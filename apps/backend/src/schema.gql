@@ -1,0 +1,152 @@
+# ------------------------------------------------------
+# THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
+# ------------------------------------------------------
+
+input CreateOpportunityInput {
+  description: String!
+  endsAt: DateTime!
+  location: String!
+  organizationId: String!
+  startsAt: DateTime!
+  status: OpportunityStatus! = DRAFT
+  title: String!
+}
+
+input CreateOrganizationInput {
+  address: String
+  description: String
+  email: String
+  logoUrl: String
+  name: String!
+  parentId: String
+  phone: String
+  websiteUrl: String
+}
+
+input CreateTaskInput {
+  description: String!
+  dueDate: DateTime!
+  opportunityId: String!
+  status: TaskStatus! = TODO
+  title: String!
+}
+
+"""
+A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date-time format.
+"""
+scalar DateTime
+
+type Mutation {
+  createOpportunity(input: CreateOpportunityInput!): Opportunity!
+  createOrganization(input: CreateOrganizationInput!): Organization!
+  createTask(input: CreateTaskInput!): Task!
+}
+
+type Opportunity {
+  createdAt: DateTime!
+  createdBy: User!
+  description: String!
+  endsAt: DateTime!
+  id: ID!
+  location: String!
+  organization: Organization!
+  slug: String!
+  startsAt: DateTime!
+  status: OpportunityStatus!
+  tasks: [Task!]
+  title: String!
+  updatedAt: DateTime
+}
+
+type OpportunityPaginatedResponse {
+  items: [Opportunity!]!
+  pagination: PaginationInfo!
+}
+
+enum OpportunityStatus {
+  ACTIVE
+  ARCHIVED
+  DRAFT
+  EXPIRED
+}
+
+type Organization {
+  address: String
+  admins: [User!]
+  children: [Organization!]!
+  createdAt: DateTime!
+  description: String
+  email: String
+  id: ID!
+  logoUrl: String
+  moderators: [User!]
+  name: String!
+  opportunities(limit: Int! = 10, offset: Int! = 0): [Opportunity!]
+  owner: User!
+  parent: Organization
+  phone: String
+  slug: String!
+  updatedAt: DateTime
+  volunteers: [User!]
+  websiteUrl: String
+}
+
+type OrganizationPaginatedResponse {
+  items: [Organization!]!
+  pagination: PaginationInfo!
+}
+
+type PaginationInfo {
+  hasMore: Boolean!
+  limit: Int!
+  offset: Int!
+  total: Int!
+}
+
+type Query {
+  me: User!
+  opportunities(limit: Int! = 10, offset: Int! = 0, organizationId: String!): OpportunityPaginatedResponse!
+  opportunity(id: String!): Opportunity!
+  organization(id: String!): Organization!
+  organizationBySlug(slug: String!): Organization!
+  organizations(limit: Int! = 10, offset: Int! = 0): OrganizationPaginatedResponse!
+  task(id: String!): Task!
+  user(id: String!): User
+}
+
+type Task {
+  assignees: [User!]
+  createdAt: DateTime!
+  createdBy: User!
+  description: String!
+  dueDate: DateTime!
+  id: ID!
+  opportunity: Opportunity!
+  slug: String!
+  status: TaskStatus!
+  title: String!
+  updatedAt: DateTime
+}
+
+enum TaskStatus {
+  ARCHIVED
+  DONE
+  IN_PROGRESS
+  TODO
+}
+
+type TimeRecord {
+  createdAt: DateTime!
+  endedAt: DateTime!
+  id: ID!
+  notes: String
+  startedAt: DateTime!
+}
+
+type User {
+  email: String!
+  id: ID!
+  image: String!
+  name: String!
+  username: String!
+}
