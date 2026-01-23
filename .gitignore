@@ -33,6 +33,9 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
+# Docker
+docker-compose.override.yml
+
 # Misc
 .DS_Store
 *.pem
