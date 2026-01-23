@@ -1,12 +1,19 @@
 {
-	"$schema": "https://json.schemastore.org/tsconfig",
-	"extends": "./base.json",
-	"compilerOptions": {
-		"plugins": [{ "name": "next" }],
-		"module": "ESNext",
-		"moduleResolution": "Bundler",
-		"allowJs": true,
-		"jsx": "preserve",
-		"noEmit": true
-	}
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "extends": "./base.json",
+  "compilerOptions": {
+    "target": "ES2017",
+    "lib": ["dom", "dom.iterable", "esnext"],
+    "allowJs": true,
+    "noEmit": true,
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "jsx": "react-jsx",
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ],
+    "incremental": true
+  }
 }
