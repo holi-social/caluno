@@ -1,135 +1,138 @@
-# Turborepo starter
+# Clippy Monorepo
 
-This Turborepo starter is maintained by the Turborepo core team.
-
-## Using this example
-
-Run the following command:
-
-```sh
-npx create-turbo@latest
-```
+A Turborepo-based monorepo for the Clippy platform.
 
 ## What's inside?
 
-This Turborepo includes the following packages/apps:
+This monorepo includes the following packages/apps:
 
 ### Apps and Packages
 
-- `docs`: a [Next.js](https://nextjs.org/) app
-- `web`: another [Next.js](https://nextjs.org/) app
-- `@repo/ui`: a stub React component library shared by both `web` and `docs` applications
-- `@repo/eslint-config`: `eslint` configurations (includes `eslint-config-next` and `eslint-config-prettier`)
-- `@repo/typescript-config`: `tsconfig.json`s used throughout the monorepo
+- `backoffice-frontend`: a [Next.js](https://nextjs.org/) app for the backoffice interface
+- `backend`: a [NestJS](https://nestjs.com/) GraphQL API server with PostgreSQL
+- `@repo/ui`: a React component library using shadcn/ui
+- `@repo/typescript-config`: shared `tsconfig.json` configurations
 
-Each package/app is 100% [TypeScript](https://www.typescriptlang.org/).
+## Prerequisites
 
-### Utilities
+- [Bun](https://bun.sh/) (v1.3.5 or higher)
+- [Docker](https://www.docker.com/) and Docker Compose
+- [Node.js](https://nodejs.org/) (v18 or higher)
 
-This Turborepo has some additional tools already setup for you:
+## Getting Started
 
-- [TypeScript](https://www.typescriptlang.org/) for static type checking
-- [ESLint](https://eslint.org/) for code linting
-- [Prettier](https://prettier.io) for code formatting
+1. **Clone the repository**
+2. **Set up environment variables**
 
-### Build
+   ```bash
+   # Copy root environment file (for Docker)
+   cp .env.example .env
 
-To build all apps and packages, run the following command:
+   # Copy backend environment file
+   cp apps/backend/.env.example apps/backend/.env
+   ```
 
-```
-cd my-turborepo
+   Update the `.env` files with your configuration. The defaults should work for local development.
 
-# With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed (recommended)
-turbo build
+3. **Install dependencies**
 
-# Without [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation), use your package manager
-npx turbo build
-yarn dlx turbo build
-pnpm exec turbo build
-```
+   ```bash
+   bun install
+   ```
 
-You can build a specific package by using a [filter](https://turborepo.dev/docs/crafting-your-repository/running-tasks#using-filters):
+4. **Start the development environment**
 
-```
-# With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed (recommended)
-turbo build --filter=docs
+   ```bash
+   bun dev
+   ```
 
-# Without [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation), use your package manager
-npx turbo build --filter=docs
-yarn exec turbo build --filter=docs
-pnpm exec turbo build --filter=docs
-```
+   This single command will:
+   - Start the PostgreSQL database in Docker
+   - Wait for the database to be ready
+   - Start all applications in parallel (backend and frontend)
 
-### Develop
+   The services will be available at:
+   - Backend API: http://localhost:5001
+   - Frontend: http://localhost:3000
 
-To develop all apps and packages, run the following command:
+## Available Scripts
 
-```
-cd my-turborepo
+### Development
 
-# With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed (recommended)
-turbo dev
+- `bun dev` - Start all services (database + apps)
+- `bun run db:up` - Start the PostgreSQL database
+- `bun run db:down` - Stop the PostgreSQL database
 
-# Without [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation), use your package manager
-npx turbo dev
-yarn exec turbo dev
-pnpm exec turbo dev
-```
+### Database Management
 
-You can develop a specific package by using a [filter](https://turborepo.dev/docs/crafting-your-repository/running-tasks#using-filters):
+The backend uses Drizzle ORM for database management. Run these commands from `apps/backend`:
 
-```
-# With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed (recommended)
-turbo dev --filter=web
+- `bun run db:generate` - Generate migrations from schema changes
+- `bun run db:migrate` - Run pending migrations
+- `bun run db:studio` - Open Drizzle Studio (database GUI)
 
-# Without [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation), use your package manager
-npx turbo dev --filter=web
-yarn exec turbo dev --filter=web
-pnpm exec turbo dev --filter=web
-```
+### Building
 
-### Remote Caching
+- `bun run build` - Build all apps and packages
+- `bun run check-types` - Type-check all TypeScript code
 
-> [!TIP]
-> Vercel Remote Cache is free for all plans. Get started today at [vercel.com](https://vercel.com/signup?/signup?utm_source=remote-cache-sdk&utm_campaign=free_remote_cache).
+### Linting & Formatting
 
-Turborepo can use a technique known as [Remote Caching](https://turborepo.dev/docs/core-concepts/remote-caching) to share cache artifacts across machines, enabling you to share build caches with your team and CI/CD pipelines.
+- `bun run lint` - Lint all code with Biome
+- `bun run format` - Format and fix all code with Biome
 
-By default, Turborepo will cache locally. To enable Remote Caching you will need an account with Vercel. If you don't have an account you can [create one](https://vercel.com/signup?utm_source=turborepo-examples), then enter the following commands:
+## Project Structure
 
 ```
-cd my-turborepo
-
-# With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed (recommended)
-turbo login
-
-# Without [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation), use your package manager
-npx turbo login
-yarn exec turbo login
-pnpm exec turbo login
+clippy/
+├── apps/
+│   ├── backoffice-frontend/  # Next.js frontend
+│   └── backend/              # NestJS GraphQL API
+├── packages/
+│   ├── ui/                   # Shared React components
+│   └── typescript-config/    # Shared TypeScript configs
+├── docker-compose.yml        # PostgreSQL database setup
+└── turbo.json               # Turborepo configuration
 ```
 
-This will authenticate the Turborepo CLI with your [Vercel account](https://vercel.com/docs/concepts/personal-accounts/overview).
+## Tech Stack
 
-Next, you can link your Turborepo to your Remote Cache by running the following command from the root of your Turborepo:
+- **Frontend**: Next.js 16, React 19, TypeScript, Tailwind CSS 4, shadcn/ui
+- **Backend**: NestJS, GraphQL, Apollo Server, Drizzle ORM
+- **Database**: PostgreSQL 17
+- **Tooling**: Turborepo, Bun, Biome, Docker
 
-```
-# With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed (recommended)
-turbo link
+## Environment Variables
 
-# Without [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation), use your package manager
-npx turbo link
-yarn exec turbo link
-pnpm exec turbo link
-```
+Environment variables are scoped per project:
 
-## Useful Links
+### Root `.env` (Docker configuration)
+- `POSTGRES_USER` - PostgreSQL username (default: postgres)
+- `POSTGRES_PASSWORD` - PostgreSQL password (default: postgres)
+- `POSTGRES_DB` - PostgreSQL database name (default: clippy)
+- `POSTGRES_PORT` - PostgreSQL port (default: 5432)
 
-Learn more about the power of Turborepo:
+### `apps/backend/.env` (Backend configuration)
+- `PORT` - Backend server port (default: 5001)
+- `DATABASE_URL` - PostgreSQL connection string
+- `BETTER_AUTH_SECRET` - Secret key for authentication
+- `BETTER_AUTH_URL` - Backend URL for auth
+- `WEB_URL` - Frontend URL
 
-- [Tasks](https://turborepo.dev/docs/crafting-your-repository/running-tasks)
-- [Caching](https://turborepo.dev/docs/crafting-your-repository/caching)
-- [Remote Caching](https://turborepo.dev/docs/core-concepts/remote-caching)
-- [Filtering](https://turborepo.dev/docs/crafting-your-repository/running-tasks#using-filters)
-- [Configuration Options](https://turborepo.dev/docs/reference/configuration)
-- [CLI Usage](https://turborepo.dev/docs/reference/command-line-reference)
+## Troubleshooting
+
+### Database connection issues
+
+If you encounter database connection errors:
+
+1. Ensure Docker is running
+2. Check if PostgreSQL is healthy: `docker compose ps`
+3. Restart the database: `bun run db:down && bun run db:up`
+
+### Port conflicts
+
+If ports 3000, 5001, or 5432 are already in use:
+
+1. Update the ports in `.env`
+2. Update `docker-compose.yml` for PostgreSQL port
+3. Restart the services
