@@ -5,8 +5,8 @@ import { UserModule } from '../user/user.module';
 import { MembershipService } from './membership.service';
 
 @Module({
-    imports: [DatabaseModule, UserModule],
-    providers: [MembershipService, UserMapper],
-    exports: [MembershipService],
+  imports: [DatabaseModule, UserModule],
+  providers: [MembershipService, UserMapper],
+  exports: [MembershipService],
 })
 export class MembershipModule {}

@@ -6,19 +6,19 @@ import { UserModule } from '../user/user.module';
 import { OrganizationMapper } from './mappers/organization.mapper';
 import { OrganizationService } from './organization.service';
 import {
-    OrganizationFieldResolver,
-    OrganizationMutationResolver,
-    OrganizationQueryResolver,
+  OrganizationFieldResolver,
+  OrganizationMutationResolver,
+  OrganizationQueryResolver,
 } from './resolvers';
 
 @Module({
-    imports: [DatabaseModule, UserModule, MembershipModule, OpportunityModule],
-    providers: [
-        OrganizationService,
-        OrganizationQueryResolver,
-        OrganizationMutationResolver,
-        OrganizationFieldResolver,
-        OrganizationMapper,
-    ],
+  imports: [DatabaseModule, UserModule, MembershipModule, OpportunityModule],
+  providers: [
+    OrganizationService,
+    OrganizationQueryResolver,
+    OrganizationMutationResolver,
+    OrganizationFieldResolver,
+    OrganizationMapper,
+  ],
 })
 export class OrganizationModule {}

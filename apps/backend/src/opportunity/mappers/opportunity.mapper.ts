@@ -5,6 +5,6 @@ import type { OpportunityEntity } from '../schemas/opportunity.schema';
 
 @Mapper({ model: Opportunity })
 export class OpportunityMapper extends BaseMapper<
-    Opportunity,
-    OpportunityEntity
+  Opportunity,
+  OpportunityEntity
 > {}

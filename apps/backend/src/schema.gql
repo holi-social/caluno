@@ -105,11 +105,18 @@ type PaginationInfo {
 
 type Query {
   me: User!
-  opportunities(limit: Int! = 10, offset: Int! = 0, organizationId: String!): OpportunityPaginatedResponse!
+  opportunities(
+    limit: Int! = 10
+    offset: Int! = 0
+    organizationId: String!
+  ): OpportunityPaginatedResponse!
   opportunity(id: String!): Opportunity!
   organization(id: String!): Organization!
   organizationBySlug(slug: String!): Organization!
-  organizations(limit: Int! = 10, offset: Int! = 0): OrganizationPaginatedResponse!
+  organizations(
+    limit: Int! = 10
+    offset: Int! = 0
+  ): OrganizationPaginatedResponse!
   task(id: String!): Task!
   user(id: String!): User
 }

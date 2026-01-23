@@ -110,12 +110,8 @@
           "name": "accounts_user_id_users_id_fk",
           "tableFrom": "accounts",
           "tableTo": "users",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -202,12 +198,8 @@
           "name": "sessions_user_id_users_id_fk",
           "tableFrom": "sessions",
           "tableTo": "users",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -217,9 +209,7 @@
         "sessions_token_unique": {
           "name": "sessions_token_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "token"
-          ]
+          "columns": ["token"]
         }
       },
       "policies": {},
@@ -295,16 +285,12 @@
         "users_email_unique": {
           "name": "users_email_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "email"
-          ]
+          "columns": ["email"]
         },
         "users_username_unique": {
           "name": "users_username_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "username"
-          ]
+          "columns": ["username"]
         }
       },
       "policies": {},
@@ -460,12 +446,8 @@
           "name": "memberships_user_id_users_id_fk",
           "tableFrom": "memberships",
           "tableTo": "users",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -473,12 +455,8 @@
           "name": "memberships_organization_id_organizations_id_fk",
           "tableFrom": "memberships",
           "tableTo": "organizations",
-          "columnsFrom": [
-            "organization_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["organization_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -488,10 +466,7 @@
         "uq_memberships_user_id_organization_id": {
           "name": "uq_memberships_user_id_organization_id",
           "nullsNotDistinct": false,
-          "columns": [
-            "user_id",
-            "organization_id"
-          ]
+          "columns": ["user_id", "organization_id"]
         }
       },
       "policies": {},
@@ -676,12 +651,8 @@
           "name": "opportunities_organization_id_organizations_id_fk",
           "tableFrom": "opportunities",
           "tableTo": "organizations",
-          "columnsFrom": [
-            "organization_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["organization_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -689,12 +660,8 @@
           "name": "opportunities_created_by_id_users_id_fk",
           "tableFrom": "opportunities",
           "tableTo": "users",
-          "columnsFrom": [
-            "created_by_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["created_by_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         }
@@ -704,9 +671,7 @@
         "opportunities_slug_unique": {
           "name": "opportunities_slug_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "slug"
-          ]
+          "columns": ["slug"]
         }
       },
       "policies": {},
@@ -872,12 +837,8 @@
           "name": "organizations_parent_id_organizations_id_fk",
           "tableFrom": "organizations",
           "tableTo": "organizations",
-          "columnsFrom": [
-            "parent_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["parent_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -885,12 +846,8 @@
           "name": "organizations_owner_id_users_id_fk",
           "tableFrom": "organizations",
           "tableTo": "users",
-          "columnsFrom": [
-            "owner_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["owner_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         }
@@ -900,9 +857,7 @@
         "organizations_slug_unique": {
           "name": "organizations_slug_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "slug"
-          ]
+          "columns": ["slug"]
         }
       },
       "policies": {},
@@ -1005,12 +960,8 @@
           "name": "task_assignments_task_id_tasks_id_fk",
           "tableFrom": "task_assignments",
           "tableTo": "tasks",
-          "columnsFrom": [
-            "task_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["task_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -1018,12 +969,8 @@
           "name": "task_assignments_assigned_to_id_users_id_fk",
           "tableFrom": "task_assignments",
           "tableTo": "users",
-          "columnsFrom": [
-            "assigned_to_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["assigned_to_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -1031,12 +978,8 @@
           "name": "task_assignments_assigned_by_id_users_id_fk",
           "tableFrom": "task_assignments",
           "tableTo": "users",
-          "columnsFrom": [
-            "assigned_by_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["assigned_by_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         }
@@ -1046,10 +989,7 @@
         "uq_task_assignments_task_id_assigned_to_id": {
           "name": "uq_task_assignments_task_id_assigned_to_id",
           "nullsNotDistinct": false,
-          "columns": [
-            "task_id",
-            "assigned_to_id"
-          ]
+          "columns": ["task_id", "assigned_to_id"]
         }
       },
       "policies": {},
@@ -1207,12 +1147,8 @@
           "name": "tasks_opportunity_id_opportunities_id_fk",
           "tableFrom": "tasks",
           "tableTo": "opportunities",
-          "columnsFrom": [
-            "opportunity_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["opportunity_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -1220,12 +1156,8 @@
           "name": "tasks_created_by_id_users_id_fk",
           "tableFrom": "tasks",
           "tableTo": "users",
-          "columnsFrom": [
-            "created_by_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["created_by_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         }
@@ -1235,9 +1167,7 @@
         "tasks_slug_unique": {
           "name": "tasks_slug_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "slug"
-          ]
+          "columns": ["slug"]
         }
       },
       "policies": {},
@@ -1300,12 +1230,8 @@
           "name": "time_records_session_id_time_sessions_id_fk",
           "tableFrom": "time_records",
           "tableTo": "time_sessions",
-          "columnsFrom": [
-            "session_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["session_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -1379,12 +1305,8 @@
           "name": "time_sessions_assignment_id_task_assignments_id_fk",
           "tableFrom": "time_sessions",
           "tableTo": "task_assignments",
-          "columnsFrom": [
-            "assignment_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["assignment_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -1392,12 +1314,8 @@
           "name": "time_sessions_validated_by_users_id_fk",
           "tableFrom": "time_sessions",
           "tableTo": "users",
-          "columnsFrom": [
-            "validated_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["validated_by"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         }
@@ -1413,43 +1331,22 @@
     "public.opportunity_status": {
       "name": "opportunity_status",
       "schema": "public",
-      "values": [
-        "DRAFT",
-        "ACTIVE",
-        "EXPIRED",
-        "ARCHIVED"
-      ]
+      "values": ["DRAFT", "ACTIVE", "EXPIRED", "ARCHIVED"]
     },
     "public.organization_role": {
       "name": "organization_role",
       "schema": "public",
-      "values": [
-        "OWNER",
-        "ADMIN",
-        "MODERATOR",
-        "VOLUNTEER"
-      ]
+      "values": ["OWNER", "ADMIN", "MODERATOR", "VOLUNTEER"]
     },
     "public.task_status": {
       "name": "task_status",
       "schema": "public",
-      "values": [
-        "TODO",
-        "IN_PROGRESS",
-        "DONE",
-        "ARCHIVED"
-      ]
+      "values": ["TODO", "IN_PROGRESS", "DONE", "ARCHIVED"]
     },
     "public.time_session_status": {
       "name": "time_session_status",
       "schema": "public",
-      "values": [
-        "IN_PROGRESS",
-        "PENDING",
-        "APPROVED",
-        "REJECTED",
-        "CANCELLED"
-      ]
+      "values": ["IN_PROGRESS", "PENDING", "APPROVED", "REJECTED", "CANCELLED"]
     }
   },
   "schemas": {},

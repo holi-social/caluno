@@ -4,55 +4,55 @@ import { Opportunity } from '../../opportunity/models/opportunity.model';
 import { User } from '../../user/models/user.model';
 
 export enum TaskStatus {
-    TODO = 'TODO',
-    IN_PROGRESS = 'IN_PROGRESS',
-    DONE = 'DONE',
-    ARCHIVED = 'ARCHIVED',
+  TODO = 'TODO',
+  IN_PROGRESS = 'IN_PROGRESS',
+  DONE = 'DONE',
+  ARCHIVED = 'ARCHIVED',
 }
 
 registerEnumType(TaskStatus, {
-    name: 'TaskStatus',
+  name: 'TaskStatus',
 });
 
 @ObjectType()
 export class Task {
-    @Field(() => ID)
-    id: string;
+  @Field(() => ID)
+  id: string;
 
-    @Field(() => String)
-    title: string;
+  @Field(() => String)
+  title: string;
 
-    @Field(() => String)
-    slug: string;
+  @Field(() => String)
+  slug: string;
 
-    @Field(() => String)
-    description: string;
+  @Field(() => String)
+  description: string;
 
-    @Field(() => Opportunity)
-    opportunity: Opportunity;
+  @Field(() => Opportunity)
+  opportunity: Opportunity;
 
-    @Field(() => TaskStatus)
-    status: TaskStatus;
+  @Field(() => TaskStatus)
+  status: TaskStatus;
 
-    @Field(() => [User], { nullable: true })
-    assignees: User[];
+  @Field(() => [User], { nullable: true })
+  assignees: User[];
 
-    @Field(() => User)
-    createdBy: User;
+  @Field(() => User)
+  createdBy: User;
 
-    @Field(() => Date)
-    dueDate: Date;
+  @Field(() => Date)
+  dueDate: Date;
 
-    @Field(() => Date)
-    createdAt: Date;
+  @Field(() => Date)
+  createdAt: Date;
 
-    @Field(() => Date, { nullable: true })
-    updatedAt: Date;
+  @Field(() => Date, { nullable: true })
+  updatedAt: Date;
 }
 
 export const TaskPaginatedResponse = createPaginatedResponseType<Task>(
-    Task,
-    'Task',
+  Task,
+  'Task',
 );
 
 export type TaskPaginatedResponse = InstanceType<typeof TaskPaginatedResponse>;

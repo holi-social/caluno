@@ -5,6 +5,6 @@ import type { TimeRecordEntity } from '../schemas/time-record.schema';
 
 @Mapper({ model: TimeRecord })
 export class TimeRecordMapper extends BaseMapper<
-    TimeRecord,
-    TimeRecordEntity
+  TimeRecord,
+  TimeRecordEntity
 > {}

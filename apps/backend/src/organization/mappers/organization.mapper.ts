@@ -5,6 +5,6 @@ import type { OrganizationEntity } from '../schemas/organization.schema';
 
 @Mapper({ model: Organization })
 export class OrganizationMapper extends BaseMapper<
-    Organization,
-    OrganizationEntity
+  Organization,
+  OrganizationEntity
 > {}

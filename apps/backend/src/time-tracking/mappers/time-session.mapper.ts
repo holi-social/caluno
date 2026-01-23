@@ -5,6 +5,6 @@ import type { TimeSessionEntity } from '../schemas/time-session.schema';
 
 @Mapper({ model: TimeSession })
 export class TimeSessionMapper extends BaseMapper<
-    TimeSession,
-    TimeSessionEntity
+  TimeSession,
+  TimeSessionEntity
 > {}
