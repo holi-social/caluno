@@ -1,10 +1,10 @@
 import { Args, Query, Resolver } from '@nestjs/graphql';
-import type { PaginationInput } from '../../graphql/pagination.input';
+import { PaginationInput } from '../../graphql/pagination.input';
 import {
   Organization,
   OrganizationPaginatedResponse,
 } from '../models/organization.model';
-import type { OrganizationService } from '../organization.service';
+import { OrganizationService } from '../organization.service';
 
 @Resolver(() => Organization)
 export class OrganizationQueryResolver {

@@ -2,9 +2,9 @@ import { Args, Query, Resolver } from '@nestjs/graphql';
 
 import type { UserSession } from '@thallesp/nestjs-better-auth';
 import { Session } from '@thallesp/nestjs-better-auth';
-import type { PaginationInput } from '../../graphql/pagination.input';
+import { PaginationInput } from '../../graphql/pagination.input';
 import { Task, TaskPaginatedResponse } from '../models/task.model';
-import type { TaskService } from '../task.service';
+import { TaskService } from '../task.service';
 
 @Resolver(() => Task)
 export class TaskQueryResolver {

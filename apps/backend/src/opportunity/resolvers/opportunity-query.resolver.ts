@@ -1,10 +1,10 @@
 import { Args, Query, Resolver } from '@nestjs/graphql';
-import type { PaginationInput } from '../../graphql/pagination.input';
+import { PaginationInput } from '../../graphql/pagination.input';
 import {
   Opportunity,
   OpportunityPaginatedResponse,
 } from '../models/opportunity.model';
-import type { OpportunityService } from '../opportunity.service';
+import { OpportunityService } from '../opportunity.service';
 
 @Resolver(() => Opportunity)
 export class OpportunityQueryResolver {

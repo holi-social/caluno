@@ -1,12 +1,12 @@
 import { Args, Parent, ResolveField, Resolver } from '@nestjs/graphql';
-import type { PaginationInput } from '../../graphql/pagination.input';
+import { PaginationInput } from '../../graphql/pagination.input';
 import {
   Opportunity,
   type OpportunityPaginatedResponse,
 } from '../../opportunity/models/opportunity.model';
 import { User } from '../../user/models/user.model';
 import { Organization } from '../models/organization.model';
-import type { OrganizationService } from '../organization.service';
+import { OrganizationService } from '../organization.service';
 import type { OrganizationEntity } from '../schemas/organization.schema';
 
 @Resolver(() => Organization)

@@ -1,10 +1,10 @@
 import { Args, Mutation, Resolver } from '@nestjs/graphql';
 import type { UserSession } from '@thallesp/nestjs-better-auth';
 import { Session } from '@thallesp/nestjs-better-auth';
-import type { CreateTaskInput } from '../inputs/create-task.input';
-import type { CreateTaskAssignmentInput } from '../inputs/create-task-assignment.input';
+import { CreateTaskInput } from '../inputs/create-task.input';
+import { CreateTaskAssignmentInput } from '../inputs/create-task-assignment.input';
 import { Task } from '../models/task.model';
-import type { TaskService } from '../task.service';
+import { TaskService } from '../task.service';
 
 @Resolver(() => Task)
 export class TaskMutationResolver {

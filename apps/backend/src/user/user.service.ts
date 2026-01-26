@@ -4,7 +4,7 @@ import type { NodePgDatabase } from 'drizzle-orm/node-postgres';
 
 import * as schema from '../auth/schemas/auth.schema';
 import { DATABASE_CONNECTION } from '../database/database-connection';
-import type { UserMapper } from './mappers/user.mapper';
+import { UserMapper } from './mappers/user.mapper';
 import type { User } from './models/user.model';
 
 @Injectable()

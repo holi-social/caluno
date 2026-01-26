@@ -2,7 +2,7 @@ import { Parent, ResolveField, Resolver } from '@nestjs/graphql';
 import { Task } from '../../task/models/task.model';
 import { User } from '../../user/models/user.model';
 import { Opportunity } from '../models/opportunity.model';
-import type { OpportunityService } from '../opportunity.service';
+import { OpportunityService } from '../opportunity.service';
 import type { OpportunityEntity } from '../schemas/opportunity.schema';
 
 @Resolver(() => Opportunity)

@@ -4,14 +4,14 @@ import type { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import { DATABASE_CONNECTION } from '../database/database-connection';
 import * as schema from '../database/schema';
 import type { PaginationInput } from '../graphql/pagination.input';
-import type { MembershipService } from '../membership/membership.service';
+import { MembershipService } from '../membership/membership.service';
 import type { OpportunityPaginatedResponse } from '../opportunity/models/opportunity.model';
-import type { OpportunityService } from '../opportunity/opportunity.service';
+import { OpportunityService } from '../opportunity/opportunity.service';
 import type { User } from '../user/models/user.model';
-import type { UserService } from '../user/user.service';
+import { UserService } from '../user/user.service';
 import { slugify } from '../utils';
 import type { CreateOrganizationInput } from './inputs/create-organization.input';
-import type { OrganizationMapper } from './mappers/organization.mapper';
+import { OrganizationMapper } from './mappers/organization.mapper';
 import {
   type Organization,
   OrganizationPaginatedResponse,

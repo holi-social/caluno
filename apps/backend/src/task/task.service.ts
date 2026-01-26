@@ -5,13 +5,13 @@ import { DATABASE_CONNECTION } from '../database/database-connection';
 import * as schema from '../database/schema';
 import { ForbiddenGraphQLError, NotFoundGraphQLError } from '../graphql/errors';
 import type { PaginationInput } from '../graphql/pagination.input';
-import type { MembershipService } from '../membership/membership.service';
-import type { UserMapper } from '../user/mappers/user.mapper';
+import { MembershipService } from '../membership/membership.service';
+import { UserMapper } from '../user/mappers/user.mapper';
 import type { User } from '../user/models/user.model';
 import { slugify } from '../utils';
 import type { CreateTaskInput } from './inputs/create-task.input';
 import type { CreateTaskAssignmentInput } from './inputs/create-task-assignment.input';
-import type { TaskMapper } from './mappers/task.mapper';
+import { TaskMapper } from './mappers/task.mapper';
 import { type Task, TaskPaginatedResponse } from './models/task.model';
 
 @Injectable()

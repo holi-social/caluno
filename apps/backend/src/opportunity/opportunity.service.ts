@@ -5,14 +5,14 @@ import { DATABASE_CONNECTION } from '../database/database-connection';
 import * as schema from '../database/schema';
 import { ForbiddenGraphQLError } from '../graphql/errors';
 import type { PaginationInput } from '../graphql/pagination.input';
-import type { MembershipService } from '../membership/membership.service';
+import { MembershipService } from '../membership/membership.service';
 import type { Task } from '../task/models/task.model';
-import type { TaskService } from '../task/task.service';
+import { TaskService } from '../task/task.service';
 import type { User } from '../user/models/user.model';
-import type { UserService } from '../user/user.service';
+import { UserService } from '../user/user.service';
 import { slugify } from '../utils';
 import type { CreateOpportunityInput } from './inputs/create-opportunity.input';
-import type { OpportunityMapper } from './mappers/opportunity.mapper';
+import { OpportunityMapper } from './mappers/opportunity.mapper';
 import {
   type Opportunity,
   OpportunityPaginatedResponse,

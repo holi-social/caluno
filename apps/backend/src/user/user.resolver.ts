@@ -1,7 +1,7 @@
 import { Args, Query, Resolver } from '@nestjs/graphql';
 import { Session, type UserSession } from '@thallesp/nestjs-better-auth';
 import { User } from './models/user.model';
-import type { UserService } from './user.service';
+import { UserService } from './user.service';
 
 @Resolver(() => User)
 export class UserResolver {
