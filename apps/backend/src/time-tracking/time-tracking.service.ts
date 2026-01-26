@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { and, eq, inArray, lt } from 'drizzle-orm';
 import type { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import * as schema from '../database/schema';
@@ -8,28 +8,54 @@ import {
   ForbiddenGraphQLError,
   NotFoundGraphQLError,
 } from '../graphql/errors';
-import type { MembershipService } from '../membership/membership.service';
-import type { UserService } from '../user/user.service';
-import type { AddTimeRecordInput } from './inputs/add-time-record.input';
-import type { ApproveTimeSessionInput } from './inputs/approve-time-session.input';
-import type { RejectTimeSessionInput } from './inputs/reject-time-session.input';
-import type { StartTimeSessionInput } from './inputs/start-time-session.input';
-import type { TimeRecordMapper } from './mappers/time-record.mapper';
-import type { TimeSessionMapper } from './mappers/time-session.mapper';
-import type { TimeRecord } from './models/time-record.model';
-import { type TimeSession } from './models/time-session.model';
+import { MembershipService } from '../membership/membership.service';
+import { AddTimeRecordInput } from './inputs/add-time-record.input';
+import { ApproveTimeSessionInput } from './inputs/approve-time-session.input';
+import { RejectTimeSessionInput } from './inputs/reject-time-session.input';
+import { StartTimeSessionInput } from './inputs/start-time-session.input';
+import { TimeRecordMapper } from './mappers/time-record.mapper';
+import { TimeSessionMapper } from './mappers/time-session.mapper';
+import { TimeRecord } from './models/time-record.model';
+import { TimeSession } from './models/time-session.model';
 import { TimeSessionStatus } from './enums';
+import { DATABASE_CONNECTION } from '../database/database-connection';
+import { Task } from 'src/task/models/task.model';
+import { TaskMapper } from 'src/task/mappers/task.mapper';
+import { User } from 'src/user/models/user.model';
+import { UserMapper } from 'src/user/mappers/user.mapper';
 
 @Injectable()
 export class TimeTrackingService {
   constructor(
+    @Inject(DATABASE_CONNECTION)
     private readonly db: NodePgDatabase<typeof schema>,
-    private readonly userService: UserService,
     private readonly membershipService: MembershipService,
     private readonly recordMapper: TimeRecordMapper,
     private readonly sessionMapper: TimeSessionMapper,
+    private readonly taskMapper: TaskMapper,
+    private readonly userMapper: UserMapper,
   ) {}
-  async addTimeRecord(input: AddTimeRecordInput): Promise<TimeRecord> {
+  async addTimeRecord(
+    userId: string,
+    input: AddTimeRecordInput,
+  ): Promise<TimeRecord> {
+    const timeSession = await this.db.query.timeSessions.findFirst({
+      where: eq(schema.timeSessions.id, input.sessionId),
+      with: {
+        assignment: true,
+      },
+    });
+
+    if (!timeSession) {
+      throw new NotFoundGraphQLError('Time session not found');
+    }
+
+    if (timeSession.assignment?.assignedToId !== userId) {
+      throw new ForbiddenGraphQLError(
+        'You are not authorized to add time records to this time session',
+      );
+    }
+
     const [timeRecord] = await this.db
       .insert(schema.timeRecords)
       .values(input)
@@ -185,11 +211,119 @@ export class TimeTrackingService {
     return this.sessionMapper.toModelOrThrow(rejectedSession);
   }
 
-  async deleteTimeRecord(id: string): Promise<TimeRecord> {
-    const [timeRecord] = await this.db
+  async deleteTimeRecord(userId: string, id: string): Promise<TimeRecord> {
+    const timeRecord = await this.db.query.timeRecords.findFirst({
+      where: eq(schema.timeRecords.id, id),
+      with: {
+        session: {
+          with: {
+            assignment: true,
+          },
+        },
+      },
+    });
+
+    if (!timeRecord) {
+      throw new NotFoundGraphQLError('Time record not found');
+    }
+
+    if (timeRecord.session?.assignment?.assignedToId !== userId) {
+      throw new ForbiddenGraphQLError(
+        'You are not authorized to delete this time record',
+      );
+    }
+
+    const [deletedTimeRecord] = await this.db
       .delete(schema.timeRecords)
       .where(eq(schema.timeRecords.id, id))
       .returning();
-    return this.recordMapper.toModelOrThrow(timeRecord);
+    return this.recordMapper.toModelOrThrow(deletedTimeRecord);
+  }
+
+  async findRecordsBySessionId(
+    userId: string,
+    sessionId: string,
+  ): Promise<TimeRecord[]> {
+    const records = await this.db.query.timeRecords.findMany({
+      where: eq(schema.timeRecords.sessionId, sessionId),
+      with: {
+        session: {
+          with: {
+            assignment: true,
+          },
+        },
+      },
+    });
+    const userRecords = records.filter(
+      (record) => record.session?.assignment?.assignedToId === userId,
+    );
+    return this.recordMapper.toArray(userRecords);
+  }
+
+  async findTaskBySessionId(userId: string, sessionId: string): Promise<Task> {
+    const timeSession = await this.db.query.timeSessions.findFirst({
+      where: eq(schema.timeSessions.id, sessionId),
+      with: {
+        assignment: {
+          with: {
+            task: true,
+          },
+        },
+      },
+    });
+
+    if (!timeSession) {
+      throw new NotFoundGraphQLError('Time session not found');
+    }
+
+    if (timeSession.assignment?.assignedToId !== userId) {
+      throw new ForbiddenGraphQLError(
+        'You are not authorized to access this task',
+      );
+    }
+
+    return this.taskMapper.toModelOrThrow(timeSession.assignment?.task);
+  }
+
+  async findValidatorBySessionId(
+    userId: string,
+    sessionId: string,
+  ): Promise<User | null> {
+    const timeSession = await this.db.query.timeSessions.findFirst({
+      where: eq(schema.timeSessions.id, sessionId),
+      with: {
+        validatedBy: true,
+        assignment: {
+          with: {
+            task: {
+              with: {
+                opportunity: {
+                  with: {
+                    organization: true,
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    });
+
+    if (!timeSession) {
+      throw new NotFoundGraphQLError('Time session not found');
+    }
+
+    const isStaff = await this.membershipService.isStaff(
+      userId,
+      timeSession.assignment?.task?.opportunity?.organization?.id ?? '',
+    );
+
+    if (timeSession.assignment?.assignedToId !== userId || !isStaff) {
+      throw new ForbiddenGraphQLError(
+        'You are not authorized to access this time session',
+      );
+    }
+
+    return this.userMapper.toModel(timeSession.validatedBy);
   }
 }

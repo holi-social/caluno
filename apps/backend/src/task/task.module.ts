@@ -17,6 +17,6 @@ import { TaskService } from './task.service';
     TaskMutationResolver,
     TaskFieldResolver,
   ],
-  exports: [TaskService],
+  exports: [TaskService, TaskMapper],
 })
 export class TaskModule {}

@@ -25,11 +25,11 @@ export class TimeSession {
   @Field(() => [TimeRecord])
   records: TimeRecord[];
 
-  @Field(() => User)
-  validatedBy: User;
+  @Field(() => User, { nullable: true })
+  validatedBy: User | null;
 
-  @Field(() => Date)
-  validatedAt: Date;
+  @Field(() => Date, { nullable: true })
+  validatedAt: Date | null;
 
   @Field(() => String, { nullable: true })
   rejectionReason: string | null;

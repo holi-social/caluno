@@ -2,6 +2,18 @@
 # THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
 # ------------------------------------------------------
 
+input AddTimeRecordInput {
+  endedAt: DateTime!
+  notes: String
+  sessionId: String!
+  startedAt: DateTime!
+}
+
+input ApproveTimeSessionInput {
+  id: String!
+  organizationId: String!
+}
+
 input CreateOpportunityInput {
   description: String!
   endsAt: DateTime!
@@ -44,10 +56,16 @@ A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date
 scalar DateTime
 
 type Mutation {
+  addTimeRecord(input: AddTimeRecordInput!): TimeRecord!
+  approveTimeSession(input: ApproveTimeSessionInput!): TimeSession!
   assignTask(input: CreateTaskAssignmentInput!): Task!
   createOpportunity(input: CreateOpportunityInput!): Opportunity!
   createOrganization(input: CreateOrganizationInput!): Organization!
   createTask(input: CreateTaskInput!): Task!
+  deleteTimeRecord(id: ID!): TimeRecord!
+  endTimeSession(id: ID!): TimeSession!
+  rejectTimeSession(input: RejectTimeSessionInput!): TimeSession!
+  startTimeSession(input: StartTimeSessionInput!): TimeSession!
 }
 
 type Opportunity {
@@ -135,6 +153,17 @@ type Query {
   user(id: String!): User
 }
 
+input RejectTimeSessionInput {
+  id: String!
+  organizationId: String!
+  rejectionReason: String
+}
+
+input StartTimeSessionInput {
+  status: TimeSessionStatus! = IN_PROGRESS
+  taskId: String!
+}
+
 type Task {
   assignees: [User!]
   createdAt: DateTime!
@@ -159,6 +188,36 @@ enum TaskStatus {
   DONE
   IN_PROGRESS
   TODO
+}
+
+type TimeRecord {
+  createdAt: DateTime!
+  endedAt: DateTime!
+  id: ID!
+  notes: String
+  startedAt: DateTime!
+}
+
+type TimeSession {
+  createdAt: DateTime!
+  id: ID!
+  records: [TimeRecord!]!
+  rejectionReason: String
+  status: TimeSessionStatus!
+  task: Task!
+  updatedAt: DateTime
+  user: User!
+  validatedAt: DateTime
+  validatedBy: User
+}
+
+enum TimeSessionStatus {
+  APPROVED
+  CANCELLED
+  IN_PROGRESS
+  PENDING
+  REJECTED
+  SUBMITTED
 }
 
 type User {
