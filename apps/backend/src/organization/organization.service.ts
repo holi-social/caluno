@@ -15,8 +15,8 @@ import { OrganizationMapper } from './mappers/organization.mapper';
 import {
   type Organization,
   OrganizationPaginatedResponse,
-  OrganizationRole,
 } from './models/organization.model';
+import { OrganizationRole } from './enums';
 
 @Injectable()
 export class OrganizationService {

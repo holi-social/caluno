@@ -2,13 +2,7 @@ import { Field, ID, ObjectType, registerEnumType } from '@nestjs/graphql';
 import { createPaginatedResponseType } from '../../graphql/paginated-response.model';
 import { Opportunity } from '../../opportunity/models/opportunity.model';
 import { User } from '../../user/models/user.model';
-
-export enum TaskStatus {
-  TODO = 'TODO',
-  IN_PROGRESS = 'IN_PROGRESS',
-  DONE = 'DONE',
-  ARCHIVED = 'ARCHIVED',
-}
+import { TaskStatus } from '../enums';
 
 registerEnumType(TaskStatus, {
   name: 'TaskStatus',

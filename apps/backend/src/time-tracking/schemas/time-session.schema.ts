@@ -2,7 +2,7 @@ import { relations } from 'drizzle-orm';
 import { pgEnum, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
 import { users } from '../../auth/schemas/auth.schema';
 import { taskAssignments } from '../../task/schemas/task-assignment.schema';
-import { TimeSessionStatus } from '../models/time-session.model';
+import { TimeSessionStatus } from '../enums';
 import { timeRecords } from './time-record.schema';
 
 export const timeSessionStatusEnum = pgEnum(

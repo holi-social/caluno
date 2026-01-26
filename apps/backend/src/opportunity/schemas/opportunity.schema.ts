@@ -10,7 +10,7 @@ import {
 import { users } from '../../auth/schemas/auth.schema';
 import { organizations } from '../../organization/schemas/organization.schema';
 import { tasks } from '../../task/schemas/task.schema';
-import { OpportunityStatus } from '../models/opportunity.model';
+import { OpportunityStatus } from '../enums';
 
 export const opportunityStatusEnum = pgEnum(
   'opportunity_status',

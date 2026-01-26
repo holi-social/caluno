@@ -8,7 +8,7 @@ import {
   uuid,
 } from 'drizzle-orm/pg-core';
 import { users } from '../../auth/schemas/auth.schema';
-import { OrganizationRole } from '../../organization/models/organization.model';
+import { OrganizationRole } from '../../organization/enums';
 import {
   organizationRoleEnum,
   organizations,

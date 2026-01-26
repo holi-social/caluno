@@ -1,15 +1,9 @@
 import { Field, ID, ObjectType, registerEnumType } from '@nestjs/graphql';
 import { createPaginatedResponseType } from '../../graphql/paginated-response.model';
 import { Organization } from '../../organization/models/organization.model';
+import { OpportunityStatus } from '../enums';
 import { Task } from '../../task/models/task.model';
 import { User } from '../../user/models/user.model';
-
-export enum OpportunityStatus {
-  DRAFT = 'DRAFT',
-  ACTIVE = 'ACTIVE',
-  EXPIRED = 'EXPIRED',
-  ARCHIVED = 'ARCHIVED',
-}
 
 registerEnumType(OpportunityStatus, {
   name: 'OpportunityStatus',

@@ -3,13 +3,7 @@ import { Field, ID, ObjectType, registerEnumType } from '@nestjs/graphql';
 import { createPaginatedResponseType } from '../../graphql/paginated-response.model';
 import { Opportunity } from '../../opportunity/models/opportunity.model';
 import { User } from '../../user/models/user.model';
-
-export enum OrganizationRole {
-  OWNER = 'OWNER',
-  ADMIN = 'ADMIN',
-  MODERATOR = 'MODERATOR',
-  VOLUNTEER = 'VOLUNTEER',
-}
+import { OrganizationRole } from '../enums';
 
 registerEnumType(OrganizationRole, {
   name: 'OrganizationRole',

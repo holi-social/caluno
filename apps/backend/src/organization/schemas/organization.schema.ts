@@ -11,7 +11,7 @@ import {
 import { users } from '../../auth/schemas/auth.schema';
 import { memberships } from '../../membership/schemas/membership.schema';
 import { opportunities } from '../../opportunity/schemas/opportunity.schema';
-import { OrganizationRole } from '../models/organization.model';
+import { OrganizationRole } from '../enums';
 
 export const organizationRoleEnum = pgEnum(
   'organization_role',

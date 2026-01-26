@@ -1,5 +1,5 @@
 import { Field, InputType } from '@nestjs/graphql';
-import { OpportunityStatus } from '../models/opportunity.model';
+import { OpportunityStatus } from '../enums';
 
 @InputType()
 export class CreateOpportunityInput {

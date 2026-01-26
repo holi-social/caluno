@@ -9,7 +9,7 @@ import {
 } from 'drizzle-orm/pg-core';
 import { users } from '../../auth/schemas/auth.schema';
 import { opportunities } from '../../opportunity/schemas/opportunity.schema';
-import { TaskStatus } from '../models/task.model';
+import { TaskStatus } from '../enums';
 import { taskAssignments } from './task-assignment.schema';
 
 export const taskStatusEnum = pgEnum(

@@ -17,10 +17,8 @@ import type { StartTimeSessionInput } from './inputs/start-time-session.input';
 import type { TimeRecordMapper } from './mappers/time-record.mapper';
 import type { TimeSessionMapper } from './mappers/time-session.mapper';
 import type { TimeRecord } from './models/time-record.model';
-import {
-  type TimeSession,
-  TimeSessionStatus,
-} from './models/time-session.model';
+import { type TimeSession } from './models/time-session.model';
+import { TimeSessionStatus } from './enums';
 
 @Injectable()
 export class TimeTrackingService {

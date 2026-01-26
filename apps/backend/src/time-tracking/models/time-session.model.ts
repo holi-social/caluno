@@ -1,16 +1,8 @@
 import { Field, ID, ObjectType, registerEnumType } from '@nestjs/graphql';
 import { Task } from '../../task/models/task.model';
 import { User } from '../../user/models/user.model';
+import { TimeSessionStatus } from '../enums';
 import { TimeRecord } from './time-record.model';
-
-export enum TimeSessionStatus {
-  IN_PROGRESS = 'IN_PROGRESS',
-  PENDING = 'PENDING',
-  APPROVED = 'APPROVED',
-  REJECTED = 'REJECTED',
-  CANCELLED = 'CANCELLED',
-  SUBMITTED = 'SUBMITTED',
-}
 
 registerEnumType(TimeSessionStatus, {
   name: 'TimeSessionStatus',

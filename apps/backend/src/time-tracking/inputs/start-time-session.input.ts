@@ -1,5 +1,5 @@
 import { Field, InputType } from '@nestjs/graphql';
-import { TimeSessionStatus } from '../models/time-session.model';
+import { TimeSessionStatus } from '../enums';
 
 @InputType()
 export class StartTimeSessionInput {

@@ -150,14 +150,6 @@ enum TaskStatus {
   TODO
 }
 
-type TimeRecord {
-  createdAt: DateTime!
-  endedAt: DateTime!
-  id: ID!
-  notes: String
-  startedAt: DateTime!
-}
-
 type User {
   email: String!
   id: ID!
