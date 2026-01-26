@@ -2,6 +2,7 @@ import { Args, Mutation, Resolver } from '@nestjs/graphql';
 import type { UserSession } from '@thallesp/nestjs-better-auth';
 import { Session } from '@thallesp/nestjs-better-auth';
 import type { CreateTaskInput } from '../inputs/create-task.input';
+import type { CreateTaskAssignmentInput } from '../inputs/create-task-assignment.input';
 import { Task } from '../models/task.model';
 import type { TaskService } from '../task.service';
 
@@ -15,5 +16,13 @@ export class TaskMutationResolver {
     @Session() session: UserSession,
   ): Promise<Task> {
     return this.taskService.create(session.user.id, input);
+  }
+
+  @Mutation(() => Task)
+  async assignTask(
+    @Args('input') input: CreateTaskAssignmentInput,
+    @Session() session: UserSession,
+  ): Promise<Task> {
+    return this.taskService.assignTask(session.user.id, input);
   }
 }

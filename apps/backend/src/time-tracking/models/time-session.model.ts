@@ -9,6 +9,7 @@ export enum TimeSessionStatus {
   APPROVED = 'APPROVED',
   REJECTED = 'REJECTED',
   CANCELLED = 'CANCELLED',
+  SUBMITTED = 'SUBMITTED',
 }
 
 registerEnumType(TimeSessionStatus, {

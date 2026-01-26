@@ -3,7 +3,9 @@ import { eq } from 'drizzle-orm';
 import type { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import { DATABASE_CONNECTION } from '../database/database-connection';
 import * as schema from '../database/schema';
+import { ForbiddenGraphQLError } from '../graphql/errors';
 import type { PaginationInput } from '../graphql/pagination.input';
+import type { MembershipService } from '../membership/membership.service';
 import type { Task } from '../task/models/task.model';
 import type { TaskService } from '../task/task.service';
 import type { User } from '../user/models/user.model';
@@ -23,6 +25,7 @@ export class OpportunityService {
     private readonly db: NodePgDatabase<typeof schema>,
     private readonly mapper: OpportunityMapper,
     private readonly userService: UserService,
+    private readonly membershipService: MembershipService,
     private readonly taskService: TaskService,
   ) {}
 
@@ -62,6 +65,17 @@ export class OpportunityService {
     userId: string,
     input: CreateOpportunityInput,
   ): Promise<Opportunity> {
+    const isStaff = await this.membershipService.isStaff(
+      userId,
+      input.organizationId,
+    );
+
+    if (!isStaff) {
+      throw new ForbiddenGraphQLError(
+        'You are not authorized to create an opportunity for this organization',
+      );
+    }
+
     const [opportunity] = await this.db
       .insert(schema.opportunities)
       .values({

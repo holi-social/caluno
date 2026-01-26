@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { DatabaseModule } from '../database/database.module';
+import { MembershipModule } from '../membership/membership.module';
 import { UserModule } from '../user/user.module';
 import { TaskMapper } from './mappers/task.mapper';
 import { TaskFieldResolver } from './resolvers/task-field.resolver';
@@ -8,7 +9,7 @@ import { TaskQueryResolver } from './resolvers/task-query.resolver';
 import { TaskService } from './task.service';
 
 @Module({
-  imports: [DatabaseModule, UserModule],
+  imports: [DatabaseModule, UserModule, MembershipModule],
   providers: [
     TaskService,
     TaskMapper,

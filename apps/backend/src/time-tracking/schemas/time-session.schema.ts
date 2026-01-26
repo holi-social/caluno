@@ -21,7 +21,7 @@ export const timeSessions = pgTable('time_sessions', {
   validatedBy: text('validated_by').references(() => users.id, {
     onDelete: 'restrict',
   }),
-  validatedAt: timestamp('validated_at').notNull(),
+  validatedAt: timestamp('validated_at'),
   rejectionReason: text('rejection_reason'),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
