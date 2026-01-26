@@ -3,9 +3,14 @@
   "version": "0.0.0",
   "private": true,
   "exports": {
+    "./postcss.config": "./postcss.config.mjs",
     ".": "./src/index.ts",
     "./utils": "./src/lib/utils.ts",
-    "./hooks/*": "./src/hooks/*.ts",
+    "./hooks/*": [
+      "./src/hooks/*.ts",
+      "./src/hooks/*.tsx"
+    ],
+    "./styles/*": "./src/styles/*",
     "./*": "./src/components/*.tsx"
   },
   "scripts": {
@@ -16,6 +21,7 @@
     "@types/node": "^22.15.3",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "tailwindcss": "^4",
     "typescript": "5.9.2"
   },
   "peerDependencies": {
