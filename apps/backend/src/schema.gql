@@ -64,6 +64,7 @@ type Mutation {
   createTask(input: CreateTaskInput!): Task!
   deleteTimeRecord(id: ID!): TimeRecord!
   endTimeSession(id: ID!): TimeSession!
+  publishOpportunity(id: ID!): Opportunity!
   rejectTimeSession(input: RejectTimeSessionInput!): TimeSession!
   startTimeSession(input: StartTimeSessionInput!): TimeSession!
 }

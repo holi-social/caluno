@@ -1,4 +1,4 @@
-import { Args, Mutation, Resolver } from '@nestjs/graphql';
+import { Args, ID, Mutation, Resolver } from '@nestjs/graphql';
 import type { UserSession } from '@thallesp/nestjs-better-auth';
 import { Session } from '@thallesp/nestjs-better-auth';
 import { CreateOpportunityInput } from '../inputs/create-opportunity.input';
@@ -15,5 +15,13 @@ export class OpportunityMutationResolver {
     @Session() session: UserSession,
   ): Promise<Opportunity> {
     return this.opportunityService.create(session.user.id, input);
+  }
+
+  @Mutation(() => Opportunity)
+  async publishOpportunity(
+    @Args('id', { type: () => ID }) id: string,
+    @Session() session: UserSession,
+  ): Promise<Opportunity> {
+    return this.opportunityService.publish(session.user.id, id);
   }
 }

@@ -3,7 +3,7 @@ import { eq } from 'drizzle-orm';
 import type { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import { DATABASE_CONNECTION } from '../database/database-connection';
 import * as schema from '../database/schema';
-import { ForbiddenGraphQLError } from '../graphql/errors';
+import { ForbiddenGraphQLError, NotFoundGraphQLError } from '../graphql/errors';
 import type { PaginationInput } from '../graphql/pagination.input';
 import { MembershipService } from '../membership/membership.service';
 import type { Task } from '../task/models/task.model';
@@ -17,6 +17,7 @@ import {
   type Opportunity,
   OpportunityPaginatedResponse,
 } from './models/opportunity.model';
+import { OpportunityStatus } from './enums';
 
 @Injectable()
 export class OpportunityService {
@@ -86,5 +87,29 @@ export class OpportunityService {
       .returning();
 
     return this.mapper.toModelOrThrow(opportunity);
+  }
+
+  async publish(userId: string, id: string): Promise<Opportunity> {
+    const opportunity = await this.db.query.opportunities.findFirst({
+      where: eq(schema.opportunities.id, id),
+    });
+
+    if (!opportunity) {
+      throw new NotFoundGraphQLError('Opportunity not found');
+    }
+
+    if (opportunity.createdById !== userId) {
+      throw new ForbiddenGraphQLError(
+        'You are not authorized to publish this opportunity',
+      );
+    }
+
+    const [publishedOpportunity] = await this.db
+      .update(schema.opportunities)
+      .set({ status: OpportunityStatus.ACTIVE })
+      .where(eq(schema.opportunities.id, id))
+      .returning();
+
+    return this.mapper.toModelOrThrow(publishedOpportunity);
   }
 }
