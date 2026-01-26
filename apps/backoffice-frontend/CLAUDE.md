@@ -1,0 +1,41 @@
+# CLAUDE.md
+
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+
+## Commands
+
+- `bun run dev` - Start development server
+- `bun run build` - Build for production
+- `bun run lint` - Run Biome linting
+- `bun run format` - Format code with Biome
+
+## Tech Stack
+
+- **Next.js 16** with App Router (React 19)
+- **TypeScript** with strict mode
+- **Tailwind CSS 4** for styling
+- **Biome** for linting and formatting (not ESLint/Prettier)
+- **shadcn/ui** component patterns with CVA (Class Variance Authority)
+
+## Architecture
+
+### Path Aliases
+Use `@/*` to import from `src/*` (e.g., `@/lib/something`).
+
+### Component Patterns - Library
+UI components live in `packages/ui/` and follow shadcn/ui conventions:
+- It must be installed in package json to be used (e.g "@repo/ui": "*")
+- Use CVA for variant definitions
+- Use the `cn()` utility from `@repo/ui/lib/utils` to merge Tailwind classes
+- Components accept `className` prop for customization via `Slot` pattern
+- DO NOT code manual components in the library always start from generating the components using shadcn cli, see below
+
+### How to create new UI components
+Use shadcn cli to create new UI components, do not create them by yourself.
+- you can use: bunx --bun shadcn@latest add [component name]
+
+### Styling
+- CSS variables defined in `@repo/ui/styles/default.css` for theming
+- Dark mode supported via `.dark` class
+- Use OKLCH color space for color definitions
+- Prefer shadcn theme colors instead of tailwind base colors as they are themed
