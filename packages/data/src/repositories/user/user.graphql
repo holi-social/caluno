@@ -1,0 +1,19 @@
+query GetMe {
+  me {
+    id
+    name
+    email
+    username
+    image
+  }
+}
+
+query GetUser($id: String!) {
+  user(id: $id) {
+    id
+    name
+    email
+    username
+    image
+  }
+}
