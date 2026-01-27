@@ -1,0 +1,67 @@
+query GetOrganization($id: String!) {
+  organization(id: $id) {
+    id
+    name
+    slug
+    description
+    logoUrl
+    websiteUrl
+    email
+    phone
+    address
+    owner {
+      id
+      name
+      email
+      username
+    }
+    createdAt
+    updatedAt
+  }
+}
+
+query GetOrganizations($limit: Int!, $offset: Int!) {
+  organizations(limit: $limit, offset: $offset) {
+    items {
+      id
+      name
+      slug
+      description
+      logoUrl
+      createdAt
+    }
+    pagination {
+      total
+      limit
+      offset
+      hasMore
+    }
+  }
+}
+
+query GetOrganizationBySlug($slug: String!) {
+  organizationBySlug(slug: $slug) {
+    id
+    name
+    slug
+    description
+    logoUrl
+    websiteUrl
+    email
+    phone
+    address
+    createdAt
+  }
+}
+
+mutation CreateOrganization($input: CreateOrganizationInput!) {
+  createOrganization(input: $input) {
+    id
+    name
+    slug
+    description
+    logoUrl
+    websiteUrl
+    createdAt
+  }
+}

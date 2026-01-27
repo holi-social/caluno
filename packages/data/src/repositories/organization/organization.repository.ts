@@ -1,0 +1,52 @@
+import type { GraphQLClient } from 'graphql-request';
+import { DataError } from '../../errors/data-error';
+import type { CreateOrganizationInput } from '../../generated/graphql';
+import { BaseRepository } from '../base/base.repository';
+
+export interface FindOrganizationsOptions {
+  limit?: number;
+  offset?: number;
+}
+
+export class OrganizationRepository extends BaseRepository {
+  constructor(client: GraphQLClient) {
+    super(client);
+  }
+
+  async findById(id: string) {
+    try {
+      const data = await this.sdk.GetOrganization({ id });
+      return data.organization;
+    } catch (error) {
+      throw DataError.fromGraphQLError(error);
+    }
+  }
+
+  async findBySlug(slug: string) {
+    try {
+      const data = await this.sdk.GetOrganizationBySlug({ slug });
+      return data.organizationBySlug;
+    } catch (error) {
+      throw DataError.fromGraphQLError(error);
+    }
+  }
+
+  async findAll(options: FindOrganizationsOptions = {}) {
+    const { limit = 10, offset = 0 } = options;
+    try {
+      const data = await this.sdk.GetOrganizations({ limit, offset });
+      return data.organizations;
+    } catch (error) {
+      throw DataError.fromGraphQLError(error);
+    }
+  }
+
+  async create(input: CreateOrganizationInput) {
+    try {
+      const data = await this.sdk.CreateOrganization({ input });
+      return data.createOrganization;
+    } catch (error) {
+      throw DataError.fromGraphQLError(error);
+    }
+  }
+}
