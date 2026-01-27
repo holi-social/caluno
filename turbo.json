@@ -3,17 +3,26 @@
   "ui": "tui",
   "tasks": {
     "build": {
-      "dependsOn": ["^build"],
+      "dependsOn": ["^build", "codegen"],
       "inputs": ["$TURBO_DEFAULT$", ".env*"],
       "outputs": [".next/**", "!.next/cache/**", "dist/**"]
     },
     "check-types": {
-      "dependsOn": ["^check-types"]
+      "dependsOn": ["^check-types", "codegen"]
+    },
+    "codegen": {
+      "dependsOn": ["^codegen"],
+      "inputs": ["../../apps/backend/src/schema.gql", "src/**/*.graphql"],
+      "outputs": ["src/generated/**"]
+    },
+    "codegen:watch": {
+      "cache": false,
+      "persistent": true
     },
     "dev": {
       "cache": false,
       "persistent": true,
-      "dependsOn": ["db:up"]
+      "dependsOn": ["db:up", "codegen"]
     },
     "db:up": {
       "cache": false

@@ -40,3 +40,6 @@ docker-compose.override.yml
 .DS_Store
 *.pem
 /.turbo/
+
+# Generated Code
+packages/data/src/generated/
