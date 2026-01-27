@@ -10,6 +10,7 @@
     "format": "biome format --write"
   },
   "dependencies": {
+    "@repo/data": "*",
     "@repo/ui": "*",
     "next": "16.1.4",
     "react": "19.2.3",
