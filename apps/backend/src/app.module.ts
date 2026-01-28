@@ -17,6 +17,7 @@ import { OrganizationModule } from './organization/organization.module';
 import { TaskModule } from './task/task.module';
 import { TimeTrackingModule } from './time-tracking/time-tracking.module';
 import { UserModule } from './user/user.module';
+import { ShiftModule } from './shift/shift.module';
 
 @Module({
   imports: [
@@ -46,6 +47,7 @@ import { UserModule } from './user/user.module';
     TaskModule,
     TimeTrackingModule,
     GraphqlModule,
+    ShiftModule,
   ],
   controllers: [],
   providers: [
