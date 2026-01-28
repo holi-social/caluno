@@ -120,6 +120,12 @@ export class OrganizationService {
       })
       .returning();
 
+    await this.membershipService.create(
+      userId,
+      organization.id,
+      OrganizationRole.OWNER,
+    );
+
     return this.mapper.toModelOrThrow(organization);
   }
 }
