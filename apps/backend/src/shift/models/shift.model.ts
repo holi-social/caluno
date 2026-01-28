@@ -1,8 +1,8 @@
 import { Field, ID, ObjectType } from '@nestjs/graphql';
+import { createPaginatedResponseType } from '../../graphql/paginated-response.model';
 import { Organization } from '../../organization/models/organization.model';
 import { Project } from '../../project/models/project.model';
 import { User } from '../../user/models/user.model';
-import { createPaginatedResponseType } from '../../graphql/paginated-response.model';
 
 @ObjectType()
 export class Shift {

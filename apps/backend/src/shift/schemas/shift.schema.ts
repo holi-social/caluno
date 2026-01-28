@@ -1,8 +1,8 @@
+import { relations } from 'drizzle-orm';
 import { index, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
+import { users } from '../../auth/schemas/auth.schema';
 import { organizations } from '../../organization/schemas/organization.schema';
 import { projects } from '../../project/schemas/project.schema';
-import { users } from '../../auth/schemas/auth.schema';
-import { relations } from 'drizzle-orm';
 import { shiftAssignments } from './shift-assignment.schema';
 
 export const shifts = pgTable(
