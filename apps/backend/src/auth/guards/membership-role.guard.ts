@@ -46,7 +46,10 @@ export class MembershipRoleGuard implements CanActivate {
 
     const ctx = GqlExecutionContext.create(context);
     const gqlContext = ctx.getContext();
-    const { user, organizationId } = gqlContext;
+    const {
+      req: { user },
+      organizationId,
+    } = gqlContext;
 
     if (!user) {
       throw new ForbiddenGraphQLError('You are not authenticated');
