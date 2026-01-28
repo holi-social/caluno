@@ -17,8 +17,6 @@ CREATE TABLE "projects" (
 --> statement-breakpoint
 ALTER TABLE "opportunities" DISABLE ROW LEVEL SECURITY;--> statement-breakpoint
 DROP TABLE "opportunities" CASCADE;--> statement-breakpoint
-ALTER TABLE "tasks" DROP CONSTRAINT "tasks_opportunity_id_opportunities_id_fk";
---> statement-breakpoint
 DROP INDEX "idx_tasks_opportunity_id";--> statement-breakpoint
 ALTER TABLE "tasks" ADD COLUMN "project_id" uuid;--> statement-breakpoint
 ALTER TABLE "projects" ADD CONSTRAINT "projects_organization_id_organizations_id_fk" FOREIGN KEY ("organization_id") REFERENCES "public"."organizations"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint

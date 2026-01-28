@@ -135,11 +135,22 @@ type Query {
   myTasks(limit: Int! = 10, offset: Int! = 0): TaskPaginatedResponse!
   organization(id: String!): Organization!
   organizationBySlug(slug: String!): Organization!
-  organizations(limit: Int! = 10, offset: Int! = 0): OrganizationPaginatedResponse!
+  organizations(
+    limit: Int! = 10
+    offset: Int! = 0
+  ): OrganizationPaginatedResponse!
   project(id: String!): Project!
-  projects(limit: Int! = 10, offset: Int! = 0, organizationId: String!): ProjectPaginatedResponse!
+  projects(
+    limit: Int! = 10
+    offset: Int! = 0
+    organizationId: String!
+  ): ProjectPaginatedResponse!
   task(id: String!): Task!
-  tasksByUserId(limit: Int! = 10, offset: Int! = 0, userId: String!): TaskPaginatedResponse!
+  tasksByUserId(
+    limit: Int! = 10
+    offset: Int! = 0
+    userId: String!
+  ): TaskPaginatedResponse!
   user(id: String!): User
 }
 
