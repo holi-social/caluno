@@ -8,6 +8,7 @@ import { betterAuth } from 'better-auth';
 import type { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import { join } from 'path';
 import { createAuthConfig } from './auth/auth';
+import { MembershipRoleGuard } from './auth/guards/membership-role.guard';
 import { DatabaseModule } from './database/database.module';
 import { DATABASE_CONNECTION } from './database/database-connection';
 import { GraphqlModule } from './graphql/graphql.module';
@@ -30,6 +31,11 @@ import { UserModule } from './user/user.module';
       autoSchemaFile: join(process.cwd(), 'src/schema.gql'),
       graphiql: true,
       sortSchema: true,
+      context: ({ req }) => ({
+        req,
+        user: req.user,
+        organizationId: req.headers['x-organization-id'],
+      }),
     }),
     AuthModule.forRootAsync({
       imports: [DatabaseModule, ConfigModule],
@@ -54,6 +60,10 @@ import { UserModule } from './user/user.module';
     {
       provide: APP_GUARD,
       useClass: AuthGuard,
+    },
+    {
+      provide: APP_GUARD,
+      useClass: MembershipRoleGuard,
     },
   ],
 })
