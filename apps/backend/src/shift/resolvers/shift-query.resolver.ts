@@ -1,4 +1,5 @@
 import { Args, Query, Resolver } from '@nestjs/graphql';
+import { Roles } from 'src/auth/decorators/roles.decorator';
 import { PaginationInput } from 'src/graphql/pagination.input';
 import { ShiftMapper } from '../mappers/shift.mapper';
 import { Shift, ShiftPaginatedResponse } from '../models/shift.model';
@@ -11,12 +12,14 @@ export class ShiftQueryResolver {
     private readonly shiftMapper: ShiftMapper,
   ) {}
 
+  @Roles('MEMBER')
   @Query(() => Shift)
   async shift(@Args('id') id: string): Promise<Shift | null> {
     const shift = await this.shiftService.findById(id);
     return this.shiftMapper.toModel(shift);
   }
 
+  @Roles('MEMBER')
   @Query(() => ShiftPaginatedResponse)
   async shifts(
     @Args() pagination: PaginationInput,
