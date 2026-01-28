@@ -1,8 +1,8 @@
 import { relations } from 'drizzle-orm';
 import { boolean, index, pgTable, text, timestamp } from 'drizzle-orm/pg-core';
 import { memberships } from '../../membership/schemas/membership.schema';
-import { projects } from '../../project/schemas/project.schema';
 import { organizations } from '../../organization/schemas/organization.schema';
+import { projects } from '../../project/schemas/project.schema';
 import { tasks } from '../../task/schemas/task.schema';
 import { taskAssignments } from '../../task/schemas/task-assignment.schema';
 import { timeRecords } from '../../time-tracking/schemas/time-record.schema';

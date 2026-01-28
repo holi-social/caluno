@@ -6,8 +6,8 @@ import { UserModule } from '../user/user.module';
 import { TimeRecordMapper } from './mappers/time-record.mapper';
 import { TimeSessionMapper } from './mappers/time-session.mapper';
 import {
-  TimeTrackingMutationResolver,
   TimeSessionFieldResolver,
+  TimeTrackingMutationResolver,
 } from './resolvers';
 import { TimeTrackingService } from './time-tracking.service';
 

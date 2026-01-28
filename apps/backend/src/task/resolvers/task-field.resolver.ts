@@ -1,6 +1,6 @@
 import { Parent, ResolveField, Resolver } from '@nestjs/graphql';
-import { User } from '../../user/models/user.model';
 import { UserMapper } from '../../user/mappers/user.mapper';
+import { User } from '../../user/models/user.model';
 import { Task } from '../models/task.model';
 import { TaskService } from '../task.service';
 

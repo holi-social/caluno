@@ -1,7 +1,7 @@
 import { Parent, ResolveField, Resolver } from '@nestjs/graphql';
 import { Task } from '../../task/models/task.model';
-import { User } from '../../user/models/user.model';
 import { UserMapper } from '../../user/mappers/user.mapper';
+import { User } from '../../user/models/user.model';
 import { Project } from '../models/project.model';
 import { ProjectService } from '../project.service';
 import type { ProjectEntity } from '../schemas/project.schema';

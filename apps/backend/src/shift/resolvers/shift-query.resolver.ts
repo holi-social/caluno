@@ -1,8 +1,8 @@
 import { Args, Query, Resolver } from '@nestjs/graphql';
-import type { PaginationInput } from 'src/graphql/pagination.input';
-import type { ShiftMapper } from '../mappers/shift.mapper';
+import { PaginationInput } from 'src/graphql/pagination.input';
+import { ShiftMapper } from '../mappers/shift.mapper';
 import { Shift, ShiftPaginatedResponse } from '../models/shift.model';
-import type { ShiftService } from '../shift.service';
+import { ShiftService } from '../shift.service';
 
 @Resolver(() => Shift)
 export class ShiftQueryResolver {

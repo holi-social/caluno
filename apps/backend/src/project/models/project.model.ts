@@ -1,9 +1,9 @@
 import { Field, ID, ObjectType, registerEnumType } from '@nestjs/graphql';
 import { createPaginatedResponseType } from '../../graphql/paginated-response.model';
 import { Organization } from '../../organization/models/organization.model';
-import { ProjectStatus } from '../enums';
 import { Task } from '../../task/models/task.model';
 import { User } from '../../user/models/user.model';
+import { ProjectStatus } from '../enums';
 
 registerEnumType(ProjectStatus, {
   name: 'ProjectStatus',

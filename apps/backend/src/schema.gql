@@ -135,22 +135,13 @@ type Query {
   myTasks(limit: Int! = 10, offset: Int! = 0): TaskPaginatedResponse!
   organization(id: String!): Organization!
   organizationBySlug(slug: String!): Organization!
-  organizations(
-    limit: Int! = 10
-    offset: Int! = 0
-  ): OrganizationPaginatedResponse!
+  organizations(limit: Int! = 10, offset: Int! = 0): OrganizationPaginatedResponse!
   project(id: String!): Project!
-  projects(
-    limit: Int! = 10
-    offset: Int! = 0
-    organizationId: String!
-  ): ProjectPaginatedResponse!
+  projects(limit: Int! = 10, offset: Int! = 0, organizationId: String!): ProjectPaginatedResponse!
+  shift(id: String!): Shift!
+  shifts(limit: Int! = 10, offset: Int! = 0): ShiftPaginatedResponse!
   task(id: String!): Task!
-  tasksByUserId(
-    limit: Int! = 10
-    offset: Int! = 0
-    userId: String!
-  ): TaskPaginatedResponse!
+  tasksByUserId(limit: Int! = 10, offset: Int! = 0, userId: String!): TaskPaginatedResponse!
   user(id: String!): User
 }
 
@@ -158,6 +149,23 @@ input RejectTimeSessionInput {
   id: String!
   organizationId: String!
   rejectionReason: String
+}
+
+type Shift {
+  assignees: [User!]
+  createdBy: User!
+  description: String!
+  endsAt: DateTime!
+  id: ID!
+  location: String
+  organization: Organization!
+  project: Project
+  startsAt: DateTime!
+}
+
+type ShiftPaginatedResponse {
+  items: [Shift!]!
+  pagination: PaginationInfo!
 }
 
 input StartTimeSessionInput {

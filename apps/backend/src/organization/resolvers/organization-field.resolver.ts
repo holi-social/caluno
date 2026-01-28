@@ -4,8 +4,8 @@ import {
   Project,
   type ProjectPaginatedResponse,
 } from '../../project/models/project.model';
-import { User } from '../../user/models/user.model';
 import { UserMapper } from '../../user/mappers/user.mapper';
+import { User } from '../../user/models/user.model';
 import { Organization } from '../models/organization.model';
 import { OrganizationService } from '../organization.service';
 import type { OrganizationEntity } from '../schemas/organization.schema';

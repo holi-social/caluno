@@ -3,6 +3,9 @@
   "extends": ["../../biome.json"],
   "linter": {
     "rules": {
+      "style": {
+        "useImportType": "off"
+      },
       "suspicious": {
         "noExplicitAny": "off"
       },

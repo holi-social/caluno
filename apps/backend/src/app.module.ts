@@ -12,12 +12,12 @@ import { DatabaseModule } from './database/database.module';
 import { DATABASE_CONNECTION } from './database/database-connection';
 import { GraphqlModule } from './graphql/graphql.module';
 import { MembershipModule } from './membership/membership.module';
-import { ProjectModule } from './project/project.module';
 import { OrganizationModule } from './organization/organization.module';
+import { ProjectModule } from './project/project.module';
+import { ShiftModule } from './shift/shift.module';
 import { TaskModule } from './task/task.module';
 import { TimeTrackingModule } from './time-tracking/time-tracking.module';
 import { UserModule } from './user/user.module';
-import { ShiftModule } from './shift/shift.module';
 
 @Module({
   imports: [

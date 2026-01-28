@@ -1,6 +1,7 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { eq } from 'drizzle-orm';
 import type { NodePgDatabase } from 'drizzle-orm/node-postgres';
+import type { UserEntity } from '../auth/schemas/auth.schema';
 import { DATABASE_CONNECTION } from '../database/database-connection';
 import * as schema from '../database/schema';
 import { ForbiddenGraphQLError, NotFoundGraphQLError } from '../graphql/errors';
@@ -8,13 +9,12 @@ import type { PaginationInput } from '../graphql/pagination.input';
 import { MembershipService } from '../membership/membership.service';
 import type { Task } from '../task/models/task.model';
 import { TaskService } from '../task/task.service';
-import type { UserEntity } from '../auth/schemas/auth.schema';
 import { UserService } from '../user/user.service';
 import { slugify } from '../utils';
+import { ProjectStatus } from './enums';
 import type { CreateProjectInput } from './inputs/create-project.input';
 import { ProjectMapper } from './mappers/project.mapper';
 import { type Project, ProjectPaginatedResponse } from './models/project.model';
-import { ProjectStatus } from './enums';
 
 @Injectable()
 export class ProjectService {

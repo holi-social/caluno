@@ -1,10 +1,10 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { and, eq, or } from 'drizzle-orm';
 import type { NodePgDatabase } from 'drizzle-orm/node-postgres';
+import type { UserEntity } from '../auth/schemas/auth.schema';
 import { DATABASE_CONNECTION } from '../database/database-connection';
 import * as schema from '../database/schema';
 import { OrganizationRole } from '../organization/enums';
-import type { UserEntity } from '../auth/schemas/auth.schema';
 
 @Injectable()
 export class MembershipService {

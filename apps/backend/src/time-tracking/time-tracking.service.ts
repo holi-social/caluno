@@ -1,6 +1,8 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { and, eq, inArray, lt } from 'drizzle-orm';
 import type { NodePgDatabase } from 'drizzle-orm/node-postgres';
+import type { UserEntity } from '../auth/schemas/auth.schema';
+import { DATABASE_CONNECTION } from '../database/database-connection';
 import * as schema from '../database/schema';
 import {
   BadRequestGraphQLError,
@@ -9,16 +11,14 @@ import {
   NotFoundGraphQLError,
 } from '../graphql/errors';
 import { MembershipService } from '../membership/membership.service';
+import type { TaskEntity } from '../task/schemas/task.schema';
+import { TimeSessionStatus } from './enums';
 import { AddTimeRecordInput } from './inputs/add-time-record.input';
 import { ApproveTimeSessionInput } from './inputs/approve-time-session.input';
 import { RejectTimeSessionInput } from './inputs/reject-time-session.input';
 import { StartTimeSessionInput } from './inputs/start-time-session.input';
-import { TimeSessionStatus } from './enums';
-import { DATABASE_CONNECTION } from '../database/database-connection';
-import type { UserEntity } from '../auth/schemas/auth.schema';
 import type { TimeRecordEntity } from './schemas/time-record.schema';
 import type { TimeSessionEntity } from './schemas/time-session.schema';
-import type { TaskEntity } from '../task/schemas/task.schema';
 
 @Injectable()
 export class TimeTrackingService {

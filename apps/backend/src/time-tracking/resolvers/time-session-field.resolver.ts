@@ -1,14 +1,14 @@
 import { Parent, ResolveField, Resolver } from '@nestjs/graphql';
-import { TimeSession } from '../models/time-session.model';
-import { TimeTrackingService } from '../time-tracking.service';
-import * as timeSessionSchema from '../schemas/time-session.schema';
-import { TimeRecordMapper } from '../mappers/time-record.mapper';
-import { TimeRecord } from '../models/time-record.model';
 import { Session, type UserSession } from '@thallesp/nestjs-better-auth';
 import { TaskMapper } from 'src/task/mappers/task.mapper';
 import { Task } from 'src/task/models/task.model';
-import { User } from 'src/user/models/user.model';
 import { UserMapper } from 'src/user/mappers/user.mapper';
+import { User } from 'src/user/models/user.model';
+import { TimeRecordMapper } from '../mappers/time-record.mapper';
+import { TimeRecord } from '../models/time-record.model';
+import { TimeSession } from '../models/time-session.model';
+import * as timeSessionSchema from '../schemas/time-session.schema';
+import { TimeTrackingService } from '../time-tracking.service';
 
 @Resolver(() => TimeSession)
 export class TimeSessionFieldResolver {

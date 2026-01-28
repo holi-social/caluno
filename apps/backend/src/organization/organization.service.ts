@@ -1,22 +1,22 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { eq } from 'drizzle-orm';
 import type { NodePgDatabase } from 'drizzle-orm/node-postgres';
+import type { UserEntity } from '../auth/schemas/auth.schema';
 import { DATABASE_CONNECTION } from '../database/database-connection';
 import * as schema from '../database/schema';
 import type { PaginationInput } from '../graphql/pagination.input';
 import { MembershipService } from '../membership/membership.service';
 import type { ProjectPaginatedResponse } from '../project/models/project.model';
 import { ProjectService } from '../project/project.service';
-import type { UserEntity } from '../auth/schemas/auth.schema';
 import { UserService } from '../user/user.service';
 import { slugify } from '../utils';
+import { OrganizationRole } from './enums';
 import type { CreateOrganizationInput } from './inputs/create-organization.input';
 import { OrganizationMapper } from './mappers/organization.mapper';
 import {
   type Organization,
   OrganizationPaginatedResponse,
 } from './models/organization.model';
-import { OrganizationRole } from './enums';
 
 @Injectable()
 export class OrganizationService {
