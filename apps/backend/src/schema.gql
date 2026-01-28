@@ -14,16 +14,6 @@ input ApproveTimeSessionInput {
   organizationId: String!
 }
 
-input CreateOpportunityInput {
-  description: String!
-  endsAt: DateTime!
-  location: String!
-  organizationId: String!
-  startsAt: DateTime!
-  status: OpportunityStatus! = DRAFT
-  title: String!
-}
-
 input CreateOrganizationInput {
   address: String
   description: String
@@ -35,6 +25,16 @@ input CreateOrganizationInput {
   websiteUrl: String
 }
 
+input CreateProjectInput {
+  description: String!
+  endsAt: DateTime!
+  location: String!
+  organizationId: String!
+  startsAt: DateTime!
+  status: ProjectStatus! = DRAFT
+  title: String!
+}
+
 input CreateTaskAssignmentInput {
   assigneeId: String!
   organizationId: String!
@@ -44,8 +44,8 @@ input CreateTaskAssignmentInput {
 input CreateTaskInput {
   description: String!
   dueDate: DateTime!
-  opportunityId: String!
   organizationId: String!
+  projectId: String!
   status: TaskStatus! = TODO
   title: String!
 }
@@ -59,42 +59,14 @@ type Mutation {
   addTimeRecord(input: AddTimeRecordInput!): TimeRecord!
   approveTimeSession(input: ApproveTimeSessionInput!): TimeSession!
   assignTask(input: CreateTaskAssignmentInput!): Task!
-  createOpportunity(input: CreateOpportunityInput!): Opportunity!
   createOrganization(input: CreateOrganizationInput!): Organization!
+  createProject(input: CreateProjectInput!): Project!
   createTask(input: CreateTaskInput!): Task!
   deleteTimeRecord(id: ID!): TimeRecord!
   endTimeSession(id: ID!): TimeSession!
-  publishOpportunity(id: ID!): Opportunity!
+  publishProject(id: ID!): Project!
   rejectTimeSession(input: RejectTimeSessionInput!): TimeSession!
   startTimeSession(input: StartTimeSessionInput!): TimeSession!
-}
-
-type Opportunity {
-  createdAt: DateTime!
-  createdBy: User!
-  description: String!
-  endsAt: DateTime!
-  id: ID!
-  location: String!
-  organization: Organization!
-  slug: String!
-  startsAt: DateTime!
-  status: OpportunityStatus!
-  tasks: [Task!]
-  title: String!
-  updatedAt: DateTime
-}
-
-type OpportunityPaginatedResponse {
-  items: [Opportunity!]!
-  pagination: PaginationInfo!
-}
-
-enum OpportunityStatus {
-  ACTIVE
-  ARCHIVED
-  DRAFT
-  EXPIRED
 }
 
 type Organization {
@@ -108,10 +80,10 @@ type Organization {
   logoUrl: String
   moderators: [User!]
   name: String!
-  opportunities(limit: Int! = 10, offset: Int! = 0): [Opportunity!]
   owner: User!
   parent: Organization
   phone: String
+  projects(limit: Int! = 10, offset: Int! = 0): [Project!]
   slug: String!
   updatedAt: DateTime
   volunteers: [User!]
@@ -130,14 +102,42 @@ type PaginationInfo {
   total: Int!
 }
 
+type Project {
+  createdAt: DateTime!
+  createdBy: User!
+  description: String!
+  endsAt: DateTime!
+  id: ID!
+  location: String!
+  organization: Organization!
+  slug: String!
+  startsAt: DateTime!
+  status: ProjectStatus!
+  tasks: [Task!]
+  title: String!
+  updatedAt: DateTime
+}
+
+type ProjectPaginatedResponse {
+  items: [Project!]!
+  pagination: PaginationInfo!
+}
+
+enum ProjectStatus {
+  ACTIVE
+  ARCHIVED
+  DRAFT
+  EXPIRED
+}
+
 type Query {
   me: User!
   myTasks(limit: Int! = 10, offset: Int! = 0): TaskPaginatedResponse!
-  opportunities(limit: Int! = 10, offset: Int! = 0, organizationId: String!): OpportunityPaginatedResponse!
-  opportunity(id: String!): Opportunity!
   organization(id: String!): Organization!
   organizationBySlug(slug: String!): Organization!
   organizations(limit: Int! = 10, offset: Int! = 0): OrganizationPaginatedResponse!
+  project(id: String!): Project!
+  projects(limit: Int! = 10, offset: Int! = 0, organizationId: String!): ProjectPaginatedResponse!
   task(id: String!): Task!
   tasksByUserId(limit: Int! = 10, offset: Int! = 0, userId: String!): TaskPaginatedResponse!
   user(id: String!): User
@@ -161,7 +161,7 @@ type Task {
   description: String!
   dueDate: DateTime!
   id: ID!
-  opportunity: Opportunity!
+  project: Project!
   slug: String!
   status: TaskStatus!
   title: String!

@@ -6,8 +6,7 @@ import * as schema from '../database/schema';
 import { ForbiddenGraphQLError, NotFoundGraphQLError } from '../graphql/errors';
 import type { PaginationInput } from '../graphql/pagination.input';
 import { MembershipService } from '../membership/membership.service';
-import { UserMapper } from '../user/mappers/user.mapper';
-import type { User } from '../user/models/user.model';
+import type { UserEntity } from '../auth/schemas/auth.schema';
 import { slugify } from '../utils';
 import type { CreateTaskInput } from './inputs/create-task.input';
 import type { CreateTaskAssignmentInput } from './inputs/create-task-assignment.input';
@@ -21,7 +20,6 @@ export class TaskService {
     private readonly db: NodePgDatabase<typeof schema>,
     private readonly membershipService: MembershipService,
     private readonly mapper: TaskMapper,
-    private readonly userMapper: UserMapper,
   ) {}
 
   async findById(id: string): Promise<Task | null> {
@@ -31,9 +29,9 @@ export class TaskService {
     return this.mapper.toModel(task);
   }
 
-  async findAllByOpportunityId(opportunityId: string): Promise<Task[]> {
+  async findAllByProjectId(projectId: string): Promise<Task[]> {
     const tasks = await this.db.query.tasks.findMany({
-      where: eq(schema.tasks.opportunityId, opportunityId),
+      where: eq(schema.tasks.projectId, projectId),
     });
     return this.mapper.toArray(tasks);
   }
@@ -54,7 +52,7 @@ export class TaskService {
     });
   }
 
-  async findAssignees(taskId: string): Promise<User[]> {
+  async findAssignees(taskId: string): Promise<UserEntity[]> {
     const assignments = await this.db.query.taskAssignments.findMany({
       where: eq(schema.taskAssignments.taskId, taskId),
       with: {
@@ -62,8 +60,10 @@ export class TaskService {
       },
     });
 
-    const assignees = assignments.map((assignment) => assignment.assignedTo);
-    return this.userMapper.toArray(assignees);
+    const assignees = assignments
+      .map((assignment) => assignment.assignedTo)
+      .filter((assignee): assignee is UserEntity => assignee !== null);
+    return assignees;
   }
 
   async create(userId: string, input: CreateTaskInput): Promise<Task> {

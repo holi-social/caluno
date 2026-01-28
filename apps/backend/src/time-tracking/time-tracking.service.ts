@@ -13,16 +13,12 @@ import { AddTimeRecordInput } from './inputs/add-time-record.input';
 import { ApproveTimeSessionInput } from './inputs/approve-time-session.input';
 import { RejectTimeSessionInput } from './inputs/reject-time-session.input';
 import { StartTimeSessionInput } from './inputs/start-time-session.input';
-import { TimeRecordMapper } from './mappers/time-record.mapper';
-import { TimeSessionMapper } from './mappers/time-session.mapper';
-import { TimeRecord } from './models/time-record.model';
-import { TimeSession } from './models/time-session.model';
 import { TimeSessionStatus } from './enums';
 import { DATABASE_CONNECTION } from '../database/database-connection';
-import { Task } from 'src/task/models/task.model';
-import { TaskMapper } from 'src/task/mappers/task.mapper';
-import { User } from 'src/user/models/user.model';
-import { UserMapper } from 'src/user/mappers/user.mapper';
+import type { UserEntity } from '../auth/schemas/auth.schema';
+import type { TimeRecordEntity } from './schemas/time-record.schema';
+import type { TimeSessionEntity } from './schemas/time-session.schema';
+import type { TaskEntity } from '../task/schemas/task.schema';
 
 @Injectable()
 export class TimeTrackingService {
@@ -30,15 +26,11 @@ export class TimeTrackingService {
     @Inject(DATABASE_CONNECTION)
     private readonly db: NodePgDatabase<typeof schema>,
     private readonly membershipService: MembershipService,
-    private readonly recordMapper: TimeRecordMapper,
-    private readonly sessionMapper: TimeSessionMapper,
-    private readonly taskMapper: TaskMapper,
-    private readonly userMapper: UserMapper,
   ) {}
   async addTimeRecord(
     userId: string,
     input: AddTimeRecordInput,
-  ): Promise<TimeRecord> {
+  ): Promise<TimeRecordEntity> {
     const timeSession = await this.db.query.timeSessions.findFirst({
       where: eq(schema.timeSessions.id, input.sessionId),
       with: {
@@ -60,13 +52,13 @@ export class TimeTrackingService {
       .insert(schema.timeRecords)
       .values(input)
       .returning();
-    return this.recordMapper.toModelOrThrow(timeRecord);
+    return timeRecord;
   }
 
   async startTimeSession(
     userId: string,
     input: StartTimeSessionInput,
-  ): Promise<TimeSession> {
+  ): Promise<TimeSessionEntity> {
     const activeSessions = await this.db.query.timeSessions.findMany({
       where: inArray(schema.timeSessions.status, [
         TimeSessionStatus.IN_PROGRESS,
@@ -113,10 +105,10 @@ export class TimeTrackingService {
         status: input.status,
       })
       .returning();
-    return this.sessionMapper.toModelOrThrow(timeSession);
+    return timeSession;
   }
 
-  async endTimeSession(userId: string, id: string): Promise<TimeSession> {
+  async endTimeSession(userId: string, id: string): Promise<TimeSessionEntity> {
     const timeSession = await this.db.query.timeSessions.findFirst({
       where: eq(schema.timeSessions.id, id),
       with: {
@@ -143,13 +135,13 @@ export class TimeTrackingService {
       .set({ status: TimeSessionStatus.SUBMITTED })
       .where(eq(schema.timeSessions.id, id))
       .returning();
-    return this.sessionMapper.toModelOrThrow(updatedSession);
+    return updatedSession;
   }
 
   async approveTimeSession(
     userId: string,
     input: ApproveTimeSessionInput,
-  ): Promise<TimeSession> {
+  ): Promise<TimeSessionEntity> {
     const isStaff = await this.membershipService.isStaff(
       userId,
       input.organizationId,
@@ -182,13 +174,13 @@ export class TimeTrackingService {
       })
       .where(eq(schema.timeSessions.id, input.id))
       .returning();
-    return this.sessionMapper.toModelOrThrow(approvedSession);
+    return approvedSession;
   }
 
   async rejectTimeSession(
     userId: string,
     input: RejectTimeSessionInput,
-  ): Promise<TimeSession> {
+  ): Promise<TimeSessionEntity> {
     const isStaff = await this.membershipService.isStaff(
       userId,
       input.organizationId,
@@ -208,10 +200,13 @@ export class TimeTrackingService {
       })
       .where(eq(schema.timeSessions.id, input.id))
       .returning();
-    return this.sessionMapper.toModelOrThrow(rejectedSession);
+    return rejectedSession;
   }
 
-  async deleteTimeRecord(userId: string, id: string): Promise<TimeRecord> {
+  async deleteTimeRecord(
+    userId: string,
+    id: string,
+  ): Promise<TimeRecordEntity> {
     const timeRecord = await this.db.query.timeRecords.findFirst({
       where: eq(schema.timeRecords.id, id),
       with: {
@@ -237,13 +232,13 @@ export class TimeTrackingService {
       .delete(schema.timeRecords)
       .where(eq(schema.timeRecords.id, id))
       .returning();
-    return this.recordMapper.toModelOrThrow(deletedTimeRecord);
+    return deletedTimeRecord;
   }
 
   async findRecordsBySessionId(
     userId: string,
     sessionId: string,
-  ): Promise<TimeRecord[]> {
+  ): Promise<TimeRecordEntity[]> {
     const records = await this.db.query.timeRecords.findMany({
       where: eq(schema.timeRecords.sessionId, sessionId),
       with: {
@@ -257,10 +252,13 @@ export class TimeTrackingService {
     const userRecords = records.filter(
       (record) => record.session?.assignment?.assignedToId === userId,
     );
-    return this.recordMapper.toArray(userRecords);
+    return userRecords;
   }
 
-  async findTaskBySessionId(userId: string, sessionId: string): Promise<Task> {
+  async findTaskBySessionId(
+    userId: string,
+    sessionId: string,
+  ): Promise<TaskEntity> {
     const timeSession = await this.db.query.timeSessions.findFirst({
       where: eq(schema.timeSessions.id, sessionId),
       with: {
@@ -282,13 +280,17 @@ export class TimeTrackingService {
       );
     }
 
-    return this.taskMapper.toModelOrThrow(timeSession.assignment?.task);
+    if (!timeSession.assignment?.task) {
+      throw new NotFoundGraphQLError('Task not found');
+    }
+
+    return timeSession.assignment.task;
   }
 
   async findValidatorBySessionId(
     userId: string,
     sessionId: string,
-  ): Promise<User | null> {
+  ): Promise<UserEntity | null> {
     const timeSession = await this.db.query.timeSessions.findFirst({
       where: eq(schema.timeSessions.id, sessionId),
       with: {
@@ -297,7 +299,7 @@ export class TimeTrackingService {
           with: {
             task: {
               with: {
-                opportunity: {
+                project: {
                   with: {
                     organization: true,
                   },
@@ -315,7 +317,7 @@ export class TimeTrackingService {
 
     const isStaff = await this.membershipService.isStaff(
       userId,
-      timeSession.assignment?.task?.opportunity?.organization?.id ?? '',
+      timeSession.assignment?.task?.project?.organization?.id ?? '',
     );
 
     if (timeSession.assignment?.assignedToId !== userId || !isStaff) {
@@ -324,6 +326,6 @@ export class TimeTrackingService {
       );
     }
 
-    return this.userMapper.toModel(timeSession.validatedBy);
+    return timeSession.validatedBy;
   }
 }

@@ -5,20 +5,30 @@ import { AddTimeRecordInput } from '../inputs/add-time-record.input';
 import { ApproveTimeSessionInput } from '../inputs/approve-time-session.input';
 import { RejectTimeSessionInput } from '../inputs/reject-time-session.input';
 import { StartTimeSessionInput } from '../inputs/start-time-session.input';
+import { TimeRecordMapper } from '../mappers/time-record.mapper';
+import { TimeSessionMapper } from '../mappers/time-session.mapper';
 import { TimeRecord } from '../models/time-record.model';
 import { TimeSession } from '../models/time-session.model';
 import { TimeTrackingService } from '../time-tracking.service';
 
 @Resolver(() => TimeSession)
 export class TimeTrackingMutationResolver {
-  constructor(private readonly timeTrackingService: TimeTrackingService) {}
+  constructor(
+    private readonly timeTrackingService: TimeTrackingService,
+    private readonly sessionMapper: TimeSessionMapper,
+    private readonly recordMapper: TimeRecordMapper,
+  ) {}
 
   @Mutation(() => TimeSession)
   async startTimeSession(
     @Args('input') input: StartTimeSessionInput,
     @Session() session: UserSession,
   ): Promise<TimeSession> {
-    return this.timeTrackingService.startTimeSession(session.user.id, input);
+    const entity = await this.timeTrackingService.startTimeSession(
+      session.user.id,
+      input,
+    );
+    return this.sessionMapper.toModelOrThrow(entity);
   }
 
   @Mutation(() => TimeSession)
@@ -26,7 +36,11 @@ export class TimeTrackingMutationResolver {
     @Args('id', { type: () => ID }) id: string,
     @Session() session: UserSession,
   ): Promise<TimeSession> {
-    return this.timeTrackingService.endTimeSession(session.user.id, id);
+    const entity = await this.timeTrackingService.endTimeSession(
+      session.user.id,
+      id,
+    );
+    return this.sessionMapper.toModelOrThrow(entity);
   }
 
   @Mutation(() => TimeSession)
@@ -34,7 +48,11 @@ export class TimeTrackingMutationResolver {
     @Args('input') input: ApproveTimeSessionInput,
     @Session() session: UserSession,
   ): Promise<TimeSession> {
-    return this.timeTrackingService.approveTimeSession(session.user.id, input);
+    const entity = await this.timeTrackingService.approveTimeSession(
+      session.user.id,
+      input,
+    );
+    return this.sessionMapper.toModelOrThrow(entity);
   }
 
   @Mutation(() => TimeSession)
@@ -42,7 +60,11 @@ export class TimeTrackingMutationResolver {
     @Args('input') input: RejectTimeSessionInput,
     @Session() session: UserSession,
   ): Promise<TimeSession> {
-    return this.timeTrackingService.rejectTimeSession(session.user.id, input);
+    const entity = await this.timeTrackingService.rejectTimeSession(
+      session.user.id,
+      input,
+    );
+    return this.sessionMapper.toModelOrThrow(entity);
   }
 
   @Mutation(() => TimeRecord)
@@ -50,7 +72,11 @@ export class TimeTrackingMutationResolver {
     @Args('input') input: AddTimeRecordInput,
     @Session() session: UserSession,
   ): Promise<TimeRecord> {
-    return this.timeTrackingService.addTimeRecord(session.user.id, input);
+    const entity = await this.timeTrackingService.addTimeRecord(
+      session.user.id,
+      input,
+    );
+    return this.recordMapper.toModelOrThrow(entity);
   }
 
   @Mutation(() => TimeRecord)
@@ -58,6 +84,10 @@ export class TimeTrackingMutationResolver {
     @Args('id', { type: () => ID }) id: string,
     @Session() session: UserSession,
   ): Promise<TimeRecord> {
-    return this.timeTrackingService.deleteTimeRecord(session.user.id, id);
+    const entity = await this.timeTrackingService.deleteTimeRecord(
+      session.user.id,
+      id,
+    );
+    return this.recordMapper.toModelOrThrow(entity);
   }
 }

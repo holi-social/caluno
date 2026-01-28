@@ -10,7 +10,7 @@ import {
 
 import { users } from '../../auth/schemas/auth.schema';
 import { memberships } from '../../membership/schemas/membership.schema';
-import { opportunities } from '../../opportunity/schemas/opportunity.schema';
+import { projects } from '../../project/schemas/project.schema';
 import { OrganizationRole } from '../enums';
 
 export const organizationRoleEnum = pgEnum(
@@ -66,7 +66,7 @@ export const organizationRelations = relations(
       fields: [organizations.ownerId],
       references: [users.id],
     }),
-    opportunities: many(opportunities),
+    projects: many(projects),
     memberships: many(memberships),
   }),
 );

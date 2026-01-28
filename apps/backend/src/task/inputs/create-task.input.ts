@@ -13,7 +13,7 @@ export class CreateTaskInput {
   organizationId: string;
 
   @Field(() => String)
-  opportunityId: string;
+  projectId: string;
 
   @Field(() => TaskStatus, { defaultValue: TaskStatus.TODO })
   status: TaskStatus;

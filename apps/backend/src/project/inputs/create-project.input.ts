@@ -1,8 +1,8 @@
 import { Field, InputType } from '@nestjs/graphql';
-import { OpportunityStatus } from '../enums';
+import { ProjectStatus } from '../enums';
 
 @InputType()
-export class CreateOpportunityInput {
+export class CreateProjectInput {
   @Field(() => String)
   title: string;
 
@@ -21,6 +21,6 @@ export class CreateOpportunityInput {
   @Field(() => Date)
   endsAt: Date;
 
-  @Field(() => OpportunityStatus, { defaultValue: OpportunityStatus.DRAFT })
-  status: OpportunityStatus;
+  @Field(() => ProjectStatus, { defaultValue: ProjectStatus.DRAFT })
+  status: ProjectStatus;
 }

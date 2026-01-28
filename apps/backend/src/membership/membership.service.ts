@@ -4,21 +4,19 @@ import type { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import { DATABASE_CONNECTION } from '../database/database-connection';
 import * as schema from '../database/schema';
 import { OrganizationRole } from '../organization/enums';
-import { UserMapper } from '../user/mappers/user.mapper';
-import type { User } from '../user/models/user.model';
+import type { UserEntity } from '../auth/schemas/auth.schema';
 
 @Injectable()
 export class MembershipService {
   constructor(
     @Inject(DATABASE_CONNECTION)
     private readonly db: NodePgDatabase<typeof schema>,
-    private readonly userMapper: UserMapper,
   ) {}
 
   async findUsersByRole(
     organizationId: string,
     role: OrganizationRole,
-  ): Promise<User[]> {
+  ): Promise<UserEntity[]> {
     const adminMemberships = await this.db.query.memberships.findMany({
       where: and(
         eq(schema.memberships.organizationId, organizationId),
@@ -29,9 +27,10 @@ export class MembershipService {
       },
     });
 
-    const admins = adminMemberships.map((membership) => membership.user);
-
-    return this.userMapper.toArray(admins);
+    const admins = adminMemberships
+      .map((membership) => membership.user)
+      .filter((user): user is UserEntity => user !== null);
+    return admins;
   }
 
   async isOwner(userId: string, organizationId: string): Promise<boolean> {

@@ -1,16 +1,16 @@
 import { Field, ID, ObjectType, registerEnumType } from '@nestjs/graphql';
 import { createPaginatedResponseType } from '../../graphql/paginated-response.model';
 import { Organization } from '../../organization/models/organization.model';
-import { OpportunityStatus } from '../enums';
+import { ProjectStatus } from '../enums';
 import { Task } from '../../task/models/task.model';
 import { User } from '../../user/models/user.model';
 
-registerEnumType(OpportunityStatus, {
-  name: 'OpportunityStatus',
+registerEnumType(ProjectStatus, {
+  name: 'ProjectStatus',
 });
 
 @ObjectType()
-export class Opportunity {
+export class Project {
   @Field(() => ID)
   id: string;
 
@@ -35,8 +35,8 @@ export class Opportunity {
   @Field(() => Date)
   endsAt: Date;
 
-  @Field(() => OpportunityStatus)
-  status: OpportunityStatus;
+  @Field(() => ProjectStatus)
+  status: ProjectStatus;
 
   @Field(() => [Task], { nullable: true })
   tasks: Task[];
@@ -51,9 +51,11 @@ export class Opportunity {
   updatedAt: Date;
 }
 
-export const OpportunityPaginatedResponse =
-  createPaginatedResponseType<Opportunity>(Opportunity, 'Opportunity');
+export const ProjectPaginatedResponse = createPaginatedResponseType<Project>(
+  Project,
+  'Project',
+);
 
-export type OpportunityPaginatedResponse = InstanceType<
-  typeof OpportunityPaginatedResponse
+export type ProjectPaginatedResponse = InstanceType<
+  typeof ProjectPaginatedResponse
 >;

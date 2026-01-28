@@ -1,7 +1,7 @@
 import { relations } from 'drizzle-orm';
 import { boolean, index, pgTable, text, timestamp } from 'drizzle-orm/pg-core';
 import { memberships } from '../../membership/schemas/membership.schema';
-import { opportunities } from '../../opportunity/schemas/opportunity.schema';
+import { projects } from '../../project/schemas/project.schema';
 import { organizations } from '../../organization/schemas/organization.schema';
 import { tasks } from '../../task/schemas/task.schema';
 import { taskAssignments } from '../../task/schemas/task-assignment.schema';
@@ -86,7 +86,7 @@ export const usersRelations = relations(users, ({ many }) => ({
   sessions: many(sessions),
   accounts: many(accounts),
   organizations: many(organizations),
-  opportunities: many(opportunities),
+  projects: many(projects),
   tasks: many(tasks),
   assignments: many(taskAssignments),
   memberships: many(memberships),

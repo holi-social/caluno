@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import { DatabaseModule } from '../database/database.module';
 import { MembershipModule } from '../membership/membership.module';
-import { OpportunityModule } from '../opportunity/opportunity.module';
+import { ProjectModule } from '../project/project.module';
 import { UserModule } from '../user/user.module';
 import { OrganizationMapper } from './mappers/organization.mapper';
 import { OrganizationService } from './organization.service';
@@ -12,7 +12,7 @@ import {
 } from './resolvers';
 
 @Module({
-  imports: [DatabaseModule, UserModule, MembershipModule, OpportunityModule],
+  imports: [DatabaseModule, UserModule, MembershipModule, ProjectModule],
   providers: [
     OrganizationService,
     OrganizationQueryResolver,

@@ -8,7 +8,7 @@ import {
   uuid,
 } from 'drizzle-orm/pg-core';
 import { users } from '../../auth/schemas/auth.schema';
-import { opportunities } from '../../opportunity/schemas/opportunity.schema';
+import { projects } from '../../project/schemas/project.schema';
 import { TaskStatus } from '../enums';
 import { taskAssignments } from './task-assignment.schema';
 
@@ -24,7 +24,7 @@ export const tasks = pgTable(
     title: text('title').notNull(),
     slug: text('slug').notNull().unique(),
     description: text('description').notNull(),
-    opportunityId: uuid('opportunity_id').references(() => opportunities.id, {
+    projectId: uuid('project_id').references(() => projects.id, {
       onDelete: 'restrict',
     }),
     createdById: text('created_by_id').references(() => users.id, {
@@ -39,7 +39,7 @@ export const tasks = pgTable(
       .notNull(),
   },
   (table) => [
-    index('idx_tasks_opportunity_id').on(table.opportunityId),
+    index('idx_tasks_project_id').on(table.projectId),
     index('idx_tasks_status').on(table.status),
     index('idx_tasks_due_date').on(table.dueDate),
     index('idx_tasks_title').on(table.title),
@@ -48,9 +48,9 @@ export const tasks = pgTable(
 );
 
 export const tasksRelations = relations(tasks, ({ one, many }) => ({
-  opportunity: one(opportunities, {
-    fields: [tasks.opportunityId],
-    references: [opportunities.id],
+  project: one(projects, {
+    fields: [tasks.projectId],
+    references: [projects.id],
   }),
   createdBy: one(users, {
     fields: [tasks.createdById],

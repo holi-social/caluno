@@ -1,7 +1,7 @@
 import { Field, ID, ObjectType, registerEnumType } from '@nestjs/graphql';
 
 import { createPaginatedResponseType } from '../../graphql/paginated-response.model';
-import { Opportunity } from '../../opportunity/models/opportunity.model';
+import { Project } from '../../project/models/project.model';
 import { User } from '../../user/models/user.model';
 import { OrganizationRole } from '../enums';
 
@@ -56,8 +56,8 @@ export class Organization {
   @Field(() => [User], { nullable: true })
   volunteers: User[];
 
-  @Field(() => [Opportunity], { nullable: true })
-  opportunities: Opportunity[];
+  @Field(() => [Project], { nullable: true })
+  projects: Project[];
 
   @Field(() => Date)
   createdAt: Date;

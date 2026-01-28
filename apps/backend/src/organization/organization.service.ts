@@ -5,9 +5,9 @@ import { DATABASE_CONNECTION } from '../database/database-connection';
 import * as schema from '../database/schema';
 import type { PaginationInput } from '../graphql/pagination.input';
 import { MembershipService } from '../membership/membership.service';
-import type { OpportunityPaginatedResponse } from '../opportunity/models/opportunity.model';
-import { OpportunityService } from '../opportunity/opportunity.service';
-import type { User } from '../user/models/user.model';
+import type { ProjectPaginatedResponse } from '../project/models/project.model';
+import { ProjectService } from '../project/project.service';
+import type { UserEntity } from '../auth/schemas/auth.schema';
 import { UserService } from '../user/user.service';
 import { slugify } from '../utils';
 import type { CreateOrganizationInput } from './inputs/create-organization.input';
@@ -25,7 +25,7 @@ export class OrganizationService {
     private readonly db: NodePgDatabase<typeof schema>,
     private readonly mapper: OrganizationMapper,
     private readonly userService: UserService,
-    private readonly opportunityService: OpportunityService,
+    private readonly projectService: ProjectService,
     private readonly membershipService: MembershipService,
   ) {}
 
@@ -72,36 +72,36 @@ export class OrganizationService {
     return this.mapper.toModel(parent);
   }
 
-  async findOwner(ownerId: string): Promise<User> {
+  async findOwner(ownerId: string): Promise<UserEntity> {
     return this.userService.findByIdOrThrow(ownerId);
   }
 
-  async findAdmins(organizationId: string): Promise<User[]> {
+  async findAdmins(organizationId: string): Promise<UserEntity[]> {
     return this.membershipService.findUsersByRole(
       organizationId,
       OrganizationRole.ADMIN,
     );
   }
 
-  async findModerators(organizationId: string): Promise<User[]> {
+  async findModerators(organizationId: string): Promise<UserEntity[]> {
     return this.membershipService.findUsersByRole(
       organizationId,
       OrganizationRole.MODERATOR,
     );
   }
 
-  async findVolunteers(organizationId: string): Promise<User[]> {
+  async findVolunteers(organizationId: string): Promise<UserEntity[]> {
     return this.membershipService.findUsersByRole(
       organizationId,
       OrganizationRole.VOLUNTEER,
     );
   }
 
-  async findOpportunities(
+  async findProjectsByOrganizationId(
     organizationId: string,
     pagination: PaginationInput,
-  ): Promise<OpportunityPaginatedResponse> {
-    return this.opportunityService.findAllByOrganizationId(
+  ): Promise<ProjectPaginatedResponse> {
+    return this.projectService.findAllByOrganizationId(
       organizationId,
       pagination,
     );

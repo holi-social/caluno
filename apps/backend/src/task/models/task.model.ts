@@ -1,6 +1,6 @@
 import { Field, ID, ObjectType, registerEnumType } from '@nestjs/graphql';
 import { createPaginatedResponseType } from '../../graphql/paginated-response.model';
-import { Opportunity } from '../../opportunity/models/opportunity.model';
+import { Project } from '../../project/models/project.model';
 import { User } from '../../user/models/user.model';
 import { TaskStatus } from '../enums';
 
@@ -22,8 +22,8 @@ export class Task {
   @Field(() => String)
   description: string;
 
-  @Field(() => Opportunity)
-  opportunity: Opportunity;
+  @Field(() => Project)
+  project: Project;
 
   @Field(() => TaskStatus)
   status: TaskStatus;

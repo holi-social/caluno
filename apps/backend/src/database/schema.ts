@@ -1,6 +1,6 @@
 export * from '../auth/schemas/auth.schema';
 export * from '../membership/schemas/membership.schema';
-export * from '../opportunity/schemas/opportunity.schema';
+export * from '../project/schemas/project.schema';
 export * from '../organization/schemas/organization.schema';
 export * from '../task/schemas/task.schema';
 export * from '../task/schemas/task-assignment.schema';
