@@ -56,3 +56,5 @@ export const shiftsRelations = relations(shifts, ({ one, many }) => ({
   }),
   assignments: many(shiftAssignments),
 }));
+
+export type ShiftEntity = typeof shifts.$inferSelect;
