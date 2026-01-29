@@ -8,8 +8,8 @@ import { ForbiddenGraphQLError, NotFoundGraphQLError } from '../graphql/errors';
 import type { PaginationInput } from '../graphql/pagination.input';
 import { MembershipService } from '../membership/membership.service';
 import { slugify } from '../utils';
-import type { CreateTaskInput } from './inputs/create-task.input';
-import type { CreateTaskAssignmentInput } from './inputs/create-task-assignment.input';
+import { CreateTaskInput } from './inputs/create-task.input';
+import { CreateTaskAssignmentInput } from './inputs/create-task-assignment.input';
 import { TaskMapper } from './mappers/task.mapper';
 import { type Task, TaskPaginatedResponse } from './models/task.model';
 

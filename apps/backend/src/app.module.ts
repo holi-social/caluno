@@ -1,3 +1,4 @@
+import { join } from 'node:path';
 import { ApolloDriver, type ApolloDriverConfig } from '@nestjs/apollo';
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
@@ -6,7 +7,6 @@ import { GraphQLModule } from '@nestjs/graphql';
 import { AuthGuard, AuthModule } from '@thallesp/nestjs-better-auth';
 import { betterAuth } from 'better-auth';
 import type { NodePgDatabase } from 'drizzle-orm/node-postgres';
-import { join } from 'path';
 import { createAuthConfig } from './auth/auth';
 import { MembershipRoleGuard } from './auth/guards/membership-role.guard';
 import { DatabaseModule } from './database/database.module';

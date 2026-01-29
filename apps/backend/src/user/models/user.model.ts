@@ -13,7 +13,4 @@ export class User {
 
   @Field(() => String)
   image: string;
-
-  @Field(() => String)
-  username: string;
 }

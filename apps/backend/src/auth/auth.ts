@@ -1,6 +1,5 @@
 import { type BetterAuthOptions, betterAuth } from 'better-auth';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
-import { username } from 'better-auth/plugins';
 import type { NodePgDatabase } from 'drizzle-orm/node-postgres';
 
 export const createAuthConfig = (
@@ -18,7 +17,7 @@ export const createAuthConfig = (
     maxPasswordLength: 128,
     autoSignIn: true,
   },
-  plugins: [username()],
+  plugins: [],
 });
 
 export const auth = betterAuth(createAuthConfig({}, []));
