@@ -1,4 +1,3 @@
-import type { GraphQLClient } from 'graphql-request';
 import { DataError } from '../../errors/data-error';
 import type { CreateOrganizationInput } from '../../generated/graphql';
 import { BaseRepository } from '../base/base.repository';
@@ -9,10 +8,6 @@ export interface FindOrganizationsOptions {
 }
 
 export class OrganizationRepository extends BaseRepository {
-  constructor(client: GraphQLClient) {
-    super(client);
-  }
-
   async findById(id: string) {
     try {
       const data = await this.sdk.GetOrganization({ id });

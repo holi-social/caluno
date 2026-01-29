@@ -1,53 +1,44 @@
 import { GraphQLClient } from 'graphql-request';
-import { UserRepository } from '../repositories/user/user.repository';
 import { OrganizationRepository } from '../repositories/organization/organization.repository';
+import { UserRepository } from '../repositories/user/user.repository';
 import type { GraphQLClientConfig } from './graphql-client';
+import type { OrganizationContext } from './organization-context';
 
-/**
- * Unified data client with all repositories
- * Use in server components, API routes, or any JavaScript environment
- *
- * @example
- * ```typescript
- * // Server component
- * const data = createDataClient({
- *   url: process.env.API_URL!
- * });
- *
- * const user = await data.user.getMe();
- * const orgs = await data.organization.findAll();
- * ```
- */
 export class DataClient {
   private graphqlClient: GraphQLClient;
 
-  // Repository instances
   public readonly user: UserRepository;
   public readonly organization: OrganizationRepository;
 
-  constructor(config: GraphQLClientConfig) {
+  // Optional organization context
+  public readonly organizationContext?: OrganizationContext;
+
+  constructor(
+    config: GraphQLClientConfig,
+    organizationContext?: OrganizationContext,
+  ) {
     this.graphqlClient = new GraphQLClient(config.url, {
       credentials: config.credentials,
       headers: config.headers,
     });
 
-    // Initialize all repositories
+    this.organizationContext = organizationContext;
     this.user = new UserRepository(this.graphqlClient);
     this.organization = new OrganizationRepository(this.graphqlClient);
   }
 
-  /**
-   * Get the underlying GraphQL client for advanced usage
-   */
+  async getCurrentOrganizationId(): Promise<string | null> {
+    return (await this.organizationContext?.getCurrentOrganizationId()) ?? null;
+  }
+
   getGraphQLClient(): GraphQLClient {
     return this.graphqlClient;
   }
 }
 
-/**
- * Create a data client instance
- * Singleton pattern recommended - create once and reuse
- */
-export function createDataClient(config: GraphQLClientConfig): DataClient {
-  return new DataClient(config);
+export function createDataClient(
+  config: GraphQLClientConfig,
+  organizationContext?: OrganizationContext,
+): DataClient {
+  return new DataClient(config, organizationContext);
 }

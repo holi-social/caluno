@@ -1,7 +1,10 @@
 'use client';
 
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { OrganizationRepository, type CreateOrganizationInput } from '@repo/data';
+import {
+  type CreateOrganizationInput,
+  OrganizationRepository,
+} from '@repo/data';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useGraphQLClient } from './use-graphql-client';
 
 export function useOrganizations(limit = 10, offset = 0) {

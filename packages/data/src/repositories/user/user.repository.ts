@@ -1,17 +1,8 @@
-import type { GraphQLClient } from 'graphql-request';
 import { DataError } from '../../errors/data-error';
-import type { User } from '../../generated/graphql';
+import type { GetMyOrganizationsQuery, User } from '../../generated/graphql';
 import { BaseRepository } from '../base/base.repository';
 
 export class UserRepository extends BaseRepository {
-  constructor(client: GraphQLClient) {
-    super(client);
-  }
-
-  /**
-   * Get current authenticated user
-   * Callable from server components or wrapped in hooks for client
-   */
   async getMe(): Promise<User> {
     try {
       const data = await this.sdk.GetMe();
@@ -21,13 +12,22 @@ export class UserRepository extends BaseRepository {
     }
   }
 
-  /**
-   * Get user by ID
-   */
   async findById(id: string): Promise<User | null> {
     try {
       const data = await this.sdk.GetUser({ id });
       return data.user ?? null;
+    } catch (error) {
+      throw DataError.fromGraphQLError(error);
+    }
+  }
+
+  async getMyOrganizations(
+    options: { limit?: number; offset?: number } = {},
+  ): Promise<GetMyOrganizationsQuery['organizations']> {
+    const { limit = 10, offset = 0 } = options;
+    try {
+      const data = await this.sdk.GetMyOrganizations({ limit, offset });
+      return data.organizations;
     } catch (error) {
       throw DataError.fromGraphQLError(error);
     }

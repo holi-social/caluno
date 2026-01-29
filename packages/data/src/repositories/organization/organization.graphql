@@ -13,7 +13,6 @@ query GetOrganization($id: String!) {
       id
       name
       email
-      username
     }
     createdAt
     updatedAt
