@@ -1,6 +1,8 @@
 import { DataProvider } from '@repo/data/react';
 import type { Metadata } from 'next';
 import { Geologica } from 'next/font/google';
+import { ThemeProvider } from '@/components/theme-provider';
+import { GRAPHQL_API_URL, ORG_CONTEXT_COOKIE } from '@/lib/constants';
 
 import './globals.css';
 
@@ -14,18 +16,22 @@ export const metadata: Metadata = {
   description: 'Volunteer management platform',
 };
 
-const apiURL =
-  process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001/graphql';
-
 export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body className={`${geologica.variable} antialiased`}>
-        <DataProvider apiUrl={apiURL}>{children}</DataProvider>
+        <ThemeProvider>
+          <DataProvider
+            apiUrl={GRAPHQL_API_URL}
+            organizationCookieName={ORG_CONTEXT_COOKIE}
+          >
+            {children}
+          </DataProvider>
+        </ThemeProvider>
       </body>
     </html>
   );
