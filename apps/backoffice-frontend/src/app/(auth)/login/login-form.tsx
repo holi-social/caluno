@@ -34,7 +34,7 @@ export function LoginForm() {
       }
 
       if (result.data?.user) {
-        router.push('/shifts');
+        router.push('/');
         router.refresh();
       } else {
         setError('Login failed. Please try again.');

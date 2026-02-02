@@ -1,6 +1,15 @@
 'use client';
 
 import {
+  CalendarIcon,
+  LogOutIcon,
+  SettingsIcon,
+  UsersIcon,
+} from 'lucide-react';
+import { useParams, useRouter } from 'next/navigation';
+import { useMemo } from 'react';
+import { Button } from '@repo/ui/button';
+import {
   Sidebar,
   SidebarContent,
   SidebarFooter,
@@ -11,98 +20,110 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-  SidebarSeparator,
 } from '@repo/ui/sidebar';
-import {
-  CalendarIcon,
-  LogOutIcon,
-  SettingsIcon,
-  UsersIcon,
-} from 'lucide-react';
-import Link from 'next/link';
-import { usePathname, useRouter } from 'next/navigation';
 import { signOut } from '@/lib/auth-client';
-
-const navigationItems = [
-  {
-    title: 'Shifts',
-    href: '/shifts',
-    icon: CalendarIcon,
-  },
-  {
-    title: 'Volunteers',
-    href: '/volunteers',
-    icon: UsersIcon,
-  },
-];
+import { OrgSwitcher } from './org-switcher';
 
 export function DashboardSidebar() {
-  const pathname = usePathname();
+  const params = useParams();
   const router = useRouter();
+  const orgSlug = params.orgSlug as string | undefined;
+
+  const menuItems = useMemo(() => {
+    if (!orgSlug) return [];
+
+    return [
+      {
+        title: 'Shifts',
+        href: `/${orgSlug}/shifts`,
+        icon: CalendarIcon,
+      },
+      {
+        title: 'Volunteers',
+        href: `/${orgSlug}/volunteers`,
+        icon: UsersIcon,
+      },
+    ];
+  }, [orgSlug]);
+
+  const settingsItems = useMemo(() => {
+    if (!orgSlug) return [];
+
+    return [
+      {
+        title: 'Settings',
+        href: `/${orgSlug}/settings`,
+        icon: SettingsIcon,
+      },
+    ];
+  }, [orgSlug]);
 
   async function handleSignOut() {
     await signOut();
     router.push('/login');
+    router.refresh();
   }
 
   return (
     <Sidebar>
-      <SidebarHeader className="border-b px-6 py-4">
-        <div className="text-lg font-bold">Clippy</div>
+      <SidebarHeader className="border-b px-4 py-3 space-y-2">
+        <div className="text-lg font-bold px-2">Clippy</div>
+        <OrgSwitcher />
       </SidebarHeader>
 
       <SidebarContent>
-        <SidebarGroup>
-          <SidebarGroupLabel>Menu</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {navigationItems.map((item) => (
-                <SidebarMenuItem key={item.href}>
-                  <SidebarMenuButton asChild isActive={pathname === item.href}>
-                    <Link href={item.href}>
-                      <item.icon className="size-4" />
-                      <span>{item.title}</span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
+        {menuItems.length > 0 && (
+          <SidebarGroup>
+            <SidebarGroupLabel>Menu</SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                {menuItems.map((item) => (
+                  <SidebarMenuItem key={item.href}>
+                    <SidebarMenuButton asChild>
+                      <a href={item.href}>
+                        <item.icon className="h-4 w-4" />
+                        <span>{item.title}</span>
+                      </a>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                ))}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        )}
 
-        <SidebarGroup>
-          <SidebarGroupLabel>Settings</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              <SidebarMenuItem>
-                <SidebarMenuButton asChild isActive={pathname === '/settings'}>
-                  <Link href="/settings">
-                    <SettingsIcon className="size-4" />
-                    <span>Settings</span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
+        {settingsItems.length > 0 && (
+          <SidebarGroup>
+            <SidebarGroupLabel>Settings</SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                {settingsItems.map((item) => (
+                  <SidebarMenuItem key={item.href}>
+                    <SidebarMenuButton asChild>
+                      <a href={item.href}>
+                        <item.icon className="h-4 w-4" />
+                        <span>{item.title}</span>
+                      </a>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                ))}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        )}
       </SidebarContent>
 
       <SidebarFooter className="border-t p-4">
-        <SidebarMenu>
-          <SidebarMenuItem>
-            <SidebarMenuButton asChild>
-              <button
-                type="button"
-                onClick={handleSignOut}
-                className="flex w-full items-center gap-2"
-              >
-                <LogOutIcon className="size-4" />
-                <span>Sign Out</span>
-              </button>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-        </SidebarMenu>
+        <Button
+          variant="ghost"
+          className="w-full justify-start"
+          onClick={handleSignOut}
+        >
+          <LogOutIcon className="mr-2 h-4 w-4" />
+          Sign Out
+        </Button>
       </SidebarFooter>
     </Sidebar>
   );
 }
+
