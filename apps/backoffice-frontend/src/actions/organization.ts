@@ -3,7 +3,6 @@
 import type { CreateOrganizationInput } from '@repo/data';
 import { redirect } from 'next/navigation';
 import { getDataClient } from '@/lib/data-client';
-import { organizationContext } from '@/lib/organization-context-server';
 
 interface CreateOrganizationResult {
   success: boolean;
@@ -41,7 +40,7 @@ export async function createOrganization(
     const data = await getDataClient();
     const newOrg = await data.organization.create(input);
 
-    await organizationContext.setCurrentOrganizationId(newOrg.id);
+    redirect(`/${newOrg.slug}/shifts`);
   } catch (error) {
     console.error('Create organization error:', error);
     return {
@@ -52,5 +51,4 @@ export async function createOrganization(
           : 'Failed to create organization. Please try again.',
     };
   }
-  redirect('/shifts');
 }

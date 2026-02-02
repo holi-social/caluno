@@ -1,4 +1,4 @@
-export const ORG_CONTEXT_COOKIE = 'clippy.current_org';
+export const LAST_ORG_COOKIE = 'clippy.last_org_slug';
 export const API_URL =
   process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001';
 export const GRAPHQL_API_URL = `${API_URL}/graphql`;

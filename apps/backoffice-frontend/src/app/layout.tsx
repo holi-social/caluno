@@ -1,8 +1,6 @@
-import { DataProvider } from '@repo/data/react';
 import type { Metadata } from 'next';
 import { Geologica } from 'next/font/google';
 import { ThemeProvider } from '@/components/theme-provider';
-import { GRAPHQL_API_URL, ORG_CONTEXT_COOKIE } from '@/lib/constants';
 
 import './globals.css';
 
@@ -24,14 +22,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={`${geologica.variable} antialiased`}>
-        <ThemeProvider>
-          <DataProvider
-            apiUrl={GRAPHQL_API_URL}
-            organizationCookieName={ORG_CONTEXT_COOKIE}
-          >
-            {children}
-          </DataProvider>
-        </ThemeProvider>
+        <ThemeProvider>{children}</ThemeProvider>
       </body>
     </html>
   );

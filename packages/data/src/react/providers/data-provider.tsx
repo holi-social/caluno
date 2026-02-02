@@ -2,7 +2,6 @@
 
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
-import Cookies from 'js-cookie';
 import type { ReactNode } from 'react';
 import { useMemo } from 'react';
 import { createGraphQLClient } from '../../client/graphql-client';
@@ -13,7 +12,7 @@ export interface DataProviderProps {
   apiUrl: string;
   queryClient?: QueryClient;
   showDevTools?: boolean;
-  organizationCookieName?: string;
+  organizationId?: string;
 }
 
 const defaultQueryClient = new QueryClient({
@@ -36,15 +35,13 @@ export function DataProvider({
   apiUrl,
   queryClient: customQueryClient,
   showDevTools = process.env.NODE_ENV === 'development',
-  organizationCookieName,
+  organizationId,
 }: DataProviderProps) {
   const queryClient = customQueryClient ?? defaultQueryClient;
   const graphqlClient = useMemo(() => {
-    const getHeaders = organizationCookieName
+    const getHeaders = organizationId
       ? (): Record<string, string> => {
-          const orgId = Cookies.get(organizationCookieName);
-          if (!orgId) return {};
-          return { 'x-organization-id': orgId };
+          return { 'x-organization-id': organizationId };
         }
       : undefined;
 
@@ -53,7 +50,7 @@ export function DataProvider({
       credentials: 'include',
       headers: getHeaders,
     });
-  }, [apiUrl, organizationCookieName]);
+  }, [apiUrl, organizationId]);
 
   return (
     <QueryClientProvider client={queryClient}>

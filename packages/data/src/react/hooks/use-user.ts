@@ -24,3 +24,14 @@ export function useUser(id: string) {
     enabled: !!id,
   });
 }
+
+export function useMyOrganizations(limit = 100, offset = 0) {
+  const client = useGraphQLClient();
+  const repository = new UserRepository(client);
+
+  return useQuery({
+    queryKey: ['user', 'me', 'organizations', { limit, offset }],
+    queryFn: () => repository.getMyOrganizations({ limit, offset }),
+    staleTime: 5 * 60 * 1000,
+  });
+}
