@@ -1,12 +1,13 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { count, eq } from 'drizzle-orm';
 import type { NodePgDatabase } from 'drizzle-orm/node-postgres';
+import { NotFoundGraphQLError } from 'src/graphql/errors/not-found.error';
 import type { PaginationInput } from 'src/graphql/pagination.input';
+import { slugify } from 'src/utils/slug.util';
 import { DATABASE_CONNECTION } from '../database/database-connection';
 import * as schema from '../database/schema';
 import { CreateShiftInput } from './inputs/create-shift.input';
 import type { ShiftEntity } from './schemas/shift.schema';
-import { slugify } from 'src/utils/slug.util';
 
 @Injectable()
 export class ShiftService {
@@ -50,6 +51,35 @@ export class ShiftService {
         organizationId,
       })
       .returning();
+
+    if (input.invitedMemberIds && input.invitedMemberIds.length > 0) {
+      await this.db.insert(schema.shiftInvites).values(
+        input.invitedMemberIds.map((memberId) => ({
+          shiftId: shift.id,
+          userId: memberId,
+        })),
+      );
+    }
+
+    return shift;
+  }
+
+  async inviteMembersToShift(
+    shiftId: string,
+    memberIds: string[],
+  ): Promise<ShiftEntity> {
+    const shift = await this.findById(shiftId);
+
+    if (!shift) {
+      throw new NotFoundGraphQLError('Shift not found');
+    }
+
+    await this.db.insert(schema.shiftInvites).values(
+      memberIds.map((memberId) => ({
+        shiftId,
+        userId: memberId,
+      })),
+    );
 
     return shift;
   }

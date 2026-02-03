@@ -38,6 +38,7 @@ input CreateProjectInput {
 input CreateShiftInput {
   endsAt: DateTime!
   instructions: String!
+  invitedMemberIds: [String!]
   location: String
   projectId: String
   startsAt: DateTime!
@@ -77,6 +78,7 @@ type Mutation {
   createTask(input: CreateTaskInput!): Task!
   deleteTimeEntry(id: ID!): TimeEntry!
   endVolunteerSession(id: ID!): VolunteerSession!
+  inviteMembersToShift(memberIds: [String!]!, shiftId: String!): Shift!
   publishProject(id: ID!): Project!
   rejectVolunteerSession(input: RejectVolunteerSessionInput!): VolunteerSession!
   startVolunteerSession(input: StartVolunteerSessionInput!): VolunteerSession!
@@ -176,7 +178,6 @@ input RejectVolunteerSessionInput {
 }
 
 type Shift {
-  assignees: [User!]
   createdBy: User!
   endsAt: DateTime!
   id: ID!
@@ -188,6 +189,7 @@ type Shift {
   startsAt: DateTime!
   title: String!
   visibility: ShiftVisibility!
+  volunteers: [User!]
 }
 
 type ShiftPaginatedResponse {

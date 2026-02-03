@@ -28,4 +28,17 @@ export class ShiftMutationResolver {
     );
     return this.shiftMapper.toModelOrThrow(shift);
   }
+
+  @Roles('STAFF')
+  @Mutation(() => Shift)
+  async inviteMembersToShift(
+    @Args('shiftId', { type: () => String }) shiftId: string,
+    @Args('memberIds', { type: () => [String] }) memberIds: string[],
+  ): Promise<Shift> {
+    const shift = await this.shiftService.inviteMembersToShift(
+      shiftId,
+      memberIds,
+    );
+    return this.shiftMapper.toModelOrThrow(shift);
+  }
 }
