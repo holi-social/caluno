@@ -10,6 +10,13 @@ interface OrgContextValue {
     description?: string | null;
     logoUrl?: string | null;
   };
+  organizations: Array<{
+    id: string;
+    slug: string;
+    name: string;
+    description?: string | null;
+    logoUrl?: string | null;
+  }>;
 }
 
 const OrgContext = createContext<OrgContextValue | null>(null);
@@ -17,11 +24,17 @@ const OrgContext = createContext<OrgContextValue | null>(null);
 export function OrgProvider({
   children,
   org,
+  organizations,
 }: {
   children: ReactNode;
   org: OrgContextValue['org'];
+  organizations: OrgContextValue['organizations'];
 }) {
-  return <OrgContext.Provider value={{ org }}>{children}</OrgContext.Provider>;
+  return (
+    <OrgContext.Provider value={{ org, organizations }}>
+      {children}
+    </OrgContext.Provider>
+  );
 }
 
 export function useOrg(): OrgContextValue {
@@ -38,4 +51,8 @@ export function useOrgId(): string {
 
 export function useOrgSlug(): string {
   return useOrg().org.slug;
+}
+
+export function useOrganizations(): OrgContextValue['organizations'] {
+  return useOrg().organizations;
 }

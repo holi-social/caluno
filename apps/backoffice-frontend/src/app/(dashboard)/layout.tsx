@@ -1,11 +1,4 @@
-import { Separator } from '@repo/ui/separator';
-import {
-  SidebarInset,
-  SidebarProvider,
-  SidebarTrigger,
-} from '@repo/ui/sidebar';
 import type { ReactNode } from 'react';
-import { DashboardSidebar } from '@/components/dashboard-sidebar';
 import { requireAuth } from '@/lib/auth-server';
 
 export default async function DashboardLayout({
@@ -15,19 +8,5 @@ export default async function DashboardLayout({
 }) {
   await requireAuth();
 
-  return (
-    <SidebarProvider>
-      <DashboardSidebar />
-      <SidebarInset>
-        <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4">
-          <SidebarTrigger className="-ml-1" />
-          <Separator orientation="vertical" className="mr-2 h-4" />
-          <div className="flex items-center gap-2">
-            <h1 className="text-lg font-semibold">Clippy</h1>
-          </div>
-        </header>
-        <div className="flex flex-1 flex-col gap-4 p-4">{children}</div>
-      </SidebarInset>
-    </SidebarProvider>
-  );
+  return <>{children}</>;
 }

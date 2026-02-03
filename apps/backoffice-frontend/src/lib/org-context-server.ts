@@ -46,15 +46,27 @@ export async function validateUserOrgAccess(orgId: string): Promise<boolean> {
 
 export async function requireOrgAccess(
   orgSlug: string,
-): Promise<OrgContextData> {
-  const org = await resolveOrgFromSlug(orgSlug);
-  const hasAccess = await validateUserOrgAccess(org.id);
+): Promise<{ org: OrgContextData; organizations: OrgContextData[] }> {
+  const data = await getDataClient();
+  const [org, myOrgsResult] = await Promise.all([
+    data.organization.findBySlug(orgSlug),
+    data.user.getMyOrganizations({ limit: 100, offset: 0 }),
+  ]);
+
+  if (!org) {
+    notFound();
+  }
+
+  const hasAccess = myOrgsResult.items.some((o) => o.id === org.id);
 
   if (!hasAccess) {
     redirect('/unauthorized');
   }
 
-  return org;
+  return {
+    org,
+    organizations: myOrgsResult.items,
+  };
 }
 
 export async function getLastVisitedOrgServer(): Promise<string | null> {

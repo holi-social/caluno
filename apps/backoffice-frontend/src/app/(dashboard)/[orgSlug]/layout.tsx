@@ -1,5 +1,12 @@
 import { DataProvider } from '@repo/data/react';
+import { Separator } from '@repo/ui/separator';
+import {
+  SidebarInset,
+  SidebarProvider,
+  SidebarTrigger,
+} from '@repo/ui/sidebar';
 import type { ReactNode } from 'react';
+import { DashboardSidebar } from '@/components/dashboard-sidebar';
 import { OrgProvider } from '@/contexts/org-context';
 import { requireAuth } from '@/lib/auth-server';
 import { GRAPHQL_API_URL } from '@/lib/constants';
@@ -14,12 +21,26 @@ interface OrgLayoutProps {
 export default async function OrgLayout({ children, params }: OrgLayoutProps) {
   await requireAuth();
   const { orgSlug } = await params;
-  const org = await requireOrgAccess(orgSlug);
+  const { org, organizations } = await requireOrgAccess(orgSlug);
 
   return (
-    <OrgProvider org={org}>
+    <OrgProvider org={org} organizations={organizations}>
       <DataProvider apiUrl={GRAPHQL_API_URL} organizationId={org.id}>
-        <OrgSyncProvider orgSlug={org.slug}>{children}</OrgSyncProvider>
+        <OrgSyncProvider orgSlug={org.slug}>
+          <SidebarProvider>
+            <DashboardSidebar />
+            <SidebarInset>
+              <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4">
+                <SidebarTrigger className="-ml-1" />
+                <Separator orientation="vertical" className="mr-2 h-4" />
+                <div className="flex items-center gap-2">
+                  <h1 className="text-lg font-semibold">Clippy</h1>
+                </div>
+              </header>
+              <div className="flex flex-1 flex-col gap-4 p-4">{children}</div>
+            </SidebarInset>
+          </SidebarProvider>
+        </OrgSyncProvider>
       </DataProvider>
     </OrgProvider>
   );
