@@ -4,8 +4,7 @@
   "private": true,
   "exports": {
     ".": "./src/index.ts",
-    "./react": "./src/react.ts",
-    "./integrations": "./src/integrations/*"
+    "./react": "./src/react.ts"
   },
   "scripts": {
     "codegen": "graphql-codegen",

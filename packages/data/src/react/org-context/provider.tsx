@@ -32,7 +32,11 @@ export interface OrgProviderProps {
  *   <App />
  * </OrgProvider>
  */
-export function OrgProvider({ children, org, organizations }: OrgProviderProps) {
+export function OrgProvider({
+  children,
+  org,
+  organizations,
+}: OrgProviderProps) {
   return (
     <OrgContext.Provider value={{ org, organizations }}>
       {children}
