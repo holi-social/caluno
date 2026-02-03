@@ -11,7 +11,6 @@ import { users } from '../../auth/schemas/auth.schema';
 import { organizations } from '../../organization/schemas/organization.schema';
 import { projects } from '../../project/schemas/project.schema';
 import { ShiftVisibility } from '../enums';
-import { shiftInvites } from './shift-invite.schema';
 
 export const shiftVisibilityEnum = pgEnum(
   'shift_visibility',
