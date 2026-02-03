@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { eq, inArray } from 'drizzle-orm';
+import { count, eq, inArray } from 'drizzle-orm';
 import type { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import type { UserEntity } from '../auth/schemas/auth.schema';
 import { DATABASE_CONNECTION } from '../database/database-connection';
@@ -13,10 +13,8 @@ import { slugify } from '../utils';
 import { OrganizationRole } from './enums';
 import type { CreateOrganizationInput } from './inputs/create-organization.input';
 import { OrganizationMapper } from './mappers/organization.mapper';
-import {
-  type Organization,
-  OrganizationPaginatedResponse,
-} from './models/organization.model';
+import { type Organization } from './models/organization.model';
+import { OrganizationEntity } from '../database/schema';
 
 @Injectable()
 export class OrganizationService {
@@ -44,38 +42,33 @@ export class OrganizationService {
   }
 
   async findAll(
-    pagination: PaginationInput,
     userId: string,
-  ): Promise<OrganizationPaginatedResponse> {
-    const userMemberships = await this.db
-      .select({ orgId: schema.memberships.organizationId })
+    pagination: PaginationInput,
+  ): Promise<{ items: OrganizationEntity[]; total: number }> {
+    const memberships = await this.db.query.memberships.findMany({
+      where: eq(schema.memberships.userId, userId),
+      with: {
+        organization: true,
+      },
+      limit: pagination.limit,
+      offset: pagination.offset,
+    });
+
+    const [{ total }] = await this.db
+      .select({ total: count() })
       .from(schema.memberships)
       .where(eq(schema.memberships.userId, userId));
 
-    const orgIds = userMemberships
-      .map((m) => m.orgId)
-      .filter((id): id is string => !!id);
-
-    if (orgIds.length === 0) {
-      return new OrganizationPaginatedResponse({
-        items: [],
-        total: 0,
-        limit: pagination.limit,
-        offset: pagination.offset,
-      });
-    }
-    const organizations = await this.db.query.organizations.findMany({
-      where: inArray(schema.organizations.id, orgIds),
-      limit: pagination.limit,
-      offset: pagination.offset,
-    });
-
-    return new OrganizationPaginatedResponse({
-      items: this.mapper.toArray(organizations),
-      total: organizations.length,
-      limit: pagination.limit,
-      offset: pagination.offset,
-    });
+    const organizations = memberships
+      .map((membership) => membership.organization)
+      .filter(
+        (organization): organization is OrganizationEntity =>
+          organization !== null,
+      );
+    return {
+      items: organizations,
+      total,
+    };
   }
 
   async findChildren(organizationId: string): Promise<Organization[]> {

@@ -5,10 +5,16 @@ import {
   OrganizationPaginatedResponse,
 } from '../models/organization.model';
 import { OrganizationService } from '../organization.service';
+import { Session } from '@nestjs/common';
+import { type UserSession } from '@thallesp/nestjs-better-auth';
+import { OrganizationMapper } from '../mappers/organization.mapper';
 
 @Resolver(() => Organization)
 export class OrganizationQueryResolver {
-  constructor(private readonly organizationService: OrganizationService) {}
+  constructor(
+    private readonly organizationService: OrganizationService,
+    private readonly organizationMapper: OrganizationMapper,
+  ) {}
 
   @Query(() => Organization)
   async organization(@Args('id') id: string): Promise<Organization | null> {
@@ -25,9 +31,17 @@ export class OrganizationQueryResolver {
   @Query(() => OrganizationPaginatedResponse)
   async organizations(
     @Args() pagination: PaginationInput,
-    @Context() context: any,
+    @Session() session: UserSession,
   ): Promise<OrganizationPaginatedResponse> {
-    const user = context.req.user;
-    return this.organizationService.findAll(pagination, user.id);
+    const { items, total } = await this.organizationService.findAll(
+      session.user.id,
+      pagination,
+    );
+    return new OrganizationPaginatedResponse({
+      items: this.organizationMapper.toArray(items),
+      total,
+      limit: pagination.limit,
+      offset: pagination.offset,
+    });
   }
 }
