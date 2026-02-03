@@ -1,4 +1,9 @@
-import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
+import {
+  CanActivate,
+  ExecutionContext,
+  Injectable,
+  Scope,
+} from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { GqlExecutionContext } from '@nestjs/graphql';
 import {
@@ -9,7 +14,7 @@ import { MembershipService } from '../../membership/membership.service';
 import { OrganizationRole } from '../../organization/enums';
 import { ROLES_KEY, type Role } from '../decorators/roles.decorator';
 
-@Injectable()
+@Injectable({ scope: Scope.REQUEST })
 export class MembershipRoleGuard implements CanActivate {
   private readonly roleMapping: Record<Role, OrganizationRole[]> = {
     [OrganizationRole.OWNER]: [OrganizationRole.OWNER],
