@@ -6,5 +6,5 @@ export * from '../shift/schemas/shift.schema';
 export * from '../shift/schemas/shift-assignment.schema';
 export * from '../task/schemas/task.schema';
 export * from '../task/schemas/task-assignment.schema';
-export * from '../time-tracking/schemas/time-record.schema';
-export * from '../time-tracking/schemas/time-session.schema';
+export * from '../time-tracking/schemas/time-entry.schema';
+export * from '../time-tracking/schemas/volunteer-session.schema';

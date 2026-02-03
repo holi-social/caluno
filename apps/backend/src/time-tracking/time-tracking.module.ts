@@ -3,11 +3,11 @@ import { DatabaseModule } from '../database/database.module';
 import { MembershipModule } from '../membership/membership.module';
 import { TaskModule } from '../task/task.module';
 import { UserModule } from '../user/user.module';
-import { TimeRecordMapper } from './mappers/time-record.mapper';
-import { TimeSessionMapper } from './mappers/time-session.mapper';
+import { TimeEntryMapper } from './mappers/time-entry.mapper';
+import { VolunteerSessionMapper } from './mappers/volunteer-session.mapper';
 import {
-  TimeSessionFieldResolver,
   TimeTrackingMutationResolver,
+  VolunteerSessionFieldResolver,
 } from './resolvers';
 import { TimeTrackingService } from './time-tracking.service';
 
@@ -15,10 +15,10 @@ import { TimeTrackingService } from './time-tracking.service';
   imports: [DatabaseModule, MembershipModule, TaskModule, UserModule],
   providers: [
     TimeTrackingService,
-    TimeSessionMapper,
-    TimeRecordMapper,
+    VolunteerSessionMapper,
+    TimeEntryMapper,
     TimeTrackingMutationResolver,
-    TimeSessionFieldResolver,
+    VolunteerSessionFieldResolver,
   ],
   exports: [TimeTrackingService],
 })

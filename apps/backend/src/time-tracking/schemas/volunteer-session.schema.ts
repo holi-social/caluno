@@ -2,22 +2,22 @@ import { relations } from 'drizzle-orm';
 import { pgEnum, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
 import { users } from '../../auth/schemas/auth.schema';
 import { taskAssignments } from '../../task/schemas/task-assignment.schema';
-import { TimeSessionStatus } from '../enums';
-import { timeRecords } from './time-record.schema';
+import { VolunteerSessionStatus } from '../enums';
+import { timeEntries } from './time-entry.schema';
 
-export const timeSessionStatusEnum = pgEnum(
-  'time_session_status',
-  TimeSessionStatus as Record<string, string>,
+export const volunteerSessionStatusEnum = pgEnum(
+  'volunteer_session_status',
+  VolunteerSessionStatus as Record<string, string>,
 );
 
-export const timeSessions = pgTable('time_sessions', {
+export const volunteerSessions = pgTable('volunteer_sessions', {
   id: uuid('id').primaryKey().defaultRandom(),
   assignmentId: uuid('assignment_id').references(() => taskAssignments.id, {
     onDelete: 'restrict',
   }),
-  status: timeSessionStatusEnum('status')
+  status: volunteerSessionStatusEnum('status')
     .notNull()
-    .default(TimeSessionStatus.PENDING),
+    .default(VolunteerSessionStatus.PENDING),
   validatedBy: text('validated_by').references(() => users.id, {
     onDelete: 'restrict',
   }),
@@ -27,20 +27,20 @@ export const timeSessions = pgTable('time_sessions', {
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });
 
-export const timeSessionsRelations = relations(
-  timeSessions,
+export const volunteerSessionsRelations = relations(
+  volunteerSessions,
   ({ one, many }) => ({
     assignment: one(taskAssignments, {
-      fields: [timeSessions.assignmentId],
+      fields: [volunteerSessions.assignmentId],
       references: [taskAssignments.id],
     }),
     validatedBy: one(users, {
-      fields: [timeSessions.validatedBy],
+      fields: [volunteerSessions.validatedBy],
       references: [users.id],
     }),
-    records: many(timeRecords),
+    entries: many(timeEntries),
   }),
 );
 
-export type TimeSessionEntity = typeof timeSessions.$inferSelect;
-export type TimeSessionInsert = typeof timeSessions.$inferInsert;
+export type VolunteerSessionEntity = typeof volunteerSessions.$inferSelect;
+export type VolunteerSessionInsert = typeof volunteerSessions.$inferInsert;

@@ -29,6 +29,20 @@
       "when": 1769613050096,
       "tag": "0003_add-shifts",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1769767874909,
+      "tag": "0004_rename-time-tracking-tables",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1769767902356,
+      "tag": "0005_rename-time-session-enums",
+      "breakpoints": true
     }
   ]
 }

@@ -5,8 +5,8 @@ import { organizations } from '../../organization/schemas/organization.schema';
 import { projects } from '../../project/schemas/project.schema';
 import { tasks } from '../../task/schemas/task.schema';
 import { taskAssignments } from '../../task/schemas/task-assignment.schema';
-import { timeRecords } from '../../time-tracking/schemas/time-record.schema';
-import { timeSessions } from '../../time-tracking/schemas/time-session.schema';
+import { timeEntries } from '../../time-tracking/schemas/time-entry.schema';
+import { volunteerSessions } from '../../time-tracking/schemas/volunteer-session.schema';
 
 export const users = pgTable('users', {
   id: text('id').primaryKey(),
@@ -88,8 +88,8 @@ export const usersRelations = relations(users, ({ many }) => ({
   tasks: many(tasks),
   assignments: many(taskAssignments),
   memberships: many(memberships),
-  timeSessions: many(timeSessions),
-  timeRecords: many(timeRecords),
+  volunteerSessions: many(volunteerSessions),
+  timeEntries: many(timeEntries),
 }));
 
 export const sessionsRelations = relations(sessions, ({ one }) => ({

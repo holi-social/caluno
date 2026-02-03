@@ -1,4 +1,4 @@
-export enum TimeSessionStatus {
+export enum VolunteerSessionStatus {
   IN_PROGRESS = 'IN_PROGRESS',
   PENDING = 'PENDING',
   APPROVED = 'APPROVED',

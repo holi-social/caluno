@@ -1,13 +1,10 @@
 import { Field, InputType } from '@nestjs/graphql';
 
 @InputType()
-export class RejectTimeSessionInput {
+export class ApproveVolunteerSessionInput {
   @Field(() => String)
   id: string;
 
   @Field(() => String)
   organizationId: string;
-
-  @Field(() => String, { nullable: true })
-  rejectionReason: string | null;
 }

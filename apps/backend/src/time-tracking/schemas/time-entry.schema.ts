@@ -1,11 +1,11 @@
 import { relations } from 'drizzle-orm';
 import { pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
-import { timeSessions } from './time-session.schema';
+import { volunteerSessions } from './volunteer-session.schema';
 
-export const timeRecords = pgTable('time_records', {
+export const timeEntries = pgTable('time_entries', {
   id: uuid('id').primaryKey().defaultRandom(),
   sessionId: uuid('session_id')
-    .references(() => timeSessions.id, {
+    .references(() => volunteerSessions.id, {
       onDelete: 'cascade',
     })
     .notNull(),
@@ -19,12 +19,12 @@ export const timeRecords = pgTable('time_records', {
     .notNull(),
 });
 
-export const timeRecordsRelations = relations(timeRecords, ({ one }) => ({
-  session: one(timeSessions, {
-    fields: [timeRecords.sessionId],
-    references: [timeSessions.id],
+export const timeEntriesRelations = relations(timeEntries, ({ one }) => ({
+  session: one(volunteerSessions, {
+    fields: [timeEntries.sessionId],
+    references: [volunteerSessions.id],
   }),
 }));
 
-export type TimeRecordEntity = typeof timeRecords.$inferSelect;
-export type TimeRecordInsert = typeof timeRecords.$inferInsert;
+export type TimeEntryEntity = typeof timeEntries.$inferSelect;
+export type TimeEntryInsert = typeof timeEntries.$inferInsert;

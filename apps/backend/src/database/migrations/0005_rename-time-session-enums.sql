@@ -1,0 +1,1 @@
+ALTER TYPE "public"."time_session_status" RENAME TO "volunteer_session_status";

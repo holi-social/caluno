@@ -4,53 +4,53 @@ import { TaskMapper } from 'src/task/mappers/task.mapper';
 import { Task } from 'src/task/models/task.model';
 import { UserMapper } from 'src/user/mappers/user.mapper';
 import { User } from 'src/user/models/user.model';
-import { TimeRecordMapper } from '../mappers/time-record.mapper';
-import { TimeRecord } from '../models/time-record.model';
-import { TimeSession } from '../models/time-session.model';
-import * as timeSessionSchema from '../schemas/time-session.schema';
+import { TimeEntryMapper } from '../mappers/time-entry.mapper';
+import { TimeEntry } from '../models/time-entry.model';
+import { VolunteerSession } from '../models/volunteer-session.model';
+import * as volunteerSessionSchema from '../schemas/volunteer-session.schema';
 import { TimeTrackingService } from '../time-tracking.service';
 
-@Resolver(() => TimeSession)
-export class TimeSessionFieldResolver {
+@Resolver(() => VolunteerSession)
+export class VolunteerSessionFieldResolver {
   constructor(
     private readonly timeTrackingService: TimeTrackingService,
-    private readonly recordMapper: TimeRecordMapper,
+    private readonly entryMapper: TimeEntryMapper,
     private readonly taskMapper: TaskMapper,
     private readonly userMapper: UserMapper,
   ) {}
 
-  @ResolveField(() => [TimeRecord])
-  async records(
-    @Parent() timeSession: timeSessionSchema.TimeSessionEntity,
+  @ResolveField(() => [TimeEntry])
+  async entries(
+    @Parent() volunteerSession: volunteerSessionSchema.VolunteerSessionEntity,
     @Session() session: UserSession,
-  ): Promise<TimeRecord[]> {
-    const records = await this.timeTrackingService.findRecordsBySessionId(
+  ): Promise<TimeEntry[]> {
+    const entries = await this.timeTrackingService.findEntriesBySessionId(
       session.user.id,
-      timeSession.id,
+      volunteerSession.id,
     );
-    return this.recordMapper.toArray(records);
+    return this.entryMapper.toArray(entries);
   }
 
   @ResolveField(() => Task)
   async task(
-    @Parent() timeSession: timeSessionSchema.TimeSessionEntity,
+    @Parent() volunteerSession: volunteerSessionSchema.VolunteerSessionEntity,
     @Session() session: UserSession,
   ): Promise<Task> {
     const task = await this.timeTrackingService.findTaskBySessionId(
       session.user.id,
-      timeSession.id,
+      volunteerSession.id,
     );
     return this.taskMapper.toModelOrThrow(task);
   }
 
   @ResolveField(() => User, { nullable: true })
   async validatedBy(
-    @Parent() timeSession: timeSessionSchema.TimeSessionEntity,
+    @Parent() volunteerSession: volunteerSessionSchema.VolunteerSessionEntity,
     @Session() session: UserSession,
   ): Promise<User | null> {
     const validator = await this.timeTrackingService.findValidatorBySessionId(
       session.user.id,
-      timeSession.id,
+      volunteerSession.id,
     );
     if (!validator) {
       return null;

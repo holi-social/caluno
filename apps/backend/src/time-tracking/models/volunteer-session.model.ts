@@ -1,15 +1,15 @@
 import { Field, ID, ObjectType, registerEnumType } from '@nestjs/graphql';
 import { Task } from '../../task/models/task.model';
 import { User } from '../../user/models/user.model';
-import { TimeSessionStatus } from '../enums';
-import { TimeRecord } from './time-record.model';
+import { VolunteerSessionStatus } from '../enums';
+import { TimeEntry } from './time-entry.model';
 
-registerEnumType(TimeSessionStatus, {
-  name: 'TimeSessionStatus',
+registerEnumType(VolunteerSessionStatus, {
+  name: 'VolunteerSessionStatus',
 });
 
 @ObjectType()
-export class TimeSession {
+export class VolunteerSession {
   @Field(() => ID)
   id: string;
 
@@ -19,11 +19,11 @@ export class TimeSession {
   @Field(() => Task)
   task: Task;
 
-  @Field(() => TimeSessionStatus)
-  status: TimeSessionStatus;
+  @Field(() => VolunteerSessionStatus)
+  status: VolunteerSessionStatus;
 
-  @Field(() => [TimeRecord])
-  records: TimeRecord[];
+  @Field(() => [TimeEntry])
+  entries: TimeEntry[];
 
   @Field(() => User, { nullable: true })
   validatedBy: User | null;
