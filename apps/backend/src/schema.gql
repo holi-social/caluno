@@ -68,9 +68,7 @@ scalar DateTime
 
 type Mutation {
   addTimeEntry(input: AddTimeEntryInput!): TimeEntry!
-  approveVolunteerSession(
-    input: ApproveVolunteerSessionInput!
-  ): VolunteerSession!
+  approveVolunteerSession(input: ApproveVolunteerSessionInput!): VolunteerSession!
   assignTask(input: CreateTaskAssignmentInput!): Task!
   createOrganization(input: CreateOrganizationInput!): Organization!
   createProject(input: CreateProjectInput!): Project!
@@ -150,24 +148,13 @@ type Query {
   myTasks(limit: Int! = 10, offset: Int! = 0): TaskPaginatedResponse!
   organization(id: String!): Organization!
   organizationBySlug(slug: String!): Organization!
-  organizations(
-    limit: Int! = 10
-    offset: Int! = 0
-  ): OrganizationPaginatedResponse!
+  organizations(limit: Int! = 10, offset: Int! = 0): OrganizationPaginatedResponse!
   project(id: String!): Project!
-  projects(
-    limit: Int! = 10
-    offset: Int! = 0
-    organizationId: String!
-  ): ProjectPaginatedResponse!
+  projects(limit: Int! = 10, offset: Int! = 0, organizationId: String!): ProjectPaginatedResponse!
   shift(id: String!): Shift!
   shifts(limit: Int! = 10, offset: Int! = 0): ShiftPaginatedResponse!
   task(id: String!): Task!
-  tasksByUserId(
-    limit: Int! = 10
-    offset: Int! = 0
-    userId: String!
-  ): TaskPaginatedResponse!
+  tasksByUserId(limit: Int! = 10, offset: Int! = 0, userId: String!): TaskPaginatedResponse!
   user(id: String!): User
 }
 
