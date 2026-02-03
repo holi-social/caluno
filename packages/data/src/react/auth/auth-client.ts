@@ -8,14 +8,12 @@ export function createAuthClient(baseURL: string) {
     baseURL,
   });
 
-  return {
-    ...client,
-    useSession: client.useSession,
-    signOut: () => {
-      clearLastVisitedOrg();
-      client.signOut();
-    },
+  const signOut = async (...args: Parameters<typeof client.signOut>) => {
+    clearLastVisitedOrg();
+    return await client.signOut(...args);
   };
+
+  return Object.assign(client, { signOut });
 }
 
 export type AuthClient = ReturnType<typeof createAuthClient>;

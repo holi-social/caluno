@@ -37,7 +37,8 @@ export function SignupForm() {
         setError('Signup failed. Please try again.');
         setIsPending(false);
       }
-    } catch {
+    } catch (error) {
+      console.log(error);
       setError('Failed to create account. Please try again.');
       setIsPending(false);
     }
