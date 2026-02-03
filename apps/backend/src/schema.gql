@@ -2,14 +2,14 @@
 # THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
 # ------------------------------------------------------
 
-input AddTimeRecordInput {
+input AddTimeEntryInput {
   endedAt: DateTime!
   notes: String
   sessionId: String!
   startedAt: DateTime!
 }
 
-input ApproveTimeSessionInput {
+input ApproveVolunteerSessionInput {
   id: String!
   organizationId: String!
 }
@@ -35,6 +35,14 @@ input CreateProjectInput {
   title: String!
 }
 
+input CreateShiftInput {
+  description: String!
+  endsAt: DateTime!
+  location: String
+  projectId: String
+  startsAt: DateTime!
+}
+
 input CreateTaskAssignmentInput {
   assigneeId: String!
   organizationId: String!
@@ -56,17 +64,20 @@ A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date
 scalar DateTime
 
 type Mutation {
-  addTimeRecord(input: AddTimeRecordInput!): TimeRecord!
-  approveTimeSession(input: ApproveTimeSessionInput!): TimeSession!
+  addTimeEntry(input: AddTimeEntryInput!): TimeEntry!
+  approveVolunteerSession(
+    input: ApproveVolunteerSessionInput!
+  ): VolunteerSession!
   assignTask(input: CreateTaskAssignmentInput!): Task!
   createOrganization(input: CreateOrganizationInput!): Organization!
   createProject(input: CreateProjectInput!): Project!
+  createShift(input: CreateShiftInput!): Shift!
   createTask(input: CreateTaskInput!): Task!
-  deleteTimeRecord(id: ID!): TimeRecord!
-  endTimeSession(id: ID!): TimeSession!
+  deleteTimeEntry(id: ID!): TimeEntry!
+  endVolunteerSession(id: ID!): VolunteerSession!
   publishProject(id: ID!): Project!
-  rejectTimeSession(input: RejectTimeSessionInput!): TimeSession!
-  startTimeSession(input: StartTimeSessionInput!): TimeSession!
+  rejectVolunteerSession(input: RejectVolunteerSessionInput!): VolunteerSession!
+  startVolunteerSession(input: StartVolunteerSessionInput!): VolunteerSession!
 }
 
 type Organization {
@@ -135,17 +146,28 @@ type Query {
   myTasks(limit: Int! = 10, offset: Int! = 0): TaskPaginatedResponse!
   organization(id: String!): Organization!
   organizationBySlug(slug: String!): Organization!
-  organizations(limit: Int! = 10, offset: Int! = 0): OrganizationPaginatedResponse!
+  organizations(
+    limit: Int! = 10
+    offset: Int! = 0
+  ): OrganizationPaginatedResponse!
   project(id: String!): Project!
-  projects(limit: Int! = 10, offset: Int! = 0, organizationId: String!): ProjectPaginatedResponse!
+  projects(
+    limit: Int! = 10
+    offset: Int! = 0
+    organizationId: String!
+  ): ProjectPaginatedResponse!
   shift(id: String!): Shift!
   shifts(limit: Int! = 10, offset: Int! = 0): ShiftPaginatedResponse!
   task(id: String!): Task!
-  tasksByUserId(limit: Int! = 10, offset: Int! = 0, userId: String!): TaskPaginatedResponse!
+  tasksByUserId(
+    limit: Int! = 10
+    offset: Int! = 0
+    userId: String!
+  ): TaskPaginatedResponse!
   user(id: String!): User
 }
 
-input RejectTimeSessionInput {
+input RejectVolunteerSessionInput {
   id: String!
   organizationId: String!
   rejectionReason: String
@@ -168,8 +190,8 @@ type ShiftPaginatedResponse {
   pagination: PaginationInfo!
 }
 
-input StartTimeSessionInput {
-  status: TimeSessionStatus! = IN_PROGRESS
+input StartVolunteerSessionInput {
+  status: VolunteerSessionStatus! = IN_PROGRESS
   taskId: String!
 }
 
@@ -199,7 +221,7 @@ enum TaskStatus {
   TODO
 }
 
-type TimeRecord {
+type TimeEntry {
   createdAt: DateTime!
   endedAt: DateTime!
   id: ID!
@@ -207,12 +229,19 @@ type TimeRecord {
   startedAt: DateTime!
 }
 
-type TimeSession {
-  createdAt: DateTime!
+type User {
+  email: String!
   id: ID!
-  records: [TimeRecord!]!
+  image: String!
+  name: String!
+}
+
+type VolunteerSession {
+  createdAt: DateTime!
+  entries: [TimeEntry!]!
+  id: ID!
   rejectionReason: String
-  status: TimeSessionStatus!
+  status: VolunteerSessionStatus!
   task: Task!
   updatedAt: DateTime
   user: User!
@@ -220,18 +249,11 @@ type TimeSession {
   validatedBy: User
 }
 
-enum TimeSessionStatus {
+enum VolunteerSessionStatus {
   APPROVED
   CANCELLED
   IN_PROGRESS
   PENDING
   REJECTED
   SUBMITTED
-}
-
-type User {
-  email: String!
-  id: ID!
-  image: String!
-  name: String!
 }
