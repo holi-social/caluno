@@ -38,7 +38,7 @@ export class Shift {
   location: string | null;
 
   @Field(() => [User], { nullable: true })
-  assignees: User[];
+  volunteers: User[];
 
   @Field(() => ShiftVisibility)
   visibility: ShiftVisibility;

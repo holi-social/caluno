@@ -57,6 +57,20 @@
       "when": 1770112214251,
       "tag": "0007_add_shift_instructions_and_slug",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1770113625478,
+      "tag": "0008_add_shift_invites",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1770113837182,
+      "tag": "0009_replace_shift_assignment_with_invites",
+      "breakpoints": true
     }
   ]
 }

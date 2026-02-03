@@ -3,7 +3,7 @@ export * from '../membership/schemas/membership.schema';
 export * from '../organization/schemas/organization.schema';
 export * from '../project/schemas/project.schema';
 export * from '../shift/schemas/shift.schema';
-export * from '../shift/schemas/shift-assignment.schema';
+export * from '../shift/schemas/shift-invite.schema';
 export * from '../task/schemas/task.schema';
 export * from '../task/schemas/task-assignment.schema';
 export * from '../time-tracking/schemas/time-entry.schema';
