@@ -1,5 +1,5 @@
 import { Session } from '@nestjs/common';
-import { Args, Context, Query, Resolver } from '@nestjs/graphql';
+import { Args, Query, Resolver } from '@nestjs/graphql';
 import { type UserSession } from '@thallesp/nestjs-better-auth';
 import { PaginationInput } from '../../graphql/pagination.input';
 import { OrganizationMapper } from '../mappers/organization.mapper';

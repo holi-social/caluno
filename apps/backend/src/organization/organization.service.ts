@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { count, eq, inArray } from 'drizzle-orm';
+import { count, eq } from 'drizzle-orm';
 import type { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import type { UserEntity } from '../auth/schemas/auth.schema';
 import { DATABASE_CONNECTION } from '../database/database-connection';
