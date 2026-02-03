@@ -22,7 +22,9 @@ export const shifts = pgTable(
   'shifts',
   {
     id: uuid('id').primaryKey().defaultRandom(),
-    description: text('description'),
+    title: text('title').notNull(),
+    slug: text('slug').notNull().unique(),
+    instructions: text('instructions').notNull(),
     organizationId: uuid('organization_id')
       .references(() => organizations.id, {
         onDelete: 'cascade',

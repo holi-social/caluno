@@ -6,6 +6,7 @@ import { DATABASE_CONNECTION } from '../database/database-connection';
 import * as schema from '../database/schema';
 import { CreateShiftInput } from './inputs/create-shift.input';
 import type { ShiftEntity } from './schemas/shift.schema';
+import { slugify } from 'src/utils/slug.util';
 
 @Injectable()
 export class ShiftService {
@@ -44,6 +45,7 @@ export class ShiftService {
       .insert(schema.shifts)
       .values({
         ...input,
+        slug: slugify(input.title),
         createdById: userId,
         organizationId,
       })

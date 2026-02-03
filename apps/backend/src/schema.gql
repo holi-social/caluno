@@ -36,11 +36,12 @@ input CreateProjectInput {
 }
 
 input CreateShiftInput {
-  description: String!
   endsAt: DateTime!
+  instructions: String!
   location: String
   projectId: String
   startsAt: DateTime!
+  title: String!
   visibility: ShiftVisibility! = ALL_MEMBERS
 }
 
@@ -177,13 +178,15 @@ input RejectVolunteerSessionInput {
 type Shift {
   assignees: [User!]
   createdBy: User!
-  description: String!
   endsAt: DateTime!
   id: ID!
+  instructions: String!
   location: String
   organization: Organization!
   project: Project
+  slug: String!
   startsAt: DateTime!
+  title: String!
   visibility: ShiftVisibility!
 }
 

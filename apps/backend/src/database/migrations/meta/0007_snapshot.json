@@ -1,6 +1,6 @@
 {
-  "id": "c3a3dce1-d00e-4ae8-9e22-5502fff7c0ff",
-  "prevId": "3796d41b-c973-4dee-8d14-e5a4b313c6e9",
+  "id": "54018fde-d9b7-4e7c-8b2a-e5fae27081be",
+  "prevId": "c3a3dce1-d00e-4ae8-9e22-5502fff7c0ff",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -960,11 +960,23 @@
           "notNull": true,
           "default": "gen_random_uuid()"
         },
-        "description": {
-          "name": "description",
+        "title": {
+          "name": "title",
           "type": "text",
           "primaryKey": false,
-          "notNull": false
+          "notNull": true
+        },
+        "slug": {
+          "name": "slug",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "instructions": {
+          "name": "instructions",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
         },
         "organization_id": {
           "name": "organization_id",
@@ -1131,7 +1143,13 @@
         }
       },
       "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
+      "uniqueConstraints": {
+        "shifts_slug_unique": {
+          "name": "shifts_slug_unique",
+          "nullsNotDistinct": false,
+          "columns": ["slug"]
+        }
+      },
       "policies": {},
       "checkConstraints": {},
       "isRLSEnabled": false

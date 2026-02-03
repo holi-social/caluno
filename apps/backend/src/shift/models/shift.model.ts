@@ -11,7 +11,13 @@ export class Shift {
   id: string;
 
   @Field(() => String)
-  description: string;
+  title: string;
+
+  @Field(() => String)
+  slug: string;
+
+  @Field(() => String)
+  instructions: string;
 
   @Field(() => Organization)
   organization: Organization;

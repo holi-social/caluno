@@ -83,13 +83,6 @@ export class OrganizationService {
     );
   }
 
-  async findModerators(organizationId: string): Promise<UserEntity[]> {
-    return this.membershipService.findUsersByRole(
-      organizationId,
-      OrganizationRole.MODERATOR,
-    );
-  }
-
   async findVolunteers(organizationId: string): Promise<UserEntity[]> {
     return this.membershipService.findUsersByRole(
       organizationId,

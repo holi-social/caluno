@@ -57,14 +57,6 @@ export class OrganizationFieldResolver {
   }
 
   @ResolveField(() => [User])
-  async moderators(@Parent() organization: Organization): Promise<User[]> {
-    const moderators = await this.organizationService.findModerators(
-      organization.id,
-    );
-    return this.userMapper.toArray(moderators);
-  }
-
-  @ResolveField(() => [User])
   async volunteers(@Parent() organization: Organization): Promise<User[]> {
     const volunteers = await this.organizationService.findVolunteers(
       organization.id,

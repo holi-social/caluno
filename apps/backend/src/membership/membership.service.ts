@@ -72,17 +72,6 @@ export class MembershipService {
     return !!membership;
   }
 
-  async isModerator(userId: string, organizationId: string): Promise<boolean> {
-    const membership = await this.db.query.memberships.findFirst({
-      where: and(
-        eq(schema.memberships.userId, userId),
-        eq(schema.memberships.organizationId, organizationId),
-        eq(schema.memberships.role, OrganizationRole.MODERATOR),
-      ),
-    });
-    return !!membership;
-  }
-
   async isVolunteer(userId: string, organizationId: string): Promise<boolean> {
     const membership = await this.db.query.memberships.findFirst({
       where: and(
@@ -102,7 +91,6 @@ export class MembershipService {
         or(
           eq(schema.memberships.role, OrganizationRole.OWNER),
           eq(schema.memberships.role, OrganizationRole.ADMIN),
-          eq(schema.memberships.role, OrganizationRole.MODERATOR),
         ),
       ),
     });

@@ -8,7 +8,10 @@ registerEnumType(ShiftVisibility, {
 @InputType()
 export class CreateShiftInput {
   @Field(() => String)
-  description: string;
+  title: string;
+
+  @Field(() => String)
+  instructions: string;
 
   @Field(() => String, { nullable: true })
   projectId: string | null;

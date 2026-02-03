@@ -50,6 +50,13 @@
       "when": 1770111615296,
       "tag": "0006_add_shift_visibility",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1770112214251,
+      "tag": "0007_add_shift_instructions_and_slug",
+      "breakpoints": true
     }
   ]
 }
