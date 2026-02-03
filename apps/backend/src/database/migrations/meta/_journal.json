@@ -43,6 +43,13 @@
       "when": 1769767902356,
       "tag": "0005_rename-time-session-enums",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1770111615296,
+      "tag": "0006_add_shift_visibility",
+      "breakpoints": true
     }
   ]
 }

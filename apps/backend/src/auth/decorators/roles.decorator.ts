@@ -6,7 +6,6 @@ export const ROLES_KEY = 'roles';
 export type Role =
   | OrganizationRole.OWNER
   | OrganizationRole.ADMIN
-  | OrganizationRole.MODERATOR
   | OrganizationRole.VOLUNTEER
   | 'STAFF'
   | 'MEMBER';

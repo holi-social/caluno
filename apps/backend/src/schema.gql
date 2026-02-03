@@ -41,6 +41,7 @@ input CreateShiftInput {
   location: String
   projectId: String
   startsAt: DateTime!
+  visibility: ShiftVisibility! = ALL_MEMBERS
 }
 
 input CreateTaskAssignmentInput {
@@ -183,11 +184,17 @@ type Shift {
   organization: Organization!
   project: Project
   startsAt: DateTime!
+  visibility: ShiftVisibility!
 }
 
 type ShiftPaginatedResponse {
   items: [Shift!]!
   pagination: PaginationInfo!
+}
+
+enum ShiftVisibility {
+  ALL_MEMBERS
+  INVITED_MEMBERS
 }
 
 input StartVolunteerSessionInput {

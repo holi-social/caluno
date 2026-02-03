@@ -19,17 +19,11 @@ export class MembershipRoleGuard implements CanActivate {
   private readonly roleMapping: Record<Role, OrganizationRole[]> = {
     [OrganizationRole.OWNER]: [OrganizationRole.OWNER],
     [OrganizationRole.ADMIN]: [OrganizationRole.ADMIN],
-    [OrganizationRole.MODERATOR]: [OrganizationRole.MODERATOR],
     [OrganizationRole.VOLUNTEER]: [OrganizationRole.VOLUNTEER],
-    STAFF: [
-      OrganizationRole.OWNER,
-      OrganizationRole.ADMIN,
-      OrganizationRole.MODERATOR,
-    ],
+    STAFF: [OrganizationRole.OWNER, OrganizationRole.ADMIN],
     MEMBER: [
       OrganizationRole.OWNER,
       OrganizationRole.ADMIN,
-      OrganizationRole.MODERATOR,
       OrganizationRole.VOLUNTEER,
     ],
   };

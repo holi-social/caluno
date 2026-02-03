@@ -3,6 +3,7 @@ import { createPaginatedResponseType } from '../../graphql/paginated-response.mo
 import { Organization } from '../../organization/models/organization.model';
 import { Project } from '../../project/models/project.model';
 import { User } from '../../user/models/user.model';
+import { ShiftVisibility } from '../enums';
 
 @ObjectType()
 export class Shift {
@@ -32,6 +33,9 @@ export class Shift {
 
   @Field(() => [User], { nullable: true })
   assignees: User[];
+
+  @Field(() => ShiftVisibility)
+  visibility: ShiftVisibility;
 }
 
 export const ShiftPaginatedResponse = createPaginatedResponseType<Shift>(

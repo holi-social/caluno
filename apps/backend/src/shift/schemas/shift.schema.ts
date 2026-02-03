@@ -1,9 +1,22 @@
 import { relations } from 'drizzle-orm';
-import { index, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
+import {
+  index,
+  pgEnum,
+  pgTable,
+  text,
+  timestamp,
+  uuid,
+} from 'drizzle-orm/pg-core';
 import { users } from '../../auth/schemas/auth.schema';
 import { organizations } from '../../organization/schemas/organization.schema';
 import { projects } from '../../project/schemas/project.schema';
 import { shiftAssignments } from './shift-assignment.schema';
+import { ShiftVisibility } from '../enums';
+
+export const shiftVisibilityEnum = pgEnum(
+  'shift_visibility',
+  ShiftVisibility as Record<string, string>,
+);
 
 export const shifts = pgTable(
   'shifts',
@@ -26,6 +39,9 @@ export const shifts = pgTable(
       })
       .notNull(),
     location: text('location'),
+    visibility: shiftVisibilityEnum('visibility')
+      .notNull()
+      .default(ShiftVisibility.ALL_MEMBERS),
     createdAt: timestamp('created_at').defaultNow().notNull(),
     updatedAt: timestamp('updated_at')
       .defaultNow()
