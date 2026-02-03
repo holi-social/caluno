@@ -25,6 +25,9 @@ export class CreateShiftInput {
   @Field(() => String, { nullable: true })
   location: string | null;
 
+  @Field(() => [String], { nullable: true })
+  invitedMemberIds: string[];
+
   @Field(() => ShiftVisibility, { defaultValue: ShiftVisibility.ALL_MEMBERS })
   visibility: ShiftVisibility;
 }
