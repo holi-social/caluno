@@ -8,6 +8,7 @@ import { DATABASE_CONNECTION } from '../database/database-connection';
 import * as schema from '../database/schema';
 import { CreateShiftInput } from './inputs/create-shift.input';
 import type { ShiftEntity } from './schemas/shift.schema';
+import { UserEntity } from '../database/schema';
 
 @Injectable()
 export class ShiftService {
@@ -82,5 +83,16 @@ export class ShiftService {
     );
 
     return shift;
+  }
+
+  async findVolunteers(shiftId: string): Promise<UserEntity[]> {
+    const volunteers = await this.db.query.shiftInvites.findMany({
+      where: eq(schema.shiftInvites.shiftId, shiftId),
+      with: {
+        user: true,
+      },
+    });
+
+    return volunteers.map((volunteer) => volunteer.user);
   }
 }
