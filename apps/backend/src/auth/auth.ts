@@ -17,12 +17,6 @@ export const createAuthConfig = (
     maxPasswordLength: 128,
     autoSignIn: true,
   },
-  session: {
-    cookieCache: {
-      enabled: true,
-      maxAge: 5 * 60,
-    },
-  },
   plugins: [],
 });
 

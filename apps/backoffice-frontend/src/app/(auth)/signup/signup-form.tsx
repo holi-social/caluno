@@ -33,7 +33,6 @@ export function SignupForm() {
 
       if (result.data?.user) {
         router.push('/');
-        router.refresh();
       } else {
         setError('Signup failed. Please try again.');
         setIsPending(false);
