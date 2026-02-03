@@ -1,4 +1,4 @@
-import { Args, Query, Resolver } from '@nestjs/graphql';
+import { Args, Context, Query, Resolver } from '@nestjs/graphql';
 import { PaginationInput } from '../../graphql/pagination.input';
 import {
   Organization,
@@ -25,7 +25,9 @@ export class OrganizationQueryResolver {
   @Query(() => OrganizationPaginatedResponse)
   async organizations(
     @Args() pagination: PaginationInput,
+    @Context() context: any,
   ): Promise<OrganizationPaginatedResponse> {
-    return this.organizationService.findAll(pagination);
+    const user = context.req.user;
+    return this.organizationService.findAll(pagination, user.id);
   }
 }

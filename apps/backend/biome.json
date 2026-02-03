@@ -11,9 +11,6 @@
       },
       "correctness": {
         "noUnusedFunctionParameters": "off"
-      },
-      "style": {
-        "useImportType": "off"
       }
     }
   }

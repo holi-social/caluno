@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { eq } from 'drizzle-orm';
+import { eq, inArray } from 'drizzle-orm';
 import type { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import type { UserEntity } from '../auth/schemas/auth.schema';
 import { DATABASE_CONNECTION } from '../database/database-connection';
@@ -45,11 +45,31 @@ export class OrganizationService {
 
   async findAll(
     pagination: PaginationInput,
+    userId: string,
   ): Promise<OrganizationPaginatedResponse> {
+    const userMemberships = await this.db
+      .select({ orgId: schema.memberships.organizationId })
+      .from(schema.memberships)
+      .where(eq(schema.memberships.userId, userId));
+
+    const orgIds = userMemberships
+      .map((m) => m.orgId)
+      .filter((id): id is string => !!id);
+
+    if (orgIds.length === 0) {
+      return new OrganizationPaginatedResponse({
+        items: [],
+        total: 0,
+        limit: pagination.limit,
+        offset: pagination.offset,
+      });
+    }
     const organizations = await this.db.query.organizations.findMany({
+      where: inArray(schema.organizations.id, orgIds),
       limit: pagination.limit,
       offset: pagination.offset,
     });
+
     return new OrganizationPaginatedResponse({
       items: this.mapper.toArray(organizations),
       total: organizations.length,

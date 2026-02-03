@@ -17,6 +17,21 @@ export const createAuthConfig = (
     maxPasswordLength: 128,
     autoSignIn: true,
   },
+  session: {
+    cookieCache: {
+      enabled: true,
+      maxAge: 5 * 60,
+    },
+  },
+  advanced: {
+    cookiePrefix: 'clippy',
+    defaultCookieAttributes: {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      path: '/',
+    },
+  },
   plugins: [],
 });
 
