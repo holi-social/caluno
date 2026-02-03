@@ -1,4 +1,4 @@
-import { DataProvider } from '@repo/data/react';
+import { DataProvider, OrgProvider } from '@repo/data/react';
 import { Separator } from '@repo/ui/separator';
 import {
   SidebarInset,
@@ -7,7 +7,6 @@ import {
 } from '@repo/ui/sidebar';
 import type { ReactNode } from 'react';
 import { DashboardSidebar } from '@/components/dashboard-sidebar';
-import { OrgProvider } from '@/contexts/org-context';
 import { requireAuth } from '@/lib/auth-server';
 import { GRAPHQL_API_URL } from '@/lib/constants';
 import { requireOrgAccess } from '@/lib/org-context-server';

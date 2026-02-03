@@ -10,10 +10,14 @@ export * from './client/graphql-client';
 // Organization Context Interface (implement per platform)
 export type { OrganizationContext } from './client/organization-context';
 
+// Constants
+export * from './constants';
 // Errors
 export * from './errors/data-error';
 // Generated types (all GraphQL types, queries, mutations)
 export * from './generated/graphql';
+// Server-side utilities (framework-agnostic, requires DI)
+export * from './integrations/server-org-context';
 // Repositories (if you want to use them directly)
 export * from './repositories/base/base.repository';
 export * from './repositories/organization/organization.repository';

@@ -1,10 +1,9 @@
 'use client';
 
+import { useUserOrganizations } from '@repo/data/react';
 import {
   Command,
-  CommandEmpty,
   CommandGroup,
-  CommandInput,
   CommandItem,
   CommandList,
   Popover,
@@ -16,7 +15,6 @@ import { cn } from '@repo/ui/utils';
 import { Building2, Check, ChevronsUpDown } from 'lucide-react';
 import { useParams, usePathname, useRouter } from 'next/navigation';
 import { useState } from 'react';
-import { useOrganizations } from '@/contexts/org-context';
 
 export function OrgSwitcher() {
   const [open, setOpen] = useState(false);
@@ -25,7 +23,7 @@ export function OrgSwitcher() {
   const pathname = usePathname();
   const currentOrgSlug = params.orgSlug as string | undefined;
 
-  const organizations = useOrganizations();
+  const organizations = useUserOrganizations();
 
   const handleOrgChange = (newOrgSlug: string) => {
     if (newOrgSlug === currentOrgSlug) {

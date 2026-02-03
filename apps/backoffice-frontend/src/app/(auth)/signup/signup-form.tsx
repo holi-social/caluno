@@ -5,7 +5,7 @@ import { Input } from '@repo/ui/input';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
-import { signUp } from '@/lib/auth-client';
+import { signUp } from '@/lib/auth';
 
 export function SignupForm() {
   const router = useRouter();
@@ -23,11 +23,7 @@ export function SignupForm() {
     const password = formData.get('password') as string;
 
     try {
-      const result = await signUp.email({
-        name,
-        email,
-        password,
-      });
+      const result = await signUp.email({ name, email, password });
 
       if (result.error) {
         setError(result.error.message || 'Failed to create account');
@@ -36,7 +32,7 @@ export function SignupForm() {
       }
 
       if (result.data?.user) {
-        router.push('/shifts');
+        router.push('/');
         router.refresh();
       } else {
         setError('Signup failed. Please try again.');

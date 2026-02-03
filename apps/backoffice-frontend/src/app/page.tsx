@@ -7,7 +7,7 @@ export default async function Home() {
   const session = await getSession();
 
   if (!session?.user) {
-    redirect('/login');
+    return redirect('/login');
   }
 
   const data = await getDataClient();
@@ -17,7 +17,7 @@ export default async function Home() {
   });
 
   if (orgsResult.pagination.total === 0) {
-    redirect('/create-organization');
+    return redirect('/create-organization');
   }
 
   const lastOrgSlug = await getLastVisitedOrgServer();
@@ -25,13 +25,14 @@ export default async function Home() {
   if (lastOrgSlug) {
     const hasAccess = orgsResult.items.some((org) => org.slug === lastOrgSlug);
     if (hasAccess) {
-      redirect(`/${lastOrgSlug}/shifts`);
+      return redirect(`/${lastOrgSlug}/shifts`);
     }
   }
 
   const firstOrg = orgsResult.items?.[0];
   if (!firstOrg) {
-    redirect('/create-organization');
+    return redirect('/create-organization');
   }
+
   redirect(`/${firstOrg.slug}/shifts`);
 }

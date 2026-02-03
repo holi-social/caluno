@@ -1,13 +1,4 @@
 'use client';
-
-import {
-  CalendarIcon,
-  LogOutIcon,
-  SettingsIcon,
-  UsersIcon,
-} from 'lucide-react';
-import { useParams, useRouter } from 'next/navigation';
-import { useMemo } from 'react';
 import { Button } from '@repo/ui/button';
 import {
   Sidebar,
@@ -21,7 +12,15 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from '@repo/ui/sidebar';
-import { signOut } from '@/lib/auth-client';
+import {
+  CalendarIcon,
+  LogOutIcon,
+  SettingsIcon,
+  UsersIcon,
+} from 'lucide-react';
+import { useParams, useRouter } from 'next/navigation';
+import { useMemo } from 'react';
+import { signOut } from '@/lib/auth';
 import { OrgSwitcher } from './org-switcher';
 
 export function DashboardSidebar() {
@@ -126,4 +125,3 @@ export function DashboardSidebar() {
     </Sidebar>
   );
 }
-

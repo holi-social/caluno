@@ -5,10 +5,11 @@ import { Input } from '@repo/ui/input';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
-import { signIn } from '@/lib/auth-client';
+import { signIn, useSession } from '@/lib/auth';
 
 export function LoginForm() {
   const router = useRouter();
+  const { refetch } = useSession();
   const [error, setError] = useState<string | null>(null);
   const [isPending, setIsPending] = useState(false);
 
@@ -22,10 +23,7 @@ export function LoginForm() {
     const password = formData.get('password') as string;
 
     try {
-      const result = await signIn.email({
-        email,
-        password,
-      });
+      const result = await signIn.email({ email, password });
 
       if (result.error) {
         setError(result.error.message || 'Invalid credentials');

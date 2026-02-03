@@ -1,7 +1,7 @@
 'use client';
 
+import { setLastVisitedOrg } from '@repo/data/react';
 import { type ReactNode, useEffect } from 'react';
-import { setLastVisitedOrg } from '@/lib/org-context-client';
 
 export function OrgSyncProvider({
   children,
