@@ -10,8 +10,8 @@ import {
 import { users } from '../../auth/schemas/auth.schema';
 import { organizations } from '../../organization/schemas/organization.schema';
 import { projects } from '../../project/schemas/project.schema';
-import { shiftAssignments } from './shift-assignment.schema';
 import { ShiftVisibility } from '../enums';
+import { shiftAssignments } from './shift-assignment.schema';
 
 export const shiftVisibilityEnum = pgEnum(
   'shift_visibility',
