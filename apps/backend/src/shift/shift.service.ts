@@ -6,9 +6,9 @@ import type { PaginationInput } from 'src/graphql/pagination.input';
 import { slugify } from 'src/utils/slug.util';
 import { DATABASE_CONNECTION } from '../database/database-connection';
 import * as schema from '../database/schema';
+import { UserEntity } from '../database/schema';
 import { CreateShiftInput } from './inputs/create-shift.input';
 import type { ShiftEntity } from './schemas/shift.schema';
-import { UserEntity } from '../database/schema';
 
 @Injectable()
 export class ShiftService {

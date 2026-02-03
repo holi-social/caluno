@@ -1,13 +1,13 @@
+import { Session } from '@nestjs/common';
 import { Args, Context, Query, Resolver } from '@nestjs/graphql';
+import { type UserSession } from '@thallesp/nestjs-better-auth';
 import { PaginationInput } from '../../graphql/pagination.input';
+import { OrganizationMapper } from '../mappers/organization.mapper';
 import {
   Organization,
   OrganizationPaginatedResponse,
 } from '../models/organization.model';
 import { OrganizationService } from '../organization.service';
-import { Session } from '@nestjs/common';
-import { type UserSession } from '@thallesp/nestjs-better-auth';
-import { OrganizationMapper } from '../mappers/organization.mapper';
 
 @Resolver(() => Organization)
 export class OrganizationQueryResolver {

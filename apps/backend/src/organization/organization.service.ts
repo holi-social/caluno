@@ -4,6 +4,7 @@ import type { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import type { UserEntity } from '../auth/schemas/auth.schema';
 import { DATABASE_CONNECTION } from '../database/database-connection';
 import * as schema from '../database/schema';
+import { OrganizationEntity } from '../database/schema';
 import type { PaginationInput } from '../graphql/pagination.input';
 import { MembershipService } from '../membership/membership.service';
 import type { ProjectPaginatedResponse } from '../project/models/project.model';
@@ -14,7 +15,6 @@ import { OrganizationRole } from './enums';
 import type { CreateOrganizationInput } from './inputs/create-organization.input';
 import { OrganizationMapper } from './mappers/organization.mapper';
 import { type Organization } from './models/organization.model';
-import { OrganizationEntity } from '../database/schema';
 
 @Injectable()
 export class OrganizationService {

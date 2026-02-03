@@ -1,10 +1,9 @@
-import { Args, Parent, ResolveField, Resolver } from '@nestjs/graphql';
-import { Shift } from '../models/shift.model';
-import { User } from 'src/user/models/user.model';
-import { ShiftService } from '../shift.service';
+import { Parent, ResolveField, Resolver } from '@nestjs/graphql';
 import { UserMapper } from 'src/user/mappers/user.mapper';
+import { User } from 'src/user/models/user.model';
+import { Shift } from '../models/shift.model';
 import type { ShiftEntity } from '../schemas/shift.schema';
-import { PaginationInput } from 'src/graphql/pagination.input';
+import { ShiftService } from '../shift.service';
 
 @Resolver(() => Shift)
 export class ShiftFieldResolver {
