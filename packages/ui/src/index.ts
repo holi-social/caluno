@@ -1,5 +1,6 @@
 // Components
 
+export * from './components/base/card';
 export * from './components/base/command';
 export * from './components/base/dialog';
 export * from './components/base/popover';
