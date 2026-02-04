@@ -2,7 +2,19 @@
 
 import { zodResolver } from '@hookform/resolvers/zod';
 import { ShiftVisibility, useOrgId } from '@repo/data/react';
-import { Button, DialogFooter, Input, Label } from '@repo/ui';
+import {
+  Button,
+  DialogFooter,
+  Input,
+  Label,
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+  Textarea,
+} from '@repo/ui';
 import { useRouter } from 'next/navigation';
 import { useState, useTransition } from 'react';
 import { useForm } from 'react-hook-form';
@@ -126,10 +138,9 @@ export function CreateShiftForm({ orgSlug }: CreateShiftFormProps) {
         <Label htmlFor="instructions">
           Instructions <span className="text-destructive">*</span>
         </Label>
-        <textarea
+        <Textarea
           id="instructions"
           rows={4}
-          className="flex min-h-20 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
           placeholder="Describe the shift responsibilities and requirements..."
           disabled={isPending}
           {...register('instructions')}
@@ -143,15 +154,21 @@ export function CreateShiftForm({ orgSlug }: CreateShiftFormProps) {
 
       <div className="space-y-2">
         <Label htmlFor="visibility">Visibility</Label>
-        <select
-          id="visibility"
-          className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
-          disabled={isPending}
-          {...register('visibility')}
-        >
-          <option value="ALL_MEMBERS">All Members</option>
-          <option value="INVITED_MEMBERS">Invited Members Only</option>
-        </select>
+        <Select disabled={isPending} {...register('visibility')}>
+          <SelectTrigger className="w-xl">
+            <SelectValue placeholder="Choose who can see this shift..." />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectGroup>
+              <SelectItem value={ShiftVisibility.AllMembers}>
+                All Members
+              </SelectItem>
+              <SelectItem value={ShiftVisibility.InvitedMembers}>
+                Invited Members Only
+              </SelectItem>
+            </SelectGroup>
+          </SelectContent>
+        </Select>
         {errors.visibility && (
           <p className="text-sm text-destructive">
             {errors.visibility.message}

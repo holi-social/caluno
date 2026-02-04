@@ -5,6 +5,8 @@ export * from './components/base/command';
 export * from './components/base/dialog';
 export * from './components/base/label';
 export * from './components/base/popover';
+export * from './components/base/select';
+export * from './components/base/textarea';
 export * from './components/button';
 export * from './components/input';
 export * from './components/separator';
