@@ -74,23 +74,23 @@ export function CreateShiftForm({ orgSlug }: CreateShiftFormProps) {
       )}
 
       <Field>
-        <FieldLabel htmlFor="title">
-          Title <span className="text-destructive">*</span>
+        <FieldLabel htmlFor="name">
+          Name <span className="text-destructive">*</span>
         </FieldLabel>
         <Input
-          id="title"
+          id="name"
           disabled={isPending}
           placeholder="Morning Shift"
-          {...register('title')}
+          {...register('name')}
         />
-        {errors.title && <FieldError>{errors.title.message}</FieldError>}
+        {errors.name && <FieldError>{errors.name.message}</FieldError>}
       </Field>
 
       <div className="grid grid-cols-2 gap-4">
         <Field>
-          <Label htmlFor="startsAt">
+          <FieldLabel htmlFor="startsAt">
             Start Time <span className="text-destructive">*</span>
-          </Label>
+          </FieldLabel>
           <Input
             id="startsAt"
             type="datetime-local"
@@ -103,9 +103,9 @@ export function CreateShiftForm({ orgSlug }: CreateShiftFormProps) {
         </Field>
 
         <Field>
-          <Label htmlFor="endsAt">
+          <FieldLabel htmlFor="endsAt">
             End Time <span className="text-destructive">*</span>
-          </Label>
+          </FieldLabel>
           <Input
             id="endsAt"
             type="datetime-local"
@@ -117,7 +117,7 @@ export function CreateShiftForm({ orgSlug }: CreateShiftFormProps) {
       </div>
 
       <Field>
-        <Label htmlFor="location">Location</Label>
+        <FieldLabel htmlFor="location">Location</FieldLabel>
         <Input
           id="location"
           disabled={isPending}
@@ -128,9 +128,7 @@ export function CreateShiftForm({ orgSlug }: CreateShiftFormProps) {
       </Field>
 
       <Field>
-        <Label htmlFor="instructions">
-          Instructions <span className="text-destructive">*</span>
-        </Label>
+        <FieldLabel htmlFor="instructions">Instructions</FieldLabel>
         <Textarea
           id="instructions"
           rows={4}
@@ -144,7 +142,9 @@ export function CreateShiftForm({ orgSlug }: CreateShiftFormProps) {
       </Field>
 
       <Field>
-        <Label htmlFor="visibility">Visibility</Label>
+        <FieldLabel htmlFor="visibility">
+          Visibility <span className="text-destructive">*</span>
+        </FieldLabel>
         <Select disabled={isPending} {...register('visibility')}>
           <SelectTrigger className="w-xl">
             <SelectValue placeholder="Choose who can see this shift..." />
