@@ -1,12 +1,13 @@
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
+import { ShiftVisibility, useOrgId } from '@repo/data/react';
 import { Button, DialogFooter, Input, Label } from '@repo/ui';
 import { useRouter } from 'next/navigation';
 import { useState, useTransition } from 'react';
 import { useForm } from 'react-hook-form';
 import { createShift } from './actions';
-import { type CreateShiftFormValues, createShiftSchema } from './schema';
+import { type CreateShiftFormValues, createShiftSchema } from './schemas';
 
 interface CreateShiftFormProps {
   orgSlug: string;
@@ -16,6 +17,7 @@ export function CreateShiftForm({ orgSlug }: CreateShiftFormProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [serverError, setServerError] = useState<string | null>(null);
+  const orgId = useOrgId();
 
   const form = useForm<CreateShiftFormValues>({
     resolver: zodResolver(createShiftSchema),
@@ -25,21 +27,21 @@ export function CreateShiftForm({ orgSlug }: CreateShiftFormProps) {
       endsAt: '',
       location: '',
       instructions: '',
-      visibility: 'ALL_MEMBERS',
-      projectId: '',
+      visibility: ShiftVisibility.AllMembers,
+      projectId: '1567a68b-5819-4e71-8566-088cc09ede21',
+      organizationId: orgId,
     },
   });
 
-  const onSubmit = async (data: CreateShiftFormValues) => {
+  const onSubmit = async (formData: CreateShiftFormValues) => {
     setServerError(null);
 
     startTransition(async () => {
-      const result = await createShift(orgSlug, data);
-      if (result?.error) {
-        setServerError(result.error);
+      const result = await createShift(formData);
+      if (result?.serverError) {
+        setServerError(result.serverError);
       } else {
-        router.push(`/${orgSlug}/shifts`);
-        router.refresh();
+        router.push(`/${orgSlug}/shifts/${result.data?.id}`);
       }
     });
   };

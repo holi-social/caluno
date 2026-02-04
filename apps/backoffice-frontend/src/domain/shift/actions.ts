@@ -2,72 +2,26 @@
 
 import type { CreateShiftInput } from '@repo/data';
 import { ShiftVisibility } from '@repo/data';
-import { redirect } from 'next/navigation';
 import { getDataClient } from '@/lib/data-client';
-import type { CreateShiftFormValues } from './schema';
+import { actionClient } from '@/lib/safe-action';
+import { createShiftSchema } from './schemas';
 
-interface CreateShiftResult {
-  success: boolean;
-  error?: string;
-}
-
-export async function createShift(
-  orgSlug: string,
-  formData: CreateShiftFormValues,
-): Promise<CreateShiftResult> {
-  if (!formData.title) {
-    return {
-      success: false,
-      error: 'Shift title is required',
-    };
-  }
-
-  if (!formData.startsAt) {
-    return {
-      success: false,
-      error: 'Start time is required',
-    };
-  }
-
-  if (!formData.endsAt) {
-    return {
-      success: false,
-      error: 'End time is required',
-    };
-  }
-
-  if (!formData.instructions) {
-    return {
-      success: false,
-      error: 'Instructions are required',
-    };
-  }
-
-  try {
-    const data = await getDataClient();
+export const createShift = actionClient
+  .inputSchema(createShiftSchema)
+  .action(async ({ parsedInput }) => {
+    const data = await getDataClient(parsedInput.organizationId);
 
     const input: CreateShiftInput = {
-      title: formData.title,
-      startsAt: new Date(formData.startsAt).toISOString(),
-      endsAt: new Date(formData.endsAt).toISOString(),
-      instructions: formData.instructions,
-      location: formData.location,
+      title: parsedInput.title,
+      startsAt: new Date(parsedInput.startsAt).toISOString(),
+      endsAt: new Date(parsedInput.endsAt).toISOString(),
+      instructions: parsedInput.instructions,
+      location: parsedInput.location,
       visibility:
-        (formData.visibility as ShiftVisibility) || ShiftVisibility.AllMembers,
-      projectId: formData.projectId,
+        (parsedInput.visibility as ShiftVisibility) ||
+        ShiftVisibility.AllMembers,
+      projectId: parsedInput.projectId,
     };
 
-    await data.shift.create(input);
-
-    redirect(`/${orgSlug}/shifts`);
-  } catch (error) {
-    console.error('Create shift error:', error);
-    return {
-      success: false,
-      error:
-        error instanceof Error
-          ? error.message
-          : 'Failed to create shift. Please try again.',
-    };
-  }
-}
+    return await data.shift.create(input);
+  });

@@ -1,3 +1,4 @@
+import { ShiftVisibility } from '@repo/data';
 import z from 'zod';
 
 export const createShiftSchema = z.object({
@@ -6,8 +7,9 @@ export const createShiftSchema = z.object({
   endsAt: z.string().min(1, 'End time is required'),
   location: z.string().optional(),
   instructions: z.string().min(1, 'Instructions are required'),
-  visibility: z.enum(['ALL_MEMBERS', 'INVITED_MEMBERS']),
+  visibility: z.enum(ShiftVisibility),
   projectId: z.string().optional(),
+  organizationId: z.string().min(1, 'Organization ID is required'),
 });
 
 export type CreateShiftFormValues = z.infer<typeof createShiftSchema>;
