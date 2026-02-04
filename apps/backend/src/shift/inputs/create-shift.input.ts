@@ -10,8 +10,8 @@ export class CreateShiftInput {
   @Field(() => String)
   title: string;
 
-  @Field(() => String)
-  instructions: string;
+  @Field(() => String, { nullable: true })
+  instructions: string | null;
 
   @Field(() => String, { nullable: true })
   projectId: string | null;

@@ -35,7 +35,7 @@ export function CreateShiftForm({ orgSlug }: CreateShiftFormProps) {
   const form = useForm<CreateShiftFormValues>({
     resolver: zodResolver(createShiftSchema),
     defaultValues: {
-      title: '',
+      name: '',
       startsAt: '',
       endsAt: '',
       location: '',

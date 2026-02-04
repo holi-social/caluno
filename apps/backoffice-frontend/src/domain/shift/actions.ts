@@ -12,7 +12,7 @@ export const createShift = actionClient
     const data = await getDataClient(parsedInput.organizationId);
 
     const input: CreateShiftInput = {
-      title: parsedInput.title,
+      title: parsedInput.name,
       startsAt: new Date(parsedInput.startsAt).toISOString(),
       endsAt: new Date(parsedInput.endsAt).toISOString(),
       instructions: parsedInput.instructions,
