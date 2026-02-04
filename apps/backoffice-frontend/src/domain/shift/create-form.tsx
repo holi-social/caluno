@@ -4,12 +4,13 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { ShiftVisibility, useOrgId } from '@repo/data/react';
 import {
   Button,
-  DialogFooter,
+  Field,
+  FieldError,
+  FieldLabel,
   Input,
   Label,
   Select,
   SelectContent,
-  SelectGroup,
   SelectItem,
   SelectTrigger,
   SelectValue,
@@ -72,23 +73,21 @@ export function CreateShiftForm({ orgSlug }: CreateShiftFormProps) {
         </div>
       )}
 
-      <div className="space-y-2">
-        <Label htmlFor="title">
+      <Field>
+        <FieldLabel htmlFor="title">
           Title <span className="text-destructive">*</span>
-        </Label>
+        </FieldLabel>
         <Input
           id="title"
           disabled={isPending}
           placeholder="Morning Shift"
           {...register('title')}
         />
-        {errors.title && (
-          <p className="text-sm text-destructive">{errors.title.message}</p>
-        )}
-      </div>
+        {errors.title && <FieldError>{errors.title.message}</FieldError>}
+      </Field>
 
       <div className="grid grid-cols-2 gap-4">
-        <div className="space-y-2">
+        <Field>
           <Label htmlFor="startsAt">
             Start Time <span className="text-destructive">*</span>
           </Label>
@@ -99,13 +98,11 @@ export function CreateShiftForm({ orgSlug }: CreateShiftFormProps) {
             {...register('startsAt')}
           />
           {errors.startsAt && (
-            <p className="text-sm text-destructive">
-              {errors.startsAt.message}
-            </p>
+            <FieldError>{errors.startsAt.message}</FieldError>
           )}
-        </div>
+        </Field>
 
-        <div className="space-y-2">
+        <Field>
           <Label htmlFor="endsAt">
             End Time <span className="text-destructive">*</span>
           </Label>
@@ -115,13 +112,11 @@ export function CreateShiftForm({ orgSlug }: CreateShiftFormProps) {
             disabled={isPending}
             {...register('endsAt')}
           />
-          {errors.endsAt && (
-            <p className="text-sm text-destructive">{errors.endsAt.message}</p>
-          )}
-        </div>
+          {errors.endsAt && <FieldError>{errors.endsAt.message}</FieldError>}
+        </Field>
       </div>
 
-      <div className="space-y-2">
+      <Field>
         <Label htmlFor="location">Location</Label>
         <Input
           id="location"
@@ -129,12 +124,10 @@ export function CreateShiftForm({ orgSlug }: CreateShiftFormProps) {
           placeholder="Main Hall, 123 Main St"
           {...register('location')}
         />
-        {errors.location && (
-          <p className="text-sm text-destructive">{errors.location.message}</p>
-        )}
-      </div>
+        {errors.location && <FieldError>{errors.location.message}</FieldError>}
+      </Field>
 
-      <div className="space-y-2">
+      <Field>
         <Label htmlFor="instructions">
           Instructions <span className="text-destructive">*</span>
         </Label>
@@ -146,41 +139,35 @@ export function CreateShiftForm({ orgSlug }: CreateShiftFormProps) {
           {...register('instructions')}
         />
         {errors.instructions && (
-          <p className="text-sm text-destructive">
-            {errors.instructions.message}
-          </p>
+          <FieldError>{errors.instructions.message}</FieldError>
         )}
-      </div>
+      </Field>
 
-      <div className="space-y-2">
+      <Field>
         <Label htmlFor="visibility">Visibility</Label>
         <Select disabled={isPending} {...register('visibility')}>
           <SelectTrigger className="w-xl">
             <SelectValue placeholder="Choose who can see this shift..." />
           </SelectTrigger>
           <SelectContent>
-            <SelectGroup>
-              <SelectItem value={ShiftVisibility.AllMembers}>
-                All Members
-              </SelectItem>
-              <SelectItem value={ShiftVisibility.InvitedMembers}>
-                Invited Members Only
-              </SelectItem>
-            </SelectGroup>
+            <SelectItem value={ShiftVisibility.AllMembers}>
+              All Members
+            </SelectItem>
+            <SelectItem value={ShiftVisibility.InvitedMembers}>
+              Invited Members Only
+            </SelectItem>
           </SelectContent>
         </Select>
         {errors.visibility && (
-          <p className="text-sm text-destructive">
-            {errors.visibility.message}
-          </p>
+          <FieldError>{errors.visibility.message}</FieldError>
         )}
-      </div>
+      </Field>
 
-      <DialogFooter>
+      <div className="flex justify-end">
         <Button type="submit" disabled={isPending}>
           {isPending ? 'Creating...' : 'Create Shift'}
         </Button>
-      </DialogFooter>
+      </div>
     </form>
   );
 }
