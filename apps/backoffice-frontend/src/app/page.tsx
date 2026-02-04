@@ -11,28 +11,26 @@ export default async function Home() {
   }
 
   const data = await getDataClient();
-  const orgsResult = await data.user.getMyOrganizations({
-    limit: 100,
-    offset: 0,
-  });
+
+  const orgsResult = await data.user
+    .getMyOrganizations({
+      limit: 100,
+      offset: 0,
+    })
+    .catch((error) => {
+      throw error;
+    });
 
   if (orgsResult.pagination.total === 0) {
-    return redirect('/create-organization');
+    redirect('/create-organization');
   }
 
   const lastOrgSlug = await getLastVisitedOrgServer();
-
   if (lastOrgSlug) {
     const hasAccess = orgsResult.items.some((org) => org.slug === lastOrgSlug);
     if (hasAccess) {
-      return redirect(`/${lastOrgSlug}/shifts`);
+      redirect(`/${lastOrgSlug}/shifts`);
     }
   }
-
-  const firstOrg = orgsResult.items?.[0];
-  if (!firstOrg) {
-    return redirect('/create-organization');
-  }
-
-  redirect(`/${firstOrg.slug}/shifts`);
+  redirect('/organizations');
 }

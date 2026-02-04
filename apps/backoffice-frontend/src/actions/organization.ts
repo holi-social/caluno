@@ -27,28 +27,28 @@ export async function createOrganization(
     };
   }
 
-  try {
-    const input: CreateOrganizationInput = {
-      name,
-      description: description || undefined,
-      email: email || undefined,
-      phone: phone || undefined,
-      websiteUrl: websiteUrl || undefined,
-      address: address || undefined,
-    };
+  const input: CreateOrganizationInput = {
+    name,
+    description: description || undefined,
+    email: email || undefined,
+    phone: phone || undefined,
+    websiteUrl: websiteUrl || undefined,
+    address: address || undefined,
+  };
 
-    const data = await getDataClient();
-    const newOrg = await data.organization.create(input);
-
-    redirect(`/${newOrg.slug}/shifts`);
-  } catch (error) {
-    console.error('Create organization error:', error);
-    return {
-      success: false,
-      error:
-        error instanceof Error
-          ? error.message
-          : 'Failed to create organization. Please try again.',
-    };
-  }
+  const data = await getDataClient();
+  return await data.organization
+    .create(input)
+    .then((org) => {
+      return redirect(`/${org.slug}/shifts`);
+    })
+    .catch((error) => {
+      return {
+        success: false,
+        error:
+          error instanceof Error
+            ? error.message
+            : 'Failed to create organization. Please try again.',
+      };
+    });
 }
