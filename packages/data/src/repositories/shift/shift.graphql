@@ -1,0 +1,5 @@
+mutation CreateShift($input: CreateShiftInput!) {
+  createShift(input: $input) {
+    id
+  }
+}
