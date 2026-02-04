@@ -1,22 +1,36 @@
-import { redirect } from 'next/navigation';
-import { getDataClient } from '@/lib/data-client';
+import { Button } from '@repo/ui/button';
+import { PlusIcon } from 'lucide-react';
+import Link from 'next/link';
 
-export default async function DashboardPage() {
-  const data = await getDataClient();
-  const orgsResult = await data.user.getMyOrganizations({
-    limit: 1,
-    offset: 0,
-  });
+interface ShiftsPageProps {
+  params: Promise<{ orgSlug: string }>;
+}
 
-  if (orgsResult.pagination.total === 0) {
-    redirect('/create-organization');
-  }
+export default async function ShiftsPage({ params }: ShiftsPageProps) {
+  const { orgSlug } = await params;
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold">Shifts</h1>
+    <>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold">Shifts</h1>
+          <p className="text-muted-foreground">
+            Manage and view your organization&apos;s shifts
+          </p>
+        </div>
+        <Link href={`/${orgSlug}/shifts/create`}>
+          <Button>
+            <PlusIcon className="mr-2 size-4" />
+            Create Shift
+          </Button>
+        </Link>
       </div>
-    </div>
+
+      <div className="rounded-md border border-dashed p-12 text-center">
+        <p className="text-muted-foreground">
+          No shifts yet. Create your first shift to get started.
+        </p>
+      </div>
+    </>
   );
 }
