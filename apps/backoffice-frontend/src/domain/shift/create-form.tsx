@@ -165,7 +165,7 @@ export function CreateShiftForm({ orgSlug }: CreateShiftFormProps) {
 
       <div className="flex justify-end">
         <Button type="submit" disabled={isPending}>
-          {isPending ? 'Creating...' : 'Create Shift'}
+          {isPending ? 'Saving...' : 'Save & Publish'}
         </Button>
       </div>
     </form>
