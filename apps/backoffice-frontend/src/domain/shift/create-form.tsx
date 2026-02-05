@@ -1,19 +1,19 @@
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
-import { ShiftVisibility, useOrgId } from '@repo/data/react';
+import { useOrgId } from '@repo/data/react';
 import {
   Button,
+  Card,
+  CardContent,
   Field,
+  FieldContent,
+  FieldDescription,
   FieldError,
+  FieldGroup,
   FieldLabel,
   Input,
-  Label,
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
+  Switch,
   Textarea,
 } from '@repo/ui';
 import { useRouter } from 'next/navigation';
@@ -30,7 +30,7 @@ export function CreateShiftForm({ orgSlug }: CreateShiftFormProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [serverError, setServerError] = useState<string | null>(null);
-  const orgId = useOrgId();
+  const organizationId = useOrgId();
 
   const form = useForm<CreateShiftFormValues>({
     resolver: zodResolver(createShiftSchema),
@@ -40,9 +40,9 @@ export function CreateShiftForm({ orgSlug }: CreateShiftFormProps) {
       endsAt: '',
       location: '',
       instructions: '',
-      visibility: ShiftVisibility.AllMembers,
+      openShift: true,
       projectId: '1567a68b-5819-4e71-8566-088cc09ede21',
-      organizationId: orgId,
+      organizationId,
     },
   });
 
@@ -62,6 +62,8 @@ export function CreateShiftForm({ orgSlug }: CreateShiftFormProps) {
   const {
     register,
     handleSubmit,
+    setValue,
+    watch,
     formState: { errors },
   } = form;
 
@@ -141,27 +143,25 @@ export function CreateShiftForm({ orgSlug }: CreateShiftFormProps) {
         )}
       </Field>
 
-      <Field>
-        <FieldLabel htmlFor="visibility">
-          Visibility <span className="text-destructive">*</span>
-        </FieldLabel>
-        <Select disabled={isPending} {...register('visibility')}>
-          <SelectTrigger className="w-xl">
-            <SelectValue placeholder="Choose who can see this shift..." />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value={ShiftVisibility.AllMembers}>
-              All Members
-            </SelectItem>
-            <SelectItem value={ShiftVisibility.InvitedMembers}>
-              Invited Members Only
-            </SelectItem>
-          </SelectContent>
-        </Select>
-        {errors.visibility && (
-          <FieldError>{errors.visibility.message}</FieldError>
-        )}
-      </Field>
+      <Card className="rounded-md p-4">
+        <Field orientation="horizontal">
+          <FieldContent>
+            <FieldLabel htmlFor="openShift">Open Shift</FieldLabel>
+            <FieldDescription>
+              Any volunteer can join the shift
+            </FieldDescription>
+          </FieldContent>
+          <Switch
+            id="openShift"
+            checked={watch('openShift')}
+            onCheckedChange={(checked) => setValue('openShift', checked)}
+            disabled={isPending}
+          />
+          {errors.openShift && (
+            <FieldError>{errors.openShift.message}</FieldError>
+          )}
+        </Field>
+      </Card>
 
       <div className="flex justify-end">
         <Button type="submit" disabled={isPending}>

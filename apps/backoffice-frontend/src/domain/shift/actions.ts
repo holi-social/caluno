@@ -17,9 +17,9 @@ export const createShift = actionClient
       endsAt: new Date(parsedInput.endsAt).toISOString(),
       instructions: parsedInput.instructions,
       location: parsedInput.location,
-      visibility:
-        (parsedInput.visibility as ShiftVisibility) ||
-        ShiftVisibility.AllMembers,
+      visibility: parsedInput.openShift
+        ? ShiftVisibility.AllMembers
+        : ShiftVisibility.InvitedMembers,
       projectId: parsedInput.projectId,
     };
 
