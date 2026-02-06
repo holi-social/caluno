@@ -1,9 +1,11 @@
 // Components
 
+export * from './components/base/badge';
 export * from './components/base/card';
 export * from './components/base/command';
 export * from './components/base/dialog';
 export * from './components/base/popover';
+export * from './components/base/table';
 export * from './components/button';
 export * from './components/calendar';
 export * from './components/input';
