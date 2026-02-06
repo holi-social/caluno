@@ -8,3 +8,47 @@ mutation CreateProject($input: CreateProjectInput!) {
     status
   }
 }
+
+query GetProject($id: String!) {
+  project(id: $id) {
+    id
+    title
+    slug
+    description
+    location
+    organization {
+      id
+      name
+    }
+    startsAt
+    endsAt
+    status
+    createdBy {
+      id
+      name
+    }
+    createdAt
+    updatedAt
+  }
+}
+
+query GetProjects($organizationId: String!, $limit: Int!, $offset: Int!) {
+  projects(organizationId: $organizationId, limit: $limit, offset: $offset) {
+    items {
+      id
+      title
+      slug
+      description
+      location
+      startsAt
+      endsAt
+      status
+    }
+    pagination {
+      total
+      limit
+      offset
+      hasMore
+    }
+  }
+}
