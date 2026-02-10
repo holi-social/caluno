@@ -22,4 +22,5 @@ export * from './integrations/server-org-context';
 export * from './repositories/base/base.repository';
 export * from './repositories/organization/organization.repository';
 export * from './repositories/project/project.repository';
+export * from './repositories/shift/shift.repository';
 export * from './repositories/user/user.repository';

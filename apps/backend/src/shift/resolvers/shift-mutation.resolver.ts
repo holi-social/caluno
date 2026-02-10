@@ -35,7 +35,7 @@ export class ShiftMutationResolver {
     @Args('shiftId', { type: () => String }) shiftId: string,
     @Args('memberIds', { type: () => [String] }) memberIds: string[],
   ): Promise<Shift> {
-    const shift = await this.shiftService.inviteMembersToShift(
+    const shift = await this.shiftService.inviteMembersToShiftWithAutoApproval(
       shiftId,
       memberIds,
     );

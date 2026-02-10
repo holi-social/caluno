@@ -1,6 +1,7 @@
 import { GraphQLClient } from 'graphql-request';
 import { OrganizationRepository } from '../repositories/organization/organization.repository';
 import { ProjectRepository } from '../repositories/project/project.repository';
+import { ShiftRepository } from '../repositories/shift/shift.repository';
 import { UserRepository } from '../repositories/user/user.repository';
 import type { GraphQLClientConfig } from './graphql-client';
 import type { OrganizationContext } from './organization-context';
@@ -11,6 +12,7 @@ export class DataClient {
   public readonly user: UserRepository;
   public readonly organization: OrganizationRepository;
   public readonly project: ProjectRepository;
+  public readonly shift: ShiftRepository;
 
   // Optional organization context
   public readonly organizationContext?: OrganizationContext;
@@ -28,6 +30,7 @@ export class DataClient {
     this.user = new UserRepository(this.graphqlClient);
     this.organization = new OrganizationRepository(this.graphqlClient);
     this.project = new ProjectRepository(this.graphqlClient);
+    this.shift = new ShiftRepository(this.graphqlClient);
   }
 
   async getCurrentOrganizationId(): Promise<string | null> {

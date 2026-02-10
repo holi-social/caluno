@@ -3,8 +3,8 @@
 import { cva, type VariantProps } from 'class-variance-authority';
 import { useMemo } from 'react';
 import { cn } from '../../lib/utils';
+import { Separator } from '../separator';
 import { Label } from './label';
-import { Separator } from './separator';
 
 function FieldSet({ className, ...props }: React.ComponentProps<'fieldset'>) {
   return (
@@ -203,7 +203,7 @@ function FieldError({
       ...new Map(errors.map((error) => [error?.message, error])).values(),
     ];
 
-    if (uniqueErrors?.length === 1) {
+    if (uniqueErrors?.length == 1) {
       return uniqueErrors[0]?.message;
     }
 
