@@ -20,8 +20,8 @@ import {
 } from 'lucide-react';
 import { useParams, useRouter } from 'next/navigation';
 import { useMemo } from 'react';
+import { OrgSwitcher } from '@/domain/organization/org-switcher';
 import { signOut } from '@/lib/auth';
-import { OrgSwitcher } from './org-switcher';
 
 export function DashboardSidebar() {
   const params = useParams();

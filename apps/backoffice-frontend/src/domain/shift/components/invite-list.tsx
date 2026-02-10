@@ -2,9 +2,6 @@
 
 import type { User } from '@repo/data';
 import {
-  Avatar,
-  AvatarFallback,
-  AvatarImage,
   Badge,
   Button,
   Card,
@@ -15,32 +12,14 @@ import {
 } from '@repo/ui';
 import { Search, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import { getVolunteers } from '../organization/actions';
+import { UserCard } from '@/components/user-card';
+import { getVolunteers } from '@/domain/organization/actions';
 
-interface InviteSectionProps {
+interface InviteListProps {
   organizationId: string;
   value: string[] | undefined;
   onChange: (ids: string[]) => void;
 }
-
-type MemberProps = {
-  member: User;
-};
-
-const Member = ({ member }: MemberProps) => (
-  <div className="flex items-center gap-2">
-    <Avatar size="sm" className="bg-muted">
-      <AvatarImage src={member.image} alt="" />
-      <AvatarFallback>XX</AvatarFallback>
-    </Avatar>
-    <div>
-      <div className="font-medium text-sm truncate">{member.name}</div>
-      <div className="text-xs text-muted-foreground truncate">
-        {member.email}
-      </div>
-    </div>
-  </div>
-);
 
 const filterUsers = (users: User[], query: string) =>
   users.filter(
@@ -49,11 +28,11 @@ const filterUsers = (users: User[], query: string) =>
       v.email.toLowerCase().includes(query.toLowerCase()),
   );
 
-export function InviteSection({
+export const InviteList = ({
   organizationId,
   value = [],
   onChange,
-}: InviteSectionProps) {
+}: InviteListProps) => {
   const [volunteers, setVolunteers] = useState<User[]>([]);
   const [volunteerSearchQuery, setVolunteerSearchQuery] = useState('');
   const [inviteSearchQuery, setInviteSearchQuery] = useState('');
@@ -114,9 +93,9 @@ export function InviteSection({
                 key={volunteer.id}
                 type="button"
                 onClick={() => addMember(volunteer.id)}
-                className="w-full rounded-md p-2 text-left hover:bg-muted/50 transition-colors"
+                className="w-full rounded-md p-2 hover:bg-muted/50 transition-colors"
               >
-                <Member member={volunteer} />
+                <UserCard member={volunteer} />
               </button>
             ))
           )}
@@ -148,9 +127,9 @@ export function InviteSection({
             filteredInvites.map((volunteer) => (
               <div
                 key={volunteer.id}
-                className="w-full flex justify-between rounded-md p-2 pr-0 text-left hover:bg-muted/50 transition-colors"
+                className="w-full flex justify-between rounded-md p-2 pr-0 hover:bg-muted/50 transition-colors"
               >
-                <Member member={volunteer} />
+                <UserCard member={volunteer} />
                 <div className="flex ">
                   <Button
                     size="icon-sm"
@@ -167,4 +146,4 @@ export function InviteSection({
       </Card>
     </div>
   );
-}
+};

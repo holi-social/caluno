@@ -17,9 +17,9 @@ import {
 import { useRouter } from 'next/navigation';
 import { useState, useTransition } from 'react';
 import { useForm } from 'react-hook-form';
-import { createShift } from './actions';
-import { InviteSection } from './invite-section';
-import { type CreateShiftFormValues, createShiftSchema } from './schemas';
+import { createShift } from '../actions';
+import { type CreateShiftFormValues, createShiftSchema } from '../schemas';
+import { InviteList } from './invite-list';
 
 interface CreateShiftFormProps {
   orgSlug: string;
@@ -166,7 +166,7 @@ export function CreateShiftForm({ orgSlug }: CreateShiftFormProps) {
       <Field>
         <FieldLabel htmlFor="instructions">Invited volunteers</FieldLabel>
 
-        <InviteSection
+        <InviteList
           organizationId={organizationId}
           value={watch('invitedMemberIds')}
           onChange={(ids) => setValue('invitedMemberIds', ids)}

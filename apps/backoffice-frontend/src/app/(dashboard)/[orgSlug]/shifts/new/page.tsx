@@ -1,4 +1,4 @@
-import { CreateShiftForm } from '@/domain/shift/create-form';
+import { CreateShiftForm } from '@/domain/shift/components/create-form';
 
 interface CreateShiftPageProps {
   params: Promise<{ orgSlug: string }>;
