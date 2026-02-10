@@ -5,12 +5,10 @@ import { useOrgId } from '@repo/data/react';
 import {
   Button,
   Card,
-  CardContent,
   Field,
   FieldContent,
   FieldDescription,
   FieldError,
-  FieldGroup,
   FieldLabel,
   Input,
   Switch,
@@ -20,6 +18,7 @@ import { useRouter } from 'next/navigation';
 import { useState, useTransition } from 'react';
 import { useForm } from 'react-hook-form';
 import { createShift } from './actions';
+import { InviteSection } from './invite-section';
 import { type CreateShiftFormValues, createShiftSchema } from './schemas';
 
 interface CreateShiftFormProps {
@@ -43,6 +42,7 @@ export function CreateShiftForm({ orgSlug }: CreateShiftFormProps) {
       openShift: true,
       projectId: '1567a68b-5819-4e71-8566-088cc09ede21',
       organizationId,
+      invitedMemberIds: [],
     },
   });
 
@@ -88,7 +88,7 @@ export function CreateShiftForm({ orgSlug }: CreateShiftFormProps) {
         {errors.name && <FieldError>{errors.name.message}</FieldError>}
       </Field>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-2 gap-2">
         <Field>
           <FieldLabel htmlFor="startsAt">
             Start Time <span className="text-destructive">*</span>
@@ -146,7 +146,7 @@ export function CreateShiftForm({ orgSlug }: CreateShiftFormProps) {
       <Card className="rounded-md p-4">
         <Field orientation="horizontal">
           <FieldContent>
-            <FieldLabel htmlFor="openShift">Open Shift</FieldLabel>
+            <FieldLabel htmlFor="openShift">Open shift</FieldLabel>
             <FieldDescription>
               Any volunteer can join the shift
             </FieldDescription>
@@ -162,6 +162,20 @@ export function CreateShiftForm({ orgSlug }: CreateShiftFormProps) {
           )}
         </Field>
       </Card>
+
+      <Field>
+        <FieldLabel htmlFor="instructions">Invited volunteers</FieldLabel>
+
+        <InviteSection
+          organizationId={organizationId}
+          value={watch('invitedMemberIds')}
+          onChange={(ids) => setValue('invitedMemberIds', ids)}
+        />
+
+        {errors.invitedMemberIds && (
+          <FieldError>{errors.invitedMemberIds.message}</FieldError>
+        )}
+      </Field>
 
       <div className="flex justify-end">
         <Button type="submit" disabled={isPending}>
