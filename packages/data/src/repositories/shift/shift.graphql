@@ -1,3 +1,31 @@
+query GetShift($id: String!) {
+  shift(id: $id) {
+    id
+    title
+    slug
+    instructions
+    location
+    startsAt
+    endsAt
+    visibility
+    project {
+      id
+      title
+    }
+    volunteers {
+      id
+      name
+      email
+      image
+    }
+    createdBy {
+      id
+      name
+      email
+    }
+  }
+}
+
 mutation CreateShift($input: CreateShiftInput!) {
   createShift(input: $input) {
     id

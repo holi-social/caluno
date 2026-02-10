@@ -9,6 +9,7 @@ import { slugify } from 'src/utils/slug.util';
 import { DATABASE_CONNECTION } from '../database/database-connection';
 import * as schema from '../database/schema';
 import { UserEntity } from '../database/schema';
+import { UserService } from '../user/user.service';
 import { ShiftInviteStatus, ShiftVisibility } from './enums';
 import { CreateShiftInput } from './inputs/create-shift.input';
 import { UpdateShiftInput } from './inputs/update-shift.input';
@@ -20,6 +21,7 @@ export class ShiftService {
     @Inject(DATABASE_CONNECTION)
     private readonly db: NodePgDatabase<typeof schema>,
     private readonly membershipService: MembershipService,
+    private readonly userService: UserService,
   ) {}
 
   async findById(
@@ -297,5 +299,9 @@ export class ShiftService {
     }
 
     return shift;
+  }
+
+  async findCreator(createdById: string): Promise<UserEntity> {
+    return this.userService.findByIdOrThrow(createdById);
   }
 }
