@@ -15,7 +15,8 @@ interface Props {
   id?: string;
   value: DateRange | undefined;
   onChange: (dateRange: DateRange | undefined) => void;
-  formatter?: (date: Date) => string;
+  placeholder?: string;
+  formatString?: string;
   'aria-invalid'?: boolean;
 }
 
@@ -23,7 +24,8 @@ export function DatePickerWithRange({
   id,
   value: dateRange,
   onChange,
-  formatter = (date: Date) => format(date, 'LLL dd, y'),
+  placeholder = 'Pick a date range',
+  formatString = 'd. MMM yyyy',
   'aria-invalid': ariaInvalid,
 }: Props) {
   return (
@@ -35,9 +37,9 @@ export function DatePickerWithRange({
             placeholder={
               dateRange?.from
                 ? dateRange.to
-                  ? `${formatter(dateRange.from)} - ${formatter(dateRange.to)}`
-                  : formatter(dateRange.from)
-                : 'Pick a date'
+                  ? `${format(dateRange.from, formatString)} - ${format(dateRange.to, formatString)}`
+                  : format(dateRange.from, formatString)
+                : placeholder
             }
             aria-invalid={ariaInvalid}
           />
