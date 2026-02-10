@@ -5,8 +5,8 @@ import {
   CardHeader,
   CardTitle,
 } from '@repo/ui';
+import { CreateProjectForm } from '@/domain/project/create-form';
 import { requireOrgAccess } from '@/lib/org-context-server';
-import { CreateProjectForm } from './create-project-form';
 
 interface CreateProjectPageProps {
   params: Promise<{ orgSlug: string }>;
