@@ -10,10 +10,10 @@ import { PlusIcon } from 'lucide-react';
 import Link from 'next/link';
 import type { ReactNode } from 'react';
 import { DashboardSidebar } from '@/components/dashboard-sidebar';
+import { OrgSyncProvider } from '@/domain/organization/org-sync-provider';
 import { requireAuth } from '@/lib/auth-server';
 import { GRAPHQL_API_URL } from '@/lib/constants';
 import { requireOrgAccess } from '@/lib/org-context-server';
-import { OrgSyncProvider } from './org-sync-provider';
 
 interface OrgLayoutProps {
   children: ReactNode;
