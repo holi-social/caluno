@@ -20,7 +20,7 @@ import {
 } from 'lucide-react';
 import { useParams, useRouter } from 'next/navigation';
 import { useMemo } from 'react';
-import { OrgSwitcher } from '@/domain/organization/org-switcher';
+import { OrgSwitcher } from '@/domain/organization/components/org-switcher';
 import { signOut } from '@/lib/auth';
 
 export function DashboardSidebar() {
