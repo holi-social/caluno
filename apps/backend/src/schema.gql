@@ -37,7 +37,7 @@ input CreateProjectInput {
 
 input CreateShiftInput {
   endsAt: DateTime!
-  instructions: String!
+  instructions: String
   invitedMemberIds: [String!]
   location: String
   projectId: String
@@ -168,7 +168,7 @@ type Shift {
   createdBy: User!
   endsAt: DateTime!
   id: ID!
-  instructions: String!
+  instructions: String
   location: String
   organization: Organization!
   project: Project

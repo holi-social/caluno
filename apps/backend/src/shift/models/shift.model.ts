@@ -16,8 +16,8 @@ export class Shift {
   @Field(() => String)
   slug: string;
 
-  @Field(() => String)
-  instructions: string;
+  @Field(() => String, { nullable: true })
+  instructions: string | null;
 
   @Field(() => Organization)
   organization: Organization;
