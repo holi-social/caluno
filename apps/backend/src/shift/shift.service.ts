@@ -9,7 +9,7 @@ import { slugify } from 'src/utils/slug.util';
 import { DATABASE_CONNECTION } from '../database/database-connection';
 import * as schema from '../database/schema';
 import { UserEntity } from '../database/schema';
-import { ShiftVisibility } from './enums';
+import { ShiftInviteStatus, ShiftVisibility } from './enums';
 import { CreateShiftInput } from './inputs/create-shift.input';
 import type { ShiftEntity } from './schemas/shift.schema';
 
@@ -103,10 +103,12 @@ export class ShiftService {
 
     const condition = and(
       eq(schema.shifts.organizationId, organizationId),
-      or(
-        eq(schema.shifts.visibility, ShiftVisibility.ALL_MEMBERS),
-        inArray(schema.shifts.id, shiftIds),
-      ),
+      shiftIds.length > 0
+        ? or(
+            eq(schema.shifts.visibility, ShiftVisibility.ALL_MEMBERS),
+            inArray(schema.shifts.id, shiftIds),
+          )
+        : eq(schema.shifts.visibility, ShiftVisibility.ALL_MEMBERS),
     );
 
     shifts = await this.db.query.shifts.findMany({
@@ -139,19 +141,40 @@ export class ShiftService {
       })
       .returning();
 
-    if (input.invitedMemberIds && input.invitedMemberIds.length > 0) {
-      await this.db.insert(schema.shiftInvites).values(
-        input.invitedMemberIds.map((memberId) => ({
-          shiftId: shift.id,
-          userId: memberId,
-        })),
+    /**
+     * If the shift is visible to all members, we automatically approve the invites for all members.
+     * If the shift is visible to specific members, we create invites for those members and approve them automatically.
+     * This is a temporary solution to avoid manually approving invites for the prototype.
+     * TODO: Refactor this when the prototype is complete.
+     */
+
+    if (input.visibility === ShiftVisibility.ALL_MEMBERS) {
+      const members = await this.db.query.memberships.findMany({
+        where: eq(schema.memberships.organizationId, organizationId),
+      });
+      const memberIds = members
+        .map((member) => member.userId)
+        .filter(
+          (memberId): memberId is string =>
+            memberId !== null && memberId !== userId,
+        );
+      await this.createAndAutoApproveShiftInvites(shift.id, memberIds);
+    } else if (input.invitedMemberIds && input.invitedMemberIds.length > 0) {
+      await this.createAndAutoApproveShiftInvites(
+        shift.id,
+        input.invitedMemberIds,
       );
     }
 
     return shift;
   }
 
-  async inviteMembersToShift(
+  /**
+   * Invites members to a shift and approves them automatically.
+   * This is a temporary solution to avoid manually approving invites for the prototype.
+   * TODO: Refactor this method when the prototype is complete.
+   */
+  async inviteMembersToShiftWithAutoApproval(
     shiftId: string,
     memberIds: string[],
   ): Promise<ShiftEntity> {
@@ -163,24 +186,61 @@ export class ShiftService {
       throw new NotFoundGraphQLError('Shift not found');
     }
 
-    await this.db.insert(schema.shiftInvites).values(
-      memberIds.map((memberId) => ({
-        shiftId,
-        userId: memberId,
-      })),
-    );
+    await this.db
+      .insert(schema.shiftInvites)
+      .values(
+        memberIds.map((memberId) => ({
+          shiftId,
+          userId: memberId,
+          status: ShiftInviteStatus.ACCEPTED,
+        })),
+      )
+      .onConflictDoUpdate({
+        target: [schema.shiftInvites.shiftId, schema.shiftInvites.userId],
+        set: { status: ShiftInviteStatus.ACCEPTED },
+      });
 
     return shift;
   }
 
   async findVolunteers(shiftId: string): Promise<UserEntity[]> {
     const volunteers = await this.db.query.shiftInvites.findMany({
-      where: eq(schema.shiftInvites.shiftId, shiftId),
+      where: and(
+        eq(schema.shiftInvites.shiftId, shiftId),
+        eq(schema.shiftInvites.status, ShiftInviteStatus.ACCEPTED),
+      ),
       with: {
         user: true,
       },
     });
 
     return volunteers.map((volunteer) => volunteer.user);
+  }
+
+  /**
+   * Creates shift invites and approves them automatically.
+   * This is a temporary solution to avoid manually approving invites for the prototype.
+   * TODO: Remove this method when the prototype is complete.
+   */
+
+  private async createAndAutoApproveShiftInvites(
+    shiftId: string,
+    memberIds: string[],
+  ): Promise<void> {
+    if (memberIds.length === 0) return;
+
+    await this.db
+      .insert(schema.shiftInvites)
+      .values(
+        memberIds.map((memberId) => ({
+          shiftId,
+          userId: memberId,
+          status: ShiftInviteStatus.ACCEPTED,
+        })),
+      )
+      .onConflictDoUpdate({
+        target: [schema.shiftInvites.shiftId, schema.shiftInvites.userId],
+        set: { status: ShiftInviteStatus.ACCEPTED },
+      });
   }
 }
