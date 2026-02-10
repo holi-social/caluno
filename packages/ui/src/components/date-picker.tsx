@@ -3,7 +3,6 @@
 import { format } from 'date-fns';
 import { CalendarIcon } from 'lucide-react';
 import type { DateRange } from 'react-day-picker';
-import { Field, FieldError, FieldLabel } from './base/field';
 import {
   InputGroup,
   InputGroupAddon,
@@ -13,69 +12,51 @@ import { Popover, PopoverContent, PopoverTrigger } from './base/popover';
 import { Calendar } from './calendar';
 
 interface Props {
-  names?: { startsAt?: string; endsAt?: string };
-  dateRange: DateRange | undefined;
-  setDateRange: (dateRange: DateRange | undefined) => void;
-  errors?: Array<{ message?: string } | undefined>;
+  id?: string;
+  value: DateRange | undefined;
+  onChange: (dateRange: DateRange | undefined) => void;
   formatter?: (date: Date) => string;
+  'aria-invalid'?: boolean;
 }
 
 export function DatePickerWithRange({
-  names,
-  dateRange,
-  setDateRange,
-  errors,
+  id,
+  value: dateRange,
+  onChange,
   formatter = (date: Date) => format(date, 'LLL dd, y'),
+  'aria-invalid': ariaInvalid,
 }: Props) {
   return (
-    <>
-      {/* Hidden fields for server action */}
-      <input
-        type="hidden"
-        name={names?.startsAt ?? 'startsAt'}
-        defaultValue={dateRange?.from?.toISOString()}
-      />
-      <input
-        type="hidden"
-        name={names?.endsAt ?? 'endsAt'}
-        defaultValue={dateRange?.to?.toISOString()}
-      />
+    <Popover>
+      <PopoverTrigger asChild>
+        <InputGroup>
+          <InputGroupInput
+            id={id}
+            placeholder={
+              dateRange?.from
+                ? dateRange.to
+                  ? `${formatter(dateRange.from)} - ${formatter(dateRange.to)}`
+                  : formatter(dateRange.from)
+                : 'Pick a date'
+            }
+            aria-invalid={ariaInvalid}
+          />
 
-      <Field>
-        <FieldLabel htmlFor="date-picker-range">Date Picker Range</FieldLabel>
-        <Popover>
-          <PopoverTrigger asChild>
-            <InputGroup>
-              <InputGroupInput
-                placeholder={
-                  dateRange?.from
-                    ? dateRange.to
-                      ? `${formatter(dateRange.from)} - ${formatter(dateRange.to)}`
-                      : formatter(dateRange.from)
-                    : 'Pick a date'
-                }
-                aria-invalid={!!errors?.length}
-              />
+          <InputGroupAddon align="inline-start">
+            <CalendarIcon />
+          </InputGroupAddon>
+        </InputGroup>
+      </PopoverTrigger>
 
-              <InputGroupAddon align="inline-start">
-                <CalendarIcon />
-              </InputGroupAddon>
-            </InputGroup>
-          </PopoverTrigger>
-
-          <PopoverContent className="w-auto p-0" align="start">
-            <Calendar
-              mode="range"
-              defaultMonth={dateRange?.from}
-              selected={dateRange}
-              onSelect={setDateRange}
-              numberOfMonths={2}
-            />
-          </PopoverContent>
-        </Popover>
-
-        <FieldError errors={errors} />
-      </Field>
-    </>
+      <PopoverContent className="w-auto p-0" align="start">
+        <Calendar
+          mode="range"
+          defaultMonth={dateRange?.from}
+          selected={dateRange}
+          onSelect={onChange}
+          numberOfMonths={2}
+        />
+      </PopoverContent>
+    </Popover>
   );
 }
