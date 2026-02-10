@@ -40,7 +40,6 @@ export function CreateShiftForm({ orgSlug }: CreateShiftFormProps) {
       location: '',
       instructions: '',
       openShift: true,
-      projectId: '1567a68b-5819-4e71-8566-088cc09ede21',
       organizationId,
       invitedMemberIds: [],
     },
