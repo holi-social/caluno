@@ -9,9 +9,15 @@ type ActionBarProps = {
   id: string;
   orgSlug: string;
   size?: 'xs' | 'sm' | 'lg';
+  hideEdit?: boolean;
 };
 
-export const ActionBar = ({ id, orgSlug, size = 'xs' }: ActionBarProps) => {
+export const ActionBar = ({
+  id,
+  orgSlug,
+  size = 'xs',
+  hideEdit = false,
+}: ActionBarProps) => {
   const buttonSize = `icon-${size}` as const;
 
   const handleDelete = () => {
@@ -38,11 +44,14 @@ export const ActionBar = ({ id, orgSlug, size = 'xs' }: ActionBarProps) => {
       >
         <Share2 />
       </Button>
-      <Link href={`/${orgSlug}/shifts/${id}/edit`} aria-label="Edit shift">
-        <Button size={buttonSize} variant="outline">
-          <Edit />
-        </Button>
-      </Link>
+
+      {!hideEdit && (
+        <Link href={`/${orgSlug}/shifts/${id}/edit`} aria-label="Edit shift">
+          <Button size={buttonSize} variant="outline">
+            <Edit />
+          </Button>
+        </Link>
+      )}
 
       <Button
         size={buttonSize}
