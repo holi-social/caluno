@@ -9,11 +9,15 @@ export * from './components/base/field';
 export * from './components/base/input-group';
 export * from './components/base/label';
 export * from './components/base/popover';
+export * from './components/base/popover';
 export * from './components/base/select';
 export * from './components/base/switch';
+export * from './components/base/table';
 export * from './components/base/textarea';
 
 export * from './components/button';
+export * from './components/calendar';
+export * from './components/date-picker';
 export * from './components/input';
 export * from './components/separator';
 export * from './components/sheet';

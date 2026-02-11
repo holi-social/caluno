@@ -14,6 +14,7 @@ import {
 } from '@repo/ui/sidebar';
 import {
   CalendarIcon,
+  FolderIcon,
   LogOutIcon,
   SettingsIcon,
   UsersIcon,
@@ -32,6 +33,11 @@ export function DashboardSidebar() {
     if (!orgSlug) return [];
 
     return [
+      {
+        title: 'Projects',
+        href: `/${orgSlug}/projects`,
+        icon: FolderIcon,
+      },
       {
         title: 'Shifts',
         href: `/${orgSlug}/shifts`,

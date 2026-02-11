@@ -21,5 +21,6 @@ export * from './integrations/server-org-context';
 // Repositories (if you want to use them directly)
 export * from './repositories/base/base.repository';
 export * from './repositories/organization/organization.repository';
+export * from './repositories/project/project.repository';
 export * from './repositories/shift/shift.repository';
 export * from './repositories/user/user.repository';
