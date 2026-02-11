@@ -26,6 +26,33 @@ query GetShift($id: String!) {
   }
 }
 
+query GetShifts($limit: Int!, $offset: Int!) {
+  shifts(limit: $limit, offset: $offset) {
+    items {
+      id
+      title
+      startsAt
+      endsAt
+      visibility
+      project {
+        id
+        title
+      }
+      volunteers {
+        id
+        name
+        email
+      }
+    }
+    pagination {
+      total
+      limit
+      offset
+      hasMore
+    }
+  }
+}
+
 mutation CreateShift($input: CreateShiftInput!) {
   createShift(input: $input) {
     id
