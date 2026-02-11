@@ -1,40 +1,15 @@
+import { Button } from '@repo/ui';
+import { Edit, Share2, Trash } from 'lucide-react';
+import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { UserCard } from '@/components/user-card';
 import { getDataClient } from '@/lib/data-client';
+import { formatRange } from '@/lib/formatting';
 import { requireOrgAccess } from '@/lib/org-context-server';
 
 interface ShiftPageProps {
   params: Promise<{ orgSlug: string; id: string }>;
 }
-
-const formatRange = (from: string, to: string) => {
-  const fromDate = new Date(from);
-  const toDate = new Date(to);
-
-  const isSameDay =
-    fromDate.getDate() === toDate.getDate() &&
-    fromDate.getMonth() === toDate.getMonth() &&
-    fromDate.getFullYear() === toDate.getFullYear();
-
-  const formatDate = (date: Date) =>
-    date.toLocaleDateString(undefined, {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-    });
-  const formatTime = (date: Date) =>
-    date.toLocaleTimeString(undefined, {
-      hour: '2-digit',
-      minute: '2-digit',
-      hour12: false,
-    });
-
-  if (isSameDay) {
-    return `${formatDate(fromDate)} ${formatTime(fromDate)} - ${formatTime(toDate)}`;
-  }
-
-  return `${formatDate(fromDate)} ${formatTime(fromDate)} - ${formatDate(toDate)} ${formatTime(toDate)}`;
-};
 
 export default async function ShiftPage({ params }: ShiftPageProps) {
   const { orgSlug, id } = await params;
@@ -50,11 +25,34 @@ export default async function ShiftPage({ params }: ShiftPageProps) {
 
   return (
     <div className="max-w-3xl">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold">{shift.title}</h1>
-        <p className="text-muted-foreground">
-          {formatRange(shift.startsAt, shift.endsAt)}
-        </p>
+      <div className="flex justify-between">
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold">{shift.title}</h1>
+          <p className="text-muted-foreground">
+            {formatRange(shift.startsAt, shift.endsAt)}
+          </p>
+        </div>
+        <div className="space-x-2">
+          <Button size="icon" variant="outline">
+            <Link
+              href={`/${orgSlug}/shifts/${id}/edit`}
+              aria-label="Copy shift link to clipboard"
+            >
+              <Share2 className="size-4" />
+            </Link>
+          </Button>
+          <Button size="icon" variant="outline">
+            <Link
+              href={`/${orgSlug}/shifts/${id}/edit`}
+              aria-label="Edit shift"
+            >
+              <Edit className="size-4" />
+            </Link>
+          </Button>
+          <Button size="icon" variant="destructive" aria-label="Delete shift">
+            <Trash className="size-4" />
+          </Button>
+        </div>
       </div>
 
       <div className="space-y-6">
