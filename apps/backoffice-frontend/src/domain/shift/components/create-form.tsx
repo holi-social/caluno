@@ -79,6 +79,7 @@ export function CreateShiftForm() {
           id="name"
           disabled={isPending}
           placeholder="Morning Shift"
+          aria-invalid={!!errors.name}
           {...register('name')}
         />
         {errors.name && <FieldError>{errors.name.message}</FieldError>}
@@ -93,6 +94,7 @@ export function CreateShiftForm() {
             id="startsAt"
             type="datetime-local"
             disabled={isPending}
+            aria-invalid={!!errors.startsAt}
             {...register('startsAt')}
           />
           {errors.startsAt && (
@@ -108,6 +110,7 @@ export function CreateShiftForm() {
             id="endsAt"
             type="datetime-local"
             disabled={isPending}
+            aria-invalid={!!errors.endsAt}
             {...register('endsAt')}
           />
           {errors.endsAt && <FieldError>{errors.endsAt.message}</FieldError>}
@@ -120,6 +123,7 @@ export function CreateShiftForm() {
           id="location"
           disabled={isPending}
           placeholder="Main Hall, 123 Main St"
+          aria-invalid={!!errors.location}
           {...register('location')}
         />
         {errors.location && <FieldError>{errors.location.message}</FieldError>}
@@ -132,6 +136,7 @@ export function CreateShiftForm() {
           rows={4}
           placeholder="Describe the shift responsibilities and requirements..."
           disabled={isPending}
+          aria-invalid={!!errors.instructions}
           {...register('instructions')}
         />
         {errors.instructions && (
@@ -152,6 +157,7 @@ export function CreateShiftForm() {
             checked={watch('openShift')}
             onCheckedChange={(checked) => setValue('openShift', checked)}
             disabled={isPending}
+            aria-invalid={!!errors.openShift}
           />
           {errors.openShift && (
             <FieldError>{errors.openShift.message}</FieldError>
