@@ -1,12 +1,12 @@
 import Link from 'next/link';
+import { Pagination } from '@/components/pagination';
+import { ShiftsTable } from '@/domain/shift/components/shifts-table';
 import { getDataClient } from '@/lib/data-client';
 import { requireOrgAccess } from '@/lib/org-context-server';
-import { PaginationControls } from './pagination-controls';
-import { ShiftsTable } from './shifts-table';
 
 interface ShiftsPageProps {
   params: Promise<{ orgSlug: string }>;
-  searchParams: Promise<{ page?: number }>;
+  searchParams: Promise<{ page?: string }>;
 }
 
 export default async function ShiftsPage({
@@ -16,7 +16,7 @@ export default async function ShiftsPage({
   const { orgSlug } = await params;
   const { page } = await searchParams;
 
-  const currentPage = page || 1;
+  const currentPage = Number.parseInt(page ?? '1', 10) || 1;
   const ITEMS_PER_PAGE = 10;
   const offset = (currentPage - 1) * ITEMS_PER_PAGE;
 
@@ -43,10 +43,11 @@ export default async function ShiftsPage({
         <>
           <ShiftsTable shifts={result.items} orgSlug={orgSlug} />
           {result.pagination.total > ITEMS_PER_PAGE && (
-            <PaginationControls
+            <Pagination
               pagination={result.pagination}
-              orgSlug={orgSlug}
+              url={`/${orgSlug}/shifts`}
               currentPage={currentPage}
+              name="shifts"
             />
           )}
         </>
