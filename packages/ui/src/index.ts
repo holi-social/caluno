@@ -1,5 +1,6 @@
 // Components
 
+export * from './components/base/avatar';
 export * from './components/base/badge';
 export * from './components/base/card';
 export * from './components/base/command';
@@ -13,6 +14,7 @@ export * from './components/base/select';
 export * from './components/base/switch';
 export * from './components/base/table';
 export * from './components/base/textarea';
+
 export * from './components/button';
 export * from './components/calendar';
 export * from './components/date-picker';

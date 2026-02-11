@@ -7,8 +7,9 @@ export const createShiftSchema = z.object({
   location: z.string().trim().optional(),
   instructions: z.string().trim().optional(),
   openShift: z.boolean().optional(),
-  projectId: z.string().min(1, 'Project is required'),
+  projectId: z.string().optional(),
   organizationId: z.string().min(1, 'Organization is required'),
+  invitedMemberIds: z.array(z.string()).optional(),
 });
 
 export type CreateShiftFormValues = z.infer<typeof createShiftSchema>;

@@ -3,7 +3,7 @@
 import { Button } from '@repo/ui/button';
 import { Input } from '@repo/ui/input';
 import { useActionState } from 'react';
-import { createOrganization } from '@/actions/organization';
+import { createOrganization } from '@/domain/organization/actions';
 
 export function CreateOrganizationForm() {
   const [state, formAction, isPending] = useActionState(

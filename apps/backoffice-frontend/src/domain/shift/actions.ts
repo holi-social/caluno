@@ -21,6 +21,7 @@ export const createShift = actionClient
         ? ShiftVisibility.AllMembers
         : ShiftVisibility.InvitedMembers,
       projectId: parsedInput.projectId,
+      invitedMemberIds: parsedInput.invitedMemberIds,
     };
 
     return await data.shift.create(input);

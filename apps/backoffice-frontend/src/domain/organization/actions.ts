@@ -52,3 +52,9 @@ export async function createOrganization(
       };
     });
 }
+
+export async function getVolunteers(organizationId: string) {
+  const data = await getDataClient(organizationId);
+
+  return await data.organization.findVolunteers(organizationId);
+}

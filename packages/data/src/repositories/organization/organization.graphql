@@ -19,6 +19,18 @@ query GetOrganization($id: String!) {
   }
 }
 
+query GetVolunteers($id: String!) {
+  organization(id: $id) {
+    id
+    volunteers {
+      id
+      name
+      email
+      image
+    }
+  }
+}
+
 query GetOrganizations($limit: Int!, $offset: Int!) {
   organizations(limit: $limit, offset: $offset) {
     items {
