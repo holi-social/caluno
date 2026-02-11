@@ -1,5 +1,3 @@
-'use client';
-
 import type { GetProjectsQuery } from '@repo/data';
 import {
   Badge,

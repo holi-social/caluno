@@ -27,10 +27,8 @@ import { useState, useTransition } from 'react';
 import { useForm } from 'react-hook-form';
 import { createShift } from '../actions';
 import { type CreateShiftFormValues, createShiftSchema } from '../schemas';
+import { copyToClipboard, shiftShareUrl } from '../share';
 import { InviteList } from './invite-list';
-
-const shiftShareUrl = (shiftId?: string) =>
-  `${process.env.NEXT_PUBLIC_BACKOFFICE_URL}/shifts/${shiftId}`;
 
 export function CreateShiftForm() {
   const router = useRouter();
@@ -51,7 +49,7 @@ export function CreateShiftForm() {
   };
 
   const handleCopyToClipboard = () => {
-    navigator.clipboard.writeText(shiftShareUrl(shiftId));
+    copyToClipboard(shiftId);
   };
 
   const form = useForm<CreateShiftFormValues>({

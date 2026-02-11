@@ -9,20 +9,21 @@ import {
   TableRow,
 } from '@repo/ui';
 import { formatRange } from '@/lib/formatting';
+import { ActionBar } from './action-bar';
 
 type ShiftListItem = GetShiftsQuery['shifts']['items'][number];
 
-interface ShiftsTableProps {
+type ShiftsTableProps = {
   shifts: ShiftListItem[];
   orgSlug: string;
-}
+};
 
 const visibilityConfig = {
   ALL_MEMBERS: { variant: 'outline' as const, label: 'Open shift' },
   INVITED_MEMBERS: { variant: 'secondary' as const, label: 'Invite only' },
 };
 
-export function ShiftsTable({ shifts }: ShiftsTableProps) {
+export function ShiftsTable({ shifts, orgSlug }: ShiftsTableProps) {
   return (
     <div className="rounded-md border overflow-x-auto">
       <Table>
@@ -33,6 +34,7 @@ export function ShiftsTable({ shifts }: ShiftsTableProps) {
             <TableHead className="text-muted-foreground">Volunteers</TableHead>
             <TableHead className="text-muted-foreground">Date</TableHead>
             <TableHead className="text-muted-foreground">Visibility</TableHead>
+            <TableHead></TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -54,6 +56,9 @@ export function ShiftsTable({ shifts }: ShiftsTableProps) {
                 <Badge variant={visibilityConfig[shift.visibility].variant}>
                   {visibilityConfig[shift.visibility].label}
                 </Badge>
+              </TableCell>
+              <TableCell className="space-x-2">
+                <ActionBar orgSlug={orgSlug} id={shift.id} />
               </TableCell>
             </TableRow>
           ))}
