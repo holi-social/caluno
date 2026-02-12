@@ -96,7 +96,6 @@ export const ShiftForm = ({
             disabled={isPending}
             aria-invalid={!!errors.endsAt}
             {...register('endsAt')}
-            defaultValue={initialValues?.endsAt}
           />
           {errors.endsAt && <FieldError>{errors.endsAt.message}</FieldError>}
         </Field>
