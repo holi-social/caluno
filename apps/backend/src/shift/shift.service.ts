@@ -11,6 +11,7 @@ import * as schema from '../database/schema';
 import { UserEntity } from '../database/schema';
 import { ShiftInviteStatus, ShiftVisibility } from './enums';
 import { CreateShiftInput } from './inputs/create-shift.input';
+import { UpdateShiftInput } from './inputs/update-shift.input';
 import type { ShiftEntity } from './schemas/shift.schema';
 
 @Injectable()
@@ -242,5 +243,59 @@ export class ShiftService {
         target: [schema.shiftInvites.shiftId, schema.shiftInvites.userId],
         set: { status: ShiftInviteStatus.ACCEPTED },
       });
+  }
+
+  async update(
+    userId: string,
+    id: string,
+    organizationId: string,
+    input: UpdateShiftInput,
+  ): Promise<ShiftEntity> {
+    const { title, ...rest } = input;
+
+    const [shift] = await this.db
+      .update(schema.shifts)
+      .set({
+        ...rest,
+        ...(title && { slug: slugify(title) }),
+      })
+      .where(
+        and(
+          eq(schema.shifts.id, id),
+          eq(schema.shifts.organizationId, organizationId),
+        ),
+      )
+      .returning();
+
+    if (!shift) {
+      throw new NotFoundGraphQLError('Shift not found');
+    }
+
+    /**
+     * If the shift is visible to all members, we automatically approve the invites for all members.
+     * If the shift is visible to specific members, we create invites for those members and approve them automatically.
+     * This is a temporary solution to avoid manually approving invites for the prototype.
+     * TODO: Refactor this when the prototype is complete.
+     */
+
+    if (input.visibility === ShiftVisibility.ALL_MEMBERS) {
+      const members = await this.db.query.memberships.findMany({
+        where: eq(schema.memberships.organizationId, organizationId),
+      });
+      const memberIds = members
+        .map((member) => member.userId)
+        .filter(
+          (memberId): memberId is string =>
+            memberId !== null && memberId !== userId,
+        );
+      await this.createAndAutoApproveShiftInvites(shift.id, memberIds);
+    } else if (input.invitedMemberIds && input.invitedMemberIds.length > 0) {
+      await this.createAndAutoApproveShiftInvites(
+        shift.id,
+        input.invitedMemberIds,
+      );
+    }
+
+    return shift;
   }
 }
