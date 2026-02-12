@@ -82,6 +82,7 @@ export default async function ShiftPage({ params }: ShiftPageProps) {
         <Card>
           <CardContent>
             {/* If shift has finished, simple button to fill timesheet for whole shift */}
+            {/* If it's ended. Then UI might be different */}
 
             {(await getSession()) ? (
               <div className="space-x-2">
