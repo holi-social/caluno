@@ -15,7 +15,6 @@ type ProjectListItem = GetProjectsQuery['projects']['items'][number];
 
 interface ProjectsTableProps {
   projects: ProjectListItem[];
-  orgSlug: string;
 }
 
 const statusConfig = {

@@ -7,7 +7,7 @@ import { PaginationControls } from './pagination-controls';
 import { ProjectsTable } from './projects-table';
 
 interface ProjectsPageProps {
-  params: Promise<{ orgSlug: string }>;
+  params: Promise<{ orgId: string }>;
   searchParams: Promise<{ page?: string }>;
 }
 
@@ -15,7 +15,7 @@ export default async function ProjectsPage({
   params,
   searchParams,
 }: ProjectsPageProps) {
-  const { orgSlug } = await params;
+  const { orgId } = await params;
   const { page: pageParam } = await searchParams;
 
   // Parse page number safely, default to 1
@@ -24,7 +24,7 @@ export default async function ProjectsPage({
   const offset = (currentPage - 1) * ITEMS_PER_PAGE;
 
   // Get organization and fetch projects
-  const { org } = await requireOrgAccess(orgSlug);
+  const { org } = await requireOrgAccess(orgId);
   const data = await getDataClient();
 
   const result = await data.project.findAllByOrganizationId(org.id, {
@@ -45,7 +45,7 @@ export default async function ProjectsPage({
           </p>
         </div>
         <Button asChild>
-          <Link href={`/${orgSlug}/projects/create`}>
+          <Link href={`/${org.id}/projects/create`}>
             <PlusIcon className="mr-2 h-4 w-4" />
             Create Project
           </Link>
@@ -55,11 +55,10 @@ export default async function ProjectsPage({
       {/* Projects table or empty state */}
       {hasProjects ? (
         <>
-          <ProjectsTable projects={result.items} orgSlug={orgSlug} />
+          <ProjectsTable projects={result.items} />
           {result.pagination.total > ITEMS_PER_PAGE && (
             <PaginationControls
               pagination={result.pagination}
-              orgSlug={orgSlug}
               currentPage={currentPage}
             />
           )}

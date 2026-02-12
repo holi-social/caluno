@@ -17,18 +17,18 @@ import { requireOrgAccess } from '@/lib/org-context-server';
 
 interface OrgLayoutProps {
   children: ReactNode;
-  params: Promise<{ orgSlug: string }>;
+  params: Promise<{ orgId: string }>;
 }
 
 export default async function OrgLayout({ children, params }: OrgLayoutProps) {
   await requireAuth();
-  const { orgSlug } = await params;
-  const { org, organizations } = await requireOrgAccess(orgSlug);
+  const { orgId } = await params;
+  const { org, organizations } = await requireOrgAccess(orgId);
 
   return (
     <OrgProvider org={org} organizations={organizations}>
       <DataProvider apiUrl={GRAPHQL_API_URL} organizationId={org.id}>
-        <OrgSyncProvider orgSlug={org.slug}>
+        <OrgSyncProvider orgId={org.id}>
           <SidebarProvider>
             <DashboardSidebar />
             <SidebarInset>
@@ -37,7 +37,7 @@ export default async function OrgLayout({ children, params }: OrgLayoutProps) {
                 <Separator orientation="vertical" className="mr-2 h-4" />
                 <div className="flex justify-between gap-2 flex-1">
                   <h1 className="text-lg font-semibold">Clippy</h1>
-                  <Link href={`/${orgSlug}/shifts/new`}>
+                  <Link href={`/${org.id}/shifts/new`}>
                     <Button>
                       <PlusIcon className="mr-2 size-4" />
                       Create Shift

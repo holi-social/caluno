@@ -25,11 +25,11 @@ export default async function Home() {
     redirect('/create-organization');
   }
 
-  const lastOrgSlug = await getLastVisitedOrgServer();
-  if (lastOrgSlug) {
-    const hasAccess = orgsResult.items.some((org) => org.slug === lastOrgSlug);
+  const lastOrgId = await getLastVisitedOrgServer();
+  if (lastOrgId) {
+    const hasAccess = orgsResult.items.some((org) => org.id === lastOrgId);
     if (hasAccess) {
-      redirect(`/${lastOrgSlug}/shifts`);
+      redirect(`/${lastOrgId}`);
     }
   }
   redirect('/organizations');

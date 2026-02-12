@@ -2,6 +2,7 @@
 
 import { zodResolver } from '@hookform/resolvers/zod';
 import { ProjectStatus } from '@repo/data';
+import { useOrgId } from '@repo/data/react';
 import { DatePickerWithRange } from '@repo/ui';
 import { Field, FieldError, FieldGroup, FieldLabel } from '@repo/ui/base/field';
 import { Button } from '@repo/ui/button';
@@ -20,13 +21,10 @@ import { useForm } from 'react-hook-form';
 import { createProject } from '@/domain/project/actions';
 import { type CreateProjectFormValues, createProjectSchema } from './schemas';
 
-export function CreateProjectForm({
-  organizationId,
-}: {
-  organizationId: string;
-}) {
+export function CreateProjectForm() {
   const params = useParams();
-  const orgSlug = params.orgSlug as string;
+  const orgId = params.orgId as string;
+  const organizationId = useOrgId();
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [serverError, setServerError] = useState<string | null>(null);
@@ -58,7 +56,7 @@ export function CreateProjectForm({
       if (result?.serverError) {
         setServerError(result.serverError);
       } else {
-        router.push(`/${orgSlug}/projects/`);
+        router.push(`/${orgId}/projects/`);
       }
     });
   };
@@ -67,7 +65,7 @@ export function CreateProjectForm({
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
       {/* Hidden fields for server action */}
       <input type="hidden" name="organizationId" value={organizationId} />
-      <input type="hidden" name="orgSlug" value={orgSlug} />
+      <input type="hidden" name="orgId" value={orgId} />
 
       {/* Title field */}
       <FieldGroup>

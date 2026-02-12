@@ -21,15 +21,12 @@ import { createShift } from '../actions';
 import { type CreateShiftFormValues, createShiftSchema } from '../schemas';
 import { InviteList } from './invite-list';
 
-interface CreateShiftFormProps {
-  orgSlug: string;
-}
-
-export function CreateShiftForm({ orgSlug }: CreateShiftFormProps) {
+export function CreateShiftForm() {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [serverError, setServerError] = useState<string | null>(null);
   const organizationId = useOrgId();
+  const orgId = useOrgId();
 
   const form = useForm<CreateShiftFormValues>({
     resolver: zodResolver(createShiftSchema),
@@ -53,7 +50,7 @@ export function CreateShiftForm({ orgSlug }: CreateShiftFormProps) {
       if (result?.serverError) {
         setServerError(result.serverError);
       } else {
-        router.push(`/${orgSlug}/shifts/${result.data?.id}`);
+        router.push(`/${orgId}/shifts/${result.data?.id}`);
       }
     });
   };
