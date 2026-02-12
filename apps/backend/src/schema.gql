@@ -80,6 +80,7 @@ type Mutation {
   publishProject(id: ID!): Project!
   rejectVolunteerSession(input: RejectVolunteerSessionInput!): VolunteerSession!
   startVolunteerSession(input: StartVolunteerSessionInput!): VolunteerSession!
+  updateShift(id: String!, input: UpdateShiftInput!): Shift!
 }
 
 type Organization {
@@ -226,6 +227,17 @@ type TimeEntry {
   id: ID!
   notes: String
   startedAt: DateTime!
+}
+
+input UpdateShiftInput {
+  endsAt: DateTime
+  instructions: String
+  invitedMemberIds: [String!]
+  location: String
+  projectId: String
+  startsAt: DateTime
+  title: String
+  visibility: ShiftVisibility = ALL_MEMBERS
 }
 
 type User {
