@@ -5,7 +5,7 @@ import { getDataClient } from '@/lib/data-client';
 import { requireOrgAccess } from '@/lib/org-context-server';
 
 interface ShiftsPageProps {
-  params: Promise<{ orgSlug: string }>;
+  params: Promise<{ orgId: string }>;
   searchParams: Promise<{ page?: string }>;
 }
 
@@ -13,14 +13,14 @@ export default async function ShiftsPage({
   params,
   searchParams,
 }: ShiftsPageProps) {
-  const { orgSlug } = await params;
+  const { orgId } = await params;
   const { page } = await searchParams;
 
   const currentPage = Number.parseInt(page ?? '1', 10) || 1;
   const ITEMS_PER_PAGE = 10;
   const offset = (currentPage - 1) * ITEMS_PER_PAGE;
 
-  const { org } = await requireOrgAccess(orgSlug);
+  const { org } = await requireOrgAccess(orgId);
   const data = await getDataClient(org.id);
 
   const result = await data.shift.findAll({
@@ -41,11 +41,11 @@ export default async function ShiftsPage({
 
       {hasShifts ? (
         <>
-          <ShiftsTable shifts={result.items} orgSlug={orgSlug} />
+          <ShiftsTable shifts={result.items} orgId={orgId} />
           {result.pagination.total > ITEMS_PER_PAGE && (
             <Pagination
               pagination={result.pagination}
-              url={`/${orgSlug}/shifts`}
+              url={`/${orgId}/shifts`}
               currentPage={currentPage}
               name="shifts"
             />
@@ -54,8 +54,8 @@ export default async function ShiftsPage({
       ) : (
         <div className="text-muted-foreground">
           No shifts yet.{' '}
-          <Link href={`/${orgSlug}/shifts/new`}>Create your first</Link> shift
-          to get started.
+          <Link href={`/${orgId}/shifts/new`}>Create your first</Link> shift to
+          get started.
         </div>
       )}
     </div>

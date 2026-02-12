@@ -12,17 +12,15 @@ import type { ShiftFormValues } from '../schemas';
 import { ShiftForm } from './shift-form';
 
 interface EditShiftFormProps {
-  orgSlug: string;
+  orgId: string;
   shift: GetShiftQuery['shift'];
 }
 
-export function EditShiftForm({ orgSlug, shift }: EditShiftFormProps) {
+export function EditShiftForm({ orgId, shift }: EditShiftFormProps) {
   const router = useRouter();
 
   const [isPending, startTransition] = useTransition();
   const [serverError, setServerError] = useState<string | null>(null);
-
-  const organizationId = useOrgId();
 
   const onSubmit = async (formData: ShiftFormValues) => {
     setServerError(null);
@@ -32,13 +30,13 @@ export function EditShiftForm({ orgSlug, shift }: EditShiftFormProps) {
       if (result?.serverError) {
         setServerError(result.serverError);
       } else {
-        router.push(`/${orgSlug}/shifts`);
+        router.push(`/${orgId}/shifts`);
       }
     });
   };
 
   const shiftFormValues = {
-    organizationId,
+    organizationId: orgId,
     name: shift.title,
     instructions: shift.instructions || undefined,
     location: shift.location || undefined,
@@ -58,7 +56,7 @@ export function EditShiftForm({ orgSlug, shift }: EditShiftFormProps) {
       )}
 
       <ShiftForm
-        organizationId={organizationId}
+        organizationId={orgId}
         onSubmit={onSubmit}
         isPending={isPending}
         initialValues={shiftFormValues}

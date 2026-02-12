@@ -7,14 +7,14 @@ import { copyToClipboard, shiftShareUrl } from '../share';
 
 type ActionBarProps = {
   id: string;
-  orgSlug: string;
+  orgId: string;
   size?: 'xs' | 'sm' | 'lg';
   hideEdit?: boolean;
 };
 
 export const ActionBar = ({
   id,
-  orgSlug,
+  orgId,
   size = 'xs',
   hideEdit = false,
 }: ActionBarProps) => {
@@ -43,7 +43,7 @@ export const ActionBar = ({
       </Link>
 
       {!hideEdit && (
-        <Link href={`/${orgSlug}/shifts/${id}/edit`} aria-label="Edit shift">
+        <Link href={`/${orgId}/shifts/${id}/edit`} aria-label="Edit shift">
           <Button size={buttonSize} variant="outline">
             <Edit />
           </Button>

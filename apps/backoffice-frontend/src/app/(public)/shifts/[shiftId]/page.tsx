@@ -8,7 +8,7 @@ import { UserCard } from '../../../../components/user-card';
 import { getSession } from '../../../../lib/auth-server';
 
 interface ShiftPageProps {
-  params: Promise<{ orgSlug: string; id: string }>;
+  params: Promise<{ shiftId: string }>;
 }
 
 const status = (shift: GetShiftQuery['shift']) => {
@@ -24,10 +24,10 @@ const status = (shift: GetShiftQuery['shift']) => {
 };
 
 export default async function ShiftPage({ params }: ShiftPageProps) {
-  const { id } = await params;
+  const { shiftId } = await params;
 
   const data = await getDataClient();
-  const shift = await data.shift.findById(id);
+  const shift = await data.shift.findById(shiftId);
 
   if (!shift) {
     notFound();

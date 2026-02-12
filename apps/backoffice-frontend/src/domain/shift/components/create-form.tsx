@@ -27,8 +27,6 @@ export function CreateShiftForm() {
 
   const [isSuccessModalOpen, setSuccessModalOpen] = useState(false);
   const [shiftId, setShiftId] = useState<string>();
-
-  const organizationId = useOrgId();
   const orgId = useOrgId();
 
   const handleModalClose = (open: boolean) => {
@@ -66,7 +64,7 @@ export function CreateShiftForm() {
       )}
 
       <ShiftForm
-        organizationId={organizationId}
+        organizationId={orgId}
         onSubmit={onSubmit}
         isPending={isPending}
       />
