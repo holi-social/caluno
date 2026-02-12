@@ -4,8 +4,8 @@ import { Calendar, Clock, DoorOpen, FileText } from 'lucide-react';
 import { notFound } from 'next/navigation';
 import { getDataClient } from '@/lib/data-client';
 import { formatRange } from '@/lib/formatting';
-import { UserCard } from '../../../components/user-card';
-import { getSession } from '../../../lib/auth-server';
+import { UserCard } from '../../../../components/user-card';
+import { getSession } from '../../../../lib/auth-server';
 
 interface ShiftPageProps {
   params: Promise<{ orgSlug: string; id: string }>;
