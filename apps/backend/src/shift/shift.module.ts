@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { MembershipModule } from 'src/membership/membership.module';
 import { UserModule } from 'src/user/user.module';
 import { DatabaseModule } from '../database/database.module';
 import { ShiftMapper } from './mappers/shift.mapper';
@@ -8,7 +9,7 @@ import { ShiftQueryResolver } from './resolvers/shift-query.resolver';
 import { ShiftService } from './shift.service';
 
 @Module({
-  imports: [DatabaseModule, UserModule],
+  imports: [DatabaseModule, UserModule, MembershipModule],
   providers: [
     ShiftService,
     ShiftQueryResolver,
