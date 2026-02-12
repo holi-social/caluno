@@ -16,10 +16,6 @@ query GetProject($id: String!) {
     slug
     description
     location
-    organization {
-      id
-      name
-    }
     startsAt
     endsAt
     status
