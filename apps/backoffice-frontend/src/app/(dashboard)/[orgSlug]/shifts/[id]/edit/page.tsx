@@ -1,5 +1,7 @@
+import { notFound } from 'next/navigation';
 import { ActionBar } from '@/domain/shift/components/action-bar';
-import { CreateShiftForm } from '@/domain/shift/components/create-form';
+import { EditShiftForm } from '@/domain/shift/components/edit-form';
+import { getDataClient } from '@/lib/data-client';
 
 interface EditShiftPageProps {
   params: Promise<{ orgSlug: string; id: string }>;
@@ -7,6 +9,13 @@ interface EditShiftPageProps {
 
 export default async function EditShiftPage({ params }: EditShiftPageProps) {
   const { orgSlug, id } = await params;
+
+  const data = await getDataClient();
+  const shift = await data.shift.findById(id);
+
+  if (!shift) {
+    notFound();
+  }
 
   return (
     <div className="max-w-2xl">
@@ -21,8 +30,7 @@ export default async function EditShiftPage({ params }: EditShiftPageProps) {
       </div>
 
       <div className="px-2 py-8">
-        {/* TODO: reuse for for editing */}
-        <CreateShiftForm orgSlug={orgSlug} />
+        <EditShiftForm orgSlug={orgSlug} shift={shift} />
       </div>
     </div>
   );

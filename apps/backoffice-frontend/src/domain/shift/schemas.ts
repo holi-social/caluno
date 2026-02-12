@@ -1,6 +1,6 @@
 import z from 'zod';
 
-export const createShiftSchema = z.object({
+export const shiftFormSchema = z.object({
   name: z.string().trim().min(1, 'Name is required'),
   startsAt: z.string().min(1, 'Start time is required'),
   endsAt: z.string().min(1, 'End time is required'),
@@ -12,4 +12,4 @@ export const createShiftSchema = z.object({
   invitedMemberIds: z.array(z.string()).optional(),
 });
 
-export type CreateShiftFormValues = z.infer<typeof createShiftSchema>;
+export type ShiftFormValues = z.infer<typeof shiftFormSchema>;

@@ -1,13 +1,14 @@
 'use server';
 
-import type { CreateShiftInput } from '@repo/data';
+import type { CreateShiftInput, UpdateShiftInput } from '@repo/data';
 import { ShiftVisibility } from '@repo/data';
+import z from 'zod';
 import { getDataClient } from '@/lib/data-client';
 import { actionClient } from '@/lib/safe-action';
-import { createShiftSchema } from './schemas';
+import { shiftFormSchema } from './schemas';
 
 export const createShift = actionClient
-  .inputSchema(createShiftSchema)
+  .inputSchema(shiftFormSchema)
   .action(async ({ parsedInput }) => {
     const data = await getDataClient(parsedInput.organizationId);
 
@@ -25,4 +26,28 @@ export const createShift = actionClient
     };
 
     return await data.shift.create(input);
+  });
+
+export const updateShift = actionClient
+  .inputSchema(shiftFormSchema)
+  .inputSchema(async (prevSchema) => {
+    return prevSchema.extend({ id: z.string().min(1, 'Shift ID is required') });
+  })
+  .action(async ({ parsedInput }) => {
+    const data = await getDataClient(parsedInput.organizationId);
+
+    const input: UpdateShiftInput = {
+      title: parsedInput.name,
+      startsAt: new Date(parsedInput.startsAt).toISOString(),
+      endsAt: new Date(parsedInput.endsAt).toISOString(),
+      instructions: parsedInput.instructions,
+      location: parsedInput.location,
+      visibility: parsedInput.openShift
+        ? ShiftVisibility.AllMembers
+        : ShiftVisibility.InvitedMembers,
+      projectId: parsedInput.projectId,
+      invitedMemberIds: parsedInput.invitedMemberIds,
+    };
+
+    return await data.shift.update(parsedInput.id, input);
   });

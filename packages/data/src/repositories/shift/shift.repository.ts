@@ -1,5 +1,8 @@
 import { DataError } from '../../errors/data-error';
-import type { CreateShiftInput } from '../../generated/graphql';
+import type {
+  CreateShiftInput,
+  UpdateShiftInput,
+} from '../../generated/graphql';
 import { BaseRepository } from '../base/base.repository';
 
 export interface PaginationOptions {
@@ -33,6 +36,15 @@ export class ShiftRepository extends BaseRepository {
     try {
       const data = await this.sdk.CreateShift({ input });
       return data.createShift;
+    } catch (error) {
+      throw DataError.fromGraphQLError(error);
+    }
+  }
+
+  async update(id: string, input: UpdateShiftInput) {
+    try {
+      const data = await this.sdk.UpdateShift({ id, input });
+      return data.updateShift;
     } catch (error) {
       throw DataError.fromGraphQLError(error);
     }

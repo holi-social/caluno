@@ -59,3 +59,9 @@ mutation CreateShift($input: CreateShiftInput!) {
     id
   }
 }
+
+mutation UpdateShift($id: String!, $input: UpdateShiftInput!) {
+  updateShift(id: $id, input: $input) {
+    id
+  }
+}
