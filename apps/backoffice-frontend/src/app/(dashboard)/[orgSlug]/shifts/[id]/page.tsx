@@ -99,7 +99,7 @@ export default async function ShiftPage({ params }: ShiftPageProps) {
           {shift.volunteers && shift.volunteers.length > 0 ? (
             <div className="space-y-2">
               {shift.volunteers.map((volunteer) => (
-                <UserCard key={volunteer.id} member={volunteer} />
+                <UserCard key={volunteer.id} user={volunteer} size="sm" />
               ))}
             </div>
           ) : (

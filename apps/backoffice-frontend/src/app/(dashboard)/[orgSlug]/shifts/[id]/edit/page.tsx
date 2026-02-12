@@ -1,11 +1,11 @@
 import { ActionBar } from '@/domain/shift/components/action-bar';
 import { CreateShiftForm } from '@/domain/shift/components/create-form';
 
-interface CreateShiftPageProps {
+interface EditShiftPageProps {
   params: Promise<{ orgSlug: string; id: string }>;
 }
 
-export default async function EditShiftPage({ params }: CreateShiftPageProps) {
+export default async function EditShiftPage({ params }: EditShiftPageProps) {
   const { orgSlug, id } = await params;
 
   return (

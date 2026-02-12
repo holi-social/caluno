@@ -24,49 +24,15 @@ export class ShiftService {
     private readonly userService: UserService,
   ) {}
 
-  async findById(
-    userId: string,
-    organizationId: string,
-    id: string,
-  ): Promise<ShiftEntity> {
+  async findById(id: string): Promise<ShiftEntity> {
     const shift = await this.db.query.shifts.findFirst({
-      where: and(
-        eq(schema.shifts.id, id),
-        eq(schema.shifts.organizationId, organizationId),
-      ),
+      where: and(eq(schema.shifts.id, id)),
     });
 
     if (!shift) {
       throw new NotFoundGraphQLError(`Shift with ID ${id} not found`);
     }
-
-    const isStaff = await this.membershipService.isStaff(
-      userId,
-      shift.organizationId,
-    );
-
-    if (isStaff) {
-      return shift;
-    }
-
-    if (shift.visibility === ShiftVisibility.ALL_MEMBERS) {
-      return shift;
-    }
-
-    const invite = await this.db.query.shiftInvites.findFirst({
-      where: and(
-        eq(schema.shiftInvites.shiftId, id),
-        eq(schema.shiftInvites.userId, userId),
-      ),
-    });
-
-    if (invite) {
-      return shift;
-    }
-
-    throw new ForbiddenGraphQLError(
-      `You are not authorized to access this shift`,
-    );
+    return shift;
   }
 
   async findAll(

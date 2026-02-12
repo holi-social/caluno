@@ -14,18 +14,9 @@ export class ShiftQueryResolver {
     private readonly shiftMapper: ShiftMapper,
   ) {}
 
-  @Roles('MEMBER')
   @Query(() => Shift)
-  async shift(
-    @Args('id') id: string,
-    @Session() session: UserSession,
-    @Context() context: AuthenticatedGraphQLContext,
-  ): Promise<Shift> {
-    const shift = await this.shiftService.findById(
-      session.user.id,
-      context.organizationId,
-      id,
-    );
+  async shift(@Args('id') id: string): Promise<Shift> {
+    const shift = await this.shiftService.findById(id);
     return this.shiftMapper.toModelOrThrow(shift);
   }
 
