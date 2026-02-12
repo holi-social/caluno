@@ -29,8 +29,6 @@ export default async function ShiftPage({ params }: ShiftPageProps) {
   const data = await getDataClient();
   const shift = await data.shift.findById(id);
 
-  // TODO: gate access to shift, based on org and shift access
-
   if (!shift) {
     notFound();
   }
