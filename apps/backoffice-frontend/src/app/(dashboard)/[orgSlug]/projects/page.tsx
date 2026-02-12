@@ -47,7 +47,7 @@ export default async function ProjectsPage({
         <Button asChild>
           <Link href={`/${orgSlug}/projects/create`}>
             <PlusIcon className="mr-2 h-4 w-4" />
-            Create Project
+            Create new Project
           </Link>
         </Button>
       </div>
