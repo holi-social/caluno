@@ -6,18 +6,8 @@ import {
   CardTitle,
 } from '@repo/ui';
 import { CreateProjectForm } from '@/domain/project/create-form';
-import { requireOrgAccess } from '@/lib/org-context-server';
 
-interface CreateProjectPageProps {
-  params: Promise<{ orgSlug: string }>;
-}
-
-export default async function CreateProjectPage({
-  params,
-}: CreateProjectPageProps) {
-  const { orgSlug } = await params;
-  const { org } = await requireOrgAccess(orgSlug);
-
+export default async function CreateProjectPage() {
   return (
     <div className="mx-auto max-w-2xl space-y-6">
       <div>
@@ -35,7 +25,7 @@ export default async function CreateProjectPage({
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <CreateProjectForm organizationId={org.id} />
+          <CreateProjectForm />
         </CardContent>
       </Card>
     </div>
