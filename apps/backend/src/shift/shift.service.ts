@@ -224,6 +224,7 @@ export class ShiftService {
     const [shift] = await this.db
       .update(schema.shifts)
       .set({
+        title,
         ...rest,
         ...(title && { slug: slugify(title) }),
       })
