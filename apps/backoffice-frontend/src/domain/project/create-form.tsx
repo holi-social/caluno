@@ -152,7 +152,15 @@ export function CreateProjectForm({
         {/* Status field */}
         <Field>
           <FieldLabel htmlFor="status">Status</FieldLabel>
-          <Select name="status" defaultValue="DRAFT" disabled={isPending}>
+          <Select
+            name="status"
+            defaultValue="DRAFT"
+            value={watch('status')}
+            onValueChange={(value) =>
+              setValue('status', value as ProjectStatus)
+            }
+            disabled={isPending}
+          >
             <SelectTrigger className="mt-1">
               <SelectValue placeholder="Select status" />
             </SelectTrigger>
