@@ -39,7 +39,7 @@ docker-compose.override.yml
 # Misc
 .DS_Store
 *.pem
-/.turbo/
+.idea
 
 # Generated Code
 packages/data/src/generated/
