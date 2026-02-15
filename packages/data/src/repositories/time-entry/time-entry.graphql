@@ -1,0 +1,19 @@
+mutation AddTimeEntry($input: AddTimeEntryInput!) {
+  addTimeEntry(input: $input) {
+    id
+    startedAt
+    endedAt
+    notes
+    createdAt
+  }
+}
+
+mutation DeleteTimeEntry($id: ID!) {
+  deleteTimeEntry(id: $id) {
+    id
+    startedAt
+    endedAt
+    notes
+    createdAt
+  }
+}
