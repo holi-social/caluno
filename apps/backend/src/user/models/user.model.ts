@@ -11,6 +11,6 @@ export class User {
   @Field(() => String)
   email: string;
 
-  @Field(() => String)
-  image: string;
+  @Field(() => String, { nullable: true })
+  image: string | null;
 }
