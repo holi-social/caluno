@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { getDataClient } from '@/lib/data-client';
 import { requireOrgAccess } from '@/lib/org-context-server';
 import { PaginationControls } from './pagination-controls';
-import { ProjectsTable } from './projects-table';
+import { ProjectsCards } from './projects-cards';
 
 interface ProjectsPageProps {
   params: Promise<{ orgId: string }>;
@@ -55,7 +55,7 @@ export default async function ProjectsPage({
       {/* Projects cards or empty state */}
       {hasProjects ? (
         <>
-          <ProjectsTable projects={result.items} />
+          <ProjectsCards projects={result.items} orgId={orgId} />
           {result.pagination.total > ITEMS_PER_PAGE && (
             <PaginationControls
               pagination={result.pagination}

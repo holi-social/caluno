@@ -9,7 +9,7 @@ type ProjectListItem = GetProjectsQuery['projects']['items'][number];
 
 interface ProjectsCardsProps {
   projects: ProjectListItem[];
-  orgSlug: string;
+  orgId: string;
 }
 
 const statusConfig = {
@@ -19,13 +19,13 @@ const statusConfig = {
   EXPIRED: { variant: 'destructive' as const, label: 'expired' },
 };
 
-export function ProjectsCards({ projects, orgSlug }: ProjectsCardsProps) {
+export function ProjectsCards({ projects, orgId }: ProjectsCardsProps) {
   return (
     <div className="grid gap-6 md:grid-cols-2">
       {projects.map((project) => (
         <Link
           key={project.id}
-          href={`/${orgSlug}/projects/${project.id}`}
+          href={`/${orgId}/projects/${project.id}`}
           className="group"
         >
           <Card className="h-full transition-all hover:shadow-lg hover:border-primary/50">

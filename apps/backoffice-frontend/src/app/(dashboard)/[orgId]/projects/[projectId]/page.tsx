@@ -30,7 +30,7 @@ function formatDisplayDate(dateString: string): string {
 
 interface ProjectDetailPageProps {
   params: Promise<{
-    orgSlug: string;
+    orgId: string;
     projectId: string;
   }>;
 }
@@ -38,10 +38,10 @@ interface ProjectDetailPageProps {
 export default async function ProjectDetailPage({
   params,
 }: ProjectDetailPageProps) {
-  const { orgSlug, projectId } = await params;
+  const { orgId, projectId } = await params;
 
   // Verify organization access
-  await requireOrgAccess(orgSlug);
+  await requireOrgAccess(orgId);
 
   const data = await getDataClient();
   const project = await data.project.findById(projectId);
@@ -54,7 +54,7 @@ export default async function ProjectDetailPage({
     <div className="space-y-6">
       {/* Back navigation */}
       <Link
-        href={`/${orgSlug}/projects`}
+        href={`/${orgId}/projects`}
         className="text-sm text-muted-foreground hover:text-foreground inline-flex items-center"
       >
         ← Back to Projects
