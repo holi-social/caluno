@@ -1,5 +1,5 @@
 import type { PaginationInfo } from '@repo/data';
-import { Button } from '@repo/ui/button';
+import { Button } from '@repo/ui';
 import { ChevronLeftIcon, ChevronRightIcon } from 'lucide-react';
 import Link from 'next/link';
 import type React from 'react';
