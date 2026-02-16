@@ -43,12 +43,14 @@ export default async function ProjectDetailPage({
   // Verify organization access
   await requireOrgAccess(orgId);
 
-  const data = await getDataClient();
+  const data = await getDataClient(orgId);
   const project = await data.project.findById(projectId);
 
   if (!project) {
     notFound();
   }
+
+  const shiftsData = await data.shift.findAllByProjectId(projectId);
 
   return (
     <div className="space-y-6">
@@ -88,6 +90,55 @@ export default async function ProjectDetailPage({
               <p className="text-muted-foreground">
                 {project.description || 'No description provided.'}
               </p>
+            </CardContent>
+          </Card>
+
+          {/* Shifts Section */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Shifts ({shiftsData.items.length})</CardTitle>
+            </CardHeader>
+
+            <CardContent>
+              {shiftsData.items.length === 0 ? (
+                <p className="text-sm text-muted-foreground">
+                  No shifts have been created for this project yet.
+                </p>
+              ) : (
+                <div className="space-y-4">
+                  {shiftsData.items.map((shift) => (
+                    <div
+                      key={shift.id}
+                      className="border rounded-lg p-4 space-y-2"
+                    >
+                      <div className="flex items-start justify-between gap-4">
+                        <h3 className="font-semibold">{shift.title}</h3>
+                      </div>
+
+                      <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                        <div className="flex items-center gap-1">
+                          <Calendar className="h-4 w-4" />
+                          <span>
+                            {formatDisplayDate(shift.startsAt)} -{' '}
+                            {formatDisplayDate(shift.endsAt)}
+                          </span>
+                        </div>
+                      </div>
+
+                      {shift.instructions && (
+                        <p className="text-sm text-muted-foreground line-clamp-2">
+                          {shift.instructions}
+                        </p>
+                      )}
+
+                      <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                        <User className="h-3 w-3" />
+                        <span>Created by {shift.createdBy.name}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </CardContent>
           </Card>
         </div>
