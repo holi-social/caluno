@@ -3,18 +3,22 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { ProjectStatus } from '@repo/data';
 import { useOrgId } from '@repo/data/react';
-import { DatePickerWithRange } from '@repo/ui';
-import { Field, FieldError, FieldGroup, FieldLabel } from '@repo/ui/base/field';
-import { Button } from '@repo/ui/button';
-import { Input } from '@repo/ui/input';
 import {
+  Button,
+  DatePickerWithRange,
+  Field,
+  FieldError,
+  FieldGroup,
+  FieldLabel,
+  Input,
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@repo/ui/select';
-import { Textarea } from '@repo/ui/textarea';
+  Textarea,
+} from '@repo/ui';
+
 import { useParams, useRouter } from 'next/navigation';
 import { useState, useTransition } from 'react';
 import { useForm } from 'react-hook-form';

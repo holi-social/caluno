@@ -1,5 +1,5 @@
 'use client';
-import { Button } from '@repo/ui/button';
+import { Button } from '@repo/ui';
 import {
   Sidebar,
   SidebarContent,

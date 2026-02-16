@@ -1,7 +1,6 @@
 'use client';
 
-import { Button } from '@repo/ui/button';
-import { Input } from '@repo/ui/input';
+import { Button, Input } from '@repo/ui';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
