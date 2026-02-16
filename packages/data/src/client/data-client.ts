@@ -4,6 +4,7 @@ import { ProjectRepository } from '../repositories/project/project.repository';
 import { ShiftRepository } from '../repositories/shift/shift.repository';
 import { TimeEntryRepository } from '../repositories/time-entry/time-entry.repository';
 import { UserRepository } from '../repositories/user/user.repository';
+import { VolunteerSessionRepository } from '../repositories/volunteer-session/volunteer-session.repository';
 import type { GraphQLClientConfig } from './graphql-client';
 import type { OrganizationContext } from './organization-context';
 
@@ -15,6 +16,7 @@ export class DataClient {
   public readonly project: ProjectRepository;
   public readonly shift: ShiftRepository;
   public readonly timeEntry: TimeEntryRepository;
+  public readonly volunteerSession: VolunteerSessionRepository;
 
   // Optional organization context
   public readonly organizationContext?: OrganizationContext;
@@ -34,6 +36,7 @@ export class DataClient {
     this.project = new ProjectRepository(this.graphqlClient);
     this.shift = new ShiftRepository(this.graphqlClient);
     this.timeEntry = new TimeEntryRepository(this.graphqlClient);
+    this.volunteerSession = new VolunteerSessionRepository(this.graphqlClient);
   }
 
   async getCurrentOrganizationId(): Promise<string | null> {
