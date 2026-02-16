@@ -54,7 +54,7 @@ query GetShifts($limit: Int!, $offset: Int!) {
   }
 }
 
-query GetShiftsForTimeEntry($limit: Int!, $offset: Int!) {
+query GetShiftsForTimeEntryCreation($limit: Int!, $offset: Int!) {
   shifts(limit: $limit, offset: $offset) {
     items {
       id

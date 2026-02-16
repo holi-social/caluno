@@ -6,7 +6,7 @@ export async function getAvailableShiftsWithVolunteers(organizationId: string) {
   const data = await getDataClient(organizationId);
 
   try {
-    const shifts = await data.shift.findAllForTimeEntry();
+    const shifts = await data.shift.findAllForTimeEntryCreation();
     const allVolunteers =
       await data.organization.findVolunteers(organizationId);
 

@@ -32,9 +32,9 @@ export class ShiftRepository extends BaseRepository {
     }
   }
 
-  async findAllForTimeEntry(options: PaginationOptions = {}) {
+  async findAllForTimeEntryCreation(options: PaginationOptions = {}) {
     try {
-      const data = await this.sdk.GetShiftsForTimeEntry({
+      const data = await this.sdk.GetShiftsForTimeEntryCreation({
         limit: options.limit ?? 100,
         offset: options.offset ?? 0,
       });
