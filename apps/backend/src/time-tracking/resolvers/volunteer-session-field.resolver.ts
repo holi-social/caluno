@@ -1,5 +1,7 @@
 import { Parent, ResolveField, Resolver } from '@nestjs/graphql';
 import { Session, type UserSession } from '@thallesp/nestjs-better-auth';
+import { ShiftMapper } from 'src/shift/mappers/shift.mapper';
+import { Shift } from 'src/shift/models/shift.model';
 import { TaskMapper } from 'src/task/mappers/task.mapper';
 import { Task } from 'src/task/models/task.model';
 import { UserMapper } from 'src/user/mappers/user.mapper';
@@ -17,6 +19,7 @@ export class VolunteerSessionFieldResolver {
     private readonly entryMapper: TimeEntryMapper,
     private readonly taskMapper: TaskMapper,
     private readonly userMapper: UserMapper,
+    private readonly shiftMapper: ShiftMapper,
   ) {}
 
   @ResolveField(() => [TimeEntry])
@@ -56,5 +59,20 @@ export class VolunteerSessionFieldResolver {
       return null;
     }
     return this.userMapper.toModel(validator);
+  }
+
+  @ResolveField(() => Shift, { nullable: true })
+  async shift(
+    @Parent() volunteerSession: volunteerSessionSchema.VolunteerSessionEntity,
+    @Session() session: UserSession,
+  ): Promise<Shift | null> {
+    const shift = await this.timeTrackingService.findShiftBySessionId(
+      session.user.id,
+      volunteerSession.id,
+    );
+    if (!shift) {
+      return null;
+    }
+    return this.shiftMapper.toModel(shift);
   }
 }

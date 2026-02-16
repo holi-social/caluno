@@ -1,6 +1,7 @@
 import { relations } from 'drizzle-orm';
 import { pgEnum, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
 import { users } from '../../auth/schemas/auth.schema';
+import { shifts } from '../../shift/schemas/shift.schema';
 import { taskAssignments } from '../../task/schemas/task-assignment.schema';
 import { VolunteerSessionStatus } from '../enums';
 import { timeEntries } from './time-entry.schema';
@@ -13,6 +14,9 @@ export const volunteerSessionStatusEnum = pgEnum(
 export const volunteerSessions = pgTable('volunteer_sessions', {
   id: uuid('id').primaryKey().defaultRandom(),
   assignmentId: uuid('assignment_id').references(() => taskAssignments.id, {
+    onDelete: 'restrict',
+  }),
+  shiftId: uuid('shift_id').references(() => shifts.id, {
     onDelete: 'restrict',
   }),
   status: volunteerSessionStatusEnum('status')
@@ -33,6 +37,10 @@ export const volunteerSessionsRelations = relations(
     assignment: one(taskAssignments, {
       fields: [volunteerSessions.assignmentId],
       references: [taskAssignments.id],
+    }),
+    shift: one(shifts, {
+      fields: [volunteerSessions.shiftId],
+      references: [shifts.id],
     }),
     validatedBy: one(users, {
       fields: [volunteerSessions.validatedBy],
