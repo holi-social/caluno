@@ -1,5 +1,9 @@
 import { Args, Context, Query, Resolver } from '@nestjs/graphql';
-import { Session, type UserSession } from '@thallesp/nestjs-better-auth';
+import {
+  AllowAnonymous,
+  Session,
+  type UserSession,
+} from '@thallesp/nestjs-better-auth';
 import { Roles } from 'src/auth/decorators/roles.decorator';
 import type { AuthenticatedGraphQLContext } from 'src/graphql/graphql.context';
 import { PaginationInput } from 'src/graphql/pagination.input';
@@ -14,18 +18,10 @@ export class ShiftQueryResolver {
     private readonly shiftMapper: ShiftMapper,
   ) {}
 
-  @Roles('MEMBER')
+  @AllowAnonymous()
   @Query(() => Shift)
-  async shift(
-    @Args('id') id: string,
-    @Session() session: UserSession,
-    @Context() context: AuthenticatedGraphQLContext,
-  ): Promise<Shift> {
-    const shift = await this.shiftService.findById(
-      session.user.id,
-      context.organizationId,
-      id,
-    );
+  async shift(@Args('id') id: string): Promise<Shift> {
+    const shift = await this.shiftService.findById(id);
     return this.shiftMapper.toModelOrThrow(shift);
   }
 

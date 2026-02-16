@@ -1,9 +1,9 @@
 import { Button } from '@repo/ui';
 import { PlusIcon } from 'lucide-react';
 import Link from 'next/link';
+import { Pagination } from '@/components/pagination';
 import { getDataClient } from '@/lib/data-client';
 import { requireOrgAccess } from '@/lib/org-context-server';
-import { PaginationControls } from './pagination-controls';
 import { ProjectsCards } from './projects-cards';
 
 interface ProjectsPageProps {
@@ -57,9 +57,11 @@ export default async function ProjectsPage({
         <>
           <ProjectsCards projects={result.items} orgId={orgId} />
           {result.pagination.total > ITEMS_PER_PAGE && (
-            <PaginationControls
+            <Pagination
               pagination={result.pagination}
+              url={`/${orgId}/projects`}
               currentPage={currentPage}
+              name={'projects'}
             />
           )}
         </>

@@ -244,7 +244,7 @@ input UpdateShiftInput {
 type User {
   email: String!
   id: ID!
-  image: String!
+  image: String
   name: String!
 }
 
