@@ -10,16 +10,14 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useGraphQLClient } from './use-graphql-client';
 
 export function useVolunteerSessions(
-  organizationId: string,
   options: { status?: VolunteerSessionStatus } = {},
 ) {
   const client = useGraphQLClient();
   const repository = new VolunteerSessionRepository(client);
 
   return useQuery({
-    queryKey: ['volunteer-sessions', organizationId, options.status],
-    queryFn: () => repository.findAllByOrganizationId(organizationId, options),
-    enabled: !!organizationId,
+    queryKey: ['volunteer-sessions', options.status],
+    queryFn: () => repository.findAll(),
   });
 }
 
