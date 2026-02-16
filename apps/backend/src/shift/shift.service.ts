@@ -70,10 +70,15 @@ export class ShiftService {
   async findAll(
     userId: string,
     organizationId: string,
+    projectId: string | null,
     pagination: PaginationInput,
   ): Promise<{ shifts: ShiftEntity[]; total: number }> {
     let shifts: ShiftEntity[] = [];
     let total: number = 0;
+
+    const projectCondition = projectId
+      ? eq(schema.shifts.projectId, projectId)
+      : undefined;
 
     const isStaff = await this.membershipService.isStaff(
       userId,
@@ -81,8 +86,13 @@ export class ShiftService {
     );
 
     if (isStaff) {
+      const condition = and(
+        eq(schema.shifts.organizationId, organizationId),
+        projectCondition,
+      );
+
       shifts = await this.db.query.shifts.findMany({
-        where: and(eq(schema.shifts.organizationId, organizationId)),
+        where: condition,
         limit: pagination.limit,
         offset: pagination.offset,
       });
@@ -90,7 +100,7 @@ export class ShiftService {
       const [{ rowCount }] = await this.db
         .select({ rowCount: count() })
         .from(schema.shifts)
-        .where(eq(schema.shifts.organizationId, organizationId));
+        .where(condition);
 
       total = rowCount;
       return { shifts, total };
@@ -104,6 +114,7 @@ export class ShiftService {
 
     const condition = and(
       eq(schema.shifts.organizationId, organizationId),
+      projectCondition,
       shiftIds.length > 0
         ? or(
             eq(schema.shifts.visibility, ShiftVisibility.ALL_MEMBERS),
