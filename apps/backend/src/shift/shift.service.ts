@@ -9,6 +9,7 @@ import { slugify } from 'src/utils/slug.util';
 import { DATABASE_CONNECTION } from '../database/database-connection';
 import * as schema from '../database/schema';
 import { UserEntity } from '../database/schema';
+import { UserService } from '../user/user.service';
 import { ShiftInviteStatus, ShiftVisibility } from './enums';
 import { CreateShiftInput } from './inputs/create-shift.input';
 import { UpdateShiftInput } from './inputs/update-shift.input';
@@ -20,51 +21,18 @@ export class ShiftService {
     @Inject(DATABASE_CONNECTION)
     private readonly db: NodePgDatabase<typeof schema>,
     private readonly membershipService: MembershipService,
+    private readonly userService: UserService,
   ) {}
 
-  async findById(
-    userId: string,
-    organizationId: string,
-    id: string,
-  ): Promise<ShiftEntity> {
+  async findById(id: string): Promise<ShiftEntity> {
     const shift = await this.db.query.shifts.findFirst({
-      where: and(
-        eq(schema.shifts.id, id),
-        eq(schema.shifts.organizationId, organizationId),
-      ),
+      where: and(eq(schema.shifts.id, id)),
     });
 
     if (!shift) {
       throw new NotFoundGraphQLError(`Shift with ID ${id} not found`);
     }
-
-    const isStaff = await this.membershipService.isStaff(
-      userId,
-      shift.organizationId,
-    );
-
-    if (isStaff) {
-      return shift;
-    }
-
-    if (shift.visibility === ShiftVisibility.ALL_MEMBERS) {
-      return shift;
-    }
-
-    const invite = await this.db.query.shiftInvites.findFirst({
-      where: and(
-        eq(schema.shiftInvites.shiftId, id),
-        eq(schema.shiftInvites.userId, userId),
-      ),
-    });
-
-    if (invite) {
-      return shift;
-    }
-
-    throw new ForbiddenGraphQLError(
-      `You are not authorized to access this shift`,
-    );
+    return shift;
   }
 
   async findAll(
@@ -256,6 +224,7 @@ export class ShiftService {
     const [shift] = await this.db
       .update(schema.shifts)
       .set({
+        title,
         ...rest,
         ...(title && { slug: slugify(title) }),
       })
@@ -297,5 +266,9 @@ export class ShiftService {
     }
 
     return shift;
+  }
+
+  async findCreator(createdById: string): Promise<UserEntity> {
+    return this.userService.findByIdOrThrow(createdById);
   }
 }

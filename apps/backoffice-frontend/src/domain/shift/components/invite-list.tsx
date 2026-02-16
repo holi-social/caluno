@@ -95,7 +95,7 @@ export const InviteList = ({
                 onClick={() => addMember(volunteer.id)}
                 className="w-full rounded-md p-2 hover:bg-muted/50 transition-colors"
               >
-                <UserCard member={volunteer} />
+                <UserCard user={volunteer} size="sm" />
               </button>
             ))
           )}
@@ -129,7 +129,7 @@ export const InviteList = ({
                 key={volunteer.id}
                 className="w-full flex justify-between rounded-md p-2 pr-0 hover:bg-muted/50 transition-colors"
               >
-                <UserCard member={volunteer} />
+                <UserCard user={volunteer} size="sm" />
                 <div className="flex ">
                   <Button
                     size="icon-sm"
