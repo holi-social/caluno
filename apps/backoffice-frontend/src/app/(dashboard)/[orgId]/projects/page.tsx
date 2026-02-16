@@ -1,7 +1,5 @@
-import { Button } from '@repo/ui';
-import { PlusIcon } from 'lucide-react';
-import Link from 'next/link';
 import { Pagination } from '@/components/pagination';
+import { CreateProjectSheet } from '@/components/sheets/create-project-sheet';
 import { getDataClient } from '@/lib/data-client';
 import { requireOrgAccess } from '@/lib/org-context-server';
 import { ProjectsTable } from './projects-table';
@@ -44,12 +42,7 @@ export default async function ProjectsPage({
             Manage and organize volunteer projects
           </p>
         </div>
-        <Button asChild>
-          <Link href={`/${org.id}/projects/create`}>
-            <PlusIcon className="mr-2 h-4 w-4" />
-            Create Project
-          </Link>
-        </Button>
+        <CreateProjectSheet />
       </div>
 
       {/* Projects table or empty state */}
