@@ -1,4 +1,5 @@
 import { Field, ID, ObjectType, registerEnumType } from '@nestjs/graphql';
+import { Shift } from '../../shift/models/shift.model';
 import { Task } from '../../task/models/task.model';
 import { User } from '../../user/models/user.model';
 import { VolunteerSessionStatus } from '../enums';
@@ -18,6 +19,9 @@ export class VolunteerSession {
 
   @Field(() => Task)
   task: Task;
+
+  @Field(() => Shift, { nullable: true })
+  shift: Shift | null;
 
   @Field(() => VolunteerSessionStatus)
   status: VolunteerSessionStatus;

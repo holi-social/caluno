@@ -1,4 +1,4 @@
-import { cn } from '@repo/ui/utils';
+import { cn } from '@repo/ui';
 import type * as React from 'react';
 
 function Card({ className, ...props }: React.ComponentProps<'div'>) {

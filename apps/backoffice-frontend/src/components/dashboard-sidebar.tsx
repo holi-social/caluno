@@ -1,6 +1,6 @@
 'use client';
-import { Button } from '@repo/ui';
 import {
+  Button,
   Sidebar,
   SidebarContent,
   SidebarFooter,
@@ -11,9 +11,10 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-} from '@repo/ui/sidebar';
+} from '@repo/ui';
 import {
   CalendarIcon,
+  ClockIcon,
   FolderIcon,
   LogOutIcon,
   SettingsIcon,
@@ -42,6 +43,11 @@ export function DashboardSidebar() {
         title: 'Shifts',
         href: `/${orgId}/shifts`,
         icon: CalendarIcon,
+      },
+      {
+        title: 'Timesheets',
+        href: `/${orgId}/timesheets`,
+        icon: ClockIcon,
       },
       {
         title: 'Volunteers',

@@ -54,6 +54,20 @@ query GetShifts($limit: Int!, $offset: Int!) {
   }
 }
 
+query GetShiftsForTimeEntryCreation($limit: Int!, $offset: Int!) {
+  shifts(limit: $limit, offset: $offset) {
+    items {
+      id
+      title
+      volunteers {
+        id
+        name
+        email
+      }
+    }
+  }
+}
+
 mutation CreateShift($input: CreateShiftInput!) {
   createShift(input: $input) {
     id

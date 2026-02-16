@@ -9,7 +9,9 @@ export * from './react/auth/auth-client';
 // Data fetching hooks
 export * from './react/hooks/use-graphql-client';
 export * from './react/hooks/use-organizations';
+export * from './react/hooks/use-time-entry';
 export * from './react/hooks/use-user';
+export * from './react/hooks/use-volunteer-session';
 // Organization context (provider, hooks, and cookie utilities)
 export * from './react/org-context';
 // React-specific exports

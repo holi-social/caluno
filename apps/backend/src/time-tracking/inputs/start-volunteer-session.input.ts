@@ -4,10 +4,13 @@ import { VolunteerSessionStatus } from '../enums';
 @InputType()
 export class StartVolunteerSessionInput {
   @Field(() => String)
-  taskId: string;
+  shiftId: string;
+
+  @Field(() => String)
+  volunteerId: string;
 
   @Field(() => VolunteerSessionStatus, {
-    defaultValue: VolunteerSessionStatus.IN_PROGRESS,
+    defaultValue: VolunteerSessionStatus.SUBMITTED,
   })
   status: VolunteerSessionStatus;
 }

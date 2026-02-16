@@ -1,10 +1,6 @@
 'use client';
 
-import {
-  type GetShiftQuery,
-  ShiftVisibility,
-  useOrgId,
-} from '@repo/data/react';
+import { type GetShiftQuery, ShiftVisibility } from '@repo/data/react';
 import { useRouter } from 'next/navigation';
 import { useState, useTransition } from 'react';
 import { updateShift } from '../actions';
