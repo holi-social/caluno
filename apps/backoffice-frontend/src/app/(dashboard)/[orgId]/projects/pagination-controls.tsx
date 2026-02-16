@@ -1,8 +1,8 @@
 'use client';
 
-import { Button } from '@repo/ui/button';
+import { Button } from '@repo/ui';
 import { ChevronLeftIcon, ChevronRightIcon } from 'lucide-react';
-import { useRouter } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 
 interface PaginationInfo {
   total: number;
@@ -13,16 +13,16 @@ interface PaginationInfo {
 
 interface PaginationControlsProps {
   pagination: PaginationInfo;
-  orgSlug: string;
   currentPage: number;
 }
 
 export function PaginationControls({
   pagination,
-  orgSlug,
   currentPage,
 }: PaginationControlsProps) {
   const router = useRouter();
+  const params = useParams();
+  const orgId = params.orgId as string;
   const totalPages = Math.ceil(pagination.total / pagination.limit);
   const startItem = pagination.offset + 1;
   const endItem = Math.min(
@@ -31,7 +31,7 @@ export function PaginationControls({
   );
 
   const handlePageChange = (newPage: number) => {
-    router.push(`/${orgSlug}/projects?page=${newPage}`);
+    router.push(`/${orgId}/projects?page=${newPage}`);
   };
 
   return (

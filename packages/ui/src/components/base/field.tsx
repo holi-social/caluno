@@ -3,8 +3,8 @@
 import { cva, type VariantProps } from 'class-variance-authority';
 import { useMemo } from 'react';
 import { cn } from '../../lib/utils';
-import { Separator } from '../separator';
 import { Label } from './label';
+import { Separator } from './separator';
 
 function FieldSet({ className, ...props }: React.ComponentProps<'fieldset'>) {
   return (
@@ -83,6 +83,7 @@ function Field({
   ...props
 }: React.ComponentProps<'div'> & VariantProps<typeof fieldVariants>) {
   return (
+    // biome-ignore lint/a11y/useSemanticElements: generated code
     <div
       role="group"
       data-slot="field"
@@ -203,7 +204,7 @@ function FieldError({
       ...new Map(errors.map((error) => [error?.message, error])).values(),
     ];
 
-    if (uniqueErrors?.length == 1) {
+    if (uniqueErrors?.length === 1) {
       return uniqueErrors[0]?.message;
     }
 
@@ -211,7 +212,11 @@ function FieldError({
       <ul className="ml-4 flex list-disc flex-col gap-1">
         {uniqueErrors.map(
           (error, index) =>
-            error?.message && <li key={index}>{error.message}</li>,
+            error?.message && (
+              <li key={`fieldset-error-${error.message.toString()}-${index}`}>
+                {error.message}
+              </li>
+            ),
         )}
       </ul>
     );

@@ -78,6 +78,20 @@
       "when": 1770221148373,
       "tag": "0010_shift-instructions-is-null",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1770906258944,
+      "tag": "0011_remove-membership-role",
+      "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1770906270507,
+      "tag": "0012_add-membership-role",
+      "breakpoints": true
     }
   ]
 }

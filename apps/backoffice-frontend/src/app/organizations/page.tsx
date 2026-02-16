@@ -32,7 +32,7 @@ export default async function OrganizationsPage() {
 
       <div className="grid gap-4 md:grid-cols-2">
         {orgsResult.items.map((org) => (
-          <Link key={org.id} href={`/${org.slug}/shifts`}>
+          <Link key={org.id} href={`/${org.id}`}>
             <Card className="hover:bg-accent transition-colors cursor-pointer">
               <CardHeader>
                 <CardTitle>{org.name}</CardTitle>

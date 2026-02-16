@@ -2,6 +2,7 @@
 
 import { useUserOrganizations } from '@repo/data/react';
 import {
+  Button,
   Command,
   CommandGroup,
   CommandItem,
@@ -10,7 +11,6 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@repo/ui';
-import { Button } from '@repo/ui/button';
 import { cn } from '@repo/ui/utils';
 import { Building2, Check, ChevronsUpDown } from 'lucide-react';
 import { useParams, usePathname, useRouter } from 'next/navigation';
@@ -21,12 +21,12 @@ export function OrgSwitcher() {
   const params = useParams();
   const router = useRouter();
   const pathname = usePathname();
-  const currentOrgSlug = params.orgSlug as string | undefined;
+  const currentOrgId = params.orgId as string | undefined;
 
   const organizations = useUserOrganizations();
 
-  const handleOrgChange = (newOrgSlug: string) => {
-    if (newOrgSlug === currentOrgSlug) {
+  const handleOrgChange = (newOrgId: string) => {
+    if (newOrgId === currentOrgId) {
       setOpen(false);
       return;
     }
@@ -34,11 +34,11 @@ export function OrgSwitcher() {
     const pathParts = pathname.split('/').filter(Boolean);
     const currentPage = pathParts.length > 1 ? pathParts[1] : 'shifts';
 
-    router.push(`/${newOrgSlug}/${currentPage}`);
+    router.push(`/${newOrgId}/${currentPage}`);
     setOpen(false);
   };
 
-  const currentOrg = organizations.find((org) => org.slug === currentOrgSlug);
+  const currentOrg = organizations.find((org) => org.id === currentOrgId);
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -65,13 +65,13 @@ export function OrgSwitcher() {
               {organizations.map((org) => (
                 <CommandItem
                   key={org.id}
-                  value={org.slug}
-                  onSelect={() => handleOrgChange(org.slug)}
+                  value={org.id}
+                  onSelect={() => handleOrgChange(org.id)}
                 >
                   <Check
                     className={cn(
                       'mr-2 h-4 w-4',
-                      currentOrgSlug === org.slug ? 'opacity-100' : 'opacity-0',
+                      currentOrgId === org.id ? 'opacity-100' : 'opacity-0',
                     )}
                   />
                   <div className="flex flex-col">

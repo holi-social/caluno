@@ -1,6 +1,6 @@
 {
-  "id": "9d5d1138-8f92-4e02-8b2e-52f65a4e98dc",
-  "prevId": "965023ce-b159-4beb-9cd3-89a3d0abec73",
+  "id": "45f33909-2724-4682-8eb9-d4226c4afc36",
+  "prevId": "9d5d1138-8f92-4e02-8b2e-52f65a4e98dc",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -369,13 +369,6 @@
           "type": "uuid",
           "primaryKey": false,
           "notNull": false
-        },
-        "role": {
-          "name": "role",
-          "type": "organization_role",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "'VOLUNTEER'"
         },
         "created_at": {
           "name": "created_at",

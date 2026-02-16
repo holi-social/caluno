@@ -1,5 +1,5 @@
 'use client';
-import { Button } from '@repo/ui/button';
+import { Button } from '@repo/ui';
 import {
   Sidebar,
   SidebarContent,
@@ -27,41 +27,41 @@ import { signOut } from '@/lib/auth';
 export function DashboardSidebar() {
   const params = useParams();
   const router = useRouter();
-  const orgSlug = params.orgSlug as string | undefined;
+  const orgId = params.orgId as string | undefined;
 
   const menuItems = useMemo(() => {
-    if (!orgSlug) return [];
+    if (!orgId) return [];
 
     return [
       {
         title: 'Projects',
-        href: `/${orgSlug}/projects`,
+        href: `/${orgId}/projects`,
         icon: FolderIcon,
       },
       {
         title: 'Shifts',
-        href: `/${orgSlug}/shifts`,
+        href: `/${orgId}/shifts`,
         icon: CalendarIcon,
       },
       {
         title: 'Volunteers',
-        href: `/${orgSlug}/volunteers`,
+        href: `/${orgId}/volunteers`,
         icon: UsersIcon,
       },
     ];
-  }, [orgSlug]);
+  }, [orgId]);
 
   const settingsItems = useMemo(() => {
-    if (!orgSlug) return [];
+    if (!orgId) return [];
 
     return [
       {
         title: 'Settings',
-        href: `/${orgSlug}/settings`,
+        href: `/${orgId}/settings`,
         icon: SettingsIcon,
       },
     ];
-  }, [orgSlug]);
+  }, [orgId]);
 
   async function handleSignOut() {
     await signOut();

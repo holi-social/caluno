@@ -5,6 +5,7 @@ import { getDataClient } from './data-client';
 
 export const {
   requireOrgAccess,
+  resolveOrgFromId,
   resolveOrgFromSlug,
   validateUserOrgAccess,
   getLastVisitedOrgServer,

@@ -1,14 +1,6 @@
 import { CreateShiftForm } from '@/domain/shift/components/create-form';
 
-interface CreateShiftPageProps {
-  params: Promise<{ orgSlug: string }>;
-}
-
-export default async function CreateShiftPage({
-  params,
-}: CreateShiftPageProps) {
-  const { orgSlug } = await params;
-
+export default async function CreateShiftPage() {
   return (
     <div className="max-w-2xl">
       <div>
@@ -19,7 +11,7 @@ export default async function CreateShiftPage({
           </p>
         </div>
         <div className="px-2 py-8">
-          <CreateShiftForm orgSlug={orgSlug} />
+          <CreateShiftForm />
         </div>
       </div>
     </div>

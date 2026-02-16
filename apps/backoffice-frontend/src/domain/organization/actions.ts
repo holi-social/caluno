@@ -40,7 +40,7 @@ export async function createOrganization(
   return await data.organization
     .create(input)
     .then((org) => {
-      return redirect(`/${org.slug}/shifts`);
+      return redirect(`/${org.id}`);
     })
     .catch((error) => {
       return {

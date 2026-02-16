@@ -23,15 +23,6 @@ export interface OrgProviderProps {
   organizations: OrganizationData[];
 }
 
-/**
- * Organization context provider.
- * Provides current organization and list of user's organizations to all child components.
- *
- * @example
- * <OrgProvider org={currentOrg} organizations={userOrgs}>
- *   <App />
- * </OrgProvider>
- */
 export function OrgProvider({
   children,
   org,
@@ -44,10 +35,6 @@ export function OrgProvider({
   );
 }
 
-/**
- * Hook to access full org context (current org + all organizations).
- * @throws Error if used outside OrgProvider
- */
 export function useOrg(): OrgContextValue {
   const context = useContext(OrgContext);
   if (!context) {
@@ -56,35 +43,18 @@ export function useOrg(): OrgContextValue {
   return context;
 }
 
-/**
- * Hook to access current organization ID.
- * @throws Error if used outside OrgProvider
- */
 export function useOrgId(): string {
   return useOrg().org.id;
 }
 
-/**
- * Hook to access current organization slug.
- * @throws Error if used outside OrgProvider
- */
 export function useOrgSlug(): string {
   return useOrg().org.slug;
 }
 
-/**
- * Hook to access current organization data.
- * @throws Error if used outside OrgProvider
- */
 export function useCurrentOrg(): OrganizationData {
   return useOrg().org;
 }
 
-/**
- * Hook to access all organizations the user has access to.
- * Returns the list from the provider (no fetching).
- * @throws Error if used outside OrgProvider
- */
 export function useUserOrganizations(): OrganizationData[] {
   return useOrg().organizations;
 }
