@@ -1,6 +1,6 @@
 'use client';
 
-import { Button } from '@repo/ui/button';
+import { Button } from '@repo/ui';
 import { ChevronLeftIcon, ChevronRightIcon } from 'lucide-react';
 import { useParams, useRouter } from 'next/navigation';
 

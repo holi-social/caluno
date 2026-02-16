@@ -2,6 +2,7 @@
 
 import { useUserOrganizations } from '@repo/data/react';
 import {
+  Button,
   Command,
   CommandGroup,
   CommandItem,
@@ -10,7 +11,6 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@repo/ui';
-import { Button } from '@repo/ui/button';
 import { cn } from '@repo/ui/utils';
 import { Building2, Check, ChevronsUpDown } from 'lucide-react';
 import { useParams, usePathname, useRouter } from 'next/navigation';

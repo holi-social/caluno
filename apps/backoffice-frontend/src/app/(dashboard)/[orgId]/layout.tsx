@@ -1,6 +1,5 @@
 import { DataProvider, OrgProvider } from '@repo/data/react';
-import { Button } from '@repo/ui';
-import { Separator } from '@repo/ui/separator';
+import { Button, Separator } from '@repo/ui';
 import {
   SidebarInset,
   SidebarProvider,

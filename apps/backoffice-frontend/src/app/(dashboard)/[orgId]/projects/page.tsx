@@ -1,4 +1,4 @@
-import { Button } from '@repo/ui/button';
+import { Button } from '@repo/ui';
 import { PlusIcon } from 'lucide-react';
 import Link from 'next/link';
 import { getDataClient } from '@/lib/data-client';

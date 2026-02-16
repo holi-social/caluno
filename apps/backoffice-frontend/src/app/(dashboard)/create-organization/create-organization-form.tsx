@@ -1,6 +1,6 @@
 'use client';
 
-import { Button } from '@repo/ui/button';
+import { Button } from '@repo/ui';
 import { Input } from '@repo/ui/input';
 import { useActionState } from 'react';
 import { createOrganization } from '@/domain/organization/actions';
