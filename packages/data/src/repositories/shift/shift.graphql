@@ -3,3 +3,32 @@ mutation CreateShift($input: CreateShiftInput!) {
     id
   }
 }
+
+query GetShiftsByProjectId($projectId: String!, $limit: Int!, $offset: Int!) {
+  shiftsByProjectId(projectId: $projectId, limit: $limit, offset: $offset) {
+    items {
+      id
+      title
+      slug
+      instructions
+      organization {
+        id
+      }
+      project {
+        id
+      }
+      startsAt
+      endsAt
+      createdBy {
+        id
+        name
+      }
+    }
+    pagination {
+      total
+      limit
+      offset
+      hasMore
+    }
+  }
+}
