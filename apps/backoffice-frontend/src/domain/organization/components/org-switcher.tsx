@@ -7,11 +7,11 @@ import {
   CommandGroup,
   CommandItem,
   CommandList,
+  cn,
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from '@repo/ui';
-import { cn } from '@repo/ui/utils';
 import { Building2, Check, ChevronsUpDown } from 'lucide-react';
 import { useParams, usePathname, useRouter } from 'next/navigation';
 import { useState } from 'react';

@@ -1,7 +1,6 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { and, count, eq, inArray, or } from 'drizzle-orm';
 import type { NodePgDatabase } from 'drizzle-orm/node-postgres';
-import { ForbiddenGraphQLError } from 'src/graphql/errors/forbidden.error';
 import { NotFoundGraphQLError } from 'src/graphql/errors/not-found.error';
 import type { PaginationInput } from 'src/graphql/pagination.input';
 import { MembershipService } from 'src/membership/membership.service';

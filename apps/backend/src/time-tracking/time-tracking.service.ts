@@ -1,16 +1,16 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { and, eq, inArray, lt } from 'drizzle-orm';
+import { eq } from 'drizzle-orm';
 import type { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import type { UserEntity } from '../auth/schemas/auth.schema';
 import { DATABASE_CONNECTION } from '../database/database-connection';
 import * as schema from '../database/schema';
 import {
   BadRequestGraphQLError,
-  ConflictGraphQLError,
   ForbiddenGraphQLError,
   NotFoundGraphQLError,
 } from '../graphql/errors';
 import { MembershipService } from '../membership/membership.service';
+import type { ShiftEntity } from '../shift/schemas/shift.schema';
 import type { TaskEntity } from '../task/schemas/task.schema';
 import { VolunteerSessionStatus } from './enums';
 import { AddTimeEntryInput } from './inputs/add-time-entry.input';
@@ -59,51 +59,34 @@ export class TimeTrackingService {
     userId: string,
     input: StartVolunteerSessionInput,
   ): Promise<VolunteerSessionEntity> {
-    const activeSessions = await this.db.query.volunteerSessions.findMany({
-      where: inArray(schema.volunteerSessions.status, [
-        VolunteerSessionStatus.IN_PROGRESS,
-      ]),
+    const shift = await this.db.query.shifts.findFirst({
+      where: eq(schema.shifts.id, input.shiftId),
       with: {
-        assignment: true,
+        organization: true,
       },
     });
 
-    const userActiveSession = activeSessions.find(
-      (session) => session.assignment?.assignedToId === userId,
+    if (!shift) {
+      throw new NotFoundGraphQLError('Shift not found');
+    }
+
+    const isStaff = await this.membershipService.isStaff(
+      userId,
+      shift.organizationId,
     );
 
-    if (userActiveSession) {
-      throw new ConflictGraphQLError(
-        'You already have an active volunteer session',
+    if (!isStaff && input.volunteerId !== userId) {
+      throw new ForbiddenGraphQLError(
+        'You are not authorized to create volunteer sessions for other users',
       );
     }
 
-    const task = await this.db.query.tasks.findFirst({
-      where: and(
-        eq(schema.tasks.id, input.taskId),
-        lt(schema.tasks.dueDate, new Date()),
-      ),
-    });
-
-    if (!task) {
-      throw new NotFoundGraphQLError('Task not found or is overdue');
-    }
-
-    const assignment = await this.db.query.taskAssignments.findFirst({
-      where: and(
-        eq(schema.taskAssignments.taskId, input.taskId),
-        eq(schema.taskAssignments.assignedToId, userId),
-      ),
-    });
-
-    if (!assignment) {
-      throw new NotFoundGraphQLError('Task assignment not found');
-    }
-
+    // Create the volunteer session
     const [volunteerSession] = await this.db
       .insert(schema.volunteerSessions)
       .values({
-        assignmentId: assignment.id,
+        assignmentId: null,
+        shiftId: input.shiftId,
         status: input.status,
       })
       .returning();
@@ -166,8 +149,10 @@ export class TimeTrackingService {
       throw new NotFoundGraphQLError('Volunteer session not found');
     }
 
-    if (volunteerSession.status !== VolunteerSessionStatus.PENDING) {
-      throw new BadRequestGraphQLError('Volunteer session is not pending');
+    if (volunteerSession.status !== VolunteerSessionStatus.SUBMITTED) {
+      throw new BadRequestGraphQLError(
+        'Volunteer session must be submitted for approval',
+      );
     }
 
     const [approvedSession] = await this.db
@@ -329,5 +314,59 @@ export class TimeTrackingService {
     }
 
     return volunteerSession.validatedBy;
+  }
+
+  async findAll(
+    organizationId: string,
+    status?: VolunteerSessionStatus,
+  ): Promise<VolunteerSessionEntity[]> {
+    const sessions = await this.db.query.volunteerSessions.findMany({
+      where: status ? eq(schema.volunteerSessions.status, status) : undefined,
+      with: {
+        shift: true,
+        entries: true,
+        validatedBy: true,
+      },
+    });
+
+    const filteredSessions = sessions.filter(
+      (session) => session.shift?.organizationId === organizationId,
+    );
+
+    return filteredSessions;
+  }
+
+  async findShiftBySessionId(
+    userId: string,
+    sessionId: string,
+  ): Promise<ShiftEntity | null> {
+    const volunteerSession = await this.db.query.volunteerSessions.findFirst({
+      where: eq(schema.volunteerSessions.id, sessionId),
+      with: {
+        shift: true,
+      },
+    });
+
+    if (!volunteerSession) {
+      throw new NotFoundGraphQLError('Volunteer session not found');
+    }
+    const organizationId = volunteerSession.shift?.organizationId;
+
+    if (!organizationId) {
+      throw new NotFoundGraphQLError('Organization not found for this session');
+    }
+
+    const isStaff = await this.membershipService.isStaff(
+      userId,
+      organizationId,
+    );
+
+    if (!isStaff) {
+      throw new ForbiddenGraphQLError(
+        'You are not authorized to access this volunteer session',
+      );
+    }
+
+    return volunteerSession.shift ?? null;
   }
 }

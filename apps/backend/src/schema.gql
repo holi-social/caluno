@@ -158,6 +158,7 @@ type Query {
   task(id: String!): Task!
   tasksByUserId(limit: Int! = 10, offset: Int! = 0, userId: String!): TaskPaginatedResponse!
   user(id: String!): User
+  volunteerSessions(status: VolunteerSessionStatus): [VolunteerSession!]!
 }
 
 input RejectVolunteerSessionInput {
@@ -192,8 +193,9 @@ enum ShiftVisibility {
 }
 
 input StartVolunteerSessionInput {
-  status: VolunteerSessionStatus! = IN_PROGRESS
-  taskId: String!
+  shiftId: String!
+  status: VolunteerSessionStatus! = SUBMITTED
+  volunteerId: String!
 }
 
 type Task {
@@ -253,6 +255,7 @@ type VolunteerSession {
   entries: [TimeEntry!]!
   id: ID!
   rejectionReason: String
+  shift: Shift
   status: VolunteerSessionStatus!
   task: Task!
   updatedAt: DateTime
