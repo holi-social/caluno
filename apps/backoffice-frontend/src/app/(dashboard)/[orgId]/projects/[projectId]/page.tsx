@@ -1,8 +1,23 @@
 import type { ProjectStatus } from '@repo/data';
-import { Badge, Card, CardContent, CardHeader, CardTitle } from '@repo/ui';
-import { Calendar, Clock, MapPin, User } from 'lucide-react';
+import {
+  Badge,
+  Button,
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from '@repo/ui';
+import {
+  Calendar,
+  Clock,
+  MapPin,
+  SquarePenIcon,
+  TrashIcon,
+  User,
+} from 'lucide-react';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
+import { UpdateProjectSheet } from '@/components/sheets/update-project-sheet';
 import { getDataClient } from '@/lib/data-client';
 import { requireOrgAccess } from '@/lib/org-context-server';
 
@@ -55,12 +70,31 @@ export default async function ProjectDetailPage({
   return (
     <div className="space-y-6">
       {/* Back navigation */}
-      <Link
-        href={`/${orgId}/projects`}
-        className="text-sm text-muted-foreground hover:text-foreground inline-flex items-center"
-      >
-        ← Back to Projects
-      </Link>
+      <div className="flex justify-between">
+        <Link
+          href={`/${orgId}/projects`}
+          className="text-sm text-muted-foreground hover:text-foreground inline-flex items-center"
+        >
+          ← Back to Projects
+        </Link>
+
+        <div className="space-x-2">
+          <UpdateProjectSheet
+            project={project}
+            trigger={
+              <Button size="sm" variant="outline">
+                <SquarePenIcon className="h-4 w-4" />
+                Edit Project
+              </Button>
+            }
+          />
+
+          <Button size="sm" variant="destructive">
+            <TrashIcon className="h-4 w-4" />
+            Delete Project
+          </Button>
+        </div>
+      </div>
 
       {/* Header */}
       <div className="flex items-start justify-between gap-4">
