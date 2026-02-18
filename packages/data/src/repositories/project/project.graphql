@@ -28,7 +28,7 @@ query GetProject($id: String!) {
   }
 }
 
-query GetProjects($organizationId: String!, $limit: Int!, $offset: Int!) {
+query GetProjects($organizationId: ID!, $limit: Int!, $offset: Int!) {
   projects(organizationId: $organizationId, limit: $limit, offset: $offset) {
     items {
       id

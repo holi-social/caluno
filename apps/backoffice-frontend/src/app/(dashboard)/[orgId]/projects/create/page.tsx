@@ -5,7 +5,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@repo/ui';
-import { CreateProjectForm } from '@/domain/project/create-form';
+import { CreateProjectForm } from '@/domain/project/forms/create-form';
 
 export default async function CreateProjectPage() {
   return (

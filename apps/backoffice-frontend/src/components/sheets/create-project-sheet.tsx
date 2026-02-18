@@ -11,7 +11,7 @@ import {
 } from '@repo/ui';
 import { PlusIcon } from 'lucide-react';
 import { useState } from 'react';
-import { CreateProjectForm } from '@/domain/project/create-form';
+import { CreateProjectForm } from '@/domain/project/forms/create-form';
 
 interface CreateProjectSheetProps {
   trigger?: React.ReactNode;
