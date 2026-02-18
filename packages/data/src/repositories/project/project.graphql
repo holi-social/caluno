@@ -9,7 +9,26 @@ mutation CreateProject($input: CreateProjectInput!) {
   }
 }
 
-query GetProject($id: String!) {
+mutation UpdateProject($id: ID!, $input: UpdateProjectInput!) {
+  updateProject(id: $id, input: $input) {
+    id
+    title
+    slug
+    description
+    location
+    startsAt
+    endsAt
+    status
+    createdBy {
+      id
+      name
+    }
+    createdAt
+    updatedAt
+  }
+}
+
+query GetProject($id: ID!) {
   project(id: $id) {
     id
     title
