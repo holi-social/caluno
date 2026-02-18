@@ -1,4 +1,4 @@
-import { Args, Query, Resolver } from '@nestjs/graphql';
+import { Args, ID, Query, Resolver } from '@nestjs/graphql';
 import { PaginationInput } from '../../graphql/pagination.input';
 import { Project, ProjectPaginatedResponse } from '../models/project.model';
 import { ProjectService } from '../project.service';
@@ -8,13 +8,15 @@ export class ProjectQueryResolver {
   constructor(private readonly projectService: ProjectService) {}
 
   @Query(() => Project)
-  async project(@Args('id') id: string): Promise<Project | null> {
+  async project(
+    @Args('id', { type: () => ID }) id: string,
+  ): Promise<Project | null> {
     return this.projectService.findById(id);
   }
 
   @Query(() => ProjectPaginatedResponse)
   async projects(
-    @Args('organizationId') organizationId: string,
+    @Args('organizationId', { type: () => ID }) organizationId: string,
     @Args() pagination: PaginationInput,
   ): Promise<ProjectPaginatedResponse> {
     return this.projectService.findAllByOrganizationId(
