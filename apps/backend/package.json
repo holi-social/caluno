@@ -6,11 +6,11 @@
   "private": true,
   "license": "UNLICENSED",
   "scripts": {
-    "build": "nest build",
+    "build": "nest build && cp -r src/database/migrations dist/src/database/",
     "dev": "nest start --watch",
     "start": "nest start",
     "start:debug": "nest start --debug --watch",
-    "start:prod": "node dist/main",
+    "start:prod": "node dist/src/main.js",
     "check-types": "tsc --noEmit",
     "lint": "biome check",
     "format": "biome format --write",

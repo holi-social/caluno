@@ -8,7 +8,7 @@ import {
   unique,
   uuid,
 } from 'drizzle-orm/pg-core';
-import { users } from 'src/auth/schemas/auth.schema';
+import { users } from '../../auth/schemas/auth.schema';
 import { ShiftInviteStatus } from '../enums';
 import { shifts } from './shift.schema';
 

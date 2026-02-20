@@ -1,6 +1,6 @@
 import { Parent, ResolveField, Resolver } from '@nestjs/graphql';
-import { UserMapper } from 'src/user/mappers/user.mapper';
-import { User } from 'src/user/models/user.model';
+import { UserMapper } from '../../user/mappers/user.mapper';
+import { User } from '../../user/models/user.model';
 import { Shift } from '../models/shift.model';
 import type { ShiftEntity } from '../schemas/shift.schema';
 import { ShiftService } from '../shift.service';

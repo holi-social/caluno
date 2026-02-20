@@ -1,6 +1,6 @@
 import { Args, Context, Query, Resolver } from '@nestjs/graphql';
-import { Roles } from 'src/auth/decorators/roles.decorator';
-import type { AuthenticatedGraphQLContext } from 'src/graphql/graphql.context';
+import { Roles } from '../../auth/decorators/roles.decorator';
+import type { AuthenticatedGraphQLContext } from '../../graphql/graphql.context';
 import { VolunteerSessionStatus } from '../enums';
 import { VolunteerSessionMapper } from '../mappers/volunteer-session.mapper';
 import { VolunteerSession } from '../models/volunteer-session.model';

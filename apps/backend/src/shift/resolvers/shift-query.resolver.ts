@@ -4,9 +4,9 @@ import {
   Session,
   type UserSession,
 } from '@thallesp/nestjs-better-auth';
-import { Roles } from 'src/auth/decorators/roles.decorator';
-import type { AuthenticatedGraphQLContext } from 'src/graphql/graphql.context';
-import { PaginationInput } from 'src/graphql/pagination.input';
+import { Roles } from '../../auth/decorators/roles.decorator';
+import type { AuthenticatedGraphQLContext } from '../../graphql/graphql.context';
+import { PaginationInput } from '../../graphql/pagination.input';
 import { ShiftMapper } from '../mappers/shift.mapper';
 import { Shift, ShiftPaginatedResponse } from '../models/shift.model';
 import { ShiftService } from '../shift.service';

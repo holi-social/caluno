@@ -1,7 +1,7 @@
 import { Args, Context, Mutation, Resolver } from '@nestjs/graphql';
 import { Session, type UserSession } from '@thallesp/nestjs-better-auth';
-import { Roles } from 'src/auth/decorators/roles.decorator';
-import type { AuthenticatedGraphQLContext } from 'src/graphql/graphql.context';
+import { Roles } from '../../auth/decorators/roles.decorator';
+import type { AuthenticatedGraphQLContext } from '../../graphql/graphql.context';
 import { CreateShiftInput } from '../inputs/create-shift.input';
 import { UpdateShiftInput } from '../inputs/update-shift.input';
 import { ShiftMapper } from '../mappers/shift.mapper';

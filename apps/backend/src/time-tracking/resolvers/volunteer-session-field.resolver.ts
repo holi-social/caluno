@@ -1,11 +1,11 @@
 import { Parent, ResolveField, Resolver } from '@nestjs/graphql';
 import { Session, type UserSession } from '@thallesp/nestjs-better-auth';
-import { ShiftMapper } from 'src/shift/mappers/shift.mapper';
-import { Shift } from 'src/shift/models/shift.model';
-import { TaskMapper } from 'src/task/mappers/task.mapper';
-import { Task } from 'src/task/models/task.model';
-import { UserMapper } from 'src/user/mappers/user.mapper';
-import { User } from 'src/user/models/user.model';
+import { ShiftMapper } from '../../shift/mappers/shift.mapper';
+import { Shift } from '../../shift/models/shift.model';
+import { TaskMapper } from '../../task/mappers/task.mapper';
+import { Task } from '../../task/models/task.model';
+import { UserMapper } from '../../user/mappers/user.mapper';
+import { User } from '../../user/models/user.model';
 import { TimeEntryMapper } from '../mappers/time-entry.mapper';
 import { TimeEntry } from '../models/time-entry.model';
 import { VolunteerSession } from '../models/volunteer-session.model';
