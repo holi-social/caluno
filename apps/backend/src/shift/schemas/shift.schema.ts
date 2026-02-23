@@ -7,6 +7,7 @@ import {
   timestamp,
   uuid,
 } from 'drizzle-orm/pg-core';
+import { idColumn, timestampColumns } from '../../database/database-columns';
 import { users } from '../../auth/schemas/auth.schema';
 import { organizations } from '../../organization/schemas/organization.schema';
 import { projects } from '../../project/schemas/project.schema';
@@ -20,7 +21,7 @@ export const shiftVisibilityEnum = pgEnum(
 export const shifts = pgTable(
   'shifts',
   {
-    id: uuid('id').primaryKey().defaultRandom(),
+    ...idColumn,
     title: text('title').notNull(),
     slug: text('slug').notNull().unique(),
     instructions: text('instructions'),
@@ -43,11 +44,7 @@ export const shifts = pgTable(
     visibility: shiftVisibilityEnum('visibility')
       .notNull()
       .default(ShiftVisibility.ALL_MEMBERS),
-    createdAt: timestamp('created_at').defaultNow().notNull(),
-    updatedAt: timestamp('updated_at')
-      .defaultNow()
-      .$onUpdate(() => new Date())
-      .notNull(),
+    ...timestampColumns,
   },
   (table) => [
     index('idx_shifts_organization_id').on(table.organizationId),

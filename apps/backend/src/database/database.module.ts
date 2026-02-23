@@ -22,6 +22,7 @@ import * as schema from './schema';
         });
         return drizzle(pool, {
           schema,
+          casing: 'snake_case',
         });
       },
       inject: [ConfigService],

@@ -3,17 +3,17 @@ import {
   index,
   pgTable,
   text,
-  timestamp,
   unique,
   uuid,
 } from 'drizzle-orm/pg-core';
+import { idColumn, timestampColumns } from '../../database/database-columns';
 import { users } from '../../auth/schemas/auth.schema';
 import { tasks } from './task.schema';
 
 export const taskAssignments = pgTable(
   'task_assignments',
   {
-    id: uuid('id').primaryKey().defaultRandom(),
+    ...idColumn,
     taskId: uuid('task_id').references(() => tasks.id, {
       onDelete: 'restrict',
     }),
@@ -23,11 +23,7 @@ export const taskAssignments = pgTable(
     assignedById: text('assigned_by_id').references(() => users.id, {
       onDelete: 'restrict',
     }),
-    createdAt: timestamp('created_at').defaultNow().notNull(),
-    updatedAt: timestamp('updated_at')
-      .defaultNow()
-      .$onUpdate(() => new Date())
-      .notNull(),
+    ...timestampColumns,
   },
   (table) => [
     index('idx_task_assignments_task_id').on(table.taskId),

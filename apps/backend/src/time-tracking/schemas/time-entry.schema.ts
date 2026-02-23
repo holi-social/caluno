@@ -1,9 +1,10 @@
 import { relations } from 'drizzle-orm';
 import { pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
+import { idColumn, timestampColumns } from '../../database/database-columns';
 import { volunteerSessions } from './volunteer-session.schema';
 
 export const timeEntries = pgTable('time_entries', {
-  id: uuid('id').primaryKey().defaultRandom(),
+  ...idColumn,
   sessionId: uuid('session_id')
     .references(() => volunteerSessions.id, {
       onDelete: 'cascade',
@@ -12,11 +13,7 @@ export const timeEntries = pgTable('time_entries', {
   startedAt: timestamp('started_at').notNull(),
   endedAt: timestamp('ended_at').notNull(),
   notes: text('notes'),
-  createdAt: timestamp('created_at').defaultNow().notNull(),
-  updatedAt: timestamp('updated_at')
-    .defaultNow()
-    .$onUpdate(() => new Date())
-    .notNull(),
+  ...timestampColumns,
 });
 
 export const timeEntriesRelations = relations(timeEntries, ({ one }) => ({

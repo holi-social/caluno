@@ -20,7 +20,7 @@ const getInitials = (name?: string): string => {
 export const UserCard = ({ user, size = 'default' }: UserCardProps) => (
   <div className="flex items-center gap-2">
     <Avatar size={size} className="bg-muted">
-      <AvatarImage src={user.image} alt="" />
+      <AvatarImage src={user.image ?? ''} alt="" />
       <AvatarFallback>{getInitials(user.name)}</AvatarFallback>
     </Avatar>
     <div>

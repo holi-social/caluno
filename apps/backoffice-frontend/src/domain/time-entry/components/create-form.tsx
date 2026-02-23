@@ -18,7 +18,7 @@ import {
   Textarea,
 } from '@repo/ui';
 import { useRouter } from 'next/navigation';
-import { useEffect, useState, useTransition } from 'react';
+import { useState, useTransition } from 'react';
 import { useForm } from 'react-hook-form';
 import { createTimeEntry } from '../actions';
 import {
@@ -48,7 +48,6 @@ export function CreateTimeEntryForm({
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [serverError, setServerError] = useState<string | null>(null);
-  const [selectedShift, setSelectedShift] = useState<Shift | null>(null);
 
   const {
     register,
@@ -70,13 +69,11 @@ export function CreateTimeEntryForm({
   });
 
   const shiftId = watch('shiftId');
-
-  useEffect(() => {
-    const shift = shifts.find((s) => s.id === shiftId);
-    setSelectedShift(shift || null);
-    // Reset volunteer selection when shift changes
-    setValue('volunteerId', '');
-  }, [shiftId, shifts, setValue]);
+  const selectedShift = shifts.find((s) => s.id === shiftId);
+  const shiftVolunteers = selectedShift?.volunteers || [];
+  const otherVolunteers = allVolunteers.filter(
+    (v) => !shiftVolunteers.some((sv) => sv.id === v.id),
+  );
 
   const onSubmit = async (formData: CreateTimeEntryFormValues) => {
     setServerError(null);
@@ -91,11 +88,6 @@ export function CreateTimeEntryForm({
       }
     });
   };
-
-  const shiftVolunteers = selectedShift?.volunteers || [];
-  const otherVolunteers = allVolunteers.filter(
-    (v) => !shiftVolunteers.some((sv) => sv.id === v.id),
-  );
 
   return (
     <form
@@ -119,7 +111,10 @@ export function CreateTimeEntryForm({
               </FieldLabel>
               <Select
                 value={watch('shiftId')}
-                onValueChange={(value) => setValue('shiftId', value)}
+                onValueChange={(value) => {
+                  setValue('shiftId', value);
+                  setValue('volunteerId', '');
+                }}
                 disabled={isPending}
               >
                 <SelectTrigger>
