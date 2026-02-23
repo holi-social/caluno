@@ -1,7 +1,7 @@
 services:
   postgres:
     image: postgres:17-alpine
-    container_name: clippy-postgres
+    container_name: db
     restart: unless-stopped
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-postgres}
@@ -25,7 +25,7 @@ services:
       postgres:
         condition: service_healthy
     environment:
-      NODE_ENV: production
+      NODE_ENV: development
       DB_HOST: postgres
       DB_PORT: 5432
       DB_USER: ${POSTGRES_USER:-postgres}
@@ -37,6 +37,17 @@ services:
       - apps/backend/.env
     ports:
       - "${BACKEND_PORT:-3000}:3000"
+
+  frontend:
+    build:
+      context: .
+      dockerfile: apps/backoffice-frontend/Dockerfile
+    depends_on:
+      - backend
+    environment:
+      NODE_ENV: development
+    ports:
+      - "${FRONTEND_PORT:-3001}:3000"
 
 volumes:
   postgres_data:
