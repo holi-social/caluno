@@ -1,0 +1,6 @@
+---
+description: Backend app – include CLAUDE.md when working in apps/backend
+globs: apps/backend/**
+alwaysApply: false
+---
+@apps/backend/CLAUDE.md
