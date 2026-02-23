@@ -1,10 +1,10 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { and, count, eq, inArray, or } from 'drizzle-orm';
 import type { NodePgDatabase } from 'drizzle-orm/node-postgres';
-import { NotFoundGraphQLError } from 'src/graphql/errors/not-found.error';
-import type { PaginationInput } from 'src/graphql/pagination.input';
-import { MembershipService } from 'src/membership/membership.service';
-import { slugify } from 'src/utils/slug.util';
+import { NotFoundGraphQLError } from '../graphql/errors/not-found.error';
+import type { PaginationInput } from '../graphql/pagination.input';
+import { MembershipService } from '../membership/membership.service';
+import { slugify } from '../utils/slug.util';
 import { DATABASE_CONNECTION } from '../database/database-connection';
 import * as schema from '../database/schema';
 import { UserEntity } from '../database/schema';

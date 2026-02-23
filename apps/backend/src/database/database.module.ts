@@ -13,7 +13,12 @@ import * as schema from './schema';
       provide: DATABASE_CONNECTION,
       useFactory: (configService: ConfigService) => {
         const pool = new Pool({
-          connectionString: configService.getOrThrow('DATABASE_URL'),
+          host: configService.getOrThrow('DB_HOST'),
+          port: parseInt(configService.getOrThrow('DB_PORT')),
+          user: configService.getOrThrow('DB_USER'),
+          password: configService.getOrThrow('DB_PASSWORD'),
+          database: configService.getOrThrow('DB_NAME'),
+          ssl: false,
         });
         return drizzle(pool, {
           schema,

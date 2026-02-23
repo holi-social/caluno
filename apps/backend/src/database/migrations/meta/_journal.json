@@ -92,6 +92,13 @@
       "when": 1770906270507,
       "tag": "0012_add-membership-role",
       "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1771593361169,
+      "tag": "0013_add_shift_to_volunteering_sessions",
+      "breakpoints": true
     }
   ]
 }
