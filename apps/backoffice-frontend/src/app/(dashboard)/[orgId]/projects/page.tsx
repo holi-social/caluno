@@ -2,7 +2,7 @@ import { Pagination } from '@/components/pagination';
 import { CreateProjectSheet } from '@/components/sheets/create-project-sheet';
 import { getDataClient } from '@/lib/data-client';
 import { requireOrgAccess } from '@/lib/org-context-server';
-import { ProjectsTable } from './projects-table';
+import { ProjectsCards } from './projects-cards';
 
 interface ProjectsPageProps {
   params: Promise<{ orgId: string }>;
@@ -45,10 +45,10 @@ export default async function ProjectsPage({
         <CreateProjectSheet />
       </div>
 
-      {/* Projects table or empty state */}
+      {/* Projects cards or empty state */}
       {hasProjects ? (
         <>
-          <ProjectsTable projects={result.items} />
+          <ProjectsCards projects={result.items} orgId={orgId} />
           {result.pagination.total > ITEMS_PER_PAGE && (
             <Pagination
               pagination={result.pagination}

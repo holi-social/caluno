@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
+import { DatabaseModule } from '../database/database.module';
 import { MembershipModule } from '../membership/membership.module';
 import { UserModule } from '../user/user.module';
-import { DatabaseModule } from '../database/database.module';
 import { ShiftMapper } from './mappers/shift.mapper';
 import { ShiftFieldResolver } from './resolvers/shift-field.resolver';
 import { ShiftMutationResolver } from './resolvers/shift-mutation.resolver';

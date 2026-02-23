@@ -1,5 +1,6 @@
 'use client';
 
+import type { Project } from '@repo/data';
 import {
   Button,
   Sheet,
@@ -11,13 +12,17 @@ import {
 } from '@repo/ui';
 import { PlusIcon } from 'lucide-react';
 import { useState } from 'react';
-import { CreateProjectForm } from '@/domain/project/forms/create-form';
+import { UpdateProjectForm } from '../../domain/project/forms/update-form';
 
-interface CreateProjectSheetProps {
+interface UpdateProjectSheetProps {
+  project: Omit<Project, 'organization' | 'createdBy'>;
   trigger?: React.ReactNode;
 }
 
-export function CreateProjectSheet({ trigger }: CreateProjectSheetProps) {
+export function UpdateProjectSheet({
+  project,
+  trigger,
+}: UpdateProjectSheetProps) {
   const [open, setOpen] = useState(false);
 
   return (
@@ -26,21 +31,22 @@ export function CreateProjectSheet({ trigger }: CreateProjectSheetProps) {
         {trigger || (
           <Button>
             <PlusIcon className="mr-2 h-4 w-4" />
-            Create Project
+            Update Project
           </Button>
         )}
       </SheetTrigger>
       <SheetContent className="flex flex-col w-full sm:max-w-2xl">
         <SheetHeader className="px-6 pt-6">
-          <SheetTitle>Create Project</SheetTitle>
-          <SheetDescription>
-            Create a new volunteer project for your organization.
-          </SheetDescription>
+          <SheetTitle>Update Project</SheetTitle>
+          <SheetDescription>Update this volunteer project.</SheetDescription>
         </SheetHeader>
 
         <div className="flex-1 overflow-y-auto px-6 pb-24">
           <div className="mt-6">
-            <CreateProjectForm onSuccess={() => setOpen(false)} />
+            <UpdateProjectForm
+              project={project}
+              onSuccess={() => setOpen(false)}
+            />
           </div>
         </div>
       </SheetContent>

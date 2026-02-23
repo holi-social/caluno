@@ -83,6 +83,34 @@ export class ProjectService {
     return this.mapper.toModelOrThrow(project);
   }
 
+  async update(
+    userId: string,
+    id: string,
+    project: Partial<Omit<schema.ProjectEntity, 'id' | 'createdAt' | 'updatedAt' | 'createdById' | 'organizationId'>>,
+  ): Promise<Project> {
+    const existingProject = await this.db.query.projects.findFirst({
+      where: eq(schema.projects.id, id),
+    });
+
+    if (!existingProject) {
+      throw new NotFoundGraphQLError('Project not found');
+    }
+
+    if (existingProject.createdById !== userId) {
+      throw new ForbiddenGraphQLError(
+        'You are not authorized to update this project',
+      );
+    }
+
+    const [updatedProject] = await this.db
+      .update(schema.projects)
+      .set(project)
+      .where(eq(schema.projects.id, id))
+      .returning();
+
+    return this.mapper.toModelOrThrow(updatedProject);
+  }
+
   async publish(userId: string, id: string): Promise<Project> {
     const project = await this.db.query.projects.findFirst({
       where: eq(schema.projects.id, id),

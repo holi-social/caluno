@@ -53,6 +53,19 @@ export class ShiftRepository extends BaseRepository {
     }
   }
 
+  async findAllByProjectId(projectId: string, options: PaginationOptions = {}) {
+    try {
+      const data = await this.sdk.GetShiftsByProjectId({
+        projectId,
+        limit: options.limit ?? 10,
+        offset: options.offset ?? 0,
+      });
+      return data.shiftsByProjectId;
+    } catch (error) {
+      throw DataError.fromGraphQLError(error);
+    }
+  }
+
   async update(id: string, input: UpdateShiftInput) {
     try {
       const data = await this.sdk.UpdateShift({ id, input });

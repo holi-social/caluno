@@ -80,6 +80,7 @@ type Mutation {
   publishProject(id: ID!): Project!
   rejectVolunteerSession(input: RejectVolunteerSessionInput!): VolunteerSession!
   startVolunteerSession(input: StartVolunteerSessionInput!): VolunteerSession!
+  updateProject(id: ID!, input: UpdateProjectInput!): Project!
   updateShift(id: String!, input: UpdateShiftInput!): Shift!
 }
 
@@ -150,10 +151,11 @@ type Query {
   organization(id: String!): Organization!
   organizationBySlug(slug: String!): Organization!
   organizations(limit: Int! = 10, offset: Int! = 0): OrganizationPaginatedResponse!
-  project(id: String!): Project!
-  projects(limit: Int! = 10, offset: Int! = 0, organizationId: String!): ProjectPaginatedResponse!
+  project(id: ID!): Project!
+  projects(limit: Int! = 10, offset: Int! = 0, organizationId: ID!): ProjectPaginatedResponse!
   shift(id: String!): Shift!
   shifts(limit: Int! = 10, offset: Int! = 0): ShiftPaginatedResponse!
+  shiftsByProjectId(limit: Int! = 10, offset: Int! = 0, projectId: String!): ShiftPaginatedResponse!
   task(id: String!): Task!
   tasksByUserId(limit: Int! = 10, offset: Int! = 0, userId: String!): TaskPaginatedResponse!
   user(id: String!): User
@@ -229,6 +231,16 @@ type TimeEntry {
   id: ID!
   notes: String
   startedAt: DateTime!
+}
+
+input UpdateProjectInput {
+  description: String!
+  endsAt: DateTime!
+  location: String!
+  organizationId: String!
+  startsAt: DateTime!
+  status: ProjectStatus! = DRAFT
+  title: String!
 }
 
 input UpdateShiftInput {

@@ -9,17 +9,13 @@ mutation CreateProject($input: CreateProjectInput!) {
   }
 }
 
-query GetProject($id: String!) {
-  project(id: $id) {
+mutation UpdateProject($id: ID!, $input: UpdateProjectInput!) {
+  updateProject(id: $id, input: $input) {
     id
     title
     slug
     description
     location
-    organization {
-      id
-      name
-    }
     startsAt
     endsAt
     status
@@ -32,7 +28,26 @@ query GetProject($id: String!) {
   }
 }
 
-query GetProjects($organizationId: String!, $limit: Int!, $offset: Int!) {
+query GetProject($id: ID!) {
+  project(id: $id) {
+    id
+    title
+    slug
+    description
+    location
+    startsAt
+    endsAt
+    status
+    createdBy {
+      id
+      name
+    }
+    createdAt
+    updatedAt
+  }
+}
+
+query GetProjects($organizationId: ID!, $limit: Int!, $offset: Int!) {
   projects(organizationId: $organizationId, limit: $limit, offset: $offset) {
     items {
       id
