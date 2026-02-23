@@ -4,10 +4,10 @@ import {
   pgEnum,
   pgTable,
   text,
-  timestamp,
   unique,
   uuid,
 } from 'drizzle-orm/pg-core';
+import { idColumn, timestampColumns } from '../../database/database-columns';
 import { users } from '../../auth/schemas/auth.schema';
 import { ShiftInviteStatus } from '../enums';
 import { shifts } from './shift.schema';
@@ -20,7 +20,7 @@ export const shiftInviteStatusEnum = pgEnum(
 export const shiftInvites = pgTable(
   'shift_invites',
   {
-    id: uuid('id').primaryKey().defaultRandom(),
+    ...idColumn,
     shiftId: uuid('shift_id')
       .references(() => shifts.id, {
         onDelete: 'restrict',
@@ -34,11 +34,7 @@ export const shiftInvites = pgTable(
     status: shiftInviteStatusEnum('status')
       .notNull()
       .default(ShiftInviteStatus.PENDING),
-    createdAt: timestamp('created_at').defaultNow().notNull(),
-    updatedAt: timestamp('updated_at')
-      .defaultNow()
-      .$onUpdate(() => new Date())
-      .notNull(),
+    ...timestampColumns,
   },
   (table) => [
     index('idx_shift_invites_shift_id').on(table.shiftId),

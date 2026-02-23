@@ -7,6 +7,7 @@ import {
   timestamp,
   uuid,
 } from 'drizzle-orm/pg-core';
+import { idColumn, timestampColumns } from '../../database/database-columns';
 import { users } from '../../auth/schemas/auth.schema';
 import { organizations } from '../../organization/schemas/organization.schema';
 import { tasks } from '../../task/schemas/task.schema';
@@ -20,7 +21,7 @@ export const projectStatusEnum = pgEnum(
 export const projects = pgTable(
   'projects',
   {
-    id: uuid('id').primaryKey().defaultRandom(),
+    ...idColumn,
     title: text('title').notNull(),
     slug: text('slug').notNull().unique(),
     description: text('description').notNull(),
@@ -38,11 +39,7 @@ export const projects = pgTable(
     status: projectStatusEnum('status').notNull().default(ProjectStatus.DRAFT),
     startsAt: timestamp('starts_at').notNull(),
     endsAt: timestamp('ends_at').notNull(),
-    createdAt: timestamp('created_at').defaultNow().notNull(),
-    updatedAt: timestamp('updated_at')
-      .defaultNow()
-      .$onUpdate(() => new Date())
-      .notNull(),
+    ...timestampColumns,
   },
   (table) => [
     index('idx_projects_organization_id').on(table.organizationId),

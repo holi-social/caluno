@@ -3,10 +3,10 @@ import {
   index,
   pgTable,
   text,
-  timestamp,
   unique,
   uuid,
 } from 'drizzle-orm/pg-core';
+import { idColumn, timestampColumns } from '../../database/database-columns';
 import { users } from '../../auth/schemas/auth.schema';
 import { OrganizationRole } from '../../organization/enums';
 import {
@@ -17,7 +17,7 @@ import {
 export const memberships = pgTable(
   'memberships',
   {
-    id: uuid('id').primaryKey().defaultRandom(),
+    ...idColumn,
     userId: text('user_id').references(() => users.id, {
       onDelete: 'cascade',
     }),
@@ -27,11 +27,7 @@ export const memberships = pgTable(
     role: organizationRoleEnum('role')
       .notNull()
       .default(OrganizationRole.VOLUNTEER),
-    createdAt: timestamp('created_at').defaultNow().notNull(),
-    updatedAt: timestamp('updated_at')
-      .defaultNow()
-      .$onUpdate(() => new Date())
-      .notNull(),
+    ...timestampColumns,
   },
   (table) => [
     index('idx_memberships_user_id').on(table.userId),
