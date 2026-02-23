@@ -9,6 +9,7 @@ import {
 } from 'drizzle-orm/pg-core';
 
 import { users } from '../../auth/schemas/auth.schema';
+import { idColumn, timestampColumns } from '../../database/database-columns';
 import { memberships } from '../../membership/schemas/membership.schema';
 import { projects } from '../../project/schemas/project.schema';
 import { OrganizationRole } from '../enums';
@@ -21,7 +22,7 @@ export const organizationRoleEnum = pgEnum(
 export const organizations = pgTable(
   'organizations',
   {
-    id: uuid('id').primaryKey().defaultRandom(),
+    ...idColumn,
     parentId: uuid('parent_id').references((): any => organizations.id, {
       onDelete: 'cascade',
     }),
@@ -33,11 +34,7 @@ export const organizations = pgTable(
     phone: text('phone'),
     description: text('description'),
     address: text('address'),
-    createdAt: timestamp('created_at').defaultNow().notNull(),
-    updatedAt: timestamp('updated_at')
-      .defaultNow()
-      .$onUpdate(() => new Date())
-      .notNull(),
+    ...timestampColumns,
     deletedAt: timestamp('deleted_at'),
     ownerId: text('owner_id')
       .notNull()

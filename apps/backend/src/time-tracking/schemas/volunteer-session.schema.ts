@@ -1,5 +1,6 @@
 import { relations } from 'drizzle-orm';
 import { pgEnum, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
+import { idColumn, timestampColumns } from '../../database/database-columns';
 import { users } from '../../auth/schemas/auth.schema';
 import { shifts } from '../../shift/schemas/shift.schema';
 import { taskAssignments } from '../../task/schemas/task-assignment.schema';
@@ -12,7 +13,7 @@ export const volunteerSessionStatusEnum = pgEnum(
 );
 
 export const volunteerSessions = pgTable('volunteer_sessions', {
-  id: uuid('id').primaryKey().defaultRandom(),
+  ...idColumn,
   assignmentId: uuid('assignment_id').references(() => taskAssignments.id, {
     onDelete: 'restrict',
   }),
@@ -27,8 +28,7 @@ export const volunteerSessions = pgTable('volunteer_sessions', {
   }),
   validatedAt: timestamp('validated_at'),
   rejectionReason: text('rejection_reason'),
-  createdAt: timestamp('created_at').defaultNow().notNull(),
-  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+  ...timestampColumns,
 });
 
 export const volunteerSessionsRelations = relations(
