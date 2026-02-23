@@ -39,7 +39,7 @@ export function CreateShiftSheet({ trigger }: CreateShiftSheetProps) {
     setDialogOpen(true);
   };
 
-  const handleDialogClose = (open: boolean) => {
+  const handleDialogChange = (open: boolean) => {
     setDialogOpen(open);
     if (!open) {
       router.refresh();
@@ -77,7 +77,7 @@ export function CreateShiftSheet({ trigger }: CreateShiftSheetProps) {
         </SheetContent>
       </Sheet>
 
-      <Dialog open={dialogOpen} onOpenChange={handleDialogClose} modal>
+      <Dialog open={dialogOpen} onOpenChange={handleDialogChange} modal>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Shift created</DialogTitle>
