@@ -1,3 +1,5 @@
+'use client';
+
 import { zodResolver } from '@hookform/resolvers/zod';
 import { ProjectStatus } from '@repo/data';
 import { useOrgId } from '@repo/data/react';

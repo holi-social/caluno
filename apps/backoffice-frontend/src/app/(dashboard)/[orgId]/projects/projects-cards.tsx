@@ -55,7 +55,6 @@ export function ProjectsCards({ projects, orgId }: ProjectsCardsProps) {
               <div className="flex items-center gap-4 text-sm text-muted-foreground">
                 <div className="flex items-center gap-1.5">
                   <Calendar className="h-4 w-4" />
-                  <span>{project._count?.shifts ?? 0} shifts</span>
                 </div>
                 <div className="flex items-center gap-1.5">
                   <Clock className="h-4 w-4" />
