@@ -1,0 +1,72 @@
+@startuml clippy
+skinparam linetype ortho
+class Organization {
+    name
+    location
+    address
+    ...
+}
+class User {
+    name
+    email
+    phone
+    address
+    ...
+}
+note right: What about payed users?\nPayed users are not a\ndifferent entity.
+class Project {
+    name
+    description
+}
+class Shift {
+    start
+    end
+    location
+}
+class TimeEntry {
+    start
+    end
+    status {started, finished, validated, rejected}
+    note ?
+}
+note right: How do we manage\nstatus and validation?
+class Membership {
+    role {admin, moderator, volunteer}
+    status {invited, approved, rejected}
+}
+class Assignment {
+    status {invited, accepted, rejected}
+}
+class Review {
+    rating
+    review
+}
+class VolunteeringSession {
+    status {started, finished, validated, rejected}
+    note ?
+}
+note right: Is this needed?
+class ValidationAction {
+    note
+    moderator
+    timestamp
+}
+note right: How is reject => update\nof a TimeEntry working?
+
+Organization "* child" o-- "1 parent" Organization
+Organization "1" -down- "*" Project
+Organization "0..1" -- "*" Shift
+Project "0..1" -right- "*" Shift
+Organization "1" -right- "*" Membership
+Membership "*" -right- "1" User
+Assignment "*" -up- "1" User
+Shift "1" -up- "*" Assignment
+Review "*" -up- "1" User
+Shift "1" -up- "*" Review
+TimeEntry "*" -up- "1" User
+TimeEntry "*" -- "1" Shift
+VolunteeringSession "*" -up- "1" User
+VolunteeringSession "*" -left- "1" Shift
+VolunteeringSession "1" -- "*" TimeEntry
+TimeEntry "1" -- "0..1" ValidationAction
+@enduml
