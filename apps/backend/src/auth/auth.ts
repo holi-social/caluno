@@ -1,9 +1,9 @@
 import { type BetterAuthOptions, betterAuth } from 'better-auth';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
-import type { NodePgDatabase } from 'drizzle-orm/node-postgres';
+import { Database } from '../database/database.module';
 
 export const createAuthConfig = (
-  database: NodePgDatabase | object,
+  database: Database | object,
   trustedOrigins: string[],
 ): BetterAuthOptions => ({
   database: drizzleAdapter(database, {

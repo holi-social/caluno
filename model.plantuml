@@ -31,7 +31,7 @@ class TimeEntry {
 }
 note right: How do we manage\nstatus and validation?
 class Membership {
-    role {admin, moderator, volunteer}
+    role {admin, location_admin, supervisor, volunteer}
     status {invited, approved, rejected}
 }
 class Assignment {

@@ -1,13 +1,5 @@
-import { relations } from 'drizzle-orm';
 import { boolean, index, pgTable, text, timestamp } from 'drizzle-orm/pg-core';
 import { timestampColumns } from '../../database/database-columns';
-import { memberships } from '../../membership/schemas/membership.schema';
-import { organizations } from '../../organization/schemas/organization.schema';
-import { projects } from '../../project/schemas/project.schema';
-import { tasks } from '../../task/schemas/task.schema';
-import { taskAssignments } from '../../task/schemas/task-assignment.schema';
-import { timeEntries } from '../../time-tracking/schemas/time-entry.schema';
-import { volunteerSessions } from '../../time-tracking/schemas/volunteer-session.schema';
 
 export const users = pgTable('users', {
   id: text('id').primaryKey(),
@@ -66,32 +58,6 @@ export const verifications = pgTable(
   },
   (table) => [index('verifications_identifier_idx').on(table.identifier)],
 );
-
-export const usersRelations = relations(users, ({ many }) => ({
-  sessions: many(sessions),
-  accounts: many(accounts),
-  organizations: many(organizations),
-  projects: many(projects),
-  tasks: many(tasks),
-  assignments: many(taskAssignments),
-  memberships: many(memberships),
-  volunteerSessions: many(volunteerSessions),
-  timeEntries: many(timeEntries),
-}));
-
-export const sessionsRelations = relations(sessions, ({ one }) => ({
-  users: one(users, {
-    fields: [sessions.userId],
-    references: [users.id],
-  }),
-}));
-
-export const accountsRelations = relations(accounts, ({ one }) => ({
-  users: one(users, {
-    fields: [accounts.userId],
-    references: [users.id],
-  }),
-}));
 
 export type UserEntity = typeof users.$inferSelect;
 export type UserInsert = typeof users.$inferInsert;

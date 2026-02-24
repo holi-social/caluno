@@ -1,14 +1,14 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { and, count, eq, inArray, or } from 'drizzle-orm';
-import type { NodePgDatabase } from 'drizzle-orm/node-postgres';
-import { NotFoundGraphQLError } from '../graphql/errors/not-found.error';
-import type { PaginationInput } from '../graphql/pagination.input';
-import { MembershipService } from '../membership/membership.service';
-import { slugify } from '../utils/slug.util';
+import { and, count, eq, inArray, or, SQL } from 'drizzle-orm';
+import type { Database } from '../database/database.module';
 import { DATABASE_CONNECTION } from '../database/database-connection';
 import * as schema from '../database/schema';
 import { UserEntity } from '../database/schema';
+import { NotFoundGraphQLError } from '../graphql/errors/not-found.error';
+import type { PaginationInput } from '../graphql/pagination.input';
+import { MembershipService } from '../membership/membership.service';
 import { UserService } from '../user/user.service';
+import { slugify } from '../utils/slug.util';
 import { ShiftInviteStatus, ShiftVisibility } from './enums';
 import { CreateShiftInput } from './inputs/create-shift.input';
 import { UpdateShiftInput } from './inputs/update-shift.input';
@@ -18,14 +18,14 @@ import type { ShiftEntity } from './schemas/shift.schema';
 export class ShiftService {
   constructor(
     @Inject(DATABASE_CONNECTION)
-    private readonly db: NodePgDatabase<typeof schema>,
+    private readonly db: Database,
     private readonly membershipService: MembershipService,
     private readonly userService: UserService,
   ) {}
 
   async findById(id: string): Promise<ShiftEntity> {
     const shift = await this.db.query.shifts.findFirst({
-      where: and(eq(schema.shifts.id, id)),
+      where: { id },
     });
 
     if (!shift) {
@@ -40,9 +40,6 @@ export class ShiftService {
     projectId: string | null,
     pagination: PaginationInput,
   ): Promise<{ shifts: ShiftEntity[]; total: number }> {
-    let shifts: ShiftEntity[] = [];
-    let total: number = 0;
-
     const projectCondition = projectId
       ? eq(schema.shifts.projectId, projectId)
       : undefined;
@@ -52,56 +49,44 @@ export class ShiftService {
       organizationId,
     );
 
+    let condition: SQL<unknown> | undefined;
     if (isStaff) {
-      const condition = and(
+      condition = and(
         eq(schema.shifts.organizationId, organizationId),
         projectCondition,
       );
-
-      shifts = await this.db.query.shifts.findMany({
-        where: condition,
-        limit: pagination.limit,
-        offset: pagination.offset,
+    } else {
+      const invites = await this.db.query.shiftInvites.findMany({
+        where: { userId },
       });
 
-      const [{ rowCount }] = await this.db
-        .select({ rowCount: count() })
-        .from(schema.shifts)
-        .where(condition);
+      const shiftIds = invites.map((invite) => invite.shiftId);
 
-      total = rowCount;
-      return { shifts, total };
+      condition = and(
+        eq(schema.shifts.organizationId, organizationId),
+        projectCondition,
+        shiftIds.length > 0
+          ? or(
+              eq(schema.shifts.visibility, ShiftVisibility.ALL_MEMBERS),
+              inArray(schema.shifts.id, shiftIds),
+            )
+          : eq(schema.shifts.visibility, ShiftVisibility.ALL_MEMBERS),
+      );
     }
 
-    const invites = await this.db.query.shiftInvites.findMany({
-      where: and(eq(schema.shiftInvites.userId, userId)),
-    });
-
-    const shiftIds = invites.map((invite) => invite.shiftId);
-
-    const condition = and(
-      eq(schema.shifts.organizationId, organizationId),
-      projectCondition,
-      shiftIds.length > 0
-        ? or(
-            eq(schema.shifts.visibility, ShiftVisibility.ALL_MEMBERS),
-            inArray(schema.shifts.id, shiftIds),
-          )
-        : eq(schema.shifts.visibility, ShiftVisibility.ALL_MEMBERS),
-    );
-
-    shifts = await this.db.query.shifts.findMany({
-      where: condition,
-      limit: pagination.limit,
-      offset: pagination.offset,
-    });
+    const shifts = await this.db
+      .select()
+      .from(schema.shifts)
+      .where(condition)
+      .limit(pagination.limit)
+      .offset(pagination.offset);
 
     const [{ rowCount }] = await this.db
       .select({ rowCount: count() })
       .from(schema.shifts)
       .where(condition);
 
-    total = rowCount;
+    const total = rowCount;
     return { shifts, total };
   }
 
@@ -129,7 +114,7 @@ export class ShiftService {
 
     if (input.visibility === ShiftVisibility.ALL_MEMBERS) {
       const members = await this.db.query.memberships.findMany({
-        where: eq(schema.memberships.organizationId, organizationId),
+        where: { organizationId },
       });
       const memberIds = members
         .map((member) => member.userId)
@@ -158,7 +143,7 @@ export class ShiftService {
     memberIds: string[],
   ): Promise<ShiftEntity> {
     const shift = await this.db.query.shifts.findFirst({
-      where: eq(schema.shifts.id, shiftId),
+      where: { id: shiftId },
     });
 
     if (!shift) {
@@ -183,17 +168,16 @@ export class ShiftService {
   }
 
   async findVolunteers(shiftId: string): Promise<UserEntity[]> {
-    const volunteers = await this.db.query.shiftInvites.findMany({
-      where: and(
-        eq(schema.shiftInvites.shiftId, shiftId),
-        eq(schema.shiftInvites.status, ShiftInviteStatus.ACCEPTED),
-      ),
-      with: {
-        user: true,
+    const volunteers = await this.db.query.users.findMany({
+      where: {
+        shiftInvites: {
+          shiftId,
+          status: ShiftInviteStatus.ACCEPTED,
+        },
       },
     });
 
-    return volunteers.map((volunteer) => volunteer.user);
+    return volunteers;
   }
 
   /**
@@ -259,7 +243,7 @@ export class ShiftService {
 
     if (input.visibility === ShiftVisibility.ALL_MEMBERS) {
       const members = await this.db.query.memberships.findMany({
-        where: eq(schema.memberships.organizationId, organizationId),
+        where: { organizationId },
       });
       const memberIds = members
         .map((member) => member.userId)

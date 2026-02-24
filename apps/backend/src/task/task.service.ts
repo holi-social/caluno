@@ -1,7 +1,6 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { eq } from 'drizzle-orm';
-import type { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import type { UserEntity } from '../auth/schemas/auth.schema';
+import type { Database } from '../database/database.module';
 import { DATABASE_CONNECTION } from '../database/database-connection';
 import * as schema from '../database/schema';
 import { ForbiddenGraphQLError, NotFoundGraphQLError } from '../graphql/errors';
@@ -17,21 +16,21 @@ import { type Task, TaskPaginatedResponse } from './models/task.model';
 export class TaskService {
   constructor(
     @Inject(DATABASE_CONNECTION)
-    private readonly db: NodePgDatabase<typeof schema>,
+    private readonly db: Database,
     private readonly membershipService: MembershipService,
     private readonly mapper: TaskMapper,
   ) {}
 
   async findById(id: string): Promise<Task | null> {
     const task = await this.db.query.tasks.findFirst({
-      where: eq(schema.tasks.id, id),
+      where: { id },
     });
     return this.mapper.toModel(task);
   }
 
   async findAllByProjectId(projectId: string): Promise<Task[]> {
     const tasks = await this.db.query.tasks.findMany({
-      where: eq(schema.tasks.projectId, projectId),
+      where: { projectId },
     });
     return this.mapper.toArray(tasks);
   }
@@ -41,7 +40,7 @@ export class TaskService {
     pagination: PaginationInput,
   ): Promise<TaskPaginatedResponse> {
     const tasks = await this.db.query.tasks.findMany({
-      where: eq(schema.tasks.createdById, userId),
+      where: { createdById: userId },
     });
 
     return new TaskPaginatedResponse({
@@ -54,7 +53,7 @@ export class TaskService {
 
   async findAssignees(taskId: string): Promise<UserEntity[]> {
     const assignments = await this.db.query.taskAssignments.findMany({
-      where: eq(schema.taskAssignments.taskId, taskId),
+      where: { taskId },
       with: {
         assignedTo: true,
       },

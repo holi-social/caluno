@@ -1,7 +1,7 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { count, eq } from 'drizzle-orm';
-import type { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import type { UserEntity } from '../auth/schemas/auth.schema';
+import type { Database } from '../database/database.module';
 import { DATABASE_CONNECTION } from '../database/database-connection';
 import * as schema from '../database/schema';
 import { OrganizationEntity } from '../database/schema';
@@ -20,7 +20,7 @@ import { type Organization } from './models/organization.model';
 export class OrganizationService {
   constructor(
     @Inject(DATABASE_CONNECTION)
-    private readonly db: NodePgDatabase<typeof schema>,
+    private readonly db: Database,
     private readonly mapper: OrganizationMapper,
     private readonly userService: UserService,
     private readonly projectService: ProjectService,
@@ -29,14 +29,14 @@ export class OrganizationService {
 
   async findById(id: string): Promise<Organization | null> {
     const organization = await this.db.query.organizations.findFirst({
-      where: eq(schema.organizations.id, id),
+      where: { id },
     });
     return this.mapper.toModel(organization);
   }
 
   async findBySlug(slug: string): Promise<Organization | null> {
     const organization = await this.db.query.organizations.findFirst({
-      where: eq(schema.organizations.slug, slug),
+      where: { slug },
     });
     return this.mapper.toModel(organization);
   }
@@ -46,7 +46,7 @@ export class OrganizationService {
     pagination: PaginationInput,
   ): Promise<{ items: OrganizationEntity[]; total: number }> {
     const memberships = await this.db.query.memberships.findMany({
-      where: eq(schema.memberships.userId, userId),
+      where: { userId },
       with: {
         organization: true,
       },
@@ -73,14 +73,14 @@ export class OrganizationService {
 
   async findChildren(organizationId: string): Promise<Organization[]> {
     const children = await this.db.query.organizations.findMany({
-      where: eq(schema.organizations.parentId, organizationId),
+      where: { parentId: organizationId },
     });
     return this.mapper.toArray(children);
   }
 
   async findParent(organizationId: string): Promise<Organization | null> {
     const parent = await this.db.query.organizations.findFirst({
-      where: eq(schema.organizations.id, organizationId),
+      where: { id: organizationId },
     });
     return this.mapper.toModel(parent);
   }
