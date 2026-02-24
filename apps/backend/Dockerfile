@@ -13,7 +13,6 @@ RUN bun install
 WORKDIR /app/apps/backend
 RUN bun run build
 
-ENV NODE_ENV=production
 EXPOSE 3000
 
 CMD ["sh", "-c", "bun run db:migrate && bun run start:prod"]
