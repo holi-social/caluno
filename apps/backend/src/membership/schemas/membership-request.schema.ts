@@ -36,8 +36,8 @@ export const membershipRequests = pgTable(
   },
   (table) => [
     index('idx_membership_requests_email').on(table.email),
-    index('idx_memberships_organization_id').on(table.organizationId),
-    unique('uq_memberships_user_id_organization_id').on(
+    index('idx_memberships_requests_organization_id').on(table.organizationId),
+    unique('uq_memberships_requests_email_organization_id').on(
       table.email,
       table.organizationId,
     ),
