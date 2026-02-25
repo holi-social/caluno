@@ -1,13 +1,14 @@
 import { Inject, Injectable } from '@nestjs/common';
+import { and, eq } from 'drizzle-orm';
 import type { UserEntity } from '../auth/schemas/auth.schema';
 import type { Database } from '../database/database.module';
 import { DATABASE_CONNECTION } from '../database/database-connection';
 import * as schema from '../database/schema';
 import { MembershipEntity } from '../database/schema';
+import { NotFoundGraphQLError } from '../graphql/errors';
 import { OrganizationRole } from '../organization/enums';
-import { MembershipRequestEntity } from './schemas/membership-request.schema';
 import { MembershipRequestStatus } from './enums';
-import { BadRequestGraphQLError, NotFoundGraphQLError } from '../graphql/errors';
+import { MembershipRequestEntity } from './schemas/membership-request.schema';
 
 @Injectable()
 export class MembershipService {
@@ -120,10 +121,13 @@ export class MembershipService {
     email: string,
     organizationId: string,
   ): Promise<MembershipRequestEntity> {
-    const [membershipRequest] = await this.db.insert(schema.membershipRequests).values({
-      email,
-      organizationId,
-    }).returning();
+    const [membershipRequest] = await this.db
+      .insert(schema.membershipRequests)
+      .values({
+        email,
+        organizationId,
+      })
+      .returning();
     return membershipRequest;
   }
 
@@ -131,12 +135,18 @@ export class MembershipService {
     userId: string,
     membershipRequestId: string,
   ): Promise<boolean> {
-    const [membershipRequest] = await this.db.update(schema.membershipRequests).set({
-      status: MembershipRequestStatus.ACCEPTED,
-    }).where(and(
-      eq(schema.membershipRequests.id, membershipRequestId),
-      eq(schema.membershipRequests.status, MembershipRequestStatus.PENDING),
-    )).returning();
+    const [membershipRequest] = await this.db
+      .update(schema.membershipRequests)
+      .set({
+        status: MembershipRequestStatus.ACCEPTED,
+      })
+      .where(
+        and(
+          eq(schema.membershipRequests.id, membershipRequestId),
+          eq(schema.membershipRequests.status, MembershipRequestStatus.PENDING),
+        ),
+      )
+      .returning();
 
     if (!membershipRequest) {
       throw new NotFoundGraphQLError('Membership request not found');
