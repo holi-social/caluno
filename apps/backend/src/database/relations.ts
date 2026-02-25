@@ -1,5 +1,6 @@
 import { authRelations } from '../auth/schemas/auth.relations';
 import { membershipRelations } from '../membership/schemas/membership.relations';
+import { membershipRequestRelations } from '../membership/schemas/membership-request.relations';
 import { organizationRelations } from '../organization/schemas/organization.relations';
 import { projectRelations } from '../project/schemas/project.relations';
 import { shiftRelations } from '../shift/schemas/shift.relations';
@@ -12,6 +13,7 @@ import { volunteerSessionRelations } from '../time-tracking/schemas/volunteer-se
 export const relations = {
   ...authRelations,
   ...membershipRelations,
+  ...membershipRequestRelations,
   ...organizationRelations,
   ...projectRelations,
   ...shiftRelations,

@@ -5,6 +5,9 @@ import { DATABASE_CONNECTION } from '../database/database-connection';
 import * as schema from '../database/schema';
 import { MembershipEntity } from '../database/schema';
 import { OrganizationRole } from '../organization/enums';
+import { MembershipRequestEntity } from './schemas/membership-request.schema';
+import { MembershipRequestStatus } from './enums';
+import { BadRequestGraphQLError, NotFoundGraphQLError } from '../graphql/errors';
 
 @Injectable()
 export class MembershipService {
@@ -111,5 +114,40 @@ export class MembershipService {
       },
     });
     return membership ?? null;
+  }
+
+  async createMembershipRequest(
+    email: string,
+    organizationId: string,
+  ): Promise<MembershipRequestEntity> {
+    const [membershipRequest] = await this.db.insert(schema.membershipRequests).values({
+      email,
+      organizationId,
+    }).returning();
+    return membershipRequest;
+  }
+
+  async approveMembershipRequest(
+    userId: string,
+    membershipRequestId: string,
+  ): Promise<boolean> {
+    const [membershipRequest] = await this.db.update(schema.membershipRequests).set({
+      status: MembershipRequestStatus.ACCEPTED,
+    }).where(and(
+      eq(schema.membershipRequests.id, membershipRequestId),
+      eq(schema.membershipRequests.status, MembershipRequestStatus.PENDING),
+    )).returning();
+
+    if (!membershipRequest) {
+      throw new NotFoundGraphQLError('Membership request not found');
+    }
+
+    await this.db.insert(schema.memberships).values({
+      userId,
+      organizationId: membershipRequest.organizationId,
+      role: OrganizationRole.VOLUNTEER,
+    });
+
+    return true;
   }
 }
