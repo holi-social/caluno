@@ -9,7 +9,7 @@
     "check-types": "turbo run check-types",
     "format-and-lint": "biome check .",
     "format-and-lint:fix": "biome check . --write",
-    "db:up": "docker compose up -d && bun run db:wait",
+    "db:up": "docker compose up -d postgres && bun run db:wait",
     "db:down": "docker compose down",
     "db:wait": "docker compose exec postgres sh -c 'until pg_isready -U ${POSTGRES_USER:-postgres}; do sleep 1; done'"
   },
