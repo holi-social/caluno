@@ -32,7 +32,12 @@ class TimeEntry {
 note right: How do we manage\nstatus and validation?
 class Membership {
     role {admin, moderator, volunteer}
-    status {invited, approved, rejected}
+}
+class MembershipRequest {
+    status {pending, accepted, rejected}
+    reviewedBy
+    reviewedAt
+    rejectionReason
 }
 class Assignment {
     status {invited, accepted, rejected}
@@ -57,8 +62,6 @@ Organization "* child" o-- "1 parent" Organization
 Organization "1" -down- "*" Project
 Organization "0..1" -- "*" Shift
 Project "0..1" -right- "*" Shift
-Organization "1" -right- "*" Membership
-Membership "*" -right- "1" User
 Assignment "*" -up- "1" User
 Shift "1" -up- "*" Assignment
 Review "*" -up- "1" User
@@ -69,4 +72,11 @@ VolunteeringSession "*" -up- "1" User
 VolunteeringSession "*" -left- "1" Shift
 VolunteeringSession "1" -- "*" TimeEntry
 TimeEntry "1" -- "0..1" ValidationAction
+
+Organization "1" -right- "*" Membership
+Membership "*" -right- "1" User
+
+Organization "1" -right- "*" MembershipRequest
+MembershipRequest "*" -right- "1" User
+
 @enduml
