@@ -27,7 +27,7 @@ export const ActionBar = ({
 
   const buttonSize = `icon-${size}` as const;
 
-  const handleDelete = async () => {
+  const handleDelete = () => {
     if (
       !confirm(
         "Are you sure you wish to delete this shift and all it's timesheets?",
@@ -39,7 +39,7 @@ export const ActionBar = ({
     startTransition(async () => {
       const result = await deleteShift({
         id,
-        organizationId: organizationId,
+        organizationId,
       });
       if (result?.serverError) {
         toast.error(`Failed to delete Shift. ${result.serverError}`);
