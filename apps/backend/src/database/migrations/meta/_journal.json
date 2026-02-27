@@ -99,6 +99,13 @@
       "when": 1771593361169,
       "tag": "0013_add_shift_to_volunteering_sessions",
       "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1771950185855,
+      "tag": "0014_add_membership_requests",
+      "breakpoints": true
     }
   ]
 }

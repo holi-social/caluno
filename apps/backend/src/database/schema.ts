@@ -8,3 +8,4 @@ export * from '../task/schemas/task.schema';
 export * from '../task/schemas/task-assignment.schema';
 export * from '../time-tracking/schemas/time-entry.schema';
 export * from '../time-tracking/schemas/volunteer-session.schema';
+export * from '../membership/schemas/membership-request.schema';

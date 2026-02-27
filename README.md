@@ -118,6 +118,7 @@ Environment variables are scoped per project:
 - `BETTER_AUTH_SECRET` - Secret key for authentication
 - `BETTER_AUTH_URL` - Backend URL for auth
 - `WEB_URL` - Frontend URL
+- `COOKIE_DOMAIN` - (Optional) Root domain for cross-subdomain cookies when frontend and API use different subdomains (e.g. `clippy.holi.social` for `staging.clippy.holi.social` + `api.clippy.holi.social`)
 
 ## Troubleshooting
 

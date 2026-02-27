@@ -41,7 +41,11 @@ import { UserModule } from './user/user.module';
       imports: [DatabaseModule, ConfigModule],
       useFactory: (database: NodePgDatabase, configService: ConfigService) => ({
         auth: betterAuth(
-          createAuthConfig(database, [configService.getOrThrow('WEB_URL')]),
+          createAuthConfig({
+            database,
+            trustedOrigins: [configService.getOrThrow('WEB_URL')],
+            cookieDomain: configService.get('COOKIE_DOMAIN'),
+          }),
         ),
       }),
       inject: [DATABASE_CONNECTION, ConfigService],
