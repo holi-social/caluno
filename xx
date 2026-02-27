@@ -1,0 +1,220 @@
+#0 building with "desktop-linux" instance using docker driver
+
+#1 [internal] load build definition from Dockerfile
+#0 building with "desktop-linux" instance using docker driver
+
+#1 [internal] load build definition from Dockerfile
+#1 transferring dockerfile: 917B done
+#1 DONE 0.0s
+
+#2 [internal] load metadata for docker.io/oven/bun:1
+#1 transferring dockerfile: 917B done
+#1 DONE 0.0s
+
+#2 [internal] load metadata for docker.io/oven/bun:1
+#2 DONE 0.6s
+#2 DONE 0.6s
+
+#3 [internal] load .dockerignore
+
+#3 [internal] load .dockerignore
+#3 transferring context: 123B done
+#3 DONE 0.0s
+
+#4 [builder 1/8] FROM docker.io/oven/bun:1@sha256:b86c67b531d87b4db11470d9b2bd0c519b1976eee6fcd71634e73abfa6230d2e
+#4 DONE 0.0s
+
+#5 [builder 2/8] WORKDIR /app
+#5 CACHED
+
+#6 [internal] load build context
+#3 transferring context: 123B done
+#3 DONE 0.0s
+
+#4 [builder 1/8] FROM docker.io/oven/bun:1@sha256:b86c67b531d87b4db11470d9b2bd0c519b1976eee6fcd71634e73abfa6230d2e
+#4 DONE 0.0s
+
+#5 [builder 2/8] WORKDIR /app
+#5 CACHED
+
+#6 [internal] load build context
+#6 transferring context: 139.65kB 0.2s done
+#6 DONE 0.2s
+#6 transferring context: 139.65kB 0.2s done
+#6 DONE 0.2s
+
+#7 [builder 3/8] COPY package.json turbo.json ./
+
+#7 [builder 3/8] COPY package.json turbo.json ./
+#7 DONE 0.1s
+#7 DONE 0.1s
+
+
+#8 [builder 4/8] COPY apps ./apps
+#8 [builder 4/8] COPY apps ./apps
+#8 DONE 0.7s
+#8 DONE 0.7s
+
+#9 [builder 5/8] COPY packages ./packages
+
+#9 [builder 5/8] COPY packages ./packages
+#9 DONE 0.3s
+#9 DONE 0.3s
+
+#10 [runner 6/8] RUN bun install --production --ignore-scripts
+
+#10 [runner 6/8] RUN bun install --production --ignore-scripts
+#10 0.284 bun install v1.3.10 (30e609e0)
+#10 0.381 Resolving dependencies
+#10 0.284 bun install v1.3.10 (30e609e0)
+#10 0.381 Resolving dependencies
+#10 ...
+
+#10 ...
+
+#11 [builder 6/8] RUN bun install
+#11 [builder 6/8] RUN bun install
+#11 0.285 bun install v1.3.10 (30e609e0)
+#11 0.285 bun install v1.3.10 (30e609e0)
+#11 0.383 Resolving dependencies
+#11 0.383 Resolving dependencies
+#11 38.08 Resolved, downloaded and extracted [4338]
+#11 38.08 Resolved, downloaded and extracted [4338]
+#11 38.09 warn: incorrect peer dependency "@apollo/server@5.4.0"
+#11 38.09 warn: incorrect peer dependency "@apollo/server@5.4.0"
+#11 ...
+
+#11 ...
+
+#10 [runner 6/8] RUN bun install --production --ignore-scripts
+#10 44.39 Resolved, downloaded and extracted [4338]
+#10 44.39 warn: incorrect peer dependency "@apollo/server@5.4.0"
+#10 [runner 6/8] RUN bun install --production --ignore-scripts
+#10 44.39 Resolved, downloaded and extracted [4338]
+#10 44.39 warn: incorrect peer dependency "@apollo/server@5.4.0"
+#10 48.10 
+#10 48.10 774 packages installed [47.83s]
+#10 48.10 
+#10 48.10 774 packages installed [47.83s]
+#10 DONE 48.7s
+
+#11 [builder 6/8] RUN bun install
+#10 DONE 48.7s
+
+#11 [builder 6/8] RUN bun install
+#11 ...
+
+#12 [runner 7/8] WORKDIR /app/apps/backoffice-frontend
+#11 ...
+
+#12 [runner 7/8] WORKDIR /app/apps/backoffice-frontend
+#12 DONE 0.1s
+#12 DONE 0.1s
+
+#11 [builder 6/8] RUN bun install
+
+#11 [builder 6/8] RUN bun install
+#11 51.04 Saved lockfile
+#11 51.04 Saved lockfile
+#11 51.05 
+#11 51.05 + @biomejs/biome@2.4.4
+#11 51.05 + turbo@2.8.11#11 51.05 
+#11 51.05 + @biomejs/biome@2.4.4
+#11 51.05 + turbo@2.8.11
+#11 51.05 + typescript@5.9.2 (v5.9.3 available)
+#11 51.05 
+#11 51.05 2157 packages installed [50.78s]
+
+#11 51.05 + typescript@5.9.2 (v5.9.3 available)
+#11 51.05 
+#11 51.05 2157 packages installed [50.78s]
+#11 DONE 51.9s
+#11 DONE 51.9s
+
+
+#13 [builder 7/8] WORKDIR /app/apps/backoffice-frontend
+#13 DONE 0.1s
+
+#14 [builder 8/8] RUN bun run build
+#13 [builder 7/8] WORKDIR /app/apps/backoffice-frontend
+#13 DONE 0.1s
+
+#14 [builder 8/8] RUN bun run build
+#14 1.451 $ bun --bun next build
+#14 1.451 $ bun --bun next build
+#14 5.659 Attention: Next.js now collects completely anonymous telemetry regarding usage.
+#14 5.659 This information is used to shape Next.js' roadmap and prioritize features.
+#14 5.659 You can learn more, including how to opt-out if you'd not like to participate in this anonymous program, by visiting the following URL:
+#14 5.659 https://nextjs.org/telemetry
+#14 5.659 
+#14 5.659 Attention: Next.js now collects completely anonymous telemetry regarding usage.
+#14 5.659 This information is used to shape Next.js' roadmap and prioritize features.
+#14 5.659 You can learn more, including how to opt-out if you'd not like to participate in this anonymous program, by visiting the following URL:
+#14 5.659 https://nextjs.org/telemetry
+#14 5.659 
+#14 5.696 ▲ Next.js 16.1.4 (Turbopack)
+#14 5.696 
+#14 5.696 ▲ Next.js 16.1.4 (Turbopack)
+#14 5.696 
+#14 6.075 
+#14 6.075 > Build error occurred
+#14 6.075 
+#14 6.075 > Build error occurred
+#14 6.091 RangeError: Array length must be a positive integer of safe magnitude.
+#14 6.091     at processTicksAndRejections (null)
+#14 6.134 error: "next" exited with code 1
+#14 6.136 error: script "build" exited with code 1
+#14 ERROR: process "/bin/sh -c bun run build" did not complete successfully: exit code: 1
+------
+ > [builder 8/8] RUN bun run build:
+5.659 https://nextjs.org/telemetry
+5.659 
+5.696 ▲ Next.js 16.1.4 (Turbopack)
+5.696 
+6.075 
+6.075 > Build error occurred
+6.091 RangeError: Array length must be a positive integer of safe magnitude.
+6.091     at processTicksAndRejections (null)
+6.134 error: "next" exited with code 1
+6.136 error: script "build" exited with code 1
+------
+#14 6.091 RangeError: Array length must be a positive integer of safe magnitude.
+#14 6.091     at processTicksAndRejections (null)
+#14 6.134 error: "next" exited with code 1
+#14 6.136 error: script "build" exited with code 1
+#14 ERROR: process "/bin/sh -c bun run build" did not complete successfully: exit code: 1
+------
+ > [builder 8/8] RUN bun run build:
+5.659 https://nextjs.org/telemetry
+5.659 
+5.696 ▲ Next.js 16.1.4 (Turbopack)
+5.696 
+6.075 
+6.075 > Build error occurred
+6.091 RangeError: Array length must be a positive integer of safe magnitude.
+6.091     at processTicksAndRejections (null)
+6.134 error: "next" exited with code 1
+6.136 error: script "build" exited with code 1
+------
+Dockerfile:22
+--------------------
+  20 |     # Build the Next.js app
+  21 |     WORKDIR /app/apps/backoffice-frontend
+  22 | >>> RUN bun run build
+  23 |     
+  24 |     
+--------------------
+ERROR: failed to build: failed to solve: process "/bin/sh -c bun run build" did not complete successfully: exit code: 1
+
+View build details: docker-desktop://dashboard/build/desktop-linux/desktop-linux/hygivxbuf3n93szy2ma7k44jm
+Dockerfile:22
+--------------------
+  20 |     # Build the Next.js app
+  21 |     WORKDIR /app/apps/backoffice-frontend
+  22 | >>> RUN bun run build
+  23 |     
+  24 |     
+--------------------
+ERROR: failed to build: failed to solve: process "/bin/sh -c bun run build" did not complete successfully: exit code: 1
+
+View build details: docker-desktop://dashboard/build/desktop-linux/desktop-linux/hygivxbuf3n93szy2ma7k44jm
