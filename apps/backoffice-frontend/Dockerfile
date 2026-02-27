@@ -2,6 +2,8 @@ FROM oven/bun:1 AS builder
 
 WORKDIR /app
 
+ENV NODE_ENV=production
+
 # Install dependencies for the whole monorepo so workspace packages are available
 COPY package.json turbo.json ./
 COPY apps ./apps
@@ -23,6 +25,8 @@ RUN bun run build
 FROM oven/bun:1 AS runner
 
 WORKDIR /app
+
+ENV NODE_ENV=production
 
 COPY package.json turbo.json ./
 COPY apps ./apps
