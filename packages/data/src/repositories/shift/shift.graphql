@@ -108,3 +108,9 @@ mutation UpdateShift($id: String!, $input: UpdateShiftInput!) {
     id
   }
 }
+
+mutation DeleteShift($id: String!) {
+  deleteShift(id: $id) {
+    id
+  }
+}

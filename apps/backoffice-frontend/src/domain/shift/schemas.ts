@@ -13,3 +13,8 @@ export const shiftFormSchema = z.object({
 });
 
 export type ShiftFormValues = z.infer<typeof shiftFormSchema>;
+
+export const shiftDeleteSchema = z.object({
+  id: z.string().min(1, 'Shift ID is required'),
+  organizationId: z.string().min(1, 'Organization ID is required'),
+});

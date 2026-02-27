@@ -74,4 +74,13 @@ export class ShiftRepository extends BaseRepository {
       throw DataError.fromGraphQLError(error);
     }
   }
+
+  async delete(id: string): Promise<{ id: string }> {
+    try {
+      const data = await this.sdk.DeleteShift({ id });
+      return { id: data.deleteShift.id };
+    } catch (error) {
+      throw DataError.fromGraphQLError(error);
+    }
+  }
 }
