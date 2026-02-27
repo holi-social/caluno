@@ -1,14 +1,15 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { and, count, eq, inArray, or } from 'drizzle-orm';
 import type { NodePgDatabase } from 'drizzle-orm/node-postgres';
-import { NotFoundGraphQLError } from '../graphql/errors/not-found.error';
-import type { PaginationInput } from '../graphql/pagination.input';
-import { MembershipService } from '../membership/membership.service';
-import { slugify } from '../utils/slug.util';
 import { DATABASE_CONNECTION } from '../database/database-connection';
 import * as schema from '../database/schema';
 import { UserEntity } from '../database/schema';
+import { InternalServerGraphQLError } from '../graphql/errors/internal-server.error';
+import { NotFoundGraphQLError } from '../graphql/errors/not-found.error';
+import type { PaginationInput } from '../graphql/pagination.input';
+import { MembershipService } from '../membership/membership.service';
 import { UserService } from '../user/user.service';
+import { slugify } from '../utils/slug.util';
 import { ShiftInviteStatus, ShiftVisibility } from './enums';
 import { CreateShiftInput } from './inputs/create-shift.input';
 import { UpdateShiftInput } from './inputs/update-shift.input';
@@ -276,6 +277,31 @@ export class ShiftService {
     }
 
     return shift;
+  }
+
+  async delete(id: string, organizationId: string): Promise<ShiftEntity> {
+    const shift = await this.db.query.shifts.findFirst({
+      where: and(
+        eq(schema.shifts.id, id),
+        eq(schema.shifts.organizationId, organizationId),
+      ),
+    });
+
+    if (!shift) {
+      throw new NotFoundGraphQLError(`Shift with ID ${id} not found`);
+    }
+
+    const [deletedShift] = await this.db
+      .delete(schema.shifts)
+      .where(
+        and(
+          eq(schema.shifts.id, id),
+          eq(schema.shifts.organizationId, organizationId),
+        ),
+      )
+      .returning();
+
+    return deletedShift;
   }
 
   async findCreator(createdById: string): Promise<UserEntity> {
