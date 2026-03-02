@@ -23,9 +23,9 @@ variables:
   TF_IN_AUTOMATION: "true"
   TF_INPUT: "false"
 
-.build-images:
+.build-images-base:
   stage: build
-  script:
+  before_script:
     - echo "Logging into Scaleway registry"
     - unset DOCKER_AUTH_CONFIG
     - echo "$SCW_SECRET_KEY" | docker login "$SCW_REGISTRY_HOST/$SCW_REGISTRY_NAMESPACE" -u "nologin" --password-stdin
@@ -45,17 +45,6 @@ variables:
       else
         echo "Unsupported branch $CI_COMMIT_BRANCH"; exit 1
       fi
-
-    - export BACKEND_IMAGE_NAME="clippy-backend"
-    - docker buildx build --load -t "$REGISTRY_NAMESPACE/$BACKEND_IMAGE_NAME:$IMAGE_TAG_SHA" -t "$REGISTRY_NAMESPACE/$BACKEND_IMAGE_NAME:$STABLE_TAG" -f apps/backend/Dockerfile .
-    - docker push "$REGISTRY_NAMESPACE/$BACKEND_IMAGE_NAME:$IMAGE_TAG_SHA"
-    - docker push "$REGISTRY_NAMESPACE/$BACKEND_IMAGE_NAME:$STABLE_TAG"
-
-    - export FRONTEND_IMAGE_NAME="clippy-frontend"
-    - docker buildx build --load --build-arg NEXT_PUBLIC_API_URL="$NEXT_PUBLIC_API_URL" --build-arg NEXT_PUBLIC_WEB_URL="$NEXT_PUBLIC_WEB_URL" -t "$REGISTRY_NAMESPACE/$FRONTEND_IMAGE_NAME:$IMAGE_TAG_SHA" -t "$REGISTRY_NAMESPACE/$FRONTEND_IMAGE_NAME:$STABLE_TAG" -f apps/backoffice-frontend/Dockerfile .
-    - docker push "$REGISTRY_NAMESPACE/$FRONTEND_IMAGE_NAME:$IMAGE_TAG_SHA"
-    - docker push "$REGISTRY_NAMESPACE/$FRONTEND_IMAGE_NAME:$STABLE_TAG"
-
   artifacts:
     reports:
       dotenv: build.env
@@ -63,13 +52,47 @@ variables:
     - echo "IMAGE_TAG_SHA=$IMAGE_TAG_SHA" >> build.env
     - echo "STABLE_TAG=$STABLE_TAG" >> build.env
 
-build:staging:
-  extends: .build-images
+.build-images-backend:
+  extends: .build-images-base
+  script:
+    - export BACKEND_IMAGE_NAME="clippy-backend"
+    - docker buildx build --load \
+        -t "$REGISTRY_NAMESPACE/$BACKEND_IMAGE_NAME:$IMAGE_TAG_SHA" \
+        -t "$REGISTRY_NAMESPACE/$BACKEND_IMAGE_NAME:$STABLE_TAG" \
+        -f apps/backend/Dockerfile .
+    - docker push "$REGISTRY_NAMESPACE/$BACKEND_IMAGE_NAME:$IMAGE_TAG_SHA"
+    - docker push "$REGISTRY_NAMESPACE/$BACKEND_IMAGE_NAME:$STABLE_TAG"
+
+.build-images-frontend:
+  extends: .build-images-base
+  script:
+    - export FRONTEND_IMAGE_NAME="clippy-frontend"
+    - docker buildx build --load \
+        --build-arg NEXT_PUBLIC_API_URL="$NEXT_PUBLIC_API_URL" \
+        --build-arg NEXT_PUBLIC_WEB_URL="$NEXT_PUBLIC_WEB_URL" \
+        -t "$REGISTRY_NAMESPACE/$FRONTEND_IMAGE_NAME:$IMAGE_TAG_SHA" \
+        -t "$REGISTRY_NAMESPACE/$FRONTEND_IMAGE_NAME:$STABLE_TAG" \
+        -f apps/backoffice-frontend/Dockerfile .
+    - docker push "$REGISTRY_NAMESPACE/$FRONTEND_IMAGE_NAME:$IMAGE_TAG_SHA"
+    - docker push "$REGISTRY_NAMESPACE/$FRONTEND_IMAGE_NAME:$STABLE_TAG"
+
+build:staging:backend:
+  extends: .build-images-backend
   rules:
     - if: '$CI_COMMIT_BRANCH == "main"'
 
-build:production:
-  extends: .build-images
+build:staging:frontend:
+  extends: .build-images-frontend
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+
+build:production:backend:
+  extends: .build-images-backend
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "production"'
+
+build:production:frontend:
+  extends: .build-images-frontend
   rules:
     - if: '$CI_COMMIT_BRANCH == "production"'
 
@@ -87,7 +110,7 @@ build:production:
 terraform:plan:staging:
   extends: .terraform
   stage: terraform_plan
-  needs: ["build:staging"]
+  needs: ["build:staging:backend", "build:staging:frontend"]
   rules:
     - if: '$CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "main"'
     - if: '$CI_COMMIT_BRANCH == "main"'
@@ -125,7 +148,7 @@ terraform:apply:staging:
 terraform:plan:production:
   extends: .terraform
   stage: terraform_plan
-  needs: ["build:production"]
+  needs: ["build:production:backend", "build:production:frontend"]
   rules:
     - if: '$CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "production"'
     - if: '$CI_COMMIT_BRANCH == "production"'
