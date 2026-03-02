@@ -116,10 +116,11 @@ terraform_plan_staging:
         export TF_VAR_backend_image_tag="$IMAGE_TAG_SHA"
       fi
     - terraform validate
-    - terraform plan \
-      -var-file="terraform.tfvars" \
-      -out="plan-staging.tfplan" \
-      -target='module.env["staging"]'
+    - |
+      terraform plan \
+        -var-file="terraform.tfvars" \
+        -out="plan-staging.tfplan" \
+        -target='module.env["staging"]'
   artifacts:
     paths:
       - packages/infra/plan-staging.tfplan
@@ -154,10 +155,11 @@ terraform_plan_production:
         export TF_VAR_backend_image_tag="$IMAGE_TAG_SHA"
       fi
     - terraform validate
-    - terraform plan \
-      -var-file="terraform.tfvars" \
-      -out="plan-production.tfplan" \
-      -target='module.env["production"]'
+    - |
+      terraform plan \
+        -var-file="terraform.tfvars" \
+        -out="plan-production.tfplan" \
+        -target='module.env["production"]'
   artifacts:
     paths:
       - packages/infra/plan-production.tfplan
