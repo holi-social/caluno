@@ -136,7 +136,6 @@ terraform_apply_staging:
     name: staging
   script:
     - terraform apply -auto-approve "plan-staging.tfplan"
-  when: manual
   allow_failure: false
 
 terraform_plan_production:
