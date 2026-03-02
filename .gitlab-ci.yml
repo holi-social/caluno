@@ -14,6 +14,8 @@ default:
   services:
     - name: europe-north1-docker.pkg.dev/holi-shared/docker-hub-remote/docker:29-dind
       alias: docker
+  tags:
+    - 4cpu-16gb
 
 variables:
   DOCKER_TLS_CERTDIR: "/certs"
@@ -25,7 +27,8 @@ variables:
   stage: build
   script:
     - echo "Logging into Scaleway registry"
-    - echo "$SCW_SECRET_KEY" | docker login "$SCW_REGISTRY_HOST" -u "nologin" --password-stdin
+    - unset DOCKER_AUTH_CONFIG
+    - echo "$SCW_SECRET_KEY" | docker login "$SCW_REGISTRY_HOST/$SCW_REGISTRY_NAMESPACE" -u "nologin" --password-stdin
 
     - export REGISTRY_NAMESPACE="$SCW_REGISTRY_HOST/$SCW_REGISTRY_NAMESPACE"
     - export IMAGE_TAG_SHA="$CI_COMMIT_SHORT_SHA"
@@ -44,20 +47,12 @@ variables:
       fi
 
     - export BACKEND_IMAGE_NAME="clippy-backend"
-    - docker build \
-      -t "$REGISTRY_NAMESPACE/$BACKEND_IMAGE_NAME:$IMAGE_TAG_SHA" \
-      -t "$REGISTRY_NAMESPACE/$BACKEND_IMAGE_NAME:$STABLE_TAG" \
-      -f apps/backend/Dockerfile .
+    - docker buildx build --load -t "$REGISTRY_NAMESPACE/$BACKEND_IMAGE_NAME:$IMAGE_TAG_SHA" -t "$REGISTRY_NAMESPACE/$BACKEND_IMAGE_NAME:$STABLE_TAG" -f apps/backend/Dockerfile .
     - docker push "$REGISTRY_NAMESPACE/$BACKEND_IMAGE_NAME:$IMAGE_TAG_SHA"
     - docker push "$REGISTRY_NAMESPACE/$BACKEND_IMAGE_NAME:$STABLE_TAG"
 
     - export FRONTEND_IMAGE_NAME="clippy-frontend"
-    - docker build \
-      --build-arg NEXT_PUBLIC_API_URL="$NEXT_PUBLIC_API_URL" \
-      --build-arg NEXT_PUBLIC_WEB_URL="$NEXT_PUBLIC_WEB_URL" \
-      -t "$REGISTRY_NAMESPACE/$FRONTEND_IMAGE_NAME:$IMAGE_TAG_SHA" \
-      -t "$REGISTRY_NAMESPACE/$FRONTEND_IMAGE_NAME:$STABLE_TAG" \
-      -f apps/backoffice-frontend/Dockerfile .
+    - docker buildx build --load --build-arg NEXT_PUBLIC_API_URL="$NEXT_PUBLIC_API_URL" --build-arg NEXT_PUBLIC_WEB_URL="$NEXT_PUBLIC_WEB_URL" -t "$REGISTRY_NAMESPACE/$FRONTEND_IMAGE_NAME:$IMAGE_TAG_SHA" -t "$REGISTRY_NAMESPACE/$FRONTEND_IMAGE_NAME:$STABLE_TAG" -f apps/backoffice-frontend/Dockerfile .
     - docker push "$REGISTRY_NAMESPACE/$FRONTEND_IMAGE_NAME:$IMAGE_TAG_SHA"
     - docker push "$REGISTRY_NAMESPACE/$FRONTEND_IMAGE_NAME:$STABLE_TAG"
 
@@ -83,6 +78,8 @@ build:production:
     name: hashicorp/terraform:1.9.5
     entrypoint: [""]
   before_script:
+    - export SECURE_FILES_DOWNLOAD_PATH="$CI_PROJECT_DIR/$TF_ROOT"
+    - curl --silent "https://gitlab.com/gitlab-org/incubation-engineering/mobile-devops/download-secure-files/-/raw/main/installer" | bash
     - cd "$TF_ROOT"
     - terraform --version
     - terraform init
