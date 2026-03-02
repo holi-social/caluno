@@ -30,11 +30,11 @@ export const organizations = pgTable(
     phone: text('phone'),
     description: text('description'),
     address: text('address'),
-    ...timestampColumns,
     deletedAt: timestamp('deleted_at'),
     ownerId: text('owner_id')
       .notNull()
       .references(() => users.id, { onDelete: 'restrict' }),
+    ...timestampColumns,
   },
   (table) => [
     index('idx_organizations_parent_id').on(table.parentId),

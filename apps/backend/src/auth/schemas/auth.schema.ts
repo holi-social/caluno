@@ -16,12 +16,12 @@ export const sessions = pgTable(
     id: text('id').primaryKey(),
     expiresAt: timestamp('expires_at').notNull(),
     token: text('token').notNull().unique(),
-    ...timestampColumns,
     ipAddress: text('ip_address'),
     userAgent: text('user_agent'),
     userId: text('user_id')
       .notNull()
       .references(() => users.id, { onDelete: 'cascade' }),
+    ...timestampColumns,
   },
   (table) => [index('sessions_userId_idx').on(table.userId)],
 );

@@ -2,15 +2,29 @@ import { type BetterAuthOptions, betterAuth } from 'better-auth';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 import { Database } from '../database/database.module';
 
+export interface AuthConfigOptions {
+  database: Database | object;
+  trustedOrigins: string[];
+  /** Root domain for cross-subdomain cookies (e.g. "clippy.holi.social"). Set when frontend and API use different subdomains. */
+  cookieDomain?: string;
+}
+
 export const createAuthConfig = (
-  database: Database | object,
-  trustedOrigins: string[],
+  { database, trustedOrigins, cookieDomain }: AuthConfigOptions,
 ): BetterAuthOptions => ({
   database: drizzleAdapter(database, {
     usePlural: true,
     provider: 'pg',
   }),
   trustedOrigins,
+  ...(cookieDomain && {
+    advanced: {
+      crossSubDomainCookies: {
+        enabled: true,
+        domain: cookieDomain,
+      },
+    },
+  }),
   emailAndPassword: {
     enabled: true,
     minPasswordLength: 6,
@@ -20,4 +34,6 @@ export const createAuthConfig = (
   plugins: [],
 });
 
-export const auth = betterAuth(createAuthConfig({}, []));
+export const auth = betterAuth(
+  createAuthConfig({ database: {}, trustedOrigins: [], cookieDomain: undefined }),
+);
