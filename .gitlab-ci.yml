@@ -25,7 +25,8 @@ variables:
   stage: build
   script:
     - echo "Logging into Scaleway registry"
-    - echo "$SCW_SECRET_KEY" | docker login "$SCW_REGISTRY_HOST" -u "nologin" --password-stdin
+    - unset DOCKER_AUTH_CONFIG
+    - echo "$SCW_SECRET_KEY" | docker login "$SCW_REGISTRY_HOST/$SCW_REGISTRY_NAMESPACE" -u "nologin" --password-stdin
 
     - export REGISTRY_NAMESPACE="$SCW_REGISTRY_HOST/$SCW_REGISTRY_NAMESPACE"
     - export IMAGE_TAG_SHA="$CI_COMMIT_SHORT_SHA"
