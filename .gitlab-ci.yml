@@ -1,0 +1,164 @@
+workflow:
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main" || $CI_COMMIT_BRANCH == "production"'
+    - if: '$CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "main" || $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "production"'
+    - when: never
+
+stages:
+  - build
+  - terraform_plan
+  - terraform_apply
+
+default:
+  image: europe-north1-docker.pkg.dev/holi-shared/docker-hub-remote/docker:29
+  services:
+    - name: europe-north1-docker.pkg.dev/holi-shared/docker-hub-remote/docker:29-dind
+      alias: docker
+
+variables:
+  DOCKER_TLS_CERTDIR: "/certs"
+  TF_ROOT: "packages/infra"
+  TF_IN_AUTOMATION: "true"
+  TF_INPUT: "false"
+
+.build-images:
+  stage: build
+  script:
+    - echo "Logging into Scaleway registry"
+    - echo "$SCW_SECRET_KEY" | docker login "$SCW_REGISTRY_HOST" -u "nologin" --password-stdin
+
+    - export REGISTRY_NAMESPACE="$SCW_REGISTRY_HOST/$SCW_REGISTRY_NAMESPACE"
+    - export IMAGE_TAG_SHA="$CI_COMMIT_SHORT_SHA"
+
+    - |
+      if [ "$CI_COMMIT_BRANCH" = "main" ]; then
+        export STABLE_TAG="staging"
+        export NEXT_PUBLIC_API_URL="https://staging.clippy.apis.holi.social"
+        export NEXT_PUBLIC_WEB_URL="https://staging.clippy.holi.social"
+      elif [ "$CI_COMMIT_BRANCH" = "production" ]; then
+        export STABLE_TAG="latest"
+        export NEXT_PUBLIC_API_URL="https://clippy.apis.holi.social"
+        export NEXT_PUBLIC_WEB_URL="https://clippy.holi.social"
+      else
+        echo "Unsupported branch $CI_COMMIT_BRANCH"; exit 1
+      fi
+
+    - export BACKEND_IMAGE_NAME="clippy-backend"
+    - docker build \
+      -t "$REGISTRY_NAMESPACE/$BACKEND_IMAGE_NAME:$IMAGE_TAG_SHA" \
+      -t "$REGISTRY_NAMESPACE/$BACKEND_IMAGE_NAME:$STABLE_TAG" \
+      -f apps/backend/Dockerfile .
+    - docker push "$REGISTRY_NAMESPACE/$BACKEND_IMAGE_NAME:$IMAGE_TAG_SHA"
+    - docker push "$REGISTRY_NAMESPACE/$BACKEND_IMAGE_NAME:$STABLE_TAG"
+
+    - export FRONTEND_IMAGE_NAME="clippy-frontend"
+    - docker build \
+      --build-arg NEXT_PUBLIC_API_URL="$NEXT_PUBLIC_API_URL" \
+      --build-arg NEXT_PUBLIC_WEB_URL="$NEXT_PUBLIC_WEB_URL" \
+      -t "$REGISTRY_NAMESPACE/$FRONTEND_IMAGE_NAME:$IMAGE_TAG_SHA" \
+      -t "$REGISTRY_NAMESPACE/$FRONTEND_IMAGE_NAME:$STABLE_TAG" \
+      -f apps/backoffice-frontend/Dockerfile .
+    - docker push "$REGISTRY_NAMESPACE/$FRONTEND_IMAGE_NAME:$IMAGE_TAG_SHA"
+    - docker push "$REGISTRY_NAMESPACE/$FRONTEND_IMAGE_NAME:$STABLE_TAG"
+
+  artifacts:
+    reports:
+      dotenv: build.env
+  after_script:
+    - echo "IMAGE_TAG_SHA=$IMAGE_TAG_SHA" >> build.env
+    - echo "STABLE_TAG=$STABLE_TAG" >> build.env
+
+build:staging:
+  extends: .build-images
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+
+build:production:
+  extends: .build-images
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "production"'
+
+.terraform:
+  image:
+    name: hashicorp/terraform:1.9.5
+    entrypoint: [""]
+  before_script:
+    - cd "$TF_ROOT"
+    - terraform --version
+    - terraform init
+
+terraform:plan:staging:
+  extends: .terraform
+  stage: terraform_plan
+  needs: ["build:staging"]
+  rules:
+    - if: '$CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "main"'
+    - if: '$CI_COMMIT_BRANCH == "main"'
+  script:
+    - |
+      if [ -f "build.env" ]; then
+        # Load IMAGE_TAG_SHA from build job to use as image tag
+        . build.env
+        export TF_VAR_frontend_image_tag="$IMAGE_TAG_SHA"
+        export TF_VAR_backend_image_tag="$IMAGE_TAG_SHA"
+      fi
+    - terraform validate
+    - terraform plan \
+      -var-file="terraform.tfvars" \
+      -out="plan-staging.tfplan" \
+      -target='module.env["staging"]'
+  artifacts:
+    paths:
+      - packages/infra/plan-staging.tfplan
+
+terraform:apply:staging:
+  extends: .terraform
+  stage: terraform_apply
+  needs: ["terraform:plan:staging"]
+  resource_group: "terraform-staging"
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main" && $CI_PIPELINE_SOURCE == "push"'
+  environment:
+    name: staging
+  script:
+    - terraform apply -auto-approve "plan-staging.tfplan"
+  when: manual
+  allow_failure: false
+
+terraform:plan:production:
+  extends: .terraform
+  stage: terraform_plan
+  needs: ["build:production"]
+  rules:
+    - if: '$CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "production"'
+    - if: '$CI_COMMIT_BRANCH == "production"'
+  script:
+    - |
+      if [ -f "build.env" ]; then
+        # Load IMAGE_TAG_SHA from build job to use as image tag
+        . build.env
+        export TF_VAR_frontend_image_tag="$IMAGE_TAG_SHA"
+        export TF_VAR_backend_image_tag="$IMAGE_TAG_SHA"
+      fi
+    - terraform validate
+    - terraform plan \
+      -var-file="terraform.tfvars" \
+      -out="plan-production.tfplan" \
+      -target='module.env["production"]'
+  artifacts:
+    paths:
+      - packages/infra/plan-production.tfplan
+
+terraform:apply:production:
+  extends: .terraform
+  stage: terraform_apply
+  needs: ["terraform:plan:production"]
+  resource_group: "terraform-production"
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "production" && $CI_PIPELINE_SOURCE == "push"'
+  environment:
+    name: production
+  script:
+    - terraform apply -auto-approve "plan-production.tfplan"
+  when: manual
+  allow_failure: false
