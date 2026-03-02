@@ -68,41 +68,42 @@ variables:
     - docker push "$REGISTRY_NAMESPACE/$FRONTEND_IMAGE_NAME:$IMAGE_TAG_SHA"
     - docker push "$REGISTRY_NAMESPACE/$FRONTEND_IMAGE_NAME:$STABLE_TAG"
 
-build:staging:backend:
+build_staging_backend:
   extends: .build-images-backend
   rules:
     - if: '$CI_COMMIT_BRANCH == "main"'
 
-build:staging:frontend:
+build_staging_frontend:
   extends: .build-images-frontend
   rules:
     - if: '$CI_COMMIT_BRANCH == "main"'
 
-build:production:backend:
+build_production_backend:
   extends: .build-images-backend
   rules:
     - if: '$CI_COMMIT_BRANCH == "production"'
 
-build:production:frontend:
+build_production_frontend:
   extends: .build-images-frontend
   rules:
     - if: '$CI_COMMIT_BRANCH == "production"'
 
 .terraform:
   image:
-    name: hashicorp/terraform:1.9.5
+    name: hashicorp/terraform:1.14
     entrypoint: [""]
   before_script:
+    - apk add --no-cache curl bash
     - export SECURE_FILES_DOWNLOAD_PATH="$CI_PROJECT_DIR/$TF_ROOT"
     - curl --silent "https://gitlab.com/gitlab-org/incubation-engineering/mobile-devops/download-secure-files/-/raw/main/installer" | bash
     - cd "$TF_ROOT"
     - terraform --version
     - terraform init
 
-terraform:plan:staging:
+terraform_plan_staging:
   extends: .terraform
   stage: terraform_plan
-  needs: ["build:staging:backend", "build:staging:frontend"]
+  needs: ["build_staging_backend", "build_staging_frontend"]
   rules:
     - if: '$CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "main"'
     - if: '$CI_COMMIT_BRANCH == "main"'
@@ -123,10 +124,10 @@ terraform:plan:staging:
     paths:
       - packages/infra/plan-staging.tfplan
 
-terraform:apply:staging:
+terraform_apply_staging:
   extends: .terraform
   stage: terraform_apply
-  needs: ["terraform:plan:staging"]
+  needs: ["terraform_plan_staging"]
   resource_group: "terraform-staging"
   rules:
     - if: '$CI_COMMIT_BRANCH == "main" && $CI_PIPELINE_SOURCE == "push"'
@@ -137,10 +138,10 @@ terraform:apply:staging:
   when: manual
   allow_failure: false
 
-terraform:plan:production:
+terraform_plan_production:
   extends: .terraform
   stage: terraform_plan
-  needs: ["build:production:backend", "build:production:frontend"]
+  needs: ["build_production_backend", "build_production_frontend"]
   rules:
     - if: '$CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "production"'
     - if: '$CI_COMMIT_BRANCH == "production"'
@@ -161,10 +162,10 @@ terraform:plan:production:
     paths:
       - packages/infra/plan-production.tfplan
 
-terraform:apply:production:
+terraform_apply_production:
   extends: .terraform
   stage: terraform_apply
-  needs: ["terraform:plan:production"]
+  needs: ["terraform_plan_production"]
   resource_group: "terraform-production"
   rules:
     - if: '$CI_COMMIT_BRANCH == "production" && $CI_PIPELINE_SOURCE == "push"'
