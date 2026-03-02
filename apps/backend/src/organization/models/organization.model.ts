@@ -44,9 +44,6 @@ export class Organization {
   @Field(() => [Organization])
   children: Organization[];
 
-  @Field(() => User)
-  owner: User;
-
   @Field(() => [User], { nullable: true })
   admins: User[];
 

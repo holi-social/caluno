@@ -95,7 +95,6 @@ type Organization {
   logoUrl: String
   moderators: [User!]
   name: String!
-  owner: User!
   parent: Organization
   phone: String
   projects(limit: Int! = 10, offset: Int! = 0): [Project!]

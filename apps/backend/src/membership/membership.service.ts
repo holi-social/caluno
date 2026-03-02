@@ -48,17 +48,6 @@ export class MembershipService {
     return users;
   }
 
-  async isOwner(userId: string, organizationId: string): Promise<boolean> {
-    const membership = await this.db.query.memberships.findFirst({
-      where: {
-        userId,
-        organizationId,
-        role: OrganizationRole.OWNER,
-      },
-    });
-    return !!membership;
-  }
-
   async isAdmin(userId: string, organizationId: string): Promise<boolean> {
     const membership = await this.db.query.memberships.findFirst({
       where: {
@@ -86,10 +75,7 @@ export class MembershipService {
       where: {
         userId,
         organizationId,
-        OR: [
-          { role: OrganizationRole.OWNER },
-          { role: OrganizationRole.ADMIN },
-        ],
+        role: OrganizationRole.ADMIN,
       },
     });
     return !!membership;

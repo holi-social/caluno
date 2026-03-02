@@ -85,10 +85,6 @@ export class OrganizationService {
     return this.mapper.toModel(parent);
   }
 
-  async findOwner(ownerId: string): Promise<UserEntity> {
-    return this.userService.findByIdOrThrow(ownerId);
-  }
-
   async findAdmins(organizationId: string): Promise<UserEntity[]> {
     return this.membershipService.findUsersByRole(
       organizationId,
@@ -122,14 +118,13 @@ export class OrganizationService {
       .values({
         ...input,
         slug: slugify(input.name),
-        ownerId: userId,
       })
       .returning();
 
     await this.membershipService.create(
       userId,
       organization.id,
-      OrganizationRole.OWNER,
+      OrganizationRole.ADMIN,
     );
 
     return this.mapper.toModelOrThrow(organization);
