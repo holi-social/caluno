@@ -81,6 +81,40 @@ The backend uses Drizzle ORM for database management. Run these commands from `a
 - `bun run lint` - Lint all code with Biome
 - `bun run format` - Format and fix all code with Biome
 
+### Scaleway deployment
+
+The root `scaleway.sh` script helps you build and push Docker images for:
+
+- `apps/backoffice-frontend` (frontend)
+- `apps/backend` (backend)
+
+It uses the Scaleway Container Registry configuration from the root `.env` (or your shell environment):
+
+- `REGISTRY_URL` - Scaleway registry URL (e.g. `rg.nl-ams.scw.cloud`)
+- `SCW_CR_NAMESPACE` - Scaleway Container Registry namespace (e.g. `clippy`)
+- `IMAGE_TAG` - Image tag to use (e.g. `staging` or a commit SHA)
+
+You must be logged in to the Scaleway registry first:
+
+```bash
+docker login "$REGISTRY_URL"
+```
+
+Common usage:
+
+```bash
+# Build and push both images
+./scaleway.sh
+
+# Build images only
+./scaleway.sh --build
+
+# Push existing images only
+./scaleway.sh --push
+```
+
+This script requires Docker with Buildx enabled (see the **Prerequisites** section).
+
 ## Project Structure
 
 ```
