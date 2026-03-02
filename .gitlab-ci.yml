@@ -14,6 +14,8 @@ default:
   services:
     - name: europe-north1-docker.pkg.dev/holi-shared/docker-hub-remote/docker:29-dind
       alias: docker
+  tags:
+    - 4cpu-16gb
 
 variables:
   DOCKER_TLS_CERTDIR: "/certs"
