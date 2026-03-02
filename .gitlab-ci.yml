@@ -83,6 +83,8 @@ build:production:
     name: hashicorp/terraform:1.9.5
     entrypoint: [""]
   before_script:
+    - export SECURE_FILES_DOWNLOAD_PATH="$CI_PROJECT_DIR/$TF_ROOT"
+    - curl --silent "https://gitlab.com/gitlab-org/incubation-engineering/mobile-devops/download-secure-files/-/raw/main/installer" | bash
     - cd "$TF_ROOT"
     - terraform --version
     - terraform init
