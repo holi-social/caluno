@@ -1,0 +1,228 @@
+workflow:
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main" || $CI_COMMIT_BRANCH == "production"'
+    - if: '$CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "main" || $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "production"'
+    - when: never
+
+stages:
+  - build
+  - terraform_plan
+  - terraform_apply
+
+default:
+  image: europe-north1-docker.pkg.dev/holi-shared/docker-hub-remote/docker:29
+  services:
+    - name: europe-north1-docker.pkg.dev/holi-shared/docker-hub-remote/docker:29-dind
+      alias: docker
+  tags:
+    - 4cpu-16gb
+
+variables:
+  DOCKER_TLS_CERTDIR: "/certs"
+  TF_ROOT: "packages/infra"
+  TF_IN_AUTOMATION: "true"
+  TF_INPUT: "false"
+
+# ─── BUILD ────────────────────────────────────────────────────────────────────
+
+.build-images-base:
+  stage: build
+  before_script:
+    - echo "Logging into Scaleway registry"
+    - unset DOCKER_AUTH_CONFIG
+    - echo "$SCW_SECRET_KEY" | docker login "$SCW_REGISTRY_HOST/$SCW_REGISTRY_NAMESPACE" -u "nologin" --password-stdin
+    - export REGISTRY_NAMESPACE="$SCW_REGISTRY_HOST/$SCW_REGISTRY_NAMESPACE"
+    - export IMAGE_TAG_SHA="$CI_COMMIT_SHORT_SHA"
+    - |
+      if [ "$CI_COMMIT_BRANCH" = "main" ]; then
+        export STABLE_TAG="staging"
+        export NEXT_PUBLIC_API_URL="https://staging.clippy.apis.holi.social"
+        export NEXT_PUBLIC_WEB_URL="https://staging.clippy.holi.social"
+      elif [ "$CI_COMMIT_BRANCH" = "production" ]; then
+        export STABLE_TAG="latest"
+        export NEXT_PUBLIC_API_URL="https://clippy.apis.holi.social"
+        export NEXT_PUBLIC_WEB_URL="https://clippy.holi.social"
+      else
+        echo "Unsupported branch $CI_COMMIT_BRANCH"; exit 1
+      fi
+.build-images-backend:
+  extends: .build-images-base
+  script:
+    - export BACKEND_IMAGE_NAME="clippy-backend"
+    - docker buildx build --load
+      -t "$REGISTRY_NAMESPACE/$BACKEND_IMAGE_NAME:$IMAGE_TAG_SHA"
+      -t "$REGISTRY_NAMESPACE/$BACKEND_IMAGE_NAME:$STABLE_TAG"
+      -f apps/backend/Dockerfile .
+    - docker push "$REGISTRY_NAMESPACE/$BACKEND_IMAGE_NAME:$IMAGE_TAG_SHA"
+    - docker push "$REGISTRY_NAMESPACE/$BACKEND_IMAGE_NAME:$STABLE_TAG"
+
+.build-images-frontend:
+  extends: .build-images-base
+  script:
+    - export FRONTEND_IMAGE_NAME="clippy-frontend"
+    - docker buildx build --load
+      --build-arg NEXT_PUBLIC_API_URL="$NEXT_PUBLIC_API_URL"
+      --build-arg NEXT_PUBLIC_WEB_URL="$NEXT_PUBLIC_WEB_URL"
+      -t "$REGISTRY_NAMESPACE/$FRONTEND_IMAGE_NAME:$IMAGE_TAG_SHA"
+      -t "$REGISTRY_NAMESPACE/$FRONTEND_IMAGE_NAME:$STABLE_TAG"
+      -f apps/backoffice-frontend/Dockerfile .
+    - docker push "$REGISTRY_NAMESPACE/$FRONTEND_IMAGE_NAME:$IMAGE_TAG_SHA"
+    - docker push "$REGISTRY_NAMESPACE/$FRONTEND_IMAGE_NAME:$STABLE_TAG"
+
+build_staging_backend:
+  extends: .build-images-backend
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+
+build_staging_frontend:
+  extends: .build-images-frontend
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+
+build_production_backend:
+  extends: .build-images-backend
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "production"'
+
+build_production_frontend:
+  extends: .build-images-frontend
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "production"'
+
+.terraform:
+  image:
+    name: hashicorp/terraform:1.14
+    entrypoint: [""]
+  before_script:
+    - apk add --no-cache curl bash glab
+    - glab auth login --job-token "$CI_JOB_TOKEN" --hostname "$CI_SERVER_FQDN" --api-protocol "$CI_SERVER_PROTOCOL"
+    - glab -R "$CI_PROJECT_PATH" securefile download --all --output-dir "$TF_ROOT"
+    - cd "$TF_ROOT"
+    - terraform --version
+    - terraform init
+
+# ─── STAGING PLAN ─────────────────────────────────────────────────────────────
+
+terraform_plan_staging_mr:
+  extends: .terraform
+  stage: terraform_plan
+  needs: []
+  rules:
+    - if: '$CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "main"'
+  script:
+    - terraform validate
+    - terraform plan
+      -var-file="terraform.tfvars"
+      -target='module.env["staging"]'
+
+terraform_plan_staging:
+  extends: .terraform
+  stage: terraform_plan
+  needs: ["build_staging_backend", "build_staging_frontend"]
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+  variables:
+    TF_VAR_image_tag: "$CI_COMMIT_SHORT_SHA"
+  script:
+    - terraform validate
+    - |
+      set +e
+      terraform plan \
+        -var-file="terraform.tfvars" \
+        -out="plan-staging.tfplan" \
+        -target='module.env["staging"]'
+      PLAN_EXIT_CODE=$?
+      if [ "$PLAN_EXIT_CODE" -eq 0 ]; then
+        echo "TF_HAS_CHANGES_STAGING=0" > tfplan-staging.env
+      elif [ "$PLAN_EXIT_CODE" -eq 2 ]; then
+        echo "TF_HAS_CHANGES_STAGING=1" > tfplan-staging.env
+      else
+        exit "$PLAN_EXIT_CODE"
+      fi
+      set -e
+  artifacts:
+    reports:
+      dotenv: packages/infra/tfplan-staging.env
+    paths:
+      - packages/infra/plan-staging.tfplan
+
+terraform_apply_staging:
+  extends: .terraform
+  stage: terraform_apply
+  needs: ["terraform_plan_staging"]
+  resource_group: "terraform-staging"
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main" && $CI_PIPELINE_SOURCE == "push"'
+  environment:
+    name: staging
+  script:
+    - |
+      if [ "${TF_HAS_CHANGES_STAGING:-1}" != "1" ]; then
+        echo "No Terraform changes detected for staging, skipping apply."
+        exit 0
+      fi
+      terraform apply -auto-approve "plan-staging.tfplan"
+  allow_failure: false
+
+# ─── PRODUCTION PLAN ──────────────────────────────────────────────────────────
+
+terraform_plan_production_mr:
+  extends: .terraform
+  stage: terraform_plan
+  needs: []
+  rules:
+    - if: '$CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "production"'
+  script:
+    - terraform validate
+    - terraform plan
+      -var-file="terraform.tfvars"
+      -target='module.env["production"]'
+
+terraform_plan_production:
+  extends: .terraform
+  stage: terraform_plan
+  needs: ["build_production_backend", "build_production_frontend"]
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "production"'
+  variables:
+    TF_VAR_image_tag: "$CI_COMMIT_SHORT_SHA"
+  script:
+    - terraform validate
+    - |
+      set +e
+      terraform plan \
+        -var-file="terraform.tfvars" \
+        -out="plan-production.tfplan" \
+        -target='module.env["production"]'
+      PLAN_EXIT_CODE=$?
+      if [ "$PLAN_EXIT_CODE" -eq 0 ]; then
+        echo "TF_HAS_CHANGES_PRODUCTION=0" > tfplan-production.env
+      elif [ "$PLAN_EXIT_CODE" -eq 2 ]; then
+        echo "TF_HAS_CHANGES_PRODUCTION=1" > tfplan-production.env
+      else
+        exit "$PLAN_EXIT_CODE"
+      fi
+      set -e
+  artifacts:
+    reports:
+      dotenv: packages/infra/tfplan-production.env
+    paths:
+      - packages/infra/plan-production.tfplan
+
+terraform_apply_production:
+  extends: .terraform
+  stage: terraform_apply
+  needs: ["terraform_plan_production"]
+  resource_group: "terraform-production"
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "production" && $CI_PIPELINE_SOURCE == "push"'
+  environment:
+    name: production
+  script:
+    - |
+      if [ "${TF_HAS_CHANGES_PRODUCTION:-1}" != "1" ]; then
+        echo "No Terraform changes detected for production, skipping apply."
+        exit 0
+      fi
+      terraform apply -auto-approve "plan-production.tfplan"
+  allow_failure: false

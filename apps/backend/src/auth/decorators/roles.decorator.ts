@@ -4,7 +4,6 @@ import { OrganizationRole } from '../../organization/enums';
 export const ROLES_KEY = 'roles';
 
 export type Role =
-  | OrganizationRole.OWNER
   | OrganizationRole.ADMIN
   | OrganizationRole.VOLUNTEER
   | 'STAFF'

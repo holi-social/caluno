@@ -6,10 +6,9 @@ import { APP_GUARD } from '@nestjs/core';
 import { GraphQLModule } from '@nestjs/graphql';
 import { AuthGuard, AuthModule } from '@thallesp/nestjs-better-auth';
 import { betterAuth } from 'better-auth';
-import type { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import { createAuthConfig } from './auth/auth';
 import { MembershipRoleGuard } from './auth/guards/membership-role.guard';
-import { DatabaseModule } from './database/database.module';
+import { type Database, DatabaseModule } from './database/database.module';
 import { DATABASE_CONNECTION } from './database/database-connection';
 import { GraphqlModule } from './graphql/graphql.module';
 import { MembershipModule } from './membership/membership.module';
@@ -39,7 +38,7 @@ import { UserModule } from './user/user.module';
     }),
     AuthModule.forRootAsync({
       imports: [DatabaseModule, ConfigModule],
-      useFactory: (database: NodePgDatabase, configService: ConfigService) => ({
+      useFactory: (database: Database, configService: ConfigService) => ({
         auth: betterAuth(
           createAuthConfig({
             database,

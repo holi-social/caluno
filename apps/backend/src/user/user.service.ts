@@ -1,26 +1,24 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { eq } from 'drizzle-orm';
-import type { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import type { UserEntity } from '../auth/schemas/auth.schema';
-import * as schema from '../auth/schemas/auth.schema';
+import type { Database } from '../database/database.module';
 import { DATABASE_CONNECTION } from '../database/database-connection';
 
 @Injectable()
 export class UserService {
   constructor(
     @Inject(DATABASE_CONNECTION)
-    private readonly db: NodePgDatabase<typeof schema>,
+    private readonly db: Database,
   ) {}
 
   async findById(id: string): Promise<UserEntity | undefined> {
     return this.db.query.users.findFirst({
-      where: eq(schema.users.id, id),
+      where: { id },
     });
   }
 
   async findByIdOrThrow(id: string): Promise<UserEntity> {
     const user = await this.db.query.users.findFirst({
-      where: eq(schema.users.id, id),
+      where: { id },
     });
 
     if (!user) {

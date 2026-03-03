@@ -1,7 +1,7 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { eq } from 'drizzle-orm';
-import type { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import type { UserEntity } from '../auth/schemas/auth.schema';
+import type { Database } from '../database/database.module';
 import { DATABASE_CONNECTION } from '../database/database-connection';
 import * as schema from '../database/schema';
 import {
@@ -24,7 +24,7 @@ import type { VolunteerSessionEntity } from './schemas/volunteer-session.schema'
 export class TimeTrackingService {
   constructor(
     @Inject(DATABASE_CONNECTION)
-    private readonly db: NodePgDatabase<typeof schema>,
+    private readonly db: Database,
     private readonly membershipService: MembershipService,
   ) {}
   async addTimeEntry(
@@ -32,7 +32,7 @@ export class TimeTrackingService {
     input: AddTimeEntryInput,
   ): Promise<TimeEntryEntity> {
     const volunteerSession = await this.db.query.volunteerSessions.findFirst({
-      where: eq(schema.volunteerSessions.id, input.sessionId),
+      where: { id: input.sessionId },
       with: {
         assignment: true,
       },
@@ -60,7 +60,7 @@ export class TimeTrackingService {
     input: StartVolunteerSessionInput,
   ): Promise<VolunteerSessionEntity> {
     const shift = await this.db.query.shifts.findFirst({
-      where: eq(schema.shifts.id, input.shiftId),
+      where: { id: input.shiftId },
       with: {
         organization: true,
       },
@@ -98,7 +98,7 @@ export class TimeTrackingService {
     id: string,
   ): Promise<VolunteerSessionEntity> {
     const volunteerSession = await this.db.query.volunteerSessions.findFirst({
-      where: eq(schema.volunteerSessions.id, id),
+      where: { id },
       with: {
         assignment: true,
       },
@@ -142,7 +142,7 @@ export class TimeTrackingService {
     }
 
     const volunteerSession = await this.db.query.volunteerSessions.findFirst({
-      where: eq(schema.volunteerSessions.id, input.id),
+      where: { id: input.id },
     });
 
     if (!volunteerSession) {
@@ -195,7 +195,7 @@ export class TimeTrackingService {
 
   async deleteTimeEntry(userId: string, id: string): Promise<TimeEntryEntity> {
     const timeEntry = await this.db.query.timeEntries.findFirst({
-      where: eq(schema.timeEntries.id, id),
+      where: { id },
       with: {
         session: {
           with: {
@@ -227,7 +227,7 @@ export class TimeTrackingService {
     sessionId: string,
   ): Promise<TimeEntryEntity[]> {
     const entries = await this.db.query.timeEntries.findMany({
-      where: eq(schema.timeEntries.sessionId, sessionId),
+      where: { sessionId },
       with: {
         session: {
           with: {
@@ -247,7 +247,7 @@ export class TimeTrackingService {
     sessionId: string,
   ): Promise<TaskEntity> {
     const volunteerSession = await this.db.query.volunteerSessions.findFirst({
-      where: eq(schema.volunteerSessions.id, sessionId),
+      where: { id: sessionId },
       with: {
         assignment: {
           with: {
@@ -279,9 +279,9 @@ export class TimeTrackingService {
     sessionId: string,
   ): Promise<UserEntity | null> {
     const volunteerSession = await this.db.query.volunteerSessions.findFirst({
-      where: eq(schema.volunteerSessions.id, sessionId),
+      where: { id: sessionId },
       with: {
-        validatedBy: true,
+        validatedByRel: true,
         assignment: {
           with: {
             task: {
@@ -313,7 +313,7 @@ export class TimeTrackingService {
       );
     }
 
-    return volunteerSession.validatedBy;
+    return volunteerSession.validatedByRel;
   }
 
   async findAll(
@@ -321,11 +321,11 @@ export class TimeTrackingService {
     status?: VolunteerSessionStatus,
   ): Promise<VolunteerSessionEntity[]> {
     const sessions = await this.db.query.volunteerSessions.findMany({
-      where: status ? eq(schema.volunteerSessions.status, status) : undefined,
+      where: status ? { status } : undefined,
       with: {
         shift: true,
         entries: true,
-        validatedBy: true,
+        validatedByRel: true,
       },
     });
 
@@ -341,7 +341,7 @@ export class TimeTrackingService {
     sessionId: string,
   ): Promise<ShiftEntity | null> {
     const volunteerSession = await this.db.query.volunteerSessions.findFirst({
-      where: eq(schema.volunteerSessions.id, sessionId),
+      where: { id: sessionId },
       with: {
         shift: true,
       },

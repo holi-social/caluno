@@ -13,6 +13,7 @@ export * from './components/base/label';
 export * from './components/base/popover';
 export * from './components/base/select';
 export * from './components/base/separator';
+export * from './components/base/sonner';
 export * from './components/base/switch';
 export * from './components/base/table';
 export * from './components/base/textarea';

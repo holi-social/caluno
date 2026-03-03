@@ -52,7 +52,7 @@ This monorepo includes the following packages/apps:
    - Start all applications in parallel (backend and frontend)
 
    The services will be available at:
-   - Backend API: http://localhost:5001
+   - Backend API: http://localhost:8080
    - Frontend: http://localhost:3000
 
 ## Available Scripts
@@ -80,6 +80,40 @@ The backend uses Drizzle ORM for database management. Run these commands from `a
 
 - `bun run lint` - Lint all code with Biome
 - `bun run format` - Format and fix all code with Biome
+
+### Scaleway deployment
+
+The root `scaleway.sh` script helps you build and push Docker images for:
+
+- `apps/backoffice-frontend` (frontend)
+- `apps/backend` (backend)
+
+It uses the Scaleway Container Registry configuration from the root `.env` (or your shell environment):
+
+- `REGISTRY_URL` - Scaleway registry URL (e.g. `rg.nl-ams.scw.cloud`)
+- `SCW_CR_NAMESPACE` - Scaleway Container Registry namespace (e.g. `clippy`)
+- `IMAGE_TAG` - Image tag to use (e.g. `staging` or a commit SHA)
+
+You must be logged in to the Scaleway registry first:
+
+```bash
+docker login "$REGISTRY_URL"
+```
+
+Common usage:
+
+```bash
+# Build and push both images
+./scaleway.sh
+
+# Build images only
+./scaleway.sh --build
+
+# Push existing images only
+./scaleway.sh --push
+```
+
+This script requires Docker with Buildx enabled (see the **Prerequisites** section).
 
 ## Project Structure
 
@@ -113,7 +147,7 @@ Environment variables are scoped per project:
 - `POSTGRES_PORT` - PostgreSQL port (default: 5432)
 
 ### `apps/backend/.env` (Backend configuration)
-- `PORT` - Backend server port (default: 5001)
+- `PORT` - Backend server port (default: 8080)
 - `DATABASE_URL` - PostgreSQL connection string
 - `BETTER_AUTH_SECRET` - Secret key for authentication
 - `BETTER_AUTH_URL` - Backend URL for auth
@@ -132,7 +166,7 @@ If you encounter database connection errors:
 
 ### Port conflicts
 
-If ports 3000, 5001, or 5432 are already in use:
+If ports 3000, 8080, or 5432 are already in use:
 
 1. Update the ports in `.env`
 2. Update `docker-compose.yml` for PostgreSQL port

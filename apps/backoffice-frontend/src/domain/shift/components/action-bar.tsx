@@ -7,7 +7,7 @@ import { useRouter } from 'next/navigation';
 import { useTransition } from 'react';
 import { toast } from 'sonner';
 import { deleteShift } from '../actions';
-import { copyToClipboard, shiftPath } from '../share';
+import { copyToClipboard, shiftShareUrl } from '../share';
 
 type ActionBarProps = {
   id: string;
@@ -56,7 +56,7 @@ export const ActionBar = ({
 
   return (
     <aside className="space-x-2">
-      <Link href={shiftPath(id)} aria-label="View shift">
+      <Link href={shiftShareUrl(id)} aria-label="View shift">
         <Button size={buttonSize} variant="outline">
           <Eye />
         </Button>

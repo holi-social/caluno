@@ -1,4 +1,3 @@
-import { relations } from 'drizzle-orm';
 import {
   index,
   pgEnum,
@@ -7,8 +6,8 @@ import {
   timestamp,
   uuid,
 } from 'drizzle-orm/pg-core';
-import { idColumn, timestampColumns } from '../../database/database-columns';
 import { users } from '../../auth/schemas/auth.schema';
+import { idColumn, timestampColumns } from '../../database/database-columns';
 import { organizations } from '../../organization/schemas/organization.schema';
 import { projects } from '../../project/schemas/project.schema';
 import { ShiftVisibility } from '../enums';
@@ -54,20 +53,5 @@ export const shifts = pgTable(
     index('idx_shifts_ends_at').on(table.endsAt),
   ],
 );
-
-export const shiftsRelations = relations(shifts, ({ one, many }) => ({
-  organization: one(organizations, {
-    fields: [shifts.organizationId],
-    references: [organizations.id],
-  }),
-  project: one(projects, {
-    fields: [shifts.projectId],
-    references: [projects.id],
-  }),
-  createdBy: one(users, {
-    fields: [shifts.createdById],
-    references: [users.id],
-  }),
-}));
 
 export type ShiftEntity = typeof shifts.$inferSelect;
