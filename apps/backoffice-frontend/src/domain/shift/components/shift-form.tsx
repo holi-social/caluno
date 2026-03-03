@@ -2,6 +2,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import {
   Button,
   Card,
+  DatePickerWithRange,
   Field,
   FieldContent,
   FieldDescription,
@@ -33,8 +34,6 @@ export const ShiftForm = ({
     defaultValues: {
       ...{
         name: '',
-        startsAt: '',
-        endsAt: '',
         location: '',
         instructions: '',
         openShift: true,
@@ -69,37 +68,31 @@ export const ShiftForm = ({
         {errors.name && <FieldError>{errors.name.message}</FieldError>}
       </Field>
 
-      <div className="grid grid-cols-2 gap-2">
-        <Field>
-          <FieldLabel htmlFor="startsAt">
-            Start Time <span className="text-destructive">*</span>
-          </FieldLabel>
-          <Input
-            id="startsAt"
-            type="datetime-local"
-            disabled={isPending}
-            aria-invalid={!!errors.startsAt}
-            {...register('startsAt')}
-          />
-          {errors.startsAt && (
-            <FieldError>{errors.startsAt.message}</FieldError>
-          )}
-        </Field>
-
-        <Field>
-          <FieldLabel htmlFor="endsAt">
-            End Time <span className="text-destructive">*</span>
-          </FieldLabel>
-          <Input
-            id="endsAt"
-            type="datetime-local"
-            disabled={isPending}
-            aria-invalid={!!errors.endsAt}
-            {...register('endsAt')}
-          />
-          {errors.endsAt && <FieldError>{errors.endsAt.message}</FieldError>}
-        </Field>
-      </div>
+      <Field>
+        <FieldLabel htmlFor="startToEnd">
+          Start → End <span className="text-destructive">*</span>
+        </FieldLabel>
+        <DatePickerWithRange
+          includeTime
+          id="startToEnd"
+          value={{
+            from: watch('startsAt') ? watch('startsAt') : undefined,
+            to: watch('endsAt') ? watch('endsAt') : undefined,
+          }}
+          aria-invalid={!!errors.startsAt || !!errors.endsAt}
+          onChange={(dateRange) => {
+            setValue('startsAt', dateRange?.from as Date, {
+              shouldValidate: true,
+            });
+            setValue('endsAt', dateRange?.to as Date, {
+              shouldValidate: true,
+            });
+          }}
+          placeholder="Shift start to end time"
+        />
+        {errors.startsAt && <FieldError>{errors.startsAt.message}</FieldError>}
+        {errors.endsAt && <FieldError>{errors.endsAt.message}</FieldError>}
+      </Field>
 
       <Field>
         <FieldLabel htmlFor="location">Location</FieldLabel>

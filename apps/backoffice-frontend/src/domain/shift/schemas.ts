@@ -2,8 +2,8 @@ import z from 'zod';
 
 export const shiftFormSchema = z.object({
   name: z.string().trim().min(1, 'Name is required'),
-  startsAt: z.string().min(1, 'Start time is required'),
-  endsAt: z.string().min(1, 'End time is required'),
+  startsAt: z.date('Start time is required'),
+  endsAt: z.date('End time is required'),
   location: z.string().trim().optional(),
   instructions: z.string().trim().optional(),
   openShift: z.boolean().optional(),
