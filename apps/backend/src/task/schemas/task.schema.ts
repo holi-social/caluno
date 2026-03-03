@@ -1,4 +1,3 @@
-import { relations } from 'drizzle-orm';
 import {
   index,
   pgEnum,
@@ -7,11 +6,10 @@ import {
   timestamp,
   uuid,
 } from 'drizzle-orm/pg-core';
-import { idColumn, timestampColumns } from '../../database/database-columns';
 import { users } from '../../auth/schemas/auth.schema';
+import { idColumn, timestampColumns } from '../../database/database-columns';
 import { projects } from '../../project/schemas/project.schema';
 import { TaskStatus } from '../enums';
-import { taskAssignments } from './task-assignment.schema';
 
 export const taskStatusEnum = pgEnum(
   'task_status',
@@ -43,18 +41,6 @@ export const tasks = pgTable(
     index('idx_tasks_created_by_id').on(table.createdById),
   ],
 );
-
-export const tasksRelations = relations(tasks, ({ one, many }) => ({
-  project: one(projects, {
-    fields: [tasks.projectId],
-    references: [projects.id],
-  }),
-  createdBy: one(users, {
-    fields: [tasks.createdById],
-    references: [users.id],
-  }),
-  assignments: many(taskAssignments),
-}));
 
 export type TaskEntity = typeof tasks.$inferSelect;
 export type TaskInsert = typeof tasks.$inferInsert;

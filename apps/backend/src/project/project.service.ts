@@ -1,8 +1,8 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { eq } from 'drizzle-orm';
-import type { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import type { UserEntity } from '../auth/schemas/auth.schema';
 import { DATABASE_CONNECTION } from '../database/database-connection';
+import type { Database } from '../database/database.module';
 import * as schema from '../database/schema';
 import { ForbiddenGraphQLError, NotFoundGraphQLError } from '../graphql/errors';
 import type { PaginationInput } from '../graphql/pagination.input';
@@ -20,7 +20,7 @@ import { type Project, ProjectPaginatedResponse } from './models/project.model';
 export class ProjectService {
   constructor(
     @Inject(DATABASE_CONNECTION)
-    private readonly db: NodePgDatabase<typeof schema>,
+    private readonly db: Database,
     private readonly mapper: ProjectMapper,
     private readonly userService: UserService,
     private readonly membershipService: MembershipService,
@@ -29,7 +29,7 @@ export class ProjectService {
 
   async findById(id: string): Promise<Project | null> {
     const project = await this.db.query.projects.findFirst({
-      where: eq(schema.projects.id, id),
+      where: { id },
     });
     return this.mapper.toModel(project);
   }
@@ -39,7 +39,7 @@ export class ProjectService {
     pagination: PaginationInput,
   ): Promise<ProjectPaginatedResponse> {
     const projects = await this.db.query.projects.findMany({
-      where: eq(schema.projects.organizationId, organizationId),
+      where: { organizationId },
       limit: pagination.limit,
       offset: pagination.offset,
     });
@@ -89,7 +89,7 @@ export class ProjectService {
     project: Partial<Omit<schema.ProjectEntity, 'id' | 'createdAt' | 'updatedAt' | 'createdById' | 'organizationId'>>,
   ): Promise<Project> {
     const existingProject = await this.db.query.projects.findFirst({
-      where: eq(schema.projects.id, id),
+      where: { id },
     });
 
     if (!existingProject) {
@@ -113,7 +113,7 @@ export class ProjectService {
 
   async publish(userId: string, id: string): Promise<Project> {
     const project = await this.db.query.projects.findFirst({
-      where: eq(schema.projects.id, id),
+      where: { id },
     });
 
     if (!project) {

@@ -1,4 +1,3 @@
-import { relations } from 'drizzle-orm';
 import {
   index,
   pgEnum,
@@ -8,12 +7,7 @@ import {
   uuid,
 } from 'drizzle-orm/pg-core';
 import { idColumn, timestampColumns } from '../../database/database-columns';
-import { users } from '../../auth/schemas/auth.schema';
-import { OrganizationRole } from '../../organization/enums';
-import {
-  organizationRoleEnum,
-  organizations,
-} from '../../organization/schemas/organization.schema';
+import { organizations } from '../../organization/schemas/organization.schema';
 import { MembershipRequestStatus } from '../enums';
 
 export const membershipRequestStatusEnum = pgEnum(
@@ -26,9 +20,11 @@ export const membershipRequests = pgTable(
   {
     ...idColumn,
     email: text('email').notNull(),
-    organizationId: uuid('organization_id').references(() => organizations.id, {
-      onDelete: 'cascade',
-    }).notNull(),
+    organizationId: uuid('organization_id')
+      .references(() => organizations.id, {
+        onDelete: 'cascade',
+      })
+      .notNull(),
     status: membershipRequestStatusEnum('status')
       .notNull()
       .default(MembershipRequestStatus.PENDING),
@@ -43,13 +39,6 @@ export const membershipRequests = pgTable(
     ),
   ],
 );
-
-export const membershipRequestsRelations = relations(membershipRequests, ({ one }) => ({
-  organization: one(organizations, {
-    fields: [membershipRequests.organizationId],
-    references: [organizations.id],
-  }),
-}));
 
 export type MembershipRequestEntity = typeof membershipRequests.$inferSelect;
 export type MembershipRequestInsert = typeof membershipRequests.$inferInsert;

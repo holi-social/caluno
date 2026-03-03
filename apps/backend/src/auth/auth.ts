@@ -1,9 +1,9 @@
 import { type BetterAuthOptions, betterAuth } from 'better-auth';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
-import type { NodePgDatabase } from 'drizzle-orm/node-postgres';
+import { Database } from '../database/database.module';
 
 export interface AuthConfigOptions {
-  database: NodePgDatabase | object;
+  database: Database | object;
   trustedOrigins: string[];
   /** Root domain for cross-subdomain cookies (e.g. "clippy.holi.social"). Set when frontend and API use different subdomains. */
   cookieDomain?: string;

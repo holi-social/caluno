@@ -17,15 +17,10 @@ import { ROLES_KEY, type Role } from '../decorators/roles.decorator';
 @Injectable({ scope: Scope.REQUEST })
 export class MembershipRoleGuard implements CanActivate {
   private readonly roleMapping: Record<Role, OrganizationRole[]> = {
-    [OrganizationRole.OWNER]: [OrganizationRole.OWNER],
     [OrganizationRole.ADMIN]: [OrganizationRole.ADMIN],
     [OrganizationRole.VOLUNTEER]: [OrganizationRole.VOLUNTEER],
-    STAFF: [OrganizationRole.OWNER, OrganizationRole.ADMIN],
-    MEMBER: [
-      OrganizationRole.OWNER,
-      OrganizationRole.ADMIN,
-      OrganizationRole.VOLUNTEER,
-    ],
+    STAFF: [OrganizationRole.ADMIN],
+    MEMBER: [OrganizationRole.ADMIN, OrganizationRole.VOLUNTEER],
   };
 
   constructor(

@@ -1,11 +1,9 @@
-import { relations } from 'drizzle-orm';
 import { pgEnum, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
-import { idColumn, timestampColumns } from '../../database/database-columns';
 import { users } from '../../auth/schemas/auth.schema';
+import { idColumn, timestampColumns } from '../../database/database-columns';
 import { shifts } from '../../shift/schemas/shift.schema';
 import { taskAssignments } from '../../task/schemas/task-assignment.schema';
 import { VolunteerSessionStatus } from '../enums';
-import { timeEntries } from './time-entry.schema';
 
 export const volunteerSessionStatusEnum = pgEnum(
   'volunteer_session_status',
@@ -30,25 +28,6 @@ export const volunteerSessions = pgTable('volunteer_sessions', {
   rejectionReason: text('rejection_reason'),
   ...timestampColumns,
 });
-
-export const volunteerSessionsRelations = relations(
-  volunteerSessions,
-  ({ one, many }) => ({
-    assignment: one(taskAssignments, {
-      fields: [volunteerSessions.assignmentId],
-      references: [taskAssignments.id],
-    }),
-    shift: one(shifts, {
-      fields: [volunteerSessions.shiftId],
-      references: [shifts.id],
-    }),
-    validatedBy: one(users, {
-      fields: [volunteerSessions.validatedBy],
-      references: [users.id],
-    }),
-    entries: many(timeEntries),
-  }),
-);
 
 export type VolunteerSessionEntity = typeof volunteerSessions.$inferSelect;
 export type VolunteerSessionInsert = typeof volunteerSessions.$inferInsert;

@@ -9,11 +9,6 @@ query GetOrganization($id: String!) {
     email
     phone
     address
-    owner {
-      id
-      name
-      email
-    }
     createdAt
     updatedAt
   }

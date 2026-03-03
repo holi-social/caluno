@@ -1,4 +1,3 @@
-import { relations } from 'drizzle-orm';
 import {
   index,
   pgEnum,
@@ -7,8 +6,8 @@ import {
   unique,
   uuid,
 } from 'drizzle-orm/pg-core';
-import { idColumn, timestampColumns } from '../../database/database-columns';
 import { users } from '../../auth/schemas/auth.schema';
+import { idColumn, timestampColumns } from '../../database/database-columns';
 import { ShiftInviteStatus } from '../enums';
 import { shifts } from './shift.schema';
 
@@ -43,14 +42,3 @@ export const shiftInvites = pgTable(
     unique('uq_shift_invites_shift_id_user_id').on(table.shiftId, table.userId),
   ],
 );
-
-export const shiftInvitesRelations = relations(shiftInvites, ({ one }) => ({
-  shift: one(shifts, {
-    fields: [shiftInvites.shiftId],
-    references: [shifts.id],
-  }),
-  user: one(users, {
-    fields: [shiftInvites.userId],
-    references: [users.id],
-  }),
-}));

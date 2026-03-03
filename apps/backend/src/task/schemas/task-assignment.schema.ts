@@ -1,13 +1,6 @@
-import { relations } from 'drizzle-orm';
-import {
-  index,
-  pgTable,
-  text,
-  unique,
-  uuid,
-} from 'drizzle-orm/pg-core';
-import { idColumn, timestampColumns } from '../../database/database-columns';
+import { index, pgTable, text, unique, uuid } from 'drizzle-orm/pg-core';
 import { users } from '../../auth/schemas/auth.schema';
+import { idColumn, timestampColumns } from '../../database/database-columns';
 import { tasks } from './task.schema';
 
 export const taskAssignments = pgTable(
@@ -34,26 +27,6 @@ export const taskAssignments = pgTable(
       table.assignedToId,
     ),
   ],
-);
-
-export const taskAssignmentsRelations = relations(
-  taskAssignments,
-  ({ one }) => ({
-    task: one(tasks, {
-      fields: [taskAssignments.taskId],
-      references: [tasks.id],
-    }),
-
-    assignedTo: one(users, {
-      fields: [taskAssignments.assignedToId],
-      references: [users.id],
-    }),
-
-    assignedBy: one(users, {
-      fields: [taskAssignments.assignedById],
-      references: [users.id],
-    }),
-  }),
 );
 
 export type TaskAssignmentEntity = typeof taskAssignments.$inferSelect;

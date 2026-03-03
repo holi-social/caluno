@@ -31,14 +31,6 @@ export class OrganizationFieldResolver {
     return this.organizationService.findParent(organization.id);
   }
 
-  @ResolveField(() => User)
-  async owner(@Parent() organization: OrganizationEntity): Promise<User> {
-    const owner = await this.organizationService.findOwner(
-      organization.ownerId,
-    );
-    return this.userMapper.toModelOrThrow(owner);
-  }
-
   @ResolveField(() => [Project])
   async projects(
     @Parent() organization: Organization,

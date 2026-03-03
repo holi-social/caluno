@@ -1,0 +1,55 @@
+import { defineRelationsPart } from 'drizzle-orm';
+import * as schema from '../../database/schema';
+
+export const authRelations = defineRelationsPart(schema, (r) => ({
+  users: {
+    sessions: r.many.sessions({
+      from: r.users.id,
+      to: r.sessions.userId,
+    }),
+    accounts: r.many.accounts({
+      from: r.users.id,
+      to: r.accounts.userId,
+    }),
+    organizations: r.many.organizations({
+      from: r.users.id.through(r.memberships.userId),
+      to: r.organizations.id.through(r.memberships.organizationId),
+    }),
+    projects: r.many.projects({
+      from: r.users.id,
+      to: r.projects.createdById,
+    }),
+    tasks: r.many.tasks({
+      from: r.users.id,
+      to: r.tasks.createdById,
+    }),
+    assignments: r.many.taskAssignments({
+      from: r.users.id,
+      to: r.taskAssignments.assignedToId,
+    }),
+    memberships: r.many.memberships({
+      from: r.users.id,
+      to: r.memberships.userId,
+    }),
+    volunteerSessions: r.many.volunteerSessions({
+      from: r.users.id.through(r.taskAssignments.assignedToId),
+      to: r.volunteerSessions.assignmentId.through(r.taskAssignments.id),
+    }),
+    shiftInvites: r.many.shiftInvites({
+      from: r.users.id,
+      to: r.shiftInvites.userId,
+    }),
+  },
+  sessions: {
+    users: r.one.users({
+      from: r.sessions.userId,
+      to: r.users.id,
+    }),
+  },
+  accounts: {
+    users: r.one.users({
+      from: r.accounts.userId,
+      to: r.users.id,
+    }),
+  },
+}));

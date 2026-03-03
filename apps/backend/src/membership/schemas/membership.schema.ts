@@ -1,13 +1,6 @@
-import { relations } from 'drizzle-orm';
-import {
-  index,
-  pgTable,
-  text,
-  unique,
-  uuid,
-} from 'drizzle-orm/pg-core';
-import { idColumn, timestampColumns } from '../../database/database-columns';
+import { index, pgTable, text, unique, uuid } from 'drizzle-orm/pg-core';
 import { users } from '../../auth/schemas/auth.schema';
+import { idColumn, timestampColumns } from '../../database/database-columns';
 import { OrganizationRole } from '../../organization/enums';
 import {
   organizationRoleEnum,
@@ -38,17 +31,6 @@ export const memberships = pgTable(
     ),
   ],
 );
-
-export const membershipsRelations = relations(memberships, ({ one }) => ({
-  user: one(users, {
-    fields: [memberships.userId],
-    references: [users.id],
-  }),
-  organization: one(organizations, {
-    fields: [memberships.organizationId],
-    references: [organizations.id],
-  }),
-}));
 
 export type MembershipEntity = typeof memberships.$inferSelect;
 export type MembershipInsert = typeof memberships.$inferInsert;

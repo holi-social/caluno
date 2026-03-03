@@ -1,4 +1,3 @@
-import { relations } from 'drizzle-orm';
 import { pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
 import { idColumn, timestampColumns } from '../../database/database-columns';
 import { volunteerSessions } from './volunteer-session.schema';
@@ -15,13 +14,6 @@ export const timeEntries = pgTable('time_entries', {
   notes: text('notes'),
   ...timestampColumns,
 });
-
-export const timeEntriesRelations = relations(timeEntries, ({ one }) => ({
-  session: one(volunteerSessions, {
-    fields: [timeEntries.sessionId],
-    references: [volunteerSessions.id],
-  }),
-}));
 
 export type TimeEntryEntity = typeof timeEntries.$inferSelect;
 export type TimeEntryInsert = typeof timeEntries.$inferInsert;
