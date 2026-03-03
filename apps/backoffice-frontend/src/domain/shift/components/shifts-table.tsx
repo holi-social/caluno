@@ -58,7 +58,7 @@ export function ShiftsTable({ shifts, orgId }: ShiftsTableProps) {
                 </Badge>
               </TableCell>
               <TableCell className="space-x-2">
-                <ActionBar orgId={orgId} id={shift.id} />
+                <ActionBar organizationId={orgId} id={shift.id} />
               </TableCell>
             </TableRow>
           ))}

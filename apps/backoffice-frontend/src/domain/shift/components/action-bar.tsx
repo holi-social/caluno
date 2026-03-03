@@ -1,33 +1,53 @@
 'use client';
 
 import { Button } from '@repo/ui';
-import { Edit, Eye, Share2, Trash } from 'lucide-react';
+import { Edit, Eye, Loader2, Share2, Trash } from 'lucide-react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { useTransition } from 'react';
+import { toast } from 'sonner';
+import { deleteShift } from '../actions';
 import { copyToClipboard, shiftShareUrl } from '../share';
 
 type ActionBarProps = {
   id: string;
-  orgId: string;
+  organizationId: string;
   size?: 'xs' | 'sm' | 'lg';
   hideEdit?: boolean;
 };
 
 export const ActionBar = ({
   id,
-  orgId,
+  organizationId,
   size = 'xs',
   hideEdit = false,
 }: ActionBarProps) => {
+  const router = useRouter();
+  const [isDeleting, startTransition] = useTransition();
+
   const buttonSize = `icon-${size}` as const;
 
   const handleDelete = () => {
     if (
-      confirm(
+      !confirm(
         "Are you sure you wish to delete this shift and all it's timesheets?",
       )
     ) {
-      // TODO: delete
+      return;
     }
+
+    startTransition(async () => {
+      const result = await deleteShift({
+        id,
+        organizationId,
+      });
+      if (result?.serverError) {
+        toast.error(`Failed to delete Shift. ${result.serverError}`);
+      } else {
+        toast.success('Successfully deleted Shift.');
+        router.push(`/${organizationId}/shifts`);
+      }
+    });
   };
 
   const handleCopyToClipboard = () => {
@@ -43,7 +63,10 @@ export const ActionBar = ({
       </Link>
 
       {!hideEdit && (
-        <Link href={`/${orgId}/shifts/${id}/edit`} aria-label="Edit shift">
+        <Link
+          href={`/${organizationId}/shifts/${id}/edit`}
+          aria-label="Edit shift"
+        >
           <Button size={buttonSize} variant="outline">
             <Edit />
           </Button>
@@ -64,8 +87,9 @@ export const ActionBar = ({
         variant="destructive"
         aria-label="Delete shift"
         onClick={handleDelete}
+        disabled={isDeleting}
       >
-        <Trash />
+        {isDeleting ? <Loader2 className="animate-spin" /> : <Trash />}
       </Button>
     </aside>
   );

@@ -5,7 +5,7 @@ import { ShiftVisibility } from '@repo/data';
 import z from 'zod';
 import { getDataClient } from '@/lib/data-client';
 import { actionClient } from '@/lib/safe-action';
-import { shiftFormSchema } from './schemas';
+import { shiftDeleteSchema, shiftFormSchema } from './schemas';
 
 export const createShift = actionClient
   .inputSchema(shiftFormSchema)
@@ -50,4 +50,12 @@ export const updateShift = actionClient
     };
 
     return await data.shift.update(parsedInput.id, input);
+  });
+
+export const deleteShift = actionClient
+  .inputSchema(shiftDeleteSchema)
+  .action(async ({ parsedInput }) => {
+    const data = await getDataClient(parsedInput.organizationId);
+
+    return await data.shift.delete(parsedInput.id);
   });

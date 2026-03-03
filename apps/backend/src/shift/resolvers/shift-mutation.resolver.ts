@@ -59,4 +59,14 @@ export class ShiftMutationResolver {
     );
     return this.shiftMapper.toModelOrThrow(shift);
   }
+
+  @Roles('STAFF')
+  @Mutation(() => Shift)
+  async deleteShift(
+    @Args('id', { type: () => String }) id: string,
+    @Context() context: AuthenticatedGraphQLContext,
+  ): Promise<Shift> {
+    const result = await this.shiftService.delete(id, context.organizationId);
+    return this.shiftMapper.toModelOrThrow(result);
+  }
 }

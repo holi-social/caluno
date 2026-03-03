@@ -74,6 +74,7 @@ type Mutation {
   createProject(input: CreateProjectInput!): Project!
   createShift(input: CreateShiftInput!): Shift!
   createTask(input: CreateTaskInput!): Task!
+  deleteShift(id: String!): Shift!
   deleteTimeEntry(id: ID!): TimeEntry!
   endVolunteerSession(id: ID!): VolunteerSession!
   inviteMembersToShift(memberIds: [String!]!, shiftId: String!): Shift!

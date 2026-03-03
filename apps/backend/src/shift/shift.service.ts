@@ -262,6 +262,31 @@ export class ShiftService {
     return shift;
   }
 
+  async delete(id: string, organizationId: string): Promise<ShiftEntity> {
+    const shift = await this.db.query.shifts.findFirst({
+      where: and(
+        eq(schema.shifts.id, id),
+        eq(schema.shifts.organizationId, organizationId),
+      ),
+    });
+
+    if (!shift) {
+      throw new NotFoundGraphQLError(`Shift with ID ${id} not found`);
+    }
+
+    const [deletedShift] = await this.db
+      .delete(schema.shifts)
+      .where(
+        and(
+          eq(schema.shifts.id, id),
+          eq(schema.shifts.organizationId, organizationId),
+        ),
+      )
+      .returning();
+
+    return deletedShift;
+  }
+
   async findCreator(createdById: string): Promise<UserEntity> {
     return this.userService.findByIdOrThrow(createdById);
   }

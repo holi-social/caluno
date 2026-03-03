@@ -26,7 +26,7 @@ export default async function EditShiftPage({ params }: EditShiftPageProps) {
             Edit shift and change volunteer invitations
           </p>
         </div>
-        <ActionBar id={shiftId} orgId={orgId} size="sm" hideEdit />
+        <ActionBar id={shiftId} organizationId={orgId} size="sm" hideEdit />
       </div>
 
       <div className="px-2 py-8">
