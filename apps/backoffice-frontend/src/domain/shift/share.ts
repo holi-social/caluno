@@ -1,13 +1,12 @@
-export const shiftPath = (id?: string) => `/shifts/${id}`;
+import { toast } from 'sonner';
+
+const shiftPath = (id?: string) => `/shifts/${id}`;
 
 export const shiftShareUrl = (id?: string) => {
-  if (process.env.NEXT_PUBLIC_WEB_URL)
-    return `${process.env.NEXT_PUBLIC_WEB_URL}${shiftPath(id)}`;
-  // Fallback to relative path when no public URL is configured.
-  if (typeof window === 'undefined') return shiftPath(id);
-  return `${window.location.origin}${shiftPath(id)}`;
+  return `${process.env.NEXT_PUBLIC_WEB_URL}${shiftPath(id)}`;
 };
 
-export const copyToClipboard = (id?: string) => {
-  navigator.clipboard.writeText(shiftShareUrl(id));
+export const copyToClipboard = async (id?: string) => {
+  await navigator.clipboard.writeText(shiftShareUrl(id));
+  toast.info('Link copied to clipboard');
 };

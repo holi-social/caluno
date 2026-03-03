@@ -3,7 +3,7 @@
 import { Button } from '@repo/ui';
 import { Edit, Eye, Share2, Trash } from 'lucide-react';
 import Link from 'next/link';
-import { copyToClipboard, shiftPath } from '../share';
+import { copyToClipboard, shiftShareUrl } from '../share';
 
 type ActionBarProps = {
   id: string;
@@ -36,7 +36,7 @@ export const ActionBar = ({
 
   return (
     <aside className="space-x-2">
-      <Link href={shiftPath(id)} aria-label="View shift">
+      <Link href={shiftShareUrl(id)} aria-label="View shift">
         <Button size={buttonSize} variant="outline">
           <Eye />
         </Button>
