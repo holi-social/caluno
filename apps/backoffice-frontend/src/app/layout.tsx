@@ -3,6 +3,7 @@ import { Geologica } from 'next/font/google';
 import { ThemeProvider } from '@/components/theme-provider';
 
 import './globals.css';
+import { Toaster } from '@repo/ui';
 
 const geologica = Geologica({
   variable: '--font-geologica-sans',
@@ -22,6 +23,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={`${geologica.variable} antialiased`}>
+        <Toaster />
         <ThemeProvider>{children}</ThemeProvider>
       </body>
     </html>
