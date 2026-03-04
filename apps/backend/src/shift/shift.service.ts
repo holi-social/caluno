@@ -264,10 +264,10 @@ export class ShiftService {
 
   async delete(id: string, organizationId: string): Promise<ShiftEntity> {
     const shift = await this.db.query.shifts.findFirst({
-      where: and(
-        eq(schema.shifts.id, id),
-        eq(schema.shifts.organizationId, organizationId),
-      ),
+      where: {
+        id,
+        organizationId,
+      },
     });
 
     if (!shift) {
