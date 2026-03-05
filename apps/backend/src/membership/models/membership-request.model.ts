@@ -40,7 +40,10 @@ export class MembershipRequest {
 }
 
 export const MembershipRequestPaginatedResponse =
-  createPaginatedResponseType<MembershipRequest>(MembershipRequest, 'MembershipRequest');
+  createPaginatedResponseType<MembershipRequest>(
+    MembershipRequest,
+    'MembershipRequest',
+  );
 
 export type MembershipRequestPaginatedResponse = InstanceType<
   typeof MembershipRequestPaginatedResponse

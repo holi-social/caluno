@@ -1,5 +1,5 @@
+import { drizzleAdapter } from '@better-auth/drizzle-adapter';
 import { type BetterAuthOptions, betterAuth } from 'better-auth';
-import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 import { Database } from '../database/database.module';
 
 export interface AuthConfigOptions {
@@ -9,9 +9,11 @@ export interface AuthConfigOptions {
   cookieDomain?: string;
 }
 
-export const createAuthConfig = (
-  { database, trustedOrigins, cookieDomain }: AuthConfigOptions,
-): BetterAuthOptions => ({
+export const createAuthConfig = ({
+  database,
+  trustedOrigins,
+  cookieDomain,
+}: AuthConfigOptions): BetterAuthOptions => ({
   database: drizzleAdapter(database, {
     usePlural: true,
     provider: 'pg',
@@ -35,5 +37,9 @@ export const createAuthConfig = (
 });
 
 export const auth = betterAuth(
-  createAuthConfig({ database: {}, trustedOrigins: [], cookieDomain: undefined }),
+  createAuthConfig({
+    database: {},
+    trustedOrigins: [],
+    cookieDomain: undefined,
+  }),
 );
