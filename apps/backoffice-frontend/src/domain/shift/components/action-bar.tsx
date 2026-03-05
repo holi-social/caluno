@@ -6,8 +6,9 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useTransition } from 'react';
 import { toast } from 'sonner';
+import { copyToClipboard } from '@/lib/clipboard';
 import { deleteShift } from '../actions';
-import { copyToClipboard, shiftShareUrl } from '../share';
+import { shiftShareUrl } from '../share';
 
 type ActionBarProps = {
   id: string;
@@ -51,7 +52,7 @@ export const ActionBar = ({
   };
 
   const handleCopyToClipboard = () => {
-    copyToClipboard(id);
+    copyToClipboard(shiftShareUrl(id), 'Shift link copied to clipboard');
   };
 
   return (

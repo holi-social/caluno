@@ -21,7 +21,8 @@ import { Copy, PlusIcon } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { CreateShiftForm } from '@/domain/shift/components/create-form';
-import { copyToClipboard, shiftShareUrl } from '@/domain/shift/share';
+import { shiftShareUrl } from '@/domain/shift/share';
+import { copyToClipboard } from '@/lib/clipboard';
 
 interface CreateShiftSheetProps {
   trigger?: React.ReactNode;
@@ -47,7 +48,7 @@ export function CreateShiftSheet({ trigger }: CreateShiftSheetProps) {
   };
 
   const handleCopyToClipboard = () => {
-    copyToClipboard(shiftId);
+    copyToClipboard(shiftShareUrl(shiftId), 'Shift link copied to clipboard');
   };
 
   return (
