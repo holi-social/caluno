@@ -1,26 +1,5 @@
-import { Field, InputType } from '@nestjs/graphql';
-import { ProjectStatus } from '../enums';
+import { InputType, PartialType } from '@nestjs/graphql';
+import { CreateProjectInput } from './create-project.input';
 
 @InputType()
-export class UpdateProjectInput {
-  @Field(() => String)
-  title: string;
-
-  @Field(() => String)
-  description: string;
-
-  @Field(() => String)
-  location: string;
-
-  @Field(() => String)
-  organizationId: string;
-
-  @Field(() => Date)
-  startsAt: Date;
-
-  @Field(() => Date)
-  endsAt: Date;
-
-  @Field(() => ProjectStatus, { defaultValue: ProjectStatus.DRAFT })
-  status: ProjectStatus;
-}
+export class UpdateProjectInput extends PartialType(CreateProjectInput) {}

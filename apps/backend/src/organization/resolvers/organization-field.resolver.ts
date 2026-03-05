@@ -45,7 +45,7 @@ export class OrganizationFieldResolver {
   @ResolveField(() => [User])
   async admins(@Parent() organization: Organization): Promise<User[]> {
     const admins = await this.organizationService.findAdmins(organization.id);
-    return this.userMapper.toArray(admins);
+    return admins;
   }
 
   @ResolveField(() => [User])
@@ -53,6 +53,6 @@ export class OrganizationFieldResolver {
     const volunteers = await this.organizationService.findVolunteers(
       organization.id,
     );
-    return this.userMapper.toArray(volunteers);
+    return volunteers;
   }
 }

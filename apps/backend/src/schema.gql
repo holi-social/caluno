@@ -29,7 +29,7 @@ input CreateProjectInput {
   description: String!
   endsAt: DateTime!
   location: String!
-  organizationId: String!
+  organizationId: ID!
   startsAt: DateTime!
   status: ProjectStatus! = DRAFT
   title: String!
@@ -65,6 +65,32 @@ input CreateTaskInput {
 A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date-time format.
 """
 scalar DateTime
+
+type Membership {
+  id: ID!
+  organization: Organization!
+  role: OrganizationRole!
+  user: User!
+}
+
+type MembershipRequest {
+  createdAt: DateTime!
+  id: ID!
+  organization: Organization!
+  rejectionReason: String!
+  reviewedAt: DateTime!
+  reviewedBy: User!
+  status: MembershipRequestStatus!
+  updatedAt: DateTime!
+  user: String!
+}
+
+enum MembershipRequestStatus {
+  ACCEPTED
+  CANCELLED
+  PENDING
+  REJECTED
+}
 
 type Mutation {
   addTimeEntry(input: AddTimeEntryInput!): TimeEntry!
@@ -110,6 +136,11 @@ type OrganizationPaginatedResponse {
   pagination: PaginationInfo!
 }
 
+enum OrganizationRole {
+  ADMIN
+  VOLUNTEER
+}
+
 type PaginationInfo {
   hasMore: Boolean!
   limit: Int!
@@ -146,7 +177,13 @@ enum ProjectStatus {
 }
 
 type Query {
+  isUserOrganizationAdmin(organizationId: ID!): Boolean!
+  isUserOrganizationMember(organizationId: ID!): Boolean!
+  isUserOrganizationStaff(organizationId: ID!): Boolean!
+  isUserOrganizationVolunteer(organizationId: ID!): Boolean!
   me: User!
+  membership(organizationId: ID!): Membership!
+  membershipRequests(limit: Int! = 10, offset: Int! = 0, organizationId: ID!): MembershipRequest!
   myTasks(limit: Int! = 10, offset: Int! = 0): TaskPaginatedResponse!
   organization(id: String!): Organization!
   organizationBySlug(slug: String!): Organization!
@@ -159,6 +196,7 @@ type Query {
   task(id: String!): Task!
   tasksByUserId(limit: Int! = 10, offset: Int! = 0, userId: String!): TaskPaginatedResponse!
   user(id: String!): User
+  usersByRole(organizationId: ID!, role: OrganizationRole!): User!
   volunteerSessions(status: VolunteerSessionStatus): [VolunteerSession!]!
 }
 
@@ -234,13 +272,13 @@ type TimeEntry {
 }
 
 input UpdateProjectInput {
-  description: String!
-  endsAt: DateTime!
-  location: String!
-  organizationId: String!
-  startsAt: DateTime!
-  status: ProjectStatus! = DRAFT
-  title: String!
+  description: String
+  endsAt: DateTime
+  location: String
+  organizationId: ID
+  startsAt: DateTime
+  status: ProjectStatus = DRAFT
+  title: String
 }
 
 input UpdateShiftInput {

@@ -1,8 +1,8 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { eq } from 'drizzle-orm';
 import type { UserEntity } from '../auth/schemas/auth.schema';
-import { DATABASE_CONNECTION } from '../database/database-connection';
 import type { Database } from '../database/database.module';
+import { DATABASE_CONNECTION } from '../database/database-connection';
 import * as schema from '../database/schema';
 import { ForbiddenGraphQLError, NotFoundGraphQLError } from '../graphql/errors';
 import type { PaginationInput } from '../graphql/pagination.input';
@@ -13,6 +13,7 @@ import { UserService } from '../user/user.service';
 import { slugify } from '../utils';
 import { ProjectStatus } from './enums';
 import type { CreateProjectInput } from './inputs/create-project.input';
+import { UpdateProjectInput } from './inputs/update-project.input';
 import { ProjectMapper } from './mappers/project.mapper';
 import { type Project, ProjectPaginatedResponse } from './models/project.model';
 
@@ -43,6 +44,7 @@ export class ProjectService {
       limit: pagination.limit,
       offset: pagination.offset,
     });
+
     return new ProjectPaginatedResponse({
       items: this.mapper.toArray(projects),
       total: projects.length,
@@ -86,7 +88,7 @@ export class ProjectService {
   async update(
     userId: string,
     id: string,
-    project: Partial<Omit<schema.ProjectEntity, 'id' | 'createdAt' | 'updatedAt' | 'createdById' | 'organizationId'>>,
+    project: Partial<UpdateProjectInput>,
   ): Promise<Project> {
     const existingProject = await this.db.query.projects.findFirst({
       where: { id },
