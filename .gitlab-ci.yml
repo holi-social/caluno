@@ -130,6 +130,7 @@ terraform_plan_staging:
     - |
       set +e
       terraform plan \
+        -detailed-exitcode \
         -var-file="terraform.tfvars" \
         -out="plan-staging.tfplan" \
         -target='module.env["staging"]'
@@ -195,6 +196,7 @@ terraform_plan_production:
     - |
       set +e
       terraform plan \
+        -detailed-exitcode \
         -var-file="terraform.tfvars" \
         -out="plan-production.tfplan" \
         -target='module.env["production"]'
