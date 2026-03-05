@@ -9,7 +9,7 @@ import type { PaginationInput } from '../graphql/pagination.input';
 import { MembershipService } from '../membership/membership.service';
 import type { ProjectPaginatedResponse } from '../project/models/project.model';
 import { ProjectService } from '../project/project.service';
-import { UserService } from '../user/user.service';
+import { User } from '../user/models/user.model';
 import { slugify } from '../utils';
 import { OrganizationRole } from './enums';
 import type { CreateOrganizationInput } from './inputs/create-organization.input';
@@ -22,7 +22,6 @@ export class OrganizationService {
     @Inject(DATABASE_CONNECTION)
     private readonly db: Database,
     private readonly mapper: OrganizationMapper,
-    private readonly userService: UserService,
     private readonly projectService: ProjectService,
     private readonly membershipService: MembershipService,
   ) {}
@@ -92,7 +91,7 @@ export class OrganizationService {
     );
   }
 
-  async findVolunteers(organizationId: string): Promise<UserEntity[]> {
+  async findVolunteers(organizationId: string): Promise<User[]> {
     return this.membershipService.findUsersByRole(
       organizationId,
       OrganizationRole.VOLUNTEER,

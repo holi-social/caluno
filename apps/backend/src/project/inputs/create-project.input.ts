@@ -1,4 +1,4 @@
-import { Field, InputType } from '@nestjs/graphql';
+import { Field, ID, InputType } from '@nestjs/graphql';
 import { ProjectStatus } from '../enums';
 
 @InputType()
@@ -12,7 +12,7 @@ export class CreateProjectInput {
   @Field(() => String)
   location: string;
 
-  @Field(() => String)
+  @Field(() => ID)
   organizationId: string;
 
   @Field(() => Date)
