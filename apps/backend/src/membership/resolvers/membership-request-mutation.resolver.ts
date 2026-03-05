@@ -1,22 +1,27 @@
 import { Args, ID, Mutation, Resolver } from '@nestjs/graphql';
 import { Session, type UserSession } from '@thallesp/nestjs-better-auth';
 import { Roles } from '../../auth/decorators';
+import { MembershipRequestMapper } from '../mappers/membership-request.mepper';
 import { MembershipService } from '../membership.service';
 import { MembershipRequest } from '../models/membership-request.model';
 
 @Resolver(() => MembershipRequest)
 export class MembershipRequestMutationResolver {
-  constructor(private readonly membershipRequestService: MembershipService) {}
+  constructor(
+    private readonly membershipRequestService: MembershipService,
+    private readonly membershipRequestMapper: MembershipRequestMapper,
+  ) {}
 
   @Mutation(() => MembershipRequest)
   async createMembershipRequest(
     @Args('organizationId', { type: () => ID }) organizationId: string,
     @Session() session: UserSession,
   ): Promise<MembershipRequest> {
-    return this.membershipRequestService.createMembershipRequest(
+    const entity = await this.membershipRequestService.createMembershipRequest(
       session.user.id,
       organizationId,
     );
+    return this.membershipRequestMapper.toModelOrThrow(entity);
   }
 
   @Roles('STAFF')

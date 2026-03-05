@@ -5,19 +5,10 @@ import type { Database } from '../database/database.module';
 import { DATABASE_CONNECTION } from '../database/database-connection';
 import * as schema from '../database/schema';
 import { NotFoundGraphQLError } from '../graphql/errors';
-import { PaginationInput } from '../graphql/pagination.input';
 import { OrganizationRole } from '../organization/enums';
-import { UserMapper } from '../user/mappers/user.mapper';
-import type { User } from '../user/models/user.model';
 import { MembershipRequestStatus } from './enums';
 import { UpdateMembershipRequestInput } from './inputs/update-membership-request.input';
-import { MembershipMapper } from './mappers/membership.mepper';
-import { MembershipRequestMapper } from './mappers/membership-request.mepper';
-import { Membership } from './models/membership.model';
-import {
-  MembershipRequest,
-  MembershipRequestPaginatedResponse,
-} from './models/membership-request.model';
+import type { MembershipEntity } from './schemas/membership.schema';
 import { MembershipRequestEntity } from './schemas/membership-request.schema';
 
 @Injectable()
@@ -25,15 +16,13 @@ export class MembershipService {
   constructor(
     @Inject(DATABASE_CONNECTION)
     private readonly db: Database,
-    private readonly membershipMapper: MembershipMapper,
-    private readonly membershipRequestMapper: MembershipRequestMapper,
   ) {}
 
   async create(
     userId: string,
     organizationId: string,
     role: OrganizationRole,
-  ): Promise<Membership> {
+  ): Promise<MembershipEntity> {
     const [membership] = await this.db
       .insert(schema.memberships)
       .values({
@@ -42,7 +31,7 @@ export class MembershipService {
         role,
       })
       .returning();
-    return this.membershipMapper.toModelOrThrow(membership);
+    return membership;
   }
 
   async findUsersByRole(
@@ -108,21 +97,21 @@ export class MembershipService {
   async getMembership(
     userId: string,
     organizationId: string,
-  ): Promise<Membership | null> {
+  ): Promise<MembershipEntity | null> {
     const membership = await this.db.query.memberships.findFirst({
       where: {
         userId,
         organizationId,
       },
     });
-    return this.membershipMapper.toModel(membership);
+    return membership ?? null;
   }
 
   // Membership requests
   async createMembershipRequest(
     userId: string,
     organizationId: string,
-  ): Promise<MembershipRequest> {
+  ): Promise<MembershipRequestEntity> {
     const [membershipRequest] = await this.db
       .insert(schema.membershipRequests)
       .values({
@@ -131,7 +120,7 @@ export class MembershipService {
       })
       .returning();
 
-    return this.membershipRequestMapper.toModelOrThrow(membershipRequest);
+    return membershipRequest;
   }
 
   private async updateMembershipRequest(
@@ -219,16 +208,9 @@ export class MembershipService {
 
   async getMembershipRequests(
     organizationId: string,
-    pagination: PaginationInput,
-  ): Promise<MembershipRequestPaginatedResponse> {
-    const membershipRequests = await this.db.query.membershipRequests.findMany({
+  ): Promise<MembershipRequestEntity[]> {
+    return this.db.query.membershipRequests.findMany({
       where: { organizationId },
-    });
-    return new MembershipRequestPaginatedResponse({
-      items: this.membershipRequestMapper.toArray(membershipRequests),
-      total: membershipRequests.length,
-      limit: pagination.limit,
-      offset: pagination.offset,
     });
   }
 }
