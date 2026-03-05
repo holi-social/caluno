@@ -1,5 +1,6 @@
 'use client';
 
+import type { ProjectListItem } from '@repo/data';
 import { useOrgId } from '@repo/data/react';
 import { useState, useTransition } from 'react';
 import { createShift } from '../actions';
@@ -7,10 +8,11 @@ import type { ShiftFormValues } from '../schemas';
 import { ShiftForm } from './shift-form';
 
 interface CreateShiftFormProps {
+  projects: ProjectListItem[];
   onSuccess?: (shiftId: string) => void;
 }
 
-export function CreateShiftForm({ onSuccess }: CreateShiftFormProps = {}) {
+export function CreateShiftForm({ onSuccess, projects }: CreateShiftFormProps) {
   const [isPending, startTransition] = useTransition();
   const [serverError, setServerError] = useState<string | null>(null);
   const orgId = useOrgId();
@@ -19,7 +21,13 @@ export function CreateShiftForm({ onSuccess }: CreateShiftFormProps = {}) {
     setServerError(null);
 
     startTransition(async () => {
-      const result = await createShift(formData);
+      const result = await createShift({
+        ...formData,
+        ...{
+          projectId:
+            formData.projectId === 'none' ? undefined : formData.projectId,
+        },
+      });
       if (result?.serverError) {
         setServerError(result.serverError);
       } else {
@@ -38,6 +46,7 @@ export function CreateShiftForm({ onSuccess }: CreateShiftFormProps = {}) {
 
       <ShiftForm
         organizationId={orgId}
+        projects={projects}
         onSubmit={onSubmit}
         isPending={isPending}
       />
