@@ -41,7 +41,7 @@ export function DatePickerWithRange({
   'aria-invalid': ariaInvalid,
   includeTime = false,
 }: Props) {
-  const formatString = includeTime ? 'dd.MM.yyyy HH:mm' : 'dd.MM.yyyy HH:mm';
+  const formatString = includeTime ? 'dd.MM.yyyy HH:mm' : 'dd.MM.yyyy';
 
   const handleFromTimeChange = (fromTime: string) => {
     if (dateRange?.from) {
