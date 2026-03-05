@@ -1,4 +1,4 @@
-import type { GetProjectsQuery } from '@repo/data';
+import type { ProjectListItem } from '@repo/data';
 import {
   Badge,
   Table,
@@ -8,8 +8,6 @@ import {
   TableHeader,
   TableRow,
 } from '@repo/ui';
-
-type ProjectListItem = GetProjectsQuery['projects']['items'][number];
 
 interface ProjectsTableProps {
   projects: ProjectListItem[];
