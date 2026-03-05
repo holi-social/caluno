@@ -59,14 +59,7 @@ query GetShiftsByProjectId($projectId: String!, $limit: Int!, $offset: Int!) {
     items {
       id
       title
-      slug
       instructions
-      organization {
-        id
-      }
-      project {
-        id
-      }
       startsAt
       endsAt
       createdBy {
