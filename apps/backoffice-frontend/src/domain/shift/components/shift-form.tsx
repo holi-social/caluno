@@ -25,10 +25,9 @@ import { InviteList } from './invite-list';
 type FormProps = {
   organizationId: string;
   projects: ProjectListItem[];
-
   onSubmit: (formData: ShiftFormValues) => void;
   isPending?: boolean;
-  initialValues?: ShiftFormValues;
+  initialValues?: Partial<ShiftFormValues>;
 };
 
 export const ShiftForm = ({
