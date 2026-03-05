@@ -94,8 +94,11 @@ enum MembershipRequestStatus {
 
 type Mutation {
   addTimeEntry(input: AddTimeEntryInput!): TimeEntry!
+  approveMembershipRequest(id: ID!, organizationId: ID!): MembershipRequest!
   approveVolunteerSession(input: ApproveVolunteerSessionInput!): VolunteerSession!
   assignTask(input: CreateTaskAssignmentInput!): Task!
+  cancelMembershipRequest(id: ID!, organizationId: ID!): MembershipRequest!
+  createMembershipRequest(organizationId: ID!): MembershipRequest!
   createOrganization(input: CreateOrganizationInput!): Organization!
   createProject(input: CreateProjectInput!): Project!
   createShift(input: CreateShiftInput!): Shift!
@@ -105,6 +108,7 @@ type Mutation {
   endVolunteerSession(id: ID!): VolunteerSession!
   inviteMembersToShift(memberIds: [String!]!, shiftId: String!): Shift!
   publishProject(id: ID!): Project!
+  rejectMembershipRequest(id: ID!, organizationId: ID!, rejectionReason: String!): MembershipRequest!
   rejectVolunteerSession(input: RejectVolunteerSessionInput!): VolunteerSession!
   startVolunteerSession(input: StartVolunteerSessionInput!): VolunteerSession!
   updateProject(id: ID!, input: UpdateProjectInput!): Project!
