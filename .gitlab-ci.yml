@@ -2,6 +2,7 @@ workflow:
   rules:
     - if: '$CI_COMMIT_BRANCH == "main" || $CI_COMMIT_BRANCH == "production"'
     - if: '$CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "main" || $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "production"'
+    - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BRANCH && $CI_COMMIT_BRANCH != "main" && $CI_COMMIT_BRANCH != "production"'
     - when: never
 
 stages:
@@ -69,6 +70,31 @@ variables:
     - docker push "$REGISTRY_NAMESPACE/$FRONTEND_IMAGE_NAME:$IMAGE_TAG_SHA"
     - docker push "$REGISTRY_NAMESPACE/$FRONTEND_IMAGE_NAME:$STABLE_TAG"
 
+.build-images-base-branch:
+  stage: build
+  before_script:
+    - echo "Building Docker images for branch (no push)"
+    - unset DOCKER_AUTH_CONFIG
+    - export IMAGE_TAG_SHA="$CI_COMMIT_SHORT_SHA"
+
+.build-images-backend-branch:
+  extends: .build-images-base-branch
+  script:
+    - export BACKEND_IMAGE_NAME="clippy-backend"
+    - docker buildx build --load
+      -t "$BACKEND_IMAGE_NAME:$IMAGE_TAG_SHA"
+      -f apps/backend/Dockerfile .
+
+.build-images-frontend-branch:
+  extends: .build-images-base-branch
+  script:
+    - export FRONTEND_IMAGE_NAME="clippy-frontend"
+    - docker buildx build --load
+      --build-arg NEXT_PUBLIC_API_URL="http://localhost"
+      --build-arg NEXT_PUBLIC_WEB_URL="http://localhost"
+      -t "$FRONTEND_IMAGE_NAME:$IMAGE_TAG_SHA"
+      -f apps/backoffice-frontend/Dockerfile .
+
 build_staging_backend:
   extends: .build-images-backend
   rules:
@@ -88,6 +114,16 @@ build_production_frontend:
   extends: .build-images-frontend
   rules:
     - if: '$CI_COMMIT_BRANCH == "production"'
+
+build_branch_backend:
+  extends: .build-images-backend-branch
+  rules:
+    - if: '$CI_COMMIT_BRANCH != "main" && $CI_COMMIT_BRANCH != "production" && $CI_PIPELINE_SOURCE == "push"'
+
+build_branch_frontend:
+  extends: .build-images-frontend-branch
+  rules:
+    - if: '$CI_COMMIT_BRANCH != "main" && $CI_COMMIT_BRANCH != "production" && $CI_PIPELINE_SOURCE == "push"'
 
 .terraform:
   image:
