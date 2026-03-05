@@ -109,6 +109,8 @@ terraform_plan_staging_mr:
   needs: []
   rules:
     - if: '$CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "main"'
+  variables:
+    TF_VAR_image_tag: "$CI_COMMIT_SHORT_SHA"
   script:
     - terraform validate
     - terraform plan
@@ -172,6 +174,8 @@ terraform_plan_production_mr:
   needs: []
   rules:
     - if: '$CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "production"'
+  variables:
+    TF_VAR_image_tag: "$CI_COMMIT_SHORT_SHA"
   script:
     - terraform validate
     - terraform plan
