@@ -1,9 +1,28 @@
 @startuml clippy
 skinparam linetype ortho
-class Organization {
+class Tenant {
     name
-    location
-    address
+    invoiceAddress
+    ...
+}
+class OrgUnit {
+    name
+    description
+    logoUrl
+    websiteUrl
+    ...
+}
+class OrgUnitType {
+    name
+    description
+    icon
+}
+class Location {
+    name
+    street
+    zip
+    city
+    country
     ...
 }
 class User {
@@ -14,14 +33,9 @@ class User {
     ...
 }
 note right: What about payed users?\nPayed users are not a\ndifferent entity.
-class Project {
-    name
-    description
-}
 class Shift {
     start
     end
-    location
 }
 class TimeEntry {
     start
@@ -31,7 +45,15 @@ class TimeEntry {
 }
 note right: How do we manage\nstatus and validation?
 class Membership {
-    role {admin, moderator, volunteer}
+    role {admin, volunteer}
+}
+class Role {
+    name
+    description
+}
+class Permission {
+    key
+    description
 }
 class MembershipRequest {
     status {pending, accepted, rejected}
@@ -58,10 +80,10 @@ class ValidationAction {
 }
 note right: How is reject => update\nof a TimeEntry working?
 
-Organization "* child" o-- "1 parent" Organization
-Organization "1" -down- "*" Project
-Organization "0..1" -- "*" Shift
-Project "0..1" -right- "*" Shift
+Tenant "1" -- "*" OrgUnit
+OrgUnit "*" -left- "1" OrgUnitType
+OrgUnit "* child" o-- "1 parent" OrgUnit
+OrgUnit "0..1" -- "*" Shift
 Assignment "*" -up- "1" User
 Shift "1" -up- "*" Assignment
 Review "*" -up- "1" User
@@ -73,10 +95,19 @@ VolunteeringSession "*" -left- "1" Shift
 VolunteeringSession "1" -- "*" TimeEntry
 TimeEntry "1" -- "0..1" ValidationAction
 
-Organization "1" -right- "*" Membership
+Tenant "1" -right- "*" Membership
 Membership "*" -right- "1" User
 
-Organization "1" -right- "*" MembershipRequest
+Tenant "1" -right- "*" MembershipRequest
 MembershipRequest "*" -right- "1" User
+
+Location "0..1" -up- "*" OrgUnit
+Location "0..1" -right- "*" Shift
+
+Role "*" -- "1" User
+Role "*" -- "1" OrgUnit
+Role "*" -- "1" Tenant
+
+Role "*" -left- "*" Permission
 
 @enduml
