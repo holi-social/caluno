@@ -5,6 +5,7 @@ class Tenant {
     invoiceAddress
     ...
 }
+note left: There is only one Tenant\nconnected to the root OrgUnit
 class OrgUnit {
     name
     description
@@ -80,7 +81,7 @@ class ValidationAction {
 }
 note right: How is reject => update\nof a TimeEntry working?
 
-Tenant "1" -- "*" OrgUnit
+Tenant "1" -- "1" OrgUnit
 OrgUnit "*" -left- "1" OrgUnitType
 OrgUnit "* child" o-- "1 parent" OrgUnit
 OrgUnit "0..1" -- "*" Shift
@@ -95,19 +96,17 @@ VolunteeringSession "*" -left- "1" Shift
 VolunteeringSession "1" -- "*" TimeEntry
 TimeEntry "1" -- "0..1" ValidationAction
 
-Tenant "1" -right- "*" Membership
-Membership "*" -right- "1" User
+OrgUnit "1" -right- "*" Membership
+Membership "*" -down- "1" User
 
-Tenant "1" -right- "*" MembershipRequest
+OrgUnit "1" -right- "*" MembershipRequest
 MembershipRequest "*" -right- "1" User
 
 Location "0..1" -up- "*" OrgUnit
 Location "0..1" -right- "*" Shift
 
-Role "*" -- "1" User
-Role "*" -- "1" OrgUnit
-Role "*" -- "1" Tenant
+Role "*" -right- "*" Permission
 
-Role "*" -left- "*" Permission
+Role "*" -- "*" Membership
 
 @enduml
