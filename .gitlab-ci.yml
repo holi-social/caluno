@@ -144,7 +144,7 @@ terraform_plan_staging_mr:
   stage: terraform_plan
   needs: []
   rules:
-    - if: '$CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "main"'
+    - if: '$CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "main" && $CI_COMMIT_REF_PROTECTED == "true"'
   variables:
     TF_VAR_image_tag: "$CI_COMMIT_SHORT_SHA"
     TF_VAR_active_environment: "staging"
@@ -210,7 +210,7 @@ terraform_plan_production_mr:
   stage: terraform_plan
   needs: []
   rules:
-    - if: '$CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "production"'
+    - if: '$CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "production" && $CI_COMMIT_REF_PROTECTED == "true"'
   variables:
     TF_VAR_image_tag: "$CI_COMMIT_SHORT_SHA"
     TF_VAR_active_environment: "production"
