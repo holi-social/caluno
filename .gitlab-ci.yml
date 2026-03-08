@@ -150,8 +150,7 @@ terraform_plan_staging_mr:
     TF_VAR_active_environment: "staging"
   script:
     - terraform validate
-    - terraform plan
-      -var-file="terraform.tfvars"
+    - terraform plan -var-file="terraform.tfvars" -target='module.env["staging"]'
 
 terraform_plan_staging:
   extends: .terraform
@@ -169,6 +168,7 @@ terraform_plan_staging:
       terraform plan \
         -detailed-exitcode \
         -var-file="terraform.tfvars" \
+        -target='module.env["staging"]' \
         -out="plan-staging.tfplan"
       PLAN_EXIT_CODE=$?
       if [ "$PLAN_EXIT_CODE" -eq 0 ]; then
@@ -200,7 +200,7 @@ terraform_apply_staging:
         echo "No Terraform changes detected for staging, skipping apply."
         exit 0
       fi
-      terraform apply -auto-approve "plan-staging.tfplan"
+      terraform apply -auto-approve -target='module.env["staging"]' "plan-staging.tfplan"
   allow_failure: false
 
 # ─── PRODUCTION PLAN ──────────────────────────────────────────────────────────
@@ -216,8 +216,7 @@ terraform_plan_production_mr:
     TF_VAR_active_environment: "production"
   script:
     - terraform validate
-    - terraform plan
-      -var-file="terraform.tfvars"
+    - terraform plan -var-file="terraform.tfvars" -target='module.env["production"]'
 
 terraform_plan_production:
   extends: .terraform
@@ -235,6 +234,7 @@ terraform_plan_production:
       terraform plan \
         -detailed-exitcode \
         -var-file="terraform.tfvars" \
+        -target='module.env["production"]' \
         -out="plan-production.tfplan"
       PLAN_EXIT_CODE=$?
       if [ "$PLAN_EXIT_CODE" -eq 0 ]; then
@@ -266,5 +266,5 @@ terraform_apply_production:
         echo "No Terraform changes detected for production, skipping apply."
         exit 0
       fi
-      terraform apply -auto-approve "plan-production.tfplan"
+      terraform apply -auto-approve -target='module.env["production"]' "plan-production.tfplan"
   allow_failure: false
