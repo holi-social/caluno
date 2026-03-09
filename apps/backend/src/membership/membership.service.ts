@@ -4,7 +4,7 @@ import type { UserEntity } from '../auth/schemas/auth.schema';
 import type { Database } from '../database/database.module';
 import { DATABASE_CONNECTION } from '../database/database-connection';
 import * as schema from '../database/schema';
-import { NotFoundGraphQLError } from '../graphql/errors';
+import { ConflictGraphQLError, NotFoundGraphQLError } from '../graphql/errors';
 import { OrganizationRole } from '../organization/enums';
 import { MembershipRequestStatus } from './enums';
 import { UpdateMembershipRequestInput } from './inputs/update-membership-request.input';
@@ -112,6 +112,20 @@ export class MembershipService {
     userId: string,
     organizationId: string,
   ): Promise<MembershipRequestEntity> {
+    const existing = await this.db.query.membershipRequests.findFirst({
+      where: {
+        userId,
+        organizationId,
+        status: MembershipRequestStatus.PENDING,
+      },
+    });
+
+    if (existing) {
+      throw new ConflictGraphQLError(
+        'A pending membership request already exists for this organization.',
+      );
+    }
+
     const [membershipRequest] = await this.db
       .insert(schema.membershipRequests)
       .values({
