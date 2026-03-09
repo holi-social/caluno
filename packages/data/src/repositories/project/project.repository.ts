@@ -1,9 +1,12 @@
 import { DataError } from '../../errors/data-error';
 import type {
   CreateProjectInput,
+  GetProjectsQuery,
   UpdateProjectInput,
 } from '../../generated/graphql';
 import { BaseRepository } from '../base/base.repository';
+
+export type ProjectListItem = GetProjectsQuery['projects']['items'][number];
 
 export interface FindProjectsOptions {
   limit?: number;

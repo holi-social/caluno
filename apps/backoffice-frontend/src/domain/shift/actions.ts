@@ -45,7 +45,7 @@ export const updateShift = actionClient
       visibility: parsedInput.openShift
         ? ShiftVisibility.AllMembers
         : ShiftVisibility.InvitedMembers,
-      projectId: parsedInput.projectId,
+      projectId: parsedInput.projectId || null,
       invitedMemberIds: parsedInput.invitedMemberIds,
     };
 
