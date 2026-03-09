@@ -9,8 +9,6 @@ note left: There is only one Tenant\nconnected to the root OrgUnit
 class OrgUnit {
     name
     description
-    logoUrl
-    websiteUrl
     ...
 }
 class OrgUnitType {
@@ -46,7 +44,6 @@ class TimeEntry {
 }
 note right: How do we manage\nstatus and validation?
 class Membership {
-    role {admin, volunteer}
 }
 class Role {
     name
