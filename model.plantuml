@@ -78,9 +78,9 @@ class ValidationAction {
 }
 note right: How is reject => update\nof a TimeEntry working?
 
-Tenant -- "1" OrgUnit
+Tenant -down- "root\n1" OrgUnit
 OrgUnit "*" -left- "1" OrgUnitType
-OrgUnit "* child" o-- "1 parent" OrgUnit
+OrgUnit "*\nchild" o-- "1\nparent" OrgUnit
 OrgUnit "0..1" -- "*" Shift
 Assignment "*" -up- "1" User
 Shift "1" -up- "*" Assignment
