@@ -258,6 +258,7 @@ terraform_apply_production:
   resource_group: "terraform-production"
   rules:
     - if: '$CI_COMMIT_BRANCH == "production" && $CI_PIPELINE_SOURCE == "push"'
+      when: manual
   environment:
     name: production
   script:
