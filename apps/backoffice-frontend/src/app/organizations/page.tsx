@@ -17,10 +17,6 @@ export default async function OrganizationsPage() {
     offset: 0,
   });
 
-  if (orgsResult.pagination.total === 0) {
-    return redirect('/create-organization');
-  }
-
   return (
     <div className="container mx-auto max-w-4xl py-12 px-4">
       <div className="mb-8">
