@@ -1,5 +1,6 @@
 'use client';
 
+import type { ProjectListItem } from '@repo/data';
 import { type GetShiftQuery, ShiftVisibility } from '@repo/data/react';
 import { useRouter } from 'next/navigation';
 import { useState, useTransition } from 'react';
@@ -10,9 +11,10 @@ import { ShiftForm } from './shift-form';
 interface EditShiftFormProps {
   orgId: string;
   shift: GetShiftQuery['shift'];
+  projects: ProjectListItem[];
 }
 
-export function EditShiftForm({ orgId, shift }: EditShiftFormProps) {
+export function EditShiftForm({ orgId, shift, projects }: EditShiftFormProps) {
   const router = useRouter();
 
   const [isPending, startTransition] = useTransition();
@@ -22,7 +24,14 @@ export function EditShiftForm({ orgId, shift }: EditShiftFormProps) {
     setServerError(null);
 
     startTransition(async () => {
-      const result = await updateShift({ ...formData, ...{ id: shift.id } });
+      const result = await updateShift({
+        ...formData,
+        ...{
+          id: shift.id,
+          projectId:
+            formData.projectId === 'none' ? undefined : formData.projectId,
+        },
+      });
       if (result?.serverError) {
         setServerError(result.serverError);
       } else {
@@ -36,8 +45,8 @@ export function EditShiftForm({ orgId, shift }: EditShiftFormProps) {
     name: shift.title,
     instructions: shift.instructions || undefined,
     location: shift.location || undefined,
-    startsAt: new Date(shift.startsAt).toLocaleString(),
-    endsAt: new Date(shift.endsAt).toLocaleString(),
+    startsAt: new Date(shift.startsAt),
+    endsAt: new Date(shift.endsAt),
     openShift: shift.visibility === ShiftVisibility.AllMembers,
     projectId: shift.project?.id,
     invitedMemberIds: shift.volunteers?.map((v) => v.id),
@@ -56,6 +65,7 @@ export function EditShiftForm({ orgId, shift }: EditShiftFormProps) {
         onSubmit={onSubmit}
         isPending={isPending}
         initialValues={shiftFormValues}
+        projects={projects}
       />
     </>
   );

@@ -1,11 +1,9 @@
 'use client';
 
-import type { GetProjectsQuery } from '@repo/data';
+import type { ProjectListItem } from '@repo/data';
 import { Badge, Card, CardContent, CardHeader, CardTitle } from '@repo/ui';
 import { Calendar, Clock, MapPin } from 'lucide-react';
 import Link from 'next/link';
-
-type ProjectListItem = GetProjectsQuery['projects']['items'][number];
 
 interface ProjectsCardsProps {
   projects: ProjectListItem[];

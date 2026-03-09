@@ -1,6 +1,19 @@
 import { CreateShiftForm } from '@/domain/shift/components/create-form';
+import { getDataClient } from '@/lib/data-client';
 
-export default async function CreateShiftPage() {
+interface NewShiftPageProps {
+  params: Promise<{ orgId: string }>;
+}
+
+export default async function CreateShiftPage({ params }: NewShiftPageProps) {
+  const { orgId } = await params;
+
+  const data = await getDataClient(orgId);
+
+  const projects = await data.project.findAllByOrganizationId(orgId, {
+    limit: 100,
+  });
+
   return (
     <div className="max-w-2xl">
       <div>
@@ -11,7 +24,7 @@ export default async function CreateShiftPage() {
           </p>
         </div>
         <div className="px-2 py-8">
-          <CreateShiftForm />
+          <CreateShiftForm projects={projects.items} />
         </div>
       </div>
     </div>

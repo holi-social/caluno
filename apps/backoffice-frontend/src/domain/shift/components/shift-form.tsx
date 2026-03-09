@@ -1,13 +1,20 @@
 import { zodResolver } from '@hookform/resolvers/zod';
+import type { ProjectListItem } from '@repo/data';
 import {
   Button,
   Card,
+  DatePickerWithRange,
   Field,
   FieldContent,
   FieldDescription,
   FieldError,
   FieldLabel,
   Input,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
   Switch,
   Textarea,
 } from '@repo/ui';
@@ -17,13 +24,15 @@ import { InviteList } from './invite-list';
 
 type FormProps = {
   organizationId: string;
+  projects: ProjectListItem[];
   onSubmit: (formData: ShiftFormValues) => void;
   isPending?: boolean;
-  initialValues?: ShiftFormValues;
+  initialValues?: Partial<ShiftFormValues>;
 };
 
 export const ShiftForm = ({
   organizationId,
+  projects,
   onSubmit,
   isPending = false,
   initialValues,
@@ -33,8 +42,7 @@ export const ShiftForm = ({
     defaultValues: {
       ...{
         name: '',
-        startsAt: '',
-        endsAt: '',
+        projectId: 'none',
         location: '',
         instructions: '',
         openShift: true,
@@ -69,37 +77,57 @@ export const ShiftForm = ({
         {errors.name && <FieldError>{errors.name.message}</FieldError>}
       </Field>
 
-      <div className="grid grid-cols-2 gap-2">
-        <Field>
-          <FieldLabel htmlFor="startsAt">
-            Start Time <span className="text-destructive">*</span>
-          </FieldLabel>
-          <Input
-            id="startsAt"
-            type="datetime-local"
-            disabled={isPending}
-            aria-invalid={!!errors.startsAt}
-            {...register('startsAt')}
-          />
-          {errors.startsAt && (
-            <FieldError>{errors.startsAt.message}</FieldError>
-          )}
-        </Field>
+      <Field>
+        <FieldLabel htmlFor="project">Project</FieldLabel>
+        <Select
+          disabled={isPending}
+          aria-invalid={!!errors.projectId}
+          {...register('projectId')}
+          value={watch('projectId')}
+          onValueChange={(value) => setValue('projectId', value)}
+        >
+          <SelectTrigger className="w-full max-w-1/2">
+            <SelectValue placeholder="Select a project" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="none">--- none ---</SelectItem>
+            {projects.map((p) => (
+              <SelectItem key={p.id} value={p.id}>
+                {p.title}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        {errors.projectId && (
+          <FieldError>{errors.projectId.message}</FieldError>
+        )}
+      </Field>
 
-        <Field>
-          <FieldLabel htmlFor="endsAt">
-            End Time <span className="text-destructive">*</span>
-          </FieldLabel>
-          <Input
-            id="endsAt"
-            type="datetime-local"
-            disabled={isPending}
-            aria-invalid={!!errors.endsAt}
-            {...register('endsAt')}
-          />
-          {errors.endsAt && <FieldError>{errors.endsAt.message}</FieldError>}
-        </Field>
-      </div>
+      <Field>
+        <FieldLabel htmlFor="startToEnd">
+          Start → End <span className="text-destructive">*</span>
+        </FieldLabel>
+        <DatePickerWithRange
+          includeTime
+          id="startToEnd"
+          value={{
+            from: watch('startsAt') ? watch('startsAt') : undefined,
+            to: watch('endsAt') ? watch('endsAt') : undefined,
+          }}
+          aria-invalid={!!errors.startsAt || !!errors.endsAt}
+          onChange={(dateRange) => {
+            setValue('startsAt', dateRange?.from as Date, {
+              shouldValidate: true,
+            });
+            setValue('endsAt', dateRange?.to as Date, {
+              shouldValidate: true,
+            });
+          }}
+          placeholder="Shift start to end time"
+        />
+        {errors.startsAt && <FieldError>{errors.startsAt.message}</FieldError>}
+        {errors.endsAt && <FieldError>{errors.endsAt.message}</FieldError>}
+      </Field>
 
       <Field>
         <FieldLabel htmlFor="location">Location</FieldLabel>

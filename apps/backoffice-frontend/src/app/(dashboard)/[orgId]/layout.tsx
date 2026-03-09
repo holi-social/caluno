@@ -11,6 +11,7 @@ import { CreateShiftSheet } from '@/components/sheets/create-shift-sheet';
 import { OrgSyncProvider } from '@/domain/organization/components/org-sync-provider';
 import { requireAuth } from '@/lib/auth-server';
 import { GRAPHQL_API_URL } from '@/lib/constants';
+import { getDataClient } from '@/lib/data-client';
 import { requireOrgAccess } from '@/lib/org-context-server';
 
 interface OrgLayoutProps {
@@ -22,6 +23,11 @@ export default async function OrgLayout({ children, params }: OrgLayoutProps) {
   await requireAuth();
   const { orgId } = await params;
   const { org, organizations } = await requireOrgAccess(orgId);
+
+  const data = await getDataClient(orgId);
+  const projects = await data.project.findAllByOrganizationId(orgId, {
+    limit: 100,
+  });
 
   return (
     <OrgProvider org={org} organizations={organizations}>
@@ -35,7 +41,7 @@ export default async function OrgLayout({ children, params }: OrgLayoutProps) {
                 <Separator orientation="vertical" className="mr-2 h-4" />
                 <div className="flex justify-between gap-2 flex-1">
                   <h1 className="text-lg font-semibold">Clippy</h1>
-                  <CreateShiftSheet />
+                  <CreateShiftSheet projects={projects.items} />
                 </div>
               </header>
               <div className="flex flex-1 flex-col gap-4 p-4">{children}</div>

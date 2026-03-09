@@ -14,8 +14,8 @@ export const createShift = actionClient
 
     const input: CreateShiftInput = {
       title: parsedInput.name,
-      startsAt: new Date(parsedInput.startsAt).toISOString(),
-      endsAt: new Date(parsedInput.endsAt).toISOString(),
+      startsAt: parsedInput.startsAt.toISOString(),
+      endsAt: parsedInput.endsAt.toISOString(),
       instructions: parsedInput.instructions,
       location: parsedInput.location,
       visibility: parsedInput.openShift
@@ -38,14 +38,14 @@ export const updateShift = actionClient
 
     const input: UpdateShiftInput = {
       title: parsedInput.name,
-      startsAt: new Date(parsedInput.startsAt).toISOString(),
-      endsAt: new Date(parsedInput.endsAt).toISOString(),
+      startsAt: parsedInput.startsAt.toISOString(),
+      endsAt: parsedInput.endsAt.toISOString(),
       instructions: parsedInput.instructions,
       location: parsedInput.location,
       visibility: parsedInput.openShift
         ? ShiftVisibility.AllMembers
         : ShiftVisibility.InvitedMembers,
-      projectId: parsedInput.projectId,
+      projectId: parsedInput.projectId || null,
       invitedMemberIds: parsedInput.invitedMemberIds,
     };
 

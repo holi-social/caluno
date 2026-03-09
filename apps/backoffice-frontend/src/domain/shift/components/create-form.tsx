@@ -1,25 +1,37 @@
 'use client';
 
+import type { ProjectListItem } from '@repo/data';
 import { useOrgId } from '@repo/data/react';
+import { useParams } from 'next/navigation';
 import { useState, useTransition } from 'react';
 import { createShift } from '../actions';
 import type { ShiftFormValues } from '../schemas';
 import { ShiftForm } from './shift-form';
 
 interface CreateShiftFormProps {
+  projects: ProjectListItem[];
   onSuccess?: (shiftId: string) => void;
 }
 
-export function CreateShiftForm({ onSuccess }: CreateShiftFormProps = {}) {
+export function CreateShiftForm({ onSuccess, projects }: CreateShiftFormProps) {
+  const { projectId } = useParams<{ projectId?: string }>();
   const [isPending, startTransition] = useTransition();
   const [serverError, setServerError] = useState<string | null>(null);
   const orgId = useOrgId();
+
+  const initialValues = projectId ? { projectId } : undefined;
 
   const onSubmit = async (formData: ShiftFormValues) => {
     setServerError(null);
 
     startTransition(async () => {
-      const result = await createShift(formData);
+      const result = await createShift({
+        ...formData,
+        ...{
+          projectId:
+            formData.projectId === 'none' ? undefined : formData.projectId,
+        },
+      });
       if (result?.serverError) {
         setServerError(result.serverError);
       } else {
@@ -38,8 +50,10 @@ export function CreateShiftForm({ onSuccess }: CreateShiftFormProps = {}) {
 
       <ShiftForm
         organizationId={orgId}
+        projects={projects}
         onSubmit={onSubmit}
         isPending={isPending}
+        initialValues={initialValues}
       />
     </>
   );
