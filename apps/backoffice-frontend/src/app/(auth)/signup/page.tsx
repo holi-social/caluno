@@ -1,11 +1,16 @@
+import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { getSession } from '@/lib/auth-server';
 import { SignupForm } from './signup-form';
 
 export default async function SignupPage() {
   const session = await getSession();
+  const cookieStore = await cookies();
+  const pendingInvite = cookieStore.get('pending_invite')?.value;
+  const redirectTo = pendingInvite ? `/invite/${pendingInvite}` : '/';
+
   if (session) {
-    redirect('/');
+    redirect(redirectTo);
   }
 
   return (
@@ -15,7 +20,7 @@ export default async function SignupPage() {
           <h2 className="text-3xl font-bold">Create your account</h2>
         </div>
 
-        <SignupForm />
+        <SignupForm redirectTo={redirectTo} />
       </div>
     </div>
   );

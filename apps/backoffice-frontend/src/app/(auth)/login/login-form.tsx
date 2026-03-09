@@ -6,7 +6,11 @@ import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { signIn } from '@/lib/auth';
 
-export function LoginForm() {
+interface LoginFormProps {
+  redirectTo?: string;
+}
+
+export function LoginForm({ redirectTo = '/' }: LoginFormProps) {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [isPending, setIsPending] = useState(false);
@@ -30,7 +34,7 @@ export function LoginForm() {
       }
 
       if (result.data?.user) {
-        router.push('/');
+        router.push(redirectTo);
         router.refresh();
       } else {
         setError('Login failed. Please try again.');
