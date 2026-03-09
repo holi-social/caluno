@@ -2,7 +2,7 @@
 
 import type { ProjectListItem } from '@repo/data';
 import { useOrgId } from '@repo/data/react';
-import { usePathname } from 'next/navigation';
+import { useParams } from 'next/navigation';
 import { useState, useTransition } from 'react';
 import { createShift } from '../actions';
 import type { ShiftFormValues } from '../schemas';
@@ -14,14 +14,11 @@ interface CreateShiftFormProps {
 }
 
 export function CreateShiftForm({ onSuccess, projects }: CreateShiftFormProps) {
-  const pathname = usePathname();
-
+  const { projectId } = useParams<{ projectId?: string }>();
   const [isPending, startTransition] = useTransition();
   const [serverError, setServerError] = useState<string | null>(null);
   const orgId = useOrgId();
 
-  // Extract projectId from URL if we're on a project page or deeper
-  const projectId = pathname?.match(/\/projects\/([^/]+)/)?.[1];
   const initialValues = projectId ? { projectId } : undefined;
 
   const onSubmit = async (formData: ShiftFormValues) => {
