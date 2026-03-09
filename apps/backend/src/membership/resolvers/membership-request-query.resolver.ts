@@ -16,7 +16,7 @@ export class MembershipRequestQueryResolver {
   ) {}
 
   @Roles('STAFF')
-  @Query(() => MembershipRequest)
+  @Query(() => MembershipRequestPaginatedResponse)
   async membershipRequests(
     @Args('organizationId', { type: () => ID }) organizationId: string,
     @Args() pagination: PaginationInput,
