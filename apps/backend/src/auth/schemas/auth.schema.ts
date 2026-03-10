@@ -1,4 +1,11 @@
-import { boolean, index, pgTable, text, timestamp } from 'drizzle-orm/pg-core';
+import {
+  boolean,
+  index,
+  pgTable,
+  text,
+  timestamp,
+  uuid,
+} from 'drizzle-orm/pg-core';
 import { timestampColumns } from '../../database/database-columns';
 
 export const users = pgTable('users', {
@@ -7,6 +14,7 @@ export const users = pgTable('users', {
   email: text('email').notNull().unique(),
   emailVerified: boolean('email_verified').default(false).notNull(),
   image: text('image'),
+  checkInId: uuid('check_in_id').notNull().unique().defaultRandom(),
   ...timestampColumns,
 });
 

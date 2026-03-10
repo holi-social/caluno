@@ -17,6 +17,7 @@ import {
   ClockIcon,
   FolderIcon,
   LogOutIcon,
+ScanFace,
   SettingsIcon,
   UsersIcon,
 } from 'lucide-react';
@@ -65,6 +66,11 @@ export function DashboardSidebar() {
         title: 'Settings',
         href: `/${orgId}/settings`,
         icon: SettingsIcon,
+      },
+{
+        title: 'QR iD',
+        href: `/${orgId}/me/id`,
+        icon: ScanFace,
       },
     ];
   }, [orgId]);

@@ -4,6 +4,7 @@ query GetMe {
     name
     email
     image
+    checkInId
   }
 }
 
