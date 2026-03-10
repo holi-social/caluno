@@ -10,12 +10,16 @@ interface EditShiftPageProps {
 export default async function EditShiftPage({ params }: EditShiftPageProps) {
   const { orgId, shiftId } = await params;
 
-  const data = await getDataClient();
+  const data = await getDataClient(orgId);
   const shift = await data.shift.findById(shiftId);
 
   if (!shift) {
     notFound();
   }
+
+  const projects = await data.project.findAllByOrganizationId(orgId, {
+    limit: 100,
+  });
 
   return (
     <div className="max-w-2xl">
@@ -30,7 +34,7 @@ export default async function EditShiftPage({ params }: EditShiftPageProps) {
       </div>
 
       <div className="px-2 py-8">
-        <EditShiftForm orgId={orgId} shift={shift} />
+        <EditShiftForm orgId={orgId} shift={shift} projects={projects.items} />
       </div>
     </div>
   );

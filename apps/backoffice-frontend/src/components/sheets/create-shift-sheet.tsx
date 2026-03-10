@@ -1,5 +1,6 @@
 'use client';
 
+import type { ProjectListItem } from '@repo/data';
 import {
   Button,
   Dialog,
@@ -21,13 +22,15 @@ import { Copy, PlusIcon } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { CreateShiftForm } from '@/domain/shift/components/create-form';
-import { copyToClipboard, shiftShareUrl } from '@/domain/shift/share';
+import { shiftShareUrl } from '@/domain/shift/share';
+import { copyToClipboard } from '@/lib/clipboard';
 
 interface CreateShiftSheetProps {
+  projects: ProjectListItem[];
   trigger?: React.ReactNode;
 }
 
-export function CreateShiftSheet({ trigger }: CreateShiftSheetProps) {
+export function CreateShiftSheet({ trigger, projects }: CreateShiftSheetProps) {
   const router = useRouter();
   const [sheetOpen, setSheetOpen] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -47,7 +50,7 @@ export function CreateShiftSheet({ trigger }: CreateShiftSheetProps) {
   };
 
   const handleCopyToClipboard = () => {
-    copyToClipboard(shiftId);
+    copyToClipboard(shiftShareUrl(shiftId), 'Shift link copied to clipboard');
   };
 
   return (
@@ -71,7 +74,7 @@ export function CreateShiftSheet({ trigger }: CreateShiftSheetProps) {
 
           <div className="flex-1 overflow-y-auto px-6 pb-24">
             <div className="mt-6">
-              <CreateShiftForm onSuccess={handleSuccess} />
+              <CreateShiftForm onSuccess={handleSuccess} projects={projects} />
             </div>
           </div>
         </SheetContent>

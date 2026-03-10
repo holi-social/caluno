@@ -1,6 +1,5 @@
 import { Field, ID, ObjectType, registerEnumType } from '@nestjs/graphql';
 import { createPaginatedResponseType } from '../../graphql/paginated-response.model';
-import { OrganizationRole } from '../../organization/enums';
 import { Organization } from '../../organization/models/organization.model';
 import { User } from '../../user/models/user.model';
 import { MembershipRequestStatus } from '../enums';
@@ -14,7 +13,7 @@ export class MembershipRequest {
   @Field(() => ID)
   id: string;
 
-  @Field(() => String)
+  @Field(() => User)
   user: User;
 
   @Field(() => Organization)

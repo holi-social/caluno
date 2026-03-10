@@ -82,7 +82,12 @@ type MembershipRequest {
   reviewedBy: User!
   status: MembershipRequestStatus!
   updatedAt: DateTime!
-  user: String!
+  user: User!
+}
+
+type MembershipRequestPaginatedResponse {
+  items: [MembershipRequest!]!
+  pagination: PaginationInfo!
 }
 
 enum MembershipRequestStatus {
@@ -187,7 +192,7 @@ type Query {
   isUserOrganizationVolunteer(organizationId: ID!): Boolean!
   me: User!
   membership(organizationId: ID!): Membership!
-  membershipRequests(limit: Int! = 10, offset: Int! = 0, organizationId: ID!): MembershipRequest!
+  membershipRequests(limit: Int! = 10, offset: Int! = 0, organizationId: ID!): MembershipRequestPaginatedResponse!
   myTasks(limit: Int! = 10, offset: Int! = 0): TaskPaginatedResponse!
   organization(id: String!): Organization!
   organizationBySlug(slug: String!): Organization!

@@ -1,0 +1,60 @@
+mutation CreateMembershipRequest($organizationId: ID!) {
+  createMembershipRequest(organizationId: $organizationId) {
+    id
+  }
+}
+
+mutation ApproveMembershipRequest($id: ID!, $organizationId: ID!) {
+  approveMembershipRequest(id: $id, organizationId: $organizationId) {
+    id
+  }
+}
+
+mutation RejectMembershipRequest(
+  $id: ID!
+  $organizationId: ID!
+  $rejectionReason: String!
+) {
+  rejectMembershipRequest(
+    id: $id
+    organizationId: $organizationId
+    rejectionReason: $rejectionReason
+  ) {
+    id
+  }
+}
+
+mutation CancelMembershipRequest($id: ID!, $organizationId: ID!) {
+  cancelMembershipRequest(id: $id, organizationId: $organizationId) {
+    id
+  }
+}
+
+query GetMembershipRequests($organizationId: ID!, $limit: Int!, $offset: Int!) {
+  membershipRequests(
+    organizationId: $organizationId
+    limit: $limit
+    offset: $offset
+  ) {
+    items {
+      id
+      organization {
+        id
+        name
+      }
+      user {
+        id
+        name
+      }
+      status
+      reviewedBy {
+        id
+        name
+      }
+      reviewedAt
+      rejectionReason
+      createdAt
+      updatedAt
+    }
+  }
+}
