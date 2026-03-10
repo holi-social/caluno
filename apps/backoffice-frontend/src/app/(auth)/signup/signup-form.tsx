@@ -6,7 +6,11 @@ import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { signUp } from '@/lib/auth';
 
-export function SignupForm() {
+interface SignupFormProps {
+  redirectTo?: string;
+}
+
+export function SignupForm({ redirectTo = '/' }: SignupFormProps) {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [isPending, setIsPending] = useState(false);
@@ -31,7 +35,7 @@ export function SignupForm() {
       }
 
       if (result.data?.user) {
-        router.push('/');
+        router.push(redirectTo);
       } else {
         setError('Signup failed. Please try again.');
         setIsPending(false);

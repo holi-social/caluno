@@ -1,12 +1,11 @@
 import { redirect } from 'next/navigation';
-import { getSession } from '@/lib/auth-server';
+import HomePage from '@/domain/home/components/home-page';
+import { isAuthenticated } from '@/lib/auth-server';
 import { getDataClient } from '@/lib/data-client';
 import { getLastVisitedOrgServer } from '@/lib/org-context-server';
 
 export default async function Home() {
-  const session = await getSession();
-
-  if (!session?.user) {
+  if (!(await isAuthenticated())) {
     return redirect('/login');
   }
 
@@ -21,10 +20,6 @@ export default async function Home() {
       throw error;
     });
 
-  if (orgsResult.pagination.total === 0) {
-    redirect('/create-organization');
-  }
-
   const lastOrgId = await getLastVisitedOrgServer();
   if (lastOrgId) {
     const hasAccess = orgsResult.items.some((org) => org.id === lastOrgId);
@@ -32,5 +27,6 @@ export default async function Home() {
       redirect(`/${lastOrgId}`);
     }
   }
-  redirect('/organizations');
+
+  return <HomePage />;
 }
