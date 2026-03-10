@@ -37,20 +37,21 @@ export async function createOrganization(
   };
 
   const data = await getDataClient();
-  return await data.organization
-    .create(input)
-    .then((org) => {
-      return redirect(`/${org.id}`);
-    })
-    .catch((error) => {
-      return {
-        success: false,
-        error:
-          error instanceof Error
-            ? error.message
-            : 'Failed to create organization. Please try again.',
-      };
-    });
+
+  let org: { id: string };
+
+  try {
+    org = await data.organization.create(input);
+  } catch (error) {
+    return {
+      success: false,
+      error:
+        error instanceof Error
+          ? error.message
+          : 'Failed to create organization. Please try again.',
+    };
+  }
+  redirect(`/${org.id}`);
 }
 
 export async function getVolunteers(organizationId: string) {
