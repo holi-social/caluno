@@ -14,6 +14,35 @@ type ErrorMessage = {
   description: string;
 };
 
+const highlightCodeOnCanvas = (
+  detectedCodes: IDetectedBarcode[],
+  ctx: CanvasRenderingContext2D,
+) => {
+  detectedCodes.forEach((detectedCode) => {
+    const { cornerPoints } = detectedCode;
+
+    if (cornerPoints && cornerPoints.length > 0) {
+      // Draw polygon connecting corner points (matches rotation)
+      ctx.strokeStyle = '#fdfd80';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      cornerPoints.forEach((point) => {
+        ctx.lineTo(point.x, point.y);
+      });
+      ctx.closePath();
+      ctx.stroke();
+
+      // Draw corner points
+      ctx.fillStyle = '#fdc700';
+      cornerPoints.forEach((point) => {
+        ctx.beginPath();
+        ctx.arc(point.x, point.y, 3, 0, 2 * Math.PI);
+        ctx.fill();
+      });
+    }
+  });
+};
+
 export function QRScanner({ onScan }: QRScannerProps) {
   const [isPaused, setIsPaused] = useState(false);
   const [error, setError] = useState<ErrorMessage>();
@@ -85,7 +114,13 @@ export function QRScanner({ onScan }: QRScannerProps) {
           paused={isPaused}
           constraints={{ facingMode: 'environment', aspectRatio: 1 }}
           sound={true}
-          components={{ onOff: true, finder: true, torch: true, zoom: true }}
+          components={{
+            onOff: true,
+            finder: true,
+            torch: true,
+            zoom: true,
+            tracker: highlightCodeOnCanvas,
+          }}
           formats={['qr_code', 'rm_qr_code', 'micro_qr_code']}
         />
       </div>
