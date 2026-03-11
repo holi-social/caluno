@@ -1,5 +1,6 @@
 // Components
 
+export * from './components/base/alert';
 export * from './components/base/alert-dialog';
 export * from './components/base/avatar';
 export * from './components/base/badge';
