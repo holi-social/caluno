@@ -1,8 +1,8 @@
 'use client';
 
-import { Alert, AlertDescription, AlertTitle } from '@repo/ui';
+import { Alert, AlertDescription, AlertTitle, Button } from '@repo/ui';
 import { type IDetectedBarcode, Scanner } from '@yudiel/react-qr-scanner';
-import { AlertCircle } from 'lucide-react';
+import { AlertCircle, ScanQrCode } from 'lucide-react';
 import { useState } from 'react';
 
 interface QRScannerProps {
@@ -100,11 +100,11 @@ export function QRScanner({ onScan }: QRScannerProps) {
   }
 
   return (
-    <div className="w-full max-w-lg">
+    <div>
       <div
         className={`relative aspect-square rounded-lg overflow-hidden border transition-all duration-300 ${
           showSuccessFlash
-            ? 'ring-8 ring-green-500 ring-opacity-75 scale-105'
+            ? 'ring-4 ring-green-500 ring-opacity-75 scale-102'
             : ''
         }`}
       >
@@ -127,9 +127,9 @@ export function QRScanner({ onScan }: QRScannerProps) {
 
       {isPaused && (
         <div className="mt-4 text-center">
-          <p className="text-sm text-muted-foreground mb-2">
-            QR code scanned! Use the toggle above to resume scanning.
-          </p>
+          <Button onClick={() => setIsPaused(false)}>
+            <ScanQrCode /> Rescan
+          </Button>
         </div>
       )}
     </div>
