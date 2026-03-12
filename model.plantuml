@@ -59,7 +59,7 @@ class MembershipRequest {
     reviewedAt
     rejectionReason
 }
-class Assignment {
+class ShiftAssignment {
     status {invited, accepted, rejected}
 }
 class Review {
@@ -78,22 +78,22 @@ class ValidationAction {
 }
 note right: How is reject => update\nof a TimeEntry working?
 
-class ProfileDefinition {
+class DossierDefinition {
     name
     description
 }
-class ProfileRequirementDefinition {
+class DossierEntryDefinition {
     type {document, check, date, ...}
     name
     description
 }
-class Profile {
+class Dossier {
     status {draft, submitted, approved, rejected}
     submittedAt
     reviewedAt
     reviewedBy
 }
-class ProfileRequirement {
+class DossierEntry {
     value: text/JSON
     status {draft, submitted, approved, rejected}
     submittedAt
@@ -124,20 +124,20 @@ Role "*" -right- "*" Permission
 
 Role "*" -- "*" Membership
 
-OrgUnit "1" -left- "*" ProfileDefinition
-ProfileDefinition -left- "*" ProfileRequirementDefinition
+OrgUnit "1" -left- "*" DossierDefinition
+DossierDefinition -left- "*" DossierEntryDefinition
 
 User "1" -right- "*" Document
-ProfileRequirement "*" -down- "0..1" Document
-Membership "1" -right- "*" Profile
-Profile -right- "*" ProfileRequirement
-MembershipRequest "1" -left- "*" Profile
+DossierEntry "*" -down- "0..1" Document
+Membership "1" -right- "*" Dossier
+Dossier -right- "*" DossierEntry
+MembershipRequest "1" -left- "*" Dossier
 
-Profile "*" -left- "1" ProfileDefinition
-ProfileRequirement "*" -left- "1" ProfileRequirementDefinition
+Dossier "*" -left- "1" DossierDefinition
+DossierEntry "*" -left- "1" DossierEntryDefinition
 
-Assignment "*" -up- "1" User
-Shift "1" -up- "*" Assignment
+ShiftAssignment "*" -up- "1" User
+Shift "1" -up- "*" ShiftAssignment
 Review "*" -up- "1" User
 Shift "1" -up- "*" Review
 TimeEntry "*" -up- "1" User
