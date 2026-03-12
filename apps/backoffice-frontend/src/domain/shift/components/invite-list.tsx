@@ -1,6 +1,6 @@
 'use client';
 
-import type { User } from '@repo/data';
+import type { GetVolunteersQuery } from '@repo/data';
 import {
   Badge,
   Button,
@@ -15,13 +15,17 @@ import { useEffect, useState } from 'react';
 import { UserCard } from '@/components/user-card';
 import { getVolunteers } from '@/domain/organization/actions';
 
+type Volunteer = NonNullable<
+  GetVolunteersQuery['organization']['volunteers']
+>[number];
+
 interface InviteListProps {
   organizationId: string;
   value: string[] | undefined;
   onChange: (ids: string[]) => void;
 }
 
-const filterUsers = (users: User[], query: string) =>
+const filterUsers = (users: Volunteer[], query: string) =>
   users.filter(
     (v) =>
       v.name.toLowerCase().includes(query.toLowerCase()) ||
@@ -33,7 +37,7 @@ export const InviteList = ({
   value = [],
   onChange,
 }: InviteListProps) => {
-  const [volunteers, setVolunteers] = useState<User[]>([]);
+  const [volunteers, setVolunteers] = useState<Volunteer[]>([]);
   const [volunteerSearchQuery, setVolunteerSearchQuery] = useState('');
   const [inviteSearchQuery, setInviteSearchQuery] = useState('');
 

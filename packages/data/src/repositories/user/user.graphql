@@ -4,6 +4,7 @@ query GetMe {
     name
     email
     image
+    checkInId
   }
 }
 
@@ -13,6 +14,7 @@ query GetUser($id: String!) {
     name
     email
     image
+    checkInId
   }
 }
 

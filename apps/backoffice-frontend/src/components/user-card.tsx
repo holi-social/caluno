@@ -2,7 +2,7 @@ import type { User } from '@repo/data';
 import { Avatar, AvatarFallback, AvatarImage } from '@repo/ui';
 
 type UserCardProps = {
-  user: User;
+  user: Pick<User, 'name' | 'image' | 'email'>;
   size?: 'sm' | 'lg' | 'default';
 };
 

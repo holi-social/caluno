@@ -302,6 +302,7 @@ input UpdateShiftInput {
 }
 
 type User {
+  checkInId: ID!
   email: String!
   id: ID!
   image: String

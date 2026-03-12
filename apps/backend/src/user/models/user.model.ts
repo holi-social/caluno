@@ -13,4 +13,7 @@ export class User {
 
   @Field(() => String, { nullable: true })
   image: string | null;
+
+  @Field(() => ID)
+  checkInId: string;
 }

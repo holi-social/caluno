@@ -1,0 +1,1 @@
+ALTER TABLE "users" ALTER COLUMN "check_in_id" SET NOT NULL;
