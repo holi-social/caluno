@@ -51,13 +51,12 @@ export function QRScanner({ onScan }: QRScannerProps) {
   const handleScan = (detectedCodes: IDetectedBarcode[]) => {
     const firstCode = detectedCodes[0];
     if (firstCode?.rawValue && !isPaused) {
-      console.log('QR Code detected:', firstCode.rawValue);
-      onScan?.(firstCode.rawValue);
-
       setShowSuccessFlash(true);
       setTimeout(() => setShowSuccessFlash(false), 500);
 
       setIsPaused(true);
+
+      onScan?.(firstCode.rawValue);
     }
   };
 

@@ -1,7 +1,13 @@
 import { Separator } from '@repo/ui';
-import { QRScanner } from './qr-scanner';
+import { CheckinScanner } from '@/domain/shift/check-in-scanner';
 
-export default function CheckinPage() {
+interface ScanPageProps {
+  params: Promise<{ orgId: string }>;
+}
+
+export default async function ScanPage({ params }: ScanPageProps) {
+  const { orgId } = await params;
+
   return (
     <div className="max-w-2xl">
       <div>
@@ -12,7 +18,9 @@ export default function CheckinPage() {
           </p>
         </div>
         <div className="px-2 py-8">
-          <QRScanner />
+          <div className="max-w-lg">
+            <CheckinScanner organizationId={orgId} />
+          </div>
           <Separator className="my-4" />
           <h2>Search for volunteer</h2>
           TODO

@@ -58,7 +58,7 @@ export function DashboardSidebar() {
       },
       {
         title: 'Check-in',
-        href: `/${orgId}/check-in`,
+        href: `/${orgId}/check-in/scan`,
         icon: ScanQrCode,
       },
     ];
