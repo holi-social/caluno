@@ -185,6 +185,7 @@ type Query {
   shiftsByProjectId(limit: Int! = 10, offset: Int! = 0, projectId: String!): ShiftPaginatedResponse!
   timeEntries(limit: Int! = 10, offset: Int! = 0): TimeEntryPaginatedResponse!
   user(id: String!): User
+  userByCheckInId(checkInId: String!): User
 }
 
 type Role {

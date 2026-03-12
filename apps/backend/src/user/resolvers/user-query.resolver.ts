@@ -22,4 +22,10 @@ export class UserQueryResolver {
     const user = await this.userService.findById(id);
     return this.userMapper.toModel(user);
   }
+
+  @Query(() => User, { nullable: true })
+  async userByCheckInId(@Args('checkInId') checkInId: string): Promise<User | null> {
+    const user = await this.userService.findByCheckInId(checkInId);
+    return this.userMapper.toModel(user);
+  }
 }

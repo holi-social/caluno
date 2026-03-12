@@ -16,6 +16,12 @@ export class UserService {
     });
   }
 
+  async findByCheckInId(checkInId: string): Promise<UserEntity | undefined> {
+    return this.db.query.users.findFirst({
+      where: { checkInId },
+    });
+  }
+
   async findByIdOrThrow(id: string): Promise<UserEntity> {
     const user = await this.db.query.users.findFirst({
       where: { id },

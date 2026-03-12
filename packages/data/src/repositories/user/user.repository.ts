@@ -21,6 +21,15 @@ export class UserRepository extends BaseRepository {
     }
   }
 
+  async findByCheckInId(checkInId: string): Promise<User | null> {
+    try {
+      const data = await this.sdk.GetUserByCheckInId({ checkInId });
+      return data.userByCheckInId ?? null;
+    } catch (error) {
+      throw DataError.fromGraphQLError(error);
+    }
+  }
+
   async getMyOrganizations(
     options: { limit?: number; offset?: number } = {},
   ): Promise<GetMyOrganizationsQuery['organizations']> {
