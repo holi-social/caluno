@@ -5,7 +5,7 @@ class Tenant {
     invoiceAddress
     ...
 }
-note left: There is only one Tenant\nconnected to the root OrgUnit
+note top: There is only one Tenant\nconnected to the root OrgUnit
 class OrgUnit {
     name
     description
@@ -108,19 +108,19 @@ class Document {
 }
 
 Tenant -down- "root\n1" OrgUnit
-OrgUnit "*" -up- "1" OrgUnitType
+OrgUnit "*" -left- "1" OrgUnitType
 OrgUnit "*\nchild" o-- "1\nparent" OrgUnit
 OrgUnit "0..1" -- "*" Shift
 Tenant "1" -right- "*" Membership
 Membership "*" -down- "1" User
 
-OrgUnit -- RoleAccess
-RoleAccess -- Membership
-RoleAccess -- Role
+RoleAccess -- "1" OrgUnit
+RoleAccess -- "1" Membership
+RoleAccess -up- "*" Role
 
-OrgUnit -- QualificationProfileAccess
-QualificationProfileAccess -- Membership
-QualificationProfileAccess -- QualificationProfile
+QualificationProfileAccess -- "1" OrgUnit
+QualificationProfileAccess -- "1" Membership
+QualificationProfileAccess -- "*" QualificationProfile
 
 OrgUnit "1" -down- "*" MembershipRequest
 MembershipRequest "*" -right- "1" User
@@ -128,15 +128,14 @@ MembershipRequest "*" -right- "1" User
 Location "0..1" -up- "*" OrgUnit
 Location "0..1" -right- "*" Shift
 
-Role "*" -left- "*" Permission
+Role "*" -right- "*" Permission
 
-OrgUnit "1" -left- "*" QualificationProfileDefinition
-QualificationProfileDefinition -left- "*" QualificationCriterionDefinition
+Tenant "1" -up- "*" QualificationProfileDefinition
+QualificationProfileDefinition -right- "*" QualificationCriterionDefinition
 
 User "1" -right- "*" Document
 QualificationCriterion "*" -down- "0..1" Document
 Membership "1" -right- "*" QualificationProfile
-User "1" -up- "*" QualificationProfile
 QualificationProfile -right- "*" QualificationCriterion
 MembershipRequest "1" -left- "*" QualificationProfile
 
