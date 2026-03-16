@@ -6,7 +6,6 @@ import { DATABASE_CONNECTION } from '../database/database-connection';
 import * as schema from '../database/schema';
 import { ForbiddenGraphQLError, NotFoundGraphQLError } from '../graphql/errors';
 import type { PaginationInput } from '../graphql/pagination.input';
-import { MembershipService } from '../membership/membership.service';
 import type { Task } from '../task/models/task.model';
 import { TaskService } from '../task/task.service';
 import { UserService } from '../user/user.service';
@@ -24,7 +23,6 @@ export class ProjectService {
     private readonly db: Database,
     private readonly mapper: ProjectMapper,
     private readonly userService: UserService,
-    private readonly membershipService: MembershipService,
     private readonly taskService: TaskService,
   ) {}
 
@@ -62,17 +60,6 @@ export class ProjectService {
   }
 
   async create(userId: string, input: CreateProjectInput): Promise<Project> {
-    const isStaff = await this.membershipService.isStaff(
-      userId,
-      input.organizationId,
-    );
-
-    if (!isStaff) {
-      throw new ForbiddenGraphQLError(
-        'You are not authorized to create a project for this organization',
-      );
-    }
-
     const [project] = await this.db
       .insert(schema.projects)
       .values({

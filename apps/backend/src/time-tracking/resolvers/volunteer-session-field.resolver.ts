@@ -41,10 +41,8 @@ export class VolunteerSessionFieldResolver {
   @ResolveField(() => Task)
   async task(
     @Parent() volunteerSession: volunteerSessionSchema.VolunteerSessionEntity,
-    @Session() session: UserSession,
   ): Promise<Task> {
     const task = await this.timeTrackingService.findTaskBySessionId(
-      session.user.id,
       volunteerSession.id,
     );
     return this.taskMapper.toModelOrThrow(task);
@@ -54,10 +52,8 @@ export class VolunteerSessionFieldResolver {
   @ResolveField(() => User, { nullable: true })
   async validatedBy(
     @Parent() volunteerSession: volunteerSessionSchema.VolunteerSessionEntity,
-    @Session() session: UserSession,
   ): Promise<User | null> {
     const validator = await this.timeTrackingService.findValidatorBySessionId(
-      session.user.id,
       volunteerSession.id,
     );
     if (!validator) {
@@ -70,10 +66,8 @@ export class VolunteerSessionFieldResolver {
   @ResolveField(() => Shift, { nullable: true })
   async shift(
     @Parent() volunteerSession: volunteerSessionSchema.VolunteerSessionEntity,
-    @Session() session: UserSession,
   ): Promise<Shift | null> {
     const shift = await this.timeTrackingService.findShiftBySessionId(
-      session.user.id,
       volunteerSession.id,
     );
     if (!shift) {

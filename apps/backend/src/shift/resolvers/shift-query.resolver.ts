@@ -1,9 +1,5 @@
 import { Args, Context, Query, Resolver } from '@nestjs/graphql';
-import {
-  AllowAnonymous,
-  Session,
-  type UserSession,
-} from '@thallesp/nestjs-better-auth';
+import { AllowAnonymous } from '@thallesp/nestjs-better-auth';
 import { PERMISSIONS } from '../../auth/constants';
 import { Permissions } from '../../auth/decorators/permissions.decorator';
 import type { AuthenticatedGraphQLContext } from '../../graphql/graphql.context';
@@ -30,11 +26,9 @@ export class ShiftQueryResolver {
   @Query(() => ShiftPaginatedResponse)
   async shifts(
     @Args() pagination: PaginationInput,
-    @Session() session: UserSession,
     @Context() context: AuthenticatedGraphQLContext,
   ): Promise<ShiftPaginatedResponse> {
     const { shifts, total } = await this.shiftService.findAll(
-      session.user.id,
       context.organizationId,
       null,
       pagination,
@@ -52,11 +46,9 @@ export class ShiftQueryResolver {
   async shiftsByProjectId(
     @Args('projectId') projectId: string,
     @Args() pagination: PaginationInput,
-    @Session() session: UserSession,
     @Context() context: AuthenticatedGraphQLContext,
   ): Promise<ShiftPaginatedResponse> {
     const { shifts, total } = await this.shiftService.findAll(
-      session.user.id,
       context.organizationId,
       projectId,
       pagination,

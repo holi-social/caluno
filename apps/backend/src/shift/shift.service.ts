@@ -1,12 +1,11 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { and, count, eq, inArray, or, SQL } from 'drizzle-orm';
+import { and, count, eq, SQL } from 'drizzle-orm';
 import type { Database } from '../database/database.module';
 import { DATABASE_CONNECTION } from '../database/database-connection';
 import * as schema from '../database/schema';
 import { UserEntity } from '../database/schema';
 import { NotFoundGraphQLError } from '../graphql/errors/not-found.error';
 import type { PaginationInput } from '../graphql/pagination.input';
-import { MembershipService } from '../membership/membership.service';
 import { UserService } from '../user/user.service';
 import { slugify } from '../utils/slug.util';
 import { ShiftInviteStatus, ShiftVisibility } from './enums';
@@ -19,7 +18,6 @@ export class ShiftService {
   constructor(
     @Inject(DATABASE_CONNECTION)
     private readonly db: Database,
-    private readonly membershipService: MembershipService,
     private readonly userService: UserService,
   ) {}
 
@@ -35,7 +33,6 @@ export class ShiftService {
   }
 
   async findAll(
-    userId: string,
     organizationId: string,
     projectId: string | null,
     pagination: PaginationInput,
@@ -44,35 +41,10 @@ export class ShiftService {
       ? eq(schema.shifts.projectId, projectId)
       : undefined;
 
-    const isStaff = await this.membershipService.isStaff(
-      userId,
-      organizationId,
+    const condition: SQL<unknown> | undefined = and(
+      eq(schema.shifts.organizationId, organizationId),
+      projectCondition,
     );
-
-    let condition: SQL<unknown> | undefined;
-    if (isStaff) {
-      condition = and(
-        eq(schema.shifts.organizationId, organizationId),
-        projectCondition,
-      );
-    } else {
-      const invites = await this.db.query.shiftInvites.findMany({
-        where: { userId },
-      });
-
-      const shiftIds = invites.map((invite) => invite.shiftId);
-
-      condition = and(
-        eq(schema.shifts.organizationId, organizationId),
-        projectCondition,
-        shiftIds.length > 0
-          ? or(
-              eq(schema.shifts.visibility, ShiftVisibility.ALL_MEMBERS),
-              inArray(schema.shifts.id, shiftIds),
-            )
-          : eq(schema.shifts.visibility, ShiftVisibility.ALL_MEMBERS),
-      );
-    }
 
     const shifts = await this.db
       .select()

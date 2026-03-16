@@ -1,12 +1,10 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { and, eq } from 'drizzle-orm';
 import { DEFAULT_MEMBER_ROLE_NAME } from '../auth/constants';
-import type { UserEntity } from '../auth/schemas/auth.schema';
 import type { Database } from '../database/database.module';
 import { DATABASE_CONNECTION } from '../database/database-connection';
 import * as schema from '../database/schema';
 import { ConflictGraphQLError, NotFoundGraphQLError } from '../graphql/errors';
-import { OrganizationRole } from '../organization/enums';
 import { MembershipRequestStatus } from './enums';
 import { UpdateMembershipRequestInput } from './inputs/update-membership-request.input';
 import type { MembershipEntity } from './schemas/membership.schema';
@@ -18,82 +16,6 @@ export class MembershipService {
     @Inject(DATABASE_CONNECTION)
     private readonly db: Database,
   ) {}
-
-  async create(
-    userId: string,
-    organizationId: string,
-    role: OrganizationRole,
-  ): Promise<MembershipEntity> {
-    const [membership] = await this.db
-      .insert(schema.memberships)
-      .values({
-        userId,
-        organizationId,
-        organizationRole: role,
-      })
-      .returning();
-    return membership;
-  }
-
-  async findUsersByRole(
-    organizationId: string,
-    role: OrganizationRole,
-  ): Promise<UserEntity[]> {
-    const adminMemberships = await this.db.query.memberships.findMany({
-      where: { organizationId, organizationRole: role },
-      with: {
-        user: true,
-      },
-    });
-
-    const admins = adminMemberships
-      .map((membership) => membership.user)
-      .filter((user): user is UserEntity => user !== null);
-
-    return admins;
-  }
-
-  async isAdmin(userId: string, organizationId: string): Promise<boolean> {
-    const membership = await this.db.query.memberships.findFirst({
-      where: {
-        userId,
-        organizationId,
-        organizationRole: OrganizationRole.ADMIN,
-      },
-    });
-    return !!membership;
-  }
-
-  async isVolunteer(userId: string, organizationId: string): Promise<boolean> {
-    const membership = await this.db.query.memberships.findFirst({
-      where: {
-        userId,
-        organizationId,
-        organizationRole: OrganizationRole.VOLUNTEER,
-      },
-    });
-    return !!membership;
-  }
-
-  async isStaff(userId: string, organizationId: string): Promise<boolean> {
-    const membership = await this.db.query.memberships.findFirst({
-      where: {
-        userId,
-        organizationId,
-        organizationRole: OrganizationRole.ADMIN,
-      },
-    });
-    return !!membership;
-  }
-  async isMember(userId: string, organizationId: string): Promise<boolean> {
-    const membership = await this.db.query.memberships.findFirst({
-      where: {
-        userId,
-        organizationId,
-      },
-    });
-    return !!membership;
-  }
 
   async getMembership(
     userId: string,
@@ -218,7 +140,6 @@ export class MembershipService {
         await tx.insert(schema.memberships).values({
           userId: membershipRequest.userId,
           organizationId: membershipRequest.organizationId,
-          organizationRole: OrganizationRole.VOLUNTEER,
           roleId: memberRole.id,
         });
 

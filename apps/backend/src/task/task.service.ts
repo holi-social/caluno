@@ -3,9 +3,8 @@ import type { UserEntity } from '../auth/schemas/auth.schema';
 import type { Database } from '../database/database.module';
 import { DATABASE_CONNECTION } from '../database/database-connection';
 import * as schema from '../database/schema';
-import { ForbiddenGraphQLError, NotFoundGraphQLError } from '../graphql/errors';
+import { NotFoundGraphQLError } from '../graphql/errors';
 import type { PaginationInput } from '../graphql/pagination.input';
-import { MembershipService } from '../membership/membership.service';
 import { slugify } from '../utils';
 import { CreateTaskInput } from './inputs/create-task.input';
 import { CreateTaskAssignmentInput } from './inputs/create-task-assignment.input';
@@ -17,7 +16,6 @@ export class TaskService {
   constructor(
     @Inject(DATABASE_CONNECTION)
     private readonly db: Database,
-    private readonly membershipService: MembershipService,
     private readonly mapper: TaskMapper,
   ) {}
 
@@ -66,17 +64,6 @@ export class TaskService {
   }
 
   async create(userId: string, input: CreateTaskInput): Promise<Task> {
-    const isStaff = await this.membershipService.isStaff(
-      userId,
-      input.organizationId,
-    );
-
-    if (!isStaff) {
-      throw new ForbiddenGraphQLError(
-        'You are not authorized to create a task for this organization',
-      );
-    }
-
     const [task] = await this.db
       .insert(schema.tasks)
       .values({
@@ -96,28 +83,6 @@ export class TaskService {
 
     if (!task) {
       throw new NotFoundGraphQLError('Task not found');
-    }
-
-    const isStaff = await this.membershipService.isStaff(
-      userId,
-      input.organizationId,
-    );
-
-    if (!isStaff) {
-      throw new ForbiddenGraphQLError(
-        'You are not authorized to assign a task to this user',
-      );
-    }
-
-    const isVolunteer = await this.membershipService.isVolunteer(
-      input.assigneeId,
-      input.organizationId,
-    );
-
-    if (!isVolunteer) {
-      throw new ForbiddenGraphQLError(
-        'You are not authorized to assign a task to this user because they are not a volunteer for this organization',
-      );
     }
 
     await this.db

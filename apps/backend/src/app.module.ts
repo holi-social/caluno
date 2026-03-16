@@ -11,7 +11,6 @@ import {
 import { betterAuth } from 'better-auth';
 import { createAuthConfig } from './auth/auth';
 import { AuthModule } from './auth/auth.module';
-import { MembershipRoleGuard } from './auth/guards/membership-role.guard';
 import { PermissionGuard } from './auth/guards/permission.guard';
 import { type Database, DatabaseModule } from './database/database.module';
 import { DATABASE_CONNECTION } from './database/database-connection';
@@ -70,10 +69,6 @@ import { UserModule } from './user/user.module';
     {
       provide: APP_GUARD,
       useClass: AuthGuard,
-    },
-    {
-      provide: APP_GUARD,
-      useClass: MembershipRoleGuard,
     },
     {
       provide: APP_GUARD,
