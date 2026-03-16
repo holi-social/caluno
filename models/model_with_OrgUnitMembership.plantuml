@@ -1,0 +1,155 @@
+@startuml clippy
+skinparam linetype ortho
+class Tenant {
+    name
+    invoiceAddress
+    ...
+}
+note top: There is only one Tenant\nconnected to the root OrgUnit
+class OrgUnit {
+    name
+    description
+    ...
+}
+class OrgUnitType {
+    name
+    description
+    icon
+}
+class Location {
+    name
+    street
+    zip
+    city
+    country
+    ...
+}
+class User {
+    name
+    email
+    phone
+    address
+    bankAccountNumber
+    ...
+}
+class Shift {
+    start
+    end
+}
+class TimeEntry {
+    start
+    end
+    status {started, finished, validated, rejected}
+    note ?
+}
+note right: How do we manage\nstatus and validation?
+class Membership {
+}
+class Role {
+    name
+    description
+}
+class Permission {
+    key
+    description
+}
+class MembershipRequest {
+    status {pending, accepted, rejected}
+    reviewedBy
+    reviewedAt
+    rejectionReason
+}
+class ShiftAssignment {
+    status {invited, accepted, rejected}
+}
+class Review {
+    rating
+    review
+}
+class VolunteeringSession {
+    status {started, finished, validated, rejected}
+    note ?
+}
+note right: Is this needed?
+class ValidationAction {
+    note
+    moderator
+    timestamp
+}
+note right: How is reject => update\nof a TimeEntry working?
+
+class QualificationProfileDefinition {
+    name
+    description
+}
+class QualificationCriterionDefinition {
+    type {document, check, date, ...}
+    name
+    description
+}
+class QualificationProfile {
+    status {draft, submitted, approved, rejected}
+    submittedAt
+    reviewedAt
+    reviewedBy
+}
+class QualificationCriterion {
+    value: text/JSON
+    status {draft, submitted, approved, rejected}
+    submittedAt
+    reviewedAt
+    reviewedBy
+}
+class Document {
+    name
+    mimeType
+    storageKey
+    uploadedAt
+}
+
+Tenant -- "root\n1" OrgUnit
+OrgUnit "*" -left- "1" OrgUnitType
+OrgUnit "*\nchild" o-- "1\nparent" OrgUnit
+OrgUnit "0..1" -- "*" Shift
+Tenant "1" -- "*" Membership
+Membership "*" -- "1" User
+
+OrgUnitMembership -- OrgUnit
+OrgUnitMembership -- Membership
+OrgUnitMembership -up- "*" Role
+OrgUnitMembership -- "?" QualificationProfile
+
+OrgUnit "1" -down- "*" MembershipRequest
+MembershipRequest "*" -right- "1" User
+
+Location "0..1" -up- "*" OrgUnit
+Location "0..1" -right- "*" Shift
+
+Permission "*" -- "*" Role
+
+Tenant "1" -right- "*" QualificationProfileDefinition
+QualificationProfileDefinition -right- "*" QualificationCriterionDefinition
+
+User "1" -right- "*" Document
+QualificationCriterion "*" -down- "0..1" Document
+Membership "1" -right- "*" QualificationProfile
+QualificationProfile -right- "*" QualificationCriterion
+MembershipRequest "1" -left- "*" QualificationProfile
+
+QualificationProfile "*" -up- "1" QualificationProfileDefinition
+QualificationCriterion "*" -up- "1" QualificationCriterionDefinition
+
+ShiftAssignment "*" -up- "1" User
+Shift "1" -up- "*" ShiftAssignment
+Review "*" -up- "1" User
+Shift "1" -up- "*" Review
+TimeEntry "*" -up- "1" User
+TimeEntry "*" -- "1" Shift
+VolunteeringSession "*" -up- "1" User
+VolunteeringSession "*" -left- "1" Shift
+VolunteeringSession "1" -- "*" TimeEntry
+TimeEntry "1" -- "0..1" ValidationAction
+
+' only for layouting purposes
+
+@enduml
