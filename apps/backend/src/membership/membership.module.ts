@@ -5,6 +5,7 @@ import { MembershipMapper } from './mappers/membership.mepper';
 import { MembershipRequestMapper } from './mappers/membership-request.mepper';
 import { MembershipService } from './membership.service';
 import {
+  MembershipMutationResolver,
   MembershipQueryResolver,
   MembershipRequestMutationResolver,
   MembershipRequestQueryResolver,
@@ -19,6 +20,7 @@ import {
     MembershipQueryResolver,
     MembershipRequestMutationResolver,
     MembershipRequestQueryResolver,
+    MembershipMutationResolver,
   ],
   exports: [MembershipService],
 })

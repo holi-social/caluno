@@ -1,5 +1,7 @@
 import { Args, Query, Resolver } from '@nestjs/graphql';
 import { Session, type UserSession } from '@thallesp/nestjs-better-auth';
+import { PERMISSIONS } from '../../auth/constants';
+import { Permissions } from '../../auth/decorators/permissions.decorator';
 import { PaginationInput } from '../../graphql/pagination.input';
 import { OrganizationMapper } from '../mappers/organization.mapper';
 import {
@@ -15,11 +17,13 @@ export class OrganizationQueryResolver {
     private readonly organizationMapper: OrganizationMapper,
   ) {}
 
+  @Permissions(PERMISSIONS.ORG_READ)
   @Query(() => Organization)
   async organization(@Args('id') id: string): Promise<Organization | null> {
     return this.organizationService.findById(id);
   }
 
+  @Permissions(PERMISSIONS.ORG_READ)
   @Query(() => Organization)
   async organizationBySlug(
     @Args('slug') slug: string,
@@ -27,6 +31,7 @@ export class OrganizationQueryResolver {
     return this.organizationService.findBySlug(slug);
   }
 
+  @Permissions(PERMISSIONS.ORG_READ)
   @Query(() => OrganizationPaginatedResponse)
   async organizations(
     @Args() pagination: PaginationInput,

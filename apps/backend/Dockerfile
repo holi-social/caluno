@@ -35,5 +35,5 @@ COPY --from=builder /app/apps/backend/dist ./dist
 
 EXPOSE 8080
 
-CMD ["sh", "-c", "bun run db:migrate && bun run start:prod"]
+CMD ["sh", "-c", "bun run db:migrate && bun run db:seed && bun run start:prod"]
 

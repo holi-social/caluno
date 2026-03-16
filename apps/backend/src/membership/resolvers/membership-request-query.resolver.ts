@@ -1,5 +1,6 @@
 import { Args, ID, Query, Resolver } from '@nestjs/graphql';
-import { Roles } from '../../auth/decorators';
+import { PERMISSIONS } from '../../auth/constants';
+import { Permissions } from '../../auth/decorators/permissions.decorator';
 import { PaginationInput } from '../../graphql/pagination.input';
 import { MembershipRequestMapper } from '../mappers/membership-request.mepper';
 import { MembershipService } from '../membership.service';
@@ -15,7 +16,7 @@ export class MembershipRequestQueryResolver {
     private readonly membershipRequestMapper: MembershipRequestMapper,
   ) {}
 
-  @Roles('STAFF')
+  @Permissions(PERMISSIONS.MEMBERSHIP_REQUEST_READ)
   @Query(() => MembershipRequestPaginatedResponse)
   async membershipRequests(
     @Args('organizationId', { type: () => ID }) organizationId: string,

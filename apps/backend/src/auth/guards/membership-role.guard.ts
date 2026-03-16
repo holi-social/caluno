@@ -68,7 +68,7 @@ export class MembershipRoleGuard implements CanActivate {
 
     const hasRequiredRole = requiredRoles.some((requiredRole) =>
       this.roleMapping[requiredRole]?.includes(
-        membership.role as OrganizationRole,
+        membership.organizationRole as OrganizationRole,
       ),
     );
 

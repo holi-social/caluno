@@ -1,6 +1,8 @@
 import { Args, ID, Mutation, Resolver } from '@nestjs/graphql';
 import type { UserSession } from '@thallesp/nestjs-better-auth';
 import { Session } from '@thallesp/nestjs-better-auth';
+import { PERMISSIONS } from '../../auth/constants';
+import { Permissions } from '../../auth/decorators/permissions.decorator';
 import { AddTimeEntryInput } from '../inputs/add-time-entry.input';
 import { ApproveVolunteerSessionInput } from '../inputs/approve-volunteer-session.input';
 import { RejectVolunteerSessionInput } from '../inputs/reject-volunteer-session.input';
@@ -19,6 +21,7 @@ export class TimeTrackingMutationResolver {
     private readonly entryMapper: TimeEntryMapper,
   ) {}
 
+  @Permissions(PERMISSIONS.VOLUNTEER_SESSION_CREATE)
   @Mutation(() => VolunteerSession)
   async startVolunteerSession(
     @Args('input') input: StartVolunteerSessionInput,
@@ -31,6 +34,7 @@ export class TimeTrackingMutationResolver {
     return this.sessionMapper.toModelOrThrow(entity);
   }
 
+  @Permissions(PERMISSIONS.VOLUNTEER_SESSION_UPDATE)
   @Mutation(() => VolunteerSession)
   async endVolunteerSession(
     @Args('id', { type: () => ID }) id: string,
@@ -43,6 +47,7 @@ export class TimeTrackingMutationResolver {
     return this.sessionMapper.toModelOrThrow(entity);
   }
 
+  @Permissions(PERMISSIONS.VOLUNTEER_SESSION_APPROVE)
   @Mutation(() => VolunteerSession)
   async approveVolunteerSession(
     @Args('input') input: ApproveVolunteerSessionInput,
@@ -55,6 +60,7 @@ export class TimeTrackingMutationResolver {
     return this.sessionMapper.toModelOrThrow(entity);
   }
 
+  @Permissions(PERMISSIONS.VOLUNTEER_SESSION_REJECT)
   @Mutation(() => VolunteerSession)
   async rejectVolunteerSession(
     @Args('input') input: RejectVolunteerSessionInput,
@@ -67,6 +73,7 @@ export class TimeTrackingMutationResolver {
     return this.sessionMapper.toModelOrThrow(entity);
   }
 
+  @Permissions(PERMISSIONS.TIME_ENTRY_CREATE)
   @Mutation(() => TimeEntry)
   async addTimeEntry(
     @Args('input') input: AddTimeEntryInput,
@@ -79,6 +86,7 @@ export class TimeTrackingMutationResolver {
     return this.entryMapper.toModelOrThrow(entity);
   }
 
+  @Permissions(PERMISSIONS.TIME_ENTRY_DELETE)
   @Mutation(() => TimeEntry)
   async deleteTimeEntry(
     @Args('id', { type: () => ID }) id: string,

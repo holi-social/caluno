@@ -35,6 +35,12 @@ input CreateProjectInput {
   title: String!
 }
 
+input CreateRoleInput {
+  description: String
+  name: String!
+  permissionIds: [String!]!
+}
+
 input CreateShiftInput {
   endsAt: DateTime!
   instructions: String
@@ -101,13 +107,16 @@ type Mutation {
   addTimeEntry(input: AddTimeEntryInput!): TimeEntry!
   approveMembershipRequest(id: ID!, organizationId: ID!): MembershipRequest!
   approveVolunteerSession(input: ApproveVolunteerSessionInput!): VolunteerSession!
+  assignRoleToMembership(membershipId: ID!, roleId: ID!): Boolean!
   assignTask(input: CreateTaskAssignmentInput!): Task!
   cancelMembershipRequest(id: ID!, organizationId: ID!): MembershipRequest!
   createMembershipRequest(organizationId: ID!): MembershipRequest!
   createOrganization(input: CreateOrganizationInput!): Organization!
   createProject(input: CreateProjectInput!): Project!
+  createRole(input: CreateRoleInput!): Role!
   createShift(input: CreateShiftInput!): Shift!
   createTask(input: CreateTaskInput!): Task!
+  deleteRole(id: ID!): Role!
   deleteShift(id: String!): Shift!
   deleteTimeEntry(id: ID!): TimeEntry!
   endVolunteerSession(id: ID!): VolunteerSession!
@@ -117,6 +126,7 @@ type Mutation {
   rejectVolunteerSession(input: RejectVolunteerSessionInput!): VolunteerSession!
   startVolunteerSession(input: StartVolunteerSessionInput!): VolunteerSession!
   updateProject(id: ID!, input: UpdateProjectInput!): Project!
+  updateRole(id: ID!, input: CreateRoleInput!): Role!
   updateShift(id: String!, input: UpdateShiftInput!): Shift!
 }
 
@@ -155,6 +165,12 @@ type PaginationInfo {
   limit: Int!
   offset: Int!
   total: Int!
+}
+
+type Permission {
+  description: String
+  id: ID!
+  key: String!
 }
 
 type Project {
@@ -197,8 +213,10 @@ type Query {
   organization(id: String!): Organization!
   organizationBySlug(slug: String!): Organization!
   organizations(limit: Int! = 10, offset: Int! = 0): OrganizationPaginatedResponse!
+  permissions: [Permission!]!
   project(id: ID!): Project!
   projects(limit: Int! = 10, offset: Int! = 0, organizationId: ID!): ProjectPaginatedResponse!
+  roles: [Role!]!
   shift(id: String!): Shift!
   shifts(limit: Int! = 10, offset: Int! = 0): ShiftPaginatedResponse!
   shiftsByProjectId(limit: Int! = 10, offset: Int! = 0, projectId: String!): ShiftPaginatedResponse!
@@ -213,6 +231,14 @@ input RejectVolunteerSessionInput {
   id: String!
   organizationId: String!
   rejectionReason: String
+}
+
+type Role {
+  description: String
+  id: ID!
+  isInternal: Boolean!
+  name: String!
+  permissions: [Permission!]!
 }
 
 type Shift {

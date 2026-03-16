@@ -1,5 +1,6 @@
 import { Args, Context, Query, Resolver } from '@nestjs/graphql';
-import { Roles } from '../../auth/decorators/roles.decorator';
+import { PERMISSIONS } from '../../auth/constants';
+import { Permissions } from '../../auth/decorators/permissions.decorator';
 import type { AuthenticatedGraphQLContext } from '../../graphql/graphql.context';
 import { VolunteerSessionStatus } from '../enums';
 import { VolunteerSessionMapper } from '../mappers/volunteer-session.mapper';
@@ -13,7 +14,7 @@ export class TimeTrackingQueryResolver {
     private readonly volunteerSessionMapper: VolunteerSessionMapper,
   ) {}
 
-  @Roles('MEMBER')
+  @Permissions(PERMISSIONS.VOLUNTEER_SESSION_READ)
   @Query(() => [VolunteerSession])
   async volunteerSessions(
     @Args('status', { type: () => VolunteerSessionStatus, nullable: true })

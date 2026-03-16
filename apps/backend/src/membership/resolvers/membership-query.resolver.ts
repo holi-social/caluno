@@ -1,5 +1,7 @@
 import { Args, ID, Query, Resolver } from '@nestjs/graphql';
 import { Session, type UserSession } from '@thallesp/nestjs-better-auth';
+import { PERMISSIONS } from '../../auth/constants';
+import { Permissions } from '../../auth/decorators/permissions.decorator';
 import { OrganizationRole } from '../../organization/enums';
 import { User } from '../../user/models/user.model';
 import { MembershipMapper } from '../mappers/membership.mepper';
@@ -13,6 +15,7 @@ export class MembershipQueryResolver {
     private readonly membershipMapper: MembershipMapper,
   ) {}
 
+  @Permissions(PERMISSIONS.MEMBERSHIP_READ)
   @Query(() => Membership)
   async membership(
     @Args('organizationId', { type: () => ID }) organizationId: string,
@@ -25,6 +28,7 @@ export class MembershipQueryResolver {
     return this.membershipMapper.toModel(entity);
   }
 
+  @Permissions(PERMISSIONS.MEMBERSHIP_READ)
   @Query(() => User)
   async usersByRole(
     @Args('organizationId', { type: () => ID }) organizationId: string,
@@ -33,6 +37,7 @@ export class MembershipQueryResolver {
     return this.membershipService.findUsersByRole(organizationId, role);
   }
 
+  @Permissions(PERMISSIONS.MEMBERSHIP_READ)
   @Query(() => Boolean)
   async isUserOrganizationAdmin(
     @Args('organizationId', { type: () => ID }) organizationId: string,
@@ -41,6 +46,7 @@ export class MembershipQueryResolver {
     return this.membershipService.isAdmin(session.user.id, organizationId);
   }
 
+  @Permissions(PERMISSIONS.MEMBERSHIP_READ)
   @Query(() => Boolean)
   async isUserOrganizationVolunteer(
     @Args('organizationId', { type: () => ID }) organizationId: string,
@@ -49,6 +55,7 @@ export class MembershipQueryResolver {
     return this.membershipService.isVolunteer(session.user.id, organizationId);
   }
 
+  @Permissions(PERMISSIONS.MEMBERSHIP_READ)
   @Query(() => Boolean)
   async isUserOrganizationStaff(
     @Args('organizationId', { type: () => ID }) organizationId: string,
@@ -57,6 +64,7 @@ export class MembershipQueryResolver {
     return this.membershipService.isStaff(session.user.id, organizationId);
   }
 
+  @Permissions(PERMISSIONS.MEMBERSHIP_READ)
   @Query(() => Boolean)
   async isUserOrganizationMember(
     @Args('organizationId', { type: () => ID }) organizationId: string,

@@ -4,7 +4,8 @@ import {
   Session,
   type UserSession,
 } from '@thallesp/nestjs-better-auth';
-import { Roles } from '../../auth/decorators/roles.decorator';
+import { PERMISSIONS } from '../../auth/constants';
+import { Permissions } from '../../auth/decorators/permissions.decorator';
 import type { AuthenticatedGraphQLContext } from '../../graphql/graphql.context';
 import { PaginationInput } from '../../graphql/pagination.input';
 import { ShiftMapper } from '../mappers/shift.mapper';
@@ -25,7 +26,7 @@ export class ShiftQueryResolver {
     return this.shiftMapper.toModelOrThrow(shift);
   }
 
-  @Roles('MEMBER')
+  @Permissions(PERMISSIONS.SHIFT_READ)
   @Query(() => ShiftPaginatedResponse)
   async shifts(
     @Args() pagination: PaginationInput,
@@ -46,7 +47,7 @@ export class ShiftQueryResolver {
     });
   }
 
-  @Roles('MEMBER')
+  @Permissions(PERMISSIONS.SHIFT_READ)
   @Query(() => ShiftPaginatedResponse)
   async shiftsByProjectId(
     @Args('projectId') projectId: string,
