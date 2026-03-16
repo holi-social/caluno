@@ -4,10 +4,15 @@ import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { APP_GUARD } from '@nestjs/core';
 import { GraphQLModule } from '@nestjs/graphql';
-import { AuthGuard, AuthModule } from '@thallesp/nestjs-better-auth';
+import {
+  AuthGuard,
+  AuthModule as BetterAuthModule,
+} from '@thallesp/nestjs-better-auth';
 import { betterAuth } from 'better-auth';
 import { createAuthConfig } from './auth/auth';
+import { AuthModule } from './auth/auth.module';
 import { MembershipRoleGuard } from './auth/guards/membership-role.guard';
+import { PermissionGuard } from './auth/guards/permission.guard';
 import { type Database, DatabaseModule } from './database/database.module';
 import { DATABASE_CONNECTION } from './database/database-connection';
 import { GraphqlModule } from './graphql/graphql.module';
@@ -36,7 +41,7 @@ import { UserModule } from './user/user.module';
         organizationId: req.headers['x-organization-id'],
       }),
     }),
-    AuthModule.forRootAsync({
+    BetterAuthModule.forRootAsync({
       imports: [DatabaseModule, ConfigModule],
       useFactory: (database: Database, configService: ConfigService) => ({
         auth: betterAuth(
@@ -57,6 +62,8 @@ import { UserModule } from './user/user.module';
     TimeTrackingModule,
     GraphqlModule,
     ShiftModule,
+    BetterAuthModule,
+    AuthModule,
   ],
   controllers: [],
   providers: [
@@ -67,6 +74,10 @@ import { UserModule } from './user/user.module';
     {
       provide: APP_GUARD,
       useClass: MembershipRoleGuard,
+    },
+    {
+      provide: APP_GUARD,
+      useClass: PermissionGuard,
     },
   ],
 })

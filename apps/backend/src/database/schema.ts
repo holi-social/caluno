@@ -1,4 +1,7 @@
 export * from '../auth/schemas/auth.schema';
+export * from '../auth/schemas/permission.schema';
+export * from '../auth/schemas/role.schema';
+export * from '../auth/schemas/role-permission.schema';
 export * from '../membership/schemas/membership.schema';
 export * from '../membership/schemas/membership-request.schema';
 export * from '../organization/schemas/organization.schema';
