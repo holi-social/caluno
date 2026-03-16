@@ -1,18 +1,5 @@
-import {
-  index,
-  pgEnum,
-  pgTable,
-  text,
-  timestamp,
-  uuid,
-} from 'drizzle-orm/pg-core';
+import { index, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
 import { idColumn, timestampColumns } from '../../database/database-columns';
-import { OrganizationRole } from '../enums';
-
-export const organizationRoleEnum = pgEnum(
-  'organization_role',
-  OrganizationRole as Record<string, string>,
-);
 
 export const organizations = pgTable(
   'organizations',

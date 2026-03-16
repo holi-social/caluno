@@ -75,7 +75,6 @@ scalar DateTime
 type Membership {
   id: ID!
   organization: Organization!
-  role: OrganizationRole!
   user: User!
 }
 
@@ -155,11 +154,6 @@ type OrganizationPaginatedResponse {
   pagination: PaginationInfo!
 }
 
-enum OrganizationRole {
-  ADMIN
-  VOLUNTEER
-}
-
 type PaginationInfo {
   hasMore: Boolean!
   limit: Int!
@@ -202,10 +196,6 @@ enum ProjectStatus {
 }
 
 type Query {
-  isUserOrganizationAdmin(organizationId: ID!): Boolean!
-  isUserOrganizationMember(organizationId: ID!): Boolean!
-  isUserOrganizationStaff(organizationId: ID!): Boolean!
-  isUserOrganizationVolunteer(organizationId: ID!): Boolean!
   me: User!
   membership(organizationId: ID!): Membership!
   membershipRequests(limit: Int! = 10, offset: Int! = 0, organizationId: ID!): MembershipRequestPaginatedResponse!
@@ -223,7 +213,6 @@ type Query {
   task(id: String!): Task!
   tasksByUserId(limit: Int! = 10, offset: Int! = 0, userId: String!): TaskPaginatedResponse!
   user(id: String!): User
-  usersByRole(organizationId: ID!, role: OrganizationRole!): User!
   volunteerSessions(status: VolunteerSessionStatus): [VolunteerSession!]!
 }
 

@@ -1,6 +1,5 @@
 import { Field, ID, ObjectType } from '@nestjs/graphql';
 import { createPaginatedResponseType } from '../../graphql/paginated-response.model';
-import { OrganizationRole } from '../../organization/enums';
 import { Organization } from '../../organization/models/organization.model';
 import { User } from '../../user/models/user.model';
 
@@ -14,9 +13,6 @@ export class Membership {
 
   @Field(() => Organization)
   organization: Organization;
-
-  @Field(() => OrganizationRole)
-  role: OrganizationRole;
 }
 
 export const MembershipPaginatedResponse =

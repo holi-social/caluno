@@ -25,7 +25,7 @@ export class TimeTrackingService {
   constructor(
     @Inject(DATABASE_CONNECTION)
     private readonly db: Database,
-    private readonly membershipService: MembershipService,
+    readonly _membershipService: MembershipService,
   ) {}
   async addTimeEntry(
     userId: string,
@@ -70,12 +70,7 @@ export class TimeTrackingService {
       throw new NotFoundGraphQLError('Shift not found');
     }
 
-    const isStaff = await this.membershipService.isStaff(
-      userId,
-      shift.organizationId,
-    );
-
-    if (!isStaff && input.volunteerId !== userId) {
+    if (input.volunteerId !== userId) {
       throw new ForbiddenGraphQLError(
         'You are not authorized to create volunteer sessions for other users',
       );
@@ -130,17 +125,6 @@ export class TimeTrackingService {
     userId: string,
     input: ApproveVolunteerSessionInput,
   ): Promise<VolunteerSessionEntity> {
-    const isStaff = await this.membershipService.isStaff(
-      userId,
-      input.organizationId,
-    );
-
-    if (!isStaff) {
-      throw new ForbiddenGraphQLError(
-        'You are not authorized to approve volunteer sessions',
-      );
-    }
-
     const volunteerSession = await this.db.query.volunteerSessions.findFirst({
       where: { id: input.id },
     });
@@ -171,15 +155,6 @@ export class TimeTrackingService {
     userId: string,
     input: RejectVolunteerSessionInput,
   ): Promise<VolunteerSessionEntity> {
-    const isStaff = await this.membershipService.isStaff(
-      userId,
-      input.organizationId,
-    );
-    if (!isStaff) {
-      throw new ForbiddenGraphQLError(
-        'You are not authorized to reject volunteer sessions',
-      );
-    }
     const [rejectedSession] = await this.db
       .update(schema.volunteerSessions)
       .set({
@@ -242,10 +217,7 @@ export class TimeTrackingService {
     return userEntries;
   }
 
-  async findTaskBySessionId(
-    userId: string,
-    sessionId: string,
-  ): Promise<TaskEntity> {
+  async findTaskBySessionId(sessionId: string): Promise<TaskEntity> {
     const volunteerSession = await this.db.query.volunteerSessions.findFirst({
       where: { id: sessionId },
       with: {
@@ -261,12 +233,6 @@ export class TimeTrackingService {
       throw new NotFoundGraphQLError('Volunteer session not found');
     }
 
-    if (volunteerSession.assignment?.assignedToId !== userId) {
-      throw new ForbiddenGraphQLError(
-        'You are not authorized to access this task',
-      );
-    }
-
     if (!volunteerSession.assignment?.task) {
       throw new NotFoundGraphQLError('Task not found');
     }
@@ -275,7 +241,6 @@ export class TimeTrackingService {
   }
 
   async findValidatorBySessionId(
-    userId: string,
     sessionId: string,
   ): Promise<UserEntity | null> {
     const volunteerSession = await this.db.query.volunteerSessions.findFirst({
@@ -302,17 +267,6 @@ export class TimeTrackingService {
       throw new NotFoundGraphQLError('Volunteer session not found');
     }
 
-    const isStaff = await this.membershipService.isStaff(
-      userId,
-      volunteerSession.assignment?.task?.project?.organization?.id ?? '',
-    );
-
-    if (volunteerSession.assignment?.assignedToId !== userId || !isStaff) {
-      throw new ForbiddenGraphQLError(
-        'You are not authorized to access this volunteer session',
-      );
-    }
-
     return volunteerSession.validatedByRel;
   }
 
@@ -336,10 +290,7 @@ export class TimeTrackingService {
     return filteredSessions;
   }
 
-  async findShiftBySessionId(
-    userId: string,
-    sessionId: string,
-  ): Promise<ShiftEntity | null> {
+  async findShiftBySessionId(sessionId: string): Promise<ShiftEntity | null> {
     const volunteerSession = await this.db.query.volunteerSessions.findFirst({
       where: { id: sessionId },
       with: {
@@ -354,17 +305,6 @@ export class TimeTrackingService {
 
     if (!organizationId) {
       throw new NotFoundGraphQLError('Organization not found for this session');
-    }
-
-    const isStaff = await this.membershipService.isStaff(
-      userId,
-      organizationId,
-    );
-
-    if (!isStaff) {
-      throw new ForbiddenGraphQLError(
-        'You are not authorized to access this volunteer session',
-      );
     }
 
     return volunteerSession.shift ?? null;

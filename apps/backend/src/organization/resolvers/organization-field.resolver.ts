@@ -7,7 +7,6 @@ import {
   type ProjectPaginatedResponse,
 } from '../../project/models/project.model';
 import { UserMapper } from '../../user/mappers/user.mapper';
-import { User } from '../../user/models/user.model';
 import { Organization } from '../models/organization.model';
 import { OrganizationService } from '../organization.service';
 
@@ -44,21 +43,5 @@ export class OrganizationFieldResolver {
       organization.id,
       pagination,
     );
-  }
-
-  @Permissions(PERMISSIONS.MEMBERSHIP_READ)
-  @ResolveField(() => [User])
-  async admins(@Parent() organization: Organization): Promise<User[]> {
-    const admins = await this.organizationService.findAdmins(organization.id);
-    return admins;
-  }
-
-  @Permissions(PERMISSIONS.MEMBERSHIP_READ)
-  @ResolveField(() => [User])
-  async volunteers(@Parent() organization: Organization): Promise<User[]> {
-    const volunteers = await this.organizationService.findVolunteers(
-      organization.id,
-    );
-    return volunteers;
   }
 }

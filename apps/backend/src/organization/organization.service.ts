@@ -6,7 +6,6 @@ import {
   MEMBER_DEFAULT_PERMISSIONS,
   PERMISSIONS,
 } from '../auth/constants';
-import type { UserEntity } from '../auth/schemas/auth.schema';
 import type { Database } from '../database/database.module';
 import { DATABASE_CONNECTION } from '../database/database-connection';
 import * as schema from '../database/schema';
@@ -15,9 +14,7 @@ import type { PaginationInput } from '../graphql/pagination.input';
 import { MembershipService } from '../membership/membership.service';
 import type { ProjectPaginatedResponse } from '../project/models/project.model';
 import { ProjectService } from '../project/project.service';
-import { User } from '../user/models/user.model';
 import { slugify } from '../utils';
-import { OrganizationRole } from './enums';
 import type { CreateOrganizationInput } from './inputs/create-organization.input';
 import { OrganizationMapper } from './mappers/organization.mapper';
 import { type Organization } from './models/organization.model';
@@ -29,7 +26,7 @@ export class OrganizationService {
     private readonly db: Database,
     private readonly mapper: OrganizationMapper,
     private readonly projectService: ProjectService,
-    private readonly membershipService: MembershipService,
+    readonly _membershipService: MembershipService,
   ) {}
 
   async findById(id: string): Promise<Organization | null> {
@@ -88,20 +85,6 @@ export class OrganizationService {
       where: { id: organizationId },
     });
     return this.mapper.toModel(parent);
-  }
-
-  async findAdmins(organizationId: string): Promise<UserEntity[]> {
-    return this.membershipService.findUsersByRole(
-      organizationId,
-      OrganizationRole.ADMIN,
-    );
-  }
-
-  async findVolunteers(organizationId: string): Promise<User[]> {
-    return this.membershipService.findUsersByRole(
-      organizationId,
-      OrganizationRole.VOLUNTEER,
-    );
   }
 
   async findProjectsByOrganizationId(
@@ -182,7 +165,6 @@ export class OrganizationService {
       await tx.insert(schema.memberships).values({
         userId,
         organizationId: createdOrganization.id,
-        organizationRole: OrganizationRole.ADMIN,
         roleId: ownerRole.id,
       });
 
