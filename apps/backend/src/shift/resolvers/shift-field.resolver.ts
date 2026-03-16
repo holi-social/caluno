@@ -1,4 +1,6 @@
 import { Parent, ResolveField, Resolver } from '@nestjs/graphql';
+import { PERMISSIONS } from '../../auth/constants';
+import { Permissions } from '../../auth/decorators/permissions.decorator';
 import { Project } from '../../project/models/project.model';
 import { ProjectService } from '../../project/project.service';
 import { UserMapper } from '../../user/mappers/user.mapper';
@@ -15,12 +17,14 @@ export class ShiftFieldResolver {
     private readonly userMapper: UserMapper,
   ) {}
 
+  @Permissions(PERMISSIONS.SHIFT_READ)
   @ResolveField(() => User)
   async createdBy(@Parent() shift: ShiftEntity): Promise<User> {
     const creator = await this.shiftService.findCreator(shift.createdById);
     return this.userMapper.toModelOrThrow(creator);
   }
 
+  @Permissions(PERMISSIONS.SHIFT_READ)
   @ResolveField(() => Project, { nullable: true })
   async project(@Parent() shift: ShiftEntity): Promise<Project | null> {
     if (shift.projectId) {
@@ -30,6 +34,7 @@ export class ShiftFieldResolver {
     }
   }
 
+  @Permissions(PERMISSIONS.SHIFT_READ)
   @ResolveField(() => User)
   async volunteers(@Parent() shift: ShiftEntity): Promise<User[]> {
     const volunteers = await this.shiftService.findVolunteers(shift.id);

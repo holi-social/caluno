@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { AuthModule } from '../auth/auth.module';
 import { DatabaseModule } from '../database/database.module';
 import { MembershipModule } from '../membership/membership.module';
 import { ProjectModule } from '../project/project.module';
@@ -12,7 +13,13 @@ import {
 } from './resolvers';
 
 @Module({
-  imports: [DatabaseModule, UserModule, MembershipModule, ProjectModule],
+  imports: [
+    DatabaseModule,
+    UserModule,
+    MembershipModule,
+    ProjectModule,
+    AuthModule,
+  ],
   providers: [
     OrganizationService,
     OrganizationQueryResolver,

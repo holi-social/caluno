@@ -1,6 +1,7 @@
 import { Args, Context, Mutation, Resolver } from '@nestjs/graphql';
 import { Session, type UserSession } from '@thallesp/nestjs-better-auth';
-import { Roles } from '../../auth/decorators/roles.decorator';
+import { PERMISSIONS } from '../../auth/constants';
+import { Permissions } from '../../auth/decorators/permissions.decorator';
 import type { AuthenticatedGraphQLContext } from '../../graphql/graphql.context';
 import { CreateShiftInput } from '../inputs/create-shift.input';
 import { UpdateShiftInput } from '../inputs/update-shift.input';
@@ -15,7 +16,7 @@ export class ShiftMutationResolver {
     private readonly shiftMapper: ShiftMapper,
   ) {}
 
-  @Roles('STAFF')
+  @Permissions(PERMISSIONS.SHIFT_CREATE)
   @Mutation(() => Shift)
   async createShift(
     @Session() session: UserSession,
@@ -30,7 +31,7 @@ export class ShiftMutationResolver {
     return this.shiftMapper.toModelOrThrow(shift);
   }
 
-  @Roles('STAFF')
+  @Permissions(PERMISSIONS.SHIFT_UPDATE)
   @Mutation(() => Shift)
   async updateShift(
     @Session() session: UserSession,
@@ -47,7 +48,7 @@ export class ShiftMutationResolver {
     return this.shiftMapper.toModelOrThrow(shift);
   }
 
-  @Roles('STAFF')
+  @Permissions(PERMISSIONS.SHIFT_UPDATE)
   @Mutation(() => Shift)
   async inviteMembersToShift(
     @Args('shiftId', { type: () => String }) shiftId: string,
@@ -60,7 +61,7 @@ export class ShiftMutationResolver {
     return this.shiftMapper.toModelOrThrow(shift);
   }
 
-  @Roles('STAFF')
+  @Permissions(PERMISSIONS.SHIFT_DELETE)
   @Mutation(() => Shift)
   async deleteShift(
     @Args('id', { type: () => String }) id: string,

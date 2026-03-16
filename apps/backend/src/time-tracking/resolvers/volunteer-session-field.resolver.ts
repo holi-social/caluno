@@ -1,5 +1,7 @@
 import { Parent, ResolveField, Resolver } from '@nestjs/graphql';
 import { Session, type UserSession } from '@thallesp/nestjs-better-auth';
+import { PERMISSIONS } from '../../auth/constants';
+import { Permissions } from '../../auth/decorators/permissions.decorator';
 import { ShiftMapper } from '../../shift/mappers/shift.mapper';
 import { Shift } from '../../shift/models/shift.model';
 import { TaskMapper } from '../../task/mappers/task.mapper';
@@ -22,6 +24,7 @@ export class VolunteerSessionFieldResolver {
     private readonly shiftMapper: ShiftMapper,
   ) {}
 
+  @Permissions(PERMISSIONS.VOLUNTEER_SESSION_READ)
   @ResolveField(() => [TimeEntry])
   async entries(
     @Parent() volunteerSession: volunteerSessionSchema.VolunteerSessionEntity,
@@ -34,6 +37,7 @@ export class VolunteerSessionFieldResolver {
     return this.entryMapper.toArray(entries);
   }
 
+  @Permissions(PERMISSIONS.VOLUNTEER_SESSION_READ)
   @ResolveField(() => Task)
   async task(
     @Parent() volunteerSession: volunteerSessionSchema.VolunteerSessionEntity,
@@ -46,6 +50,7 @@ export class VolunteerSessionFieldResolver {
     return this.taskMapper.toModelOrThrow(task);
   }
 
+  @Permissions(PERMISSIONS.VOLUNTEER_SESSION_READ)
   @ResolveField(() => User, { nullable: true })
   async validatedBy(
     @Parent() volunteerSession: volunteerSessionSchema.VolunteerSessionEntity,
@@ -61,6 +66,7 @@ export class VolunteerSessionFieldResolver {
     return this.userMapper.toModel(validator);
   }
 
+  @Permissions(PERMISSIONS.VOLUNTEER_SESSION_READ)
   @ResolveField(() => Shift, { nullable: true })
   async shift(
     @Parent() volunteerSession: volunteerSessionSchema.VolunteerSessionEntity,

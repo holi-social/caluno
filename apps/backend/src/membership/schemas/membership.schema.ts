@@ -1,5 +1,6 @@
 import { index, pgTable, text, unique, uuid } from 'drizzle-orm/pg-core';
 import { users } from '../../auth/schemas/auth.schema';
+import { roles } from '../../auth/schemas/role.schema';
 import { idColumn, timestampColumns } from '../../database/database-columns';
 import { OrganizationRole } from '../../organization/enums';
 import {
@@ -17,9 +18,12 @@ export const memberships = pgTable(
     organizationId: uuid('organization_id').references(() => organizations.id, {
       onDelete: 'cascade',
     }),
-    role: organizationRoleEnum('role')
+    organizationRole: organizationRoleEnum('organization_role')
       .notNull()
       .default(OrganizationRole.VOLUNTEER),
+    roleId: uuid('role_id').references(() => roles.id, {
+      onDelete: 'cascade',
+    }),
     ...timestampColumns,
   },
   (table) => [

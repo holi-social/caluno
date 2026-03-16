@@ -1,6 +1,8 @@
 import { Args, Mutation, Resolver } from '@nestjs/graphql';
 import type { UserSession } from '@thallesp/nestjs-better-auth';
 import { Session } from '@thallesp/nestjs-better-auth';
+import { PERMISSIONS } from '../../auth/constants';
+import { Permissions } from '../../auth/decorators/permissions.decorator';
 import { CreateOrganizationInput } from '../inputs/create-organization.input';
 import { Organization } from '../models/organization.model';
 import { OrganizationService } from '../organization.service';
@@ -9,6 +11,7 @@ import { OrganizationService } from '../organization.service';
 export class OrganizationMutationResolver {
   constructor(private readonly organizationService: OrganizationService) {}
 
+  @Permissions(PERMISSIONS.ORG_CREATE)
   @Mutation(() => Organization)
   async createOrganization(
     @Args('input') input: CreateOrganizationInput,

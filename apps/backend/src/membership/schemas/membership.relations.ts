@@ -11,5 +11,9 @@ export const membershipRelations = defineRelationsPart(schema, (r) => ({
       from: r.memberships.organizationId,
       to: r.organizations.id,
     }),
+    role: r.one.roles({
+      from: r.memberships.roleId,
+      to: r.roles.id,
+    }),
   },
 }));

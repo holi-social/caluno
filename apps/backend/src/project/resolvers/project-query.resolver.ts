@@ -1,4 +1,6 @@
 import { Args, ID, Query, Resolver } from '@nestjs/graphql';
+import { PERMISSIONS } from '../../auth/constants';
+import { Permissions } from '../../auth/decorators/permissions.decorator';
 import { PaginationInput } from '../../graphql/pagination.input';
 import { Project, ProjectPaginatedResponse } from '../models/project.model';
 import { ProjectService } from '../project.service';
@@ -7,6 +9,7 @@ import { ProjectService } from '../project.service';
 export class ProjectQueryResolver {
   constructor(private readonly projectService: ProjectService) {}
 
+  @Permissions(PERMISSIONS.PROJECT_READ)
   @Query(() => Project)
   async project(
     @Args('id', { type: () => ID }) id: string,
@@ -14,6 +17,7 @@ export class ProjectQueryResolver {
     return this.projectService.findById(id);
   }
 
+  @Permissions(PERMISSIONS.PROJECT_READ)
   @Query(() => ProjectPaginatedResponse)
   async projects(
     @Args('organizationId', { type: () => ID }) organizationId: string,

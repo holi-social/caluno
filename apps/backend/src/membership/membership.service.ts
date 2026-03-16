@@ -1,5 +1,6 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { and, eq } from 'drizzle-orm';
+import { DEFAULT_MEMBER_ROLE_NAME } from '../auth/constants';
 import type { UserEntity } from '../auth/schemas/auth.schema';
 import type { Database } from '../database/database.module';
 import { DATABASE_CONNECTION } from '../database/database-connection';
@@ -28,7 +29,7 @@ export class MembershipService {
       .values({
         userId,
         organizationId,
-        role,
+        organizationRole: role,
       })
       .returning();
     return membership;
@@ -39,7 +40,7 @@ export class MembershipService {
     role: OrganizationRole,
   ): Promise<UserEntity[]> {
     const adminMemberships = await this.db.query.memberships.findMany({
-      where: { organizationId, role },
+      where: { organizationId, organizationRole: role },
       with: {
         user: true,
       },
@@ -57,7 +58,7 @@ export class MembershipService {
       where: {
         userId,
         organizationId,
-        role: OrganizationRole.ADMIN,
+        organizationRole: OrganizationRole.ADMIN,
       },
     });
     return !!membership;
@@ -68,7 +69,7 @@ export class MembershipService {
       where: {
         userId,
         organizationId,
-        role: OrganizationRole.VOLUNTEER,
+        organizationRole: OrganizationRole.VOLUNTEER,
       },
     });
     return !!membership;
@@ -79,7 +80,7 @@ export class MembershipService {
       where: {
         userId,
         organizationId,
-        role: OrganizationRole.ADMIN,
+        organizationRole: OrganizationRole.ADMIN,
       },
     });
     return !!membership;
@@ -168,20 +169,57 @@ export class MembershipService {
     organizationId: string,
     reviewerId: string,
   ): Promise<boolean> {
-    const membershipRequest = await this.updateMembershipRequest(
-      id,
-      organizationId,
-      {
-        status: MembershipRequestStatus.ACCEPTED,
-        reviewedBy: reviewerId,
-        reviewedAt: new Date(),
-      },
-    );
+    await this.db.transaction(async (tx) => {
+      const organization = await tx.query.organizations.findFirst({
+        where: { id: organizationId },
+      });
 
-    await this.db.insert(schema.memberships).values({
-      userId: membershipRequest.userId,
-      organizationId: membershipRequest.organizationId,
-      role: OrganizationRole.VOLUNTEER,
+      if (!organization) {
+        throw new NotFoundGraphQLError('Organization not found');
+      }
+
+      const memberRole = await tx.query.roles.findFirst({
+        where: {
+          name: DEFAULT_MEMBER_ROLE_NAME,
+          isInternal: true,
+        },
+      });
+
+      if (!memberRole) {
+        throw new NotFoundGraphQLError(
+          'Member role not found for this organization',
+        );
+      }
+
+      const [membershipRequest] = await tx
+        .update(schema.membershipRequests)
+        .set({
+          status: MembershipRequestStatus.ACCEPTED,
+          reviewedById: reviewerId,
+          reviewedAt: new Date(),
+        })
+        .where(
+          and(
+            eq(schema.membershipRequests.id, id),
+            eq(schema.membershipRequests.organizationId, organizationId),
+            eq(
+              schema.membershipRequests.status,
+              MembershipRequestStatus.PENDING,
+            ),
+          ),
+        )
+        .returning();
+
+      if (!membershipRequest) {
+        throw new NotFoundGraphQLError('Membership request not found');
+      }
+
+      await tx.insert(schema.memberships).values({
+        userId: membershipRequest.userId,
+        organizationId: membershipRequest.organizationId,
+        organizationRole: OrganizationRole.VOLUNTEER,
+        roleId: memberRole.id,
+      });
     });
 
     return true;
@@ -195,7 +233,7 @@ export class MembershipService {
   ): Promise<boolean> {
     await this.updateMembershipRequest(id, organizationId, {
       status: MembershipRequestStatus.REJECTED,
-      reviewedBy: reviewerId,
+      reviewedById: reviewerId,
       reviewedAt: new Date(),
       rejectionReason,
     });

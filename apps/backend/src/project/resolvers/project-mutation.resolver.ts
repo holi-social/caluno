@@ -1,7 +1,8 @@
 import { Args, ID, Mutation, Resolver } from '@nestjs/graphql';
 import type { UserSession } from '@thallesp/nestjs-better-auth';
 import { Session } from '@thallesp/nestjs-better-auth';
-import { Roles } from '../../auth/decorators';
+import { PERMISSIONS } from '../../auth/constants';
+import { Permissions } from '../../auth/decorators/permissions.decorator';
 import { CreateProjectInput } from '../inputs/create-project.input';
 import { UpdateProjectInput } from '../inputs/update-project.input';
 import { Project } from '../models/project.model';
@@ -11,7 +12,7 @@ import { ProjectService } from '../project.service';
 export class ProjectMutationResolver {
   constructor(private readonly projectService: ProjectService) {}
 
-  @Roles('STAFF')
+  @Permissions(PERMISSIONS.PROJECT_CREATE)
   @Mutation(() => Project)
   async createProject(
     @Args('input') input: CreateProjectInput,
@@ -20,7 +21,7 @@ export class ProjectMutationResolver {
     return this.projectService.create(session.user.id, input);
   }
 
-  @Roles('STAFF')
+  @Permissions(PERMISSIONS.PROJECT_PUBLISH)
   @Mutation(() => Project)
   async publishProject(
     @Args('id', { type: () => ID }) id: string,
@@ -29,7 +30,7 @@ export class ProjectMutationResolver {
     return this.projectService.publish(session.user.id, id);
   }
 
-  @Roles('STAFF')
+  @Permissions(PERMISSIONS.PROJECT_UPDATE)
   @Mutation(() => Project)
   async updateProject(
     @Args('id', { type: () => ID }) id: string,

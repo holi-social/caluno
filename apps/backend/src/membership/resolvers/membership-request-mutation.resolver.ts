@@ -1,6 +1,7 @@
 import { Args, ID, Mutation, Resolver } from '@nestjs/graphql';
 import { Session, type UserSession } from '@thallesp/nestjs-better-auth';
-import { Roles } from '../../auth/decorators';
+import { PERMISSIONS } from '../../auth/constants';
+import { Permissions } from '../../auth/decorators/permissions.decorator';
 import { MembershipRequestMapper } from '../mappers/membership-request.mepper';
 import { MembershipService } from '../membership.service';
 import { MembershipRequest } from '../models/membership-request.model';
@@ -12,6 +13,7 @@ export class MembershipRequestMutationResolver {
     private readonly membershipRequestMapper: MembershipRequestMapper,
   ) {}
 
+  @Permissions(PERMISSIONS.MEMBERSHIP_REQUEST_CREATE)
   @Mutation(() => MembershipRequest)
   async createMembershipRequest(
     @Args('organizationId', { type: () => ID }) organizationId: string,
@@ -24,8 +26,8 @@ export class MembershipRequestMutationResolver {
     return this.membershipRequestMapper.toModelOrThrow(entity);
   }
 
-  @Roles('STAFF')
-  @Mutation(() => MembershipRequest)
+  @Permissions(PERMISSIONS.MEMBERSHIP_REQUEST_APPROVE)
+  @Mutation(() => Boolean)
   async approveMembershipRequest(
     @Args('id', { type: () => ID }) id: string,
     @Args('organizationId', { type: () => ID }) organizationId: string,
@@ -38,8 +40,8 @@ export class MembershipRequestMutationResolver {
     );
   }
 
-  @Roles('STAFF')
-  @Mutation(() => MembershipRequest)
+  @Permissions(PERMISSIONS.MEMBERSHIP_REQUEST_REJECT)
+  @Mutation(() => Boolean)
   async rejectMembershipRequest(
     @Args('id', { type: () => ID }) id: string,
     @Args('organizationId', { type: () => ID }) organizationId: string,
@@ -54,7 +56,8 @@ export class MembershipRequestMutationResolver {
     );
   }
 
-  @Mutation(() => MembershipRequest)
+  @Permissions(PERMISSIONS.MEMBERSHIP_REQUEST_CANCEL)
+  @Mutation(() => Boolean)
   async cancelMembershipRequest(
     @Args('id', { type: () => ID }) id: string,
     @Args('organizationId', { type: () => ID }) organizationId: string,
