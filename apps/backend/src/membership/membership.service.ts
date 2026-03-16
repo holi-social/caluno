@@ -168,61 +168,64 @@ export class MembershipService {
     id: string,
     organizationId: string,
     reviewerId: string,
-  ): Promise<boolean> {
-    await this.db.transaction(async (tx) => {
-      const organization = await tx.query.organizations.findFirst({
-        where: { id: organizationId },
-      });
+  ): Promise<MembershipRequestEntity> {
+    const membershipRequest =
+      await this.db.transaction<MembershipRequestEntity>(async (tx) => {
+        const organization = await tx.query.organizations.findFirst({
+          where: { id: organizationId },
+        });
 
-      if (!organization) {
-        throw new NotFoundGraphQLError('Organization not found');
-      }
+        if (!organization) {
+          throw new NotFoundGraphQLError('Organization not found');
+        }
 
-      const memberRole = await tx.query.roles.findFirst({
-        where: {
-          name: DEFAULT_MEMBER_ROLE_NAME,
-          isInternal: true,
-        },
-      });
+        const memberRole = await tx.query.roles.findFirst({
+          where: {
+            name: DEFAULT_MEMBER_ROLE_NAME,
+            isInternal: true,
+          },
+        });
 
-      if (!memberRole) {
-        throw new NotFoundGraphQLError(
-          'Member role not found for this organization',
-        );
-      }
+        if (!memberRole) {
+          throw new NotFoundGraphQLError(
+            'Member role not found for this organization',
+          );
+        }
 
-      const [membershipRequest] = await tx
-        .update(schema.membershipRequests)
-        .set({
-          status: MembershipRequestStatus.ACCEPTED,
-          reviewedById: reviewerId,
-          reviewedAt: new Date(),
-        })
-        .where(
-          and(
-            eq(schema.membershipRequests.id, id),
-            eq(schema.membershipRequests.organizationId, organizationId),
-            eq(
-              schema.membershipRequests.status,
-              MembershipRequestStatus.PENDING,
+        const [membershipRequest] = await tx
+          .update(schema.membershipRequests)
+          .set({
+            status: MembershipRequestStatus.ACCEPTED,
+            reviewedById: reviewerId,
+            reviewedAt: new Date(),
+          })
+          .where(
+            and(
+              eq(schema.membershipRequests.id, id),
+              eq(schema.membershipRequests.organizationId, organizationId),
+              eq(
+                schema.membershipRequests.status,
+                MembershipRequestStatus.PENDING,
+              ),
             ),
-          ),
-        )
-        .returning();
+          )
+          .returning();
 
-      if (!membershipRequest) {
-        throw new NotFoundGraphQLError('Membership request not found');
-      }
+        if (!membershipRequest) {
+          throw new NotFoundGraphQLError('Membership request not found');
+        }
 
-      await tx.insert(schema.memberships).values({
-        userId: membershipRequest.userId,
-        organizationId: membershipRequest.organizationId,
-        organizationRole: OrganizationRole.VOLUNTEER,
-        roleId: memberRole.id,
+        await tx.insert(schema.memberships).values({
+          userId: membershipRequest.userId,
+          organizationId: membershipRequest.organizationId,
+          organizationRole: OrganizationRole.VOLUNTEER,
+          roleId: memberRole.id,
+        });
+
+        return membershipRequest;
       });
-    });
 
-    return true;
+    return membershipRequest;
   }
 
   async rejectMembershipRequest(
@@ -230,23 +233,21 @@ export class MembershipService {
     organizationId: string,
     reviewerId: string,
     rejectionReason: string,
-  ): Promise<boolean> {
-    await this.updateMembershipRequest(id, organizationId, {
+  ): Promise<MembershipRequestEntity> {
+    return this.updateMembershipRequest(id, organizationId, {
       status: MembershipRequestStatus.REJECTED,
       reviewedById: reviewerId,
       reviewedAt: new Date(),
       rejectionReason,
     });
-
-    return true;
   }
 
   async cancelMembershipRequest(
     id: string,
     organizationId: string,
     userId: string,
-  ): Promise<boolean> {
-    await this.updateMembershipRequest(
+  ): Promise<MembershipRequestEntity> {
+    return this.updateMembershipRequest(
       id,
       organizationId,
       {
@@ -254,8 +255,6 @@ export class MembershipService {
       },
       userId,
     );
-
-    return true;
   }
 
   async getMembershipRequests(

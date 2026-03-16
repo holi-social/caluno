@@ -27,46 +27,49 @@ export class MembershipRequestMutationResolver {
   }
 
   @Permissions(PERMISSIONS.MEMBERSHIP_REQUEST_APPROVE)
-  @Mutation(() => Boolean)
+  @Mutation(() => MembershipRequest)
   async approveMembershipRequest(
     @Args('id', { type: () => ID }) id: string,
     @Args('organizationId', { type: () => ID }) organizationId: string,
     @Session() session: UserSession,
-  ): Promise<boolean> {
-    return this.membershipRequestService.approveMembershipRequest(
+  ): Promise<MembershipRequest> {
+    const entity = await this.membershipRequestService.approveMembershipRequest(
       id,
       organizationId,
       session.user.id,
     );
+    return this.membershipRequestMapper.toModelOrThrow(entity);
   }
 
   @Permissions(PERMISSIONS.MEMBERSHIP_REQUEST_REJECT)
-  @Mutation(() => Boolean)
+  @Mutation(() => MembershipRequest)
   async rejectMembershipRequest(
     @Args('id', { type: () => ID }) id: string,
     @Args('organizationId', { type: () => ID }) organizationId: string,
     @Args('rejectionReason', { type: () => String }) rejectionReason: string,
     @Session() session: UserSession,
-  ): Promise<boolean> {
-    return this.membershipRequestService.rejectMembershipRequest(
+  ): Promise<MembershipRequest> {
+    const entity = await this.membershipRequestService.rejectMembershipRequest(
       id,
       organizationId,
       session.user.id,
       rejectionReason,
     );
+    return this.membershipRequestMapper.toModelOrThrow(entity);
   }
 
   @Permissions(PERMISSIONS.MEMBERSHIP_REQUEST_CANCEL)
-  @Mutation(() => Boolean)
+  @Mutation(() => MembershipRequest)
   async cancelMembershipRequest(
     @Args('id', { type: () => ID }) id: string,
     @Args('organizationId', { type: () => ID }) organizationId: string,
     @Session() session: UserSession,
-  ): Promise<boolean> {
-    return this.membershipRequestService.cancelMembershipRequest(
+  ): Promise<MembershipRequest> {
+    const entity = await this.membershipRequestService.cancelMembershipRequest(
       id,
       organizationId,
       session.user.id,
     );
+    return this.membershipRequestMapper.toModelOrThrow(entity);
   }
 }
