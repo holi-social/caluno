@@ -1,5 +1,11 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { count, eq } from 'drizzle-orm';
+import { count, eq, inArray } from 'drizzle-orm';
+import {
+  DEFAULT_MEMBER_ROLE_NAME,
+  DEFAULT_OWNER_ROLE_NAME,
+  MEMBER_DEFAULT_PERMISSIONS,
+  PERMISSIONS,
+} from '../auth/constants';
 import type { UserEntity } from '../auth/schemas/auth.schema';
 import type { Database } from '../database/database.module';
 import { DATABASE_CONNECTION } from '../database/database-connection';
@@ -112,19 +118,76 @@ export class OrganizationService {
     userId: string,
     input: CreateOrganizationInput,
   ): Promise<Organization> {
-    const [organization] = await this.db
-      .insert(schema.organizations)
-      .values({
-        ...input,
-        slug: slugify(input.name),
-      })
-      .returning();
+    const allPermissionKeys = Object.values(PERMISSIONS);
 
-    await this.membershipService.create(
-      userId,
-      organization.id,
-      OrganizationRole.ADMIN,
-    );
+    const [organization] = await this.db.transaction(async (tx) => {
+      const [createdOrganization] = await tx
+        .insert(schema.organizations)
+        .values({
+          ...input,
+          slug: slugify(input.name),
+        })
+        .returning();
+
+      const [ownerRole] = await tx
+        .insert(schema.roles)
+        .values({
+          name: DEFAULT_OWNER_ROLE_NAME,
+          description: `Owner role for organization ${createdOrganization.name}`,
+          isInternal: true,
+        })
+        .returning();
+
+      const [memberRole] = await tx
+        .insert(schema.roles)
+        .values({
+          name: DEFAULT_MEMBER_ROLE_NAME,
+          description: `Member role for organization ${createdOrganization.name}`,
+          isInternal: true,
+        })
+        .returning();
+
+      const memberPermissionRows = await tx
+        .select({
+          id: schema.permissions.id,
+          key: schema.permissions.key,
+        })
+        .from(schema.permissions)
+        .where(inArray(schema.permissions.key, MEMBER_DEFAULT_PERMISSIONS));
+
+      await tx.insert(schema.rolePermissions).values(
+        memberPermissionRows.map((permission) => ({
+          roleId: memberRole.id,
+          permissionId: permission.id,
+        })),
+      );
+
+      const permissionRows = await tx
+        .select({
+          id: schema.permissions.id,
+          key: schema.permissions.key,
+        })
+        .from(schema.permissions)
+        .where(inArray(schema.permissions.key, allPermissionKeys));
+
+      if (permissionRows.length > 0) {
+        await tx.insert(schema.rolePermissions).values(
+          permissionRows.map((permission) => ({
+            roleId: ownerRole.id,
+            permissionId: permission.id,
+          })),
+        );
+      }
+
+      await tx.insert(schema.memberships).values({
+        userId,
+        organizationId: createdOrganization.id,
+        organizationRole: OrganizationRole.ADMIN,
+        roleId: ownerRole.id,
+      });
+
+      return [createdOrganization];
+    });
 
     return this.mapper.toModelOrThrow(organization);
   }
