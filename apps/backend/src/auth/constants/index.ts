@@ -4,6 +4,11 @@ export const PERMISSIONS = {
   ORG_UPDATE: 'org:update',
   ORG_DELETE: 'org:delete',
 
+  ROLE_CREATE: 'role:create',
+  ROLE_READ: 'role:read',
+  ROLE_UPDATE: 'role:update',
+  ROLE_DELETE: 'role:delete',
+
   MEMBERSHIP_CREATE: 'membership:create',
   MEMBERSHIP_READ: 'membership:read',
   MEMBERSHIP_UPDATE: 'membership:update',

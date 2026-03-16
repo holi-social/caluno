@@ -22,7 +22,7 @@ export const memberships = pgTable(
       .notNull()
       .default(OrganizationRole.VOLUNTEER),
     roleId: uuid('role_id').references(() => roles.id, {
-      onDelete: 'cascade',
+      onDelete: 'restrict',
     }),
     ...timestampColumns,
   },

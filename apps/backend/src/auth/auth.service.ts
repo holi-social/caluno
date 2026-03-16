@@ -1,13 +1,16 @@
-import { Inject, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Inject,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
+import { eq } from 'drizzle-orm';
 import type { Database } from 'src/database/database.module';
 import { DATABASE_CONNECTION } from 'src/database/database-connection';
 import * as schema from '../database/schema';
-import {
-  PermissionEntity,
-  RoleEntity,
-  RolePermissionEntity,
-} from '../database/schema';
+import { PermissionEntity, RoleEntity } from '../database/schema';
 import { CreateRoleInput } from './inputs/create-role.input';
+import { UpdateRoleInput } from './inputs/update-role.input';
 
 @Injectable()
 export class AuthService {
@@ -16,38 +19,29 @@ export class AuthService {
     private readonly db: Database,
   ) {}
 
-  async createRole(input: CreateRoleInput): Promise<RolePermissionEntity[]> {
-    const rolePermissions = await this.db.transaction(async (tx) => {
-      const [role] = await tx
-        .insert(schema.roles)
-        .values({
-          name: input.name,
-          description: input.description,
-        })
-        .returning();
+  async createRole(input: CreateRoleInput): Promise<RoleEntity> {
+    const [role] = await this.db
+      .insert(schema.roles)
+      .values({
+        name: input.name,
+        description: input.description,
+      })
+      .returning();
 
-      if (!role) {
-        throw new Error('Failed to create role');
-      }
+    if (!role) {
+      throw new Error('Failed to create role');
+    }
 
-      if (!input.permissionIds.length) {
-        return [] as RolePermissionEntity[];
-      }
+    if (input.permissionIds.length) {
+      await this.db.insert(schema.rolePermissions).values(
+        input.permissionIds.map((permissionId) => ({
+          roleId: role.id,
+          permissionId,
+        })),
+      );
+    }
 
-      const createdRolePermissions = await tx
-        .insert(schema.rolePermissions)
-        .values(
-          input.permissionIds.map((permissionId) => ({
-            roleId: role.id,
-            permissionId,
-          })),
-        )
-        .returning();
-
-      return createdRolePermissions;
-    });
-
-    return rolePermissions;
+    return role;
   }
 
   async getUserPermissions(
@@ -127,5 +121,80 @@ export class AuthService {
     return rolePermissions
       .map((rp) => rp.permission)
       .filter((p): p is PermissionEntity => p !== null);
+  }
+
+  async updateRole(
+    roleId: string,
+    input: UpdateRoleInput,
+  ): Promise<RoleEntity> {
+    const [updatedRole] = await this.db.transaction(async (tx) => {
+      const updateData: Partial<typeof schema.roles.$inferInsert> = {};
+
+      if (input.name !== undefined) {
+        updateData.name = input.name;
+      }
+
+      if (input.description !== undefined) {
+        updateData.description = input.description;
+      }
+
+      const [role] = await tx
+        .update(schema.roles)
+        .set(updateData)
+        .where(eq(schema.roles.id, roleId))
+        .returning();
+
+      if (!role) {
+        throw new NotFoundException('Role not found');
+      }
+
+      if (input.permissionIds !== undefined) {
+        await tx
+          .delete(schema.rolePermissions)
+          .where(eq(schema.rolePermissions.roleId, roleId));
+
+        if (input.permissionIds.length) {
+          await tx.insert(schema.rolePermissions).values(
+            input.permissionIds.map((permissionId) => ({
+              roleId,
+              permissionId,
+            })),
+          );
+        }
+      }
+
+      return [role];
+    });
+
+    return updatedRole;
+  }
+
+  async deleteRole(roleId: string): Promise<RoleEntity> {
+    const [deletedRole] = await this.db.transaction(async (tx) => {
+      const assignedMembership = await tx.query.memberships.findFirst({
+        where: {
+          roleId,
+        },
+      });
+
+      if (assignedMembership) {
+        throw new BadRequestException(
+          'Role is assigned to at least one membership and cannot be deleted',
+        );
+      }
+
+      const [role] = await tx
+        .delete(schema.roles)
+        .where(eq(schema.roles.id, roleId))
+        .returning();
+
+      if (!role) {
+        throw new NotFoundException('Role not found');
+      }
+
+      return [role];
+    });
+
+    return deletedRole;
   }
 }

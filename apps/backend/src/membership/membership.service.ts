@@ -265,4 +265,21 @@ export class MembershipService {
       where: { organizationId },
     });
   }
+
+  async assignRoleToMembership(
+    membershipId: string,
+    roleId: string,
+  ): Promise<boolean> {
+    const [membership] = await this.db
+      .update(schema.memberships)
+      .set({ roleId })
+      .where(eq(schema.memberships.id, membershipId))
+      .returning();
+
+    if (!membership) {
+      throw new NotFoundGraphQLError('Membership not found');
+    }
+
+    return true;
+  }
 }
