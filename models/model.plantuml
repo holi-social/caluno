@@ -78,22 +78,22 @@ class ValidationAction {
 }
 note right: How is reject => update\nof a TimeEntry working?
 
-class DossierDefinition {
+class QualificationProfileDefinition {
     name
     description
 }
-class DossierEntryDefinition {
+class QualificationCriterionDefinition {
     type {document, check, date, ...}
     name
     description
 }
-class Dossier {
+class QualificationProfile {
     status {draft, submitted, approved, rejected}
     submittedAt
     reviewedAt
     reviewedBy
 }
-class DossierEntry {
+class QualificationCriterion {
     value: text/JSON
     status {draft, submitted, approved, rejected}
     submittedAt
@@ -124,17 +124,17 @@ Role "*" -right- "*" Permission
 
 Role "*" -- "*" Membership
 
-OrgUnit "1" -left- "*" DossierDefinition
-DossierDefinition -left- "*" DossierEntryDefinition
+OrgUnit "1" -left- "*" QualificationProfileDefinition
+QualificationProfileDefinition -left- "*" QualificationCriterionDefinition
 
 User "1" -right- "*" Document
-DossierEntry "*" -down- "0..1" Document
-Membership "1" -right- "*" Dossier
-Dossier -right- "*" DossierEntry
-MembershipRequest "1" -left- "*" Dossier
+QualificationCriterion "*" -down- "0..1" Document
+Membership "1" -right- "*" QualificationProfile
+QualificationProfile -right- "*" QualificationCriterion
+MembershipRequest "1" -left- "*" QualificationProfile
 
-Dossier "*" -left- "1" DossierDefinition
-DossierEntry "*" -left- "1" DossierEntryDefinition
+QualificationProfile "*" -left- "1" QualificationProfileDefinition
+QualificationCriterion "*" -left- "1" QualificationCriterionDefinition
 
 ShiftAssignment "*" -up- "1" User
 Shift "1" -up- "*" ShiftAssignment
