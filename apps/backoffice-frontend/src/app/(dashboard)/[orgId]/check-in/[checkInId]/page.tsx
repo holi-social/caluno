@@ -1,22 +1,15 @@
-import {
-  Alert,
-  AlertDescription,
-  AlertTitle,
-  Button,
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from '@repo/ui';
-import { AlertCircle, CheckCircle2, User } from 'lucide-react';
-import Image from 'next/image';
+import { Alert, AlertDescription, AlertTitle } from '@repo/ui';
+import { AlertCircle } from 'lucide-react';
+import { CheckinForm } from '@/domain/shift/components/checkin-form';
 import { getDataClient } from '@/lib/data-client';
+import { requireOrgAccess } from '@/lib/org-context-server';
 
 interface CheckinPageProps {
   params: Promise<{ orgId: string; checkInId: string }>;
 }
 
-type CheckInStatus =
+//  TODO: what's the true different states
+export type CheckInStatus =
   | 'valid'
   | 'blocked'
   | 'information-required'
@@ -26,8 +19,14 @@ type CheckInStatus =
 export default async function CheckinPage({ params }: CheckinPageProps) {
   const { orgId, checkInId } = await params;
 
-  const data = await getDataClient();
+  const { org } = await requireOrgAccess(orgId);
+  const data = await getDataClient(org.id);
   const user = await data.user.findByCheckInId(checkInId);
+
+  const activeShiftsResult = await data.shift.activeShifts({
+    limit: 100,
+    offset: 0,
+  });
 
   if (!user) {
     return (
@@ -43,6 +42,7 @@ export default async function CheckinPage({ params }: CheckinPageProps) {
     );
   }
 
+  //  TODO: temporary status checking, until blocking & dossier features land
   const status: CheckInStatus = 'valid';
 
   return (
@@ -63,43 +63,12 @@ export default async function CheckinPage({ params }: CheckinPageProps) {
             </Alert>
           )}
 
-          <Card className="p-4 gap-2">
-            <CardHeader className="px-0">
-              <CardTitle>
-                {user.name} <span className="font-light">({user.email})</span>
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="px-0">
-              {user.image ? (
-                <Image src={user.image} alt="Volunteers profile photo" />
-              ) : (
-                <div className="border-8 rounded-2xl inline-block">
-                  <User className="size-72 max-w-full text-accent/90" />
-                </div>
-              )}
-            </CardContent>
-          </Card>
-          <div className="grid grid-cols-2 gap-4">
-            <Card>
-              <CardHeader>
-                <CardTitle>Requirements</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="flex gap-2">
-                  <CheckCircle2 className="text-green-500" /> All met
-                </div>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent>
-                <CardTitle>Shift</CardTitle>
-              </CardContent>
-            </Card>
-          </div>
-
-          <Button size="lg" className="w-full" disabled={status !== 'valid'}>
-            Check-in
-          </Button>
+          <CheckinForm
+            volunteer={user}
+            shifts={activeShiftsResult.items}
+            organizationId={orgId}
+            status={status}
+          />
         </div>
       </div>
     </div>

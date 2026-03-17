@@ -107,3 +107,24 @@ mutation DeleteShift($id: String!) {
     id
   }
 }
+
+query GetActiveShifts($limit: Int!, $offset: Int!) {
+  activeShifts(limit: $limit, offset: $offset) {
+    items {
+      id
+      title
+      startsAt
+      endsAt
+      project {
+        id
+        title
+      }
+    }
+    pagination {
+      total
+      limit
+      offset
+      hasMore
+    }
+  }
+}

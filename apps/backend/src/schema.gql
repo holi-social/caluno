@@ -170,6 +170,7 @@ enum ProjectStatus {
 }
 
 type Query {
+  activeShifts(limit: Int! = 10, offset: Int! = 0): ShiftPaginatedResponse!
   me: User!
   membership(organizationId: ID!): Membership!
   membershipRequests(limit: Int! = 10, offset: Int! = 0, organizationId: ID!): MembershipRequestPaginatedResponse!
