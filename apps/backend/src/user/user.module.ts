@@ -1,12 +1,14 @@
 import { Module } from '@nestjs/common';
+import { AuthModule } from '../auth/auth.module';
 import { DatabaseModule } from '../database/database.module';
 import { UserMapper } from './mappers/user.mapper';
-import { UserResolver } from './user.resolver';
+import { UserFieldResolver } from './resolvers/user-field.resolver';
+import { UserQueryResolver } from './resolvers/user-query.resolver';
 import { UserService } from './user.service';
 
 @Module({
-  imports: [DatabaseModule],
-  providers: [UserService, UserResolver, UserMapper],
+  imports: [DatabaseModule, AuthModule],
+  providers: [UserService, UserQueryResolver, UserFieldResolver, UserMapper],
   exports: [UserService, UserMapper],
 })
 export class UserModule {}

@@ -1,4 +1,5 @@
 import { Field, ID, ObjectType } from '@nestjs/graphql';
+import { Permission } from '../../auth/models/permission.model';
 
 @ObjectType()
 export class User {
@@ -16,4 +17,7 @@ export class User {
 
   @Field(() => ID)
   checkInId: string;
+
+  @Field(() => [Permission], { nullable: true })
+  permissions: Permission[];
 }

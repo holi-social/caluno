@@ -31,7 +31,6 @@ export class OrganizationQueryResolver {
     return this.organizationService.findBySlug(slug);
   }
 
-  @Permissions(PERMISSIONS.ORG_READ)
   @Query(() => OrganizationPaginatedResponse)
   async organizations(
     @Args() pagination: PaginationInput,

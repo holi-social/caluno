@@ -19,6 +19,6 @@ import { RoleQueryResolver } from './resolvers/role-query.resolver';
     RoleMutationResolver,
     PermissionQueryResolver,
   ],
-  exports: [AuthService],
+  exports: [AuthService, PermissionMapper, RoleMapper],
 })
 export class AuthModule {}

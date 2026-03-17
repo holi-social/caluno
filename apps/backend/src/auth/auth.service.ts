@@ -44,11 +44,11 @@ export class AuthService {
     return role;
   }
 
-  async getUserPermissions(
+  async findUserPermissions(
     userId: string,
     organizationId: string,
-  ): Promise<string[]> {
-    const userPermissions = await this.db.query.memberships.findMany({
+  ): Promise<PermissionEntity[]> {
+    const memberships = await this.db.query.memberships.findMany({
       where: { userId, organizationId },
       with: {
         role: {
@@ -62,15 +62,14 @@ export class AuthService {
         },
       },
     });
-    return Array.from(
-      new Set(
-        userPermissions.flatMap(
-          (membership) =>
-            membership.role?.permissions
-              ?.map((rp) => rp.permission?.key)
-              .filter((key): key is string => !!key) ?? [],
-        ),
-      ),
+
+    return memberships.flatMap(
+      (membership) =>
+        membership.role?.permissions
+          ?.map((rp) => rp.permission)
+          .filter(
+            (permission): permission is PermissionEntity => !!permission,
+          ) ?? [],
     );
   }
 
@@ -79,13 +78,21 @@ export class AuthService {
     organizationId: string,
     requiredPermissions: string[],
   ): Promise<boolean> {
-    const userPermissions = await this.getUserPermissions(
+    if (requiredPermissions.length === 0) {
+      return true;
+    }
+
+    const userPermissions = await this.findUserPermissions(
       userId,
       organizationId,
     );
 
+    const permissionKeys = new Set(
+      userPermissions.map((permission) => permission.key),
+    );
+
     return requiredPermissions.every((permission) =>
-      userPermissions.includes(permission),
+      permissionKeys.has(permission),
     );
   }
 
