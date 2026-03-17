@@ -56,6 +56,8 @@ variables:
       -f apps/backend/Dockerfile .
     - docker push "$REGISTRY_NAMESPACE/$BACKEND_IMAGE_NAME:$IMAGE_TAG_SHA"
     - docker push "$REGISTRY_NAMESPACE/$BACKEND_IMAGE_NAME:$STABLE_TAG"
+    - echo "Waiting for registry to propagate..."
+    - sleep 30
 
 .build-images-frontend:
   extends: .build-images-base
@@ -69,6 +71,8 @@ variables:
       -f apps/backoffice-frontend/Dockerfile .
     - docker push "$REGISTRY_NAMESPACE/$FRONTEND_IMAGE_NAME:$IMAGE_TAG_SHA"
     - docker push "$REGISTRY_NAMESPACE/$FRONTEND_IMAGE_NAME:$STABLE_TAG"
+    - echo "Waiting for registry to propagate..."
+    - sleep 30
 
 .build-images-base-branch:
   stage: build
@@ -155,6 +159,7 @@ terraform_plan_staging_mr:
 terraform_plan_staging:
   extends: .terraform
   stage: terraform_plan
+  retry: 2
   needs: ["build_staging_backend", "build_staging_frontend"]
   rules:
     - if: '$CI_COMMIT_BRANCH == "main"'
@@ -221,6 +226,7 @@ terraform_plan_production_mr:
 terraform_plan_production:
   extends: .terraform
   stage: terraform_plan
+  retry: 2
   needs: ["build_production_backend", "build_production_frontend"]
   rules:
     - if: '$CI_COMMIT_BRANCH == "production"'
