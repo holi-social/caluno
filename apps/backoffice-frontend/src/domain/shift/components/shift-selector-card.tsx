@@ -1,5 +1,3 @@
-'use client';
-
 import type { ActiveShift } from '@repo/data';
 import {
   Alert,
@@ -13,22 +11,21 @@ import {
 } from '@repo/ui';
 import { AlertCircle } from 'lucide-react';
 import Link from 'next/link';
-import { useState } from 'react';
 import { MiniShiftCard } from './mini-shift-card';
 
 type ShiftSelectorCardProps = {
   organizationId: string;
   shifts: ActiveShift[];
+  onChange: (shiftId: string) => void;
+  value?: string;
 };
 
 export const ShiftSelectorCard = ({
   shifts,
   organizationId,
+  onChange,
+  value,
 }: ShiftSelectorCardProps) => {
-  const [selectedShiftId, setSelectedShiftId] = useState<string | null>(() =>
-    shifts.length === 1 ? (shifts[0]?.id ?? null) : null,
-  );
-
   if (shifts.length === 0) {
     return (
       <Alert variant="destructive">
@@ -55,11 +52,11 @@ export const ShiftSelectorCard = ({
     return shift && <MiniShiftCard {...shift} />;
   }
 
-  const selectedShift = shifts.find((s) => s.id === selectedShiftId);
+  const selectedShift = shifts.find((s) => s.id === value);
 
   return (
     <div className="space-y-4">
-      <Select value="" onValueChange={setSelectedShiftId}>
+      <Select value="" onValueChange={onChange}>
         <SelectTrigger>
           <SelectValue placeholder="Choose a shift" />
         </SelectTrigger>
