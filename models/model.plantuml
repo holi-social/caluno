@@ -1,11 +1,10 @@
 @startuml clippy
-skinparam linetype ortho
-class Tenant {
+class Organisation {
     name
     invoiceAddress
     ...
 }
-note left: There is only one Tenant\nconnected to the root OrgUnit
+note left: There is only one Organisation\nconnected to the root OrgUnit
 class OrgUnit {
     name
     description
@@ -100,6 +99,7 @@ class QualificationCriterion {
     reviewedAt
     reviewedBy
 }
+
 class Document {
     name
     mimeType
@@ -107,8 +107,8 @@ class Document {
     uploadedAt
 }
 
-Tenant -down- "root\n1" OrgUnit
-OrgUnit "*" -up- "1" OrgUnitType
+Organisation [root] -down- "1" OrgUnit
+OrgUnit "*" -left- "1" OrgUnitType
 OrgUnit "*\nchild" o-- "1\nparent" OrgUnit
 OrgUnit "0..1" -- "*" Shift
 OrgUnit "1" -right- "*" Membership
@@ -120,12 +120,13 @@ MembershipRequest "*" -right- "1" User
 Location "0..1" -up- "*" OrgUnit
 Location "0..1" -right- "*" Shift
 
-Role "*" -right- "*" Permission
+Role "*" -up- "*" Permission
 
 Role "*" -- "*" Membership
 
-OrgUnit "1" -left- "*" QualificationProfileDefinition
-QualificationProfileDefinition -left- "*" QualificationCriterionDefinition
+OrgUnit -up- "*" QualificationProfileDefinition : selects >
+Organisation "1" -right- "*" QualificationProfileDefinition
+QualificationProfileDefinition -right- "*" QualificationCriterionDefinition
 
 User "1" -right- "*" Document
 QualificationCriterion "*" -down- "0..1" Document
@@ -133,8 +134,8 @@ Membership "1" -right- "*" QualificationProfile
 QualificationProfile -right- "*" QualificationCriterion
 MembershipRequest "1" -left- "*" QualificationProfile
 
-QualificationProfile "*" -left- "1" QualificationProfileDefinition
-QualificationCriterion "*" -left- "1" QualificationCriterionDefinition
+QualificationProfile "*" -up- "1" QualificationProfileDefinition
+QualificationCriterion "*" -up- "1" QualificationCriterionDefinition
 
 ShiftAssignment "*" -up- "1" User
 Shift "1" -up- "*" ShiftAssignment
