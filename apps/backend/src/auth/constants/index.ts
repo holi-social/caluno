@@ -37,14 +37,6 @@ export const PERMISSIONS = {
   TIME_ENTRY_READ: 'time-entry:read',
   TIME_ENTRY_UPDATE: 'time-entry:update',
   TIME_ENTRY_DELETE: 'time-entry:delete',
-
-  VOLUNTEER_SESSION_CREATE: 'volunteer-session:create',
-  VOLUNTEER_SESSION_READ: 'volunteer-session:read',
-  VOLUNTEER_SESSION_UPDATE: 'volunteer-session:update',
-  VOLUNTEER_SESSION_DELETE: 'volunteer-session:delete',
-  VOLUNTEER_SESSION_APPROVE: 'volunteer-session:approve',
-  VOLUNTEER_SESSION_REJECT: 'volunteer-session:reject',
-  VOLUNTEER_SESSION_CANCEL: 'volunteer-session:cancel',
 } as const;
 
 export const MEMBER_DEFAULT_PERMISSIONS = [
@@ -55,10 +47,6 @@ export const MEMBER_DEFAULT_PERMISSIONS = [
   PERMISSIONS.TIME_ENTRY_CREATE,
   PERMISSIONS.TIME_ENTRY_UPDATE,
   PERMISSIONS.TIME_ENTRY_DELETE,
-  PERMISSIONS.VOLUNTEER_SESSION_READ,
-  PERMISSIONS.VOLUNTEER_SESSION_CREATE,
-  PERMISSIONS.VOLUNTEER_SESSION_UPDATE,
-  PERMISSIONS.VOLUNTEER_SESSION_DELETE,
 ];
 
 export const DEFAULT_OWNER_ROLE_NAME = 'Owner';

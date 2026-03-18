@@ -6,7 +6,6 @@ import { projectRelations } from '../project/schemas/project.relations';
 import { shiftRelations } from '../shift/schemas/shift.relations';
 import { shiftInviteRelations } from '../shift/schemas/shift-invite.relations';
 import { timeEntryRelations } from '../time-tracking/schemas/time-entry.relations';
-import { volunteerSessionRelations } from '../time-tracking/schemas/volunteer-sessions.relation';
 
 export const relations = {
   ...authRelations,
@@ -17,5 +16,4 @@ export const relations = {
   ...shiftRelations,
   ...shiftInviteRelations,
   ...timeEntryRelations,
-  ...volunteerSessionRelations,
 };

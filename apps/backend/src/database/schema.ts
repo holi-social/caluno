@@ -9,4 +9,3 @@ export * from '../project/schemas/project.schema';
 export * from '../shift/schemas/shift.schema';
 export * from '../shift/schemas/shift-invite.schema';
 export * from '../time-tracking/schemas/time-entry.schema';
-export * from '../time-tracking/schemas/volunteer-session.schema';
