@@ -5,8 +5,8 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { eq } from 'drizzle-orm';
-import type { Database } from 'src/database/database.module';
-import { DATABASE_CONNECTION } from 'src/database/database-connection';
+import type { Database } from '../database/database.module';
+import { DATABASE_CONNECTION } from '../database/database-connection';
 import * as schema from '../database/schema';
 import { PermissionEntity, RoleEntity } from '../database/schema';
 import { CreateRoleInput } from './inputs/create-role.input';

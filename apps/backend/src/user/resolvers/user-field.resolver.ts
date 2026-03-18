@@ -1,7 +1,7 @@
 import { Context, Parent, ResolveField, Resolver } from '@nestjs/graphql';
-import { PermissionMapper } from 'src/auth/mappers/permission.mapper';
-import { Permission } from 'src/auth/models/permission.model';
-import type { AuthenticatedGraphQLContext } from 'src/graphql/graphql.context';
+import { PermissionMapper } from '../../auth/mappers/permission.mapper';
+import { Permission } from '../../auth/models/permission.model';
+import type { AuthenticatedGraphQLContext } from '../../graphql/graphql.context';
 import { AuthService } from '../../auth/auth.service';
 import { User } from '../models/user.model';
 
