@@ -3,10 +3,6 @@ import * as schema from '../../database/schema';
 
 export const volunteerSessionRelations = defineRelationsPart(schema, (r) => ({
   volunteerSessions: {
-    assignment: r.one.taskAssignments({
-      from: r.volunteerSessions.assignmentId,
-      to: r.taskAssignments.id,
-    }),
     shift: r.one.shifts({
       from: r.volunteerSessions.shiftId,
       to: r.shifts.id,

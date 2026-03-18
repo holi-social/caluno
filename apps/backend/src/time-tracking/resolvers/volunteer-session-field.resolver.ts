@@ -4,10 +4,6 @@ import { PERMISSIONS } from '../../auth/constants';
 import { Permissions } from '../../auth/decorators/permissions.decorator';
 import { ShiftMapper } from '../../shift/mappers/shift.mapper';
 import { Shift } from '../../shift/models/shift.model';
-import { TaskMapper } from '../../task/mappers/task.mapper';
-import { Task } from '../../task/models/task.model';
-import { UserMapper } from '../../user/mappers/user.mapper';
-import { User } from '../../user/models/user.model';
 import { TimeEntryMapper } from '../mappers/time-entry.mapper';
 import { TimeEntry } from '../models/time-entry.model';
 import { VolunteerSession } from '../models/volunteer-session.model';
@@ -19,8 +15,7 @@ export class VolunteerSessionFieldResolver {
   constructor(
     private readonly timeTrackingService: TimeTrackingService,
     private readonly entryMapper: TimeEntryMapper,
-    private readonly taskMapper: TaskMapper,
-    private readonly userMapper: UserMapper,
+
     private readonly shiftMapper: ShiftMapper,
   ) {}
 
@@ -30,36 +25,8 @@ export class VolunteerSessionFieldResolver {
     @Parent() volunteerSession: volunteerSessionSchema.VolunteerSessionEntity,
     @Session() session: UserSession,
   ): Promise<TimeEntry[]> {
-    const entries = await this.timeTrackingService.findEntriesBySessionId(
-      session.user.id,
-      volunteerSession.id,
-    );
-    return this.entryMapper.toArray(entries);
-  }
-
-  @Permissions(PERMISSIONS.VOLUNTEER_SESSION_READ)
-  @ResolveField(() => Task)
-  async task(
-    @Parent() volunteerSession: volunteerSessionSchema.VolunteerSessionEntity,
-  ): Promise<Task> {
-    const task = await this.timeTrackingService.findTaskBySessionId(
-      volunteerSession.id,
-    );
-    return this.taskMapper.toModelOrThrow(task);
-  }
-
-  @Permissions(PERMISSIONS.VOLUNTEER_SESSION_READ)
-  @ResolveField(() => User, { nullable: true })
-  async validatedBy(
-    @Parent() volunteerSession: volunteerSessionSchema.VolunteerSessionEntity,
-  ): Promise<User | null> {
-    const validator = await this.timeTrackingService.findValidatorBySessionId(
-      volunteerSession.id,
-    );
-    if (!validator) {
-      return null;
-    }
-    return this.userMapper.toModel(validator);
+    //  TODO: get time entries for org
+    return this.entryMapper.toArray([]);
   }
 
   @Permissions(PERMISSIONS.VOLUNTEER_SESSION_READ)

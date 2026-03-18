@@ -1,7 +1,6 @@
 import { Module } from '@nestjs/common';
 import { DatabaseModule } from '../database/database.module';
 import { MembershipModule } from '../membership/membership.module';
-import { TaskModule } from '../task/task.module';
 import { UserModule } from '../user/user.module';
 import { ProjectMapper } from './mappers/project.mapper';
 import { ProjectService } from './project.service';
@@ -12,7 +11,7 @@ import {
 } from './resolvers';
 
 @Module({
-  imports: [DatabaseModule, UserModule, TaskModule, MembershipModule],
+  imports: [DatabaseModule, UserModule, MembershipModule],
   providers: [
     ProjectService,
     ProjectMapper,

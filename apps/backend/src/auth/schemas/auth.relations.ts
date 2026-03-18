@@ -19,21 +19,9 @@ export const authRelations = defineRelationsPart(schema, (r) => ({
       from: r.users.id,
       to: r.projects.createdById,
     }),
-    tasks: r.many.tasks({
-      from: r.users.id,
-      to: r.tasks.createdById,
-    }),
-    assignments: r.many.taskAssignments({
-      from: r.users.id,
-      to: r.taskAssignments.assignedToId,
-    }),
     memberships: r.many.memberships({
       from: r.users.id,
       to: r.memberships.userId,
-    }),
-    volunteerSessions: r.many.volunteerSessions({
-      from: r.users.id.through(r.taskAssignments.assignedToId),
-      to: r.volunteerSessions.assignmentId.through(r.taskAssignments.id),
     }),
     shiftInvites: r.many.shiftInvites({
       from: r.users.id,

@@ -1,6 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { eq } from 'drizzle-orm';
-import type { UserEntity } from '../auth/schemas/auth.schema';
 import type { Database } from '../database/database.module';
 import { DATABASE_CONNECTION } from '../database/database-connection';
 import * as schema from '../database/schema';
@@ -11,7 +10,6 @@ import {
 } from '../graphql/errors';
 import { MembershipService } from '../membership/membership.service';
 import type { ShiftEntity } from '../shift/schemas/shift.schema';
-import type { TaskEntity } from '../task/schemas/task.schema';
 import { VolunteerSessionStatus } from './enums';
 import { AddTimeEntryInput } from './inputs/add-time-entry.input';
 import { ApproveVolunteerSessionInput } from './inputs/approve-volunteer-session.input';
@@ -33,19 +31,10 @@ export class TimeTrackingService {
   ): Promise<TimeEntryEntity> {
     const volunteerSession = await this.db.query.volunteerSessions.findFirst({
       where: { id: input.sessionId },
-      with: {
-        assignment: true,
-      },
     });
 
     if (!volunteerSession) {
       throw new NotFoundGraphQLError('Volunteer session not found');
-    }
-
-    if (volunteerSession.assignment?.assignedToId !== userId) {
-      throw new ForbiddenGraphQLError(
-        'You are not authorized to add time entries to this volunteer session',
-      );
     }
 
     const [timeEntry] = await this.db
@@ -80,7 +69,6 @@ export class TimeTrackingService {
     const [volunteerSession] = await this.db
       .insert(schema.volunteerSessions)
       .values({
-        assignmentId: null,
         shiftId: input.shiftId,
         status: input.status,
       })
@@ -94,16 +82,9 @@ export class TimeTrackingService {
   ): Promise<VolunteerSessionEntity> {
     const volunteerSession = await this.db.query.volunteerSessions.findFirst({
       where: { id },
-      with: {
-        assignment: true,
-      },
     });
 
     if (!volunteerSession) {
-      throw new NotFoundGraphQLError('Volunteer session not found');
-    }
-
-    if (volunteerSession.assignment?.assignedToId !== userId) {
       throw new NotFoundGraphQLError('Volunteer session not found');
     }
 
@@ -171,23 +152,10 @@ export class TimeTrackingService {
   async deleteTimeEntry(userId: string, id: string): Promise<TimeEntryEntity> {
     const timeEntry = await this.db.query.timeEntries.findFirst({
       where: { id },
-      with: {
-        session: {
-          with: {
-            assignment: true,
-          },
-        },
-      },
     });
 
     if (!timeEntry) {
       throw new NotFoundGraphQLError('Time entry not found');
-    }
-
-    if (timeEntry.session?.assignment?.assignedToId !== userId) {
-      throw new ForbiddenGraphQLError(
-        'You are not authorized to delete this time entry',
-      );
     }
 
     const [deletedTimeEntry] = await this.db
@@ -195,79 +163,6 @@ export class TimeTrackingService {
       .where(eq(schema.timeEntries.id, id))
       .returning();
     return deletedTimeEntry;
-  }
-
-  async findEntriesBySessionId(
-    userId: string,
-    sessionId: string,
-  ): Promise<TimeEntryEntity[]> {
-    const entries = await this.db.query.timeEntries.findMany({
-      where: { sessionId },
-      with: {
-        session: {
-          with: {
-            assignment: true,
-          },
-        },
-      },
-    });
-    const userEntries = entries.filter(
-      (entry) => entry.session?.assignment?.assignedToId === userId,
-    );
-    return userEntries;
-  }
-
-  async findTaskBySessionId(sessionId: string): Promise<TaskEntity> {
-    const volunteerSession = await this.db.query.volunteerSessions.findFirst({
-      where: { id: sessionId },
-      with: {
-        assignment: {
-          with: {
-            task: true,
-          },
-        },
-      },
-    });
-
-    if (!volunteerSession) {
-      throw new NotFoundGraphQLError('Volunteer session not found');
-    }
-
-    if (!volunteerSession.assignment?.task) {
-      throw new NotFoundGraphQLError('Task not found');
-    }
-
-    return volunteerSession.assignment.task;
-  }
-
-  async findValidatorBySessionId(
-    sessionId: string,
-  ): Promise<UserEntity | null> {
-    const volunteerSession = await this.db.query.volunteerSessions.findFirst({
-      where: { id: sessionId },
-      with: {
-        validatedByRel: true,
-        assignment: {
-          with: {
-            task: {
-              with: {
-                project: {
-                  with: {
-                    organization: true,
-                  },
-                },
-              },
-            },
-          },
-        },
-      },
-    });
-
-    if (!volunteerSession) {
-      throw new NotFoundGraphQLError('Volunteer session not found');
-    }
-
-    return volunteerSession.validatedByRel;
   }
 
   async findAll(

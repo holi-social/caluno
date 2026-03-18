@@ -2,7 +2,6 @@ import { pgEnum, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
 import { users } from '../../auth/schemas/auth.schema';
 import { idColumn, timestampColumns } from '../../database/database-columns';
 import { shifts } from '../../shift/schemas/shift.schema';
-import { taskAssignments } from '../../task/schemas/task-assignment.schema';
 import { VolunteerSessionStatus } from '../enums';
 
 export const volunteerSessionStatusEnum = pgEnum(
@@ -12,9 +11,6 @@ export const volunteerSessionStatusEnum = pgEnum(
 
 export const volunteerSessions = pgTable('volunteer_sessions', {
   ...idColumn,
-  assignmentId: uuid('assignment_id').references(() => taskAssignments.id, {
-    onDelete: 'restrict',
-  }),
   shiftId: uuid('shift_id').references(() => shifts.id, {
     onDelete: 'restrict',
   }),

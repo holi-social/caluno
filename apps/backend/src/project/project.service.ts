@@ -6,8 +6,6 @@ import { DATABASE_CONNECTION } from '../database/database-connection';
 import * as schema from '../database/schema';
 import { ForbiddenGraphQLError, NotFoundGraphQLError } from '../graphql/errors';
 import type { PaginationInput } from '../graphql/pagination.input';
-import type { Task } from '../task/models/task.model';
-import { TaskService } from '../task/task.service';
 import { UserService } from '../user/user.service';
 import { slugify } from '../utils';
 import { ProjectStatus } from './enums';
@@ -23,7 +21,6 @@ export class ProjectService {
     private readonly db: Database,
     private readonly mapper: ProjectMapper,
     private readonly userService: UserService,
-    private readonly taskService: TaskService,
   ) {}
 
   async findById(id: string): Promise<Project | null> {
@@ -53,10 +50,6 @@ export class ProjectService {
 
   async findCreator(createdById: string): Promise<UserEntity> {
     return this.userService.findByIdOrThrow(createdById);
-  }
-
-  async findTasksByProjectId(projectId: string): Promise<Task[]> {
-    return this.taskService.findAllByProjectId(projectId);
   }
 
   async create(userId: string, input: CreateProjectInput): Promise<Project> {
