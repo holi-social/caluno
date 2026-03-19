@@ -71,16 +71,6 @@ class MembershipRequest {
 class ShiftAssignment {
     status {invited, accepted, rejected}
 }
-' allows a user to rate or give feedback about a shift experience
-class Review {
-    rating
-    review
-}
-class ValidationAction {
-    note
-    moderator
-    timestamp
-}
 note right: How is reject => update\nof a TimeEntry working?
 package RequirementProfiles {
     class RequirementProfile {
@@ -157,12 +147,9 @@ note "At least one is needed" as Note1
 OrganisationUserProfile "1" -- "*" IncidentReport
 IncidentReport "*" -- "1" User : "reported by >"
 
-ShiftAssignment "*" -up- "1" User
-Shift "1" -up- "*" ShiftAssignment
-Review "*" -up- "1" User : "submitted by >"
-Shift "1" -up- "*" Review : "is for <"
-TimeEntry "*" -up- "1" User
+User "1" -- "*" ShiftAssignment
+Shift "1" -- "*" ShiftAssignment
+User "1" -- "*" TimeEntry
 TimeEntry "*" -- "1" Shift : "logged against >"
-TimeEntry "1" -- "0..1" ValidationAction : "audited via >"
 
 @enduml
