@@ -82,31 +82,31 @@ class ValidationAction {
     timestamp
 }
 note right: How is reject => update\nof a TimeEntry working?
-
-class RequirementProfile {
-    name
-    description
+package RequirementProfiles {
+    class RequirementProfile {
+        name
+        description
+    }
+    class Requirement {
+        type {document, check, date, ...}
+        name
+        description
+        mandatory
+    }
+    class RequirementProfileSubmission {
+        status {draft, submitted, approved, rejected}
+        submittedAt
+        reviewedAt
+        reviewedBy
+    }
+    class RequirementFulfillment {
+        value: text/JSON
+        status {draft, submitted, approved, rejected}
+        submittedAt
+        reviewedAt
+        reviewedBy
+    }
 }
-class Requirement {
-    type {document, check, date, ...}
-    name
-    description
-    mandatory
-}
-class RequirementProfileSubmission {
-    status {draft, submitted, approved, rejected}
-    submittedAt
-    reviewedAt
-    reviewedBy
-}
-class RequirementFulfillment {
-    value: text/JSON
-    status {draft, submitted, approved, rejected}
-    submittedAt
-    reviewedAt
-    reviewedBy
-}
-
 class Document {
     name
     mimeType
@@ -123,7 +123,6 @@ OrgUnit "0..1" -- "*" Shift
 
 OrgUnit "1" -right- "*" Membership
 Membership "*" -down- "1" User
-OrganisationUserProfile "1" .. "*" Membership : "store for clarify? >"
 
 Organisation "1" -- "*"OrganisationUserProfile : "owns >"
 OrganisationUserProfile "*" -- "1" User
@@ -136,16 +135,17 @@ Location "0..1" -- "*" Shift : "is at <"
 
 Role "*" -up- "*" Permission : "groups >"
 Role "*" -- "*" Membership
-Organisation "1" -left- "*" Role : "defines >"
+Organisation "1" -right- "*" Role : "defines >"
 
 OrgUnit -up- "*" RequirementProfile : selects >
 Organisation "1" -right- "*" RequirementProfile : "defines >"
 RequirementProfile -right- "*" Requirement : "groups >"
 User "1" -right- "*" Document : "owns >"
 RequirementFulfillment "*" -down- "0..1" Document : "backed by >"
-Membership "1" -right- "*" RequirementProfileSubmission
+Membership "0..1" -right- "*" RequirementProfileSubmission
 RequirementProfileSubmission -right- "*" RequirementFulfillment
-MembershipRequest "1" -left- "*" RequirementProfileSubmission
+' 
+MembershipRequest "0..1" -left- "*" RequirementProfileSubmission
 RequirementProfileSubmission "*" -up- "1" RequirementProfile : "fulfills >"
 RequirementFulfillment "*" -up- "1" Requirement : "fulfills >"
 RequirementFulfillment "*" .. "1" OrganisationUserProfile : "store for reuse <"
@@ -153,7 +153,9 @@ RequirementProfileSubmission "*" .. "1" OrganisationUserProfile : "store for reu
 note "At least one is needed" as Note1
 (RequirementProfileSubmission, OrganisationUserProfile) .. Note1
 (RequirementFulfillment, OrganisationUserProfile) .. Note1
+
 OrganisationUserProfile "1" -- "*" IncidentReport
+IncidentReport "*" -- "1" User : "reported by >"
 
 ShiftAssignment "*" -up- "1" User
 Shift "1" -up- "*" ShiftAssignment
