@@ -36,12 +36,17 @@ export const CheckinForm = ({
     setServerError(null);
 
     startTransition(async () => {
+      if (!selectedShiftId) {
+        toast.warning('No shift selected');
+        return;
+      }
+
       const result = await createTimeEntry({
         volunteerId: volunteer.id,
         startedAt: new Date().toISOString(),
         shiftId: selectedShiftId,
-        endedAt: new Date().toISOString(),
       });
+
       if (result?.serverError) {
         setServerError(result.serverError);
       } else {

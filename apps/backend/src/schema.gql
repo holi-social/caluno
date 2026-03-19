@@ -224,7 +224,7 @@ enum ShiftVisibility {
 
 type TimeEntry {
   createdAt: DateTime!
-  endedAt: DateTime!
+  endedAt: DateTime
   id: ID!
   notes: String
   shift: Shift!

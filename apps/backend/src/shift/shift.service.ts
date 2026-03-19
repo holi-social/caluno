@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { and, count, eq, SQL } from 'drizzle-orm';
+import { and, count, desc, eq, SQL } from 'drizzle-orm';
 import type { Database } from '../database/database.module';
 import { DATABASE_CONNECTION } from '../database/database-connection';
 import * as schema from '../database/schema';
@@ -50,6 +50,7 @@ export class ShiftService {
       .select()
       .from(schema.shifts)
       .where(condition)
+      .orderBy(desc(schema.shifts.startsAt))
       .limit(pagination.limit)
       .offset(pagination.offset);
 
@@ -263,7 +264,6 @@ export class ShiftService {
   }
 
   async findActiveShifts(
-    userId: string,
     organizationId: string,
     pagination: PaginationInput,
   ): Promise<{ shifts: ShiftEntity[]; total: number }> {
@@ -280,6 +280,7 @@ export class ShiftService {
 
     const shifts = await this.db.query.shifts.findMany({
       where: condition,
+      orderBy: { createdAt: 'desc' },
       limit: pagination.limit,
       offset: pagination.offset,
     });

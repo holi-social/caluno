@@ -61,15 +61,13 @@ export class ShiftQueryResolver {
     });
   }
 
-  @Roles('MEMBER')
+  @Permissions(PERMISSIONS.SHIFT_READ)
   @Query(() => ShiftPaginatedResponse)
   async activeShifts(
     @Args() pagination: PaginationInput,
-    @Session() session: UserSession,
     @Context() context: AuthenticatedGraphQLContext,
   ): Promise<ShiftPaginatedResponse> {
     const { shifts, total } = await this.shiftService.findActiveShifts(
-      session.user.id,
       context.organizationId,
       pagination,
     );

@@ -48,6 +48,7 @@ export class TimeTrackingService {
 
     const entries = await this.db.query.timeEntries.findMany({
       where: condition,
+      orderBy: { startedAt: 'desc' },
       limit: pagination.limit,
       offset: pagination.offset,
     });
