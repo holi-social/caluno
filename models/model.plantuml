@@ -117,7 +117,7 @@ class Document {
 
 
 Organisation [root] -down- "1" OrgUnit
-OrgUnit "*" -left- "1" OrgUnitType
+OrgUnit "*" -left- "1" OrgUnitType : "categorized by >"
 OrgUnit "*\nchild" o-- "1\nparent" OrgUnit
 OrgUnit "0..1" -- "*" Shift
 
@@ -128,25 +128,26 @@ OrganisationUserProfile "1" .. "*" Membership : "?"
 Organisation "1" -- "*"OrganisationUserProfile
 OrganisationUserProfile "*" -- "1" User
 
-OrgUnit "1" -down- "*" MembershipRequest
-MembershipRequest "*" -right- "1" User
+OrgUnit "1" -down- "*" MembershipRequest : "receives >"
+MembershipRequest "*" -right- "1" User : "submitted by >"
 
-OrgUnit "*" -- "0..1" Location
-Location "0..1" -- "*" Shift
+OrgUnit "*" -- "0..1" Location : "is at >"
+Location "0..1" -- "*" Shift : "is at <"
 
-Role "*" -up- "*" Permission
+Role "*" -up- "*" Permission : "groups >"
 Role "*" -- "*" Membership
+Organisation "1" -left- "*" Role
 
 OrgUnit -up- "*" RequirementProfile : selects >
-Organisation "1" -right- "*" RequirementProfile
-RequirementProfile -right- "*" Requirement
-User "1" -right- "*" Document
-RequirementFulfillment "*" -down- "0..1" Document
+Organisation "1" -right- "*" RequirementProfile : "defines >"
+RequirementProfile -right- "*" Requirement : "groups >"
+User "1" -right- "*" Document : "owns >"
+RequirementFulfillment "*" -down- "0..1" Document : "backed by >"
 Membership "1" -right- "*" RequirementProfileSubmission
 RequirementProfileSubmission -right- "*" RequirementFulfillment
 MembershipRequest "1" -left- "*" RequirementProfileSubmission
-RequirementProfileSubmission "*" -up- "1" RequirementProfile
-RequirementFulfillment "*" -up- "1" Requirement
+RequirementProfileSubmission "*" -up- "1" RequirementProfile : "fulfills >"
+RequirementFulfillment "*" -up- "1" Requirement : "fulfills >"
 RequirementFulfillment "*" -- "1" OrganisationUserProfile
 RequirementProfileSubmission "*" .. "1" OrganisationUserProfile : "?"
 
