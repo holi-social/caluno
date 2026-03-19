@@ -1,12 +1,16 @@
-import { Context, Query, Resolver } from '@nestjs/graphql';
+import { Args, Context, Query, Resolver } from '@nestjs/graphql';
 import { PERMISSIONS } from '../../auth/constants';
 import { Permissions } from '../../auth/decorators/permissions.decorator';
 import type { AuthenticatedGraphQLContext } from '../../graphql/graphql.context';
+import { PaginationInput } from '../../graphql/pagination.input';
 import { TimeEntryMapper } from '../mappers/time-entry.mapper';
-import { TimeEntry } from '../models/time-entry.model';
+import {
+  TimeEntry,
+  TimeEntryPaginatedResponse,
+} from '../models/time-entry.model';
 import { TimeTrackingService } from '../time-tracking.service';
 
-@Resolver()
+@Resolver(() => TimeEntry)
 export class TimeTrackingQueryResolver {
   constructor(
     private readonly timeTrackingService: TimeTrackingService,
@@ -14,13 +18,20 @@ export class TimeTrackingQueryResolver {
   ) {}
 
   @Permissions(PERMISSIONS.TIME_ENTRY_READ)
-  @Query(() => [TimeEntry])
+  @Query(() => TimeEntryPaginatedResponse)
   async timeEntries(
+    @Args() pagination: PaginationInput,
     @Context() context: AuthenticatedGraphQLContext,
-  ): Promise<TimeEntry[]> {
-    const sessions = await this.timeTrackingService.findEntries(
+  ): Promise<TimeEntryPaginatedResponse> {
+    const { entries, total } = await this.timeTrackingService.findAll(
       context.organizationId,
+      pagination,
     );
-    return this.timeEntryMapper.toArray(sessions);
+    return new TimeEntryPaginatedResponse({
+      items: this.timeEntryMapper.toArray(entries),
+      total: total,
+      limit: pagination.limit,
+      offset: pagination.offset,
+    });
   }
 }

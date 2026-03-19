@@ -5,6 +5,7 @@ import { ShiftModule } from '../shift/shift.module';
 import { UserModule } from '../user/user.module';
 import { TimeEntryMapper } from './mappers/time-entry.mapper';
 import {
+  TimeEntryFieldResolver,
   TimeTrackingMutationResolver,
   TimeTrackingQueryResolver,
 } from './resolvers';
@@ -15,6 +16,7 @@ import { TimeTrackingService } from './time-tracking.service';
   providers: [
     TimeTrackingService,
     TimeEntryMapper,
+    TimeEntryFieldResolver,
     TimeTrackingMutationResolver,
     TimeTrackingQueryResolver,
   ],

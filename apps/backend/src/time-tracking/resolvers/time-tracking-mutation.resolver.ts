@@ -19,12 +19,8 @@ export class TimeTrackingMutationResolver {
   @Mutation(() => TimeEntry)
   async addTimeEntry(
     @Args('input') input: AddTimeEntryInput,
-    @Session() session: UserSession,
   ): Promise<TimeEntry> {
-    const entity = await this.timeTrackingService.addTimeEntry(
-      session.user.id,
-      input,
-    );
+    const entity = await this.timeTrackingService.addTimeEntry(input);
     return this.entryMapper.toModelOrThrow(entity);
   }
 
