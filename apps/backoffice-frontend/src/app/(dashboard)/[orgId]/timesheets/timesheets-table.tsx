@@ -2,6 +2,7 @@
 
 import type { GetTimeEntriesQuery } from '@repo/data';
 import {
+  cn,
   Table,
   TableBody,
   TableCell,
@@ -51,7 +52,7 @@ function calculateDuration(entry: TimeEntry): string {
 
 export function TimesheetsTable({ entries }: TimesheetsTableProps) {
   return (
-    <div className="rounded-md border">
+    <div className="rounded-md border overflow-hidden">
       <Table>
         <TableHeader>
           <TableRow>
@@ -64,7 +65,10 @@ export function TimesheetsTable({ entries }: TimesheetsTableProps) {
         </TableHeader>
         <TableBody>
           {entries.map((entry) => (
-            <TableRow key={entry.id}>
+            <TableRow
+              key={entry.id}
+              className={cn({ 'bg-muted/80': !entry.endedAt })}
+            >
               <TableCell>{entry.shift?.title ?? 'N/A'}</TableCell>
               <TableCell>
                 {entry.volunteer?.name ?? entry.volunteer?.email ?? 'N/A'}
