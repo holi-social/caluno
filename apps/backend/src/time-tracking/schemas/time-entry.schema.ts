@@ -1,16 +1,22 @@
 import { pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
+import { users } from '../../auth/schemas/auth.schema';
 import { idColumn, timestampColumns } from '../../database/database-columns';
-import { volunteerSessions } from './volunteer-session.schema';
+import { shifts } from '../../shift/schemas/shift.schema';
 
 export const timeEntries = pgTable('time_entries', {
   ...idColumn,
-  sessionId: uuid('session_id')
-    .references(() => volunteerSessions.id, {
-      onDelete: 'cascade',
+  shiftId: uuid('shift_id')
+    .references(() => shifts.id, {
+      onDelete: 'restrict',
+    })
+    .notNull(),
+  volunteerId: text('volunteer_id')
+    .references(() => users.id, {
+      onDelete: 'restrict',
     })
     .notNull(),
   startedAt: timestamp('started_at').notNull(),
-  endedAt: timestamp('ended_at').notNull(),
+  endedAt: timestamp('ended_at'),
   notes: text('notes'),
   ...timestampColumns,
 });

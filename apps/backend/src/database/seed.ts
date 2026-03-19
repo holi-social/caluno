@@ -40,13 +40,6 @@ const PERMISSION_NAMES: Record<
   [PERMISSIONS.TIME_ENTRY_READ]: 'Read time entry',
   [PERMISSIONS.TIME_ENTRY_UPDATE]: 'Update time entry',
   [PERMISSIONS.TIME_ENTRY_DELETE]: 'Delete time entry',
-  [PERMISSIONS.VOLUNTEER_SESSION_CREATE]: 'Create volunteer session',
-  [PERMISSIONS.VOLUNTEER_SESSION_READ]: 'Read volunteer session',
-  [PERMISSIONS.VOLUNTEER_SESSION_UPDATE]: 'Update volunteer session',
-  [PERMISSIONS.VOLUNTEER_SESSION_DELETE]: 'Delete volunteer session',
-  [PERMISSIONS.VOLUNTEER_SESSION_APPROVE]: 'Approve volunteer session',
-  [PERMISSIONS.VOLUNTEER_SESSION_REJECT]: 'Reject volunteer session',
-  [PERMISSIONS.VOLUNTEER_SESSION_CANCEL]: 'Cancel volunteer session',
 };
 
 async function seed() {

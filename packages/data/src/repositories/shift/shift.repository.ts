@@ -3,12 +3,10 @@ import type {
   CreateShiftInput,
   UpdateShiftInput,
 } from '../../generated/graphql';
-import { BaseRepository } from '../base/base.repository';
-
-export interface PaginationOptions {
-  limit?: number;
-  offset?: number;
-}
+import {
+  BaseRepository,
+  type PaginationOptions,
+} from '../base/base.repository';
 
 export class ShiftRepository extends BaseRepository {
   async findById(id: string) {

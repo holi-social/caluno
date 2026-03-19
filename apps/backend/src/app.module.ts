@@ -19,7 +19,6 @@ import { MembershipModule } from './membership/membership.module';
 import { OrganizationModule } from './organization/organization.module';
 import { ProjectModule } from './project/project.module';
 import { ShiftModule } from './shift/shift.module';
-import { TaskModule } from './task/task.module';
 import { TimeTrackingModule } from './time-tracking/time-tracking.module';
 import { UserModule } from './user/user.module';
 
@@ -57,7 +56,6 @@ import { UserModule } from './user/user.module';
     ProjectModule,
     OrganizationModule,
     MembershipModule,
-    TaskModule,
     TimeTrackingModule,
     GraphqlModule,
     ShiftModule,

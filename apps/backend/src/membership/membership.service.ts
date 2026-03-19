@@ -1,6 +1,7 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { and, eq } from 'drizzle-orm';
 import { DEFAULT_MEMBER_ROLE_NAME } from '../auth/constants';
+import type { UserEntity } from '../auth/schemas/auth.schema';
 import type { Database } from '../database/database.module';
 import { DATABASE_CONNECTION } from '../database/database-connection';
 import * as schema from '../database/schema';
@@ -16,6 +17,18 @@ export class MembershipService {
     @Inject(DATABASE_CONNECTION)
     private readonly db: Database,
   ) {}
+
+  async getMembers(organizationId: string): Promise<UserEntity[]> {
+    const members = await this.db.query.users.findMany({
+      where: {
+        memberships: {
+          organizationId,
+        },
+      },
+    });
+
+    return members;
+  }
 
   async getMembership(
     userId: string,

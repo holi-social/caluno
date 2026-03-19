@@ -1,8 +1,0 @@
-export enum VolunteerSessionStatus {
-  IN_PROGRESS = 'IN_PROGRESS',
-  PENDING = 'PENDING',
-  APPROVED = 'APPROVED',
-  REJECTED = 'REJECTED',
-  CANCELLED = 'CANCELLED',
-  SUBMITTED = 'SUBMITTED',
-}

@@ -11,9 +11,5 @@ export const projectRelations = defineRelationsPart(schema, (r) => ({
       from: r.projects.createdById,
       to: r.users.id,
     }),
-    tasks: r.many.tasks({
-      from: r.projects.id,
-      to: r.tasks.projectId,
-    }),
   },
 }));

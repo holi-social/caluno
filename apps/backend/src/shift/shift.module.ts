@@ -18,6 +18,6 @@ import { ShiftService } from './shift.service';
     ShiftMutationResolver,
     ShiftFieldResolver,
   ],
-  exports: [ShiftMapper],
+  exports: [ShiftMapper, ShiftService],
 })
 export class ShiftModule {}

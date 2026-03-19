@@ -2,11 +2,13 @@ import { Args, Parent, ResolveField, Resolver } from '@nestjs/graphql';
 import { PERMISSIONS } from '../../auth/constants';
 import { Permissions } from '../../auth/decorators/permissions.decorator';
 import { PaginationInput } from '../../graphql/pagination.input';
+import { MembershipService } from '../../membership/membership.service';
 import {
   Project,
   type ProjectPaginatedResponse,
 } from '../../project/models/project.model';
 import { UserMapper } from '../../user/mappers/user.mapper';
+import { User } from '../../user/models/user.model';
 import { Organization } from '../models/organization.model';
 import { OrganizationService } from '../organization.service';
 
@@ -14,7 +16,8 @@ import { OrganizationService } from '../organization.service';
 export class OrganizationFieldResolver {
   constructor(
     private readonly organizationService: OrganizationService,
-    readonly _userMapper: UserMapper,
+    private readonly membershipService: MembershipService,
+    private readonly userMapper: UserMapper,
   ) {}
 
   @Permissions(PERMISSIONS.ORG_READ)
@@ -43,5 +46,12 @@ export class OrganizationFieldResolver {
       organization.id,
       pagination,
     );
+  }
+
+  @Permissions(PERMISSIONS.MEMBERSHIP_READ)
+  @ResolveField(() => [User])
+  async volunteers(@Parent() organization: Organization): Promise<User[]> {
+    const volunteers = await this.membershipService.getMembers(organization.id);
+    return this.userMapper.toArray(volunteers);
   }
 }

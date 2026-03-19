@@ -3,15 +3,11 @@
 # ------------------------------------------------------
 
 input AddTimeEntryInput {
-  endedAt: DateTime!
+  endedAt: DateTime
   notes: String
-  sessionId: String!
+  shiftId: String!
   startedAt: DateTime!
-}
-
-input ApproveVolunteerSessionInput {
-  id: String!
-  organizationId: String!
+  volunteerId: String!
 }
 
 input CreateOrganizationInput {
@@ -52,21 +48,6 @@ input CreateShiftInput {
   visibility: ShiftVisibility! = ALL_MEMBERS
 }
 
-input CreateTaskAssignmentInput {
-  assigneeId: String!
-  organizationId: String!
-  taskId: String!
-}
-
-input CreateTaskInput {
-  description: String!
-  dueDate: DateTime!
-  organizationId: String!
-  projectId: String!
-  status: TaskStatus! = TODO
-  title: String!
-}
-
 """
 A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date-time format.
 """
@@ -105,25 +86,19 @@ enum MembershipRequestStatus {
 type Mutation {
   addTimeEntry(input: AddTimeEntryInput!): TimeEntry!
   approveMembershipRequest(id: ID!, organizationId: ID!): MembershipRequest!
-  approveVolunteerSession(input: ApproveVolunteerSessionInput!): VolunteerSession!
   assignRoleToMembership(membershipId: ID!, roleId: ID!): Boolean!
-  assignTask(input: CreateTaskAssignmentInput!): Task!
   cancelMembershipRequest(id: ID!, organizationId: ID!): MembershipRequest!
   createMembershipRequest(organizationId: ID!): MembershipRequest!
   createOrganization(input: CreateOrganizationInput!): Organization!
   createProject(input: CreateProjectInput!): Project!
   createRole(input: CreateRoleInput!): Role!
   createShift(input: CreateShiftInput!): Shift!
-  createTask(input: CreateTaskInput!): Task!
   deleteRole(id: ID!): Role!
   deleteShift(id: String!): Shift!
   deleteTimeEntry(id: ID!): TimeEntry!
-  endVolunteerSession(id: ID!): VolunteerSession!
   inviteMembersToShift(memberIds: [String!]!, shiftId: String!): Shift!
   publishProject(id: ID!): Project!
   rejectMembershipRequest(id: ID!, organizationId: ID!, rejectionReason: String!): MembershipRequest!
-  rejectVolunteerSession(input: RejectVolunteerSessionInput!): VolunteerSession!
-  startVolunteerSession(input: StartVolunteerSessionInput!): VolunteerSession!
   updateProject(id: ID!, input: UpdateProjectInput!): Project!
   updateRole(id: ID!, input: CreateRoleInput!): Role!
   updateShift(id: String!, input: UpdateShiftInput!): Shift!
@@ -178,7 +153,6 @@ type Project {
   slug: String!
   startsAt: DateTime!
   status: ProjectStatus!
-  tasks: [Task!]
   title: String!
   updatedAt: DateTime
 }
@@ -199,7 +173,6 @@ type Query {
   me: User!
   membership(organizationId: ID!): Membership!
   membershipRequests(limit: Int! = 10, offset: Int! = 0, organizationId: ID!): MembershipRequestPaginatedResponse!
-  myTasks(limit: Int! = 10, offset: Int! = 0): TaskPaginatedResponse!
   organization(id: String!): Organization!
   organizationBySlug(slug: String!): Organization!
   organizations(limit: Int! = 10, offset: Int! = 0): OrganizationPaginatedResponse!
@@ -210,16 +183,8 @@ type Query {
   shift(id: String!): Shift!
   shifts(limit: Int! = 10, offset: Int! = 0): ShiftPaginatedResponse!
   shiftsByProjectId(limit: Int! = 10, offset: Int! = 0, projectId: String!): ShiftPaginatedResponse!
-  task(id: String!): Task!
-  tasksByUserId(limit: Int! = 10, offset: Int! = 0, userId: String!): TaskPaginatedResponse!
+  timeEntries(limit: Int! = 10, offset: Int! = 0): TimeEntryPaginatedResponse!
   user(id: String!): User
-  volunteerSessions(status: VolunteerSessionStatus): [VolunteerSession!]!
-}
-
-input RejectVolunteerSessionInput {
-  id: String!
-  organizationId: String!
-  rejectionReason: String
 }
 
 type Role {
@@ -255,44 +220,19 @@ enum ShiftVisibility {
   INVITED_MEMBERS
 }
 
-input StartVolunteerSessionInput {
-  shiftId: String!
-  status: VolunteerSessionStatus! = SUBMITTED
-  volunteerId: String!
-}
-
-type Task {
-  assignees: [User!]
-  createdAt: DateTime!
-  createdBy: User!
-  description: String!
-  dueDate: DateTime!
-  id: ID!
-  project: Project!
-  slug: String!
-  status: TaskStatus!
-  title: String!
-  updatedAt: DateTime
-}
-
-type TaskPaginatedResponse {
-  items: [Task!]!
-  pagination: PaginationInfo!
-}
-
-enum TaskStatus {
-  ARCHIVED
-  DONE
-  IN_PROGRESS
-  TODO
-}
-
 type TimeEntry {
   createdAt: DateTime!
   endedAt: DateTime!
   id: ID!
   notes: String
+  shift: Shift!
   startedAt: DateTime!
+  volunteer: User!
+}
+
+type TimeEntryPaginatedResponse {
+  items: [TimeEntry!]!
+  pagination: PaginationInfo!
 }
 
 input UpdateProjectInput {
@@ -323,27 +263,4 @@ type User {
   image: String
   name: String!
   permissions: [Permission!]
-}
-
-type VolunteerSession {
-  createdAt: DateTime!
-  entries: [TimeEntry!]!
-  id: ID!
-  rejectionReason: String
-  shift: Shift
-  status: VolunteerSessionStatus!
-  task: Task!
-  updatedAt: DateTime
-  user: User!
-  validatedAt: DateTime
-  validatedBy: User
-}
-
-enum VolunteerSessionStatus {
-  APPROVED
-  CANCELLED
-  IN_PROGRESS
-  PENDING
-  REJECTED
-  SUBMITTED
 }

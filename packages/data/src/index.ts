@@ -26,4 +26,3 @@ export * from './repositories/project/project.repository';
 export * from './repositories/shift/shift.repository';
 export * from './repositories/time-entry/time-entry.repository';
 export * from './repositories/user/user.repository';
-export * from './repositories/volunteer-session/volunteer-session.repository';

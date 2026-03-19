@@ -1,7 +1,6 @@
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
-import { VolunteerSessionStatus } from '@repo/data';
 import {
   Button,
   Field,
@@ -40,7 +39,6 @@ interface CreateTimeEntryFormProps {
 }
 
 export function CreateTimeEntryForm({
-  sessionId,
   shifts = [],
   allVolunteers = [],
   onSuccess,
@@ -58,10 +56,8 @@ export function CreateTimeEntryForm({
   } = useForm<CreateTimeEntryFormValues>({
     resolver: zodResolver(createTimeEntrySchema),
     defaultValues: {
-      sessionId: sessionId || undefined,
       shiftId: '',
       volunteerId: '',
-      status: VolunteerSessionStatus.Submitted,
       startedAt: '',
       endedAt: '',
       notes: '',
@@ -101,103 +97,71 @@ export function CreateTimeEntryForm({
           </div>
         )}
 
-        {sessionId ? (
-          <input type="hidden" {...register('sessionId')} />
-        ) : (
-          <>
-            <Field>
-              <FieldLabel htmlFor="shiftId">
-                Select Shift <span className="text-destructive">*</span>
-              </FieldLabel>
-              <Select
-                value={watch('shiftId')}
-                onValueChange={(value) => {
-                  setValue('shiftId', value);
-                  setValue('volunteerId', '');
-                }}
-                disabled={isPending}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select a shift" />
-                </SelectTrigger>
-                <SelectContent>
-                  {shifts.map((shift) => (
-                    <SelectItem key={shift.id} value={shift.id}>
-                      {shift.title}
+        <Field>
+          <FieldLabel htmlFor="shiftId">
+            Select Shift <span className="text-destructive">*</span>
+          </FieldLabel>
+          <Select
+            value={watch('shiftId')}
+            onValueChange={(value) => {
+              setValue('shiftId', value);
+              setValue('volunteerId', '');
+            }}
+            disabled={isPending}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Select a shift" />
+            </SelectTrigger>
+            <SelectContent>
+              {shifts.map((shift) => (
+                <SelectItem key={shift.id} value={shift.id}>
+                  {shift.title}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          {errors.shiftId && <FieldError>{errors.shiftId.message}</FieldError>}
+        </Field>
+
+        <Field>
+          <FieldLabel htmlFor="volunteerId">
+            Select Volunteer <span className="text-destructive">*</span>
+          </FieldLabel>
+          <Select
+            value={watch('volunteerId')}
+            onValueChange={(value) => setValue('volunteerId', value)}
+            disabled={isPending || !shiftId}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Select a volunteer" />
+            </SelectTrigger>
+            <SelectContent>
+              {shiftVolunteers.length > 0 && (
+                <SelectGroup>
+                  <SelectLabel>Shift Volunteers</SelectLabel>
+                  {shiftVolunteers.map((volunteer) => (
+                    <SelectItem key={volunteer.id} value={volunteer.id}>
+                      {volunteer.name || volunteer.email}
                     </SelectItem>
                   ))}
-                </SelectContent>
-              </Select>
-              {errors.shiftId && (
-                <FieldError>{errors.shiftId.message}</FieldError>
+                </SelectGroup>
               )}
-            </Field>
-
-            <Field>
-              <FieldLabel htmlFor="volunteerId">
-                Select Volunteer <span className="text-destructive">*</span>
-              </FieldLabel>
-              <Select
-                value={watch('volunteerId')}
-                onValueChange={(value) => setValue('volunteerId', value)}
-                disabled={isPending || !shiftId}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select a volunteer" />
-                </SelectTrigger>
-                <SelectContent>
-                  {shiftVolunteers.length > 0 && (
-                    <SelectGroup>
-                      <SelectLabel>Shift Volunteers</SelectLabel>
-                      {shiftVolunteers.map((volunteer) => (
-                        <SelectItem key={volunteer.id} value={volunteer.id}>
-                          {volunteer.name || volunteer.email}
-                        </SelectItem>
-                      ))}
-                    </SelectGroup>
-                  )}
-                  {otherVolunteers.length > 0 && (
-                    <SelectGroup>
-                      <SelectLabel>Other Volunteers</SelectLabel>
-                      {otherVolunteers.map((volunteer) => (
-                        <SelectItem key={volunteer.id} value={volunteer.id}>
-                          {volunteer.name || volunteer.email}
-                        </SelectItem>
-                      ))}
-                    </SelectGroup>
-                  )}
-                </SelectContent>
-              </Select>
-              {errors.volunteerId && (
-                <FieldError>{errors.volunteerId.message}</FieldError>
+              {otherVolunteers.length > 0 && (
+                <SelectGroup>
+                  <SelectLabel>Other Volunteers</SelectLabel>
+                  {otherVolunteers.map((volunteer) => (
+                    <SelectItem key={volunteer.id} value={volunteer.id}>
+                      {volunteer.name || volunteer.email}
+                    </SelectItem>
+                  ))}
+                </SelectGroup>
               )}
-            </Field>
-
-            <Field>
-              <FieldLabel htmlFor="status">Session Status</FieldLabel>
-              <Select
-                value={watch('status')}
-                onValueChange={(value) => setValue('status', value)}
-                disabled={isPending}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value={VolunteerSessionStatus.Pending}>
-                    Pending
-                  </SelectItem>
-                  <SelectItem value={VolunteerSessionStatus.Submitted}>
-                    Submitted
-                  </SelectItem>
-                  <SelectItem value={VolunteerSessionStatus.Approved}>
-                    Approved
-                  </SelectItem>
-                </SelectContent>
-              </Select>
-            </Field>
-          </>
-        )}
+            </SelectContent>
+          </Select>
+          {errors.volunteerId && (
+            <FieldError>{errors.volunteerId.message}</FieldError>
+          )}
+        </Field>
 
         <Field>
           <FieldLabel htmlFor="startedAt">
