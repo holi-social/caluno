@@ -29,9 +29,9 @@ function formatDate(dateString: string | null | undefined): string {
 
 function formatTimeRange(entry: TimeEntry): string {
   const start = new Date(entry.startedAt);
-  const end = new Date(entry.endedAt);
 
   if (entry.endedAt) {
+    const end = new Date(entry.endedAt);
     return `${format(start, 'HH:mm')} - ${format(end, 'HH:mm')}`;
   } else {
     return `${format(start, 'HH:mm')} - open`;

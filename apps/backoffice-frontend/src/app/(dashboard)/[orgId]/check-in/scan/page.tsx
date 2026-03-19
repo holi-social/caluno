@@ -1,5 +1,7 @@
 import { Separator } from '@repo/ui';
 import { CheckinScanner } from '@/domain/shift/check-in-scanner';
+import { VolunteerCheckin } from '@/domain/shift/components/volunteer-checkin';
+import { getDataClient } from '@/lib/data-client';
 
 interface ScanPageProps {
   params: Promise<{ orgId: string }>;
@@ -7,6 +9,10 @@ interface ScanPageProps {
 
 export default async function ScanPage({ params }: ScanPageProps) {
   const { orgId } = await params;
+
+  const data = await getDataClient(orgId);
+
+  const volunteers = (await data.organization.findVolunteers(orgId)) || [];
 
   return (
     <div className="max-w-2xl">
@@ -21,9 +27,9 @@ export default async function ScanPage({ params }: ScanPageProps) {
           <div className="max-w-lg">
             <CheckinScanner organizationId={orgId} />
           </div>
-          <Separator className="my-4" />
-          <h2>Search for volunteer</h2>
-          TODO
+          <Separator className="my-6" />
+          <h2 className="text-lg mb-2">Or search for a volunteer</h2>
+          <VolunteerCheckin volunteers={volunteers} organizationId={orgId} />
         </div>
       </div>
     </div>
