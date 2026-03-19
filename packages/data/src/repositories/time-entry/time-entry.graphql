@@ -1,19 +1,35 @@
 mutation AddTimeEntry($input: AddTimeEntryInput!) {
   addTimeEntry(input: $input) {
     id
-    startedAt
-    endedAt
-    notes
-    createdAt
   }
 }
 
 mutation DeleteTimeEntry($id: ID!) {
   deleteTimeEntry(id: $id) {
     id
-    startedAt
-    endedAt
-    notes
-    createdAt
+  }
+}
+
+query GetTimeEntries($limit: Int!, $offset: Int!) {
+  timeEntries(limit: $limit, offset: $offset) {
+    items {
+      id
+      startedAt
+      endedAt
+      volunteer {
+        id
+        name
+        email
+      }
+      shift {
+        title
+      }
+    }
+    pagination {
+      total
+      limit
+      offset
+      hasMore
+    }
   }
 }
