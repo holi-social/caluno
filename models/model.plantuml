@@ -71,11 +71,11 @@ class MembershipRequest {
 class ShiftAssignment {
     status {invited, accepted, rejected}
 }
+' allows a user to rate or give feedback about a shift experience
 class Review {
     rating
     review
 }
-note right: Is this needed?
 class ValidationAction {
     note
     moderator
@@ -123,9 +123,9 @@ OrgUnit "0..1" -- "*" Shift
 
 OrgUnit "1" -right- "*" Membership
 Membership "*" -down- "1" User
-OrganisationUserProfile "1" .. "*" Membership : "?"
+OrganisationUserProfile "1" .. "*" Membership : "store for clarify? >"
 
-Organisation "1" -- "*"OrganisationUserProfile
+Organisation "1" -- "*"OrganisationUserProfile : "owns >"
 OrganisationUserProfile "*" -- "1" User
 
 OrgUnit "1" -down- "*" MembershipRequest : "receives >"
@@ -136,7 +136,7 @@ Location "0..1" -- "*" Shift : "is at <"
 
 Role "*" -up- "*" Permission : "groups >"
 Role "*" -- "*" Membership
-Organisation "1" -left- "*" Role
+Organisation "1" -left- "*" Role : "defines >"
 
 OrgUnit -up- "*" RequirementProfile : selects >
 Organisation "1" -right- "*" RequirementProfile : "defines >"
@@ -148,17 +148,19 @@ RequirementProfileSubmission -right- "*" RequirementFulfillment
 MembershipRequest "1" -left- "*" RequirementProfileSubmission
 RequirementProfileSubmission "*" -up- "1" RequirementProfile : "fulfills >"
 RequirementFulfillment "*" -up- "1" Requirement : "fulfills >"
-RequirementFulfillment "*" -- "1" OrganisationUserProfile
-RequirementProfileSubmission "*" .. "1" OrganisationUserProfile : "?"
-
+RequirementFulfillment "*" .. "1" OrganisationUserProfile : "store for reuse <"
+RequirementProfileSubmission "*" .. "1" OrganisationUserProfile : "store for reuse <"
+note "At least one is needed" as Note1
+(RequirementProfileSubmission, OrganisationUserProfile) .. Note1
+(RequirementFulfillment, OrganisationUserProfile) .. Note1
 OrganisationUserProfile "1" -- "*" IncidentReport
 
 ShiftAssignment "*" -up- "1" User
 Shift "1" -up- "*" ShiftAssignment
-Review "*" -up- "1" User
-Shift "1" -up- "*" Review
+Review "*" -up- "1" User : "submitted by >"
+Shift "1" -up- "*" Review : "is for <"
 TimeEntry "*" -up- "1" User
-TimeEntry "*" -- "1" Shift
-TimeEntry "1" -- "0..1" ValidationAction
+TimeEntry "*" -- "1" Shift : "logged against >"
+TimeEntry "1" -- "0..1" ValidationAction : "audited via >"
 
 @enduml
