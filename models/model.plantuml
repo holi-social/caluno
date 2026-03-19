@@ -4,7 +4,7 @@ class Organisation {
     invoiceAddress
     ...
 }
-note left: There is only one Organisation\nconnected to the root OrgUnit
+note top: There is only one Organisation\nconnected to the root OrgUnit
 class OrgUnit {
     name
     description
@@ -26,10 +26,20 @@ class Location {
 class User {
     name
     email
-    phone
+    phoneNumber
     address
     bankAccountNumber
     ...
+}
+class OrganisationUserProfile {
+    grantAccessPhoneNumber
+    grantAccessAddress
+    grantAccessBankAccountNumber
+    note
+    status {pending, active, blacklisted, inactive}
+}
+class IncidentReport {
+    description
 }
 class Shift {
     start
@@ -41,7 +51,7 @@ class TimeEntry {
     status {started, finished, validated, rejected}
     note ?
 }
-note right: How do we manage\nstatus and validation?
+note bottom: How do we manage\nstatus and validation?
 class Membership {
 }
 class Role {
@@ -65,10 +75,6 @@ class Review {
     rating
     review
 }
-class VolunteeringSession {
-    status {started, finished, validated, rejected}
-    note ?
-}
 note right: Is this needed?
 class ValidationAction {
     note
@@ -77,22 +83,23 @@ class ValidationAction {
 }
 note right: How is reject => update\nof a TimeEntry working?
 
-class QualificationProfileDefinition {
+class RequirementProfile {
     name
     description
 }
-class QualificationCriterionDefinition {
+class Requirement {
     type {document, check, date, ...}
     name
     description
+    mandatory
 }
-class QualificationProfile {
+class RequirementProfileSubmission {
     status {draft, submitted, approved, rejected}
     submittedAt
     reviewedAt
     reviewedBy
 }
-class QualificationCriterion {
+class RequirementFulfillment {
     value: text/JSON
     status {draft, submitted, approved, rejected}
     submittedAt
@@ -107,35 +114,43 @@ class Document {
     uploadedAt
 }
 
+
+
 Organisation [root] -down- "1" OrgUnit
 OrgUnit "*" -left- "1" OrgUnitType
 OrgUnit "*\nchild" o-- "1\nparent" OrgUnit
 OrgUnit "0..1" -- "*" Shift
+
 OrgUnit "1" -right- "*" Membership
 Membership "*" -down- "1" User
+OrganisationUserProfile "1" .. "*" Membership : "?"
+
+Organisation "1" -- "*"OrganisationUserProfile
+OrganisationUserProfile "*" -- "1" User
 
 OrgUnit "1" -down- "*" MembershipRequest
 MembershipRequest "*" -right- "1" User
 
-Location "0..1" -up- "*" OrgUnit
-Location "0..1" -right- "*" Shift
+OrgUnit "*" -- "0..1" Location
+Location "0..1" -- "*" Shift
 
 Role "*" -up- "*" Permission
-
 Role "*" -- "*" Membership
 
-OrgUnit -up- "*" QualificationProfileDefinition : selects >
-Organisation "1" -right- "*" QualificationProfileDefinition
-QualificationProfileDefinition -right- "*" QualificationCriterionDefinition
-
+OrgUnit -up- "*" RequirementProfile : selects >
+Organisation "1" -right- "*" RequirementProfile
+RequirementProfile -right- "*" Requirement
 User "1" -right- "*" Document
-QualificationCriterion "*" -down- "0..1" Document
-Membership "1" -right- "*" QualificationProfile
-QualificationProfile -right- "*" QualificationCriterion
-MembershipRequest "1" -left- "*" QualificationProfile
+RequirementFulfillment "*" -down- "0..1" Document
+Membership "1" -right- "*" RequirementProfileSubmission
+RequirementProfileSubmission -right- "*" RequirementFulfillment
+MembershipRequest "1" -left- "*" RequirementProfileSubmission
+RequirementProfileSubmission "*" -up- "1" RequirementProfile
+RequirementFulfillment "*" -up- "1" Requirement
+RequirementFulfillment "*" -- "1" OrganisationUserProfile
+RequirementProfileSubmission "*" .. "1" OrganisationUserProfile : "?"
 
-QualificationProfile "*" -up- "1" QualificationProfileDefinition
-QualificationCriterion "*" -up- "1" QualificationCriterionDefinition
+OrganisationUserProfile "1" -- "*" IncidentReport
 
 ShiftAssignment "*" -up- "1" User
 Shift "1" -up- "*" ShiftAssignment
@@ -143,9 +158,6 @@ Review "*" -up- "1" User
 Shift "1" -up- "*" Review
 TimeEntry "*" -up- "1" User
 TimeEntry "*" -- "1" Shift
-VolunteeringSession "*" -up- "1" User
-VolunteeringSession "*" -left- "1" Shift
-VolunteeringSession "1" -- "*" TimeEntry
 TimeEntry "1" -- "0..1" ValidationAction
 
 @enduml
