@@ -18,7 +18,7 @@ interface TimesheetsTableProps {
   organizationId: string;
 }
 
-function formatDate(dateString: string | null | undefined): string {
+export function formatDate(dateString: string | null | undefined): string {
   if (!dateString) return 'N/A';
   try {
     return format(new Date(dateString), 'MMM d, yyyy');

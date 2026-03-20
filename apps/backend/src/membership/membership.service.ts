@@ -193,9 +193,15 @@ export class MembershipService {
 
   async getMembershipRequests(
     organizationId: string,
+    status?: MembershipRequestStatus,
   ): Promise<MembershipRequestEntity[]> {
     return this.db.query.membershipRequests.findMany({
-      where: { organizationId },
+      where: { organizationId, status },
+      with: {
+        user: true,
+        organization: true,
+        reviewedBy: true,
+      },
     });
   }
 

@@ -1,9 +1,11 @@
 import { DataError } from '../../errors/data-error';
+import type { MembershipRequestStatus } from '../../generated/graphql';
 import { BaseRepository } from '../base/base.repository';
 
 export interface FindMembershipRequestsOptions {
   limit?: number;
   offset?: number;
+  status?: MembershipRequestStatus;
 }
 
 export class MembershipRequestRepository extends BaseRepository {
@@ -16,6 +18,7 @@ export class MembershipRequestRepository extends BaseRepository {
         organizationId,
         limit: options.limit ?? 10,
         offset: options.offset ?? 0,
+        status: options.status,
       });
       return data.membershipRequests;
     } catch (error) {

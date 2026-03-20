@@ -19,14 +19,14 @@ export class MembershipRequest {
   @Field(() => Organization)
   organization: Organization;
 
-  @Field(() => User)
-  reviewedBy: User;
+  @Field(() => User, { nullable: true })
+  reviewedBy: User | null;
 
-  @Field(() => Date)
-  reviewedAt: Date;
+  @Field(() => Date, { nullable: true })
+  reviewedAt: Date | null;
 
-  @Field(() => String)
-  rejectionReason: string;
+  @Field(() => String, { nullable: true })
+  rejectionReason: string | null;
 
   @Field(() => MembershipRequestStatus)
   status: MembershipRequestStatus;
