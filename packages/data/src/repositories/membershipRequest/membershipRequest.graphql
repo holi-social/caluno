@@ -30,9 +30,15 @@ mutation CancelMembershipRequest($id: ID!, $organizationId: ID!) {
   }
 }
 
-query GetMembershipRequests($organizationId: ID!, $limit: Int!, $offset: Int!) {
+query GetMembershipRequests(
+  $organizationId: ID!
+  $status: MembershipRequestStatus
+  $limit: Int!
+  $offset: Int!
+) {
   membershipRequests(
     organizationId: $organizationId
+    status: $status
     limit: $limit
     offset: $offset
   ) {
@@ -45,6 +51,7 @@ query GetMembershipRequests($organizationId: ID!, $limit: Int!, $offset: Int!) {
       user {
         id
         name
+        email
       }
       status
       reviewedBy {

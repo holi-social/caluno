@@ -11,7 +11,10 @@ export function createGraphQLClient(
 ): GraphQLClient {
   const client = new GraphQLClient(config.url, {
     credentials: config.credentials,
-    headers: typeof config.headers === 'function' ? undefined : config.headers,
+    headers: {
+      'content-type': 'application/json',
+      ...(typeof config.headers === 'function' ? undefined : config.headers),
+    },
   });
 
   if (typeof config.headers === 'function') {
@@ -20,6 +23,7 @@ export function createGraphQLClient(
       return {
         ...request,
         headers: {
+          'content-type': 'application/json',
           ...request.headers,
           ...getHeaders(),
         },
