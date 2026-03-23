@@ -128,7 +128,7 @@ Organisation "1" -right- "*" Role : "defines >"
 
 OrgUnit -up- "*" RequirementProfile : selects >
 Organisation "1" -right- "*" RequirementProfile : "defines >"
-RequirementProfile -right- "*" Requirement : "groups >"
+RequirementProfile "*" -right- "*" Requirement : "groups >"
 User "1" -right- "*" Document : "owns >"
 RequirementFulfillment "*" -down- "0..1" Document : "backed by >"
 Membership "0..1" -right- "*" RequirementProfileSubmission
