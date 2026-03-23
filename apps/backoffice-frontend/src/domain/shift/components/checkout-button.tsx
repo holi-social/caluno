@@ -28,6 +28,7 @@ export const CheckOutButton = ({
     startTransition(async () => {
       const result = await closeTimeEntry({
         id: timeEntryId,
+        organizationId,
         endedAt: new Date(),
       });
 

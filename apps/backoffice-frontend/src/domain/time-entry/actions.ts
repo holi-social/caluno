@@ -26,7 +26,7 @@ export const createTimeEntry = actionClient
 export const closeTimeEntry = actionClient
   .inputSchema(closeTimeEntrySchema)
   .action(async ({ parsedInput }) => {
-    const data = await getDataClient();
+    const data = await getDataClient(parsedInput.organizationId);
 
     const input: CloseTimeEntryInput = {
       endedAt: parsedInput.endedAt.toISOString(),

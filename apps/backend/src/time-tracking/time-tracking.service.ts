@@ -30,11 +30,17 @@ export class TimeTrackingService {
     organizationId: string,
     input: CloseTimeEntryInput,
   ): Promise<TimeEntryEntity> {
-    //  TODO: limit by org id
     const [timeEntry] = await this.db
       .update(schema.timeEntries)
       .set(input)
-      .where(and(eq(schema.timeEntries.id, id)))
+      .from(schema.shifts)
+      .where(
+        and(
+          eq(schema.timeEntries.id, id),
+          eq(schema.shifts.id, schema.timeEntries.shiftId),
+          eq(schema.shifts.organizationId, organizationId),
+        ),
+      )
       .returning();
 
     if (!timeEntry) {
@@ -46,7 +52,7 @@ export class TimeTrackingService {
 
   async deleteTimeEntry(userId: string, id: string): Promise<TimeEntryEntity> {
     const timeEntry = await this.db.query.timeEntries.findFirst({
-      where: { id },
+      where: { id, volunteerId: userId },
     });
 
     if (!timeEntry) {
