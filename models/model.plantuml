@@ -33,9 +33,9 @@ package "User & Profile" {
         ...
     }
     class OrganisationUserProfile {
-        grantAccessPhoneNumber
-        grantAccessAddress
-        grantAccessBankAccountNumber
+        canAccessPhoneNumber
+        canAccessAddress
+        canAccessBankAccountNumber
         note
         status {pending, active, blacklisted, inactive}
     }
