@@ -63,7 +63,7 @@ package "Operations" {
         status {started, finished, validated, rejected}
         note ?
     }
-    note bottom: How do we manage\nstatus and validation?
+    note bottom: How do we manage\nstatus and validation?\nHow is reject => update\nof a TimeEntry working?
 }
 class Membership {
 }
@@ -81,7 +81,6 @@ class MembershipRequest {
     reviewedAt
     rejectionReason
 }
-note right: How is reject => update\nof a TimeEntry working?
 package RequirementProfiles {
     class RequirementProfile {
         name
