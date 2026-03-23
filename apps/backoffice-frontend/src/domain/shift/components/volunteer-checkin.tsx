@@ -28,7 +28,7 @@ export const VolunteerCheckin = ({
   const router = useRouter();
 
   const handleCheckin = (checkInId: string) => {
-    router.push(`/${organizationId}/check-in/${checkInId}`);
+    router.push(`/${organizationId}/check-in/${checkInId}/decide`);
   };
 
   return (

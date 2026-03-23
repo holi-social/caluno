@@ -34,4 +34,24 @@ export class TimeTrackingQueryResolver {
       offset: pagination.offset,
     });
   }
+
+  @Permissions(PERMISSIONS.TIME_ENTRY_READ)
+  @Query(() => TimeEntryPaginatedResponse)
+  async timeEntriesByUser(
+    @Args('userId') userId: string,
+    @Args() pagination: PaginationInput,
+    @Context() context: AuthenticatedGraphQLContext,
+  ): Promise<TimeEntryPaginatedResponse> {
+    const { entries, total } = await this.timeTrackingService.findByUser(
+      context.organizationId,
+      userId,
+      pagination,
+    );
+    return new TimeEntryPaginatedResponse({
+      items: this.timeEntryMapper.toArray(entries),
+      total: total,
+      limit: pagination.limit,
+      offset: pagination.offset,
+    });
+  }
 }

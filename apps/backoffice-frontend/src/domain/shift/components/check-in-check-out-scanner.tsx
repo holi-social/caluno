@@ -18,7 +18,9 @@ type CheckinScannerProps = {
   organizationId: string;
 };
 
-export const CheckinScanner = ({ organizationId }: CheckinScannerProps) => {
+export const CheckInCheckOutScanner = ({
+  organizationId,
+}: CheckinScannerProps) => {
   const [error, setError] = useState(false);
   const router = useRouter();
 
@@ -27,7 +29,7 @@ export const CheckinScanner = ({ organizationId }: CheckinScannerProps) => {
     const checkinId = extractCheckInId(data);
 
     if (checkinId) {
-      router.push(`/${organizationId}/check-in/${checkinId}`);
+      router.push(`/${organizationId}/check-in/${checkinId}/decide`);
     } else {
       setError(true);
       toast.error('Not a valid check-in iD. Please try again.');

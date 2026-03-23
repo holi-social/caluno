@@ -61,7 +61,7 @@ export default async function VolunteersPage({ params }: VolunteersPageProps) {
                 <TableCell>{volunteer.email}</TableCell>
                 <TableCell>
                   <Link
-                    href={`/${orgId}/check-in/${volunteer.checkInId}`}
+                    href={`/${orgId}/check-in/${volunteer.checkInId}/check-in`}
                     aria-label="Check-in volunteer"
                   >
                     <Button size="icon-xs" variant="outline">

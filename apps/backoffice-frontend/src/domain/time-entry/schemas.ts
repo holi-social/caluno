@@ -9,3 +9,9 @@ export const createTimeEntrySchema = z.object({
 });
 
 export type CreateTimeEntryFormValues = z.infer<typeof createTimeEntrySchema>;
+
+export const closeTimeEntrySchema = z.object({
+  id: z.string().min(1, 'Time Entry ID is required'),
+  endedAt: z.date('End time is required'),
+  notes: z.string().trim().optional(),
+});

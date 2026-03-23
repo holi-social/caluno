@@ -29,17 +29,7 @@ export default async function CheckinPage({ params }: CheckinPageProps) {
   });
 
   if (!user) {
-    return (
-      <Alert variant="destructive">
-        <AlertCircle />
-        <AlertTitle>Volunteer does not exist</AlertTitle>
-        <AlertDescription>
-          There is no volunteers that matches this QR iD. The QR iD may have
-          been re-generated and so this QR iD is no longer valid. Try and other
-          QR iD or search for the volunteer to check them in.
-        </AlertDescription>
-      </Alert>
-    );
+    return;
   }
 
   //  TODO: temporary status checking, until blocking & dossier features land

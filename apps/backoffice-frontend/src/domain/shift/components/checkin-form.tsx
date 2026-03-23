@@ -2,13 +2,13 @@
 
 import type { ActiveShift, User } from '@repo/data';
 import { Button, Card, CardContent, CardHeader, CardTitle } from '@repo/ui';
-import { CheckCircle2, UserIcon } from 'lucide-react';
+import { CheckCircle2, Timer, UserIcon } from 'lucide-react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 
 import { useState, useTransition } from 'react';
 import { toast } from 'sonner';
-import type { CheckInStatus } from '@/app/(dashboard)/[orgId]/check-in/[checkInId]/page';
+import type { CheckInStatus } from '@/app/(dashboard)/[orgId]/check-in/[checkInId]/check-in/page';
 import { createTimeEntry } from '@/domain/time-entry/actions';
 import { ShiftSelectorCard } from './shift-selector-card';
 
@@ -114,11 +114,11 @@ export const CheckinForm = ({
       <Button
         size="lg"
         className="w-full"
-        disabled={!canCheckin}
+        disabled={!canCheckin || isPending}
         onClick={handleCheckin}
         type="button"
       >
-        {isPending ? 'Checking-in...' : 'Check-in'}
+        <Timer /> {isPending ? 'Checking-in...' : 'Check-in'}
       </Button>
     </div>
   );
