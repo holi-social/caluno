@@ -61,6 +61,11 @@ export function DashboardSidebar() {
         href: `/${orgId}/check-in/scan`,
         icon: ScanQrCode,
       },
+      {
+        title: 'Membership Requests',
+        href: `/${orgId}/membership-requests`,
+        icon: UsersIcon,
+      },
     ];
   }, [orgId]);
 

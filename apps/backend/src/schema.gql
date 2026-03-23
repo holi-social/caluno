@@ -68,9 +68,9 @@ type MembershipRequest {
   createdAt: DateTime!
   id: ID!
   organization: Organization!
-  rejectionReason: String!
-  reviewedAt: DateTime!
-  reviewedBy: User!
+  rejectionReason: String
+  reviewedAt: DateTime
+  reviewedBy: User
   status: MembershipRequestStatus!
   updatedAt: DateTime!
   user: User!
@@ -179,7 +179,7 @@ type Query {
   activeShifts(limit: Int! = 10, offset: Int! = 0): ShiftPaginatedResponse!
   me: User!
   membership(organizationId: ID!): Membership!
-  membershipRequests(limit: Int! = 10, offset: Int! = 0, organizationId: ID!): MembershipRequestPaginatedResponse!
+  membershipRequests(limit: Int! = 10, offset: Int! = 0, organizationId: ID!, status: MembershipRequestStatus): MembershipRequestPaginatedResponse!
   organization(id: String!): Organization!
   organizationBySlug(slug: String!): Organization!
   organizations(limit: Int! = 10, offset: Int! = 0): OrganizationPaginatedResponse!

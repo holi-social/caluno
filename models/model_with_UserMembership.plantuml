@@ -1,6 +1,6 @@
 @startuml
 'package "Identity & Multi-Tenancy" {
-    class Tenant {
+    class Organisation {
         id: UUID
         name: String
     }
@@ -30,9 +30,9 @@
     }
     note left: GDPR:\nDo not hard-delete? \nAnonymize data on account deletion\nto preserve legal audit trails\nwe should understand\nwhat are the requirement here.
 
-    ' Protects data. Users have global accounts, but their profile should be scoped to the tenant.
-    ' If you work for Stadtmission, your IBAN will be safely locked to the Stadtmission Tenant.
-    class TenantUserProfile {
+    ' Protects data. Users have global accounts, but their profile should be scoped to the Organisation.
+    ' If you work for Stadtmission, your IBAN will be safely locked to the Stadtmission Organisation.
+    class OrganisationUserProfile {
         address: String
         bankAccountNumber: String
     }
@@ -69,25 +69,25 @@ package "Compliance & Qualifications" {
     ' The rule itself > "ID Check" 
     ' Owned by OrgUnit. If Root creates it, it cascades to all children
     ' If a Sub-Org creates it, only that Sub-Org sees it
-    class QualCriterionDef {
+    class Requirement {
         name: String 
         type {document, check}
     }
 
     ' grouping mechanism
-    class QualProfileDef {
+    class RequirementProfile {
         name: String 
     }
 
     ' groups the user's fulfillments together
-    class QualificationSubmission {
+    class RequirementProfileSubmission {
         status {pending, approved, rejected}
         submittedAt: DateTime
     }
 
     ' Linked directly to the User. If B1 and B2 both 
     ' ask for the "ID Check", Max's single fulfillment satisfies both automatically.
-    class UserCriterionFulfillment {
+    class RequirementFulfillment {
         status {pending, verified, expired}
         valueJSON: JSON
     }
@@ -124,10 +124,10 @@ package "Operations" {
     }
 }
 
-' --- Identity & Tenant ---
-Tenant "1" -- "1\nroot" OrgUnit : "contains >"
-Tenant "1" -down- "*" TenantUserProfile : "secures >"
-User "1" -up- "*" TenantUserProfile : "has >"
+' --- Identity & Organisation ---
+Organisation "1" -- "1\nroot" OrgUnit : "contains >"
+Organisation "1" -down- "*" OrganisationUserProfile : "secures >"
+User "1" -up- "*" OrganisationUserProfile : "has >"
 OrgUnit "*" -up- "1" OrgUnitType : "categorized by >"
 OrgUnit "*\nchild" o-- "1\nparent" OrgUnit : "cascades down <"
 Location "0..1" -up- "*" OrgUnit : "hosts >"
@@ -143,20 +143,19 @@ OrgUnit "1" -down- "*" MembershipRequest : "receives >"
 MembershipRequest "*" -right- "1" User : "submitted by >"
 
 ' --- Compliance ---
-OrgUnit "1" -- "*" QualCriterionDef : "defines >"
-OrgUnit "1" -- "*" QualProfileDef : "defines >"
+OrgUnit "1" -- "*" Requirement : "defines >"
+OrgUnit "1" -- "*" RequirementProfile : "defines >"
 
-QualProfileDef "*" -- "*" QualCriterionDef 
-OrgUnit "*" -- "*" QualProfileDef : "enforces >"
+RequirementProfile "*" -- "*" Requirement 
 
-User "1" -down- "*" QualificationSubmission : "submits >"
-OrgUnit "1" -down- "*" QualificationSubmission : "receives >"
-QualProfileDef "1" -down- "*" QualificationSubmission : "based on >"
+User "1" -down- "*" RequirementProfileSubmission : "submits >"
+OrgUnit "1" -down- "*" RequirementProfileSubmission : "receives >"
+RequirementProfile "1" -down- "*" RequirementProfileSubmission : "based on >"
 
-QualificationSubmission "*" -- "*" UserCriterionFulfillment : "contains >"
-User "1" -- "*" UserCriterionFulfillment : "achieves >"
-QualCriterionDef "1" -- "*" UserCriterionFulfillment : "satisfies <"
-UserCriterionFulfillment "*" -- "0..1" Document : "backed by >"
+RequirementProfileSubmission "*" -- "*" RequirementFulfillment : "contains >"
+User "1" -- "*" RequirementFulfillment : "achieves >"
+Requirement "1" -- "*" RequirementFulfillment : "satisfies <"
+RequirementFulfillment "*" -- "0..1" Document : "backed by >"
 User "1" -down- "*" Document : "owns >"
 
 ' --- Operations ---
