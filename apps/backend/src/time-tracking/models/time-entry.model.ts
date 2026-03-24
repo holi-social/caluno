@@ -11,8 +11,8 @@ export class TimeEntry {
   @Field(() => Date)
   startedAt: Date;
 
-  @Field(() => Date)
-  endedAt: Date;
+  @Field(() => Date, { nullable: true })
+  endedAt: Date | null;
 
   @Field(() => String, { nullable: true })
   notes: string | null;

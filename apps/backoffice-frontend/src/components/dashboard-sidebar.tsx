@@ -18,6 +18,7 @@ import {
   FolderIcon,
   LogOutIcon,
   ScanFace,
+  ScanQrCode,
   SettingsIcon,
   UsersIcon,
 } from 'lucide-react';
@@ -54,6 +55,11 @@ export function DashboardSidebar() {
         title: 'Volunteers',
         href: `/${orgId}/volunteers`,
         icon: UsersIcon,
+      },
+      {
+        title: 'Check-in/out',
+        href: `/${orgId}/check-in/scan`,
+        icon: ScanQrCode,
       },
       {
         title: 'Membership Requests',

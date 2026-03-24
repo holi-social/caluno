@@ -1,9 +1,11 @@
-import { Args, ID, Mutation, Resolver } from '@nestjs/graphql';
+import { Args, Context, ID, Mutation, Resolver } from '@nestjs/graphql';
 import type { UserSession } from '@thallesp/nestjs-better-auth';
 import { Session } from '@thallesp/nestjs-better-auth';
 import { PERMISSIONS } from '../../auth/constants';
 import { Permissions } from '../../auth/decorators/permissions.decorator';
+import { type AuthenticatedGraphQLContext } from '../../graphql/graphql.context';
 import { AddTimeEntryInput } from '../inputs/add-time-entry.input';
+import { CloseTimeEntryInput } from '../inputs/close-time-enty-input';
 import { TimeEntryMapper } from '../mappers/time-entry.mapper';
 import { TimeEntry } from '../models/time-entry.model';
 import { TimeTrackingService } from '../time-tracking.service';
@@ -21,6 +23,21 @@ export class TimeTrackingMutationResolver {
     @Args('input') input: AddTimeEntryInput,
   ): Promise<TimeEntry> {
     const entity = await this.timeTrackingService.addTimeEntry(input);
+    return this.entryMapper.toModelOrThrow(entity);
+  }
+
+  @Permissions(PERMISSIONS.TIME_ENTRY_UPDATE)
+  @Mutation(() => TimeEntry)
+  async closeTimeEntry(
+    @Args('id', { type: () => ID }) id: string,
+    @Args('input') input: CloseTimeEntryInput,
+    @Context() context: AuthenticatedGraphQLContext,
+  ): Promise<TimeEntry> {
+    const entity = await this.timeTrackingService.closeTimeEntry(
+      id,
+      context.organizationId,
+      input,
+    );
     return this.entryMapper.toModelOrThrow(entity);
   }
 

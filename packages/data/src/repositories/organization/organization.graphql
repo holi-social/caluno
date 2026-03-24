@@ -22,6 +22,7 @@ query GetVolunteers($id: String!) {
       name
       email
       image
+      checkInId
     }
   }
 }

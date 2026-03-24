@@ -179,9 +179,7 @@ export function CreateTimeEntryForm({
         </Field>
 
         <Field>
-          <FieldLabel htmlFor="endedAt">
-            End Time <span className="text-destructive">*</span>
-          </FieldLabel>
+          <FieldLabel htmlFor="endedAt">End Time</FieldLabel>
           <Input
             id="endedAt"
             type="datetime-local"

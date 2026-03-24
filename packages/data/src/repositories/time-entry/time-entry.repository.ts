@@ -1,5 +1,8 @@
 import { DataError } from '../../errors/data-error';
-import type { AddTimeEntryInput } from '../../generated/graphql';
+import type {
+  AddTimeEntryInput,
+  CloseTimeEntryInput,
+} from '../../generated/graphql';
 import {
   BaseRepository,
   type PaginationOptions,
@@ -24,6 +27,15 @@ export class TimeEntryRepository extends BaseRepository {
     }
   }
 
+  async close(id: string, input: CloseTimeEntryInput) {
+    try {
+      const data = await this.sdk.CloseTimeEntry({ id, input });
+      return data.closeTimeEntry;
+    } catch (error) {
+      throw DataError.fromGraphQLError(error);
+    }
+  }
+
   async findAll(options: PaginationOptions = {}) {
     try {
       const data = await this.sdk.GetTimeEntries({
@@ -31,6 +43,19 @@ export class TimeEntryRepository extends BaseRepository {
         offset: options.offset ?? 0,
       });
       return data.timeEntries;
+    } catch (error) {
+      throw DataError.fromGraphQLError(error);
+    }
+  }
+
+  async findByUser(userId: string, options: PaginationOptions = {}) {
+    try {
+      const data = await this.sdk.GetTimeEntriesByUser({
+        userId,
+        limit: options.limit ?? 10,
+        offset: options.offset ?? 0,
+      });
+      return data.timeEntriesByUser;
     } catch (error) {
       throw DataError.fromGraphQLError(error);
     }

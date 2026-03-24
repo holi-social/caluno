@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { and, count, eq, SQL } from 'drizzle-orm';
+import { and, count, desc, eq, SQL } from 'drizzle-orm';
 import type { Database } from '../database/database.module';
 import { DATABASE_CONNECTION } from '../database/database-connection';
 import * as schema from '../database/schema';
@@ -50,15 +50,15 @@ export class ShiftService {
       .select()
       .from(schema.shifts)
       .where(condition)
+      .orderBy(desc(schema.shifts.startsAt))
       .limit(pagination.limit)
       .offset(pagination.offset);
 
-    const [{ rowCount }] = await this.db
-      .select({ rowCount: count() })
+    const [{ total }] = await this.db
+      .select({ total: count() })
       .from(schema.shifts)
       .where(condition);
 
-    const total = rowCount;
     return { shifts, total };
   }
 
@@ -261,5 +261,36 @@ export class ShiftService {
 
   async findCreator(createdById: string): Promise<UserEntity> {
     return this.userService.findByIdOrThrow(createdById);
+  }
+
+  async findActiveShifts(
+    organizationId: string,
+    pagination: PaginationInput,
+  ): Promise<{ shifts: ShiftEntity[]; total: number }> {
+    // Increase the window either side by 1hr to show shifts that where just active or just about to be active
+    const now = new Date();
+    const oneHourAgo = new Date(now.getTime() - 60 * 60 * 1000);
+    const oneHourFromNow = new Date(now.getTime() + 60 * 60 * 1000);
+
+    const condition = {
+      organizationId,
+      startsAt: { lt: oneHourFromNow },
+      endsAt: { gt: oneHourAgo },
+    };
+
+    const shifts = await this.db.query.shifts.findMany({
+      where: condition,
+      orderBy: { createdAt: 'desc' },
+      limit: pagination.limit,
+      offset: pagination.offset,
+    });
+
+    const [{ total }] = await this.db.query.shifts.findMany({
+      columns: {},
+      extras: { total: count() },
+      where: condition,
+    });
+
+    return { shifts, total };
   }
 }

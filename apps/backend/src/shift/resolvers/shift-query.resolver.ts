@@ -60,4 +60,23 @@ export class ShiftQueryResolver {
       offset: pagination.offset,
     });
   }
+
+  @Permissions(PERMISSIONS.SHIFT_READ)
+  @Query(() => ShiftPaginatedResponse)
+  async activeShifts(
+    @Args() pagination: PaginationInput,
+    @Context() context: AuthenticatedGraphQLContext,
+  ): Promise<ShiftPaginatedResponse> {
+    const { shifts, total } = await this.shiftService.findActiveShifts(
+      context.organizationId,
+      pagination,
+    );
+
+    return new ShiftPaginatedResponse({
+      items: this.shiftMapper.toArray(shifts),
+      total: total,
+      limit: pagination.limit,
+      offset: pagination.offset,
+    });
+  }
 }

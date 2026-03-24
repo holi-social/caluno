@@ -2,6 +2,7 @@
 
 import type { GetTimeEntriesQuery } from '@repo/data';
 import {
+  cn,
   Table,
   TableBody,
   TableCell,
@@ -29,25 +30,29 @@ export function formatDate(dateString: string | null | undefined): string {
 
 function formatTimeRange(entry: TimeEntry): string {
   const start = new Date(entry.startedAt);
-  const end = new Date(entry.endedAt);
 
-  return `${format(start, 'HH:mm')} - ${format(end, 'HH:mm')}`;
+  if (entry.endedAt) {
+    const end = new Date(entry.endedAt);
+    return `${format(start, 'HH:mm')} - ${format(end, 'HH:mm')}`;
+  } else {
+    return `${format(start, 'HH:mm')} - open`;
+  }
 }
 
 function calculateDuration(entry: TimeEntry): string {
   const start = new Date(entry.startedAt);
-  const end = new Date(entry.endedAt);
+  const end = entry.endedAt ? new Date(entry.endedAt) : new Date();
   const totalMinutes = (end.getTime() - start.getTime()) / (1000 * 60);
 
-  const hours = Math.floor(totalMinutes / 60);
-  const minutes = Math.floor(totalMinutes % 60);
+  const hours = Math.max(Math.floor(totalMinutes / 60), 0);
+  const minutes = Math.max(Math.floor(totalMinutes % 60), 0);
 
   return `${hours}h ${minutes}m`;
 }
 
 export function TimesheetsTable({ entries }: TimesheetsTableProps) {
   return (
-    <div className="rounded-md border">
+    <div className="rounded-md border overflow-hidden">
       <Table>
         <TableHeader>
           <TableRow>
@@ -60,7 +65,10 @@ export function TimesheetsTable({ entries }: TimesheetsTableProps) {
         </TableHeader>
         <TableBody>
           {entries.map((entry) => (
-            <TableRow key={entry.id} className="hover:bg-accent/25">
+            <TableRow
+              key={entry.id}
+              className={cn({ 'bg-muted/80': !entry.endedAt })}
+            >
               <TableCell>{entry.shift?.title ?? 'N/A'}</TableCell>
               <TableCell>
                 {entry.volunteer?.name ?? entry.volunteer?.email ?? 'N/A'}

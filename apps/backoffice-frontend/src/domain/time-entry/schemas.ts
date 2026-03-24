@@ -4,8 +4,15 @@ export const createTimeEntrySchema = z.object({
   shiftId: z.string(),
   volunteerId: z.string(),
   startedAt: z.string().min(1, 'Start time is required'),
-  endedAt: z.string().min(1, 'End time is required'),
+  endedAt: z.string().optional(),
   notes: z.string().trim().optional(),
 });
 
 export type CreateTimeEntryFormValues = z.infer<typeof createTimeEntrySchema>;
+
+export const closeTimeEntrySchema = z.object({
+  id: z.string().min(1, 'Time Entry ID is required'),
+  endedAt: z.date('End time is required'),
+  organizationId: z.string().min(1, 'Organization ID is required'),
+  notes: z.string().trim().optional(),
+});

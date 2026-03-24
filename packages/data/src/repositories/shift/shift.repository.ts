@@ -1,12 +1,15 @@
 import { DataError } from '../../errors/data-error';
 import type {
   CreateShiftInput,
+  GetActiveShiftsQuery,
   UpdateShiftInput,
 } from '../../generated/graphql';
 import {
   BaseRepository,
   type PaginationOptions,
 } from '../base/base.repository';
+
+export type ActiveShift = GetActiveShiftsQuery['activeShifts']['items'][number];
 
 export class ShiftRepository extends BaseRepository {
   async findById(id: string) {
@@ -37,6 +40,18 @@ export class ShiftRepository extends BaseRepository {
         offset: options.offset ?? 0,
       });
       return data.shifts.items;
+    } catch (error) {
+      throw DataError.fromGraphQLError(error);
+    }
+  }
+
+  async activeShifts(options: PaginationOptions = {}) {
+    try {
+      const data = await this.sdk.GetActiveShifts({
+        limit: options.limit ?? 100,
+        offset: options.offset ?? 0,
+      });
+      return data.activeShifts;
     } catch (error) {
       throw DataError.fromGraphQLError(error);
     }

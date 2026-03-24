@@ -18,6 +18,16 @@ query GetUser($id: String!) {
   }
 }
 
+query GetUserByCheckInId($checkInId: String!) {
+  userByCheckInId(checkInId: $checkInId) {
+    id
+    name
+    email
+    image
+    checkInId
+  }
+}
+
 query GetMyOrganizations($limit: Int!, $offset: Int!) {
   organizations(limit: $limit, offset: $offset) {
     items {

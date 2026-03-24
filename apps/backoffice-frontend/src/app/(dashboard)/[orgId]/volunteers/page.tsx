@@ -1,3 +1,14 @@
+import {
+  Button,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@repo/ui';
+import { LogIn } from 'lucide-react';
+import Link from 'next/link';
 import { ButtonClipboard } from '@/components/button-clipboard';
 import { organizationShareUrl } from '@/domain/organization/share';
 import { getDataClient } from '@/lib/data-client';
@@ -32,6 +43,36 @@ export default async function VolunteersPage({ params }: VolunteersPageProps) {
           copyText={orgUrl}
           toastMessage="Organization link copied to clipboard"
         />
+      </div>
+
+      <div className="rounded-md border">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Name</TableHead>
+              <TableHead>Email</TableHead>
+              <TableHead></TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {volunteers?.map((volunteer) => (
+              <TableRow key={volunteer.id}>
+                <TableCell>{volunteer.name}</TableCell>
+                <TableCell>{volunteer.email}</TableCell>
+                <TableCell>
+                  <Link
+                    href={`/${orgId}/check-in/${volunteer.checkInId}/check-in`}
+                    aria-label="Check-in volunteer"
+                  >
+                    <Button size="icon-xs" variant="outline">
+                      <LogIn />
+                    </Button>
+                  </Link>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
       </div>
     </div>
   );

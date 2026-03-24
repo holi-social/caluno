@@ -10,6 +10,11 @@ input AddTimeEntryInput {
   volunteerId: String!
 }
 
+input CloseTimeEntryInput {
+  endedAt: DateTime!
+  notes: String
+}
+
 input CreateOrganizationInput {
   address: String
   description: String
@@ -88,6 +93,7 @@ type Mutation {
   approveMembershipRequest(id: ID!, organizationId: ID!): MembershipRequest!
   assignRoleToMembership(membershipId: ID!, roleId: ID!): Boolean!
   cancelMembershipRequest(id: ID!, organizationId: ID!): MembershipRequest!
+  closeTimeEntry(id: ID!, input: CloseTimeEntryInput!): TimeEntry!
   createMembershipRequest(organizationId: ID!): MembershipRequest!
   createOrganization(input: CreateOrganizationInput!): Organization!
   createProject(input: CreateProjectInput!): Project!
@@ -170,6 +176,7 @@ enum ProjectStatus {
 }
 
 type Query {
+  activeShifts(limit: Int! = 10, offset: Int! = 0): ShiftPaginatedResponse!
   me: User!
   membership(organizationId: ID!): Membership!
   membershipRequests(limit: Int! = 10, offset: Int! = 0, organizationId: ID!, status: MembershipRequestStatus): MembershipRequestPaginatedResponse!
@@ -184,7 +191,9 @@ type Query {
   shifts(limit: Int! = 10, offset: Int! = 0): ShiftPaginatedResponse!
   shiftsByProjectId(limit: Int! = 10, offset: Int! = 0, projectId: String!): ShiftPaginatedResponse!
   timeEntries(limit: Int! = 10, offset: Int! = 0): TimeEntryPaginatedResponse!
+  timeEntriesByUser(limit: Int! = 10, offset: Int! = 0, userId: String!): TimeEntryPaginatedResponse!
   user(id: String!): User
+  userByCheckInId(checkInId: String!): User
 }
 
 type Role {
@@ -222,7 +231,7 @@ enum ShiftVisibility {
 
 type TimeEntry {
   createdAt: DateTime!
-  endedAt: DateTime!
+  endedAt: DateTime
   id: ID!
   notes: String
   shift: Shift!

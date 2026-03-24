@@ -10,6 +10,12 @@ mutation DeleteTimeEntry($id: ID!) {
   }
 }
 
+mutation CloseTimeEntry($id: ID!, $input: CloseTimeEntryInput!) {
+  closeTimeEntry(id: $id, input: $input) {
+    id
+  }
+}
+
 query GetTimeEntries($limit: Int!, $offset: Int!) {
   timeEntries(limit: $limit, offset: $offset) {
     items {
@@ -23,6 +29,27 @@ query GetTimeEntries($limit: Int!, $offset: Int!) {
       }
       shift {
         title
+      }
+    }
+    pagination {
+      total
+      limit
+      offset
+      hasMore
+    }
+  }
+}
+
+query GetTimeEntriesByUser($userId: String!, $limit: Int!, $offset: Int!) {
+  timeEntriesByUser(userId: $userId, limit: $limit, offset: $offset) {
+    items {
+      id
+      startedAt
+      endedAt
+      shift {
+        title
+        startsAt
+        endsAt
       }
     }
     pagination {
