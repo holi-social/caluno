@@ -24,11 +24,11 @@ export default async function CheckInPage() {
             <div className="rounded-lg border p-8 pb-4 bg-white text-black space-y-2">
               <QRCodeSVG value={qrValue} size={256} level="M" />
               <h2 className="flex justify-center items-center gap-2 pt-2">
-                <User className="stroke-gray-500 size-4" />{' '}
+                <User className="stroke-gray-500 size-4" />
                 <span className="text-xl">{name}</span>
               </h2>
               <h2 className="flex justify-center items-center gap-2">
-                <Hash className="stroke-gray-500 size-4" />{' '}
+                <Hash className="stroke-gray-500 size-4" />
                 <span className="text-xl">{easyReadCheckinId}</span>
               </h2>
             </div>
