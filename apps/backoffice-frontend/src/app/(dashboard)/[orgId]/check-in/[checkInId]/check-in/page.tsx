@@ -33,7 +33,7 @@ export default async function CheckinPage({ params }: CheckinPageProps) {
   }
 
   //  TODO: temporary status checking, until blocking & dossier features land
-  const status: CheckInStatus = 'valid';
+  const status: CheckInStatus = 'valid' as CheckInStatus;
 
   return (
     <div className="max-w-2xl">
