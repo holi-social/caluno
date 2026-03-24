@@ -57,8 +57,6 @@ variables:
       -f apps/backend/Dockerfile .
     - docker push "$REGISTRY_NAMESPACE/$BACKEND_IMAGE_NAME:$IMAGE_TAG_SHA"
     - docker push "$REGISTRY_NAMESPACE/$BACKEND_IMAGE_NAME:$STABLE_TAG"
-    - echo "Waiting for registry to propagate..."
-    - sleep 30
 
 .build-images-frontend:
   extends: .build-images-base
@@ -72,8 +70,6 @@ variables:
       -f apps/backoffice-frontend/Dockerfile .
     - docker push "$REGISTRY_NAMESPACE/$FRONTEND_IMAGE_NAME:$IMAGE_TAG_SHA"
     - docker push "$REGISTRY_NAMESPACE/$FRONTEND_IMAGE_NAME:$STABLE_TAG"
-    - echo "Waiting for registry to propagate..."
-    - sleep 30
 
 .build-images-base-branch:
   stage: build
