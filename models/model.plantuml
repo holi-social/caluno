@@ -129,8 +129,9 @@ Role "*" -left- "*" Permission : "groups >"
 Role "*" -- "*" Membership
 Organisation "1" -- "*" Role : "defines >"
 
-OrgUnit -- "*" RequirementProfile : selects >
+OrgUnit -- "*" RequirementProfile : "selects favorites >"
 Organisation "1" -- "*" RequirementProfile : "defines >"
+Organisation "1" -- "*" Requirement : "defines >"
 RequirementProfile "*" -right- "*" Requirement : "groups >"
 User "1" -up- "*" Document : "owns >"
 RequirementFulfillment "*" -- "0..1" Document : "backed by >"

@@ -46,6 +46,7 @@ variables:
       else
         echo "Unsupported branch $CI_COMMIT_BRANCH"; exit 1
       fi
+
 .build-images-backend:
   extends: .build-images-base
   script:
