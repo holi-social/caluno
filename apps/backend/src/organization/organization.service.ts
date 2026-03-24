@@ -29,18 +29,16 @@ export class OrganizationService {
     readonly _membershipService: MembershipService,
   ) {}
 
-  async findById(id: string): Promise<Organization | null> {
-    const organization = await this.db.query.organizations.findFirst({
+  async findById(id: string): Promise<OrganizationEntity | undefined> {
+    return this.db.query.organizations.findFirst({
       where: { id },
     });
-    return this.mapper.toModel(organization);
   }
 
-  async findBySlug(slug: string): Promise<Organization | null> {
-    const organization = await this.db.query.organizations.findFirst({
+  async findBySlug(slug: string): Promise<OrganizationEntity | undefined> {
+    return this.db.query.organizations.findFirst({
       where: { slug },
     });
-    return this.mapper.toModel(organization);
   }
 
   async findAll(

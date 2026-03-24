@@ -26,6 +26,15 @@ export class OrganizationRepository extends BaseRepository {
     }
   }
 
+  async findPublicInfoById(id: string) {
+    try {
+      const data = await this.sdk.GetOrganizationPublicInfo({ id });
+      return data.organizationPublicInfo;
+    } catch (error) {
+      throw DataError.fromGraphQLError(error);
+    }
+  }
+
   async findAll(options: FindOrganizationsOptions = {}) {
     const { limit = 10, offset = 0 } = options;
     try {

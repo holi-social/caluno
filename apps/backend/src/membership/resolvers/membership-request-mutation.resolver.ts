@@ -13,7 +13,6 @@ export class MembershipRequestMutationResolver {
     private readonly membershipRequestMapper: MembershipRequestMapper,
   ) {}
 
-  @Permissions(PERMISSIONS.MEMBERSHIP_REQUEST_CREATE)
   @Mutation(() => MembershipRequest)
   async createMembershipRequest(
     @Args('organizationId', { type: () => ID }) organizationId: string,
