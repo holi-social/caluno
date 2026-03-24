@@ -141,10 +141,6 @@ MembershipRequest "0..1" -- "*" RequirementProfileSubmission
 RequirementProfileSubmission "*" -up- "1" RequirementProfile : "fulfills >"
 RequirementFulfillment "*" -up- "1" Requirement : "fulfills >"
 RequirementFulfillment "*" -- "1" OrganisationUserProfile : "store for reuse <"
-' RequirementProfileSubmission "*" .. "1" OrganisationUserProfile : "store for reuse <"
-' note "At least one is needed" as Note1
-' (RequirementProfileSubmission, OrganisationUserProfile) .. Note1
-' (RequirementFulfillment, OrganisationUserProfile) .. Note1
 
 OrganisationUserProfile "1" -- "*" IncidentReport
 IncidentReport "*" -right- "1" User : "reported by >"
