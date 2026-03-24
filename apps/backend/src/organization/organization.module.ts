@@ -4,7 +4,10 @@ import { DatabaseModule } from '../database/database.module';
 import { MembershipModule } from '../membership/membership.module';
 import { ProjectModule } from '../project/project.module';
 import { UserModule } from '../user/user.module';
-import { OrganizationMapper } from './mappers/organization.mapper';
+import {
+  OrganizationMapper,
+  OrganizationPublicInfoMapper,
+} from './mappers/organization.mapper';
 import { OrganizationService } from './organization.service';
 import {
   OrganizationFieldResolver,
@@ -26,6 +29,7 @@ import {
     OrganizationMutationResolver,
     OrganizationFieldResolver,
     OrganizationMapper,
+    OrganizationPublicInfoMapper,
   ],
 })
 export class OrganizationModule {}

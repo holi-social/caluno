@@ -3,10 +3,14 @@ import { Session, type UserSession } from '@thallesp/nestjs-better-auth';
 import { PERMISSIONS } from '../../auth/constants';
 import { Permissions } from '../../auth/decorators/permissions.decorator';
 import { PaginationInput } from '../../graphql/pagination.input';
-import { OrganizationMapper } from '../mappers/organization.mapper';
+import {
+  OrganizationMapper,
+  OrganizationPublicInfoMapper,
+} from '../mappers/organization.mapper';
 import {
   Organization,
   OrganizationPaginatedResponse,
+  OrganizationPublicInfo,
 } from '../models/organization.model';
 import { OrganizationService } from '../organization.service';
 
@@ -15,12 +19,22 @@ export class OrganizationQueryResolver {
   constructor(
     private readonly organizationService: OrganizationService,
     private readonly organizationMapper: OrganizationMapper,
+    private readonly organizationPublicInfoMapper: OrganizationPublicInfoMapper,
   ) {}
 
   @Permissions(PERMISSIONS.ORG_READ)
   @Query(() => Organization)
   async organization(@Args('id') id: string): Promise<Organization | null> {
-    return this.organizationService.findById(id);
+    const orgEntity = await this.organizationService.findById(id);
+    return this.organizationMapper.toModel(orgEntity);
+  }
+
+  @Query(() => Organization)
+  async organizationPublicInfo(
+    @Args('id') id: string,
+  ): Promise<OrganizationPublicInfo | null> {
+    const organization = await this.organizationService.findById(id);
+    return this.organizationPublicInfoMapper.toModel(organization);
   }
 
   @Permissions(PERMISSIONS.ORG_READ)
@@ -28,7 +42,8 @@ export class OrganizationQueryResolver {
   async organizationBySlug(
     @Args('slug') slug: string,
   ): Promise<Organization | null> {
-    return this.organizationService.findBySlug(slug);
+    const orgEntity = await this.organizationService.findBySlug(slug);
+    return this.organizationMapper.toModel(orgEntity);
   }
 
   @Query(() => OrganizationPaginatedResponse)

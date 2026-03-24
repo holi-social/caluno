@@ -5,7 +5,7 @@ import { Project } from '../../project/models/project.model';
 import { User } from '../../user/models/user.model';
 
 @ObjectType()
-export class Organization {
+export class OrganizationPublicInfo {
   @Field(() => ID)
   id: string;
 
@@ -32,7 +32,20 @@ export class Organization {
 
   @Field(() => String, { nullable: true })
   description: string | null;
+}
 
+export const OrganizationPublicInfoPaginatedResponse =
+  createPaginatedResponseType<OrganizationPublicInfo>(
+    OrganizationPublicInfo,
+    'OrganizationPublicInfo',
+  );
+
+export type OrganizationPublicInfoPaginatedResponse = InstanceType<
+  typeof OrganizationPublicInfoPaginatedResponse
+>;
+
+@ObjectType()
+export class Organization extends OrganizationPublicInfo {
   @Field(() => Organization, { nullable: true })
   parent: Organization | null;
 
