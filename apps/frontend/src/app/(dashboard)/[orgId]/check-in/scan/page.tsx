@@ -1,7 +1,7 @@
 import { Separator } from '@repo/ui';
 import { CheckInInput } from '@/domain/shift/components/check-in-input';
 import { CheckInScanner } from '@/domain/shift/components/check-in-scanner';
-import { VolunteerCheckin } from '@/domain/shift/components/volunteer-checkin';
+import { CheckInSelector } from '@/domain/shift/components/check-in-selector';
 import { getDataClient } from '@/lib/data-client';
 
 interface ScanPageProps {
@@ -36,7 +36,7 @@ export default async function ScanPage({ params }: ScanPageProps) {
           <Separator className="my-6" />
 
           <h2 className="text-lg mb-2">Or search for a volunteer</h2>
-          <VolunteerCheckin volunteers={volunteers} organizationId={orgId} />
+          <CheckInSelector volunteers={volunteers} organizationId={orgId} />
         </div>
       </div>
     </div>

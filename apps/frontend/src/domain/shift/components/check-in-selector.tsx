@@ -21,7 +21,7 @@ type VolunteerCheckinProps = {
   volunteers: Volunteer[];
 };
 
-export const VolunteerCheckin = ({
+export const CheckInSelector = ({
   volunteers,
   organizationId,
 }: VolunteerCheckinProps) => {
