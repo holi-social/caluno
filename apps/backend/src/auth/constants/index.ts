@@ -14,7 +14,6 @@ export const PERMISSIONS = {
   MEMBERSHIP_UPDATE: 'membership:update',
   MEMBERSHIP_DELETE: 'membership:delete',
 
-  MEMBERSHIP_REQUEST_CREATE: 'membership-request:create',
   MEMBERSHIP_REQUEST_READ: 'membership-request:read',
   MEMBERSHIP_REQUEST_UPDATE: 'membership-request:update',
   MEMBERSHIP_REQUEST_DELETE: 'membership-request:delete',

@@ -20,7 +20,6 @@ const PERMISSION_NAMES: Record<
   [PERMISSIONS.MEMBERSHIP_READ]: 'Read membership',
   [PERMISSIONS.MEMBERSHIP_UPDATE]: 'Update membership',
   [PERMISSIONS.MEMBERSHIP_DELETE]: 'Delete membership',
-  [PERMISSIONS.MEMBERSHIP_REQUEST_CREATE]: 'Create membership request',
   [PERMISSIONS.MEMBERSHIP_REQUEST_READ]: 'Read membership request',
   [PERMISSIONS.MEMBERSHIP_REQUEST_UPDATE]: 'Update membership request',
   [PERMISSIONS.MEMBERSHIP_REQUEST_DELETE]: 'Delete membership request',
