@@ -57,7 +57,7 @@
         "typescript": "^5.7.3",
       },
     },
-    "apps/backoffice-frontend": {
+    "apps/frontend": {
       "name": "clippy-backoffice",
       "version": "0.0.0",
       "dependencies": {
@@ -1329,7 +1329,7 @@
 
     "clippy-backend": ["clippy-backend@workspace:apps/backend"],
 
-    "clippy-backoffice": ["clippy-backoffice@workspace:apps/backoffice-frontend"],
+    "clippy-backoffice": ["clippy-backoffice@workspace:apps/frontend"],
 
     "cliui": ["cliui@8.0.1", "", { "dependencies": { "string-width": "^4.2.0", "strip-ansi": "^6.0.1", "wrap-ansi": "^7.0.0" } }, "sha512-BSeNnyus75C4//NQ9gQt1/csTXyo/8Sb+afLAkzAptFuMsod9HFokGNudZpi/oQV73hnVK+sR+5PVRMd+Dr7YQ=="],
 

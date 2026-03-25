@@ -8,7 +8,7 @@ This monorepo includes the following packages/apps:
 
 ### Apps and Packages
 
-- `backoffice-frontend`: a [Next.js](https://nextjs.org/) app for the backoffice interface
+- `frontend`: a [Next.js](https://nextjs.org/) app for the web interface
 - `backend`: a [NestJS](https://nestjs.com/) GraphQL API server with PostgreSQL
 - `@repo/ui`: a React component library using shadcn/ui
 - `@repo/typescript-config`: shared `tsconfig.json` configurations
@@ -85,8 +85,8 @@ The backend uses Drizzle ORM for database management. Run these commands from `a
 
 The root `scaleway.sh` script helps you build and push Docker images for:
 
-- `apps/backoffice-frontend` (frontend)
-- `apps/backend` (backend)
+- `apps/frontend`
+- `apps/backend`
 
 It uses the Scaleway Container Registry configuration from the root `.env` (or your shell environment):
 
@@ -120,7 +120,7 @@ This script requires Docker with Buildx enabled (see the **Prerequisites** secti
 ```
 clippy/
 ├── apps/
-│   ├── backoffice-frontend/  # Next.js frontend
+│   ├── frontend/  # Next.js frontend
 │   └── backend/              # NestJS GraphQL API
 ├── packages/
 │   ├── ui/                   # Shared React components
