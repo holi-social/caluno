@@ -24,7 +24,7 @@
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
     "db:seed": "node dist/src/database/seed.js",
-    "db:seed:dev": "ts-node -r tsconfig-paths/register src/database/seed-dev.ts",
+    "db:seed:dev": "ts-node -r tsconfig-paths/register src/database/seed.ts",
     "db:studio": "drizzle-kit studio"
   },
   "dependencies": {
