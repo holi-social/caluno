@@ -1,14 +1,15 @@
 'use client';
 
 import {
-  Select,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
+  Combobox,
+  ComboboxContent,
+  ComboboxEmpty,
+  ComboboxInput,
+  ComboboxItem,
+  ComboboxList,
+  InputGroupAddon,
 } from '@repo/ui';
-import { LogIn } from 'lucide-react';
+import { LogIn, User } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
 type Volunteer = {
@@ -27,24 +28,31 @@ export const CheckInSelector = ({
 }: VolunteerCheckinProps) => {
   const router = useRouter();
 
-  const handleCheckin = (checkInId: string) => {
-    router.push(`/${organizationId}/check-in/${checkInId}/decide`);
+  const handleCheckin = (checkInId: string | null) => {
+    if (checkInId)
+      router.push(`/${organizationId}/check-in/${checkInId}/decide`);
   };
 
   return (
-    <Select onValueChange={handleCheckin}>
-      <SelectTrigger className="w-full max-w-64">
-        <SelectValue placeholder="Select a volunteer" />
-      </SelectTrigger>
-      <SelectContent>
-        <SelectGroup>
-          {volunteers?.map((volunteer) => (
-            <SelectItem key={volunteer.checkInId} value={volunteer.checkInId}>
+    <Combobox items={volunteers} onValueChange={handleCheckin}>
+      <ComboboxInput
+        placeholder="Select a volunteer"
+        className="w-full max-w-72"
+      >
+        <InputGroupAddon>
+          <User />
+        </InputGroupAddon>
+      </ComboboxInput>
+      <ComboboxContent>
+        <ComboboxEmpty>No volunteer found</ComboboxEmpty>
+        <ComboboxList>
+          {(volunteer: Volunteer) => (
+            <ComboboxItem key={volunteer.checkInId} value={volunteer.checkInId}>
               {volunteer.name} <LogIn />
-            </SelectItem>
-          ))}
-        </SelectGroup>
-      </SelectContent>
-    </Select>
+            </ComboboxItem>
+          )}
+        </ComboboxList>
+      </ComboboxContent>
+    </Combobox>
   );
 };

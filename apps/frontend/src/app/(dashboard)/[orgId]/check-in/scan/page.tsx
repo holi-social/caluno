@@ -18,26 +18,24 @@ export default async function ScanPage({ params }: ScanPageProps) {
   return (
     <div className="max-w-2xl">
       <div>
-        <div>
-          <h1 className="text-3xl font-bold">Check-in/out</h1>
-          <p className="text-muted-foreground">
-            Scan the volunteers QR iD to check them in or out
-          </p>
+        <h1 className="text-3xl font-bold">Check-in/out</h1>
+        <p className="text-muted-foreground">
+          Scan the volunteers QR iD to check them in or out
+        </p>
+      </div>
+      <div className="px-2 py-8">
+        <div className="max-w-lg">
+          <CheckInScanner organizationId={orgId} />
         </div>
-        <div className="px-2 py-8">
-          <div className="max-w-lg">
-            <CheckInScanner organizationId={orgId} />
-          </div>
-          <Separator className="my-6" />
-          <h2 className="text-lg mb-2">Or enter their QR iD</h2>
+        <Separator className="my-6" />
+        <h2 className="text-lg mb-2">Or enter their QR iD</h2>
 
-          <CheckInInput organizationId={orgId} />
+        <CheckInInput organizationId={orgId} />
 
-          <Separator className="my-6" />
+        <Separator className="my-6" />
 
-          <h2 className="text-lg mb-2">Or search for a volunteer</h2>
-          <CheckInSelector volunteers={volunteers} organizationId={orgId} />
-        </div>
+        <h2 className="text-lg mb-2">Or search for a volunteer</h2>
+        <CheckInSelector volunteers={volunteers} organizationId={orgId} />
       </div>
     </div>
   );

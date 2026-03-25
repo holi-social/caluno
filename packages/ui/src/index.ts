@@ -6,6 +6,7 @@ export * from './components/base/avatar';
 export * from './components/base/badge';
 export * from './components/base/button';
 export * from './components/base/card';
+export * from './components/base/combobox';
 export * from './components/base/command';
 export * from './components/base/dialog';
 export * from './components/base/field';
