@@ -21,7 +21,7 @@ import { useState, useTransition } from 'react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 import z from 'zod';
-import { rejectMembershipRequest } from './actions';
+import { rejectMembershipRequest } from '../actions';
 
 const rejectSchema = z.object({
   rejectionReason: z.string().min(1, 'Rejection reason is required'),

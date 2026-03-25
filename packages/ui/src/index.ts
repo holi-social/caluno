@@ -17,6 +17,7 @@ export * from './components/base/separator';
 export * from './components/base/sonner';
 export * from './components/base/switch';
 export * from './components/base/table';
+export * from './components/base/tabs';
 export * from './components/base/textarea';
 
 export * from './components/calendar';
