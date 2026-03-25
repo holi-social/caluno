@@ -8,9 +8,7 @@ import { toast } from 'sonner';
 import { QRScanner } from '@/components/qr-scanner';
 
 const extractCheckInId = (url: string) => {
-  const match = url.match(
-    /check-in\/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})/i,
-  );
+  const match = url.match(/check-in\/([a-z0-9]{12})/i);
   return match ? match[1] : null;
 };
 

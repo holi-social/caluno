@@ -1,5 +1,6 @@
 import { Separator } from '@repo/ui';
 import { CheckInCheckOutScanner } from '@/domain/shift/components/check-in-check-out-scanner';
+import { CheckInInput } from '@/domain/shift/components/check-in-input';
 import { VolunteerCheckin } from '@/domain/shift/components/volunteer-checkin';
 import { getDataClient } from '@/lib/data-client';
 
@@ -28,6 +29,12 @@ export default async function ScanPage({ params }: ScanPageProps) {
             <CheckInCheckOutScanner organizationId={orgId} />
           </div>
           <Separator className="my-6" />
+          <h2 className="text-lg mb-2">Or enter their QR iD</h2>
+
+          <CheckInInput organizationId={orgId} />
+
+          <Separator className="my-6" />
+
           <h2 className="text-lg mb-2">Or search for a volunteer</h2>
           <VolunteerCheckin volunteers={volunteers} organizationId={orgId} />
         </div>
