@@ -112,7 +112,7 @@ build_frontend() {
   echo "Building frontend image: $FRONTEND_IMAGE"
   docker buildx build --no-cache --load \
     --platform linux/amd64 \
-    -f "$REPO_ROOT/apps/backoffice-frontend/Dockerfile" \
+    -f "$REPO_ROOT/apps/frontend/Dockerfile" \
     --build-arg NEXT_PUBLIC_WEB_URL="https://staging.clippy.holi.social" \
     --build-arg NEXT_PUBLIC_API_URL="https://staging.clippy.apis.holi.social" \
     -t "$FRONTEND_IMAGE" \

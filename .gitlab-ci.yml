@@ -67,7 +67,7 @@ variables:
       --build-arg NEXT_PUBLIC_WEB_URL="$NEXT_PUBLIC_WEB_URL"
       -t "$REGISTRY_NAMESPACE/$FRONTEND_IMAGE_NAME:$IMAGE_TAG_SHA"
       -t "$REGISTRY_NAMESPACE/$FRONTEND_IMAGE_NAME:$STABLE_TAG"
-      -f apps/backoffice-frontend/Dockerfile .
+      -f apps/frontend/Dockerfile .
     - docker push "$REGISTRY_NAMESPACE/$FRONTEND_IMAGE_NAME:$IMAGE_TAG_SHA"
     - docker push "$REGISTRY_NAMESPACE/$FRONTEND_IMAGE_NAME:$STABLE_TAG"
 
@@ -94,7 +94,7 @@ variables:
       --build-arg NEXT_PUBLIC_API_URL="http://localhost"
       --build-arg NEXT_PUBLIC_WEB_URL="http://localhost"
       -t "$FRONTEND_IMAGE_NAME:$IMAGE_TAG_SHA"
-      -f apps/backoffice-frontend/Dockerfile .
+      -f apps/frontend/Dockerfile .
 
 build_staging_backend:
   extends: .build-images-backend

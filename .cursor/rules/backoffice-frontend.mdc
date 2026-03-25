@@ -1,6 +1,6 @@
 ---
-description: Backoffice frontend app – include CLAUDE.md when working in apps/backoffice-frontend
-globs: apps/backoffice-frontend/**
+description: Frontend app – include CLAUDE.md when working in apps/frontend
+globs: apps/frontend/**
 alwaysApply: false
 ---
-@apps/backoffice-frontend/CLAUDE.md
+@apps/frontend/CLAUDE.md
