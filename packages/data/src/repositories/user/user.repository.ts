@@ -1,5 +1,9 @@
 import { DataError } from '../../errors/data-error';
-import type { GetMyOrganizationsQuery, User } from '../../generated/graphql';
+import type {
+  GetMyOrganizationsQuery,
+  GetMyPermissionsQuery,
+  User,
+} from '../../generated/graphql';
 import { BaseRepository } from '../base/base.repository';
 
 export class UserRepository extends BaseRepository {
@@ -25,6 +29,17 @@ export class UserRepository extends BaseRepository {
     try {
       const data = await this.sdk.GetUserByCheckInId({ checkInId });
       return data.userByCheckInId ?? null;
+    } catch (error) {
+      throw DataError.fromGraphQLError(error);
+    }
+  }
+
+  async getMyPermissions(): Promise<
+    NonNullable<GetMyPermissionsQuery['me']['permissions']>
+  > {
+    try {
+      const data = await this.sdk.GetMyPermissions();
+      return data.me.permissions ?? [];
     } catch (error) {
       throw DataError.fromGraphQLError(error);
     }

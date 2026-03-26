@@ -28,6 +28,16 @@ query GetUserByCheckInId($checkInId: String!) {
   }
 }
 
+query GetMyPermissions {
+  me {
+    id
+    permissions {
+      id
+      key
+    }
+  }
+}
+
 query GetMyOrganizations($limit: Int!, $offset: Int!) {
   organizations(limit: $limit, offset: $offset) {
     items {
