@@ -8,10 +8,6 @@ query GetShift($id: String!) {
     startsAt
     endsAt
     visibility
-    project {
-      id
-      title
-    }
     volunteers {
       id
       name
@@ -35,36 +31,10 @@ query GetShifts($limit: Int!, $offset: Int!) {
       startsAt
       endsAt
       visibility
-      project {
-        id
-        title
-      }
       volunteers {
         id
         name
         email
-      }
-    }
-    pagination {
-      total
-      limit
-      offset
-      hasMore
-    }
-  }
-}
-
-query GetShiftsByProjectId($projectId: String!, $limit: Int!, $offset: Int!) {
-  shiftsByProjectId(projectId: $projectId, limit: $limit, offset: $offset) {
-    items {
-      id
-      title
-      instructions
-      startsAt
-      endsAt
-      createdBy {
-        id
-        name
       }
     }
     pagination {
@@ -115,10 +85,6 @@ query GetActiveShifts($limit: Int!, $offset: Int!) {
       title
       startsAt
       endsAt
-      project {
-        id
-        title
-      }
     }
     pagination {
       total

@@ -1,7 +1,6 @@
 import { GraphQLClient } from 'graphql-request';
 import { MembershipRequestRepository } from '../repositories/membershipRequest/membershipRequest.repository';
 import { OrganizationRepository } from '../repositories/organization/organization.repository';
-import { ProjectRepository } from '../repositories/project/project.repository';
 import { ShiftRepository } from '../repositories/shift/shift.repository';
 import { TimeEntryRepository } from '../repositories/time-entry/time-entry.repository';
 import { UserRepository } from '../repositories/user/user.repository';
@@ -13,7 +12,6 @@ export class DataClient {
 
   public readonly user: UserRepository;
   public readonly organization: OrganizationRepository;
-  public readonly project: ProjectRepository;
   public readonly shift: ShiftRepository;
   public readonly timeEntry: TimeEntryRepository;
   public readonly membershipRequest: MembershipRequestRepository;
@@ -33,7 +31,6 @@ export class DataClient {
     this.organizationContext = organizationContext;
     this.user = new UserRepository(this.graphqlClient);
     this.organization = new OrganizationRepository(this.graphqlClient);
-    this.project = new ProjectRepository(this.graphqlClient);
     this.shift = new ShiftRepository(this.graphqlClient);
     this.timeEntry = new TimeEntryRepository(this.graphqlClient);
     this.membershipRequest = new MembershipRequestRepository(

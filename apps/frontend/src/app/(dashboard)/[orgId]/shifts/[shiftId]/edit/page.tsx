@@ -17,10 +17,6 @@ export default async function EditShiftPage({ params }: EditShiftPageProps) {
     notFound();
   }
 
-  const projects = await data.project.findAllByOrganizationId(orgId, {
-    limit: 100,
-  });
-
   return (
     <div className="max-w-2xl">
       <div className="flex justify-between">
@@ -34,7 +30,7 @@ export default async function EditShiftPage({ params }: EditShiftPageProps) {
       </div>
 
       <div className="px-2 py-8">
-        <EditShiftForm orgId={orgId} shift={shift} projects={projects.items} />
+        <EditShiftForm orgId={orgId} shift={shift} />
       </div>
     </div>
   );

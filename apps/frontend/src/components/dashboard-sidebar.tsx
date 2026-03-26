@@ -15,7 +15,6 @@ import {
 import {
   CalendarIcon,
   ClockIcon,
-  FolderIcon,
   LogOutIcon,
   ScanFace,
   ScanQrCode,
@@ -36,11 +35,6 @@ export function DashboardSidebar() {
     if (!orgId) return [];
 
     return [
-      {
-        title: 'Projects',
-        href: `/${orgId}/projects`,
-        icon: FolderIcon,
-      },
       {
         title: 'Shifts',
         href: `/${orgId}/shifts`,
