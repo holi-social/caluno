@@ -26,16 +26,6 @@ input CreateOrganizationInput {
   websiteUrl: String
 }
 
-input CreateProjectInput {
-  description: String!
-  endsAt: DateTime!
-  location: String!
-  organizationId: ID!
-  startsAt: DateTime!
-  status: ProjectStatus! = DRAFT
-  title: String!
-}
-
 input CreateRoleInput {
   description: String
   name: String!
@@ -47,7 +37,6 @@ input CreateShiftInput {
   instructions: String
   invitedMemberIds: [String!]
   location: String
-  projectId: String
   startsAt: DateTime!
   title: String!
   visibility: ShiftVisibility! = ALL_MEMBERS
@@ -96,16 +85,13 @@ type Mutation {
   closeTimeEntry(id: ID!, input: CloseTimeEntryInput!): TimeEntry!
   createMembershipRequest(organizationId: ID!): MembershipRequest!
   createOrganization(input: CreateOrganizationInput!): Organization!
-  createProject(input: CreateProjectInput!): Project!
   createRole(input: CreateRoleInput!): Role!
   createShift(input: CreateShiftInput!): Shift!
   deleteRole(id: ID!): Role!
   deleteShift(id: String!): Shift!
   deleteTimeEntry(id: ID!): TimeEntry!
   inviteMembersToShift(memberIds: [String!]!, shiftId: String!): Shift!
-  publishProject(id: ID!): Project!
   rejectMembershipRequest(id: ID!, organizationId: ID!, rejectionReason: String!): MembershipRequest!
-  updateProject(id: ID!, input: UpdateProjectInput!): Project!
   updateRole(id: ID!, input: CreateRoleInput!): Role!
   updateShift(id: String!, input: UpdateShiftInput!): Shift!
 }
@@ -123,7 +109,6 @@ type Organization {
   name: String!
   parent: Organization
   phone: String
-  projects(limit: Int! = 10, offset: Int! = 0): [Project!]
   slug: String!
   updatedAt: DateTime
   volunteers: [User!]
@@ -160,33 +145,6 @@ type Permission {
   key: String!
 }
 
-type Project {
-  createdAt: DateTime!
-  createdBy: User!
-  description: String!
-  endsAt: DateTime!
-  id: ID!
-  location: String!
-  organization: Organization!
-  slug: String!
-  startsAt: DateTime!
-  status: ProjectStatus!
-  title: String!
-  updatedAt: DateTime
-}
-
-type ProjectPaginatedResponse {
-  items: [Project!]!
-  pagination: PaginationInfo!
-}
-
-enum ProjectStatus {
-  ACTIVE
-  ARCHIVED
-  DRAFT
-  EXPIRED
-}
-
 type Query {
   activeShifts(limit: Int! = 10, offset: Int! = 0): ShiftPaginatedResponse!
   me: User!
@@ -197,12 +155,9 @@ type Query {
   organizationPublicInfo(id: String!): Organization!
   organizations(limit: Int! = 10, offset: Int! = 0): OrganizationPaginatedResponse!
   permissions: [Permission!]!
-  project(id: ID!): Project!
-  projects(limit: Int! = 10, offset: Int! = 0, organizationId: ID!): ProjectPaginatedResponse!
   roles: [Role!]!
   shift(id: String!): Shift!
   shifts(limit: Int! = 10, offset: Int! = 0): ShiftPaginatedResponse!
-  shiftsByProjectId(limit: Int! = 10, offset: Int! = 0, projectId: String!): ShiftPaginatedResponse!
   timeEntries(limit: Int! = 10, offset: Int! = 0): TimeEntryPaginatedResponse!
   timeEntriesByUser(limit: Int! = 10, offset: Int! = 0, userId: String!): TimeEntryPaginatedResponse!
   user(id: String!): User
@@ -224,7 +179,6 @@ type Shift {
   instructions: String
   location: String
   organization: Organization!
-  project: Project
   slug: String!
   startsAt: DateTime!
   title: String!
@@ -257,22 +211,11 @@ type TimeEntryPaginatedResponse {
   pagination: PaginationInfo!
 }
 
-input UpdateProjectInput {
-  description: String
-  endsAt: DateTime
-  location: String
-  organizationId: ID
-  startsAt: DateTime
-  status: ProjectStatus = DRAFT
-  title: String
-}
-
 input UpdateShiftInput {
   endsAt: DateTime
   instructions: String
   invitedMemberIds: [String!]
   location: String
-  projectId: String
   startsAt: DateTime
   title: String
   visibility: ShiftVisibility = ALL_MEMBERS

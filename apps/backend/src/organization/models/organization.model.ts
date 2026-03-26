@@ -1,7 +1,6 @@
 import { Field, ID, ObjectType } from '@nestjs/graphql';
 
 import { createPaginatedResponseType } from '../../graphql/paginated-response.model';
-import { Project } from '../../project/models/project.model';
 import { User } from '../../user/models/user.model';
 
 @ObjectType()
@@ -60,9 +59,6 @@ export class Organization extends OrganizationPublicInfo {
 
   @Field(() => [User], { nullable: true })
   volunteers: User[];
-
-  @Field(() => [Project], { nullable: true })
-  projects: Project[];
 
   @Field(() => Date)
   createdAt: Date;

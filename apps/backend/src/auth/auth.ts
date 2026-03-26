@@ -34,14 +34,25 @@ export const createAuthConfig = ({
     maxPasswordLength: 128,
     autoSignIn: true,
   },
+  user: {
+    additionalFields: {
+      checkInId: {
+        type: 'string',
+        required: true,
+        defaultValue: generateCheckInId,
+      },
+    },
+  },
   databaseHooks: {
     user: {
       create: {
         before: async (user) => {
+          console.log('user', user);
+          const checkInId = generateCheckInId();
           return {
             data: {
               ...user,
-              checkInId: generateCheckInId(),
+              checkInId,
             },
           };
         },

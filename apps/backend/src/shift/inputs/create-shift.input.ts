@@ -13,9 +13,6 @@ export class CreateShiftInput {
   @Field(() => String, { nullable: true })
   instructions: string | null;
 
-  @Field(() => String, { nullable: true })
-  projectId: string | null;
-
   @Field(() => Date)
   startsAt: Date;
 

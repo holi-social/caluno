@@ -13,10 +13,6 @@ export const organizationRelations = defineRelationsPart(schema, (r) => ({
       to: r.organizations.parentId,
       alias: 'parentChild',
     }),
-    projects: r.many.projects({
-      from: r.organizations.id,
-      to: r.projects.organizationId,
-    }),
     memberships: r.many.memberships({
       from: r.organizations.id,
       to: r.memberships.organizationId,

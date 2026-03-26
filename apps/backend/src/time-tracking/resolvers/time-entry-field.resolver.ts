@@ -1,7 +1,6 @@
 import { Parent, ResolveField, Resolver } from '@nestjs/graphql';
 import { PERMISSIONS } from '../../auth/constants';
 import { Permissions } from '../../auth/decorators/permissions.decorator';
-import { Project } from '../../project/models/project.model';
 import { ShiftMapper } from '../../shift/mappers/shift.mapper';
 import { Shift } from '../../shift/models/shift.model';
 import { ShiftService } from '../../shift/shift.service';
@@ -28,7 +27,7 @@ export class TimeEntryFieldResolver {
   }
 
   @Permissions(PERMISSIONS.TIME_ENTRY_READ)
-  @ResolveField(() => Project, { nullable: true })
+  @ResolveField(() => Shift, { nullable: true })
   async shift(@Parent() timeEntry: TimeEntryEntity): Promise<Shift> {
     const shift = await this.shiftService.findById(timeEntry.shiftId);
     return this.shiftMapper.toModelOrThrow(shift);

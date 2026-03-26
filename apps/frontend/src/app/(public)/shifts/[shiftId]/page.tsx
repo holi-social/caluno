@@ -38,7 +38,6 @@ export default async function ShiftPage({ params }: ShiftPageProps) {
       <div className="flex justify-between w-full max-w-2xl py-6 px-2">
         <div>
           <h1 className="text-3xl font-bold">{shift.title}</h1>
-          <p className="text-muted-foreground">{shift.project?.title}</p>
         </div>
         <Badge variant="secondary">{status(shift)}</Badge>
 

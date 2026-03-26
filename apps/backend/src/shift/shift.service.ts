@@ -34,16 +34,10 @@ export class ShiftService {
 
   async findAll(
     organizationId: string,
-    projectId: string | null,
     pagination: PaginationInput,
   ): Promise<{ shifts: ShiftEntity[]; total: number }> {
-    const projectCondition = projectId
-      ? eq(schema.shifts.projectId, projectId)
-      : undefined;
-
     const condition: SQL<unknown> | undefined = and(
       eq(schema.shifts.organizationId, organizationId),
-      projectCondition,
     );
 
     const shifts = await this.db
