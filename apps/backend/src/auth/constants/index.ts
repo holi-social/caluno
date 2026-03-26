@@ -21,12 +21,6 @@ export const PERMISSIONS = {
   MEMBERSHIP_REQUEST_REJECT: 'membership-request:reject',
   MEMBERSHIP_REQUEST_CANCEL: 'membership-request:cancel',
 
-  PROJECT_CREATE: 'project:create',
-  PROJECT_READ: 'project:read',
-  PROJECT_UPDATE: 'project:update',
-  PROJECT_DELETE: 'project:delete',
-  PROJECT_PUBLISH: 'project:publish',
-
   SHIFT_CREATE: 'shift:create',
   SHIFT_READ: 'shift:read',
   SHIFT_UPDATE: 'shift:update',
@@ -40,7 +34,6 @@ export const PERMISSIONS = {
 
 export const MEMBER_DEFAULT_PERMISSIONS = [
   PERMISSIONS.ORG_READ,
-  PERMISSIONS.PROJECT_READ,
   PERMISSIONS.SHIFT_READ,
   PERMISSIONS.TIME_ENTRY_READ,
   PERMISSIONS.TIME_ENTRY_CREATE,

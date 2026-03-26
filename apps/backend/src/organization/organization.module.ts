@@ -2,7 +2,6 @@ import { Module } from '@nestjs/common';
 import { AuthModule } from '../auth/auth.module';
 import { DatabaseModule } from '../database/database.module';
 import { MembershipModule } from '../membership/membership.module';
-import { ProjectModule } from '../project/project.module';
 import { UserModule } from '../user/user.module';
 import {
   OrganizationMapper,
@@ -16,13 +15,7 @@ import {
 } from './resolvers';
 
 @Module({
-  imports: [
-    DatabaseModule,
-    UserModule,
-    MembershipModule,
-    ProjectModule,
-    AuthModule,
-  ],
+  imports: [DatabaseModule, UserModule, MembershipModule, AuthModule],
   providers: [
     OrganizationService,
     OrganizationQueryResolver,

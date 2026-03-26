@@ -24,7 +24,9 @@ export class UserQueryResolver {
   }
 
   @Query(() => User, { nullable: true })
-  async userByCheckInId(@Args('checkInId') checkInId: string): Promise<User | null> {
+  async userByCheckInId(
+    @Args('checkInId') checkInId: string,
+  ): Promise<User | null> {
     const user = await this.userService.findByCheckInId(checkInId);
     return this.userMapper.toModel(user);
   }

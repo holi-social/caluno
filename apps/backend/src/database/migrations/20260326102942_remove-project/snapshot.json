@@ -1,18 +1,12 @@
 {
   "version": "8",
   "dialect": "postgres",
-  "id": "47b24830-8b04-4ddc-b02c-58f9d22ee7b2",
-  "prevIds": ["3b54246f-0c06-46b7-8bfd-d95ea9a82c54"],
+  "id": "d9f8e9be-14ba-455a-b777-f2f1fdbb7686",
+  "prevIds": ["664a31b9-c89e-44b9-b96b-149f796f3750"],
   "ddl": [
     {
       "values": ["PENDING", "ACCEPTED", "REJECTED", "CANCELLED"],
       "name": "membership_request_status",
-      "entityType": "enums",
-      "schema": "public"
-    },
-    {
-      "values": ["DRAFT", "ACTIVE", "EXPIRED", "ARCHIVED"],
-      "name": "project_status",
       "entityType": "enums",
       "schema": "public"
     },
@@ -85,12 +79,6 @@
     {
       "isRlsEnabled": false,
       "name": "organizations",
-      "entityType": "tables",
-      "schema": "public"
-    },
-    {
-      "isRlsEnabled": false,
-      "name": "projects",
       "entityType": "tables",
       "schema": "public"
     },
@@ -451,11 +439,11 @@
       "table": "users"
     },
     {
-      "type": "uuid",
+      "type": "text",
       "typeSchema": null,
       "notNull": true,
       "dimensions": 0,
-      "default": "gen_random_uuid()",
+      "default": null,
       "generated": null,
       "identity": null,
       "name": "check_in_id",
@@ -1150,162 +1138,6 @@
       "name": "id",
       "entityType": "columns",
       "schema": "public",
-      "table": "projects"
-    },
-    {
-      "type": "text",
-      "typeSchema": null,
-      "notNull": true,
-      "dimensions": 0,
-      "default": null,
-      "generated": null,
-      "identity": null,
-      "name": "title",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "projects"
-    },
-    {
-      "type": "text",
-      "typeSchema": null,
-      "notNull": true,
-      "dimensions": 0,
-      "default": null,
-      "generated": null,
-      "identity": null,
-      "name": "slug",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "projects"
-    },
-    {
-      "type": "text",
-      "typeSchema": null,
-      "notNull": true,
-      "dimensions": 0,
-      "default": null,
-      "generated": null,
-      "identity": null,
-      "name": "description",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "projects"
-    },
-    {
-      "type": "text",
-      "typeSchema": null,
-      "notNull": true,
-      "dimensions": 0,
-      "default": null,
-      "generated": null,
-      "identity": null,
-      "name": "location",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "projects"
-    },
-    {
-      "type": "uuid",
-      "typeSchema": null,
-      "notNull": true,
-      "dimensions": 0,
-      "default": null,
-      "generated": null,
-      "identity": null,
-      "name": "organization_id",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "projects"
-    },
-    {
-      "type": "text",
-      "typeSchema": null,
-      "notNull": true,
-      "dimensions": 0,
-      "default": null,
-      "generated": null,
-      "identity": null,
-      "name": "created_by_id",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "projects"
-    },
-    {
-      "type": "project_status",
-      "typeSchema": "public",
-      "notNull": true,
-      "dimensions": 0,
-      "default": "'DRAFT'",
-      "generated": null,
-      "identity": null,
-      "name": "status",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "projects"
-    },
-    {
-      "type": "timestamp",
-      "typeSchema": null,
-      "notNull": true,
-      "dimensions": 0,
-      "default": null,
-      "generated": null,
-      "identity": null,
-      "name": "starts_at",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "projects"
-    },
-    {
-      "type": "timestamp",
-      "typeSchema": null,
-      "notNull": true,
-      "dimensions": 0,
-      "default": null,
-      "generated": null,
-      "identity": null,
-      "name": "ends_at",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "projects"
-    },
-    {
-      "type": "timestamp",
-      "typeSchema": null,
-      "notNull": true,
-      "dimensions": 0,
-      "default": "now()",
-      "generated": null,
-      "identity": null,
-      "name": "created_at",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "projects"
-    },
-    {
-      "type": "timestamp",
-      "typeSchema": null,
-      "notNull": true,
-      "dimensions": 0,
-      "default": "now()",
-      "generated": null,
-      "identity": null,
-      "name": "updated_at",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "projects"
-    },
-    {
-      "type": "uuid",
-      "typeSchema": null,
-      "notNull": true,
-      "dimensions": 0,
-      "default": "gen_random_uuid()",
-      "generated": null,
-      "identity": null,
-      "name": "id",
-      "entityType": "columns",
-      "schema": "public",
       "table": "shifts"
     },
     {
@@ -1356,19 +1188,6 @@
       "generated": null,
       "identity": null,
       "name": "organization_id",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "shifts"
-    },
-    {
-      "type": "uuid",
-      "typeSchema": null,
-      "notNull": false,
-      "dimensions": 0,
-      "default": null,
-      "generated": null,
-      "identity": null,
-      "name": "project_id",
       "entityType": "columns",
       "schema": "public",
       "table": "shifts"
@@ -1556,6 +1375,32 @@
       "table": "time_entries"
     },
     {
+      "type": "uuid",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "shift_id",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "time_entries"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "volunteer_id",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "time_entries"
+    },
+    {
       "type": "timestamp",
       "typeSchema": null,
       "notNull": true,
@@ -1571,7 +1416,7 @@
     {
       "type": "timestamp",
       "typeSchema": null,
-      "notNull": true,
+      "notNull": false,
       "dimensions": 0,
       "default": null,
       "generated": null,
@@ -1888,154 +1733,7 @@
       "with": "",
       "method": "btree",
       "concurrently": false,
-      "name": "idx_projects_organization_id",
-      "entityType": "indexes",
-      "schema": "public",
-      "table": "projects"
-    },
-    {
-      "nameExplicit": true,
-      "columns": [
-        {
-          "value": "status",
-          "isExpression": false,
-          "asc": true,
-          "nullsFirst": false,
-          "opclass": null
-        }
-      ],
-      "isUnique": false,
-      "where": null,
-      "with": "",
-      "method": "btree",
-      "concurrently": false,
-      "name": "idx_projects_status",
-      "entityType": "indexes",
-      "schema": "public",
-      "table": "projects"
-    },
-    {
-      "nameExplicit": true,
-      "columns": [
-        {
-          "value": "title",
-          "isExpression": false,
-          "asc": true,
-          "nullsFirst": false,
-          "opclass": null
-        }
-      ],
-      "isUnique": false,
-      "where": null,
-      "with": "",
-      "method": "btree",
-      "concurrently": false,
-      "name": "idx_projects_title",
-      "entityType": "indexes",
-      "schema": "public",
-      "table": "projects"
-    },
-    {
-      "nameExplicit": true,
-      "columns": [
-        {
-          "value": "starts_at",
-          "isExpression": false,
-          "asc": true,
-          "nullsFirst": false,
-          "opclass": null
-        }
-      ],
-      "isUnique": false,
-      "where": null,
-      "with": "",
-      "method": "btree",
-      "concurrently": false,
-      "name": "idx_projects_starts_at",
-      "entityType": "indexes",
-      "schema": "public",
-      "table": "projects"
-    },
-    {
-      "nameExplicit": true,
-      "columns": [
-        {
-          "value": "ends_at",
-          "isExpression": false,
-          "asc": true,
-          "nullsFirst": false,
-          "opclass": null
-        }
-      ],
-      "isUnique": false,
-      "where": null,
-      "with": "",
-      "method": "btree",
-      "concurrently": false,
-      "name": "idx_projects_ends_at",
-      "entityType": "indexes",
-      "schema": "public",
-      "table": "projects"
-    },
-    {
-      "nameExplicit": true,
-      "columns": [
-        {
-          "value": "created_by_id",
-          "isExpression": false,
-          "asc": true,
-          "nullsFirst": false,
-          "opclass": null
-        }
-      ],
-      "isUnique": false,
-      "where": null,
-      "with": "",
-      "method": "btree",
-      "concurrently": false,
-      "name": "idx_projects_created_by_id",
-      "entityType": "indexes",
-      "schema": "public",
-      "table": "projects"
-    },
-    {
-      "nameExplicit": true,
-      "columns": [
-        {
-          "value": "organization_id",
-          "isExpression": false,
-          "asc": true,
-          "nullsFirst": false,
-          "opclass": null
-        }
-      ],
-      "isUnique": false,
-      "where": null,
-      "with": "",
-      "method": "btree",
-      "concurrently": false,
       "name": "idx_shifts_organization_id",
-      "entityType": "indexes",
-      "schema": "public",
-      "table": "shifts"
-    },
-    {
-      "nameExplicit": true,
-      "columns": [
-        {
-          "value": "project_id",
-          "isExpression": false,
-          "asc": true,
-          "nullsFirst": false,
-          "opclass": null
-        }
-      ],
-      "isUnique": false,
-      "where": null,
-      "with": "",
-      "method": "btree",
-      "concurrently": false,
-      "name": "idx_shifts_project_id",
       "entityType": "indexes",
       "schema": "public",
       "table": "shifts"
@@ -2317,46 +2015,7 @@
       "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "CASCADE",
-      "name": "projects_organization_id_organizations_id_fk",
-      "entityType": "fks",
-      "schema": "public",
-      "table": "projects"
-    },
-    {
-      "nameExplicit": false,
-      "columns": ["created_by_id"],
-      "schemaTo": "public",
-      "tableTo": "users",
-      "columnsTo": ["id"],
-      "onUpdate": "NO ACTION",
-      "onDelete": "RESTRICT",
-      "name": "projects_created_by_id_users_id_fk",
-      "entityType": "fks",
-      "schema": "public",
-      "table": "projects"
-    },
-    {
-      "nameExplicit": false,
-      "columns": ["organization_id"],
-      "schemaTo": "public",
-      "tableTo": "organizations",
-      "columnsTo": ["id"],
-      "onUpdate": "NO ACTION",
-      "onDelete": "CASCADE",
       "name": "shifts_organization_id_organizations_id_fk",
-      "entityType": "fks",
-      "schema": "public",
-      "table": "shifts"
-    },
-    {
-      "nameExplicit": false,
-      "columns": ["project_id"],
-      "schemaTo": "public",
-      "tableTo": "projects",
-      "columnsTo": ["id"],
-      "onUpdate": "NO ACTION",
-      "onDelete": "RESTRICT",
-      "name": "shifts_project_id_projects_id_fk",
       "entityType": "fks",
       "schema": "public",
       "table": "shifts"
@@ -2399,6 +2058,32 @@
       "entityType": "fks",
       "schema": "public",
       "table": "shift_invites"
+    },
+    {
+      "nameExplicit": false,
+      "columns": ["shift_id"],
+      "schemaTo": "public",
+      "tableTo": "shifts",
+      "columnsTo": ["id"],
+      "onUpdate": "NO ACTION",
+      "onDelete": "RESTRICT",
+      "name": "time_entries_shift_id_shifts_id_fkey",
+      "entityType": "fks",
+      "schema": "public",
+      "table": "time_entries"
+    },
+    {
+      "nameExplicit": false,
+      "columns": ["volunteer_id"],
+      "schemaTo": "public",
+      "tableTo": "users",
+      "columnsTo": ["id"],
+      "onUpdate": "NO ACTION",
+      "onDelete": "RESTRICT",
+      "name": "time_entries_volunteer_id_users_id_fkey",
+      "entityType": "fks",
+      "schema": "public",
+      "table": "time_entries"
     },
     {
       "columns": ["id"],
@@ -2478,14 +2163,6 @@
       "name": "organizations_pkey",
       "schema": "public",
       "table": "organizations",
-      "entityType": "pks"
-    },
-    {
-      "columns": ["id"],
-      "nameExplicit": false,
-      "name": "projects_pkey",
-      "schema": "public",
-      "table": "projects",
       "entityType": "pks"
     },
     {
@@ -2591,15 +2268,6 @@
       "name": "organizations_slug_unique",
       "schema": "public",
       "table": "organizations",
-      "entityType": "uniques"
-    },
-    {
-      "nameExplicit": false,
-      "columns": ["slug"],
-      "nullsNotDistinct": false,
-      "name": "projects_slug_unique",
-      "schema": "public",
-      "table": "projects",
       "entityType": "uniques"
     },
     {
