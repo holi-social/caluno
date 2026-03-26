@@ -118,6 +118,7 @@ export class MembershipService {
           where: {
             name: DEFAULT_MEMBER_ROLE_NAME,
             isInternal: true,
+            organizationId,
           },
         });
 

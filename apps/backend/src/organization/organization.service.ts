@@ -103,6 +103,7 @@ export class OrganizationService {
           name: DEFAULT_OWNER_ROLE_NAME,
           description: `Owner role for organization ${createdOrganization.name}`,
           isInternal: true,
+          organizationId: createdOrganization.id,
         })
         .returning();
 
@@ -112,6 +113,7 @@ export class OrganizationService {
           name: DEFAULT_MEMBER_ROLE_NAME,
           description: `Member role for organization ${createdOrganization.name}`,
           isInternal: true,
+          organizationId: createdOrganization.id,
         })
         .returning();
 

@@ -15,7 +15,9 @@ export class RoleQueryResolver {
   async roles(
     @Context() context: AuthenticatedGraphQLContext,
   ): Promise<Role[]> {
-    const roles = await this.authService.findAllRoles(context.organizationId);
+    const roles = await this.authService.findAllRoles(
+      context.organizationId,
+    );
     return this.roleMapper.toArray(roles);
   }
 }

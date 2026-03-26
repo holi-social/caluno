@@ -37,6 +37,10 @@ export const authRelations = defineRelationsPart(schema, (r) => ({
     }),
   },
   roles: {
+    organization: r.one.organizations({
+      from: r.roles.organizationId,
+      to: r.organizations.id,
+    }),
     permissions: r.many.rolePermissions({
       from: r.roles.id,
       to: r.rolePermissions.roleId,
