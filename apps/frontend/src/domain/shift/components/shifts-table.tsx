@@ -30,7 +30,6 @@ export function ShiftsTable({ shifts, orgId }: ShiftsTableProps) {
         <TableHeader>
           <TableRow>
             <TableHead className="text-muted-foreground">Name</TableHead>
-            <TableHead className="text-muted-foreground">Project</TableHead>
             <TableHead className="text-muted-foreground">Volunteers</TableHead>
             <TableHead className="text-muted-foreground">Date</TableHead>
             <TableHead className="text-muted-foreground">Visibility</TableHead>
@@ -41,9 +40,7 @@ export function ShiftsTable({ shifts, orgId }: ShiftsTableProps) {
           {shifts.map((shift) => (
             <TableRow key={shift.id} className="hover:bg-muted/50">
               <TableCell>{shift.title}</TableCell>
-              <TableCell className="text-muted-foreground">
-                {shift.project?.title ?? '-'}
-              </TableCell>
+              <TableCell className="text-muted-foreground">-</TableCell>
               <TableCell>
                 {shift.volunteers?.slice(0, 3).map((u) => (
                   <div key={u.id}>{u.name}</div>

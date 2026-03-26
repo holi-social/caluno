@@ -7,10 +7,6 @@ export const shiftRelations = defineRelationsPart(schema, (r) => ({
       from: r.shifts.organizationId,
       to: r.organizations.id,
     }),
-    project: r.one.projects({
-      from: r.shifts.projectId,
-      to: r.projects.id,
-    }),
     createdBy: r.one.users({
       from: r.shifts.createdById,
       to: r.users.id,

@@ -30,27 +30,6 @@ export class ShiftQueryResolver {
   ): Promise<ShiftPaginatedResponse> {
     const { shifts, total } = await this.shiftService.findAll(
       context.organizationId,
-      null,
-      pagination,
-    );
-    return new ShiftPaginatedResponse({
-      items: this.shiftMapper.toArray(shifts),
-      total: total,
-      limit: pagination.limit,
-      offset: pagination.offset,
-    });
-  }
-
-  @Permissions(PERMISSIONS.SHIFT_READ)
-  @Query(() => ShiftPaginatedResponse)
-  async shiftsByProjectId(
-    @Args('projectId') projectId: string,
-    @Args() pagination: PaginationInput,
-    @Context() context: AuthenticatedGraphQLContext,
-  ): Promise<ShiftPaginatedResponse> {
-    const { shifts, total } = await this.shiftService.findAll(
-      context.organizationId,
-      projectId,
       pagination,
     );
     return new ShiftPaginatedResponse({

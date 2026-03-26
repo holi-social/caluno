@@ -1,5 +1,4 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import type { ProjectListItem } from '@repo/data';
 import {
   Button,
   Card,
@@ -10,11 +9,6 @@ import {
   FieldError,
   FieldLabel,
   Input,
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
   Switch,
   Textarea,
 } from '@repo/ui';
@@ -24,7 +18,6 @@ import { InviteList } from './invite-list';
 
 type FormProps = {
   organizationId: string;
-  projects: ProjectListItem[];
   onSubmit: (formData: ShiftFormValues) => void;
   isPending?: boolean;
   initialValues?: Partial<ShiftFormValues>;
@@ -32,7 +25,6 @@ type FormProps = {
 
 export const ShiftForm = ({
   organizationId,
-  projects,
   onSubmit,
   isPending = false,
   initialValues,
@@ -42,7 +34,6 @@ export const ShiftForm = ({
     defaultValues: {
       ...{
         name: '',
-        projectId: 'none',
         location: '',
         instructions: '',
         openShift: true,
@@ -75,32 +66,6 @@ export const ShiftForm = ({
           {...register('name')}
         />
         {errors.name && <FieldError>{errors.name.message}</FieldError>}
-      </Field>
-
-      <Field>
-        <FieldLabel htmlFor="project">Project</FieldLabel>
-        <Select
-          disabled={isPending}
-          aria-invalid={!!errors.projectId}
-          {...register('projectId')}
-          value={watch('projectId')}
-          onValueChange={(value) => setValue('projectId', value)}
-        >
-          <SelectTrigger className="w-full max-w-1/2">
-            <SelectValue placeholder="Select a project" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="none">--- none ---</SelectItem>
-            {projects.map((p) => (
-              <SelectItem key={p.id} value={p.id}>
-                {p.title}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        {errors.projectId && (
-          <FieldError>{errors.projectId.message}</FieldError>
-        )}
       </Field>
 
       <Field>

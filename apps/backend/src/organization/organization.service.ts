@@ -12,8 +12,6 @@ import * as schema from '../database/schema';
 import { OrganizationEntity } from '../database/schema';
 import type { PaginationInput } from '../graphql/pagination.input';
 import { MembershipService } from '../membership/membership.service';
-import type { ProjectPaginatedResponse } from '../project/models/project.model';
-import { ProjectService } from '../project/project.service';
 import { slugify } from '../utils';
 import type { CreateOrganizationInput } from './inputs/create-organization.input';
 import { OrganizationMapper } from './mappers/organization.mapper';
@@ -25,7 +23,6 @@ export class OrganizationService {
     @Inject(DATABASE_CONNECTION)
     private readonly db: Database,
     private readonly mapper: OrganizationMapper,
-    private readonly projectService: ProjectService,
     readonly _membershipService: MembershipService,
   ) {}
 
@@ -83,16 +80,6 @@ export class OrganizationService {
       where: { id: organizationId },
     });
     return this.mapper.toModel(parent);
-  }
-
-  async findProjectsByOrganizationId(
-    organizationId: string,
-    pagination: PaginationInput,
-  ): Promise<ProjectPaginatedResponse> {
-    return this.projectService.findAllByOrganizationId(
-      organizationId,
-      pagination,
-    );
   }
 
   async create(

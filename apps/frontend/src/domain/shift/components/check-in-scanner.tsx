@@ -16,9 +16,7 @@ type CheckinScannerProps = {
   organizationId: string;
 };
 
-export const CheckInCheckOutScanner = ({
-  organizationId,
-}: CheckinScannerProps) => {
+export const CheckInScanner = ({ organizationId }: CheckinScannerProps) => {
   const [error, setError] = useState(false);
   const router = useRouter();
 

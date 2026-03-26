@@ -9,7 +9,6 @@ import {
 import { users } from '../../auth/schemas/auth.schema';
 import { idColumn, timestampColumns } from '../../database/database-columns';
 import { organizations } from '../../organization/schemas/organization.schema';
-import { projects } from '../../project/schemas/project.schema';
 import { ShiftVisibility } from '../enums';
 
 export const shiftVisibilityEnum = pgEnum(
@@ -29,9 +28,6 @@ export const shifts = pgTable(
         onDelete: 'cascade',
       })
       .notNull(),
-    projectId: uuid('project_id').references(() => projects.id, {
-      onDelete: 'restrict',
-    }),
     startsAt: timestamp('starts_at').notNull(),
     endsAt: timestamp('ends_at').notNull(),
     createdById: text('created_by_id')
@@ -47,7 +43,6 @@ export const shifts = pgTable(
   },
   (table) => [
     index('idx_shifts_organization_id').on(table.organizationId),
-    index('idx_shifts_project_id').on(table.projectId),
     index('idx_shifts_created_by_id').on(table.createdById),
     index('idx_shifts_starts_at').on(table.startsAt),
     index('idx_shifts_ends_at').on(table.endsAt),

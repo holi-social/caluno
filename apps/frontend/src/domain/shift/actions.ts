@@ -21,7 +21,6 @@ export const createShift = actionClient
       visibility: parsedInput.openShift
         ? ShiftVisibility.AllMembers
         : ShiftVisibility.InvitedMembers,
-      projectId: parsedInput.projectId,
       invitedMemberIds: parsedInput.invitedMemberIds,
     };
 
@@ -45,7 +44,6 @@ export const updateShift = actionClient
       visibility: parsedInput.openShift
         ? ShiftVisibility.AllMembers
         : ShiftVisibility.InvitedMembers,
-      projectId: parsedInput.projectId || null,
       invitedMemberIds: parsedInput.invitedMemberIds,
     };
 
