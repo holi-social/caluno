@@ -19,10 +19,12 @@ import {
   ScanFace,
   ScanQrCode,
   SettingsIcon,
+  ShieldIcon,
   UsersIcon,
 } from 'lucide-react';
 import { useParams, useRouter } from 'next/navigation';
 import { useMemo } from 'react';
+import { RequirePermission } from '@/components/require-permission';
 import { OrgSwitcher } from '@/domain/organization/components/org-switcher';
 import { signOut } from '@/lib/auth';
 
@@ -73,6 +75,12 @@ export function DashboardSidebar() {
         icon: SettingsIcon,
       },
       {
+        title: 'Roles',
+        href: `/${orgId}/settings/roles`,
+        icon: ShieldIcon,
+        permission: 'role:read',
+      },
+      {
         title: 'QR iD',
         href: `/${orgId}/me/id`,
         icon: ScanFace,
@@ -119,16 +127,31 @@ export function DashboardSidebar() {
             <SidebarGroupLabel>Settings</SidebarGroupLabel>
             <SidebarGroupContent>
               <SidebarMenu>
-                {settingsItems.map((item) => (
-                  <SidebarMenuItem key={item.href}>
-                    <SidebarMenuButton asChild>
-                      <a href={item.href}>
-                        <item.icon className="h-4 w-4" />
-                        <span>{item.title}</span>
-                      </a>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                ))}
+                {settingsItems.map((item) => {
+                  const menuItem = (
+                    <SidebarMenuItem key={item.href}>
+                      <SidebarMenuButton asChild>
+                        <a href={item.href}>
+                          <item.icon className="h-4 w-4" />
+                          <span>{item.title}</span>
+                        </a>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  );
+
+                  if (item.permission) {
+                    return (
+                      <RequirePermission
+                        key={item.href}
+                        permission={item.permission}
+                      >
+                        {menuItem}
+                      </RequirePermission>
+                    );
+                  }
+
+                  return menuItem;
+                })}
               </SidebarMenu>
             </SidebarGroupContent>
           </SidebarGroup>
