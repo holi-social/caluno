@@ -1,6 +1,4 @@
 import { Args, Context, ID, Mutation, Resolver } from '@nestjs/graphql';
-import type { UserSession } from '@thallesp/nestjs-better-auth';
-import { Session } from '@thallesp/nestjs-better-auth';
 import { PERMISSIONS } from '../../auth/constants';
 import { Permissions } from '../../auth/decorators/permissions.decorator';
 import { type AuthenticatedGraphQLContext } from '../../graphql/graphql.context';
@@ -21,8 +19,12 @@ export class TimeTrackingMutationResolver {
   @Mutation(() => TimeEntry)
   async addTimeEntry(
     @Args('input') input: AddTimeEntryInput,
+    @Context() context: AuthenticatedGraphQLContext,
   ): Promise<TimeEntry> {
-    const entity = await this.timeTrackingService.addTimeEntry(input);
+    const entity = await this.timeTrackingService.addTimeEntry(
+      context.organizationId,
+      input,
+    );
     return this.entryMapper.toModelOrThrow(entity);
   }
 
@@ -45,10 +47,10 @@ export class TimeTrackingMutationResolver {
   @Mutation(() => TimeEntry)
   async deleteTimeEntry(
     @Args('id', { type: () => ID }) id: string,
-    @Session() session: UserSession,
+    @Context() context: AuthenticatedGraphQLContext,
   ): Promise<TimeEntry> {
     const entity = await this.timeTrackingService.deleteTimeEntry(
-      session.user.id,
+      context.organizationId,
       id,
     );
     return this.entryMapper.toModelOrThrow(entity);

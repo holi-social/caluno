@@ -1,7 +1,7 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { and, count, eq } from 'drizzle-orm';
-import type { Database } from '../database/database.module';
 import { DATABASE_CONNECTION } from '../database/database-connection';
+import type { Database } from '../database/database.module';
 import * as schema from '../database/schema';
 import { NotFoundGraphQLError } from '../graphql/errors';
 import { PaginationInput } from '../graphql/pagination.input';
@@ -17,7 +17,23 @@ export class TimeTrackingService {
     private readonly db: Database,
     readonly _membershipService: MembershipService,
   ) {}
-  async addTimeEntry(input: AddTimeEntryInput): Promise<TimeEntryEntity> {
+  async addTimeEntry(
+    organizationId: string,
+    input: AddTimeEntryInput,
+  ): Promise<TimeEntryEntity> {
+    const shift = await this.db.query.shifts.findFirst({
+      where: {
+        organizationId,
+        id: input.shiftId,
+      },
+    });
+
+    if (!shift) {
+      throw new NotFoundGraphQLError(
+        'Shift does not exist in this organisation',
+      );
+    }
+
     const [timeEntry] = await this.db
       .insert(schema.timeEntries)
       .values(input)
@@ -50,9 +66,15 @@ export class TimeTrackingService {
     return timeEntry;
   }
 
-  async deleteTimeEntry(userId: string, id: string): Promise<TimeEntryEntity> {
+  async deleteTimeEntry(
+    organizationId: string,
+    id: string,
+  ): Promise<TimeEntryEntity> {
     const timeEntry = await this.db.query.timeEntries.findFirst({
-      where: { id, volunteerId: userId },
+      where: {
+        shift: { organizationId },
+        id,
+      },
     });
 
     if (!timeEntry) {
