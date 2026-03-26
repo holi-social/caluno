@@ -13,6 +13,7 @@ import { requireAuth } from '@/lib/auth-server';
 import { GRAPHQL_API_URL } from '@/lib/constants';
 import { getDataClient } from '@/lib/data-client';
 import { requireOrgAccess } from '@/lib/org-context-server';
+import { ThemeToggle } from '../../../components/theme-toggle';
 
 interface OrgLayoutProps {
   children: ReactNode;
@@ -41,7 +42,10 @@ export default async function OrgLayout({ children, params }: OrgLayoutProps) {
                 <Separator orientation="vertical" className="mr-2 h-4" />
                 <div className="flex justify-between gap-2 flex-1">
                   <h1 className="text-lg font-semibold">Clippy</h1>
-                  <CreateShiftSheet projects={projects.items} />
+                  <div className="flex gap-2">
+                    <CreateShiftSheet projects={projects.items} />
+                    <ThemeToggle />
+                  </div>
                 </div>
               </header>
               <div className="flex flex-1 flex-col gap-4 p-4">{children}</div>
