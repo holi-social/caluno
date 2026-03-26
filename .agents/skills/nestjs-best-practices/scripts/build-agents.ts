@@ -14,8 +14,8 @@
 
 import * as fs from 'fs';
 import * as path from 'path';
-import { fileURLToPath } from 'url';
 import { dirname } from 'path';
+import { fileURLToPath } from 'url';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -23,7 +23,12 @@ const __dirname = dirname(__filename);
 // Category definitions with ordering and metadata
 const CATEGORIES = [
   { prefix: 'arch-', name: 'Architecture', impact: 'CRITICAL', section: 1 },
-  { prefix: 'di-', name: 'Dependency Injection', impact: 'CRITICAL', section: 2 },
+  {
+    prefix: 'di-',
+    name: 'Dependency Injection',
+    impact: 'CRITICAL',
+    section: 2,
+  },
   { prefix: 'error-', name: 'Error Handling', impact: 'HIGH', section: 3 },
   { prefix: 'security-', name: 'Security', impact: 'HIGH', section: 4 },
   { prefix: 'perf-', name: 'Performance', impact: 'HIGH', section: 5 },
@@ -31,7 +36,12 @@ const CATEGORIES = [
   { prefix: 'db-', name: 'Database & ORM', impact: 'MEDIUM-HIGH', section: 7 },
   { prefix: 'api-', name: 'API Design', impact: 'MEDIUM', section: 8 },
   { prefix: 'micro-', name: 'Microservices', impact: 'MEDIUM', section: 9 },
-  { prefix: 'devops-', name: 'DevOps & Deployment', impact: 'LOW-MEDIUM', section: 10 },
+  {
+    prefix: 'devops-',
+    name: 'DevOps & Deployment',
+    impact: 'LOW-MEDIUM',
+    section: 10,
+  },
 ];
 
 interface RuleFrontmatter {
@@ -49,7 +59,10 @@ interface Rule {
   categorySection: number;
 }
 
-function parseFrontmatter(content: string): { frontmatter: RuleFrontmatter | null; body: string } {
+function parseFrontmatter(content: string): {
+  frontmatter: RuleFrontmatter | null;
+  body: string;
+} {
   const frontmatterRegex = /^---\n([\s\S]*?)\n---\n([\s\S]*)$/;
   const match = content.match(frontmatterRegex);
 
@@ -98,11 +111,13 @@ function parseFrontmatter(content: string): { frontmatter: RuleFrontmatter | nul
 
   return {
     frontmatter: frontmatter as RuleFrontmatter,
-    body: body.trim()
+    body: body.trim(),
   };
 }
 
-function getCategoryForFile(filename: string): { name: string; section: number } | null {
+function getCategoryForFile(
+  filename: string,
+): { name: string; section: number } | null {
   for (const cat of CATEGORIES) {
     if (filename.startsWith(cat.prefix)) {
       return { name: cat.name, section: cat.section };
@@ -118,8 +133,9 @@ function readMetadata(): any {
 
 function readRules(): Rule[] {
   const rulesDir = path.join(__dirname, '..', 'rules');
-  const files = fs.readdirSync(rulesDir)
-    .filter(f => f.endsWith('.md') && !f.startsWith('_'));
+  const files = fs
+    .readdirSync(rulesDir)
+    .filter((f) => f.endsWith('.md') && !f.startsWith('_'));
 
   const rules: Rule[] = [];
 
@@ -144,7 +160,7 @@ function readRules(): Rule[] {
       frontmatter,
       content: body,
       category: category.name,
-      categorySection: category.section
+      categorySection: category.section,
     });
   }
 
