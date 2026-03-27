@@ -20,13 +20,13 @@ export class MembershipRequestQueryResolver {
   @Permissions(PERMISSIONS.MEMBERSHIP_REQUEST_READ)
   @Query(() => MembershipRequestPaginatedResponse)
   async membershipRequests(
-    @Args('organizationId', { type: () => ID }) organizationId: string,
+    @Args('organizationUnitId', { type: () => ID }) organizationUnitId: string,
     @Args('status', { type: () => MembershipRequestStatus, nullable: true })
     status: MembershipRequestStatus | null,
     @Args() pagination: PaginationInput,
   ): Promise<MembershipRequestPaginatedResponse> {
     const items = await this.membershipRequestService.getMembershipRequests(
-      organizationId,
+      organizationUnitId,
       status ?? MembershipRequestStatus.PENDING,
     );
     return new MembershipRequestPaginatedResponse({

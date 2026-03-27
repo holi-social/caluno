@@ -22,7 +22,9 @@ export class MembershipService {
     const members = await this.db.query.users.findMany({
       where: {
         memberships: {
-          organizationId,
+          role: {
+            organizationId,
+          },
         },
       },
     });
@@ -32,12 +34,14 @@ export class MembershipService {
 
   async getMembership(
     userId: string,
-    organizationId: string,
+    organizationUnitId: string,
   ): Promise<MembershipEntity | null> {
     const membership = await this.db.query.memberships.findFirst({
       where: {
         userId,
-        organizationId,
+        role: {
+          organizationUnitId,
+        },
       },
     });
     return membership ?? null;
@@ -46,12 +50,12 @@ export class MembershipService {
   // Membership requests
   async createMembershipRequest(
     userId: string,
-    organizationId: string,
+    organizationUnitId: string,
   ): Promise<MembershipRequestEntity> {
     const existing = await this.db.query.membershipRequests.findFirst({
       where: {
         userId,
-        organizationId,
+        organizationUnitId,
         status: MembershipRequestStatus.PENDING,
       },
     });
@@ -66,7 +70,7 @@ export class MembershipService {
       .insert(schema.membershipRequests)
       .values({
         userId,
-        organizationId,
+        organizationUnitId,
       })
       .returning();
 
@@ -75,7 +79,7 @@ export class MembershipService {
 
   private async updateMembershipRequest(
     id: string,
-    organizationId: string,
+    organizationUnitId: string,
     input: UpdateMembershipRequestInput,
     userId?: string,
   ): Promise<MembershipRequestEntity> {
@@ -85,7 +89,7 @@ export class MembershipService {
       .where(
         and(
           eq(schema.membershipRequests.id, id),
-          eq(schema.membershipRequests.organizationId, organizationId),
+          eq(schema.membershipRequests.organizationUnitId, organizationUnitId),
           eq(schema.membershipRequests.status, MembershipRequestStatus.PENDING),
           userId ? eq(schema.membershipRequests.userId, userId) : undefined,
         ),
@@ -101,13 +105,13 @@ export class MembershipService {
 
   async approveMembershipRequest(
     id: string,
-    organizationId: string,
+    organizationUnitId: string,
     reviewerId: string,
   ): Promise<MembershipRequestEntity> {
     const membershipRequest =
       await this.db.transaction<MembershipRequestEntity>(async (tx) => {
         const organization = await tx.query.organizations.findFirst({
-          where: { id: organizationId },
+          where: { id: organizationUnitId },
         });
 
         if (!organization) {
@@ -118,7 +122,7 @@ export class MembershipService {
           where: {
             name: DEFAULT_MEMBER_ROLE_NAME,
             isInternal: true,
-            organizationId,
+            organizationUnitId,
           },
         });
 
@@ -138,7 +142,7 @@ export class MembershipService {
           .where(
             and(
               eq(schema.membershipRequests.id, id),
-              eq(schema.membershipRequests.organizationId, organizationId),
+              eq(schema.membershipRequests.organizationUnitId, organizationUnitId),
               eq(
                 schema.membershipRequests.status,
                 MembershipRequestStatus.PENDING,
@@ -153,7 +157,6 @@ export class MembershipService {
 
         await tx.insert(schema.memberships).values({
           userId: membershipRequest.userId,
-          organizationId: membershipRequest.organizationId,
           roleId: memberRole.id,
         });
 
@@ -165,11 +168,11 @@ export class MembershipService {
 
   async rejectMembershipRequest(
     id: string,
-    organizationId: string,
+    organizationUnitId: string,
     reviewerId: string,
     rejectionReason: string,
   ): Promise<MembershipRequestEntity> {
-    return this.updateMembershipRequest(id, organizationId, {
+    return this.updateMembershipRequest(id, organizationUnitId, {
       status: MembershipRequestStatus.REJECTED,
       reviewedById: reviewerId,
       reviewedAt: new Date(),
@@ -179,12 +182,12 @@ export class MembershipService {
 
   async cancelMembershipRequest(
     id: string,
-    organizationId: string,
+    organizationUnitId: string,
     userId: string,
   ): Promise<MembershipRequestEntity> {
     return this.updateMembershipRequest(
       id,
-      organizationId,
+      organizationUnitId,
       {
         status: MembershipRequestStatus.CANCELLED,
       },
@@ -193,14 +196,14 @@ export class MembershipService {
   }
 
   async getMembershipRequests(
-    organizationId: string,
+    organizationUnitId: string,
     status?: MembershipRequestStatus,
   ): Promise<MembershipRequestEntity[]> {
     return this.db.query.membershipRequests.findMany({
-      where: { organizationId, status },
+      where: { organizationUnitId, status },
       with: {
         user: true,
-        organization: true,
+        organizationUnit: true,
         reviewedBy: true,
       },
     });

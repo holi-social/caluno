@@ -1,8 +1,8 @@
 import { Field, ID, ObjectType, registerEnumType } from '@nestjs/graphql';
 import { createPaginatedResponseType } from '../../graphql/paginated-response.model';
-import { Organization } from '../../organization/models/organization.model';
 import { User } from '../../user/models/user.model';
 import { MembershipRequestStatus } from '../enums';
+import { OrganizationUnit } from '../../organization/models/organization-unit.model';
 
 registerEnumType(MembershipRequestStatus, {
   name: 'MembershipRequestStatus',
@@ -16,8 +16,8 @@ export class MembershipRequest {
   @Field(() => User)
   user: User;
 
-  @Field(() => Organization)
-  organization: Organization;
+  @Field(() => OrganizationUnit)
+  organizationUnit: OrganizationUnit;
 
   @Field(() => User, { nullable: true })
   reviewedBy: User | null;

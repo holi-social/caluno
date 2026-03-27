@@ -9,7 +9,7 @@ import {
 } from 'drizzle-orm/pg-core';
 import { users } from '../../auth/schemas/auth.schema';
 import { idColumn, timestampColumns } from '../../database/database-columns';
-import { organizations } from '../../organization/schemas/organization.schema';
+import { organizationUnits } from '../../organization/schemas/organization-unit.schema';
 import { MembershipRequestStatus } from '../enums';
 
 export const membershipRequestStatusEnum = pgEnum(
@@ -25,8 +25,8 @@ export const membershipRequests = pgTable(
     userId: text('user_id').references(() => users.id, {
       onDelete: 'cascade',
     }),
-    organizationId: uuid('organization_id')
-      .references(() => organizations.id, {
+    organizationUnitId: uuid('organization_unit_id')
+      .references(() => organizationUnits.id, {
         onDelete: 'cascade',
       })
       .notNull(),
@@ -41,10 +41,10 @@ export const membershipRequests = pgTable(
   },
   (table) => [
     index('idx_membership_requests_user_id').on(table.userId),
-    index('idx_membership_requests_organization_id').on(table.organizationId),
-    unique('uq_membership_requests_user_id_organization_id').on(
+    index('idx_membership_requests_organization_unit_id').on(table.organizationUnitId),
+    unique('uq_membership_requests_user_id_organization_unit_id').on(
       table.userId,
-      table.organizationId,
+      table.organizationUnitId,
     ),
   ],
 );
