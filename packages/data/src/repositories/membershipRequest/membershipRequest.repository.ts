@@ -9,13 +9,13 @@ export interface FindMembershipRequestsOptions {
 }
 
 export class MembershipRequestRepository extends BaseRepository {
-  async findAllByOrganizationId(
-    organizationId: string,
+  async findAllByOrganizationUnitId(
+    organizationUnitId: string,
     options: FindMembershipRequestsOptions = {},
   ) {
     try {
       const data = await this.sdk.GetMembershipRequests({
-        organizationId,
+        organizationUnitId,
         limit: options.limit ?? 10,
         offset: options.offset ?? 0,
         status: options.status,
@@ -26,20 +26,22 @@ export class MembershipRequestRepository extends BaseRepository {
     }
   }
 
-  async create(organizationId: string) {
+  async create(organizationUnitId: string) {
     try {
-      const data = await this.sdk.CreateMembershipRequest({ organizationId });
+      const data = await this.sdk.CreateMembershipRequest({
+        organizationUnitId,
+      });
       return data.createMembershipRequest;
     } catch (error) {
       throw DataError.fromGraphQLError(error);
     }
   }
 
-  async approve(id: string, organizationId: string) {
+  async approve(id: string, organizationUnitId: string) {
     try {
       const data = await this.sdk.ApproveMembershipRequest({
         id,
-        organizationId,
+        organizationUnitId,
       });
       return data.approveMembershipRequest;
     } catch (error) {
@@ -47,11 +49,15 @@ export class MembershipRequestRepository extends BaseRepository {
     }
   }
 
-  async reject(id: string, organizationId: string, rejectionReason: string) {
+  async reject(
+    id: string,
+    organizationUnitId: string,
+    rejectionReason: string,
+  ) {
     try {
       const data = await this.sdk.RejectMembershipRequest({
         id,
-        organizationId,
+        organizationUnitId,
         rejectionReason,
       });
       return data.rejectMembershipRequest;
@@ -60,11 +66,11 @@ export class MembershipRequestRepository extends BaseRepository {
     }
   }
 
-  async cancel(id: string, organizationId: string) {
+  async cancel(id: string, organizationUnitId: string) {
     try {
       const data = await this.sdk.CancelMembershipRequest({
         id,
-        organizationId,
+        organizationUnitId,
       });
       return data.cancelMembershipRequest;
     } catch (error) {

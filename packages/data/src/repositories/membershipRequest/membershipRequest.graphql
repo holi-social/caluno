@@ -1,50 +1,50 @@
-mutation CreateMembershipRequest($organizationId: ID!) {
-  createMembershipRequest(organizationId: $organizationId) {
+mutation CreateMembershipRequest($organizationUnitId: ID!) {
+  createMembershipRequest(organizationUnitId: $organizationUnitId) {
     id
   }
 }
 
-mutation ApproveMembershipRequest($id: ID!, $organizationId: ID!) {
-  approveMembershipRequest(id: $id, organizationId: $organizationId) {
+mutation ApproveMembershipRequest($id: ID!, $organizationUnitId: ID!) {
+  approveMembershipRequest(id: $id, organizationUnitId: $organizationUnitId) {
     id
   }
 }
 
 mutation RejectMembershipRequest(
   $id: ID!
-  $organizationId: ID!
+  $organizationUnitId: ID!
   $rejectionReason: String!
 ) {
   rejectMembershipRequest(
     id: $id
-    organizationId: $organizationId
+    organizationUnitId: $organizationUnitId
     rejectionReason: $rejectionReason
   ) {
     id
   }
 }
 
-mutation CancelMembershipRequest($id: ID!, $organizationId: ID!) {
-  cancelMembershipRequest(id: $id, organizationId: $organizationId) {
+mutation CancelMembershipRequest($id: ID!, $organizationUnitId: ID!) {
+  cancelMembershipRequest(id: $id, organizationUnitId: $organizationUnitId) {
     id
   }
 }
 
 query GetMembershipRequests(
-  $organizationId: ID!
+  $organizationUnitId: ID!
   $status: MembershipRequestStatus
   $limit: Int!
   $offset: Int!
 ) {
   membershipRequests(
-    organizationId: $organizationId
+    organizationUnitId: $organizationUnitId
     status: $status
     limit: $limit
     offset: $offset
   ) {
     items {
       id
-      organization {
+      organizationUnit {
         id
         name
       }

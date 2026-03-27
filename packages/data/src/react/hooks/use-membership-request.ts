@@ -5,7 +5,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useGraphQLClient } from './use-graphql-client';
 
 export function useMembershipRequests(
-  organizationId: string,
+  organizationUnitId: string,
   limit = 10,
   offset = 0,
 ) {
@@ -13,10 +13,13 @@ export function useMembershipRequests(
   const repository = new MembershipRequestRepository(client);
 
   return useQuery({
-    queryKey: ['membershipRequests', organizationId, { limit, offset }],
+    queryKey: ['membershipRequests', organizationUnitId, { limit, offset }],
     queryFn: () =>
-      repository.findAllByOrganizationId(organizationId, { limit, offset }),
-    enabled: !!organizationId,
+      repository.findAllByOrganizationUnitId(organizationUnitId, {
+        limit,
+        offset,
+      }),
+    enabled: !!organizationUnitId,
   });
 }
 
@@ -26,10 +29,11 @@ export function useCreateMembershipRequest() {
   const repository = new MembershipRequestRepository(client);
 
   return useMutation({
-    mutationFn: (organizationId: string) => repository.create(organizationId),
-    onSuccess: (_, organizationId) => {
+    mutationFn: (organizationUnitId: string) =>
+      repository.create(organizationUnitId),
+    onSuccess: (_, organizationUnitId) => {
       queryClient.invalidateQueries({
-        queryKey: ['membershipRequests', organizationId],
+        queryKey: ['membershipRequests', organizationUnitId],
       });
     },
   });
@@ -43,14 +47,14 @@ export function useApproveMembershipRequest() {
   return useMutation({
     mutationFn: ({
       id,
-      organizationId,
+      organizationUnitId,
     }: {
       id: string;
-      organizationId: string;
-    }) => repository.approve(id, organizationId),
-    onSuccess: (_, { organizationId }) => {
+      organizationUnitId: string;
+    }) => repository.approve(id, organizationUnitId),
+    onSuccess: (_, { organizationUnitId }) => {
       queryClient.invalidateQueries({
-        queryKey: ['membershipRequests', organizationId],
+        queryKey: ['membershipRequests', organizationUnitId],
       });
     },
   });
@@ -64,16 +68,16 @@ export function useRejectMembershipRequest() {
   return useMutation({
     mutationFn: ({
       id,
-      organizationId,
+      organizationUnitId,
       rejectionReason,
     }: {
       id: string;
-      organizationId: string;
+      organizationUnitId: string;
       rejectionReason: string;
-    }) => repository.reject(id, organizationId, rejectionReason),
-    onSuccess: (_, { organizationId }) => {
+    }) => repository.reject(id, organizationUnitId, rejectionReason),
+    onSuccess: (_, { organizationUnitId }) => {
       queryClient.invalidateQueries({
-        queryKey: ['membershipRequests', organizationId],
+        queryKey: ['membershipRequests', organizationUnitId],
       });
     },
   });
@@ -87,14 +91,14 @@ export function useCancelMembershipRequest() {
   return useMutation({
     mutationFn: ({
       id,
-      organizationId,
+      organizationUnitId,
     }: {
       id: string;
-      organizationId: string;
-    }) => repository.cancel(id, organizationId),
-    onSuccess: (_, { organizationId }) => {
+      organizationUnitId: string;
+    }) => repository.cancel(id, organizationUnitId),
+    onSuccess: (_, { organizationUnitId }) => {
       queryClient.invalidateQueries({
-        queryKey: ['membershipRequests', organizationId],
+        queryKey: ['membershipRequests', organizationUnitId],
       });
     },
   });

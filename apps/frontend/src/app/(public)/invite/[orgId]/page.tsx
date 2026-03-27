@@ -16,7 +16,7 @@ export default async function InvitePage({ params }: InvitePageProps) {
   }
 
   const data = await getDataClient();
-  const org = await data.organization.findPublicInfoById(orgId);
+  const org = await data.organization.findById(orgId);
 
   if (!org) {
     notFound();

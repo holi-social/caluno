@@ -20,8 +20,20 @@ query GetPermissions {
   }
 }
 
-mutation CreateRole($input: CreateRoleInput!) {
-  createRole(input: $input) {
+mutation CreateOrganizationRole($input: CreateRoleInput!) {
+  createOrganizationRole(input: $input) {
+    id
+    name
+    description
+    permissions {
+      id
+      key
+    }
+  }
+}
+
+mutation CreateOrganizationUnitRole($input: CreateRoleInput!) {
+  createOrganizationUnitRole(input: $input) {
     id
     name
     description
