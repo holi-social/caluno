@@ -29,7 +29,7 @@ export class ShiftQueryResolver {
     @Context() context: AuthenticatedGraphQLContext,
   ): Promise<ShiftPaginatedResponse> {
     const { shifts, total } = await this.shiftService.findAll(
-      context.organizationId,
+      context.organizationUnitId,
       pagination,
     );
     return new ShiftPaginatedResponse({
@@ -47,7 +47,7 @@ export class ShiftQueryResolver {
     @Context() context: AuthenticatedGraphQLContext,
   ): Promise<ShiftPaginatedResponse> {
     const { shifts, total } = await this.shiftService.findActiveShifts(
-      context.organizationId,
+      context.organizationUnitId,
       pagination,
     );
 
