@@ -20,7 +20,7 @@ export function createServerOrgContext(deps: ServerOrgContextDeps) {
   const { getCookie, notFound, redirect, getDataClient } = deps;
   async function resolveOrgFromId(orgId: string): Promise<OrgContextData> {
     try {
-      const data = await getDataClient();
+      const data = await getDataClient(orgId);
       const org = await data.organization.findById(orgId);
 
       if (!org) {
@@ -67,7 +67,7 @@ export function createServerOrgContext(deps: ServerOrgContextDeps) {
   async function requireOrgAccess(
     orgId: string,
   ): Promise<{ org: OrgContextData; organizations: OrgContextData[] }> {
-    const data = await getDataClient();
+    const data = await getDataClient(orgId);
     const [org, myOrgsResult] = await Promise.all([
       data.organization.findById(orgId),
       data.user.getMyOrganizations({ limit: 100, offset: 0 }),
