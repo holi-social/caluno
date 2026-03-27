@@ -5,6 +5,8 @@ export * from '../auth/schemas/role-permission.schema';
 export * from '../membership/schemas/membership.schema';
 export * from '../membership/schemas/membership-request.schema';
 export * from '../organization/schemas/organization.schema';
+export * from '../organization/schemas/organization-unit.schema';
+export * from '../organization/schemas/organization-unit-type.schema';
 export * from '../shift/schemas/shift.schema';
 export * from '../shift/schemas/shift-invite.schema';
 export * from '../time-tracking/schemas/time-entry.schema';
