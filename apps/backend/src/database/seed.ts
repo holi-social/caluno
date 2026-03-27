@@ -1,4 +1,4 @@
-import { inArray } from 'drizzle-orm';
+import { inArray, sql } from 'drizzle-orm';
 import { drizzle } from 'drizzle-orm/node-postgres';
 import { Pool } from 'pg';
 import { PERMISSIONS } from '../auth/constants';
@@ -13,6 +13,10 @@ const PERMISSION_NAMES: Record<
   [PERMISSIONS.ORG_READ]: 'Read organization',
   [PERMISSIONS.ORG_UPDATE]: 'Update organization',
   [PERMISSIONS.ORG_DELETE]: 'Delete organization',
+  [PERMISSIONS.ORG_UNIT_CREATE]: 'Create organization unit',
+  [PERMISSIONS.ORG_UNIT_READ]: 'Read organization unit',
+  [PERMISSIONS.ORG_UNIT_UPDATE]: 'Update organization unit',
+  [PERMISSIONS.ORG_UNIT_DELETE]: 'Delete organization unit',
   [PERMISSIONS.ROLE_CREATE]: 'Create role',
   [PERMISSIONS.ROLE_READ]: 'Read role',
   [PERMISSIONS.ROLE_UPDATE]: 'Update role',
@@ -55,31 +59,59 @@ async function seed() {
   }));
 
   const validKeys = Object.values(PERMISSIONS);
-  const existing = await db.select({ key: permissions.key }).from(permissions);
+  const existing = await db
+    .select({
+      key: permissions.key,
+      description: permissions.description,
+    })
+    .from(permissions);
+  const existingByKey = new Map(existing.map((permission) => [permission.key, permission]));
+
+  const insertedKeys = values
+    .filter(({ key }) => !existingByKey.has(key))
+    .map(({ key }) => key);
+  const updatedDescriptionKeys = values
+    .filter(({ key, description }) => {
+      const current = existingByKey.get(key);
+      return Boolean(current && current.description !== description);
+    })
+    .map(({ key }) => key);
+
   const staleKeys = existing
     .map((p) => p.key)
     .filter((key) => !validKeys.includes(key as (typeof validKeys)[number]));
 
-  if (staleKeys.length > 0) {
-    await db.delete(schema.rolePermissions).where(
-      inArray(
-        schema.rolePermissions.permissionId,
-        db
-          .select({ id: permissions.id })
-          .from(permissions)
-          .where(inArray(permissions.key, staleKeys)),
-      ),
-    );
-    await db.delete(permissions).where(inArray(permissions.key, staleKeys));
-    console.log(`Removed ${staleKeys.length} stale permissions: ${staleKeys.join(', ')}`);
-  }
+  await db.transaction(async (tx) => {
+    if (staleKeys.length > 0) {
+      await tx.delete(schema.rolePermissions).where(
+        inArray(
+          schema.rolePermissions.permissionId,
+          tx
+            .select({ id: permissions.id })
+            .from(permissions)
+            .where(inArray(permissions.key, staleKeys)),
+        ),
+      );
+      await tx.delete(permissions).where(inArray(permissions.key, staleKeys));
+      console.log(
+        `Removed ${staleKeys.length} stale permissions: ${staleKeys.join(', ')}`,
+      );
+    }
 
-  await db
-    .insert(permissions)
-    .values(values)
-    .onConflictDoNothing({ target: permissions.key });
+    await tx
+      .insert(permissions)
+      .values(values)
+      .onConflictDoUpdate({
+        target: permissions.key,
+        set: {
+          description: sql`excluded.description`,
+        },
+      });
+  });
 
-  console.log(`Seeded ${values.length} permissions`);
+  console.log(`Inserted ${insertedKeys.length} new permissions`);
+  console.log(`Updated ${updatedDescriptionKeys.length} permission descriptions`);
+  console.log(`Synced ${values.length} permissions in total`);
   await pool.end();
 }
 
