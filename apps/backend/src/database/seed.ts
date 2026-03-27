@@ -1,3 +1,4 @@
+import { inArray } from 'drizzle-orm';
 import { drizzle } from 'drizzle-orm/node-postgres';
 import { Pool } from 'pg';
 import { PERMISSIONS } from '../auth/constants';
@@ -52,6 +53,26 @@ async function seed() {
     key,
     description: PERMISSION_NAMES[key],
   }));
+
+  const validKeys = Object.values(PERMISSIONS);
+  const existing = await db.select({ key: permissions.key }).from(permissions);
+  const staleKeys = existing
+    .map((p) => p.key)
+    .filter((key) => !validKeys.includes(key as (typeof validKeys)[number]));
+
+  if (staleKeys.length > 0) {
+    await db.delete(schema.rolePermissions).where(
+      inArray(
+        schema.rolePermissions.permissionId,
+        db
+          .select({ id: permissions.id })
+          .from(permissions)
+          .where(inArray(permissions.key, staleKeys)),
+      ),
+    );
+    await db.delete(permissions).where(inArray(permissions.key, staleKeys));
+    console.log(`Removed ${staleKeys.length} stale permissions: ${staleKeys.join(', ')}`);
+  }
 
   await db
     .insert(permissions)

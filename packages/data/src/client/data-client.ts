@@ -1,6 +1,7 @@
 import { GraphQLClient } from 'graphql-request';
 import { MembershipRequestRepository } from '../repositories/membershipRequest/membershipRequest.repository';
 import { OrganizationRepository } from '../repositories/organization/organization.repository';
+import { RoleRepository } from '../repositories/role/role.repository';
 import { ShiftRepository } from '../repositories/shift/shift.repository';
 import { TimeEntryRepository } from '../repositories/time-entry/time-entry.repository';
 import { UserRepository } from '../repositories/user/user.repository';
@@ -15,6 +16,7 @@ export class DataClient {
   public readonly shift: ShiftRepository;
   public readonly timeEntry: TimeEntryRepository;
   public readonly membershipRequest: MembershipRequestRepository;
+  public readonly role: RoleRepository;
 
   // Optional organization context
   public readonly organizationContext?: OrganizationContext;
@@ -36,6 +38,7 @@ export class DataClient {
     this.membershipRequest = new MembershipRequestRepository(
       this.graphqlClient,
     );
+    this.role = new RoleRepository(this.graphqlClient);
   }
 
   async getCurrentOrganizationId(): Promise<string | null> {

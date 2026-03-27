@@ -1,7 +1,6 @@
 import { drizzleAdapter } from '@better-auth/drizzle-adapter';
 import { type BetterAuthOptions, betterAuth } from 'better-auth';
 import { Database } from '../database/database.module';
-import { generateCheckInId } from './checkInId';
 
 export interface AuthConfigOptions {
   database: Database | object;
@@ -33,31 +32,6 @@ export const createAuthConfig = ({
     minPasswordLength: 6,
     maxPasswordLength: 128,
     autoSignIn: true,
-  },
-  user: {
-    additionalFields: {
-      checkInId: {
-        type: 'string',
-        required: true,
-        defaultValue: generateCheckInId,
-      },
-    },
-  },
-  databaseHooks: {
-    user: {
-      create: {
-        before: async (user) => {
-          console.log('user', user);
-          const checkInId = generateCheckInId();
-          return {
-            data: {
-              ...user,
-              checkInId,
-            },
-          };
-        },
-      },
-    },
   },
   plugins: [],
 });

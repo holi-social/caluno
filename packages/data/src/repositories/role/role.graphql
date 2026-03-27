@@ -1,0 +1,52 @@
+query GetRoles {
+  roles {
+    id
+    name
+    description
+    isInternal
+    permissions {
+      id
+      key
+      description
+    }
+  }
+}
+
+query GetPermissions {
+  permissions {
+    id
+    key
+    description
+  }
+}
+
+mutation CreateRole($input: CreateRoleInput!) {
+  createRole(input: $input) {
+    id
+    name
+    description
+    permissions {
+      id
+      key
+    }
+  }
+}
+
+mutation UpdateRole($id: ID!, $input: CreateRoleInput!) {
+  updateRole(id: $id, input: $input) {
+    id
+    name
+    description
+    permissions {
+      id
+      key
+    }
+  }
+}
+
+mutation DeleteRole($id: ID!) {
+  deleteRole(id: $id) {
+    id
+    name
+  }
+}

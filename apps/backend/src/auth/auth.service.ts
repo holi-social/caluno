@@ -19,12 +19,16 @@ export class AuthService {
     private readonly db: Database,
   ) {}
 
-  async createRole(input: CreateRoleInput): Promise<RoleEntity> {
+  async createRole(
+    organizationId: string,
+    input: CreateRoleInput,
+  ): Promise<RoleEntity> {
     const [role] = await this.db
       .insert(schema.roles)
       .values({
         name: input.name,
         description: input.description,
+        organizationId,
       })
       .returning();
 
@@ -102,11 +106,7 @@ export class AuthService {
 
   async findAllRoles(organizationId: string): Promise<RoleEntity[]> {
     return this.db.query.roles.findMany({
-      where: {
-        memberships: {
-          organizationId,
-        },
-      },
+      where: { organizationId },
       with: {
         permissions: {
           with: {

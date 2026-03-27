@@ -1,4 +1,5 @@
-import { Args, ID, Mutation, Resolver } from '@nestjs/graphql';
+import { Args, Context, ID, Mutation, Resolver } from '@nestjs/graphql';
+import type { AuthenticatedGraphQLContext } from '../../graphql/graphql.context';
 import { AuthService } from '../auth.service';
 import { PERMISSIONS } from '../constants';
 import { Permissions } from '../decorators/permissions.decorator';
@@ -15,8 +16,14 @@ export class RoleMutationResolver {
 
   @Permissions(PERMISSIONS.ROLE_CREATE)
   @Mutation(() => Role)
-  async createRole(@Args('input') input: CreateRoleInput): Promise<Role> {
-    const role = await this.authService.createRole(input);
+  async createRole(
+    @Context() context: AuthenticatedGraphQLContext,
+    @Args('input') input: CreateRoleInput,
+  ): Promise<Role> {
+    const role = await this.authService.createRole(
+      context.organizationId,
+      input,
+    );
     return this.roleMapper.toModelOrThrow(role);
   }
 
