@@ -12,6 +12,11 @@ import { PermissionEntity, RoleEntity } from '../database/schema';
 import { CreateRoleInput } from './inputs/create-role.input';
 import { UpdateRoleInput } from './inputs/update-role.input';
 
+type PermissionScope = {
+  organizationId?: string;
+  organizationUnitId?: string;
+};
+
 @Injectable()
 export class AuthService {
   constructor(
@@ -19,7 +24,7 @@ export class AuthService {
     private readonly db: Database,
   ) {}
 
-  async createRole(
+  async createOrganizationRole(
     organizationId: string,
     input: CreateRoleInput,
   ): Promise<RoleEntity> {
@@ -33,7 +38,36 @@ export class AuthService {
       .returning();
 
     if (!role) {
-      throw new Error('Failed to create role');
+      throw new Error('Failed to create organization role');
+    }
+
+    if (input.permissionIds.length) {
+      await this.db.insert(schema.rolePermissions).values(
+        input.permissionIds.map((permissionId) => ({
+          roleId: role.id,
+          permissionId,
+        })),
+      );
+    }
+
+    return role;
+  }
+
+  async createOrganizationUnitRole(
+    organizationUnitId: string,
+    input: CreateRoleInput,
+  ): Promise<RoleEntity> {
+    const [role] = await this.db
+      .insert(schema.roles)
+      .values({
+        name: input.name,
+        description: input.description,
+        organizationUnitId,
+      })
+      .returning();
+
+    if (!role) {
+      throw new Error('Failed to create organization unit role');
     }
 
     if (input.permissionIds.length) {
@@ -50,46 +84,101 @@ export class AuthService {
 
   async findUserPermissions(
     userId: string,
-    organizationId: string,
+    scope: PermissionScope,
   ): Promise<PermissionEntity[]> {
-    const memberships = await this.db.query.memberships.findMany({
-      where: { userId, organizationId },
-      with: {
-        role: {
+    if (!scope.organizationId && !scope.organizationUnitId) {
+      return [];
+    }
+
+    const membershipQueries: Promise<
+      Array<{
+        role:
+          | {
+              permissions:
+                | Array<{ permission: PermissionEntity | null }>
+                | null;
+            }
+          | null;
+      }>
+    >[] = [];
+
+    if (scope.organizationId) {
+      membershipQueries.push(
+        this.db.query.memberships.findMany({
+          where: { userId, role: { organizationId: scope.organizationId } },
           with: {
-            permissions: {
+            role: {
               with: {
-                permission: true,
+                permissions: {
+                  with: {
+                    permission: true,
+                  },
+                },
               },
             },
           },
-        },
-      },
-    });
+        }),
+      );
+    }
 
-    return memberships.flatMap(
-      (membership) =>
-        membership.role?.permissions
-          ?.map((rp) => rp.permission)
-          .filter(
-            (permission): permission is PermissionEntity => !!permission,
-          ) ?? [],
+    if (scope.organizationUnitId) {
+      membershipQueries.push(
+        this.db.query.memberships.findMany({
+          where: {
+            userId,
+            role: { organizationUnitId: scope.organizationUnitId },
+          },
+          with: {
+            role: {
+              with: {
+                permissions: {
+                  with: {
+                    permission: true,
+                  },
+                },
+              },
+            },
+          },
+        }),
+      );
+    }
+
+    const membershipsByScope = await Promise.all(membershipQueries);
+    const permissions = membershipsByScope.flatMap((memberships) =>
+      memberships.flatMap(
+        (membership) =>
+          membership.role?.permissions
+            ?.map((rp) => rp.permission)
+            .filter(
+              (permission): permission is PermissionEntity => !!permission,
+            ) ?? [],
+      ),
     );
+
+    const uniquePermissions = new Map<string, PermissionEntity>();
+    for (const permission of permissions) {
+      uniquePermissions.set(permission.id, permission);
+    }
+
+    return [...uniquePermissions.values()];
   }
 
   async hasRequiredPermissions(
     userId: string,
-    organizationId: string,
+    scope: PermissionScope,
     requiredPermissions: string[],
   ): Promise<boolean> {
     if (requiredPermissions.length === 0) {
       return true;
     }
 
-    const userPermissions = await this.findUserPermissions(
-      userId,
-      organizationId,
-    );
+    if (!scope.organizationId && !scope.organizationUnitId) {
+      throw new BadRequestException(
+        'Missing scope. organizationId or organizationUnitId is required',
+      );
+    }
+
+    const userPermissions = await this.findUserPermissions(userId, scope);
 
     const permissionKeys = new Set(
       userPermissions.map((permission) => permission.key),

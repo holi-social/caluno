@@ -4,9 +4,11 @@ export type GraphQLContext = {
   req: Request;
   user?: BaseUserSession['user'];
   organizationId?: string;
+  organizationUnitId?: string;
 };
 
 export type AuthenticatedGraphQLContext = GraphQLContext & {
   user: NonNullable<BaseUserSession['user']>;
   organizationId: string;
+  organizationUnitId: string;
 };
