@@ -36,6 +36,7 @@ import { UserModule } from './user/user.module';
         req,
         user: req.user,
         organizationId: req.headers['x-organization-id'],
+        organizationUnitId: req.headers['x-organization-unit-id'],
       }),
     }),
     BetterAuthModule.forRootAsync({
