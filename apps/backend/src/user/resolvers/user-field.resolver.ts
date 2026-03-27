@@ -19,7 +19,10 @@ export class UserFieldResolver {
   ): Promise<Permission[]> {
     const permissions = await this.authService.findUserPermissions(
       user.id,
-      ctx.organizationId,
+      {
+        organizationId: ctx.organizationId,
+        organizationUnitId: ctx.organizationUnitId,
+      },
     );
     return this.permissionMapper.toArray(permissions);
   }
