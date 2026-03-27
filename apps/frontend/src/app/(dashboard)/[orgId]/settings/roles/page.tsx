@@ -1,7 +1,9 @@
+import { PermissionKey } from '@repo/data';
+import { CreateRoleSheet } from '@/components/sheets/create-role-sheet';
 import { getDataClient } from '@/lib/data-client';
 import { requireOrgAccess } from '@/lib/org-context-server';
+import { requirePermission } from '@/lib/permissions-server';
 import { RolesTable } from './roles-table';
-import { CreateRoleSheet } from '@/components/sheets/create-role-sheet';
 
 interface RolesPageProps {
   params: Promise<{ orgId: string }>;
@@ -10,6 +12,7 @@ interface RolesPageProps {
 export default async function RolesPage({ params }: RolesPageProps) {
   const { orgId } = await params;
   const { org } = await requireOrgAccess(orgId);
+  await requirePermission(org.id, PermissionKey.RoleRead);
   const data = await getDataClient(org.id);
 
   const roles = await data.role.findAll();

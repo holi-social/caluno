@@ -10,15 +10,44 @@ interface PermissionPickerProps {
   disabled?: boolean;
 }
 
+const ACTIONS = new Set([
+  'CREATE',
+  'READ',
+  'UPDATE',
+  'DELETE',
+  'APPROVE',
+  'REJECT',
+  'CANCEL',
+  'PUBLISH',
+]);
+
+function parsePermissionKey(key: string): { entity: string; action: string } {
+  const parts = key.split('_');
+  for (let i = parts.length - 1; i > 0; i--) {
+    const part = parts[i];
+    if (part !== undefined && ACTIONS.has(part)) {
+      const entity = parts.slice(0, i).join(' ');
+      const action = parts.slice(i).join(' ');
+      return { entity, action };
+    }
+  }
+  return { entity: key, action: key };
+}
+
+function capitalize(str: string): string {
+  return str
+    .toLowerCase()
+    .split(' ')
+    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+    .join(' ');
+}
+
 function groupPermissions(permissions: Permission[]) {
   const groups = new Map<string, Permission[]>();
 
   for (const permission of permissions) {
-    const entity = permission.key.split(':')[0] ?? permission.key;
-    const label = entity
-      .split('-')
-      .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
-      .join(' ');
+    const { entity } = parsePermissionKey(permission.key);
+    const label = capitalize(entity);
 
     if (!groups.has(label)) {
       groups.set(label, []);
@@ -30,8 +59,8 @@ function groupPermissions(permissions: Permission[]) {
 }
 
 function getActionLabel(key: string): string {
-  const action = key.split(':')[1] ?? key;
-  return action.charAt(0).toUpperCase() + action.slice(1);
+  const { action } = parsePermissionKey(key);
+  return capitalize(action);
 }
 
 export function PermissionPicker({

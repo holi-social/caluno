@@ -1,10 +1,11 @@
 'use client';
 
+import type { PermissionKey } from '@repo/data';
 import { useHasPermission } from '@repo/data/react';
 import type { ReactNode } from 'react';
 
 interface RequirePermissionProps {
-  permission: string;
+  permission: PermissionKey | PermissionKey[];
   children: ReactNode;
   fallback?: ReactNode;
 }

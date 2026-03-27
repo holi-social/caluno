@@ -22,13 +22,17 @@ import {
   ShieldIcon,
   UsersIcon,
 } from 'lucide-react';
+import { PermissionKey } from '@repo/data';
 import { useParams, useRouter } from 'next/navigation';
 import { useMemo } from 'react';
-import { RequirePermission } from '@/components/require-permission';
 import { OrgSwitcher } from '@/domain/organization/components/org-switcher';
 import { signOut } from '@/lib/auth';
 
-export function DashboardSidebar() {
+interface DashboardSidebarProps {
+  permissions: PermissionKey[];
+}
+
+export function DashboardSidebar({ permissions }: DashboardSidebarProps) {
   const params = useParams();
   const router = useRouter();
   const orgId = params.orgId as string | undefined;
@@ -65,6 +69,8 @@ export function DashboardSidebar() {
     ];
   }, [orgId]);
 
+  const permissionSet = useMemo(() => new Set(permissions), [permissions]);
+
   const settingsItems = useMemo(() => {
     if (!orgId) return [];
 
@@ -78,15 +84,15 @@ export function DashboardSidebar() {
         title: 'Roles',
         href: `/${orgId}/settings/roles`,
         icon: ShieldIcon,
-        permission: 'role:read',
+        permission: PermissionKey.RoleRead,
       },
       {
         title: 'QR iD',
         href: `/${orgId}/me/id`,
         icon: ScanFace,
       },
-    ];
-  }, [orgId]);
+    ].filter((item) => !item.permission || permissionSet.has(item.permission));
+  }, [orgId, permissionSet]);
 
   async function handleSignOut() {
     await signOut();
@@ -127,31 +133,16 @@ export function DashboardSidebar() {
             <SidebarGroupLabel>Settings</SidebarGroupLabel>
             <SidebarGroupContent>
               <SidebarMenu>
-                {settingsItems.map((item) => {
-                  const menuItem = (
-                    <SidebarMenuItem key={item.href}>
-                      <SidebarMenuButton asChild>
-                        <a href={item.href}>
-                          <item.icon className="h-4 w-4" />
-                          <span>{item.title}</span>
-                        </a>
-                      </SidebarMenuButton>
-                    </SidebarMenuItem>
-                  );
-
-                  if (item.permission) {
-                    return (
-                      <RequirePermission
-                        key={item.href}
-                        permission={item.permission}
-                      >
-                        {menuItem}
-                      </RequirePermission>
-                    );
-                  }
-
-                  return menuItem;
-                })}
+                {settingsItems.map((item) => (
+                  <SidebarMenuItem key={item.href}>
+                    <SidebarMenuButton asChild>
+                      <a href={item.href}>
+                        <item.icon className="h-4 w-4" />
+                        <span>{item.title}</span>
+                      </a>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                ))}
               </SidebarMenu>
             </SidebarGroupContent>
           </SidebarGroup>

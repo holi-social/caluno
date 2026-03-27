@@ -1,6 +1,6 @@
 'use client';
 
-import type { RoleListItem } from '@repo/data';
+import { type RoleListItem, PermissionKey } from '@repo/data';
 import { useOrgId } from '@repo/data/react';
 import {
   Badge,
@@ -52,7 +52,7 @@ export function RolesTable({ roles }: RolesTableProps) {
             <TableCell>
               {!role.isInternal && (
                 <div className="flex items-center gap-1">
-                  <RequirePermission permission="role:update">
+                  <RequirePermission permission={PermissionKey.RoleUpdate}>
                     <EditRoleSheet
                       role={role}
                       trigger={
@@ -62,7 +62,7 @@ export function RolesTable({ roles }: RolesTableProps) {
                       }
                     />
                   </RequirePermission>
-                  <RequirePermission permission="role:delete">
+                  <RequirePermission permission={PermissionKey.RoleDelete}>
                     <DeleteRoleDialog
                       roleId={role.id}
                       roleName={role.name}

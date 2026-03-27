@@ -24,14 +24,16 @@ export default async function OrgLayout({ children, params }: OrgLayoutProps) {
   const { orgId } = await params;
   const { org, organizations } = await requireOrgAccess(orgId);
 
-  const _data = await getDataClient(orgId);
+  const data = await getDataClient(org.id);
+  const userPermissions = await data.user.getMyPermissions();
+  const permissionKeys = userPermissions.map((p) => p.key);
 
   return (
     <OrgProvider org={org} organizations={organizations}>
       <DataProvider apiUrl={GRAPHQL_API_URL} organizationId={org.id}>
         <OrgSyncProvider orgId={org.id}>
           <SidebarProvider>
-            <DashboardSidebar />
+            <DashboardSidebar permissions={permissionKeys} />
             <SidebarInset>
               <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4">
                 <SidebarTrigger className="-ml-1" />
