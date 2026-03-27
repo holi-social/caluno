@@ -24,7 +24,7 @@ export class TimeTrackingQueryResolver {
     @Context() context: AuthenticatedGraphQLContext,
   ): Promise<TimeEntryPaginatedResponse> {
     const { entries, total } = await this.timeTrackingService.findAll(
-      context.organizationId,
+      context.organizationUnitId,
       pagination,
     );
     return new TimeEntryPaginatedResponse({
@@ -43,7 +43,7 @@ export class TimeTrackingQueryResolver {
     @Context() context: AuthenticatedGraphQLContext,
   ): Promise<TimeEntryPaginatedResponse> {
     const { entries, total } = await this.timeTrackingService.findByUser(
-      context.organizationId,
+      context.organizationUnitId,
       userId,
       pagination,
     );

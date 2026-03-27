@@ -22,7 +22,7 @@ export class TimeTrackingMutationResolver {
     @Context() context: AuthenticatedGraphQLContext,
   ): Promise<TimeEntry> {
     const entity = await this.timeTrackingService.addTimeEntry(
-      context.organizationId,
+      context.organizationUnitId,
       input,
     );
     return this.entryMapper.toModelOrThrow(entity);
@@ -37,7 +37,7 @@ export class TimeTrackingMutationResolver {
   ): Promise<TimeEntry> {
     const entity = await this.timeTrackingService.closeTimeEntry(
       id,
-      context.organizationId,
+      context.organizationUnitId,
       input,
     );
     return this.entryMapper.toModelOrThrow(entity);
@@ -50,7 +50,7 @@ export class TimeTrackingMutationResolver {
     @Context() context: AuthenticatedGraphQLContext,
   ): Promise<TimeEntry> {
     const entity = await this.timeTrackingService.deleteTimeEntry(
-      context.organizationId,
+      context.organizationUnitId,
       id,
     );
     return this.entryMapper.toModelOrThrow(entity);
