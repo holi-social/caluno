@@ -3,26 +3,34 @@ import { AuthModule } from '../auth/auth.module';
 import { DatabaseModule } from '../database/database.module';
 import { MembershipModule } from '../membership/membership.module';
 import { UserModule } from '../user/user.module';
-import {
-  OrganizationMapper,
-  OrganizationPublicInfoMapper,
-} from './mappers/organization.mapper';
+import { OrganizationMapper } from './mappers/organization.mapper';
+import { OrganizationUnitMapper } from './mappers/organization-unit.mapper';
+import { OrganizationUnitTypeMapper } from './mappers/organization-unit-type.mapper';
 import { OrganizationService } from './organization.service';
+import { OrganizationUnitService } from './organization-unit.service';
 import {
   OrganizationFieldResolver,
   OrganizationMutationResolver,
   OrganizationQueryResolver,
+  OrganizationUnitFieldResolver,
+  OrganizationUnitMutationResolver,
+  OrganizationUnitQueryResolver,
 } from './resolvers';
 
 @Module({
   imports: [DatabaseModule, UserModule, MembershipModule, AuthModule],
   providers: [
     OrganizationService,
+    OrganizationUnitService,
     OrganizationQueryResolver,
     OrganizationMutationResolver,
     OrganizationFieldResolver,
+    OrganizationUnitQueryResolver,
+    OrganizationUnitMutationResolver,
+    OrganizationUnitFieldResolver,
     OrganizationMapper,
-    OrganizationPublicInfoMapper,
+    OrganizationUnitMapper,
+    OrganizationUnitTypeMapper,
   ],
 })
 export class OrganizationModule {}
