@@ -29,21 +29,11 @@ export class OrganizationUnitService {
     });
   }
 
-  async findByOrganizationId(
-    id: string,
-    organizationId: string,
-  ): Promise<OrganizationUnitEntity | undefined> {
-    return this.db.query.organizationUnits.findFirst({
-      where: { organizationId, id },
-    });
-  }
-
   async findBySlug(
     slug: string,
-    organizationId: string,
   ): Promise<OrganizationUnitEntity | undefined> {
     return this.db.query.organizationUnits.findFirst({
-      where: { organizationId, slug },
+      where: { slug },
     });
   }
 
@@ -82,33 +72,22 @@ export class OrganizationUnitService {
   }
 
   async findParent(
-    organizationId: string,
     parentId: string,
   ): Promise<OrganizationUnitEntity | undefined> {
     return this.db.query.organizationUnits.findFirst({
-      where: { id: parentId, organizationId },
+      where: { id: parentId },
     });
   }
 
   async findChildren(
-    organizationId: string,
     parentId: string,
   ): Promise<OrganizationUnitEntity[]> {
     return this.db.query.organizationUnits.findMany({
-      where: { organizationId, parentId },
-    });
-  }
-
-  async findRootByOrganizationId(
-    organizationId: string,
-  ): Promise<OrganizationUnitEntity | undefined> {
-    return this.db.query.organizationUnits.findFirst({
-      where: { organizationId, isRoot: true },
+      where: { parentId },
     });
   }
 
   async create(
-    organizationId: string,
     input: CreateOrganizationUnitInput,
   ): Promise<OrganizationUnitEntity> {
     const type = await this.findType(input.typeId);
@@ -116,13 +95,14 @@ export class OrganizationUnitService {
       throw new NotFoundGraphQLError('Organization unit type not found');
     }
 
-    const parent = await this.findParent(organizationId, input.parentId);
+    const parent = await this.findParent(input.parentId);
+
     if (!parent) {
       throw new NotFoundGraphQLError('Parent organization unit not found');
     }
 
     const slug = slugify(input.name);
-    const existing = await this.findBySlug(organizationId, slug);
+    const existing = await this.findBySlug(slug);
     if (existing) {
       throw new ConflictGraphQLError(
         `Organization unit slug "${slug}" already exists`,
@@ -133,7 +113,7 @@ export class OrganizationUnitService {
       .insert(schema.organizationUnits)
       .values({
         ...input,
-        organizationId,
+        organizationId: input.organizationId,
         isRoot: false,
         slug,
       })
@@ -144,10 +124,10 @@ export class OrganizationUnitService {
 
   async update(
     id: string,
-    organizationId: string,
     input: UpdateOrganizationUnitInput,
   ): Promise<OrganizationUnitEntity> {
-    const unit = await this.findByOrganizationId(id, organizationId);
+    const unit = await this.findById(id);
+
     if (!unit) {
       throw new NotFoundGraphQLError('Organization unit not found');
     }
@@ -172,7 +152,7 @@ export class OrganizationUnitService {
     }
 
     if (input.parentId) {
-      const parent = await this.findParent(organizationId, input.parentId);
+      const parent = await this.findParent(input.parentId);
       if (!parent) {
         throw new NotFoundGraphQLError('Parent organization unit not found');
       }
@@ -181,7 +161,7 @@ export class OrganizationUnitService {
     let slug: string | undefined;
     if (input.name) {
       slug = slugify(input.name);
-      const existing = await this.findBySlug(organizationId, slug);
+      const existing = await this.findBySlug(slug);
       if (existing && existing.id !== id) {
         throw new ConflictGraphQLError(
           `Organization unit slug "${slug}" already exists`,
@@ -198,7 +178,7 @@ export class OrganizationUnitService {
       .where(
         and(
           eq(schema.organizationUnits.id, id),
-          eq(schema.organizationUnits.organizationId, organizationId),
+          eq(schema.organizationUnits.organizationId, input.organizationId),
         ),
       )
       .returning();
@@ -212,9 +192,9 @@ export class OrganizationUnitService {
 
   async delete(
     id: string,
-    organizationId: string,
   ): Promise<OrganizationUnitEntity> {
-    const unit = await this.findByOrganizationId(id, organizationId);
+    const unit = await this.findById(id);
+
     if (!unit) {
       throw new NotFoundGraphQLError('Organization unit not found');
     }
@@ -230,7 +210,6 @@ export class OrganizationUnitService {
       .where(
         and(
           eq(schema.organizationUnits.id, id),
-          eq(schema.organizationUnits.organizationId, organizationId),
         ),
       )
       .returning();

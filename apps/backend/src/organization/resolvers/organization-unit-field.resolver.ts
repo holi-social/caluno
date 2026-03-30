@@ -51,7 +51,6 @@ export class OrganizationUnitFieldResolver {
     }
 
     const parent = await this.organizationUnitService.findParent(
-      organizationUnit.organizationId,
       organizationUnit.parentId,
     );
     return this.organizationUnitMapper.toModel(parent);
@@ -63,7 +62,6 @@ export class OrganizationUnitFieldResolver {
     @Parent() organizationUnit: OrganizationUnitEntity,
   ): Promise<OrganizationUnit[]> {
     const children = await this.organizationUnitService.findChildren(
-      organizationUnit.organizationId,
       organizationUnit.id,
     );
     return this.organizationUnitMapper.toArray(children);

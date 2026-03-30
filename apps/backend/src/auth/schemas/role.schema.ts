@@ -14,23 +14,11 @@ export const roles = pgTable(
     isInternal: boolean('is_internal').notNull().default(false),
     organizationUnitId: uuid('organization_unit_id')
       .references(() => organizationUnits.id, { onDelete: 'restrict' }),
-    organizationId: uuid('organization_id')
-      .references(() => organizations.id, { onDelete: 'restrict' }),
     ...timestampColumns,
   },
   (table) => [
-    check(
-      'chk_roles_exactly_one_scope_fk',
-      sql`(
-        (${table.organizationId} IS NOT NULL AND ${table.organizationUnitId} IS NULL)
-        OR
-        (${table.organizationId} IS NULL AND ${table.organizationUnitId} IS NOT NULL)
-      )`,
-    ),
     unique('uq_roles_name_organization_unit_id').on(table.name, table.organizationUnitId),
-    unique('uq_roles_name_organization_id').on(table.name, table.organizationId),
     index('idx_roles_organization_unit_id').on(table.organizationUnitId),
-    index('idx_roles_organization_id').on(table.organizationId),
   ],
 );
 

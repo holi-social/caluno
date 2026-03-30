@@ -18,12 +18,12 @@ export class MembershipService {
     private readonly db: Database,
   ) {}
 
-  async getMembers(organizationId: string): Promise<UserEntity[]> {
+  async getMembers(organizationUnitId: string): Promise<UserEntity[]> {
     const members = await this.db.query.users.findMany({
       where: {
         memberships: {
           role: {
-            organizationId,
+            organizationUnitId,
           },
         },
       },
@@ -110,12 +110,12 @@ export class MembershipService {
   ): Promise<MembershipRequestEntity> {
     const membershipRequest =
       await this.db.transaction<MembershipRequestEntity>(async (tx) => {
-        const organization = await tx.query.organizations.findFirst({
+        const organizationUnit = await tx.query.organizationUnits.findFirst({
           where: { id: organizationUnitId },
         });
 
-        if (!organization) {
-          throw new NotFoundGraphQLError('Organization not found');
+        if (!organizationUnit) {
+          throw new NotFoundGraphQLError('Organization unit not found');
         }
 
         const memberRole = await tx.query.roles.findFirst({

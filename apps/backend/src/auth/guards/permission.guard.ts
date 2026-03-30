@@ -32,7 +32,6 @@ export class PermissionGuard implements CanActivate {
     const gqlContext = ctx.getContext();
     const {
       req: { user },
-      organizationId,
       organizationUnitId,
     } = gqlContext;
 
@@ -43,10 +42,7 @@ export class PermissionGuard implements CanActivate {
     const hasRequiredPermissions =
       await this.authService.hasRequiredPermissions(
         user.id,
-        {
-          organizationId,
-          organizationUnitId,
-        },
+        organizationUnitId,
         requiredPermissions,
       );
 

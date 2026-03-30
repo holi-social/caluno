@@ -21,12 +21,10 @@ export class OrganizationUnitQueryResolver {
   @Query(() => OrganizationUnit, { nullable: true })
   async organizationUnit(
     @Args('id') id: string,
-    @Context() context: AuthenticatedGraphQLContext,
   ): Promise<OrganizationUnit | null> {
     const organizationUnit =
-      await this.organizationUnitService.findByOrganizationId(
+      await this.organizationUnitService.findById(
         id,
-        context.organizationId,
       );
     return this.organizationUnitMapper.toModel(organizationUnit);
   }
@@ -39,31 +37,19 @@ export class OrganizationUnitQueryResolver {
   ): Promise<OrganizationUnit | null> {
     const organizationUnit = await this.organizationUnitService.findBySlug(
       slug,
-      context.organizationId,
     );
     return this.organizationUnitMapper.toModel(organizationUnit);
   }
 
-  @Permissions(PERMISSIONS.ORG_UNIT_READ)
-  @Query(() => OrganizationUnit, { nullable: true })
-  async organizationRootUnit(
-    @Context() context: AuthenticatedGraphQLContext,
-  ): Promise<OrganizationUnit | null> {
-    const rootUnit =
-      await this.organizationUnitService.findRootByOrganizationId(
-        context.organizationId,
-      );
-    return this.organizationUnitMapper.toModel(rootUnit);
-  }
 
   @Permissions(PERMISSIONS.ORG_UNIT_READ)
   @Query(() => OrganizationUnitPaginatedResponse)
   async organizationUnits(
     @Args() pagination: PaginationInput,
-    @Context() context: AuthenticatedGraphQLContext,
+    @Args('organizationId') organizationId: string,
   ): Promise<OrganizationUnitPaginatedResponse> {
     const { items, total } = await this.organizationUnitService.findAll(
-      context.organizationId,
+      organizationId,
       pagination,
     );
 

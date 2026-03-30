@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { and, count, eq, inArray, isNotNull, isNull } from 'drizzle-orm';
+import { and, desc, eq, inArray, isNotNull, sql } from 'drizzle-orm';
 import {
   DEFAULT_MEMBER_ROLE_NAME,
   DEFAULT_OWNER_ROLE_NAME,
@@ -11,7 +11,6 @@ import { DATABASE_CONNECTION } from '../database/database-connection';
 import * as schema from '../database/schema';
 import { OrganizationEntity, OrganizationUnitEntity } from '../database/schema';
 import type { PaginationInput } from '../graphql/pagination.input';
-import { MembershipService } from '../membership/membership.service';
 import { slugify } from '../utils';
 import type { CreateOrganizationInput } from './inputs/create-organization.input';
 import { OrganizationMapper } from './mappers/organization.mapper';
@@ -41,43 +40,84 @@ export class OrganizationService {
     userId: string,
     pagination: PaginationInput,
   ): Promise<{ items: OrganizationEntity[]; total: number }> {
-    const memberships = await this.db.query.memberships.findMany({
-      where: { userId },
-      with: {
-        role: {
-          with: {
-            organization: true,
-          },
-        },
-      },
-      limit: pagination.limit,
-      offset: pagination.offset,
-    });
-
-    const [{ total }] = await this.db
-      .select({ total: count() })
+    const organizationIdsPage = await this.db
+      .select({
+        id: schema.organizations.id,
+        createdAt: schema.organizations.createdAt,
+      })
       .from(schema.memberships)
       .innerJoin(
         schema.roles,
         eq(schema.memberships.roleId, schema.roles.id),
       )
+      .innerJoin(
+        schema.organizationUnits,
+        eq(schema.roles.organizationUnitId, schema.organizationUnits.id),
+      )
+      .innerJoin(
+        schema.organizations,
+        eq(schema.organizationUnits.organizationId, schema.organizations.id),
+      )
       .where(
         and(
           eq(schema.memberships.userId, userId),
-          isNotNull(schema.roles.organizationId),
-          isNull(schema.roles.organizationUnitId),
+          isNotNull(schema.roles.organizationUnitId),
+        ),
+      )
+      .groupBy(schema.organizations.id, schema.organizations.createdAt)
+      .orderBy(desc(schema.organizations.createdAt))
+      .limit(pagination.limit)
+      .offset(pagination.offset);
+
+    const [{ total }] = await this.db
+      .select({
+        total: sql<number>`count(distinct ${schema.organizations.id})`,
+      })
+      .from(schema.memberships)
+      .innerJoin(
+        schema.roles,
+        eq(schema.memberships.roleId, schema.roles.id),
+      )
+      .innerJoin(
+        schema.organizationUnits,
+        eq(schema.roles.organizationUnitId, schema.organizationUnits.id),
+      )
+      .innerJoin(
+        schema.organizations,
+        eq(schema.organizationUnits.organizationId, schema.organizations.id),
+      )
+      .where(
+        and(
+          eq(schema.memberships.userId, userId),
+          isNotNull(schema.roles.organizationUnitId),
         ),
       );
 
-    const organizations = memberships
-      .map((membership) => membership.role?.organization)
-      .filter(
-        (organization): organization is OrganizationEntity =>
-          organization !== null,
-      );
+    if (organizationIdsPage.length === 0) {
+      return {
+        items: [],
+        total,
+      };
+    }
+
+    const pageIds = organizationIdsPage.map((organization) => organization.id);
+    const organizations = await this.db
+      .select()
+      .from(schema.organizations)
+      .where(inArray(schema.organizations.id, pageIds));
+
+    const uniqueOrganizations = new Map<string, OrganizationEntity>();
+    for (const organization of organizations) {
+      uniqueOrganizations.set(organization.id, organization);
+    }
 
     return {
-      items: organizations,
+      items: pageIds
+        .map((organizationId) => uniqueOrganizations.get(organizationId))
+        .filter(
+          (organization): organization is OrganizationEntity =>
+            organization !== undefined,
+        ),
       total,
     };
   }
@@ -102,7 +142,9 @@ export class OrganizationService {
     userId: string,
     input: CreateOrganizationInput,
   ): Promise<Organization> {
-    const allPermissionKeys = Object.values(PERMISSIONS);
+    const allPermissionKeys = Object.values(PERMISSIONS).filter(
+      (permission) => !permission.startsWith('org-role:'),
+    );
 
     const [organization] = await this.db.transaction(async (tx) => {
       // Create organization first to get the canonical base data.
@@ -125,20 +167,23 @@ export class OrganizationService {
         .returning();
 
       // Create root unit mirroring organization fields.
-      await tx.insert(schema.organizationUnits).values({
-        organizationId: createdOrganization.id,
-        parentId: null,
-        typeId: rootType.id,
-        isRoot: true,
-        name: createdOrganization.name,
-        slug: createdOrganization.slug,
-        logoUrl: createdOrganization.logoUrl,
-        websiteUrl: createdOrganization.websiteUrl,
-        email: createdOrganization.email,
-        phone: createdOrganization.phone,
-        description: createdOrganization.description,
-        address: createdOrganization.address,
-      });
+      const [rootUnit] = await tx
+        .insert(schema.organizationUnits)
+        .values({
+          organizationId: createdOrganization.id,
+          parentId: null,
+          typeId: rootType.id,
+          isRoot: true,
+          name: createdOrganization.name,
+          slug: createdOrganization.slug,
+          logoUrl: createdOrganization.logoUrl,
+          websiteUrl: createdOrganization.websiteUrl,
+          email: createdOrganization.email,
+          phone: createdOrganization.phone,
+          description: createdOrganization.description,
+          address: createdOrganization.address,
+        })
+        .returning();
 
       const [ownerRole] = await tx
         .insert(schema.roles)
@@ -146,7 +191,7 @@ export class OrganizationService {
           name: DEFAULT_OWNER_ROLE_NAME,
           description: `Owner role for organization ${createdOrganization.name}`,
           isInternal: true,
-          organizationId: createdOrganization.id,
+          organizationUnitId: rootUnit.id,
         })
         .returning();
 
@@ -157,7 +202,7 @@ export class OrganizationService {
           name: DEFAULT_MEMBER_ROLE_NAME,
           description: `Member role for organization ${createdOrganization.name}`,
           isInternal: true,
-          organizationId: createdOrganization.id,
+          organizationUnitId: rootUnit.id,
         })
         .returning();
 

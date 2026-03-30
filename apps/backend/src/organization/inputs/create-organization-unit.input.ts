@@ -3,6 +3,9 @@ import { Field, InputType } from '@nestjs/graphql';
 @InputType()
 export class CreateOrganizationUnitInput {
   @Field(() => String)
+  organizationId: string;
+
+  @Field(() => String)
   parentId: string;
 
   @Field(() => String)

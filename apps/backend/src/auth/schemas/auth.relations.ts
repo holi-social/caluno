@@ -11,14 +11,6 @@ export const authRelations = defineRelationsPart(schema, (r) => ({
       from: r.users.id,
       to: r.accounts.userId,
     }),
-    organizations: r.many.organizations({
-      from: r.users.id.through(r.roles.organizationId),
-      to: r.organizations.id.through(r.roles.organizationId),
-    }),
-    organizationUnits: r.many.organizationUnits({
-      from: r.users.id.through(r.roles.organizationUnitId),
-      to: r.organizationUnits.id.through(r.roles.organizationUnitId),
-    }),
     memberships: r.many.memberships({
       from: r.users.id,
       to: r.memberships.userId,
@@ -41,9 +33,9 @@ export const authRelations = defineRelationsPart(schema, (r) => ({
     }),
   },
   roles: {
-    organization: r.one.organizations({
-      from: r.roles.organizationId,
-      to: r.organizations.id,
+    organizationUnit: r.one.organizationUnits({
+      from: r.roles.organizationUnitId,
+      to: r.organizationUnits.id,
     }),
     permissions: r.many.rolePermissions({
       from: r.roles.id,

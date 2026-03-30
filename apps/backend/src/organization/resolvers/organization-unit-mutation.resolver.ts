@@ -19,10 +19,8 @@ export class OrganizationUnitMutationResolver {
   @Mutation(() => OrganizationUnit)
   async createOrganizationUnit(
     @Args('input') input: CreateOrganizationUnitInput,
-    @Context() context: AuthenticatedGraphQLContext,
   ): Promise<OrganizationUnit> {
     const organizationUnit = await this.organizationUnitService.create(
-      context.organizationId,
       input,
     );
     return this.organizationUnitMapper.toModelOrThrow(organizationUnit);
@@ -33,11 +31,9 @@ export class OrganizationUnitMutationResolver {
   async updateOrganizationUnit(
     @Args('id') id: string,
     @Args('input') input: UpdateOrganizationUnitInput,
-    @Context() context: AuthenticatedGraphQLContext,
   ): Promise<OrganizationUnit> {
     const organizationUnit = await this.organizationUnitService.update(
       id,
-      context.organizationId,
       input,
     );
     return this.organizationUnitMapper.toModelOrThrow(organizationUnit);
@@ -47,11 +43,9 @@ export class OrganizationUnitMutationResolver {
   @Mutation(() => OrganizationUnit)
   async deleteOrganizationUnit(
     @Args('id') id: string,
-    @Context() context: AuthenticatedGraphQLContext,
   ): Promise<OrganizationUnit> {
     const organizationUnit = await this.organizationUnitService.delete(
       id,
-      context.organizationId,
     );
     return this.organizationUnitMapper.toModelOrThrow(organizationUnit);
   }

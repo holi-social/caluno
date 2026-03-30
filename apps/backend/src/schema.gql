@@ -32,6 +32,7 @@ input CreateOrganizationUnitInput {
   email: String
   logoUrl: String
   name: String!
+  organizationId: String!
   parentId: String!
   phone: String
   typeId: String!
@@ -97,9 +98,8 @@ type Mutation {
   closeTimeEntry(id: ID!, input: CloseTimeEntryInput!): TimeEntry!
   createMembershipRequest(organizationUnitId: ID!): MembershipRequest!
   createOrganization(input: CreateOrganizationInput!): Organization!
-  createOrganizationRole(input: CreateRoleInput!): Role!
   createOrganizationUnit(input: CreateOrganizationUnitInput!): OrganizationUnit!
-  createOrganizationUnitRole(input: CreateRoleInput!): Role!
+  createRole(input: CreateRoleInput!): Role!
   createShift(input: CreateShiftInput!): Shift!
   deleteOrganizationUnit(id: String!): OrganizationUnit!
   deleteRole(id: ID!): Role!
@@ -187,22 +187,17 @@ enum PermissionKey {
   MEMBERSHIP_REQUEST_REJECT
   MEMBERSHIP_REQUEST_UPDATE
   MEMBERSHIP_UPDATE
-  ORG_CREATE
   ORG_DELETE
   ORG_READ
-  ORG_ROLE_CREATE
-  ORG_ROLE_DELETE
-  ORG_ROLE_READ
-  ORG_ROLE_UPDATE
   ORG_UNIT_CREATE
   ORG_UNIT_DELETE
   ORG_UNIT_READ
-  ORG_UNIT_ROLE_CREATE
-  ORG_UNIT_ROLE_DELETE
-  ORG_UNIT_ROLE_READ
-  ORG_UNIT_ROLE_UPDATE
   ORG_UNIT_UPDATE
   ORG_UPDATE
+  ROLE_CREATE
+  ROLE_DELETE
+  ROLE_READ
+  ROLE_UPDATE
   SHIFT_CREATE
   SHIFT_DELETE
   SHIFT_READ
@@ -220,10 +215,9 @@ type Query {
   membershipRequests(limit: Int! = 10, offset: Int! = 0, organizationUnitId: ID!, status: MembershipRequestStatus): MembershipRequestPaginatedResponse!
   organization(id: String!): Organization!
   organizationBySlug(slug: String!): Organization!
-  organizationRootUnit: OrganizationUnit
   organizationUnit(id: String!): OrganizationUnit
   organizationUnitBySlug(slug: String!): OrganizationUnit
-  organizationUnits(limit: Int! = 10, offset: Int! = 0): OrganizationUnitPaginatedResponse!
+  organizationUnits(limit: Int! = 10, offset: Int! = 0, organizationId: String!): OrganizationUnitPaginatedResponse!
   organizations(limit: Int! = 10, offset: Int! = 0): OrganizationPaginatedResponse!
   permissions: [Permission!]!
   roles: [Role!]!
@@ -288,6 +282,7 @@ input UpdateOrganizationUnitInput {
   email: String
   logoUrl: String
   name: String
+  organizationId: String!
   parentId: String
   phone: String
   typeId: String
