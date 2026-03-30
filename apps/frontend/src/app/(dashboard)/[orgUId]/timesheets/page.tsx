@@ -27,7 +27,7 @@ export default async function TimesheetsPage({ params }: TimesheetsPageProps) {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold">Timesheets</h1>
+          <h1 className="page-title">Timesheets</h1>
         </div>
         <CreateTimeEntrySheet shifts={shifts} allVolunteers={allVolunteers} />
       </div>

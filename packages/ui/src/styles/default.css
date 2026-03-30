@@ -211,12 +211,18 @@
   * {
     @apply border-border outline-ring/50;
   }
+  
   body {
     @apply bg-background text-foreground;
     letter-spacing: var(--tracking-normal);
   }
+  
   button:not([disabled]),
   [role="button"]:not([disabled]) {
     cursor: pointer;
+  }
+
+  .page-title {
+    @apply text-3xl md:text-4xl font-bold
   }
 }

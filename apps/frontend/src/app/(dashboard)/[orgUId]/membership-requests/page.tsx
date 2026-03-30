@@ -33,7 +33,7 @@ export default async function MembershipRequestsPage({
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold">Volunteers</h1>
+        <h1 className="page-title">Volunteers</h1>
 
         <p className="text-muted-foreground mt-1">
           Manage membership requests in your organization

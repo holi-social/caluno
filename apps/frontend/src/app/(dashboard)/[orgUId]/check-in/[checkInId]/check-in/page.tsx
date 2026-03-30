@@ -39,7 +39,7 @@ export default async function CheckinPage({ params }: CheckinPageProps) {
     <div className="max-w-2xl">
       <div>
         <div>
-          <h1 className="text-3xl font-bold">Check-in</h1>
+          <h1 className="page-title">Check-in</h1>
         </div>
         <div className="lg:px-2 lg:py-8 py-4 space-y-4">
           {status === 'blocked' && (

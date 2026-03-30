@@ -14,7 +14,7 @@ export default async function CreateShiftPage({ params }: NewShiftPageProps) {
     <div className="max-w-2xl">
       <div>
         <div>
-          <h1 className="text-3xl font-bold">New Shift</h1>
+          <h1 className="page-title">New Shift</h1>
           <p className="text-muted-foreground">
             Create a new shift and invite volunteers
           </p>
