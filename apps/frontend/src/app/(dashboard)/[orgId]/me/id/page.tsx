@@ -29,7 +29,7 @@ export default async function CheckInPage() {
               </h2>
               <h2 className="flex justify-center items-center gap-2">
                 <Hash className="stroke-gray-500 size-4" />
-                <span className="text-xl">{easyReadCheckinId}</span>
+                <span className="text-xl font-mono">{easyReadCheckinId}</span>
               </h2>
             </div>
           </div>
