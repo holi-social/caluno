@@ -16,7 +16,7 @@ type TimeEntry = GetTimeEntriesQuery['timeEntries']['items'][number];
 
 interface TimesheetsTableProps {
   entries: TimeEntry[];
-  organizationId: string;
+  organizationUnitId: string;
 }
 
 export function formatDate(dateString: string | null | undefined): string {

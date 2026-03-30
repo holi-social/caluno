@@ -10,23 +10,23 @@ import {
 import { LogIn } from 'lucide-react';
 import Link from 'next/link';
 import { ButtonClipboard } from '@/components/button-clipboard';
-import { organizationShareUrl } from '@/domain/organization/share';
+import { organizationUnitUrl } from '@/domain/organization/share';
 import { getDataClient } from '@/lib/data-client';
 import { requireOrgAccess } from '@/lib/org-context-server';
 
 interface VolunteersPageProps {
-  params: Promise<{ orgId: string }>;
+  params: Promise<{ orgUId: string }>;
 }
 
 export default async function VolunteersPage({ params }: VolunteersPageProps) {
-  const { orgId } = await params;
+  const { orgUId } = await params;
 
-  const { org } = await requireOrgAccess(orgId);
-  const data = await getDataClient(org.id);
+  const { org } = await requireOrgAccess(orgUId);
+  const data = await getDataClient(orgUId);
 
-  const orgUrl = organizationShareUrl(org.id);
+  const orgUUrl = organizationUnitUrl(orgUId);
 
-  const volunteers = await data.organization.findVolunteers(org.id);
+  const volunteers = await data.organization.findVolunteers(org.organizationId);
 
   return (
     <div className="space-y-6">
@@ -39,9 +39,9 @@ export default async function VolunteersPage({ params }: VolunteersPageProps) {
         </div>
 
         <ButtonClipboard
-          text="Copy organization link"
-          copyText={orgUrl}
-          toastMessage="Organization link copied to clipboard"
+          text="Copy organization unit link"
+          copyText={orgUUrl}
+          toastMessage="Organization unit link copied to clipboard"
         />
       </div>
 
@@ -61,7 +61,7 @@ export default async function VolunteersPage({ params }: VolunteersPageProps) {
                 <TableCell>{volunteer.email}</TableCell>
                 <TableCell>
                   <Link
-                    href={`/${orgId}/check-in/${volunteer.checkInId}/check-in`}
+                    href={`/${orgUId}/check-in/${volunteer.checkInId}/check-in`}
                     aria-label="Check-in volunteer"
                   >
                     <Button size="icon-xs" variant="outline">

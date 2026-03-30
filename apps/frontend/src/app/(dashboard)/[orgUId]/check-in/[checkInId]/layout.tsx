@@ -6,7 +6,7 @@ import { getDataClient } from '@/lib/data-client';
 import { requireOrgAccess } from '@/lib/org-context-server';
 
 type CheckInLayoutProps = {
-  params: Promise<{ orgId: string; checkInId: string }>;
+  params: Promise<{ orgUId: string; checkInId: string }>;
   children: ReactNode;
 };
 
@@ -14,10 +14,10 @@ export default async function CheckOutPage({
   params,
   children,
 }: CheckInLayoutProps) {
-  const { orgId, checkInId } = await params;
+  const { orgUId, checkInId } = await params;
 
-  const { org } = await requireOrgAccess(orgId);
-  const data = await getDataClient(org.id);
+  await requireOrgAccess(orgUId);
+  const data = await getDataClient(orgUId);
   const user = await data.user.findByCheckInId(checkInId);
 
   if (user) {
@@ -30,7 +30,7 @@ export default async function CheckOutPage({
         <AlertDescription className="block">
           There is no volunteer that matches this QR iD. The QR iD may have been
           re-generated and so this QR iD is no longer valid.{' '}
-          <Link className="underline" href={`/${orgId}/check-in/scan`}>
+          <Link className="underline" href={`/${orgUId}/check-in/scan`}>
             Try again
           </Link>{' '}
           by entering the QR iD manually or search for the volunteer to check

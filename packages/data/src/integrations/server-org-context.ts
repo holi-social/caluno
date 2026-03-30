@@ -13,15 +13,15 @@ export interface ServerOrgContextDeps {
   getCookie: (name: string) => Promise<string | null>;
   notFound: () => never;
   redirect: (path: string) => never;
-  getDataClient: (orgId?: string) => Promise<DataClient>;
+  getDataClient: (orgUId?: string) => Promise<DataClient>;
 }
 
 export function createServerOrgContext(deps: ServerOrgContextDeps) {
   const { getCookie, notFound, redirect, getDataClient } = deps;
-  async function resolveOrgFromId(orgId: string): Promise<OrgContextData> {
+  async function resolveOrgFromId(orgUId: string): Promise<OrgContextData> {
     try {
-      const data = await getDataClient(orgId);
-      const org = await data.organization.findById(orgId);
+      const data = await getDataClient(orgUId);
+      const org = await data.organization.findById(orgUId);
 
       if (!org) {
         return notFound();
@@ -49,7 +49,7 @@ export function createServerOrgContext(deps: ServerOrgContextDeps) {
     }
   }
 
-  async function validateUserOrgAccess(orgId: string): Promise<boolean> {
+  async function validateUserOrgAccess(orgUId: string): Promise<boolean> {
     try {
       const data = await getDataClient();
       const myOrgs = await data.user.getMyOrganizations({
@@ -57,7 +57,7 @@ export function createServerOrgContext(deps: ServerOrgContextDeps) {
         offset: 0,
       });
 
-      return myOrgs.items.some((org) => org.id === orgId);
+      return myOrgs.items.some((org) => org.id === orgUId);
     } catch (error) {
       console.error('Failed to validate org access:', error);
       return false;
@@ -65,11 +65,11 @@ export function createServerOrgContext(deps: ServerOrgContextDeps) {
   }
 
   async function requireOrgAccess(
-    orgId: string,
+    orgUId: string,
   ): Promise<{ org: OrgContextData; organizations: OrgContextData[] }> {
-    const data = await getDataClient(orgId);
+    const data = await getDataClient(orgUId);
     const [org, myOrgsResult] = await Promise.all([
-      data.organization.findById(orgId),
+      data.organization.findById(orgUId),
       data.user.getMyOrganizations({ limit: 100, offset: 0 }),
     ]);
 

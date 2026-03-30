@@ -42,7 +42,7 @@ export default function MembershipRequestCard({ request }: Props) {
         <CardContent className="flex justify-end">
           <MembershipRequestActions
             id={request.id}
-            organizationId={request.organization.id}
+            organizationUnitId={request.organizationUnit.id}
           />
         </CardContent>
       )}

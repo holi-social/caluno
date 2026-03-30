@@ -6,14 +6,14 @@ import { requirePermission } from '@/lib/permissions-server';
 import { RolesTable } from './roles-table';
 
 interface RolesPageProps {
-  params: Promise<{ orgId: string }>;
+  params: Promise<{ orgUId: string }>;
 }
 
 export default async function RolesPage({ params }: RolesPageProps) {
-  const { orgId } = await params;
-  const { org } = await requireOrgAccess(orgId);
-  await requirePermission(org.id, PermissionKey.OrgRoleRead);
-  const data = await getDataClient(org.id);
+  const { orgUId } = await params;
+  const { org } = await requireOrgAccess(orgUId);
+  await requirePermission(orgUId, PermissionKey.RoleRead);
+  const data = await getDataClient(orgUId);
 
   const roles = await data.role.findAll();
 

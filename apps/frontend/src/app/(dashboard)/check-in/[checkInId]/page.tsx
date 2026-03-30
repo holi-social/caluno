@@ -9,8 +9,10 @@ import {
 import { LogIn } from 'lucide-react';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
-import { getDataClient } from '@/lib/data-client';
-import { getLastVisitedOrgServer } from '@/lib/org-context-server';
+import {
+  getLastVisitedOrgServer,
+  getMyRootOrganizationUnits,
+} from '@/lib/org-context-server';
 
 type CheckInPageProps = {
   params: Promise<{ checkInId: string }>;
@@ -27,16 +29,11 @@ export default async function CheckInPage({ params }: CheckInPageProps) {
     );
   }
 
-  const data = await getDataClient();
+  const organizations = await getMyRootOrganizationUnits();
 
-  const organizations = await data.user.getMyOrganizations({
-    limit: 100,
-    offset: 0,
-  });
-
-  if (organizations.items.length === 1) {
+  if (organizations.length === 1) {
     return redirect(
-      `/${organizations.items[0]?.id}/check-in/${checkInId}/decide`,
+      `/${organizations[0]?.id}/check-in/${checkInId}/decide`,
     );
   }
 
@@ -50,7 +47,7 @@ export default async function CheckInPage({ params }: CheckInPageProps) {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          {organizations.items.map((o) => (
+          {organizations.map((o) => (
             <Link
               key={o.id}
               href={`/${o.id}/check-in/${checkInId}/decide`}

@@ -20,14 +20,14 @@ import { deleteRole } from '@/domain/role/actions';
 interface DeleteRoleDialogProps {
   roleId: string;
   roleName: string;
-  organizationId: string;
+  organizationUnitId: string;
   trigger?: React.ReactNode;
 }
 
 export function DeleteRoleDialog({
   roleId,
   roleName,
-  organizationId,
+  organizationUnitId,
   trigger,
 }: DeleteRoleDialogProps) {
   const router = useRouter();
@@ -39,7 +39,7 @@ export function DeleteRoleDialog({
     setError(null);
 
     startTransition(async () => {
-      const result = await deleteRole({ id: roleId, organizationId });
+      const result = await deleteRole({ id: roleId, organizationUnitId });
       if (result?.serverError) {
         setError(result.serverError);
       } else {

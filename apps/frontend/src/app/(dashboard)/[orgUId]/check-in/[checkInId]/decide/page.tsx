@@ -3,14 +3,14 @@ import { getDataClient } from '@/lib/data-client';
 import { requireOrgAccess } from '@/lib/org-context-server';
 
 interface CheckinPageProps {
-  params: Promise<{ orgId: string; checkInId: string }>;
+  params: Promise<{ orgUId: string; checkInId: string }>;
 }
 
 export default async function DecidePage({ params }: CheckinPageProps) {
-  const { orgId, checkInId } = await params;
+  const { orgUId, checkInId } = await params;
 
-  const { org } = await requireOrgAccess(orgId);
-  const data = await getDataClient(org.id);
+  await requireOrgAccess(orgUId);
+  const data = await getDataClient(orgUId);
   const user = await data.user.findByCheckInId(checkInId);
 
   if (!user) {
@@ -21,8 +21,8 @@ export default async function DecidePage({ params }: CheckinPageProps) {
   const hasOpenTimeEntries = timeEntries.items.some((entry) => !entry.endedAt);
 
   if (hasOpenTimeEntries) {
-    redirect(`/${orgId}/check-in/${checkInId}/check-out`);
+    redirect(`/${orgUId}/check-in/${checkInId}/check-out`);
   } else {
-    redirect(`/${orgId}/check-in/${checkInId}/check-in`);
+    redirect(`/${orgUId}/check-in/${checkInId}/check-in`);
   }
 }

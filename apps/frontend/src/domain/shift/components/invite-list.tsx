@@ -20,7 +20,7 @@ type Volunteer = NonNullable<
 >[number];
 
 interface InviteListProps {
-  organizationId: string;
+  organizationUnitId: string;
   value: string[] | undefined;
   onChange: (ids: string[]) => void;
 }
@@ -33,7 +33,7 @@ const filterUsers = (users: Volunteer[], query: string) =>
   );
 
 export const InviteList = ({
-  organizationId,
+  organizationUnitId,
   value = [],
   onChange,
 }: InviteListProps) => {
@@ -42,10 +42,10 @@ export const InviteList = ({
   const [inviteSearchQuery, setInviteSearchQuery] = useState('');
 
   useEffect(() => {
-    getVolunteers(organizationId).then((vol) =>
+    getVolunteers(organizationUnitId).then((vol) =>
       vol ? setVolunteers(vol) : setVolunteers([]),
     );
-  }, [organizationId]);
+  }, [organizationUnitId]);
 
   const availableVolunteers = volunteers.filter((v) => !value.includes(v.id));
   const filteredAvailable = filterUsers(

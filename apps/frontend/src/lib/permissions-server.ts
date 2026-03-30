@@ -5,10 +5,10 @@ import { redirect } from 'next/navigation';
 import { getDataClient } from './data-client';
 
 export async function requirePermission(
-  orgId: string,
+  orgUId: string,
   permission: PermissionKey | PermissionKey[],
 ): Promise<void> {
-  const data = await getDataClient(orgId);
+  const data = await getDataClient(orgUId);
   const permissions = await data.user.getMyPermissions();
   const userKeys = new Set(permissions.map((p) => p.key));
   const required = Array.isArray(permission) ? permission : [permission];
@@ -19,10 +19,10 @@ export async function requirePermission(
 }
 
 export async function hasPermission(
-  orgId: string,
+  orgUId: string,
   permission: PermissionKey | PermissionKey[],
 ): Promise<boolean> {
-  const data = await getDataClient(orgId);
+  const data = await getDataClient(orgUId);
   const permissions = await data.user.getMyPermissions();
   const userKeys = new Set(permissions.map((p) => p.key));
   const required = Array.isArray(permission) ? permission : [permission];

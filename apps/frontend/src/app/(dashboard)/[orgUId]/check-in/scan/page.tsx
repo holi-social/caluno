@@ -3,17 +3,20 @@ import { CheckInInput } from '@/domain/shift/components/check-in-input';
 import { CheckInScanner } from '@/domain/shift/components/check-in-scanner';
 import { CheckInSelector } from '@/domain/shift/components/check-in-selector';
 import { getDataClient } from '@/lib/data-client';
+import { requireOrgAccess } from '@/lib/org-context-server';
 
 interface ScanPageProps {
-  params: Promise<{ orgId: string }>;
+  params: Promise<{ orgUId: string }>;
 }
 
 export default async function ScanPage({ params }: ScanPageProps) {
-  const { orgId } = await params;
+  const { orgUId } = await params;
 
-  const data = await getDataClient(orgId);
+  const { org } = await requireOrgAccess(orgUId);
+  const data = await getDataClient(orgUId);
 
-  const volunteers = (await data.organization.findVolunteers(orgId)) || [];
+  const volunteers =
+    (await data.organization.findVolunteers(org.organizationId)) || [];
 
   return (
     <div className="max-w-2xl">
@@ -25,17 +28,17 @@ export default async function ScanPage({ params }: ScanPageProps) {
       </div>
       <div className="px-2 py-8">
         <div className="max-w-lg">
-          <CheckInScanner organizationId={orgId} />
+          <CheckInScanner organizationUnitId={orgUId} />
         </div>
         <Separator className="my-6" />
         <h2 className="text-lg mb-2">Or enter their QR iD</h2>
 
-        <CheckInInput organizationId={orgId} />
+        <CheckInInput organizationUnitId={orgUId} />
 
         <Separator className="my-6" />
 
         <h2 className="text-lg mb-2">Or search for a volunteer</h2>
-        <CheckInSelector volunteers={volunteers} organizationId={orgId} />
+        <CheckInSelector volunteers={volunteers} organizationUnitId={orgUId} />
       </div>
     </div>
   );

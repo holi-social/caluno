@@ -4,13 +4,13 @@ import { EditShiftForm } from '@/domain/shift/components/edit-form';
 import { getDataClient } from '@/lib/data-client';
 
 interface EditShiftPageProps {
-  params: Promise<{ orgId: string; shiftId: string }>;
+  params: Promise<{ orgUId: string; shiftId: string }>;
 }
 
 export default async function EditShiftPage({ params }: EditShiftPageProps) {
-  const { orgId, shiftId } = await params;
+  const { orgUId, shiftId } = await params;
 
-  const data = await getDataClient(orgId);
+  const data = await getDataClient(orgUId);
   const shift = await data.shift.findById(shiftId);
 
   if (!shift) {
@@ -26,11 +26,16 @@ export default async function EditShiftPage({ params }: EditShiftPageProps) {
             Edit shift and change volunteer invitations
           </p>
         </div>
-        <ActionBar id={shiftId} organizationId={orgId} size="sm" hideEdit />
+        <ActionBar
+          id={shiftId}
+          organizationUnitId={orgUId}
+          size="sm"
+          hideEdit
+        />
       </div>
 
       <div className="px-2 py-8">
-        <EditShiftForm orgId={orgId} shift={shift} />
+        <EditShiftForm orgUId={orgUId} shift={shift} />
       </div>
     </div>
   );

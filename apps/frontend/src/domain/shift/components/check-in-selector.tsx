@@ -18,19 +18,19 @@ type Volunteer = {
 };
 
 type VolunteerCheckinProps = {
-  organizationId: string;
+  organizationUnitId: string;
   volunteers: Volunteer[];
 };
 
 export const CheckInSelector = ({
   volunteers,
-  organizationId,
+  organizationUnitId,
 }: VolunteerCheckinProps) => {
   const router = useRouter();
 
   const handleCheckin = (checkInId: string | null) => {
     if (checkInId)
-      router.push(`/${organizationId}/check-in/${checkInId}/decide`);
+      router.push(`/${organizationUnitId}/check-in/${checkInId}/decide`);
   };
 
   return (

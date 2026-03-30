@@ -1,7 +1,7 @@
 'use client';
 
 import { type RoleListItem, PermissionKey } from '@repo/data';
-import { useOrgId } from '@repo/data/react';
+import { useOrgUId } from '@repo/data/react';
 import {
   Badge,
   Button,
@@ -22,7 +22,7 @@ interface RolesTableProps {
 }
 
 export function RolesTable({ roles }: RolesTableProps) {
-  const orgId = useOrgId();
+  const orgUId = useOrgUId();
 
   return (
     <Table>
@@ -66,7 +66,7 @@ export function RolesTable({ roles }: RolesTableProps) {
                     <DeleteRoleDialog
                       roleId={role.id}
                       roleName={role.name}
-                      organizationId={orgId}
+                      organizationUnitId={orgUId}
                       trigger={
                         <Button variant="ghost" size="sm">
                           <TrashIcon className="h-4 w-4" />

@@ -16,22 +16,22 @@ import { requireOrgAccess } from '@/lib/org-context-server';
 
 interface OrgLayoutProps {
   children: ReactNode;
-  params: Promise<{ orgId: string }>;
+  params: Promise<{ orgUId: string }>;
 }
 
 export default async function OrgLayout({ children, params }: OrgLayoutProps) {
   await requireAuth();
-  const { orgId } = await params;
-  const { org, organizations } = await requireOrgAccess(orgId);
+  const { orgUId } = await params;
+  const { org, organizations } = await requireOrgAccess(orgUId);
 
-  const data = await getDataClient(org.id);
+  const data = await getDataClient(orgUId);
   const userPermissions = await data.user.getMyPermissions();
   const permissionKeys = userPermissions.map((p) => p.key);
 
   return (
     <OrgProvider org={org} organizations={organizations}>
-      <DataProvider apiUrl={GRAPHQL_API_URL} organizationId={org.id}>
-        <OrgSyncProvider orgId={org.id}>
+      <DataProvider apiUrl={GRAPHQL_API_URL} organizationUnitId={orgUId}>
+        <OrgSyncProvider orgUId={orgUId}>
           <SidebarProvider>
             <DashboardSidebar permissions={permissionKeys} />
             <SidebarInset>

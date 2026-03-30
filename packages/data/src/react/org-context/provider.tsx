@@ -43,7 +43,7 @@ export function useOrg(): OrgContextValue {
   return context;
 }
 
-export function useOrgId(): string {
+export function useOrgUId(): string {
   return useOrg().org.id;
 }
 

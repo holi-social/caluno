@@ -1,7 +1,7 @@
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useOrgId } from '@repo/data/react';
+import { useOrgUId } from '@repo/data/react';
 import { Button, FieldError, FieldGroup } from '@repo/ui';
 import { useRouter } from 'next/navigation';
 import { useState, useTransition } from 'react';
@@ -19,14 +19,14 @@ interface CreateRoleFormProps {
 
 export function CreateRoleForm({ onSuccess }: CreateRoleFormProps) {
   const router = useRouter();
-  const organizationId = useOrgId();
+  const organizationUnitId = useOrgUId();
   const [isPending, startTransition] = useTransition();
   const [serverError, setServerError] = useState<string | null>(null);
 
   const form = useForm<CreateRoleFormValues>({
     resolver: zodResolver(createRoleSchema),
     defaultValues: {
-      organizationId,
+      organizationUnitId,
       name: '',
       description: '',
       permissionIds: [],

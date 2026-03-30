@@ -2,13 +2,13 @@ import { CreateShiftForm } from '@/domain/shift/components/create-form';
 import { getDataClient } from '@/lib/data-client';
 
 interface NewShiftPageProps {
-  params: Promise<{ orgId: string }>;
+  params: Promise<{ orgUId: string }>;
 }
 
 export default async function CreateShiftPage({ params }: NewShiftPageProps) {
-  const { orgId } = await params;
+  const { orgUId } = await params;
 
-  const _data = await getDataClient(orgId);
+  const _data = await getDataClient(orgUId);
 
   return (
     <div className="max-w-2xl">

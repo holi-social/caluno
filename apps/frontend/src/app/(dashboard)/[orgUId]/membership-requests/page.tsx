@@ -5,7 +5,7 @@ import { getDataClient } from '@/lib/data-client';
 import { requireOrgAccess } from '@/lib/org-context-server';
 
 interface Props {
-  params: Promise<{ orgId: string }>;
+  params: Promise<{ orgUId: string }>;
   searchParams: Promise<{ status?: string }>;
 }
 
@@ -19,16 +19,16 @@ export default async function MembershipRequestsPage({
   params,
   searchParams,
 }: Props) {
-  const { orgId } = await params;
+  const { orgUId } = await params;
   const { status: statusParam = '' } = await searchParams;
 
   const status = STATUS_MAP[statusParam] ?? MembershipRequestStatus.Pending;
 
-  const { org } = await requireOrgAccess(orgId);
-  const data = await getDataClient(org.id);
+  await requireOrgAccess(orgUId);
+  const data = await getDataClient(orgUId);
 
   const { items: membershipRequests } =
-    await data.membershipRequest.findAllByOrganizationId(org.id, { status });
+    await data.membershipRequest.findAllByOrganizationUnitId(orgUId, { status });
 
   return (
     <div className="space-y-6">

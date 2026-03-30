@@ -9,7 +9,7 @@ import { createRoleSchema } from './schemas';
 export const createRole = actionClient
   .inputSchema(createRoleSchema)
   .action(async ({ parsedInput }) => {
-    const data = await getDataClient(parsedInput.organizationId);
+    const data = await getDataClient(parsedInput.organizationUnitId);
 
     const input: CreateRoleInput = {
       name: parsedInput.name,
@@ -24,7 +24,7 @@ export const updateRole = actionClient
   .inputSchema(createRoleSchema)
   .bindArgsSchemas<[id: z.ZodUUID]>([z.uuid()])
   .action(async ({ bindArgsParsedInputs: [id], parsedInput }) => {
-    const data = await getDataClient(parsedInput.organizationId);
+    const data = await getDataClient(parsedInput.organizationUnitId);
 
     const input: CreateRoleInput = {
       name: parsedInput.name,
@@ -39,10 +39,10 @@ export const deleteRole = actionClient
   .inputSchema(
     z.object({
       id: z.uuid(),
-      organizationId: z.uuid(),
+      organizationUnitId: z.uuid(),
     }),
   )
   .action(async ({ parsedInput }) => {
-    const data = await getDataClient(parsedInput.organizationId);
+    const data = await getDataClient(parsedInput.organizationUnitId);
     return await data.role.delete(parsedInput.id);
   });

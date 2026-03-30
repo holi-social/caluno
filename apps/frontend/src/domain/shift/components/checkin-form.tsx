@@ -8,12 +8,12 @@ import { useRouter } from 'next/navigation';
 
 import { useState, useTransition } from 'react';
 import { toast } from 'sonner';
-import type { CheckInStatus } from '@/app/(dashboard)/[orgId]/check-in/[checkInId]/check-in/page';
+import type { CheckInStatus } from '@/app/(dashboard)/[orgUId]/check-in/[checkInId]/check-in/page';
 import { createTimeEntry } from '@/domain/time-entry/actions';
 import { ShiftSelectorCard } from './shift-selector-card';
 
 type CheckinFormProps = {
-  organizationId: string;
+  organizationUnitId: string;
   volunteer: User;
   shifts: ActiveShift[];
   status: CheckInStatus;
@@ -21,7 +21,7 @@ type CheckinFormProps = {
 
 export const CheckinForm = ({
   volunteer,
-  organizationId,
+  organizationUnitId,
   shifts,
   status,
 }: CheckinFormProps) => {
@@ -53,7 +53,7 @@ export const CheckinForm = ({
         // TODO: prolly need a prompt, so they get clearer confirmation that the volunteer was checked and then they can move on to checking in another,
         // or not. DO we block them and ask for a click or just take them to check-in again ?
         toast.success('Volunteer checked-in');
-        router.push(`/${organizationId}/check-in/scan`);
+        router.push(`/${organizationUnitId}/check-in/scan`);
       }
     });
   };
@@ -103,7 +103,7 @@ export const CheckinForm = ({
           <CardContent>
             <ShiftSelectorCard
               shifts={shifts}
-              organizationId={organizationId}
+              organizationUnitId={organizationUnitId}
               onChange={setSelectedShiftId}
               value={selectedShiftId}
             />

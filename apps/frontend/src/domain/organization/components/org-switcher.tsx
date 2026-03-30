@@ -21,12 +21,12 @@ export function OrgSwitcher() {
   const params = useParams();
   const router = useRouter();
   const pathname = usePathname();
-  const currentOrgId = params.orgId as string | undefined;
+  const currentorgUId = params.orgUId as string | undefined;
 
   const organizations = useUserOrganizations();
 
-  const handleOrgChange = (newOrgId: string) => {
-    if (newOrgId === currentOrgId) {
+  const handleOrgChange = (neworgUId: string) => {
+    if (neworgUId === currentorgUId) {
       setOpen(false);
       return;
     }
@@ -34,11 +34,11 @@ export function OrgSwitcher() {
     const pathParts = pathname.split('/').filter(Boolean);
     const currentPage = pathParts.length > 1 ? pathParts[1] : 'shifts';
 
-    router.push(`/${newOrgId}/${currentPage}`);
+    router.push(`/${neworgUId}/${currentPage}`);
     setOpen(false);
   };
 
-  const currentOrg = organizations.find((org) => org.id === currentOrgId);
+  const currentOrg = organizations.find((org) => org.id === currentorgUId);
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -71,7 +71,7 @@ export function OrgSwitcher() {
                   <Check
                     className={cn(
                       'mr-2 h-4 w-4',
-                      currentOrgId === org.id ? 'opacity-100' : 'opacity-0',
+                      currentorgUId === org.id ? 'opacity-100' : 'opacity-0',
                     )}
                   />
                   <div className="flex flex-col">

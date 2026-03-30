@@ -6,14 +6,14 @@ import { formatDateTime } from '@/lib/formatting';
 import { requireOrgAccess } from '@/lib/org-context-server';
 
 interface CheckOutPageProps {
-  params: Promise<{ orgId: string; checkInId: string }>;
+  params: Promise<{ orgUId: string; checkInId: string }>;
 }
 
 export default async function CheckOutPage({ params }: CheckOutPageProps) {
-  const { orgId, checkInId } = await params;
+  const { orgUId, checkInId } = await params;
 
-  const { org } = await requireOrgAccess(orgId);
-  const data = await getDataClient(org.id);
+  await requireOrgAccess(orgUId);
+  const data = await getDataClient(orgUId);
   const user = await data.user.findByCheckInId(checkInId);
 
   if (!user) {
@@ -51,7 +51,10 @@ export default async function CheckOutPage({ params }: CheckOutPageProps) {
                     </ul>
                   </CardContent>
                 </Card>
-                <CheckOutButton organizationId={orgId} timeEntryId={entry.id} />
+                <CheckOutButton
+                  organizationUnitId={orgUId}
+                  timeEntryId={entry.id}
+                />
               </CardContent>
             </Card>
           ))}

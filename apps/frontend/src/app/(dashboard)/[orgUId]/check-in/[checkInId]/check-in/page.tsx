@@ -5,7 +5,7 @@ import { getDataClient } from '@/lib/data-client';
 import { requireOrgAccess } from '@/lib/org-context-server';
 
 interface CheckinPageProps {
-  params: Promise<{ orgId: string; checkInId: string }>;
+  params: Promise<{ orgUId: string; checkInId: string }>;
 }
 
 //  TODO: what's the true different states
@@ -17,10 +17,10 @@ export type CheckInStatus =
   | 'already-checked-in';
 
 export default async function CheckinPage({ params }: CheckinPageProps) {
-  const { orgId, checkInId } = await params;
+  const { orgUId, checkInId } = await params;
 
-  const { org } = await requireOrgAccess(orgId);
-  const data = await getDataClient(org.id);
+  await requireOrgAccess(orgUId);
+  const data = await getDataClient(orgUId);
   const user = await data.user.findByCheckInId(checkInId);
 
   const activeShiftsResult = await data.shift.activeShifts({
@@ -56,7 +56,7 @@ export default async function CheckinPage({ params }: CheckinPageProps) {
           <CheckinForm
             volunteer={user}
             shifts={activeShiftsResult.items}
-            organizationId={orgId}
+            organizationUnitId={orgUId}
             status={status}
           />
         </div>

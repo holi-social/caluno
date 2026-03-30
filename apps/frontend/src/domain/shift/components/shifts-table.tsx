@@ -15,7 +15,7 @@ type ShiftListItem = GetShiftsQuery['shifts']['items'][number];
 
 type ShiftsTableProps = {
   shifts: ShiftListItem[];
-  orgId: string;
+  orgUId: string;
 };
 
 const visibilityConfig = {
@@ -23,7 +23,7 @@ const visibilityConfig = {
   INVITED_MEMBERS: { variant: 'secondary' as const, label: 'Invite only' },
 };
 
-export function ShiftsTable({ shifts, orgId }: ShiftsTableProps) {
+export function ShiftsTable({ shifts, orgUId }: ShiftsTableProps) {
   return (
     <div className="rounded-md border overflow-x-auto">
       <Table>
@@ -55,7 +55,7 @@ export function ShiftsTable({ shifts, orgId }: ShiftsTableProps) {
                 </Badge>
               </TableCell>
               <TableCell className="space-x-2">
-                <ActionBar organizationId={orgId} id={shift.id} />
+                <ActionBar organizationUnitId={orgUId} id={shift.id} />
               </TableCell>
             </TableRow>
           ))}

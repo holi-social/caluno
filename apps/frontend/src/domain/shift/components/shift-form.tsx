@@ -17,14 +17,14 @@ import { type ShiftFormValues, shiftFormSchema } from '../schemas';
 import { InviteList } from './invite-list';
 
 type FormProps = {
-  organizationId: string;
+  organizationUnitId: string;
   onSubmit: (formData: ShiftFormValues) => void;
   isPending?: boolean;
   initialValues?: Partial<ShiftFormValues>;
 };
 
 export const ShiftForm = ({
-  organizationId,
+  organizationUnitId,
   onSubmit,
   isPending = false,
   initialValues,
@@ -37,7 +37,7 @@ export const ShiftForm = ({
         location: '',
         instructions: '',
         openShift: true,
-        organizationId,
+        organizationUnitId,
         invitedMemberIds: [],
       },
       ...initialValues,
@@ -146,7 +146,7 @@ export const ShiftForm = ({
         <FieldLabel htmlFor="instructions">Invited volunteers</FieldLabel>
 
         <InviteList
-          organizationId={organizationId}
+          organizationUnitId={organizationUnitId}
           value={watch('invitedMemberIds')}
           onChange={(ids) => setValue('invitedMemberIds', ids)}
         />

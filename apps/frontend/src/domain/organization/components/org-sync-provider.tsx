@@ -5,14 +5,14 @@ import { type ReactNode, useEffect } from 'react';
 
 export function OrgSyncProvider({
   children,
-  orgId,
+  orgUId,
 }: {
   children: ReactNode;
-  orgId: string;
+  orgUId: string;
 }) {
   useEffect(() => {
-    setLastVisitedOrg(orgId);
-  }, [orgId]);
+    setLastVisitedOrg(orgUId);
+  }, [orgUId]);
 
   return <>{children}</>;
 }
