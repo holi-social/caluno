@@ -8,12 +8,12 @@ import {
 import type { ReactNode } from 'react';
 import { DashboardSidebar } from '@/components/dashboard-sidebar';
 import { CreateShiftSheet } from '@/components/sheets/create-shift-sheet';
+import { ThemeToggle } from '@/components/theme-toggle';
 import { OrgSyncProvider } from '@/domain/organization/components/org-sync-provider';
 import { requireAuth } from '@/lib/auth-server';
 import { GRAPHQL_API_URL } from '@/lib/constants';
 import { getDataClient } from '@/lib/data-client';
 import { requireOrgAccess } from '@/lib/org-context-server';
-import { ThemeToggle } from '../../../components/theme-toggle';
 
 interface OrgLayoutProps {
   children: ReactNode;
