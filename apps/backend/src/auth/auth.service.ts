@@ -19,8 +19,9 @@ export class AuthService {
     private readonly db: Database,
   ) {}
 
+
   async createRole(
-    organizationId: string,
+    organizationUnitId: string,
     input: CreateRoleInput,
   ): Promise<RoleEntity> {
     const [role] = await this.db
@@ -28,12 +29,12 @@ export class AuthService {
       .values({
         name: input.name,
         description: input.description,
-        organizationId,
+        organizationUnitId,
       })
       .returning();
 
     if (!role) {
-      throw new Error('Failed to create role');
+      throw new Error('Failed to create organization unit role');
     }
 
     if (input.permissionIds.length) {
@@ -50,10 +51,15 @@ export class AuthService {
 
   async findUserPermissions(
     userId: string,
-    organizationId: string,
+    organizationUnitId: string,
   ): Promise<PermissionEntity[]> {
-    const memberships = await this.db.query.memberships.findMany({
-      where: { userId, organizationId },
+    const membership = await this.db.query.memberships.findFirst({
+      where: {
+        userId,
+        role: {
+          organizationUnitId,
+        },
+      },
       with: {
         role: {
           with: {
@@ -67,19 +73,18 @@ export class AuthService {
       },
     });
 
-    return memberships.flatMap(
-      (membership) =>
-        membership.role?.permissions
-          ?.map((rp) => rp.permission)
-          .filter(
-            (permission): permission is PermissionEntity => !!permission,
-          ) ?? [],
-    );
+    if (!membership?.role) {
+      return [];
+    }
+
+    return membership.role.permissions
+      .map((rolePermission) => rolePermission.permission)
+      .filter((permission): permission is PermissionEntity => permission !== null);
   }
 
   async hasRequiredPermissions(
     userId: string,
-    organizationId: string,
+    organizationUnitId: string,
     requiredPermissions: string[],
   ): Promise<boolean> {
     if (requiredPermissions.length === 0) {
@@ -88,7 +93,7 @@ export class AuthService {
 
     const userPermissions = await this.findUserPermissions(
       userId,
-      organizationId,
+      organizationUnitId,
     );
 
     const permissionKeys = new Set(
@@ -104,9 +109,9 @@ export class AuthService {
     return await this.db.query.permissions.findMany();
   }
 
-  async findAllRoles(organizationId: string): Promise<RoleEntity[]> {
+  async findAllRoles(organizationUnitId: string): Promise<RoleEntity[]> {
     return this.db.query.roles.findMany({
-      where: { organizationId },
+      where: { organizationUnitId },
       with: {
         permissions: {
           with: {

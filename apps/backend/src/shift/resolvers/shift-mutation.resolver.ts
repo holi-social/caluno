@@ -25,7 +25,7 @@ export class ShiftMutationResolver {
   ): Promise<Shift> {
     const shift = await this.shiftService.create(
       session.user.id,
-      context.organizationId,
+      context.organizationUnitId,
       input,
     );
     return this.shiftMapper.toModelOrThrow(shift);
@@ -42,7 +42,7 @@ export class ShiftMutationResolver {
     const shift = await this.shiftService.update(
       session.user.id,
       id,
-      context.organizationId,
+      context.organizationUnitId,
       input,
     );
     return this.shiftMapper.toModelOrThrow(shift);
@@ -67,7 +67,7 @@ export class ShiftMutationResolver {
     @Args('id', { type: () => String }) id: string,
     @Context() context: AuthenticatedGraphQLContext,
   ): Promise<Shift> {
-    const result = await this.shiftService.delete(id, context.organizationId);
+    const result = await this.shiftService.delete(id, context.organizationUnitId);
     return this.shiftMapper.toModelOrThrow(result);
   }
 }

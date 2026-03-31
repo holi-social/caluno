@@ -31,12 +31,12 @@ type RejectFormValues = z.infer<typeof rejectSchema>;
 
 interface MembershipRequestActionsProps {
   id: string;
-  organizationId: string;
+  organizationUnitId: string;
 }
 
 export function MembershipRequestActions({
   id,
-  organizationId,
+  organizationUnitId,
 }: MembershipRequestActionsProps) {
   const router = useRouter();
   const [isRejectDialogOpen, setIsRejectDialogOpen] = useState(false);
@@ -58,7 +58,7 @@ export function MembershipRequestActions({
 
   const handleApprove = async () => {
     try {
-      await approveMutation.mutateAsync({ id, organizationId });
+      await approveMutation.mutateAsync({ id, organizationUnitId });
       toast.success('Membership request approved');
       router.refresh();
     } catch {
@@ -70,7 +70,7 @@ export function MembershipRequestActions({
     startTransition(async () => {
       const result = await rejectMembershipRequest({
         id,
-        organizationId,
+        organizationUnitId,
         rejectionReason: formData.rejectionReason,
       });
       if (result?.serverError) {

@@ -2,7 +2,7 @@
 
 import { zodResolver } from '@hookform/resolvers/zod';
 import type { RoleListItem } from '@repo/data';
-import { useOrgId } from '@repo/data/react';
+import { useOrgUId } from '@repo/data/react';
 import { Button, FieldError, FieldGroup } from '@repo/ui';
 import { useRouter } from 'next/navigation';
 import { useState, useTransition } from 'react';
@@ -21,7 +21,7 @@ interface EditRoleFormProps {
 
 export function EditRoleForm({ role, onSuccess }: EditRoleFormProps) {
   const router = useRouter();
-  const organizationId = useOrgId();
+  const organizationUnitId = useOrgUId();
   const [isPending, startTransition] = useTransition();
   const [serverError, setServerError] = useState<string | null>(null);
 
@@ -30,7 +30,7 @@ export function EditRoleForm({ role, onSuccess }: EditRoleFormProps) {
   const form = useForm<CreateRoleFormValues>({
     resolver: zodResolver(createRoleSchema),
     defaultValues: {
-      organizationId,
+      organizationUnitId,
       name: role.name,
       description: role.description ?? '',
       permissionIds: role.permissions.map((p) => p.id),

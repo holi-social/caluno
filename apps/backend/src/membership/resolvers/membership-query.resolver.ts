@@ -16,12 +16,12 @@ export class MembershipQueryResolver {
   @Permissions(PERMISSIONS.MEMBERSHIP_READ)
   @Query(() => Membership)
   async membership(
-    @Args('organizationId', { type: () => ID }) organizationId: string,
+    @Args('organizationUnitId', { type: () => ID }) organizationUnitId: string,
     @Session() session: UserSession,
   ): Promise<Membership | null> {
     const entity = await this.membershipService.getMembership(
       session.user.id,
-      organizationId,
+      organizationUnitId,
     );
     return this.membershipMapper.toModel(entity);
   }

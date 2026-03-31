@@ -18,12 +18,12 @@ export class TimeTrackingService {
     readonly _membershipService: MembershipService,
   ) {}
   async addTimeEntry(
-    organizationId: string,
+    organizationUnitId: string,
     input: AddTimeEntryInput,
   ): Promise<TimeEntryEntity> {
     const shift = await this.db.query.shifts.findFirst({
       where: {
-        organizationId,
+        organizationUnitId,
         id: input.shiftId,
       },
     });
@@ -43,7 +43,7 @@ export class TimeTrackingService {
 
   async closeTimeEntry(
     id: string,
-    organizationId: string,
+    organizationUnitId: string,
     input: CloseTimeEntryInput,
   ): Promise<TimeEntryEntity> {
     const [timeEntry] = await this.db
@@ -54,7 +54,7 @@ export class TimeTrackingService {
         and(
           eq(schema.timeEntries.id, id),
           eq(schema.shifts.id, schema.timeEntries.shiftId),
-          eq(schema.shifts.organizationId, organizationId),
+          eq(schema.shifts.organizationUnitId, organizationUnitId),
         ),
       )
       .returning();
@@ -67,12 +67,12 @@ export class TimeTrackingService {
   }
 
   async deleteTimeEntry(
-    organizationId: string,
+    organizationUnitId: string,
     id: string,
   ): Promise<TimeEntryEntity> {
     const timeEntry = await this.db.query.timeEntries.findFirst({
       where: {
-        shift: { organizationId },
+        shift: { organizationUnitId },
         id,
       },
     });
@@ -89,10 +89,10 @@ export class TimeTrackingService {
   }
 
   async findAll(
-    organizationId: string,
+    organizationUnitId: string,
     pagination: PaginationInput,
   ): Promise<{ entries: TimeEntryEntity[]; total: number }> {
-    const condition = { shift: { organizationId } };
+    const condition = { shift: { organizationUnitId } };
 
     const entries = await this.db.query.timeEntries.findMany({
       where: condition,
@@ -111,7 +111,7 @@ export class TimeTrackingService {
   }
 
   async findByUser(
-    organizationId: string,
+    organizationUnitId: string,
     userId: string,
     pagination: PaginationInput,
   ): Promise<{ entries: TimeEntryEntity[]; total: number }> {
@@ -121,7 +121,7 @@ export class TimeTrackingService {
     //  Types of entries - all, closed, open
 
     const condition = {
-      shift: { organizationId },
+      shift: { organizationUnitId },
       volunteerId: userId,
     };
 

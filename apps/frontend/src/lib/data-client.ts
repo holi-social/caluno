@@ -17,14 +17,14 @@ if (process.env.NODE_ENV !== 'production') {
   globalForData.dataClient = data;
 }
 
-export async function getDataClient(orgId?: string): Promise<DataClient> {
+export async function getDataClient(orgUId?: string): Promise<DataClient> {
   const headersList = await headers();
   const cookieHeader = headersList.get('cookie');
 
   const clientHeaders: Record<string, string> = {};
 
-  if (orgId) {
-    clientHeaders['x-organization-id'] = orgId;
+  if (orgUId) {
+    clientHeaders['x-organization-unit-id'] = orgUId;
   }
 
   if (cookieHeader) {

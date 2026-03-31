@@ -35,64 +35,64 @@ interface DashboardSidebarProps {
 export function DashboardSidebar({ permissions }: DashboardSidebarProps) {
   const params = useParams();
   const router = useRouter();
-  const orgId = params.orgId as string | undefined;
+  const orgUId = params.orgUId as string | undefined;
 
   const menuItems = useMemo(() => {
-    if (!orgId) return [];
+    if (!orgUId) return [];
 
     return [
       {
         title: 'Shifts',
-        href: `/${orgId}/shifts`,
+        href: `/${orgUId}/shifts`,
         icon: CalendarIcon,
       },
       {
         title: 'Timesheets',
-        href: `/${orgId}/timesheets`,
+        href: `/${orgUId}/timesheets`,
         icon: ClockIcon,
       },
       {
         title: 'Volunteers',
-        href: `/${orgId}/volunteers`,
+        href: `/${orgUId}/volunteers`,
         icon: UsersIcon,
       },
       {
         title: 'Check-in/out',
-        href: `/${orgId}/check-in/scan`,
+        href: `/${orgUId}/check-in/scan`,
         icon: ScanQrCode,
       },
       {
         title: 'Membership Requests',
-        href: `/${orgId}/membership-requests`,
+        href: `/${orgUId}/membership-requests`,
         icon: UsersIcon,
       },
     ];
-  }, [orgId]);
+  }, [orgUId]);
 
   const permissionSet = useMemo(() => new Set(permissions), [permissions]);
 
   const settingsItems = useMemo(() => {
-    if (!orgId) return [];
+    if (!orgUId) return [];
 
     return [
       {
         title: 'Settings',
-        href: `/${orgId}/settings`,
+        href: `/${orgUId}/settings`,
         icon: SettingsIcon,
       },
       {
         title: 'Roles',
-        href: `/${orgId}/settings/roles`,
+        href: `/${orgUId}/settings/roles`,
         icon: ShieldIcon,
         permission: PermissionKey.RoleRead,
       },
       {
         title: 'QR iD',
-        href: `/${orgId}/me/id`,
+        href: `/${orgUId}/me/id`,
         icon: ScanFace,
       },
     ].filter((item) => !item.permission || permissionSet.has(item.permission));
-  }, [orgId, permissionSet]);
+  }, [orgUId, permissionSet]);
 
   async function handleSignOut() {
     await signOut();

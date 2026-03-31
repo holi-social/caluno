@@ -6,15 +6,15 @@ import { redirect } from 'next/navigation';
 import { toast } from 'sonner';
 
 interface Props {
-  orgId: string;
+  orgUId: string;
 }
 
-export default function SendMembershipRequestButton({ orgId }: Props) {
+export default function SendMembershipRequestButton({ orgUId }: Props) {
   const createMembershipRequest = useCreateMembershipRequest();
 
   const sendMembershipRequest = async () => {
     try {
-      await createMembershipRequest.mutateAsync(orgId);
+      await createMembershipRequest.mutateAsync(orgUId);
       toast.success('Membership request sent successfully');
     } catch (error) {
       if (error instanceof DataError && error.options?.code === 'CONFLICT') {

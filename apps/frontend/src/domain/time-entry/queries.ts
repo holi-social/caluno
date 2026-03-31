@@ -2,13 +2,15 @@
 
 import { getDataClient } from '@/lib/data-client';
 
-export async function getAvailableShiftsWithVolunteers(organizationId: string) {
-  const data = await getDataClient(organizationId);
+export async function getAvailableShiftsWithVolunteers(
+  organizationUnitId: string,
+  organizationId: string,
+) {
+  const data = await getDataClient(organizationUnitId);
 
   try {
     const shifts = await data.shift.findAllForTimeEntryCreation();
-    const allVolunteers =
-      await data.organization.findVolunteers(organizationId);
+    const allVolunteers = await data.organization.findVolunteers(organizationId);
 
     return {
       shifts: shifts.map((shift) => ({

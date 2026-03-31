@@ -24,5 +24,5 @@
  */
 export interface OrganizationContext {
   getCurrentOrganizationId(): Promise<string | null>;
-  setCurrentOrganizationId(orgId: string): Promise<void>;
+  setCurrentOrganizationId(orgUId: string): Promise<void>;
 }

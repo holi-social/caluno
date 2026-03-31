@@ -26,6 +26,19 @@ input CreateOrganizationInput {
   websiteUrl: String
 }
 
+input CreateOrganizationUnitInput {
+  address: String
+  description: String
+  email: String
+  logoUrl: String
+  name: String!
+  organizationId: String!
+  parentId: String!
+  phone: String
+  typeId: String!
+  websiteUrl: String
+}
+
 input CreateRoleInput {
   description: String
   name: String!
@@ -56,7 +69,7 @@ type Membership {
 type MembershipRequest {
   createdAt: DateTime!
   id: ID!
-  organization: Organization!
+  organizationUnit: OrganizationUnit!
   rejectionReason: String
   reviewedAt: DateTime
   reviewedBy: User
@@ -79,39 +92,40 @@ enum MembershipRequestStatus {
 
 type Mutation {
   addTimeEntry(input: AddTimeEntryInput!): TimeEntry!
-  approveMembershipRequest(id: ID!, organizationId: ID!): MembershipRequest!
+  approveMembershipRequest(id: ID!, organizationUnitId: ID!): MembershipRequest!
   assignRoleToMembership(membershipId: ID!, roleId: ID!): Boolean!
-  cancelMembershipRequest(id: ID!, organizationId: ID!): MembershipRequest!
+  cancelMembershipRequest(id: ID!, organizationUnitId: ID!): MembershipRequest!
   closeTimeEntry(id: ID!, input: CloseTimeEntryInput!): TimeEntry!
-  createMembershipRequest(organizationId: ID!): MembershipRequest!
+  createMembershipRequest(organizationUnitId: ID!): MembershipRequest!
   createOrganization(input: CreateOrganizationInput!): Organization!
+  createOrganizationUnit(input: CreateOrganizationUnitInput!): OrganizationUnit!
   createRole(input: CreateRoleInput!): Role!
   createShift(input: CreateShiftInput!): Shift!
+  deleteOrganizationUnit(id: String!): OrganizationUnit!
   deleteRole(id: ID!): Role!
   deleteShift(id: String!): Shift!
   deleteTimeEntry(id: ID!): TimeEntry!
   inviteMembersToShift(memberIds: [String!]!, shiftId: String!): Shift!
-  rejectMembershipRequest(id: ID!, organizationId: ID!, rejectionReason: String!): MembershipRequest!
+  rejectMembershipRequest(id: ID!, organizationUnitId: ID!, rejectionReason: String!): MembershipRequest!
+  updateOrganizationUnit(id: String!, input: UpdateOrganizationUnitInput!): OrganizationUnit!
   updateRole(id: ID!, input: CreateRoleInput!): Role!
   updateShift(id: String!, input: UpdateShiftInput!): Shift!
 }
 
 type Organization {
   address: String
-  admins: [User!]
-  children: [Organization!]!
   createdAt: DateTime!
   description: String
   email: String
   id: ID!
   logoUrl: String
-  moderators: [User!]
   name: String!
-  parent: Organization
   phone: String
+  root: OrganizationUnit!
   slug: String!
+  units: [OrganizationUnit!]!
   updatedAt: DateTime
-  volunteers: [User!]
+  volunteers: [User!]!
   websiteUrl: String
 }
 
@@ -120,16 +134,33 @@ type OrganizationPaginatedResponse {
   pagination: PaginationInfo!
 }
 
-type OrganizationPublicInfo {
+type OrganizationUnit {
   address: String
+  children: [OrganizationUnit!]!
   description: String
   email: String
   id: ID!
+  isRoot: Boolean!
   logoUrl: String
   name: String!
+  organization: Organization!
+  parent: OrganizationUnit
   phone: String
   slug: String!
+  type: OrganizationUnitType!
   websiteUrl: String
+}
+
+type OrganizationUnitPaginatedResponse {
+  items: [OrganizationUnit!]!
+  pagination: PaginationInfo!
+}
+
+type OrganizationUnitType {
+  description: String
+  icon: String!
+  id: ID!
+  name: String!
 }
 
 type PaginationInfo {
@@ -156,9 +187,12 @@ enum PermissionKey {
   MEMBERSHIP_REQUEST_REJECT
   MEMBERSHIP_REQUEST_UPDATE
   MEMBERSHIP_UPDATE
-  ORG_CREATE
   ORG_DELETE
   ORG_READ
+  ORG_UNIT_CREATE
+  ORG_UNIT_DELETE
+  ORG_UNIT_READ
+  ORG_UNIT_UPDATE
   ORG_UPDATE
   ROLE_CREATE
   ROLE_DELETE
@@ -177,11 +211,13 @@ enum PermissionKey {
 type Query {
   activeShifts(limit: Int! = 10, offset: Int! = 0): ShiftPaginatedResponse!
   me: User!
-  membership(organizationId: ID!): Membership!
-  membershipRequests(limit: Int! = 10, offset: Int! = 0, organizationId: ID!, status: MembershipRequestStatus): MembershipRequestPaginatedResponse!
+  membership(organizationUnitId: ID!): Membership!
+  membershipRequests(limit: Int! = 10, offset: Int! = 0, organizationUnitId: ID!, status: MembershipRequestStatus): MembershipRequestPaginatedResponse!
   organization(id: String!): Organization!
   organizationBySlug(slug: String!): Organization!
-  organizationPublicInfo(id: String!): Organization!
+  organizationUnit(id: String!): OrganizationUnit
+  organizationUnitBySlug(slug: String!): OrganizationUnit
+  organizationUnits(limit: Int! = 10, offset: Int! = 0, organizationId: String!): OrganizationUnitPaginatedResponse!
   organizations(limit: Int! = 10, offset: Int! = 0): OrganizationPaginatedResponse!
   permissions: [Permission!]!
   roles: [Role!]!
@@ -238,6 +274,19 @@ type TimeEntry {
 type TimeEntryPaginatedResponse {
   items: [TimeEntry!]!
   pagination: PaginationInfo!
+}
+
+input UpdateOrganizationUnitInput {
+  address: String
+  description: String
+  email: String
+  logoUrl: String
+  name: String
+  organizationId: String!
+  parentId: String
+  phone: String
+  typeId: String
+  websiteUrl: String
 }
 
 input UpdateShiftInput {

@@ -10,7 +10,7 @@ import { shiftDeleteSchema, shiftFormSchema } from './schemas';
 export const createShift = actionClient
   .inputSchema(shiftFormSchema)
   .action(async ({ parsedInput }) => {
-    const data = await getDataClient(parsedInput.organizationId);
+    const data = await getDataClient(parsedInput.organizationUnitId);
 
     const input: CreateShiftInput = {
       title: parsedInput.name,
@@ -33,7 +33,7 @@ export const updateShift = actionClient
     return prevSchema.extend({ id: z.string().min(1, 'Shift ID is required') });
   })
   .action(async ({ parsedInput }) => {
-    const data = await getDataClient(parsedInput.organizationId);
+    const data = await getDataClient(parsedInput.organizationUnitId);
 
     const input: UpdateShiftInput = {
       title: parsedInput.name,
@@ -53,7 +53,7 @@ export const updateShift = actionClient
 export const deleteShift = actionClient
   .inputSchema(shiftDeleteSchema)
   .action(async ({ parsedInput }) => {
-    const data = await getDataClient(parsedInput.organizationId);
+    const data = await getDataClient(parsedInput.organizationUnitId);
 
     return await data.shift.delete(parsedInput.id);
   });

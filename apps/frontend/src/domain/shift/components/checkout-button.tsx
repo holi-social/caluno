@@ -9,12 +9,12 @@ import { toast } from 'sonner';
 import { closeTimeEntry } from '@/domain/time-entry/actions';
 
 type CheckinFormProps = {
-  organizationId: string;
+  organizationUnitId: string;
   timeEntryId: string;
 };
 
 export const CheckOutButton = ({
-  organizationId,
+  organizationUnitId,
   timeEntryId,
 }: CheckinFormProps) => {
   const [isPending, startTransition] = useTransition();
@@ -28,7 +28,7 @@ export const CheckOutButton = ({
     startTransition(async () => {
       const result = await closeTimeEntry({
         id: timeEntryId,
-        organizationId,
+        organizationUnitId,
         endedAt: new Date(),
       });
 
@@ -36,7 +36,7 @@ export const CheckOutButton = ({
         setServerError(result.serverError);
       } else {
         toast.success('Volunteer checked-out');
-        router.push(`/${organizationId}/check-in/scan`);
+        router.push(`/${organizationUnitId}/check-in/scan`);
       }
     });
   };

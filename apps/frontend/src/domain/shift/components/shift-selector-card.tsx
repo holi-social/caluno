@@ -14,7 +14,7 @@ import Link from 'next/link';
 import { MiniShiftCard } from './mini-shift-card';
 
 type ShiftSelectorCardProps = {
-  organizationId: string;
+  organizationUnitId: string;
   shifts: ActiveShift[];
   onChange: (shiftId: string) => void;
   value?: string;
@@ -22,7 +22,7 @@ type ShiftSelectorCardProps = {
 
 export const ShiftSelectorCard = ({
   shifts,
-  organizationId,
+  organizationUnitId,
   onChange,
   value,
 }: ShiftSelectorCardProps) => {
@@ -34,11 +34,11 @@ export const ShiftSelectorCard = ({
         <AlertDescription>
           <span>
             Please{' '}
-            <Link href={`/${organizationId}/shifts/new`} className="underline">
+            <Link href={`/${organizationUnitId}/shifts/new`} className="underline">
               add a shift
             </Link>{' '}
             or adjust the time-range of an{' '}
-            <Link href={`/${organizationId}/shifts`} className="underline">
+            <Link href={`/${organizationUnitId}/shifts`} className="underline">
               existing shift.
             </Link>
           </span>

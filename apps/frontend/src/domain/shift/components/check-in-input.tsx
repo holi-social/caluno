@@ -13,15 +13,15 @@ import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
 type CheckInInputProps = {
-  organizationId: string;
+  organizationUnitId: string;
 };
 
-export const CheckInInput = ({ organizationId }: CheckInInputProps) => {
+export const CheckInInput = ({ organizationUnitId }: CheckInInputProps) => {
   const [value, setValue] = useState('');
   const router = useRouter();
 
   const handleCheckIn = () =>
-    router.push(`/${organizationId}/check-in/${value.toLowerCase()}/decide`);
+    router.push(`/${organizationUnitId}/check-in/${value.toLowerCase()}/decide`);
 
   return (
     <div className="flex gap-2">

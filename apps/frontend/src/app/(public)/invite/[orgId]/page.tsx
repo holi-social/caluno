@@ -3,22 +3,43 @@ import SendMembershipRequestButton from '@/domain/invite/components/send-members
 import { isAuthenticated } from '@/lib/auth-server';
 import { getDataClient } from '@/lib/data-client';
 
+const GET_ORGANIZATION_UNIT_QUERY = /* GraphQL */ `
+  query GetOrganizationUnitForInvite($id: String!) {
+    organizationUnit(id: $id) {
+      id
+      name
+      organization {
+        name
+      }
+    }
+  }
+`;
+
 interface InvitePageProps {
   params: Promise<{ orgId: string }>;
 }
 
 export default async function InvitePage({ params }: InvitePageProps) {
   const { orgId } = await params;
+  const organizationUnitId = orgId;
 
   if (!(await isAuthenticated())) {
-    const searchParams = new URLSearchParams({ orgId });
+    const searchParams = new URLSearchParams({ orgUId: organizationUnitId });
     redirect(`/api/invite?${searchParams}`);
   }
 
   const data = await getDataClient();
-  const org = await data.organization.findPublicInfoById(orgId);
+  const graphQLClient = data.getGraphQLClient();
+  const result = await graphQLClient.request<{
+    organizationUnit: {
+      id: string;
+      name: string;
+      organization: { name: string };
+    } | null;
+  }>(GET_ORGANIZATION_UNIT_QUERY, { id: organizationUnitId });
+  const orgUnit = result.organizationUnit;
 
-  if (!org) {
+  if (!orgUnit) {
     notFound();
   }
 
@@ -28,11 +49,12 @@ export default async function InvitePage({ params }: InvitePageProps) {
         <h1 className="text-2xl font-bold">Request Membership</h1>
 
         <p>
-          Pressing the button below will request membership to the {org.name}{' '}
+          Pressing the button below will request membership to the{' '}
+          {orgUnit.organization.name}{' '}
           organization.
         </p>
 
-        <SendMembershipRequestButton orgId={orgId} />
+        <SendMembershipRequestButton orgUId={organizationUnitId} />
       </div>
     </div>
   );

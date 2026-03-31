@@ -1,6 +1,6 @@
 'use client';
 
-import { useOrgId } from '@repo/data/react';
+import { useOrgUId } from '@repo/data/react';
 import { useState, useTransition } from 'react';
 import { createShift } from '../actions';
 import type { ShiftFormValues } from '../schemas';
@@ -13,7 +13,7 @@ interface CreateShiftFormProps {
 export function CreateShiftForm({ onSuccess }: CreateShiftFormProps) {
   const [isPending, startTransition] = useTransition();
   const [serverError, setServerError] = useState<string | null>(null);
-  const orgId = useOrgId();
+  const orgUId = useOrgUId();
 
   const onSubmit = async (formData: ShiftFormValues) => {
     setServerError(null);
@@ -39,7 +39,7 @@ export function CreateShiftForm({ onSuccess }: CreateShiftFormProps) {
       )}
 
       <ShiftForm
-        organizationId={orgId}
+        organizationUnitId={orgUId}
         onSubmit={onSubmit}
         isPending={isPending}
       />

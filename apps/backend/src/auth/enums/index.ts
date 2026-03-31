@@ -1,8 +1,12 @@
 export enum PermissionKey {
-  ORG_CREATE = 'org:create',
   ORG_READ = 'org:read',
   ORG_UPDATE = 'org:update',
   ORG_DELETE = 'org:delete',
+
+  ORG_UNIT_CREATE = 'org-unit:create',
+  ORG_UNIT_READ = 'org-unit:read',
+  ORG_UNIT_UPDATE = 'org-unit:update',
+  ORG_UNIT_DELETE = 'org-unit:delete',
 
   ROLE_CREATE = 'role:create',
   ROLE_READ = 'role:read',

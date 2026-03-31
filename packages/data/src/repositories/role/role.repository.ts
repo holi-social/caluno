@@ -25,7 +25,7 @@ export class RoleRepository extends BaseRepository {
 
   async create(input: CreateRoleInput) {
     try {
-      const data = await this.sdk.CreateRole({ input });
+      const data = await this.sdk.createRole({ input });
       return data.createRole;
     } catch (error) {
       throw DataError.fromGraphQLError(error);

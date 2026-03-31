@@ -12,14 +12,14 @@ import { shiftShareUrl } from '../share';
 
 type ActionBarProps = {
   id: string;
-  organizationId: string;
+  organizationUnitId: string;
   size?: 'xs' | 'sm' | 'lg';
   hideEdit?: boolean;
 };
 
 export const ActionBar = ({
   id,
-  organizationId,
+  organizationUnitId,
   size = 'xs',
   hideEdit = false,
 }: ActionBarProps) => {
@@ -40,13 +40,13 @@ export const ActionBar = ({
     startTransition(async () => {
       const result = await deleteShift({
         id,
-        organizationId,
+        organizationUnitId,
       });
       if (result?.serverError) {
         toast.error(`Failed to delete Shift. ${result.serverError}`);
       } else {
         toast.success('Successfully deleted Shift.');
-        router.push(`/${organizationId}/shifts`);
+        router.push(`/${organizationUnitId}/shifts`);
       }
     });
   };
@@ -65,7 +65,7 @@ export const ActionBar = ({
 
       {!hideEdit && (
         <Link
-          href={`/${organizationId}/shifts/${id}/edit`}
+          href={`/${organizationUnitId}/shifts/${id}/edit`}
           aria-label="Edit shift"
         >
           <Button size={buttonSize} variant="outline">

@@ -33,11 +33,11 @@ export class ShiftService {
   }
 
   async findAll(
-    organizationId: string,
+    organizationUnitId: string,
     pagination: PaginationInput,
   ): Promise<{ shifts: ShiftEntity[]; total: number }> {
     const condition: SQL<unknown> | undefined = and(
-      eq(schema.shifts.organizationId, organizationId),
+      eq(schema.shifts.organizationUnitId, organizationUnitId),
     );
 
     const shifts = await this.db
@@ -58,7 +58,7 @@ export class ShiftService {
 
   async create(
     userId: string,
-    organizationId: string,
+    organizationUnitId: string,
     input: CreateShiftInput,
   ): Promise<ShiftEntity> {
     const [shift] = await this.db
@@ -67,7 +67,7 @@ export class ShiftService {
         ...input,
         slug: slugify(input.title),
         createdById: userId,
-        organizationId,
+        organizationUnitId,
       })
       .returning();
 
@@ -80,7 +80,7 @@ export class ShiftService {
 
     if (input.visibility === ShiftVisibility.ALL_MEMBERS) {
       const members = await this.db.query.memberships.findMany({
-        where: { organizationId },
+        where: { role: { organizationUnitId } },
       });
       const memberIds = members
         .map((member) => member.userId)
@@ -176,7 +176,7 @@ export class ShiftService {
   async update(
     userId: string,
     id: string,
-    organizationId: string,
+    organizationUnitId: string,
     input: UpdateShiftInput,
   ): Promise<ShiftEntity> {
     const { title, ...rest } = input;
@@ -191,7 +191,7 @@ export class ShiftService {
       .where(
         and(
           eq(schema.shifts.id, id),
-          eq(schema.shifts.organizationId, organizationId),
+          eq(schema.shifts.organizationUnitId, organizationUnitId),
         ),
       )
       .returning();
@@ -209,7 +209,7 @@ export class ShiftService {
 
     if (input.visibility === ShiftVisibility.ALL_MEMBERS) {
       const members = await this.db.query.memberships.findMany({
-        where: { organizationId },
+        where: { role: { organizationUnitId } },
       });
       const memberIds = members
         .map((member) => member.userId)
@@ -228,11 +228,11 @@ export class ShiftService {
     return shift;
   }
 
-  async delete(id: string, organizationId: string): Promise<ShiftEntity> {
+  async delete(id: string, organizationUnitId: string): Promise<ShiftEntity> {
     const shift = await this.db.query.shifts.findFirst({
       where: {
         id,
-        organizationId,
+        organizationUnitId,
       },
     });
 
@@ -245,7 +245,7 @@ export class ShiftService {
       .where(
         and(
           eq(schema.shifts.id, id),
-          eq(schema.shifts.organizationId, organizationId),
+          eq(schema.shifts.organizationUnitId, organizationUnitId),
         ),
       )
       .returning();
@@ -258,7 +258,7 @@ export class ShiftService {
   }
 
   async findActiveShifts(
-    organizationId: string,
+    organizationUnitId: string,
     pagination: PaginationInput,
   ): Promise<{ shifts: ShiftEntity[]; total: number }> {
     // Increase the window either side by 1hr to show shifts that where just active or just about to be active
@@ -267,7 +267,7 @@ export class ShiftService {
     const oneHourFromNow = new Date(now.getTime() + 60 * 60 * 1000);
 
     const condition = {
-      organizationId,
+      organizationUnitId,
       startsAt: { lt: oneHourFromNow },
       endsAt: { gt: oneHourAgo },
     };

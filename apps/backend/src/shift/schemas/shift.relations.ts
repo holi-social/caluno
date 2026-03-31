@@ -3,9 +3,9 @@ import * as schema from '../../database/schema';
 
 export const shiftRelations = defineRelationsPart(schema, (r) => ({
   shifts: {
-    organization: r.one.organizations({
-      from: r.shifts.organizationId,
-      to: r.organizations.id,
+    organizationUnit: r.one.organizationUnits({
+      from: r.shifts.organizationUnitId,
+      to: r.organizationUnits.id,
     }),
     createdBy: r.one.users({
       from: r.shifts.createdById,

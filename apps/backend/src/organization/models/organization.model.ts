@@ -1,13 +1,13 @@
 import { Field, ID, ObjectType } from '@nestjs/graphql';
 
 import { createPaginatedResponseType } from '../../graphql/paginated-response.model';
+import { OrganizationUnit } from './organization-unit.model';
 import { User } from '../../user/models/user.model';
 
 @ObjectType()
-export class OrganizationPublicInfo {
+export class Organization {
   @Field(() => ID)
   id: string;
-
   @Field(() => String)
   name: string;
 
@@ -31,40 +31,23 @@ export class OrganizationPublicInfo {
 
   @Field(() => String, { nullable: true })
   description: string | null;
-}
 
-export const OrganizationPublicInfoPaginatedResponse =
-  createPaginatedResponseType<OrganizationPublicInfo>(
-    OrganizationPublicInfo,
-    'OrganizationPublicInfo',
-  );
+  @Field(() => OrganizationUnit)
+  root: OrganizationUnit;
 
-export type OrganizationPublicInfoPaginatedResponse = InstanceType<
-  typeof OrganizationPublicInfoPaginatedResponse
->;
+  @Field(() => [OrganizationUnit])
+  units: OrganizationUnit[];
 
-@ObjectType()
-export class Organization extends OrganizationPublicInfo {
-  @Field(() => Organization, { nullable: true })
-  parent: Organization | null;
+  @Field(() => [User])
+  volunteers: User[] = [];
 
-  @Field(() => [Organization])
-  children: Organization[];
-
-  @Field(() => [User], { nullable: true })
-  admins: User[];
-
-  @Field(() => [User], { nullable: true })
-  moderators: User[];
-
-  @Field(() => [User], { nullable: true })
-  volunteers: User[];
 
   @Field(() => Date)
   createdAt: Date;
 
   @Field(() => Date, { nullable: true })
   updatedAt: Date;
+
 }
 
 export const OrganizationPaginatedResponse =

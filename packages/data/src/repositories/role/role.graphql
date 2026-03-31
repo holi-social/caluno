@@ -20,7 +20,7 @@ query GetPermissions {
   }
 }
 
-mutation CreateRole($input: CreateRoleInput!) {
+mutation createRole($input: CreateRoleInput!) {
   createRole(input: $input) {
     id
     name

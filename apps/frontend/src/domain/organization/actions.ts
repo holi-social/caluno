@@ -4,6 +4,28 @@ import type { CreateOrganizationInput } from '@repo/data';
 import { redirect } from 'next/navigation';
 import { getDataClient } from '@/lib/data-client';
 
+const GET_ORG_ROOT_QUERY = /* GraphQL */ `
+  query GetOrganizationRootUnit($id: String!) {
+    organization(id: $id) {
+      id
+      root {
+        id
+      }
+    }
+  }
+`;
+
+const GET_ORG_ID_FROM_UNIT_QUERY = /* GraphQL */ `
+  query GetOrganizationIdFromUnit($id: String!) {
+    organizationUnit(id: $id) {
+      id
+      organization {
+        id
+      }
+    }
+  }
+`;
+
 interface CreateOrganizationResult {
   success: boolean;
   error?: string;
@@ -51,11 +73,34 @@ export async function createOrganization(
           : 'Failed to create organization. Please try again.',
     };
   }
-  redirect(`/${org.id}`);
+  const graphQLClient = data.getGraphQLClient();
+  const result = await graphQLClient.request<{
+    organization: { root: { id: string } } | null;
+  }>(GET_ORG_ROOT_QUERY, { id: org.id });
+  const rootOrgUnitId = result.organization?.root.id;
+
+  if (!rootOrgUnitId) {
+    return {
+      success: false,
+      error:
+        'Organization created, but failed to resolve root organization unit.',
+    };
+  }
+
+  redirect(`/${rootOrgUnitId}`);
 }
 
-export async function getVolunteers(organizationId: string) {
-  const data = await getDataClient(organizationId);
+export async function getVolunteers(organizationUnitId: string) {
+  const data = await getDataClient(organizationUnitId);
+  const graphQLClient = data.getGraphQLClient();
+  const result = await graphQLClient.request<{
+    organizationUnit: { organization: { id: string } } | null;
+  }>(GET_ORG_ID_FROM_UNIT_QUERY, { id: organizationUnitId });
+  const organizationId = result.organizationUnit?.organization.id;
+
+  if (!organizationId) {
+    return [];
+  }
 
   return await data.organization.findVolunteers(organizationId);
 }

@@ -21,7 +21,7 @@ export class RoleMutationResolver {
     @Args('input') input: CreateRoleInput,
   ): Promise<Role> {
     const role = await this.authService.createRole(
-      context.organizationId,
+      context.organizationUnitId,
       input,
     );
     return this.roleMapper.toModelOrThrow(role);

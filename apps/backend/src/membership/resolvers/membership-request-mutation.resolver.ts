@@ -15,12 +15,12 @@ export class MembershipRequestMutationResolver {
 
   @Mutation(() => MembershipRequest)
   async createMembershipRequest(
-    @Args('organizationId', { type: () => ID }) organizationId: string,
+    @Args('organizationUnitId', { type: () => ID }) organizationUnitId: string,
     @Session() session: UserSession,
   ): Promise<MembershipRequest> {
     const entity = await this.membershipRequestService.createMembershipRequest(
       session.user.id,
-      organizationId,
+      organizationUnitId,
     );
     return this.membershipRequestMapper.toModelOrThrow(entity);
   }
@@ -29,12 +29,12 @@ export class MembershipRequestMutationResolver {
   @Mutation(() => MembershipRequest)
   async approveMembershipRequest(
     @Args('id', { type: () => ID }) id: string,
-    @Args('organizationId', { type: () => ID }) organizationId: string,
+    @Args('organizationUnitId', { type: () => ID }) organizationUnitId: string,
     @Session() session: UserSession,
   ): Promise<MembershipRequest> {
     const entity = await this.membershipRequestService.approveMembershipRequest(
       id,
-      organizationId,
+      organizationUnitId,
       session.user.id,
     );
     return this.membershipRequestMapper.toModelOrThrow(entity);
@@ -44,13 +44,13 @@ export class MembershipRequestMutationResolver {
   @Mutation(() => MembershipRequest)
   async rejectMembershipRequest(
     @Args('id', { type: () => ID }) id: string,
-    @Args('organizationId', { type: () => ID }) organizationId: string,
+    @Args('organizationUnitId', { type: () => ID }) organizationUnitId: string,
     @Args('rejectionReason', { type: () => String }) rejectionReason: string,
     @Session() session: UserSession,
   ): Promise<MembershipRequest> {
     const entity = await this.membershipRequestService.rejectMembershipRequest(
       id,
-      organizationId,
+      organizationUnitId,
       session.user.id,
       rejectionReason,
     );
@@ -61,12 +61,12 @@ export class MembershipRequestMutationResolver {
   @Mutation(() => MembershipRequest)
   async cancelMembershipRequest(
     @Args('id', { type: () => ID }) id: string,
-    @Args('organizationId', { type: () => ID }) organizationId: string,
+    @Args('organizationUnitId', { type: () => ID }) organizationUnitId: string,
     @Session() session: UserSession,
   ): Promise<MembershipRequest> {
     const entity = await this.membershipRequestService.cancelMembershipRequest(
       id,
-      organizationId,
+      organizationUnitId,
       session.user.id,
     );
     return this.membershipRequestMapper.toModelOrThrow(entity);

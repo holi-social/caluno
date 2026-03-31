@@ -1,6 +1,9 @@
-import { boolean, index, pgTable, text, uuid } from 'drizzle-orm/pg-core';
+import { boolean, index, pgTable, text, unique, uuid } from 'drizzle-orm/pg-core';
 import { idColumn, timestampColumns } from '../../database/database-columns';
+import { organizationUnits } from '../../organization/schemas/organization-unit.schema';
 import { organizations } from '../../organization/schemas/organization.schema';
+import { sql } from 'drizzle-orm';
+import { check } from 'drizzle-orm/pg-core';
 
 export const roles = pgTable(
   'roles',
@@ -9,14 +12,13 @@ export const roles = pgTable(
     name: text('name').notNull(),
     description: text('description'),
     isInternal: boolean('is_internal').notNull().default(false),
-    organizationId: uuid('organization_id')
-      .notNull()
-      .references(() => organizations.id, { onDelete: 'cascade' }),
+    organizationUnitId: uuid('organization_unit_id')
+      .references(() => organizationUnits.id, { onDelete: 'restrict' }),
     ...timestampColumns,
   },
   (table) => [
-    index('idx_roles_name').on(table.name),
-    index('idx_roles_organization_id').on(table.organizationId),
+    unique('uq_roles_name_organization_unit_id').on(table.name, table.organizationUnitId),
+    index('idx_roles_organization_unit_id').on(table.organizationUnitId),
   ],
 );
 
