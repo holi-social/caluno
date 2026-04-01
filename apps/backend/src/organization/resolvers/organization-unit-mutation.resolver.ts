@@ -1,7 +1,6 @@
-import { Args, Context, Mutation, Resolver } from '@nestjs/graphql';
+import { Args, Mutation, Resolver } from '@nestjs/graphql';
 import { PERMISSIONS } from '../../auth/constants';
 import { Permissions } from '../../auth/decorators/permissions.decorator';
-import type { AuthenticatedGraphQLContext } from '../../graphql/graphql.context';
 import { CreateOrganizationUnitInput } from '../inputs/create-organization-unit.input';
 import { UpdateOrganizationUnitInput } from '../inputs/update-organization-unit.input';
 import { OrganizationUnitMapper } from '../mappers/organization-unit.mapper';
@@ -20,9 +19,7 @@ export class OrganizationUnitMutationResolver {
   async createOrganizationUnit(
     @Args('input') input: CreateOrganizationUnitInput,
   ): Promise<OrganizationUnit> {
-    const organizationUnit = await this.organizationUnitService.create(
-      input,
-    );
+    const organizationUnit = await this.organizationUnitService.create(input);
     return this.organizationUnitMapper.toModelOrThrow(organizationUnit);
   }
 
@@ -44,9 +41,7 @@ export class OrganizationUnitMutationResolver {
   async deleteOrganizationUnit(
     @Args('id') id: string,
   ): Promise<OrganizationUnit> {
-    const organizationUnit = await this.organizationUnitService.delete(
-      id,
-    );
+    const organizationUnit = await this.organizationUnitService.delete(id);
     return this.organizationUnitMapper.toModelOrThrow(organizationUnit);
   }
 }

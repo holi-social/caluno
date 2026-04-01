@@ -8,8 +8,8 @@ import {
 } from 'drizzle-orm/pg-core';
 import { users } from '../../auth/schemas/auth.schema';
 import { idColumn, timestampColumns } from '../../database/database-columns';
-import { ShiftVisibility } from '../enums';
 import { organizationUnits } from '../../organization/schemas/organization-unit.schema';
+import { ShiftVisibility } from '../enums';
 
 export const shiftVisibilityEnum = pgEnum(
   'shift_visibility',

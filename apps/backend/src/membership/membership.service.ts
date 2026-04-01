@@ -142,7 +142,10 @@ export class MembershipService {
           .where(
             and(
               eq(schema.membershipRequests.id, id),
-              eq(schema.membershipRequests.organizationUnitId, organizationUnitId),
+              eq(
+                schema.membershipRequests.organizationUnitId,
+                organizationUnitId,
+              ),
               eq(
                 schema.membershipRequests.status,
                 MembershipRequestStatus.PENDING,

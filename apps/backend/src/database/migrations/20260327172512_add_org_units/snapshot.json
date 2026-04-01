@@ -2,36 +2,22 @@
   "version": "8",
   "dialect": "postgres",
   "id": "67cc65ee-33bf-4853-b668-97b214227b43",
-  "prevIds": [
-    "25f05376-d4b1-40cf-869e-3233457619fa"
-  ],
+  "prevIds": ["25f05376-d4b1-40cf-869e-3233457619fa"],
   "ddl": [
     {
-      "values": [
-        "PENDING",
-        "ACCEPTED",
-        "REJECTED",
-        "CANCELLED"
-      ],
+      "values": ["PENDING", "ACCEPTED", "REJECTED", "CANCELLED"],
       "name": "membership_request_status",
       "entityType": "enums",
       "schema": "public"
     },
     {
-      "values": [
-        "INVITED_MEMBERS",
-        "ALL_MEMBERS"
-      ],
+      "values": ["INVITED_MEMBERS", "ALL_MEMBERS"],
       "name": "shift_visibility",
       "entityType": "enums",
       "schema": "public"
     },
     {
-      "values": [
-        "PENDING",
-        "ACCEPTED",
-        "REJECTED"
-      ],
+      "values": ["PENDING", "ACCEPTED", "REJECTED"],
       "name": "shift_invite_status",
       "entityType": "enums",
       "schema": "public"
@@ -2304,14 +2290,10 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "user_id"
-      ],
+      "columns": ["user_id"],
       "schemaTo": "public",
       "tableTo": "users",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "CASCADE",
       "name": "accounts_user_id_users_id_fk",
@@ -2321,14 +2303,10 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "user_id"
-      ],
+      "columns": ["user_id"],
       "schemaTo": "public",
       "tableTo": "users",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "CASCADE",
       "name": "sessions_user_id_users_id_fk",
@@ -2338,14 +2316,10 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "organization_unit_id"
-      ],
+      "columns": ["organization_unit_id"],
       "schemaTo": "public",
       "tableTo": "organization_units",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "RESTRICT",
       "name": "roles_organization_unit_id_organization_units_id_fkey",
@@ -2355,14 +2329,10 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "organization_id"
-      ],
+      "columns": ["organization_id"],
       "schemaTo": "public",
       "tableTo": "organizations",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "RESTRICT",
       "name": "roles_organization_id_organizations_id_fkey",
@@ -2372,14 +2342,10 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "role_id"
-      ],
+      "columns": ["role_id"],
       "schemaTo": "public",
       "tableTo": "roles",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "CASCADE",
       "name": "role_permissions_role_id_roles_id_fkey",
@@ -2389,14 +2355,10 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "permission_id"
-      ],
+      "columns": ["permission_id"],
       "schemaTo": "public",
       "tableTo": "permissions",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "CASCADE",
       "name": "role_permissions_permission_id_permissions_id_fkey",
@@ -2406,14 +2368,10 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "user_id"
-      ],
+      "columns": ["user_id"],
       "schemaTo": "public",
       "tableTo": "users",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "CASCADE",
       "name": "memberships_user_id_users_id_fk",
@@ -2423,14 +2381,10 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "role_id"
-      ],
+      "columns": ["role_id"],
       "schemaTo": "public",
       "tableTo": "roles",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "RESTRICT",
       "name": "memberships_role_id_roles_id_fkey",
@@ -2440,14 +2394,10 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "user_id"
-      ],
+      "columns": ["user_id"],
       "schemaTo": "public",
       "tableTo": "users",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "CASCADE",
       "name": "membership_requests_user_id_users_id_fkey",
@@ -2457,14 +2407,10 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "organization_unit_id"
-      ],
+      "columns": ["organization_unit_id"],
       "schemaTo": "public",
       "tableTo": "organization_units",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "CASCADE",
       "name": "membership_requests_JnW42Hb2WNYu_fkey",
@@ -2474,14 +2420,10 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "reviewed_by_user_id"
-      ],
+      "columns": ["reviewed_by_user_id"],
       "schemaTo": "public",
       "tableTo": "users",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "CASCADE",
       "name": "membership_requests_reviewed_by_user_id_users_id_fkey",
@@ -2491,14 +2433,10 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "organization_id"
-      ],
+      "columns": ["organization_id"],
       "schemaTo": "public",
       "tableTo": "organizations",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "CASCADE",
       "name": "organization_units_organization_id_organizations_id_fkey",
@@ -2508,14 +2446,10 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "parent_id"
-      ],
+      "columns": ["parent_id"],
       "schemaTo": "public",
       "tableTo": "organization_units",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "CASCADE",
       "name": "organization_units_parent_id_organization_units_id_fkey",
@@ -2525,14 +2459,10 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "type_id"
-      ],
+      "columns": ["type_id"],
       "schemaTo": "public",
       "tableTo": "organization_unit_types",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "RESTRICT",
       "name": "organization_units_type_id_organization_unit_types_id_fkey",
@@ -2542,16 +2472,10 @@
     },
     {
       "nameExplicit": true,
-      "columns": [
-        "organization_id",
-        "parent_id"
-      ],
+      "columns": ["organization_id", "parent_id"],
       "schemaTo": "public",
       "tableTo": "organization_units",
-      "columnsTo": [
-        "organization_id",
-        "id"
-      ],
+      "columnsTo": ["organization_id", "id"],
       "onUpdate": "NO ACTION",
       "onDelete": "CASCADE",
       "name": "fk_organization_units_parent_same_organization",
@@ -2561,14 +2485,10 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "organization_unit_id"
-      ],
+      "columns": ["organization_unit_id"],
       "schemaTo": "public",
       "tableTo": "organization_units",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "CASCADE",
       "name": "shifts_organization_unit_id_organization_units_id_fkey",
@@ -2578,14 +2498,10 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "created_by_id"
-      ],
+      "columns": ["created_by_id"],
       "schemaTo": "public",
       "tableTo": "users",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "RESTRICT",
       "name": "shifts_created_by_id_users_id_fk",
@@ -2595,14 +2511,10 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "shift_id"
-      ],
+      "columns": ["shift_id"],
       "schemaTo": "public",
       "tableTo": "shifts",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "RESTRICT",
       "name": "shift_invites_shift_id_shifts_id_fk",
@@ -2612,14 +2524,10 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "user_id"
-      ],
+      "columns": ["user_id"],
       "schemaTo": "public",
       "tableTo": "users",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "RESTRICT",
       "name": "shift_invites_user_id_users_id_fk",
@@ -2629,14 +2537,10 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "shift_id"
-      ],
+      "columns": ["shift_id"],
       "schemaTo": "public",
       "tableTo": "shifts",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "RESTRICT",
       "name": "time_entries_shift_id_shifts_id_fkey",
@@ -2646,14 +2550,10 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "volunteer_id"
-      ],
+      "columns": ["volunteer_id"],
       "schemaTo": "public",
       "tableTo": "users",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "RESTRICT",
       "name": "time_entries_volunteer_id_users_id_fkey",
@@ -2662,9 +2562,7 @@
       "table": "time_entries"
     },
     {
-      "columns": [
-        "id"
-      ],
+      "columns": ["id"],
       "nameExplicit": false,
       "name": "accounts_pkey",
       "schema": "public",
@@ -2672,9 +2570,7 @@
       "entityType": "pks"
     },
     {
-      "columns": [
-        "id"
-      ],
+      "columns": ["id"],
       "nameExplicit": false,
       "name": "sessions_pkey",
       "schema": "public",
@@ -2682,9 +2578,7 @@
       "entityType": "pks"
     },
     {
-      "columns": [
-        "id"
-      ],
+      "columns": ["id"],
       "nameExplicit": false,
       "name": "users_pkey",
       "schema": "public",
@@ -2692,9 +2586,7 @@
       "entityType": "pks"
     },
     {
-      "columns": [
-        "id"
-      ],
+      "columns": ["id"],
       "nameExplicit": false,
       "name": "verifications_pkey",
       "schema": "public",
@@ -2702,9 +2594,7 @@
       "entityType": "pks"
     },
     {
-      "columns": [
-        "id"
-      ],
+      "columns": ["id"],
       "nameExplicit": false,
       "name": "permissions_pkey",
       "schema": "public",
@@ -2712,9 +2602,7 @@
       "entityType": "pks"
     },
     {
-      "columns": [
-        "id"
-      ],
+      "columns": ["id"],
       "nameExplicit": false,
       "name": "roles_pkey",
       "schema": "public",
@@ -2722,9 +2610,7 @@
       "entityType": "pks"
     },
     {
-      "columns": [
-        "id"
-      ],
+      "columns": ["id"],
       "nameExplicit": false,
       "name": "role_permissions_pkey",
       "schema": "public",
@@ -2732,9 +2618,7 @@
       "entityType": "pks"
     },
     {
-      "columns": [
-        "id"
-      ],
+      "columns": ["id"],
       "nameExplicit": false,
       "name": "memberships_pkey",
       "schema": "public",
@@ -2742,9 +2626,7 @@
       "entityType": "pks"
     },
     {
-      "columns": [
-        "id"
-      ],
+      "columns": ["id"],
       "nameExplicit": false,
       "name": "membership_requests_pkey",
       "schema": "public",
@@ -2752,9 +2634,7 @@
       "entityType": "pks"
     },
     {
-      "columns": [
-        "id"
-      ],
+      "columns": ["id"],
       "nameExplicit": false,
       "name": "organizations_pkey",
       "schema": "public",
@@ -2762,9 +2642,7 @@
       "entityType": "pks"
     },
     {
-      "columns": [
-        "id"
-      ],
+      "columns": ["id"],
       "nameExplicit": false,
       "name": "organization_units_pkey",
       "schema": "public",
@@ -2772,9 +2650,7 @@
       "entityType": "pks"
     },
     {
-      "columns": [
-        "id"
-      ],
+      "columns": ["id"],
       "nameExplicit": false,
       "name": "organization_unit_types_pkey",
       "schema": "public",
@@ -2782,9 +2658,7 @@
       "entityType": "pks"
     },
     {
-      "columns": [
-        "id"
-      ],
+      "columns": ["id"],
       "nameExplicit": false,
       "name": "shifts_pkey",
       "schema": "public",
@@ -2792,9 +2666,7 @@
       "entityType": "pks"
     },
     {
-      "columns": [
-        "id"
-      ],
+      "columns": ["id"],
       "nameExplicit": false,
       "name": "shift_invites_pkey",
       "schema": "public",
@@ -2802,9 +2674,7 @@
       "entityType": "pks"
     },
     {
-      "columns": [
-        "id"
-      ],
+      "columns": ["id"],
       "nameExplicit": false,
       "name": "time_entries_pkey",
       "schema": "public",
@@ -2813,10 +2683,7 @@
     },
     {
       "nameExplicit": true,
-      "columns": [
-        "name",
-        "organization_unit_id"
-      ],
+      "columns": ["name", "organization_unit_id"],
       "nullsNotDistinct": false,
       "name": "uq_roles_name_organization_unit_id",
       "entityType": "uniques",
@@ -2825,10 +2692,7 @@
     },
     {
       "nameExplicit": true,
-      "columns": [
-        "name",
-        "organization_id"
-      ],
+      "columns": ["name", "organization_id"],
       "nullsNotDistinct": false,
       "name": "uq_roles_name_organization_id",
       "entityType": "uniques",
@@ -2837,10 +2701,7 @@
     },
     {
       "nameExplicit": true,
-      "columns": [
-        "role_id",
-        "permission_id"
-      ],
+      "columns": ["role_id", "permission_id"],
       "nullsNotDistinct": false,
       "name": "uq_role_permissions_role_id_permission_id",
       "entityType": "uniques",
@@ -2849,10 +2710,7 @@
     },
     {
       "nameExplicit": true,
-      "columns": [
-        "user_id",
-        "organization_unit_id"
-      ],
+      "columns": ["user_id", "organization_unit_id"],
       "nullsNotDistinct": false,
       "name": "uq_membership_requests_user_id_organization_unit_id",
       "entityType": "uniques",
@@ -2861,10 +2719,7 @@
     },
     {
       "nameExplicit": true,
-      "columns": [
-        "organization_id",
-        "slug"
-      ],
+      "columns": ["organization_id", "slug"],
       "nullsNotDistinct": false,
       "name": "uq_organization_units_organization_id_slug",
       "entityType": "uniques",
@@ -2873,10 +2728,7 @@
     },
     {
       "nameExplicit": true,
-      "columns": [
-        "organization_id",
-        "id"
-      ],
+      "columns": ["organization_id", "id"],
       "nullsNotDistinct": false,
       "name": "uq_organization_units_organization_id_id",
       "entityType": "uniques",
@@ -2885,10 +2737,7 @@
     },
     {
       "nameExplicit": true,
-      "columns": [
-        "shift_id",
-        "user_id"
-      ],
+      "columns": ["shift_id", "user_id"],
       "nullsNotDistinct": false,
       "name": "uq_shift_invites_shift_id_user_id",
       "entityType": "uniques",
@@ -2897,9 +2746,7 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "token"
-      ],
+      "columns": ["token"],
       "nullsNotDistinct": false,
       "name": "sessions_token_unique",
       "schema": "public",
@@ -2908,9 +2755,7 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "email"
-      ],
+      "columns": ["email"],
       "nullsNotDistinct": false,
       "name": "users_email_unique",
       "schema": "public",
@@ -2919,9 +2764,7 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "check_in_id"
-      ],
+      "columns": ["check_in_id"],
       "nullsNotDistinct": false,
       "name": "users_check_in_id_key",
       "schema": "public",
@@ -2930,9 +2773,7 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "key"
-      ],
+      "columns": ["key"],
       "nullsNotDistinct": false,
       "name": "permissions_key_key",
       "schema": "public",
@@ -2941,9 +2782,7 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "slug"
-      ],
+      "columns": ["slug"],
       "nullsNotDistinct": false,
       "name": "organizations_slug_unique",
       "schema": "public",
@@ -2952,9 +2791,7 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "slug"
-      ],
+      "columns": ["slug"],
       "nullsNotDistinct": false,
       "name": "organization_units_slug_key",
       "schema": "public",
@@ -2963,9 +2800,7 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "slug"
-      ],
+      "columns": ["slug"],
       "nullsNotDistinct": false,
       "name": "shifts_slug_unique",
       "schema": "public",

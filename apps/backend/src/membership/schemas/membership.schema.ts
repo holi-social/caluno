@@ -1,10 +1,7 @@
-import { sql } from 'drizzle-orm';
-import { check, index, pgTable, text, unique, uuid } from 'drizzle-orm/pg-core';
+import { index, pgTable, text, uuid } from 'drizzle-orm/pg-core';
 import { users } from '../../auth/schemas/auth.schema';
 import { roles } from '../../auth/schemas/role.schema';
 import { idColumn, timestampColumns } from '../../database/database-columns';
-import { organizations } from '../../organization/schemas/organization.schema';
-import { organizationUnits } from '../../organization/schemas/organization-unit.schema';
 
 export const memberships = pgTable(
   'memberships',
