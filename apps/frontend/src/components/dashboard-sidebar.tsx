@@ -155,7 +155,7 @@ export function DashboardSidebar({ permissions }: DashboardSidebarProps) {
           className="w-full justify-start"
           onClick={handleSignOut}
         >
-          <LogOutIcon className="mr-2 h-4 w-4" />
+          <LogOutIcon className="mr-2" />
           Sign Out
         </Button>
       </SidebarFooter>

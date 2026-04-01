@@ -56,8 +56,8 @@ export function CreateShiftSheet({ trigger }: CreateShiftSheetProps) {
       <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
         <SheetTrigger asChild>
           {trigger || (
-            <Button>
-              <PlusIcon className="mr-2 h-4 w-4" />
+            <Button size="lg">
+              <PlusIcon className="mr-2" />
               Create Shift
             </Button>
           )}

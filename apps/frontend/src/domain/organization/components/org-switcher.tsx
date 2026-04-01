@@ -50,12 +50,12 @@ export function OrgSwitcher() {
           className="w-full justify-between"
         >
           <span className="flex items-center gap-2 truncate">
-            <Building2 className="h-4 w-4 shrink-0" />
+            <Building2 className="shrink-0" />
             <span className="truncate">
               {currentOrg?.name || 'Select organization'}
             </span>
           </span>
-          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+          <ChevronsUpDown className="ml-2 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
       <PopoverContent className="p-0" align="start">
