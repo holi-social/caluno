@@ -38,6 +38,29 @@ const PERMISSION_NAMES: Record<
   [PERMISSIONS.TIME_ENTRY_READ]: 'Read time entry',
   [PERMISSIONS.TIME_ENTRY_UPDATE]: 'Update time entry',
   [PERMISSIONS.TIME_ENTRY_DELETE]: 'Delete time entry',
+  [PERMISSIONS.REQUIREMENT_PROFILE_CREATE]: 'Create requirement profile',
+  [PERMISSIONS.REQUIREMENT_PROFILE_READ]: 'Read requirement profile',
+  [PERMISSIONS.REQUIREMENT_PROFILE_UPDATE]: 'Update requirement profile',
+  [PERMISSIONS.REQUIREMENT_PROFILE_DELETE]: 'Delete requirement profile',
+  [PERMISSIONS.REQUIREMENT_CREATE]: 'Create requirement',
+  [PERMISSIONS.REQUIREMENT_READ]: 'Read requirement',
+  [PERMISSIONS.REQUIREMENT_UPDATE]: 'Update requirement',
+  [PERMISSIONS.REQUIREMENT_DELETE]: 'Delete requirement',
+  [PERMISSIONS.REQUIREMENT_PROFILE_SUBMISSION_CREATE]:
+    'Create requirement profile submission',
+  [PERMISSIONS.REQUIREMENT_PROFILE_SUBMISSION_READ]:
+    'Read requirement profile submission',
+  [PERMISSIONS.REQUIREMENT_PROFILE_SUBMISSION_UPDATE]:
+    'Update requirement profile submission',
+  [PERMISSIONS.REQUIREMENT_PROFILE_SUBMISSION_DELETE]:
+    'Delete requirement profile submission',
+  [PERMISSIONS.REQUIREMENT_FULFILLMENT_CREATE]:
+    'Create requirement fulfillment',
+  [PERMISSIONS.REQUIREMENT_FULFILLMENT_READ]: 'Read requirement fulfillment',
+  [PERMISSIONS.REQUIREMENT_FULFILLMENT_UPDATE]:
+    'Update requirement fulfillment',
+  [PERMISSIONS.REQUIREMENT_FULFILLMENT_DELETE]:
+    'Delete requirement fulfillment',
 };
 
 async function seed() {
@@ -64,7 +87,9 @@ async function seed() {
       description: permissions.description,
     })
     .from(permissions);
-  const existingByKey = new Map(existing.map((permission) => [permission.key, permission]));
+  const existingByKey = new Map(
+    existing.map((permission) => [permission.key, permission]),
+  );
 
   const insertedKeys = values
     .filter(({ key }) => !existingByKey.has(key))
@@ -82,15 +107,17 @@ async function seed() {
 
   await db.transaction(async (tx) => {
     if (staleKeys.length > 0) {
-      await tx.delete(schema.rolePermissions).where(
-        inArray(
-          schema.rolePermissions.permissionId,
-          tx
-            .select({ id: permissions.id })
-            .from(permissions)
-            .where(inArray(permissions.key, staleKeys)),
-        ),
-      );
+      await tx
+        .delete(schema.rolePermissions)
+        .where(
+          inArray(
+            schema.rolePermissions.permissionId,
+            tx
+              .select({ id: permissions.id })
+              .from(permissions)
+              .where(inArray(permissions.key, staleKeys)),
+          ),
+        );
       await tx.delete(permissions).where(inArray(permissions.key, staleKeys));
       console.log(
         `Removed ${staleKeys.length} stale permissions: ${staleKeys.join(', ')}`,
@@ -109,7 +136,9 @@ async function seed() {
   });
 
   console.log(`Inserted ${insertedKeys.length} new permissions`);
-  console.log(`Updated ${updatedDescriptionKeys.length} permission descriptions`);
+  console.log(
+    `Updated ${updatedDescriptionKeys.length} permission descriptions`,
+  );
   console.log(`Synced ${values.length} permissions in total`);
   await pool.end();
 }

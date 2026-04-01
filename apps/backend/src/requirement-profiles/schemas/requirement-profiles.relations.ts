@@ -1,0 +1,106 @@
+import { defineRelationsPart } from 'drizzle-orm';
+import * as schema from '../../database/schema';
+
+export const requirementProfilesRelations = defineRelationsPart(
+  schema,
+  (r) => ({
+    requirementProfiles: {
+      organization: r.one.organizations({
+        from: r.requirementProfiles.organizationId,
+        to: r.organizations.id,
+      }),
+      requirements: r.many.requirementProfileRequirements({
+        from: r.requirementProfiles.id,
+        to: r.requirementProfileRequirements.profileId,
+      }),
+    },
+    requirements: {
+      organization: r.one.organizations({
+        from: r.requirements.organizationId,
+        to: r.organizations.id,
+      }),
+      profiles: r.many.requirementProfileRequirements({
+        from: r.requirements.id,
+        to: r.requirementProfileRequirements.requirementId,
+      }),
+    },
+    requirementProfileRequirements: {
+      requirementProfile: r.one.requirementProfiles({
+        from: r.requirementProfileRequirements.profileId,
+        to: r.requirementProfiles.id,
+      }),
+      requirement: r.one.requirements({
+        from: r.requirementProfileRequirements.requirementId,
+        to: r.requirements.id,
+      }),
+    },
+    requirementProfileSubmissions: {
+      requirementProfile: r.one.requirementProfiles({
+        from: r.requirementProfileSubmissions.profileId,
+        to: r.requirementProfiles.id,
+      }),
+      membership: r.one.memberships({
+        from: r.requirementProfileSubmissions.membershipId,
+        to: r.memberships.id,
+      }),
+      membershipRequest: r.one.membershipRequests({
+        from: r.requirementProfileSubmissions.requestId,
+        to: r.membershipRequests.id,
+      }),
+      reviewedBy: r.one.users({
+        from: r.requirementProfileSubmissions.reviewedById,
+        to: r.users.id,
+      }),
+      fulfillments: r.many.requirementFulfillments({
+        from: r.requirementProfileSubmissions.id,
+        to: r.requirementFulfillments.submissionId,
+      }),
+    },
+    requirementFulfillments: {
+      submission: r.one.requirementProfileSubmissions({
+        from: r.requirementFulfillments.submissionId,
+        to: r.requirementProfileSubmissions.id,
+      }),
+      requirement: r.one.requirements({
+        from: r.requirementFulfillments.requirementId,
+        to: r.requirements.id,
+      }),
+      reviewedBy: r.one.users({
+        from: r.requirementFulfillments.reviewedById,
+        to: r.users.id,
+      }),
+      profile: r.one.organizationUserProfiles({
+        from: r.requirementFulfillments.profileId,
+        to: r.organizationUserProfiles.id,
+      }),
+      document: r.one.documents({
+        from: r.requirementFulfillments.documentId,
+        to: r.documents.id,
+      }),
+    },
+    organizationUserProfiles: {
+      organization: r.one.organizations({
+        from: r.organizationUserProfiles.organizationId,
+        to: r.organizations.id,
+      }),
+      user: r.one.users({
+        from: r.organizationUserProfiles.userId,
+        to: r.users.id,
+      }),
+      fulfillments: r.many.requirementFulfillments({
+        from: r.organizationUserProfiles.id,
+        to: r.requirementFulfillments.profileId,
+      }),
+    },
+    documents: {
+      user: r.one.users({
+        from: r.documents.userId,
+        to: r.users.id,
+      }),
+      fulfillments: r.many.requirementFulfillments({
+        from: r.documents.id,
+        to: r.requirementFulfillments.documentId,
+      }),
+    },
+  }),
+);

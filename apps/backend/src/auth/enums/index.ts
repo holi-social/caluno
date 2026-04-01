@@ -34,4 +34,24 @@ export enum PermissionKey {
   TIME_ENTRY_READ = 'time-entry:read',
   TIME_ENTRY_UPDATE = 'time-entry:update',
   TIME_ENTRY_DELETE = 'time-entry:delete',
+
+  REQUIREMENT_PROFILE_CREATE = 'requirement-profile:create',
+  REQUIREMENT_PROFILE_READ = 'requirement-profile:read',
+  REQUIREMENT_PROFILE_UPDATE = 'requirement-profile:update',
+  REQUIREMENT_PROFILE_DELETE = 'requirement-profile:delete',
+
+  REQUIREMENT_CREATE = 'requirement:create',
+  REQUIREMENT_READ = 'requirement:read',
+  REQUIREMENT_UPDATE = 'requirement:update',
+  REQUIREMENT_DELETE = 'requirement:delete',
+
+  REQUIREMENT_PROFILE_SUBMISSION_CREATE = 'requirement-profile-submission:create',
+  REQUIREMENT_PROFILE_SUBMISSION_READ = 'requirement-profile-submission:read',
+  REQUIREMENT_PROFILE_SUBMISSION_UPDATE = 'requirement-profile-submission:update',
+  REQUIREMENT_PROFILE_SUBMISSION_DELETE = 'requirement-profile-submission:delete',
+
+  REQUIREMENT_FULFILLMENT_CREATE = 'requirement-fulfillment:create',
+  REQUIREMENT_FULFILLMENT_READ = 'requirement-fulfillment:read',
+  REQUIREMENT_FULFILLMENT_UPDATE = 'requirement-fulfillment:update',
+  REQUIREMENT_FULFILLMENT_DELETE = 'requirement-fulfillment:delete',
 }
