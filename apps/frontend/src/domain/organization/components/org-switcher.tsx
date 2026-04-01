@@ -47,7 +47,7 @@ export function OrgSwitcher() {
           variant="outline"
           role="combobox"
           aria-expanded={open}
-          className="w-full justify-between"
+          className="w-full justify-between px-3!"
         >
           <span className="flex items-center gap-2 truncate">
             <Building2 className="shrink-0" />
