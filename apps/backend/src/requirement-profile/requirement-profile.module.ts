@@ -63,4 +63,4 @@ import { DocumentMapper } from './mappers/document.mapper';
     RequirementFulfillmentService,
   ],
 })
-export class RequirementProfilesModule {}
+export class RequirementProfileModule {}
