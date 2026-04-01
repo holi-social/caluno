@@ -13,7 +13,7 @@ import { shiftShareUrl } from '../share';
 type ActionBarProps = {
   id: string;
   organizationUnitId: string;
-  size?: 'xs' | 'sm' | 'lg';
+  size?: 'xs' | 'sm' | 'md';
   hideEdit?: boolean;
 };
 

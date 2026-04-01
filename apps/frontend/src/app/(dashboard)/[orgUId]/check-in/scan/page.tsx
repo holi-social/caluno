@@ -21,7 +21,7 @@ export default async function ScanPage({ params }: ScanPageProps) {
   return (
     <div className="max-w-2xl">
       <div>
-        <h1 className="text-3xl font-bold">Check-in/out</h1>
+        <h1 className="page-title">Check-in/out</h1>
         <p className="text-muted-foreground">
           Scan the volunteers QR iD to check them in or out
         </p>

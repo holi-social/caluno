@@ -36,7 +36,7 @@ export default function HomePage() {
               router.push('/login');
             }}
           >
-            <LogOut className="h-4 w-4" />
+            <LogOut />
             Logout
           </Button>
         </div>

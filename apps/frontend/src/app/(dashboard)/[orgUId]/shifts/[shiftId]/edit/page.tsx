@@ -21,7 +21,7 @@ export default async function EditShiftPage({ params }: EditShiftPageProps) {
     <div className="max-w-2xl">
       <div className="flex justify-between">
         <div>
-          <h1 className="text-3xl font-bold">Edit Shift</h1>
+          <h1 className="page-title">Edit Shift</h1>
           <p className="text-muted-foreground">
             Edit shift and change volunteer invitations
           </p>

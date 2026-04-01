@@ -27,7 +27,7 @@ export function EditRoleSheet({ role, trigger }: EditRoleSheetProps) {
       <SheetTrigger asChild>
         {trigger || (
           <Button variant="ghost" size="sm">
-            <PencilIcon className="h-4 w-4" />
+            <PencilIcon />
           </Button>
         )}
       </SheetTrigger>

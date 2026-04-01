@@ -57,7 +57,7 @@ export function RolesTable({ roles }: RolesTableProps) {
                       role={role}
                       trigger={
                         <Button variant="ghost" size="sm">
-                          <PencilIcon className="h-4 w-4" />
+                          <PencilIcon />
                         </Button>
                       }
                     />
@@ -69,7 +69,7 @@ export function RolesTable({ roles }: RolesTableProps) {
                       organizationUnitId={orgUId}
                       trigger={
                         <Button variant="ghost" size="sm">
-                          <TrashIcon className="h-4 w-4" />
+                          <TrashIcon />
                         </Button>
                       }
                     />

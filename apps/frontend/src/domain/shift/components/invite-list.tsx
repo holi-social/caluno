@@ -140,7 +140,7 @@ export const InviteList = ({
                     variant="ghost"
                     onClick={() => removeMember(volunteer.id)}
                   >
-                    <X className="size-4" />
+                    <X />
                   </Button>
                 </div>
               </div>
