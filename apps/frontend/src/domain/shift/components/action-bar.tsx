@@ -1,11 +1,12 @@
 'use client';
 
 import { Button } from '@repo/ui';
-import { Edit, Eye, Loader2, Share2, Trash } from 'lucide-react';
+import { Edit, Eye, Loader2, Share2, Trash, UserPlus } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useTransition } from 'react';
 import { toast } from 'sonner';
+import { useSheet } from '@/hooks/use-sheet';
 import { copyToClipboard } from '@/lib/clipboard';
 import { deleteShift } from '../actions';
 import { shiftShareUrl } from '../share';
@@ -25,16 +26,15 @@ export const ActionBar = ({
   hideEdit = false,
 }: ActionBarProps) => {
   const router = useRouter();
-  const [isDeleting, startTransition] = useTransition();
+  const [isDeleting, startDeleteTransition] = useTransition();
+  const editSheet = useSheet('shift', 'id');
+  const inviteSheet = useSheet('invite-shift', 'id');
 
   const buttonSize = `icon-${size}` as const;
 
   const handleDelete = () => {
-    startTransition(async () => {
-      const result = await deleteShift({
-        id,
-        organizationUnitId,
-      });
+    startDeleteTransition(async () => {
+      const result = await deleteShift({ id, organizationUnitId });
       if (result?.serverError) {
         toast.error(`Failed to delete Shift. ${result.serverError}`);
       } else {
@@ -42,10 +42,6 @@ export const ActionBar = ({
         router.push(`/${organizationUnitId}/shifts`);
       }
     });
-  };
-
-  const handleCopyToClipboard = () => {
-    copyToClipboard(shiftShareUrl(id), 'Shift link copied to clipboard');
   };
 
   return (
@@ -57,28 +53,39 @@ export const ActionBar = ({
       </Link>
 
       {!hideEdit && (
-        <Link
-          href={`/${organizationUnitId}/shifts/${id}/edit`}
+        <Button
+          size={buttonSize}
+          variant="outline"
           aria-label="Edit shift"
+          onClick={() => editSheet.open({ id })}
         >
-          <Button size={buttonSize} variant="outline">
-            <Edit />
-          </Button>
-        </Link>
+          <Edit />
+        </Button>
       )}
 
       <Button
         size={buttonSize}
         variant="outline"
+        aria-label="Invite volunteers"
+        onClick={() => inviteSheet.open({ id })}
+      >
+        <UserPlus />
+      </Button>
+
+      <Button
+        size={buttonSize}
+        variant="outline"
         aria-label="Copy shift link to clipboard"
-        onClick={handleCopyToClipboard}
+        onClick={() =>
+          copyToClipboard(shiftShareUrl(id), 'Shift link copied to clipboard')
+        }
       >
         <Share2 />
       </Button>
 
-      <DeleteAlertDialog 
+      <DeleteAlertDialog
         title="Delete shift"
-        description="Are you sure you wish to delete this shift and all it's timesheets?"
+        description="Are you sure you wish to delete this shift and all its timesheets?"
         onDelete={handleDelete}
         trigger={
           <Button
@@ -89,9 +96,8 @@ export const ActionBar = ({
           >
             {isDeleting ? <Loader2 className="animate-spin" /> : <Trash />}
           </Button>
-        } 
+        }
       />
-
     </aside>
   );
 };

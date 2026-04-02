@@ -6,8 +6,11 @@ import {
   SidebarTrigger,
 } from '@repo/ui';
 import type { ReactNode } from 'react';
+import { Suspense } from 'react';
+import { CreateShiftButton } from '@/components/create-shift-button';
 import { DashboardSidebar } from '@/components/dashboard-sidebar';
-import { CreateShiftSheet } from '@/components/sheets/create-shift-sheet';
+import { InviteShiftSheet } from '@/components/sheets/invite-shift-sheet';
+import { ShiftSheet } from '@/components/sheets/shift-sheet';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { OrgSyncProvider } from '@/domain/organization/components/org-sync-provider';
 import { requireAuth } from '@/lib/auth-server';
@@ -23,10 +26,12 @@ interface OrgLayoutProps {
 export default async function OrgLayout({ children, params }: OrgLayoutProps) {
   await requireAuth();
   const { orgUId } = await params;
-  const { org, organizations } = await requireOrgAccess(orgUId);
-
   const data = await getDataClient(orgUId);
-  const userPermissions = await data.user.getMyPermissions();
+
+  const [{ org, organizations }, userPermissions] = await Promise.all([
+    requireOrgAccess(orgUId),
+    data.user.getMyPermissions(),
+  ]);
   const permissionKeys = userPermissions.map((p) => p.key);
 
   return (
@@ -42,7 +47,9 @@ export default async function OrgLayout({ children, params }: OrgLayoutProps) {
                 <div className="flex justify-between gap-2 flex-1">
                   <h1 className="text-lg font-semibold">Clippy</h1>
                   <div className="flex gap-2">
-                    <CreateShiftSheet />
+                    <Suspense fallback={null}>
+                      <CreateShiftButton />
+                    </Suspense>
                     <ThemeToggle />
                   </div>
                 </div>
@@ -50,6 +57,10 @@ export default async function OrgLayout({ children, params }: OrgLayoutProps) {
               <div className="flex flex-1 flex-col gap-4 p-4">{children}</div>
             </SidebarInset>
           </SidebarProvider>
+          <Suspense fallback={null}>
+            <ShiftSheet />
+            <InviteShiftSheet />
+          </Suspense>
         </OrgSyncProvider>
       </DataProvider>
     </OrgProvider>
