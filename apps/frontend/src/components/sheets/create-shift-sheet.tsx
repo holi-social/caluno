@@ -57,7 +57,7 @@ export function CreateShiftSheet({ trigger }: CreateShiftSheetProps) {
         <SheetTrigger asChild>
           {trigger || (
             <Button size="lg">
-              <PlusIcon className="mr-2" />
+              <PlusIcon />
               Create Shift
             </Button>
           )}

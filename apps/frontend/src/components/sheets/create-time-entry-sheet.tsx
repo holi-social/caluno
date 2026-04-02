@@ -39,7 +39,7 @@ export function CreateTimeEntrySheet({
       <SheetTrigger asChild>
         {trigger || (
           <Button>
-            <PlusIcon className="mr-2" />
+            <PlusIcon />
             Add Time Entry
           </Button>
         )}

@@ -25,7 +25,7 @@ export function CreateRoleSheet({ trigger }: CreateRoleSheetProps) {
       <SheetTrigger asChild>
         {trigger || (
           <Button>
-            <PlusIcon className="mr-2" />
+            <PlusIcon />
             Create Role
           </Button>
         )}
