@@ -83,4 +83,16 @@ export class ShiftRepository extends BaseRepository {
       throw DataError.fromGraphQLError(error);
     }
   }
+
+  async inviteMembers(
+    shiftId: string,
+    memberIds: string[],
+  ): Promise<{ id: string }> {
+    try {
+      const data = await this.sdk.InviteShiftVolunteers({ shiftId, memberIds });
+      return { id: data.inviteMembersToShift.id };
+    } catch (error) {
+      throw DataError.fromGraphQLError(error);
+    }
+  }
 }

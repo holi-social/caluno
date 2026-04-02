@@ -12,6 +12,7 @@ export * from './react/hooks/use-membership-request';
 export * from './react/hooks/use-my-permissions';
 export * from './react/hooks/use-organizations';
 export * from './react/hooks/use-roles';
+export * from './react/hooks/use-shift';
 export * from './react/hooks/use-time-entry';
 export * from './react/hooks/use-user';
 // Organization context (provider, hooks, and cookie utilities)

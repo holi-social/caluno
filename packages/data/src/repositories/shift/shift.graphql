@@ -8,6 +8,12 @@ query GetShift($id: String!) {
     startsAt
     endsAt
     visibility
+    maxVolunteers
+    recurrenceRule {
+      id
+      daysOfWeek
+      endsAt
+    }
     volunteers {
       id
       name
@@ -31,6 +37,12 @@ query GetShifts($limit: Int!, $offset: Int!) {
       startsAt
       endsAt
       visibility
+      maxVolunteers
+      recurrenceRule {
+        id
+        daysOfWeek
+        endsAt
+      }
       volunteers {
         id
         name
@@ -74,6 +86,12 @@ mutation UpdateShift($id: String!, $input: UpdateShiftInput!) {
 
 mutation DeleteShift($id: String!) {
   deleteShift(id: $id) {
+    id
+  }
+}
+
+mutation InviteShiftVolunteers($shiftId: String!, $memberIds: [String!]!) {
+  inviteMembersToShift(shiftId: $shiftId, memberIds: $memberIds) {
     id
   }
 }
