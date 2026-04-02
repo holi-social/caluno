@@ -1,5 +1,6 @@
 import {
   index,
+  integer,
   pgEnum,
   pgTable,
   text,
@@ -39,6 +40,7 @@ export const shifts = pgTable(
     visibility: shiftVisibilityEnum('visibility')
       .notNull()
       .default(ShiftVisibility.ALL_MEMBERS),
+    maxVolunteers: integer('max_volunteers'),
     ...timestampColumns,
   },
   (table) => [

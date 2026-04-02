@@ -1,8 +1,9 @@
-import { Field, ID, ObjectType } from '@nestjs/graphql';
+import { Field, ID, Int, ObjectType } from '@nestjs/graphql';
 import { createPaginatedResponseType } from '../../graphql/paginated-response.model';
 import { Organization } from '../../organization/models/organization.model';
 import { User } from '../../user/models/user.model';
 import { ShiftVisibility } from '../enums';
+import { ShiftRecurrenceRule } from './shift-recurrence-rule.model';
 
 @ObjectType()
 export class Shift {
@@ -38,6 +39,12 @@ export class Shift {
 
   @Field(() => ShiftVisibility)
   visibility: ShiftVisibility;
+
+  @Field(() => Int, { nullable: true })
+  maxVolunteers: number | null;
+
+  @Field(() => ShiftRecurrenceRule, { nullable: true })
+  recurrenceRule: ShiftRecurrenceRule | null;
 }
 
 export const ShiftPaginatedResponse = createPaginatedResponseType<Shift>(

@@ -15,5 +15,9 @@ export const shiftRelations = defineRelationsPart(schema, (r) => ({
       from: r.shifts.id,
       to: r.shiftInvites.shiftId,
     }),
+    recurrenceRule: r.one.shiftRecurrenceRules({
+      from: r.shifts.id,
+      to: r.shiftRecurrenceRules.shiftId,
+    }),
   },
 }));

@@ -9,4 +9,5 @@ export * from '../organization/schemas/organization-unit.schema';
 export * from '../organization/schemas/organization-unit-type.schema';
 export * from '../shift/schemas/shift.schema';
 export * from '../shift/schemas/shift-invite.schema';
+export * from '../shift/schemas/shift-recurrence-rule.schema';
 export * from '../time-tracking/schemas/time-entry.schema';
