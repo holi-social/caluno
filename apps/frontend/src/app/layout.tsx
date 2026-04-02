@@ -35,8 +35,10 @@ export default function RootLayout({
       <body
         className={`${geologica.variable} ${merriweather.variable} ${sourceCodePro.variable} antialiased`}
       >
-        <Toaster />
-        <ThemeProvider>{children}</ThemeProvider>
+        <ThemeProvider>
+          {children}
+          <Toaster />
+        </ThemeProvider>
       </body>
     </html>
   );
