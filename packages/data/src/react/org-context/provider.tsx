@@ -8,6 +8,7 @@ export interface OrganizationData {
   name: string;
   description?: string | null;
   logoUrl?: string | null;
+  address?: string | null;
 }
 
 interface OrgContextValue {
