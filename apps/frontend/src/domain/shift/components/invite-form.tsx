@@ -24,6 +24,10 @@ export function InviteShiftForm({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (memberIds.length === 0) {
+      onSuccess?.();
+      return;
+    }
     setServerError(null);
     startTransition(async () => {
       const result = await inviteShiftVolunteers({
@@ -62,7 +66,7 @@ export function InviteShiftForm({
           </Button>
         )}
         <Button type="submit" disabled={isPending}>
-          {isPending ? 'Inviting...' : 'Invite volunteers'}
+          {isPending ? 'Inviting...' : memberIds.length === 0 ? 'Skip' : 'Invite volunteers'}
         </Button>
       </div>
     </form>
