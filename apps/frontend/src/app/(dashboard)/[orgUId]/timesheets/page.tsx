@@ -15,13 +15,10 @@ export default async function TimesheetsPage({ params }: TimesheetsPageProps) {
   const { org } = await requireOrgAccess(orgUId);
   const data = await getDataClient(orgUId);
 
-  const timeEntries = await data.timeEntry.findAll();
-
-  // Fetch available shifts with volunteers
-  const { shifts, allVolunteers } = await getAvailableShiftsWithVolunteers(
-    orgUId,
-    org.organizationId,
-  );
+  const [timeEntries, { shifts, allVolunteers }] = await Promise.all([
+    data.timeEntry.findAll(),
+    getAvailableShiftsWithVolunteers(orgUId, org.organizationId),
+  ]);
 
   const hasTimeEntries = timeEntries.pagination.total > 0;
 

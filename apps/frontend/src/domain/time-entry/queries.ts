@@ -9,9 +9,10 @@ export async function getAvailableShiftsWithVolunteers(
   const data = await getDataClient(organizationUnitId);
 
   try {
-    const shifts = await data.shift.findAllForTimeEntryCreation();
-    const allVolunteers =
-      await data.organization.findVolunteers(organizationId);
+    const [shifts, allVolunteers] = await Promise.all([
+      data.shift.findAllForTimeEntryCreation(),
+      data.organization.findVolunteers(organizationId),
+    ]);
 
     return {
       shifts: shifts.map((shift) => ({

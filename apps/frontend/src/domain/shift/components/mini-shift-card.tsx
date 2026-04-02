@@ -1,5 +1,3 @@
-'use client';
-
 import { Card, CardContent, CardHeader, CardTitle } from '@repo/ui';
 import { Clock } from 'lucide-react';
 import { formatRange } from '@/lib/formatting';
