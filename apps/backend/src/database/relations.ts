@@ -4,6 +4,7 @@ import { membershipRequestRelations } from '../membership/schemas/membership-req
 import { organizationRelations } from '../organization/schemas/organization.relations';
 import { shiftRelations } from '../shift/schemas/shift.relations';
 import { shiftInviteRelations } from '../shift/schemas/shift-invite.relations';
+import { shiftRecurrenceRuleRelations } from '../shift/schemas/shift-recurrence-rule.relations';
 import { timeEntryRelations } from '../time-tracking/schemas/time-entry.relations';
 
 export const relations = {
@@ -13,5 +14,6 @@ export const relations = {
   ...organizationRelations,
   ...shiftRelations,
   ...shiftInviteRelations,
+  ...shiftRecurrenceRuleRelations,
   ...timeEntryRelations,
 };

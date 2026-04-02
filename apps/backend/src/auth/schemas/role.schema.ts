@@ -1,7 +1,5 @@
-import { sql } from 'drizzle-orm';
 import {
   boolean,
-  check,
   index,
   pgTable,
   text,
@@ -9,7 +7,6 @@ import {
   uuid,
 } from 'drizzle-orm/pg-core';
 import { idColumn, timestampColumns } from '../../database/database-columns';
-import { organizations } from '../../organization/schemas/organization.schema';
 import { organizationUnits } from '../../organization/schemas/organization-unit.schema';
 
 export const roles = pgTable(
