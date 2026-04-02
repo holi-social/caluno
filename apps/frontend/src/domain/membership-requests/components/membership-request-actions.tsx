@@ -97,7 +97,7 @@ export function MembershipRequestActions({
         onClick={handleApprove}
         disabled={approveMutation.isPending}
       >
-        <CheckIcon className="mr-1" />
+        <CheckIcon />
         Approve
       </Button>
 
@@ -106,7 +106,7 @@ export function MembershipRequestActions({
         size="sm"
         onClick={() => setIsRejectDialogOpen(true)}
       >
-        <XIcon className="mr-1" />
+        <XIcon />
         Reject
       </Button>
 
