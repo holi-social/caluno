@@ -1,0 +1,157 @@
+import { Badge, Card, CardContent, CardHeader, CardTitle } from '@repo/ui';
+import {
+  Calendar,
+  CalendarFold,
+  Clock,
+  FileText,
+  LockKeyholeOpen,
+  MapPin,
+  User,
+} from 'lucide-react';
+import { notFound } from 'next/navigation';
+import { UserCard } from '@/components/user-card';
+import { ActionBar } from '@/domain/shift/components/action-bar';
+import { getDataClient } from '@/lib/data-client';
+import { formatDateTime, formatRange } from '@/lib/formatting';
+
+interface ShiftViewPageProps {
+  params: Promise<{ orgUId: string; shiftId: string }>;
+}
+
+const visibilityConfig = {
+  ALL_MEMBERS: { variant: 'outline' as const, label: 'Open to all' },
+  INVITED_MEMBERS: { variant: 'secondary' as const, label: 'Invite only' },
+};
+
+export default async function ShiftViewPage({ params }: ShiftViewPageProps) {
+  const { orgUId, shiftId } = await params;
+
+  const data = await getDataClient(orgUId);
+  const shift = await data.shift.findById(shiftId);
+
+  if (!shift) {
+    notFound();
+  }
+
+  const startsAt = new Date(shift.originalStartsAt);
+  const endsAt = new Date(startsAt.getTime() + shift.durationMinutes * 60000);
+
+  const isFinished = new Date() > endsAt;
+  const volunteers = shift.volunteers ?? [];
+
+  return (
+    <div className="space-y-6">
+      <div className="flex justify-between">
+        <div>
+          <h1 className="page-title">{shift.title}</h1>
+          <p className="text-muted-foreground mt-1">
+            Shift details and volunteers
+          </p>
+        </div>
+        <ActionBar id={shiftId} organizationUnitId={orgUId} size="sm" />
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="md:col-span-2 space-y-6">
+          <Card>
+            <CardContent>
+              <ul className="space-y-4">
+                <li className="flex gap-2">
+                  <Calendar className="text-muted-foreground shrink-0" />
+                  <span>{formatRange(startsAt, endsAt)}</span>
+                </li>
+                {shift.location && (
+                  <li className="flex gap-2">
+                    <MapPin className="text-muted-foreground shrink-0" />
+                    <span>{shift.location}</span>
+                  </li>
+                )}
+                {shift.instructions && (
+                  <li className="flex gap-2">
+                    <FileText className="text-muted-foreground shrink-0" />
+                    <span className="whitespace-pre-wrap">
+                      {shift.instructions}
+                    </span>
+                  </li>
+                )}
+              </ul>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>
+                Volunteers <Badge variant="outline">{volunteers.length}</Badge>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {volunteers.length > 0 ? (
+                <ul className="space-y-2">
+                  {volunteers.map((v) => (
+                    <li key={v.id}>
+                      <UserCard user={v} />
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="text-sm text-muted-foreground">
+                  No invited volunteers
+                </p>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+
+        <aside>
+          <Card>
+            <CardContent>
+              <dl className="space-y-4">
+                <div>
+                  <dt className="text-muted-foreground mb-2 flex gap-2 items-center">
+                    <LockKeyholeOpen className="size-4 shrink-0" /> Visibility
+                  </dt>
+                  <dd className="ml-6">
+                    <Badge variant={visibilityConfig[shift.visibility].variant}>
+                      {visibilityConfig[shift.visibility].label}
+                    </Badge>
+                  </dd>
+                </div>
+
+                <div>
+                  <dt className="text-muted-foreground mb-2 flex gap-2 items-center">
+                    <CalendarFold className="size-4 shrink-0" /> Status
+                  </dt>
+                  <dd className="ml-6">
+                    {isFinished ? (
+                      <Badge variant="secondary">Finished</Badge>
+                    ) : (
+                      <Badge variant="success">Active</Badge>
+                    )}
+                  </dd>
+                </div>
+
+                <div>
+                  <dt className="text-muted-foreground mb-2 flex gap-2 items-center">
+                    <User className="size-4 shrink-0" /> Created by
+                  </dt>
+                  <dd className="ml-6">
+                    <UserCard user={shift.createdBy} size="sm" hideEmail />
+                  </dd>
+                </div>
+
+                <div>
+                  <dt className="text-muted-foreground mb-2 flex gap-2 items-center">
+                    <Clock className="size-4 shrink-0" /> Created
+                  </dt>
+                  <dd className="ml-6">
+                    {formatDateTime(new Date(shift.createdAt))}
+                  </dd>
+                </div>
+              </dl>
+            </CardContent>
+          </Card>
+        </aside>
+      </div>
+    </div>
+  );
+}

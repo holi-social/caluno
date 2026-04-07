@@ -9,6 +9,7 @@ import {
   TableHeader,
   TableRow,
 } from '@repo/ui';
+import Link from 'next/link';
 import { formatRange } from '@/lib/formatting';
 import { ActionBar } from './action-bar';
 
@@ -46,7 +47,14 @@ export function ShiftsTable({ shifts, orgUId }: ShiftsTableProps) {
 
             return (
               <TableRow key={shift.id}>
-                <TableCell>{shift.title}</TableCell>
+                <TableCell>
+                  <Link
+                    className="hover:underline block"
+                    href={`/${orgUId}/shifts/${shift.id}`}
+                  >
+                    {shift.title}
+                  </Link>
+                </TableCell>
                 <TableCell className="text-muted-foreground">
                   {formatRange(shift.originalStartsAt, endDate.toISOString())}
                 </TableCell>

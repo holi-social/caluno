@@ -241,6 +241,7 @@ type Role {
 }
 
 type Shift {
+  createdAt: DateTime!
   createdBy: User!
   durationMinutes: Int!
   id: ID!
