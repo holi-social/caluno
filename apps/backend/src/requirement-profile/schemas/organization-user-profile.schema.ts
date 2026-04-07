@@ -33,14 +33,7 @@ export const organizationUserProfiles = pgTable(
     status: organizationUserProfileStatusEnum('status')
       .notNull()
       .default(OrganizationUserProfileStatus.PENDING),
-    /**
-     * TODO: These are just placeholders for now. We need to decide how to handle this.
-     */
-    canAccessPhoneNumber: boolean('can_access_phone_number')
-      .notNull()
-      .default(false),
-    canAccessAddress: boolean('can_access_address').notNull().default(false),
-    canAccessBankAccountNumber: boolean('can_access_bank_account_number')
+    userProfileAccessApproved: boolean('user_profile_access_approved')
       .notNull()
       .default(false),
     note: text('note'),

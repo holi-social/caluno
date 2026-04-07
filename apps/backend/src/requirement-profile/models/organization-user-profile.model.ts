@@ -10,13 +10,7 @@ export class OrganizationUserProfile {
   status: OrganizationUserProfileStatus;
 
   @Field(() => Boolean)
-  canAccessPhoneNumber: boolean;
-
-  @Field(() => Boolean)
-  canAccessAddress: boolean;
-
-  @Field(() => Boolean)
-  canAccessBankAccountNumber: boolean;
+  userProfileAccessApproved: boolean;
 
   @Field(() => String, { nullable: true })
   note: string | null;
