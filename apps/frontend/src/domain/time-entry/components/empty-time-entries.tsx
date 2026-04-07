@@ -2,15 +2,16 @@ import { Empty, EmptyHeader, EmptyMedia, EmptyTitle, EmptyDescription, EmptyCont
 import { Users } from "lucide-react";
 import { PropsWithChildren } from "react";
 
-export const EmptyVolunteers = ({ children }: PropsWithChildren) =>
+
+export const EmptyTimeEntries = ({ children }: PropsWithChildren) =>
   <Empty className="border border-dashed">
     <EmptyHeader>
       <EmptyMedia variant="icon">
         <Users />
       </EmptyMedia>
-      <EmptyTitle>No volunteers yet</EmptyTitle>
+      <EmptyTitle>No time entries</EmptyTitle>
       <EmptyDescription>
-        Share the invitation link to get volunteers to sign-up.
+        You can check somebody into a Shift or manually add Time Entry.
       </EmptyDescription>
     </EmptyHeader>
     <EmptyContent>

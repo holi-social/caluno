@@ -1,8 +1,9 @@
-import Link from 'next/link';
 import { Pagination } from '@/components/pagination';
 import { ShiftsTable } from '@/domain/shift/components/shifts-table';
 import { getDataClient } from '@/lib/data-client';
 import { requireOrgAccess } from '@/lib/org-context-server';
+import { EmptyShifts } from '@/domain/shift/components/empty-shifts';
+import { CreateShiftSheet } from '@/components/sheets';
 
 interface ShiftsPageProps {
   params: Promise<{ orgUId: string }>;
@@ -38,24 +39,23 @@ export default async function ShiftsPage({
       </div>
 
       {hasShifts ? (
-        <>
-          <ShiftsTable shifts={result.items} orgUId={orgUId} />
-          {result.pagination.total > ITEMS_PER_PAGE && (
-            <Pagination
-              pagination={result.pagination}
-              url={`/${orgUId}/shifts`}
-              currentPage={currentPage}
-              name="shifts"
-            />
-          )}
-        </>
-      ) : (
-        <div className="text-muted-foreground">
-          No shifts yet.{' '}
-          <Link href={`/${orgUId}/shifts/new`}>Create your first</Link> shift to
-          get started.
-        </div>
-      )}
+          <>
+            <ShiftsTable shifts={result.items} orgUId={orgUId} />
+            {result.pagination.total > ITEMS_PER_PAGE && (
+              <Pagination
+                pagination={result.pagination}
+                url={`/${orgUId}/shifts`}
+                currentPage={currentPage}
+                name="shifts"
+              />
+            )}
+          </>
+        )
+      : 
+        <EmptyShifts>
+          <CreateShiftSheet />
+        </EmptyShifts>
+      }
     </div>
   );
 }

@@ -2,7 +2,8 @@ import { CreateTimeEntrySheet } from '@/components/sheets/create-time-entry-shee
 import { getAvailableShiftsWithVolunteers } from '@/domain/time-entry/queries';
 import { getDataClient } from '@/lib/data-client';
 import { requireOrgAccess } from '@/lib/org-context-server';
-import { TimesheetsTable } from './timesheets-table';
+import { EmptyTimeEntries } from '@/domain/time-entry/components/empty-time-entries';
+import { TimesheetsTable } from '@/domain/time-entry/components/timesheets-table';
 
 interface TimesheetsPageProps {
   params: Promise<{ orgUId: string }>;
@@ -22,6 +23,8 @@ export default async function TimesheetsPage({ params }: TimesheetsPageProps) {
     org.organizationId,
   );
 
+  const hasTimeEntries = timeEntries.pagination.total > 0;
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -32,10 +35,19 @@ export default async function TimesheetsPage({ params }: TimesheetsPageProps) {
         <CreateTimeEntrySheet shifts={shifts} allVolunteers={allVolunteers} />
       </div>
 
-      <TimesheetsTable
-        entries={timeEntries.items}
-        organizationUnitId={orgUId}
-      />
+
+      {hasTimeEntries ? (
+        <TimesheetsTable
+          entries={timeEntries.items}
+          organizationUnitId={orgUId}
+        />
+      )
+      : 
+        <EmptyTimeEntries>
+          <CreateTimeEntrySheet shifts={shifts} allVolunteers={allVolunteers} />
+        </EmptyTimeEntries>
+      }
+
     </div>
   );
 }

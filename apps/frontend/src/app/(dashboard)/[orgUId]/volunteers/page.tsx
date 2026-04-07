@@ -77,7 +77,13 @@ export default async function VolunteersPage({ params }: VolunteersPageProps) {
         </Table>
       </div>
       :
-      <EmptyVolunteers orgUnitUrl={orgUnitUrl} />
+      <EmptyVolunteers>
+        <ButtonClipboard
+          text="Copy invite link"
+          copyText={orgUnitUrl}
+          toastMessage="Invite link copied to clipboard"
+        />
+      </EmptyVolunteers>
     }
     </div>
   );
