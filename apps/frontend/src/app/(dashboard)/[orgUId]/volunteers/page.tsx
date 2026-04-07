@@ -13,6 +13,7 @@ import { ButtonClipboard } from '@/components/button-clipboard';
 import { organizationUnitUrl } from '@/domain/organization/share';
 import { getDataClient } from '@/lib/data-client';
 import { requireOrgAccess } from '@/lib/org-context-server';
+import { EmptyVolunteers } from '@/domain/volunteer/empty-volunteers';
 
 interface VolunteersPageProps {
   params: Promise<{ orgUId: string }>;
@@ -24,7 +25,7 @@ export default async function VolunteersPage({ params }: VolunteersPageProps) {
   const { org } = await requireOrgAccess(orgUId);
   const data = await getDataClient(orgUId);
 
-  const orgUUrl = organizationUnitUrl(orgUId);
+  const orgUnitUrl = organizationUnitUrl(orgUId);
 
   const volunteers = await data.organization.findVolunteers(org.organizationId);
 
@@ -39,12 +40,13 @@ export default async function VolunteersPage({ params }: VolunteersPageProps) {
         </div>
 
         <ButtonClipboard
-          text="Copy organization unit link"
-          copyText={orgUUrl}
-          toastMessage="Organization unit link copied to clipboard"
+          text="Copy invite link"
+          copyText={orgUnitUrl}
+          toastMessage="Invite link copied to clipboard"
         />
       </div>
 
+    {volunteers.length > 0 ? 
       <div className="rounded-md border">
         <Table>
           <TableHeader>
@@ -74,6 +76,9 @@ export default async function VolunteersPage({ params }: VolunteersPageProps) {
           </TableBody>
         </Table>
       </div>
+      :
+      <EmptyVolunteers orgUnitUrl={orgUnitUrl} />
+    }
     </div>
   );
 }
