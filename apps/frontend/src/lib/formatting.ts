@@ -22,7 +22,7 @@ export const formatTime = (date: Date) =>
     hour12: false,
   });
 
-export const formatRange = (from: string, to: string) => {
+export const formatRange = (from: string | Date, to: string | Date) => {
   const fromDate = new Date(from);
   const toDate = new Date(to);
 
