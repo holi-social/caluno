@@ -9,6 +9,7 @@ import { toast } from 'sonner';
 import { copyToClipboard } from '@/lib/clipboard';
 import { deleteShift } from '../actions';
 import { shiftShareUrl } from '../share';
+import { DeleteShiftDialog } from './delete-shit-dialog';
 
 type ActionBarProps = {
   id: string;
@@ -29,14 +30,6 @@ export const ActionBar = ({
   const buttonSize = `icon-${size}` as const;
 
   const handleDelete = () => {
-    if (
-      !confirm(
-        "Are you sure you wish to delete this shift and all it's timesheets?",
-      )
-    ) {
-      return;
-    }
-
     startTransition(async () => {
       const result = await deleteShift({
         id,
@@ -83,15 +76,15 @@ export const ActionBar = ({
         <Share2 />
       </Button>
 
-      <Button
+      <DeleteShiftDialog trigger={<Button
         size={buttonSize}
         variant="destructive"
         aria-label="Delete shift"
-        onClick={handleDelete}
         disabled={isDeleting}
       >
         {isDeleting ? <Loader2 className="animate-spin" /> : <Trash />}
-      </Button>
+      </Button>} onDelete={handleDelete} />
+
     </aside>
   );
 };
