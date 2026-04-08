@@ -45,7 +45,7 @@ export default async function VolunteersPage({ params }: VolunteersPageProps) {
         />
       </div>
 
-      <div className="rounded-md border">
+      <div className="rounded-md border overflow-x-auto">
         <Table>
           <TableHeader>
             <TableRow>
@@ -55,7 +55,7 @@ export default async function VolunteersPage({ params }: VolunteersPageProps) {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {volunteers?.map((volunteer) => (
+            {volunteers.map((volunteer) => (
               <TableRow key={volunteer.id}>
                 <TableCell>{volunteer.name}</TableCell>
                 <TableCell>{volunteer.email}</TableCell>
@@ -64,7 +64,7 @@ export default async function VolunteersPage({ params }: VolunteersPageProps) {
                     href={`/${orgUId}/check-in/${volunteer.checkInId}/check-in`}
                     aria-label="Check-in volunteer"
                   >
-                    <Button size="icon-xs" variant="outline">
+                    <Button size="icon-xs" variant="outline" aria-label='Check-in the volunteer to a shift'>
                       <LogIn />
                     </Button>
                   </Link>

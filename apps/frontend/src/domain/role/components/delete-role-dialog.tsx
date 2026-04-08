@@ -53,7 +53,7 @@ export function DeleteRoleDialog({
     <AlertDialog open={open} onOpenChange={setOpen}>
       <AlertDialogTrigger asChild>
         {trigger || (
-          <Button variant="ghost" size="sm">
+          <Button variant="destructive" size="icon-xs">
             <TrashIcon />
           </Button>
         )}
