@@ -10,15 +10,19 @@ import {
   AlertDialogTrigger,
 } from '@repo/ui';
 
-interface DeleteShiftDialogProps {
+interface DeleteAlertDialogProps {
+  title: string;
+  description: string;
   onDelete: () => void;
   trigger: React.ReactNode;
 }
 
-export function DeleteShiftDialog({
+export function DeleteAlertDialog({
+  title,
+  description,
   onDelete,
   trigger,
-}: DeleteShiftDialogProps) {
+}: DeleteAlertDialogProps) {
 
   return (
     <AlertDialog>
@@ -27,9 +31,9 @@ export function DeleteShiftDialog({
       </AlertDialogTrigger>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>Delete shift</AlertDialogTitle>
+          <AlertDialogTitle>{title}</AlertDialogTitle>
           <AlertDialogDescription>
-            Are you sure you wish to delete this shift and all it's timesheets?
+            {description}
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
