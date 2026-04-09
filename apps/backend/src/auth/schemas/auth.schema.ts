@@ -8,7 +8,10 @@ export const users = pgTable('users', {
   email: text('email').notNull().unique(),
   emailVerified: boolean('email_verified').default(false).notNull(),
   image: text('image'),
-  checkInId: text('check_in_id').notNull().unique().$defaultFn(generateCheckInId),
+  checkInId: text('check_in_id')
+    .notNull()
+    .unique()
+    .$defaultFn(generateCheckInId),
   ...timestampColumns,
 });
 

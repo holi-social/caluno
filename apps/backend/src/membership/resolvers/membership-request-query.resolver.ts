@@ -1,4 +1,5 @@
 import { Args, ID, Query, Resolver } from '@nestjs/graphql';
+import { Session, type UserSession } from '@thallesp/nestjs-better-auth';
 import { PERMISSIONS } from '../../auth/constants';
 import { Permissions } from '../../auth/decorators/permissions.decorator';
 import { PaginationInput } from '../../graphql/pagination.input';
@@ -27,7 +28,26 @@ export class MembershipRequestQueryResolver {
   ): Promise<MembershipRequestPaginatedResponse> {
     const items = await this.membershipRequestService.getMembershipRequests(
       organizationUnitId,
-      status ?? MembershipRequestStatus.PENDING,
+      status ?? undefined,
+    );
+    return new MembershipRequestPaginatedResponse({
+      items: this.membershipRequestMapper.toArray(items),
+      total: items.length,
+      limit: pagination.limit,
+      offset: pagination.offset,
+    });
+  }
+
+  @Query(() => MembershipRequestPaginatedResponse)
+  async myMembershipRequests(
+    @Session() session: UserSession,
+    @Args('status', { type: () => MembershipRequestStatus, nullable: true })
+    status: MembershipRequestStatus | null,
+    @Args() pagination: PaginationInput,
+  ): Promise<MembershipRequestPaginatedResponse> {
+    const items = await this.membershipRequestService.getMyMembershipRequests(
+      session.user.id,
+      status ?? undefined,
     );
     return new MembershipRequestPaginatedResponse({
       items: this.membershipRequestMapper.toArray(items),

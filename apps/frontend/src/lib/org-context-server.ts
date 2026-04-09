@@ -68,7 +68,9 @@ export async function getMyRootOrganizationUnits(): Promise<OrgContextData[]> {
   }));
 }
 
-export async function resolveOrgFromId(orgUId: string): Promise<OrgContextData> {
+export async function resolveOrgFromId(
+  orgUId: string,
+): Promise<OrgContextData> {
   const organizations = await getMyRootOrganizationUnits();
   const org =
     organizations.find((item) => item.id === orgUId) ??
@@ -102,7 +104,9 @@ export async function requireOrgAccess(
 ): Promise<{ org: OrgContextData; organizations: OrgContextData[] }> {
   const organizations = await getMyRootOrganizationUnits();
   const org = organizations.find((item) => item.id === orgUId);
-  const legacyOrg = organizations.find((item) => item.organizationId === orgUId);
+  const legacyOrg = organizations.find(
+    (item) => item.organizationId === orgUId,
+  );
 
   if (!org && legacyOrg) {
     redirect(`/${legacyOrg.id}`);

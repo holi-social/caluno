@@ -22,10 +22,7 @@ export class OrganizationUnitQueryResolver {
   async organizationUnit(
     @Args('id') id: string,
   ): Promise<OrganizationUnit | null> {
-    const organizationUnit =
-      await this.organizationUnitService.findById(
-        id,
-      );
+    const organizationUnit = await this.organizationUnitService.findById(id);
     return this.organizationUnitMapper.toModel(organizationUnit);
   }
 
@@ -35,12 +32,10 @@ export class OrganizationUnitQueryResolver {
     @Args('slug') slug: string,
     @Context() context: AuthenticatedGraphQLContext,
   ): Promise<OrganizationUnit | null> {
-    const organizationUnit = await this.organizationUnitService.findBySlug(
-      slug,
-    );
+    const organizationUnit =
+      await this.organizationUnitService.findBySlug(slug);
     return this.organizationUnitMapper.toModel(organizationUnit);
   }
-
 
   @Permissions(PERMISSIONS.ORG_UNIT_READ)
   @Query(() => OrganizationUnitPaginatedResponse)

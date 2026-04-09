@@ -142,7 +142,10 @@ export class MembershipService {
           .where(
             and(
               eq(schema.membershipRequests.id, id),
-              eq(schema.membershipRequests.organizationUnitId, organizationUnitId),
+              eq(
+                schema.membershipRequests.organizationUnitId,
+                organizationUnitId,
+              ),
               eq(
                 schema.membershipRequests.status,
                 MembershipRequestStatus.PENDING,
@@ -201,6 +204,20 @@ export class MembershipService {
   ): Promise<MembershipRequestEntity[]> {
     return this.db.query.membershipRequests.findMany({
       where: { organizationUnitId, status },
+      with: {
+        user: true,
+        organizationUnit: true,
+        reviewedBy: true,
+      },
+    });
+  }
+
+  async getMyMembershipRequests(
+    userId: string,
+    status?: MembershipRequestStatus,
+  ): Promise<MembershipRequestEntity[]> {
+    return this.db.query.membershipRequests.findMany({
+      where: { userId, ...(status ? { status } : {}) },
       with: {
         user: true,
         organizationUnit: true,
