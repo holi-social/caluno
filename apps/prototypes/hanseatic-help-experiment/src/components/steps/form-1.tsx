@@ -1,6 +1,6 @@
 'use client';
 
-import { CirclePlay, CircleStop, Coffee } from 'lucide-react';
+import { CirclePlay, CircleStop, Pencil } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, cn } from '@repo/ui';
 import { Logo } from '@/components/logo';
 import { StepProgress } from '@/components/step-progress';
@@ -28,7 +28,7 @@ function ActionCard({ label, icon, onClick, disabled, variant, className }: Acti
       onClick={onClick}
       disabled={disabled}
       className={cn(
-        'flex flex-col items-start justify-start gap-4 py-6 px-6 rounded-xl border shadow-sm transition-opacity w-full disabled:opacity-50 disabled:cursor-not-allowed text-left',
+        'flex flex-col items-stretch justify-start gap-4 py-6 px-6 rounded-xl border shadow-sm transition-opacity w-full h-full disabled:opacity-50 disabled:cursor-not-allowed text-left',
         variant === 'primary'
           ? 'bg-primary text-primary-foreground border-primary'
           : 'bg-secondary text-secondary-foreground border-border',
@@ -36,7 +36,7 @@ function ActionCard({ label, icon, onClick, disabled, variant, className }: Acti
       )}
     >
       <span className="font-bold text-lg leading-none">{label}</span>
-      <div className="size-10 flex items-center justify-center">{icon}</div>
+      <div className="w-full h-[60px] mt-auto flex items-center justify-end">{icon}</div>
     </button>
   );
 }
@@ -50,9 +50,9 @@ export function Form1({ onSelect, loading }: Form1Props) {
 
       <div className="flex flex-col gap-6 w-full">
         <div>
-          <h1 className="text-[24px] font-medium leading-8">Welcome to Hanseatic Help!</h1>
+          <h1 className="text-[24px] font-medium leading-8">Hilf uns, unsere Freiwilligen & Stunden zu zählen!</h1>
           <p className="text-[18px] text-foreground mt-4 mb-0">
-            Are you just starting your day with us or planning to leave now?
+          Fängst du heute mit dem Freiwilligendienst an oder bist du für heute fertig?
           </p>
         </div>
 
@@ -60,15 +60,15 @@ export function Form1({ onSelect, loading }: Form1Props) {
           {/* Starting + Finishing side by side */}
           <div className="grid grid-cols-2 gap-4">
             <ActionCard
-              label="Starting"
-              icon={<CirclePlay className="w-full h-full stroke-primary-foreground" />}
+              label="Ich fange an"
+              icon={<CirclePlay className="size-[60px] stroke-primary-foreground" />}
               onClick={() => onSelect('starting')}
               disabled={loading}
               variant="primary"
             />
             <ActionCard
-              label="Finishing"
-              icon={<CircleStop className="w-full h-full stroke-primary-foreground" />}
+              label="Ich bin fertig"
+              icon={<CircleStop className="size-[60px] stroke-primary-foreground" />}
               onClick={() => onSelect('finishing')}
               disabled={loading}
               variant="primary"
@@ -76,19 +76,19 @@ export function Form1({ onSelect, loading }: Form1Props) {
           </div>
 
           {/* Taking a break full width */}
-          <Card className="w-full cursor-pointer hover:bg-secondary/80 transition-colors">
+          <Card className="w-full flex flex-row gap-6 py-6 cursor-pointer hover:bg-secondary/80 transition-colors">
             <button
               type="button"
               onClick={() => onSelect('break')}
               disabled={loading}
-              className="w-full disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full flex justify-center gap-2 px-6 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              <CardHeader>
-                <CardTitle className="text-lg font-bold">Taking a break</CardTitle>
+              <CardHeader className="w-full flex flex-row items-center justify-center h-fit">
+                <div className="p-0 shrink-0 flex items-center justify-center w-fit h-fit">
+                  <Pencil className="size-8 text-secondary-foreground" />
+                </div>
+                <CardTitle className="text-lg font-bold w-fit">Start- & Endzeit manuell eintragen</CardTitle>
               </CardHeader>
-              <CardContent className="flex justify-center pb-4">
-                <Coffee className="size-8 text-secondary-foreground" />
-              </CardContent>
             </button>
           </Card>
         </div>
