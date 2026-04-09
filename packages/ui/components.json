@@ -11,11 +11,14 @@
     "css": "src/styles/default.css"
   },
   "aliases": {
-    "components": "src/components",
-    "ui": "src/components/base",
-    "utils": "src/lib/utils",
-    "hooks": "src/hooks",
-    "lib": "src/lib"
+    "components": "@/components",
+    "ui": "@/components/base",
+    "utils": "@/lib/utils",
+    "hooks": "@/hooks",
+    "lib": "@/lib"
   },
-  "iconLibrary": "lucide"
+  "iconLibrary": "lucide",
+  "registries": {
+    "@storybook": "https://registry.lloydrichards.dev/v3/radix/{name}.json"
+  }
 }

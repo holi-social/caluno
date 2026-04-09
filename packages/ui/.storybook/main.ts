@@ -1,7 +1,6 @@
 import type { StorybookConfig } from '@storybook/react-vite';
 
 import { dirname } from "path"
-
 import { fileURLToPath } from "url"
 
 /**
@@ -16,6 +15,14 @@ const config: StorybookConfig = {
     "../src/**/*.stories.@(js|jsx|mjs|ts|tsx)"
   ],
   "addons": [getAbsolutePath("@storybook/addon-themes")],
-  "framework": getAbsolutePath('@storybook/react-vite')
+  "framework": getAbsolutePath('@storybook/react-vite'),
+  viteFinal: async (config) => {
+    if (config.resolve) {
+      config.resolve.tsconfigPaths = true
+    } else {
+      config.resolve = { tsconfigPaths: true }
+    }
+    return config;
+  },
 };
 export default config;
