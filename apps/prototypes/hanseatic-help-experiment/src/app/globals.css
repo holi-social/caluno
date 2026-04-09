@@ -2,3 +2,13 @@
 @import "@repo/ui/styles/default.css";
 
 @source "../../node_modules/@repo/ui";
+
+@keyframes card-pop {
+  0%   { transform: scale(0) rotate(-4deg); opacity: 0; }
+  60%  { transform: scale(1.1) rotate(14deg); opacity: 1; }
+  100% { transform: scale(1) rotate(10deg); opacity: 1; }
+}
+
+@theme {
+  --animate-card-pop: card-pop 0.8s ease-out forwards;
+}

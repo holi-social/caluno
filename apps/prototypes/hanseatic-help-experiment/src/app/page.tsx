@@ -174,10 +174,17 @@ export default function WizardPage() {
     }
   }
 
-  const mainBgClass = state.step === 'form-4' ? 'bg-[#00c4ed]' : 'bg-background';
+  const mainBgClass = state.step === 'form-4' ? '' : 'bg-background';
+  const mainStyle =
+    state.step === 'form-4'
+      ? {
+          background:
+            'radial-gradient(ellipse at 5% -13%, #afDCFF 4%, #83D6FB 17%, #58D0F6 30%, #2CCAF2 42%, #00C4ED 55%)',
+        }
+      : undefined;
 
   return (
-    <main className={`min-h-dvh flex justify-center ${mainBgClass}`}>
+    <main className={`min-h-dvh flex justify-center ${mainBgClass}`} style={mainStyle}>
       <div className="relative w-full max-w-none min-h-dvh overflow-hidden">
         {state.step === 'form-1' && (
           <Form1 onSelect={handleActionSelect} loading={loading} />

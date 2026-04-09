@@ -8,15 +8,33 @@ interface Form4Props {
 export function Form4({ name, durationLabel }: Form4Props) {
   const displayName = name?.split(' ')[0] ?? 'Freund*in';
 
+
   return (
-    <div className="flex min-h-full flex-col items-center gap-6 px-4 pt-24 pb-4">
-      <h1 className="text-3xl font-bold text-center text-foreground leading-9 mb-4">
+    <div className="relative flex min-h-full flex-col items-center gap-6 px-4 pt-24 pb-4">
+      {/* Decorative rotated white lines — fixed, covers full viewport */}
+      <img
+        src="/decorative-lines.svg"
+        alt=""
+        aria-hidden="true"
+        style={{
+          position: 'fixed',
+          width: '101vw',
+          height: '101dvh',
+          top: '-0.5dvh',
+          left: '-0.5vw',
+          objectFit: 'cover',
+          pointerEvents: 'none',
+          zIndex: 0,
+        }}
+      />
+
+      <h1 className="relative z-10 text-3xl font-bold text-center text-foreground leading-9 mb-4">
         Danke für deine Hilfe, {displayName}!
       </h1>
 
       {/* Card with thick blue top/bottom borders — unique design for this screen */}
       <div
-        className="bg-card w-full rounded-2xl shadow-sm flex flex-col items-center gap-2 px-4 pt-6 pb-10"
+        className="relative z-10 animate-card-pop bg-card w-full rounded-2xl shadow-sm flex flex-col items-center gap-2 px-4 pt-6 pb-10"
         style={{
           borderTop: '32px solid #137ac9',
           borderBottom: '32px solid #137ac9',
