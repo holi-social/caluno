@@ -9,7 +9,7 @@ import { toast } from 'sonner';
 import { copyToClipboard } from '@/lib/clipboard';
 import { deleteShift } from '../actions';
 import { shiftShareUrl } from '../share';
-import { DeleteShiftDialog } from './delete-shit-dialog';
+import { DeleteAlertDialog } from '@/components/delete-alert-dialog';
 
 type ActionBarProps = {
   id: string;
@@ -76,14 +76,21 @@ export const ActionBar = ({
         <Share2 />
       </Button>
 
-      <DeleteShiftDialog trigger={<Button
-        size={buttonSize}
-        variant="destructive"
-        aria-label="Delete shift"
-        disabled={isDeleting}
-      >
-        {isDeleting ? <Loader2 className="animate-spin" /> : <Trash />}
-      </Button>} onDelete={handleDelete} />
+      <DeleteAlertDialog 
+        title="Delete shift"
+        description="Are you sure you wish to delete this shift and all it's timesheets?"
+        onDelete={handleDelete}
+        trigger={
+          <Button
+            size={buttonSize}
+            variant="destructive"
+            aria-label="Delete shift"
+            disabled={isDeleting}
+          >
+            {isDeleting ? <Loader2 className="animate-spin" /> : <Trash />}
+          </Button>
+        } 
+      />
 
     </aside>
   );
