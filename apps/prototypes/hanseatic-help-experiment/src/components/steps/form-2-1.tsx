@@ -26,7 +26,7 @@ export function Form21({ onSelect, loading }: Form21Props) {
       <Logo />
 
       <h1 className="text-[24px] font-medium leading-8 w-full">
-        How long are you planning to stay today?
+        Wie lange planst du heute ungefähr zu helfen?
       </h1>
 
       <RadioGroup
@@ -52,10 +52,10 @@ export function Form21({ onSelect, loading }: Form21Props) {
             />
             <div className="flex flex-col gap-1">
               <span className="text-base font-medium leading-none">
-                {hours} {hours === 1 ? 'hour' : 'hours'}
+                {hours} {hours === 1 ? 'Stunde' : 'Stunden'}
               </span>
               <span className="text-sm text-muted-foreground">
-                Till around {getEndTime(hours)}
+                Bis ungefähr {getEndTime(hours)}
               </span>
             </div>
           </Label>

@@ -31,7 +31,7 @@ export function Form22({ onContinue, loading }: Form22Props) {
       <Logo />
 
       <h1 className="text-[24px] font-medium leading-8 w-full">
-        Around when did you arrive today?
+      Wann hast du heute ungefähr angefangen?
       </h1>
 
       <Card className="w-full">
@@ -39,7 +39,7 @@ export function Form22({ onContinue, loading }: Form22Props) {
           <form onSubmit={handleSubmit} className="flex flex-col gap-4 items-end">
             <div className="w-full flex flex-col gap-2">
               <Label htmlFor="arrival-time" className="text-base font-medium">
-                Arrival time
+              Startzeit
               </Label>
               <div className="relative">
                 <Clock2 className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground pointer-events-none" />
@@ -54,7 +54,7 @@ export function Form22({ onContinue, loading }: Form22Props) {
               </div>
             </div>
             <Button type="submit" size="lg" disabled={loading || !arrivalTime}>
-              Continue
+              Weiter
             </Button>
           </form>
         </CardContent>

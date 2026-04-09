@@ -32,7 +32,7 @@ export function Form23({ onContinue, loading }: Form23Props) {
       <Logo />
 
       <h1 className="text-[24px] font-medium leading-8 w-full">
-        Let us know for how many hours you&apos;re planning to volunteer today
+      Sag uns, wie lange du heute ungefähr helfen möchtest
       </h1>
 
       <Card className="w-full">
@@ -41,7 +41,7 @@ export function Form23({ onContinue, loading }: Form23Props) {
             <div className="w-full flex flex-col gap-4">
               <div className="flex flex-col gap-2">
                 <Label htmlFor="break-arrival-time" className="text-base font-medium">
-                  Around when did you arrive?
+                Etwa wann hast du heute angefangen?
                 </Label>
                 <div className="relative">
                   <Clock2 className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground pointer-events-none" />
@@ -58,7 +58,7 @@ export function Form23({ onContinue, loading }: Form23Props) {
 
               <div className="flex flex-col gap-2">
                 <Label htmlFor="departure-time" className="text-base font-medium">
-                  When are you planning to leave?
+                Wann planst du heute aufzuhören?
                 </Label>
                 <div className="relative">
                   <Clock2 className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground pointer-events-none" />
@@ -79,7 +79,7 @@ export function Form23({ onContinue, loading }: Form23Props) {
               size="lg"
               disabled={loading || !arrivalTime || !departureTime}
             >
-              Continue
+              Weiter
             </Button>
           </form>
         </CardContent>

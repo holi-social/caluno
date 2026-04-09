@@ -6,12 +6,12 @@ interface Form4Props {
 }
 
 export function Form4({ name, durationLabel }: Form4Props) {
-  const displayName = name?.split(' ')[0] ?? 'friend';
+  const displayName = name?.split(' ')[0] ?? 'Freund*in';
 
   return (
-    <div className="flex min-h-full flex-col items-center px-4 pt-24 pb-4">
+    <div className="flex min-h-full flex-col items-center gap-6 px-4 pt-24 pb-4">
       <h1 className="text-3xl font-bold text-center text-foreground leading-9 mb-4">
-        Thank you for your help, {displayName}!
+        Danke für deine Hilfe, {displayName}!
       </h1>
 
       {/* Card with thick blue top/bottom borders — unique design for this screen */}

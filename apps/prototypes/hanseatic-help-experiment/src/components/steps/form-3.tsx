@@ -29,7 +29,7 @@ export function Form3({ onSubmit, loading }: Form3Props) {
       <Logo />
 
       <h1 className="text-[24px] font-medium leading-8 w-full">
-        Grow your impact by telling us who you are, sweet stranger
+      Mit deinem Namen machst du noch mehr Impact! Wer bist du, liebe unbekannte Person?
       </h1>
 
       <Card className="w-full">
@@ -38,7 +38,7 @@ export function Form3({ onSubmit, loading }: Form3Props) {
             <div className="w-full flex flex-col gap-4">
               <div className="flex flex-col gap-2">
                 <Label htmlFor="volunteer-name" className="text-base font-medium">
-                  Name and Last name
+                Name und Nachname
                 </Label>
                 <div className="relative">
                   <User className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground pointer-events-none" />
@@ -55,7 +55,7 @@ export function Form3({ onSubmit, loading }: Form3Props) {
 
               <div className="flex flex-col gap-2">
                 <Label htmlFor="volunteer-email" className="text-base font-medium">
-                  E-mail
+                E-Mail
                 </Label>
                 <div className="relative">
                   <Mail className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground pointer-events-none" />
@@ -82,8 +82,11 @@ export function Form3({ onSubmit, loading }: Form3Props) {
                     htmlFor="gdpr-consent"
                     className="text-base font-medium leading-snug cursor-pointer"
                   >
-                    I agree to my data being processed by Hanseatic Help
+                    Ich stimme zu, dass meine Daten von Hanseatic Help verarbeitet werden.
                   </Label>
+                  <p className="text-sm text-muted-foreground">
+                    Deine Daten nutzen wir nur intern und geben sie nie in identifizierbarer Form weiter.
+                  </p>
                   <a
                     href="#"
                     className="text-sm text-muted-foreground underline underline-offset-2"
@@ -96,16 +99,15 @@ export function Form3({ onSubmit, loading }: Form3Props) {
             </div>
 
             <Button type="submit" size="lg" disabled={loading}>
-              Submit
+              Weiter
             </Button>
           </form>
         </CardContent>
       </Card>
 
       <p className="text-base text-secondary-foreground leading-6 w-full">
-        Knowing who volunteers with us and how many return helps Hanseatic Help get more
-        funding. Plus, you can get a volunteering certificate and never miss cool events
-        &amp; actions!
+        Wissen, wer bei uns Freiwillig wird und wie oft sie zurückkommen, hilft uns, mehr
+        Fördermittel zu bekommen. Außerdem kannst du ein Freiwilligendienst-Zertifikat bekommen und nie wieder ein cooler Event verpassen!
       </p>
     </div>
   );
