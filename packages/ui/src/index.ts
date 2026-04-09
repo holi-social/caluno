@@ -14,6 +14,7 @@ export * from './components/base/field';
 export * from './components/base/input-group';
 export * from './components/base/label';
 export * from './components/base/popover';
+export * from './components/base/progress';
 export * from './components/base/radio-group';
 export * from './components/base/select';
 export * from './components/base/separator';

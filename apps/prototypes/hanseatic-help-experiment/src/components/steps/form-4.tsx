@@ -1,0 +1,34 @@
+import { Logo } from '@/components/logo';
+
+interface Form4Props {
+  name: string | undefined;
+  durationLabel: string;
+}
+
+export function Form4({ name, durationLabel }: Form4Props) {
+  const displayName = name?.split(' ')[0] ?? 'friend';
+
+  return (
+    <div className="flex min-h-full flex-col items-center px-4 pt-24 pb-4">
+      <h1 className="text-3xl font-bold text-center text-foreground leading-9 mb-4">
+        Thank you for your help, {displayName}!
+      </h1>
+
+      {/* Card with thick blue top/bottom borders — unique design for this screen */}
+      <div
+        className="bg-card w-full rounded-2xl shadow-sm flex flex-col items-center gap-2 px-4 pt-6 pb-10"
+        style={{
+          borderTop: '32px solid #137ac9',
+          borderBottom: '32px solid #137ac9',
+        }}
+      >
+        <Logo />
+        <div className="flex flex-col gap-1 text-center text-secondary-foreground w-full mt-2">
+          <p className="text-lg leading-7">Du hast für etwa</p>
+          <p className="text-5xl font-bold leading-12">{durationLabel}</p>
+          <p className="text-lg leading-7">mitgemacht, und dafür sind wir echt dankbar!</p>
+        </div>
+      </div>
+    </div>
+  );
+}
