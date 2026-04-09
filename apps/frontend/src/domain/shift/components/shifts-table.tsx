@@ -23,6 +23,14 @@ const visibilityConfig = {
   INVITED_MEMBERS: { variant: 'secondary' as const, label: 'Invite only' },
 };
 
+function formatRecurrence(rrule: string | null): string {
+  if (!rrule) return 'One-time';
+  if (rrule.includes('WEEKLY')) return 'Weekly';
+  if (rrule.includes('DAILY')) return 'Daily';
+  if (rrule.includes('MONTHLY')) return 'Monthly';
+  return 'Recurring';
+}
+
 export function ShiftsTable({ shifts, orgUId }: ShiftsTableProps) {
   return (
     <div className="rounded-md border overflow-x-auto">
@@ -30,35 +38,41 @@ export function ShiftsTable({ shifts, orgUId }: ShiftsTableProps) {
         <TableHeader>
           <TableRow>
             <TableHead className="text-muted-foreground">Name</TableHead>
-            <TableHead className="text-muted-foreground">Volunteers</TableHead>
-            <TableHead className="text-muted-foreground">Date</TableHead>
+            <TableHead className="text-muted-foreground">First Date</TableHead>
+            <TableHead className="text-muted-foreground">Pattern</TableHead>
             <TableHead className="text-muted-foreground">Visibility</TableHead>
             <TableHead></TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
-          {shifts.map((shift) => (
-            <TableRow key={shift.id} className="hover:bg-muted/50">
-              <TableCell>{shift.title}</TableCell>
-              <TableCell className="text-muted-foreground">-</TableCell>
-              <TableCell>
-                {shift.volunteers?.slice(0, 3).map((u) => (
-                  <div key={u.id}>{u.name}</div>
-                ))}
-              </TableCell>
-              <TableCell className="text-muted-foreground">
-                {formatRange(shift.startsAt, shift.endsAt)}
-              </TableCell>
-              <TableCell>
-                <Badge variant={visibilityConfig[shift.visibility].variant}>
-                  {visibilityConfig[shift.visibility].label}
-                </Badge>
-              </TableCell>
-              <TableCell className="space-x-2">
-                <ActionBar organizationUnitId={orgUId} id={shift.id} />
-              </TableCell>
-            </TableRow>
-          ))}
+          {shifts.map((shift) => {
+            const startDate = new Date(shift.originalStartsAt);
+            const endDate = new Date(
+              startDate.getTime() + shift.durationMinutes * 60000,
+            );
+
+            return (
+              <TableRow key={shift.id} className="hover:bg-muted/50">
+                <TableCell>{shift.title}</TableCell>
+                <TableCell className="text-muted-foreground">
+                  {formatRange(shift.originalStartsAt, endDate.toISOString())}
+                </TableCell>
+                <TableCell>
+                  <Badge variant="outline">
+                    {formatRecurrence(shift.rrule ?? null)}
+                  </Badge>
+                </TableCell>
+                <TableCell>
+                  <Badge variant={visibilityConfig[shift.visibility].variant}>
+                    {visibilityConfig[shift.visibility].label}
+                  </Badge>
+                </TableCell>
+                <TableCell className="space-x-2">
+                  <ActionBar organizationUnitId={orgUId} id={shift.id} />
+                </TableCell>
+              </TableRow>
+            );
+          })}
         </TableBody>
       </Table>
     </div>

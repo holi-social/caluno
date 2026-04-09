@@ -11,7 +11,7 @@ export const createTimeEntry = actionClient
     const data = await getDataClient();
 
     const input: AddTimeEntryInput = {
-      shiftId: parsedInput.shiftId,
+      shiftInstanceId: parsedInput.shiftInstanceId,
       volunteerId: parsedInput.volunteerId,
       startedAt: new Date(parsedInput.startedAt).toISOString(),
       endedAt: parsedInput.endedAt

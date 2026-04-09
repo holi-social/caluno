@@ -39,7 +39,7 @@ export class ShiftRepository extends BaseRepository {
         limit: options.limit ?? 100,
         offset: options.offset ?? 0,
       });
-      return data.shifts.items;
+      return data.activeShifts.items;
     } catch (error) {
       throw DataError.fromGraphQLError(error);
     }

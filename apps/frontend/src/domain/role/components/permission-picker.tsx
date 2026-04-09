@@ -52,7 +52,7 @@ function groupPermissions(permissions: Permission[]) {
     if (!groups.has(label)) {
       groups.set(label, []);
     }
-    groups.get(label)!.push(permission);
+    groups.get(label)?.push(permission);
   }
 
   return groups;

@@ -5,21 +5,11 @@ query GetShift($id: String!) {
     slug
     instructions
     location
-    startsAt
-    endsAt
     visibility
     maxVolunteers
-    recurrenceRule {
-      id
-      daysOfWeek
-      endsAt
-    }
-    volunteers {
-      id
-      name
-      email
-      image
-    }
+    rrule
+    originalStartsAt
+    durationMinutes
     createdBy {
       id
       name
@@ -34,16 +24,12 @@ query GetShifts($limit: Int!, $offset: Int!) {
     items {
       id
       title
-      startsAt
-      endsAt
+      rrule
+      originalStartsAt
+      durationMinutes
       visibility
       maxVolunteers
-      recurrenceRule {
-        id
-        daysOfWeek
-        endsAt
-      }
-      volunteers {
+      createdBy {
         id
         name
         email
@@ -59,10 +45,15 @@ query GetShifts($limit: Int!, $offset: Int!) {
 }
 
 query GetShiftsForTimeEntryCreation($limit: Int!, $offset: Int!) {
-  shifts(limit: $limit, offset: $offset) {
+  activeShifts(limit: $limit, offset: $offset) {
     items {
       id
-      title
+      actualStartsAt
+      actualEndsAt
+      master {
+        id
+        title
+      }
       volunteers {
         id
         name
@@ -100,9 +91,16 @@ query GetActiveShifts($limit: Int!, $offset: Int!) {
   activeShifts(limit: $limit, offset: $offset) {
     items {
       id
-      title
-      startsAt
-      endsAt
+      actualStartsAt
+      actualEndsAt
+      master {
+        id
+        title
+        location
+        instructions
+        visibility
+        maxVolunteers
+      }
     }
     pagination {
       total

@@ -20,8 +20,8 @@ export const shiftFormSchema = z.object({
   organizationUnitId: z.string().min(1, 'Organization unit is required'),
   invitedMemberIds: z.array(z.string()).optional(),
   maxVolunteers: z.preprocess(
-    (v) => (v === '' || v === null || v === undefined ? undefined : Number(v)),
-    z.number().int().positive().optional(),
+    (v) => (v === '' || v === null || v === undefined ? null : Number(v)),
+    z.number().int().positive().nullish(),
   ),
   recurrenceDays: z.array(recurrenceDayEnum).optional(),
   recurrenceEndsAt: z.date().optional(),

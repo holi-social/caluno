@@ -27,7 +27,11 @@ export function EditShiftForm({
     setServerError(null);
     startTransition(async () => {
       if (shift?.id) {
-        const result = await updateShift({ ...formData, id: shift.id });
+        const result = await updateShift({
+          ...formData,
+          id: shift.id,
+          maxVolunteers: formData.maxVolunteers ?? null,
+        });
         if (result?.serverError) {
           setServerError(result.serverError);
         } else {
@@ -45,22 +49,21 @@ export function EditShiftForm({
     return <p className="text-sm text-muted-foreground">Shift not found.</p>;
   }
 
+  const startDate = new Date(shift.originalStartsAt);
+  const endDate = new Date(startDate.getTime() + shift.durationMinutes * 60000);
+
   const initialValues: Partial<ShiftFormValues> = {
     organizationUnitId: orgUId,
     name: shift.title,
     instructions: shift.instructions ?? undefined,
     location: shift.location ?? undefined,
-    startsAt: new Date(shift.startsAt),
-    endsAt: new Date(shift.endsAt),
+    startsAt: startDate,
+    endsAt: endDate,
     openShift: shift.visibility === ShiftVisibility.AllMembers,
-    invitedMemberIds: shift.volunteers?.map((v) => v.id) ?? [],
+    invitedMemberIds: [],
     maxVolunteers: shift.maxVolunteers ?? undefined,
-    recurrenceDays:
-      (shift.recurrenceRule?.daysOfWeek as ShiftFormValues['recurrenceDays']) ??
-      [],
-    recurrenceEndsAt: shift.recurrenceRule?.endsAt
-      ? new Date(shift.recurrenceRule.endsAt)
-      : undefined,
+    recurrenceDays: [],
+    recurrenceEndsAt: undefined,
   };
 
   return (

@@ -52,7 +52,15 @@ export const ShiftSelectorCard = ({
 
   if (shifts.length === 1) {
     const shift = shifts[0];
-    return shift && <MiniShiftCard {...shift} />;
+    return (
+      shift && (
+        <MiniShiftCard
+          title={shift.master.title}
+          actualStartsAt={shift.actualStartsAt}
+          actualEndsAt={shift.actualEndsAt}
+        />
+      )
+    );
   }
 
   const selectedShift = shifts.find((s) => s.id === value);
@@ -66,13 +74,23 @@ export const ShiftSelectorCard = ({
         <SelectContent>
           {shifts.map((shift) => (
             <SelectItem key={shift.id} value={shift.id}>
-              <MiniShiftCard {...shift} />
+              <MiniShiftCard
+                title={shift.master.title}
+                actualStartsAt={shift.actualStartsAt}
+                actualEndsAt={shift.actualEndsAt}
+              />
             </SelectItem>
           ))}
         </SelectContent>
       </Select>
 
-      {selectedShift && <MiniShiftCard {...selectedShift} />}
+      {selectedShift && (
+        <MiniShiftCard
+          title={selectedShift.master.title}
+          actualStartsAt={selectedShift.actualStartsAt}
+          actualEndsAt={selectedShift.actualEndsAt}
+        />
+      )}
     </div>
   );
 };

@@ -38,7 +38,7 @@ export default async function CheckOutPage({ params }: CheckOutPageProps) {
                     <ul className="space-y-2">
                       <li className="flex gap-2">
                         <Calendar className="text-muted-foreground" />
-                        {entry.shift.title}
+                        {entry.shiftInstance.master.title}
                       </li>
                       <li className="flex gap-2">
                         <LogIn className="text-muted-foreground" /> Checked in:{' '}

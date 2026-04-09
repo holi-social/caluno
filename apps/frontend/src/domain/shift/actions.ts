@@ -1,15 +1,45 @@
 'use server';
 
-import type {
-  CreateShiftInput,
-  RecurrenceDay,
-  UpdateShiftInput,
-} from '@repo/data';
+import type { CreateShiftInput, UpdateShiftInput } from '@repo/data';
 import { ShiftVisibility } from '@repo/data';
+import { RRule } from 'rrule';
 import z from 'zod';
 import { getDataClient } from '@/lib/data-client';
 import { actionClient } from '@/lib/safe-action';
 import { shiftDeleteSchema, shiftFormSchema } from './schemas';
+
+const dayToRRule: Record<string, number> = {
+  MONDAY: RRule.MO.weekday,
+  TUESDAY: RRule.TU.weekday,
+  WEDNESDAY: RRule.WE.weekday,
+  THURSDAY: RRule.TH.weekday,
+  FRIDAY: RRule.FR.weekday,
+  SATURDAY: RRule.SA.weekday,
+  SUNDAY: RRule.SU.weekday,
+};
+
+function generateRrule(
+  startsAt: Date,
+  recurrenceDays?: string[],
+  recurrenceEndsAt?: Date,
+): string | null {
+  if (!recurrenceDays || recurrenceDays.length === 0) {
+    return null;
+  }
+
+  const weekdays = recurrenceDays
+    .map((d) => dayToRRule[d])
+    .filter((d): d is number => d !== undefined);
+
+  const rule = new RRule({
+    freq: RRule.WEEKLY,
+    dtstart: startsAt,
+    byweekday: weekdays,
+    until: recurrenceEndsAt,
+  });
+
+  return rule.toString().replace(/^RRULE:/, '');
+}
 
 export async function getShift(id: string, organizationUnitId: string) {
   const data = await getDataClient(organizationUnitId);
@@ -21,6 +51,12 @@ export const createShift = actionClient
   .action(async ({ parsedInput }) => {
     const data = await getDataClient(parsedInput.organizationUnitId);
 
+    const rrule = generateRrule(
+      parsedInput.startsAt,
+      parsedInput.recurrenceDays,
+      parsedInput.recurrenceEndsAt,
+    );
+
     const input: CreateShiftInput = {
       title: parsedInput.name,
       startsAt: parsedInput.startsAt.toISOString(),
@@ -31,9 +67,9 @@ export const createShift = actionClient
         ? ShiftVisibility.AllMembers
         : ShiftVisibility.InvitedMembers,
       invitedMemberIds: parsedInput.invitedMemberIds,
-      maxVolunteers: parsedInput.maxVolunteers ?? null,
-      recurrenceDays: (parsedInput.recurrenceDays as RecurrenceDay[]) ?? null,
-      recurrenceEndsAt: parsedInput.recurrenceEndsAt?.toISOString() ?? null,
+      maxVolunteers:
+        (parsedInput.maxVolunteers as number | null | undefined) ?? null,
+      rrule,
     };
 
     return await data.shift.create(input);
@@ -49,6 +85,12 @@ export const updateShift = actionClient
   .action(async ({ parsedInput }) => {
     const data = await getDataClient(parsedInput.organizationUnitId);
 
+    const rrule = generateRrule(
+      parsedInput.startsAt,
+      parsedInput.recurrenceDays,
+      parsedInput.recurrenceEndsAt,
+    );
+
     const input: UpdateShiftInput = {
       title: parsedInput.name,
       startsAt: parsedInput.startsAt.toISOString(),
@@ -59,9 +101,9 @@ export const updateShift = actionClient
         ? ShiftVisibility.AllMembers
         : ShiftVisibility.InvitedMembers,
       invitedMemberIds: parsedInput.invitedMemberIds,
-      maxVolunteers: parsedInput.maxVolunteers ?? null,
-      recurrenceDays: (parsedInput.recurrenceDays as RecurrenceDay[]) ?? null,
-      recurrenceEndsAt: parsedInput.recurrenceEndsAt?.toISOString() ?? null,
+      maxVolunteers:
+        (parsedInput.maxVolunteers as number | null | undefined) ?? null,
+      rrule,
     };
 
     return await data.shift.update(parsedInput.id, input);

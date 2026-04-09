@@ -1,5 +1,5 @@
 import { CreateTimeEntrySheet } from '@/components/sheets/create-time-entry-sheet';
-import { getAvailableShiftsWithVolunteers } from '@/domain/time-entry/queries';
+import { getAvailableShifts } from '@/domain/time-entry/queries';
 import { getDataClient } from '@/lib/data-client';
 import { requireOrgAccess } from '@/lib/org-context-server';
 import { EmptyTimeEntries } from '@/domain/time-entry/components/empty-time-entries';
@@ -17,7 +17,7 @@ export default async function TimesheetsPage({ params }: TimesheetsPageProps) {
 
   const [timeEntries, { shifts, allVolunteers }] = await Promise.all([
     data.timeEntry.findAll(),
-    getAvailableShiftsWithVolunteers(orgUId, org.organizationId),
+    getAvailableShifts(orgUId, org.organizationId),
   ]);
 
   const hasTimeEntries = timeEntries.pagination.total > 0;
@@ -29,7 +29,10 @@ export default async function TimesheetsPage({ params }: TimesheetsPageProps) {
         <div>
           <h1 className="page-title">Timesheets</h1>
         </div>
-        <CreateTimeEntrySheet shifts={shifts} allVolunteers={allVolunteers} />
+        <CreateTimeEntrySheet
+          shiftInstances={shifts}
+          allVolunteers={allVolunteers}
+        />
       </div>
 
 

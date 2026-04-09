@@ -27,8 +27,13 @@ query GetTimeEntries($limit: Int!, $offset: Int!) {
         name
         email
       }
-      shift {
-        title
+      shiftInstance {
+        id
+        actualStartsAt
+        actualEndsAt
+        master {
+          title
+        }
       }
     }
     pagination {
@@ -46,10 +51,13 @@ query GetTimeEntriesByUser($userId: String!, $limit: Int!, $offset: Int!) {
       id
       startedAt
       endedAt
-      shift {
-        title
-        startsAt
-        endsAt
+      shiftInstance {
+        id
+        actualStartsAt
+        actualEndsAt
+        master {
+          title
+        }
       }
     }
     pagination {

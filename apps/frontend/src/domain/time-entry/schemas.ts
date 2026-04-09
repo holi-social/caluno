@@ -1,7 +1,7 @@
 import z from 'zod';
 
 export const createTimeEntrySchema = z.object({
-  shiftId: z.string(),
+  shiftInstanceId: z.string(),
   volunteerId: z.string(),
   startedAt: z.string().min(1, 'Start time is required'),
   endedAt: z.string().optional(),

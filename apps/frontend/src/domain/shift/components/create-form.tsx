@@ -21,7 +21,11 @@ export function CreateShiftForm({ onCancel }: CreateShiftFormProps) {
   const onSubmit = (formData: ShiftFormValues) => {
     setServerError(null);
     startTransition(async () => {
-      const result = await createShift({ ...formData, invitedMemberIds: [] });
+      const result = await createShift({
+        ...formData,
+        invitedMemberIds: [],
+        maxVolunteers: formData.maxVolunteers ?? null,
+      });
       if (result?.serverError) {
         setServerError(result.serverError);
       } else {

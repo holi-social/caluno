@@ -6,12 +6,12 @@ import {
   SidebarTrigger,
 } from '@repo/ui';
 import type { ReactNode } from 'react';
-import { CreateShiftButton } from '@/domain/shift/components/create-shift-button';
 import { DashboardSidebar } from '@/components/dashboard-sidebar';
 import { InviteShiftSheet } from '@/components/sheets/invite-shift-sheet';
 import { ShiftSheet } from '@/components/sheets/shift-sheet';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { OrgSyncProvider } from '@/domain/organization/components/org-sync-provider';
+import { CreateShiftButton } from '@/domain/shift/components/create-shift-button';
 import { requireAuth } from '@/lib/auth-server';
 import { GRAPHQL_API_URL } from '@/lib/constants';
 import { getDataClient } from '@/lib/data-client';
