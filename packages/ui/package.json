@@ -15,8 +15,8 @@
   },
   "scripts": {
     "check-types": "tsc --noEmit",
-    "storybook": "storybook dev -p 6006",
-    "build-storybook": "storybook build"
+    "dev": "storybook dev -p 6006 --no-open",
+    "build": "storybook build"
   },
   "devDependencies": {
     "@repo/typescript-config": "*",
