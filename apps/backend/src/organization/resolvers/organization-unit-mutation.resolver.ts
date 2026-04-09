@@ -20,9 +20,7 @@ export class OrganizationUnitMutationResolver {
   async createOrganizationUnit(
     @Args('input') input: CreateOrganizationUnitInput,
   ): Promise<OrganizationUnit> {
-    const organizationUnit = await this.organizationUnitService.create(
-      input,
-    );
+    const organizationUnit = await this.organizationUnitService.create(input);
     return this.organizationUnitMapper.toModelOrThrow(organizationUnit);
   }
 
@@ -44,9 +42,7 @@ export class OrganizationUnitMutationResolver {
   async deleteOrganizationUnit(
     @Args('id') id: string,
   ): Promise<OrganizationUnit> {
-    const organizationUnit = await this.organizationUnitService.delete(
-      id,
-    );
+    const organizationUnit = await this.organizationUnitService.delete(id);
     return this.organizationUnitMapper.toModelOrThrow(organizationUnit);
   }
 }

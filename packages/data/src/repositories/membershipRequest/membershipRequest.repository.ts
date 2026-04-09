@@ -77,4 +77,17 @@ export class MembershipRequestRepository extends BaseRepository {
       throw DataError.fromGraphQLError(error);
     }
   }
+
+  async findMine(options: FindMembershipRequestsOptions = {}) {
+    try {
+      const data = await this.sdk.GetMyMembershipRequests({
+        limit: options.limit ?? 10,
+        offset: options.offset ?? 0,
+        status: options.status,
+      });
+      return data.myMembershipRequests;
+    } catch (error) {
+      throw DataError.fromGraphQLError(error);
+    }
+  }
 }

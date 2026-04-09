@@ -10,6 +10,7 @@ export * from './components/base/checkbox';
 export * from './components/base/combobox';
 export * from './components/base/command';
 export * from './components/base/dialog';
+export * from './components/base/empty';
 export * from './components/base/field';
 export * from './components/base/input-group';
 export * from './components/base/label';

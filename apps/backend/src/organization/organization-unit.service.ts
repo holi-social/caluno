@@ -29,9 +29,7 @@ export class OrganizationUnitService {
     });
   }
 
-  async findBySlug(
-    slug: string,
-  ): Promise<OrganizationUnitEntity | undefined> {
+  async findBySlug(slug: string): Promise<OrganizationUnitEntity | undefined> {
     return this.db.query.organizationUnits.findFirst({
       where: { slug },
     });
@@ -79,9 +77,7 @@ export class OrganizationUnitService {
     });
   }
 
-  async findChildren(
-    parentId: string,
-  ): Promise<OrganizationUnitEntity[]> {
+  async findChildren(parentId: string): Promise<OrganizationUnitEntity[]> {
     return this.db.query.organizationUnits.findMany({
       where: { parentId },
     });
@@ -190,9 +186,7 @@ export class OrganizationUnitService {
     return updated;
   }
 
-  async delete(
-    id: string,
-  ): Promise<OrganizationUnitEntity> {
+  async delete(id: string): Promise<OrganizationUnitEntity> {
     const unit = await this.findById(id);
 
     if (!unit) {
@@ -207,11 +201,7 @@ export class OrganizationUnitService {
 
     const [deleted] = await this.db
       .delete(schema.organizationUnits)
-      .where(
-        and(
-          eq(schema.organizationUnits.id, id),
-        ),
-      )
+      .where(and(eq(schema.organizationUnits.id, id)))
       .returning();
 
     if (!deleted) {

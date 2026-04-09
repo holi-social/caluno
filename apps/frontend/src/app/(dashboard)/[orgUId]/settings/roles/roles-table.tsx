@@ -1,6 +1,6 @@
 'use client';
 
-import { type RoleListItem, PermissionKey } from '@repo/data';
+import { PermissionKey, type RoleListItem } from '@repo/data';
 import { useOrgUId } from '@repo/data/react';
 import {
   Badge,
@@ -41,9 +41,7 @@ export function RolesTable({ roles }: RolesTableProps) {
               <TableCell className="font-medium">
                 <div className="flex items-center gap-2">
                   {role.name}
-                  {role.isInternal && (
-                    <Badge variant="secondary">System</Badge>
-                  )}
+                  {role.isInternal && <Badge variant="secondary">System</Badge>}
                 </div>
               </TableCell>
               <TableCell className="text-muted-foreground">
@@ -57,7 +55,11 @@ export function RolesTable({ roles }: RolesTableProps) {
                       <EditRoleSheet
                         role={role}
                         trigger={
-                          <Button variant="outline" size="icon-xs" aria-label='Edit a roles permissions'>
+                          <Button
+                            variant="outline"
+                            size="icon-xs"
+                            aria-label="Edit a roles permissions"
+                          >
                             <Edit />
                           </Button>
                         }
@@ -69,7 +71,11 @@ export function RolesTable({ roles }: RolesTableProps) {
                         roleName={role.name}
                         organizationUnitId={orgUId}
                         trigger={
-                          <Button variant="destructive" size="icon-xs" aria-label='Delete role'>
+                          <Button
+                            variant="destructive"
+                            size="icon-xs"
+                            aria-label="Delete role"
+                          >
                             <TrashIcon />
                           </Button>
                         }

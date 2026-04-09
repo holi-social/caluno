@@ -19,7 +19,6 @@ export class AuthService {
     private readonly db: Database,
   ) {}
 
-
   async createRole(
     organizationUnitId: string,
     input: CreateRoleInput,
@@ -79,7 +78,9 @@ export class AuthService {
 
     return membership.role.permissions
       .map((rolePermission) => rolePermission.permission)
-      .filter((permission): permission is PermissionEntity => permission !== null);
+      .filter(
+        (permission): permission is PermissionEntity => permission !== null,
+      );
   }
 
   async hasRequiredPermissions(

@@ -32,9 +32,7 @@ export default async function CheckInPage({ params }: CheckInPageProps) {
   const organizations = await getMyRootOrganizationUnits();
 
   if (organizations.length === 1) {
-    return redirect(
-      `/${organizations[0]?.id}/check-in/${checkInId}/decide`,
-    );
+    return redirect(`/${organizations[0]?.id}/check-in/${checkInId}/decide`);
   }
 
   return (

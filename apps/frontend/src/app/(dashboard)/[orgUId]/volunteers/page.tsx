@@ -11,6 +11,7 @@ import { LogIn } from 'lucide-react';
 import Link from 'next/link';
 import { ButtonClipboard } from '@/components/button-clipboard';
 import { organizationUnitUrl } from '@/domain/organization/share';
+import { EmptyVolunteers } from '@/domain/volunteer/empty-volunteers';
 import { getDataClient } from '@/lib/data-client';
 import { requireOrgAccess } from '@/lib/org-context-server';
 
@@ -24,7 +25,7 @@ export default async function VolunteersPage({ params }: VolunteersPageProps) {
   const { org } = await requireOrgAccess(orgUId);
   const data = await getDataClient(orgUId);
 
-  const orgUUrl = organizationUnitUrl(orgUId);
+  const orgUnitUrl = organizationUnitUrl(orgUId);
 
   const volunteers = await data.organization.findVolunteers(org.organizationId);
 
@@ -39,41 +40,55 @@ export default async function VolunteersPage({ params }: VolunteersPageProps) {
         </div>
 
         <ButtonClipboard
-          text="Copy organization unit link"
-          copyText={orgUUrl}
-          toastMessage="Organization unit link copied to clipboard"
+          text="Copy invite link"
+          copyText={orgUnitUrl}
+          toastMessage="Invite link copied to clipboard"
         />
       </div>
 
-      <div className="rounded-md border overflow-x-auto">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Name</TableHead>
-              <TableHead>Email</TableHead>
-              <TableHead></TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {volunteers.map((volunteer) => (
-              <TableRow key={volunteer.id}>
-                <TableCell>{volunteer.name}</TableCell>
-                <TableCell>{volunteer.email}</TableCell>
-                <TableCell>
-                  <Link
-                    href={`/${orgUId}/check-in/${volunteer.checkInId}/check-in`}
-                    aria-label="Check-in volunteer"
-                  >
-                    <Button size="icon-xs" variant="outline" aria-label='Check-in the volunteer to a shift'>
-                      <LogIn />
-                    </Button>
-                  </Link>
-                </TableCell>
+      {volunteers.length > 0 ? (
+        <div className="rounded-md border overflow-x-auto">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Name</TableHead>
+                <TableHead>Email</TableHead>
+                <TableHead></TableHead>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </div>
+            </TableHeader>
+            <TableBody>
+              {volunteers.map((volunteer) => (
+                <TableRow key={volunteer.id}>
+                  <TableCell>{volunteer.name}</TableCell>
+                  <TableCell>{volunteer.email}</TableCell>
+                  <TableCell>
+                    <Link
+                      href={`/${orgUId}/check-in/${volunteer.checkInId}/check-in`}
+                      aria-label="Check-in volunteer"
+                    >
+                      <Button
+                        size="icon-xs"
+                        variant="outline"
+                        aria-label="Check-in the volunteer to a shift"
+                      >
+                        <LogIn />
+                      </Button>
+                    </Link>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
+      ) : (
+        <EmptyVolunteers>
+          <ButtonClipboard
+            text="Copy invite link"
+            copyText={orgUnitUrl}
+            toastMessage="Invite link copied to clipboard"
+          />
+        </EmptyVolunteers>
+      )}
     </div>
   );
 }

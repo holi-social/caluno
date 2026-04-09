@@ -34,7 +34,10 @@ export const ShiftSelectorCard = ({
         <AlertDescription>
           <span>
             Please{' '}
-            <Link href={`/${organizationUnitId}/shifts/new`} className="underline">
+            <Link
+              href={`/${organizationUnitId}/shifts/new`}
+              className="underline"
+            >
               add a shift
             </Link>{' '}
             or adjust the time-range of an{' '}

@@ -65,3 +65,27 @@ query GetMembershipRequests(
     }
   }
 }
+
+query GetMyMembershipRequests(
+  $status: MembershipRequestStatus
+  $limit: Int!
+  $offset: Int!
+) {
+  myMembershipRequests(status: $status, limit: $limit, offset: $offset) {
+    items {
+      id
+      organizationUnit {
+        id
+        name
+      }
+      user {
+        id
+        name
+        email
+      }
+      status
+      reviewedAt
+      createdAt
+    }
+  }
+}

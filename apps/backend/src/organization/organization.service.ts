@@ -46,10 +46,7 @@ export class OrganizationService {
         createdAt: schema.organizations.createdAt,
       })
       .from(schema.memberships)
-      .innerJoin(
-        schema.roles,
-        eq(schema.memberships.roleId, schema.roles.id),
-      )
+      .innerJoin(schema.roles, eq(schema.memberships.roleId, schema.roles.id))
       .innerJoin(
         schema.organizationUnits,
         eq(schema.roles.organizationUnitId, schema.organizationUnits.id),
@@ -74,10 +71,7 @@ export class OrganizationService {
         total: sql<number>`count(distinct ${schema.organizations.id})`,
       })
       .from(schema.memberships)
-      .innerJoin(
-        schema.roles,
-        eq(schema.memberships.roleId, schema.roles.id),
-      )
+      .innerJoin(schema.roles, eq(schema.memberships.roleId, schema.roles.id))
       .innerJoin(
         schema.organizationUnits,
         eq(schema.roles.organizationUnitId, schema.organizationUnits.id),
