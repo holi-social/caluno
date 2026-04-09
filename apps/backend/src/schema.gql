@@ -213,6 +213,7 @@ type Query {
   me: User!
   membership(organizationUnitId: ID!): Membership!
   membershipRequests(limit: Int! = 10, offset: Int! = 0, organizationUnitId: ID!, status: MembershipRequestStatus): MembershipRequestPaginatedResponse!
+  myMembershipRequests(limit: Int! = 10, offset: Int! = 0, status: MembershipRequestStatus): MembershipRequestPaginatedResponse!
   organization(id: String!): Organization!
   organizationBySlug(slug: String!): Organization!
   organizationUnit(id: String!): OrganizationUnit

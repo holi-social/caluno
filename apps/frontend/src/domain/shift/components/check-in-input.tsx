@@ -21,7 +21,9 @@ export const CheckInInput = ({ organizationUnitId }: CheckInInputProps) => {
   const router = useRouter();
 
   const handleCheckIn = () =>
-    router.push(`/${organizationUnitId}/check-in/${value.toLowerCase()}/decide`);
+    router.push(
+      `/${organizationUnitId}/check-in/${value.toLowerCase()}/decide`,
+    );
 
   return (
     <div className="flex gap-2">

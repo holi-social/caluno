@@ -1,4 +1,5 @@
 'use client';
+import { PermissionKey } from '@repo/data';
 import {
   Button,
   Sidebar,
@@ -22,7 +23,6 @@ import {
   ShieldIcon,
   UsersIcon,
 } from 'lucide-react';
-import { PermissionKey } from '@repo/data';
 import { useParams, useRouter } from 'next/navigation';
 import { useMemo } from 'react';
 import { OrgSwitcher } from '@/domain/organization/components/org-switcher';

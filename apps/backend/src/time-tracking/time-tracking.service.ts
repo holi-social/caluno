@@ -1,7 +1,7 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { and, count, eq } from 'drizzle-orm';
-import { DATABASE_CONNECTION } from '../database/database-connection';
 import type { Database } from '../database/database.module';
+import { DATABASE_CONNECTION } from '../database/database-connection';
 import * as schema from '../database/schema';
 import { NotFoundGraphQLError } from '../graphql/errors';
 import { PaginationInput } from '../graphql/pagination.input';

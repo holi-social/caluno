@@ -1,4 +1,4 @@
-'use server'
+'use server';
 
 import type { PermissionKey } from '@repo/data';
 import { redirect } from 'next/navigation';

@@ -64,7 +64,9 @@ async function seed() {
       description: permissions.description,
     })
     .from(permissions);
-  const existingByKey = new Map(existing.map((permission) => [permission.key, permission]));
+  const existingByKey = new Map(
+    existing.map((permission) => [permission.key, permission]),
+  );
 
   const insertedKeys = values
     .filter(({ key }) => !existingByKey.has(key))
@@ -82,15 +84,17 @@ async function seed() {
 
   await db.transaction(async (tx) => {
     if (staleKeys.length > 0) {
-      await tx.delete(schema.rolePermissions).where(
-        inArray(
-          schema.rolePermissions.permissionId,
-          tx
-            .select({ id: permissions.id })
-            .from(permissions)
-            .where(inArray(permissions.key, staleKeys)),
-        ),
-      );
+      await tx
+        .delete(schema.rolePermissions)
+        .where(
+          inArray(
+            schema.rolePermissions.permissionId,
+            tx
+              .select({ id: permissions.id })
+              .from(permissions)
+              .where(inArray(permissions.key, staleKeys)),
+          ),
+        );
       await tx.delete(permissions).where(inArray(permissions.key, staleKeys));
       console.log(
         `Removed ${staleKeys.length} stale permissions: ${staleKeys.join(', ')}`,
@@ -109,7 +113,9 @@ async function seed() {
   });
 
   console.log(`Inserted ${insertedKeys.length} new permissions`);
-  console.log(`Updated ${updatedDescriptionKeys.length} permission descriptions`);
+  console.log(
+    `Updated ${updatedDescriptionKeys.length} permission descriptions`,
+  );
   console.log(`Synced ${values.length} permissions in total`);
   await pool.end();
 }
