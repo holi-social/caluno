@@ -3,7 +3,6 @@ import { createPaginatedResponseType } from '../../graphql/paginated-response.mo
 import { Organization } from '../../organization/models/organization.model';
 import { User } from '../../user/models/user.model';
 import { ShiftVisibility } from '../enums';
-import { ShiftRecurrenceRule } from './shift-recurrence-rule.model';
 
 @ObjectType()
 export class Shift {
@@ -22,20 +21,11 @@ export class Shift {
   @Field(() => Organization)
   organization: Organization;
 
-  @Field(() => Date)
-  startsAt: Date;
-
-  @Field(() => Date)
-  endsAt: Date;
-
   @Field(() => User)
   createdBy: User;
 
   @Field(() => String, { nullable: true })
   location: string | null;
-
-  @Field(() => [User], { nullable: true })
-  volunteers: User[];
 
   @Field(() => ShiftVisibility)
   visibility: ShiftVisibility;
@@ -43,8 +33,17 @@ export class Shift {
   @Field(() => Int, { nullable: true })
   maxVolunteers: number | null;
 
-  @Field(() => ShiftRecurrenceRule, { nullable: true })
-  recurrenceRule: ShiftRecurrenceRule | null;
+  @Field(() => String, { nullable: true })
+  rrule: string | null;
+
+  @Field(() => Date)
+  originalStartsAt: Date;
+
+  @Field(() => Int)
+  durationMinutes: number;
+
+  @Field(() => Boolean)
+  isDeleted: boolean;
 }
 
 export const ShiftPaginatedResponse = createPaginatedResponseType<Shift>(

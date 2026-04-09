@@ -1,7 +1,7 @@
 import { defineRelationsPart } from 'drizzle-orm';
 import * as schema from '../../database/schema';
 
-export const shiftRelations = defineRelationsPart(schema, (r) => ({
+export const shiftsRelations = defineRelationsPart(schema, (r) => ({
   shifts: {
     organizationUnit: r.one.organizationUnits({
       from: r.shifts.organizationUnitId,
@@ -11,13 +11,9 @@ export const shiftRelations = defineRelationsPart(schema, (r) => ({
       from: r.shifts.createdById,
       to: r.users.id,
     }),
-    invites: r.many.shiftInvites({
+    instances: r.many.shiftInstances({
       from: r.shifts.id,
-      to: r.shiftInvites.shiftId,
-    }),
-    recurrenceRule: r.one.shiftRecurrenceRules({
-      from: r.shifts.id,
-      to: r.shiftRecurrenceRules.shiftId,
+      to: r.shiftInstances.masterId,
     }),
   },
 }));

@@ -1,4 +1,5 @@
 import {
+  boolean,
   index,
   integer,
   pgEnum,
@@ -25,29 +26,27 @@ export const shifts = pgTable(
     slug: text('slug').notNull().unique(),
     instructions: text('instructions'),
     organizationUnitId: uuid('organization_unit_id')
-      .references(() => organizationUnits.id, {
-        onDelete: 'cascade',
-      })
+      .references(() => organizationUnits.id, { onDelete: 'cascade' })
       .notNull(),
-    startsAt: timestamp('starts_at').notNull(),
-    endsAt: timestamp('ends_at').notNull(),
     createdById: text('created_by_id')
-      .references(() => users.id, {
-        onDelete: 'restrict',
-      })
+      .references(() => users.id, { onDelete: 'restrict' })
       .notNull(),
     location: text('location'),
     visibility: shiftVisibilityEnum('visibility')
       .notNull()
       .default(ShiftVisibility.ALL_MEMBERS),
     maxVolunteers: integer('max_volunteers'),
+    rrule: text('rrule'),
+    originalStartsAt: timestamp('original_starts_at').notNull(),
+    durationMinutes: integer('duration_minutes').notNull(),
+    isDeleted: boolean('is_deleted').notNull().default(false),
     ...timestampColumns,
   },
   (table) => [
-    index('idx_shifts_organization_unit_id').on(table.organizationUnitId),
+    index('idx_shifts_org_unit_id').on(table.organizationUnitId),
     index('idx_shifts_created_by_id').on(table.createdById),
-    index('idx_shifts_starts_at').on(table.startsAt),
-    index('idx_shifts_ends_at').on(table.endsAt),
+    index('idx_shifts_slug').on(table.slug),
+    index('idx_shifts_is_deleted').on(table.isDeleted),
   ],
 );
 
