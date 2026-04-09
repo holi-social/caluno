@@ -20,6 +20,7 @@
   },
   "devDependencies": {
     "@repo/typescript-config": "*",
+    "@storybook/addon-themes": "^10.3.5",
     "@storybook/react-vite": "^10.3.5",
     "@tailwindcss/postcss": "^4.2.2",
     "@types/node": "^22.15.3",
