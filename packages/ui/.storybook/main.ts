@@ -24,5 +24,8 @@ const config: StorybookConfig = {
     }
     return config;
   },
+  features: {
+    sidebarOnboardingChecklist: false
+  }
 };
 export default config;
