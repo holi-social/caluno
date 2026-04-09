@@ -26,6 +26,47 @@ export class OrganizationRepository extends BaseRepository {
     }
   }
 
+  async findRootUnit(organizationId: string) {
+    try {
+      const data = await this.sdk.GetOrganizationRoot({ id: organizationId });
+      return data.organization?.root ?? null;
+    } catch (error) {
+      throw DataError.fromGraphQLError(error);
+    }
+  }
+
+  async findVolunteersByUnit(organizationUnitId: string) {
+    try {
+      const data = await this.sdk.GetOrganizationVolunteersByUnit({
+        id: organizationUnitId,
+      });
+      return data.organizationUnit?.organization.volunteers ?? [];
+    } catch (error) {
+      throw DataError.fromGraphQLError(error);
+    }
+  }
+
+  async findUnitWithOrg(organizationUnitId: string) {
+    try {
+      const data = await this.sdk.GetOrganizationUnitWithOrg({
+        id: organizationUnitId,
+      });
+      return data.organizationUnit ?? null;
+    } catch (error) {
+      throw DataError.fromGraphQLError(error);
+    }
+  }
+
+  async findAllWithRoot(options: FindOrganizationsOptions = {}) {
+    const { limit = 100, offset = 0 } = options;
+    try {
+      const data = await this.sdk.GetOrganizationsWithRoot({ limit, offset });
+      return data.organizations.items;
+    } catch (error) {
+      throw DataError.fromGraphQLError(error);
+    }
+  }
+
   async findAll(options: FindOrganizationsOptions = {}) {
     const { limit = 10, offset = 0 } = options;
     try {

@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { and, count, eq } from 'drizzle-orm';
+import { eq } from 'drizzle-orm';
 import type { Database } from '../database/database.module';
 import { DATABASE_CONNECTION } from '../database/database-connection';
 import * as schema from '../database/schema';
@@ -21,22 +21,29 @@ export class TimeTrackingService {
     organizationUnitId: string,
     input: AddTimeEntryInput,
   ): Promise<TimeEntryEntity> {
-    const shift = await this.db.query.shifts.findFirst({
-      where: {
-        organizationUnitId,
-        id: input.shiftId,
-      },
+    const instance = await this.db.query.shiftInstances.findFirst({
+      where: { id: input.shiftInstanceId },
+      with: { master: true },
     });
 
-    if (!shift) {
+    if (
+      !instance ||
+      !instance.master ||
+      instance.master.organizationUnitId !== organizationUnitId
+    ) {
       throw new NotFoundGraphQLError(
-        'Shift does not exist in this organisation',
+        'Shift instance does not exist in this organisation',
       );
     }
 
     const [timeEntry] = await this.db
       .insert(schema.timeEntries)
-      .values(input)
+      .values({
+        shiftInstanceId: input.shiftInstanceId,
+        volunteerId: input.volunteerId,
+        startedAt: input.startedAt,
+        notes: input.notes,
+      })
       .returning();
     return timeEntry;
   }
@@ -46,22 +53,25 @@ export class TimeTrackingService {
     organizationUnitId: string,
     input: CloseTimeEntryInput,
   ): Promise<TimeEntryEntity> {
-    const [timeEntry] = await this.db
-      .update(schema.timeEntries)
-      .set(input)
-      .from(schema.shifts)
-      .where(
-        and(
-          eq(schema.timeEntries.id, id),
-          eq(schema.shifts.id, schema.timeEntries.shiftId),
-          eq(schema.shifts.organizationUnitId, organizationUnitId),
-        ),
-      )
-      .returning();
+    const entry = await this.db.query.timeEntries.findFirst({
+      where: { id },
+      with: { shiftInstance: { with: { master: true } } },
+    });
 
-    if (!timeEntry) {
+    if (
+      !entry ||
+      !entry.shiftInstance ||
+      !entry.shiftInstance.master ||
+      entry.shiftInstance.master.organizationUnitId !== organizationUnitId
+    ) {
       throw new NotFoundGraphQLError('Time entry not found');
     }
+
+    const [timeEntry] = await this.db
+      .update(schema.timeEntries)
+      .set({ endedAt: input.endedAt, notes: input.notes })
+      .where(eq(schema.timeEntries.id, id))
+      .returning();
 
     return timeEntry;
   }
@@ -70,14 +80,17 @@ export class TimeTrackingService {
     organizationUnitId: string,
     id: string,
   ): Promise<TimeEntryEntity> {
-    const timeEntry = await this.db.query.timeEntries.findFirst({
-      where: {
-        shift: { organizationUnitId },
-        id,
-      },
+    const entry = await this.db.query.timeEntries.findFirst({
+      where: { id },
+      with: { shiftInstance: { with: { master: true } } },
     });
 
-    if (!timeEntry) {
+    if (
+      !entry ||
+      !entry.shiftInstance ||
+      !entry.shiftInstance.master ||
+      entry.shiftInstance.master.organizationUnitId !== organizationUnitId
+    ) {
       throw new NotFoundGraphQLError('Time entry not found');
     }
 
@@ -92,22 +105,25 @@ export class TimeTrackingService {
     organizationUnitId: string,
     pagination: PaginationInput,
   ): Promise<{ entries: TimeEntryEntity[]; total: number }> {
-    const condition = { shift: { organizationUnitId } };
-
-    const entries = await this.db.query.timeEntries.findMany({
-      where: condition,
+    const timeEntries = await this.db.query.timeEntries.findMany({
+      with: { shiftInstance: { with: { master: true } } },
       orderBy: { startedAt: 'desc' },
-      limit: pagination.limit,
-      offset: pagination.offset,
     });
 
-    const [{ total }] = await this.db.query.timeEntries.findMany({
-      columns: {},
-      extras: { total: count() },
-      where: condition,
-    });
+    const filteredTimeEntries = timeEntries.filter(
+      (entry) =>
+        entry.shiftInstance?.master?.organizationUnitId === organizationUnitId,
+    );
 
-    return { entries, total };
+    const paginated = filteredTimeEntries.slice(
+      pagination.offset,
+      pagination.offset + pagination.limit,
+    );
+
+    return {
+      entries: paginated as TimeEntryEntity[],
+      total: filteredTimeEntries.length,
+    };
   }
 
   async findByUser(
@@ -115,29 +131,21 @@ export class TimeTrackingService {
     userId: string,
     pagination: PaginationInput,
   ): Promise<{ entries: TimeEntryEntity[]; total: number }> {
-    //  TODO: All Entries should also be returned for a user, so they personally
-    //  Can see their entries in the system across the organizations
-    //  Should also have optionally filters - all orgs (so don't use AuthenticatedGraphQLContext in resolver)
-    //  Types of entries - all, closed, open
-
-    const condition = {
-      shift: { organizationUnitId },
-      volunteerId: userId,
-    };
-
-    const entries = await this.db.query.timeEntries.findMany({
-      where: condition,
+    const allEntries = await this.db.query.timeEntries.findMany({
+      where: { volunteerId: userId },
+      with: { shiftInstance: { with: { master: true } } },
       orderBy: { startedAt: 'desc' },
-      limit: pagination.limit,
-      offset: pagination.offset,
     });
 
-    const [{ total }] = await this.db.query.timeEntries.findMany({
-      columns: {},
-      extras: { total: count() },
-      where: condition,
-    });
+    const filtered = allEntries.filter(
+      (e) => e.shiftInstance?.master?.organizationUnitId === organizationUnitId,
+    );
 
-    return { entries, total };
+    const paginated = filtered.slice(
+      pagination.offset,
+      pagination.offset + pagination.limit,
+    );
+
+    return { entries: paginated as TimeEntryEntity[], total: filtered.length };
   }
 }

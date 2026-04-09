@@ -23,12 +23,9 @@ export function DeleteAlertDialog({
   onDelete,
   trigger,
 }: DeleteAlertDialogProps) {
-
   return (
     <AlertDialog>
-      <AlertDialogTrigger asChild>
-        {trigger}
-      </AlertDialogTrigger>
+      <AlertDialogTrigger asChild>{trigger}</AlertDialogTrigger>
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle>{title}</AlertDialogTitle>
@@ -38,10 +35,7 @@ export function DeleteAlertDialog({
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel>Cancel</AlertDialogCancel>
-          <AlertDialogAction
-            onClick={onDelete}
-            variant="destructive"
-          >
+          <AlertDialogAction onClick={onDelete} variant="destructive">
             Delete
           </AlertDialogAction>
         </AlertDialogFooter>

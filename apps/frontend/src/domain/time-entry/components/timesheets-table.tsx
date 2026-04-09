@@ -69,7 +69,9 @@ export function TimesheetsTable({ entries }: TimesheetsTableProps) {
               key={entry.id}
               className={cn({ 'bg-muted/80': !entry.endedAt })}
             >
-              <TableCell>{entry.shift?.title ?? 'N/A'}</TableCell>
+              <TableCell>
+                {entry.shiftInstance?.master?.title ?? 'N/A'}
+              </TableCell>
               <TableCell>
                 {entry.volunteer?.name ?? entry.volunteer?.email ?? 'N/A'}
               </TableCell>

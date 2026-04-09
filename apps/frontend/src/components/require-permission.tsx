@@ -16,5 +16,5 @@ export function RequirePermission({
   fallback = null,
 }: RequirePermissionProps) {
   const hasPermission = useHasPermission(permission);
-  return hasPermission ? <>{children}</> : <>{fallback}</>;
+  return hasPermission ? children : fallback;
 }

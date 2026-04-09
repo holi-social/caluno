@@ -3,67 +3,27 @@ import { cookies } from 'next/headers';
 import { notFound, redirect } from 'next/navigation';
 import { getDataClient } from './data-client';
 
-const ROOT_ORGS_QUERY = /* GraphQL */ `
-  query GetMyOrganizationsWithRoot($limit: Int!, $offset: Int!) {
-    organizations(limit: $limit, offset: $offset) {
-      items {
-        id
-        name
-        description
-        logoUrl
-        root {
-          id
-          slug
-          name
-          description
-          logoUrl
-        }
-      }
-    }
-  }
-`;
-
-interface RootOrganizationQueryResponse {
-  organizations: {
-    items: Array<{
-      id: string;
-      name: string;
-      description?: string | null;
-      logoUrl?: string | null;
-      root: {
-        id: string;
-        slug: string;
-        name: string;
-        description?: string | null;
-        logoUrl?: string | null;
-      };
-    }>;
-  };
-}
-
 export interface OrgContextData {
   id: string;
   slug: string;
   name: string;
   description?: string | null;
   logoUrl?: string | null;
+  address?: string | null;
   organizationId: string;
 }
 
 export async function getMyRootOrganizationUnits(): Promise<OrgContextData[]> {
   const data = await getDataClient();
-  const graphQLClient = data.getGraphQLClient();
-  const result = await graphQLClient.request<RootOrganizationQueryResponse>(
-    ROOT_ORGS_QUERY,
-    { limit: 100, offset: 0 },
-  );
+  const organizations = await data.organization.findAllWithRoot();
 
-  return result.organizations.items.map((organization) => ({
+  return organizations.map((organization) => ({
     id: organization.root.id,
     slug: organization.root.slug,
     name: organization.name,
     description: organization.description ?? organization.root.description,
     logoUrl: organization.logoUrl ?? organization.root.logoUrl,
+    address: organization.root.address ?? null,
     organizationId: organization.id,
   }));
 }

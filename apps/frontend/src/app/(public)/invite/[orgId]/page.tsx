@@ -3,18 +3,6 @@ import SendMembershipRequestButton from '@/domain/invite/components/send-members
 import { isAuthenticated } from '@/lib/auth-server';
 import { getDataClient } from '@/lib/data-client';
 
-const GET_ORGANIZATION_UNIT_QUERY = /* GraphQL */ `
-  query GetOrganizationUnitForInvite($id: String!) {
-    organizationUnit(id: $id) {
-      id
-      name
-      organization {
-        name
-      }
-    }
-  }
-`;
-
 interface InvitePageProps {
   params: Promise<{ orgId: string }>;
 }
@@ -29,15 +17,7 @@ export default async function InvitePage({ params }: InvitePageProps) {
   }
 
   const data = await getDataClient();
-  const graphQLClient = data.getGraphQLClient();
-  const result = await graphQLClient.request<{
-    organizationUnit: {
-      id: string;
-      name: string;
-      organization: { name: string };
-    } | null;
-  }>(GET_ORGANIZATION_UNIT_QUERY, { id: organizationUnitId });
-  const orgUnit = result.organizationUnit;
+  const orgUnit = await data.organization.findUnitWithOrg(organizationUnitId);
 
   if (!orgUnit) {
     notFound();

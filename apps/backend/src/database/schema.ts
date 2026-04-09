@@ -8,5 +8,6 @@ export * from '../organization/schemas/organization.schema';
 export * from '../organization/schemas/organization-unit.schema';
 export * from '../organization/schemas/organization-unit-type.schema';
 export * from '../shift/schemas/shift.schema';
-export * from '../shift/schemas/shift-invite.schema';
+export * from '../shift/schemas/shift-instance.schema';
+export * from '../shift/schemas/shift-instance-invite.schema';
 export * from '../time-tracking/schemas/time-entry.schema';

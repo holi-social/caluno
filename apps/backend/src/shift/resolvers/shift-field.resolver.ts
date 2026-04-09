@@ -20,11 +20,4 @@ export class ShiftFieldResolver {
     const creator = await this.shiftService.findCreator(shift.createdById);
     return this.userMapper.toModelOrThrow(creator);
   }
-
-  @Permissions(PERMISSIONS.SHIFT_READ)
-  @ResolveField(() => User)
-  async volunteers(@Parent() shift: ShiftEntity): Promise<User[]> {
-    const volunteers = await this.shiftService.findVolunteers(shift.id);
-    return this.userMapper.toArray(volunteers);
-  }
 }

@@ -1,8 +1,9 @@
-import { Parent, ResolveField, Resolver } from '@nestjs/graphql';
+import { Context, Parent, ResolveField, Resolver } from '@nestjs/graphql';
 import { PERMISSIONS } from '../../auth/constants';
 import { Permissions } from '../../auth/decorators/permissions.decorator';
-import { ShiftMapper } from '../../shift/mappers/shift.mapper';
-import { Shift } from '../../shift/models/shift.model';
+import type { AuthenticatedGraphQLContext } from '../../graphql/graphql.context';
+import { ShiftInstanceMapper } from '../../shift/mappers/shift-instance.mapper';
+import { ShiftInstance } from '../../shift/models/shift-instance.model';
 import { ShiftService } from '../../shift/shift.service';
 import { UserMapper } from '../../user/mappers/user.mapper';
 import { User } from '../../user/models/user.model';
@@ -16,7 +17,7 @@ export class TimeEntryFieldResolver {
     private readonly shiftService: ShiftService,
     private readonly userService: UserService,
     private readonly userMapper: UserMapper,
-    private readonly shiftMapper: ShiftMapper,
+    private readonly shiftInstanceMapper: ShiftInstanceMapper,
   ) {}
 
   @Permissions(PERMISSIONS.TIME_ENTRY_READ)
@@ -27,9 +28,15 @@ export class TimeEntryFieldResolver {
   }
 
   @Permissions(PERMISSIONS.TIME_ENTRY_READ)
-  @ResolveField(() => Shift, { nullable: true })
-  async shift(@Parent() timeEntry: TimeEntryEntity): Promise<Shift> {
-    const shift = await this.shiftService.findById(timeEntry.shiftId);
-    return this.shiftMapper.toModelOrThrow(shift);
+  @ResolveField(() => ShiftInstance)
+  async shiftInstance(
+    @Parent() timeEntry: TimeEntryEntity,
+    @Context() context: AuthenticatedGraphQLContext,
+  ): Promise<ShiftInstance> {
+    const instance = await this.shiftService.findInstanceById(
+      timeEntry.shiftInstanceId,
+      context.organizationUnitId,
+    );
+    return this.shiftInstanceMapper.toModelOrThrow(instance);
   }
 }

@@ -1,10 +1,10 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { and, count, desc, eq, SQL } from 'drizzle-orm';
+import { and, count, eq, gte, inArray } from 'drizzle-orm';
 import type { Database } from '../database/database.module';
 import { DATABASE_CONNECTION } from '../database/database-connection';
 import * as schema from '../database/schema';
 import { UserEntity } from '../database/schema';
-import { NotFoundGraphQLError } from '../graphql/errors/not-found.error';
+import { ConflictGraphQLError, NotFoundGraphQLError } from '../graphql/errors';
 import type { PaginationInput } from '../graphql/pagination.input';
 import { UserService } from '../user/user.service';
 import { slugify } from '../utils/slug.util';
@@ -12,6 +12,8 @@ import { ShiftInviteStatus, ShiftVisibility } from './enums';
 import { CreateShiftInput } from './inputs/create-shift.input';
 import { UpdateShiftInput } from './inputs/update-shift.input';
 import type { ShiftEntity } from './schemas/shift.schema';
+import type { ShiftInstanceEntity } from './schemas/shift-instance.schema';
+import { expandShift } from './utils/rrule-expander';
 
 @Injectable()
 export class ShiftService {
@@ -21,9 +23,9 @@ export class ShiftService {
     private readonly userService: UserService,
   ) {}
 
-  async findById(id: string): Promise<ShiftEntity> {
+  async findById(id: string, organizationUnitId: string): Promise<ShiftEntity> {
     const shift = await this.db.query.shifts.findFirst({
-      where: { id },
+      where: { id, organizationUnitId },
     });
 
     if (!shift) {
@@ -32,28 +34,60 @@ export class ShiftService {
     return shift;
   }
 
+  async findByIdPublic(id: string): Promise<ShiftEntity | null> {
+    const result = await this.db.query.shifts.findFirst({
+      where: { id, isDeleted: false },
+    });
+    return result ?? null;
+  }
+
+  async findInstanceById(
+    id: string,
+    organizationUnitId: string,
+  ): Promise<ShiftInstanceEntity> {
+    const instance = await this.db.query.shiftInstances.findFirst({
+      where: { id },
+      with: { master: true },
+    });
+
+    if (!instance) {
+      throw new NotFoundGraphQLError(`Shift instance with ID ${id} not found`);
+    }
+
+    if (
+      !instance.master ||
+      instance.master.organizationUnitId !== organizationUnitId
+    ) {
+      throw new NotFoundGraphQLError(`Shift instance with ID ${id} not found`);
+    }
+
+    return instance;
+  }
+
   async findAll(
     organizationUnitId: string,
     pagination: PaginationInput,
-  ): Promise<{ shifts: ShiftEntity[]; total: number }> {
-    const condition: SQL<unknown> | undefined = and(
-      eq(schema.shifts.organizationUnitId, organizationUnitId),
-    );
+  ): Promise<{ items: ShiftEntity[]; total: number }> {
+    const shifts = await this.db.query.shifts.findMany({
+      where: {
+        organizationUnitId,
+        isDeleted: false,
+      },
+      orderBy: { createdAt: 'desc' },
+      limit: pagination.limit,
+      offset: pagination.offset,
+    });
 
-    const shifts = await this.db
-      .select()
-      .from(schema.shifts)
-      .where(condition)
-      .orderBy(desc(schema.shifts.startsAt))
-      .limit(pagination.limit)
-      .offset(pagination.offset);
+    const totalResult = await this.db.query.shifts.findMany({
+      where: {
+        organizationUnitId,
+        isDeleted: false,
+      },
+      columns: {},
+      extras: { total: count() },
+    });
 
-    const [{ total }] = await this.db
-      .select({ total: count() })
-      .from(schema.shifts)
-      .where(condition);
-
-    return { shifts, total };
+    return { items: shifts, total: totalResult[0]?.total ?? 0 };
   }
 
   async create(
@@ -61,116 +95,175 @@ export class ShiftService {
     organizationUnitId: string,
     input: CreateShiftInput,
   ): Promise<ShiftEntity> {
-    const [shift] = await this.db
-      .insert(schema.shifts)
-      .values({
-        ...input,
-        slug: slugify(input.title),
-        createdById: userId,
-        organizationUnitId,
-      })
-      .returning();
+    const { invitedMemberIds, ...shiftInput } = input;
+    const durationMinutes =
+      (shiftInput.endsAt.getTime() - shiftInput.startsAt.getTime()) / 60000;
 
-    /**
-     * If the shift is visible to all members, we automatically approve the invites for all members.
-     * If the shift is visible to specific members, we create invites for those members and approve them automatically.
-     * This is a temporary solution to avoid manually approving invites for the prototype.
-     * TODO: Refactor this when the prototype is complete.
-     */
+    return this.db.transaction(async (tx) => {
+      const [shift] = await tx
+        .insert(schema.shifts)
+        .values({
+          title: shiftInput.title,
+          slug: slugify(shiftInput.title),
+          instructions: shiftInput.instructions,
+          organizationUnitId,
+          createdById: userId,
+          location: shiftInput.location,
+          visibility: shiftInput.visibility,
+          maxVolunteers: shiftInput.maxVolunteers,
+          rrule: shiftInput.rrule,
+          originalStartsAt: shiftInput.startsAt,
+          durationMinutes,
+        })
+        .returning();
 
-    if (input.visibility === ShiftVisibility.ALL_MEMBERS) {
-      const members = await this.db.query.memberships.findMany({
-        where: { role: { organizationUnitId } },
-      });
-      const memberIds = members
-        .map((member) => member.userId)
-        .filter(
-          (memberId): memberId is string =>
-            memberId !== null && memberId !== userId,
+      const instances = expandShift(
+        shift.rrule,
+        shift.originalStartsAt,
+        shift.durationMinutes,
+      );
+
+      if (instances.length > 0) {
+        await tx.insert(schema.shiftInstances).values(
+          instances.map((inst) => ({
+            masterId: shift.id,
+            actualStartsAt: inst.actualStartsAt,
+            actualEndsAt: inst.actualEndsAt,
+            occurrenceIndex: inst.occurrenceIndex,
+          })),
         );
-      await this.createAndAutoApproveShiftInvites(shift.id, memberIds);
-    } else if (input.invitedMemberIds && input.invitedMemberIds.length > 0) {
-      await this.createAndAutoApproveShiftInvites(
-        shift.id,
-        input.invitedMemberIds,
+
+        if (invitedMemberIds?.length) {
+          const createdInstances = await tx.query.shiftInstances.findMany({
+            where: { masterId: shift.id },
+            columns: { id: true },
+          });
+          await this.createInvitesForInstances(
+            tx,
+            createdInstances.map((i) => i.id),
+            invitedMemberIds,
+          );
+        }
+      }
+
+      return shift;
+    });
+  }
+
+  private readonly MAX_INVITES_PER_OPERATION = 100000; // same as below easy guard to avoid not reasnable operations
+
+  private async createInvitesForInstances(
+    tx: Pick<Database, 'insert' | 'select'>,
+    instanceIds: string[],
+    memberIds: string[],
+  ): Promise<void> {
+    if (memberIds.length === 0 || instanceIds.length === 0) return;
+
+    const totalInvites = instanceIds.length * memberIds.length;
+    if (totalInvites > this.MAX_INVITES_PER_OPERATION) {
+      throw new ConflictGraphQLError(
+        `Cannot create ${totalInvites} invites. Maximum allowed is ${this.MAX_INVITES_PER_OPERATION}. ` +
+          `Try reducing volunteers or using smaller recurrence ranges.`,
       );
     }
 
-    return shift;
+    const BATCH_SIZE = 1000; // this manual batch is just an easy guard to avoid going over the 65k pg linit
+    const invites = instanceIds.flatMap((instanceId) =>
+      memberIds.map((userId) => ({
+        instanceId,
+        userId,
+        status: ShiftInviteStatus.ACCEPTED,
+      })),
+    );
+
+    for (let i = 0; i < invites.length; i += BATCH_SIZE) {
+      const batch = invites.slice(i, i + BATCH_SIZE);
+      await tx
+        .insert(schema.shiftInstanceInvites)
+        .values(batch)
+        .onConflictDoNothing();
+    }
   }
 
-  /**
-   * Invites members to a shift and approves them automatically.
-   * This is a temporary solution to avoid manually approving invites for the prototype.
-   * TODO: Refactor this method when the prototype is complete.
-   */
   async inviteMembersToShiftWithAutoApproval(
     shiftId: string,
     memberIds: string[],
+    organizationUnitId: string,
   ): Promise<ShiftEntity> {
-    const shift = await this.db.query.shifts.findFirst({
-      where: { id: shiftId },
+    const shift = await this.findById(shiftId, organizationUnitId);
+
+    const instances = await this.db.query.shiftInstances.findMany({
+      where: {
+        masterId: shiftId,
+        isCancelled: false,
+      },
     });
 
-    if (!shift) {
-      throw new NotFoundGraphQLError('Shift not found');
+    if (!shift.maxVolunteers) {
+      await this.createInvitesForInstances(
+        this.db,
+        instances.map((i) => i.id),
+        memberIds,
+      );
+      return shift;
     }
 
-    await this.db
-      .insert(schema.shiftInvites)
-      .values(
-        memberIds.map((memberId) => ({
-          shiftId,
-          userId: memberId,
-          status: ShiftInviteStatus.ACCEPTED,
-        })),
-      )
-      .onConflictDoUpdate({
-        target: [schema.shiftInvites.shiftId, schema.shiftInvites.userId],
-        set: { status: ShiftInviteStatus.ACCEPTED },
-      });
+    await this.db.transaction(async (tx) => {
+      const capacityViolations = await tx
+        .select({
+          instanceId: schema.shiftInstanceInvites.instanceId,
+          current: count(),
+        })
+        .from(schema.shiftInstanceInvites)
+        .innerJoin(
+          schema.shiftInstances,
+          eq(schema.shiftInstanceInvites.instanceId, schema.shiftInstances.id),
+        )
+        .where(
+          and(
+            eq(schema.shiftInstanceInvites.status, ShiftInviteStatus.ACCEPTED),
+            eq(schema.shiftInstances.masterId, shiftId),
+          ),
+        )
+        .groupBy(schema.shiftInstanceInvites.instanceId);
+
+      const violations = capacityViolations.filter(
+        (c) => c.current + memberIds.length > (shift.maxVolunteers ?? Infinity),
+      );
+
+      if (violations.length > 0) {
+        throw new ConflictGraphQLError(
+          `Cannot invite members: ${violations.length} instance(s) would exceed capacity of ${shift.maxVolunteers}`,
+        );
+      }
+
+      await this.createInvitesForInstances(
+        tx,
+        instances.map((i) => i.id),
+        memberIds,
+      );
+    });
 
     return shift;
   }
 
-  async findVolunteers(shiftId: string): Promise<UserEntity[]> {
-    const volunteers = await this.db.query.users.findMany({
+  async findVolunteers(
+    instanceId: string,
+    organizationUnitId: string,
+  ): Promise<UserEntity[]> {
+    const instance = await this.findInstanceById(
+      instanceId,
+      organizationUnitId,
+    );
+
+    return this.db.query.users.findMany({
       where: {
-        shiftInvites: {
-          shiftId,
+        shiftInstanceInvites: {
+          instanceId: instance.id,
           status: ShiftInviteStatus.ACCEPTED,
         },
       },
     });
-
-    return volunteers;
-  }
-
-  /**
-   * Creates shift invites and approves them automatically.
-   * This is a temporary solution to avoid manually approving invites for the prototype.
-   * TODO: Remove this method when the prototype is complete.
-   */
-
-  private async createAndAutoApproveShiftInvites(
-    shiftId: string,
-    memberIds: string[],
-  ): Promise<void> {
-    if (memberIds.length === 0) return;
-
-    await this.db
-      .insert(schema.shiftInvites)
-      .values(
-        memberIds.map((memberId) => ({
-          shiftId,
-          userId: memberId,
-          status: ShiftInviteStatus.ACCEPTED,
-        })),
-      )
-      .onConflictDoUpdate({
-        target: [schema.shiftInvites.shiftId, schema.shiftInvites.userId],
-        set: { status: ShiftInviteStatus.ACCEPTED },
-      });
   }
 
   async update(
@@ -179,15 +272,169 @@ export class ShiftService {
     organizationUnitId: string,
     input: UpdateShiftInput,
   ): Promise<ShiftEntity> {
-    const { title, ...rest } = input;
+    const { invitedMemberIds, ...shiftInput } = input;
 
+    return this.db.transaction(async (tx) => {
+      const existingShift = await tx.query.shifts.findFirst({
+        where: { id, organizationUnitId },
+      });
+
+      if (!existingShift) {
+        throw new NotFoundGraphQLError('Shift not found');
+      }
+
+      const [shift] = await tx
+        .update(schema.shifts)
+        .set({
+          title: shiftInput.title,
+          slug: shiftInput.title ? slugify(shiftInput.title) : undefined,
+          instructions: shiftInput.instructions,
+          location: shiftInput.location,
+          visibility: shiftInput.visibility,
+          maxVolunteers: shiftInput.maxVolunteers,
+          rrule: shiftInput.rrule,
+        })
+        .where(
+          and(
+            eq(schema.shifts.id, id),
+            eq(schema.shifts.organizationUnitId, organizationUnitId),
+          ),
+        )
+        .returning();
+
+      if (!shift) {
+        throw new NotFoundGraphQLError('Shift not found');
+      }
+
+      if (shiftInput.rrule) {
+        const now = new Date();
+
+        const futureInstanceIds = await tx.query.shiftInstances.findMany({
+          where: {
+            masterId: id,
+            isException: false,
+            actualStartsAt: { gte: now },
+          },
+          columns: { id: true },
+        });
+
+        const existingInvites = await tx
+          .select({ userId: schema.shiftInstanceInvites.userId })
+          .from(schema.shiftInstanceInvites)
+          .where(
+            and(
+              inArray(
+                schema.shiftInstanceInvites.instanceId,
+                futureInstanceIds.map((i) => i.id),
+              ),
+              eq(
+                schema.shiftInstanceInvites.status,
+                ShiftInviteStatus.ACCEPTED,
+              ),
+            ),
+          );
+
+        const existingInvitedUserIds = new Set(
+          existingInvites.map((i) => i.userId),
+        );
+
+        await tx
+          .delete(schema.shiftInstances)
+          .where(
+            and(
+              eq(schema.shiftInstances.masterId, id),
+              eq(schema.shiftInstances.isException, false),
+              gte(schema.shiftInstances.actualStartsAt, now),
+            ),
+          );
+
+        const instances = expandShift(
+          shift.rrule,
+          shift.originalStartsAt,
+          shift.durationMinutes,
+        );
+
+        let createdInstanceIds: string[] = [];
+        if (instances.length > 0) {
+          const futureInstances = instances.filter(
+            (i) => i.actualStartsAt >= now,
+          );
+
+          if (futureInstances.length > 0) {
+            const created = await tx
+              .insert(schema.shiftInstances)
+              .values(
+                futureInstances.map((inst) => ({
+                  masterId: shift.id,
+                  actualStartsAt: inst.actualStartsAt,
+                  actualEndsAt: inst.actualEndsAt,
+                  occurrenceIndex: inst.occurrenceIndex,
+                })),
+              )
+              .returning({ id: schema.shiftInstances.id });
+            createdInstanceIds = created.map((c) => c.id);
+          }
+        }
+
+        if (existingInvitedUserIds.size > 0 && createdInstanceIds.length > 0) {
+          await this.createInvitesForInstances(
+            tx,
+            createdInstanceIds,
+            Array.from(existingInvitedUserIds),
+          );
+        }
+
+        const futureExceptions = await tx.query.shiftInstances.findMany({
+          where: {
+            masterId: id,
+            isException: true,
+            actualStartsAt: { gte: now },
+          },
+        });
+
+        const newInstanceDates = new Set(
+          instances.map((i) => i.actualStartsAt.toISOString()),
+        );
+        const orphanedExceptions = futureExceptions.filter(
+          (e) => !newInstanceDates.has(e.actualStartsAt.toISOString()),
+        );
+
+        if (orphanedExceptions.length > 0) {
+          const orphanedIds = orphanedExceptions.map((e) => e.id);
+          await tx
+            .update(schema.shiftInstances)
+            .set({ isException: false })
+            .where(inArray(schema.shiftInstances.id, orphanedIds));
+        }
+      }
+
+      if (
+        shiftInput.visibility &&
+        existingShift?.visibility === ShiftVisibility.ALL_MEMBERS &&
+        shiftInput.visibility === ShiftVisibility.INVITED_MEMBERS
+      ) {
+        const instances = await tx.query.shiftInstances.findMany({
+          where: { masterId: id },
+          columns: { id: true },
+        });
+        const instanceIds = instances.map((i) => i.id);
+        if (instanceIds.length > 0) {
+          await tx
+            .delete(schema.shiftInstanceInvites)
+            .where(
+              inArray(schema.shiftInstanceInvites.instanceId, instanceIds),
+            );
+        }
+      }
+
+      return shift;
+    });
+  }
+
+  async delete(id: string, organizationUnitId: string): Promise<ShiftEntity> {
     const [shift] = await this.db
       .update(schema.shifts)
-      .set({
-        title,
-        ...rest,
-        ...(title && { slug: slugify(title) }),
-      })
+      .set({ isDeleted: true })
       .where(
         and(
           eq(schema.shifts.id, id),
@@ -195,96 +442,69 @@ export class ShiftService {
         ),
       )
       .returning();
-
-    if (!shift) {
-      throw new NotFoundGraphQLError('Shift not found');
-    }
-
-    /**
-     * If the shift is visible to all members, we automatically approve the invites for all members.
-     * If the shift is visible to specific members, we create invites for those members and approve them automatically.
-     * This is a temporary solution to avoid manually approving invites for the prototype.
-     * TODO: Refactor this when the prototype is complete.
-     */
-
-    if (input.visibility === ShiftVisibility.ALL_MEMBERS) {
-      const members = await this.db.query.memberships.findMany({
-        where: { role: { organizationUnitId } },
-      });
-      const memberIds = members
-        .map((member) => member.userId)
-        .filter(
-          (memberId): memberId is string =>
-            memberId !== null && memberId !== userId,
-        );
-      await this.createAndAutoApproveShiftInvites(shift.id, memberIds);
-    } else if (input.invitedMemberIds && input.invitedMemberIds.length > 0) {
-      await this.createAndAutoApproveShiftInvites(
-        shift.id,
-        input.invitedMemberIds,
-      );
-    }
-
-    return shift;
-  }
-
-  async delete(id: string, organizationUnitId: string): Promise<ShiftEntity> {
-    const shift = await this.db.query.shifts.findFirst({
-      where: {
-        id,
-        organizationUnitId,
-      },
-    });
 
     if (!shift) {
       throw new NotFoundGraphQLError(`Shift with ID ${id} not found`);
     }
 
-    const [deletedShift] = await this.db
-      .delete(schema.shifts)
-      .where(
-        and(
-          eq(schema.shifts.id, id),
-          eq(schema.shifts.organizationUnitId, organizationUnitId),
-        ),
-      )
-      .returning();
-
-    return deletedShift;
-  }
-
-  async findCreator(createdById: string): Promise<UserEntity> {
-    return this.userService.findByIdOrThrow(createdById);
+    return shift;
   }
 
   async findActiveShifts(
     organizationUnitId: string,
     pagination: PaginationInput,
-  ): Promise<{ shifts: ShiftEntity[]; total: number }> {
-    // Increase the window either side by 1hr to show shifts that where just active or just about to be active
+  ): Promise<{
+    instances: ShiftInstanceEntity[];
+    total: number;
+  }> {
     const now = new Date();
     const oneHourAgo = new Date(now.getTime() - 60 * 60 * 1000);
     const oneHourFromNow = new Date(now.getTime() + 60 * 60 * 1000);
 
-    const condition = {
-      organizationUnitId,
-      startsAt: { lt: oneHourFromNow },
-      endsAt: { gt: oneHourAgo },
-    };
-
     const shifts = await this.db.query.shifts.findMany({
-      where: condition,
-      orderBy: { createdAt: 'desc' },
+      where: {
+        organizationUnitId,
+        isDeleted: false,
+      },
+      columns: { id: true },
+    });
+    const shiftIds = shifts.map((s) => s.id);
+
+    if (shiftIds.length === 0) {
+      return { instances: [], total: 0 };
+    }
+
+    const instances = await this.db.query.shiftInstances.findMany({
+      where: {
+        actualStartsAt: { gte: oneHourAgo, lte: oneHourFromNow },
+        isCancelled: false,
+        masterId: { in: shiftIds },
+      },
+      with: {
+        master: true,
+      },
+      orderBy: { actualStartsAt: 'asc' },
       limit: pagination.limit,
       offset: pagination.offset,
     });
 
-    const [{ total }] = await this.db.query.shifts.findMany({
+    const totalResult = await this.db.query.shiftInstances.findMany({
+      where: {
+        actualStartsAt: { gte: oneHourAgo, lte: oneHourFromNow },
+        isCancelled: false,
+        masterId: { in: shiftIds },
+      },
       columns: {},
       extras: { total: count() },
-      where: condition,
     });
 
-    return { shifts, total };
+    return {
+      instances,
+      total: totalResult[0]?.total ?? 0,
+    };
+  }
+
+  async findCreator(createdById: string): Promise<UserEntity> {
+    return this.userService.findByIdOrThrow(createdById);
   }
 }
