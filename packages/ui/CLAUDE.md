@@ -19,7 +19,7 @@ Use shadcn cli to create new UI components, do not create them by yourself. And 
 
 1. Use: `bunx --bun shadcn@latest add [component name]` to add the component
 2. Then use `bunx --bun shadcn@latest add -sy @storybook/[component name]-story` to add the related Story for the component. Answer N to any overwrite prompts.
-3. Modify the Story, change import from `import type { Meta, StoryObj } from "@storybook/nextjs-vite";` to `import type { Meta, StoryObj } from "@storybook/react-vite";`
+3. Modify the Story, change import from `import type { Meta, StoryObj } from "@storybook/react-vite";` to `import type { Meta, StoryObj } from "@storybook/react-vite";`
 4. Move story file to src/components/base
 5. Export component by adding to src/index.ts file
 
