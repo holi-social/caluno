@@ -43,3 +43,5 @@ docker-compose.override.yml
 
 # Generated Code
 packages/data/src/generated/
+*storybook.log
+storybook-static
