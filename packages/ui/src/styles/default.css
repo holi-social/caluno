@@ -229,6 +229,6 @@
   }
 
   .page-title {
-    @apply text-3xl md:text-4xl font-bold
+    @apply text-3xl md:text-4xl font-bold;
   }
 }
