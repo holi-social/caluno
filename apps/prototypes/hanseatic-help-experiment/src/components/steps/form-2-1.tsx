@@ -25,7 +25,7 @@ export function Form21({ onSelect, loading }: Form21Props) {
 
       <Logo />
 
-      <h1 className="text-2xl font-medium leading-8 w-full">
+      <h1 className="text-[24px] font-medium leading-8 w-full">
         How long are you planning to stay today?
       </h1>
 

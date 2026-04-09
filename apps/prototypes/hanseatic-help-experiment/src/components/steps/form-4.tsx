@@ -24,9 +24,9 @@ export function Form4({ name, durationLabel }: Form4Props) {
       >
         <Logo />
         <div className="flex flex-col gap-1 text-center text-secondary-foreground w-full mt-2">
-          <p className="text-lg leading-7">Du hast für etwa</p>
+          <p className="text-[18px] leading-7">Du hast für etwa</p>
           <p className="text-5xl font-bold leading-12">{durationLabel}</p>
-          <p className="text-lg leading-7">mitgemacht, und dafür sind wir echt dankbar!</p>
+          <p className="text-[18px] leading-7">mitgemacht, und dafür sind wir echt dankbar!</p>
         </div>
       </div>
     </div>

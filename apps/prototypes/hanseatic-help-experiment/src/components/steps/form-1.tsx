@@ -28,7 +28,7 @@ function ActionCard({ label, icon, onClick, disabled, variant, className }: Acti
       onClick={onClick}
       disabled={disabled}
       className={cn(
-        'flex flex-col items-center gap-4 py-6 px-6 rounded-xl border shadow-sm transition-opacity w-full disabled:opacity-50 disabled:cursor-not-allowed text-left',
+        'flex flex-col items-start justify-start gap-4 py-6 px-6 rounded-xl border shadow-sm transition-opacity w-full disabled:opacity-50 disabled:cursor-not-allowed text-left',
         variant === 'primary'
           ? 'bg-primary text-primary-foreground border-primary'
           : 'bg-secondary text-secondary-foreground border-border',
@@ -43,15 +43,15 @@ function ActionCard({ label, icon, onClick, disabled, variant, className }: Acti
 
 export function Form1({ onSelect, loading }: Form1Props) {
   return (
-    <div className="relative flex flex-col gap-8 items-center pt-6 pb-4 px-4 min-h-full">
+    <div className="relative w-full flex flex-col gap-8 items-center pt-6 pb-4 px-4 min-h-full">
       <StepProgress value={STEP_PROGRESS['form-1']} />
 
       <Logo />
 
       <div className="flex flex-col gap-6 w-full">
         <div>
-          <h1 className="text-2xl font-medium leading-8">Welcome to Hanseatic Help!</h1>
-          <p className="text-lg text-foreground mt-6">
+          <h1 className="text-[24px] font-medium leading-8">Welcome to Hanseatic Help!</h1>
+          <p className="text-[18px] text-foreground mt-4 mb-0">
             Are you just starting your day with us or planning to leave now?
           </p>
         </div>
@@ -61,14 +61,14 @@ export function Form1({ onSelect, loading }: Form1Props) {
           <div className="grid grid-cols-2 gap-4">
             <ActionCard
               label="Starting"
-              icon={<CirclePlay className="size-8 stroke-primary-foreground" />}
+              icon={<CirclePlay className="w-full h-full stroke-primary-foreground" />}
               onClick={() => onSelect('starting')}
               disabled={loading}
               variant="primary"
             />
             <ActionCard
               label="Finishing"
-              icon={<CircleStop className="size-8 stroke-primary-foreground" />}
+              icon={<CircleStop className="w-full h-full stroke-primary-foreground" />}
               onClick={() => onSelect('finishing')}
               disabled={loading}
               variant="primary"

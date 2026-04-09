@@ -30,12 +30,12 @@ export function Form22({ onContinue, loading }: Form22Props) {
 
       <Logo />
 
-      <h1 className="text-2xl font-medium leading-8 w-full">
+      <h1 className="text-[24px] font-medium leading-8 w-full">
         Around when did you arrive today?
       </h1>
 
       <Card className="w-full">
-        <CardContent className="pt-6">
+        <CardContent className="pt-0">
           <form onSubmit={handleSubmit} className="flex flex-col gap-4 items-end">
             <div className="w-full flex flex-col gap-2">
               <Label htmlFor="arrival-time" className="text-base font-medium">

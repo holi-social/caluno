@@ -178,7 +178,7 @@ export default function WizardPage() {
 
   return (
     <main className={`min-h-dvh flex justify-center ${mainBgClass}`}>
-      <div className="relative w-full max-w-sm min-h-dvh overflow-hidden">
+      <div className="relative w-full max-w-none min-h-dvh overflow-hidden">
         {state.step === 'form-1' && (
           <Form1 onSelect={handleActionSelect} loading={loading} />
         )}
