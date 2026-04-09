@@ -1,7 +1,7 @@
 'use client';
 
 import { ShiftVisibility, useShift } from '@repo/data/react';
-import { useState, useTransition } from 'react';
+import { useMemo, useState, useTransition } from 'react';
 import { updateShift } from '../actions';
 import type { ShiftFormValues } from '../schemas';
 import { ShiftForm } from './shift-form';
@@ -22,6 +22,38 @@ export function EditShiftForm({
   const [isPending, startTransition] = useTransition();
   const [serverError, setServerError] = useState<string | null>(null);
   const { data: shift, error, isLoading } = useShift(shiftId);
+
+  const initialValues = useMemo<Partial<ShiftFormValues>>(() => {
+    if (!shift) {
+      return {
+        organizationUnitId: orgUId,
+        name: '',
+        instructions: undefined,
+        location: undefined,
+        startsAt: new Date(),
+        endsAt: new Date(),
+        openShift: true,
+        invitedMemberIds: [],
+        maxVolunteers: undefined,
+        recurrenceDays: [],
+        recurrenceEndsAt: undefined,
+      };
+    }
+
+    return {
+      organizationUnitId: orgUId,
+      name: shift.title,
+      instructions: shift.instructions ?? undefined,
+      location: shift.location ?? undefined,
+      startsAt: shift.startDate,
+      endsAt: shift.endDate,
+      openShift: shift.visibility === ShiftVisibility.AllMembers,
+      invitedMemberIds: [],
+      maxVolunteers: shift.maxVolunteers ?? undefined,
+      recurrenceDays: shift.recurrenceDays,
+      recurrenceEndsAt: shift.recurrenceEndsAt,
+    };
+  }, [shift, orgUId]);
 
   const onSubmit = (formData: ShiftFormValues) => {
     setServerError(null);
@@ -48,23 +80,6 @@ export function EditShiftForm({
   if (error || !shift) {
     return <p className="text-sm text-muted-foreground">Shift not found.</p>;
   }
-
-  const startDate = new Date(shift.originalStartsAt);
-  const endDate = new Date(startDate.getTime() + shift.durationMinutes * 60000);
-
-  const initialValues: Partial<ShiftFormValues> = {
-    organizationUnitId: orgUId,
-    name: shift.title,
-    instructions: shift.instructions ?? undefined,
-    location: shift.location ?? undefined,
-    startsAt: startDate,
-    endsAt: endDate,
-    openShift: shift.visibility === ShiftVisibility.AllMembers,
-    invitedMemberIds: [],
-    maxVolunteers: shift.maxVolunteers ?? undefined,
-    recurrenceDays: [],
-    recurrenceEndsAt: undefined,
-  };
 
   return (
     <>

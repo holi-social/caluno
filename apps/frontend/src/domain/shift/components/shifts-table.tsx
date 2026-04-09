@@ -1,4 +1,5 @@
 import type { GetShiftsQuery } from '@repo/data';
+import { formatRrulePattern } from '@repo/data';
 import {
   Badge,
   Table,
@@ -22,14 +23,6 @@ const visibilityConfig = {
   ALL_MEMBERS: { variant: 'outline' as const, label: 'Open shift' },
   INVITED_MEMBERS: { variant: 'secondary' as const, label: 'Invite only' },
 };
-
-function formatRecurrence(rrule: string | null): string {
-  if (!rrule) return 'One-time';
-  if (rrule.includes('WEEKLY')) return 'Weekly';
-  if (rrule.includes('DAILY')) return 'Daily';
-  if (rrule.includes('MONTHLY')) return 'Monthly';
-  return 'Recurring';
-}
 
 export function ShiftsTable({ shifts, orgUId }: ShiftsTableProps) {
   return (
@@ -59,7 +52,7 @@ export function ShiftsTable({ shifts, orgUId }: ShiftsTableProps) {
                 </TableCell>
                 <TableCell>
                   <Badge variant="outline">
-                    {formatRecurrence(shift.rrule ?? null)}
+                    {formatRrulePattern(shift.rrule)}
                   </Badge>
                 </TableCell>
                 <TableCell>

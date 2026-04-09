@@ -1,7 +1,13 @@
+import {
+  parseRruleDays,
+  parseRruleEndDate,
+  type RecurrenceDayValue,
+} from '../../constants';
 import { DataError } from '../../errors/data-error';
 import type {
   CreateShiftInput,
   GetActiveShiftsQuery,
+  GetShiftQuery,
   UpdateShiftInput,
 } from '../../generated/graphql';
 import {
@@ -10,15 +16,40 @@ import {
 } from '../base/base.repository';
 
 export type ActiveShift = GetActiveShiftsQuery['activeShifts']['items'][number];
+export type RawShift = GetShiftQuery['shift'];
+export interface ShiftDetail extends RawShift {
+  startDate: Date;
+  endDate: Date;
+  recurrenceDays: RecurrenceDayValue[];
+  recurrenceEndsAt: Date | undefined;
+}
+
+function enrichShift(shift: RawShift): ShiftDetail {
+  const startDate = new Date(shift.originalStartsAt);
+  const endDate = new Date(startDate.getTime() + shift.durationMinutes * 60000);
+
+  return {
+    ...shift,
+    startDate,
+    endDate,
+    recurrenceDays: parseRruleDays(shift.rrule),
+    recurrenceEndsAt: parseRruleEndDate(shift.rrule),
+  };
+}
 
 export class ShiftRepository extends BaseRepository {
-  async findById(id: string) {
+  async findById(id: string): Promise<RawShift> {
     try {
       const data = await this.sdk.GetShift({ id });
       return data.shift;
     } catch (error) {
       throw DataError.fromGraphQLError(error);
     }
+  }
+
+  async findByIdDetailed(id: string): Promise<ShiftDetail> {
+    const shift = await this.findById(id);
+    return enrichShift(shift);
   }
 
   async findAll(options: PaginationOptions = {}) {

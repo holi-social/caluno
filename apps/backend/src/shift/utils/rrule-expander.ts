@@ -1,4 +1,5 @@
 import * as rruleLib from 'rrule';
+import { DAY_VALUE_TO_RRULE, type RecurrenceDay } from '../enums';
 
 const { RRule, rrulestr } = rruleLib;
 
@@ -69,7 +70,7 @@ export function expandShift(
 
 export function generateRrule(
   freq: 'DAILY' | 'WEEKLY' | 'MONTHLY',
-  byday: string[],
+  byday: RecurrenceDay[],
   until?: Date,
   count?: number,
 ): string {
@@ -98,7 +99,8 @@ export function generateRrule(
       SA: RRule.SA.weekday,
       SU: RRule.SU.weekday,
     };
-    options.byweekday = byday.map((d) => weekdayMap[d]);
+    const rruleCodes = byday.map((day) => DAY_VALUE_TO_RRULE[day]);
+    options.byweekday = rruleCodes.map((code) => weekdayMap[code]);
   }
 
   if (until) {
