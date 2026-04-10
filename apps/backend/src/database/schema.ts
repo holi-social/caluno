@@ -10,6 +10,7 @@ export * from '../organization/schemas/organization-unit-type.schema';
 export * from '../requirement-profile/schemas/requirement.schema';
 export * from '../requirement-profile/schemas/requirement-fulfillment.schema';
 export * from '../requirement-profile/schemas/requirement-profile.schema';
+export * from '../requirement-profile/schemas/organization-unit-favorite-requirement-profile.schema';
 export * from '../requirement-profile/schemas/requirement-profile-requirement.schema';
 export * from '../requirement-profile/schemas/requirement-profile-submission.schema';
 export * from '../requirement-profile/schemas/document.schema';
