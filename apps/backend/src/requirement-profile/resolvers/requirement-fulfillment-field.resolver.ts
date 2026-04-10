@@ -1,6 +1,7 @@
 import { Parent, ResolveField, Resolver } from '@nestjs/graphql';
 import { UserMapper } from '../../user/mappers/user.mapper';
 import { User } from '../../user/models/user.model';
+import { UserService } from '../../user/user.service';
 import { RequirementMapper } from '../mappers/requirement.mapper';
 import { RequirementProfileSubmissionMapper } from '../mappers/requirement-profile-submission.mapper';
 import { Document } from '../models/document.model';
@@ -26,6 +27,7 @@ export class RequirementFulfillmentFieldResolver {
     private readonly documentMapper: DocumentMapper,
     private readonly organizationUserProfileMapper: OrganizationUserProfileMapper,
     private readonly userMapper: UserMapper,
+    private readonly userService: UserService,
   ) {}
 
   @ResolveField(() => RequirementProfileSubmission)
@@ -52,9 +54,10 @@ export class RequirementFulfillmentFieldResolver {
   async reviewer(
     @Parent() fulfillment: RequirementFulfillmentEntity,
   ): Promise<User | null> {
-    const reviewer = await this.requirementFulfillmentService.findReviewerById(
-      fulfillment.reviewedById,
-    );
+    if (!fulfillment.reviewedById) {
+      return null;
+    }
+    const reviewer = await this.userService.findById(fulfillment.reviewedById);
     if (!reviewer) {
       return null;
     }

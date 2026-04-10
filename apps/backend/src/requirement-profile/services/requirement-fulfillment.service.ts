@@ -1,12 +1,10 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { count, eq } from 'drizzle-orm';
-import type { UserEntity } from '../../auth/schemas/auth.schema';
 import type { Database } from '../../database/database.module';
 import { DATABASE_CONNECTION } from '../../database/database-connection';
 import * as schema from '../../database/schema';
 import { NotFoundGraphQLError } from '../../graphql/errors';
 import type { PaginationInput } from '../../graphql/pagination.input';
-import { UserService } from '../../user/user.service';
 import { CreateRequirementFulfillmentInput } from '../inputs/create-requirement-fulfillment.input';
 import { UpdateRequirementFulfillmentInput } from '../inputs/update-requirement-fulfillment.input';
 import type { RequirementEntity } from '../schemas/requirement.schema';
@@ -20,7 +18,6 @@ export class RequirementFulfillmentService {
   constructor(
     @Inject(DATABASE_CONNECTION)
     private readonly db: Database,
-    private readonly userService: UserService,
     private readonly requirementService: RequirementService,
   ) {}
 
@@ -95,14 +92,6 @@ export class RequirementFulfillmentService {
       throw new NotFoundGraphQLError('Requirement not found');
     }
     return requirement;
-  }
-
-  async findReviewerById(id: string | null): Promise<UserEntity | null> {
-    if (!id) {
-      return null;
-    }
-    const reviewer = await this.userService.findById(id);
-    return reviewer ?? null;
   }
 
   async findProfileById(
