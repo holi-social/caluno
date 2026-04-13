@@ -321,7 +321,7 @@ type Requirement {
   type: RequirementType!
 }
 
-type RequirementFulfillment {
+interface RequirementFulfillment {
   id: ID!
   organizationUserProfile: OrganizationUserProfile
   requirement: Requirement!
@@ -332,7 +332,34 @@ type RequirementFulfillment {
   submission: RequirementProfileSubmission!
   submittedAt: DateTime
   type: RequirementType!
-  value: String
+}
+
+type RequirementFulfillmentCheck implements RequirementFulfillment {
+  checked: Boolean
+  id: ID!
+  organizationUserProfile: OrganizationUserProfile
+  requirement: Requirement!
+  reviewedAt: DateTime
+  reviewedBy: User
+  reviewer: User
+  status: RequirementFulfillmentStatus!
+  submission: RequirementProfileSubmission!
+  submittedAt: DateTime
+  type: RequirementType!
+}
+
+type RequirementFulfillmentDate implements RequirementFulfillment {
+  date: DateTime
+  id: ID!
+  organizationUserProfile: OrganizationUserProfile
+  requirement: Requirement!
+  reviewedAt: DateTime
+  reviewedBy: User
+  reviewer: User
+  status: RequirementFulfillmentStatus!
+  submission: RequirementProfileSubmission!
+  submittedAt: DateTime
+  type: RequirementType!
 }
 
 type RequirementFulfillmentPaginatedResponse {
@@ -345,6 +372,34 @@ enum RequirementFulfillmentStatus {
   DRAFT
   REJECTED
   SUBMITTED
+}
+
+type RequirementFulfillmentText implements RequirementFulfillment {
+  id: ID!
+  organizationUserProfile: OrganizationUserProfile
+  requirement: Requirement!
+  reviewedAt: DateTime
+  reviewedBy: User
+  reviewer: User
+  status: RequirementFulfillmentStatus!
+  submission: RequirementProfileSubmission!
+  submittedAt: DateTime
+  text: String
+  type: RequirementType!
+}
+
+type RequirementFulfillmentUpload implements RequirementFulfillment {
+  documentId: String
+  id: ID!
+  organizationUserProfile: OrganizationUserProfile
+  requirement: Requirement!
+  reviewedAt: DateTime
+  reviewedBy: User
+  reviewer: User
+  status: RequirementFulfillmentStatus!
+  submission: RequirementProfileSubmission!
+  submittedAt: DateTime
+  type: RequirementType!
 }
 
 type RequirementPaginatedResponse {

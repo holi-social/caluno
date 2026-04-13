@@ -1,4 +1,4 @@
-import { Field, ID, ObjectType } from '@nestjs/graphql';
+import { Field, ID, InterfaceType, ObjectType } from '@nestjs/graphql';
 import { createPaginatedResponseType } from '../../graphql/paginated-response.model';
 import { RequirementType } from '../enums';
 import { User } from '../../user/models/user.model';
@@ -28,7 +28,22 @@ function parseValue(
   }
 }
 
-@ObjectType()
+@InterfaceType({
+  resolveType(value: RequirementFulfillment) {
+    switch (value.type) {
+      case RequirementType.DOCUMENT:
+        return RequirementFulfillmentUpload;
+      case RequirementType.CHECK:
+        return RequirementFulfillmentCheck;
+      case RequirementType.DATE:
+        return RequirementFulfillmentDate;
+      case RequirementType.TEXT:
+        return RequirementFulfillmentText;
+      default:
+        return null;
+    }
+  },
+})
 export class RequirementFulfillment {
   @Field(() => ID)
   id: string;
@@ -39,7 +54,6 @@ export class RequirementFulfillment {
   @Field(() => RequirementType)
   type: RequirementType;
 
-  @Field(() => String, { nullable: true })
   value: string | null;
 
   @Field(() => RequirementFulfillmentStatus)
@@ -61,7 +75,11 @@ export class RequirementFulfillment {
   reviewedBy: User | null;
 }
 
+@ObjectType({
+  implements: () => RequirementFulfillment,
+})
 export class RequirementFulfillmentUpload extends RequirementFulfillment {
+  @Field(() => String, { nullable: true })
   get documentId(): string | null {
     return parseValue(this.value)?.documentId ?? null;
   }
@@ -71,7 +89,11 @@ export class RequirementFulfillmentUpload extends RequirementFulfillment {
   }
 }
 
+@ObjectType({
+  implements: () => RequirementFulfillment,
+})
 export class RequirementFulfillmentCheck extends RequirementFulfillment {
+  @Field(() => Boolean, { nullable: true })
   get checked(): boolean | null {
     return parseValue(this.value)?.checked ?? null;
   }
@@ -81,13 +103,21 @@ export class RequirementFulfillmentCheck extends RequirementFulfillment {
   }
 }
 
+@ObjectType({
+  implements: () => RequirementFulfillment,
+})
 export class RequirementFulfillmentText extends RequirementFulfillment {
+  @Field(() => String, { nullable: true })
   get text(): string | null {
     return parseValue(this.value)?.text ?? null;
   }
 }
 
+@ObjectType({
+  implements: () => RequirementFulfillment,
+})
 export class RequirementFulfillmentDate extends RequirementFulfillment {
+  @Field(() => Date, { nullable: true })
   get date(): Date | null {
     const date = parseValue(this.value)?.date;
     if (!date) {
