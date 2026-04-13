@@ -1,21 +1,26 @@
-# CLAUDE.md
+# React component library for use in our web frontends.
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+- React components based on shadcn
+- Tailwind incl. theming providing by next-themes
+- Storybook for viewing and documenting the components
+
+## Project Structure
+
+- `src/components/base` - shadcn components only
+- `src/components` - custom components
+- `src/styles` - tailwind css files
+
+Co-locate stories with components.
 
 ## Commands
 
 - `bun run check-types` - Check for any typescript compile errors
-
-## Stack
-
-- **TypeScript** with strict mode
-- **Tailwind CSS 4** for styling
-- **shadcn/ui** component patterns with CVA (Class Variance Authority)
-- **Storybook** For documenting and viewing all components
+- `bun run dev` - Run storybook dev server
+- `bun run build` - Build static storybook files
 
 ## How to create new UI components
 
-Use shadcn cli to create new UI components, do not create them by yourself. And for every shadcn component added, also create a storybook Story.
+Use shadcn cli to create new UI components, do not create them by yourself. And for every shadcn component added, create a storybook Story.
 
 1. Use: `bunx --bun shadcn@latest add [component name]` to add the component
 2. Then use `bunx --bun shadcn@latest add -sy @storybook/[component name]-story` to add the related Story for the component. Answer N to any overwrite prompts.
@@ -25,7 +30,7 @@ Use shadcn cli to create new UI components, do not create them by yourself. And 
 
 ## Styling
 
-- CSS variables defined in `.src/styles/default.css` for theming
-- Dark mode supported via `.dark` class
+`src/styles/default.css` is the primary file for frontends to import. It contains tailwind, theming and custom classes.
+
 - Use OKLCH color space for color definitions
 - Prefer shadcn theme colors instead of tailwind base colors
