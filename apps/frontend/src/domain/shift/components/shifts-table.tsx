@@ -45,7 +45,7 @@ export function ShiftsTable({ shifts, orgUId }: ShiftsTableProps) {
             );
 
             return (
-              <TableRow key={shift.id} className="hover:bg-muted/50">
+              <TableRow key={shift.id}>
                 <TableCell>{shift.title}</TableCell>
                 <TableCell className="text-muted-foreground">
                   {formatRange(shift.originalStartsAt, endDate.toISOString())}
