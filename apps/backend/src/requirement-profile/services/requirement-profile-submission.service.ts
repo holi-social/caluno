@@ -52,11 +52,24 @@ export class RequirementProfileSubmissionService {
   async create(
     input: CreateRequirementProfileSubmissionInput,
   ): Promise<RequirementProfileSubmissionEntity> {
-    const [submission] = await this.db
-      .insert(schema.requirementProfileSubmissions)
-      .values(input)
-      .returning();
-    return submission;
+    return this.db.transaction(async (tx) => {
+      const { fulfillments, ...submissionInput } = input;
+      const [submission] = await tx
+        .insert(schema.requirementProfileSubmissions)
+        .values(submissionInput)
+        .returning();
+
+      if (fulfillments && fulfillments.length > 0) {
+        await tx.insert(schema.requirementFulfillments).values(
+          fulfillments.map((fulfillment) => ({
+            ...fulfillment,
+            submissionId: submission.id,
+          })),
+        );
+      }
+
+      return submission;
+    });
   }
 
   async update(

@@ -5,7 +5,6 @@ import { DATABASE_CONNECTION } from '../../database/database-connection';
 import * as schema from '../../database/schema';
 import { NotFoundGraphQLError } from '../../graphql/errors';
 import type { PaginationInput } from '../../graphql/pagination.input';
-import { CreateRequirementFulfillmentInput } from '../inputs/create-requirement-fulfillment.input';
 import { UpdateRequirementFulfillmentInput } from '../inputs/update-requirement-fulfillment.input';
 import type { RequirementEntity } from '../schemas/requirement.schema';
 import type { RequirementFulfillmentEntity } from '../schemas/requirement-fulfillment.schema';
@@ -42,16 +41,6 @@ export class RequirementFulfillmentService {
       extras: { total: count() },
     });
     return { items, total };
-  }
-
-  async create(
-    input: CreateRequirementFulfillmentInput,
-  ): Promise<RequirementFulfillmentEntity> {
-    const [fulfillment] = await this.db
-      .insert(schema.requirementFulfillments)
-      .values(input)
-      .returning();
-    return fulfillment;
   }
 
   async update(
