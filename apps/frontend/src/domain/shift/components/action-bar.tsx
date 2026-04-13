@@ -47,7 +47,7 @@ export const ActionBar = ({
 
   return (
     <aside className="space-x-2">
-      <Link href={shiftShareUrl(id)} aria-label="View shift">
+      <Link href={shiftShareUrl(id)} aria-label="View shift" target="_blank">
         <Button size={buttonSize} variant="outline">
           <Eye />
         </Button>
