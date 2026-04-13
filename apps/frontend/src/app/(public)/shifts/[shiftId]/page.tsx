@@ -12,10 +12,6 @@ interface ShiftPageProps {
 }
 
 const status = (shift: GetShiftQuery['shift']) => {
-  if (new Date() > new Date(shift.endsAt)) {
-    return 'Finished';
-  }
-
   if (shift.visibility === ShiftVisibility.AllMembers) {
     return 'Open';
   } else {
@@ -33,15 +29,16 @@ export default async function ShiftPage({ params }: ShiftPageProps) {
     notFound();
   }
 
+  const startDate = new Date(shift.originalStartsAt);
+  const endDate = new Date(startDate.getTime() + shift.durationMinutes * 60000);
+
   return (
     <div className="flex flex-col items-center p-4 mt-8">
       <div className="flex justify-between w-full max-w-2xl py-6 px-2">
         <div>
-          <h1 className="text-3xl font-bold">{shift.title}</h1>
+          <h1 className="page-title">{shift.title}</h1>
         </div>
         <Badge variant="secondary">{status(shift)}</Badge>
-
-        {/* button/s to leave or decline/accept(if invitations are thing) the shift} */}
       </div>
 
       <div className="w-full max-w-2xl space-y-4">
@@ -51,7 +48,12 @@ export default async function ShiftPage({ params }: ShiftPageProps) {
               <ul className="space-y-3">
                 <li className="flex gap-2 items-center">
                   <Calendar className="size-4 text-muted-foreground shrink-0" />
-                  <span>{formatRange(shift.startsAt, shift.endsAt)}</span>
+                  <span>
+                    {formatRange(
+                      startDate.toISOString(),
+                      endDate.toISOString(),
+                    )}
+                  </span>
                 </li>
                 <li className="flex gap-2">
                   <FileText className="size-4 text-muted-foreground shrink-0 mt-0.5" />
@@ -66,21 +68,6 @@ export default async function ShiftPage({ params }: ShiftPageProps) {
 
         <Card>
           <CardContent>
-            <ul className="space-y-2">
-              {shift.volunteers?.map((v) => (
-                <li key={v.id}>
-                  <UserCard user={v} size="sm" />
-                </li>
-              ))}
-            </ul>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent>
-            {/* If shift has finished, simple button to fill timesheet for whole shift */}
-            {/* If it's ended. Then UI might be different */}
-
             {(await getSession()) ? (
               <div className="space-x-2">
                 <Button>

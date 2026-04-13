@@ -13,13 +13,20 @@ import {
 import { MembershipRequestActions } from '@/domain/membership-requests/components/membership-request-actions';
 import { formatDate } from '@/lib/formatting';
 
+const BG_COLOR_MAP: Record<string, string> = {
+  [MembershipRequestStatus.Accepted]: 'bg-green-950',
+  [MembershipRequestStatus.Rejected]: 'bg-red-950',
+};
+
 interface Props {
   request: GetMembershipRequestsQuery['membershipRequests']['items'][number];
 }
 
 export default function MembershipRequestCard({ request }: Props) {
+  const bgColor = BG_COLOR_MAP[request.status] ?? '';
+
   return (
-    <Card key={request.id} className="w-full">
+    <Card key={request.id} className={`w-full ${bgColor}`}>
       <CardHeader className="flex flex-row gap-3 ">
         <div className="width-full flex flex-col gap-3">
           <CardTitle className="truncate">{request.user.name}</CardTitle>

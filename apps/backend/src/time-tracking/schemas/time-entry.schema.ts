@@ -1,12 +1,12 @@
 import { pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
 import { users } from '../../auth/schemas/auth.schema';
 import { idColumn, timestampColumns } from '../../database/database-columns';
-import { shifts } from '../../shift/schemas/shift.schema';
+import { shiftInstances } from '../../shift/schemas/shift-instance.schema';
 
 export const timeEntries = pgTable('time_entries', {
   ...idColumn,
-  shiftId: uuid('shift_id')
-    .references(() => shifts.id, {
+  shiftInstanceId: uuid('shift_instance_id')
+    .references(() => shiftInstances.id, {
       onDelete: 'restrict',
     })
     .notNull(),

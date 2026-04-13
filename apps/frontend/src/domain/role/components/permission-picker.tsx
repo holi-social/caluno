@@ -52,7 +52,7 @@ function groupPermissions(permissions: Permission[]) {
     if (!groups.has(label)) {
       groups.set(label, []);
     }
-    groups.get(label)!.push(permission);
+    groups.get(label)?.push(permission);
   }
 
   return groups;
@@ -105,11 +105,7 @@ export function PermissionPicker({
               <Label className="text-sm font-semibold">{groupName}</Label>
               <div className="flex items-center gap-2">
                 <Label className="text-xs text-muted-foreground">
-                  {allSelected
-                    ? 'All'
-                    : someSelected
-                      ? 'Partial'
-                      : 'None'}
+                  {allSelected ? 'All' : someSelected ? 'Partial' : 'None'}
                 </Label>
                 <Switch
                   size="sm"

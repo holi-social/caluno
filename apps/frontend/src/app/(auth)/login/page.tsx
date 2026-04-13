@@ -17,7 +17,7 @@ export default async function LoginPage() {
     <div className="flex min-h-screen items-center justify-center bg-background">
       <div className="w-full max-w-md space-y-8 p-8">
         <div className="text-center">
-          <h2 className="text-3xl font-bold">Sign in</h2>
+          <h2 className="page-title">Sign in</h2>
         </div>
 
         <LoginForm redirectTo={redirectTo} />

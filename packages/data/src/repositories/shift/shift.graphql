@@ -5,15 +5,11 @@ query GetShift($id: String!) {
     slug
     instructions
     location
-    startsAt
-    endsAt
     visibility
-    volunteers {
-      id
-      name
-      email
-      image
-    }
+    maxVolunteers
+    rrule
+    originalStartsAt
+    durationMinutes
     createdBy {
       id
       name
@@ -28,10 +24,12 @@ query GetShifts($limit: Int!, $offset: Int!) {
     items {
       id
       title
-      startsAt
-      endsAt
+      rrule
+      originalStartsAt
+      durationMinutes
       visibility
-      volunteers {
+      maxVolunteers
+      createdBy {
         id
         name
         email
@@ -47,10 +45,15 @@ query GetShifts($limit: Int!, $offset: Int!) {
 }
 
 query GetShiftsForTimeEntryCreation($limit: Int!, $offset: Int!) {
-  shifts(limit: $limit, offset: $offset) {
+  activeShifts(limit: $limit, offset: $offset) {
     items {
       id
-      title
+      actualStartsAt
+      actualEndsAt
+      master {
+        id
+        title
+      }
       volunteers {
         id
         name
@@ -78,13 +81,26 @@ mutation DeleteShift($id: String!) {
   }
 }
 
+mutation InviteShiftVolunteers($shiftId: String!, $memberIds: [String!]!) {
+  inviteMembersToShift(shiftId: $shiftId, memberIds: $memberIds) {
+    id
+  }
+}
+
 query GetActiveShifts($limit: Int!, $offset: Int!) {
   activeShifts(limit: $limit, offset: $offset) {
     items {
       id
-      title
-      startsAt
-      endsAt
+      actualStartsAt
+      actualEndsAt
+      master {
+        id
+        title
+        location
+        instructions
+        visibility
+        maxVolunteers
+      }
     }
     pagination {
       total

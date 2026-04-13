@@ -25,7 +25,7 @@ import {
   createTimeEntrySchema,
 } from '../schemas';
 
-interface Shift {
+interface ShiftInstance {
   id: string;
   title: string;
   volunteers?: Array<{ id: string; name: string; email: string }>;
@@ -33,13 +33,13 @@ interface Shift {
 
 interface CreateTimeEntryFormProps {
   sessionId?: string;
-  shifts?: Shift[];
+  shiftInstances?: ShiftInstance[];
   allVolunteers?: Array<{ id: string; name: string; email: string }>;
   onSuccess?: () => void;
 }
 
 export function CreateTimeEntryForm({
-  shifts = [],
+  shiftInstances = [],
   allVolunteers = [],
   onSuccess,
 }: CreateTimeEntryFormProps) {
@@ -56,7 +56,7 @@ export function CreateTimeEntryForm({
   } = useForm<CreateTimeEntryFormValues>({
     resolver: zodResolver(createTimeEntrySchema),
     defaultValues: {
-      shiftId: '',
+      shiftInstanceId: '',
       volunteerId: '',
       startedAt: '',
       endedAt: '',
@@ -64,8 +64,8 @@ export function CreateTimeEntryForm({
     },
   });
 
-  const shiftId = watch('shiftId');
-  const selectedShift = shifts.find((s) => s.id === shiftId);
+  const shiftInstanceId = watch('shiftInstanceId');
+  const selectedShift = shiftInstances.find((s) => s.id === shiftInstanceId);
   const shiftVolunteers = selectedShift?.volunteers || [];
   const otherVolunteers = allVolunteers.filter(
     (v) => !shiftVolunteers.some((sv) => sv.id === v.id),
@@ -98,13 +98,13 @@ export function CreateTimeEntryForm({
         )}
 
         <Field>
-          <FieldLabel htmlFor="shiftId">
+          <FieldLabel htmlFor="shiftInstanceId">
             Select Shift <span className="text-destructive">*</span>
           </FieldLabel>
           <Select
-            value={watch('shiftId')}
+            value={watch('shiftInstanceId')}
             onValueChange={(value) => {
-              setValue('shiftId', value);
+              setValue('shiftInstanceId', value);
               setValue('volunteerId', '');
             }}
             disabled={isPending}
@@ -113,14 +113,16 @@ export function CreateTimeEntryForm({
               <SelectValue placeholder="Select a shift" />
             </SelectTrigger>
             <SelectContent>
-              {shifts.map((shift) => (
+              {shiftInstances.map((shift) => (
                 <SelectItem key={shift.id} value={shift.id}>
                   {shift.title}
                 </SelectItem>
               ))}
             </SelectContent>
           </Select>
-          {errors.shiftId && <FieldError>{errors.shiftId.message}</FieldError>}
+          {errors.shiftInstanceId && (
+            <FieldError>{errors.shiftInstanceId.message}</FieldError>
+          )}
         </Field>
 
         <Field>
@@ -130,7 +132,7 @@ export function CreateTimeEntryForm({
           <Select
             value={watch('volunteerId')}
             onValueChange={(value) => setValue('volunteerId', value)}
-            disabled={isPending || !shiftId}
+            disabled={isPending || !shiftInstanceId}
           >
             <SelectTrigger>
               <SelectValue placeholder="Select a volunteer" />

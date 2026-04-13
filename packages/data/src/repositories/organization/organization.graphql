@@ -27,6 +27,59 @@ query GetVolunteers($id: String!) {
   }
 }
 
+query GetOrganizationRoot($id: String!) {
+  organization(id: $id) {
+    id
+    root {
+      id
+    }
+  }
+}
+
+query GetOrganizationVolunteersByUnit($id: String!) {
+  organizationUnit(id: $id) {
+    organization {
+      id
+      volunteers {
+        id
+        name
+        email
+        image
+        checkInId
+      }
+    }
+  }
+}
+
+query GetOrganizationUnitWithOrg($id: String!) {
+  organizationUnit(id: $id) {
+    id
+    name
+    organization {
+      name
+    }
+  }
+}
+
+query GetOrganizationsWithRoot($limit: Int!, $offset: Int!) {
+  organizations(limit: $limit, offset: $offset) {
+    items {
+      id
+      name
+      description
+      logoUrl
+      root {
+        id
+        slug
+        name
+        description
+        logoUrl
+        address
+      }
+    }
+  }
+}
+
 query GetOrganizations($limit: Int!, $offset: Int!) {
   organizations(limit: $limit, offset: $offset) {
     items {

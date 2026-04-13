@@ -1,31 +1,38 @@
 'use client';
 
-import { useOrgUId } from '@repo/data/react';
+import { useCurrentOrg, useOrgUId } from '@repo/data/react';
 import { useState, useTransition } from 'react';
+import { useSheet } from '@/hooks/use-sheet';
 import { createShift } from '../actions';
 import type { ShiftFormValues } from '../schemas';
 import { ShiftForm } from './shift-form';
 
 interface CreateShiftFormProps {
-  onSuccess?: (shiftId: string) => void;
+  onCancel?: () => void;
 }
 
-export function CreateShiftForm({ onSuccess }: CreateShiftFormProps) {
+export function CreateShiftForm({ onCancel }: CreateShiftFormProps) {
   const [isPending, startTransition] = useTransition();
   const [serverError, setServerError] = useState<string | null>(null);
   const orgUId = useOrgUId();
+  const { address } = useCurrentOrg();
+  const inviteSheet = useSheet('invite-shift', 'id');
 
-  const onSubmit = async (formData: ShiftFormValues) => {
+  const onSubmit = (formData: ShiftFormValues) => {
     setServerError(null);
-
     startTransition(async () => {
       const result = await createShift({
         ...formData,
+        invitedMemberIds: [],
+        maxVolunteers: formData.maxVolunteers ?? null,
       });
       if (result?.serverError) {
         setServerError(result.serverError);
       } else {
-        onSuccess?.(result.data?.id ?? '');
+        const shiftId = result?.data?.id;
+        if (shiftId) {
+          inviteSheet.open({ id: shiftId });
+        }
       }
     });
   };
@@ -37,11 +44,13 @@ export function CreateShiftForm({ onSuccess }: CreateShiftFormProps) {
           {serverError}
         </div>
       )}
-
       <ShiftForm
         organizationUnitId={orgUId}
         onSubmit={onSubmit}
+        onCancel={onCancel}
         isPending={isPending}
+        submitLabel="Create shift"
+        defaultLocation={address ?? ''}
       />
     </>
   );

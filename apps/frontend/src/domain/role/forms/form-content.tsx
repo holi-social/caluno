@@ -1,16 +1,10 @@
 'use client';
 
 import { usePermissions } from '@repo/data/react';
-import {
-  Field,
-  FieldError,
-  FieldLabel,
-  Input,
-  Textarea,
-} from '@repo/ui';
+import { Field, FieldError, FieldLabel, Input, Textarea } from '@repo/ui';
 import { Controller, type UseFormReturn } from 'react-hook-form';
-import type { CreateRoleFormValues } from '../schemas';
 import { PermissionPicker } from '../components/permission-picker';
+import type { CreateRoleFormValues } from '../schemas';
 
 interface FormContentProps {
   isPending?: boolean;
@@ -24,8 +18,7 @@ export function FormContent({ isPending, formReturnValues }: FormContentProps) {
     formState: { errors },
   } = formReturnValues;
 
-  const { data: permissions, isLoading: permissionsLoading } =
-    usePermissions();
+  const { data: permissions, isLoading: permissionsLoading } = usePermissions();
 
   return (
     <>

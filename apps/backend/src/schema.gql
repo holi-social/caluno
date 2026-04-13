@@ -5,7 +5,7 @@
 input AddTimeEntryInput {
   endedAt: DateTime
   notes: String
-  shiftId: String!
+  shiftInstanceId: String!
   startedAt: DateTime!
   volunteerId: String!
 }
@@ -84,6 +84,8 @@ input CreateShiftInput {
   instructions: String
   invitedMemberIds: [String!]
   location: String
+  maxVolunteers: Int
+  rrule: String
   startsAt: DateTime!
   title: String!
   visibility: ShiftVisibility! = ALL_MEMBERS
@@ -284,10 +286,11 @@ enum PermissionKey {
 }
 
 type Query {
-  activeShifts(limit: Int! = 10, offset: Int! = 0): ShiftPaginatedResponse!
+  activeShifts(limit: Int! = 10, offset: Int! = 0): ShiftInstancePaginatedResponse!
   me: User!
   membership(organizationUnitId: ID!): Membership!
   membershipRequests(limit: Int! = 10, offset: Int! = 0, organizationUnitId: ID!, status: MembershipRequestStatus): MembershipRequestPaginatedResponse!
+  myMembershipRequests(limit: Int! = 10, offset: Int! = 0, status: MembershipRequestStatus): MembershipRequestPaginatedResponse!
   organization(id: String!): Organization!
   organizationBySlug(slug: String!): Organization!
   organizationUnit(id: String!): OrganizationUnit
@@ -462,16 +465,38 @@ type Role {
 
 type Shift {
   createdBy: User!
-  endsAt: DateTime!
+  durationMinutes: Int!
   id: ID!
   instructions: String
+  isDeleted: Boolean!
   location: String
+  maxVolunteers: Int
   organization: Organization!
+  originalStartsAt: DateTime!
+  rrule: String
   slug: String!
-  startsAt: DateTime!
   title: String!
   visibility: ShiftVisibility!
+}
+
+type ShiftInstance {
+  actualEndsAt: DateTime!
+  actualStartsAt: DateTime!
+  id: ID!
+  isCancelled: Boolean!
+  isException: Boolean!
+  master: Shift!
+  occurrenceIndex: Int!
+  overrideInstructions: String
+  overrideLocation: String
+  overrideMaxVolunteers: Int
+  overrideTitle: String
   volunteers: [User!]
+}
+
+type ShiftInstancePaginatedResponse {
+  items: [ShiftInstance!]!
+  pagination: PaginationInfo!
 }
 
 type ShiftPaginatedResponse {
@@ -489,7 +514,7 @@ type TimeEntry {
   endedAt: DateTime
   id: ID!
   notes: String
-  shift: Shift!
+  shiftInstance: ShiftInstance!
   startedAt: DateTime!
   volunteer: User!
 }
@@ -550,6 +575,8 @@ input UpdateShiftInput {
   instructions: String
   invitedMemberIds: [String!]
   location: String
+  maxVolunteers: Int
+  rrule: String
   startsAt: DateTime
   title: String
   visibility: ShiftVisibility = ALL_MEMBERS

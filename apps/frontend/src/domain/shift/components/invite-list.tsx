@@ -89,7 +89,9 @@ export const InviteList = ({
             <p className="text-sm text-muted-foreground">
               {volunteerSearchQuery
                 ? 'No members found'
-                : 'All members have been invited'}
+                : volunteers.length === 0
+                  ? 'No members in this organization yet'
+                  : 'All members have been invited'}
             </p>
           ) : (
             filteredAvailable.map((volunteer) => (
@@ -140,7 +142,7 @@ export const InviteList = ({
                     variant="ghost"
                     onClick={() => removeMember(volunteer.id)}
                   >
-                    <X className="size-4" />
+                    <X />
                   </Button>
                 </div>
               </div>

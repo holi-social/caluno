@@ -1,6 +1,19 @@
 // React-specific exports (client-side only)
 // Import from '@repo/data/react' in client components
 
+export {
+  ALL_RECURRENCE_DAYS,
+  DAY_VALUE_TO_RRULE,
+  formatRrulePattern,
+  parseRruleDays,
+  parseRruleEndDate,
+  RECURRENCE_DAYS,
+  type RecurrenceDayValue,
+  RRULE_DAY_CODES,
+  type RRuleDayCode,
+  WEEKEND_DAYS,
+  WORKING_DAYS,
+} from './constants';
 export * from './errors/data-error';
 // Re-export core types for convenience
 export * from './generated/graphql';
@@ -12,9 +25,14 @@ export * from './react/hooks/use-membership-request';
 export * from './react/hooks/use-my-permissions';
 export * from './react/hooks/use-organizations';
 export * from './react/hooks/use-roles';
+export * from './react/hooks/use-shift';
 export * from './react/hooks/use-time-entry';
 export * from './react/hooks/use-user';
 // Organization context (provider, hooks, and cookie utilities)
 export * from './react/org-context';
 // React-specific exports
 export * from './react/providers/data-provider';
+export type {
+  RawShift,
+  ShiftDetail,
+} from './repositories/shift/shift.repository';

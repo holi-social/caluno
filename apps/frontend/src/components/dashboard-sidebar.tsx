@@ -1,4 +1,5 @@
 'use client';
+import { PermissionKey } from '@repo/data';
 import {
   Button,
   Sidebar,
@@ -22,7 +23,6 @@ import {
   ShieldIcon,
   UsersIcon,
 } from 'lucide-react';
-import { PermissionKey } from '@repo/data';
 import { useParams, useRouter } from 'next/navigation';
 import { useMemo } from 'react';
 import { OrgSwitcher } from '@/domain/organization/components/org-switcher';
@@ -155,7 +155,7 @@ export function DashboardSidebar({ permissions }: DashboardSidebarProps) {
           className="w-full justify-start"
           onClick={handleSignOut}
         >
-          <LogOutIcon className="mr-2 h-4 w-4" />
+          <LogOutIcon />
           Sign Out
         </Button>
       </SidebarFooter>

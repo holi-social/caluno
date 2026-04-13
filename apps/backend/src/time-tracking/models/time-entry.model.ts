@@ -1,6 +1,6 @@
 import { Field, ID, ObjectType } from '@nestjs/graphql';
 import { createPaginatedResponseType } from '../../graphql/paginated-response.model';
-import { Shift } from '../../shift/models/shift.model';
+import { ShiftInstance } from '../../shift/models/shift-instance.model';
 import { User } from '../../user/models/user.model';
 
 @ObjectType()
@@ -23,8 +23,8 @@ export class TimeEntry {
   @Field(() => User)
   volunteer: User;
 
-  @Field(() => Shift)
-  shift: Shift;
+  @Field(() => ShiftInstance)
+  shiftInstance: ShiftInstance;
 }
 
 export const TimeEntryPaginatedResponse =

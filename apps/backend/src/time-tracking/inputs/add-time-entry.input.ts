@@ -3,7 +3,7 @@ import { Field, InputType } from '@nestjs/graphql';
 @InputType()
 export class AddTimeEntryInput {
   @Field(() => String)
-  shiftId: string;
+  shiftInstanceId: string;
 
   @Field(() => String)
   volunteerId: string;

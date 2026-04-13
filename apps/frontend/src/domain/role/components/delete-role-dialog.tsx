@@ -53,8 +53,8 @@ export function DeleteRoleDialog({
     <AlertDialog open={open} onOpenChange={setOpen}>
       <AlertDialogTrigger asChild>
         {trigger || (
-          <Button variant="ghost" size="sm">
-            <TrashIcon className="h-4 w-4" />
+          <Button variant="destructive" size="icon-xs">
+            <TrashIcon />
           </Button>
         )}
       </AlertDialogTrigger>
@@ -62,13 +62,11 @@ export function DeleteRoleDialog({
         <AlertDialogHeader>
           <AlertDialogTitle>Delete role</AlertDialogTitle>
           <AlertDialogDescription>
-            Are you sure you want to delete the role &quot;{roleName}&quot;? This
-            action cannot be undone.
+            Are you sure you want to delete the role &quot;{roleName}&quot;?
+            This action cannot be undone.
           </AlertDialogDescription>
         </AlertDialogHeader>
-        {error && (
-          <p className="text-sm text-destructive">{error}</p>
-        )}
+        {error && <p className="text-sm text-destructive">{error}</p>}
         <AlertDialogFooter>
           <AlertDialogCancel disabled={isPending}>Cancel</AlertDialogCancel>
           <AlertDialogAction

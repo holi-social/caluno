@@ -21,7 +21,7 @@ export default async function RolesPage({ params }: RolesPageProps) {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold">Roles</h1>
+          <h1 className="page-title">Roles</h1>
           <p className="text-muted-foreground mt-1">
             Manage roles and permissions for {org.name}
           </p>

@@ -1,23 +1,30 @@
 'use client';
 
-import { MembershipRequestRepository } from '@repo/data';
+import {
+  type FindMembershipRequestsOptions,
+  MembershipRequestRepository,
+} from '@repo/data';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useGraphQLClient } from './use-graphql-client';
 
 export function useMembershipRequests(
   organizationUnitId: string,
-  limit = 10,
-  offset = 0,
+  { limit, offset, status }: FindMembershipRequestsOptions = {},
 ) {
   const client = useGraphQLClient();
   const repository = new MembershipRequestRepository(client);
 
   return useQuery({
-    queryKey: ['membershipRequests', organizationUnitId, { limit, offset }],
+    queryKey: [
+      'membershipRequests',
+      organizationUnitId,
+      { limit, offset, status },
+    ],
     queryFn: () =>
       repository.findAllByOrganizationUnitId(organizationUnitId, {
         limit,
         offset,
+        status,
       }),
     enabled: !!organizationUnitId,
   });
@@ -80,6 +87,18 @@ export function useRejectMembershipRequest() {
         queryKey: ['membershipRequests', organizationUnitId],
       });
     },
+  });
+}
+
+export function useMyMembershipRequests(
+  options: FindMembershipRequestsOptions = {},
+) {
+  const client = useGraphQLClient();
+  const repository = new MembershipRequestRepository(client);
+
+  return useQuery({
+    queryKey: ['myMembershipRequests', { ...options }],
+    queryFn: () => repository.findMine({ ...options }),
   });
 }
 

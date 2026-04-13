@@ -14,7 +14,7 @@ export default async function CheckInPage() {
     <div className="max-w-2xl">
       <div>
         <div>
-          <h1 className="text-3xl font-bold">My QR iD</h1>
+          <h1 className="page-title">My QR iD</h1>
           <p className="text-muted-foreground">
             This is your personal QR code to check-in to shifts
           </p>

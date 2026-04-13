@@ -13,7 +13,7 @@ import { PlusIcon } from 'lucide-react';
 import { useState } from 'react';
 import { CreateTimeEntryForm } from '@/domain/time-entry/components/create-form';
 
-interface Shift {
+interface ShiftInstance {
   id: string;
   title: string;
   volunteers?: Array<{ id: string; name: string; email: string }>;
@@ -21,14 +21,14 @@ interface Shift {
 
 interface CreateTimeEntrySheetProps {
   sessionId?: string;
-  shifts?: Shift[];
+  shiftInstances?: ShiftInstance[];
   allVolunteers?: Array<{ id: string; name: string; email: string }>;
   trigger?: React.ReactNode;
 }
 
 export function CreateTimeEntrySheet({
   sessionId,
-  shifts = [],
+  shiftInstances = [],
   allVolunteers = [],
   trigger,
 }: CreateTimeEntrySheetProps) {
@@ -39,14 +39,14 @@ export function CreateTimeEntrySheet({
       <SheetTrigger asChild>
         {trigger || (
           <Button>
-            <PlusIcon className="mr-2 h-4 w-4" />
-            Add Time Entry
+            <PlusIcon />
+            Record Time
           </Button>
         )}
       </SheetTrigger>
-      <SheetContent className="flex flex-col w-full sm:max-w-xl">
-        <SheetHeader className="px-6 pt-6">
-          <SheetTitle>Add Time Entry</SheetTitle>
+      <SheetContent className="flex flex-col w-full sm:max-w-md">
+        <SheetHeader>
+          <SheetTitle>Record Time Entry</SheetTitle>
           <SheetDescription>
             Record a new time entry for a volunteer shift session.
           </SheetDescription>
@@ -56,7 +56,7 @@ export function CreateTimeEntrySheet({
           <div className="mt-6">
             <CreateTimeEntryForm
               sessionId={sessionId}
-              shifts={shifts}
+              shiftInstances={shiftInstances}
               allVolunteers={allVolunteers}
               onSuccess={() => setOpen(false)}
             />

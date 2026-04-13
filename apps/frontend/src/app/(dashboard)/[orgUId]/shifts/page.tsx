@@ -1,5 +1,6 @@
-import Link from 'next/link';
 import { Pagination } from '@/components/pagination';
+import { CreateShiftButton } from '@/domain/shift/components/create-shift-button';
+import { EmptyShifts } from '@/domain/shift/components/empty-shifts';
 import { ShiftsTable } from '@/domain/shift/components/shifts-table';
 import { getDataClient } from '@/lib/data-client';
 import { requireOrgAccess } from '@/lib/org-context-server';
@@ -33,7 +34,7 @@ export default async function ShiftsPage({
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold">Shifts</h1>
+        <h1 className="page-title">Shifts</h1>
         <p className="text-muted-foreground mt-1">Manage volunteer shifts</p>
       </div>
 
@@ -50,11 +51,9 @@ export default async function ShiftsPage({
           )}
         </>
       ) : (
-        <div className="text-muted-foreground">
-          No shifts yet.{' '}
-          <Link href={`/${orgUId}/shifts/new`}>Create your first</Link> shift to
-          get started.
-        </div>
+        <EmptyShifts>
+          <CreateShiftButton />
+        </EmptyShifts>
       )}
     </div>
   );

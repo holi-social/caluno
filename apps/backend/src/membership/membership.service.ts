@@ -212,6 +212,20 @@ export class MembershipService {
     });
   }
 
+  async getMyMembershipRequests(
+    userId: string,
+    status?: MembershipRequestStatus,
+  ): Promise<MembershipRequestEntity[]> {
+    return this.db.query.membershipRequests.findMany({
+      where: { userId, ...(status ? { status } : {}) },
+      with: {
+        user: true,
+        organizationUnit: true,
+        reviewedBy: true,
+      },
+    });
+  }
+
   async assignRoleToMembership(
     membershipId: string,
     roleId: string,

@@ -20,6 +20,8 @@
   --accent-foreground: oklch(0.2103 0.0059 285.8852);
   --destructive: oklch(0.583 0.2387 28.4765);
   --destructive-foreground: oklch(1 0 0);
+  --success: oklch(0.6493 0.1841 133.2796);
+  --success-foreground: oklch(0.9857 0.031 120.7572);
   --border: oklch(0.9197 0.004 286.3202);
   --input: oklch(0.9197 0.004 286.3202);
   --ring: oklch(0.8426 0.2256 129.6486);
@@ -47,7 +49,7 @@
   --shadow-offset-x: 0;
   --shadow-offset-y: 1px;
   --letter-spacing: 0em;
-  --spacing: 0.3rem;
+  --spacing: 4px;
   --shadow-2xs: 0 1px 3px 0px hsl(0 0% 0% / 0.05);
   --shadow-xs: 0 1px 3px 0px hsl(0 0% 0% / 0.05);
   --shadow-sm:
@@ -80,6 +82,8 @@
   --accent-foreground: oklch(0.9851 0 0);
   --destructive: oklch(0.7022 0.1892 22.2279);
   --destructive-foreground: oklch(0.9423 0.0097 72.6595);
+  --success: oklch(0.7681 0.2044 130.85);
+  --success-foreground: oklch(1 0 0);
   --border: oklch(0.279 0.041 260.031);
   --input: oklch(0.552 0.016 285.938);
   --ring: oklch(0.897 0.196 126.665);
@@ -107,7 +111,7 @@
   --shadow-offset-x: 0;
   --shadow-offset-y: 1px;
   --letter-spacing: 0em;
-  --spacing: 0.3rem;
+  --spacing: 4px;
   --shadow-2xs: 0 1px 3px 0px hsl(0 0% 0% / 0.05);
   --shadow-xs: 0 1px 3px 0px hsl(0 0% 0% / 0.05);
   --shadow-sm:
@@ -167,6 +171,8 @@
   --color-border: var(--border);
   --color-destructive-foreground: var(--destructive-foreground);
   --color-destructive: var(--destructive);
+  --color-success-foreground: var(--success-foreground);
+  --color-success: var(--success);
   --color-accent-foreground: var(--accent-foreground);
   --color-accent: var(--accent);
   --color-muted-foreground: var(--muted-foreground);
@@ -188,18 +194,41 @@
   --radius-2xl: calc(var(--radius) * 1.8);
   --radius-3xl: calc(var(--radius) * 2.2);
   --radius-4xl: calc(var(--radius) * 2.6);
+
+  --text-xs: 0.875rem;
+  --text-xs--line-height: calc(1.25 / 0.875);
+  --text-sm: 1rem;
+  --text-sm--line-height: calc(1.5 / 1);
+  --text-base: 1.125rem;
+  --text-base--line-height: calc(1.75 / 1.125);
+  --text-lg: 1.25rem;
+  --text-lg--line-height: calc(1.75 / 1.25);
+  --text-xl: 1.5rem;
+  --text-xl--line-height: calc(2 / 1.5);
+  --text-2xl: 1.875rem;
+  --text-2xl--line-height: calc(2.25 / 1.875);
+  --text-3xl: 2.25rem;
+  --text-3xl--line-height: calc(2.5 / 2.25);
+  --text-4xl: 2.5rem;
+  --text-4xl--line-height: calc(2.75 / 2.5);
 }
 
 @layer base {
   * {
     @apply border-border outline-ring/50;
   }
+
   body {
     @apply bg-background text-foreground;
     letter-spacing: var(--tracking-normal);
   }
+
   button:not([disabled]),
   [role="button"]:not([disabled]) {
     cursor: pointer;
+  }
+
+  .page-title {
+    @apply text-3xl md:text-4xl font-bold;
   }
 }
