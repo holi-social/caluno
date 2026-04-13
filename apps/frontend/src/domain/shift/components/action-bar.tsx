@@ -6,11 +6,11 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useTransition } from 'react';
 import { toast } from 'sonner';
+import { DeleteAlertDialog } from '@/components/delete-alert-dialog';
 import { useSheet } from '@/hooks/use-sheet';
 import { copyToClipboard } from '@/lib/clipboard';
 import { deleteShift } from '../actions';
 import { shiftShareUrl } from '../share';
-import { DeleteAlertDialog } from '@/components/delete-alert-dialog';
 
 type ActionBarProps = {
   id: string;
@@ -46,7 +46,7 @@ export const ActionBar = ({
 
   return (
     <aside className="space-x-2">
-      <Link href={shiftShareUrl(id)} aria-label="View shift">
+      <Link href={shiftShareUrl(id)} aria-label="View shift" target="_blank">
         <Button size={buttonSize} variant="outline">
           <Eye />
         </Button>
