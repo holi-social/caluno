@@ -20,7 +20,7 @@ type ShiftsTableProps = {
   orgUId: string;
 };
 
-const visibilityConfig = {
+export const visibilityConfig = {
   ALL_MEMBERS: { variant: 'outline' as const, label: 'Open shift' },
   INVITED_MEMBERS: { variant: 'secondary' as const, label: 'Invite only' },
 };
