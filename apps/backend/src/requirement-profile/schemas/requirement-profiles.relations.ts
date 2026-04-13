@@ -28,7 +28,8 @@ export const requirementProfilesRelations = defineRelationsPart(
         to: r.organizationUnits.id,
       }),
       requirementProfile: r.one.requirementProfiles({
-        from: r.organizationUnitFavoriteRequirementProfiles.requirementProfileId,
+        from: r.organizationUnitFavoriteRequirementProfiles
+          .requirementProfileId,
         to: r.requirementProfiles.id,
       }),
     },
@@ -62,7 +63,7 @@ export const requirementProfilesRelations = defineRelationsPart(
         to: r.memberships.id,
       }),
       membershipRequest: r.one.membershipRequests({
-        from: r.requirementProfileSubmissions.requestId,
+        from: r.requirementProfileSubmissions.membershipRequestId,
         to: r.membershipRequests.id,
       }),
       reviewedBy: r.one.users({
@@ -88,12 +89,8 @@ export const requirementProfilesRelations = defineRelationsPart(
         to: r.users.id,
       }),
       profile: r.one.organizationUserProfiles({
-        from: r.requirementFulfillments.profileId,
+        from: r.requirementFulfillments.organizationUserProfileId,
         to: r.organizationUserProfiles.id,
-      }),
-      document: r.one.documents({
-        from: r.requirementFulfillments.documentId,
-        to: r.documents.id,
       }),
     },
     organizationUserProfiles: {
@@ -107,17 +104,13 @@ export const requirementProfilesRelations = defineRelationsPart(
       }),
       fulfillments: r.many.requirementFulfillments({
         from: r.organizationUserProfiles.id,
-        to: r.requirementFulfillments.profileId,
+        to: r.requirementFulfillments.organizationUserProfileId,
       }),
     },
     documents: {
       user: r.one.users({
         from: r.documents.userId,
         to: r.users.id,
-      }),
-      fulfillments: r.many.requirementFulfillments({
-        from: r.documents.id,
-        to: r.requirementFulfillments.documentId,
       }),
     },
   }),

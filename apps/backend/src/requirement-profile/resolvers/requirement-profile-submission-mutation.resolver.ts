@@ -19,8 +19,12 @@ export class RequirementProfileSubmissionMutationResolver {
   @Mutation(() => RequirementProfileSubmission)
   async createRequirementProfileSubmission(
     @Args('input') input: CreateRequirementProfileSubmissionInput,
+    @Session() session: UserSession,
   ): Promise<RequirementProfileSubmission> {
-    const item = await this.requirementProfileSubmissionService.create(input);
+    const item = await this.requirementProfileSubmissionService.create(
+      input,
+      session.user.id,
+    );
     return this.requirementProfileSubmissionMapper.toModelOrThrow(item);
   }
 

@@ -30,7 +30,7 @@ export const requirementProfileSubmissions = pgTable(
     membershipId: uuid('membership_id').references(() => memberships.id, {
       onDelete: 'set null',
     }),
-    requestId: uuid('membership_request_id').references(
+    membershipRequestId: uuid('membership_request_id').references(
       () => membershipRequests.id,
       {
         onDelete: 'set null',
@@ -52,7 +52,7 @@ export const requirementProfileSubmissions = pgTable(
       table.membershipId,
     ),
     index('idx_requirement_profile_submissions_membership_request_id').on(
-      table.requestId,
+      table.membershipRequestId,
     ),
     index('idx_requirement_profile_submissions_reviewed_by_id').on(
       table.reviewedById,

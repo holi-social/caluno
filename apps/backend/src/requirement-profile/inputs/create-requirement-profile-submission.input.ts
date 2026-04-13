@@ -9,15 +9,6 @@ export class CreateRequirementSubmissionFulfillmentInput {
   @Field(() => String)
   requirementId: string;
 
-  @Field(() => String, { nullable: true })
-  profileId: string | null;
-
-  @Field(() => String, { nullable: true })
-  documentId: string | null;
-
-  @Field(() => String, { nullable: true })
-  value: string | null;
-
   @Field(() => RequirementFulfillmentStatus, {
     defaultValue: RequirementFulfillmentStatus.DRAFT,
   })
@@ -25,6 +16,18 @@ export class CreateRequirementSubmissionFulfillmentInput {
 
   @Field(() => Date, { nullable: true })
   submittedAt: Date | null;
+
+  @Field(() => String, { nullable: true })
+  documentId?: string | null;
+
+  @Field(() => Boolean, { nullable: true })
+  checked?: boolean | null;
+
+  @Field(() => Date, { nullable: true })
+  date?: Date | null;
+
+  @Field(() => String, { nullable: true })
+  text?: string | null;
 }
 
 @InputType()
@@ -36,7 +39,7 @@ export class CreateRequirementProfileSubmissionInput {
   membershipId: string | null;
 
   @Field(() => String, { nullable: true })
-  requestId: string | null;
+  membershipRequestId: string | null;
 
   @Field(() => RequirementProfileSubmissionStatus, {
     defaultValue: RequirementProfileSubmissionStatus.DRAFT,

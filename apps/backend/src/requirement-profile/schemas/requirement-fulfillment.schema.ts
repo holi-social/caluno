@@ -10,9 +10,8 @@ import {
 import { users } from '../../auth/schemas/auth.schema';
 import { idColumn, timestampColumns } from '../../database/database-columns';
 import { RequirementFulfillmentStatus } from '../enums';
-import { documents } from './document.schema';
 import { organizationUserProfiles } from './organization-user-profile.schema';
-import { requirements } from './requirement.schema';
+import { requirements, requirementTypeEnum } from './requirement.schema';
 import { requirementProfileSubmissions } from './requirement-profile-submission.schema';
 
 export const requirementFulfillmentStatusEnum = pgEnum(
@@ -34,15 +33,13 @@ export const requirementFulfillments = pgTable(
         onDelete: 'restrict',
       })
       .notNull(),
-    profileId: uuid('organization_user_profile_id').references(
+    organizationUserProfileId: uuid('organization_user_profile_id').references(
       () => organizationUserProfiles.id,
       {
         onDelete: 'restrict',
       },
     ),
-    documentId: uuid('document_id').references(() => documents.id, {
-      onDelete: 'restrict',
-    }),
+    type: requirementTypeEnum('type').notNull(),
     value: jsonb('value'),
     status: requirementFulfillmentStatusEnum('status')
       .notNull()
@@ -59,8 +56,9 @@ export const requirementFulfillments = pgTable(
     index('idx_requirement_fulfillments_requirement_id').on(
       table.requirementId,
     ),
-    index('idx_requirement_fulfillments_profile_id').on(table.profileId),
-    index('idx_requirement_fulfillments_document_id').on(table.documentId),
+    index('idx_requirement_fulfillments_profile_id').on(
+      table.organizationUserProfileId,
+    ),
     index('idx_requirement_fulfillments_reviewed_by_id').on(table.reviewedById),
   ],
 );

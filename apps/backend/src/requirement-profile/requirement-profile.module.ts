@@ -26,7 +26,6 @@ import {
   RequirementService,
 } from './services';
 import { OrganizationUserProfileMapper } from './mappers/organization-user-profile.mapper';
-import { DocumentMapper } from './mappers/document.mapper';
 
 @Module({
   imports: [DatabaseModule, UserModule],
@@ -41,7 +40,6 @@ import { DocumentMapper } from './mappers/document.mapper';
     MembershipMapper,
     MembershipRequestMapper,
     OrganizationUserProfileMapper,
-    DocumentMapper,
     RequirementProfileQueryResolver,
     RequirementProfileMutationResolver,
     RequirementProfileFieldResolver,

@@ -1,25 +1,29 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { count, eq } from 'drizzle-orm';
+import { count, eq, inArray } from 'drizzle-orm';
 import type { UserEntity } from '../../auth/schemas/auth.schema';
 import type { Database } from '../../database/database.module';
 import { DATABASE_CONNECTION } from '../../database/database-connection';
 import * as schema from '../../database/schema';
 import { NotFoundGraphQLError } from '../../graphql/errors';
+import { BadRequestGraphQLError } from '../../graphql/errors/bad-request.error';
 import type { PaginationInput } from '../../graphql/pagination.input';
 import type { MembershipEntity } from '../../membership/schemas/membership.schema';
 import type { MembershipRequestEntity } from '../../membership/schemas/membership-request.schema';
 import { UserService } from '../../user/user.service';
-import { CreateRequirementProfileSubmissionInput } from '../inputs/create-requirement-profile-submission.input';
+import { RequirementType } from '../enums';
+import {
+  CreateRequirementProfileSubmissionInput,
+  type CreateRequirementSubmissionFulfillmentInput,
+} from '../inputs/create-requirement-profile-submission.input';
 import { UpdateRequirementFulfillmentInput } from '../inputs/update-requirement-fulfillment.input';
 import { UpdateRequirementProfileSubmissionInput } from '../inputs/update-requirement-profile-submission.input';
-import type { DocumentEntity } from '../schemas/document.schema';
 import type { OrganizationUserProfileEntity } from '../schemas/organization-user-profile.schema';
 import type { RequirementEntity } from '../schemas/requirement.schema';
 import type { RequirementFulfillmentEntity } from '../schemas/requirement-fulfillment.schema';
 import type { RequirementProfileEntity } from '../schemas/requirement-profile.schema';
 import type { RequirementProfileSubmissionEntity } from '../schemas/requirement-profile-submission.schema';
-import { RequirementProfileService } from './requirement-profile.service';
 import { RequirementService } from './requirement.service';
+import { RequirementProfileService } from './requirement-profile.service';
 
 @Injectable()
 export class RequirementProfileSubmissionService {
@@ -57,25 +61,96 @@ export class RequirementProfileSubmissionService {
 
   async create(
     input: CreateRequirementProfileSubmissionInput,
+    userId: string,
   ): Promise<RequirementProfileSubmissionEntity> {
     return this.db.transaction(async (tx) => {
       const { fulfillments, ...submissionInput } = input;
+      const requirementProfile = await this.findProfile(
+        submissionInput.profileId,
+      );
+      const organizationUserProfile =
+        await this.userService.findOrganizationUserProfile(
+          userId,
+          requirementProfile.organizationId,
+        );
       const [submission] = await tx
         .insert(schema.requirementProfileSubmissions)
         .values(submissionInput)
         .returning();
 
       if (fulfillments && fulfillments.length > 0) {
+        const requirementToTypeMap = await this.createRequirementToTypeMap(
+          fulfillments.map((fulfillment) => fulfillment.requirementId),
+        );
         await tx.insert(schema.requirementFulfillments).values(
-          fulfillments.map((fulfillment) => ({
-            ...fulfillment,
-            submissionId: submission.id,
-          })),
+          fulfillments.map((fulfillment) => {
+            const requirementType =
+              requirementToTypeMap[fulfillment.requirementId];
+            if (!requirementType) {
+              throw new NotFoundGraphQLError('Requirement not found');
+            }
+            const value = this.getFulfillmentValue(
+              fulfillment,
+              requirementType,
+              true,
+            );
+
+            return {
+              requirementId: fulfillment.requirementId,
+              profileId: organizationUserProfile.id,
+              status: fulfillment.status,
+              submittedAt: fulfillment.submittedAt,
+              submissionId: submission.id,
+              type: requirementType,
+              value,
+            };
+          }),
         );
       }
 
       return submission;
     });
+  }
+
+  private getFulfillmentValue(
+    input:
+      | CreateRequirementSubmissionFulfillmentInput
+      | UpdateRequirementFulfillmentInput,
+    requirementType: string,
+    valueRequired: boolean,
+  ) {
+    switch (requirementType) {
+      case RequirementType.DOCUMENT:
+        if (input.documentId === undefined && valueRequired) {
+          throw new BadRequestGraphQLError(
+            'Document ID is required for document fulfillment',
+          );
+        }
+        return input.documentId ? { documentId: input.documentId } : null;
+      case RequirementType.CHECK:
+        if (input.checked === undefined && valueRequired) {
+          throw new BadRequestGraphQLError(
+            'Checked is required for check fulfillment',
+          );
+        }
+        return input.checked ? { checked: input.checked } : null;
+      case RequirementType.DATE:
+        if (input.date === undefined && valueRequired) {
+          throw new BadRequestGraphQLError(
+            'Date is required for date fulfillment',
+          );
+        }
+        return input.date ? { date: input.date } : null;
+      case RequirementType.TEXT:
+        if (input.text === undefined && valueRequired) {
+          throw new BadRequestGraphQLError(
+            'Text is required for text fulfillment',
+          );
+        }
+        return input.text ? { text: input.text } : null;
+      default:
+        throw new Error(`Unknown requirement type: ${requirementType}`);
+    }
   }
 
   async update(
@@ -156,11 +231,23 @@ export class RequirementProfileSubmissionService {
     input: UpdateRequirementFulfillmentInput,
     reviewerId?: string,
   ): Promise<RequirementFulfillmentEntity> {
+    const existingFulfillment = await this.findFulfillmentById(id);
+    if (!existingFulfillment) {
+      throw new NotFoundGraphQLError('Requirement fulfillment not found');
+    }
+
+    const updatePayload = this.buildFulfillmentUpdatePayload(
+      existingFulfillment,
+      input,
+    );
+
     const [fulfillment] = await this.db
       .update(schema.requirementFulfillments)
       .set({
-        ...input,
-        ...(reviewerId ? { reviewerId, reviewedAt: new Date() } : {}),
+        ...updatePayload,
+        ...(reviewerId
+          ? { reviewedById: reviewerId, reviewedAt: new Date() }
+          : {}),
       })
       .where(eq(schema.requirementFulfillments.id, id))
       .returning();
@@ -200,13 +287,6 @@ export class RequirementProfileSubmissionService {
     return profile ?? null;
   }
 
-  async findDocumentById(id: string): Promise<DocumentEntity | null> {
-    const document = await this.db.query.documents.findFirst({
-      where: { id },
-    });
-    return document ?? null;
-  }
-
   async findReviewerById(id: string | null): Promise<UserEntity | null> {
     if (!id) {
       return null;
@@ -227,5 +307,53 @@ export class RequirementProfileSubmissionService {
     return this.db.query.membershipRequests.findFirst({
       where: { id },
     });
+  }
+
+  private async createRequirementToTypeMap(
+    requirementIds: string[],
+  ): Promise<Record<string, RequirementEntity['type']>> {
+    const uniqueRequirementIds = [...new Set(requirementIds)];
+    if (uniqueRequirementIds.length === 0) {
+      return {};
+    }
+
+    const requirements = await this.db
+      .select({
+        id: schema.requirements.id,
+        type: schema.requirements.type,
+      })
+      .from(schema.requirements)
+      .where(inArray(schema.requirements.id, uniqueRequirementIds));
+
+    const requirementTypes = requirements.reduce<
+      Record<string, RequirementEntity['type']>
+    >((acc, requirement) => {
+      acc[requirement.id] = requirement.type;
+      return acc;
+    }, {});
+
+    for (const requirementId of uniqueRequirementIds) {
+      if (!requirementTypes[requirementId]) {
+        throw new NotFoundGraphQLError('Requirement not found');
+      }
+    }
+
+    return requirementTypes;
+  }
+
+  private buildFulfillmentUpdatePayload(
+    existingFulfillment: RequirementFulfillmentEntity,
+    input: UpdateRequirementFulfillmentInput,
+  ) {
+    const value = this.getFulfillmentValue(
+      input,
+      existingFulfillment.type,
+      false,
+    );
+    return {
+      status: input.status ?? existingFulfillment.status,
+      submittedAt: input.submittedAt ?? existingFulfillment.submittedAt,
+      ...(value != null && { value }),
+    };
   }
 }

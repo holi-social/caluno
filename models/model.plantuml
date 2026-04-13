@@ -96,12 +96,21 @@ package RequirementProfiles {
         reviewedAt
         reviewedBy
     }
-    class RequirementFulfillment {
-        value: text/JSON
+    interface RequirementFulfillment {
+        type: string
+        value: string
         status {draft, submitted, approved, rejected}
         submittedAt
         reviewedAt
         reviewedBy
+    }
+    class RequirementFulfillmentUpload {
+    }
+    class RequirementFulfillmentCheck {
+    }
+    class RequirementFulfillmentText {
+    }
+    class RequirementFulfillmentDate {
     }
 }
 
@@ -132,13 +141,17 @@ Organisation "1" -- "*" RequirementProfile : "defines >"
 Organisation "1" -- "*" Requirement : "defines >"
 RequirementProfile "*" -right- "*" Requirement : "groups >"
 User "1" -up- "*" Document : "owns >"
-RequirementFulfillment "*" -- "0..1" Document : "backed by >"
+RequirementFulfillmentUpload "*" -- "0..1" Document : "backed by >"
 Membership "0..1" -right- "*" RequirementProfileSubmission
 RequirementProfileSubmission "*" -right- "*" RequirementFulfillment
 MembershipRequest "0..1" -- "*" RequirementProfileSubmission
 RequirementProfileSubmission "*" -up- "1" RequirementProfile : "fulfills >"
 RequirementFulfillment "*" -up- "1" Requirement : "fulfills >"
 RequirementFulfillment "*" -- "1" OrganisationUserProfile : "store for reuse <"
+RequirementFulfillmentUpload .up.|> RequirementFulfillment
+RequirementFulfillmentCheck .up.|> RequirementFulfillment
+RequirementFulfillmentText .up.|> RequirementFulfillment
+RequirementFulfillmentDate .up.|> RequirementFulfillment
 
 OrganisationUserProfile "1" -- "*" IncidentReport
 IncidentReport "*" -right- "1" User : "reported by >"

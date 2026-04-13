@@ -77,12 +77,12 @@ export class RequirementProfileSubmissionFieldResolver {
   async membershipRequest(
     @Parent() submission: RequirementProfileSubmissionEntity,
   ): Promise<MembershipRequest | null> {
-    if (!submission.requestId) {
+    if (!submission.membershipRequestId) {
       return null;
     }
     const request =
       await this.requirementProfileSubmissionService.findRequestById(
-        submission.requestId,
+        submission.membershipRequestId,
       );
     return this.membershipRequestMapper.toModel(request);
   }
