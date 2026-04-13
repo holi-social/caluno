@@ -10,11 +10,16 @@ import type { MembershipEntity } from '../../membership/schemas/membership.schem
 import type { MembershipRequestEntity } from '../../membership/schemas/membership-request.schema';
 import { UserService } from '../../user/user.service';
 import { CreateRequirementProfileSubmissionInput } from '../inputs/create-requirement-profile-submission.input';
+import { UpdateRequirementFulfillmentInput } from '../inputs/update-requirement-fulfillment.input';
 import { UpdateRequirementProfileSubmissionInput } from '../inputs/update-requirement-profile-submission.input';
+import type { DocumentEntity } from '../schemas/document.schema';
+import type { OrganizationUserProfileEntity } from '../schemas/organization-user-profile.schema';
+import type { RequirementEntity } from '../schemas/requirement.schema';
 import type { RequirementFulfillmentEntity } from '../schemas/requirement-fulfillment.schema';
 import type { RequirementProfileEntity } from '../schemas/requirement-profile.schema';
 import type { RequirementProfileSubmissionEntity } from '../schemas/requirement-profile-submission.schema';
 import { RequirementProfileService } from './requirement-profile.service';
+import { RequirementService } from './requirement.service';
 
 @Injectable()
 export class RequirementProfileSubmissionService {
@@ -23,6 +28,7 @@ export class RequirementProfileSubmissionService {
     private readonly db: Database,
     private readonly userService: UserService,
     private readonly requirementProfileService: RequirementProfileService,
+    private readonly requirementService: RequirementService,
   ) {}
 
   async findById(
@@ -120,6 +126,85 @@ export class RequirementProfileSubmissionService {
     return this.db.query.requirementFulfillments.findMany({
       where: { submissionId },
     });
+  }
+
+  async findFulfillmentById(
+    id: string,
+  ): Promise<RequirementFulfillmentEntity | undefined> {
+    return this.db.query.requirementFulfillments.findFirst({
+      where: { id },
+    });
+  }
+
+  async findAllFulfillments(
+    pagination: PaginationInput,
+  ): Promise<{ items: RequirementFulfillmentEntity[]; total: number }> {
+    const items = await this.db.query.requirementFulfillments.findMany({
+      limit: pagination.limit,
+      offset: pagination.offset,
+      orderBy: { createdAt: 'desc' },
+    });
+    const [{ total }] = await this.db.query.requirementFulfillments.findMany({
+      columns: {},
+      extras: { total: count() },
+    });
+    return { items, total };
+  }
+
+  async updateFulfillment(
+    id: string,
+    input: UpdateRequirementFulfillmentInput,
+    reviewerId?: string,
+  ): Promise<RequirementFulfillmentEntity> {
+    const [fulfillment] = await this.db
+      .update(schema.requirementFulfillments)
+      .set({
+        ...input,
+        ...(reviewerId ? { reviewerId, reviewedAt: new Date() } : {}),
+      })
+      .where(eq(schema.requirementFulfillments.id, id))
+      .returning();
+
+    if (!fulfillment) {
+      throw new NotFoundGraphQLError('Requirement fulfillment not found');
+    }
+
+    return fulfillment;
+  }
+
+  async deleteFulfillment(id: string): Promise<RequirementFulfillmentEntity> {
+    const [fulfillment] = await this.db
+      .delete(schema.requirementFulfillments)
+      .where(eq(schema.requirementFulfillments.id, id))
+      .returning();
+    if (!fulfillment) {
+      throw new NotFoundGraphQLError('Requirement fulfillment not found');
+    }
+    return fulfillment;
+  }
+
+  async findRequirement(requirementId: string): Promise<RequirementEntity> {
+    const requirement = await this.requirementService.findById(requirementId);
+    if (!requirement) {
+      throw new NotFoundGraphQLError('Requirement not found');
+    }
+    return requirement;
+  }
+
+  async findProfileById(
+    id: string,
+  ): Promise<OrganizationUserProfileEntity | null> {
+    const profile = await this.db.query.organizationUserProfiles.findFirst({
+      where: { id },
+    });
+    return profile ?? null;
+  }
+
+  async findDocumentById(id: string): Promise<DocumentEntity | null> {
+    const document = await this.db.query.documents.findFirst({
+      where: { id },
+    });
+    return document ?? null;
   }
 
   async findReviewerById(id: string | null): Promise<UserEntity | null> {

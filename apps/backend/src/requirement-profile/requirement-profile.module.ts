@@ -21,7 +21,6 @@ import {
   RequirementQueryResolver,
 } from './resolvers';
 import {
-  RequirementFulfillmentService,
   RequirementProfileService,
   RequirementProfileSubmissionService,
   RequirementService,
@@ -35,7 +34,6 @@ import { DocumentMapper } from './mappers/document.mapper';
     RequirementService,
     RequirementProfileService,
     RequirementProfileSubmissionService,
-    RequirementFulfillmentService,
     RequirementProfileMapper,
     RequirementMapper,
     RequirementProfileSubmissionMapper,
@@ -60,7 +58,6 @@ import { DocumentMapper } from './mappers/document.mapper';
     RequirementService,
     RequirementProfileService,
     RequirementProfileSubmissionService,
-    RequirementFulfillmentService,
   ],
 })
 export class RequirementProfileModule {}

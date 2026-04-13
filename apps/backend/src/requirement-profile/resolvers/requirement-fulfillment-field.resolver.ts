@@ -10,17 +10,13 @@ import { Requirement } from '../models/requirement.model';
 import { RequirementFulfillment } from '../models/requirement-fulfillment.model';
 import { RequirementProfileSubmission } from '../models/requirement-profile-submission.model';
 import type { RequirementFulfillmentEntity } from '../schemas/requirement-fulfillment.schema';
-import {
-  RequirementFulfillmentService,
-  RequirementProfileSubmissionService,
-} from '../services';
+import { RequirementProfileSubmissionService } from '../services';
 import { OrganizationUserProfileMapper } from '../mappers/organization-user-profile.mapper';
 import { DocumentMapper } from '../mappers/document.mapper';
 
 @Resolver(() => RequirementFulfillment)
 export class RequirementFulfillmentFieldResolver {
   constructor(
-    private readonly requirementFulfillmentService: RequirementFulfillmentService,
     private readonly requirementProfileSubmissionService: RequirementProfileSubmissionService,
     private readonly requirementProfileSubmissionMapper: RequirementProfileSubmissionMapper,
     private readonly requirementMapper: RequirementMapper,
@@ -44,7 +40,7 @@ export class RequirementFulfillmentFieldResolver {
   async requirement(
     @Parent() fulfillment: RequirementFulfillmentEntity,
   ): Promise<Requirement> {
-    const entity = await this.requirementFulfillmentService.findRequirement(
+    const entity = await this.requirementProfileSubmissionService.findRequirement(
       fulfillment.requirementId,
     );
     return this.requirementMapper.toModelOrThrow(entity);
@@ -71,7 +67,7 @@ export class RequirementFulfillmentFieldResolver {
     if (!fulfillment.profileId) {
       return null;
     }
-    const profile = await this.requirementFulfillmentService.findProfileById(
+    const profile = await this.requirementProfileSubmissionService.findProfileById(
       fulfillment.profileId,
     );
     return this.organizationUserProfileMapper.toModelOrThrow(profile);
@@ -84,7 +80,8 @@ export class RequirementFulfillmentFieldResolver {
     if (!fulfillment.documentId) {
       return null;
     }
-    const document = await this.requirementFulfillmentService.findDocumentById(
+    const document =
+      await this.requirementProfileSubmissionService.findDocumentById(
       fulfillment.documentId,
     );
     return this.documentMapper.toModelOrThrow(document);

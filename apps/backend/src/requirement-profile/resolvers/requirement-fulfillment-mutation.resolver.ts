@@ -5,12 +5,12 @@ import { Permissions } from '../../auth/decorators/permissions.decorator';
 import { UpdateRequirementFulfillmentInput } from '../inputs/update-requirement-fulfillment.input';
 import { RequirementFulfillmentMapper } from '../mappers/requirement-fulfillment.mapper';
 import { RequirementFulfillment } from '../models/requirement-fulfillment.model';
-import { RequirementFulfillmentService } from '../services';
+import { RequirementProfileSubmissionService } from '../services';
 
 @Resolver(() => RequirementFulfillment)
 export class RequirementFulfillmentMutationResolver {
   constructor(
-    private readonly requirementFulfillmentService: RequirementFulfillmentService,
+    private readonly requirementProfileSubmissionService: RequirementProfileSubmissionService,
     private readonly requirementFulfillmentMapper: RequirementFulfillmentMapper,
   ) {}
 
@@ -21,7 +21,7 @@ export class RequirementFulfillmentMutationResolver {
     @Args('input') input: UpdateRequirementFulfillmentInput,
     @Session() session: UserSession,
   ): Promise<RequirementFulfillment> {
-    const item = await this.requirementFulfillmentService.update(
+    const item = await this.requirementProfileSubmissionService.updateFulfillment(
       id,
       input,
       session.user.id,
@@ -34,7 +34,8 @@ export class RequirementFulfillmentMutationResolver {
   async deleteRequirementFulfillment(
     @Args('id') id: string,
   ): Promise<RequirementFulfillment> {
-    const item = await this.requirementFulfillmentService.delete(id);
+    const item =
+      await this.requirementProfileSubmissionService.deleteFulfillment(id);
     return this.requirementFulfillmentMapper.toModelOrThrow(item);
   }
 }

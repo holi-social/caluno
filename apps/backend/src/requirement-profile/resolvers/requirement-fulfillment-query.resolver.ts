@@ -7,12 +7,12 @@ import {
   RequirementFulfillment,
   RequirementFulfillmentPaginatedResponse,
 } from '../models/requirement-fulfillment.model';
-import { RequirementFulfillmentService } from '../services';
+import { RequirementProfileSubmissionService } from '../services';
 
 @Resolver(() => RequirementFulfillment)
 export class RequirementFulfillmentQueryResolver {
   constructor(
-    private readonly requirementFulfillmentService: RequirementFulfillmentService,
+    private readonly requirementProfileSubmissionService: RequirementProfileSubmissionService,
     private readonly requirementFulfillmentMapper: RequirementFulfillmentMapper,
   ) {}
 
@@ -21,7 +21,8 @@ export class RequirementFulfillmentQueryResolver {
   async requirementFulfillment(
     @Args('id') id: string,
   ): Promise<RequirementFulfillment | null> {
-    const item = await this.requirementFulfillmentService.findById(id);
+    const item =
+      await this.requirementProfileSubmissionService.findFulfillmentById(id);
     return this.requirementFulfillmentMapper.toModel(item);
   }
 
@@ -31,7 +32,9 @@ export class RequirementFulfillmentQueryResolver {
     @Args() pagination: PaginationInput,
   ): Promise<RequirementFulfillmentPaginatedResponse> {
     const { items, total } =
-      await this.requirementFulfillmentService.findAll(pagination);
+      await this.requirementProfileSubmissionService.findAllFulfillments(
+        pagination,
+      );
     return new RequirementFulfillmentPaginatedResponse({
       items: this.requirementFulfillmentMapper.toArray(items),
       total,
