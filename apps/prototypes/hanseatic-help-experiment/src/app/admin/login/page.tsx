@@ -37,9 +37,10 @@ export default function AdminLoginPage() {
     <main className="min-h-dvh flex justify-center items-center p-4 bg-background">
       <Card className="w-full max-w-sm">
         <CardContent className="pt-6">
-          <h1 className="text-xl font-medium mb-4">Admin</h1>
+          <h1 className="text-xl font-medium mb-4">Admin Panel</h1>
           <p className="text-sm text-muted-foreground mb-6">
-            Use the credentials from your environment variables.
+            Sign in with an authorized administrator account to manage this
+            prototype.
           </p>
           <form onSubmit={handleSubmit} className="flex flex-col gap-4">
             <div className="flex flex-col gap-2">

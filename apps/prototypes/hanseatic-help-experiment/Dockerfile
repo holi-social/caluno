@@ -34,4 +34,4 @@ WORKDIR /app/apps/prototypes/hanseatic-help-experiment
 
 EXPOSE 3000
 
-CMD ["sh", "-c", "bun run db:migrate && bun run start"]
+CMD ["sh", "-c", "bun run db:migrate && node .next/standalone/apps/prototypes/hanseatic-help-experiment/server.js"]
