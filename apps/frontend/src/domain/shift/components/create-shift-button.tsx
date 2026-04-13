@@ -8,7 +8,7 @@ export function CreateShiftButton() {
   const { open } = useSheet('shift', 'id');
   return (
     <Button size="lg" onClick={() => open()}>
-      <PlusIcon className="mr-2 h-4 w-4" /> Create Shift
+      <PlusIcon /> Create Shift
     </Button>
   );
 }
