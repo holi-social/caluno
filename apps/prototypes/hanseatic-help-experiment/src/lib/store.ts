@@ -1,55 +1,78 @@
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
-import { join } from 'node:path';
-import type { Entry } from './types';
+import { desc, eq } from 'drizzle-orm';
+import { db } from '@/db/drizzle';
+import { hanseaticHelpEntries, type HanseaticHelpEntryRow } from '@/db/schema';
+import type { Action, Entry } from './types';
 
-const DATA_DIR = join(process.cwd(), 'data');
-const DATA_FILE = join(DATA_DIR, 'entries.json');
-
-function readEntries(): Entry[] {
-  if (!existsSync(DATA_FILE)) return [];
-  try {
-    return JSON.parse(readFileSync(DATA_FILE, 'utf-8')) as Entry[];
-  } catch {
-    return [];
-  }
-}
-
-function writeEntries(entries: Entry[]): void {
-  if (!existsSync(DATA_DIR)) {
-    mkdirSync(DATA_DIR, { recursive: true });
-  }
-  writeFileSync(DATA_FILE, JSON.stringify(entries, null, 2), 'utf-8');
-}
-
-export function createEntry(
-  data: Pick<Entry, 'action'>,
-): Entry {
-  const entries = readEntries();
-  const entry: Entry = {
-    ...data,
-    id: crypto.randomUUID(),
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
+function rowToEntry(row: HanseaticHelpEntryRow): Entry {
+  return {
+    id: row.id,
+    action: row.action as Action,
+    plannedDurationHours: row.plannedDurationHours ?? undefined,
+    arrivalTime: row.arrivalTime ?? undefined,
+    breakArrivalTime: row.breakArrivalTime ?? undefined,
+    breakDepartureTime: row.breakDepartureTime ?? undefined,
+    name: row.name ?? undefined,
+    email: row.email ?? undefined,
+    gdprConsent: row.gdprConsent ?? undefined,
+    createdAt: row.createdAt.toISOString(),
+    updatedAt: row.updatedAt.toISOString(),
   };
-  entries.push(entry);
-  writeEntries(entries);
-  return entry;
 }
 
-export function updateEntry(
+export async function createEntry(data: Pick<Entry, 'action'>): Promise<Entry> {
+  const [row] = await db
+    .insert(hanseaticHelpEntries)
+    .values({ action: data.action })
+    .returning();
+  if (!row) {
+    throw new Error('Failed to create entry');
+  }
+  return rowToEntry(row);
+}
+
+export async function updateEntry(
   id: string,
   data: Partial<Omit<Entry, 'id' | 'createdAt'>>,
-): Entry | null {
-  const entries = readEntries();
-  const idx = entries.findIndex((e) => e.id === id);
-  if (idx === -1) return null;
-  const existing = entries[idx];
+): Promise<Entry | null> {
+  const [existing] = await db
+    .select()
+    .from(hanseaticHelpEntries)
+    .where(eq(hanseaticHelpEntries.id, id))
+    .limit(1);
   if (!existing) return null;
-  entries[idx] = {
-    ...existing,
-    ...data,
-    updatedAt: new Date().toISOString(),
-  };
-  writeEntries(entries);
-  return entries[idx] ?? null;
+
+  const patch: Partial<typeof hanseaticHelpEntries.$inferInsert> = {};
+  if (data.action !== undefined) patch.action = data.action;
+  if (data.plannedDurationHours !== undefined) {
+    patch.plannedDurationHours = data.plannedDurationHours;
+  }
+  if (data.arrivalTime !== undefined) patch.arrivalTime = data.arrivalTime;
+  if (data.breakArrivalTime !== undefined) {
+    patch.breakArrivalTime = data.breakArrivalTime;
+  }
+  if (data.breakDepartureTime !== undefined) {
+    patch.breakDepartureTime = data.breakDepartureTime;
+  }
+  if (data.name !== undefined) patch.name = data.name;
+  if (data.email !== undefined) patch.email = data.email;
+  if (data.gdprConsent !== undefined) patch.gdprConsent = data.gdprConsent;
+
+  if (Object.keys(patch).length === 0) {
+    return rowToEntry(existing);
+  }
+
+  const [row] = await db
+    .update(hanseaticHelpEntries)
+    .set(patch)
+    .where(eq(hanseaticHelpEntries.id, id))
+    .returning();
+  return row ? rowToEntry(row) : null;
+}
+
+export async function listEntries(): Promise<Entry[]> {
+  const rows = await db
+    .select()
+    .from(hanseaticHelpEntries)
+    .orderBy(desc(hanseaticHelpEntries.createdAt));
+  return rows.map(rowToEntry);
 }

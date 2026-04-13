@@ -9,7 +9,7 @@ export async function PATCH(
   try {
     const { id } = await params;
     const body = (await request.json()) as Partial<Omit<Entry, 'id' | 'createdAt'>>;
-    const updated = updateEntry(id, body);
+    const updated = await updateEntry(id, body);
 
     if (!updated) {
       return NextResponse.json({ error: 'Entry not found' }, { status: 404 });
