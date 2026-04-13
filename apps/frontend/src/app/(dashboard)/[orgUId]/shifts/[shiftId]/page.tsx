@@ -11,17 +11,13 @@ import {
 import { notFound } from 'next/navigation';
 import { UserCard } from '@/components/user-card';
 import { ActionBar } from '@/domain/shift/components/action-bar';
+import { visibilityConfig } from '@/domain/shift/components/shifts-table';
 import { getDataClient } from '@/lib/data-client';
 import { formatDateTime, formatRange } from '@/lib/formatting';
 
 interface ShiftViewPageProps {
   params: Promise<{ orgUId: string; shiftId: string }>;
 }
-
-const visibilityConfig = {
-  ALL_MEMBERS: { variant: 'outline' as const, label: 'Open to all' },
-  INVITED_MEMBERS: { variant: 'secondary' as const, label: 'Invite only' },
-};
 
 export default async function ShiftViewPage({ params }: ShiftViewPageProps) {
   const { orgUId, shiftId } = await params;
@@ -37,7 +33,6 @@ export default async function ShiftViewPage({ params }: ShiftViewPageProps) {
   const endsAt = new Date(startsAt.getTime() + shift.durationMinutes * 60000);
 
   const isFinished = new Date() > endsAt;
-  const volunteers = shift.volunteers ?? [];
 
   return (
     <div className="space-y-6">
@@ -81,24 +76,10 @@ export default async function ShiftViewPage({ params }: ShiftViewPageProps) {
           <Card>
             <CardHeader>
               <CardTitle>
-                Volunteers <Badge variant="outline">{volunteers.length}</Badge>
+                Volunteers <Badge variant="outline">{'12'}</Badge>
               </CardTitle>
             </CardHeader>
-            <CardContent>
-              {volunteers.length > 0 ? (
-                <ul className="space-y-2">
-                  {volunteers.map((v) => (
-                    <li key={v.id}>
-                      <UserCard user={v} />
-                    </li>
-                  ))}
-                </ul>
-              ) : (
-                <p className="text-sm text-muted-foreground">
-                  No invited volunteers
-                </p>
-              )}
-            </CardContent>
+            <CardContent>TODO</CardContent>
           </Card>
         </div>
 
