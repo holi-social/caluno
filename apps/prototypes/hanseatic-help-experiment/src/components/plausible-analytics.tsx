@@ -37,6 +37,7 @@ export function PlausibleAnalytics() {
       init({
         domain,
         captureOnLocalhost: process.env.NODE_ENV === 'development',
+        formSubmissions: true,
         transformRequest: (payload) => {
           const url = typeof payload.u === 'string' ? payload.u : '';
           if (url && shouldIgnoreTrackedUrl(url)) return null;
