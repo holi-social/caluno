@@ -1,12 +1,16 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Form1 } from '@/components/steps/form-1';
 import { Form21 } from '@/components/steps/form-2-1';
 import { Form22 } from '@/components/steps/form-2-2';
 import { Form23 } from '@/components/steps/form-2-3';
 import { Form3 } from '@/components/steps/form-3';
 import { Form4 } from '@/components/steps/form-4';
+import {
+  trackVolunteerWizardStepCompleted,
+  trackVolunteerWizardStepViewed,
+} from '@/lib/volunteer-wizard-plausible';
 import type { Action, Form3Context, WizardStep } from '@/lib/types';
 
 // ---- Duration helpers ----
@@ -82,6 +86,10 @@ export default function WizardPage() {
   const [state, setState] = useState<WizardStep>({ step: 'form-1' });
   const [loading, setLoading] = useState(false);
 
+  useEffect(() => {
+    trackVolunteerWizardStepViewed(state.step);
+  }, [state.step]);
+
   // form-1: user picks action → create entry → go to matching form-2
   async function handleActionSelect(action: Action) {
     setLoading(true);
@@ -93,6 +101,11 @@ export default function WizardPage() {
           : action === 'finishing'
             ? { step: 'form-2-2', entryId }
             : { step: 'form-2-3', entryId };
+      trackVolunteerWizardStepCompleted({
+        completed_step_id: 'form-1',
+        next_step_id: next.step,
+        check_in_intent: action,
+      });
       setState(next);
     } finally {
       setLoading(false);
@@ -105,6 +118,12 @@ export default function WizardPage() {
     setLoading(true);
     try {
       await patchEntry(state.entryId, { plannedDurationHours: hours });
+      trackVolunteerWizardStepCompleted({
+        completed_step_id: 'form-2-1',
+        next_step_id: 'form-3',
+        check_in_intent: 'starting',
+        planned_duration_hours: hours,
+      });
       setState({
         step: 'form-3',
         entryId: state.entryId,
@@ -121,6 +140,11 @@ export default function WizardPage() {
     setLoading(true);
     try {
       await patchEntry(state.entryId, { arrivalTime });
+      trackVolunteerWizardStepCompleted({
+        completed_step_id: 'form-2-2',
+        next_step_id: 'form-3',
+        check_in_intent: 'finishing',
+      });
       setState({
         step: 'form-3',
         entryId: state.entryId,
@@ -139,6 +163,11 @@ export default function WizardPage() {
       await patchEntry(state.entryId, {
         breakArrivalTime: arrivalTime,
         breakDepartureTime: departureTime,
+      });
+      trackVolunteerWizardStepCompleted({
+        completed_step_id: 'form-2-3',
+        next_step_id: 'form-3',
+        check_in_intent: 'break',
       });
       setState({
         step: 'form-3',
@@ -163,6 +192,12 @@ export default function WizardPage() {
         ...(name ? { name } : {}),
         ...(email ? { email } : {}),
         gdprConsent,
+      });
+      trackVolunteerWizardStepCompleted({
+        completed_step_id: 'form-3',
+        next_step_id: 'form-4',
+        check_in_intent: state.context.action,
+        gdpr_consent_recorded: gdprConsent,
       });
       setState({
         step: 'form-4',

@@ -38,6 +38,9 @@ export function PlausibleAnalytics() {
         domain,
         captureOnLocalhost: process.env.NODE_ENV === 'development',
         formSubmissions: true,
+        customProperties: {
+          analytics_app: 'hanseatic_help_volunteer_check_in',
+        },
         transformRequest: (payload) => {
           const url = typeof payload.u === 'string' ? payload.u : '';
           if (url && shouldIgnoreTrackedUrl(url)) return null;
