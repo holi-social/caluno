@@ -31,10 +31,10 @@ export function ShiftsTable({ shifts, orgUId }: ShiftsTableProps) {
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead className="text-muted-foreground">Name</TableHead>
-            <TableHead className="text-muted-foreground">First Date</TableHead>
-            <TableHead className="text-muted-foreground">Pattern</TableHead>
-            <TableHead className="text-muted-foreground">Visibility</TableHead>
+            <TableHead>Name</TableHead>
+            <TableHead>First Date</TableHead>
+            <TableHead>Pattern</TableHead>
+            <TableHead>Visibility</TableHead>
             <TableHead></TableHead>
           </TableRow>
         </TableHeader>
