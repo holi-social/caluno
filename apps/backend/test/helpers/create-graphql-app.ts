@@ -1,6 +1,6 @@
-import { join } from 'node:path';
-import { existsSync } from 'node:fs';
 import { spawnSync } from 'node:child_process';
+import { existsSync } from 'node:fs';
+import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { ApolloDriver, type ApolloDriverConfig } from '@nestjs/apollo';
 import {
@@ -120,9 +120,8 @@ export const createGraphqlTestApp = async (
     ).href
   );
   const { UserService } = await import(
-    pathToFileURL(
-      join(backendRoot, 'dist', 'src', 'user', 'user.service.js'),
-    ).href
+    pathToFileURL(join(backendRoot, 'dist', 'src', 'user', 'user.service.js'))
+      .href
   );
   const { OrganizationUserProfileMapper } = await import(
     pathToFileURL(
@@ -241,7 +240,7 @@ export const createGraphqlTestApp = async (
         driver: ApolloDriver,
         // Keep test schema generation isolated so it does not overwrite
         // the backend's checked-in schema used by client codegen.
-        autoSchemaFile: join(backendRoot, 'test', 'schema.gql'),
+        autoSchemaFile: true, //join(backendRoot, 'test', 'schema.gql'),
         graphiql: false,
         sortSchema: true,
         context: ({ req }) => ({
