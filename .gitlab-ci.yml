@@ -6,6 +6,7 @@ workflow:
     - when: never
 
 stages:
+  - test
   - build
   - terraform_plan
   - terraform_apply
@@ -23,6 +24,17 @@ variables:
   TF_ROOT: "packages/infra"
   TF_IN_AUTOMATION: "true"
   TF_INPUT: "false"
+
+# ─── TEST ─────────────────────────────────────────────────────────────────────
+
+test_backend:
+  stage: test
+  image: europe-north1-docker.pkg.dev/holi-shared/docker-hub-remote/oven/bun:1
+  needs: []
+  script:
+    - cd apps/backend
+    - bun install --frozen-lockfile
+    - bun test
 
 # ─── BUILD ────────────────────────────────────────────────────────────────────
 
