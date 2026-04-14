@@ -1,6 +1,11 @@
 import { ensurePlausibleInitialized, getPlausibleDomain } from '@/lib/plausible-init';
 import type { Action, WizardStep } from '@/lib/types';
 
+const STEP_VIEW_ROW_ID = 'step_view_pending';
+const STEP_VIEW_NEXT_NAME = 'Step view only (see Step Completed for next step)';
+const STEP_VIEW_COMPLETED_NAME = 'Step view only (see Step Completed for completed step)';
+const STEP_VIEW_CHECK_IN_INTENT = 'not_applicable_step_view';
+
 /** Human-readable step names for Plausible custom properties (English, stable for reporting). */
 export const WIZARD_STEP_NAMES: Record<WizardStep['step'], string> = {
   'form-1': 'Check-in type (start, finish, or manual times)',
@@ -37,6 +42,11 @@ export function trackVolunteerWizardStepViewed(stepId: WizardStep['step']): void
   void trackWhenEnabled('VolunteerCheckInWizardStepViewed', {
     wizard_step_id: stepId,
     wizard_step_name: WIZARD_STEP_NAMES[stepId],
+    completed_step_id: STEP_VIEW_ROW_ID,
+    completed_step_name: STEP_VIEW_COMPLETED_NAME,
+    check_in_intent: STEP_VIEW_CHECK_IN_INTENT,
+    next_step_id: STEP_VIEW_ROW_ID,
+    next_step_name: STEP_VIEW_NEXT_NAME,
   });
 }
 
@@ -44,18 +54,19 @@ export function trackVolunteerWizardStepViewed(stepId: WizardStep['step']): void
 export function trackVolunteerWizardStepCompleted(payload: {
   completed_step_id: WizardStep['step'];
   next_step_id: WizardStep['step'];
-  check_in_intent?: Action;
+  /** Always set so `check_in_intent` is never missing on completion rows. */
+  check_in_intent: Action;
   planned_duration_hours?: number;
   gdpr_consent_recorded?: boolean;
 }): void {
   void trackWhenEnabled('VolunteerCheckInWizardStepCompleted', {
     completed_step_id: payload.completed_step_id,
     completed_step_name: WIZARD_STEP_NAMES[payload.completed_step_id],
+    wizard_step_id: payload.completed_step_id,
+    wizard_step_name: WIZARD_STEP_NAMES[payload.completed_step_id],
     next_step_id: payload.next_step_id,
     next_step_name: WIZARD_STEP_NAMES[payload.next_step_id],
-    ...(payload.check_in_intent !== undefined
-      ? { check_in_intent: payload.check_in_intent }
-      : {}),
+    check_in_intent: payload.check_in_intent,
     ...(payload.planned_duration_hours !== undefined
       ? { planned_duration_hours: payload.planned_duration_hours }
       : {}),

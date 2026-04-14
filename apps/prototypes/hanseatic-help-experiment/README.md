@@ -79,11 +79,11 @@ Uses [`@plausible-analytics/tracker`](https://www.npmjs.com/package/@plausible-a
 
 Implementation: `src/components/plausible-analytics.tsx` (`init`) and `src/lib/volunteer-wizard-plausible.ts` (`track`).
 
-In the Plausible dashboard, add **custom events** and **custom properties** (see [Plausible: custom props](https://plausible.io/docs/custom-props/introduction)) so goals and breakdowns include the names below.
+In the Plausible dashboard, register **custom events** and **custom properties** as needed (see [Plausible: custom props](https://plausible.io/docs/custom-props/introduction)).
 
 ### Global custom properties (`init`)
 
-These are attached via `customProperties` on `init` and apply to **automatic** events (for example pageviews) together with anything the tracker merges them into.
+Set on `init` as `customProperties`.
 
 | Property | Value | Notes |
 | --- | --- | --- |
@@ -103,7 +103,12 @@ Fires when the wizard step changes (including the first screen). One row per nav
 | Property | Description |
 | --- | --- |
 | `wizard_step_id` | `form-1`, `form-2-1`, `form-2-2`, `form-2-3`, `form-3`, or `form-4`. |
-| `wizard_step_name` | English label for reporting (see mapping below). |
+| `wizard_step_name` | Label for `wizard_step_id` (see reference table below). |
+| `completed_step_id` | `step_view_pending` |
+| `completed_step_name` | `Step view only (see Step Completed for completed step)` |
+| `check_in_intent` | `not_applicable_step_view` |
+| `next_step_id` | `step_view_pending` |
+| `next_step_name` | `Step view only (see Step Completed for next step)` |
 
 #### `VolunteerCheckInWizardStepCompleted`
 
@@ -113,9 +118,11 @@ Fires after a successful API write and before advancing to the next step. **No P
 | --- | --- |
 | `completed_step_id` | Step the user finished (`form-1` … `form-3`). |
 | `completed_step_name` | English label for `completed_step_id`. |
+| `wizard_step_id` | Same as `completed_step_id`. |
+| `wizard_step_name` | Same as `completed_step_name`. |
 | `next_step_id` | Next wizard step. |
 | `next_step_name` | English label for `next_step_id`. |
-| `check_in_intent` | **Optional.** `starting`, `finishing`, or `break`. Set when leaving `form-1`, `form-2-1` / `form-2-2` / `form-2-3`, or `form-3` (from current flow context). |
+| `check_in_intent` | `starting`, `finishing`, or `break`. |
 | `planned_duration_hours` | **Optional.** Integer hours when completing `form-2-1` (starting flow). |
 | `gdpr_consent_recorded` | **Optional.** `true` or `false` when completing `form-3` (consent checkbox only, not identity). |
 
