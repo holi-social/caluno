@@ -2,6 +2,43 @@
 # THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
 # ------------------------------------------------------
 
+input AddTimeEntryInput {
+  endedAt: DateTime
+  notes: String
+  shiftInstanceId: String!
+  startedAt: DateTime!
+  volunteerId: String!
+}
+
+input CloseTimeEntryInput {
+  endedAt: DateTime!
+  notes: String
+}
+
+input CreateOrganizationInput {
+  address: String
+  description: String
+  email: String
+  logoUrl: String
+  name: String!
+  parentId: String
+  phone: String
+  websiteUrl: String
+}
+
+input CreateOrganizationUnitInput {
+  address: String
+  description: String
+  email: String
+  logoUrl: String
+  name: String!
+  organizationId: String!
+  parentId: String!
+  phone: String
+  typeId: String!
+  websiteUrl: String
+}
+
 input CreateRequirementInput {
   description: String
   mandatory: Boolean! = false
@@ -36,6 +73,24 @@ input CreateRequirementSubmissionFulfillmentInput {
   text: String
 }
 
+input CreateRoleInput {
+  description: String
+  name: String!
+  permissionIds: [String!]!
+}
+
+input CreateShiftInput {
+  endsAt: DateTime!
+  instructions: String
+  invitedMemberIds: [String!]
+  location: String
+  maxVolunteers: Int
+  rrule: String
+  startsAt: DateTime!
+  title: String!
+  visibility: ShiftVisibility! = ALL_MEMBERS
+}
+
 """
 A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date-time format.
 """
@@ -59,6 +114,11 @@ type MembershipRequest {
   user: User!
 }
 
+type MembershipRequestPaginatedResponse {
+  items: [MembershipRequest!]!
+  pagination: PaginationInfo!
+}
+
 enum MembershipRequestStatus {
   ACCEPTED
   CANCELLED
@@ -67,17 +127,36 @@ enum MembershipRequestStatus {
 }
 
 type Mutation {
+  addTimeEntry(input: AddTimeEntryInput!): TimeEntry!
+  approveMembershipRequest(id: ID!, organizationUnitId: ID!): MembershipRequest!
+  assignRoleToMembership(membershipId: ID!, roleId: ID!): Boolean!
+  cancelMembershipRequest(id: ID!, organizationUnitId: ID!): MembershipRequest!
+  closeTimeEntry(id: ID!, input: CloseTimeEntryInput!): TimeEntry!
+  createMembershipRequest(organizationUnitId: ID!): MembershipRequest!
+  createOrganization(input: CreateOrganizationInput!): Organization!
+  createOrganizationUnit(input: CreateOrganizationUnitInput!): OrganizationUnit!
   createRequirement(input: CreateRequirementInput!): Requirement!
   createRequirementProfile(input: CreateRequirementProfileInput!): RequirementProfile!
   createRequirementProfileSubmission(input: CreateRequirementProfileSubmissionInput!): RequirementProfileSubmission!
+  createRole(input: CreateRoleInput!): Role!
+  createShift(input: CreateShiftInput!): Shift!
+  deleteOrganizationUnit(id: String!): OrganizationUnit!
   deleteRequirement(id: String!): Requirement!
   deleteRequirementFulfillment(id: String!): RequirementFulfillment!
   deleteRequirementProfile(id: String!): RequirementProfile!
   deleteRequirementProfileSubmission(id: String!): RequirementProfileSubmission!
+  deleteRole(id: ID!): Role!
+  deleteShift(id: String!): Shift!
+  deleteTimeEntry(id: ID!): TimeEntry!
+  inviteMembersToShift(memberIds: [String!]!, shiftId: String!): Shift!
+  rejectMembershipRequest(id: ID!, organizationUnitId: ID!, rejectionReason: String!): MembershipRequest!
+  updateOrganizationUnit(id: String!, input: UpdateOrganizationUnitInput!): OrganizationUnit!
   updateRequirement(id: String!, input: UpdateRequirementInput!): Requirement!
   updateRequirementFulfillment(id: String!, input: UpdateRequirementFulfillmentInput!): RequirementFulfillment!
   updateRequirementProfile(id: String!, input: UpdateRequirementProfileInput!): RequirementProfile!
   updateRequirementProfileSubmission(id: String!, input: UpdateRequirementProfileSubmissionInput!): RequirementProfileSubmission!
+  updateRole(id: ID!, input: CreateRoleInput!): Role!
+  updateShift(id: String!, input: UpdateShiftInput!): Shift!
 }
 
 type Organization {
@@ -97,6 +176,11 @@ type Organization {
   websiteUrl: String
 }
 
+type OrganizationPaginatedResponse {
+  items: [Organization!]!
+  pagination: PaginationInfo!
+}
+
 type OrganizationUnit {
   address: String
   children: [OrganizationUnit!]!
@@ -112,6 +196,11 @@ type OrganizationUnit {
   slug: String!
   type: OrganizationUnitType!
   websiteUrl: String
+}
+
+type OrganizationUnitPaginatedResponse {
+  items: [OrganizationUnit!]!
+  pagination: PaginationInfo!
 }
 
 type OrganizationUnitType {
@@ -197,6 +286,18 @@ enum PermissionKey {
 }
 
 type Query {
+  activeShifts(limit: Int! = 10, offset: Int! = 0): ShiftInstancePaginatedResponse!
+  me: User!
+  membership(organizationUnitId: ID!): Membership!
+  membershipRequests(limit: Int! = 10, offset: Int! = 0, organizationUnitId: ID!, status: MembershipRequestStatus): MembershipRequestPaginatedResponse!
+  myMembershipRequests(limit: Int! = 10, offset: Int! = 0, status: MembershipRequestStatus): MembershipRequestPaginatedResponse!
+  organization(id: String!): Organization!
+  organizationBySlug(slug: String!): Organization!
+  organizationUnit(id: String!): OrganizationUnit
+  organizationUnitBySlug(slug: String!): OrganizationUnit
+  organizationUnits(limit: Int! = 10, offset: Int! = 0, organizationId: String!): OrganizationUnitPaginatedResponse!
+  organizations(limit: Int! = 10, offset: Int! = 0): OrganizationPaginatedResponse!
+  permissions: [Permission!]!
   requirement(id: String!): Requirement
   requirementFulfillment(id: String!): RequirementFulfillment
   requirementFulfillments(limit: Int! = 10, offset: Int! = 0): RequirementFulfillmentPaginatedResponse!
@@ -205,6 +306,13 @@ type Query {
   requirementProfileSubmissions(limit: Int! = 10, offset: Int! = 0): RequirementProfileSubmissionPaginatedResponse!
   requirementProfiles(limit: Int! = 10, offset: Int! = 0): RequirementProfilePaginatedResponse!
   requirements(limit: Int! = 10, offset: Int! = 0): RequirementPaginatedResponse!
+  roles: [Role!]!
+  shift(id: String!): Shift!
+  shifts(limit: Int! = 10, offset: Int! = 0): ShiftPaginatedResponse!
+  timeEntries(limit: Int! = 10, offset: Int! = 0): TimeEntryPaginatedResponse!
+  timeEntriesByUser(limit: Int! = 10, offset: Int! = 0, userId: String!): TimeEntryPaginatedResponse!
+  user(id: String!): User
+  userByCheckInId(checkInId: String!): User
 }
 
 type Requirement {
@@ -347,6 +455,88 @@ enum RequirementType {
   TEXT
 }
 
+type Role {
+  description: String
+  id: ID!
+  isInternal: Boolean!
+  name: String!
+  permissions: [Permission!]!
+}
+
+type Shift {
+  createdBy: User!
+  durationMinutes: Int!
+  id: ID!
+  instructions: String
+  isDeleted: Boolean!
+  location: String
+  maxVolunteers: Int
+  organization: Organization!
+  originalStartsAt: DateTime!
+  rrule: String
+  slug: String!
+  title: String!
+  visibility: ShiftVisibility!
+}
+
+type ShiftInstance {
+  actualEndsAt: DateTime!
+  actualStartsAt: DateTime!
+  id: ID!
+  isCancelled: Boolean!
+  isException: Boolean!
+  master: Shift!
+  occurrenceIndex: Int!
+  overrideInstructions: String
+  overrideLocation: String
+  overrideMaxVolunteers: Int
+  overrideTitle: String
+  volunteers: [User!]
+}
+
+type ShiftInstancePaginatedResponse {
+  items: [ShiftInstance!]!
+  pagination: PaginationInfo!
+}
+
+type ShiftPaginatedResponse {
+  items: [Shift!]!
+  pagination: PaginationInfo!
+}
+
+enum ShiftVisibility {
+  ALL_MEMBERS
+  INVITED_MEMBERS
+}
+
+type TimeEntry {
+  createdAt: DateTime!
+  endedAt: DateTime
+  id: ID!
+  notes: String
+  shiftInstance: ShiftInstance!
+  startedAt: DateTime!
+  volunteer: User!
+}
+
+type TimeEntryPaginatedResponse {
+  items: [TimeEntry!]!
+  pagination: PaginationInfo!
+}
+
+input UpdateOrganizationUnitInput {
+  address: String
+  description: String
+  email: String
+  logoUrl: String
+  name: String
+  organizationId: String!
+  parentId: String
+  phone: String
+  typeId: String
+  websiteUrl: String
+}
+
 input UpdateRequirementFulfillmentInput {
   checked: Boolean
   date: DateTime
@@ -378,6 +568,18 @@ input UpdateRequirementProfileSubmissionInput {
   profileId: String
   status: RequirementProfileSubmissionStatus = DRAFT
   submittedAt: DateTime
+}
+
+input UpdateShiftInput {
+  endsAt: DateTime
+  instructions: String
+  invitedMemberIds: [String!]
+  location: String
+  maxVolunteers: Int
+  rrule: String
+  startsAt: DateTime
+  title: String
+  visibility: ShiftVisibility = ALL_MEMBERS
 }
 
 type User {
