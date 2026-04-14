@@ -1,6 +1,5 @@
+import { ensurePlausibleInitialized, getPlausibleDomain } from '@/lib/plausible-init';
 import type { Action, WizardStep } from '@/lib/types';
-
-const domain = process.env.NEXT_PUBLIC_PLAUSIBLE_DOMAIN;
 
 /** Human-readable step names for Plausible custom properties (English, stable for reporting). */
 export const WIZARD_STEP_NAMES: Record<WizardStep['step'], string> = {
@@ -27,7 +26,8 @@ async function trackWhenEnabled(
   eventName: string,
   props: Record<string, string | number | boolean | undefined | null>,
 ): Promise<void> {
-  if (!domain || typeof window === 'undefined') return;
+  if (!getPlausibleDomain() || typeof window === 'undefined') return;
+  await ensurePlausibleInitialized();
   const { track } = await import('@plausible-analytics/tracker');
   track(eventName, { props: toPlausibleProps(props) });
 }
