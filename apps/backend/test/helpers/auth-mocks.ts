@@ -5,6 +5,7 @@ type RegisterModuleMock = (
   moduleName: string,
   factory: () => Record<string, unknown>,
 ) => void;
+let mockedUserId = 'test-user-id';
 
 const createNoopDecorator = () => {
   return () => {
@@ -19,7 +20,7 @@ const sessionDecorator = createParamDecorator(
     const gqlContext = GqlExecutionContext.create(context).getContext();
     return gqlContext?.req?.user
       ? { user: gqlContext.req.user }
-      : { user: { id: 'test-user-id' } };
+      : { user: { id: mockedUserId } };
   },
 );
 
@@ -48,7 +49,14 @@ const registerCommonAuthMocks = (registerModuleMock: RegisterModuleMock) => {
   }));
 
   registerModuleMock('better-auth', () => ({
-    betterAuth: () => ({}),
+    betterAuth: (options: unknown) => ({
+      options,
+      api: {
+        getSession: async () => ({
+          user: { id: mockedUserId },
+        }),
+      },
+    }),
   }));
 
   registerModuleMock('@better-auth/drizzle-adapter', () => ({
@@ -88,4 +96,8 @@ export const applyBunAuthMocks = (
       all: () => [],
     }),
   }));
+};
+
+export const setAuthMockUserId = (userId: string) => {
+  mockedUserId = userId;
 };

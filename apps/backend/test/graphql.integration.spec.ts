@@ -12,8 +12,8 @@ import {
 import type { Database } from '../src/database/database.module';
 import { DATABASE_CONNECTION } from '../src/database/database-connection';
 import * as schema from '../src/database/schema';
-import { applyBunAuthMocks } from './helpers/auth-mocks';
-import { createGraphqlTestApp } from './helpers/create-graphql-app';
+import { applyBunAuthMocks, setAuthMockUserId } from './helpers/auth-mocks';
+import { createGraphqlFullTestApp } from './helpers/create-graphql-full-app';
 import { graphqlRequest } from './helpers/graphql-request';
 
 applyBunAuthMocks(mock.module);
@@ -26,7 +26,8 @@ describe('GraphQL API Integration', () => {
   let organizationId: string;
 
   beforeAll(async () => {
-    app = await createGraphqlTestApp({ testUserId });
+    setAuthMockUserId(testUserId);
+    app = await createGraphqlFullTestApp({ testUserId });
     db = app.get<Database>(DATABASE_CONNECTION);
 
     const [organization] = await db
