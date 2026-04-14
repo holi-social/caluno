@@ -239,7 +239,9 @@ export const createGraphqlTestApp = async (
       DatabaseModule,
       GraphQLModule.forRoot<ApolloDriverConfig>({
         driver: ApolloDriver,
-        autoSchemaFile: join(process.cwd(), 'apps/backend/src/schema.gql'),
+        // Keep test schema generation isolated so it does not overwrite
+        // the backend's checked-in schema used by client codegen.
+        autoSchemaFile: join(backendRoot, 'test', 'schema.gql'),
         graphiql: false,
         sortSchema: true,
         context: ({ req }) => ({
