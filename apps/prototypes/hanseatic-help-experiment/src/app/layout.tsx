@@ -2,6 +2,8 @@ import type { Metadata } from 'next';
 import { Geologica } from 'next/font/google';
 import { ThemeProvider } from 'next-themes';
 
+import { PlausibleAnalytics } from '@/components/plausible-analytics';
+
 import './globals.css';
 
 const geologica = Geologica({
@@ -23,6 +25,7 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body className={`${geologica.variable} antialiased`}>
         <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false}>
+          <PlausibleAnalytics />
           {children}
         </ThemeProvider>
       </body>
