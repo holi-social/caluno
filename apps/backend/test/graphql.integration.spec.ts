@@ -1,34 +1,274 @@
 import 'reflect-metadata';
 import type { INestApplication } from '@nestjs/common';
-// @ts-expect-error Bun test types are only available at Bun runtime.
-import { afterAll, beforeAll, describe, expect, it, mock } from 'bun:test';
+import {
+  afterAll,
+  beforeAll,
+  describe,
+  expect,
+  it,
+  mock,
+  setDefaultTimeout,
+} from 'bun:test';
+import type { Database } from '../src/database/database.module';
+import { DATABASE_CONNECTION } from '../src/database/database-connection';
+import * as schema from '../src/database/schema';
 import { applyBunAuthMocks } from './helpers/auth-mocks';
-import { createGraphqlTestApp } from './helpers/create-graphql-test-app';
+import { createGraphqlTestApp } from './helpers/create-graphql-app';
 import { graphqlRequest } from './helpers/graphql-request';
 
 applyBunAuthMocks(mock.module);
+setDefaultTimeout(20_000);
 
 describe('GraphQL API Integration', () => {
   let app: INestApplication;
+  let db: Database;
+  const testUserId = `test-user-${crypto.randomUUID()}`;
+  let organizationId: string;
 
   beforeAll(async () => {
-    app = await createGraphqlTestApp();
+    app = await createGraphqlTestApp({ testUserId });
+    db = app.get<Database>(DATABASE_CONNECTION);
+
+    const [organization] = await db
+      .insert(schema.organizations)
+      .values({
+        name: `GraphQL Test Org ${Date.now()}`,
+        slug: `graphql-test-org-${crypto.randomUUID()}`,
+      })
+      .returning();
+    organizationId = organization.id;
+
+    await db.insert(schema.users).values({
+      id: testUserId,
+      name: 'GraphQL Test User',
+      email: `graphql-test-${crypto.randomUUID()}@example.com`,
+    });
   });
 
   afterAll(async () => {
     await app?.close();
   });
 
-  it('returns GraphQL query root typename', async () => {
-    const response = await graphqlRequest<{ __typename: string }>(app, {
+  it('creates and retrieves requirement profile and submission', async () => {
+    const requirementTypes = ['DOCUMENT', 'CHECK', 'DATE', 'TEXT'] as const;
+    const createdRequirements: Array<{ id: string; type: string }> = [];
+
+    for (const type of requirementTypes) {
+      const response = await graphqlRequest<{
+        createRequirement: { id: string; type: string };
+      }>(app, {
+        query: `
+          mutation CreateRequirement($input: CreateRequirementInput!) {
+            createRequirement(input: $input) {
+              id
+              type
+            }
+          }
+        `,
+        variables: {
+          input: {
+            organizationId,
+            type,
+            name: `Requirement ${type}`,
+            description: `Description for ${type}`,
+            mandatory: true,
+          },
+        },
+      });
+
+      expect(response.errors).toBeUndefined();
+      expect(response.data?.createRequirement.type).toBe(type);
+      createdRequirements.push(response.data!.createRequirement);
+    }
+
+    const createProfileResponse = await graphqlRequest<{
+      createRequirementProfile: { id: string; requirements: Array<{ id: string }> };
+    }>(app, {
       query: `
-        query GetRootTypename {
-          __typename
+        mutation CreateRequirementProfile($input: CreateRequirementProfileInput!) {
+          createRequirementProfile(input: $input) {
+            id
+            requirements {
+              id
+            }
+          }
         }
       `,
+      variables: {
+        input: {
+          organizationId,
+          name: 'Test Requirement Profile',
+          description: 'Profile containing all requirement types',
+          requirementIds: createdRequirements.map((item) => item.id),
+        },
+      },
     });
 
-    expect(response.errors).toBeUndefined();
-    expect(response.data?.__typename).toBe('Query');
+    expect(createProfileResponse.errors).toBeUndefined();
+    const profileId = createProfileResponse.data!.createRequirementProfile.id;
+    expect(createProfileResponse.data?.createRequirementProfile.requirements).toHaveLength(4);
+
+    const getProfileResponse = await graphqlRequest<{
+      requirementProfile: {
+        id: string;
+        requirements: Array<{ id: string; type: string }>;
+      } | null;
+    }>(app, {
+      query: `
+        query GetRequirementProfile($id: String!) {
+          requirementProfile(id: $id) {
+            id
+            requirements {
+              id
+              type
+            }
+          }
+        }
+      `,
+      variables: { id: profileId },
+    });
+
+    expect(getProfileResponse.errors).toBeUndefined();
+    expect(getProfileResponse.data?.requirementProfile?.id).toBe(profileId);
+    expect(getProfileResponse.data?.requirementProfile?.requirements).toHaveLength(4);
+
+    const createSubmissionResponse = await graphqlRequest<{
+      createRequirementProfileSubmission: {
+        id: string;
+        status: string;
+        fulfillments: Array<{ id: string; type: string; status: string }>;
+      };
+    }>(app, {
+      query: `
+        mutation CreateRequirementProfileSubmission($input: CreateRequirementProfileSubmissionInput!) {
+          createRequirementProfileSubmission(input: $input) {
+            id
+            status
+            fulfillments {
+              id
+              type
+              status
+            }
+          }
+        }
+      `,
+      variables: {
+        input: {
+          profileId,
+          membershipId: null,
+          membershipRequestId: null,
+          status: 'SUBMITTED',
+          submittedAt: new Date().toISOString(),
+          fulfillments: [
+            {
+              requirementId: createdRequirements.find(
+                (item) => item.type === 'DOCUMENT',
+              )?.id,
+              status: 'SUBMITTED',
+              documentId: 'doc-123',
+            },
+            {
+              requirementId: createdRequirements.find(
+                (item) => item.type === 'CHECK',
+              )?.id,
+              status: 'SUBMITTED',
+              checked: true,
+            },
+            {
+              requirementId: createdRequirements.find(
+                (item) => item.type === 'DATE',
+              )?.id,
+              status: 'SUBMITTED',
+              date: new Date('2026-01-01T00:00:00.000Z').toISOString(),
+            },
+            {
+              requirementId: createdRequirements.find(
+                (item) => item.type === 'TEXT',
+              )?.id,
+              status: 'SUBMITTED',
+              text: 'This is the text fulfillment.',
+            },
+          ],
+        },
+      },
+    });
+
+    expect(createSubmissionResponse.errors).toBeUndefined();
+    const submissionId = createSubmissionResponse.data!.createRequirementProfileSubmission.id;
+    expect(
+      createSubmissionResponse.data?.createRequirementProfileSubmission.fulfillments,
+    ).toHaveLength(4);
+
+    const getSubmissionResponse = await graphqlRequest<{
+      requirementProfileSubmission: {
+        id: string;
+        status: string;
+        requirementProfile: { id: string };
+        fulfillments: Array<{
+          id: string;
+          type: string;
+          status: string;
+          documentId?: string | null;
+          checked?: boolean | null;
+          date?: string | null;
+          text?: string | null;
+        }>;
+      } | null;
+    }>(app, {
+      query: `
+        query GetRequirementProfileSubmission($id: String!) {
+          requirementProfileSubmission(id: $id) {
+            id
+            status
+            requirementProfile {
+              id
+            }
+            fulfillments {
+              id
+              type
+              status
+              ... on RequirementFulfillmentUpload {
+                documentId
+              }
+              ... on RequirementFulfillmentCheck {
+                checked
+              }
+              ... on RequirementFulfillmentDate {
+                date
+              }
+              ... on RequirementFulfillmentText {
+                text
+              }
+            }
+          }
+        }
+      `,
+      variables: { id: submissionId },
+    });
+
+    expect(getSubmissionResponse.errors).toBeUndefined();
+    expect(getSubmissionResponse.data?.requirementProfileSubmission?.id).toBe(submissionId);
+    expect(getSubmissionResponse.data?.requirementProfileSubmission?.requirementProfile.id).toBe(
+      profileId,
+    );
+    expect(getSubmissionResponse.data?.requirementProfileSubmission?.fulfillments).toHaveLength(4);
+    const fulfillments =
+      getSubmissionResponse.data?.requirementProfileSubmission?.fulfillments ?? [];
+    const documentFulfillment = fulfillments.find(
+      (fulfillment) => fulfillment.type === 'DOCUMENT',
+    );
+    const checkFulfillment = fulfillments.find(
+      (fulfillment) => fulfillment.type === 'CHECK',
+    );
+    const dateFulfillment = fulfillments.find(
+      (fulfillment) => fulfillment.type === 'DATE',
+    );
+    const textFulfillment = fulfillments.find(
+      (fulfillment) => fulfillment.type === 'TEXT',
+    );
+    expect(documentFulfillment?.documentId).toBe('doc-123');
+    expect(checkFulfillment?.checked).toBe(true);
+    expect(dateFulfillment?.date).toBe('2026-01-01T00:00:00.000Z');
+    expect(textFulfillment?.text).toBe('This is the text fulfillment.');
   });
 });

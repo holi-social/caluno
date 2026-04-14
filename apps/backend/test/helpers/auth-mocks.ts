@@ -1,3 +1,6 @@
+import { createParamDecorator, type ExecutionContext } from '@nestjs/common';
+import { GqlExecutionContext } from '@nestjs/graphql';
+
 type RegisterModuleMock = (
   moduleName: string,
   factory: () => Record<string, unknown>,
@@ -10,6 +13,15 @@ const createNoopDecorator = () => {
     };
   };
 };
+
+const sessionDecorator = createParamDecorator(
+  (_data: unknown, context: ExecutionContext) => {
+    const gqlContext = GqlExecutionContext.create(context).getContext();
+    return gqlContext?.req?.user
+      ? { user: gqlContext.req.user }
+      : { user: { id: 'test-user-id' } };
+  },
+);
 
 class MockBetterAuthModule {
   static forRootAsync() {
@@ -31,7 +43,7 @@ const registerCommonAuthMocks = (registerModuleMock: RegisterModuleMock) => {
   registerModuleMock('@thallesp/nestjs-better-auth', () => ({
     AuthGuard: MockAuthGuard,
     AuthModule: MockBetterAuthModule,
-    Session: createNoopDecorator(),
+    Session: () => sessionDecorator(),
     AllowAnonymous: createNoopDecorator(),
   }));
 
@@ -44,7 +56,7 @@ const registerCommonAuthMocks = (registerModuleMock: RegisterModuleMock) => {
   }));
 
   registerModuleMock('nanoid', () => ({
-    customAlphabet: () => () => 'test-generated-id',
+    customAlphabet: () => () => `test-generated-id-${crypto.randomUUID()}`,
   }));
 };
 

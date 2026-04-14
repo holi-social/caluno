@@ -8,7 +8,7 @@ npm run test:e2e
 
 ## Helpers
 
-- `test/helpers/create-graphql-test-app.ts`
+- `test/helpers/create-graphql-app.ts`
   - Boots a real Nest app from `AppModule`
   - Bypasses auth/permission guards by default
 - `test/helpers/graphql-request.ts`
