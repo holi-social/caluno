@@ -30,20 +30,32 @@ describe('GraphQL API Integration', () => {
     app = await createGraphqlFullTestApp({ testUserId });
     db = app.get<Database>(DATABASE_CONNECTION);
 
-    const [organization] = await db
-      .insert(schema.organizations)
-      .values({
-        name: `GraphQL Test Org ${Date.now()}`,
-        slug: `graphql-test-org-${crypto.randomUUID()}`,
-      })
-      .returning();
-    organizationId = organization.id;
-
     await db.insert(schema.users).values({
       id: testUserId,
       name: 'GraphQL Test User',
       email: `graphql-test-${crypto.randomUUID()}@example.com`,
     });
+
+    const createOrganizationResponse = await graphqlRequest<{
+      createOrganization: { id: string };
+    }>(app, {
+      query: `
+        mutation CreateOrganization($input: CreateOrganizationInput!) {
+          createOrganization(input: $input) {
+            id
+          }
+        }
+      `,
+      variables: {
+        input: {
+          name: `GraphQL Test Org ${Date.now()}`,
+          email: `graphql-test-org-${crypto.randomUUID()}@example.com`,
+        },
+      },
+    });
+
+    expect(createOrganizationResponse.errors).toBeUndefined();
+    organizationId = createOrganizationResponse.data!.createOrganization.id;
   });
 
   afterAll(async () => {
