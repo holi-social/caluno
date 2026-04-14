@@ -1,12 +1,23 @@
-import { Badge, Card, CardContent, CardHeader, CardTitle } from '@repo/ui';
+import { formatRrulePattern } from '@repo/data';
+import {
+  Badge,
+  Button,
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from '@repo/ui';
 import {
   Calendar,
   CalendarFold,
+  CalendarSync,
   Clock,
+  ClockPlus,
   FileText,
   LockKeyholeOpen,
   MapPin,
   User,
+  UserPlus,
 } from 'lucide-react';
 import { notFound } from 'next/navigation';
 import { UserCard } from '@/components/user-card';
@@ -31,7 +42,6 @@ export default async function ShiftViewPage({ params }: ShiftViewPageProps) {
 
   const startsAt = new Date(shift.originalStartsAt);
   const endsAt = new Date(startsAt.getTime() + shift.durationMinutes * 60000);
-
   const isFinished = new Date() > endsAt;
 
   return (
@@ -55,6 +65,10 @@ export default async function ShiftViewPage({ params }: ShiftViewPageProps) {
                   <Calendar className="text-muted-foreground shrink-0" />
                   <span>{formatRange(startsAt, endsAt)}</span>
                 </li>
+                <li className="flex gap-2">
+                  <CalendarSync className="text-muted-foreground shrink-0" />
+                  <span>{formatRrulePattern(shift.rrule)}</span>
+                </li>
                 {shift.location && (
                   <li className="flex gap-2">
                     <MapPin className="text-muted-foreground shrink-0" />
@@ -75,8 +89,30 @@ export default async function ShiftViewPage({ params }: ShiftViewPageProps) {
 
           <Card>
             <CardHeader>
-              <CardTitle>
-                Volunteers <Badge variant="outline">{'12'}</Badge>
+              <CardTitle className="flex justify-between">
+                <span>
+                  Volunteers{' '}
+                  <Badge variant="outline">
+                    x {shift.maxVolunteers && ` of ${shift.maxVolunteers}`}
+                  </Badge>
+                </span>
+                <Button size="xs">
+                  <UserPlus /> invite
+                </Button>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>TODO</CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex justify-between">
+                <span>
+                  Timesheets <Badge variant="outline">x</Badge>
+                </span>
+                <Button size="xs">
+                  <ClockPlus /> Add time
+                </Button>
               </CardTitle>
             </CardHeader>
             <CardContent>TODO</CardContent>
