@@ -39,6 +39,11 @@ integration_tests:
     POSTGRES_USER: clippy
     POSTGRES_PASSWORD: clippy
     DATABASE_URL: postgres://clippy:clippy@postgres:5432/clippy_test
+    DB_HOST: postgres
+    DB_PORT: 5432
+    DB_USER: clippy
+    DB_PASSWORD: clippy
+    DB_NAME: clippy_test
   before_script:
     - bun install --frozen-lockfile
     - bun run build
