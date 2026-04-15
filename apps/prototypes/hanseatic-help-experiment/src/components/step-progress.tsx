@@ -10,6 +10,8 @@ export function StepProgress({ value }: StepProgressProps) {
       <Progress
         value={value}
         className="h-2 w-full rounded-none bg-primary/20"
+        aria-label="Fortschritt"
+        role="progressbar"
       />
     </div>
   );

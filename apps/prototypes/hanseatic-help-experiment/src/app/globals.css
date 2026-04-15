@@ -18,3 +18,19 @@
   --animate-card-pop: card-pop 0.8s ease-out forwards;
   --animate-fade-up: fade-up 0.6s ease-out both;
 }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+  .animate-card-pop {
+    animation: none;
+    transform: rotate(10deg);
+  }
+  .animate-fade-up {
+    animation: none;
+    opacity: 1;
+  }
+}

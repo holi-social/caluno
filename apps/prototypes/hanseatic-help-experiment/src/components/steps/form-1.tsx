@@ -61,14 +61,14 @@ export function Form1({ onSelect, loading }: Form1Props) {
           <div className="grid grid-cols-2 gap-4">
             <ActionCard
               label="Ich fange an"
-              icon={<CirclePlay className="size-[60px] stroke-primary-foreground" />}
+              icon={<CirclePlay aria-hidden="true" className="size-[60px] stroke-primary-foreground" />}
               onClick={() => onSelect('starting')}
               disabled={loading}
               variant="primary"
             />
             <ActionCard
               label="Ich bin fertig"
-              icon={<CircleStop className="size-[60px] stroke-primary-foreground" />}
+              icon={<CircleStop aria-hidden="true" className="size-[60px] stroke-primary-foreground" />}
               onClick={() => onSelect('finishing')}
               disabled={loading}
               variant="primary"
@@ -85,7 +85,7 @@ export function Form1({ onSelect, loading }: Form1Props) {
             >
               <CardHeader className="w-full flex flex-row items-center justify-center h-fit">
                 <div className="p-0 shrink-0 flex items-center justify-center w-fit h-fit">
-                  <Pencil className="size-8 text-secondary-foreground" />
+                  <Pencil aria-hidden="true" className="size-8 text-secondary-foreground" />
                 </div>
                 <CardTitle className="text-lg font-bold w-fit">Start- & Endzeit manuell eintragen</CardTitle>
               </CardHeader>

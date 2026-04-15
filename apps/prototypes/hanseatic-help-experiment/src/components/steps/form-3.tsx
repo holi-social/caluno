@@ -16,9 +16,14 @@ export function Form3({ onSubmit, loading }: Form3Props) {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [gdprConsent, setGdprConsent] = useState(false);
+  const [gdprError, setGdprError] = useState(false);
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (!gdprConsent) {
+      setGdprError(true);
+      return;
+    }
     onSubmit(name, email, gdprConsent);
   }
 
@@ -51,6 +56,8 @@ export function Form3({ onSubmit, loading }: Form3Props) {
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     className="pl-9"
+                    required
+                    aria-required="true"
                   />
                 </div>
               </div>
@@ -68,35 +75,49 @@ export function Form3({ onSubmit, loading }: Form3Props) {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     className="pl-9"
+                    required
+                    aria-required="true"
                   />
                 </div>
               </div>
 
-              <div className="flex items-start gap-3">
-                <Checkbox
-                  id="gdpr-consent"
-                  checked={gdprConsent}
-                  onCheckedChange={(checked) => setGdprConsent(checked === true)}
-                  className="mt-0.5 shrink-0"
-                />
-                <div className="flex flex-col gap-1">
-                  <Label
-                    htmlFor="gdpr-consent"
-                    className="text-base font-medium leading-snug cursor-pointer"
-                  >
-                    Ich stimme zu, dass meine Daten von Hanseatic Help verarbeitet werden.
-                  </Label>
-                  <p className="text-sm text-muted-foreground">
-                    Deine Daten nutzen wir nur intern und geben sie nie in identifizierbarer Form weiter.
-                  </p>
-                  <a
-                    href="#"
-                    className="text-sm text-muted-foreground underline underline-offset-2"
-                    onClick={(e) => e.preventDefault()}
-                  >
-                    Datenschutzhinweis
-                  </a>
+              <div className="flex flex-col gap-1">
+                <div className="flex items-start gap-3">
+                  <Checkbox
+                    id="gdpr-consent"
+                    checked={gdprConsent}
+                    onCheckedChange={(checked) => {
+                      const val = checked === true;
+                      setGdprConsent(val);
+                      if (val) setGdprError(false);
+                    }}
+                    className="mt-0.5 shrink-0"
+                    aria-required="true"
+                    aria-describedby={gdprError ? 'gdpr-error' : undefined}
+                  />
+                  <div className="flex flex-col gap-1">
+                    <Label
+                      htmlFor="gdpr-consent"
+                      className="text-base font-medium leading-snug cursor-pointer"
+                    >
+                      Ich stimme zu, dass meine Daten von Hanseatic Help verarbeitet werden.
+                    </Label>
+                    <p className="text-sm text-muted-foreground">
+                      Deine Daten nutzen wir nur intern und geben sie nie in identifizierbarer Form weiter.
+                    </p>
+                    <button
+                      type="button"
+                      className="text-sm text-muted-foreground underline underline-offset-2 text-left"
+                    >
+                      Datenschutzhinweis
+                    </button>
+                  </div>
                 </div>
+                {gdprError && (
+                  <p id="gdpr-error" role="alert" className="text-sm text-destructive">
+                    Bitte stimme der Datenschutzerklärung zu, um fortzufahren.
+                  </p>
+                )}
               </div>
             </div>
 
