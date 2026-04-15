@@ -17,13 +17,17 @@ const getInitials = (name?: string): string => {
     .join('');
 };
 
-export const UserCard = ({ user, size = 'default' }: UserCardProps) => (
-  <div className="flex items-center gap-2">
+export const UserCard = ({
+  user,
+  size = 'default',
+  hideEmail = false,
+}: UserCardProps) => (
+  <div className="flex gap-2 min-w-0">
     <Avatar size={size} className="bg-muted">
       <AvatarImage src={user.image ?? ''} alt="" />
       <AvatarFallback>{getInitials(user.name)}</AvatarFallback>
     </Avatar>
-    <div>
+    <div className="overflow-hidden">
       <div className="font-medium text-left text-sm truncate">{user.name}</div>
       <div className="text-xs text-left text-muted-foreground truncate">
         {user.email}
