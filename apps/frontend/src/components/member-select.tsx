@@ -1,6 +1,3 @@
-'use client';
-
-import type { GetVolunteersQuery } from '@repo/data';
 import {
   Badge,
   Button,
@@ -10,43 +7,37 @@ import {
   InputGroupAddon,
   InputGroupInput,
 } from '@repo/ui';
-import { ArrowRightLeft, CircleX, Search, X } from 'lucide-react';
-import { useEffect, useState } from 'react';
-import { UserCard } from '@/components/user-card';
-import { getVolunteers } from '@/domain/organization/actions';
+import { ArrowRightLeft, CircleX, Search } from 'lucide-react';
+import { useState } from 'react';
+import { UserCard } from './user-card';
 
-type Volunteer = NonNullable<
-  GetVolunteersQuery['organization']['volunteers']
->[number];
+type Member = {
+  id: string;
+  name: string;
+  email: string;
+  image?: string | null;
+};
 
-interface InviteListProps {
-  organizationUnitId: string;
-  value: string[] | undefined;
-  onChange: (ids: string[]) => void;
-}
-
-const filterUsers = (users: Volunteer[], query: string) =>
+const filterUsers = (users: Member[], query: string) =>
   users.filter(
     (v) =>
       v.name.toLowerCase().includes(query.toLowerCase()) ||
       v.email.toLowerCase().includes(query.toLowerCase()),
   );
 
-export const InviteList = ({
-  organizationUnitId,
+type MemberSelectProps = {
+  members?: Member[];
+  value?: string[];
+  onChange: (ids: string[]) => void;
+};
+
+export const MemberSelect = ({
+  members = [],
   value = [],
   onChange,
-}: InviteListProps) => {
-  const [volunteers, setVolunteers] = useState<Volunteer[]>([]);
-
-  useEffect(() => {
-    getVolunteers(organizationUnitId).then((vol) => {
-      vol ? setVolunteers(vol) : setVolunteers([]);
-    });
-  }, [organizationUnitId]);
-
-  const availableMembers = volunteers.filter((v) => !value.includes(v.id));
-  const selectedMembers = volunteers.filter((v) => value.includes(v.id));
+}: MemberSelectProps) => {
+  const availableMembers = members.filter((v) => !value.includes(v.id));
+  const selectedMembers = members.filter((v) => value.includes(v.id));
 
   const addMember = (memberId: string) => {
     onChange([...value, memberId]);
@@ -97,13 +88,13 @@ export const InviteList = ({
 
 type FilteredMemberListProps = {
   title: string;
-  members: Volunteer[];
+  members: Member[];
   emptyMessage?: string;
-  renderItem: (member: Volunteer) => React.ReactNode;
+  renderItem: (member: Member) => React.ReactNode;
   className?: string;
 };
 
-const FilteredMemberList = ({
+export const FilteredMemberList = ({
   title,
   members,
   emptyMessage,
@@ -119,7 +110,7 @@ const FilteredMemberList = ({
         <FieldLabel htmlFor="searchInput">{title}</FieldLabel>
         <Badge variant="outline">{members.length}</Badge>
       </div>
-      <Card className="p-0 gap-1 h-80 rounded-md shadow-xs overflow-hidden">
+      <Card className="p-0 gap-1 h-80 rounded-md shadow-xs">
         <InputGroup className="rounded-md rounded-b-none -m-px w-[calc(100%+2px)] shadow-xs">
           <InputGroupInput
             id="searchInput"
