@@ -12,6 +12,7 @@
     "db:up": "docker compose up -d postgres && bun run db:wait",
     "db:down": "docker compose down",
     "db:wait": "docker compose exec postgres sh -c 'until pg_isready -U ${POSTGRES_USER:-postgres}; do sleep 1; done'",
+    "db:migrate": "bun run --cwd apps/backend db:migrate",
     "codegen": "turbo run codegen"
   },
   "devDependencies": {

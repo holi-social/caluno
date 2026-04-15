@@ -27,13 +27,24 @@ variables:
 
 # ─── TEST ─────────────────────────────────────────────────────────────────────
 
-tests:
+integration_tests:
   stage: test
   image: europe-north1-docker.pkg.dev/holi-shared/docker-hub-remote/oven/bun:1
   needs: []
-  script:
+  services:
+    - name: postgres:16
+      alias: postgres
+  variables:
+    POSTGRES_DB: clippy_test
+    POSTGRES_USER: clippy
+    POSTGRES_PASSWORD: clippy
+    DATABASE_URL: postgres://clippy:clippy@postgres:5432/clippy_test
+  before_script:
     - bun install --frozen-lockfile
     - bun run build
+    - until bunx --yes wait-on tcp:postgres:5432; do echo "waiting for postgres..."; sleep 1; done
+    - bun run --cwd apps/backend db:migrate
+  script:
     - bun test
 
 # ─── BUILD ────────────────────────────────────────────────────────────────────
