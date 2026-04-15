@@ -77,15 +77,6 @@ export class OrganizationRepository extends BaseRepository {
     }
   }
 
-  async findVolunteers(organizationId: string) {
-    try {
-      const data = await this.sdk.GetVolunteers({ id: organizationId });
-      return data.organization.volunteers;
-    } catch (error) {
-      throw DataError.fromGraphQLError(error);
-    }
-  }
-
   async create(input: CreateOrganizationInput) {
     try {
       const data = await this.sdk.CreateOrganization({ input });

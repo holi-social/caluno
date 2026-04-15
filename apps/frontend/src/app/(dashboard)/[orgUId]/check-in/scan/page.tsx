@@ -3,7 +3,6 @@ import { CheckInInput } from '@/domain/shift/components/check-in-input';
 import { CheckInScanner } from '@/domain/shift/components/check-in-scanner';
 import { CheckInSelector } from '@/domain/shift/components/check-in-selector';
 import { getDataClient } from '@/lib/data-client';
-import { requireOrgAccess } from '@/lib/org-context-server';
 
 interface ScanPageProps {
   params: Promise<{ orgUId: string }>;
@@ -12,11 +11,9 @@ interface ScanPageProps {
 export default async function ScanPage({ params }: ScanPageProps) {
   const { orgUId } = await params;
 
-  const { org } = await requireOrgAccess(orgUId);
   const data = await getDataClient(orgUId);
 
-  const volunteers =
-    (await data.organization.findVolunteers(org.organizationId)) || [];
+  const volunteers = await data.organization.findVolunteersByUnit(orgUId);
 
   return (
     <div className="max-w-2xl">

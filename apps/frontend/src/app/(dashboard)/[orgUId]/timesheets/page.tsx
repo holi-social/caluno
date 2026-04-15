@@ -4,7 +4,6 @@ import { EmptyTimeEntries } from '@/domain/time-entry/components/empty-time-entr
 import { TimesheetsTable } from '@/domain/time-entry/components/timesheets-table';
 import { getAvailableShiftsWithVolunteers } from '@/domain/time-entry/queries';
 import { getDataClient } from '@/lib/data-client';
-import { requireOrgAccess } from '@/lib/org-context-server';
 
 interface TimesheetsPageProps {
   params: Promise<{ orgUId: string }>;
@@ -13,12 +12,11 @@ interface TimesheetsPageProps {
 export default async function TimesheetsPage({ params }: TimesheetsPageProps) {
   const { orgUId } = await params;
 
-  const { org } = await requireOrgAccess(orgUId);
   const data = await getDataClient(orgUId);
 
   const [timeEntries, { shifts, allVolunteers }] = await Promise.all([
     data.timeEntry.findAll(),
-    getAvailableShiftsWithVolunteers(orgUId, org.organizationId),
+    getAvailableShiftsWithVolunteers(orgUId),
   ]);
 
   const hasTimeEntries = timeEntries.pagination.total > 0;
