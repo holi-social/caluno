@@ -36,18 +36,13 @@ query GetOrganizationRoot($id: String!) {
   }
 }
 
-query GetOrganizationVolunteersByUnit($id: String!) {
-  organizationUnit(id: $id) {
-    organization {
-      id
-      volunteers {
-        id
-        name
-        email
-        image
-        checkInId
-      }
-    }
+query GetOrganizationVolunteersByUnit($id: ID!) {
+  members(organizationUnitId: $id) {
+    id
+    name
+    email
+    image
+    checkInId
   }
 }
 
