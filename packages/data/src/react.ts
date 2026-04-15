@@ -1,6 +1,7 @@
 // React-specific exports (client-side only)
 // Import from '@repo/data/react' in client components
 
+export { useQueryClient } from '@tanstack/react-query';
 export {
   ALL_RECURRENCE_DAYS,
   DAY_VALUE_TO_RRULE,

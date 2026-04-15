@@ -202,7 +202,7 @@ function generateAgentsMd(rules: Rule[], metadata: any): string {
   }
 
   // Sort rules within each category alphabetically
-  for (const [category, categoryRules] of rulesByCategory) {
+  for (const [_, categoryRules] of rulesByCategory) {
     categoryRules.sort((a, b) => a.filename.localeCompare(b.filename));
   }
 

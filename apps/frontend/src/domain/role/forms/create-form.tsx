@@ -2,9 +2,9 @@
 
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useOrgUId } from '@repo/data/react';
-import { Button, FieldError, FieldGroup } from '@repo/ui';
+import { FieldError, FieldGroup } from '@repo/ui';
 import { useRouter } from 'next/navigation';
-import { useState, useTransition } from 'react';
+import { useEffect, useState, useTransition } from 'react';
 import { useForm } from 'react-hook-form';
 import { createRole } from '@/domain/role/actions';
 import {
@@ -15,13 +15,23 @@ import { FormContent } from './form-content';
 
 interface CreateRoleFormProps {
   onSuccess?: () => void;
+  onPendingChange?: (isPending: boolean) => void;
+  formId?: string;
 }
 
-export function CreateRoleForm({ onSuccess }: CreateRoleFormProps) {
+export function CreateRoleForm({
+  onSuccess,
+  onPendingChange,
+  formId,
+}: CreateRoleFormProps) {
   const router = useRouter();
   const organizationUnitId = useOrgUId();
   const [isPending, startTransition] = useTransition();
   const [serverError, setServerError] = useState<string | null>(null);
+
+  useEffect(() => {
+    onPendingChange?.(isPending);
+  }, [isPending, onPendingChange]);
 
   const form = useForm<CreateRoleFormValues>({
     resolver: zodResolver(createRoleSchema),
@@ -49,21 +59,14 @@ export function CreateRoleForm({ onSuccess }: CreateRoleFormProps) {
 
   return (
     <form
+      id={formId}
       onSubmit={form.handleSubmit(onSubmit)}
-      className="relative flex flex-col h-full"
+      className="flex flex-col h-full"
     >
-      <div className="flex-1 pb-20">
-        <FieldGroup>
-          <FormContent isPending={isPending} formReturnValues={form} />
-          {serverError && <FieldError>{serverError}</FieldError>}
-        </FieldGroup>
-      </div>
-
-      <div className="absolute bottom-0 left-0 right-0 border-t bg-background p-4">
-        <Button type="submit" disabled={isPending} className="w-full">
-          {isPending ? 'Creating role...' : 'Create role'}
-        </Button>
-      </div>
+      <FieldGroup>
+        <FormContent isPending={isPending} formReturnValues={form} />
+        {serverError && <FieldError>{serverError}</FieldError>}
+      </FieldGroup>
     </form>
   );
 }

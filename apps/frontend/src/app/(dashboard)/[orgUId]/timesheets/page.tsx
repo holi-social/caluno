@@ -1,4 +1,5 @@
 import { CreateTimeEntrySheet } from '@/components/sheets/create-time-entry-sheet';
+import { CreateTimeEntryButton } from '@/domain/time-entry/components/create-time-entry-button';
 import { EmptyTimeEntries } from '@/domain/time-entry/components/empty-time-entries';
 import { TimesheetsTable } from '@/domain/time-entry/components/timesheets-table';
 import { getAvailableShiftsWithVolunteers } from '@/domain/time-entry/queries';
@@ -29,6 +30,7 @@ export default async function TimesheetsPage({ params }: TimesheetsPageProps) {
         <div>
           <h1 className="page-title">Timesheets</h1>
         </div>
+        <CreateTimeEntryButton />
         <CreateTimeEntrySheet
           shiftInstances={shifts}
           allVolunteers={allVolunteers}
