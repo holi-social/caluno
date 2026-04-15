@@ -17,7 +17,6 @@ export class OrganizationUnitQueryResolver {
     private readonly organizationUnitMapper: OrganizationUnitMapper,
   ) {}
 
-  @Permissions(PERMISSIONS.ORG_UNIT_READ)
   @Query(() => OrganizationUnit, { nullable: true })
   async organizationUnit(
     @Args('id') id: string,
