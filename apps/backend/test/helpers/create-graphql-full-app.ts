@@ -11,24 +11,20 @@ type CreateGraphqlFullAppOptions = {
 
 const getBackendRoot = () => {
   const currentWorkingDirectory = process.cwd();
-  return existsSync(join(currentWorkingDirectory, 'apps', 'backend', 'tsconfig.json'))
+  return existsSync(
+    join(currentWorkingDirectory, 'apps', 'backend', 'tsconfig.json'),
+  )
     ? join(currentWorkingDirectory, 'apps', 'backend')
     : currentWorkingDirectory;
 };
 
 const ensureBackendBuild = (backendRoot: string) => {
-  const buildMarker = join(
-    backendRoot,
-    'dist',
-    'src',
-    'database',
-    'database.module.js',
-  );
+  const buildMarker = join(backendRoot, 'dist', 'src', 'app.module.js');
   if (existsSync(buildMarker)) {
     return;
   }
 
-  const buildResult = spawnSync('npm', ['run', 'build'], {
+  const buildResult = spawnSync('bun', ['run', 'build'], {
     cwd: backendRoot,
     stdio: 'inherit',
   });
@@ -38,14 +34,10 @@ const ensureBackendBuild = (backendRoot: string) => {
 };
 
 const ensureDatabaseSchema = (backendRoot: string) => {
-  const migrateResult = spawnSync(
-    'npx',
-    ['drizzle-kit', 'migrate', '--config', 'drizzle.config.ts'],
-    {
-      cwd: backendRoot,
-      stdio: 'inherit',
-    },
-  );
+  const migrateResult = spawnSync('bun', ['run', 'db:migrate'], {
+    cwd: backendRoot,
+    stdio: 'inherit',
+  });
 
   if (migrateResult.status !== 0) {
     throw new Error('Failed to run database migrations for Bun test runtime.');
