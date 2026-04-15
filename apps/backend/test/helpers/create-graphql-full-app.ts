@@ -33,17 +33,6 @@ const ensureBackendBuild = (backendRoot: string) => {
   }
 };
 
-const ensureDatabaseSchema = (backendRoot: string) => {
-  const migrateResult = spawnSync('bun', ['run', 'db:migrate'], {
-    cwd: backendRoot,
-    stdio: 'inherit',
-  });
-
-  if (migrateResult.status !== 0) {
-    throw new Error('Failed to run database migrations for Bun test runtime.');
-  }
-};
-
 const applyTestEnvironmentDefaults = (backendRoot: string) => {
   process.env.DB_HOST ??= 'localhost';
   process.env.DB_PORT ??= process.env.POSTGRES_PORT ?? '5432';
@@ -66,7 +55,6 @@ export const createGraphqlFullTestApp = async (
 
   applyTestEnvironmentDefaults(backendRoot);
   ensureBackendBuild(backendRoot);
-  ensureDatabaseSchema(backendRoot);
   const { AuthGuard } = await import('@thallesp/nestjs-better-auth');
   const { AppModule } = await import(
     pathToFileURL(join(backendRoot, 'dist', 'src', 'app.module.js')).href
