@@ -147,12 +147,14 @@ build_production_frontend:
 build_branch_backend:
   extends: .build-images-backend-branch
   rules:
-    - if: '$CI_COMMIT_BRANCH != "main" && $CI_COMMIT_BRANCH != "production" && $CI_PIPELINE_SOURCE == "push"'
+    - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BRANCH != "main" && $CI_COMMIT_BRANCH != "production"'
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event" && $CI_MERGE_REQUEST_SOURCE_BRANCH_NAME != "main" && $CI_MERGE_REQUEST_SOURCE_BRANCH_NAME != "production"'
 
 build_branch_frontend:
   extends: .build-images-frontend-branch
   rules:
-    - if: '$CI_COMMIT_BRANCH != "main" && $CI_COMMIT_BRANCH != "production" && $CI_PIPELINE_SOURCE == "push"'
+    - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BRANCH != "main" && $CI_COMMIT_BRANCH != "production"'
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event" && $CI_MERGE_REQUEST_SOURCE_BRANCH_NAME != "main" && $CI_MERGE_REQUEST_SOURCE_BRANCH_NAME != "production"'
 
 .terraform:
   image:
