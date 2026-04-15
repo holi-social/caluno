@@ -10,7 +10,7 @@ import {
   InputGroupAddon,
   InputGroupInput,
 } from '@repo/ui';
-import { Search, X } from 'lucide-react';
+import { ArrowRightLeft, CircleX, Search, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { UserCard } from '@/components/user-card';
 import { getVolunteers } from '@/domain/organization/actions';
@@ -38,23 +38,15 @@ export const InviteList = ({
   onChange,
 }: InviteListProps) => {
   const [volunteers, setVolunteers] = useState<Volunteer[]>([]);
-  const [volunteerSearchQuery, setVolunteerSearchQuery] = useState('');
-  const [inviteSearchQuery, setInviteSearchQuery] = useState('');
 
   useEffect(() => {
-    getVolunteers(organizationUnitId).then((vol) =>
-      vol ? setVolunteers(vol) : setVolunteers([]),
-    );
+    getVolunteers(organizationUnitId).then((vol) => {
+      vol ? setVolunteers(vol) : setVolunteers([]);
+    });
   }, [organizationUnitId]);
 
-  const availableVolunteers = volunteers.filter((v) => !value.includes(v.id));
-  const filteredAvailable = filterUsers(
-    availableVolunteers,
-    volunteerSearchQuery,
-  );
-
-  const invitedVolunteers = volunteers.filter((v) => value.includes(v.id));
-  const filteredInvites = filterUsers(invitedVolunteers, inviteSearchQuery);
+  const availableMembers = volunteers.filter((v) => !value.includes(v.id));
+  const selectedMembers = volunteers.filter((v) => value.includes(v.id));
 
   const addMember = (memberId: string) => {
     onChange([...value, memberId]);
@@ -65,87 +57,89 @@ export const InviteList = ({
   };
 
   return (
-    <div className="grid grid-cols-2 gap-4">
-      <Card className="p-4 gap-4 h-80">
-        <div className="flex justify-between">
-          <FieldLabel htmlFor="volunteerSearchInput">Available</FieldLabel>
-          <Badge variant="outline">{availableVolunteers.length}</Badge>
-        </div>
+    <div className="flex gap-4 items-center">
+      <FilteredMemberList
+        title="Available"
+        members={availableMembers}
+        emptyMessage="All members have been selected"
+        className="min-w-0 flex-1"
+        renderItem={(member) => (
+          <button
+            type="button"
+            onClick={() => addMember(member.id)}
+            className="w-full rounded-md p-1 hover:bg-muted/50 transition-colors"
+          >
+            <UserCard user={member} size="sm" />
+          </button>
+        )}
+      />
+      <ArrowRightLeft className="size-6 shrink-0" />
+      <FilteredMemberList
+        title="Invited"
+        className="min-w-0 flex-1"
+        members={selectedMembers}
+        renderItem={(member) => (
+          <div className="w-full flex justify-between p-1">
+            <UserCard user={member} size="sm" />
+            <Button
+              size="icon-sm"
+              variant="ghost"
+              onClick={() => removeMember(member.id)}
+            >
+              <CircleX />
+            </Button>
+          </div>
+        )}
+      />
+    </div>
+  );
+};
 
-        <InputGroup>
+type FilteredMemberListProps = {
+  title: string;
+  members: Volunteer[];
+  emptyMessage?: string;
+  renderItem: (member: Volunteer) => React.ReactNode;
+  className?: string;
+};
+
+const FilteredMemberList = ({
+  title,
+  members,
+  emptyMessage,
+  renderItem,
+  className,
+}: FilteredMemberListProps) => {
+  const [searchQuery, setSearchQuery] = useState('');
+  const membersFiltered = filterUsers(members, searchQuery);
+
+  return (
+    <div className={className}>
+      <div className="flex justify-between mb-2">
+        <FieldLabel htmlFor="searchInput">{title}</FieldLabel>
+        <Badge variant="outline">{members.length}</Badge>
+      </div>
+      <Card className="p-0 gap-1 h-80 rounded-md shadow-xs overflow-hidden">
+        <InputGroup className="rounded-md rounded-b-none -m-px w-[calc(100%+2px)] shadow-xs">
           <InputGroupInput
-            id="volunteerSearchInput"
-            placeholder="Search volunteers..."
-            value={volunteerSearchQuery}
-            onChange={(e) => setVolunteerSearchQuery(e.target.value)}
+            id="searchInput"
+            placeholder="Search name or email..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
           />
           <InputGroupAddon align="inline-start">
             <Search className="text-muted-foreground" />
           </InputGroupAddon>
         </InputGroup>
 
-        <div className="space-y-2 overflow-y-auto">
-          {filteredAvailable.length === 0 ? (
-            <p className="text-sm text-muted-foreground">
-              {volunteerSearchQuery
-                ? 'No members found'
-                : volunteers.length === 0
-                  ? 'No members in this organization yet'
-                  : 'All members have been invited'}
+        <div className="space-y-1 overflow-y-auto p-2">
+          {membersFiltered.length === 0 ? (
+            <p className="text-sm text-muted-foreground p-2">
+              {searchQuery ? 'No members found' : emptyMessage}
             </p>
           ) : (
-            filteredAvailable.map((volunteer) => (
-              <button
-                key={volunteer.id}
-                type="button"
-                onClick={() => addMember(volunteer.id)}
-                className="w-full rounded-md p-2 hover:bg-muted/50 transition-colors"
-              >
-                <UserCard user={volunteer} size="sm" />
-              </button>
-            ))
-          )}
-        </div>
-      </Card>
-      <Card className="p-4 gap-4 h-80">
-        <div className="flex justify-between">
-          <FieldLabel htmlFor="inviteSearchInput">Invited</FieldLabel>
-          <Badge variant="outline">{invitedVolunteers.length}</Badge>
-        </div>
-        <InputGroup>
-          <InputGroupInput
-            id="inviteSearchInput"
-            placeholder="Search invited..."
-            value={inviteSearchQuery}
-            onChange={(e) => setInviteSearchQuery(e.target.value)}
-          />
-          <InputGroupAddon align="inline-start">
-            <Search className="text-muted-foreground" />
-          </InputGroupAddon>
-        </InputGroup>
-
-        <div className="space-y-2 overflow-y-auto">
-          {filteredInvites.length === 0 ? (
-            <p className="text-sm text-muted-foreground">
-              {inviteSearchQuery && 'No members found'}
-            </p>
-          ) : (
-            filteredInvites.map((volunteer) => (
-              <div
-                key={volunteer.id}
-                className="w-full flex justify-between rounded-md p-2 pr-0 hover:bg-muted/50 transition-colors"
-              >
-                <UserCard user={volunteer} size="sm" />
-                <div className="flex ">
-                  <Button
-                    size="icon-sm"
-                    variant="ghost"
-                    onClick={() => removeMember(volunteer.id)}
-                  >
-                    <X />
-                  </Button>
-                </div>
-              </div>
+            membersFiltered.map((member) => (
+              <div key={member.id}>{renderItem(member)}</div>
             ))
           )}
         </div>
