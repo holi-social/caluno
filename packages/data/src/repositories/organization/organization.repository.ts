@@ -35,12 +35,12 @@ export class OrganizationRepository extends BaseRepository {
     }
   }
 
-  async findVolunteersByUnit(organizationUnitId: string) {
+  async findVolunteersByUnit(id: string) {
     try {
       const data = await this.sdk.GetOrganizationVolunteersByUnit({
-        id: organizationUnitId,
+        id,
       });
-      return data.organizationUnit?.organization.volunteers ?? [];
+      return data.members ?? [];
     } catch (error) {
       throw DataError.fromGraphQLError(error);
     }
@@ -72,15 +72,6 @@ export class OrganizationRepository extends BaseRepository {
     try {
       const data = await this.sdk.GetOrganizations({ limit, offset });
       return data.organizations;
-    } catch (error) {
-      throw DataError.fromGraphQLError(error);
-    }
-  }
-
-  async findVolunteers(organizationId: string) {
-    try {
-      const data = await this.sdk.GetVolunteers({ id: organizationId });
-      return data.organization.volunteers;
     } catch (error) {
       throw DataError.fromGraphQLError(error);
     }
