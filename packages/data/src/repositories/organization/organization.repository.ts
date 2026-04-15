@@ -48,7 +48,7 @@ export class OrganizationRepository extends BaseRepository {
 
   async findUnitWithOrg(organizationUnitId: string) {
     try {
-      const data = await this.sdk.GetOrganizationUnitWithOrg({
+      const data = await this.sdk.GetOrganizationUnitPublicInfo({
         id: organizationUnitId,
       });
       return data.organizationUnit ?? null;

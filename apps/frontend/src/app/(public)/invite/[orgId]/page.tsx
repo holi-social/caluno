@@ -30,7 +30,7 @@ export default async function InvitePage({ params }: InvitePageProps) {
 
         <p>
           Pressing the button below will request membership to the{' '}
-          {orgUnit.organization.name} organization.
+          {orgUnit.name} organization.
         </p>
 
         <SendMembershipRequestButton orgUId={organizationUnitId} />
