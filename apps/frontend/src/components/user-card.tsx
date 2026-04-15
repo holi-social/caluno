@@ -17,11 +17,7 @@ const getInitials = (name?: string): string => {
     .join('');
 };
 
-export const UserCard = ({
-  user,
-  size = 'default',
-  hideEmail = false,
-}: UserCardProps) => (
+export const UserCard = ({ user, size = 'default' }: UserCardProps) => (
   <div className="flex gap-2 min-w-0">
     <Avatar size={size} className="bg-muted">
       <AvatarImage src={user.image ?? ''} alt="" />
