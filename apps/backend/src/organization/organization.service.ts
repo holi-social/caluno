@@ -209,12 +209,14 @@ export class OrganizationService {
         .where(inArray(schema.permissions.key, MEMBER_DEFAULT_PERMISSIONS));
 
       // Attach default member permissions.
-      await tx.insert(schema.rolePermissions).values(
-        memberPermissionRows.map((permission) => ({
-          roleId: memberRole.id,
-          permissionId: permission.id,
-        })),
-      );
+      if (memberPermissionRows.length > 0) {
+        await tx.insert(schema.rolePermissions).values(
+          memberPermissionRows.map((permission) => ({
+            roleId: memberRole.id,
+            permissionId: permission.id,
+          })),
+        );
+      }
 
       const permissionRows = await tx
         .select({
