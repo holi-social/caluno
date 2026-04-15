@@ -49,6 +49,7 @@ integration_tests:
     - bun run build
     - until bunx --yes wait-on tcp:postgres:5432; do echo "waiting for postgres..."; sleep 1; done
     - bun run --cwd apps/backend db:migrate
+    - bun run --cwd apps/backend db:seed
   script:
     - bun test
 
