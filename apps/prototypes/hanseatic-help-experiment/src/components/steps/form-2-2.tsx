@@ -12,12 +12,8 @@ interface Form22Props {
   loading: boolean;
 }
 
-function getNowTime(): string {
-  return new Date().toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
-}
-
 export function Form22({ onContinue, loading }: Form22Props) {
-  const [arrivalTime, setArrivalTime] = useState(getNowTime());
+  const [arrivalTime, setArrivalTime] = useState('');
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -47,6 +43,7 @@ export function Form22({ onContinue, loading }: Form22Props) {
                   id="arrival-time"
                   type="time"
                   value={arrivalTime}
+                  placeholder="08:00"
                   onChange={(e) => setArrivalTime(e.target.value)}
                   className="pl-9"
                   required

@@ -12,12 +12,8 @@ interface Form23Props {
   loading: boolean;
 }
 
-function getNowTime(): string {
-  return new Date().toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
-}
-
 export function Form23({ onContinue, loading }: Form23Props) {
-  const [arrivalTime, setArrivalTime] = useState(getNowTime());
+  const [arrivalTime, setArrivalTime] = useState('');
   const [departureTime, setDepartureTime] = useState('');
 
   function handleSubmit(e: React.FormEvent) {
@@ -49,6 +45,7 @@ export function Form23({ onContinue, loading }: Form23Props) {
                     id="break-arrival-time"
                     type="time"
                     value={arrivalTime}
+                    placeholder="08:00"
                     onChange={(e) => setArrivalTime(e.target.value)}
                     className="pl-9"
                     required
@@ -66,6 +63,7 @@ export function Form23({ onContinue, loading }: Form23Props) {
                     id="departure-time"
                     type="time"
                     value={departureTime}
+                    placeholder="14:00"
                     onChange={(e) => setDepartureTime(e.target.value)}
                     className="pl-9"
                     required
