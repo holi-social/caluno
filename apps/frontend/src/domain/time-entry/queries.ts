@@ -21,14 +21,13 @@ interface GetAvailableShiftsWithVolunteers {
 
 export async function getAvailableShiftsWithVolunteers(
   organizationUnitId: string,
-  organizationId: string,
 ): Promise<GetAvailableShiftsWithVolunteers> {
   const data = await getDataClient(organizationUnitId);
 
   try {
     const [activeShifts, allVolunteers] = await Promise.all([
       data.shift.activeShifts(),
-      data.organization.findVolunteers(organizationId),
+      data.organization.findVolunteersByUnit(organizationUnitId),
     ]);
 
     return {

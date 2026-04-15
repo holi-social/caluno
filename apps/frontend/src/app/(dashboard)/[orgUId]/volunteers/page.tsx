@@ -13,7 +13,6 @@ import { ButtonClipboard } from '@/components/button-clipboard';
 import { organizationUnitUrl } from '@/domain/organization/share';
 import { EmptyVolunteers } from '@/domain/volunteer/empty-volunteers';
 import { getDataClient } from '@/lib/data-client';
-import { requireOrgAccess } from '@/lib/org-context-server';
 
 interface VolunteersPageProps {
   params: Promise<{ orgUId: string }>;
@@ -22,12 +21,11 @@ interface VolunteersPageProps {
 export default async function VolunteersPage({ params }: VolunteersPageProps) {
   const { orgUId } = await params;
 
-  const { org } = await requireOrgAccess(orgUId);
   const data = await getDataClient(orgUId);
 
   const orgUnitUrl = organizationUnitUrl(orgUId);
 
-  const volunteers = await data.organization.findVolunteers(org.organizationId);
+  const volunteers = await data.organization.findVolunteersByUnit(orgUId);
 
   return (
     <div className="space-y-6">

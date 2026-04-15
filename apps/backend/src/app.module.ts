@@ -33,6 +33,7 @@ import { UserModule } from './user/user.module';
       autoSchemaFile: join(process.cwd(), 'src/schema.gql'),
       graphiql: true,
       sortSchema: true,
+      fieldResolverEnhancers: ['guards'],
       context: ({ req }) => ({
         req,
         user: req.user,
