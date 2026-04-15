@@ -33,18 +33,22 @@ type MemberSelectProps = {
 
 export const MemberSelect = ({
   members = [],
-  value = [],
+  value: selectedMemberIds = [],
   onChange,
 }: MemberSelectProps) => {
-  const availableMembers = members.filter((v) => !value.includes(v.id));
-  const selectedMembers = members.filter((v) => value.includes(v.id));
+  const availableMembers = members.filter(
+    (v) => !selectedMemberIds.includes(v.id),
+  );
+  const selectedMembers = members.filter((v) =>
+    selectedMemberIds.includes(v.id),
+  );
 
   const addMember = (memberId: string) => {
-    onChange([...value, memberId]);
+    onChange([...selectedMemberIds, memberId]);
   };
 
   const removeMember = (memberId: string) => {
-    onChange(value.filter((id) => id !== memberId));
+    onChange(selectedMemberIds.filter((id) => id !== memberId));
   };
 
   return (
