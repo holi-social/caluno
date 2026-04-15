@@ -29,9 +29,11 @@ export function Form3({ onSubmit, loading }: Form3Props) {
       <Logo />
 
       <h1 className="text-[24px] font-medium leading-8 w-full">
-      Mit deinem Namen machst du noch mehr Impact! Wer bist du, liebe unbekannte Person?
+      Für mehr WIR in Wirkung - wer bist du und wie dürfen wir dich zukünftig erreichen
       </h1>
-
+      <p className="text-sm text-muted-foreground leading-6 w-full">
+      Mit deinen Daten können wir besser planen und dich auch zukünftig für Neuigkeiten, Schichten und Events kontaktieren. Vielen Dank dafür!
+      </p>
       <Card className="w-full">
         <CardContent className="pt-0">
           <form onSubmit={handleSubmit} className="flex flex-col gap-4 items-end">
@@ -105,10 +107,7 @@ export function Form3({ onSubmit, loading }: Form3Props) {
         </CardContent>
       </Card>
 
-      <p className="text-base text-secondary-foreground leading-6 w-full">
-        Wissen, wer bei uns Freiwillig wird und wie oft sie zurückkommen, hilft uns, mehr
-        Fördermittel zu bekommen. Außerdem kannst du ein Freiwilligendienst-Zertifikat bekommen und nie wieder ein cooler Event verpassen!
-      </p>
+    
     </div>
   );
 }

@@ -50,9 +50,9 @@ export function Form1({ onSelect, loading }: Form1Props) {
 
       <div className="flex flex-col gap-6 w-full">
         <div>
-          <h1 className="text-[24px] font-medium leading-8">Hilf uns, unsere Freiwilligen & Stunden zu zählen!</h1>
+          <h1 className="text-[24px] font-medium leading-8">Gemeinsam beweisen wir noch mehr Wirkung!</h1>
           <p className="text-[18px] text-foreground mt-4 mb-0">
-          Fängst du heute mit dem Freiwilligendienst an oder bist du für heute fertig?
+          Fängst Du gerade mit dem Freiwilligendienst an oder bist Du bereits fertig?
           </p>
         </div>
 

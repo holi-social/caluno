@@ -41,7 +41,7 @@ export function Form23({ onContinue, loading }: Form23Props) {
             <div className="w-full flex flex-col gap-4">
               <div className="flex flex-col gap-2">
                 <Label htmlFor="break-arrival-time" className="text-base font-medium">
-                Etwa wann hast du heute angefangen?
+                Wann hast du angefangen?
                 </Label>
                 <div className="relative">
                   <Clock2 className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground pointer-events-none" />
@@ -58,7 +58,7 @@ export function Form23({ onContinue, loading }: Form23Props) {
 
               <div className="flex flex-col gap-2">
                 <Label htmlFor="departure-time" className="text-base font-medium">
-                Wann planst du heute aufzuhören?
+                Wann planst du aufzuhören?
                 </Label>
                 <div className="relative">
                   <Clock2 className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground pointer-events-none" />

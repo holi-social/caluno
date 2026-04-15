@@ -26,7 +26,7 @@ export function Form21({ onSelect, loading }: Form21Props) {
       <Logo />
 
       <h1 className="text-[24px] font-medium leading-8 w-full">
-        Wie lange planst du heute ungefähr zu helfen?
+      Wie lange willst du uns heute unterstützen?
       </h1>
 
       <RadioGroup
