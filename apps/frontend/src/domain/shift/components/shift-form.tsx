@@ -26,10 +26,9 @@ import { RecurrenceSelect } from './recurrence-select';
 type FormProps = {
   organizationUnitId: string;
   onSubmit: (formData: ShiftFormValues) => void;
-  onCancel?: () => void;
   isPending?: boolean;
-  submitLabel?: string;
   initialValues?: Partial<ShiftFormValues>;
+  formId?: string;
   defaultLocation?: string;
 };
 
@@ -47,11 +46,10 @@ const getTimeString = (date: Date | undefined): string => {
 
 export const ShiftForm = ({
   organizationUnitId,
-  onSubmit,
-  onCancel,
   isPending = false,
-  submitLabel = 'Create shift',
+  onSubmit,
   initialValues,
+  formId,
   defaultLocation,
 }: FormProps) => {
   const form = useForm<ShiftFormValues>({
@@ -102,7 +100,7 @@ export const ShiftForm = ({
   };
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+    <form id={formId} onSubmit={handleSubmit(onSubmit)} className="space-y-4">
       <Field>
         <FieldLabel htmlFor="name">
           Shift name <span className="text-destructive">*</span>
@@ -238,17 +236,6 @@ export const ShiftForm = ({
           </Field>
         )}
       </Card>
-
-      <div className="flex justify-end gap-2">
-        {onCancel && (
-          <Button type="button" variant="outline" onClick={onCancel}>
-            Cancel
-          </Button>
-        )}
-        <Button type="submit" disabled={isPending}>
-          {isPending ? 'Saving...' : submitLabel}
-        </Button>
-      </div>
     </form>
   );
 };

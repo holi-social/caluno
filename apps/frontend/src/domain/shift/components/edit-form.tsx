@@ -1,7 +1,7 @@
 'use client';
 
-import { ShiftVisibility, useShift } from '@repo/data/react';
-import { useMemo, useState, useTransition } from 'react';
+import { ShiftVisibility, useQueryClient, useShift } from '@repo/data/react';
+import { useEffect, useMemo, useState, useTransition } from 'react';
 import { updateShift } from '../actions';
 import type { ShiftFormValues } from '../schemas';
 import { ShiftForm } from './shift-form';
@@ -10,18 +10,25 @@ interface EditShiftFormProps {
   orgUId: string;
   shiftId: string;
   onSuccess?: () => void;
-  onCancel?: () => void;
+  onPendingChange?: (isPending: boolean) => void;
+  formId?: string;
 }
 
 export function EditShiftForm({
   orgUId,
   shiftId,
   onSuccess,
-  onCancel,
+  onPendingChange,
+  formId,
 }: EditShiftFormProps) {
   const [isPending, startTransition] = useTransition();
   const [serverError, setServerError] = useState<string | null>(null);
   const { data: shift, error, isLoading } = useShift(shiftId);
+  const queryClient = useQueryClient();
+
+  useEffect(() => {
+    onPendingChange?.(isPending);
+  }, [isPending, onPendingChange]);
 
   const initialValues = useMemo<Partial<ShiftFormValues>>(() => {
     if (!shift) {
@@ -67,6 +74,9 @@ export function EditShiftForm({
         if (result?.serverError) {
           setServerError(result.serverError);
         } else {
+          await queryClient.invalidateQueries({
+            queryKey: ['shift', shift.id],
+          });
           onSuccess?.();
         }
       }
@@ -91,10 +101,9 @@ export function EditShiftForm({
       <ShiftForm
         organizationUnitId={orgUId}
         onSubmit={onSubmit}
-        onCancel={onCancel}
         isPending={isPending}
-        submitLabel="Save changes"
         initialValues={initialValues}
+        formId={formId}
       />
     </>
   );

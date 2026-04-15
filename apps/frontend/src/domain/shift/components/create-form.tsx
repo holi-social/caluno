@@ -1,24 +1,32 @@
 'use client';
 
 import { useCurrentOrg, useOrgUId } from '@repo/data/react';
-import { useState, useTransition } from 'react';
+import { useEffect, useState, useTransition } from 'react';
 import { useSheet } from '@/hooks/use-sheet';
 import { createShift } from '../actions';
 import type { ShiftFormValues } from '../schemas';
 import { ShiftForm } from './shift-form';
 
 interface CreateShiftFormProps {
-  onCancel?: () => void;
+  onPendingChange?: (isPending: boolean) => void;
+  formId?: string;
 }
 
-export function CreateShiftForm({ onCancel }: CreateShiftFormProps) {
+export function CreateShiftForm({
+  onPendingChange,
+  formId,
+}: CreateShiftFormProps) {
   const [isPending, startTransition] = useTransition();
   const [serverError, setServerError] = useState<string | null>(null);
   const orgUId = useOrgUId();
   const { address } = useCurrentOrg();
   const inviteSheet = useSheet('invite-shift', 'id');
 
-  const onSubmit = (formData: ShiftFormValues) => {
+  useEffect(() => {
+    onPendingChange?.(isPending);
+  }, [isPending, onPendingChange]);
+
+  const onSubmit = async (formData: ShiftFormValues) => {
     setServerError(null);
     startTransition(async () => {
       const result = await createShift({
@@ -46,10 +54,9 @@ export function CreateShiftForm({ onCancel }: CreateShiftFormProps) {
       )}
       <ShiftForm
         organizationUnitId={orgUId}
-        onSubmit={onSubmit}
-        onCancel={onCancel}
         isPending={isPending}
-        submitLabel="Create shift"
+        onSubmit={onSubmit}
+        formId={formId}
         defaultLocation={address ?? ''}
       />
     </>

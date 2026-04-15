@@ -2,7 +2,6 @@
 
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
-  Button,
   Field,
   FieldError,
   FieldLabel,
@@ -17,7 +16,7 @@ import {
   Textarea,
 } from '@repo/ui';
 import { useRouter } from 'next/navigation';
-import { useState, useTransition } from 'react';
+import { useEffect, useState, useTransition } from 'react';
 import { useForm } from 'react-hook-form';
 import { createTimeEntry } from '../actions';
 import {
@@ -36,16 +35,24 @@ interface CreateTimeEntryFormProps {
   shiftInstances?: ShiftInstance[];
   allVolunteers?: Array<{ id: string; name: string; email: string }>;
   onSuccess?: () => void;
+  onPendingChange?: (isPending: boolean) => void;
+  formId?: string;
 }
 
 export function CreateTimeEntryForm({
   shiftInstances = [],
   allVolunteers = [],
   onSuccess,
+  onPendingChange,
+  formId,
 }: CreateTimeEntryFormProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [serverError, setServerError] = useState<string | null>(null);
+
+  useEffect(() => {
+    onPendingChange?.(isPending);
+  }, [isPending, onPendingChange]);
 
   const {
     register,
@@ -87,10 +94,11 @@ export function CreateTimeEntryForm({
 
   return (
     <form
+      id={formId}
       onSubmit={handleSubmit(onSubmit)}
       className="relative flex flex-col h-full"
     >
-      <div className="flex-1 space-y-4 pb-20">
+      <div>
         {serverError && (
           <div className="rounded-md bg-destructive/10 p-4 text-sm text-destructive">
             {serverError}
@@ -202,12 +210,6 @@ export function CreateTimeEntryForm({
           />
           {errors.notes && <FieldError>{errors.notes.message}</FieldError>}
         </Field>
-      </div>
-
-      <div className="absolute bottom-0 left-0 right-0 border-t bg-background p-4">
-        <Button type="submit" disabled={isPending} className="w-full">
-          {isPending ? 'Saving...' : 'Save Time Entry'}
-        </Button>
       </div>
     </form>
   );
