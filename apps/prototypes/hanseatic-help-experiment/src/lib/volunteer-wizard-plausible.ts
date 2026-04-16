@@ -1,20 +1,43 @@
 import { ensurePlausibleInitialized, getPlausibleDomain } from '@/lib/plausible-init';
 import type { Action, WizardStep } from '@/lib/types';
 
-const STEP_VIEW_ROW_ID = 'step_view_pending';
-const STEP_VIEW_NEXT_NAME = 'Step view only (see Step Completed for next step)';
-const STEP_VIEW_COMPLETED_NAME = 'Step view only (see Step Completed for completed step)';
-const STEP_VIEW_CHECK_IN_INTENT = 'not_applicable_step_view';
+type WizardStepName =
+  | 'check_in_intent_selection'
+  | 'planned_duration_selection'
+  | 'finish_arrival_time_input'
+  | 'break_time_range_input'
+  | 'volunteer_profile_and_consent'
+  | 'thank_you_confirmation';
 
-/** Human-readable step names for Plausible custom properties (English, stable for reporting). */
-export const WIZARD_STEP_NAMES: Record<WizardStep['step'], string> = {
-  'form-1': 'Check-in type (start, finish, or manual times)',
-  'form-2-1': 'Planned volunteering duration',
-  'form-2-2': 'Arrival time when finishing',
-  'form-2-3': 'Manual start and end times',
-  'form-3': 'Volunteer name, email, and consent',
-  'form-4': 'Thank-you confirmation',
+export type WizardFlowVariant = 'start_flow' | 'finish_flow' | 'break_flow' | 'unknown_flow';
+export type WizardCheckInIntent = Action | 'unknown';
+export type WizardActionType = 'view' | 'submit_success' | 'submit_error';
+export type WizardErrorStage =
+  | 'create_entry'
+  | 'patch_entry_duration'
+  | 'patch_entry_arrival'
+  | 'patch_entry_break_times'
+  | 'patch_entry_profile';
+
+const STEP_NAME_BY_ID: Record<WizardStep['step'], WizardStepName> = {
+  'form-1': 'check_in_intent_selection',
+  'form-2-1': 'planned_duration_selection',
+  'form-2-2': 'finish_arrival_time_input',
+  'form-2-3': 'break_time_range_input',
+  'form-3': 'volunteer_profile_and_consent',
+  'form-4': 'thank_you_confirmation',
 };
+
+export function wizardStepToStepName(stepId: WizardStep['step']): WizardStepName {
+  return STEP_NAME_BY_ID[stepId];
+}
+
+export function intentToFlowVariant(intent: WizardCheckInIntent): WizardFlowVariant {
+  if (intent === 'starting') return 'start_flow';
+  if (intent === 'finishing') return 'finish_flow';
+  if (intent === 'break') return 'break_flow';
+  return 'unknown_flow';
+}
 
 function toPlausibleProps(
   input: Record<string, string | number | boolean | undefined | null>,
@@ -37,41 +60,29 @@ async function trackWhenEnabled(
   track(eventName, { props: toPlausibleProps(props) });
 }
 
-/** Fires when the user lands on a wizard screen (including the first load). */
-export function trackVolunteerWizardStepViewed(stepId: WizardStep['step']): void {
-  void trackWhenEnabled('VolunteerCheckInWizardStepViewed', {
-    wizard_step_id: stepId,
-    wizard_step_name: WIZARD_STEP_NAMES[stepId],
-    completed_step_id: STEP_VIEW_ROW_ID,
-    completed_step_name: STEP_VIEW_COMPLETED_NAME,
-    check_in_intent: STEP_VIEW_CHECK_IN_INTENT,
-    next_step_id: STEP_VIEW_ROW_ID,
-    next_step_name: STEP_VIEW_NEXT_NAME,
-  });
-}
-
-/** Fires after a successful transition (API ok, state updated). Never includes PII. */
-export function trackVolunteerWizardStepCompleted(payload: {
-  completed_step_id: WizardStep['step'];
-  next_step_id: WizardStep['step'];
-  /** Always set so `check_in_intent` is never missing on completion rows. */
-  check_in_intent: Action;
+/** Unified tracking event for wizard activity. Never includes PII. */
+export function trackVolunteerWizardAction(payload: {
+  action_type: WizardActionType;
+  step_name: WizardStepName;
+  check_in_intent: WizardCheckInIntent;
+  flow_variant: WizardFlowVariant;
+  session_wizard_id: string;
   planned_duration_hours?: number;
   gdpr_consent_recorded?: boolean;
+  error_stage?: WizardErrorStage;
 }): void {
-  void trackWhenEnabled('VolunteerCheckInWizardStepCompleted', {
-    completed_step_id: payload.completed_step_id,
-    completed_step_name: WIZARD_STEP_NAMES[payload.completed_step_id],
-    wizard_step_id: payload.completed_step_id,
-    wizard_step_name: WIZARD_STEP_NAMES[payload.completed_step_id],
-    next_step_id: payload.next_step_id,
-    next_step_name: WIZARD_STEP_NAMES[payload.next_step_id],
+  void trackWhenEnabled('volunteer_wizard_action', {
+    action_type: payload.action_type,
+    step_name: payload.step_name,
     check_in_intent: payload.check_in_intent,
+    flow_variant: payload.flow_variant,
+    session_wizard_id: payload.session_wizard_id,
     ...(payload.planned_duration_hours !== undefined
       ? { planned_duration_hours: payload.planned_duration_hours }
       : {}),
     ...(payload.gdpr_consent_recorded !== undefined
       ? { gdpr_consent_recorded: payload.gdpr_consent_recorded }
       : {}),
+    ...(payload.error_stage !== undefined ? { error_stage: payload.error_stage } : {}),
   });
 }

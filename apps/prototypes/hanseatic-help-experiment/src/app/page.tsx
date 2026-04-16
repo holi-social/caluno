@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Form1 } from '@/components/steps/form-1';
 import { Form21 } from '@/components/steps/form-2-1';
 import { Form22 } from '@/components/steps/form-2-2';
@@ -8,8 +8,10 @@ import { Form23 } from '@/components/steps/form-2-3';
 import { Form3 } from '@/components/steps/form-3';
 import { Form4 } from '@/components/steps/form-4';
 import {
-  trackVolunteerWizardStepCompleted,
-  trackVolunteerWizardStepViewed,
+  intentToFlowVariant,
+  trackVolunteerWizardAction,
+  wizardStepToStepName,
+  type WizardCheckInIntent,
 } from '@/lib/volunteer-wizard-plausible';
 import type { Action, Form3Context, WizardStep } from '@/lib/types';
 
@@ -82,17 +84,46 @@ async function patchEntry(id: string, data: Record<string, unknown>): Promise<vo
 
 // ---- Wizard ----
 
+function createSessionWizardId(): string {
+  const id = globalThis.crypto?.randomUUID?.();
+  if (id) return id;
+  return `${Date.now()}_${Math.random().toString(16).slice(2)}`;
+}
+
+function deriveIntentFromState(
+  wizardState: WizardStep,
+  fallbackIntent: WizardCheckInIntent,
+): WizardCheckInIntent {
+  if (wizardState.step === 'form-1') return 'unknown';
+  if (wizardState.step === 'form-2-1') return 'starting';
+  if (wizardState.step === 'form-2-2') return 'finishing';
+  if (wizardState.step === 'form-2-3') return 'break';
+  if (wizardState.step === 'form-3') return wizardState.context.action;
+  return fallbackIntent;
+}
+
 export default function WizardPage() {
   const [state, setState] = useState<WizardStep>({ step: 'form-1' });
   const [loading, setLoading] = useState(false);
+  const sessionWizardIdRef = useRef<string>(createSessionWizardId());
+  const checkInIntentRef = useRef<WizardCheckInIntent>('unknown');
 
   useEffect(() => {
-    trackVolunteerWizardStepViewed(state.step);
+    const checkInIntent = deriveIntentFromState(state, checkInIntentRef.current);
+    checkInIntentRef.current = checkInIntent;
+    trackVolunteerWizardAction({
+      action_type: 'view',
+      step_name: wizardStepToStepName(state.step),
+      check_in_intent: checkInIntent,
+      flow_variant: intentToFlowVariant(checkInIntent),
+      session_wizard_id: sessionWizardIdRef.current,
+    });
   }, [state.step]);
 
   // form-1: user picks action → create entry → go to matching form-2
   async function handleActionSelect(action: Action) {
     setLoading(true);
+    checkInIntentRef.current = action;
     try {
       const entryId = await createEntry(action);
       const next: WizardStep =
@@ -101,12 +132,24 @@ export default function WizardPage() {
           : action === 'finishing'
             ? { step: 'form-2-2', entryId }
             : { step: 'form-2-3', entryId };
-      trackVolunteerWizardStepCompleted({
-        completed_step_id: 'form-1',
-        next_step_id: next.step,
+      trackVolunteerWizardAction({
+        action_type: 'submit_success',
+        step_name: wizardStepToStepName('form-1'),
         check_in_intent: action,
+        flow_variant: intentToFlowVariant(action),
+        session_wizard_id: sessionWizardIdRef.current,
       });
       setState(next);
+    } catch (error) {
+      trackVolunteerWizardAction({
+        action_type: 'submit_error',
+        step_name: wizardStepToStepName('form-1'),
+        check_in_intent: action,
+        flow_variant: intentToFlowVariant(action),
+        session_wizard_id: sessionWizardIdRef.current,
+        error_stage: 'create_entry',
+      });
+      throw error;
     } finally {
       setLoading(false);
     }
@@ -116,12 +159,15 @@ export default function WizardPage() {
   async function handleDurationSelect(hours: number) {
     if (state.step !== 'form-2-1') return;
     setLoading(true);
+    checkInIntentRef.current = 'starting';
     try {
       await patchEntry(state.entryId, { plannedDurationHours: hours });
-      trackVolunteerWizardStepCompleted({
-        completed_step_id: 'form-2-1',
-        next_step_id: 'form-3',
+      trackVolunteerWizardAction({
+        action_type: 'submit_success',
+        step_name: wizardStepToStepName('form-2-1'),
         check_in_intent: 'starting',
+        flow_variant: intentToFlowVariant('starting'),
+        session_wizard_id: sessionWizardIdRef.current,
         planned_duration_hours: hours,
       });
       setState({
@@ -129,6 +175,16 @@ export default function WizardPage() {
         entryId: state.entryId,
         context: { action: 'starting', plannedHours: hours },
       });
+    } catch (error) {
+      trackVolunteerWizardAction({
+        action_type: 'submit_error',
+        step_name: wizardStepToStepName('form-2-1'),
+        check_in_intent: 'starting',
+        flow_variant: intentToFlowVariant('starting'),
+        session_wizard_id: sessionWizardIdRef.current,
+        error_stage: 'patch_entry_duration',
+      });
+      throw error;
     } finally {
       setLoading(false);
     }
@@ -138,18 +194,31 @@ export default function WizardPage() {
   async function handleArrivalTime(arrivalTime: string) {
     if (state.step !== 'form-2-2') return;
     setLoading(true);
+    checkInIntentRef.current = 'finishing';
     try {
       await patchEntry(state.entryId, { arrivalTime });
-      trackVolunteerWizardStepCompleted({
-        completed_step_id: 'form-2-2',
-        next_step_id: 'form-3',
+      trackVolunteerWizardAction({
+        action_type: 'submit_success',
+        step_name: wizardStepToStepName('form-2-2'),
         check_in_intent: 'finishing',
+        flow_variant: intentToFlowVariant('finishing'),
+        session_wizard_id: sessionWizardIdRef.current,
       });
       setState({
         step: 'form-3',
         entryId: state.entryId,
         context: { action: 'finishing', arrivalTime },
       });
+    } catch (error) {
+      trackVolunteerWizardAction({
+        action_type: 'submit_error',
+        step_name: wizardStepToStepName('form-2-2'),
+        check_in_intent: 'finishing',
+        flow_variant: intentToFlowVariant('finishing'),
+        session_wizard_id: sessionWizardIdRef.current,
+        error_stage: 'patch_entry_arrival',
+      });
+      throw error;
     } finally {
       setLoading(false);
     }
@@ -159,21 +228,34 @@ export default function WizardPage() {
   async function handleBreakTimes(arrivalTime: string, departureTime: string) {
     if (state.step !== 'form-2-3') return;
     setLoading(true);
+    checkInIntentRef.current = 'break';
     try {
       await patchEntry(state.entryId, {
         breakArrivalTime: arrivalTime,
         breakDepartureTime: departureTime,
       });
-      trackVolunteerWizardStepCompleted({
-        completed_step_id: 'form-2-3',
-        next_step_id: 'form-3',
+      trackVolunteerWizardAction({
+        action_type: 'submit_success',
+        step_name: wizardStepToStepName('form-2-3'),
         check_in_intent: 'break',
+        flow_variant: intentToFlowVariant('break'),
+        session_wizard_id: sessionWizardIdRef.current,
       });
       setState({
         step: 'form-3',
         entryId: state.entryId,
         context: { action: 'break', arrivalTime, departureTime },
       });
+    } catch (error) {
+      trackVolunteerWizardAction({
+        action_type: 'submit_error',
+        step_name: wizardStepToStepName('form-2-3'),
+        check_in_intent: 'break',
+        flow_variant: intentToFlowVariant('break'),
+        session_wizard_id: sessionWizardIdRef.current,
+        error_stage: 'patch_entry_break_times',
+      });
+      throw error;
     } finally {
       setLoading(false);
     }
@@ -187,16 +269,19 @@ export default function WizardPage() {
   ) {
     if (state.step !== 'form-3') return;
     setLoading(true);
+    checkInIntentRef.current = state.context.action;
     try {
       await patchEntry(state.entryId, {
         ...(name ? { name } : {}),
         ...(email ? { email } : {}),
         gdprConsent,
       });
-      trackVolunteerWizardStepCompleted({
-        completed_step_id: 'form-3',
-        next_step_id: 'form-4',
+      trackVolunteerWizardAction({
+        action_type: 'submit_success',
+        step_name: wizardStepToStepName('form-3'),
         check_in_intent: state.context.action,
+        flow_variant: intentToFlowVariant(state.context.action),
+        session_wizard_id: sessionWizardIdRef.current,
         gdpr_consent_recorded: gdprConsent,
       });
       setState({
@@ -204,6 +289,16 @@ export default function WizardPage() {
         name: name || undefined,
         durationLabel: buildDurationLabel(state.context),
       });
+    } catch (error) {
+      trackVolunteerWizardAction({
+        action_type: 'submit_error',
+        step_name: wizardStepToStepName('form-3'),
+        check_in_intent: state.context.action,
+        flow_variant: intentToFlowVariant(state.context.action),
+        session_wizard_id: sessionWizardIdRef.current,
+        error_stage: 'patch_entry_profile',
+      });
+      throw error;
     } finally {
       setLoading(false);
     }

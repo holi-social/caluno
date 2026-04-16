@@ -96,43 +96,41 @@ Other `init` behavior:
 
 ### Custom events (manual `track`)
 
-#### `VolunteerCheckInWizardStepViewed`
+#### `volunteer_wizard_action`
 
-Fires when the wizard step changes (including the first screen). One row per navigation to a step.
-
-| Property | Description |
-| --- | --- |
-| `wizard_step_id` | `form-1`, `form-2-1`, `form-2-2`, `form-2-3`, `form-3`, or `form-4`. |
-| `wizard_step_name` | Label for `wizard_step_id` (see reference table below). |
-| `completed_step_id` | `step_view_pending` |
-| `completed_step_name` | `Step view only (see Step Completed for completed step)` |
-| `check_in_intent` | `not_applicable_step_view` |
-| `next_step_id` | `step_view_pending` |
-| `next_step_name` | `Step view only (see Step Completed for next step)` |
-
-#### `VolunteerCheckInWizardStepCompleted`
-
-Fires after a successful API write and before advancing to the next step. **No PII** (no name, email, or free-text times).
+Single event for wizard behavior. Emitted for:
+- step views (`action_type=view`)
+- successful submits (`action_type=submit_success`)
+- failed submits (`action_type=submit_error`)
 
 | Property | Description |
 | --- | --- |
-| `completed_step_id` | Step the user finished (`form-1` … `form-3`). |
-| `completed_step_name` | English label for `completed_step_id`. |
-| `wizard_step_id` | Same as `completed_step_id`. |
-| `wizard_step_name` | Same as `completed_step_name`. |
-| `next_step_id` | Next wizard step. |
-| `next_step_name` | English label for `next_step_id`. |
-| `check_in_intent` | `starting`, `finishing`, or `break`. |
-| `planned_duration_hours` | **Optional.** Integer hours when completing `form-2-1` (starting flow). |
-| `gdpr_consent_recorded` | **Optional.** `true` or `false` when completing `form-3` (consent checkbox only, not identity). |
+| `action_type` | `view`, `submit_success`, or `submit_error`. |
+| `step_name` | `check_in_intent_selection`, `planned_duration_selection`, `finish_arrival_time_input`, `break_time_range_input`, `volunteer_profile_and_consent`, `thank_you_confirmation`. |
+| `check_in_intent` | `starting`, `finishing`, `break`, or `unknown` (before intent is selected). |
+| `flow_variant` | `start_flow`, `finish_flow`, `break_flow`, or `unknown_flow`. |
+| `session_wizard_id` | Non-PII random UUID for one wizard run, reused across all events in that run. |
+| `planned_duration_hours` | **Optional.** Present only on `submit_success` for `planned_duration_selection`. |
+| `gdpr_consent_recorded` | **Optional.** Present only on `submit_success` for `volunteer_profile_and_consent`. |
+| `error_stage` | **Optional.** Present only on `submit_error` (`create_entry`, `patch_entry_duration`, `patch_entry_arrival`, `patch_entry_break_times`, `patch_entry_profile`). |
 
-### `wizard_step_id` → `wizard_step_name` (reference)
+All event/property names and enum values use snake_case.  
+No PII is tracked (no name, no email, no free-text times).
 
-| `wizard_step_id` | `wizard_step_name` |
-| --- | --- |
-| `form-1` | Check-in type (start, finish, or manual times) |
-| `form-2-1` | Planned volunteering duration |
-| `form-2-2` | Arrival time when finishing |
-| `form-2-3` | Manual start and end times |
-| `form-3` | Volunteer name, email, and consent |
-| `form-4` | Thank-you confirmation |
+### Plausible funnel recipe
+
+Use event `volunteer_wizard_action` with `action_type=submit_success`:
+1. `step_name=check_in_intent_selection`
+2. Branch by `step_name=planned_duration_selection|finish_arrival_time_input|break_time_range_input`
+3. `step_name=volunteer_profile_and_consent`
+4. `step_name=thank_you_confirmation` (or use `action_type=view` for this final step if you prefer view-based completion)
+
+Apply breakdown by `check_in_intent` to compare start/finish/break conversion paths.
+
+### Diagnostics for failed submits
+
+Filter:
+- event: `volunteer_wizard_action`
+- `action_type=submit_error`
+
+Break down by `error_stage` to isolate drop-off caused by backend/API failures vs user behavior.
