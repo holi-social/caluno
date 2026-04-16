@@ -14,19 +14,6 @@ query GetOrganization($id: String!) {
   }
 }
 
-query GetVolunteers($id: String!) {
-  organization(id: $id) {
-    id
-    volunteers {
-      id
-      name
-      email
-      image
-      checkInId
-    }
-  }
-}
-
 query GetOrganizationRoot($id: String!) {
   organization(id: $id) {
     id

@@ -38,9 +38,6 @@ export class Organization {
   @Field(() => [OrganizationUnit])
   units: OrganizationUnit[];
 
-  @Field(() => [User])
-  volunteers: User[] = [];
-
   @Field(() => Date)
   createdAt: Date;
 
