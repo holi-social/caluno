@@ -13,10 +13,8 @@ export const createTimeEntry = actionClient
     const input: AddTimeEntryInput = {
       shiftInstanceId: parsedInput.shiftInstanceId,
       volunteerId: parsedInput.volunteerId,
-      startedAt: new Date(parsedInput.startedAt).toISOString(),
-      endedAt: parsedInput.endedAt
-        ? new Date(parsedInput.endedAt).toISOString()
-        : null,
+      startedAt: parsedInput.startedAt.toISOString(),
+      endedAt: parsedInput.endedAt ? parsedInput.endedAt?.toISOString() : null,
       notes: parsedInput.notes || null,
     };
 

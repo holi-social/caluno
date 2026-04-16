@@ -61,8 +61,3 @@ export async function createOrganization(
 
   redirect(`/${rootUnit.id}`);
 }
-
-export async function getVolunteers(organizationUnitId: string) {
-  const data = await getDataClient(organizationUnitId);
-  return data.organization.findVolunteersByUnit(organizationUnitId);
-}
