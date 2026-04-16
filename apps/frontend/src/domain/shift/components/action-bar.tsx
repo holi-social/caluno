@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation';
 import { useTransition } from 'react';
 import { toast } from 'sonner';
 import { DeleteAlertDialog } from '@/components/delete-alert-dialog';
+import { FORM_ID } from '@/components/sheets/shift-sheet';
 import { useSheet } from '@/hooks/use-sheet';
 import { copyToClipboard } from '@/lib/clipboard';
 import { deleteShift } from '../actions';
@@ -27,7 +28,7 @@ export const ActionBar = ({
 }: ActionBarProps) => {
   const router = useRouter();
   const [isDeleting, startDeleteTransition] = useTransition();
-  const editSheet = useSheet('shift', 'id');
+  const editSheet = useSheet(FORM_ID, 'id');
   const inviteSheet = useSheet('invite-shift', 'id');
 
   const buttonSize = `icon-${size}` as const;

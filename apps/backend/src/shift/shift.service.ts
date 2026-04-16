@@ -476,7 +476,8 @@ export class ShiftService {
 
     const instances = await this.db.query.shiftInstances.findMany({
       where: {
-        actualStartsAt: { gte: oneHourAgo, lte: oneHourFromNow },
+        actualStartsAt: { lt: oneHourFromNow },
+        actualEndsAt: { gt: oneHourAgo },
         isCancelled: false,
         masterId: { in: shiftIds },
       },

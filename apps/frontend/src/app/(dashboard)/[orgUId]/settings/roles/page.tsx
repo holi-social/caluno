@@ -1,5 +1,6 @@
 import { PermissionKey } from '@repo/data';
 import { CreateRoleSheet } from '@/components/sheets/create-role-sheet';
+import { CreateRoleButton } from '@/domain/role/components/create-role-button';
 import { getDataClient } from '@/lib/data-client';
 import { requireOrgAccess } from '@/lib/org-context-server';
 import { requirePermission } from '@/lib/permissions-server';
@@ -26,6 +27,7 @@ export default async function RolesPage({ params }: RolesPageProps) {
             Manage roles and permissions for {org.name}
           </p>
         </div>
+        <CreateRoleButton />
         <CreateRoleSheet />
       </div>
 

@@ -23,12 +23,12 @@ export const UserCard = ({
   size = 'default',
   hideEmail = false,
 }: UserCardProps) => (
-  <div className="flex items-center gap-2">
+  <div className="flex gap-2 min-w-0">
     <Avatar size={size} className="bg-muted">
       <AvatarImage src={user.image ?? ''} alt="" />
       <AvatarFallback>{getInitials(user.name)}</AvatarFallback>
     </Avatar>
-    <div>
+    <div className="overflow-hidden">
       <div className="font-medium text-left text-sm truncate">{user.name}</div>
       {!hideEmail && (
         <div className="text-xs text-left text-muted-foreground truncate">

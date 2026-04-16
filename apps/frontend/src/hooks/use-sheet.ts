@@ -1,19 +1,12 @@
 'use client';
 
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-import { useCallback } from 'react';
+import { useCallback, useState } from 'react';
 
-export function useSheet(name: string, extraKey?: string) {
+export function useSheetTrigger(name: string) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
-
-  const isOpen = searchParams.get('sheet') === name;
-
-  const getParam = useCallback(
-    (key: string) => searchParams.get(key),
-    [searchParams],
-  );
 
   const open = useCallback(
     (params?: Record<string, string>) => {
@@ -29,6 +22,26 @@ export function useSheet(name: string, extraKey?: string) {
     [router, pathname, searchParams, name],
   );
 
+  return {
+    open,
+  };
+}
+
+export function useSheet(name: string, extraKey?: string) {
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+
+  const { open } = useSheetTrigger(name);
+
+  const isOpen = searchParams.get('sheet') === name;
+  const [isPending, setIsPending] = useState(false);
+
+  const getParam = useCallback(
+    (key: string) => searchParams.get(key),
+    [searchParams],
+  );
+
   const close = useCallback(() => {
     const next = new URLSearchParams(searchParams.toString());
     next.delete('sheet');
@@ -37,5 +50,12 @@ export function useSheet(name: string, extraKey?: string) {
     router.push(qs ? `${pathname}?${qs}` : pathname);
   }, [router, pathname, searchParams, extraKey]);
 
-  return { isOpen, open, close, getParam };
+  return {
+    isOpen,
+    open,
+    close,
+    isPending,
+    setIsPending,
+    getParam,
+  };
 }

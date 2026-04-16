@@ -7,15 +7,12 @@ import { MembershipRequestsTabs } from '@/domain/membership-requests/components/
 type MembershipRequestItem =
   GetMembershipRequestsQuery['membershipRequests']['items'][number];
 
-interface Props<T> {
+interface Props {
   activeStatus: string;
   membershipRequests: MembershipRequestItem[];
 }
 
-export default function Tabs<T>({
-  activeStatus,
-  membershipRequests,
-}: Props<T>) {
+export default function Tabs({ activeStatus, membershipRequests }: Props) {
   return (
     <MembershipRequestsTabs
       activeStatus={activeStatus}
