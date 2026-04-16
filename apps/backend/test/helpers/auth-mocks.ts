@@ -85,9 +85,7 @@ export const applyJestAuthMocks = () => {
   );
 };
 
-export const applyBunAuthMocks = (
-  registerModuleMock: RegisterModuleMock,
-) => {
+export const applyBunAuthMocks = (registerModuleMock: RegisterModuleMock) => {
   registerCommonAuthMocks(registerModuleMock);
 
   registerModuleMock('rrule', () => ({

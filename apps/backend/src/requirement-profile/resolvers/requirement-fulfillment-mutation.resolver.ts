@@ -21,11 +21,12 @@ export class RequirementFulfillmentMutationResolver {
     @Args('input') input: UpdateRequirementFulfillmentInput,
     @Session() session: UserSession,
   ): Promise<RequirementFulfillment> {
-    const item = await this.requirementProfileSubmissionService.updateFulfillment(
-      id,
-      input,
-      session.user.id,
-    );
+    const item =
+      await this.requirementProfileSubmissionService.updateFulfillment(
+        id,
+        input,
+        session.user.id,
+      );
     return this.requirementFulfillmentMapper.toModelOrThrow(item);
   }
 

@@ -95,7 +95,10 @@ describe('GraphQL API Integration', () => {
     }
 
     const createProfileResponse = await graphqlRequest<{
-      createRequirementProfile: { id: string; requirements: Array<{ id: string }> };
+      createRequirementProfile: {
+        id: string;
+        requirements: Array<{ id: string }>;
+      };
     }>(app, {
       query: `
         mutation CreateRequirementProfile($input: CreateRequirementProfileInput!) {
@@ -119,7 +122,9 @@ describe('GraphQL API Integration', () => {
 
     expect(createProfileResponse.errors).toBeUndefined();
     const profileId = createProfileResponse.data!.createRequirementProfile.id;
-    expect(createProfileResponse.data?.createRequirementProfile.requirements).toHaveLength(4);
+    expect(
+      createProfileResponse.data?.createRequirementProfile.requirements,
+    ).toHaveLength(4);
 
     const getProfileResponse = await graphqlRequest<{
       requirementProfile: {
@@ -143,7 +148,9 @@ describe('GraphQL API Integration', () => {
 
     expect(getProfileResponse.errors).toBeUndefined();
     expect(getProfileResponse.data?.requirementProfile?.id).toBe(profileId);
-    expect(getProfileResponse.data?.requirementProfile?.requirements).toHaveLength(4);
+    expect(
+      getProfileResponse.data?.requirementProfile?.requirements,
+    ).toHaveLength(4);
 
     const createSubmissionResponse = await graphqlRequest<{
       createRequirementProfileSubmission: {
@@ -207,9 +214,11 @@ describe('GraphQL API Integration', () => {
     });
 
     expect(createSubmissionResponse.errors).toBeUndefined();
-    const submissionId = createSubmissionResponse.data!.createRequirementProfileSubmission.id;
+    const submissionId =
+      createSubmissionResponse.data!.createRequirementProfileSubmission.id;
     expect(
-      createSubmissionResponse.data?.createRequirementProfileSubmission.fulfillments,
+      createSubmissionResponse.data?.createRequirementProfileSubmission
+        .fulfillments,
     ).toHaveLength(4);
 
     const getSubmissionResponse = await graphqlRequest<{
@@ -260,13 +269,19 @@ describe('GraphQL API Integration', () => {
     });
 
     expect(getSubmissionResponse.errors).toBeUndefined();
-    expect(getSubmissionResponse.data?.requirementProfileSubmission?.id).toBe(submissionId);
-    expect(getSubmissionResponse.data?.requirementProfileSubmission?.requirementProfile.id).toBe(
-      profileId,
+    expect(getSubmissionResponse.data?.requirementProfileSubmission?.id).toBe(
+      submissionId,
     );
-    expect(getSubmissionResponse.data?.requirementProfileSubmission?.fulfillments).toHaveLength(4);
+    expect(
+      getSubmissionResponse.data?.requirementProfileSubmission
+        ?.requirementProfile.id,
+    ).toBe(profileId);
+    expect(
+      getSubmissionResponse.data?.requirementProfileSubmission?.fulfillments,
+    ).toHaveLength(4);
     const fulfillments =
-      getSubmissionResponse.data?.requirementProfileSubmission?.fulfillments ?? [];
+      getSubmissionResponse.data?.requirementProfileSubmission?.fulfillments ??
+      [];
     const documentFulfillment = fulfillments.find(
       (fulfillment) => fulfillment.type === 'DOCUMENT',
     );
