@@ -1,9 +1,15 @@
-import { Empty, EmptyHeader, EmptyMedia, EmptyTitle, EmptyDescription, EmptyContent } from "@repo/ui";
-import { Users } from "lucide-react";
-import { PropsWithChildren } from "react";
+import {
+  Empty,
+  EmptyContent,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from '@repo/ui';
+import { Users } from 'lucide-react';
+import type { PropsWithChildren } from 'react';
 
-
-export const EmptyShifts = ({ children }: PropsWithChildren) =>
+export const EmptyShifts = ({ children }: PropsWithChildren) => (
   <Empty className="border border-dashed">
     <EmptyHeader>
       <EmptyMedia variant="icon">
@@ -14,7 +20,6 @@ export const EmptyShifts = ({ children }: PropsWithChildren) =>
         Get started by creating your first shift and inviting volunteers.
       </EmptyDescription>
     </EmptyHeader>
-    <EmptyContent>
-      { children }
-    </EmptyContent>
+    <EmptyContent>{children}</EmptyContent>
   </Empty>
+);

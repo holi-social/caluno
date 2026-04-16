@@ -1,8 +1,15 @@
-import { Empty, EmptyHeader, EmptyMedia, EmptyTitle, EmptyDescription, EmptyContent } from "@repo/ui";
-import { Users } from "lucide-react";
-import { PropsWithChildren } from "react";
+import {
+  Empty,
+  EmptyContent,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from '@repo/ui';
+import { Users } from 'lucide-react';
+import type { PropsWithChildren } from 'react';
 
-export const EmptyVolunteers = ({ children }: PropsWithChildren) =>
+export const EmptyVolunteers = ({ children }: PropsWithChildren) => (
   <Empty className="border border-dashed">
     <EmptyHeader>
       <EmptyMedia variant="icon">
@@ -13,7 +20,6 @@ export const EmptyVolunteers = ({ children }: PropsWithChildren) =>
         Share the invitation link to get volunteers to sign-up.
       </EmptyDescription>
     </EmptyHeader>
-    <EmptyContent>
-      { children }
-    </EmptyContent>
+    <EmptyContent>{children}</EmptyContent>
   </Empty>
+);

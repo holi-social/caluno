@@ -2,10 +2,10 @@
 
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
+  DatePickerWithTimeRange,
   Field,
   FieldError,
   FieldLabel,
-  Input,
   Select,
   SelectContent,
   SelectGroup,
@@ -65,13 +65,13 @@ export function CreateTimeEntryForm({
     defaultValues: {
       shiftInstanceId: '',
       volunteerId: '',
-      startedAt: '',
-      endedAt: '',
       notes: '',
     },
   });
 
   const shiftInstanceId = watch('shiftInstanceId');
+  const startedAt = watch('startedAt');
+  const endedAt = watch('endedAt');
   const selectedShift = shiftInstances.find((s) => s.id === shiftInstanceId);
   const shiftVolunteers = selectedShift?.volunteers || [];
   const otherVolunteers = allVolunteers.filter(
@@ -174,29 +174,21 @@ export function CreateTimeEntryForm({
         </Field>
 
         <Field>
-          <FieldLabel htmlFor="startedAt">
-            Start Time <span className="text-destructive">*</span>
+          <FieldLabel>
+            Start and end time<span className="text-destructive"> *</span>
           </FieldLabel>
-          <Input
-            id="startedAt"
-            type="datetime-local"
+          <DatePickerWithTimeRange
+            value={{
+              start: startedAt ? new Date(startedAt) : null,
+              end: endedAt ? new Date(endedAt) : null,
+            }}
+            onChange={(start, end) => {
+              setValue('startedAt', start as Date, { shouldValidate: true });
+              setValue('endedAt', end as Date, { shouldValidate: true });
+            }}
+            errors={[errors.startedAt?.message, errors.endedAt?.message]}
             disabled={isPending}
-            {...register('startedAt')}
           />
-          {errors.startedAt && (
-            <FieldError>{errors.startedAt.message}</FieldError>
-          )}
-        </Field>
-
-        <Field>
-          <FieldLabel htmlFor="endedAt">End Time</FieldLabel>
-          <Input
-            id="endedAt"
-            type="datetime-local"
-            disabled={isPending}
-            {...register('endedAt')}
-          />
-          {errors.endedAt && <FieldError>{errors.endedAt.message}</FieldError>}
         </Field>
 
         <Field>
