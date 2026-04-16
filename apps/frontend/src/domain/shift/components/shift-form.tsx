@@ -2,23 +2,17 @@
 
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
-  Button,
-  Calendar,
   Card,
+  DatePickerWithTimeRange,
   Field,
   FieldContent,
   FieldDescription,
   FieldError,
   FieldLabel,
   Input,
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
   Switch,
   Textarea,
 } from '@repo/ui';
-import { format } from 'date-fns';
-import { CalendarIcon } from 'lucide-react';
 import { type Resolver, useForm } from 'react-hook-form';
 import { type ShiftFormValues, shiftFormSchema } from '../schemas';
 import { RecurrenceSelect } from './recurrence-select';
@@ -30,18 +24,6 @@ type FormProps = {
   initialValues?: Partial<ShiftFormValues>;
   formId?: string;
   defaultLocation?: string;
-};
-
-const setTimeOnDate = (date: Date, time: string): Date => {
-  const [hours, minutes] = time.split(':').map(Number);
-  const newDate = new Date(date);
-  newDate.setHours(hours ?? 0, minutes ?? 0, 0, 0);
-  return newDate;
-};
-
-const getTimeString = (date: Date | undefined): string => {
-  if (!date) return '';
-  return format(date, 'HH:mm');
 };
 
 export const ShiftForm = ({
@@ -76,28 +58,6 @@ export const ShiftForm = ({
 
   const startsAt = watch('startsAt');
   const endsAt = watch('endsAt');
-  const selectedDate = startsAt ? new Date(startsAt) : undefined;
-
-  const handleDateSelect = (date: Date | undefined) => {
-    if (!date) return;
-    const now = new Date();
-    const newStart = new Date(date);
-    newStart.setHours(now.getHours(), now.getMinutes(), 0, 0);
-    setValue('startsAt', newStart, { shouldValidate: true });
-    const newEnd = new Date(date);
-    newEnd.setHours(now.getHours() + 1, now.getMinutes(), 0, 0);
-    setValue('endsAt', newEnd, { shouldValidate: true });
-  };
-
-  const handleStartTimeChange = (time: string) => {
-    const base = startsAt ?? new Date();
-    setValue('startsAt', setTimeOnDate(base, time), { shouldValidate: true });
-  };
-
-  const handleEndTimeChange = (time: string) => {
-    const base = endsAt ?? startsAt ?? new Date();
-    setValue('endsAt', setTimeOnDate(base, time), { shouldValidate: true });
-  };
 
   return (
     <form id={formId} onSubmit={handleSubmit(onSubmit)} className="space-y-4">
@@ -117,51 +77,17 @@ export const ShiftForm = ({
 
       <Field>
         <FieldLabel>
-          Date and time <span className="text-destructive">*</span>
+          Date and time<span className="text-destructive"> *</span>
         </FieldLabel>
-        <div className="flex items-center gap-2">
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button
-                type="button"
-                variant="outline"
-                className="flex-1 justify-start text-left font-normal"
-              >
-                <CalendarIcon className="mr-2 size-4" />
-                {selectedDate ? format(selectedDate, 'dd.MM.yyyy') : 'Date'}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-0" align="start">
-              <Calendar
-                mode="single"
-                selected={selectedDate}
-                onSelect={handleDateSelect}
-              />
-            </PopoverContent>
-          </Popover>
-
-          <Input
-            type="time"
-            className="w-28"
-            value={getTimeString(startsAt)}
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-              handleStartTimeChange(e.target.value)
-            }
-            disabled={isPending}
-          />
-
-          <Input
-            type="time"
-            className="w-28"
-            value={getTimeString(endsAt)}
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-              handleEndTimeChange(e.target.value)
-            }
-            disabled={isPending}
-          />
-        </div>
-        {errors.startsAt && <FieldError>{errors.startsAt.message}</FieldError>}
-        {errors.endsAt && <FieldError>{errors.endsAt.message}</FieldError>}
+        <DatePickerWithTimeRange
+          value={{ start: startsAt ?? null, end: endsAt ?? null }}
+          onChange={(start, end) => {
+            setValue('startsAt', start as Date, { shouldValidate: true });
+            setValue('endsAt', end as Date, { shouldValidate: true });
+          }}
+          errors={[errors.startsAt?.message, errors.endsAt?.message]}
+          disabled={isPending}
+        />
       </Field>
 
       <RecurrenceSelect

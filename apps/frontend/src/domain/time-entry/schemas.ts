@@ -3,8 +3,8 @@ import z from 'zod';
 export const createTimeEntrySchema = z.object({
   shiftInstanceId: z.string(),
   volunteerId: z.string(),
-  startedAt: z.string().min(1, 'Start time is required'),
-  endedAt: z.string().optional(),
+  startedAt: z.date('Start time is required'),
+  endedAt: z.date().nullable(),
   notes: z.string().trim().optional(),
 });
 
