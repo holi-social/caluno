@@ -4,7 +4,9 @@ import { useOrgUId, useVolunteers } from '@repo/data/react';
 import { Button, Field } from '@repo/ui';
 import { useState, useTransition } from 'react';
 import { MemberSelect } from '@/components/member-select';
+import { useSession } from '@/lib/auth';
 import { inviteShiftVolunteers } from '../actions';
+import { shiftShareUrl } from '../share';
 
 interface InviteShiftFormProps {
   shiftId: string;
@@ -21,8 +23,13 @@ export function InviteShiftForm({
   const [memberIds, setMemberIds] = useState<string[]>([]);
   const [serverError, setServerError] = useState<string | null>(null);
   const orgUId = useOrgUId();
+  const session = useSession();
 
   const { data: volunteers } = useVolunteers(orgUId);
+  const currentUserId = session.data?.user?.id;
+  const availableVolunteers = currentUserId
+    ? volunteers?.filter((v) => v.id !== currentUserId)
+    : volunteers;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -51,9 +58,10 @@ export function InviteShiftForm({
 
       <Field>
         <MemberSelect
-          members={volunteers}
+          members={availableVolunteers}
           value={memberIds}
           onChange={setMemberIds}
+          inviteLinkUrl={shiftShareUrl(shiftId)}
         />
       </Field>
 

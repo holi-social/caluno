@@ -7,8 +7,9 @@ import {
   InputGroupAddon,
   InputGroupInput,
 } from '@repo/ui';
-import { ArrowRightLeft, CircleX, Search } from 'lucide-react';
+import { ArrowRightLeft, CircleX, Link2, Search } from 'lucide-react';
 import { useState } from 'react';
+import { copyToClipboard } from '@/lib/clipboard';
 import { UserCard } from './user-card';
 
 type Member = {
@@ -29,12 +30,14 @@ type MemberSelectProps = {
   members?: Member[];
   value?: string[];
   onChange: (ids: string[]) => void;
+  inviteLinkUrl?: string;
 };
 
 export const MemberSelect = ({
   members = [],
   value: selectedMemberIds = [],
   onChange,
+  inviteLinkUrl,
 }: MemberSelectProps) => {
   const availableMembers = members.filter(
     (v) => !selectedMemberIds.includes(v.id),
@@ -51,6 +54,12 @@ export const MemberSelect = ({
     onChange(selectedMemberIds.filter((id) => id !== memberId));
   };
 
+  const handleCopyLink = () => {
+    if (inviteLinkUrl) {
+      copyToClipboard(inviteLinkUrl, 'Share this link with the volunteer');
+    }
+  };
+
   return (
     <div className="flex gap-4 items-center">
       <FilteredMemberList
@@ -58,6 +67,9 @@ export const MemberSelect = ({
         members={availableMembers}
         emptyMessage="All members have been selected"
         className="min-w-0 flex-1"
+        inviteLinkUrl={inviteLinkUrl}
+        totalMembers={members.length}
+        onInviteByLink={handleCopyLink}
         renderItem={(member) => (
           <button
             type="button"
@@ -96,6 +108,9 @@ type FilteredMemberListProps = {
   emptyMessage?: string;
   renderItem: (member: Member) => React.ReactNode;
   className?: string;
+  inviteLinkUrl?: string;
+  totalMembers?: number;
+  onInviteByLink?: () => void;
 };
 
 export const FilteredMemberList = ({
@@ -104,9 +119,17 @@ export const FilteredMemberList = ({
   emptyMessage,
   renderItem,
   className,
+  inviteLinkUrl,
+  totalMembers,
+  onInviteByLink,
 }: FilteredMemberListProps) => {
   const [searchQuery, setSearchQuery] = useState('');
   const membersFiltered = filterUsers(members, searchQuery);
+
+  const showInviteLink =
+    inviteLinkUrl &&
+    membersFiltered.length === 0 &&
+    (searchQuery || (totalMembers ?? 0) === 0);
 
   return (
     <div className={className}>
@@ -129,9 +152,22 @@ export const FilteredMemberList = ({
 
         <div className="space-y-1 overflow-y-auto p-2">
           {membersFiltered.length === 0 ? (
-            <p className="text-sm text-muted-foreground p-2">
-              {searchQuery ? 'No members found' : emptyMessage}
-            </p>
+            <div className="space-y-2 p-2">
+              <p className="text-sm text-muted-foreground">
+                {searchQuery ? 'No members found' : emptyMessage}
+              </p>
+              {showInviteLink && onInviteByLink && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={onInviteByLink}
+                >
+                  <Link2 />
+                  Invite by link
+                </Button>
+              )}
+            </div>
           ) : (
             membersFiltered.map((member) => (
               <div key={member.id}>{renderItem(member)}</div>

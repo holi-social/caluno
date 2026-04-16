@@ -11,6 +11,7 @@ query GetShift($id: String!) {
     rrule
     originalStartsAt
     durationMinutes
+    organizationUnitId
     createdBy {
       id
       name

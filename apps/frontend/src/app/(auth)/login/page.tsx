@@ -7,7 +7,13 @@ export default async function LoginPage() {
   const session = await getSession();
   const cookieStore = await cookies();
   const pendingInvite = cookieStore.get('pending_invite')?.value;
-  const redirectTo = pendingInvite ? `/invite/${pendingInvite}` : '/';
+  const pendingRedirect = cookieStore.get('pending_redirect')?.value;
+  const safeRedirect =
+    pendingRedirect?.startsWith('/') && !pendingRedirect.startsWith('//')
+      ? pendingRedirect
+      : undefined;
+  const redirectTo =
+    safeRedirect ?? (pendingInvite ? `/invite/${pendingInvite}` : '/');
 
   if (session) {
     redirect(redirectTo);
