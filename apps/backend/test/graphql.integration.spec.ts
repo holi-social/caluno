@@ -41,7 +41,6 @@ describe('GraphQL API Integration', () => {
 
   beforeAll(async () => {
     setAuthMockUserId(testUserId);
-    console.log('before createGraphqlFullTestApp');
     app = await createGraphqlFullTestApp({ testUserId });
     db = app.get<Database>(DATABASE_CONNECTION);
 
@@ -111,7 +110,7 @@ describe('GraphQL API Integration', () => {
         response,
         'createRequirement',
       );
-      expect(createRequirementData.createRequirement.type).toBe('XXX');
+      expect(createRequirementData.createRequirement.type).toBe(type);
       createdRequirements.push(createRequirementData.createRequirement);
     }
 
