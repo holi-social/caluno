@@ -18,7 +18,7 @@ export class OrganizationQueryResolver {
   ) {}
 
   @Permissions(PERMISSIONS.ORG_READ)
-  @Query(() => Organization)
+  @Query(() => Organization, { nullable: true })
   async organization(@Args('id') id: string): Promise<Organization | null> {
     const orgEntity = await this.organizationService.findById(id);
     return this.organizationMapper.toModel(orgEntity);

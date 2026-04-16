@@ -26,9 +26,10 @@ export const organizationUnitFavoriteRequirementProfiles = pgTable(
     ...timestampColumns,
   },
   (table) => [
-    unique(
-      'uq_org_unit_favorite_requirement_profiles_org_unit_profile',
-    ).on(table.organizationUnitId, table.requirementProfileId),
+    unique('uq_org_unit_favorite_requirement_profiles_org_unit_profile').on(
+      table.organizationUnitId,
+      table.requirementProfileId,
+    ),
     foreignKey({
       name: 'fk_org_unit_favorites_org_unit_same_organization',
       columns: [table.organizationId, table.organizationUnitId],
@@ -37,7 +38,10 @@ export const organizationUnitFavoriteRequirementProfiles = pgTable(
     foreignKey({
       name: 'fk_org_unit_favorites_profile_same_organization',
       columns: [table.organizationId, table.requirementProfileId],
-      foreignColumns: [requirementProfiles.organizationId, requirementProfiles.id],
+      foreignColumns: [
+        requirementProfiles.organizationId,
+        requirementProfiles.id,
+      ],
     }).onDelete('cascade'),
     index('idx_org_unit_favorite_requirement_profiles_organization_id').on(
       table.organizationId,

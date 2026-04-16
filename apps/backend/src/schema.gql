@@ -59,8 +59,6 @@ input CreateRequirementProfileSubmissionInput {
   membershipId: String
   membershipRequestId: String
   profileId: String!
-  status: RequirementProfileSubmissionStatus! = DRAFT
-  submittedAt: DateTime
 }
 
 input CreateRequirementSubmissionFulfillmentInput {
@@ -68,8 +66,6 @@ input CreateRequirementSubmissionFulfillmentInput {
   date: DateTime
   documentId: String
   requirementId: String!
-  status: RequirementFulfillmentStatus! = DRAFT
-  submittedAt: DateTime
   text: String
 }
 
@@ -292,7 +288,7 @@ type Query {
   membership(organizationUnitId: ID!): Membership!
   membershipRequests(limit: Int! = 10, offset: Int! = 0, organizationUnitId: ID!, status: MembershipRequestStatus): MembershipRequestPaginatedResponse!
   myMembershipRequests(limit: Int! = 10, offset: Int! = 0, status: MembershipRequestStatus): MembershipRequestPaginatedResponse!
-  organization(id: String!): Organization!
+  organization(id: String!): Organization
   organizationBySlug(slug: String!): Organization!
   organizationUnit(id: String!): OrganizationUnit
   organizationUnitBySlug(slug: String!): OrganizationUnit
@@ -542,8 +538,6 @@ input UpdateRequirementFulfillmentInput {
   checked: Boolean
   date: DateTime
   documentId: String
-  status: RequirementFulfillmentStatus = DRAFT
-  submittedAt: DateTime
   text: String
 }
 
@@ -567,8 +561,6 @@ input UpdateRequirementProfileSubmissionInput {
   membershipId: String
   membershipRequestId: String
   profileId: String
-  status: RequirementProfileSubmissionStatus = DRAFT
-  submittedAt: DateTime
 }
 
 input UpdateShiftInput {
