@@ -152,6 +152,12 @@ describe('GraphQL API Integration', () => {
       getProfileResponse.data?.requirementProfile?.requirements,
     ).toHaveLength(4);
 
+    const requirementIdFor = (type: (typeof requirementTypes)[number]) => {
+      const id = createdRequirements.find((item) => item.type === type)?.id;
+      expect(id).toBeTruthy();
+      return id as string;
+    };
+
     const createSubmissionResponse = await graphqlRequest<{
       createRequirementProfileSubmission: {
         id: string;
@@ -177,35 +183,21 @@ describe('GraphQL API Integration', () => {
           profileId,
           membershipId: null,
           membershipRequestId: null,
-          status: 'SUBMITTED',
-          submittedAt: new Date().toISOString(),
           fulfillments: [
             {
-              requirementId: createdRequirements.find(
-                (item) => item.type === 'DOCUMENT',
-              )?.id,
-              status: 'SUBMITTED',
+              requirementId: requirementIdFor('DOCUMENT'),
               documentId: 'doc-123',
             },
             {
-              requirementId: createdRequirements.find(
-                (item) => item.type === 'CHECK',
-              )?.id,
-              status: 'SUBMITTED',
+              requirementId: requirementIdFor('CHECK'),
               checked: true,
             },
             {
-              requirementId: createdRequirements.find(
-                (item) => item.type === 'DATE',
-              )?.id,
-              status: 'SUBMITTED',
+              requirementId: requirementIdFor('DATE'),
               date: new Date('2026-01-01T00:00:00.000Z').toISOString(),
             },
             {
-              requirementId: createdRequirements.find(
-                (item) => item.type === 'TEXT',
-              )?.id,
-              status: 'SUBMITTED',
+              requirementId: requirementIdFor('TEXT'),
               text: 'This is the text fulfillment.',
             },
           ],
