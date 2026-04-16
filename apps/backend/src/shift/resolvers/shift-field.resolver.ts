@@ -1,6 +1,9 @@
 import { Parent, ResolveField, Resolver } from '@nestjs/graphql';
-import { PERMISSIONS } from '../../auth/constants';
-import { Permissions } from '../../auth/decorators/permissions.decorator';
+import {
+  AllowAnonymous,
+  Session,
+  type UserSession,
+} from '@thallesp/nestjs-better-auth';
 import { UserMapper } from '../../user/mappers/user.mapper';
 import { User } from '../../user/models/user.model';
 import { Shift } from '../models/shift.model';
@@ -14,9 +17,16 @@ export class ShiftFieldResolver {
     private readonly userMapper: UserMapper,
   ) {}
 
-  @Permissions(PERMISSIONS.SHIFT_READ)
-  @ResolveField(() => User)
-  async createdBy(@Parent() shift: ShiftEntity): Promise<User> {
+  @AllowAnonymous()
+  @ResolveField(() => User, { nullable: true })
+  async createdBy(
+    @Parent() shift: ShiftEntity,
+    @Session() session: UserSession,
+  ): Promise<User | null> {
+    if (!session?.user) {
+      return null;
+    }
+
     const creator = await this.shiftService.findCreator(shift.createdById);
     return this.userMapper.toModelOrThrow(creator);
   }
