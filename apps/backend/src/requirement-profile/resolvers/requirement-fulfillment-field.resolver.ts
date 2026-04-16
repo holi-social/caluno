@@ -2,6 +2,7 @@ import { Parent, ResolveField, Resolver } from '@nestjs/graphql';
 import { UserMapper } from '../../user/mappers/user.mapper';
 import { User } from '../../user/models/user.model';
 import { UserService } from '../../user/user.service';
+import { OrganizationUserProfileMapper } from '../mappers/organization-user-profile.mapper';
 import { RequirementMapper } from '../mappers/requirement.mapper';
 import { RequirementProfileSubmissionMapper } from '../mappers/requirement-profile-submission.mapper';
 import { OrganizationUserProfile } from '../models/organization-user-profile.model';
@@ -10,7 +11,6 @@ import { RequirementFulfillment } from '../models/requirement-fulfillment.model'
 import { RequirementProfileSubmission } from '../models/requirement-profile-submission.model';
 import type { RequirementFulfillmentEntity } from '../schemas/requirement-fulfillment.schema';
 import { RequirementProfileSubmissionService } from '../services';
-import { OrganizationUserProfileMapper } from '../mappers/organization-user-profile.mapper';
 
 @Resolver(() => RequirementFulfillment)
 export class RequirementFulfillmentFieldResolver {

@@ -1,4 +1,4 @@
-import type { Meta, StoryObj } from "@storybook/react-vite";
+import type { Meta, StoryObj } from '@storybook/react-vite';
 import {
   Check,
   CheckIcon,
@@ -14,8 +14,8 @@ import {
   SearchIcon,
   Star,
   StarIcon,
-} from "lucide-react";
-import * as React from "react";
+} from 'lucide-react';
+import * as React from 'react';
 
 import {
   InputGroup,
@@ -24,23 +24,23 @@ import {
   InputGroupInput,
   InputGroupText,
   InputGroupTextarea,
-} from "@/components/base/input-group";
-import { Label } from "@/components/base/label";
+} from '@/components/base/input-group';
+import { Label } from '@/components/base/label';
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-} from "@/components/base/popover";
+} from '@/components/base/popover';
 
 /**
  * Display additional information or actions to an input or textarea.
  */
 const meta: Meta<typeof InputGroup> = {
-  title: "ui/radix/InputGroup",
+  title: 'ui/radix/InputGroup',
   component: InputGroup,
-  tags: ["autodocs"],
+  tags: ['autodocs'],
   parameters: {
-    layout: "centered",
+    layout: 'centered',
   },
 } satisfies Meta<typeof InputGroup>;
 
@@ -152,7 +152,7 @@ export const WithButtons: Story = {
               title="Copy"
               size="icon-xs"
               onClick={() => {
-                copyToClipboard("https://x.com/shadcn");
+                copyToClipboard('https://x.com/shadcn');
               }}
             >
               {isCopied ? <Check /> : <Copy />}
@@ -242,7 +242,6 @@ export const WithTextarea: Story = {
   },
 };
 
-
 /**
  * Add labels within input groups to improve accessibility.
  */
@@ -261,10 +260,8 @@ export const WithLabels: Story = {
           <Label htmlFor="email-2" className="text-foreground">
             Email
           </Label>
-
         </InputGroupAddon>
       </InputGroup>
     </div>
   ),
 };
-

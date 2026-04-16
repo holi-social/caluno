@@ -1,7 +1,7 @@
-import type { Meta, StoryObj } from "@storybook/react-vite";
-import * as React from "react";
+import type { Meta, StoryObj } from '@storybook/react-vite';
+import * as React from 'react';
 
-import { Checkbox } from "@/components/base/checkbox";
+import { Checkbox } from '@/components/base/checkbox';
 import {
   Field,
   FieldContent,
@@ -12,40 +12,37 @@ import {
   FieldSeparator,
   FieldSet,
   FieldTitle,
-} from "@/components/base/field";
-import { Input } from "@/components/input";
-import {
-  RadioGroup,
-  RadioGroupItem,
-} from "@/components/base/radio-group";
+} from '@/components/base/field';
+import { RadioGroup, RadioGroupItem } from '@/components/base/radio-group';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/base/select";
-import { Switch } from "@/components/base/switch";
-import { Textarea } from "@/components/base/textarea";
+} from '@/components/base/select';
+import { Switch } from '@/components/base/switch';
+import { Textarea } from '@/components/base/textarea';
+import { Input } from '@/components/input';
 
 /**
  * Combine labels, controls, and help text to compose accessible form fields and grouped inputs.
  */
 const meta: Meta<typeof Field> = {
-  title: "ui/radix/Field",
+  title: 'ui/radix/Field',
   component: Field,
-  tags: ["autodocs"],
+  tags: ['autodocs'],
   argTypes: {
     orientation: {
-      control: "select",
-      options: ["vertical", "horizontal", "responsive"],
+      control: 'select',
+      options: ['vertical', 'horizontal', 'responsive'],
     },
   },
   parameters: {
-    layout: "centered",
+    layout: 'centered',
   },
   args: {
-    orientation: "vertical",
+    orientation: 'vertical',
   },
   decorators: (Story) => (
     <div className="w-full min-w-sm max-w-md">

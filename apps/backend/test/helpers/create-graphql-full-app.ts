@@ -41,16 +41,25 @@ const getNewestModifiedAtMs = (directoryPath: string): number => {
   return newestModifiedAtMs;
 };
 
-const isBackendBuildStale = (backendRoot: string, buildMarker: string): boolean => {
+const isBackendBuildStale = (
+  backendRoot: string,
+  buildMarker: string,
+): boolean => {
   if (!existsSync(buildMarker)) {
     return true;
   }
 
   const buildModifiedAtMs = statSync(buildMarker).mtimeMs;
   const sourceModifiedAtMs = getNewestModifiedAtMs(join(backendRoot, 'src'));
-  const testHelperModifiedAtMs = getNewestModifiedAtMs(join(backendRoot, 'test'));
-  const tsconfigModifiedAtMs = statSync(join(backendRoot, 'tsconfig.json')).mtimeMs;
-  const packageJsonModifiedAtMs = statSync(join(backendRoot, 'package.json')).mtimeMs;
+  const testHelperModifiedAtMs = getNewestModifiedAtMs(
+    join(backendRoot, 'test'),
+  );
+  const tsconfigModifiedAtMs = statSync(
+    join(backendRoot, 'tsconfig.json'),
+  ).mtimeMs;
+  const packageJsonModifiedAtMs = statSync(
+    join(backendRoot, 'package.json'),
+  ).mtimeMs;
   const newestInputModifiedAtMs = Math.max(
     sourceModifiedAtMs,
     testHelperModifiedAtMs,

@@ -1,21 +1,21 @@
-import { expect, fn, userEvent } from "storybook/test";
-import type { Meta, StoryObj } from "@storybook/react-vite";
-import { REGEXP_ONLY_DIGITS, REGEXP_ONLY_DIGITS_AND_CHARS } from "input-otp";
+import type { Meta, StoryObj } from '@storybook/react-vite';
+import { REGEXP_ONLY_DIGITS, REGEXP_ONLY_DIGITS_AND_CHARS } from 'input-otp';
+import { expect, fn, userEvent } from 'storybook/test';
 
 import {
   InputOTP,
   InputOTPGroup,
   InputOTPSeparator,
   InputOTPSlot,
-} from "@/components/base/input-otp";
+} from '@/components/base/input-otp';
 
 /**
  * Accessible one-time password component with copy paste functionality.
  */
 const meta = {
-  title: "ui/radix/InputOTP",
+  title: 'ui/radix/InputOTP',
   component: InputOTP,
-  tags: ["autodocs"],
+  tags: ['autodocs'],
   argTypes: {},
   args: {
     maxLength: 6,
@@ -23,7 +23,7 @@ const meta = {
     onComplete: fn(),
     pattern: REGEXP_ONLY_DIGITS_AND_CHARS,
     children: null,
-    "aria-label": "One-time password",
+    'aria-label': 'One-time password',
   },
 
   render: (args) => (
@@ -39,7 +39,7 @@ const meta = {
     </InputOTP>
   ),
   parameters: {
-    layout: "centered",
+    layout: 'centered',
   },
 } satisfies Meta<typeof InputOTP>;
 
@@ -83,19 +83,19 @@ export const SeparatedGroup: Story = {
 };
 
 export const ShouldAcceptTextWhenTyping: Story = {
-  name: "when typing text, should call onChange and onComplete",
-  tags: ["!dev", "!autodocs"],
+  name: 'when typing text, should call onChange and onComplete',
+  tags: ['!dev', '!autodocs'],
   play: async ({ args, canvas, step }) => {
-    const inputTextbox = await canvas.findByRole("textbox");
+    const inputTextbox = await canvas.findByRole('textbox');
 
-    await step("type into input textbox", async () => {
+    await step('type into input textbox', async () => {
       await userEvent.click(inputTextbox);
-      await userEvent.type(inputTextbox, "mocked");
+      await userEvent.type(inputTextbox, 'mocked');
       expect(args.onChange).toHaveBeenCalledTimes(6);
     });
 
-    await step("finish typing by pressing Enter", async () => {
-      await userEvent.keyboard("{enter}");
+    await step('finish typing by pressing Enter', async () => {
+      await userEvent.keyboard('{enter}');
       expect(args.onComplete).toHaveBeenCalledTimes(1);
     });
   },
@@ -103,24 +103,24 @@ export const ShouldAcceptTextWhenTyping: Story = {
 
 export const ShouldAcceptOnlyNumbersWhenRestricted: Story = {
   ...OnlyNumbers,
-  name: "when only numbers are allowed, should call onChange for numbers and onComplete",
-  tags: ["!dev", "!autodocs"],
+  name: 'when only numbers are allowed, should call onChange for numbers and onComplete',
+  tags: ['!dev', '!autodocs'],
   play: async ({ args, canvas, step }) => {
-    const inputTextbox = await canvas.findByRole("textbox");
+    const inputTextbox = await canvas.findByRole('textbox');
 
-    await step("type text into input textbox", async () => {
+    await step('type text into input textbox', async () => {
       await userEvent.click(inputTextbox);
-      await userEvent.type(inputTextbox, "mocked");
+      await userEvent.type(inputTextbox, 'mocked');
       expect(args.onChange).toHaveBeenCalledTimes(0);
     });
 
-    await step("type numbers into input textbox", async () => {
-      await userEvent.type(inputTextbox, "123456");
+    await step('type numbers into input textbox', async () => {
+      await userEvent.type(inputTextbox, '123456');
       expect(args.onChange).toHaveBeenCalledTimes(6);
     });
 
-    await step("finish typing by pressing Enter", async () => {
-      await userEvent.keyboard("{enter}");
+    await step('finish typing by pressing Enter', async () => {
+      await userEvent.keyboard('{enter}');
       expect(args.onComplete).toHaveBeenCalledTimes(1);
     });
   },

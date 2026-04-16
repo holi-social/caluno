@@ -1,5 +1,5 @@
-import type { Meta, StoryObj } from "@storybook/react-vite";
-
+import type { Meta, StoryObj } from '@storybook/react-vite';
+import { expect, userEvent, within } from 'storybook/test';
 import {
   Command,
   CommandEmpty,
@@ -8,19 +8,18 @@ import {
   CommandItem,
   CommandList,
   CommandSeparator,
-} from "@/components/base/command";
-import { expect, userEvent, within } from "storybook/test";
+} from '@/components/base/command';
 
 /**
  * Fast, composable, unstyled command menu for React.
  */
 const meta = {
-  title: "ui/radix/Command",
+  title: 'ui/radix/Command',
   component: Command,
-  tags: ["autodocs"],
+  tags: ['autodocs'],
   argTypes: {},
   args: {
-    className: "rounded-lg w-96 border shadow-md",
+    className: 'rounded-lg w-96 border shadow-md',
   },
   render: (args) => (
     <Command {...args}>
@@ -42,7 +41,7 @@ const meta = {
     </Command>
   ),
   parameters: {
-    layout: "centered",
+    layout: 'centered',
   },
 } satisfies Meta<typeof Command>;
 
@@ -56,30 +55,30 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {};
 
 export const TypingInCombobox: Story = {
-  name: "when typing into the combobox, should filter results",
-  tags: ["!dev", "!autodocs"],
+  name: 'when typing into the combobox, should filter results',
+  tags: ['!dev', '!autodocs'],
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    const input = canvas.getByRole("combobox");
+    const input = canvas.getByRole('combobox');
 
     // Search for "calendar" which should return a single result
-    await userEvent.type(input, "calen", { delay: 100 });
-    expect(canvas.getAllByRole("option", { name: /calendar/i })).toHaveLength(
+    await userEvent.type(input, 'calen', { delay: 100 });
+    expect(canvas.getAllByRole('option', { name: /calendar/i })).toHaveLength(
       1,
     );
 
     await userEvent.clear(input);
 
     // Search for "story" which should return multiple results
-    await userEvent.type(input, "se", { delay: 100 });
-    expect(canvas.getAllByRole("option").length).toBeGreaterThan(1);
-    expect(canvas.getAllByRole("option", { name: /search/i })).toHaveLength(1);
+    await userEvent.type(input, 'se', { delay: 100 });
+    expect(canvas.getAllByRole('option').length).toBeGreaterThan(1);
+    expect(canvas.getAllByRole('option', { name: /search/i })).toHaveLength(1);
 
     await userEvent.clear(input);
 
     // Search for "story" which should return no results
-    await userEvent.type(input, "story", { delay: 100 });
-    expect(canvas.queryAllByRole("option", { hidden: false })).toHaveLength(0);
+    await userEvent.type(input, 'story', { delay: 100 });
+    expect(canvas.queryAllByRole('option', { hidden: false })).toHaveLength(0);
     expect(canvas.getByText(/no results/i)).toBeVisible();
   },
 };

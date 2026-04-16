@@ -3,6 +3,7 @@ import { DatabaseModule } from '../database/database.module';
 import { MembershipMapper } from '../membership/mappers/membership.mepper';
 import { MembershipRequestMapper } from '../membership/mappers/membership-request.mepper';
 import { UserModule } from '../user/user.module';
+import { OrganizationUserProfileMapper } from './mappers/organization-user-profile.mapper';
 import { RequirementMapper } from './mappers/requirement.mapper';
 import { RequirementFulfillmentMapper } from './mappers/requirement-fulfillment.mapper';
 import { RequirementProfileMapper } from './mappers/requirement-profile.mapper';
@@ -25,7 +26,6 @@ import {
   RequirementProfileSubmissionService,
   RequirementService,
 } from './services';
-import { OrganizationUserProfileMapper } from './mappers/organization-user-profile.mapper';
 
 @Module({
   imports: [DatabaseModule, UserModule],

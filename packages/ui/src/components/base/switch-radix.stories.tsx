@@ -1,19 +1,19 @@
-import { expect, userEvent } from "storybook/test";
-import type { Meta, StoryObj } from "@storybook/react-vite";
+import type { Meta, StoryObj } from '@storybook/react-vite';
+import { expect, userEvent } from 'storybook/test';
 
-import { Label } from "@/components/base/label";
-import { Switch } from "@/components/base/switch";
+import { Label } from '@/components/base/label';
+import { Switch } from '@/components/base/switch';
 
 /**
  * A control that allows the user to toggle between checked and not checked.
  */
 const meta: Meta<typeof Switch> = {
-  title: "ui/radix/Switch",
+  title: 'ui/radix/Switch',
   component: Switch,
-  tags: ["autodocs"],
+  tags: ['autodocs'],
   argTypes: {},
   parameters: {
-    layout: "centered",
+    layout: 'centered',
   },
   render: (args) => (
     <div className="flex items-center space-x-2">
@@ -21,7 +21,7 @@ const meta: Meta<typeof Switch> = {
       <Label htmlFor={args.id}>Airplane Mode</Label>
     </div>
   ),
-}
+};
 
 export default meta;
 
@@ -32,7 +32,7 @@ type Story = StoryObj<typeof meta>;
  */
 export const Default: Story = {
   args: {
-    id: "default-switch",
+    id: 'default-switch',
   },
 };
 
@@ -41,23 +41,23 @@ export const Default: Story = {
  */
 export const Disabled: Story = {
   args: {
-    id: "disabled-switch",
+    id: 'disabled-switch',
     disabled: true,
   },
 };
 
 export const ShouldToggle: Story = {
-  name: "when clicking the switch, should toggle it on and off",
-  tags: ["!dev", "!autodocs"],
+  name: 'when clicking the switch, should toggle it on and off',
+  tags: ['!dev', '!autodocs'],
   play: async ({ canvas, step }) => {
-    const switchBtn = await canvas.findByRole("switch");
+    const switchBtn = await canvas.findByRole('switch');
 
-    await step("toggle the switch on", async () => {
+    await step('toggle the switch on', async () => {
       await userEvent.click(switchBtn);
       await expect(switchBtn).toBeChecked();
     });
 
-    await step("toggle the switch off", async () => {
+    await step('toggle the switch off', async () => {
       await userEvent.click(switchBtn);
       await expect(switchBtn).not.toBeChecked();
     });

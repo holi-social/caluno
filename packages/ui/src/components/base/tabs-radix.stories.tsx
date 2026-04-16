@@ -1,25 +1,25 @@
-import { expect, userEvent, waitFor } from "storybook/test";
-import type { Meta, StoryObj } from "@storybook/react-vite";
+import type { Meta, StoryObj } from '@storybook/react-vite';
+import { expect, userEvent, waitFor } from 'storybook/test';
 
 import {
   Tabs,
   TabsContent,
   TabsList,
   TabsTrigger,
-} from "@/components/base/tabs";
+} from '@/components/base/tabs';
 
 /**
  * A set of layered sections of content—known as tab panels—that are displayed
  * one at a time.
  */
 const meta: Meta<typeof Tabs> = {
-  title: "ui/radix/Tabs",
+  title: 'ui/radix/Tabs',
   component: Tabs,
-  tags: ["autodocs"],
+  tags: ['autodocs'],
   argTypes: {},
   args: {
-    defaultValue: "account",
-    className: "w-96",
+    defaultValue: 'account',
+    className: 'w-96',
   },
   render: (args) => (
     <Tabs {...args}>
@@ -34,7 +34,7 @@ const meta: Meta<typeof Tabs> = {
     </Tabs>
   ),
   parameters: {
-    layout: "centered",
+    layout: 'centered',
   },
 };
 
@@ -48,28 +48,30 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {};
 
 export const ShouldChangeTabs: Story = {
-  name: "when clicking a tab, should change the content",
-  tags: ["!dev", "!autodocs"],
+  name: 'when clicking a tab, should change the content',
+  tags: ['!dev', '!autodocs'],
   play: async ({ canvas, step }) => {
-    const tabs = await canvas.findAllByRole("tab");
+    const tabs = await canvas.findAllByRole('tab');
 
     for (let i = 0; i < tabs.length; i++) {
       await step(`click the '${tabs[i]!.innerText}' tab`, async () => {
         await userEvent.click(tabs[i]!);
         await waitFor(() =>
-          expect(tabs[i]).toHaveAttribute("aria-selected", "true"),
+          expect(tabs[i]).toHaveAttribute('aria-selected', 'true'),
         );
         await expect(
-          await canvas.queryByRole("tabpanel", { name: tabs[i]?.innerText }),
+          await canvas.queryByRole('tabpanel', { name: tabs[i]?.innerText }),
         ).toBeVisible();
       });
 
-      await step("check other tabs are not selected", async () => {
+      await step('check other tabs are not selected', async () => {
         for (let j = 0; j < tabs.length; j++) {
           if (j !== i) {
-            expect(tabs[j]).toHaveAttribute("aria-selected", "false");
+            expect(tabs[j]).toHaveAttribute('aria-selected', 'false');
             expect(
-              await canvas.queryByRole("tabpanel", { name: tabs[j]?.innerText }),
+              await canvas.queryByRole('tabpanel', {
+                name: tabs[j]?.innerText,
+              }),
             ).toBeNull();
           }
         }

@@ -1,18 +1,14 @@
-import type { Meta, StoryObj } from "@storybook/react-vite";
+import type { Meta, StoryObj } from '@storybook/react-vite';
 
-import {
-  Avatar,
-  AvatarFallback,
-  AvatarImage,
-} from "@/components/base/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/base/avatar';
 
 /**
  * An image element with a fallback for representing the user.
  */
 const meta: Meta<typeof Avatar> = {
-  title: "ui/radix/Avatar",
+  title: 'ui/radix/Avatar',
   component: Avatar,
-  tags: ["autodocs"],
+  tags: ['autodocs'],
   argTypes: {},
   render: (args) => (
     <Avatar {...args}>
@@ -21,9 +17,9 @@ const meta: Meta<typeof Avatar> = {
     </Avatar>
   ),
   parameters: {
-    layout: "centered",
+    layout: 'centered',
   },
-}
+};
 
 export default meta;
 
