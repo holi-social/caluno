@@ -127,7 +127,6 @@ type Organization {
   slug: String!
   units: [OrganizationUnit!]!
   updatedAt: DateTime
-  volunteers: [User!]!
   websiteUrl: String
 }
 
