@@ -210,22 +210,18 @@ describe('GraphQL API Integration', () => {
           fulfillments: [
             {
               requirementId: requirementIdByType.DOCUMENT,
-              status: 'SUBMITTED',
               documentId: 'doc-123',
             },
             {
               requirementId: requirementIdByType.CHECK,
-              status: 'SUBMITTED',
               checked: true,
             },
             {
               requirementId: requirementIdByType.DATE,
-              status: 'SUBMITTED',
               date: new Date('2026-01-01T00:00:00.000Z').toISOString(),
             },
             {
               requirementId: requirementIdByType.TEXT,
-              status: 'SUBMITTED',
               text: 'This is the text fulfillment.',
             },
           ],

@@ -27,6 +27,12 @@ export const graphqlRequest = async <TData>(
     req = req.set(header, value);
   }
 
-  const response = await req.expect(200);
+  const response = await req;
+  if (response.status !== 200) {
+    throw new Error(
+      `GraphQL request failed with status ${response.status}.\nResponse body: ${JSON.stringify(response.body)}`,
+    );
+  }
+
   return response.body as GraphqlResponse<TData>;
 };
