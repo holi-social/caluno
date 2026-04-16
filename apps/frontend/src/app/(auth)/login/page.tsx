@@ -1,6 +1,7 @@
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { getSession } from '@/lib/auth-server';
+import { getSafeRedirect } from '@/lib/safe-redirect';
 import { LoginForm } from './login-form';
 
 export default async function LoginPage() {
@@ -8,12 +9,9 @@ export default async function LoginPage() {
   const cookieStore = await cookies();
   const pendingInvite = cookieStore.get('pending_invite')?.value;
   const pendingRedirect = cookieStore.get('pending_redirect')?.value;
-  const safeRedirect =
-    pendingRedirect?.startsWith('/') && !pendingRedirect.startsWith('//')
-      ? pendingRedirect
-      : undefined;
   const redirectTo =
-    safeRedirect ?? (pendingInvite ? `/invite/${pendingInvite}` : '/');
+    getSafeRedirect(pendingRedirect) ??
+    (pendingInvite ? `/invite/${pendingInvite}` : '/');
 
   if (session) {
     redirect(redirectTo);
