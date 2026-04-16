@@ -15,9 +15,14 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **TypeScript** with strict mode
 - **Tailwind CSS 4** for styling
 - **Biome** for linting and formatting (not ESLint/Prettier)
-- **shadcn/ui** component patterns with CVA (Class Variance Authority)
 
-## Architecture
+## New features
+
+When building new features always study UI/UX patterns in existing similar features before starting a new one. We want to build an app that has a consistent experience across features.
+
+- List pages, follow the pattern in `src/app/(dashboard)/[orgUId]/shifts/page.tsx`
+- Detail pages, follow the pattern in `src/app/(dashboard)/[orgUId]/shifts/[shiftId]/page.tsx`
+- Create or edit pages, use a Sheet and follow the pattern in `src/components/sheets/shift-sheet.tsx`
 
 ### Path Aliases
 Use `@/*` to import from `src/*` (e.g., `@/lib/something`).
