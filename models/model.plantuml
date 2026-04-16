@@ -33,9 +33,7 @@ package "User & Profile" {
         ...
     }
     class OrganisationUserProfile {
-        canAccessPhoneNumber
-        canAccessAddress
-        canAccessBankAccountNumber
+        userProfileAccessApproved
         note
         status {pending, active, blacklisted, inactive}
     }
@@ -98,25 +96,34 @@ package RequirementProfiles {
         reviewedAt
         reviewedBy
     }
-    class RequirementFulfillment {
-        value: text/JSON
+    interface RequirementFulfillment {
+        type: string
+        value: string
         status {draft, submitted, approved, rejected}
         submittedAt
         reviewedAt
         reviewedBy
     }
+    class RequirementFulfillmentUpload {
+    }
+    class RequirementFulfillmentCheck {
+    }
+    class RequirementFulfillmentText {
+    }
+    class RequirementFulfillmentDate {
+    }
 }
 
 
 
-Organisation [root] -- "1" OrgUnit
+Organisation [root] "1" -- "1" OrgUnit
 OrgUnit "*" -up- "1" OrgUnitType : "categorized by >"
 OrgUnit "*\nchild" o-- "1\nparent" OrgUnit
 
 OrgUnit "1" -- "*" Membership
 Membership "*" -- "1" User
 
-Organisation "1" -- "*"OrganisationUserProfile : "owns >"
+Organisation "1" -- "*" OrganisationUserProfile : "owns >"
 OrganisationUserProfile "*" -- "1" User
 
 OrgUnit "1" -- "*" MembershipRequest : "receives >"
@@ -129,18 +136,22 @@ Role "*" -left- "*" Permission : "groups >"
 Role "*" -- "*" Membership
 Organisation "1" -- "*" Role : "defines >"
 
-OrgUnit -- "*" RequirementProfile : "selects favorites >"
+OrgUnit "*" -- "*" RequirementProfile : "mark as favorite >"
 Organisation "1" -- "*" RequirementProfile : "defines >"
 Organisation "1" -- "*" Requirement : "defines >"
 RequirementProfile "*" -right- "*" Requirement : "groups >"
 User "1" -up- "*" Document : "owns >"
-RequirementFulfillment "*" -- "0..1" Document : "backed by >"
+RequirementFulfillmentUpload "*" -- "0..1" Document : "backed by >"
 Membership "0..1" -right- "*" RequirementProfileSubmission
-RequirementProfileSubmission -right- "*" RequirementFulfillment
+RequirementProfileSubmission "*" -right- "*" RequirementFulfillment
 MembershipRequest "0..1" -- "*" RequirementProfileSubmission
 RequirementProfileSubmission "*" -up- "1" RequirementProfile : "fulfills >"
 RequirementFulfillment "*" -up- "1" Requirement : "fulfills >"
 RequirementFulfillment "*" -- "1" OrganisationUserProfile : "store for reuse <"
+RequirementFulfillmentUpload .up.|> RequirementFulfillment
+RequirementFulfillmentCheck .up.|> RequirementFulfillment
+RequirementFulfillmentText .up.|> RequirementFulfillment
+RequirementFulfillmentDate .up.|> RequirementFulfillment
 
 OrganisationUserProfile "1" -- "*" IncidentReport
 IncidentReport "*" -right- "1" User : "reported by >"

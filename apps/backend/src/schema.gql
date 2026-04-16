@@ -39,6 +39,36 @@ input CreateOrganizationUnitInput {
   websiteUrl: String
 }
 
+input CreateRequirementInput {
+  description: String
+  mandatory: Boolean! = false
+  name: String!
+  organizationId: String!
+  type: RequirementType!
+}
+
+input CreateRequirementProfileInput {
+  description: String
+  name: String!
+  organizationId: String!
+  requirementIds: [String!]
+}
+
+input CreateRequirementProfileSubmissionInput {
+  fulfillments: [CreateRequirementSubmissionFulfillmentInput!]
+  membershipId: String
+  membershipRequestId: String
+  profileId: String!
+}
+
+input CreateRequirementSubmissionFulfillmentInput {
+  checked: Boolean
+  date: DateTime
+  documentId: String
+  requirementId: String!
+  text: String
+}
+
 input CreateRoleInput {
   description: String
   name: String!
@@ -101,15 +131,26 @@ type Mutation {
   createMembershipRequest(organizationUnitId: ID!): MembershipRequest!
   createOrganization(input: CreateOrganizationInput!): Organization!
   createOrganizationUnit(input: CreateOrganizationUnitInput!): OrganizationUnit!
+  createRequirement(input: CreateRequirementInput!): Requirement!
+  createRequirementProfile(input: CreateRequirementProfileInput!): RequirementProfile!
+  createRequirementProfileSubmission(input: CreateRequirementProfileSubmissionInput!): RequirementProfileSubmission!
   createRole(input: CreateRoleInput!): Role!
   createShift(input: CreateShiftInput!): Shift!
   deleteOrganizationUnit(id: String!): OrganizationUnit!
+  deleteRequirement(id: String!): Requirement!
+  deleteRequirementFulfillment(id: String!): RequirementFulfillment!
+  deleteRequirementProfile(id: String!): RequirementProfile!
+  deleteRequirementProfileSubmission(id: String!): RequirementProfileSubmission!
   deleteRole(id: ID!): Role!
   deleteShift(id: String!): Shift!
   deleteTimeEntry(id: ID!): TimeEntry!
   inviteMembersToShift(memberIds: [String!]!, shiftId: String!): Shift!
   rejectMembershipRequest(id: ID!, organizationUnitId: ID!, rejectionReason: String!): MembershipRequest!
   updateOrganizationUnit(id: String!, input: UpdateOrganizationUnitInput!): OrganizationUnit!
+  updateRequirement(id: String!, input: UpdateRequirementInput!): Requirement!
+  updateRequirementFulfillment(id: String!, input: UpdateRequirementFulfillmentInput!): RequirementFulfillment!
+  updateRequirementProfile(id: String!, input: UpdateRequirementProfileInput!): RequirementProfile!
+  updateRequirementProfileSubmission(id: String!, input: UpdateRequirementProfileSubmissionInput!): RequirementProfileSubmission!
   updateRole(id: ID!, input: CreateRoleInput!): Role!
   updateShift(id: String!, input: UpdateShiftInput!): Shift!
 }
@@ -164,6 +205,20 @@ type OrganizationUnitType {
   name: String!
 }
 
+type OrganizationUserProfile {
+  id: ID!
+  note: String
+  status: OrganizationUserProfileStatus!
+  userProfileAccessApproved: Boolean!
+}
+
+enum OrganizationUserProfileStatus {
+  ACTIVE
+  BLACKLISTED
+  INACTIVE
+  PENDING
+}
+
 type PaginationInfo {
   hasMore: Boolean!
   limit: Int!
@@ -195,6 +250,22 @@ enum PermissionKey {
   ORG_UNIT_READ
   ORG_UNIT_UPDATE
   ORG_UPDATE
+  REQUIREMENT_CREATE
+  REQUIREMENT_DELETE
+  REQUIREMENT_FULFILLMENT_CREATE
+  REQUIREMENT_FULFILLMENT_DELETE
+  REQUIREMENT_FULFILLMENT_READ
+  REQUIREMENT_FULFILLMENT_UPDATE
+  REQUIREMENT_PROFILE_CREATE
+  REQUIREMENT_PROFILE_DELETE
+  REQUIREMENT_PROFILE_READ
+  REQUIREMENT_PROFILE_SUBMISSION_CREATE
+  REQUIREMENT_PROFILE_SUBMISSION_DELETE
+  REQUIREMENT_PROFILE_SUBMISSION_READ
+  REQUIREMENT_PROFILE_SUBMISSION_UPDATE
+  REQUIREMENT_PROFILE_UPDATE
+  REQUIREMENT_READ
+  REQUIREMENT_UPDATE
   ROLE_CREATE
   ROLE_DELETE
   ROLE_READ
@@ -216,13 +287,21 @@ type Query {
   membership(organizationUnitId: ID!): Membership!
   membershipRequests(limit: Int! = 10, offset: Int! = 0, organizationUnitId: ID!, status: MembershipRequestStatus): MembershipRequestPaginatedResponse!
   myMembershipRequests(limit: Int! = 10, offset: Int! = 0, status: MembershipRequestStatus): MembershipRequestPaginatedResponse!
-  organization(id: String!): Organization!
+  organization(id: String!): Organization
   organizationBySlug(slug: String!): Organization!
   organizationUnit(id: String!): OrganizationUnit
   organizationUnitBySlug(slug: String!): OrganizationUnit
   organizationUnits(limit: Int! = 10, offset: Int! = 0, organizationId: String!): OrganizationUnitPaginatedResponse!
   organizations(limit: Int! = 10, offset: Int! = 0): OrganizationPaginatedResponse!
   permissions: [Permission!]!
+  requirement(id: String!): Requirement
+  requirementFulfillment(id: String!): RequirementFulfillment
+  requirementFulfillments(limit: Int! = 10, offset: Int! = 0): RequirementFulfillmentPaginatedResponse!
+  requirementProfile(id: String!): RequirementProfile
+  requirementProfileSubmission(id: String!): RequirementProfileSubmission
+  requirementProfileSubmissions(limit: Int! = 10, offset: Int! = 0): RequirementProfileSubmissionPaginatedResponse!
+  requirementProfiles(limit: Int! = 10, offset: Int! = 0): RequirementProfilePaginatedResponse!
+  requirements(limit: Int! = 10, offset: Int! = 0): RequirementPaginatedResponse!
   roles: [Role!]!
   shift(id: String!): Shift!
   shifts(limit: Int! = 10, offset: Int! = 0): ShiftPaginatedResponse!
@@ -230,6 +309,146 @@ type Query {
   timeEntriesByUser(limit: Int! = 10, offset: Int! = 0, userId: String!): TimeEntryPaginatedResponse!
   user(id: String!): User
   userByCheckInId(checkInId: String!): User
+}
+
+type Requirement {
+  description: String
+  id: ID!
+  mandatory: Boolean!
+  name: String!
+  organizationId: String!
+  type: RequirementType!
+}
+
+interface RequirementFulfillment {
+  id: ID!
+  organizationUserProfile: OrganizationUserProfile
+  requirement: Requirement!
+  reviewedAt: DateTime
+  reviewedBy: User
+  reviewer: User
+  status: RequirementFulfillmentStatus!
+  submission: RequirementProfileSubmission!
+  submittedAt: DateTime
+  type: RequirementType!
+}
+
+type RequirementFulfillmentCheck implements RequirementFulfillment {
+  checked: Boolean
+  id: ID!
+  organizationUserProfile: OrganizationUserProfile
+  requirement: Requirement!
+  reviewedAt: DateTime
+  reviewedBy: User
+  reviewer: User
+  status: RequirementFulfillmentStatus!
+  submission: RequirementProfileSubmission!
+  submittedAt: DateTime
+  type: RequirementType!
+}
+
+type RequirementFulfillmentDate implements RequirementFulfillment {
+  date: DateTime
+  id: ID!
+  organizationUserProfile: OrganizationUserProfile
+  requirement: Requirement!
+  reviewedAt: DateTime
+  reviewedBy: User
+  reviewer: User
+  status: RequirementFulfillmentStatus!
+  submission: RequirementProfileSubmission!
+  submittedAt: DateTime
+  type: RequirementType!
+}
+
+type RequirementFulfillmentPaginatedResponse {
+  items: [RequirementFulfillment!]!
+  pagination: PaginationInfo!
+}
+
+enum RequirementFulfillmentStatus {
+  APPROVED
+  DRAFT
+  REJECTED
+  SUBMITTED
+}
+
+type RequirementFulfillmentText implements RequirementFulfillment {
+  id: ID!
+  organizationUserProfile: OrganizationUserProfile
+  requirement: Requirement!
+  reviewedAt: DateTime
+  reviewedBy: User
+  reviewer: User
+  status: RequirementFulfillmentStatus!
+  submission: RequirementProfileSubmission!
+  submittedAt: DateTime
+  text: String
+  type: RequirementType!
+}
+
+type RequirementFulfillmentUpload implements RequirementFulfillment {
+  documentId: String
+  id: ID!
+  organizationUserProfile: OrganizationUserProfile
+  requirement: Requirement!
+  reviewedAt: DateTime
+  reviewedBy: User
+  reviewer: User
+  status: RequirementFulfillmentStatus!
+  submission: RequirementProfileSubmission!
+  submittedAt: DateTime
+  type: RequirementType!
+}
+
+type RequirementPaginatedResponse {
+  items: [Requirement!]!
+  pagination: PaginationInfo!
+}
+
+type RequirementProfile {
+  description: String
+  id: ID!
+  name: String!
+  organizationId: String!
+  requirements: [Requirement!]
+}
+
+type RequirementProfilePaginatedResponse {
+  items: [RequirementProfile!]!
+  pagination: PaginationInfo!
+}
+
+type RequirementProfileSubmission {
+  fulfillments: [RequirementFulfillment!]
+  id: ID!
+  membership: Membership
+  membershipRequest: MembershipRequest
+  requirementProfile: RequirementProfile!
+  reviewedAt: DateTime
+  reviewedBy: User
+  reviewer: User
+  status: RequirementProfileSubmissionStatus!
+  submittedAt: DateTime
+}
+
+type RequirementProfileSubmissionPaginatedResponse {
+  items: [RequirementProfileSubmission!]!
+  pagination: PaginationInfo!
+}
+
+enum RequirementProfileSubmissionStatus {
+  APPROVED
+  DRAFT
+  REJECTED
+  SUBMITTED
+}
+
+enum RequirementType {
+  CHECK
+  DATE
+  DOCUMENT
+  TEXT
 }
 
 type Role {
@@ -313,6 +532,35 @@ input UpdateOrganizationUnitInput {
   phone: String
   typeId: String
   websiteUrl: String
+}
+
+input UpdateRequirementFulfillmentInput {
+  checked: Boolean
+  date: DateTime
+  documentId: String
+  text: String
+}
+
+input UpdateRequirementInput {
+  description: String
+  mandatory: Boolean = false
+  name: String
+  organizationId: String
+  type: RequirementType
+}
+
+input UpdateRequirementProfileInput {
+  description: String
+  name: String
+  organizationId: String
+  requirementIds: [String!]
+}
+
+input UpdateRequirementProfileSubmissionInput {
+  fulfillments: [CreateRequirementSubmissionFulfillmentInput!]
+  membershipId: String
+  membershipRequestId: String
+  profileId: String
 }
 
 input UpdateShiftInput {

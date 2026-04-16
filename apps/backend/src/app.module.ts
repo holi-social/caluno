@@ -17,9 +17,15 @@ import { DATABASE_CONNECTION } from './database/database-connection';
 import { GraphqlModule } from './graphql/graphql.module';
 import { MembershipModule } from './membership/membership.module';
 import { OrganizationModule } from './organization/organization.module';
+import { RequirementProfileModule } from './requirement-profile/requirement-profile.module';
 import { ShiftModule } from './shift/shift.module';
 import { TimeTrackingModule } from './time-tracking/time-tracking.module';
 import { UserModule } from './user/user.module';
+
+const autoSchemaFile =
+  process.env.NODE_ENV === 'test'
+    ? true
+    : join(process.cwd(), 'src/schema.gql');
 
 @Module({
   imports: [
@@ -29,7 +35,7 @@ import { UserModule } from './user/user.module';
     DatabaseModule,
     GraphQLModule.forRoot<ApolloDriverConfig>({
       driver: ApolloDriver,
-      autoSchemaFile: join(process.cwd(), 'src/schema.gql'),
+      autoSchemaFile,
       graphiql: true,
       sortSchema: true,
       fieldResolverEnhancers: ['guards'],
@@ -54,6 +60,7 @@ import { UserModule } from './user/user.module';
     }),
     UserModule,
     OrganizationModule,
+    RequirementProfileModule,
     MembershipModule,
     TimeTrackingModule,
     GraphqlModule,
