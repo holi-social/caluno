@@ -35,10 +35,10 @@ export class OrganizationRepository extends BaseRepository {
     }
   }
 
-  async findVolunteersByUnit(id: string) {
+  async findVolunteersByUnit(organizationUnitId: string) {
     try {
       const data = await this.sdk.GetOrganizationVolunteersByUnit({
-        id,
+        id: organizationUnitId,
       });
       return data.members ?? [];
     } catch (error) {

@@ -147,14 +147,16 @@ export default async function ShiftViewPage({ params }: ShiftViewPageProps) {
                   </dd>
                 </div>
 
-                <div>
-                  <dt className="text-muted-foreground mb-2 flex gap-2 items-center">
-                    <User className="size-4 shrink-0" /> Created by
-                  </dt>
-                  <dd className="ml-6">
-                    <UserCard user={shift.createdBy} size="sm" hideEmail />
-                  </dd>
-                </div>
+                {shift.createdBy && (
+                  <div>
+                    <dt className="text-muted-foreground mb-2 flex gap-2 items-center">
+                      <User className="size-4 shrink-0" /> Created by
+                    </dt>
+                    <dd className="ml-6">
+                      <UserCard user={shift.createdBy} size="sm" hideEmail />
+                    </dd>
+                  </div>
+                )}
 
                 <div>
                   <dt className="text-muted-foreground mb-2 flex gap-2 items-center">
