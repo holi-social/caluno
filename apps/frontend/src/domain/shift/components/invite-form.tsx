@@ -1,10 +1,10 @@
 'use client';
 
-import { useOrgUId } from '@repo/data/react';
+import { useOrgUId, useVolunteers } from '@repo/data/react';
 import { Button, Field } from '@repo/ui';
 import { useState, useTransition } from 'react';
+import { MemberSelect } from '@/components/member-select';
 import { inviteShiftVolunteers } from '../actions';
-import { InviteList } from './invite-list';
 
 interface InviteShiftFormProps {
   shiftId: string;
@@ -21,6 +21,8 @@ export function InviteShiftForm({
   const [memberIds, setMemberIds] = useState<string[]>([]);
   const [serverError, setServerError] = useState<string | null>(null);
   const orgUId = useOrgUId();
+
+  const { data: volunteers } = useVolunteers(orgUId);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -48,8 +50,8 @@ export function InviteShiftForm({
       )}
 
       <Field>
-        <InviteList
-          organizationUnitId={orgUId}
+        <MemberSelect
+          members={volunteers}
           value={memberIds}
           onChange={setMemberIds}
         />
