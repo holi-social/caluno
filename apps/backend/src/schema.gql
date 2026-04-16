@@ -283,6 +283,7 @@ enum PermissionKey {
 type Query {
   activeShifts(limit: Int! = 10, offset: Int! = 0): ShiftInstancePaginatedResponse!
   me: User!
+  members(organizationUnitId: ID!): [User!]!
   membership(organizationUnitId: ID!): Membership!
   membershipRequests(limit: Int! = 10, offset: Int! = 0, organizationUnitId: ID!, status: MembershipRequestStatus): MembershipRequestPaginatedResponse!
   myMembershipRequests(limit: Int! = 10, offset: Int! = 0, status: MembershipRequestStatus): MembershipRequestPaginatedResponse!
