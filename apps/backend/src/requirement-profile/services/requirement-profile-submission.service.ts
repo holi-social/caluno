@@ -98,8 +98,6 @@ export class RequirementProfileSubmissionService {
             return {
               requirementId: fulfillment.requirementId,
               profileId: organizationUserProfile.id,
-              status: fulfillment.status,
-              submittedAt: fulfillment.submittedAt,
               submissionId: submission.id,
               type: requirementType,
               value,
@@ -351,8 +349,6 @@ export class RequirementProfileSubmissionService {
       false,
     );
     return {
-      status: input.status ?? existingFulfillment.status,
-      submittedAt: input.submittedAt ?? existingFulfillment.submittedAt,
       ...(value != null && { value }),
     };
   }

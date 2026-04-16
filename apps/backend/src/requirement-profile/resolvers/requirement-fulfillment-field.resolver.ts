@@ -37,9 +37,10 @@ export class RequirementFulfillmentFieldResolver {
   async requirement(
     @Parent() fulfillment: RequirementFulfillmentEntity,
   ): Promise<Requirement> {
-    const entity = await this.requirementProfileSubmissionService.findRequirement(
-      fulfillment.requirementId,
-    );
+    const entity =
+      await this.requirementProfileSubmissionService.findRequirement(
+        fulfillment.requirementId,
+      );
     return this.requirementMapper.toModelOrThrow(entity);
   }
 
@@ -64,10 +65,10 @@ export class RequirementFulfillmentFieldResolver {
     if (!fulfillment.organizationUserProfileId) {
       return null;
     }
-    const profile = await this.requirementProfileSubmissionService.findProfileById(
-      fulfillment.organizationUserProfileId,
-    );
+    const profile =
+      await this.requirementProfileSubmissionService.findProfileById(
+        fulfillment.organizationUserProfileId,
+      );
     return this.organizationUserProfileMapper.toModelOrThrow(profile);
   }
-
 }

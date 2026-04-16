@@ -14,9 +14,7 @@ type RequirementFulfillmentValue = {
   documentId?: string | null;
 };
 
-function parseValue(
-  value: string | null,
-): RequirementFulfillmentValue | null {
+function parseValue(value: string | null): RequirementFulfillmentValue | null {
   if (!value) {
     return null;
   }

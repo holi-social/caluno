@@ -208,8 +208,6 @@ describe('GraphQL API Integration', () => {
           profileId,
           membershipId: null,
           membershipRequestId: null,
-          status: 'SUBMITTED',
-          submittedAt: new Date().toISOString(),
           fulfillments: [
             {
               requirementId: requirementIdByType.DOCUMENT,

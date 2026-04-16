@@ -74,7 +74,7 @@ export function createServerOrgContext(deps: ServerOrgContextDeps) {
     ]);
 
     if (!org) {
-      notFound();
+      return notFound();
     }
 
     const hasAccess = myOrgsResult.items.some((o) => o.id === org.id);

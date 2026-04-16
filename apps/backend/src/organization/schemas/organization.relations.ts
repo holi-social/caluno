@@ -48,12 +48,11 @@ export const organizationRelations = defineRelationsPart(schema, (r) => ({
         r.organizationUnitFavoriteRequirementProfiles.requirementProfileId,
       ),
     }),
-    requirementProfileFavorites: r.many.organizationUnitFavoriteRequirementProfiles(
-      {
+    requirementProfileFavorites:
+      r.many.organizationUnitFavoriteRequirementProfiles({
         from: r.organizationUnits.id,
         to: r.organizationUnitFavoriteRequirementProfiles.organizationUnitId,
-      },
-    ),
+      }),
   },
   organizationUnitTypes: {
     units: r.many.organizationUnits({

@@ -39,7 +39,7 @@ export const requirementProfileSubmissions = pgTable(
     status: requirementProfileSubmissionStatusEnum('status')
       .notNull()
       .default(RequirementProfileSubmissionStatus.DRAFT),
-    submittedAt: timestamp('submitted_at'),
+    submittedAt: timestamp('submitted_at').defaultNow().notNull(),
     reviewedAt: timestamp('reviewed_at'),
     reviewedById: text('reviewed_by_id').references(() => users.id, {
       onDelete: 'set null',

@@ -1,21 +1,8 @@
 import { Field, InputType } from '@nestjs/graphql';
-import {
-  RequirementFulfillmentStatus,
-  RequirementProfileSubmissionStatus,
-} from '../enums';
-
 @InputType()
 export class CreateRequirementSubmissionFulfillmentInput {
   @Field(() => String)
   requirementId: string;
-
-  @Field(() => RequirementFulfillmentStatus, {
-    defaultValue: RequirementFulfillmentStatus.DRAFT,
-  })
-  status: RequirementFulfillmentStatus;
-
-  @Field(() => Date, { nullable: true })
-  submittedAt: Date | null;
 
   @Field(() => String, { nullable: true })
   documentId?: string | null;
@@ -40,14 +27,6 @@ export class CreateRequirementProfileSubmissionInput {
 
   @Field(() => String, { nullable: true })
   membershipRequestId: string | null;
-
-  @Field(() => RequirementProfileSubmissionStatus, {
-    defaultValue: RequirementProfileSubmissionStatus.DRAFT,
-  })
-  status: RequirementProfileSubmissionStatus;
-
-  @Field(() => Date, { nullable: true })
-  submittedAt: Date | null;
 
   @Field(() => [CreateRequirementSubmissionFulfillmentInput], {
     nullable: true,

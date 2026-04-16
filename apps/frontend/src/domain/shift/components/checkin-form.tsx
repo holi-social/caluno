@@ -43,7 +43,8 @@ export const CheckinForm = ({
 
       const result = await createTimeEntry({
         volunteerId: volunteer.id,
-        startedAt: new Date().toISOString(),
+        startedAt: new Date(),
+        endedAt: null,
         shiftInstanceId: selectedShiftId,
       });
 

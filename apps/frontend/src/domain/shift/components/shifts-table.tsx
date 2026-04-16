@@ -9,6 +9,7 @@ import {
   TableHeader,
   TableRow,
 } from '@repo/ui';
+import Link from 'next/link';
 import { formatRange } from '@/lib/formatting';
 import { ActionBar } from './action-bar';
 
@@ -19,7 +20,7 @@ type ShiftsTableProps = {
   orgUId: string;
 };
 
-const visibilityConfig = {
+export const visibilityConfig = {
   ALL_MEMBERS: { variant: 'outline' as const, label: 'Open shift' },
   INVITED_MEMBERS: { variant: 'secondary' as const, label: 'Invite only' },
 };
@@ -30,10 +31,10 @@ export function ShiftsTable({ shifts, orgUId }: ShiftsTableProps) {
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead className="text-muted-foreground">Name</TableHead>
-            <TableHead className="text-muted-foreground">First Date</TableHead>
-            <TableHead className="text-muted-foreground">Pattern</TableHead>
-            <TableHead className="text-muted-foreground">Visibility</TableHead>
+            <TableHead>Name</TableHead>
+            <TableHead>First Date</TableHead>
+            <TableHead>Pattern</TableHead>
+            <TableHead>Visibility</TableHead>
             <TableHead></TableHead>
           </TableRow>
         </TableHeader>
@@ -45,8 +46,15 @@ export function ShiftsTable({ shifts, orgUId }: ShiftsTableProps) {
             );
 
             return (
-              <TableRow key={shift.id} className="hover:bg-muted/50">
-                <TableCell>{shift.title}</TableCell>
+              <TableRow key={shift.id}>
+                <TableCell>
+                  <Link
+                    className="hover:underline block"
+                    href={`/${orgUId}/shifts/${shift.id}`}
+                  >
+                    {shift.title}
+                  </Link>
+                </TableCell>
                 <TableCell className="text-muted-foreground">
                   {formatRange(shift.originalStartsAt, endDate.toISOString())}
                 </TableCell>

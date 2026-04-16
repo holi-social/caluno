@@ -3,16 +3,15 @@
 import { format } from 'date-fns';
 import { CalendarIcon } from 'lucide-react';
 import type { DateRange } from 'react-day-picker';
-
-import { FieldLabel } from './base/field';
+import { FieldLabel } from '../base/field';
 import {
   InputGroup,
   InputGroupAddon,
   InputGroupInput,
-} from './base/input-group';
-import { Popover, PopoverContent, PopoverTrigger } from './base/popover';
-import { Calendar } from './calendar';
-import { Input } from './input';
+} from '../base/input-group';
+import { Popover, PopoverContent, PopoverTrigger } from '../base/popover';
+import { Calendar } from '../calendar';
+import { Input } from '../input';
 
 interface Props {
   id?: string;

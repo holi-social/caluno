@@ -15,7 +15,9 @@ export const requirementProfiles = pgTable(
     description: text('description'),
     ...timestampColumns,
   },
-  (table) => [index('idx_requirement_profiles_organization_id').on(table.organizationId)],
+  (table) => [
+    index('idx_requirement_profiles_organization_id').on(table.organizationId),
+  ],
 );
 
 export type RequirementProfileEntity = typeof requirementProfiles.$inferSelect;
