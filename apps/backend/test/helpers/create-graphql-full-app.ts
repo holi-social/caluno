@@ -1,5 +1,5 @@
 import { spawnSync } from 'node:child_process';
-import { existsSync } from 'node:fs';
+import { existsSync, readdirSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import type { INestApplication } from '@nestjs/common';
@@ -18,9 +18,52 @@ const getBackendRoot = () => {
     : currentWorkingDirectory;
 };
 
+const getNewestModifiedAtMs = (directoryPath: string): number => {
+  const directoryEntries = readdirSync(directoryPath, { withFileTypes: true });
+  let newestModifiedAtMs = 0;
+
+  for (const entry of directoryEntries) {
+    const entryPath = join(directoryPath, entry.name);
+    if (entry.isDirectory()) {
+      newestModifiedAtMs = Math.max(
+        newestModifiedAtMs,
+        getNewestModifiedAtMs(entryPath),
+      );
+      continue;
+    }
+
+    newestModifiedAtMs = Math.max(
+      newestModifiedAtMs,
+      statSync(entryPath).mtimeMs,
+    );
+  }
+
+  return newestModifiedAtMs;
+};
+
+const isBackendBuildStale = (backendRoot: string, buildMarker: string): boolean => {
+  if (!existsSync(buildMarker)) {
+    return true;
+  }
+
+  const buildModifiedAtMs = statSync(buildMarker).mtimeMs;
+  const sourceModifiedAtMs = getNewestModifiedAtMs(join(backendRoot, 'src'));
+  const testHelperModifiedAtMs = getNewestModifiedAtMs(join(backendRoot, 'test'));
+  const tsconfigModifiedAtMs = statSync(join(backendRoot, 'tsconfig.json')).mtimeMs;
+  const packageJsonModifiedAtMs = statSync(join(backendRoot, 'package.json')).mtimeMs;
+  const newestInputModifiedAtMs = Math.max(
+    sourceModifiedAtMs,
+    testHelperModifiedAtMs,
+    tsconfigModifiedAtMs,
+    packageJsonModifiedAtMs,
+  );
+
+  return newestInputModifiedAtMs > buildModifiedAtMs;
+};
+
 const ensureBackendBuild = (backendRoot: string) => {
   const buildMarker = join(backendRoot, 'dist', 'src', 'app.module.js');
-  if (existsSync(buildMarker)) {
+  if (!isBackendBuildStale(backendRoot, buildMarker)) {
     return;
   }
 
