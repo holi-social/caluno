@@ -44,6 +44,9 @@ export class Shift {
 
   @Field(() => Boolean)
   isDeleted: boolean;
+
+  @Field(() => Date)
+  createdAt: Date;
 }
 
 export const ShiftPaginatedResponse = createPaginatedResponseType<Shift>(

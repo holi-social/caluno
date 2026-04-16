@@ -4,6 +4,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@repo/ui';
 type UserCardProps = {
   user: Pick<User, 'name' | 'image' | 'email'>;
   size?: 'sm' | 'lg' | 'default';
+  hideEmail?: boolean;
 };
 
 const getInitials = (name?: string): string => {
@@ -17,7 +18,11 @@ const getInitials = (name?: string): string => {
     .join('');
 };
 
-export const UserCard = ({ user, size = 'default' }: UserCardProps) => (
+export const UserCard = ({
+  user,
+  size = 'default',
+  hideEmail = false,
+}: UserCardProps) => (
   <div className="flex gap-2 min-w-0">
     <Avatar size={size} className="bg-muted">
       <AvatarImage src={user.image ?? ''} alt="" />
@@ -25,9 +30,11 @@ export const UserCard = ({ user, size = 'default' }: UserCardProps) => (
     </Avatar>
     <div className="overflow-hidden">
       <div className="font-medium text-left text-sm truncate">{user.name}</div>
-      <div className="text-xs text-left text-muted-foreground truncate">
-        {user.email}
-      </div>
+      {!hideEmail && (
+        <div className="text-xs text-left text-muted-foreground truncate">
+          {user.email}
+        </div>
+      )}
     </div>
   </div>
 );
