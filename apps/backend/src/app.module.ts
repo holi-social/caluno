@@ -22,6 +22,11 @@ import { ShiftModule } from './shift/shift.module';
 import { TimeTrackingModule } from './time-tracking/time-tracking.module';
 import { UserModule } from './user/user.module';
 
+const autoSchemaFile =
+  process.env.NODE_ENV === 'test'
+    ? true
+    : join(process.cwd(), 'src/schema.gql');
+
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -30,7 +35,7 @@ import { UserModule } from './user/user.module';
     DatabaseModule,
     GraphQLModule.forRoot<ApolloDriverConfig>({
       driver: ApolloDriver,
-      autoSchemaFile: join(process.cwd(), 'src/schema.gql'),
+      autoSchemaFile,
       graphiql: true,
       sortSchema: true,
       fieldResolverEnhancers: ['guards'],

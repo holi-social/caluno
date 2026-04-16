@@ -41,10 +41,7 @@ const applyTestEnvironmentDefaults = (backendRoot: string) => {
   process.env.DB_NAME ??= process.env.POSTGRES_DB ?? 'clippy';
   process.env.WEB_URL ??= 'http://localhost:3000';
   process.env.COOKIE_DOMAIN ??= 'localhost';
-  process.env.NODE_ENV ??= 'test';
-
-  // AppModule uses process.cwd() in GraphQL setup.
-  process.chdir(backendRoot);
+  process.env.NODE_ENV = 'test';
 };
 
 export const createGraphqlFullTestApp = async (
