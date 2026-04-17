@@ -43,5 +43,53 @@
         "organizeImports": "on"
       }
     }
-  }
+  },
+  "overrides": [
+    {
+      "includes": [
+        "**/.agents/**",
+        "**/.claude/**",
+        "**/.cursor/**",
+        "**/.kimi/**",
+        "**/.skills/**"
+      ],
+      "formatter": {
+        "enabled": false
+      },
+      "linter": {
+        "enabled": false
+      },
+      "assist": {
+        "enabled": false
+      }
+    },
+    {
+      "includes": ["**/*.stories.tsx", "**/.storybook/**"],
+      "linter": {
+        "rules": {
+          "correctness": {
+            "noUnusedImports": "off"
+          },
+          "style": {
+            "noNonNullAssertion": "off",
+            "useNodejsImportProtocol": "off"
+          },
+          "suspicious": {
+            "noArrayIndexKey": "off",
+            "noShadowRestrictedNames": "off"
+          }
+        }
+      }
+    },
+    {
+      "includes": ["**/test/**"],
+      "linter": {
+        "rules": {
+          "complexity": {
+            "noStaticOnlyClass": "off"
+          }
+        }
+      }
+    }
+  ]
 }

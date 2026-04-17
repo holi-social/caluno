@@ -1,5 +1,5 @@
-import type { Meta, StoryObj } from "@storybook/react-vite";
-
+import type { Meta, StoryObj } from '@storybook/react-vite';
+import { userEvent, within } from 'storybook/test';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -10,17 +10,16 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogTrigger,
-} from "@/components/base/alert-dialog";
-import { userEvent, within } from "storybook/test";
+} from '@/components/base/alert-dialog';
 
 /**
  * A modal dialog that interrupts the user with important content and expects
  * a response.
  */
 const meta: Meta<typeof AlertDialog> = {
-  title: "ui/radix/AlertDialog",
+  title: 'ui/radix/AlertDialog',
   component: AlertDialog,
-  tags: ["autodocs"],
+  tags: ['autodocs'],
   argTypes: {},
   render: (args) => (
     <AlertDialog {...args}>
@@ -41,9 +40,9 @@ const meta: Meta<typeof AlertDialog> = {
     </AlertDialog>
   ),
   parameters: {
-    layout: "centered",
+    layout: 'centered',
   },
-}
+};
 
 export default meta;
 
@@ -55,22 +54,22 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {};
 
 export const ShouldOpenClose: Story = {
-  name: "when alert dialog trigger is pressed, should open the dialog and be able to close it",
-  tags: ["!dev", "!autodocs"],
+  name: 'when alert dialog trigger is pressed, should open the dialog and be able to close it',
+  tags: ['!dev', '!autodocs'],
   play: async ({ canvasElement, canvas, step }) => {
     const canvasBody = within(canvasElement.ownerDocument.body);
 
-    await step("open the alert dialog", async () => {
+    await step('open the alert dialog', async () => {
       await userEvent.click(
-        await canvas.getByRole("button", {
+        await canvas.getByRole('button', {
           name: /open/i,
         }),
       );
     });
 
-    await step("close the alert dialog", async () => {
+    await step('close the alert dialog', async () => {
       await userEvent.click(
-        await canvasBody.getByRole("button", {
+        await canvasBody.getByRole('button', {
           name: /cancel/i,
         }),
         { delay: 100 },

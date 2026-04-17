@@ -1,3 +1,5 @@
+import type { Meta, StoryObj } from '@storybook/react-vite';
+import type { CSSProperties, ReactNode } from 'react';
 import {
   Table,
   TableBody,
@@ -5,9 +7,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/base/table";
-import type { Meta, StoryObj } from "@storybook/react-vite";
-import type { CSSProperties, ReactNode } from "react";
+} from '@/components/base/table';
 
 type Typography = {
   name: string;
@@ -31,7 +31,7 @@ const TypographyRow = ({
     <TableRow>
       <TableCell>{name}</TableCell>
       <TableCell>
-        {styleValue.split(",").map((v, idx) => (
+        {styleValue.split(',').map((v, idx) => (
           <p key={`prop-${idx}`}>{v}</p>
         ))}
       </TableCell>
@@ -52,10 +52,10 @@ const meta: Meta<{
   key: keyof CSSProperties;
   property: Typography[];
 }> = {
-  title: "design/Typography",
+  title: 'design/Typography',
   argTypes: {},
   args: {
-    children: "Typeface",
+    children: 'Typeface',
   },
   render: (args) => (
     <Table>
@@ -93,11 +93,11 @@ type Story = StoryObj<typeof meta>;
  */
 export const FontFamily: Story = {
   args: {
-    key: "fontFamily",
+    key: 'fontFamily',
     property: [
-      { name: "sans", value: "--font-sans" },
-      { name: "serif", value: "--font-serif" },
-      { name: "mono", value: "--font-mono" },
+      { name: 'sans', value: '--font-sans' },
+      { name: 'serif', value: '--font-serif' },
+      { name: 'mono', value: '--font-mono' },
     ],
   },
 };
@@ -125,17 +125,17 @@ export const FontSize: Story = {
  */
 export const FontWeight: Story = {
   args: {
-    key: "fontWeight",
+    key: 'fontWeight',
     property: [
-      { name: "thin", value: "--font-weight-thin" },
-      { name: "extralight", value: "--font-weight-extralight" },
-      { name: "light", value: "--font-weight-light" },
-      { name: "normal", value: "--font-weight-normal" },
-      { name: "medium", value: "--font-weight-medium" },
-      { name: "semibold", value: "--font-weight-semibold" },
-      { name: "bold", value: "--font-weight-bold" },
-      { name: "extrabold", value: "--font-weight-extrabold" },
-      { name: "black", value: "--font-weight-black" },
+      { name: 'thin', value: '--font-weight-thin' },
+      { name: 'extralight', value: '--font-weight-extralight' },
+      { name: 'light', value: '--font-weight-light' },
+      { name: 'normal', value: '--font-weight-normal' },
+      { name: 'medium', value: '--font-weight-medium' },
+      { name: 'semibold', value: '--font-weight-semibold' },
+      { name: 'bold', value: '--font-weight-bold' },
+      { name: 'extrabold', value: '--font-weight-extrabold' },
+      { name: 'black', value: '--font-weight-black' },
     ],
   },
 };
@@ -145,14 +145,14 @@ export const FontWeight: Story = {
  */
 export const LetterSpacing: Story = {
   args: {
-    key: "letterSpacing",
+    key: 'letterSpacing',
     property: [
-      { name: "tighter", value: "--tracking-tighter" },
-      { name: "tight", value: "--tracking-tight" },
-      { name: "normal", value: "--tracking-normal" },
-      { name: "wide", value: "--tracking-wide" },
-      { name: "wider", value: "--tracking-wider" },
-      { name: "widest", value: "--tracking-widest" },
+      { name: 'tighter', value: '--tracking-tighter' },
+      { name: 'tight', value: '--tracking-tight' },
+      { name: 'normal', value: '--tracking-normal' },
+      { name: 'wide', value: '--tracking-wide' },
+      { name: 'wider', value: '--tracking-wider' },
+      { name: 'widest', value: '--tracking-widest' },
     ],
   },
 };

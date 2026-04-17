@@ -1,11 +1,13 @@
 import { type GetShiftQuery, ShiftVisibility } from '@repo/data';
 import { Badge, Button, Card, CardContent } from '@repo/ui';
 import { Calendar, Clock, DoorOpen, FileText } from 'lucide-react';
-import { notFound } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
+import { RequestJoinButton } from '@/domain/shift/components/request-join-button';
 import { getDataClient } from '@/lib/data-client';
 import { formatRange } from '@/lib/formatting';
 import { UserCard } from '../../../../components/user-card';
-import { getSession } from '../../../../lib/auth-server';
+import { isAuthenticated } from '../../../../lib/auth-server';
+import { validateUserOrgAccess } from '../../../../lib/org-context-server';
 
 interface ShiftPageProps {
   params: Promise<{ shiftId: string }>;
@@ -31,6 +33,18 @@ export default async function ShiftPage({ params }: ShiftPageProps) {
 
   const startDate = new Date(shift.originalStartsAt);
   const endDate = new Date(startDate.getTime() + shift.durationMinutes * 60000);
+
+  const authenticated = await isAuthenticated();
+
+  if (!authenticated) {
+    const searchParams = new URLSearchParams({
+      orgUId: shift.organizationUnitId,
+      redirectTo: `/shifts/${shiftId}`,
+    });
+    redirect(`/api/invite?${searchParams}`);
+  }
+
+  const isMember = await validateUserOrgAccess(shift.organizationUnitId);
 
   return (
     <div className="flex flex-col items-center p-4 mt-8">
@@ -62,13 +76,13 @@ export default async function ShiftPage({ params }: ShiftPageProps) {
               </ul>
             </div>
 
-            <UserCard user={shift.createdBy} />
+            {shift.createdBy && <UserCard user={shift.createdBy} />}
           </CardContent>
         </Card>
 
         <Card>
           <CardContent>
-            {(await getSession()) ? (
+            {isMember ? (
               <div className="space-x-2">
                 <Button>
                   <Clock /> Record time
@@ -78,7 +92,9 @@ export default async function ShiftPage({ params }: ShiftPageProps) {
                 </Button>
               </div>
             ) : (
-              <Button>Sign-in</Button>
+              <RequestJoinButton
+                organizationUnitId={shift.organizationUnitId}
+              />
             )}
           </CardContent>
         </Card>

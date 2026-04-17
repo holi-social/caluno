@@ -1,8 +1,7 @@
 import { Field, ID, InterfaceType, ObjectType } from '@nestjs/graphql';
 import { createPaginatedResponseType } from '../../graphql/paginated-response.model';
-import { RequirementType } from '../enums';
 import { User } from '../../user/models/user.model';
-import { RequirementFulfillmentStatus } from '../enums';
+import { RequirementFulfillmentStatus, RequirementType } from '../enums';
 import { OrganizationUserProfile } from './organization-user-profile.model';
 import { Requirement } from './requirement.model';
 import { RequirementProfileSubmission } from './requirement-profile-submission.model';

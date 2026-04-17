@@ -1,14 +1,14 @@
-import type { Meta, StoryObj } from "@storybook/react-vite";
+import type { Meta, StoryObj } from '@storybook/react-vite';
 
-import { Separator } from "@/components/base/separator";
+import { Separator } from '@/components/base/separator';
 
 /**
  * Visually or semantically separates content.
  */
 const meta = {
-  title: "ui/radix/Separator",
+  title: 'ui/radix/Separator',
   component: Separator,
-  tags: ["autodocs"],
+  tags: ['autodocs'],
   argTypes: {},
 } satisfies Meta<typeof Separator>;
 

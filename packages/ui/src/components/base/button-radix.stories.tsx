@@ -1,37 +1,37 @@
-import type { Meta, StoryObj } from "@storybook/react-vite";
-import { Loader2, Mail } from "lucide-react";
+import type { Meta, StoryObj } from '@storybook/react-vite';
+import { Loader2, Mail } from 'lucide-react';
 
-import { Button } from "./button";
+import { Button } from './button';
 
 /**
  * Displays a button or a component that looks like a button.
  */
 const meta: Meta<typeof Button> = {
-  title: "ui/radix/Button",
+  title: 'ui/radix/Button',
   component: Button,
-  tags: ["autodocs"],
+  tags: ['autodocs'],
   argTypes: {
     variant: {
-      control: "select",
+      control: 'select',
       options: [
-        "default",
-        "destructive",
-        "outline",
-        "secondary",
-        "ghost",
-        "link",
+        'default',
+        'destructive',
+        'outline',
+        'secondary',
+        'ghost',
+        'link',
       ],
     },
     size: {
-      control: "select",
-      options: ["sm", "md", "lg", "icon"],
-      if: { arg: "variant", neq: "link" },
+      control: 'select',
+      options: ['sm', 'md', 'lg', 'icon'],
+      if: { arg: 'variant', neq: 'link' },
     },
     children: {
-      control: "text",
+      control: 'text',
     },
     disabled: {
-      control: "boolean",
+      control: 'boolean',
     },
     asChild: {
       table: {
@@ -40,12 +40,12 @@ const meta: Meta<typeof Button> = {
     },
   },
   parameters: {
-    layout: "centered",
+    layout: 'centered',
   },
   args: {
-    variant: "default",
-    size: "md",
-    children: "Button",
+    variant: 'default',
+    size: 'md',
+    children: 'Button',
     disabled: false,
   },
 } satisfies Meta<typeof Button>;
@@ -65,7 +65,7 @@ export const Default: Story = {};
  */
 export const Outline: Story = {
   args: {
-    variant: "outline",
+    variant: 'outline',
   },
 };
 
@@ -75,7 +75,7 @@ export const Outline: Story = {
  */
 export const Ghost: Story = {
   args: {
-    variant: "ghost",
+    variant: 'ghost',
   },
 };
 
@@ -85,7 +85,7 @@ export const Ghost: Story = {
  */
 export const Secondary: Story = {
   args: {
-    variant: "secondary",
+    variant: 'secondary',
   },
 };
 
@@ -95,7 +95,7 @@ export const Secondary: Story = {
  */
 export const Destructive: Story = {
   args: {
-    variant: "destructive",
+    variant: 'destructive',
   },
 };
 
@@ -105,7 +105,7 @@ export const Destructive: Story = {
  */
 export const Link: Story = {
   args: {
-    variant: "link",
+    variant: 'link',
   },
 };
 
@@ -147,7 +147,7 @@ export const WithIcon: Story = {
  */
 export const Small: Story = {
   args: {
-    size: "sm",
+    size: 'sm',
   },
 };
 
@@ -157,7 +157,7 @@ export const Small: Story = {
  */
 export const Large: Story = {
   args: {
-    size: "lg",
+    size: 'lg',
   },
 };
 
@@ -167,8 +167,8 @@ export const Large: Story = {
 export const Icon: Story = {
   args: {
     ...Secondary.args,
-    size: "icon",
-    title: "Mail",
+    size: 'icon',
+    title: 'Mail',
     children: <Mail />,
   },
 };
@@ -178,9 +178,9 @@ export const Icon: Story = {
  */
 export const IconXS: Story = {
   args: {
-    variant: "secondary",
-    size: "icon-xs",
-    title: "Mail",
+    variant: 'secondary',
+    size: 'icon-xs',
+    title: 'Mail',
     children: <Mail />,
   },
 };
@@ -190,9 +190,9 @@ export const IconXS: Story = {
  */
 export const IconSmall: Story = {
   args: {
-    variant: "secondary",
-    size: "icon-sm",
-    title: "Mail",
+    variant: 'secondary',
+    size: 'icon-sm',
+    title: 'Mail',
     children: <Mail />,
   },
 };
@@ -202,9 +202,9 @@ export const IconSmall: Story = {
  */
 export const IconMedium: Story = {
   args: {
-    variant: "secondary",
-    size: "icon-md",
-    title: "Mail",
+    variant: 'secondary',
+    size: 'icon-md',
+    title: 'Mail',
     children: <Mail />,
   },
 };

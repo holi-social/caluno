@@ -1,26 +1,26 @@
-import { expect, userEvent } from "storybook/test";
-import type { Meta, StoryObj } from "@storybook/react-vite";
+import type { Meta, StoryObj } from '@storybook/react-vite';
+import { expect, userEvent } from 'storybook/test';
 
-import { Button } from "@/components/base/button";
-import { Input } from "@/components/input";
-import { Label } from "@/components/base/label";
+import { Button } from '@/components/base/button';
+import { Label } from '@/components/base/label';
+import { Input } from '@/components/input';
 
 /**
  * Displays a form input field or a component that looks like an input field.
  */
 const meta = {
-  title: "ui/radix/Input",
+  title: 'ui/radix/Input',
   component: Input,
-  tags: ["autodocs"],
+  tags: ['autodocs'],
   argTypes: {},
   args: {
-    className: "w-96",
-    type: "email",
-    placeholder: "Email",
+    className: 'w-96',
+    type: 'email',
+    placeholder: 'Email',
     disabled: false,
   },
   parameters: {
-    layout: "centered",
+    layout: 'centered',
   },
 } satisfies Meta<typeof Input>;
 
@@ -82,13 +82,13 @@ export const WithButton: Story = {
 };
 
 export const ShouldEnterText: Story = {
-  name: "when user enters text, should see it in the input field",
-  tags: ["!dev", "!autodocs"],
+  name: 'when user enters text, should see it in the input field',
+  tags: ['!dev', '!autodocs'],
   play: async ({ canvas, step }) => {
     const input = await canvas.findByPlaceholderText(/email/i);
-    const mockedInput = "mocked@shadcn.com";
+    const mockedInput = 'mocked@shadcn.com';
 
-    await step("focus and type into the input field", async () => {
+    await step('focus and type into the input field', async () => {
       await userEvent.click(input);
       await userEvent.type(input, mockedInput);
     });

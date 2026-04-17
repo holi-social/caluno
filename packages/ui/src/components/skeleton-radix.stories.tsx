@@ -1,17 +1,17 @@
-import type { Meta, StoryObj } from "@storybook/react-vite";
+import type { Meta, StoryObj } from '@storybook/react-vite';
 
-import { Skeleton } from "@/components/skeleton";
+import { Skeleton } from '@/components/skeleton';
 
 /**
  * Use to show a placeholder while content is loading.
  */
 const meta = {
-  title: "ui/radix/Skeleton",
+  title: 'ui/radix/Skeleton',
   component: Skeleton,
-  tags: ["autodocs"],
+  tags: ['autodocs'],
   argTypes: {},
   parameters: {
-    layout: "centered",
+    layout: 'centered',
   },
 } satisfies Meta<typeof Skeleton>;
 

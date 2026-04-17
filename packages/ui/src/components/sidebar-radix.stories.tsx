@@ -1,6 +1,6 @@
-import { userEvent } from "storybook/test";
-import type { Meta, StoryObj } from "@storybook/react-vite";
-
+import type { Meta, StoryObj } from '@storybook/react-vite';
+import { Calendar, Home, Inbox, Search, Settings } from 'lucide-react';
+import { userEvent } from 'storybook/test';
 import {
   Sidebar,
   SidebarContent,
@@ -14,43 +14,36 @@ import {
   SidebarMenuItem,
   SidebarProvider,
   SidebarTrigger,
-} from "@/components/sidebar";
-import {
-  Calendar,
-  Home,
-  Inbox,
-  Search,
-  Settings,
-} from "lucide-react";
+} from '@/components/sidebar';
 
 /**
  * A composable, themeable and customizable sidebar component.
  */
 const meta = {
-  title: "ui/radix/Sidebar",
+  title: 'ui/radix/Sidebar',
   component: Sidebar,
-  tags: ["autodocs"],
+  tags: ['autodocs'],
   argTypes: {
     side: {
-      options: ["left", "right"],
-      control: { type: "radio" },
+      options: ['left', 'right'],
+      control: { type: 'radio' },
     },
     variant: {
-      options: ["sidebar", "floating", "inset"],
-      control: { type: "radio" },
+      options: ['sidebar', 'floating', 'inset'],
+      control: { type: 'radio' },
     },
     collapsible: {
-      options: ["offcanvas", "icon", "none"],
-      control: { type: "radio" },
+      options: ['offcanvas', 'icon', 'none'],
+      control: { type: 'radio' },
     },
   },
   args: {
-    side: "left",
-    variant: "sidebar",
-    collapsible: "icon",
+    side: 'left',
+    variant: 'sidebar',
+    collapsible: 'icon',
   },
   parameters: {
-    layout: "fullscreen",
+    layout: 'fullscreen',
   },
   decorators: [
     (Story) => (
@@ -72,28 +65,28 @@ type Story = StoryObj<typeof Sidebar>;
 // Menu items.
 const items = [
   {
-    title: "Home",
-    url: "#",
+    title: 'Home',
+    url: '#',
     icon: Home,
   },
   {
-    title: "Inbox",
-    url: "#",
+    title: 'Inbox',
+    url: '#',
     icon: Inbox,
   },
   {
-    title: "Calendar",
-    url: "#",
+    title: 'Calendar',
+    url: '#',
     icon: Calendar,
   },
   {
-    title: "Search",
-    url: "#",
+    title: 'Search',
+    url: '#',
     icon: Search,
   },
   {
-    title: "Settings",
-    url: "#",
+    title: 'Settings',
+    url: '#',
     icon: Settings,
   },
 ];
@@ -139,9 +132,7 @@ export const Footer: Story = {
       <SidebarContent />
       <SidebarFooter>
         <SidebarMenu>
-          <SidebarMenuItem>
-            Phut
-          </SidebarMenuItem>
+          <SidebarMenuItem>Phut</SidebarMenuItem>
         </SidebarMenu>
       </SidebarFooter>
     </Sidebar>
@@ -150,17 +141,17 @@ export const Footer: Story = {
 
 export const ShouldCloseOpen: Story = {
   ...Simple,
-  name: "when clicking the trigger, should close and open the sidebar",
-  tags: ["!dev", "!autodocs"],
+  name: 'when clicking the trigger, should close and open the sidebar',
+  tags: ['!dev', '!autodocs'],
   play: async ({ canvas, step }) => {
-    const sidebarBtn = await canvas.findByRole("button", {
+    const sidebarBtn = await canvas.findByRole('button', {
       name: /toggle/i,
     });
-    await step("close the sidebar", async () => {
+    await step('close the sidebar', async () => {
       await userEvent.click(sidebarBtn);
     });
 
-    await step("reopen the sidebar", async () => {
+    await step('reopen the sidebar', async () => {
       await userEvent.click(sidebarBtn);
     });
   },

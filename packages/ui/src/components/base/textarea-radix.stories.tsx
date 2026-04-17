@@ -1,19 +1,19 @@
-import type { Meta, StoryObj } from "@storybook/react-vite";
+import type { Meta, StoryObj } from '@storybook/react-vite';
 
-import { Button } from "@/components/base/button";
-import { Label } from "@/components/base/label";
-import { Textarea } from "@/components/base/textarea";
+import { Button } from '@/components/base/button';
+import { Label } from '@/components/base/label';
+import { Textarea } from '@/components/base/textarea';
 
 /**
  * Displays a form textarea or a component that looks like a textarea.
  */
 const meta = {
-  title: "ui/radix/Textarea",
+  title: 'ui/radix/Textarea',
   component: Textarea,
-  tags: ["autodocs"],
+  tags: ['autodocs'],
   argTypes: {},
   args: {
-    placeholder: "Type your message here.",
+    placeholder: 'Type your message here.',
     disabled: false,
   },
 } satisfies Meta<typeof Textarea>;

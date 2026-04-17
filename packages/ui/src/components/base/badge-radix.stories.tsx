@@ -1,30 +1,38 @@
-import type { Meta, StoryObj } from "@storybook/react-vite";
+import type { Meta, StoryObj } from '@storybook/react-vite';
 
-import { Badge } from "@/components/base/badge";
+import { Badge } from '@/components/base/badge';
 
 /**
  * Displays a badge or a component that looks like a badge.
  */
 const meta = {
-  title: "ui/radix/Badge",
+  title: 'ui/radix/Badge',
   component: Badge,
-  tags: ["autodocs"],
+  tags: ['autodocs'],
   argTypes: {
     variant: {
-      control: "select",
-      options: ["default", "secondary", "destructive", "outline", "info", "success", "error"],
+      control: 'select',
+      options: [
+        'default',
+        'secondary',
+        'destructive',
+        'outline',
+        'info',
+        'success',
+        'error',
+      ],
     },
     children: {
-      control: "text",
-      description: "Badge content",
+      control: 'text',
+      description: 'Badge content',
     },
   },
   args: {
-    variant: "default",
-    children: "Badge",
+    variant: 'default',
+    children: 'Badge',
   },
   parameters: {
-    layout: "centered",
+    layout: 'centered',
   },
 } satisfies Meta<typeof Badge>;
 
@@ -43,7 +51,7 @@ export const Default: Story = {};
  */
 export const Secondary: Story = {
   args: {
-    variant: "secondary",
+    variant: 'secondary',
   },
 };
 
@@ -53,7 +61,7 @@ export const Secondary: Story = {
  */
 export const Destructive: Story = {
   args: {
-    variant: "destructive",
+    variant: 'destructive',
   },
 };
 
@@ -63,24 +71,24 @@ export const Destructive: Story = {
  */
 export const Outline: Story = {
   args: {
-    variant: "outline",
+    variant: 'outline',
   },
 };
 
 export const Info: Story = {
   args: {
-    variant: "info",
+    variant: 'info',
   },
 };
 
 export const Success: Story = {
   args: {
-    variant: "success",
+    variant: 'success',
   },
 };
 
 export const Error: Story = {
   args: {
-    variant: "error",
+    variant: 'error',
   },
 };

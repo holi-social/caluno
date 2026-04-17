@@ -461,7 +461,7 @@ type Role {
 
 type Shift {
   createdAt: DateTime!
-  createdBy: User!
+  createdBy: User
   durationMinutes: Int!
   id: ID!
   instructions: String
@@ -469,6 +469,7 @@ type Shift {
   location: String
   maxVolunteers: Int
   organization: Organization!
+  organizationUnitId: ID!
   originalStartsAt: DateTime!
   rrule: String
   slug: String!

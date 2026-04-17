@@ -21,8 +21,11 @@ export class Shift {
   @Field(() => Organization)
   organization: Organization;
 
-  @Field(() => User)
-  createdBy: User;
+  @Field(() => ID)
+  organizationUnitId: string;
+
+  @Field(() => User, { nullable: true })
+  createdBy: User | null;
 
   @Field(() => String, { nullable: true })
   location: string | null;
