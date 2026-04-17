@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { Geologica } from 'next/font/google';
 import { ThemeProvider } from 'next-themes';
+import { Suspense } from 'react';
 
 import { PlausibleAnalytics } from '@/components/plausible-analytics';
 
@@ -25,7 +26,9 @@ export default function RootLayout({
     <html lang="de" suppressHydrationWarning>
       <body className={`${geologica.variable} antialiased`}>
         <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false}>
-          <PlausibleAnalytics />
+          <Suspense fallback={null}>
+            <PlausibleAnalytics />
+          </Suspense>
           {children}
         </ThemeProvider>
       </body>

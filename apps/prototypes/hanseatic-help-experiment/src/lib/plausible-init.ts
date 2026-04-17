@@ -41,6 +41,8 @@ export function ensurePlausibleInitialized(): Promise<void> {
     init({
       domain,
       captureOnLocalhost: process.env.NODE_ENV === 'development',
+      // Manual pageview tracking in PlausibleAnalytics keeps query-string attribution explicit.
+      autoCapturePageviews: false,
       formSubmissions: true,
       customProperties: {
         analytics_app: 'hanseatic_help_volunteer_check_in',
