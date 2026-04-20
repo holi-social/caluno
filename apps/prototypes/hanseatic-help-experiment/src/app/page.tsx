@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
 import { Form1 } from '@/components/steps/form-1';
 import { Form21 } from '@/components/steps/form-2-1';
@@ -315,7 +316,7 @@ export default function WizardPage() {
 
   return (
     <main className={`min-h-dvh flex justify-center ${mainBgClass}`} style={mainStyle}>
-      <div className="relative w-full max-w-none min-h-dvh overflow-hidden">
+      <div className="relative w-full max-w-none min-h-dvh overflow-hidden pb-8">
         {state.step === 'form-1' && (
           <Form1 onSelect={handleActionSelect} loading={loading} />
         )}
@@ -335,6 +336,14 @@ export default function WizardPage() {
           <Form4 name={state.name} durationLabel={state.durationLabel} />
         )}
       </div>
+      <footer className="fixed bottom-0 left-0 right-0 flex justify-center gap-4 py-2 pointer-events-none">
+        <Link href="/impressum" className="text-xs text-muted-foreground underline underline-offset-2 pointer-events-auto">
+          Impressum
+        </Link>
+        <Link href="/datenschutz" className="text-xs text-muted-foreground underline underline-offset-2 pointer-events-auto">
+          Datenschutzhinweis
+        </Link>
+      </footer>
     </main>
   );
 }

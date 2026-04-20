@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useState } from 'react';
 import { Mail, User } from 'lucide-react';
 import { Button, Card, CardContent, Checkbox, Input, Label } from '@repo/ui';
@@ -105,12 +106,12 @@ export function Form3({ onSubmit, loading }: Form3Props) {
                     <p className="text-sm text-muted-foreground">
                       Deine Daten nutzen wir nur intern und geben sie nie in identifizierbarer Form weiter.
                     </p>
-                    <button
-                      type="button"
-                      className="text-sm text-muted-foreground underline underline-offset-2 text-left"
+                    <Link
+                      href="/datenschutz"
+                      className="text-sm text-muted-foreground underline underline-offset-2"
                     >
                       Datenschutzhinweis
-                    </button>
+                    </Link>
                   </div>
                 </div>
                 {gdprError && (
