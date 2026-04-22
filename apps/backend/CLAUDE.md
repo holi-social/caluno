@@ -16,58 +16,51 @@ The backend api for securely managing volunteers and shifts in multi-tiered orga
 
 ## Tech Stack
 
-- **NestJS 11** - Progressive Node.js framework
+- **NestJS 11** primary web framework
 - **TypeScript** with strict mode
-- **GraphQL** with Apollo Server and Code-First approach
+- **GraphQL** Apollo Server using Code-First approach
 - **Drizzle ORM** for database management (PostgreSQL)
-- **Better Auth** for authentication (@thallesp/nestjs-better-auth)
-- **Biome** for linting and formatting
+- **Better Auth** authentication framework
+- **Biome** for linting and formatting (not ESLint/Prettier)
 
-## Code Style
+## Project Structure
 
-- **Indent**: 2 spaces (inherited from root config)
-- **Line width**: 80 characters (inherited from root config)
-- **Quotes**: Single quotes (inherited from root config)
-- **Trailing commas**: All (inherited from root config)
-- **Semicolons**: Always (inherited from root config)
-- `noExplicitAny` is disabled (NestJS uses `any` for flexibility, but we want to avoid it as much as possible)
+src/
+├── auth        # Authorization - role based permissions
+├── database    # Drizzle config, schema and migrations
+├── graphql     # Custom graphQL extensions
+├── shared      # Shared generic code
+├── utils       # Shared generic code 
+test/
 
-## NestJS Patterns
 
-### Module Structure
-- `*.module.ts` - Module definition with imports, providers, exports
-- `*.service.ts` - Business logic and data access
-- `*.resolver.ts` - GraphQL resolvers (code-first approach)
-- `*.dto.ts` - Data Transfer Objects for validation
+# Patterns
 
-### Dependency Injection
-Use constructor injection:
+- GraphQL schema is built using code first approach and utilising decorators.
+- Data from Drizzle queries are mapped to GraphQl models via mappers. All mappers are named with the pattern *.mapper.ts
+
+
+## Drizzle
+Database schema in `src/database/schema.ts`
+
+
+### Use Relational Query v2 for querying data:
 ```typescript
-@Injectable()
-export class MyService {
-    constructor(
-        private readonly otherService: OtherService,
-        private readonly repository: Repository,
-    ) {}
-}
+const users = await db.query.users.findMany({
+	where: {
+	    id: 1
+	}
+});
 ```
 
-### GraphQL Code-First
-- Decorators: `@ObjectType()`, `@Field()`, `@Resolver()`, `@Query()`, `@Mutation()`
-- DataLoader pattern for N+1 query prevention
+### Do not use Query v1:
+```typescript
+const users = await db._query.users.findMany({
+	where: (users, { eq }) => eq(users.id, 1),
+})
+```
 
-### Database
-- **Drizzle ORM** (not TypeORM)
-- Schema in `src/db/schema/`
-- Use Drizzle's query builder and relational queries
-
-### Exception Handling
-Use built-in NestJS exceptions:
-- `NotFoundException`, `BadRequestException`, `UnauthorizedException`, `ForbiddenException`
-
-## Testing
-
-- **Jest** test framework
-- Test files use `.spec.ts` suffix
-- Use `@nestjs/testing` for creating test modules
-- Use `supertest` for e2e tests
+### Do not use SQL-like select:
+```typescript
+const users = await db.select().from(users).where(eq(users.id, 1));
+```
