@@ -14,9 +14,10 @@ import { MembershipService } from '../membership/membership.service';
 import type { MembershipRequestEntity } from '../membership/schemas/membership-request.schema';
 import { NotificationService } from '../notification/notification.service';
 import type { RequirementProfileEntity } from '../requirement-profile/schemas/requirement-profile.schema';
+import { JoinStatus } from '../shared/enums/join-status.enum';
 import { UserService } from '../user/user.service';
 import { slugify } from '../utils/slug.util';
-import { JoinShiftStatus, ShiftInviteStatus, ShiftVisibility } from './enums';
+import { ShiftInviteStatus, ShiftVisibility } from './enums';
 import { CreateShiftInput } from './inputs/create-shift.input';
 import { UpdateShiftInput } from './inputs/update-shift.input';
 import type { ShiftEntity } from './schemas/shift.schema';
@@ -649,7 +650,7 @@ export class ShiftService {
     userId: string,
     shiftId: string,
   ): Promise<{
-    status: JoinShiftStatus;
+    status: JoinStatus;
     shift: ShiftEntity;
     membershipRequest?: MembershipRequestEntity;
     requirementProfile?: RequirementProfileEntity;
@@ -693,30 +694,39 @@ export class ShiftService {
 
       if (result.status === 'REQUIREMENTS_NEEDED') {
         return {
-          status: JoinShiftStatus.REQUIREMENTS_NEEDED,
+          status: JoinStatus.REQUIREMENTS_NEEDED,
           shift,
           requirementProfile: result.requirementProfile,
           requirementStatuses: result.requirementStatuses,
         };
       }
 
-      if (result.status === 'MEMBERSHIP_REQUESTED') {
+      if (result.status === 'PENDING') {
         return {
-          status: JoinShiftStatus.MEMBERSHIP_REQUESTED,
+          status: JoinStatus.PENDING,
           shift,
           membershipRequest: result.membershipRequest,
         };
       }
 
+      if (result.status === 'REJECTED') {
+        return {
+          status: JoinStatus.REJECTED,
+          shift,
+          membershipRequest: result.membershipRequest,
+        };
+      }
+
+      await this.joinShift(userId, shiftId);
       return {
-        status: JoinShiftStatus.JOINED,
+        status: JoinStatus.JOINED,
         shift,
       };
     }
 
     await this.joinShift(userId, shiftId);
     return {
-      status: JoinShiftStatus.JOINED,
+      status: JoinStatus.JOINED,
       shift,
     };
   }

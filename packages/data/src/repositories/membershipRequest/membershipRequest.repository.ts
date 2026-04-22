@@ -29,17 +29,6 @@ export class MembershipRequestRepository extends BaseRepository {
     }
   }
 
-  async create(organizationUnitId: string) {
-    try {
-      const data = await this.sdk.CreateMembershipRequest({
-        organizationUnitId,
-      });
-      return data.createMembershipRequest;
-    } catch (error) {
-      throw DataError.fromGraphQLError(error);
-    }
-  }
-
   async approve(id: string, organizationUnitId: string) {
     try {
       const data = await this.sdk.ApproveMembershipRequest({

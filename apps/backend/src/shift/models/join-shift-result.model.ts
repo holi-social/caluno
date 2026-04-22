@@ -1,17 +1,13 @@
-import { Field, ID, ObjectType, registerEnumType } from '@nestjs/graphql';
+import { Field, ID, ObjectType } from '@nestjs/graphql';
 import { RequirementProfile } from '../../requirement-profile/models/requirement-profile.model';
 import { UserRequirementStatus } from '../../requirement-profile/models/user-requirement-status.model';
-import { JoinShiftStatus } from '../enums';
+import { JoinStatus } from '../../shared/enums/join-status.enum';
 import { Shift } from './shift.model';
-
-registerEnumType(JoinShiftStatus, {
-  name: 'JoinShiftStatus',
-});
 
 @ObjectType()
 export class JoinShiftResult {
-  @Field(() => JoinShiftStatus)
-  status: JoinShiftStatus;
+  @Field(() => JoinStatus)
+  status: JoinStatus;
 
   @Field(() => Shift)
   shift: Shift;

@@ -7,9 +7,9 @@ import { DATABASE_CONNECTION } from '../database/database-connection';
 import * as schema from '../database/schema';
 import { ConflictGraphQLError, NotFoundGraphQLError } from '../graphql/errors';
 import { NotificationService } from '../notification/notification.service';
-import { RequirementProfileSubmissionStatus } from '../requirement-profile/enums';
 import type { RequirementProfileEntity } from '../requirement-profile/schemas/requirement-profile.schema';
 import { RequirementProfileService } from '../requirement-profile/services/requirement-profile.service';
+import { JoinStatus } from '../shared/enums/join-status.enum';
 import { ShiftService } from '../shift/shift.service';
 import { MembershipRequestStatus } from './enums';
 import { UpdateMembershipRequestInput } from './inputs/update-membership-request.input';
@@ -331,7 +331,11 @@ export class MembershipService {
   ): Promise<
     | { status: 'JOINED' }
     | {
-        status: 'MEMBERSHIP_REQUESTED';
+        status: 'PENDING';
+        membershipRequest: MembershipRequestEntity;
+      }
+    | {
+        status: 'REJECTED';
         membershipRequest: MembershipRequestEntity;
       }
     | {
@@ -378,12 +382,51 @@ export class MembershipService {
       }
     }
 
+    const existing = await this.db.query.membershipRequests.findFirst({
+      where: {
+        userId,
+        organizationUnitId,
+      },
+    });
+
+    if (existing) {
+      if (existing.status === MembershipRequestStatus.PENDING) {
+        if (intendedShiftId) {
+          const metadata = (existing.metadata ?? {}) as {
+            intendedShiftIds?: string[];
+          };
+          const intendedShiftIds = Array.from(
+            new Set([...(metadata.intendedShiftIds ?? []), intendedShiftId]),
+          );
+
+          const [updated] = await this.db
+            .update(schema.membershipRequests)
+            .set({ metadata: { ...metadata, intendedShiftIds } })
+            .where(eq(schema.membershipRequests.id, existing.id))
+            .returning();
+
+          return { status: JoinStatus.PENDING, membershipRequest: updated };
+        }
+
+        return { status: JoinStatus.PENDING, membershipRequest: existing };
+      }
+
+      if (
+        existing.status === MembershipRequestStatus.REJECTED ||
+        existing.status === MembershipRequestStatus.CANCELLED
+      ) {
+        return { status: JoinStatus.REJECTED, membershipRequest: existing };
+      }
+
+      return { status: JoinStatus.JOINED };
+    }
+
     const request = await this.createMembershipRequest(
       userId,
       organizationUnitId,
       intendedShiftId,
     );
-    return { status: 'MEMBERSHIP_REQUESTED', membershipRequest: request };
+    return { status: 'PENDING', membershipRequest: request };
   }
 
   async assignRoleToMembership(

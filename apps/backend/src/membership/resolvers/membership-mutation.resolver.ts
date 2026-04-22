@@ -3,7 +3,7 @@ import { Session, type UserSession } from '@thallesp/nestjs-better-auth';
 import { plainToInstance } from 'class-transformer';
 import { RequirementProfile } from '../../requirement-profile/models/requirement-profile.model';
 import { UserRequirementStatus } from '../../requirement-profile/models/user-requirement-status.model';
-import { JoinOrganizationStatus } from '../enums';
+import { JoinStatus } from '../../shared/enums/join-status.enum';
 import { MembershipService } from '../membership.service';
 import { JoinOrganizationResult } from '../models/join-organization-result.model';
 
@@ -22,18 +22,27 @@ export class MembershipMutationResolver {
       organizationUnitId,
     );
 
-    if (result.status === 'JOINED') {
+    if (result.status === JoinStatus.JOINED) {
       return {
-        status: JoinOrganizationStatus.JOINED,
+        status: JoinStatus.JOINED,
         membershipRequestId: null,
         requirementProfile: null,
         requirementStatuses: null,
       };
     }
 
-    if (result.status === 'MEMBERSHIP_REQUESTED') {
+    if (result.status === JoinStatus.PENDING) {
       return {
-        status: JoinOrganizationStatus.MEMBERSHIP_REQUESTED,
+        status: JoinStatus.PENDING,
+        membershipRequestId: result.membershipRequest.id,
+        requirementProfile: null,
+        requirementStatuses: null,
+      };
+    }
+
+    if (result.status === JoinStatus.REJECTED) {
+      return {
+        status: JoinStatus.REJECTED,
         membershipRequestId: result.membershipRequest.id,
         requirementProfile: null,
         requirementStatuses: null,
@@ -41,7 +50,7 @@ export class MembershipMutationResolver {
     }
 
     return {
-      status: JoinOrganizationStatus.REQUIREMENTS_NEEDED,
+      status: JoinStatus.REQUIREMENTS_NEEDED,
       membershipRequestId: null,
       requirementProfile: result.requirementProfile
         ? plainToInstance(RequirementProfile, result.requirementProfile)

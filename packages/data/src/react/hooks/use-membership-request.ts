@@ -30,22 +30,6 @@ export function useMembershipRequests(
   });
 }
 
-export function useCreateMembershipRequest() {
-  const client = useGraphQLClient();
-  const queryClient = useQueryClient();
-  const repository = new MembershipRequestRepository(client);
-
-  return useMutation({
-    mutationFn: (organizationUnitId: string) =>
-      repository.create(organizationUnitId),
-    onSuccess: (_, organizationUnitId) => {
-      queryClient.invalidateQueries({
-        queryKey: ['membershipRequests', organizationUnitId],
-      });
-    },
-  });
-}
-
 export function useApproveMembershipRequest() {
   const client = useGraphQLClient();
   const queryClient = useQueryClient();

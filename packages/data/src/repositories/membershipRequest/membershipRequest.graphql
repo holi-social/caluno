@@ -1,9 +1,3 @@
-mutation CreateMembershipRequest($organizationUnitId: ID!) {
-  createMembershipRequest(organizationUnitId: $organizationUnitId) {
-    id
-  }
-}
-
 mutation JoinOrganization($organizationUnitId: ID!) {
   joinOrganization(organizationUnitId: $organizationUnitId) {
     status

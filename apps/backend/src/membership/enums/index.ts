@@ -4,9 +4,3 @@ export enum MembershipRequestStatus {
   REJECTED = 'REJECTED',
   CANCELLED = 'CANCELLED',
 }
-
-export enum JoinOrganizationStatus {
-  JOINED = 'JOINED',
-  MEMBERSHIP_REQUESTED = 'MEMBERSHIP_REQUESTED',
-  REQUIREMENTS_NEEDED = 'REQUIREMENTS_NEEDED',
-}

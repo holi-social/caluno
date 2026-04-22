@@ -96,13 +96,7 @@ type JoinOrganizationResult {
   membershipRequestId: ID
   requirementProfile: RequirementProfile
   requirementStatuses: [UserRequirementStatus!]
-  status: JoinOrganizationStatus!
-}
-
-enum JoinOrganizationStatus {
-  JOINED
-  MEMBERSHIP_REQUESTED
-  REQUIREMENTS_NEEDED
+  status: JoinStatus!
 }
 
 type JoinShiftResult {
@@ -110,12 +104,13 @@ type JoinShiftResult {
   requirementProfile: RequirementProfile
   requirementStatuses: [UserRequirementStatus!]
   shift: Shift!
-  status: JoinShiftStatus!
+  status: JoinStatus!
 }
 
-enum JoinShiftStatus {
+enum JoinStatus {
   JOINED
-  MEMBERSHIP_REQUESTED
+  PENDING
+  REJECTED
   REQUIREMENTS_NEEDED
 }
 
@@ -154,7 +149,6 @@ type Mutation {
   approveMembershipRequest(id: ID!, organizationUnitId: ID!): MembershipRequest!
   cancelMembershipRequest(id: ID!, organizationUnitId: ID!): MembershipRequest!
   closeTimeEntry(id: ID!, input: CloseTimeEntryInput!): TimeEntry!
-  createMembershipRequest(organizationUnitId: ID!): MembershipRequest!
   createOrganization(input: CreateOrganizationInput!): Organization!
   createOrganizationUnit(input: CreateOrganizationUnitInput!): OrganizationUnit!
   createRequirement(input: CreateRequirementInput!): Requirement!
@@ -333,6 +327,7 @@ type Query {
   requirements(limit: Int! = 10, offset: Int! = 0): RequirementPaginatedResponse!
   roles: [Role!]!
   shift(id: String!): Shift!
+  shiftVolunteers(shiftId: ID!): [User!]!
   shifts(limit: Int! = 10, offset: Int! = 0): ShiftPaginatedResponse!
   timeEntries(limit: Int! = 10, offset: Int! = 0): TimeEntryPaginatedResponse!
   timeEntriesByUser(limit: Int! = 10, offset: Int! = 0, userId: String!): TimeEntryPaginatedResponse!

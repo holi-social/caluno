@@ -1,16 +1,12 @@
-import { Field, ID, ObjectType, registerEnumType } from '@nestjs/graphql';
+import { Field, ID, ObjectType } from '@nestjs/graphql';
 import { RequirementProfile } from '../../requirement-profile/models/requirement-profile.model';
 import { UserRequirementStatus } from '../../requirement-profile/models/user-requirement-status.model';
-import { JoinOrganizationStatus } from '../enums';
-
-registerEnumType(JoinOrganizationStatus, {
-  name: 'JoinOrganizationStatus',
-});
+import { JoinStatus } from '../../shared/enums/join-status.enum';
 
 @ObjectType()
 export class JoinOrganizationResult {
-  @Field(() => JoinOrganizationStatus)
-  status: JoinOrganizationStatus;
+  @Field(() => JoinStatus)
+  status: JoinStatus;
 
   @Field(() => ID, { nullable: true })
   membershipRequestId: string | null;
