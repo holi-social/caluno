@@ -15,7 +15,6 @@ export class RequirementProfileSubmissionMutationResolver {
     private readonly requirementProfileSubmissionMapper: RequirementProfileSubmissionMapper,
   ) {}
 
-  @Permissions(PERMISSIONS.REQUIREMENT_PROFILE_SUBMISSION_CREATE)
   @Mutation(() => RequirementProfileSubmission)
   async createRequirementProfileSubmission(
     @Args('input') input: CreateRequirementProfileSubmissionInput,
