@@ -1,4 +1,4 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { forwardRef, Inject, Injectable, Logger } from '@nestjs/common';
 import { and, eq } from 'drizzle-orm';
 import { DEFAULT_MEMBER_ROLE_NAME } from '../auth/constants';
 import type { UserEntity } from '../auth/schemas/auth.schema';
@@ -6,6 +6,11 @@ import type { Database } from '../database/database.module';
 import { DATABASE_CONNECTION } from '../database/database-connection';
 import * as schema from '../database/schema';
 import { ConflictGraphQLError, NotFoundGraphQLError } from '../graphql/errors';
+import { NotificationService } from '../notification/notification.service';
+import { RequirementProfileSubmissionStatus } from '../requirement-profile/enums';
+import type { RequirementProfileEntity } from '../requirement-profile/schemas/requirement-profile.schema';
+import { RequirementProfileService } from '../requirement-profile/services/requirement-profile.service';
+import { ShiftService } from '../shift/shift.service';
 import { MembershipRequestStatus } from './enums';
 import { UpdateMembershipRequestInput } from './inputs/update-membership-request.input';
 import type { MembershipEntity } from './schemas/membership.schema';
@@ -13,9 +18,15 @@ import { MembershipRequestEntity } from './schemas/membership-request.schema';
 
 @Injectable()
 export class MembershipService {
+  private readonly logger = new Logger(MembershipService.name);
+
   constructor(
     @Inject(DATABASE_CONNECTION)
     private readonly db: Database,
+    private readonly notificationService: NotificationService,
+    private readonly requirementProfileService: RequirementProfileService,
+    @Inject(forwardRef(() => ShiftService))
+    private readonly shiftService: ShiftService,
   ) {}
 
   async getMembers(organizationUnitId: string): Promise<UserEntity[]> {
@@ -51,6 +62,7 @@ export class MembershipService {
   async createMembershipRequest(
     userId: string,
     organizationUnitId: string,
+    intendedShiftId?: string,
   ): Promise<MembershipRequestEntity> {
     const existing = await this.db.query.membershipRequests.findFirst({
       where: {
@@ -61,6 +73,23 @@ export class MembershipService {
     });
 
     if (existing) {
+      if (intendedShiftId) {
+        const metadata = (existing.metadata ?? {}) as {
+          intendedShiftIds?: string[];
+        };
+        const intendedShiftIds = Array.from(
+          new Set([...(metadata.intendedShiftIds ?? []), intendedShiftId]),
+        );
+
+        const [updated] = await this.db
+          .update(schema.membershipRequests)
+          .set({ metadata: { ...metadata, intendedShiftIds } })
+          .where(eq(schema.membershipRequests.id, existing.id))
+          .returning();
+
+        return updated;
+      }
+
       throw new ConflictGraphQLError(
         'A pending membership request already exists for this organization.',
       );
@@ -71,8 +100,21 @@ export class MembershipService {
       .values({
         userId,
         organizationUnitId,
+        metadata: intendedShiftId
+          ? { intendedShiftIds: [intendedShiftId] }
+          : undefined,
       })
       .returning();
+
+    const orgUnit = await this.db.query.organizationUnits.findFirst({
+      where: { id: organizationUnitId },
+    });
+    if (orgUnit) {
+      await this.notificationService.notifyOrgOfMembershipRequest(
+        membershipRequest,
+        orgUnit,
+      );
+    }
 
     return membershipRequest;
   }
@@ -108,63 +150,102 @@ export class MembershipService {
     organizationUnitId: string,
     reviewerId: string,
   ): Promise<MembershipRequestEntity> {
-    const membershipRequest =
-      await this.db.transaction<MembershipRequestEntity>(async (tx) => {
-        const organizationUnit = await tx.query.organizationUnits.findFirst({
-          where: { id: organizationUnitId },
-        });
+    const membershipRequest = await this.db.transaction(async (tx) => {
+      const organizationUnit = await tx.query.organizationUnits.findFirst({
+        where: { id: organizationUnitId },
+      });
 
-        if (!organizationUnit) {
-          throw new NotFoundGraphQLError('Organization unit not found');
-        }
+      if (!organizationUnit) {
+        throw new NotFoundGraphQLError('Organization unit not found');
+      }
 
-        const memberRole = await tx.query.roles.findFirst({
-          where: {
-            name: DEFAULT_MEMBER_ROLE_NAME,
-            isInternal: true,
-            organizationUnitId,
-          },
-        });
-
-        if (!memberRole) {
-          throw new NotFoundGraphQLError(
-            'Member role not found for this organization',
+      if (organizationUnit.requiredMembershipRequirementProfileId) {
+        const approvedSubmission =
+          await tx.query.requirementProfileSubmissions.findFirst({
+            where: {
+              profileId:
+                organizationUnit.requiredMembershipRequirementProfileId,
+              membershipRequestId: id,
+              status: RequirementProfileSubmissionStatus.APPROVED,
+            },
+          });
+        if (!approvedSubmission) {
+          throw new ConflictGraphQLError(
+            'Cannot approve: user has not completed the required membership profile.',
           );
         }
+      }
 
-        const [membershipRequest] = await tx
-          .update(schema.membershipRequests)
-          .set({
-            status: MembershipRequestStatus.ACCEPTED,
-            reviewedById: reviewerId,
-            reviewedAt: new Date(),
-          })
-          .where(
-            and(
-              eq(schema.membershipRequests.id, id),
-              eq(
-                schema.membershipRequests.organizationUnitId,
-                organizationUnitId,
-              ),
-              eq(
-                schema.membershipRequests.status,
-                MembershipRequestStatus.PENDING,
-              ),
-            ),
-          )
-          .returning();
-
-        if (!membershipRequest) {
-          throw new NotFoundGraphQLError('Membership request not found');
-        }
-
-        await tx.insert(schema.memberships).values({
-          userId: membershipRequest.userId,
-          roleId: memberRole.id,
-        });
-
-        return membershipRequest;
+      const memberRole = await tx.query.roles.findFirst({
+        where: {
+          name: DEFAULT_MEMBER_ROLE_NAME,
+          isInternal: true,
+          organizationUnitId,
+        },
       });
+
+      if (!memberRole) {
+        throw new NotFoundGraphQLError(
+          'Member role not found for this organization',
+        );
+      }
+
+      const [membershipRequest] = await tx
+        .update(schema.membershipRequests)
+        .set({
+          status: MembershipRequestStatus.ACCEPTED,
+          reviewedById: reviewerId,
+          reviewedAt: new Date(),
+        })
+        .where(
+          and(
+            eq(schema.membershipRequests.id, id),
+            eq(
+              schema.membershipRequests.organizationUnitId,
+              organizationUnitId,
+            ),
+            eq(
+              schema.membershipRequests.status,
+              MembershipRequestStatus.PENDING,
+            ),
+          ),
+        )
+        .returning();
+
+      if (!membershipRequest) {
+        throw new NotFoundGraphQLError('Membership request not found');
+      }
+
+      await tx.insert(schema.memberships).values({
+        userId: membershipRequest.userId,
+        roleId: memberRole.id,
+      });
+
+      return membershipRequest;
+    });
+
+    await this.notificationService.notifyUserMembershipApproved(
+      membershipRequest,
+    );
+
+    const metadata = (membershipRequest.metadata ?? {}) as {
+      intendedShiftIds?: string[];
+    };
+    if (metadata.intendedShiftIds?.length && membershipRequest.userId) {
+      for (const shiftId of metadata.intendedShiftIds) {
+        try {
+          const shift = await this.shiftService.findByIdPublic(shiftId);
+          if (shift && shift.visibility === 'ALL_MEMBERS') {
+            await this.shiftService.joinShift(
+              membershipRequest.userId,
+              shiftId,
+            );
+          }
+        } catch (e) {
+          this.logger.warn(`Failed to auto-join shift ${shiftId}: ${e}`);
+        }
+      }
+    }
 
     return membershipRequest;
   }
@@ -175,12 +256,15 @@ export class MembershipService {
     reviewerId: string,
     rejectionReason: string,
   ): Promise<MembershipRequestEntity> {
-    return this.updateMembershipRequest(id, organizationUnitId, {
+    const request = await this.updateMembershipRequest(id, organizationUnitId, {
       status: MembershipRequestStatus.REJECTED,
       reviewedById: reviewerId,
       reviewedAt: new Date(),
       rejectionReason,
     });
+
+    await this.notificationService.notifyUserMembershipRejected(request);
+    return request;
   }
 
   async cancelMembershipRequest(
@@ -208,6 +292,7 @@ export class MembershipService {
         user: true,
         organizationUnit: true,
         reviewedBy: true,
+        requirementProfileSubmissions: true,
       },
     });
   }
@@ -222,8 +307,71 @@ export class MembershipService {
         user: true,
         organizationUnit: true,
         reviewedBy: true,
+        requirementProfileSubmissions: true,
       },
     });
+  }
+
+  async requestOrgJoin(
+    userId: string,
+    organizationUnitId: string,
+    intendedShiftId?: string,
+  ): Promise<
+    | { status: 'JOINED' }
+    | {
+        status: 'MEMBERSHIP_REQUESTED';
+        membershipRequest: MembershipRequestEntity;
+      }
+    | {
+        status: 'REQUIREMENTS_NEEDED';
+        requirementProfile: RequirementProfileEntity;
+        requirementStatuses: Array<{
+          requirementId: string;
+          name: string;
+          status: string;
+        }>;
+      }
+  > {
+    const membership = await this.getMembership(userId, organizationUnitId);
+    if (membership) {
+      return { status: 'JOINED' };
+    }
+
+    const orgUnit = await this.db.query.organizationUnits.findFirst({
+      where: { id: organizationUnitId },
+    });
+    if (!orgUnit) {
+      throw new NotFoundGraphQLError('Organization unit not found');
+    }
+
+    if (orgUnit.requiredMembershipRequirementProfileId) {
+      const statuses =
+        await this.requirementProfileService.getUserRequirementStatus(
+          userId,
+          orgUnit.requiredMembershipRequirementProfileId,
+        );
+      const allApproved = statuses.every((s) => s.status === 'APPROVED');
+      if (!allApproved) {
+        const profile = await this.requirementProfileService.findById(
+          orgUnit.requiredMembershipRequirementProfileId,
+        );
+        if (!profile) {
+          throw new NotFoundGraphQLError('Requirement profile not found');
+        }
+        return {
+          status: 'REQUIREMENTS_NEEDED',
+          requirementProfile: profile,
+          requirementStatuses: statuses,
+        };
+      }
+    }
+
+    const request = await this.createMembershipRequest(
+      userId,
+      organizationUnitId,
+      intendedShiftId,
+    );
+    return { status: 'MEMBERSHIP_REQUESTED', membershipRequest: request };
   }
 
   async assignRoleToMembership(
