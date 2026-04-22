@@ -1,8 +1,8 @@
 import { type GetShiftQuery, ShiftVisibility } from '@repo/data';
 import { Badge, Button, Card, CardContent } from '@repo/ui';
 import { Calendar, Clock, DoorOpen, FileText } from 'lucide-react';
-import { notFound, redirect } from 'next/navigation';
-import { RequestJoinButton } from '@/domain/shift/components/request-join-button';
+import { notFound } from 'next/navigation';
+import { JoinShiftButton } from '@/domain/shift/components/join-shift-button';
 import { getDataClient } from '@/lib/data-client';
 import { formatRange } from '@/lib/formatting';
 import { UserCard } from '../../../../components/user-card';
@@ -11,6 +11,7 @@ import { validateUserOrgAccess } from '../../../../lib/org-context-server';
 
 interface ShiftPageProps {
   params: Promise<{ shiftId: string }>;
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }
 
 const status = (shift: GetShiftQuery['shift']) => {
@@ -21,8 +22,13 @@ const status = (shift: GetShiftQuery['shift']) => {
   }
 };
 
-export default async function ShiftPage({ params }: ShiftPageProps) {
+export default async function ShiftPage({
+  params,
+  searchParams,
+}: ShiftPageProps) {
   const { shiftId } = await params;
+  const search = await searchParams;
+  const autoJoin = search.autoJoin === 'true';
 
   const data = await getDataClient();
   const shift = await data.shift.findById(shiftId);
@@ -35,16 +41,9 @@ export default async function ShiftPage({ params }: ShiftPageProps) {
   const endDate = new Date(startDate.getTime() + shift.durationMinutes * 60000);
 
   const authenticated = await isAuthenticated();
-
-  if (!authenticated) {
-    const searchParams = new URLSearchParams({
-      orgUId: shift.organizationUnitId,
-      redirectTo: `/shifts/${shiftId}`,
-    });
-    redirect(`/api/invite?${searchParams}`);
-  }
-
-  const isMember = await validateUserOrgAccess(shift.organizationUnitId);
+  const isMember = authenticated
+    ? await validateUserOrgAccess(shift.organizationUnitId)
+    : false;
 
   return (
     <div className="flex flex-col items-center p-4 mt-8">
@@ -92,8 +91,11 @@ export default async function ShiftPage({ params }: ShiftPageProps) {
                 </Button>
               </div>
             ) : (
-              <RequestJoinButton
-                organizationUnitId={shift.organizationUnitId}
+              <JoinShiftButton
+                shiftId={shiftId}
+                visibility={shift.visibility}
+                isAuthenticated={authenticated}
+                autoJoin={autoJoin}
               />
             )}
           </CardContent>
