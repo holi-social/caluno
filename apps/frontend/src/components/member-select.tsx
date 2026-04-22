@@ -30,6 +30,7 @@ type MemberSelectProps = {
   members?: Member[];
   value?: string[];
   onChange: (ids: string[]) => void;
+  readonlyIds?: string[];
   inviteLinkUrl?: string;
 };
 
@@ -37,13 +38,17 @@ export const MemberSelect = ({
   members = [],
   value: selectedMemberIds = [],
   onChange,
+  readonlyIds = [],
   inviteLinkUrl,
 }: MemberSelectProps) => {
+  const effectiveSelectedIds = [
+    ...new Set([...selectedMemberIds, ...readonlyIds]),
+  ];
   const availableMembers = members.filter(
-    (v) => !selectedMemberIds.includes(v.id),
+    (v) => !effectiveSelectedIds.includes(v.id),
   );
   const selectedMembers = members.filter((v) =>
-    selectedMemberIds.includes(v.id),
+    effectiveSelectedIds.includes(v.id),
   );
 
   const addMember = (memberId: string) => {
@@ -51,6 +56,7 @@ export const MemberSelect = ({
   };
 
   const removeMember = (memberId: string) => {
+    if (readonlyIds.includes(memberId)) return;
     onChange(selectedMemberIds.filter((id) => id !== memberId));
   };
 
@@ -68,7 +74,6 @@ export const MemberSelect = ({
         emptyMessage="All members have been selected"
         className="min-w-0 flex-1"
         inviteLinkUrl={inviteLinkUrl}
-        totalMembers={members.length}
         onInviteByLink={handleCopyLink}
         renderItem={(member) => (
           <button
@@ -88,13 +93,15 @@ export const MemberSelect = ({
         renderItem={(member) => (
           <div className="w-full flex justify-between p-1">
             <UserCard user={member} size="sm" />
-            <Button
-              size="icon-sm"
-              variant="ghost"
-              onClick={() => removeMember(member.id)}
-            >
-              <CircleX />
-            </Button>
+            {!readonlyIds.includes(member.id) && (
+              <Button
+                size="icon-sm"
+                variant="ghost"
+                onClick={() => removeMember(member.id)}
+              >
+                <CircleX />
+              </Button>
+            )}
           </div>
         )}
       />
@@ -109,7 +116,6 @@ type FilteredMemberListProps = {
   renderItem: (member: Member) => React.ReactNode;
   className?: string;
   inviteLinkUrl?: string;
-  totalMembers?: number;
   onInviteByLink?: () => void;
 };
 
@@ -120,16 +126,12 @@ export const FilteredMemberList = ({
   renderItem,
   className,
   inviteLinkUrl,
-  totalMembers,
   onInviteByLink,
 }: FilteredMemberListProps) => {
   const [searchQuery, setSearchQuery] = useState('');
   const membersFiltered = filterUsers(members, searchQuery);
 
-  const showInviteLink =
-    inviteLinkUrl &&
-    membersFiltered.length === 0 &&
-    (searchQuery || (totalMembers ?? 0) === 0);
+  const showInviteLink = inviteLinkUrl && membersFiltered.length === 0;
 
   return (
     <div className={className}>

@@ -213,12 +213,28 @@ export class ShiftService {
       },
     });
 
-    if (!shift.maxVolunteers) {
-      await this.createInvitesForInstances(
-        this.db,
-        instances.map((i) => i.id),
-        memberIds,
+    const instanceIds = instances.map((i) => i.id);
+
+    const existingInvites = await this.db
+      .selectDistinct({ userId: schema.shiftInstanceInvites.userId })
+      .from(schema.shiftInstanceInvites)
+      .where(
+        and(
+          inArray(schema.shiftInstanceInvites.instanceId, instanceIds),
+          inArray(schema.shiftInstanceInvites.userId, memberIds),
+          eq(schema.shiftInstanceInvites.status, ShiftInviteStatus.ACCEPTED),
+        ),
       );
+
+    const alreadyInvited = new Set(existingInvites.map((i) => i.userId));
+    const newMemberIds = memberIds.filter((id) => !alreadyInvited.has(id));
+
+    if (newMemberIds.length === 0) {
+      return shift;
+    }
+
+    if (!shift.maxVolunteers) {
+      await this.createInvitesForInstances(this.db, instanceIds, newMemberIds);
       return shift;
     }
 
@@ -242,7 +258,8 @@ export class ShiftService {
         .groupBy(schema.shiftInstanceInvites.instanceId);
 
       const violations = capacityViolations.filter(
-        (c) => c.current + memberIds.length > (shift.maxVolunteers ?? Infinity),
+        (c) =>
+          c.current + newMemberIds.length > (shift.maxVolunteers ?? Infinity),
       );
 
       if (violations.length > 0) {
@@ -251,11 +268,7 @@ export class ShiftService {
         );
       }
 
-      await this.createInvitesForInstances(
-        tx,
-        instances.map((i) => i.id),
-        memberIds,
-      );
+      await this.createInvitesForInstances(tx, instanceIds, newMemberIds);
     });
 
     return shift;

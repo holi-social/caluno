@@ -15,7 +15,6 @@ query GetShift($id: String!) {
     createdBy {
       id
       name
-      email
       image
     }
   }
@@ -130,6 +129,15 @@ mutation JoinShift($shiftId: String!) {
       name
       status
     }
+  }
+}
+
+query GetShiftVolunteers($shiftId: ID!) {
+  shiftVolunteers(shiftId: $shiftId) {
+    id
+    name
+    email
+    image
   }
 }
 

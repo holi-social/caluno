@@ -1,8 +1,14 @@
 'use client';
 
-import { useOrgUId, useVolunteers } from '@repo/data/react';
+import {
+  useOrgUId,
+  useQueryClient,
+  useShiftVolunteers,
+  useVolunteers,
+} from '@repo/data/react';
 import { Button, Field } from '@repo/ui';
 import { useState, useTransition } from 'react';
+import { toast } from 'sonner';
 import { MemberSelect } from '@/components/member-select';
 import { useSession } from '@/lib/auth';
 import { inviteShiftVolunteers } from '../actions';
@@ -24,26 +30,54 @@ export function InviteShiftForm({
   const [serverError, setServerError] = useState<string | null>(null);
   const orgUId = useOrgUId();
   const session = useSession();
+  const queryClient = useQueryClient();
 
+  const { data: shiftVolunteers } = useShiftVolunteers(shiftId);
   const { data: volunteers } = useVolunteers(orgUId);
   const currentUserId = session.data?.user?.id;
-  const availableVolunteers = currentUserId
-    ? volunteers?.filter((v) => v.id !== currentUserId)
-    : volunteers;
+
+  const existingIds = new Set(shiftVolunteers?.map((v) => v.id) ?? []);
+  const readonlyIds = shiftVolunteers?.map((v) => v.id) ?? [];
+
+  const eligibleVolunteers = volunteers?.filter((v) => v.id !== currentUserId);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setServerError(null);
+
+    const newMemberIds = memberIds.filter((id) => !existingIds.has(id));
+    if (newMemberIds.length === 0) {
+      toast.info('No new volunteers selected');
+      return;
+    }
+
     startTransition(async () => {
-      const result = await inviteShiftVolunteers({
-        shiftId,
-        organizationUnitId: orgUId,
-        memberIds,
-      });
-      if (result?.serverError) {
-        setServerError(result.serverError);
-      } else {
+      try {
+        const result = await inviteShiftVolunteers({
+          shiftId,
+          organizationUnitId: orgUId,
+          memberIds: newMemberIds,
+        });
+
+        if (result?.serverError) {
+          setServerError(result.serverError);
+          toast.error(result.serverError);
+          return;
+        }
+
+        toast.success('Volunteers invited successfully');
+        setMemberIds([]);
+        queryClient.invalidateQueries({
+          queryKey: ['shiftVolunteers', shiftId],
+        });
         onSuccess?.();
+      } catch (error) {
+        const message =
+          error instanceof Error
+            ? error.message
+            : 'Failed to invite volunteers';
+        setServerError(message);
+        toast.error(message);
       }
     });
   };
@@ -58,9 +92,10 @@ export function InviteShiftForm({
 
       <Field>
         <MemberSelect
-          members={availableVolunteers}
+          members={eligibleVolunteers}
           value={memberIds}
           onChange={setMemberIds}
+          readonlyIds={readonlyIds}
           inviteLinkUrl={shiftShareUrl(shiftId)}
         />
       </Field>
@@ -71,7 +106,7 @@ export function InviteShiftForm({
             Cancel
           </Button>
         )}
-        <Button type="submit" disabled={isPending}>
+        <Button type="submit" disabled={isPending || memberIds.length === 0}>
           {isPending ? 'Inviting...' : 'Invite volunteers'}
         </Button>
       </div>

@@ -136,4 +136,13 @@ export class ShiftRepository extends BaseRepository {
       throw DataError.fromGraphQLError(error);
     }
   }
+
+  async findVolunteersByShiftId(shiftId: string) {
+    try {
+      const data = await this.sdk.GetShiftVolunteers({ shiftId });
+      return data.shiftVolunteers;
+    } catch (error) {
+      throw DataError.fromGraphQLError(error);
+    }
+  }
 }
