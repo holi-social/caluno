@@ -1,21 +1,18 @@
-# CLAUDE.md
+# Clippy Backend GraphQL API
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+The backend api for securely managing volunteers and shifts in multi-tiered organisations.
 
 ## Commands
 
-- `npm run dev` - Start development server with watch mode
-- `npm run build` - Build for production
-- `npm run start:prod` - Start production server
-- `npm run lint` - Lint with Biome
-- `npm run format` - Format with Biome
-- `npm run check-types` - Type check without emitting files
-- `npm run test` - Run tests
-- `npm run test:watch` - Run tests in watch mode
-- `npm run test:cov` - Run tests with coverage
-- `npm run db:generate` - Generate database migrations with Drizzle
-- `npm run db:migrate` - Run database migrations
-- `npm run db:studio` - Open Drizzle Studio
+- `bun run dev` - Start NestJS development server
+- `bun run build` - Build a production bundle
+- `bun run lint` - Lint with Biome
+- `bun run format` - Format with Biome
+- `bun run check-types` - Check for type errors
+- `bun test:e2e` - Tests the GraphQL api
+- `bun run db:generate` - Generate database migrations based on schema changes
+- `bun run db:migrate` - Run drizzle database migrations
+
 
 ## Tech Stack
 

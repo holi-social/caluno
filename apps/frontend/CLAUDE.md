@@ -1,6 +1,6 @@
 # Clippy Frontend Web App
 
-The front-end web app for securely managing volunteers and shifts in multi-tiered organisations.
+The frontend web app for securely managing volunteers and shifts in multi-tiered organisations.
 
 ## Commands
 
