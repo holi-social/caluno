@@ -15,18 +15,6 @@ export class MembershipRequestMutationResolver {
     private readonly membershipRequestMapper: MembershipRequestMapper,
   ) {}
 
-  @Mutation(() => MembershipRequest)
-  async createMembershipRequest(
-    @Args('organizationUnitId', { type: () => ID }) organizationUnitId: string,
-    @Session() session: UserSession,
-  ): Promise<MembershipRequest> {
-    const entity = await this.membershipService.createMembershipRequest(
-      session.user.id,
-      organizationUnitId,
-    );
-    return this.membershipRequestMapper.toModelOrThrow(entity);
-  }
-
   @Permissions(PERMISSIONS.MEMBERSHIP_REQUEST_APPROVE)
   @Mutation(() => MembershipRequest)
   async approveMembershipRequest(

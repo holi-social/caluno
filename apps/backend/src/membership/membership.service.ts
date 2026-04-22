@@ -151,6 +151,14 @@ export class MembershipService {
     reviewerId: string,
   ): Promise<MembershipRequestEntity> {
     const membershipRequest = await this.db.transaction(async (tx) => {
+      const requestToApprove = await tx.query.membershipRequests.findFirst({
+        where: { id },
+      });
+
+      if (!requestToApprove) {
+        throw new NotFoundGraphQLError('Membership request not found');
+      }
+
       const organizationUnit = await tx.query.organizationUnits.findFirst({
         where: { id: organizationUnitId },
       });
@@ -160,16 +168,20 @@ export class MembershipService {
       }
 
       if (organizationUnit.requiredMembershipRequirementProfileId) {
-        const approvedSubmission =
-          await tx.query.requirementProfileSubmissions.findFirst({
-            where: {
-              profileId:
-                organizationUnit.requiredMembershipRequirementProfileId,
-              membershipRequestId: id,
-              status: RequirementProfileSubmissionStatus.APPROVED,
-            },
-          });
-        if (!approvedSubmission) {
+        if (!requestToApprove.userId) {
+          throw new ConflictGraphQLError(
+            'Cannot approve: membership request has no associated user.',
+          );
+        }
+        const requirementStatuses =
+          await this.requirementProfileService.getUserRequirementStatus(
+            requestToApprove.userId,
+            organizationUnit.requiredMembershipRequirementProfileId,
+          );
+        const allApproved = requirementStatuses.every(
+          (s) => s.status === 'APPROVED',
+        );
+        if (!allApproved) {
           throw new ConflictGraphQLError(
             'Cannot approve: user has not completed the required membership profile.',
           );
@@ -190,7 +202,7 @@ export class MembershipService {
         );
       }
 
-      const [membershipRequest] = await tx
+      const [updatedRequest] = await tx
         .update(schema.membershipRequests)
         .set({
           status: MembershipRequestStatus.ACCEPTED,
@@ -212,12 +224,12 @@ export class MembershipService {
         )
         .returning();
 
-      if (!membershipRequest) {
+      if (!updatedRequest) {
         throw new NotFoundGraphQLError('Membership request not found');
       }
 
       await tx.insert(schema.memberships).values({
-        userId: membershipRequest.userId,
+        userId: updatedRequest.userId,
         roleId: memberRole.id,
       });
 
