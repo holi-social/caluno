@@ -4,6 +4,30 @@ mutation CreateMembershipRequest($organizationUnitId: ID!) {
   }
 }
 
+mutation JoinOrganization($organizationUnitId: ID!) {
+  joinOrganization(organizationUnitId: $organizationUnitId) {
+    status
+    membershipRequestId
+    requirementProfile {
+      id
+      name
+      description
+      requirements {
+        id
+        name
+        description
+        type
+        mandatory
+      }
+    }
+    requirementStatuses {
+      requirementId
+      name
+      status
+    }
+  }
+}
+
 mutation ApproveMembershipRequest($id: ID!, $organizationUnitId: ID!) {
   approveMembershipRequest(id: $id, organizationUnitId: $organizationUnitId) {
     id
