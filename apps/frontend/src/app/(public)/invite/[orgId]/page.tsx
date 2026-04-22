@@ -1,3 +1,4 @@
+import { JoinOrganizationStatus } from '@repo/data';
 import { cookies } from 'next/headers';
 import { notFound, redirect } from 'next/navigation';
 import { isAuthenticated } from '@/lib/auth-server';
@@ -25,13 +26,27 @@ export default async function InvitePage({ params }: InvitePageProps) {
   }
 
   try {
-    await data.membershipRequest.create(organizationUnitId);
-  } catch {}
+    const result = await data.membershipRequest.join(organizationUnitId);
 
-  const cookieStore = await cookies();
-  const pendingRedirect = cookieStore.get('pending_redirect')?.value;
-  cookieStore.set('pending_invite', '', { maxAge: 0, path: '/' });
-  cookieStore.set('pending_redirect', '', { maxAge: 0, path: '/' });
+    if (result.status === JoinOrganizationStatus.RequirementsNeeded) {
+      const redirectUrl = new URL('/', process.env.NEXT_PUBLIC_WEB_URL ?? '');
+      redirectUrl.searchParams.set('orgUId', organizationUnitId);
+      redirectUrl.searchParams.set('requirementsNeeded', 'true');
+      redirect(redirectUrl.toString());
+    }
 
-  redirect(getSafeRedirect(pendingRedirect));
+    const cookieStore = await cookies();
+    const pendingRedirect = cookieStore.get('pending_redirect')?.value;
+    cookieStore.set('pending_invite', '', { maxAge: 0, path: '/' });
+    cookieStore.set('pending_redirect', '', { maxAge: 0, path: '/' });
+
+    redirect(getSafeRedirect(pendingRedirect));
+  } catch (error) {
+    const message =
+      error instanceof Error ? error.message : 'Failed to join organization';
+    const redirectUrl = new URL('/', process.env.NEXT_PUBLIC_WEB_URL ?? '');
+    redirectUrl.searchParams.set('orgUId', organizationUnitId);
+    redirectUrl.searchParams.set('joinError', message);
+    redirect(redirectUrl.toString());
+  }
 }
