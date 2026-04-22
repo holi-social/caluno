@@ -16,6 +16,7 @@ import { type Database, DatabaseModule } from './database/database.module';
 import { DATABASE_CONNECTION } from './database/database-connection';
 import { GraphqlModule } from './graphql/graphql.module';
 import { MembershipModule } from './membership/membership.module';
+import { NotificationModule } from './notification/notification.module';
 import { OrganizationModule } from './organization/organization.module';
 import { RequirementProfileModule } from './requirement-profile/requirement-profile.module';
 import { ShiftModule } from './shift/shift.module';
@@ -62,6 +63,7 @@ const autoSchemaFile =
     OrganizationModule,
     RequirementProfileModule,
     MembershipModule,
+    NotificationModule,
     TimeTrackingModule,
     GraphqlModule,
     ShiftModule,
