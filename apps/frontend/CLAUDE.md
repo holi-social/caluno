@@ -4,9 +4,7 @@ The front-end web app for securely managing volunteers and shifts in multi-tiere
 
 ## Commands
 
-Use `bun` - never use npm or yarn.
-
-- `bun run dev` - Start development server
+- `bun run dev` - Start NextJS development server
 - `bun run build` - Build a production bundle
 - `bun run lint` - Lint with Biome
 - `bun run format` - Format with Biome
