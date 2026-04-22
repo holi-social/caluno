@@ -1,6 +1,6 @@
 'use client';
 
-import { JoinShiftStatus, ShiftVisibility } from '@repo/data';
+import { JoinStatus, ShiftVisibility } from '@repo/data';
 import { useJoinShift } from '@repo/data/react';
 import { Button } from '@repo/ui';
 import { useRouter } from 'next/navigation';
@@ -23,7 +23,6 @@ export function JoinShiftButton({
   const router = useRouter();
   const joinShift = useJoinShift();
 
-  const [requestSent, setRequestSent] = useState(false);
   const [hasAutoJoined, setHasAutoJoined] = useState(false);
 
   const handleJoin = useCallback(async () => {
@@ -38,14 +37,19 @@ export function JoinShiftButton({
     try {
       const result = await joinShift.mutateAsync(shiftId);
 
-      if (result.status === JoinShiftStatus.Joined) {
+      if (result.status === JoinStatus.Joined) {
         toast.success('You have joined the shift');
         router.refresh();
-      } else if (result.status === JoinShiftStatus.MembershipRequested) {
-        toast.success('Membership request sent successfully');
-        setRequestSent(true);
+      } else if (result.status === JoinStatus.Pending) {
+        toast.success(
+          'Your membership request is pending. You will be added to this shift once approved.',
+        );
         router.refresh();
-      } else if (result.status === JoinShiftStatus.RequirementsNeeded) {
+      } else if (result.status === JoinStatus.Rejected) {
+        toast.error(
+          'Your membership request for this organization was rejected. Contact an admin if you believe this was a mistake.',
+        );
+      } else if (result.status === JoinStatus.RequirementsNeeded) {
         const missing = result.requirementStatuses?.filter(
           (s) => s.status !== 'APPROVED',
         );
@@ -97,10 +101,6 @@ export function JoinShiftButton({
         Invite only
       </Button>
     );
-  }
-
-  if (requestSent) {
-    return <Button disabled>Membership request sent</Button>;
   }
 
   return (

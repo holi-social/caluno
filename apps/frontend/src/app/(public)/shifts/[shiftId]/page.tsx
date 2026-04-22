@@ -1,4 +1,8 @@
-import { type GetShiftQuery, ShiftVisibility } from '@repo/data';
+import {
+  type GetShiftQuery,
+  MembershipRequestStatus,
+  ShiftVisibility,
+} from '@repo/data';
 import { Badge, Button, Card, CardContent } from '@repo/ui';
 import { Calendar, Clock, DoorOpen, FileText } from 'lucide-react';
 import { notFound } from 'next/navigation';
@@ -45,6 +49,19 @@ export default async function ShiftPage({
     ? await validateUserOrgAccess(shift.organizationUnitId)
     : false;
 
+  const pendingRequest =
+    authenticated && !isMember
+      ? await data.membershipRequest
+          .findMine({ status: MembershipRequestStatus.Pending, limit: 100 })
+          .then(
+            (res) =>
+              res.items.find(
+                (r) => r.organizationUnit.id === shift.organizationUnitId,
+              ) ?? null,
+          )
+          .catch(() => null)
+      : null;
+
   return (
     <div className="flex flex-col items-center p-4 mt-8">
       <div className="flex justify-between w-full max-w-2xl py-6 px-2">
@@ -89,6 +106,14 @@ export default async function ShiftPage({
                 <Button variant="destructive">
                   <DoorOpen /> Leave shift
                 </Button>
+              </div>
+            ) : pendingRequest ? (
+              <div className="space-y-2">
+                <p className="text-sm text-muted-foreground">
+                  Your membership request for this organization is pending
+                  approval. You will be able to join this shift once approved.
+                </p>
+                <Button disabled>Request sent</Button>
               </div>
             ) : (
               <JoinShiftButton
