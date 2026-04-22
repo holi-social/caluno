@@ -46,7 +46,11 @@ export class ShiftService {
 
   async findByIdPublic(id: string): Promise<ShiftEntity | null> {
     const result = await this.db.query.shifts.findFirst({
-      where: { id, isDeleted: false },
+      where: {
+        id,
+        isDeleted: false,
+        visibility: ShiftVisibility.ALL_MEMBERS,
+      },
     });
     return result ?? null;
   }
@@ -271,6 +275,30 @@ export class ShiftService {
         shiftInstanceInvites: {
           instanceId: instance.id,
           status: ShiftInviteStatus.ACCEPTED,
+        },
+      },
+    });
+  }
+
+  async findShiftVolunteers(
+    shiftId: string,
+    organizationUnitId: string,
+  ): Promise<UserEntity[]> {
+    const shift = await this.db.query.shifts.findFirst({
+      where: { id: shiftId, organizationUnitId },
+    });
+    if (!shift) {
+      throw new NotFoundGraphQLError('Shift not found');
+    }
+
+    return this.db.query.users.findMany({
+      where: {
+        shiftInstanceInvites: {
+          status: ShiftInviteStatus.ACCEPTED,
+          instance: {
+            masterId: shiftId,
+            isCancelled: false,
+          },
         },
       },
     });

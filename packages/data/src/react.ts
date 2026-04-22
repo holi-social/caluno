@@ -30,6 +30,7 @@ export * from './react/hooks/use-organizations';
 export * from './react/hooks/use-requirement-profile-submission';
 export * from './react/hooks/use-roles';
 export * from './react/hooks/use-shift';
+export * from './react/hooks/use-shift-volunteers';
 export * from './react/hooks/use-time-entry';
 export * from './react/hooks/use-user';
 // Organization context (provider, hooks, and cookie utilities)
