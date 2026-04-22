@@ -4,11 +4,19 @@ import type { Database } from '../database/database.module';
 import { DATABASE_CONNECTION } from '../database/database-connection';
 import * as schema from '../database/schema';
 import { UserEntity } from '../database/schema';
-import { ConflictGraphQLError, NotFoundGraphQLError } from '../graphql/errors';
+import {
+  ConflictGraphQLError,
+  ForbiddenGraphQLError,
+  NotFoundGraphQLError,
+} from '../graphql/errors';
 import type { PaginationInput } from '../graphql/pagination.input';
+import { MembershipService } from '../membership/membership.service';
+import type { MembershipRequestEntity } from '../membership/schemas/membership-request.schema';
+import { NotificationService } from '../notification/notification.service';
+import type { RequirementProfileEntity } from '../requirement-profile/schemas/requirement-profile.schema';
 import { UserService } from '../user/user.service';
 import { slugify } from '../utils/slug.util';
-import { ShiftInviteStatus, ShiftVisibility } from './enums';
+import { JoinShiftStatus, ShiftInviteStatus, ShiftVisibility } from './enums';
 import { CreateShiftInput } from './inputs/create-shift.input';
 import { UpdateShiftInput } from './inputs/update-shift.input';
 import type { ShiftEntity } from './schemas/shift.schema';
@@ -21,6 +29,8 @@ export class ShiftService {
     @Inject(DATABASE_CONNECTION)
     private readonly db: Database,
     private readonly userService: UserService,
+    private readonly membershipService: MembershipService,
+    private readonly notificationService: NotificationService,
   ) {}
 
   async findById(id: string, organizationUnitId: string): Promise<ShiftEntity> {
@@ -507,5 +517,166 @@ export class ShiftService {
 
   async findCreator(createdById: string): Promise<UserEntity> {
     return this.userService.findByIdOrThrow(createdById);
+  }
+
+  async joinShift(
+    userId: string,
+    shiftId: string,
+    tx?: Database,
+  ): Promise<ShiftEntity> {
+    const db = tx ?? this.db;
+
+    const shift = await db.query.shifts.findFirst({
+      where: { id: shiftId, isDeleted: false },
+    });
+
+    if (!shift) {
+      throw new NotFoundGraphQLError('Shift not found');
+    }
+
+    const membership = await this.membershipService.getMembership(
+      userId,
+      shift.organizationUnitId,
+    );
+
+    if (!membership) {
+      throw new ConflictGraphQLError(
+        'You must be a member of the organization to join this shift.',
+      );
+    }
+
+    const instances = await db.query.shiftInstances.findMany({
+      where: {
+        masterId: shiftId,
+        isCancelled: false,
+      },
+    });
+
+    if (instances.length === 0) {
+      throw new NotFoundGraphQLError('No instances found for this shift');
+    }
+
+    if (shift.maxVolunteers) {
+      const capacityViolations = await db
+        .select({
+          instanceId: schema.shiftInstanceInvites.instanceId,
+          current: count(),
+        })
+        .from(schema.shiftInstanceInvites)
+        .where(
+          and(
+            eq(schema.shiftInstanceInvites.status, ShiftInviteStatus.ACCEPTED),
+            inArray(
+              schema.shiftInstanceInvites.instanceId,
+              instances.map((i) => i.id),
+            ),
+          ),
+        )
+        .groupBy(schema.shiftInstanceInvites.instanceId);
+
+      const violations = capacityViolations.filter(
+        (c) =>
+          shift.maxVolunteers !== null &&
+          shift.maxVolunteers !== undefined &&
+          c.current >= shift.maxVolunteers,
+      );
+
+      if (violations.length > 0) {
+        throw new ConflictGraphQLError(
+          `Cannot join shift: ${violations.length} instance(s) are at full capacity of ${shift.maxVolunteers}`,
+        );
+      }
+    }
+
+    const invites = instances.map((instance) => ({
+      instanceId: instance.id,
+      userId,
+      status: ShiftInviteStatus.ACCEPTED,
+    }));
+
+    await db
+      .insert(schema.shiftInstanceInvites)
+      .values(invites)
+      .onConflictDoNothing();
+
+    await this.notificationService.notifyUserShiftJoined(shift, userId);
+
+    return shift;
+  }
+
+  async requestJoinShift(
+    userId: string,
+    shiftId: string,
+  ): Promise<{
+    status: JoinShiftStatus;
+    shift: ShiftEntity;
+    membershipRequest?: MembershipRequestEntity;
+    requirementProfile?: RequirementProfileEntity;
+    requirementStatuses?: Array<{
+      requirementId: string;
+      name: string;
+      status: string;
+    }>;
+  }> {
+    const shift = await this.findByIdPublic(shiftId);
+
+    if (!shift || shift.isDeleted) {
+      throw new NotFoundGraphQLError('Shift not found');
+    }
+
+    if (shift.visibility !== ShiftVisibility.ALL_MEMBERS) {
+      throw new ForbiddenGraphQLError(
+        'This shift is invite-only and cannot be joined directly',
+      );
+    }
+
+    const orgUnit = await this.db.query.organizationUnits.findFirst({
+      where: { id: shift.organizationUnitId },
+    });
+
+    if (!orgUnit) {
+      throw new NotFoundGraphQLError('Organization unit not found');
+    }
+
+    const membership = await this.membershipService.getMembership(
+      userId,
+      orgUnit.id,
+    );
+
+    if (!membership) {
+      const result = await this.membershipService.requestOrgJoin(
+        userId,
+        orgUnit.id,
+        shiftId,
+      );
+
+      if (result.status === 'REQUIREMENTS_NEEDED') {
+        return {
+          status: JoinShiftStatus.REQUIREMENTS_NEEDED,
+          shift,
+          requirementProfile: result.requirementProfile,
+          requirementStatuses: result.requirementStatuses,
+        };
+      }
+
+      if (result.status === 'MEMBERSHIP_REQUESTED') {
+        return {
+          status: JoinShiftStatus.MEMBERSHIP_REQUESTED,
+          shift,
+          membershipRequest: result.membershipRequest,
+        };
+      }
+
+      return {
+        status: JoinShiftStatus.JOINED,
+        shift,
+      };
+    }
+
+    await this.joinShift(userId, shiftId);
+    return {
+      status: JoinShiftStatus.JOINED,
+      shift,
+    };
   }
 }

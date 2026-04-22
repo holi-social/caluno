@@ -9,6 +9,12 @@ export enum ShiftInviteStatus {
   REJECTED = 'REJECTED',
 }
 
+export enum JoinShiftStatus {
+  JOINED = 'JOINED',
+  MEMBERSHIP_REQUESTED = 'MEMBERSHIP_REQUESTED',
+  REQUIREMENTS_NEEDED = 'REQUIREMENTS_NEEDED',
+}
+
 export enum RecurrenceDay {
   MONDAY = 'MONDAY',
   TUESDAY = 'TUESDAY',
