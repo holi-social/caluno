@@ -7,4 +7,7 @@ export class UpdateOrganizationUnitInput extends PartialType(
 ) {
   @Field(() => String)
   organizationId: string;
+
+  @Field(() => String, { nullable: true })
+  requiredMembershipRequirementProfileId?: string | null;
 }

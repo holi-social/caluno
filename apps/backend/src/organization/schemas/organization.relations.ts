@@ -53,6 +53,10 @@ export const organizationRelations = defineRelationsPart(schema, (r) => ({
         from: r.organizationUnits.id,
         to: r.organizationUnitFavoriteRequirementProfiles.organizationUnitId,
       }),
+    requiredMembershipRequirementProfile: r.one.requirementProfiles({
+      from: r.organizationUnits.requiredMembershipRequirementProfileId,
+      to: r.requirementProfiles.id,
+    }),
   },
   organizationUnitTypes: {
     units: r.many.organizationUnits({
