@@ -34,7 +34,7 @@ src/
 test/
 
 
-# Patterns
+## Patterns
 
 - GraphQL schema is built using code first approach and utilising decorators.
 - Data from Drizzle queries are mapped to GraphQl models via mappers. All mappers are named with the pattern *.mapper.ts

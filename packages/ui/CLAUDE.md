@@ -1,4 +1,4 @@
-# React component library for use in frontend.
+# React component library for use in frontend
 
 - React components based on shadcn
 - Tailwind incl. theming providing by next-themes
