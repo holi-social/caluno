@@ -34,7 +34,7 @@ src/
 - Code (components, hooks, actions etc) for a specific domain/feature should go in specific src/domain folders. Not the Shared folders.
 - Use `@/*` to import from `src/*` (e.g., `@/domain/shift/actions.ts`).
 - Organise Server Actions for a domain into a `actions.ts` file. Example: `src/domain/shift/actions.ts`.
-- Organise zod schemas for a domain into a `schemaa.ts` file. Example: `src/domain/shift/schemas.ts`.
+- Organise zod schemas for a domain into a `schemas.ts` file. Example: `src/domain/shift/schemas.ts`.
 - Do not write GraphQL in this project, use `@repo/data` for data access.
 
 ### New features
