@@ -150,7 +150,7 @@ package "Operations" {
 }
 
 ' --- Identity & Organisation ---
-Organisation "1" -- "1\nroot" OrgUnit
+Organisation [root] "1" -- "1" OrgUnit
 Organisation "1" -- "*" OrganisationUserProfile
 User "1" -- "*" OrganisationUserProfile
 OrgUnit "*" -- "1" OrgUnitType
@@ -161,16 +161,16 @@ OrgUnit "1" -- "*" Membership
 Membership "*" -- "1" User
 Role "*" -- "*" Permission
 Role "*" -- "*" Membership
-Organisation "1" -- "*" Role
+OrgUnit "1" -- "*" [root] Role : "defines >"
 
 ' --- Membership Requests ---
 OrgUnit "1" -- "*" MembershipRequest : "receives >"
 MembershipRequest "*" -- "1" User : "submitted by >"
 
 ' --- Requirement Profiles ---
-OrgUnit "1" -- "*" RequirementProfile : "requires >"
-Organisation "1" -- "*" RequirementProfile : "defines >"
-Organisation "1" -- "*" Requirement : "defines >"
+OrgUnit "1" -- "*" RequirementProfile : "??? requires >"
+OrgUnit "1" -- "*" [root] RequirementProfile : "defines >"
+OrgUnit "1" -- "*" [root] Requirement : "defines >"
 RequirementProfile "*" -- "*" Requirement : "groups >"
 
 ' --- Submissions & Fulfillments ---
