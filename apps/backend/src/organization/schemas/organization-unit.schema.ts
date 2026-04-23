@@ -12,6 +12,7 @@ import {
   uuid,
 } from 'drizzle-orm/pg-core';
 import { idColumn, timestampColumns } from '../../database/database-columns';
+import { requirementProfiles } from '../../requirement-profile/schemas/requirement-profile.schema';
 import { organizations } from './organization.schema';
 import { organizationUnitTypes } from './organization-unit-type.schema';
 
@@ -41,6 +42,9 @@ export const organizationUnits = pgTable(
     phone: text('phone'),
     description: text('description'),
     address: text('address'),
+    requiredMembershipRequirementProfileId: uuid(
+      'required_membership_requirement_profile_id',
+    ).references(() => requirementProfiles.id, { onDelete: 'set null' }),
     deletedAt: timestamp('deleted_at'),
     ...timestampColumns,
   },
@@ -74,6 +78,9 @@ export const organizationUnits = pgTable(
       foreignColumns: [table.organizationId, table.id],
     }).onDelete('cascade'),
     index('idx_organization_units_parent_id').on(table.parentId),
+    index('idx_organization_units_required_profile_id').on(
+      table.requiredMembershipRequirementProfileId,
+    ),
     index('idx_organization_units_type_id').on(table.typeId),
     index('idx_organization_units_name').on(table.name),
     index('idx_organization_units_deleted_at').on(table.deletedAt),

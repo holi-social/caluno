@@ -1,5 +1,6 @@
 import {
   index,
+  jsonb,
   pgEnum,
   pgTable,
   text,
@@ -38,6 +39,9 @@ export const membershipRequests = pgTable(
     status: membershipRequestStatusEnum('status')
       .notNull()
       .default(MembershipRequestStatus.PENDING),
+    metadata: jsonb('metadata').$type<{
+      intendedShiftIds?: string[];
+    }>(),
   },
   (table) => [
     index('idx_membership_requests_user_id').on(table.userId),

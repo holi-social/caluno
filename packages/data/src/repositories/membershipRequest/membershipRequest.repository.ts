@@ -1,5 +1,8 @@
 import { DataError } from '../../errors/data-error';
-import type { MembershipRequestStatus } from '../../generated/graphql';
+import type {
+  JoinOrganizationMutation,
+  MembershipRequestStatus,
+} from '../../generated/graphql';
 import { BaseRepository } from '../base/base.repository';
 
 export interface FindMembershipRequestsOptions {
@@ -21,17 +24,6 @@ export class MembershipRequestRepository extends BaseRepository {
         status: options.status,
       });
       return data.membershipRequests;
-    } catch (error) {
-      throw DataError.fromGraphQLError(error);
-    }
-  }
-
-  async create(organizationUnitId: string) {
-    try {
-      const data = await this.sdk.CreateMembershipRequest({
-        organizationUnitId,
-      });
-      return data.createMembershipRequest;
     } catch (error) {
       throw DataError.fromGraphQLError(error);
     }
@@ -86,6 +78,17 @@ export class MembershipRequestRepository extends BaseRepository {
         status: options.status,
       });
       return data.myMembershipRequests;
+    } catch (error) {
+      throw DataError.fromGraphQLError(error);
+    }
+  }
+
+  async join(
+    organizationUnitId: string,
+  ): Promise<JoinOrganizationMutation['joinOrganization']> {
+    try {
+      const data = await this.sdk.JoinOrganization({ organizationUnitId });
+      return data.joinOrganization;
     } catch (error) {
       throw DataError.fromGraphQLError(error);
     }

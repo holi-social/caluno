@@ -1,6 +1,7 @@
 import { Field, ID, ObjectType } from '@nestjs/graphql';
 
 import { createPaginatedResponseType } from '../../graphql/paginated-response.model';
+import { RequirementProfile } from '../../requirement-profile/models/requirement-profile.model';
 import { Organization } from './organization.model';
 import { OrganizationUnitType } from './organization-unit-type.model';
 
@@ -47,6 +48,9 @@ export class OrganizationUnit {
 
   @Field(() => [OrganizationUnit])
   children: OrganizationUnit[];
+
+  @Field(() => RequirementProfile, { nullable: true })
+  requiredMembershipRequirementProfile: RequirementProfile | null;
 }
 
 export const OrganizationUnitPaginatedResponse =

@@ -1,0 +1,12 @@
+mutation CreateRequirementProfileSubmission(
+  $input: CreateRequirementProfileSubmissionInput!
+) {
+  createRequirementProfileSubmission(input: $input) {
+    id
+    status
+    requirementProfile {
+      id
+      name
+    }
+  }
+}

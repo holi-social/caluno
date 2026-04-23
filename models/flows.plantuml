@@ -1,0 +1,157 @@
+@startuml user_join_flow
+
+skinparam state {
+    BackgroundColor<<terminal>> LightGray
+}
+
+title User Join Flow (Org & Shift)
+
+state "Not a Member" as NotMember
+state "Requirements Needed" as RequirementsNeeded
+state "Pending Approval" as Pending
+state "Rejected / Cancelled" as Rejected <<terminal>>
+state "Joined" as Joined <<terminal>>
+
+[*] --> NotMember : user visits invite link
+[*] --> Joined : already member
+
+NotMember --> RequirementsNeeded : org requires profile
+NotMember --> Pending : no requirements / all approved
+NotMember --> Rejected : existing rejected/cancelled request
+
+RequirementsNeeded --> Pending : submits requirements
+RequirementsNeeded --> NotMember : leaves page
+
+Pending --> Joined : admin approves
+Pending --> Rejected : admin rejects
+Pending --> NotMember : user cancels
+
+Rejected --> [*] : blocked (unique constraint)
+Joined --> [*]
+
+note right of Rejected
+  A REJECTED or CANCELLED request blocks
+  re-application due to unique constraint
+  on (userId, orgUnitId).
+  Future: remove constraint to allow retry.
+end note
+
+note right of Pending
+  When approved, metadata.intendedShiftIds
+  auto-joins user to those shifts (if ALL_MEMBERS).
+end note
+
+@enduml
+
+@startuml membership_request
+
+title Membership Request Entity Lifecycle
+
+[*] --> PENDING : user requests to join
+
+PENDING --> ACCEPTED : admin approves
+PENDING --> REJECTED : admin rejects
+PENDING --> CANCELLED : user cancels
+
+ACCEPTED --> [*]
+REJECTED --> [*]
+CANCELLED --> [*]
+
+note right of PENDING
+  Unique constraint: (userId, orgUnitId).
+  Only one request per user+org ever.
+end note
+
+@enduml
+
+@startuml
+
+title Shift Instance Invite Lifecycle
+
+[*] --> PENDING : user invited / auto-invited
+
+PENDING --> ACCEPTED : user accepts invite
+PENDING --> REJECTED : user declines invite
+
+ACCEPTED --> [*]
+REJECTED --> [*]
+
+note right of PENDING
+  Unique constraint: (instanceId, userId).
+  A user can only have one invite per shift instance.
+end note
+
+@enduml
+
+@startuml requirement_flows
+
+title Requirement Profile Submission Lifecycle
+
+[*] --> DRAFT : user starts filling
+
+DRAFT --> SUBMITTED : user submits
+SUBMITTED --> APPROVED : admin approves
+SUBMITTED --> REJECTED : admin rejects
+
+APPROVED --> [*]
+REJECTED --> DRAFT : user resubmits
+
+note right of DRAFT
+  A submission can be linked to either
+  a Membership or a MembershipRequest.
+end note
+
+@enduml
+
+@startuml requirement_fullfillment_lifecycle
+
+title Requirement Fulfillment Lifecycle
+
+[*] --> DRAFT : created with submission
+
+DRAFT --> SUBMITTED : user provides value
+SUBMITTED --> APPROVED : admin verifies
+SUBMITTED --> REJECTED : admin rejects
+
+APPROVED --> [*]
+REJECTED --> DRAFT : user updates value
+
+note right of DRAFT
+  Fulfillments are anchored to OrganisationUserProfile
+  so they can be reused across multiple OrgUnits
+  that share the same RequirementProfile.
+end note
+
+@enduml
+
+@startuml shift_join_flow
+
+title Shift Join Flow (User Perspective)
+
+state "Viewing Shift" as Viewing
+state "Checking Access" as CheckingAccess
+state "Org Member?" as IsMember <<choice>>
+state "Shift Visible?" as IsVisible <<choice>>
+state "Joined Shift" as JoinedShift <<terminal>>
+state "Membership Pending" as MembershipPending <<terminal>>
+state "Membership Rejected" as MembershipRejected <<terminal>>
+state "Requirements Needed" as ShiftRequirementsNeeded <<terminal>>
+
+[*] --> Viewing : visits /shifts/[id]
+Viewing --> IsVisible : clicks Join
+
+IsVisible --> CheckingAccess : visibility = ALL_MEMBERS
+IsVisible --> [*] : visibility = INVITED_MEMBERS
+
+CheckingAccess --> IsMember
+IsMember --> JoinedShift : yes → joinShift()
+IsMember --> RequirementsNeeded : no → requestOrgJoin()
+
+RequirementsNeeded --> ShiftRequirementsNeeded : requirements incomplete
+RequirementsNeeded --> MembershipPending : requirements ok → pending request
+RequirementsNeeded --> JoinedShift : auto-approved (not implemented)
+
+MembershipPending --> JoinedShift : admin approves + auto-joins intended shifts
+MembershipPending --> MembershipRejected : admin rejects
+
+@enduml

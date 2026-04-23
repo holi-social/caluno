@@ -1,8 +1,12 @@
-import { type GetShiftQuery, ShiftVisibility } from '@repo/data';
+import {
+  type GetShiftQuery,
+  MembershipRequestStatus,
+  ShiftVisibility,
+} from '@repo/data';
 import { Badge, Button, Card, CardContent } from '@repo/ui';
 import { Calendar, Clock, DoorOpen, FileText } from 'lucide-react';
-import { notFound, redirect } from 'next/navigation';
-import { RequestJoinButton } from '@/domain/shift/components/request-join-button';
+import { notFound } from 'next/navigation';
+import { JoinShiftButton } from '@/domain/shift/components/join-shift-button';
 import { getDataClient } from '@/lib/data-client';
 import { formatRange } from '@/lib/formatting';
 import { UserCard } from '../../../../components/user-card';
@@ -11,6 +15,7 @@ import { validateUserOrgAccess } from '../../../../lib/org-context-server';
 
 interface ShiftPageProps {
   params: Promise<{ shiftId: string }>;
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }
 
 const status = (shift: GetShiftQuery['shift']) => {
@@ -21,8 +26,13 @@ const status = (shift: GetShiftQuery['shift']) => {
   }
 };
 
-export default async function ShiftPage({ params }: ShiftPageProps) {
+export default async function ShiftPage({
+  params,
+  searchParams,
+}: ShiftPageProps) {
   const { shiftId } = await params;
+  const search = await searchParams;
+  const autoJoin = search.autoJoin === 'true';
 
   const data = await getDataClient();
   const shift = await data.shift.findById(shiftId);
@@ -35,16 +45,22 @@ export default async function ShiftPage({ params }: ShiftPageProps) {
   const endDate = new Date(startDate.getTime() + shift.durationMinutes * 60000);
 
   const authenticated = await isAuthenticated();
+  const isMember = authenticated
+    ? await validateUserOrgAccess(shift.organizationUnitId)
+    : false;
 
-  if (!authenticated) {
-    const searchParams = new URLSearchParams({
-      orgUId: shift.organizationUnitId,
-      redirectTo: `/shifts/${shiftId}`,
-    });
-    redirect(`/api/invite?${searchParams}`);
-  }
-
-  const isMember = await validateUserOrgAccess(shift.organizationUnitId);
+  const pendingRequest =
+    authenticated && !isMember
+      ? await data.membershipRequest
+          .findMine({ status: MembershipRequestStatus.Pending, limit: 100 })
+          .then(
+            (res) =>
+              res.items.find(
+                (r) => r.organizationUnit.id === shift.organizationUnitId,
+              ) ?? null,
+          )
+          .catch(() => null)
+      : null;
 
   return (
     <div className="flex flex-col items-center p-4 mt-8">
@@ -91,9 +107,20 @@ export default async function ShiftPage({ params }: ShiftPageProps) {
                   <DoorOpen /> Leave shift
                 </Button>
               </div>
+            ) : pendingRequest ? (
+              <div className="space-y-2">
+                <p className="text-sm text-muted-foreground">
+                  Your membership request for this organization is pending
+                  approval. You will be able to join this shift once approved.
+                </p>
+                <Button disabled>Request sent</Button>
+              </div>
             ) : (
-              <RequestJoinButton
-                organizationUnitId={shift.organizationUnitId}
+              <JoinShiftButton
+                shiftId={shiftId}
+                visibility={shift.visibility}
+                isAuthenticated={authenticated}
+                autoJoin={autoJoin}
               />
             )}
           </CardContent>

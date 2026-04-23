@@ -22,6 +22,7 @@ export * from './integrations/server-org-context';
 export * from './repositories/base/base.repository';
 export * from './repositories/membershipRequest/membershipRequest.repository';
 export * from './repositories/organization/organization.repository';
+export * from './repositories/requirementProfile/requirement-profile.repository';
 export * from './repositories/role/role.repository';
 export * from './repositories/shift/shift.repository';
 export * from './repositories/time-entry/time-entry.repository';

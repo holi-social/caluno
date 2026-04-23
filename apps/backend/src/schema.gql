@@ -92,6 +92,28 @@ A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date
 """
 scalar DateTime
 
+type JoinOrganizationResult {
+  membershipRequestId: ID
+  requirementProfile: RequirementProfile
+  requirementStatuses: [UserRequirementStatus!]
+  status: JoinStatus!
+}
+
+type JoinShiftResult {
+  membershipRequestId: ID
+  requirementProfile: RequirementProfile
+  requirementStatuses: [UserRequirementStatus!]
+  shift: Shift!
+  status: JoinStatus!
+}
+
+enum JoinStatus {
+  JOINED
+  PENDING
+  REJECTED
+  REQUIREMENTS_NEEDED
+}
+
 type Membership {
   id: ID!
   organization: Organization!
@@ -125,10 +147,8 @@ enum MembershipRequestStatus {
 type Mutation {
   addTimeEntry(input: AddTimeEntryInput!): TimeEntry!
   approveMembershipRequest(id: ID!, organizationUnitId: ID!): MembershipRequest!
-  assignRoleToMembership(membershipId: ID!, roleId: ID!): Boolean!
   cancelMembershipRequest(id: ID!, organizationUnitId: ID!): MembershipRequest!
   closeTimeEntry(id: ID!, input: CloseTimeEntryInput!): TimeEntry!
-  createMembershipRequest(organizationUnitId: ID!): MembershipRequest!
   createOrganization(input: CreateOrganizationInput!): Organization!
   createOrganizationUnit(input: CreateOrganizationUnitInput!): OrganizationUnit!
   createRequirement(input: CreateRequirementInput!): Requirement!
@@ -145,6 +165,8 @@ type Mutation {
   deleteShift(id: String!): Shift!
   deleteTimeEntry(id: ID!): TimeEntry!
   inviteMembersToShift(memberIds: [String!]!, shiftId: String!): Shift!
+  joinOrganization(organizationUnitId: ID!): JoinOrganizationResult!
+  joinShift(shiftId: String!): JoinShiftResult!
   rejectMembershipRequest(id: ID!, organizationUnitId: ID!, rejectionReason: String!): MembershipRequest!
   updateOrganizationUnit(id: String!, input: UpdateOrganizationUnitInput!): OrganizationUnit!
   updateRequirement(id: String!, input: UpdateRequirementInput!): Requirement!
@@ -188,6 +210,7 @@ type OrganizationUnit {
   organization: Organization!
   parent: OrganizationUnit
   phone: String
+  requiredMembershipRequirementProfile: RequirementProfile
   slug: String!
   type: OrganizationUnitType!
   websiteUrl: String
@@ -304,6 +327,7 @@ type Query {
   requirements(limit: Int! = 10, offset: Int! = 0): RequirementPaginatedResponse!
   roles: [Role!]!
   shift(id: String!): Shift!
+  shiftVolunteers(shiftId: ID!): [User!]!
   shifts(limit: Int! = 10, offset: Int! = 0): ShiftPaginatedResponse!
   timeEntries(limit: Int! = 10, offset: Int! = 0): TimeEntryPaginatedResponse!
   timeEntriesByUser(limit: Int! = 10, offset: Int! = 0, userId: String!): TimeEntryPaginatedResponse!
@@ -531,6 +555,7 @@ input UpdateOrganizationUnitInput {
   organizationId: String!
   parentId: String
   phone: String
+  requiredMembershipRequirementProfileId: String
   typeId: String
   websiteUrl: String
 }
@@ -583,4 +608,10 @@ type User {
   image: String
   name: String!
   permissions: [Permission!]
+}
+
+type UserRequirementStatus {
+  name: String!
+  requirementId: ID!
+  status: RequirementFulfillmentStatus!
 }

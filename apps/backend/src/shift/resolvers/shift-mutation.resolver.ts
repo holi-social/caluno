@@ -1,11 +1,15 @@
 import { Args, Context, Mutation, Resolver } from '@nestjs/graphql';
 import { Session, type UserSession } from '@thallesp/nestjs-better-auth';
+import { plainToInstance } from 'class-transformer';
 import { PERMISSIONS } from '../../auth/constants';
 import { Permissions } from '../../auth/decorators/permissions.decorator';
 import type { AuthenticatedGraphQLContext } from '../../graphql/graphql.context';
+import { RequirementProfile } from '../../requirement-profile/models/requirement-profile.model';
+import { UserRequirementStatus } from '../../requirement-profile/models/user-requirement-status.model';
 import { CreateShiftInput } from '../inputs/create-shift.input';
 import { UpdateShiftInput } from '../inputs/update-shift.input';
 import { ShiftMapper } from '../mappers/shift.mapper';
+import { JoinShiftResult } from '../models/join-shift-result.model';
 import { Shift } from '../models/shift.model';
 import { ShiftService } from '../shift.service';
 
@@ -74,5 +78,29 @@ export class ShiftMutationResolver {
       context.organizationUnitId,
     );
     return this.shiftMapper.toModelOrThrow(result);
+  }
+
+  @Mutation(() => JoinShiftResult)
+  async joinShift(
+    @Args('shiftId', { type: () => String }) shiftId: string,
+    @Session() session: UserSession,
+  ): Promise<JoinShiftResult> {
+    const result = await this.shiftService.requestJoinShift(
+      session.user.id,
+      shiftId,
+    );
+
+    return {
+      status: result.status,
+      shift: this.shiftMapper.toModelOrThrow(result.shift),
+      membershipRequestId: result.membershipRequest?.id ?? null,
+      requirementProfile: result.requirementProfile
+        ? plainToInstance(RequirementProfile, result.requirementProfile)
+        : null,
+      requirementStatuses:
+        result.requirementStatuses?.map((s) =>
+          plainToInstance(UserRequirementStatus, s),
+        ) ?? null,
+    };
   }
 }

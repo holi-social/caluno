@@ -1,12 +1,19 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { count, eq, inArray } from 'drizzle-orm';
+import { and, count, eq, inArray } from 'drizzle-orm';
 import type { Database } from '../../database/database.module';
 import { DATABASE_CONNECTION } from '../../database/database-connection';
 import * as schema from '../../database/schema';
 import { NotFoundGraphQLError } from '../../graphql/errors';
 import type { PaginationInput } from '../../graphql/pagination.input';
+import { RequirementFulfillmentStatus } from '../enums';
 import { CreateRequirementProfileInput } from '../inputs/create-requirement-profile.input';
 import { UpdateRequirementProfileInput } from '../inputs/update-requirement-profile.input';
+export interface UserRequirementStatusDto {
+  requirementId: string;
+  name: string;
+  status: RequirementFulfillmentStatus;
+}
+
 import type { RequirementEntity } from '../schemas/requirement.schema';
 import type { RequirementProfileEntity } from '../schemas/requirement-profile.schema';
 
@@ -128,5 +135,119 @@ export class RequirementProfileService {
           profileRequirements.map((item) => item.requirementId),
         ),
       );
+  }
+
+  async hasApprovedSubmission(
+    userId: string,
+    profileId: string,
+  ): Promise<boolean> {
+    const result = await this.db
+      .select({ id: schema.requirementProfileSubmissions.id })
+      .from(schema.requirementProfileSubmissions)
+      .innerJoin(
+        schema.requirementFulfillments,
+        eq(
+          schema.requirementProfileSubmissions.id,
+          schema.requirementFulfillments.submissionId,
+        ),
+      )
+      .innerJoin(
+        schema.organizationUserProfiles,
+        eq(
+          schema.requirementFulfillments.organizationUserProfileId,
+          schema.organizationUserProfiles.id,
+        ),
+      )
+      .where(
+        and(
+          eq(schema.requirementProfileSubmissions.profileId, profileId),
+          eq(schema.requirementProfileSubmissions.status, 'APPROVED'),
+          eq(schema.organizationUserProfiles.userId, userId),
+        ),
+      )
+      .limit(1);
+
+    return result.length > 0;
+  }
+
+  async getUserRequirementStatus(
+    userId: string,
+    profileId: string,
+  ): Promise<UserRequirementStatusDto[]> {
+    const requirements = await this.findRequirements(profileId);
+
+    if (requirements.length === 0) {
+      return [];
+    }
+
+    const profile = await this.findById(profileId);
+    if (!profile) {
+      throw new NotFoundGraphQLError('Requirement profile not found');
+    }
+
+    const userProfile = await this.db.query.organizationUserProfiles.findFirst({
+      where: { userId, organizationId: profile.organizationId },
+    });
+
+    if (!userProfile) {
+      return requirements.map((req) => ({
+        requirementId: req.id,
+        name: req.name,
+        status: RequirementFulfillmentStatus.DRAFT,
+      }));
+    }
+
+    const submissions =
+      await this.db.query.requirementProfileSubmissions.findMany({
+        where: {
+          profileId,
+        },
+        with: {
+          fulfillments: true,
+        },
+      });
+
+    const userSubmissions = submissions.filter((sub) =>
+      sub.fulfillments.some(
+        (f) => f.organizationUserProfileId === userProfile.id,
+      ),
+    );
+
+    const requirementStatusMap = new Map<
+      string,
+      RequirementFulfillmentStatus
+    >();
+
+    for (const submission of userSubmissions) {
+      for (const fulfillment of submission.fulfillments) {
+        const currentStatus = requirementStatusMap.get(
+          fulfillment.requirementId,
+        );
+        const newStatus = fulfillment.status as RequirementFulfillmentStatus;
+
+        if (!currentStatus) {
+          requirementStatusMap.set(fulfillment.requirementId, newStatus);
+          continue;
+        }
+
+        const priority = {
+          [RequirementFulfillmentStatus.APPROVED]: 4,
+          [RequirementFulfillmentStatus.REJECTED]: 3,
+          [RequirementFulfillmentStatus.SUBMITTED]: 2,
+          [RequirementFulfillmentStatus.DRAFT]: 1,
+        };
+
+        if (priority[newStatus] > priority[currentStatus]) {
+          requirementStatusMap.set(fulfillment.requirementId, newStatus);
+        }
+      }
+    }
+
+    return requirements.map((req) => ({
+      requirementId: req.id,
+      name: req.name,
+      status:
+        requirementStatusMap.get(req.id) ?? RequirementFulfillmentStatus.DRAFT,
+    }));
   }
 }

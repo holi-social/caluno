@@ -1,8 +1,13 @@
+import { type JoinOrganizationMutation, JoinStatus } from '@repo/data';
 import { cookies } from 'next/headers';
 import { notFound, redirect } from 'next/navigation';
 import { isAuthenticated } from '@/lib/auth-server';
 import { getDataClient } from '@/lib/data-client';
 import { getSafeRedirect } from '@/lib/safe-redirect';
+import { JoinError } from './components/join-error';
+import { RequestPending } from './components/request-pending';
+import { RequestRejected } from './components/request-rejected';
+import { OrgRequirementsNeeded } from './components/requirements-needed';
 
 interface InvitePageProps {
   params: Promise<{ orgId: string }>;
@@ -24,14 +29,40 @@ export default async function InvitePage({ params }: InvitePageProps) {
     notFound();
   }
 
+  let result: JoinOrganizationMutation['joinOrganization'];
   try {
-    await data.membershipRequest.create(organizationUnitId);
-  } catch {}
+    result = await data.membershipRequest.join(organizationUnitId);
+  } catch (error) {
+    const message =
+      error instanceof Error ? error.message : 'Failed to join organization';
+    return <JoinError message={message} />;
+  }
 
-  const cookieStore = await cookies();
-  const pendingRedirect = cookieStore.get('pending_redirect')?.value;
-  cookieStore.set('pending_invite', '', { maxAge: 0, path: '/' });
-  cookieStore.set('pending_redirect', '', { maxAge: 0, path: '/' });
+  if (result.status === JoinStatus.Joined) {
+    const cookieStore = await cookies();
+    const pendingRedirect = cookieStore.get('pending_redirect')?.value;
+    redirect(getSafeRedirect(pendingRedirect) ?? `/${organizationUnitId}`);
+  }
 
-  redirect(getSafeRedirect(pendingRedirect));
+  if (result.status === JoinStatus.Pending) {
+    return <RequestPending orgName={orgUnit.name} />;
+  }
+
+  if (result.status === JoinStatus.Rejected) {
+    return <RequestRejected orgName={orgUnit.name} />;
+  }
+
+  if (result.status === JoinStatus.RequirementsNeeded) {
+    return (
+      <OrgRequirementsNeeded
+        orgName={orgUnit.name}
+        profileName={result.requirementProfile?.name}
+        profileDescription={result.requirementProfile?.description}
+        requirements={result.requirementProfile?.requirements ?? []}
+        requirementStatuses={result.requirementStatuses ?? []}
+      />
+    );
+  }
+
+  return <JoinError message="Unexpected response from server" />;
 }

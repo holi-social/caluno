@@ -1,6 +1,24 @@
-mutation CreateMembershipRequest($organizationUnitId: ID!) {
-  createMembershipRequest(organizationUnitId: $organizationUnitId) {
-    id
+mutation JoinOrganization($organizationUnitId: ID!) {
+  joinOrganization(organizationUnitId: $organizationUnitId) {
+    status
+    membershipRequestId
+    requirementProfile {
+      id
+      name
+      description
+      requirements {
+        id
+        name
+        description
+        type
+        mandatory
+      }
+    }
+    requirementStatuses {
+      requirementId
+      name
+      status
+    }
   }
 }
 

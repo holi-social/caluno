@@ -8,6 +8,7 @@ import type {
   CreateShiftInput,
   GetActiveShiftsQuery,
   GetShiftQuery,
+  JoinShiftMutation,
   UpdateShiftInput,
 } from '../../generated/graphql';
 import {
@@ -122,6 +123,24 @@ export class ShiftRepository extends BaseRepository {
     try {
       const data = await this.sdk.InviteShiftVolunteers({ shiftId, memberIds });
       return { id: data.inviteMembersToShift.id };
+    } catch (error) {
+      throw DataError.fromGraphQLError(error);
+    }
+  }
+
+  async join(shiftId: string): Promise<JoinShiftMutation['joinShift']> {
+    try {
+      const data = await this.sdk.JoinShift({ shiftId });
+      return data.joinShift;
+    } catch (error) {
+      throw DataError.fromGraphQLError(error);
+    }
+  }
+
+  async findVolunteersByShiftId(shiftId: string) {
+    try {
+      const data = await this.sdk.GetShiftVolunteers({ shiftId });
+      return data.shiftVolunteers;
     } catch (error) {
       throw DataError.fromGraphQLError(error);
     }

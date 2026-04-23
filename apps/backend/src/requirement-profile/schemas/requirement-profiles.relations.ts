@@ -17,6 +17,10 @@ export const requirementProfilesRelations = defineRelationsPart(
         from: r.requirementProfiles.id,
         to: r.organizationUnitFavoriteRequirementProfiles.requirementProfileId,
       }),
+      requiredByOrgUnits: r.many.organizationUnits({
+        from: r.requirementProfiles.id,
+        to: r.organizationUnits.requiredMembershipRequirementProfileId,
+      }),
     },
     organizationUnitFavoriteRequirementProfiles: {
       organization: r.one.organizations({

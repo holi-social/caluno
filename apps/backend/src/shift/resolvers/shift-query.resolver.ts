@@ -1,9 +1,11 @@
-import { Args, Context, Query, Resolver } from '@nestjs/graphql';
+import { Args, Context, ID, Query, Resolver } from '@nestjs/graphql';
 import { AllowAnonymous } from '@thallesp/nestjs-better-auth';
 import { PERMISSIONS } from '../../auth/constants';
 import { Permissions } from '../../auth/decorators/permissions.decorator';
 import type { AuthenticatedGraphQLContext } from '../../graphql/graphql.context';
 import { PaginationInput } from '../../graphql/pagination.input';
+import { UserMapper } from '../../user/mappers/user.mapper';
+import { User } from '../../user/models/user.model';
 import { ShiftMapper } from '../mappers/shift.mapper';
 import { ShiftInstanceMapper } from '../mappers/shift-instance.mapper';
 import { Shift, ShiftPaginatedResponse } from '../models/shift.model';
@@ -16,6 +18,7 @@ export class ShiftQueryResolver {
     private readonly shiftService: ShiftService,
     private readonly shiftMapper: ShiftMapper,
     private readonly shiftInstanceMapper: ShiftInstanceMapper,
+    private readonly userMapper: UserMapper,
   ) {}
 
   @AllowAnonymous()
@@ -63,5 +66,18 @@ export class ShiftQueryResolver {
       limit: pagination.limit,
       offset: pagination.offset,
     });
+  }
+
+  @Permissions(PERMISSIONS.SHIFT_READ)
+  @Query(() => [User])
+  async shiftVolunteers(
+    @Args('shiftId', { type: () => ID }) shiftId: string,
+    @Context() context: AuthenticatedGraphQLContext,
+  ): Promise<User[]> {
+    const volunteers = await this.shiftService.findShiftVolunteers(
+      shiftId,
+      context.organizationUnitId,
+    );
+    return this.userMapper.toArray(volunteers);
   }
 }

@@ -15,7 +15,6 @@ query GetShift($id: String!) {
     createdBy {
       id
       name
-      email
       image
     }
   }
@@ -86,6 +85,59 @@ mutation DeleteShift($id: String!) {
 mutation InviteShiftVolunteers($shiftId: String!, $memberIds: [String!]!) {
   inviteMembersToShift(shiftId: $shiftId, memberIds: $memberIds) {
     id
+  }
+}
+
+mutation JoinShift($shiftId: String!) {
+  joinShift(shiftId: $shiftId) {
+    status
+    shift {
+      id
+      title
+      slug
+      instructions
+      location
+      visibility
+      createdAt
+      maxVolunteers
+      rrule
+      originalStartsAt
+      durationMinutes
+      organizationUnitId
+      createdBy {
+        id
+        name
+        email
+        image
+      }
+    }
+    membershipRequestId
+    requirementProfile {
+      id
+      name
+      description
+      requirements {
+        id
+        name
+        description
+        type
+        mandatory
+      }
+    }
+    requirementStatuses {
+      requirementId
+      name
+      status
+    }
+  }
+}
+
+query GetShiftVolunteers($shiftId: ID!) {
+  shiftVolunteers(shiftId: $shiftId) {
+    id
+    name
+    email
+    image
   }
 }
 

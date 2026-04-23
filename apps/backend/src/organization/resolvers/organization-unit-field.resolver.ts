@@ -1,6 +1,9 @@
 import { Parent, ResolveField, Resolver } from '@nestjs/graphql';
+import { plainToInstance } from 'class-transformer';
 import { PERMISSIONS } from '../../auth/constants';
 import { Permissions } from '../../auth/decorators/permissions.decorator';
+import { RequirementProfile } from '../../requirement-profile/models/requirement-profile.model';
+import { RequirementProfileService } from '../../requirement-profile/services';
 import { OrganizationMapper } from '../mappers/organization.mapper';
 import { OrganizationUnitMapper } from '../mappers/organization-unit.mapper';
 import { OrganizationUnitTypeMapper } from '../mappers/organization-unit-type.mapper';
@@ -17,6 +20,7 @@ export class OrganizationUnitFieldResolver {
     private readonly organizationMapper: OrganizationMapper,
     private readonly organizationUnitMapper: OrganizationUnitMapper,
     private readonly organizationUnitTypeMapper: OrganizationUnitTypeMapper,
+    private readonly requirementProfileService: RequirementProfileService,
   ) {}
 
   @Permissions(PERMISSIONS.ORG_UNIT_READ)
@@ -65,5 +69,20 @@ export class OrganizationUnitFieldResolver {
       organizationUnit.id,
     );
     return this.organizationUnitMapper.toArray(children);
+  }
+
+  @Permissions(PERMISSIONS.ORG_UNIT_READ)
+  @ResolveField(() => RequirementProfile, { nullable: true })
+  async requiredMembershipRequirementProfile(
+    @Parent() organizationUnit: OrganizationUnitEntity,
+  ): Promise<RequirementProfile | null> {
+    if (!organizationUnit.requiredMembershipRequirementProfileId) {
+      return null;
+    }
+
+    const profile = await this.requirementProfileService.findById(
+      organizationUnit.requiredMembershipRequirementProfileId,
+    );
+    return profile ? plainToInstance(RequirementProfile, profile) : null;
   }
 }
