@@ -1,45 +1,53 @@
 @startuml clippy
-class Organisation {
-    name
-    invoiceAddress
-    ...
-}
-note top: There is only one Organisation\nconnected to the root OrgUnit
-class OrgUnit {
-    name
-    description
-    ...
-}
-class OrgUnitType {
-    name
-    description
-    icon
-}
-class Location {
-    name
-    street
-    zip
-    city
-    country
-    ...
-}
-package "User & Profile" {
+
+skinparam classAttributeIconSize 0
+skinparam linetype ortho
+
+package "Identity & Organisation" {
+    class Organisation {
+        name
+        slug
+        email
+        phone
+        websiteUrl
+        description
+        logoUrl
+    }
+
+    class OrgUnit {
+        name
+        slug
+        isRoot
+        logoUrl
+        websiteUrl
+        email
+        phone
+        description
+        address
+        deletedAt
+    }
+    note right: Root OrgUnit has parentId = NULL.\nOnly one root per Organisation.\nPermissions cascade downward.
+
+    class OrgUnitType {
+        name
+        description
+        icon
+    }
+
     class User {
         name
         email
-        phoneNumber
-        address
-        bankAccountNumber
-        ...
+        image
+        checkInId
     }
+    note left: GDPR: anonymize on deletion,\npreserve audit trails.
+
     class OrganisationUserProfile {
-        userProfileAccessApproved
         note
-        status {pending, active, blacklisted, inactive}
+        status {ACTIVE, INACTIVE, BLACKLISTED, PENDING}
+        userProfileAccessApproved
     }
-    class IncidentReport {
-        description
-    }
+
     class Document {
         name
         mimeType
@@ -47,119 +55,142 @@ package "User & Profile" {
         uploadedAt
     }
 }
-package "Operations" {
-    class Shift {
-        start
-        end
+
+package "Access & Roles" {
+    class Membership {
     }
-    class ShiftAssignment {
-        status {invited, accepted, rejected}
+    note right: Links User to OrgUnit via Role.\nA user can have multiple memberships\nacross the OrgUnit tree.
+
+    class Role {
+        name
+        description
+        isInternal
     }
-    class TimeEntry {
-        start
-        end
-        status {started, finished, validated, rejected}
-        note ?
+
+    class Permission {
+        key
+        description
     }
-    note bottom: How do we manage\nstatus and validation?\nHow is reject => update\nof a TimeEntry working?
+
+    class MembershipRequest {
+        status {PENDING, ACCEPTED, REJECTED, CANCELLED}
+        reviewedAt
+        rejectionReason
+        metadata: { intendedShiftIds?: string[] }
+    }
+    note bottom: The "Waiting Room".\nUnique constraint on (userId, orgUnitId).\nA rejected/cancelled request blocks\nre-application unless constraint is removed.
 }
-class Membership {
-}
-class Role {
-    name
-    description
-}
-class Permission {
-    key
-    description
-}
-class MembershipRequest {
-    status {pending, accepted, rejected}
-    reviewedBy
-    reviewedAt
-    rejectionReason
-}
-package RequirementProfiles {
+
+package "Compliance & Qualifications" {
     class RequirementProfile {
         name
         description
     }
+
     class Requirement {
-        type {document, check, date, ...}
+        type {CHECK, DATE, DOCUMENT, TEXT}
         name
         description
         mandatory
     }
+
     class RequirementProfileSubmission {
-        status {draft, submitted, approved, rejected}
+        status {DRAFT, SUBMITTED, APPROVED, REJECTED}
         submittedAt
         reviewedAt
-        reviewedBy
     }
-    interface RequirementFulfillment {
-        type: string
-        value: string
-        status {draft, submitted, approved, rejected}
+
+    class RequirementFulfillment {
+        type {CHECK, DATE, DOCUMENT, TEXT}
+        value: JSON
+        status {DRAFT, SUBMITTED, APPROVED, REJECTED}
         submittedAt
         reviewedAt
-        reviewedBy
     }
-    class RequirementFulfillmentUpload {
+    note bottom: Anchored to OrganisationUserProfile\nfor reuse across OrgUnits.
+}
+
+package "Operations" {
+    class Shift {
+        title
+        slug
+        instructions
+        location
+        visibility {ALL_MEMBERS, INVITED_MEMBERS}
+        maxVolunteers
+        rrule
+        originalStartsAt
+        durationMinutes
+        isDeleted
     }
-    class RequirementFulfillmentCheck {
+    note right: A Shift is a recurring pattern (master).\nrrule defines recurrence.\nVolunteers join ShiftInstances, not Shifts.
+
+    class ShiftInstance {
+        actualStartsAt
+        actualEndsAt
+        overrideTitle
+        overrideInstructions
+        overrideLocation
+        overrideMaxVolunteers
+        isException
+        isCancelled
+        occurrenceIndex
     }
-    class RequirementFulfillmentText {
+    note right: A concrete occurrence of a Shift.\nCan override master fields.\nisException = one-off change.\nisCancelled = skipped occurrence.
+
+    class ShiftInstanceInvite {
+        status {PENDING, ACCEPTED, REJECTED}
     }
-    class RequirementFulfillmentDate {
+
+    class TimeEntry {
+        startedAt
+        endedAt
+        notes
     }
 }
 
-
-
-Organisation [root] "1" -- "1" OrgUnit
-OrgUnit "*" -up- "1" OrgUnitType : "categorized by >"
+' --- Identity & Organisation ---
+Organisation "1" -- "1\nroot" OrgUnit
+Organisation "1" -- "*" OrganisationUserProfile
+User "1" -- "*" OrganisationUserProfile
+OrgUnit "*" -- "1" OrgUnitType
 OrgUnit "*\nchild" o-- "1\nparent" OrgUnit
 
+' --- Access & Roles ---
 OrgUnit "1" -- "*" Membership
 Membership "*" -- "1" User
+Role "*" -- "*" Permission
+Role "*" -- "*" Membership
+Organisation "1" -- "*" Role
 
-Organisation "1" -- "*" OrganisationUserProfile : "owns >"
-OrganisationUserProfile "*" -- "1" User
-
+' --- Membership Requests ---
 OrgUnit "1" -- "*" MembershipRequest : "receives >"
 MembershipRequest "*" -- "1" User : "submitted by >"
 
-OrgUnit "*" -- "0..1" Location : "is at >"
-Location "0..1" -- "*" Shift : "is at <"
-
-Role "*" -left- "*" Permission : "groups >"
-Role "*" -- "*" Membership
-Organisation "1" -- "*" Role : "defines >"
-
-OrgUnit "*" -- "*" RequirementProfile : "mark as favorite >"
+' --- Requirement Profiles ---
+OrgUnit "1" -- "*" RequirementProfile : "requires >"
 Organisation "1" -- "*" RequirementProfile : "defines >"
 Organisation "1" -- "*" Requirement : "defines >"
-RequirementProfile "*" -right- "*" Requirement : "groups >"
-User "1" -up- "*" Document : "owns >"
-RequirementFulfillmentUpload "*" -- "0..1" Document : "backed by >"
-Membership "0..1" -right- "*" RequirementProfileSubmission
-RequirementProfileSubmission "*" -right- "*" RequirementFulfillment
+RequirementProfile "*" -- "*" Requirement : "groups >"
+
+' --- Submissions & Fulfillments ---
+Membership "0..1" -- "*" RequirementProfileSubmission
 MembershipRequest "0..1" -- "*" RequirementProfileSubmission
-RequirementProfileSubmission "*" -up- "1" RequirementProfile : "fulfills >"
-RequirementFulfillment "*" -up- "1" Requirement : "fulfills >"
-RequirementFulfillment "*" -- "1" OrganisationUserProfile : "store for reuse <"
-RequirementFulfillmentUpload .up.|> RequirementFulfillment
-RequirementFulfillmentCheck .up.|> RequirementFulfillment
-RequirementFulfillmentText .up.|> RequirementFulfillment
-RequirementFulfillmentDate .up.|> RequirementFulfillment
+RequirementProfileSubmission "*" -- "1" RequirementProfile : "fulfills >"
+RequirementProfileSubmission "*" -- "*" RequirementFulfillment : "contains >"
+RequirementFulfillment "*" -- "1" Requirement : "satisfies >"
+RequirementFulfillment "*" -- "0..1" OrganisationUserProfile : "stored for reuse <"
+RequirementFulfillment "*" -- "0..1" Document : "backed by >"
+User "1" -- "*" Document : "owns >"
 
-OrganisationUserProfile "1" -- "*" IncidentReport
-IncidentReport "*" -right- "1" User : "reported by >"
+' --- Shifts ---
+OrgUnit "1" -- "*" Shift : "manages >"
+Shift "1" -- "*" ShiftInstance : "occurs as >"
+ShiftInstance "1" -- "*" ShiftInstanceInvite : "includes >"
+ShiftInstanceInvite "*" -- "1" User : "assigned to >"
 
-OrgUnit "0..1" -- "*" Shift
-User "1" -- "*" ShiftAssignment
-Shift "1" -- "*" ShiftAssignment
-User "1" -- "*" TimeEntry
-TimeEntry "*" -- "1" Shift : "logged against >"
+' --- Time Tracking ---
+ShiftInstance "1" -- "*" TimeEntry : "logged against >"
+User "1" -- "*" TimeEntry : "clocked by >"
 
 @enduml
