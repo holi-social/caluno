@@ -1,6 +1,7 @@
-import { Args, Mutation, Resolver } from '@nestjs/graphql';
+import { Args, Context, Mutation, Resolver } from '@nestjs/graphql';
 import { PERMISSIONS } from '../../auth/constants';
 import { Permissions } from '../../auth/decorators/permissions.decorator';
+import type { AuthenticatedGraphQLContext } from '../../graphql/graphql.context';
 import { CreateRequirementProfileInput } from '../inputs/create-requirement-profile.input';
 import { UpdateRequirementProfileInput } from '../inputs/update-requirement-profile.input';
 import { RequirementProfileMapper } from '../mappers/requirement-profile.mapper';
@@ -18,8 +19,12 @@ export class RequirementProfileMutationResolver {
   @Mutation(() => RequirementProfile)
   async createRequirementProfile(
     @Args('input') input: CreateRequirementProfileInput,
+    @Context() context: AuthenticatedGraphQLContext,
   ): Promise<RequirementProfile> {
-    const item = await this.requirementProfileService.create(input);
+    const item = await this.requirementProfileService.create(
+      input,
+      context.organizationUnitId,
+    );
     return this.requirementProfileMapper.toModelOrThrow(item);
   }
 
@@ -28,8 +33,13 @@ export class RequirementProfileMutationResolver {
   async updateRequirementProfile(
     @Args('id') id: string,
     @Args('input') input: UpdateRequirementProfileInput,
+    @Context() context: AuthenticatedGraphQLContext,
   ): Promise<RequirementProfile> {
-    const item = await this.requirementProfileService.update(id, input);
+    const item = await this.requirementProfileService.update(
+      id,
+      context.organizationUnitId,
+      input,
+    );
     return this.requirementProfileMapper.toModelOrThrow(item);
   }
 
@@ -37,8 +47,12 @@ export class RequirementProfileMutationResolver {
   @Mutation(() => RequirementProfile)
   async deleteRequirementProfile(
     @Args('id') id: string,
+    @Context() context: AuthenticatedGraphQLContext,
   ): Promise<RequirementProfile> {
-    const item = await this.requirementProfileService.delete(id);
+    const item = await this.requirementProfileService.delete(
+      id,
+      context.organizationUnitId,
+    );
     return this.requirementProfileMapper.toModelOrThrow(item);
   }
 }
