@@ -45,3 +45,6 @@ docker-compose.override.yml
 packages/data/src/generated/
 *storybook.log
 storybook-static
+
+CLAUDE.local.md
+AGENTS.local.md
