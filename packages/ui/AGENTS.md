@@ -1,22 +1,23 @@
-# React component library for use in our web frontends.
+# React component library for use in frontend
 
 - React components based on shadcn
 - Tailwind incl. theming providing by next-themes
 - Storybook for viewing and documenting the components
-
-## Project Structure
-
-- `src/components/base` - shadcn components only
-- `src/components` - custom components
-- `src/styles` - tailwind css files
-
-Co-locate stories with components.
 
 ## Commands
 
 - `bun run check-types` - Check for any typescript compile errors
 - `bun run dev` - Run storybook dev server
 - `bun run build` - Build static storybook files
+
+## Project Structure
+
+src/
+├── components        # custom shared components
+├── components/base   # shadcn components only
+└── styles            # tailwind css files
+
+Co-locate stories with components.
 
 ## How to create new UI components
 
