@@ -8,6 +8,7 @@ import type { PaginationInput } from '../../graphql/pagination.input';
 import { CreateRequirementInput } from '../inputs/create-requirement.input';
 import { UpdateRequirementInput } from '../inputs/update-requirement.input';
 import type { RequirementEntity } from '../schemas/requirement.schema';
+import { isUnitInOrg } from './is-unit-in-org';
 
 @Injectable()
 export class RequirementService {
@@ -35,7 +36,12 @@ export class RequirementService {
     return { items, total };
   }
 
-  async create(input: CreateRequirementInput): Promise<RequirementEntity> {
+  async create(
+    input: CreateRequirementInput,
+    organizationUnitId: string,
+  ): Promise<RequirementEntity> {
+    await isUnitInOrg(this.db, organizationUnitId, input.organizationId);
+
     const [requirement] = await this.db
       .insert(schema.requirements)
       .values(input)
@@ -45,8 +51,20 @@ export class RequirementService {
 
   async update(
     id: string,
+    organizationUnitId: string,
     input: UpdateRequirementInput,
   ): Promise<RequirementEntity> {
+    const existingRequirement = await this.findById(id);
+    if (!existingRequirement) {
+      throw new NotFoundGraphQLError('Requirement not found');
+    }
+
+    await isUnitInOrg(
+      this.db,
+      organizationUnitId,
+      existingRequirement.organizationId,
+    );
+
     const [requirement] = await this.db
       .update(schema.requirements)
       .set(input)
@@ -60,7 +78,21 @@ export class RequirementService {
     return requirement;
   }
 
-  async delete(id: string): Promise<RequirementEntity> {
+  async delete(
+    id: string,
+    organizationUnitId: string,
+  ): Promise<RequirementEntity> {
+    const existingRequirement = await this.findById(id);
+    if (!existingRequirement) {
+      throw new NotFoundGraphQLError('Requirement not found');
+    }
+
+    await isUnitInOrg(
+      this.db,
+      organizationUnitId,
+      existingRequirement.organizationId,
+    );
+
     const [requirement] = await this.db
       .delete(schema.requirements)
       .where(eq(schema.requirements.id, id))

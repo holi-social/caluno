@@ -571,14 +571,12 @@ input UpdateRequirementInput {
   description: String
   mandatory: Boolean = false
   name: String
-  organizationId: String
   type: RequirementType
 }
 
 input UpdateRequirementProfileInput {
   description: String
   name: String
-  organizationId: String
   requirementIds: [String!]
 }
 

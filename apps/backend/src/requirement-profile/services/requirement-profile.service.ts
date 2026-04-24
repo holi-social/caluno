@@ -16,6 +16,7 @@ export interface UserRequirementStatusDto {
 
 import type { RequirementEntity } from '../schemas/requirement.schema';
 import type { RequirementProfileEntity } from '../schemas/requirement-profile.schema';
+import { isUnitInOrg } from './is-unit-in-org';
 
 @Injectable()
 export class RequirementProfileService {
@@ -47,7 +48,10 @@ export class RequirementProfileService {
 
   async create(
     input: CreateRequirementProfileInput,
+    organizationUnitId: string,
   ): Promise<RequirementProfileEntity> {
+    await isUnitInOrg(this.db, organizationUnitId, input.organizationId);
+
     return this.db.transaction(async (tx) => {
       const [profile] = await tx
         .insert(schema.requirementProfiles)
@@ -73,8 +77,20 @@ export class RequirementProfileService {
 
   async update(
     id: string,
+    organizationUnitId: string,
     input: UpdateRequirementProfileInput,
   ): Promise<RequirementProfileEntity> {
+    const existingProfile = await this.findById(id);
+    if (!existingProfile) {
+      throw new NotFoundGraphQLError('Requirement profile not found');
+    }
+
+    await isUnitInOrg(
+      this.db,
+      organizationUnitId,
+      existingProfile.organizationId,
+    );
+
     return this.db.transaction(async (tx) => {
       const { requirementIds, ...rest } = input;
       const [profile] = await tx
@@ -106,7 +122,21 @@ export class RequirementProfileService {
     });
   }
 
-  async delete(id: string): Promise<RequirementProfileEntity> {
+  async delete(
+    id: string,
+    organizationUnitId: string,
+  ): Promise<RequirementProfileEntity> {
+    const existingProfile = await this.findById(id);
+    if (!existingProfile) {
+      throw new NotFoundGraphQLError('Requirement profile not found');
+    }
+
+    await isUnitInOrg(
+      this.db,
+      organizationUnitId,
+      existingProfile.organizationId,
+    );
+
     const [profile] = await this.db
       .delete(schema.requirementProfiles)
       .where(eq(schema.requirementProfiles.id, id))
