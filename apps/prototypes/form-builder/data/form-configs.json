@@ -1,0 +1,58 @@
+[
+  {
+    "id": "423754fb-bbd8-47ff-bbcc-32c0e498f7cb",
+    "slug": "form-1",
+    "name": "Form 1",
+    "description": "",
+    "organizationName": "BSM 1",
+    "locale": "de",
+    "sections": [
+      {
+        "id": "sec-1777367566566",
+        "title": "Datenschutzerklärung",
+        "icon": "FileCheck",
+        "fields": [
+          {
+            "id": "field-1777367610582",
+            "type": "document-acknowledgement",
+            "label": "Accept this doc",
+            "documentUrl": "/api/uploads/1777367604499-HelpingOrgs.pdf",
+            "documentLabel": "Accept this doc lesen",
+            "required": true
+          },
+          {
+            "id": "field-1777367653740",
+            "type": "document-acknowledgement",
+            "label": "And this one",
+            "documentUrl": "/api/uploads/1777367649279-HelpingOrgs.pdf",
+            "documentLabel": "And this one lesen",
+            "required": false
+          }
+        ]
+      },
+      {
+        "id": "sec-1777368177513",
+        "title": "section 2",
+        "icon": "MapPin",
+        "fields": [
+          {
+            "id": "field-1777368182288",
+            "type": "date",
+            "label": "Geburtsdatum",
+            "required": true,
+            "minAge": 14,
+            "lockType": true
+          }
+        ]
+      }
+    ],
+    "settings": {
+      "submitButtonLabel": "Absenden",
+      "successTitle": "Vielen Dank!",
+      "successMessage": "Ihre Daten wurden erfolgreich übermittelt.",
+      "allowEmbed": true
+    },
+    "createdAt": "2026-04-28T09:12:03.255Z",
+    "updatedAt": "2026-04-28T10:02:08.866Z"
+  }
+]

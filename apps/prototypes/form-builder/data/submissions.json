@@ -1,0 +1,14 @@
+[
+  {
+    "id": "db2a2699-1f05-4f7a-aaec-1696dcbb4793",
+    "formConfigId": "0cba5765-36b8-46da-8575-f060898d4a40",
+    "formSlug": "onboarding-default",
+    "data": {
+      "field-1777283313814": "Max",
+      "field-1777283316730": "Mustermann",
+      "field-1777283321252": "1990-10-24",
+      "field-1777283345074": "DE930897298292892982"
+    },
+    "submittedAt": "2026-04-27T10:12:30.870Z"
+  }
+]
