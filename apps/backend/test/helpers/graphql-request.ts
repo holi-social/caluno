@@ -13,6 +13,33 @@ export type GraphqlResponse<TData> = {
   errors?: Array<{ message: string }>;
 };
 
+export const requireGraphqlData = <TData>(
+  response: GraphqlResponse<TData>,
+  operation: string,
+): TData => {
+  if (response.errors) {
+    throw new Error(
+      `Expected ${operation} to return data, got GraphQL errors: ${JSON.stringify(
+        response.errors,
+      )}`,
+    );
+  }
+
+  if (!response.data) {
+    throw new Error(`Expected ${operation} to return data.`);
+  }
+
+  return response.data;
+};
+
+export const graphqlRequestRequiringData = async <TData>(
+  app: INestApplication,
+  options: GraphqlRequestOptions,
+  operation: string,
+): Promise<TData> => {
+  return requireGraphqlData(await graphqlRequest(app, options), operation);
+};
+
 export const graphqlRequest = async <TData>(
   app: INestApplication,
   options: GraphqlRequestOptions,

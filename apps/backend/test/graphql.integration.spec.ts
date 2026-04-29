@@ -1,6 +1,5 @@
 import 'reflect-metadata';
 import {
-  afterAll,
   beforeAll,
   describe,
   expect,
@@ -9,74 +8,24 @@ import {
   setDefaultTimeout,
 } from 'bun:test';
 import type { INestApplication } from '@nestjs/common';
-import type { Database } from '../src/database/database.module';
-import { DATABASE_CONNECTION } from '../src/database/database-connection';
-import * as schema from '../src/database/schema';
-import { applyBunAuthMocks, setAuthMockUserId } from './helpers/auth-mocks';
-import { createGraphqlFullTestApp } from './helpers/create-graphql-full-app';
+import { applyBunAuthMocks } from './helpers/auth-mocks';
 import {
-  type GraphqlResponse,
   graphqlRequest,
+  graphqlRequestRequiringData,
 } from './helpers/graphql-request';
+import { getGraphqlTestContext } from './helpers/graphql-test-context';
 
 applyBunAuthMocks(mock.module);
 setDefaultTimeout(20_000);
 
-const requireGraphqlData = <TData>(
-  response: GraphqlResponse<TData>,
-  operation: string,
-): TData => {
-  expect(response.errors).toBeUndefined();
-  if (!response.data) {
-    throw new Error(`Expected ${operation} to return data.`);
-  }
-  return response.data;
-};
-
 describe('GraphQL API Integration', () => {
   let app: INestApplication;
-  let db: Database;
-  const testUserId = `test-user-${crypto.randomUUID()}`;
   let organizationId: string;
 
   beforeAll(async () => {
-    setAuthMockUserId(testUserId);
-    app = await createGraphqlFullTestApp({ testUserId });
-    db = app.get<Database>(DATABASE_CONNECTION);
-
-    await db.insert(schema.users).values({
-      id: testUserId,
-      name: 'GraphQL Test User',
-      email: `graphql-test-${crypto.randomUUID()}@example.com`,
-    });
-
-    const createOrganizationResponse = await graphqlRequest<{
-      createOrganization: { id: string };
-    }>(app, {
-      query: `
-        mutation CreateOrganization($input: CreateOrganizationInput!) {
-          createOrganization(input: $input) {
-            id
-          }
-        }
-      `,
-      variables: {
-        input: {
-          name: `GraphQL Test Org ${Date.now()}`,
-          email: `graphql-test-org-${crypto.randomUUID()}@example.com`,
-        },
-      },
-    });
-
-    const createOrganizationData = requireGraphqlData(
-      createOrganizationResponse,
-      'createOrganization',
-    );
-    organizationId = createOrganizationData.createOrganization.id;
-  });
-
-  afterAll(async () => {
-    await app?.close();
+    const context = await getGraphqlTestContext();
+    app = context.app;
+    organizationId = context.organizationId;
   });
 
   it('creates and retrieves requirement profile and submission', async () => {
@@ -84,10 +33,12 @@ describe('GraphQL API Integration', () => {
     const createdRequirements: Array<{ id: string; type: string }> = [];
 
     for (const type of requirementTypes) {
-      const response = await graphqlRequest<{
+      const createRequirementData = await graphqlRequestRequiringData<{
         createRequirement: { id: string; type: string };
-      }>(app, {
-        query: `
+      }>(
+        app,
+        {
+          query: `
           mutation CreateRequirement($input: CreateRequirementInput!) {
             createRequirement(input: $input) {
               id
@@ -95,21 +46,19 @@ describe('GraphQL API Integration', () => {
             }
           }
         `,
-        variables: {
-          input: {
-            organizationId,
-            type,
-            name: `Requirement ${type}`,
-            description: `Description for ${type}`,
-            mandatory: true,
+          variables: {
+            input: {
+              organizationId,
+              type,
+              name: `Requirement ${type}`,
+              description: `Description for ${type}`,
+              mandatory: true,
+            },
           },
         },
-      });
-
-      const createRequirementData = requireGraphqlData(
-        response,
         'createRequirement',
       );
+
       expect(createRequirementData.createRequirement.type).toBe(type);
       createdRequirements.push(createRequirementData.createRequirement);
     }
@@ -121,13 +70,15 @@ describe('GraphQL API Integration', () => {
       ]),
     ) as Record<(typeof requirementTypes)[number], string>;
 
-    const createProfileResponse = await graphqlRequest<{
+    const createRequirementProfileData = await graphqlRequestRequiringData<{
       createRequirementProfile: {
         id: string;
         requirements: Array<{ id: string }>;
       };
-    }>(app, {
-      query: `
+    }>(
+      app,
+      {
+        query: `
         mutation CreateRequirementProfile($input: CreateRequirementProfileInput!) {
           createRequirementProfile(input: $input) {
             id
@@ -137,23 +88,21 @@ describe('GraphQL API Integration', () => {
           }
         }
       `,
-      variables: {
-        input: {
-          organizationId,
-          name: 'Test Requirement Profile',
-          description: 'Profile containing all requirement types',
-          requirementIds: createdRequirements.map((item) => item.id),
+        variables: {
+          input: {
+            organizationId,
+            name: 'Test Requirement Profile',
+            description: 'Profile containing all requirement types',
+            requirementIds: createdRequirements.map((item) => item.id),
+          },
         },
       },
-    });
-
-    const createRequirementProfileData = requireGraphqlData(
-      createProfileResponse,
       'createRequirementProfile',
     );
+
     const profileId = createRequirementProfileData.createRequirementProfile.id;
     expect(
-      createProfileResponse.data?.createRequirementProfile.requirements,
+      createRequirementProfileData.createRequirementProfile.requirements,
     ).toHaveLength(4);
 
     const getProfileResponse = await graphqlRequest<{
@@ -182,14 +131,17 @@ describe('GraphQL API Integration', () => {
       getProfileResponse.data?.requirementProfile?.requirements,
     ).toHaveLength(4);
 
-    const createSubmissionResponse = await graphqlRequest<{
-      createRequirementProfileSubmission: {
-        id: string;
-        status: string;
-        fulfillments: Array<{ id: string; type: string; status: string }>;
-      };
-    }>(app, {
-      query: `
+    const createRequirementProfileSubmissionData =
+      await graphqlRequestRequiringData<{
+        createRequirementProfileSubmission: {
+          id: string;
+          status: string;
+          fulfillments: Array<{ id: string; type: string; status: string }>;
+        };
+      }>(
+        app,
+        {
+          query: `
         mutation CreateRequirementProfileSubmission($input: CreateRequirementProfileSubmissionInput!) {
           createRequirementProfileSubmission(input: $input) {
             id
@@ -202,37 +154,35 @@ describe('GraphQL API Integration', () => {
           }
         }
       `,
-      variables: {
-        input: {
-          profileId,
-          membershipId: null,
-          membershipRequestId: null,
-          fulfillments: [
-            {
-              requirementId: requirementIdByType.DOCUMENT,
-              documentId: 'doc-123',
+          variables: {
+            input: {
+              profileId,
+              membershipId: null,
+              membershipRequestId: null,
+              fulfillments: [
+                {
+                  requirementId: requirementIdByType.DOCUMENT,
+                  documentId: 'doc-123',
+                },
+                {
+                  requirementId: requirementIdByType.CHECK,
+                  checked: true,
+                },
+                {
+                  requirementId: requirementIdByType.DATE,
+                  date: new Date('2026-01-01T00:00:00.000Z').toISOString(),
+                },
+                {
+                  requirementId: requirementIdByType.TEXT,
+                  text: 'This is the text fulfillment.',
+                },
+              ],
             },
-            {
-              requirementId: requirementIdByType.CHECK,
-              checked: true,
-            },
-            {
-              requirementId: requirementIdByType.DATE,
-              date: new Date('2026-01-01T00:00:00.000Z').toISOString(),
-            },
-            {
-              requirementId: requirementIdByType.TEXT,
-              text: 'This is the text fulfillment.',
-            },
-          ],
+          },
         },
-      },
-    });
+        'createRequirementProfileSubmission',
+      );
 
-    const createRequirementProfileSubmissionData = requireGraphqlData(
-      createSubmissionResponse,
-      'createRequirementProfileSubmission',
-    );
     const submissionId =
       createRequirementProfileSubmissionData.createRequirementProfileSubmission
         .id;
