@@ -1,10 +1,12 @@
 import { Parent, ResolveField, Resolver } from '@nestjs/graphql';
 import { PERMISSIONS } from '../../auth/constants';
 import { Permissions } from '../../auth/decorators/permissions.decorator';
+import { Loader } from '../../graphql/decorators';
 import { OrganizationUnitMapper } from '../mappers/organization-unit.mapper';
 import { Organization } from '../models/organization.model';
 import { OrganizationUnit } from '../models/organization-unit.model';
 import { OrganizationService } from '../organization.service';
+import { OrganizationLoader } from './loader';
 
 @Resolver(() => Organization)
 export class OrganizationFieldResolver {
@@ -26,10 +28,8 @@ export class OrganizationFieldResolver {
   @ResolveField(() => [OrganizationUnit])
   async units(
     @Parent() organization: Organization,
+    @Loader(OrganizationLoader) loader: OrganizationLoader,
   ): Promise<OrganizationUnit[]> {
-    const childrenUnits = await this.organizationService.findChildrenUnits(
-      organization.id,
-    );
-    return this.organizationUnitMapper.toArray(childrenUnits);
+    return loader.unitsByOrgId.load(organization.id);
   }
 }

@@ -132,6 +132,21 @@ export class OrganizationService {
     });
   }
 
+  async findUnitsByOrgIds(orgIds: string[]): Promise<OrganizationUnitEntity[]> {
+    if (orgIds.length === 0) {
+      return [];
+    }
+
+    return this.db.query.organizationUnits.findMany({
+      where: {
+        organizationId: {
+          in: orgIds,
+        },
+        isRoot: false,
+      },
+    });
+  }
+
   async create(
     userId: string,
     input: CreateOrganizationInput,

@@ -11,6 +11,7 @@ import { OrganizationService } from './organization.service';
 import { OrganizationUnitService } from './organization-unit.service';
 import {
   OrganizationFieldResolver,
+  OrganizationLoader,
   OrganizationMutationResolver,
   OrganizationQueryResolver,
   OrganizationUnitFieldResolver,
@@ -32,6 +33,7 @@ import {
     OrganizationQueryResolver,
     OrganizationMutationResolver,
     OrganizationFieldResolver,
+    OrganizationLoader,
     OrganizationUnitQueryResolver,
     OrganizationUnitMutationResolver,
     OrganizationUnitFieldResolver,
