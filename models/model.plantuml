@@ -3,7 +3,7 @@
 skinparam classAttributeIconSize 0
 skinparam linetype ortho
 
-package "Identity & Organisation" {
+' package "Identity & Organisation" {
     class Organisation {
         name
         slug
@@ -26,7 +26,7 @@ package "Identity & Organisation" {
         address
         deletedAt
     }
-    note right: Root OrgUnit has parentId = NULL.\nOnly one root per Organisation.\nPermissions cascade downward.
+    note left: Root OrgUnit has parentId = NULL.\nOnly one root per Organisation.\nPermissions cascade downward.
 
     class OrgUnitType {
         name
@@ -40,7 +40,7 @@ package "Identity & Organisation" {
         image
         checkInId
     }
-    note left: GDPR: anonymize on deletion,\npreserve audit trails.
+    note top: GDPR: anonymize on deletion,\npreserve audit trails.
 
     class OrganisationUserProfile {
         note
@@ -54,12 +54,12 @@ package "Identity & Organisation" {
         storageKey
         uploadedAt
     }
-}
+' }
 
-package "Access & Roles" {
+' package "Access & Roles" {
     class Membership {
     }
-    note right: Links User to OrgUnit via Role.\nA user can have multiple memberships\nacross the OrgUnit tree.
+    note bottom: Links User to OrgUnit via Role.\nA user can have multiple memberships\nacross the OrgUnit tree.
 
     class Role {
         name
@@ -78,8 +78,8 @@ package "Access & Roles" {
         rejectionReason
         metadata: { intendedShiftIds?: string[] }
     }
-    note bottom: The "Waiting Room".\nUnique constraint on (userId, orgUnitId).\nA rejected/cancelled request blocks\nre-application unless constraint is removed.
-}
+    note top: The "Waiting Room".\nUnique constraint on (userId, orgUnitId).\nA rejected/cancelled request blocks\nre-application unless constraint is removed.
+' }
 
 package "Compliance & Qualifications" {
     class RequirementProfile {
@@ -107,7 +107,11 @@ package "Compliance & Qualifications" {
         submittedAt
         reviewedAt
     }
-    note bottom: Anchored to OrganisationUserProfile\nfor reuse across OrgUnits.
+    note left: Anchored to OrganisationUserProfile\nfor reuse across OrgUnits.
+    class RequirementFulfillmentUpload extends RequirementFulfillment {}
+    class RequirementFulfillmentCheck extends RequirementFulfillment {}
+    class RequirementFulfillmentDate extends RequirementFulfillment {}
+    class RequirementFulfillmentText extends RequirementFulfillment {}
 }
 
 package "Operations" {
@@ -123,7 +127,7 @@ package "Operations" {
         durationMinutes
         isDeleted
     }
-    note right: A Shift is a recurring pattern (master).\nrrule defines recurrence.\nVolunteers join ShiftInstances, not Shifts.
+    note left: A Shift is a recurring pattern (master).\nrrule defines recurrence.\nVolunteers join ShiftInstances, not Shifts.
 
     class ShiftInstance {
         actualStartsAt
@@ -136,7 +140,7 @@ package "Operations" {
         isCancelled
         occurrenceIndex
     }
-    note right: A concrete occurrence of a Shift.\nCan override master fields.\nisException = one-off change.\nisCancelled = skipped occurrence.
+    note left: A concrete occurrence of a Shift.\nCan override master fields.\nisException = one-off change.\nisCancelled = skipped occurrence.
 
     class ShiftInstanceInvite {
         status {PENDING, ACCEPTED, REJECTED}
@@ -152,16 +156,16 @@ package "Operations" {
 ' --- Identity & Organisation ---
 Organisation [root] "1" -- "1" OrgUnit
 Organisation "1" -- "*" OrganisationUserProfile
-User "1" -- "*" OrganisationUserProfile
-OrgUnit "*" -- "1" OrgUnitType
+User "1" -up- "*" OrganisationUserProfile
+OrgUnit "*" -up- "1" OrgUnitType
 OrgUnit "*\nchild" o-- "1\nparent" OrgUnit
 
 ' --- Access & Roles ---
 OrgUnit "1" -- "*" Membership
-Membership "*" -- "1" User
-Role "*" -- "*" Permission
+Membership "*" -left- "1" User
+Role "*" -up- "*" Permission
 Role "*" -- "*" Membership
-OrgUnit "1" -- "*" [root] Role : "defines >"
+OrgUnit "1" -right- "*" [root] Role : "defines >"
 
 ' --- Membership Requests ---
 OrgUnit "1" -- "*" MembershipRequest : "receives >"
@@ -171,13 +175,13 @@ MembershipRequest "*" -- "1" User : "submitted by >"
 OrgUnit "1" -- "*" RequirementProfile : "??? requires >"
 OrgUnit "1" -- "*" [root] RequirementProfile : "defines >"
 OrgUnit "1" -- "*" [root] Requirement : "defines >"
-RequirementProfile "*" -- "*" Requirement : "groups >"
+RequirementProfile "*" -left- "*" Requirement : "groups >"
 
 ' --- Submissions & Fulfillments ---
 Membership "0..1" -- "*" RequirementProfileSubmission
 MembershipRequest "0..1" -- "*" RequirementProfileSubmission
 RequirementProfileSubmission "*" -- "1" RequirementProfile : "fulfills >"
-RequirementProfileSubmission "*" -- "*" RequirementFulfillment : "contains >"
+RequirementProfileSubmission "*" -left- "*" RequirementFulfillment : "contains >"
 RequirementFulfillment "*" -- "1" Requirement : "satisfies >"
 RequirementFulfillment "*" -- "0..1" OrganisationUserProfile : "stored for reuse <"
 RequirementFulfillment "*" -- "0..1" Document : "backed by >"
