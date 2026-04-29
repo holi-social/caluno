@@ -2,7 +2,7 @@ import { join } from 'node:path';
 import { ApolloDriver, type ApolloDriverConfig } from '@nestjs/apollo';
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { APP_GUARD } from '@nestjs/core';
+import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 import { GraphQLModule } from '@nestjs/graphql';
 import {
   AuthGuard,
@@ -15,6 +15,7 @@ import { PermissionGuard } from './auth/guards/permission.guard';
 import { type Database, DatabaseModule } from './database/database.module';
 import { DATABASE_CONNECTION } from './database/database-connection';
 import { GraphqlModule } from './graphql/graphql.module';
+import { LoaderInterceptor } from './graphql/interceptors';
 import { MembershipModule } from './membership/membership.module';
 import { NotificationModule } from './notification/notification.module';
 import { OrganizationModule } from './organization/organization.module';
@@ -72,6 +73,10 @@ const autoSchemaFile =
   ],
   controllers: [],
   providers: [
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: LoaderInterceptor,
+    },
     {
       provide: APP_GUARD,
       useClass: AuthGuard,
