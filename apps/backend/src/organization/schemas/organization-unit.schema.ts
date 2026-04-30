@@ -33,7 +33,6 @@ export const organizationUnits = pgTable(
         onDelete: 'restrict',
       })
       .notNull(),
-    isRoot: boolean('is_root').notNull().default(false),
     name: text('name').notNull(),
     slug: text('slug').notNull().unique(),
     logoUrl: text('logo_url'),
@@ -59,15 +58,7 @@ export const organizationUnits = pgTable(
     ),
     uniqueIndex('uq_organization_units_organization_id_is_root_true')
       .on(table.organizationId)
-      .where(sql`${table.isRoot} = true`),
-    check(
-      'chk_organization_units_root_parent_consistency',
-      sql`(
-        (${table.isRoot} = true AND ${table.parentId} IS NULL)
-        OR
-        (${table.isRoot} = false AND ${table.parentId} IS NOT NULL)
-      )`,
-    ),
+      .where(sql`${table.parentId} IS NULL`),
     check(
       'chk_organization_units_not_self_parent',
       sql`${table.parentId} IS NULL OR ${table.parentId} <> ${table.id}`,

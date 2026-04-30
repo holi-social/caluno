@@ -33,9 +33,7 @@ export class MembershipService {
     const members = await this.db.query.users.findMany({
       where: {
         memberships: {
-          role: {
-            organizationUnitId,
-          },
+          organizationUnitId,
         },
       },
     });
@@ -50,9 +48,7 @@ export class MembershipService {
     const membership = await this.db.query.memberships.findFirst({
       where: {
         userId,
-        role: {
-          organizationUnitId,
-        },
+        organizationUnitId,
       },
     });
     return membership ?? null;
@@ -167,6 +163,24 @@ export class MembershipService {
         throw new NotFoundGraphQLError('Organization unit not found');
       }
 
+      if (!organizationUnit.organizationId) {
+        throw new ConflictGraphQLError(
+          'Cannot approve: organization unit is not linked to an organization.',
+        );
+      }
+
+      const memberRole = await tx.query.roles.findFirst({
+        where: {
+          organizationId: organizationUnit.organizationId,
+          name: DEFAULT_MEMBER_ROLE_NAME,
+          isInternal: true,
+        },
+      });
+
+      if (!memberRole) {
+        throw new NotFoundGraphQLError('Default member role not found');
+      }
+
       if (organizationUnit.requiredMembershipRequirementProfileId) {
         if (!requestToApprove.userId) {
           throw new ConflictGraphQLError(
@@ -186,20 +200,6 @@ export class MembershipService {
             'Cannot approve: user has not completed the required membership profile.',
           );
         }
-      }
-
-      const memberRole = await tx.query.roles.findFirst({
-        where: {
-          name: DEFAULT_MEMBER_ROLE_NAME,
-          isInternal: true,
-          organizationUnitId,
-        },
-      });
-
-      if (!memberRole) {
-        throw new NotFoundGraphQLError(
-          'Member role not found for this organization',
-        );
       }
 
       const [updatedRequest] = await tx
@@ -228,8 +228,20 @@ export class MembershipService {
         throw new NotFoundGraphQLError('Membership request not found');
       }
 
-      await tx.insert(schema.memberships).values({
-        userId: updatedRequest.userId,
+      const [membership] = await tx
+        .insert(schema.memberships)
+        .values({
+          userId: updatedRequest.userId,
+          organizationUnitId,
+        })
+        .returning();
+
+      if (!membership) {
+        throw new NotFoundGraphQLError('Membership not found');
+      }
+
+      await tx.insert(schema.membershipRoles).values({
+        membershipId: membership.id,
         roleId: memberRole.id,
       });
 
@@ -433,16 +445,56 @@ export class MembershipService {
     membershipId: string,
     roleId: string,
   ): Promise<boolean> {
-    const [membership] = await this.db
-      .update(schema.memberships)
-      .set({ roleId })
-      .where(eq(schema.memberships.id, membershipId))
-      .returning();
+    const membership = await this.db.query.memberships.findFirst({
+      where: { id: membershipId },
+      with: {
+        organizationUnit: true,
+      },
+    });
 
     if (!membership) {
       throw new NotFoundGraphQLError('Membership not found');
     }
 
-    return true;
+    if (!membership.organizationUnit?.organizationId) {
+      throw new ConflictGraphQLError(
+        'Membership organization unit is not linked to an organization.',
+      );
+    }
+
+    const role = await this.db.query.roles.findFirst({
+      where: { id: roleId },
+    });
+
+    if (!role) {
+      throw new NotFoundGraphQLError('Role not found');
+    }
+
+    if (role.organizationId !== membership.organizationUnit.organizationId) {
+      throw new ConflictGraphQLError(
+        'Role does not belong to the membership organization.',
+      );
+    }
+
+    const existingRole = await this.db.query.membershipRoles.findFirst({
+      where: {
+        membershipId,
+        roleId,
+      },
+    });
+
+    if (existingRole) {
+      return true;
+    }
+
+    const [membershipRole] = await this.db
+      .insert(schema.membershipRoles)
+      .values({
+        membershipId,
+        roleId,
+      })
+      .returning();
+
+    return membershipRole !== undefined;
   }
 }

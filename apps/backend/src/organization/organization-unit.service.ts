@@ -83,6 +83,16 @@ export class OrganizationUnitService {
     });
   }
 
+  async findOrganizationByUnitId(
+    organizationUnitId: string,
+  ): Promise<OrganizationEntity | undefined> {
+    const organizationUnit = await this.findById(organizationUnitId);
+    if (!organizationUnit) {
+      throw new NotFoundGraphQLError('Organization unit not found');
+    }
+    return this.findOrganization(organizationUnit.organizationId);
+  }
+
   async create(
     input: CreateOrganizationUnitInput,
   ): Promise<OrganizationUnitEntity> {
@@ -110,7 +120,6 @@ export class OrganizationUnitService {
       .values({
         ...input,
         organizationId: input.organizationId,
-        isRoot: false,
         slug,
       })
       .returning();
@@ -128,6 +137,12 @@ export class OrganizationUnitService {
       throw new NotFoundGraphQLError('Organization unit not found');
     }
 
+    if (input.organizationId !== unit.organizationId) {
+      throw new BadRequestGraphQLError(
+        'Organization unit must be in the same organization',
+      );
+    }
+
     if (input.parentId === null) {
       throw new BadRequestGraphQLError(
         'parentId cannot be null for non-root organization units',
@@ -140,17 +155,22 @@ export class OrganizationUnitService {
       );
     }
 
-    if (input.typeId) {
-      const type = await this.findType(input.typeId);
-      if (!type) {
-        throw new NotFoundGraphQLError('Organization unit type not found');
-      }
-    }
-
     if (input.parentId) {
       const parent = await this.findParent(input.parentId);
       if (!parent) {
         throw new NotFoundGraphQLError('Parent organization unit not found');
+      }
+      if (parent.organizationId !== unit.organizationId) {
+        throw new BadRequestGraphQLError(
+          'Parent organization unit must be in the same organization',
+        );
+      }
+    }
+
+    if (input.typeId) {
+      const type = await this.findType(input.typeId);
+      if (!type) {
+        throw new NotFoundGraphQLError('Organization unit type not found');
       }
     }
 
@@ -193,7 +213,7 @@ export class OrganizationUnitService {
       throw new NotFoundGraphQLError('Organization unit not found');
     }
 
-    if (unit.isRoot) {
+    if (unit.parentId === null) {
       throw new ConflictGraphQLError(
         'Root organization unit cannot be deleted',
       );
