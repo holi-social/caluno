@@ -35,7 +35,7 @@ export const ShiftSelectorCard = ({
           <span>
             Please{' '}
             <Link
-              href={`/${organizationUnitId}/shifts/new`}
+              href="?sheet=shift-form"
               className="underline"
             >
               add a shift
