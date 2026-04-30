@@ -60,7 +60,7 @@ export function FormCard({
 
   return (
     <Card className="flex flex-col">
-      <CardContent className="flex flex-1 flex-col pt-6">
+      <CardContent className="flex flex-1 flex-col pt-2">
         <div className="mb-4 flex-1">
           <p className="text-muted-foreground text-xs font-medium uppercase tracking-wide">
             {config.organizationName}

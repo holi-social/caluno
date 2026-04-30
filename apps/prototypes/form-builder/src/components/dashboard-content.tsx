@@ -141,7 +141,7 @@ export function DashboardContent({
       <div className="flex items-center justify-between gap-4">
         <TabsList>
           <TabsTrigger value="formulare">Formulare</TabsTrigger>
-          <TabsTrigger value="bloecke">Bloecke</TabsTrigger>
+          <TabsTrigger value="bloecke">Blöcke</TabsTrigger>
         </TabsList>
         <div className="flex gap-2">
           <TabsContent value="formulare" className="mt-0">

@@ -144,7 +144,7 @@ export function BlockCard({
 
   return (
     <Card className="flex flex-col">
-      <CardContent className="flex flex-1 flex-col pt-6">
+      <CardContent className="flex flex-1 flex-col pt-1">
         <div className="mb-4 flex-1">
           <div className="flex items-center gap-2">
             <h2 className="text-lg font-semibold">{block.title}</h2>
@@ -210,7 +210,7 @@ export function BlockCard({
             <DialogTitle className="text-xl">Block loeschen?</DialogTitle>
           </DialogHeader>
           <p className="text-muted-foreground text-sm">
-            Sind Sie sicher, dass Sie <strong>{block.title}</strong> loeschen moechten?
+            Sind Sie sicher, dass Sie <strong>{block.title}</strong> löschen möchten?
           </p>
           {usedInForms.length > 0 && (
             <div>
@@ -240,7 +240,7 @@ export function BlockCard({
               onClick={handleDelete}
               disabled={deleting}
             >
-              {deleting ? 'Loeschen...' : 'Loeschen'}
+              {deleting ? 'Loeschen...' : 'Löschen'}
             </Button>
           </div>
         </DialogContent>

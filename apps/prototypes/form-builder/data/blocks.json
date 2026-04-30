@@ -1,7 +1,7 @@
 [
   {
     "id": "seed-block-personal",
-    "title": "Persoenliche Daten",
+    "title": "Persönliche Daten",
     "icon": "User",
     "fields": [
       {
@@ -22,7 +22,7 @@
         "id": "f-dob",
         "type": "date",
         "label": "Geburtsdatum",
-        "required": true,
+        "required": false,
         "minAge": 14
       }
     ],
@@ -30,7 +30,7 @@
     "createdBy": "andrea",
     "updatedBy": "andrea",
     "createdAt": "2026-04-30T08:58:15.922Z",
-    "updatedAt": "2026-04-30T08:58:15.922Z"
+    "updatedAt": "2026-04-30T10:11:58.250Z"
   },
   {
     "id": "seed-block-kontakte",
