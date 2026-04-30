@@ -11,6 +11,7 @@ interface ShiftInstance {
 }
 
 interface CreateTimeEntrySheetProps {
+  organizationUnitId: string;
   sessionId?: string;
   shiftInstances?: ShiftInstance[];
   allVolunteers?: Array<{ id: string; name: string; email: string }>;
@@ -19,6 +20,7 @@ interface CreateTimeEntrySheetProps {
 export const FORM_ID = 'create-time-entry-form';
 
 export function CreateTimeEntrySheet({
+  organizationUnitId,
   sessionId,
   shiftInstances = [],
   allVolunteers = [],
@@ -36,6 +38,7 @@ export function CreateTimeEntrySheet({
       formId={FORM_ID}
     >
       <CreateTimeEntryForm
+        organizationUnitId={organizationUnitId}
         sessionId={sessionId}
         shiftInstances={shiftInstances}
         allVolunteers={allVolunteers}
