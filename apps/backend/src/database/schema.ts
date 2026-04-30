@@ -8,7 +8,6 @@ export * from '../organization/schemas/organization.schema';
 export * from '../organization/schemas/organization-unit.schema';
 export * from '../organization/schemas/organization-unit-type.schema';
 export * from '../requirement-profile/schemas/document.schema';
-export * from '../requirement-profile/schemas/organization-unit-favorite-requirement-profile.schema';
 export * from '../requirement-profile/schemas/organization-user-profile.schema';
 export * from '../requirement-profile/schemas/requirement.schema';
 export * from '../requirement-profile/schemas/requirement-fulfillment.schema';

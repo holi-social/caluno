@@ -40,19 +40,6 @@ export const organizationRelations = defineRelationsPart(schema, (r) => ({
       from: r.organizationUnits.id.through(r.roles.organizationUnitId),
       to: r.memberships.roleId.through(r.roles.id),
     }),
-    favoriteRequirementProfiles: r.many.requirementProfiles({
-      from: r.organizationUnits.id.through(
-        r.organizationUnitFavoriteRequirementProfiles.organizationUnitId,
-      ),
-      to: r.requirementProfiles.id.through(
-        r.organizationUnitFavoriteRequirementProfiles.requirementProfileId,
-      ),
-    }),
-    requirementProfileFavorites:
-      r.many.organizationUnitFavoriteRequirementProfiles({
-        from: r.organizationUnits.id,
-        to: r.organizationUnitFavoriteRequirementProfiles.organizationUnitId,
-      }),
     requiredMembershipRequirementProfile: r.one.requirementProfiles({
       from: r.organizationUnits.requiredMembershipRequirementProfileId,
       to: r.requirementProfiles.id,
