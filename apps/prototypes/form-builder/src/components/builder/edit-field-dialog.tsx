@@ -10,7 +10,6 @@ import {
   Field,
   FieldLabel,
   Input,
-  Switch,
 } from '@repo/ui';
 import type { FormField } from '@/lib/types';
 
@@ -27,13 +26,11 @@ export function EditFieldDialog({
 }) {
   const [label, setLabel] = useState('');
   const [description, setDescription] = useState('');
-  const [required, setRequired] = useState(false);
 
   useEffect(() => {
     if (field) {
       setLabel(field.label);
       setDescription(field.description ?? '');
-      setRequired(field.required);
     }
   }, [field]);
 
@@ -42,7 +39,6 @@ export function EditFieldDialog({
     onSave(field.id, {
       label: label.trim(),
       description: description.trim() || undefined,
-      required,
     });
     onOpenChange(false);
   }
@@ -75,18 +71,12 @@ export function EditFieldDialog({
             />
           </Field>
 
-          <div className="flex items-center gap-3">
-            <span className="text-sm font-medium">
-              {required ? 'Pflichtfeld' : 'Optional'}
-            </span>
-            <Switch
-              checked={required}
-              onCheckedChange={(val) => setRequired(val === true)}
-            />
-          </div>
-
           <div className="flex justify-end gap-3 pt-2">
-            <Button size="lg" variant="outline" onClick={() => onOpenChange(false)}>
+            <Button
+              size="lg"
+              variant="outline"
+              onClick={() => onOpenChange(false)}
+            >
               Abbrechen
             </Button>
             <Button size="lg" onClick={handleSave} disabled={!label.trim()}>

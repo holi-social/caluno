@@ -11,6 +11,8 @@ import {
 import { ArrowLeft } from 'lucide-react';
 import { listSubmissionsByForm } from '@/lib/store-submissions';
 import { getFormConfig } from '@/lib/store-configs';
+import { getBlocksByIds } from '@/lib/store-blocks';
+import { resolveBlockRefs } from '@/lib/resolve-blocks';
 import { redirect } from 'next/navigation';
 
 function formatDateTime(iso: string): string {
@@ -38,8 +40,11 @@ export default async function FormSubmissionsPage({
     redirect('/');
   }
 
-  const allFields = config.sections.flatMap((s) => s.fields);
-  const fieldLabels = new Map(allFields.map((f) => [f.id, f.label]));
+  // Resolve blocks to get field labels
+  const blockIds = config.blockRefs.map((r) => r.blockId);
+  const blocks = await getBlocksByIds(blockIds);
+  const resolved = resolveBlockRefs(config.blockRefs, blocks);
+  const allFields = resolved.flatMap((b) => b.fields);
 
   return (
     <div className="min-h-screen bg-muted/30">
@@ -58,7 +63,8 @@ export default async function FormSubmissionsPage({
               Einreichungen: {config.name}
             </h1>
             <p className="text-muted-foreground text-sm">
-              {submissions.length} Einreichung{submissions.length !== 1 && 'en'}
+              {submissions.length} Einreichung
+              {submissions.length !== 1 && 'en'}
             </p>
           </div>
         </div>
@@ -67,7 +73,7 @@ export default async function FormSubmissionsPage({
       <main className="mx-auto max-w-6xl px-6 py-8">
         {submissions.length === 0 ? (
           <p className="text-muted-foreground py-12 text-center">
-            Noch keine Einreichungen für dieses Formular.
+            Noch keine Einreichungen fuer dieses Formular.
           </p>
         ) : (
           <div className="overflow-x-auto rounded-lg border bg-background">

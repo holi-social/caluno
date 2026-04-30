@@ -1,9 +1,20 @@
+import { cookies } from 'next/headers';
 import { listFormConfigs } from '@/lib/store-configs';
-import { CreateFormDialog } from '@/components/create-form-dialog';
-import { FormCard } from '@/components/form-card';
+import { listBlocks } from '@/lib/store-blocks';
+import { getCurrentUserFromCookieValue, USER_COOKIE } from '@/lib/users';
+import { UserSwitcher } from '@/components/user-switcher';
+import { DashboardContent } from '@/components/dashboard-content';
 
 export default async function DashboardPage() {
-  const configs = await listFormConfigs();
+  const cookieStore = await cookies();
+  const currentUser = getCurrentUserFromCookieValue(
+    cookieStore.get(USER_COOKIE)?.value,
+  );
+
+  const [configs, blocks] = await Promise.all([
+    listFormConfigs(),
+    listBlocks(),
+  ]);
 
   return (
     <div className="min-h-screen bg-muted/30">
@@ -15,22 +26,16 @@ export default async function DashboardPage() {
               Registrierungs- und Onboarding-Formulare verwalten
             </p>
           </div>
-          <CreateFormDialog />
+          <UserSwitcher currentUser={currentUser} />
         </div>
       </header>
 
       <main className="mx-auto max-w-5xl px-6 py-8">
-        {configs.length === 0 ? (
-          <p className="text-muted-foreground py-12 text-center">
-            Noch keine Formulare. Erstellen Sie Ihr erstes Formular.
-          </p>
-        ) : (
-          <div className="grid gap-4 md:grid-cols-2">
-            {configs.map((config) => (
-              <FormCard key={config.id} config={config} />
-            ))}
-          </div>
-        )}
+        <DashboardContent
+          forms={configs}
+          blocks={blocks}
+          currentUser={currentUser}
+        />
       </main>
     </div>
   );

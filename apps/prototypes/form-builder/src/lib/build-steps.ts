@@ -1,36 +1,33 @@
-import type { FormSection, FormField } from './types';
+import type { ResolvedBlock, FormField } from './types';
 
 export type DisplayStep = {
-  section: FormSection;
+  block: ResolvedBlock;
   documentField?: FormField;
 };
 
-export function buildDisplaySteps(sections: FormSection[]): DisplayStep[] {
+export function buildDisplaySteps(blocks: ResolvedBlock[]): DisplayStep[] {
   const steps: DisplayStep[] = [];
 
-  for (const section of sections) {
-    const docFields = section.fields.filter(
+  for (const block of blocks) {
+    const docFields = block.fields.filter(
       (f) => f.type === 'document-acknowledgement',
     );
-    const nonDocFields = section.fields.filter(
+    const nonDocFields = block.fields.filter(
       (f) => f.type !== 'document-acknowledgement',
     );
 
     if (nonDocFields.length > 0) {
       steps.push({
-        section: { ...section, fields: nonDocFields },
+        block: { ...block, fields: nonDocFields },
       });
     }
 
     for (const docField of docFields) {
       steps.push({
-        section: {
-          ...section,
-          id: `${section.id}-doc-${docField.id}`,
-          title: docField.label,
-          description:
-            docField.documentLabel ||
-            'Bitte lesen und bestaetigen Sie das Dokument.',
+        block: {
+          ...block,
+          id: `${block.id}-doc-${docField.id}`,
+          title: block.title,
           fields: [docField],
         },
         documentField: docField,

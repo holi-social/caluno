@@ -1,21 +1,26 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Button, Separator } from '@repo/ui';
 import { ArrowLeft, Plus, Redo2, Save, Undo2 } from 'lucide-react';
 import Link from 'next/link';
-import type { FieldType, FormConfig, FormField, FormSection } from '@/lib/types';
+import type { Block, BlockRef, FormConfig, FormField } from '@/lib/types';
+import type { User } from '@/lib/users';
+import { canEditBlock, canRemoveBlockFromForm } from '@/lib/users';
 import { useUndoRedo } from '@/lib/use-undo-redo';
-import { SectionCard } from './section-card';
-import { AddFieldDialog } from './add-field-dialog';
-import { AddSectionDialog } from './add-section-dialog';
-import { EditFieldDialog } from './edit-field-dialog';
+import { BlockCardBuilder } from './section-card';
+import { AddBlockDialog } from './add-section-dialog';
+import { EditBlockSheet } from './edit-block-sheet';
 import { FormPreview } from './form-preview';
 
 export function BuilderLayout({
   initialConfig,
+  initialBlocks,
+  currentUser,
 }: {
   initialConfig: FormConfig;
+  initialBlocks: Block[];
+  currentUser: User;
 }) {
   const {
     state: config,
@@ -25,13 +30,15 @@ export function BuilderLayout({
     canUndo,
     canRedo,
   } = useUndoRedo<FormConfig>(initialConfig);
+
+  const [blocks, setBlocks] = useState<Block[]>(initialBlocks);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
-  const [addFieldSectionId, setAddFieldSectionId] = useState<string | null>(
-    null,
-  );
-  const [addSectionOpen, setAddSectionOpen] = useState(false);
-  const [editField, setEditField] = useState<{ sectionId: string; fieldId: string } | null>(null);
+  const [addBlockOpen, setAddBlockOpen] = useState(false);
+  const [editBlockId, setEditBlockId] = useState<string | null>(null);
+
+  // Build a map for quick block lookup
+  const blockMap = new Map(blocks.map((b) => [b.id, b]));
 
   // Keyboard shortcuts for undo/redo
   useEffect(() => {
@@ -53,107 +60,120 @@ export function BuilderLayout({
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [undo, redo]);
 
-  function handleAddField(field: FormField) {
-    if (!addFieldSectionId) return;
-    setConfig((prev) => ({
-      ...prev,
-      sections: prev.sections.map((s) =>
-        s.id === addFieldSectionId
-          ? { ...s, fields: [...s.fields, field] }
-          : s,
-      ),
-    }));
-    setAddFieldSectionId(null);
+  // Refresh blocks from API
+  const refreshBlocks = useCallback(async () => {
+    const res = await fetch('/api/blocks');
+    if (res.ok) {
+      const data = await res.json();
+      setBlocks(data);
+    }
+  }, []);
+
+  // --- Form-level handlers (tracked by undo/redo) ---
+
+  function handleAddBlockRef(blockId: string) {
+    setConfig((prev) => {
+      const maxOrder = prev.blockRefs.reduce(
+        (max, r) => Math.max(max, r.order),
+        -1,
+      );
+      return {
+        ...prev,
+        blockRefs: [...prev.blockRefs, { blockId, order: maxOrder + 1 }],
+      };
+    });
   }
 
-  function handleAddSection(section: FormSection) {
+  function handleRemoveBlockRef(blockId: string) {
     setConfig((prev) => ({
       ...prev,
-      sections: [...prev.sections, section],
-    }));
-  }
-
-  function handleToggleRequired(sectionId: string, fieldId: string) {
-    setConfig((prev) => ({
-      ...prev,
-      sections: prev.sections.map((s) =>
-        s.id === sectionId
-          ? {
-              ...s,
-              fields: s.fields.map((f) =>
-                f.id === fieldId ? { ...f, required: !f.required } : f,
-              ),
-            }
-          : s,
-      ),
+      blockRefs: prev.blockRefs.filter((r) => r.blockId !== blockId),
     }));
   }
 
-  function handleChangeFieldType(
-    sectionId: string,
+  function handleToggleBlockRequired(blockId: string) {
+    setConfig((prev) => ({
+      ...prev,
+      blockRefs: prev.blockRefs.map((r) => {
+        if (r.blockId !== blockId) return r;
+        const block = blockMap.get(blockId);
+        const currentEffective = r.required ?? block?.required ?? true;
+        return { ...r, required: !currentEffective };
+      }),
+    }));
+  }
+
+  function handleMoveBlock(blockId: string, direction: 'up' | 'down') {
+    setConfig((prev) => {
+      const sorted = [...prev.blockRefs].sort((a, b) => a.order - b.order);
+      const idx = sorted.findIndex((r) => r.blockId === blockId);
+      if (idx === -1) return prev;
+      const swapIdx = direction === 'up' ? idx - 1 : idx + 1;
+      if (swapIdx < 0 || swapIdx >= sorted.length) return prev;
+      const temp = sorted[idx]!.order;
+      sorted[idx] = { ...sorted[idx]!, order: sorted[swapIdx]!.order };
+      sorted[swapIdx] = { ...sorted[swapIdx]!, order: temp };
+      return { ...prev, blockRefs: sorted };
+    });
+  }
+
+  // --- Block content handlers (go to API, NOT in undo stack) ---
+
+  async function handleBlockFieldAdd(blockId: string, field: FormField) {
+    const block = blockMap.get(blockId);
+    if (!block) return;
+    const updatedFields = [...block.fields, field];
+    const res = await fetch(`/api/blocks/${blockId}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ fields: updatedFields }),
+    });
+    if (res.ok) await refreshBlocks();
+  }
+
+  async function handleBlockFieldEdit(
+    blockId: string,
     fieldId: string,
-    newType: FieldType,
-    opts?: { options?: { label: string; value: string }[] },
+    updates: Partial<FormField>,
   ) {
-    setConfig((prev) => ({
-      ...prev,
-      sections: prev.sections.map((s) =>
-        s.id === sectionId
-          ? {
-              ...s,
-              fields: s.fields.map((f) =>
-                f.id === fieldId
-                  ? {
-                      ...f,
-                      type: newType,
-                      options:
-                        newType === 'singlechoice' ||
-                        newType === 'multichoice' ||
-                        newType === 'select'
-                          ? (opts?.options ?? f.options ?? [])
-                          : undefined,
-                    }
-                  : f,
-              ),
-            }
-          : s,
-      ),
-    }));
+    const block = blockMap.get(blockId);
+    if (!block) return;
+    const updatedFields = block.fields.map((f) =>
+      f.id === fieldId ? { ...f, ...updates } : f,
+    );
+    const res = await fetch(`/api/blocks/${blockId}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ fields: updatedFields }),
+    });
+    if (res.ok) await refreshBlocks();
   }
 
-  function handleEditField(sectionId: string, fieldId: string, updates: Partial<FormField>) {
-    setConfig((prev) => ({
-      ...prev,
-      sections: prev.sections.map((s) =>
-        s.id === sectionId
-          ? {
-              ...s,
-              fields: s.fields.map((f) =>
-                f.id === fieldId ? { ...f, ...updates } : f,
-              ),
-            }
-          : s,
-      ),
-    }));
+  async function handleBlockFieldDelete(blockId: string, fieldId: string) {
+    const block = blockMap.get(blockId);
+    if (!block) return;
+    const updatedFields = block.fields.filter((f) => f.id !== fieldId);
+    const res = await fetch(`/api/blocks/${blockId}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ fields: updatedFields }),
+    });
+    if (res.ok) await refreshBlocks();
   }
 
-  function handleDeleteSection(sectionId: string) {
-    setConfig((prev) => ({
-      ...prev,
-      sections: prev.sections.filter((s) => s.id !== sectionId),
-    }));
+  async function handleBlockEdit(
+    blockId: string,
+    updates: Partial<Pick<Block, 'title' | 'description' | 'icon'>>,
+  ) {
+    const res = await fetch(`/api/blocks/${blockId}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(updates),
+    });
+    if (res.ok) await refreshBlocks();
   }
 
-  function handleDeleteField(sectionId: string, fieldId: string) {
-    setConfig((prev) => ({
-      ...prev,
-      sections: prev.sections.map((s) =>
-        s.id === sectionId
-          ? { ...s, fields: s.fields.filter((f) => f.id !== fieldId) }
-          : s,
-      ),
-    }));
-  }
+  // --- Save form ---
 
   async function handleSave() {
     setSaving(true);
@@ -171,6 +191,9 @@ export function BuilderLayout({
     }
   }
 
+  // Sorted blockRefs for display
+  const sortedRefs = [...config.blockRefs].sort((a, b) => a.order - b.order);
+
   return (
     <div className="flex min-h-screen">
       {/* Left Panel - Editor */}
@@ -178,7 +201,12 @@ export function BuilderLayout({
         <div className="mx-auto max-w-3xl px-6 py-10">
           {/* Back + Breadcrumb */}
           <div className="mb-3 flex items-center gap-3">
-            <Button asChild variant="ghost" size="icon" className="size-9 rounded-xl">
+            <Button
+              asChild
+              variant="ghost"
+              size="icon"
+              className="size-9 rounded-xl"
+            >
               <Link href="/">
                 <ArrowLeft className="size-5" />
               </Link>
@@ -189,7 +217,7 @@ export function BuilderLayout({
           </div>
 
           <div className="mb-8 flex items-center justify-between">
-            <h1 className="text-3xl font-bold tracking-tight">Profilname</h1>
+            <h1 className="text-3xl font-bold tracking-tight">{config.name}</h1>
             <div className="flex items-center gap-2">
               <Button
                 variant="ghost"
@@ -197,7 +225,7 @@ export function BuilderLayout({
                 className="size-9 rounded-xl"
                 disabled={!canUndo}
                 onClick={undo}
-                aria-label="Rückgängig"
+                aria-label="Rueckgaengig"
               >
                 <Undo2 className="size-5" />
               </Button>
@@ -211,52 +239,61 @@ export function BuilderLayout({
               >
                 <Redo2 className="size-5" />
               </Button>
-              <Button variant="outline" size="lg" disabled>
-                Auf Schichten anwenden
-              </Button>
             </div>
           </div>
 
-          {/* Section cards */}
+          {/* Block cards */}
           <div className="space-y-4">
-            {config.sections.map((section) => (
-              <SectionCard
-                key={section.id}
-                section={section}
-                onAddField={
-                  section.locked
-                    ? undefined
-                    : () => setAddFieldSectionId(section.id)
-                }
-                onToggleRequired={(fieldId) => handleToggleRequired(section.id, fieldId)}
-                onChangeFieldType={(fieldId, newType, opts) =>
-                  handleChangeFieldType(section.id, fieldId, newType, opts)
-                }
-                onEditField={(fieldId) =>
-                  setEditField({ sectionId: section.id, fieldId })
-                }
-                onDeleteSection={() => handleDeleteSection(section.id)}
-                onDeleteField={(fieldId) => handleDeleteField(section.id, fieldId)}
-              />
-            ))}
+            {sortedRefs.map((ref, idx) => {
+              const block = blockMap.get(ref.blockId);
+              if (!block) return null;
+              return (
+                <BlockCardBuilder
+                  key={ref.blockId}
+                  block={block}
+                  blockRef={ref}
+                  isFirst={idx === 0}
+                  isLast={idx === sortedRefs.length - 1}
+                  onToggleRequired={() =>
+                    handleToggleBlockRequired(ref.blockId)
+                  }
+                  onMoveUp={() => handleMoveBlock(ref.blockId, 'up')}
+                  onMoveDown={() => handleMoveBlock(ref.blockId, 'down')}
+                  onRemove={
+                    canRemoveBlockFromForm(currentUser)
+                      ? () => handleRemoveBlockRef(ref.blockId)
+                      : undefined
+                  }
+                  onEditBlock={
+                    canEditBlock(currentUser, block)
+                      ? () => setEditBlockId(ref.blockId)
+                      : undefined
+                  }
+                />
+              );
+            })}
           </div>
 
           <Separator className="my-8" />
 
-          {/* Add requirement / Save */}
+          {/* Add block / Save */}
           <div className="flex items-center justify-between gap-3">
             <Button
               variant="outline"
               size="lg"
-              onClick={() => setAddSectionOpen(true)}
+              onClick={() => setAddBlockOpen(true)}
             >
               <Plus className="mr-2 size-5" />
-              Anforderung hinzufügen
+              Block hinzufuegen
             </Button>
 
             <Button size="lg" onClick={handleSave} disabled={saving}>
               <Save className="mr-2 size-5" />
-              {saved ? 'Gespeichert!' : saving ? 'Speichern...' : 'Speichern'}
+              {saved
+                ? 'Gespeichert!'
+                : saving
+                  ? 'Speichern...'
+                  : 'Speichern'}
             </Button>
           </div>
         </div>
@@ -264,41 +301,65 @@ export function BuilderLayout({
 
       {/* Right Panel - Preview */}
       <div className="bg-muted/30 w-[380px] shrink-0 overflow-y-auto p-6">
-        <FormPreview config={config} />
+        <FormPreview config={config} blocks={blocks} />
       </div>
 
-      {/* Add field dialog */}
-      <AddFieldDialog
-        open={addFieldSectionId !== null}
-        onOpenChange={(open) => {
-          if (!open) setAddFieldSectionId(null);
+      {/* Add block dialog */}
+      <AddBlockDialog
+        open={addBlockOpen}
+        onOpenChange={setAddBlockOpen}
+        existingBlocks={blocks}
+        usedBlockIds={config.blockRefs.map((r) => r.blockId)}
+        onSelectBlock={(blockId) => {
+          handleAddBlockRef(blockId);
+          setAddBlockOpen(false);
         }}
-        onAdd={handleAddField}
+        onCreateBlock={async (data) => {
+          const res = await fetch('/api/blocks', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data),
+          });
+          if (res.ok) {
+            const newBlock = (await res.json()) as Block;
+            await refreshBlocks();
+            handleAddBlockRef(newBlock.id);
+            setAddBlockOpen(false);
+          }
+        }}
       />
 
-      {/* Add section dialog */}
-      <AddSectionDialog
-        open={addSectionOpen}
-        onOpenChange={setAddSectionOpen}
-        onAdd={handleAddSection}
-      />
-
-      {/* Edit field dialog */}
-      <EditFieldDialog
-        field={
-          editField
-            ? (config.sections
-                .find((s) => s.id === editField.sectionId)
-                ?.fields.find((f) => f.id === editField.fieldId) ?? null)
-            : null
+      {/* Edit block sheet */}
+      <EditBlockSheet
+        block={editBlockId ? (blockMap.get(editBlockId) ?? null) : null}
+        open={editBlockId !== null}
+        onOpenChange={(open) => {
+          if (!open) setEditBlockId(null);
+        }}
+        onSaveBlock={async (blockId, updates) => {
+          await handleBlockEdit(blockId, updates);
+        }}
+        onAddField={
+          editBlockId && blockMap.get(editBlockId) && canEditBlock(currentUser, blockMap.get(editBlockId)!)
+            ? async (blockId, field) => {
+                await handleBlockFieldAdd(blockId, field);
+              }
+            : undefined
         }
-        open={editField !== null}
-        onOpenChange={(open) => {
-          if (!open) setEditField(null);
-        }}
-        onSave={(fieldId, updates) => {
-          if (editField) handleEditField(editField.sectionId, fieldId, updates);
-        }}
+        onEditField={
+          editBlockId && blockMap.get(editBlockId) && canEditBlock(currentUser, blockMap.get(editBlockId)!)
+            ? async (blockId, fieldId, updates) => {
+                await handleBlockFieldEdit(blockId, fieldId, updates);
+              }
+            : undefined
+        }
+        onDeleteField={
+          editBlockId && blockMap.get(editBlockId) && canEditBlock(currentUser, blockMap.get(editBlockId)!)
+            ? async (blockId, fieldId) => {
+                await handleBlockFieldDelete(blockId, fieldId);
+              }
+            : undefined
+        }
       />
     </div>
   );

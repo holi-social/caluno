@@ -1,14 +1,19 @@
 [
   {
-    "id": "db2a2699-1f05-4f7a-aaec-1696dcbb4793",
-    "formConfigId": "0cba5765-36b8-46da-8575-f060898d4a40",
-    "formSlug": "onboarding-default",
+    "id": "3ba02c26-0571-452f-8a99-c98a332d1dbf",
+    "formConfigId": "ef6d63d3-4bc8-4e59-baea-07fb81af16b8",
+    "formSlug": "onboarding-ehrenamt",
     "data": {
-      "field-1777283313814": "Max",
-      "field-1777283316730": "Mustermann",
-      "field-1777283321252": "1990-10-24",
-      "field-1777283345074": "DE930897298292892982"
+      "f-vorname": "Max",
+      "f-nachname": "Mustermann",
+      "f-dob": "1990-05-15",
+      "f-email": "max@example.de",
+      "f-phone": "+49 170 1234567",
+      "f-street": "Musterstrasse 42",
+      "f-plz": "10115",
+      "f-city": "Berlin",
+      "f-datenschutz": true
     },
-    "submittedAt": "2026-04-27T10:12:30.870Z"
+    "submittedAt": "2026-04-30T09:01:01.545Z"
   }
 ]

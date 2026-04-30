@@ -1,58 +1,41 @@
 [
   {
-    "id": "423754fb-bbd8-47ff-bbcc-32c0e498f7cb",
-    "slug": "form-1",
-    "name": "Form 1",
-    "description": "",
-    "organizationName": "BSM 1",
+    "id": "ef6d63d3-4bc8-4e59-baea-07fb81af16b8",
+    "slug": "onboarding-ehrenamt",
+    "name": "Onboarding Ehrenamt",
+    "description": "Registrierungsformular fuer neue Ehrenamtliche",
+    "organizationName": "Abteilung EA",
     "locale": "de",
-    "sections": [
+    "blockRefs": [
       {
-        "id": "sec-1777367566566",
-        "title": "Datenschutzerklärung",
-        "icon": "FileCheck",
-        "fields": [
-          {
-            "id": "field-1777367610582",
-            "type": "document-acknowledgement",
-            "label": "Accept this doc",
-            "documentUrl": "/api/uploads/1777367604499-HelpingOrgs.pdf",
-            "documentLabel": "Accept this doc lesen",
-            "required": true
-          },
-          {
-            "id": "field-1777367653740",
-            "type": "document-acknowledgement",
-            "label": "And this one",
-            "documentUrl": "/api/uploads/1777367649279-HelpingOrgs.pdf",
-            "documentLabel": "And this one lesen",
-            "required": false
-          }
-        ]
+        "blockId": "seed-block-personal",
+        "order": 0,
+        "required": true
       },
       {
-        "id": "sec-1777368177513",
-        "title": "section 2",
-        "icon": "MapPin",
-        "fields": [
-          {
-            "id": "field-1777368182288",
-            "type": "date",
-            "label": "Geburtsdatum",
-            "required": true,
-            "minAge": 14,
-            "lockType": true
-          }
-        ]
+        "blockId": "seed-block-kontakte",
+        "order": 1,
+        "required": true
+      },
+      {
+        "blockId": "seed-block-adresse",
+        "order": 2
+      },
+      {
+        "blockId": "seed-block-datenschutz",
+        "order": 3,
+        "required": true
       }
     ],
     "settings": {
       "submitButtonLabel": "Absenden",
       "successTitle": "Vielen Dank!",
-      "successMessage": "Ihre Daten wurden erfolgreich übermittelt.",
+      "successMessage": "Ihre Daten wurden erfolgreich uebermittelt.",
       "allowEmbed": true
     },
-    "createdAt": "2026-04-28T09:12:03.255Z",
-    "updatedAt": "2026-04-28T10:02:08.866Z"
+    "createdBy": "andrea",
+    "updatedBy": "andrea",
+    "createdAt": "2026-04-30T08:58:15.909Z",
+    "updatedAt": "2026-04-30T08:58:15.909Z"
   }
 ]

@@ -2,25 +2,8 @@ import { randomUUID } from 'node:crypto';
 import { readFile, writeFile, mkdir } from 'node:fs/promises';
 import path from 'node:path';
 import type { FormConfig } from './types';
-import { PRESET_SECTION_FIELD_LABELS } from './predefined-fields';
-
-function normalizeConfig(config: FormConfig): FormConfig {
-  return {
-    ...config,
-    sections: config.sections.map((section) => {
-      const presetLabels = PRESET_SECTION_FIELD_LABELS.get(section.title);
-      if (!presetLabels) return section;
-      return {
-        ...section,
-        fields: section.fields.map((field) => {
-          if (field.lockType === true) return field;
-          if (!presetLabels.has(field.label)) return field;
-          return { ...field, lockType: true };
-        }),
-      };
-    }),
-  };
-}
+import { getUserById } from './users';
+import { SEED_BLOCK_IDS } from './store-blocks';
 
 function jsonPath(): string {
   return path.join(process.cwd(), 'data', 'form-configs.json');
@@ -32,13 +15,13 @@ async function readConfigs(): Promise<FormConfig[]> {
     const raw = await readFile(file, 'utf8');
     const parsed = JSON.parse(raw) as unknown;
     if (!Array.isArray(parsed)) return [];
-    return (parsed as FormConfig[]).map(normalizeConfig);
+    return parsed as FormConfig[];
   } catch (e) {
     const err = e as NodeJS.ErrnoException;
     if (err.code === 'ENOENT') {
       await seedConfigs();
       const raw = await readFile(file, 'utf8');
-      return (JSON.parse(raw) as FormConfig[]).map(normalizeConfig);
+      return JSON.parse(raw) as FormConfig[];
     }
     throw e;
   }
@@ -51,7 +34,32 @@ async function writeConfigs(configs: FormConfig[]): Promise<void> {
 }
 
 async function seedConfigs(): Promise<void> {
-  await writeConfigs([]);
+  const now = new Date().toISOString();
+  const sampleForm: FormConfig = {
+    id: randomUUID(),
+    slug: 'onboarding-ehrenamt',
+    name: 'Onboarding Ehrenamt',
+    description: 'Registrierungsformular fuer neue Ehrenamtliche',
+    organizationName: 'Abteilung EA',
+    locale: 'de',
+    blockRefs: [
+      { blockId: SEED_BLOCK_IDS.personal, order: 0, required: true },
+      { blockId: SEED_BLOCK_IDS.kontakte, order: 1, required: true },
+      { blockId: SEED_BLOCK_IDS.adresse, order: 2 },
+      { blockId: SEED_BLOCK_IDS.datenschutz, order: 3, required: true },
+    ],
+    settings: {
+      submitButtonLabel: 'Absenden',
+      successTitle: 'Vielen Dank!',
+      successMessage: 'Ihre Daten wurden erfolgreich uebermittelt.',
+      allowEmbed: true,
+    },
+    createdBy: 'andrea',
+    updatedBy: 'andrea',
+    createdAt: now,
+    updatedAt: now,
+  };
+  await writeConfigs([sampleForm]);
 }
 
 let chain: Promise<unknown> = Promise.resolve();
@@ -63,45 +71,6 @@ function runExclusive<T>(fn: () => Promise<T>): Promise<T> {
     () => undefined,
   );
   return next;
-}
-
-export async function listFormConfigs(): Promise<FormConfig[]> {
-  return runExclusive(async () => {
-    return readConfigs();
-  });
-}
-
-export async function getFormConfig(
-  slug: string,
-): Promise<FormConfig | null> {
-  return runExclusive(async () => {
-    const configs = await readConfigs();
-    return configs.find((c) => c.slug === slug) ?? null;
-  });
-}
-
-export async function updateFormConfig(
-  slug: string,
-  data: Partial<Omit<FormConfig, 'id' | 'slug' | 'createdAt'>>,
-): Promise<FormConfig | null> {
-  return runExclusive(async () => {
-    const configs = await readConfigs();
-    const idx = configs.findIndex((c) => c.slug === slug);
-    if (idx === -1) return null;
-
-    const existing = configs[idx]!;
-    const updated: FormConfig = {
-      ...existing,
-      ...data,
-      id: existing.id,
-      slug: existing.slug,
-      createdAt: existing.createdAt,
-      updatedAt: new Date().toISOString(),
-    };
-    configs[idx] = updated;
-    await writeConfigs(configs);
-    return updated;
-  });
 }
 
 function generateSlug(name: string, existing: FormConfig[]): string {
@@ -117,6 +86,82 @@ function generateSlug(name: string, existing: FormConfig[]): string {
   return `${slugBase}-${i}`;
 }
 
+// --- Public API ---
+
+export async function listFormConfigs(): Promise<FormConfig[]> {
+  return runExclusive(() => readConfigs());
+}
+
+export async function getFormConfig(
+  slug: string,
+): Promise<FormConfig | null> {
+  return runExclusive(async () => {
+    const configs = await readConfigs();
+    return configs.find((c) => c.slug === slug) ?? null;
+  });
+}
+
+export async function createFormConfig(data: {
+  name: string;
+  description?: string;
+  createdBy: string;
+}): Promise<FormConfig> {
+  return runExclusive(async () => {
+    const configs = await readConfigs();
+    const user = getUserById(data.createdBy);
+    const now = new Date().toISOString();
+    const newConfig: FormConfig = {
+      id: randomUUID(),
+      slug: generateSlug(data.name, configs),
+      name: data.name,
+      description: data.description ?? '',
+      organizationName: user?.subOrg ?? '',
+      locale: 'de',
+      blockRefs: [],
+      settings: {
+        submitButtonLabel: 'Absenden',
+        successTitle: 'Vielen Dank!',
+        successMessage: 'Ihre Daten wurden erfolgreich uebermittelt.',
+        allowEmbed: true,
+      },
+      createdBy: data.createdBy,
+      updatedBy: data.createdBy,
+      createdAt: now,
+      updatedAt: now,
+    };
+    configs.push(newConfig);
+    await writeConfigs(configs);
+    return newConfig;
+  });
+}
+
+export async function updateFormConfig(
+  slug: string,
+  data: Partial<Omit<FormConfig, 'id' | 'slug' | 'createdAt' | 'createdBy'>>,
+  updatedBy: string,
+): Promise<FormConfig | null> {
+  return runExclusive(async () => {
+    const configs = await readConfigs();
+    const idx = configs.findIndex((c) => c.slug === slug);
+    if (idx === -1) return null;
+
+    const existing = configs[idx]!;
+    const updated: FormConfig = {
+      ...existing,
+      ...data,
+      id: existing.id,
+      slug: existing.slug,
+      createdAt: existing.createdAt,
+      createdBy: existing.createdBy,
+      updatedBy,
+      updatedAt: new Date().toISOString(),
+    };
+    configs[idx] = updated;
+    await writeConfigs(configs);
+    return updated;
+  });
+}
+
 export async function deleteFormConfig(slug: string): Promise<boolean> {
   return runExclusive(async () => {
     const configs = await readConfigs();
@@ -128,33 +173,34 @@ export async function deleteFormConfig(slug: string): Promise<boolean> {
   });
 }
 
-export async function createFormConfig(data: {
-  name: string;
-  organizationName: string;
-  description?: string;
-}): Promise<FormConfig> {
+export async function copyFormConfig(
+  sourceSlug: string,
+  newName: string,
+  createdBy: string,
+): Promise<FormConfig | null> {
   return runExclusive(async () => {
     const configs = await readConfigs();
+    const source = configs.find((c) => c.slug === sourceSlug);
+    if (!source) return null;
+
+    const user = getUserById(createdBy);
     const now = new Date().toISOString();
-    const newConfig: FormConfig = {
+    const copy: FormConfig = {
       id: randomUUID(),
-      slug: generateSlug(data.name, configs),
-      name: data.name,
-      description: data.description ?? '',
-      organizationName: data.organizationName,
-      locale: 'de',
-      sections: [],
-      settings: {
-        submitButtonLabel: 'Absenden',
-        successTitle: 'Vielen Dank!',
-        successMessage: 'Ihre Daten wurden erfolgreich übermittelt.',
-        allowEmbed: true,
-      },
+      slug: generateSlug(newName, configs),
+      name: newName,
+      description: source.description,
+      organizationName: user?.subOrg ?? '',
+      locale: source.locale,
+      blockRefs: source.blockRefs.map((ref) => ({ ...ref })),
+      settings: { ...source.settings },
+      createdBy,
+      updatedBy: createdBy,
       createdAt: now,
       updatedAt: now,
     };
-    configs.push(newConfig);
+    configs.push(copy);
     await writeConfigs(configs);
-    return newConfig;
+    return copy;
   });
 }

@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getFormConfig } from '@/lib/store-configs';
+import { getBlocksByIds } from '@/lib/store-blocks';
+import { resolveBlockRefs } from '@/lib/resolve-blocks';
 import {
   createSubmission,
   listSubmissions,
@@ -32,7 +34,18 @@ export async function POST(request: Request) {
     );
   }
 
-  const allFields = config.sections.flatMap((s) => s.fields);
+  // Resolve blocks and apply block-level required-ness
+  const blockIds = config.blockRefs.map((r) => r.blockId);
+  const blocks = await getBlocksByIds(blockIds);
+  const resolved = resolveBlockRefs(config.blockRefs, blocks);
+
+  const allFields = resolved.flatMap((block) =>
+    block.fields.map((f) => ({
+      ...f,
+      required: block.effectiveRequired,
+    })),
+  );
+
   const errors = validateStepFields(allFields, body.data);
   if (errors.length > 0) {
     return NextResponse.json({ errors }, { status: 422 });

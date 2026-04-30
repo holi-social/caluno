@@ -16,74 +16,68 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
+  Separator,
 } from '@repo/ui';
 import { Plus } from 'lucide-react';
-import type { FormSection } from '@/lib/types';
-import {
-  PRESET_SECTIONS,
-  FIELD_TYPE_LABELS,
-  getPredefinedField,
-} from '@/lib/predefined-fields';
+import type { Block } from '@/lib/types';
 
 const ICON_OPTIONS = [
-  { label: 'Kein Icon', value: '' },
+  { label: 'Kein Icon', value: 'none' },
   { label: 'Person', value: 'User' },
   { label: 'Adresse', value: 'MapPin' },
   { label: 'Dokument', value: 'FileCheck' },
   { label: 'Finanzen', value: 'Banknote' },
 ];
 
-function buildSection(preset: (typeof PRESET_SECTIONS)[number]): FormSection {
-  const now = Date.now();
-  return {
-    id: `sec-${now}`,
-    title: preset.title,
-    icon: preset.icon,
-    fields: preset.fieldKeys.map((key, i) => ({
-      ...getPredefinedField(key),
-      id: `field-${now}-${i}`,
-    })),
-  };
-}
-
-export function AddSectionDialog({
+export function AddBlockDialog({
   open,
   onOpenChange,
-  onAdd,
+  existingBlocks,
+  usedBlockIds,
+  onSelectBlock,
+  onCreateBlock,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onAdd: (section: FormSection) => void;
+  existingBlocks: Block[];
+  usedBlockIds: string[];
+  onSelectBlock: (blockId: string) => void;
+  onCreateBlock: (data: {
+    title: string;
+    description?: string;
+    icon?: string;
+    fields: [];
+    required: boolean;
+  }) => void;
 }) {
-  const [showCustom, setShowCustom] = useState(false);
+  const [showCreate, setShowCreate] = useState(false);
   const [title, setTitle] = useState('');
-  const [icon, setIcon] = useState('');
+  const [description, setDescription] = useState('');
+  const [icon, setIcon] = useState('none');
+
+  const usedSet = new Set(usedBlockIds);
+  const availableBlocks = existingBlocks.filter((b) => !usedSet.has(b.id));
 
   function reset() {
-    setShowCustom(false);
+    setShowCreate(false);
     setTitle('');
-    setIcon('');
+    setDescription('');
+    setIcon('none');
   }
 
-  function handlePresetClick(preset: (typeof PRESET_SECTIONS)[number]) {
-    onAdd(buildSection(preset));
-    reset();
-    onOpenChange(false);
-  }
-
-  function handleCustomAdd() {
+  function handleCreate() {
     if (!title.trim()) return;
-    onAdd({
-      id: `sec-${Date.now()}`,
+    onCreateBlock({
       title: title.trim(),
-      icon: icon && icon !== 'none' ? icon : undefined,
+      description: description.trim() || undefined,
+      icon: icon !== 'none' ? icon : undefined,
       fields: [],
+      required: true,
     });
     reset();
-    onOpenChange(false);
   }
 
-  if (showCustom) {
+  if (showCreate) {
     return (
       <Dialog
         open={open}
@@ -94,28 +88,46 @@ export function AddSectionDialog({
       >
         <DialogContent className="sm:max-w-xl">
           <DialogHeader>
-            <DialogTitle className="text-xl">Eigener Abschnitt</DialogTitle>
+            <DialogTitle className="text-xl">
+              Neuen Block erstellen
+            </DialogTitle>
           </DialogHeader>
           <div className="space-y-6 pt-2">
             <Field>
-              <FieldLabel htmlFor="section-title">Titel</FieldLabel>
+              <FieldLabel htmlFor="block-title">Titel</FieldLabel>
               <Input
-                id="section-title"
-                placeholder="z.B. Persönliche Daten"
+                id="block-title"
+                placeholder="z.B. Persoenliche Daten"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 className="h-11 text-base"
               />
             </Field>
             <Field>
-              <FieldLabel htmlFor="section-icon">Icon (optional)</FieldLabel>
+              <FieldLabel htmlFor="block-desc">
+                Beschreibung (optional)
+              </FieldLabel>
+              <Input
+                id="block-desc"
+                placeholder="z.B. Grundlegende Informationen zur Person"
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                className="h-11 text-base"
+              />
+            </Field>
+            <Field>
+              <FieldLabel htmlFor="block-icon">Icon (optional)</FieldLabel>
               <Select value={icon} onValueChange={setIcon}>
-                <SelectTrigger id="section-icon" size="default" className="w-full">
-                  <SelectValue placeholder="Icon auswählen..." />
+                <SelectTrigger
+                  id="block-icon"
+                  size="default"
+                  className="w-full"
+                >
+                  <SelectValue placeholder="Icon auswaehlen..." />
                 </SelectTrigger>
                 <SelectContent>
                   {ICON_OPTIONS.map((opt) => (
-                    <SelectItem key={opt.value || 'none'} value={opt.value || 'none'}>
+                    <SelectItem key={opt.value} value={opt.value}>
                       {opt.label}
                     </SelectItem>
                   ))}
@@ -123,11 +135,19 @@ export function AddSectionDialog({
               </Select>
             </Field>
             <div className="flex justify-end gap-3 pt-2">
-              <Button size="lg" variant="outline" onClick={() => setShowCustom(false)}>
-                Zurück
+              <Button
+                size="lg"
+                variant="outline"
+                onClick={() => setShowCreate(false)}
+              >
+                Zurueck
               </Button>
-              <Button size="lg" onClick={handleCustomAdd} disabled={!title.trim()}>
-                Hinzufügen
+              <Button
+                size="lg"
+                onClick={handleCreate}
+                disabled={!title.trim()}
+              >
+                Erstellen & hinzufuegen
               </Button>
             </div>
           </div>
@@ -144,49 +164,66 @@ export function AddSectionDialog({
         onOpenChange(v);
       }}
     >
-      <DialogContent className="sm:max-w-xl">
+      <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-xl">
         <DialogHeader>
-          <DialogTitle className="text-xl">Neuer Abschnitt</DialogTitle>
+          <DialogTitle className="text-xl">Block hinzufuegen</DialogTitle>
           <p className="text-muted-foreground text-sm">
-            Das Inhalt kann später verarbeitet werden
+            Bestehenden Block auswaehlen oder neuen erstellen
           </p>
         </DialogHeader>
-        <div className="grid gap-4 pt-2">
-          {PRESET_SECTIONS.map((preset) => {
-            const fields = preset.fieldKeys.map((k) => getPredefinedField(k));
-            return (
+        <div className="grid gap-3 pt-2">
+          {availableBlocks.length > 0 ? (
+            availableBlocks.map((block) => (
               <button
-                key={preset.title}
+                key={block.id}
                 type="button"
                 className="hover:border-primary hover:bg-accent cursor-pointer rounded-xl border p-4 text-left transition-colors"
-                onClick={() => handlePresetClick(preset)}
+                onClick={() => {
+                  onSelectBlock(block.id);
+                  reset();
+                }}
               >
-                <p className="text-base font-semibold">{preset.title}</p>
+                <p className="text-base font-semibold">{block.title}</p>
+                {block.description && (
+                  <p className="text-muted-foreground mt-0.5 text-sm">
+                    {block.description}
+                  </p>
+                )}
                 <div className="mt-1.5 flex flex-wrap gap-1.5">
-                  {fields.map((f) => (
-                    <Badge key={f.label} variant="secondary" className="text-sm">
+                  {block.fields.map((f) => (
+                    <Badge
+                      key={f.id}
+                      variant="secondary"
+                      className="text-sm"
+                    >
                       {f.label}
-                      <span className="text-muted-foreground ml-1">
-                        {FIELD_TYPE_LABELS[f.type] || f.type}
-                      </span>
-                      {f.required && (
-                        <span className="text-destructive ml-0.5">*</span>
-                      )}
                     </Badge>
                   ))}
+                  {block.fields.length === 0 && (
+                    <span className="text-muted-foreground text-sm">
+                      Keine Felder
+                    </span>
+                  )}
                 </div>
               </button>
-            );
-          })}
+            ))
+          ) : (
+            <p className="text-muted-foreground py-4 text-center text-sm">
+              Alle Bloecke werden bereits verwendet
+            </p>
+          )}
 
-          {/* Custom section card */}
+          <Separator />
+
           <button
             type="button"
             className="hover:border-primary hover:bg-accent flex cursor-pointer items-center justify-center gap-2 rounded-xl border border-dashed p-4 transition-colors"
-            onClick={() => setShowCustom(true)}
+            onClick={() => setShowCreate(true)}
           >
             <Plus className="text-muted-foreground size-5" />
-            <span className="text-muted-foreground text-base font-semibold">Eigener Abschnitt</span>
+            <span className="text-muted-foreground text-base font-semibold">
+              Neuen Block erstellen
+            </span>
           </button>
         </div>
       </DialogContent>

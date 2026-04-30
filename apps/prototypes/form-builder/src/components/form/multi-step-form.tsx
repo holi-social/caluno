@@ -1,9 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Button } from '@repo/ui';
 import { ArrowLeft, ArrowRight, Loader2 } from 'lucide-react';
-import type { FormConfig, FieldError } from '@/lib/types';
+import type { Block, FormConfig, FieldError } from '@/lib/types';
+import { resolveBlockRefs } from '@/lib/resolve-blocks';
 import { validateStepFields } from '@/lib/validation';
 import { buildDisplaySteps } from '@/lib/build-steps';
 import { StepProgress } from './step-progress';
@@ -11,33 +12,51 @@ import { FormStep } from './form-step';
 
 export function MultiStepForm({
   config,
+  blocks,
   onSuccess,
 }: {
   config: FormConfig;
+  blocks: Block[];
   onSuccess: () => void;
 }) {
   const [currentStep, setCurrentStep] = useState(0);
-  const [formData, setFormData] = useState<Record<string, string | boolean | string[]>>(
-    {},
-  );
+  const [formData, setFormData] = useState<
+    Record<string, string | boolean | string[]>
+  >({});
   const [errors, setErrors] = useState<FieldError[]>([]);
   const [submitting, setSubmitting] = useState(false);
 
-  const displaySteps = buildDisplaySteps(config.sections);
+  const resolvedBlocks = useMemo(
+    () => resolveBlockRefs(config.blockRefs, blocks),
+    [config.blockRefs, blocks],
+  );
+
+  const displaySteps = useMemo(
+    () => buildDisplaySteps(resolvedBlocks),
+    [resolvedBlocks],
+  );
+
   const totalSteps = displaySteps.length;
   const currentDisplayStep = displaySteps[currentStep]!;
-  const currentSection = currentDisplayStep.section;
+  const currentBlock = currentDisplayStep.block;
   const isDocumentStep = !!currentDisplayStep.documentField;
   const isLastStep = currentStep === totalSteps - 1;
   const isFirstStep = currentStep === 0;
 
-  function handleFieldChange(fieldId: string, value: string | boolean | string[]) {
+  function handleFieldChange(
+    fieldId: string,
+    value: string | boolean | string[],
+  ) {
     setFormData((prev) => ({ ...prev, [fieldId]: value }));
     setErrors((prev) => prev.filter((e) => e.fieldId !== fieldId));
   }
 
   function handleNext() {
-    const stepErrors = validateStepFields(currentSection.fields, formData);
+    const stepFields = currentBlock.fields.map((f) => ({
+      ...f,
+      required: currentBlock.effectiveRequired,
+    }));
+    const stepErrors = validateStepFields(stepFields, formData);
     if (stepErrors.length > 0) {
       setErrors(stepErrors);
       return;
@@ -52,7 +71,11 @@ export function MultiStepForm({
   }
 
   async function handleSubmit() {
-    const stepErrors = validateStepFields(currentSection.fields, formData);
+    const stepFields = currentBlock.fields.map((f) => ({
+      ...f,
+      required: currentBlock.effectiveRequired,
+    }));
+    const stepErrors = validateStepFields(stepFields, formData);
     if (stepErrors.length > 0) {
       setErrors(stepErrors);
       return;
@@ -83,7 +106,8 @@ export function MultiStepForm({
       setErrors([
         {
           fieldId: '__form',
-          message: 'Beim Absenden ist ein Fehler aufgetreten. Bitte versuchen Sie es erneut.',
+          message:
+            'Beim Absenden ist ein Fehler aufgetreten. Bitte versuchen Sie es erneut.',
         },
       ]);
     } finally {
@@ -98,7 +122,7 @@ export function MultiStepForm({
       <StepProgress currentStep={currentStep + 1} totalSteps={totalSteps} />
 
       <FormStep
-        section={currentSection}
+        block={currentBlock}
         data={formData}
         errors={errors}
         onChange={handleFieldChange}
@@ -120,7 +144,7 @@ export function MultiStepForm({
             disabled={submitting}
           >
             <ArrowLeft className="mr-2 size-4" />
-            Zurück
+            Zurueck
           </Button>
         ) : (
           <div />
@@ -132,7 +156,9 @@ export function MultiStepForm({
             onClick={handleSubmit}
             disabled={submitting}
           >
-            {submitting && <Loader2 className="mr-2 size-4 animate-spin" />}
+            {submitting && (
+              <Loader2 className="mr-2 size-4 animate-spin" />
+            )}
             {config.settings.submitButtonLabel}
           </Button>
         ) : (

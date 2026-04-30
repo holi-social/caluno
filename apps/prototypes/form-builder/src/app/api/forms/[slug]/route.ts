@@ -1,5 +1,16 @@
+import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
-import { deleteFormConfig, getFormConfig, updateFormConfig } from '@/lib/store-configs';
+import {
+  deleteFormConfig,
+  getFormConfig,
+  updateFormConfig,
+} from '@/lib/store-configs';
+import {
+  getCurrentUserFromCookieValue,
+  canEditForm,
+  canDeleteForm,
+  USER_COOKIE,
+} from '@/lib/users';
 
 export async function GET(
   _request: Request,
@@ -21,8 +32,28 @@ export async function PUT(
   { params }: { params: Promise<{ slug: string }> },
 ) {
   const { slug } = await params;
+  const cookieStore = await cookies();
+  const user = getCurrentUserFromCookieValue(
+    cookieStore.get(USER_COOKIE)?.value,
+  );
+
+  const existing = await getFormConfig(slug);
+  if (!existing) {
+    return NextResponse.json(
+      { error: 'Formular nicht gefunden' },
+      { status: 404 },
+    );
+  }
+
+  if (!canEditForm(user, existing)) {
+    return NextResponse.json(
+      { error: 'Keine Berechtigung' },
+      { status: 403 },
+    );
+  }
+
   const body = (await request.json()) as Record<string, unknown>;
-  const updated = await updateFormConfig(slug, body);
+  const updated = await updateFormConfig(slug, body, user.id);
   if (!updated) {
     return NextResponse.json(
       { error: 'Formular nicht gefunden' },
@@ -37,12 +68,26 @@ export async function DELETE(
   { params }: { params: Promise<{ slug: string }> },
 ) {
   const { slug } = await params;
-  const deleted = await deleteFormConfig(slug);
-  if (!deleted) {
+  const cookieStore = await cookies();
+  const user = getCurrentUserFromCookieValue(
+    cookieStore.get(USER_COOKIE)?.value,
+  );
+
+  const existing = await getFormConfig(slug);
+  if (!existing) {
     return NextResponse.json(
       { error: 'Formular nicht gefunden' },
       { status: 404 },
     );
   }
+
+  if (!canDeleteForm(user, existing)) {
+    return NextResponse.json(
+      { error: 'Keine Berechtigung' },
+      { status: 403 },
+    );
+  }
+
+  await deleteFormConfig(slug);
   return NextResponse.json({ ok: true });
 }

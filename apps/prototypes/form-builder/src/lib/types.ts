@@ -37,15 +37,35 @@ export type FormField = {
   minAge?: number;
 };
 
-export type FormSection = {
+// --- Block-based architecture ---
+
+export type Block = {
   id: string;
   title: string;
   description?: string;
   icon?: string;
   fields: FormField[];
-  locked?: boolean;
-  lockedSource?: string;
+  /** Default required-ness for the whole block (all fields). */
+  required: boolean;
+  createdBy: string;
+  updatedBy: string;
+  createdAt: string;
+  updatedAt: string;
 };
+
+export type BlockRef = {
+  blockId: string;
+  order: number;
+  /** Per-form override of block's default required value. undefined = use block default. */
+  required?: boolean;
+};
+
+/** Block with resolved effective required-ness for rendering. */
+export type ResolvedBlock = Block & {
+  effectiveRequired: boolean;
+};
+
+// --- Form config ---
 
 export type FormSettings = {
   submitButtonLabel: string;
@@ -61,8 +81,10 @@ export type FormConfig = {
   description: string;
   organizationName: string;
   locale: 'de' | 'en';
-  sections: FormSection[];
+  blockRefs: BlockRef[];
   settings: FormSettings;
+  createdBy: string;
+  updatedBy: string;
   createdAt: string;
   updatedAt: string;
 };
@@ -79,3 +101,14 @@ export type FieldError = {
   fieldId: string;
   message: string;
 };
+
+// --- Legacy (kept for reference) ---
+// export type FormSection = {
+//   id: string;
+//   title: string;
+//   description?: string;
+//   icon?: string;
+//   fields: FormField[];
+//   locked?: boolean;
+//   lockedSource?: string;
+// };

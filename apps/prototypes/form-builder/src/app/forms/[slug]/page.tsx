@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useParams, useSearchParams, useRouter } from 'next/navigation';
 import { Card, CardContent } from '@repo/ui';
 import { Loader2 } from 'lucide-react';
-import type { FormConfig } from '@/lib/types';
+import type { Block, FormConfig } from '@/lib/types';
 import { MultiStepForm } from '@/components/form/multi-step-form';
 import { FormSuccessScreen } from '@/components/form-success-screen';
 
@@ -15,6 +15,7 @@ export default function PublicFormPage() {
   const isEmbed = searchParams.get('embed') === 'true';
 
   const [config, setConfig] = useState<FormConfig | null>(null);
+  const [blocks, setBlocks] = useState<Block[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
@@ -22,13 +23,20 @@ export default function PublicFormPage() {
   useEffect(() => {
     async function load() {
       try {
-        const res = await fetch(`/api/forms/${params.slug}`);
-        if (!res.ok) {
+        const [formRes, blocksRes] = await Promise.all([
+          fetch(`/api/forms/${params.slug}`),
+          fetch('/api/blocks'),
+        ]);
+        if (!formRes.ok) {
           setError('Formular nicht gefunden.');
           return;
         }
-        const data = (await res.json()) as FormConfig;
-        setConfig(data);
+        const formData = (await formRes.json()) as FormConfig;
+        const blocksData = blocksRes.ok
+          ? ((await blocksRes.json()) as Block[])
+          : [];
+        setConfig(formData);
+        setBlocks(blocksData);
       } catch {
         setError('Fehler beim Laden des Formulars.');
       } finally {
@@ -49,7 +57,9 @@ export default function PublicFormPage() {
   if (error || !config) {
     return (
       <div className="flex min-h-screen items-center justify-center">
-        <p className="text-muted-foreground">{error || 'Formular nicht gefunden.'}</p>
+        <p className="text-muted-foreground">
+          {error || 'Formular nicht gefunden.'}
+        </p>
       </div>
     );
   }
@@ -85,6 +95,7 @@ export default function PublicFormPage() {
           <CardContent className="pt-6">
             <MultiStepForm
               config={config}
+              blocks={blocks}
               onSuccess={() => setSuccess(true)}
             />
           </CardContent>

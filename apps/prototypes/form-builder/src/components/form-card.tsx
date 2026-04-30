@@ -14,18 +14,41 @@ import {
   DialogTitle,
 } from '@repo/ui';
 import { Eye, FileText, Pencil, Trash2 } from 'lucide-react';
-import type { FormConfig } from '@/lib/types';
+import type { Block, FormConfig } from '@/lib/types';
+import type { User } from '@/lib/users';
+import { canEditForm, canDeleteForm, getUserById } from '@/lib/users';
 
-export function FormCard({ config }: { config: FormConfig }) {
+export function FormCard({
+  config,
+  blocks,
+  currentUser,
+}: {
+  config: FormConfig;
+  blocks: Block[];
+  currentUser: User;
+}) {
   const router = useRouter();
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
 
+  const blockMap = new Map(blocks.map((b) => [b.id, b]));
+  const usedBlocks = config.blockRefs
+    .map((ref) => blockMap.get(ref.blockId))
+    .filter((b): b is Block => b != null);
+
+  const editorName = getUserById(config.updatedBy)?.name ?? config.updatedBy;
+  const updatedDate = new Date(config.updatedAt).toLocaleDateString('de-DE', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+  });
 
   async function handleDelete() {
     setDeleting(true);
     try {
-      const res = await fetch(`/api/forms/${config.slug}`, { method: 'DELETE' });
+      const res = await fetch(`/api/forms/${config.slug}`, {
+        method: 'DELETE',
+      });
       if (res.ok) {
         setConfirmOpen(false);
         router.refresh();
@@ -43,31 +66,58 @@ export function FormCard({ config }: { config: FormConfig }) {
             {config.organizationName}
           </p>
           <h2 className="mt-1 text-lg font-semibold">{config.name}</h2>
-          <p className="text-muted-foreground mt-1 text-sm">
-            {config.description}
-          </p>
+          {config.description && (
+            <p className="text-muted-foreground mt-1 text-sm">
+              {config.description}
+            </p>
+          )}
           <div className="mt-3 flex flex-wrap gap-1.5">
-            {config.sections.flatMap((s) => s.fields).map((field) => (
-              <Badge key={field.id} variant="outline" className="text-xs">
-                {field.label}
+            {usedBlocks.map((block) => (
+              <Badge key={block.id} variant="outline" className="text-xs">
+                {block.title}
               </Badge>
             ))}
           </div>
+          <p className="text-muted-foreground mt-3 text-xs">
+            Bearbeitet von {editorName} am {updatedDate}
+          </p>
         </div>
 
         <div className="flex w-full gap-2 border-t pt-4">
-          <Button asChild variant="outline" className="h-10 flex-1">
-            <Link href={`/builder/${config.slug}`}>
-              <Pencil className="mr-1.5 size-4" />
-              Bearbeiten
-            </Link>
+          <Button
+            asChild={canEditForm(currentUser, config)}
+            variant="outline"
+            className="h-10 flex-1"
+            disabled={!canEditForm(currentUser, config)}
+          >
+            {canEditForm(currentUser, config) ? (
+              <Link href={`/builder/${config.slug}`}>
+                <Pencil className="mr-1.5 size-4" />
+                Bearbeiten
+              </Link>
+            ) : (
+              <>
+                <Pencil className="mr-1.5 size-4" />
+                Bearbeiten
+              </>
+            )}
           </Button>
-          <Button asChild variant="outline" size="icon" className="size-10 shrink-0">
+          <Button
+            asChild
+            variant="outline"
+            size="icon"
+            className="size-10 shrink-0"
+          >
             <Link href={`/forms/${config.slug}`}>
               <Eye className="size-4" />
             </Link>
           </Button>
-          <Button asChild variant="outline" size="icon" className="size-10 shrink-0">
+          <Button
+            asChild
+            variant="outline"
+            size="icon"
+            className="size-10 shrink-0"
+          >
             <Link href={`/submissions/${config.slug}`}>
               <FileText className="size-4" />
             </Link>
@@ -76,6 +126,7 @@ export function FormCard({ config }: { config: FormConfig }) {
             variant="outline"
             size="icon"
             className="text-muted-foreground hover:text-destructive size-10 shrink-0"
+            disabled={!canDeleteForm(currentUser, config)}
             onClick={() => setConfirmOpen(true)}
           >
             <Trash2 className="size-4" />
@@ -86,11 +137,11 @@ export function FormCard({ config }: { config: FormConfig }) {
       <Dialog open={confirmOpen} onOpenChange={setConfirmOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle className="text-xl">Formular löschen?</DialogTitle>
+            <DialogTitle className="text-xl">Formular loeschen?</DialogTitle>
           </DialogHeader>
           <p className="text-muted-foreground text-sm">
-            Sind Sie sicher, dass Sie <strong>{config.name}</strong> löschen möchten?
-            Diese Aktion kann nicht rückgängig gemacht werden.
+            Sind Sie sicher, dass Sie <strong>{config.name}</strong> loeschen
+            moechten? Diese Aktion kann nicht rueckgaengig gemacht werden.
           </p>
           <div className="flex justify-end gap-3 pt-4">
             <Button
@@ -106,7 +157,7 @@ export function FormCard({ config }: { config: FormConfig }) {
               onClick={handleDelete}
               disabled={deleting}
             >
-              {deleting ? 'Löschen...' : 'Löschen'}
+              {deleting ? 'Loeschen...' : 'Loeschen'}
             </Button>
           </div>
         </DialogContent>

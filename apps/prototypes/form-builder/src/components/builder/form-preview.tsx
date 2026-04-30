@@ -1,29 +1,53 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Button, Card, CardContent, Progress } from '@repo/ui';
-import { ArrowLeft, ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react';
-import type { FormConfig } from '@/lib/types';
+import {
+  ArrowLeft,
+  ArrowRight,
+  ChevronLeft,
+  ChevronRight,
+} from 'lucide-react';
+import type { Block, FormConfig } from '@/lib/types';
+import { resolveBlockRefs } from '@/lib/resolve-blocks';
 import { buildDisplaySteps } from '@/lib/build-steps';
 import { FormStep } from '@/components/form/form-step';
 
-export function FormPreview({ config }: { config: FormConfig }) {
+export function FormPreview({
+  config,
+  blocks,
+}: {
+  config: FormConfig;
+  blocks: Block[];
+}) {
   const [currentStep, setCurrentStep] = useState(0);
 
-  const displaySteps = buildDisplaySteps(config.sections);
+  const resolvedBlocks = useMemo(
+    () => resolveBlockRefs(config.blockRefs, blocks),
+    [config.blockRefs, blocks],
+  );
+
+  const displaySteps = useMemo(
+    () => buildDisplaySteps(resolvedBlocks),
+    [resolvedBlocks],
+  );
+
   const totalSteps = displaySteps.length;
   const currentDisplayStep = displaySteps[currentStep];
-  const currentSection = currentDisplayStep?.section;
+  const currentBlock = currentDisplayStep?.block;
   const isDocumentStep = !!currentDisplayStep?.documentField;
   const isLastStep = currentStep === totalSteps - 1;
   const isFirstStep = currentStep === 0;
-  const percentage = totalSteps > 0 ? Math.round(((currentStep + 1) / totalSteps) * 100) : 0;
+  const percentage =
+    totalSteps > 0
+      ? Math.round(((currentStep + 1) / totalSteps) * 100)
+      : 0;
 
   useEffect(() => {
     setCurrentStep(0);
-  }, [config.sections]);
+  }, [config.blockRefs, blocks]);
 
-  if (!currentSection || totalSteps === 0) return null;
+  if (!currentBlock || totalSteps === 0) return null;
 
   return (
     <div className="space-y-4">
@@ -42,7 +66,7 @@ export function FormPreview({ config }: { config: FormConfig }) {
 
           <div className="pointer-events-none select-none">
             <FormStep
-              section={currentSection}
+              block={currentBlock}
               data={{}}
               errors={[]}
               onChange={() => {}}
@@ -55,7 +79,7 @@ export function FormPreview({ config }: { config: FormConfig }) {
               <Button
                 variant="outline"
                 size="icon"
-                aria-label="Zurück"
+                aria-label="Zurueck"
                 className="size-10"
                 onClick={() => setCurrentStep((s) => s - 1)}
               >
@@ -66,9 +90,14 @@ export function FormPreview({ config }: { config: FormConfig }) {
             )}
 
             {isLastStep ? (
-              <Button size="lg">{config.settings.submitButtonLabel}</Button>
+              <Button size="lg">
+                {config.settings.submitButtonLabel}
+              </Button>
             ) : (
-              <Button size="lg" onClick={() => setCurrentStep((s) => s + 1)}>
+              <Button
+                size="lg"
+                onClick={() => setCurrentStep((s) => s + 1)}
+              >
                 Weiter
                 <ArrowRight className="ml-1 size-3.5" />
               </Button>

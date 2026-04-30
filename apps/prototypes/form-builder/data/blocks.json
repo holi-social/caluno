@@ -1,0 +1,120 @@
+[
+  {
+    "id": "seed-block-personal",
+    "title": "Persoenliche Daten",
+    "icon": "User",
+    "fields": [
+      {
+        "id": "f-vorname",
+        "type": "text",
+        "label": "Vorname",
+        "required": true,
+        "placeholder": "z.B. Max"
+      },
+      {
+        "id": "f-nachname",
+        "type": "text",
+        "label": "Nachname",
+        "required": true,
+        "placeholder": "z.B. Mustermann"
+      },
+      {
+        "id": "f-dob",
+        "type": "date",
+        "label": "Geburtsdatum",
+        "required": true,
+        "minAge": 14
+      }
+    ],
+    "required": true,
+    "createdBy": "andrea",
+    "updatedBy": "andrea",
+    "createdAt": "2026-04-30T08:58:15.922Z",
+    "updatedAt": "2026-04-30T08:58:15.922Z"
+  },
+  {
+    "id": "seed-block-kontakte",
+    "title": "Kontakte",
+    "icon": "User",
+    "fields": [
+      {
+        "id": "f-phone",
+        "type": "phone",
+        "label": "Telefonnummer",
+        "required": true,
+        "placeholder": "z.B. +49 170 1234567"
+      },
+      {
+        "id": "f-email",
+        "type": "email",
+        "label": "E-Mail",
+        "required": true,
+        "placeholder": "z.B. max@beispiel.de"
+      }
+    ],
+    "required": true,
+    "createdBy": "andrea",
+    "updatedBy": "andrea",
+    "createdAt": "2026-04-30T08:58:15.922Z",
+    "updatedAt": "2026-04-30T10:03:49.982Z"
+  },
+  {
+    "id": "seed-block-adresse",
+    "title": "Adresse",
+    "icon": "MapPin",
+    "fields": [
+      {
+        "id": "f-street",
+        "type": "text",
+        "label": "Strasse und Hausnummer",
+        "required": true,
+        "placeholder": "z.B. Musterstrasse 42"
+      },
+      {
+        "id": "f-plz",
+        "type": "plz",
+        "label": "PLZ",
+        "required": true,
+        "placeholder": "z.B. 10115"
+      },
+      {
+        "id": "f-city",
+        "type": "text",
+        "label": "Stadt",
+        "required": true,
+        "placeholder": "z.B. Berlin"
+      }
+    ],
+    "required": true,
+    "createdBy": "andrea",
+    "updatedBy": "andrea",
+    "createdAt": "2026-04-30T08:58:15.922Z",
+    "updatedAt": "2026-04-30T08:58:15.922Z"
+  },
+  {
+    "id": "seed-block-datenschutz",
+    "title": "Datenschutzerklaerung",
+    "icon": "FileCheck",
+    "fields": [
+      {
+        "id": "field-1777541641614",
+        "type": "document-acknowledgement",
+        "label": "Datrnschutzerklärung",
+        "documentUrl": "/api/uploads/1777541625755-3_stadtmission_merkblatt_datenschutz_ehrenamtliche__1_.pdf",
+        "documentLabel": "Datrnschutzerklärung lesen",
+        "required": true
+      },
+      {
+        "id": "field-1777541667735",
+        "type": "text",
+        "label": "City",
+        "required": false
+      }
+    ],
+    "required": true,
+    "createdBy": "andrea",
+    "updatedBy": "andrea",
+    "createdAt": "2026-04-30T08:58:15.922Z",
+    "updatedAt": "2026-04-30T10:04:09.307Z"
+  }
+]
