@@ -7,7 +7,7 @@ import {
   useVolunteers,
 } from '@repo/data/react';
 import { Button, Field } from '@repo/ui';
-import { useState, useTransition } from 'react';
+import { useState } from 'react';
 import { toast } from 'sonner';
 import { MemberSelect } from '@/components/member-select';
 import { useSession } from '@/lib/auth';
@@ -25,7 +25,7 @@ export function InviteShiftForm({
   onSuccess,
   onCancel,
 }: InviteShiftFormProps) {
-  const [isPending, startTransition] = useTransition();
+  const [isInviting, setIsInviting] = useState(false);
   const [memberIds, setMemberIds] = useState<string[]>([]);
   const [serverError, setServerError] = useState<string | null>(null);
   const orgUId = useOrgUId();
@@ -41,7 +41,7 @@ export function InviteShiftForm({
 
   const eligibleVolunteers = volunteers?.filter((v) => v.id !== currentUserId);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setServerError(null);
 
@@ -51,35 +51,34 @@ export function InviteShiftForm({
       return;
     }
 
-    startTransition(async () => {
-      try {
-        const result = await inviteShiftVolunteers({
-          shiftId,
-          organizationUnitId: orgUId,
-          memberIds: newMemberIds,
-        });
+    setIsInviting(true);
+    try {
+      const result = await inviteShiftVolunteers({
+        shiftId,
+        organizationUnitId: orgUId,
+        memberIds: newMemberIds,
+      });
 
-        if (result?.serverError) {
-          setServerError(result.serverError);
-          toast.error(result.serverError);
-          return;
-        }
-
-        toast.success('Volunteers invited successfully');
-        setMemberIds([]);
-        queryClient.invalidateQueries({
-          queryKey: ['shiftVolunteers', shiftId],
-        });
-        onSuccess?.();
-      } catch (error) {
-        const message =
-          error instanceof Error
-            ? error.message
-            : 'Failed to invite volunteers';
-        setServerError(message);
-        toast.error(message);
+      if (result?.serverError) {
+        setServerError(result.serverError);
+        toast.error(result.serverError);
+        return;
       }
-    });
+
+      toast.success('Volunteers invited successfully');
+      setMemberIds([]);
+      queryClient.invalidateQueries({
+        queryKey: ['shiftVolunteers', shiftId],
+      });
+      onSuccess?.();
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : 'Failed to invite volunteers';
+      setServerError(message);
+      toast.error(message);
+    } finally {
+      setIsInviting(false);
+    }
   };
 
   return (
@@ -106,8 +105,8 @@ export function InviteShiftForm({
             Cancel
           </Button>
         )}
-        <Button type="submit" disabled={isPending || memberIds.length === 0}>
-          {isPending ? 'Inviting...' : 'Invite volunteers'}
+        <Button type="submit" disabled={isInviting || memberIds.length === 0}>
+          {isInviting ? 'Inviting...' : 'Invite volunteers'}
         </Button>
       </div>
     </form>
