@@ -211,7 +211,7 @@ export function FieldRenderer({
     );
   }
 
-  // text, email, phone, date, password, numbers, iban, plz
+  // text, vorname, nachname, email, phone, date, password, numbers, iban, plz
   const inputType =
     field.type === 'email'
       ? 'email'
@@ -232,6 +232,19 @@ export function FieldRenderer({
         ? ('text' as const)
         : undefined;
 
+  const placeholder =
+    field.placeholder ??
+    (field.type === 'vorname'
+      ? 'z.B. Max'
+      : field.type === 'nachname'
+        ? 'z.B. Mustermann'
+        : undefined);
+
+  const pattern =
+    field.type === 'vorname' || field.type === 'nachname'
+      ? '[\\p{L}\\s\\-]+'
+      : undefined;
+
   return (
     <Field data-invalid={!!error || undefined}>
       <FieldLabel htmlFor={field.id}>
@@ -247,7 +260,8 @@ export function FieldRenderer({
         id={field.id}
         type={inputType}
         inputMode={inputMode}
-        placeholder={field.placeholder}
+        placeholder={placeholder}
+        pattern={pattern}
         value={typeof value === 'string' ? value : ''}
         onChange={(e) => onChange(e.target.value)}
         aria-invalid={!!error}

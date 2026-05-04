@@ -161,6 +161,18 @@ export function BuilderLayout({
     if (res.ok) await refreshBlocks();
   }
 
+  async function handleBlockFieldReorder(
+    blockId: string,
+    orderedFields: FormField[],
+  ) {
+    const res = await fetch(`/api/blocks/${blockId}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ fields: orderedFields }),
+    });
+    if (res.ok) await refreshBlocks();
+  }
+
   async function handleBlockEdit(
     blockId: string,
     updates: Partial<Pick<Block, 'title' | 'description' | 'icon'>>,
@@ -357,6 +369,13 @@ export function BuilderLayout({
           editBlockId && blockMap.get(editBlockId) && canEditBlock(currentUser, blockMap.get(editBlockId)!)
             ? async (blockId, fieldId) => {
                 await handleBlockFieldDelete(blockId, fieldId);
+              }
+            : undefined
+        }
+        onReorderFields={
+          editBlockId && blockMap.get(editBlockId) && canEditBlock(currentUser, blockMap.get(editBlockId)!)
+            ? async (blockId, orderedFields) => {
+                await handleBlockFieldReorder(blockId, orderedFields);
               }
             : undefined
         }

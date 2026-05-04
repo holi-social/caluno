@@ -11,23 +11,10 @@ import {
   Field,
   FieldLabel,
   Input,
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
   Separator,
 } from '@repo/ui';
 import { Plus } from 'lucide-react';
 import type { Block } from '@/lib/types';
-
-const ICON_OPTIONS = [
-  { label: 'Kein Icon', value: 'none' },
-  { label: 'Person', value: 'User' },
-  { label: 'Adresse', value: 'MapPin' },
-  { label: 'Dokument', value: 'FileCheck' },
-  { label: 'Finanzen', value: 'Banknote' },
-];
 
 export function AddBlockDialog({
   open,
@@ -45,7 +32,6 @@ export function AddBlockDialog({
   onCreateBlock: (data: {
     title: string;
     description?: string;
-    icon?: string;
     fields: [];
     required: boolean;
   }) => void;
@@ -53,7 +39,6 @@ export function AddBlockDialog({
   const [showCreate, setShowCreate] = useState(false);
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
-  const [icon, setIcon] = useState('none');
 
   const usedSet = new Set(usedBlockIds);
   const availableBlocks = existingBlocks.filter((b) => !usedSet.has(b.id));
@@ -62,7 +47,6 @@ export function AddBlockDialog({
     setShowCreate(false);
     setTitle('');
     setDescription('');
-    setIcon('none');
   }
 
   function handleCreate() {
@@ -70,7 +54,6 @@ export function AddBlockDialog({
     onCreateBlock({
       title: title.trim(),
       description: description.trim() || undefined,
-      icon: icon !== 'none' ? icon : undefined,
       fields: [],
       required: true,
     });
@@ -114,25 +97,6 @@ export function AddBlockDialog({
                 onChange={(e) => setDescription(e.target.value)}
                 className="h-11 text-base"
               />
-            </Field>
-            <Field>
-              <FieldLabel htmlFor="block-icon">Icon (optional)</FieldLabel>
-              <Select value={icon} onValueChange={setIcon}>
-                <SelectTrigger
-                  id="block-icon"
-                  size="default"
-                  className="w-full"
-                >
-                  <SelectValue placeholder="Icon auswaehlen..." />
-                </SelectTrigger>
-                <SelectContent>
-                  {ICON_OPTIONS.map((opt) => (
-                    <SelectItem key={opt.value} value={opt.value}>
-                      {opt.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
             </Field>
             <div className="flex justify-end gap-3 pt-2">
               <Button

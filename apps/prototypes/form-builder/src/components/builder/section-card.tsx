@@ -18,22 +18,12 @@ import {
   GripVertical,
   Pencil,
   Trash2,
-  User,
-  MapPin,
-  FileCheck,
-  Banknote,
   ArrowUp,
   ArrowDown,
 } from 'lucide-react';
 import type { Block, BlockRef } from '@/lib/types';
+import { getBlockIcon } from '@/lib/block-icon';
 import { FieldBadge } from './field-badge';
-
-const ICON_MAP: Record<string, React.ReactNode> = {
-  User: <User className="size-5" />,
-  MapPin: <MapPin className="size-5" />,
-  FileCheck: <FileCheck className="size-5" />,
-  Banknote: <Banknote className="size-5" />,
-};
 
 export function BlockCardBuilder({
   block,
@@ -58,7 +48,7 @@ export function BlockCardBuilder({
 }) {
   const [expanded, setExpanded] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
-  const icon = block.icon ? ICON_MAP[block.icon] : null;
+  const icon = getBlockIcon(block.fields);
   const effectiveRequired = blockRef.required ?? block.required;
 
   return (

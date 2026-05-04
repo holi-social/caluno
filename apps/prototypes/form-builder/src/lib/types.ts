@@ -1,5 +1,7 @@
 export type FieldType =
   | 'text'
+  | 'vorname'
+  | 'nachname'
   | 'email'
   | 'phone'
   | 'date'

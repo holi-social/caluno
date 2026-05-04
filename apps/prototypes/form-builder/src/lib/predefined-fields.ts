@@ -33,6 +33,8 @@ import type { FieldType } from './types';
 
 export const FIELD_TYPE_LABELS: Record<FieldType, string> = {
   text: 'Text',
+  vorname: 'Vorname',
+  nachname: 'Nachname',
   email: 'E-Mail',
   phone: 'Telefon',
   date: 'Datum',
