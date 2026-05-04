@@ -164,9 +164,6 @@ build_branch_frontend:
     name: hashicorp/terraform:1.15
     entrypoint: ['']
   before_script:
-    - apk add --no-cache curl bash glab
-    - glab auth login --job-token "$CI_JOB_TOKEN" --hostname "$CI_SERVER_FQDN" --api-protocol "$CI_SERVER_PROTOCOL"
-    - glab -R "$CI_PROJECT_PATH" securefile download --all --output-dir "$TF_ROOT"
     - cd "$TF_ROOT"
     - terraform --version
     - terraform init

@@ -5,11 +5,11 @@ WORKDIR /app
 ENV NODE_ENV=production
 
 # Install dependencies for the whole monorepo so workspace packages are available
-COPY package.json turbo.json ./
+COPY package.json bun.lock turbo.json ./
 COPY apps ./apps
 COPY packages ./packages
 
-RUN bun install
+RUN bun install --frozen-lockfile
 
 # Build the NestJS backend
 WORKDIR /app/apps/backend
@@ -22,11 +22,11 @@ WORKDIR /app
 
 ENV NODE_ENV=production
 
-COPY package.json turbo.json ./
+COPY package.json bun.lock turbo.json ./
 COPY apps ./apps
 COPY packages ./packages
 
-RUN bun install --production --ignore-scripts
+RUN bun install --frozen-lockfile --production --ignore-scripts
 
 WORKDIR /app/apps/backend
 
