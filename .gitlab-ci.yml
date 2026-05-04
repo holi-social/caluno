@@ -161,7 +161,7 @@ build_branch_frontend:
 
 .terraform:
   image:
-    name: hashicorp/terraform:1.14
+    name: hashicorp/terraform:1.15
     entrypoint: ['']
   before_script:
     - apk add --no-cache curl bash glab
