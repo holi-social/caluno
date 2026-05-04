@@ -1,17 +1,166 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
-import { Button, Separator } from '@repo/ui';
-import { ArrowLeft, Plus, Redo2, Save, Undo2 } from 'lucide-react';
+import {
+  Badge,
+  Button,
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+  Separator,
+} from '@repo/ui';
+import { ArrowLeft, Plus, Redo2, Save, Search, Undo2, X } from 'lucide-react';
 import Link from 'next/link';
-import type { Block, BlockRef, FormConfig, FormField } from '@/lib/types';
+import { toast } from 'sonner';
+import type { Block, FormConfig, FormField } from '@/lib/types';
 import type { User } from '@/lib/users';
 import { canEditBlock, canRemoveBlockFromForm } from '@/lib/users';
 import { useUndoRedo } from '@/lib/use-undo-redo';
+import {
+  TRIGGER_OPTIONS,
+  TRIGGER_MAP,
+  type TriggerOption,
+} from '@/lib/trigger-options';
 import { BlockCardBuilder } from './section-card';
 import { AddBlockDialog } from './add-section-dialog';
 import { EditBlockSheet } from './edit-block-sheet';
 import { FormPreview } from './form-preview';
+
+// --- Applied-to section ---
+
+function AppliedToSection({
+  appliedTo,
+  onChange,
+  hasError,
+}: {
+  appliedTo: string[];
+  onChange: (next: string[]) => void;
+  hasError: boolean;
+}) {
+  const [popoverOpen, setPopoverOpen] = useState(false);
+  const [search, setSearch] = useState('');
+
+  const available = TRIGGER_OPTIONS.filter((o) => !appliedTo.includes(o.id));
+  const filtered = search.trim()
+    ? available.filter((o) =>
+        o.label.toLowerCase().includes(search.trim().toLowerCase()),
+      )
+    : available;
+
+  const groups = Array.from(
+    filtered.reduce((map, opt) => {
+      const list = map.get(opt.group) ?? [];
+      list.push(opt);
+      map.set(opt.group, list);
+      return map;
+    }, new Map<string, TriggerOption[]>()),
+  );
+
+  function handleSelect(id: string) {
+    onChange([...appliedTo, id]);
+    setPopoverOpen(false);
+    setSearch('');
+  }
+
+  function handleRemove(id: string) {
+    onChange(appliedTo.filter((v) => v !== id));
+  }
+
+  return (
+    <div>
+      <h2 className="text-2xl font-bold tracking-tight">Einsatzbereiche</h2>
+      <p className="text-muted-foreground mt-1 text-sm">
+        Legen Sie fest, wann Ihre Freiwilligen dieses Formular ausfüllen müssen.
+        Das Formular wird nur einmalig beim ersten Mal angezeigt — danach nur bei
+        Änderungen am jeweiligen Block.
+      </p>
+
+      <div
+        className={`mt-4 flex min-h-9 flex-wrap items-center gap-2 rounded-lg border p-2 ${
+          hasError
+            ? 'border-destructive bg-destructive/5'
+            : 'border-border'
+        }`}
+      >
+        {appliedTo.map((id) => {
+          const option = TRIGGER_MAP.get(id);
+          return (
+            <Badge
+              key={id}
+              variant="outline"
+              className="h-9 gap-1.5 pl-3 pr-1.5 text-sm"
+            >
+              {option?.label ?? id}
+              <button
+                type="button"
+                onClick={() => handleRemove(id)}
+                className="text-muted-foreground hover:text-foreground ml-0.5 rounded-sm p-0.5"
+              >
+                <X className="size-3.5" />
+              </button>
+            </Badge>
+          );
+        })}
+
+        <Popover
+          open={popoverOpen}
+          onOpenChange={(open) => {
+            setPopoverOpen(open);
+            if (!open) setSearch('');
+          }}
+        >
+          <PopoverTrigger asChild>
+            <Button variant="outline" size="icon" className="size-9 shrink-0">
+              <Plus className="size-4" />
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent align="start" className="w-80 p-0">
+            <div className="flex items-center gap-2 border-b px-3 py-2">
+              <Search className="text-muted-foreground size-4 shrink-0" />
+              <input
+                className="placeholder:text-muted-foreground flex-1 bg-transparent text-sm outline-none"
+                placeholder="Suchen..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                autoFocus
+              />
+            </div>
+            <div className="max-h-60 overflow-y-auto p-1">
+              {groups.length === 0 && (
+                <p className="text-muted-foreground py-4 text-center text-sm">
+                  Keine Optionen verfügbar
+                </p>
+              )}
+              {groups.map(([group, items]) => (
+                <div key={group}>
+                  <p className="text-muted-foreground px-2 py-1.5 text-xs font-medium">
+                    {group}
+                  </p>
+                  {items.map((opt) => (
+                    <button
+                      key={opt.id}
+                      type="button"
+                      onClick={() => handleSelect(opt.id)}
+                      className="hover:bg-accent hover:text-accent-foreground w-full rounded-sm px-2 py-1.5 text-left text-sm"
+                    >
+                      {opt.label}
+                    </button>
+                  ))}
+                </div>
+              ))}
+            </div>
+          </PopoverContent>
+        </Popover>
+      </div>
+
+      {hasError && (
+        <p className="text-destructive mt-1.5 text-sm">
+          Bitte weisen Sie mindestens einen Einsatzbereich zu.
+        </p>
+      )}
+    </div>
+  );
+}
 
 export function BuilderLayout({
   initialConfig,
@@ -36,6 +185,7 @@ export function BuilderLayout({
   const [saved, setSaved] = useState(false);
   const [addBlockOpen, setAddBlockOpen] = useState(false);
   const [editBlockId, setEditBlockId] = useState<string | null>(null);
+  const [appliedToError, setAppliedToError] = useState(false);
 
   // Build a map for quick block lookup
   const blockMap = new Map(blocks.map((b) => [b.id, b]));
@@ -188,6 +338,16 @@ export function BuilderLayout({
   // --- Save form ---
 
   async function handleSave() {
+    const appliedTo = config.appliedTo ?? [];
+    if (appliedTo.length === 0) {
+      setAppliedToError(true);
+      toast.warning(
+        'Das Formular ist keinem Einsatzbereich zugewiesen und wird niemandem angezeigt.',
+      );
+      return;
+    }
+    setAppliedToError(false);
+
     setSaving(true);
     setSaved(false);
     try {
@@ -286,19 +446,32 @@ export function BuilderLayout({
             })}
           </div>
 
-          <Separator className="my-8" />
-
-          {/* Add block / Save */}
-          <div className="flex items-center justify-between gap-3">
+          {/* Add block */}
+          <div className="mt-4">
             <Button
               variant="outline"
               size="lg"
               onClick={() => setAddBlockOpen(true)}
             >
               <Plus className="mr-2 size-5" />
-              Block hinzufuegen
+              Block hinzufügen
             </Button>
+          </div>
 
+          <Separator className="my-8" />
+
+          {/* Applied-to section */}
+          <AppliedToSection
+            appliedTo={config.appliedTo ?? []}
+            onChange={(next) => {
+              setAppliedToError(false);
+              setConfig((prev) => ({ ...prev, appliedTo: next }));
+            }}
+            hasError={appliedToError}
+          />
+
+          {/* Save */}
+          <div className="mt-8 flex justify-end">
             <Button size="lg" onClick={handleSave} disabled={saving}>
               <Save className="mr-2 size-5" />
               {saved

@@ -48,6 +48,7 @@ async function seedConfigs(): Promise<void> {
       { blockId: SEED_BLOCK_IDS.adresse, order: 2 },
       { blockId: SEED_BLOCK_IDS.datenschutz, order: 3, required: true },
     ],
+    appliedTo: ['join-org'],
     settings: {
       submitButtonLabel: 'Absenden',
       successTitle: 'Vielen Dank!',
@@ -118,6 +119,7 @@ export async function createFormConfig(data: {
       organizationName: user?.subOrg ?? '',
       locale: 'de',
       blockRefs: [],
+      appliedTo: [],
       settings: {
         submitButtonLabel: 'Absenden',
         successTitle: 'Vielen Dank!',
@@ -193,6 +195,7 @@ export async function copyFormConfig(
       organizationName: user?.subOrg ?? '',
       locale: source.locale,
       blockRefs: source.blockRefs.map((ref) => ({ ...ref })),
+      appliedTo: [...source.appliedTo],
       settings: { ...source.settings },
       createdBy,
       updatedBy: createdBy,

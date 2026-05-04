@@ -6,14 +6,14 @@
     "fields": [
       {
         "id": "f-vorname",
-        "type": "text",
+        "type": "vorname",
         "label": "Vorname",
         "required": true,
         "placeholder": "z.B. Max"
       },
       {
         "id": "f-nachname",
-        "type": "text",
+        "type": "nachname",
         "label": "Nachname",
         "required": true,
         "placeholder": "z.B. Mustermann"
@@ -30,7 +30,8 @@
     "createdBy": "andrea",
     "updatedBy": "andrea",
     "createdAt": "2026-04-30T08:58:15.922Z",
-    "updatedAt": "2026-04-30T10:11:58.250Z"
+    "updatedAt": "2026-05-04T12:25:42.048Z",
+    "description": "Let's get to know each other!"
   },
   {
     "id": "seed-block-kontakte",
@@ -93,51 +94,22 @@
   },
   {
     "id": "seed-block-datenschutz",
-    "title": "Datenschutzerklaerung",
+    "title": "Datenschutzerklärung",
     "icon": "FileCheck",
     "fields": [
       {
-        "id": "field-1777541641614",
+        "id": "field-1777896641813",
         "type": "document-acknowledgement",
-        "label": "Datrnschutzerklärung",
-        "documentUrl": "/api/uploads/1777541625755-3_stadtmission_merkblatt_datenschutz_ehrenamtliche__1_.pdf",
-        "documentLabel": "Datrnschutzerklärung lesen",
+        "label": "Datenschutzerklärung",
+        "documentUrl": "/api/uploads/1777896632131-3_stadtmission_merkblatt_datenschutz_ehrenamtliche__1_.pdf",
+        "documentLabel": "Datenschutzerklärung lesen",
         "required": true
-      },
-      {
-        "id": "field-1777541667735",
-        "type": "text",
-        "label": "City",
-        "required": false
       }
     ],
     "required": true,
     "createdBy": "andrea",
     "updatedBy": "andrea",
     "createdAt": "2026-04-30T08:58:15.922Z",
-    "updatedAt": "2026-04-30T10:04:09.307Z"
-  },
-  {
-    "id": "block-bb333358",
-    "title": "1",
-    "description": "123",
-    "fields": [],
-    "required": true,
-    "createdBy": "karl",
-    "updatedBy": "karl",
-    "createdAt": "2026-04-30T12:14:09.133Z",
-    "updatedAt": "2026-04-30T12:14:29.649Z",
-    "icon": "FileCheck"
-  },
-  {
-    "id": "block-9026eddb",
-    "title": "123",
-    "description": "123",
-    "fields": [],
-    "required": true,
-    "createdBy": "andrea",
-    "updatedBy": "andrea",
-    "createdAt": "2026-04-30T14:19:24.930Z",
-    "updatedAt": "2026-04-30T14:19:24.930Z"
+    "updatedAt": "2026-05-04T12:10:59.999Z"
   }
 ]

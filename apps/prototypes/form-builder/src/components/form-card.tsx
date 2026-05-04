@@ -15,6 +15,7 @@ import {
 } from '@repo/ui';
 import { Eye, FileText, Pencil, Trash2 } from 'lucide-react';
 import type { Block, FormConfig } from '@/lib/types';
+import { TRIGGER_MAP } from '@/lib/trigger-options';
 import type { User } from '@/lib/users';
 import { canEditForm, canDeleteForm, getUserById } from '@/lib/users';
 
@@ -71,13 +72,34 @@ export function FormCard({
               {config.description}
             </p>
           )}
-          <div className="mt-3 flex flex-wrap gap-1.5">
-            {usedBlocks.map((block) => (
-              <Badge key={block.id} variant="outline" className="text-xs">
-                {block.title}
-              </Badge>
-            ))}
-          </div>
+          {usedBlocks.length > 0 && (
+            <div className="mt-3">
+              <p className="text-muted-foreground mb-1 text-xs font-medium">
+                Inhalt
+              </p>
+              <div className="flex flex-wrap gap-1.5">
+                {usedBlocks.map((block) => (
+                  <Badge key={block.id} variant="outline" className="text-xs">
+                    {block.title}
+                  </Badge>
+                ))}
+              </div>
+            </div>
+          )}
+          {(config.appliedTo ?? []).length > 0 && (
+            <div className="mt-3">
+              <p className="text-muted-foreground mb-1 text-xs font-medium">
+                Aktiv bei
+              </p>
+              <div className="flex flex-wrap gap-1.5">
+                {config.appliedTo.map((id) => (
+                  <Badge key={id} variant="secondary" className="text-xs">
+                    {TRIGGER_MAP.get(id)?.label ?? id}
+                  </Badge>
+                ))}
+              </div>
+            </div>
+          )}
           <p className="text-muted-foreground mt-3 text-xs">
             Bearbeitet von {editorName} am {updatedDate}
           </p>

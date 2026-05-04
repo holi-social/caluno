@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { Geologica } from 'next/font/google';
 import { ThemeProvider } from 'next-themes';
+import { Toaster } from '@repo/ui';
 
 import './globals.css';
 
@@ -24,6 +25,7 @@ export default function RootLayout({
       <body className={`${geologica.variable} antialiased`}>
         <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false}>
           {children}
+          <Toaster />
         </ThemeProvider>
       </body>
     </html>

@@ -1,1 +1,44 @@
-[]
+[
+  {
+    "id": "05b1ece6-31c8-4511-8edc-df0f1632cff2",
+    "slug": "onboarding-ehrenamt",
+    "name": "Onboarding Ehrenamt",
+    "description": "Registrierungsformular fuer neue Ehrenamtliche",
+    "organizationName": "Abteilung EA",
+    "locale": "de",
+    "blockRefs": [
+      {
+        "blockId": "seed-block-personal",
+        "order": 0,
+        "required": true
+      },
+      {
+        "blockId": "seed-block-kontakte",
+        "order": 1,
+        "required": true
+      },
+      {
+        "blockId": "seed-block-adresse",
+        "order": 2
+      },
+      {
+        "blockId": "seed-block-datenschutz",
+        "order": 3,
+        "required": true
+      }
+    ],
+    "appliedTo": [
+      "join-org"
+    ],
+    "settings": {
+      "submitButtonLabel": "Absenden",
+      "successTitle": "Vielen Dank!",
+      "successMessage": "Ihre Daten wurden erfolgreich uebermittelt.",
+      "allowEmbed": true
+    },
+    "createdBy": "andrea",
+    "updatedBy": "andrea",
+    "createdAt": "2026-05-04T15:15:25.861Z",
+    "updatedAt": "2026-05-04T15:15:25.861Z"
+  }
+]

@@ -29,6 +29,7 @@ export function CreateFormDialog({
   existingForms: FormConfig[];
 }) {
   const router = useRouter();
+  const [mode, setMode] = useState<'create' | 'copy'>('create');
   const [open, setOpen] = useState(false);
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
@@ -36,6 +37,7 @@ export function CreateFormDialog({
   const [creating, setCreating] = useState(false);
 
   const isModerator = currentUser.role === 'moderator';
+  const isCopy = isModerator || mode === 'copy';
 
   function reset() {
     setName('');
@@ -43,14 +45,19 @@ export function CreateFormDialog({
     setSourceSlug('');
   }
 
+  function openDialog(m: 'create' | 'copy') {
+    setMode(m);
+    setOpen(true);
+  }
+
   async function handleCreate() {
     if (!name.trim()) return;
-    if (isModerator && !sourceSlug) return;
+    if (isCopy && !sourceSlug) return;
 
     setCreating(true);
     try {
       let res: Response;
-      if (isModerator) {
+      if (isCopy) {
         res = await fetch('/api/forms?action=copy', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -80,25 +87,33 @@ export function CreateFormDialog({
     }
   }
 
-  const canCreate = isModerator
+  const canCreate = isCopy
     ? name.trim() !== '' && sourceSlug !== ''
     : name.trim() !== '';
 
   return (
     <>
-      <Button size="lg" onClick={() => setOpen(true)}>
-        {isModerator ? (
-          <>
+      {isModerator ? (
+        <Button size="lg" onClick={() => openDialog('copy')}>
+          <Copy className="mr-2 size-5" />
+          Formular kopieren
+        </Button>
+      ) : (
+        <div className="flex gap-2">
+          <Button
+            size="lg"
+            variant="secondary"
+            onClick={() => openDialog('copy')}
+          >
             <Copy className="mr-2 size-5" />
             Formular kopieren
-          </>
-        ) : (
-          <>
+          </Button>
+          <Button size="lg" onClick={() => openDialog('create')}>
             <Plus className="mr-2 size-5" />
             Neues Formular
-          </>
-        )}
-      </Button>
+          </Button>
+        </div>
+      )}
       <Dialog
         open={open}
         onOpenChange={(v) => {
@@ -109,13 +124,13 @@ export function CreateFormDialog({
         <DialogContent className="sm:max-w-xl">
           <DialogHeader>
             <DialogTitle className="text-xl">
-              {isModerator
+              {isCopy
                 ? 'Formular kopieren'
                 : 'Neues Formular erstellen'}
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-6 pt-2">
-            {isModerator && (
+            {isCopy && (
               <Field>
                 <FieldLabel htmlFor="source-form">Vorlage</FieldLabel>
                 <Select value={sourceSlug} onValueChange={setSourceSlug}>
@@ -142,7 +157,7 @@ export function CreateFormDialog({
                 className="h-11 text-base"
               />
             </Field>
-            {!isModerator && (
+            {!isCopy && (
               <Field>
                 <FieldLabel htmlFor="form-desc">
                   Beschreibung (optional)
@@ -173,10 +188,10 @@ export function CreateFormDialog({
                 disabled={!canCreate || creating}
               >
                 {creating
-                  ? isModerator
+                  ? isCopy
                     ? 'Kopieren...'
                     : 'Erstellen...'
-                  : isModerator
+                  : isCopy
                     ? 'Kopieren'
                     : 'Erstellen'}
               </Button>

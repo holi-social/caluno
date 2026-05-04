@@ -84,6 +84,8 @@ export type FormConfig = {
   organizationName: string;
   locale: 'de' | 'en';
   blockRefs: BlockRef[];
+  /** IDs of triggers where this form is shown to volunteers (e.g. "join-org", "shift:abc"). */
+  appliedTo: string[];
   settings: FormSettings;
   createdBy: string;
   updatedBy: string;
