@@ -34,7 +34,7 @@ integration_tests:
   image: europe-north1-docker.pkg.dev/holi-shared/docker-hub-remote/oven/bun:1
   needs: []
   services:
-    - name: postgres:16
+    - name: europe-north1-docker.pkg.dev/holi-shared/docker-hub-remote/postgres:17
       alias: postgres
   variables:
     POSTGRES_DB: clippy_test
