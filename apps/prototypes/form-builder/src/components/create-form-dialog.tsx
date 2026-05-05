@@ -135,7 +135,7 @@ export function CreateFormDialog({
                 <FieldLabel htmlFor="source-form">Vorlage</FieldLabel>
                 <Select value={sourceSlug} onValueChange={setSourceSlug}>
                   <SelectTrigger id="source-form" size="default" className="h-11 w-full text-base">
-                    <SelectValue placeholder="Formular auswaehlen..." />
+                    <SelectValue placeholder="Formular auswählen..." />
                   </SelectTrigger>
                   <SelectContent>
                     {existingForms.map((f) => (
@@ -164,7 +164,7 @@ export function CreateFormDialog({
                 </FieldLabel>
                 <Input
                   id="form-desc"
-                  placeholder="z.B. Registrierungsformular fuer neue Freiwillige"
+                  placeholder="z.B. Registrierungsformular für neue Freiwillige"
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
                   className="h-11 text-base"
@@ -189,8 +189,8 @@ export function CreateFormDialog({
               >
                 {creating
                   ? isCopy
-                    ? 'Kopieren...'
-                    : 'Erstellen...'
+                    ? 'Wird kopiert...'
+                    : 'Wird erstellt...'
                   : isCopy
                     ? 'Kopieren'
                     : 'Erstellen'}

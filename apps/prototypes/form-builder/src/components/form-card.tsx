@@ -129,6 +129,8 @@ export function FormCard({
             variant="outline"
             size="icon"
             className="size-10 shrink-0"
+            aria-label="Vorschau"
+            title="Vorschau"
           >
             <Link href={`/forms/${config.slug}`}>
               <Eye className="size-4" />
@@ -139,6 +141,8 @@ export function FormCard({
             variant="outline"
             size="icon"
             className="size-10 shrink-0"
+            aria-label="Einsendungen"
+            title="Einsendungen"
           >
             <Link href={`/submissions/${config.slug}`}>
               <FileText className="size-4" />
@@ -150,6 +154,8 @@ export function FormCard({
             className="text-muted-foreground hover:text-destructive size-10 shrink-0"
             disabled={!canDeleteForm(currentUser, config)}
             onClick={() => setConfirmOpen(true)}
+            aria-label="Formular löschen"
+            title="Formular löschen"
           >
             <Trash2 className="size-4" />
           </Button>
@@ -159,11 +165,10 @@ export function FormCard({
       <Dialog open={confirmOpen} onOpenChange={setConfirmOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle className="text-xl">Formular loeschen?</DialogTitle>
+            <DialogTitle className="text-xl">Formular löschen?</DialogTitle>
           </DialogHeader>
           <p className="text-muted-foreground text-sm">
-            Sind Sie sicher, dass Sie <strong>{config.name}</strong> loeschen
-            moechten? Diese Aktion kann nicht rueckgaengig gemacht werden.
+            <strong>{config.name}</strong> wird unwiderruflich entfernt.
           </p>
           <div className="flex justify-end gap-3 pt-4">
             <Button
@@ -179,7 +184,7 @@ export function FormCard({
               onClick={handleDelete}
               disabled={deleting}
             >
-              {deleting ? 'Loeschen...' : 'Loeschen'}
+              {deleting ? 'Wird gelöscht...' : 'Löschen'}
             </Button>
           </div>
         </DialogContent>

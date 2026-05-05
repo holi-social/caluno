@@ -83,7 +83,7 @@ function CreateBlockDialog({ currentUser }: { currentUser: User }) {
               <FieldLabel htmlFor="block-title">Titel</FieldLabel>
               <Input
                 id="block-title"
-                placeholder="z.B. Persoenliche Daten"
+                placeholder="z.B. Persönliche Daten"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 className="h-11 text-base"
@@ -117,7 +117,7 @@ function CreateBlockDialog({ currentUser }: { currentUser: User }) {
                 onClick={handleCreate}
                 disabled={!title.trim() || creating}
               >
-                {creating ? 'Erstellen...' : 'Erstellen'}
+                {creating ? 'Wird erstellt...' : 'Erstellen'}
               </Button>
             </div>
           </div>
@@ -183,7 +183,7 @@ export function DashboardContent({
       <TabsContent value="bloecke" className="mt-6">
         {blocks.length === 0 ? (
           <p className="text-muted-foreground py-12 text-center">
-            Noch keine Bloecke. Erstellen Sie Ihren ersten Block.
+            Noch keine Blöcke. Erstellen Sie Ihren ersten Block.
           </p>
         ) : (
           <div className="grid gap-4 md:grid-cols-2">

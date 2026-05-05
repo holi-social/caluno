@@ -111,7 +111,7 @@ export function AddBlockDialog({
                 onClick={handleCreate}
                 disabled={!title.trim()}
               >
-                Erstellen & hinzufuegen
+                Erstellen & hinzufügen
               </Button>
             </div>
           </div>
@@ -130,9 +130,9 @@ export function AddBlockDialog({
     >
       <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-xl">
         <DialogHeader>
-          <DialogTitle className="text-xl">Block hinzufuegen</DialogTitle>
+          <DialogTitle className="text-xl">Block hinzufügen</DialogTitle>
           <p className="text-muted-foreground text-sm">
-            Bestehenden Block auswaehlen oder neuen erstellen
+            Bestehenden Block auswählen oder neuen erstellen
           </p>
         </DialogHeader>
         <div className="grid gap-3 pt-2">
@@ -173,7 +173,7 @@ export function AddBlockDialog({
             ))
           ) : (
             <p className="text-muted-foreground py-4 text-center text-sm">
-              Alle Bloecke werden bereits verwendet
+              Alle Blöcke werden bereits verwendet
             </p>
           )}
 

@@ -188,7 +188,7 @@ export function BlockCardBuilder({
             <p className="text-muted-foreground text-sm">
               Sind Sie sicher, dass Sie den Block{' '}
               <strong>{block.title}</strong> aus diesem Formular entfernen
-              moechten? Der Block bleibt in der Bibliothek erhalten.
+              möchten? Der Block bleibt in der Bibliothek erhalten.
             </p>
             <div className="flex flex-wrap gap-1.5">
               {block.fields.map((f) => (

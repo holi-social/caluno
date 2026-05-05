@@ -337,7 +337,7 @@ function AddFieldInline({
           Abbrechen
         </Button>
         <Button onClick={handleAdd} disabled={!canAdd}>
-          Hinzufuegen
+          Hinzufügen
         </Button>
       </div>
     </div>

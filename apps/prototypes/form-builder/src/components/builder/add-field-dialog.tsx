@@ -174,7 +174,7 @@ export function AddFieldDialog({
     >
       <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-xl">
         <DialogHeader>
-          <DialogTitle className="text-xl">Neues Feld hinzufuegen</DialogTitle>
+          <DialogTitle className="text-xl">Neues Feld hinzufügen</DialogTitle>
         </DialogHeader>
         <div className="space-y-6 pt-2">
           <Field>
@@ -188,7 +188,7 @@ export function AddFieldDialog({
                 size="default"
                 className="w-full"
               >
-                <SelectValue placeholder="Feld auswaehlen..." />
+                <SelectValue placeholder="Feld auswählen..." />
               </SelectTrigger>
               <SelectContent>
                 {FIELD_PICKER_OPTIONS.map((opt) => (
@@ -208,7 +208,7 @@ export function AddFieldDialog({
                 <FieldLabel htmlFor="doc-label">Dokumentname</FieldLabel>
                 <Input
                   id="doc-label"
-                  placeholder="z.B. Datenschutzerklaerung"
+                  placeholder="z.B. Datenschutzerklärung"
                   value={documentLabel}
                   onChange={(e) => setDocumentLabel(e.target.value)}
                   className="h-11 text-base"
@@ -326,7 +326,7 @@ export function AddFieldDialog({
                   ))}
                   <Button variant="outline" size="lg" onClick={addOption}>
                     <Plus className="mr-2 size-4" />
-                    Option hinzufuegen
+                    Option hinzufügen
                   </Button>
                 </div>
               )}

@@ -187,6 +187,8 @@ export function BlockCard({
             className="text-muted-foreground hover:text-destructive size-10 shrink-0"
             disabled={!canDeleteBlock(currentUser, block)}
             onClick={() => setConfirmOpen(true)}
+            aria-label="Block löschen"
+            title="Block löschen"
           >
             <Trash2 className="size-4" />
           </Button>
@@ -207,15 +209,15 @@ export function BlockCard({
       <Dialog open={confirmOpen} onOpenChange={setConfirmOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle className="text-xl">Block loeschen?</DialogTitle>
+            <DialogTitle className="text-xl">Block löschen?</DialogTitle>
           </DialogHeader>
           <p className="text-muted-foreground text-sm">
-            Sind Sie sicher, dass Sie <strong>{block.title}</strong> löschen möchten?
+            <strong>{block.title}</strong> wird unwiderruflich entfernt.
           </p>
           {usedInForms.length > 0 && (
             <div>
               <p className="text-destructive mb-2 text-sm font-medium">
-                Dieser Block wird in folgenden Formularen verwendet:
+                Wird in folgenden Formularen verwendet:
               </p>
               <div className="flex flex-wrap gap-1.5">
                 {usedInForms.map((f) => (
@@ -240,7 +242,7 @@ export function BlockCard({
               onClick={handleDelete}
               disabled={deleting}
             >
-              {deleting ? 'Loeschen...' : 'Löschen'}
+              {deleting ? 'Wird gelöscht...' : 'Löschen'}
             </Button>
           </div>
         </DialogContent>
