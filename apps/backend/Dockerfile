@@ -1,4 +1,4 @@
-FROM oven/bun:1 AS builder
+FROM europe-north1-docker.pkg.dev/holi-shared/docker-hub-remote/oven/bun:1 AS builder
 
 WORKDIR /app
 
@@ -16,7 +16,7 @@ WORKDIR /app/apps/backend
 RUN bun run build
 
 
-FROM oven/bun:1 AS runner
+FROM europe-north1-docker.pkg.dev/holi-shared/docker-hub-remote/oven/bun:1 AS runner
 
 WORKDIR /app
 
