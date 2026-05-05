@@ -11,13 +11,11 @@
     ":automergeLinters"
   ],
   "configMigration": true,
-  "prConcurrentLimit": 55555,
+  "prConcurrentLimit": 5,
   "osvVulnerabilityAlerts": true,
   "packageRules": [
     {
-      "matchSourceUrls": [
-        "https://github.com/hashicorp/terraform"
-      ],
+      "matchSourceUrls": ["https://github.com/hashicorp/terraform"],
       "groupName": "terraform"
     }
   ]
