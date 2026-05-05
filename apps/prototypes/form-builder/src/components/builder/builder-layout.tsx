@@ -24,6 +24,7 @@ import {
 import { BlockCardBuilder } from './section-card';
 import { AddBlockDialog } from './add-section-dialog';
 import { EditBlockSheet } from './edit-block-sheet';
+import { CreateBlockSheet } from './create-block-sheet';
 import { FormPreview } from './form-preview';
 
 // --- Applied-to section ---
@@ -185,6 +186,7 @@ export function BuilderLayout({
   const [saved, setSaved] = useState(false);
   const [addBlockOpen, setAddBlockOpen] = useState(false);
   const [editBlockId, setEditBlockId] = useState<string | null>(null);
+  const [createBlockOpen, setCreateBlockOpen] = useState(false);
   const [appliedToError, setAppliedToError] = useState(false);
 
   // Build a map for quick block lookup
@@ -499,18 +501,19 @@ export function BuilderLayout({
           handleAddBlockRef(blockId);
           setAddBlockOpen(false);
         }}
-        onCreateBlock={async (data) => {
-          const res = await fetch('/api/blocks', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(data),
-          });
-          if (res.ok) {
-            const newBlock = (await res.json()) as Block;
-            await refreshBlocks();
-            handleAddBlockRef(newBlock.id);
-            setAddBlockOpen(false);
-          }
+        onRequestCreate={() => {
+          setAddBlockOpen(false);
+          setCreateBlockOpen(true);
+        }}
+      />
+
+      {/* Create block sheet (draft, persists only if user fills it in) */}
+      <CreateBlockSheet
+        open={createBlockOpen}
+        onOpenChange={setCreateBlockOpen}
+        onCreated={async (block) => {
+          await refreshBlocks();
+          handleAddBlockRef(block.id);
         }}
       />
 

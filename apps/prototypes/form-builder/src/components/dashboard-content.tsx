@@ -2,62 +2,18 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import {
-  Button,
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  Field,
-  FieldLabel,
-  Input,
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from '@repo/ui';
+import { Button, Tabs, TabsContent, TabsList, TabsTrigger } from '@repo/ui';
 import { Plus } from 'lucide-react';
 import type { Block, FormConfig } from '@/lib/types';
 import type { User } from '@/lib/users';
 import { FormCard } from './form-card';
 import { BlockCard } from './block-card';
 import { CreateFormDialog } from './create-form-dialog';
+import { CreateBlockSheet } from './builder/create-block-sheet';
 
-function CreateBlockDialog({ currentUser }: { currentUser: User }) {
+function CreateBlockButton() {
   const router = useRouter();
   const [open, setOpen] = useState(false);
-  const [title, setTitle] = useState('');
-  const [description, setDescription] = useState('');
-  const [creating, setCreating] = useState(false);
-
-  function reset() {
-    setTitle('');
-    setDescription('');
-  }
-
-  async function handleCreate() {
-    if (!title.trim()) return;
-    setCreating(true);
-    try {
-      const res = await fetch('/api/blocks', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          title: title.trim(),
-          description: description.trim() || undefined,
-          fields: [],
-          required: true,
-        }),
-      });
-      if (res.ok) {
-        reset();
-        setOpen(false);
-        router.refresh();
-      }
-    } finally {
-      setCreating(false);
-    }
-  }
 
   return (
     <>
@@ -65,64 +21,11 @@ function CreateBlockDialog({ currentUser }: { currentUser: User }) {
         <Plus className="mr-2 size-5" />
         Neuer Block
       </Button>
-      <Dialog
+      <CreateBlockSheet
         open={open}
-        onOpenChange={(v) => {
-          if (!v) reset();
-          setOpen(v);
-        }}
-      >
-        <DialogContent className="sm:max-w-xl">
-          <DialogHeader>
-            <DialogTitle className="text-xl">
-              Neuen Block erstellen
-            </DialogTitle>
-          </DialogHeader>
-          <div className="space-y-6 pt-2">
-            <Field>
-              <FieldLabel htmlFor="block-title">Titel</FieldLabel>
-              <Input
-                id="block-title"
-                placeholder="z.B. Persönliche Daten"
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                className="h-11 text-base"
-              />
-            </Field>
-            <Field>
-              <FieldLabel htmlFor="block-desc">
-                Beschreibung (optional)
-              </FieldLabel>
-              <Input
-                id="block-desc"
-                placeholder="z.B. Grundlegende Informationen zur Person"
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                className="h-11 text-base"
-              />
-            </Field>
-            <div className="flex justify-end gap-3 pt-2">
-              <Button
-                size="lg"
-                variant="outline"
-                onClick={() => {
-                  reset();
-                  setOpen(false);
-                }}
-              >
-                Abbrechen
-              </Button>
-              <Button
-                size="lg"
-                onClick={handleCreate}
-                disabled={!title.trim() || creating}
-              >
-                {creating ? 'Wird erstellt...' : 'Erstellen'}
-              </Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
+        onOpenChange={setOpen}
+        onCreated={() => router.refresh()}
+      />
     </>
   );
 }
@@ -156,7 +59,7 @@ export function DashboardContent({
               existingForms={forms}
             />
           ) : (
-            <CreateBlockDialog currentUser={currentUser} />
+            <CreateBlockButton />
           )}
         </div>
       </div>

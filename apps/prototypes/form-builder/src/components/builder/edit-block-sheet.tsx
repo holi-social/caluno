@@ -378,6 +378,7 @@ export function EditBlockSheet({
   const [addingField, setAddingField] = useState(false);
   const [metaDirty, setMetaDirty] = useState(false);
   const [draggingFieldId, setDraggingFieldId] = useState<string | null>(null);
+  const titleInputRef = useRef<HTMLInputElement>(null);
 
   // Sync local state when block changes
   useEffect(() => {
@@ -398,6 +399,16 @@ export function EditBlockSheet({
       (description.trim() || undefined) !== (block.description || undefined);
     setMetaDirty(dirty);
   }, [title, description, block]);
+
+  // Auto-focus the title input when the sheet opens
+  useEffect(() => {
+    if (!open) return;
+    const id = window.setTimeout(() => {
+      titleInputRef.current?.focus();
+      titleInputRef.current?.select();
+    }, 50);
+    return () => window.clearTimeout(id);
+  }, [open]);
 
   function handleSaveMeta() {
     if (!block || !title.trim()) return;
@@ -420,8 +431,15 @@ export function EditBlockSheet({
 
   if (!block) return null;
 
+  function handleSheetOpenChange(next: boolean) {
+    if (!next && metaDirty && title.trim()) {
+      handleSaveMeta();
+    }
+    onOpenChange(next);
+  }
+
   return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
+    <Sheet open={open} onOpenChange={handleSheetOpenChange}>
       <SheetContent className="flex w-full flex-col sm:max-w-xl">
         <SheetHeader className="px-6 pt-6">
           <SheetTitle className="text-2xl font-bold">
@@ -443,7 +461,8 @@ export function EditBlockSheet({
               <FieldLabel htmlFor="sheet-block-title">Titel</FieldLabel>
               <Input
                 id="sheet-block-title"
-                placeholder="z.B. Persoenliche Daten"
+                ref={titleInputRef}
+                placeholder="z.B. Persönliche Daten"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 className="h-11 text-base"
