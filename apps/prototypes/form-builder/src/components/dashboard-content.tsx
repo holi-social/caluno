@@ -136,27 +136,32 @@ export function DashboardContent({
   blocks: Block[];
   currentUser: User;
 }) {
+  const [tab, setTab] = useState('formulare');
+
   return (
-    <Tabs defaultValue="formulare">
-      <div className="flex items-center justify-between gap-4">
-        <TabsList>
-          <TabsTrigger value="formulare">Formulare</TabsTrigger>
-          <TabsTrigger value="bloecke">Blöcke</TabsTrigger>
+    <Tabs value={tab} onValueChange={setTab}>
+      <div className="flex flex-col items-start gap-2">
+        <TabsList className="h-10">
+          <TabsTrigger value="formulare" className="px-6 text-[18px]">
+            Formulare
+          </TabsTrigger>
+          <TabsTrigger value="bloecke" className="px-6 text-[18px]">
+            Blöcke
+          </TabsTrigger>
         </TabsList>
-        <div className="flex gap-2">
-          <TabsContent value="formulare" className="mt-0">
+        <div className="flex w-full justify-end">
+          {tab === 'formulare' ? (
             <CreateFormDialog
               currentUser={currentUser}
               existingForms={forms}
             />
-          </TabsContent>
-          <TabsContent value="bloecke" className="mt-0">
+          ) : (
             <CreateBlockDialog currentUser={currentUser} />
-          </TabsContent>
+          )}
         </div>
       </div>
 
-      <TabsContent value="formulare">
+      <TabsContent value="formulare" className="mt-6">
         {forms.length === 0 ? (
           <p className="text-muted-foreground py-12 text-center">
             Noch keine Formulare. Erstellen Sie Ihr erstes Formular.
@@ -175,7 +180,7 @@ export function DashboardContent({
         )}
       </TabsContent>
 
-      <TabsContent value="bloecke">
+      <TabsContent value="bloecke" className="mt-6">
         {blocks.length === 0 ? (
           <p className="text-muted-foreground py-12 text-center">
             Noch keine Bloecke. Erstellen Sie Ihren ersten Block.
