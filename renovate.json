@@ -10,6 +10,9 @@
     ":automergeTesters",
     ":automergeLinters"
   ],
+  "configMigration": true,
+  "prConcurrentLimit": 55555,
+  "osvVulnerabilityAlerts": true,
   "packageRules": [
     {
       "matchSourceUrls": [
