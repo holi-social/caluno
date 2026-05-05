@@ -245,7 +245,7 @@ export class MembershipService {
         roleId: memberRole.id,
       });
 
-      return membershipRequest;
+      return updatedRequest;
     });
 
     await this.notificationService.notifyUserMembershipApproved(

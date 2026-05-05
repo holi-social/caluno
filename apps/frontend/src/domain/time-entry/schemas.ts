@@ -1,6 +1,7 @@
 import z from 'zod';
 
 export const createTimeEntrySchema = z.object({
+  organizationUnitId: z.string().min(1, 'Organization unit ID is required'),
   shiftInstanceId: z.string(),
   volunteerId: z.string(),
   startedAt: z.date('Start time is required'),

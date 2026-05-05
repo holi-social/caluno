@@ -30,6 +30,7 @@ export default async function TimesheetsPage({ params }: TimesheetsPageProps) {
         </div>
         <CreateTimeEntryButton />
         <CreateTimeEntrySheet
+          organizationUnitId={orgUId}
           shiftInstances={shifts}
           allVolunteers={allVolunteers}
         />
@@ -43,6 +44,7 @@ export default async function TimesheetsPage({ params }: TimesheetsPageProps) {
       ) : (
         <EmptyTimeEntries>
           <CreateTimeEntrySheet
+            organizationUnitId={orgUId}
             shiftInstances={shifts}
             allVolunteers={allVolunteers}
           />

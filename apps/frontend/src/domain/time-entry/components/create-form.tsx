@@ -31,6 +31,7 @@ interface ShiftInstance {
 }
 
 interface CreateTimeEntryFormProps {
+  organizationUnitId: string;
   sessionId?: string;
   shiftInstances?: ShiftInstance[];
   allVolunteers?: Array<{ id: string; name: string; email: string }>;
@@ -40,6 +41,7 @@ interface CreateTimeEntryFormProps {
 }
 
 export function CreateTimeEntryForm({
+  organizationUnitId,
   shiftInstances = [],
   allVolunteers = [],
   onSuccess,
@@ -63,6 +65,7 @@ export function CreateTimeEntryForm({
   } = useForm<CreateTimeEntryFormValues>({
     resolver: zodResolver(createTimeEntrySchema),
     defaultValues: {
+      organizationUnitId,
       shiftInstanceId: '',
       volunteerId: '',
       notes: '',

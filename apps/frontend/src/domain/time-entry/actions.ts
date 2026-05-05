@@ -8,7 +8,7 @@ import { closeTimeEntrySchema, createTimeEntrySchema } from './schemas';
 export const createTimeEntry = actionClient
   .inputSchema(createTimeEntrySchema)
   .action(async ({ parsedInput }) => {
-    const data = await getDataClient();
+    const data = await getDataClient(parsedInput.organizationUnitId);
 
     const input: AddTimeEntryInput = {
       shiftInstanceId: parsedInput.shiftInstanceId,

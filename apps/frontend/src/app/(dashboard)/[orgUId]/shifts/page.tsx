@@ -1,4 +1,5 @@
 import { Pagination } from '@/components/pagination';
+import { ShiftSheet } from '@/components/sheets';
 import { CreateShiftButton } from '@/domain/shift/components/create-shift-button';
 import { EmptyShifts } from '@/domain/shift/components/empty-shifts';
 import { ShiftsTable } from '@/domain/shift/components/shifts-table';
@@ -33,9 +34,13 @@ export default async function ShiftsPage({
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="page-title">Shifts</h1>
-        <p className="text-muted-foreground mt-1">Manage volunteer shifts</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="page-title">Shifts</h1>
+          <p className="text-muted-foreground mt-1">Manage volunteer shifts</p>
+        </div>
+        <CreateShiftButton />
+        <ShiftSheet />
       </div>
 
       {hasShifts ? (
