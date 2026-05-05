@@ -1,47 +1,81 @@
 {
   "version": "8",
   "dialect": "postgres",
-  "id": "4e86a4ac-97f8-4ae6-ab39-378faf6a955d",
-  "prevIds": ["970e07e6-dc94-4e2f-b95f-4320c9867878"],
+  "id": "ab2c4863-6908-4d63-b7a5-1567cac0f122",
+  "prevIds": [
+    "00000000-0000-0000-0000-000000000000"
+  ],
   "ddl": [
     {
-      "values": ["PENDING", "ACCEPTED", "REJECTED", "CANCELLED"],
+      "values": [
+        "PENDING",
+        "ACCEPTED",
+        "REJECTED",
+        "CANCELLED"
+      ],
       "name": "membership_request_status",
       "entityType": "enums",
       "schema": "public"
     },
     {
-      "values": ["DOCUMENT", "CHECK", "DATE", "TEXT"],
-      "name": "requirement_type",
-      "entityType": "enums",
-      "schema": "public"
-    },
-    {
-      "values": ["DRAFT", "SUBMITTED", "APPROVED", "REJECTED"],
-      "name": "requirement_fulfillment_status",
-      "entityType": "enums",
-      "schema": "public"
-    },
-    {
-      "values": ["DRAFT", "SUBMITTED", "APPROVED", "REJECTED"],
-      "name": "requirement_profile_submission_status",
-      "entityType": "enums",
-      "schema": "public"
-    },
-    {
-      "values": ["PENDING", "ACTIVE", "BLACKLISTED", "INACTIVE"],
+      "values": [
+        "PENDING",
+        "ACTIVE",
+        "BLACKLISTED",
+        "INACTIVE"
+      ],
       "name": "organization_user_profile_status",
       "entityType": "enums",
       "schema": "public"
     },
     {
-      "values": ["INVITED_MEMBERS", "ALL_MEMBERS"],
+      "values": [
+        "DOCUMENT",
+        "CHECK",
+        "DATE",
+        "TEXT"
+      ],
+      "name": "requirement_type",
+      "entityType": "enums",
+      "schema": "public"
+    },
+    {
+      "values": [
+        "DRAFT",
+        "SUBMITTED",
+        "APPROVED",
+        "REJECTED"
+      ],
+      "name": "requirement_fulfillment_status",
+      "entityType": "enums",
+      "schema": "public"
+    },
+    {
+      "values": [
+        "DRAFT",
+        "SUBMITTED",
+        "APPROVED",
+        "REJECTED"
+      ],
+      "name": "requirement_profile_submission_status",
+      "entityType": "enums",
+      "schema": "public"
+    },
+    {
+      "values": [
+        "INVITED_MEMBERS",
+        "ALL_MEMBERS"
+      ],
       "name": "shift_visibility",
       "entityType": "enums",
       "schema": "public"
     },
     {
-      "values": ["PENDING", "ACCEPTED", "REJECTED"],
+      "values": [
+        "PENDING",
+        "ACCEPTED",
+        "REJECTED"
+      ],
       "name": "shift_invite_status",
       "entityType": "enums",
       "schema": "public"
@@ -96,6 +130,12 @@
     },
     {
       "isRlsEnabled": false,
+      "name": "membership_roles",
+      "entityType": "tables",
+      "schema": "public"
+    },
+    {
+      "isRlsEnabled": false,
       "name": "membership_requests",
       "entityType": "tables",
       "schema": "public"
@@ -120,6 +160,18 @@
     },
     {
       "isRlsEnabled": false,
+      "name": "documents",
+      "entityType": "tables",
+      "schema": "public"
+    },
+    {
+      "isRlsEnabled": false,
+      "name": "organization_user_profiles",
+      "entityType": "tables",
+      "schema": "public"
+    },
+    {
+      "isRlsEnabled": false,
       "name": "requirements",
       "entityType": "tables",
       "schema": "public"
@@ -138,12 +190,6 @@
     },
     {
       "isRlsEnabled": false,
-      "name": "organization_unit_favorite_requirement_profiles",
-      "entityType": "tables",
-      "schema": "public"
-    },
-    {
-      "isRlsEnabled": false,
       "name": "requirement_profile_requirements",
       "entityType": "tables",
       "schema": "public"
@@ -151,18 +197,6 @@
     {
       "isRlsEnabled": false,
       "name": "requirement_profile_submissions",
-      "entityType": "tables",
-      "schema": "public"
-    },
-    {
-      "isRlsEnabled": false,
-      "name": "documents",
-      "entityType": "tables",
-      "schema": "public"
-    },
-    {
-      "isRlsEnabled": false,
-      "name": "organization_user_profiles",
       "entityType": "tables",
       "schema": "public"
     },
@@ -770,7 +804,7 @@
       "default": null,
       "generated": null,
       "identity": null,
-      "name": "organization_unit_id",
+      "name": "organization_id",
       "entityType": "columns",
       "schema": "public",
       "table": "roles"
@@ -900,7 +934,7 @@
       "default": null,
       "generated": null,
       "identity": null,
-      "name": "role_id",
+      "name": "organization_unit_id",
       "entityType": "columns",
       "schema": "public",
       "table": "memberships"
@@ -930,6 +964,71 @@
       "entityType": "columns",
       "schema": "public",
       "table": "memberships"
+    },
+    {
+      "type": "uuid",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "gen_random_uuid()",
+      "generated": null,
+      "identity": null,
+      "name": "id",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "membership_roles"
+    },
+    {
+      "type": "uuid",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "membership_id",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "membership_roles"
+    },
+    {
+      "type": "uuid",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "role_id",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "membership_roles"
+    },
+    {
+      "type": "timestamp",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "now()",
+      "generated": null,
+      "identity": null,
+      "name": "created_at",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "membership_roles"
+    },
+    {
+      "type": "timestamp",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "now()",
+      "generated": null,
+      "identity": null,
+      "name": "updated_at",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "membership_roles"
     },
     {
       "type": "uuid",
@@ -1044,6 +1143,19 @@
       "generated": null,
       "identity": null,
       "name": "status",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "membership_requests"
+    },
+    {
+      "type": "jsonb",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "metadata",
       "entityType": "columns",
       "schema": "public",
       "table": "membership_requests"
@@ -1257,19 +1369,6 @@
       "table": "organization_units"
     },
     {
-      "type": "boolean",
-      "typeSchema": null,
-      "notNull": true,
-      "dimensions": 0,
-      "default": "false",
-      "generated": null,
-      "identity": null,
-      "name": "is_root",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "organization_units"
-    },
-    {
       "type": "text",
       "typeSchema": null,
       "notNull": true,
@@ -1369,6 +1468,19 @@
       "generated": null,
       "identity": null,
       "name": "address",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "organization_units"
+    },
+    {
+      "type": "uuid",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "required_membership_requirement_profile_id",
       "entityType": "columns",
       "schema": "public",
       "table": "organization_units"
@@ -1489,6 +1601,201 @@
       "entityType": "columns",
       "schema": "public",
       "table": "organization_unit_types"
+    },
+    {
+      "type": "uuid",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "gen_random_uuid()",
+      "generated": null,
+      "identity": null,
+      "name": "id",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "documents"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "user_id",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "documents"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "storage_key",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "documents"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "mime_type",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "documents"
+    },
+    {
+      "type": "timestamp",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "uploaded_at",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "documents"
+    },
+    {
+      "type": "timestamp",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "now()",
+      "generated": null,
+      "identity": null,
+      "name": "created_at",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "documents"
+    },
+    {
+      "type": "timestamp",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "now()",
+      "generated": null,
+      "identity": null,
+      "name": "updated_at",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "documents"
+    },
+    {
+      "type": "uuid",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "gen_random_uuid()",
+      "generated": null,
+      "identity": null,
+      "name": "id",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "organization_user_profiles"
+    },
+    {
+      "type": "uuid",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "organization_id",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "organization_user_profiles"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "user_id",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "organization_user_profiles"
+    },
+    {
+      "type": "organization_user_profile_status",
+      "typeSchema": "public",
+      "notNull": true,
+      "dimensions": 0,
+      "default": "'PENDING'",
+      "generated": null,
+      "identity": null,
+      "name": "status",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "organization_user_profiles"
+    },
+    {
+      "type": "boolean",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "false",
+      "generated": null,
+      "identity": null,
+      "name": "user_profile_access_approved",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "organization_user_profiles"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "note",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "organization_user_profiles"
+    },
+    {
+      "type": "timestamp",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "now()",
+      "generated": null,
+      "identity": null,
+      "name": "created_at",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "organization_user_profiles"
+    },
+    {
+      "type": "timestamp",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "now()",
+      "generated": null,
+      "identity": null,
+      "name": "updated_at",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "organization_user_profiles"
     },
     {
       "type": "uuid",
@@ -1839,84 +2146,6 @@
       "name": "id",
       "entityType": "columns",
       "schema": "public",
-      "table": "organization_unit_favorite_requirement_profiles"
-    },
-    {
-      "type": "uuid",
-      "typeSchema": null,
-      "notNull": true,
-      "dimensions": 0,
-      "default": null,
-      "generated": null,
-      "identity": null,
-      "name": "organization_id",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "organization_unit_favorite_requirement_profiles"
-    },
-    {
-      "type": "uuid",
-      "typeSchema": null,
-      "notNull": true,
-      "dimensions": 0,
-      "default": null,
-      "generated": null,
-      "identity": null,
-      "name": "organization_unit_id",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "organization_unit_favorite_requirement_profiles"
-    },
-    {
-      "type": "uuid",
-      "typeSchema": null,
-      "notNull": true,
-      "dimensions": 0,
-      "default": null,
-      "generated": null,
-      "identity": null,
-      "name": "requirement_profile_id",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "organization_unit_favorite_requirement_profiles"
-    },
-    {
-      "type": "timestamp",
-      "typeSchema": null,
-      "notNull": true,
-      "dimensions": 0,
-      "default": "now()",
-      "generated": null,
-      "identity": null,
-      "name": "created_at",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "organization_unit_favorite_requirement_profiles"
-    },
-    {
-      "type": "timestamp",
-      "typeSchema": null,
-      "notNull": true,
-      "dimensions": 0,
-      "default": "now()",
-      "generated": null,
-      "identity": null,
-      "name": "updated_at",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "organization_unit_favorite_requirement_profiles"
-    },
-    {
-      "type": "uuid",
-      "typeSchema": null,
-      "notNull": true,
-      "dimensions": 0,
-      "default": "gen_random_uuid()",
-      "generated": null,
-      "identity": null,
-      "name": "id",
-      "entityType": "columns",
-      "schema": "public",
       "table": "requirement_profile_requirements"
     },
     {
@@ -2100,201 +2329,6 @@
       "entityType": "columns",
       "schema": "public",
       "table": "requirement_profile_submissions"
-    },
-    {
-      "type": "uuid",
-      "typeSchema": null,
-      "notNull": true,
-      "dimensions": 0,
-      "default": "gen_random_uuid()",
-      "generated": null,
-      "identity": null,
-      "name": "id",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "documents"
-    },
-    {
-      "type": "text",
-      "typeSchema": null,
-      "notNull": true,
-      "dimensions": 0,
-      "default": null,
-      "generated": null,
-      "identity": null,
-      "name": "user_id",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "documents"
-    },
-    {
-      "type": "text",
-      "typeSchema": null,
-      "notNull": true,
-      "dimensions": 0,
-      "default": null,
-      "generated": null,
-      "identity": null,
-      "name": "storage_key",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "documents"
-    },
-    {
-      "type": "text",
-      "typeSchema": null,
-      "notNull": true,
-      "dimensions": 0,
-      "default": null,
-      "generated": null,
-      "identity": null,
-      "name": "mime_type",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "documents"
-    },
-    {
-      "type": "timestamp",
-      "typeSchema": null,
-      "notNull": true,
-      "dimensions": 0,
-      "default": null,
-      "generated": null,
-      "identity": null,
-      "name": "uploaded_at",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "documents"
-    },
-    {
-      "type": "timestamp",
-      "typeSchema": null,
-      "notNull": true,
-      "dimensions": 0,
-      "default": "now()",
-      "generated": null,
-      "identity": null,
-      "name": "created_at",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "documents"
-    },
-    {
-      "type": "timestamp",
-      "typeSchema": null,
-      "notNull": true,
-      "dimensions": 0,
-      "default": "now()",
-      "generated": null,
-      "identity": null,
-      "name": "updated_at",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "documents"
-    },
-    {
-      "type": "uuid",
-      "typeSchema": null,
-      "notNull": true,
-      "dimensions": 0,
-      "default": "gen_random_uuid()",
-      "generated": null,
-      "identity": null,
-      "name": "id",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "organization_user_profiles"
-    },
-    {
-      "type": "uuid",
-      "typeSchema": null,
-      "notNull": true,
-      "dimensions": 0,
-      "default": null,
-      "generated": null,
-      "identity": null,
-      "name": "organization_id",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "organization_user_profiles"
-    },
-    {
-      "type": "text",
-      "typeSchema": null,
-      "notNull": true,
-      "dimensions": 0,
-      "default": null,
-      "generated": null,
-      "identity": null,
-      "name": "user_id",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "organization_user_profiles"
-    },
-    {
-      "type": "organization_user_profile_status",
-      "typeSchema": "public",
-      "notNull": true,
-      "dimensions": 0,
-      "default": "'PENDING'",
-      "generated": null,
-      "identity": null,
-      "name": "status",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "organization_user_profiles"
-    },
-    {
-      "type": "boolean",
-      "typeSchema": null,
-      "notNull": true,
-      "dimensions": 0,
-      "default": "false",
-      "generated": null,
-      "identity": null,
-      "name": "user_profile_access_approved",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "organization_user_profiles"
-    },
-    {
-      "type": "text",
-      "typeSchema": null,
-      "notNull": false,
-      "dimensions": 0,
-      "default": null,
-      "generated": null,
-      "identity": null,
-      "name": "note",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "organization_user_profiles"
-    },
-    {
-      "type": "timestamp",
-      "typeSchema": null,
-      "notNull": true,
-      "dimensions": 0,
-      "default": "now()",
-      "generated": null,
-      "identity": null,
-      "name": "created_at",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "organization_user_profiles"
-    },
-    {
-      "type": "timestamp",
-      "typeSchema": null,
-      "notNull": true,
-      "dimensions": 0,
-      "default": "now()",
-      "generated": null,
-      "identity": null,
-      "name": "updated_at",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "organization_user_profiles"
     },
     {
       "type": "uuid",
@@ -2930,7 +2964,7 @@
       "nameExplicit": true,
       "columns": [
         {
-          "value": "organization_unit_id",
+          "value": "organization_id",
           "isExpression": false,
           "asc": true,
           "nullsFirst": false,
@@ -2942,7 +2976,7 @@
       "with": "",
       "method": "btree",
       "concurrently": false,
-      "name": "idx_roles_organization_unit_id",
+      "name": "idx_roles_organization_id",
       "entityType": "indexes",
       "schema": "public",
       "table": "roles"
@@ -2972,6 +3006,48 @@
       "nameExplicit": true,
       "columns": [
         {
+          "value": "organization_unit_id",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "with": "",
+      "method": "btree",
+      "concurrently": false,
+      "name": "idx_memberships_organization_unit_id",
+      "entityType": "indexes",
+      "schema": "public",
+      "table": "memberships"
+    },
+    {
+      "nameExplicit": true,
+      "columns": [
+        {
+          "value": "membership_id",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "with": "",
+      "method": "btree",
+      "concurrently": false,
+      "name": "idx_membership_roles_membership_id",
+      "entityType": "indexes",
+      "schema": "public",
+      "table": "membership_roles"
+    },
+    {
+      "nameExplicit": true,
+      "columns": [
+        {
           "value": "role_id",
           "isExpression": false,
           "asc": true,
@@ -2984,10 +3060,10 @@
       "with": "",
       "method": "btree",
       "concurrently": false,
-      "name": "idx_memberships_role_id",
+      "name": "idx_membership_roles_role_id",
       "entityType": "indexes",
       "schema": "public",
-      "table": "memberships"
+      "table": "membership_roles"
     },
     {
       "nameExplicit": true,
@@ -3085,7 +3161,7 @@
         }
       ],
       "isUnique": true,
-      "where": "\"is_root\" = true",
+      "where": "\"parent_id\" IS NULL",
       "with": "",
       "method": "btree",
       "concurrently": false,
@@ -3111,6 +3187,27 @@
       "method": "btree",
       "concurrently": false,
       "name": "idx_organization_units_parent_id",
+      "entityType": "indexes",
+      "schema": "public",
+      "table": "organization_units"
+    },
+    {
+      "nameExplicit": true,
+      "columns": [
+        {
+          "value": "required_membership_requirement_profile_id",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "with": "",
+      "method": "btree",
+      "concurrently": false,
+      "name": "idx_organization_units_required_profile_id",
       "entityType": "indexes",
       "schema": "public",
       "table": "organization_units"
@@ -3198,6 +3295,69 @@
       "entityType": "indexes",
       "schema": "public",
       "table": "organization_unit_types"
+    },
+    {
+      "nameExplicit": true,
+      "columns": [
+        {
+          "value": "user_id",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "with": "",
+      "method": "btree",
+      "concurrently": false,
+      "name": "idx_documents_user_id",
+      "entityType": "indexes",
+      "schema": "public",
+      "table": "documents"
+    },
+    {
+      "nameExplicit": true,
+      "columns": [
+        {
+          "value": "organization_id",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "with": "",
+      "method": "btree",
+      "concurrently": false,
+      "name": "idx_organization_user_profiles_organization_id",
+      "entityType": "indexes",
+      "schema": "public",
+      "table": "organization_user_profiles"
+    },
+    {
+      "nameExplicit": true,
+      "columns": [
+        {
+          "value": "user_id",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "with": "",
+      "method": "btree",
+      "concurrently": false,
+      "name": "idx_organization_user_profiles_user_id",
+      "entityType": "indexes",
+      "schema": "public",
+      "table": "organization_user_profiles"
     },
     {
       "nameExplicit": true,
@@ -3329,69 +3489,6 @@
       "nameExplicit": true,
       "columns": [
         {
-          "value": "organization_id",
-          "isExpression": false,
-          "asc": true,
-          "nullsFirst": false,
-          "opclass": null
-        }
-      ],
-      "isUnique": false,
-      "where": null,
-      "with": "",
-      "method": "btree",
-      "concurrently": false,
-      "name": "idx_org_unit_favorite_requirement_profiles_organization_id",
-      "entityType": "indexes",
-      "schema": "public",
-      "table": "organization_unit_favorite_requirement_profiles"
-    },
-    {
-      "nameExplicit": true,
-      "columns": [
-        {
-          "value": "organization_unit_id",
-          "isExpression": false,
-          "asc": true,
-          "nullsFirst": false,
-          "opclass": null
-        }
-      ],
-      "isUnique": false,
-      "where": null,
-      "with": "",
-      "method": "btree",
-      "concurrently": false,
-      "name": "idx_org_unit_favorite_requirement_profiles_org_unit_id",
-      "entityType": "indexes",
-      "schema": "public",
-      "table": "organization_unit_favorite_requirement_profiles"
-    },
-    {
-      "nameExplicit": true,
-      "columns": [
-        {
-          "value": "requirement_profile_id",
-          "isExpression": false,
-          "asc": true,
-          "nullsFirst": false,
-          "opclass": null
-        }
-      ],
-      "isUnique": false,
-      "where": null,
-      "with": "",
-      "method": "btree",
-      "concurrently": false,
-      "name": "idx_org_unit_favorite_requirement_profiles_profile_id",
-      "entityType": "indexes",
-      "schema": "public",
-      "table": "organization_unit_favorite_requirement_profiles"
-    },
-    {
-      "nameExplicit": true,
-      "columns": [
-        {
           "value": "requirement_profile_id",
           "isExpression": false,
           "asc": true,
@@ -3513,69 +3610,6 @@
       "entityType": "indexes",
       "schema": "public",
       "table": "requirement_profile_submissions"
-    },
-    {
-      "nameExplicit": true,
-      "columns": [
-        {
-          "value": "user_id",
-          "isExpression": false,
-          "asc": true,
-          "nullsFirst": false,
-          "opclass": null
-        }
-      ],
-      "isUnique": false,
-      "where": null,
-      "with": "",
-      "method": "btree",
-      "concurrently": false,
-      "name": "idx_documents_user_id",
-      "entityType": "indexes",
-      "schema": "public",
-      "table": "documents"
-    },
-    {
-      "nameExplicit": true,
-      "columns": [
-        {
-          "value": "organization_id",
-          "isExpression": false,
-          "asc": true,
-          "nullsFirst": false,
-          "opclass": null
-        }
-      ],
-      "isUnique": false,
-      "where": null,
-      "with": "",
-      "method": "btree",
-      "concurrently": false,
-      "name": "idx_organization_user_profiles_organization_id",
-      "entityType": "indexes",
-      "schema": "public",
-      "table": "organization_user_profiles"
-    },
-    {
-      "nameExplicit": true,
-      "columns": [
-        {
-          "value": "user_id",
-          "isExpression": false,
-          "asc": true,
-          "nullsFirst": false,
-          "opclass": null
-        }
-      ],
-      "isUnique": false,
-      "where": null,
-      "with": "",
-      "method": "btree",
-      "concurrently": false,
-      "name": "idx_organization_user_profiles_user_id",
-      "entityType": "indexes",
-      "schema": "public",
-      "table": "organization_user_profiles"
     },
     {
       "nameExplicit": true,
@@ -3859,49 +3893,65 @@
     },
     {
       "nameExplicit": false,
-      "columns": ["user_id"],
+      "columns": [
+        "user_id"
+      ],
       "schemaTo": "public",
       "tableTo": "users",
-      "columnsTo": ["id"],
+      "columnsTo": [
+        "id"
+      ],
       "onUpdate": "NO ACTION",
       "onDelete": "CASCADE",
-      "name": "accounts_user_id_users_id_fk",
+      "name": "accounts_user_id_users_id_fkey",
       "entityType": "fks",
       "schema": "public",
       "table": "accounts"
     },
     {
       "nameExplicit": false,
-      "columns": ["user_id"],
+      "columns": [
+        "user_id"
+      ],
       "schemaTo": "public",
       "tableTo": "users",
-      "columnsTo": ["id"],
+      "columnsTo": [
+        "id"
+      ],
       "onUpdate": "NO ACTION",
       "onDelete": "CASCADE",
-      "name": "sessions_user_id_users_id_fk",
+      "name": "sessions_user_id_users_id_fkey",
       "entityType": "fks",
       "schema": "public",
       "table": "sessions"
     },
     {
       "nameExplicit": false,
-      "columns": ["organization_unit_id"],
+      "columns": [
+        "organization_id"
+      ],
       "schemaTo": "public",
-      "tableTo": "organization_units",
-      "columnsTo": ["id"],
+      "tableTo": "organizations",
+      "columnsTo": [
+        "id"
+      ],
       "onUpdate": "NO ACTION",
       "onDelete": "RESTRICT",
-      "name": "roles_organization_unit_id_organization_units_id_fkey",
+      "name": "roles_organization_id_organizations_id_fkey",
       "entityType": "fks",
       "schema": "public",
       "table": "roles"
     },
     {
       "nameExplicit": false,
-      "columns": ["role_id"],
+      "columns": [
+        "role_id"
+      ],
       "schemaTo": "public",
       "tableTo": "roles",
-      "columnsTo": ["id"],
+      "columnsTo": [
+        "id"
+      ],
       "onUpdate": "NO ACTION",
       "onDelete": "CASCADE",
       "name": "role_permissions_role_id_roles_id_fkey",
@@ -3911,10 +3961,14 @@
     },
     {
       "nameExplicit": false,
-      "columns": ["permission_id"],
+      "columns": [
+        "permission_id"
+      ],
       "schemaTo": "public",
       "tableTo": "permissions",
-      "columnsTo": ["id"],
+      "columnsTo": [
+        "id"
+      ],
       "onUpdate": "NO ACTION",
       "onDelete": "CASCADE",
       "name": "role_permissions_permission_id_permissions_id_fkey",
@@ -3924,36 +3978,82 @@
     },
     {
       "nameExplicit": false,
-      "columns": ["user_id"],
+      "columns": [
+        "user_id"
+      ],
       "schemaTo": "public",
       "tableTo": "users",
-      "columnsTo": ["id"],
+      "columnsTo": [
+        "id"
+      ],
       "onUpdate": "NO ACTION",
       "onDelete": "CASCADE",
-      "name": "memberships_user_id_users_id_fk",
+      "name": "memberships_user_id_users_id_fkey",
       "entityType": "fks",
       "schema": "public",
       "table": "memberships"
     },
     {
       "nameExplicit": false,
-      "columns": ["role_id"],
+      "columns": [
+        "organization_unit_id"
+      ],
+      "schemaTo": "public",
+      "tableTo": "organization_units",
+      "columnsTo": [
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "CASCADE",
+      "name": "memberships_organization_unit_id_organization_units_id_fkey",
+      "entityType": "fks",
+      "schema": "public",
+      "table": "memberships"
+    },
+    {
+      "nameExplicit": false,
+      "columns": [
+        "membership_id"
+      ],
+      "schemaTo": "public",
+      "tableTo": "memberships",
+      "columnsTo": [
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "CASCADE",
+      "name": "membership_roles_membership_id_memberships_id_fkey",
+      "entityType": "fks",
+      "schema": "public",
+      "table": "membership_roles"
+    },
+    {
+      "nameExplicit": false,
+      "columns": [
+        "role_id"
+      ],
       "schemaTo": "public",
       "tableTo": "roles",
-      "columnsTo": ["id"],
+      "columnsTo": [
+        "id"
+      ],
       "onUpdate": "NO ACTION",
-      "onDelete": "RESTRICT",
-      "name": "memberships_role_id_roles_id_fkey",
+      "onDelete": "CASCADE",
+      "name": "membership_roles_role_id_roles_id_fkey",
       "entityType": "fks",
       "schema": "public",
-      "table": "memberships"
+      "table": "membership_roles"
     },
     {
       "nameExplicit": false,
-      "columns": ["user_id"],
+      "columns": [
+        "user_id"
+      ],
       "schemaTo": "public",
       "tableTo": "users",
-      "columnsTo": ["id"],
+      "columnsTo": [
+        "id"
+      ],
       "onUpdate": "NO ACTION",
       "onDelete": "CASCADE",
       "name": "membership_requests_user_id_users_id_fkey",
@@ -3963,10 +4063,14 @@
     },
     {
       "nameExplicit": false,
-      "columns": ["organization_unit_id"],
+      "columns": [
+        "organization_unit_id"
+      ],
       "schemaTo": "public",
       "tableTo": "organization_units",
-      "columnsTo": ["id"],
+      "columnsTo": [
+        "id"
+      ],
       "onUpdate": "NO ACTION",
       "onDelete": "CASCADE",
       "name": "membership_requests_JnW42Hb2WNYu_fkey",
@@ -3976,10 +4080,14 @@
     },
     {
       "nameExplicit": false,
-      "columns": ["reviewed_by_user_id"],
+      "columns": [
+        "reviewed_by_user_id"
+      ],
       "schemaTo": "public",
       "tableTo": "users",
-      "columnsTo": ["id"],
+      "columnsTo": [
+        "id"
+      ],
       "onUpdate": "NO ACTION",
       "onDelete": "CASCADE",
       "name": "membership_requests_reviewed_by_user_id_users_id_fkey",
@@ -3989,10 +4097,14 @@
     },
     {
       "nameExplicit": false,
-      "columns": ["organization_id"],
+      "columns": [
+        "organization_id"
+      ],
       "schemaTo": "public",
       "tableTo": "organizations",
-      "columnsTo": ["id"],
+      "columnsTo": [
+        "id"
+      ],
       "onUpdate": "NO ACTION",
       "onDelete": "CASCADE",
       "name": "organization_units_organization_id_organizations_id_fkey",
@@ -4002,10 +4114,14 @@
     },
     {
       "nameExplicit": false,
-      "columns": ["parent_id"],
+      "columns": [
+        "parent_id"
+      ],
       "schemaTo": "public",
       "tableTo": "organization_units",
-      "columnsTo": ["id"],
+      "columnsTo": [
+        "id"
+      ],
       "onUpdate": "NO ACTION",
       "onDelete": "CASCADE",
       "name": "organization_units_parent_id_organization_units_id_fkey",
@@ -4015,10 +4131,14 @@
     },
     {
       "nameExplicit": false,
-      "columns": ["type_id"],
+      "columns": [
+        "type_id"
+      ],
       "schemaTo": "public",
       "tableTo": "organization_unit_types",
-      "columnsTo": ["id"],
+      "columnsTo": [
+        "id"
+      ],
       "onUpdate": "NO ACTION",
       "onDelete": "RESTRICT",
       "name": "organization_units_type_id_organization_unit_types_id_fkey",
@@ -4027,11 +4147,34 @@
       "table": "organization_units"
     },
     {
+      "nameExplicit": false,
+      "columns": [
+        "required_membership_requirement_profile_id"
+      ],
+      "schemaTo": "public",
+      "tableTo": "requirement_profiles",
+      "columnsTo": [
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "SET NULL",
+      "name": "organization_units_Wl3widDJ46RJ_fkey",
+      "entityType": "fks",
+      "schema": "public",
+      "table": "organization_units"
+    },
+    {
       "nameExplicit": true,
-      "columns": ["organization_id", "parent_id"],
+      "columns": [
+        "organization_id",
+        "parent_id"
+      ],
       "schemaTo": "public",
       "tableTo": "organization_units",
-      "columnsTo": ["organization_id", "id"],
+      "columnsTo": [
+        "organization_id",
+        "id"
+      ],
       "onUpdate": "NO ACTION",
       "onDelete": "CASCADE",
       "name": "fk_organization_units_parent_same_organization",
@@ -4041,231 +4184,14 @@
     },
     {
       "nameExplicit": false,
-      "columns": ["organization_id"],
-      "schemaTo": "public",
-      "tableTo": "organizations",
-      "columnsTo": ["id"],
-      "onUpdate": "NO ACTION",
-      "onDelete": "CASCADE",
-      "name": "requirements_organization_id_organizations_id_fkey",
-      "entityType": "fks",
-      "schema": "public",
-      "table": "requirements"
-    },
-    {
-      "nameExplicit": false,
-      "columns": ["requirement_profile_submission_id"],
-      "schemaTo": "public",
-      "tableTo": "requirement_profile_submissions",
-      "columnsTo": ["id"],
-      "onUpdate": "NO ACTION",
-      "onDelete": "CASCADE",
-      "name": "requirement_fulfillments_SSi8x4wpJ4c0_fkey",
-      "entityType": "fks",
-      "schema": "public",
-      "table": "requirement_fulfillments"
-    },
-    {
-      "nameExplicit": false,
-      "columns": ["requirement_id"],
-      "schemaTo": "public",
-      "tableTo": "requirements",
-      "columnsTo": ["id"],
-      "onUpdate": "NO ACTION",
-      "onDelete": "RESTRICT",
-      "name": "requirement_fulfillments_requirement_id_requirements_id_fkey",
-      "entityType": "fks",
-      "schema": "public",
-      "table": "requirement_fulfillments"
-    },
-    {
-      "nameExplicit": false,
-      "columns": ["organization_user_profile_id"],
-      "schemaTo": "public",
-      "tableTo": "organization_user_profiles",
-      "columnsTo": ["id"],
-      "onUpdate": "NO ACTION",
-      "onDelete": "RESTRICT",
-      "name": "requirement_fulfillments_DsUV3QFu7hSK_fkey",
-      "entityType": "fks",
-      "schema": "public",
-      "table": "requirement_fulfillments"
-    },
-    {
-      "nameExplicit": false,
-      "columns": ["reviewed_by_id"],
+      "columns": [
+        "user_id"
+      ],
       "schemaTo": "public",
       "tableTo": "users",
-      "columnsTo": ["id"],
-      "onUpdate": "NO ACTION",
-      "onDelete": "SET NULL",
-      "name": "requirement_fulfillments_reviewed_by_id_users_id_fkey",
-      "entityType": "fks",
-      "schema": "public",
-      "table": "requirement_fulfillments"
-    },
-    {
-      "nameExplicit": false,
-      "columns": ["organization_id"],
-      "schemaTo": "public",
-      "tableTo": "organizations",
-      "columnsTo": ["id"],
-      "onUpdate": "NO ACTION",
-      "onDelete": "CASCADE",
-      "name": "requirement_profiles_organization_id_organizations_id_fkey",
-      "entityType": "fks",
-      "schema": "public",
-      "table": "requirement_profiles"
-    },
-    {
-      "nameExplicit": false,
-      "columns": ["organization_id"],
-      "schemaTo": "public",
-      "tableTo": "organizations",
-      "columnsTo": ["id"],
-      "onUpdate": "NO ACTION",
-      "onDelete": "CASCADE",
-      "name": "qx0x2eiJqXKz_fkey",
-      "entityType": "fks",
-      "schema": "public",
-      "table": "organization_unit_favorite_requirement_profiles"
-    },
-    {
-      "nameExplicit": false,
-      "columns": ["organization_unit_id"],
-      "schemaTo": "public",
-      "tableTo": "organization_units",
-      "columnsTo": ["id"],
-      "onUpdate": "NO ACTION",
-      "onDelete": "CASCADE",
-      "name": "sysgw6dCC8MR_fkey",
-      "entityType": "fks",
-      "schema": "public",
-      "table": "organization_unit_favorite_requirement_profiles"
-    },
-    {
-      "nameExplicit": false,
-      "columns": ["requirement_profile_id"],
-      "schemaTo": "public",
-      "tableTo": "requirement_profiles",
-      "columnsTo": ["id"],
-      "onUpdate": "NO ACTION",
-      "onDelete": "CASCADE",
-      "name": "dybKrzHfJ0tl_fkey",
-      "entityType": "fks",
-      "schema": "public",
-      "table": "organization_unit_favorite_requirement_profiles"
-    },
-    {
-      "nameExplicit": true,
-      "columns": ["organization_id", "organization_unit_id"],
-      "schemaTo": "public",
-      "tableTo": "organization_units",
-      "columnsTo": ["organization_id", "id"],
-      "onUpdate": "NO ACTION",
-      "onDelete": "CASCADE",
-      "name": "fk_org_unit_favorites_org_unit_same_organization",
-      "entityType": "fks",
-      "schema": "public",
-      "table": "organization_unit_favorite_requirement_profiles"
-    },
-    {
-      "nameExplicit": true,
-      "columns": ["organization_id", "requirement_profile_id"],
-      "schemaTo": "public",
-      "tableTo": "requirement_profiles",
-      "columnsTo": ["organization_id", "id"],
-      "onUpdate": "NO ACTION",
-      "onDelete": "CASCADE",
-      "name": "fk_org_unit_favorites_profile_same_organization",
-      "entityType": "fks",
-      "schema": "public",
-      "table": "organization_unit_favorite_requirement_profiles"
-    },
-    {
-      "nameExplicit": false,
-      "columns": ["requirement_profile_id"],
-      "schemaTo": "public",
-      "tableTo": "requirement_profiles",
-      "columnsTo": ["id"],
-      "onUpdate": "NO ACTION",
-      "onDelete": "CASCADE",
-      "name": "requirement_profile_requirements_2bdUJ4zBfOtP_fkey",
-      "entityType": "fks",
-      "schema": "public",
-      "table": "requirement_profile_requirements"
-    },
-    {
-      "nameExplicit": false,
-      "columns": ["requirement_id"],
-      "schemaTo": "public",
-      "tableTo": "requirements",
-      "columnsTo": ["id"],
-      "onUpdate": "NO ACTION",
-      "onDelete": "CASCADE",
-      "name": "requirement_profile_requirements_9WTdnZHUUErT_fkey",
-      "entityType": "fks",
-      "schema": "public",
-      "table": "requirement_profile_requirements"
-    },
-    {
-      "nameExplicit": false,
-      "columns": ["requirement_profile_id"],
-      "schemaTo": "public",
-      "tableTo": "requirement_profiles",
-      "columnsTo": ["id"],
-      "onUpdate": "NO ACTION",
-      "onDelete": "RESTRICT",
-      "name": "requirement_profile_submissions_Exl1MZS3y1B6_fkey",
-      "entityType": "fks",
-      "schema": "public",
-      "table": "requirement_profile_submissions"
-    },
-    {
-      "nameExplicit": false,
-      "columns": ["membership_id"],
-      "schemaTo": "public",
-      "tableTo": "memberships",
-      "columnsTo": ["id"],
-      "onUpdate": "NO ACTION",
-      "onDelete": "SET NULL",
-      "name": "requirement_profile_submissions_fzxMBJUWWAzQ_fkey",
-      "entityType": "fks",
-      "schema": "public",
-      "table": "requirement_profile_submissions"
-    },
-    {
-      "nameExplicit": false,
-      "columns": ["membership_request_id"],
-      "schemaTo": "public",
-      "tableTo": "membership_requests",
-      "columnsTo": ["id"],
-      "onUpdate": "NO ACTION",
-      "onDelete": "SET NULL",
-      "name": "requirement_profile_submissions_JCCJ6yr7JOfs_fkey",
-      "entityType": "fks",
-      "schema": "public",
-      "table": "requirement_profile_submissions"
-    },
-    {
-      "nameExplicit": false,
-      "columns": ["reviewed_by_id"],
-      "schemaTo": "public",
-      "tableTo": "users",
-      "columnsTo": ["id"],
-      "onUpdate": "NO ACTION",
-      "onDelete": "SET NULL",
-      "name": "requirement_profile_submissions_reviewed_by_id_users_id_fkey",
-      "entityType": "fks",
-      "schema": "public",
-      "table": "requirement_profile_submissions"
-    },
-    {
-      "nameExplicit": false,
-      "columns": ["user_id"],
-      "schemaTo": "public",
-      "tableTo": "users",
-      "columnsTo": ["id"],
+      "columnsTo": [
+        "id"
+      ],
       "onUpdate": "NO ACTION",
       "onDelete": "CASCADE",
       "name": "documents_user_id_users_id_fkey",
@@ -4275,10 +4201,14 @@
     },
     {
       "nameExplicit": false,
-      "columns": ["organization_id"],
+      "columns": [
+        "organization_id"
+      ],
       "schemaTo": "public",
       "tableTo": "organizations",
-      "columnsTo": ["id"],
+      "columnsTo": [
+        "id"
+      ],
       "onUpdate": "NO ACTION",
       "onDelete": "CASCADE",
       "name": "organization_user_profiles_WTRTxwUqszuD_fkey",
@@ -4288,10 +4218,14 @@
     },
     {
       "nameExplicit": false,
-      "columns": ["user_id"],
+      "columns": [
+        "user_id"
+      ],
       "schemaTo": "public",
       "tableTo": "users",
-      "columnsTo": ["id"],
+      "columnsTo": [
+        "id"
+      ],
       "onUpdate": "NO ACTION",
       "onDelete": "CASCADE",
       "name": "organization_user_profiles_user_id_users_id_fkey",
@@ -4301,10 +4235,218 @@
     },
     {
       "nameExplicit": false,
-      "columns": ["organization_unit_id"],
+      "columns": [
+        "organization_id"
+      ],
+      "schemaTo": "public",
+      "tableTo": "organizations",
+      "columnsTo": [
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "CASCADE",
+      "name": "requirements_organization_id_organizations_id_fkey",
+      "entityType": "fks",
+      "schema": "public",
+      "table": "requirements"
+    },
+    {
+      "nameExplicit": false,
+      "columns": [
+        "requirement_profile_submission_id"
+      ],
+      "schemaTo": "public",
+      "tableTo": "requirement_profile_submissions",
+      "columnsTo": [
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "CASCADE",
+      "name": "requirement_fulfillments_SSi8x4wpJ4c0_fkey",
+      "entityType": "fks",
+      "schema": "public",
+      "table": "requirement_fulfillments"
+    },
+    {
+      "nameExplicit": false,
+      "columns": [
+        "requirement_id"
+      ],
+      "schemaTo": "public",
+      "tableTo": "requirements",
+      "columnsTo": [
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "RESTRICT",
+      "name": "requirement_fulfillments_requirement_id_requirements_id_fkey",
+      "entityType": "fks",
+      "schema": "public",
+      "table": "requirement_fulfillments"
+    },
+    {
+      "nameExplicit": false,
+      "columns": [
+        "organization_user_profile_id"
+      ],
+      "schemaTo": "public",
+      "tableTo": "organization_user_profiles",
+      "columnsTo": [
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "RESTRICT",
+      "name": "requirement_fulfillments_DsUV3QFu7hSK_fkey",
+      "entityType": "fks",
+      "schema": "public",
+      "table": "requirement_fulfillments"
+    },
+    {
+      "nameExplicit": false,
+      "columns": [
+        "reviewed_by_id"
+      ],
+      "schemaTo": "public",
+      "tableTo": "users",
+      "columnsTo": [
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "SET NULL",
+      "name": "requirement_fulfillments_reviewed_by_id_users_id_fkey",
+      "entityType": "fks",
+      "schema": "public",
+      "table": "requirement_fulfillments"
+    },
+    {
+      "nameExplicit": false,
+      "columns": [
+        "organization_id"
+      ],
+      "schemaTo": "public",
+      "tableTo": "organizations",
+      "columnsTo": [
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "CASCADE",
+      "name": "requirement_profiles_organization_id_organizations_id_fkey",
+      "entityType": "fks",
+      "schema": "public",
+      "table": "requirement_profiles"
+    },
+    {
+      "nameExplicit": false,
+      "columns": [
+        "requirement_profile_id"
+      ],
+      "schemaTo": "public",
+      "tableTo": "requirement_profiles",
+      "columnsTo": [
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "CASCADE",
+      "name": "requirement_profile_requirements_2bdUJ4zBfOtP_fkey",
+      "entityType": "fks",
+      "schema": "public",
+      "table": "requirement_profile_requirements"
+    },
+    {
+      "nameExplicit": false,
+      "columns": [
+        "requirement_id"
+      ],
+      "schemaTo": "public",
+      "tableTo": "requirements",
+      "columnsTo": [
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "CASCADE",
+      "name": "requirement_profile_requirements_9WTdnZHUUErT_fkey",
+      "entityType": "fks",
+      "schema": "public",
+      "table": "requirement_profile_requirements"
+    },
+    {
+      "nameExplicit": false,
+      "columns": [
+        "requirement_profile_id"
+      ],
+      "schemaTo": "public",
+      "tableTo": "requirement_profiles",
+      "columnsTo": [
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "RESTRICT",
+      "name": "requirement_profile_submissions_Exl1MZS3y1B6_fkey",
+      "entityType": "fks",
+      "schema": "public",
+      "table": "requirement_profile_submissions"
+    },
+    {
+      "nameExplicit": false,
+      "columns": [
+        "membership_id"
+      ],
+      "schemaTo": "public",
+      "tableTo": "memberships",
+      "columnsTo": [
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "SET NULL",
+      "name": "requirement_profile_submissions_fzxMBJUWWAzQ_fkey",
+      "entityType": "fks",
+      "schema": "public",
+      "table": "requirement_profile_submissions"
+    },
+    {
+      "nameExplicit": false,
+      "columns": [
+        "membership_request_id"
+      ],
+      "schemaTo": "public",
+      "tableTo": "membership_requests",
+      "columnsTo": [
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "SET NULL",
+      "name": "requirement_profile_submissions_JCCJ6yr7JOfs_fkey",
+      "entityType": "fks",
+      "schema": "public",
+      "table": "requirement_profile_submissions"
+    },
+    {
+      "nameExplicit": false,
+      "columns": [
+        "reviewed_by_id"
+      ],
+      "schemaTo": "public",
+      "tableTo": "users",
+      "columnsTo": [
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "SET NULL",
+      "name": "requirement_profile_submissions_reviewed_by_id_users_id_fkey",
+      "entityType": "fks",
+      "schema": "public",
+      "table": "requirement_profile_submissions"
+    },
+    {
+      "nameExplicit": false,
+      "columns": [
+        "organization_unit_id"
+      ],
       "schemaTo": "public",
       "tableTo": "organization_units",
-      "columnsTo": ["id"],
+      "columnsTo": [
+        "id"
+      ],
       "onUpdate": "NO ACTION",
       "onDelete": "CASCADE",
       "name": "shifts_organization_unit_id_organization_units_id_fkey",
@@ -4314,23 +4456,31 @@
     },
     {
       "nameExplicit": false,
-      "columns": ["created_by_id"],
+      "columns": [
+        "created_by_id"
+      ],
       "schemaTo": "public",
       "tableTo": "users",
-      "columnsTo": ["id"],
+      "columnsTo": [
+        "id"
+      ],
       "onUpdate": "NO ACTION",
       "onDelete": "RESTRICT",
-      "name": "shifts_created_by_id_users_id_fk",
+      "name": "shifts_created_by_id_users_id_fkey",
       "entityType": "fks",
       "schema": "public",
       "table": "shifts"
     },
     {
       "nameExplicit": false,
-      "columns": ["master_id"],
+      "columns": [
+        "master_id"
+      ],
       "schemaTo": "public",
       "tableTo": "shifts",
-      "columnsTo": ["id"],
+      "columnsTo": [
+        "id"
+      ],
       "onUpdate": "NO ACTION",
       "onDelete": "CASCADE",
       "name": "shift_instances_master_id_shifts_id_fkey",
@@ -4340,10 +4490,14 @@
     },
     {
       "nameExplicit": false,
-      "columns": ["instance_id"],
+      "columns": [
+        "instance_id"
+      ],
       "schemaTo": "public",
       "tableTo": "shift_instances",
-      "columnsTo": ["id"],
+      "columnsTo": [
+        "id"
+      ],
       "onUpdate": "NO ACTION",
       "onDelete": "CASCADE",
       "name": "shift_instance_invites_instance_id_shift_instances_id_fkey",
@@ -4353,10 +4507,14 @@
     },
     {
       "nameExplicit": false,
-      "columns": ["user_id"],
+      "columns": [
+        "user_id"
+      ],
       "schemaTo": "public",
       "tableTo": "users",
-      "columnsTo": ["id"],
+      "columnsTo": [
+        "id"
+      ],
       "onUpdate": "NO ACTION",
       "onDelete": "RESTRICT",
       "name": "shift_instance_invites_user_id_users_id_fkey",
@@ -4366,10 +4524,14 @@
     },
     {
       "nameExplicit": false,
-      "columns": ["shift_instance_id"],
+      "columns": [
+        "shift_instance_id"
+      ],
       "schemaTo": "public",
       "tableTo": "shift_instances",
-      "columnsTo": ["id"],
+      "columnsTo": [
+        "id"
+      ],
       "onUpdate": "NO ACTION",
       "onDelete": "RESTRICT",
       "name": "time_entries_shift_instance_id_shift_instances_id_fkey",
@@ -4379,10 +4541,14 @@
     },
     {
       "nameExplicit": false,
-      "columns": ["volunteer_id"],
+      "columns": [
+        "volunteer_id"
+      ],
       "schemaTo": "public",
       "tableTo": "users",
-      "columnsTo": ["id"],
+      "columnsTo": [
+        "id"
+      ],
       "onUpdate": "NO ACTION",
       "onDelete": "RESTRICT",
       "name": "time_entries_volunteer_id_users_id_fkey",
@@ -4391,7 +4557,9 @@
       "table": "time_entries"
     },
     {
-      "columns": ["id"],
+      "columns": [
+        "id"
+      ],
       "nameExplicit": false,
       "name": "accounts_pkey",
       "schema": "public",
@@ -4399,7 +4567,9 @@
       "entityType": "pks"
     },
     {
-      "columns": ["id"],
+      "columns": [
+        "id"
+      ],
       "nameExplicit": false,
       "name": "sessions_pkey",
       "schema": "public",
@@ -4407,7 +4577,9 @@
       "entityType": "pks"
     },
     {
-      "columns": ["id"],
+      "columns": [
+        "id"
+      ],
       "nameExplicit": false,
       "name": "users_pkey",
       "schema": "public",
@@ -4415,7 +4587,9 @@
       "entityType": "pks"
     },
     {
-      "columns": ["id"],
+      "columns": [
+        "id"
+      ],
       "nameExplicit": false,
       "name": "verifications_pkey",
       "schema": "public",
@@ -4423,7 +4597,9 @@
       "entityType": "pks"
     },
     {
-      "columns": ["id"],
+      "columns": [
+        "id"
+      ],
       "nameExplicit": false,
       "name": "permissions_pkey",
       "schema": "public",
@@ -4431,7 +4607,9 @@
       "entityType": "pks"
     },
     {
-      "columns": ["id"],
+      "columns": [
+        "id"
+      ],
       "nameExplicit": false,
       "name": "roles_pkey",
       "schema": "public",
@@ -4439,7 +4617,9 @@
       "entityType": "pks"
     },
     {
-      "columns": ["id"],
+      "columns": [
+        "id"
+      ],
       "nameExplicit": false,
       "name": "role_permissions_pkey",
       "schema": "public",
@@ -4447,7 +4627,9 @@
       "entityType": "pks"
     },
     {
-      "columns": ["id"],
+      "columns": [
+        "id"
+      ],
       "nameExplicit": false,
       "name": "memberships_pkey",
       "schema": "public",
@@ -4455,7 +4637,19 @@
       "entityType": "pks"
     },
     {
-      "columns": ["id"],
+      "columns": [
+        "id"
+      ],
+      "nameExplicit": false,
+      "name": "membership_roles_pkey",
+      "schema": "public",
+      "table": "membership_roles",
+      "entityType": "pks"
+    },
+    {
+      "columns": [
+        "id"
+      ],
       "nameExplicit": false,
       "name": "membership_requests_pkey",
       "schema": "public",
@@ -4463,7 +4657,9 @@
       "entityType": "pks"
     },
     {
-      "columns": ["id"],
+      "columns": [
+        "id"
+      ],
       "nameExplicit": false,
       "name": "organizations_pkey",
       "schema": "public",
@@ -4471,7 +4667,9 @@
       "entityType": "pks"
     },
     {
-      "columns": ["id"],
+      "columns": [
+        "id"
+      ],
       "nameExplicit": false,
       "name": "organization_units_pkey",
       "schema": "public",
@@ -4479,7 +4677,9 @@
       "entityType": "pks"
     },
     {
-      "columns": ["id"],
+      "columns": [
+        "id"
+      ],
       "nameExplicit": false,
       "name": "organization_unit_types_pkey",
       "schema": "public",
@@ -4487,55 +4687,9 @@
       "entityType": "pks"
     },
     {
-      "columns": ["id"],
-      "nameExplicit": false,
-      "name": "requirements_pkey",
-      "schema": "public",
-      "table": "requirements",
-      "entityType": "pks"
-    },
-    {
-      "columns": ["id"],
-      "nameExplicit": false,
-      "name": "requirement_fulfillments_pkey",
-      "schema": "public",
-      "table": "requirement_fulfillments",
-      "entityType": "pks"
-    },
-    {
-      "columns": ["id"],
-      "nameExplicit": false,
-      "name": "requirement_profiles_pkey",
-      "schema": "public",
-      "table": "requirement_profiles",
-      "entityType": "pks"
-    },
-    {
-      "columns": ["id"],
-      "nameExplicit": false,
-      "name": "organization_unit_favorite_requirement_profiles_pkey",
-      "schema": "public",
-      "table": "organization_unit_favorite_requirement_profiles",
-      "entityType": "pks"
-    },
-    {
-      "columns": ["id"],
-      "nameExplicit": false,
-      "name": "requirement_profile_requirements_pkey",
-      "schema": "public",
-      "table": "requirement_profile_requirements",
-      "entityType": "pks"
-    },
-    {
-      "columns": ["id"],
-      "nameExplicit": false,
-      "name": "requirement_profile_submissions_pkey",
-      "schema": "public",
-      "table": "requirement_profile_submissions",
-      "entityType": "pks"
-    },
-    {
-      "columns": ["id"],
+      "columns": [
+        "id"
+      ],
       "nameExplicit": false,
       "name": "documents_pkey",
       "schema": "public",
@@ -4543,7 +4697,9 @@
       "entityType": "pks"
     },
     {
-      "columns": ["id"],
+      "columns": [
+        "id"
+      ],
       "nameExplicit": false,
       "name": "organization_user_profiles_pkey",
       "schema": "public",
@@ -4551,7 +4707,59 @@
       "entityType": "pks"
     },
     {
-      "columns": ["id"],
+      "columns": [
+        "id"
+      ],
+      "nameExplicit": false,
+      "name": "requirements_pkey",
+      "schema": "public",
+      "table": "requirements",
+      "entityType": "pks"
+    },
+    {
+      "columns": [
+        "id"
+      ],
+      "nameExplicit": false,
+      "name": "requirement_fulfillments_pkey",
+      "schema": "public",
+      "table": "requirement_fulfillments",
+      "entityType": "pks"
+    },
+    {
+      "columns": [
+        "id"
+      ],
+      "nameExplicit": false,
+      "name": "requirement_profiles_pkey",
+      "schema": "public",
+      "table": "requirement_profiles",
+      "entityType": "pks"
+    },
+    {
+      "columns": [
+        "id"
+      ],
+      "nameExplicit": false,
+      "name": "requirement_profile_requirements_pkey",
+      "schema": "public",
+      "table": "requirement_profile_requirements",
+      "entityType": "pks"
+    },
+    {
+      "columns": [
+        "id"
+      ],
+      "nameExplicit": false,
+      "name": "requirement_profile_submissions_pkey",
+      "schema": "public",
+      "table": "requirement_profile_submissions",
+      "entityType": "pks"
+    },
+    {
+      "columns": [
+        "id"
+      ],
       "nameExplicit": false,
       "name": "shifts_pkey",
       "schema": "public",
@@ -4559,7 +4767,9 @@
       "entityType": "pks"
     },
     {
-      "columns": ["id"],
+      "columns": [
+        "id"
+      ],
       "nameExplicit": false,
       "name": "shift_instances_pkey",
       "schema": "public",
@@ -4567,7 +4777,9 @@
       "entityType": "pks"
     },
     {
-      "columns": ["id"],
+      "columns": [
+        "id"
+      ],
       "nameExplicit": false,
       "name": "shift_instance_invites_pkey",
       "schema": "public",
@@ -4575,7 +4787,9 @@
       "entityType": "pks"
     },
     {
-      "columns": ["id"],
+      "columns": [
+        "id"
+      ],
       "nameExplicit": false,
       "name": "time_entries_pkey",
       "schema": "public",
@@ -4584,7 +4798,10 @@
     },
     {
       "nameExplicit": true,
-      "columns": ["name", "organization_unit_id"],
+      "columns": [
+        "name",
+        "organization_id"
+      ],
       "nullsNotDistinct": false,
       "name": "uq_roles_name_organization_unit_id",
       "entityType": "uniques",
@@ -4593,7 +4810,10 @@
     },
     {
       "nameExplicit": true,
-      "columns": ["role_id", "permission_id"],
+      "columns": [
+        "role_id",
+        "permission_id"
+      ],
       "nullsNotDistinct": false,
       "name": "uq_role_permissions_role_id_permission_id",
       "entityType": "uniques",
@@ -4602,7 +4822,22 @@
     },
     {
       "nameExplicit": true,
-      "columns": ["user_id", "organization_unit_id"],
+      "columns": [
+        "membership_id",
+        "role_id"
+      ],
+      "nullsNotDistinct": false,
+      "name": "uq_membership_roles_membership_id_role_id",
+      "entityType": "uniques",
+      "schema": "public",
+      "table": "membership_roles"
+    },
+    {
+      "nameExplicit": true,
+      "columns": [
+        "user_id",
+        "organization_unit_id"
+      ],
       "nullsNotDistinct": false,
       "name": "uq_membership_requests_user_id_organization_unit_id",
       "entityType": "uniques",
@@ -4611,7 +4846,10 @@
     },
     {
       "nameExplicit": true,
-      "columns": ["organization_id", "slug"],
+      "columns": [
+        "organization_id",
+        "slug"
+      ],
       "nullsNotDistinct": false,
       "name": "uq_organization_units_organization_id_slug",
       "entityType": "uniques",
@@ -4620,7 +4858,10 @@
     },
     {
       "nameExplicit": true,
-      "columns": ["organization_id", "id"],
+      "columns": [
+        "organization_id",
+        "id"
+      ],
       "nullsNotDistinct": false,
       "name": "uq_organization_units_organization_id_id",
       "entityType": "uniques",
@@ -4629,16 +4870,10 @@
     },
     {
       "nameExplicit": true,
-      "columns": ["organization_unit_id", "requirement_profile_id"],
-      "nullsNotDistinct": false,
-      "name": "uq_org_unit_favorite_requirement_profiles_org_unit_profile",
-      "entityType": "uniques",
-      "schema": "public",
-      "table": "organization_unit_favorite_requirement_profiles"
-    },
-    {
-      "nameExplicit": true,
-      "columns": ["requirement_profile_id", "requirement_id"],
+      "columns": [
+        "requirement_profile_id",
+        "requirement_id"
+      ],
       "nullsNotDistinct": false,
       "name": "uq_requirement_profile_requirements_profile_requirement",
       "entityType": "uniques",
@@ -4647,7 +4882,10 @@
     },
     {
       "nameExplicit": true,
-      "columns": ["instance_id", "user_id"],
+      "columns": [
+        "instance_id",
+        "user_id"
+      ],
       "nullsNotDistinct": false,
       "name": "uq_sii_instance_user",
       "entityType": "uniques",
@@ -4656,25 +4894,31 @@
     },
     {
       "nameExplicit": false,
-      "columns": ["token"],
+      "columns": [
+        "token"
+      ],
       "nullsNotDistinct": false,
-      "name": "sessions_token_unique",
+      "name": "sessions_token_key",
       "schema": "public",
       "table": "sessions",
       "entityType": "uniques"
     },
     {
       "nameExplicit": false,
-      "columns": ["email"],
+      "columns": [
+        "email"
+      ],
       "nullsNotDistinct": false,
-      "name": "users_email_unique",
+      "name": "users_email_key",
       "schema": "public",
       "table": "users",
       "entityType": "uniques"
     },
     {
       "nameExplicit": false,
-      "columns": ["check_in_id"],
+      "columns": [
+        "check_in_id"
+      ],
       "nullsNotDistinct": false,
       "name": "users_check_in_id_key",
       "schema": "public",
@@ -4683,7 +4927,9 @@
     },
     {
       "nameExplicit": false,
-      "columns": ["key"],
+      "columns": [
+        "key"
+      ],
       "nullsNotDistinct": false,
       "name": "permissions_key_key",
       "schema": "public",
@@ -4692,16 +4938,20 @@
     },
     {
       "nameExplicit": false,
-      "columns": ["slug"],
+      "columns": [
+        "slug"
+      ],
       "nullsNotDistinct": false,
-      "name": "organizations_slug_unique",
+      "name": "organizations_slug_key",
       "schema": "public",
       "table": "organizations",
       "entityType": "uniques"
     },
     {
       "nameExplicit": false,
-      "columns": ["slug"],
+      "columns": [
+        "slug"
+      ],
       "nullsNotDistinct": false,
       "name": "organization_units_slug_key",
       "schema": "public",
@@ -4710,7 +4960,9 @@
     },
     {
       "nameExplicit": false,
-      "columns": ["storage_key"],
+      "columns": [
+        "storage_key"
+      ],
       "nullsNotDistinct": false,
       "name": "documents_storage_key_key",
       "schema": "public",
@@ -4719,19 +4971,14 @@
     },
     {
       "nameExplicit": false,
-      "columns": ["slug"],
+      "columns": [
+        "slug"
+      ],
       "nullsNotDistinct": false,
-      "name": "shifts_slug_unique",
+      "name": "shifts_slug_key",
       "schema": "public",
       "table": "shifts",
       "entityType": "uniques"
-    },
-    {
-      "value": "(\n        (\"is_root\" = true AND \"parent_id\" IS NULL)\n        OR\n        (\"is_root\" = false AND \"parent_id\" IS NOT NULL)\n      )",
-      "name": "chk_organization_units_root_parent_consistency",
-      "entityType": "checks",
-      "schema": "public",
-      "table": "organization_units"
     },
     {
       "value": "\"parent_id\" IS NULL OR \"parent_id\" <> \"id\"",
