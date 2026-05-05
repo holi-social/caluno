@@ -59,7 +59,7 @@
     "@repo/typescript-config": "*",
     "@types/express": "^5.0.0",
     "@types/jest": "^30.0.0",
-    "@types/node": "^25.0.0",
+    "@types/node": "^24.12.2",
     "@types/pg": "^8.16.0",
     "@types/supertest": "^7.0.0",
     "jest": "^30.0.0",
