@@ -116,12 +116,12 @@ async function seedBlocks(): Promise<void> {
     },
     {
       id: SEED_BLOCK_IDS.datenschutz,
-      title: 'Datenschutzerklaerung',
+      title: 'Datenschutzerklärung',
       icon: 'FileCheck',
       fields: [
-        makeSeedField('f-datenschutz', 'Datenschutzerklaerung', 'document-acknowledgement', {
+        makeSeedField('f-datenschutz', 'Datenschutzerklärung', 'document-acknowledgement', {
           documentLabel:
-            'Bitte lesen und akzeptieren Sie die Datenschutzerklaerung.',
+            'Bitte lesen und akzeptieren Sie die Datenschutzerklärung.',
         }),
       ],
       required: true,

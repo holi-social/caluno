@@ -244,7 +244,7 @@ function AddFieldInline({
             id="new-field-name"
             placeholder={
               isDocument
-                ? 'z.B. Datenschutzerklaerung'
+                ? 'z.B. Datenschutzerklärung'
                 : 'z.B. Lieblingsfarbe'
             }
             value={label}
