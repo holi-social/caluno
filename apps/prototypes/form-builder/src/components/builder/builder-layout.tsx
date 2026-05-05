@@ -76,7 +76,7 @@ function AppliedToSection({
       </p>
 
       <div
-        className={`mt-4 flex min-h-9 flex-wrap items-center gap-2 rounded-lg border p-2 ${
+        className={`mt-4 flex min-h-9 flex-wrap items-center gap-2 rounded-lg ${
           hasError
             ? 'border-destructive bg-destructive/5'
             : 'border-border'
