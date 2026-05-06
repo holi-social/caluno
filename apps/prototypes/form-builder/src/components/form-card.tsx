@@ -16,7 +16,7 @@ import {
 import { Pencil, Share2, Trash2, Users } from 'lucide-react';
 import { toast } from 'sonner';
 import type { Block, FormConfig } from '@/lib/types';
-import { TRIGGER_MAP } from '@/lib/trigger-options';
+import { formatRuleId } from '@/lib/trigger-options';
 import type { User } from '@/lib/users';
 import { canEditForm, canDeleteForm, getUserById } from '@/lib/users';
 
@@ -105,7 +105,7 @@ export function FormCard({
               <div className="mt-2 flex flex-wrap gap-1.5">
                 {config.appliedTo.map((id) => (
                   <Badge key={id} variant="secondary" className="text-xs">
-                    {TRIGGER_MAP.get(id)?.label ?? id}
+                    {formatRuleId(id)}
                   </Badge>
                 ))}
               </div>

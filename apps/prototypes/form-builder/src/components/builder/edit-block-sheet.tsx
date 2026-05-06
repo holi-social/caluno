@@ -54,154 +54,109 @@ const FIELD_TYPE_OPTIONS: { label: string; value: FieldType }[] = [
   { label: 'Dokument zum Akzeptieren', value: 'document-acknowledgement' },
 ];
 
-// --- Inline field editor ---
+// --- Field form (used for both creating and editing fields) ---
 
 type FieldCommitHandle = { commit: () => boolean };
 
-const InlineFieldEditor = forwardRef<
+const FieldForm = forwardRef<
   FieldCommitHandle,
   {
-    field: FormField;
-    onSave: (updates: Partial<FormField>) => void;
+    initial?: FormField;
+    onSubmit: (field: FormField) => void;
     onCancel: () => void;
   }
->(function InlineFieldEditor({ field, onSave, onCancel }, ref) {
-  const [label, setLabel] = useState(field.label);
-  const [description, setDescription] = useState(field.description ?? '');
-  const [fieldType, setFieldType] = useState<FieldType>(field.type);
-  const [error, setError] = useState<string | null>(null);
+>(function FieldForm({ initial, onSubmit, onCancel }, ref) {
+  const isEdit = !!initial;
+  const idScope = initial?.id ?? 'new';
 
-  function commit(): boolean {
-    if (!label.trim()) {
-      setError('Bitte Feldname eingeben.');
-      return false;
-    }
-    setError(null);
-    onSave({
-      label: label.trim(),
-      type: fieldType,
-      description: description.trim() || undefined,
-    });
-    return true;
-  }
-
-  useImperativeHandle(ref, () => ({ commit }));
-
-  return (
-    <div className="space-y-3 rounded-lg border p-4">
-      <Field>
-        <FieldLabel htmlFor={`edit-${field.id}-label`}>Feldname</FieldLabel>
-        <Input
-          id={`edit-${field.id}-label`}
-          value={label}
-          onChange={(e) => {
-            setLabel(e.target.value);
-            if (error) setError(null);
-          }}
-          className="h-10"
-        />
-      </Field>
-      <Field>
-        <FieldLabel htmlFor={`edit-${field.id}-type`}>Feldtyp</FieldLabel>
-        <Select
-          value={fieldType}
-          onValueChange={(v) => setFieldType(v as FieldType)}
-        >
-          <SelectTrigger
-            id={`edit-${field.id}-type`}
-            size="default"
-            className="w-full"
-          >
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {FIELD_TYPE_OPTIONS.map((opt) => (
-              <SelectItem key={opt.value} value={opt.value}>
-                {opt.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </Field>
-      <Field>
-        <FieldLabel htmlFor={`edit-${field.id}-desc`}>Beschreibung</FieldLabel>
-        <Input
-          id={`edit-${field.id}-desc`}
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-          placeholder="Optionale Hilfestellung"
-          className="h-10"
-        />
-      </Field>
-      {error && <p className="text-destructive text-xs">{error}</p>}
-      <div className="flex justify-end gap-2">
-        <Button variant="outline" onClick={onCancel}>
-          Abbrechen
-        </Button>
-        <Button onClick={commit}>Speichern</Button>
-      </div>
-    </div>
+  const [fieldType, setFieldType] = useState<FieldType | ''>(
+    initial?.type ?? '',
   );
-});
-
-// --- Add field inline form ---
-
-function AddFieldInline({
-  onAdd,
-  onCancel,
-}: {
-  onAdd: (field: FormField) => void;
-  onCancel: () => void;
-}) {
-  const [fieldType, setFieldType] = useState<FieldType | ''>('');
-  const [label, setLabel] = useState('');
-  const [options, setOptions] = useState<string[]>(['', '', '']);
+  const [label, setLabel] = useState(initial?.label ?? '');
+  const [description, setDescription] = useState(initial?.description ?? '');
+  const [options, setOptions] = useState<string[]>(() => {
+    const initialOptions = initial?.options;
+    if (initialOptions && initialOptions.length > 0) {
+      return initialOptions.map((o) => o.label);
+    }
+    return ['', '', ''];
+  });
   const [uploading, setUploading] = useState(false);
   const [uploadedFile, setUploadedFile] = useState<{
     url: string;
     filename: string;
-  } | null>(null);
+  } | null>(() => {
+    if (initial?.type === 'document-acknowledgement' && initial.documentUrl) {
+      const filename = initial.documentUrl.split('/').pop() ?? 'Dokument';
+      return { url: initial.documentUrl, filename };
+    }
+    return null;
+  });
+  const [error, setError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const isDocument = fieldType === 'document-acknowledgement';
   const showOptions =
     fieldType === 'multichoice' || fieldType === 'singlechoice';
 
-  function handleAdd() {
-    if (!fieldType || !label.trim()) return;
-    const id = `field-${Date.now()}`;
+  function commit(): boolean {
+    if (!fieldType) {
+      setError('Bitte Feldtyp auswählen.');
+      return false;
+    }
+    if (!label.trim()) {
+      setError('Bitte Feldname eingeben.');
+      return false;
+    }
+    if (isDocument && !uploadedFile) {
+      setError('Bitte ein Dokument hochladen.');
+      return false;
+    }
+    if (showOptions && !options.some((o) => o.trim() !== '')) {
+      setError('Bitte mindestens eine Option angeben.');
+      return false;
+    }
 
-    if (isDocument) {
-      if (!uploadedFile) return;
-      onAdd({
+    setError(null);
+    const id = initial?.id ?? `field-${Date.now()}`;
+
+    if (isDocument && uploadedFile) {
+      onSubmit({
         id,
         type: 'document-acknowledgement',
         label: label.trim(),
         documentUrl: uploadedFile.url,
-        documentLabel: `${label.trim()} lesen`,
-        required: true,
+        documentLabel: initial?.documentLabel ?? `${label.trim()} lesen`,
+        required: initial?.required ?? true,
       });
-      return;
+      return true;
     }
 
     const field: FormField = {
       id,
       type: fieldType,
       label: label.trim(),
-      required: true,
+      required: initial?.required ?? true,
     };
+    if (description.trim()) {
+      field.description = description.trim();
+    }
     if (showOptions) {
       field.options = options
         .filter((o) => o.trim() !== '')
         .map((o) => ({
           label: o.trim(),
-          value: o
-            .trim()
-            .toLowerCase()
-            .replace(/\s+/g, '-'),
+          value: o.trim().toLowerCase().replace(/\s+/g, '-'),
         }));
     }
-    onAdd(field);
+    onSubmit(field);
+    return true;
+  }
+
+  useImperativeHandle(ref, () => ({ commit }));
+
+  function handleSubmit() {
+    commit();
   }
 
   async function handleFileUpload(e: React.ChangeEvent<HTMLInputElement>) {
@@ -225,7 +180,7 @@ function AddFieldInline({
     }
   }
 
-  const canAdd =
+  const canSubmit =
     !!fieldType &&
     label.trim() !== '' &&
     (!isDocument || !!uploadedFile) &&
@@ -233,16 +188,22 @@ function AddFieldInline({
 
   return (
     <div className="space-y-4 rounded-lg border border-dashed p-4">
-      <p className="text-sm font-semibold">Neues Feld</p>
+      <p className="text-sm font-semibold">
+        {isEdit ? 'Feld bearbeiten' : 'Neues Feld'}
+      </p>
 
       <Field>
-        <FieldLabel htmlFor="new-field-type">Feldtyp</FieldLabel>
+        <FieldLabel htmlFor={`field-${idScope}-type`}>Feldtyp</FieldLabel>
         <Select
           value={fieldType}
           onValueChange={(v) => setFieldType(v as FieldType)}
         >
-          <SelectTrigger id="new-field-type" size="default" className="w-full">
-            <SelectValue placeholder="Typ auswaehlen..." />
+          <SelectTrigger
+            id={`field-${idScope}-type`}
+            size="default"
+            className="w-full"
+          >
+            <SelectValue placeholder="Typ auswählen..." />
           </SelectTrigger>
           <SelectContent>
             {FIELD_TYPE_OPTIONS.map((opt) => (
@@ -256,16 +217,34 @@ function AddFieldInline({
 
       {fieldType && (
         <Field>
-          <FieldLabel htmlFor="new-field-name">Feldname</FieldLabel>
+          <FieldLabel htmlFor={`field-${idScope}-name`}>Feldname</FieldLabel>
           <Input
-            id="new-field-name"
+            id={`field-${idScope}-name`}
             placeholder={
               isDocument
                 ? 'z.B. Datenschutzerklärung'
                 : 'z.B. Lieblingsfarbe'
             }
             value={label}
-            onChange={(e) => setLabel(e.target.value)}
+            onChange={(e) => {
+              setLabel(e.target.value);
+              if (error) setError(null);
+            }}
+            className="h-10"
+          />
+        </Field>
+      )}
+
+      {fieldType && !isDocument && (
+        <Field>
+          <FieldLabel htmlFor={`field-${idScope}-desc`}>
+            Beschreibung
+          </FieldLabel>
+          <Input
+            id={`field-${idScope}-desc`}
+            placeholder="Optionale Hilfestellung"
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
             className="h-10"
           />
         </Field>
@@ -304,7 +283,7 @@ function AddFieldInline({
               disabled={uploading}
             >
               <Upload className="mr-2 size-4" />
-              {uploading ? 'Hochladen...' : 'Datei auswaehlen'}
+              {uploading ? 'Wird hochgeladen...' : 'Datei auswählen'}
             </Button>
           )}
         </Field>
@@ -349,17 +328,18 @@ function AddFieldInline({
         </div>
       )}
 
+      {error && <p className="text-destructive text-xs">{error}</p>}
       <div className="flex justify-end gap-2">
         <Button variant="outline" onClick={onCancel}>
           Abbrechen
         </Button>
-        <Button onClick={handleAdd} disabled={!canAdd}>
-          Hinzufügen
+        <Button onClick={handleSubmit} disabled={!canSubmit}>
+          {isEdit ? 'Speichern' : 'Hinzufügen'}
         </Button>
       </div>
     </div>
   );
-}
+});
 
 // --- Main sheet component ---
 
@@ -396,8 +376,12 @@ export function EditBlockSheet({
   const [metaDirty, setMetaDirty] = useState(false);
   const [draggingFieldId, setDraggingFieldId] = useState<string | null>(null);
   const titleInputRef = useRef<HTMLInputElement>(null);
+  const addFieldRef = useRef<FieldCommitHandle>(null);
+  const editFieldRef = useRef<FieldCommitHandle>(null);
 
-  // Sync local state when block changes
+  // Sync local state only when a different block is loaded (not on every block update,
+  // since field add/edit produces a new block reference and would otherwise wipe
+  // the user's in-progress title/description.)
   useEffect(() => {
     if (block) {
       setTitle(block.title);
@@ -406,7 +390,8 @@ export function EditBlockSheet({
       setAddingField(false);
       setMetaDirty(false);
     }
-  }, [block]);
+    // biome-ignore lint/correctness/useExhaustiveDependencies: only re-init on a different block
+  }, [block?.id]);
 
   // Track if metadata has changed
   useEffect(() => {
@@ -529,11 +514,12 @@ export function EditBlockSheet({
 
             {block.fields.map((field) =>
               editingFieldId === field.id && onEditField ? (
-                <InlineFieldEditor
+                <FieldForm
                   key={field.id}
-                  field={field}
-                  onSave={(updates) => {
-                    onEditField(block.id, field.id, updates);
+                  ref={editFieldRef}
+                  initial={field}
+                  onSubmit={(updated) => {
+                    onEditField(block.id, field.id, updated);
                     setEditingFieldId(null);
                   }}
                   onCancel={() => setEditingFieldId(null)}
@@ -590,8 +576,9 @@ export function EditBlockSheet({
             )}
 
             {addingField && onAddField && (
-              <AddFieldInline
-                onAdd={(field) => {
+              <FieldForm
+                ref={addFieldRef}
+                onSubmit={(field) => {
                   onAddField(block.id, field);
                   setAddingField(false);
                 }}
@@ -613,8 +600,15 @@ export function EditBlockSheet({
             <Button
               size="lg"
               onClick={() => {
-                if (metaDirty) handleSaveMeta();
-                onOpenChange(false);
+                // Force-commit any in-progress field. If validation fails,
+                // the inline form surfaces an error and we keep the sheet open.
+                if (addingField && addFieldRef.current) {
+                  if (!addFieldRef.current.commit()) return;
+                }
+                if (editingFieldId && editFieldRef.current) {
+                  if (!editFieldRef.current.commit()) return;
+                }
+                handleSheetOpenChange(false);
               }}
               disabled={!title.trim()}
             >
