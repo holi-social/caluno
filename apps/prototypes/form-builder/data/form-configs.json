@@ -6,8 +6,15 @@
     "description": "123",
     "organizationName": "Abteilung EA",
     "locale": "de",
-    "blockRefs": [],
-    "appliedTo": [],
+    "blockRefs": [
+      {
+        "blockId": "seed-block-kontakte",
+        "order": 0
+      }
+    ],
+    "appliedTo": [
+      "join:current"
+    ],
     "settings": {
       "submitButtonLabel": "Absenden",
       "successTitle": "Vielen Dank!",
@@ -17,6 +24,6 @@
     "createdBy": "andrea",
     "updatedBy": "andrea",
     "createdAt": "2026-05-06T07:36:35.875Z",
-    "updatedAt": "2026-05-06T07:36:35.875Z"
+    "updatedAt": "2026-05-06T09:46:20.320Z"
   }
 ]

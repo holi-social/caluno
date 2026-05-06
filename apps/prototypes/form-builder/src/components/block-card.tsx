@@ -12,12 +12,25 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@repo/ui';
-import { Pencil, Trash2 } from 'lucide-react';
+import {
+  FileCheck,
+  MapPin,
+  Pencil,
+  Trash2,
+  User,
+  type LucideIcon,
+} from 'lucide-react';
 import type { Block, FormConfig, FormField } from '@/lib/types';
-import type { User } from '@/lib/users';
+import type { User as AppUser } from '@/lib/users';
 import { canEditBlock, canDeleteBlock } from '@/lib/users';
 import { getUserById } from '@/lib/users';
 import { EditBlockSheet } from './builder/edit-block-sheet';
+
+const BLOCK_ICONS: Record<string, LucideIcon> = {
+  User,
+  MapPin,
+  FileCheck,
+};
 
 export function BlockCard({
   block,
@@ -26,7 +39,7 @@ export function BlockCard({
 }: {
   block: Block;
   forms: FormConfig[];
-  currentUser: User;
+  currentUser: AppUser;
 }) {
   const router = useRouter();
   const [confirmOpen, setConfirmOpen] = useState(false);
@@ -125,6 +138,8 @@ export function BlockCard({
     month: '2-digit',
     year: 'numeric',
   });
+  const fieldCount = block.fields.length;
+  const Icon = block.icon ? BLOCK_ICONS[block.icon] : undefined;
 
   async function handleDelete() {
     setDeleting(true);
@@ -144,34 +159,66 @@ export function BlockCard({
 
   return (
     <Card className="flex flex-col">
-      <CardContent className="flex flex-1 flex-col pt-1">
-        <div className="mb-4 flex-1">
-          <div className="flex items-center gap-2">
+      <CardContent className="flex flex-1 flex-col pt-5">
+        <div className="flex flex-1 flex-col">
+          <div className="flex items-center gap-2.5">
+            {Icon && (
+              <Icon className="text-muted-foreground size-5 shrink-0" />
+            )}
             <h2 className="text-lg font-semibold">{block.title}</h2>
+            {fieldCount > 0 && (
+              <Badge variant="outline" className="ml-auto text-xs">
+                {fieldCount} {fieldCount === 1 ? 'Feld' : 'Felder'}
+              </Badge>
+            )}
           </div>
+
           {block.description && (
             <p className="text-muted-foreground mt-1 text-sm">
               {block.description}
             </p>
           )}
-          <div className="mt-3 flex flex-wrap gap-1.5">
-            {block.fields.map((field) => (
-              <Badge key={field.id} variant="outline" className="text-xs">
-                {field.label}
-              </Badge>
-            ))}
+
+          <div className="mt-4">
+            <p className="text-muted-foreground text-xs font-medium uppercase tracking-wide">
+              Felder
+            </p>
+            {fieldCount === 0 ? (
+              <p className="text-muted-foreground mt-2 text-sm">
+                Noch keine Felder.
+              </p>
+            ) : (
+              <div className="mt-2 flex flex-wrap gap-1.5">
+                {block.fields.map((field) => (
+                  <Badge key={field.id} variant="outline" className="text-xs">
+                    {field.label}
+                  </Badge>
+                ))}
+              </div>
+            )}
           </div>
-          <p className="text-muted-foreground mt-3 text-xs">
+
+          {usedInForms.length > 0 && (
+            <div className="mt-4">
+              <p className="text-muted-foreground text-xs font-medium uppercase tracking-wide">
+                Verwendet in
+              </p>
+              <div className="mt-2 flex flex-wrap gap-1.5">
+                {usedInForms.map((f) => (
+                  <Badge key={f.id} variant="outline" className="text-xs">
+                    {f.name}
+                  </Badge>
+                ))}
+              </div>
+            </div>
+          )}
+
+          <p className="text-muted-foreground mt-4 text-xs">
             Bearbeitet von {editorName} am {updatedDate}
           </p>
-          {usedInForms.length > 0 && (
-            <p className="text-muted-foreground mt-1 text-xs">
-              Verwendet in: {usedInForms.map((f) => f.name).join(', ')}
-            </p>
-          )}
         </div>
 
-        <div className="flex w-full gap-2 border-t pt-4">
+        <div className="mt-5 flex w-full gap-2">
           <Button
             variant="outline"
             className="h-10 flex-1"
@@ -179,7 +226,7 @@ export function BlockCard({
             onClick={() => setEditOpen(true)}
           >
             <Pencil className="mr-1.5 size-4" />
-            Bearbeiten
+            Ändern
           </Button>
           <Button
             variant="outline"

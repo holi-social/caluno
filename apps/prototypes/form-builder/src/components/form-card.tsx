@@ -13,7 +13,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@repo/ui';
-import { FileText, Pencil, Share2, Trash2 } from 'lucide-react';
+import { Pencil, Share2, Trash2, Users } from 'lucide-react';
 import { toast } from 'sonner';
 import type { Block, FormConfig } from '@/lib/types';
 import { TRIGGER_MAP } from '@/lib/trigger-options';
@@ -72,8 +72,8 @@ export function FormCard({
 
   return (
     <Card className="flex flex-col">
-      <CardContent className="flex flex-1 flex-col pt-2">
-        <div className="mb-4 flex-1">
+      <CardContent className="flex flex-1 flex-col pt-5">
+        <div className="flex flex-1 flex-col">
           <p className="text-muted-foreground text-xs font-medium uppercase tracking-wide">
             {config.organizationName}
           </p>
@@ -84,11 +84,11 @@ export function FormCard({
             </p>
           )}
           {usedBlocks.length > 0 && (
-            <div className="mt-3">
-              <p className="text-muted-foreground mb-1 text-xs font-medium">
+            <div className="mt-4">
+              <p className="text-muted-foreground text-xs font-medium uppercase tracking-wide">
                 Inhalt
               </p>
-              <div className="flex flex-wrap gap-1.5">
+              <div className="mt-2 flex flex-wrap gap-1.5">
                 {usedBlocks.map((block) => (
                   <Badge key={block.id} variant="outline" className="text-xs">
                     {block.title}
@@ -98,11 +98,11 @@ export function FormCard({
             </div>
           )}
           {(config.appliedTo ?? []).length > 0 && (
-            <div className="mt-3">
-              <p className="text-muted-foreground mb-1 text-xs font-medium">
+            <div className="mt-4">
+              <p className="text-muted-foreground text-xs font-medium uppercase tracking-wide">
                 Aktiv bei
               </p>
-              <div className="flex flex-wrap gap-1.5">
+              <div className="mt-2 flex flex-wrap gap-1.5">
                 {config.appliedTo.map((id) => (
                   <Badge key={id} variant="secondary" className="text-xs">
                     {TRIGGER_MAP.get(id)?.label ?? id}
@@ -111,12 +111,12 @@ export function FormCard({
               </div>
             </div>
           )}
-          <p className="text-muted-foreground mt-3 text-xs">
+          <p className="text-muted-foreground mt-4 text-xs">
             Bearbeitet von {editorName} am {updatedDate}
           </p>
         </div>
 
-        <div className="flex w-full gap-2 border-t pt-4">
+        <div className="mt-5 flex w-full gap-2">
           <Button className="h-10 flex-1" onClick={handleShare}>
             <Share2 className="mr-1.5 size-4" />
             Teilen
@@ -148,7 +148,7 @@ export function FormCard({
             title="Einsendungen"
           >
             <Link href={`/submissions/${config.slug}`}>
-              <FileText className="size-4" />
+              <Users className="size-4" />
             </Link>
           </Button>
           <Button
