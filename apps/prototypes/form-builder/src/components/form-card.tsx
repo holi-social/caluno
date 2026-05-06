@@ -74,10 +74,10 @@ export function FormCard({
     <Card className="flex flex-col">
       <CardContent className="flex flex-1 flex-col pt-5">
         <div className="flex flex-1 flex-col">
-          <p className="text-muted-foreground text-xs font-medium uppercase tracking-wide">
-            {config.organizationName}
+          <p className="text-muted-foreground text-xs font-medium tracking-wide">
+            Erstellt von {config.organizationName}
           </p>
-          <h2 className="mt-1 text-lg font-semibold">{config.name}</h2>
+          <h2 className="mt-1 text-xl font-bold">{config.name}</h2>
           {config.description && (
             <p className="text-muted-foreground mt-1 text-sm">
               {config.description}

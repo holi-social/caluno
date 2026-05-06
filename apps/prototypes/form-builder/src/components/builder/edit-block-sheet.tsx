@@ -1,6 +1,12 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import {
+  forwardRef,
+  useEffect,
+  useImperativeHandle,
+  useRef,
+  useState,
+} from 'react';
 import {
   Badge,
   Button,
@@ -50,18 +56,36 @@ const FIELD_TYPE_OPTIONS: { label: string; value: FieldType }[] = [
 
 // --- Inline field editor ---
 
-function InlineFieldEditor({
-  field,
-  onSave,
-  onCancel,
-}: {
-  field: FormField;
-  onSave: (updates: Partial<FormField>) => void;
-  onCancel: () => void;
-}) {
+type FieldCommitHandle = { commit: () => boolean };
+
+const InlineFieldEditor = forwardRef<
+  FieldCommitHandle,
+  {
+    field: FormField;
+    onSave: (updates: Partial<FormField>) => void;
+    onCancel: () => void;
+  }
+>(function InlineFieldEditor({ field, onSave, onCancel }, ref) {
   const [label, setLabel] = useState(field.label);
   const [description, setDescription] = useState(field.description ?? '');
   const [fieldType, setFieldType] = useState<FieldType>(field.type);
+  const [error, setError] = useState<string | null>(null);
+
+  function commit(): boolean {
+    if (!label.trim()) {
+      setError('Bitte Feldname eingeben.');
+      return false;
+    }
+    setError(null);
+    onSave({
+      label: label.trim(),
+      type: fieldType,
+      description: description.trim() || undefined,
+    });
+    return true;
+  }
+
+  useImperativeHandle(ref, () => ({ commit }));
 
   return (
     <div className="space-y-3 rounded-lg border p-4">
@@ -70,7 +94,10 @@ function InlineFieldEditor({
         <Input
           id={`edit-${field.id}-label`}
           value={label}
-          onChange={(e) => setLabel(e.target.value)}
+          onChange={(e) => {
+            setLabel(e.target.value);
+            if (error) setError(null);
+          }}
           className="h-10"
         />
       </Field>
@@ -106,26 +133,16 @@ function InlineFieldEditor({
           className="h-10"
         />
       </Field>
+      {error && <p className="text-destructive text-xs">{error}</p>}
       <div className="flex justify-end gap-2">
         <Button variant="outline" onClick={onCancel}>
           Abbrechen
         </Button>
-        <Button
-          disabled={!label.trim()}
-          onClick={() =>
-            onSave({
-              label: label.trim(),
-              type: fieldType,
-              description: description.trim() || undefined,
-            })
-          }
-        >
-          Speichern
-        </Button>
+        <Button onClick={commit}>Speichern</Button>
       </div>
     </div>
   );
-}
+});
 
 // --- Add field inline form ---
 
