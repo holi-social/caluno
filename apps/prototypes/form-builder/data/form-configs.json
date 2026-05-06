@@ -1,1 +1,22 @@
-[]
+[
+  {
+    "id": "3f062b72-fbce-40a7-9ce7-593166507ac6",
+    "slug": "123",
+    "name": "123",
+    "description": "123",
+    "organizationName": "Abteilung EA",
+    "locale": "de",
+    "blockRefs": [],
+    "appliedTo": [],
+    "settings": {
+      "submitButtonLabel": "Absenden",
+      "successTitle": "Vielen Dank!",
+      "successMessage": "Ihre Daten wurden erfolgreich uebermittelt.",
+      "allowEmbed": true
+    },
+    "createdBy": "andrea",
+    "updatedBy": "andrea",
+    "createdAt": "2026-05-06T07:36:35.875Z",
+    "updatedAt": "2026-05-06T07:36:35.875Z"
+  }
+]

@@ -2,35 +2,53 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import {
-  Badge,
   Button,
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
   Separator,
 } from '@repo/ui';
-import { ArrowLeft, Plus, Redo2, Save, Search, Undo2, X } from 'lucide-react';
+import { ArrowLeft, Plus, Redo2, Save, Undo2, X } from 'lucide-react';
 import Link from 'next/link';
 import { toast } from 'sonner';
 import type { Block, FormConfig, FormField } from '@/lib/types';
 import type { User } from '@/lib/users';
 import { canEditBlock, canRemoveBlockFromForm } from '@/lib/users';
 import { useUndoRedo } from '@/lib/use-undo-redo';
-import {
-  TRIGGER_OPTIONS,
-  TRIGGER_MAP,
-  type TriggerOption,
-} from '@/lib/trigger-options';
 import { BlockCardBuilder } from './section-card';
 import { AddBlockDialog } from './add-section-dialog';
 import { EditBlockSheet } from './edit-block-sheet';
 import { CreateBlockSheet } from './create-block-sheet';
 import { FormPreview } from './form-preview';
 
-// --- Applied-to section ---
+// --- Application rules section (prototype: dummy, no backend mapping) ---
+
+type Rule = { id: string; trigger: string; location: string };
+
+const TRIGGER_TYPES = [
+  { value: 'join', label: 'Beitritt zur Organisation' },
+  { value: 'shift', label: 'Schichtanmeldung' },
+];
+
+const LOCATIONS = [
+  { value: 'current', label: 'Aktueller Standort' },
+  { value: 'ks13', label: 'Karlstraße 13' },
+  { value: 'ea', label: 'Abteilung EA' },
+  { value: 'berlin', label: 'Standort Berlin' },
+  { value: 'hamburg', label: 'Standort Hamburg' },
+];
+
+function makeRule(): Rule {
+  return {
+    id: `rule-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+    trigger: 'join',
+    location: 'current',
+  };
+}
 
 function AppliedToSection({
-  appliedTo,
   onChange,
   hasError,
 }: {
@@ -38,125 +56,93 @@ function AppliedToSection({
   onChange: (next: string[]) => void;
   hasError: boolean;
 }) {
-  const [popoverOpen, setPopoverOpen] = useState(false);
-  const [search, setSearch] = useState('');
+  const [rules, setRules] = useState<Rule[]>(() => [makeRule()]);
 
-  const available = TRIGGER_OPTIONS.filter((o) => !appliedTo.includes(o.id));
-  const filtered = search.trim()
-    ? available.filter((o) =>
-        o.label.toLowerCase().includes(search.trim().toLowerCase()),
-      )
-    : available;
+  // Sync the default rule to parent on mount so save validation passes.
+  useEffect(() => {
+    onChange(rules.map((r) => `${r.trigger}:${r.location}`));
+    // biome-ignore lint/correctness/useExhaustiveDependencies: mount-only
+  }, []);
 
-  const groups = Array.from(
-    filtered.reduce((map, opt) => {
-      const list = map.get(opt.group) ?? [];
-      list.push(opt);
-      map.set(opt.group, list);
-      return map;
-    }, new Map<string, TriggerOption[]>()),
-  );
-
-  function handleSelect(id: string) {
-    onChange([...appliedTo, id]);
-    setPopoverOpen(false);
-    setSearch('');
+  function commit(next: Rule[]) {
+    setRules(next);
+    onChange(next.map((r) => `${r.trigger}:${r.location}`));
   }
 
-  function handleRemove(id: string) {
-    onChange(appliedTo.filter((v) => v !== id));
+  function addRule() {
+    commit([...rules, makeRule()]);
+  }
+
+  function updateRule(id: string, updates: Partial<Rule>) {
+    commit(rules.map((r) => (r.id === id ? { ...r, ...updates } : r)));
+  }
+
+  function removeRule(id: string) {
+    if (rules.length <= 1) return;
+    commit(rules.filter((r) => r.id !== id));
   }
 
   return (
     <div>
-      <h2 className="text-2xl font-bold tracking-tight">Einsatzbereiche</h2>
-      <p className="text-muted-foreground mt-1 text-sm">
-        Legen Sie fest, wann Ihre Freiwilligen dieses Formular ausfüllen müssen.
-        Das Formular wird nur einmalig beim ersten Mal angezeigt — danach nur bei
-        Änderungen am jeweiligen Block.
+      <h2 className="text-2xl font-bold tracking-tight">Anwendungsregeln</h2>
+      <p className="text-muted-foreground mt-6 text-sm font-semibold uppercase tracking-wider">
+        Freiwillige müssen ausfüllen, wenn:
       </p>
-
-      <div
-        className={`mt-4 flex min-h-9 flex-wrap items-center gap-2 rounded-lg ${
-          hasError
-            ? 'border-destructive bg-destructive/5'
-            : 'border-border'
-        }`}
-      >
-        {appliedTo.map((id) => {
-          const option = TRIGGER_MAP.get(id);
-          return (
-            <Badge
-              key={id}
-              variant="outline"
-              className="h-9 gap-1.5 pl-3 pr-1.5 text-sm"
+      <div className="mt-4 space-y-2">
+        {rules.map((rule) => (
+          <div key={rule.id} className="flex items-center gap-1">
+            <Select
+              value={rule.trigger}
+              onValueChange={(v) => updateRule(rule.id, { trigger: v })}
             >
-              {option?.label ?? id}
-              <button
-                type="button"
-                onClick={() => handleRemove(id)}
-                className="text-muted-foreground hover:text-foreground ml-0.5 rounded-sm p-0.5"
-              >
-                <X className="size-3.5" />
-              </button>
-            </Badge>
-          );
-        })}
-
-        <Popover
-          open={popoverOpen}
-          onOpenChange={(open) => {
-            setPopoverOpen(open);
-            if (!open) setSearch('');
-          }}
-        >
-          <PopoverTrigger asChild>
-            <Button variant="outline" size="icon" className="size-9 shrink-0">
-              <Plus className="size-4" />
+              <SelectTrigger size="default" className="h-10 flex-1">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {TRIGGER_TYPES.map((t) => (
+                  <SelectItem key={t.value} value={t.value}>
+                    {t.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <span className="text-muted-foreground px-1 text-sm">bei</span>
+            <Select
+              value={rule.location}
+              onValueChange={(v) => updateRule(rule.id, { location: v })}
+            >
+              <SelectTrigger size="default" className="h-10 flex-1">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {LOCATIONS.map((l) => (
+                  <SelectItem key={l.value} value={l.value}>
+                    {l.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="text-muted-foreground hover:text-destructive size-10 shrink-0"
+              onClick={() => removeRule(rule.id)}
+              disabled={rules.length <= 1}
+              aria-label="Regel entfernen"
+              title="Regel entfernen"
+            >
+              <X className="size-4" />
             </Button>
-          </PopoverTrigger>
-          <PopoverContent align="start" className="w-80 p-0">
-            <div className="flex items-center gap-2 border-b px-3 py-2">
-              <Search className="text-muted-foreground size-4 shrink-0" />
-              <input
-                className="placeholder:text-muted-foreground flex-1 bg-transparent text-sm outline-none"
-                placeholder="Suchen..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                autoFocus
-              />
-            </div>
-            <div className="max-h-60 overflow-y-auto p-1">
-              {groups.length === 0 && (
-                <p className="text-muted-foreground py-4 text-center text-sm">
-                  Keine Optionen verfügbar
-                </p>
-              )}
-              {groups.map(([group, items]) => (
-                <div key={group}>
-                  <p className="text-muted-foreground px-2 py-1.5 text-xs font-medium">
-                    {group}
-                  </p>
-                  {items.map((opt) => (
-                    <button
-                      key={opt.id}
-                      type="button"
-                      onClick={() => handleSelect(opt.id)}
-                      className="hover:bg-accent hover:text-accent-foreground w-full rounded-sm px-2 py-1.5 text-left text-sm"
-                    >
-                      {opt.label}
-                    </button>
-                  ))}
-                </div>
-              ))}
-            </div>
-          </PopoverContent>
-        </Popover>
+          </div>
+        ))}
       </div>
-
+      <Button variant="outline" size="md" className="mt-4" onClick={addRule}>
+        <Plus className="mr-1.5 size-4" />
+        Regel hinzufügen
+      </Button>
       {hasError && (
         <p className="text-destructive mt-1.5 text-sm">
-          Bitte weisen Sie mindestens einen Einsatzbereich zu.
+          Bitte fügen Sie mindestens eine Regel hinzu.
         </p>
       )}
     </div>
