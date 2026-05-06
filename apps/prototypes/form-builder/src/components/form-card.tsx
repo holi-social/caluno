@@ -13,7 +13,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@repo/ui';
-import { Eye, FileText, Pencil, Trash2 } from 'lucide-react';
+import { FileText, Pencil, Share2, Trash2 } from 'lucide-react';
+import { toast } from 'sonner';
 import type { Block, FormConfig } from '@/lib/types';
 import { TRIGGER_MAP } from '@/lib/trigger-options';
 import type { User } from '@/lib/users';
@@ -56,6 +57,16 @@ export function FormCard({
       }
     } finally {
       setDeleting(false);
+    }
+  }
+
+  async function handleShare() {
+    const url = `${window.location.origin}/forms/${config.slug}`;
+    try {
+      await navigator.clipboard.writeText(url);
+      toast.success('Link kopiert', { description: url });
+    } catch {
+      toast.error('Link konnte nicht kopiert werden', { description: url });
     }
   }
 
@@ -106,6 +117,10 @@ export function FormCard({
         </div>
 
         <div className="flex w-full gap-2 border-t pt-4">
+          <Button className="h-10 flex-1" onClick={handleShare}>
+            <Share2 className="mr-1.5 size-4" />
+            Teilen
+          </Button>
           <Button
             asChild={canEditForm(currentUser, config)}
             variant="outline"
@@ -115,26 +130,14 @@ export function FormCard({
             {canEditForm(currentUser, config) ? (
               <Link href={`/builder/${config.slug}`}>
                 <Pencil className="mr-1.5 size-4" />
-                Bearbeiten
+                Ändern
               </Link>
             ) : (
               <>
                 <Pencil className="mr-1.5 size-4" />
-                Bearbeiten
+                Ändern
               </>
             )}
-          </Button>
-          <Button
-            asChild
-            variant="outline"
-            size="icon"
-            className="size-10 shrink-0"
-            aria-label="Vorschau"
-            title="Vorschau"
-          >
-            <Link href={`/forms/${config.slug}`}>
-              <Eye className="size-4" />
-            </Link>
           </Button>
           <Button
             asChild
