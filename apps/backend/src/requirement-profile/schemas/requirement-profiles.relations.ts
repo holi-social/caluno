@@ -13,28 +13,9 @@ export const requirementProfilesRelations = defineRelationsPart(
         from: r.requirementProfiles.id,
         to: r.requirementProfileRequirements.profileId,
       }),
-      favoritedByOrgUnits: r.many.organizationUnitFavoriteRequirementProfiles({
-        from: r.requirementProfiles.id,
-        to: r.organizationUnitFavoriteRequirementProfiles.requirementProfileId,
-      }),
       requiredByOrgUnits: r.many.organizationUnits({
         from: r.requirementProfiles.id,
         to: r.organizationUnits.requiredMembershipRequirementProfileId,
-      }),
-    },
-    organizationUnitFavoriteRequirementProfiles: {
-      organization: r.one.organizations({
-        from: r.organizationUnitFavoriteRequirementProfiles.organizationId,
-        to: r.organizations.id,
-      }),
-      organizationUnit: r.one.organizationUnits({
-        from: r.organizationUnitFavoriteRequirementProfiles.organizationUnitId,
-        to: r.organizationUnits.id,
-      }),
-      requirementProfile: r.one.requirementProfiles({
-        from: r.organizationUnitFavoriteRequirementProfiles
-          .requirementProfileId,
-        to: r.requirementProfiles.id,
       }),
     },
     requirements: {

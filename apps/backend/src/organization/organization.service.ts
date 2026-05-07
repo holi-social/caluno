@@ -46,10 +46,9 @@ export class OrganizationService {
         createdAt: schema.organizations.createdAt,
       })
       .from(schema.memberships)
-      .innerJoin(schema.roles, eq(schema.memberships.roleId, schema.roles.id))
       .innerJoin(
         schema.organizationUnits,
-        eq(schema.roles.organizationUnitId, schema.organizationUnits.id),
+        eq(schema.memberships.organizationUnitId, schema.organizationUnits.id),
       )
       .innerJoin(
         schema.organizations,
@@ -58,7 +57,7 @@ export class OrganizationService {
       .where(
         and(
           eq(schema.memberships.userId, userId),
-          isNotNull(schema.roles.organizationUnitId),
+          isNotNull(schema.organizationUnits.organizationId),
         ),
       )
       .groupBy(schema.organizations.id, schema.organizations.createdAt)
@@ -71,10 +70,9 @@ export class OrganizationService {
         total: sql<number>`count(distinct ${schema.organizations.id})`,
       })
       .from(schema.memberships)
-      .innerJoin(schema.roles, eq(schema.memberships.roleId, schema.roles.id))
       .innerJoin(
         schema.organizationUnits,
-        eq(schema.roles.organizationUnitId, schema.organizationUnits.id),
+        eq(schema.memberships.organizationUnitId, schema.organizationUnits.id),
       )
       .innerJoin(
         schema.organizations,
@@ -83,7 +81,7 @@ export class OrganizationService {
       .where(
         and(
           eq(schema.memberships.userId, userId),
-          isNotNull(schema.roles.organizationUnitId),
+          isNotNull(schema.organizationUnits.organizationId),
         ),
       );
 
@@ -120,7 +118,12 @@ export class OrganizationService {
     organizationId: string,
   ): Promise<OrganizationUnitEntity | undefined> {
     return this.db.query.organizationUnits.findFirst({
-      where: { organizationId, isRoot: true },
+      where: {
+        organizationId,
+        parentId: {
+          isNull: true,
+        },
+      },
     });
   }
 
@@ -128,7 +131,12 @@ export class OrganizationService {
     organizationId: string,
   ): Promise<OrganizationUnitEntity[]> {
     return this.db.query.organizationUnits.findMany({
-      where: { organizationId, isRoot: false },
+      where: {
+        organizationId,
+        parentId: {
+          isNotNull: true,
+        },
+      },
     });
   }
 
@@ -142,7 +150,9 @@ export class OrganizationService {
         organizationId: {
           in: orgIds,
         },
-        isRoot: false,
+        parentId: {
+          isNotNull: true,
+        },
       },
     });
   }
@@ -182,7 +192,6 @@ export class OrganizationService {
           organizationId: createdOrganization.id,
           parentId: null,
           typeId: rootType.id,
-          isRoot: true,
           name: createdOrganization.name,
           slug: createdOrganization.slug,
           logoUrl: createdOrganization.logoUrl,
@@ -200,7 +209,7 @@ export class OrganizationService {
           name: DEFAULT_OWNER_ROLE_NAME,
           description: `Owner role for organization ${createdOrganization.name}`,
           isInternal: true,
-          organizationUnitId: rootUnit.id,
+          organizationId: createdOrganization.id,
         })
         .returning();
 
@@ -211,7 +220,7 @@ export class OrganizationService {
           name: DEFAULT_MEMBER_ROLE_NAME,
           description: `Member role for organization ${createdOrganization.name}`,
           isInternal: true,
-          organizationUnitId: rootUnit.id,
+          organizationId: createdOrganization.id,
         })
         .returning();
 
@@ -252,8 +261,16 @@ export class OrganizationService {
       }
 
       // Link creator as owner member of the organization.
-      await tx.insert(schema.memberships).values({
-        userId,
+      const [membership] = await tx
+        .insert(schema.memberships)
+        .values({
+          userId,
+          organizationUnitId: rootUnit.id,
+        })
+        .returning();
+
+      await tx.insert(schema.membershipRoles).values({
+        membershipId: membership.id,
         roleId: ownerRole.id,
       });
 

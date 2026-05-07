@@ -1,5 +1,4 @@
 import {
-  BadRequestException,
   Inject,
   Injectable,
   NotFoundException,
@@ -11,24 +10,30 @@ import * as schema from '../database/schema';
 import { PermissionEntity, RoleEntity } from '../database/schema';
 import { CreateRoleInput } from './inputs/create-role.input';
 import { UpdateRoleInput } from './inputs/update-role.input';
+import { OrganizationUnitService } from '../organization/organization-unit.service';
 
 @Injectable()
 export class AuthService {
   constructor(
     @Inject(DATABASE_CONNECTION)
     private readonly db: Database,
+    private readonly organizationUnitService: OrganizationUnitService,
   ) {}
 
   async createRole(
     organizationUnitId: string,
     input: CreateRoleInput,
   ): Promise<RoleEntity> {
+    const organization = await this.organizationUnitService.findOrganizationByUnitId(organizationUnitId);
+    if (!organization) {
+      throw new NotFoundException('Organization not found');
+    }
     const [role] = await this.db
       .insert(schema.roles)
       .values({
         name: input.name,
         description: input.description,
-        organizationUnitId,
+        organizationId: organization.id,
       })
       .returning();
 
@@ -52,35 +57,51 @@ export class AuthService {
     userId: string,
     organizationUnitId: string,
   ): Promise<PermissionEntity[]> {
+    const organization = await this.organizationUnitService.findOrganizationByUnitId(organizationUnitId);
+
+    if (!organization) {
+      throw new NotFoundException('Organization not found');
+    }
+
     const membership = await this.db.query.memberships.findFirst({
       where: {
         userId,
-        role: {
-          organizationUnitId,
-        },
+        organizationUnitId,
       },
       with: {
-        role: {
+        roles: {
           with: {
-            permissions: {
+            role: {
               with: {
-                permission: true,
+                permissions: {
+                  with: {
+                    permission: true,
+                  },
+                },
               },
             },
-          },
+          }
         },
       },
     });
 
-    if (!membership?.role) {
+    if (!membership) {
       return [];
     }
 
-    return membership.role.permissions
-      .map((rolePermission) => rolePermission.permission)
-      .filter(
-        (permission): permission is PermissionEntity => permission !== null,
-      );
+    const permissionsById = new Map<string, PermissionEntity>();
+    for (const membershipRole of membership.roles) {
+      if (!membershipRole.role) {
+        continue;
+      }
+      for (const rolePermission of membershipRole.role.permissions) {
+        if (rolePermission.permission) {
+          permissionsById.set(rolePermission.permission.id, rolePermission.permission);
+        }
+      }
+    }
+
+    return Array.from(permissionsById.values());
   }
 
   async hasRequiredPermissions(
@@ -110,9 +131,9 @@ export class AuthService {
     return await this.db.query.permissions.findMany();
   }
 
-  async findAllRoles(organizationUnitId: string): Promise<RoleEntity[]> {
+  async findAllRoles(organizationId: string): Promise<RoleEntity[]> {
     return this.db.query.roles.findMany({
-      where: { organizationUnitId },
+      where: { organizationId },
       with: {
         permissions: {
           with: {
@@ -184,18 +205,6 @@ export class AuthService {
 
   async deleteRole(roleId: string): Promise<RoleEntity> {
     const [deletedRole] = await this.db.transaction(async (tx) => {
-      const assignedMembership = await tx.query.memberships.findFirst({
-        where: {
-          roleId,
-        },
-      });
-
-      if (assignedMembership) {
-        throw new BadRequestException(
-          'Role is assigned to at least one membership and cannot be deleted',
-        );
-      }
-
       const [role] = await tx
         .delete(schema.roles)
         .where(eq(schema.roles.id, roleId))

@@ -1,7 +1,7 @@
 import { index, pgTable, text, uuid } from 'drizzle-orm/pg-core';
 import { users } from '../../auth/schemas/auth.schema';
-import { roles } from '../../auth/schemas/role.schema';
 import { idColumn, timestampColumns } from '../../database/database-columns';
+import { organizationUnits } from '../../organization/schemas/organization-unit.schema';
 
 export const memberships = pgTable(
   'memberships',
@@ -10,14 +10,17 @@ export const memberships = pgTable(
     userId: text('user_id').references(() => users.id, {
       onDelete: 'cascade',
     }),
-    roleId: uuid('role_id').references(() => roles.id, {
-      onDelete: 'restrict',
-    }),
+    organizationUnitId: uuid('organization_unit_id').references(
+      () => organizationUnits.id,
+      {
+        onDelete: 'cascade',
+      },
+    ),
     ...timestampColumns,
   },
   (table) => [
     index('idx_memberships_user_id').on(table.userId),
-    index('idx_memberships_role_id').on(table.roleId),
+    index('idx_memberships_organization_unit_id').on(table.organizationUnitId),
   ],
 );
 

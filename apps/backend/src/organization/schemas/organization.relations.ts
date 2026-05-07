@@ -7,12 +7,18 @@ export const organizationRelations = defineRelationsPart(schema, (r) => ({
       from: r.organizations.id,
       to: r.organizationUnits.organizationId,
       where: {
-        isRoot: true,
+        parentId: {
+          isNull: true,
+        },
       },
     }),
     units: r.many.organizationUnits({
       from: r.organizations.id,
       to: r.organizationUnits.organizationId,
+    }),
+    roles: r.many.roles({
+      from: r.organizations.id,
+      to: r.roles.organizationId,
     }),
   },
   organizationUnits: {
@@ -32,27 +38,10 @@ export const organizationRelations = defineRelationsPart(schema, (r) => ({
       from: r.organizationUnits.id,
       to: r.organizationUnits.parentId,
     }),
-    roles: r.many.roles({
-      from: r.organizationUnits.id,
-      to: r.roles.organizationUnitId,
-    }),
     memberships: r.many.memberships({
-      from: r.organizationUnits.id.through(r.roles.organizationUnitId),
-      to: r.memberships.roleId.through(r.roles.id),
+      from: r.organizationUnits.id,
+      to: r.memberships.organizationUnitId,
     }),
-    favoriteRequirementProfiles: r.many.requirementProfiles({
-      from: r.organizationUnits.id.through(
-        r.organizationUnitFavoriteRequirementProfiles.organizationUnitId,
-      ),
-      to: r.requirementProfiles.id.through(
-        r.organizationUnitFavoriteRequirementProfiles.requirementProfileId,
-      ),
-    }),
-    requirementProfileFavorites:
-      r.many.organizationUnitFavoriteRequirementProfiles({
-        from: r.organizationUnits.id,
-        to: r.organizationUnitFavoriteRequirementProfiles.organizationUnitId,
-      }),
     requiredMembershipRequirementProfile: r.one.requirementProfiles({
       from: r.organizationUnits.requiredMembershipRequirementProfileId,
       to: r.requirementProfiles.id,

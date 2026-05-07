@@ -10,9 +10,6 @@ export class OrganizationUnit {
   @Field(() => ID)
   id: string;
 
-  @Field(() => Boolean)
-  isRoot: boolean;
-
   @Field(() => String)
   name: string;
 

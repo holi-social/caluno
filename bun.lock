@@ -59,7 +59,7 @@
       },
     },
     "apps/frontend": {
-      "name": "clippy-backoffice",
+      "name": "clippy-frontend",
       "version": "0.0.0",
       "dependencies": {
         "@hookform/resolvers": "^5.2.2",
@@ -1432,7 +1432,7 @@
 
     "clippy-backend": ["clippy-backend@workspace:apps/backend"],
 
-    "clippy-backoffice": ["clippy-backoffice@workspace:apps/frontend"],
+    "clippy-frontend": ["clippy-frontend@workspace:apps/frontend"],
 
     "cliui": ["cliui@8.0.1", "", { "dependencies": { "string-width": "^4.2.0", "strip-ansi": "^6.0.1", "wrap-ansi": "^7.0.0" } }, "sha512-BSeNnyus75C4//NQ9gQt1/csTXyo/8Sb+afLAkzAptFuMsod9HFokGNudZpi/oQV73hnVK+sR+5PVRMd+Dr7YQ=="],
 
@@ -2864,9 +2864,9 @@
 
     "clippy-backend/@types/node": ["@types/node@24.12.2", "", { "dependencies": { "undici-types": "~7.16.0" } }, "sha512-A1sre26ke7HDIuY/M23nd9gfB+nrmhtYyMINbjI1zHJxYteKR6qSMX56FsmjMcDb3SMcjJg5BiRRgOCC/yBD0g=="],
 
-    "clippy-backoffice/@biomejs/biome": ["@biomejs/biome@2.4.14", "", { "optionalDependencies": { "@biomejs/cli-darwin-arm64": "2.4.14", "@biomejs/cli-darwin-x64": "2.4.14", "@biomejs/cli-linux-arm64": "2.4.14", "@biomejs/cli-linux-arm64-musl": "2.4.14", "@biomejs/cli-linux-x64": "2.4.14", "@biomejs/cli-linux-x64-musl": "2.4.14", "@biomejs/cli-win32-arm64": "2.4.14", "@biomejs/cli-win32-x64": "2.4.14" }, "bin": { "biome": "bin/biome" } }, "sha512-TmAvxOEgrpLypzVGJ8FulIZnlyA9TxrO1hyqYrCz9r+bwma9xXxuLA5IuYnj55XQneFx460KjRbx6SWGLkg3bQ=="],
+    "clippy-frontend/@biomejs/biome": ["@biomejs/biome@2.4.14", "", { "optionalDependencies": { "@biomejs/cli-darwin-arm64": "2.4.14", "@biomejs/cli-darwin-x64": "2.4.14", "@biomejs/cli-linux-arm64": "2.4.14", "@biomejs/cli-linux-arm64-musl": "2.4.14", "@biomejs/cli-linux-x64": "2.4.14", "@biomejs/cli-linux-x64-musl": "2.4.14", "@biomejs/cli-win32-arm64": "2.4.14", "@biomejs/cli-win32-x64": "2.4.14" }, "bin": { "biome": "bin/biome" } }, "sha512-TmAvxOEgrpLypzVGJ8FulIZnlyA9TxrO1hyqYrCz9r+bwma9xXxuLA5IuYnj55XQneFx460KjRbx6SWGLkg3bQ=="],
 
-    "clippy-backoffice/@types/node": ["@types/node@24.12.2", "", { "dependencies": { "undici-types": "~7.16.0" } }, "sha512-A1sre26ke7HDIuY/M23nd9gfB+nrmhtYyMINbjI1zHJxYteKR6qSMX56FsmjMcDb3SMcjJg5BiRRgOCC/yBD0g=="],
+    "clippy-frontend/@types/node": ["@types/node@24.12.2", "", { "dependencies": { "undici-types": "~7.16.0" } }, "sha512-A1sre26ke7HDIuY/M23nd9gfB+nrmhtYyMINbjI1zHJxYteKR6qSMX56FsmjMcDb3SMcjJg5BiRRgOCC/yBD0g=="],
 
     "cliui/wrap-ansi": ["wrap-ansi@7.0.0", "", { "dependencies": { "ansi-styles": "^4.0.0", "string-width": "^4.1.0", "strip-ansi": "^6.0.0" } }, "sha512-YVGIj2kamLSTxw6NsZjoBxfSwsn0ycdesmc4p+Q21c5zPuZ1pl+NfxVdxPtdHvmNVOQ6XSYG4AUtyt/Fi7D16Q=="],
 
@@ -3140,21 +3140,21 @@
 
     "cli-truncate/string-width/strip-ansi": ["strip-ansi@7.1.2", "", { "dependencies": { "ansi-regex": "^6.0.1" } }, "sha512-gmBGslpoQJtgnMAvOVqGZpEz9dyoKTCzy2nfz/n8aIFhN/jCE/rCmcxabB6jOOHV+0WNnylOxaxBQPSvcWklhA=="],
 
-    "clippy-backoffice/@biomejs/biome/@biomejs/cli-darwin-arm64": ["@biomejs/cli-darwin-arm64@2.4.14", "", { "os": "darwin", "cpu": "arm64" }, "sha512-XvgoE9XOawUOQPdmvs4J7wPhi/DLwSCGks3AlPJDmh34O0awRTqCED1HRcRDdpf1Zrp4us4MGOOdIxNpbqNF5Q=="],
+    "clippy-frontend/@biomejs/biome/@biomejs/cli-darwin-arm64": ["@biomejs/cli-darwin-arm64@2.4.14", "", { "os": "darwin", "cpu": "arm64" }, "sha512-XvgoE9XOawUOQPdmvs4J7wPhi/DLwSCGks3AlPJDmh34O0awRTqCED1HRcRDdpf1Zrp4us4MGOOdIxNpbqNF5Q=="],
 
-    "clippy-backoffice/@biomejs/biome/@biomejs/cli-darwin-x64": ["@biomejs/cli-darwin-x64@2.4.14", "", { "os": "darwin", "cpu": "x64" }, "sha512-jE7hKBCFhOx3uUh+ZkWBfOHxAcILPfhFplNkuID/eZeSTLHzfZzoZxW8fbqY9xXRnPi7jGNAf1iPVR+0yWsM/Q=="],
+    "clippy-frontend/@biomejs/biome/@biomejs/cli-darwin-x64": ["@biomejs/cli-darwin-x64@2.4.14", "", { "os": "darwin", "cpu": "x64" }, "sha512-jE7hKBCFhOx3uUh+ZkWBfOHxAcILPfhFplNkuID/eZeSTLHzfZzoZxW8fbqY9xXRnPi7jGNAf1iPVR+0yWsM/Q=="],
 
-    "clippy-backoffice/@biomejs/biome/@biomejs/cli-linux-arm64": ["@biomejs/cli-linux-arm64@2.4.14", "", { "os": "linux", "cpu": "arm64" }, "sha512-2TELhZnW5RSLL063l9rc5xLpA0ZIw0Ccwy/0q384rvNAgFw3yI76bd59547yxowdQr5MNPET/xDLrLuvgSeeWQ=="],
+    "clippy-frontend/@biomejs/biome/@biomejs/cli-linux-arm64": ["@biomejs/cli-linux-arm64@2.4.14", "", { "os": "linux", "cpu": "arm64" }, "sha512-2TELhZnW5RSLL063l9rc5xLpA0ZIw0Ccwy/0q384rvNAgFw3yI76bd59547yxowdQr5MNPET/xDLrLuvgSeeWQ=="],
 
-    "clippy-backoffice/@biomejs/biome/@biomejs/cli-linux-arm64-musl": ["@biomejs/cli-linux-arm64-musl@2.4.14", "", { "os": "linux", "cpu": "arm64" }, "sha512-/z+6gqAqqUQTHazwStxSXKHg9b8UvqBmDFRp+c4wYbq2KXhELQDon9EoC9RpmQ8JWkqQx/lIUy/cs+MhzDZp6A=="],
+    "clippy-frontend/@biomejs/biome/@biomejs/cli-linux-arm64-musl": ["@biomejs/cli-linux-arm64-musl@2.4.14", "", { "os": "linux", "cpu": "arm64" }, "sha512-/z+6gqAqqUQTHazwStxSXKHg9b8UvqBmDFRp+c4wYbq2KXhELQDon9EoC9RpmQ8JWkqQx/lIUy/cs+MhzDZp6A=="],
 
-    "clippy-backoffice/@biomejs/biome/@biomejs/cli-linux-x64": ["@biomejs/cli-linux-x64@2.4.14", "", { "os": "linux", "cpu": "x64" }, "sha512-zHrlQZDBDUz4OLAraYpWKcnLS6HOewBFWYOzY91d1ZjdqZwibOyb6BEu6WuWLugyo0P3riCmsbV9UqV1cSXwQg=="],
+    "clippy-frontend/@biomejs/biome/@biomejs/cli-linux-x64": ["@biomejs/cli-linux-x64@2.4.14", "", { "os": "linux", "cpu": "x64" }, "sha512-zHrlQZDBDUz4OLAraYpWKcnLS6HOewBFWYOzY91d1ZjdqZwibOyb6BEu6WuWLugyo0P3riCmsbV9UqV1cSXwQg=="],
 
-    "clippy-backoffice/@biomejs/biome/@biomejs/cli-linux-x64-musl": ["@biomejs/cli-linux-x64-musl@2.4.14", "", { "os": "linux", "cpu": "x64" }, "sha512-R6BWgJdQOwW9ulJatuTVrQkjnODjqHZkKNOqb1sz++3Noe5LYd0i3PchnOBUCYAPHoPWHhjJqbdZlHEu0hpjdA=="],
+    "clippy-frontend/@biomejs/biome/@biomejs/cli-linux-x64-musl": ["@biomejs/cli-linux-x64-musl@2.4.14", "", { "os": "linux", "cpu": "x64" }, "sha512-R6BWgJdQOwW9ulJatuTVrQkjnODjqHZkKNOqb1sz++3Noe5LYd0i3PchnOBUCYAPHoPWHhjJqbdZlHEu0hpjdA=="],
 
-    "clippy-backoffice/@biomejs/biome/@biomejs/cli-win32-arm64": ["@biomejs/cli-win32-arm64@2.4.14", "", { "os": "win32", "cpu": "arm64" }, "sha512-M3EH5hqOI/F/FUA2u4xcLoUgmxd218mvuj/6JL7Hv2toQvr2/AdOvKSpGkoRuWFCtQPVa+ZqkEV3Q5xBA9+XSA=="],
+    "clippy-frontend/@biomejs/biome/@biomejs/cli-win32-arm64": ["@biomejs/cli-win32-arm64@2.4.14", "", { "os": "win32", "cpu": "arm64" }, "sha512-M3EH5hqOI/F/FUA2u4xcLoUgmxd218mvuj/6JL7Hv2toQvr2/AdOvKSpGkoRuWFCtQPVa+ZqkEV3Q5xBA9+XSA=="],
 
-    "clippy-backoffice/@biomejs/biome/@biomejs/cli-win32-x64": ["@biomejs/cli-win32-x64@2.4.14", "", { "os": "win32", "cpu": "x64" }, "sha512-WL0EG5qE+EAKomGXbf2g6VnSKJhTL3tXC0QRzWRwA5VpjxNYa6H4P7ZWfymbGE4IhZZQi1KXQ2R0YjwInmz2fA=="],
+    "clippy-frontend/@biomejs/biome/@biomejs/cli-win32-x64": ["@biomejs/cli-win32-x64@2.4.14", "", { "os": "win32", "cpu": "x64" }, "sha512-WL0EG5qE+EAKomGXbf2g6VnSKJhTL3tXC0QRzWRwA5VpjxNYa6H4P7ZWfymbGE4IhZZQi1KXQ2R0YjwInmz2fA=="],
 
     "drizzle-kit/esbuild/@esbuild/aix-ppc64": ["@esbuild/aix-ppc64@0.25.12", "", { "os": "aix", "cpu": "ppc64" }, "sha512-Hhmwd6CInZ3dwpuGTF8fJG6yoWmsToE+vYgD4nytZVxcu1ulHpUQRAB1UJ8+N1Am3Mz4+xOByoQoSZf4D+CpkA=="],
 

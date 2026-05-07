@@ -17,7 +17,6 @@ skinparam linetype ortho
     class OrgUnit {
         name
         slug
-        isRoot
         logoUrl
         websiteUrl
         email
@@ -154,7 +153,7 @@ package "Operations" {
 }
 
 ' --- Identity & Organisation ---
-Organisation [root] "1" -- "1" OrgUnit
+Organisation "1" -- "1\nroot" OrgUnit
 Organisation "1" -- "*" OrganisationUserProfile
 User "1" -up- "*" OrganisationUserProfile
 OrgUnit "*" -up- "1" OrgUnitType
@@ -165,16 +164,15 @@ OrgUnit "1" -- "*" Membership
 Membership "*" -left- "1" User
 Role "*" -up- "*" Permission
 Role "*" -- "*" Membership
-OrgUnit "1" -right- "*" [root] Role : "defines >"
+Organisation "1" -right- "*" Role : "defines >"
 
 ' --- Membership Requests ---
 OrgUnit "1" -- "*" MembershipRequest : "receives >"
 MembershipRequest "*" -- "1" User : "submitted by >"
 
 ' --- Requirement Profiles ---
-OrgUnit "1" -- "*" RequirementProfile : "??? requires >"
-OrgUnit "1" -- "*" [root] RequirementProfile : "defines >"
-OrgUnit "1" -- "*" [root] Requirement : "defines >"
+Organisation "1" -- "*" RequirementProfile : "defines >"
+Organisation "1" -- "*" Requirement : "defines >"
 RequirementProfile "*" -left- "*" Requirement : "groups >"
 
 ' --- Submissions & Fulfillments ---
@@ -184,7 +182,7 @@ RequirementProfileSubmission "*" -- "1" RequirementProfile : "fulfills >"
 RequirementProfileSubmission "*" -left- "*" RequirementFulfillment : "contains >"
 RequirementFulfillment "*" -- "1" Requirement : "satisfies >"
 RequirementFulfillment "*" -- "0..1" OrganisationUserProfile : "stored for reuse <"
-RequirementFulfillment "*" -- "0..1" Document : "backed by >"
+RequirementFulfillmentUpload "*" -- "0..1" Document : "backed by >"
 User "1" -- "*" Document : "owns >"
 
 ' --- Shifts ---

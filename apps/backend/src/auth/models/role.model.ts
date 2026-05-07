@@ -1,4 +1,5 @@
 import { Field, ID, ObjectType } from '@nestjs/graphql';
+import { Organization } from '../../organization/models/organization.model';
 import { Permission } from './permission.model';
 
 @ObjectType()
@@ -17,4 +18,7 @@ export class Role {
 
   @Field(() => [Permission])
   permissions: Permission[];
+
+  @Field(() => Organization)
+  organization: Organization;
 }
