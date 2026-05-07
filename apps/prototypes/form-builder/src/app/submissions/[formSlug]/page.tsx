@@ -1,6 +1,4 @@
-import Link from 'next/link';
 import {
-  Button,
   Table,
   TableBody,
   TableCell,
@@ -8,13 +6,13 @@ import {
   TableHeader,
   TableRow,
 } from '@repo/ui';
-import { ArrowLeft } from 'lucide-react';
 import { listSubmissionsByForm } from '@/lib/store-submissions';
 import { getFormConfig } from '@/lib/store-configs';
 import { getBlocksByIds } from '@/lib/store-blocks';
 import { resolveBlockRefs } from '@/lib/resolve-blocks';
 import { redirect } from 'next/navigation';
 import { formatDateTime, formatSubmissionValue } from '@/lib/formatting';
+import { BackHeader } from '@/components/back-header';
 
 export default async function FormSubmissionsPage({
   params,
@@ -39,27 +37,12 @@ export default async function FormSubmissionsPage({
 
   return (
     <div className="min-h-screen bg-muted/30">
-      <header className="border-b bg-background/80 backdrop-blur-sm">
-        <div className="mx-auto flex max-w-6xl items-center gap-4 px-6 py-4">
-          <Button asChild variant="ghost" size="icon" className="size-8">
-            <Link href="/">
-              <ArrowLeft className="size-4" />
-            </Link>
-          </Button>
-          <div>
-            <p className="text-muted-foreground text-xs">
-              {config.organizationName}
-            </p>
-            <h1 className="text-xl font-bold">
-              Einreichungen: {config.name}
-            </h1>
-            <p className="text-muted-foreground text-sm">
-              {submissions.length} Einreichung
-              {submissions.length !== 1 && 'en'}
-            </p>
-          </div>
-        </div>
-      </header>
+      <BackHeader
+        maxWidth="max-w-6xl"
+        eyebrow={config.organizationName}
+        title={`Einreichungen: ${config.name}`}
+        subtitle={`${submissions.length} Einreichung${submissions.length !== 1 ? 'en' : ''}`}
+      />
 
       <main className="mx-auto max-w-6xl px-6 py-8">
         {submissions.length === 0 ? (

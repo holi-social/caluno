@@ -2,16 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import {
-  Badge,
-  Button,
-  Card,
-  CardContent,
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from '@repo/ui';
+import { Badge, Button, Card, CardContent } from '@repo/ui';
 import {
   FileCheck,
   MapPin,
@@ -20,11 +11,13 @@ import {
   User,
   type LucideIcon,
 } from 'lucide-react';
-import type { Block, FormConfig, FormField } from '@/lib/types';
+import type { Block, FormConfig } from '@/lib/types';
 import type { User as AppUser } from '@/lib/users';
 import { canEditBlock, canDeleteBlock } from '@/lib/users';
 import { getUserById } from '@/lib/users';
 import { formatDate } from '@/lib/formatting';
+import { useBlockFieldMutations } from '@/lib/use-block-field-mutations';
+import { ConfirmDialog } from './confirm-dialog';
 import { EditBlockSheet } from './builder/edit-block-sheet';
 
 const BLOCK_ICONS: Record<string, LucideIcon> = {
@@ -69,67 +62,16 @@ export function BlockCard({
     }
   }
 
-  async function handleAddField(blockId: string, field: FormField) {
-    const updatedFields = [...liveBlock.fields, field];
-    const res = await fetch(`/api/blocks/${blockId}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ fields: updatedFields }),
-    });
-    if (res.ok) {
-      const updated = (await res.json()) as Block;
-      setLiveBlock(updated);
-      router.refresh();
-    }
-  }
-
-  async function handleEditField(
-    blockId: string,
-    fieldId: string,
-    updates: Partial<FormField>,
-  ) {
-    const updatedFields = liveBlock.fields.map((f) =>
-      f.id === fieldId ? { ...f, ...updates } : f,
+  const { addField, editField, deleteField, reorderFields } =
+    useBlockFieldMutations(
+      (id) => (id === liveBlock.id ? liveBlock.fields : null),
+      (updated) => {
+        setLiveBlock(updated);
+        router.refresh();
+      },
     );
-    const res = await fetch(`/api/blocks/${blockId}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ fields: updatedFields }),
-    });
-    if (res.ok) {
-      const updated = (await res.json()) as Block;
-      setLiveBlock(updated);
-      router.refresh();
-    }
-  }
 
-  async function handleDeleteField(blockId: string, fieldId: string) {
-    const updatedFields = liveBlock.fields.filter((f) => f.id !== fieldId);
-    const res = await fetch(`/api/blocks/${blockId}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ fields: updatedFields }),
-    });
-    if (res.ok) {
-      const updated = (await res.json()) as Block;
-      setLiveBlock(updated);
-      router.refresh();
-    }
-  }
-
-  async function handleReorderFields(blockId: string, orderedFields: FormField[]) {
-    const res = await fetch(`/api/blocks/${blockId}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ fields: orderedFields }),
-    });
-    if (res.ok) {
-      const updated = (await res.json()) as Block;
-      setLiveBlock(updated);
-      router.refresh();
-    }
-  }
-
+  const canEdit = canEditBlock(currentUser, block);
   const usedInForms = forms.filter((f) =>
     f.blockRefs.some((ref) => ref.blockId === block.id),
   );
@@ -244,53 +186,41 @@ export function BlockCard({
         open={editOpen}
         onOpenChange={setEditOpen}
         onSaveBlock={handleSaveBlock}
-        onAddField={canEditBlock(currentUser, block) ? handleAddField : undefined}
-        onEditField={canEditBlock(currentUser, block) ? handleEditField : undefined}
-        onDeleteField={canEditBlock(currentUser, block) ? handleDeleteField : undefined}
-        onReorderFields={canEditBlock(currentUser, block) ? handleReorderFields : undefined}
+        onAddField={canEdit ? addField : undefined}
+        onEditField={canEdit ? editField : undefined}
+        onDeleteField={canEdit ? deleteField : undefined}
+        onReorderFields={canEdit ? reorderFields : undefined}
       />
 
-      <Dialog open={confirmOpen} onOpenChange={setConfirmOpen}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle className="text-xl">Block löschen?</DialogTitle>
-          </DialogHeader>
-          <p className="text-muted-foreground text-sm">
+      <ConfirmDialog
+        open={confirmOpen}
+        onOpenChange={setConfirmOpen}
+        title="Block löschen?"
+        description={
+          <>
             <strong>{block.title}</strong> wird unwiderruflich entfernt.
-          </p>
-          {usedInForms.length > 0 && (
-            <div>
-              <p className="text-destructive mb-2 text-sm font-medium">
-                Wird in folgenden Formularen verwendet:
-              </p>
-              <div className="flex flex-wrap gap-1.5">
-                {usedInForms.map((f) => (
-                  <Badge key={f.id} variant="outline" className="text-sm">
-                    {f.name}
-                  </Badge>
-                ))}
-              </div>
+          </>
+        }
+        confirmLabel="Löschen"
+        pendingLabel="Wird gelöscht..."
+        pending={deleting}
+        onConfirm={handleDelete}
+      >
+        {usedInForms.length > 0 && (
+          <div>
+            <p className="text-destructive mb-2 text-sm font-medium">
+              Wird in folgenden Formularen verwendet:
+            </p>
+            <div className="flex flex-wrap gap-1.5">
+              {usedInForms.map((f) => (
+                <Badge key={f.id} variant="outline" className="text-sm">
+                  {f.name}
+                </Badge>
+              ))}
             </div>
-          )}
-          <div className="flex justify-end gap-3 pt-4">
-            <Button
-              variant="outline"
-              className="h-10"
-              onClick={() => setConfirmOpen(false)}
-            >
-              Abbrechen
-            </Button>
-            <Button
-              variant="destructive"
-              className="h-10"
-              onClick={handleDelete}
-              disabled={deleting}
-            >
-              {deleting ? 'Wird gelöscht...' : 'Löschen'}
-            </Button>
           </div>
-        </DialogContent>
-      </Dialog>
+        )}
+      </ConfirmDialog>
     </Card>
   );
 }

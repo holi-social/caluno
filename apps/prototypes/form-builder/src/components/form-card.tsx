@@ -3,16 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import {
-  Badge,
-  Button,
-  Card,
-  CardContent,
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from '@repo/ui';
+import { Badge, Button, Card, CardContent } from '@repo/ui';
 import { Pencil, Share2, Trash2, Users } from 'lucide-react';
 import { toast } from 'sonner';
 import type { Block, FormConfig } from '@/lib/types';
@@ -20,6 +11,7 @@ import { formatRuleId } from '@/lib/trigger-options';
 import type { User } from '@/lib/users';
 import { canEditForm, canDeleteForm, getUserById } from '@/lib/users';
 import { formatDate } from '@/lib/formatting';
+import { ConfirmDialog } from './confirm-dialog';
 
 export function FormCard({
   config,
@@ -162,33 +154,20 @@ export function FormCard({
         </div>
       </CardContent>
 
-      <Dialog open={confirmOpen} onOpenChange={setConfirmOpen}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle className="text-xl">Formular löschen?</DialogTitle>
-          </DialogHeader>
-          <p className="text-muted-foreground text-sm">
+      <ConfirmDialog
+        open={confirmOpen}
+        onOpenChange={setConfirmOpen}
+        title="Formular löschen?"
+        description={
+          <>
             <strong>{config.name}</strong> wird unwiderruflich entfernt.
-          </p>
-          <div className="flex justify-end gap-3 pt-4">
-            <Button
-              variant="outline"
-              className="h-10"
-              onClick={() => setConfirmOpen(false)}
-            >
-              Abbrechen
-            </Button>
-            <Button
-              variant="destructive"
-              className="h-10"
-              onClick={handleDelete}
-              disabled={deleting}
-            >
-              {deleting ? 'Wird gelöscht...' : 'Löschen'}
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
+          </>
+        }
+        confirmLabel="Löschen"
+        pendingLabel="Wird gelöscht..."
+        pending={deleting}
+        onConfirm={handleDelete}
+      />
     </Card>
   );
 }

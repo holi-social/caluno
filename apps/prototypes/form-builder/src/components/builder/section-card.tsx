@@ -1,17 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import {
-  Badge,
-  Button,
-  Card,
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  Separator,
-  Switch,
-} from '@repo/ui';
+import { Badge, Button, Card, Separator, Switch } from '@repo/ui';
+import { ConfirmDialog } from '../confirm-dialog';
 import {
   ChevronDown,
   ChevronUp,
@@ -178,46 +169,31 @@ export function BlockCardBuilder({
       </div>
 
       {onRemove && (
-        <Dialog open={deleteOpen} onOpenChange={setDeleteOpen}>
-          <DialogContent className="sm:max-w-md">
-            <DialogHeader>
-              <DialogTitle className="text-xl">
-                Block entfernen?
-              </DialogTitle>
-            </DialogHeader>
-            <p className="text-muted-foreground text-sm">
+        <ConfirmDialog
+          open={deleteOpen}
+          onOpenChange={setDeleteOpen}
+          title="Block entfernen?"
+          description={
+            <>
               Sind Sie sicher, dass Sie den Block{' '}
               <strong>{block.title}</strong> aus diesem Formular entfernen
               möchten? Der Block bleibt in der Bibliothek erhalten.
-            </p>
-            <div className="flex flex-wrap gap-1.5">
-              {block.fields.map((f) => (
-                <Badge key={f.id} variant="outline" className="text-sm">
-                  {f.label}
-                </Badge>
-              ))}
-            </div>
-            <div className="flex justify-end gap-3 pt-4">
-              <Button
-                variant="outline"
-                className="h-10"
-                onClick={() => setDeleteOpen(false)}
-              >
-                Abbrechen
-              </Button>
-              <Button
-                variant="destructive"
-                className="h-10"
-                onClick={() => {
-                  setDeleteOpen(false);
-                  onRemove();
-                }}
-              >
-                Entfernen
-              </Button>
-            </div>
-          </DialogContent>
-        </Dialog>
+            </>
+          }
+          confirmLabel="Entfernen"
+          onConfirm={() => {
+            setDeleteOpen(false);
+            onRemove();
+          }}
+        >
+          <div className="flex flex-wrap gap-1.5">
+            {block.fields.map((f) => (
+              <Badge key={f.id} variant="outline" className="text-sm">
+                {f.label}
+              </Badge>
+            ))}
+          </div>
+        </ConfirmDialog>
       )}
     </Card>
   );

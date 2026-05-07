@@ -1,6 +1,5 @@
 import Link from 'next/link';
 import {
-  Button,
   Table,
   TableBody,
   TableCell,
@@ -9,10 +8,10 @@ import {
   TableRow,
   Badge,
 } from '@repo/ui';
-import { ArrowLeft } from 'lucide-react';
 import { listSubmissions } from '@/lib/store-submissions';
 import { listFormConfigs } from '@/lib/store-configs';
 import { formatDateTime } from '@/lib/formatting';
+import { BackHeader } from '@/components/back-header';
 
 export default async function AllSubmissionsPage() {
   const [submissions, configs] = await Promise.all([
@@ -24,21 +23,10 @@ export default async function AllSubmissionsPage() {
 
   return (
     <div className="min-h-screen bg-muted/30">
-      <header className="border-b bg-background/80 backdrop-blur-sm">
-        <div className="mx-auto flex max-w-5xl items-center gap-4 px-6 py-4">
-          <Button asChild variant="ghost" size="icon" className="size-8">
-            <Link href="/">
-              <ArrowLeft className="size-4" />
-            </Link>
-          </Button>
-          <div>
-            <h1 className="text-xl font-bold">Alle Einreichungen</h1>
-            <p className="text-muted-foreground text-sm">
-              {submissions.length} Einreichung{submissions.length !== 1 && 'en'}
-            </p>
-          </div>
-        </div>
-      </header>
+      <BackHeader
+        title="Alle Einreichungen"
+        subtitle={`${submissions.length} Einreichung${submissions.length !== 1 ? 'en' : ''}`}
+      />
 
       <main className="mx-auto max-w-5xl px-6 py-8">
         {submissions.length === 0 ? (

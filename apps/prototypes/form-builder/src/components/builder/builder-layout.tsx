@@ -1,141 +1,21 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
-import {
-  Button,
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-  Separator,
-} from '@repo/ui';
-import { ArrowLeft, Plus, Redo2, Save, Undo2, X } from 'lucide-react';
+import { Button, Separator } from '@repo/ui';
+import { ArrowLeft, Plus, Redo2, Save, Undo2 } from 'lucide-react';
 import Link from 'next/link';
 import { toast } from 'sonner';
-import type { Block, FormConfig, FormField } from '@/lib/types';
+import type { Block, FormConfig } from '@/lib/types';
 import type { User } from '@/lib/users';
 import { canEditBlock, canRemoveBlockFromForm } from '@/lib/users';
-import { RULE_LOCATIONS, RULE_TRIGGER_TYPES } from '@/lib/trigger-options';
 import { useUndoRedo } from '@/lib/use-undo-redo';
+import { useBlockFieldMutations } from '@/lib/use-block-field-mutations';
 import { BlockCardBuilder } from './section-card';
 import { AddBlockDialog } from './add-section-dialog';
 import { EditBlockSheet } from './edit-block-sheet';
 import { CreateBlockSheet } from './create-block-sheet';
 import { FormPreview } from './form-preview';
-
-// --- Application rules section (prototype: dummy, no backend mapping) ---
-
-type Rule = { id: string; trigger: string; location: string };
-
-function makeRule(): Rule {
-  return {
-    id: `rule-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
-    trigger: 'join',
-    location: 'current',
-  };
-}
-
-function AppliedToSection({
-  onChange,
-  hasError,
-}: {
-  appliedTo: string[];
-  onChange: (next: string[]) => void;
-  hasError: boolean;
-}) {
-  const [rules, setRules] = useState<Rule[]>(() => [makeRule()]);
-
-  // Sync the default rule to parent on mount so save validation passes.
-  useEffect(() => {
-    onChange(rules.map((r) => `${r.trigger}:${r.location}`));
-    // biome-ignore lint/correctness/useExhaustiveDependencies: mount-only
-  }, []);
-
-  function commit(next: Rule[]) {
-    setRules(next);
-    onChange(next.map((r) => `${r.trigger}:${r.location}`));
-  }
-
-  function addRule() {
-    commit([...rules, makeRule()]);
-  }
-
-  function updateRule(id: string, updates: Partial<Rule>) {
-    commit(rules.map((r) => (r.id === id ? { ...r, ...updates } : r)));
-  }
-
-  function removeRule(id: string) {
-    if (rules.length <= 1) return;
-    commit(rules.filter((r) => r.id !== id));
-  }
-
-  return (
-    <div>
-      <h2 className="text-2xl font-bold tracking-tight">Anwendungsregeln</h2>
-      <p className="text-muted-foreground mt-6 text-sm font-semibold uppercase tracking-wider">
-        Freiwillige müssen ausfüllen, wenn:
-      </p>
-      <div className="mt-4 space-y-2">
-        {rules.map((rule) => (
-          <div key={rule.id} className="flex items-center gap-1">
-            <Select
-              value={rule.trigger}
-              onValueChange={(v) => updateRule(rule.id, { trigger: v })}
-            >
-              <SelectTrigger size="default" className="h-10 flex-1">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {RULE_TRIGGER_TYPES.map((t) => (
-                  <SelectItem key={t.value} value={t.value}>
-                    {t.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <span className="text-muted-foreground px-1 text-sm">bei</span>
-            <Select
-              value={rule.location}
-              onValueChange={(v) => updateRule(rule.id, { location: v })}
-            >
-              <SelectTrigger size="default" className="h-10 flex-1">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {RULE_LOCATIONS.map((l) => (
-                  <SelectItem key={l.value} value={l.value}>
-                    {l.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="text-muted-foreground hover:text-destructive size-10 shrink-0"
-              onClick={() => removeRule(rule.id)}
-              disabled={rules.length <= 1}
-              aria-label="Regel entfernen"
-              title="Regel entfernen"
-            >
-              <X className="size-4" />
-            </Button>
-          </div>
-        ))}
-      </div>
-      <Button variant="outline" size="md" className="mt-4" onClick={addRule}>
-        <Plus className="mr-1.5 size-4" />
-        Regel hinzufügen
-      </Button>
-      {hasError && (
-        <p className="text-destructive mt-1.5 text-sm">
-          Bitte fügen Sie mindestens eine Regel hinzu.
-        </p>
-      )}
-    </div>
-  );
-}
+import { AppliedToSection } from './applied-to-section';
 
 export function BuilderLayout({
   initialConfig,
@@ -245,59 +125,13 @@ export function BuilderLayout({
 
   // --- Block content handlers (go to API, NOT in undo stack) ---
 
-  async function handleBlockFieldAdd(blockId: string, field: FormField) {
-    const block = blockMap.get(blockId);
-    if (!block) return;
-    const updatedFields = [...block.fields, field];
-    const res = await fetch(`/api/blocks/${blockId}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ fields: updatedFields }),
-    });
-    if (res.ok) await refreshBlocks();
-  }
-
-  async function handleBlockFieldEdit(
-    blockId: string,
-    fieldId: string,
-    updates: Partial<FormField>,
-  ) {
-    const block = blockMap.get(blockId);
-    if (!block) return;
-    const updatedFields = block.fields.map((f) =>
-      f.id === fieldId ? { ...f, ...updates } : f,
+  const { addField, editField, deleteField, reorderFields } =
+    useBlockFieldMutations(
+      (id) => blockMap.get(id)?.fields ?? null,
+      () => {
+        void refreshBlocks();
+      },
     );
-    const res = await fetch(`/api/blocks/${blockId}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ fields: updatedFields }),
-    });
-    if (res.ok) await refreshBlocks();
-  }
-
-  async function handleBlockFieldDelete(blockId: string, fieldId: string) {
-    const block = blockMap.get(blockId);
-    if (!block) return;
-    const updatedFields = block.fields.filter((f) => f.id !== fieldId);
-    const res = await fetch(`/api/blocks/${blockId}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ fields: updatedFields }),
-    });
-    if (res.ok) await refreshBlocks();
-  }
-
-  async function handleBlockFieldReorder(
-    blockId: string,
-    orderedFields: FormField[],
-  ) {
-    const res = await fetch(`/api/blocks/${blockId}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ fields: orderedFields }),
-    });
-    if (res.ok) await refreshBlocks();
-  }
 
   async function handleBlockEdit(
     blockId: string,
@@ -492,44 +326,24 @@ export function BuilderLayout({
       />
 
       {/* Edit block sheet */}
-      <EditBlockSheet
-        block={editBlockId ? (blockMap.get(editBlockId) ?? null) : null}
-        open={editBlockId !== null}
-        onOpenChange={(open) => {
-          if (!open) setEditBlockId(null);
-        }}
-        onSaveBlock={async (blockId, updates) => {
-          await handleBlockEdit(blockId, updates);
-        }}
-        onAddField={
-          editBlockId && blockMap.get(editBlockId) && canEditBlock(currentUser, blockMap.get(editBlockId)!)
-            ? async (blockId, field) => {
-                await handleBlockFieldAdd(blockId, field);
-              }
-            : undefined
-        }
-        onEditField={
-          editBlockId && blockMap.get(editBlockId) && canEditBlock(currentUser, blockMap.get(editBlockId)!)
-            ? async (blockId, fieldId, updates) => {
-                await handleBlockFieldEdit(blockId, fieldId, updates);
-              }
-            : undefined
-        }
-        onDeleteField={
-          editBlockId && blockMap.get(editBlockId) && canEditBlock(currentUser, blockMap.get(editBlockId)!)
-            ? async (blockId, fieldId) => {
-                await handleBlockFieldDelete(blockId, fieldId);
-              }
-            : undefined
-        }
-        onReorderFields={
-          editBlockId && blockMap.get(editBlockId) && canEditBlock(currentUser, blockMap.get(editBlockId)!)
-            ? async (blockId, orderedFields) => {
-                await handleBlockFieldReorder(blockId, orderedFields);
-              }
-            : undefined
-        }
-      />
+      {(() => {
+        const editBlock = editBlockId ? blockMap.get(editBlockId) ?? null : null;
+        const canEditCurrent = !!editBlock && canEditBlock(currentUser, editBlock);
+        return (
+          <EditBlockSheet
+            block={editBlock}
+            open={editBlockId !== null}
+            onOpenChange={(open) => {
+              if (!open) setEditBlockId(null);
+            }}
+            onSaveBlock={handleBlockEdit}
+            onAddField={canEditCurrent ? addField : undefined}
+            onEditField={canEditCurrent ? editField : undefined}
+            onDeleteField={canEditCurrent ? deleteField : undefined}
+            onReorderFields={canEditCurrent ? reorderFields : undefined}
+          />
+        );
+      })()}
     </div>
   );
 }
