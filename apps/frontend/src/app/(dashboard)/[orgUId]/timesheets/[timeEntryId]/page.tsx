@@ -10,8 +10,9 @@ import {
 } from 'lucide-react';
 import { notFound } from 'next/navigation';
 import { ActionBar } from '@/domain/time-entry/components/action-bar';
+import { formatDuration, formatTimeRange } from '@/domain/time-entry/formating';
 import { getDataClient } from '@/lib/data-client';
-import { formatDateTime, formatDuration, formatRange } from '@/lib/formatting';
+import { formatDateTime } from '@/lib/formatting';
 
 interface TimeEntryDetailPageProps {
   params: Promise<{ orgUId: string; timeEntryId: string }>;
@@ -30,9 +31,6 @@ export default async function TimeEntryDetailPage({
   }
 
   const isOpen = !entry.endedAt;
-  const startedAt = new Date(entry.startedAt);
-  const endedAt = entry.endedAt ? new Date(entry.endedAt) : new Date();
-  const duration = formatDuration(startedAt, endedAt);
 
   return (
     <div className="space-y-6">
@@ -54,15 +52,11 @@ export default async function TimeEntryDetailPage({
               <ul className="space-y-4">
                 <li className="flex gap-2">
                   <Timer className="text-muted-foreground shrink-0" />
-                  <span>{duration}</span>
+                  <span>{formatDuration(entry)}</span>
                 </li>
                 <li className="flex gap-2">
                   <Calendars className="text-muted-foreground shrink-0" />
-                  <span>
-                    {isOpen
-                      ? `${formatDateTime(startedAt)} - open`
-                      : formatRange(startedAt, endedAt)}
-                  </span>
+                  <span>{formatTimeRange(entry)}</span>
                 </li>
                 <li className="flex gap-2">
                   <User className="text-muted-foreground shrink-0" />
