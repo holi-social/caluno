@@ -2,13 +2,25 @@ import { DataError } from '../../errors/data-error';
 import type {
   AddTimeEntryInput,
   CloseTimeEntryInput,
+  GetTimeEntryQuery,
 } from '../../generated/graphql';
 import {
   BaseRepository,
   type PaginationOptions,
 } from '../base/base.repository';
 
+export type TimeEntryDetail = GetTimeEntryQuery['timeEntry'];
+
 export class TimeEntryRepository extends BaseRepository {
+  async findById(id: string): Promise<TimeEntryDetail> {
+    try {
+      const data = await this.sdk.GetTimeEntry({ id });
+      return data.timeEntry;
+    } catch (error) {
+      throw DataError.fromGraphQLError(error);
+    }
+  }
+
   async add(input: AddTimeEntryInput) {
     try {
       const data = await this.sdk.AddTimeEntry({ input });

@@ -18,6 +18,19 @@ export class TimeTrackingQueryResolver {
   ) {}
 
   @Permissions(PERMISSIONS.TIME_ENTRY_READ)
+  @Query(() => TimeEntry)
+  async timeEntry(
+    @Args('id') id: string,
+    @Context() context: AuthenticatedGraphQLContext,
+  ): Promise<TimeEntry> {
+    const entry = await this.timeTrackingService.findById(
+      id,
+      context.organizationUnitId,
+    );
+    return this.timeEntryMapper.toModelOrThrow(entry);
+  }
+
+  @Permissions(PERMISSIONS.TIME_ENTRY_READ)
   @Query(() => TimeEntryPaginatedResponse)
   async timeEntries(
     @Args() pagination: PaginationInput,
