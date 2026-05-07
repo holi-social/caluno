@@ -49,3 +49,17 @@ export const FIELD_TYPE_LABELS: Record<FieldType, string> = {
   singlechoice: 'Einzelauswahl',
   'document-acknowledgement': 'Dokument',
 };
+
+/** Field types offered in the builder's field-type picker, in display order. */
+export const FIELD_TYPE_OPTIONS: { label: string; value: FieldType }[] = [
+  { label: 'Vorname', value: 'vorname' },
+  { label: 'Nachname', value: 'nachname' },
+  { label: 'Eingabe', value: 'text' },
+  { label: 'E-Mail', value: 'email' },
+  { label: 'Telefonnummer', value: 'phone' },
+  { label: 'Zahlen', value: 'numbers' },
+  { label: 'Mehrfachauswahl', value: 'multichoice' },
+  { label: 'Einzelauswahl', value: 'singlechoice' },
+  { label: 'Datum', value: 'date' },
+  { label: 'Dokument zum Akzeptieren', value: 'document-acknowledgement' },
+];

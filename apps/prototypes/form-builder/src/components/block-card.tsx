@@ -24,6 +24,7 @@ import type { Block, FormConfig, FormField } from '@/lib/types';
 import type { User as AppUser } from '@/lib/users';
 import { canEditBlock, canDeleteBlock } from '@/lib/users';
 import { getUserById } from '@/lib/users';
+import { formatDate } from '@/lib/formatting';
 import { EditBlockSheet } from './builder/edit-block-sheet';
 
 const BLOCK_ICONS: Record<string, LucideIcon> = {
@@ -133,11 +134,7 @@ export function BlockCard({
     f.blockRefs.some((ref) => ref.blockId === block.id),
   );
   const editorName = getUserById(block.updatedBy)?.name ?? block.updatedBy;
-  const updatedDate = new Date(block.updatedAt).toLocaleDateString('de-DE', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-  });
+  const updatedDate = formatDate(block.updatedAt);
   const fieldCount = block.fields.length;
   const Icon = block.icon ? BLOCK_ICONS[block.icon] : undefined;
 

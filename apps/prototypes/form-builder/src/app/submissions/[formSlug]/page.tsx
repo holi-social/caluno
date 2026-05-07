@@ -14,16 +14,7 @@ import { getFormConfig } from '@/lib/store-configs';
 import { getBlocksByIds } from '@/lib/store-blocks';
 import { resolveBlockRefs } from '@/lib/resolve-blocks';
 import { redirect } from 'next/navigation';
-
-function formatDateTime(iso: string): string {
-  return new Date(iso).toLocaleString('de-DE', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  });
-}
+import { formatDateTime, formatSubmissionValue } from '@/lib/formatting';
 
 export default async function FormSubmissionsPage({
   params,
@@ -89,24 +80,11 @@ export default async function FormSubmissionsPage({
               <TableBody>
                 {submissions.map((sub) => (
                   <TableRow key={sub.id}>
-                    {allFields.map((field) => {
-                      const val = sub.data[field.id];
-                      let display: string;
-                      if (Array.isArray(val)) {
-                        display = val.length > 0 ? val.join(', ') : '-';
-                      } else if (typeof val === 'boolean') {
-                        display = val ? 'Ja' : 'Nein';
-                      } else if (typeof val === 'string' && val.trim()) {
-                        display = val;
-                      } else {
-                        display = '-';
-                      }
-                      return (
-                        <TableCell key={field.id} className="text-sm">
-                          {display}
-                        </TableCell>
-                      );
-                    })}
+                    {allFields.map((field) => (
+                      <TableCell key={field.id} className="text-sm">
+                        {formatSubmissionValue(sub.data[field.id])}
+                      </TableCell>
+                    ))}
                     <TableCell className="text-muted-foreground text-sm whitespace-nowrap">
                       {formatDateTime(sub.submittedAt)}
                     </TableCell>

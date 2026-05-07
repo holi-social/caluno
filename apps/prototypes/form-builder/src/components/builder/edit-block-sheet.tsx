@@ -37,22 +37,7 @@ import {
   X,
 } from 'lucide-react';
 import type { Block, FieldType, FormField } from '@/lib/types';
-import { FIELD_TYPE_LABELS } from '@/lib/predefined-fields';
-
-// --- Field type options (shared by add + edit) ---
-
-const FIELD_TYPE_OPTIONS: { label: string; value: FieldType }[] = [
-  { label: 'Vorname', value: 'vorname' },
-  { label: 'Nachname', value: 'nachname' },
-  { label: 'Eingabe', value: 'text' },
-  { label: 'E-Mail', value: 'email' },
-  { label: 'Telefonnummer', value: 'phone' },
-  { label: 'Zahlen', value: 'numbers' },
-  { label: 'Mehrfachauswahl', value: 'multichoice' },
-  { label: 'Einzelauswahl', value: 'singlechoice' },
-  { label: 'Datum', value: 'date' },
-  { label: 'Dokument zum Akzeptieren', value: 'document-acknowledgement' },
-];
+import { FIELD_TYPE_LABELS, FIELD_TYPE_OPTIONS } from '@/lib/predefined-fields';
 
 // --- Field form (used for both creating and editing fields) ---
 

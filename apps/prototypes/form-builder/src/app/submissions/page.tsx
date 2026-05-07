@@ -12,16 +12,7 @@ import {
 import { ArrowLeft } from 'lucide-react';
 import { listSubmissions } from '@/lib/store-submissions';
 import { listFormConfigs } from '@/lib/store-configs';
-
-function formatDateTime(iso: string): string {
-  return new Date(iso).toLocaleString('de-DE', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  });
-}
+import { formatDateTime } from '@/lib/formatting';
 
 export default async function AllSubmissionsPage() {
   const [submissions, configs] = await Promise.all([

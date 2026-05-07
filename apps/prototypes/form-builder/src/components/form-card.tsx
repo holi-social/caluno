@@ -19,6 +19,7 @@ import type { Block, FormConfig } from '@/lib/types';
 import { formatRuleId } from '@/lib/trigger-options';
 import type { User } from '@/lib/users';
 import { canEditForm, canDeleteForm, getUserById } from '@/lib/users';
+import { formatDate } from '@/lib/formatting';
 
 export function FormCard({
   config,
@@ -39,11 +40,7 @@ export function FormCard({
     .filter((b): b is Block => b != null);
 
   const editorName = getUserById(config.updatedBy)?.name ?? config.updatedBy;
-  const updatedDate = new Date(config.updatedAt).toLocaleDateString('de-DE', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-  });
+  const updatedDate = formatDate(config.updatedAt);
 
   async function handleDelete() {
     setDeleting(true);

@@ -16,6 +16,7 @@ import { toast } from 'sonner';
 import type { Block, FormConfig, FormField } from '@/lib/types';
 import type { User } from '@/lib/users';
 import { canEditBlock, canRemoveBlockFromForm } from '@/lib/users';
+import { RULE_LOCATIONS, RULE_TRIGGER_TYPES } from '@/lib/trigger-options';
 import { useUndoRedo } from '@/lib/use-undo-redo';
 import { BlockCardBuilder } from './section-card';
 import { AddBlockDialog } from './add-section-dialog';
@@ -26,19 +27,6 @@ import { FormPreview } from './form-preview';
 // --- Application rules section (prototype: dummy, no backend mapping) ---
 
 type Rule = { id: string; trigger: string; location: string };
-
-const TRIGGER_TYPES = [
-  { value: 'join', label: 'Beitritt zur Organisation' },
-  { value: 'shift', label: 'Schichtanmeldung' },
-];
-
-const LOCATIONS = [
-  { value: 'current', label: 'Aktueller Standort' },
-  { value: 'ks13', label: 'Karlstraße 13' },
-  { value: 'ea', label: 'Abteilung EA' },
-  { value: 'berlin', label: 'Standort Berlin' },
-  { value: 'hamburg', label: 'Standort Hamburg' },
-];
 
 function makeRule(): Rule {
   return {
@@ -99,7 +87,7 @@ function AppliedToSection({
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                {TRIGGER_TYPES.map((t) => (
+                {RULE_TRIGGER_TYPES.map((t) => (
                   <SelectItem key={t.value} value={t.value}>
                     {t.label}
                   </SelectItem>
@@ -115,7 +103,7 @@ function AppliedToSection({
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                {LOCATIONS.map((l) => (
+                {RULE_LOCATIONS.map((l) => (
                   <SelectItem key={l.value} value={l.value}>
                     {l.label}
                   </SelectItem>
