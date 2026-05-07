@@ -34,7 +34,7 @@ integration_tests:
   image: europe-north1-docker.pkg.dev/holi-shared/docker-hub-remote/oven/bun:1
   needs: []
   services:
-    - name: postgres:16
+    - name: europe-north1-docker.pkg.dev/holi-shared/docker-hub-remote/postgres:17
       alias: postgres
   variables:
     POSTGRES_DB: clippy_test
@@ -161,12 +161,9 @@ build_branch_frontend:
 
 .terraform:
   image:
-    name: hashicorp/terraform:1.14
+    name: hashicorp/terraform:1.15
     entrypoint: ['']
   before_script:
-    - apk add --no-cache curl bash glab
-    - glab auth login --job-token "$CI_JOB_TOKEN" --hostname "$CI_SERVER_FQDN" --api-protocol "$CI_SERVER_PROTOCOL"
-    - glab -R "$CI_PROJECT_PATH" securefile download --all --output-dir "$TF_ROOT"
     - cd "$TF_ROOT"
     - terraform --version
     - terraform init

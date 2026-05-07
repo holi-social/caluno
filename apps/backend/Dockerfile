@@ -1,32 +1,32 @@
-FROM oven/bun:1 AS builder
+FROM europe-north1-docker.pkg.dev/holi-shared/docker-hub-remote/oven/bun:1 AS builder
 
 WORKDIR /app
 
 ENV NODE_ENV=production
 
 # Install dependencies for the whole monorepo so workspace packages are available
-COPY package.json turbo.json ./
+COPY package.json bun.lock turbo.json ./
 COPY apps ./apps
 COPY packages ./packages
 
-RUN bun install
+RUN bun install --frozen-lockfile
 
 # Build the NestJS backend
 WORKDIR /app/apps/backend
 RUN bun run build
 
 
-FROM oven/bun:1 AS runner
+FROM europe-north1-docker.pkg.dev/holi-shared/docker-hub-remote/oven/bun:1 AS runner
 
 WORKDIR /app
 
 ENV NODE_ENV=production
 
-COPY package.json turbo.json ./
+COPY package.json bun.lock turbo.json ./
 COPY apps ./apps
 COPY packages ./packages
 
-RUN bun install --production --ignore-scripts
+RUN bun install --frozen-lockfile --production --ignore-scripts
 
 WORKDIR /app/apps/backend
 
