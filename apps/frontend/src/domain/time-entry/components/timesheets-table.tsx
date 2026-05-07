@@ -11,6 +11,7 @@ import {
   TableRow,
 } from '@repo/ui';
 import { format } from 'date-fns';
+import Link from 'next/link';
 
 type TimeEntry = GetTimeEntriesQuery['timeEntries']['items'][number];
 
@@ -50,7 +51,7 @@ function calculateDuration(entry: TimeEntry): string {
   return `${hours}h ${minutes}m`;
 }
 
-export function TimesheetsTable({ entries }: TimesheetsTableProps) {
+export function TimesheetsTable({ entries, organizationUnitId }: TimesheetsTableProps) {
   return (
     <div className="rounded-md border overflow-hidden">
       <Table>
@@ -70,7 +71,12 @@ export function TimesheetsTable({ entries }: TimesheetsTableProps) {
               className={cn({ 'bg-muted/80': !entry.endedAt })}
             >
               <TableCell>
-                {entry.shiftInstance?.master?.title ?? 'N/A'}
+                <Link
+                  className="hover:underline block"
+                  href={`/${organizationUnitId}/timesheets/${entry.id}`}
+                >
+                  {entry.shiftInstance?.master?.title ?? 'N/A'}
+                </Link>
               </TableCell>
               <TableCell>
                 {entry.volunteer?.name ?? entry.volunteer?.email ?? 'N/A'}

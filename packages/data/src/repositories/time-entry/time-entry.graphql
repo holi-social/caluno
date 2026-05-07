@@ -16,6 +16,29 @@ mutation CloseTimeEntry($id: ID!, $input: CloseTimeEntryInput!) {
   }
 }
 
+query GetTimeEntry($id: String!) {
+  timeEntry(id: $id) {
+    id
+    startedAt
+    endedAt
+    notes
+    createdAt
+    volunteer {
+      id
+      name
+      email
+    }
+    shiftInstance {
+      id
+      actualStartsAt
+      actualEndsAt
+      master {
+        title
+      }
+    }
+  }
+}
+
 query GetTimeEntries($limit: Int!, $offset: Int!) {
   timeEntries(limit: $limit, offset: $offset) {
     items {

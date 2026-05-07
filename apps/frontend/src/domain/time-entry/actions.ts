@@ -3,7 +3,7 @@
 import type { AddTimeEntryInput, CloseTimeEntryInput } from '@repo/data';
 import { getDataClient } from '@/lib/data-client';
 import { actionClient } from '@/lib/safe-action';
-import { closeTimeEntrySchema, createTimeEntrySchema } from './schemas';
+import { closeTimeEntrySchema, createTimeEntrySchema, deleteTimeEntrySchema } from './schemas';
 
 export const createTimeEntry = actionClient
   .inputSchema(createTimeEntrySchema)
@@ -32,4 +32,11 @@ export const closeTimeEntry = actionClient
     };
 
     return await data.timeEntry.close(parsedInput.id, input);
+  });
+
+export const deleteTimeEntry = actionClient
+  .inputSchema(deleteTimeEntrySchema)
+  .action(async ({ parsedInput }) => {
+    const data = await getDataClient(parsedInput.organizationUnitId);
+    return await data.timeEntry.delete(parsedInput.id);
   });

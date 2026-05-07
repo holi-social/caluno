@@ -37,3 +37,10 @@ export const formatRange = (from: string | Date, to: string | Date) => {
     return `${formatDateTime(fromDate)} - ${formatDateTime(toDate)}`;
   }
 };
+
+export const formatDuration = (from: Date, to: Date) => {
+  const totalMinutes = (to.getTime() - from.getTime()) / (1000 * 60);
+  const hours = Math.max(Math.floor(totalMinutes / 60), 0);
+  const minutes = Math.max(Math.floor(totalMinutes % 60), 0);
+  return `${hours}h ${minutes}m`;
+};
