@@ -11,6 +11,7 @@ import {
   TableRow,
 } from '@repo/ui';
 import Link from 'next/link';
+import { ActionBar } from './action-bar';
 import { formatDuration, formatTimeRange } from '../formating';
 
 type TimeEntry = GetTimeEntriesQuery['timeEntries']['items'][number];
@@ -33,6 +34,7 @@ export const TimesheetsTable = ({
             <TableHead>Volunteer</TableHead>
             <TableHead>Time</TableHead>
             <TableHead>Duration</TableHead>
+            <TableHead className="w-0" />
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -54,6 +56,14 @@ export const TimesheetsTable = ({
               </TableCell>
               <TableCell>{formatTimeRange(entry)}</TableCell>
               <TableCell>{formatDuration(entry)}</TableCell>
+              <TableCell>
+                <ActionBar
+                  id={entry.id}
+                  organizationUnitId={organizationUnitId}
+                  isOpen={!entry.endedAt}
+                  size="xs"
+                />
+              </TableCell>
             </TableRow>
           ))}
         </TableBody>
