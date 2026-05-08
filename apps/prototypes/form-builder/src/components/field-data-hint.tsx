@@ -1,39 +1,16 @@
-import type { ReactNode } from 'react';
-import { CheckSquare, FileText } from 'lucide-react';
+import { Badge } from '@repo/ui';
+import { FileText } from 'lucide-react';
 import type { FormField } from '@/lib/types';
 import { FIELD_TYPE_LABELS } from '@/lib/predefined-fields';
 
-function Pill({ children }: { children: ReactNode }) {
-  return (
-    <span className="bg-muted/70 text-muted-foreground inline-flex items-center rounded-md px-2.5 py-1 text-xs font-medium">
-      {children}
-    </span>
-  );
-}
-
 /**
- * Lightweight, non-interactive visual cue describing what data a volunteer
- * would enter for a given field. Used by BlockSummaryPreview to render
- * a builder-side summary; not the volunteer-facing input.
+ * Per-field cue inside the builder-side preview.
+ * - Choice fields render their options as outline chips.
+ * - Document-acknowledgement renders a "Nutzer-Bestätigung" badge above the
+ *   uploaded document link (when present).
+ * - All other types render an outline badge with the type label.
  */
 export function FieldDataHint({ field }: { field: FormField }) {
-  if (field.type === 'document-acknowledgement') {
-    if (field.documentUrl) {
-      return (
-        <a
-          href={field.documentUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-primary inline-flex items-center gap-1.5 text-sm hover:underline"
-        >
-          <FileText className="size-4" />
-          {field.documentLabel || field.documentUrl}
-        </a>
-      );
-    }
-    return <Pill>Dokument</Pill>;
-  }
-
   if (
     (field.type === 'singlechoice' ||
       field.type === 'multichoice' ||
@@ -42,28 +19,41 @@ export function FieldDataHint({ field }: { field: FormField }) {
     field.options.length > 0
   ) {
     return (
-      <div className="flex flex-wrap gap-1.5">
+      <div className="flex flex-wrap items-center gap-2">
+        {FIELD_TYPE_LABELS[field.type]}:
         {field.options.map((opt) => (
-          <Pill key={opt.value}>{opt.label}</Pill>
+          <Badge key={opt.value} variant="outline" className="text-sm">
+            {opt.label}
+          </Badge>
         ))}
       </div>
     );
   }
 
-  if (field.type === 'checkbox') {
+  if (field.type === 'document-acknowledgement') {
     return (
-      <div className="text-muted-foreground inline-flex items-center gap-2 text-sm">
-        <CheckSquare className="size-4" />
-        {field.placeholder || 'Bestätigen'}
+      <div className="space-y-3">
+        {field.documentUrl && (
+          <a
+            href={field.documentUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-primary flex items-center gap-1.5 text-sm hover:underline"
+          >
+            <FileText className="size-4" />
+            {field.documentLabel || field.documentUrl}
+          </a>
+        )}
+        <Badge variant="outline" className="text-sm">
+          Nutzer-Bestätigung
+        </Badge>
       </div>
     );
   }
 
-  if (field.type === 'textarea') {
-    return (
-      <div className="bg-muted/60 h-14 w-full max-w-sm rounded-md" />
-    );
-  }
-
-  return <Pill>{FIELD_TYPE_LABELS[field.type]}</Pill>;
+  return (
+    <Badge variant="outline" className="text-sm">
+      {FIELD_TYPE_LABELS[field.type]}
+    </Badge>
+  );
 }

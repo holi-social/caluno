@@ -93,18 +93,6 @@ export function BuilderLayout({
     }));
   }
 
-  function handleToggleBlockRequired(blockId: string) {
-    setConfig((prev) => ({
-      ...prev,
-      blockRefs: prev.blockRefs.map((r) => {
-        if (r.blockId !== blockId) return r;
-        const block = blockMap.get(blockId);
-        const currentEffective = r.required ?? block?.required ?? true;
-        return { ...r, required: !currentEffective };
-      }),
-    }));
-  }
-
   function handleMoveBlock(blockId: string, direction: 'up' | 'down') {
     setConfig((prev) => {
       const sorted = [...prev.blockRefs].sort((a, b) => a.order - b.order);
@@ -227,12 +215,8 @@ export function BuilderLayout({
                 <BlockCardBuilder
                   key={ref.blockId}
                   block={block}
-                  blockRef={ref}
                   isFirst={idx === 0}
                   isLast={idx === sortedRefs.length - 1}
-                  onToggleRequired={() =>
-                    handleToggleBlockRequired(ref.blockId)
-                  }
                   onMoveUp={() => handleMoveBlock(ref.blockId, 'up')}
                   onMoveDown={() => handleMoveBlock(ref.blockId, 'down')}
                   onRemove={

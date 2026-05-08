@@ -9,7 +9,8 @@
         "type": "vorname",
         "label": "Vorname",
         "required": true,
-        "placeholder": "z.B. Max"
+        "placeholder": "z.B. Max",
+        "description": "genau wie im Ausweissdokument"
       },
       {
         "id": "f-nachname",
@@ -30,7 +31,7 @@
     "createdBy": "andrea",
     "updatedBy": "andrea",
     "createdAt": "2026-04-30T08:58:15.922Z",
-    "updatedAt": "2026-05-04T12:25:42.048Z",
+    "updatedAt": "2026-05-08T10:44:04.873Z",
     "description": "Let's get to know each other!"
   },
   {
@@ -111,5 +112,36 @@
     "updatedBy": "andrea",
     "createdAt": "2026-04-30T08:58:15.922Z",
     "updatedAt": "2026-05-04T12:10:59.999Z"
+  },
+  {
+    "id": "block-d71b1558",
+    "title": "Neuer Block",
+    "fields": [
+      {
+        "id": "field-1778238077260",
+        "type": "multichoice",
+        "label": "1234",
+        "required": true,
+        "options": [
+          {
+            "label": "1",
+            "value": "1"
+          },
+          {
+            "label": "2",
+            "value": "2"
+          },
+          {
+            "label": "3",
+            "value": "3"
+          }
+        ]
+      }
+    ],
+    "required": true,
+    "createdBy": "andrea",
+    "updatedBy": "andrea",
+    "createdAt": "2026-05-08T11:01:17.935Z",
+    "updatedAt": "2026-05-08T11:01:17.935Z"
   }
 ]

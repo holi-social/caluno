@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Badge, Button, Card, Switch } from '@repo/ui';
+import { Badge, Button, Card } from '@repo/ui';
 import { ConfirmDialog } from '../confirm-dialog';
 import { BlockSummaryPreview } from '../block-summary-preview';
 import {
@@ -13,26 +13,22 @@ import {
   ArrowUp,
   ArrowDown,
 } from 'lucide-react';
-import type { Block, BlockRef } from '@/lib/types';
+import type { Block } from '@/lib/types';
 import { getBlockIcon } from '@/lib/block-icon';
 import { FieldBadge } from './field-badge';
 
 export function BlockCardBuilder({
   block,
-  blockRef,
   isFirst,
   isLast,
-  onToggleRequired,
   onMoveUp,
   onMoveDown,
   onRemove,
   onEditBlock,
 }: {
   block: Block;
-  blockRef: BlockRef;
   isFirst: boolean;
   isLast: boolean;
-  onToggleRequired: () => void;
   onMoveUp: () => void;
   onMoveDown: () => void;
   onRemove?: () => void;
@@ -41,7 +37,6 @@ export function BlockCardBuilder({
   const [expanded, setExpanded] = useState(true);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const icon = getBlockIcon(block.fields);
-  const effectiveRequired = blockRef.required ?? block.required;
 
   return (
     <Card className="relative">
@@ -71,34 +66,18 @@ export function BlockCardBuilder({
         </div>
 
         <div className="min-w-0 flex-1">
-          {!expanded && (
-            <>
-              <div className="flex items-center gap-2">
-                {icon && <div className="text-muted-foreground">{icon}</div>}
-                <h3 className="text-lg font-semibold">{block.title}</h3>
-              </div>
-              {block.description && (
-                <p className="text-muted-foreground mt-1 text-sm">
-                  {block.description}
-                </p>
-              )}
-            </>
+          <div className="flex items-center gap-2">
+            {icon && <div className="text-muted-foreground">{icon}</div>}
+            <h3 className="text-lg font-semibold">{block.title}</h3>
+          </div>
+          {block.description && (
+            <p className="text-muted-foreground mt-1 text-sm">
+              {block.description}
+            </p>
           )}
 
-          {/* Block-level required toggle */}
-          <div className={expanded ? 'flex items-center gap-2' : 'mt-2 flex items-center gap-2'}>
-            <span className="text-muted-foreground text-sm font-medium">
-              {effectiveRequired ? 'Pflicht' : 'Optional'}
-            </span>
-            <Switch
-              size="default"
-              checked={effectiveRequired}
-              onCheckedChange={onToggleRequired}
-            />
-          </div>
-
           {!expanded && (
-            <div className="mt-2 flex flex-wrap gap-1.5">
+            <div className="mt-3 flex flex-wrap gap-1.5">
               {block.fields.map((field) => (
                 <FieldBadge key={field.id} field={field} />
               ))}

@@ -6,7 +6,16 @@
     "description": "123",
     "organizationName": "Abteilung EA",
     "locale": "de",
-    "blockRefs": [],
+    "blockRefs": [
+      {
+        "blockId": "seed-block-personal",
+        "order": 0
+      },
+      {
+        "blockId": "seed-block-datenschutz",
+        "order": 1
+      }
+    ],
     "appliedTo": [
       "join:current"
     ],
@@ -19,6 +28,6 @@
     "createdBy": "andrea",
     "updatedBy": "andrea",
     "createdAt": "2026-05-06T07:36:35.875Z",
-    "updatedAt": "2026-05-07T16:26:38.085Z"
+    "updatedAt": "2026-05-08T11:26:49.451Z"
   }
 ]
