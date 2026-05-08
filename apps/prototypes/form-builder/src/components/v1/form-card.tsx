@@ -7,6 +7,7 @@ import { Badge, Button, Card, CardContent } from '@repo/ui';
 import { Pencil, Share2, Trash2, Users } from 'lucide-react';
 import { toast } from 'sonner';
 import type { Block, FormConfig } from '@/lib/types';
+import { formatRuleId } from '@/lib/trigger-options';
 import type { User } from '@/lib/users';
 import { canEditForm, canDeleteForm, getUserById } from '@/lib/users';
 import { formatDate } from '@/lib/formatting';
@@ -85,6 +86,20 @@ export function FormCard({
               </div>
             </div>
           )}
+          {(config.appliedTo ?? []).length > 0 && (
+            <div className="mt-4">
+              <p className="text-muted-foreground text-xs font-medium uppercase tracking-wide">
+                Aktiv bei
+              </p>
+              <div className="mt-2 flex flex-wrap gap-1.5">
+                {config.appliedTo.map((id) => (
+                  <Badge key={id} variant="secondary" className="text-xs">
+                    {formatRuleId(id)}
+                  </Badge>
+                ))}
+              </div>
+            </div>
+          )}
           <p className="text-muted-foreground mt-4 text-xs">
             Bearbeitet von {editorName} am {updatedDate}
           </p>
@@ -102,7 +117,7 @@ export function FormCard({
             disabled={!canEditForm(currentUser, config)}
           >
             {canEditForm(currentUser, config) ? (
-              <Link href={`/builder/${config.slug}`}>
+              <Link href={`/v1/builder/${config.slug}`}>
                 <Pencil className="mr-1.5 size-4" />
                 Ändern
               </Link>
@@ -121,7 +136,7 @@ export function FormCard({
             aria-label="Einsendungen"
             title="Einsendungen"
           >
-            <Link href={`/submissions/${config.slug}`}>
+            <Link href={`/v1/submissions/${config.slug}`}>
               <Users className="size-4" />
             </Link>
           </Button>

@@ -1,0 +1,290 @@
+'use client';
+
+import { useEffect, useRef, useState } from 'react';
+import {
+  Button,
+  Field,
+  FieldLabel,
+  Input,
+  Separator,
+  Sheet,
+  SheetContent,
+  SheetFooter,
+  SheetHeader,
+  SheetTitle,
+} from '@repo/ui';
+import { AlertTriangle, Plus, Save } from 'lucide-react';
+import type { Block, FormField } from '@/lib/types';
+import { FieldForm, type FieldCommitHandle } from './field-form';
+import { DraggableFieldRow, arrayMove } from './draggable-field-row';
+
+export function EditBlockSheet({
+  block,
+  open,
+  onOpenChange,
+  onSaveBlock,
+  onAddField,
+  onEditField,
+  onDeleteField,
+  onReorderFields,
+}: {
+  block: Block | null;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onSaveBlock: (
+    blockId: string,
+    updates: Partial<Pick<Block, 'title' | 'description' | 'icon'>>,
+  ) => void;
+  onAddField?: (blockId: string, field: FormField) => void;
+  onEditField?: (
+    blockId: string,
+    fieldId: string,
+    updates: Partial<FormField>,
+  ) => void;
+  onDeleteField?: (blockId: string, fieldId: string) => void;
+  onReorderFields?: (blockId: string, orderedFields: FormField[]) => void;
+}) {
+  const [title, setTitle] = useState('');
+  const [description, setDescription] = useState('');
+  const [editingFieldId, setEditingFieldId] = useState<string | null>(null);
+  const [addingField, setAddingField] = useState(false);
+  const [metaDirty, setMetaDirty] = useState(false);
+  const [draggingFieldId, setDraggingFieldId] = useState<string | null>(null);
+  const titleInputRef = useRef<HTMLInputElement>(null);
+  const addFieldRef = useRef<FieldCommitHandle>(null);
+  const editFieldRef = useRef<FieldCommitHandle>(null);
+
+  // Sync local state only when a different block is loaded (not on every block update,
+  // since field add/edit produces a new block reference and would otherwise wipe
+  // the user's in-progress title/description.)
+  useEffect(() => {
+    if (block) {
+      setTitle(block.title);
+      setDescription(block.description ?? '');
+      setEditingFieldId(null);
+      setAddingField(false);
+      setMetaDirty(false);
+    }
+    // biome-ignore lint/correctness/useExhaustiveDependencies: only re-init on a different block
+  }, [block?.id]);
+
+  useEffect(() => {
+    if (!block) return;
+    const dirty =
+      title.trim() !== block.title ||
+      (description.trim() || undefined) !== (block.description || undefined);
+    setMetaDirty(dirty);
+  }, [title, description, block]);
+
+  useEffect(() => {
+    if (!open) return;
+    const id = window.setTimeout(() => {
+      titleInputRef.current?.focus();
+      titleInputRef.current?.select();
+    }, 50);
+    return () => window.clearTimeout(id);
+  }, [open]);
+
+  function handleSaveMeta() {
+    if (!block || !title.trim()) return;
+    onSaveBlock(block.id, {
+      title: title.trim(),
+      description: description.trim() || undefined,
+    });
+    setMetaDirty(false);
+  }
+
+  function moveField(sourceId: string, targetId: string) {
+    if (!block || !onReorderFields) return;
+    if (sourceId === targetId) return;
+    const oldIndex = block.fields.findIndex((f) => f.id === sourceId);
+    const newIndex = block.fields.findIndex((f) => f.id === targetId);
+    if (oldIndex === -1 || newIndex === -1) return;
+    const next = arrayMove(block.fields, oldIndex, newIndex);
+    onReorderFields(block.id, next);
+  }
+
+  if (!block) return null;
+
+  function handleSheetOpenChange(next: boolean) {
+    if (!next && metaDirty && title.trim()) {
+      handleSaveMeta();
+    }
+    onOpenChange(next);
+  }
+
+  return (
+    <Sheet open={open} onOpenChange={handleSheetOpenChange}>
+      <SheetContent className="flex w-full flex-col sm:max-w-xl">
+        <SheetHeader className="px-6 pt-6">
+          <SheetTitle className="text-2xl font-bold">
+            Block bearbeiten
+          </SheetTitle>
+          <div className="mt-2 flex items-start gap-2 rounded-lg border p-3">
+            <AlertTriangle className="text-foreground mt-0.5 size-4 shrink-0" />
+            <p className="text-foreground text-base">
+              Änderungen an diesem Block wirken sich auf alle Formulare aus,
+              die ihn verwenden.
+            </p>
+          </div>
+        </SheetHeader>
+
+        <div className="flex-1 overflow-y-auto px-6 pb-6">
+          <div className="mt-6 space-y-4">
+            <Field>
+              <FieldLabel htmlFor="sheet-block-title">Titel</FieldLabel>
+              <Input
+                id="sheet-block-title"
+                ref={titleInputRef}
+                placeholder="z.B. Persönliche Daten"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                className="h-11 text-base"
+              />
+            </Field>
+            <Field>
+              <FieldLabel htmlFor="sheet-block-description">
+                Beschreibung (optional)
+              </FieldLabel>
+              <Input
+                id="sheet-block-description"
+                placeholder="z.B. Bitte geben Sie Ihre persoenlichen Daten ein"
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                className="h-11 text-base"
+              />
+            </Field>
+          </div>
+
+          <Separator className="my-6" />
+
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm font-semibold">
+                Felder ({block.fields.length})
+              </h3>
+              {onAddField && !addingField && (
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setEditingFieldId(null);
+                    setAddingField(true);
+                  }}
+                >
+                  <Plus className="mr-2 size-4" />
+                  Feld
+                </Button>
+              )}
+            </div>
+
+            {block.fields.length === 0 && !addingField && (
+              <p className="text-muted-foreground py-4 text-center text-sm">
+                Noch keine Felder in diesem Block.
+              </p>
+            )}
+
+            {block.fields.map((field) =>
+              editingFieldId === field.id && onEditField ? (
+                <FieldForm
+                  key={field.id}
+                  ref={editFieldRef}
+                  initial={field}
+                  onSubmit={(updated) => {
+                    onEditField(block.id, field.id, updated);
+                    setEditingFieldId(null);
+                  }}
+                  onCancel={() => setEditingFieldId(null)}
+                />
+              ) : (
+                <DraggableFieldRow
+                  key={field.id}
+                  field={field}
+                  canSort={!!onReorderFields}
+                  dragging={draggingFieldId === field.id}
+                  onDragStart={
+                    onReorderFields
+                      ? () => setDraggingFieldId(field.id)
+                      : undefined
+                  }
+                  onDragEnd={
+                    onReorderFields
+                      ? () => setDraggingFieldId(null)
+                      : undefined
+                  }
+                  onDragOver={
+                    onReorderFields
+                      ? (overId) => {
+                          if (!draggingFieldId) return;
+                          moveField(draggingFieldId, overId);
+                        }
+                      : undefined
+                  }
+                  onToggleRequired={
+                    onEditField
+                      ? (next) =>
+                          onEditField(block.id, field.id, { required: next })
+                      : undefined
+                  }
+                  onEdit={
+                    onEditField
+                      ? () => {
+                          setAddingField(false);
+                          setEditingFieldId(field.id);
+                        }
+                      : undefined
+                  }
+                  onDelete={
+                    onDeleteField
+                      ? () => onDeleteField(block.id, field.id)
+                      : undefined
+                  }
+                />
+              ),
+            )}
+
+            {addingField && onAddField && (
+              <FieldForm
+                ref={addFieldRef}
+                onSubmit={(field) => {
+                  onAddField(block.id, field);
+                  setAddingField(false);
+                }}
+                onCancel={() => setAddingField(false)}
+              />
+            )}
+          </div>
+        </div>
+
+        <SheetFooter className="sticky bottom-0 z-10 border-t bg-background px-6 py-4">
+          <div className="flex w-full items-center justify-end gap-3">
+            <Button
+              variant="outline"
+              size="lg"
+              onClick={() => onOpenChange(false)}
+            >
+              Schliessen
+            </Button>
+            <Button
+              size="lg"
+              onClick={() => {
+                // Force-commit any in-progress field. If validation fails,
+                // the inline form surfaces an error and we keep the sheet open.
+                if (addingField && addFieldRef.current) {
+                  if (!addFieldRef.current.commit()) return;
+                }
+                if (editingFieldId && editFieldRef.current) {
+                  if (!editFieldRef.current.commit()) return;
+                }
+                handleSheetOpenChange(false);
+              }}
+              disabled={!title.trim()}
+            >
+              <Save className="mr-2 size-4" />
+              Speichern
+            </Button>
+          </div>
+        </SheetFooter>
+      </SheetContent>
+    </Sheet>
+  );
+}

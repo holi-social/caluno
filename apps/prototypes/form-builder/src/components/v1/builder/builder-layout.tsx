@@ -1,9 +1,10 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
-import { Button } from '@repo/ui';
-import { ArrowLeft, Eye, Plus, Redo2, Save, Undo2 } from 'lucide-react';
+import { Button, Separator } from '@repo/ui';
+import { ArrowLeft, Plus, Redo2, Save, Undo2 } from 'lucide-react';
 import Link from 'next/link';
+import { toast } from 'sonner';
 import type { Block, FormConfig } from '@/lib/types';
 import type { User } from '@/lib/users';
 import { canEditBlock, canRemoveBlockFromForm } from '@/lib/users';
@@ -13,6 +14,8 @@ import { BlockCardBuilder } from './section-card';
 import { AddBlockDialog } from './add-section-dialog';
 import { EditBlockSheet } from './edit-block-sheet';
 import { CreateBlockSheet } from './create-block-sheet';
+import { FormPreview } from './form-preview';
+import { AppliedToSection } from './applied-to-section';
 
 export function BuilderLayout({
   initialConfig,
@@ -38,6 +41,7 @@ export function BuilderLayout({
   const [addBlockOpen, setAddBlockOpen] = useState(false);
   const [editBlockId, setEditBlockId] = useState<string | null>(null);
   const [createBlockOpen, setCreateBlockOpen] = useState(false);
+  const [appliedToError, setAppliedToError] = useState(false);
 
   // Build a map for quick block lookup
   const blockMap = new Map(blocks.map((b) => [b.id, b]));
@@ -144,6 +148,16 @@ export function BuilderLayout({
   // --- Save form ---
 
   async function handleSave() {
+    const appliedTo = config.appliedTo ?? [];
+    if (appliedTo.length === 0) {
+      setAppliedToError(true);
+      toast.warning(
+        'Das Formular ist keinem Einsatzbereich zugewiesen und wird niemandem angezeigt.',
+      );
+      return;
+    }
+    setAppliedToError(false);
+
     setSaving(true);
     setSaved(false);
     try {
@@ -163,8 +177,10 @@ export function BuilderLayout({
   const sortedRefs = [...config.blockRefs].sort((a, b) => a.order - b.order);
 
   return (
-    <div className="min-h-screen">
-      <div className="mx-auto max-w-3xl px-6 py-10">
+    <div className="flex min-h-screen">
+      {/* Left Panel - Editor */}
+      <div className="flex-1 overflow-y-auto border-r">
+        <div className="mx-auto max-w-3xl px-6 py-10">
           {/* Back + Breadcrumb */}
           <div className="mb-3 flex items-center gap-3">
             <Button
@@ -173,7 +189,7 @@ export function BuilderLayout({
               size="icon"
               className="size-9 rounded-xl"
             >
-              <Link href="/">
+              <Link href="/v1">
                 <ArrowLeft className="size-5" />
               </Link>
             </Button>
@@ -182,7 +198,7 @@ export function BuilderLayout({
             </p>
           </div>
 
-          <div className="mb-8 flex items-center justify-between gap-4">
+          <div className="mb-8 flex items-center justify-between">
             <h1 className="text-3xl font-bold tracking-tight">{config.name}</h1>
             <div className="flex items-center gap-2">
               <Button
@@ -204,16 +220,6 @@ export function BuilderLayout({
                 aria-label="Wiederholen"
               >
                 <Redo2 className="size-5" />
-              </Button>
-              <Button asChild variant="outline" size="md">
-                <a
-                  href={`/forms/${config.slug}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  <Eye className="mr-2 size-4" />
-                  Vorschau
-                </a>
               </Button>
             </div>
           </div>
@@ -262,6 +268,18 @@ export function BuilderLayout({
             </Button>
           </div>
 
+          <Separator className="my-8" />
+
+          {/* Applied-to section */}
+          <AppliedToSection
+            appliedTo={config.appliedTo ?? []}
+            onChange={(next) => {
+              setAppliedToError(false);
+              setConfig((prev) => ({ ...prev, appliedTo: next }));
+            }}
+            hasError={appliedToError}
+          />
+
           {/* Save */}
           <div className="mt-8 flex justify-end">
             <Button size="lg" onClick={handleSave} disabled={saving}>
@@ -273,6 +291,12 @@ export function BuilderLayout({
                   : 'Speichern'}
             </Button>
           </div>
+        </div>
+      </div>
+
+      {/* Right Panel - Preview */}
+      <div className="bg-muted/30 w-[380px] shrink-0 overflow-y-auto p-6">
+        <FormPreview config={config} blocks={blocks} />
       </div>
 
       {/* Add block dialog */}

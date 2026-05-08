@@ -1,9 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { Badge, Button, Card, Switch } from '@repo/ui';
+import { Badge, Button, Card, Separator, Switch } from '@repo/ui';
 import { ConfirmDialog } from '../confirm-dialog';
-import { BlockSummaryPreview } from '../block-summary-preview';
 import {
   ChevronDown,
   ChevronUp,
@@ -38,7 +37,7 @@ export function BlockCardBuilder({
   onRemove?: () => void;
   onEditBlock?: () => void;
 }) {
-  const [expanded, setExpanded] = useState(true);
+  const [expanded, setExpanded] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const icon = getBlockIcon(block.fields);
   const effectiveRequired = blockRef.required ?? block.required;
@@ -71,22 +70,20 @@ export function BlockCardBuilder({
         </div>
 
         <div className="min-w-0 flex-1">
-          {!expanded && (
-            <>
-              <div className="flex items-center gap-2">
-                {icon && <div className="text-muted-foreground">{icon}</div>}
-                <h3 className="text-lg font-semibold">{block.title}</h3>
-              </div>
-              {block.description && (
-                <p className="text-muted-foreground mt-1 text-sm">
-                  {block.description}
-                </p>
-              )}
-            </>
+          <div className="flex items-center gap-2">
+            {icon && (
+              <div className="text-muted-foreground">{icon}</div>
+            )}
+            <h3 className="text-lg font-semibold">{block.title}</h3>
+          </div>
+          {block.description && (
+            <p className="text-muted-foreground mt-1 text-sm">
+              {block.description}
+            </p>
           )}
 
           {/* Block-level required toggle */}
-          <div className={expanded ? 'flex items-center gap-2' : 'mt-2 flex items-center gap-2'}>
+          <div className="mt-2 flex items-center gap-2">
             <span className="text-muted-foreground text-sm font-medium">
               {effectiveRequired ? 'Pflicht' : 'Optional'}
             </span>
@@ -106,10 +103,24 @@ export function BlockCardBuilder({
           )}
 
           {expanded && (
-            <div className="mt-4 space-y-4">
-              <BlockSummaryPreview block={block} />
+            <div className="mt-3 space-y-3">
+              <Separator />
+              {block.fields.map((field) => (
+                <div key={field.id} className="flex items-start gap-2">
+                  <div className="bg-muted/50 flex min-w-0 flex-1 flex-col items-start justify-start gap-1 rounded-lg px-4 py-3">
+                    <span className="text-base font-semibold">
+                      {field.label}
+                    </span>
+                    {field.description && (
+                      <span className="text-muted-foreground text-sm">
+                        {field.description}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              ))}
               {onRemove && (
-                <div className="flex items-center justify-end">
+                <div className="mt-2 flex items-center justify-end">
                   <Button
                     variant="outline"
                     size="lg"

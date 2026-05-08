@@ -2,8 +2,8 @@ import { cookies } from 'next/headers';
 import { listFormConfigs } from '@/lib/store-configs';
 import { listBlocks } from '@/lib/store-blocks';
 import { getCurrentUserFromCookieValue, USER_COOKIE } from '@/lib/users';
-import { UserSwitcher } from '@/components/user-switcher';
-import { DashboardContent } from '@/components/dashboard-content';
+import { UserSwitcher } from '@/components/v1/user-switcher';
+import { DashboardContent } from '@/components/v1/dashboard-content';
 import { VersionSwitcher } from '@/components/version-switcher';
 
 export default async function DashboardPage() {
