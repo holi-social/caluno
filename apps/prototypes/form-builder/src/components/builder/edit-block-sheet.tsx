@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import {
+  Badge,
   Button,
   Field,
   FieldLabel,
@@ -14,12 +15,13 @@ import {
   SheetTitle,
 } from '@repo/ui';
 import { AlertTriangle, Plus, Save } from 'lucide-react';
-import type { Block, FormField } from '@/lib/types';
+import type { Block, FormConfig, FormField } from '@/lib/types';
 import { FieldForm, type FieldCommitHandle } from './field-form';
 import { DraggableFieldRow, arrayMove } from './draggable-field-row';
 
 export function EditBlockSheet({
   block,
+  forms,
   open,
   onOpenChange,
   onSaveBlock,
@@ -29,6 +31,8 @@ export function EditBlockSheet({
   onReorderFields,
 }: {
   block: Block | null;
+  /** All forms; when provided, the sheet shows which forms reference this block. */
+  forms?: FormConfig[];
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSaveBlock: (
@@ -113,6 +117,11 @@ export function EditBlockSheet({
     onOpenChange(next);
   }
 
+  const usedInForms =
+    forms?.filter((f) =>
+      f.blockRefs.some((ref) => ref.blockId === block.id),
+    ) ?? [];
+
   return (
     <Sheet open={open} onOpenChange={handleSheetOpenChange}>
       <SheetContent className="flex w-full flex-col sm:max-w-xl">
@@ -120,17 +129,39 @@ export function EditBlockSheet({
           <SheetTitle className="text-2xl font-bold">
             Block bearbeiten
           </SheetTitle>
-          <div className="mt-2 flex items-start gap-2 rounded-lg border p-3">
-            <AlertTriangle className="text-foreground mt-0.5 size-4 shrink-0" />
-            <p className="text-foreground text-base">
-              Änderungen an diesem Block wirken sich auf alle Formulare aus,
-              die ihn verwenden.
-            </p>
+          <div className="mt-2 rounded-lg border p-3">
+            <div className="flex items-start gap-2">
+              <AlertTriangle className="text-foreground mt-0.5 size-4 shrink-0" />
+              <div className="min-w-0 flex-1">
+                <p className="text-foreground text-base">
+                  Änderungen an diesem Block wirken sich auf alle Formulare
+                  aus, die ihn verwenden.
+                </p>
+                {usedInForms.length > 0 && (
+                  <div className="mt-1.5">
+                    <p className="text-muted-foreground text-xs font-medium uppercase tracking-wide">
+                      Verwendet in
+                    </p>
+                    <div className="mt-1.5 flex flex-wrap gap-1.5">
+                      {usedInForms.map((f) => (
+                        <Badge
+                          key={f.id}
+                          variant="outline"
+                          className="text-sm"
+                        >
+                          {f.name}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
         </SheetHeader>
 
         <div className="flex-1 overflow-y-auto px-6 pb-6">
-          <div className="mt-6 space-y-4">
+          <div className="mt-2 space-y-4">
             <Field>
               <FieldLabel htmlFor="sheet-block-title">Titel</FieldLabel>
               <Input

@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect, useId, useMemo, useRef, useState } from 'react';
 import {
   Input,
   Select,
@@ -28,15 +29,80 @@ export function ListControls({
   search,
   onSearchChange,
   searchPlaceholder = 'Suchen...',
+  searchSuggestions,
   filters,
   sort,
 }: {
   search: string;
   onSearchChange: (next: string) => void;
   searchPlaceholder?: string;
+  /** When provided, a native datalist autocompletes the search input. */
+  searchSuggestions?: string[];
   filters: FilterDef[];
-  sort: SortDef;
+  sort?: SortDef;
 }) {
+  const [focused, setFocused] = useState(false);
+  const [activeIndex, setActiveIndex] = useState(-1);
+  const listboxId = useId();
+  const itemRefs = useRef<(HTMLButtonElement | null)[]>([]);
+
+  const matches = useMemo(() => {
+    if (!searchSuggestions) return [];
+    const q = search.trim().toLowerCase();
+    if (!q) return [];
+    return searchSuggestions
+      .filter(
+        (s) => s.toLowerCase().includes(q) && s.toLowerCase() !== q,
+      )
+      .slice(0, 8);
+  }, [search, searchSuggestions]);
+  const showSuggestions = focused && matches.length > 0;
+  const safeActiveIndex =
+    activeIndex >= 0 && activeIndex < matches.length ? activeIndex : -1;
+
+  // Reset highlight when the query changes.
+  useEffect(() => {
+    setActiveIndex(-1);
+  }, [search]);
+
+  // Keep the highlighted item in view.
+  useEffect(() => {
+    if (safeActiveIndex < 0) return;
+    itemRefs.current[safeActiveIndex]?.scrollIntoView({ block: 'nearest' });
+  }, [safeActiveIndex]);
+
+  function commit(value: string) {
+    onSearchChange(value);
+    setFocused(false);
+    setActiveIndex(-1);
+  }
+
+  function handleKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
+    if (matches.length === 0) return;
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      setFocused(true);
+      setActiveIndex((i) => (i + 1 >= matches.length ? 0 : i + 1));
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      setFocused(true);
+      setActiveIndex((i) => (i <= 0 ? matches.length - 1 : i - 1));
+    } else if (e.key === 'Enter' && safeActiveIndex >= 0) {
+      e.preventDefault();
+      const choice = matches[safeActiveIndex];
+      if (choice) commit(choice);
+    } else if (e.key === 'Escape' && showSuggestions) {
+      e.preventDefault();
+      setFocused(false);
+    } else if (e.key === 'Home' && showSuggestions) {
+      e.preventDefault();
+      setActiveIndex(0);
+    } else if (e.key === 'End' && showSuggestions) {
+      e.preventDefault();
+      setActiveIndex(matches.length - 1);
+    }
+  }
+
   return (
     <div className="flex flex-wrap items-center gap-2">
       <div className="relative w-full sm:w-64">
@@ -44,9 +110,57 @@ export function ListControls({
         <Input
           value={search}
           onChange={(e) => onSearchChange(e.target.value)}
+          onFocus={() => setFocused(true)}
+          onBlur={() => setFocused(false)}
+          onKeyDown={handleKeyDown}
           placeholder={searchPlaceholder}
           className="h-10 pl-9"
+          role={searchSuggestions ? 'combobox' : undefined}
+          aria-expanded={searchSuggestions ? showSuggestions : undefined}
+          aria-controls={searchSuggestions ? listboxId : undefined}
+          aria-autocomplete={searchSuggestions ? 'list' : undefined}
+          aria-activedescendant={
+            safeActiveIndex >= 0
+              ? `${listboxId}-${safeActiveIndex}`
+              : undefined
+          }
         />
+        {showSuggestions && (
+          <ul
+            id={listboxId}
+            role="listbox"
+            className="bg-popover text-popover-foreground absolute left-0 right-0 top-full z-50 mt-1 max-h-60 overflow-y-auto rounded-md border p-1 shadow-md"
+          >
+            {matches.map((s, idx) => {
+              const active = idx === safeActiveIndex;
+              return (
+                <li key={s} role="presentation">
+                  <button
+                    ref={(el) => {
+                      itemRefs.current[idx] = el;
+                    }}
+                    type="button"
+                    role="option"
+                    id={`${listboxId}-${idx}`}
+                    aria-selected={active}
+                    className={`w-full rounded-sm px-2 py-1.5 text-left text-sm ${
+                      active
+                        ? 'bg-accent text-accent-foreground'
+                        : 'hover:bg-accent hover:text-accent-foreground'
+                    }`}
+                    onMouseEnter={() => setActiveIndex(idx)}
+                    onMouseDown={(e) => {
+                      e.preventDefault();
+                      commit(s);
+                    }}
+                  >
+                    {s}
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
+        )}
       </div>
       {filters.map((f) => (
         <Select key={f.id} value={f.value} onValueChange={f.onChange}>
@@ -62,18 +176,20 @@ export function ListControls({
           </SelectContent>
         </Select>
       ))}
-      <Select value={sort.value} onValueChange={sort.onChange}>
-        <SelectTrigger size="default" className="h-10 min-w-44">
-          <SelectValue />
-        </SelectTrigger>
-        <SelectContent>
-          {sort.options.map((o) => (
-            <SelectItem key={o.value} value={o.value}>
-              {o.label}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
+      {sort && (
+        <Select value={sort.value} onValueChange={sort.onChange}>
+          <SelectTrigger size="default" className="h-10 min-w-40">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {sort.options.map((o) => (
+              <SelectItem key={o.value} value={o.value}>
+                {o.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      )}
     </div>
   );
 }

@@ -1,5 +1,6 @@
 'use client';
 
+import { useMemo, useState } from 'react';
 import {
   Badge,
   Dialog,
@@ -10,6 +11,10 @@ import {
 } from '@repo/ui';
 import { Plus } from 'lucide-react';
 import type { Block } from '@/lib/types';
+import { getUserById } from '@/lib/users';
+import { ListControls } from '../list-controls';
+
+const ALL = '__all__';
 
 export function AddBlockDialog({
   open,
@@ -29,6 +34,28 @@ export function AddBlockDialog({
   const usedSet = new Set(usedBlockIds);
   const availableBlocks = existingBlocks.filter((b) => !usedSet.has(b.id));
 
+  const [search, setSearch] = useState('');
+  const [author, setAuthor] = useState(ALL);
+
+  const authorOptions = useMemo(() => {
+    const ids = Array.from(new Set(availableBlocks.map((b) => b.updatedBy)));
+    return [
+      { label: 'Alle Autoren', value: ALL },
+      ...ids.map((id) => ({
+        label: getUserById(id)?.name ?? id,
+        value: id,
+      })),
+    ];
+  }, [availableBlocks]);
+
+  const visibleBlocks = useMemo(() => {
+    let list = availableBlocks;
+    const q = search.trim().toLowerCase();
+    if (q) list = list.filter((b) => b.title.toLowerCase().includes(q));
+    if (author !== ALL) list = list.filter((b) => b.updatedBy === author);
+    return [...list].sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
+  }, [availableBlocks, search, author]);
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-xl">
@@ -38,9 +65,38 @@ export function AddBlockDialog({
             Bestehenden Block auswählen oder neuen erstellen
           </p>
         </DialogHeader>
+
+        {availableBlocks.length > 0 && (
+          <div className="pt-2">
+            <ListControls
+              search={search}
+              onSearchChange={setSearch}
+              searchPlaceholder="Blöcke suchen..."
+              searchSuggestions={availableBlocks.map((b) => b.title)}
+              filters={[
+                {
+                  id: 'author',
+                  label: 'Autor',
+                  value: author,
+                  options: authorOptions,
+                  onChange: setAuthor,
+                },
+              ]}
+            />
+          </div>
+        )}
+
         <div className="grid gap-3 pt-2">
-          {availableBlocks.length > 0 ? (
-            availableBlocks.map((block) => (
+          {availableBlocks.length === 0 ? (
+            <p className="text-muted-foreground py-4 text-center text-sm">
+              Alle Blöcke werden bereits verwendet
+            </p>
+          ) : visibleBlocks.length === 0 ? (
+            <p className="text-muted-foreground py-4 text-center text-sm">
+              Keine Blöcke entsprechen den aktuellen Filtern.
+            </p>
+          ) : (
+            visibleBlocks.map((block) => (
               <button
                 key={block.id}
                 type="button"
@@ -55,11 +111,7 @@ export function AddBlockDialog({
                 )}
                 <div className="mt-1.5 flex flex-wrap gap-1.5">
                   {block.fields.map((f) => (
-                    <Badge
-                      key={f.id}
-                      variant="secondary"
-                      className="text-sm"
-                    >
+                    <Badge key={f.id} variant="secondary" className="text-sm">
                       {f.label}
                     </Badge>
                   ))}
@@ -71,10 +123,6 @@ export function AddBlockDialog({
                 </div>
               </button>
             ))
-          ) : (
-            <p className="text-muted-foreground py-4 text-center text-sm">
-              Alle Blöcke werden bereits verwendet
-            </p>
           )}
 
           <Separator />

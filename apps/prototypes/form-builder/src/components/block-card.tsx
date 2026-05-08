@@ -183,6 +183,7 @@ export function BlockCard({
 
       <EditBlockSheet
         block={liveBlock}
+        forms={forms}
         open={editOpen}
         onOpenChange={setEditOpen}
         onSaveBlock={handleSaveBlock}

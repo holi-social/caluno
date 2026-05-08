@@ -53,29 +53,36 @@ export function DraggableFieldRow({
         <GripVertical className="size-4" />
       </button>
 
-      <div className="min-w-0 flex-1">
-        <div className="flex flex-wrap items-center gap-2">
-          <span className="text-sm font-medium">{field.label}</span>
-          <Badge variant="outline" className="text-[10px]">
-            {FIELD_TYPE_LABELS[field.type] ?? field.type}
-          </Badge>
-          <div className="ml-auto flex items-center gap-2">
-            <span className="text-muted-foreground text-xs font-medium">
-              {field.required ? 'Pflichtig' : 'Optional'}
-            </span>
-            <Switch
-              size="sm"
-              checked={field.required}
-              onCheckedChange={(checked) => onToggleRequired?.(checked)}
-              disabled={!onToggleRequired}
-            />
+      <div className="flex min-w-0 flex-1 items-stretch gap-2">
+        <button
+          type="button"
+          onClick={onEdit}
+          disabled={!onEdit}
+          className="hover:bg-muted/60 disabled:hover:bg-transparent -my-2 min-w-0 flex-1 rounded-md px-2 py-2 text-left disabled:cursor-default"
+        >
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="text-sm font-medium">{field.label}</span>
+            <Badge variant="outline" className="text-[10px]">
+              {FIELD_TYPE_LABELS[field.type] ?? field.type}
+            </Badge>
           </div>
+          {field.description && (
+            <p className="text-muted-foreground mt-0.5 text-xs">
+              {field.description}
+            </p>
+          )}
+        </button>
+        <div className="flex shrink-0 items-center gap-2">
+          <span className="text-muted-foreground text-xs font-medium">
+            {field.required ? 'Pflichtig' : 'Optional'}
+          </span>
+          <Switch
+            size="sm"
+            checked={field.required}
+            onCheckedChange={(checked) => onToggleRequired?.(checked)}
+            disabled={!onToggleRequired}
+          />
         </div>
-        {field.description && (
-          <p className="text-muted-foreground mt-0.5 text-xs">
-            {field.description}
-          </p>
-        )}
       </div>
 
       {(onEdit || onDelete) && (
