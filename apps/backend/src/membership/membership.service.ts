@@ -54,6 +54,66 @@ export class MembershipService {
     return membership ?? null;
   }
 
+  /**
+   * Returns `true` when the user holds a membership on `organizationUnitId`
+   * itself or on any of its ancestors within the same organization. Access
+   * inherits downward, so sibling and descendant memberships do not count.
+   *
+   * Returns `false` (never throws) when the unit is missing, has no
+   * organization, or the user has no qualifying membership.
+   */
+  async isMemberOfUnitOrAncestor(
+    userId: string,
+    organizationUnitId: string,
+  ): Promise<boolean> {
+    const requestedUnit = await this.db.query.organizationUnits.findFirst({
+      where: { id: organizationUnitId },
+      columns: { id: true, organizationId: true },
+    });
+
+    if (!requestedUnit?.organizationId) return false;
+
+    const userMemberships = await this.db.query.memberships.findMany({
+      where: { userId },
+      with: {
+        organizationUnit: {
+          columns: { id: true, organizationId: true },
+        },
+      },
+    });
+
+    // Keep only memberships scoped to the target organization.
+    const memberUnitIdsInOrganization = new Set(
+      userMemberships.flatMap((membership) => {
+        const unit = membership.organizationUnit;
+        if (!unit) return [];
+        if (unit.organizationId !== requestedUnit.organizationId) return [];
+        return [unit.id];
+      }),
+    );
+
+    if (memberUnitIdsInOrganization.size === 0) return false;
+
+    const units = await this.db.query.organizationUnits.findMany({
+      where: { organizationId: requestedUnit.organizationId },
+      columns: { id: true, parentId: true },
+    });
+
+    const parentByUnitId = new Map<string, string | null>();
+    for (const unit of units) {
+      parentByUnitId.set(unit.id, unit.parentId);
+    }
+
+    // Walk upward; first member-owned ancestor wins.
+    let currentUnitId: string | null = organizationUnitId;
+    while (currentUnitId) {
+      if (memberUnitIdsInOrganization.has(currentUnitId)) return true;
+      currentUnitId = parentByUnitId.get(currentUnitId) ?? null;
+    }
+
+    return false;
+  }
+
   // Membership requests
   async createMembershipRequest(
     userId: string,
