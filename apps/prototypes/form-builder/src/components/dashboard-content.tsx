@@ -2,11 +2,20 @@
 
 import { useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Button, Tabs, TabsContent, TabsList, TabsTrigger } from '@repo/ui';
-import { Plus } from 'lucide-react';
+import {
+  Button,
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from '@repo/ui';
+import { Copy, Plus } from 'lucide-react';
 import type { Block, FormConfig } from '@/lib/types';
 import type { User } from '@/lib/users';
-import { getUserById } from '@/lib/users';
+import { canCreateFormFromScratch, getUserById } from '@/lib/users';
 import { FormCard } from './form-card';
 import { BlockCard } from './block-card';
 import { CreateFormDialog } from './create-form-dialog';
@@ -14,25 +23,6 @@ import { CreateBlockSheet } from './builder/create-block-sheet';
 import { ListControls } from './list-controls';
 
 const ALL = '__all__';
-
-function CreateBlockButton() {
-  const router = useRouter();
-  const [open, setOpen] = useState(false);
-
-  return (
-    <>
-      <Button size="lg" onClick={() => setOpen(true)}>
-        <Plus className="mr-2 size-5" />
-        Neuer Block
-      </Button>
-      <CreateBlockSheet
-        open={open}
-        onOpenChange={setOpen}
-        onCreated={() => router.refresh()}
-      />
-    </>
-  );
-}
 
 export function DashboardContent({
   forms,
@@ -43,7 +33,23 @@ export function DashboardContent({
   blocks: Block[];
   currentUser: User;
 }) {
+  const router = useRouter();
   const [tab, setTab] = useState('formulare');
+
+  // --- Create flows ---
+  const [createFormOpen, setCreateFormOpen] = useState(false);
+  const [createFormMode, setCreateFormMode] = useState<'create' | 'copy'>(
+    'create',
+  );
+  const [createBlockOpen, setCreateBlockOpen] = useState(false);
+  const [formMenuOpen, setFormMenuOpen] = useState(false);
+  const canScratch = canCreateFormFromScratch(currentUser);
+
+  function openFormCreate(m: 'create' | 'copy') {
+    setCreateFormMode(m);
+    setCreateFormOpen(true);
+    setFormMenuOpen(false);
+  }
 
   // --- Forms list controls ---
   const [formSearch, setFormSearch] = useState('');
@@ -159,28 +165,70 @@ export function DashboardContent({
 
   return (
     <Tabs value={tab} onValueChange={setTab}>
-      <div className="flex flex-col items-start gap-2">
-        <TabsList className="h-10">
-          <TabsTrigger value="formulare" className="px-6 text-[18px]">
-            Formulare
-          </TabsTrigger>
-          <TabsTrigger value="bloecke" className="px-6 text-[18px]">
-            Blöcke
-          </TabsTrigger>
-        </TabsList>
-        <div className="flex w-full justify-end">
+      <div className="grid grid-cols-3 items-center gap-3">
+        <div />
+        <div className="flex justify-center">
+          <TabsList className="h-12!">
+            <TabsTrigger
+              value="formulare"
+              className="rounded-xl px-9 text-base"
+            >
+              Formulare
+            </TabsTrigger>
+            <TabsTrigger value="bloecke" className="rounded-xl px-9 text-base">
+              Blöcke
+            </TabsTrigger>
+          </TabsList>
+        </div>
+        <div className="flex justify-end">
           {tab === 'formulare' ? (
-            <CreateFormDialog
-              currentUser={currentUser}
-              existingForms={forms}
-            />
+            canScratch ? (
+              <Popover open={formMenuOpen} onOpenChange={setFormMenuOpen}>
+                <PopoverTrigger asChild>
+                  <Button size="lg">
+                    <Plus className="mr-2 size-5" />
+                    Formular erstellen
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent
+                  align="end"
+                  className="w-56 p-1"
+                  sideOffset={6}
+                >
+                  <button
+                    type="button"
+                    className="hover:bg-accent hover:text-accent-foreground flex w-full items-center gap-2 rounded-sm px-3 py-2 text-left text-sm"
+                    onClick={() => openFormCreate('create')}
+                  >
+                    <Plus className="size-4" />
+                    Neues Formular
+                  </button>
+                  <button
+                    type="button"
+                    className="hover:bg-accent hover:text-accent-foreground flex w-full items-center gap-2 rounded-sm px-3 py-2 text-left text-sm"
+                    onClick={() => openFormCreate('copy')}
+                  >
+                    <Copy className="size-4" />
+                    Formular kopieren
+                  </button>
+                </PopoverContent>
+              </Popover>
+            ) : (
+              <Button size="lg" onClick={() => openFormCreate('copy')}>
+                <Plus className="mr-2 size-5" />
+                Formular erstellen
+              </Button>
+            )
           ) : (
-            <CreateBlockButton />
+            <Button size="lg" onClick={() => setCreateBlockOpen(true)}>
+              <Plus className="mr-2 size-5" />
+              Block erstellen
+            </Button>
           )}
         </div>
       </div>
 
-      <TabsContent value="formulare" className="mt-6">
+      <TabsContent value="formulare" className="mt-8">
         {forms.length === 0 ? (
           <p className="text-muted-foreground py-12 text-center">
             Noch keine Formulare. Erstellen Sie Ihr erstes Formular.
@@ -233,7 +281,7 @@ export function DashboardContent({
         )}
       </TabsContent>
 
-      <TabsContent value="bloecke" className="mt-6">
+      <TabsContent value="bloecke" className="mt-8">
         {blocks.length === 0 ? (
           <p className="text-muted-foreground py-12 text-center">
             Noch keine Blöcke. Erstellen Sie Ihren ersten Block.
@@ -278,6 +326,18 @@ export function DashboardContent({
           </>
         )}
       </TabsContent>
+
+      <CreateFormDialog
+        open={createFormOpen}
+        onOpenChange={setCreateFormOpen}
+        mode={createFormMode}
+        existingForms={forms}
+      />
+      <CreateBlockSheet
+        open={createBlockOpen}
+        onOpenChange={setCreateBlockOpen}
+        onCreated={() => router.refresh()}
+      />
     </Tabs>
   );
 }

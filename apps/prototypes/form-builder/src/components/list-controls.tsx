@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useId, useMemo, useRef, useState } from 'react';
+import { useEffect, useId, useMemo, useRef, useState, type ReactNode } from 'react';
 import {
   Input,
   Select,
@@ -32,6 +32,7 @@ export function ListControls({
   searchSuggestions,
   filters,
   sort,
+  trailing,
 }: {
   search: string;
   onSearchChange: (next: string) => void;
@@ -40,6 +41,8 @@ export function ListControls({
   searchSuggestions?: string[];
   filters: FilterDef[];
   sort?: SortDef;
+  /** Right-aligned slot (e.g. a primary "create" button). */
+  trailing?: ReactNode;
 }) {
   const [focused, setFocused] = useState(false);
   const [activeIndex, setActiveIndex] = useState(-1);
@@ -104,7 +107,9 @@ export function ListControls({
   }
 
   return (
-    <div className="flex flex-wrap items-center gap-2">
+    <div className="space-y-4">
+      {trailing && <div className="flex justify-end">{trailing}</div>}
+      <div className="flex flex-wrap items-center gap-2">
       <div className="relative w-full sm:w-64">
         <Search className="text-muted-foreground pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2" />
         <Input
@@ -190,6 +195,7 @@ export function ListControls({
           </SelectContent>
         </Select>
       )}
+      </div>
     </div>
   );
 }

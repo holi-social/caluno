@@ -65,3 +65,7 @@ export function canDeleteForm(user: User, form: FormConfig): boolean {
 export function canRemoveBlockFromForm(user: User): boolean {
   return user.role === 'admin';
 }
+
+export function canCreateFormFromScratch(user: User): boolean {
+  return user.role === 'admin';
+}
