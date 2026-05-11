@@ -4,10 +4,12 @@ import { Permissions } from '../../auth/decorators/permissions.decorator';
 import type { AuthenticatedGraphQLContext } from '../../graphql/graphql.context';
 import { PaginationInput } from '../../graphql/pagination.input';
 import { OrganizationUnitMapper } from '../mappers/organization-unit.mapper';
+import { OrganizationUnitTypeMapper } from '../mappers/organization-unit-type.mapper';
 import {
   OrganizationUnit,
   OrganizationUnitPaginatedResponse,
 } from '../models/organization-unit.model';
+import { OrganizationUnitType } from '../models/organization-unit-type.model';
 import { OrganizationUnitService } from '../organization-unit.service';
 
 @Resolver(() => OrganizationUnit)
@@ -15,6 +17,7 @@ export class OrganizationUnitQueryResolver {
   constructor(
     private readonly organizationUnitService: OrganizationUnitService,
     private readonly organizationUnitMapper: OrganizationUnitMapper,
+    private readonly organizationUnitTypeMapper: OrganizationUnitTypeMapper,
   ) {}
 
   @Query(() => OrganizationUnit, { nullable: true })
@@ -34,6 +37,13 @@ export class OrganizationUnitQueryResolver {
     const organizationUnit =
       await this.organizationUnitService.findBySlug(slug);
     return this.organizationUnitMapper.toModel(organizationUnit);
+  }
+
+  @Permissions(PERMISSIONS.ORG_UNIT_READ)
+  @Query(() => [OrganizationUnitType])
+  async organizationUnitTypes(): Promise<OrganizationUnitType[]> {
+    const types = await this.organizationUnitService.findAllTypes();
+    return this.organizationUnitTypeMapper.toArray(types);
   }
 
   @Permissions(PERMISSIONS.ORG_UNIT_READ)

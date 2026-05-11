@@ -48,6 +48,9 @@ export class OrganizationUnit {
 
   @Field(() => RequirementProfile, { nullable: true })
   requiredMembershipRequirementProfile: RequirementProfile | null;
+
+  @Field(() => Date, { nullable: true })
+  deletedAt: Date;
 }
 
 export const OrganizationUnitPaginatedResponse =

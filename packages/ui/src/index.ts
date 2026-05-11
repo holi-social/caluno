@@ -31,6 +31,7 @@ export * from './components/sheet';
 export * from './components/sidebar';
 export * from './components/skeleton';
 export * from './components/tooltip';
+export * from './components/kibo-ui/tree';
 
 // Hooks
 export { useIsMobile } from './hooks/use-mobile';
