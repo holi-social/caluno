@@ -27,7 +27,7 @@ export function useSheetTrigger(name: string) {
   };
 }
 
-export function useSheet(name: string, extraKey?: string) {
+export function useSheet(name: string, ...extraKeys: string[]) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -42,13 +42,22 @@ export function useSheet(name: string, extraKey?: string) {
     [searchParams],
   );
 
+  // join keys to use as a primitive in dependency array of useCallback
+  const joinKey = ', ';
+  const keysToDeleteJoined = extraKeys.join(joinKey);
+
   const close = useCallback(() => {
+    const keysToDelete = keysToDeleteJoined.split(joinKey);
     const next = new URLSearchParams(searchParams.toString());
+
     next.delete('sheet');
-    if (extraKey) next.delete(extraKey);
+    for (const key of keysToDelete) {
+      next.delete(key);
+    }
+
     const qs = next.toString();
     router.push(qs ? `${pathname}?${qs}` : pathname);
-  }, [router, pathname, searchParams, extraKey]);
+  }, [router, pathname, searchParams, keysToDeleteJoined]);
 
   return {
     isOpen,

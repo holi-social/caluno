@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { and, count, eq } from 'drizzle-orm';
+import { and, count, eq, inArray, isNull } from 'drizzle-orm';
 import type { Database } from '../database/database.module';
 import { DATABASE_CONNECTION } from '../database/database-connection';
 import * as schema from '../database/schema';
@@ -48,7 +48,12 @@ export class OrganizationUnitService {
     const [{ total }] = await this.db
       .select({ total: count() })
       .from(schema.organizationUnits)
-      .where(eq(schema.organizationUnits.organizationId, organizationId));
+      .where(
+        and(
+          eq(schema.organizationUnits.organizationId, organizationId),
+          isNull(schema.organizationUnits.deletedAt),
+        ),
+      );
 
     return { items, total };
   }
@@ -78,9 +83,15 @@ export class OrganizationUnitService {
   }
 
   async findChildren(parentId: string): Promise<OrganizationUnitEntity[]> {
-    return this.db.query.organizationUnits.findMany({
-      where: { parentId },
-    });
+    return this.db
+      .select()
+      .from(schema.organizationUnits)
+      .where(
+        and(
+          eq(schema.organizationUnits.parentId, parentId),
+          isNull(schema.organizationUnits.deletedAt),
+        ),
+      );
   }
 
   async findOrganizationByUnitId(
@@ -206,6 +217,10 @@ export class OrganizationUnitService {
     return updated;
   }
 
+  async findAllTypes(): Promise<OrganizationUnitTypeEntity[]> {
+    return this.db.query.organizationUnitTypes.findMany();
+  }
+
   async delete(id: string): Promise<OrganizationUnitEntity> {
     const unit = await this.findById(id);
 
@@ -220,8 +235,9 @@ export class OrganizationUnitService {
     }
 
     const [deleted] = await this.db
-      .delete(schema.organizationUnits)
-      .where(and(eq(schema.organizationUnits.id, id)))
+      .update(schema.organizationUnits)
+      .set({ deletedAt: new Date() })
+      .where(eq(schema.organizationUnits.id, id))
       .returning();
 
     if (!deleted) {

@@ -4,7 +4,13 @@ import {
   type CreateOrganizationInput,
   OrganizationRepository,
 } from '@repo/data';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import {
+  useMutation,
+  useQuery,
+  useQueryClient,
+  useSuspenseQuery,
+} from '@tanstack/react-query';
+import { OrganizationUnitRepository } from '../../repositories/organization/organization-unit.repository';
 import { useGraphQLClient } from './use-graphql-client';
 
 export function useOrganizations(limit = 10, offset = 0) {
@@ -50,5 +56,26 @@ export function useCreateOrganization() {
       // Invalidate organizations list to refetch
       queryClient.invalidateQueries({ queryKey: ['organizations'] });
     },
+  });
+}
+
+export function useOrganizationUnit(id: string) {
+  const client = useGraphQLClient();
+  const repository = new OrganizationUnitRepository(client);
+
+  return useQuery({
+    queryKey: ['organization-unit', id],
+    queryFn: () => repository.findById(id),
+    enabled: !!id,
+  });
+}
+
+export function useOrganizationUnitWithSuspense(id: string) {
+  const client = useGraphQLClient();
+  const repository = new OrganizationUnitRepository(client);
+
+  return useSuspenseQuery({
+    queryKey: ['organization-unit', id],
+    queryFn: () => repository.findById(id),
   });
 }

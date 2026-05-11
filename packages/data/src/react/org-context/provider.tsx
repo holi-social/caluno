@@ -4,6 +4,7 @@ import { createContext, type ReactNode, useContext } from 'react';
 
 export interface OrganizationData {
   id: string;
+  organizationId: string;
   slug: string;
   name: string;
   description?: string | null;

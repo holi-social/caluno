@@ -17,6 +17,7 @@ import {
   CalendarIcon,
   ClockIcon,
   LogOutIcon,
+  NetworkIcon,
   ScanFace,
   ScanQrCode,
   SettingsIcon,
@@ -85,6 +86,12 @@ export function DashboardSidebar({ permissions }: DashboardSidebarProps) {
         href: `/${orgUId}/settings/roles`,
         icon: ShieldIcon,
         permission: PermissionKey.RoleRead,
+      },
+      {
+        title: 'Org Units',
+        href: `/${orgUId}/settings/org-units`,
+        icon: NetworkIcon,
+        permission: PermissionKey.OrgUnitRead,
       },
       {
         title: 'QR iD',
