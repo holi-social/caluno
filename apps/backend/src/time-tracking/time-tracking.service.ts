@@ -8,6 +8,7 @@ import { PaginationInput } from '../graphql/pagination.input';
 import { MembershipService } from '../membership/membership.service';
 import { AddTimeEntryInput } from './inputs/add-time-entry.input';
 import { CloseTimeEntryInput } from './inputs/close-time-enty-input';
+import { UpdateTimeEntryInput } from './inputs/update-time-entry.input';
 import type { TimeEntryEntity } from './schemas/time-entry.schema';
 
 @Injectable()
@@ -58,18 +59,36 @@ export class TimeTrackingService {
       with: { shiftInstance: { with: { master: true } } },
     });
 
-    if (
-      !entry ||
-      !entry.shiftInstance ||
-      !entry.shiftInstance.master ||
-      entry.shiftInstance.master.organizationUnitId !== organizationUnitId
-    ) {
+    if (!existsInOrgUnit(organizationUnitId, entry)) {
       throw new NotFoundGraphQLError('Time entry not found');
     }
 
     const [timeEntry] = await this.db
       .update(schema.timeEntries)
       .set({ endedAt: input.endedAt, notes: input.notes })
+      .where(eq(schema.timeEntries.id, id))
+      .returning();
+
+    return timeEntry;
+  }
+
+  async updateTimeEntry(
+    id: string,
+    organizationUnitId: string,
+    input: UpdateTimeEntryInput,
+  ): Promise<TimeEntryEntity> {
+    const entry = await this.db.query.timeEntries.findFirst({
+      where: { id },
+      with: { shiftInstance: { with: { master: true } } },
+    });
+
+    if (!existsInOrgUnit(organizationUnitId, entry)) {
+      throw new NotFoundGraphQLError('Time entry not found');
+    }
+
+    const [timeEntry] = await this.db
+      .update(schema.timeEntries)
+      .set(input)
       .where(eq(schema.timeEntries.id, id))
       .returning();
 
@@ -85,12 +104,7 @@ export class TimeTrackingService {
       with: { shiftInstance: { with: { master: true } } },
     });
 
-    if (
-      !entry ||
-      !entry.shiftInstance ||
-      !entry.shiftInstance.master ||
-      entry.shiftInstance.master.organizationUnitId !== organizationUnitId
-    ) {
+    if (!existsInOrgUnit(organizationUnitId, entry)) {
       throw new NotFoundGraphQLError('Time entry not found');
     }
 
@@ -110,11 +124,7 @@ export class TimeTrackingService {
       with: { shiftInstance: { with: { master: true } }, volunteer: true },
     });
 
-    if (
-      !entry ||
-      !entry.shiftInstance?.master ||
-      entry.shiftInstance.master.organizationUnitId !== organizationUnitId
-    ) {
+    if (!existsInOrgUnit(organizationUnitId, entry)) {
       throw new NotFoundGraphQLError('Time entry not found');
     }
 
@@ -169,3 +179,16 @@ export class TimeTrackingService {
     return { entries: paginated as TimeEntryEntity[], total: filtered.length };
   }
 }
+
+const existsInOrgUnit = (
+  organizationUnitId: string,
+  entry?: {
+    shiftInstance: { master: { organizationUnitId: string } | null } | null;
+  },
+): entry is {
+  shiftInstance: { master: { organizationUnitId: string } };
+} => {
+  return !!(
+    entry?.shiftInstance?.master?.organizationUnitId === organizationUnitId
+  );
+};

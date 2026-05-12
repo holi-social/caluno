@@ -175,6 +175,7 @@ type Mutation {
   updateRequirementProfileSubmission(id: String!, input: UpdateRequirementProfileSubmissionInput!): RequirementProfileSubmission!
   updateRole(id: ID!, input: CreateRoleInput!): Role!
   updateShift(id: String!, input: UpdateShiftInput!): Shift!
+  updateTimeEntry(id: ID!, input: UpdateTimeEntryInput!): TimeEntry!
 }
 
 type Organization {
@@ -331,6 +332,7 @@ type Query {
   shiftVolunteers(shiftId: ID!): [User!]!
   shifts(limit: Int! = 10, offset: Int! = 0): ShiftPaginatedResponse!
   timeEntries(limit: Int! = 10, offset: Int! = 0): TimeEntryPaginatedResponse!
+  timeEntry(id: ID!): TimeEntry!
   timeEntriesByUser(limit: Int! = 10, offset: Int! = 0, userId: String!): TimeEntryPaginatedResponse!
   timeEntry(id: String!): TimeEntry!
   user(id: String!): User
@@ -600,6 +602,13 @@ input UpdateShiftInput {
   startsAt: DateTime
   title: String
   visibility: ShiftVisibility = ALL_MEMBERS
+}
+
+input UpdateTimeEntryInput {
+  endedAt: DateTime
+  notes: String
+  shiftInstanceId: String!
+  startedAt: DateTime!
 }
 
 type User {
