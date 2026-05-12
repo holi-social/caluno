@@ -17,3 +17,8 @@ export const closeTimeEntrySchema = z.object({
   organizationUnitId: z.string().min(1, 'Organization unit ID is required'),
   notes: z.string().trim().optional(),
 });
+
+export const deleteTimeEntrySchema = z.object({
+  id: z.string().min(1, 'Time Entry ID is required'),
+  organizationUnitId: z.string().min(1, 'Organization unit ID is required'),
+});

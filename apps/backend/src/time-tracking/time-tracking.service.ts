@@ -101,6 +101,26 @@ export class TimeTrackingService {
     return deletedTimeEntry;
   }
 
+  async findById(
+    id: string,
+    organizationUnitId: string,
+  ): Promise<TimeEntryEntity> {
+    const entry = await this.db.query.timeEntries.findFirst({
+      where: { id },
+      with: { shiftInstance: { with: { master: true } }, volunteer: true },
+    });
+
+    if (
+      !entry ||
+      !entry.shiftInstance?.master ||
+      entry.shiftInstance.master.organizationUnitId !== organizationUnitId
+    ) {
+      throw new NotFoundGraphQLError('Time entry not found');
+    }
+
+    return entry;
+  }
+
   async findAll(
     organizationUnitId: string,
     pagination: PaginationInput,

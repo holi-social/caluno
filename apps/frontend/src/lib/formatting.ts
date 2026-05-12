@@ -1,3 +1,8 @@
+import {
+  formatDuration as dateFnsFormatDuration,
+  intervalToDuration,
+} from 'date-fns';
+
 export const formatDateTime = (date: Date) =>
   date.toLocaleDateString(undefined, {
     day: '2-digit',
@@ -36,4 +41,11 @@ export const formatRange = (from: string | Date, to: string | Date) => {
   } else {
     return `${formatDateTime(fromDate)} - ${formatDateTime(toDate)}`;
   }
+};
+
+export const formatDuration = (start: Date, end: Date) => {
+  const duration = intervalToDuration({ start, end });
+  return dateFnsFormatDuration(duration, {
+    format: ['days', 'hours', 'minutes'],
+  });
 };
