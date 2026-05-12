@@ -11,10 +11,13 @@ import { DATABASE_CONNECTION } from '../database/database-connection';
 import * as schema from '../database/schema';
 import { OrganizationEntity, OrganizationUnitEntity } from '../database/schema';
 import type { PaginationInput } from '../graphql/pagination.input';
+import { MembershipService } from '../membership/membership.service';
 import { slugify } from '../utils';
 import type { CreateOrganizationInput } from './inputs/create-organization.input';
 import { OrganizationMapper } from './mappers/organization.mapper';
 import { type Organization } from './models/organization.model';
+import { OrganizationTree } from './models/organization-tree.model';
+import { OrganizationNode } from './types/organization-node';
 
 @Injectable()
 export class OrganizationService {
@@ -22,6 +25,7 @@ export class OrganizationService {
     @Inject(DATABASE_CONNECTION)
     private readonly db: Database,
     private readonly mapper: OrganizationMapper,
+    private readonly membershipService: MembershipService,
   ) {}
 
   async findById(id: string): Promise<OrganizationEntity | undefined> {
@@ -112,6 +116,76 @@ export class OrganizationService {
         ),
       total,
     };
+  }
+
+  /**
+   * Returns the organization subtree rooted at `organizationUnitId` for the
+   * given user, or `null` when the unit is missing, detached from an
+   * organization, or the user lacks access.
+   *
+   * Access is delegated to `MembershipService.isMemberOfUnitOrAncestor`: the
+   * caller must hold a membership on the unit or any of its ancestors.
+   * The returned `nodes` are the root's recursive descendants; the root
+   * itself is exposed via `id`/`name`.
+   */
+  async findOrganizationTree(
+    userId: string,
+    organizationUnitId: string,
+  ): Promise<OrganizationTree | null> {
+    const requestedUnit = await this.db.query.organizationUnits.findFirst({
+      where: { id: organizationUnitId },
+    });
+
+    if (!requestedUnit?.organizationId) return null;
+
+    const canAccess = await this.membershipService.isMemberOfUnitOrAncestor(
+      userId,
+      organizationUnitId,
+    );
+
+    if (!canAccess) return null;
+
+    const units = await this.db.query.organizationUnits.findMany({
+      where: { organizationId: requestedUnit.organizationId },
+    });
+
+    return {
+      id: organizationUnitId,
+      name: requestedUnit.name,
+      nodes: this.buildSubtreeNodes(units, organizationUnitId),
+    };
+  }
+
+  /**
+   * Materializes the descendant subtree of `rootUnitId` from a flat list of
+   * units in the same organization. Returns the root's direct children, each
+   * with their own recursive `children` (root itself excluded). Assumes the
+   * input forms a forest of trees (no cycles, enforced by the schema).
+   */
+  private buildSubtreeNodes(
+    units: OrganizationUnitEntity[],
+    rootUnitId: string,
+  ): OrganizationNode[] {
+    const childrenByParentId = new Map<string, OrganizationUnitEntity[]>();
+
+    for (const unit of units) {
+      if (!unit.parentId) continue;
+      const siblings = childrenByParentId.get(unit.parentId) ?? [];
+      siblings.push(unit);
+      childrenByParentId.set(unit.parentId, siblings);
+    }
+
+    const buildChildren = (parentId: string): OrganizationNode[] => {
+      const directChildren = childrenByParentId.get(parentId) ?? [];
+      return directChildren.map((child) => ({
+        id: child.id,
+        name: child.name,
+        parentId: child.parentId,
+        children: buildChildren(child.id),
+      }));
+    };
+
+    return buildChildren(rootUnitId);
   }
 
   async findRootUnit(

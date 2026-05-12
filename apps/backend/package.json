@@ -45,6 +45,7 @@
     "drizzle-kit": "^1.0.0-beta.15",
     "drizzle-orm": "^1.0.0-beta.15",
     "graphql": "^16.12.0",
+    "graphql-scalars": "^1.25.0",
     "nanoid": "^5.1.7",
     "pg": "^8.17.1",
     "reflect-metadata": "^0.2.2",
