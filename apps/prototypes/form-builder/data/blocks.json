@@ -5,20 +5,60 @@
     "icon": "User",
     "fields": [
       {
-        "id": "sysreq-geburtsdatum-wj2ev2",
-        "type": "date",
-        "label": "Geburtsdatum",
-        "description": "Wird im Profil gespeichert und z.B. für altersgebundene Einsätze genutzt.",
+        "id": "sysreq-vorname-3j0iqo",
+        "type": "vorname",
+        "label": "Vorname",
         "required": true,
         "lockType": true,
-        "systemKey": "geburtsdatum"
+        "systemKey": "vorname",
+        "description": "Wie im Ausweisdokument."
+      },
+      {
+        "id": "sysreq-nachname-lk3pbg",
+        "type": "nachname",
+        "label": "Nachname",
+        "required": true,
+        "lockType": true,
+        "systemKey": "nachname",
+        "description": "Wie im Ausweisdokument."
+      },
+      {
+        "id": "sysreq-bevorzugter-name-wyc4kv",
+        "type": "vorname",
+        "label": "Bevorzugter Name",
+        "required": false,
+        "lockType": true,
+        "systemKey": "bevorzugter-name",
+        "description": "Falls anders als der gesetzliche Name."
+      },
+      {
+        "id": "sysreq-geschlecht-4ijxoh",
+        "type": "singlechoice",
+        "label": "Geschlecht",
+        "required": true,
+        "lockType": true,
+        "systemKey": "geschlecht",
+        "options": [
+          {
+            "label": "Weiblich",
+            "value": "weiblich"
+          },
+          {
+            "label": "Männlich",
+            "value": "maennlich"
+          },
+          {
+            "label": "Divers",
+            "value": "divers"
+          }
+        ]
       }
     ],
     "required": true,
     "createdBy": "andrea",
     "updatedBy": "andrea",
     "createdAt": "2026-04-30T08:58:15.922Z",
-    "updatedAt": "2026-05-12T15:34:32.714Z",
+    "updatedAt": "2026-05-12T16:06:27.571Z",
     "description": "Let's get to know each other!"
   },
   {
@@ -130,5 +170,67 @@
     "updatedBy": "andrea",
     "createdAt": "2026-05-08T11:01:17.935Z",
     "updatedAt": "2026-05-08T11:01:17.935Z"
+  },
+  {
+    "id": "block-d6a64a05",
+    "title": "Neuer Block",
+    "fields": [
+      {
+        "id": "sysreq-email-2m0wwk",
+        "type": "email",
+        "label": "E-Mail",
+        "required": true,
+        "lockType": true,
+        "systemKey": "email"
+      },
+      {
+        "id": "sysreq-vorname-g34vjf",
+        "type": "vorname",
+        "label": "Vorname",
+        "required": true,
+        "lockType": true,
+        "systemKey": "vorname",
+        "description": "Wie im Ausweisdokument."
+      },
+      {
+        "id": "sysreq-bevorzugter-name-drr5lb",
+        "type": "vorname",
+        "label": "Bevorzugter Name",
+        "required": false,
+        "lockType": true,
+        "systemKey": "bevorzugter-name",
+        "description": "Falls anders als der gesetzliche Name."
+      },
+      {
+        "id": "sysreq-nachname-5v2gdq",
+        "type": "nachname",
+        "label": "Nachname",
+        "required": true,
+        "lockType": true,
+        "systemKey": "nachname",
+        "description": "Wie im Ausweisdokument."
+      },
+      {
+        "id": "sysreq-telefonnummer-ke1vqr",
+        "type": "phone",
+        "label": "Telefonnummer",
+        "required": false,
+        "lockType": true,
+        "systemKey": "telefonnummer"
+      },
+      {
+        "id": "sysreq-adresse-dv9yz8",
+        "type": "text",
+        "label": "Adresse",
+        "required": true,
+        "lockType": true,
+        "systemKey": "adresse"
+      }
+    ],
+    "required": true,
+    "createdBy": "andrea",
+    "updatedBy": "andrea",
+    "createdAt": "2026-05-12T16:09:33.500Z",
+    "updatedAt": "2026-05-12T16:09:33.500Z"
   }
 ]

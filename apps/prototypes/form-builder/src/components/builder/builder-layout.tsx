@@ -64,7 +64,20 @@ export function BuilderLayout({
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [undo, redo]);
 
-  // Refresh blocks from API
+  // Splice an updated block into local state. Used after PUT responses so
+  // we avoid a second round-trip to GET /api/blocks.
+  const applyBlockUpdate = useCallback((updated: Block) => {
+    setBlocks((prev) => {
+      const idx = prev.findIndex((b) => b.id === updated.id);
+      if (idx === -1) return [...prev, updated];
+      const next = prev.slice();
+      next[idx] = updated;
+      return next;
+    });
+  }, []);
+
+  // Full re-fetch, only used when an id might be unknown (e.g. after
+  // creating a brand-new block from CreateBlockSheet).
   const refreshBlocks = useCallback(async () => {
     const res = await fetch('/api/blocks');
     if (res.ok) {
@@ -114,9 +127,7 @@ export function BuilderLayout({
   const { addField, editField, deleteField, reorderFields } =
     useBlockFieldMutations(
       (id) => blockMap.get(id)?.fields ?? null,
-      () => {
-        void refreshBlocks();
-      },
+      applyBlockUpdate,
     );
 
   async function handleBlockEdit(
@@ -128,7 +139,10 @@ export function BuilderLayout({
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(updates),
     });
-    if (res.ok) await refreshBlocks();
+    if (res.ok) {
+      const updated = (await res.json()) as Block;
+      applyBlockUpdate(updated);
+    }
   }
 
   // --- Save form ---

@@ -20,9 +20,11 @@ export function AvailableSystemFieldCard({
       <UserCircle2 className="text-muted-foreground mt-0.5 size-4 shrink-0" />
       <div className="min-w-0 flex-1">
         <p className="text-sm font-medium">{preset.defaultLabel}</p>
-        <p className="text-muted-foreground mt-0.5 text-sm">
-          {preset.defaultDescription}
-        </p>
+        {preset.defaultDescription && (
+          <p className="text-muted-foreground mt-0.5 text-sm">
+            {preset.defaultDescription}
+          </p>
+        )}
       </div>
     </button>
   );

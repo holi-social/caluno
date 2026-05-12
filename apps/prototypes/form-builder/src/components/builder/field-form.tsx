@@ -61,7 +61,8 @@ export const FieldForm = forwardRef<
 
   const isDocument = fieldType === 'document-acknowledgement';
   const showOptions =
-    fieldType === 'multichoice' || fieldType === 'singlechoice';
+    !initial?.lockType &&
+    (fieldType === 'multichoice' || fieldType === 'singlechoice');
 
   function commit(): boolean {
     if (!fieldType) {
@@ -106,6 +107,7 @@ export const FieldForm = forwardRef<
       ...(initial?.lockType ? { lockType: initial.lockType } : {}),
       ...(initial?.systemKey ? { systemKey: initial.systemKey } : {}),
       ...(initial?.minAge !== undefined ? { minAge: initial.minAge } : {}),
+      ...(initial?.options ? { options: initial.options } : {}),
     };
     if (description.trim()) {
       field.description = description.trim();

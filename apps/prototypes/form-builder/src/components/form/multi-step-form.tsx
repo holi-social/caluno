@@ -164,11 +164,7 @@ export function MultiStepForm({
 
   function validateCurrentStep(): FieldError[] {
     if (!currentBlock) return [];
-    const stepFields = currentBlock.fields.map((f) => ({
-      ...f,
-      required: currentBlock.effectiveRequired,
-    }));
-    return validateStepFields(stepFields, formData);
+    return validateStepFields(currentBlock.fields, formData);
   }
 
   function handleNext() {

@@ -7,8 +7,6 @@ import {
   FieldError,
   FieldLabel,
   Input,
-  RadioGroup,
-  RadioGroupItem,
   Select,
   SelectContent,
   SelectItem,
@@ -116,45 +114,7 @@ export function FieldRenderer({
     );
   }
 
-  if (field.type === 'singlechoice') {
-    const stringValue = typeof value === 'string' ? value : '';
-    return (
-      <Field data-invalid={!!error || undefined}>
-        <FieldLabel>
-          {field.label}
-          {field.required && (
-            <span className="text-destructive ml-0.5">*</span>
-          )}
-        </FieldLabel>
-        {field.description && (
-          <FieldDescription>{field.description}</FieldDescription>
-        )}
-        <RadioGroup
-          value={stringValue}
-          onValueChange={(val) => onChange(val)}
-          className="pt-1"
-        >
-          {field.options?.map((opt) => (
-            <div key={opt.value} className="flex items-center gap-3">
-              <RadioGroupItem
-                value={opt.value}
-                id={`${field.id}-${opt.value}`}
-              />
-              <label
-                htmlFor={`${field.id}-${opt.value}`}
-                className="text-sm cursor-pointer"
-              >
-                {opt.label}
-              </label>
-            </div>
-          ))}
-        </RadioGroup>
-        {error && <FieldError>{error.message}</FieldError>}
-      </Field>
-    );
-  }
-
-  if (field.type === 'select') {
+  if (field.type === 'singlechoice' || field.type === 'select') {
     return (
       <Field data-invalid={!!error || undefined}>
         <FieldLabel htmlFor={field.id}>

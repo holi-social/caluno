@@ -71,6 +71,67 @@ These build on the v1 vs v2 baseline above. v1 is untouched.
   - Blöcke: click opens `CreateBlockSheet` directly.
 - **`CreateFormDialog` is now controlled-only** ([create-form-dialog.tsx](src/components/create-form-dialog.tsx)). Props: `open`, `onOpenChange`, `mode: 'create' | 'copy'`, `existingForms`. No internal trigger, no `currentUser` prop — the parent picks the mode (which absorbs the moderator-forced-copy rule that used to live inside the dialog). State resets on every `open` flip.
 - **New permission helper** `canCreateFormFromScratch(user)` in [lib/users.ts](src/lib/users.ts) — admin only. Used by `DashboardContent` to decide whether to render the create-form Popover or skip to copy.
+- **Volunteer-side `singlechoice` renders as a dropdown** ([form/field-renderer.tsx](src/components/form/field-renderer.tsx)). Single-choice and `select` fields now share one render branch using shadcn `Select`; `RadioGroup` / `RadioGroupItem` imports dropped. Builder/preview is unchanged — choice fields still show as option chips inside `FieldDataHint`.
+- **Per-field `required` is now the source of truth on the volunteer form** ([form/form-step.tsx](src/components/form/form-step.tsx), [form/multi-step-form.tsx](src/components/form/multi-step-form.tsx)). Both files used to override `field.required` with `block.effectiveRequired` (a v1-era cascade from the now-removed block-level Pflicht Switch). That override silently made every field mandatory regardless of the builder toggle — fixed by reading `field.required` directly in the renderer and in `validateCurrentStep`. v1's copies still cascade.
+- **Single round-trip on field/block-meta save in the builder** ([builder/builder-layout.tsx](src/components/builder/builder-layout.tsx)). The old flow PUT-then-`GET /api/blocks`-then-`setBlocks` — two trips through the file-store's serial `runExclusive` queue per click. New `applyBlockUpdate(updated)` callback splices the PUT response into local state directly. `refreshBlocks` still exists for the only path that needs it: after `CreateBlockSheet` creates a brand-new block whose id wasn't in `blocks` yet.
+
+## System Requirement fields
+
+A second class of field alongside the custom fields the org defines. The platform owns the type / validation / required-flag; the org can only edit label + description per block. The value lives on the **volunteer's profile**, keyed by `systemKey`, tagged with the sub-org where it was last filled — so the answer round-trips across forms and sub-orgs without going into submission records.
+
+### Registry & types
+
+- `FormField.systemKey?: string` discriminator (added to [src/lib/types.ts](src/lib/types.ts)).
+- [src/lib/system-requirements.ts](src/lib/system-requirements.ts) — `SYSTEM_REQUIREMENTS` registry, `createSystemRequirementField(key)` factory, `isSystemRequirement(field)` guard, `getSystemRequirementPreset(field)`, `getSystemRequirementKeysInUse(fields)`. Ten entries today:
+
+  | Key | Label | FieldType | `defaultRequired` | `requiredEditable` |
+  |---|---|---|---|---|
+  | `nachname` | Nachname | `nachname` | true | false |
+  | `vorname` | Vorname | `vorname` | true | false |
+  | `bevorzugter-name` | Bevorzugter Name | `vorname` | false | false |
+  | `geschlecht` | Geschlecht | `singlechoice` (Weiblich / Männlich / Divers) | false | true |
+  | `email` | E-Mail | `email` | true | false |
+  | `telefonnummer` | Telefonnummer | `phone` | false | true |
+  | `adresse` | Adresse | `text` | true | true |
+  | `plz` | PLZ | `plz` | true | true |
+  | `stadt` | Stadt | `text` | true | true |
+  | `geburtsdatum` | Geburtsdatum | `date` | true | false |
+
+- **Required-flag policy is two-dimensional** (not just a single boolean): `defaultRequired` seeds `field.required` at creation; `requiredEditable` decides whether the org can flip the Switch later. The factory bakes `defaultRequired` into the field at creation, and the row reads `requiredEditable` from the registry at render time to choose between the live Switch and a disabled+tooltip variant. Generic tooltip copy: *"Diese Einstellung ist durch das Systemfeld vorgegeben."* (works for both always-required and always-optional cases).
+- `FormField.lockType: true` is honored — wired in `FieldForm` (was defined-but-unread before this work).
+
+### Profile storage
+
+- [src/lib/store-user-profiles.ts](src/lib/store-user-profiles.ts) — file-based, `runExclusive`, seed-on-ENOENT; mirrors `store-blocks.ts`. Shape: `Record<userId, { userId, entries: Partial<Record<SystemRequirementKey, { value, subOrg, updatedAt }>> }>`. Seeds Karl with `geburtsdatum = '1980-05-12'` (subOrg `Karlstrasse 13`); Andrea has no entry.
+- [src/app/api/user-profile/route.ts](src/app/api/user-profile/route.ts) — GET reads cookie + returns profile, POST upserts entries. `getVolunteerId()` helper at the top of the file is the **single production-swap point**: replace the `USER_COOKIE` read with real auth here when the prototype graduates.
+
+### Builder UI
+
+- `EditBlockSheet` got a new subsection **"Systemfelder auswählen"** below the regular field list. Lists `SYSTEM_REQUIREMENT_LIST` entries not yet in this block as `<AvailableSystemFieldCard>`s; click → factory inserts into the block and the card disappears from the available list.
+- The original "+ Feld" button was renamed to **"Eigenes Feld erstellen"** to contrast against system fields.
+- Used system fields render with `bg-accent/40`, a leading `UserCircle2`, and a secondary `Systemfeld` badge inside `DraggableFieldRow`. The Pflichtig Switch is locked (disabled) **only when `requiredEditable === false`** — for editable presets (Geschlecht, Telefonnummer, Adresse, PLZ, Stadt) the Switch behaves like a normal field's.
+- `FieldDataHint` prepends a `Systemfeld` Badge inline (flex flex-wrap gap-2) before the type cue, so the BlockSummaryPreview reads consistently with the EditBlockSheet row.
+- `FieldForm` with `lockType: true` **drops the type Select entirely** (was previously a disabled Select) and shows an `Alert` at the bottom of the form (not above — see pitfalls) explaining where the data lands, with the preset's canonical name bolded. It also **hides the `OptionsEditor`** (registry owns options); commit spreads `initial.options` so the registry's choices survive a label/description edit.
+- `EditBlockSheet` takes optional `forms?: FormConfig[]` to render a "Verwendet in" list inside the warning header. `BuilderLayout` now fetches `listFormConfigs()` at the page level and passes them through, so block editing has the same affordance from the builder AND from the blocks list.
+
+### Volunteer rendering (3 states)
+
+`MultiStepForm` derives a state per field that has `systemKey`:
+
+1. **`empty`** — no profile entry → render normal empty input.
+2. **`hidden`** — profile has entry on the same sub-org → skip entirely (filtered from `resolvedBlocks` before `buildDisplaySteps`, so validation + step nav never see it).
+3. **`profile-prefilled`** — profile has entry on a different sub-org → input pre-filled with the profile value, `<SystemFieldBanner>` rendered above it.
+
+On submit, `formData` is split via `Promise.all`:
+- Regular fields → `/api/submissions` (existing route).
+- System req fields with a value → `/api/user-profile` (new route, upserts with current sub-org).
+
+System req values **never** appear in submission records. If neither path has work, the corresponding POST is skipped.
+
+### Seed data
+
+- `data/blocks.json` — the existing `f-dob` date field in "Persönliche Daten" was converted into the Geburtsdatum system requirement (`systemKey: 'geburtsdatum'`, `lockType: true`).
+- `data/user-profiles.json` does not exist on disk by default; it self-seeds with Karl's entry on first API hit.
 
 ## Core architecture: blocks, not sections
 
@@ -129,6 +190,14 @@ Thin REST wrappers under `src/app/api/`. `/api/blocks`, `/api/forms`, `/api/subm
 - Toasts via `sonner` (`toast.success` / `toast.error`).
 - `router.refresh()` after mutations in client components — server components re-read the JSON.
 - Date format: always `de-DE` `dd.mm.yyyy`.
+- **Heading scale** (calibrated on `EditBlockSheet`):
+  - `h2` (SheetTitle) — `text-2xl font-bold` ("Block bearbeiten").
+  - `h3` — `text-xl font-semibold` ("Felder (N)").
+  - `h4` — `text-lg font-medium` ("Systemfelder auswählen"). Visually lighter than `h3`; weight does the subordination.
+  - Inline edit forms (FieldForm-style) **get no heading** — the primary border carries the active signal, surrounding chrome carries the intent.
+- **`text-xs` is reserved for decorative + uppercase** (eyebrows like "Verwendet in", "Inhalt"). Body copy, helper text, badges, switch labels all default to `text-sm`. **Never** `text-[10px]` or other arbitrary values.
+- **Active-edit affordance** is a 1px `border-primary` on the editing card. Not background tint, not dashed border, not ring overlay. Inactive cards keep the muted `border`.
+- **Section subtitle pattern**: heading first, then a one-line `<p className="text-muted-foreground text-sm">` underneath. **Never** lead a section with an Alert/banner — title leads, banner (if any) goes inside the section or at the bottom.
 
 ## Working style the user prefers
 
@@ -151,3 +220,12 @@ Calibrated from this project's iteration:
 - Hard-coding vertical insets like `-my-2 py-2` on a row child and assuming it'll always be a fixed pixel offset from the wrapper. When the wrapper height is dynamic, set the parent flex to `items-stretch` so the child stretches to the tallest sibling first; the negative-margin trick only behaves consistently then.
 - Restoring the block-level `Pflicht` toggle in `section-card`. It was deliberately removed in v2 — the cascade onto fields isn't surfaced and the toggle confused users. `BlockRef.required` stays in types for v1/data compatibility only.
 - Sizing a `TabsList` with a plain `h-*` class. The `@repo/ui` variant bakes `group-data-[orientation=horizontal]/tabs:h-9` into the class, which has higher specificity than a bare `h-12`; tailwind-merge can't dedupe across the conditional selector. Use Tailwind v4's important-modifier suffix: `h-12!`.
+- Putting an `<Alert>` (or any callout) *above* a section title. The banner steals attention before the user reads what the section is. Title leads; banner (if any) goes inside.
+- Adding a heading inside an inline edit form by reflex. When the FieldForm replaces a row in-place, the surrounding context already says "Feld bearbeiten" — a `<h4>` on top is noise. Active border + context wins.
+- Reaching for `text-xs` for non-decorative copy. Decorative + uppercase only (eyebrows). Everything else is `text-sm`. Arbitrary values like `text-[10px]` are always wrong.
+- `AlertDescription` is a **grid container** (`grid gap-1`) — each direct child becomes its own row. Wrap inline-formatted sentences containing `<strong>` (or any mixed children) in a single `<p>` so the elements stay on one line.
+- Forgetting that system-requirement fields don't go into submission records. When touching the submit pipeline, filter on `field.systemKey` before posting to `/api/submissions` — those values belong on `/api/user-profile`.
+- Storing system-requirement profile data in `User.subOrg`. That string is the **admin's** sub-org. Profile entries carry their own `subOrg` snapshot from `FormConfig.organizationName` at submit time.
+- Trusting `block.effectiveRequired` in the volunteer renderer. It's a v1-era cascade (a "required" block forced every field inside to required) and silently overrides the builder's per-field toggle. Read `field.required` directly in v2's `FormStep` + `validateCurrentStep`. The resolver still emits `effectiveRequired` for v1, but v2 ignores it.
+- Discarding the PUT response and immediately doing a GET to "refresh" after a field mutation. The PUT already returns the updated block; splice it into local state via the `onUpdated` callback. Each extra GET goes through `runExclusive` and visibly stalls clicks — felt sharply on rapid actions like adding system fields one after another.
+- Treating `SystemRequirementPreset.required` as a single boolean. Two flags: `defaultRequired` (the initial value baked into the field) and `requiredEditable` (whether the org can flip it). Look up `getSystemRequirementPreset(field)` at render time to decide whether the Switch is live or disabled.

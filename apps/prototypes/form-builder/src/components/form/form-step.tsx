@@ -40,7 +40,7 @@ export function FormStep({
             >
               {fromProfile && <SystemFieldBanner />}
               <FieldRenderer
-                field={{ ...field, required: block.effectiveRequired }}
+                field={field}
                 value={
                   data[field.id] ??
                   (field.type === 'checkbox' ||

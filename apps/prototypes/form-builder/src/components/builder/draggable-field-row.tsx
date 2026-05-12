@@ -4,7 +4,10 @@ import { Badge, Button, Switch, Tooltip, TooltipContent, TooltipTrigger } from '
 import { GripVertical, Pencil, Trash2, UserCircle2 } from 'lucide-react';
 import type { FormField } from '@/lib/types';
 import { FIELD_TYPE_LABELS } from '@/lib/predefined-fields';
-import { isSystemRequirement } from '@/lib/system-requirements';
+import {
+  getSystemRequirementPreset,
+  isSystemRequirement,
+} from '@/lib/system-requirements';
 
 export function DraggableFieldRow({
   field,
@@ -28,6 +31,8 @@ export function DraggableFieldRow({
   onDelete?: () => void;
 }) {
   const isSystemField = isSystemRequirement(field);
+  const systemPreset = getSystemRequirementPreset(field);
+  const requiredLocked = isSystemField && systemPreset?.requiredEditable === false;
   return (
     <div
       className={[
@@ -87,19 +92,15 @@ export function DraggableFieldRow({
           <span className="text-muted-foreground text-sm font-medium">
             {field.required ? 'Pflichtig' : 'Optional'}
           </span>
-          {isSystemField ? (
+          {requiredLocked ? (
             <Tooltip>
               <TooltipTrigger asChild>
                 <span>
-                  <Switch
-                    size="sm"
-                    checked
-                    disabled
-                  />
+                  <Switch size="sm" checked={field.required} disabled />
                 </span>
               </TooltipTrigger>
               <TooltipContent>
-                Systemfelder sind immer Pflichtfelder.
+                Diese Einstellung ist durch das Systemfeld vorgegeben.
               </TooltipContent>
             </Tooltip>
           ) : (
