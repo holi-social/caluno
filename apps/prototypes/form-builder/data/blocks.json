@@ -5,33 +5,20 @@
     "icon": "User",
     "fields": [
       {
-        "id": "f-vorname",
-        "type": "vorname",
-        "label": "Vorname",
-        "required": true,
-        "placeholder": "z.B. Max",
-        "description": "genau wie im Ausweissdokument"
-      },
-      {
-        "id": "f-nachname",
-        "type": "nachname",
-        "label": "Nachname",
-        "required": true,
-        "placeholder": "z.B. Mustermann"
-      },
-      {
-        "id": "f-dob",
+        "id": "sysreq-geburtsdatum-wj2ev2",
         "type": "date",
         "label": "Geburtsdatum",
-        "required": false,
-        "minAge": 14
+        "description": "Wird im Profil gespeichert und z.B. für altersgebundene Einsätze genutzt.",
+        "required": true,
+        "lockType": true,
+        "systemKey": "geburtsdatum"
       }
     ],
     "required": true,
     "createdBy": "andrea",
     "updatedBy": "andrea",
     "createdAt": "2026-04-30T08:58:15.922Z",
-    "updatedAt": "2026-05-08T10:44:04.873Z",
+    "updatedAt": "2026-05-12T15:34:32.714Z",
     "description": "Let's get to know each other!"
   },
   {

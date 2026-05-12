@@ -17,10 +17,12 @@ import { CreateBlockSheet } from './create-block-sheet';
 export function BuilderLayout({
   initialConfig,
   initialBlocks,
+  initialForms,
   currentUser,
 }: {
   initialConfig: FormConfig;
   initialBlocks: Block[];
+  initialForms: FormConfig[];
   currentUser: User;
 }) {
   const {
@@ -292,6 +294,7 @@ export function BuilderLayout({
         return (
           <EditBlockSheet
             block={editBlock}
+            forms={initialForms}
             open={editBlockId !== null}
             onOpenChange={(open) => {
               if (!open) setEditBlockId(null);

@@ -33,6 +33,12 @@ export type FormField = {
    * Used for predefined fields (e.g. "Vorname", "Nachname", ...)
    */
   lockType?: boolean;
+  /**
+   * If set, this field is bound to a platform-defined System Requirement preset.
+   * The value lives on the user profile (not on the form submission) and is
+   * reusable across sub-orgs. The org may only edit label and description.
+   */
+  systemKey?: string;
   options?: SelectOption[];
   documentUrl?: string;
   documentLabel?: string;

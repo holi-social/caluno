@@ -2,6 +2,8 @@
 
 import { forwardRef, useImperativeHandle, useState } from 'react';
 import {
+  Alert,
+  AlertDescription,
   Button,
   Field,
   FieldLabel,
@@ -12,8 +14,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@repo/ui';
+import { UserCircle2 } from 'lucide-react';
 import type { FieldType, FormField } from '@/lib/types';
 import { FIELD_TYPE_OPTIONS } from '@/lib/predefined-fields';
+import {
+  SYSTEM_REQUIREMENTS,
+  type SystemRequirementKey,
+} from '@/lib/system-requirements';
 import type { UploadedFile } from '@/lib/use-file-upload';
 import { FileUploadField } from './file-upload-field';
 import { OptionsEditor } from './options-editor';
@@ -85,6 +92,8 @@ export const FieldForm = forwardRef<
         documentUrl: uploadedFile.url,
         documentLabel: initial?.documentLabel ?? `${label.trim()} lesen`,
         required: initial?.required ?? true,
+        ...(initial?.lockType ? { lockType: initial.lockType } : {}),
+        ...(initial?.systemKey ? { systemKey: initial.systemKey } : {}),
       });
       return true;
     }
@@ -94,6 +103,9 @@ export const FieldForm = forwardRef<
       type: fieldType,
       label: label.trim(),
       required: initial?.required ?? true,
+      ...(initial?.lockType ? { lockType: initial.lockType } : {}),
+      ...(initial?.systemKey ? { systemKey: initial.systemKey } : {}),
+      ...(initial?.minAge !== undefined ? { minAge: initial.minAge } : {}),
     };
     if (description.trim()) {
       field.description = description.trim();
@@ -118,34 +130,39 @@ export const FieldForm = forwardRef<
     (!isDocument || !!uploadedFile) &&
     (!showOptions || options.some((o) => o.trim() !== ''));
 
-  return (
-    <div className="space-y-4 rounded-lg border border-dashed p-4">
-      <p className="text-sm font-semibold">
-        {isEdit ? 'Feld bearbeiten' : 'Neues Feld'}
-      </p>
+  const isLocked = !!initial?.lockType;
+  const systemPreset =
+    initial?.systemKey && initial.systemKey in SYSTEM_REQUIREMENTS
+      ? SYSTEM_REQUIREMENTS[initial.systemKey as SystemRequirementKey]
+      : null;
 
-      <Field>
-        <FieldLabel htmlFor={`field-${idScope}-type`}>Feldtyp</FieldLabel>
-        <Select
-          value={fieldType}
-          onValueChange={(v) => setFieldType(v as FieldType)}
-        >
-          <SelectTrigger
-            id={`field-${idScope}-type`}
-            size="default"
-            className="w-full"
+  return (
+    <div className="border-primary space-y-4 rounded-lg border p-4">
+
+      {!isLocked && (
+        <Field>
+          <FieldLabel htmlFor={`field-${idScope}-type`}>Feldtyp</FieldLabel>
+          <Select
+            value={fieldType}
+            onValueChange={(v) => setFieldType(v as FieldType)}
           >
-            <SelectValue placeholder="Typ auswählen..." />
-          </SelectTrigger>
-          <SelectContent>
-            {FIELD_TYPE_OPTIONS.map((opt) => (
-              <SelectItem key={opt.value} value={opt.value}>
-                {opt.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </Field>
+            <SelectTrigger
+              id={`field-${idScope}-type`}
+              size="default"
+              className="w-full"
+            >
+              <SelectValue placeholder="Typ auswählen..." />
+            </SelectTrigger>
+            <SelectContent>
+              {FIELD_TYPE_OPTIONS.map((opt) => (
+                <SelectItem key={opt.value} value={opt.value}>
+                  {opt.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </Field>
+      )}
 
       {fieldType && (
         <Field>
@@ -189,6 +206,18 @@ export const FieldForm = forwardRef<
 
       {showOptions && (
         <OptionsEditor value={options} onChange={setOptions} minRows={2} />
+      )}
+
+      {isLocked && systemPreset && (
+        <Alert>
+          <UserCircle2 />
+          <AlertDescription>
+            <p>
+              Antwort wird als <strong>{systemPreset.defaultLabel}</strong> im
+              Profil gespeichert und in anderen Formularen wiederverwendet.
+            </p>
+          </AlertDescription>
+        </Alert>
       )}
 
       {error && <p className="text-destructive text-xs">{error}</p>}

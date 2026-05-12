@@ -1,16 +1,33 @@
 import { Badge } from '@repo/ui';
-import { FileText } from 'lucide-react';
+import { FileText, UserCircle2 } from 'lucide-react';
 import type { FormField } from '@/lib/types';
 import { FIELD_TYPE_LABELS } from '@/lib/predefined-fields';
+import { isSystemRequirement } from '@/lib/system-requirements';
 
 /**
  * Per-field cue inside the builder-side preview.
+ * - System Requirement fields show a leading "Systemfeld" badge with icon.
  * - Choice fields render their options as outline chips.
  * - Document-acknowledgement renders a "Nutzer-Bestätigung" badge above the
  *   uploaded document link (when present).
  * - All other types render an outline badge with the type label.
  */
 export function FieldDataHint({ field }: { field: FormField }) {
+  if (isSystemRequirement(field)) {
+    return (
+      <div className="flex flex-wrap items-center gap-2">
+        <Badge variant="secondary" className="text-sm">
+          <UserCircle2 className="mr-1 size-3.5" />
+          Systemfeld
+        </Badge>
+        <FieldTypeHint field={field} />
+      </div>
+    );
+  }
+  return <FieldTypeHint field={field} />;
+}
+
+function FieldTypeHint({ field }: { field: FormField }) {
   if (
     (field.type === 'singlechoice' ||
       field.type === 'multichoice' ||

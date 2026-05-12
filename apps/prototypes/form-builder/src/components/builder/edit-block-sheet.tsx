@@ -16,8 +16,14 @@ import {
 } from '@repo/ui';
 import { AlertTriangle, Plus, Save } from 'lucide-react';
 import type { Block, FormConfig, FormField } from '@/lib/types';
+import {
+  SYSTEM_REQUIREMENT_LIST,
+  createSystemRequirementField,
+  getSystemRequirementKeysInUse,
+} from '@/lib/system-requirements';
 import { FieldForm, type FieldCommitHandle } from './field-form';
 import { DraggableFieldRow, arrayMove } from './draggable-field-row';
+import { AvailableSystemFieldCard } from './available-system-field-card';
 
 export function EditBlockSheet({
   block,
@@ -191,7 +197,7 @@ export function EditBlockSheet({
 
           <div className="space-y-3">
             <div className="flex items-center justify-between">
-              <h3 className="text-sm font-semibold">
+              <h3 className="text-xl font-semibold">
                 Felder ({block.fields.length})
               </h3>
               {onAddField && !addingField && (
@@ -203,15 +209,17 @@ export function EditBlockSheet({
                   }}
                 >
                   <Plus className="mr-2 size-4" />
-                  Feld
+                  Eigenes Feld erstellen
                 </Button>
               )}
             </div>
 
             {block.fields.length === 0 && !addingField && (
-              <p className="text-muted-foreground py-4 text-center text-sm">
-                Noch keine Felder in diesem Block.
-              </p>
+              <div className="rounded-lg border border-dashed px-4 py-6 text-center">
+                <p className="text-muted-foreground text-sm">
+                  Noch keine Felder in diesem Block.
+                </p>
+              </div>
             )}
 
             {block.fields.map((field) =>
@@ -284,6 +292,46 @@ export function EditBlockSheet({
               />
             )}
           </div>
+
+          {onAddField && (() => {
+            const usedKeys = getSystemRequirementKeysInUse(block.fields);
+            const available = SYSTEM_REQUIREMENT_LIST.filter(
+              (p) => !usedKeys.has(p.key),
+            );
+            return (
+              <div className="mt-6 space-y-3">
+                <div className="space-y-1">
+                  <h4 className="text-lg font-medium">
+                    Systemfelder auswählen
+                  </h4>
+                  <p className="text-muted-foreground text-sm">
+                    Antworten werden im Nutzerprofil gespeichert und ueber
+                    Sub-Organisationen wiederverwendet.
+                  </p>
+                </div>
+                {available.length === 0 ? (
+                  <p className="text-muted-foreground text-sm">
+                    Alle Systemfelder sind hinzugefügt.
+                  </p>
+                ) : (
+                  <div className="space-y-3">
+                    {available.map((preset) => (
+                      <AvailableSystemFieldCard
+                        key={preset.key}
+                        preset={preset}
+                        onAdd={() => {
+                          onAddField(
+                            block.id,
+                            createSystemRequirementField(preset.key),
+                          );
+                        }}
+                      />
+                    ))}
+                  </div>
+                )}
+              </div>
+            );
+          })()}
         </div>
 
         <SheetFooter className="sticky bottom-0 z-10 border-t bg-background px-6 py-4">
