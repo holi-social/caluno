@@ -3,6 +3,7 @@ import type {
   AddTimeEntryInput,
   CloseTimeEntryInput,
   GetTimeEntryQuery,
+  UpdateTimeEntryInput,
 } from '../../generated/graphql';
 import {
   BaseRepository,
@@ -43,6 +44,15 @@ export class TimeEntryRepository extends BaseRepository {
     try {
       const data = await this.sdk.CloseTimeEntry({ id, input });
       return data.closeTimeEntry;
+    } catch (error) {
+      throw DataError.fromGraphQLError(error);
+    }
+  }
+
+  async update(id: string, input: UpdateTimeEntryInput) {
+    try {
+      const data = await this.sdk.UpdateTimeEntry({ id, input });
+      return data.updateTimeEntry;
     } catch (error) {
       throw DataError.fromGraphQLError(error);
     }

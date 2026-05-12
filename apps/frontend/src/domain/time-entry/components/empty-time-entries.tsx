@@ -17,7 +17,7 @@ export const EmptyTimeEntries = ({ children }: PropsWithChildren) => (
       </EmptyMedia>
       <EmptyTitle>No time entries</EmptyTitle>
       <EmptyDescription>
-        You can check somebody into a Shift or manually add Time Entry.
+        You can check somebody into a Shift or manually add a Time Entry.
       </EmptyDescription>
     </EmptyHeader>
     <EmptyContent>{children}</EmptyContent>
