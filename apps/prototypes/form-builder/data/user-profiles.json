@@ -3,9 +3,34 @@
     "userId": "karl",
     "entries": {
       "geburtsdatum": {
-        "value": "1980-05-12",
-        "subOrg": "Karlstrasse 13",
-        "updatedAt": "2026-05-12T16:01:13.320Z"
+        "value": "1980-04-29",
+        "subOrg": "Abteilung EA",
+        "updatedAt": "2026-05-12T16:16:40.941Z"
+      }
+    }
+  },
+  "andrea": {
+    "userId": "andrea",
+    "entries": {
+      "geburtsdatum": {
+        "value": "1998-03-05",
+        "subOrg": "Abteilung EA",
+        "updatedAt": "2026-05-12T16:17:31.081Z"
+      },
+      "vorname": {
+        "value": "Andrea",
+        "subOrg": "Abteilung EA",
+        "updatedAt": "2026-05-13T11:43:19.515Z"
+      },
+      "nachname": {
+        "value": "Schulz",
+        "subOrg": "Abteilung EA",
+        "updatedAt": "2026-05-13T11:43:19.515Z"
+      },
+      "email": {
+        "value": "andrea.schulz@beispiel.de",
+        "subOrg": "Abteilung EA",
+        "updatedAt": "2026-05-13T11:43:19.515Z"
       }
     }
   }

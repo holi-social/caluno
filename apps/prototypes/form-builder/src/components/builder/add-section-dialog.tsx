@@ -11,6 +11,7 @@ import {
 } from '@repo/ui';
 import { Plus } from 'lucide-react';
 import type { Block } from '@/lib/types';
+import { getFieldDisplayLabel } from '@/lib/predefined-fields';
 import { getUserById } from '@/lib/users';
 import { ListControls } from '../list-controls';
 
@@ -112,7 +113,7 @@ export function AddBlockDialog({
                 <div className="mt-1.5 flex flex-wrap gap-1.5">
                   {block.fields.map((f) => (
                     <Badge key={f.id} variant="secondary" className="text-sm">
-                      {f.label}
+                      {getFieldDisplayLabel(f)}
                     </Badge>
                   ))}
                   {block.fields.length === 0 && (

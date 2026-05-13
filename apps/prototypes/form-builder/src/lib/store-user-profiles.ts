@@ -75,6 +75,26 @@ async function seedProfiles(): Promise<void> {
         },
       },
     },
+    andrea: {
+      userId: 'andrea',
+      entries: {
+        vorname: {
+          value: 'Andrea',
+          subOrg: 'Abteilung EA',
+          updatedAt: now,
+        },
+        nachname: {
+          value: 'Schulz',
+          subOrg: 'Abteilung EA',
+          updatedAt: now,
+        },
+        email: {
+          value: 'andrea.schulz@beispiel.de',
+          subOrg: 'Abteilung EA',
+          updatedAt: now,
+        },
+      },
+    },
   };
   await writeStore(seed);
 }

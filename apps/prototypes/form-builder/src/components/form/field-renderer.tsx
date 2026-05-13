@@ -23,13 +23,35 @@ export function FieldRenderer({
   onChange,
   error,
   showDocumentPreview,
+  hideLabel,
 }: {
   field: FormField;
   value: string | boolean | string[];
   onChange: (value: string | boolean | string[]) => void;
   error?: FieldErrorType;
   showDocumentPreview?: boolean;
+  /** When true, FieldLabel + FieldDescription are skipped so the caller
+   *  can render its own label/title above whatever container wraps the
+   *  control (used by the state-3 edit-mode card). */
+  hideLabel?: boolean;
 }) {
+  const labelNode = !hideLabel && (
+    <FieldLabel htmlFor={field.id}>
+      {field.label}
+      {field.required && <span className="text-destructive ml-0.5">*</span>}
+    </FieldLabel>
+  );
+  const descriptionNode = !hideLabel && field.description && (
+    <FieldDescription>{field.description}</FieldDescription>
+  );
+  if (field.type === 'static-text') {
+    return (
+      <p className="text-foreground text-lg whitespace-pre-line">
+        {field.label}
+      </p>
+    );
+  }
+
   if (field.type === 'document-acknowledgement') {
     return (
       <DocumentAcknowledgement
@@ -78,15 +100,8 @@ export function FieldRenderer({
     const selected = Array.isArray(value) ? value : [];
     return (
       <Field data-invalid={!!error || undefined}>
-        <FieldLabel>
-          {field.label}
-          {field.required && (
-            <span className="text-destructive ml-0.5">*</span>
-          )}
-        </FieldLabel>
-        {field.description && (
-          <FieldDescription>{field.description}</FieldDescription>
-        )}
+        {labelNode}
+        {descriptionNode}
         <div className="space-y-2 pt-1">
           {field.options?.map((opt) => (
             <div key={opt.value} className="flex items-center gap-3">
@@ -117,15 +132,8 @@ export function FieldRenderer({
   if (field.type === 'singlechoice' || field.type === 'select') {
     return (
       <Field data-invalid={!!error || undefined}>
-        <FieldLabel htmlFor={field.id}>
-          {field.label}
-          {field.required && (
-            <span className="text-destructive ml-0.5">*</span>
-          )}
-        </FieldLabel>
-        {field.description && (
-          <FieldDescription>{field.description}</FieldDescription>
-        )}
+        {labelNode}
+        {descriptionNode}
         <Select
           value={typeof value === 'string' ? value : ''}
           onValueChange={(val) => onChange(val)}
@@ -149,15 +157,8 @@ export function FieldRenderer({
   if (field.type === 'textarea') {
     return (
       <Field data-invalid={!!error || undefined}>
-        <FieldLabel htmlFor={field.id}>
-          {field.label}
-          {field.required && (
-            <span className="text-destructive ml-0.5">*</span>
-          )}
-        </FieldLabel>
-        {field.description && (
-          <FieldDescription>{field.description}</FieldDescription>
-        )}
+        {labelNode}
+        {descriptionNode}
         <Textarea
           id={field.id}
           placeholder={field.placeholder}
@@ -207,15 +208,8 @@ export function FieldRenderer({
 
   return (
     <Field data-invalid={!!error || undefined}>
-      <FieldLabel htmlFor={field.id}>
-        {field.label}
-        {field.required && (
-          <span className="text-destructive ml-0.5">*</span>
-        )}
-      </FieldLabel>
-      {field.description && (
-        <FieldDescription>{field.description}</FieldDescription>
-      )}
+      {labelNode}
+      {descriptionNode}
       <Input
         id={field.id}
         type={inputType}

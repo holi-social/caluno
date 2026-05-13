@@ -12,6 +12,7 @@ export function validateStepFields(
   const errors: FieldError[] = [];
 
   for (const field of fields) {
+    if (field.type === 'static-text') continue;
     const value = data[field.id];
 
     if (field.required) {

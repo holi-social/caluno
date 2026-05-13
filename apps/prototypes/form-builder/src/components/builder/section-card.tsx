@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import type { Block } from '@/lib/types';
 import { getBlockIcon } from '@/lib/block-icon';
+import { getFieldDisplayLabel } from '@/lib/predefined-fields';
 import { FieldBadge } from './field-badge';
 
 export function BlockCardBuilder({
@@ -157,7 +158,7 @@ export function BlockCardBuilder({
           <div className="flex flex-wrap gap-1.5">
             {block.fields.map((f) => (
               <Badge key={f.id} variant="outline" className="text-sm">
-                {f.label}
+                {getFieldDisplayLabel(f)}
               </Badge>
             ))}
           </div>

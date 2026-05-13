@@ -71,6 +71,7 @@ export function FormPreview({
               errors={[]}
               onChange={() => {}}
               showDocumentPreview={isDocumentStep}
+              formOrg={config.organizationName}
             />
           </div>
 

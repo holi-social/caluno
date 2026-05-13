@@ -1,4 +1,11 @@
-import type { FieldType } from './types';
+import type { FieldType, FormField } from './types';
+
+/** Label to display for a field in chip/badge contexts.
+ *  For `static-text` we hide the content (which lives in `field.label`)
+ *  behind a placeholder so block previews stay readable. */
+export function getFieldDisplayLabel(field: FormField): string {
+  return field.type === 'static-text' ? 'Hinweistext' : field.label;
+}
 
 // --- Predefined field presets (commented out — block architecture uses custom fields) ---
 
@@ -32,7 +39,7 @@ import type { FieldType } from './types';
 // --- Field type labels (still used by builder UI) ---
 
 export const FIELD_TYPE_LABELS: Record<FieldType, string> = {
-  text: 'Text',
+  text: 'Eingabe (kurz)',
   vorname: 'Vorname',
   nachname: 'Nachname',
   email: 'E-Mail',
@@ -42,24 +49,26 @@ export const FIELD_TYPE_LABELS: Record<FieldType, string> = {
   plz: 'PLZ',
   password: 'Passwort',
   numbers: 'Zahlen',
-  textarea: 'Textfeld',
+  textarea: 'Eingabe (lang)',
   select: 'Dropdown',
   checkbox: 'Checkbox',
   multichoice: 'Mehrfachauswahl',
-  singlechoice: 'Einzelauswahl',
+  singlechoice: 'Dropdown',
   'document-acknowledgement': 'Dokument',
+  'static-text': 'Hinweistext',
 };
 
-/** Field types offered in the builder's field-type picker, in display order. */
+/** Field types offered in the builder's field-type picker, in display order.
+ *  Grouped: free-text inputs → typed value inputs → selection inputs → special.
+ *  System-bound types (vorname, email, phone, ...) are intentionally excluded —
+ *  those reach a block via the system-field flow, not the custom-field picker. */
 export const FIELD_TYPE_OPTIONS: { label: string; value: FieldType }[] = [
-  { label: 'Vorname', value: 'vorname' },
-  { label: 'Nachname', value: 'nachname' },
-  { label: 'Eingabe', value: 'text' },
-  { label: 'E-Mail', value: 'email' },
-  { label: 'Telefonnummer', value: 'phone' },
+  { label: 'Eingabe (kurz)', value: 'text' },
+  { label: 'Eingabe (lang)', value: 'textarea' },
   { label: 'Zahlen', value: 'numbers' },
-  { label: 'Mehrfachauswahl', value: 'multichoice' },
-  { label: 'Einzelauswahl', value: 'singlechoice' },
   { label: 'Datum', value: 'date' },
+  { label: 'Dropdown', value: 'singlechoice' },
+  { label: 'Mehrfachauswahl', value: 'multichoice' },
   { label: 'Dokument zum Akzeptieren', value: 'document-acknowledgement' },
+  { label: 'Hinweistext', value: 'static-text' },
 ];

@@ -33,6 +33,7 @@ export function DraggableFieldRow({
   const isSystemField = isSystemRequirement(field);
   const systemPreset = getSystemRequirementPreset(field);
   const requiredLocked = isSystemField && systemPreset?.requiredEditable === false;
+  const isStaticText = field.type === 'static-text';
   return (
     <div
       className={[
@@ -77,9 +78,17 @@ export function DraggableFieldRow({
               {FIELD_TYPE_LABELS[field.type] ?? field.type}
             </Badge>
             {isSystemField && (
-              <Badge variant="secondary" className="text-sm">
-                Systemfeld
-              </Badge>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Badge variant="secondary" className="text-sm">
+                    Systemfeld
+                  </Badge>
+                </TooltipTrigger>
+                <TooltipContent className="max-w-xs">
+                  Wird im Profil der Freiwilligen gespeichert und kann in
+                  anderen Formularen und Einrichtungen wiederverwendet werden.
+                </TooltipContent>
+              </Tooltip>
             )}
           </div>
           {field.description && (
@@ -88,30 +97,32 @@ export function DraggableFieldRow({
             </p>
           )}
         </button>
-        <div className="flex shrink-0 items-center gap-2">
-          <span className="text-muted-foreground text-sm font-medium">
-            {field.required ? 'Pflichtig' : 'Optional'}
-          </span>
-          {requiredLocked ? (
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <span>
-                  <Switch size="sm" checked={field.required} disabled />
-                </span>
-              </TooltipTrigger>
-              <TooltipContent>
-                Diese Einstellung ist durch das Systemfeld vorgegeben.
-              </TooltipContent>
-            </Tooltip>
-          ) : (
-            <Switch
-              size="sm"
-              checked={field.required}
-              onCheckedChange={(checked) => onToggleRequired?.(checked)}
-              disabled={!onToggleRequired}
-            />
-          )}
-        </div>
+        {!isStaticText && (
+          <div className="flex shrink-0 items-center gap-2">
+            <span className="text-muted-foreground text-sm font-medium">
+              {field.required ? 'Pflichtig' : 'Optional'}
+            </span>
+            {requiredLocked ? (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <span>
+                    <Switch size="sm" checked={field.required} disabled />
+                  </span>
+                </TooltipTrigger>
+                <TooltipContent>
+                  Diese Einstellung ist durch das Systemfeld vorgegeben.
+                </TooltipContent>
+              </Tooltip>
+            ) : (
+              <Switch
+                size="sm"
+                checked={field.required}
+                onCheckedChange={(checked) => onToggleRequired?.(checked)}
+                disabled={!onToggleRequired}
+              />
+            )}
+          </div>
+        )}
       </div>
 
       {(onEdit || onDelete) && (

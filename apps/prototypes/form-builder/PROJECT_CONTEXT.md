@@ -74,6 +74,7 @@ These build on the v1 vs v2 baseline above. v1 is untouched.
 - **Volunteer-side `singlechoice` renders as a dropdown** ([form/field-renderer.tsx](src/components/form/field-renderer.tsx)). Single-choice and `select` fields now share one render branch using shadcn `Select`; `RadioGroup` / `RadioGroupItem` imports dropped. Builder/preview is unchanged — choice fields still show as option chips inside `FieldDataHint`.
 - **Per-field `required` is now the source of truth on the volunteer form** ([form/form-step.tsx](src/components/form/form-step.tsx), [form/multi-step-form.tsx](src/components/form/multi-step-form.tsx)). Both files used to override `field.required` with `block.effectiveRequired` (a v1-era cascade from the now-removed block-level Pflicht Switch). That override silently made every field mandatory regardless of the builder toggle — fixed by reading `field.required` directly in the renderer and in `validateCurrentStep`. v1's copies still cascade.
 - **Single round-trip on field/block-meta save in the builder** ([builder/builder-layout.tsx](src/components/builder/builder-layout.tsx)). The old flow PUT-then-`GET /api/blocks`-then-`setBlocks` — two trips through the file-store's serial `runExclusive` queue per click. New `applyBlockUpdate(updated)` callback splices the PUT response into local state directly. `refreshBlocks` still exists for the only path that needs it: after `CreateBlockSheet` creates a brand-new block whose id wasn't in `blocks` yet.
+- **Custom-field picker pruned + `static-text` added** ([lib/predefined-fields.ts](src/lib/predefined-fields.ts), [lib/types.ts](src/lib/types.ts)). System-bound types (`vorname`, `nachname`, `email`, `phone`, `plz`, `iban`, `password`, `checkbox`, `select`) reach blocks via the system-field flow and are excluded from `FIELD_TYPE_OPTIONS`; the union itself still carries them so existing data + system requirements keep working. Picker order: free-text inputs → typed value → selection → special. `singlechoice` is relabeled **Dropdown** (same render). New `static-text` ("Hinweistext") type — no user input, renders volunteer-side as `<p className="text-foreground text-lg whitespace-pre-line">`; builder's `FieldForm` swaps "Feldname" for a "Text" `Textarea` and hides description; required toggle is hidden in `DraggableFieldRow`; validation skips it. Display label across badges goes through `getFieldDisplayLabel(field)` in `predefined-fields.ts` ("Hinweistext" for static-text, `field.label` otherwise) — used by `BlockCard`, `FieldBadge`, `AddBlockDialog`, and the "Block entfernen?" `ConfirmDialog` so the static-text content never leaks into chip previews.
 
 ## System Requirement fields
 
@@ -116,22 +117,30 @@ A second class of field alongside the custom fields the org defines. The platfor
 
 ### Volunteer rendering (3 states)
 
-`MultiStepForm` derives a state per field that has `systemKey`:
+`MultiStepForm` derives a state per field that has `systemKey`. The rule is computed **once per render** into a `fieldStateMap: Map<fieldId, FieldState>`; `visibleBlocks`, the prefill effect, and `profilePrefilledFieldIds` all read from this map (don't reintroduce per-call `deriveFieldState` lookups).
 
-1. **`empty`** — no profile entry → render normal empty input.
+1. **`empty`** — no profile entry → render normal empty input via `FieldRenderer`.
 2. **`hidden`** — profile has entry on the same sub-org → skip entirely (filtered from `resolvedBlocks` before `buildDisplaySteps`, so validation + step nav never see it).
-3. **`profile-prefilled`** — profile has entry on a different sub-org → input pre-filled with the profile value, `<SystemFieldBanner>` rendered above it.
+3. **`profile-prefilled`** — profile has entry on a different sub-org → renders `<ProfileFieldDisplay>` (a `bg-secondary` card showing the value at `text-lg` with subtitle "Daten aus meinem Profil mit „{formOrg}" teilen:" and a top-right pencil button). The `<SystemFieldBanner>` from the first cut is **gone** — title/description live above the card, never as a leading banner.
+
+**Per-field edit toggle (state 3 only).** Click the pencil → `handleStartEdit` snapshots `formData[fieldId]` into `editSnapshots` and adds the id to `editingFieldIds`. The card swaps to `bg-card border-primary` and renders `<FieldRenderer hideLabel>` (see Fields below) inside a flex row, with the check button inline at the right end and the original top-right slot replaced by an `Undo2` (back) icon.
+- **Confirm** (`Check`) — exits edit mode and fires `POST /api/user-profile` with `{ key, value, subOrg: formOrg }` so the change persists immediately. The display card re-renders from `formData` showing the new value.
+- **Cancel** (`Undo2`) — restores `formData[fieldId]` from the snapshot, drops the snapshot, exits edit mode. Repeated confirm→edit→cancel reverts to the most recent confirmed value, not the pristine profile value, because snapshots capture whatever was visible at edit-start.
+
+Label + description are rendered **outside** the card in both display and edit modes so they don't jump when toggling. `FormStep` separates fields with `space-y-8` (groups internally use `space-y-2`).
 
 On submit, `formData` is split via `Promise.all`:
 - Regular fields → `/api/submissions` (existing route).
-- System req fields with a value → `/api/user-profile` (new route, upserts with current sub-org).
+- System req fields with a value → `/api/user-profile` (upserts with current sub-org).
 
 System req values **never** appear in submission records. If neither path has work, the corresponding POST is skipped.
+
+**Files:** [form/multi-step-form.tsx](src/components/form/multi-step-form.tsx) (state + handlers + map), [form/form-step.tsx](src/components/form/form-step.tsx) (3-way dispatch), [form/profile-field-display.tsx](src/components/form/profile-field-display.tsx) (state-3 card), [form/field-renderer.tsx](src/components/form/field-renderer.tsx) (`hideLabel` prop used by edit mode).
 
 ### Seed data
 
 - `data/blocks.json` — the existing `f-dob` date field in "Persönliche Daten" was converted into the Geburtsdatum system requirement (`systemKey: 'geburtsdatum'`, `lockType: true`).
-- `data/user-profiles.json` does not exist on disk by default; it self-seeds with Karl's entry on first API hit.
+- `data/user-profiles.json` does not exist on disk by default; it self-seeds (see `seedProfiles` in [store-user-profiles.ts](src/lib/store-user-profiles.ts)) with Karl's `geburtsdatum` at sub-org `Karlstrasse 13` plus Andrea's `vorname / nachname / email` at sub-org `Abteilung EA`. Andrea has no `geburtsdatum` in the seed — useful for exercising state 1 on her side while state 2/3 hit on the other three.
 
 ## Core architecture: blocks, not sections
 
@@ -163,9 +172,11 @@ Permission helpers (`canEditBlock`, `canDeleteBlock`, `canEditForm`, `canDeleteF
 
 ## Fields
 
-`FieldType` is a closed union in [types.ts](src/lib/types.ts). Validation lives in [src/lib/validation.ts](src/lib/validation.ts) with regex/age checks per type. When adding a field type, update both `FieldType`, `FIELD_TYPE_LABELS` in `predefined-fields.ts`, the validator, and the renderer in `components/form/field-renderer.tsx`.
+`FieldType` is a closed union in [types.ts](src/lib/types.ts). Validation lives in [src/lib/validation.ts](src/lib/validation.ts) with regex/age checks per type. When adding a field type, update `FieldType`, `FIELD_TYPE_LABELS` in `predefined-fields.ts`, `FIELD_TYPE_OPTIONS` (the builder picker — see the v2 evolutions note about what's intentionally excluded), the validator, and the renderer in `components/form/field-renderer.tsx`.
 
-`document-acknowledgement` and `checkbox` validate truthy boolean; `multichoice` validates non-empty array; everything else validates non-empty trimmed string.
+`FieldRenderer` accepts an optional `hideLabel` prop: when set, `FieldLabel` + `FieldDescription` are skipped so the caller can render its own title above whatever container wraps the control. Used by the state-3 edit card; **don't fork a second input renderer** for that case — extend `FieldRenderer` instead.
+
+`document-acknowledgement` and `checkbox` validate truthy boolean; `multichoice` validates non-empty array; `static-text` is skipped entirely; everything else validates non-empty trimmed string.
 
 ## Storage layer convention
 
@@ -229,3 +240,6 @@ Calibrated from this project's iteration:
 - Trusting `block.effectiveRequired` in the volunteer renderer. It's a v1-era cascade (a "required" block forced every field inside to required) and silently overrides the builder's per-field toggle. Read `field.required` directly in v2's `FormStep` + `validateCurrentStep`. The resolver still emits `effectiveRequired` for v1, but v2 ignores it.
 - Discarding the PUT response and immediately doing a GET to "refresh" after a field mutation. The PUT already returns the updated block; splice it into local state via the `onUpdated` callback. Each extra GET goes through `runExclusive` and visibly stalls clicks — felt sharply on rapid actions like adding system fields one after another.
 - Treating `SystemRequirementPreset.required` as a single boolean. Two flags: `defaultRequired` (the initial value baked into the field) and `requiredEditable` (whether the org can flip it). Look up `getSystemRequirementPreset(field)` at render time to decide whether the Switch is live or disabled.
+- Forking a parallel input renderer for state-3 edit mode. There was briefly a `profile-field-editor.tsx` that re-implemented `FieldRenderer`'s input/Select branches; it drifted from the source within hours. `FieldRenderer` takes a `hideLabel` prop now — use it from any caller that wraps the control in its own titled container.
+- Calling `deriveFieldState` in three loops (visibleBlocks filter, prefill effect, prefilled-id Set). Compute it once into `fieldStateMap` and derive the rest from there. Adding a new state-3 consumer? Read the map.
+- Letting `static-text`'s `field.label` (which holds the actual paragraph content) flow into chip/badge previews. Every badge that previously displayed `field.label` for a generic field must go through `getFieldDisplayLabel(field)` so static-text reads as "Hinweistext" instead of dumping its body into a card chip.

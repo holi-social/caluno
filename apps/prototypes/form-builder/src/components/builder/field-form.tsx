@@ -13,6 +13,7 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
+  Textarea,
 } from '@repo/ui';
 import { UserCircle2 } from 'lucide-react';
 import type { FieldType, FormField } from '@/lib/types';
@@ -60,6 +61,7 @@ export const FieldForm = forwardRef<
   const [error, setError] = useState<string | null>(null);
 
   const isDocument = fieldType === 'document-acknowledgement';
+  const isStaticText = fieldType === 'static-text';
   const showOptions =
     !initial?.lockType &&
     (fieldType === 'multichoice' || fieldType === 'singlechoice');
@@ -70,7 +72,7 @@ export const FieldForm = forwardRef<
       return false;
     }
     if (!label.trim()) {
-      setError('Bitte Feldname eingeben.');
+      setError(isStaticText ? 'Bitte Text eingeben.' : 'Bitte Feldname eingeben.');
       return false;
     }
     if (isDocument && !uploadedFile) {
@@ -103,13 +105,13 @@ export const FieldForm = forwardRef<
       id,
       type: fieldType,
       label: label.trim(),
-      required: initial?.required ?? true,
+      required: isStaticText ? false : (initial?.required ?? true),
       ...(initial?.lockType ? { lockType: initial.lockType } : {}),
       ...(initial?.systemKey ? { systemKey: initial.systemKey } : {}),
       ...(initial?.minAge !== undefined ? { minAge: initial.minAge } : {}),
       ...(initial?.options ? { options: initial.options } : {}),
     };
-    if (description.trim()) {
+    if (!isStaticText && description.trim()) {
       field.description = description.trim();
     }
     if (showOptions) {
@@ -168,23 +170,38 @@ export const FieldForm = forwardRef<
 
       {fieldType && (
         <Field>
-          <FieldLabel htmlFor={`field-${idScope}-name`}>Feldname</FieldLabel>
-          <Input
-            id={`field-${idScope}-name`}
-            placeholder={
-              isDocument ? 'z.B. Datenschutzerklärung' : 'z.B. Lieblingsfarbe'
-            }
-            value={label}
-            onChange={(e) => {
-              setLabel(e.target.value);
-              if (error) setError(null);
-            }}
-            className="h-10"
-          />
+          <FieldLabel htmlFor={`field-${idScope}-name`}>
+            {isStaticText ? 'Text' : 'Feldname'}
+          </FieldLabel>
+          {isStaticText ? (
+            <Textarea
+              id={`field-${idScope}-name`}
+              placeholder="z.B. Hinweis zu diesem Abschnitt"
+              value={label}
+              onChange={(e) => {
+                setLabel(e.target.value);
+                if (error) setError(null);
+              }}
+              rows={3}
+            />
+          ) : (
+            <Input
+              id={`field-${idScope}-name`}
+              placeholder={
+                isDocument ? 'z.B. Datenschutzerklärung' : 'z.B. Lieblingsfarbe'
+              }
+              value={label}
+              onChange={(e) => {
+                setLabel(e.target.value);
+                if (error) setError(null);
+              }}
+              className="h-10"
+            />
+          )}
         </Field>
       )}
 
-      {fieldType && !isDocument && (
+      {fieldType && !isDocument && !isStaticText && (
         <Field>
           <FieldLabel htmlFor={`field-${idScope}-desc`}>
             Beschreibung

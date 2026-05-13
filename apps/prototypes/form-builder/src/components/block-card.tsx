@@ -16,6 +16,7 @@ import type { User as AppUser } from '@/lib/users';
 import { canEditBlock, canDeleteBlock } from '@/lib/users';
 import { getUserById } from '@/lib/users';
 import { formatDate } from '@/lib/formatting';
+import { getFieldDisplayLabel } from '@/lib/predefined-fields';
 import { useBlockFieldMutations } from '@/lib/use-block-field-mutations';
 import { ConfirmDialog } from './confirm-dialog';
 import { EditBlockSheet } from './builder/edit-block-sheet';
@@ -130,7 +131,7 @@ export function BlockCard({
               <div className="mt-2 flex flex-wrap gap-1.5">
                 {block.fields.map((field) => (
                   <Badge key={field.id} variant="outline" className="text-xs">
-                    {field.label}
+                    {getFieldDisplayLabel(field)}
                   </Badge>
                 ))}
               </div>

@@ -57,7 +57,13 @@ export function ConfirmDialog({
             {cancelLabel}
           </AlertDialogCancel>
           <AlertDialogAction
-            onClick={onConfirm}
+            onClick={(e) => {
+              // Keep the dialog open while the async onConfirm runs so the
+              // pending state has time to render. Parent closes it via
+              // onOpenChange(false) after the operation resolves.
+              e.preventDefault();
+              onConfirm();
+            }}
             disabled={pending}
             className="bg-destructive text-destructive-foreground hover:bg-destructive/90 h-10"
           >

@@ -53,6 +53,15 @@ export function MultiStepForm({
   const [submitting, setSubmitting] = useState(false);
   const [profileEntries, setProfileEntries] = useState<ProfileEntries>({});
   const [profileLoaded, setProfileLoaded] = useState(false);
+  const [editingFieldIds, setEditingFieldIds] = useState<Set<string>>(
+    () => new Set(),
+  );
+  // Per-field pre-edit value so "verwerfen" can restore exactly what was
+  // shown when the user opened the editor (handles both initial profile
+  // values and values from a prior confirmed edit in the same session).
+  const [editSnapshots, setEditSnapshots] = useState<
+    Record<string, string | boolean | string[]>
+  >({});
 
   // Fetch the volunteer's profile once on mount.
   useEffect(() => {
@@ -85,17 +94,29 @@ export function MultiStepForm({
     [config.blockRefs, blocks],
   );
 
+  // Compute every field's state once; visibleBlocks, prefill, and the
+  // state-3 id-set all derive from this single map.
+  const fieldStateMap = useMemo(() => {
+    const map = new Map<string, FieldState>();
+    for (const block of resolvedBlocks) {
+      for (const field of block.fields) {
+        map.set(field.id, deriveFieldState(field, profileEntries, formOrg));
+      }
+    }
+    return map;
+  }, [resolvedBlocks, profileEntries, formOrg]);
+
   // Filter out hidden system-requirement fields and drop empty blocks.
   const visibleBlocks: ResolvedBlock[] = useMemo(() => {
     return resolvedBlocks
       .map((b) => ({
         ...b,
         fields: b.fields.filter(
-          (f) => deriveFieldState(f, profileEntries, formOrg) !== 'hidden',
+          (f) => fieldStateMap.get(f.id) !== 'hidden',
         ),
       }))
       .filter((b) => b.fields.length > 0);
-  }, [resolvedBlocks, profileEntries, formOrg]);
+  }, [resolvedBlocks, fieldStateMap]);
 
   const displaySteps = useMemo(
     () => buildDisplaySteps(visibleBlocks),
@@ -108,10 +129,7 @@ export function MultiStepForm({
     const prefill: Record<string, ProfileEntryValue> = {};
     for (const block of visibleBlocks) {
       for (const field of block.fields) {
-        if (
-          deriveFieldState(field, profileEntries, formOrg) ===
-          'profile-prefilled'
-        ) {
+        if (fieldStateMap.get(field.id) === 'profile-prefilled') {
           const key = field.systemKey as SystemRequirementKey;
           const entry = profileEntries[key];
           if (entry) prefill[field.id] = entry.value;
@@ -138,21 +156,14 @@ export function MultiStepForm({
   const isFirstStep = currentStep === 0;
 
   // Set of field ids whose value is pulled from the profile (state 3).
-  // Used to render the SystemFieldBanner above those fields.
+  // Drives the ProfileFieldDisplay rendering in FormStep.
   const profilePrefilledFieldIds = useMemo(() => {
     const set = new Set<string>();
-    for (const block of visibleBlocks) {
-      for (const field of block.fields) {
-        if (
-          deriveFieldState(field, profileEntries, formOrg) ===
-          'profile-prefilled'
-        ) {
-          set.add(field.id);
-        }
-      }
+    for (const [id, state] of fieldStateMap) {
+      if (state === 'profile-prefilled') set.add(id);
     }
     return set;
-  }, [visibleBlocks, profileEntries, formOrg]);
+  }, [fieldStateMap]);
 
   function handleFieldChange(
     fieldId: string,
@@ -160,6 +171,75 @@ export function MultiStepForm({
   ) {
     setFormData((prev) => ({ ...prev, [fieldId]: value }));
     setErrors((prev) => prev.filter((e) => e.fieldId !== fieldId));
+  }
+
+  function handleStartEdit(fieldId: string) {
+    setEditSnapshots((prev) => {
+      if (fieldId in prev) return prev;
+      return { ...prev, [fieldId]: formData[fieldId] ?? '' };
+    });
+    setEditingFieldIds((prev) => {
+      if (prev.has(fieldId)) return prev;
+      const next = new Set(prev);
+      next.add(fieldId);
+      return next;
+    });
+  }
+
+  function handleCancelEdit(fieldId: string) {
+    setFormData((prev) => {
+      if (!(fieldId in editSnapshots)) return prev;
+      return { ...prev, [fieldId]: editSnapshots[fieldId]! };
+    });
+    setEditSnapshots((prev) => {
+      if (!(fieldId in prev)) return prev;
+      const next = { ...prev };
+      delete next[fieldId];
+      return next;
+    });
+    setEditingFieldIds((prev) => {
+      if (!prev.has(fieldId)) return prev;
+      const next = new Set(prev);
+      next.delete(fieldId);
+      return next;
+    });
+    setErrors((prev) => prev.filter((e) => e.fieldId !== fieldId));
+  }
+
+  async function handleConfirmEdit(fieldId: string) {
+    const field = currentBlock?.fields.find((f) => f.id === fieldId);
+    setEditingFieldIds((prev) => {
+      if (!prev.has(fieldId)) return prev;
+      const next = new Set(prev);
+      next.delete(fieldId);
+      return next;
+    });
+    setEditSnapshots((prev) => {
+      if (!(fieldId in prev)) return prev;
+      const next = { ...prev };
+      delete next[fieldId];
+      return next;
+    });
+    if (!field?.systemKey) return;
+    const value = formData[fieldId];
+    if (value === undefined || value === '' || value === null) return;
+    try {
+      await fetch('/api/user-profile', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          entries: [
+            {
+              key: field.systemKey as SystemRequirementKey,
+              value,
+              subOrg: formOrg,
+            },
+          ],
+        }),
+      });
+    } catch {
+      // Best-effort — the final form submit will retry profile updates.
+    }
   }
 
   function validateCurrentStep(): FieldError[] {
@@ -268,7 +348,7 @@ export function MultiStepForm({
     // All fields ended up hidden — nothing for the volunteer to do.
     return (
       <p className="text-muted-foreground py-8 text-center">
-        Es gibt aktuell nichts auszufuellen.
+        Es gibt aktuell nichts auszufüllen.
       </p>
     );
   }
@@ -284,6 +364,11 @@ export function MultiStepForm({
         onChange={handleFieldChange}
         showDocumentPreview={isDocumentStep}
         profilePrefilledFieldIds={profilePrefilledFieldIds}
+        editingFieldIds={editingFieldIds}
+        formOrg={formOrg}
+        onStartEdit={handleStartEdit}
+        onCancelEdit={handleCancelEdit}
+        onConfirmEdit={handleConfirmEdit}
       />
 
       {formError && (

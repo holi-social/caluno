@@ -1,36 +1,5 @@
 [
   {
-    "id": "3f062b72-fbce-40a7-9ce7-593166507ac6",
-    "slug": "123",
-    "name": "123",
-    "description": "123",
-    "organizationName": "Abteilung EA",
-    "locale": "de",
-    "blockRefs": [
-      {
-        "blockId": "seed-block-personal",
-        "order": 0
-      },
-      {
-        "blockId": "seed-block-datenschutz",
-        "order": 1
-      }
-    ],
-    "appliedTo": [
-      "join:current"
-    ],
-    "settings": {
-      "submitButtonLabel": "Absenden",
-      "successTitle": "Vielen Dank!",
-      "successMessage": "Ihre Daten wurden erfolgreich uebermittelt.",
-      "allowEmbed": true
-    },
-    "createdBy": "andrea",
-    "updatedBy": "andrea",
-    "createdAt": "2026-05-06T07:36:35.875Z",
-    "updatedAt": "2026-05-11T11:04:45.208Z"
-  },
-  {
     "id": "977e57e5-a3aa-4270-bcb2-f388b907f743",
     "slug": "titel",
     "name": "titel",
@@ -39,16 +8,8 @@
     "locale": "de",
     "blockRefs": [
       {
-        "blockId": "seed-block-personal",
+        "blockId": "block-fa457589",
         "order": 0
-      },
-      {
-        "blockId": "seed-block-kontakte",
-        "order": 1
-      },
-      {
-        "blockId": "seed-block-datenschutz",
-        "order": 2
       }
     ],
     "appliedTo": [
@@ -63,31 +24,19 @@
     "createdBy": "andrea",
     "updatedBy": "andrea",
     "createdAt": "2026-05-11T11:27:11.979Z",
-    "updatedAt": "2026-05-11T11:57:19.257Z"
+    "updatedAt": "2026-05-13T10:30:32.393Z"
   },
   {
-    "id": "28400d85-ecf0-4718-816c-f6536933c98e",
-    "slug": "123-2",
+    "id": "ca92ff8c-d4ad-49a4-9b36-b44b622d104d",
+    "slug": "123",
     "name": "123",
     "description": "beschreibung",
     "organizationName": "Karlstrasse 13",
     "locale": "de",
     "blockRefs": [
       {
-        "blockId": "seed-block-personal",
+        "blockId": "block-f9acc4af",
         "order": 1
-      },
-      {
-        "blockId": "block-d6a64a05",
-        "order": 0
-      },
-      {
-        "blockId": "seed-block-kontakte",
-        "order": 2
-      },
-      {
-        "blockId": "seed-block-datenschutz",
-        "order": 3
       }
     ],
     "appliedTo": [
@@ -101,7 +50,7 @@
     },
     "createdBy": "karl",
     "updatedBy": "andrea",
-    "createdAt": "2026-05-11T13:55:41.669Z",
-    "updatedAt": "2026-05-12T16:10:01.918Z"
+    "createdAt": "2026-05-13T10:57:31.496Z",
+    "updatedAt": "2026-05-13T13:16:37.843Z"
   }
 ]

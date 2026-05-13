@@ -14,7 +14,8 @@ export type FieldType =
   | 'singlechoice'
   | 'numbers'
   | 'iban'
-  | 'plz';
+  | 'plz'
+  | 'static-text';
 
 export type SelectOption = {
   label: string;
