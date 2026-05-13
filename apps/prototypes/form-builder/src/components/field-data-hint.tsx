@@ -1,4 +1,4 @@
-import { Badge } from '@repo/ui';
+import { Badge, Tooltip, TooltipContent, TooltipTrigger } from '@repo/ui';
 import { FileText, UserCircle2 } from 'lucide-react';
 import type { FormField } from '@/lib/types';
 import { FIELD_TYPE_LABELS } from '@/lib/predefined-fields';
@@ -16,10 +16,18 @@ export function FieldDataHint({ field }: { field: FormField }) {
   if (isSystemRequirement(field)) {
     return (
       <div className="flex flex-wrap items-center gap-2">
-        <Badge variant="secondary" className="text-sm">
-          <UserCircle2 className="mr-1 size-3.5" />
-          Systemfeld
-        </Badge>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Badge variant="secondary" className="text-sm">
+              <UserCircle2 className="mr-1 size-3.5" />
+              Systemfeld
+            </Badge>
+          </TooltipTrigger>
+          <TooltipContent className="max-w-xs">
+            Wird im Profil der Freiwilligen gespeichert und kann in anderen
+            Formularen und Einrichtungen wiederverwendet werden.
+          </TooltipContent>
+        </Tooltip>
         <FieldTypeHint field={field} />
       </div>
     );
