@@ -5,7 +5,8 @@ import {
   SidebarProvider,
   SidebarTrigger,
 } from '@repo/ui';
-import type { ReactNode } from 'react';
+import { Loader2 } from 'lucide-react';
+import { type ReactNode, Suspense } from 'react';
 import { DashboardSidebar } from '@/components/dashboard-sidebar';
 import { InviteShiftSheet } from '@/components/sheets/invite-shift-sheet';
 import { ThemeToggle } from '@/components/theme-toggle';
@@ -17,10 +18,15 @@ import { requireOrgAccess } from '@/lib/org-context-server';
 
 interface OrgLayoutProps {
   children: ReactNode;
+  sheet: ReactNode;
   params: Promise<{ orgUId: string }>;
 }
 
-export default async function OrgLayout({ children, params }: OrgLayoutProps) {
+export default async function OrgLayout({
+  children,
+  sheet,
+  params,
+}: OrgLayoutProps) {
   await requireAuth();
   const { orgUId } = await params;
   const data = await getDataClient(orgUId);
@@ -43,7 +49,12 @@ export default async function OrgLayout({ children, params }: OrgLayoutProps) {
                 <Separator orientation="vertical" className="mr-2 h-4" />
                 <div className="flex justify-between gap-2 flex-1">
                   <h1 className="text-lg font-semibold">Clippy</h1>
-                  <div className="flex gap-2">
+                  <div className="flex gap-2 items-center">
+                    <Suspense
+                      fallback={<Loader2 className="animate-spin size-4" />}
+                    >
+                      {sheet}
+                    </Suspense>
                     <ThemeToggle />
                   </div>
                 </div>

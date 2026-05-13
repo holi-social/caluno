@@ -16,8 +16,9 @@ import {
   Textarea,
 } from '@repo/ui';
 import { useRouter } from 'next/navigation';
-import { useEffect, useState, useTransition } from 'react';
+import { useState, useTransition } from 'react';
 import { useForm } from 'react-hook-form';
+import { FormSheet, useFormSheet } from '@/components/form-sheet';
 import { createTimeEntry } from '../actions';
 import {
   type CreateTimeEntryFormValues,
@@ -35,26 +36,17 @@ interface CreateTimeEntryFormProps {
   sessionId?: string;
   shiftInstances?: ShiftInstance[];
   allVolunteers?: Array<{ id: string; name: string; email: string }>;
-  onSuccess?: () => void;
-  onPendingChange?: (isPending: boolean) => void;
-  formId?: string;
 }
 
 export function CreateTimeEntryForm({
   organizationUnitId,
   shiftInstances = [],
   allVolunteers = [],
-  onSuccess,
-  onPendingChange,
-  formId,
 }: CreateTimeEntryFormProps) {
   const router = useRouter();
-  const [isPending, startTransition] = useTransition();
-  const [serverError, setServerError] = useState<string | null>(null);
-
-  useEffect(() => {
-    onPendingChange?.(isPending);
-  }, [isPending, onPendingChange]);
+  const [pending, startTransition] = useTransition();
+  const [serverError, setServerError] = useState<string>();
+  const { open, setOpen } = useFormSheet();
 
   const {
     register,
@@ -82,130 +74,126 @@ export function CreateTimeEntryForm({
   );
 
   const onSubmit = async (formData: CreateTimeEntryFormValues) => {
-    setServerError(null);
+    setServerError(undefined);
 
     startTransition(async () => {
       const result = await createTimeEntry(formData);
       if (result?.serverError) {
         setServerError(result.serverError);
       } else {
-        onSuccess?.();
+        await setOpen(false);
         router.refresh();
       }
     });
   };
 
   return (
-    <form
-      id={formId}
+    <FormSheet
       onSubmit={handleSubmit(onSubmit)}
-      className="relative flex flex-col h-full"
+      title="Add Time Entry"
+      description="Record a new time entry for a volunteer shift session."
+      pending={pending}
+      open={open}
+      onOpenChange={setOpen}
+      formError={serverError}
     >
-      <div>
-        {serverError && (
-          <div className="rounded-md bg-destructive/10 p-4 text-sm text-destructive">
-            {serverError}
-          </div>
+      <Field>
+        <FieldLabel htmlFor="shiftInstanceId">
+          Select Shift <span className="text-destructive">*</span>
+        </FieldLabel>
+        <Select
+          value={watch('shiftInstanceId')}
+          onValueChange={(value) => {
+            setValue('shiftInstanceId', value);
+            setValue('volunteerId', '');
+          }}
+          disabled={pending}
+        >
+          <SelectTrigger>
+            <SelectValue placeholder="Select a shift" />
+          </SelectTrigger>
+          <SelectContent>
+            {shiftInstances.map((shift) => (
+              <SelectItem key={shift.id} value={shift.id}>
+                {shift.title}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        {errors.shiftInstanceId && (
+          <FieldError>{errors.shiftInstanceId.message}</FieldError>
         )}
+      </Field>
 
-        <Field>
-          <FieldLabel htmlFor="shiftInstanceId">
-            Select Shift <span className="text-destructive">*</span>
-          </FieldLabel>
-          <Select
-            value={watch('shiftInstanceId')}
-            onValueChange={(value) => {
-              setValue('shiftInstanceId', value);
-              setValue('volunteerId', '');
-            }}
-            disabled={isPending}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Select a shift" />
-            </SelectTrigger>
-            <SelectContent>
-              {shiftInstances.map((shift) => (
-                <SelectItem key={shift.id} value={shift.id}>
-                  {shift.title}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          {errors.shiftInstanceId && (
-            <FieldError>{errors.shiftInstanceId.message}</FieldError>
-          )}
-        </Field>
+      <Field>
+        <FieldLabel htmlFor="volunteerId">
+          Select Volunteer <span className="text-destructive">*</span>
+        </FieldLabel>
+        <Select
+          value={watch('volunteerId')}
+          onValueChange={(value) => setValue('volunteerId', value)}
+          disabled={pending || !shiftInstanceId}
+        >
+          <SelectTrigger>
+            <SelectValue placeholder="Select a volunteer" />
+          </SelectTrigger>
+          <SelectContent>
+            {shiftVolunteers.length > 0 && (
+              <SelectGroup>
+                <SelectLabel>Shift Volunteers</SelectLabel>
+                {shiftVolunteers.map((volunteer) => (
+                  <SelectItem key={volunteer.id} value={volunteer.id}>
+                    {volunteer.name || volunteer.email}
+                  </SelectItem>
+                ))}
+              </SelectGroup>
+            )}
+            {otherVolunteers.length > 0 && (
+              <SelectGroup>
+                <SelectLabel>Other Volunteers</SelectLabel>
+                {otherVolunteers.map((volunteer) => (
+                  <SelectItem key={volunteer.id} value={volunteer.id}>
+                    {volunteer.name || volunteer.email}
+                  </SelectItem>
+                ))}
+              </SelectGroup>
+            )}
+          </SelectContent>
+        </Select>
+        {errors.volunteerId && (
+          <FieldError>{errors.volunteerId.message}</FieldError>
+        )}
+      </Field>
 
-        <Field>
-          <FieldLabel htmlFor="volunteerId">
-            Select Volunteer <span className="text-destructive">*</span>
-          </FieldLabel>
-          <Select
-            value={watch('volunteerId')}
-            onValueChange={(value) => setValue('volunteerId', value)}
-            disabled={isPending || !shiftInstanceId}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Select a volunteer" />
-            </SelectTrigger>
-            <SelectContent>
-              {shiftVolunteers.length > 0 && (
-                <SelectGroup>
-                  <SelectLabel>Shift Volunteers</SelectLabel>
-                  {shiftVolunteers.map((volunteer) => (
-                    <SelectItem key={volunteer.id} value={volunteer.id}>
-                      {volunteer.name || volunteer.email}
-                    </SelectItem>
-                  ))}
-                </SelectGroup>
-              )}
-              {otherVolunteers.length > 0 && (
-                <SelectGroup>
-                  <SelectLabel>Other Volunteers</SelectLabel>
-                  {otherVolunteers.map((volunteer) => (
-                    <SelectItem key={volunteer.id} value={volunteer.id}>
-                      {volunteer.name || volunteer.email}
-                    </SelectItem>
-                  ))}
-                </SelectGroup>
-              )}
-            </SelectContent>
-          </Select>
-          {errors.volunteerId && (
-            <FieldError>{errors.volunteerId.message}</FieldError>
-          )}
-        </Field>
+      <Field>
+        <FieldLabel>
+          Start and end time<span className="text-destructive"> *</span>
+        </FieldLabel>
+        <DatePickerWithTimeRange
+          value={{
+            start: startedAt ? new Date(startedAt) : null,
+            end: endedAt ? new Date(endedAt) : null,
+          }}
+          onChange={(start, end) => {
+            setValue('startedAt', start as Date, { shouldValidate: true });
+            setValue('endedAt', end as Date, { shouldValidate: true });
+          }}
+          errors={[errors.startedAt?.message, errors.endedAt?.message]}
+          disabled={pending}
+        />
+      </Field>
 
-        <Field>
-          <FieldLabel>
-            Start and end time<span className="text-destructive"> *</span>
-          </FieldLabel>
-          <DatePickerWithTimeRange
-            value={{
-              start: startedAt ? new Date(startedAt) : null,
-              end: endedAt ? new Date(endedAt) : null,
-            }}
-            onChange={(start, end) => {
-              setValue('startedAt', start as Date, { shouldValidate: true });
-              setValue('endedAt', end as Date, { shouldValidate: true });
-            }}
-            errors={[errors.startedAt?.message, errors.endedAt?.message]}
-            disabled={isPending}
-          />
-        </Field>
-
-        <Field>
-          <FieldLabel htmlFor="notes">Notes</FieldLabel>
-          <Textarea
-            id="notes"
-            rows={4}
-            placeholder="Add any notes about this time entry..."
-            disabled={isPending}
-            {...register('notes')}
-          />
-          {errors.notes && <FieldError>{errors.notes.message}</FieldError>}
-        </Field>
-      </div>
-    </form>
+      <Field>
+        <FieldLabel htmlFor="notes">Notes</FieldLabel>
+        <Textarea
+          id="notes"
+          rows={4}
+          placeholder="Add any notes about this time entry..."
+          disabled={pending}
+          {...register('notes')}
+        />
+        {errors.notes && <FieldError>{errors.notes.message}</FieldError>}
+      </Field>
+    </FormSheet>
   );
 }
