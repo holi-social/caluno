@@ -1,6 +1,7 @@
 import { Badge, Card, CardContent } from '@repo/ui';
 import { Lock, Shield, ShieldCheck, Unlock } from 'lucide-react';
 import { notFound } from 'next/navigation';
+import { ActionBar } from '@/domain/role/components/action-bar';
 import { getActionLabel, groupPermissions } from '@/domain/role/grouping';
 import { getDataClient } from '@/lib/data-client';
 
@@ -24,9 +25,12 @@ export default async function RoleDetailsPage({
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="page-title mb-1">{role.name}</h1>
-        <p className="text-muted-foreground">{role.description}</p>
+      <div className="flex justify-between">
+        <div>
+          <h1 className="page-title mb-1">{role.name}</h1>
+          <p className="text-muted-foreground">{role.description}</p>
+        </div>
+        <ActionBar role={role} organizationUnitId={orgUId} />
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
