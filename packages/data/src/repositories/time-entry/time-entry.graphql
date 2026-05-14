@@ -39,6 +39,12 @@ query GetTimeEntry($id: String!) {
   }
 }
 
+mutation UpdateTimeEntry($id: ID!, $input: UpdateTimeEntryInput!) {
+  updateTimeEntry(id: $id, input: $input) {
+    id
+  }
+}
+
 query GetTimeEntries($limit: Int!, $offset: Int!) {
   timeEntries(limit: $limit, offset: $offset) {
     items {

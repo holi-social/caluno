@@ -1,12 +1,21 @@
 'use server';
 
-import type { AddTimeEntryInput, CloseTimeEntryInput } from '@repo/data';
+import type {
+  AddTimeEntryInput,
+  CloseTimeEntryInput,
+  UpdateTimeEntryInput,
+} from '@repo/data';
+import z from 'zod';
 import { getDataClient } from '@/lib/data-client';
 import { actionClient } from '@/lib/safe-action';
-import { closeTimeEntrySchema, createTimeEntrySchema, deleteTimeEntrySchema } from './schemas';
+import {
+  closeTimeEntrySchema,
+  deleteTimeEntrySchema,
+  timeEntrySchema,
+} from './schemas';
 
 export const createTimeEntry = actionClient
-  .inputSchema(createTimeEntrySchema)
+  .inputSchema(timeEntrySchema)
   .action(async ({ parsedInput }) => {
     const data = await getDataClient(parsedInput.organizationUnitId);
 
@@ -32,6 +41,22 @@ export const closeTimeEntry = actionClient
     };
 
     return await data.timeEntry.close(parsedInput.id, input);
+  });
+
+export const updateTimeEntry = actionClient
+  .inputSchema(timeEntrySchema)
+  .bindArgsSchemas([z.string()])
+  .action(async ({ parsedInput, bindArgsParsedInputs: [timeEntryId] }) => {
+    const data = await getDataClient(parsedInput.organizationUnitId);
+
+    const input: UpdateTimeEntryInput = {
+      shiftInstanceId: parsedInput.shiftInstanceId,
+      startedAt: parsedInput.startedAt.toISOString(),
+      endedAt: parsedInput.endedAt?.toISOString() ?? null,
+      notes: parsedInput.notes || null,
+    };
+
+    return await data.timeEntry.update(timeEntryId, input);
   });
 
 export const deleteTimeEntry = actionClient

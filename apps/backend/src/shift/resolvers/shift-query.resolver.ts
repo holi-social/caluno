@@ -37,12 +37,12 @@ export class ShiftQueryResolver {
     @Args() pagination: PaginationInput,
     @Context() context: AuthenticatedGraphQLContext,
   ): Promise<ShiftPaginatedResponse> {
-    const { items, total } = await this.shiftService.findAll(
+    const { shifts, total } = await this.shiftService.findAll(
       context.organizationUnitId,
       pagination,
     );
     return new ShiftPaginatedResponse({
-      items: this.shiftMapper.toArray(items),
+      items: this.shiftMapper.toArray(shifts),
       total: total,
       limit: pagination.limit,
       offset: pagination.offset,

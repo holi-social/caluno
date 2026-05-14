@@ -82,7 +82,7 @@ export class ShiftService {
   async findAll(
     organizationUnitId: string,
     pagination: PaginationInput,
-  ): Promise<{ items: ShiftEntity[]; total: number }> {
+  ): Promise<{ shifts: ShiftEntity[]; total: number }> {
     const shifts = await this.db.query.shifts.findMany({
       where: {
         organizationUnitId,
@@ -102,7 +102,7 @@ export class ShiftService {
       extras: { total: count() },
     });
 
-    return { items: shifts, total: totalResult[0]?.total ?? 0 };
+    return { shifts, total: totalResult[0]?.total ?? 0 };
   }
 
   async create(

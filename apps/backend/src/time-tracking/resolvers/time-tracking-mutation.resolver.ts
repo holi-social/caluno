@@ -4,6 +4,7 @@ import { Permissions } from '../../auth/decorators/permissions.decorator';
 import { type AuthenticatedGraphQLContext } from '../../graphql/graphql.context';
 import { AddTimeEntryInput } from '../inputs/add-time-entry.input';
 import { CloseTimeEntryInput } from '../inputs/close-time-enty-input';
+import { UpdateTimeEntryInput } from '../inputs/update-time-entry.input';
 import { TimeEntryMapper } from '../mappers/time-entry.mapper';
 import { TimeEntry } from '../models/time-entry.model';
 import { TimeTrackingService } from '../time-tracking.service';
@@ -36,6 +37,21 @@ export class TimeTrackingMutationResolver {
     @Context() context: AuthenticatedGraphQLContext,
   ): Promise<TimeEntry> {
     const entity = await this.timeTrackingService.closeTimeEntry(
+      id,
+      context.organizationUnitId,
+      input,
+    );
+    return this.entryMapper.toModelOrThrow(entity);
+  }
+
+  @Permissions(PERMISSIONS.TIME_ENTRY_UPDATE)
+  @Mutation(() => TimeEntry)
+  async updateTimeEntry(
+    @Args('id', { type: () => ID }) id: string,
+    @Args('input') input: UpdateTimeEntryInput,
+    @Context() context: AuthenticatedGraphQLContext,
+  ): Promise<TimeEntry> {
+    const entity = await this.timeTrackingService.updateTimeEntry(
       id,
       context.organizationUnitId,
       input,

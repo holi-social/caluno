@@ -180,6 +180,7 @@ type Mutation {
   updateRequirementProfileSubmission(id: String!, input: UpdateRequirementProfileSubmissionInput!): RequirementProfileSubmission!
   updateRole(id: ID!, input: CreateRoleInput!): Role!
   updateShift(id: String!, input: UpdateShiftInput!): Shift!
+  updateTimeEntry(id: ID!, input: UpdateTimeEntryInput!): TimeEntry!
 }
 
 type Organization {
@@ -612,6 +613,13 @@ input UpdateShiftInput {
   startsAt: DateTime
   title: String
   visibility: ShiftVisibility = ALL_MEMBERS
+}
+
+input UpdateTimeEntryInput {
+  endedAt: DateTime
+  notes: String
+  shiftInstanceId: String!
+  startedAt: DateTime!
 }
 
 type User {

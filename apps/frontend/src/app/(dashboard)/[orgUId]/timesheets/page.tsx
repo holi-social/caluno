@@ -1,8 +1,6 @@
-import { CreateTimeEntrySheet } from '@/components/sheets/create-time-entry-sheet';
 import { CreateTimeEntryButton } from '@/domain/time-entry/components/create-time-entry-button';
 import { EmptyTimeEntries } from '@/domain/time-entry/components/empty-time-entries';
 import { TimesheetsTable } from '@/domain/time-entry/components/timesheets-table';
-import { getAvailableShiftsWithVolunteers } from '@/domain/time-entry/queries';
 import { getDataClient } from '@/lib/data-client';
 
 interface TimesheetsPageProps {
@@ -14,26 +12,14 @@ export default async function TimesheetsPage({ params }: TimesheetsPageProps) {
 
   const data = await getDataClient(orgUId);
 
-  const [timeEntries, { shifts, allVolunteers }] = await Promise.all([
-    data.timeEntry.findAll(),
-    getAvailableShiftsWithVolunteers(orgUId),
-  ]);
-
+  const timeEntries = await data.timeEntry.findAll();
   const hasTimeEntries = timeEntries.pagination.total > 0;
 
   return (
     <div className="space-y-6">
-      {/* Header */}
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="page-title">Timesheets</h1>
-        </div>
-        <CreateTimeEntryButton />
-        <CreateTimeEntrySheet
-          organizationUnitId={orgUId}
-          shiftInstances={shifts}
-          allVolunteers={allVolunteers}
-        />
+        <h1 className="page-title">Timesheets</h1>
+        <CreateTimeEntryButton orgUId={orgUId} />
       </div>
 
       {hasTimeEntries ? (
@@ -43,11 +29,7 @@ export default async function TimesheetsPage({ params }: TimesheetsPageProps) {
         />
       ) : (
         <EmptyTimeEntries>
-          <CreateTimeEntrySheet
-            organizationUnitId={orgUId}
-            shiftInstances={shifts}
-            allVolunteers={allVolunteers}
-          />
+          <CreateTimeEntryButton orgUId={orgUId} />
         </EmptyTimeEntries>
       )}
     </div>

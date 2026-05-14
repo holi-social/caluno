@@ -11,8 +11,8 @@ import {
   TableRow,
 } from '@repo/ui';
 import Link from 'next/link';
-import { ActionBar } from './action-bar';
 import { formatDuration, formatTimeRange } from '../formating';
+import { ActionBar } from './action-bar';
 
 type TimeEntry = GetTimeEntriesQuery['timeEntries']['items'][number];
 

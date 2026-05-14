@@ -1,16 +1,13 @@
-'use client';
-
 import { Button } from '@repo/ui';
 import { PlusIcon } from 'lucide-react';
-import { FORM_ID } from '@/components/sheets/create-time-entry-sheet';
-import { useSheetTrigger } from '@/hooks/use-sheet';
+import Link from 'next/link';
 
-export function CreateTimeEntryButton() {
-  const { open: openCreateTimeEntrySheet } = useSheetTrigger(FORM_ID);
-
+export const CreateTimeEntryButton = ({ orgUId }: { orgUId: string }) => {
   return (
-    <Button onClick={() => openCreateTimeEntrySheet()}>
-      <PlusIcon /> Add Time Entry
-    </Button>
+    <Link href={`/${orgUId}/timesheets/new`}>
+      <Button>
+        <PlusIcon /> Add Time Entry
+      </Button>
+    </Link>
   );
-}
+};
