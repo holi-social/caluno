@@ -5,7 +5,7 @@ import { UserRepository } from '@repo/data';
 import { useQuery } from '@tanstack/react-query';
 import { useGraphQLClient } from './use-graphql-client';
 
-export function useMyPermissions() {
+function useMyPermissions() {
   const client = useGraphQLClient();
   const repository = new UserRepository(client);
 
