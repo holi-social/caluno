@@ -13,6 +13,7 @@ import {
   TableRow,
 } from '@repo/ui';
 import { Edit, TrashIcon } from 'lucide-react';
+import Link from 'next/link';
 import { RequirePermission } from '@/components/require-permission';
 import { DeleteRoleDialog } from '@/domain/role/components/delete-role-dialog';
 import {
@@ -45,7 +46,12 @@ export function RolesTable({ roles }: RolesTableProps) {
             <TableRow key={role.id}>
               <TableCell className="font-medium">
                 <div className="flex items-center gap-2">
-                  {role.name}
+                  <Link
+                    href={`/${orgUId}/settings/roles/${role.id}`}
+                    className="hover:underline"
+                  >
+                    {role.name}
+                  </Link>
                   {role.isInternal && <Badge variant="secondary">System</Badge>}
                 </div>
               </TableCell>
