@@ -1,7 +1,8 @@
 'use client';
 
 import { Button } from '@repo/ui';
-import { Loader2, Timer, Trash } from 'lucide-react';
+import { Edit, Loader2, Timer, Trash } from 'lucide-react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useTransition } from 'react';
 import { toast } from 'sonner';
@@ -22,6 +23,7 @@ export const ActionBar = ({
   size = 'sm',
 }: ActionBarProps) => {
   const router = useRouter();
+
   const [isDeleting, startDeleteTransition] = useTransition();
   const [isClosing, startCloseTransition] = useTransition();
 
@@ -69,6 +71,15 @@ export const ActionBar = ({
         </Button>
       )}
 
+      <Link href={`/${organizationUnitId}/timesheets/${id}/edit`}>
+        <Button
+          size={buttonSize}
+          variant="outline"
+          aria-label="Edit Time Entry"
+        >
+          <Edit />
+        </Button>
+      </Link>
       <DeleteAlertDialog
         title="Delete time entry"
         description="Are you sure you wish to delete this time entry?"

@@ -19,30 +19,28 @@ import { useRouter } from 'next/navigation';
 import { useState, useTransition } from 'react';
 import { useForm } from 'react-hook-form';
 import { FormSheet, useFormSheet } from '@/components/form-sheet';
-import { createTimeEntry } from '../actions';
-import {
-  type CreateTimeEntryFormValues,
-  createTimeEntrySchema,
-} from '../schemas';
+import type { ShiftInstance } from '../queries';
+import { type TimeEntryFormValues, timeEntrySchema } from '../schemas';
 
-interface ShiftInstance {
-  id: string;
-  title: string;
-  volunteers?: Array<{ id: string; name: string; email: string }>;
-}
-
-interface CreateTimeEntryFormProps {
+interface TimeEntryFormProps {
   organizationUnitId: string;
-  sessionId?: string;
   shiftInstances?: ShiftInstance[];
-  allVolunteers?: Array<{ id: string; name: string; email: string }>;
+  volunteers?: Array<{ id: string; name: string; email: string }>;
+  initialValues?: Partial<TimeEntryFormValues>;
+  mutate: (formData: TimeEntryFormValues) => Promise<{ serverError?: string }>;
+  title: string;
+  description: string;
 }
 
-export function CreateTimeEntryForm({
+export function TimeEntryForm({
   organizationUnitId,
   shiftInstances = [],
-  allVolunteers = [],
-}: CreateTimeEntryFormProps) {
+  volunteers = [],
+  mutate,
+  initialValues,
+  title,
+  description,
+}: TimeEntryFormProps) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [serverError, setServerError] = useState<string>();
@@ -54,31 +52,32 @@ export function CreateTimeEntryForm({
     watch,
     setValue,
     formState: { errors },
-  } = useForm<CreateTimeEntryFormValues>({
-    resolver: zodResolver(createTimeEntrySchema),
+  } = useForm<TimeEntryFormValues>({
+    resolver: zodResolver(timeEntrySchema),
     defaultValues: {
       organizationUnitId,
       shiftInstanceId: '',
       volunteerId: '',
-      notes: '',
+      ...initialValues,
     },
   });
 
   const shiftInstanceId = watch('shiftInstanceId');
   const startedAt = watch('startedAt');
   const endedAt = watch('endedAt');
+
   const selectedShift = shiftInstances.find((s) => s.id === shiftInstanceId);
   const shiftVolunteers = selectedShift?.volunteers || [];
-  const otherVolunteers = allVolunteers.filter(
+  const otherVolunteers = volunteers.filter(
     (v) => !shiftVolunteers.some((sv) => sv.id === v.id),
   );
 
-  const onSubmit = async (formData: CreateTimeEntryFormValues) => {
+  const onSubmit = async (formData: TimeEntryFormValues) => {
     setServerError(undefined);
 
     startTransition(async () => {
-      const result = await createTimeEntry(formData);
-      if (result?.serverError) {
+      const result = await mutate(formData);
+      if (result.serverError) {
         setServerError(result.serverError);
       } else {
         await setOpen(false);
@@ -90,8 +89,8 @@ export function CreateTimeEntryForm({
   return (
     <FormSheet
       onSubmit={handleSubmit(onSubmit)}
-      title="Add Time Entry"
-      description="Record a new time entry for a volunteer shift session."
+      title={title}
+      description={description}
       pending={pending}
       open={open}
       onOpenChange={setOpen}
@@ -102,7 +101,7 @@ export function CreateTimeEntryForm({
           Select Shift <span className="text-destructive">*</span>
         </FieldLabel>
         <Select
-          value={watch('shiftInstanceId')}
+          value={shiftInstanceId}
           onValueChange={(value) => {
             setValue('shiftInstanceId', value);
             setValue('volunteerId', '');
@@ -167,7 +166,7 @@ export function CreateTimeEntryForm({
 
       <Field>
         <FieldLabel>
-          Start and end time<span className="text-destructive"> *</span>
+          Start and end time<span className="text-destructive">*</span>
         </FieldLabel>
         <DatePickerWithTimeRange
           value={{

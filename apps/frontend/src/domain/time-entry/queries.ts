@@ -2,7 +2,7 @@
 
 import { getDataClient } from '@/lib/data-client';
 
-interface ShiftInstance {
+export interface ShiftInstance {
   id: string;
   title: string;
   volunteers: Array<{ id: string; name: string; email: string }>;
