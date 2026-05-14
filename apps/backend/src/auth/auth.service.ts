@@ -1,16 +1,16 @@
-import {
-  Inject,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
+import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { eq } from 'drizzle-orm';
 import type { Database } from '../database/database.module';
 import { DATABASE_CONNECTION } from '../database/database-connection';
 import * as schema from '../database/schema';
-import { PermissionEntity, RoleEntity } from '../database/schema';
+import {
+  OrganizationEntity,
+  PermissionEntity,
+  RoleEntity,
+} from '../database/schema';
+import { OrganizationUnitService } from '../organization/organization-unit.service';
 import { CreateRoleInput } from './inputs/create-role.input';
 import { UpdateRoleInput } from './inputs/update-role.input';
-import { OrganizationUnitService } from '../organization/organization-unit.service';
 
 @Injectable()
 export class AuthService {
@@ -24,10 +24,8 @@ export class AuthService {
     organizationUnitId: string,
     input: CreateRoleInput,
   ): Promise<RoleEntity> {
-    const organization = await this.organizationUnitService.findOrganizationByUnitId(organizationUnitId);
-    if (!organization) {
-      throw new NotFoundException('Organization not found');
-    }
+    const organization = await this.getOrganisation(organizationUnitId);
+
     const [role] = await this.db
       .insert(schema.roles)
       .values({
@@ -57,12 +55,6 @@ export class AuthService {
     userId: string,
     organizationUnitId: string,
   ): Promise<PermissionEntity[]> {
-    const organization = await this.organizationUnitService.findOrganizationByUnitId(organizationUnitId);
-
-    if (!organization) {
-      throw new NotFoundException('Organization not found');
-    }
-
     const membership = await this.db.query.memberships.findFirst({
       where: {
         userId,
@@ -80,7 +72,7 @@ export class AuthService {
                 },
               },
             },
-          }
+          },
         },
       },
     });
@@ -96,7 +88,10 @@ export class AuthService {
       }
       for (const rolePermission of membershipRole.role.permissions) {
         if (rolePermission.permission) {
-          permissionsById.set(rolePermission.permission.id, rolePermission.permission);
+          permissionsById.set(
+            rolePermission.permission.id,
+            rolePermission.permission,
+          );
         }
       }
     }
@@ -131,9 +126,11 @@ export class AuthService {
     return await this.db.query.permissions.findMany();
   }
 
-  async findAllRoles(organizationId: string): Promise<RoleEntity[]> {
+  async findAllRoles(organizationUnitId: string): Promise<RoleEntity[]> {
+    const organization = await this.getOrganisation(organizationUnitId);
+
     return this.db.query.roles.findMany({
-      where: { organizationId },
+      where: { organizationId: organization.id },
       with: {
         permissions: {
           with: {
@@ -218,5 +215,20 @@ export class AuthService {
     });
 
     return deletedRole;
+  }
+
+  async getOrganisation(
+    organizationUnitId: string,
+  ): Promise<OrganizationEntity> {
+    const organization =
+      await this.organizationUnitService.findOrganizationByUnitId(
+        organizationUnitId,
+      );
+
+    if (!organization) {
+      throw new NotFoundException('Organization not found');
+    }
+
+    return organization;
   }
 }
