@@ -4,36 +4,34 @@ import type { RoleListItem } from '@repo/data';
 import { PermissionKey } from '@repo/data';
 import { Button } from '@repo/ui';
 import { Edit, Loader2, Trash } from 'lucide-react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useTransition } from 'react';
 import { toast } from 'sonner';
 import { DeleteAlertDialog } from '@/components/delete-alert-dialog';
 import { RequirePermission } from '@/components/require-permission';
-import { useSheetTrigger } from '@/hooks/use-sheet';
 import { deleteRole } from '../actions';
-import { EditRoleSheet, FORM_ID } from './edit-role-sheet';
 
 type ActionBarProps = {
-  role: RoleListItem;
+  id: string;
+  isInternal: boolean;
   organizationUnitId: string;
   size?: 'xs' | 'sm' | 'md';
 };
 
 export const ActionBar = ({
-  role,
   organizationUnitId,
+  id,
+  isInternal,
   size = 'sm',
 }: ActionBarProps) => {
   const router = useRouter();
-  const { open: openEditRoleSheet } = useSheetTrigger(FORM_ID);
-
   const [isDeleting, startTransition] = useTransition();
-
   const buttonSize = `icon-${size}` as const;
 
   const handleDelete = () => {
     startTransition(async () => {
-      const result = await deleteRole({ id: role.id, organizationUnitId });
+      const result = await deleteRole({ id, organizationUnitId });
       if (result?.serverError) {
         toast.error(`Failed to delete Role. ${result.serverError}`);
       } else {
@@ -46,17 +44,17 @@ export const ActionBar = ({
   return (
     <aside className="space-x-2">
       <RequirePermission permission={PermissionKey.RoleUpdate}>
-        <Button
-          variant="outline"
-          size={buttonSize}
-          aria-label="Edit a roles permissions"
-          onClick={() => openEditRoleSheet({ id: role.id })}
-        >
-          <Edit />
-        </Button>
-        <EditRoleSheet role={role} />
+        <Link href={`/${organizationUnitId}/settings/roles/${id}/edit`}>
+          <Button
+            variant="outline"
+            size={buttonSize}
+            aria-label="Edit a roles permissions"
+          >
+            <Edit />
+          </Button>
+        </Link>
       </RequirePermission>
-      {!role.isInternal && (
+      {!isInternal && (
         <RequirePermission permission={PermissionKey.RoleDelete}>
           <DeleteAlertDialog
             title="Delete Role"

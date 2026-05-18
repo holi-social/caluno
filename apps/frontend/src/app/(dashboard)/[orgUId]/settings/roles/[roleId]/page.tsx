@@ -30,7 +30,11 @@ export default async function RoleDetailsPage({
           <h1 className="page-title mb-1">{role.name}</h1>
           <p className="text-muted-foreground">{role.description}</p>
         </div>
-        <ActionBar role={role} organizationUnitId={orgUId} />
+        <ActionBar
+          id={role.id}
+          isInternal={role.isInternal}
+          organizationUnitId={orgUId}
+        />
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
