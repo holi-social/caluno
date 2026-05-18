@@ -13,7 +13,7 @@ interface RolesPageProps {
 export default async function RolesPage({ params }: RolesPageProps) {
   const { orgUId } = await params;
   const { org } = await requireOrgAccess(orgUId);
-  await requirePermission(orgUId, PermissionKey.RoleRead);
+  await requirePermission(orgUId, PermissionKey.OrgView);
   const data = await getDataClient(orgUId);
 
   const roles = await data.role.findAll();

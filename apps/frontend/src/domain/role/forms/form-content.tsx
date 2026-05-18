@@ -1,6 +1,6 @@
 'use client';
 
-import { usePermissions } from '@repo/data/react';
+import { usePermissionGroups } from '@repo/data/react';
 import { Field, FieldError, FieldLabel, Input, Textarea } from '@repo/ui';
 import { Controller, type UseFormReturn } from 'react-hook-form';
 import { PermissionPicker } from '../components/permission-picker';
@@ -18,7 +18,8 @@ export function FormContent({ isPending, formReturnValues }: FormContentProps) {
     formState: { errors },
   } = formReturnValues;
 
-  const { data: permissions, isLoading: permissionsLoading } = usePermissions();
+  const { data: permissionGroups, isLoading: permissionsLoading } =
+    usePermissionGroups();
 
   return (
     <>
@@ -59,13 +60,13 @@ export function FormContent({ isPending, formReturnValues }: FormContentProps) {
           <div className="text-sm text-muted-foreground">
             Loading permissions...
           </div>
-        ) : permissions ? (
+        ) : permissionGroups ? (
           <Controller
             control={control}
             name="permissionIds"
             render={({ field }) => (
               <PermissionPicker
-                permissions={permissions}
+                groups={permissionGroups}
                 selectedIds={field.value}
                 onChange={field.onChange}
                 disabled={isPending}

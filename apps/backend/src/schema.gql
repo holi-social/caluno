@@ -151,8 +151,8 @@ enum MembershipRequestStatus {
 
 type Mutation {
   addTimeEntry(input: AddTimeEntryInput!): TimeEntry!
-  approveMembershipRequest(id: ID!): MembershipRequest!
-  cancelMembershipRequest(id: ID!): MembershipRequest!
+  approveMembershipRequest(id: ID!, organizationUnitId: ID!): MembershipRequest!
+  cancelMembershipRequest(id: ID!, organizationUnitId: ID!): MembershipRequest!
   closeTimeEntry(id: ID!, input: CloseTimeEntryInput!): TimeEntry!
   createOrganization(input: CreateOrganizationInput!): Organization!
   createOrganizationUnit(input: CreateOrganizationUnitInput!): OrganizationUnit!
@@ -172,7 +172,7 @@ type Mutation {
   inviteMembersToShift(memberIds: [String!]!, shiftId: String!): Shift!
   joinOrganization(organizationUnitId: ID!): JoinOrganizationResult!
   joinShift(shiftId: String!): JoinShiftResult!
-  rejectMembershipRequest(id: ID!, rejectionReason: String!): MembershipRequest!
+  rejectMembershipRequest(id: ID!, organizationUnitId: ID!, rejectionReason: String!): MembershipRequest!
   updateOrganizationUnit(id: String!, input: UpdateOrganizationUnitInput!): OrganizationUnit!
   updateRequirement(id: String!, input: UpdateRequirementInput!): Requirement!
   updateRequirementFulfillment(id: String!, input: UpdateRequirementFulfillmentInput!): RequirementFulfillment!

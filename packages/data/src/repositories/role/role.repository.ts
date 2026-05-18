@@ -23,6 +23,15 @@ export class RoleRepository extends BaseRepository {
     }
   }
 
+  async findPermissionGroups() {
+    try {
+      const data = await this.sdk.GetPermissionGroups();
+      return data.permissionGroups;
+    } catch (error) {
+      throw DataError.fromGraphQLError(error);
+    }
+  }
+
   async create(input: CreateRoleInput) {
     try {
       const data = await this.sdk.createRole({ input });

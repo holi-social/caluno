@@ -56,7 +56,7 @@ export function RolesTable({ roles }: RolesTableProps) {
               <TableCell>
                 {!role.isInternal && (
                   <div className="flex items-center gap-2">
-                    <RequirePermission permission={PermissionKey.RoleUpdate}>
+                    <RequirePermission permission={PermissionKey.OrgEdit}>
                       <Button
                         variant="outline"
                         size="icon-xs"
@@ -67,7 +67,7 @@ export function RolesTable({ roles }: RolesTableProps) {
                       </Button>
                       <EditRoleSheet role={role} />
                     </RequirePermission>
-                    <RequirePermission permission={PermissionKey.RoleDelete}>
+                    <RequirePermission permission={PermissionKey.OrgEdit}>
                       <DeleteRoleDialog
                         roleId={role.id}
                         roleName={role.name}
