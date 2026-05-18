@@ -151,8 +151,8 @@ enum MembershipRequestStatus {
 
 type Mutation {
   addTimeEntry(input: AddTimeEntryInput!): TimeEntry!
-  approveMembershipRequest(id: ID!, organizationUnitId: ID!): MembershipRequest!
-  cancelMembershipRequest(id: ID!, organizationUnitId: ID!): MembershipRequest!
+  approveMembershipRequest(id: ID!): MembershipRequest!
+  cancelMembershipRequest(id: ID!): MembershipRequest!
   closeTimeEntry(id: ID!, input: CloseTimeEntryInput!): TimeEntry!
   createOrganization(input: CreateOrganizationInput!): Organization!
   createOrganizationUnit(input: CreateOrganizationUnitInput!): OrganizationUnit!
@@ -172,7 +172,7 @@ type Mutation {
   inviteMembersToShift(memberIds: [String!]!, shiftId: String!): Shift!
   joinOrganization(organizationUnitId: ID!): JoinOrganizationResult!
   joinShift(shiftId: String!): JoinShiftResult!
-  rejectMembershipRequest(id: ID!, organizationUnitId: ID!, rejectionReason: String!): MembershipRequest!
+  rejectMembershipRequest(id: ID!, rejectionReason: String!): MembershipRequest!
   updateOrganizationUnit(id: String!, input: UpdateOrganizationUnitInput!): OrganizationUnit!
   updateRequirement(id: String!, input: UpdateRequirementInput!): Requirement!
   updateRequirementFulfillment(id: String!, input: UpdateRequirementFulfillmentInput!): RequirementFulfillment!
@@ -267,52 +267,26 @@ type Permission {
   key: PermissionKey!
 }
 
+type PermissionGroup {
+  items: [PermissionGroupItem!]!
+  key: String!
+  label: String!
+}
+
+type PermissionGroupItem {
+  label: String!
+  permission: Permission!
+}
+
 enum PermissionKey {
-  MEMBERSHIP_CREATE
-  MEMBERSHIP_DELETE
-  MEMBERSHIP_READ
-  MEMBERSHIP_REQUEST_APPROVE
-  MEMBERSHIP_REQUEST_CANCEL
-  MEMBERSHIP_REQUEST_DELETE
-  MEMBERSHIP_REQUEST_READ
-  MEMBERSHIP_REQUEST_REJECT
-  MEMBERSHIP_REQUEST_UPDATE
-  MEMBERSHIP_UPDATE
-  ORG_DELETE
-  ORG_READ
-  ORG_UNIT_CREATE
-  ORG_UNIT_DELETE
-  ORG_UNIT_READ
-  ORG_UNIT_UPDATE
-  ORG_UPDATE
-  REQUIREMENT_CREATE
-  REQUIREMENT_DELETE
-  REQUIREMENT_FULFILLMENT_CREATE
-  REQUIREMENT_FULFILLMENT_DELETE
-  REQUIREMENT_FULFILLMENT_READ
-  REQUIREMENT_FULFILLMENT_UPDATE
-  REQUIREMENT_PROFILE_CREATE
-  REQUIREMENT_PROFILE_DELETE
-  REQUIREMENT_PROFILE_READ
-  REQUIREMENT_PROFILE_SUBMISSION_CREATE
-  REQUIREMENT_PROFILE_SUBMISSION_DELETE
-  REQUIREMENT_PROFILE_SUBMISSION_READ
-  REQUIREMENT_PROFILE_SUBMISSION_UPDATE
-  REQUIREMENT_PROFILE_UPDATE
-  REQUIREMENT_READ
-  REQUIREMENT_UPDATE
-  ROLE_CREATE
-  ROLE_DELETE
-  ROLE_READ
-  ROLE_UPDATE
-  SHIFT_CREATE
-  SHIFT_DELETE
-  SHIFT_READ
-  SHIFT_UPDATE
-  TIME_ENTRY_CREATE
-  TIME_ENTRY_DELETE
-  TIME_ENTRY_READ
-  TIME_ENTRY_UPDATE
+  ORG_EDIT
+  ORG_VIEW
+  REQUIREMENT_PROFILE_EDIT
+  REQUIREMENT_PROFILE_VIEW
+  SHIFT_EDIT
+  SHIFT_VIEW
+  VOLUNTEER_EDIT
+  VOLUNTEER_VIEW
 }
 
 type Query {
@@ -330,6 +304,7 @@ type Query {
   organizationUnitTypes: [OrganizationUnitType!]!
   organizationUnits(limit: Int! = 10, offset: Int! = 0, organizationId: String!): OrganizationUnitPaginatedResponse!
   organizations(limit: Int! = 10, offset: Int! = 0): OrganizationPaginatedResponse!
+  permissionGroups: [PermissionGroup!]!
   permissions: [Permission!]!
   requirement(id: String!): Requirement
   requirementFulfillment(id: String!): RequirementFulfillment
