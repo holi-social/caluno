@@ -9,58 +9,14 @@ const PERMISSION_NAMES: Record<
   (typeof PERMISSIONS)[keyof typeof PERMISSIONS],
   string
 > = {
-  [PERMISSIONS.ORG_READ]: 'Read organization',
-  [PERMISSIONS.ORG_UPDATE]: 'Update organization',
-  [PERMISSIONS.ORG_DELETE]: 'Delete organization',
-  [PERMISSIONS.ORG_UNIT_CREATE]: 'Create organization unit',
-  [PERMISSIONS.ORG_UNIT_READ]: 'Read organization unit',
-  [PERMISSIONS.ORG_UNIT_UPDATE]: 'Update organization unit',
-  [PERMISSIONS.ORG_UNIT_DELETE]: 'Delete organization unit',
-  [PERMISSIONS.ROLE_CREATE]: 'Create role',
-  [PERMISSIONS.ROLE_READ]: 'Read role',
-  [PERMISSIONS.ROLE_UPDATE]: 'Update role',
-  [PERMISSIONS.ROLE_DELETE]: 'Delete role',
-  [PERMISSIONS.MEMBERSHIP_CREATE]: 'Create membership',
-  [PERMISSIONS.MEMBERSHIP_READ]: 'Read membership',
-  [PERMISSIONS.MEMBERSHIP_UPDATE]: 'Update membership',
-  [PERMISSIONS.MEMBERSHIP_DELETE]: 'Delete membership',
-  [PERMISSIONS.MEMBERSHIP_REQUEST_READ]: 'Read membership request',
-  [PERMISSIONS.MEMBERSHIP_REQUEST_UPDATE]: 'Update membership request',
-  [PERMISSIONS.MEMBERSHIP_REQUEST_DELETE]: 'Delete membership request',
-  [PERMISSIONS.MEMBERSHIP_REQUEST_APPROVE]: 'Approve membership request',
-  [PERMISSIONS.MEMBERSHIP_REQUEST_REJECT]: 'Reject membership request',
-  [PERMISSIONS.MEMBERSHIP_REQUEST_CANCEL]: 'Cancel membership request',
-  [PERMISSIONS.SHIFT_CREATE]: 'Create shift',
-  [PERMISSIONS.SHIFT_READ]: 'Read shift',
-  [PERMISSIONS.SHIFT_UPDATE]: 'Update shift',
-  [PERMISSIONS.SHIFT_DELETE]: 'Delete shift',
-  [PERMISSIONS.TIME_ENTRY_CREATE]: 'Create time entry',
-  [PERMISSIONS.TIME_ENTRY_READ]: 'Read time entry',
-  [PERMISSIONS.TIME_ENTRY_UPDATE]: 'Update time entry',
-  [PERMISSIONS.TIME_ENTRY_DELETE]: 'Delete time entry',
-  [PERMISSIONS.REQUIREMENT_PROFILE_CREATE]: 'Create requirement profile',
-  [PERMISSIONS.REQUIREMENT_PROFILE_READ]: 'Read requirement profile',
-  [PERMISSIONS.REQUIREMENT_PROFILE_UPDATE]: 'Update requirement profile',
-  [PERMISSIONS.REQUIREMENT_PROFILE_DELETE]: 'Delete requirement profile',
-  [PERMISSIONS.REQUIREMENT_CREATE]: 'Create requirement',
-  [PERMISSIONS.REQUIREMENT_READ]: 'Read requirement',
-  [PERMISSIONS.REQUIREMENT_UPDATE]: 'Update requirement',
-  [PERMISSIONS.REQUIREMENT_DELETE]: 'Delete requirement',
-  [PERMISSIONS.REQUIREMENT_PROFILE_SUBMISSION_CREATE]:
-    'Create requirement profile submission',
-  [PERMISSIONS.REQUIREMENT_PROFILE_SUBMISSION_READ]:
-    'Read requirement profile submission',
-  [PERMISSIONS.REQUIREMENT_PROFILE_SUBMISSION_UPDATE]:
-    'Update requirement profile submission',
-  [PERMISSIONS.REQUIREMENT_PROFILE_SUBMISSION_DELETE]:
-    'Delete requirement profile submission',
-  [PERMISSIONS.REQUIREMENT_FULFILLMENT_CREATE]:
-    'Create requirement fulfillment',
-  [PERMISSIONS.REQUIREMENT_FULFILLMENT_READ]: 'Read requirement fulfillment',
-  [PERMISSIONS.REQUIREMENT_FULFILLMENT_UPDATE]:
-    'Update requirement fulfillment',
-  [PERMISSIONS.REQUIREMENT_FULFILLMENT_DELETE]:
-    'Delete requirement fulfillment',
+  [PERMISSIONS.ORG_VIEW]: 'View organization',
+  [PERMISSIONS.ORG_EDIT]: 'Edit organization',
+  [PERMISSIONS.VOLUNTEER_VIEW]: 'View volunteer',
+  [PERMISSIONS.VOLUNTEER_EDIT]: 'Edit volunteer',
+  [PERMISSIONS.SHIFT_VIEW]: 'View shift',
+  [PERMISSIONS.SHIFT_EDIT]: 'Edit shift',
+  [PERMISSIONS.REQUIREMENT_PROFILE_VIEW]: 'View requirement profile',
+  [PERMISSIONS.REQUIREMENT_PROFILE_EDIT]: 'Edit requirement profile',
 };
 
 async function seed() {
