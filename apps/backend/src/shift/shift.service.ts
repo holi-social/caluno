@@ -1,5 +1,7 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { and, count, eq, gte, inArray } from 'drizzle-orm';
+import { AuthService } from '../auth/auth.service';
+import { PERMISSIONS } from '../auth/constants';
 import type { Database } from '../database/database.module';
 import { DATABASE_CONNECTION } from '../database/database-connection';
 import * as schema from '../database/schema';
@@ -29,6 +31,7 @@ export class ShiftService {
   constructor(
     @Inject(DATABASE_CONNECTION)
     private readonly db: Database,
+    private readonly authService: AuthService,
     private readonly userService: UserService,
     private readonly membershipService: MembershipService,
     private readonly notificationService: NotificationService,
@@ -80,6 +83,24 @@ export class ShiftService {
   }
 
   async findAll(
+    userId: string,
+    organizationUnitId: string,
+    pagination: PaginationInput,
+  ): Promise<{ shifts: ShiftEntity[]; total: number }> {
+    const canViewAllShifts = await this.authService.hasRequiredPermissions(
+      userId,
+      organizationUnitId,
+      [PERMISSIONS.SHIFT_VIEW],
+    );
+
+    if (canViewAllShifts) {
+      return this.findAllForOrgUnit(organizationUnitId, pagination);
+    }
+
+    return this.findAllVisibleToMember(userId, organizationUnitId, pagination);
+  }
+
+  private async findAllForOrgUnit(
     organizationUnitId: string,
     pagination: PaginationInput,
   ): Promise<{ shifts: ShiftEntity[]; total: number }> {
@@ -103,6 +124,86 @@ export class ShiftService {
     });
 
     return { shifts, total: totalResult[0]?.total ?? 0 };
+  }
+
+  private async findVisibleShiftIdsForMember(
+    userId: string,
+    organizationUnitId: string,
+  ): Promise<string[]> {
+    const [openShifts, joinedShifts] = await Promise.all([
+      this.db.query.shifts.findMany({
+        where: {
+          organizationUnitId,
+          isDeleted: false,
+          visibility: ShiftVisibility.ALL_MEMBERS,
+        },
+        columns: { id: true, createdAt: true },
+      }),
+      this.db.query.shifts.findMany({
+        where: {
+          organizationUnitId,
+          isDeleted: false,
+          instances: {
+            invites: {
+              userId,
+              status: ShiftInviteStatus.ACCEPTED,
+            },
+          },
+        },
+        columns: { id: true, createdAt: true },
+      }),
+    ]);
+
+    return this.mergeShiftIdsByRecency([...openShifts, ...joinedShifts]);
+  }
+
+  private async findAllVisibleToMember(
+    userId: string,
+    organizationUnitId: string,
+    pagination: PaginationInput,
+  ): Promise<{ shifts: ShiftEntity[]; total: number }> {
+    const visibleShiftIds = await this.findVisibleShiftIdsForMember(
+      userId,
+      organizationUnitId,
+    );
+    const total = visibleShiftIds.length;
+
+    if (total === 0) {
+      return { shifts: [], total: 0 };
+    }
+
+    const paginatedIds = visibleShiftIds.slice(
+      pagination.offset,
+      pagination.offset + pagination.limit,
+    );
+
+    const shifts = await this.db.query.shifts.findMany({
+      where: { id: { in: paginatedIds } },
+    });
+
+    const shiftsById = new Map(shifts.map((shift) => [shift.id, shift]));
+    const orderedShifts = paginatedIds
+      .map((id) => shiftsById.get(id))
+      .filter((shift): shift is ShiftEntity => shift !== undefined);
+
+    return { shifts: orderedShifts, total };
+  }
+
+  private mergeShiftIdsByRecency(
+    shifts: Array<{ id: string; createdAt: Date }>,
+  ): string[] {
+    const byId = new Map<string, Date>();
+
+    for (const shift of shifts) {
+      const existing = byId.get(shift.id);
+      if (!existing || shift.createdAt > existing) {
+        byId.set(shift.id, shift.createdAt);
+      }
+    }
+
+    return [...byId.entries()]
+      .sort(([, a], [, b]) => b.getTime() - a.getTime())
+      .map(([id]) => id);
   }
 
   async create(
