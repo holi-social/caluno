@@ -27,7 +27,7 @@ export class RequirementProfileSubmissionMutationResolver {
     return this.requirementProfileSubmissionMapper.toModelOrThrow(item);
   }
 
-  @Permissions(PERMISSIONS.REQUIREMENT_PROFILE_SUBMISSION_UPDATE)
+  @Permissions(PERMISSIONS.VOLUNTEER_EDIT)
   @Mutation(() => RequirementProfileSubmission)
   async updateRequirementProfileSubmission(
     @Args('id') id: string,
@@ -42,7 +42,7 @@ export class RequirementProfileSubmissionMutationResolver {
     return this.requirementProfileSubmissionMapper.toModelOrThrow(item);
   }
 
-  @Permissions(PERMISSIONS.REQUIREMENT_PROFILE_SUBMISSION_DELETE)
+  @Permissions(PERMISSIONS.VOLUNTEER_EDIT)
   @Mutation(() => RequirementProfileSubmission)
   async deleteRequirementProfileSubmission(
     @Args('id') id: string,

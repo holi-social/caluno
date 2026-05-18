@@ -15,7 +15,7 @@ export class ShiftInstanceFieldResolver {
     private readonly userMapper: UserMapper,
   ) {}
 
-  @Permissions(PERMISSIONS.SHIFT_READ)
+  @Permissions(PERMISSIONS.SHIFT_VIEW)
   @ResolveField(() => [User])
   async volunteers(
     @Parent() instance: ShiftInstanceEntity,

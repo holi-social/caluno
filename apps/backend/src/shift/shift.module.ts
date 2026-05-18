@@ -1,4 +1,5 @@
 import { forwardRef, Module } from '@nestjs/common';
+import { AuthModule } from '../auth/auth.module';
 import { DatabaseModule } from '../database/database.module';
 import { MembershipModule } from '../membership/membership.module';
 import { NotificationModule } from '../notification/notification.module';
@@ -15,6 +16,7 @@ import { ShiftService } from './shift.service';
 @Module({
   imports: [
     DatabaseModule,
+    AuthModule,
     UserModule,
     forwardRef(() => MembershipModule),
     RequirementProfileModule,

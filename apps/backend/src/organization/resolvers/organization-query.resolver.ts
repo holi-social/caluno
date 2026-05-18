@@ -19,14 +19,14 @@ export class OrganizationQueryResolver {
     private readonly organizationMapper: OrganizationMapper,
   ) {}
 
-  @Permissions(PERMISSIONS.ORG_READ)
+  @Permissions(PERMISSIONS.ORG_VIEW)
   @Query(() => Organization, { nullable: true })
   async organization(@Args('id') id: string): Promise<Organization | null> {
     const orgEntity = await this.organizationService.findById(id);
     return this.organizationMapper.toModel(orgEntity);
   }
 
-  @Permissions(PERMISSIONS.ORG_READ)
+  @Permissions(PERMISSIONS.ORG_VIEW)
   @Query(() => Organization)
   async organizationBySlug(
     @Args('slug') slug: string,

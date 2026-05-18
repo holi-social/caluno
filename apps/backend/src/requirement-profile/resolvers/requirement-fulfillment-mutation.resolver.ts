@@ -14,7 +14,7 @@ export class RequirementFulfillmentMutationResolver {
     private readonly requirementFulfillmentMapper: RequirementFulfillmentMapper,
   ) {}
 
-  @Permissions(PERMISSIONS.REQUIREMENT_FULFILLMENT_UPDATE)
+  @Permissions(PERMISSIONS.REQUIREMENT_PROFILE_EDIT)
   @Mutation(() => RequirementFulfillment)
   async updateRequirementFulfillment(
     @Args('id') id: string,
@@ -30,7 +30,7 @@ export class RequirementFulfillmentMutationResolver {
     return this.requirementFulfillmentMapper.toModelOrThrow(item);
   }
 
-  @Permissions(PERMISSIONS.REQUIREMENT_FULFILLMENT_DELETE)
+  @Permissions(PERMISSIONS.REQUIREMENT_PROFILE_EDIT)
   @Mutation(() => RequirementFulfillment)
   async deleteRequirementFulfillment(
     @Args('id') id: string,

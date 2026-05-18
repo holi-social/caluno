@@ -20,6 +20,7 @@ export class OrganizationUnitQueryResolver {
     private readonly organizationUnitTypeMapper: OrganizationUnitTypeMapper,
   ) {}
 
+  @Permissions(PERMISSIONS.ORG_VIEW)
   @Query(() => OrganizationUnit, { nullable: true })
   async organizationUnit(
     @Args('id') id: string,
@@ -28,7 +29,7 @@ export class OrganizationUnitQueryResolver {
     return this.organizationUnitMapper.toModel(organizationUnit);
   }
 
-  @Permissions(PERMISSIONS.ORG_UNIT_READ)
+  @Permissions(PERMISSIONS.ORG_VIEW)
   @Query(() => OrganizationUnit, { nullable: true })
   async organizationUnitBySlug(
     @Args('slug') slug: string,
@@ -39,14 +40,14 @@ export class OrganizationUnitQueryResolver {
     return this.organizationUnitMapper.toModel(organizationUnit);
   }
 
-  @Permissions(PERMISSIONS.ORG_UNIT_READ)
+  @Permissions(PERMISSIONS.ORG_VIEW)
   @Query(() => [OrganizationUnitType])
   async organizationUnitTypes(): Promise<OrganizationUnitType[]> {
     const types = await this.organizationUnitService.findAllTypes();
     return this.organizationUnitTypeMapper.toArray(types);
   }
 
-  @Permissions(PERMISSIONS.ORG_UNIT_READ)
+  @Permissions(PERMISSIONS.ORG_VIEW)
   @Query(() => OrganizationUnitPaginatedResponse)
   async organizationUnits(
     @Args() pagination: PaginationInput,

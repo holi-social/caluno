@@ -1,7 +1,5 @@
 import { Parent, ResolveField, Resolver } from '@nestjs/graphql';
 import { plainToInstance } from 'class-transformer';
-import { PERMISSIONS } from '../../auth/constants';
-import { Permissions } from '../../auth/decorators/permissions.decorator';
 import { RequirementProfile } from '../../requirement-profile/models/requirement-profile.model';
 import { RequirementProfileService } from '../../requirement-profile/services';
 import { OrganizationMapper } from '../mappers/organization.mapper';
@@ -23,7 +21,6 @@ export class OrganizationUnitFieldResolver {
     private readonly requirementProfileService: RequirementProfileService,
   ) {}
 
-  @Permissions(PERMISSIONS.ORG_UNIT_READ)
   @ResolveField(() => Organization)
   async organization(
     @Parent() organizationUnit: OrganizationUnitEntity,
@@ -34,7 +31,6 @@ export class OrganizationUnitFieldResolver {
     return this.organizationMapper.toModelOrThrow(organization);
   }
 
-  @Permissions(PERMISSIONS.ORG_UNIT_READ)
   @ResolveField(() => OrganizationUnitType)
   async type(
     @Parent() organizationUnit: OrganizationUnitEntity,
@@ -45,7 +41,6 @@ export class OrganizationUnitFieldResolver {
     return this.organizationUnitTypeMapper.toModelOrThrow(organizationUnitType);
   }
 
-  @Permissions(PERMISSIONS.ORG_UNIT_READ)
   @ResolveField(() => OrganizationUnit, { nullable: true })
   async parent(
     @Parent() organizationUnit: OrganizationUnitEntity,
@@ -60,7 +55,6 @@ export class OrganizationUnitFieldResolver {
     return this.organizationUnitMapper.toModel(parent);
   }
 
-  @Permissions(PERMISSIONS.ORG_UNIT_READ)
   @ResolveField(() => [OrganizationUnit])
   async children(
     @Parent() organizationUnit: OrganizationUnitEntity,
@@ -71,7 +65,6 @@ export class OrganizationUnitFieldResolver {
     return this.organizationUnitMapper.toArray(children);
   }
 
-  @Permissions(PERMISSIONS.ORG_UNIT_READ)
   @ResolveField(() => RequirementProfile, { nullable: true })
   async requiredMembershipRequirementProfile(
     @Parent() organizationUnit: OrganizationUnitEntity,

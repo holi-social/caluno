@@ -1,6 +1,8 @@
 import { Context, Query, Resolver } from '@nestjs/graphql';
 import type { AuthenticatedGraphQLContext } from '../../graphql/graphql.context';
 import { AuthService } from '../auth.service';
+import { PERMISSIONS } from '../constants';
+import { Permissions } from '../decorators/permissions.decorator';
 import { RoleMapper } from '../mappers/role.mapper';
 import { Role } from '../models/role.model';
 
@@ -11,6 +13,7 @@ export class RoleQueryResolver {
     private readonly roleMapper: RoleMapper,
   ) {}
 
+  @Permissions(PERMISSIONS.ORG_VIEW)
   @Query(() => [Role])
   async roles(
     @Context() context: AuthenticatedGraphQLContext,

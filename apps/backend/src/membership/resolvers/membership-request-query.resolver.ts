@@ -18,7 +18,7 @@ export class MembershipRequestQueryResolver {
     private readonly membershipRequestMapper: MembershipRequestMapper,
   ) {}
 
-  @Permissions(PERMISSIONS.MEMBERSHIP_REQUEST_READ)
+  @Permissions(PERMISSIONS.VOLUNTEER_VIEW)
   @Query(() => MembershipRequestPaginatedResponse)
   async membershipRequests(
     @Args('organizationUnitId', { type: () => ID }) organizationUnitId: string,

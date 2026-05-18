@@ -17,7 +17,7 @@ export class TimeTrackingQueryResolver {
     private readonly timeEntryMapper: TimeEntryMapper,
   ) {}
 
-  @Permissions(PERMISSIONS.TIME_ENTRY_READ)
+  @Permissions(PERMISSIONS.SHIFT_VIEW)
   @Query(() => TimeEntry)
   async timeEntry(
     @Args('id') id: string,
@@ -30,7 +30,7 @@ export class TimeTrackingQueryResolver {
     return this.timeEntryMapper.toModelOrThrow(entry);
   }
 
-  @Permissions(PERMISSIONS.TIME_ENTRY_READ)
+  @Permissions(PERMISSIONS.SHIFT_VIEW)
   @Query(() => TimeEntryPaginatedResponse)
   async timeEntries(
     @Args() pagination: PaginationInput,
@@ -48,7 +48,7 @@ export class TimeTrackingQueryResolver {
     });
   }
 
-  @Permissions(PERMISSIONS.TIME_ENTRY_READ)
+  @Permissions(PERMISSIONS.SHIFT_VIEW)
   @Query(() => TimeEntryPaginatedResponse)
   async timeEntriesByUser(
     @Args('userId') userId: string,
