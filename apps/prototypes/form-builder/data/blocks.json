@@ -236,28 +236,12 @@
   {
     "id": "block-fa457589",
     "title": "test",
-    "fields": [
-      {
-        "id": "sysreq-geburtsdatum-1hvl5c",
-        "type": "date",
-        "label": "Geburtsdatum",
-        "required": true,
-        "lockType": true,
-        "systemKey": "geburtsdatum",
-        "description": "Wird im Profil gespeichert und z.B. fuer altersgebundene Einsaetze genutzt."
-      },
-      {
-        "id": "field-1778668149107",
-        "type": "static-text",
-        "label": "Summary of changes:\n\nsrc/lib/types.ts — added 'static-text' to FieldType.\nsrc/lib/predefined-fields.ts — FIELD_TYPE_OPTIONS now offers only: Eingabe (kurz), Eingabe (lang), Mehrfachauswahl, Dropdown, Zahlen, Datum, Dokument zum Akzeptieren, Hinweistext. Updated FIELD_TYPE_LABELS accordingly. The legacy union members (vorname, email, phone, plz, …) stay in FieldType because system requirements still reference them — they're just hidden from the custom-field picker.\nsrc/components/form/field-renderer.tsx — static-text renders as <p className=\"text-foreground text-lg whitespace-pre-line\">{field.label}</p> (no label, no field wrapper).\nsrc/lib/validation.ts — skips static-text entirely (no value, never required).\nsrc/components/builder/field-form.tsx — when type is static-text, \"Feldname\" becomes \"Text\" using a multi-line Textarea, the Beschreibung field is hidden, and required is forced false on commit.\nsrc/components/builder/draggable-field-row.tsx — hides the Pflichtig/Optional toggle for static-text rows.",
-        "required": false
-      }
-    ],
+    "fields": [],
     "required": true,
     "createdBy": "andrea",
     "updatedBy": "andrea",
     "createdAt": "2026-05-12T16:15:43.253Z",
-    "updatedAt": "2026-05-13T10:29:09.362Z"
+    "updatedAt": "2026-05-18T14:25:07.953Z"
   },
   {
     "id": "block-f9acc4af",
@@ -318,5 +302,15 @@
     "updatedBy": "andrea",
     "createdAt": "2026-05-13T10:57:49.280Z",
     "updatedAt": "2026-05-13T13:16:28.780Z"
+  },
+  {
+    "id": "block-3f70fd25",
+    "title": "Neuer Block",
+    "fields": [],
+    "required": true,
+    "createdBy": "andrea",
+    "updatedBy": "andrea",
+    "createdAt": "2026-05-18T15:46:15.570Z",
+    "updatedAt": "2026-05-18T15:48:59.513Z"
   }
 ]

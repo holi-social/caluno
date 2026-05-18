@@ -1,6 +1,12 @@
 'use client';
 
-import { forwardRef, useImperativeHandle, useState } from 'react';
+import {
+  forwardRef,
+  useEffect,
+  useImperativeHandle,
+  useRef,
+  useState,
+} from 'react';
 import {
   Alert,
   AlertDescription,
@@ -26,21 +32,41 @@ import type { UploadedFile } from '@/lib/use-file-upload';
 import { FileUploadField } from './file-upload-field';
 import { OptionsEditor } from './options-editor';
 
-export type FieldCommitHandle = { commit: () => boolean };
+export type FieldCommitHandle = {
+  commit: () => boolean;
+  /** Scroll the form into view and surface its current error inline.
+   *  Called by the global Save handler when commit() returns false so
+   *  the user lands on the offending field instead of hunting for it. */
+  scrollToError: () => void;
+};
+
+/** Turn a filename like "Datenschutzerklärung_v3.pdf" into a friendly
+ *  default label ("Datenschutzerklärung v3"). Used after document upload
+ *  to seed the Feldname input. */
+function deriveLabelFromFilename(filename: string): string {
+  const noExt = filename.replace(/\.[^/.]+$/, '');
+  const spaced = noExt.replace(/[_-]+/g, ' ').trim();
+  if (!spaced) return '';
+  return spaced.charAt(0).toUpperCase() + spaced.slice(1);
+}
 
 export const FieldForm = forwardRef<
   FieldCommitHandle,
   {
     initial?: FormField;
+    /** Pre-set the field type for a brand-new field and hide the type picker.
+     *  Used by the "Dokument hinzufügen" affordance, where the type is fixed
+     *  before the user enters the editor. */
+    lockedType?: FieldType;
     onSubmit: (field: FormField) => void;
     onCancel: () => void;
   }
->(function FieldForm({ initial, onSubmit, onCancel }, ref) {
+>(function FieldForm({ initial, lockedType, onSubmit, onCancel }, ref) {
   const isEdit = !!initial;
   const idScope = initial?.id ?? 'new';
 
   const [fieldType, setFieldType] = useState<FieldType | ''>(
-    initial?.type ?? '',
+    initial?.type ?? lockedType ?? '',
   );
   const [label, setLabel] = useState(initial?.label ?? '');
   const [description, setDescription] = useState(initial?.description ?? '');
@@ -58,6 +84,26 @@ export const FieldForm = forwardRef<
     }
     return null;
   });
+  const nameInputRef = useRef<HTMLInputElement>(null);
+
+  function handleUploadedFile(next: UploadedFile | null) {
+    setUploadedFile(next);
+    // If the user hasn't named the field yet, derive a sensible default
+    // from the filename ("Datenschutzerklaerung.pdf" → "Datenschutzerklaerung")
+    // and drop them into the Feldname input with the value pre-selected so
+    // they can either keep it or replace it with one keystroke.
+    if (next && !label.trim()) {
+      const derived = deriveLabelFromFilename(next.filename);
+      if (derived) {
+        setLabel(derived);
+        // Defer focus until after React flushes the new value into the input.
+        window.setTimeout(() => {
+          nameInputRef.current?.focus();
+          nameInputRef.current?.select();
+        }, 0);
+      }
+    }
+  }
   const [error, setError] = useState<string | null>(null);
 
   const isDocument = fieldType === 'document-acknowledgement';
@@ -66,7 +112,16 @@ export const FieldForm = forwardRef<
     !initial?.lockType &&
     (fieldType === 'multichoice' || fieldType === 'singlechoice');
 
+  // Tracks an already-committed submission so accidental double-fires
+  // (blur firing then a global Save click within the same tick) don't
+  // call onSubmit twice.
+  const committedRef = useRef(false);
+  // Set by Abbrechen's onMouseDown so the blur-commit handler can step
+  // aside — explicit cancel always wins over implicit save.
+  const cancellingRef = useRef(false);
+
   function commit(): boolean {
+    if (committedRef.current) return true;
     if (!fieldType) {
       setError('Bitte Feldtyp auswählen.');
       return false;
@@ -88,6 +143,7 @@ export const FieldForm = forwardRef<
     const id = initial?.id ?? `field-${Date.now()}`;
 
     if (isDocument && uploadedFile) {
+      committedRef.current = true;
       onSubmit({
         id,
         type: 'document-acknowledgement',
@@ -122,11 +178,19 @@ export const FieldForm = forwardRef<
           value: o.trim().toLowerCase().replace(/\s+/g, '-'),
         }));
     }
+    committedRef.current = true;
     onSubmit(field);
     return true;
   }
 
-  useImperativeHandle(ref, () => ({ commit }));
+  const rootRef = useRef<HTMLDivElement>(null);
+
+  useImperativeHandle(ref, () => ({
+    commit,
+    scrollToError: () => {
+      rootRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    },
+  }));
 
   const canSubmit =
     !!fieldType &&
@@ -135,19 +199,55 @@ export const FieldForm = forwardRef<
     (!showOptions || options.some((o) => o.trim() !== ''));
 
   const isLocked = !!initial?.lockType;
+  // Type is only chosen at creation. Editing an existing field keeps the
+  // original type — changing it would invalidate the stored value shape and
+  // any per-type extras (options, document upload, etc.).
+  const hideTypePicker = isLocked || !!lockedType || isEdit;
+  // For a brand-new custom field, open the type picker immediately so the
+  // first interaction is "pick a type" with no preliminary click.
+  const autoOpenTypeSelect = !hideTypePicker && !fieldType;
+
+  // After the user picks a type, move focus to the next required input.
+  // Document fields have their own Part-1 focus flow (post-upload prefill),
+  // and static-text uses a Textarea which we deliberately don't auto-grab —
+  // the user just picked the type and tends to glance at it before typing.
+  useEffect(() => {
+    if (!fieldType) return;
+    if (isDocument || isStaticText) return;
+    nameInputRef.current?.focus();
+    // biome-ignore lint/correctness/useExhaustiveDependencies: chain runs once per type change
+  }, [fieldType]);
+
+  function handleRootBlur(e: React.FocusEvent<HTMLDivElement>) {
+    // Focus moved to another element inside this form — not a real exit.
+    if (e.currentTarget.contains(e.relatedTarget as Node | null)) return;
+    // Explicit Abbrechen wins; the cancel button itself handles teardown.
+    if (cancellingRef.current) {
+      cancellingRef.current = false;
+      return;
+    }
+    // Nothing entered yet — treat as a no-op so an empty add doesn't error.
+    if (!fieldType && !label.trim() && !uploadedFile) return;
+    commit();
+  }
   const systemPreset =
     initial?.systemKey && initial.systemKey in SYSTEM_REQUIREMENTS
       ? SYSTEM_REQUIREMENTS[initial.systemKey as SystemRequirementKey]
       : null;
 
   return (
-    <div className="border-primary space-y-4 rounded-lg border p-4">
+    <div
+      ref={rootRef}
+      onBlur={handleRootBlur}
+      className="border-primary space-y-4 rounded-lg border p-4"
+    >
 
-      {!isLocked && (
+      {!hideTypePicker && (
         <Field>
           <FieldLabel htmlFor={`field-${idScope}-type`}>Feldtyp</FieldLabel>
           <Select
             value={fieldType}
+            defaultOpen={autoOpenTypeSelect}
             onValueChange={(v) => setFieldType(v as FieldType)}
           >
             <SelectTrigger
@@ -186,6 +286,7 @@ export const FieldForm = forwardRef<
             />
           ) : (
             <Input
+              ref={nameInputRef}
               id={`field-${idScope}-name`}
               placeholder={
                 isDocument ? 'z.B. Datenschutzerklärung' : 'z.B. Lieblingsfarbe'
@@ -219,7 +320,10 @@ export const FieldForm = forwardRef<
       {isDocument && (
         <Field>
           <FieldLabel>Dokument hochladen</FieldLabel>
-          <FileUploadField value={uploadedFile} onChange={setUploadedFile} />
+          <FileUploadField
+            value={uploadedFile}
+            onChange={handleUploadedFile}
+          />
         </Field>
       )}
 
@@ -233,7 +337,8 @@ export const FieldForm = forwardRef<
           <AlertDescription>
             <p>
               Antwort wird als <strong>{systemPreset.defaultLabel}</strong> im
-              Profil gespeichert und in anderen Formularen wiederverwendet.
+              Profil der freiwilligen Person gespeichert und in anderen Formularen 
+              wiederverwendet.
             </p>
           </AlertDescription>
         </Alert>
@@ -241,7 +346,13 @@ export const FieldForm = forwardRef<
 
       {error && <p className="text-destructive text-xs">{error}</p>}
       <div className="flex justify-end gap-2">
-        <Button variant="outline" onClick={onCancel}>
+        <Button
+          variant="outline"
+          onMouseDown={() => {
+            cancellingRef.current = true;
+          }}
+          onClick={onCancel}
+        >
           Abbrechen
         </Button>
         <Button onClick={() => commit()} disabled={!canSubmit}>

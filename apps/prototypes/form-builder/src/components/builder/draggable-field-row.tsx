@@ -69,11 +69,18 @@ export function DraggableFieldRow({
           disabled={!onEdit}
           className="hover:bg-muted/60 disabled:hover:bg-transparent -my-2 min-w-0 flex-1 rounded-md px-2 py-2 text-left disabled:cursor-default"
         >
-          <div className="flex flex-wrap items-center gap-2">
+          <div className="flex items-center gap-2">
             {isSystemField && (
               <UserCircle2 className="text-muted-foreground size-4 shrink-0" />
             )}
             <span className="text-sm font-medium">{field.label}</span>
+          </div>
+          {field.description && (
+            <p className="text-muted-foreground mt-0.5 text-sm">
+              {field.description}
+            </p>
+          )}
+          <div className="mt-2 flex flex-wrap items-center gap-2">
             <Badge variant="outline" className="text-sm">
               {FIELD_TYPE_LABELS[field.type] ?? field.type}
             </Badge>
@@ -81,7 +88,7 @@ export function DraggableFieldRow({
               <Tooltip>
                 <TooltipTrigger asChild>
                   <Badge variant="secondary" className="text-sm">
-                    Systemfeld
+                    Profilfeld
                   </Badge>
                 </TooltipTrigger>
                 <TooltipContent className="max-w-xs">
@@ -91,11 +98,6 @@ export function DraggableFieldRow({
               </Tooltip>
             )}
           </div>
-          {field.description && (
-            <p className="text-muted-foreground mt-0.5 text-sm">
-              {field.description}
-            </p>
-          )}
         </button>
         {!isStaticText && (
           <div className="flex shrink-0 items-center gap-2">

@@ -20,7 +20,7 @@ export function FieldDataHint({ field }: { field: FormField }) {
           <TooltipTrigger asChild>
             <Badge variant="secondary" className="text-sm">
               <UserCircle2 className="mr-1 size-3.5" />
-              Systemfeld
+              Profilfeld
             </Badge>
           </TooltipTrigger>
           <TooltipContent className="max-w-xs">

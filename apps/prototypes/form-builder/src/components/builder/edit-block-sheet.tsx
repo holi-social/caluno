@@ -14,7 +14,7 @@ import {
   SheetHeader,
   SheetTitle,
 } from '@repo/ui';
-import { AlertTriangle, Plus, Save } from 'lucide-react';
+import { AlertTriangle, FileText, Plus, Save } from 'lucide-react';
 import type { Block, FormConfig, FormField } from '@/lib/types';
 import {
   SYSTEM_REQUIREMENT_LIST,
@@ -57,7 +57,7 @@ export function EditBlockSheet({
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [editingFieldId, setEditingFieldId] = useState<string | null>(null);
-  const [addingField, setAddingField] = useState(false);
+  const [addType, setAddType] = useState<'custom' | 'document' | null>(null);
   const [metaDirty, setMetaDirty] = useState(false);
   const [draggingFieldId, setDraggingFieldId] = useState<string | null>(null);
   const titleInputRef = useRef<HTMLInputElement>(null);
@@ -72,7 +72,7 @@ export function EditBlockSheet({
       setTitle(block.title);
       setDescription(block.description ?? '');
       setEditingFieldId(null);
-      setAddingField(false);
+      setAddType(null);
       setMetaDirty(false);
     }
     // biome-ignore lint/correctness/useExhaustiveDependencies: only re-init on a different block
@@ -135,15 +135,15 @@ export function EditBlockSheet({
           <SheetTitle className="text-2xl font-bold">
             Block bearbeiten
           </SheetTitle>
-          <div className="mt-2 rounded-lg border p-3">
-            <div className="flex items-start gap-2">
-              <AlertTriangle className="text-foreground mt-0.5 size-4 shrink-0" />
-              <div className="min-w-0 flex-1">
-                <p className="text-foreground text-base">
-                  Änderungen an diesem Block wirken sich auf alle Formulare
-                  aus, die ihn verwenden.
-                </p>
-                {usedInForms.length > 0 && (
+          {usedInForms.length > 0 && (
+            <div className="mt-2 rounded-lg border p-3">
+              <div className="flex items-start gap-2">
+                <AlertTriangle className="text-foreground mt-0.5 size-4 shrink-0" />
+                <div className="min-w-0 flex-1">
+                  <p className="text-foreground text-base">
+                    Änderungen an diesem Block wirken sich auf alle Formulare
+                    aus, die ihn verwenden.
+                  </p>
                   <div className="mt-1.5">
                     <p className="text-muted-foreground text-xs font-medium uppercase tracking-wide">
                       Verwendet in
@@ -160,10 +160,10 @@ export function EditBlockSheet({
                       ))}
                     </div>
                   </div>
-                )}
+                </div>
               </div>
             </div>
-          </div>
+          )}
         </SheetHeader>
 
         <div className="flex-1 overflow-y-auto px-6 pb-6">
@@ -196,29 +196,39 @@ export function EditBlockSheet({
           <Separator className="my-6" />
 
           <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <h3 className="text-xl font-semibold">
-                Felder ({block.fields.length})
-              </h3>
-              {onAddField && !addingField && (
-                <Button
-                  variant="outline"
-                  onClick={() => {
-                    setEditingFieldId(null);
-                    setAddingField(true);
-                  }}
-                >
-                  <Plus className="mr-2 size-4" />
-                  Eigenes Feld erstellen
-                </Button>
-              )}
-            </div>
+            <h3 className="text-xl font-semibold">
+              Felder ({block.fields.length})
+            </h3>
 
-            {block.fields.length === 0 && !addingField && (
-              <div className="rounded-lg border border-dashed px-4 py-6 text-center">
+            {block.fields.length === 0 && addType === null && (
+              <div className="space-y-4 rounded-lg border border-dashed px-4 py-6 text-center">
                 <p className="text-muted-foreground text-sm">
                   Noch keine Felder in diesem Block.
                 </p>
+                {onAddField && (
+                  <div className="flex flex-wrap items-center justify-center gap-2">
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        setEditingFieldId(null);
+                        setAddType('custom');
+                      }}
+                    >
+                      <Plus className="mr-2 size-4" />
+                      Freies Feld erstellen
+                    </Button>
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        setEditingFieldId(null);
+                        setAddType('document');
+                      }}
+                    >
+                      <FileText className="mr-2 size-4" />
+                      Dokument hinzufügen
+                    </Button>
+                  </div>
+                )}
               </div>
             )}
 
@@ -267,7 +277,7 @@ export function EditBlockSheet({
                   onEdit={
                     onEditField
                       ? () => {
-                          setAddingField(false);
+                          setAddType(null);
                           setEditingFieldId(field.id);
                         }
                       : undefined
@@ -281,14 +291,42 @@ export function EditBlockSheet({
               ),
             )}
 
-            {addingField && onAddField && (
+            {block.fields.length > 0 && addType === null && onAddField && (
+              <div className="flex flex-wrap items-center gap-2 pt-1">
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setEditingFieldId(null);
+                    setAddType('custom');
+                  }}
+                >
+                  <Plus className="mr-2 size-4" />
+                  Freies Feld erstellen
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setEditingFieldId(null);
+                    setAddType('document');
+                  }}
+                >
+                  <FileText className="mr-2 size-4" />
+                  Dokument hinzufügen
+                </Button>
+              </div>
+            )}
+
+            {addType !== null && onAddField && (
               <FieldForm
                 ref={addFieldRef}
+                lockedType={
+                  addType === 'document' ? 'document-acknowledgement' : undefined
+                }
                 onSubmit={(field) => {
                   onAddField(block.id, field);
-                  setAddingField(false);
+                  setAddType(null);
                 }}
-                onCancel={() => setAddingField(false)}
+                onCancel={() => setAddType(null)}
               />
             )}
           </div>
@@ -302,11 +340,10 @@ export function EditBlockSheet({
               <div className="mt-6 space-y-3">
                 <div className="space-y-1">
                   <h4 className="text-lg font-medium">
-                    Systemfelder auswählen
+                    Gemeinsame Profilfelder auswählen
                   </h4>
                   <p className="text-muted-foreground text-sm">
-                    Antworten werden im Nutzerprofil gespeichert und ueber
-                    Sub-Organisationen wiederverwendet.
+                  Freiwillige müssen diese Angaben nur einmal ausfüllen. Danach können sie in anderen Unterorganisationen wiederverwendet werden.
                   </p>
                 </div>
                 {available.length === 0 ? (
@@ -347,12 +384,19 @@ export function EditBlockSheet({
               size="lg"
               onClick={() => {
                 // Force-commit any in-progress field. If validation fails,
-                // the inline form surfaces an error and we keep the sheet open.
-                if (addingField && addFieldRef.current) {
-                  if (!addFieldRef.current.commit()) return;
+                // surface the error inline and scroll the failing field into
+                // view so the user doesn't have to hunt for it.
+                if (addType !== null && addFieldRef.current) {
+                  if (!addFieldRef.current.commit()) {
+                    addFieldRef.current.scrollToError();
+                    return;
+                  }
                 }
                 if (editingFieldId && editFieldRef.current) {
-                  if (!editFieldRef.current.commit()) return;
+                  if (!editFieldRef.current.commit()) {
+                    editFieldRef.current.scrollToError();
+                    return;
+                  }
                 }
                 handleSheetOpenChange(false);
               }}
