@@ -27,11 +27,11 @@ export * from './components/base/textarea';
 export * from './components/calendar';
 export * from './components/date-picker';
 export * from './components/input';
+export * from './components/kibo-ui/tree';
 export * from './components/sheet';
 export * from './components/sidebar';
 export * from './components/skeleton';
 export * from './components/tooltip';
-export * from './components/kibo-ui/tree';
 
 // Hooks
 export { useIsMobile } from './hooks/use-mobile';
