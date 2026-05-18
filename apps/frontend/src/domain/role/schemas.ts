@@ -1,10 +1,10 @@
 import z from 'zod';
 
-export const createRoleSchema = z.object({
+export const roleSchema = z.object({
   organizationUnitId: z.uuid(),
   name: z.string().min(2, 'Name must be at least 2 characters'),
   description: z.string().optional(),
-  permissionIds: z.array(z.string()).min(1, 'Select at least one permission'),
+  permissionIds: z.array(z.string()).min(1, 'At least one permission required'),
 });
 
-export type CreateRoleFormValues = z.infer<typeof createRoleSchema>;
+export type RoleFormValues = z.infer<typeof roleSchema>;

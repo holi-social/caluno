@@ -51,7 +51,12 @@ export function RolesTable({ roles }: RolesTableProps) {
               </TableCell>
               <TableCell>{role.permissions.length} permissions</TableCell>
               <TableCell>
-                <ActionBar role={role} organizationUnitId={orgUId} size="xs" />
+                <ActionBar
+                  id={role.id}
+                  isInternal={role.isInternal}
+                  organizationUnitId={orgUId}
+                  size="xs"
+                />
               </TableCell>
             </TableRow>
           ))}

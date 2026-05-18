@@ -7,14 +7,14 @@ import { useRouter } from 'next/navigation';
 import { useState, useTransition } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { FormSheet, useFormSheet } from '@/components/form-sheet';
-import { type CreateRoleFormValues, createRoleSchema } from '../schemas';
+import { type RoleFormValues, roleSchema } from '../schemas';
 import { PermissionPicker } from './permission-picker';
 
 interface RoleFormProps {
   organizationUnitId: string;
   permissions: Permission[];
-  initialValues?: Partial<CreateRoleFormValues>;
-  mutate: (formData: CreateRoleFormValues) => Promise<{ serverError?: string }>;
+  initialValues?: Partial<RoleFormValues>;
+  mutate: (formData: RoleFormValues) => Promise<{ serverError?: string }>;
   title: string;
   description: string;
 }
@@ -37,8 +37,8 @@ export function RoleForm({
     handleSubmit,
     control,
     formState: { errors },
-  } = useForm<CreateRoleFormValues>({
-    resolver: zodResolver(createRoleSchema),
+  } = useForm<RoleFormValues>({
+    resolver: zodResolver(roleSchema),
     defaultValues: {
       organizationUnitId,
       name: '',
@@ -48,7 +48,7 @@ export function RoleForm({
     },
   });
 
-  const onSubmit = async (formData: CreateRoleFormValues) => {
+  const onSubmit = async (formData: RoleFormValues) => {
     setServerError(undefined);
 
     startTransition(async () => {
