@@ -8,6 +8,7 @@ import {
   PermissionEntity,
   RoleEntity,
 } from '../database/schema';
+import { NotFoundGraphQLError } from '../graphql/errors';
 import { OrganizationUnitService } from '../organization/organization-unit.service';
 import { CreateRoleInput } from './inputs/create-role.input';
 import { UpdateRoleInput } from './inputs/update-role.input';
@@ -139,6 +140,25 @@ export class AuthService {
         },
       },
     });
+  }
+
+  async findRoleById(roleId: string): Promise<RoleEntity> {
+    const role = await this.db.query.roles.findFirst({
+      where: { id: roleId },
+      with: {
+        permissions: {
+          with: {
+            permission: true,
+          },
+        },
+      },
+    });
+
+    if (!role) {
+      throw new NotFoundGraphQLError(`Role not found`);
+    }
+
+    return role;
   }
 
   async findRolePermissions(roleId: string): Promise<PermissionEntity[]> {
