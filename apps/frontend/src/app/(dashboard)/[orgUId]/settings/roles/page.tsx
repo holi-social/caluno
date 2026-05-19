@@ -1,10 +1,11 @@
 import { PermissionKey } from '@repo/data';
-import { CreateRoleSheet } from '@/components/sheets/create-role-sheet';
-import { CreateRoleButton } from '@/domain/role/components/create-role-button';
+import { Button } from '@repo/ui';
+import { PlusIcon } from 'lucide-react';
+import Link from 'next/link';
+import { RolesTable } from '@/domain/role/components/roles-table';
 import { getDataClient } from '@/lib/data-client';
 import { requireOrgAccess } from '@/lib/org-context-server';
 import { requirePermission } from '@/lib/permissions-server';
-import { RolesTable } from './roles-table';
 
 interface RolesPageProps {
   params: Promise<{ orgUId: string }>;
@@ -27,8 +28,12 @@ export default async function RolesPage({ params }: RolesPageProps) {
             Manage roles and permissions for {org.name}
           </p>
         </div>
-        <CreateRoleButton />
-        <CreateRoleSheet />
+        <Link href={`/${orgUId}/settings/roles/new`}>
+          <Button>
+            <PlusIcon />
+            Create Role
+          </Button>
+        </Link>
       </div>
 
       {roles.length > 0 ? (

@@ -1,3 +1,17 @@
+query GetRole($id: String!) {
+  role(id: $id) {
+    id
+    name
+    description
+    isInternal
+    permissions {
+      id
+      key
+      description
+    }
+  }
+}
+
 query GetRoles {
   roles {
     id

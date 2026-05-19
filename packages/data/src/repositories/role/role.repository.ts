@@ -1,10 +1,24 @@
 import { DataError } from '../../errors/data-error';
-import type { CreateRoleInput, GetRolesQuery } from '../../generated/graphql';
+import type {
+  CreateRoleInput,
+  GetRoleQuery,
+  GetRolesQuery,
+} from '../../generated/graphql';
 import { BaseRepository } from '../base/base.repository';
 
 export type RoleListItem = GetRolesQuery['roles'][number];
+export type RoleDetails = GetRoleQuery['role'];
 
 export class RoleRepository extends BaseRepository {
+  async findById(id: string) {
+    try {
+      const data = await this.sdk.GetRole({ id });
+      return data.role;
+    } catch (error) {
+      throw DataError.fromGraphQLError(error);
+    }
+  }
+
   async findAll() {
     try {
       const data = await this.sdk.GetRoles();

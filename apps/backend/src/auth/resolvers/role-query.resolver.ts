@@ -1,4 +1,4 @@
-import { Context, Query, Resolver } from '@nestjs/graphql';
+import { Args, Context, Query, Resolver } from '@nestjs/graphql';
 import type { AuthenticatedGraphQLContext } from '../../graphql/graphql.context';
 import { AuthService } from '../auth.service';
 import { PERMISSIONS } from '../constants';
@@ -22,5 +22,11 @@ export class RoleQueryResolver {
       context.organizationUnitId,
     );
     return this.roleMapper.toArray(roles);
+  }
+
+  @Query(() => Role)
+  async role(@Args('id') id: string): Promise<Role> {
+    const role = await this.authService.findRoleById(id);
+    return this.roleMapper.toModelOrThrow(role);
   }
 }

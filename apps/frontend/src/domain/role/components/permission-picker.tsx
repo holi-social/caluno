@@ -2,6 +2,7 @@
 
 import type { GetPermissionGroupsQuery } from '@repo/data';
 import { Card, Label, Separator, Switch } from '@repo/ui';
+import { getActionLabel, groupPermissions } from '../grouping';
 
 type PermissionGroup = GetPermissionGroupsQuery['permissionGroups'][number];
 

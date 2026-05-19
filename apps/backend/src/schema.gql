@@ -314,6 +314,7 @@ type Query {
   requirementProfileSubmissions(limit: Int! = 10, offset: Int! = 0): RequirementProfileSubmissionPaginatedResponse!
   requirementProfiles(limit: Int! = 10, offset: Int! = 0): RequirementProfilePaginatedResponse!
   requirements(limit: Int! = 10, offset: Int! = 0): RequirementPaginatedResponse!
+  role(id: String!): Role!
   roles: [Role!]!
   shift(id: String!): Shift!
   shiftVolunteers(shiftId: ID!): [User!]!
