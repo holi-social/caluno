@@ -16,7 +16,7 @@ export class MembershipQueryResolver {
     private readonly userMapper: UserMapper,
   ) {}
 
-  @Permissions(PERMISSIONS.MEMBERSHIP_READ)
+  @Permissions(PERMISSIONS.VOLUNTEER_VIEW)
   @Query(() => Membership)
   async membership(
     @Args('organizationUnitId', { type: () => ID }) organizationUnitId: string,
@@ -29,7 +29,7 @@ export class MembershipQueryResolver {
     return this.membershipMapper.toModel(entity);
   }
 
-  @Permissions(PERMISSIONS.MEMBERSHIP_READ)
+  @Permissions(PERMISSIONS.VOLUNTEER_VIEW)
   @Query(() => [User])
   async members(
     @Args('organizationUnitId', { type: () => ID }) organizationUnitId: string,

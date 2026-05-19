@@ -16,7 +16,7 @@ export class RequirementFulfillmentQueryResolver {
     private readonly requirementFulfillmentMapper: RequirementFulfillmentMapper,
   ) {}
 
-  @Permissions(PERMISSIONS.REQUIREMENT_FULFILLMENT_READ)
+  @Permissions(PERMISSIONS.REQUIREMENT_PROFILE_VIEW)
   @Query(() => RequirementFulfillment, { nullable: true })
   async requirementFulfillment(
     @Args('id') id: string,
@@ -26,7 +26,7 @@ export class RequirementFulfillmentQueryResolver {
     return this.requirementFulfillmentMapper.toModel(item);
   }
 
-  @Permissions(PERMISSIONS.REQUIREMENT_FULFILLMENT_READ)
+  @Permissions(PERMISSIONS.REQUIREMENT_PROFILE_VIEW)
   @Query(() => RequirementFulfillmentPaginatedResponse)
   async requirementFulfillments(
     @Args() pagination: PaginationInput,

@@ -50,7 +50,7 @@ export function RolesTable({ roles }: RolesTableProps) {
                 {role.description || '-'}
               </TableCell>
               <TableCell>{role.permissions.length} permissions</TableCell>
-              <TableCell>
+              <TableCell className="text-right">
                 <ActionBar
                   id={role.id}
                   isInternal={role.isInternal}

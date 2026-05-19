@@ -34,10 +34,7 @@ export const ShiftSelectorCard = ({
         <AlertDescription>
           <span>
             Please{' '}
-            <Link
-              href="?sheet=shift-form"
-              className="underline"
-            >
+            <Link href="?sheet=shift-form" className="underline">
               add a shift
             </Link>{' '}
             or adjust the time-range of an{' '}

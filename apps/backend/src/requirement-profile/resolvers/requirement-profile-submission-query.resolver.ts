@@ -16,7 +16,7 @@ export class RequirementProfileSubmissionQueryResolver {
     private readonly requirementProfileSubmissionMapper: RequirementProfileSubmissionMapper,
   ) {}
 
-  @Permissions(PERMISSIONS.REQUIREMENT_PROFILE_SUBMISSION_READ)
+  @Permissions(PERMISSIONS.VOLUNTEER_VIEW)
   @Query(() => RequirementProfileSubmission, { nullable: true })
   async requirementProfileSubmission(
     @Args('id') id: string,
@@ -25,7 +25,7 @@ export class RequirementProfileSubmissionQueryResolver {
     return this.requirementProfileSubmissionMapper.toModel(item);
   }
 
-  @Permissions(PERMISSIONS.REQUIREMENT_PROFILE_SUBMISSION_READ)
+  @Permissions(PERMISSIONS.VOLUNTEER_VIEW)
   @Query(() => RequirementProfileSubmissionPaginatedResponse)
   async requirementProfileSubmissions(
     @Args() pagination: PaginationInput,

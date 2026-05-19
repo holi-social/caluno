@@ -20,7 +20,7 @@ export class ShiftMutationResolver {
     private readonly shiftMapper: ShiftMapper,
   ) {}
 
-  @Permissions(PERMISSIONS.SHIFT_CREATE)
+  @Permissions(PERMISSIONS.SHIFT_EDIT)
   @Mutation(() => Shift)
   async createShift(
     @Session() session: UserSession,
@@ -35,7 +35,7 @@ export class ShiftMutationResolver {
     return this.shiftMapper.toModelOrThrow(shift);
   }
 
-  @Permissions(PERMISSIONS.SHIFT_UPDATE)
+  @Permissions(PERMISSIONS.SHIFT_EDIT)
   @Mutation(() => Shift)
   async updateShift(
     @Session() session: UserSession,
@@ -52,7 +52,7 @@ export class ShiftMutationResolver {
     return this.shiftMapper.toModelOrThrow(shift);
   }
 
-  @Permissions(PERMISSIONS.SHIFT_UPDATE)
+  @Permissions(PERMISSIONS.SHIFT_EDIT)
   @Mutation(() => Shift)
   async inviteMembersToShift(
     @Args('shiftId', { type: () => String }) shiftId: string,
@@ -67,7 +67,7 @@ export class ShiftMutationResolver {
     return this.shiftMapper.toModelOrThrow(shift);
   }
 
-  @Permissions(PERMISSIONS.SHIFT_DELETE)
+  @Permissions(PERMISSIONS.SHIFT_EDIT)
   @Mutation(() => Shift)
   async deleteShift(
     @Args('id', { type: () => String }) id: string,

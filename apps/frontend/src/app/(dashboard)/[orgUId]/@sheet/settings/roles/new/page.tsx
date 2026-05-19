@@ -10,14 +10,14 @@ export default async function CreateRolePage({ params }: CreateRolePageProps) {
   const { orgUId } = await params;
 
   const dataClient = await getDataClient(orgUId);
-  const allPermissions = await dataClient.role.findAllPermissions();
+  const permissionGroups = await dataClient.role.findPermissionGroups();
 
   return (
     <RoleForm
       title="Create Role"
       description="Define a new role with specific permissions."
       organizationUnitId={orgUId}
-      permissions={allPermissions}
+      permissionGroups={permissionGroups}
       mutate={createRole}
     />
   );

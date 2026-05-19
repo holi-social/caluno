@@ -85,13 +85,13 @@ export function DashboardSidebar({ permissions }: DashboardSidebarProps) {
         title: 'Roles',
         href: `/${orgUId}/settings/roles`,
         icon: ShieldIcon,
-        permission: PermissionKey.RoleRead,
+        permission: PermissionKey.OrgView,
       },
       {
         title: 'Org Units',
         href: `/${orgUId}/settings/org-units`,
         icon: NetworkIcon,
-        permission: PermissionKey.OrgUnitRead,
+        permission: PermissionKey.OrgView,
       },
       {
         title: 'QR iD',

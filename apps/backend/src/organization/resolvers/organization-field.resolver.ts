@@ -1,6 +1,4 @@
 import { Parent, ResolveField, Resolver } from '@nestjs/graphql';
-import { PERMISSIONS } from '../../auth/constants';
-import { Permissions } from '../../auth/decorators/permissions.decorator';
 import { Loader } from '../../graphql/decorators';
 import { OrganizationUnitMapper } from '../mappers/organization-unit.mapper';
 import { Organization } from '../models/organization.model';
@@ -15,7 +13,6 @@ export class OrganizationFieldResolver {
     private readonly organizationUnitMapper: OrganizationUnitMapper,
   ) {}
 
-  @Permissions(PERMISSIONS.ORG_READ)
   @ResolveField(() => OrganizationUnit)
   async root(@Parent() organization: Organization): Promise<OrganizationUnit> {
     const rootUnit = await this.organizationService.findRootUnit(
@@ -24,7 +21,6 @@ export class OrganizationFieldResolver {
     return this.organizationUnitMapper.toModelOrThrow(rootUnit);
   }
 
-  @Permissions(PERMISSIONS.ORG_READ)
   @ResolveField(() => [OrganizationUnit])
   async units(
     @Parent() organization: Organization,

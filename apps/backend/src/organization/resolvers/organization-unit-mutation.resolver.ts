@@ -14,7 +14,7 @@ export class OrganizationUnitMutationResolver {
     private readonly organizationUnitMapper: OrganizationUnitMapper,
   ) {}
 
-  @Permissions(PERMISSIONS.ORG_UNIT_CREATE)
+  @Permissions(PERMISSIONS.ORG_EDIT)
   @Mutation(() => OrganizationUnit)
   async createOrganizationUnit(
     @Args('input') input: CreateOrganizationUnitInput,
@@ -23,7 +23,7 @@ export class OrganizationUnitMutationResolver {
     return this.organizationUnitMapper.toModelOrThrow(organizationUnit);
   }
 
-  @Permissions(PERMISSIONS.ORG_UNIT_UPDATE)
+  @Permissions(PERMISSIONS.ORG_EDIT)
   @Mutation(() => OrganizationUnit)
   async updateOrganizationUnit(
     @Args('id') id: string,
@@ -36,7 +36,7 @@ export class OrganizationUnitMutationResolver {
     return this.organizationUnitMapper.toModelOrThrow(organizationUnit);
   }
 
-  @Permissions(PERMISSIONS.ORG_UNIT_DELETE)
+  @Permissions(PERMISSIONS.ORG_EDIT)
   @Mutation(() => OrganizationUnit)
   async deleteOrganizationUnit(
     @Args('id') id: string,

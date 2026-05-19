@@ -16,7 +16,7 @@ export class TimeTrackingMutationResolver {
     private readonly entryMapper: TimeEntryMapper,
   ) {}
 
-  @Permissions(PERMISSIONS.TIME_ENTRY_CREATE)
+  @Permissions(PERMISSIONS.SHIFT_EDIT)
   @Mutation(() => TimeEntry)
   async addTimeEntry(
     @Args('input') input: AddTimeEntryInput,
@@ -29,7 +29,7 @@ export class TimeTrackingMutationResolver {
     return this.entryMapper.toModelOrThrow(entity);
   }
 
-  @Permissions(PERMISSIONS.TIME_ENTRY_UPDATE)
+  @Permissions(PERMISSIONS.SHIFT_EDIT)
   @Mutation(() => TimeEntry)
   async closeTimeEntry(
     @Args('id', { type: () => ID }) id: string,
@@ -44,7 +44,7 @@ export class TimeTrackingMutationResolver {
     return this.entryMapper.toModelOrThrow(entity);
   }
 
-  @Permissions(PERMISSIONS.TIME_ENTRY_UPDATE)
+  @Permissions(PERMISSIONS.SHIFT_EDIT)
   @Mutation(() => TimeEntry)
   async updateTimeEntry(
     @Args('id', { type: () => ID }) id: string,
@@ -59,7 +59,7 @@ export class TimeTrackingMutationResolver {
     return this.entryMapper.toModelOrThrow(entity);
   }
 
-  @Permissions(PERMISSIONS.TIME_ENTRY_DELETE)
+  @Permissions(PERMISSIONS.SHIFT_EDIT)
   @Mutation(() => TimeEntry)
   async deleteTimeEntry(
     @Args('id', { type: () => ID }) id: string,

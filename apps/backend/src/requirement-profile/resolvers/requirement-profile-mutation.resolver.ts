@@ -15,7 +15,7 @@ export class RequirementProfileMutationResolver {
     private readonly requirementProfileMapper: RequirementProfileMapper,
   ) {}
 
-  @Permissions(PERMISSIONS.REQUIREMENT_PROFILE_CREATE)
+  @Permissions(PERMISSIONS.REQUIREMENT_PROFILE_EDIT)
   @Mutation(() => RequirementProfile)
   async createRequirementProfile(
     @Args('input') input: CreateRequirementProfileInput,
@@ -28,7 +28,7 @@ export class RequirementProfileMutationResolver {
     return this.requirementProfileMapper.toModelOrThrow(item);
   }
 
-  @Permissions(PERMISSIONS.REQUIREMENT_PROFILE_UPDATE)
+  @Permissions(PERMISSIONS.REQUIREMENT_PROFILE_EDIT)
   @Mutation(() => RequirementProfile)
   async updateRequirementProfile(
     @Args('id') id: string,
@@ -43,7 +43,7 @@ export class RequirementProfileMutationResolver {
     return this.requirementProfileMapper.toModelOrThrow(item);
   }
 
-  @Permissions(PERMISSIONS.REQUIREMENT_PROFILE_DELETE)
+  @Permissions(PERMISSIONS.REQUIREMENT_PROFILE_EDIT)
   @Mutation(() => RequirementProfile)
   async deleteRequirementProfile(
     @Args('id') id: string,

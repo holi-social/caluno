@@ -1,11 +1,10 @@
 'use client';
 
-import type { RoleListItem } from '@repo/data';
 import { PermissionKey } from '@repo/data';
 import { Button } from '@repo/ui';
 import { Edit, Loader2, Trash } from 'lucide-react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { useTransition } from 'react';
 import { toast } from 'sonner';
 import { DeleteAlertDialog } from '@/components/delete-alert-dialog';
@@ -26,8 +25,10 @@ export const ActionBar = ({
   size = 'sm',
 }: ActionBarProps) => {
   const router = useRouter();
+  const pathname = usePathname();
   const [isDeleting, startTransition] = useTransition();
   const buttonSize = `icon-${size}` as const;
+  const editHref = `/${organizationUnitId}/settings/roles/${id}/edit`;
 
   const handleDelete = () => {
     startTransition(async () => {
@@ -36,26 +37,25 @@ export const ActionBar = ({
         toast.error(`Failed to delete Role. ${result.serverError}`);
       } else {
         toast.success('Role deleted');
-        router.push(`/${organizationUnitId}/settings/roles`);
+        router.refresh();
+        if (pathname === `/${organizationUnitId}/settings/roles/${id}`) {
+          router.push(`/${organizationUnitId}/settings/roles`);
+        }
       }
     });
   };
 
   return (
-    <aside className="space-x-2">
-      <RequirePermission permission={PermissionKey.RoleUpdate}>
-        <Link href={`/${organizationUnitId}/settings/roles/${id}/edit`}>
-          <Button
-            variant="outline"
-            size={buttonSize}
-            aria-label="Edit a roles permissions"
-          >
+    <aside className="flex items-center gap-2">
+      <RequirePermission permission={PermissionKey.OrgEdit}>
+        <Button variant="outline" size={buttonSize} asChild>
+          <Link href={editHref} aria-label="Edit role">
             <Edit />
-          </Button>
-        </Link>
+          </Link>
+        </Button>
       </RequirePermission>
       {!isInternal && (
-        <RequirePermission permission={PermissionKey.RoleDelete}>
+        <RequirePermission permission={PermissionKey.OrgEdit}>
           <DeleteAlertDialog
             title="Delete Role"
             description="Are you sure you wish to delete this Role?"

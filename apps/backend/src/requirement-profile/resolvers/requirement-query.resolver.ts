@@ -16,14 +16,14 @@ export class RequirementQueryResolver {
     private readonly requirementMapper: RequirementMapper,
   ) {}
 
-  @Permissions(PERMISSIONS.REQUIREMENT_READ)
+  @Permissions(PERMISSIONS.REQUIREMENT_PROFILE_VIEW)
   @Query(() => Requirement, { nullable: true })
   async requirement(@Args('id') id: string): Promise<Requirement | null> {
     const item = await this.requirementService.findById(id);
     return this.requirementMapper.toModel(item);
   }
 
-  @Permissions(PERMISSIONS.REQUIREMENT_READ)
+  @Permissions(PERMISSIONS.REQUIREMENT_PROFILE_VIEW)
   @Query(() => RequirementPaginatedResponse)
   async requirements(
     @Args() pagination: PaginationInput,

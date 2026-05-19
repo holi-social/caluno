@@ -14,7 +14,7 @@ export class RoleMutationResolver {
     private readonly roleMapper: RoleMapper,
   ) {}
 
-  @Permissions(PERMISSIONS.ROLE_CREATE)
+  @Permissions(PERMISSIONS.ORG_EDIT)
   @Mutation(() => Role)
   async createRole(
     @Context() context: AuthenticatedGraphQLContext,
@@ -27,7 +27,7 @@ export class RoleMutationResolver {
     return this.roleMapper.toModelOrThrow(role);
   }
 
-  @Permissions(PERMISSIONS.ROLE_UPDATE)
+  @Permissions(PERMISSIONS.ORG_EDIT)
   @Mutation(() => Role)
   async updateRole(
     @Args('id', { type: () => ID }) id: string,
@@ -37,7 +37,7 @@ export class RoleMutationResolver {
     return this.roleMapper.toModelOrThrow(updatedRole);
   }
 
-  @Permissions(PERMISSIONS.ROLE_DELETE)
+  @Permissions(PERMISSIONS.ORG_EDIT)
   @Mutation(() => Role)
   async deleteRole(@Args('id', { type: () => ID }) id: string): Promise<Role> {
     const deletedRole = await this.authService.deleteRole(id);

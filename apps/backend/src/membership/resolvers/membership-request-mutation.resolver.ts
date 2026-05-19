@@ -15,7 +15,7 @@ export class MembershipRequestMutationResolver {
     private readonly membershipRequestMapper: MembershipRequestMapper,
   ) {}
 
-  @Permissions(PERMISSIONS.MEMBERSHIP_REQUEST_APPROVE)
+  @Permissions(PERMISSIONS.VOLUNTEER_EDIT)
   @Mutation(() => MembershipRequest)
   async approveMembershipRequest(
     @Args('id', { type: () => ID }) id: string,
@@ -36,7 +36,7 @@ export class MembershipRequestMutationResolver {
     return this.membershipRequestMapper.toModelOrThrow(entity);
   }
 
-  @Permissions(PERMISSIONS.MEMBERSHIP_REQUEST_REJECT)
+  @Permissions(PERMISSIONS.VOLUNTEER_EDIT)
   @Mutation(() => MembershipRequest)
   async rejectMembershipRequest(
     @Args('id', { type: () => ID }) id: string,
@@ -59,7 +59,6 @@ export class MembershipRequestMutationResolver {
     return this.membershipRequestMapper.toModelOrThrow(entity);
   }
 
-  @Permissions(PERMISSIONS.MEMBERSHIP_REQUEST_CANCEL)
   @Mutation(() => MembershipRequest)
   async cancelMembershipRequest(
     @Args('id', { type: () => ID }) id: string,

@@ -10,6 +10,7 @@ import {
 } from '../database/schema';
 import { NotFoundGraphQLError } from '../graphql/errors';
 import { OrganizationUnitService } from '../organization/organization-unit.service';
+import { PERMISSION_GROUPS } from './constants/permission-groups';
 import { CreateRoleInput } from './inputs/create-role.input';
 import { UpdateRoleInput } from './inputs/update-role.input';
 
@@ -125,6 +126,35 @@ export class AuthService {
 
   async findAllPermissions(): Promise<PermissionEntity[]> {
     return await this.db.query.permissions.findMany();
+  }
+
+  async findPermissionGroups(): Promise<
+    Array<{
+      key: string;
+      label: string;
+      items: Array<{ label: string; permission: PermissionEntity }>;
+    }>
+  > {
+    const permissions = await this.findAllPermissions();
+    const permissionsByKey = new Map(
+      permissions.map((permission) => [permission.key, permission]),
+    );
+
+    return PERMISSION_GROUPS.map((group) => ({
+      key: group.key,
+      label: group.label,
+      items: group.permissions.map((item) => {
+        const permission = permissionsByKey.get(item.key);
+        if (!permission) {
+          throw new Error(`Missing permission definition for ${item.key}`);
+        }
+
+        return {
+          label: item.label,
+          permission,
+        };
+      }),
+    }));
   }
 
   async findAllRoles(organizationUnitId: string): Promise<RoleEntity[]> {

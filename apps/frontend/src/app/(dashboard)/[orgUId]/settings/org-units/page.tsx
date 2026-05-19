@@ -11,17 +11,12 @@ interface OrgUnitsPageProps {
 export default async function OrgUnitsPage({ params }: OrgUnitsPageProps) {
   const { orgUId } = await params;
   const { org } = await requireOrgAccess(orgUId);
-  await requirePermission(orgUId, PermissionKey.OrgUnitRead);
+  await requirePermission(orgUId, PermissionKey.OrgView);
 
   const data = await getDataClient(orgUId);
 
   const [[canCreate, canEdit, canDelete], tree, types] = await Promise.all([
-    await checkPermission(
-      orgUId,
-      PermissionKey.OrgUnitCreate,
-      PermissionKey.OrgUnitUpdate,
-      PermissionKey.OrgUnitDelete,
-    ),
+    await checkPermission(orgUId, PermissionKey.OrgEdit),
     data.organizationUnit.findTree(org.organizationId),
     data.organizationUnit.findAllTypes(),
   ]);
