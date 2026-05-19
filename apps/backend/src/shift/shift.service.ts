@@ -146,7 +146,9 @@ export class ShiftService {
           instances: {
             invites: {
               userId,
-              status: ShiftInviteStatus.ACCEPTED,
+              status: {
+                in: [ShiftInviteStatus.ACCEPTED, ShiftInviteStatus.PENDING],
+              },
             },
           },
         },
