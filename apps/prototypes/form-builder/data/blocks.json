@@ -306,11 +306,121 @@
   {
     "id": "block-3f70fd25",
     "title": "Neuer Block",
-    "fields": [],
+    "fields": [
+      {
+        "id": "field-1779177314422",
+        "type": "date",
+        "label": "134",
+        "required": true
+      },
+      {
+        "id": "sysreq-nachname-ual873",
+        "type": "nachname",
+        "label": "Nachname",
+        "required": true,
+        "lockType": true,
+        "systemKey": "nachname",
+        "description": "Wie im Ausweisdokument."
+      }
+    ],
     "required": true,
     "createdBy": "andrea",
     "updatedBy": "andrea",
     "createdAt": "2026-05-18T15:46:15.570Z",
-    "updatedAt": "2026-05-18T15:48:59.513Z"
+    "updatedAt": "2026-05-19T09:57:35.486Z"
+  },
+  {
+    "id": "block-da68f96c",
+    "title": "Neuer Block",
+    "fields": [
+      {
+        "id": "field-1779193481280",
+        "type": "numbers",
+        "label": "q1231",
+        "required": true
+      },
+      {
+        "id": "field-1779194336748",
+        "type": "document-acknowledgement",
+        "label": "Cat is cool",
+        "documentUrl": "/api/uploads/1779194329213-513eV9QFlAL.jpg",
+        "documentLabel": "Cat is cool lesen",
+        "required": true
+      },
+      {
+        "id": "field-1779197142016",
+        "type": "multichoice",
+        "label": "1",
+        "required": true,
+        "description": "1",
+        "options": [
+          {
+            "label": "1",
+            "value": "1"
+          }
+        ]
+      },
+      {
+        "id": "sysreq-email-zvfn05",
+        "type": "email",
+        "label": "E-Mail",
+        "required": true,
+        "lockType": true,
+        "systemKey": "email"
+      },
+      {
+        "id": "sysreq-geschlecht-yvxnm2",
+        "type": "singlechoice",
+        "label": "Geschlecht",
+        "required": false,
+        "lockType": true,
+        "systemKey": "geschlecht",
+        "options": [
+          {
+            "label": "Weiblich",
+            "value": "weiblich"
+          },
+          {
+            "label": "Männlich",
+            "value": "maennlich"
+          },
+          {
+            "label": "Divers",
+            "value": "divers"
+          }
+        ]
+      },
+      {
+        "id": "sysreq-adresse-t4ag2l",
+        "type": "text",
+        "label": "Adresse",
+        "required": true,
+        "lockType": true,
+        "systemKey": "adresse"
+      },
+      {
+        "id": "sysreq-vorname-0la1y0",
+        "type": "vorname",
+        "label": "Vorname",
+        "required": true,
+        "lockType": true,
+        "systemKey": "vorname",
+        "description": "Wie im Ausweisdokument."
+      },
+      {
+        "id": "sysreq-nachname-v4beez",
+        "type": "nachname",
+        "label": "Nachname",
+        "required": true,
+        "lockType": true,
+        "systemKey": "nachname",
+        "description": "Wie im Ausweisdokument."
+      }
+    ],
+    "required": true,
+    "createdBy": "andrea",
+    "updatedBy": "andrea",
+    "createdAt": "2026-05-19T12:39:04.343Z",
+    "updatedAt": "2026-05-19T13:25:56.407Z"
   }
 ]

@@ -35,8 +35,16 @@
     "locale": "de",
     "blockRefs": [
       {
-        "blockId": "block-f9acc4af",
+        "blockId": "block-3f70fd25",
+        "order": 0
+      },
+      {
+        "blockId": "block-d6a64a05",
         "order": 1
+      },
+      {
+        "blockId": "seed-block-adresse",
+        "order": 2
       }
     ],
     "appliedTo": [
@@ -51,6 +59,6 @@
     "createdBy": "karl",
     "updatedBy": "andrea",
     "createdAt": "2026-05-13T10:57:31.496Z",
-    "updatedAt": "2026-05-13T13:16:37.843Z"
+    "updatedAt": "2026-05-19T09:59:21.588Z"
   }
 ]

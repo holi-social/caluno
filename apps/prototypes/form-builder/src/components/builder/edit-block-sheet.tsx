@@ -7,6 +7,9 @@ import {
   Field,
   FieldLabel,
   Input,
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
   Separator,
   Sheet,
   SheetContent,
@@ -14,8 +17,9 @@ import {
   SheetHeader,
   SheetTitle,
 } from '@repo/ui';
-import { AlertTriangle, FileText, Plus, Save } from 'lucide-react';
-import type { Block, FormConfig, FormField } from '@/lib/types';
+import { AlertTriangle, FileText, Plus, Save, UserCircle2 } from 'lucide-react';
+import type { Block, FieldType, FormConfig, FormField } from '@/lib/types';
+import { FIELD_TYPE_OPTIONS } from '@/lib/predefined-fields';
 import {
   SYSTEM_REQUIREMENT_LIST,
   createSystemRequirementField,
@@ -57,7 +61,12 @@ export function EditBlockSheet({
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [editingFieldId, setEditingFieldId] = useState<string | null>(null);
-  const [addType, setAddType] = useState<'custom' | 'document' | null>(null);
+  // The field type the user picked from the "Feld hinzufügen" flyout. When
+  // non-null we render a FieldForm with this type pre-locked so the user
+  // skips the in-form type Select entirely (it's now the flyout's job).
+  const [addType, setAddType] = useState<FieldType | null>(null);
+  const [fieldPickerOpen, setFieldPickerOpen] = useState(false);
+  const [profilePickerOpen, setProfilePickerOpen] = useState(false);
   const [metaDirty, setMetaDirty] = useState(false);
   const [draggingFieldId, setDraggingFieldId] = useState<string | null>(null);
   const titleInputRef = useRef<HTMLInputElement>(null);
@@ -127,6 +136,97 @@ export function EditBlockSheet({
     forms?.filter((f) =>
       f.blockRefs.some((ref) => ref.blockId === block.id),
     ) ?? [];
+
+  // "Feld hinzufügen" — opens a flyout with all custom field types. Clicking
+  // a type sets `addType` to that FieldType, which renders FieldForm with
+  // `lockedType` set so the in-form Feldtyp Select stays hidden.
+  const fieldPicker = onAddField && (
+    <Popover open={fieldPickerOpen} onOpenChange={setFieldPickerOpen}>
+      <PopoverTrigger asChild>
+        <Button variant="outline">
+          <Plus className="mr-2 size-4" />
+          Feld hinzufügen
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent
+        className="flex max-h-[var(--radix-popover-content-available-height)] w-[28rem] flex-col p-0"
+        collisionPadding={16}
+      >
+        <div className="min-h-0 flex-1 space-y-2 overflow-y-auto p-3">
+          {FIELD_TYPE_OPTIONS.map((opt) => (
+            <button
+              key={opt.value}
+              type="button"
+              onClick={() => {
+                setEditingFieldId(null);
+                setAddType(opt.value);
+                setFieldPickerOpen(false);
+              }}
+              className="hover:border-primary hover:bg-accent w-full rounded-lg border px-3 py-2.5 text-left text-sm font-medium transition-colors"
+            >
+              {opt.label}
+            </button>
+          ))}
+        </div>
+      </PopoverContent>
+    </Popover>
+  );
+
+  // "Profilfeld hinzufügen" — opens a flyout with the system-requirement
+  // presets not yet used in this block. Sticky intro stays above the
+  // scrollable card list so the rationale is always visible.
+  // "Dokument hinzufügen" stays as a top-level shortcut even though
+  // document-acknowledgement is also reachable from the Feld picker —
+  // docs are a high-frequency action and worth a single-click affordance.
+  const documentButton = onAddField && (
+    <Button
+      variant="outline"
+      onClick={() => {
+        setEditingFieldId(null);
+        setAddType('document-acknowledgement');
+      }}
+    >
+      <FileText className="mr-2 size-4" />
+      Dokument hinzufügen
+    </Button>
+  );
+
+  const availableSystemPresets = SYSTEM_REQUIREMENT_LIST.filter(
+    (p) => !getSystemRequirementKeysInUse(block.fields).has(p.key),
+  );
+  const profilePicker = onAddField && availableSystemPresets.length > 0 && (
+    <Popover open={profilePickerOpen} onOpenChange={setProfilePickerOpen}>
+      <PopoverTrigger asChild>
+        <Button variant="outline">
+          <UserCircle2 className="mr-2 size-4" />
+          Profilfeld hinzufügen
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent
+        className="flex max-h-[var(--radix-popover-content-available-height)] w-[28rem] flex-col p-0"
+        collisionPadding={16}
+      >
+        <div className="shrink-0 border-b p-4">
+          <p className="text-muted-foreground text-sm">
+            Freiwillige müssen diese Angaben nur einmal ausfüllen. Danach
+            können sie in anderen Unterorganisationen wiederverwendet werden.
+          </p>
+        </div>
+        <div className="min-h-0 flex-1 space-y-3 overflow-y-auto p-4">
+          {availableSystemPresets.map((preset) => (
+            <AvailableSystemFieldCard
+              key={preset.key}
+              preset={preset}
+              onAdd={() => {
+                onAddField(block.id, createSystemRequirementField(preset.key));
+                setProfilePickerOpen(false);
+              }}
+            />
+          ))}
+        </div>
+      </PopoverContent>
+    </Popover>
+  );
 
   return (
     <Sheet open={open} onOpenChange={handleSheetOpenChange}>
@@ -201,34 +301,10 @@ export function EditBlockSheet({
             </h3>
 
             {block.fields.length === 0 && addType === null && (
-              <div className="space-y-4 rounded-lg border border-dashed px-4 py-6 text-center">
+              <div className="rounded-lg border border-dashed px-4 py-6 text-center">
                 <p className="text-muted-foreground text-sm">
                   Noch keine Felder in diesem Block.
                 </p>
-                {onAddField && (
-                  <div className="flex flex-wrap items-center justify-center gap-2">
-                    <Button
-                      variant="outline"
-                      onClick={() => {
-                        setEditingFieldId(null);
-                        setAddType('custom');
-                      }}
-                    >
-                      <Plus className="mr-2 size-4" />
-                      Freies Feld erstellen
-                    </Button>
-                    <Button
-                      variant="outline"
-                      onClick={() => {
-                        setEditingFieldId(null);
-                        setAddType('document');
-                      }}
-                    >
-                      <FileText className="mr-2 size-4" />
-                      Dokument hinzufügen
-                    </Button>
-                  </div>
-                )}
               </div>
             )}
 
@@ -291,37 +367,22 @@ export function EditBlockSheet({
               ),
             )}
 
-            {block.fields.length > 0 && addType === null && onAddField && (
-              <div className="flex flex-wrap items-center gap-2 pt-1">
-                <Button
-                  variant="outline"
-                  onClick={() => {
-                    setEditingFieldId(null);
-                    setAddType('custom');
-                  }}
-                >
-                  <Plus className="mr-2 size-4" />
-                  Freies Feld erstellen
-                </Button>
-                <Button
-                  variant="outline"
-                  onClick={() => {
-                    setEditingFieldId(null);
-                    setAddType('document');
-                  }}
-                >
-                  <FileText className="mr-2 size-4" />
-                  Dokument hinzufügen
-                </Button>
+            {addType === null && onAddField && (
+              <div className="space-y-2 pt-1">
+                <div className="flex items-center gap-2">
+                  {fieldPicker}
+                  {profilePicker}
+                </div>
+                <div className="flex items-center justify-center">
+                  {documentButton}
+                </div>
               </div>
             )}
 
             {addType !== null && onAddField && (
               <FieldForm
                 ref={addFieldRef}
-                lockedType={
-                  addType === 'document' ? 'document-acknowledgement' : undefined
-                }
+                lockedType={addType}
                 onSubmit={(field) => {
                   onAddField(block.id, field);
                   setAddType(null);
@@ -331,44 +392,6 @@ export function EditBlockSheet({
             )}
           </div>
 
-          {onAddField && (() => {
-            const usedKeys = getSystemRequirementKeysInUse(block.fields);
-            const available = SYSTEM_REQUIREMENT_LIST.filter(
-              (p) => !usedKeys.has(p.key),
-            );
-            return (
-              <div className="mt-6 space-y-3">
-                <div className="space-y-1">
-                  <h4 className="text-lg font-medium">
-                    Gemeinsame Profilfelder auswählen
-                  </h4>
-                  <p className="text-muted-foreground text-sm">
-                  Freiwillige müssen diese Angaben nur einmal ausfüllen. Danach können sie in anderen Unterorganisationen wiederverwendet werden.
-                  </p>
-                </div>
-                {available.length === 0 ? (
-                  <p className="text-muted-foreground text-sm">
-                    Alle Systemfelder sind hinzugefügt.
-                  </p>
-                ) : (
-                  <div className="space-y-3">
-                    {available.map((preset) => (
-                      <AvailableSystemFieldCard
-                        key={preset.key}
-                        preset={preset}
-                        onAdd={() => {
-                          onAddField(
-                            block.id,
-                            createSystemRequirementField(preset.key),
-                          );
-                        }}
-                      />
-                    ))}
-                  </div>
-                )}
-              </div>
-            );
-          })()}
         </div>
 
         <SheetFooter className="sticky bottom-0 z-10 border-t bg-background px-6 py-4">
