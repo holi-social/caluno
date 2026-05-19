@@ -14,9 +14,9 @@ export default async function RoleUpdatePage({
 
   const data = await getDataClient(orgUId);
 
-  const [role, allPermissions] = await Promise.all([
+  const [role, permissionGroups] = await Promise.all([
     data.role.findById(roleId),
-    data.role.findAllPermissions(),
+    data.role.findPermissionGroups(),
   ]);
 
   if (!role) {
@@ -28,7 +28,7 @@ export default async function RoleUpdatePage({
       title="Edit Role"
       description="Update permissions for the role"
       organizationUnitId={orgUId}
-      permissions={allPermissions}
+      permissionGroups={permissionGroups}
       mutate={updateRole.bind(null, role.id)}
       initialValues={{
         organizationUnitId: orgUId,

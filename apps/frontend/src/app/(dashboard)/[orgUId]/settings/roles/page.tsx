@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { RolesTable } from '@/domain/role/components/roles-table';
 import { getDataClient } from '@/lib/data-client';
 import { requireOrgAccess } from '@/lib/org-context-server';
-import { requirePermission } from '@/lib/permissions-server';
+import { checkPermission, requirePermission } from '@/lib/permissions-server';
 
 interface RolesPageProps {
   params: Promise<{ orgUId: string }>;
@@ -15,6 +15,7 @@ export default async function RolesPage({ params }: RolesPageProps) {
   const { orgUId } = await params;
   const { org } = await requireOrgAccess(orgUId);
   await requirePermission(orgUId, PermissionKey.OrgView);
+  const [canEdit] = await checkPermission(orgUId, PermissionKey.OrgEdit);
   const data = await getDataClient(orgUId);
 
   const roles = await data.role.findAll();
@@ -28,12 +29,14 @@ export default async function RolesPage({ params }: RolesPageProps) {
             Manage roles and permissions for {org.name}
           </p>
         </div>
-        <Link href={`/${orgUId}/settings/roles/new`}>
-          <Button>
-            <PlusIcon />
-            Create Role
+        {canEdit && (
+          <Button asChild>
+            <Link href={`/${orgUId}/settings/roles/new`}>
+              <PlusIcon />
+              Create Role
+            </Link>
           </Button>
-        </Link>
+        )}
       </div>
 
       {roles.length > 0 ? (

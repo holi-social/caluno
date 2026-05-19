@@ -2,19 +2,18 @@
 
 import type { GetPermissionGroupsQuery } from '@repo/data';
 import { Card, Label, Separator, Switch } from '@repo/ui';
-import { getActionLabel, groupPermissions } from '../grouping';
 
 type PermissionGroup = GetPermissionGroupsQuery['permissionGroups'][number];
 
 interface PermissionPickerProps {
-  groups: PermissionGroup[];
+  groups?: PermissionGroup[];
   selectedIds: string[];
   onChange: (ids: string[]) => void;
   disabled?: boolean;
 }
 
 export function PermissionPicker({
-  groups,
+  groups = [],
   selectedIds,
   onChange,
   disabled = false,

@@ -2,7 +2,6 @@ import { Badge, Card, CardContent } from '@repo/ui';
 import { Lock, Shield, ShieldCheck, Unlock } from 'lucide-react';
 import { notFound } from 'next/navigation';
 import { ActionBar } from '@/domain/role/components/action-bar';
-import { getActionLabel, groupPermissions } from '@/domain/role/grouping';
 import { getDataClient } from '@/lib/data-client';
 
 interface RoleDetailsPageProps {
@@ -15,13 +14,24 @@ export default async function RoleDetailsPage({
   const { orgUId, roleId } = await params;
 
   const data = await getDataClient(orgUId);
-  const role = await data.role.findById(roleId);
+  const [role, permissionGroups] = await Promise.all([
+    data.role.findById(roleId),
+    data.role.findPermissionGroups(),
+  ]);
 
   if (!role) {
     notFound();
   }
 
-  const permissionGroups = groupPermissions(role.permissions);
+  const rolePermissionIds = new Set(role.permissions.map((p) => p.id));
+  const assignedGroups = permissionGroups
+    .map((group) => ({
+      ...group,
+      items: group.items.filter((item) =>
+        rolePermissionIds.has(item.permission.id),
+      ),
+    }))
+    .filter((group) => group.items.length > 0);
 
   return (
     <div className="space-y-6">
@@ -41,30 +51,28 @@ export default async function RoleDetailsPage({
         <div className="md:col-span-2 space-y-6">
           <Card>
             <CardContent>
-              {permissionGroups.size === 0 ? (
+              {assignedGroups.length === 0 ? (
                 <p className="text-muted-foreground">
                   No permissions assigned to this role.
                 </p>
               ) : (
                 <div className="space-y-4">
-                  {Array.from(permissionGroups.entries()).map(
-                    ([groupName, permissions]) => (
-                      <div key={groupName}>
-                        <h3 className="text-sm mb-2">{groupName}</h3>
-                        <div className="flex flex-wrap gap-2">
-                          {permissions.map((permission) => (
-                            <Badge
-                              key={permission.id}
-                              variant="secondary"
-                              title={permission.description ?? undefined}
-                            >
-                              {getActionLabel(permission.key)}
-                            </Badge>
-                          ))}
-                        </div>
+                  {assignedGroups.map((group) => (
+                    <div key={group.key}>
+                      <h3 className="text-sm mb-2">{group.label}</h3>
+                      <div className="flex flex-wrap gap-2">
+                        {group.items.map((item) => (
+                          <Badge
+                            key={item.permission.id}
+                            variant="secondary"
+                            title={item.permission.description ?? undefined}
+                          >
+                            {item.label}
+                          </Badge>
+                        ))}
                       </div>
-                    ),
-                  )}
+                    </div>
+                  ))}
                 </div>
               )}
             </CardContent>

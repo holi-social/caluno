@@ -1,7 +1,7 @@
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
-import type { Permission } from '@repo/data';
+import type { GetPermissionGroupsQuery } from '@repo/data';
 import { Field, FieldError, FieldLabel, Input, Textarea } from '@repo/ui';
 import { useRouter } from 'next/navigation';
 import { useState, useTransition } from 'react';
@@ -10,9 +10,11 @@ import { FormSheet, useFormSheet } from '@/components/form-sheet';
 import { type RoleFormValues, roleSchema } from '../schemas';
 import { PermissionPicker } from './permission-picker';
 
+type PermissionGroup = GetPermissionGroupsQuery['permissionGroups'][number];
+
 interface RoleFormProps {
   organizationUnitId: string;
-  permissions: Permission[];
+  permissionGroups: PermissionGroup[];
   initialValues?: Partial<RoleFormValues>;
   mutate: (formData: RoleFormValues) => Promise<{ serverError?: string }>;
   title: string;
@@ -21,7 +23,7 @@ interface RoleFormProps {
 
 export function RoleForm({
   organizationUnitId,
-  permissions,
+  permissionGroups,
   mutate,
   initialValues,
   title,
@@ -114,7 +116,7 @@ export function RoleForm({
           name="permissionIds"
           render={({ field }) => (
             <PermissionPicker
-              permissions={permissions}
+              groups={permissionGroups}
               selectedIds={field.value}
               onChange={field.onChange}
               disabled={pending}
