@@ -47,15 +47,14 @@ export const ActionBar = ({
 
   return (
     <aside className="flex items-center gap-2">
-      <RequirePermission permission={PermissionKey.OrgEdit}>
-        <Button variant="outline" size={buttonSize} asChild>
-          <Link href={editHref} aria-label="Edit role">
-            <Edit />
-          </Link>
-        </Button>
-      </RequirePermission>
       {!isInternal && (
         <RequirePermission permission={PermissionKey.OrgEdit}>
+          <Button variant="outline" size={buttonSize} asChild>
+            <Link href={editHref} aria-label="Edit role">
+              <Edit />
+            </Link>
+          </Button>
+
           <DeleteAlertDialog
             title="Delete Role"
             description="Are you sure you wish to delete this Role?"
