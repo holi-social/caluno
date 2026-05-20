@@ -32,7 +32,9 @@ query GetTimeEntry($id: String!) {
       id
       actualStartsAt
       actualEndsAt
+      overrideTitle
       master {
+        id
         title
       }
     }
@@ -60,7 +62,9 @@ query GetTimeEntries($limit: Int!, $offset: Int!) {
         id
         actualStartsAt
         actualEndsAt
+        overrideTitle
         master {
+          id
           title
         }
       }
@@ -84,7 +88,9 @@ query GetTimeEntriesByUser($userId: String!, $limit: Int!, $offset: Int!) {
         id
         actualStartsAt
         actualEndsAt
+        overrideTitle
         master {
+          id
           title
         }
       }

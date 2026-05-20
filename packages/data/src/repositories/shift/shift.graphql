@@ -164,3 +164,13 @@ query GetActiveShifts($limit: Int!, $offset: Int!) {
     }
   }
 }
+
+query GetShiftInstances($shiftId: ID!) {
+  shiftInstances(shiftId: $shiftId) {
+    id
+    actualStartsAt
+    actualEndsAt
+    overrideTitle
+    isCancelled
+  }
+}
