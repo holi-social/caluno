@@ -66,7 +66,16 @@ export const DatePickerWithTimeRange = ({
       return;
     }
 
-    if (!value.start && !value.end) return;
+    if (!value.start && !value.end) {
+      const now = new Date();
+      now.setSeconds(0, 0);
+      const oneHourLater = new Date(now.getTime() + 60 * 60 * 1000);
+      onChange(
+        applyTimeToDate(date, format(now, 'HH:mm')),
+        applyTimeToDate(date, format(oneHourLater, 'HH:mm')),
+      );
+      return;
+    }
 
     onChange(
       value.start ? applyDateToTime(date, value.start) : null,
@@ -98,7 +107,7 @@ export const DatePickerWithTimeRange = ({
             <Button
               type="button"
               variant="outline"
-              className="flex-1 justify-start text-left font-normal rounded-md"
+              className="flex-1 justify-start text-left font-normal rounded-md px-3 has-[>svg]:px-3"
               disabled={disabled}
             >
               <CalendarIcon className="mr-2 size-4" />
@@ -111,6 +120,7 @@ export const DatePickerWithTimeRange = ({
               mode="single"
               selected={calendarDate ?? undefined}
               onSelect={handleDateSelect}
+              weekStartsOn={1}
             />
           </PopoverContent>
         </Popover>
