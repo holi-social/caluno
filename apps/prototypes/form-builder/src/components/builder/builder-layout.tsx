@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Button } from '@repo/ui';
 import { ArrowLeft, Eye, Plus, Redo2, Save, Undo2 } from 'lucide-react';
 import Link from 'next/link';
@@ -8,7 +8,7 @@ import type { Block, FormConfig } from '@/lib/types';
 import type { User } from '@/lib/users';
 import { canEditBlock, canRemoveBlockFromForm } from '@/lib/users';
 import { useUndoRedo } from '@/lib/use-undo-redo';
-import { useBlockFieldMutations } from '@/lib/use-block-field-mutations';
+import { toast } from 'sonner';
 import { BlockCardBuilder } from './section-card';
 import { AddBlockDialog } from './add-section-dialog';
 import { EditBlockSheet } from './edit-block-sheet';
@@ -35,6 +35,14 @@ export function BuilderLayout({
   } = useUndoRedo<FormConfig>(initialConfig);
 
   const [blocks, setBlocks] = useState<Block[]>(initialBlocks);
+  // Merge the current form's in-session state into the seeded forms list so
+  // EditBlockSheet's "used in" / single-form-bypass checks reflect the
+  // blockRefs the user has added or removed in this builder session, not
+  // the stale page-load snapshot.
+  const formsWithCurrent = useMemo(
+    () => initialForms.map((f) => (f.id === initialConfig.id ? config : f)),
+    [initialForms, initialConfig.id, config],
+  );
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [addBlockOpen, setAddBlockOpen] = useState(false);
@@ -122,27 +130,68 @@ export function BuilderLayout({
     });
   }
 
-  // --- Block content handlers (go to API, NOT in undo stack) ---
+  // --- Block-level commit (one PUT for the whole edited block) ---
 
-  const { addField, editField, deleteField, reorderFields } =
-    useBlockFieldMutations(
-      (id) => blockMap.get(id)?.fields ?? null,
-      applyBlockUpdate,
-    );
-
-  async function handleBlockEdit(
-    blockId: string,
-    updates: Partial<Pick<Block, 'title' | 'description' | 'icon'>>,
+  async function handleCommitBlock(
+    updated: Block,
+    options: { requestResubmit: boolean },
   ) {
-    const res = await fetch(`/api/blocks/${blockId}`, {
+    const res = await fetch(`/api/blocks/${updated.id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(updates),
+      body: JSON.stringify({
+        title: updated.title,
+        description: updated.description,
+        icon: updated.icon,
+        fields: updated.fields,
+        required: updated.required,
+      }),
     });
-    if (res.ok) {
-      const updated = (await res.json()) as Block;
-      applyBlockUpdate(updated);
+    if (!res.ok) {
+      toast.error('Block konnte nicht gespeichert werden.');
+      return;
     }
+    const saved = (await res.json()) as Block;
+    applyBlockUpdate(saved);
+    if (options.requestResubmit) {
+      toast.success(
+        'Block gespeichert. Freiwillige werden zur Neueinreichung aufgefordert.',
+      );
+    } else {
+      toast.success('Block gespeichert.');
+    }
+  }
+
+  async function handleCreateCopy(
+    editedBlock: Block,
+    copyTitle: string,
+  ): Promise<Block> {
+    const createRes = await fetch('/api/blocks', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        title: copyTitle,
+        description: editedBlock.description,
+        icon: editedBlock.icon,
+        fields: editedBlock.fields,
+        required: editedBlock.required,
+      }),
+    });
+    const newBlock = (await createRes.json()) as Block;
+    setBlocks((prev) => [...prev, newBlock]);
+    toast.success(`Kopie „${copyTitle}" erstellt.`);
+    // Original block is untouched — nothing was flushed during this edit
+    // session, so the persisted state matches what other forms still see.
+    return newBlock;
+  }
+
+  function handleSwapBlockRef(oldBlockId: string, newBlockId: string) {
+    setConfig((prev) => ({
+      ...prev,
+      blockRefs: prev.blockRefs.map((r) =>
+        r.blockId === oldBlockId ? { ...r, blockId: newBlockId } : r,
+      ),
+    }));
   }
 
   // --- Save form ---
@@ -308,16 +357,16 @@ export function BuilderLayout({
         return (
           <EditBlockSheet
             block={editBlock}
-            forms={initialForms}
+            forms={formsWithCurrent}
+            currentFormId={config.id}
+            canEdit={canEditCurrent}
             open={editBlockId !== null}
             onOpenChange={(open) => {
               if (!open) setEditBlockId(null);
             }}
-            onSaveBlock={handleBlockEdit}
-            onAddField={canEditCurrent ? addField : undefined}
-            onEditField={canEditCurrent ? editField : undefined}
-            onDeleteField={canEditCurrent ? deleteField : undefined}
-            onReorderFields={canEditCurrent ? reorderFields : undefined}
+            onCommit={handleCommitBlock}
+            onCreateCopy={canEditCurrent ? handleCreateCopy : undefined}
+            onSwapBlockRef={handleSwapBlockRef}
           />
         );
       })()}

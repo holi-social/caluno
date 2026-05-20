@@ -1,426 +1,70 @@
 [
   {
-    "id": "seed-block-personal",
-    "title": "Persönliche Daten",
-    "icon": "User",
+    "id": "block-c8c37123",
+    "title": "Personal data",
+    "description": "Let's meet each other!",
     "fields": [
       {
-        "id": "sysreq-vorname-3j0iqo",
-        "type": "vorname",
-        "label": "Vorname",
-        "required": true,
-        "lockType": true,
-        "systemKey": "vorname",
-        "description": "Wie im Ausweisdokument."
-      },
-      {
-        "id": "sysreq-nachname-lk3pbg",
+        "id": "sysreq-nachname-93bo59",
         "type": "nachname",
         "label": "Nachname",
         "required": true,
         "lockType": true,
         "systemKey": "nachname",
         "description": "Wie im Ausweisdokument."
-      },
-      {
-        "id": "sysreq-bevorzugter-name-wyc4kv",
-        "type": "vorname",
-        "label": "Bevorzugter Name",
-        "required": false,
-        "lockType": true,
-        "systemKey": "bevorzugter-name",
-        "description": "Falls anders als der gesetzliche Name."
-      },
-      {
-        "id": "sysreq-geschlecht-4ijxoh",
-        "type": "singlechoice",
-        "label": "Geschlecht",
-        "required": true,
-        "lockType": true,
-        "systemKey": "geschlecht",
-        "options": [
-          {
-            "label": "Weiblich",
-            "value": "weiblich"
-          },
-          {
-            "label": "Männlich",
-            "value": "maennlich"
-          },
-          {
-            "label": "Divers",
-            "value": "divers"
-          }
-        ]
       }
     ],
     "required": true,
     "createdBy": "andrea",
     "updatedBy": "andrea",
-    "createdAt": "2026-04-30T08:58:15.922Z",
-    "updatedAt": "2026-05-12T16:06:27.571Z",
-    "description": "Let's get to know each other!"
+    "createdAt": "2026-05-19T16:22:34.116Z",
+    "updatedAt": "2026-05-20T07:46:59.457Z"
   },
   {
-    "id": "seed-block-kontakte",
-    "title": "Kontakte",
-    "icon": "User",
+    "id": "block-f480f2e9",
+    "title": "Document step",
     "fields": [
       {
-        "id": "f-email",
-        "type": "email",
-        "label": "E-Mail",
-        "required": true,
-        "placeholder": "z.B. max@beispiel.de"
-      },
-      {
-        "id": "f-phone",
-        "type": "phone",
-        "label": "Telefonnummer",
-        "required": true,
-        "placeholder": "z.B. +49 170 1234567"
-      }
-    ],
-    "required": true,
-    "createdBy": "andrea",
-    "updatedBy": "andrea",
-    "createdAt": "2026-04-30T08:58:15.922Z",
-    "updatedAt": "2026-04-30T13:52:45.394Z"
-  },
-  {
-    "id": "seed-block-adresse",
-    "title": "Adresse",
-    "icon": "MapPin",
-    "fields": [
-      {
-        "id": "f-street",
-        "type": "text",
-        "label": "Strasse und Hausnummer",
-        "required": true,
-        "placeholder": "z.B. Musterstrasse 42"
-      },
-      {
-        "id": "f-plz",
-        "type": "plz",
-        "label": "PLZ",
-        "required": true,
-        "placeholder": "z.B. 10115"
-      },
-      {
-        "id": "f-city",
-        "type": "text",
-        "label": "Stadt",
-        "required": true,
-        "placeholder": "z.B. Berlin"
-      }
-    ],
-    "required": true,
-    "createdBy": "andrea",
-    "updatedBy": "andrea",
-    "createdAt": "2026-04-30T08:58:15.922Z",
-    "updatedAt": "2026-05-08T12:16:01.272Z"
-  },
-  {
-    "id": "seed-block-datenschutz",
-    "title": "Datenschutzerklärung",
-    "icon": "FileCheck",
-    "fields": [
-      {
-        "id": "field-1777896641813",
+        "id": "field-1779207808586",
         "type": "document-acknowledgement",
-        "label": "Datenschutzerklärung",
-        "documentUrl": "/api/uploads/1777896632131-3_stadtmission_merkblatt_datenschutz_ehrenamtliche__1_.pdf",
-        "documentLabel": "Datenschutzerklärung lesen",
+        "label": "Document to sign",
+        "documentUrl": "/api/uploads/1779207807872-0_selbstauskunft_infoblatt__1_.pdf",
+        "documentLabel": "Document to sign lesen",
         "required": true
       }
     ],
     "required": true,
     "createdBy": "andrea",
     "updatedBy": "andrea",
-    "createdAt": "2026-04-30T08:58:15.922Z",
-    "updatedAt": "2026-05-04T12:10:59.999Z"
+    "createdAt": "2026-05-19T16:23:30.881Z",
+    "updatedAt": "2026-05-19T16:23:30.881Z"
   },
   {
-    "id": "block-d71b1558",
+    "id": "block-929eb654",
     "title": "Neuer Block",
     "fields": [
       {
-        "id": "field-1778238077260",
-        "type": "multichoice",
-        "label": "1234",
+        "id": "sysreq-vorname-6eo2s8",
+        "type": "vorname",
+        "label": "Vorname",
         "required": true,
-        "options": [
-          {
-            "label": "1",
-            "value": "1"
-          },
-          {
-            "label": "2",
-            "value": "2"
-          },
-          {
-            "label": "3",
-            "value": "3"
-          }
-        ]
-      }
-    ],
-    "required": true,
-    "createdBy": "andrea",
-    "updatedBy": "andrea",
-    "createdAt": "2026-05-08T11:01:17.935Z",
-    "updatedAt": "2026-05-08T11:01:17.935Z"
-  },
-  {
-    "id": "block-d6a64a05",
-    "title": "Neuer Block",
-    "fields": [
+        "lockType": true,
+        "systemKey": "vorname",
+        "description": "Wie im Ausweisdokument."
+      },
       {
-        "id": "sysreq-email-2m0wwk",
+        "id": "sysreq-email-sxd03l",
         "type": "email",
         "label": "E-Mail",
         "required": true,
         "lockType": true,
         "systemKey": "email"
-      },
-      {
-        "id": "sysreq-vorname-g34vjf",
-        "type": "vorname",
-        "label": "Vorname",
-        "required": true,
-        "lockType": true,
-        "systemKey": "vorname",
-        "description": "Wie im Ausweisdokument."
-      },
-      {
-        "id": "sysreq-bevorzugter-name-drr5lb",
-        "type": "vorname",
-        "label": "Bevorzugter Name",
-        "required": false,
-        "lockType": true,
-        "systemKey": "bevorzugter-name",
-        "description": "Falls anders als der gesetzliche Name."
-      },
-      {
-        "id": "sysreq-nachname-5v2gdq",
-        "type": "nachname",
-        "label": "Nachname",
-        "required": true,
-        "lockType": true,
-        "systemKey": "nachname",
-        "description": "Wie im Ausweisdokument."
-      },
-      {
-        "id": "sysreq-telefonnummer-ke1vqr",
-        "type": "phone",
-        "label": "Telefonnummer",
-        "required": false,
-        "lockType": true,
-        "systemKey": "telefonnummer"
-      },
-      {
-        "id": "sysreq-adresse-dv9yz8",
-        "type": "text",
-        "label": "Adresse",
-        "required": true,
-        "lockType": true,
-        "systemKey": "adresse"
-      }
-    ],
-    "required": true,
-    "createdBy": "andrea",
-    "updatedBy": "andrea",
-    "createdAt": "2026-05-12T16:09:33.500Z",
-    "updatedAt": "2026-05-12T16:09:33.500Z"
-  },
-  {
-    "id": "block-fa457589",
-    "title": "test",
-    "fields": [],
-    "required": true,
-    "createdBy": "andrea",
-    "updatedBy": "andrea",
-    "createdAt": "2026-05-12T16:15:43.253Z",
-    "updatedAt": "2026-05-18T14:25:07.953Z"
-  },
-  {
-    "id": "block-f9acc4af",
-    "title": "Neuer Block",
-    "fields": [
-      {
-        "id": "sysreq-geschlecht-722iri",
-        "type": "singlechoice",
-        "label": "Geschlecht",
-        "required": false,
-        "lockType": true,
-        "systemKey": "geschlecht",
-        "options": [
-          {
-            "label": "Weiblich",
-            "value": "weiblich"
-          },
-          {
-            "label": "Männlich",
-            "value": "maennlich"
-          },
-          {
-            "label": "Divers",
-            "value": "divers"
-          }
-        ]
-      },
-      {
-        "id": "sysreq-vorname-8m479q",
-        "type": "vorname",
-        "label": "Vorname",
-        "required": true,
-        "lockType": true,
-        "systemKey": "vorname",
-        "description": "Wie im Ausweisdokument."
-      },
-      {
-        "id": "sysreq-nachname-wfi9a9",
-        "type": "nachname",
-        "label": "Nachname",
-        "required": true,
-        "lockType": true,
-        "systemKey": "nachname",
-        "description": "Wie im Ausweisdokument."
-      },
-      {
-        "id": "sysreq-bevorzugter-name-ay5eut",
-        "type": "vorname",
-        "label": "Bevorzugter Name",
-        "required": false,
-        "lockType": true,
-        "systemKey": "bevorzugter-name",
-        "description": "Falls anders als der gesetzliche Name."
       }
     ],
     "required": true,
     "createdBy": "karl",
-    "updatedBy": "andrea",
-    "createdAt": "2026-05-13T10:57:49.280Z",
-    "updatedAt": "2026-05-13T13:16:28.780Z"
-  },
-  {
-    "id": "block-3f70fd25",
-    "title": "Neuer Block",
-    "fields": [
-      {
-        "id": "field-1779177314422",
-        "type": "date",
-        "label": "134",
-        "required": true
-      },
-      {
-        "id": "sysreq-nachname-ual873",
-        "type": "nachname",
-        "label": "Nachname",
-        "required": true,
-        "lockType": true,
-        "systemKey": "nachname",
-        "description": "Wie im Ausweisdokument."
-      }
-    ],
-    "required": true,
-    "createdBy": "andrea",
-    "updatedBy": "andrea",
-    "createdAt": "2026-05-18T15:46:15.570Z",
-    "updatedAt": "2026-05-19T09:57:35.486Z"
-  },
-  {
-    "id": "block-da68f96c",
-    "title": "Neuer Block",
-    "fields": [
-      {
-        "id": "field-1779193481280",
-        "type": "numbers",
-        "label": "q1231",
-        "required": true
-      },
-      {
-        "id": "field-1779194336748",
-        "type": "document-acknowledgement",
-        "label": "Cat is cool",
-        "documentUrl": "/api/uploads/1779194329213-513eV9QFlAL.jpg",
-        "documentLabel": "Cat is cool lesen",
-        "required": true
-      },
-      {
-        "id": "field-1779197142016",
-        "type": "multichoice",
-        "label": "1",
-        "required": true,
-        "description": "1",
-        "options": [
-          {
-            "label": "1",
-            "value": "1"
-          }
-        ]
-      },
-      {
-        "id": "sysreq-email-zvfn05",
-        "type": "email",
-        "label": "E-Mail",
-        "required": true,
-        "lockType": true,
-        "systemKey": "email"
-      },
-      {
-        "id": "sysreq-geschlecht-yvxnm2",
-        "type": "singlechoice",
-        "label": "Geschlecht",
-        "required": false,
-        "lockType": true,
-        "systemKey": "geschlecht",
-        "options": [
-          {
-            "label": "Weiblich",
-            "value": "weiblich"
-          },
-          {
-            "label": "Männlich",
-            "value": "maennlich"
-          },
-          {
-            "label": "Divers",
-            "value": "divers"
-          }
-        ]
-      },
-      {
-        "id": "sysreq-adresse-t4ag2l",
-        "type": "text",
-        "label": "Adresse",
-        "required": true,
-        "lockType": true,
-        "systemKey": "adresse"
-      },
-      {
-        "id": "sysreq-vorname-0la1y0",
-        "type": "vorname",
-        "label": "Vorname",
-        "required": true,
-        "lockType": true,
-        "systemKey": "vorname",
-        "description": "Wie im Ausweisdokument."
-      },
-      {
-        "id": "sysreq-nachname-v4beez",
-        "type": "nachname",
-        "label": "Nachname",
-        "required": true,
-        "lockType": true,
-        "systemKey": "nachname",
-        "description": "Wie im Ausweisdokument."
-      }
-    ],
-    "required": true,
-    "createdBy": "andrea",
-    "updatedBy": "andrea",
-    "createdAt": "2026-05-19T12:39:04.343Z",
-    "updatedAt": "2026-05-19T13:25:56.407Z"
+    "updatedBy": "karl",
+    "createdAt": "2026-05-19T18:17:38.399Z",
+    "updatedAt": "2026-05-19T18:17:38.399Z"
   }
 ]

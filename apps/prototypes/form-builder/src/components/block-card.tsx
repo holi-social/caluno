@@ -15,9 +15,9 @@ import type { Block, FormConfig } from '@/lib/types';
 import type { User as AppUser } from '@/lib/users';
 import { canEditBlock, canDeleteBlock } from '@/lib/users';
 import { getUserById } from '@/lib/users';
+import { toast } from 'sonner';
 import { formatDate } from '@/lib/formatting';
 import { getFieldDisplayLabel } from '@/lib/predefined-fields';
-import { useBlockFieldMutations } from '@/lib/use-block-field-mutations';
 import { ConfirmDialog } from './confirm-dialog';
 import { EditBlockSheet } from './builder/edit-block-sheet';
 
@@ -47,30 +47,57 @@ export function BlockCard({
     if (!editOpen) setLiveBlock(block);
   }, [block, editOpen]);
 
-  async function handleSaveBlock(
-    blockId: string,
-    updates: Partial<Pick<Block, 'title' | 'description' | 'icon'>>,
+  async function handleCommitBlock(
+    updated: Block,
+    options: { requestResubmit: boolean },
   ) {
-    const res = await fetch(`/api/blocks/${blockId}`, {
+    const res = await fetch(`/api/blocks/${updated.id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(updates),
+      body: JSON.stringify({
+        title: updated.title,
+        description: updated.description,
+        icon: updated.icon,
+        fields: updated.fields,
+        required: updated.required,
+      }),
     });
-    if (res.ok) {
-      const updated = (await res.json()) as Block;
-      setLiveBlock(updated);
-      router.refresh();
+    if (!res.ok) {
+      toast.error('Block konnte nicht gespeichert werden.');
+      return;
+    }
+    const saved = (await res.json()) as Block;
+    setLiveBlock(saved);
+    router.refresh();
+    if (options.requestResubmit) {
+      toast.success(
+        'Block gespeichert. Freiwillige werden zur Neueinreichung aufgefordert.',
+      );
+    } else {
+      toast.success('Block gespeichert.');
     }
   }
 
-  const { addField, editField, deleteField, reorderFields } =
-    useBlockFieldMutations(
-      (id) => (id === liveBlock.id ? liveBlock.fields : null),
-      (updated) => {
-        setLiveBlock(updated);
-        router.refresh();
-      },
-    );
+  async function handleCreateCopy(
+    editedBlock: Block,
+    copyTitle: string,
+  ): Promise<Block> {
+    const createRes = await fetch('/api/blocks', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        title: copyTitle,
+        description: editedBlock.description,
+        icon: editedBlock.icon,
+        fields: editedBlock.fields,
+        required: editedBlock.required,
+      }),
+    });
+    const newBlock = (await createRes.json()) as Block;
+    router.refresh();
+    toast.success(`Kopie „${copyTitle}" erstellt.`);
+    return newBlock;
+  }
 
   const canEdit = canEditBlock(currentUser, block);
   const usedInForms = forms.filter((f) =>
@@ -185,13 +212,11 @@ export function BlockCard({
       <EditBlockSheet
         block={liveBlock}
         forms={forms}
+        canEdit={canEdit}
         open={editOpen}
         onOpenChange={setEditOpen}
-        onSaveBlock={handleSaveBlock}
-        onAddField={canEdit ? addField : undefined}
-        onEditField={canEdit ? editField : undefined}
-        onDeleteField={canEdit ? deleteField : undefined}
-        onReorderFields={canEdit ? reorderFields : undefined}
+        onCommit={handleCommitBlock}
+        onCreateCopy={canEdit ? handleCreateCopy : undefined}
       />
 
       <ConfirmDialog

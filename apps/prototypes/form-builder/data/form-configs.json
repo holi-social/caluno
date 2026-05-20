@@ -1,20 +1,22 @@
 [
   {
-    "id": "977e57e5-a3aa-4270-bcb2-f388b907f743",
-    "slug": "titel",
-    "name": "titel",
-    "description": "beschreibung",
+    "id": "82115f6f-84d3-4d14-a129-7abca9bb64ad",
+    "slug": "test",
+    "name": "Test",
+    "description": "",
     "organizationName": "Abteilung EA",
     "locale": "de",
     "blockRefs": [
       {
-        "blockId": "block-fa457589",
+        "blockId": "block-f480f2e9",
+        "order": 1
+      },
+      {
+        "blockId": "block-c8c37123",
         "order": 0
       }
     ],
-    "appliedTo": [
-      "join:current"
-    ],
+    "appliedTo": [],
     "settings": {
       "submitButtonLabel": "Absenden",
       "successTitle": "Vielen Dank!",
@@ -23,42 +25,7 @@
     },
     "createdBy": "andrea",
     "updatedBy": "andrea",
-    "createdAt": "2026-05-11T11:27:11.979Z",
-    "updatedAt": "2026-05-13T10:30:32.393Z"
-  },
-  {
-    "id": "ca92ff8c-d4ad-49a4-9b36-b44b622d104d",
-    "slug": "123",
-    "name": "123",
-    "description": "beschreibung",
-    "organizationName": "Karlstrasse 13",
-    "locale": "de",
-    "blockRefs": [
-      {
-        "blockId": "block-3f70fd25",
-        "order": 0
-      },
-      {
-        "blockId": "block-d6a64a05",
-        "order": 1
-      },
-      {
-        "blockId": "seed-block-adresse",
-        "order": 2
-      }
-    ],
-    "appliedTo": [
-      "join:current"
-    ],
-    "settings": {
-      "submitButtonLabel": "Absenden",
-      "successTitle": "Vielen Dank!",
-      "successMessage": "Ihre Daten wurden erfolgreich uebermittelt.",
-      "allowEmbed": true
-    },
-    "createdBy": "karl",
-    "updatedBy": "andrea",
-    "createdAt": "2026-05-13T10:57:31.496Z",
-    "updatedAt": "2026-05-19T09:59:21.588Z"
+    "createdAt": "2026-05-19T16:22:43.882Z",
+    "updatedAt": "2026-05-19T16:23:51.679Z"
   }
 ]
