@@ -1,11 +1,116 @@
 [
   {
-    "id": "block-c8c37123",
+    "id": "block-714c8ebf",
     "title": "Personal data",
-    "description": "Let's meet each other!",
+    "description": "subtitle",
     "fields": [
       {
-        "id": "sysreq-nachname-93bo59",
+        "id": "field-1779276336376",
+        "type": "static-text",
+        "label": "Datenschutztext -------",
+        "required": false
+      },
+      {
+        "id": "field-1779276354034",
+        "type": "multichoice",
+        "label": "I agree to all",
+        "required": true,
+        "options": [
+          {
+            "label": "agree",
+            "value": "agree"
+          }
+        ]
+      }
+    ],
+    "required": true,
+    "createdBy": "andrea",
+    "updatedBy": "andrea",
+    "createdAt": "2026-05-20T11:02:39.333Z",
+    "updatedAt": "2026-05-20T11:26:15.473Z"
+  },
+  {
+    "id": "block-c05bbb96",
+    "title": "Personal data Kopie",
+    "description": "subtitle",
+    "fields": [
+      {
+        "id": "sysreq-nachname-jwr2vc",
+        "type": "nachname",
+        "label": "Name",
+        "required": true,
+        "lockType": true,
+        "systemKey": "nachname",
+        "description": "Subtitle"
+      },
+      {
+        "id": "sysreq-vorname-7exobd",
+        "type": "vorname",
+        "label": "Vorname",
+        "required": true,
+        "lockType": true,
+        "systemKey": "vorname",
+        "description": "Wie im Ausweisdokument."
+      },
+      {
+        "id": "field-1779274927203",
+        "type": "document-acknowledgement",
+        "label": "0 selbstauskunft infoblatt",
+        "documentUrl": "/api/uploads/1779274922848-0_selbstauskunft_infoblatt__1_.pdf",
+        "documentLabel": "0 selbstauskunft infoblatt lesen",
+        "required": true
+      }
+    ],
+    "required": true,
+    "createdBy": "andrea",
+    "updatedBy": "andrea",
+    "createdAt": "2026-05-20T11:07:07.899Z",
+    "updatedAt": "2026-05-20T11:07:07.899Z"
+  },
+  {
+    "id": "block-8094aa62",
+    "title": "Neuer Block",
+    "fields": [
+      {
+        "id": "sysreq-vorname-43vjhd",
+        "type": "vorname",
+        "label": "Vorname",
+        "required": true,
+        "lockType": true,
+        "systemKey": "vorname",
+        "description": "Wie im Ausweisdokument."
+      }
+    ],
+    "required": true,
+    "createdBy": "andrea",
+    "updatedBy": "andrea",
+    "createdAt": "2026-05-20T11:28:45.247Z",
+    "updatedAt": "2026-05-20T11:29:42.691Z"
+  },
+  {
+    "id": "block-d2f1b409",
+    "title": "Neuer Block",
+    "fields": [
+      {
+        "id": "field-1779276614509",
+        "type": "numbers",
+        "label": "1234",
+        "required": true,
+        "description": "tyu"
+      }
+    ],
+    "required": true,
+    "createdBy": "andrea",
+    "updatedBy": "andrea",
+    "createdAt": "2026-05-20T11:30:15.682Z",
+    "updatedAt": "2026-05-20T11:30:15.682Z"
+  },
+  {
+    "id": "block-fc027ab7",
+    "title": "Neuer Block",
+    "fields": [
+      {
+        "id": "sysreq-nachname-gdce73",
         "type": "nachname",
         "label": "Nachname",
         "required": true,
@@ -17,54 +122,7 @@
     "required": true,
     "createdBy": "andrea",
     "updatedBy": "andrea",
-    "createdAt": "2026-05-19T16:22:34.116Z",
-    "updatedAt": "2026-05-20T07:46:59.457Z"
-  },
-  {
-    "id": "block-f480f2e9",
-    "title": "Document step",
-    "fields": [
-      {
-        "id": "field-1779207808586",
-        "type": "document-acknowledgement",
-        "label": "Document to sign",
-        "documentUrl": "/api/uploads/1779207807872-0_selbstauskunft_infoblatt__1_.pdf",
-        "documentLabel": "Document to sign lesen",
-        "required": true
-      }
-    ],
-    "required": true,
-    "createdBy": "andrea",
-    "updatedBy": "andrea",
-    "createdAt": "2026-05-19T16:23:30.881Z",
-    "updatedAt": "2026-05-19T16:23:30.881Z"
-  },
-  {
-    "id": "block-929eb654",
-    "title": "Neuer Block",
-    "fields": [
-      {
-        "id": "sysreq-vorname-6eo2s8",
-        "type": "vorname",
-        "label": "Vorname",
-        "required": true,
-        "lockType": true,
-        "systemKey": "vorname",
-        "description": "Wie im Ausweisdokument."
-      },
-      {
-        "id": "sysreq-email-sxd03l",
-        "type": "email",
-        "label": "E-Mail",
-        "required": true,
-        "lockType": true,
-        "systemKey": "email"
-      }
-    ],
-    "required": true,
-    "createdBy": "karl",
-    "updatedBy": "karl",
-    "createdAt": "2026-05-19T18:17:38.399Z",
-    "updatedAt": "2026-05-19T18:17:38.399Z"
+    "createdAt": "2026-05-20T11:32:03.969Z",
+    "updatedAt": "2026-05-20T11:32:03.969Z"
   }
 ]

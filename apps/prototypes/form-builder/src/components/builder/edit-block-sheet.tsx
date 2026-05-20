@@ -500,8 +500,8 @@ export function EditBlockSheet({
             {addType === null && canEdit && (
               <div className="space-y-2 pt-1">
                 <div className="flex items-center gap-2">
-                  {fieldPicker}
                   {profilePicker}
+                  {fieldPicker}
                 </div>
                 <div className="flex items-center justify-center">
                   {documentButton}

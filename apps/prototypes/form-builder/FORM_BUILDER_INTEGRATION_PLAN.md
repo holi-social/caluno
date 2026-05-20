@@ -142,13 +142,36 @@ GraphQL operations in `packages/data/src/repositories/block/block.graphql` (quer
 
 ### Built differently
 
-- **Field mutations**: prototype's [`useBlockFieldMutations`](src/lib/use-block-field-mutations.ts) does optimistic PUT-then-splice via REST. Replace with two patterns:
-  - **Batched approach** (recommended for simplicity): "save block" sends the entire field array; backend diffs and updates. Removes the per-field add/edit/delete/reorder round-trips. Same UX in the sheet, simpler backend.
-  - **Granular approach** (matches today's UX exactly): add `addBlockField`, `updateBlockField`, `deleteBlockField`, `reorderBlockFields` mutations. Higher fidelity to the prototype but quadruples the resolver surface.
-  - **Open question for PM.** Batched is faster to ship; granular is the prototype's current feel. Default: batched, escalate if the UX feels worse.
+- **Batched commit, client-side draft** (decided May 2026, prototype now ships this). The earlier `useBlockFieldMutations` PUT-on-every-keystroke pattern is **gone**. `EditBlockSheet` holds the whole edit session in local state (`localFields` + `title` + `description`); a single `onCommit(updatedBlock, { requestResubmit })` fires when the user explicitly clicks Speichern. Port this contract directly:
+  - Backend: one `updateBlock(id, input)` mutation that takes the full block payload (title, description, icon, fields, required) and writes it in one transaction. No `addBlockField` / `updateBlockField` / etc.
+  - Frontend: server action `updateBlock` wraps the GraphQL mutation. The sheet calls it on Speichern; nothing else PUTs.
+  - Why this matters for the real product: it removes the "rollback via PUT" mess (open question #2 in earlier drafts), kills concurrent-editor race conditions, and prevents the audit log from filling with mid-edit noise. The prototype kept the draft model purely in React state; the real product gets it almost for free via the existing `react-hook-form` + `next-safe-action` flow.
+- **`useBlockFieldMutations` is dead code** in v2 and should not be ported. It only lives at `src/components/v1/lib/` for the frozen v1 tree.
+- **`CreateBlockSheet` is a thin wrapper** now — it just holds a static seed Block, hands it to `EditBlockSheet`, and the `onCommit` POSTs to `/api/blocks` (becomes `createBlock` mutation in the real product). No more `draftRef` mirror. Port the new shape.
 - **Confirm dialogs**: replace [`ConfirmDialog`](src/components/confirm-dialog.tsx) (currently `AlertDialog`-based already; the v1 copies are `Dialog`-based — port the v2 file).
 - **Mutations**: convert every component-level `fetch('/api/blocks/...')` to call a server action that wraps the data-client repo.
 - **No undo/redo for blocks**: the prototype's `useUndoRedo` is form-level only; keep that scope.
+
+### Shared-block save prevention (new sub-feature)
+
+When an admin edits a block referenced by multiple forms, blindly saving would silently change every consumer. The prototype guards this with a confirmation dialog — port the same shape:
+
+- **Bypass rule**: `requiresConfirmation = usedInForms.length > 0 && !(currentFormId && onlyConsumer)`. Standalone blocks save silently. Form-editor entry + sole-consumer saves silently. Everything else (block-card entry, shared block) shows the dialog.
+- **Dialog content**: title states the form count; a `Verwendet in` eyebrow + outline badges list the affected forms.
+- **Two coupled save options** (visually paired in the dialog footer): **Speichern und neu einreichen lassen** (primary — Phase 2 wires this to the notification system, see Chunk 10) and **Stillschweigend speichern** (outline — silent commit, e.g. for typo fixes). Plus a separate **Kopie erstellen ({Title} Kopie)** affordance that POSTs a new block from the edit and leaves the original untouched. From the form editor, picking Kopie also swaps the current form's `blockRef` to the new block — wire `onSwapBlockRef` accordingly.
+- **No "Discard" button** — the dialog's X / Escape / click-outside reverts to the sheet so the user can keep editing; closing without saving simply throws away the local draft (the open-effect re-seeds from the persisted block next time).
+- **Toasts** via `sonner` on the parent's commit handler: differentiates resubmit vs silent (`"Block gespeichert. Freiwillige werden zur Neueinreichung aufgefordert."` vs `"Block gespeichert."`) so the user knows which path fired.
+- **Resubmit hook**: in the prototype this is just a different toast. In the real product the `requestResubmit: true` flag has to call the notification system — see Chunk 10 §"Resubmit propagation" below.
+
+### Inline-edit UX patterns to keep
+
+These come from the prototype's last polish pass and are worth a paragraph here so the porter doesn't strip them:
+
+- **FieldForm autosave-on-unfocus** (blur-commit). When focus leaves the inline FieldForm, it commits the field into the parent's draft. Explicit Abbrechen wins via a `cancellingRef` set on the button's `onMouseDown`. Idempotent commit via `committedRef` so blur + global Save in the same tick don't double-fire.
+- **Auto-open type picker** on a fresh new field, then focus the Feldname Input as soon as a type is picked. Document upload prefills the Feldname from the filename and `select()`s it.
+- **`scrollToError()` on the commit handle**. When the global Save fails validation on an in-progress field, scroll that FieldForm into view + surface the inline error.
+
+These all live entirely client-side; nothing changes when porting them. Note them in the design review with the same UX rules captured in `PROJECT_CONTEXT.md` (eliminate dead clicks, focus follows commitment, errors come to the user).
 
 ---
 
@@ -389,6 +412,16 @@ Almost nothing — `appliedTo` and `trigger-options.ts` are v1-only and don't tr
 - No synthetic rule IDs (`join:current`, `shift:abc`). Direct FKs.
 - No "applied to" UI on the form-builder side — the *trigger* owns the relation, the form is a passive resource. (Future: a read-only "wird genutzt von" panel on the form-builder page that lists the triggers referencing this form.)
 
+### Resubmit propagation (new — sourced from Chunk 2's save dialog)
+
+The Chunk 2 save dialog has two save modes — **Speichern und neu einreichen lassen** and **Stillschweigend speichern**. The prototype differentiates them with a toast only. In the real product the resubmit mode has to fan out:
+
+- For every form that references the edited block (`usedInForms`), find every `form_submissions` row whose `form_id` matches and `submitted_at >= block.previous_updated_at`. Those are the submissions to notify.
+- Notification target: the `submitter_user_id` on each row (skip when null — anonymous submissions can't be re-prompted).
+- Notification channel: TBD. Most likely a record in a `notifications` table + an email send. Lives in the notifications module, not the form-builder module. The form-builder side just emits the *intent* (e.g. a `BLOCK_CHANGED_NEEDS_RESUBMIT` event) and lets the notification system decide how to deliver.
+- Why it can't ship in MVP: the notification module doesn't exist yet, and the spec for "what does 'resubmit' mean for a volunteer" hasn't been written (do they edit their existing submission? create a new one and supersede the old? both?). Until that's decided, Phase 2 ships the dialog UX with **both modes routing to silent save server-side**; the notification flag is captured in the mutation input and ignored. When the notification module lands, the resolver gets one new dependency and one new side-effect call.
+- **Open question for PM** — see §13 item 9.
+
 ---
 
 ## 12. Permissions matrix
@@ -412,13 +445,18 @@ The prototype's `canEditBlock / canDeleteBlock / canEditForm / canDeleteForm / c
 Pull these into the PM/eng kickoff before phase 2 starts. Each blocks design choices downstream; deferring is fine, ambiguity is not.
 
 1. **Block scoping.** Are blocks org-unit-local, org-wide, or platform-wide? The prototype treats them as flat-global (any admin sees all blocks). The real product has a hierarchy (`organization_units` tree). MVP recommendation: org-unit-local with read-through to parent (a child sub-org can use any block created in its parent chain). Hits the prototype's reuse story without introducing platform-wide globals.
-2. **Form-field mutation granularity.** Batched save vs per-field mutations (§3). PM cost: more dev-time for granular but smoother feel during heavy editing sessions. Recommendation: ship batched, revisit if UX complains.
+2. **Form-field mutation granularity.** ✅ Resolved May 2026 — batched. The prototype now holds the whole edit session as a client-side draft and PUTs the full block in one shot on Speichern. See §3 "Batched commit" for details. Revisit only if the integration ever needs draft state to survive page navigation (current model loses the draft on close).
 3. **Anonymous submissions.** Can the public form URL be filled without an account? For membership-request forms, the answer is yes (the whole point is "I'd like to join"). For shift-application forms, the answer is probably no (you must be a member first). Encode per-form via `settings.allowAnonymous: boolean` — defaults to false.
 4. **Undo/redo across server save.** Local-only (undo stack clears on save) vs server-versioned (re-issue mutations). MVP: local-only, matches the prototype's behaviour exactly. Server-versioned is a quarter-long effort and not in this scope.
 5. **File storage backend** (§6). Needs eng-lead decision before Chunk 5 — this is now blocking MVP.
 6. **Profile editor**. Should volunteers be able to edit their profile entries outside of a form-submission flow? Not in MVP scope, but design should leave room — likely a `me/profile` page later that reuses [`src/components/form/profile-field-display.tsx`](src/components/form/profile-field-display.tsx) in edit mode.
 7. **Form versioning.** A volunteer fills a form, then admin edits the form — does the submission belong to the old or new version? MVP: no versioning, last-write-wins, submissions reference current form. Acceptable for v1 because submissions store their own `data` snapshot and the field IDs in that snapshot still resolve. Revisit when the first compliance question lands.
 8. **i18n**. Forms today are German-only. Prototype's `locale: 'de' | 'en'` field is unused but stored. Decide whether MVP supports English forms or just retains the field for forward compatibility.
+9. **Resubmit notification fan-out** (new — needed by Chunk 2's save dialog + Chunk 10). When admin picks **"Speichern und neu einreichen lassen"** on a shared block, who exactly gets notified, through which channel, and what action do they take on receipt? Three sub-questions:
+   - **Scope**: every volunteer whose submission predates the change, or only those whose specific fields actually changed? The latter is cheaper but the diff is non-trivial (which `block_fields.id` changed?).
+   - **Delivery**: email only, in-app notification, both? Tied to whatever the notifications module ends up being. Form-builder shouldn't dictate.
+   - **Semantics**: does "resubmit" mean re-fill from scratch, edit in place, or supersede the old submission with a new one? Affects `form_submissions` table shape (need a `supersedes_id` column?) and the audit story for compliance-flavoured forms.
+   - **MVP fallback** (proposed): ship the dialog UX with both modes routing to a silent save server-side; capture the flag in the mutation input and ignore it for now. Wire the fan-out when the notification module exists.
 
 ---
 
@@ -432,6 +470,8 @@ A one-page reference for the engineer scaffolding a chunk.
 - `src/lib/system-requirements.ts` — registry + factory + guards
 - `src/lib/predefined-fields.ts` — `FIELD_TYPE_OPTIONS`, `FIELD_TYPE_LABELS`, `getFieldDisplayLabel`
 - `src/lib/validation.ts` — client-side rules; also mirror server-side
+- `src/components/builder/edit-block-sheet.tsx` — **post-refactor shape**: one `onCommit(updated, { requestResubmit })`, no per-field op props, multi-form save dialog included
+- `src/components/builder/create-block-sheet.tsx` — thin wrapper over EditBlockSheet that POSTs on commit
 - `src/lib/build-steps.ts`, `src/lib/resolve-blocks.ts` — pure transformations
 - `src/lib/block-icon.tsx` — icon picker
 - `src/lib/use-undo-redo.ts` — generic, no storage coupling
@@ -446,7 +486,6 @@ A one-page reference for the engineer scaffolding a chunk.
 - All `data/*.json` store files → Drizzle tables
 - All inline `fetch('/api/...')` in components → server actions (`actionClient`) calling repos
 - `src/lib/users.ts` and the `canX(user)` helpers → `<RequirePermission>` + resolver `@Permissions(...)`
-- `src/lib/use-block-field-mutations.ts` → either dropped (batched-save) or rebuilt as a thin server-action wrapper
 - `src/lib/use-file-upload.ts` upload target → presigned URL flow
 - `src/lib/store-*.ts` files → service-layer code in NestJS
 - `appliedTo` + `trigger-options.ts` → trigger-side FKs (`membership_requests.form_id`, `shifts.application_form_id`)
@@ -456,6 +495,7 @@ A one-page reference for the engineer scaffolding a chunk.
 ### Don't port (prototype-only)
 
 - `src/components/user-switcher.tsx`, `src/components/version-switcher.tsx` — both are prototype-demo affordances.
+- `src/lib/use-block-field-mutations.ts` — already unused in v2 after the local-draft refactor. The integration uses `onCommit(updatedBlock)` instead. Only the v1 copy under `src/components/v1/lib/` keeps a reference.
 - `data/*.json` files (used for seed inspiration only).
 - The `/v1` route tree.
 - `REFACTOR_PLAN.md` (already-completed prototype refactor, separate from this integration plan).
