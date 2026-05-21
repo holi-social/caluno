@@ -1,6 +1,7 @@
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
+import type { GetShiftsQuery } from '@repo/data';
 import {
   DatePickerWithTimeRange,
   Field,
@@ -16,15 +17,20 @@ import {
   Textarea,
 } from '@repo/ui';
 import { useRouter } from 'next/navigation';
-import { useState, useTransition } from 'react';
+import { useCallback, useState, useTransition } from 'react';
 import { useForm } from 'react-hook-form';
 import { FormSheet, useFormSheet } from '@/components/form-sheet';
-import type { ShiftInstance } from '../queries';
 import { type TimeEntryFormValues, timeEntrySchema } from '../schemas';
+import {
+  type PickerValue,
+  ShiftPicker,
+} from './shift-instance-picker/shift-instance-picker';
+
+type Shift = GetShiftsQuery['shifts']['items'][0];
 
 interface TimeEntryFormProps {
   organizationUnitId: string;
-  shiftInstances?: ShiftInstance[];
+  shifts: Shift[];
   volunteers?: Array<{ id: string; name: string; email: string }>;
   initialValues?: Partial<TimeEntryFormValues>;
   mutate: (formData: TimeEntryFormValues) => Promise<{ serverError?: string }>;
@@ -32,15 +38,15 @@ interface TimeEntryFormProps {
   description: string;
 }
 
-export function TimeEntryForm({
+export const TimeEntryForm = ({
   organizationUnitId,
-  shiftInstances = [],
+  shifts,
   volunteers = [],
   mutate,
   initialValues,
   title,
   description,
-}: TimeEntryFormProps) {
+}: TimeEntryFormProps) => {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [serverError, setServerError] = useState<string>();
@@ -56,20 +62,34 @@ export function TimeEntryForm({
     resolver: zodResolver(timeEntrySchema),
     defaultValues: {
       organizationUnitId,
+      shiftId: '',
       shiftInstanceId: '',
       volunteerId: '',
       ...initialValues,
     },
   });
 
+  const shiftId = watch('shiftId');
   const shiftInstanceId = watch('shiftInstanceId');
   const startedAt = watch('startedAt');
   const endedAt = watch('endedAt');
 
-  const selectedShift = shiftInstances.find((s) => s.id === shiftInstanceId);
-  const shiftVolunteers = selectedShift?.volunteers || [];
-  const otherVolunteers = volunteers.filter(
-    (v) => !shiftVolunteers.some((sv) => sv.id === v.id),
+  //const selectedShift = shifts.find((s) => s.id === shiftInstanceId);
+  //const shiftVolunteers = selectedShift?. || [];
+  //const otherVolunteers = volunteers.filter(
+  //  (v) => !shiftVolunteers.some((sv) => sv.id === v.id),
+  //);
+  const otherVolunteers = volunteers;
+
+  const handleInstanceSelect = useCallback(
+    (value: PickerValue) => {
+      setValue('shiftId', value.shiftId);
+      setValue('shiftInstanceId', value.shiftInstanceId ?? '', {
+        shouldValidate: true,
+      });
+      setValue('volunteerId', '');
+    },
+    [setValue],
   );
 
   const onSubmit = async (formData: TimeEntryFormValues) => {
@@ -96,33 +116,15 @@ export function TimeEntryForm({
       onOpenChange={setOpen}
       formError={serverError}
     >
-      <Field>
-        <FieldLabel htmlFor="shiftInstanceId">
-          Select Shift <span className="text-destructive">*</span>
-        </FieldLabel>
-        <Select
-          value={shiftInstanceId}
-          onValueChange={(value) => {
-            setValue('shiftInstanceId', value);
-            setValue('volunteerId', '');
-          }}
-          disabled={pending}
-        >
-          <SelectTrigger>
-            <SelectValue placeholder="Select a shift" />
-          </SelectTrigger>
-          <SelectContent>
-            {shiftInstances.map((shift) => (
-              <SelectItem key={shift.id} value={shift.id}>
-                {shift.title}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        {errors.shiftInstanceId && (
-          <FieldError>{errors.shiftInstanceId.message}</FieldError>
-        )}
-      </Field>
+      <ShiftPicker
+        shifts={shifts}
+        value={{ shiftId, shiftInstanceId }}
+        onChange={handleInstanceSelect}
+        disabled={pending}
+      />
+      {errors.shiftInstanceId && (
+        <FieldError>{errors.shiftInstanceId.message}</FieldError>
+      )}
 
       <Field>
         <FieldLabel htmlFor="volunteerId">
@@ -137,19 +139,9 @@ export function TimeEntryForm({
             <SelectValue placeholder="Select a volunteer" />
           </SelectTrigger>
           <SelectContent>
-            {shiftVolunteers.length > 0 && (
-              <SelectGroup>
-                <SelectLabel>Shift Volunteers</SelectLabel>
-                {shiftVolunteers.map((volunteer) => (
-                  <SelectItem key={volunteer.id} value={volunteer.id}>
-                    {volunteer.name || volunteer.email}
-                  </SelectItem>
-                ))}
-              </SelectGroup>
-            )}
             {otherVolunteers.length > 0 && (
               <SelectGroup>
-                <SelectLabel>Other Volunteers</SelectLabel>
+                <SelectLabel>Volunteers</SelectLabel>
                 {otherVolunteers.map((volunteer) => (
                   <SelectItem key={volunteer.id} value={volunteer.id}>
                     {volunteer.name || volunteer.email}
@@ -195,4 +187,4 @@ export function TimeEntryForm({
       </Field>
     </FormSheet>
   );
-}
+};
