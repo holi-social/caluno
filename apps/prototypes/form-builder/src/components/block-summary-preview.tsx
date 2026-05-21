@@ -1,11 +1,12 @@
-import { Badge, Card, CardContent } from '@repo/ui';
 import type { Block } from '@/lib/types';
-import { FieldDataHint } from './field-data-hint';
+import { DraggableFieldRow } from './builder/draggable-field-row';
 
 /**
- * Inline, builder-side preview of a block's fields. Renders one shadow-less
- * card per field (label, optional description, type badge / document link).
- * Reusable; drop wherever a non-interactive summary is needed.
+ * Inline, builder-side preview of a block's fields. Renders the same shape
+ * as the block editor's field rows (border + bg-accent/40 for system fields)
+ * but without the interactive controls (no grip, no required toggle, no edit
+ * / delete). Required state is surfaced as a small "Pflicht" badge inline
+ * with the other tag chips; see `DraggableFieldRow` for that logic.
  */
 export function BlockSummaryPreview({ block }: { block: Block }) {
   if (block.fields.length === 0) {
@@ -17,31 +18,14 @@ export function BlockSummaryPreview({ block }: { block: Block }) {
   }
 
   return (
-    <div>
+    <div className="space-y-2">
       {block.fields.map((field) => (
-        <Card
+        <DraggableFieldRow
           key={field.id}
-          className="bg-muted/40 mb-2 border-none shadow-none last:mb-0"
-        >
-          <CardContent className="space-y-1.5 px-6 py-1">
-            <div className="flex items-start justify-between gap-3">
-              <p className="text-sm font-semibold">{field.label}</p>
-              {field.required && (
-                <Badge variant="secondary" className="shrink-0 text-xs">
-                  Pflicht
-                </Badge>
-              )}
-            </div>
-            {field.description && (
-              <p className="text-muted-foreground text-sm">
-                {field.description}
-              </p>
-            )}
-            <div className="pt-1">
-              <FieldDataHint field={field} />
-            </div>
-          </CardContent>
-        </Card>
+          field={field}
+          canSort={false}
+          dragging={false}
+        />
       ))}
     </div>
   );

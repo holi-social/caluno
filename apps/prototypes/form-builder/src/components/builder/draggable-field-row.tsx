@@ -51,16 +51,18 @@ export function DraggableFieldRow({
         e.preventDefault();
       }}
     >
-      <button
-        type="button"
-        className="text-muted-foreground cursor-grab active:cursor-grabbing"
-        aria-label="Feld verschieben"
-        draggable={canSort}
-        onDragStart={() => onDragStart?.()}
-        onDragEnd={() => onDragEnd?.()}
-      >
-        <GripVertical className="size-4" />
-      </button>
+      {canSort && (
+        <button
+          type="button"
+          className="text-muted-foreground cursor-grab active:cursor-grabbing"
+          aria-label="Feld verschieben"
+          draggable={canSort}
+          onDragStart={() => onDragStart?.()}
+          onDragEnd={() => onDragEnd?.()}
+        >
+          <GripVertical className="size-4" />
+        </button>
+      )}
 
       <div className="flex min-w-0 flex-1 items-stretch gap-2">
         <button
@@ -73,7 +75,12 @@ export function DraggableFieldRow({
             {isSystemField && (
               <UserCircle2 className="text-muted-foreground size-4 shrink-0" />
             )}
-            <span className="text-sm font-medium">{field.label}</span>
+            <span className="text-base font-medium">
+              {field.label}
+              {field.required && !isStaticText && (
+                <span className="text-destructive ml-1">*</span>
+              )}
+            </span>
           </div>
           {field.description && (
             <p className="text-muted-foreground mt-0.5 text-sm">
@@ -99,7 +106,7 @@ export function DraggableFieldRow({
             )}
           </div>
         </button>
-        {!isStaticText && (
+        {onToggleRequired && !isStaticText && (
           <div className="flex shrink-0 items-center gap-2">
             <span className="text-muted-foreground text-sm font-medium">
               {field.required ? 'Pflichtig' : 'Optional'}
@@ -120,7 +127,6 @@ export function DraggableFieldRow({
                 size="sm"
                 checked={field.required}
                 onCheckedChange={(checked) => onToggleRequired?.(checked)}
-                disabled={!onToggleRequired}
               />
             )}
           </div>
