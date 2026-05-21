@@ -151,16 +151,11 @@ export const TimeEntryForm = ({
             <SelectValue placeholder="Select a volunteer" />
           </SelectTrigger>
           <SelectContent>
-            {volunteers.length > 0 && (
-              <SelectGroup>
-                <SelectLabel>Volunteers</SelectLabel>
-                {volunteers.map((volunteer) => (
-                  <SelectItem key={volunteer.id} value={volunteer.id}>
-                    {volunteer.name || volunteer.email}
-                  </SelectItem>
-                ))}
-              </SelectGroup>
-            )}
+            {volunteers.map((volunteer) => (
+              <SelectItem key={volunteer.id} value={volunteer.id}>
+                {volunteer.name || volunteer.email}
+              </SelectItem>
+            ))}
           </SelectContent>
         </Select>
         {errors.volunteerId && (

@@ -10,7 +10,7 @@ export function useShiftInstances(shiftId?: string) {
 
   return useQuery({
     queryKey: ['shiftInstances', shiftId],
-    queryFn: () => (shiftId ? repository.findByShiftId(shiftId) : []),
+    queryFn: () => (shiftId ? repository.findInstances(shiftId) : []),
     enabled: !!shiftId,
   });
 }

@@ -18,7 +18,8 @@ import {
 } from '../base/base.repository';
 
 export type ActiveShift = GetActiveShiftsQuery['activeShifts']['items'][number];
-export type ShiftInstanceItem = GetShiftInstancesQuery['shiftInstances'][number];
+export type ShiftInstanceItem =
+  GetShiftInstancesQuery['shiftInstances'][number];
 export type RawShift = GetShiftQuery['shift'];
 export interface ShiftDetail extends RawShift {
   startDate: Date;
@@ -148,7 +149,7 @@ export class ShiftRepository extends BaseRepository {
     }
   }
 
-  async findByShiftId(shiftId: string) {
+  async findInstances(shiftId: string) {
     try {
       const data = await this.sdk.GetShiftInstances({ shiftId });
       return data.shiftInstances;
