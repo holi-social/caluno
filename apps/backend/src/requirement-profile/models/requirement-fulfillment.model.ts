@@ -7,10 +7,10 @@ import { Requirement } from './requirement.model';
 import { RequirementProfileSubmission } from './requirement-profile-submission.model';
 
 type RequirementFulfillmentValue = {
-  text?: string | null;
-  date?: string | null;
-  checked?: boolean | null;
-  documentId?: string | null;
+  text: string | null;
+  date: string | null;
+  checked: boolean | null;
+  documentId: string | null;
 };
 
 function parseValue(value: string | null): RequirementFulfillmentValue | null {
@@ -43,33 +43,33 @@ function parseValue(value: string | null): RequirementFulfillmentValue | null {
 })
 export class RequirementFulfillment {
   @Field(() => ID)
-  id: string;
+  id!: string;
 
   @Field(() => OrganizationUserProfile, { nullable: true })
-  organizationUserProfile: OrganizationUserProfile | null;
+  organizationUserProfile!: OrganizationUserProfile | null;
 
   @Field(() => RequirementType)
-  type: RequirementType;
+  type!: RequirementType;
 
-  value: string | null;
+  value!: string | null;
 
   @Field(() => RequirementFulfillmentStatus)
-  status: RequirementFulfillmentStatus;
+  status!: RequirementFulfillmentStatus;
 
   @Field(() => Date, { nullable: true })
-  submittedAt: Date | null;
+  submittedAt!: Date | null;
 
   @Field(() => Date, { nullable: true })
-  reviewedAt: Date | null;
+  reviewedAt!: Date | null;
 
   @Field(() => RequirementProfileSubmission)
-  submission: RequirementProfileSubmission;
+  submission!: RequirementProfileSubmission;
 
   @Field(() => Requirement)
-  requirement: Requirement;
+  requirement!: Requirement;
 
   @Field(() => User, { nullable: true })
-  reviewedBy: User | null;
+  reviewedBy!: User | null;
 }
 
 @ObjectType({

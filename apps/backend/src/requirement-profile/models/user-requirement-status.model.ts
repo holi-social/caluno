@@ -4,11 +4,11 @@ import { RequirementFulfillmentStatus } from '../enums';
 @ObjectType()
 export class UserRequirementStatus {
   @Field(() => ID)
-  requirementId: string;
+  requirementId!: string;
 
   @Field(() => String)
-  name: string;
+  name!: string;
 
   @Field(() => RequirementFulfillmentStatus)
-  status: RequirementFulfillmentStatus;
+  status!: RequirementFulfillmentStatus;
 }

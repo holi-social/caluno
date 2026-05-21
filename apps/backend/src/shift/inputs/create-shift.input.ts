@@ -8,29 +8,29 @@ registerEnumType(ShiftVisibility, {
 @InputType()
 export class CreateShiftInput {
   @Field(() => String)
-  title: string;
+  title!: string;
 
   @Field(() => String, { nullable: true })
-  instructions: string | null;
+  instructions!: string | null;
 
   @Field(() => Date)
-  startsAt: Date;
+  startsAt!: Date;
 
   @Field(() => Date)
-  endsAt: Date;
+  endsAt!: Date;
 
   @Field(() => String, { nullable: true })
-  location: string | null;
+  location!: string | null;
 
   @Field(() => [String], { nullable: true })
-  invitedMemberIds: string[];
+  invitedMemberIds!: string[];
 
   @Field(() => ShiftVisibility, { defaultValue: ShiftVisibility.ALL_MEMBERS })
-  visibility: ShiftVisibility;
+  visibility!: ShiftVisibility;
 
   @Field(() => Int, { nullable: true })
-  maxVolunteers: number | null;
+  maxVolunteers!: number | null;
 
   @Field(() => String, { nullable: true })
-  rrule: string | null;
+  rrule!: string | null;
 }
