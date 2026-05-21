@@ -3,14 +3,14 @@ import { Field, ID, ObjectType } from '@nestjs/graphql';
 @ObjectType()
 export class Document {
   @Field(() => ID)
-  id: string;
+  id!: string;
 
   @Field(() => String)
-  storageKey: string;
+  storageKey!: string;
 
   @Field(() => String)
-  mimeType: string;
+  mimeType!: string;
 
   @Field(() => Date)
-  uploadedAt: Date;
+  uploadedAt!: Date;
 }

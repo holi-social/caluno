@@ -9,10 +9,10 @@ export function createPaginatedResponseType<TItem>(
   @ObjectType(`${name}PaginatedResponse`)
   class PaginatedResponse {
     @Field(() => [ItemClass])
-    items: TItem[];
+    items!: TItem[];
 
     @Field(() => PaginationInfo)
-    pagination: PaginationInfo;
+    pagination!: PaginationInfo;
 
     constructor({
       items,

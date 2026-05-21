@@ -5,11 +5,11 @@ import type { OrganizationNode } from '../types/organization-node';
 @ObjectType()
 export class OrganizationTree {
   @Field(() => ID)
-  id: string;
+  id!: string;
 
   @Field(() => String)
-  name: string;
+  name!: string;
 
   @Field(() => GraphQLJSON)
-  nodes: OrganizationNode[];
+  nodes!: OrganizationNode[];
 }

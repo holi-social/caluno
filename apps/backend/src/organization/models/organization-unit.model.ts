@@ -8,49 +8,49 @@ import { OrganizationUnitType } from './organization-unit-type.model';
 @ObjectType()
 export class OrganizationUnit {
   @Field(() => ID)
-  id: string;
+  id!: string;
 
   @Field(() => String)
-  name: string;
+  name!: string;
 
   @Field(() => String)
-  slug: string;
+  slug!: string;
 
   @Field(() => String, { nullable: true })
-  logoUrl: string | null;
+  logoUrl!: string | null;
 
   @Field(() => String, { nullable: true })
-  websiteUrl: string | null;
+  websiteUrl!: string | null;
 
   @Field(() => String, { nullable: true })
-  email: string | null;
+  email!: string | null;
 
   @Field(() => String, { nullable: true })
-  phone: string | null;
+  phone!: string | null;
 
   @Field(() => String, { nullable: true })
-  address: string | null;
+  address!: string | null;
 
   @Field(() => String, { nullable: true })
-  description: string | null;
+  description!: string | null;
 
   @Field(() => Organization)
-  organization: Organization;
+  organization!: Organization;
 
   @Field(() => OrganizationUnitType)
-  type: OrganizationUnitType;
+  type!: OrganizationUnitType;
 
   @Field(() => OrganizationUnit, { nullable: true })
-  parent: OrganizationUnit | null;
+  parent!: OrganizationUnit | null;
 
   @Field(() => [OrganizationUnit])
-  children: OrganizationUnit[];
+  children!: OrganizationUnit[];
 
   @Field(() => RequirementProfile, { nullable: true })
-  requiredMembershipRequirementProfile: RequirementProfile | null;
+  requiredMembershipRequirementProfile!: RequirementProfile | null;
 
   @Field(() => Date, { nullable: true })
-  deletedAt: Date;
+  deletedAt!: Date;
 }
 
 export const OrganizationUnitPaginatedResponse =

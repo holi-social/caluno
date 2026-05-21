@@ -10,31 +10,31 @@ import { RequirementProfile } from './requirement-profile.model';
 @ObjectType()
 export class RequirementProfileSubmission {
   @Field(() => ID)
-  id: string;
+  id!: string;
 
   @Field(() => Membership, { nullable: true })
-  membership: Membership | null;
+  membership!: Membership | null;
 
   @Field(() => MembershipRequest, { nullable: true })
-  membershipRequest: MembershipRequest | null;
+  membershipRequest!: MembershipRequest | null;
 
   @Field(() => RequirementProfileSubmissionStatus)
-  status: RequirementProfileSubmissionStatus;
+  status!: RequirementProfileSubmissionStatus;
 
   @Field(() => Date, { nullable: true })
-  submittedAt: Date | null;
+  submittedAt!: Date | null;
 
   @Field(() => Date, { nullable: true })
-  reviewedAt: Date | null;
+  reviewedAt!: Date | null;
 
   @Field(() => RequirementProfile)
-  requirementProfile: RequirementProfile;
+  requirementProfile!: RequirementProfile;
 
   @Field(() => [RequirementFulfillment], { nullable: true })
-  fulfillments: RequirementFulfillment[];
+  fulfillments!: RequirementFulfillment[];
 
   @Field(() => User, { nullable: true })
-  reviewedBy: User | null;
+  reviewedBy!: User | null;
 }
 
 export const RequirementProfileSubmissionPaginatedResponse =

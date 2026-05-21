@@ -6,40 +6,40 @@ import { Shift } from './shift.model';
 @ObjectType()
 export class ShiftInstance {
   @Field(() => ID)
-  id: string;
+  id!: string;
 
   @Field(() => Shift)
-  master: Shift;
+  master!: Shift;
 
   @Field(() => Date)
-  actualStartsAt: Date;
+  actualStartsAt!: Date;
 
   @Field(() => Date)
-  actualEndsAt: Date;
+  actualEndsAt!: Date;
 
   @Field(() => String, { nullable: true })
-  overrideTitle: string | null;
+  overrideTitle!: string | null;
 
   @Field(() => String, { nullable: true })
-  overrideInstructions: string | null;
+  overrideInstructions!: string | null;
 
   @Field(() => String, { nullable: true })
-  overrideLocation: string | null;
+  overrideLocation!: string | null;
 
   @Field(() => Int, { nullable: true })
-  overrideMaxVolunteers: number | null;
+  overrideMaxVolunteers!: number | null;
 
   @Field(() => Boolean)
-  isException: boolean;
+  isException!: boolean;
 
   @Field(() => Boolean)
-  isCancelled: boolean;
+  isCancelled!: boolean;
 
   @Field(() => Int)
-  occurrenceIndex: number;
+  occurrenceIndex!: number;
 
   @Field(() => [User], { nullable: true })
-  volunteers: User[];
+  volunteers!: User[];
 }
 
 export const ShiftInstancePaginatedResponse =

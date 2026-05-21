@@ -4,14 +4,14 @@ import { OrganizationUserProfileStatus } from '../enums';
 @ObjectType()
 export class OrganizationUserProfile {
   @Field(() => ID)
-  id: string;
+  id!: string;
 
   @Field(() => OrganizationUserProfileStatus)
-  status: OrganizationUserProfileStatus;
+  status!: OrganizationUserProfileStatus;
 
   @Field(() => Boolean)
-  userProfileAccessApproved: boolean;
+  userProfileAccessApproved!: boolean;
 
   @Field(() => String, { nullable: true })
-  note: string | null;
+  note!: string | null;
 }

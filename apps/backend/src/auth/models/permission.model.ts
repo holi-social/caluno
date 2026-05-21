@@ -8,11 +8,11 @@ registerEnumType(PermissionKey, {
 @ObjectType()
 export class Permission {
   @Field(() => ID)
-  id: string;
+  id!: string;
 
   @Field(() => PermissionKey)
-  key: PermissionKey;
+  key!: PermissionKey;
 
   @Field(() => String, { nullable: true })
-  description: string | null;
+  description!: string | null;
 }

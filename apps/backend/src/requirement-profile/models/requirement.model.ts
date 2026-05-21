@@ -5,22 +5,22 @@ import { RequirementType } from '../enums';
 @ObjectType()
 export class Requirement {
   @Field(() => ID)
-  id: string;
+  id!: string;
 
   @Field(() => String)
-  organizationId: string;
+  organizationId!: string;
 
   @Field(() => RequirementType)
-  type: RequirementType;
+  type!: RequirementType;
 
   @Field(() => String)
-  name: string;
+  name!: string;
 
   @Field(() => String, { nullable: true })
-  description: string | null;
+  description!: string | null;
 
   @Field(() => Boolean)
-  mandatory: boolean;
+  mandatory!: boolean;
 }
 
 export const RequirementPaginatedResponse =
