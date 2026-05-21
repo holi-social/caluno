@@ -14,6 +14,7 @@ export const deleteTimeEntrySchema = z.object({
 
 export const timeEntrySchema = z.object({
   organizationUnitId: z.string().min(1, 'Organization Unit is required'),
+  shiftId: z.string().optional(),
   shiftInstanceId: z.string().min(1, 'Shift is required'),
   volunteerId: z.string().min(1, 'Volunteer is required'),
   startedAt: z.date('Start time is required'),
