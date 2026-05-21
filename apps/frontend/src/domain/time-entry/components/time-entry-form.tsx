@@ -145,7 +145,7 @@ export const TimeEntryForm = ({
         <Select
           value={watch('volunteerId')}
           onValueChange={(value) => setValue('volunteerId', value)}
-          disabled={pending || !shiftInstanceId}
+          disabled={pending}
         >
           <SelectTrigger>
             <SelectValue placeholder="Select a volunteer" />
