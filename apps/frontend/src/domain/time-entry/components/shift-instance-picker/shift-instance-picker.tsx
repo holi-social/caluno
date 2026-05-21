@@ -1,6 +1,10 @@
 'use client';
 
-import { formatRrulePattern, type GetShiftsQuery } from '@repo/data';
+import {
+  formatRrulePattern,
+  type GetShiftsQuery,
+  type ShiftInstanceItem,
+} from '@repo/data';
 import { useShiftInstances } from '@repo/data/react';
 import {
   Field,
@@ -26,7 +30,7 @@ type Shift = GetShiftsQuery['shifts']['items'][0];
 type ShiftPickerProps = {
   shifts: Shift[];
   value: PickerValue;
-  onChange: (value: PickerValue) => void;
+  onChange: (value: PickerValue, shiftInstance?: ShiftInstanceItem) => void;
   disabled?: boolean;
 };
 
@@ -51,8 +55,6 @@ export function ShiftPicker({
   onChange,
   disabled,
 }: ShiftPickerProps) {
-  console.log('RENDER', disabled, value);
-
   const {
     data: instances,
     isLoading,
@@ -73,10 +75,13 @@ export function ShiftPicker({
       instances &&
       instances.length > 0
     ) {
-      onChange({
-        shiftId: selectedShift.id,
-        shiftInstanceId: instances[0]?.id,
-      });
+      onChange(
+        {
+          shiftId: selectedShift.id,
+          shiftInstanceId: instances[0]?.id,
+        },
+        instances[0],
+      );
     }
   }, [selectedShift, instances, onChange, value.shiftInstanceId]);
 
@@ -85,7 +90,8 @@ export function ShiftPicker({
   };
 
   const handleInstanceSelect = (shiftInstanceId: string) => {
-    onChange({ shiftId: value.shiftId, shiftInstanceId });
+    const instance = instances?.find((i) => i.id === shiftInstanceId);
+    onChange({ shiftId: value.shiftId, shiftInstanceId }, instance);
   };
 
   return (
