@@ -1,7 +1,7 @@
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
-import type { GetShiftsQuery } from '@repo/data';
+import type { GetShiftsQuery, ShiftInstanceItem } from '@repo/data';
 import {
   DatePickerWithTimeRange,
   Field,
@@ -17,10 +17,11 @@ import {
   Textarea,
 } from '@repo/ui';
 import { useRouter } from 'next/navigation';
-import { useCallback, useState, useTransition } from 'react';
+import { useCallback, useEffect, useState, useTransition } from 'react';
 import { useForm } from 'react-hook-form';
 import { FormSheet, useFormSheet } from '@/components/form-sheet';
 import { type TimeEntryFormValues, timeEntrySchema } from '../schemas';
+
 import {
   type PickerValue,
   ShiftPicker,
@@ -50,6 +51,8 @@ export const TimeEntryForm = ({
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [serverError, setServerError] = useState<string>();
+  const [selectedInstance, setSelectedInstance] = useState<ShiftInstanceItem>();
+
   const { open, setOpen } = useFormSheet();
 
   const {
@@ -74,20 +77,29 @@ export const TimeEntryForm = ({
   const startedAt = watch('startedAt');
   const endedAt = watch('endedAt');
 
-  //const selectedShift = shifts.find((s) => s.id === shiftInstanceId);
-  //const shiftVolunteers = selectedShift?. || [];
-  //const otherVolunteers = volunteers.filter(
-  //  (v) => !shiftVolunteers.some((sv) => sv.id === v.id),
-  //);
-  const otherVolunteers = volunteers;
+  //  When an instance is selected, default the time entry to the instances date range
+  //  But don't overwrite any initial range that would be set via the Edit form
+  useEffect(() => {
+    if (
+      selectedInstance &&
+      !initialValues?.startedAt &&
+      !initialValues?.endedAt
+    ) {
+      setValue('startedAt', new Date(selectedInstance.actualStartsAt));
+      setValue('endedAt', new Date(selectedInstance.actualEndsAt));
+    }
+  }, [
+    selectedInstance,
+    setValue,
+    initialValues?.endedAt,
+    initialValues?.startedAt,
+  ]);
 
   const handleInstanceSelect = useCallback(
-    (value: PickerValue) => {
+    (value: PickerValue, instance?: ShiftInstanceItem) => {
       setValue('shiftId', value.shiftId);
-      setValue('shiftInstanceId', value.shiftInstanceId ?? '', {
-        shouldValidate: true,
-      });
-      setValue('volunteerId', '');
+      setValue('shiftInstanceId', value.shiftInstanceId ?? '');
+      setSelectedInstance(instance);
     },
     [setValue],
   );
@@ -139,10 +151,10 @@ export const TimeEntryForm = ({
             <SelectValue placeholder="Select a volunteer" />
           </SelectTrigger>
           <SelectContent>
-            {otherVolunteers.length > 0 && (
+            {volunteers.length > 0 && (
               <SelectGroup>
                 <SelectLabel>Volunteers</SelectLabel>
-                {otherVolunteers.map((volunteer) => (
+                {volunteers.map((volunteer) => (
                   <SelectItem key={volunteer.id} value={volunteer.id}>
                     {volunteer.name || volunteer.email}
                   </SelectItem>
