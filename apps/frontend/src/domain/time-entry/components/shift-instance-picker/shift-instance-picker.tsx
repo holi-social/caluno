@@ -34,16 +34,17 @@ type ShiftPickerProps = {
   disabled?: boolean;
 };
 
-const shiftLabel = (
-  shift: Shift,
-  instance?: { actualStartsAt: string; actualEndsAt: string },
-) => {
-  const label = getShiftOptionLabel(shift);
-  if (!instance) return label;
-  return `${label} · ${formatDate(new Date(instance.actualStartsAt))}`;
+const shiftInstanceLabel = (shift: Shift, instance?: ShiftInstanceItem) => {
+  if (instance) {
+    const start = new Date(instance.actualStartsAt);
+    const end = new Date(instance.actualEndsAt);
+    return `${shift.title} · ${formatDate(start)} ${formatTime(start)}–${formatTime(end)}`;
+  } else {
+    return shiftLabel(shift);
+  }
 };
 
-const getShiftOptionLabel = (shift: Shift) => {
+const shiftLabel = (shift: Shift) => {
   const start = new Date(shift.originalStartsAt);
   const end = new Date(start.getTime() + shift.durationMinutes * 60000);
   return `${shift.title} · ${formatRrulePattern(shift.rrule)}  ${formatTime(start)}–${formatTime(end)}`;
@@ -109,7 +110,7 @@ export function ShiftPicker({
           <SelectValue
             placeholder={
               selectedShift
-                ? shiftLabel(selectedShift, selectedInstance)
+                ? shiftInstanceLabel(selectedShift, selectedInstance)
                 : 'Select a shift'
             }
           />
@@ -117,7 +118,7 @@ export function ShiftPicker({
         <SelectContent>
           {shifts.map((shift) => (
             <SelectItem key={shift.id} value={shift.id}>
-              {getShiftOptionLabel(shift)}
+              {shiftLabel(shift)}
             </SelectItem>
           ))}
         </SelectContent>
