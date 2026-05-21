@@ -47,10 +47,10 @@ export function ShiftInstanceCalendar({
   }, [selectedInstanceId, instances]);
 
   return (
-    <div className="rounded-md border p-3">
+    <div className="rounded-md border p-2 w-96">
       <Calendar
-        className="w-full"
         mode="single"
+        className="w-full"
         selected={
           selectedInstance ? new Date(selectedInstance.actualEndsAt) : undefined
         }
@@ -63,6 +63,11 @@ export function ShiftInstanceCalendar({
         }}
         startMonth={monthRange.startMonth}
         endMonth={monthRange.endMonth}
+        defaultMonth={
+          selectedInstance
+            ? new Date(selectedInstance.actualStartsAt)
+            : undefined
+        }
         disabled={(date) =>
           disabled || !instancesByDate.has(date.toDateString())
         }
