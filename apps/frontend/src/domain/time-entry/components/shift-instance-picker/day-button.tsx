@@ -1,31 +1,13 @@
-import { cn } from '@repo/ui';
-
-type DayButtonComponentProps = {
-  day: { date: Date };
-  modifiers: Record<string, boolean>;
-  className?: string;
-  children?: React.ReactNode;
-};
+import { CalendarDayButton, cn } from '@repo/ui';
 
 export const DayButton = ({
-  day,
   modifiers,
-  className,
-}: DayButtonComponentProps) => {
+  children,
+  ...props
+}: React.ComponentProps<typeof CalendarDayButton>) => {
   return (
-    <button
-      type="button"
-      className={cn(
-        'relative inline-flex flex-col items-center justify-center rounded-md text-sm leading-none font-normal',
-        modifiers.selected && 'bg-primary text-primary-foreground',
-        modifiers.today &&
-          !modifiers.selected &&
-          'bg-accent text-accent-foreground',
-        modifiers.disabled && 'text-muted-foreground opacity-50 cursor-default',
-        className,
-      )}
-    >
-      {day.date.getDate()}
+    <CalendarDayButton modifiers={modifiers} {...props}>
+      {children}
       {modifiers.hasInstance && (
         <span
           className={cn(
@@ -34,6 +16,6 @@ export const DayButton = ({
           )}
         />
       )}
-    </button>
+    </CalendarDayButton>
   );
 };
