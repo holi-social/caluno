@@ -5,20 +5,20 @@ import { Permission } from './permission.model';
 @ObjectType()
 export class Role {
   @Field(() => ID)
-  id: string;
+  id!: string;
 
   @Field(() => String)
-  name: string;
+  name!: string;
 
   @Field(() => String, { nullable: true })
-  description: string | null;
+  description!: string | null;
 
   @Field(() => Boolean)
-  isInternal: boolean;
+  isInternal!: boolean;
 
   @Field(() => [Permission])
-  permissions: Permission[];
+  permissions!: Permission[];
 
   @Field(() => Organization)
-  organization: Organization;
+  organization!: Organization;
 }

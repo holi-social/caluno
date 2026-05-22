@@ -4,20 +4,20 @@ import { Permission } from './permission.model';
 @ObjectType()
 export class PermissionGroupItem {
   @Field()
-  label: string;
+  label!: string;
 
   @Field(() => Permission)
-  permission: Permission;
+  permission!: Permission;
 }
 
 @ObjectType()
 export class PermissionGroup {
   @Field()
-  key: string;
+  key!: string;
 
   @Field()
-  label: string;
+  label!: string;
 
   @Field(() => [PermissionGroupItem])
-  items: PermissionGroupItem[];
+  items!: PermissionGroupItem[];
 }

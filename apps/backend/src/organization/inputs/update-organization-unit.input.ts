@@ -6,7 +6,7 @@ export class UpdateOrganizationUnitInput extends PartialType(
   CreateOrganizationUnitInput,
 ) {
   @Field(() => String)
-  organizationId: string;
+  organizationId!: string;
 
   @Field(() => String, { nullable: true })
   requiredMembershipRequirementProfileId?: string | null;

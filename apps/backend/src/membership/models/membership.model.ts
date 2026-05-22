@@ -6,13 +6,13 @@ import { User } from '../../user/models/user.model';
 @ObjectType()
 export class Membership {
   @Field(() => ID)
-  id: string;
+  id!: string;
 
   @Field(() => User)
-  user: User;
+  user!: User;
 
   @Field(() => Organization)
-  organization: Organization;
+  organization!: Organization;
 }
 
 export const MembershipPaginatedResponse =

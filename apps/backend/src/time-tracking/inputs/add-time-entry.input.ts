@@ -3,17 +3,17 @@ import { Field, InputType } from '@nestjs/graphql';
 @InputType()
 export class AddTimeEntryInput {
   @Field(() => String)
-  shiftInstanceId: string;
+  shiftInstanceId!: string;
 
   @Field(() => String)
-  volunteerId: string;
+  volunteerId!: string;
 
   @Field(() => Date)
-  startedAt: Date;
+  startedAt!: Date;
 
   @Field(() => Date, { nullable: true })
-  endedAt: Date | null;
+  endedAt!: Date | null;
 
   @Field(() => String, { nullable: true })
-  notes: string | null;
+  notes!: string | null;
 }

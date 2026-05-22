@@ -13,5 +13,5 @@ export class UpdateMembershipRequestInput {
   rejectionReason?: string;
 
   @Field(() => MembershipRequestStatus)
-  status: MembershipRequestStatus;
+  status!: MembershipRequestStatus;
 }

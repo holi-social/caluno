@@ -7,17 +7,17 @@ import { Shift } from './shift.model';
 @ObjectType()
 export class JoinShiftResult {
   @Field(() => JoinStatus)
-  status: JoinStatus;
+  status!: JoinStatus;
 
   @Field(() => Shift)
-  shift: Shift;
+  shift!: Shift;
 
   @Field(() => ID, { nullable: true })
-  membershipRequestId: string | null;
+  membershipRequestId!: string | null;
 
   @Field(() => RequirementProfile, { nullable: true })
-  requirementProfile: RequirementProfile | null;
+  requirementProfile!: RequirementProfile | null;
 
   @Field(() => [UserRequirementStatus], { nullable: true })
-  requirementStatuses: UserRequirementStatus[] | null;
+  requirementStatuses!: UserRequirementStatus[] | null;
 }

@@ -51,20 +51,20 @@ export default async function TimeEntryDetailPage({
             <CardContent>
               <ul className="space-y-4">
                 <li className="flex gap-2">
-                  <Timer className="text-muted-foreground shrink-0" />
-                  <span>{formatDuration(entry)}</span>
-                </li>
-                <li className="flex gap-2">
-                  <Calendars className="text-muted-foreground shrink-0" />
-                  <span>{formatTimeRange(entry)}</span>
-                </li>
-                <li className="flex gap-2">
                   <User className="text-muted-foreground shrink-0" />
                   <span>
                     {entry.volunteer?.name ??
                       entry.volunteer?.email ??
                       'Unknown volunteer'}
                   </span>
+                </li>
+                <li className="flex gap-2">
+                  <Timer className="text-muted-foreground shrink-0" />
+                  <span>{formatDuration(entry)}</span>
+                </li>
+                <li className="flex gap-2">
+                  <Calendars className="text-muted-foreground shrink-0" />
+                  <span>{formatTimeRange(entry)}</span>
                 </li>
 
                 {entry.notes && (

@@ -11,31 +11,31 @@ registerEnumType(MembershipRequestStatus, {
 @ObjectType()
 export class MembershipRequest {
   @Field(() => ID)
-  id: string;
+  id!: string;
 
   @Field(() => User)
-  user: User;
+  user!: User;
 
   @Field(() => OrganizationUnit)
-  organizationUnit: OrganizationUnit;
+  organizationUnit!: OrganizationUnit;
 
   @Field(() => User, { nullable: true })
-  reviewedBy: User | null;
+  reviewedBy!: User | null;
 
   @Field(() => Date, { nullable: true })
-  reviewedAt: Date | null;
+  reviewedAt!: Date | null;
 
   @Field(() => String, { nullable: true })
-  rejectionReason: string | null;
+  rejectionReason!: string | null;
 
   @Field(() => MembershipRequestStatus)
-  status: MembershipRequestStatus;
+  status!: MembershipRequestStatus;
 
   @Field(() => Date)
-  createdAt: Date;
+  createdAt!: Date;
 
   @Field(() => Date)
-  updatedAt: Date;
+  updatedAt!: Date;
 }
 
 export const MembershipRequestPaginatedResponse =

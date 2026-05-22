@@ -6,14 +6,14 @@ import { JoinStatus } from '../../shared/enums/join-status.enum';
 @ObjectType()
 export class JoinOrganizationResult {
   @Field(() => JoinStatus)
-  status: JoinStatus;
+  status!: JoinStatus;
 
   @Field(() => ID, { nullable: true })
-  membershipRequestId: string | null;
+  membershipRequestId!: string | null;
 
   @Field(() => RequirementProfile, { nullable: true })
-  requirementProfile: RequirementProfile | null;
+  requirementProfile!: RequirementProfile | null;
 
   @Field(() => [UserRequirementStatus], { nullable: true })
-  requirementStatuses: UserRequirementStatus[] | null;
+  requirementStatuses!: UserRequirementStatus[] | null;
 }

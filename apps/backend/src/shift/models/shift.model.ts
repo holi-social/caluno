@@ -7,49 +7,49 @@ import { ShiftVisibility } from '../enums';
 @ObjectType()
 export class Shift {
   @Field(() => ID)
-  id: string;
+  id!: string;
 
   @Field(() => String)
-  title: string;
+  title!: string;
 
   @Field(() => String)
-  slug: string;
+  slug!: string;
 
   @Field(() => String, { nullable: true })
-  instructions: string | null;
+  instructions!: string | null;
 
   @Field(() => Organization)
-  organization: Organization;
+  organization!: Organization;
 
   @Field(() => ID)
-  organizationUnitId: string;
+  organizationUnitId!: string;
 
   @Field(() => User, { nullable: true })
-  createdBy: User | null;
+  createdBy!: User | null;
 
   @Field(() => String, { nullable: true })
-  location: string | null;
+  location!: string | null;
 
   @Field(() => ShiftVisibility)
-  visibility: ShiftVisibility;
+  visibility!: ShiftVisibility;
 
   @Field(() => Int, { nullable: true })
-  maxVolunteers: number | null;
+  maxVolunteers!: number | null;
 
   @Field(() => String, { nullable: true })
-  rrule: string | null;
+  rrule!: string | null;
 
   @Field(() => Date)
-  originalStartsAt: Date;
+  originalStartsAt!: Date;
 
   @Field(() => Int)
-  durationMinutes: number;
+  durationMinutes!: number;
 
   @Field(() => Boolean)
-  isDeleted: boolean;
+  isDeleted!: boolean;
 
   @Field(() => Date)
-  createdAt: Date;
+  createdAt!: Date;
 }
 
 export const ShiftPaginatedResponse = createPaginatedResponseType<Shift>(

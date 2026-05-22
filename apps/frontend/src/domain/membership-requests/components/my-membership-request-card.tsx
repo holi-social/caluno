@@ -6,11 +6,6 @@ import { Card, CardAction, CardContent, CardHeader, CardTitle } from '@repo/ui';
 import { formatDate } from '@/lib/formatting';
 import { CancelMembershipRequestButton } from './cancel-membership-request-button';
 
-const BG_COLOR_MAP: Record<string, string> = {
-  [MembershipRequestStatus.Accepted]: 'bg-green-950',
-  [MembershipRequestStatus.Rejected]: 'bg-red-950',
-};
-
 type MyMembershipRequestItem =
   GetMyMembershipRequestsQuery['myMembershipRequests']['items'][number];
 
@@ -24,10 +19,8 @@ export default function MyMembershipRequestCard({ request }: Props) {
       ? request.createdAt
       : request.reviewedAt;
 
-  const bgColor = BG_COLOR_MAP[request.status] ?? '';
-
   return (
-    <Card className={`w-full ${bgColor}`}>
+    <Card className="w-full">
       <CardHeader className="flex flex-row gap-3">
         <div className="w-full flex flex-col gap-1">
           <CardTitle>{request.organizationUnit.name}</CardTitle>

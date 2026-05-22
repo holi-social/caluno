@@ -5,19 +5,19 @@ import { Requirement } from './requirement.model';
 @ObjectType()
 export class RequirementProfile {
   @Field(() => ID)
-  id: string;
+  id!: string;
 
   @Field(() => String)
-  organizationId: string;
+  organizationId!: string;
 
   @Field(() => String)
-  name: string;
+  name!: string;
 
   @Field(() => String, { nullable: true })
-  description: string | null;
+  description!: string | null;
 
   @Field(() => [Requirement], { nullable: true })
-  requirements: Requirement[];
+  requirements!: Requirement[];
 }
 
 export const RequirementProfilePaginatedResponse =

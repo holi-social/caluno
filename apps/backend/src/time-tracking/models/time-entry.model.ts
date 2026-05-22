@@ -6,25 +6,25 @@ import { User } from '../../user/models/user.model';
 @ObjectType()
 export class TimeEntry {
   @Field(() => ID)
-  id: string;
+  id!: string;
 
   @Field(() => Date)
-  startedAt: Date;
+  startedAt!: Date;
 
   @Field(() => Date, { nullable: true })
-  endedAt: Date | null;
+  endedAt!: Date | null;
 
   @Field(() => String, { nullable: true })
-  notes: string | null;
+  notes!: string | null;
 
   @Field(() => Date)
-  createdAt: Date;
+  createdAt!: Date;
 
   @Field(() => User)
-  volunteer: User;
+  volunteer!: User;
 
   @Field(() => ShiftInstance)
-  shiftInstance: ShiftInstance;
+  shiftInstance!: ShiftInstance;
 }
 
 export const TimeEntryPaginatedResponse =

@@ -2,7 +2,7 @@ import { Field, InputType } from '@nestjs/graphql';
 @InputType()
 export class CreateRequirementSubmissionFulfillmentInput {
   @Field(() => String)
-  requirementId: string;
+  requirementId!: string;
 
   @Field(() => String, { nullable: true })
   documentId?: string | null;
@@ -20,13 +20,13 @@ export class CreateRequirementSubmissionFulfillmentInput {
 @InputType()
 export class CreateRequirementProfileSubmissionInput {
   @Field(() => String)
-  profileId: string;
+  profileId!: string;
 
   @Field(() => String, { nullable: true })
-  membershipId: string | null;
+  membershipId!: string | null;
 
   @Field(() => String, { nullable: true })
-  membershipRequestId: string | null;
+  membershipRequestId!: string | null;
 
   @Field(() => [CreateRequirementSubmissionFulfillmentInput], {
     nullable: true,
