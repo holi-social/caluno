@@ -11,7 +11,7 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import {
   getLastVisitedOrgServer,
-  getMyRootOrganizationUnits,
+  getMyAccessibleOrganizationUnits,
 } from '@/lib/org-context-server';
 
 type CheckInPageProps = {
@@ -29,7 +29,7 @@ export default async function CheckInPage({ params }: CheckInPageProps) {
     );
   }
 
-  const organizations = await getMyRootOrganizationUnits();
+  const organizations = await getMyAccessibleOrganizationUnits();
 
   if (organizations.length === 1) {
     return redirect(`/${organizations[0]?.id}/check-in/${checkInId}/decide`);

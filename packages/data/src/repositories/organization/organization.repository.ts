@@ -67,6 +67,15 @@ export class OrganizationRepository extends BaseRepository {
     }
   }
 
+  async findMyAccessibleOrganizationUnits() {
+    try {
+      const data = await this.sdk.GetMyAccessibleOrganizationUnits();
+      return data.myAccessibleOrganizationUnits;
+    } catch (error) {
+      throw DataError.fromGraphQLError(error);
+    }
+  }
+
   async findAll(options: FindOrganizationsOptions = {}) {
     const { limit = 10, offset = 0 } = options;
     try {
