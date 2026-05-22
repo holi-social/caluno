@@ -3,7 +3,7 @@ import HomePage from '@/domain/home/components/home-page';
 import { isAuthenticated } from '@/lib/auth-server';
 import {
   getLastVisitedOrgServer,
-  getMyRootOrganizationUnits,
+  getMyAccessibleOrganizationUnits,
 } from '@/lib/org-context-server';
 
 export default async function Home() {
@@ -11,7 +11,7 @@ export default async function Home() {
     return redirect('/login');
   }
 
-  const orgs = await getMyRootOrganizationUnits();
+  const orgs = await getMyAccessibleOrganizationUnits();
 
   const lastorgUId = await getLastVisitedOrgServer();
   if (lastorgUId) {

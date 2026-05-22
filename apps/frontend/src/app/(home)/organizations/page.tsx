@@ -2,7 +2,7 @@ import { Card, CardDescription, CardHeader, CardTitle } from '@repo/ui';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { getSession } from '@/lib/auth-server';
-import { getMyRootOrganizationUnits } from '@/lib/org-context-server';
+import { getMyAccessibleOrganizationUnits } from '@/lib/org-context-server';
 
 export default async function OrganizationsPage() {
   const session = await getSession();
@@ -11,7 +11,7 @@ export default async function OrganizationsPage() {
     return redirect('/login');
   }
 
-  const organizations = await getMyRootOrganizationUnits();
+  const organizations = await getMyAccessibleOrganizationUnits();
 
   return (
     <div className="container mx-auto max-w-4xl py-12 px-4">

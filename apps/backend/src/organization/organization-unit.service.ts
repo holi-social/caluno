@@ -104,6 +104,25 @@ export class OrganizationUnitService {
     return this.findOrganization(organizationUnit.organizationId);
   }
 
+  async listInclusiveAncestorUnitIds(
+    organizationUnitId: string,
+  ): Promise<string[]> {
+    const chain: string[] = [];
+    let currentId: string | null = organizationUnitId;
+
+    while (currentId) {
+      const unit = await this.db.query.organizationUnits.findFirst({
+        where: { id: currentId },
+        columns: { id: true, parentId: true },
+      });
+      if (!unit) break;
+      chain.push(unit.id);
+      currentId = unit.parentId;
+    }
+
+    return chain;
+  }
+
   async create(
     input: CreateOrganizationUnitInput,
   ): Promise<OrganizationUnitEntity> {
