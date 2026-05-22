@@ -118,6 +118,82 @@ export class OrganizationService {
     };
   }
 
+  async findAccessibleUnits(
+    userId: string,
+  ): Promise<OrganizationUnitEntity[]> {
+    const userMemberships = await this.db.query.memberships.findMany({
+      where: { userId },
+      with: {
+        organizationUnit: {
+          columns: { id: true, organizationId: true },
+        },
+      },
+    });
+
+    const memberUnitIdsByOrgId = new Map<string, Set<string>>();
+    for (const membership of userMemberships) {
+      const unit = membership.organizationUnit;
+      if (!unit?.organizationId) continue;
+      const memberUnitIds =
+        memberUnitIdsByOrgId.get(unit.organizationId) ?? new Set<string>();
+      memberUnitIds.add(unit.id);
+      memberUnitIdsByOrgId.set(unit.organizationId, memberUnitIds);
+    }
+
+    if (memberUnitIdsByOrgId.size === 0) {
+      return [];
+    }
+
+    const accessibleByOrg = await Promise.all(
+      [...memberUnitIdsByOrgId.entries()].map(
+        async ([organizationId, memberUnitIds]) => {
+          const units = await this.db.query.organizationUnits.findMany({
+            where: { organizationId },
+          });
+          return this.collectUnitsAccessibleFromMemberships(
+            units,
+            memberUnitIds,
+          );
+        },
+      ),
+    );
+
+    return accessibleByOrg.flat().sort((a, b) => a.name.localeCompare(b.name));
+  }
+
+  /**
+   * Membership on a unit grants access to that unit and every descendant.
+   * Expands member seeds downward instead of walking ancestors per unit.
+   */
+  private collectUnitsAccessibleFromMemberships(
+    units: OrganizationUnitEntity[],
+    memberUnitIds: Set<string>,
+  ): OrganizationUnitEntity[] {
+    const childrenByParentId = new Map<string, string[]>();
+    for (const unit of units) {
+      if (!unit.parentId) continue;
+      const children = childrenByParentId.get(unit.parentId) ?? [];
+      children.push(unit.id);
+      childrenByParentId.set(unit.parentId, children);
+    }
+
+    const accessibleUnitIds = new Set(memberUnitIds);
+    const queue = [...memberUnitIds];
+    while (queue.length > 0) {
+      const parentId = queue.shift();
+      if (!parentId) continue;
+      for (const childId of childrenByParentId.get(parentId) ?? []) {
+        if (accessibleUnitIds.has(childId)) continue;
+        accessibleUnitIds.add(childId);
+        queue.push(childId);
+      }
+    }
+
+    return units.filter(
+      (unit) => !unit.deletedAt && accessibleUnitIds.has(unit.id),
+    );
+  }
+
   /**
    * Returns the organization subtree rooted at `organizationUnitId` for the
    * given user, or `null` when the unit is missing, detached from an
