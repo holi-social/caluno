@@ -1,5 +1,5 @@
 import { Inject, Injectable, NotFoundException } from '@nestjs/common';
-import { eq } from 'drizzle-orm';
+import { and, eq, inArray } from 'drizzle-orm';
 import type { Database } from '../database/database.module';
 import { DATABASE_CONNECTION } from '../database/database-connection';
 import * as schema from '../database/schema';
@@ -57,48 +57,80 @@ export class AuthService {
     userId: string,
     organizationUnitId: string,
   ): Promise<PermissionEntity[]> {
-    const membership = await this.db.query.memberships.findFirst({
-      where: {
-        userId,
+    const ancestorUnitIds =
+      await this.organizationUnitService.listInclusiveAncestorUnitIds(
         organizationUnitId,
-      },
-      with: {
-        roles: {
-          with: {
-            role: {
-              with: {
-                permissions: {
-                  with: {
-                    permission: true,
-                  },
-                },
-              },
-            },
-          },
-        },
-      },
-    });
+      );
 
-    if (!membership) {
+    if (ancestorUnitIds.length === 0) {
       return [];
     }
 
-    const permissionsById = new Map<string, PermissionEntity>();
-    for (const membershipRole of membership.roles) {
-      if (!membershipRole.role) {
-        continue;
-      }
-      for (const rolePermission of membershipRole.role.permissions) {
-        if (rolePermission.permission) {
-          permissionsById.set(
-            rolePermission.permission.id,
-            rolePermission.permission,
-          );
-        }
-      }
+    return this.db
+      .selectDistinct({
+        id: schema.permissions.id,
+        key: schema.permissions.key,
+        description: schema.permissions.description,
+        createdAt: schema.permissions.createdAt,
+        updatedAt: schema.permissions.updatedAt,
+      })
+      .from(schema.permissions)
+      .innerJoin(
+        schema.rolePermissions,
+        eq(schema.rolePermissions.permissionId, schema.permissions.id),
+      )
+      .innerJoin(
+        schema.membershipRoles,
+        eq(schema.membershipRoles.roleId, schema.rolePermissions.roleId),
+      )
+      .innerJoin(
+        schema.memberships,
+        eq(schema.memberships.id, schema.membershipRoles.membershipId),
+      )
+      .where(
+        and(
+          eq(schema.memberships.userId, userId),
+          inArray(schema.memberships.organizationUnitId, ancestorUnitIds),
+        ),
+      );
+  }
+
+  async findUserPermissionKeys(
+    userId: string,
+    organizationUnitId: string,
+  ): Promise<Set<string>> {
+    const ancestorUnitIds =
+      await this.organizationUnitService.listInclusiveAncestorUnitIds(
+        organizationUnitId,
+      );
+
+    if (ancestorUnitIds.length === 0) {
+      return new Set();
     }
 
-    return Array.from(permissionsById.values());
+    const rows = await this.db
+      .selectDistinct({ key: schema.permissions.key })
+      .from(schema.permissions)
+      .innerJoin(
+        schema.rolePermissions,
+        eq(schema.rolePermissions.permissionId, schema.permissions.id),
+      )
+      .innerJoin(
+        schema.membershipRoles,
+        eq(schema.membershipRoles.roleId, schema.rolePermissions.roleId),
+      )
+      .innerJoin(
+        schema.memberships,
+        eq(schema.memberships.id, schema.membershipRoles.membershipId),
+      )
+      .where(
+        and(
+          eq(schema.memberships.userId, userId),
+          inArray(schema.memberships.organizationUnitId, ancestorUnitIds),
+        ),
+      );
+
+    return new Set(rows.map((r) => r.key));
   }
 
   async hasRequiredPermissions(
@@ -110,13 +142,9 @@ export class AuthService {
       return true;
     }
 
-    const userPermissions = await this.findUserPermissions(
+    const permissionKeys = await this.findUserPermissionKeys(
       userId,
       organizationUnitId,
-    );
-
-    const permissionKeys = new Set(
-      userPermissions.map((permission) => permission.key),
     );
 
     return requiredPermissions.every((permission) =>

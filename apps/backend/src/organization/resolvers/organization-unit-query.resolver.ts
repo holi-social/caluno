@@ -1,4 +1,5 @@
 import { Args, Context, Query, Resolver } from '@nestjs/graphql';
+import { Session, type UserSession } from '@thallesp/nestjs-better-auth';
 import { PERMISSIONS } from '../../auth/constants';
 import { Permissions } from '../../auth/decorators/permissions.decorator';
 import type { AuthenticatedGraphQLContext } from '../../graphql/graphql.context';
@@ -10,17 +11,28 @@ import {
   OrganizationUnitPaginatedResponse,
 } from '../models/organization-unit.model';
 import { OrganizationUnitType } from '../models/organization-unit-type.model';
+import { OrganizationService } from '../organization.service';
 import { OrganizationUnitService } from '../organization-unit.service';
 
 @Resolver(() => OrganizationUnit)
 export class OrganizationUnitQueryResolver {
   constructor(
     private readonly organizationUnitService: OrganizationUnitService,
+    private readonly organizationService: OrganizationService,
     private readonly organizationUnitMapper: OrganizationUnitMapper,
     private readonly organizationUnitTypeMapper: OrganizationUnitTypeMapper,
   ) {}
 
-  @Permissions(PERMISSIONS.ORG_VIEW)
+  @Query(() => [OrganizationUnit])
+  async myAccessibleOrganizationUnits(
+    @Session() session: UserSession,
+  ): Promise<OrganizationUnit[]> {
+    const units = await this.organizationService.findAccessibleUnits(
+      session.user.id,
+    );
+    return this.organizationUnitMapper.toArray(units);
+  }
+
   @Query(() => OrganizationUnit, { nullable: true })
   async organizationUnit(
     @Args('id') id: string,
