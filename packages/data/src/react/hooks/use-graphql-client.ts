@@ -1,6 +1,7 @@
 'use client';
 import type { GraphQLClient } from 'graphql-request';
 import { createContext, useContext } from 'react';
+import { getSdk } from '../../generated/graphql';
 
 const GraphQLClientContext = createContext<GraphQLClient | null>(null);
 
@@ -13,4 +14,9 @@ export function useGraphQLClient() {
     );
   }
   return client;
+}
+
+export function useSdk() {
+  const client = useGraphQLClient();
+  return getSdk(client);
 }

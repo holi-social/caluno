@@ -2,12 +2,12 @@
 
 import { ShiftRepository } from '@repo/data';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { useGraphQLClient } from './use-graphql-client';
+import { useSdk } from './use-graphql-client';
 
 export function useJoinShift() {
-  const client = useGraphQLClient();
+  const sdk = useSdk();
   const queryClient = useQueryClient();
-  const repository = new ShiftRepository(client);
+  const repository = new ShiftRepository(sdk);
 
   return useMutation({
     mutationFn: (shiftId: string) => repository.join(shiftId),

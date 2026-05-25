@@ -2,11 +2,11 @@
 
 import { OrganizationRepository } from '@repo/data';
 import { useQuery } from '@tanstack/react-query';
-import { useGraphQLClient } from './use-graphql-client';
+import { useSdk } from './use-graphql-client';
 
 export function useVolunteers(orgUId: string) {
-  const client = useGraphQLClient();
-  const repository = new OrganizationRepository(client);
+  const sdk = useSdk();
+  const repository = new OrganizationRepository(sdk);
 
   return useQuery({
     queryKey: ['volunteers', orgUId],

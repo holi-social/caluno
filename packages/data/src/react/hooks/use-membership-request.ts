@@ -2,12 +2,12 @@
 
 import { MembershipRequestRepository } from '@repo/data';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { useGraphQLClient } from './use-graphql-client';
+import { useSdk } from './use-graphql-client';
 
 export function useApproveMembershipRequest() {
-  const client = useGraphQLClient();
+  const sdk = useSdk();
   const queryClient = useQueryClient();
-  const repository = new MembershipRequestRepository(client);
+  const repository = new MembershipRequestRepository(sdk);
 
   return useMutation({
     mutationFn: ({
@@ -26,9 +26,9 @@ export function useApproveMembershipRequest() {
 }
 
 export function useCancelMembershipRequest() {
-  const client = useGraphQLClient();
+  const sdk = useSdk();
   const queryClient = useQueryClient();
-  const repository = new MembershipRequestRepository(client);
+  const repository = new MembershipRequestRepository(sdk);
 
   return useMutation({
     mutationFn: ({
