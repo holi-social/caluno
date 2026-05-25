@@ -1,4 +1,3 @@
-import { fromGraphQLError } from '../../errors/translate';
 import type {
   JoinOrganizationMutation,
   MembershipRequestStatus,
@@ -16,29 +15,21 @@ export class MembershipRequestRepository extends BaseRepository {
     organizationUnitId: string,
     options: FindMembershipRequestsOptions = {},
   ) {
-    try {
-      const data = await this.sdk.GetMembershipRequests({
-        organizationUnitId,
-        limit: options.limit ?? 10,
-        offset: options.offset ?? 0,
-        status: options.status,
-      });
-      return data.membershipRequests;
-    } catch (error) {
-      throw fromGraphQLError(error);
-    }
+    const data = await this.sdk.GetMembershipRequests({
+      organizationUnitId,
+      limit: options.limit ?? 10,
+      offset: options.offset ?? 0,
+      status: options.status,
+    });
+    return data.membershipRequests;
   }
 
   async approve(id: string, organizationUnitId: string) {
-    try {
-      const data = await this.sdk.ApproveMembershipRequest({
-        id,
-        organizationUnitId,
-      });
-      return data.approveMembershipRequest;
-    } catch (error) {
-      throw fromGraphQLError(error);
-    }
+    const data = await this.sdk.ApproveMembershipRequest({
+      id,
+      organizationUnitId,
+    });
+    return data.approveMembershipRequest;
   }
 
   async reject(
@@ -46,51 +37,35 @@ export class MembershipRequestRepository extends BaseRepository {
     organizationUnitId: string,
     rejectionReason: string,
   ) {
-    try {
-      const data = await this.sdk.RejectMembershipRequest({
-        id,
-        organizationUnitId,
-        rejectionReason,
-      });
-      return data.rejectMembershipRequest;
-    } catch (error) {
-      throw fromGraphQLError(error);
-    }
+    const data = await this.sdk.RejectMembershipRequest({
+      id,
+      organizationUnitId,
+      rejectionReason,
+    });
+    return data.rejectMembershipRequest;
   }
 
   async cancel(id: string, organizationUnitId: string) {
-    try {
-      const data = await this.sdk.CancelMembershipRequest({
-        id,
-        organizationUnitId,
-      });
-      return data.cancelMembershipRequest;
-    } catch (error) {
-      throw fromGraphQLError(error);
-    }
+    const data = await this.sdk.CancelMembershipRequest({
+      id,
+      organizationUnitId,
+    });
+    return data.cancelMembershipRequest;
   }
 
   async findMine(options: FindMembershipRequestsOptions = {}) {
-    try {
-      const data = await this.sdk.GetMyMembershipRequests({
-        limit: options.limit ?? 10,
-        offset: options.offset ?? 0,
-        status: options.status,
-      });
-      return data.myMembershipRequests;
-    } catch (error) {
-      throw fromGraphQLError(error);
-    }
+    const data = await this.sdk.GetMyMembershipRequests({
+      limit: options.limit ?? 10,
+      offset: options.offset ?? 0,
+      status: options.status,
+    });
+    return data.myMembershipRequests;
   }
 
   async join(
     organizationUnitId: string,
   ): Promise<JoinOrganizationMutation['joinOrganization']> {
-    try {
-      const data = await this.sdk.JoinOrganization({ organizationUnitId });
-      return data.joinOrganization;
-    } catch (error) {
-      throw fromGraphQLError(error);
-    }
+    const data = await this.sdk.JoinOrganization({ organizationUnitId });
+    return data.joinOrganization;
   }
 }

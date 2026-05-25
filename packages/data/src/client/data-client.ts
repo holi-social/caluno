@@ -39,7 +39,7 @@ export class DataClient {
   ) {
     const graphqlClient = createGraphQLClient(clientConfig);
 
-    const wrapper: SdkFunctionWrapper = async (action) => {
+    const graphQLCallWrapper: SdkFunctionWrapper = async (action) => {
       try {
         return await action();
       } catch (error) {
@@ -49,7 +49,7 @@ export class DataClient {
       }
     };
 
-    const sdk = getSdk(graphqlClient, wrapper);
+    const sdk = getSdk(graphqlClient, graphQLCallWrapper);
 
     this.organizationContext = organizationContext;
     this.user = new UserRepository(sdk);

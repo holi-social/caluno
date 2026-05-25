@@ -1,4 +1,3 @@
-import { fromGraphQLError } from '../../errors/translate';
 import type {
   CreateRoleInput,
   GetRoleQuery,
@@ -11,65 +10,37 @@ export type RoleDetails = GetRoleQuery['role'];
 
 export class RoleRepository extends BaseRepository {
   async findById(id: string) {
-    try {
-      const data = await this.sdk.GetRole({ id });
-      return data.role;
-    } catch (error) {
-      throw fromGraphQLError(error);
-    }
+    const data = await this.sdk.GetRole({ id });
+    return data.role;
   }
 
   async findAll() {
-    try {
-      const data = await this.sdk.GetRoles();
-      return data.roles;
-    } catch (error) {
-      throw fromGraphQLError(error);
-    }
+    const data = await this.sdk.GetRoles();
+    return data.roles;
   }
 
   async findAllPermissions() {
-    try {
-      const data = await this.sdk.GetPermissions();
-      return data.permissions;
-    } catch (error) {
-      throw fromGraphQLError(error);
-    }
+    const data = await this.sdk.GetPermissions();
+    return data.permissions;
   }
 
   async findPermissionGroups() {
-    try {
-      const data = await this.sdk.GetPermissionGroups();
-      return data.permissionGroups;
-    } catch (error) {
-      throw fromGraphQLError(error);
-    }
+    const data = await this.sdk.GetPermissionGroups();
+    return data.permissionGroups;
   }
 
   async create(input: CreateRoleInput) {
-    try {
-      const data = await this.sdk.createRole({ input });
-      return data.createRole;
-    } catch (error) {
-      throw fromGraphQLError(error);
-    }
+    const data = await this.sdk.createRole({ input });
+    return data.createRole;
   }
 
   async update(id: string, input: CreateRoleInput) {
-    try {
-      const data = await this.sdk.UpdateRole({ id, input });
-      return data.updateRole;
-    } catch (error) {
-      throw fromGraphQLError(error);
-    }
+    const data = await this.sdk.UpdateRole({ id, input });
+    return data.updateRole;
   }
 
   async delete(id: string) {
-    try {
-      const data = await this.sdk.DeleteRole({ id });
-      return data.deleteRole;
-    } catch (error) {
-      throw fromGraphQLError(error);
-    }
+    const data = await this.sdk.DeleteRole({ id });
+    return data.deleteRole;
   }
 }

@@ -1,4 +1,3 @@
-import { fromGraphQLError } from '../../errors/translate';
 import type {
   CreateRequirementProfileSubmissionInput,
   CreateRequirementProfileSubmissionMutation,
@@ -11,11 +10,7 @@ export class RequirementProfileRepository extends BaseRepository {
   ): Promise<
     CreateRequirementProfileSubmissionMutation['createRequirementProfileSubmission']
   > {
-    try {
-      const data = await this.sdk.CreateRequirementProfileSubmission({ input });
-      return data.createRequirementProfileSubmission;
-    } catch (error) {
-      throw fromGraphQLError(error);
-    }
+    const data = await this.sdk.CreateRequirementProfileSubmission({ input });
+    return data.createRequirementProfileSubmission;
   }
 }
