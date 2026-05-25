@@ -2,7 +2,7 @@
 // Use in server components, API routes, or any JavaScript environment
 
 // Unified Data Client (recommended)
-export { createDataClient, DataClient } from './client/data-client';
+export { createDataClient, DataClient, type DataClientConfig } from './client/data-client';
 
 // GraphQL Client (for advanced usage)
 export * from './client/graphql-client';
@@ -14,6 +14,7 @@ export type { OrganizationContext } from './client/organization-context';
 export * from './constants';
 // Errors
 export * from './errors/data-error';
+export * from './errors/forbidden-data-error';
 // Generated types (all GraphQL types, queries, mutations)
 export * from './generated/graphql';
 // Server-side utilities (framework-agnostic, requires DI)
