@@ -1,4 +1,4 @@
-import { DataError } from '../../errors/data-error';
+import { fromGraphQLError } from '../../errors/translate';
 import type {
   CreateRequirementProfileSubmissionInput,
   CreateRequirementProfileSubmissionMutation,
@@ -15,7 +15,7 @@ export class RequirementProfileRepository extends BaseRepository {
       const data = await this.sdk.CreateRequirementProfileSubmission({ input });
       return data.createRequirementProfileSubmission;
     } catch (error) {
-      throw DataError.fromGraphQLError(error);
+      throw fromGraphQLError(error);
     }
   }
 }

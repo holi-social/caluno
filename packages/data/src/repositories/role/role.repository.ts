@@ -1,4 +1,4 @@
-import { DataError } from '../../errors/data-error';
+import { fromGraphQLError } from '../../errors/translate';
 import type {
   CreateRoleInput,
   GetRoleQuery,
@@ -15,7 +15,7 @@ export class RoleRepository extends BaseRepository {
       const data = await this.sdk.GetRole({ id });
       return data.role;
     } catch (error) {
-      throw DataError.fromGraphQLError(error);
+      throw fromGraphQLError(error);
     }
   }
 
@@ -24,7 +24,7 @@ export class RoleRepository extends BaseRepository {
       const data = await this.sdk.GetRoles();
       return data.roles;
     } catch (error) {
-      throw DataError.fromGraphQLError(error);
+      throw fromGraphQLError(error);
     }
   }
 
@@ -33,7 +33,7 @@ export class RoleRepository extends BaseRepository {
       const data = await this.sdk.GetPermissions();
       return data.permissions;
     } catch (error) {
-      throw DataError.fromGraphQLError(error);
+      throw fromGraphQLError(error);
     }
   }
 
@@ -42,7 +42,7 @@ export class RoleRepository extends BaseRepository {
       const data = await this.sdk.GetPermissionGroups();
       return data.permissionGroups;
     } catch (error) {
-      throw DataError.fromGraphQLError(error);
+      throw fromGraphQLError(error);
     }
   }
 
@@ -51,7 +51,7 @@ export class RoleRepository extends BaseRepository {
       const data = await this.sdk.createRole({ input });
       return data.createRole;
     } catch (error) {
-      throw DataError.fromGraphQLError(error);
+      throw fromGraphQLError(error);
     }
   }
 
@@ -60,7 +60,7 @@ export class RoleRepository extends BaseRepository {
       const data = await this.sdk.UpdateRole({ id, input });
       return data.updateRole;
     } catch (error) {
-      throw DataError.fromGraphQLError(error);
+      throw fromGraphQLError(error);
     }
   }
 
@@ -69,7 +69,7 @@ export class RoleRepository extends BaseRepository {
       const data = await this.sdk.DeleteRole({ id });
       return data.deleteRole;
     } catch (error) {
-      throw DataError.fromGraphQLError(error);
+      throw fromGraphQLError(error);
     }
   }
 }

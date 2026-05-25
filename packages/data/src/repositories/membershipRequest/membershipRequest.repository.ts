@@ -1,4 +1,4 @@
-import { DataError } from '../../errors/data-error';
+import { fromGraphQLError } from '../../errors/translate';
 import type {
   JoinOrganizationMutation,
   MembershipRequestStatus,
@@ -25,7 +25,7 @@ export class MembershipRequestRepository extends BaseRepository {
       });
       return data.membershipRequests;
     } catch (error) {
-      throw DataError.fromGraphQLError(error);
+      throw fromGraphQLError(error);
     }
   }
 
@@ -37,7 +37,7 @@ export class MembershipRequestRepository extends BaseRepository {
       });
       return data.approveMembershipRequest;
     } catch (error) {
-      throw DataError.fromGraphQLError(error);
+      throw fromGraphQLError(error);
     }
   }
 
@@ -54,7 +54,7 @@ export class MembershipRequestRepository extends BaseRepository {
       });
       return data.rejectMembershipRequest;
     } catch (error) {
-      throw DataError.fromGraphQLError(error);
+      throw fromGraphQLError(error);
     }
   }
 
@@ -66,7 +66,7 @@ export class MembershipRequestRepository extends BaseRepository {
       });
       return data.cancelMembershipRequest;
     } catch (error) {
-      throw DataError.fromGraphQLError(error);
+      throw fromGraphQLError(error);
     }
   }
 
@@ -79,7 +79,7 @@ export class MembershipRequestRepository extends BaseRepository {
       });
       return data.myMembershipRequests;
     } catch (error) {
-      throw DataError.fromGraphQLError(error);
+      throw fromGraphQLError(error);
     }
   }
 
@@ -90,7 +90,7 @@ export class MembershipRequestRepository extends BaseRepository {
       const data = await this.sdk.JoinOrganization({ organizationUnitId });
       return data.joinOrganization;
     } catch (error) {
-      throw DataError.fromGraphQLError(error);
+      throw fromGraphQLError(error);
     }
   }
 }

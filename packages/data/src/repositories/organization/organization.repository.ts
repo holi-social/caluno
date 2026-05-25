@@ -1,4 +1,4 @@
-import { DataError } from '../../errors/data-error';
+import { fromGraphQLError } from '../../errors/translate';
 import type { CreateOrganizationInput } from '../../generated/graphql';
 import { BaseRepository } from '../base/base.repository';
 
@@ -13,7 +13,7 @@ export class OrganizationRepository extends BaseRepository {
       const data = await this.sdk.GetOrganization({ id });
       return data.organization;
     } catch (error) {
-      throw DataError.fromGraphQLError(error);
+      throw fromGraphQLError(error);
     }
   }
 
@@ -22,7 +22,7 @@ export class OrganizationRepository extends BaseRepository {
       const data = await this.sdk.GetOrganizationBySlug({ slug });
       return data.organizationBySlug;
     } catch (error) {
-      throw DataError.fromGraphQLError(error);
+      throw fromGraphQLError(error);
     }
   }
 
@@ -31,7 +31,7 @@ export class OrganizationRepository extends BaseRepository {
       const data = await this.sdk.GetOrganizationRoot({ id: organizationId });
       return data.organization?.root ?? null;
     } catch (error) {
-      throw DataError.fromGraphQLError(error);
+      throw fromGraphQLError(error);
     }
   }
 
@@ -42,7 +42,7 @@ export class OrganizationRepository extends BaseRepository {
       });
       return data.members ?? [];
     } catch (error) {
-      throw DataError.fromGraphQLError(error);
+      throw fromGraphQLError(error);
     }
   }
 
@@ -53,7 +53,7 @@ export class OrganizationRepository extends BaseRepository {
       });
       return data.organizationUnit ?? null;
     } catch (error) {
-      throw DataError.fromGraphQLError(error);
+      throw fromGraphQLError(error);
     }
   }
 
@@ -63,7 +63,7 @@ export class OrganizationRepository extends BaseRepository {
       const data = await this.sdk.GetOrganizationsWithRoot({ limit, offset });
       return data.organizations.items;
     } catch (error) {
-      throw DataError.fromGraphQLError(error);
+      throw fromGraphQLError(error);
     }
   }
 
@@ -72,7 +72,7 @@ export class OrganizationRepository extends BaseRepository {
       const data = await this.sdk.GetMyAccessibleOrganizationUnits();
       return data.myAccessibleOrganizationUnits;
     } catch (error) {
-      throw DataError.fromGraphQLError(error);
+      throw fromGraphQLError(error);
     }
   }
 
@@ -82,7 +82,7 @@ export class OrganizationRepository extends BaseRepository {
       const data = await this.sdk.GetOrganizations({ limit, offset });
       return data.organizations;
     } catch (error) {
-      throw DataError.fromGraphQLError(error);
+      throw fromGraphQLError(error);
     }
   }
 
@@ -91,7 +91,7 @@ export class OrganizationRepository extends BaseRepository {
       const data = await this.sdk.CreateOrganization({ input });
       return data.createOrganization;
     } catch (error) {
-      throw DataError.fromGraphQLError(error);
+      throw fromGraphQLError(error);
     }
   }
 }

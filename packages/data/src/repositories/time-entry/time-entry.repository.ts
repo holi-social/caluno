@@ -1,4 +1,4 @@
-import { DataError } from '../../errors/data-error';
+import { fromGraphQLError } from '../../errors/translate';
 import type {
   AddTimeEntryInput,
   CloseTimeEntryInput,
@@ -18,7 +18,7 @@ export class TimeEntryRepository extends BaseRepository {
       const data = await this.sdk.GetTimeEntry({ id });
       return data.timeEntry;
     } catch (error) {
-      throw DataError.fromGraphQLError(error);
+      throw fromGraphQLError(error);
     }
   }
 
@@ -27,7 +27,7 @@ export class TimeEntryRepository extends BaseRepository {
       const data = await this.sdk.AddTimeEntry({ input });
       return data.addTimeEntry;
     } catch (error) {
-      throw DataError.fromGraphQLError(error);
+      throw fromGraphQLError(error);
     }
   }
 
@@ -36,7 +36,7 @@ export class TimeEntryRepository extends BaseRepository {
       const data = await this.sdk.DeleteTimeEntry({ id });
       return data.deleteTimeEntry;
     } catch (error) {
-      throw DataError.fromGraphQLError(error);
+      throw fromGraphQLError(error);
     }
   }
 
@@ -45,7 +45,7 @@ export class TimeEntryRepository extends BaseRepository {
       const data = await this.sdk.CloseTimeEntry({ id, input });
       return data.closeTimeEntry;
     } catch (error) {
-      throw DataError.fromGraphQLError(error);
+      throw fromGraphQLError(error);
     }
   }
 
@@ -54,7 +54,7 @@ export class TimeEntryRepository extends BaseRepository {
       const data = await this.sdk.UpdateTimeEntry({ id, input });
       return data.updateTimeEntry;
     } catch (error) {
-      throw DataError.fromGraphQLError(error);
+      throw fromGraphQLError(error);
     }
   }
 
@@ -66,7 +66,7 @@ export class TimeEntryRepository extends BaseRepository {
       });
       return data.timeEntries;
     } catch (error) {
-      throw DataError.fromGraphQLError(error);
+      throw fromGraphQLError(error);
     }
   }
 
@@ -79,7 +79,7 @@ export class TimeEntryRepository extends BaseRepository {
       });
       return data.timeEntriesByUser;
     } catch (error) {
-      throw DataError.fromGraphQLError(error);
+      throw fromGraphQLError(error);
     }
   }
 }

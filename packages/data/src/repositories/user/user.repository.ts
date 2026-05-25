@@ -1,4 +1,4 @@
-import { DataError } from '../../errors/data-error';
+import { fromGraphQLError } from '../../errors/translate';
 import type {
   GetMyOrganizationsQuery,
   GetMyPermissionsQuery,
@@ -12,7 +12,7 @@ export class UserRepository extends BaseRepository {
       const data = await this.sdk.GetMe();
       return data.me;
     } catch (error) {
-      throw DataError.fromGraphQLError(error);
+      throw fromGraphQLError(error);
     }
   }
 
@@ -21,7 +21,7 @@ export class UserRepository extends BaseRepository {
       const data = await this.sdk.GetUser({ id });
       return data.user ?? null;
     } catch (error) {
-      throw DataError.fromGraphQLError(error);
+      throw fromGraphQLError(error);
     }
   }
 
@@ -30,7 +30,7 @@ export class UserRepository extends BaseRepository {
       const data = await this.sdk.GetUserByCheckInId({ checkInId });
       return data.userByCheckInId ?? null;
     } catch (error) {
-      throw DataError.fromGraphQLError(error);
+      throw fromGraphQLError(error);
     }
   }
 
@@ -41,7 +41,7 @@ export class UserRepository extends BaseRepository {
       const data = await this.sdk.GetMyPermissions();
       return data.me.permissions ?? [];
     } catch (error) {
-      throw DataError.fromGraphQLError(error);
+      throw fromGraphQLError(error);
     }
   }
 
@@ -53,7 +53,7 @@ export class UserRepository extends BaseRepository {
       const data = await this.sdk.GetMyOrganizations({ limit, offset });
       return data.organizations;
     } catch (error) {
-      throw DataError.fromGraphQLError(error);
+      throw fromGraphQLError(error);
     }
   }
 }

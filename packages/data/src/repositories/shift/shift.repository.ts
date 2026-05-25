@@ -3,7 +3,7 @@ import {
   parseRruleEndDate,
   type RecurrenceDayValue,
 } from '../../constants';
-import { DataError } from '../../errors/data-error';
+import { fromGraphQLError } from '../../errors/translate';
 import type {
   CreateShiftInput,
   GetActiveShiftsQuery,
@@ -44,7 +44,7 @@ export class ShiftRepository extends BaseRepository {
       const data = await this.sdk.GetShift({ id });
       return data.shift;
     } catch (error) {
-      throw DataError.fromGraphQLError(error);
+      throw fromGraphQLError(error);
     }
   }
 
@@ -61,7 +61,7 @@ export class ShiftRepository extends BaseRepository {
       });
       return data.shifts;
     } catch (error) {
-      throw DataError.fromGraphQLError(error);
+      throw fromGraphQLError(error);
     }
   }
 
@@ -73,7 +73,7 @@ export class ShiftRepository extends BaseRepository {
       });
       return data.activeShifts.items;
     } catch (error) {
-      throw DataError.fromGraphQLError(error);
+      throw fromGraphQLError(error);
     }
   }
 
@@ -85,7 +85,7 @@ export class ShiftRepository extends BaseRepository {
       });
       return data.activeShifts;
     } catch (error) {
-      throw DataError.fromGraphQLError(error);
+      throw fromGraphQLError(error);
     }
   }
 
@@ -94,7 +94,7 @@ export class ShiftRepository extends BaseRepository {
       const data = await this.sdk.CreateShift({ input });
       return data.createShift;
     } catch (error) {
-      throw DataError.fromGraphQLError(error);
+      throw fromGraphQLError(error);
     }
   }
 
@@ -103,7 +103,7 @@ export class ShiftRepository extends BaseRepository {
       const data = await this.sdk.UpdateShift({ id, input });
       return data.updateShift;
     } catch (error) {
-      throw DataError.fromGraphQLError(error);
+      throw fromGraphQLError(error);
     }
   }
 
@@ -112,7 +112,7 @@ export class ShiftRepository extends BaseRepository {
       const data = await this.sdk.DeleteShift({ id });
       return { id: data.deleteShift.id };
     } catch (error) {
-      throw DataError.fromGraphQLError(error);
+      throw fromGraphQLError(error);
     }
   }
 
@@ -124,7 +124,7 @@ export class ShiftRepository extends BaseRepository {
       const data = await this.sdk.InviteShiftVolunteers({ shiftId, memberIds });
       return { id: data.inviteMembersToShift.id };
     } catch (error) {
-      throw DataError.fromGraphQLError(error);
+      throw fromGraphQLError(error);
     }
   }
 
@@ -133,7 +133,7 @@ export class ShiftRepository extends BaseRepository {
       const data = await this.sdk.JoinShift({ shiftId });
       return data.joinShift;
     } catch (error) {
-      throw DataError.fromGraphQLError(error);
+      throw fromGraphQLError(error);
     }
   }
 
@@ -142,7 +142,7 @@ export class ShiftRepository extends BaseRepository {
       const data = await this.sdk.GetShiftVolunteers({ shiftId });
       return data.shiftVolunteers;
     } catch (error) {
-      throw DataError.fromGraphQLError(error);
+      throw fromGraphQLError(error);
     }
   }
 }

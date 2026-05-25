@@ -1,4 +1,5 @@
-import { DataError } from '../errors/data-error';
+import type { DataError } from '../errors/data-error';
+import { fromGraphQLError } from '../errors/translate';
 import { getSdk, type SdkFunctionWrapper } from '../generated/graphql';
 import { MembershipRequestRepository } from '../repositories/membershipRequest/membershipRequest.repository';
 import { OrganizationRepository } from '../repositories/organization/organization.repository';
@@ -14,7 +15,7 @@ import {
 import type { OrganizationContext } from './organization-context';
 
 export interface DataClientConfig extends GraphQLClientConfig {
-  onError?: (error: DataError) => void;
+  onError?: (error: DataError) => never;
 }
 
 const rethrowErrorHandler = (error: DataError) => {
@@ -42,7 +43,7 @@ export class DataClient {
       try {
         return await action();
       } catch (error) {
-        const dataError = DataError.fromGraphQLError(error);
+        const dataError = fromGraphQLError(error);
         onError(dataError);
         throw dataError;
       }

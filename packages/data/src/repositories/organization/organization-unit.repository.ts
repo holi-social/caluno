@@ -1,4 +1,4 @@
-import { DataError } from '../../errors/data-error';
+import { fromGraphQLError } from '../../errors/translate';
 import type {
   CreateOrganizationUnitInput,
   UpdateOrganizationUnitInput,
@@ -11,7 +11,7 @@ export class OrganizationUnitRepository extends BaseRepository {
       const data = await this.sdk.GetOrganizationUnit({ id });
       return data.organizationUnit;
     } catch (error) {
-      throw DataError.fromGraphQLError(error);
+      throw fromGraphQLError(error);
     }
   }
 
@@ -22,7 +22,7 @@ export class OrganizationUnitRepository extends BaseRepository {
       });
       return data.organization?.root ?? null;
     } catch (error) {
-      throw DataError.fromGraphQLError(error);
+      throw fromGraphQLError(error);
     }
   }
 
@@ -31,7 +31,7 @@ export class OrganizationUnitRepository extends BaseRepository {
       const data = await this.sdk.GetOrganizationUnitTypes();
       return data.organizationUnitTypes;
     } catch (error) {
-      throw DataError.fromGraphQLError(error);
+      throw fromGraphQLError(error);
     }
   }
 
@@ -40,7 +40,7 @@ export class OrganizationUnitRepository extends BaseRepository {
       const data = await this.sdk.CreateOrganizationUnit({ input });
       return data.createOrganizationUnit;
     } catch (error) {
-      throw DataError.fromGraphQLError(error);
+      throw fromGraphQLError(error);
     }
   }
 
@@ -49,7 +49,7 @@ export class OrganizationUnitRepository extends BaseRepository {
       const data = await this.sdk.UpdateOrganizationUnit({ id, input });
       return data.updateOrganizationUnit;
     } catch (error) {
-      throw DataError.fromGraphQLError(error);
+      throw fromGraphQLError(error);
     }
   }
 
@@ -58,7 +58,7 @@ export class OrganizationUnitRepository extends BaseRepository {
       const data = await this.sdk.DeleteOrganizationUnit({ id });
       return data.deleteOrganizationUnit;
     } catch (error) {
-      throw DataError.fromGraphQLError(error);
+      throw fromGraphQLError(error);
     }
   }
 }
