@@ -1,5 +1,10 @@
-import { createDataClient, type DataClient } from '@repo/data';
+import {
+  createDataClient,
+  type DataClient,
+  ForbiddenDataError,
+} from '@repo/data';
 import { headers } from 'next/headers';
+import { forbidden } from 'next/navigation';
 import { GRAPHQL_API_URL } from './constants';
 
 const globalForData = globalThis as unknown as {
@@ -34,5 +39,11 @@ export async function getDataClient(orgUId?: string): Promise<DataClient> {
   return createDataClient({
     url: GRAPHQL_API_URL,
     headers: clientHeaders,
+    onError: (error) => {
+      if (error instanceof ForbiddenDataError) {
+        forbidden();
+      }
+      throw error;
+    },
   });
 }
