@@ -29,6 +29,7 @@ export * from './react/hooks/use-my-permissions';
 export * from './react/hooks/use-organizations';
 export * from './react/hooks/use-roles';
 export * from './react/hooks/use-shift';
+export * from './react/hooks/use-shift-instances';
 export * from './react/hooks/use-shift-volunteers';
 // Organization context (provider, hooks, and cookie utilities)
 export * from './react/org-context';
