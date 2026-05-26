@@ -118,9 +118,7 @@ export class OrganizationService {
     };
   }
 
-  async findAccessibleUnits(
-    userId: string,
-  ): Promise<OrganizationUnitEntity[]> {
+  async findAccessibleUnits(userId: string): Promise<OrganizationUnitEntity[]> {
     const userMemberships = await this.db.query.memberships.findMany({
       where: { userId },
       with: {

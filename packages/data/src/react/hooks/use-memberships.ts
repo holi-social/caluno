@@ -1,7 +1,12 @@
 'use client';
 
 import { MembershipRepository } from '@repo/data';
-import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import {
+  keepPreviousData,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from '@tanstack/react-query';
 import { useGraphQLClient } from './use-graphql-client';
 
 export function useMemberships(orgUId: string) {

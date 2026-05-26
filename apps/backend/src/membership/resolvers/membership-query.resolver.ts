@@ -2,7 +2,6 @@ import { Args, Context, ID, Query, Resolver } from '@nestjs/graphql';
 import { Session, type UserSession } from '@thallesp/nestjs-better-auth';
 import { PERMISSIONS } from '../../auth/constants';
 import { Permissions } from '../../auth/decorators/permissions.decorator';
-import { ForbiddenGraphQLError } from '../../graphql/errors';
 import type { AuthenticatedGraphQLContext } from '../../graphql/graphql.context';
 import { UserMapper } from '../../user/mappers/user.mapper';
 import { User } from '../../user/models/user.model';
@@ -37,12 +36,9 @@ export class MembershipQueryResolver {
     @Args('organizationUnitId', { type: () => ID }) organizationUnitId: string,
     @Context() context: AuthenticatedGraphQLContext,
   ): Promise<User[]> {
-    if (organizationUnitId !== context.organizationUnitId) {
-      throw new ForbiddenGraphQLError(
-        'Organization unit ID does not match the current context',
-      );
-    }
-    const users = await this.membershipService.getMembers(organizationUnitId);
+    const users = await this.membershipService.getMembers(
+      context.organizationUnitId,
+    );
     return this.userMapper.toArray(users);
   }
 
@@ -51,8 +47,9 @@ export class MembershipQueryResolver {
   async memberships(
     @Context() context: AuthenticatedGraphQLContext,
   ): Promise<Membership[]> {
-    const memberships =
-      await this.membershipService.getMemberships(context.organizationUnitId);
+    const memberships = await this.membershipService.getMemberships(
+      context.organizationUnitId,
+    );
     return this.membershipMapper.toArray(memberships);
   }
 }

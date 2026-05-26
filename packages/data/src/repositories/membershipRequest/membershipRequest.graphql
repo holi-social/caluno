@@ -53,11 +53,7 @@ query GetMembershipRequests(
   $limit: Int!
   $offset: Int!
 ) {
-  membershipRequests(
-    status: $status
-    limit: $limit
-    offset: $offset
-  ) {
+  membershipRequests(status: $status, limit: $limit, offset: $offset) {
     items {
       id
       organizationUnit {
@@ -82,12 +78,8 @@ query GetMembershipRequests(
   }
 }
 
-query GetMembershipRequestCount(
-  $status: MembershipRequestStatus
-) {
-  membershipRequestCount(
-    status: $status
-  )
+query GetMembershipRequestCount($status: MembershipRequestStatus) {
+  membershipRequestCount(status: $status)
 }
 
 query GetMyMembershipRequests(

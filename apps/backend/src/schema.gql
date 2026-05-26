@@ -299,6 +299,7 @@ type Query {
   membershipRequestCount(status: MembershipRequestStatus): Int!
   membershipRequests(limit: Int! = 10, offset: Int! = 0, status: MembershipRequestStatus): MembershipRequestPaginatedResponse!
   memberships: [Membership!]!
+  myAccessibleOrganizationUnits: [OrganizationUnit!]!
   myMembershipRequests(limit: Int! = 10, offset: Int! = 0, status: MembershipRequestStatus): MembershipRequestPaginatedResponse!
   organization(id: String!): Organization
   organizationBySlug(slug: String!): Organization!

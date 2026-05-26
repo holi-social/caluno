@@ -11,7 +11,9 @@ export class MembershipFieldResolver {
 
   @ResolveField(() => [Role])
   async roles(
-    @Parent() membership: MembershipEntity & { roles?: Array<{ role: RoleEntity }> },
+    @Parent() membership: MembershipEntity & {
+      roles?: Array<{ role: RoleEntity }>;
+    },
   ): Promise<Role[]> {
     if (!membership.roles) {
       return [];
