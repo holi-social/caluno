@@ -7,16 +7,16 @@ import { User } from '../../user/models/user.model';
 @ObjectType()
 export class Membership {
   @Field(() => ID)
-  id: string;
+  id!: string;
 
   @Field(() => User)
-  user: User;
+  user!: User;
 
   @Field(() => OrganizationUnit)
-  organizationUnit: OrganizationUnit;
+  organizationUnit!: OrganizationUnit;
 
   @Field(() => [Role])
-  roles: Role[];
+  roles!: Role[];
 }
 
 export const MembershipPaginatedResponse =
