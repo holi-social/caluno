@@ -15,7 +15,7 @@ import {
 import type { OrganizationContext } from './organization-context';
 
 export interface DataClientConfig extends GraphQLClientConfig {
-  onError?: (error: DataError) => never;
+  onError?: (error: DataError) => void;
 }
 
 const rethrowErrorHandler = (error: DataError) => {

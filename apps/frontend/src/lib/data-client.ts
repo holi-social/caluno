@@ -4,7 +4,7 @@ import {
   ForbiddenDataError,
 } from '@repo/data';
 import { headers } from 'next/headers';
-import { forbidden } from 'next/navigation';
+import { redirect } from 'next/navigation';
 import { GRAPHQL_API_URL } from './constants';
 
 const globalForData = globalThis as unknown as {
@@ -41,7 +41,10 @@ export async function getDataClient(orgUId?: string): Promise<DataClient> {
     headers: clientHeaders,
     onError: (error) => {
       if (error instanceof ForbiddenDataError) {
-        forbidden();
+        //  This is less than ideal, as error handling code is not given the chance to handle the error themselves.
+        //  They're just booted out to the unauthorized page. So as a fallback it's too broad - it's handling all 403 errors handled and unhandled.
+        //  But... the FE shouldn't allow unauthorized GQL in the first place, so as a fallback maybe it's ok. Let's see, revisit later :|
+        redirect(`/unauthorized?message=${encodeURIComponent(error.message)}`);
       }
       throw error;
     },
