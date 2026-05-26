@@ -1,7 +1,8 @@
-import { Args, ID, Query, Resolver } from '@nestjs/graphql';
+import { Args, Context, ID, Int, Query, Resolver } from '@nestjs/graphql';
 import { Session, type UserSession } from '@thallesp/nestjs-better-auth';
 import { PERMISSIONS } from '../../auth/constants';
 import { Permissions } from '../../auth/decorators/permissions.decorator';
+import type { AuthenticatedGraphQLContext } from '../../graphql/graphql.context';
 import { PaginationInput } from '../../graphql/pagination.input';
 import { MembershipRequestStatus } from '../enums';
 import { MembershipRequestMapper } from '../mappers/membership-request.mepper';
@@ -21,13 +22,13 @@ export class MembershipRequestQueryResolver {
   @Permissions(PERMISSIONS.VOLUNTEER_VIEW)
   @Query(() => MembershipRequestPaginatedResponse)
   async membershipRequests(
-    @Args('organizationUnitId', { type: () => ID }) organizationUnitId: string,
     @Args('status', { type: () => MembershipRequestStatus, nullable: true })
     status: MembershipRequestStatus | null,
     @Args() pagination: PaginationInput,
+    @Context() context: AuthenticatedGraphQLContext,
   ): Promise<MembershipRequestPaginatedResponse> {
     const items = await this.membershipRequestService.getMembershipRequests(
-      organizationUnitId,
+      context.organizationUnitId,
       status ?? undefined,
     );
     return new MembershipRequestPaginatedResponse({
@@ -36,6 +37,19 @@ export class MembershipRequestQueryResolver {
       limit: pagination.limit,
       offset: pagination.offset,
     });
+  }
+
+  @Permissions(PERMISSIONS.VOLUNTEER_VIEW)
+  @Query(() => Int)
+  async membershipRequestCount(
+    @Args('status', { type: () => MembershipRequestStatus, nullable: true })
+    status: MembershipRequestStatus | null,
+    @Context() context: AuthenticatedGraphQLContext,
+  ): Promise<number> {
+    return this.membershipRequestService.getMembershipRequestCount(
+      context.organizationUnitId,
+      status ?? undefined,
+    );
   }
 
   @Query(() => MembershipRequestPaginatedResponse)

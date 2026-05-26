@@ -1,5 +1,5 @@
 import { Inject, Injectable, NotFoundException } from '@nestjs/common';
-import { and, eq, inArray } from 'drizzle-orm';
+import { eq } from 'drizzle-orm';
 import type { Database } from '../database/database.module';
 import { DATABASE_CONNECTION } from '../database/database-connection';
 import * as schema from '../database/schema';
@@ -53,84 +53,112 @@ export class AuthService {
     return role;
   }
 
+  private collectPermissions(
+    membership: {
+      roles: Array<{
+        role: {
+          permissions: Array<{ permission: PermissionEntity | null }>;
+        } | null;
+      }>;
+    },
+    permissionsById: Map<string, PermissionEntity>,
+  ): void {
+    for (const membershipRole of membership.roles) {
+      if (!membershipRole.role) continue;
+      for (const rolePermission of membershipRole.role.permissions) {
+        if (rolePermission.permission) {
+          permissionsById.set(
+            rolePermission.permission.id,
+            rolePermission.permission,
+          );
+        }
+      }
+    }
+  }
+
   async findUserPermissions(
     userId: string,
     organizationUnitId: string,
   ): Promise<PermissionEntity[]> {
-    const ancestorUnitIds =
-      await this.organizationUnitService.listInclusiveAncestorUnitIds(
-        organizationUnitId,
-      );
+    const permissionsById = new Map<string, PermissionEntity>();
+    const directMembership = await this.db.query.memberships.findFirst({
+      where: { userId, organizationUnitId },
+      with: {
+        roles: {
+          with: {
+            role: {
+              with: {
+                permissions: { with: { permission: true } },
+              },
+            },
+          },
+        },
+      },
+    });
 
-    if (ancestorUnitIds.length === 0) {
-      return [];
+    if (directMembership) {
+      this.collectPermissions(directMembership, permissionsById);
+      return Array.from(permissionsById.values());
     }
 
-    return this.db
-      .selectDistinct({
-        id: schema.permissions.id,
-        key: schema.permissions.key,
-        description: schema.permissions.description,
-        createdAt: schema.permissions.createdAt,
-        updatedAt: schema.permissions.updatedAt,
-      })
-      .from(schema.permissions)
-      .innerJoin(
-        schema.rolePermissions,
-        eq(schema.rolePermissions.permissionId, schema.permissions.id),
-      )
-      .innerJoin(
-        schema.membershipRoles,
-        eq(schema.membershipRoles.roleId, schema.rolePermissions.roleId),
-      )
-      .innerJoin(
-        schema.memberships,
-        eq(schema.memberships.id, schema.membershipRoles.membershipId),
-      )
-      .where(
-        and(
-          eq(schema.memberships.userId, userId),
-          inArray(schema.memberships.organizationUnitId, ancestorUnitIds),
-        ),
-      );
-  }
+    const requestedUnit = await this.db.query.organizationUnits.findFirst({
+      where: { id: organizationUnitId },
+      columns: { id: true, organizationId: true },
+    });
 
-  async findUserPermissionKeys(
-    userId: string,
-    organizationUnitId: string,
-  ): Promise<Set<string>> {
-    const ancestorUnitIds =
-      await this.organizationUnitService.listInclusiveAncestorUnitIds(
-        organizationUnitId,
-      );
+    if (!requestedUnit?.organizationId) return [];
 
-    if (ancestorUnitIds.length === 0) {
-      return new Set();
+    const userMemberships = await this.db.query.memberships.findMany({
+      where: { userId },
+      with: {
+        organizationUnit: { columns: { id: true, organizationId: true } },
+        roles: {
+          with: {
+            role: {
+              with: {
+                permissions: { with: { permission: true } },
+              },
+            },
+          },
+        },
+      },
+    });
+
+    const memberUnitIdsInOrg = new Set(
+      userMemberships.flatMap((m) => {
+        const unit = m.organizationUnit;
+        if (!unit || unit.organizationId !== requestedUnit.organizationId)
+          return [];
+        return [unit.id];
+      }),
+    );
+
+    if (memberUnitIdsInOrg.size === 0) return [];
+
+    const units = await this.db.query.organizationUnits.findMany({
+      where: { organizationId: requestedUnit.organizationId },
+      columns: { id: true, parentId: true },
+    });
+
+    const parentByUnitId = new Map<string, string | null>();
+    for (const unit of units) {
+      parentByUnitId.set(unit.id, unit.parentId);
     }
 
-    const rows = await this.db
-      .selectDistinct({ key: schema.permissions.key })
-      .from(schema.permissions)
-      .innerJoin(
-        schema.rolePermissions,
-        eq(schema.rolePermissions.permissionId, schema.permissions.id),
-      )
-      .innerJoin(
-        schema.membershipRoles,
-        eq(schema.membershipRoles.roleId, schema.rolePermissions.roleId),
-      )
-      .innerJoin(
-        schema.memberships,
-        eq(schema.memberships.id, schema.membershipRoles.membershipId),
-      )
-      .where(
-        and(
-          eq(schema.memberships.userId, userId),
-          inArray(schema.memberships.organizationUnitId, ancestorUnitIds),
-        ),
-      );
+    let currentUnitId: string | null = organizationUnitId;
+    while (currentUnitId) {
+      if (memberUnitIdsInOrg.has(currentUnitId)) {
+        const membership = userMemberships.find(
+          (m) => m.organizationUnit?.id === currentUnitId,
+        );
+        if (membership) {
+          this.collectPermissions(membership, permissionsById);
+        }
+      }
+      currentUnitId = parentByUnitId.get(currentUnitId) ?? null;
+    }
 
-    return new Set(rows.map((r) => r.key));
+    return Array.from(permissionsById.values());
   }
 
   async hasRequiredPermissions(
@@ -142,9 +170,13 @@ export class AuthService {
       return true;
     }
 
-    const permissionKeys = await this.findUserPermissionKeys(
+    const userPermissions = await this.findUserPermissions(
       userId,
       organizationUnitId,
+    );
+
+    const permissionKeys = new Set(
+      userPermissions.map((permission) => permission.key),
     );
 
     return requiredPermissions.every((permission) =>

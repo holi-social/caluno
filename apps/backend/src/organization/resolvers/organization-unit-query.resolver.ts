@@ -1,8 +1,4 @@
-import { Args, Context, Query, Resolver } from '@nestjs/graphql';
-import { Session, type UserSession } from '@thallesp/nestjs-better-auth';
-import { PERMISSIONS } from '../../auth/constants';
-import { Permissions } from '../../auth/decorators/permissions.decorator';
-import type { AuthenticatedGraphQLContext } from '../../graphql/graphql.context';
+import { Args, Query, Resolver } from '@nestjs/graphql';
 import { PaginationInput } from '../../graphql/pagination.input';
 import { OrganizationUnitMapper } from '../mappers/organization-unit.mapper';
 import { OrganizationUnitTypeMapper } from '../mappers/organization-unit-type.mapper';
@@ -11,27 +7,15 @@ import {
   OrganizationUnitPaginatedResponse,
 } from '../models/organization-unit.model';
 import { OrganizationUnitType } from '../models/organization-unit-type.model';
-import { OrganizationService } from '../organization.service';
 import { OrganizationUnitService } from '../organization-unit.service';
 
 @Resolver(() => OrganizationUnit)
 export class OrganizationUnitQueryResolver {
   constructor(
     private readonly organizationUnitService: OrganizationUnitService,
-    private readonly organizationService: OrganizationService,
     private readonly organizationUnitMapper: OrganizationUnitMapper,
     private readonly organizationUnitTypeMapper: OrganizationUnitTypeMapper,
   ) {}
-
-  @Query(() => [OrganizationUnit])
-  async myAccessibleOrganizationUnits(
-    @Session() session: UserSession,
-  ): Promise<OrganizationUnit[]> {
-    const units = await this.organizationService.findAccessibleUnits(
-      session.user.id,
-    );
-    return this.organizationUnitMapper.toArray(units);
-  }
 
   @Query(() => OrganizationUnit, { nullable: true })
   async organizationUnit(
@@ -41,25 +25,21 @@ export class OrganizationUnitQueryResolver {
     return this.organizationUnitMapper.toModel(organizationUnit);
   }
 
-  @Permissions(PERMISSIONS.ORG_VIEW)
   @Query(() => OrganizationUnit, { nullable: true })
   async organizationUnitBySlug(
     @Args('slug') slug: string,
-    @Context() context: AuthenticatedGraphQLContext,
   ): Promise<OrganizationUnit | null> {
     const organizationUnit =
       await this.organizationUnitService.findBySlug(slug);
     return this.organizationUnitMapper.toModel(organizationUnit);
   }
 
-  @Permissions(PERMISSIONS.ORG_VIEW)
   @Query(() => [OrganizationUnitType])
   async organizationUnitTypes(): Promise<OrganizationUnitType[]> {
     const types = await this.organizationUnitService.findAllTypes();
     return this.organizationUnitTypeMapper.toArray(types);
   }
 
-  @Permissions(PERMISSIONS.ORG_VIEW)
   @Query(() => OrganizationUnitPaginatedResponse)
   async organizationUnits(
     @Args() pagination: PaginationInput,

@@ -1,7 +1,8 @@
 import { forwardRef, Inject, Injectable, Logger } from '@nestjs/common';
-import { and, eq } from 'drizzle-orm';
+import { and, eq, inArray, sql } from 'drizzle-orm';
 import { DEFAULT_MEMBER_ROLE_NAME } from '../auth/constants';
 import type { UserEntity } from '../auth/schemas/auth.schema';
+import type { RoleEntity } from '../auth/schemas/role.schema';
 import type { Database } from '../database/database.module';
 import { DATABASE_CONNECTION } from '../database/database-connection';
 import * as schema from '../database/schema';
@@ -52,6 +53,51 @@ export class MembershipService {
       },
     });
     return membership ?? null;
+  }
+
+  async getMemberships(
+    organizationUnitId: string,
+  ): Promise<MembershipEntity[]> {
+    return this.db.query.memberships.findMany({
+      where: { organizationUnitId },
+      with: {
+        user: true,
+        organizationUnit: true,
+        roles: {
+          with: {
+            role: true,
+          },
+        },
+      },
+    });
+  }
+
+  async getMembershipUser(membershipId: string): Promise<UserEntity | null> {
+    const membership = await this.db.query.memberships.findFirst({
+      where: { id: membershipId },
+      with: { user: true },
+    });
+    return membership?.user ?? null;
+  }
+
+  async getMembershipOrganizationUnit(
+    membershipId: string,
+  ): Promise<schema.OrganizationUnitEntity | null> {
+    const membership = await this.db.query.memberships.findFirst({
+      where: { id: membershipId },
+      with: { organizationUnit: true },
+    });
+    return membership?.organizationUnit ?? null;
+  }
+
+  async getMembershipRoles(membershipId: string): Promise<RoleEntity[]> {
+    const membershipRoles = await this.db.query.membershipRoles.findMany({
+      where: { membershipId },
+      with: { role: true },
+    });
+    return membershipRoles
+      .map((mr) => mr.role)
+      .filter((r): r is RoleEntity => r !== null);
   }
 
   /**
@@ -381,6 +427,22 @@ export class MembershipService {
     });
   }
 
+  async getMembershipRequestCount(
+    organizationUnitId: string,
+    status?: MembershipRequestStatus,
+  ): Promise<number> {
+    const result = await this.db
+      .select({ count: sql<number>`count(*)` })
+      .from(schema.membershipRequests)
+      .where(
+        and(
+          eq(schema.membershipRequests.organizationUnitId, organizationUnitId),
+          status ? eq(schema.membershipRequests.status, status) : undefined,
+        ),
+      );
+    return result[0]?.count ?? 0;
+  }
+
   async getMyMembershipRequests(
     userId: string,
     status?: MembershipRequestStatus,
@@ -556,5 +618,88 @@ export class MembershipService {
       .returning();
 
     return membershipRole !== undefined;
+  }
+
+  async updateMembershipRoles(
+    membershipId: string,
+    roleIds: string[],
+    organizationUnitId?: string,
+  ): Promise<MembershipEntity> {
+    const membership = await this.db.query.memberships.findFirst({
+      where: { id: membershipId },
+      with: {
+        organizationUnit: true,
+      },
+    });
+
+    if (!membership) {
+      throw new NotFoundGraphQLError('Membership not found');
+    }
+
+    if (
+      organizationUnitId &&
+      membership.organizationUnitId !== organizationUnitId
+    ) {
+      throw new ConflictGraphQLError(
+        'Membership does not belong to the current organization unit.',
+      );
+    }
+
+    if (!membership.organizationUnit?.organizationId) {
+      throw new ConflictGraphQLError(
+        'Membership organization unit is not linked to an organization.',
+      );
+    }
+
+    const organizationId = membership.organizationUnit.organizationId;
+
+    if (roleIds.length === 0) {
+      throw new ConflictGraphQLError(
+        'A membership must have at least one role assigned.',
+      );
+    }
+
+    const roles = await this.db
+      .select()
+      .from(schema.roles)
+      .where(inArray(schema.roles.id, roleIds));
+
+    if (roles.length !== roleIds.length) {
+      throw new NotFoundGraphQLError('One or more roles not found');
+    }
+
+    const allBelongToOrg = roles.every(
+      (role) => role.organizationId === organizationId,
+    );
+
+    if (!allBelongToOrg) {
+      throw new ConflictGraphQLError(
+        'One or more roles do not belong to the membership organization.',
+      );
+    }
+
+    const updatedMembership = await this.db.transaction(async (tx) => {
+      await tx
+        .delete(schema.membershipRoles)
+        .where(eq(schema.membershipRoles.membershipId, membershipId));
+
+      if (roleIds.length > 0) {
+        await tx.insert(schema.membershipRoles).values(
+          roleIds.map((roleId) => ({
+            membershipId,
+            roleId,
+          })),
+        );
+      }
+
+      return membership;
+    });
+
+    await this.notificationService.notifyUserRoleUpgraded(
+      updatedMembership,
+      roleIds,
+    );
+
+    return updatedMembership;
   }
 }
