@@ -1,5 +1,6 @@
 'use client';
-import { PermissionKey } from '@repo/data';
+import { MembershipRequestStatus, PermissionKey } from '@repo/data';
+import { useMembershipRequestCount } from '@repo/data/react';
 import {
   Button,
   Sidebar,
@@ -38,6 +39,11 @@ export function DashboardSidebar({ permissions }: DashboardSidebarProps) {
   const router = useRouter();
   const orgUId = params.orgUId as string | undefined;
 
+  const { data: pendingCount } = useMembershipRequestCount(
+    orgUId ?? '',
+    MembershipRequestStatus.Pending,
+  );
+
   const menuItems = useMemo(() => {
     if (!orgUId) return [];
 
@@ -56,19 +62,15 @@ export function DashboardSidebar({ permissions }: DashboardSidebarProps) {
         title: 'Volunteers',
         href: `/${orgUId}/volunteers`,
         icon: UsersIcon,
+        count: pendingCount,
       },
       {
         title: 'Check-in/out',
         href: `/${orgUId}/check-in/scan`,
         icon: ScanQrCode,
       },
-      {
-        title: 'Membership Requests',
-        href: `/${orgUId}/membership-requests`,
-        icon: UsersIcon,
-      },
     ];
-  }, [orgUId]);
+  }, [orgUId, pendingCount]);
 
   const permissionSet = useMemo(() => new Set(permissions), [permissions]);
 
@@ -123,9 +125,19 @@ export function DashboardSidebar({ permissions }: DashboardSidebarProps) {
                 {menuItems.map((item) => (
                   <SidebarMenuItem key={item.href}>
                     <SidebarMenuButton asChild>
-                      <a href={item.href}>
-                        <item.icon className="h-4 w-4" />
-                        <span>{item.title}</span>
+                      <a
+                        href={item.href}
+                        className="flex items-center justify-between w-full"
+                      >
+                        <span className="flex items-center gap-2">
+                          <item.icon className="h-4 w-4" />
+                          <span>{item.title}</span>
+                        </span>
+                        {'count' in item && item.count ? (
+                          <span className="inline-flex h-5 min-w-[20px] items-center justify-center rounded-full bg-muted px-1.5 text-xs font-medium text-muted-foreground">
+                            {item.count}
+                          </span>
+                        ) : null}
                       </a>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
