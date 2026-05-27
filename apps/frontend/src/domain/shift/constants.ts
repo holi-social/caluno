@@ -13,11 +13,11 @@ export {
   ALL_RECURRENCE_DAYS,
   DAY_VALUE_TO_RRULE,
   RECURRENCE_DAYS,
+  type RecurrenceDayValue,
   RRULE_DAY_CODES,
+  type RRuleDayCode,
   WEEKEND_DAYS,
   WORKING_DAYS,
-  type RecurrenceDayValue,
-  type RRuleDayCode,
 };
 
 export const RECURRENCE_PRESETS = [

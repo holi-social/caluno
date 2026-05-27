@@ -121,7 +121,8 @@ enum JoinStatus {
 
 type Membership {
   id: ID!
-  organization: Organization!
+  organizationUnit: OrganizationUnit!
+  roles: [Role!]!
   user: User!
 }
 
@@ -173,6 +174,7 @@ type Mutation {
   joinOrganization(organizationUnitId: ID!): JoinOrganizationResult!
   joinShift(shiftId: String!): JoinShiftResult!
   rejectMembershipRequest(id: ID!, organizationUnitId: ID!, rejectionReason: String!): MembershipRequest!
+  updateMembershipRoles(membershipId: ID!, roleIds: [ID!]!): Membership!
   updateOrganizationUnit(id: String!, input: UpdateOrganizationUnitInput!): OrganizationUnit!
   updateRequirement(id: String!, input: UpdateRequirementInput!): Requirement!
   updateRequirementFulfillment(id: String!, input: UpdateRequirementFulfillmentInput!): RequirementFulfillment!
@@ -293,8 +295,10 @@ type Query {
   activeShifts(limit: Int! = 10, offset: Int! = 0): ShiftInstancePaginatedResponse!
   me: User!
   members(organizationUnitId: ID!): [User!]!
-  membership(organizationUnitId: ID!): Membership!
-  membershipRequests(limit: Int! = 10, offset: Int! = 0, organizationUnitId: ID!, status: MembershipRequestStatus): MembershipRequestPaginatedResponse!
+  membership(organizationUnitId: ID!): Membership
+  membershipRequestCount(status: MembershipRequestStatus): Int!
+  membershipRequests(limit: Int! = 10, offset: Int! = 0, status: MembershipRequestStatus): MembershipRequestPaginatedResponse!
+  memberships: [Membership!]!
   myAccessibleOrganizationUnits: [OrganizationUnit!]!
   myMembershipRequests(limit: Int! = 10, offset: Int! = 0, status: MembershipRequestStatus): MembershipRequestPaginatedResponse!
   organization(id: String!): Organization

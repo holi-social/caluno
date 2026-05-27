@@ -23,3 +23,13 @@ export function usePermissionGroups() {
     queryFn: () => repository.findPermissionGroups(),
   });
 }
+
+export function useRoles() {
+  const client = useGraphQLClient();
+  const repository = new RoleRepository(client);
+
+  return useQuery({
+    queryKey: ['roles'],
+    queryFn: () => repository.findAll(),
+  });
+}

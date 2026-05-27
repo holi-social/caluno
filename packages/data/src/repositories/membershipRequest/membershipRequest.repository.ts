@@ -13,17 +13,26 @@ export interface FindMembershipRequestsOptions {
 
 export class MembershipRequestRepository extends BaseRepository {
   async findAllByOrganizationUnitId(
-    organizationUnitId: string,
     options: FindMembershipRequestsOptions = {},
   ) {
     try {
       const data = await this.sdk.GetMembershipRequests({
-        organizationUnitId,
         limit: options.limit ?? 10,
         offset: options.offset ?? 0,
         status: options.status,
       });
       return data.membershipRequests;
+    } catch (error) {
+      throw DataError.fromGraphQLError(error);
+    }
+  }
+
+  async getCount(status?: MembershipRequestStatus) {
+    try {
+      const data = await this.sdk.GetMembershipRequestCount({
+        status,
+      });
+      return data.membershipRequestCount;
     } catch (error) {
       throw DataError.fromGraphQLError(error);
     }

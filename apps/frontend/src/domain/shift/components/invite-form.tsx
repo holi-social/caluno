@@ -1,10 +1,10 @@
 'use client';
 
 import {
+  useMemberships,
   useOrgUId,
   useQueryClient,
   useShiftVolunteers,
-  useVolunteers,
 } from '@repo/data/react';
 import { Button, Field } from '@repo/ui';
 import { useState } from 'react';
@@ -33,13 +33,14 @@ export function InviteShiftForm({
   const queryClient = useQueryClient();
 
   const { data: shiftVolunteers } = useShiftVolunteers(shiftId);
-  const { data: volunteers } = useVolunteers(orgUId);
+  const { data: memberships } = useMemberships(orgUId);
   const currentUserId = session.data?.user?.id;
 
   const existingIds = new Set(shiftVolunteers?.map((v) => v.id) ?? []);
   const readonlyIds = shiftVolunteers?.map((v) => v.id) ?? [];
 
-  const eligibleVolunteers = volunteers?.filter((v) => v.id !== currentUserId);
+  const volunteers = memberships?.map((m) => m.user) ?? [];
+  const eligibleVolunteers = volunteers.filter((v) => v.id !== currentUserId);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

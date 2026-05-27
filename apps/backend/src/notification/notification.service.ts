@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import type { MembershipEntity } from '../membership/schemas/membership.schema';
 import type { MembershipRequestEntity } from '../membership/schemas/membership-request.schema';
 import type { OrganizationUnitEntity } from '../organization/schemas/organization-unit.schema';
 import type { ShiftEntity } from '../shift/schemas/shift.schema';
@@ -30,6 +31,17 @@ export class NotificationService {
     this.noop('notifyUserMembershipRejected', {
       requestId: request.id,
       userId: request.userId,
+    });
+  }
+
+  async notifyUserRoleUpgraded(
+    membership: MembershipEntity,
+    roleIds: string[],
+  ): Promise<void> {
+    this.noop('notifyUserRoleUpgraded', {
+      membershipId: membership.id,
+      userId: membership.userId,
+      roleIds,
     });
   }
 

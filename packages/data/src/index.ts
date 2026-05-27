@@ -20,6 +20,7 @@ export * from './generated/graphql';
 export * from './integrations/server-org-context';
 // Repositories (if you want to use them directly)
 export * from './repositories/base/base.repository';
+export * from './repositories/membership/membership.repository';
 export * from './repositories/membershipRequest/membershipRequest.repository';
 export * from './repositories/organization/organization.repository';
 export * from './repositories/requirementProfile/requirement-profile.repository';

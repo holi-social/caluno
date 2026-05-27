@@ -17,7 +17,8 @@ export function getDynamicIcon(
   name: string,
   fallback: React.ComponentType<LucideProps>,
 ): React.ComponentType<LucideProps> {
-  if (iconCache.has(name)) return iconCache.get(name)!;
+  const iconFromCache = iconCache?.get(name);
+  if (iconFromCache) return iconFromCache;
 
   const loader = isLucideIconKey(name) ? dynamicIconImports[name] : undefined;
   const Icon = loader
