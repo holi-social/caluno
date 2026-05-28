@@ -678,7 +678,7 @@ export class MembershipService {
       );
     }
 
-    const updatedMembership = await this.db.transaction(async (tx) => {
+    await this.db.transaction(async (tx) => {
       await tx
         .delete(schema.membershipRoles)
         .where(eq(schema.membershipRoles.membershipId, membershipId));
@@ -691,9 +691,24 @@ export class MembershipService {
           })),
         );
       }
-
-      return membership;
     });
+
+    const updatedMembership = await this.db.query.memberships.findFirst({
+      where: { id: membershipId },
+      with: {
+        user: true,
+        organizationUnit: true,
+        roles: {
+          with: {
+            role: true,
+          },
+        },
+      },
+    });
+
+    if (!updatedMembership) {
+      throw new NotFoundGraphQLError('Membership not found after update');
+    }
 
     await this.notificationService.notifyUserRoleUpgraded(
       updatedMembership,

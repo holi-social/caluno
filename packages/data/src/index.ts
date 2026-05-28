@@ -2,7 +2,11 @@
 // Use in server components, API routes, or any JavaScript environment
 
 // Unified Data Client (recommended)
-export { createDataClient, DataClient, type DataClientConfig } from './client/data-client';
+export {
+  createDataClient,
+  DataClient,
+  type DataClientConfig,
+} from './client/data-client';
 
 // GraphQL Client (for advanced usage)
 export * from './client/graphql-client';
