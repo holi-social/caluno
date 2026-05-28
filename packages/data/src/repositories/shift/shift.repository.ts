@@ -3,7 +3,6 @@ import {
   parseRruleEndDate,
   type RecurrenceDayValue,
 } from '../../constants';
-import { DataError } from '../../errors/data-error';
 import type {
   CreateShiftInput,
   GetActiveShiftsQuery,
@@ -43,12 +42,8 @@ function enrichShift(shift: RawShift): ShiftDetail {
 
 export class ShiftRepository extends BaseRepository {
   async findById(id: string): Promise<RawShift> {
-    try {
-      const data = await this.sdk.GetShift({ id });
-      return data.shift;
-    } catch (error) {
-      throw DataError.fromGraphQLError(error);
-    }
+    const data = await this.sdk.GetShift({ id });
+    return data.shift;
   }
 
   async findByIdDetailed(id: string): Promise<ShiftDetail> {
@@ -57,104 +52,64 @@ export class ShiftRepository extends BaseRepository {
   }
 
   async findAll(options: PaginationOptions = {}) {
-    try {
-      const data = await this.sdk.GetShifts({
-        limit: options.limit ?? 10,
-        offset: options.offset ?? 0,
-      });
-      return data.shifts;
-    } catch (error) {
-      throw DataError.fromGraphQLError(error);
-    }
+    const data = await this.sdk.GetShifts({
+      limit: options.limit ?? 10,
+      offset: options.offset ?? 0,
+    });
+    return data.shifts;
   }
 
   async findAllForTimeEntryCreation(options: PaginationOptions = {}) {
-    try {
-      const data = await this.sdk.GetShiftsForTimeEntryCreation({
-        limit: options.limit ?? 100,
-        offset: options.offset ?? 0,
-      });
-      return data.activeShifts.items;
-    } catch (error) {
-      throw DataError.fromGraphQLError(error);
-    }
+    const data = await this.sdk.GetShiftsForTimeEntryCreation({
+      limit: options.limit ?? 100,
+      offset: options.offset ?? 0,
+    });
+    return data.activeShifts.items;
   }
 
   async activeShifts(options: PaginationOptions = {}) {
-    try {
-      const data = await this.sdk.GetActiveShifts({
-        limit: options.limit ?? 100,
-        offset: options.offset ?? 0,
-      });
-      return data.activeShifts;
-    } catch (error) {
-      throw DataError.fromGraphQLError(error);
-    }
+    const data = await this.sdk.GetActiveShifts({
+      limit: options.limit ?? 100,
+      offset: options.offset ?? 0,
+    });
+    return data.activeShifts;
   }
 
   async create(input: CreateShiftInput) {
-    try {
-      const data = await this.sdk.CreateShift({ input });
-      return data.createShift;
-    } catch (error) {
-      throw DataError.fromGraphQLError(error);
-    }
+    const data = await this.sdk.CreateShift({ input });
+    return data.createShift;
   }
 
   async update(id: string, input: UpdateShiftInput) {
-    try {
-      const data = await this.sdk.UpdateShift({ id, input });
-      return data.updateShift;
-    } catch (error) {
-      throw DataError.fromGraphQLError(error);
-    }
+    const data = await this.sdk.UpdateShift({ id, input });
+    return data.updateShift;
   }
 
   async delete(id: string): Promise<{ id: string }> {
-    try {
-      const data = await this.sdk.DeleteShift({ id });
-      return { id: data.deleteShift.id };
-    } catch (error) {
-      throw DataError.fromGraphQLError(error);
-    }
+    const data = await this.sdk.DeleteShift({ id });
+    return { id: data.deleteShift.id };
   }
 
   async inviteMembers(
     shiftId: string,
     memberIds: string[],
   ): Promise<{ id: string }> {
-    try {
-      const data = await this.sdk.InviteShiftVolunteers({ shiftId, memberIds });
-      return { id: data.inviteMembersToShift.id };
-    } catch (error) {
-      throw DataError.fromGraphQLError(error);
-    }
+    const data = await this.sdk.InviteShiftVolunteers({ shiftId, memberIds });
+    return { id: data.inviteMembersToShift.id };
   }
 
   async join(shiftId: string): Promise<JoinShiftMutation['joinShift']> {
-    try {
-      const data = await this.sdk.JoinShift({ shiftId });
-      return data.joinShift;
-    } catch (error) {
-      throw DataError.fromGraphQLError(error);
-    }
+    const data = await this.sdk.JoinShift({ shiftId });
+    return data.joinShift;
   }
 
   async findVolunteersByShiftId(shiftId: string) {
-    try {
-      const data = await this.sdk.GetShiftVolunteers({ shiftId });
-      return data.shiftVolunteers;
-    } catch (error) {
-      throw DataError.fromGraphQLError(error);
-    }
+    const data = await this.sdk.GetShiftVolunteers({ shiftId });
+    return data.shiftVolunteers;
   }
 
   async findInstances(shiftId: string) {
-    try {
-      const data = await this.sdk.GetShiftInstances({ shiftId });
-      return data.shiftInstances;
-    } catch (error) {
-      throw DataError.fromGraphQLError(error);
-    }
+    const data = await this.sdk.GetShiftInstances({ shiftId });
+    return data.shiftInstances;
   }
 }

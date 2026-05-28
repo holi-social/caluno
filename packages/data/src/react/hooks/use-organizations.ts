@@ -2,11 +2,11 @@
 
 import { useSuspenseQuery } from '@tanstack/react-query';
 import { OrganizationUnitRepository } from '../../repositories/organization/organization-unit.repository';
-import { useGraphQLClient } from './use-graphql-client';
+import { useSdk } from './use-graphql-client';
 
 export function useOrganizationUnitWithSuspense(id: string) {
-  const client = useGraphQLClient();
-  const repository = new OrganizationUnitRepository(client);
+  const sdk = useSdk();
+  const repository = new OrganizationUnitRepository(sdk);
 
   return useSuspenseQuery({
     queryKey: ['organization-unit', id],

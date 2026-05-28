@@ -2,11 +2,11 @@
 
 import { ShiftRepository } from '@repo/data';
 import { useQuery } from '@tanstack/react-query';
-import { useGraphQLClient } from './use-graphql-client';
+import { useSdk } from './use-graphql-client';
 
 export function useShiftInstances(shiftId?: string) {
-  const client = useGraphQLClient();
-  const repository = new ShiftRepository(client);
+  const sdk = useSdk();
+  const repository = new ShiftRepository(sdk);
 
   return useQuery({
     queryKey: ['shiftInstances', shiftId],

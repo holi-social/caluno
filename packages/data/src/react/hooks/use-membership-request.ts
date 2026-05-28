@@ -8,14 +8,14 @@ import {
   useQueryClient,
 } from '@tanstack/react-query';
 import type { MembershipRequestStatus } from '../../generated/graphql';
-import { useGraphQLClient } from './use-graphql-client';
+import { useSdk } from './use-graphql-client';
 
 export function useMembershipRequests(
   organizationUnitId: string,
   status?: MembershipRequestStatus,
 ) {
-  const client = useGraphQLClient();
-  const repository = new MembershipRequestRepository(client);
+  const sdk = useSdk();
+  const repository = new MembershipRequestRepository(sdk);
 
   return useQuery({
     queryKey: ['membershipRequests', organizationUnitId, status],
@@ -34,8 +34,8 @@ export function useMembershipRequestCount(
   organizationUnitId: string,
   status?: MembershipRequestStatus,
 ) {
-  const client = useGraphQLClient();
-  const repository = new MembershipRequestRepository(client);
+  const sdk = useSdk();
+  const repository = new MembershipRequestRepository(sdk);
 
   return useQuery({
     queryKey: ['membershipRequestCount', organizationUnitId, status],
@@ -46,9 +46,9 @@ export function useMembershipRequestCount(
 }
 
 export function useApproveMembershipRequest() {
-  const client = useGraphQLClient();
+  const sdk = useSdk();
   const queryClient = useQueryClient();
-  const repository = new MembershipRequestRepository(client);
+  const repository = new MembershipRequestRepository(sdk);
 
   return useMutation({
     mutationFn: ({
@@ -67,9 +67,9 @@ export function useApproveMembershipRequest() {
 }
 
 export function useCancelMembershipRequest() {
-  const client = useGraphQLClient();
+  const sdk = useSdk();
   const queryClient = useQueryClient();
-  const repository = new MembershipRequestRepository(client);
+  const repository = new MembershipRequestRepository(sdk);
 
   return useMutation({
     mutationFn: ({

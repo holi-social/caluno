@@ -7,11 +7,11 @@ import {
   useQuery,
   useQueryClient,
 } from '@tanstack/react-query';
-import { useGraphQLClient } from './use-graphql-client';
+import { useSdk } from './use-graphql-client';
 
 export function useMemberships(orgUId: string) {
-  const client = useGraphQLClient();
-  const repository = new MembershipRepository(client);
+  const sdk = useSdk();
+  const repository = new MembershipRepository(sdk);
 
   return useQuery({
     queryKey: ['memberships', orgUId],
@@ -22,9 +22,9 @@ export function useMemberships(orgUId: string) {
 }
 
 export function useUpdateMembershipRoles() {
-  const client = useGraphQLClient();
+  const sdk = useSdk();
   const queryClient = useQueryClient();
-  const repository = new MembershipRepository(client);
+  const repository = new MembershipRepository(sdk);
 
   return useMutation({
     mutationFn: ({

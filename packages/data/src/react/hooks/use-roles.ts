@@ -2,11 +2,11 @@
 
 import { RoleRepository } from '@repo/data';
 import { useQuery } from '@tanstack/react-query';
-import { useGraphQLClient } from './use-graphql-client';
+import { useSdk } from './use-graphql-client';
 
 export function usePermissions() {
-  const client = useGraphQLClient();
-  const repository = new RoleRepository(client);
+  const sdk = useSdk();
+  const repository = new RoleRepository(sdk);
 
   return useQuery({
     queryKey: ['permissions'],
@@ -15,8 +15,8 @@ export function usePermissions() {
 }
 
 export function usePermissionGroups() {
-  const client = useGraphQLClient();
-  const repository = new RoleRepository(client);
+  const sdk = useSdk();
+  const repository = new RoleRepository(sdk);
 
   return useQuery({
     queryKey: ['permissionGroups'],
@@ -25,8 +25,8 @@ export function usePermissionGroups() {
 }
 
 export function useRoles() {
-  const client = useGraphQLClient();
-  const repository = new RoleRepository(client);
+  const sdk = useSdk();
+  const repository = new RoleRepository(sdk);
 
   return useQuery({
     queryKey: ['roles'],

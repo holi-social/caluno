@@ -3,11 +3,11 @@
 import type { PermissionKey } from '@repo/data';
 import { UserRepository } from '@repo/data';
 import { useQuery } from '@tanstack/react-query';
-import { useGraphQLClient } from './use-graphql-client';
+import { useSdk } from './use-graphql-client';
 
 function useMyPermissions() {
-  const client = useGraphQLClient();
-  const repository = new UserRepository(client);
+  const sdk = useSdk();
+  const repository = new UserRepository(sdk);
 
   return useQuery({
     queryKey: ['user', 'me', 'permissions'],
