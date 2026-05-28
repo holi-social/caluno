@@ -1,15 +1,24 @@
-import { Args, ID, Mutation, Resolver } from '@nestjs/graphql';
+import { Args, Context, ID, Mutation, Resolver } from '@nestjs/graphql';
 import { Session, type UserSession } from '@thallesp/nestjs-better-auth';
 import { plainToInstance } from 'class-transformer';
+import { PERMISSIONS } from '../../auth/constants';
+import { Permissions } from '../../auth/decorators/permissions.decorator';
+import type { AuthenticatedGraphQLContext } from '../../graphql/graphql.context';
 import { RequirementProfile } from '../../requirement-profile/models/requirement-profile.model';
 import { UserRequirementStatus } from '../../requirement-profile/models/user-requirement-status.model';
+
 import { JoinStatus } from '../../shared/enums/join-status.enum';
+import { MembershipMapper } from '../mappers/membership.mepper';
 import { MembershipService } from '../membership.service';
 import { JoinOrganizationResult } from '../models/join-organization-result.model';
+import { Membership } from '../models/membership.model';
 
 @Resolver(() => JoinOrganizationResult)
 export class MembershipMutationResolver {
-  constructor(private readonly membershipService: MembershipService) {}
+  constructor(
+    private readonly membershipService: MembershipService,
+    private readonly membershipMapper: MembershipMapper,
+  ) {}
 
   @Mutation(() => JoinOrganizationResult)
   async joinOrganization(
@@ -59,5 +68,20 @@ export class MembershipMutationResolver {
         plainToInstance(UserRequirementStatus, s),
       ),
     };
+  }
+
+  @Permissions(PERMISSIONS.VOLUNTEER_EDIT)
+  @Mutation(() => Membership)
+  async updateMembershipRoles(
+    @Args('membershipId', { type: () => ID }) membershipId: string,
+    @Args('roleIds', { type: () => [ID] }) roleIds: string[],
+    @Context() context: AuthenticatedGraphQLContext,
+  ): Promise<Membership> {
+    const entity = await this.membershipService.updateMembershipRoles(
+      membershipId,
+      roleIds,
+      context.organizationUnitId,
+    );
+    return this.membershipMapper.toModelOrThrow(entity);
   }
 }

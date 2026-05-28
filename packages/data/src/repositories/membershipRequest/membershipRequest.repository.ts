@@ -12,16 +12,21 @@ export interface FindMembershipRequestsOptions {
 
 export class MembershipRequestRepository extends BaseRepository {
   async findAllByOrganizationUnitId(
-    organizationUnitId: string,
     options: FindMembershipRequestsOptions = {},
   ) {
     const data = await this.sdk.GetMembershipRequests({
-      organizationUnitId,
       limit: options.limit ?? 10,
       offset: options.offset ?? 0,
       status: options.status,
     });
     return data.membershipRequests;
+  }
+
+  async getCount(status?: MembershipRequestStatus) {
+    const data = await this.sdk.GetMembershipRequestCount({
+      status,
+    });
+    return data.membershipRequestCount;
   }
 
   async approve(id: string, organizationUnitId: string) {

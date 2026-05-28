@@ -1,15 +1,43 @@
 'use client';
 
-import { OrganizationRepository } from '@repo/data';
-import { useQuery } from '@tanstack/react-query';
+import { MembershipRepository } from '@repo/data';
+import {
+  keepPreviousData,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from '@tanstack/react-query';
 import { useSdk } from './use-graphql-client';
 
-export function useVolunteers(orgUId: string) {
+export function useMemberships(orgUId: string) {
   const sdk = useSdk();
-  const repository = new OrganizationRepository(sdk);
+  const repository = new MembershipRepository(sdk);
 
   return useQuery({
-    queryKey: ['volunteers', orgUId],
-    queryFn: () => repository.findVolunteersByUnit(orgUId),
+    queryKey: ['memberships', orgUId],
+    queryFn: () => repository.findAllByOrganizationUnitId(),
+    staleTime: 5 * 60 * 1000,
+    placeholderData: keepPreviousData,
+  });
+}
+
+export function useUpdateMembershipRoles() {
+  const sdk = useSdk();
+  const queryClient = useQueryClient();
+  const repository = new MembershipRepository(sdk);
+
+  return useMutation({
+    mutationFn: ({
+      membershipId,
+      roleIds,
+    }: {
+      membershipId: string;
+      roleIds: string[];
+    }) => repository.updateRoles(membershipId, roleIds),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ['memberships'],
+      });
+    },
   });
 }

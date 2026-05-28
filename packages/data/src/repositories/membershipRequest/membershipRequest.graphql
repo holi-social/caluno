@@ -49,17 +49,11 @@ mutation CancelMembershipRequest($id: ID!, $organizationUnitId: ID!) {
 }
 
 query GetMembershipRequests(
-  $organizationUnitId: ID!
   $status: MembershipRequestStatus
   $limit: Int!
   $offset: Int!
 ) {
-  membershipRequests(
-    organizationUnitId: $organizationUnitId
-    status: $status
-    limit: $limit
-    offset: $offset
-  ) {
+  membershipRequests(status: $status, limit: $limit, offset: $offset) {
     items {
       id
       organizationUnit {
@@ -82,6 +76,10 @@ query GetMembershipRequests(
       updatedAt
     }
   }
+}
+
+query GetMembershipRequestCount($status: MembershipRequestStatus) {
+  membershipRequestCount(status: $status)
 }
 
 query GetMyMembershipRequests(

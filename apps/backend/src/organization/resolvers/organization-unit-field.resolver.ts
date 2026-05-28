@@ -20,7 +20,6 @@ export class OrganizationUnitFieldResolver {
     private readonly organizationUnitTypeMapper: OrganizationUnitTypeMapper,
     private readonly requirementProfileService: RequirementProfileService,
   ) {}
-
   @ResolveField(() => Organization)
   async organization(
     @Parent() organizationUnit: OrganizationUnitEntity,

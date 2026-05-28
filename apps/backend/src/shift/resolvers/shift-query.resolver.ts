@@ -13,7 +13,10 @@ import { User } from '../../user/models/user.model';
 import { ShiftMapper } from '../mappers/shift.mapper';
 import { ShiftInstanceMapper } from '../mappers/shift-instance.mapper';
 import { Shift, ShiftPaginatedResponse } from '../models/shift.model';
-import { ShiftInstancePaginatedResponse } from '../models/shift-instance.model';
+import {
+  ShiftInstance,
+  ShiftInstancePaginatedResponse,
+} from '../models/shift-instance.model';
 import { ShiftService } from '../shift.service';
 
 @Resolver(() => Shift)
@@ -71,6 +74,19 @@ export class ShiftQueryResolver {
       limit: pagination.limit,
       offset: pagination.offset,
     });
+  }
+
+  @Permissions(PERMISSIONS.SHIFT_VIEW)
+  @Query(() => [ShiftInstance])
+  async shiftInstances(
+    @Args('shiftId', { type: () => ID }) shiftId: string,
+    @Context() context: AuthenticatedGraphQLContext,
+  ): Promise<ShiftInstance[]> {
+    const instances = await this.shiftService.findInstances(
+      shiftId,
+      context.organizationUnitId,
+    );
+    return this.shiftInstanceMapper.toArray(instances);
   }
 
   @Permissions(PERMISSIONS.SHIFT_VIEW)

@@ -660,6 +660,28 @@ export class ShiftService {
     };
   }
 
+  async findInstances(
+    shiftId: string,
+    organizationUnitId: string,
+  ): Promise<ShiftInstanceEntity[]> {
+    const shift = await this.db.query.shifts.findFirst({
+      where: { id: shiftId, organizationUnitId, isDeleted: false },
+      columns: { id: true },
+    });
+
+    if (!shift) {
+      throw new NotFoundGraphQLError('Shift not found');
+    }
+
+    return this.db.query.shiftInstances.findMany({
+      where: {
+        masterId: shiftId,
+        isCancelled: false,
+      },
+      orderBy: { actualStartsAt: 'asc' },
+    });
+  }
+
   async findCreator(createdById: string): Promise<UserEntity> {
     return this.userService.findByIdOrThrow(createdById);
   }
