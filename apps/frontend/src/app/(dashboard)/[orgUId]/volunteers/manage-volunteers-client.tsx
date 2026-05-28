@@ -26,6 +26,7 @@ import { ButtonClipboard } from '@/components/button-clipboard';
 import MembershipRequestCard from '@/domain/membership-requests/components/membership-request-card';
 import { organizationUnitUrl } from '@/domain/organization/share';
 import { EmptyVolunteers } from '@/domain/volunteer/empty-volunteers';
+import { RoleSelectCell } from './role-select-cell';
 
 const TAB_APPROVED = 'APPROVED';
 const TAB_PENDING = MembershipRequestStatus.Pending;
@@ -85,7 +86,11 @@ function ApprovedTab({ orgUId }: { orgUId: string }) {
               <TableCell>{membership.user.name}</TableCell>
               <TableCell>{membership.user.email}</TableCell>
               <TableCell>
-                {membership.roles.map((role) => role.name).join(', ')}
+                <RoleSelectCell
+                  membershipId={membership.id}
+                  roles={membership.roles}
+                  orgUId={orgUId}
+                />
               </TableCell>
               <TableCell>
                 <Link
