@@ -109,11 +109,7 @@ export class ShiftRepository extends BaseRepository {
   }
 
   async findInstances(shiftId: string) {
-    try {
-      const data = await this.sdk.GetShiftInstances({ shiftId });
-      return data.shiftInstances;
-    } catch (error) {
-      throw DataError.fromGraphQLError(error);
-    }
+    const data = await this.sdk.GetShiftInstances({ shiftId });
+    return data.shiftInstances;
   }
 }

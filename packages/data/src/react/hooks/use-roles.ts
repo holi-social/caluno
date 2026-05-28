@@ -25,8 +25,8 @@ export function usePermissionGroups() {
 }
 
 export function useRoles() {
-  const client = useGraphQLClient();
-  const repository = new RoleRepository(client);
+  const sdk = useSdk();
+  const repository = new RoleRepository(sdk);
 
   return useQuery({
     queryKey: ['roles'],
