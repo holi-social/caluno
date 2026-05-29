@@ -41,6 +41,7 @@ query GetOrganizationRoot($id: String!) {
 query GetOrganizationUnit($id: String!) {
   organizationUnit(id: $id) {
     id
+    slug
     name
     description
     logoUrl
@@ -48,6 +49,11 @@ query GetOrganizationUnit($id: String!) {
     email
     phone
     address
+    organizationId
+    parent {
+      id
+      name
+    }
     type {
       id
       name
@@ -155,6 +161,9 @@ mutation CreateOrganization($input: CreateOrganizationInput!) {
     logoUrl
     websiteUrl
     createdAt
+    root {
+      id
+    }
   }
 }
 
@@ -239,4 +248,8 @@ mutation DeleteOrganizationUnit($id: String!) {
     id
     name
   }
+}
+
+query IsMemberOfOrgUnitOrAncestor($organizationUnitId: ID!) {
+  isMemberOfUnitOrAncestor(organizationUnitId: $organizationUnitId)
 }

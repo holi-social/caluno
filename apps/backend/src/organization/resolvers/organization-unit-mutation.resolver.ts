@@ -1,4 +1,6 @@
 import { Args, Mutation, Resolver } from '@nestjs/graphql';
+import type { UserSession } from '@thallesp/nestjs-better-auth';
+import { Session } from '@thallesp/nestjs-better-auth';
 import { PERMISSIONS } from '../../auth/constants';
 import { Permissions } from '../../auth/decorators/permissions.decorator';
 import { CreateOrganizationUnitInput } from '../inputs/create-organization-unit.input';
@@ -18,8 +20,12 @@ export class OrganizationUnitMutationResolver {
   @Mutation(() => OrganizationUnit)
   async createOrganizationUnit(
     @Args('input') input: CreateOrganizationUnitInput,
+    @Session() session: UserSession,
   ): Promise<OrganizationUnit> {
-    const organizationUnit = await this.organizationUnitService.create(input);
+    const organizationUnit = await this.organizationUnitService.create(
+      session.user.id,
+      input,
+    );
     return this.organizationUnitMapper.toModelOrThrow(organizationUnit);
   }
 

@@ -15,6 +15,7 @@ import {
   SidebarMenuItem,
 } from '@repo/ui';
 import {
+  BuildingIcon,
   CalendarIcon,
   ClockIcon,
   LogOutIcon,
@@ -48,6 +49,11 @@ export function DashboardSidebar({ permissions }: DashboardSidebarProps) {
     if (!orgUId) return [];
 
     return [
+      {
+        title: 'Overview',
+        href: `/${orgUId}`,
+        icon: BuildingIcon,
+      },
       {
         title: 'Shifts',
         href: `/${orgUId}/shifts`,

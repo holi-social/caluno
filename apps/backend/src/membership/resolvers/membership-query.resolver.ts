@@ -31,6 +31,18 @@ export class MembershipQueryResolver {
   }
 
   @Permissions(PERMISSIONS.VOLUNTEER_VIEW)
+  @Query(() => Boolean)
+  async isMemberOfUnitOrAncestor(
+    @Args('organizationUnitId', { type: () => ID }) organizationUnitId: string,
+    @Session() session: UserSession,
+  ): Promise<boolean> {
+    return this.membershipService.isMemberOfUnitOrAncestor(
+      session.user.id,
+      organizationUnitId,
+    );
+  }
+
+  @Permissions(PERMISSIONS.VOLUNTEER_VIEW)
   @Query(() => [User])
   async members(
     @Args('organizationUnitId', { type: () => ID }) organizationUnitId: string,

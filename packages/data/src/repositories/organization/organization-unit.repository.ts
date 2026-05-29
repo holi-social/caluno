@@ -36,4 +36,13 @@ export class OrganizationUnitRepository extends BaseRepository {
     const data = await this.sdk.DeleteOrganizationUnit({ id });
     return data.deleteOrganizationUnit;
   }
+
+  async isMemberOfOrgUnitOrAncestor(organizationUnitId: string): Promise<boolean> {
+    try {
+      const data = await this.sdk.IsMemberOfOrgUnitOrAncestor({ organizationUnitId });
+      return data.isMemberOfUnitOrAncestor;
+    } catch (error) {
+      throw DataError.fromGraphQLError(error);
+    }
+  }
 }

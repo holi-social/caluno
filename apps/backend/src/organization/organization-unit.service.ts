@@ -1,5 +1,6 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { and, count, eq, isNull } from 'drizzle-orm';
+import { DEFAULT_OWNER_ROLE_NAME } from '../auth/constants';
 import type { Database } from '../database/database.module';
 import { DATABASE_CONNECTION } from '../database/database-connection';
 import * as schema from '../database/schema';
@@ -124,6 +125,7 @@ export class OrganizationUnitService {
   }
 
   async create(
+    userId: string,
     input: CreateOrganizationUnitInput,
   ): Promise<OrganizationUnitEntity> {
     const type = await this.findType(input.typeId);
@@ -145,16 +147,47 @@ export class OrganizationUnitService {
       );
     }
 
-    const [organizationUnit] = await this.db
-      .insert(schema.organizationUnits)
-      .values({
-        ...input,
-        organizationId: input.organizationId,
-        slug,
-      })
-      .returning();
+    const [organizationUnit] = await this.db.transaction(async (tx) => {
+      const [unit] = await tx
+        .insert(schema.organizationUnits)
+        .values({
+          ...input,
+          organizationId: input.organizationId,
+          slug,
+        })
+        .returning();
+
+      await this.addOwnerMembership(userId, unit.id, input.organizationId, tx);
+
+      return [unit];
+    });
 
     return organizationUnit;
+  }
+
+  async addOwnerMembership(
+    userId: string,
+    organizationUnitId: string,
+    organizationId: string,
+    tx?: Database,
+  ): Promise<void> {
+    const db = tx ?? this.db;
+
+    const ownerRole = await db.query.roles.findFirst({
+      where: { organizationId, name: DEFAULT_OWNER_ROLE_NAME },
+    });
+
+    if (!ownerRole) throw new NotFoundGraphQLError('Owner role not found');
+
+    const [membership] = await db
+      .insert(schema.memberships)
+      .values({ userId, organizationUnitId })
+      .returning();
+
+    await db.insert(schema.membershipRoles).values({
+      membershipId: membership.id,
+      roleId: ownerRole.id,
+    });
   }
 
   async update(

@@ -81,11 +81,33 @@ export async function requireOrgAccess(
     redirect(`/${legacyOrg.id}`);
   }
 
-  if (!org) {
+  if (org) {
+    return { org, organizations };
+  }
+
+  const data = await getDataClient();
+  const isMember = await data.organizationUnit.isMemberOfOrgUnitOrAncestor(orgUId);
+  if (!isMember) {
     redirect('/unauthorized');
   }
 
-  return { org, organizations };
+  const unit = await data.organizationUnit.findById(orgUId);
+  if (!unit) {
+    redirect('/unauthorized');
+  }
+
+  return {
+    org: {
+      id: unit.id,
+      slug: unit.slug,
+      name: unit.name,
+      description: unit.description ?? null,
+      logoUrl: unit.logoUrl ?? null,
+      address: unit.address ?? null,
+      organizationId: unit.organizationId ?? '',
+    },
+    organizations,
+  };
 }
 
 export async function getLastVisitedOrgServer(): Promise<string | null> {

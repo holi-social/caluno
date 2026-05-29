@@ -11,7 +11,14 @@ import {
   TreeProvider,
   TreeView,
 } from '@repo/ui';
-import { HouseIcon, PencilIcon, PlusIcon, TrashIcon } from 'lucide-react';
+import {
+  EyeIcon,
+  HouseIcon,
+  PencilIcon,
+  PlusIcon,
+  TrashIcon,
+} from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import { getDynamicIcon } from '@/lib/dynamic-icon';
 
 type OrgUnitNode = OrgUnitNodeFieldsFragment & {
@@ -63,6 +70,8 @@ function OrgUnitNodeItem({
   isLast = false,
   parentPath = [],
 }: OrgUnitNodeItemProps) {
+  const router = useRouter();
+
   const Icon = getDynamicIcon(node.type.icon, HouseIcon);
   const children = node.children ?? [];
   const hasChildren = children.length > 0;
@@ -92,6 +101,18 @@ function OrgUnitNodeItem({
           <TreeLabel>{node.name}</TreeLabel>
 
           <span className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+            <button
+              type="button"
+              className="rounded p-1 hover:bg-accent"
+              onClick={(e) => {
+                e.stopPropagation();
+                router.push(`/${node.id}`);
+              }}
+              title="Visit org unit"
+            >
+              <EyeIcon className="h-5 w-5" />
+            </button>
+
             {canCreate && (
               <button
                 type="button"
