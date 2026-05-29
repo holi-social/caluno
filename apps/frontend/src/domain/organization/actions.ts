@@ -35,7 +35,7 @@ export async function createOrganization(
 
   const data = await getDataClient();
 
-  let org: { id: string };
+  let org: { id: string; root: { id: string } };
 
   try {
     org = await data.organization.create(input);
@@ -49,9 +49,7 @@ export async function createOrganization(
     };
   }
 
-  const rootUnit = await data.organization.findRootUnit(org.id);
-
-  if (!rootUnit) {
+  if (!org.root.id) {
     return {
       success: false,
       error:
@@ -59,5 +57,5 @@ export async function createOrganization(
     };
   }
 
-  redirect(`/${rootUnit.id}`);
+  redirect(`/${org.root.id}`);
 }

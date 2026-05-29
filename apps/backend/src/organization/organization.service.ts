@@ -17,6 +17,7 @@ import type { CreateOrganizationInput } from './inputs/create-organization.input
 import { OrganizationMapper } from './mappers/organization.mapper';
 import { type Organization } from './models/organization.model';
 import { OrganizationTree } from './models/organization-tree.model';
+import { OrganizationUnitService } from './organization-unit.service';
 import { OrganizationNode } from './types/organization-node';
 
 @Injectable()
@@ -26,6 +27,7 @@ export class OrganizationService {
     private readonly db: Database,
     private readonly mapper: OrganizationMapper,
     private readonly membershipService: MembershipService,
+    private readonly organizationUnitService: OrganizationUnitService,
   ) {}
 
   async findById(id: string): Promise<OrganizationEntity | undefined> {
@@ -409,18 +411,12 @@ export class OrganizationService {
       }
 
       // Link creator as owner member of the organization.
-      const [membership] = await tx
-        .insert(schema.memberships)
-        .values({
-          userId,
-          organizationUnitId: rootUnit.id,
-        })
-        .returning();
-
-      await tx.insert(schema.membershipRoles).values({
-        membershipId: membership.id,
-        roleId: ownerRole.id,
-      });
+      await this.organizationUnitService.addOwnerMembership(
+        userId,
+        rootUnit.id,
+        createdOrganization.id,
+        tx,
+      );
 
       return [createdOrganization];
     });

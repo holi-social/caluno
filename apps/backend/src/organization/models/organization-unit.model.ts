@@ -16,6 +16,9 @@ export class OrganizationUnit {
   @Field(() => String)
   slug!: string;
 
+  @Field(() => String)
+  organizationId!: string;
+
   @Field(() => String, { nullable: true })
   logoUrl!: string | null;
 
