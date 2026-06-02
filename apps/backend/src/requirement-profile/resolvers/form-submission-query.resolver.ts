@@ -1,6 +1,7 @@
 import { Args, Context, Query, Resolver } from '@nestjs/graphql';
 import { PERMISSIONS } from '../../auth/constants';
 import { Permissions } from '../../auth/decorators/permissions.decorator';
+import { NotFoundGraphQLError } from '../../graphql/errors';
 import type { AuthenticatedGraphQLContext } from '../../graphql/graphql.context';
 import { PaginationInput } from '../../graphql/pagination.input';
 import { OrgAccessService } from '../../shared/org-access.service';
@@ -29,12 +30,13 @@ export class FormSubmissionQueryResolver {
     const item = await this.formSubmissionService.findById(id);
     if (item) {
       const form = await this.requirementFormService.findById(item.formId);
-      if (form) {
-        await this.orgAccessService.verifyUnitInOrg(
-          context.organizationUnitId,
-          form.organizationId,
-        );
+      if (!form) {
+        throw new NotFoundGraphQLError('Form not found');
       }
+      await this.orgAccessService.verifyUnitInOrg(
+        context.organizationUnitId,
+        form.organizationId,
+      );
     }
     return this.formSubmissionMapper.toModel(item);
   }
@@ -47,12 +49,13 @@ export class FormSubmissionQueryResolver {
     @Context() context: AuthenticatedGraphQLContext,
   ): Promise<FormSubmissionPaginatedResponse> {
     const form = await this.requirementFormService.findById(formId);
-    if (form) {
-      await this.orgAccessService.verifyUnitInOrg(
-        context.organizationUnitId,
-        form.organizationId,
-      );
+    if (!form) {
+      throw new NotFoundGraphQLError('Form not found');
     }
+    await this.orgAccessService.verifyUnitInOrg(
+      context.organizationUnitId,
+      form.organizationId,
+    );
     const { items, total } = await this.formSubmissionService.findByFormId(
       formId,
       pagination,

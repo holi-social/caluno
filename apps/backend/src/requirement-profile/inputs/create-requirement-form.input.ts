@@ -8,9 +8,6 @@ export class CreateRequirementFormInput {
   organizationId!: string;
 
   @Field(() => String)
-  organizationUnitId!: string;
-
-  @Field(() => String)
   name!: string;
 
   @Field(() => String, { nullable: true })

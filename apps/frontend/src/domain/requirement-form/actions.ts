@@ -13,7 +13,6 @@ export const createForm = actionClient
     const data = await getDataClient(parsedInput.organizationUnitId);
     const form = await data.requirementForm.createForm({
       organizationId: parsedInput.organizationId,
-      organizationUnitId: parsedInput.organizationUnitId,
       name: parsedInput.name,
       description: parsedInput.description,
     });
@@ -82,9 +81,11 @@ export const submitForm = actionClient
   .inputSchema(submitFormSchema)
   .action(async ({ parsedInput }) => {
     const data = await getDataClient();
-    return await data.requirementForm.submitForm(parsedInput.token, {
+    const result = await data.requirementForm.submitForm(parsedInput.token, {
       values: parsedInput.values,
     });
+    revalidatePath('/my-membership-requests');
+    return result;
   });
 
 const deleteFormSchema = z.object({
@@ -257,6 +258,7 @@ export const joinOrganization = actionClient
     const result = await data.membershipRequest.join(
       parsedInput.organizationUnitId,
     );
+    revalidatePath('/my-membership-requests');
     return result;
   });
 

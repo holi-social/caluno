@@ -347,44 +347,27 @@ query GetRequirementForm($id: String!) {
 query GetRequirementFormByShareToken($token: String!) {
   requirementFormByShareToken(token: $token) {
     id
-    organizationId
     organizationUnitId
-    slug
     name
     description
-    locale
     settings {
       submitButtonLabel
       successTitle
       successMessage
       allowEmbed
     }
-    shareToken
-    submissionCount
-    createdBy
-    updatedBy
-    createdAt
-    updatedAt
     blockRefs {
       id
       formId
       blockId
       fieldOrder
       required
-      createdAt
-      updatedAt
       block {
         id
-        organizationId
         title
         description
         icon
         required
-        isEditable
-        createdBy
-        updatedBy
-        createdAt
-        updatedAt
         fields {
           id
           blockId
@@ -393,7 +376,6 @@ query GetRequirementFormByShareToken($token: String!) {
           placeholder
           description
           required
-          lockType
           systemKey
           options {
             label
@@ -401,10 +383,6 @@ query GetRequirementFormByShareToken($token: String!) {
           }
           documentUrl
           documentLabel
-          minAge
-          fieldOrder
-          createdAt
-          updatedAt
         }
       }
     }

@@ -69,7 +69,6 @@ input CreateRequirementFormInput {
   locale: String
   name: String!
   organizationId: String!
-  organizationUnitId: String!
   settings: FormSettingsInput
 }
 

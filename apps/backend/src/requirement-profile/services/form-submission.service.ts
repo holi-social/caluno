@@ -9,23 +9,11 @@ import {
 } from '../../graphql/errors';
 import type { PaginationInput } from '../../graphql/pagination.input';
 import { MembershipService } from '../../membership/membership.service';
+import { SYSTEM_PROFILE_KEYS } from '../constants';
 import { FieldType } from '../enums';
 import { SubmitFormInput } from '../inputs/submit-form.input';
 import type { FormSubmissionEntity } from '../schemas/form-submission.schema';
 import { UserProfileService } from './user-profile.service';
-
-const SYSTEM_FIELD_KEYS = new Set<string>([
-  'name',
-  'lastname',
-  'preffered-name',
-  'gender',
-  'email',
-  'phone',
-  'address',
-  'zip',
-  'city',
-  'birth-date',
-]);
 
 @Injectable()
 export class FormSubmissionService {
@@ -182,7 +170,7 @@ export class FormSubmissionService {
         );
       }
 
-      if (fieldInfo.systemKey && SYSTEM_FIELD_KEYS.has(fieldInfo.systemKey)) {
+      if (fieldInfo.systemKey && SYSTEM_PROFILE_KEYS.has(fieldInfo.systemKey)) {
         profileData[fieldInfo.systemKey] = this.parseValue(
           valueInput.value,
           fieldInfo.type,
@@ -190,7 +178,7 @@ export class FormSubmissionService {
       } else {
         customValues.push({
           fieldId: valueInput.fieldId,
-          blockId: valueInput.blockId,
+          blockId: fieldInfo.blockId,
           value: this.parseValue(valueInput.value, fieldInfo.type),
         });
       }

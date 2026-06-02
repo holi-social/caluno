@@ -90,7 +90,7 @@ export class RequirementFormService {
     return this.db.transaction(async (tx) => {
       const formInsert: RequirementFormInsert = {
         organizationId: input.organizationId,
-        organizationUnitId: input.organizationUnitId ?? organizationUnitId,
+        organizationUnitId: organizationUnitId,
         slug,
         name: input.name,
         description: input.description,
@@ -134,17 +134,18 @@ export class RequirementFormService {
 
     await isUnitInOrg(this.db, organizationUnitId, existing.organizationId);
 
-    const hasSubmissions = await this.db.query.formSubmissions.findFirst({
-      where: { formId: id },
-    });
-
-    if (hasSubmissions) {
-      throw new ConflictGraphQLError(
-        'Cannot edit form because it already has submissions',
-      );
-    }
-
     return this.db.transaction(async (tx) => {
+      const hasSubmissions = await tx.query.formSubmissions.findFirst({
+        where: { formId: id },
+        columns: { id: true },
+      });
+
+      if (hasSubmissions) {
+        throw new ConflictGraphQLError(
+          'Cannot edit form because it already has submissions',
+        );
+      }
+
       const [updated] = await tx
         .update(schema.requirementForms)
         .set({
@@ -198,26 +199,29 @@ export class RequirementFormService {
 
     await isUnitInOrg(this.db, organizationUnitId, existing.organizationId);
 
-    const hasSubmissions = await this.db.query.formSubmissions.findFirst({
-      where: { formId: id },
+    return this.db.transaction(async (tx) => {
+      const hasSubmissions = await tx.query.formSubmissions.findFirst({
+        where: { formId: id },
+        columns: { id: true },
+      });
+
+      if (hasSubmissions) {
+        throw new ConflictGraphQLError(
+          'Cannot delete form because it already has submissions',
+        );
+      }
+
+      const [deleted] = await tx
+        .delete(schema.requirementForms)
+        .where(eq(schema.requirementForms.id, id))
+        .returning();
+
+      if (!deleted) {
+        throw new NotFoundGraphQLError('Form not found');
+      }
+
+      return deleted;
     });
-
-    if (hasSubmissions) {
-      throw new ConflictGraphQLError(
-        'Cannot delete form because it already has submissions',
-      );
-    }
-
-    const [deleted] = await this.db
-      .delete(schema.requirementForms)
-      .where(eq(schema.requirementForms.id, id))
-      .returning();
-
-    if (!deleted) {
-      throw new NotFoundGraphQLError('Form not found');
-    }
-
-    return deleted;
   }
 
   async regenerateShareToken(
