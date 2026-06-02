@@ -1,16 +1,24 @@
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { getSession } from '@/lib/auth-server';
-import { getSafeRedirect } from '@/lib/safe-redirect';
+import { getSafeRedirect, isSafeRedirect } from '@/lib/safe-redirect';
 import { SignupForm } from './signup-form';
 
-export default async function SignupPage() {
+export default async function SignupPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ redirectTo?: string }>;
+}) {
   const session = await getSession();
   const cookieStore = await cookies();
+  const params = await searchParams;
   const pendingInvite = cookieStore.get('pending_invite')?.value;
   const pendingRedirect = cookieStore.get('pending_redirect')?.value;
+  const urlRedirectTo = isSafeRedirect(params.redirectTo)
+    ? params.redirectTo
+    : undefined;
   const redirectTo =
-    getSafeRedirect(pendingRedirect) ??
+    getSafeRedirect(pendingRedirect ?? urlRedirectTo) ??
     (pendingInvite ? `/invite/${pendingInvite}` : '/');
 
   if (session) {

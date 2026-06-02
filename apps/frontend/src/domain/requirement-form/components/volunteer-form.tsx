@@ -158,11 +158,11 @@ export function VolunteerForm({ form, token }: VolunteerFormProps) {
           <Check className="h-6 w-6 text-green-600" />
         </div>
         <h2 className="mt-4 text-xl font-semibold">
-          {form.settings?.successTitle || 'Thank You!'}
+          {form.settings?.successTitle || 'Application received!'}
         </h2>
         <p className="mt-2 text-muted-foreground">
           {form.settings?.successMessage ||
-            'Your submission has been received.'}
+            'Your application is pending review. An admin will get back to you shortly.'}
         </p>
       </div>
     );
