@@ -21,6 +21,7 @@ export * from './generated/graphql';
 // Auth (better-auth client factory and enhanced methods)
 export * from './react/auth/auth-client';
 // Data fetching hooks
+export * from './react/hooks/use-block';
 export * from './react/hooks/use-graphql-client';
 export * from './react/hooks/use-join-shift';
 export * from './react/hooks/use-membership-request';

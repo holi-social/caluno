@@ -1,0 +1,552 @@
+query GetFormBlock($id: String!) {
+  formBlock(id: $id) {
+    id
+    organizationId
+    title
+    description
+    icon
+    required
+    isEditable
+    createdBy
+    updatedBy
+    createdAt
+    updatedAt
+    fields {
+      id
+      blockId
+      type
+      label
+      placeholder
+      description
+      required
+      lockType
+      systemKey
+      options {
+        label
+        value
+      }
+      documentUrl
+      documentLabel
+      minAge
+      fieldOrder
+      createdAt
+      updatedAt
+    }
+  }
+}
+
+query GetFormBlocks($organizationId: String!, $limit: Int!, $offset: Int!) {
+  formBlocks(organizationId: $organizationId, limit: $limit, offset: $offset) {
+    items {
+      id
+      organizationId
+      title
+      description
+      icon
+      required
+      isEditable
+      createdBy
+      updatedBy
+      createdAt
+      updatedAt
+      fields {
+        id
+        blockId
+        type
+        label
+        placeholder
+        description
+        required
+        lockType
+        systemKey
+        options {
+          label
+          value
+        }
+        documentUrl
+        documentLabel
+        minAge
+        fieldOrder
+        createdAt
+        updatedAt
+      }
+    }
+    pagination {
+      total
+      limit
+      offset
+      hasMore
+    }
+  }
+}
+
+mutation CreateFormBlock($input: CreateFormBlockInput!) {
+  createFormBlock(input: $input) {
+    id
+    organizationId
+    title
+    description
+    icon
+    required
+    isEditable
+    createdBy
+    updatedBy
+    createdAt
+    updatedAt
+    fields {
+      id
+      blockId
+      type
+      label
+      placeholder
+      description
+      required
+      lockType
+      systemKey
+      options {
+        label
+        value
+      }
+      documentUrl
+      documentLabel
+      minAge
+      fieldOrder
+      createdAt
+      updatedAt
+    }
+  }
+}
+
+mutation UpdateFormBlock($id: String!, $input: UpdateFormBlockInput!) {
+  updateFormBlock(id: $id, input: $input) {
+    id
+    organizationId
+    title
+    description
+    icon
+    required
+    isEditable
+    createdBy
+    updatedBy
+    createdAt
+    updatedAt
+    fields {
+      id
+      blockId
+      type
+      label
+      placeholder
+      description
+      required
+      lockType
+      systemKey
+      options {
+        label
+        value
+      }
+      documentUrl
+      documentLabel
+      minAge
+      fieldOrder
+      createdAt
+      updatedAt
+    }
+  }
+}
+
+mutation DeleteFormBlock($id: String!) {
+  deleteFormBlock(id: $id) {
+    id
+  }
+}
+
+mutation CreateFormBlockField(
+  $blockId: String!
+  $input: CreateFormBlockFieldInput!
+) {
+  createFormBlockField(blockId: $blockId, input: $input) {
+    id
+    organizationId
+    title
+    description
+    icon
+    required
+    isEditable
+    createdBy
+    updatedBy
+    createdAt
+    updatedAt
+    fields {
+      id
+      blockId
+      type
+      label
+      placeholder
+      description
+      required
+      lockType
+      systemKey
+      options {
+        label
+        value
+      }
+      documentUrl
+      documentLabel
+      minAge
+      fieldOrder
+      createdAt
+      updatedAt
+    }
+  }
+}
+
+mutation UpdateFormBlockField(
+  $fieldId: String!
+  $input: UpdateFormBlockFieldInput!
+) {
+  updateFormBlockField(fieldId: $fieldId, input: $input) {
+    id
+    organizationId
+    title
+    description
+    icon
+    required
+    isEditable
+    createdBy
+    updatedBy
+    createdAt
+    updatedAt
+    fields {
+      id
+      blockId
+      type
+      label
+      placeholder
+      description
+      required
+      lockType
+      systemKey
+      options {
+        label
+        value
+      }
+      documentUrl
+      documentLabel
+      minAge
+      fieldOrder
+      createdAt
+      updatedAt
+    }
+  }
+}
+
+mutation DeleteFormBlockField($fieldId: String!) {
+  deleteFormBlockField(fieldId: $fieldId) {
+    id
+    organizationId
+    title
+    description
+    icon
+    required
+    isEditable
+    createdBy
+    updatedBy
+    createdAt
+    updatedAt
+    fields {
+      id
+      blockId
+      type
+      label
+      placeholder
+      description
+      required
+      lockType
+      systemKey
+      options {
+        label
+        value
+      }
+      documentUrl
+      documentLabel
+      minAge
+      fieldOrder
+      createdAt
+      updatedAt
+    }
+  }
+}
+
+query GetRequirementForm($id: String!) {
+  requirementForm(id: $id) {
+    id
+    organizationId
+    organizationUnitId
+    slug
+    name
+    description
+    locale
+    settings {
+      submitButtonLabel
+      successTitle
+      successMessage
+      allowEmbed
+    }
+    shareToken
+    submissionCount
+    createdBy
+    updatedBy
+    createdAt
+    updatedAt
+    blockRefs {
+      id
+      formId
+      blockId
+      fieldOrder
+      required
+      createdAt
+      updatedAt
+      block {
+        id
+        organizationId
+        title
+        description
+        icon
+        required
+        isEditable
+        createdBy
+        updatedBy
+        createdAt
+        updatedAt
+        fields {
+          id
+          blockId
+          type
+          label
+          placeholder
+          description
+          required
+          lockType
+          systemKey
+          options {
+            label
+            value
+          }
+          documentUrl
+          documentLabel
+          minAge
+          fieldOrder
+          createdAt
+          updatedAt
+        }
+      }
+    }
+  }
+}
+
+query GetRequirementFormByShareToken($token: String!) {
+  requirementFormByShareToken(token: $token) {
+    id
+    organizationId
+    organizationUnitId
+    slug
+    name
+    description
+    locale
+    settings {
+      submitButtonLabel
+      successTitle
+      successMessage
+      allowEmbed
+    }
+    shareToken
+    submissionCount
+    createdBy
+    updatedBy
+    createdAt
+    updatedAt
+    blockRefs {
+      id
+      formId
+      blockId
+      fieldOrder
+      required
+      createdAt
+      updatedAt
+      block {
+        id
+        organizationId
+        title
+        description
+        icon
+        required
+        isEditable
+        createdBy
+        updatedBy
+        createdAt
+        updatedAt
+        fields {
+          id
+          blockId
+          type
+          label
+          placeholder
+          description
+          required
+          lockType
+          systemKey
+          options {
+            label
+            value
+          }
+          documentUrl
+          documentLabel
+          minAge
+          fieldOrder
+          createdAt
+          updatedAt
+        }
+      }
+    }
+  }
+}
+
+query GetRequirementForms(
+  $organizationId: String!
+  $limit: Int!
+  $offset: Int!
+) {
+  requirementForms(
+    organizationId: $organizationId
+    limit: $limit
+    offset: $offset
+  ) {
+    items {
+      id
+      organizationId
+      organizationUnitId
+      slug
+      name
+      description
+      locale
+      settings {
+        submitButtonLabel
+        successTitle
+        successMessage
+        allowEmbed
+      }
+      shareToken
+      submissionCount
+      createdBy
+      updatedBy
+      createdAt
+      updatedAt
+      blockRefs {
+        id
+        formId
+        blockId
+        fieldOrder
+        required
+        createdAt
+        updatedAt
+        block {
+          id
+          organizationId
+          title
+          description
+          icon
+          required
+          isEditable
+          createdBy
+          updatedBy
+          createdAt
+          updatedAt
+        }
+      }
+    }
+    pagination {
+      total
+      limit
+      offset
+      hasMore
+    }
+  }
+}
+
+mutation CreateRequirementForm($input: CreateRequirementFormInput!) {
+  createRequirementForm(input: $input) {
+    id
+    organizationId
+    organizationUnitId
+    slug
+    name
+    description
+    shareToken
+    submissionCount
+    createdAt
+    updatedAt
+  }
+}
+
+mutation UpdateRequirementForm(
+  $id: String!
+  $input: UpdateRequirementFormInput!
+) {
+  updateRequirementForm(id: $id, input: $input) {
+    id
+    organizationId
+    organizationUnitId
+    slug
+    name
+    description
+    shareToken
+    submissionCount
+    updatedAt
+  }
+}
+
+mutation DeleteRequirementForm($id: String!) {
+  deleteRequirementForm(id: $id) {
+    id
+  }
+}
+
+mutation RegenerateFormShareToken($id: String!) {
+  regenerateFormShareToken(id: $id) {
+    id
+    shareToken
+  }
+}
+
+mutation SubmitForm($token: String!, $input: SubmitFormInput!) {
+  submitForm(token: $token, input: $input) {
+    id
+    formId
+    userId
+    status
+    submittedAt
+  }
+}
+
+query GetMyUserProfile {
+  myUserProfile {
+    id
+    userId
+    data
+    createdAt
+    updatedAt
+  }
+}
+
+mutation UpdateMyUserProfile($input: UpdateUserProfileInput!) {
+  updateMyUserProfile(input: $input) {
+    id
+    userId
+    data
+    updatedAt
+  }
+}
+
+mutation GenerateDocumentUploadUrl($filename: String!, $mimeType: String!) {
+  generateDocumentUploadUrl(filename: $filename, mimeType: $mimeType)
+}
