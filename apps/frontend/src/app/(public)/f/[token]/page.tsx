@@ -28,9 +28,24 @@ export default async function PublicFormPage({ params }: Props) {
     redirect(`/login?redirectTo=${encodeURIComponent(`/f/${token}`)}`);
   }
 
-  const isMember = form.organizationUnitId
-    ? await validateUserOrgAccess(form.organizationUnitId)
-    : false;
+  const [isMember, userProfile] = await Promise.all([
+    form.organizationUnitId
+      ? validateUserOrgAccess(form.organizationUnitId)
+      : Promise.resolve(false),
+    data.requirementForm.getMyUserProfile(),
+  ]);
+
+  let profileData: Record<string, string> = {};
+  if (userProfile?.data) {
+    try {
+      const parsed = JSON.parse(userProfile.data);
+      if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+        profileData = parsed as Record<string, string>;
+      }
+    } catch {
+      // ignore malformed profile data
+    }
+  }
 
   return (
     <div className="min-h-screen bg-muted/30 py-10 px-4">
@@ -40,6 +55,7 @@ export default async function PublicFormPage({ params }: Props) {
           token={token}
           isMember={isMember}
           orgUId={form.organizationUnitId ?? ''}
+          profileData={profileData}
         />
       </div>
     </div>

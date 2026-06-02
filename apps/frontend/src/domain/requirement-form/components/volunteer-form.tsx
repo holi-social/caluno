@@ -29,6 +29,7 @@ import {
   Check,
   Loader2,
 } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import { useMemo, useState } from 'react';
 import { Controller, type Resolver, useForm } from 'react-hook-form';
 import { toast } from 'sonner';
@@ -38,9 +39,17 @@ import { submitForm } from '../actions';
 interface VolunteerFormProps {
   form: RequirementForm;
   token: string;
+  isMember?: boolean;
+  profileData?: Record<string, string>;
 }
 
-export function VolunteerForm({ form, token }: VolunteerFormProps) {
+export function VolunteerForm({
+  form,
+  token,
+  isMember = true,
+  profileData = {},
+}: VolunteerFormProps) {
+  const router = useRouter();
   const [step, setStep] = useState(0);
   const [submitted, setSubmitted] = useState(false);
 
@@ -92,6 +101,18 @@ export function VolunteerForm({ form, token }: VolunteerFormProps) {
     return z.object(shape);
   }, [blocks]);
 
+  const defaultValues = useMemo(() => {
+    const vals: Record<string, string> = {};
+    for (const block of blocks) {
+      for (const field of block.fields ?? []) {
+        if (field.systemKey && profileData[field.systemKey]) {
+          vals[field.id] = profileData[field.systemKey] ?? '';
+        }
+      }
+    }
+    return vals;
+  }, [blocks, profileData]);
+
   const {
     control,
     trigger,
@@ -99,7 +120,7 @@ export function VolunteerForm({ form, token }: VolunteerFormProps) {
     formState: { errors, isSubmitting },
   } = useForm<Record<string, string>>({
     resolver: zodResolver(formSchema) as Resolver<Record<string, string>>,
-    defaultValues: {},
+    defaultValues,
     mode: 'onChange',
   });
 
@@ -140,7 +161,11 @@ export function VolunteerForm({ form, token }: VolunteerFormProps) {
       if (result?.serverError) {
         toast.error(result.serverError);
       } else if (result?.data) {
-        setSubmitted(true);
+        if (!isMember) {
+          router.push('/my-membership-requests');
+        } else {
+          setSubmitted(true);
+        }
       } else {
         toast.error('Failed to submit form');
       }

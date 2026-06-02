@@ -272,7 +272,7 @@ function FieldCard({
   index: number;
   control: Control<BlockFormData>;
   register: UseFormRegister<BlockFormData>;
-  errors?: FieldErrors<BlockFormData>;
+  errors?: FieldErrors<BlockFormFieldInput>;
   onRemove: () => void;
   onMoveUp: () => void;
   onMoveDown: () => void;

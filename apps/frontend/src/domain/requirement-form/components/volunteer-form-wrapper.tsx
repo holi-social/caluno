@@ -5,11 +5,13 @@ export function VolunteerFormWrapper({
   form,
   token,
   isMember,
+  profileData,
 }: {
   form: RequirementForm;
   token: string;
   isMember: boolean;
   orgUId: string;
+  profileData?: Record<string, string>;
 }) {
   return (
     <div className="space-y-6">
@@ -20,7 +22,12 @@ export function VolunteerFormWrapper({
           request.
         </div>
       )}
-      <VolunteerForm form={form} token={token} />
+      <VolunteerForm
+        form={form}
+        token={token}
+        isMember={isMember}
+        profileData={profileData}
+      />
     </div>
   );
 }
