@@ -6,6 +6,7 @@ import type { RoleEntity } from '../auth/schemas/role.schema';
 import type { Database } from '../database/database.module';
 import { DATABASE_CONNECTION } from '../database/database-connection';
 import * as schema from '../database/schema';
+import { EventService } from '../event/event.service';
 import { ConflictGraphQLError, NotFoundGraphQLError } from '../graphql/errors';
 import { NotificationService } from '../notification/notification.service';
 import type { RequirementProfileEntity } from '../requirement-profile/schemas/requirement-profile.schema';
@@ -15,7 +16,10 @@ import { ShiftService } from '../shift/shift.service';
 import { MembershipRequestStatus } from './enums';
 import { UpdateMembershipRequestInput } from './inputs/update-membership-request.input';
 import type { MembershipEntity } from './schemas/membership.schema';
-import { MembershipRequestEntity } from './schemas/membership-request.schema';
+import {
+  type MembershipRequestEntity,
+  type MembershipRequestMetadata,
+} from './schemas/membership-request.schema';
 
 @Injectable()
 export class MembershipService {
@@ -28,7 +32,48 @@ export class MembershipService {
     private readonly requirementProfileService: RequirementProfileService,
     @Inject(forwardRef(() => ShiftService))
     private readonly shiftService: ShiftService,
+    @Inject(forwardRef(() => EventService))
+    private readonly eventService: EventService,
   ) {}
+
+  private appendIntendedIdsToMetadata(
+    metadata: MembershipRequestMetadata,
+    intendedShiftId?: string,
+    intendedEventId?: string,
+  ): MembershipRequestMetadata {
+    const next: MembershipRequestMetadata = { ...metadata };
+
+    if (intendedShiftId) {
+      next.intendedShiftIds = Array.from(
+        new Set([...(next.intendedShiftIds ?? []), intendedShiftId]),
+      );
+    }
+
+    if (intendedEventId) {
+      next.intendedEventIds = Array.from(
+        new Set([...(next.intendedEventIds ?? []), intendedEventId]),
+      );
+    }
+
+    return next;
+  }
+
+  private buildInitialMetadata(
+    intendedShiftId?: string,
+    intendedEventId?: string,
+  ): MembershipRequestMetadata | undefined {
+    const metadata: MembershipRequestMetadata = {};
+
+    if (intendedShiftId) {
+      metadata.intendedShiftIds = [intendedShiftId];
+    }
+
+    if (intendedEventId) {
+      metadata.intendedEventIds = [intendedEventId];
+    }
+
+    return Object.keys(metadata).length > 0 ? metadata : undefined;
+  }
 
   async getMembers(organizationUnitId: string): Promise<UserEntity[]> {
     const members = await this.db.query.users.findMany({
@@ -165,6 +210,7 @@ export class MembershipService {
     userId: string,
     organizationUnitId: string,
     intendedShiftId?: string,
+    intendedEventId?: string,
   ): Promise<MembershipRequestEntity> {
     const existing = await this.db.query.membershipRequests.findFirst({
       where: {
@@ -175,17 +221,16 @@ export class MembershipService {
     });
 
     if (existing) {
-      if (intendedShiftId) {
-        const metadata = (existing.metadata ?? {}) as {
-          intendedShiftIds?: string[];
-        };
-        const intendedShiftIds = Array.from(
-          new Set([...(metadata.intendedShiftIds ?? []), intendedShiftId]),
+      if (intendedShiftId || intendedEventId) {
+        const metadata = this.appendIntendedIdsToMetadata(
+          (existing.metadata ?? {}) as MembershipRequestMetadata,
+          intendedShiftId,
+          intendedEventId,
         );
 
         const [updated] = await this.db
           .update(schema.membershipRequests)
-          .set({ metadata: { ...metadata, intendedShiftIds } })
+          .set({ metadata })
           .where(eq(schema.membershipRequests.id, existing.id))
           .returning();
 
@@ -202,9 +247,7 @@ export class MembershipService {
       .values({
         userId,
         organizationUnitId,
-        metadata: intendedShiftId
-          ? { intendedShiftIds: [intendedShiftId] }
-          : undefined,
+        metadata: this.buildInitialMetadata(intendedShiftId, intendedEventId),
       })
       .returning();
 
@@ -358,9 +401,9 @@ export class MembershipService {
       membershipRequest,
     );
 
-    const metadata = (membershipRequest.metadata ?? {}) as {
-      intendedShiftIds?: string[];
-    };
+    const metadata = (membershipRequest.metadata ??
+      {}) as MembershipRequestMetadata;
+
     if (metadata.intendedShiftIds?.length && membershipRequest.userId) {
       for (const shiftId of metadata.intendedShiftIds) {
         try {
@@ -373,6 +416,22 @@ export class MembershipService {
           }
         } catch (e) {
           this.logger.warn(`Failed to auto-join shift ${shiftId}: ${e}`);
+        }
+      }
+    }
+
+    if (metadata.intendedEventIds?.length && membershipRequest.userId) {
+      for (const eventId of metadata.intendedEventIds) {
+        try {
+          const event = await this.eventService.findByIdPublic(eventId);
+          if (event) {
+            await this.eventService.joinEvent(
+              membershipRequest.userId,
+              eventId,
+            );
+          }
+        } catch (e) {
+          this.logger.warn(`Failed to auto-join event ${eventId}: ${e}`);
         }
       }
     }
@@ -462,6 +521,7 @@ export class MembershipService {
     userId: string,
     organizationUnitId: string,
     intendedShiftId?: string,
+    intendedEventId?: string,
   ): Promise<
     | { status: 'JOINED' }
     | {
@@ -525,17 +585,16 @@ export class MembershipService {
 
     if (existing) {
       if (existing.status === MembershipRequestStatus.PENDING) {
-        if (intendedShiftId) {
-          const metadata = (existing.metadata ?? {}) as {
-            intendedShiftIds?: string[];
-          };
-          const intendedShiftIds = Array.from(
-            new Set([...(metadata.intendedShiftIds ?? []), intendedShiftId]),
+        if (intendedShiftId || intendedEventId) {
+          const metadata = this.appendIntendedIdsToMetadata(
+            (existing.metadata ?? {}) as MembershipRequestMetadata,
+            intendedShiftId,
+            intendedEventId,
           );
 
           const [updated] = await this.db
             .update(schema.membershipRequests)
-            .set({ metadata: { ...metadata, intendedShiftIds } })
+            .set({ metadata })
             .where(eq(schema.membershipRequests.id, existing.id))
             .returning();
 
@@ -559,6 +618,7 @@ export class MembershipService {
       userId,
       organizationUnitId,
       intendedShiftId,
+      intendedEventId,
     );
     return { status: 'PENDING', membershipRequest: request };
   }
