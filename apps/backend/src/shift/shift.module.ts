@@ -19,7 +19,7 @@ import { ShiftService } from './shift.service';
     AuthModule,
     UserModule,
     forwardRef(() => MembershipModule),
-    RequirementProfileModule,
+    forwardRef(() => RequirementProfileModule),
     NotificationModule,
   ],
   providers: [
