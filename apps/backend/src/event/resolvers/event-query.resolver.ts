@@ -7,16 +7,13 @@ import { UserMapper } from '../../user/mappers/user.mapper';
 import { User } from '../../user/models/user.model';
 import { EventService } from '../event.service';
 import { EventMapper } from '../mappers/event.mapper';
-import { EventInviteMapper } from '../mappers/event-invite.mapper';
 import { Event, EventPaginatedResponse } from '../models/event.model';
-import { EventInvite } from '../models/event-invite.model';
 
 @Resolver(() => Event)
 export class EventQueryResolver {
   constructor(
     private readonly eventService: EventService,
     private readonly eventMapper: EventMapper,
-    private readonly eventInviteMapper: EventInviteMapper,
     private readonly userMapper: UserMapper,
   ) {}
 
@@ -49,19 +46,6 @@ export class EventQueryResolver {
       limit: pagination.limit,
       offset: pagination.offset,
     });
-  }
-
-  @Permissions(PERMISSIONS.SHIFT_VIEW)
-  @Query(() => [EventInvite])
-  async eventInvites(
-    @Args('eventId', { type: () => ID }) eventId: string,
-    @Context() context: AuthenticatedGraphQLContext,
-  ): Promise<EventInvite[]> {
-    const invites = await this.eventService.findInvites(
-      eventId,
-      context.organizationUnitId,
-    );
-    return this.eventInviteMapper.toArray(invites);
   }
 
   @Permissions(PERMISSIONS.SHIFT_VIEW)
