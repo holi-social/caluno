@@ -15,8 +15,8 @@ export function useOrganizationUnitWithSuspense(id: string) {
 }
 
 export function useIsMemberOfOrgUnitOrAncestor(organizationUnitId: string) {
-  const client = useGraphQLClient();
-  const repository = new OrganizationUnitRepository(client);
+  const sdk = useSdk();
+  const repository = new OrganizationUnitRepository(sdk);
 
   return useQuery({
     queryKey: ['organization-unit', 'is-member', organizationUnitId],
