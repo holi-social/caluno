@@ -1,4 +1,6 @@
 import { authRelations } from '../auth/schemas/auth.relations';
+import { eventsRelations } from '../event/schemas/event.relations';
+import { eventInvitesRelations } from '../event/schemas/event-invite.relations';
 import { membershipRelations } from '../membership/schemas/membership.relations';
 import { membershipRequestRelations } from '../membership/schemas/membership-request.relations';
 import { organizationRelations } from '../organization/schemas/organization.relations';
@@ -10,6 +12,8 @@ import { timeEntryRelations } from '../time-tracking/schemas/time-entry.relation
 
 export const relations = {
   ...authRelations,
+  ...eventsRelations,
+  ...eventInvitesRelations,
   ...membershipRelations,
   ...membershipRequestRelations,
   ...organizationRelations,
