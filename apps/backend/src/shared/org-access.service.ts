@@ -1,7 +1,7 @@
 import { Inject, Injectable } from '@nestjs/common';
 import type { Database } from '../database/database.module';
 import { DATABASE_CONNECTION } from '../database/database-connection';
-import { ForbiddenGraphQLError } from '../graphql/errors';
+import { isUnitInOrg } from '../requirement-profile/services/is-unit-in-org';
 
 @Injectable()
 export class OrgAccessService {
@@ -14,15 +14,6 @@ export class OrgAccessService {
     organizationUnitId: string,
     organizationId: string,
   ): Promise<void> {
-    const unit = await this.db.query.organizationUnits.findFirst({
-      where: { id: organizationUnitId, organizationId },
-      columns: { id: true },
-    });
-
-    if (!unit) {
-      throw new ForbiddenGraphQLError(
-        'You can only perform this action if you are a member of an organization unit within this organization.',
-      );
-    }
+    await isUnitInOrg(this.db, organizationUnitId, organizationId);
   }
 }

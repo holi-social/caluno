@@ -1,7 +1,7 @@
 export const SYSTEM_PROFILE_KEYS = new Set<string>([
   'name',
   'lastname',
-  'preffered-name',
+  'preferred-name',
   'gender',
   'email',
   'phone',

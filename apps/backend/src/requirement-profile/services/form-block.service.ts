@@ -4,10 +4,12 @@ import type { Database } from '../../database/database.module';
 import { DATABASE_CONNECTION } from '../../database/database-connection';
 import * as schema from '../../database/schema';
 import {
+  BadRequestGraphQLError,
   ConflictGraphQLError,
   NotFoundGraphQLError,
 } from '../../graphql/errors';
 import type { PaginationInput } from '../../graphql/pagination.input';
+import { SYSTEM_PROFILE_KEYS } from '../constants';
 import { CreateFormBlockInput } from '../inputs/create-form-block.input';
 import { CreateFormBlockFieldInput } from '../inputs/create-form-block-field.input';
 import { UpdateFormBlockInput } from '../inputs/update-form-block.input';
@@ -186,11 +188,32 @@ export class FormBlockService {
     return deleted;
   }
 
+  private validateDocumentUrl(url: string | null | undefined): void {
+    if (!url) return;
+    try {
+      const parsed = new URL(url);
+      if (parsed.protocol !== 'https:' && parsed.protocol !== 'http:') {
+        throw new Error();
+      }
+    } catch {
+      throw new BadRequestGraphQLError(
+        'documentUrl must be a valid http/https URL',
+      );
+    }
+  }
+
   async createField(
     blockId: string,
     organizationUnitId: string,
     input: CreateFormBlockFieldInput,
   ): Promise<FormBlockEntity> {
+    if (input.systemKey && !SYSTEM_PROFILE_KEYS.has(input.systemKey)) {
+      throw new BadRequestGraphQLError(
+        `Invalid systemKey: "${input.systemKey}". Must be one of: ${[...SYSTEM_PROFILE_KEYS].join(', ')}`,
+      );
+    }
+    this.validateDocumentUrl(input.documentUrl);
+
     const block = await this.findById(blockId);
     if (!block) {
       throw new NotFoundGraphQLError('Block not found');
@@ -219,6 +242,13 @@ export class FormBlockService {
     organizationUnitId: string,
     input: UpdateFormBlockFieldInput,
   ): Promise<FormBlockEntity> {
+    if (input.systemKey && !SYSTEM_PROFILE_KEYS.has(input.systemKey)) {
+      throw new BadRequestGraphQLError(
+        `Invalid systemKey: "${input.systemKey}". Must be one of: ${[...SYSTEM_PROFILE_KEYS].join(', ')}`,
+      );
+    }
+    this.validateDocumentUrl(input.documentUrl);
+
     const field = await this.db.query.formBlockFields.findFirst({
       where: { id: fieldId },
       with: { block: true },
