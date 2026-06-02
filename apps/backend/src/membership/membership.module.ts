@@ -1,6 +1,7 @@
 import { forwardRef, Module } from '@nestjs/common';
 import { RoleMapper } from '../auth/mappers/role.mapper';
 import { DatabaseModule } from '../database/database.module';
+import { EventModule } from '../event/event.module';
 import { NotificationModule } from '../notification/notification.module';
 import { OrganizationUnitMapper } from '../organization/mappers/organization-unit.mapper';
 import { RequirementProfileModule } from '../requirement-profile/requirement-profile.module';
@@ -24,6 +25,7 @@ import {
     NotificationModule,
     RequirementProfileModule,
     forwardRef(() => ShiftModule),
+    forwardRef(() => EventModule),
   ],
   providers: [
     MembershipService,
