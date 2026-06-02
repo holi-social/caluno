@@ -17,6 +17,7 @@ import {
 import {
   BuildingIcon,
   CalendarIcon,
+  ClipboardListIcon,
   ClockIcon,
   LogOutIcon,
   NetworkIcon,
@@ -74,6 +75,11 @@ export function DashboardSidebar({ permissions }: DashboardSidebarProps) {
         title: 'Check-in/out',
         href: `/${orgUId}/check-in/scan`,
         icon: ScanQrCode,
+      },
+      {
+        title: 'Requirement Forms',
+        href: `/${orgUId}/requirement-forms`,
+        icon: ClipboardListIcon,
       },
     ];
   }, [orgUId, pendingCount]);
