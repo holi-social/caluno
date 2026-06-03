@@ -31,6 +31,27 @@ const FIELD_TYPE_OPTIONS: { label: string; value: string }[] = [
   { label: 'Info Text', value: 'STATIC_TEXT' },
 ];
 
+// Field types that have a fixed, unambiguous system key
+const AUTO_SYSTEM_KEY: Record<string, string> = {
+  EMAIL: 'email',
+  PHONE: 'phone',
+};
+
+// System keys that can be manually assigned to text-like fields
+const TEXT_SYSTEM_KEY_OPTIONS = [
+  { label: 'None', value: '' },
+  { label: 'First name', value: 'name' },
+  { label: 'Last name', value: 'lastname' },
+  { label: 'Preferred name', value: 'preferred-name' },
+  { label: 'Gender', value: 'gender' },
+  { label: 'Address', value: 'address' },
+  { label: 'ZIP code', value: 'zip' },
+  { label: 'City', value: 'city' },
+  { label: 'Birth date', value: 'birth-date' },
+];
+
+const TEXT_LIKE_TYPES = new Set(['TEXT', 'TEXTAREA', 'DATE', 'NUMBERS']);
+
 export function FieldForm({
   initial,
   onSubmit,
@@ -43,6 +64,7 @@ export function FieldForm({
     description?: string;
     placeholder?: string;
     required?: boolean;
+    systemKey?: string;
     options?: { label: string; value: string }[];
     documentUrl?: string;
     documentLabel?: string;
@@ -57,6 +79,11 @@ export function FieldForm({
   const [description, setDescription] = useState(initial?.description ?? '');
   const [placeholder, setPlaceholder] = useState(initial?.placeholder ?? '');
   const [required, setRequired] = useState(initial?.required ?? true);
+  const [manualSystemKey, setManualSystemKey] = useState(
+    initial?.systemKey && !AUTO_SYSTEM_KEY[initial.type]
+      ? initial.systemKey
+      : '',
+  );
   const [options, setOptions] = useState<{ label: string; value: string }[]>(
     () => {
       if (initial?.options && initial.options.length > 0) {
@@ -76,6 +103,8 @@ export function FieldForm({
     fieldType === 'SINGLE_CHOICE' || fieldType === 'MULTI_CHOICE';
   const isDocument = fieldType === 'DOCUMENT_ACKNOWLEDGEMENT';
   const isStaticText = fieldType === 'STATIC_TEXT';
+  const autoSystemKey = AUTO_SYSTEM_KEY[fieldType];
+  const showSystemKeyPicker = !autoSystemKey && TEXT_LIKE_TYPES.has(fieldType);
 
   function commit() {
     if (!fieldType) {
@@ -95,6 +124,8 @@ export function FieldForm({
       return;
     }
 
+    const systemKey = autoSystemKey || manualSystemKey || undefined;
+
     setError(null);
     onSubmit({
       type: fieldType,
@@ -102,6 +133,7 @@ export function FieldForm({
       description: description.trim() || undefined,
       placeholder: placeholder.trim() || undefined,
       required: isStaticText ? false : required,
+      systemKey,
       ...(showOptions
         ? {
             options: options
@@ -194,6 +226,34 @@ export function FieldForm({
                 />
               </Field>
             </>
+          )}
+
+          {autoSystemKey && (
+            <p className="text-muted-foreground text-xs">
+              Profile field: <strong>{autoSystemKey}</strong> — value will be
+              saved to the user&apos;s profile for pre-fill on future forms.
+            </p>
+          )}
+
+          {showSystemKeyPicker && (
+            <Field>
+              <FieldLabel>Profile field (optional)</FieldLabel>
+              <Select
+                value={manualSystemKey}
+                onValueChange={setManualSystemKey}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="None" />
+                </SelectTrigger>
+                <SelectContent>
+                  {TEXT_SYSTEM_KEY_OPTIONS.map((opt) => (
+                    <SelectItem key={opt.value || '__none'} value={opt.value}>
+                      {opt.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </Field>
           )}
 
           {isDocument && (

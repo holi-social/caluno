@@ -88,6 +88,7 @@ export function EditBlockForm({
     description?: string;
     placeholder?: string;
     required?: boolean;
+    systemKey?: string;
     options?: { label: string; value: string }[];
     documentUrl?: string;
     documentLabel?: string;
@@ -118,6 +119,7 @@ export function EditBlockForm({
       description?: string;
       placeholder?: string;
       required?: boolean;
+      systemKey?: string;
       options?: { label: string; value: string }[];
       documentUrl?: string;
       documentLabel?: string;
@@ -293,6 +295,7 @@ export function EditBlockForm({
                   description: data.description,
                   placeholder: data.placeholder,
                   required: data.required,
+                  systemKey: data.systemKey,
                   options: data.options,
                   documentUrl: data.documentUrl,
                   documentLabel: data.documentLabel,
@@ -375,6 +378,7 @@ export function EditBlockForm({
                 description: data.description,
                 placeholder: data.placeholder,
                 required: data.required,
+                systemKey: data.systemKey,
                 options: data.options,
                 documentUrl: data.documentUrl,
                 documentLabel: data.documentLabel,

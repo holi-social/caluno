@@ -1,5 +1,5 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
-import { count, eq, inArray } from 'drizzle-orm';
+import { and, count, eq, inArray } from 'drizzle-orm';
 import type { Database } from '../../database/database.module';
 import { DATABASE_CONNECTION } from '../../database/database-connection';
 import * as schema from '../../database/schema';
@@ -84,7 +84,15 @@ export class FormSubmissionService {
 
     const existing = await this.findByUserAndForm(userId, form.id);
     if (existing) {
-      throw new BadRequestGraphQLError('You have already submitted this form');
+      if (existing.status !== 'REJECTED') {
+        throw new BadRequestGraphQLError(
+          'You have already submitted this form',
+        );
+      }
+      // Previous submission was rejected — delete it so the user can re-submit
+      await this.db
+        .delete(schema.formSubmissions)
+        .where(eq(schema.formSubmissions.id, existing.id));
     }
 
     // Load block refs and fields
@@ -236,6 +244,29 @@ export class FormSubmissionService {
     }
 
     return submission;
+  }
+
+  async rejectByUserAndOrgUnit(
+    userId: string,
+    organizationUnitId: string,
+  ): Promise<void> {
+    const forms = await this.db.query.requirementForms.findMany({
+      where: { organizationUnitId },
+      columns: { id: true },
+    });
+    if (forms.length === 0) return;
+
+    const formIds = forms.map((f) => f.id);
+    await this.db
+      .update(schema.formSubmissions)
+      .set({ status: 'REJECTED' })
+      .where(
+        and(
+          eq(schema.formSubmissions.userId, userId),
+          eq(schema.formSubmissions.status, 'SUBMITTED'),
+          inArray(schema.formSubmissions.formId, formIds),
+        ),
+      );
   }
 
   private parseValue(rawValue: string, fieldType: string): unknown {
