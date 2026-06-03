@@ -9,7 +9,11 @@ import {
 import type { Database } from '../database/database.module';
 import { DATABASE_CONNECTION } from '../database/database-connection';
 import * as schema from '../database/schema';
-import { OrganizationEntity, OrganizationUnitEntity } from '../database/schema';
+import {
+  OrganizationEntity,
+  OrganizationUnitEntity,
+  OrganizationUnitTypeEntity,
+} from '../database/schema';
 import type { PaginationInput } from '../graphql/pagination.input';
 import { MembershipService } from '../membership/membership.service';
 import { slugify } from '../utils';
@@ -19,6 +23,10 @@ import { type Organization } from './models/organization.model';
 import { OrganizationTree } from './models/organization-tree.model';
 import { OrganizationUnitService } from './organization-unit.service';
 import { OrganizationNode } from './types/organization-node';
+
+type OrganizationUnitWithType = OrganizationUnitEntity & {
+  type: OrganizationUnitTypeEntity;
+};
 
 @Injectable()
 export class OrganizationService {
@@ -194,25 +202,16 @@ export class OrganizationService {
     );
   }
 
-  /**
-   * Returns the organization subtree rooted at `organizationUnitId` for the
-   * given user, or `null` when the unit is missing, detached from an
-   * organization, or the user lacks access.
-   *
-   * Access is delegated to `MembershipService.isMemberOfUnitOrAncestor`: the
-   * caller must hold a membership on the unit or any of its ancestors.
-   * The returned `nodes` are the root's recursive descendants; the root
-   * itself is exposed via `id`/`name`.
-   */
   async findOrganizationTree(
     userId: string,
     organizationUnitId: string,
   ): Promise<OrganizationTree | null> {
-    const requestedUnit = await this.db.query.organizationUnits.findFirst({
+    const rootUnit = (await this.db.query.organizationUnits.findFirst({
       where: { id: organizationUnitId },
-    });
+      with: { type: true },
+    })) as OrganizationUnitWithType;
 
-    if (!requestedUnit?.organizationId) return null;
+    if (!rootUnit?.organizationId) return null;
 
     const canAccess = await this.membershipService.isMemberOfUnitOrAncestor(
       userId,
@@ -221,28 +220,21 @@ export class OrganizationService {
 
     if (!canAccess) return null;
 
-    const units = await this.db.query.organizationUnits.findMany({
-      where: { organizationId: requestedUnit.organizationId },
-    });
+    const allOrgUnits = (await this.db.query.organizationUnits.findMany({
+      where: { organizationId: rootUnit.organizationId },
+      with: { type: true },
+    })) as OrganizationUnitWithType[];
 
     return {
-      id: organizationUnitId,
-      name: requestedUnit.name,
-      nodes: this.buildSubtreeNodes(units, organizationUnitId),
+      root: this.buildRootNode(allOrgUnits, rootUnit),
     };
   }
 
-  /**
-   * Materializes the descendant subtree of `rootUnitId` from a flat list of
-   * units in the same organization. Returns the root's direct children, each
-   * with their own recursive `children` (root itself excluded). Assumes the
-   * input forms a forest of trees (no cycles, enforced by the schema).
-   */
-  private buildSubtreeNodes(
-    units: OrganizationUnitEntity[],
-    rootUnitId: string,
-  ): OrganizationNode[] {
-    const childrenByParentId = new Map<string, OrganizationUnitEntity[]>();
+  private buildRootNode(
+    units: OrganizationUnitWithType[],
+    root: OrganizationUnitWithType,
+  ): OrganizationNode {
+    const childrenByParentId = new Map<string, OrganizationUnitWithType[]>();
 
     for (const unit of units) {
       if (!unit.parentId) continue;
@@ -251,17 +243,24 @@ export class OrganizationService {
       childrenByParentId.set(unit.parentId, siblings);
     }
 
-    const buildChildren = (parentId: string): OrganizationNode[] => {
-      const directChildren = childrenByParentId.get(parentId) ?? [];
-      return directChildren.map((child) => ({
-        id: child.id,
-        name: child.name,
-        parentId: child.parentId,
-        children: buildChildren(child.id),
-      }));
-    };
+    const buildNode = (unit: OrganizationUnitWithType): OrganizationNode => ({
+      id: unit.id,
+      name: unit.name,
+      slug: unit.slug,
+      parentId: unit.parentId,
+      deletedAt: unit.deletedAt?.toISOString() ?? null,
+      type: {
+        id: unit.type.id,
+        name: unit.type.name,
+        icon: unit.type.icon ?? '',
+      },
+      children: buildChildren(unit.id),
+    });
 
-    return buildChildren(rootUnitId);
+    const buildChildren = (parentId: string): OrganizationNode[] =>
+      (childrenByParentId.get(parentId) ?? []).map(buildNode);
+
+    return buildNode(root);
   }
 
   async findRootUnit(

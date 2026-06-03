@@ -52,6 +52,7 @@ export class OrganizationQueryResolver {
     });
   }
 
+  @Permissions(PERMISSIONS.ORG_VIEW)
   @Query(() => OrganizationTree, { nullable: true })
   async organizationTree(
     @Session() session: UserSession,

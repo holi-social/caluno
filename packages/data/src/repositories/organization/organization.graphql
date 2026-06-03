@@ -167,51 +167,9 @@ mutation CreateOrganization($input: CreateOrganizationInput!) {
   }
 }
 
-fragment OrgUnitNodeFields on OrganizationUnit {
-  id
-  name
-  slug
-  parent {
-    id
-  }
-  deletedAt
-  type {
-    id
-    name
-    icon
-  }
-}
-
-query GetOrganizationUnitTree($id: String!) {
-  organization(id: $id) {
-    id
-    root {
-      ...OrgUnitNodeFields
-      children {
-        ...OrgUnitNodeFields
-        children {
-          ...OrgUnitNodeFields
-          children {
-            ...OrgUnitNodeFields
-            children {
-              ...OrgUnitNodeFields
-              children {
-                ...OrgUnitNodeFields
-                children {
-                  ...OrgUnitNodeFields
-                  children {
-                    ...OrgUnitNodeFields
-                    children {
-                      ...OrgUnitNodeFields
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    }
+query GetOrganizationTree {
+  organizationTree {
+    root
   }
 }
 
@@ -226,10 +184,18 @@ query GetOrganizationUnitTypes {
 
 mutation CreateOrganizationUnit($input: CreateOrganizationUnitInput!) {
   createOrganizationUnit(input: $input) {
-    ...OrgUnitNodeFields
+    id
+    name
+    slug
+    deletedAt
     parent {
       id
       name
+    }
+    type {
+      id
+      name
+      icon
     }
   }
 }
@@ -239,7 +205,18 @@ mutation UpdateOrganizationUnit(
   $input: UpdateOrganizationUnitInput!
 ) {
   updateOrganizationUnit(id: $id, input: $input) {
-    ...OrgUnitNodeFields
+    id
+    name
+    slug
+    deletedAt
+    parent {
+      id
+    }
+    type {
+      id
+      name
+      icon
+    }
   }
 }
 
