@@ -30,37 +30,23 @@ export function DashboardContent({
 
   // --- Forms list controls ---
   const [formSearch, setFormSearch] = useState('');
-  const [formSort, setFormSort] = useState<string>('updatedDesc');
 
   const visibleForms = useMemo(() => {
     let list = [...forms];
     const q = formSearch.trim().toLowerCase();
     if (q) list = list.filter((f) => f.name.toLowerCase().includes(q));
-
-    if (formSort === 'updatedDesc') {
-      list.sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
-    } else if (formSort === 'nameAsc') {
-      list.sort((a, b) => a.name.localeCompare(b.name));
-    }
     return list;
-  }, [forms, formSearch, formSort]);
+  }, [forms, formSearch]);
 
   // --- Blocks list controls ---
   const [blockSearch, setBlockSearch] = useState('');
-  const [blockSort, setBlockSort] = useState<string>('updatedDesc');
 
   const visibleBlocks = useMemo(() => {
     let list = [...blocks];
     const q = blockSearch.trim().toLowerCase();
     if (q) list = list.filter((b) => b.title.toLowerCase().includes(q));
-
-    if (blockSort === 'updatedAsc') {
-      list.sort((a, b) => a.updatedAt.localeCompare(b.updatedAt));
-    } else {
-      list.sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
-    }
     return list;
-  }, [blocks, blockSearch, blockSort]);
+  }, [blocks, blockSearch]);
 
   async function handleDeleteForm(id: string) {
     const result = await deleteForm({ organizationUnitId: orgUId, formId: id });
@@ -119,14 +105,6 @@ export function DashboardContent({
               onSearchChange={setFormSearch}
               searchPlaceholder="Search forms..."
               filters={[]}
-              sort={{
-                value: formSort,
-                options: [
-                  { label: 'Date (newest first)', value: 'updatedDesc' },
-                  { label: 'Name (A-Z)', value: 'nameAsc' },
-                ],
-                onChange: setFormSort,
-              }}
             />
             {visibleForms.length === 0 ? (
               <p className="text-muted-foreground py-12 text-center">
@@ -161,14 +139,6 @@ export function DashboardContent({
               onSearchChange={setBlockSearch}
               searchPlaceholder="Search blocks..."
               filters={[]}
-              sort={{
-                value: blockSort,
-                options: [
-                  { label: 'Date (newest first)', value: 'updatedDesc' },
-                  { label: 'Date (oldest first)', value: 'updatedAsc' },
-                ],
-                onChange: setBlockSort,
-              }}
             />
             {visibleBlocks.length === 0 ? (
               <p className="text-muted-foreground py-12 text-center">
