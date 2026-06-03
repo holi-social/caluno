@@ -2,7 +2,7 @@
 
 import { useQuery, useSuspenseQuery } from '@tanstack/react-query';
 import { OrganizationUnitRepository } from '../../repositories/organization/organization-unit.repository';
-import { useSdk } from './use-graphql-client';
+import { useGraphQLClient, useSdk } from './use-graphql-client';
 
 export function useOrganizationUnitWithSuspense(id: string) {
   const sdk = useSdk();
@@ -15,8 +15,8 @@ export function useOrganizationUnitWithSuspense(id: string) {
 }
 
 export function useIsMemberOfOrgUnitOrAncestor(organizationUnitId: string) {
-  const client = useGraphQLClient();
-  const repository = new OrganizationUnitRepository(client);
+  const sdk = useSdk();
+  const repository = new OrganizationUnitRepository(sdk);
 
   return useQuery({
     queryKey: ['organization-unit', 'is-member', organizationUnitId],

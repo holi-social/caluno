@@ -1,9 +1,6 @@
 'use client';
 
-import type {
-  OrganizationUnitType,
-  OrgUnitNodeFieldsFragment,
-} from '@repo/data';
+import type { OrganizationUnitType, OrgUnitTreeNode } from '@repo/data';
 import { useState } from 'react';
 import { useSheetTrigger } from '@/hooks/use-sheet';
 import { DeleteOrgUnitDialog } from './delete-org-unit-dialog';
@@ -13,30 +10,21 @@ import {
 } from './org-unit-create-edit-sheet';
 import { OrgUnitTree } from './org-unit-tree';
 
-type OrgUnitNode = OrgUnitNodeFieldsFragment & {
-  children?: OrgUnitNode[];
-};
-
 interface OrgUnitSetupClientProps {
-  tree: OrgUnitNode | null;
+  tree: OrgUnitTreeNode | null;
   types: OrganizationUnitType[];
   organizationUnitId: string;
-  canCreate?: boolean;
   canEdit?: boolean;
-  canDelete?: boolean;
 }
 
 export function OrgUnitSetup({
   tree,
   types,
   organizationUnitId,
-  canCreate = false,
   canEdit = false,
-  canDelete = false,
 }: OrgUnitSetupClientProps) {
-  const [orgUnitToDelete, setOrgUnitToDelete] = useState<OrgUnitNode | null>(
-    null,
-  );
+  const [orgUnitToDelete, setOrgUnitToDelete] =
+    useState<OrgUnitTreeNode | null>(null);
 
   const { open: openOrgUnitSheet } = useSheetTrigger(CREATE_EDIT_FORM_ID);
 
@@ -55,9 +43,7 @@ export function OrgUnitSetup({
         onCreate={(parentNode) => openOrgUnitSheet({ parentId: parentNode.id })}
         onEdit={(node) => openOrgUnitSheet({ id: node.id })}
         onDelete={setOrgUnitToDelete}
-        canCreate={canCreate}
         canEdit={canEdit}
-        canDelete={canDelete}
       />
 
       <OrgUnitCreateEditSheet types={types} />

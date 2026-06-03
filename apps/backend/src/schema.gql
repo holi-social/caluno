@@ -207,9 +207,7 @@ type OrganizationPaginatedResponse {
 }
 
 type OrganizationTree {
-  id: ID!
-  name: String!
-  nodes: JSON!
+  root: JSON!
 }
 
 type OrganizationUnit {

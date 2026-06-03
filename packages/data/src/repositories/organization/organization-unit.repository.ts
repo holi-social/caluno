@@ -4,17 +4,25 @@ import type {
 } from '../../generated/graphql';
 import { BaseRepository } from '../base/base.repository';
 
+export interface OrgUnitTreeNode {
+  id: string;
+  name: string;
+  slug: string;
+  parentId: string | null;
+  deletedAt: string | null;
+  type: { id: string; name: string; icon: string };
+  children: OrgUnitTreeNode[];
+}
+
 export class OrganizationUnitRepository extends BaseRepository {
   async findById(id: string) {
     const data = await this.sdk.GetOrganizationUnit({ id });
     return data.organizationUnit;
   }
 
-  async findTree(organizationId: string) {
-    const data = await this.sdk.GetOrganizationUnitTree({
-      id: organizationId,
-    });
-    return data.organization?.root ?? null;
+  async findOrganizationTree(): Promise<OrgUnitTreeNode | null> {
+    const data = await this.sdk.GetOrganizationTree();
+    return (data.organizationTree?.root as OrgUnitTreeNode) ?? null;
   }
 
   async findAllTypes() {
@@ -37,12 +45,12 @@ export class OrganizationUnitRepository extends BaseRepository {
     return data.deleteOrganizationUnit;
   }
 
-  async isMemberOfOrgUnitOrAncestor(organizationUnitId: string): Promise<boolean> {
-    try {
-      const data = await this.sdk.IsMemberOfOrgUnitOrAncestor({ organizationUnitId });
-      return data.isMemberOfUnitOrAncestor;
-    } catch (error) {
-      throw DataError.fromGraphQLError(error);
-    }
+  async isMemberOfOrgUnitOrAncestor(
+    organizationUnitId: string,
+  ): Promise<boolean> {
+    const data = await this.sdk.IsMemberOfOrgUnitOrAncestor({
+      organizationUnitId,
+    });
+    return data.isMemberOfUnitOrAncestor;
   }
 }
