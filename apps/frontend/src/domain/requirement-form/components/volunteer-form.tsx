@@ -167,7 +167,16 @@ function buildFieldSchema(
   }
 
   // Text-like: TEXT, NAME, LASTNAME, ZIP, IBAN, TEXTAREA
-  const maxLen = type === FieldType.Textarea ? 5000 : 500;
+  const maxLen =
+    type === FieldType.Textarea
+      ? 5000
+      : type === FieldType.Name || type === FieldType.Lastname
+        ? 100
+        : type === FieldType.Zip
+          ? 20
+          : type === FieldType.Iban
+            ? 34
+            : 300; // TEXT and anything else
   let s = z
     .string()
     .max(maxLen, `${label} must be ${maxLen} characters or fewer`);

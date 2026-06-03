@@ -302,22 +302,33 @@ export class FormSubmissionService {
   ): void {
     const { type, label, systemKey, options, minAge } = field;
 
-    if (rawValue.length > 10_000) {
-      throw new BadRequestGraphQLError(`"${label}": value too long`);
-    }
-
     if (type === FieldType.STATIC_TEXT) return;
     if (!rawValue) return;
 
     switch (type) {
       case FieldType.TEXT:
+        if (rawValue.length > 300)
+          throw new BadRequestGraphQLError(
+            `"${label}": must be 300 characters or fewer`,
+          );
+        break;
       case FieldType.NAME:
       case FieldType.LASTNAME:
-      case FieldType.ZIP:
-      case FieldType.IBAN:
-        if (rawValue.length > 500)
+        if (rawValue.length > 100)
           throw new BadRequestGraphQLError(
-            `"${label}": must be 500 characters or fewer`,
+            `"${label}": must be 100 characters or fewer`,
+          );
+        break;
+      case FieldType.ZIP:
+        if (rawValue.length > 20)
+          throw new BadRequestGraphQLError(
+            `"${label}": must be 20 characters or fewer`,
+          );
+        break;
+      case FieldType.IBAN:
+        if (rawValue.length > 34)
+          throw new BadRequestGraphQLError(
+            `"${label}": must be 34 characters or fewer`,
           );
         break;
       case FieldType.TEXTAREA:
