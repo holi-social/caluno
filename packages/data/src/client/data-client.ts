@@ -5,6 +5,7 @@ import { MembershipRepository } from '../repositories/membership/membership.repo
 import { MembershipRequestRepository } from '../repositories/membershipRequest/membershipRequest.repository';
 import { OrganizationRepository } from '../repositories/organization/organization.repository';
 import { OrganizationUnitRepository } from '../repositories/organization/organization-unit.repository';
+import { RequirementFormRepository } from '../repositories/requirementForm/requirement-form.repository';
 import { RoleRepository } from '../repositories/role/role.repository';
 import { ShiftRepository } from '../repositories/shift/shift.repository';
 import { TimeEntryRepository } from '../repositories/time-entry/time-entry.repository';
@@ -31,6 +32,7 @@ export class DataClient {
   public readonly timeEntry: TimeEntryRepository;
   public readonly membership: MembershipRepository;
   public readonly membershipRequest: MembershipRequestRepository;
+  public readonly requirementForm: RequirementFormRepository;
   public readonly role: RoleRepository;
 
   public readonly organizationContext?: OrganizationContext;
@@ -61,6 +63,7 @@ export class DataClient {
     this.timeEntry = new TimeEntryRepository(sdk);
     this.membership = new MembershipRepository(sdk);
     this.membershipRequest = new MembershipRequestRepository(sdk);
+    this.requirementForm = new RequirementFormRepository(sdk);
     this.role = new RoleRepository(sdk);
   }
 

@@ -86,7 +86,8 @@ export async function requireOrgAccess(
   }
 
   const data = await getDataClient();
-  const isMember = await data.organizationUnit.isMemberOfOrgUnitOrAncestor(orgUId);
+  const isMember =
+    await data.organizationUnit.isMemberOfOrgUnitOrAncestor(orgUId);
   if (!isMember) {
     redirect('/unauthorized');
   }
