@@ -6,21 +6,23 @@ import { Plus } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { toast } from 'sonner';
 import { deleteBlock, deleteForm } from '../actions';
-import { BlocksTable } from './blocks-table';
+import { BlockCard } from './block-card';
 import { CreateBlockButton } from './create-block-button';
 import { CreateFormDialog } from './create-form-dialog';
-import { FormsTable } from './forms-table';
+import { FormCard } from './form-card';
 import { ListControls } from './list-controls';
 
 export function DashboardContent({
   forms,
   blocks,
   orgUId,
+  orgUnitName,
   organizationId,
 }: {
   forms: RequirementForm[];
   blocks: FormBlock[];
   orgUId: string;
+  orgUnitName: string;
   organizationId: string;
 }) {
   const [tab, setTab] = useState('forms');
@@ -111,13 +113,17 @@ export function DashboardContent({
                 No forms match the current filters.
               </p>
             ) : (
-              <div className="mt-4">
-                <FormsTable
-                  forms={visibleForms}
-                  blocks={blocks}
-                  orgUId={orgUId}
-                  onDelete={handleDeleteForm}
-                />
+              <div className="mt-4 grid grid-cols-2 gap-4">
+                {visibleForms.map((f) => (
+                  <FormCard
+                    key={f.id}
+                    form={f}
+                    blocks={blocks}
+                    orgUId={orgUId}
+                    orgUnitName={orgUnitName}
+                    onDelete={handleDeleteForm}
+                  />
+                ))}
               </div>
             )}
           </>
@@ -142,12 +148,15 @@ export function DashboardContent({
                 No blocks match the current filters.
               </p>
             ) : (
-              <div className="mt-4">
-                <BlocksTable
-                  blocks={visibleBlocks}
-                  forms={forms}
-                  onDelete={handleDeleteBlock}
-                />
+              <div className="mt-4 grid grid-cols-2 gap-4">
+                {visibleBlocks.map((b) => (
+                  <BlockCard
+                    key={b.id}
+                    block={b}
+                    forms={forms}
+                    onDelete={handleDeleteBlock}
+                  />
+                ))}
               </div>
             )}
           </>

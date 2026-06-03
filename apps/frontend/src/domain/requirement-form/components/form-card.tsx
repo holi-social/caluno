@@ -12,16 +12,19 @@ export function FormCard({
   form,
   blocks,
   orgUId,
+  orgUnitName,
   onDelete,
 }: {
   form: RequirementForm;
   blocks: FormBlock[];
   orgUId: string;
+  orgUnitName?: string;
   onDelete?: (id: string) => Promise<void>;
 }) {
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
 
+  const locked = (form.submissionCount ?? 0) > 0;
   const blockMap = new Map(blocks.map((b) => [b.id, b]));
   const usedBlocks = (form.blockRefs ?? [])
     .map((ref) => blockMap.get(ref.blockId))
@@ -52,6 +55,9 @@ export function FormCard({
     <Card className="flex flex-col">
       <CardContent className="flex flex-1 flex-col pt-5">
         <div className="flex flex-1 flex-col">
+          {orgUnitName && (
+            <p className="text-muted-foreground mb-1 text-xs">{orgUnitName}</p>
+          )}
           <h2 className="mt-1 text-xl font-bold">{form.name}</h2>
           {form.description && (
             <p className="text-muted-foreground mt-1 text-sm">
@@ -82,12 +88,19 @@ export function FormCard({
             <Share2 className="mr-1.5 size-4" />
             Share
           </Button>
-          <Button asChild variant="outline" className="h-10 flex-1">
-            <Link href={`/${orgUId}/requirement-forms/${form.id}/builder`}>
+          {locked ? (
+            <Button variant="outline" className="h-10 flex-1" disabled>
               <Pencil className="mr-1.5 size-4" />
               Edit
-            </Link>
-          </Button>
+            </Button>
+          ) : (
+            <Button asChild variant="outline" className="h-10 flex-1">
+              <Link href={`/${orgUId}/requirement-forms/${form.id}/builder`}>
+                <Pencil className="mr-1.5 size-4" />
+                Edit
+              </Link>
+            </Button>
+          )}
           <Button
             asChild
             variant="outline"
@@ -108,6 +121,7 @@ export function FormCard({
               onClick={() => setConfirmOpen(true)}
               aria-label="Delete form"
               title="Delete form"
+              disabled={locked}
             >
               <Trash2 className="size-4" />
             </Button>

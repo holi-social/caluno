@@ -30,6 +30,7 @@ export function BlockCard({
   const usedInForms = forms.filter((f) =>
     (f.blockRefs ?? []).some((ref) => ref.blockId === block.id),
   );
+  const locked = usedInForms.some((f) => (f.submissionCount ?? 0) > 0);
   const fieldCount = block.fields?.length ?? 0;
   const Icon = block.icon ? BLOCK_ICONS[block.icon] : undefined;
 
@@ -118,6 +119,7 @@ export function BlockCard({
             variant="outline"
             className="h-10 flex-1"
             onClick={() => openSheet({ id: block.id })}
+            disabled={locked}
           >
             {block.isEditable ? (
               <>
@@ -139,6 +141,7 @@ export function BlockCard({
               onClick={() => setConfirmOpen(true)}
               aria-label="Delete block"
               title="Delete block"
+              disabled={locked}
             >
               <Trash2 className="size-4" />
             </Button>
