@@ -17,6 +17,7 @@ import type {
 } from '../schemas/requirement-form.schema';
 
 import { isUnitInOrg } from './is-unit-in-org';
+import { patch } from '../../shared/patch';
 
 @Injectable()
 export class RequirementFormService {
@@ -94,7 +95,6 @@ export class RequirementFormService {
         slug,
         name: input.name,
         description: input.description,
-        locale: input.locale ?? 'de',
         settings: this.normalizeSettings(input.settings),
         shareToken: randomUUID(),
         createdBy: userId,
@@ -146,17 +146,14 @@ export class RequirementFormService {
         );
       }
 
+      const { settings, blockRefs, ...rest } = input;
       const [updated] = await tx
         .update(schema.requirementForms)
         .set({
-          ...(input.name !== null ? { name: input.name } : {}),
-          ...(input.description !== null
-            ? { description: input.description }
-            : {}),
-          ...(input.locale !== null ? { locale: input.locale } : {}),
-          ...(input.settings !== null
-            ? { settings: this.normalizeSettings(input.settings) }
-            : {}),
+          ...patch(rest),
+          ...(settings !== undefined && {
+            settings: this.normalizeSettings(settings),
+          }),
           updatedBy: userId,
           updatedAt: new Date(),
         })

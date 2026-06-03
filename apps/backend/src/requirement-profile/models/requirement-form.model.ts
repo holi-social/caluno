@@ -37,9 +37,6 @@ export class RequirementForm {
   @Field(() => String, { nullable: true })
   description!: string | null;
 
-  @Field(() => String)
-  locale!: string;
-
   @Field(() => FormSettings)
   settings!: FormSettings;
 

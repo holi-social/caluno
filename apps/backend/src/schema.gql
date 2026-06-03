@@ -66,7 +66,6 @@ input CreateOrganizationUnitInput {
 input CreateRequirementFormInput {
   blockRefs: [FormBlockRefInput!]
   description: String
-  locale: String
   name: String!
   organizationId: String!
   settings: FormSettingsInput
@@ -519,7 +518,6 @@ type RequirementForm {
   createdBy: String!
   description: String
   id: ID!
-  locale: String!
   name: String!
   organizationId: String!
   organizationUnitId: String
@@ -803,7 +801,6 @@ input UpdateOrganizationUnitInput {
 input UpdateRequirementFormInput {
   blockRefs: [FormBlockRefInput!]
   description: String
-  locale: String
   name: String
   settings: FormSettingsInput
 }

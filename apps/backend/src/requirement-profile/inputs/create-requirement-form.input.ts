@@ -13,9 +13,6 @@ export class CreateRequirementFormInput {
   @Field(() => String, { nullable: true })
   description!: string | null;
 
-  @Field(() => String, { nullable: true })
-  locale!: string | null;
-
   @Field(() => FormSettingsInput, { nullable: true })
   settings!: FormSettingsInput | null;
 

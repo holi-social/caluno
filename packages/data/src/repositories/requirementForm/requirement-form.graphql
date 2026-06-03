@@ -285,7 +285,6 @@ query GetRequirementForm($id: String!) {
     slug
     name
     description
-    locale
     settings {
       submitButtonLabel
       successTitle
@@ -406,8 +405,7 @@ query GetRequirementForms(
       slug
       name
       description
-      locale
-      settings {
+        settings {
         submitButtonLabel
         successTitle
         successMessage

@@ -3,6 +3,7 @@ import { count, eq, inArray } from 'drizzle-orm';
 import type { Database } from '../../database/database.module';
 import { DATABASE_CONNECTION } from '../../database/database-connection';
 import * as schema from '../../database/schema';
+import { patch } from '../../shared/patch';
 import {
   BadRequestGraphQLError,
   ConflictGraphQLError,
@@ -135,16 +136,7 @@ export class FormBlockService {
 
     const [updated] = await this.db
       .update(schema.formBlocks)
-      .set({
-        ...(input.title !== null ? { title: input.title } : {}),
-        ...(input.description !== null
-          ? { description: input.description }
-          : {}),
-        ...(input.icon !== null ? { icon: input.icon } : {}),
-        ...(input.required !== null ? { required: input.required } : {}),
-        updatedBy: userId,
-        updatedAt: new Date(),
-      })
+      .set({ ...patch(input), updatedBy: userId, updatedAt: new Date() })
       .where(eq(schema.formBlocks.id, id))
       .returning();
 
@@ -262,29 +254,7 @@ export class FormBlockService {
 
     await this.db
       .update(schema.formBlockFields)
-      .set({
-        ...(input.type !== null ? { type: input.type } : {}),
-        ...(input.label !== null ? { label: input.label } : {}),
-        ...(input.placeholder !== null
-          ? { placeholder: input.placeholder }
-          : {}),
-        ...(input.description !== null
-          ? { description: input.description }
-          : {}),
-        ...(input.required !== null ? { required: input.required } : {}),
-        ...(input.lockType !== null ? { lockType: input.lockType } : {}),
-        ...(input.systemKey !== null ? { systemKey: input.systemKey } : {}),
-        ...(input.options !== null ? { options: input.options } : {}),
-        ...(input.documentUrl !== null
-          ? { documentUrl: input.documentUrl }
-          : {}),
-        ...(input.documentLabel !== null
-          ? { documentLabel: input.documentLabel }
-          : {}),
-        ...(input.minAge !== null ? { minAge: input.minAge } : {}),
-        ...(input.fieldOrder !== null ? { fieldOrder: input.fieldOrder } : {}),
-        updatedAt: new Date(),
-      })
+      .set({ ...patch(input), updatedAt: new Date() })
       .where(eq(schema.formBlockFields.id, fieldId));
 
     return this.findById(field.block.id) as Promise<FormBlockEntity>;

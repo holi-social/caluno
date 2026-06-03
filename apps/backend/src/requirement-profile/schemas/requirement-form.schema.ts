@@ -18,7 +18,6 @@ export const requirementForms = pgTable(
     slug: text('slug').notNull(),
     name: text('name').notNull(),
     description: text('description'),
-    locale: text('locale').notNull().default('de'),
     settings: jsonb('settings')
       .$type<{
         submitButtonLabel?: string;

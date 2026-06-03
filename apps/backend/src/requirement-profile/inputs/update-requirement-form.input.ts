@@ -5,17 +5,15 @@ import { FormSettingsInput } from './form-settings.input';
 @InputType()
 export class UpdateRequirementFormInput {
   @Field(() => String, { nullable: true })
-  name!: string | null;
+  name?: string;
 
+  // Nullable in DB — null clears the value
   @Field(() => String, { nullable: true })
-  description!: string | null;
-
-  @Field(() => String, { nullable: true })
-  locale!: string | null;
+  description?: string | null;
 
   @Field(() => FormSettingsInput, { nullable: true })
-  settings!: FormSettingsInput | null;
+  settings?: FormSettingsInput | null;
 
   @Field(() => [FormBlockRefInput], { nullable: true })
-  blockRefs!: FormBlockRefInput[] | null;
+  blockRefs?: FormBlockRefInput[] | null;
 }
