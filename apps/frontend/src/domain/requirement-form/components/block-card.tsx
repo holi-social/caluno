@@ -105,9 +105,7 @@ export function BlockCard({
             className="h-10 flex-1"
             onClick={() =>
               openSheet(
-                locked
-                  ? { id: block.id, readOnly: 'true' }
-                  : { id: block.id },
+                locked ? { id: block.id, readOnly: 'true' } : { id: block.id },
               )
             }
           >

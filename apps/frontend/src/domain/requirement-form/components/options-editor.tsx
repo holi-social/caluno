@@ -82,7 +82,13 @@ export function OptionsEditor({
           </Button>
         </div>
       ))}
-      <Button type="button" variant="outline" size="sm" onClick={add} disabled={disabled}>
+      <Button
+        type="button"
+        variant="outline"
+        size="sm"
+        onClick={add}
+        disabled={disabled}
+      >
         <Plus className="mr-1 size-4" />
         Add Option
       </Button>

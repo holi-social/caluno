@@ -215,7 +215,11 @@ export function BlockForm({
 
         <Field>
           <FieldLabel>Icon</FieldLabel>
-          <Input {...register('icon')} placeholder="e.g. user" disabled={readOnly} />
+          <Input
+            {...register('icon')}
+            placeholder="e.g. user"
+            disabled={readOnly}
+          />
         </Field>
       </div>
 
@@ -266,7 +270,11 @@ export function BlockForm({
             disabled={isSubmitting || !showSaveButton}
           >
             <Save className="mr-2 size-4" />
-            {isSubmitting ? 'Saving…' : isEdit ? 'Save changes' : 'Create block'}
+            {isSubmitting
+              ? 'Saving…'
+              : isEdit
+                ? 'Save changes'
+                : 'Create block'}
           </Button>
         </div>
       )}
@@ -351,7 +359,11 @@ function FieldCard({
             control={control}
             name={`fields.${index}.type`}
             render={({ field }) => (
-              <Select value={field.value} onValueChange={field.onChange} disabled={readOnly}>
+              <Select
+                value={field.value}
+                onValueChange={field.onChange}
+                disabled={readOnly}
+              >
                 <SelectTrigger>
                   <SelectValue placeholder="Select type" />
                 </SelectTrigger>

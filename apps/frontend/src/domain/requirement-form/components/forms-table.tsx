@@ -52,12 +52,7 @@ function FormActions({
           <Pencil />
         </Link>
       </Button>
-      <Button
-        size="icon-xs"
-        variant="outline"
-        aria-label="Submissions"
-        asChild
-      >
+      <Button size="icon-xs" variant="outline" aria-label="Submissions" asChild>
         <Link href={`/${orgUId}/requirement-forms/${form.id}/submissions`}>
           <Users />
         </Link>

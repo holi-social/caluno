@@ -405,7 +405,7 @@ query GetRequirementForms(
       slug
       name
       description
-        settings {
+      settings {
         submitButtonLabel
         successTitle
         successMessage

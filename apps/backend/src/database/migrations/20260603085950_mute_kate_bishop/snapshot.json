@@ -2,91 +2,52 @@
   "version": "8",
   "dialect": "postgres",
   "id": "57350e57-723e-4ee0-be02-1a1c5eee859f",
-  "prevIds": [
-    "6b5fe3fe-a36f-4175-80c6-7a00bdbd2087"
-  ],
+  "prevIds": ["6b5fe3fe-a36f-4175-80c6-7a00bdbd2087"],
   "ddl": [
     {
-      "values": [
-        "PENDING",
-        "ACCEPTED",
-        "REJECTED",
-        "CANCELLED"
-      ],
+      "values": ["PENDING", "ACCEPTED", "REJECTED", "CANCELLED"],
       "name": "membership_request_status",
       "entityType": "enums",
       "schema": "public"
     },
     {
-      "values": [
-        "DRAFT",
-        "SUBMITTED",
-        "APPROVED",
-        "REJECTED"
-      ],
+      "values": ["DRAFT", "SUBMITTED", "APPROVED", "REJECTED"],
       "name": "form_submission_status",
       "entityType": "enums",
       "schema": "public"
     },
     {
-      "values": [
-        "PENDING",
-        "ACTIVE",
-        "BLACKLISTED",
-        "INACTIVE"
-      ],
+      "values": ["PENDING", "ACTIVE", "BLACKLISTED", "INACTIVE"],
       "name": "organization_user_profile_status",
       "entityType": "enums",
       "schema": "public"
     },
     {
-      "values": [
-        "DOCUMENT",
-        "CHECK",
-        "DATE",
-        "TEXT"
-      ],
+      "values": ["DOCUMENT", "CHECK", "DATE", "TEXT"],
       "name": "requirement_type",
       "entityType": "enums",
       "schema": "public"
     },
     {
-      "values": [
-        "DRAFT",
-        "SUBMITTED",
-        "APPROVED",
-        "REJECTED"
-      ],
+      "values": ["DRAFT", "SUBMITTED", "APPROVED", "REJECTED"],
       "name": "requirement_fulfillment_status",
       "entityType": "enums",
       "schema": "public"
     },
     {
-      "values": [
-        "DRAFT",
-        "SUBMITTED",
-        "APPROVED",
-        "REJECTED"
-      ],
+      "values": ["DRAFT", "SUBMITTED", "APPROVED", "REJECTED"],
       "name": "requirement_profile_submission_status",
       "entityType": "enums",
       "schema": "public"
     },
     {
-      "values": [
-        "INVITED_MEMBERS",
-        "ALL_MEMBERS"
-      ],
+      "values": ["INVITED_MEMBERS", "ALL_MEMBERS"],
       "name": "shift_visibility",
       "entityType": "enums",
       "schema": "public"
     },
     {
-      "values": [
-        "PENDING",
-        "ACCEPTED",
-        "REJECTED"
-      ],
+      "values": ["PENDING", "ACCEPTED", "REJECTED"],
       "name": "shift_invite_status",
       "entityType": "enums",
       "schema": "public"
@@ -5127,14 +5088,10 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "user_id"
-      ],
+      "columns": ["user_id"],
       "schemaTo": "public",
       "tableTo": "users",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "CASCADE",
       "name": "accounts_user_id_users_id_fkey",
@@ -5144,14 +5101,10 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "user_id"
-      ],
+      "columns": ["user_id"],
       "schemaTo": "public",
       "tableTo": "users",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "CASCADE",
       "name": "sessions_user_id_users_id_fkey",
@@ -5161,14 +5114,10 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "organization_id"
-      ],
+      "columns": ["organization_id"],
       "schemaTo": "public",
       "tableTo": "organizations",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "CASCADE",
       "name": "roles_organization_id_organizations_id_fkey",
@@ -5178,14 +5127,10 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "role_id"
-      ],
+      "columns": ["role_id"],
       "schemaTo": "public",
       "tableTo": "roles",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "CASCADE",
       "name": "role_permissions_role_id_roles_id_fkey",
@@ -5195,14 +5140,10 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "permission_id"
-      ],
+      "columns": ["permission_id"],
       "schemaTo": "public",
       "tableTo": "permissions",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "CASCADE",
       "name": "role_permissions_permission_id_permissions_id_fkey",
@@ -5212,14 +5153,10 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "user_id"
-      ],
+      "columns": ["user_id"],
       "schemaTo": "public",
       "tableTo": "users",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "CASCADE",
       "name": "memberships_user_id_users_id_fkey",
@@ -5229,14 +5166,10 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "organization_unit_id"
-      ],
+      "columns": ["organization_unit_id"],
       "schemaTo": "public",
       "tableTo": "organization_units",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "CASCADE",
       "name": "memberships_organization_unit_id_organization_units_id_fkey",
@@ -5246,14 +5179,10 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "user_id"
-      ],
+      "columns": ["user_id"],
       "schemaTo": "public",
       "tableTo": "users",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "CASCADE",
       "name": "membership_requests_user_id_users_id_fkey",
@@ -5263,14 +5192,10 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "organization_unit_id"
-      ],
+      "columns": ["organization_unit_id"],
       "schemaTo": "public",
       "tableTo": "organization_units",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "CASCADE",
       "name": "membership_requests_JnW42Hb2WNYu_fkey",
@@ -5280,14 +5205,10 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "reviewed_by_user_id"
-      ],
+      "columns": ["reviewed_by_user_id"],
       "schemaTo": "public",
       "tableTo": "users",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "CASCADE",
       "name": "membership_requests_reviewed_by_user_id_users_id_fkey",
@@ -5297,14 +5218,10 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "membership_id"
-      ],
+      "columns": ["membership_id"],
       "schemaTo": "public",
       "tableTo": "memberships",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "CASCADE",
       "name": "membership_roles_membership_id_memberships_id_fkey",
@@ -5314,14 +5231,10 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "role_id"
-      ],
+      "columns": ["role_id"],
       "schemaTo": "public",
       "tableTo": "roles",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "CASCADE",
       "name": "membership_roles_role_id_roles_id_fkey",
@@ -5331,14 +5244,10 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "organization_id"
-      ],
+      "columns": ["organization_id"],
       "schemaTo": "public",
       "tableTo": "organizations",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "CASCADE",
       "name": "organization_units_organization_id_organizations_id_fkey",
@@ -5348,14 +5257,10 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "parent_id"
-      ],
+      "columns": ["parent_id"],
       "schemaTo": "public",
       "tableTo": "organization_units",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "CASCADE",
       "name": "organization_units_parent_id_organization_units_id_fkey",
@@ -5365,14 +5270,10 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "type_id"
-      ],
+      "columns": ["type_id"],
       "schemaTo": "public",
       "tableTo": "organization_unit_types",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "RESTRICT",
       "name": "organization_units_type_id_organization_unit_types_id_fkey",
@@ -5382,14 +5283,10 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "required_membership_requirement_profile_id"
-      ],
+      "columns": ["required_membership_requirement_profile_id"],
       "schemaTo": "public",
       "tableTo": "requirement_profiles",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "SET NULL",
       "name": "organization_units_Wl3widDJ46RJ_fkey",
@@ -5399,16 +5296,10 @@
     },
     {
       "nameExplicit": true,
-      "columns": [
-        "organization_id",
-        "parent_id"
-      ],
+      "columns": ["organization_id", "parent_id"],
       "schemaTo": "public",
       "tableTo": "organization_units",
-      "columnsTo": [
-        "organization_id",
-        "id"
-      ],
+      "columnsTo": ["organization_id", "id"],
       "onUpdate": "NO ACTION",
       "onDelete": "CASCADE",
       "name": "fk_organization_units_parent_same_organization",
@@ -5418,14 +5309,10 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "user_id"
-      ],
+      "columns": ["user_id"],
       "schemaTo": "public",
       "tableTo": "users",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "CASCADE",
       "name": "documents_user_id_users_id_fkey",
@@ -5435,14 +5322,10 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "organization_id"
-      ],
+      "columns": ["organization_id"],
       "schemaTo": "public",
       "tableTo": "organizations",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "CASCADE",
       "name": "form_blocks_organization_id_organizations_id_fkey",
@@ -5452,14 +5335,10 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "created_by"
-      ],
+      "columns": ["created_by"],
       "schemaTo": "public",
       "tableTo": "users",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "NO ACTION",
       "name": "form_blocks_created_by_users_id_fkey",
@@ -5469,14 +5348,10 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "updated_by"
-      ],
+      "columns": ["updated_by"],
       "schemaTo": "public",
       "tableTo": "users",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "NO ACTION",
       "name": "form_blocks_updated_by_users_id_fkey",
@@ -5486,14 +5361,10 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "block_id"
-      ],
+      "columns": ["block_id"],
       "schemaTo": "public",
       "tableTo": "form_blocks",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "CASCADE",
       "name": "form_block_fields_block_id_form_blocks_id_fkey",
@@ -5503,14 +5374,10 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "form_id"
-      ],
+      "columns": ["form_id"],
       "schemaTo": "public",
       "tableTo": "requirement_forms",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "RESTRICT",
       "name": "form_submissions_form_id_requirement_forms_id_fkey",
@@ -5520,14 +5387,10 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "user_id"
-      ],
+      "columns": ["user_id"],
       "schemaTo": "public",
       "tableTo": "users",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "CASCADE",
       "name": "form_submissions_user_id_users_id_fkey",
@@ -5537,14 +5400,10 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "membership_id"
-      ],
+      "columns": ["membership_id"],
       "schemaTo": "public",
       "tableTo": "memberships",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "SET NULL",
       "name": "form_submissions_membership_id_memberships_id_fkey",
@@ -5554,14 +5413,10 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "submission_id"
-      ],
+      "columns": ["submission_id"],
       "schemaTo": "public",
       "tableTo": "form_submissions",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "CASCADE",
       "name": "form_submission_values_submission_id_form_submissions_id_fkey",
@@ -5571,14 +5426,10 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "field_id"
-      ],
+      "columns": ["field_id"],
       "schemaTo": "public",
       "tableTo": "form_block_fields",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "NO ACTION",
       "name": "form_submission_values_field_id_form_block_fields_id_fkey",
@@ -5588,14 +5439,10 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "block_id"
-      ],
+      "columns": ["block_id"],
       "schemaTo": "public",
       "tableTo": "form_blocks",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "NO ACTION",
       "name": "form_submission_values_block_id_form_blocks_id_fkey",
@@ -5605,14 +5452,10 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "organization_id"
-      ],
+      "columns": ["organization_id"],
       "schemaTo": "public",
       "tableTo": "organizations",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "CASCADE",
       "name": "organization_user_profiles_WTRTxwUqszuD_fkey",
@@ -5622,14 +5465,10 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "user_id"
-      ],
+      "columns": ["user_id"],
       "schemaTo": "public",
       "tableTo": "users",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "CASCADE",
       "name": "organization_user_profiles_user_id_users_id_fkey",
@@ -5639,14 +5478,10 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "organization_id"
-      ],
+      "columns": ["organization_id"],
       "schemaTo": "public",
       "tableTo": "organizations",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "CASCADE",
       "name": "requirements_organization_id_organizations_id_fkey",
@@ -5656,14 +5491,10 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "organization_id"
-      ],
+      "columns": ["organization_id"],
       "schemaTo": "public",
       "tableTo": "organizations",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "CASCADE",
       "name": "requirement_forms_organization_id_organizations_id_fkey",
@@ -5673,14 +5504,10 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "organization_unit_id"
-      ],
+      "columns": ["organization_unit_id"],
       "schemaTo": "public",
       "tableTo": "organization_units",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "CASCADE",
       "name": "requirement_forms_WaMssqa2Hv1A_fkey",
@@ -5690,14 +5517,10 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "created_by"
-      ],
+      "columns": ["created_by"],
       "schemaTo": "public",
       "tableTo": "users",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "NO ACTION",
       "name": "requirement_forms_created_by_users_id_fkey",
@@ -5707,14 +5530,10 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "updated_by"
-      ],
+      "columns": ["updated_by"],
       "schemaTo": "public",
       "tableTo": "users",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "NO ACTION",
       "name": "requirement_forms_updated_by_users_id_fkey",
@@ -5724,14 +5543,10 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "form_id"
-      ],
+      "columns": ["form_id"],
       "schemaTo": "public",
       "tableTo": "requirement_forms",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "CASCADE",
       "name": "requirement_form_block_refs_form_id_requirement_forms_id_fkey",
@@ -5741,14 +5556,10 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "block_id"
-      ],
+      "columns": ["block_id"],
       "schemaTo": "public",
       "tableTo": "form_blocks",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "RESTRICT",
       "name": "requirement_form_block_refs_block_id_form_blocks_id_fkey",
@@ -5758,14 +5569,10 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "requirement_profile_submission_id"
-      ],
+      "columns": ["requirement_profile_submission_id"],
       "schemaTo": "public",
       "tableTo": "requirement_profile_submissions",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "CASCADE",
       "name": "requirement_fulfillments_SSi8x4wpJ4c0_fkey",
@@ -5775,14 +5582,10 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "requirement_id"
-      ],
+      "columns": ["requirement_id"],
       "schemaTo": "public",
       "tableTo": "requirements",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "RESTRICT",
       "name": "requirement_fulfillments_requirement_id_requirements_id_fkey",
@@ -5792,14 +5595,10 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "organization_user_profile_id"
-      ],
+      "columns": ["organization_user_profile_id"],
       "schemaTo": "public",
       "tableTo": "organization_user_profiles",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "RESTRICT",
       "name": "requirement_fulfillments_DsUV3QFu7hSK_fkey",
@@ -5809,14 +5608,10 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "reviewed_by_id"
-      ],
+      "columns": ["reviewed_by_id"],
       "schemaTo": "public",
       "tableTo": "users",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "SET NULL",
       "name": "requirement_fulfillments_reviewed_by_id_users_id_fkey",
@@ -5826,14 +5621,10 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "organization_id"
-      ],
+      "columns": ["organization_id"],
       "schemaTo": "public",
       "tableTo": "organizations",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "CASCADE",
       "name": "requirement_profiles_organization_id_organizations_id_fkey",
@@ -5843,14 +5634,10 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "requirement_profile_id"
-      ],
+      "columns": ["requirement_profile_id"],
       "schemaTo": "public",
       "tableTo": "requirement_profiles",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "CASCADE",
       "name": "requirement_profile_requirements_2bdUJ4zBfOtP_fkey",
@@ -5860,14 +5647,10 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "requirement_id"
-      ],
+      "columns": ["requirement_id"],
       "schemaTo": "public",
       "tableTo": "requirements",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "CASCADE",
       "name": "requirement_profile_requirements_9WTdnZHUUErT_fkey",
@@ -5877,14 +5660,10 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "requirement_profile_id"
-      ],
+      "columns": ["requirement_profile_id"],
       "schemaTo": "public",
       "tableTo": "requirement_profiles",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "RESTRICT",
       "name": "requirement_profile_submissions_Exl1MZS3y1B6_fkey",
@@ -5894,14 +5673,10 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "membership_id"
-      ],
+      "columns": ["membership_id"],
       "schemaTo": "public",
       "tableTo": "memberships",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "SET NULL",
       "name": "requirement_profile_submissions_fzxMBJUWWAzQ_fkey",
@@ -5911,14 +5686,10 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "membership_request_id"
-      ],
+      "columns": ["membership_request_id"],
       "schemaTo": "public",
       "tableTo": "membership_requests",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "SET NULL",
       "name": "requirement_profile_submissions_JCCJ6yr7JOfs_fkey",
@@ -5928,14 +5699,10 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "reviewed_by_id"
-      ],
+      "columns": ["reviewed_by_id"],
       "schemaTo": "public",
       "tableTo": "users",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "SET NULL",
       "name": "requirement_profile_submissions_reviewed_by_id_users_id_fkey",
@@ -5945,14 +5712,10 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "user_id"
-      ],
+      "columns": ["user_id"],
       "schemaTo": "public",
       "tableTo": "users",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "CASCADE",
       "name": "user_profiles_user_id_users_id_fkey",
@@ -5962,14 +5725,10 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "organization_unit_id"
-      ],
+      "columns": ["organization_unit_id"],
       "schemaTo": "public",
       "tableTo": "organization_units",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "CASCADE",
       "name": "shifts_organization_unit_id_organization_units_id_fkey",
@@ -5979,14 +5738,10 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "created_by_id"
-      ],
+      "columns": ["created_by_id"],
       "schemaTo": "public",
       "tableTo": "users",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "RESTRICT",
       "name": "shifts_created_by_id_users_id_fkey",
@@ -5996,14 +5751,10 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "master_id"
-      ],
+      "columns": ["master_id"],
       "schemaTo": "public",
       "tableTo": "shifts",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "CASCADE",
       "name": "shift_instances_master_id_shifts_id_fkey",
@@ -6013,14 +5764,10 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "instance_id"
-      ],
+      "columns": ["instance_id"],
       "schemaTo": "public",
       "tableTo": "shift_instances",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "CASCADE",
       "name": "shift_instance_invites_instance_id_shift_instances_id_fkey",
@@ -6030,14 +5777,10 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "user_id"
-      ],
+      "columns": ["user_id"],
       "schemaTo": "public",
       "tableTo": "users",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "RESTRICT",
       "name": "shift_instance_invites_user_id_users_id_fkey",
@@ -6047,14 +5790,10 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "shift_instance_id"
-      ],
+      "columns": ["shift_instance_id"],
       "schemaTo": "public",
       "tableTo": "shift_instances",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "RESTRICT",
       "name": "time_entries_shift_instance_id_shift_instances_id_fkey",
@@ -6064,14 +5803,10 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "volunteer_id"
-      ],
+      "columns": ["volunteer_id"],
       "schemaTo": "public",
       "tableTo": "users",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "RESTRICT",
       "name": "time_entries_volunteer_id_users_id_fkey",
@@ -6080,9 +5815,7 @@
       "table": "time_entries"
     },
     {
-      "columns": [
-        "id"
-      ],
+      "columns": ["id"],
       "nameExplicit": false,
       "name": "accounts_pkey",
       "schema": "public",
@@ -6090,9 +5823,7 @@
       "entityType": "pks"
     },
     {
-      "columns": [
-        "id"
-      ],
+      "columns": ["id"],
       "nameExplicit": false,
       "name": "sessions_pkey",
       "schema": "public",
@@ -6100,9 +5831,7 @@
       "entityType": "pks"
     },
     {
-      "columns": [
-        "id"
-      ],
+      "columns": ["id"],
       "nameExplicit": false,
       "name": "users_pkey",
       "schema": "public",
@@ -6110,9 +5839,7 @@
       "entityType": "pks"
     },
     {
-      "columns": [
-        "id"
-      ],
+      "columns": ["id"],
       "nameExplicit": false,
       "name": "verifications_pkey",
       "schema": "public",
@@ -6120,9 +5847,7 @@
       "entityType": "pks"
     },
     {
-      "columns": [
-        "id"
-      ],
+      "columns": ["id"],
       "nameExplicit": false,
       "name": "permissions_pkey",
       "schema": "public",
@@ -6130,9 +5855,7 @@
       "entityType": "pks"
     },
     {
-      "columns": [
-        "id"
-      ],
+      "columns": ["id"],
       "nameExplicit": false,
       "name": "roles_pkey",
       "schema": "public",
@@ -6140,9 +5863,7 @@
       "entityType": "pks"
     },
     {
-      "columns": [
-        "id"
-      ],
+      "columns": ["id"],
       "nameExplicit": false,
       "name": "role_permissions_pkey",
       "schema": "public",
@@ -6150,9 +5871,7 @@
       "entityType": "pks"
     },
     {
-      "columns": [
-        "id"
-      ],
+      "columns": ["id"],
       "nameExplicit": false,
       "name": "memberships_pkey",
       "schema": "public",
@@ -6160,9 +5879,7 @@
       "entityType": "pks"
     },
     {
-      "columns": [
-        "id"
-      ],
+      "columns": ["id"],
       "nameExplicit": false,
       "name": "membership_requests_pkey",
       "schema": "public",
@@ -6170,9 +5887,7 @@
       "entityType": "pks"
     },
     {
-      "columns": [
-        "id"
-      ],
+      "columns": ["id"],
       "nameExplicit": false,
       "name": "membership_roles_pkey",
       "schema": "public",
@@ -6180,9 +5895,7 @@
       "entityType": "pks"
     },
     {
-      "columns": [
-        "id"
-      ],
+      "columns": ["id"],
       "nameExplicit": false,
       "name": "organizations_pkey",
       "schema": "public",
@@ -6190,9 +5903,7 @@
       "entityType": "pks"
     },
     {
-      "columns": [
-        "id"
-      ],
+      "columns": ["id"],
       "nameExplicit": false,
       "name": "organization_units_pkey",
       "schema": "public",
@@ -6200,9 +5911,7 @@
       "entityType": "pks"
     },
     {
-      "columns": [
-        "id"
-      ],
+      "columns": ["id"],
       "nameExplicit": false,
       "name": "organization_unit_types_pkey",
       "schema": "public",
@@ -6210,9 +5919,7 @@
       "entityType": "pks"
     },
     {
-      "columns": [
-        "id"
-      ],
+      "columns": ["id"],
       "nameExplicit": false,
       "name": "documents_pkey",
       "schema": "public",
@@ -6220,9 +5927,7 @@
       "entityType": "pks"
     },
     {
-      "columns": [
-        "id"
-      ],
+      "columns": ["id"],
       "nameExplicit": false,
       "name": "form_blocks_pkey",
       "schema": "public",
@@ -6230,9 +5935,7 @@
       "entityType": "pks"
     },
     {
-      "columns": [
-        "id"
-      ],
+      "columns": ["id"],
       "nameExplicit": false,
       "name": "form_block_fields_pkey",
       "schema": "public",
@@ -6240,9 +5943,7 @@
       "entityType": "pks"
     },
     {
-      "columns": [
-        "id"
-      ],
+      "columns": ["id"],
       "nameExplicit": false,
       "name": "form_submissions_pkey",
       "schema": "public",
@@ -6250,9 +5951,7 @@
       "entityType": "pks"
     },
     {
-      "columns": [
-        "id"
-      ],
+      "columns": ["id"],
       "nameExplicit": false,
       "name": "form_submission_values_pkey",
       "schema": "public",
@@ -6260,9 +5959,7 @@
       "entityType": "pks"
     },
     {
-      "columns": [
-        "id"
-      ],
+      "columns": ["id"],
       "nameExplicit": false,
       "name": "organization_user_profiles_pkey",
       "schema": "public",
@@ -6270,9 +5967,7 @@
       "entityType": "pks"
     },
     {
-      "columns": [
-        "id"
-      ],
+      "columns": ["id"],
       "nameExplicit": false,
       "name": "requirements_pkey",
       "schema": "public",
@@ -6280,9 +5975,7 @@
       "entityType": "pks"
     },
     {
-      "columns": [
-        "id"
-      ],
+      "columns": ["id"],
       "nameExplicit": false,
       "name": "requirement_forms_pkey",
       "schema": "public",
@@ -6290,9 +5983,7 @@
       "entityType": "pks"
     },
     {
-      "columns": [
-        "id"
-      ],
+      "columns": ["id"],
       "nameExplicit": false,
       "name": "requirement_form_block_refs_pkey",
       "schema": "public",
@@ -6300,9 +5991,7 @@
       "entityType": "pks"
     },
     {
-      "columns": [
-        "id"
-      ],
+      "columns": ["id"],
       "nameExplicit": false,
       "name": "requirement_fulfillments_pkey",
       "schema": "public",
@@ -6310,9 +5999,7 @@
       "entityType": "pks"
     },
     {
-      "columns": [
-        "id"
-      ],
+      "columns": ["id"],
       "nameExplicit": false,
       "name": "requirement_profiles_pkey",
       "schema": "public",
@@ -6320,9 +6007,7 @@
       "entityType": "pks"
     },
     {
-      "columns": [
-        "id"
-      ],
+      "columns": ["id"],
       "nameExplicit": false,
       "name": "requirement_profile_requirements_pkey",
       "schema": "public",
@@ -6330,9 +6015,7 @@
       "entityType": "pks"
     },
     {
-      "columns": [
-        "id"
-      ],
+      "columns": ["id"],
       "nameExplicit": false,
       "name": "requirement_profile_submissions_pkey",
       "schema": "public",
@@ -6340,9 +6023,7 @@
       "entityType": "pks"
     },
     {
-      "columns": [
-        "id"
-      ],
+      "columns": ["id"],
       "nameExplicit": false,
       "name": "user_profiles_pkey",
       "schema": "public",
@@ -6350,9 +6031,7 @@
       "entityType": "pks"
     },
     {
-      "columns": [
-        "id"
-      ],
+      "columns": ["id"],
       "nameExplicit": false,
       "name": "shifts_pkey",
       "schema": "public",
@@ -6360,9 +6039,7 @@
       "entityType": "pks"
     },
     {
-      "columns": [
-        "id"
-      ],
+      "columns": ["id"],
       "nameExplicit": false,
       "name": "shift_instances_pkey",
       "schema": "public",
@@ -6370,9 +6047,7 @@
       "entityType": "pks"
     },
     {
-      "columns": [
-        "id"
-      ],
+      "columns": ["id"],
       "nameExplicit": false,
       "name": "shift_instance_invites_pkey",
       "schema": "public",
@@ -6380,9 +6055,7 @@
       "entityType": "pks"
     },
     {
-      "columns": [
-        "id"
-      ],
+      "columns": ["id"],
       "nameExplicit": false,
       "name": "time_entries_pkey",
       "schema": "public",
@@ -6391,10 +6064,7 @@
     },
     {
       "nameExplicit": true,
-      "columns": [
-        "name",
-        "organization_id"
-      ],
+      "columns": ["name", "organization_id"],
       "nullsNotDistinct": false,
       "name": "uq_roles_name_organization_unit_id",
       "entityType": "uniques",
@@ -6403,10 +6073,7 @@
     },
     {
       "nameExplicit": true,
-      "columns": [
-        "role_id",
-        "permission_id"
-      ],
+      "columns": ["role_id", "permission_id"],
       "nullsNotDistinct": false,
       "name": "uq_role_permissions_role_id_permission_id",
       "entityType": "uniques",
@@ -6415,10 +6082,7 @@
     },
     {
       "nameExplicit": true,
-      "columns": [
-        "user_id",
-        "organization_unit_id"
-      ],
+      "columns": ["user_id", "organization_unit_id"],
       "nullsNotDistinct": false,
       "name": "uq_membership_requests_user_id_organization_unit_id",
       "entityType": "uniques",
@@ -6427,10 +6091,7 @@
     },
     {
       "nameExplicit": true,
-      "columns": [
-        "membership_id",
-        "role_id"
-      ],
+      "columns": ["membership_id", "role_id"],
       "nullsNotDistinct": false,
       "name": "uq_membership_roles_membership_id_role_id",
       "entityType": "uniques",
@@ -6439,10 +6100,7 @@
     },
     {
       "nameExplicit": true,
-      "columns": [
-        "organization_id",
-        "slug"
-      ],
+      "columns": ["organization_id", "slug"],
       "nullsNotDistinct": false,
       "name": "uq_organization_units_organization_id_slug",
       "entityType": "uniques",
@@ -6451,10 +6109,7 @@
     },
     {
       "nameExplicit": true,
-      "columns": [
-        "organization_id",
-        "id"
-      ],
+      "columns": ["organization_id", "id"],
       "nullsNotDistinct": false,
       "name": "uq_organization_units_organization_id_id",
       "entityType": "uniques",
@@ -6463,10 +6118,7 @@
     },
     {
       "nameExplicit": true,
-      "columns": [
-        "organization_id",
-        "slug"
-      ],
+      "columns": ["organization_id", "slug"],
       "nullsNotDistinct": false,
       "name": "uq_requirement_forms_organization_id_slug",
       "entityType": "uniques",
@@ -6475,10 +6127,7 @@
     },
     {
       "nameExplicit": true,
-      "columns": [
-        "requirement_profile_id",
-        "requirement_id"
-      ],
+      "columns": ["requirement_profile_id", "requirement_id"],
       "nullsNotDistinct": false,
       "name": "uq_requirement_profile_requirements_profile_requirement",
       "entityType": "uniques",
@@ -6487,10 +6136,7 @@
     },
     {
       "nameExplicit": true,
-      "columns": [
-        "instance_id",
-        "user_id"
-      ],
+      "columns": ["instance_id", "user_id"],
       "nullsNotDistinct": false,
       "name": "uq_sii_instance_user",
       "entityType": "uniques",
@@ -6499,9 +6145,7 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "token"
-      ],
+      "columns": ["token"],
       "nullsNotDistinct": false,
       "name": "sessions_token_key",
       "schema": "public",
@@ -6510,9 +6154,7 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "email"
-      ],
+      "columns": ["email"],
       "nullsNotDistinct": false,
       "name": "users_email_key",
       "schema": "public",
@@ -6521,9 +6163,7 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "check_in_id"
-      ],
+      "columns": ["check_in_id"],
       "nullsNotDistinct": false,
       "name": "users_check_in_id_key",
       "schema": "public",
@@ -6532,9 +6172,7 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "key"
-      ],
+      "columns": ["key"],
       "nullsNotDistinct": false,
       "name": "permissions_key_key",
       "schema": "public",
@@ -6543,9 +6181,7 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "slug"
-      ],
+      "columns": ["slug"],
       "nullsNotDistinct": false,
       "name": "organizations_slug_key",
       "schema": "public",
@@ -6554,9 +6190,7 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "slug"
-      ],
+      "columns": ["slug"],
       "nullsNotDistinct": false,
       "name": "organization_units_slug_key",
       "schema": "public",
@@ -6565,9 +6199,7 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "storage_key"
-      ],
+      "columns": ["storage_key"],
       "nullsNotDistinct": false,
       "name": "documents_storage_key_key",
       "schema": "public",
@@ -6576,9 +6208,7 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "share_token"
-      ],
+      "columns": ["share_token"],
       "nullsNotDistinct": false,
       "name": "requirement_forms_share_token_key",
       "schema": "public",
@@ -6587,9 +6217,7 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "user_id"
-      ],
+      "columns": ["user_id"],
       "nullsNotDistinct": false,
       "name": "user_profiles_user_id_key",
       "schema": "public",
@@ -6598,9 +6226,7 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "slug"
-      ],
+      "columns": ["slug"],
       "nullsNotDistinct": false,
       "name": "shifts_slug_key",
       "schema": "public",
