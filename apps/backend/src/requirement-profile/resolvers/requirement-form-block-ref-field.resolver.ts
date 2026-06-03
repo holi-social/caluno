@@ -1,4 +1,5 @@
 import { Parent, ResolveField, Resolver } from '@nestjs/graphql';
+import { AllowAnonymous } from '@thallesp/nestjs-better-auth';
 import { FormBlockMapper } from '../mappers/form-block.mapper';
 import { FormBlock } from '../models/form-block.model';
 import { RequirementFormBlockRef } from '../models/requirement-form-block-ref.model';
@@ -11,6 +12,7 @@ export class RequirementFormBlockRefFieldResolver {
     private readonly formBlockMapper: FormBlockMapper,
   ) {}
 
+  @AllowAnonymous()
   @ResolveField(() => FormBlock, { nullable: true })
   async block(
     @Parent() ref: RequirementFormBlockRef,
