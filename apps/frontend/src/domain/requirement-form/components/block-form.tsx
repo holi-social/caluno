@@ -14,7 +14,7 @@ import {
   SelectValue,
   Textarea,
 } from '@repo/ui';
-import { Plus, Save, Trash2 } from 'lucide-react';
+import { Lock, Plus, Save, Trash2 } from 'lucide-react';
 import { useEffect } from 'react';
 import {
   type Control,
@@ -51,12 +51,14 @@ export function BlockForm({
   blockId,
   orgUId,
   organizationId,
+  readOnly,
   onPendingChange,
   onCreated,
 }: {
   blockId?: string;
   orgUId: string;
   organizationId: string;
+  readOnly?: boolean;
   onPendingChange?: (isPending: boolean) => void;
   onCreated?: (id: string) => void;
 }) {
@@ -172,10 +174,20 @@ export function BlockForm({
     );
   }
 
-  const showSaveButton = isDirty || !isEdit;
+  const showSaveButton = !readOnly && (isDirty || !isEdit);
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+      {readOnly && (
+        <div className="flex items-start gap-3 rounded-lg border border-amber-200 bg-amber-50 p-3 text-amber-900">
+          <Lock className="mt-0.5 size-4 shrink-0" />
+          <p className="text-sm">
+            This block is locked because it&apos;s used in a form that has
+            received submissions.
+          </p>
+        </div>
+      )}
+
       {/* Metadata */}
       <div className="space-y-4">
         <Field>
@@ -185,6 +197,7 @@ export function BlockForm({
           <Input
             {...register('title', { required: 'Title is required' })}
             placeholder="e.g. Personal Information"
+            disabled={readOnly}
           />
           {errors.title && (
             <p className="text-destructive text-sm">{errors.title.message}</p>
@@ -196,12 +209,13 @@ export function BlockForm({
           <Textarea
             {...register('description')}
             placeholder="What does this block collect?"
+            disabled={readOnly}
           />
         </Field>
 
         <Field>
           <FieldLabel>Icon</FieldLabel>
-          <Input {...register('icon')} placeholder="e.g. user" />
+          <Input {...register('icon')} placeholder="e.g. user" disabled={readOnly} />
         </Field>
       </div>
 
@@ -209,10 +223,12 @@ export function BlockForm({
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <h3 className="text-lg font-semibold">Fields ({fields.length})</h3>
-          <Button type="button" variant="outline" onClick={handleAddField}>
-            <Plus className="mr-2 size-4" />
-            Add Field
-          </Button>
+          {!readOnly && (
+            <Button type="button" variant="outline" onClick={handleAddField}>
+              <Plus className="mr-2 size-4" />
+              Add Field
+            </Button>
+          )}
         </div>
 
         {fields.length === 0 && (
@@ -236,22 +252,24 @@ export function BlockForm({
             canMoveUp={index > 0}
             canMoveDown={index < fields.length - 1}
             fieldType={watchedFields[index]?.type}
+            readOnly={readOnly}
           />
         ))}
       </div>
 
-      {/* Sticky Save */}
-      <div className="sticky bottom-0 -mx-6 border-t bg-background px-6 py-4">
-        <Button
-          type="submit"
-          size="lg"
-          className="w-full"
-          disabled={isSubmitting || !showSaveButton}
-        >
-          <Save className="mr-2 size-4" />
-          {isSubmitting ? 'Saving…' : isEdit ? 'Save changes' : 'Create block'}
-        </Button>
-      </div>
+      {!readOnly && (
+        <div className="sticky bottom-0 -mx-6 border-t bg-background px-6 py-4">
+          <Button
+            type="submit"
+            size="lg"
+            className="w-full"
+            disabled={isSubmitting || !showSaveButton}
+          >
+            <Save className="mr-2 size-4" />
+            {isSubmitting ? 'Saving…' : isEdit ? 'Save changes' : 'Create block'}
+          </Button>
+        </div>
+      )}
     </form>
   );
 }
@@ -267,6 +285,7 @@ function FieldCard({
   canMoveUp,
   canMoveDown,
   fieldType,
+  readOnly,
 }: {
   index: number;
   control: Control<BlockFormData>;
@@ -278,6 +297,7 @@ function FieldCard({
   canMoveUp: boolean;
   canMoveDown: boolean;
   fieldType?: FieldType;
+  readOnly?: boolean;
 }) {
   const showOptions =
     fieldType === FieldType.SingleChoice || fieldType === FieldType.MultiChoice;
@@ -289,35 +309,37 @@ function FieldCard({
         <span className="text-sm font-medium text-muted-foreground">
           Field {index + 1}
         </span>
-        <div className="flex items-center gap-1">
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            disabled={!canMoveUp}
-            onClick={onMoveUp}
-          >
-            ↑
-          </Button>
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            disabled={!canMoveDown}
-            onClick={onMoveDown}
-          >
-            ↓
-          </Button>
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            className="text-muted-foreground hover:text-destructive size-8"
-            onClick={onRemove}
-          >
-            <Trash2 className="size-4" />
-          </Button>
-        </div>
+        {!readOnly && (
+          <div className="flex items-center gap-1">
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              disabled={!canMoveUp}
+              onClick={onMoveUp}
+            >
+              ↑
+            </Button>
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              disabled={!canMoveDown}
+              onClick={onMoveDown}
+            >
+              ↓
+            </Button>
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              className="text-muted-foreground hover:text-destructive size-8"
+              onClick={onRemove}
+            >
+              <Trash2 className="size-4" />
+            </Button>
+          </div>
+        )}
       </div>
 
       <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
@@ -329,7 +351,7 @@ function FieldCard({
             control={control}
             name={`fields.${index}.type`}
             render={({ field }) => (
-              <Select value={field.value} onValueChange={field.onChange}>
+              <Select value={field.value} onValueChange={field.onChange} disabled={readOnly}>
                 <SelectTrigger>
                   <SelectValue placeholder="Select type" />
                 </SelectTrigger>
@@ -372,6 +394,7 @@ function FieldCard({
               required: 'Label is required',
             })}
             placeholder="Field label"
+            disabled={readOnly}
           />
           {errors?.label && (
             <p className="text-destructive text-sm">{errors.label.message}</p>
@@ -383,6 +406,7 @@ function FieldCard({
           <Input
             {...register(`fields.${index}.description`)}
             placeholder="Help text for this field"
+            disabled={readOnly}
           />
         </Field>
 
@@ -391,6 +415,7 @@ function FieldCard({
           <Input
             {...register(`fields.${index}.placeholder`)}
             placeholder="e.g. Enter your name"
+            disabled={readOnly}
           />
         </Field>
 
@@ -400,6 +425,7 @@ function FieldCard({
             id={`field-required-${index}`}
             {...register(`fields.${index}.required`)}
             className="size-4"
+            disabled={readOnly}
           />
           <label htmlFor={`field-required-${index}`} className="text-sm">
             Required
@@ -436,6 +462,7 @@ function FieldCard({
               <OptionsEditor
                 options={field.value ?? []}
                 onChange={field.onChange}
+                disabled={readOnly}
               />
             )}
           />

@@ -103,10 +103,15 @@ export function BlockCard({
           <Button
             variant="outline"
             className="h-10 flex-1"
-            onClick={() => openSheet({ id: block.id })}
-            disabled={locked}
+            onClick={() =>
+              openSheet(
+                locked
+                  ? { id: block.id, readOnly: 'true' }
+                  : { id: block.id },
+              )
+            }
           >
-            {block.isEditable ? (
+            {!locked && block.isEditable ? (
               <>
                 <Pencil className="mr-1.5 size-4" />
                 Edit

@@ -17,9 +17,11 @@ function toItems(options: { label: string; value: string }[]): OptionItem[] {
 export function OptionsEditor({
   options,
   onChange,
+  disabled,
 }: {
   options: { label: string; value: string }[];
   onChange: (options: { label: string; value: string }[]) => void;
+  disabled?: boolean;
 }) {
   const [items, setItems] = useState<OptionItem[]>(() => toItems(options));
 
@@ -59,12 +61,14 @@ export function OptionsEditor({
             onChange={(e) => update(idx, 'label', e.target.value)}
             placeholder={`Label ${idx + 1}`}
             className="flex-1"
+            disabled={disabled}
           />
           <Input
             value={item.value}
             onChange={(e) => update(idx, 'value', e.target.value)}
             placeholder={`Value ${idx + 1}`}
             className="flex-1"
+            disabled={disabled}
           />
           <Button
             type="button"
@@ -72,12 +76,13 @@ export function OptionsEditor({
             size="icon"
             className="text-muted-foreground hover:text-destructive shrink-0"
             onClick={() => remove(idx)}
+            disabled={disabled}
           >
             <Trash2 className="size-4" />
           </Button>
         </div>
       ))}
-      <Button type="button" variant="outline" size="sm" onClick={add}>
+      <Button type="button" variant="outline" size="sm" onClick={add} disabled={disabled}>
         <Plus className="mr-1 size-4" />
         Add Option
       </Button>

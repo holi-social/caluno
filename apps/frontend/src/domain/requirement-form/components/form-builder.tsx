@@ -178,8 +178,13 @@ export function FormBuilder({
                   <Button
                     variant="ghost"
                     size="icon"
-                    onClick={() => openBlockSheet({ id: block.id })}
-                    title="Edit block"
+                    onClick={() =>
+                      openBlockSheet({
+                        id: block.id,
+                        ...(hasSubmissions && { readOnly: 'true' }),
+                      })
+                    }
+                    title={hasSubmissions ? 'View block' : 'Edit block'}
                   >
                     <Edit3 className="h-4 w-4" />
                   </Button>
