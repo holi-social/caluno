@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { count, eq, inArray } from 'drizzle-orm';
+import { count, desc, eq, inArray } from 'drizzle-orm';
 import type { Database } from '../../database/database.module';
 import { DATABASE_CONNECTION } from '../../database/database-connection';
 import * as schema from '../../database/schema';
@@ -91,6 +91,16 @@ export class FormBlockService {
   ): Promise<FormBlockEntity> {
     await isUnitInOrg(this.db, organizationUnitId, input.organizationId);
 
+    const duplicate = await this.db.query.formBlocks.findFirst({
+      where: { organizationId: input.organizationId, title: input.title },
+      columns: { id: true },
+    });
+    if (duplicate) {
+      throw new ConflictGraphQLError(
+        `A block named "${input.title}" already exists in this organization`,
+      );
+    }
+
     return this.db.transaction(async (tx) => {
       const blockInsert: FormBlockInsert = {
         organizationId: input.organizationId,
@@ -133,6 +143,18 @@ export class FormBlockService {
     }
 
     await isUnitInOrg(this.db, organizationUnitId, existing.organizationId);
+
+    if (input.title && input.title !== existing.title) {
+      const conflict = await this.db.query.formBlocks.findFirst({
+        where: { organizationId: existing.organizationId, title: input.title },
+        columns: { id: true },
+      });
+      if (conflict) {
+        throw new ConflictGraphQLError(
+          `A block named "${input.title}" already exists in this organization`,
+        );
+      }
+    }
 
     const [updated] = await this.db
       .update(schema.formBlocks)
@@ -217,7 +239,7 @@ export class FormBlockService {
       .select({ maxOrder: schema.formBlockFields.fieldOrder })
       .from(schema.formBlockFields)
       .where(eq(schema.formBlockFields.blockId, blockId))
-      .orderBy(schema.formBlockFields.fieldOrder)
+      .orderBy(desc(schema.formBlockFields.fieldOrder))
       .limit(1);
 
     const order = maxOrder[0]?.maxOrder ?? -1;

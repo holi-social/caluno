@@ -37,9 +37,9 @@ export const requirementForms = pgTable(
     ...timestampColumns,
   },
   (table) => [
-    unique('uq_requirement_forms_organization_id_slug').on(
-      table.organizationId,
-      table.slug,
+    unique('uq_requirement_forms_organization_unit_id_name').on(
+      table.organizationUnitId,
+      table.name,
     ),
     index('idx_requirement_forms_organization_id').on(table.organizationId),
     index('idx_requirement_forms_organization_unit_id').on(

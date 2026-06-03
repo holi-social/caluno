@@ -86,6 +86,18 @@ export class RequirementFormService {
   ): Promise<RequirementFormEntity> {
     await isUnitInOrg(this.db, organizationUnitId, input.organizationId);
 
+    if (organizationUnitId) {
+      const duplicate = await this.db.query.requirementForms.findFirst({
+        where: { organizationUnitId, name: input.name },
+        columns: { id: true },
+      });
+      if (duplicate) {
+        throw new ConflictGraphQLError(
+          `A form named "${input.name}" already exists in this organization unit`,
+        );
+      }
+    }
+
     const slug = this.generateSlug(input.name);
 
     return this.db.transaction(async (tx) => {
@@ -133,6 +145,25 @@ export class RequirementFormService {
     }
 
     await isUnitInOrg(this.db, organizationUnitId, existing.organizationId);
+
+    if (
+      input.name &&
+      input.name !== existing.name &&
+      existing.organizationUnitId
+    ) {
+      const conflict = await this.db.query.requirementForms.findFirst({
+        where: {
+          organizationUnitId: existing.organizationUnitId,
+          name: input.name,
+        },
+        columns: { id: true },
+      });
+      if (conflict) {
+        throw new ConflictGraphQLError(
+          `A form named "${input.name}" already exists in this organization unit`,
+        );
+      }
+    }
 
     return this.db.transaction(async (tx) => {
       const hasSubmissions = await tx.query.formSubmissions.findFirst({

@@ -131,7 +131,14 @@ export class FormSubmissionService {
     const requiredFieldIds = new Set<string>();
     const fieldMap = new Map<
       string,
-      { blockId: string; systemKey: string | null; type: string; label: string }
+      {
+        blockId: string;
+        systemKey: string | null;
+        type: string;
+        label: string;
+        options: Array<{ label: string; value: string }> | null;
+        minAge: number | null;
+      }
     >();
 
     for (const ref of blockRefs) {
@@ -144,6 +151,11 @@ export class FormSubmissionService {
           systemKey: field.systemKey,
           type: field.type,
           label: field.label,
+          options: field.options as Array<{
+            label: string;
+            value: string;
+          }> | null,
+          minAge: field.minAge,
         });
         if (effectiveRequired && field.required) {
           requiredFieldIds.add(field.id);
@@ -151,14 +163,20 @@ export class FormSubmissionService {
       }
     }
 
-    // Validate required fields
-    const providedFieldIds = new Set(input.values.map((v) => v.fieldId));
+    // Validate required fields are present and non-empty
+    const valuesByFieldId = new Map(
+      input.values.map((v) => [v.fieldId, v.value]),
+    );
     for (const requiredId of requiredFieldIds) {
-      if (!providedFieldIds.has(requiredId)) {
-        const fieldInfo = fieldMap.get(requiredId);
-        throw new BadRequestGraphQLError(
-          `Field "${fieldInfo?.label ?? requiredId}" is required`,
-        );
+      const fieldInfo = fieldMap.get(requiredId);
+      const label = fieldInfo?.label ?? requiredId;
+      const value = valuesByFieldId.get(requiredId);
+      const isCheckboxType =
+        fieldInfo?.type === FieldType.CHECKBOX ||
+        fieldInfo?.type === FieldType.DOCUMENT_ACKNOWLEDGEMENT;
+      const missing = isCheckboxType ? value !== 'true' : !value;
+      if (missing) {
+        throw new BadRequestGraphQLError(`Field "${label}" is required`);
       }
     }
 
@@ -177,6 +195,8 @@ export class FormSubmissionService {
           `Unknown field: ${valueInput.fieldId}`,
         );
       }
+
+      this.validateFieldValue(valueInput.value, fieldInfo);
 
       if (fieldInfo.systemKey && SYSTEM_PROFILE_KEYS.has(fieldInfo.systemKey)) {
         profileData[fieldInfo.systemKey] = this.parseValue(
@@ -237,8 +257,9 @@ export class FormSubmissionService {
             userId,
             form.organizationUnitId,
           );
-        } catch {
-          // Pending request already exists — submission is still valid
+        } catch (e) {
+          // Pending request already exists or transient error — submission is still valid
+          console.warn('[FormSubmission] createMembershipRequest skipped', e);
         }
       }
     }
@@ -269,6 +290,174 @@ export class FormSubmissionService {
       );
   }
 
+  private validateFieldValue(
+    rawValue: string,
+    field: {
+      type: string;
+      label: string;
+      systemKey: string | null;
+      options: Array<{ label: string; value: string }> | null;
+      minAge: number | null;
+    },
+  ): void {
+    const { type, label, systemKey, options, minAge } = field;
+
+    if (type === FieldType.STATIC_TEXT) return;
+    if (!rawValue) return;
+
+    switch (type) {
+      case FieldType.TEXT:
+        if (rawValue.length > 300)
+          throw new BadRequestGraphQLError(
+            `"${label}": must be 300 characters or fewer`,
+          );
+        break;
+      case FieldType.NAME:
+      case FieldType.LASTNAME:
+        if (rawValue.length > 100)
+          throw new BadRequestGraphQLError(
+            `"${label}": must be 100 characters or fewer`,
+          );
+        break;
+      case FieldType.ZIP:
+        if (rawValue.length > 20)
+          throw new BadRequestGraphQLError(
+            `"${label}": must be 20 characters or fewer`,
+          );
+        break;
+      case FieldType.IBAN:
+        if (rawValue.length > 34)
+          throw new BadRequestGraphQLError(
+            `"${label}": must be 34 characters or fewer`,
+          );
+        break;
+      case FieldType.TEXTAREA:
+        if (rawValue.length > 5000)
+          throw new BadRequestGraphQLError(
+            `"${label}": must be 5000 characters or fewer`,
+          );
+        break;
+      case FieldType.EMAIL:
+        if (
+          !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(rawValue) ||
+          rawValue.length > 254
+        )
+          throw new BadRequestGraphQLError(
+            `"${label}": must be a valid email address`,
+          );
+        break;
+      case FieldType.PHONE:
+        if (!/^\+?[\d\s\-().]{7,20}$/.test(rawValue))
+          throw new BadRequestGraphQLError(
+            `"${label}": must be a valid phone number`,
+          );
+        break;
+      case FieldType.NUMBERS:
+        if (!/^-?\d+(\.\d+)?$/.test(rawValue))
+          throw new BadRequestGraphQLError(`"${label}": must be a number`);
+        break;
+      case FieldType.DATE:
+        if (isNaN(Date.parse(rawValue)))
+          throw new BadRequestGraphQLError(`"${label}": must be a valid date`);
+        break;
+      case FieldType.SINGLE_CHOICE: {
+        const valid = (options ?? []).map((o) => o.value);
+        if (valid.length > 0 && !valid.includes(rawValue))
+          throw new BadRequestGraphQLError(`"${label}": invalid option`);
+        break;
+      }
+      case FieldType.MULTI_CHOICE: {
+        const valid = new Set((options ?? []).map((o) => o.value));
+        const invalid = rawValue
+          .split(',')
+          .filter((v) => valid.size > 0 && !valid.has(v));
+        if (invalid.length > 0)
+          throw new BadRequestGraphQLError(`"${label}": invalid option(s)`);
+        break;
+      }
+      case FieldType.CHECKBOX:
+      case FieldType.DOCUMENT_ACKNOWLEDGEMENT:
+        if (rawValue !== 'true' && rawValue !== 'false')
+          throw new BadRequestGraphQLError(`"${label}": must be true or false`);
+        break;
+    }
+
+    if (systemKey) {
+      this.validateSystemKey(rawValue, systemKey, label, minAge);
+    }
+  }
+
+  private validateSystemKey(
+    value: string,
+    systemKey: string,
+    label: string,
+    minAge: number | null,
+  ): void {
+    switch (systemKey) {
+      case 'name':
+      case 'lastname':
+      case 'preferred-name':
+      case 'city':
+        if (value.length > 100)
+          throw new BadRequestGraphQLError(
+            `"${label}": must be 100 characters or fewer`,
+          );
+        if (!/^[\p{L}\p{M}'\- ]+$/u.test(value))
+          throw new BadRequestGraphQLError(
+            `"${label}": contains invalid characters`,
+          );
+        break;
+      case 'email':
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value) || value.length > 254)
+          throw new BadRequestGraphQLError(
+            `"${label}": must be a valid email address`,
+          );
+        break;
+      case 'phone':
+        if (!/^\+?[\d\s\-().]{7,20}$/.test(value))
+          throw new BadRequestGraphQLError(
+            `"${label}": must be a valid phone number`,
+          );
+        break;
+      case 'address':
+        if (value.length > 200)
+          throw new BadRequestGraphQLError(
+            `"${label}": must be 200 characters or fewer`,
+          );
+        break;
+      case 'zip':
+        if (!/^[A-Z0-9\- ]{3,10}$/i.test(value))
+          throw new BadRequestGraphQLError(
+            `"${label}": must be a valid postal code`,
+          );
+        break;
+      case 'gender':
+        if (value.length > 50)
+          throw new BadRequestGraphQLError(
+            `"${label}": must be 50 characters or fewer`,
+          );
+        break;
+      case 'birth-date':
+        if (minAge !== null && minAge !== undefined) {
+          const birth = new Date(value);
+          const today = new Date();
+          let age = today.getFullYear() - birth.getFullYear();
+          if (
+            today.getMonth() < birth.getMonth() ||
+            (today.getMonth() === birth.getMonth() &&
+              today.getDate() < birth.getDate())
+          ) {
+            age--;
+          }
+          if (age < minAge)
+            throw new BadRequestGraphQLError(
+              `You must be at least ${minAge} years old`,
+            );
+        }
+        break;
+    }
+  }
+
   private parseValue(rawValue: string, fieldType: string): unknown {
     if (
       fieldType === FieldType.CHECKBOX ||
@@ -277,11 +466,7 @@ export class FormSubmissionService {
       return rawValue === 'true';
     }
     if (fieldType === FieldType.MULTI_CHOICE) {
-      try {
-        return JSON.parse(rawValue);
-      } catch {
-        return rawValue.split(',');
-      }
+      return rawValue ? rawValue.split(',') : [];
     }
     if (fieldType === FieldType.NUMBERS) {
       const num = Number(rawValue);
