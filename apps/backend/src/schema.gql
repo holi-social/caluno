@@ -866,7 +866,7 @@ type User {
 
 type UserProfile {
   createdAt: DateTime!
-  data: String!
+  data: JSON!
   id: ID!
   updatedAt: DateTime!
   userId: String!

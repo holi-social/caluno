@@ -39,15 +39,9 @@ export default async function PublicFormPage({ params }: Props) {
   ]);
 
   let profileData: Record<string, string> = {};
-  if (userProfile?.data) {
-    try {
-      const parsed = JSON.parse(userProfile.data);
-      if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
-        profileData = parsed as Record<string, string>;
-      }
-    } catch {
-      // ignore malformed profile data
-    }
+  const raw = userProfile?.data;
+  if (raw && typeof raw === 'object' && !Array.isArray(raw)) {
+    profileData = raw as Record<string, string>;
   }
 
   return (

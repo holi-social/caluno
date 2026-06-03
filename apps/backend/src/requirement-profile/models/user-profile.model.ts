@@ -1,4 +1,5 @@
 import { Field, ID, ObjectType } from '@nestjs/graphql';
+import { GraphQLJSON } from 'graphql-scalars';
 
 @ObjectType()
 export class UserProfile {
@@ -8,8 +9,8 @@ export class UserProfile {
   @Field(() => String)
   userId!: string;
 
-  @Field(() => String)
-  data!: string;
+  @Field(() => GraphQLJSON)
+  data!: Record<string, unknown>;
 
   @Field(() => Date)
   createdAt!: Date;
