@@ -225,8 +225,6 @@ type FormSubmissionPaginatedResponse {
 }
 
 enum FormSubmissionStatus {
-  APPROVED
-  DRAFT
   REJECTED
   SUBMITTED
 }

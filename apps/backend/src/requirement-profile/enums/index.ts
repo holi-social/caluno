@@ -47,9 +47,7 @@ export enum FieldType {
 }
 
 export enum FormSubmissionStatus {
-  DRAFT = 'DRAFT',
   SUBMITTED = 'SUBMITTED',
-  APPROVED = 'APPROVED',
   REJECTED = 'REJECTED',
 }
 

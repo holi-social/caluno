@@ -49,15 +49,9 @@ export default async function PublicFormPage({ params }: Props) {
     return (
       <div className="min-h-screen bg-muted/30 py-10 px-4">
         <div className="mx-auto max-w-xl rounded-lg border bg-card p-8 text-center">
-          <h2 className="text-xl font-semibold">
-            {existingSubmission.status === 'APPROVED'
-              ? 'Application approved'
-              : 'Application pending review'}
-          </h2>
+          <h2 className="text-xl font-semibold">Form submitted</h2>
           <p className="mt-2 text-muted-foreground">
-            {existingSubmission.status === 'APPROVED'
-              ? 'Your application has been approved.'
-              : 'Your application has already been submitted and is pending review.'}
+            Your form has been submitted correctly.
           </p>
         </div>
       </div>
