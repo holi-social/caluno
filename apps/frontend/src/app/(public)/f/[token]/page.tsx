@@ -28,11 +28,14 @@ export default async function PublicFormPage({ params }: Props) {
     redirect(`/login?redirectTo=${encodeURIComponent(`/f/${token}`)}`);
   }
 
-  const [isMember, userProfile] = await Promise.all([
+  const [isMember, userProfile, orgUnit] = await Promise.all([
     form.organizationUnitId
       ? validateUserOrgAccess(form.organizationUnitId)
       : Promise.resolve(false),
     data.requirementForm.getMyUserProfile(),
+    form.organizationUnitId
+      ? data.organizationUnit.findById(form.organizationUnitId)
+      : Promise.resolve(null),
   ]);
 
   let profileData: Record<string, string> = {};
@@ -55,6 +58,7 @@ export default async function PublicFormPage({ params }: Props) {
           token={token}
           isMember={isMember}
           orgUId={form.organizationUnitId ?? ''}
+          orgName={orgUnit?.name}
           profileData={profileData}
         />
       </div>

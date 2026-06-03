@@ -78,6 +78,7 @@ export function BlocksTable({
             <TableHead>Title</TableHead>
             <TableHead>Fields</TableHead>
             <TableHead>Used in</TableHead>
+            <TableHead>Editable</TableHead>
             <TableHead>Updated</TableHead>
             <TableHead />
           </TableRow>
@@ -120,6 +121,18 @@ export function BlocksTable({
                         </Badge>
                       ))}
                     </div>
+                  )}
+                </TableCell>
+                <TableCell>
+                  {block.isEditable ? (
+                    <Badge
+                      variant="outline"
+                      className="bg-emerald-50 text-emerald-700 border-emerald-200 text-xs"
+                    >
+                      Yes
+                    </Badge>
+                  ) : (
+                    <span className="text-muted-foreground text-sm">No</span>
                   )}
                 </TableCell>
                 <TableCell className="text-muted-foreground whitespace-nowrap">

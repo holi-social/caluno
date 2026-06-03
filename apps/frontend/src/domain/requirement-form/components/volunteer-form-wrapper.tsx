@@ -4,12 +4,14 @@ export function VolunteerFormWrapper({
   form,
   token,
   isMember,
+  orgName,
   profileData,
 }: {
   form: PublicForm;
   token: string;
   isMember: boolean;
   orgUId: string;
+  orgName?: string;
   profileData?: Record<string, string>;
 }) {
   return (
@@ -17,8 +19,8 @@ export function VolunteerFormWrapper({
       {!isMember && (
         <div className="rounded-lg border bg-blue-50 p-4 text-sm text-blue-800">
           By submitting this form you will send a membership request to{' '}
-          <strong>{form.name}</strong>. An admin will review and approve your
-          request.
+          <strong>{orgName ?? form.name}</strong>. An admin will review and
+          approve your request.
         </div>
       )}
       <VolunteerForm

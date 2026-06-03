@@ -11,7 +11,7 @@ import {
   TableHeader,
   TableRow,
 } from '@repo/ui';
-import { Loader2, Pencil, Share2, Trash2, Users } from 'lucide-react';
+import { Lock, Loader2, Pencil, Share2, Trash2, Users } from 'lucide-react';
 import Link from 'next/link';
 import { useTransition } from 'react';
 import { DeleteAlertDialog } from '@/components/delete-alert-dialog';
@@ -62,21 +62,33 @@ function FormActions({
           <Users />
         </Link>
       </Button>
-      <DeleteAlertDialog
-        title="Delete form?"
-        description={`"${form.name}" will be permanently removed.`}
-        onDelete={handleDelete}
-        trigger={
-          <Button
-            size="icon-xs"
-            variant="destructive"
-            aria-label="Delete form"
-            disabled={isDeleting}
-          >
-            {isDeleting ? <Loader2 className="animate-spin" /> : <Trash2 />}
-          </Button>
-        }
-      />
+      {form.submissionCount > 0 ? (
+        <Button
+          size="icon-xs"
+          variant="outline"
+          aria-label="Cannot delete — form has submissions"
+          title="Cannot delete — form has submissions"
+          disabled
+        >
+          <Lock />
+        </Button>
+      ) : (
+        <DeleteAlertDialog
+          title="Delete form?"
+          description={`"${form.name}" will be permanently removed.`}
+          onDelete={handleDelete}
+          trigger={
+            <Button
+              size="icon-xs"
+              variant="destructive"
+              aria-label="Delete form"
+              disabled={isDeleting}
+            >
+              {isDeleting ? <Loader2 className="animate-spin" /> : <Trash2 />}
+            </Button>
+          }
+        />
+      )}
     </aside>
   );
 }
