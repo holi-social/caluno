@@ -52,21 +52,6 @@ export function BlockCard({
           <div className="flex items-center gap-2.5">
             {Icon && <Icon className="text-muted-foreground size-5 shrink-0" />}
             <h2 className="text-lg font-semibold">{block.title}</h2>
-            <div className="ml-auto flex items-center gap-1.5">
-              {block.isEditable && (
-                <Badge
-                  variant="outline"
-                  className="bg-emerald-50 text-emerald-700 border-emerald-200 text-xs"
-                >
-                  Editable
-                </Badge>
-              )}
-              {fieldCount > 0 && (
-                <Badge variant="outline" className="text-xs">
-                  {fieldCount} {fieldCount === 1 ? 'Field' : 'Fields'}
-                </Badge>
-              )}
-            </div>
           </div>
 
           {block.description && (
