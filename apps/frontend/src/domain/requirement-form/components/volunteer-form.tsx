@@ -6,6 +6,7 @@ import type {
   FormBlockField,
   GetRequirementFormByShareTokenQuery,
 } from '@repo/data';
+import { FieldType } from '@repo/data';
 import {
   Button,
   Calendar,
@@ -39,6 +40,171 @@ import { Controller, type Resolver, useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 import { z } from 'zod';
 import { submitForm } from '../actions';
+
+const PHONE_RE = /^\+?[\d\s\-().]{7,20}$/;
+const NAME_RE = /^[\p{L}\p{M}'\- ]+$/u;
+const ZIP_RE = /^[A-Z0-9\- ]{3,10}$/i;
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const NUM_RE = /^-?\d+(\.\d+)?$/;
+
+function buildFieldSchema(
+  field: FormBlockField,
+  isRequired: boolean,
+): z.ZodTypeAny {
+  const { type, label, systemKey, options, minAge } = field;
+
+  if (
+    type === FieldType.Checkbox ||
+    type === FieldType.DocumentAcknowledgement
+  ) {
+    const base = z.enum(['true', 'false'] as const);
+    return isRequired
+      ? base.refine((v) => v === 'true', { message: `${label} is required` })
+      : base.optional();
+  }
+
+  if (type === FieldType.StaticText) {
+    return z.string().optional();
+  }
+
+  if (type === FieldType.Numbers) {
+    return isRequired
+      ? z
+          .string()
+          .min(1, `${label} is required`)
+          .regex(NUM_RE, `${label} must be a number`)
+      : z
+          .string()
+          .refine((v) => !v || NUM_RE.test(v), {
+            message: `${label} must be a number`,
+          });
+  }
+
+  if (type === FieldType.Date) {
+    let s = isRequired
+      ? z
+          .string()
+          .min(1, `${label} is required`)
+          .refine((v) => !isNaN(Date.parse(v)), {
+            message: `${label} must be a valid date`,
+          })
+      : z
+          .string()
+          .refine((v) => !v || !Number.isNaN(Date.parse(v)), {
+            message: `${label} must be a valid date`,
+          });
+    if (minAge != null) {
+      s = s.refine(
+        (v) => {
+          if (!v) return true;
+          const birth = new Date(v);
+          const today = new Date();
+          let age = today.getFullYear() - birth.getFullYear();
+          if (
+            today.getMonth() < birth.getMonth() ||
+            (today.getMonth() === birth.getMonth() &&
+              today.getDate() < birth.getDate())
+          ) {
+            age--;
+          }
+          return age >= minAge!;
+        },
+        { message: `You must be at least ${minAge} years old` },
+      );
+    }
+    return s;
+  }
+
+  if (type === FieldType.Email) {
+    return isRequired
+      ? z
+          .string()
+          .min(1, `${label} is required`)
+          .regex(EMAIL_RE, `${label} must be a valid email`)
+          .max(254)
+      : z
+          .string()
+          .refine((v) => !v || (EMAIL_RE.test(v) && v.length <= 254), {
+            message: `${label} must be a valid email`,
+          });
+  }
+
+  if (type === FieldType.Phone) {
+    return isRequired
+      ? z
+          .string()
+          .min(1, `${label} is required`)
+          .regex(PHONE_RE, `${label} must be a valid phone number`)
+      : z
+          .string()
+          .refine((v) => !v || PHONE_RE.test(v), {
+            message: `${label} must be a valid phone number`,
+          });
+  }
+
+  if (type === FieldType.SingleChoice) {
+    const vals = (options ?? []).map((o) => o.value);
+    if (vals.length > 0) {
+      const e = z.enum(vals as [string, ...string[]]);
+      return isRequired ? e : e.optional();
+    }
+    return isRequired
+      ? z.string().min(1, `${label} is required`)
+      : z.string().optional();
+  }
+
+  if (type === FieldType.MultiChoice) {
+    const vals = new Set((options ?? []).map((o) => o.value));
+    const s = z
+      .string()
+      .refine(
+        (v) => !v || vals.size === 0 || v.split(',').every((t) => vals.has(t)),
+        { message: `${label} contains invalid options` },
+      );
+    return isRequired
+      ? s.refine((v) => !!v, { message: `${label} is required` })
+      : s;
+  }
+
+  // Text-like: TEXT, NAME, LASTNAME, ZIP, IBAN, TEXTAREA
+  const maxLen = type === FieldType.Textarea ? 5000 : 500;
+  let s = z
+    .string()
+    .max(maxLen, `${label} must be ${maxLen} characters or fewer`);
+
+  // System-key extra rules (applied regardless of FieldType for defensive coverage)
+  const sk = systemKey ?? '';
+  if (
+    sk === 'name' ||
+    sk === 'lastname' ||
+    sk === 'preferred-name' ||
+    sk === 'city'
+  ) {
+    s = s
+      .max(100, `${label} must be 100 characters or fewer`)
+      .refine((v) => !v || NAME_RE.test(v), {
+        message: `${label} contains invalid characters`,
+      }) as z.ZodString;
+  } else if (sk === 'email') {
+    s = s
+      .regex(EMAIL_RE, `${label} must be a valid email`)
+      .max(254) as z.ZodString;
+  } else if (sk === 'phone') {
+    s = s.refine((v) => !v || PHONE_RE.test(v), {
+      message: `${label} must be a valid phone number`,
+    }) as z.ZodString;
+  } else if (sk === 'address') {
+    s = s.max(200, `${label} must be 200 characters or fewer`) as z.ZodString;
+  } else if (sk === 'zip') {
+    s = s.refine((v) => !v || ZIP_RE.test(v), {
+      message: `${label} must be a valid postal code`,
+    }) as z.ZodString;
+  } else if (sk === 'gender') {
+    s = s.max(50, `${label} must be 50 characters or fewer`) as z.ZodString;
+  }
+
+  return isRequired ? (s as z.ZodString).min(1, `${label} is required`) : s;
+}
 
 export type PublicForm = NonNullable<
   GetRequirementFormByShareTokenQuery['requirementFormByShareToken']
@@ -86,24 +252,7 @@ export function VolunteerForm({
     for (const block of blocks) {
       for (const field of block.fields ?? []) {
         const isRequired = block.effectiveRequired && field.required;
-        if (
-          field.type === 'CHECKBOX' ||
-          field.type === 'DOCUMENT_ACKNOWLEDGEMENT'
-        ) {
-          shape[field.id] = isRequired
-            ? z.enum(['true', 'false']).refine((v) => v === 'true', {
-                message: `${field.label} is required`,
-              })
-            : z.enum(['true', 'false']).optional();
-        } else if (field.type === 'MULTI_CHOICE') {
-          shape[field.id] = isRequired
-            ? z.string().min(1, `${field.label} is required`)
-            : z.string().optional();
-        } else {
-          shape[field.id] = isRequired
-            ? z.string().min(1, `${field.label} is required`)
-            : z.string().optional();
-        }
+        shape[field.id] = buildFieldSchema(field, isRequired);
       }
     }
     return z.object(shape);

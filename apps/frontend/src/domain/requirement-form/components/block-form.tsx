@@ -3,19 +3,24 @@
 import { FieldType } from '@repo/data';
 import { useBlock } from '@repo/data/react';
 import {
+  Badge,
   Button,
   Field,
   FieldLabel,
   Input,
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
+  Switch,
   Textarea,
 } from '@repo/ui';
-import { Lock, Plus, Save, Trash2 } from 'lucide-react';
-import { useEffect } from 'react';
+import { FileText, Lock, Plus, Save, Trash2, UserCircle2 } from 'lucide-react';
+import { useEffect, useState } from 'react';
 import {
   type Control,
   Controller,
@@ -28,6 +33,32 @@ import { toast } from 'sonner';
 import { saveBlock } from '../actions';
 import { OptionsEditor } from './options-editor';
 
+const SYSTEM_PRESETS = [
+  { key: 'name',           label: 'First name',     type: FieldType.Name,     required: true  },
+  { key: 'lastname',       label: 'Last name',      type: FieldType.Lastname, required: true  },
+  { key: 'preferred-name', label: 'Preferred name', type: FieldType.Text,     required: false },
+  { key: 'email',          label: 'Email address',  type: FieldType.Email,    required: true  },
+  { key: 'phone',          label: 'Phone number',   type: FieldType.Phone,    required: false },
+  { key: 'address',        label: 'Address',        type: FieldType.Text,     required: false },
+  { key: 'zip',            label: 'ZIP code',       type: FieldType.Zip,      required: false },
+  { key: 'city',           label: 'City',           type: FieldType.Text,     required: false },
+  { key: 'birth-date',     label: 'Birth date',     type: FieldType.Date,     required: false },
+  { key: 'gender',         label: 'Gender',         type: FieldType.Text,     required: false },
+] as const;
+
+const CUSTOM_FIELD_TYPES = [
+  { value: FieldType.Text,         label: 'Text (short)' },
+  { value: FieldType.Textarea,     label: 'Text (long)' },
+  { value: FieldType.Email,        label: 'Email' },
+  { value: FieldType.Phone,        label: 'Phone' },
+  { value: FieldType.Numbers,      label: 'Number' },
+  { value: FieldType.Date,         label: 'Date' },
+  { value: FieldType.SingleChoice, label: 'Single choice' },
+  { value: FieldType.MultiChoice,  label: 'Multi choice' },
+  { value: FieldType.Checkbox,     label: 'Checkbox' },
+  { value: FieldType.StaticText,   label: 'Static text' },
+] as const;
+
 interface BlockFormFieldInput {
   id?: string;
   type: FieldType;
@@ -35,6 +66,8 @@ interface BlockFormFieldInput {
   description?: string;
   placeholder?: string;
   required: boolean;
+  systemKey?: string;
+  lockType?: boolean;
   options?: { label: string; value: string }[];
   documentUrl?: string;
   documentLabel?: string;
@@ -65,12 +98,16 @@ export function BlockForm({
   const isEdit = !!blockId;
   const blockQuery = useBlock(blockId ?? '');
 
+  const [fieldPickerOpen, setFieldPickerOpen] = useState(false);
+  const [profilePickerOpen, setProfilePickerOpen] = useState(false);
+
   const {
     register,
     control,
     handleSubmit,
     reset,
     watch,
+    setValue,
     formState: { isDirty, isSubmitting, errors },
   } = useForm<BlockFormData>({
     defaultValues: {
@@ -101,6 +138,8 @@ export function BlockForm({
             description: f.description ?? '',
             placeholder: f.placeholder ?? '',
             required: f.required,
+            systemKey: f.systemKey ?? '',
+            lockType: f.lockType ?? false,
             options: f.options ?? [],
             documentUrl: f.documentUrl ?? '',
             documentLabel: f.documentLabel ?? '',
@@ -136,6 +175,8 @@ export function BlockForm({
         description: f.description || undefined,
         placeholder: f.placeholder || undefined,
         required: f.required,
+        systemKey: f.systemKey || undefined,
+        lockType: f.lockType ?? false,
         options: f.options,
         documentUrl: f.documentUrl || undefined,
         documentLabel: f.documentLabel || undefined,
@@ -155,13 +196,28 @@ export function BlockForm({
     }
   }
 
-  function handleAddField() {
+  function appendCustomField(type: FieldType) {
     append({
-      type: FieldType.Text,
+      type,
       label: '',
       description: '',
       placeholder: '',
       required: false,
+      systemKey: '',
+      lockType: false,
+      options: [],
+    });
+  }
+
+  function appendSystemField(preset: (typeof SYSTEM_PRESETS)[number]) {
+    append({
+      type: preset.type,
+      label: preset.label,
+      description: '',
+      placeholder: '',
+      required: preset.required,
+      systemKey: preset.key,
+      lockType: true,
       options: [],
     });
   }
@@ -175,6 +231,13 @@ export function BlockForm({
   }
 
   const showSaveButton = !readOnly && (isDirty || !isEdit);
+
+  const usedSystemKeys = new Set(
+    watchedFields.map((f) => f.systemKey).filter(Boolean),
+  );
+  const availablePresets = SYSTEM_PRESETS.filter(
+    (p) => !usedSystemKeys.has(p.key),
+  );
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
@@ -225,15 +288,7 @@ export function BlockForm({
 
       {/* Fields */}
       <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <h3 className="text-lg font-semibold">Fields ({fields.length})</h3>
-          {!readOnly && (
-            <Button type="button" variant="outline" onClick={handleAddField}>
-              <Plus className="mr-2 size-4" />
-              Add Field
-            </Button>
-          )}
-        </div>
+        <h3 className="text-lg font-semibold">Fields ({fields.length})</h3>
 
         {fields.length === 0 && (
           <div className="rounded-lg border border-dashed px-4 py-6 text-center">
@@ -256,9 +311,101 @@ export function BlockForm({
             canMoveUp={index > 0}
             canMoveDown={index < fields.length - 1}
             fieldType={watchedFields[index]?.type}
+            currentRequired={watchedFields[index]?.required ?? false}
+            isSystemField={!!(watchedFields[index]?.systemKey)}
+            lockType={watchedFields[index]?.lockType ?? false}
+            onToggleRequired={(next) =>
+              setValue(`fields.${index}.required`, next, { shouldDirty: true })
+            }
             readOnly={readOnly}
           />
         ))}
+
+        {!readOnly && (
+          <div className="space-y-2 pt-1">
+            <div className="flex flex-wrap gap-2">
+              {/* Field type picker */}
+              <Popover open={fieldPickerOpen} onOpenChange={setFieldPickerOpen}>
+                <PopoverTrigger asChild>
+                  <Button type="button" variant="outline">
+                    <Plus className="mr-2 size-4" />
+                    Add field
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-52 p-1" align="start">
+                  {CUSTOM_FIELD_TYPES.map((t) => (
+                    <button
+                      key={t.value}
+                      type="button"
+                      className="w-full rounded px-3 py-2 text-left text-sm hover:bg-accent transition-colors"
+                      onClick={() => {
+                        appendCustomField(t.value);
+                        setFieldPickerOpen(false);
+                      }}
+                    >
+                      {t.label}
+                    </button>
+                  ))}
+                </PopoverContent>
+              </Popover>
+
+              {/* Profile field picker */}
+              <Popover
+                open={profilePickerOpen}
+                onOpenChange={setProfilePickerOpen}
+              >
+                <PopoverTrigger asChild>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    disabled={availablePresets.length === 0}
+                  >
+                    <UserCircle2 className="mr-2 size-4" />
+                    Add profile field
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-72 p-0" align="start">
+                  <div className="border-b p-3">
+                    <p className="text-muted-foreground text-xs">
+                      Volunteers fill these in once and they&apos;re reused
+                      across organizations.
+                    </p>
+                  </div>
+                  <div className="max-h-72 space-y-1 overflow-y-auto p-2">
+                    {availablePresets.map((p) => (
+                      <button
+                        key={p.key}
+                        type="button"
+                        className="flex w-full items-center gap-3 rounded-lg border px-3 py-2.5 text-left transition-colors hover:bg-accent"
+                        onClick={() => {
+                          appendSystemField(p);
+                          setProfilePickerOpen(false);
+                        }}
+                      >
+                        <UserCircle2 className="text-muted-foreground size-4 shrink-0" />
+                        <span className="text-sm font-medium">{p.label}</span>
+                      </button>
+                    ))}
+                  </div>
+                </PopoverContent>
+              </Popover>
+            </div>
+
+            {/* Document shortcut */}
+            <div>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() =>
+                  appendCustomField(FieldType.DocumentAcknowledgement)
+                }
+              >
+                <FileText className="mr-2 size-4" />
+                Add document
+              </Button>
+            </div>
+          </div>
+        )}
       </div>
 
       {!readOnly && (
@@ -293,6 +440,10 @@ function FieldCard({
   canMoveUp,
   canMoveDown,
   fieldType,
+  currentRequired,
+  isSystemField,
+  lockType,
+  onToggleRequired,
   readOnly,
 }: {
   index: number;
@@ -305,6 +456,10 @@ function FieldCard({
   canMoveUp: boolean;
   canMoveDown: boolean;
   fieldType?: FieldType;
+  currentRequired: boolean;
+  isSystemField: boolean;
+  lockType: boolean;
+  onToggleRequired: (next: boolean) => void;
   readOnly?: boolean;
 }) {
   const showOptions =
@@ -313,41 +468,62 @@ function FieldCard({
 
   return (
     <div className="rounded-lg border p-4 space-y-3">
-      <div className="flex items-center justify-between">
-        <span className="text-sm font-medium text-muted-foreground">
-          Field {index + 1}
-        </span>
-        {!readOnly && (
-          <div className="flex items-center gap-1">
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              disabled={!canMoveUp}
-              onClick={onMoveUp}
-            >
-              ↑
-            </Button>
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              disabled={!canMoveDown}
-              onClick={onMoveDown}
-            >
-              ↓
-            </Button>
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon"
-              className="text-muted-foreground hover:text-destructive size-8"
-              onClick={onRemove}
-            >
-              <Trash2 className="size-4" />
-            </Button>
-          </div>
-        )}
+      <div className="flex items-center justify-between gap-3">
+        <div className="flex items-center gap-2">
+          <span className="text-sm font-medium text-muted-foreground">
+            Field {index + 1}
+          </span>
+          {isSystemField && (
+            <Badge variant="secondary" className="text-xs">
+              <UserCircle2 className="mr-1 size-3" />
+              System field
+            </Badge>
+          )}
+        </div>
+        <div className="flex items-center gap-3">
+          {!readOnly && (
+            <label className="flex cursor-pointer items-center gap-1.5 text-sm text-muted-foreground">
+              <Switch
+                checked={currentRequired}
+                onCheckedChange={onToggleRequired}
+                size="sm"
+                disabled={isSystemField}
+              />
+              {currentRequired ? 'Required' : 'Optional'}
+            </label>
+          )}
+          {!readOnly && (
+            <div className="flex items-center gap-1">
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                disabled={!canMoveUp}
+                onClick={onMoveUp}
+              >
+                ↑
+              </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                disabled={!canMoveDown}
+                onClick={onMoveDown}
+              >
+                ↓
+              </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="text-muted-foreground hover:text-destructive size-8"
+                onClick={onRemove}
+              >
+                <Trash2 className="size-4" />
+              </Button>
+            </div>
+          )}
+        </div>
       </div>
 
       <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
@@ -362,35 +538,20 @@ function FieldCard({
               <Select
                 value={field.value}
                 onValueChange={field.onChange}
-                disabled={readOnly}
+                disabled={readOnly || lockType}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select type" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value={FieldType.Text}>Text</SelectItem>
-                  <SelectItem value={FieldType.Textarea}>Textarea</SelectItem>
-                  <SelectItem value={FieldType.Email}>Email</SelectItem>
-                  <SelectItem value={FieldType.Phone}>Phone</SelectItem>
-                  <SelectItem value={FieldType.Numbers}>Number</SelectItem>
-                  <SelectItem value={FieldType.Date}>Date</SelectItem>
-                  <SelectItem value={FieldType.SingleChoice}>
-                    Single Choice
-                  </SelectItem>
-                  <SelectItem value={FieldType.MultiChoice}>
-                    Multi Choice
-                  </SelectItem>
-                  <SelectItem value={FieldType.Checkbox}>Checkbox</SelectItem>
+                  {CUSTOM_FIELD_TYPES.map((t) => (
+                    <SelectItem key={t.value} value={t.value}>
+                      {t.label}
+                    </SelectItem>
+                  ))}
                   <SelectItem value={FieldType.DocumentAcknowledgement}>
                     Document Acknowledgement
                   </SelectItem>
-                  <SelectItem value={FieldType.StaticText}>
-                    Static Text
-                  </SelectItem>
-                  <SelectItem value={FieldType.Name}>Name</SelectItem>
-                  <SelectItem value={FieldType.Lastname}>Lastname</SelectItem>
-                  <SelectItem value={FieldType.Zip}>ZIP</SelectItem>
-                  <SelectItem value={FieldType.Iban}>IBAN</SelectItem>
                 </SelectContent>
               </Select>
             )}
@@ -431,19 +592,6 @@ function FieldCard({
           />
         </Field>
 
-        <div className="flex items-center gap-2 pt-6">
-          <input
-            type="checkbox"
-            id={`field-required-${index}`}
-            {...register(`fields.${index}.required`)}
-            className="size-4"
-            disabled={readOnly}
-          />
-          <label htmlFor={`field-required-${index}`} className="text-sm">
-            Required
-          </label>
-        </div>
-
         {isDocument && (
           <>
             <Field className="md:col-span-2">
@@ -451,6 +599,7 @@ function FieldCard({
               <Input
                 {...register(`fields.${index}.documentUrl`)}
                 placeholder="https://example.com/document.pdf"
+                disabled={readOnly}
               />
             </Field>
             <Field className="md:col-span-2">
@@ -458,6 +607,7 @@ function FieldCard({
               <Input
                 {...register(`fields.${index}.documentLabel`)}
                 placeholder="e.g. Terms of Service"
+                disabled={readOnly}
               />
             </Field>
           </>

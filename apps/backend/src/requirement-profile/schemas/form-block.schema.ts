@@ -1,4 +1,11 @@
-import { boolean, index, pgTable, text, uuid } from 'drizzle-orm/pg-core';
+import {
+  boolean,
+  index,
+  pgTable,
+  text,
+  unique,
+  uuid,
+} from 'drizzle-orm/pg-core';
 import { users } from '../../auth/schemas/auth.schema';
 import { idColumn, timestampColumns } from '../../database/database-columns';
 import { organizations } from '../../organization/schemas/organization.schema';
@@ -23,6 +30,10 @@ export const formBlocks = pgTable(
     ...timestampColumns,
   },
   (table) => [
+    unique('uq_form_blocks_organization_id_title').on(
+      table.organizationId,
+      table.title,
+    ),
     index('idx_form_blocks_organization_id').on(table.organizationId),
     index('idx_form_blocks_created_by').on(table.createdBy),
   ],

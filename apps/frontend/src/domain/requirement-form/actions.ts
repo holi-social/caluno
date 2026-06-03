@@ -206,6 +206,8 @@ const updateBlockFieldSchema = z.object({
   documentUrl: z.string().optional(),
   documentLabel: z.string().optional(),
   fieldOrder: z.number().optional(),
+  systemKey: z.string().nullable().optional(),
+  lockType: z.boolean().optional(),
 });
 
 export const updateBlockField = actionClient
@@ -223,6 +225,8 @@ export const updateBlockField = actionClient
         documentUrl: parsedInput.documentUrl,
         documentLabel: parsedInput.documentLabel,
         fieldOrder: parsedInput.fieldOrder,
+        systemKey: parsedInput.systemKey,
+        lockType: parsedInput.lockType,
       },
     );
     revalidatePath(
@@ -277,6 +281,8 @@ const saveBlockSchema = z.object({
       description: z.string().trim().optional(),
       placeholder: z.string().trim().optional(),
       required: z.boolean().optional(),
+      systemKey: z.string().optional(),
+      lockType: z.boolean().optional(),
       options: z
         .array(
           z.object({
@@ -345,6 +351,8 @@ export const saveBlock = actionClient
             description: field.description,
             placeholder: field.placeholder,
             required: field.required,
+            systemKey: field.systemKey ?? null,
+            lockType: field.lockType,
             options: field.options,
             documentUrl: field.documentUrl,
             documentLabel: field.documentLabel,
@@ -357,6 +365,8 @@ export const saveBlock = actionClient
             description: field.description,
             placeholder: field.placeholder,
             required: field.required,
+            systemKey: field.systemKey,
+            lockType: field.lockType,
             options: field.options,
             documentUrl: field.documentUrl,
             documentLabel: field.documentLabel,
@@ -375,6 +385,8 @@ export const saveBlock = actionClient
           description: field.description,
           placeholder: field.placeholder,
           required: field.required,
+          systemKey: field.systemKey,
+          lockType: field.lockType,
           options: field.options,
           documentUrl: field.documentUrl,
           documentLabel: field.documentLabel,
@@ -387,4 +399,18 @@ export const saveBlock = actionClient
       `/${parsedInput.organizationUnitId}/requirement-forms/blocks`,
     );
     return { blockId };
+  });
+
+const updateUserProfileSchema = z.object({
+  data: z.record(z.string(), z.string()),
+});
+
+export const updateUserProfile = actionClient
+  .inputSchema(updateUserProfileSchema)
+  .action(async ({ parsedInput }) => {
+    const data = await getDataClient();
+    const result = await data.requirementForm.updateMyUserProfile({
+      data: JSON.stringify(parsedInput.data),
+    });
+    return result;
   });
