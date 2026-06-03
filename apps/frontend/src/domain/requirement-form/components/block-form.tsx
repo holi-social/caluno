@@ -52,11 +52,13 @@ export function BlockForm({
   orgUId,
   organizationId,
   onPendingChange,
+  onCreated,
 }: {
   blockId?: string;
   orgUId: string;
   organizationId: string;
   onPendingChange?: (isPending: boolean) => void;
+  onCreated?: (id: string) => void;
 }) {
   const isEdit = !!blockId;
   const blockQuery = useBlock(blockId ?? '');
@@ -142,12 +144,9 @@ export function BlockForm({
       toast.error(result.serverError);
     } else if (result?.data) {
       toast.success(isEdit ? 'Block saved' : 'Block created');
+      reset(data);
       if (!isEdit && result.data.blockId) {
-        // After creating, we could redirect to edit mode or just close
-        // For now, just reset to clear dirty state
-        reset(data);
-      } else {
-        reset(data);
+        onCreated?.(result.data.blockId);
       }
     } else {
       toast.error('Failed to save block');

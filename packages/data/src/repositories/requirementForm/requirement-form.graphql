@@ -506,6 +506,16 @@ mutation SubmitForm($token: String!, $input: SubmitFormInput!) {
   }
 }
 
+query GetMyFormSubmissionByToken($token: String!) {
+  myFormSubmissionByToken(token: $token) {
+    id
+    formId
+    userId
+    status
+    submittedAt
+  }
+}
+
 query GetMyUserProfile {
   myUserProfile {
     id

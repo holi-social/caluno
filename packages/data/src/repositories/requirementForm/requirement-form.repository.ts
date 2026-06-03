@@ -102,6 +102,11 @@ export class RequirementFormRepository extends BaseRepository {
     return data.submitForm;
   }
 
+  async getMyFormSubmissionByToken(token: string) {
+    const data = await this.sdk.GetMyFormSubmissionByToken({ token });
+    return data.myFormSubmissionByToken;
+  }
+
   async getMyUserProfile() {
     const data = await this.sdk.GetMyUserProfile();
     return data.myUserProfile;

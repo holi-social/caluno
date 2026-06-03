@@ -40,6 +40,7 @@ export function BlockSheet() {
           orgUId={orgUId}
           organizationId={organizationId}
           onPendingChange={setIsPending}
+          onCreated={(id) => sheetProps.open({ id })}
         />
       </Suspense>
     </ClippySheet>

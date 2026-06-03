@@ -47,8 +47,10 @@ export enum FieldType {
 }
 
 export enum FormSubmissionStatus {
-  SUBMITTED = 'SUBMITTED',
   DRAFT = 'DRAFT',
+  SUBMITTED = 'SUBMITTED',
+  APPROVED = 'APPROVED',
+  REJECTED = 'REJECTED',
 }
 
 registerEnumType(OrganizationUserProfileStatus, {

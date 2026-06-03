@@ -10,7 +10,7 @@ import {
 import type { PaginationInput } from '../../graphql/pagination.input';
 import { MembershipService } from '../../membership/membership.service';
 import { SYSTEM_PROFILE_KEYS } from '../constants';
-import { FieldType } from '../enums';
+import { FieldType, FormSubmissionStatus } from '../enums';
 import { SubmitFormInput } from '../inputs/submit-form.input';
 import type { FormSubmissionEntity } from '../schemas/form-submission.schema';
 import { UserProfileService } from './user-profile.service';
@@ -84,7 +84,7 @@ export class FormSubmissionService {
 
     const existing = await this.findByUserAndForm(userId, form.id);
     if (existing) {
-      if (existing.status !== 'REJECTED') {
+      if (existing.status !== FormSubmissionStatus.REJECTED) {
         throw new BadRequestGraphQLError(
           'You have already submitted this form',
         );
@@ -204,7 +204,7 @@ export class FormSubmissionService {
         .values({
           formId: form.id,
           userId,
-          status: 'SUBMITTED',
+          status: FormSubmissionStatus.SUBMITTED,
           submittedAt: new Date(),
         })
         .returning();
@@ -259,11 +259,11 @@ export class FormSubmissionService {
     const formIds = forms.map((f) => f.id);
     await this.db
       .update(schema.formSubmissions)
-      .set({ status: 'REJECTED' })
+      .set({ status: FormSubmissionStatus.REJECTED })
       .where(
         and(
           eq(schema.formSubmissions.userId, userId),
-          eq(schema.formSubmissions.status, 'SUBMITTED'),
+          eq(schema.formSubmissions.status, FormSubmissionStatus.SUBMITTED),
           inArray(schema.formSubmissions.formId, formIds),
         ),
       );

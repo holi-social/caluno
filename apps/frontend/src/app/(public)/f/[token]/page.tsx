@@ -28,7 +28,7 @@ export default async function PublicFormPage({ params }: Props) {
     redirect(`/login?redirectTo=${encodeURIComponent(`/f/${token}`)}`);
   }
 
-  const [isMember, userProfile, orgUnit] = await Promise.all([
+  const [isMember, userProfile, orgUnit, existingSubmission] = await Promise.all([
     form.organizationUnitId
       ? validateUserOrgAccess(form.organizationUnitId)
       : Promise.resolve(false),
@@ -36,12 +36,32 @@ export default async function PublicFormPage({ params }: Props) {
     form.organizationUnitId
       ? data.organizationUnit.findById(form.organizationUnitId)
       : Promise.resolve(null),
+    data.requirementForm.getMyFormSubmissionByToken(token),
   ]);
 
   let profileData: Record<string, string> = {};
   const raw = userProfile?.data;
   if (raw && typeof raw === 'object' && !Array.isArray(raw)) {
     profileData = raw as Record<string, string>;
+  }
+
+  if (existingSubmission && existingSubmission.status !== 'REJECTED') {
+    return (
+      <div className="min-h-screen bg-muted/30 py-10 px-4">
+        <div className="mx-auto max-w-xl rounded-lg border bg-card p-8 text-center">
+          <h2 className="text-xl font-semibold">
+            {existingSubmission.status === 'APPROVED'
+              ? 'Application approved'
+              : 'Application pending review'}
+          </h2>
+          <p className="mt-2 text-muted-foreground">
+            {existingSubmission.status === 'APPROVED'
+              ? 'Your application has been approved.'
+              : 'Your application has already been submitted and is pending review.'}
+          </p>
+        </div>
+      </div>
+    );
   }
 
   return (

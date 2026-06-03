@@ -1,4 +1,5 @@
 import { Args, Context, Query, Resolver } from '@nestjs/graphql';
+import { Session, type UserSession } from '@thallesp/nestjs-better-auth';
 import { PERMISSIONS } from '../../auth/constants';
 import { Permissions } from '../../auth/decorators/permissions.decorator';
 import { NotFoundGraphQLError } from '../../graphql/errors';
@@ -20,6 +21,20 @@ export class FormSubmissionQueryResolver {
     private readonly formSubmissionMapper: FormSubmissionMapper,
     private readonly orgAccessService: OrgAccessService,
   ) {}
+
+  @Query(() => FormSubmission, { nullable: true })
+  async myFormSubmissionByToken(
+    @Args('token') token: string,
+    @Session() session: UserSession,
+  ): Promise<FormSubmission | null> {
+    const form = await this.requirementFormService.findByShareToken(token);
+    if (!form) return null;
+    const item = await this.formSubmissionService.findByUserAndForm(
+      session.user.id,
+      form.id,
+    );
+    return this.formSubmissionMapper.toModel(item);
+  }
 
   @Permissions(PERMISSIONS.REQUIREMENT_PROFILE_VIEW)
   @Query(() => FormSubmission, { nullable: true })

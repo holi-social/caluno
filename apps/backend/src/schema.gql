@@ -226,7 +226,9 @@ type FormSubmissionPaginatedResponse {
 }
 
 enum FormSubmissionStatus {
+  APPROVED
   DRAFT
+  REJECTED
   SUBMITTED
 }
 
@@ -465,6 +467,7 @@ type Query {
   membershipRequests(limit: Int! = 10, offset: Int! = 0, status: MembershipRequestStatus): MembershipRequestPaginatedResponse!
   memberships: [Membership!]!
   myAccessibleOrganizationUnits: [OrganizationUnit!]!
+  myFormSubmissionByToken(token: String!): FormSubmission
   myMembershipRequests(limit: Int! = 10, offset: Int! = 0, status: MembershipRequestStatus): MembershipRequestPaginatedResponse!
   myUserProfile: UserProfile
   organization(id: String!): Organization
