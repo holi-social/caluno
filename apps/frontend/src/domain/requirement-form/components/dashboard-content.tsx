@@ -6,10 +6,10 @@ import { Plus } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { toast } from 'sonner';
 import { deleteBlock, deleteForm } from '../actions';
-import { BlockCard } from './block-card';
+import { BlocksTable } from './blocks-table';
 import { CreateBlockButton } from './create-block-button';
 import { CreateFormDialog } from './create-form-dialog';
-import { FormCard } from './form-card';
+import { FormsTable } from './forms-table';
 import { ListControls } from './list-controls';
 
 export function DashboardContent({
@@ -111,16 +111,13 @@ export function DashboardContent({
                 No forms match the current filters.
               </p>
             ) : (
-              <div className="mt-4 grid gap-4 md:grid-cols-2">
-                {visibleForms.map((form) => (
-                  <FormCard
-                    key={form.id}
-                    form={form}
-                    blocks={blocks}
-                    orgUId={orgUId}
-                    onDelete={handleDeleteForm}
-                  />
-                ))}
+              <div className="mt-4">
+                <FormsTable
+                  forms={visibleForms}
+                  blocks={blocks}
+                  orgUId={orgUId}
+                  onDelete={handleDeleteForm}
+                />
               </div>
             )}
           </>
@@ -145,15 +142,12 @@ export function DashboardContent({
                 No blocks match the current filters.
               </p>
             ) : (
-              <div className="mt-4 grid gap-4 md:grid-cols-2">
-                {visibleBlocks.map((block) => (
-                  <BlockCard
-                    key={block.id}
-                    block={block}
-                    forms={forms}
-                    onDelete={handleDeleteBlock}
-                  />
-                ))}
+              <div className="mt-4">
+                <BlocksTable
+                  blocks={visibleBlocks}
+                  forms={forms}
+                  onDelete={handleDeleteBlock}
+                />
               </div>
             )}
           </>

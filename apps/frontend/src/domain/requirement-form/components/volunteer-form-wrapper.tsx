@@ -1,5 +1,4 @@
-import type { RequirementForm } from '@repo/data';
-import { VolunteerForm } from './volunteer-form';
+import { type PublicForm, VolunteerForm } from './volunteer-form';
 
 export function VolunteerFormWrapper({
   form,
@@ -7,7 +6,7 @@ export function VolunteerFormWrapper({
   isMember,
   profileData,
 }: {
-  form: RequirementForm;
+  form: PublicForm;
   token: string;
   isMember: boolean;
   orgUId: string;

@@ -1,7 +1,11 @@
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
-import type { FormBlock, FormBlockField, RequirementForm } from '@repo/data';
+import type {
+  FormBlock,
+  FormBlockField,
+  GetRequirementFormByShareTokenQuery,
+} from '@repo/data';
 import {
   Button,
   Calendar,
@@ -36,8 +40,12 @@ import { toast } from 'sonner';
 import { z } from 'zod';
 import { submitForm } from '../actions';
 
+export type PublicForm = NonNullable<
+  GetRequirementFormByShareTokenQuery['requirementFormByShareToken']
+>;
+
 interface VolunteerFormProps {
-  form: RequirementForm;
+  form: PublicForm;
   token: string;
   isMember?: boolean;
   profileData?: Record<string, string>;
