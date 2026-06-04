@@ -34,7 +34,7 @@ export function OrgSwitcher() {
     const pathParts = pathname.split('/').filter(Boolean);
     const currentPage = pathParts.length > 1 ? pathParts[1] : 'shifts';
 
-    router.push(`/${neworgUId}/${currentPage}`);
+    router.push(`/admin/${neworgUId}/${currentPage}`);
     setOpen(false);
   };
 

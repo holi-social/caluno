@@ -30,7 +30,7 @@ export default async function CheckOutPage({
         <AlertDescription className="block">
           There is no volunteer that matches this QR iD. The QR iD may have been
           re-generated and so this QR iD is no longer valid.{' '}
-          <Link className="underline" href={`/${orgUId}/check-in/scan`}>
+          <Link className="underline" href={`/admin/${orgUId}/check-in/scan`}>
             Try again
           </Link>{' '}
           by entering the QR iD manually or search for the volunteer to check

@@ -94,7 +94,7 @@ function ApprovedTab({ orgUId }: { orgUId: string }) {
               </TableCell>
               <TableCell>
                 <Link
-                  href={`/${orgUId}/check-in/${membership.user.checkInId}/check-in`}
+                  href={`/admin/${orgUId}/check-in/${membership.user.checkInId}/check-in`}
                   aria-label="Check-in volunteer"
                 >
                   <Button

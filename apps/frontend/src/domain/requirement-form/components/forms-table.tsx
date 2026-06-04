@@ -11,7 +11,7 @@ import {
   TableHeader,
   TableRow,
 } from '@repo/ui';
-import { Lock, Loader2, Pencil, Share2, Trash2, Users } from 'lucide-react';
+import { Loader2, Lock, Pencil, Share2, Trash2, Users } from 'lucide-react';
 import Link from 'next/link';
 import { useTransition } from 'react';
 import { DeleteAlertDialog } from '@/components/delete-alert-dialog';
@@ -48,12 +48,14 @@ function FormActions({
         <Share2 />
       </Button>
       <Button size="icon-xs" variant="outline" aria-label="Edit form" asChild>
-        <Link href={`/${orgUId}/requirement-forms/${form.id}/builder`}>
+        <Link href={`/admin/${orgUId}/requirement-forms/${form.id}/builder`}>
           <Pencil />
         </Link>
       </Button>
       <Button size="icon-xs" variant="outline" aria-label="Submissions" asChild>
-        <Link href={`/${orgUId}/requirement-forms/${form.id}/submissions`}>
+        <Link
+          href={`/admin/${orgUId}/requirement-forms/${form.id}/submissions`}
+        >
           <Users />
         </Link>
       </Button>
@@ -124,7 +126,7 @@ export function FormsTable({
                 <TableCell>
                   <Link
                     className="hover:underline font-medium"
-                    href={`/${orgUId}/requirement-forms/${form.id}/builder`}
+                    href={`/admin/${orgUId}/requirement-forms/${form.id}/builder`}
                   >
                     {form.name}
                   </Link>

@@ -6,5 +6,5 @@ interface Props {
 
 export default async function NewBlockPage({ params }: Props) {
   const { orgUId } = await params;
-  redirect(`/${orgUId}/requirement-forms/blocks?sheet=block-form`);
+  redirect(`/admin/${orgUId}/requirement-forms/blocks?sheet=block-form`);
 }

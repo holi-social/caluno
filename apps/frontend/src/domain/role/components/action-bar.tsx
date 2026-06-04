@@ -28,7 +28,7 @@ export const ActionBar = ({
   const pathname = usePathname();
   const [isDeleting, startTransition] = useTransition();
   const buttonSize = `icon-${size}` as const;
-  const editHref = `/${organizationUnitId}/settings/roles/${id}/edit`;
+  const editHref = `/admin/${organizationUnitId}/settings/roles/${id}/edit`;
 
   const handleDelete = () => {
     startTransition(async () => {
@@ -38,8 +38,8 @@ export const ActionBar = ({
       } else {
         toast.success('Role deleted');
         router.refresh();
-        if (pathname === `/${organizationUnitId}/settings/roles/${id}`) {
-          router.push(`/${organizationUnitId}/settings/roles`);
+        if (pathname === `/admin/${organizationUnitId}/settings/roles/${id}`) {
+          router.push(`/admin/${organizationUnitId}/settings/roles`);
         }
       }
     });

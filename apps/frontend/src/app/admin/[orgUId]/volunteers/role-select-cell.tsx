@@ -136,7 +136,7 @@ export function RoleSelectCell({
                 className="cursor-pointer"
                 onSelect={() => {
                   setOpen(false);
-                  router.push(`/${orgUId}/settings/roles/new`);
+                  router.push(`/admin/${orgUId}/settings/roles/new`);
                 }}
               >
                 <PlusIcon className="mr-2 size-4" />

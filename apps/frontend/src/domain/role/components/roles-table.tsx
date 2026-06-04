@@ -38,7 +38,7 @@ export function RolesTable({ roles }: RolesTableProps) {
               <TableCell className="font-medium">
                 <div className="flex items-center gap-2">
                   <Link
-                    href={`/${orgUId}/settings/roles/${role.id}`}
+                    href={`/admin/${orgUId}/settings/roles/${role.id}`}
                     className="hover:underline"
                   >
                     {role.name}

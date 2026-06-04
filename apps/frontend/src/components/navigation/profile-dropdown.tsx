@@ -37,7 +37,7 @@ export function ProfileDropdown({ userName, userImage }: ProfileDropdownProps) {
           Edit profile
         </Link>
         <Link
-          href={'/'}
+          href={'/admin'}
           className="flex items-center gap-2 rounded-sm px-2 py-1.5 text-sm hover:bg-accent"
         >
           <Crown className="h-4 w-4" />

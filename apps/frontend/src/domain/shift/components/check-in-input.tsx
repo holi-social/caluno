@@ -22,7 +22,7 @@ export const CheckInInput = ({ organizationUnitId }: CheckInInputProps) => {
 
   const handleCheckIn = () =>
     router.push(
-      `/${organizationUnitId}/check-in/${value.toLowerCase()}/decide`,
+      `/admin/${organizationUnitId}/check-in/${value.toLowerCase()}/decide`,
     );
 
   return (
