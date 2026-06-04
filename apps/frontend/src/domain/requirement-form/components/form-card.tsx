@@ -2,7 +2,7 @@
 
 import type { FormBlock, RequirementForm } from '@repo/data';
 import { Badge, Button, Card, CardContent } from '@repo/ui';
-import { Pencil, Share2, Trash2, Users } from 'lucide-react';
+import { Eye, Pencil, Share2, Trash2, Users } from 'lucide-react';
 import Link from 'next/link';
 import { useState } from 'react';
 import { toast } from 'sonner';
@@ -88,19 +88,21 @@ export function FormCard({
             <Share2 className="mr-1.5 size-4" />
             Share
           </Button>
-          {locked ? (
-            <Button variant="outline" className="h-10 flex-1" disabled>
-              <Pencil className="mr-1.5 size-4" />
-              Edit
-            </Button>
-          ) : (
-            <Button asChild variant="outline" className="h-10 flex-1">
-              <Link href={`/${orgUId}/requirement-forms/${form.id}/builder`}>
-                <Pencil className="mr-1.5 size-4" />
-                Edit
-              </Link>
-            </Button>
-          )}
+          <Button asChild variant="outline" className="h-10 flex-1">
+            <Link href={`/${orgUId}/requirement-forms/${form.id}/builder`}>
+              {locked ? (
+                <>
+                  <Eye className="mr-1.5 size-4" />
+                  View
+                </>
+              ) : (
+                <>
+                  <Pencil className="mr-1.5 size-4" />
+                  Edit
+                </>
+              )}
+            </Link>
+          </Button>
           <Button
             asChild
             variant="outline"
