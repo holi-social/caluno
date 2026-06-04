@@ -84,55 +84,55 @@ export function FormCard({
           </p>
         </div>
 
-        <div className="mt-5 flex w-full gap-2">
-          <Button className="h-10 flex-1" onClick={handleShare}>
-            <Share2 className="mr-1.5 size-4" />
-            Share
-          </Button>
-          <Button asChild variant="outline" className="h-10 flex-1">
-            <Link
-              href={`/admin/${orgUId}/requirement-forms/${form.id}/builder`}
-            >
-              {locked ? (
-                <>
-                  <Eye className="mr-1.5 size-4" />
-                  View
-                </>
-              ) : (
-                <>
-                  <Pencil className="mr-1.5 size-4" />
-                  Edit
-                </>
-              )}
-            </Link>
-          </Button>
-          <Button
-            asChild
-            variant="outline"
-            size="icon"
-            className="size-10 shrink-0"
-            aria-label="Submissions"
-            title="Submissions"
-          >
-            <Link
-              href={`/admin/${orgUId}/requirement-forms/${form.id}/submissions`}
-            >
-              <Users className="size-4" />
-            </Link>
-          </Button>
-          {onDelete && (
-            <Button
-              variant="outline"
-              size="icon"
-              className="text-muted-foreground hover:text-destructive size-10 shrink-0"
-              onClick={() => setConfirmOpen(true)}
-              aria-label="Delete form"
-              title="Delete form"
-              disabled={locked}
-            >
-              <Trash2 className="size-4" />
+        <div className="mt-5 space-y-2 sm:flex sm:gap-2 sm:space-y-0">
+          <div className="flex gap-2 sm:contents">
+            <Button className="h-10 flex-1" onClick={handleShare}>
+              <Share2 className="mr-1.5 size-4" />
+              Share
             </Button>
-          )}
+            <Button asChild variant="outline" className="h-10 flex-1">
+              <Link href={`/admin/${orgUId}/requirement-forms/${form.id}/builder`}>
+                {locked ? (
+                  <>
+                    <Eye className="mr-1.5 size-4" />
+                    View
+                  </>
+                ) : (
+                  <>
+                    <Pencil className="mr-1.5 size-4" />
+                    Edit
+                  </>
+                )}
+              </Link>
+            </Button>
+          </div>
+          <div className="flex gap-2 sm:contents">
+            <Button
+              asChild
+              variant="outline"
+              className="h-10 flex-1 sm:size-10 sm:flex-none sm:shrink-0"
+              aria-label="Submissions"
+              title="Submissions"
+            >
+              <Link href={`/admin/${orgUId}/requirement-forms/${form.id}/submissions`}>
+                <Users className="size-4" />
+                <span className="ml-1.5 sm:hidden">Submissions</span>
+              </Link>
+            </Button>
+            {onDelete && (
+              <Button
+                variant="outline"
+                size="icon"
+                className="text-muted-foreground hover:text-destructive size-10 shrink-0"
+                onClick={() => setConfirmOpen(true)}
+                aria-label="Delete form"
+                title="Delete form"
+                disabled={locked}
+              >
+                <Trash2 className="size-4" />
+              </Button>
+            )}
+          </div>
         </div>
       </CardContent>
 
