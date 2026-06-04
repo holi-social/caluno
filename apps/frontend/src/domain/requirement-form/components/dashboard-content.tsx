@@ -70,7 +70,7 @@ export function DashboardContent({
   }
 
   return (
-    <Tabs value={tab} onValueChange={setTab}>
+    <Tabs value={tab} onValueChange={setTab} suppressHydrationWarning>
       <div className="grid grid-cols-3 items-center gap-3">
         <div />
         <div className="flex justify-center">

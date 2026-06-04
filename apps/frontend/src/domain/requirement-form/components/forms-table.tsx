@@ -15,6 +15,7 @@ import { Loader2, Lock, Pencil, Share2, Trash2, Users } from 'lucide-react';
 import Link from 'next/link';
 import { useTransition } from 'react';
 import { DeleteAlertDialog } from '@/components/delete-alert-dialog';
+import { FormattedDate } from '@/components/formatted-date';
 import { copyToClipboard } from '@/lib/clipboard';
 
 function FormActions({
@@ -152,7 +153,7 @@ export function FormsTable({
                   )}
                 </TableCell>
                 <TableCell className="text-muted-foreground whitespace-nowrap">
-                  {new Date(form.updatedAt).toLocaleDateString()}
+                  <FormattedDate date={form.updatedAt} />
                 </TableCell>
                 <TableCell>
                   <FormActions

@@ -6,6 +6,7 @@ import { Eye, Pencil, Share2, Trash2, Users } from 'lucide-react';
 import Link from 'next/link';
 import { useState } from 'react';
 import { toast } from 'sonner';
+import { FormattedDate } from '@/components/formatted-date';
 import { ConfirmDialog } from './confirm-dialog';
 
 export function FormCard({
@@ -79,7 +80,7 @@ export function FormCard({
             </div>
           )}
           <p className="text-muted-foreground mt-4 text-xs">
-            Updated {new Date(form.updatedAt).toLocaleDateString()}
+            Updated <FormattedDate date={form.updatedAt} />
           </p>
         </div>
 
