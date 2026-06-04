@@ -5,6 +5,7 @@ import { EventModule } from '../event/event.module';
 import { NotificationModule } from '../notification/notification.module';
 import { OrganizationUnitMapper } from '../organization/mappers/organization-unit.mapper';
 import { RequirementProfileModule } from '../requirement-profile/requirement-profile.module';
+// forwardRef needed: RequirementProfileModule imports MembershipModule for form submission flow
 import { ShiftModule } from '../shift/shift.module';
 import { UserModule } from '../user/user.module';
 import { MembershipMapper } from './mappers/membership.mepper';
@@ -23,7 +24,7 @@ import {
     DatabaseModule,
     UserModule,
     NotificationModule,
-    RequirementProfileModule,
+    forwardRef(() => RequirementProfileModule),
     forwardRef(() => ShiftModule),
     forwardRef(() => EventModule),
   ],

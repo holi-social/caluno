@@ -7,10 +7,11 @@ import {
 } from '@repo/ui';
 import { Loader2 } from 'lucide-react';
 import { type ReactNode, Suspense } from 'react';
-import { DashboardSidebar } from '@/components/dashboard-sidebar';
+import { DashboardSidebar } from '@/components/navigation/dashboard-sidebar';
 import { InviteShiftSheet } from '@/components/sheets/invite-shift-sheet';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { OrgSyncProvider } from '@/domain/organization/components/org-sync-provider';
+import { BlockSheet } from '@/domain/requirement-form/components/block-sheet';
 import { requireAuth } from '@/lib/auth-server';
 import { GRAPHQL_API_URL } from '@/lib/constants';
 import { getDataClient } from '@/lib/data-client';
@@ -63,6 +64,7 @@ export default async function OrgLayout({
             </SidebarInset>
           </SidebarProvider>
           <InviteShiftSheet />
+          <BlockSheet />
         </OrgSyncProvider>
       </DataProvider>
     </OrgProvider>

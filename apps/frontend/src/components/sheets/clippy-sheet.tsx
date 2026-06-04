@@ -22,6 +22,7 @@ interface Props extends React.PropsWithChildren {
   trigger?: React.ReactNode;
   description?: string;
   showSaveButton?: boolean;
+  showCancelButton?: boolean;
   isPending?: boolean;
   formId?: string;
 }
@@ -34,6 +35,7 @@ export function ClippySheet({
   description,
   trigger,
   showSaveButton = true,
+  showCancelButton = true,
   isPending = false,
   formId,
   children,
@@ -62,11 +64,13 @@ export function ClippySheet({
         </div>
 
         <SheetFooter className="flex flex-row">
-          <SheetClose asChild>
-            <Button variant="outline" className="flex-1" disabled={isPending}>
-              Cancel
-            </Button>
-          </SheetClose>
+          {showCancelButton && (
+            <SheetClose asChild>
+              <Button variant="outline" className="flex-1" disabled={isPending}>
+                Cancel
+              </Button>
+            </SheetClose>
+          )}
 
           {showSaveButton && (
             <Button

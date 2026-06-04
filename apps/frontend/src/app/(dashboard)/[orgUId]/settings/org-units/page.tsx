@@ -15,9 +15,9 @@ export default async function OrgUnitsPage({ params }: OrgUnitsPageProps) {
 
   const data = await getDataClient(orgUId);
 
-  const [[canCreate, canEdit, canDelete], tree, types] = await Promise.all([
-    await checkPermission(orgUId, PermissionKey.OrgEdit),
-    data.organizationUnit.findTree(org.organizationId),
+  const [[canEdit], tree, types] = await Promise.all([
+    checkPermission(orgUId, PermissionKey.OrgEdit),
+    data.organizationUnit.findOrganizationTree(),
     data.organizationUnit.findAllTypes(),
   ]);
 
@@ -32,9 +32,7 @@ export default async function OrgUnitsPage({ params }: OrgUnitsPageProps) {
       </div>
 
       <OrgUnitSetup
-        canCreate={canCreate}
         canEdit={canEdit}
-        canDelete={canDelete}
         tree={tree}
         types={types}
         organizationUnitId={orgUId}

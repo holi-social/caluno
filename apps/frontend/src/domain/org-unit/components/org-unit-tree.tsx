@@ -1,7 +1,8 @@
 'use client';
 
-import type { OrgUnitNodeFieldsFragment } from '@repo/data';
+import type { OrgUnitTreeNode } from '@repo/data';
 import {
+  Button,
   TreeExpander,
   TreeIcon,
   TreeLabel,
@@ -16,39 +17,34 @@ import {
   HouseIcon,
   PencilIcon,
   PlusIcon,
+  Share2Icon,
   TrashIcon,
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { getDynamicIcon } from '@/lib/dynamic-icon';
-
-type OrgUnitNode = OrgUnitNodeFieldsFragment & {
-  children?: OrgUnitNode[];
-};
+import { copyToClipboard } from '../../../lib/clipboard';
+import { organizationUnitUrl } from '../../organization/share';
 
 interface OrgUnitTreeProps {
-  root: OrgUnitNode;
-  canCreate: boolean;
+  root: OrgUnitTreeNode;
   canEdit: boolean;
-  canDelete: boolean;
-  onCreate: (node: OrgUnitNode) => void;
-  onEdit: (node: OrgUnitNode) => void;
-  onDelete: (node: OrgUnitNode) => void;
+  onCreate: (node: OrgUnitTreeNode) => void;
+  onEdit: (node: OrgUnitTreeNode) => void;
+  onDelete: (node: OrgUnitTreeNode) => void;
 }
 
 interface OrgUnitNodeItemProps {
-  node: OrgUnitNode;
-  canCreate: boolean;
+  node: OrgUnitTreeNode;
   canEdit: boolean;
-  canDelete: boolean;
-  onCreate: (node: OrgUnitNode) => void;
-  onEdit: (node: OrgUnitNode) => void;
-  onDelete: (node: OrgUnitNode) => void;
+  onCreate: (node: OrgUnitTreeNode) => void;
+  onEdit: (node: OrgUnitTreeNode) => void;
+  onDelete: (node: OrgUnitTreeNode) => void;
   level?: number;
   isLast?: boolean;
   parentPath?: boolean[];
 }
 
-function collectAllIds(node: OrgUnitNode): string[] {
+function collectAllIds(node: OrgUnitTreeNode): string[] {
   const ids: string[] = [node.id];
   if (node.children) {
     for (const child of node.children) {
@@ -60,9 +56,7 @@ function collectAllIds(node: OrgUnitNode): string[] {
 
 function OrgUnitNodeItem({
   node,
-  canCreate,
   canEdit,
-  canDelete,
   onCreate,
   onEdit,
   onDelete,
@@ -101,58 +95,73 @@ function OrgUnitNodeItem({
           <TreeLabel>{node.name}</TreeLabel>
 
           <span className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-            <button
-              type="button"
-              className="rounded p-1 hover:bg-accent"
+            <Button
+              size="icon-xs"
+              variant="outline"
+              aria-label="Visit org unit"
               onClick={(e) => {
                 e.stopPropagation();
                 router.push(`/${node.id}`);
               }}
-              title="Visit org unit"
             >
-              <EyeIcon className="h-5 w-5" />
-            </button>
+              <EyeIcon />
+            </Button>
 
-            {canCreate && (
-              <button
-                type="button"
-                className="rounded p-1 hover:bg-accent"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onCreate(node);
-                }}
-                title="Add child"
-              >
-                <PlusIcon className="h-5 w-5" />
-              </button>
-            )}
+            <Button
+              size="icon-xs"
+              variant="outline"
+              aria-label="Copy org unit link to clipboard"
+              onClick={(e) => {
+                e.stopPropagation();
+                copyToClipboard(
+                  organizationUnitUrl(node.id),
+                  'Org unit link copied to clipboard',
+                );
+              }}
+            >
+              <Share2Icon />
+            </Button>
 
             {canEdit && (
-              <button
-                type="button"
-                className="rounded p-1 hover:bg-accent"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onEdit(node);
-                }}
-                title="Edit"
-              >
-                <PencilIcon className="h-5 w-5" />
-              </button>
-            )}
+              <>
+                <Button
+                  size="icon-xs"
+                  variant="outline"
+                  aria-label="Add child"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onCreate(node);
+                  }}
+                >
+                  <PlusIcon />
+                </Button>
 
-            {!!node.parent?.id && canDelete && (
-              <button
-                type="button"
-                className="rounded p-1 hover:bg-destructive/20 text-destructive"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onDelete(node);
-                }}
-                title="Delete"
-              >
-                <TrashIcon className="h-5 w-5" />
-              </button>
+                <Button
+                  size="icon-xs"
+                  variant="outline"
+                  aria-label="Edit"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onEdit(node);
+                  }}
+                >
+                  <PencilIcon />
+                </Button>
+
+                {!!node.parentId && (
+                  <Button
+                    size="icon-xs"
+                    variant="destructive"
+                    aria-label="Delete"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onDelete(node);
+                    }}
+                  >
+                    <TrashIcon />
+                  </Button>
+                )}
+              </>
             )}
           </span>
         </span>
@@ -164,9 +173,7 @@ function OrgUnitNodeItem({
             <OrgUnitNodeItem
               key={child.id}
               node={child}
-              canCreate={canCreate}
               canEdit={canEdit}
-              canDelete={canDelete}
               onCreate={onCreate}
               onEdit={onEdit}
               onDelete={onDelete}
@@ -186,9 +193,7 @@ export function OrgUnitTree({
   onCreate,
   onEdit,
   onDelete,
-  canCreate,
   canEdit,
-  canDelete,
 }: OrgUnitTreeProps) {
   const allIds = collectAllIds(root);
 
@@ -197,9 +202,7 @@ export function OrgUnitTree({
       <TreeView className="w-full">
         <OrgUnitNodeItem
           node={root}
-          canCreate={canCreate}
           canEdit={canEdit}
-          canDelete={canDelete}
           onCreate={onCreate}
           onEdit={onEdit}
           onDelete={onDelete}

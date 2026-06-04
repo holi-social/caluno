@@ -98,5 +98,103 @@ export const requirementProfilesRelations = defineRelationsPart(
         to: r.users.id,
       }),
     },
+    userProfiles: {
+      user: r.one.users({
+        from: r.userProfiles.userId,
+        to: r.users.id,
+      }),
+    },
+    formBlocks: {
+      organization: r.one.organizations({
+        from: r.formBlocks.organizationId,
+        to: r.organizations.id,
+      }),
+      createdByUser: r.one.users({
+        from: r.formBlocks.createdBy,
+        to: r.users.id,
+      }),
+      updatedByUser: r.one.users({
+        from: r.formBlocks.updatedBy,
+        to: r.users.id,
+      }),
+      fields: r.many.formBlockFields({
+        from: r.formBlocks.id,
+        to: r.formBlockFields.blockId,
+      }),
+      formRefs: r.many.requirementFormBlockRefs({
+        from: r.formBlocks.id,
+        to: r.requirementFormBlockRefs.blockId,
+      }),
+    },
+    formBlockFields: {
+      block: r.one.formBlocks({
+        from: r.formBlockFields.blockId,
+        to: r.formBlocks.id,
+      }),
+    },
+    requirementForms: {
+      organization: r.one.organizations({
+        from: r.requirementForms.organizationId,
+        to: r.organizations.id,
+      }),
+      createdByUser: r.one.users({
+        from: r.requirementForms.createdBy,
+        to: r.users.id,
+      }),
+      updatedByUser: r.one.users({
+        from: r.requirementForms.updatedBy,
+        to: r.users.id,
+      }),
+      blockRefs: r.many.requirementFormBlockRefs({
+        from: r.requirementForms.id,
+        to: r.requirementFormBlockRefs.formId,
+      }),
+      submissions: r.many.formSubmissions({
+        from: r.requirementForms.id,
+        to: r.formSubmissions.formId,
+      }),
+    },
+    requirementFormBlockRefs: {
+      form: r.one.requirementForms({
+        from: r.requirementFormBlockRefs.formId,
+        to: r.requirementForms.id,
+      }),
+      block: r.one.formBlocks({
+        from: r.requirementFormBlockRefs.blockId,
+        to: r.formBlocks.id,
+      }),
+    },
+    formSubmissions: {
+      form: r.one.requirementForms({
+        from: r.formSubmissions.formId,
+        to: r.requirementForms.id,
+      }),
+      user: r.one.users({
+        from: r.formSubmissions.userId,
+        to: r.users.id,
+      }),
+      membership: r.one.memberships({
+        from: r.formSubmissions.membershipId,
+        to: r.memberships.id,
+      }),
+      values: r.many.formSubmissionValues({
+        from: r.formSubmissions.id,
+        to: r.formSubmissionValues.submissionId,
+      }),
+    },
+    formSubmissionValues: {
+      submission: r.one.formSubmissions({
+        from: r.formSubmissionValues.submissionId,
+        to: r.formSubmissions.id,
+      }),
+      field: r.one.formBlockFields({
+        from: r.formSubmissionValues.fieldId,
+        to: r.formBlockFields.id,
+      }),
+      block: r.one.formBlocks({
+        from: r.formSubmissionValues.blockId,
+        to: r.formBlocks.id,
+      }),
+    },
   }),
 );

@@ -1,4 +1,5 @@
 import { forwardRef, Inject, Injectable, Logger } from '@nestjs/common';
+import { FormSubmissionService } from '../requirement-profile/services/form-submission.service';
 import { and, eq, inArray, sql } from 'drizzle-orm';
 import { DEFAULT_MEMBER_ROLE_NAME } from '../auth/constants';
 import type { UserEntity } from '../auth/schemas/auth.schema';
@@ -32,6 +33,8 @@ export class MembershipService {
     private readonly requirementProfileService: RequirementProfileService,
     @Inject(forwardRef(() => ShiftService))
     private readonly shiftService: ShiftService,
+    @Inject(forwardRef(() => FormSubmissionService))
+    private readonly formSubmissionService: FormSubmissionService,
     @Inject(forwardRef(() => EventService))
     private readonly eventService: EventService,
   ) {}
@@ -453,6 +456,15 @@ export class MembershipService {
     });
 
     await this.notificationService.notifyUserMembershipRejected(request);
+
+    // Mark any pending form submissions for this user+org as REJECTED so they can re-submit
+    if (request.userId && request.organizationUnitId) {
+      await this.formSubmissionService.rejectByUserAndOrgUnit(
+        request.userId,
+        request.organizationUnitId,
+      );
+    }
+
     return request;
   }
 

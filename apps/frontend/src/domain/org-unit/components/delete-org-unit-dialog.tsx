@@ -1,6 +1,6 @@
 'use client';
 
-import type { OrgUnitNodeFieldsFragment } from '@repo/data';
+import type { OrgUnitTreeNode } from '@repo/data';
 import {
   AlertDialog,
   AlertDialogCancel,
@@ -19,15 +19,11 @@ import { useRouter } from 'next/navigation';
 import { useState, useTransition } from 'react';
 import { deleteOrgUnit } from '@/domain/org-unit/actions';
 
-type OrgUnitNode = OrgUnitNodeFieldsFragment & {
-  children?: OrgUnitNode[];
-};
-
 interface DeleteOrgUnitDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   organizationUnitId: string;
-  unit: OrgUnitNode | null;
+  unit: OrgUnitTreeNode | null;
 }
 
 export function DeleteOrgUnitDialog({

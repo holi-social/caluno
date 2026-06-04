@@ -15,6 +15,30 @@ input CloseTimeEntryInput {
   notes: String
 }
 
+input CreateFormBlockFieldInput {
+  description: String
+  documentLabel: String
+  documentUrl: String
+  fieldOrder: Float
+  label: String!
+  lockType: Boolean
+  minAge: Float
+  options: [SelectOptionInput!]
+  placeholder: String
+  required: Boolean
+  systemKey: String
+  type: FieldType!
+}
+
+input CreateFormBlockInput {
+  description: String
+  fields: [CreateFormBlockFieldInput!]
+  icon: String
+  organizationId: String!
+  required: Boolean
+  title: String!
+}
+
 input CreateOrganizationInput {
   address: String
   description: String
@@ -37,6 +61,14 @@ input CreateOrganizationUnitInput {
   phone: String
   typeId: String!
   websiteUrl: String
+}
+
+input CreateRequirementFormInput {
+  blockRefs: [FormBlockRefInput!]
+  description: String
+  name: String!
+  organizationId: String!
+  settings: FormSettingsInput
 }
 
 input CreateRequirementInput {
@@ -91,6 +123,121 @@ input CreateShiftInput {
 A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date-time format.
 """
 scalar DateTime
+
+enum FieldType {
+  CHECKBOX
+  DATE
+  DOCUMENT_ACKNOWLEDGEMENT
+  EMAIL
+  IBAN
+  LASTNAME
+  MULTI_CHOICE
+  NAME
+  NUMBERS
+  PHONE
+  SINGLE_CHOICE
+  STATIC_TEXT
+  TEXT
+  TEXTAREA
+  ZIP
+}
+
+type FormBlock {
+  createdAt: DateTime!
+  createdBy: String!
+  description: String
+  fields: [FormBlockField!]
+  icon: String
+  id: ID!
+  isEditable: Boolean!
+  organizationId: String!
+  required: Boolean!
+  title: String!
+  updatedAt: DateTime!
+  updatedBy: String!
+}
+
+type FormBlockField {
+  blockId: String!
+  createdAt: DateTime!
+  description: String
+  documentLabel: String
+  documentUrl: String
+  fieldOrder: Float!
+  id: ID!
+  label: String!
+  lockType: Boolean!
+  minAge: Float
+  options: [SelectOption!]
+  placeholder: String
+  required: Boolean!
+  systemKey: String
+  type: FieldType!
+  updatedAt: DateTime!
+}
+
+type FormBlockPaginatedResponse {
+  items: [FormBlock!]!
+  pagination: PaginationInfo!
+}
+
+input FormBlockRefInput {
+  blockId: String!
+  order: Float
+  required: Boolean
+}
+
+input FormFieldValueInput {
+  blockId: String!
+  fieldId: String!
+  value: String!
+}
+
+type FormSettings {
+  allowEmbed: Boolean
+  submitButtonLabel: String
+  successMessage: String
+  successTitle: String
+}
+
+input FormSettingsInput {
+  allowEmbed: Boolean
+  submitButtonLabel: String
+  successMessage: String
+  successTitle: String
+}
+
+type FormSubmission {
+  createdAt: DateTime!
+  formId: String!
+  id: ID!
+  membershipId: String
+  status: FormSubmissionStatus!
+  submittedAt: DateTime!
+  updatedAt: DateTime!
+  userId: String!
+  values: [FormSubmissionValue!]
+}
+
+type FormSubmissionPaginatedResponse {
+  items: [FormSubmission!]!
+  pagination: PaginationInfo!
+}
+
+enum FormSubmissionStatus {
+  REJECTED
+  SUBMITTED
+}
+
+type FormSubmissionValue {
+  blockId: String!
+  createdAt: DateTime!
+  fieldId: String!
+  id: ID!
+  submissionId: String!
+  updatedAt: DateTime!
+  value: String!
+}
 
 """
 The `JSON` scalar type represents JSON values as specified by [ECMA-404](http://www.ecma-international.org/publications/files/ECMA-ST/ECMA-404.pdf).
@@ -155,28 +302,41 @@ type Mutation {
   approveMembershipRequest(id: ID!, organizationUnitId: ID!): MembershipRequest!
   cancelMembershipRequest(id: ID!, organizationUnitId: ID!): MembershipRequest!
   closeTimeEntry(id: ID!, input: CloseTimeEntryInput!): TimeEntry!
+  createFormBlock(input: CreateFormBlockInput!): FormBlock!
+  createFormBlockField(blockId: String!, input: CreateFormBlockFieldInput!): FormBlock!
   createOrganization(input: CreateOrganizationInput!): Organization!
   createOrganizationUnit(input: CreateOrganizationUnitInput!): OrganizationUnit!
   createRequirement(input: CreateRequirementInput!): Requirement!
+  createRequirementForm(input: CreateRequirementFormInput!): RequirementForm!
   createRequirementProfile(input: CreateRequirementProfileInput!): RequirementProfile!
   createRequirementProfileSubmission(input: CreateRequirementProfileSubmissionInput!): RequirementProfileSubmission!
   createRole(input: CreateRoleInput!): Role!
   createShift(input: CreateShiftInput!): Shift!
+  deleteFormBlock(id: String!): FormBlock!
+  deleteFormBlockField(fieldId: String!): FormBlock!
   deleteOrganizationUnit(id: String!): OrganizationUnit!
   deleteRequirement(id: String!): Requirement!
+  deleteRequirementForm(id: String!): RequirementForm!
   deleteRequirementFulfillment(id: String!): RequirementFulfillment!
   deleteRequirementProfile(id: String!): RequirementProfile!
   deleteRequirementProfileSubmission(id: String!): RequirementProfileSubmission!
   deleteRole(id: ID!): Role!
   deleteShift(id: String!): Shift!
   deleteTimeEntry(id: ID!): TimeEntry!
+  generateDocumentUploadUrl(filename: String!, mimeType: String!): String!
   inviteMembersToShift(memberIds: [String!]!, shiftId: String!): Shift!
   joinOrganization(organizationUnitId: ID!): JoinOrganizationResult!
   joinShift(shiftId: String!): JoinShiftResult!
+  regenerateFormShareToken(id: String!): RequirementForm!
   rejectMembershipRequest(id: ID!, organizationUnitId: ID!, rejectionReason: String!): MembershipRequest!
+  submitForm(input: SubmitFormInput!, token: String!): FormSubmission!
+  updateFormBlock(id: String!, input: UpdateFormBlockInput!): FormBlock!
+  updateFormBlockField(fieldId: String!, input: UpdateFormBlockFieldInput!): FormBlock!
   updateMembershipRoles(membershipId: ID!, roleIds: [ID!]!): Membership!
+  updateMyUserProfile(input: UpdateUserProfileInput!): UserProfile!
   updateOrganizationUnit(id: String!, input: UpdateOrganizationUnitInput!): OrganizationUnit!
   updateRequirement(id: String!, input: UpdateRequirementInput!): Requirement!
+  updateRequirementForm(id: String!, input: UpdateRequirementFormInput!): RequirementForm!
   updateRequirementFulfillment(id: String!, input: UpdateRequirementFulfillmentInput!): RequirementFulfillment!
   updateRequirementProfile(id: String!, input: UpdateRequirementProfileInput!): RequirementProfile!
   updateRequirementProfileSubmission(id: String!, input: UpdateRequirementProfileSubmissionInput!): RequirementProfileSubmission!
@@ -207,9 +367,7 @@ type OrganizationPaginatedResponse {
 }
 
 type OrganizationTree {
-  id: ID!
-  name: String!
-  nodes: JSON!
+  root: JSON!
 }
 
 type OrganizationUnit {
@@ -294,6 +452,10 @@ enum PermissionKey {
 
 type Query {
   activeShifts(limit: Int! = 10, offset: Int! = 0): ShiftInstancePaginatedResponse!
+  formBlock(id: String!): FormBlock
+  formBlocks(limit: Int! = 10, offset: Int! = 0, organizationId: String!): FormBlockPaginatedResponse!
+  formSubmission(id: String!): FormSubmission
+  formSubmissionsByForm(formId: String!, limit: Int! = 10, offset: Int! = 0): FormSubmissionPaginatedResponse!
   isMemberOfUnitOrAncestor(organizationUnitId: ID!): Boolean!
   me: User!
   members(organizationUnitId: ID!): [User!]!
@@ -302,7 +464,9 @@ type Query {
   membershipRequests(limit: Int! = 10, offset: Int! = 0, status: MembershipRequestStatus): MembershipRequestPaginatedResponse!
   memberships: [Membership!]!
   myAccessibleOrganizationUnits: [OrganizationUnit!]!
+  myFormSubmissionByToken(token: String!): FormSubmission
   myMembershipRequests(limit: Int! = 10, offset: Int! = 0, status: MembershipRequestStatus): MembershipRequestPaginatedResponse!
+  myUserProfile: UserProfile
   organization(id: String!): Organization
   organizationBySlug(slug: String!): Organization!
   organizationTree: OrganizationTree
@@ -314,6 +478,9 @@ type Query {
   permissionGroups: [PermissionGroup!]!
   permissions: [Permission!]!
   requirement(id: String!): Requirement
+  requirementForm(id: String!): RequirementForm
+  requirementFormByShareToken(token: String!): RequirementForm
+  requirementForms(limit: Int! = 10, offset: Int! = 0, organizationId: String!): RequirementFormPaginatedResponse!
   requirementFulfillment(id: String!): RequirementFulfillment
   requirementFulfillments(limit: Int! = 10, offset: Int! = 0): RequirementFulfillmentPaginatedResponse!
   requirementProfile(id: String!): RequirementProfile
@@ -341,6 +508,39 @@ type Requirement {
   name: String!
   organizationId: String!
   type: RequirementType!
+}
+
+type RequirementForm {
+  blockRefs: [RequirementFormBlockRef!]
+  createdAt: DateTime!
+  createdBy: String!
+  description: String
+  id: ID!
+  name: String!
+  organizationId: String!
+  organizationUnitId: String
+  settings: FormSettings!
+  shareToken: String!
+  slug: String!
+  submissionCount: Float!
+  updatedAt: DateTime!
+  updatedBy: String!
+}
+
+type RequirementFormBlockRef {
+  block: FormBlock
+  blockId: String!
+  createdAt: DateTime!
+  fieldOrder: Float!
+  formId: String!
+  id: ID!
+  required: Boolean
+  updatedAt: DateTime!
+}
+
+type RequirementFormPaginatedResponse {
+  items: [RequirementForm!]!
+  pagination: PaginationInfo!
 }
 
 interface RequirementFulfillment {
@@ -483,6 +683,16 @@ type Role {
   permissions: [Permission!]!
 }
 
+type SelectOption {
+  label: String!
+  value: String!
+}
+
+input SelectOptionInput {
+  label: String!
+  value: String!
+}
+
 type Shift {
   createdAt: DateTime!
   createdBy: User
@@ -531,6 +741,10 @@ enum ShiftVisibility {
   INVITED_MEMBERS
 }
 
+input SubmitFormInput {
+  values: [FormFieldValueInput!]!
+}
+
 type TimeEntry {
   createdAt: DateTime!
   endedAt: DateTime
@@ -546,6 +760,28 @@ type TimeEntryPaginatedResponse {
   pagination: PaginationInfo!
 }
 
+input UpdateFormBlockFieldInput {
+  description: String
+  documentLabel: String
+  documentUrl: String
+  fieldOrder: Float
+  label: String
+  lockType: Boolean
+  minAge: Float
+  options: [SelectOptionInput!]
+  placeholder: String
+  required: Boolean
+  systemKey: String
+  type: FieldType
+}
+
+input UpdateFormBlockInput {
+  description: String
+  icon: String
+  required: Boolean
+  title: String
+}
+
 input UpdateOrganizationUnitInput {
   address: String
   description: String
@@ -558,6 +794,13 @@ input UpdateOrganizationUnitInput {
   requiredMembershipRequirementProfileId: String
   typeId: String
   websiteUrl: String
+}
+
+input UpdateRequirementFormInput {
+  blockRefs: [FormBlockRefInput!]
+  description: String
+  name: String
+  settings: FormSettingsInput
 }
 
 input UpdateRequirementFulfillmentInput {
@@ -606,6 +849,10 @@ input UpdateTimeEntryInput {
   startedAt: DateTime!
 }
 
+input UpdateUserProfileInput {
+  data: String!
+}
+
 type User {
   checkInId: ID!
   email: String!
@@ -613,6 +860,14 @@ type User {
   image: String
   name: String!
   permissions: [Permission!]
+}
+
+type UserProfile {
+  createdAt: DateTime!
+  data: JSON!
+  id: ID!
+  updatedAt: DateTime!
+  userId: String!
 }
 
 type UserRequirementStatus {
