@@ -239,12 +239,14 @@ input FormSettingsInput {
 
 type FormSubmission {
   createdAt: DateTime!
+  form: RequirementForm
   formId: String!
   id: ID!
   membershipId: String
   status: FormSubmissionStatus!
   submittedAt: DateTime!
   updatedAt: DateTime!
+  user: User
   userId: String!
   values: [FormSubmissionValue!]
 }
@@ -498,10 +500,13 @@ type Query {
   event(id: ID!): Event!
   eventAttendees(eventId: ID!): [User!]!
   events(limit: Int! = 10, offset: Int! = 0): EventPaginatedResponse!
+  adminUserProfile(userId: String!): UserProfile
   formBlock(id: String!): FormBlock
   formBlocks(limit: Int! = 10, offset: Int! = 0, organizationId: String!): FormBlockPaginatedResponse!
   formSubmission(id: String!): FormSubmission
   formSubmissionsByForm(formId: String!, limit: Int! = 10, offset: Int! = 0): FormSubmissionPaginatedResponse!
+  formSubmissionsByMembershipRequest(membershipRequestId: String!): [FormSubmission!]!
+  formSubmissionsForVolunteer(userId: String!): [FormSubmission!]!
   isMemberOfUnitOrAncestor(organizationUnitId: ID!): Boolean!
   me: User!
   members(organizationUnitId: ID!): [User!]!

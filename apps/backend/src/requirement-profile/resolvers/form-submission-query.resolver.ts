@@ -36,6 +36,33 @@ export class FormSubmissionQueryResolver {
     return this.formSubmissionMapper.toModel(item);
   }
 
+  @Permissions(PERMISSIONS.VOLUNTEER_VIEW)
+  @Query(() => [FormSubmission])
+  async formSubmissionsForVolunteer(
+    @Args('userId') userId: string,
+    @Context() context: AuthenticatedGraphQLContext,
+  ): Promise<FormSubmission[]> {
+    const items = await this.formSubmissionService.findByUserForAdmin(
+      userId,
+      context.organizationUnitId,
+    );
+    return this.formSubmissionMapper.toArray(items);
+  }
+
+  @Permissions(PERMISSIONS.VOLUNTEER_VIEW)
+  @Query(() => [FormSubmission])
+  async formSubmissionsByMembershipRequest(
+    @Args('membershipRequestId') membershipRequestId: string,
+    @Context() context: AuthenticatedGraphQLContext,
+  ): Promise<FormSubmission[]> {
+    const items =
+      await this.formSubmissionService.findByMembershipRequestForAdmin(
+        membershipRequestId,
+        context.organizationUnitId,
+      );
+    return this.formSubmissionMapper.toArray(items);
+  }
+
   @Permissions(PERMISSIONS.REQUIREMENT_PROFILE_VIEW)
   @Query(() => FormSubmission, { nullable: true })
   async formSubmission(

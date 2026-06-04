@@ -1,10 +1,11 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { and, count, eq, inArray } from 'drizzle-orm';
+import { and, asc, count, eq, inArray } from 'drizzle-orm';
 import type { Database } from '../../database/database.module';
 import { DATABASE_CONNECTION } from '../../database/database-connection';
 import * as schema from '../../database/schema';
 import {
   BadRequestGraphQLError,
+  ForbiddenGraphQLError,
   NotFoundGraphQLError,
 } from '../../graphql/errors';
 import type { PaginationInput } from '../../graphql/pagination.input';
@@ -74,6 +75,47 @@ export class FormSubmissionService {
     return this.db.query.formSubmissionValues.findMany({
       where: { submissionId },
     });
+  }
+
+  async findByMembershipRequestForAdmin(
+    membershipRequestId: string,
+    orgUnitId: string,
+  ): Promise<FormSubmissionEntity[]> {
+    const request = await this.db.query.membershipRequests.findFirst({
+      where: { id: membershipRequestId, organizationUnitId: orgUnitId },
+    });
+    if (!request?.userId) {
+      throw new ForbiddenGraphQLError('Access denied');
+    }
+    return this.findByUserAndOrgUnit(request.userId, orgUnitId);
+  }
+
+  async findByUserForAdmin(
+    userId: string,
+    orgUnitId: string,
+  ): Promise<FormSubmissionEntity[]> {
+    return this.findByUserAndOrgUnit(userId, orgUnitId);
+  }
+
+  private async findByUserAndOrgUnit(
+    userId: string,
+    orgUnitId: string,
+  ): Promise<FormSubmissionEntity[]> {
+    const rows = await this.db
+      .select({ submission: schema.formSubmissions })
+      .from(schema.formSubmissions)
+      .innerJoin(
+        schema.requirementForms,
+        eq(schema.formSubmissions.formId, schema.requirementForms.id),
+      )
+      .where(
+        and(
+          eq(schema.formSubmissions.userId, userId),
+          eq(schema.requirementForms.organizationUnitId, orgUnitId),
+        ),
+      )
+      .orderBy(asc(schema.formSubmissions.submittedAt));
+    return rows.map((r) => r.submission);
   }
 
   async submit(
