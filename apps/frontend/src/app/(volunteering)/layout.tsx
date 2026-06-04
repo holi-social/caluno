@@ -1,4 +1,6 @@
 import { DataProvider } from '@repo/data/react';
+import { Sparkle, Sparkles } from 'lucide-react';
+import Link from 'next/link';
 import type { ReactNode } from 'react';
 import { ProfileDropdown } from '@/components/navigation/profile-dropdown';
 import { VolunteerNav } from '@/components/navigation/volunteer-nav';
@@ -21,7 +23,9 @@ export default async function VolunteeringOrgLayout({
       <div className="flex min-h-screen flex-col">
         <header className="shrink border-b">
           <div className="container mx-auto px-4 flex items-center h-14 max-w-4xl">
-            <div className="flex-1 page-title">Clippy</div>
+            <Link className="flex-1 page-title flex align-top" href="/">
+              Clippy <Sparkles className="size-6 pl-2 text-yellow-400" />
+            </Link>
             <ProfileDropdown userName={user.name} userImage={user.image} />
           </div>
         </header>
