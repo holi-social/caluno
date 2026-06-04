@@ -2,19 +2,19 @@ import { Hash, User } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import { getDataClient } from '@/lib/data-client';
 
-export default async function CheckInPage() {
+export default async function QrIdPage() {
   const data = await getDataClient();
 
   const { checkInId, name } = await data.user.getMe();
   const easyReadCheckinId = checkInId.match(/.{1,4}/g)?.join('-') ?? checkInId;
 
-  const qrValue = `${process.env.NEXT_PUBLIC_BACKOFFICE_URL}/check-in/${checkInId}`;
+  const qrValue = `${process.env.NEXT_PUBLIC_BACKOFFICE_URL}/admin/check-in/${checkInId}`;
 
   return (
     <div className="max-w-2xl">
       <div>
         <div>
-          <h1 className="page-title">My QR iD</h1>
+          <h1 className="page-title">QR iD</h1>
           <p className="text-muted-foreground">
             This is your personal QR code to check-in to shifts
           </p>
