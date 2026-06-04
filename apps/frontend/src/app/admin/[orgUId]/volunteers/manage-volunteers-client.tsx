@@ -19,13 +19,14 @@ import {
   TabsList,
   TabsTrigger,
 } from '@repo/ui';
-import { LogIn } from 'lucide-react';
+import { LogIn, UserRound } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { ButtonClipboard } from '@/components/button-clipboard';
 import MembershipRequestCard from '@/domain/membership-requests/components/membership-request-card';
 import { organizationUnitUrl } from '@/domain/organization/share';
 import { EmptyVolunteers } from '@/domain/volunteer/empty-volunteers';
+import { useSheetTrigger } from '@/hooks/use-sheet';
 import { RoleSelectCell } from './role-select-cell';
 
 const TAB_APPROVED = 'APPROVED';
@@ -44,6 +45,7 @@ interface Props {
 
 function ApprovedTab({ orgUId }: { orgUId: string }) {
   const { data, isPending } = useMemberships(orgUId);
+  const { open: openVolunteerSheet } = useSheetTrigger('volunteer-profile');
 
   if (isPending) {
     return (
@@ -93,18 +95,36 @@ function ApprovedTab({ orgUId }: { orgUId: string }) {
                 />
               </TableCell>
               <TableCell>
-                <Link
-                  href={`/admin/${orgUId}/check-in/${membership.user.checkInId}/check-in`}
-                  aria-label="Check-in volunteer"
-                >
+                <div className="flex items-center gap-1">
                   <Button
                     size="icon-xs"
                     variant="outline"
-                    aria-label="Check-in the volunteer to a shift"
+                    aria-label="View volunteer profile"
+                    onClick={() =>
+                      openVolunteerSheet({
+                        userId: membership.user.id,
+                        volunteerName: membership.user.name,
+                        volunteerStatus: MembershipRequestStatus.Accepted,
+                        volunteerEmail: membership.user.email,
+                        volunteerCheckInId: membership.user.checkInId,
+                      })
+                    }
                   >
-                    <LogIn />
+                    <UserRound />
                   </Button>
-                </Link>
+                  <Link
+                    href={`/admin/${orgUId}/check-in/${membership.user.checkInId}/check-in`}
+                    aria-label="Check-in volunteer"
+                  >
+                    <Button
+                      size="icon-xs"
+                      variant="outline"
+                      aria-label="Check-in the volunteer to a shift"
+                    >
+                      <LogIn />
+                    </Button>
+                  </Link>
+                </div>
               </TableCell>
             </TableRow>
           ))}
