@@ -1,0 +1,170 @@
+'use client';
+
+import {
+  MembershipRequestStatus,
+  useAdminUserProfile,
+  useFormSubmissionsForVolunteer,
+} from '@repo/data/react';
+import {
+  Badge,
+  Separator,
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  Skeleton,
+} from '@repo/ui';
+import { ExternalLink } from 'lucide-react';
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
+import { useSheet } from '@/hooks/use-sheet';
+
+function statusVariant(
+  status: MembershipRequestStatus,
+): 'default' | 'secondary' | 'destructive' | 'outline' {
+  if (status === MembershipRequestStatus.Pending) return 'secondary';
+  if (status === MembershipRequestStatus.Rejected) return 'destructive';
+  return 'default';
+}
+
+function InfoRow({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex gap-2 text-sm">
+      <span className="text-muted-foreground w-24 shrink-0">{label}</span>
+      <span className="break-all">{value}</span>
+    </div>
+  );
+}
+
+function VolunteerSheetContent({
+  userId,
+  status,
+  email,
+  checkInId,
+  orgUId,
+}: {
+  userId: string;
+  name: string;
+  status: MembershipRequestStatus;
+  email: string;
+  checkInId: string;
+  orgUId: string;
+}) {
+  const { data: userProfile, isPending: profilePending } =
+    useAdminUserProfile(userId);
+  const { data: submissions, isPending: submissionsPending } =
+    useFormSubmissionsForVolunteer(userId);
+
+  const profileData = (userProfile?.data ?? {}) as Record<string, unknown>;
+  const address =
+    typeof profileData.address === 'string' ? profileData.address : null;
+  const birthday =
+    typeof profileData.birthday === 'string' ? profileData.birthday : null;
+
+  return (
+    <div className="flex flex-col gap-6 mt-4">
+      <div className="flex items-center gap-2">
+        <Badge variant={statusVariant(status)}>
+          {status.charAt(0) + status.slice(1).toLowerCase()}
+        </Badge>
+      </div>
+
+      <div>
+        <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-3">
+          User info
+        </p>
+        {profilePending ? (
+          <div className="space-y-2">
+            <Skeleton className="h-4 w-48" />
+            <Skeleton className="h-4 w-36" />
+          </div>
+        ) : (
+          <div className="space-y-2">
+            <InfoRow label="Email" value={email} />
+            {address && <InfoRow label="Address" value={address} />}
+            {birthday && <InfoRow label="Birthday" value={birthday} />}
+            <InfoRow label="QR ID" value={checkInId} />
+          </div>
+        )}
+      </div>
+
+      <Separator />
+
+      <div>
+        <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-3">
+          Submitted forms
+        </p>
+        {submissionsPending ? (
+          <div className="space-y-2">
+            <Skeleton className="h-9 w-full" />
+            <Skeleton className="h-9 w-full" />
+          </div>
+        ) : !submissions || submissions.length === 0 ? (
+          <p className="text-sm text-muted-foreground">
+            No submitted forms yet.
+          </p>
+        ) : (
+          <div className="space-y-2">
+            {submissions.map((submission) => (
+              <Link
+                key={submission.id}
+                href={`/admin/${orgUId}/volunteers/form-submission/${submission.id}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center justify-between rounded-md border px-3 py-2 text-sm hover:bg-accent transition-colors"
+              >
+                <span>{submission.form?.name ?? 'Form'}</span>
+                <ExternalLink className="h-4 w-4 text-muted-foreground shrink-0 ml-2" />
+              </Link>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+export function VolunteerSheet() {
+  const { isOpen, close, getParam } = useSheet(
+    'volunteer-profile',
+    'userId',
+    'volunteerName',
+    'volunteerStatus',
+    'volunteerEmail',
+    'volunteerCheckInId',
+  );
+
+  const userId = getParam('userId') ?? '';
+  const name = getParam('volunteerName') ?? '';
+  const status =
+    (getParam('volunteerStatus') as MembershipRequestStatus) ??
+    MembershipRequestStatus.Pending;
+  const email = getParam('volunteerEmail') ?? '';
+  const checkInId = getParam('volunteerCheckInId') ?? '';
+
+  const pathname = usePathname();
+  const orgUId = pathname.split('/')[2] ?? '';
+
+  return (
+    <Sheet open={isOpen} onOpenChange={(open) => !open && close()}>
+      <SheetContent className="flex flex-col w-full sm:max-w-md overflow-y-auto">
+        <SheetHeader className="px-6 pt-6">
+          <SheetTitle>{name || 'Volunteer'}</SheetTitle>
+        </SheetHeader>
+
+        <div className="px-6 pb-10 flex-1">
+          {isOpen && userId && (
+            <VolunteerSheetContent
+              userId={userId}
+              name={name}
+              status={status}
+              email={email}
+              checkInId={checkInId}
+              orgUId={orgUId}
+            />
+          )}
+        </div>
+      </SheetContent>
+    </Sheet>
+  );
+}
