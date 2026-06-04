@@ -1,6 +1,0 @@
----
-description: Frontend app – include CLAUDE.md when working in apps/frontend
-globs: apps/frontend/**
-alwaysApply: false
----
-@apps/frontend/CLAUDE.md
