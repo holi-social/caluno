@@ -146,7 +146,7 @@ export class FormBlockService {
 
     if (!(await this.isEditable(id))) {
       throw new ConflictGraphQLError(
-        'Cannot edit a locked block — it is used in a form with submissions',
+        'Cannot edit locked block, it is used in a form with submissions',
       );
     }
 
@@ -243,7 +243,7 @@ export class FormBlockService {
 
     if (!(await this.isEditable(blockId))) {
       throw new ConflictGraphQLError(
-        'Cannot edit a locked block — it is used in a form with submissions',
+        'Cannot edit locked block, it is used in a form with submissions',
       );
     }
 
@@ -288,7 +288,7 @@ export class FormBlockService {
 
     if (!(await this.isEditable(field.block.id))) {
       throw new ConflictGraphQLError(
-        'Cannot edit a locked block — it is used in a form with submissions',
+        'Cannot edit locked block, it is used in a form with submissions',
       );
     }
 
@@ -317,7 +317,7 @@ export class FormBlockService {
 
     if (!(await this.isEditable(field.block.id))) {
       throw new ConflictGraphQLError(
-        'Cannot edit a locked block — it is used in a form with submissions',
+        'Cannot edit locked block, it is used in a form with submissions',
       );
     }
 

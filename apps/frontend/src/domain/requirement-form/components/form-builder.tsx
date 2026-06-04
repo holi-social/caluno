@@ -191,7 +191,7 @@ export function FormBuilder({
                             </Button>
                           </span>
                         </TooltipTrigger>
-                        <TooltipContent>you can&apos;t edit</TooltipContent>
+                        <TooltipContent>Cannot edit, block in use in a submitted form</TooltipContent>
                       </Tooltip>
                     </TooltipProvider>
                   ) : (
