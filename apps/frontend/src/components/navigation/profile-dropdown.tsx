@@ -1,3 +1,5 @@
+'use client';
+
 import { Button, Popover, PopoverContent, PopoverTrigger } from '@repo/ui';
 import { Crown, SettingsIcon, UserIcon } from 'lucide-react';
 import Image from 'next/image';

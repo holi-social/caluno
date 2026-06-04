@@ -9,15 +9,14 @@ import {
   NotFoundGraphQLError,
 } from '../../graphql/errors';
 import type { PaginationInput } from '../../graphql/pagination.input';
+import { patch } from '../../shared/patch';
 import { CreateRequirementFormInput } from '../inputs/create-requirement-form.input';
 import { UpdateRequirementFormInput } from '../inputs/update-requirement-form.input';
 import type {
   RequirementFormEntity,
   RequirementFormInsert,
 } from '../schemas/requirement-form.schema';
-
 import { isUnitInOrg } from './is-unit-in-org';
-import { patch } from '../../shared/patch';
 
 @Injectable()
 export class RequirementFormService {
