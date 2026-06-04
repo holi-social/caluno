@@ -15,20 +15,12 @@ export function VolunteerFormWrapper({
   profileData?: Record<string, string>;
 }) {
   return (
-    <div className="space-y-6">
-      {!isMember && (
-        <div className="rounded-lg border bg-blue-50 p-4 text-sm text-blue-800">
-          By submitting this form you will send a membership request to{' '}
-          <strong>{orgName ?? form.name}</strong>. An admin will review and
-          approve your request.
-        </div>
-      )}
-      <VolunteerForm
-        form={form}
-        token={token}
-        isMember={isMember}
-        profileData={profileData}
-      />
-    </div>
+    <VolunteerForm
+      form={form}
+      token={token}
+      isMember={isMember}
+      orgName={orgName}
+      profileData={profileData}
+    />
   );
 }
