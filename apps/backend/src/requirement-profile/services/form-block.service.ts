@@ -3,13 +3,13 @@ import { count, desc, eq, inArray } from 'drizzle-orm';
 import type { Database } from '../../database/database.module';
 import { DATABASE_CONNECTION } from '../../database/database-connection';
 import * as schema from '../../database/schema';
-import { patch } from '../../shared/patch';
 import {
   BadRequestGraphQLError,
   ConflictGraphQLError,
   NotFoundGraphQLError,
 } from '../../graphql/errors';
 import type { PaginationInput } from '../../graphql/pagination.input';
+import { patch } from '../../shared/patch';
 import { SYSTEM_PROFILE_KEYS } from '../constants';
 import { CreateFormBlockInput } from '../inputs/create-form-block.input';
 import { CreateFormBlockFieldInput } from '../inputs/create-form-block-field.input';
@@ -144,6 +144,12 @@ export class FormBlockService {
 
     await isUnitInOrg(this.db, organizationUnitId, existing.organizationId);
 
+    if (!(await this.isEditable(id))) {
+      throw new ConflictGraphQLError(
+        'Cannot edit a locked block — it is used in a form with submissions',
+      );
+    }
+
     if (input.title && input.title !== existing.title) {
       const conflict = await this.db.query.formBlocks.findFirst({
         where: { organizationId: existing.organizationId, title: input.title },
@@ -235,6 +241,12 @@ export class FormBlockService {
 
     await isUnitInOrg(this.db, organizationUnitId, block.organizationId);
 
+    if (!(await this.isEditable(blockId))) {
+      throw new ConflictGraphQLError(
+        'Cannot edit a locked block — it is used in a form with submissions',
+      );
+    }
+
     const maxOrder = await this.db
       .select({ maxOrder: schema.formBlockFields.fieldOrder })
       .from(schema.formBlockFields)
@@ -274,6 +286,12 @@ export class FormBlockService {
 
     await isUnitInOrg(this.db, organizationUnitId, field.block.organizationId);
 
+    if (!(await this.isEditable(field.block.id))) {
+      throw new ConflictGraphQLError(
+        'Cannot edit a locked block — it is used in a form with submissions',
+      );
+    }
+
     await this.db
       .update(schema.formBlockFields)
       .set({ ...patch(input), updatedAt: new Date() })
@@ -296,6 +314,12 @@ export class FormBlockService {
     }
 
     await isUnitInOrg(this.db, organizationUnitId, field.block.organizationId);
+
+    if (!(await this.isEditable(field.block.id))) {
+      throw new ConflictGraphQLError(
+        'Cannot edit a locked block — it is used in a form with submissions',
+      );
+    }
 
     await this.db
       .delete(schema.formBlockFields)
