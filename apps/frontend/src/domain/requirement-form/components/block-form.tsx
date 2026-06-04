@@ -34,29 +34,54 @@ import { saveBlock } from '../actions';
 import { OptionsEditor } from './options-editor';
 
 const SYSTEM_PRESETS = [
-  { key: 'name',           label: 'First name',     type: FieldType.Name,     required: true  },
-  { key: 'lastname',       label: 'Last name',      type: FieldType.Lastname, required: true  },
-  { key: 'preferred-name', label: 'Preferred name', type: FieldType.Text,     required: false },
-  { key: 'email',          label: 'Email address',  type: FieldType.Email,    required: true  },
-  { key: 'phone',          label: 'Phone number',   type: FieldType.Phone,    required: false },
-  { key: 'address',        label: 'Address',        type: FieldType.Text,     required: false },
-  { key: 'zip',            label: 'ZIP code',       type: FieldType.Zip,      required: false },
-  { key: 'city',           label: 'City',           type: FieldType.Text,     required: false },
-  { key: 'birth-date',     label: 'Birth date',     type: FieldType.Date,     required: false },
-  { key: 'gender',         label: 'Gender',         type: FieldType.Text,     required: false },
+  { key: 'name', label: 'First name', type: FieldType.Name, required: true },
+  {
+    key: 'lastname',
+    label: 'Last name',
+    type: FieldType.Lastname,
+    required: true,
+  },
+  {
+    key: 'preferred-name',
+    label: 'Preferred name',
+    type: FieldType.Text,
+    required: false,
+  },
+  {
+    key: 'email',
+    label: 'Email address',
+    type: FieldType.Email,
+    required: true,
+  },
+  {
+    key: 'phone',
+    label: 'Phone number',
+    type: FieldType.Phone,
+    required: false,
+  },
+  { key: 'address', label: 'Address', type: FieldType.Text, required: false },
+  { key: 'zip', label: 'ZIP code', type: FieldType.Zip, required: false },
+  { key: 'city', label: 'City', type: FieldType.Text, required: false },
+  {
+    key: 'birth-date',
+    label: 'Birth date',
+    type: FieldType.Date,
+    required: false,
+  },
+  { key: 'gender', label: 'Gender', type: FieldType.Text, required: false },
 ] as const;
 
 const CUSTOM_FIELD_TYPES = [
-  { value: FieldType.Text,         label: 'Text (short)' },
-  { value: FieldType.Textarea,     label: 'Text (long)' },
-  { value: FieldType.Email,        label: 'Email' },
-  { value: FieldType.Phone,        label: 'Phone' },
-  { value: FieldType.Numbers,      label: 'Number' },
-  { value: FieldType.Date,         label: 'Date' },
+  { value: FieldType.Text, label: 'Text (short)' },
+  { value: FieldType.Textarea, label: 'Text (long)' },
+  { value: FieldType.Email, label: 'Email' },
+  { value: FieldType.Phone, label: 'Phone' },
+  { value: FieldType.Numbers, label: 'Number' },
+  { value: FieldType.Date, label: 'Date' },
   { value: FieldType.SingleChoice, label: 'Single choice' },
-  { value: FieldType.MultiChoice,  label: 'Multi choice' },
-  { value: FieldType.Checkbox,     label: 'Checkbox' },
-  { value: FieldType.StaticText,   label: 'Static text' },
+  { value: FieldType.MultiChoice, label: 'Multi choice' },
+  { value: FieldType.Checkbox, label: 'Checkbox' },
+  { value: FieldType.StaticText, label: 'Static text' },
 ] as const;
 
 interface BlockFormFieldInput {
@@ -312,7 +337,7 @@ export function BlockForm({
             canMoveDown={index < fields.length - 1}
             fieldType={watchedFields[index]?.type}
             currentRequired={watchedFields[index]?.required ?? false}
-            isSystemField={!!(watchedFields[index]?.systemKey)}
+            isSystemField={!!watchedFields[index]?.systemKey}
             lockType={watchedFields[index]?.lockType ?? false}
             onToggleRequired={(next) =>
               setValue(`fields.${index}.required`, next, { shouldDirty: true })
@@ -323,11 +348,16 @@ export function BlockForm({
 
         {!readOnly && (
           <div className="space-y-2 pt-1">
-            <div className="flex flex-wrap gap-2">
+            <div className="flex gap-4">
               {/* Field type picker */}
               <Popover open={fieldPickerOpen} onOpenChange={setFieldPickerOpen}>
                 <PopoverTrigger asChild>
-                  <Button type="button" variant="outline">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="lg"
+                    className="flex-1"
+                  >
                     <Plus className="mr-2 size-4" />
                     Add field
                   </Button>
@@ -358,6 +388,8 @@ export function BlockForm({
                   <Button
                     type="button"
                     variant="outline"
+                    size="lg"
+                    className="flex-1"
                     disabled={availablePresets.length === 0}
                   >
                     <UserCircle2 className="mr-2 size-4" />
@@ -392,10 +424,11 @@ export function BlockForm({
             </div>
 
             {/* Document shortcut */}
-            <div>
+            <div className="flex justify-center">
               <Button
                 type="button"
                 variant="outline"
+                size="lg"
                 onClick={() =>
                   appendCustomField(FieldType.DocumentAcknowledgement)
                 }
