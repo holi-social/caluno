@@ -84,6 +84,24 @@ const CUSTOM_FIELD_TYPES = [
   { value: FieldType.StaticText, label: 'Static text' },
 ] as const;
 
+const FIELD_TYPE_LABELS: Record<FieldType, string> = {
+  [FieldType.Text]: 'Text (short)',
+  [FieldType.Textarea]: 'Text (long)',
+  [FieldType.Email]: 'Email',
+  [FieldType.Phone]: 'Phone',
+  [FieldType.Numbers]: 'Number',
+  [FieldType.Date]: 'Date',
+  [FieldType.SingleChoice]: 'Single choice',
+  [FieldType.MultiChoice]: 'Multi choice',
+  [FieldType.Checkbox]: 'Checkbox',
+  [FieldType.StaticText]: 'Static text',
+  [FieldType.DocumentAcknowledgement]: 'Document acknowledgement',
+  [FieldType.Name]: 'First name',
+  [FieldType.Lastname]: 'Last name',
+  [FieldType.Zip]: 'ZIP code',
+  [FieldType.Iban]: 'IBAN',
+};
+
 interface BlockFormFieldInput {
   id?: string;
   type: FieldType;
@@ -564,31 +582,37 @@ function FieldCard({
           <FieldLabel>
             Type <span className="text-destructive">*</span>
           </FieldLabel>
-          <Controller
-            control={control}
-            name={`fields.${index}.type`}
-            render={({ field }) => (
-              <Select
-                value={field.value}
-                onValueChange={field.onChange}
-                disabled={readOnly || lockType}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select type" />
-                </SelectTrigger>
-                <SelectContent>
-                  {CUSTOM_FIELD_TYPES.map((t) => (
-                    <SelectItem key={t.value} value={t.value}>
-                      {t.label}
+          {lockType && fieldType ? (
+            <div className="border-input bg-muted/50 text-muted-foreground flex h-9 w-full items-center rounded-md border px-3 text-sm">
+              {FIELD_TYPE_LABELS[fieldType] ?? fieldType}
+            </div>
+          ) : (
+            <Controller
+              control={control}
+              name={`fields.${index}.type`}
+              render={({ field }) => (
+                <Select
+                  value={field.value}
+                  onValueChange={field.onChange}
+                  disabled={readOnly}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {CUSTOM_FIELD_TYPES.map((t) => (
+                      <SelectItem key={t.value} value={t.value}>
+                        {t.label}
+                      </SelectItem>
+                    ))}
+                    <SelectItem value={FieldType.DocumentAcknowledgement}>
+                      Document acknowledgement
                     </SelectItem>
-                  ))}
-                  <SelectItem value={FieldType.DocumentAcknowledgement}>
-                    Document Acknowledgement
-                  </SelectItem>
-                </SelectContent>
-              </Select>
-            )}
-          />
+                  </SelectContent>
+                </Select>
+              )}
+            />
+          )}
         </Field>
 
         <Field>

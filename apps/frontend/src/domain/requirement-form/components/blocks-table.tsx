@@ -14,6 +14,7 @@ import {
 import { Eye, Loader2, Pencil, Trash2 } from 'lucide-react';
 import { useTransition } from 'react';
 import { DeleteAlertDialog } from '@/components/delete-alert-dialog';
+import { FormattedDate } from '@/components/formatted-date';
 import { useSheetTrigger } from '@/hooks/use-sheet';
 
 function BlockActions({
@@ -136,7 +137,7 @@ export function BlocksTable({
                   )}
                 </TableCell>
                 <TableCell className="text-muted-foreground whitespace-nowrap">
-                  {new Date(block.updatedAt).toLocaleDateString()}
+                  <FormattedDate date={block.updatedAt} />
                 </TableCell>
                 <TableCell>
                   <BlockActions block={block} onDelete={onDelete} />
