@@ -41,7 +41,7 @@ export default function HomePage() {
             <CardFooter>
               <Button
                 className="w-full"
-                onClick={() => router.push('/create-organization')}
+                onClick={() => router.push('/admin/create-organization')}
               >
                 Get started
               </Button>
