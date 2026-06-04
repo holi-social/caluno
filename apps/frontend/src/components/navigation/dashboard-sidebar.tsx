@@ -21,7 +21,6 @@ import {
   ClockIcon,
   LogOutIcon,
   NetworkIcon,
-  ScanFace,
   ScanQrCode,
   SettingsIcon,
   ShieldIcon,
@@ -106,11 +105,6 @@ export function DashboardSidebar({ permissions }: DashboardSidebarProps) {
         href: `/admin/${orgUId}/settings/org-units`,
         icon: NetworkIcon,
         permission: PermissionKey.OrgView,
-      },
-      {
-        title: 'QR iD',
-        href: `/admin/${orgUId}/me/id`,
-        icon: ScanFace,
       },
     ].filter((item) => !item.permission || permissionSet.has(item.permission));
   }, [orgUId, permissionSet]);
