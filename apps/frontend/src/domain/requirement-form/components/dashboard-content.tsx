@@ -71,8 +71,8 @@ export function DashboardContent({
 
   return (
     <Tabs value={tab} onValueChange={setTab} suppressHydrationWarning>
-      <div className="grid grid-cols-3 items-center gap-3">
-        <div />
+      <div className="flex flex-col gap-3 lg:grid lg:grid-cols-3 lg:items-center">
+        <div className="hidden lg:block" />
         <div className="flex justify-center">
           <TabsList className="h-12!">
             <TabsTrigger value="forms" className="rounded-xl px-9 text-base">
@@ -83,14 +83,14 @@ export function DashboardContent({
             </TabsTrigger>
           </TabsList>
         </div>
-        <div className="flex justify-end">
+        <div className="flex lg:justify-end">
           {tab === 'forms' ? (
-            <Button size="lg" onClick={() => setCreateFormOpen(true)}>
+            <Button size="lg" className="w-full lg:w-auto" onClick={() => setCreateFormOpen(true)}>
               <Plus className="mr-2 size-5" />
               Create Form
             </Button>
           ) : (
-            <CreateBlockButton size="lg" />
+            <CreateBlockButton size="lg" className="w-full lg:w-auto" />
           )}
         </div>
       </div>
@@ -113,7 +113,7 @@ export function DashboardContent({
                 No forms match the current filters.
               </p>
             ) : (
-              <div className="mt-4 grid grid-cols-2 gap-4">
+              <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
                 {visibleForms.map((f) => (
                   <FormCard
                     key={f.id}
@@ -148,7 +148,7 @@ export function DashboardContent({
                 No blocks match the current filters.
               </p>
             ) : (
-              <div className="mt-4 grid grid-cols-2 gap-4">
+              <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
                 {visibleBlocks.map((b) => (
                   <BlockCard
                     key={b.id}
