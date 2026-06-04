@@ -1,5 +1,5 @@
-import { createSafeActionClient } from 'next-safe-action';
 import { DataError } from '@repo/data';
+import { createSafeActionClient } from 'next-safe-action';
 
 export const actionClient = createSafeActionClient({
   handleServerError(e) {

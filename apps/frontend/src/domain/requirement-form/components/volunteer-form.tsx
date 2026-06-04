@@ -73,11 +73,9 @@ function buildFieldSchema(
           .string()
           .min(1, `${label} is required`)
           .regex(NUM_RE, `${label} must be a number`)
-      : z
-          .string()
-          .refine((v) => !v || NUM_RE.test(v), {
-            message: `${label} must be a number`,
-          });
+      : z.string().refine((v) => !v || NUM_RE.test(v), {
+          message: `${label} must be a number`,
+        });
   }
 
   if (type === FieldType.Date) {
@@ -85,14 +83,12 @@ function buildFieldSchema(
       ? z
           .string()
           .min(1, `${label} is required`)
-          .refine((v) => !isNaN(Date.parse(v)), {
+          .refine((v) => !Number.isNaN(Date.parse(v)), {
             message: `${label} must be a valid date`,
           })
-      : z
-          .string()
-          .refine((v) => !v || !Number.isNaN(Date.parse(v)), {
-            message: `${label} must be a valid date`,
-          });
+      : z.string().refine((v) => !v || !Number.isNaN(Date.parse(v)), {
+          message: `${label} must be a valid date`,
+        });
     if (minAge != null) {
       s = s.refine(
         (v) => {
@@ -122,11 +118,9 @@ function buildFieldSchema(
           .min(1, `${label} is required`)
           .regex(EMAIL_RE, `${label} must be a valid email`)
           .max(254)
-      : z
-          .string()
-          .refine((v) => !v || (EMAIL_RE.test(v) && v.length <= 254), {
-            message: `${label} must be a valid email`,
-          });
+      : z.string().refine((v) => !v || (EMAIL_RE.test(v) && v.length <= 254), {
+          message: `${label} must be a valid email`,
+        });
   }
 
   if (type === FieldType.Phone) {
@@ -135,11 +129,9 @@ function buildFieldSchema(
           .string()
           .min(1, `${label} is required`)
           .regex(PHONE_RE, `${label} must be a valid phone number`)
-      : z
-          .string()
-          .refine((v) => !v || PHONE_RE.test(v), {
-            message: `${label} must be a valid phone number`,
-          });
+      : z.string().refine((v) => !v || PHONE_RE.test(v), {
+          message: `${label} must be a valid phone number`,
+        });
   }
 
   if (type === FieldType.SingleChoice) {

@@ -11,7 +11,7 @@ import {
   TableHeader,
   TableRow,
 } from '@repo/ui';
-import { Lock, Loader2, Pencil, Share2, Trash2, Users } from 'lucide-react';
+import { Loader2, Lock, Pencil, Share2, Trash2, Users } from 'lucide-react';
 import Link from 'next/link';
 import { useTransition } from 'react';
 import { DeleteAlertDialog } from '@/components/delete-alert-dialog';
