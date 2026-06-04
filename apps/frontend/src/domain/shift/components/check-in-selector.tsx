@@ -30,7 +30,7 @@ export const CheckInSelector = ({
 
   const handleCheckin = (checkInId: string | null) => {
     if (checkInId)
-      router.push(`/${organizationUnitId}/check-in/${checkInId}/decide`);
+      router.push(`/admin/${organizationUnitId}/check-in/${checkInId}/decide`);
   };
 
   return (

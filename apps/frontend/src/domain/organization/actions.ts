@@ -57,5 +57,5 @@ export async function createOrganization(
     };
   }
 
-  redirect(`/${org.root.id}`);
+  redirect(`/admin/${org.root.id}`);
 }

@@ -50,7 +50,7 @@ export function ShiftsTable({ shifts, orgUId }: ShiftsTableProps) {
                 <TableCell>
                   <Link
                     className="hover:underline block"
-                    href={`/${orgUId}/shifts/${shift.id}`}
+                    href={`/admin/${orgUId}/shifts/${shift.id}`}
                   >
                     {shift.title}
                   </Link>

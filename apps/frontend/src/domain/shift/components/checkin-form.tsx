@@ -8,7 +8,7 @@ import { useRouter } from 'next/navigation';
 
 import { useState, useTransition } from 'react';
 import { toast } from 'sonner';
-import type { CheckInStatus } from '@/app/(dashboard)/[orgUId]/check-in/[checkInId]/check-in/page';
+import type { CheckInStatus } from '@/app/admin/[orgUId]/check-in/[checkInId]/check-in/page';
 import { createTimeEntry } from '@/domain/time-entry/actions';
 import { ShiftSelectorCard } from './shift-selector-card';
 
@@ -55,7 +55,7 @@ export const CheckinForm = ({
         // TODO: prolly need a prompt, so they get clearer confirmation that the volunteer was checked and then they can move on to checking in another,
         // or not. DO we block them and ask for a click or just take them to check-in again ?
         toast.success('Volunteer checked-in');
-        router.push(`/${organizationUnitId}/check-in/scan`);
+        router.push(`/admin/${organizationUnitId}/check-in/scan`);
       }
     });
   };

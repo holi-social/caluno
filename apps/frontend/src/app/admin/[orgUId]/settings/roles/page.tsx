@@ -31,7 +31,7 @@ export default async function RolesPage({ params }: RolesPageProps) {
         </div>
         {canEdit && (
           <Button asChild>
-            <Link href={`/${orgUId}/settings/roles/new`}>
+            <Link href={`/admin/${orgUId}/settings/roles/new`}>
               <PlusIcon />
               Create Role
             </Link>

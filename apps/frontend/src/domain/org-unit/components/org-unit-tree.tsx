@@ -101,7 +101,7 @@ function OrgUnitNodeItem({
               aria-label="Visit org unit"
               onClick={(e) => {
                 e.stopPropagation();
-                router.push(`/${node.id}`);
+                router.push(`/admin/${node.id}`);
               }}
             >
               <EyeIcon />

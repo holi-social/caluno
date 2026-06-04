@@ -47,7 +47,9 @@ export function CreateForm({ orgUId, organizationId }: CreateFormProps) {
       if (result?.serverError) {
         toast.error(result.serverError);
       } else if (result?.data?.id) {
-        router.push(`/${orgUId}/requirement-forms/${result.data.id}/builder`);
+        router.push(
+          `/admin/${orgUId}/requirement-forms/${result.data.id}/builder`,
+        );
       } else {
         toast.error('Failed to create form');
       }
@@ -90,7 +92,7 @@ export function CreateForm({ orgUId, organizationId }: CreateFormProps) {
           type="button"
           variant="outline"
           disabled={isPending}
-          onClick={() => router.push(`/${orgUId}/requirement-forms`)}
+          onClick={() => router.push(`/admin/${orgUId}/requirement-forms`)}
         >
           Cancel
         </Button>

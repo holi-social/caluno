@@ -46,7 +46,7 @@ export const TimesheetsTable = ({
               <TableCell>
                 <Link
                   className="hover:underline block"
-                  href={`/${organizationUnitId}/timesheets/${entry.id}`}
+                  href={`/admin/${organizationUnitId}/timesheets/${entry.id}`}
                 >
                   {entry.shiftInstance?.master?.title ?? 'N/A'}
                 </Link>

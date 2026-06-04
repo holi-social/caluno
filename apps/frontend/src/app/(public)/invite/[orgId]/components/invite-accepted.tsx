@@ -22,7 +22,7 @@ export function InviteAccepted({ orgName, orgUId }: InviteAcceptedProps) {
         </CardHeader>
         <CardContent className="flex justify-center">
           <Button asChild>
-            <Link href={`/${orgUId}`}>Go to {orgName}</Link>
+            <Link href={`/admin/${orgUId}`}>Go to {orgName}</Link>
           </Button>
         </CardContent>
       </Card>

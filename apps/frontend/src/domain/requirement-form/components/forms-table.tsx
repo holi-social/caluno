@@ -48,12 +48,14 @@ function FormActions({
         <Share2 />
       </Button>
       <Button size="icon-xs" variant="outline" aria-label="Edit form" asChild>
-        <Link href={`/${orgUId}/requirement-forms/${form.id}/builder`}>
+        <Link href={`/admin/${orgUId}/requirement-forms/${form.id}/builder`}>
           <Pencil />
         </Link>
       </Button>
       <Button size="icon-xs" variant="outline" aria-label="Submissions" asChild>
-        <Link href={`/${orgUId}/requirement-forms/${form.id}/submissions`}>
+        <Link
+          href={`/admin/${orgUId}/requirement-forms/${form.id}/submissions`}
+        >
           <Users />
         </Link>
       </Button>
@@ -124,7 +126,7 @@ export function FormsTable({
                 <TableCell>
                   <Link
                     className="hover:underline font-medium"
-                    href={`/${orgUId}/requirement-forms/${form.id}/builder`}
+                    href={`/admin/${orgUId}/requirement-forms/${form.id}/builder`}
                   >
                     {form.name}
                   </Link>

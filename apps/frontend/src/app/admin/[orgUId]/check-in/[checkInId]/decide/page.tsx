@@ -21,8 +21,8 @@ export default async function DecidePage({ params }: CheckinPageProps) {
   const hasOpenTimeEntries = timeEntries.items.some((entry) => !entry.endedAt);
 
   if (hasOpenTimeEntries) {
-    redirect(`/${orgUId}/check-in/${checkInId}/check-out`);
+    redirect(`/admin/${orgUId}/check-in/${checkInId}/check-out`);
   } else {
-    redirect(`/${orgUId}/check-in/${checkInId}/check-in`);
+    redirect(`/admin/${orgUId}/check-in/${checkInId}/check-in`);
   }
 }

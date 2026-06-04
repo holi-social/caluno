@@ -17,7 +17,7 @@ export default async function Home() {
   if (lastorgUId) {
     const hasAccess = orgs.some((org) => org.id === lastorgUId);
     if (hasAccess) {
-      redirect(`/${lastorgUId}`);
+      redirect(`/admin/${lastorgUId}`);
     }
   }
 

@@ -49,7 +49,7 @@ export default async function ShiftsPage({
           {result.pagination.total > ITEMS_PER_PAGE && (
             <Pagination
               pagination={result.pagination}
-              url={`/${orgUId}/shifts`}
+              url={`/admin/${orgUId}/shifts`}
               currentPage={currentPage}
               name="shifts"
             />

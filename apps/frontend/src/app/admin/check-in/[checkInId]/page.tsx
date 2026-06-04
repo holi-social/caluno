@@ -25,14 +25,16 @@ export default async function CheckInPage({ params }: CheckInPageProps) {
 
   if (lastVisitedOrganizationId) {
     return redirect(
-      `/${lastVisitedOrganizationId}/check-in/${checkInId}/decide`,
+      `/admin/${lastVisitedOrganizationId}/check-in/${checkInId}/decide`,
     );
   }
 
   const organizations = await getMyAccessibleOrganizationUnits();
 
   if (organizations.length === 1) {
-    return redirect(`/${organizations[0]?.id}/check-in/${checkInId}/decide`);
+    return redirect(
+      `/admin/${organizations[0]?.id}/check-in/${checkInId}/decide`,
+    );
   }
 
   return (
@@ -48,7 +50,7 @@ export default async function CheckInPage({ params }: CheckInPageProps) {
           {organizations.map((o) => (
             <Link
               key={o.id}
-              href={`/${o.id}/check-in/${checkInId}/decide`}
+              href={`/admin/${o.id}/check-in/${checkInId}/decide`}
               className="flex gap-4 items-center text-xl"
             >
               {o.name}

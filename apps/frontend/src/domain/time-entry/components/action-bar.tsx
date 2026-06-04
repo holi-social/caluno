@@ -52,7 +52,7 @@ export const ActionBar = ({
         toast.error(`Failed to delete time entry. ${result.serverError}`);
       } else {
         toast.success('Time entry deleted');
-        router.push(`/${organizationUnitId}/timesheets`);
+        router.push(`/admin/${organizationUnitId}/timesheets`);
       }
     });
   };
@@ -71,7 +71,7 @@ export const ActionBar = ({
         </Button>
       )}
 
-      <Link href={`/${organizationUnitId}/timesheets/${id}/edit`}>
+      <Link href={`/admin/${organizationUnitId}/timesheets/${id}/edit`}>
         <Button
           size={buttonSize}
           variant="outline"
