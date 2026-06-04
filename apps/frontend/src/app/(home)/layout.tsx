@@ -6,7 +6,7 @@ import {
   SidebarTrigger,
 } from '@repo/ui';
 import type { ReactNode } from 'react';
-import { HomeSidebar } from '@/components/home-sidebar';
+import { HomeSidebar } from '@/components/navigation/home-sidebar';
 import { PageTitle } from '@/components/page-title';
 import { requireAuth } from '@/lib/auth-server';
 import { GRAPHQL_API_URL } from '@/lib/constants';
