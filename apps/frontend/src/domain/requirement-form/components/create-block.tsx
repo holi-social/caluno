@@ -50,7 +50,7 @@ export function CreateBlock({ orgUId, organizationId }: CreateBlockProps) {
         toast.error(result.serverError);
       } else if (result?.data?.id) {
         router.push(
-          `/${orgUId}/requirement-forms/blocks/${result.data.id}/edit`,
+          `/admin/${orgUId}/requirement-forms/blocks/${result.data.id}/edit`,
         );
       } else {
         toast.error('Failed to create block');
@@ -107,7 +107,9 @@ export function CreateBlock({ orgUId, organizationId }: CreateBlockProps) {
           type="button"
           variant="outline"
           disabled={isPending}
-          onClick={() => router.push(`/${orgUId}/requirement-forms/blocks`)}
+          onClick={() =>
+            router.push(`/admin/${orgUId}/requirement-forms/blocks`)
+          }
         >
           Cancel
         </Button>

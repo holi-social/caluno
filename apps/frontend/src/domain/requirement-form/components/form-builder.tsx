@@ -2,12 +2,17 @@
 
 import type { FormBlock, RequirementForm } from '@repo/data';
 import {
+  Badge,
   Button,
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
+  Separator,
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
 } from '@repo/ui';
 import {
   AlertTriangle,
@@ -15,6 +20,7 @@ import {
   ArrowUp,
   Copy,
   Edit3,
+  Eye,
   Plus,
   Save,
   Trash2,
@@ -71,7 +77,7 @@ export function FormBuilder({
     setBlockRefs([
       ...blockRefs,
       {
-        id: `temp-${Date.now()}`,
+        id: `temp-${crypto.randomUUID()}`,
         formId: form.id,
         blockId,
         fieldOrder: blockRefs.length,
@@ -175,19 +181,38 @@ export function FormBuilder({
                       </Button>
                     </>
                   )}
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() =>
-                      openBlockSheet({
-                        id: block.id,
-                        ...(hasSubmissions && { readOnly: 'true' }),
-                      })
-                    }
-                    title={hasSubmissions ? 'View block' : 'Edit block'}
-                  >
-                    <Edit3 className="h-4 w-4" />
-                  </Button>
+                  {!block.isEditable && !hasSubmissions ? (
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <span>
+                            <Button variant="ghost" size="icon" disabled>
+                              <Edit3 className="h-4 w-4" />
+                            </Button>
+                          </span>
+                        </TooltipTrigger>
+                        <TooltipContent>Cannot edit, block in use in a submitted form</TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  ) : (
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() =>
+                        openBlockSheet({
+                          id: block.id,
+                          ...(hasSubmissions && { readOnly: 'true' }),
+                        })
+                      }
+                      title={hasSubmissions ? 'View block' : 'Edit block'}
+                    >
+                      {hasSubmissions ? (
+                        <Eye className="h-4 w-4" />
+                      ) : (
+                        <Edit3 className="h-4 w-4" />
+                      )}
+                    </Button>
+                  )}
                 </div>
               </div>
               <div className="space-y-2">
@@ -211,62 +236,105 @@ export function FormBuilder({
         })}
 
         {!hasSubmissions && (
-          <div className="flex gap-2">
-            <Dialog open={addBlockOpen} onOpenChange={setAddBlockOpen}>
-              <DialogTrigger asChild>
-                <Button variant="outline">
-                  <Plus className="mr-2 h-4 w-4" />
-                  Add Existing Block
-                </Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Add Block</DialogTitle>
-                </DialogHeader>
-                <div className="space-y-2 max-h-[60vh] overflow-y-auto">
-                  {availableBlocks
+          <Dialog open={addBlockOpen} onOpenChange={setAddBlockOpen}>
+            <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-xl">
+              <DialogHeader>
+                <DialogTitle className="text-xl">Add block</DialogTitle>
+                <p className="text-muted-foreground text-sm">
+                  Select an existing block or create a new one
+                </p>
+              </DialogHeader>
+              <div className="grid gap-3 pt-2">
+                {availableBlocks.filter((b) => !usedBlockIds.has(b.id)).length >
+                0 ? (
+                  availableBlocks
                     .filter((b) => !usedBlockIds.has(b.id))
                     .map((block) => (
                       <button
                         type="button"
                         key={block.id}
-                        className="w-full rounded-lg border p-3 text-left hover:bg-muted transition-colors"
+                        className="hover:border-primary hover:bg-accent cursor-pointer rounded-xl border p-4 text-left transition-colors"
                         onClick={() => handleAddExistingBlock(block.id)}
                       >
-                        <div className="font-medium">{block.title}</div>
-                        <div className="text-sm text-muted-foreground">
-                          {block.fields?.length ?? 0} fields
+                        <p className="text-base font-semibold">{block.title}</p>
+                        {block.description && (
+                          <p className="text-muted-foreground mt-0.5 text-sm">
+                            {block.description}
+                          </p>
+                        )}
+                        <div className="mt-1.5 flex flex-wrap gap-1.5">
+                          {block.fields?.map((f) => (
+                            <Badge
+                              key={f.id}
+                              variant="secondary"
+                              className="text-sm"
+                            >
+                              {f.label}
+                            </Badge>
+                          ))}
+                          {(block.fields?.length ?? 0) === 0 && (
+                            <span className="text-muted-foreground text-sm">
+                              No fields
+                            </span>
+                          )}
                         </div>
                       </button>
-                    ))}
-                  {availableBlocks.filter((b) => !usedBlockIds.has(b.id))
-                    .length === 0 && (
-                    <p className="text-sm text-muted-foreground text-center py-4">
-                      No available blocks. Create a new one below.
-                    </p>
-                  )}
-                </div>
-              </DialogContent>
-            </Dialog>
+                    ))
+                ) : (
+                  <p className="text-muted-foreground py-4 text-center text-sm">
+                    All blocks are already in use
+                  </p>
+                )}
 
-            <Button variant="outline" onClick={() => openBlockSheet()}>
-              <Plus className="mr-2 h-4 w-4" />
-              Create Block
-            </Button>
-          </div>
+                <Separator />
+
+                <button
+                  type="button"
+                  className="hover:border-primary hover:bg-accent flex cursor-pointer items-center justify-center gap-2 rounded-xl border border-dashed p-4 transition-colors"
+                  onClick={() => {
+                    setAddBlockOpen(false);
+                    openBlockSheet();
+                  }}
+                >
+                  <Plus className="text-muted-foreground size-5" />
+                  <span className="text-muted-foreground text-base font-semibold">
+                    Create new block
+                  </span>
+                </button>
+              </div>
+            </DialogContent>
+          </Dialog>
         )}
 
-        <div className="flex items-center justify-between pt-4">
-          <Button variant="outline" onClick={handleCopyShareLink}>
-            <Copy className="mr-2 h-4 w-4" />
-            Copy Share Link
-          </Button>
+        <div className="space-y-2 pt-4">
           {!hasSubmissions && (
-            <Button onClick={handleSave} disabled={saving}>
-              <Save className="mr-2 h-4 w-4" />
-              {saving ? 'Saving...' : 'Save Form'}
-            </Button>
+            <div className="flex gap-4">
+              <Button
+                size="lg"
+                onClick={handleSave}
+                disabled={saving}
+                className="flex-1"
+              >
+                <Save className="mr-2 h-4 w-4" />
+                {saving ? 'Saving...' : 'Save Form'}
+              </Button>
+              <Button
+                size="lg"
+                variant="outline"
+                className="flex-1"
+                onClick={() => setAddBlockOpen(true)}
+              >
+                <Plus className="mr-2 h-4 w-4" />
+                Add Block
+              </Button>
+            </div>
           )}
+          <div className="flex justify-center">
+            <Button variant="outline" onClick={handleCopyShareLink}>
+              <Copy className="mr-2 h-4 w-4" />
+              Copy Share Link
+            </Button>
+          </div>
         </div>
       </div>
 

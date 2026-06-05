@@ -357,7 +357,7 @@ export class FormSubmissionService {
           throw new BadRequestGraphQLError(`"${label}": must be a number`);
         break;
       case FieldType.DATE:
-        if (isNaN(Date.parse(rawValue)))
+        if (Number.isNaN(Date.parse(rawValue)))
           throw new BadRequestGraphQLError(`"${label}": must be a valid date`);
         break;
       case FieldType.SINGLE_CHOICE: {

@@ -4,7 +4,7 @@ import Link from 'next/link';
 
 export const CreateTimeEntryButton = ({ orgUId }: { orgUId: string }) => {
   return (
-    <Link href={`/${orgUId}/timesheets/new`}>
+    <Link href={`/admin/${orgUId}/timesheets/new`}>
       <Button>
         <PlusIcon /> Add Time Entry
       </Button>

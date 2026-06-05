@@ -34,30 +34,73 @@ import { saveBlock } from '../actions';
 import { OptionsEditor } from './options-editor';
 
 const SYSTEM_PRESETS = [
-  { key: 'name',           label: 'First name',     type: FieldType.Name,     required: true  },
-  { key: 'lastname',       label: 'Last name',      type: FieldType.Lastname, required: true  },
-  { key: 'preferred-name', label: 'Preferred name', type: FieldType.Text,     required: false },
-  { key: 'email',          label: 'Email address',  type: FieldType.Email,    required: true  },
-  { key: 'phone',          label: 'Phone number',   type: FieldType.Phone,    required: false },
-  { key: 'address',        label: 'Address',        type: FieldType.Text,     required: false },
-  { key: 'zip',            label: 'ZIP code',       type: FieldType.Zip,      required: false },
-  { key: 'city',           label: 'City',           type: FieldType.Text,     required: false },
-  { key: 'birth-date',     label: 'Birth date',     type: FieldType.Date,     required: false },
-  { key: 'gender',         label: 'Gender',         type: FieldType.Text,     required: false },
+  { key: 'name', label: 'First name', type: FieldType.Name, required: true },
+  {
+    key: 'lastname',
+    label: 'Last name',
+    type: FieldType.Lastname,
+    required: true,
+  },
+  {
+    key: 'preferred-name',
+    label: 'Preferred name',
+    type: FieldType.Text,
+    required: false,
+  },
+  {
+    key: 'email',
+    label: 'Email address',
+    type: FieldType.Email,
+    required: true,
+  },
+  {
+    key: 'phone',
+    label: 'Phone number',
+    type: FieldType.Phone,
+    required: false,
+  },
+  { key: 'address', label: 'Address', type: FieldType.Text, required: false },
+  { key: 'zip', label: 'ZIP code', type: FieldType.Zip, required: false },
+  { key: 'city', label: 'City', type: FieldType.Text, required: false },
+  {
+    key: 'birth-date',
+    label: 'Birth date',
+    type: FieldType.Date,
+    required: false,
+  },
+  { key: 'gender', label: 'Gender', type: FieldType.Text, required: false },
 ] as const;
 
 const CUSTOM_FIELD_TYPES = [
-  { value: FieldType.Text,         label: 'Text (short)' },
-  { value: FieldType.Textarea,     label: 'Text (long)' },
-  { value: FieldType.Email,        label: 'Email' },
-  { value: FieldType.Phone,        label: 'Phone' },
-  { value: FieldType.Numbers,      label: 'Number' },
-  { value: FieldType.Date,         label: 'Date' },
+  { value: FieldType.Text, label: 'Text (short)' },
+  { value: FieldType.Textarea, label: 'Text (long)' },
+  { value: FieldType.Email, label: 'Email' },
+  { value: FieldType.Phone, label: 'Phone' },
+  { value: FieldType.Numbers, label: 'Number' },
+  { value: FieldType.Date, label: 'Date' },
   { value: FieldType.SingleChoice, label: 'Single choice' },
-  { value: FieldType.MultiChoice,  label: 'Multi choice' },
-  { value: FieldType.Checkbox,     label: 'Checkbox' },
-  { value: FieldType.StaticText,   label: 'Static text' },
+  { value: FieldType.MultiChoice, label: 'Multi choice' },
+  { value: FieldType.Checkbox, label: 'Checkbox' },
+  { value: FieldType.StaticText, label: 'Static text' },
 ] as const;
+
+const FIELD_TYPE_LABELS: Record<FieldType, string> = {
+  [FieldType.Text]: 'Text (short)',
+  [FieldType.Textarea]: 'Text (long)',
+  [FieldType.Email]: 'Email',
+  [FieldType.Phone]: 'Phone',
+  [FieldType.Numbers]: 'Number',
+  [FieldType.Date]: 'Date',
+  [FieldType.SingleChoice]: 'Single choice',
+  [FieldType.MultiChoice]: 'Multi choice',
+  [FieldType.Checkbox]: 'Checkbox',
+  [FieldType.StaticText]: 'Static text',
+  [FieldType.DocumentAcknowledgement]: 'Document acknowledgement',
+  [FieldType.Name]: 'First name',
+  [FieldType.Lastname]: 'Last name',
+  [FieldType.Zip]: 'ZIP code',
+  [FieldType.Iban]: 'IBAN',
+};
 
 interface BlockFormFieldInput {
   id?: string;
@@ -312,7 +355,7 @@ export function BlockForm({
             canMoveDown={index < fields.length - 1}
             fieldType={watchedFields[index]?.type}
             currentRequired={watchedFields[index]?.required ?? false}
-            isSystemField={!!(watchedFields[index]?.systemKey)}
+            isSystemField={!!watchedFields[index]?.systemKey}
             lockType={watchedFields[index]?.lockType ?? false}
             onToggleRequired={(next) =>
               setValue(`fields.${index}.required`, next, { shouldDirty: true })
@@ -323,11 +366,16 @@ export function BlockForm({
 
         {!readOnly && (
           <div className="space-y-2 pt-1">
-            <div className="flex flex-wrap gap-2">
+            <div className="flex gap-4">
               {/* Field type picker */}
               <Popover open={fieldPickerOpen} onOpenChange={setFieldPickerOpen}>
                 <PopoverTrigger asChild>
-                  <Button type="button" variant="outline">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="lg"
+                    className="flex-1"
+                  >
                     <Plus className="mr-2 size-4" />
                     Add field
                   </Button>
@@ -358,6 +406,8 @@ export function BlockForm({
                   <Button
                     type="button"
                     variant="outline"
+                    size="lg"
+                    className="flex-1"
                     disabled={availablePresets.length === 0}
                   >
                     <UserCircle2 className="mr-2 size-4" />
@@ -392,10 +442,11 @@ export function BlockForm({
             </div>
 
             {/* Document shortcut */}
-            <div>
+            <div className="flex justify-center">
               <Button
                 type="button"
                 variant="outline"
+                size="lg"
                 onClick={() =>
                   appendCustomField(FieldType.DocumentAcknowledgement)
                 }
@@ -531,31 +582,37 @@ function FieldCard({
           <FieldLabel>
             Type <span className="text-destructive">*</span>
           </FieldLabel>
-          <Controller
-            control={control}
-            name={`fields.${index}.type`}
-            render={({ field }) => (
-              <Select
-                value={field.value}
-                onValueChange={field.onChange}
-                disabled={readOnly || lockType}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select type" />
-                </SelectTrigger>
-                <SelectContent>
-                  {CUSTOM_FIELD_TYPES.map((t) => (
-                    <SelectItem key={t.value} value={t.value}>
-                      {t.label}
+          {lockType && fieldType ? (
+            <div className="border-input bg-muted/50 text-muted-foreground flex h-9 w-full items-center rounded-md border px-3 text-sm">
+              {FIELD_TYPE_LABELS[fieldType] ?? fieldType}
+            </div>
+          ) : (
+            <Controller
+              control={control}
+              name={`fields.${index}.type`}
+              render={({ field }) => (
+                <Select
+                  value={field.value}
+                  onValueChange={field.onChange}
+                  disabled={readOnly}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {CUSTOM_FIELD_TYPES.map((t) => (
+                      <SelectItem key={t.value} value={t.value}>
+                        {t.label}
+                      </SelectItem>
+                    ))}
+                    <SelectItem value={FieldType.DocumentAcknowledgement}>
+                      Document acknowledgement
                     </SelectItem>
-                  ))}
-                  <SelectItem value={FieldType.DocumentAcknowledgement}>
-                    Document Acknowledgement
-                  </SelectItem>
-                </SelectContent>
-              </Select>
-            )}
-          />
+                  </SelectContent>
+                </Select>
+              )}
+            />
+          )}
         </Field>
 
         <Field>

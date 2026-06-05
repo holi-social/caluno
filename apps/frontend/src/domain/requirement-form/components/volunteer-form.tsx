@@ -73,11 +73,9 @@ function buildFieldSchema(
           .string()
           .min(1, `${label} is required`)
           .regex(NUM_RE, `${label} must be a number`)
-      : z
-          .string()
-          .refine((v) => !v || NUM_RE.test(v), {
-            message: `${label} must be a number`,
-          });
+      : z.string().refine((v) => !v || NUM_RE.test(v), {
+          message: `${label} must be a number`,
+        });
   }
 
   if (type === FieldType.Date) {
@@ -85,14 +83,12 @@ function buildFieldSchema(
       ? z
           .string()
           .min(1, `${label} is required`)
-          .refine((v) => !isNaN(Date.parse(v)), {
+          .refine((v) => !Number.isNaN(Date.parse(v)), {
             message: `${label} must be a valid date`,
           })
-      : z
-          .string()
-          .refine((v) => !v || !Number.isNaN(Date.parse(v)), {
-            message: `${label} must be a valid date`,
-          });
+      : z.string().refine((v) => !v || !Number.isNaN(Date.parse(v)), {
+          message: `${label} must be a valid date`,
+        });
     if (minAge != null) {
       s = s.refine(
         (v) => {
@@ -122,11 +118,9 @@ function buildFieldSchema(
           .min(1, `${label} is required`)
           .regex(EMAIL_RE, `${label} must be a valid email`)
           .max(254)
-      : z
-          .string()
-          .refine((v) => !v || (EMAIL_RE.test(v) && v.length <= 254), {
-            message: `${label} must be a valid email`,
-          });
+      : z.string().refine((v) => !v || (EMAIL_RE.test(v) && v.length <= 254), {
+          message: `${label} must be a valid email`,
+        });
   }
 
   if (type === FieldType.Phone) {
@@ -135,11 +129,9 @@ function buildFieldSchema(
           .string()
           .min(1, `${label} is required`)
           .regex(PHONE_RE, `${label} must be a valid phone number`)
-      : z
-          .string()
-          .refine((v) => !v || PHONE_RE.test(v), {
-            message: `${label} must be a valid phone number`,
-          });
+      : z.string().refine((v) => !v || PHONE_RE.test(v), {
+          message: `${label} must be a valid phone number`,
+        });
   }
 
   if (type === FieldType.SingleChoice) {
@@ -223,6 +215,7 @@ interface VolunteerFormProps {
   form: PublicForm;
   token: string;
   isMember?: boolean;
+  orgName?: string;
   profileData?: Record<string, string>;
 }
 
@@ -230,6 +223,7 @@ export function VolunteerForm({
   form,
   token,
   isMember = true,
+  orgName,
   profileData = {},
 }: VolunteerFormProps) {
   const router = useRouter();
@@ -375,6 +369,14 @@ export function VolunteerForm({
           <p className="mt-1 text-muted-foreground">{form.description}</p>
         )}
       </div>
+
+      {!isMember && (
+        <div className="rounded-lg border bg-blue-50 p-4 text-sm text-blue-800">
+          By submitting this form you will send a membership request to{' '}
+          <strong>{orgName ?? form.name}</strong>. An admin will review and
+          approve your request.
+        </div>
+      )}
 
       <div className="rounded-lg border bg-card p-6">
         <div className="mb-4 flex items-center justify-between">

@@ -3,8 +3,10 @@ import {
   intervalToDuration,
 } from 'date-fns';
 
-export const formatDateTime = (date: Date) =>
-  date.toLocaleDateString(undefined, {
+export const DEFAULT_LOCALE = 'de-DE';
+
+export const formatDateTime = (date: Date, locale = DEFAULT_LOCALE) =>
+  date.toLocaleDateString(locale, {
     day: '2-digit',
     month: '2-digit',
     year: 'numeric',
@@ -13,15 +15,15 @@ export const formatDateTime = (date: Date) =>
     hour12: false,
   });
 
-export const formatDate = (date: Date) =>
-  date.toLocaleDateString(undefined, {
+export const formatDate = (date: Date, locale = DEFAULT_LOCALE) =>
+  date.toLocaleDateString(locale, {
     day: '2-digit',
     month: '2-digit',
     year: 'numeric',
   });
 
-export const formatTime = (date: Date) =>
-  date.toLocaleTimeString(undefined, {
+export const formatTime = (date: Date, locale = DEFAULT_LOCALE) =>
+  date.toLocaleTimeString(locale, {
     hour: '2-digit',
     minute: '2-digit',
     hour12: false,

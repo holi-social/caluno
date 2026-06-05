@@ -78,7 +78,7 @@ export async function requireOrgAccess(
   );
 
   if (!org && legacyOrg) {
-    redirect(`/${legacyOrg.id}`);
+    redirect(`/admin/${legacyOrg.id}`);
   }
 
   if (org) {

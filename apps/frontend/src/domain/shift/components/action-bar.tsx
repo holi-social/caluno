@@ -40,7 +40,7 @@ export const ActionBar = ({
         toast.error(`Failed to delete Shift. ${result.serverError}`);
       } else {
         toast.success('Successfully deleted Shift.');
-        router.push(`/${organizationUnitId}/shifts`);
+        router.push(`/admin/${organizationUnitId}/shifts`);
       }
     });
   };

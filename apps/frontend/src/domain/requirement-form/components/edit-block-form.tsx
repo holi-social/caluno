@@ -199,7 +199,9 @@ export function EditBlockForm({
         <Button
           variant="ghost"
           size="sm"
-          onClick={() => router.push(`/${orgUId}/requirement-forms/blocks`)}
+          onClick={() =>
+            router.push(`/admin/${orgUId}/requirement-forms/blocks`)
+          }
         >
           <ArrowLeft className="mr-1 size-4" />
           Back

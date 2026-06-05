@@ -16,7 +16,9 @@ export const createForm = actionClient
       name: parsedInput.name,
       description: parsedInput.description,
     });
-    revalidatePath(`/${parsedInput.organizationUnitId}/requirement-forms`);
+    revalidatePath(
+      `/admin/${parsedInput.organizationUnitId}/requirement-forms`,
+    );
     return form;
   });
 
@@ -45,7 +47,9 @@ export const updateForm = actionClient
       description: parsedInput.description,
       blockRefs: parsedInput.blockRefs,
     });
-    revalidatePath(`/${parsedInput.organizationUnitId}/requirement-forms`);
+    revalidatePath(
+      `/admin/${parsedInput.organizationUnitId}/requirement-forms`,
+    );
     return form;
   });
 
@@ -61,7 +65,7 @@ export const createBlock = actionClient
       required: parsedInput.required,
     });
     revalidatePath(
-      `/${parsedInput.organizationUnitId}/requirement-forms/blocks`,
+      `/admin/${parsedInput.organizationUnitId}/requirement-forms/blocks`,
     );
     return block;
   });
@@ -84,7 +88,7 @@ export const submitForm = actionClient
     const result = await data.requirementForm.submitForm(parsedInput.token, {
       values: parsedInput.values,
     });
-    revalidatePath('/my-membership-requests');
+    revalidatePath('/admin/my-membership-requests');
     return result;
   });
 
@@ -98,7 +102,9 @@ export const deleteForm = actionClient
   .action(async ({ parsedInput }) => {
     const data = await getDataClient(parsedInput.organizationUnitId);
     await data.requirementForm.deleteForm(parsedInput.formId);
-    revalidatePath(`/${parsedInput.organizationUnitId}/requirement-forms`);
+    revalidatePath(
+      `/admin/${parsedInput.organizationUnitId}/requirement-forms`,
+    );
     return { success: true };
   });
 
@@ -112,7 +118,9 @@ export const deleteBlock = actionClient
   .action(async ({ parsedInput }) => {
     const data = await getDataClient(parsedInput.organizationUnitId);
     await data.requirementForm.deleteBlock(parsedInput.blockId);
-    revalidatePath(`/${parsedInput.organizationUnitId}/requirement-forms`);
+    revalidatePath(
+      `/admin/${parsedInput.organizationUnitId}/requirement-forms`,
+    );
     return { success: true };
   });
 
@@ -136,7 +144,7 @@ export const updateBlock = actionClient
       required: parsedInput.required,
     });
     revalidatePath(
-      `/${parsedInput.organizationUnitId}/requirement-forms/blocks`,
+      `/admin/${parsedInput.organizationUnitId}/requirement-forms/blocks`,
     );
     return block;
   });
@@ -183,7 +191,7 @@ export const createBlockField = actionClient
       },
     );
     revalidatePath(
-      `/${parsedInput.organizationUnitId}/requirement-forms/blocks`,
+      `/admin/${parsedInput.organizationUnitId}/requirement-forms/blocks`,
     );
     return block;
   });
@@ -230,7 +238,7 @@ export const updateBlockField = actionClient
       },
     );
     revalidatePath(
-      `/${parsedInput.organizationUnitId}/requirement-forms/blocks`,
+      `/admin/${parsedInput.organizationUnitId}/requirement-forms/blocks`,
     );
     return block;
   });
@@ -246,7 +254,7 @@ export const deleteBlockField = actionClient
     const data = await getDataClient(parsedInput.organizationUnitId);
     await data.requirementForm.deleteBlockField(parsedInput.fieldId);
     revalidatePath(
-      `/${parsedInput.organizationUnitId}/requirement-forms/blocks`,
+      `/admin/${parsedInput.organizationUnitId}/requirement-forms/blocks`,
     );
     return { success: true };
   });
@@ -262,7 +270,7 @@ export const joinOrganization = actionClient
     const result = await data.membershipRequest.join(
       parsedInput.organizationUnitId,
     );
-    revalidatePath('/my-membership-requests');
+    revalidatePath('/admin/my-membership-requests');
     return result;
   });
 
@@ -396,7 +404,7 @@ export const saveBlock = actionClient
     }
 
     revalidatePath(
-      `/${parsedInput.organizationUnitId}/requirement-forms/blocks`,
+      `/admin/${parsedInput.organizationUnitId}/requirement-forms/blocks`,
     );
     return { blockId };
   });

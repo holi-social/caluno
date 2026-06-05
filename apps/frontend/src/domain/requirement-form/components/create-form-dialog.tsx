@@ -52,7 +52,9 @@ export function CreateFormDialog({
         toast.error(result.serverError);
       } else if (result?.data?.id) {
         onOpenChange(false);
-        router.push(`/${orgUId}/requirement-forms/${result.data.id}/builder`);
+        router.push(
+          `/admin/${orgUId}/requirement-forms/${result.data.id}/builder`,
+        );
       }
     } finally {
       setCreating(false);

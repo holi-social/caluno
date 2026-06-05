@@ -21,7 +21,6 @@ import {
   ClockIcon,
   LogOutIcon,
   NetworkIcon,
-  ScanFace,
   ScanQrCode,
   SettingsIcon,
   ShieldIcon,
@@ -52,33 +51,33 @@ export function DashboardSidebar({ permissions }: DashboardSidebarProps) {
     return [
       {
         title: 'Overview',
-        href: `/${orgUId}`,
+        href: `/admin/${orgUId}`,
         icon: BuildingIcon,
       },
       {
         title: 'Shifts',
-        href: `/${orgUId}/shifts`,
+        href: `/admin/${orgUId}/shifts`,
         icon: CalendarIcon,
       },
       {
         title: 'Timesheets',
-        href: `/${orgUId}/timesheets`,
+        href: `/admin/${orgUId}/timesheets`,
         icon: ClockIcon,
       },
       {
         title: 'Volunteers',
-        href: `/${orgUId}/volunteers`,
+        href: `/admin/${orgUId}/volunteers`,
         icon: UsersIcon,
         count: pendingCount,
       },
       {
         title: 'Check-in/out',
-        href: `/${orgUId}/check-in/scan`,
+        href: `/admin/${orgUId}/check-in/scan`,
         icon: ScanQrCode,
       },
       {
         title: 'Requirement Forms',
-        href: `/${orgUId}/requirement-forms`,
+        href: `/admin/${orgUId}/requirement-forms`,
         icon: ClipboardListIcon,
       },
     ];
@@ -92,25 +91,20 @@ export function DashboardSidebar({ permissions }: DashboardSidebarProps) {
     return [
       {
         title: 'Settings',
-        href: `/${orgUId}/settings`,
+        href: `/admin/${orgUId}/settings`,
         icon: SettingsIcon,
       },
       {
         title: 'Roles',
-        href: `/${orgUId}/settings/roles`,
+        href: `/admin/${orgUId}/settings/roles`,
         icon: ShieldIcon,
         permission: PermissionKey.OrgView,
       },
       {
         title: 'Org Units',
-        href: `/${orgUId}/settings/org-units`,
+        href: `/admin/${orgUId}/settings/org-units`,
         icon: NetworkIcon,
         permission: PermissionKey.OrgView,
-      },
-      {
-        title: 'QR iD',
-        href: `/${orgUId}/me/id`,
-        icon: ScanFace,
       },
     ].filter((item) => !item.permission || permissionSet.has(item.permission));
   }, [orgUId, permissionSet]);

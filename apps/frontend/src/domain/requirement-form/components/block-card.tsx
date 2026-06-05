@@ -6,6 +6,7 @@ import type { LucideIcon } from 'lucide-react';
 import { Eye, FileCheck, MapPin, Pencil, Trash2, User } from 'lucide-react';
 import { useState } from 'react';
 import { useSheetTrigger } from '@/hooks/use-sheet';
+import { FormattedDate } from '@/components/formatted-date';
 import { ConfirmDialog } from './confirm-dialog';
 
 const BLOCK_ICONS: Record<string, LucideIcon> = {
@@ -95,7 +96,7 @@ export function BlockCard({
           )}
 
           <p className="text-muted-foreground mt-4 text-xs">
-            Updated {new Date(block.updatedAt).toLocaleDateString()}
+            Updated <FormattedDate date={block.updatedAt} />
           </p>
         </div>
 
