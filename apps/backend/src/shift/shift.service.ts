@@ -701,12 +701,12 @@ export class ShiftService {
       throw new NotFoundGraphQLError('Shift not found');
     }
 
-    const membership = await this.membershipService.getMembership(
+    const isAllowed = await this.membershipService.isMemberOfUnitOrAncestor(
       userId,
       shift.organizationUnitId,
     );
 
-    if (!membership) {
+    if (!isAllowed) {
       throw new ConflictGraphQLError(
         'You must be a member of the organization to join this shift.',
       );
@@ -805,12 +805,12 @@ export class ShiftService {
       throw new NotFoundGraphQLError('Organization unit not found');
     }
 
-    const membership = await this.membershipService.getMembership(
+    const isAllowed = await this.membershipService.isMemberOfUnitOrAncestor(
       userId,
       orgUnit.id,
     );
 
-    if (!membership) {
+    if (!isAllowed) {
       const result = await this.membershipService.requestOrgJoin(
         userId,
         orgUnit.id,
