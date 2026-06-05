@@ -2,14 +2,14 @@ import { Parent, ResolveField, Resolver } from '@nestjs/graphql';
 import { Session, type UserSession } from '@thallesp/nestjs-better-auth';
 import { UserMapper } from '../../user/mappers/user.mapper';
 import { User } from '../../user/models/user.model';
-import { EventService } from '../event.service';
+import { UserService } from '../../user/user.service';
 import { Event } from '../models/event.model';
 import type { EventEntity } from '../schemas/event.schema';
 
 @Resolver(() => Event)
 export class EventFieldResolver {
   constructor(
-    private readonly eventService: EventService,
+    private readonly userService: UserService,
     private readonly userMapper: UserMapper,
   ) {}
 
@@ -22,7 +22,7 @@ export class EventFieldResolver {
       return null;
     }
 
-    const organizer = await this.eventService.findOrganizer(event.createdById);
+    const organizer = await this.userService.findByIdOrThrow(event.createdById);
     return this.userMapper.toModelOrThrow(organizer);
   }
 }

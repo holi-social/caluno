@@ -174,10 +174,6 @@ export class EventService {
     return event;
   }
 
-  async findOrganizer(createdById: string): Promise<UserEntity> {
-    return this.userService.findByIdOrThrow(createdById);
-  }
-
   async inviteMembersToEvent(
     eventId: string,
     memberIds: string[],
