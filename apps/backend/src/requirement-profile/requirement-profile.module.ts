@@ -1,8 +1,7 @@
-import { forwardRef, Module } from '@nestjs/common';
+import { Module } from '@nestjs/common';
 import { DatabaseModule } from '../database/database.module';
 import { MembershipMapper } from '../membership/mappers/membership.mepper';
 import { MembershipRequestMapper } from '../membership/mappers/membership-request.mepper';
-import { MembershipModule } from '../membership/membership.module';
 import { SharedModule } from '../shared/shared.module';
 import { UserModule } from '../user/user.module';
 import { FormBlockMapper } from './mappers/form-block.mapper';
@@ -35,7 +34,6 @@ import { FormBlockFieldResolver } from './resolvers/form-block-field.resolver';
 import { FormBlockMutationResolver } from './resolvers/form-block-mutation.resolver';
 import { FormBlockQueryResolver } from './resolvers/form-block-query.resolver';
 import { FormSubmissionFieldResolver } from './resolvers/form-submission-field.resolver';
-import { FormSubmissionMutationResolver } from './resolvers/form-submission-mutation.resolver';
 import { FormSubmissionQueryResolver } from './resolvers/form-submission-query.resolver';
 import { RequirementFormBlockRefFieldResolver } from './resolvers/requirement-form-block-ref-field.resolver';
 import { RequirementFormFieldResolver } from './resolvers/requirement-form-field.resolver';
@@ -55,12 +53,7 @@ import {
 } from './services';
 
 @Module({
-  imports: [
-    DatabaseModule,
-    SharedModule,
-    UserModule,
-    forwardRef(() => MembershipModule),
-  ],
+  imports: [DatabaseModule, SharedModule, UserModule],
   providers: [
     RequirementService,
     RequirementProfileService,
@@ -103,7 +96,6 @@ import {
     RequirementFormFieldResolver,
     RequirementFormBlockRefFieldResolver,
     FormSubmissionQueryResolver,
-    FormSubmissionMutationResolver,
     FormSubmissionFieldResolver,
     UserProfileQueryResolver,
     UserProfileMutationResolver,

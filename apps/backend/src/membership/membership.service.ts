@@ -1,4 +1,4 @@
-import { forwardRef, Inject, Injectable, Logger } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { and, eq, inArray, sql } from 'drizzle-orm';
 import { DEFAULT_MEMBER_ROLE_NAME } from '../auth/constants';
 import type { UserEntity } from '../auth/schemas/auth.schema';
@@ -6,14 +6,11 @@ import type { RoleEntity } from '../auth/schemas/role.schema';
 import type { Database } from '../database/database.module';
 import { DATABASE_CONNECTION } from '../database/database-connection';
 import * as schema from '../database/schema';
-import { EventService } from '../event/event.service';
 import { ConflictGraphQLError, NotFoundGraphQLError } from '../graphql/errors';
 import { NotificationService } from '../notification/notification.service';
 import type { RequirementProfileEntity } from '../requirement-profile/schemas/requirement-profile.schema';
-import { FormSubmissionService } from '../requirement-profile/services/form-submission.service';
 import { RequirementProfileService } from '../requirement-profile/services/requirement-profile.service';
 import { JoinStatus } from '../shared/enums/join-status.enum';
-import { ShiftService } from '../shift/shift.service';
 import { MembershipRequestStatus } from './enums';
 import { UpdateMembershipRequestInput } from './inputs/update-membership-request.input';
 import type { MembershipEntity } from './schemas/membership.schema';
@@ -24,19 +21,11 @@ import {
 
 @Injectable()
 export class MembershipService {
-  private readonly logger = new Logger(MembershipService.name);
-
   constructor(
     @Inject(DATABASE_CONNECTION)
     private readonly db: Database,
     private readonly notificationService: NotificationService,
     private readonly requirementProfileService: RequirementProfileService,
-    @Inject(forwardRef(() => ShiftService))
-    private readonly shiftService: ShiftService,
-    @Inject(forwardRef(() => FormSubmissionService))
-    private readonly formSubmissionService: FormSubmissionService,
-    @Inject(forwardRef(() => EventService))
-    private readonly eventService: EventService,
   ) {}
 
   private appendIntendedIdsToMetadata(
@@ -44,21 +33,21 @@ export class MembershipService {
     intendedShiftId?: string,
     intendedEventId?: string,
   ): MembershipRequestMetadata {
-    const next: MembershipRequestMetadata = { ...metadata };
+    const newMetadata: MembershipRequestMetadata = { ...metadata };
 
     if (intendedShiftId) {
-      next.intendedShiftIds = Array.from(
-        new Set([...(next.intendedShiftIds ?? []), intendedShiftId]),
+      newMetadata.intendedShiftIds = Array.from(
+        new Set([...(newMetadata.intendedShiftIds ?? []), intendedShiftId]),
       );
     }
 
     if (intendedEventId) {
-      next.intendedEventIds = Array.from(
-        new Set([...(next.intendedEventIds ?? []), intendedEventId]),
+      newMetadata.intendedEventIds = Array.from(
+        new Set([...(newMetadata.intendedEventIds ?? []), intendedEventId]),
       );
     }
 
-    return next;
+    return newMetadata;
   }
 
   private buildInitialMetadata(
@@ -404,41 +393,6 @@ export class MembershipService {
       membershipRequest,
     );
 
-    const metadata = (membershipRequest.metadata ??
-      {}) as MembershipRequestMetadata;
-
-    if (metadata.intendedShiftIds?.length && membershipRequest.userId) {
-      for (const shiftId of metadata.intendedShiftIds) {
-        try {
-          const shift = await this.shiftService.findByIdPublic(shiftId);
-          if (shift && shift.visibility === 'ALL_MEMBERS') {
-            await this.shiftService.joinShift(
-              membershipRequest.userId,
-              shiftId,
-            );
-          }
-        } catch (e) {
-          this.logger.warn(`Failed to auto-join shift ${shiftId}: ${e}`);
-        }
-      }
-    }
-
-    if (metadata.intendedEventIds?.length && membershipRequest.userId) {
-      for (const eventId of metadata.intendedEventIds) {
-        try {
-          const event = await this.eventService.findByIdPublic(eventId);
-          if (event) {
-            await this.eventService.joinEvent(
-              membershipRequest.userId,
-              eventId,
-            );
-          }
-        } catch (e) {
-          this.logger.warn(`Failed to auto-join event ${eventId}: ${e}`);
-        }
-      }
-    }
-
     return membershipRequest;
   }
 
@@ -456,14 +410,6 @@ export class MembershipService {
     });
 
     await this.notificationService.notifyUserMembershipRejected(request);
-
-    // Mark any pending form submissions for this user+org as REJECTED so they can re-submit
-    if (request.userId && request.organizationUnitId) {
-      await this.formSubmissionService.rejectByUserAndOrgUnit(
-        request.userId,
-        request.organizationUnitId,
-      );
-    }
 
     return request;
   }

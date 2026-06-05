@@ -1,4 +1,4 @@
-import { forwardRef, Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { and, count, eq, inArray } from 'drizzle-orm';
 import type { Database } from '../database/database.module';
 import { DATABASE_CONNECTION } from '../database/database-connection';
@@ -25,9 +25,7 @@ export class EventService {
     @Inject(DATABASE_CONNECTION)
     private readonly db: Database,
     private readonly userService: UserService,
-    @Inject(forwardRef(() => MembershipService))
     private readonly membershipService: MembershipService,
-    private readonly notificationService: NotificationService,
   ) {}
 
   async findById(id: string, organizationUnitId: string): Promise<EventEntity> {

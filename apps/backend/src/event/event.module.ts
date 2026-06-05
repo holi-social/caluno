@@ -1,4 +1,4 @@
-import { forwardRef, Module } from '@nestjs/common';
+import { Module } from '@nestjs/common';
 import { AuthModule } from '../auth/auth.module';
 import { DatabaseModule } from '../database/database.module';
 import { MembershipModule } from '../membership/membership.module';
@@ -15,7 +15,7 @@ import { EventQueryResolver } from './resolvers/event-query.resolver';
     DatabaseModule,
     AuthModule,
     UserModule,
-    forwardRef(() => MembershipModule),
+    MembershipModule,
     NotificationModule,
   ],
   providers: [

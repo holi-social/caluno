@@ -1,4 +1,4 @@
-import { forwardRef, Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { and, count, eq, gte, inArray } from 'drizzle-orm';
 import { AuthService } from '../auth/auth.service';
 import { PERMISSIONS } from '../auth/constants';
@@ -33,7 +33,6 @@ export class ShiftService {
     private readonly db: Database,
     private readonly authService: AuthService,
     private readonly userService: UserService,
-    @Inject(forwardRef(() => MembershipService))
     private readonly membershipService: MembershipService,
     private readonly notificationService: NotificationService,
   ) {}

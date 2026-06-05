@@ -18,6 +18,7 @@ import { EventModule } from './event/event.module';
 import { GraphqlModule } from './graphql/graphql.module';
 import { LoaderInterceptor } from './graphql/interceptors';
 import { MembershipModule } from './membership/membership.module';
+import { MembershipLifecycleModule } from './membership-lifecycle/membership-lifecycle.module';
 import { NotificationModule } from './notification/notification.module';
 import { OrganizationModule } from './organization/organization.module';
 import { RequirementProfileModule } from './requirement-profile/requirement-profile.module';
@@ -65,6 +66,7 @@ const autoSchemaFile =
     OrganizationModule,
     RequirementProfileModule,
     MembershipModule,
+    MembershipLifecycleModule,
     NotificationModule,
     TimeTrackingModule,
     GraphqlModule,
