@@ -75,7 +75,7 @@ skinparam linetype ortho
         status {PENDING, ACCEPTED, REJECTED, CANCELLED}
         reviewedAt
         rejectionReason
-        metadata: { intendedShiftIds?: string[] }
+        metadata: { intendedShiftIds?: string[], intendedEventIds?: string[] }
     }
     'note top: The "Waiting Room".\nUnique constraint on (userId, orgUnitId).\nA rejected/cancelled request blocks\nre-application unless constraint is removed.
 ' }
@@ -158,6 +158,22 @@ package "Operations" {
         endedAt
         notes
     }
+
+    class Event {
+        title
+        slug
+        location
+        logoUrl
+        coverUrl
+        startsAt
+        endsAt
+        isDeleted
+    }
+    note left: A standalone calendar event tied to an OrgUnit.\nVisible to all members.\nVolunteers join the Event directly (no instances).
+
+    class EventInvite {
+        status {PENDING, ACCEPTED, REJECTED}
+    }
 }
 
 ' --- Identity & Organisation ---
@@ -202,6 +218,12 @@ OrgUnit "1" -- "*" Shift : "manages >"
 Shift "1" -- "*" ShiftInstance : "occurs as >"
 ShiftInstance "1" -- "*" ShiftInstanceInvite : "includes >"
 ShiftInstanceInvite "*" -- "1" User : "assigned to >"
+
+' --- Events ---
+OrgUnit "1" -- "*" Event : "hosts >"
+Event "1" -- "*" EventInvite : "includes >"
+EventInvite "*" -- "1" User : "assigned to >"
+User "1" -- "*" Event : "created by <"
 
 ' --- Time Tracking ---
 ShiftInstance "1" -- "*" TimeEntry : "logged against >"

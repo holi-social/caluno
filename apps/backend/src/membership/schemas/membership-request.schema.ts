@@ -13,6 +13,11 @@ import { idColumn, timestampColumns } from '../../database/database-columns';
 import { organizationUnits } from '../../organization/schemas/organization-unit.schema';
 import { MembershipRequestStatus } from '../enums';
 
+export type MembershipRequestMetadata = {
+  intendedShiftIds?: string[];
+  intendedEventIds?: string[];
+};
+
 export const membershipRequestStatusEnum = pgEnum(
   'membership_request_status',
   MembershipRequestStatus as Record<string, string>,
@@ -39,9 +44,7 @@ export const membershipRequests = pgTable(
     status: membershipRequestStatusEnum('status')
       .notNull()
       .default(MembershipRequestStatus.PENDING),
-    metadata: jsonb('metadata').$type<{
-      intendedShiftIds?: string[];
-    }>(),
+    metadata: jsonb('metadata').$type<MembershipRequestMetadata>(),
   },
   (table) => [
     index('idx_membership_requests_user_id').on(table.userId),

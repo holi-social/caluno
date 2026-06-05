@@ -1,4 +1,4 @@
-import { forwardRef, Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { and, count, eq, gte, inArray } from 'drizzle-orm';
 import { AuthService } from '../auth/auth.service';
 import { PERMISSIONS } from '../auth/constants';
@@ -33,7 +33,6 @@ export class ShiftService {
     private readonly db: Database,
     private readonly authService: AuthService,
     private readonly userService: UserService,
-    @Inject(forwardRef(() => MembershipService))
     private readonly membershipService: MembershipService,
     private readonly notificationService: NotificationService,
   ) {}
@@ -702,12 +701,12 @@ export class ShiftService {
       throw new NotFoundGraphQLError('Shift not found');
     }
 
-    const membership = await this.membershipService.getMembership(
+    const isAllowed = await this.membershipService.isMemberOfUnitOrAncestor(
       userId,
       shift.organizationUnitId,
     );
 
-    if (!membership) {
+    if (!isAllowed) {
       throw new ConflictGraphQLError(
         'You must be a member of the organization to join this shift.',
       );
@@ -806,12 +805,12 @@ export class ShiftService {
       throw new NotFoundGraphQLError('Organization unit not found');
     }
 
-    const membership = await this.membershipService.getMembership(
+    const isAllowed = await this.membershipService.isMemberOfUnitOrAncestor(
       userId,
       orgUnit.id,
     );
 
-    if (!membership) {
+    if (!isAllowed) {
       const result = await this.membershipService.requestOrgJoin(
         userId,
         orgUnit.id,
