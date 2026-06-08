@@ -51,8 +51,8 @@ input CreateFormBlockInput {
 
 input CreateOrganizationInput {
   address: String
+  contactEmail: String
   description: String
-  email: String
   logoUrl: String
   name: String!
   parentId: String
@@ -62,8 +62,8 @@ input CreateOrganizationInput {
 
 input CreateOrganizationUnitInput {
   address: String
+  contactEmail: String
   description: String
-  email: String
   logoUrl: String
   name: String!
   organizationId: String!
@@ -390,9 +390,9 @@ type Mutation {
 
 type Organization {
   address: String
+  contactEmail: String
   createdAt: DateTime!
   description: String
-  email: String
   id: ID!
   logoUrl: String
   name: String!
@@ -416,9 +416,9 @@ type OrganizationTree {
 type OrganizationUnit {
   address: String
   children: [OrganizationUnit!]!
+  contactEmail: String
   deletedAt: DateTime
   description: String
-  email: String
   id: ID!
   logoUrl: String
   name: String!
@@ -840,8 +840,8 @@ input UpdateFormBlockInput {
 
 input UpdateOrganizationUnitInput {
   address: String
+  contactEmail: String
   description: String
-  email: String
   logoUrl: String
   name: String
   organizationId: String!

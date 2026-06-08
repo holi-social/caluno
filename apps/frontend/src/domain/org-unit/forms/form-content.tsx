@@ -80,16 +80,18 @@ export function OrgUnitFormContent({
       </Field>
 
       <Field>
-        <FieldLabel htmlFor="email">Email</FieldLabel>
+        <FieldLabel htmlFor="contactEmail">Email</FieldLabel>
         <Input
-          id="email"
+          id="contactEmail"
           type="email"
           placeholder="e.g. contact@example.com"
           disabled={isPending}
-          aria-invalid={!!errors.email}
-          {...register('email')}
+          aria-invalid={!!errors.contactEmail}
+          {...register('contactEmail')}
         />
-        {errors.email && <FieldError>{errors.email.message}</FieldError>}
+        {errors.contactEmail && (
+          <FieldError>{errors.contactEmail.message}</FieldError>
+        )}
       </Field>
 
       <Field>

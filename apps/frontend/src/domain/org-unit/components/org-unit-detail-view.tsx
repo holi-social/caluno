@@ -43,7 +43,10 @@ export function OrgUnitDetailView({
   const TypeIcon = getDynamicIcon(orgUnit.type.icon, BuildingIcon);
 
   const hasContact =
-    orgUnit.email || orgUnit.phone || orgUnit.websiteUrl || orgUnit.address;
+    orgUnit.contactEmail ||
+    orgUnit.phone ||
+    orgUnit.websiteUrl ||
+    orgUnit.address;
 
   return (
     <>
@@ -96,11 +99,14 @@ export function OrgUnitDetailView({
             <CardTitle>Contact</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
-            {orgUnit.email && (
+            {orgUnit.contactEmail && (
               <div className="flex items-center gap-2 text-sm">
                 <MailIcon className="h-4 w-4 text-muted-foreground shrink-0" />
-                <a href={`mailto:${orgUnit.email}`} className="hover:underline">
-                  {orgUnit.email}
+                <a
+                  href={`mailto:${orgUnit.contactEmail}`}
+                  className="hover:underline"
+                >
+                  {orgUnit.contactEmail}
                 </a>
               </div>
             )}

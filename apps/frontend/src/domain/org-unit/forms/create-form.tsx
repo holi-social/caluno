@@ -49,7 +49,7 @@ export function CreateOrgUnitForm({
         typeId: formData.typeId,
         logoUrl: formData.logoUrl,
         websiteUrl: formData.websiteUrl,
-        email: formData.email,
+        contactEmail: formData.contactEmail,
         phone: formData.phone,
         description: formData.description,
         address: formData.address,

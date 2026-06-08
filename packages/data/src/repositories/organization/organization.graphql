@@ -6,7 +6,7 @@ query GetOrganization($id: String!) {
     description
     logoUrl
     websiteUrl
-    email
+    contactEmail
     phone
     address
     createdAt
@@ -22,7 +22,7 @@ query GetOrganizationBySlug($slug: String!) {
     description
     logoUrl
     websiteUrl
-    email
+    contactEmail
     phone
     address
     createdAt
@@ -46,7 +46,7 @@ query GetOrganizationUnit($id: String!) {
     description
     logoUrl
     websiteUrl
-    email
+    contactEmail
     phone
     address
     organizationId
@@ -89,7 +89,7 @@ query GetOrganizationUnitPublicInfo($id: String!) {
     description
     logoUrl
     websiteUrl
-    email
+    contactEmail
     phone
   }
 }

@@ -49,12 +49,12 @@ export function CreateOrganizationForm() {
         </div>
 
         <div>
-          <label htmlFor="email" className="block text-sm font-medium">
+          <label htmlFor="contactEmail" className="block text-sm font-medium">
             Email
           </label>
           <Input
-            id="email"
-            name="email"
+            id="contactEmail"
+            name="contactEmail"
             type="email"
             className="mt-1"
             placeholder="contact@organization.org"

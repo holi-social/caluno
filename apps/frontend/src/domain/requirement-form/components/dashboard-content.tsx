@@ -85,7 +85,11 @@ export function DashboardContent({
         </div>
         <div className="flex lg:justify-end">
           {tab === 'forms' ? (
-            <Button size="lg" className="w-full lg:w-auto" onClick={() => setCreateFormOpen(true)}>
+            <Button
+              size="lg"
+              className="w-full lg:w-auto"
+              onClick={() => setCreateFormOpen(true)}
+            >
               <Plus className="mr-2 size-5" />
               Create Form
             </Button>

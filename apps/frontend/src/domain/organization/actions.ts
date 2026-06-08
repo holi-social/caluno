@@ -15,7 +15,7 @@ export async function createOrganization(
 ): Promise<CreateOrganizationResult> {
   const name = formData.get('name') as string;
   const description = formData.get('description') as string;
-  const email = formData.get('email') as string;
+  const contactEmail = formData.get('contactEmail') as string;
   const phone = formData.get('phone') as string;
   const websiteUrl = formData.get('websiteUrl') as string;
   const address = formData.get('address') as string;
@@ -27,7 +27,7 @@ export async function createOrganization(
   const input: CreateOrganizationInput = {
     name,
     description: description || undefined,
-    email: email || undefined,
+    contactEmail: contactEmail || undefined,
     phone: phone || undefined,
     websiteUrl: websiteUrl || undefined,
     address: address || undefined,

@@ -91,7 +91,9 @@ export function FormCard({
               Share
             </Button>
             <Button asChild variant="outline" className="h-10 flex-1">
-              <Link href={`/admin/${orgUId}/requirement-forms/${form.id}/builder`}>
+              <Link
+                href={`/admin/${orgUId}/requirement-forms/${form.id}/builder`}
+              >
                 {locked ? (
                   <>
                     <Eye className="mr-1.5 size-4" />
@@ -114,7 +116,9 @@ export function FormCard({
               aria-label="Submissions"
               title="Submissions"
             >
-              <Link href={`/admin/${orgUId}/requirement-forms/${form.id}/submissions`}>
+              <Link
+                href={`/admin/${orgUId}/requirement-forms/${form.id}/submissions`}
+              >
                 <Users className="size-4" />
                 <span className="ml-1.5 sm:hidden">Submissions</span>
               </Link>

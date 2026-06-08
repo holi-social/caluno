@@ -51,7 +51,7 @@ const createContext = async (): Promise<GraphqlTestContext> => {
       variables: {
         input: {
           name: `GraphQL Test Org ${Date.now()}`,
-          email: `graphql-test-org-${crypto.randomUUID()}@example.com`,
+          contactEmail: `graphql-test-org-${crypto.randomUUID()}@example.com`,
         },
       },
     },
