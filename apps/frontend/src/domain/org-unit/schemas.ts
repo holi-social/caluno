@@ -7,7 +7,7 @@ export const createOrgUnitSchema = z.object({
   typeId: z.uuid('Organization unit type is required'),
   logoUrl: z.union([z.url(), z.literal('')]).optional(),
   websiteUrl: z.union([z.url(), z.literal('')]).optional(),
-  email: z.union([z.email(), z.literal('')]).optional(),
+  contactEmail: z.union([z.email(), z.literal('')]).optional(),
   phone: z.string().optional(),
   description: z.string().optional(),
   address: z.string().optional(),

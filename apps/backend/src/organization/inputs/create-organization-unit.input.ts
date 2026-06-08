@@ -21,7 +21,7 @@ export class CreateOrganizationUnitInput {
   websiteUrl!: string | null;
 
   @Field(() => String, { nullable: true })
-  email!: string | null;
+  contactEmail!: string | null;
 
   @Field(() => String, { nullable: true })
   phone!: string | null;

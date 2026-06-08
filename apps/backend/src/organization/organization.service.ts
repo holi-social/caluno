@@ -345,7 +345,7 @@ export class OrganizationService {
           slug: createdOrganization.slug,
           logoUrl: createdOrganization.logoUrl,
           websiteUrl: createdOrganization.websiteUrl,
-          email: createdOrganization.email,
+          contactEmail: createdOrganization.contactEmail,
           phone: createdOrganization.phone,
           description: createdOrganization.description,
           address: createdOrganization.address,

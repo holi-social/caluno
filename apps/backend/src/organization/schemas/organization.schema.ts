@@ -9,7 +9,7 @@ export const organizations = pgTable(
     slug: text('slug').notNull().unique(),
     logoUrl: text('logo_url'),
     websiteUrl: text('website_url'),
-    email: text('email'),
+    contactEmail: text('contact_email'),
     phone: text('phone'),
     description: text('description'),
     address: text('address'),
