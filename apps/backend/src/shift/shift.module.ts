@@ -1,9 +1,8 @@
-import { forwardRef, Module } from '@nestjs/common';
+import { Module } from '@nestjs/common';
 import { AuthModule } from '../auth/auth.module';
 import { DatabaseModule } from '../database/database.module';
 import { MembershipModule } from '../membership/membership.module';
 import { NotificationModule } from '../notification/notification.module';
-import { RequirementProfileModule } from '../requirement-profile/requirement-profile.module';
 import { UserModule } from '../user/user.module';
 import { ShiftMapper } from './mappers/shift.mapper';
 import { ShiftInstanceMapper } from './mappers/shift-instance.mapper';
@@ -18,8 +17,7 @@ import { ShiftService } from './shift.service';
     DatabaseModule,
     AuthModule,
     UserModule,
-    forwardRef(() => MembershipModule),
-    forwardRef(() => RequirementProfileModule),
+    MembershipModule,
     NotificationModule,
   ],
   providers: [

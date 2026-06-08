@@ -3,7 +3,6 @@ export * from './form-block-field.resolver';
 export * from './form-block-mutation.resolver';
 export * from './form-block-query.resolver';
 export * from './form-submission-field.resolver';
-export * from './form-submission-mutation.resolver';
 export * from './form-submission-query.resolver';
 export * from './requirement-form-block-ref-field.resolver';
 export * from './requirement-form-field.resolver';

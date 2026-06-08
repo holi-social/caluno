@@ -1,4 +1,4 @@
-import { forwardRef, Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { and, count, eq, inArray } from 'drizzle-orm';
 import type { Database } from '../../database/database.module';
 import { DATABASE_CONNECTION } from '../../database/database-connection';
@@ -8,7 +8,6 @@ import {
   NotFoundGraphQLError,
 } from '../../graphql/errors';
 import type { PaginationInput } from '../../graphql/pagination.input';
-import { MembershipService } from '../../membership/membership.service';
 import { SYSTEM_PROFILE_KEYS } from '../constants';
 import { FieldType, FormSubmissionStatus } from '../enums';
 import { SubmitFormInput } from '../inputs/submit-form.input';
@@ -21,9 +20,17 @@ export class FormSubmissionService {
     @Inject(DATABASE_CONNECTION)
     private readonly db: Database,
     private readonly userProfileService: UserProfileService,
-    @Inject(forwardRef(() => MembershipService))
-    private readonly membershipService: MembershipService,
   ) {}
+
+  async findOrganizationUnitIdByFormId(
+    formId: string,
+  ): Promise<string | undefined> {
+    const form = await this.db.query.requirementForms.findFirst({
+      where: { id: formId },
+      columns: { organizationUnitId: true },
+    });
+    return form?.organizationUnitId ?? undefined;
+  }
 
   async findById(id: string): Promise<FormSubmissionEntity | undefined> {
     return this.db.query.formSubmissions.findFirst({
@@ -243,26 +250,6 @@ export class FormSubmissionService {
 
       return created;
     });
-
-    // Create membership request if the user is not already a member.
-    // A pending request already existing is not an error — ignore ConflictGraphQLError.
-    if (form.organizationUnitId) {
-      const isMember = await this.membershipService.isMemberOfUnitOrAncestor(
-        userId,
-        form.organizationUnitId,
-      );
-      if (!isMember) {
-        try {
-          await this.membershipService.createMembershipRequest(
-            userId,
-            form.organizationUnitId,
-          );
-        } catch (e) {
-          // Pending request already exists or transient error — submission is still valid
-          console.warn('[FormSubmission] createMembershipRequest skipped', e);
-        }
-      }
-    }
 
     return submission;
   }
