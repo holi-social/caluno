@@ -55,7 +55,6 @@ export const Volunteer: Story = {
     const [activeKey, setActiveKey] = useState('check-in');
     return (
       <TabBar
-        position="static"
         items={volunteerTabs}
         activeKey={activeKey}
         onSelect={setActiveKey}
@@ -70,7 +69,6 @@ export const VolunteerAdmin: Story = {
     const [activeKey, setActiveKey] = useState('check-in');
     return (
       <TabBar
-        position="static"
         items={volunteerTabs}
         activeKey={activeKey}
         onSelect={setActiveKey}
@@ -91,7 +89,6 @@ export const Backoffice: Story = {
     const [activeKey, setActiveKey] = useState('check-in');
     return (
       <TabBar
-        position="static"
         items={backofficeTabs}
         activeKey={activeKey}
         onSelect={setActiveKey}
@@ -113,7 +110,6 @@ export const ShouldSelectAndMoveHighlight: Story = {
     const [activeKey, setActiveKey] = useState('check-in');
     return (
       <TabBar
-        position="static"
         items={volunteerTabs}
         activeKey={activeKey}
         onSelect={setActiveKey}
