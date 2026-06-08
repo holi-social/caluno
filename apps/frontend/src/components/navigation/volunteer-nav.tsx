@@ -1,7 +1,12 @@
 'use client';
 
 import { TabBar, type TabBarItem } from '@repo/ui';
-import { FileClockIcon, HomeIcon, QrCodeIcon } from 'lucide-react';
+import {
+  Building2Icon,
+  FileClockIcon,
+  HomeIcon,
+  QrCodeIcon,
+} from 'lucide-react';
 import { usePathname, useRouter } from 'next/navigation';
 
 const volunteerTabs: TabBarItem[] = [
@@ -14,17 +19,21 @@ export function VolunteerNav() {
   const pathname = usePathname();
   const router = useRouter();
 
-  const handleSelect = (key: string) => {
-    router.push(key);
-  };
-
   return (
     <div className="fixed inset-x-0 bottom-0 z-50 pb-[calc(0.25rem+env(safe-area-inset-bottom))] flex justify-center">
       <TabBar
         items={volunteerTabs}
-        onSelect={handleSelect}
+        onSelect={router.push}
         activeKey={pathname}
         className="w-full max-w-xl"
+        island={{
+          side: 'right',
+          icon: Building2Icon,
+          label: 'Admin',
+          onClick: () => {
+            router.push('/admin');
+          },
+        }}
       />
     </div>
   );
