@@ -30,11 +30,6 @@ export interface TabBarProps {
    * sidebar island. The component itself is mode-agnostic.
    */
   island?: TabBarIsland;
-  /**
-   * `fixed` (default) floats the bar pinned to the bottom of the viewport,
-   * above content. `static` is for embedding / Storybook.
-   */
-  position?: 'fixed' | 'static';
   className?: string;
 }
 
@@ -82,7 +77,6 @@ export function TabBar({
   activeKey,
   onSelect,
   island,
-  position = 'fixed',
   className,
 }: TabBarProps) {
   const reduceMotion = useReducedMotion();
@@ -121,19 +115,10 @@ export function TabBar({
   }
 
   return (
-    <nav
-      aria-label="Primary"
-      data-slot="tab-bar"
-      className={cn(
-        'flex items-center justify-center gap-3 p-1 font-sans',
-        position === 'fixed' &&
-          'fixed inset-x-0 bottom-0 z-50 pb-[calc(0.25rem+env(safe-area-inset-bottom))]',
-        className,
-      )}
-    >
+    <nav className={cn('flex items-center gap-3 p-1', className)}>
       {island?.side === 'left' && <Island {...island} />}
 
-      <div className="flex items-center rounded-full border border-border bg-muted shadow-md">
+      <div className="flex items-center rounded-full justify-between grow border border-border bg-muted shadow-md">
         {items.map((item, index) => {
           const Icon = item.icon;
           const active = item.key === activeKey;
