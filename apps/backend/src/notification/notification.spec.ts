@@ -1,3 +1,4 @@
+import { ConfigService } from '@nestjs/config';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { Test, type TestingModule } from '@nestjs/testing';
 import { EmailService } from './email/email.service';
@@ -46,7 +47,10 @@ describe('NotificationModule', () => {
       ownerEmail: 'owner@example.com',
       ownerFirstName: 'Jane',
     };
-    const expected = await organizationCreatedTemplate(payload);
+    const configService = moduleRef.get(ConfigService);
+    const expected = await organizationCreatedTemplate(payload, {
+      appUrl: configService.get<string>('WEB_URL'),
+    });
 
     emitter.emit(NotificationEvent.ORGANIZATION_CREATED, payload);
 
