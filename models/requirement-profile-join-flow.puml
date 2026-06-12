@@ -32,13 +32,13 @@ if (Volunteer has membership in the Org-Unit?) is (no) then
   :Create membership request;
   |System|
   if (auto-membership approval?) is (enabled) then
-  :Approve membership request;
+    :Approve membership request;
   else (disabled)
-  |Volunteer|
-  :Show: Waiting to be approved;
-  |Manager|
-  :New membership request in Volunteering section;
-  :Approves membership request;
+    |Volunteer|
+    :Show: Waiting to be approved;
+    |Manager|
+    :New membership request in Volunteering section;
+    :Approves membership request;
   endif
 endif
 |Volunteer|
