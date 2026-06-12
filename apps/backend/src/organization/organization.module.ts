@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { AuthModule } from '../auth/auth.module';
 import { DatabaseModule } from '../database/database.module';
 import { MembershipModule } from '../membership/membership.module';
+import { NotificationModule } from '../notification/notification.module';
 import { RequirementProfileModule } from '../requirement-profile/requirement-profile.module';
 import { UserModule } from '../user/user.module';
 import { OrganizationMapper } from './mappers/organization.mapper';
@@ -24,6 +25,7 @@ import {
     DatabaseModule,
     UserModule,
     MembershipModule,
+    NotificationModule,
     AuthModule,
     RequirementProfileModule,
   ],

@@ -16,6 +16,8 @@ import {
 } from '../database/schema';
 import type { PaginationInput } from '../graphql/pagination.input';
 import { MembershipService } from '../membership/membership.service';
+import { NotificationEvent, TypedNotificationEmitter } from '../notification';
+import { UserService } from '../user/user.service';
 import { slugify } from '../utils';
 import type { CreateOrganizationInput } from './inputs/create-organization.input';
 import { OrganizationMapper } from './mappers/organization.mapper';
@@ -36,6 +38,8 @@ export class OrganizationService {
     private readonly mapper: OrganizationMapper,
     private readonly membershipService: MembershipService,
     private readonly organizationUnitService: OrganizationUnitService,
+    private readonly userService: UserService,
+    private readonly notificationEmitter: TypedNotificationEmitter,
   ) {}
 
   async findById(id: string): Promise<OrganizationEntity | undefined> {
@@ -314,7 +318,7 @@ export class OrganizationService {
       (permission) => !permission.startsWith('org-role:'),
     );
 
-    const [organization] = await this.db.transaction(async (tx) => {
+    const [organization, rootUnit] = await this.db.transaction(async (tx) => {
       // Create organization first to get the canonical base data.
       const [createdOrganization] = await tx
         .insert(schema.organizations)
@@ -417,7 +421,16 @@ export class OrganizationService {
         tx,
       );
 
-      return [createdOrganization];
+      return [createdOrganization, rootUnit];
+    });
+
+    const owner = await this.userService.findByIdOrThrow(userId);
+
+    this.notificationEmitter.emit(NotificationEvent.ORGANIZATION_CREATED, {
+      organizationUnitId: rootUnit.id,
+      organizationName: organization.name,
+      ownerEmail: owner.email,
+      ownerFirstName: owner.name.split(' ')[0] ?? owner.name,
     });
 
     return this.mapper.toModelOrThrow(organization);
