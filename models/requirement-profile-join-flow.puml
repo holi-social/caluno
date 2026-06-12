@@ -1,0 +1,46 @@
+@startuml requirement-profile-join-flow
+title Requirement Profile Join Flow
+
+|#Pink|Manager|
+|#LightGray|System|
+|#LightBlue|Volunteer|
+
+|Manager|
+start
+:Send invite link with form to volunteer;
+
+|Volunteer|
+:Receives form link (e.g. via email);
+:Opens link;
+
+|System|
+while (Volunteer has account?) is (no)
+  |Volunteer|
+  :Create account;
+endwhile (yes)
+
+|System|
+:Pre fill requirements that match between form and requirements submissions;
+
+|Volunteer|
+:Fills in form;
+:Submits form;
+:Lands on Org-Unit Home page;
+
+|System|
+if (Volunteer has membership in the Org-Unit?) is (no) then
+  :Create membership request;
+  |System|
+  if (auto-membership approval?) is (enabled) then
+  :Approve membership request;
+  else (disabled)
+  |Volunteer|
+  :Show: Waiting to be approved;
+  |Manager|
+  :New membership request in Volunteering section;
+  :Approves membership request;
+  endif
+endif
+|Volunteer|
+:Is member and gets access to view all relevant Org-Unit info related to them;
+stop
