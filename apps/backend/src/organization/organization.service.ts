@@ -430,7 +430,7 @@ export class OrganizationService {
       organizationUnitId: rootUnit.id,
       organizationName: organization.name,
       ownerEmail: owner.email,
-      ownerFirstName: owner.name.split(' ')[0] ?? owner.name,
+      ownerFirstName: owner.name.split(' ')[0],
     });
 
     return this.mapper.toModelOrThrow(organization);
