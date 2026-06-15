@@ -15,4 +15,4 @@ export const emailTheme = {
   },
 } as const;
 
-export const DEFAULT_APP_URL = 'https://app.clippy.holi.social';
+export const DEFAULT_APP_URL = 'https://clippy.holi.social'; // TODO: Change this to the actual URL
