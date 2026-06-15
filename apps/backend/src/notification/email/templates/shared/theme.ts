@@ -1,6 +1,7 @@
+// TODO: Change this to the actual brand name and support email address
 export const emailTheme = {
   brandName: 'Clippy',
-  supportEmail: 'support@clippy.holi.social',
+  supportEmail: 'support@holi.social',
   fontStack:
     "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
   colors: {
