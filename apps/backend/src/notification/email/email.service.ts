@@ -39,9 +39,11 @@ export class EmailService {
   }
 
   async send(options: EmailSendOptions): Promise<void> {
+    const maskedTo = this.maskEmail(options.to);
+
     if (!this.scaleway) {
       this.logger.log(
-        `[Email:LOG] to=${options.to} subject="${options.subject}"\n${options.html}`,
+        `[Email:LOG] to=${maskedTo} subject="${options.subject}"\n${options.html}`,
       );
       return;
     }
@@ -71,17 +73,32 @@ export class EmailService {
       if (!response.ok) {
         const body = await response.text();
         this.logger.error(
-          `Scaleway TEM responded ${response.status} for ${options.to}: ${body}`,
+          `Scaleway Transactional Email responded ${response.status} for ${maskedTo}: ${body}`,
         );
         return;
       }
 
-      this.logger.debug(`Email sent to ${options.to}`);
+      this.logger.debug(`Email sent to ${maskedTo}`);
     } catch (error) {
       this.logger.error(
-        `Failed to send email to ${options.to}: ${error instanceof Error ? error.message : String(error)}`,
+        `Failed to send email to ${maskedTo}: ${error instanceof Error ? error.message : String(error)}`,
       );
     }
+  }
+
+  private maskEmail(email: string): string {
+    const [local, domain] = email.split('@');
+    if (!domain) {
+      return '***';
+    }
+    const maskedLocal =
+      local.length <= 2 ? `${local[0] ?? ''}***` : `${local.slice(0, 2)}***`;
+
+    const dotIndex = domain.lastIndexOf('.');
+    const maskedDomain =
+      dotIndex === -1 ? '***' : `***${domain.slice(dotIndex)}`;
+
+    return `${maskedLocal}@${maskedDomain}`;
   }
 
   private htmlToText(html: string): string {
