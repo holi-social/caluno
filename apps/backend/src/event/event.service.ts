@@ -8,10 +8,8 @@ import { ConflictGraphQLError, NotFoundGraphQLError } from '../graphql/errors';
 import type { PaginationInput } from '../graphql/pagination.input';
 import { MembershipService } from '../membership/membership.service';
 import type { MembershipRequestEntity } from '../membership/schemas/membership-request.schema';
-import { NotificationService } from '../notification/notification.service';
 import type { RequirementProfileEntity } from '../requirement-profile/schemas/requirement-profile.schema';
 import { JoinStatus } from '../shared/enums/join-status.enum';
-import { UserService } from '../user/user.service';
 import { slugify } from '../utils/slug.util';
 import { EventInviteStatus } from './enums';
 import { CreateEventInput } from './inputs/create-event.input';
@@ -24,7 +22,6 @@ export class EventService {
   constructor(
     @Inject(DATABASE_CONNECTION)
     private readonly db: Database,
-    private readonly userService: UserService,
     private readonly membershipService: MembershipService,
   ) {}
 

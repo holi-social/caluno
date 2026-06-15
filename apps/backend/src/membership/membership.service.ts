@@ -7,7 +7,6 @@ import type { Database } from '../database/database.module';
 import { DATABASE_CONNECTION } from '../database/database-connection';
 import * as schema from '../database/schema';
 import { ConflictGraphQLError, NotFoundGraphQLError } from '../graphql/errors';
-import { NotificationService } from '../notification/notification.service';
 import type { RequirementProfileEntity } from '../requirement-profile/schemas/requirement-profile.schema';
 import { RequirementProfileService } from '../requirement-profile/services/requirement-profile.service';
 import { JoinStatus } from '../shared/enums/join-status.enum';
@@ -24,7 +23,6 @@ export class MembershipService {
   constructor(
     @Inject(DATABASE_CONNECTION)
     private readonly db: Database,
-    private readonly notificationService: NotificationService,
     private readonly requirementProfileService: RequirementProfileService,
   ) {}
 
@@ -243,16 +241,6 @@ export class MembershipService {
       })
       .returning();
 
-    const orgUnit = await this.db.query.organizationUnits.findFirst({
-      where: { id: organizationUnitId },
-    });
-    if (orgUnit) {
-      await this.notificationService.notifyOrgOfMembershipRequest(
-        membershipRequest,
-        orgUnit,
-      );
-    }
-
     return membershipRequest;
   }
 
@@ -389,10 +377,6 @@ export class MembershipService {
       return updatedRequest;
     });
 
-    await this.notificationService.notifyUserMembershipApproved(
-      membershipRequest,
-    );
-
     return membershipRequest;
   }
 
@@ -408,8 +392,6 @@ export class MembershipService {
       reviewedAt: new Date(),
       rejectionReason,
     });
-
-    await this.notificationService.notifyUserMembershipRejected(request);
 
     return request;
   }
@@ -727,11 +709,6 @@ export class MembershipService {
     if (!updatedMembership) {
       throw new NotFoundGraphQLError('Membership not found after update');
     }
-
-    await this.notificationService.notifyUserRoleUpgraded(
-      updatedMembership,
-      roleIds,
-    );
 
     return updatedMembership;
   }

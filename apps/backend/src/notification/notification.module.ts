@@ -1,8 +1,12 @@
 import { Module } from '@nestjs/common';
-import { NotificationService } from './notification.service';
+import { ConfigModule } from '@nestjs/config';
+import { EmailService } from './email/email.service';
+import { OrganizationListener } from './listeners/organization.listener';
+import { TypedNotificationEmitter } from './typed-notification-emitter.service';
 
 @Module({
-  providers: [NotificationService],
-  exports: [NotificationService],
+  imports: [ConfigModule],
+  providers: [TypedNotificationEmitter, EmailService, OrganizationListener],
+  exports: [TypedNotificationEmitter],
 })
 export class NotificationModule {}

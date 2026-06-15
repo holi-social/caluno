@@ -2,7 +2,6 @@ import { Module } from '@nestjs/common';
 import { AuthModule } from '../auth/auth.module';
 import { DatabaseModule } from '../database/database.module';
 import { MembershipModule } from '../membership/membership.module';
-import { NotificationModule } from '../notification/notification.module';
 import { UserModule } from '../user/user.module';
 import { EventService } from './event.service';
 import { EventMapper } from './mappers/event.mapper';
@@ -11,13 +10,7 @@ import { EventMutationResolver } from './resolvers/event-mutation.resolver';
 import { EventQueryResolver } from './resolvers/event-query.resolver';
 
 @Module({
-  imports: [
-    DatabaseModule,
-    AuthModule,
-    UserModule,
-    MembershipModule,
-    NotificationModule,
-  ],
+  imports: [DatabaseModule, AuthModule, UserModule, MembershipModule],
   providers: [
     EventService,
     EventMapper,
