@@ -40,6 +40,7 @@ if (Volunteer has membership in the Org-Unit?) is (no) then
     :New membership request in Volunteering section;
     :Approves membership request;
   endif
+else (yes)
 endif
 |Volunteer|
 :Is member and gets access to view all relevant Org-Unit info related to them;
