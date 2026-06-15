@@ -22,7 +22,7 @@ export class EmailService {
   private readonly scaleway: ScalewayConfig | null;
 
   constructor(private readonly configService: ConfigService) {
-    const secretKey = this.configService.get<string>('SCW_SECRET_KEY');
+    const secretKey = this.configService.get<string>('TEMP_SECRET_KEY');
 
     if (!secretKey) {
       this.scaleway = null;
@@ -31,10 +31,10 @@ export class EmailService {
 
     this.scaleway = {
       secretKey,
-      projectId: this.configService.getOrThrow<string>('SCW_PROJECT_ID'),
-      region: this.configService.get<string>('SCW_TEM_REGION') ?? 'fr-par',
-      fromEmail: this.configService.getOrThrow<string>('SCW_TEM_FROM_EMAIL'),
-      fromName: this.configService.get<string>('SCW_TEM_FROM_NAME'),
+      projectId: this.configService.getOrThrow<string>('PROJECT_ID'),
+      region: this.configService.getOrThrow<string>('TEMP_REGION'),
+      fromEmail: 'noreply@holi.social', // TODO: Change this to the actual email address
+      fromName: 'Clippy', // TODO: Change this to the actual name
     };
   }
 
