@@ -533,8 +533,12 @@ function FieldCard({
         </div>
         <div className="flex items-center gap-3">
           {!readOnly && (
-            <label className="flex cursor-pointer items-center gap-1.5 text-sm text-muted-foreground">
+            <label
+              htmlFor={`field-${index}-required`}
+              className="flex cursor-pointer items-center gap-1.5 text-sm text-muted-foreground"
+            >
               <Switch
+                id={`field-${index}-required`}
                 checked={currentRequired}
                 onCheckedChange={onToggleRequired}
                 size="sm"

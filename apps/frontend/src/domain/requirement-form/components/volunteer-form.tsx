@@ -90,6 +90,7 @@ function buildFieldSchema(
           message: `${label} must be a valid date`,
         });
     if (minAge != null) {
+      const requiredAge = minAge;
       s = s.refine(
         (v) => {
           if (!v) return true;
@@ -103,7 +104,7 @@ function buildFieldSchema(
           ) {
             age--;
           }
-          return age >= minAge!;
+          return age >= requiredAge;
         },
         { message: `You must be at least ${minAge} years old` },
       );
