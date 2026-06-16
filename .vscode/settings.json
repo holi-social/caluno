@@ -22,5 +22,11 @@
   },
   "[terraform]": {
     "editor.defaultFormatter": "hashicorp.terraform"
+  },
+  "[typescriptreact]": {
+    "editor.defaultFormatter": "biomejs.biome"
+  },
+  "[jsonc]": {
+    "editor.defaultFormatter": "biomejs.biome"
   }
 }

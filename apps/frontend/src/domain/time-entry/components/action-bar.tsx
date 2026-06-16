@@ -1,49 +1,30 @@
 'use client';
 
 import { Button } from '@repo/ui';
-import { Edit, Loader2, Timer, Trash } from 'lucide-react';
+import { Edit, Loader2, Trash } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useTransition } from 'react';
 import { toast } from 'sonner';
 import { DeleteAlertDialog } from '@/components/delete-alert-dialog';
-import { closeTimeEntry, deleteTimeEntry } from '@/domain/time-entry/actions';
+import { deleteTimeEntry } from '@/domain/time-entry/actions';
 
 type ActionBarProps = {
   id: string;
   organizationUnitId: string;
-  isOpen: boolean;
   size?: 'xs' | 'sm' | 'md';
 };
 
 export const ActionBar = ({
   id,
   organizationUnitId,
-  isOpen,
   size = 'sm',
 }: ActionBarProps) => {
   const router = useRouter();
 
   const [isDeleting, startDeleteTransition] = useTransition();
-  const [isClosing, startCloseTransition] = useTransition();
 
   const buttonSize = `icon-${size}` as const;
-
-  const handleClose = () => {
-    startCloseTransition(async () => {
-      const result = await closeTimeEntry({
-        id,
-        organizationUnitId,
-        endedAt: new Date(),
-      });
-      if (result?.serverError) {
-        toast.error(`Failed to close time entry. ${result.serverError}`);
-      } else {
-        toast.success('Time entry closed');
-        router.refresh();
-      }
-    });
-  };
 
   const handleDelete = () => {
     startDeleteTransition(async () => {
@@ -59,18 +40,6 @@ export const ActionBar = ({
 
   return (
     <aside className="space-x-2">
-      {isOpen && (
-        <Button
-          size={buttonSize}
-          variant="outline"
-          aria-label="Close time entry"
-          disabled={isClosing}
-          onClick={handleClose}
-        >
-          {isClosing ? <Loader2 className="animate-spin" /> : <Timer />}
-        </Button>
-      )}
-
       <Link href={`/admin/${organizationUnitId}/timesheets/${id}/edit`}>
         <Button
           size={buttonSize}
