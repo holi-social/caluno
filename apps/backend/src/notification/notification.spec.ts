@@ -2,6 +2,7 @@ import { ConfigService } from '@nestjs/config';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { Test, type TestingModule } from '@nestjs/testing';
 import { EmailService } from './email/email.service';
+import { membershipApprovedTemplate } from './email/templates/membership-approved.template';
 import { organizationCreatedTemplate } from './email/templates/organization-created.template';
 import { NotificationModule } from './notification.module';
 import { NotificationEvent } from './notification-events';
@@ -58,6 +59,29 @@ describe('NotificationModule', () => {
 
     expect(emailService.send).toHaveBeenCalledWith({
       to: payload.ownerEmail,
+      subject: expected.subject,
+      html: expected.html,
+    });
+  });
+
+  it('sends membership approved email when event is emitted', async () => {
+    const payload = {
+      organizationUnitId: 'unit-root-1',
+      organizationName: 'Acme Volunteers',
+      memberEmail: 'volunteer@example.com',
+      memberFirstName: 'Sam',
+    };
+    const configService = moduleRef.get(ConfigService);
+    const expected = await membershipApprovedTemplate(payload, {
+      appUrl: configService.get<string>('WEB_URL'),
+    });
+
+    emitter.emit(NotificationEvent.MEMBERSHIP_APPROVED, payload);
+
+    await new Promise((resolve) => setTimeout(resolve, 50));
+
+    expect(emailService.send).toHaveBeenCalledWith({
+      to: payload.memberEmail,
       subject: expected.subject,
       html: expected.html,
     });
