@@ -1,23 +1,23 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
 import { EmailService } from '../email/email.service';
-import { organizationCreatedTemplate } from '../email/templates/organization-created.template';
+import { membershipApprovedTemplate } from '../email/templates/membership-approved.template';
 import { NotificationService } from '../notification.service';
 import type { NotificationEventPayloadMap } from '../notification-event-map';
 import { NotificationEvent } from '../notification-events';
 
 @Injectable()
-export class OrganizationListener {
-  private readonly logger = new Logger(OrganizationListener.name);
+export class MembershipListener {
+  private readonly logger = new Logger(MembershipListener.name);
 
   constructor(
     private readonly emailService: EmailService,
     private readonly notificationService: NotificationService,
   ) {}
 
-  @OnEvent(NotificationEvent.ORGANIZATION_CREATED)
-  async handleOrganizationCreated(
-    payload: NotificationEventPayloadMap[typeof NotificationEvent.ORGANIZATION_CREATED],
+  @OnEvent(NotificationEvent.MEMBERSHIP_APPROVED)
+  async handleMembershipApproved(
+    payload: NotificationEventPayloadMap[typeof NotificationEvent.MEMBERSHIP_APPROVED],
   ): Promise<void> {
     try {
       const recipient =
@@ -26,12 +26,12 @@ export class OrganizationListener {
         );
       if (!recipient) {
         this.logger.warn(
-          `Skipping ${NotificationEvent.ORGANIZATION_CREATED}: user ${payload.userId} not found`,
+          `Skipping ${NotificationEvent.MEMBERSHIP_APPROVED}: user ${payload.userId} not found`,
         );
         return;
       }
 
-      const { subject, html } = await organizationCreatedTemplate({
+      const { subject, html } = await membershipApprovedTemplate({
         organizationUnitId: payload.organizationUnitId,
         organizationName: payload.organizationName,
         recipientFirstName: recipient.firstName,
@@ -43,7 +43,7 @@ export class OrganizationListener {
       });
     } catch (error) {
       this.logger.error(
-        `Failed to handle ${NotificationEvent.ORGANIZATION_CREATED}: ${error instanceof Error ? error.message : String(error)}`,
+        `Failed to handle ${NotificationEvent.MEMBERSHIP_APPROVED}: ${error instanceof Error ? error.message : String(error)}`,
       );
     }
   }

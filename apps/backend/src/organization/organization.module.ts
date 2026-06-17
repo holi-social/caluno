@@ -4,7 +4,6 @@ import { DatabaseModule } from '../database/database.module';
 import { MembershipModule } from '../membership/membership.module';
 import { NotificationModule } from '../notification/notification.module';
 import { RequirementProfileModule } from '../requirement-profile/requirement-profile.module';
-import { UserModule } from '../user/user.module';
 import { OrganizationMapper } from './mappers/organization.mapper';
 import { OrganizationUnitMapper } from './mappers/organization-unit.mapper';
 import { OrganizationUnitTypeMapper } from './mappers/organization-unit-type.mapper';
@@ -23,7 +22,6 @@ import {
 @Module({
   imports: [
     DatabaseModule,
-    UserModule,
     MembershipModule,
     NotificationModule,
     AuthModule,
