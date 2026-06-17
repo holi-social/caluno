@@ -38,11 +38,7 @@ export default async function TimeEntryDetailPage({
         <div>
           <h1 className="page-title">Time Entry</h1>
         </div>
-        <ActionBar
-          id={timeEntryId}
-          organizationUnitId={orgUId}
-          isOpen={isOpen}
-        />
+        <ActionBar id={timeEntryId} organizationUnitId={orgUId} />
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
