@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "hooks": {
+    "preToolUse": [
+      {
+        "command": "AI_HOST=cursor .ai/scripts/guard-write.sh",
+        "matcher": "Write|TabWrite"
+      }
+    ]
+  }
+}
