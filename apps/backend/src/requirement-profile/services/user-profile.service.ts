@@ -18,6 +18,27 @@ export class UserProfileService {
     });
   }
 
+  async findByUserIdInOrgUnit(
+    userId: string,
+    orgUnitId: string,
+  ): Promise<UserProfileEntity | undefined> {
+    const isMember = await this.db.query.memberships.findFirst({
+      where: { userId, organizationUnitId: orgUnitId },
+      columns: { id: true },
+    });
+    const hasRequest = isMember
+      ? null
+      : await this.db.query.membershipRequests.findFirst({
+          where: { userId, organizationUnitId: orgUnitId },
+          columns: { id: true },
+        });
+
+    if (!isMember && !hasRequest) {
+      return undefined;
+    }
+    return this.findByUserId(userId);
+  }
+
   async getData(userId: string): Promise<Record<string, unknown>> {
     const profile = await this.findByUserId(userId);
     return (profile?.data as Record<string, unknown>) ?? {};

@@ -36,11 +36,54 @@ export class FormSubmissionQueryResolver {
     return this.formSubmissionMapper.toModel(item);
   }
 
+  @Permissions(PERMISSIONS.VOLUNTEER_VIEW)
+  @Query(() => [FormSubmission])
+  async formSubmissionsForVolunteer(
+    @Args('userId') userId: string,
+    @Context() context: AuthenticatedGraphQLContext,
+  ): Promise<FormSubmission[]> {
+    const items = await this.formSubmissionService.findByUserForAdmin(
+      userId,
+      context.organizationUnitId,
+    );
+    return this.formSubmissionMapper.toArray(items);
+  }
+
+  @Permissions(PERMISSIONS.VOLUNTEER_VIEW)
+  @Query(() => [FormSubmission])
+  async formSubmissionsByMembershipRequest(
+    @Args('membershipRequestId') membershipRequestId: string,
+    @Context() context: AuthenticatedGraphQLContext,
+  ): Promise<FormSubmission[]> {
+    const items =
+      await this.formSubmissionService.findByMembershipRequestForAdmin(
+        membershipRequestId,
+        context.organizationUnitId,
+      );
+    return this.formSubmissionMapper.toArray(items);
+  }
+
   @Permissions(PERMISSIONS.REQUIREMENT_PROFILE_VIEW)
   @Query(() => FormSubmission, { nullable: true })
   async formSubmission(
     @Args('id') id: string,
     @Context() context: AuthenticatedGraphQLContext,
+  ): Promise<FormSubmission | null> {
+    return this.findOrgScopedSubmission(id, context.organizationUnitId);
+  }
+
+  @Permissions(PERMISSIONS.VOLUNTEER_VIEW)
+  @Query(() => FormSubmission, { nullable: true })
+  async adminVolunteerSubmission(
+    @Args('id') id: string,
+    @Context() context: AuthenticatedGraphQLContext,
+  ): Promise<FormSubmission | null> {
+    return this.findOrgScopedSubmission(id, context.organizationUnitId);
+  }
+
+  private async findOrgScopedSubmission(
+    id: string,
+    organizationUnitId: string,
   ): Promise<FormSubmission | null> {
     const item = await this.formSubmissionService.findById(id);
     if (item) {
@@ -49,7 +92,7 @@ export class FormSubmissionQueryResolver {
         throw new NotFoundGraphQLError('Form not found');
       }
       await this.orgAccessService.verifyUnitInOrg(
-        context.organizationUnitId,
+        organizationUnitId,
         form.organizationId,
       );
     }

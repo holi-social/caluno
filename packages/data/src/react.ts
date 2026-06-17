@@ -21,6 +21,7 @@ export * from './generated/graphql';
 // Auth (better-auth client factory and enhanced methods)
 export * from './react/auth/auth-client';
 // Data fetching hooks
+export * from './react/hooks/use-admin-user-profile';
 export * from './react/hooks/use-block';
 export * from './react/hooks/use-graphql-client';
 export * from './react/hooks/use-join-shift';
@@ -32,6 +33,7 @@ export * from './react/hooks/use-roles';
 export * from './react/hooks/use-shift';
 export * from './react/hooks/use-shift-instances';
 export * from './react/hooks/use-shift-volunteers';
+export * from './react/hooks/use-volunteer-submissions';
 // Organization context (provider, hooks, and cookie utilities)
 export * from './react/org-context';
 // React-specific exports

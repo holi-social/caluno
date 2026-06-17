@@ -1,8 +1,11 @@
+'use client';
+
 import {
   type GetMembershipRequestsQuery,
   MembershipRequestStatus,
 } from '@repo/data';
 import {
+  Button,
   Card,
   CardAction,
   CardContent,
@@ -10,7 +13,9 @@ import {
   CardHeader,
   CardTitle,
 } from '@repo/ui';
+import { UserRound } from 'lucide-react';
 import { MembershipRequestActions } from '@/domain/membership-requests/components/membership-request-actions';
+import { useSheetTrigger } from '@/hooks/use-sheet';
 import { formatDate } from '@/lib/formatting';
 
 interface Props {
@@ -18,6 +23,18 @@ interface Props {
 }
 
 export default function MembershipRequestCard({ request }: Props) {
+  const { open } = useSheetTrigger('volunteer-profile');
+
+  const handleViewVolunteer = () => {
+    open({
+      userId: request.user.id,
+      volunteerName: request.user.name,
+      volunteerStatus: request.status,
+      volunteerEmail: request.user.email,
+      volunteerCheckInId: request.user.checkInId,
+    });
+  };
+
   return (
     <Card key={request.id} className="w-full">
       <CardHeader className="flex flex-row gap-3 ">
@@ -39,7 +56,10 @@ export default function MembershipRequestCard({ request }: Props) {
       </CardHeader>
 
       {request.status === MembershipRequestStatus.Pending && (
-        <CardContent className="flex justify-end">
+        <CardContent className="flex justify-between items-center">
+          <Button variant="outline" size="sm" onClick={handleViewVolunteer}>
+            View volunteer
+          </Button>
           <MembershipRequestActions
             id={request.id}
             organizationUnitId={request.organizationUnit.id}
@@ -47,17 +67,28 @@ export default function MembershipRequestCard({ request }: Props) {
         </CardContent>
       )}
 
-      {request.status === MembershipRequestStatus.Rejected &&
-        request.rejectionReason && (
-          <CardContent>
+      {request.status === MembershipRequestStatus.Rejected && (
+        <CardContent className="flex items-center justify-between">
+          {request.rejectionReason ? (
             <p className="text-muted-foreground text-sm">
               <span className="font-medium text-foreground">
                 Rejection reason:
               </span>{' '}
               {request.rejectionReason}
             </p>
-          </CardContent>
-        )}
+          ) : (
+            <span />
+          )}
+          <Button
+            variant="outline"
+            size="icon-xs"
+            onClick={handleViewVolunteer}
+            aria-label="View volunteer"
+          >
+            <UserRound />
+          </Button>
+        </CardContent>
+      )}
     </Card>
   );
 }

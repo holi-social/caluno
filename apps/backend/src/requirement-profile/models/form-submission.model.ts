@@ -1,7 +1,9 @@
 import { Field, ID, ObjectType } from '@nestjs/graphql';
 import { createPaginatedResponseType } from '../../graphql/paginated-response.model';
+import { User } from '../../user/models/user.model';
 import { FormSubmissionStatus } from '../enums';
 import { FormSubmissionValue } from './form-submission-value.model';
+import { RequirementForm } from './requirement-form.model';
 
 @ObjectType()
 export class FormSubmission {
@@ -31,6 +33,12 @@ export class FormSubmission {
 
   @Field(() => [FormSubmissionValue], { nullable: true })
   values!: FormSubmissionValue[];
+
+  @Field(() => RequirementForm, { nullable: true })
+  form!: RequirementForm | null;
+
+  @Field(() => User, { nullable: true })
+  user!: User | null;
 }
 
 export const FormSubmissionPaginatedResponse =

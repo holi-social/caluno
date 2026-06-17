@@ -124,4 +124,21 @@ export class RequirementFormRepository extends BaseRepository {
     });
     return data.generateDocumentUploadUrl;
   }
+
+  async findSubmissionsByMembershipRequestId(membershipRequestId: string) {
+    const data = await this.sdk.GetFormSubmissionsByMembershipRequest({
+      membershipRequestId,
+    });
+    return data.formSubmissionsByMembershipRequest;
+  }
+
+  async findSubmissionsForVolunteer(userId: string) {
+    const data = await this.sdk.GetFormSubmissionsForVolunteer({ userId });
+    return data.formSubmissionsForVolunteer;
+  }
+
+  async findAdminSubmission(id: string) {
+    const data = await this.sdk.GetAdminFormSubmission({ id });
+    return data.adminVolunteerSubmission;
+  }
 }
