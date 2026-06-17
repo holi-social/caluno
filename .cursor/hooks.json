@@ -4,7 +4,8 @@
     "preToolUse": [
       {
         "command": "AI_HOST=cursor .ai/scripts/guard-write.sh",
-        "matcher": "Write|TabWrite"
+        "matcher": "Write|StrReplace|Delete",
+        "failClosed": true
       }
     ]
   }
