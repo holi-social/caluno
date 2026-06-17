@@ -29,6 +29,59 @@ variables:
 
 # ─── TEST ─────────────────────────────────────────────────────────────────────
 
+# AI pipeline structural quality gate. Runs on every MR and branch pipeline; make it a
+# required check on protected `main` (Settings → Merge requests → "Pipelines must succeed").
+# This is the enforcement the local pre-commit hook only approximates — the agent's shell
+# cannot bypass it. See .ai/PIPELINE.md (Enforcement Model).
+quality:
+  stage: test
+  image: europe-north1-docker.pkg.dev/holi-shared/docker-hub-remote/oven/bun:1
+  needs: []
+  before_script:
+    - bun install --frozen-lockfile
+  script:
+    - bun run lint
+    - bun run check-types
+
+# AI pipeline gate-script self-test: the structural guards must stay green.
+ai_gate_tests:
+  stage: test
+  image: europe-north1-docker.pkg.dev/holi-shared/docker-hub-remote/oven/bun:1
+  needs: []
+  before_script:
+    - apt-get update && apt-get install -y --no-install-recommends git jq >/dev/null
+  script:
+    - bash .ai/scripts/__tests__/gates.test.sh
+
+# AI pipeline commit-convention gate: every MR commit subject must be
+# `type(scope): description` (see .ai/PIPELINE.md Commit Convention). Structural backing
+# for the otherwise prose-only convention. POSIX sh (GitLab default shell).
+commit_lint:
+  stage: test
+  image: europe-north1-docker.pkg.dev/holi-shared/docker-hub-remote/oven/bun:1
+  needs: []
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+  before_script:
+    - apt-get update && apt-get install -y --no-install-recommends git >/dev/null
+  script:
+    - |
+      BASE="${CI_MERGE_REQUEST_DIFF_BASE_SHA:-}"
+      if [ -z "$BASE" ]; then echo "no MR base sha; skipping"; exit 0; fi
+      git log --format='%s' "${BASE}..HEAD" > /tmp/subjects.txt
+      bad=0
+      while IFS= read -r subj; do
+        case "$subj" in ""|Merge\ *) continue ;; esac
+        if ! printf '%s' "$subj" | grep -Eq '^(feat|fix|refactor|chore|test|docs)(\([a-z-]+\))?: .+'; then
+          echo "✖ bad commit subject: $subj"; bad=1
+        fi
+      done < /tmp/subjects.txt
+      if [ "$bad" -ne 0 ]; then
+        echo "Commit subjects must be 'type(scope): description' — see .ai/PIPELINE.md Commit Convention."
+        exit 1
+      fi
+      echo "✓ commit subjects OK"
+
 check_migrations:
   stage: test
   image: europe-north1-docker.pkg.dev/holi-shared/docker-hub-remote/oven/bun:1
