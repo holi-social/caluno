@@ -7,11 +7,10 @@ import type { Database } from '../database/database.module';
 import { DATABASE_CONNECTION } from '../database/database-connection';
 import * as schema from '../database/schema';
 import { ConflictGraphQLError, NotFoundGraphQLError } from '../graphql/errors';
-import { NotificationEvent, TypedNotificationEmitter } from '../notification';
+import { NotificationService } from '../notification';
 import type { RequirementProfileEntity } from '../requirement-profile/schemas/requirement-profile.schema';
 import { RequirementProfileService } from '../requirement-profile/services/requirement-profile.service';
 import { JoinStatus } from '../shared/enums/join-status.enum';
-import { UserService } from '../user/user.service';
 import { MembershipRequestStatus } from './enums';
 import { UpdateMembershipRequestInput } from './inputs/update-membership-request.input';
 import type { MembershipEntity } from './schemas/membership.schema';
@@ -26,8 +25,7 @@ export class MembershipService {
     @Inject(DATABASE_CONNECTION)
     private readonly db: Database,
     private readonly requirementProfileService: RequirementProfileService,
-    private readonly userService: UserService,
-    private readonly notificationEmitter: TypedNotificationEmitter,
+    private readonly notificationService: NotificationService,
   ) {}
 
   private appendIntendedIdsToMetadata(
@@ -384,15 +382,11 @@ export class MembershipService {
     );
 
     if (membershipRequest.userId) {
-      const user = await this.userService.findById(membershipRequest.userId);
-      if (user) {
-        this.notificationEmitter.emit(NotificationEvent.MEMBERSHIP_APPROVED, {
-          organizationUnitId,
-          organizationName: organizationUnit.name,
-          memberEmail: user.email,
-          memberFirstName: user.name.split(' ')[0],
-        });
-      }
+      this.notificationService.notifyMembershipApproved({
+        organizationUnitId,
+        organizationName: organizationUnit.name,
+        userId: membershipRequest.userId,
+      });
     }
 
     return membershipRequest;

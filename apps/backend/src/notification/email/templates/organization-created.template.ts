@@ -1,4 +1,3 @@
-import type { OrganizationCreatedPayload } from '../../payloads/organization-created.payload';
 import {
   button,
   card,
@@ -12,20 +11,18 @@ import {
   text,
 } from './shared';
 
-export interface OrganizationCreatedTemplateOptions {
-  appUrl?: string;
+export interface OrganizationCreatedTemplateData {
+  organizationUnitId: string;
+  organizationName: string;
+  recipientFirstName: string;
 }
 
 export async function organizationCreatedTemplate(
-  payload: OrganizationCreatedPayload,
-  options: OrganizationCreatedTemplateOptions = {},
+  data: OrganizationCreatedTemplateData,
 ): Promise<{ subject: string; html: string }> {
-  const firstName = escapeHtml(payload.ownerFirstName);
-  const organizationName = escapeHtml(payload.organizationName);
-  const organizationUrl = organizationAdminUrl(
-    options.appUrl,
-    payload.organizationUnitId,
-  );
+  const firstName = escapeHtml(data.recipientFirstName);
+  const organizationName = escapeHtml(data.organizationName);
+  const organizationUrl = organizationAdminUrl(data.organizationUnitId);
 
   const body = card(`
     ${heading('Your organization is ready')}
@@ -43,7 +40,7 @@ export async function organizationCreatedTemplate(
 
   return renderEmail({
     templateName: 'organizationCreatedTemplate',
-    subject: `Your organization "${payload.organizationName}" is ready`,
+    subject: `Your organization "${data.organizationName}" is ready`,
     previewText: `${organizationName} is ready. Invite your team and start scheduling shifts.`,
     body,
     footerNote: `You are receiving this because you created an organization on ${emailTheme.brandName}.`,

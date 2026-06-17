@@ -1,4 +1,3 @@
-import type { MembershipApprovedPayload } from '../../payloads/membership-approved.payload';
 import {
   button,
   card,
@@ -12,20 +11,18 @@ import {
   text,
 } from './shared';
 
-export interface MembershipApprovedTemplateOptions {
-  appUrl?: string;
+export interface MembershipApprovedTemplateData {
+  organizationUnitId: string;
+  organizationName: string;
+  recipientFirstName: string;
 }
 
 export async function membershipApprovedTemplate(
-  payload: MembershipApprovedPayload,
-  options: MembershipApprovedTemplateOptions = {},
+  data: MembershipApprovedTemplateData,
 ): Promise<{ subject: string; html: string }> {
-  const firstName = escapeHtml(payload.memberFirstName);
-  const organizationName = escapeHtml(payload.organizationName);
-  const organizationUrl = organizationAdminUrl(
-    options.appUrl,
-    payload.organizationUnitId,
-  );
+  const firstName = escapeHtml(data.recipientFirstName);
+  const organizationName = escapeHtml(data.organizationName);
+  const organizationUrl = organizationAdminUrl(data.organizationUnitId);
 
   const body = card(`
     ${heading('Welcome aboard')}
@@ -43,7 +40,7 @@ export async function membershipApprovedTemplate(
 
   return renderEmail({
     templateName: 'membershipApprovedTemplate',
-    subject: `Your membership to "${payload.organizationName}" has been approved`,
+    subject: `Your membership to "${data.organizationName}" has been approved`,
     previewText: `Your membership to ${organizationName} has been approved. Browse shifts and start volunteering.`,
     body,
     footerNote: `You are receiving this because your membership request to ${organizationName} was approved on ${emailTheme.brandName}.`,

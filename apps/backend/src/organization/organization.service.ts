@@ -16,8 +16,7 @@ import {
 } from '../database/schema';
 import type { PaginationInput } from '../graphql/pagination.input';
 import { MembershipService } from '../membership/membership.service';
-import { NotificationEvent, TypedNotificationEmitter } from '../notification';
-import { UserService } from '../user/user.service';
+import { NotificationService } from '../notification';
 import { slugify } from '../utils';
 import type { CreateOrganizationInput } from './inputs/create-organization.input';
 import { OrganizationMapper } from './mappers/organization.mapper';
@@ -38,8 +37,7 @@ export class OrganizationService {
     private readonly mapper: OrganizationMapper,
     private readonly membershipService: MembershipService,
     private readonly organizationUnitService: OrganizationUnitService,
-    private readonly userService: UserService,
-    private readonly notificationEmitter: TypedNotificationEmitter,
+    private readonly notificationService: NotificationService,
   ) {}
 
   async findById(id: string): Promise<OrganizationEntity | undefined> {
@@ -424,13 +422,10 @@ export class OrganizationService {
       return [createdOrganization, rootUnit];
     });
 
-    const owner = await this.userService.findByIdOrThrow(userId);
-
-    this.notificationEmitter.emit(NotificationEvent.ORGANIZATION_CREATED, {
+    this.notificationService.notifyOrganizationCreated({
       organizationUnitId: rootUnit.id,
       organizationName: organization.name,
-      ownerEmail: owner.email,
-      ownerFirstName: owner.name.split(' ')[0],
+      userId,
     });
 
     return this.mapper.toModelOrThrow(organization);
