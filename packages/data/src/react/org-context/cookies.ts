@@ -2,6 +2,7 @@
 
 import Cookies from 'js-cookie';
 import { LAST_ORG_COOKIE } from '../../constants';
+
 export { LAST_ORG_COOKIE };
 
 export function setLastVisitedOrg(orgUId: string): void {

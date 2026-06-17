@@ -28,8 +28,7 @@ export class TimeTrackingService {
     });
 
     if (
-      !instance ||
-      !instance.master ||
+      !instance?.master ||
       instance.master.organizationUnitId !== organizationUnitId
     ) {
       throw new NotFoundGraphQLError(
