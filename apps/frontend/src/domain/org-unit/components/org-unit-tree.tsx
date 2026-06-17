@@ -20,7 +20,8 @@ import {
   Share2Icon,
   TrashIcon,
 } from 'lucide-react';
-import { useRouter } from 'next/navigation';
+import Link from 'next/link';
+import { orgUnitAdminHref } from '@/lib/admin-routes';
 import { getDynamicIcon } from '@/lib/dynamic-icon';
 import { copyToClipboard } from '../../../lib/clipboard';
 import { organizationUnitUrl } from '../../organization/share';
@@ -64,8 +65,6 @@ function OrgUnitNodeItem({
   isLast = false,
   parentPath = [],
 }: OrgUnitNodeItemProps) {
-  const router = useRouter();
-
   const Icon = getDynamicIcon(node.type.icon, HouseIcon);
   const children = node.children ?? [];
   const hasChildren = children.length > 0;
@@ -92,19 +91,26 @@ function OrgUnitNodeItem({
         />
 
         <span className="flex flex-row gap-6">
-          <TreeLabel>{node.name}</TreeLabel>
+          <TreeLabel
+            className="hover:underline"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <Link href={orgUnitAdminHref(node.id)}>{node.name}</Link>
+          </TreeLabel>
 
           <span className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
             <Button
               size="icon-xs"
               variant="outline"
               aria-label="Visit org unit"
-              onClick={(e) => {
-                e.stopPropagation();
-                router.push(`/admin/${node.id}`);
-              }}
+              asChild
             >
-              <EyeIcon />
+              <Link
+                href={orgUnitAdminHref(node.id)}
+                onClick={(e) => e.stopPropagation()}
+              >
+                <EyeIcon />
+              </Link>
             </Button>
 
             <Button
