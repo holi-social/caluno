@@ -14,19 +14,16 @@ export function escapeHtml(value: string): string {
 }
 
 /**
- * Normalizes the configured web app URL (falling back to the production default)
+ * Normalizes WEB_URL (falling back to the production default)
  * by stripping any trailing slashes so paths can be appended safely.
  */
-export function resolveAppUrl(appUrl?: string): string {
-  return (appUrl ?? DEFAULT_APP_URL).replace(/\/+$/, '');
+export function resolveAppUrl(): string {
+  return (process.env.WEB_URL ?? DEFAULT_APP_URL).replace(/\/+$/, '');
 }
 
 /** Deep link to an organization's admin dashboard, keyed by its root unit id. */
-export function organizationAdminUrl(
-  appUrl: string | undefined,
-  organizationUnitId: string,
-): string {
-  return `${resolveAppUrl(appUrl)}/admin/${encodeURIComponent(organizationUnitId)}`;
+export function organizationAdminUrl(organizationUnitId: string): string {
+  return `${resolveAppUrl()}/admin/${encodeURIComponent(organizationUnitId)}`;
 }
 
 /** Deep link to the volunteers admin page for reviewing membership requests. */

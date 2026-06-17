@@ -1,8 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
 import { OnEvent } from '@nestjs/event-emitter';
 import { EmailService } from '../email/email.service';
 import { organizationCreatedTemplate } from '../email/templates/organization-created.template';
+import { NotificationService } from '../notification.service';
 import type { NotificationEventPayloadMap } from '../notification-event-map';
 import { NotificationEvent } from '../notification-events';
 
@@ -12,7 +12,7 @@ export class OrganizationListener {
 
   constructor(
     private readonly emailService: EmailService,
-    private readonly configService: ConfigService,
+    private readonly notificationService: NotificationService,
   ) {}
 
   @OnEvent(NotificationEvent.ORGANIZATION_CREATED)
@@ -20,10 +20,27 @@ export class OrganizationListener {
     payload: NotificationEventPayloadMap[typeof NotificationEvent.ORGANIZATION_CREATED],
   ): Promise<void> {
     try {
-      const { subject, html } = await organizationCreatedTemplate(payload, {
-        appUrl: this.configService.get<string>('WEB_URL'),
+      const recipient =
+        await this.notificationService.resolveUserNotificationData(
+          payload.userId,
+        );
+      if (!recipient) {
+        this.logger.warn(
+          `Skipping ${NotificationEvent.ORGANIZATION_CREATED}: user ${payload.userId} not found`,
+        );
+        return;
+      }
+
+      const { subject, html } = await organizationCreatedTemplate({
+        organizationUnitId: payload.organizationUnitId,
+        organizationName: payload.organizationName,
+        recipientFirstName: recipient.firstName,
       });
-      await this.emailService.send({ to: payload.ownerEmail, subject, html });
+      await this.emailService.send({
+        to: recipient.email,
+        subject,
+        html,
+      });
     } catch (error) {
       this.logger.error(
         `Failed to handle ${NotificationEvent.ORGANIZATION_CREATED}: ${error instanceof Error ? error.message : String(error)}`,

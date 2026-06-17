@@ -8,11 +8,10 @@ import type { Database } from '../database/database.module';
 import { DATABASE_CONNECTION } from '../database/database-connection';
 import * as schema from '../database/schema';
 import { ConflictGraphQLError, NotFoundGraphQLError } from '../graphql/errors';
-import { NotificationEvent, TypedNotificationEmitter } from '../notification';
+import { NotificationService } from '../notification';
 import type { RequirementProfileEntity } from '../requirement-profile/schemas/requirement-profile.schema';
 import { RequirementProfileService } from '../requirement-profile/services/requirement-profile.service';
 import { JoinStatus } from '../shared/enums/join-status.enum';
-import { UserService } from '../user/user.service';
 import { MembershipRequestStatus } from './enums';
 import { UpdateMembershipRequestInput } from './inputs/update-membership-request.input';
 import type { MembershipEntity } from './schemas/membership.schema';
@@ -30,8 +29,7 @@ export class MembershipService {
     private readonly db: Database,
     private readonly requirementProfileService: RequirementProfileService,
     private readonly authService: AuthService,
-    private readonly userService: UserService,
-    private readonly notificationEmitter: TypedNotificationEmitter,
+    private readonly notificationService: NotificationService,
   ) {}
 
   private appendIntendedIdsToMetadata(
@@ -208,15 +206,12 @@ export class MembershipService {
     organizationUnitId: string,
   ): Promise<void> {
     try {
-      const [organizationUnit, requester] = await Promise.all([
-        this.db.query.organizationUnits.findFirst({
-          where: { id: organizationUnitId },
-          columns: { id: true, name: true },
-        }),
-        this.userService.findById(userId),
-      ]);
+      const organizationUnit = await this.db.query.organizationUnits.findFirst({
+        where: { id: organizationUnitId },
+        columns: { id: true, name: true },
+      });
 
-      if (!organizationUnit || !requester) {
+      if (!organizationUnit) {
         return;
       }
 
@@ -224,27 +219,23 @@ export class MembershipService {
         organizationUnitId,
         PERMISSIONS.VOLUNTEER_EDIT,
       );
-
-      const recipients = reviewers
+      const recipientUserIds = reviewers
         .filter((reviewer) => reviewer.id !== userId)
-        .map((reviewer) => ({
-          email: reviewer.email,
-          firstName: reviewer.name.split(' ')[0] ?? reviewer.name,
-        }));
+        .map((reviewer) => reviewer.id);
 
-      if (recipients.length === 0) {
+      if (recipientUserIds.length === 0) {
         return;
       }
 
-      this.notificationEmitter.emit(NotificationEvent.MEMBERSHIP_REQUESTED, {
+      this.notificationService.notifyMembershipRequested({
         organizationUnitId,
         organizationUnitName: organizationUnit.name,
-        requesterName: requester.name,
-        recipients,
+        requesterUserId: userId,
+        recipientUserIds,
       });
     } catch (error) {
       this.logger.error(
-        `Failed to emit ${NotificationEvent.MEMBERSHIP_REQUESTED}: ${error instanceof Error ? error.message : String(error)}`,
+        `Failed to emit membership requested notification: ${error instanceof Error ? error.message : String(error)}`,
       );
     }
   }
@@ -331,107 +322,117 @@ export class MembershipService {
     organizationUnitId: string,
     reviewerId: string,
   ): Promise<MembershipRequestEntity> {
-    const membershipRequest = await this.db.transaction(async (tx) => {
-      const requestToApprove = await tx.query.membershipRequests.findFirst({
-        where: { id },
-      });
+    const { membershipRequest, organizationUnit } = await this.db.transaction(
+      async (tx) => {
+        const requestToApprove = await tx.query.membershipRequests.findFirst({
+          where: { id },
+        });
 
-      if (!requestToApprove) {
-        throw new NotFoundGraphQLError('Membership request not found');
-      }
+        if (!requestToApprove) {
+          throw new NotFoundGraphQLError('Membership request not found');
+        }
 
-      const organizationUnit = await tx.query.organizationUnits.findFirst({
-        where: { id: organizationUnitId },
-      });
+        const organizationUnit = await tx.query.organizationUnits.findFirst({
+          where: { id: organizationUnitId },
+        });
 
-      if (!organizationUnit) {
-        throw new NotFoundGraphQLError('Organization unit not found');
-      }
+        if (!organizationUnit) {
+          throw new NotFoundGraphQLError('Organization unit not found');
+        }
 
-      if (!organizationUnit.organizationId) {
-        throw new ConflictGraphQLError(
-          'Cannot approve: organization unit is not linked to an organization.',
-        );
-      }
-
-      const memberRole = await tx.query.roles.findFirst({
-        where: {
-          organizationId: organizationUnit.organizationId,
-          name: DEFAULT_MEMBER_ROLE_NAME,
-          isInternal: true,
-        },
-      });
-
-      if (!memberRole) {
-        throw new NotFoundGraphQLError('Default member role not found');
-      }
-
-      if (organizationUnit.requiredMembershipRequirementProfileId) {
-        if (!requestToApprove.userId) {
+        if (!organizationUnit.organizationId) {
           throw new ConflictGraphQLError(
-            'Cannot approve: membership request has no associated user.',
+            'Cannot approve: organization unit is not linked to an organization.',
           );
         }
-        const requirementStatuses =
-          await this.requirementProfileService.getUserRequirementStatus(
-            requestToApprove.userId,
-            organizationUnit.requiredMembershipRequirementProfileId,
-          );
-        const allApproved = requirementStatuses.every(
-          (s) => s.status === 'APPROVED',
-        );
-        if (!allApproved) {
-          throw new ConflictGraphQLError(
-            'Cannot approve: user has not completed the required membership profile.',
-          );
+
+        const memberRole = await tx.query.roles.findFirst({
+          where: {
+            organizationId: organizationUnit.organizationId,
+            name: DEFAULT_MEMBER_ROLE_NAME,
+            isInternal: true,
+          },
+        });
+
+        if (!memberRole) {
+          throw new NotFoundGraphQLError('Default member role not found');
         }
-      }
 
-      const [updatedRequest] = await tx
-        .update(schema.membershipRequests)
-        .set({
-          status: MembershipRequestStatus.ACCEPTED,
-          reviewedById: reviewerId,
-          reviewedAt: new Date(),
-        })
-        .where(
-          and(
-            eq(schema.membershipRequests.id, id),
-            eq(
-              schema.membershipRequests.organizationUnitId,
-              organizationUnitId,
+        if (organizationUnit.requiredMembershipRequirementProfileId) {
+          if (!requestToApprove.userId) {
+            throw new ConflictGraphQLError(
+              'Cannot approve: membership request has no associated user.',
+            );
+          }
+          const requirementStatuses =
+            await this.requirementProfileService.getUserRequirementStatus(
+              requestToApprove.userId,
+              organizationUnit.requiredMembershipRequirementProfileId,
+            );
+          const allApproved = requirementStatuses.every(
+            (s) => s.status === 'APPROVED',
+          );
+          if (!allApproved) {
+            throw new ConflictGraphQLError(
+              'Cannot approve: user has not completed the required membership profile.',
+            );
+          }
+        }
+
+        const [updatedRequest] = await tx
+          .update(schema.membershipRequests)
+          .set({
+            status: MembershipRequestStatus.ACCEPTED,
+            reviewedById: reviewerId,
+            reviewedAt: new Date(),
+          })
+          .where(
+            and(
+              eq(schema.membershipRequests.id, id),
+              eq(
+                schema.membershipRequests.organizationUnitId,
+                organizationUnitId,
+              ),
+              eq(
+                schema.membershipRequests.status,
+                MembershipRequestStatus.PENDING,
+              ),
             ),
-            eq(
-              schema.membershipRequests.status,
-              MembershipRequestStatus.PENDING,
-            ),
-          ),
-        )
-        .returning();
+          )
+          .returning();
 
-      if (!updatedRequest) {
-        throw new NotFoundGraphQLError('Membership request not found');
-      }
+        if (!updatedRequest) {
+          throw new NotFoundGraphQLError('Membership request not found');
+        }
 
-      const [membership] = await tx
-        .insert(schema.memberships)
-        .values({
-          userId: updatedRequest.userId,
-          organizationUnitId,
-        })
-        .returning();
+        const [membership] = await tx
+          .insert(schema.memberships)
+          .values({
+            userId: updatedRequest.userId,
+            organizationUnitId,
+          })
+          .returning();
 
-      if (!membership) {
-        throw new NotFoundGraphQLError('Membership not found');
-      }
+        if (!membership) {
+          throw new NotFoundGraphQLError('Membership not found');
+        }
 
-      await tx.insert(schema.membershipRoles).values({
-        membershipId: membership.id,
-        roleId: memberRole.id,
+        await tx.insert(schema.membershipRoles).values({
+          membershipId: membership.id,
+          roleId: memberRole.id,
+        });
+
+        return { membershipRequest: updatedRequest, organizationUnit };
+      },
+    );
+
+    if (membershipRequest.userId) {
+      this.notificationService.notifyMembershipApproved({
+        organizationUnitId,
+        organizationName: organizationUnit.name,
+        userId: membershipRequest.userId,
       });
-
-      return updatedRequest;
-    });
+    }
 
     return membershipRequest;
   }
