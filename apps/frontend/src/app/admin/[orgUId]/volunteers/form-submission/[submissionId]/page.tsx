@@ -46,13 +46,14 @@ export default async function FormSubmissionPage({ params }: Props) {
 
   const submission =
     await data.requirementForm.findAdminSubmission(submissionId);
-  const userProfile = submission?.user?.id
-    ? await data.requirementProfile.getAdminUserProfile(submission.user.id)
-    : null;
 
   if (!submission) {
     notFound();
   }
+
+  const userProfile = submission.user?.id
+    ? await data.requirementProfile.getAdminUserProfile(submission.user.id)
+    : null;
 
   const volunteerName = submission.user?.name ?? 'Volunteer';
   const formName = submission.form?.name ?? 'Form';

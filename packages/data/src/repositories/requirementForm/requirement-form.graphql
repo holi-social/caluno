@@ -564,7 +564,7 @@ query GetFormSubmissionsForVolunteer($userId: String!) {
 }
 
 query GetAdminFormSubmission($id: String!) {
-  formSubmission(id: $id) {
+  adminVolunteerSubmission(id: $id) {
     id
     status
     submittedAt

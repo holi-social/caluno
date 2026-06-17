@@ -84,8 +84,13 @@ export class FormSubmissionService {
     const request = await this.db.query.membershipRequests.findFirst({
       where: { id: membershipRequestId, organizationUnitId: orgUnitId },
     });
-    if (!request?.userId) {
-      throw new ForbiddenGraphQLError('Access denied');
+    if (!request) {
+      throw new NotFoundGraphQLError('Membership request not found');
+    }
+    if (!request.userId) {
+      throw new ForbiddenGraphQLError(
+        `Membership request ${membershipRequestId} has no user`,
+      );
     }
     return this.findByUserAndOrgUnit(request.userId, orgUnitId);
   }

@@ -69,6 +69,22 @@ export class FormSubmissionQueryResolver {
     @Args('id') id: string,
     @Context() context: AuthenticatedGraphQLContext,
   ): Promise<FormSubmission | null> {
+    return this.findOrgScopedSubmission(id, context.organizationUnitId);
+  }
+
+  @Permissions(PERMISSIONS.VOLUNTEER_VIEW)
+  @Query(() => FormSubmission, { nullable: true })
+  async adminVolunteerSubmission(
+    @Args('id') id: string,
+    @Context() context: AuthenticatedGraphQLContext,
+  ): Promise<FormSubmission | null> {
+    return this.findOrgScopedSubmission(id, context.organizationUnitId);
+  }
+
+  private async findOrgScopedSubmission(
+    id: string,
+    organizationUnitId: string,
+  ): Promise<FormSubmission | null> {
     const item = await this.formSubmissionService.findById(id);
     if (item) {
       const form = await this.requirementFormService.findById(item.formId);
@@ -76,7 +92,7 @@ export class FormSubmissionQueryResolver {
         throw new NotFoundGraphQLError('Form not found');
       }
       await this.orgAccessService.verifyUnitInOrg(
-        context.organizationUnitId,
+        organizationUnitId,
         form.organizationId,
       );
     }

@@ -4,6 +4,7 @@ import {
   MembershipRequestStatus,
   useAdminUserProfile,
   useFormSubmissionsForVolunteer,
+  useOrgUId,
 } from '@repo/data/react';
 import {
   Badge,
@@ -16,12 +17,11 @@ import {
 } from '@repo/ui';
 import { ExternalLink } from 'lucide-react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
 import { useSheet } from '@/hooks/use-sheet';
 
 function statusVariant(
   status: MembershipRequestStatus,
-): 'default' | 'secondary' | 'destructive' | 'outline' {
+): 'default' | 'secondary' | 'destructive' {
   if (status === MembershipRequestStatus.Pending) return 'secondary';
   if (status === MembershipRequestStatus.Rejected) return 'destructive';
   return 'default';
@@ -41,15 +41,14 @@ function VolunteerSheetContent({
   status,
   email,
   checkInId,
-  orgUId,
 }: {
   userId: string;
   name: string;
   status: MembershipRequestStatus;
   email: string;
   checkInId: string;
-  orgUId: string;
 }) {
+  const orgUId = useOrgUId();
   const { data: userProfile, isPending: profilePending } =
     useAdminUserProfile(userId);
   const { data: submissions, isPending: submissionsPending } =
@@ -59,7 +58,9 @@ function VolunteerSheetContent({
   const address =
     typeof profileData.address === 'string' ? profileData.address : null;
   const birthday =
-    typeof profileData.birthday === 'string' ? profileData.birthday : null;
+    typeof profileData['birth-date'] === 'string'
+      ? profileData['birth-date']
+      : null;
 
   return (
     <div className="flex flex-col gap-6 mt-4">
@@ -142,9 +143,6 @@ export function VolunteerSheet() {
   const email = getParam('volunteerEmail') ?? '';
   const checkInId = getParam('volunteerCheckInId') ?? '';
 
-  const pathname = usePathname();
-  const orgUId = pathname.split('/')[2] ?? '';
-
   return (
     <Sheet open={isOpen} onOpenChange={(open) => !open && close()}>
       <SheetContent className="flex flex-col w-full sm:max-w-md overflow-y-auto">
@@ -160,7 +158,6 @@ export function VolunteerSheet() {
               status={status}
               email={email}
               checkInId={checkInId}
-              orgUId={orgUId}
             />
           )}
         </div>

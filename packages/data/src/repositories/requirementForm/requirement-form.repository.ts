@@ -139,6 +139,6 @@ export class RequirementFormRepository extends BaseRepository {
 
   async findAdminSubmission(id: string) {
     const data = await this.sdk.GetAdminFormSubmission({ id });
-    return data.formSubmission;
+    return data.adminVolunteerSubmission;
   }
 }
