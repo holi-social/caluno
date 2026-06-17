@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { RoleMapper } from '../auth/mappers/role.mapper';
 import { DatabaseModule } from '../database/database.module';
+import { NotificationModule } from '../notification/notification.module';
 import { OrganizationUnitMapper } from '../organization/mappers/organization-unit.mapper';
 import { RequirementProfileModule } from '../requirement-profile/requirement-profile.module';
 import { UserModule } from '../user/user.module';
@@ -15,7 +16,12 @@ import {
 } from './resolvers';
 
 @Module({
-  imports: [DatabaseModule, UserModule, RequirementProfileModule],
+  imports: [
+    DatabaseModule,
+    UserModule,
+    RequirementProfileModule,
+    NotificationModule,
+  ],
   providers: [
     MembershipService,
     MembershipMapper,
