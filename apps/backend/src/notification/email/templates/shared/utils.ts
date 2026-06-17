@@ -28,3 +28,11 @@ export function organizationAdminUrl(
 ): string {
   return `${resolveAppUrl(appUrl)}/admin/${encodeURIComponent(organizationUnitId)}`;
 }
+
+/** Deep link to the volunteers admin page for reviewing membership requests. */
+export function volunteersAdminUrl(
+  appUrl: string | undefined,
+  organizationUnitId: string,
+): string {
+  return `${resolveAppUrl(appUrl)}/admin/${encodeURIComponent(organizationUnitId)}/volunteers`;
+}

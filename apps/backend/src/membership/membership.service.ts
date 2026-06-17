@@ -1,15 +1,18 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable, Logger } from '@nestjs/common';
 import { and, eq, inArray, sql } from 'drizzle-orm';
-import { DEFAULT_MEMBER_ROLE_NAME } from '../auth/constants';
+import { AuthService } from '../auth/auth.service';
+import { DEFAULT_MEMBER_ROLE_NAME, PERMISSIONS } from '../auth/constants';
 import type { UserEntity } from '../auth/schemas/auth.schema';
 import type { RoleEntity } from '../auth/schemas/role.schema';
 import type { Database } from '../database/database.module';
 import { DATABASE_CONNECTION } from '../database/database-connection';
 import * as schema from '../database/schema';
 import { ConflictGraphQLError, NotFoundGraphQLError } from '../graphql/errors';
+import { NotificationEvent, TypedNotificationEmitter } from '../notification';
 import type { RequirementProfileEntity } from '../requirement-profile/schemas/requirement-profile.schema';
 import { RequirementProfileService } from '../requirement-profile/services/requirement-profile.service';
 import { JoinStatus } from '../shared/enums/join-status.enum';
+import { UserService } from '../user/user.service';
 import { MembershipRequestStatus } from './enums';
 import { UpdateMembershipRequestInput } from './inputs/update-membership-request.input';
 import type { MembershipEntity } from './schemas/membership.schema';
@@ -20,10 +23,15 @@ import {
 
 @Injectable()
 export class MembershipService {
+  private readonly logger = new Logger(MembershipService.name);
+
   constructor(
     @Inject(DATABASE_CONNECTION)
     private readonly db: Database,
     private readonly requirementProfileService: RequirementProfileService,
+    private readonly authService: AuthService,
+    private readonly userService: UserService,
+    private readonly notificationEmitter: TypedNotificationEmitter,
   ) {}
 
   private appendIntendedIdsToMetadata(
@@ -195,6 +203,52 @@ export class MembershipService {
     return false;
   }
 
+  private async notifyMembershipRequested(
+    userId: string,
+    organizationUnitId: string,
+  ): Promise<void> {
+    try {
+      const [organizationUnit, requester] = await Promise.all([
+        this.db.query.organizationUnits.findFirst({
+          where: { id: organizationUnitId },
+          columns: { id: true, name: true },
+        }),
+        this.userService.findById(userId),
+      ]);
+
+      if (!organizationUnit || !requester) {
+        return;
+      }
+
+      const reviewers = await this.authService.findUsersWithPermission(
+        organizationUnitId,
+        PERMISSIONS.VOLUNTEER_EDIT,
+      );
+
+      const recipients = reviewers
+        .filter((reviewer) => reviewer.id !== userId)
+        .map((reviewer) => ({
+          email: reviewer.email,
+          firstName: reviewer.name.split(' ')[0] ?? reviewer.name,
+        }));
+
+      if (recipients.length === 0) {
+        return;
+      }
+
+      this.notificationEmitter.emit(NotificationEvent.MEMBERSHIP_REQUESTED, {
+        organizationUnitId,
+        organizationUnitName: organizationUnit.name,
+        requesterName: requester.name,
+        recipients,
+      });
+    } catch (error) {
+      this.logger.error(
+        `Failed to emit ${NotificationEvent.MEMBERSHIP_REQUESTED}: ${error instanceof Error ? error.message : String(error)}`,
+      );
+    }
+  }
+
   // Membership requests
   async createMembershipRequest(
     userId: string,
@@ -240,6 +294,8 @@ export class MembershipService {
         metadata: this.buildInitialMetadata(intendedShiftId, intendedEventId),
       })
       .returning();
+
+    void this.notifyMembershipRequested(userId, organizationUnitId);
 
     return membershipRequest;
   }
