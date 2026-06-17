@@ -8,6 +8,7 @@ query GetShift($id: String!) {
     visibility
     createdAt
     maxVolunteers
+    minVolunteers
     rrule
     originalStartsAt
     durationMinutes
@@ -30,6 +31,7 @@ query GetShifts($limit: Int!, $offset: Int!) {
       durationMinutes
       visibility
       maxVolunteers
+      minVolunteers
       createdBy {
         id
         name
@@ -172,5 +174,25 @@ query GetShiftInstances($shiftId: ID!) {
     actualEndsAt
     overrideTitle
     isCancelled
+  }
+}
+
+query GetWeeklyShifts($from: DateTime!, $to: DateTime!) {
+  weeklyShifts(from: $from, to: $to) {
+    id
+    actualStartsAt
+    actualEndsAt
+    isCancelled
+    master {
+      id
+      title
+      minVolunteers
+      maxVolunteers
+      visibility
+    }
+    volunteers {
+      id
+      name
+    }
   }
 }

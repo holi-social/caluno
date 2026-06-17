@@ -101,4 +101,19 @@ export class ShiftQueryResolver {
     );
     return this.userMapper.toArray(volunteers);
   }
+
+  @Permissions(PERMISSIONS.SHIFT_VIEW)
+  @Query(() => [ShiftInstance])
+  async weeklyShifts(
+    @Args('from', { type: () => Date }) from: Date,
+    @Args('to', { type: () => Date }) to: Date,
+    @Context() context: AuthenticatedGraphQLContext,
+  ): Promise<ShiftInstance[]> {
+    const instances = await this.shiftService.findShiftsForWeek(
+      context.organizationUnitId,
+      from,
+      to,
+    );
+    return this.shiftInstanceMapper.toArray(instances);
+  }
 }

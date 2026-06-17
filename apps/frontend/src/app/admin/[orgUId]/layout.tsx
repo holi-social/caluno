@@ -50,8 +50,10 @@ export default async function OrgLayout({
                 <SidebarTrigger className="-ml-1" />
                 <Separator orientation="vertical" className="mr-2 h-4" />
                 <div className="flex justify-between gap-2 flex-1">
-                  <h1 className="text-lg font-semibold">Clippy</h1>
-                  <div className="flex gap-2 items-center">
+                  <h1 className="text-lg font-semibold hidden sm:block">
+                    Clippy
+                  </h1>
+                  <div className="flex gap-2 items-center ml-auto sm:ml-0">
                     <Suspense
                       fallback={<Loader2 className="animate-spin size-4" />}
                     >
