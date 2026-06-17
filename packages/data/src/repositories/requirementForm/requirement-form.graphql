@@ -536,3 +536,63 @@ mutation UpdateMyUserProfile($input: UpdateUserProfileInput!) {
 mutation GenerateDocumentUploadUrl($filename: String!, $mimeType: String!) {
   generateDocumentUploadUrl(filename: $filename, mimeType: $mimeType)
 }
+
+query GetFormSubmissionsByMembershipRequest($membershipRequestId: String!) {
+  formSubmissionsByMembershipRequest(
+    membershipRequestId: $membershipRequestId
+  ) {
+    id
+    status
+    submittedAt
+    form {
+      id
+      name
+    }
+  }
+}
+
+query GetFormSubmissionsForVolunteer($userId: String!) {
+  formSubmissionsForVolunteer(userId: $userId) {
+    id
+    status
+    submittedAt
+    form {
+      id
+      name
+    }
+  }
+}
+
+query GetAdminFormSubmission($id: String!) {
+  adminVolunteerSubmission(id: $id) {
+    id
+    status
+    submittedAt
+    user {
+      id
+      name
+      email
+      checkInId
+    }
+    form {
+      id
+      name
+      blockRefs {
+        fieldOrder
+        block {
+          id
+          fields {
+            id
+            label
+            type
+            systemKey
+          }
+        }
+      }
+    }
+    values {
+      fieldId
+      value
+    }
+  }
+}

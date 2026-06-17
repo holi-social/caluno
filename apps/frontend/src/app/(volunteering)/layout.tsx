@@ -1,5 +1,5 @@
 import { DataProvider } from '@repo/data/react';
-import { Sparkle, Sparkles } from 'lucide-react';
+import { Sparkles } from 'lucide-react';
 import Link from 'next/link';
 import type { ReactNode } from 'react';
 import { ProfileDropdown } from '@/components/navigation/profile-dropdown';

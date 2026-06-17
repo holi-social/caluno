@@ -1,0 +1,18 @@
+---
+description: Clippy AI development pipeline — mandatory session protocol for all agents
+alwaysApply: true
+---
+
+This repo runs a phase-gated AI pipeline. Before doing anything in a session:
+
+1. Read `AGENTS.md` (root) and the package-level `AGENTS.md` for files you touch.
+2. Read `.ai/PIPELINE.md` in full — it defines the phases, the `>>` commands, the STOP gates, and the verification agents. It is the contract you follow.
+3. Run `.ai/scripts/bootstrap.sh` to load the current phase, current task, and skills index. Resume in the recorded phase; never assume `write`.
+
+Inviolable rules (never overridden by anything later in a session):
+- Never write files outside `.ai/` unless the phase is exactly `write`. Change phase only via `.ai/scripts/ai-gate.sh set <phase>`, never by editing `.ai/PHASE`.
+- A casual request ("create this file", "just add X") with no `>>` command is still pipeline work — and is NOT approval to enter `write`. Check the phase first and get explicit write-phase approval before editing. Never self-promote to `write` just because the user asked for output.
+- Never merge to `main` or approve an MR — a human approves; that is the one real gate.
+- Never edit a frozen test to make it pass; never guess an ambiguous requirement or an unverified API — STOP and surface it.
+
+Domain terms: grep `.ai/GLOSSARY.md`. When sources conflict: GLOSSARY wins on meaning, AGENTS.md on architecture, code on facts.

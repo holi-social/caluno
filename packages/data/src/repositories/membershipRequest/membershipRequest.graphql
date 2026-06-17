@@ -64,6 +64,7 @@ query GetMembershipRequests(
         id
         name
         email
+        checkInId
       }
       status
       reviewedBy {
