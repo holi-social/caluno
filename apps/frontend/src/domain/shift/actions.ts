@@ -63,12 +63,8 @@ export const createShift = actionClient
       endsAt: parsedInput.endsAt.toISOString(),
       instructions: parsedInput.instructions,
       location: parsedInput.location,
-      visibility: parsedInput.openShift
-        ? ShiftVisibility.AllMembers
-        : ShiftVisibility.InvitedMembers,
+      visibility: ShiftVisibility.AllMembers,
       invitedMemberIds: parsedInput.invitedMemberIds,
-      maxVolunteers:
-        (parsedInput.maxVolunteers as number | null | undefined) ?? null,
       rrule,
     };
 
@@ -97,12 +93,7 @@ export const updateShift = actionClient
       endsAt: parsedInput.endsAt.toISOString(),
       instructions: parsedInput.instructions,
       location: parsedInput.location,
-      visibility: parsedInput.openShift
-        ? ShiftVisibility.AllMembers
-        : ShiftVisibility.InvitedMembers,
       invitedMemberIds: parsedInput.invitedMemberIds,
-      maxVolunteers:
-        (parsedInput.maxVolunteers as number | null | undefined) ?? null,
       rrule,
     };
 
@@ -131,4 +122,21 @@ export const inviteShiftVolunteers = actionClient
       parsedInput.shiftId,
       parsedInput.memberIds,
     );
+  });
+
+const updateShiftStaffingSchema = z.object({
+  shiftId: z.string().min(1),
+  organizationUnitId: z.string().min(1),
+  minVolunteers: z.number().int().positive().nullable(),
+  maxVolunteers: z.number().int().positive().nullable(),
+});
+
+export const updateShiftStaffing = actionClient
+  .inputSchema(updateShiftStaffingSchema)
+  .action(async ({ parsedInput }) => {
+    const data = await getDataClient(parsedInput.organizationUnitId);
+    await data.shift.update(parsedInput.shiftId, {
+      minVolunteers: parsedInput.minVolunteers ?? undefined,
+      maxVolunteers: parsedInput.maxVolunteers ?? undefined,
+    });
   });

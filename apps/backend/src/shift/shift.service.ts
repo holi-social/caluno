@@ -227,6 +227,7 @@ export class ShiftService {
           location: shiftInput.location,
           visibility: shiftInput.visibility,
           maxVolunteers: shiftInput.maxVolunteers,
+          minVolunteers: shiftInput.minVolunteers,
           rrule: shiftInput.rrule,
           originalStartsAt: shiftInput.startsAt,
           durationMinutes,
@@ -445,6 +446,7 @@ export class ShiftService {
           location: shiftInput.location,
           visibility: shiftInput.visibility,
           maxVolunteers: shiftInput.maxVolunteers,
+          minVolunteers: shiftInput.minVolunteers,
           rrule: shiftInput.rrule,
         })
         .where(
@@ -676,6 +678,29 @@ export class ShiftService {
         masterId: shiftId,
         isCancelled: false,
       },
+      orderBy: { actualStartsAt: 'asc' },
+    });
+  }
+
+  async findShiftsForWeek(
+    organizationUnitId: string,
+    from: Date,
+    to: Date,
+  ): Promise<ShiftInstanceEntity[]> {
+    const shifts = await this.db.query.shifts.findMany({
+      where: { organizationUnitId, isDeleted: false },
+      columns: { id: true },
+    });
+    const shiftIds = shifts.map((s) => s.id);
+    if (shiftIds.length === 0) return [];
+
+    return this.db.query.shiftInstances.findMany({
+      where: {
+        masterId: { in: shiftIds },
+        actualStartsAt: { gte: from, lt: to },
+        isCancelled: false,
+      },
+      with: { master: true },
       orderBy: { actualStartsAt: 'asc' },
     });
   }

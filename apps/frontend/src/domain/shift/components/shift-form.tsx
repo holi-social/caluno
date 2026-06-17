@@ -2,15 +2,11 @@
 
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
-  Card,
   DatePickerWithTimeRange,
   Field,
-  FieldContent,
-  FieldDescription,
   FieldError,
   FieldLabel,
   Input,
-  Switch,
   Textarea,
 } from '@repo/ui';
 import { type Resolver, useForm } from 'react-hook-form';
@@ -40,7 +36,6 @@ export const ShiftForm = ({
       name: '',
       location: defaultLocation ?? '',
       instructions: '',
-      openShift: true,
       organizationUnitId,
       invitedMemberIds: [],
       recurrenceDays: [],
@@ -124,44 +119,6 @@ export const ShiftForm = ({
           <FieldError>{errors.instructions.message}</FieldError>
         )}
       </Field>
-
-      <Card className="rounded-md p-4 space-y-3">
-        <Field orientation="horizontal">
-          <FieldContent>
-            <FieldLabel htmlFor="openShift">Open shift</FieldLabel>
-            <FieldDescription>
-              Any volunteer can sign up for this shift
-            </FieldDescription>
-          </FieldContent>
-          <Switch
-            id="openShift"
-            checked={watch('openShift')}
-            onCheckedChange={(checked) => setValue('openShift', checked)}
-            disabled={isPending}
-          />
-        </Field>
-
-        {watch('openShift') && (
-          <Field>
-            <FieldLabel htmlFor="maxVolunteers">Max volunteers</FieldLabel>
-            <Input
-              id="maxVolunteers"
-              type="number"
-              min={1}
-              disabled={isPending}
-              placeholder="e.g. 50"
-              aria-invalid={!!errors.maxVolunteers}
-              {...register('maxVolunteers')}
-            />
-            <FieldDescription>
-              Maximum number of people allowed to sign up
-            </FieldDescription>
-            {errors.maxVolunteers && (
-              <FieldError>{errors.maxVolunteers.message}</FieldError>
-            )}
-          </Field>
-        )}
-      </Card>
     </form>
   );
 };

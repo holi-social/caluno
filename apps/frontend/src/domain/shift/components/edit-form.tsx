@@ -1,6 +1,6 @@
 'use client';
 
-import { ShiftVisibility, useQueryClient, useShift } from '@repo/data/react';
+import { useQueryClient, useShift } from '@repo/data/react';
 import { useEffect, useMemo, useState, useTransition } from 'react';
 import { updateShift } from '../actions';
 import type { ShiftFormValues } from '../schemas';
@@ -39,9 +39,7 @@ export function EditShiftForm({
         location: undefined,
         startsAt: new Date(),
         endsAt: new Date(),
-        openShift: true,
         invitedMemberIds: [],
-        maxVolunteers: undefined,
         recurrenceDays: [],
         recurrenceEndsAt: undefined,
       };
@@ -54,9 +52,7 @@ export function EditShiftForm({
       location: shift.location ?? undefined,
       startsAt: shift.startDate,
       endsAt: shift.endDate,
-      openShift: shift.visibility === ShiftVisibility.AllMembers,
       invitedMemberIds: [],
-      maxVolunteers: shift.maxVolunteers ?? undefined,
       recurrenceDays: shift.recurrenceDays,
       recurrenceEndsAt: shift.recurrenceEndsAt,
     };
@@ -69,7 +65,6 @@ export function EditShiftForm({
         const result = await updateShift({
           ...formData,
           id: shift.id,
-          maxVolunteers: formData.maxVolunteers ?? null,
         });
         if (result?.serverError) {
           setServerError(result.serverError);
