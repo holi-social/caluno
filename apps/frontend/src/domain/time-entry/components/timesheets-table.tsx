@@ -1,6 +1,6 @@
-"use client";
+'use client';
 
-import type { GetTimeEntriesQuery } from "@repo/data";
+import type { GetTimeEntriesQuery } from '@repo/data';
 import {
   cn,
   Table,
@@ -9,12 +9,12 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@repo/ui";
-import Link from "next/link";
-import { formatDuration, formatTimeRange } from "../formating";
-import { ActionBar } from "./action-bar";
+} from '@repo/ui';
+import Link from 'next/link';
+import { formatDuration, formatTimeRange } from '../formating';
+import { ActionBar } from './action-bar';
 
-type TimeEntry = GetTimeEntriesQuery["timeEntries"]["items"][number];
+type TimeEntry = GetTimeEntriesQuery['timeEntries']['items'][number];
 
 interface TimesheetsTableProps {
   entries: TimeEntry[];
@@ -41,18 +41,18 @@ export const TimesheetsTable = ({
           {entries.map((entry) => (
             <TableRow
               key={entry.id}
-              className={cn({ "bg-muted/80": !entry.endedAt })}
+              className={cn({ 'bg-muted/80': !entry.endedAt })}
             >
               <TableCell>
                 <Link
                   className="hover:underline block"
                   href={`/admin/${organizationUnitId}/timesheets/${entry.id}`}
                 >
-                  {entry.shiftInstance?.master?.title ?? "N/A"}
+                  {entry.shiftInstance?.master?.title ?? 'N/A'}
                 </Link>
               </TableCell>
               <TableCell>
-                {entry.volunteer?.name ?? entry.volunteer?.email ?? "N/A"}
+                {entry.volunteer?.name ?? entry.volunteer?.email ?? 'N/A'}
               </TableCell>
               <TableCell>{formatTimeRange(entry)}</TableCell>
               <TableCell>{formatDuration(entry)}</TableCell>

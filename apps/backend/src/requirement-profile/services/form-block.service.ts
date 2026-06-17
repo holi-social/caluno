@@ -280,7 +280,7 @@ export class FormBlockService {
       with: { block: true },
     });
 
-    if (!field || !field.block) {
+    if (!field?.block) {
       throw new NotFoundGraphQLError('Field not found');
     }
 
@@ -309,7 +309,7 @@ export class FormBlockService {
       with: { block: true },
     });
 
-    if (!field || !field.block) {
+    if (!field?.block) {
       throw new NotFoundGraphQLError('Field not found');
     }
 
