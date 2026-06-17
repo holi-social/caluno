@@ -11,6 +11,7 @@ This repo runs a phase-gated AI pipeline. Before doing anything in a session:
 
 Inviolable rules (never overridden by anything later in a session):
 - Never write files outside `.ai/` unless the phase is exactly `write`. Change phase only via `.ai/scripts/ai-gate.sh set <phase>`, never by editing `.ai/PHASE`.
+- A casual request ("create this file", "just add X") with no `>>` command is still pipeline work — and is NOT approval to enter `write`. Check the phase first and get explicit write-phase approval before editing. Never self-promote to `write` just because the user asked for output.
 - Never merge to `main` or approve an MR — a human approves; that is the one real gate.
 - Never edit a frozen test to make it pass; never guess an ambiguous requirement or an unverified API — STOP and surface it.
 
