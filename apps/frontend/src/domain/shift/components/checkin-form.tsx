@@ -8,7 +8,7 @@ import { useRouter } from 'next/navigation';
 
 import { useState, useTransition } from 'react';
 import { toast } from 'sonner';
-import type { CheckInStatus } from '@/app/admin/[orgUId]/check-in/[checkInId]/check-in/page';
+import type { CheckInStatus } from '@/app/[locale]/admin/[orgUId]/check-in/[checkInId]/check-in/page';
 import { createTimeEntry } from '@/domain/time-entry/actions';
 import { ShiftSelectorCard } from './shift-selector-card';
 

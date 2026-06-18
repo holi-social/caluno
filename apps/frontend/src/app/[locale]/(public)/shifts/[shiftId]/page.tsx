@@ -6,12 +6,12 @@ import {
 import { Badge, Button, Card, CardContent } from '@repo/ui';
 import { Calendar, Clock, DoorOpen, FileText } from 'lucide-react';
 import { notFound } from 'next/navigation';
+import { UserCard } from '@/components/user-card';
 import { JoinShiftButton } from '@/domain/shift/components/join-shift-button';
+import { isAuthenticated } from '@/lib/auth-server';
 import { getDataClient } from '@/lib/data-client';
 import { formatRange } from '@/lib/formatting';
-import { UserCard } from '../../../../components/user-card';
-import { isAuthenticated } from '../../../../lib/auth-server';
-import { validateUserOrgAccess } from '../../../../lib/org-context-server';
+import { validateUserOrgAccess } from '@/lib/org-context-server';
 
 interface ShiftPageProps {
   params: Promise<{ shiftId: string }>;
