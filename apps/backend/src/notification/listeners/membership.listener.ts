@@ -2,6 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
 import { EmailService } from '../email/email.service';
 import { membershipApprovedTemplate } from '../email/templates/membership-approved.template';
+import { membershipRequestedTemplate } from '../email/templates/membership-requested.template';
 import { NotificationService } from '../notification.service';
 import type { NotificationEventPayloadMap } from '../notification-event-map';
 import { NotificationEvent } from '../notification-events';
@@ -15,6 +16,56 @@ export class MembershipListener {
     private readonly notificationService: NotificationService,
   ) {}
 
+  @OnEvent(NotificationEvent.MEMBERSHIP_REQUESTED)
+  async handleMembershipRequested(
+    payload: NotificationEventPayloadMap[typeof NotificationEvent.MEMBERSHIP_REQUESTED],
+  ): Promise<void> {
+    if (payload.recipientUserIds.length === 0) {
+      return;
+    }
+
+    const requester =
+      await this.notificationService.resolveUserNotificationData(
+        payload.requesterUserId,
+        {
+          event: NotificationEvent.MEMBERSHIP_REQUESTED,
+        },
+      );
+    if (!requester) {
+      return;
+    }
+
+    const recipients =
+      await this.notificationService.resolveUsersNotificationData(
+        payload.recipientUserIds,
+        {
+          event: NotificationEvent.MEMBERSHIP_REQUESTED,
+        },
+      );
+
+    await Promise.all(
+      recipients.map(async (recipient) => {
+        try {
+          const { subject, html } = await membershipRequestedTemplate({
+            organizationUnitId: payload.organizationUnitId,
+            organizationUnitName: payload.organizationUnitName,
+            requesterName: requester.name,
+            recipientFirstName: recipient.firstName,
+          });
+          await this.emailService.send({
+            to: recipient.email,
+            subject,
+            html,
+          });
+        } catch (error) {
+          this.logger.error(
+            `Failed to handle ${NotificationEvent.MEMBERSHIP_REQUESTED} for ${recipient.email}: ${error instanceof Error ? error.message : String(error)}`,
+          );
+        }
+      }),
+    );
+  }
+
   @OnEvent(NotificationEvent.MEMBERSHIP_APPROVED)
   async handleMembershipApproved(
     payload: NotificationEventPayloadMap[typeof NotificationEvent.MEMBERSHIP_APPROVED],
@@ -23,11 +74,11 @@ export class MembershipListener {
       const recipient =
         await this.notificationService.resolveUserNotificationData(
           payload.userId,
+          {
+            event: NotificationEvent.MEMBERSHIP_APPROVED,
+          },
         );
       if (!recipient) {
-        this.logger.warn(
-          `Skipping ${NotificationEvent.MEMBERSHIP_APPROVED}: user ${payload.userId} not found`,
-        );
         return;
       }
 
