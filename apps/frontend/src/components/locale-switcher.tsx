@@ -7,7 +7,6 @@ import {
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue,
 } from '@repo/ui';
 import { useLocale, useTranslations } from 'next-intl';
 import { useState } from 'react';
@@ -38,7 +37,7 @@ export function LocaleSwitcher() {
         <Label htmlFor="locale">{t('LocaleSwitcher.label')}</Label>
         <Select value={selected} onValueChange={setSelected}>
           <SelectTrigger id="locale">
-            <SelectValue placeholder={selectedLabel} />
+            <span data-slot="select-value">{selectedLabel}</span>
           </SelectTrigger>
           <SelectContent>
             {locales.map(({ key, label }) => (
