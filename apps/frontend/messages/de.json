@@ -45,9 +45,7 @@
     "homeLink": "Zu deinen Organisationen"
   },
   "LocaleSwitcher": {
-    "label": "Sprache",
-    "english": "Englisch",
-    "german": "Deutsch"
+    "label": "Sprache"
   },
   "Profile": {
     "title": "Profil bearbeiten"

@@ -45,9 +45,7 @@
     "homeLink": "Go to your organizations"
   },
   "LocaleSwitcher": {
-    "label": "Language",
-    "english": "English",
-    "german": "German"
+    "label": "Language"
   },
   "Profile": {
     "title": "Edit Profile"

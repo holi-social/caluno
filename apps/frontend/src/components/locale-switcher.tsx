@@ -14,8 +14,8 @@ import { useState } from 'react';
 import { usePathname, useRouter } from '@/i18n/navigation';
 
 const locales = [
-  { key: 'en', label: 'english' },
-  { key: 'de', label: 'german' },
+  { key: 'en', label: 'English' },
+  { key: 'de', label: 'Deutsch' },
 ] as const;
 
 export function LocaleSwitcher() {
@@ -41,7 +41,7 @@ export function LocaleSwitcher() {
           <SelectContent>
             {locales.map(({ key, label }) => (
               <SelectItem key={key} value={key}>
-                {t(`LocaleSwitcher.${label}`)}
+                {label}
               </SelectItem>
             ))}
           </SelectContent>

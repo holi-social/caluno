@@ -8,6 +8,7 @@ import {
 import { Loader2 } from 'lucide-react';
 import { type ReactNode, Suspense } from 'react';
 import { DashboardSidebar } from '@/components/navigation/dashboard-sidebar';
+import { ProfileNavIcon } from '@/components/navigation/profile-nav-icon';
 import { InviteShiftSheet } from '@/components/sheets/invite-shift-sheet';
 import { VolunteerSheet } from '@/components/sheets/volunteer-sheet';
 import { ThemeToggle } from '@/components/theme-toggle';
@@ -60,6 +61,7 @@ export default async function OrgLayout({
                       {sheet}
                     </Suspense>
                     <ThemeToggle />
+                    <ProfileNavIcon />
                   </div>
                 </div>
               </header>
