@@ -14,6 +14,7 @@ import {
 } from '@repo/ui';
 import { Building2, Check, ChevronsUpDown } from 'lucide-react';
 import { useParams } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import { useState } from 'react';
 import { Link, usePathname } from '@/i18n/navigation';
 import { orgUnitAdminHref, switchOrgAdminHref } from '@/lib/admin-routes';
@@ -23,6 +24,7 @@ export function OrgSwitcher() {
   const params = useParams();
   const pathname = usePathname();
   const currentorgUId = params.orgUId as string | undefined;
+  const t = useTranslations('Navigation');
 
   const organizations = useUserOrganizations();
 
@@ -45,7 +47,7 @@ export function OrgSwitcher() {
           <span className="flex items-center gap-2 truncate">
             <Building2 className="shrink-0" />
             <span className="truncate">
-              {currentOrg?.name || 'Select organization'}
+              {currentOrg?.name || t('selectOrganization')}
             </span>
           </span>
           <ChevronsUpDown className="ml-2 shrink-0 opacity-50" />

@@ -1,9 +1,11 @@
 import { DataError } from '@repo/data';
+import { getTranslations } from 'next-intl/server';
 import { createSafeActionClient } from 'next-safe-action';
 
 export const actionClient = createSafeActionClient({
-  handleServerError(e) {
+  async handleServerError(e) {
     if (e instanceof DataError) return e.message;
-    return 'Something went wrong';
+    const t = await getTranslations('Error');
+    return t('generic');
   },
 });

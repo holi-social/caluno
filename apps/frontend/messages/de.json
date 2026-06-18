@@ -1,7 +1,36 @@
 {
   "Common": {
     "save": "Speichern",
-    "cancel": "Abbrechen"
+    "saving": "Wird gespeichert...",
+    "saveChanges": "Änderungen speichern",
+    "cancel": "Abbrechen",
+    "delete": "Löschen",
+    "deleting": "Wird gelöscht...",
+    "loading": "Wird geladen...",
+    "create": "Erstellen",
+    "creating": "Wird erstellt...",
+    "submit": "Absenden",
+    "submitting": "Wird abgesendet...",
+    "copyToClipboard": "In Zwischenablage kopieren",
+    "linkCopied": "Link in Zwischenablage kopiert",
+    "previous": "Zurück",
+    "next": "Weiter",
+    "back": "Zurück",
+    "searchPlaceholder": "Suchen...",
+    "yes": "Ja",
+    "no": "Nein",
+    "view": "Ansehen",
+    "edit": "Bearbeiten",
+    "required": "Erforderlich",
+    "optional": "Optional",
+    "none": "Keine",
+    "moveUp": "Nach oben",
+    "moveDown": "Nach unten",
+    "dash": "—",
+    "toggleTheme": "Design wechseln",
+    "menu": "Menü",
+    "signOut": "Abmelden",
+    "brand": "Clippy"
   },
   "Auth": {
     "login": {
@@ -49,5 +78,43 @@
   },
   "Profile": {
     "title": "Profil bearbeiten"
+  },
+  "Navigation": {
+    "home": "Startseite",
+    "organizations": "Organisationen",
+    "myMembershipRequests": "Meine Mitgliedschaftsanfragen",
+    "overview": "Übersicht",
+    "shifts": "Schichten",
+    "timesheets": "Zeiterfassung",
+    "volunteers": "Freiwillige",
+    "checkInOut": "Check-in/out",
+    "checkIn": "Einchecken",
+    "myTime": "Meine Zeit",
+    "requirementForms": "Anforderungsformulare",
+    "settings": "Einstellungen",
+    "roles": "Rollen",
+    "orgUnits": " Organisationseinheiten",
+    "selectOrganization": "Organisation auswählen",
+    "editProfile": "Profil bearbeiten",
+    "admin": "Admin"
+  },
+  "Pagination": {
+    "showing": "{start}-{end} von {total} {name} werden angezeigt",
+    "pageOf": "Seite {current} von {total}"
+  },
+  "Error": {
+    "title": "Etwas ist schiefgelaufen",
+    "tryAgain": "Erneut versuchen",
+    "reloadPage": "Seite neu laden",
+    "goHome": "Zur Startseite",
+    "generic": "Etwas ist schiefgelaufen",
+    "orgNotFound": {
+      "title": "Organisation nicht gefunden",
+      "description": "Die gesuchte Organisation existiert nicht.",
+      "homeLink": "Zu deinen Organisationen"
+    }
+  },
+  "Settings": {
+    "title": "Einstellungen"
   }
 }

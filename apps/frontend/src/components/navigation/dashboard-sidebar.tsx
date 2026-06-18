@@ -27,6 +27,7 @@ import {
   UsersIcon,
 } from 'lucide-react';
 import { useParams } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import { useMemo } from 'react';
 import { OrgSwitcher } from '@/domain/organization/components/org-switcher';
 import { Link, useRouter } from '@/i18n/navigation';
@@ -40,6 +41,8 @@ export function DashboardSidebar({ permissions }: DashboardSidebarProps) {
   const params = useParams();
   const router = useRouter();
   const orgUId = params.orgUId as string | undefined;
+  const t = useTranslations('Navigation');
+  const tCommon = useTranslations('Common');
 
   const { data: pendingCount } = useMembershipRequestCount(
     orgUId ?? '',
@@ -51,33 +54,33 @@ export function DashboardSidebar({ permissions }: DashboardSidebarProps) {
 
     return [
       {
-        title: 'Overview',
+        titleKey: 'overview',
         href: `/admin/${orgUId}`,
         icon: BuildingIcon,
       },
       {
-        title: 'Shifts',
+        titleKey: 'shifts',
         href: `/admin/${orgUId}/shifts`,
         icon: CalendarIcon,
       },
       {
-        title: 'Timesheets',
+        titleKey: 'timesheets',
         href: `/admin/${orgUId}/timesheets`,
         icon: ClockIcon,
       },
       {
-        title: 'Volunteers',
+        titleKey: 'volunteers',
         href: `/admin/${orgUId}/volunteers`,
         icon: UsersIcon,
         count: pendingCount,
       },
       {
-        title: 'Check-in/out',
+        titleKey: 'checkInOut',
         href: `/admin/${orgUId}/check-in/scan`,
         icon: ScanQrCode,
       },
       {
-        title: 'Requirement Forms',
+        titleKey: 'requirementForms',
         href: `/admin/${orgUId}/requirement-forms`,
         icon: ClipboardListIcon,
       },
@@ -91,18 +94,18 @@ export function DashboardSidebar({ permissions }: DashboardSidebarProps) {
 
     return [
       {
-        title: 'Settings',
+        titleKey: 'settings',
         href: `/admin/${orgUId}/settings`,
         icon: SettingsIcon,
       },
       {
-        title: 'Roles',
+        titleKey: 'roles',
         href: `/admin/${orgUId}/settings/roles`,
         icon: ShieldIcon,
         permission: PermissionKey.OrgView,
       },
       {
-        title: 'Org Units',
+        titleKey: 'orgUnits',
         href: `/admin/${orgUId}/settings/org-units`,
         icon: NetworkIcon,
         permission: PermissionKey.OrgView,
@@ -119,14 +122,14 @@ export function DashboardSidebar({ permissions }: DashboardSidebarProps) {
   return (
     <Sidebar>
       <SidebarHeader className="border-b px-4 py-3 space-y-2">
-        <div className="text-lg font-bold px-2">Clippy</div>
+        <div className="text-lg font-bold px-2">{tCommon('brand')}</div>
         <OrgSwitcher />
       </SidebarHeader>
 
       <SidebarContent>
         {menuItems.length > 0 && (
           <SidebarGroup>
-            <SidebarGroupLabel>Menu</SidebarGroupLabel>
+            <SidebarGroupLabel>{tCommon('menu')}</SidebarGroupLabel>
             <SidebarGroupContent>
               <SidebarMenu>
                 {menuItems.map((item) => (
@@ -138,7 +141,9 @@ export function DashboardSidebar({ permissions }: DashboardSidebarProps) {
                       >
                         <span className="flex items-center gap-2">
                           <item.icon className="h-4 w-4" />
-                          <span>{item.title}</span>
+                          <span>
+                            {t(item.titleKey as Parameters<typeof t>[0])}
+                          </span>
                         </span>
                         {'count' in item && item.count ? (
                           <span className="inline-flex h-5 min-w-[20px] items-center justify-center rounded-full bg-muted px-1.5 text-xs font-medium text-muted-foreground">
@@ -156,7 +161,7 @@ export function DashboardSidebar({ permissions }: DashboardSidebarProps) {
 
         {settingsItems.length > 0 && (
           <SidebarGroup>
-            <SidebarGroupLabel>Settings</SidebarGroupLabel>
+            <SidebarGroupLabel>{t('settings')}</SidebarGroupLabel>
             <SidebarGroupContent>
               <SidebarMenu>
                 {settingsItems.map((item) => (
@@ -164,7 +169,9 @@ export function DashboardSidebar({ permissions }: DashboardSidebarProps) {
                     <SidebarMenuButton asChild>
                       <Link href={item.href}>
                         <item.icon className="h-4 w-4" />
-                        <span>{item.title}</span>
+                        <span>
+                          {t(item.titleKey as Parameters<typeof t>[0])}
+                        </span>
                       </Link>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
@@ -182,7 +189,7 @@ export function DashboardSidebar({ permissions }: DashboardSidebarProps) {
           onClick={handleSignOut}
         >
           <LogOutIcon />
-          Sign Out
+          {tCommon('signOut')}
         </Button>
       </SidebarFooter>
     </Sidebar>

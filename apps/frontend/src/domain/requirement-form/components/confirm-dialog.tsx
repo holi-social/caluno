@@ -11,6 +11,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@repo/ui';
+import { useTranslations } from 'next-intl';
 import type { ReactNode } from 'react';
 
 export function ConfirmDialog({
@@ -18,8 +19,8 @@ export function ConfirmDialog({
   onOpenChange,
   title,
   description,
-  confirmLabel = 'Delete',
-  cancelLabel = 'Cancel',
+  confirmLabel: confirmLabelProp,
+  cancelLabel: cancelLabelProp,
   pending = false,
   pendingLabel,
   onConfirm,
@@ -38,6 +39,10 @@ export function ConfirmDialog({
   trigger?: ReactNode;
   children?: ReactNode;
 }) {
+  const t = useTranslations('Common');
+  const confirmLabel = confirmLabelProp ?? t('delete');
+  const cancelLabel = cancelLabelProp ?? t('cancel');
+
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
       {trigger && <AlertDialogTrigger asChild>{trigger}</AlertDialogTrigger>}

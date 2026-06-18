@@ -1,7 +1,36 @@
 {
   "Common": {
     "save": "Save",
-    "cancel": "Cancel"
+    "saving": "Saving...",
+    "saveChanges": "Save changes",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "deleting": "Deleting...",
+    "loading": "Loading...",
+    "create": "Create",
+    "creating": "Creating...",
+    "submit": "Submit",
+    "submitting": "Submitting...",
+    "copyToClipboard": "Copy to clipboard",
+    "linkCopied": "Link copied to clipboard",
+    "previous": "Previous",
+    "next": "Next",
+    "back": "Back",
+    "searchPlaceholder": "Search...",
+    "yes": "Yes",
+    "no": "No",
+    "view": "View",
+    "edit": "Edit",
+    "required": "Required",
+    "optional": "Optional",
+    "none": "None",
+    "moveUp": "Move up",
+    "moveDown": "Move down",
+    "dash": "—",
+    "toggleTheme": "Toggle theme",
+    "menu": "Menu",
+    "signOut": "Sign Out",
+    "brand": "Clippy"
   },
   "Auth": {
     "login": {
@@ -49,5 +78,43 @@
   },
   "Profile": {
     "title": "Edit Profile"
+  },
+  "Navigation": {
+    "home": "Home",
+    "organizations": "Organizations",
+    "myMembershipRequests": "My Membership Requests",
+    "overview": "Overview",
+    "shifts": "Shifts",
+    "timesheets": "Timesheets",
+    "volunteers": "Volunteers",
+    "checkInOut": "Check-in/out",
+    "checkIn": "Check in",
+    "myTime": "My Time",
+    "requirementForms": "Requirement Forms",
+    "settings": "Settings",
+    "roles": "Roles",
+    "orgUnits": "Org Units",
+    "selectOrganization": "Select organization",
+    "editProfile": "Edit profile",
+    "admin": "Admin"
+  },
+  "Pagination": {
+    "showing": "Showing {start}-{end} of {total} {name}",
+    "pageOf": "Page {current} of {total}"
+  },
+  "Error": {
+    "title": "Something went wrong",
+    "tryAgain": "Try again",
+    "reloadPage": "Reload page",
+    "goHome": "Go home",
+    "generic": "Something went wrong",
+    "orgNotFound": {
+      "title": "Organization Not Found",
+      "description": "The organization you're looking for doesn't exist.",
+      "homeLink": "Go to your organizations"
+    }
+  },
+  "Settings": {
+    "title": "Settings"
   }
 }
