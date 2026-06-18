@@ -2,10 +2,10 @@
 
 import { Alert, AlertDescription, AlertTitle } from '@repo/ui';
 import { AlertCircle } from 'lucide-react';
-import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { QRScanner } from '@/components/qr-scanner';
+import { useRouter } from '@/i18n/navigation';
 
 const extractCheckInId = (url: string) => {
   const match = url.match(/check-in\/([a-z0-9]{12})/i);

@@ -26,9 +26,10 @@ import {
   ShieldIcon,
   UsersIcon,
 } from 'lucide-react';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams } from 'next/navigation';
 import { useMemo } from 'react';
 import { OrgSwitcher } from '@/domain/organization/components/org-switcher';
+import { Link, useRouter } from '@/i18n/navigation';
 import { signOut } from '@/lib/auth';
 
 interface DashboardSidebarProps {
@@ -131,7 +132,7 @@ export function DashboardSidebar({ permissions }: DashboardSidebarProps) {
                 {menuItems.map((item) => (
                   <SidebarMenuItem key={item.href}>
                     <SidebarMenuButton asChild>
-                      <a
+                      <Link
                         href={item.href}
                         className="flex items-center justify-between w-full"
                       >
@@ -144,7 +145,7 @@ export function DashboardSidebar({ permissions }: DashboardSidebarProps) {
                             {item.count}
                           </span>
                         ) : null}
-                      </a>
+                      </Link>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
                 ))}
@@ -161,10 +162,10 @@ export function DashboardSidebar({ permissions }: DashboardSidebarProps) {
                 {settingsItems.map((item) => (
                   <SidebarMenuItem key={item.href}>
                     <SidebarMenuButton asChild>
-                      <a href={item.href}>
+                      <Link href={item.href}>
                         <item.icon className="h-4 w-4" />
                         <span>{item.title}</span>
-                      </a>
+                      </Link>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
                 ))}

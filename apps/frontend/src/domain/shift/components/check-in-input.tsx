@@ -9,8 +9,8 @@ import {
   REGEXP_ONLY_DIGITS_AND_CHARS,
 } from '@repo/ui/base/input-otp';
 import { LogIn } from 'lucide-react';
-import { useRouter } from 'next/navigation';
 import { useState } from 'react';
+import { useRouter } from '@/i18n/navigation';
 
 type CheckInInputProps = {
   organizationUnitId: string;

@@ -12,11 +12,11 @@ import {
   Textarea,
 } from '@repo/ui';
 import { ArrowLeft, Plus, Save, Trash2 } from 'lucide-react';
-import { useRouter } from 'next/navigation';
 import { useState, useTransition } from 'react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 import { z } from 'zod';
+import { useRouter } from '@/i18n/navigation';
 import {
   createBlockField,
   deleteBlockField,

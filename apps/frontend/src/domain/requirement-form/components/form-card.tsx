@@ -3,10 +3,10 @@
 import type { FormBlock, RequirementForm } from '@repo/data';
 import { Badge, Button, Card, CardContent } from '@repo/ui';
 import { Eye, Pencil, Share2, Trash2, Users } from 'lucide-react';
-import Link from 'next/link';
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { FormattedDate } from '@/components/formatted-date';
+import { Link } from '@/i18n/navigation';
 import { ConfirmDialog } from './confirm-dialog';
 
 export function FormCard({

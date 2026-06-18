@@ -14,10 +14,10 @@ import {
   SelectValue,
   Textarea,
 } from '@repo/ui';
-import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useState, useTransition } from 'react';
 import { useForm } from 'react-hook-form';
 import { FormSheet, useFormSheet } from '@/components/form-sheet';
+import { useRouter } from '@/i18n/navigation';
 import { type TimeEntryFormValues, timeEntrySchema } from '../schemas';
 
 import {

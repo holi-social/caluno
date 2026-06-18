@@ -34,11 +34,11 @@ import {
   Check,
   Loader2,
 } from 'lucide-react';
-import { useRouter } from 'next/navigation';
 import { useMemo, useState } from 'react';
 import { Controller, type Resolver, useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 import { z } from 'zod';
+import { useRouter } from '@/i18n/navigation';
 import { submitForm } from '../actions';
 
 const PHONE_RE = /^\+?[\d\s\-().]{7,20}$/;

@@ -12,8 +12,8 @@ import {
   SheetTitle,
   useIsMobile,
 } from '@repo/ui';
-import { useRouter } from 'next/navigation';
 import { useState } from 'react';
+import { useRouter } from '@/i18n/navigation';
 import { wait } from '@/lib/wait';
 
 type Props = React.PropsWithChildren & {

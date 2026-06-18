@@ -1,0 +1,55 @@
+{
+  "Common": {
+    "save": "Speichern",
+    "cancel": "Abbrechen"
+  },
+  "Auth": {
+    "login": {
+      "title": "Anmelden",
+      "emailLabel": "E-Mail",
+      "emailPlaceholder": "du@beispiel.de",
+      "passwordLabel": "Passwort",
+      "passwordPlaceholder": "••••••••",
+      "submit": "Anmelden",
+      "submitting": "Wird angemeldet...",
+      "noAccount": "Noch kein Konto?",
+      "signUpLink": "Registrieren",
+      "invalidCredentials": "Ungültige Anmeldedaten",
+      "genericError": "Anmeldung fehlgeschlagen. Bitte versuche es erneut."
+    },
+    "signup": {
+      "title": "Erstelle dein Konto",
+      "nameLabel": "Vollständiger Name",
+      "namePlaceholder": "Max Mustermann",
+      "emailLabel": "E-Mail",
+      "emailPlaceholder": "du@beispiel.de",
+      "passwordLabel": "Passwort",
+      "passwordPlaceholder": "••••••••",
+      "passwordHint": "Mindestens 6 Zeichen",
+      "submit": "Konto erstellen",
+      "submitting": "Konto wird erstellt...",
+      "hasAccount": "Bereits ein Konto?",
+      "signInLink": "Anmelden",
+      "createAccountFailed": "Konto konnte nicht erstellt werden",
+      "genericError": "Konto konnte nicht erstellt werden. Bitte versuche es erneut."
+    }
+  },
+  "Metadata": {
+    "title": "Clippy",
+    "description": "Plattform zur Verwaltung von Freiwilligen",
+    "unauthorizedTitle": "Zugriff verweigert | Clippy"
+  },
+  "Unauthorized": {
+    "title": "Zugriff verweigert",
+    "message": "Du hast keine Berechtigung, auf diese Ressource zuzugreifen.",
+    "homeLink": "Zu deinen Organisationen"
+  },
+  "LocaleSwitcher": {
+    "label": "Sprache",
+    "english": "Englisch",
+    "german": "Deutsch"
+  },
+  "Profile": {
+    "title": "Profil bearbeiten"
+  }
+}

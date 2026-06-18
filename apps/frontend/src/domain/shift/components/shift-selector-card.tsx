@@ -10,7 +10,7 @@ import {
   SelectValue,
 } from '@repo/ui';
 import { AlertCircle } from 'lucide-react';
-import Link from 'next/link';
+import { Link } from '@/i18n/navigation';
 import { MiniShiftCard } from './mini-shift-card';
 
 type ShiftSelectorCardProps = {

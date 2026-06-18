@@ -10,7 +10,7 @@ import {
   InputGroupAddon,
 } from '@repo/ui';
 import { LogIn, User } from 'lucide-react';
-import { useRouter } from 'next/navigation';
+import { useRouter } from '@/i18n/navigation';
 
 type Volunteer = {
   checkInId: string;

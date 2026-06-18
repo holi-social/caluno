@@ -1,11 +1,11 @@
 'use client';
 
 import type { OrganizationUnitType } from '@repo/data';
-import { useRouter } from 'next/navigation';
 import { Suspense } from 'react';
 import { toast } from 'sonner';
 import { ClippySheet } from '@/components/sheets/clippy-sheet';
 import { useSheet } from '@/hooks/use-sheet';
+import { useRouter } from '@/i18n/navigation';
 import { CreateOrgUnitForm } from '../forms/create-form';
 import { EditOrgUnitForm } from '../forms/edit-form';
 

@@ -2,7 +2,7 @@
 
 import { Tabs, TabsList, TabsTrigger } from '@repo/ui';
 import { CalendarRange, Table as TableIcon } from 'lucide-react';
-import { useRouter } from 'next/navigation';
+import { useRouter } from '@/i18n/navigation';
 
 interface Props {
   orgUId: string;

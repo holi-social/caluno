@@ -20,7 +20,7 @@ import {
   Share2Icon,
   TrashIcon,
 } from 'lucide-react';
-import Link from 'next/link';
+import { Link } from '@/i18n/navigation';
 import { orgUnitAdminHref } from '@/lib/admin-routes';
 import { getDynamicIcon } from '@/lib/dynamic-icon';
 import { copyToClipboard } from '../../../lib/clipboard';

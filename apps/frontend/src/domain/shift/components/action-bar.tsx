@@ -2,13 +2,12 @@
 
 import { Button } from '@repo/ui';
 import { Edit, Eye, Loader2, Share2, Trash, UserPlus } from 'lucide-react';
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import { useTransition } from 'react';
 import { toast } from 'sonner';
 import { DeleteAlertDialog } from '@/components/delete-alert-dialog';
 import { FORM_ID } from '@/components/sheets/shift-sheet';
 import { useSheet } from '@/hooks/use-sheet';
+import { Link, useRouter } from '@/i18n/navigation';
 import { copyToClipboard } from '@/lib/clipboard';
 import { deleteShift } from '../actions';
 import { shiftShareUrl } from '../share';

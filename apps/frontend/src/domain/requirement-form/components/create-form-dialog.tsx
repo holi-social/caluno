@@ -10,9 +10,9 @@ import {
   FieldLabel,
   Input,
 } from '@repo/ui';
-import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
+import { useRouter } from '@/i18n/navigation';
 import { createForm } from '../actions';
 
 export function CreateFormDialog({
