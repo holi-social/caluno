@@ -3,8 +3,9 @@
 import { Button } from '@repo/ui';
 import { addDays, addWeeks, format, getISOWeek, subWeeks } from 'date-fns';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 import { useCallback } from 'react';
+import { useRouter } from '@/i18n/navigation';
 
 type WeeklyCalendarNavProps = {
   weekStart: Date;

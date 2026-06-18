@@ -2,11 +2,10 @@
 
 import { Button } from '@repo/ui';
 import { Timer } from 'lucide-react';
-import { useRouter } from 'next/navigation';
-
 import { useState, useTransition } from 'react';
 import { toast } from 'sonner';
 import { closeTimeEntry } from '@/domain/time-entry/actions';
+import { useRouter } from '@/i18n/navigation';
 
 type CheckinFormProps = {
   organizationUnitId: string;

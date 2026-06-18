@@ -7,8 +7,8 @@ import {
   CardTitle,
 } from '@repo/ui';
 import { LogIn } from 'lucide-react';
-import Link from 'next/link';
 import { redirect } from 'next/navigation';
+import { Link } from '@/i18n/navigation';
 import {
   getLastVisitedOrgServer,
   getMyAccessibleOrganizationUnits,

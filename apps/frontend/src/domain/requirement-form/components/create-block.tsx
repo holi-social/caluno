@@ -9,10 +9,10 @@ import {
   Input,
   Textarea,
 } from '@repo/ui';
-import { useRouter } from 'next/navigation';
 import { useTransition } from 'react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
+import { useRouter } from '@/i18n/navigation';
 import { createBlock } from '../actions';
 import { type CreateBlockValues, createBlockSchema } from '../schemas';
 

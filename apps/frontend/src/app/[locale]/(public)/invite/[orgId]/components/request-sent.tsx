@@ -1,6 +1,6 @@
 import { Button, Card, CardContent, CardHeader, CardTitle } from '@repo/ui';
 import { Send } from 'lucide-react';
-import Link from 'next/link';
+import { Link } from '@/i18n/navigation';
 
 interface RequestSentProps {
   orgName: string;

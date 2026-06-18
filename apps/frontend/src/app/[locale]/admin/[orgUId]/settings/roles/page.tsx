@@ -1,8 +1,8 @@
 import { PermissionKey } from '@repo/data';
 import { Button } from '@repo/ui';
 import { PlusIcon } from 'lucide-react';
-import Link from 'next/link';
 import { RolesTable } from '@/domain/role/components/roles-table';
+import { Link } from '@/i18n/navigation';
 import { getDataClient } from '@/lib/data-client';
 import { requireOrgAccess } from '@/lib/org-context-server';
 import { checkPermission, requirePermission } from '@/lib/permissions-server';

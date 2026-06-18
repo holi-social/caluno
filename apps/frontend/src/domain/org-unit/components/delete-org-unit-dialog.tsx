@@ -15,9 +15,9 @@ import {
   FieldLabel,
   Input,
 } from '@repo/ui';
-import { useRouter } from 'next/navigation';
 import { useState, useTransition } from 'react';
 import { deleteOrgUnit } from '@/domain/org-unit/actions';
+import { useRouter } from '@/i18n/navigation';
 
 interface DeleteOrgUnitDialogProps {
   open: boolean;

@@ -13,9 +13,9 @@ import {
   PopoverTrigger,
 } from '@repo/ui';
 import { Building2, Check, ChevronsUpDown } from 'lucide-react';
-import Link from 'next/link';
-import { useParams, usePathname } from 'next/navigation';
+import { useParams } from 'next/navigation';
 import { useState } from 'react';
+import { Link, usePathname } from '@/i18n/navigation';
 import { orgUnitAdminHref, switchOrgAdminHref } from '@/lib/admin-routes';
 
 export function OrgSwitcher() {

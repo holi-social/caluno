@@ -1,9 +1,9 @@
 import { DataProvider } from '@repo/data/react';
 import { Sparkles } from 'lucide-react';
-import Link from 'next/link';
 import type { ReactNode } from 'react';
 import { ProfileDropdown } from '@/components/navigation/profile-dropdown';
 import { VolunteerNav } from '@/components/navigation/volunteer-nav';
+import { Link } from '@/i18n/navigation';
 import { requireAuth } from '@/lib/auth-server';
 import { GRAPHQL_API_URL } from '@/lib/constants';
 

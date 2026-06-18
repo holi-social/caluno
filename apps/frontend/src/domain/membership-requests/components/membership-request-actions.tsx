@@ -16,11 +16,11 @@ import {
   Textarea,
 } from '@repo/ui';
 import { CheckIcon, XIcon } from 'lucide-react';
-import { useRouter } from 'next/navigation';
 import { useState, useTransition } from 'react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 import z from 'zod';
+import { useRouter } from '@/i18n/navigation';
 import { rejectMembershipRequest } from '../actions';
 
 const rejectSchema = z.object({

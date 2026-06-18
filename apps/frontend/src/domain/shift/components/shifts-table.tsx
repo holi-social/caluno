@@ -9,7 +9,7 @@ import {
   TableHeader,
   TableRow,
 } from '@repo/ui';
-import Link from 'next/link';
+import { Link } from '@/i18n/navigation';
 import { formatRange } from '@/lib/formatting';
 import { ActionBar } from './action-bar';
 

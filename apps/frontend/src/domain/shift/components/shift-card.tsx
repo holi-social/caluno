@@ -13,8 +13,8 @@ import {
 } from '@repo/ui';
 import { format } from 'date-fns';
 import { TriangleAlert, UserPlus, UsersRound } from 'lucide-react';
-import Link from 'next/link';
 import { useSheet } from '@/hooks/use-sheet';
+import { Link } from '@/i18n/navigation';
 
 type ShiftCardProps = {
   instance: WeeklyShiftInstance;

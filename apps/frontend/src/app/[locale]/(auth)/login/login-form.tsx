@@ -1,10 +1,9 @@
 'use client';
 
 import { Button, Input } from '@repo/ui';
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { useState } from 'react';
+import { Link, useRouter } from '@/i18n/navigation';
 import { signIn } from '@/lib/auth';
 
 interface LoginFormProps {

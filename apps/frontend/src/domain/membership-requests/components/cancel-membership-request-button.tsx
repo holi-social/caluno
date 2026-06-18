@@ -2,8 +2,8 @@
 
 import { useCancelMembershipRequest } from '@repo/data/react';
 import { Button } from '@repo/ui';
-import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
+import { useRouter } from '@/i18n/navigation';
 
 interface CancelMembershipRequestButtonProps {
   id: string;

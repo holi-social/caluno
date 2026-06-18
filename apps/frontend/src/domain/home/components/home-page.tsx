@@ -10,7 +10,7 @@ import {
   CardTitle,
 } from '@repo/ui';
 import { Plus } from 'lucide-react';
-import { useRouter } from 'next/navigation';
+import { useRouter } from '@/i18n/navigation';
 
 export default function HomePage() {
   const router = useRouter();

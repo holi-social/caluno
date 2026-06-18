@@ -3,7 +3,7 @@
 import { Button, Popover, PopoverContent, PopoverTrigger } from '@repo/ui';
 import { SettingsIcon, UserIcon } from 'lucide-react';
 import Image from 'next/image';
-import Link from 'next/link';
+import { Link } from '@/i18n/navigation';
 
 interface ProfileDropdownProps {
   userName: string;

@@ -1,6 +1,6 @@
 import { Card, CardDescription, CardHeader, CardTitle } from '@repo/ui';
-import Link from 'next/link';
 import { redirect } from 'next/navigation';
+import { Link } from '@/i18n/navigation';
 import { getSession } from '@/lib/auth-server';
 import { getMyAccessibleOrganizationUnits } from '@/lib/org-context-server';
 

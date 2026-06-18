@@ -25,10 +25,10 @@ import {
   Save,
   Trash2,
 } from 'lucide-react';
-import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { useSheetTrigger } from '@/hooks/use-sheet';
+import { useRouter } from '@/i18n/navigation';
 import { updateForm } from '../actions';
 
 interface FormBuilderProps {

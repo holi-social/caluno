@@ -1,6 +1,6 @@
 import { Button, Card, CardContent, CardHeader, CardTitle } from '@repo/ui';
 import { CheckCircle2 } from 'lucide-react';
-import Link from 'next/link';
+import { Link } from '@/i18n/navigation';
 
 interface InviteAcceptedProps {
   orgName: string;

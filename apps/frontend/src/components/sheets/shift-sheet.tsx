@@ -1,13 +1,13 @@
 'use client';
 
 import { useOrgUId } from '@repo/data/react';
-import { useRouter } from 'next/navigation';
 import { Suspense } from 'react';
 import { toast } from 'sonner';
 import { ClippySheet } from '@/components/sheets/clippy-sheet';
 import { CreateShiftForm } from '@/domain/shift/components/create-form';
 import { EditShiftForm } from '@/domain/shift/components/edit-form';
 import { useSheet } from '@/hooks/use-sheet';
+import { useRouter } from '@/i18n/navigation';
 
 export const FORM_ID = 'shift-form';
 

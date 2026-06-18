@@ -1,7 +1,7 @@
 'use client';
 
-import { usePathname } from 'next/navigation';
 import { menuItems } from '@/components/navigation/home-sidebar';
+import { usePathname } from '@/i18n/navigation';
 
 export function PageTitle() {
   const pathname = usePathname();

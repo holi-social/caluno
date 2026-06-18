@@ -1,8 +1,8 @@
 'use client';
 
 import { Button } from '@repo/ui';
-import Link from 'next/link';
 import { useEffect } from 'react';
+import { Link } from '@/i18n/navigation';
 
 interface ErrorProps {
   error: Error & { digest?: string };
