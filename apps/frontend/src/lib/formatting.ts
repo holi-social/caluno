@@ -3,7 +3,10 @@ import {
   intervalToDuration,
 } from 'date-fns';
 
-export const DEFAULT_LOCALE = 'de-DE';
+// For active-locale formatting prefer:
+// - Client components: useFormatting() from '@/hooks/use-formatting'
+// - Server components: getFormatting() from '@/lib/formatting-server'
+export const DEFAULT_LOCALE = 'en';
 
 export const formatDateTime = (date: Date, locale = DEFAULT_LOCALE) =>
   date.toLocaleDateString(locale, {

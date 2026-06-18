@@ -1,15 +1,18 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { formatDate } from '@/lib/formatting';
+import { useFormatter } from 'next-intl';
 
 export function FormattedDate({ date }: { date: Date | string }) {
-  const time = new Date(date).getTime();
-  const [formatted, setFormatted] = useState(() => formatDate(new Date(time)));
+  const formatter = useFormatter();
+  const value = new Date(date);
 
-  useEffect(() => {
-    setFormatted(formatDate(new Date(time), navigator.language));
-  }, [time]);
-
-  return <span>{formatted}</span>;
+  return (
+    <span>
+      {formatter.dateTime(value, {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+      })}
+    </span>
+  );
 }

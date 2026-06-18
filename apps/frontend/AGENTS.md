@@ -40,8 +40,12 @@ Route groups: `(auth)` unauthenticated, `(dashboard)/[orgUId]` protected + org-s
 - Server Actions for a domain in `actions.ts`; zod schemas in `schemas.ts` (e.g. `src/domain/shift/schemas.ts`).
 - Do not write GraphQL in this project — use `@repo/data` for data access.
 
-## Dates — always
-Use `lib/formatting.ts` helpers, never `toLocaleDateString()` directly: `formatDate`, `formatDateTime`, `formatTime` (default `de-DE`). For rendered dates in components use `<FormattedDate date={...} />` (`components/formatted-date.tsx`): renders `de-DE` on the server (SSR-safe) and swaps to `navigator.language` after mount.
+## Dates — always use active-locale formatters
+- **Client components**: `const { formatDate, formatDateTime, formatTime } = useFormatting()` from `@/hooks/use-formatting`.
+- **Server components**: `const { formatDate, formatDateTime, formatTime } = await getFormatting()` from `@/lib/formatting-server`.
+- **Legacy / explicit-locale cases**: `lib/formatting.ts` still exports sync helpers that accept a `locale` string; default is the source locale `en`.
+- **Rendered dates in shared components**: prefer `<FormattedDate date={...} />` from `@/components/formatted-date`.
+- Never call `toLocaleDateString()` directly.
 
 ## Localisation (i18n) — next-intl
 Localised with **next-intl** (App Router/RSC). Supported locales `['en','de']`, default/fallback `en`; routing is **URL-prefixed** (`/[locale]/…`). Config in `src/i18n/`: `routing.ts` (locales), `request.ts` (per-request messages), `navigation.ts` (locale-aware nav). Message catalogs are ICU-syntax JSON at `apps/frontend/messages/{en,de}.json`, nested by domain namespace; read copy via `useTranslations('Namespace')` (client) / `getTranslations('Namespace')` (server).
