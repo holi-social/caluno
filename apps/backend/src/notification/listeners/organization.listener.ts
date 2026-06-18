@@ -23,11 +23,11 @@ export class OrganizationListener {
       const recipient =
         await this.notificationService.resolveUserNotificationData(
           payload.userId,
+          {
+            event: NotificationEvent.ORGANIZATION_CREATED,
+          },
         );
       if (!recipient) {
-        this.logger.warn(
-          `Skipping ${NotificationEvent.ORGANIZATION_CREATED}: user ${payload.userId} not found`,
-        );
         return;
       }
 

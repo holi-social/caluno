@@ -27,17 +27,20 @@ export class MembershipListener {
     const requester =
       await this.notificationService.resolveUserNotificationData(
         payload.requesterUserId,
+        {
+          event: NotificationEvent.MEMBERSHIP_REQUESTED,
+        },
       );
     if (!requester) {
-      this.logger.warn(
-        `Skipping ${NotificationEvent.MEMBERSHIP_REQUESTED}: requester ${payload.requesterUserId} not found`,
-      );
       return;
     }
 
     const recipients =
       await this.notificationService.resolveUsersNotificationData(
         payload.recipientUserIds,
+        {
+          event: NotificationEvent.MEMBERSHIP_REQUESTED,
+        },
       );
 
     await Promise.all(
@@ -71,11 +74,11 @@ export class MembershipListener {
       const recipient =
         await this.notificationService.resolveUserNotificationData(
           payload.userId,
+          {
+            event: NotificationEvent.MEMBERSHIP_APPROVED,
+          },
         );
       if (!recipient) {
-        this.logger.warn(
-          `Skipping ${NotificationEvent.MEMBERSHIP_APPROVED}: user ${payload.userId} not found`,
-        );
         return;
       }
 
