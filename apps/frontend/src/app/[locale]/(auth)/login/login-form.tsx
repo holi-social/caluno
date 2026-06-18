@@ -3,6 +3,7 @@
 import { Button, Input } from '@repo/ui';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import { useState } from 'react';
 import { signIn } from '@/lib/auth';
 
@@ -11,6 +12,7 @@ interface LoginFormProps {
 }
 
 export function LoginForm({ redirectTo = '/' }: LoginFormProps) {
+  const t = useTranslations('Auth.login');
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [isPending, setIsPending] = useState(false);
@@ -28,7 +30,7 @@ export function LoginForm({ redirectTo = '/' }: LoginFormProps) {
       const result = await signIn.email({ email, password });
 
       if (result.error) {
-        setError(result.error.message || 'Invalid credentials');
+        setError(result.error.message || t('invalidCredentials'));
         setIsPending(false);
         return;
       }
@@ -37,11 +39,11 @@ export function LoginForm({ redirectTo = '/' }: LoginFormProps) {
         router.push(redirectTo);
         router.refresh();
       } else {
-        setError('Login failed. Please try again.');
+        setError(t('loginFailed'));
         setIsPending(false);
       }
     } catch {
-      setError('Failed to sign in. Please try again.');
+      setError(t('signInFailed'));
       setIsPending(false);
     }
   }
@@ -57,7 +59,7 @@ export function LoginForm({ redirectTo = '/' }: LoginFormProps) {
       <div className="space-y-4">
         <div>
           <label htmlFor="email" className="block text-sm font-medium">
-            Email
+            {t('emailLabel')}
           </label>
           <Input
             id="email"
@@ -65,14 +67,14 @@ export function LoginForm({ redirectTo = '/' }: LoginFormProps) {
             type="email"
             required
             className="mt-1"
-            placeholder="you@example.com"
+            placeholder={t('emailPlaceholder')}
             disabled={isPending}
           />
         </div>
 
         <div>
           <label htmlFor="password" className="block text-sm font-medium">
-            Password
+            {t('passwordLabel')}
           </label>
           <Input
             id="password"
@@ -81,23 +83,23 @@ export function LoginForm({ redirectTo = '/' }: LoginFormProps) {
             required
             minLength={6}
             className="mt-1"
-            placeholder="••••••••"
+            placeholder={t('passwordPlaceholder')}
             disabled={isPending}
           />
         </div>
       </div>
 
       <Button type="submit" disabled={isPending} className="w-full">
-        {isPending ? 'Signing in...' : 'Sign in'}
+        {isPending ? t('submitting') : t('submit')}
       </Button>
 
       <p className="text-center text-sm text-muted-foreground">
-        Don't have an account?{' '}
+        {t('noAccount')}{' '}
         <Link
           href="/signup"
           className="font-medium text-primary hover:underline"
         >
-          Sign up
+          {t('signUpLink')}
         </Link>
       </p>
     </form>

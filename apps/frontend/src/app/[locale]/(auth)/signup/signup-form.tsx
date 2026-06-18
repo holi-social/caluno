@@ -3,6 +3,7 @@
 import { Button, Input } from '@repo/ui';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import { useState } from 'react';
 import { signUp } from '@/lib/auth';
 
@@ -11,6 +12,7 @@ interface SignupFormProps {
 }
 
 export function SignupForm({ redirectTo = '/' }: SignupFormProps) {
+  const t = useTranslations('Auth.signup');
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [isPending, setIsPending] = useState(false);
@@ -29,7 +31,7 @@ export function SignupForm({ redirectTo = '/' }: SignupFormProps) {
       const result = await signUp.email({ name, email, password });
 
       if (result.error) {
-        setError(result.error.message || 'Failed to create account');
+        setError(result.error.message || t('createAccountFailed'));
         setIsPending(false);
         return;
       }
@@ -37,12 +39,12 @@ export function SignupForm({ redirectTo = '/' }: SignupFormProps) {
       if (result.data?.user) {
         router.push(redirectTo);
       } else {
-        setError('Signup failed. Please try again.');
+        setError(t('signupFailed'));
         setIsPending(false);
       }
     } catch (error) {
       console.log(error);
-      setError('Failed to create account. Please try again.');
+      setError(t('failedToCreateAccount'));
       setIsPending(false);
     }
   }
@@ -58,7 +60,7 @@ export function SignupForm({ redirectTo = '/' }: SignupFormProps) {
       <div className="space-y-4">
         <div>
           <label htmlFor="name" className="block text-sm font-medium">
-            Full Name
+            {t('nameLabel')}
           </label>
           <Input
             id="name"
@@ -66,14 +68,14 @@ export function SignupForm({ redirectTo = '/' }: SignupFormProps) {
             type="text"
             required
             className="mt-1"
-            placeholder="John Doe"
+            placeholder={t('namePlaceholder')}
             disabled={isPending}
           />
         </div>
 
         <div>
           <label htmlFor="email" className="block text-sm font-medium">
-            Email
+            {t('emailLabel')}
           </label>
           <Input
             id="email"
@@ -81,14 +83,14 @@ export function SignupForm({ redirectTo = '/' }: SignupFormProps) {
             type="email"
             required
             className="mt-1"
-            placeholder="you@example.com"
+            placeholder={t('emailPlaceholder')}
             disabled={isPending}
           />
         </div>
 
         <div>
           <label htmlFor="password" className="block text-sm font-medium">
-            Password
+            {t('passwordLabel')}
           </label>
           <Input
             id="password"
@@ -97,26 +99,26 @@ export function SignupForm({ redirectTo = '/' }: SignupFormProps) {
             required
             minLength={6}
             className="mt-1"
-            placeholder="••••••••"
+            placeholder={t('passwordPlaceholder')}
             disabled={isPending}
           />
           <p className="mt-1 text-xs text-muted-foreground">
-            At least 6 characters
+            {t('passwordHint')}
           </p>
         </div>
       </div>
 
       <Button type="submit" disabled={isPending} className="w-full">
-        {isPending ? 'Creating account...' : 'Create account'}
+        {isPending ? t('submitting') : t('submit')}
       </Button>
 
       <p className="text-center text-sm text-muted-foreground">
-        Already have an account?{' '}
+        {t('hasAccount')}{' '}
         <Link
           href="/login"
           className="font-medium text-primary hover:underline"
         >
-          Sign in
+          {t('signInLink')}
         </Link>
       </p>
     </form>

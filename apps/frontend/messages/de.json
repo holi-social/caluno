@@ -5,7 +5,35 @@
   },
   "Auth": {
     "login": {
-      "title": "Anmelden"
+      "title": "Anmelden",
+      "emailLabel": "E-Mail",
+      "emailPlaceholder": "du@beispiel.de",
+      "passwordLabel": "Passwort",
+      "passwordPlaceholder": "••••••••",
+      "submit": "Anmelden",
+      "submitting": "Wird angemeldet...",
+      "noAccount": "Noch kein Konto?",
+      "signUpLink": "Registrieren",
+      "invalidCredentials": "Ungültige Anmeldedaten",
+      "loginFailed": "Anmeldung fehlgeschlagen. Bitte versuche es erneut.",
+      "signInFailed": "Anmeldung fehlgeschlagen. Bitte versuche es erneut."
+    },
+    "signup": {
+      "title": "Erstelle dein Konto",
+      "nameLabel": "Vollständiger Name",
+      "namePlaceholder": "Max Mustermann",
+      "emailLabel": "E-Mail",
+      "emailPlaceholder": "du@beispiel.de",
+      "passwordLabel": "Passwort",
+      "passwordPlaceholder": "••••••••",
+      "passwordHint": "Mindestens 6 Zeichen",
+      "submit": "Konto erstellen",
+      "submitting": "Konto wird erstellt...",
+      "hasAccount": "Bereits ein Konto?",
+      "signInLink": "Anmelden",
+      "createAccountFailed": "Konto konnte nicht erstellt werden",
+      "signupFailed": "Registrierung fehlgeschlagen. Bitte versuche es erneut.",
+      "failedToCreateAccount": "Konto konnte nicht erstellt werden. Bitte versuche es erneut."
     }
   },
   "Metadata": {
