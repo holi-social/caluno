@@ -47,6 +47,11 @@ Use `lib/formatting.ts` helpers, never `toLocaleDateString()` directly: `formatD
 Localised with **next-intl** (App Router/RSC). Supported locales `['en','de']`, default/fallback `en`; routing is **URL-prefixed** (`/[locale]/…`). Config in `src/i18n/`: `routing.ts` (locales), `request.ts` (per-request messages), `navigation.ts` (locale-aware nav). Message catalogs are ICU-syntax JSON at `apps/frontend/messages/{en,de}.json`, nested by domain namespace; read copy via `useTranslations('Namespace')` (client) / `getTranslations('Namespace')` (server).
 - **Routing/links — always use `@/i18n/navigation`, never `next/link` or `next/navigation` directly.** It re-exports locale-aware `Link`, `redirect`, `usePathname`, `useRouter`, `getPathname` from `createNavigation(routing)`; these preserve the active locale prefix automatically. Using the raw Next equivalents drops the locale and breaks prefixed routing.
 
+### Server i18n access
+- **RSC pages/layouts**: import `{ setRequestLocale, getTranslations, getFormatter }` from `next-intl/server`. Call `setRequestLocale(locale)` before any other next-intl function to keep static rendering.
+- **Server actions**: `getTranslations` can be called directly to localize user-facing messages returned to the client.
+- **Metadata**: export `async function generateMetadata({ params })`, await `params`, then call `getTranslations({ locale, namespace })`.
+
 ## New features
 Always study UI/UX patterns in existing similar features before starting a new one — consistent experience across features.
 - List pages: follow `src/app/(dashboard)/[orgUId]/shifts/page.tsx`
