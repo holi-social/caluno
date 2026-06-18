@@ -1,7 +1,8 @@
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { getSession } from '@/lib/auth-server';
-import { getSafeRedirect, isSafeRedirect } from '@/lib/safe-redirect';
+import { resolvePostAuthDestination } from '@/lib/post-auth-routing';
+import { isSafeRedirect } from '@/lib/safe-redirect';
 import { SignupForm } from './signup-form';
 
 export default async function SignupPage({
@@ -17,13 +18,23 @@ export default async function SignupPage({
   const urlRedirectTo = isSafeRedirect(params.redirectTo)
     ? params.redirectTo
     : undefined;
-  const redirectTo =
-    getSafeRedirect(pendingRedirect ?? urlRedirectTo) ??
-    (pendingInvite ? `/invite/${pendingInvite}` : '/');
+  const rawRedirect = pendingRedirect ?? urlRedirectTo;
+  const explicitRedirect =
+    isSafeRedirect(rawRedirect) && rawRedirect !== '/'
+      ? rawRedirect
+      : undefined;
 
   if (session) {
-    redirect(redirectTo);
+    redirect(
+      explicitRedirect ??
+        (pendingInvite
+          ? `/invite/${pendingInvite}`
+          : await resolvePostAuthDestination()),
+    );
   }
+
+  const redirectTo =
+    explicitRedirect ?? (pendingInvite ? `/invite/${pendingInvite}` : '/');
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background">

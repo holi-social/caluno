@@ -1,7 +1,8 @@
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { getSession } from '@/lib/auth-server';
-import { getSafeRedirect, isSafeRedirect } from '@/lib/safe-redirect';
+import { resolvePostAuthDestination } from '@/lib/post-auth-routing';
+import { isSafeRedirect } from '@/lib/safe-redirect';
 import { LoginForm } from './login-form';
 
 export default async function LoginPage({
@@ -16,11 +17,17 @@ export default async function LoginPage({
   const urlRedirectTo = isSafeRedirect(params.redirectTo)
     ? params.redirectTo
     : undefined;
-  const redirectTo = getSafeRedirect(pendingRedirect ?? urlRedirectTo);
+  const rawRedirect = pendingRedirect ?? urlRedirectTo;
+  const explicitRedirect =
+    isSafeRedirect(rawRedirect) && rawRedirect !== '/'
+      ? rawRedirect
+      : undefined;
 
   if (session) {
-    redirect(redirectTo);
+    redirect(explicitRedirect ?? (await resolvePostAuthDestination()));
   }
+
+  const redirectTo = explicitRedirect ?? '/';
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background">
