@@ -24,6 +24,8 @@ export function LocaleSwitcher() {
   const pathname = usePathname();
   const router = useRouter();
   const [selected, setSelected] = useState(locale);
+  const selectedLabel =
+    locales.find(({ key }) => key === selected)?.label ?? selected;
 
   const handleSave = () => {
     if (selected === locale) return;
@@ -36,7 +38,7 @@ export function LocaleSwitcher() {
         <Label htmlFor="locale">{t('LocaleSwitcher.label')}</Label>
         <Select value={selected} onValueChange={setSelected}>
           <SelectTrigger id="locale">
-            <SelectValue />
+            <SelectValue placeholder={selectedLabel} />
           </SelectTrigger>
           <SelectContent>
             {locales.map(({ key, label }) => (
