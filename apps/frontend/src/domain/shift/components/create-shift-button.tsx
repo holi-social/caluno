@@ -8,8 +8,19 @@ import { useSheetTrigger } from '@/hooks/use-sheet';
 export function CreateShiftButton() {
   const { open } = useSheetTrigger(FORM_ID);
   return (
-    <Button size="lg" onClick={() => open()}>
-      <PlusIcon /> Create Shift
-    </Button>
+    <>
+      <Button size="icon-sm" className="sm:hidden" onClick={() => open()}>
+        <PlusIcon />
+      </Button>
+
+      <Button
+        size="icon-sm"
+        className="hidden inline-flex"
+        onClick={() => open()}
+      >
+        <PlusIcon />
+        Create Shift
+      </Button>
+    </>
   );
 }

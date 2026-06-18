@@ -8,6 +8,7 @@ import type {
   GetActiveShiftsQuery,
   GetShiftInstancesQuery,
   GetShiftQuery,
+  GetWeeklyShiftsQuery,
   JoinShiftMutation,
   UpdateShiftInput,
 } from '../../generated/graphql';
@@ -20,6 +21,7 @@ export type ActiveShift = GetActiveShiftsQuery['activeShifts']['items'][number];
 export type ShiftInstanceItem =
   GetShiftInstancesQuery['shiftInstances'][number];
 export type RawShift = GetShiftQuery['shift'];
+export type WeeklyShiftInstance = GetWeeklyShiftsQuery['weeklyShifts'][number];
 export interface ShiftDetail extends RawShift {
   startDate: Date;
   endDate: Date;
@@ -111,5 +113,13 @@ export class ShiftRepository extends BaseRepository {
   async findInstances(shiftId: string) {
     const data = await this.sdk.GetShiftInstances({ shiftId });
     return data.shiftInstances;
+  }
+
+  async findForWeek(from: Date, to: Date): Promise<WeeklyShiftInstance[]> {
+    const data = await this.sdk.GetWeeklyShifts({
+      from: from.toISOString(),
+      to: to.toISOString(),
+    });
+    return data.weeklyShifts;
   }
 }

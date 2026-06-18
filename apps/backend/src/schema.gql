@@ -123,6 +123,7 @@ input CreateShiftInput {
   invitedMemberIds: [String!]
   location: String
   maxVolunteers: Int
+  minVolunteers: Int
   rrule: String
   startsAt: DateTime!
   title: String!
@@ -551,6 +552,7 @@ type Query {
   timeEntry(id: String!): TimeEntry!
   user(id: String!): User
   userByCheckInId(checkInId: String!): User
+  weeklyShifts(from: DateTime!, to: DateTime!): [ShiftInstance!]!
 }
 
 type Requirement {
@@ -754,6 +756,7 @@ type Shift {
   isDeleted: Boolean!
   location: String
   maxVolunteers: Int
+  minVolunteers: Int
   organization: Organization!
   organizationUnitId: ID!
   originalStartsAt: DateTime!
@@ -898,6 +901,7 @@ input UpdateShiftInput {
   invitedMemberIds: [String!]
   location: String
   maxVolunteers: Int
+  minVolunteers: Int
   rrule: String
   startsAt: DateTime
   title: String

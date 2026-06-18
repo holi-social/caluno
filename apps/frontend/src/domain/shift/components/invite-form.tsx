@@ -1,113 +1,189 @@
 'use client';
 
+import { zodResolver } from '@hookform/resolvers/zod';
 import {
   useMemberships,
   useOrgUId,
-  useQueryClient,
+  useShift,
   useShiftVolunteers,
 } from '@repo/data/react';
-import { Button, Field } from '@repo/ui';
-import { useState } from 'react';
+import {
+  Button,
+  Field,
+  FieldDescription,
+  FieldError,
+  FieldLabel,
+  Input,
+  Separator,
+} from '@repo/ui';
+import { Share2 } from 'lucide-react';
+import { useEffect, useTransition } from 'react';
+import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
-import { MemberSelect } from '@/components/member-select';
 import { useSession } from '@/lib/auth';
-import { inviteShiftVolunteers } from '../actions';
+import { copyToClipboard } from '@/lib/clipboard';
+import { inviteShiftVolunteers, updateShiftStaffing } from '../actions';
+import { type InviteShiftFormValues, inviteShiftFormSchema } from '../schemas';
 import { shiftShareUrl } from '../share';
+import { TransferList } from './transfer-list';
 
 interface InviteShiftFormProps {
+  formId?: string;
   shiftId: string;
   onSuccess?: () => void;
-  onCancel?: () => void;
+  onPendingChange?: (isPending: boolean) => void;
 }
 
 export function InviteShiftForm({
+  formId,
   shiftId,
   onSuccess,
-  onCancel,
+  onPendingChange,
 }: InviteShiftFormProps) {
-  const [isInviting, setIsInviting] = useState(false);
-  const [memberIds, setMemberIds] = useState<string[]>([]);
-  const [serverError, setServerError] = useState<string | null>(null);
   const orgUId = useOrgUId();
   const session = useSession();
-  const queryClient = useQueryClient();
+  const [isPending, startTransition] = useTransition();
 
+  const { data: shift } = useShift(shiftId);
   const { data: shiftVolunteers } = useShiftVolunteers(shiftId);
   const { data: memberships } = useMemberships(orgUId);
-  const currentUserId = session.data?.user?.id;
 
-  const existingIds = new Set(shiftVolunteers?.map((v) => v.id) ?? []);
-  const readonlyIds = shiftVolunteers?.map((v) => v.id) ?? [];
+  const form = useForm<InviteShiftFormValues>({
+    resolver: zodResolver(inviteShiftFormSchema),
+    defaultValues: {
+      minVolunteers: null,
+      maxVolunteers: null,
+      invitedMemberIds: [],
+    },
+  });
 
-  const volunteers = memberships?.map((m) => m.user) ?? [];
-  const eligibleVolunteers = volunteers.filter((v) => v.id !== currentUserId);
+  useEffect(() => {
+    onPendingChange?.(isPending);
+  }, [isPending, onPendingChange]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setServerError(null);
-
-    const newMemberIds = memberIds.filter((id) => !existingIds.has(id));
-    if (newMemberIds.length === 0) {
-      toast.info('No new volunteers selected');
-      return;
+  useEffect(() => {
+    if (shift?.id) {
+      form.setValue('minVolunteers', shift.minVolunteers ?? null);
+      form.setValue('maxVolunteers', shift.maxVolunteers ?? null);
     }
+  }, [shift?.id, shift?.minVolunteers, shift?.maxVolunteers, form.setValue]);
 
-    setIsInviting(true);
-    try {
-      const result = await inviteShiftVolunteers({
+  useEffect(() => {
+    if (shiftVolunteers) {
+      form.setValue(
+        'invitedMemberIds',
+        shiftVolunteers.map((v) => v.id),
+      );
+    }
+  }, [shiftVolunteers, form.setValue]);
+
+  const currentUserId = session.data?.user?.id;
+  const existingVolunteers = shiftVolunteers ?? [];
+  const existingIds = existingVolunteers.map((v) => v.id);
+
+  const allMembers = (memberships ?? [])
+    .map((m) => m.user)
+    .filter((u) => u.id !== currentUserId);
+
+  const watchedIds = form.watch('invitedMemberIds');
+  const invitedMembers = allMembers.filter((m) => watchedIds.includes(m.id));
+
+  const onSubmit = (data: InviteShiftFormValues) => {
+    startTransition(async () => {
+      const staffingResult = await updateShiftStaffing({
         shiftId,
         organizationUnitId: orgUId,
-        memberIds: newMemberIds,
+        minVolunteers: data.minVolunteers ?? null,
+        maxVolunteers: data.maxVolunteers ?? null,
       });
-
-      if (result?.serverError) {
-        setServerError(result.serverError);
-        toast.error(result.serverError);
+      if (staffingResult?.serverError) {
+        toast.error(staffingResult.serverError);
         return;
       }
 
-      toast.success('Volunteers invited successfully');
-      setMemberIds([]);
-      queryClient.invalidateQueries({
-        queryKey: ['shiftVolunteers', shiftId],
-      });
+      const newIds = data.invitedMemberIds.filter(
+        (id) => !existingIds.includes(id),
+      );
+      if (newIds.length > 0) {
+        const inviteResult = await inviteShiftVolunteers({
+          shiftId,
+          organizationUnitId: orgUId,
+          memberIds: newIds,
+        });
+        if (inviteResult?.serverError) {
+          toast.error(inviteResult.serverError);
+          return;
+        }
+      }
+
       onSuccess?.();
-    } catch (error) {
-      const message =
-        error instanceof Error ? error.message : 'Failed to invite volunteers';
-      setServerError(message);
-      toast.error(message);
-    } finally {
-      setIsInviting(false);
-    }
+    });
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      {serverError && (
-        <div className="rounded-md bg-destructive/10 p-4 text-sm text-destructive">
-          {serverError}
-        </div>
-      )}
+    <form
+      id={formId}
+      onSubmit={form.handleSubmit(onSubmit)}
+      className="flex flex-col gap-6 h-full"
+    >
+      {/* Min / Max row */}
+      <div className="flex gap-3">
+        <Field className="flex-1">
+          <FieldLabel htmlFor="minVolunteers">Min volunteers</FieldLabel>
+          <Input
+            id="minVolunteers"
+            type="number"
+            min={1}
+            placeholder="e.g. 2"
+            disabled={isPending}
+            {...form.register('minVolunteers', {
+              setValueAs: (v) => (v === '' || v == null ? null : Number(v)),
+            })}
+          />
+          <FieldDescription>
+            Minimum number of people required to open the shift
+          </FieldDescription>
+        </Field>
+        <Field className="flex-1">
+          <FieldLabel htmlFor="maxVolunteers">Max volunteers</FieldLabel>
+          <Input
+            id="maxVolunteers"
+            type="number"
+            min={1}
+            placeholder="e.g. 50"
+            disabled={isPending}
+            {...form.register('maxVolunteers', {
+              setValueAs: (v) => (v === '' || v == null ? null : Number(v)),
+            })}
+          />
+          <FieldDescription>
+            Maximum number of people allowed to sign up for the shift
+          </FieldDescription>
+          <FieldError errors={[form.formState.errors.maxVolunteers]} />
+        </Field>
+      </div>
 
-      <Field>
-        <MemberSelect
-          members={eligibleVolunteers}
-          value={memberIds}
-          onChange={setMemberIds}
-          readonlyIds={readonlyIds}
-          inviteLinkUrl={shiftShareUrl(shiftId)}
+      <Separator />
+
+      {/* Invite section */}
+      <div className="flex flex-col gap-4 flex-1">
+        <p className="text-xl font-bold">Invite and manage participants</p>
+        <TransferList
+          available={allMembers}
+          invited={invitedMembers}
+          onInvitedChange={(ids) => form.setValue('invitedMemberIds', ids)}
+          readonlyIds={existingIds}
         />
-      </Field>
-
-      <div className="flex justify-end gap-2">
-        {onCancel && (
-          <Button type="button" variant="outline" onClick={onCancel}>
-            Cancel
-          </Button>
-        )}
-        <Button type="submit" disabled={isInviting || memberIds.length === 0}>
-          {isInviting ? 'Inviting...' : 'Invite volunteers'}
+        <Button
+          type="button"
+          variant="outline"
+          className="w-full"
+          onClick={() =>
+            copyToClipboard(shiftShareUrl(shiftId), 'Invite link copied')
+          }
+        >
+          <Share2 className="size-4 mr-2" />
+          Copy invite link
         </Button>
       </div>
     </form>

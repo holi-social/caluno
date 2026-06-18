@@ -32,7 +32,6 @@ export function CreateShiftForm({
       const result = await createShift({
         ...formData,
         invitedMemberIds: [],
-        maxVolunteers: formData.maxVolunteers ?? null,
       });
       if (result?.serverError) {
         setServerError(result.serverError);

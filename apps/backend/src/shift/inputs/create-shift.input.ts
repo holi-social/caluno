@@ -31,6 +31,9 @@ export class CreateShiftInput {
   @Field(() => Int, { nullable: true })
   maxVolunteers!: number | null;
 
+  @Field(() => Int, { nullable: true })
+  minVolunteers!: number | null;
+
   @Field(() => String, { nullable: true })
   rrule!: string | null;
 }

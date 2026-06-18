@@ -36,6 +36,7 @@ export const shifts = pgTable(
       .notNull()
       .default(ShiftVisibility.ALL_MEMBERS),
     maxVolunteers: integer('max_volunteers'),
+    minVolunteers: integer('min_volunteers'),
     rrule: text('rrule'),
     originalStartsAt: timestamp('original_starts_at').notNull(),
     durationMinutes: integer('duration_minutes').notNull(),
