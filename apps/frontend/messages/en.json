@@ -1,0 +1,11 @@
+{
+  "Common": {
+    "save": "Save",
+    "cancel": "Cancel"
+  },
+  "Auth": {
+    "login": {
+      "title": "Sign in"
+    }
+  }
+}

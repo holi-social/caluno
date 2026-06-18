@@ -1,0 +1,11 @@
+{
+  "Common": {
+    "save": "Speichern",
+    "cancel": "Abbrechen"
+  },
+  "Auth": {
+    "login": {
+      "title": "Anmelden"
+    }
+  }
+}
