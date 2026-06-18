@@ -19,7 +19,7 @@ const locales = [
 ] as const;
 
 export function LocaleSwitcher() {
-  const t = useTranslations('LocaleSwitcher');
+  const t = useTranslations();
   const locale = useLocale();
   const pathname = usePathname();
   const router = useRouter();
@@ -33,7 +33,7 @@ export function LocaleSwitcher() {
   return (
     <div className="space-y-4 max-w-sm">
       <div className="space-y-2">
-        <Label htmlFor="locale">{t('label')}</Label>
+        <Label htmlFor="locale">{t('LocaleSwitcher.label')}</Label>
         <Select value={selected} onValueChange={setSelected}>
           <SelectTrigger id="locale">
             <SelectValue />
@@ -41,14 +41,14 @@ export function LocaleSwitcher() {
           <SelectContent>
             {locales.map(({ key, label }) => (
               <SelectItem key={key} value={key}>
-                {t(label)}
+                {t(`LocaleSwitcher.${label}`)}
               </SelectItem>
             ))}
           </SelectContent>
         </Select>
       </div>
       <Button onClick={handleSave} disabled={selected === locale}>
-        {t('save')}
+        {t('Common.save')}
       </Button>
     </div>
   );

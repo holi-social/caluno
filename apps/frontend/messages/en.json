@@ -15,8 +15,7 @@
       "noAccount": "Don't have an account?",
       "signUpLink": "Sign up",
       "invalidCredentials": "Invalid credentials",
-      "loginFailed": "Login failed. Please try again.",
-      "signInFailed": "Failed to sign in. Please try again."
+      "genericError": "Sign in failed. Please try again."
     },
     "signup": {
       "title": "Create your account",
@@ -32,8 +31,7 @@
       "hasAccount": "Already have an account?",
       "signInLink": "Sign in",
       "createAccountFailed": "Failed to create account",
-      "signupFailed": "Signup failed. Please try again.",
-      "failedToCreateAccount": "Failed to create account. Please try again."
+      "genericError": "Creating your account failed. Please try again."
     }
   },
   "Metadata": {
@@ -42,12 +40,16 @@
     "unauthorizedTitle": "Access Denied | Clippy"
   },
   "Unauthorized": {
-    "title": "Access Denied"
+    "title": "Access Denied",
+    "message": "You don't have permission to access this resource.",
+    "homeLink": "Go to your organizations"
   },
   "LocaleSwitcher": {
     "label": "Language",
-    "save": "Save",
     "english": "English",
     "german": "German"
+  },
+  "Profile": {
+    "title": "Edit Profile"
   }
 }

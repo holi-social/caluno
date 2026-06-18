@@ -10,7 +10,7 @@ import { UserCard } from '@/components/user-card';
 import { JoinShiftButton } from '@/domain/shift/components/join-shift-button';
 import { isAuthenticated } from '@/lib/auth-server';
 import { getDataClient } from '@/lib/data-client';
-import { formatRange } from '@/lib/formatting';
+import { getFormatting } from '@/lib/formatting-server';
 import { validateUserOrgAccess } from '@/lib/org-context-server';
 
 interface ShiftPageProps {
@@ -35,6 +35,7 @@ export default async function ShiftPage({
   const autoJoin = search.autoJoin === 'true';
 
   const data = await getDataClient();
+  const { formatRange } = await getFormatting();
   const shift = await data.shift.findById(shiftId);
 
   if (!shift) {

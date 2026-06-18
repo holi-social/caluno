@@ -38,11 +38,11 @@ export function LoginForm({ redirectTo = '/' }: LoginFormProps) {
         router.push(redirectTo);
         router.refresh();
       } else {
-        setError(t('loginFailed'));
+        setError(t('genericError'));
         setIsPending(false);
       }
     } catch {
-      setError(t('signInFailed'));
+      setError(t('genericError'));
       setIsPending(false);
     }
   }

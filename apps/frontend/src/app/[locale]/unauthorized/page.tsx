@@ -37,12 +37,10 @@ export default async function UnauthorizedPage({
         {message ? (
           <p className="text-muted-foreground">{message}</p>
         ) : (
-          <p className="text-muted-foreground">
-            You don't have permission to access this resource.
-          </p>
+          <p className="text-muted-foreground">{t('message')}</p>
         )}
         <Link href="/" className="text-primary hover:underline">
-          Go to your organizations
+          {t('homeLink')}
         </Link>
       </div>
     </div>

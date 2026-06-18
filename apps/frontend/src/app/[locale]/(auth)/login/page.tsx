@@ -1,6 +1,6 @@
 import { cookies } from 'next/headers';
-import { redirect } from 'next/navigation';
 import { getTranslations, setRequestLocale } from 'next-intl/server';
+import { redirect } from '@/i18n/navigation';
 import { getSession } from '@/lib/auth-server';
 import { getSafeRedirect, isSafeRedirect } from '@/lib/safe-redirect';
 import { LoginForm } from './login-form';
@@ -28,7 +28,7 @@ export default async function LoginPage({
   const redirectTo = getSafeRedirect(pendingRedirect ?? urlRedirectTo);
 
   if (session) {
-    redirect(redirectTo);
+    redirect({ href: redirectTo, locale });
   }
 
   return (

@@ -38,12 +38,11 @@ export function SignupForm({ redirectTo = '/' }: SignupFormProps) {
       if (result.data?.user) {
         router.push(redirectTo);
       } else {
-        setError(t('signupFailed'));
+        setError(t('genericError'));
         setIsPending(false);
       }
-    } catch (error) {
-      console.log(error);
-      setError(t('failedToCreateAccount'));
+    } catch {
+      setError(t('genericError'));
       setIsPending(false);
     }
   }

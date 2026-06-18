@@ -1,6 +1,6 @@
 import { cookies } from 'next/headers';
-import { redirect } from 'next/navigation';
 import { getTranslations, setRequestLocale } from 'next-intl/server';
+import { redirect } from '@/i18n/navigation';
 import { getSession } from '@/lib/auth-server';
 import { getSafeRedirect, isSafeRedirect } from '@/lib/safe-redirect';
 import { SignupForm } from './signup-form';
@@ -31,7 +31,7 @@ export default async function SignupPage({
     (pendingInvite ? `/invite/${pendingInvite}` : '/');
 
   if (session) {
-    redirect(redirectTo);
+    redirect({ href: redirectTo, locale });
   }
 
   return (

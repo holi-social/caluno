@@ -15,8 +15,7 @@
       "noAccount": "Noch kein Konto?",
       "signUpLink": "Registrieren",
       "invalidCredentials": "Ungültige Anmeldedaten",
-      "loginFailed": "Anmeldung fehlgeschlagen. Bitte versuche es erneut.",
-      "signInFailed": "Anmeldung fehlgeschlagen. Bitte versuche es erneut."
+      "genericError": "Anmeldung fehlgeschlagen. Bitte versuche es erneut."
     },
     "signup": {
       "title": "Erstelle dein Konto",
@@ -32,8 +31,7 @@
       "hasAccount": "Bereits ein Konto?",
       "signInLink": "Anmelden",
       "createAccountFailed": "Konto konnte nicht erstellt werden",
-      "signupFailed": "Registrierung fehlgeschlagen. Bitte versuche es erneut.",
-      "failedToCreateAccount": "Konto konnte nicht erstellt werden. Bitte versuche es erneut."
+      "genericError": "Konto konnte nicht erstellt werden. Bitte versuche es erneut."
     }
   },
   "Metadata": {
@@ -42,12 +40,16 @@
     "unauthorizedTitle": "Zugriff verweigert | Clippy"
   },
   "Unauthorized": {
-    "title": "Zugriff verweigert"
+    "title": "Zugriff verweigert",
+    "message": "Du hast keine Berechtigung, auf diese Ressource zuzugreifen.",
+    "homeLink": "Zu deinen Organisationen"
   },
   "LocaleSwitcher": {
     "label": "Sprache",
-    "save": "Speichern",
     "english": "Englisch",
     "german": "Deutsch"
+  },
+  "Profile": {
+    "title": "Profil bearbeiten"
   }
 }

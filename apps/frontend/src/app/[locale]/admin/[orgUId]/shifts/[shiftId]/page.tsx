@@ -24,7 +24,7 @@ import { UserCard } from '@/components/user-card';
 import { ActionBar } from '@/domain/shift/components/action-bar';
 import { visibilityConfig } from '@/domain/shift/components/shifts-table';
 import { getDataClient } from '@/lib/data-client';
-import { formatDateTime, formatRange } from '@/lib/formatting';
+import { getFormatting } from '@/lib/formatting-server';
 
 interface ShiftViewPageProps {
   params: Promise<{ orgUId: string; shiftId: string }>;
@@ -34,6 +34,7 @@ export default async function ShiftViewPage({ params }: ShiftViewPageProps) {
   const { orgUId, shiftId } = await params;
 
   const data = await getDataClient(orgUId);
+  const { formatDateTime, formatRange } = await getFormatting();
   const shift = await data.shift.findById(shiftId);
 
   if (!shift) {

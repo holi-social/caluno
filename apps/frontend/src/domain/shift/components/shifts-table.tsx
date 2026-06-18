@@ -10,7 +10,7 @@ import {
   TableRow,
 } from '@repo/ui';
 import { Link } from '@/i18n/navigation';
-import { formatRange } from '@/lib/formatting';
+import { getFormatting } from '@/lib/formatting-server';
 import { ActionBar } from './action-bar';
 
 type ShiftListItem = GetShiftsQuery['shifts']['items'][number];
@@ -25,7 +25,9 @@ export const visibilityConfig = {
   INVITED_MEMBERS: { variant: 'secondary' as const, label: 'Invite only' },
 };
 
-export function ShiftsTable({ shifts, orgUId }: ShiftsTableProps) {
+export async function ShiftsTable({ shifts, orgUId }: ShiftsTableProps) {
+  const { formatRange } = await getFormatting();
+
   return (
     <div className="rounded-md border overflow-x-auto">
       <Table>

@@ -41,16 +41,17 @@ Route groups: `(auth)` unauthenticated, `(dashboard)/[orgUId]` protected + org-s
 - Do not write GraphQL in this project — use `@repo/data` for data access.
 
 ## Dates — always use active-locale formatters
-- **Client components**: `const { formatDate, formatDateTime, formatTime } = useFormatting()` from `@/hooks/use-formatting`.
-- **Server components**: `const { formatDate, formatDateTime, formatTime } = await getFormatting()` from `@/lib/formatting-server`.
-- **Legacy / explicit-locale cases**: `lib/formatting.ts` still exports sync helpers that accept a `locale` string; default is the source locale `en`.
+- **Client components**: `const { formatDate, formatDateTime, formatTime, formatRange } = useFormatting()` from `@/hooks/use-formatting`.
+- **Server components**: `const { formatDate, formatDateTime, formatTime, formatRange } = await getFormatting()` from `@/lib/formatting-server`.
+- **Shared options**: `lib/date-time-options.ts` owns the `Intl.DateTimeFormatOptions` objects so client/server/legacy formatters stay consistent.
+- **Legacy / explicit-locale cases**: `lib/formatting.ts` still exports sync helpers that accept a `locale` string; default is the source locale `en`. Existing call sites that rely on the default render English dates until they are migrated to the active-locale helpers above.
 - **Rendered dates in shared components**: prefer `<FormattedDate date={...} />` from `@/components/formatted-date`.
 - Never call `toLocaleDateString()` directly.
 
 ## Localisation (i18n) — next-intl
 Localised with **next-intl** (App Router/RSC). Supported locales `['en','de']`, default/fallback `en`; routing is **URL-prefixed** (`/[locale]/…`). Config in `src/i18n/`: `routing.ts` (locales), `request.ts` (per-request messages), `navigation.ts` (locale-aware nav). Message catalogs are ICU-syntax JSON at `apps/frontend/messages/{en,de}.json`, nested by domain namespace; read copy via `useTranslations('Namespace')` (client) / `getTranslations('Namespace')` (server).
 - **Client-side routing — always use `@/i18n/navigation`, never `next/link` or `next/navigation` directly.** It re-exports locale-aware `Link`, `usePathname`, `useRouter`, `getPathname` from `createNavigation(routing)`; these preserve the active locale prefix automatically. Using the raw Next equivalents drops the locale and breaks prefixed routing.
-- **Server-side `redirect`** — still imported from `next/navigation` for now. The proxy will recover missing locale prefixes on the following request, but a future refactor should migrate these to the locale-aware `redirect` from `@/i18n/navigation`.
+- **Server-side `redirect`** — import from `@/i18n/navigation` and call it with the locale: `redirect({ href: '/path', locale })`. The locale-aware helper prefixes the path automatically; raw `next/navigation` `redirect` does not.
 - **`notFound`, `useSearchParams`, `useParams`** — keep importing from `next/navigation`; they are not locale-dependent.
 
 ### Server i18n access
