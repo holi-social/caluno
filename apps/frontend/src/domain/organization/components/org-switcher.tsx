@@ -13,30 +13,23 @@ import {
   PopoverTrigger,
 } from '@repo/ui';
 import { Building2, Check, ChevronsUpDown } from 'lucide-react';
-import { useParams, usePathname, useRouter } from 'next/navigation';
+import Link from 'next/link';
+import { useParams, usePathname } from 'next/navigation';
 import { useState } from 'react';
+import { orgUnitAdminHref, switchOrgAdminHref } from '@/lib/admin-routes';
 
 export function OrgSwitcher() {
   const [open, setOpen] = useState(false);
   const params = useParams();
-  const router = useRouter();
   const pathname = usePathname();
   const currentorgUId = params.orgUId as string | undefined;
 
   const organizations = useUserOrganizations();
 
-  const handleOrgChange = (neworgUId: string) => {
-    if (neworgUId === currentorgUId) {
-      setOpen(false);
-      return;
-    }
-
-    const pathParts = pathname.split('/').filter(Boolean);
-    const currentPage = pathParts.length > 1 ? pathParts[1] : 'shifts';
-
-    router.push(`/admin/${neworgUId}/${currentPage}`);
-    setOpen(false);
-  };
+  const orgHref = (orgUId: string) =>
+    orgUId === currentorgUId
+      ? orgUnitAdminHref(orgUId)
+      : switchOrgAdminHref(orgUId, pathname);
 
   const currentOrg = organizations.find((org) => org.id === currentorgUId);
 
@@ -63,25 +56,23 @@ export function OrgSwitcher() {
           <CommandList>
             <CommandGroup>
               {organizations.map((org) => (
-                <CommandItem
-                  key={org.id}
-                  value={org.id}
-                  onSelect={() => handleOrgChange(org.id)}
-                >
-                  <Check
-                    className={cn(
-                      'mr-2 h-4 w-4',
-                      currentorgUId === org.id ? 'opacity-100' : 'opacity-0',
-                    )}
-                  />
-                  <div className="flex flex-col">
-                    <span>{org.name}</span>
-                    {org.description && (
-                      <span className="text-xs text-muted-foreground">
-                        {org.description}
-                      </span>
-                    )}
-                  </div>
+                <CommandItem key={org.id} value={org.id} asChild>
+                  <Link href={orgHref(org.id)} onClick={() => setOpen(false)}>
+                    <Check
+                      className={cn(
+                        'mr-2 h-4 w-4',
+                        currentorgUId === org.id ? 'opacity-100' : 'opacity-0',
+                      )}
+                    />
+                    <div className="flex flex-col">
+                      <span>{org.name}</span>
+                      {org.description && (
+                        <span className="text-xs text-muted-foreground">
+                          {org.description}
+                        </span>
+                      )}
+                    </div>
+                  </Link>
                 </CommandItem>
               ))}
             </CommandGroup>
