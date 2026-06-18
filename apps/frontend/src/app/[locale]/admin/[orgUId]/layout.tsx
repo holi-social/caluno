@@ -61,7 +61,7 @@ export default async function OrgLayout({
                       {sheet}
                     </Suspense>
                     <ThemeToggle />
-                    <ProfileNavIcon />
+                    <ProfileNavIcon orgUId={orgUId} />
                   </div>
                 </div>
               </header>
