@@ -56,6 +56,17 @@ Localised with **next-intl** (App Router/RSC). Supported locales `['en','de']`, 
 - **Server actions**: `getTranslations` can be called directly to localize user-facing messages returned to the client.
 - **Metadata**: export `async function generateMetadata({ params })`, await `params`, then call `getTranslations({ locale, namespace })`.
 
+### Strings and translations
+All user-facing strings must come from `messages/{en,de}.json` via `useTranslations`
+(client) or `getTranslations` (server). Do not hardcode labels, buttons, headings,
+error messages, or empty-state text in components. Add new keys to both locales and
+keep namespaces/key shapes in sync.
+
+### Locale switching
+Use `useLocale`, `usePathname`, and `useRouter` from `@/i18n/navigation`. Call
+`router.replace(pathname, { locale })` to switch locale while preserving the current
+path. next-intl updates the locale cookie automatically.
+
 ## New features
 Always study UI/UX patterns in existing similar features before starting a new one — consistent experience across features.
 - List pages: follow `src/app/(dashboard)/[orgUId]/shifts/page.tsx`

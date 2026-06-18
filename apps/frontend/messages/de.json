@@ -15,5 +15,11 @@
   },
   "Unauthorized": {
     "title": "Zugriff verweigert"
+  },
+  "LocaleSwitcher": {
+    "label": "Sprache",
+    "save": "Speichern",
+    "english": "Englisch",
+    "german": "Deutsch"
   }
 }

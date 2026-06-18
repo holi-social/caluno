@@ -15,5 +15,11 @@
   },
   "Unauthorized": {
     "title": "Access Denied"
+  },
+  "LocaleSwitcher": {
+    "label": "Language",
+    "save": "Save",
+    "english": "English",
+    "german": "German"
   }
 }
