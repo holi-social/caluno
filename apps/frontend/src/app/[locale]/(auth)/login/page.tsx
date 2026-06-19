@@ -1,9 +1,8 @@
-import { cookies } from 'next/headers';
 import { getTranslations, setRequestLocale } from 'next-intl/server';
 import { redirect } from '@/i18n/navigation';
+import { AuthPageShell } from '../auth-page-shell';
+import { resolveAuthPageRedirects } from '@/lib/auth-page-redirect';
 import { getSession } from '@/lib/auth-server';
-import { resolvePostAuthDestination } from '@/lib/post-auth-routing';
-import { isSafeRedirect } from '@/lib/safe-redirect';
 import { LoginForm } from './login-form';
 
 interface LoginPageProps {
@@ -19,36 +18,16 @@ export default async function LoginPage({
   setRequestLocale(locale);
   const t = await getTranslations('Auth.login');
 
-  const session = await getSession();
-  const cookieStore = await cookies();
-  const searchParamsData = await searchParams;
-  const pendingRedirect = cookieStore.get('pending_redirect')?.value;
-  const urlRedirectTo = isSafeRedirect(searchParamsData.redirectTo)
-    ? searchParamsData.redirectTo
-    : undefined;
-  const rawRedirect = pendingRedirect ?? urlRedirectTo;
-  const explicitRedirect =
-    isSafeRedirect(rawRedirect) && rawRedirect !== '/'
-      ? rawRedirect
-      : undefined;
+  const { formRedirectTo, authenticatedRedirect } =
+    await resolveAuthPageRedirects(await searchParams);
 
-  if (session) {
-    const destination =
-      explicitRedirect ?? (await resolvePostAuthDestination());
-    redirect({ href: destination, locale });
+  if (await getSession()) {
+    redirect({ href: await authenticatedRedirect(), locale });
   }
 
-  const redirectTo = explicitRedirect ?? '/';
-
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background">
-      <div className="w-full max-w-md space-y-8 p-8">
-        <div className="text-center">
-          <h2 className="page-title">{t('title')}</h2>
-        </div>
-
-        <LoginForm redirectTo={redirectTo} />
-      </div>
-    </div>
+    <AuthPageShell title={t('title')}>
+      <LoginForm redirectTo={formRedirectTo} />
+    </AuthPageShell>
   );
 }
