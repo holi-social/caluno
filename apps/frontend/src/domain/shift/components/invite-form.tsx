@@ -30,6 +30,7 @@ import { TransferList } from './transfer-list';
 interface InviteShiftFormProps {
   formId?: string;
   shiftId: string;
+  instanceId: string;
   onSuccess?: () => void;
   onPendingChange?: (isPending: boolean) => void;
 }
@@ -37,6 +38,7 @@ interface InviteShiftFormProps {
 export function InviteShiftForm({
   formId,
   shiftId,
+  instanceId,
   onSuccess,
   onPendingChange,
 }: InviteShiftFormProps) {
@@ -45,7 +47,7 @@ export function InviteShiftForm({
   const [isPending, startTransition] = useTransition();
 
   const { data: shift } = useShift(shiftId);
-  const { data: shiftVolunteers } = useShiftVolunteers(shiftId);
+  const { data: shiftVolunteers } = useShiftVolunteers(instanceId);
   const { data: memberships } = useMemberships(orgUId);
 
   const form = useForm<InviteShiftFormValues>({
@@ -107,6 +109,7 @@ export function InviteShiftForm({
       if (newIds.length > 0) {
         const inviteResult = await inviteShiftVolunteers({
           shiftId,
+          instanceId,
           organizationUnitId: orgUId,
           memberIds: newIds,
         });

@@ -110,6 +110,7 @@ export const deleteShift = actionClient
 
 const inviteShiftVolunteersSchema = z.object({
   shiftId: z.string().min(1),
+  instanceId: z.string().min(1),
   organizationUnitId: z.string().min(1),
   memberIds: z.array(z.string()),
 });
@@ -120,6 +121,7 @@ export const inviteShiftVolunteers = actionClient
     const data = await getDataClient(parsedInput.organizationUnitId);
     return await data.shift.inviteMembers(
       parsedInput.shiftId,
+      parsedInput.instanceId,
       parsedInput.memberIds,
     );
   });

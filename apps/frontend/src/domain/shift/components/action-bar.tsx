@@ -14,6 +14,7 @@ import { shiftShareUrl } from '../share';
 
 type ActionBarProps = {
   id: string;
+  instanceId?: string;
   organizationUnitId: string;
   size?: 'xs' | 'sm' | 'md';
   hideEdit?: boolean;
@@ -21,6 +22,7 @@ type ActionBarProps = {
 
 export const ActionBar = ({
   id,
+  instanceId,
   organizationUnitId,
   size = 'xs',
   hideEdit = false,
@@ -28,7 +30,7 @@ export const ActionBar = ({
   const router = useRouter();
   const [isDeleting, startDeleteTransition] = useTransition();
   const editSheet = useSheet(FORM_ID, 'id');
-  const inviteSheet = useSheet('invite-shift', 'id');
+  const inviteSheet = useSheet('invite-shift', 'id', 'instanceId');
 
   const buttonSize = `icon-${size}` as const;
 
@@ -63,14 +65,16 @@ export const ActionBar = ({
         </Button>
       )}
 
-      <Button
-        size={buttonSize}
-        variant="outline"
-        aria-label="Invite volunteers"
-        onClick={() => inviteSheet.open({ id })}
-      >
-        <UserPlus />
-      </Button>
+      {instanceId && (
+        <Button
+          size={buttonSize}
+          variant="outline"
+          aria-label="Invite volunteers"
+          onClick={() => inviteSheet.open({ id, instanceId })}
+        >
+          <UserPlus />
+        </Button>
+      )}
 
       <Button
         size={buttonSize}

@@ -94,9 +94,14 @@ export class ShiftRepository extends BaseRepository {
 
   async inviteMembers(
     shiftId: string,
+    instanceId: string,
     memberIds: string[],
   ): Promise<{ id: string }> {
-    const data = await this.sdk.InviteShiftVolunteers({ shiftId, memberIds });
+    const data = await this.sdk.InviteShiftVolunteers({
+      shiftId,
+      instanceId,
+      memberIds,
+    });
     return { id: data.inviteMembersToShift.id };
   }
 
@@ -105,8 +110,8 @@ export class ShiftRepository extends BaseRepository {
     return data.joinShift;
   }
 
-  async findVolunteersByShiftId(shiftId: string) {
-    const data = await this.sdk.GetShiftVolunteers({ shiftId });
+  async findVolunteersByInstanceId(instanceId: string) {
+    const data = await this.sdk.GetShiftVolunteers({ instanceId });
     return data.shiftVolunteers;
   }
 

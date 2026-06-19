@@ -304,26 +304,32 @@ export class ShiftService {
 
   async inviteMembersToShiftWithAutoApproval(
     shiftId: string,
+    instanceId: string,
     memberIds: string[],
     organizationUnitId: string,
   ): Promise<ShiftEntity> {
     const shift = await this.findById(shiftId, organizationUnitId);
+    const instance = await this.findInstanceById(
+      instanceId,
+      organizationUnitId,
+    );
 
-    const instances = await this.db.query.shiftInstances.findMany({
-      where: {
-        masterId: shiftId,
-        isCancelled: false,
-      },
-    });
+    if (instance.masterId !== shiftId || instance.isCancelled) {
+      throw new NotFoundGraphQLError(
+        `Shift instance with ID ${instanceId} not found`,
+      );
+    }
 
-    const instanceIds = instances.map((i) => i.id);
+    if (memberIds.length === 0) {
+      return shift;
+    }
 
     const existingInvites = await this.db
       .selectDistinct({ userId: schema.shiftInstanceInvites.userId })
       .from(schema.shiftInstanceInvites)
       .where(
         and(
-          inArray(schema.shiftInstanceInvites.instanceId, instanceIds),
+          eq(schema.shiftInstanceInvites.instanceId, instanceId),
           inArray(schema.shiftInstanceInvites.userId, memberIds),
           eq(schema.shiftInstanceInvites.status, ShiftInviteStatus.ACCEPTED),
         ),
@@ -336,42 +342,31 @@ export class ShiftService {
       return shift;
     }
 
-    if (!shift.maxVolunteers) {
-      await this.createInvitesForInstances(this.db, instanceIds, newMemberIds);
+    const maxVolunteers = instance.overrideMaxVolunteers ?? shift.maxVolunteers;
+
+    if (!maxVolunteers) {
+      await this.createInvitesForInstances(this.db, [instanceId], newMemberIds);
       return shift;
     }
 
     await this.db.transaction(async (tx) => {
-      const capacityViolations = await tx
-        .select({
-          instanceId: schema.shiftInstanceInvites.instanceId,
-          current: count(),
-        })
+      const [capacity] = await tx
+        .select({ current: count() })
         .from(schema.shiftInstanceInvites)
-        .innerJoin(
-          schema.shiftInstances,
-          eq(schema.shiftInstanceInvites.instanceId, schema.shiftInstances.id),
-        )
         .where(
           and(
             eq(schema.shiftInstanceInvites.status, ShiftInviteStatus.ACCEPTED),
-            eq(schema.shiftInstances.masterId, shiftId),
+            eq(schema.shiftInstanceInvites.instanceId, instanceId),
           ),
-        )
-        .groupBy(schema.shiftInstanceInvites.instanceId);
+        );
 
-      const violations = capacityViolations.filter(
-        (c) =>
-          c.current + newMemberIds.length > (shift.maxVolunteers ?? Infinity),
-      );
-
-      if (violations.length > 0) {
+      if ((capacity?.current ?? 0) + newMemberIds.length > maxVolunteers) {
         throw new ConflictGraphQLError(
-          `Cannot invite members: ${violations.length} instance(s) would exceed capacity of ${shift.maxVolunteers}`,
+          `Cannot invite members: instance would exceed capacity of ${maxVolunteers}`,
         );
       }
 
-      await this.createInvitesForInstances(tx, instanceIds, newMemberIds);
+      await this.createInvitesForInstances(tx, [instanceId], newMemberIds);
     });
 
     return shift;
