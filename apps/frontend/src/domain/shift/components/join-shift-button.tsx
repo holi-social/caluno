@@ -3,9 +3,9 @@
 import { JoinStatus, ShiftVisibility } from '@repo/data';
 import { useJoinShift } from '@repo/data/react';
 import { Button } from '@repo/ui';
-import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useState } from 'react';
 import { toast } from 'sonner';
+import { useRouter } from '@/i18n/navigation';
 
 interface JoinShiftButtonProps {
   shiftId: string;

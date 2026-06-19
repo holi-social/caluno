@@ -20,7 +20,7 @@ import {
   HomeIcon,
   LogOutIcon,
 } from 'lucide-react';
-import { useRouter } from 'next/navigation';
+import { Link, useRouter } from '@/i18n/navigation';
 import { signOut } from '@/lib/auth';
 
 export const menuItems = [
@@ -69,10 +69,10 @@ export function HomeSidebar() {
               {menuItems.map((item) => (
                 <SidebarMenuItem key={item.href}>
                   <SidebarMenuButton asChild>
-                    <a href={item.href}>
+                    <Link href={item.href}>
                       <item.icon className="h-4 w-4" />
                       <span>{item.title}</span>
-                    </a>
+                    </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}

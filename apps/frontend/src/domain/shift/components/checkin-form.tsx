@@ -4,12 +4,11 @@ import type { ActiveShift, User } from '@repo/data';
 import { Button, Card, CardContent, CardHeader, CardTitle } from '@repo/ui';
 import { CheckCircle2, Timer, UserIcon } from 'lucide-react';
 import Image from 'next/image';
-import { useRouter } from 'next/navigation';
-
 import { useState, useTransition } from 'react';
 import { toast } from 'sonner';
-import type { CheckInStatus } from '@/app/admin/[orgUId]/check-in/[checkInId]/check-in/page';
+import type { CheckInStatus } from '@/app/[locale]/admin/[orgUId]/check-in/[checkInId]/check-in/page';
 import { createTimeEntry } from '@/domain/time-entry/actions';
+import { useRouter } from '@/i18n/navigation';
 import { ShiftSelectorCard } from './shift-selector-card';
 
 type CheckinFormProps = {

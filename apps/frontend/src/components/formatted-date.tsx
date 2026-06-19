@@ -1,15 +1,10 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { formatDate } from '@/lib/formatting';
+import { useFormatting } from '@/hooks/use-formatting';
 
 export function FormattedDate({ date }: { date: Date | string }) {
-  const time = new Date(date).getTime();
-  const [formatted, setFormatted] = useState(() => formatDate(new Date(time)));
+  const { formatDate } = useFormatting();
+  const value = new Date(date);
 
-  useEffect(() => {
-    setFormatted(formatDate(new Date(time), navigator.language));
-  }, [time]);
-
-  return <span>{formatted}</span>;
+  return <span>{formatDate(value)}</span>;
 }

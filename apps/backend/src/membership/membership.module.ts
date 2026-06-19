@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { AuthModule } from '../auth/auth.module';
 import { RoleMapper } from '../auth/mappers/role.mapper';
 import { DatabaseModule } from '../database/database.module';
 import { NotificationModule } from '../notification/notification.module';
@@ -20,6 +21,7 @@ import {
     DatabaseModule,
     UserModule,
     RequirementProfileModule,
+    AuthModule,
     NotificationModule,
   ],
   providers: [

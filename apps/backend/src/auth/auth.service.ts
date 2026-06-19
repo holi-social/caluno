@@ -7,6 +7,7 @@ import {
   OrganizationEntity,
   PermissionEntity,
   RoleEntity,
+  UserEntity,
 } from '../database/schema';
 import { NotFoundGraphQLError } from '../graphql/errors';
 import { OrganizationUnitService } from '../organization/organization-unit.service';
@@ -131,6 +132,50 @@ export class AuthService {
       );
 
     return new Set(rows.map((r) => r.key));
+  }
+
+  async findUsersWithPermission(
+    organizationUnitId: string,
+    permissionKey: string,
+  ): Promise<Array<Pick<UserEntity, 'id' | 'email' | 'name'>>> {
+    const ancestorUnitIds =
+      await this.organizationUnitService.listInclusiveAncestorUnitIds(
+        organizationUnitId,
+      );
+
+    if (ancestorUnitIds.length === 0) {
+      return [];
+    }
+
+    return this.db
+      .selectDistinct({
+        id: schema.users.id,
+        email: schema.users.email,
+        name: schema.users.name,
+      })
+      .from(schema.users)
+      .innerJoin(
+        schema.memberships,
+        eq(schema.memberships.userId, schema.users.id),
+      )
+      .innerJoin(
+        schema.membershipRoles,
+        eq(schema.membershipRoles.membershipId, schema.memberships.id),
+      )
+      .innerJoin(
+        schema.rolePermissions,
+        eq(schema.rolePermissions.roleId, schema.membershipRoles.roleId),
+      )
+      .innerJoin(
+        schema.permissions,
+        eq(schema.permissions.id, schema.rolePermissions.permissionId),
+      )
+      .where(
+        and(
+          inArray(schema.memberships.organizationUnitId, ancestorUnitIds),
+          eq(schema.permissions.key, permissionKey),
+        ),
+      );
   }
 
   async hasRequiredPermissions(

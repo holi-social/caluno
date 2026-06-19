@@ -1,0 +1,53 @@
+{
+  "Common": {
+    "save": "Save",
+    "cancel": "Cancel"
+  },
+  "Auth": {
+    "login": {
+      "title": "Sign in",
+      "emailLabel": "Email",
+      "emailPlaceholder": "you@example.com",
+      "passwordLabel": "Password",
+      "passwordPlaceholder": "••••••••",
+      "submit": "Sign in",
+      "submitting": "Signing in...",
+      "noAccount": "Don't have an account?",
+      "signUpLink": "Sign up",
+      "invalidCredentials": "Invalid credentials",
+      "genericError": "Sign in failed. Please try again."
+    },
+    "signup": {
+      "title": "Create your account",
+      "nameLabel": "Full Name",
+      "namePlaceholder": "John Doe",
+      "emailLabel": "Email",
+      "emailPlaceholder": "you@example.com",
+      "passwordLabel": "Password",
+      "passwordPlaceholder": "••••••••",
+      "passwordHint": "At least 6 characters",
+      "submit": "Create account",
+      "submitting": "Creating account...",
+      "hasAccount": "Already have an account?",
+      "signInLink": "Sign in",
+      "createAccountFailed": "Failed to create account",
+      "genericError": "Creating your account failed. Please try again."
+    }
+  },
+  "Metadata": {
+    "title": "Clippy",
+    "description": "Volunteer management platform",
+    "unauthorizedTitle": "Access Denied | Clippy"
+  },
+  "Unauthorized": {
+    "title": "Access Denied",
+    "message": "You don't have permission to access this resource.",
+    "homeLink": "Go to your organizations"
+  },
+  "LocaleSwitcher": {
+    "label": "Language"
+  },
+  "Profile": {
+    "title": "Edit Profile"
+  }
+}

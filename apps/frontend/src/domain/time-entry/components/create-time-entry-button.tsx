@@ -1,6 +1,6 @@
 import { Button } from '@repo/ui';
 import { PlusIcon } from 'lucide-react';
-import Link from 'next/link';
+import { Link } from '@/i18n/navigation';
 
 export const CreateTimeEntryButton = ({ orgUId }: { orgUId: string }) => {
   return (

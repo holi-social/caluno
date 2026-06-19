@@ -3,10 +3,10 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import type { GetPermissionGroupsQuery } from '@repo/data';
 import { Field, FieldError, FieldLabel, Input, Textarea } from '@repo/ui';
-import { useRouter } from 'next/navigation';
 import { useState, useTransition } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { FormSheet, useFormSheet } from '@/components/form-sheet';
+import { useRouter } from '@/i18n/navigation';
 import { type RoleFormValues, roleSchema } from '../schemas';
 import { PermissionPicker } from './permission-picker';
 

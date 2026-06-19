@@ -16,8 +16,8 @@ import {
   Skeleton,
 } from '@repo/ui';
 import { ExternalLink } from 'lucide-react';
-import Link from 'next/link';
 import { useSheet } from '@/hooks/use-sheet';
+import { Link } from '@/i18n/navigation';
 
 function statusVariant(
   status: MembershipRequestStatus,

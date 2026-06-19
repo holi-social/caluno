@@ -1,6 +1,8 @@
+'use client';
+
 import { Card, CardContent, CardHeader, CardTitle } from '@repo/ui';
 import { Clock } from 'lucide-react';
-import { formatRange } from '@/lib/formatting';
+import { useFormatting } from '@/hooks/use-formatting';
 
 type MiniShiftCardProps = {
   title: string;
@@ -13,6 +15,8 @@ export function MiniShiftCard({
   actualStartsAt,
   actualEndsAt,
 }: MiniShiftCardProps) {
+  const { formatRange } = useFormatting();
+
   return (
     <Card className="p-2 gap-1 rounded-sm w-full">
       <CardHeader className="p-0 gap-0">

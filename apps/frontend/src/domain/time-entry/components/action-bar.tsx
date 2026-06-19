@@ -2,12 +2,11 @@
 
 import { Button } from '@repo/ui';
 import { Edit, Loader2, Trash } from 'lucide-react';
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import { useTransition } from 'react';
 import { toast } from 'sonner';
 import { DeleteAlertDialog } from '@/components/delete-alert-dialog';
 import { deleteTimeEntry } from '@/domain/time-entry/actions';
+import { Link, useRouter } from '@/i18n/navigation';
 
 type ActionBarProps = {
   id: string;

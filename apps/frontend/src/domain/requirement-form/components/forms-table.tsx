@@ -12,10 +12,10 @@ import {
   TableRow,
 } from '@repo/ui';
 import { Loader2, Lock, Pencil, Share2, Trash2, Users } from 'lucide-react';
-import Link from 'next/link';
 import { useTransition } from 'react';
 import { DeleteAlertDialog } from '@/components/delete-alert-dialog';
 import { FormattedDate } from '@/components/formatted-date';
+import { Link } from '@/i18n/navigation';
 import { copyToClipboard } from '@/lib/clipboard';
 
 function FormActions({

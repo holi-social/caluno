@@ -7,7 +7,7 @@ import {
   HomeIcon,
   QrCodeIcon,
 } from 'lucide-react';
-import { usePathname, useRouter } from 'next/navigation';
+import { usePathname, useRouter } from '@/i18n/navigation';
 
 const volunteerTabs: TabBarItem[] = [
   { label: 'Home', icon: HomeIcon, key: '/' },

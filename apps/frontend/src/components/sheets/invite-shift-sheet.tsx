@@ -1,11 +1,11 @@
 'use client';
 
 import { useQueryClient } from '@repo/data/react';
-import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { ClippySheet } from '@/components/sheets/clippy-sheet';
 import { InviteShiftForm } from '@/domain/shift/components/invite-form';
 import { useSheet } from '@/hooks/use-sheet';
+import { useRouter } from '@/i18n/navigation';
 
 const FORM_ID = 'invite-shift-form';
 
