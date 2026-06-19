@@ -537,6 +537,71 @@
       "minMaxVolunteers": "Die Mindestanzahl an Freiwilligen darf die Höchstanzahl nicht überschreiten"
     }
   },
+  "TimeEntry": {
+    "page": {
+      "title": "Stundenzettel",
+      "createButton": "Zeiteintrag hinzufügen"
+    },
+    "empty": {
+      "title": "Keine Zeiteinträge",
+      "description": "Du kannst jemanden zu einer Schicht einchecken oder manuell einen Zeiteintrag hinzufügen."
+    },
+    "table": {
+      "shift": "Schicht",
+      "volunteer": "Freiwilliger",
+      "time": "Zeit",
+      "duration": "Dauer",
+      "notAvailable": "k. A."
+    },
+    "form": {
+      "selectShiftLabel": "Schicht auswählen",
+      "selectShiftPlaceholder": "Schicht auswählen",
+      "selectShiftHint": "Wähle eine Schicht, um verfügbare Termine zu sehen",
+      "selectVolunteerLabel": "Freiwilligen auswählen",
+      "selectVolunteerPlaceholder": "Freiwilligen auswählen",
+      "startEndTimeLabel": "Start- und Endzeit",
+      "notesLabel": "Notizen",
+      "notesPlaceholder": "Notizen zu diesem Zeiteintrag hinzufügen...",
+      "loadInstancesError": "Termine konnten nicht geladen werden."
+    },
+    "picker": {
+      "shiftInstanceLabel": "{title} · {date} {startTime}–{endTime}",
+      "shiftLabel": "{title} · {pattern} {startTime}–{endTime}"
+    },
+    "sheet": {
+      "createTitle": "Zeiteintrag hinzufügen",
+      "createDescription": "Erfasse einen neuen Zeiteintrag für eine Schicht.",
+      "editTitle": "Zeiteintrag bearbeiten",
+      "editDescription": "Passe die Details dieses Zeiteintrags an."
+    },
+    "detail": {
+      "title": "Zeiteintrag",
+      "unknownVolunteer": "Unbekannter Freiwilliger",
+      "shiftLabel": "Schicht",
+      "statusLabel": "Status",
+      "createdLabel": "Erstellt",
+      "openStatus": "Offen",
+      "closedStatus": "Abgeschlossen"
+    },
+    "action": {
+      "editAria": "Zeiteintrag bearbeiten",
+      "deleteTitle": "Zeiteintrag löschen",
+      "deleteDescription": "Bist du sicher, dass du diesen Zeiteintrag löschen möchtest?",
+      "deleteSuccess": "Zeiteintrag gelöscht",
+      "deleteError": "Zeiteintrag konnte nicht gelöscht werden. {error}"
+    },
+    "format": {
+      "open": "offen"
+    },
+    "validation": {
+      "organizationUnitRequired": "Organisationseinheit ist erforderlich",
+      "shiftInstanceRequired": "Schichttermin ist erforderlich",
+      "volunteerRequired": "Freiwilliger ist erforderlich",
+      "startedAtRequired": "Startzeit ist erforderlich",
+      "endedAtRequired": "Endzeit ist erforderlich",
+      "timeEntryIdRequired": "Zeiteintrags-ID ist erforderlich"
+    }
+  },
   "RequirementForm": {
     "builder": {
       "previewTitle": "Vorschau",

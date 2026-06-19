@@ -9,13 +9,13 @@ import z from 'zod';
 import { getDataClient } from '@/lib/data-client';
 import { actionClient } from '@/lib/safe-action';
 import {
-  closeTimeEntrySchema,
-  deleteTimeEntrySchema,
-  timeEntrySchema,
+  serverCloseTimeEntrySchema,
+  serverDeleteTimeEntrySchema,
+  serverTimeEntrySchema,
 } from './schemas';
 
 export const createTimeEntry = actionClient
-  .inputSchema(timeEntrySchema)
+  .inputSchema(serverTimeEntrySchema)
   .action(async ({ parsedInput }) => {
     const data = await getDataClient(parsedInput.organizationUnitId);
 
@@ -31,7 +31,7 @@ export const createTimeEntry = actionClient
   });
 
 export const closeTimeEntry = actionClient
-  .inputSchema(closeTimeEntrySchema)
+  .inputSchema(serverCloseTimeEntrySchema)
   .action(async ({ parsedInput }) => {
     const data = await getDataClient(parsedInput.organizationUnitId);
 
@@ -44,7 +44,7 @@ export const closeTimeEntry = actionClient
   });
 
 export const updateTimeEntry = actionClient
-  .inputSchema(timeEntrySchema)
+  .inputSchema(serverTimeEntrySchema)
   .bindArgsSchemas([z.string()])
   .action(async ({ parsedInput, bindArgsParsedInputs: [timeEntryId] }) => {
     const data = await getDataClient(parsedInput.organizationUnitId);
@@ -60,7 +60,7 @@ export const updateTimeEntry = actionClient
   });
 
 export const deleteTimeEntry = actionClient
-  .inputSchema(deleteTimeEntrySchema)
+  .inputSchema(serverDeleteTimeEntrySchema)
   .action(async ({ parsedInput }) => {
     const data = await getDataClient(parsedInput.organizationUnitId);
     return await data.timeEntry.delete(parsedInput.id);

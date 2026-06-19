@@ -537,6 +537,71 @@
       "minMaxVolunteers": "Minimum volunteers cannot exceed maximum volunteers"
     }
   },
+  "TimeEntry": {
+    "page": {
+      "title": "Timesheets",
+      "createButton": "Add Time Entry"
+    },
+    "empty": {
+      "title": "No time entries",
+      "description": "You can check somebody into a Shift or manually add a Time Entry."
+    },
+    "table": {
+      "shift": "Shift",
+      "volunteer": "Volunteer",
+      "time": "Time",
+      "duration": "Duration",
+      "notAvailable": "N/A"
+    },
+    "form": {
+      "selectShiftLabel": "Select Shift",
+      "selectShiftPlaceholder": "Select a shift",
+      "selectShiftHint": "Select a shift to view available dates",
+      "selectVolunteerLabel": "Select Volunteer",
+      "selectVolunteerPlaceholder": "Select a volunteer",
+      "startEndTimeLabel": "Start and end time",
+      "notesLabel": "Notes",
+      "notesPlaceholder": "Add any notes about this time entry...",
+      "loadInstancesError": "Failed to load instances."
+    },
+    "picker": {
+      "shiftInstanceLabel": "{title} · {date} {startTime}–{endTime}",
+      "shiftLabel": "{title} · {pattern} {startTime}–{endTime}"
+    },
+    "sheet": {
+      "createTitle": "Add Time Entry",
+      "createDescription": "Record a new time entry for a volunteer shift session.",
+      "editTitle": "Edit Time Entry",
+      "editDescription": "Adjust the details of this Time Entry."
+    },
+    "detail": {
+      "title": "Time Entry",
+      "unknownVolunteer": "Unknown volunteer",
+      "shiftLabel": "Shift",
+      "statusLabel": "Status",
+      "createdLabel": "Created",
+      "openStatus": "Open",
+      "closedStatus": "Closed"
+    },
+    "action": {
+      "editAria": "Edit Time Entry",
+      "deleteTitle": "Delete time entry",
+      "deleteDescription": "Are you sure you wish to delete this time entry?",
+      "deleteSuccess": "Time entry deleted",
+      "deleteError": "Failed to delete time entry. {error}"
+    },
+    "format": {
+      "open": "open"
+    },
+    "validation": {
+      "organizationUnitRequired": "Organization Unit is required",
+      "shiftInstanceRequired": "Shift date is required",
+      "volunteerRequired": "Volunteer is required",
+      "startedAtRequired": "Start time is required",
+      "endedAtRequired": "End time is required",
+      "timeEntryIdRequired": "Time Entry ID is required"
+    }
+  },
   "RequirementForm": {
     "builder": {
       "previewTitle": "Preview",

@@ -14,6 +14,7 @@ import {
   SelectValue,
   Textarea,
 } from '@repo/ui';
+import { useTranslations } from 'next-intl';
 import { useCallback, useEffect, useState, useTransition } from 'react';
 import { useForm } from 'react-hook-form';
 import { FormSheet, useFormSheet } from '@/components/form-sheet';
@@ -47,11 +48,22 @@ export const TimeEntryForm = ({
   description,
 }: TimeEntryFormProps) => {
   const router = useRouter();
+  const t = useTranslations('TimeEntry.form');
+  const tValidation = useTranslations('TimeEntry.validation');
   const [pending, startTransition] = useTransition();
   const [serverError, setServerError] = useState<string>();
   const [selectedInstance, setSelectedInstance] = useState<ShiftInstanceItem>();
 
   const { open, setOpen } = useFormSheet();
+
+  const schema = timeEntrySchema({
+    organizationUnitRequired: tValidation('organizationUnitRequired'),
+    shiftInstanceRequired: tValidation('shiftInstanceRequired'),
+    volunteerRequired: tValidation('volunteerRequired'),
+    startedAtRequired: tValidation('startedAtRequired'),
+    endedAtRequired: tValidation('endedAtRequired'),
+    timeEntryIdRequired: tValidation('timeEntryIdRequired'),
+  });
 
   const {
     register,
@@ -60,7 +72,7 @@ export const TimeEntryForm = ({
     setValue,
     formState: { errors },
   } = useForm<TimeEntryFormValues>({
-    resolver: zodResolver(timeEntrySchema),
+    resolver: zodResolver(schema),
     defaultValues: {
       organizationUnitId,
       shiftId: '',
@@ -138,7 +150,8 @@ export const TimeEntryForm = ({
 
       <Field>
         <FieldLabel htmlFor="volunteerId">
-          Select Volunteer <span className="text-destructive">*</span>
+          {t('selectVolunteerLabel')}{' '}
+          <span className="text-destructive">*</span>
         </FieldLabel>
         <Select
           value={watch('volunteerId')}
@@ -146,7 +159,7 @@ export const TimeEntryForm = ({
           disabled={pending}
         >
           <SelectTrigger>
-            <SelectValue placeholder="Select a volunteer" />
+            <SelectValue placeholder={t('selectVolunteerPlaceholder')} />
           </SelectTrigger>
           <SelectContent>
             {volunteers.map((volunteer) => (
@@ -163,7 +176,8 @@ export const TimeEntryForm = ({
 
       <Field>
         <FieldLabel>
-          Start and end time<span className="text-destructive">*</span>
+          {t('startEndTimeLabel')}
+          <span className="text-destructive"> *</span>
         </FieldLabel>
         <DatePickerWithTimeRange
           value={{
@@ -180,11 +194,11 @@ export const TimeEntryForm = ({
       </Field>
 
       <Field>
-        <FieldLabel htmlFor="notes">Notes</FieldLabel>
+        <FieldLabel htmlFor="notes">{t('notesLabel')}</FieldLabel>
         <Textarea
           id="notes"
           rows={4}
-          placeholder="Add any notes about this time entry..."
+          placeholder={t('notesPlaceholder')}
           disabled={pending}
           {...register('notes')}
         />
