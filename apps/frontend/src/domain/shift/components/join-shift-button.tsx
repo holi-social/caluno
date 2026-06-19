@@ -3,6 +3,7 @@
 import { JoinStatus, ShiftVisibility } from '@repo/data';
 import { useJoinShift } from '@repo/data/react';
 import { Button } from '@repo/ui';
+import { useTranslations } from 'next-intl';
 import { useCallback, useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import { useRouter } from '@/i18n/navigation';
@@ -22,6 +23,7 @@ export function JoinShiftButton({
 }: JoinShiftButtonProps) {
   const router = useRouter();
   const joinShift = useJoinShift();
+  const t = useTranslations('Shift');
 
   const [hasAutoJoined, setHasAutoJoined] = useState(false);
 
@@ -38,17 +40,13 @@ export function JoinShiftButton({
       const result = await joinShift.mutateAsync(shiftId);
 
       if (result.status === JoinStatus.Joined) {
-        toast.success('You have joined the shift');
+        toast.success(t('join.joined'));
         router.refresh();
       } else if (result.status === JoinStatus.Pending) {
-        toast.success(
-          'Your membership request is pending. You will be added to this shift once approved.',
-        );
+        toast.success(t('join.pending'));
         router.refresh();
       } else if (result.status === JoinStatus.Rejected) {
-        toast.error(
-          'Your membership request for this organization was rejected. Contact an admin if you believe this was a mistake.',
-        );
+        toast.error(t('join.rejected'));
       } else if (result.status === JoinStatus.RequirementsNeeded) {
         const missing = result.requirementStatuses?.filter(
           (s) => s.status !== 'APPROVED',
@@ -59,25 +57,24 @@ export function JoinShiftButton({
 
         if (missing && missing.length > 0) {
           const missingNames = missing.map((s) => s.name).join(', ');
+          const approvedNames = approved?.map((s) => s.name).join(', ');
           toast.info(
-            `Requirements needed: ${missingNames}${
-              approved && approved.length > 0
-                ? ` (already completed: ${approved.map((s) => s.name).join(', ')})`
-                : ''
-            }`,
+            t('join.requirementsNeeded', {
+              missing: missingNames,
+              hasCompleted: approved && approved.length > 0 ? 'yes' : 'no',
+              completed: approvedNames ?? '',
+            }),
           );
         } else {
-          toast.info('Requirement profile ui (to be implemented)');
+          toast.info(t('join.requirementsFallback'));
         }
       } else {
-        toast.error('Unexpected response from server');
+        toast.error(t('join.unexpected'));
       }
     } catch (error) {
-      toast.error(
-        error instanceof Error ? error.message : 'Failed to join shift',
-      );
+      toast.error(error instanceof Error ? error.message : t('join.failed'));
     }
-  }, [isAuthenticated, shiftId, joinShift, router]);
+  }, [isAuthenticated, shiftId, joinShift, router, t]);
 
   useEffect(() => {
     if (
@@ -98,14 +95,14 @@ export function JoinShiftButton({
   if (visibility !== ShiftVisibility.AllMembers) {
     return (
       <Button disabled variant="outline">
-        Invite only
+        {t('join.inviteOnly')}
       </Button>
     );
   }
 
   return (
     <Button onClick={handleJoin} disabled={joinShift.isPending}>
-      {joinShift.isPending ? 'Joining...' : 'Join shift'}
+      {joinShift.isPending ? t('join.joining') : t('join.joinShift')}
     </Button>
   );
 }

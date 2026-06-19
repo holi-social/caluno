@@ -2,6 +2,7 @@
 
 import { Tabs, TabsList, TabsTrigger } from '@repo/ui';
 import { CalendarRange, Table as TableIcon } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import { useRouter } from '@/i18n/navigation';
 
 interface Props {
@@ -12,6 +13,7 @@ interface Props {
 
 export function ShiftTabSwitcher({ orgUId, activeTab, week }: Props) {
   const router = useRouter();
+  const t = useTranslations('Shift');
 
   const handleTabChange = (value: string) => {
     if (value === 'weekplan') {
@@ -28,12 +30,12 @@ export function ShiftTabSwitcher({ orgUId, activeTab, week }: Props) {
       <TabsList>
         <TabsTrigger value="weekplan">
           <CalendarRange />
-          Weekplan
+          {t('tabs.weekplan')}
         </TabsTrigger>
 
         <TabsTrigger value="shifts">
           <TableIcon />
-          All shifts
+          {t('tabs.allShifts')}
         </TabsTrigger>
       </TabsList>
     </Tabs>

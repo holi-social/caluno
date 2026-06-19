@@ -20,9 +20,10 @@ import {
   UserPlus,
 } from 'lucide-react';
 import { notFound } from 'next/navigation';
+import { getTranslations } from 'next-intl/server';
 import { UserCard } from '@/components/user-card';
 import { ActionBar } from '@/domain/shift/components/action-bar';
-import { visibilityConfig } from '@/domain/shift/components/shifts-table';
+import { getVisibilityConfig } from '@/domain/shift/components/shifts-table';
 import { getDataClient } from '@/lib/data-client';
 import { getFormatting } from '@/lib/formatting-server';
 
@@ -33,8 +34,10 @@ interface ShiftViewPageProps {
 export default async function ShiftViewPage({ params }: ShiftViewPageProps) {
   const { orgUId, shiftId } = await params;
 
+  const t = await getTranslations('Shift');
   const data = await getDataClient(orgUId);
   const { formatDateTime, formatRange } = await getFormatting();
+  const visibilityConfig = getVisibilityConfig(t);
   const shift = await data.shift.findById(shiftId);
 
   if (!shift) {
@@ -50,9 +53,7 @@ export default async function ShiftViewPage({ params }: ShiftViewPageProps) {
       <div className="flex justify-between">
         <div>
           <h1 className="page-title">{shift.title}</h1>
-          <p className="text-muted-foreground mt-1">
-            Shift details and volunteers
-          </p>
+          <p className="text-muted-foreground mt-1">{t('page.subtitle')}</p>
         </div>
         <ActionBar id={shiftId} organizationUnitId={orgUId} size="sm" />
       </div>
@@ -92,13 +93,18 @@ export default async function ShiftViewPage({ params }: ShiftViewPageProps) {
             <CardHeader>
               <CardTitle className="flex justify-between">
                 <span>
-                  Volunteers{' '}
+                  {t('detail.volunteersTitle')}{' '}
                   <Badge variant="outline">
-                    x {shift.maxVolunteers && ` of ${shift.maxVolunteers}`}
+                    {shift.maxVolunteers
+                      ? t('detail.volunteersBadgeWithMax', {
+                          count: 0,
+                          max: shift.maxVolunteers,
+                        })
+                      : t('detail.volunteersBadge', { count: 0 })}
                   </Badge>
                 </span>
                 <Button size="xs">
-                  <UserPlus /> invite
+                  <UserPlus /> {t('detail.inviteButton')}
                 </Button>
               </CardTitle>
             </CardHeader>
@@ -109,10 +115,13 @@ export default async function ShiftViewPage({ params }: ShiftViewPageProps) {
             <CardHeader>
               <CardTitle className="flex justify-between">
                 <span>
-                  Timesheets <Badge variant="outline">x</Badge>
+                  {t('detail.timesheetsTitle')}{' '}
+                  <Badge variant="outline">
+                    {t('detail.timesheetsBadge', { count: 0 })}
+                  </Badge>
                 </span>
                 <Button size="xs">
-                  <ClockPlus /> Add time
+                  <ClockPlus /> {t('detail.addTimeButton')}
                 </Button>
               </CardTitle>
             </CardHeader>
@@ -126,7 +135,8 @@ export default async function ShiftViewPage({ params }: ShiftViewPageProps) {
               <dl className="space-y-4">
                 <div>
                   <dt className="text-muted-foreground mb-2 flex gap-2 items-center">
-                    <LockKeyholeOpen className="size-4 shrink-0" /> Visibility
+                    <LockKeyholeOpen className="size-4 shrink-0" />{' '}
+                    {t('detail.visibilityLabel')}
                   </dt>
                   <dd className="ml-6">
                     <Badge variant={visibilityConfig[shift.visibility].variant}>
@@ -137,13 +147,14 @@ export default async function ShiftViewPage({ params }: ShiftViewPageProps) {
 
                 <div>
                   <dt className="text-muted-foreground mb-2 flex gap-2 items-center">
-                    <CalendarFold className="size-4 shrink-0" /> Status
+                    <CalendarFold className="size-4 shrink-0" />{' '}
+                    {t('detail.statusLabel')}
                   </dt>
                   <dd className="ml-6">
                     {isFinished ? (
-                      <Badge variant="secondary">Finished</Badge>
+                      <Badge variant="secondary">{t('status.finished')}</Badge>
                     ) : (
-                      <Badge variant="success">Active</Badge>
+                      <Badge variant="success">{t('status.active')}</Badge>
                     )}
                   </dd>
                 </div>
@@ -151,7 +162,8 @@ export default async function ShiftViewPage({ params }: ShiftViewPageProps) {
                 {shift.createdBy && (
                   <div>
                     <dt className="text-muted-foreground mb-2 flex gap-2 items-center">
-                      <User className="size-4 shrink-0" /> Created by
+                      <User className="size-4 shrink-0" />{' '}
+                      {t('detail.createdByLabel')}
                     </dt>
                     <dd className="ml-6">
                       <UserCard user={shift.createdBy} size="sm" hideEmail />
@@ -161,7 +173,8 @@ export default async function ShiftViewPage({ params }: ShiftViewPageProps) {
 
                 <div>
                   <dt className="text-muted-foreground mb-2 flex gap-2 items-center">
-                    <Clock className="size-4 shrink-0" /> Created
+                    <Clock className="size-4 shrink-0" />{' '}
+                    {t('detail.createdLabel')}
                   </dt>
                   <dd className="ml-6">
                     {formatDateTime(new Date(shift.createdAt))}

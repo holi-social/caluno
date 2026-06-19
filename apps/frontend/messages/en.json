@@ -350,5 +350,191 @@
       "formFallback": "Form",
       "titleFallback": "Volunteer"
     }
+  },
+  "Shift": {
+    "page": {
+      "title": "Shifts",
+      "subtitle": "Shift details and volunteers",
+      "createButton": "Create shift"
+    },
+    "empty": {
+      "title": "No shifts yet",
+      "description": "Get started by creating your first shift and inviting volunteers."
+    },
+    "tabs": {
+      "weekplan": "Weekplan",
+      "allShifts": "All shifts"
+    },
+    "calendar": {
+      "week": "Week {week}"
+    },
+    "table": {
+      "name": "Name",
+      "firstDate": "First Date",
+      "pattern": "Pattern",
+      "visibility": "Visibility"
+    },
+    "visibility": {
+      "ALL_MEMBERS": "Open shift",
+      "INVITED_MEMBERS": "Invite only"
+    },
+    "status": {
+      "finished": "Finished",
+      "active": "Active"
+    },
+    "card": {
+      "invited": "Invited",
+      "noVolunteers": "No volunteers invited",
+      "inviteAria": "Invite volunteers"
+    },
+    "form": {
+      "nameLabel": "Shift name",
+      "namePlaceholder": "e.g. Morning cashier shift",
+      "dateTimeLabel": "Date and time",
+      "locationLabel": "Location",
+      "locationPlaceholder": "Main Hall, 123 Main St",
+      "instructionsLabel": "Instructions",
+      "instructionsPlaceholder": "Describe volunteers' responsibilities and requirements for this shift",
+      "recurring": "Recurring shift",
+      "noRecurrence": "No recurrence",
+      "chooseDays": "Choose which days this shift repeats"
+    },
+    "recurrence": {
+      "preset": {
+        "none": "Does not repeat",
+        "daily": "Every day",
+        "workingDays": "Every working day",
+        "weekend": "Every weekend day",
+        "custom": "Custom recurrence"
+      },
+      "weekDay": {
+        "MONDAY": "Mo",
+        "TUESDAY": "Tu",
+        "WEDNESDAY": "We",
+        "THURSDAY": "Th",
+        "FRIDAY": "Fr",
+        "SATURDAY": "Sa",
+        "SUNDAY": "Su"
+      }
+    },
+    "inviteForm": {
+      "title": "Invite and manage participants",
+      "minVolunteersLabel": "Min volunteers",
+      "minVolunteersPlaceholder": "e.g. 2",
+      "minVolunteersDescription": "Minimum number of people required to open the shift",
+      "maxVolunteersLabel": "Max volunteers",
+      "maxVolunteersPlaceholder": "e.g. 50",
+      "maxVolunteersDescription": "Maximum number of people allowed to sign up for the shift",
+      "copyInviteLink": "Copy invite link"
+    },
+    "transferList": {
+      "available": "Available",
+      "invited": "Invited",
+      "searchPlaceholder": "Name or email",
+      "addAria": "Add {name}",
+      "removeAria": "Remove {name}"
+    },
+    "selector": {
+      "noActiveShifts": "No active shifts",
+      "noActiveShiftsDescription": "Please <addShift>add a shift</addShift> or adjust the time-range of an <existingShift>existing shift</existingShift>.",
+      "chooseShift": "Choose a shift"
+    },
+    "checkInSelector": {
+      "placeholder": "Select a volunteer",
+      "empty": "No volunteer found"
+    },
+    "checkIn": {
+      "checkIn": "Check in",
+      "checkingIn": "Checking-in...",
+      "requirements": "Requirements",
+      "allMet": "All met",
+      "shift": "Shift",
+      "noShiftSelected": "No shift selected",
+      "volunteerCheckedIn": "Volunteer checked-in",
+      "volunteerProfilePhoto": "Volunteer's profile photo",
+      "checkOut": "Check-out",
+      "checkingOut": "Checking-out...",
+      "volunteerCheckedOut": "Volunteer checked-out",
+      "scanTitle": "Check-in/out",
+      "scanDescription": "Scan the volunteers QR iD to check them in or out",
+      "enterQrTitle": "Or enter their QR iD",
+      "searchVolunteerTitle": "Or search for a volunteer",
+      "checkInTitle": "Check-in",
+      "checkOutTitle": "Check-out",
+      "blockedTitle": "Check-in denied",
+      "blockedDescription": "The volunteer is not permitted to check-in. They must contact Headquarters for assistance.",
+      "checkedInAt": "Checked in: {time}",
+      "checkingOutAt": "Checking out: {time}",
+      "volunteerNotFoundTitle": "Volunteer does not exist",
+      "volunteerNotFoundDescription": "There is no volunteer that matches this QR iD. The QR iD may have been re-generated and so this QR iD is no longer valid. <tryAgain>Try again</tryAgain> by entering the QR iD manually or search for the volunteer to check them in.",
+      "tryAgain": "Try again"
+    },
+    "scanner": {
+      "title": "Invalid check-in ID",
+      "description": "Please try rescanning or rescan a different copy of QR ID.",
+      "invalidToast": "Not a valid check-in ID. Please try again."
+    },
+    "join": {
+      "joinShift": "Join shift",
+      "joining": "Joining...",
+      "inviteOnly": "Invite only",
+      "joined": "You have joined the shift",
+      "pending": "Your membership request is pending. You will be added to this shift once approved.",
+      "rejected": "Your membership request for this organization was rejected. Contact an admin if you believe this was a mistake.",
+      "requirementsNeeded": "Requirements needed: {missing}{hasCompleted, select, yes { (already completed: {completed})} other {}}",
+      "requirementsFallback": "Requirement profile ui (to be implemented)",
+      "failed": "Failed to join shift",
+      "unexpected": "Unexpected response from server",
+      "requestSent": "Request sent",
+      "pendingMessage": "Your membership request for this organization is pending approval. You will be able to join this shift once approved."
+    },
+    "action": {
+      "viewAria": "View shift",
+      "editAria": "Edit shift",
+      "inviteAria": "Invite volunteers",
+      "copyLinkAria": "Copy shift link to clipboard",
+      "recordTime": "Record time",
+      "leaveShift": "Leave shift",
+      "deleteTitle": "Delete shift",
+      "deleteDescription": "Are you sure you wish to delete this shift and all its timesheets?",
+      "deleteSuccess": "Successfully deleted Shift.",
+      "deleteError": "Failed to delete Shift. {error}"
+    },
+    "sheet": {
+      "createTitle": "Create shift",
+      "createDescription": "Create a new shift.",
+      "editTitle": "Edit shift",
+      "editDescription": "Edit shift.",
+      "inviteTitle": "Invite volunteers",
+      "inviteDescription": "Invited volunteers will receive an invitation email with shift details and a link to the system."
+    },
+    "toast": {
+      "created": "Shift created",
+      "updated": "Shift updated",
+      "inviteChanged": "Volunteers invitations changed"
+    },
+    "detail": {
+      "volunteersTitle": "Volunteers",
+      "inviteButton": "Invite",
+      "timesheetsTitle": "Timesheets",
+      "addTimeButton": "Add time",
+      "visibilityLabel": "Visibility",
+      "statusLabel": "Status",
+      "createdByLabel": "Created by",
+      "createdLabel": "Created",
+      "volunteersBadge": "{count}",
+      "volunteersBadgeWithMax": "{count} of {max}",
+      "timesheetsBadge": "{count}"
+    },
+    "notFound": "Shift not found.",
+    "loading": "Loading...",
+    "validation": {
+      "nameRequired": "Name is required",
+      "startTimeRequired": "Start time is required",
+      "endTimeRequired": "End time is required",
+      "organizationUnitRequired": "Organization unit is required",
+      "shiftIdRequired": "Shift ID is required",
+      "minMaxVolunteers": "Minimum volunteers cannot exceed maximum volunteers"
+    }
   }
 }

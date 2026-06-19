@@ -2,6 +2,7 @@
 
 import { Button } from '@repo/ui';
 import { Edit, Eye, Loader2, Share2, Trash, UserPlus } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import { useTransition } from 'react';
 import { toast } from 'sonner';
 import { DeleteAlertDialog } from '@/components/delete-alert-dialog';
@@ -29,6 +30,8 @@ export const ActionBar = ({
   const [isDeleting, startDeleteTransition] = useTransition();
   const editSheet = useSheet(FORM_ID, 'id');
   const inviteSheet = useSheet('invite-shift', 'id');
+  const t = useTranslations('Shift');
+  const tCommon = useTranslations('Common');
 
   const buttonSize = `icon-${size}` as const;
 
@@ -36,9 +39,9 @@ export const ActionBar = ({
     startDeleteTransition(async () => {
       const result = await deleteShift({ id, organizationUnitId });
       if (result?.serverError) {
-        toast.error(`Failed to delete Shift. ${result.serverError}`);
+        toast.error(t('action.deleteError', { error: result.serverError }));
       } else {
-        toast.success('Successfully deleted Shift.');
+        toast.success(t('action.deleteSuccess'));
         router.push(`/admin/${organizationUnitId}/shifts`);
       }
     });
@@ -46,7 +49,11 @@ export const ActionBar = ({
 
   return (
     <aside className="space-x-2">
-      <Link href={shiftShareUrl(id)} aria-label="View shift" target="_blank">
+      <Link
+        href={shiftShareUrl(id)}
+        aria-label={t('action.viewAria')}
+        target="_blank"
+      >
         <Button size={buttonSize} variant="outline">
           <Eye />
         </Button>
@@ -56,7 +63,7 @@ export const ActionBar = ({
         <Button
           size={buttonSize}
           variant="outline"
-          aria-label="Edit shift"
+          aria-label={t('action.editAria')}
           onClick={() => editSheet.open({ id })}
         >
           <Edit />
@@ -66,7 +73,7 @@ export const ActionBar = ({
       <Button
         size={buttonSize}
         variant="outline"
-        aria-label="Invite volunteers"
+        aria-label={t('action.inviteAria')}
         onClick={() => inviteSheet.open({ id })}
       >
         <UserPlus />
@@ -75,23 +82,23 @@ export const ActionBar = ({
       <Button
         size={buttonSize}
         variant="outline"
-        aria-label="Copy shift link to clipboard"
+        aria-label={t('action.copyLinkAria')}
         onClick={() =>
-          copyToClipboard(shiftShareUrl(id), 'Shift link copied to clipboard')
+          copyToClipboard(shiftShareUrl(id), tCommon('linkCopied'))
         }
       >
         <Share2 />
       </Button>
 
       <DeleteAlertDialog
-        title="Delete shift"
-        description="Are you sure you wish to delete this shift and all its timesheets?"
+        title={t('action.deleteTitle')}
+        description={t('action.deleteDescription')}
         onDelete={handleDelete}
         trigger={
           <Button
             size={buttonSize}
             variant="destructive"
-            aria-label="Delete shift"
+            aria-label={t('action.deleteTitle')}
             disabled={isDeleting}
           >
             {isDeleting ? <Loader2 className="animate-spin" /> : <Trash />}

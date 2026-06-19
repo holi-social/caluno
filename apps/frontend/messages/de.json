@@ -350,5 +350,191 @@
       "formFallback": "Formular",
       "titleFallback": "Freiwilliger"
     }
+  },
+  "Shift": {
+    "page": {
+      "title": "Schichten",
+      "subtitle": "Schichtdetails und Freiwillige",
+      "createButton": "Schicht erstellen"
+    },
+    "empty": {
+      "title": "Noch keine Schichten",
+      "description": "Erstelle deine erste Schicht und lade Freiwillige ein, um loszulegen."
+    },
+    "tabs": {
+      "weekplan": "Wochenplan",
+      "allShifts": "Alle Schichten"
+    },
+    "calendar": {
+      "week": "KW {week}"
+    },
+    "table": {
+      "name": "Name",
+      "firstDate": "Erster Termin",
+      "pattern": "Muster",
+      "visibility": "Sichtbarkeit"
+    },
+    "visibility": {
+      "ALL_MEMBERS": "Offene Schicht",
+      "INVITED_MEMBERS": "Nur mit Einladung"
+    },
+    "status": {
+      "finished": "Beendet",
+      "active": "Aktiv"
+    },
+    "card": {
+      "invited": "Eingeladen",
+      "noVolunteers": "Noch keine Freiwilligen eingeladen",
+      "inviteAria": "Freiwillige einladen"
+    },
+    "form": {
+      "nameLabel": "Schichtname",
+      "namePlaceholder": "z. B. Morgendliche Kassaschicht",
+      "dateTimeLabel": "Datum und Uhrzeit",
+      "locationLabel": "Ort",
+      "locationPlaceholder": "Hauptsaal, Musterstraße 123",
+      "instructionsLabel": "Anweisungen",
+      "instructionsPlaceholder": "Beschreibe Aufgaben und Anforderungen für diese Schicht",
+      "recurring": "Wiederkehrende Schicht",
+      "noRecurrence": "Keine Wiederholung",
+      "chooseDays": "Wähle die Tage, an denen sich diese Schicht wiederholt"
+    },
+    "recurrence": {
+      "preset": {
+        "none": "Wiederholt sich nicht",
+        "daily": "Täglich",
+        "workingDays": "An Werktagen",
+        "weekend": "Am Wochenende",
+        "custom": "Benutzerdefinierte Wiederholung"
+      },
+      "weekDay": {
+        "MONDAY": "Mo",
+        "TUESDAY": "Di",
+        "WEDNESDAY": "Mi",
+        "THURSDAY": "Do",
+        "FRIDAY": "Fr",
+        "SATURDAY": "Sa",
+        "SUNDAY": "So"
+      }
+    },
+    "inviteForm": {
+      "title": "Teilnehmer einladen und verwalten",
+      "minVolunteersLabel": "Min. Freiwillige",
+      "minVolunteersPlaceholder": "z. B. 2",
+      "minVolunteersDescription": "Mindestanzahl an Personen, die nötig ist, um die Schicht zu öffnen",
+      "maxVolunteersLabel": "Max. Freiwillige",
+      "maxVolunteersPlaceholder": "z. B. 50",
+      "maxVolunteersDescription": "Maximale Anzahl an Personen, die sich für die Schicht anmelden dürfen",
+      "copyInviteLink": "Einladungslink kopieren"
+    },
+    "transferList": {
+      "available": "Verfügbar",
+      "invited": "Eingeladen",
+      "searchPlaceholder": "Name oder E-Mail",
+      "addAria": "{name} hinzufügen",
+      "removeAria": "{name} entfernen"
+    },
+    "selector": {
+      "noActiveShifts": "Keine aktiven Schichten",
+      "noActiveShiftsDescription": "Bitte <addShift>eine Schicht hinzufügen</addShift> oder den Zeitraum einer <existingShift>bestehenden Schicht</existingShift> anpassen.",
+      "chooseShift": "Wähle eine Schicht"
+    },
+    "checkInSelector": {
+      "placeholder": "Freiwilligen auswählen",
+      "empty": "Kein Freiwilliger gefunden"
+    },
+    "checkIn": {
+      "checkIn": "Einchecken",
+      "checkingIn": "Wird eingecheckt...",
+      "requirements": "Anforderungen",
+      "allMet": "Alle erfüllt",
+      "shift": "Schicht",
+      "noShiftSelected": "Keine Schicht ausgewählt",
+      "volunteerCheckedIn": "Freiwilliger eingecheckt",
+      "volunteerProfilePhoto": "Profilfoto des Freiwilligen",
+      "checkOut": "Auschecken",
+      "checkingOut": "Wird ausgecheckt...",
+      "volunteerCheckedOut": "Freiwilliger ausgecheckt",
+      "scanTitle": "Check-in/out",
+      "scanDescription": "Scanne die QR-ID der Freiwilligen, um sie ein- oder auszuchecken",
+      "enterQrTitle": "Oder gib ihre QR-ID ein",
+      "searchVolunteerTitle": "Oder suche nach einer Freiwilligen",
+      "checkInTitle": "Einchecken",
+      "checkOutTitle": "Auschecken",
+      "blockedTitle": "Check-in verweigert",
+      "blockedDescription": "Der Freiwillige darf nicht einchecken. Er muss sich an die Zentrale wenden, um Hilfe zu erhalten.",
+      "checkedInAt": "Eingecheckt: {time}",
+      "checkingOutAt": "Wird ausgecheckt: {time}",
+      "volunteerNotFoundTitle": "Freiwilliger nicht gefunden",
+      "volunteerNotFoundDescription": "Es gibt keinen Freiwilligen, der zu dieser QR-ID passt. Die QR-ID wurde möglicherweise neu generiert und ist daher nicht mehr gültig. <tryAgain>Versuche es erneut</tryAgain>, indem du die QR-ID manuell eingibst oder nach der Freiwilligen suchst, um sie einzuchecken.",
+      "tryAgain": "Versuche es erneut"
+    },
+    "scanner": {
+      "title": "Ungültige Check-in-ID",
+      "description": "Bitte versuche es erneut zu scannen oder scanne eine andere Kopie der QR-ID.",
+      "invalidToast": "Keine gültige Check-in-ID. Bitte versuche es erneut."
+    },
+    "join": {
+      "joinShift": "Schicht beitreten",
+      "joining": "Wird beigetreten...",
+      "inviteOnly": "Nur mit Einladung",
+      "joined": "Du bist der Schicht beigetreten",
+      "pending": "Deine Mitgliedschaftsanfrage ist ausstehend. Du wirst der Schicht hinzugefügt, sobald sie genehmigt wurde.",
+      "rejected": "Deine Mitgliedschaftsanfrage für diese Organisation wurde abgelehnt. Kontaktiere einen Admin, wenn du denkst, dass das ein Fehler war.",
+      "requirementsNeeded": "Erforderliche Anforderungen: {missing}{hasCompleted, select, yes { (bereits erledigt: {completed})} other {}}",
+      "requirementsFallback": "Anforderungsprofil-Oberfläche (noch zu implementieren)",
+      "failed": "Schichtbeitritt fehlgeschlagen",
+      "unexpected": "Unerwartete Antwort vom Server",
+      "requestSent": "Anfrage gesendet",
+      "pendingMessage": "Deine Mitgliedschaftsanfrage für diese Organisation wird noch geprüft. Du kannst der Schicht beitreten, sobald sie genehmigt wurde."
+    },
+    "action": {
+      "viewAria": "Schicht ansehen",
+      "editAria": "Schicht bearbeiten",
+      "inviteAria": "Freiwillige einladen",
+      "copyLinkAria": "Schichtlink in Zwischenablage kopieren",
+      "recordTime": "Zeit erfassen",
+      "leaveShift": "Schicht verlassen",
+      "deleteTitle": "Schicht löschen",
+      "deleteDescription": "Bist du sicher, dass du diese Schicht und alle zugehörigen Stundenzettel löschen möchtest?",
+      "deleteSuccess": "Schicht erfolgreich gelöscht.",
+      "deleteError": "Schicht konnte nicht gelöscht werden. {error}"
+    },
+    "sheet": {
+      "createTitle": "Schicht erstellen",
+      "createDescription": "Erstelle eine neue Schicht.",
+      "editTitle": "Schicht bearbeiten",
+      "editDescription": "Bearbeite die Schicht.",
+      "inviteTitle": "Freiwillige einladen",
+      "inviteDescription": "Eingeladene Freiwillige erhalten eine E-Mail mit Schichtdetails und einem Link zum System."
+    },
+    "toast": {
+      "created": "Schicht erstellt",
+      "updated": "Schicht aktualisiert",
+      "inviteChanged": "Einladungen der Freiwilligen aktualisiert"
+    },
+    "detail": {
+      "volunteersTitle": "Freiwillige",
+      "inviteButton": "Einladen",
+      "timesheetsTitle": "Stundenzettel",
+      "addTimeButton": "Zeit hinzufügen",
+      "visibilityLabel": "Sichtbarkeit",
+      "statusLabel": "Status",
+      "createdByLabel": "Erstellt von",
+      "createdLabel": "Erstellt",
+      "volunteersBadge": "{count}",
+      "volunteersBadgeWithMax": "{count} von {max}",
+      "timesheetsBadge": "{count}"
+    },
+    "notFound": "Schicht nicht gefunden.",
+    "loading": "Wird geladen...",
+    "validation": {
+      "nameRequired": "Name ist erforderlich",
+      "startTimeRequired": "Startzeit ist erforderlich",
+      "endTimeRequired": "Endzeit ist erforderlich",
+      "organizationUnitRequired": "Organisationseinheit ist erforderlich",
+      "shiftIdRequired": "Schicht-ID ist erforderlich",
+      "minMaxVolunteers": "Die Mindestanzahl an Freiwilligen darf die Höchstanzahl nicht überschreiten"
+    }
   }
 }

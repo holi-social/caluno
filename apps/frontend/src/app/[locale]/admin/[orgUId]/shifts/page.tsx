@@ -1,5 +1,6 @@
 import { PermissionKey } from '@repo/data';
 import { startOfWeek } from 'date-fns';
+import { getTranslations } from 'next-intl/server';
 import { Pagination } from '@/components/pagination';
 import { ShiftSheet } from '@/components/sheets';
 import { CreateShiftButton } from '@/domain/shift/components/create-shift-button';
@@ -41,6 +42,8 @@ export default async function ShiftsPage({
   const isWeekplan = view !== 'shifts';
   const weekStart = parseWeekStart(week);
 
+  const t = await getTranslations('Shift');
+
   let tableContent = null;
   if (!isWeekplan) {
     const data = await getDataClient(orgUId);
@@ -52,7 +55,7 @@ export default async function ShiftsPage({
     <div className="flex flex-col h-full gap-4">
       {/* Page header */}
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-        <h1 className="page-title">Shifts</h1>
+        <h1 className="page-title">{t('page.title')}</h1>
 
         <div className="flex items-center justify-between sm:gap-4">
           {isWeekplan && (

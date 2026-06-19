@@ -13,6 +13,7 @@ import {
 } from '@repo/ui';
 import { format } from 'date-fns';
 import { TriangleAlert, UserPlus, UsersRound } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import { useSheet } from '@/hooks/use-sheet';
 import { Link } from '@/i18n/navigation';
 
@@ -78,6 +79,7 @@ function StaffingBadge({
 export function ShiftCard({ instance, canManage = false }: ShiftCardProps) {
   const orgUId = useOrgUId();
   const inviteSheet = useSheet('invite-shift', 'id');
+  const t = useTranslations('Shift');
 
   const count = instance.volunteers?.length ?? 0;
   const min = instance.master.minVolunteers;
@@ -117,7 +119,7 @@ export function ShiftCard({ instance, canManage = false }: ShiftCardProps) {
             <Button
               size="icon-sm"
               variant={buttonVariant}
-              aria-label="Invite volunteers"
+              aria-label={t('card.inviteAria')}
               onClick={() => inviteSheet.open({ id: instance.master.id })}
             >
               <UserPlus className="size-4" />
@@ -131,7 +133,7 @@ export function ShiftCard({ instance, canManage = false }: ShiftCardProps) {
         <Accordion type="single" collapsible>
           <AccordionItem value="volunteers" className="border-0">
             <AccordionTrigger className="items-center py-1 text-base font-bold hover:no-underline flex-row-reverse justify-end gap-1">
-              Invited
+              {t('card.invited')}
             </AccordionTrigger>
 
             <AccordionContent className="pb-2">
@@ -147,7 +149,7 @@ export function ShiftCard({ instance, canManage = false }: ShiftCardProps) {
         </Accordion>
       ) : (
         <p className="text-sm text-muted-foreground italic">
-          No volunteers invited
+          {t('card.noVolunteers')}
         </p>
       )}
     </Card>

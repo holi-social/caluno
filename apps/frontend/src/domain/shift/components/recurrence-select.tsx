@@ -10,10 +10,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@repo/ui';
+import { useTranslations } from 'next-intl';
 import { useMemo, useState } from 'react';
 import {
-  RECURRENCE_DAYS,
-  RECURRENCE_PRESETS,
+  getRecurrenceDays,
+  getRecurrencePresets,
   type RecurrenceDayValue,
   type RecurrencePresetValue,
 } from '../constants';
@@ -24,10 +25,13 @@ interface RecurrenceSelectProps {
   disabled?: boolean;
 }
 
-function getPresetFromDays(days: string[]): RecurrencePresetValue {
+function getPresetFromDays(
+  presets: { value: RecurrencePresetValue; days: string[] }[],
+  days: string[],
+): RecurrencePresetValue {
   if (!days || days.length === 0) return 'none';
 
-  for (const preset of RECURRENCE_PRESETS) {
+  for (const preset of presets) {
     if (preset.value === 'none' || preset.value === 'custom') continue;
     if (
       preset.days.length === days.length &&
@@ -44,7 +48,25 @@ export function RecurrenceSelect({
   onChange,
   disabled = false,
 }: RecurrenceSelectProps) {
-  const detectedPreset = useMemo(() => getPresetFromDays(value), [value]);
+  const t = useTranslations('Shift');
+
+  const presets = useMemo(
+    () =>
+      getRecurrencePresets({
+        none: t('recurrence.preset.none'),
+        daily: t('recurrence.preset.daily'),
+        workingDays: t('recurrence.preset.workingDays'),
+        weekend: t('recurrence.preset.weekend'),
+        custom: t('recurrence.preset.custom'),
+      }),
+    [t],
+  );
+  const days = useMemo(() => getRecurrenceDays(t), [t]);
+
+  const detectedPreset = useMemo(
+    () => getPresetFromDays(presets, value),
+    [presets, value],
+  );
   const [selectedPreset, setSelectedPreset] =
     useState<RecurrencePresetValue>(detectedPreset);
 
@@ -53,7 +75,7 @@ export function RecurrenceSelect({
     (selectedPreset !== 'none' && value.length > 0);
 
   const handlePresetChange = (presetValue: string) => {
-    const preset = RECURRENCE_PRESETS.find((p) => p.value === presetValue);
+    const preset = presets.find((p) => p.value === presetValue);
     if (!preset) return;
 
     setSelectedPreset(preset.value);
@@ -76,17 +98,17 @@ export function RecurrenceSelect({
   return (
     <div className="space-y-3">
       <Field>
-        <FieldLabel>Recurring shift</FieldLabel>
+        <FieldLabel>{t('form.recurring')}</FieldLabel>
         <Select
           value={selectedPreset}
           onValueChange={handlePresetChange}
           disabled={disabled}
         >
           <SelectTrigger>
-            <SelectValue placeholder="No recurrence" />
+            <SelectValue placeholder={t('form.noRecurrence')} />
           </SelectTrigger>
           <SelectContent>
-            {RECURRENCE_PRESETS.map((preset) => (
+            {presets.map((preset) => (
               <SelectItem key={preset.value} value={preset.value}>
                 {preset.label}
               </SelectItem>
@@ -97,11 +119,9 @@ export function RecurrenceSelect({
 
       {showDayPicker && (
         <div>
-          <FieldLabel className="mb-2">
-            Choose which days this shift repeats
-          </FieldLabel>
+          <FieldLabel className="mb-2">{t('form.chooseDays')}</FieldLabel>
           <div className="flex gap-1">
-            {RECURRENCE_DAYS.map((day) => (
+            {days.map((day) => (
               <Button
                 key={day.value}
                 type="button"
