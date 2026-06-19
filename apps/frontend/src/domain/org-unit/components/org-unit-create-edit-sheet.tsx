@@ -1,6 +1,7 @@
 'use client';
 
 import type { OrganizationUnitType } from '@repo/data';
+import { useTranslations } from 'next-intl';
 import { Suspense } from 'react';
 import { toast } from 'sonner';
 import { ClippySheet } from '@/components/sheets/clippy-sheet';
@@ -26,27 +27,31 @@ export function OrgUnitCreateEditSheet({ types }: Props) {
   const editOrgUnitId = getParam('id');
   const parentOrgUnitId = getParam('parentId');
   const isEdit = !!editOrgUnitId;
+  const t = useTranslations('OrgUnit');
+  const tCommon = useTranslations('Common');
 
   const handleSuccess = () => {
     router.refresh();
     sheetProps.close();
-    toast.success(
-      isEdit ? 'Organization unit updated' : 'Organization unit created',
-    );
+    toast.success(isEdit ? t('toast.updated') : t('toast.created'));
   };
 
   return (
     <ClippySheet
       {...sheetProps}
-      title={isEdit ? 'Edit organization unit' : 'Create organization unit'}
+      title={isEdit ? t('sheet.editTitle') : t('sheet.createTitle')}
       description={
-        isEdit ? 'Edit organization unit.' : 'Create a new organization unit.'
+        isEdit ? t('sheet.editDescription') : t('sheet.createDescription')
       }
       formId={FORM_ID}
     >
       {editOrgUnitId ? (
         <Suspense
-          fallback={<p className="text-sm text-muted-foreground">Loading…</p>}
+          fallback={
+            <p className="text-sm text-muted-foreground">
+              {tCommon('loading')}
+            </p>
+          }
         >
           <EditOrgUnitForm
             editOrgUnitId={editOrgUnitId}

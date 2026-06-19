@@ -1,6 +1,7 @@
 'use client';
 
 import { Button, Input } from '@repo/ui';
+import { useTranslations } from 'next-intl';
 import { useActionState } from 'react';
 import { createOrganization } from '@/domain/organization/actions';
 
@@ -9,6 +10,7 @@ export function CreateOrganizationForm() {
     createOrganization,
     null,
   );
+  const t = useTranslations('Organization.create');
 
   return (
     <form action={formAction} className="mt-8 space-y-6">
@@ -21,7 +23,7 @@ export function CreateOrganizationForm() {
       <div className="space-y-4">
         <div>
           <label htmlFor="name" className="block text-sm font-medium">
-            Organization Name <span className="text-destructive">*</span>
+            {t('nameLabel')} <span className="text-destructive">*</span>
           </label>
           <Input
             id="name"
@@ -29,84 +31,84 @@ export function CreateOrganizationForm() {
             type="text"
             required
             className="mt-1"
-            placeholder="My Organization"
+            placeholder={t('namePlaceholder')}
             disabled={isPending}
           />
         </div>
 
         <div>
           <label htmlFor="description" className="block text-sm font-medium">
-            Description
+            {t('descriptionLabel')}
           </label>
           <Input
             id="description"
             name="description"
             type="text"
             className="mt-1"
-            placeholder="What does your organization do?"
+            placeholder={t('descriptionPlaceholder')}
             disabled={isPending}
           />
         </div>
 
         <div>
           <label htmlFor="contactEmail" className="block text-sm font-medium">
-            Email
+            {t('emailLabel')}
           </label>
           <Input
             id="contactEmail"
             name="contactEmail"
             type="email"
             className="mt-1"
-            placeholder="contact@organization.org"
+            placeholder={t('emailPlaceholder')}
             disabled={isPending}
           />
         </div>
 
         <div>
           <label htmlFor="phone" className="block text-sm font-medium">
-            Phone
+            {t('phoneLabel')}
           </label>
           <Input
             id="phone"
             name="phone"
             type="tel"
             className="mt-1"
-            placeholder="+1 (555) 123-4567"
+            placeholder={t('phonePlaceholder')}
             disabled={isPending}
           />
         </div>
 
         <div>
           <label htmlFor="websiteUrl" className="block text-sm font-medium">
-            Website
+            {t('websiteLabel')}
           </label>
           <Input
             id="websiteUrl"
             name="websiteUrl"
             type="url"
             className="mt-1"
-            placeholder="https://organization.org"
+            placeholder={t('websitePlaceholder')}
             disabled={isPending}
           />
         </div>
 
         <div>
           <label htmlFor="address" className="block text-sm font-medium">
-            Address
+            {t('addressLabel')}
           </label>
           <Input
             id="address"
             name="address"
             type="text"
             className="mt-1"
-            placeholder="123 Main St, City, State 12345"
+            placeholder={t('addressPlaceholder')}
             disabled={isPending}
           />
         </div>
       </div>
 
       <Button type="submit" disabled={isPending} className="w-full">
-        {isPending ? 'Creating organization...' : 'Create organization'}
+        {isPending ? t('submitting') : t('submit')}
       </Button>
     </form>
   );

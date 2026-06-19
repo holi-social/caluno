@@ -9,6 +9,7 @@ import {
   useQueryClient,
 } from '@repo/data/react';
 import { FieldGroup } from '@repo/ui';
+import { useTranslations } from 'next-intl';
 import { useEffect, useTransition } from 'react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
@@ -34,6 +35,7 @@ export function EditOrgUnitForm({
   const queryClient = useQueryClient();
   const { organizationId } = useCurrentOrg();
   const rootOrgUnitId = useOrgUId();
+  const tValidation = useTranslations('OrgUnit.validation');
 
   const { data: organizationUnit } =
     useOrganizationUnitWithSuspense(editOrgUnitId);
@@ -45,7 +47,12 @@ export function EditOrgUnitForm({
   }, [isPending, onPendingChange]);
 
   const form = useForm<CreateOrgUnitFormValues>({
-    resolver: zodResolver(createOrgUnitSchema),
+    resolver: zodResolver(
+      createOrgUnitSchema({
+        nameMin: tValidation('nameMin'),
+        typeRequired: tValidation('typeRequired'),
+      }),
+    ),
     defaultValues: {
       organizationUnitId: rootOrgUnitId,
       organizationId,

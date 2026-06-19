@@ -116,5 +116,103 @@
   },
   "Settings": {
     "title": "Einstellungen"
+  },
+  "Organization": {
+    "home": {
+      "welcomeBack": "Willkommen zurück",
+      "subtitle": "Verwalte deine Organisationen und Freiwilligen an einem Ort.",
+      "createCard": {
+        "title": "Organisation erstellen",
+        "description": "Richte eine neue Organisation ein, um deine Freiwilligen und Schichten zu verwalten.",
+        "cta": "Loslegen"
+      }
+    },
+    "list": {
+      "title": "Deine Organisationen",
+      "subtitle": "Wähle eine Organisation aus, um fortzufahren"
+    },
+    "create": {
+      "title": "Organisation erstellen",
+      "nameLabel": "Name der Organisation",
+      "namePlaceholder": "Meine Organisation",
+      "descriptionLabel": "Beschreibung",
+      "descriptionPlaceholder": "Wofür steht deine Organisation?",
+      "emailLabel": "E-Mail",
+      "emailPlaceholder": "kontakt@organisation.org",
+      "phoneLabel": "Telefon",
+      "phonePlaceholder": "+49 30 12345678",
+      "websiteLabel": "Website",
+      "websitePlaceholder": "https://organisation.org",
+      "addressLabel": "Adresse",
+      "addressPlaceholder": "Musterstraße 1, 12345 Berlin",
+      "submit": "Organisation erstellen",
+      "submitting": "Organisation wird erstellt...",
+      "errors": {
+        "nameRequired": "Name der Organisation ist erforderlich",
+        "generic": "Organisation konnte nicht erstellt werden. Bitte versuche es erneut.",
+        "rootNotResolved": "Organisation erstellt, aber die Stammeinheit konnte nicht ermittelt werden."
+      }
+    }
+  },
+  "OrgUnit": {
+    "page": {
+      "title": "Organisationseinheiten",
+      "subtitle": "Verwalte die Hierarchie der Organisationseinheiten für {orgName}"
+    },
+    "form": {
+      "nameLabel": "Name",
+      "namePlaceholder": "z. B. Marketing",
+      "typeLabel": "Typ",
+      "typePlaceholder": "Typ auswählen",
+      "emailLabel": "E-Mail",
+      "emailPlaceholder": "z. B. kontakt@beispiel.de",
+      "phoneLabel": "Telefon",
+      "phonePlaceholder": "z. B. +49 30 00000000",
+      "websiteLabel": "Website-URL",
+      "websitePlaceholder": "z. B. https://beispiel.de",
+      "logoLabel": "Logo-URL",
+      "logoPlaceholder": "z. B. https://beispiel.de/logo.png",
+      "addressLabel": "Adresse",
+      "addressPlaceholder": "z. B. Musterstraße 1, Berlin",
+      "descriptionLabel": "Beschreibung",
+      "descriptionPlaceholder": "Beschreibe diese Organisationseinheit..."
+    },
+    "detail": {
+      "editButton": "Bearbeiten",
+      "aboutTitle": "Über",
+      "contactTitle": "Kontakt",
+      "hierarchyTitle": "Hierarchie",
+      "partOf": "Teil von "
+    },
+    "tree": {
+      "visitAria": "Organisationseinheit besuchen",
+      "copyLinkAria": "Link zur Organisationseinheit kopieren",
+      "copyToast": "Link zur Organisationseinheit kopiert",
+      "addChildAria": "Untergeordnete hinzufügen",
+      "editAria": "Bearbeiten",
+      "deleteAria": "Löschen",
+      "empty": "Keine Organisationseinheit-Hierarchie gefunden. Kontaktiere deinen Administrator."
+    },
+    "toast": {
+      "updated": "Organisationseinheit aktualisiert",
+      "created": "Organisationseinheit erstellt"
+    },
+    "sheet": {
+      "editTitle": "Organisationseinheit bearbeiten",
+      "createTitle": "Organisationseinheit erstellen",
+      "editDescription": "Bearbeite die Organisationseinheit.",
+      "createDescription": "Erstelle eine neue Organisationseinheit."
+    },
+    "delete": {
+      "title": "\"{name}\" löschen",
+      "description": "Diese Aktion kann nicht rückgängig gemacht werden. Die Einheit wird dauerhaft gelöscht.",
+      "childrenWarning": "Warnung: Diese Einheit hat untergeordnete Einheiten. Das Löschen wirkt sich auf die Hierarchie aus.",
+      "confirmLabel": "Gib DELETE zur Bestätigung ein",
+      "confirmPlaceholder": "DELETE"
+    },
+    "validation": {
+      "nameMin": "Name muss mindestens 2 Zeichen lang sein",
+      "typeRequired": "Ein Typ für die Organisationseinheit ist erforderlich"
+    }
   }
 }

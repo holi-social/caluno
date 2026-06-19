@@ -4,6 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import type { OrganizationUnitType } from '@repo/data';
 import { useCurrentOrg, useOrgUId } from '@repo/data/react';
 import { FieldGroup } from '@repo/ui';
+import { useTranslations } from 'next-intl';
 import { useEffect, useTransition } from 'react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
@@ -28,6 +29,7 @@ export function CreateOrgUnitForm({
 }: Props) {
   const organizationUnitId = useOrgUId();
   const { organizationId } = useCurrentOrg();
+  const tValidation = useTranslations('OrgUnit.validation');
 
   const [isPending, startTransition] = useTransition();
 
@@ -36,7 +38,12 @@ export function CreateOrgUnitForm({
   }, [isPending, onPendingChange]);
 
   const form = useForm<CreateOrgUnitFormValues>({
-    resolver: zodResolver(createOrgUnitSchema),
+    resolver: zodResolver(
+      createOrgUnitSchema({
+        nameMin: tValidation('nameMin'),
+        typeRequired: tValidation('typeRequired'),
+      }),
+    ),
     defaultValues: { organizationUnitId, organizationId, name: '' },
   });
 

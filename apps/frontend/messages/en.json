@@ -116,5 +116,103 @@
   },
   "Settings": {
     "title": "Settings"
+  },
+  "Organization": {
+    "home": {
+      "welcomeBack": "Welcome back",
+      "subtitle": "Manage your organizations and volunteers all in one place.",
+      "createCard": {
+        "title": "Create an Organization",
+        "description": "Set up a new organization to start managing your volunteers and shifts.",
+        "cta": "Get started"
+      }
+    },
+    "list": {
+      "title": "Your Organizations",
+      "subtitle": "Select an organization to continue"
+    },
+    "create": {
+      "title": "Create an organization",
+      "nameLabel": "Organization Name",
+      "namePlaceholder": "My Organization",
+      "descriptionLabel": "Description",
+      "descriptionPlaceholder": "What does your organization do?",
+      "emailLabel": "Email",
+      "emailPlaceholder": "contact@organization.org",
+      "phoneLabel": "Phone",
+      "phonePlaceholder": "+1 (555) 123-4567",
+      "websiteLabel": "Website",
+      "websitePlaceholder": "https://organization.org",
+      "addressLabel": "Address",
+      "addressPlaceholder": "123 Main St, City, State 12345",
+      "submit": "Create organization",
+      "submitting": "Creating organization...",
+      "errors": {
+        "nameRequired": "Organization name is required",
+        "generic": "Failed to create organization. Please try again.",
+        "rootNotResolved": "Organization created, but failed to resolve root organization unit."
+      }
+    }
+  },
+  "OrgUnit": {
+    "page": {
+      "title": "Org Units",
+      "subtitle": "Manage the organizational unit hierarchy for {orgName}"
+    },
+    "form": {
+      "nameLabel": "Name",
+      "namePlaceholder": "e.g. Marketing",
+      "typeLabel": "Type",
+      "typePlaceholder": "Select a type",
+      "emailLabel": "Email",
+      "emailPlaceholder": "e.g. contact@example.com",
+      "phoneLabel": "Phone",
+      "phonePlaceholder": "e.g. +1 555 000 0000",
+      "websiteLabel": "Website URL",
+      "websitePlaceholder": "e.g. https://example.com",
+      "logoLabel": "Logo URL",
+      "logoPlaceholder": "e.g. https://example.com/logo.png",
+      "addressLabel": "Address",
+      "addressPlaceholder": "e.g. 123 Main St, City",
+      "descriptionLabel": "Description",
+      "descriptionPlaceholder": "Describe this organizational unit..."
+    },
+    "detail": {
+      "editButton": "Edit",
+      "aboutTitle": "About",
+      "contactTitle": "Contact",
+      "hierarchyTitle": "Hierarchy",
+      "partOf": "Part of "
+    },
+    "tree": {
+      "visitAria": "Visit org unit",
+      "copyLinkAria": "Copy org unit link to clipboard",
+      "copyToast": "Org unit link copied to clipboard",
+      "addChildAria": "Add child",
+      "editAria": "Edit",
+      "deleteAria": "Delete",
+      "empty": "No org unit tree found. Contact your administrator."
+    },
+    "toast": {
+      "updated": "Organization unit updated",
+      "created": "Organization unit created"
+    },
+    "sheet": {
+      "editTitle": "Edit organization unit",
+      "createTitle": "Create organization unit",
+      "editDescription": "Edit organization unit.",
+      "createDescription": "Create a new organization unit."
+    },
+    "delete": {
+      "title": "Delete \"{name}\"",
+      "description": "This action cannot be undone. The unit will be permanently deleted.",
+      "childrenWarning": "Warning: this unit has children. Deleting it will affect the hierarchy.",
+      "confirmLabel": "Type DELETE to confirm",
+      "confirmPlaceholder": "DELETE"
+    },
+    "validation": {
+      "nameMin": "Name must be at least 2 characters",
+      "typeRequired": "Organization unit type is required"
+    }
   }
 }
