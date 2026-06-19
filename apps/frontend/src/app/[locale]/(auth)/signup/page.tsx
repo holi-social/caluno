@@ -1,8 +1,8 @@
 import { getTranslations, setRequestLocale } from 'next-intl/server';
 import { redirect } from '@/i18n/navigation';
-import { AuthPageShell } from '../auth-page-shell';
 import { resolveAuthPageRedirects } from '@/lib/auth-page-redirect';
 import { getSession } from '@/lib/auth-server';
+import { AuthPageShell } from '../auth-page-shell';
 import { SignupForm } from './signup-form';
 
 interface SignupPageProps {
