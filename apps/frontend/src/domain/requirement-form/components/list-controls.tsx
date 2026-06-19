@@ -9,6 +9,7 @@ import {
   SelectValue,
 } from '@repo/ui';
 import { Search } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import {
   type ReactNode,
   useEffect,
@@ -35,7 +36,7 @@ export type SortDef = {
 export function ListControls({
   search,
   onSearchChange,
-  searchPlaceholder = 'Search...',
+  searchPlaceholder,
   searchSuggestions,
   filters,
   sort,
@@ -49,6 +50,8 @@ export function ListControls({
   sort?: SortDef;
   trailing?: ReactNode;
 }) {
+  const tCommon = useTranslations('Common');
+  const placeholder = searchPlaceholder ?? tCommon('searchPlaceholder');
   const [focused, setFocused] = useState(false);
   const [activeIndex, setActiveIndex] = useState(-1);
   const listboxId = useId();
@@ -120,7 +123,7 @@ export function ListControls({
             onFocus={() => setFocused(true)}
             onBlur={() => setFocused(false)}
             onKeyDown={handleKeyDown}
-            placeholder={searchPlaceholder}
+            placeholder={placeholder}
             className="h-10 pl-9"
             role={searchSuggestions ? 'combobox' : undefined}
             aria-expanded={searchSuggestions ? showSuggestions : undefined}

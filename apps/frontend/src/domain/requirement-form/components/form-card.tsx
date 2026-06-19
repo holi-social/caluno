@@ -3,9 +3,9 @@
 import type { FormBlock, RequirementForm } from '@repo/data';
 import { Badge, Button, Card, CardContent } from '@repo/ui';
 import { Eye, Pencil, Share2, Trash2, Users } from 'lucide-react';
+import { useFormatter, useTranslations } from 'next-intl';
 import { useState } from 'react';
 import { toast } from 'sonner';
-import { FormattedDate } from '@/components/formatted-date';
 import { Link } from '@/i18n/navigation';
 import { ConfirmDialog } from './confirm-dialog';
 
@@ -22,6 +22,10 @@ export function FormCard({
   orgUnitName?: string;
   onDelete?: (id: string) => Promise<void>;
 }) {
+  const t = useTranslations('RequirementForm.card');
+  const tTable = useTranslations('RequirementForm.table');
+  const tActions = useTranslations('RequirementForm.actions');
+  const { dateTime } = useFormatter();
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
 
@@ -46,9 +50,9 @@ export function FormCard({
     const url = `${window.location.origin}/f/${form.shareToken}`;
     try {
       await navigator.clipboard.writeText(url);
-      toast.success('Link copied', { description: url });
+      toast.success(tActions('linkCopied'), { description: url });
     } catch {
-      toast.error('Could not copy link', { description: url });
+      toast.error(tActions('couldNotCopyLink'), { description: url });
     }
   }
 
@@ -68,7 +72,7 @@ export function FormCard({
           {usedBlocks.length > 0 && (
             <div className="mt-4">
               <p className="text-muted-foreground text-xs font-medium uppercase tracking-wide">
-                Content
+                {t('content')}
               </p>
               <div className="mt-2 flex flex-wrap gap-1.5">
                 {usedBlocks.map((block) => (
@@ -80,7 +84,7 @@ export function FormCard({
             </div>
           )}
           <p className="text-muted-foreground mt-4 text-xs">
-            Updated <FormattedDate date={form.updatedAt} />
+            {t('updated', { date: dateTime(new Date(form.updatedAt)) })}
           </p>
         </div>
 
@@ -88,7 +92,7 @@ export function FormCard({
           <div className="flex gap-2 sm:contents">
             <Button className="h-10 flex-1" onClick={handleShare}>
               <Share2 className="mr-1.5 size-4" />
-              Share
+              {t('share')}
             </Button>
             <Button asChild variant="outline" className="h-10 flex-1">
               <Link
@@ -97,12 +101,12 @@ export function FormCard({
                 {locked ? (
                   <>
                     <Eye className="mr-1.5 size-4" />
-                    View
+                    {t('view')}
                   </>
                 ) : (
                   <>
                     <Pencil className="mr-1.5 size-4" />
-                    Edit
+                    {t('edit')}
                   </>
                 )}
               </Link>
@@ -113,14 +117,14 @@ export function FormCard({
               asChild
               variant="outline"
               className="h-10 flex-1 sm:size-10 sm:flex-none sm:shrink-0"
-              aria-label="Submissions"
-              title="Submissions"
+              aria-label={t('submissions')}
+              title={t('submissions')}
             >
               <Link
                 href={`/admin/${orgUId}/requirement-forms/${form.id}/submissions`}
               >
                 <Users className="size-4" />
-                <span className="ml-1.5 sm:hidden">Submissions</span>
+                <span className="ml-1.5 sm:hidden">{t('submissions')}</span>
               </Link>
             </Button>
             {onDelete && (
@@ -129,8 +133,8 @@ export function FormCard({
                 size="icon"
                 className="text-muted-foreground hover:text-destructive size-10 shrink-0"
                 onClick={() => setConfirmOpen(true)}
-                aria-label="Delete form"
-                title="Delete form"
+                aria-label={tTable('deleteFormAria')}
+                title={tTable('deleteFormAria')}
                 disabled={locked}
               >
                 <Trash2 className="size-4" />
@@ -143,14 +147,14 @@ export function FormCard({
       <ConfirmDialog
         open={confirmOpen}
         onOpenChange={setConfirmOpen}
-        title="Delete form?"
+        title={t('deleteFormTitle')}
         description={
           <>
-            <strong>{form.name}</strong> will be permanently removed.
+            <strong>{form.name}</strong> {t('deleteFormDescription')}
           </>
         }
-        confirmLabel="Delete"
-        pendingLabel="Deleting..."
+        confirmLabel={tTable('deleteFormAria')}
+        pendingLabel={t('deleting')}
         pending={deleting}
         onConfirm={handleDelete}
       />

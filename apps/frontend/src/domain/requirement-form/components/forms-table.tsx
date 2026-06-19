@@ -12,6 +12,7 @@ import {
   TableRow,
 } from '@repo/ui';
 import { Loader2, Lock, Pencil, Share2, Trash2, Users } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import { useTransition } from 'react';
 import { DeleteAlertDialog } from '@/components/delete-alert-dialog';
 import { FormattedDate } from '@/components/formatted-date';
@@ -27,11 +28,13 @@ function FormActions({
   orgUId: string;
   onDelete: (id: string) => Promise<void>;
 }) {
+  const t = useTranslations('RequirementForm.table');
+  const tActions = useTranslations('RequirementForm.actions');
   const [isDeleting, startDeleteTransition] = useTransition();
 
   function handleShare() {
     const url = `${window.location.origin}/f/${form.shareToken}`;
-    void copyToClipboard(url, 'Form link copied to clipboard');
+    void copyToClipboard(url, tActions('linkCopied'));
   }
 
   function handleDelete() {
@@ -43,17 +46,27 @@ function FormActions({
       <Button
         size="icon-xs"
         variant="outline"
-        aria-label="Copy share link"
+        aria-label={t('copyShareLinkAria')}
         onClick={handleShare}
       >
         <Share2 />
       </Button>
-      <Button size="icon-xs" variant="outline" aria-label="Edit form" asChild>
+      <Button
+        size="icon-xs"
+        variant="outline"
+        aria-label={t('editFormAria')}
+        asChild
+      >
         <Link href={`/admin/${orgUId}/requirement-forms/${form.id}/builder`}>
           <Pencil />
         </Link>
       </Button>
-      <Button size="icon-xs" variant="outline" aria-label="Submissions" asChild>
+      <Button
+        size="icon-xs"
+        variant="outline"
+        aria-label={t('submissionsAria')}
+        asChild
+      >
         <Link
           href={`/admin/${orgUId}/requirement-forms/${form.id}/submissions`}
         >
@@ -64,22 +77,22 @@ function FormActions({
         <Button
           size="icon-xs"
           variant="outline"
-          aria-label="Cannot delete — form has submissions"
-          title="Cannot delete — form has submissions"
+          aria-label={t('cannotDeleteAria')}
+          title={t('cannotDeleteAria')}
           disabled
         >
           <Lock />
         </Button>
       ) : (
         <DeleteAlertDialog
-          title="Delete form?"
-          description={`"${form.name}" will be permanently removed.`}
+          title={t('deleteFormAria')}
+          description={t('deleteFormDescription', { name: form.name })}
           onDelete={handleDelete}
           trigger={
             <Button
               size="icon-xs"
               variant="destructive"
-              aria-label="Delete form"
+              aria-label={t('deleteFormAria')}
               disabled={isDeleting}
             >
               {isDeleting ? <Loader2 className="animate-spin" /> : <Trash2 />}
@@ -102,6 +115,8 @@ export function FormsTable({
   orgUId: string;
   onDelete: (id: string) => Promise<void>;
 }) {
+  const t = useTranslations('RequirementForm.table');
+  const tCommon = useTranslations('Common');
   const blockMap = new Map(blocks.map((b) => [b.id, b]));
 
   return (
@@ -109,10 +124,10 @@ export function FormsTable({
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead>Name</TableHead>
-            <TableHead>Description</TableHead>
-            <TableHead>Blocks</TableHead>
-            <TableHead>Updated</TableHead>
+            <TableHead>{t('name')}</TableHead>
+            <TableHead>{t('description')}</TableHead>
+            <TableHead>{t('blocks')}</TableHead>
+            <TableHead>{t('updated')}</TableHead>
             <TableHead />
           </TableRow>
         </TableHeader>
@@ -133,11 +148,13 @@ export function FormsTable({
                   </Link>
                 </TableCell>
                 <TableCell className="text-muted-foreground max-w-xs truncate">
-                  {form.description ?? '—'}
+                  {form.description ?? tCommon('dash')}
                 </TableCell>
                 <TableCell>
                   {usedBlocks.length === 0 ? (
-                    <span className="text-muted-foreground text-sm">—</span>
+                    <span className="text-muted-foreground text-sm">
+                      {tCommon('dash')}
+                    </span>
                   ) : (
                     <div className="flex flex-wrap gap-1">
                       {usedBlocks.map((block) => (

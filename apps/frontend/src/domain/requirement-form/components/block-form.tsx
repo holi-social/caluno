@@ -20,6 +20,7 @@ import {
   Textarea,
 } from '@repo/ui';
 import { FileText, Lock, Plus, Save, Trash2, UserCircle2 } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import { useEffect, useState } from 'react';
 import {
   type Control,
@@ -32,75 +33,6 @@ import {
 import { toast } from 'sonner';
 import { saveBlock } from '../actions';
 import { OptionsEditor } from './options-editor';
-
-const SYSTEM_PRESETS = [
-  { key: 'name', label: 'First name', type: FieldType.Name, required: true },
-  {
-    key: 'lastname',
-    label: 'Last name',
-    type: FieldType.Lastname,
-    required: true,
-  },
-  {
-    key: 'preferred-name',
-    label: 'Preferred name',
-    type: FieldType.Text,
-    required: false,
-  },
-  {
-    key: 'email',
-    label: 'Email address',
-    type: FieldType.Email,
-    required: true,
-  },
-  {
-    key: 'phone',
-    label: 'Phone number',
-    type: FieldType.Phone,
-    required: false,
-  },
-  { key: 'address', label: 'Address', type: FieldType.Text, required: false },
-  { key: 'zip', label: 'ZIP code', type: FieldType.Zip, required: false },
-  { key: 'city', label: 'City', type: FieldType.Text, required: false },
-  {
-    key: 'birth-date',
-    label: 'Birth date',
-    type: FieldType.Date,
-    required: false,
-  },
-  { key: 'gender', label: 'Gender', type: FieldType.Text, required: false },
-] as const;
-
-const CUSTOM_FIELD_TYPES = [
-  { value: FieldType.Text, label: 'Text (short)' },
-  { value: FieldType.Textarea, label: 'Text (long)' },
-  { value: FieldType.Email, label: 'Email' },
-  { value: FieldType.Phone, label: 'Phone' },
-  { value: FieldType.Numbers, label: 'Number' },
-  { value: FieldType.Date, label: 'Date' },
-  { value: FieldType.SingleChoice, label: 'Single choice' },
-  { value: FieldType.MultiChoice, label: 'Multi choice' },
-  { value: FieldType.Checkbox, label: 'Checkbox' },
-  { value: FieldType.StaticText, label: 'Static text' },
-] as const;
-
-const FIELD_TYPE_LABELS: Record<FieldType, string> = {
-  [FieldType.Text]: 'Text (short)',
-  [FieldType.Textarea]: 'Text (long)',
-  [FieldType.Email]: 'Email',
-  [FieldType.Phone]: 'Phone',
-  [FieldType.Numbers]: 'Number',
-  [FieldType.Date]: 'Date',
-  [FieldType.SingleChoice]: 'Single choice',
-  [FieldType.MultiChoice]: 'Multi choice',
-  [FieldType.Checkbox]: 'Checkbox',
-  [FieldType.StaticText]: 'Static text',
-  [FieldType.DocumentAcknowledgement]: 'Document acknowledgement',
-  [FieldType.Name]: 'First name',
-  [FieldType.Lastname]: 'Last name',
-  [FieldType.Zip]: 'ZIP code',
-  [FieldType.Iban]: 'IBAN',
-};
 
 interface BlockFormFieldInput {
   id?: string;
@@ -138,11 +70,109 @@ export function BlockForm({
   onPendingChange?: (isPending: boolean) => void;
   onCreated?: (id: string) => void;
 }) {
+  const t = useTranslations('RequirementForm.block');
+  const tField = useTranslations('RequirementForm.fieldForm');
+  const tActions = useTranslations('RequirementForm.actions');
+  const tValidation = useTranslations('RequirementForm.validation');
   const isEdit = !!blockId;
   const blockQuery = useBlock(blockId ?? '');
 
   const [fieldPickerOpen, setFieldPickerOpen] = useState(false);
   const [profilePickerOpen, setProfilePickerOpen] = useState(false);
+
+  const systemPresets = [
+    {
+      key: 'name',
+      label: tField('firstName'),
+      type: FieldType.Name,
+      required: true,
+    },
+    {
+      key: 'lastname',
+      label: tField('lastName'),
+      type: FieldType.Lastname,
+      required: true,
+    },
+    {
+      key: 'preferred-name',
+      label: tField('preferredName'),
+      type: FieldType.Text,
+      required: false,
+    },
+    {
+      key: 'email',
+      label: tField('email'),
+      type: FieldType.Email,
+      required: true,
+    },
+    {
+      key: 'phone',
+      label: tField('phone'),
+      type: FieldType.Phone,
+      required: false,
+    },
+    {
+      key: 'address',
+      label: tField('address'),
+      type: FieldType.Text,
+      required: false,
+    },
+    {
+      key: 'zip',
+      label: tField('zipCode'),
+      type: FieldType.Zip,
+      required: false,
+    },
+    {
+      key: 'city',
+      label: tField('city'),
+      type: FieldType.Text,
+      required: false,
+    },
+    {
+      key: 'birth-date',
+      label: tField('birthDate'),
+      type: FieldType.Date,
+      required: false,
+    },
+    {
+      key: 'gender',
+      label: tField('gender'),
+      type: FieldType.Text,
+      required: false,
+    },
+  ] as const;
+
+  const customFieldTypes = [
+    { value: FieldType.Text, label: tField('shortText') },
+    { value: FieldType.Textarea, label: tField('longText') },
+    { value: FieldType.Email, label: tField('email') },
+    { value: FieldType.Phone, label: tField('phone') },
+    { value: FieldType.Numbers, label: tField('number') },
+    { value: FieldType.Date, label: tField('date') },
+    { value: FieldType.SingleChoice, label: tField('dropdown') },
+    { value: FieldType.MultiChoice, label: tField('multiSelect') },
+    { value: FieldType.Checkbox, label: tField('checkbox') },
+    { value: FieldType.StaticText, label: tField('infoText') },
+  ];
+
+  const fieldTypeLabels: Record<FieldType, string> = {
+    [FieldType.Text]: tField('shortText'),
+    [FieldType.Textarea]: tField('longText'),
+    [FieldType.Email]: tField('email'),
+    [FieldType.Phone]: tField('phone'),
+    [FieldType.Numbers]: tField('number'),
+    [FieldType.Date]: tField('date'),
+    [FieldType.SingleChoice]: tField('dropdown'),
+    [FieldType.MultiChoice]: tField('multiSelect'),
+    [FieldType.Checkbox]: tField('checkbox'),
+    [FieldType.StaticText]: tField('infoText'),
+    [FieldType.DocumentAcknowledgement]: tField('document'),
+    [FieldType.Name]: tField('firstName'),
+    [FieldType.Lastname]: tField('lastName'),
+    [FieldType.Zip]: tField('zipCode'),
+    [FieldType.Iban]: 'IBAN',
+  };
 
   const {
     register,
@@ -197,9 +227,9 @@ export function BlockForm({
 
   useEffect(() => {
     if (blockQuery.isError) {
-      toast.error('Failed to load block');
+      toast.error(tActions('failedToLoadBlock'));
     }
-  }, [blockQuery.isError]);
+  }, [blockQuery.isError, tActions]);
 
   const watchedFields = watch('fields');
 
@@ -229,13 +259,13 @@ export function BlockForm({
     if (result?.serverError) {
       toast.error(result.serverError);
     } else if (result?.data) {
-      toast.success(isEdit ? 'Block saved' : 'Block created');
+      toast.success(isEdit ? tActions('blockSaved') : tActions('blockCreated'));
       reset(data);
       if (!isEdit && result.data.blockId) {
         onCreated?.(result.data.blockId);
       }
     } else {
-      toast.error('Failed to save block');
+      toast.error(tActions('failedToSaveBlock'));
     }
   }
 
@@ -252,7 +282,7 @@ export function BlockForm({
     });
   }
 
-  function appendSystemField(preset: (typeof SYSTEM_PRESETS)[number]) {
+  function appendSystemField(preset: (typeof systemPresets)[number]) {
     append({
       type: preset.type,
       label: preset.label,
@@ -268,7 +298,7 @@ export function BlockForm({
   if (isEdit && blockQuery.isPending) {
     return (
       <div className="py-12 text-center">
-        <p className="text-muted-foreground text-sm">Loading…</p>
+        <p className="text-muted-foreground text-sm">{t('loading')}</p>
       </div>
     );
   }
@@ -278,7 +308,7 @@ export function BlockForm({
   const usedSystemKeys = new Set(
     watchedFields.map((f) => f.systemKey).filter(Boolean),
   );
-  const availablePresets = SYSTEM_PRESETS.filter(
+  const availablePresets = systemPresets.filter(
     (p) => !usedSystemKeys.has(p.key),
   );
 
@@ -287,10 +317,7 @@ export function BlockForm({
       {readOnly && (
         <div className="flex items-start gap-3 rounded-lg border border-amber-200 bg-amber-50 p-3 text-amber-900">
           <Lock className="mt-0.5 size-4 shrink-0" />
-          <p className="text-sm">
-            This block is locked because it&apos;s used in a form that has
-            received submissions.
-          </p>
+          <p className="text-sm">{t('lockedNotice')}</p>
         </div>
       )}
 
@@ -298,11 +325,11 @@ export function BlockForm({
       <div className="space-y-4">
         <Field>
           <FieldLabel>
-            Block Title <span className="text-destructive">*</span>
+            {t('blockTitleLabel')} <span className="text-destructive">*</span>
           </FieldLabel>
           <Input
-            {...register('title', { required: 'Title is required' })}
-            placeholder="e.g. Personal Information"
+            {...register('title', { required: tValidation('titleRequired') })}
+            placeholder={t('titlePlaceholder')}
             disabled={readOnly}
           />
           {errors.title && (
@@ -311,19 +338,19 @@ export function BlockForm({
         </Field>
 
         <Field>
-          <FieldLabel>Description</FieldLabel>
+          <FieldLabel>{t('descriptionLabel')}</FieldLabel>
           <Textarea
             {...register('description')}
-            placeholder="What does this block collect?"
+            placeholder={t('descriptionPlaceholder')}
             disabled={readOnly}
           />
         </Field>
 
         <Field>
-          <FieldLabel>Icon</FieldLabel>
+          <FieldLabel>{t('iconLabel')}</FieldLabel>
           <Input
             {...register('icon')}
-            placeholder="e.g. user"
+            placeholder={t('iconPlaceholder')}
             disabled={readOnly}
           />
         </Field>
@@ -331,13 +358,13 @@ export function BlockForm({
 
       {/* Fields */}
       <div className="space-y-4">
-        <h3 className="text-lg font-semibold">Fields ({fields.length})</h3>
+        <h3 className="text-lg font-semibold">
+          {t('fieldsTitle', { count: fields.length })}
+        </h3>
 
         {fields.length === 0 && (
           <div className="rounded-lg border border-dashed px-4 py-6 text-center">
-            <p className="text-muted-foreground text-sm">
-              No fields yet. Add your first field to this block.
-            </p>
+            <p className="text-muted-foreground text-sm">{t('noFields')}</p>
           </div>
         )}
 
@@ -361,6 +388,8 @@ export function BlockForm({
               setValue(`fields.${index}.required`, next, { shouldDirty: true })
             }
             readOnly={readOnly}
+            customFieldTypes={customFieldTypes}
+            fieldTypeLabels={fieldTypeLabels}
           />
         ))}
 
@@ -377,11 +406,11 @@ export function BlockForm({
                     className="flex-1"
                   >
                     <Plus className="mr-2 size-4" />
-                    Add field
+                    {t('addField')}
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-52 p-1" align="start">
-                  {CUSTOM_FIELD_TYPES.map((t) => (
+                  {customFieldTypes.map((t) => (
                     <button
                       key={t.value}
                       type="button"
@@ -411,14 +440,13 @@ export function BlockForm({
                     disabled={availablePresets.length === 0}
                   >
                     <UserCircle2 className="mr-2 size-4" />
-                    Add profile field
+                    {t('addProfileField')}
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-72 p-0" align="start">
                   <div className="border-b p-3">
                     <p className="text-muted-foreground text-xs">
-                      Volunteers fill these in once and they&apos;re reused
-                      across organizations.
+                      {t('profileFieldHint')}
                     </p>
                   </div>
                   <div className="max-h-72 space-y-1 overflow-y-auto p-2">
@@ -452,7 +480,7 @@ export function BlockForm({
                 }
               >
                 <FileText className="mr-2 size-4" />
-                Add document
+                {t('addDocument')}
               </Button>
             </div>
           </div>
@@ -469,10 +497,10 @@ export function BlockForm({
           >
             <Save className="mr-2 size-4" />
             {isSubmitting
-              ? 'Saving…'
+              ? t('saving')
               : isEdit
-                ? 'Save changes'
-                : 'Create block'}
+                ? t('saveChanges')
+                : t('createBlock')}
           </Button>
         </div>
       )}
@@ -496,6 +524,8 @@ function FieldCard({
   lockType,
   onToggleRequired,
   readOnly,
+  customFieldTypes,
+  fieldTypeLabels,
 }: {
   index: number;
   control: Control<BlockFormData>;
@@ -512,7 +542,12 @@ function FieldCard({
   lockType: boolean;
   onToggleRequired: (next: boolean) => void;
   readOnly?: boolean;
+  customFieldTypes: { value: FieldType; label: string }[];
+  fieldTypeLabels: Record<FieldType, string>;
 }) {
+  const t = useTranslations('RequirementForm.block');
+  const tField = useTranslations('RequirementForm.fieldForm');
+  const tValidation = useTranslations('RequirementForm.validation');
   const showOptions =
     fieldType === FieldType.SingleChoice || fieldType === FieldType.MultiChoice;
   const isDocument = fieldType === FieldType.DocumentAcknowledgement;
@@ -522,12 +557,12 @@ function FieldCard({
       <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-2">
           <span className="text-sm font-medium text-muted-foreground">
-            Field {index + 1}
+            {t('fieldN', { n: index + 1 })}
           </span>
           {isSystemField && (
             <Badge variant="secondary" className="text-xs">
               <UserCircle2 className="mr-1 size-3" />
-              System field
+              {t('systemField')}
             </Badge>
           )}
         </div>
@@ -544,7 +579,7 @@ function FieldCard({
                 size="sm"
                 disabled={isSystemField}
               />
-              {currentRequired ? 'Required' : 'Optional'}
+              {currentRequired ? t('required') : t('optional')}
             </label>
           )}
           {!readOnly && (
@@ -584,11 +619,11 @@ function FieldCard({
       <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
         <Field>
           <FieldLabel>
-            Type <span className="text-destructive">*</span>
+            {tField('typeLabel')} <span className="text-destructive">*</span>
           </FieldLabel>
           {lockType && fieldType ? (
             <div className="border-input bg-muted/50 text-muted-foreground flex h-9 w-full items-center rounded-md border px-3 text-sm">
-              {FIELD_TYPE_LABELS[fieldType] ?? fieldType}
+              {fieldTypeLabels[fieldType] ?? fieldType}
             </div>
           ) : (
             <Controller
@@ -601,16 +636,16 @@ function FieldCard({
                   disabled={readOnly}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Select type" />
+                    <SelectValue placeholder={tField('typePlaceholder')} />
                   </SelectTrigger>
                   <SelectContent>
-                    {CUSTOM_FIELD_TYPES.map((t) => (
+                    {customFieldTypes.map((t) => (
                       <SelectItem key={t.value} value={t.value}>
                         {t.label}
                       </SelectItem>
                     ))}
                     <SelectItem value={FieldType.DocumentAcknowledgement}>
-                      Document acknowledgement
+                      {tField('document')}
                     </SelectItem>
                   </SelectContent>
                 </Select>
@@ -621,13 +656,13 @@ function FieldCard({
 
         <Field>
           <FieldLabel>
-            Label <span className="text-destructive">*</span>
+            {tField('labelLabel')} <span className="text-destructive">*</span>
           </FieldLabel>
           <Input
             {...register(`fields.${index}.label`, {
-              required: 'Label is required',
+              required: tValidation('labelRequired'),
             })}
-            placeholder="Field label"
+            placeholder={tField('labelPlaceholder')}
             disabled={readOnly}
           />
           {errors?.label && (
@@ -636,19 +671,19 @@ function FieldCard({
         </Field>
 
         <Field className="md:col-span-2">
-          <FieldLabel>Description</FieldLabel>
+          <FieldLabel>{tField('descriptionLabel')}</FieldLabel>
           <Input
             {...register(`fields.${index}.description`)}
-            placeholder="Help text for this field"
+            placeholder={tField('descriptionPlaceholder')}
             disabled={readOnly}
           />
         </Field>
 
         <Field>
-          <FieldLabel>Placeholder</FieldLabel>
+          <FieldLabel>{tField('placeholderLabel')}</FieldLabel>
           <Input
             {...register(`fields.${index}.placeholder`)}
-            placeholder="e.g. Enter your name"
+            placeholder={tField('placeholderPlaceholder')}
             disabled={readOnly}
           />
         </Field>
@@ -656,18 +691,18 @@ function FieldCard({
         {isDocument && (
           <>
             <Field className="md:col-span-2">
-              <FieldLabel>Document URL</FieldLabel>
+              <FieldLabel>{tField('documentUrlLabel')}</FieldLabel>
               <Input
                 {...register(`fields.${index}.documentUrl`)}
-                placeholder="https://example.com/document.pdf"
+                placeholder={tField('documentUrlPlaceholder')}
                 disabled={readOnly}
               />
             </Field>
             <Field className="md:col-span-2">
-              <FieldLabel>Document Label</FieldLabel>
+              <FieldLabel>{tField('documentLabelLabel')}</FieldLabel>
               <Input
                 {...register(`fields.${index}.documentLabel`)}
-                placeholder="e.g. Terms of Service"
+                placeholder={tField('documentLabelPlaceholder')}
                 disabled={readOnly}
               />
             </Field>
@@ -677,7 +712,7 @@ function FieldCard({
 
       {showOptions && (
         <div className="md:col-span-2">
-          <FieldLabel>Options</FieldLabel>
+          <FieldLabel>{tField('optionsLabel')}</FieldLabel>
           <Controller
             control={control}
             name={`fields.${index}.options`}

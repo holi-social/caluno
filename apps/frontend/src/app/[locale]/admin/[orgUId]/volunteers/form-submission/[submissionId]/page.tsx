@@ -7,17 +7,21 @@ import {
   TableRow,
 } from '@repo/ui';
 import { notFound } from 'next/navigation';
+import { getTranslations } from 'next-intl/server';
 import { getDataClient } from '@/lib/data-client';
-import { formatDate } from '@/lib/formatting';
+import { getFormatting } from '@/lib/formatting-server';
 
 interface Props {
-  params: Promise<{ orgUId: string; submissionId: string }>;
+  params: Promise<{ orgUId: string; submissionId: string; locale: string }>;
 }
 
 function resolveFieldAnswer(
   field: { id: string; type: string; systemKey?: string | null },
   submissionValues: { fieldId: string; value: string }[],
   profileData: Record<string, unknown>,
+  tCommon: { dash: string },
+  t: { accepted: string },
+  formatDate: (date: Date) => string,
 ): string {
   const raw =
     field.systemKey && profileData[field.systemKey] !== undefined
@@ -25,7 +29,7 @@ function resolveFieldAnswer(
       : (submissionValues.find((v) => v.fieldId === field.id)?.value ?? null);
 
   if (!raw) {
-    return '—';
+    return tCommon.dash;
   }
 
   if (field.type === 'DATE') {
@@ -33,16 +37,19 @@ function resolveFieldAnswer(
     return Number.isNaN(d.getTime()) ? raw : formatDate(d);
   }
   if (field.type === 'CHECKBOX' || field.type === 'DOCUMENT_ACKNOWLEDGEMENT') {
-    return raw === 'true' ? 'Accepted' : '—';
+    return raw === 'true' ? t.accepted : tCommon.dash;
   }
-  if (field.type === 'STATIC_TEXT') return '—';
+  if (field.type === 'STATIC_TEXT') return tCommon.dash;
 
   return raw;
 }
 
 export default async function FormSubmissionPage({ params }: Props) {
-  const { orgUId, submissionId } = await params;
+  const { orgUId, submissionId, locale } = await params;
   const data = await getDataClient(orgUId);
+  const t = await getTranslations({ locale, namespace: 'RequirementForm' });
+  const tCommon = await getTranslations({ locale, namespace: 'Common' });
+  const { formatDate } = await getFormatting();
 
   const submission =
     await data.requirementForm.findAdminSubmission(submissionId);
@@ -55,8 +62,9 @@ export default async function FormSubmissionPage({ params }: Props) {
     ? await data.requirementProfile.getAdminUserProfile(submission.user.id)
     : null;
 
-  const volunteerName = submission.user?.name ?? 'Volunteer';
-  const formName = submission.form?.name ?? 'Form';
+  const volunteerName =
+    submission.user?.name ?? t('submission.fallbackVolunteer');
+  const formName = submission.form?.name ?? t('submission.fallbackForm');
   const submissionValues = (submission.values ?? []) as {
     fieldId: string;
     value: string;
@@ -82,8 +90,10 @@ export default async function FormSubmissionPage({ params }: Props) {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead className="w-1/2">Field</TableHead>
-              <TableHead>Answer</TableHead>
+              <TableHead className="w-1/2">
+                {t('submission.fieldColumn')}
+              </TableHead>
+              <TableHead>{t('submission.answerColumn')}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -93,7 +103,7 @@ export default async function FormSubmissionPage({ params }: Props) {
                   colSpan={2}
                   className="text-center text-muted-foreground"
                 >
-                  No fields defined for this form.
+                  {t('submission.noFields')}
                 </TableCell>
               </TableRow>
             ) : (
@@ -101,7 +111,14 @@ export default async function FormSubmissionPage({ params }: Props) {
                 <TableRow key={field.id}>
                   <TableCell className="font-medium">{field.label}</TableCell>
                   <TableCell>
-                    {resolveFieldAnswer(field, submissionValues, profileData)}
+                    {resolveFieldAnswer(
+                      field,
+                      submissionValues,
+                      profileData,
+                      { dash: tCommon('dash') },
+                      { accepted: t('submission.accepted') },
+                      formatDate,
+                    )}
                   </TableCell>
                 </TableRow>
               ))

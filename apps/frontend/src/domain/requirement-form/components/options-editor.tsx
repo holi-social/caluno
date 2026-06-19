@@ -2,6 +2,7 @@
 
 import { Button, Input } from '@repo/ui';
 import { Plus, Trash2 } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import { useState } from 'react';
 
 interface OptionItem {
@@ -23,6 +24,7 @@ export function OptionsEditor({
   onChange: (options: { label: string; value: string }[]) => void;
   disabled?: boolean;
 }) {
+  const t = useTranslations('RequirementForm.block');
   const [items, setItems] = useState<OptionItem[]>(() => toItems(options));
 
   function update(
@@ -59,14 +61,14 @@ export function OptionsEditor({
           <Input
             value={item.label}
             onChange={(e) => update(idx, 'label', e.target.value)}
-            placeholder={`Label ${idx + 1}`}
+            placeholder={t('optionLabelPlaceholder', { n: idx + 1 })}
             className="flex-1"
             disabled={disabled}
           />
           <Input
             value={item.value}
             onChange={(e) => update(idx, 'value', e.target.value)}
-            placeholder={`Value ${idx + 1}`}
+            placeholder={t('optionValuePlaceholder', { n: idx + 1 })}
             className="flex-1"
             disabled={disabled}
           />
@@ -90,7 +92,7 @@ export function OptionsEditor({
         disabled={disabled}
       >
         <Plus className="mr-1 size-4" />
-        Add Option
+        {t('addOption')}
       </Button>
     </div>
   );

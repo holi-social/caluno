@@ -25,6 +25,7 @@ import {
   Save,
   Trash2,
 } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { useSheetTrigger } from '@/hooks/use-sheet';
@@ -43,6 +44,8 @@ export function FormBuilder({
   orgUId,
 }: FormBuilderProps) {
   const router = useRouter();
+  const t = useTranslations('RequirementForm.builder');
+  const tActions = useTranslations('RequirementForm.actions');
   const [blockRefs, setBlockRefs] = useState(
     form.blockRefs
       ?.slice()
@@ -104,13 +107,13 @@ export function FormBuilder({
       if (result?.serverError) {
         toast.error(result.serverError);
       } else if (result?.data) {
-        toast.success('Form saved');
+        toast.success(tActions('formSaved'));
         router.refresh();
       } else {
-        toast.error('Failed to save form');
+        toast.error(tActions('failedToSaveForm'));
       }
     } catch {
-      toast.error('Failed to save form');
+      toast.error(tActions('failedToSaveForm'));
     } finally {
       setSaving(false);
     }
@@ -119,7 +122,7 @@ export function FormBuilder({
   async function handleCopyShareLink() {
     const url = `${window.location.origin}/f/${form.shareToken}`;
     await navigator.clipboard.writeText(url);
-    toast.success('Share link copied to clipboard');
+    toast.success(tActions('linkCopied'), { description: url });
   }
 
   return (
@@ -129,10 +132,9 @@ export function FormBuilder({
           <div className="flex items-start gap-3 rounded-lg border border-amber-200 bg-amber-50 p-4 text-amber-900">
             <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0" />
             <div>
-              <p className="font-medium">This form has submissions</p>
+              <p className="font-medium">{t('submissionsWarning')}</p>
               <p className="text-sm text-amber-800">
-                Editing is disabled because volunteers have already submitted
-                responses. Create a copy if you need a new version.
+                {t('submissionsWarningDescription')}
               </p>
             </div>
           </div>
@@ -150,7 +152,7 @@ export function FormBuilder({
                 <div>
                   <h3 className="font-semibold">{block.title}</h3>
                   <p className="text-sm text-muted-foreground">
-                    {block.fields?.length ?? 0} fields
+                    {t('fieldsCount', { count: block.fields?.length ?? 0 })}
                   </p>
                 </div>
                 <div className="flex items-center gap-1">
@@ -191,9 +193,7 @@ export function FormBuilder({
                             </Button>
                           </span>
                         </TooltipTrigger>
-                        <TooltipContent>
-                          Cannot edit, block in use in a submitted form
-                        </TooltipContent>
+                        <TooltipContent>{t('lockedTooltip')}</TooltipContent>
                       </Tooltip>
                     </TooltipProvider>
                   ) : (
@@ -206,7 +206,7 @@ export function FormBuilder({
                           ...(hasSubmissions && { readOnly: 'true' }),
                         })
                       }
-                      title={hasSubmissions ? 'View block' : 'Edit block'}
+                      title={hasSubmissions ? t('viewBlock') : t('editBlock')}
                     >
                       {hasSubmissions ? (
                         <Eye className="h-4 w-4" />
@@ -241,9 +241,11 @@ export function FormBuilder({
           <Dialog open={addBlockOpen} onOpenChange={setAddBlockOpen}>
             <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-xl">
               <DialogHeader>
-                <DialogTitle className="text-xl">Add block</DialogTitle>
+                <DialogTitle className="text-xl">
+                  {t('addBlockTitle')}
+                </DialogTitle>
                 <p className="text-muted-foreground text-sm">
-                  Select an existing block or create a new one
+                  {t('addBlockDescription')}
                 </p>
               </DialogHeader>
               <div className="grid gap-3 pt-2">
@@ -276,7 +278,7 @@ export function FormBuilder({
                           ))}
                           {(block.fields?.length ?? 0) === 0 && (
                             <span className="text-muted-foreground text-sm">
-                              No fields
+                              {t('noFields')}
                             </span>
                           )}
                         </div>
@@ -284,7 +286,7 @@ export function FormBuilder({
                     ))
                 ) : (
                   <p className="text-muted-foreground py-4 text-center text-sm">
-                    All blocks are already in use
+                    {t('allBlocksInUse')}
                   </p>
                 )}
 
@@ -300,7 +302,7 @@ export function FormBuilder({
                 >
                   <Plus className="text-muted-foreground size-5" />
                   <span className="text-muted-foreground text-base font-semibold">
-                    Create new block
+                    {t('createNewBlock')}
                   </span>
                 </button>
               </div>
@@ -318,7 +320,7 @@ export function FormBuilder({
                 className="flex-1"
               >
                 <Save className="mr-2 h-4 w-4" />
-                {saving ? 'Saving...' : 'Save Form'}
+                {saving ? t('saving') : t('saveForm')}
               </Button>
               <Button
                 size="lg"
@@ -327,21 +329,21 @@ export function FormBuilder({
                 onClick={() => setAddBlockOpen(true)}
               >
                 <Plus className="mr-2 h-4 w-4" />
-                Add Block
+                {t('addBlock')}
               </Button>
             </div>
           )}
           <div className="flex justify-center">
             <Button variant="outline" onClick={handleCopyShareLink}>
               <Copy className="mr-2 h-4 w-4" />
-              Copy Share Link
+              {t('copyShareLink')}
             </Button>
           </div>
         </div>
       </div>
 
       <div className="rounded-lg border bg-muted/30 p-4">
-        <h3 className="font-semibold mb-4">Preview</h3>
+        <h3 className="font-semibold mb-4">{t('previewTitle')}</h3>
         <div className="space-y-4">
           {blockRefs.map((ref) => {
             const block = availableBlocks.find((b) => b.id === ref.blockId);
@@ -375,7 +377,7 @@ export function FormBuilder({
           })}
           {blockRefs.length === 0 && (
             <p className="text-sm text-muted-foreground text-center py-8">
-              Add blocks to see a preview
+              {t('noPreview')}
             </p>
           )}
         </div>

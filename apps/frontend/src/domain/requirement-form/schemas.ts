@@ -1,21 +1,41 @@
 import z from 'zod';
 
-export const createFormSchema = z.object({
-  organizationUnitId: z.string().min(1),
-  organizationId: z.string().min(1),
-  name: z.string().trim().min(1, 'Name is required'),
-  description: z.string().trim().optional(),
+interface CreateFormSchemaMessages {
+  nameRequired: string;
+}
+
+export function createFormSchema(t: CreateFormSchemaMessages) {
+  return z.object({
+    organizationUnitId: z.string().min(1),
+    organizationId: z.string().min(1),
+    name: z.string().trim().min(1, t.nameRequired),
+    description: z.string().trim().optional(),
+  });
+}
+
+export const serverCreateFormSchema = createFormSchema({
+  nameRequired: 'Name is required',
 });
 
-export type CreateFormValues = z.infer<typeof createFormSchema>;
+export type CreateFormValues = z.infer<typeof serverCreateFormSchema>;
 
-export const createBlockSchema = z.object({
-  organizationUnitId: z.string().min(1),
-  organizationId: z.string().min(1),
-  title: z.string().trim().min(1, 'Title is required'),
-  description: z.string().trim().optional(),
-  icon: z.string().trim().optional(),
-  required: z.boolean().optional(),
+interface CreateBlockSchemaMessages {
+  titleRequired: string;
+}
+
+export function createBlockSchema(t: CreateBlockSchemaMessages) {
+  return z.object({
+    organizationUnitId: z.string().min(1),
+    organizationId: z.string().min(1),
+    title: z.string().trim().min(1, t.titleRequired),
+    description: z.string().trim().optional(),
+    icon: z.string().trim().optional(),
+    required: z.boolean().optional(),
+  });
+}
+
+export const serverCreateBlockSchema = createBlockSchema({
+  titleRequired: 'Title is required',
 });
 
-export type CreateBlockValues = z.infer<typeof createBlockSchema>;
+export type CreateBlockValues = z.infer<typeof serverCreateBlockSchema>;

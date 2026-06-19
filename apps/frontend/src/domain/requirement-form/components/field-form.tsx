@@ -14,41 +14,15 @@ import {
   Switch,
   Textarea,
 } from '@repo/ui';
+import { useTranslations } from 'next-intl';
 import { useState } from 'react';
 import { OptionsEditor } from './options-editor';
-
-const FIELD_TYPE_OPTIONS: { label: string; value: string }[] = [
-  { label: 'Short Text', value: 'TEXT' },
-  { label: 'Long Text', value: 'TEXTAREA' },
-  { label: 'Number', value: 'NUMBERS' },
-  { label: 'Date', value: 'DATE' },
-  { label: 'Email', value: 'EMAIL' },
-  { label: 'Phone', value: 'PHONE' },
-  { label: 'Dropdown', value: 'SINGLE_CHOICE' },
-  { label: 'Multi Select', value: 'MULTI_CHOICE' },
-  { label: 'Checkbox', value: 'CHECKBOX' },
-  { label: 'Document', value: 'DOCUMENT_ACKNOWLEDGEMENT' },
-  { label: 'Info Text', value: 'STATIC_TEXT' },
-];
 
 // Field types that have a fixed, unambiguous system key
 const AUTO_SYSTEM_KEY: Record<string, string> = {
   EMAIL: 'email',
   PHONE: 'phone',
 };
-
-// System keys that can be manually assigned to text-like fields
-const TEXT_SYSTEM_KEY_OPTIONS = [
-  { label: 'None', value: '' },
-  { label: 'First name', value: 'name' },
-  { label: 'Last name', value: 'lastname' },
-  { label: 'Preferred name', value: 'preferred-name' },
-  { label: 'Gender', value: 'gender' },
-  { label: 'Address', value: 'address' },
-  { label: 'ZIP code', value: 'zip' },
-  { label: 'City', value: 'city' },
-  { label: 'Birth date', value: 'birth-date' },
-];
 
 const TEXT_LIKE_TYPES = new Set(['TEXT', 'TEXTAREA', 'DATE', 'NUMBERS']);
 
@@ -71,8 +45,36 @@ export function FieldForm({
   }) => void;
   onCancel: () => void;
 }) {
+  const t = useTranslations('RequirementForm.fieldForm');
+  const tCommon = useTranslations('Common');
   const isEdit = !!initial;
   const isLocked = initial?.lockType ?? false;
+
+  const fieldTypeOptions: { label: string; value: string }[] = [
+    { label: t('shortText'), value: 'TEXT' },
+    { label: t('longText'), value: 'TEXTAREA' },
+    { label: t('number'), value: 'NUMBERS' },
+    { label: t('date'), value: 'DATE' },
+    { label: t('email'), value: 'EMAIL' },
+    { label: t('phone'), value: 'PHONE' },
+    { label: t('dropdown'), value: 'SINGLE_CHOICE' },
+    { label: t('multiSelect'), value: 'MULTI_CHOICE' },
+    { label: t('checkbox'), value: 'CHECKBOX' },
+    { label: t('document'), value: 'DOCUMENT_ACKNOWLEDGEMENT' },
+    { label: t('infoText'), value: 'STATIC_TEXT' },
+  ];
+
+  const textSystemKeyOptions = [
+    { label: t('profileFieldNone'), value: '' },
+    { label: t('firstName'), value: 'name' },
+    { label: t('lastName'), value: 'lastname' },
+    { label: t('preferredName'), value: 'preferred-name' },
+    { label: t('gender'), value: 'gender' },
+    { label: t('address'), value: 'address' },
+    { label: t('zipCode'), value: 'zip' },
+    { label: t('city'), value: 'city' },
+    { label: t('birthDate'), value: 'birth-date' },
+  ];
 
   const [fieldType, setFieldType] = useState(initial?.type ?? '');
   const [label, setLabel] = useState(initial?.label ?? '');
@@ -108,19 +110,19 @@ export function FieldForm({
 
   function commit() {
     if (!fieldType) {
-      setError('Please select a field type.');
+      setError(t('selectTypeError'));
       return;
     }
     if (!label.trim()) {
-      setError(isStaticText ? 'Please enter text.' : 'Please enter a label.');
+      setError(isStaticText ? t('enterTextError') : t('enterLabelError'));
       return;
     }
     if (isDocument && !documentUrl.trim()) {
-      setError('Please enter a document URL.');
+      setError(t('enterDocumentUrlError'));
       return;
     }
     if (showOptions && !options.some((o) => o.label.trim() !== '')) {
-      setError('Please enter at least one option.');
+      setError(t('enterOptionError'));
       return;
     }
 
@@ -165,13 +167,13 @@ export function FieldForm({
     <div className="space-y-4 rounded-lg border p-4">
       {!isLocked && (
         <Field>
-          <FieldLabel>Field Type</FieldLabel>
+          <FieldLabel>{t('fieldTypeLabel')}</FieldLabel>
           <Select value={fieldType} onValueChange={(v) => setFieldType(v)}>
             <SelectTrigger className="w-full">
-              <SelectValue placeholder="Select type..." />
+              <SelectValue placeholder={t('fieldTypePlaceholder')} />
             </SelectTrigger>
             <SelectContent>
-              {FIELD_TYPE_OPTIONS.map((opt) => (
+              {fieldTypeOptions.map((opt) => (
                 <SelectItem key={opt.value} value={opt.value}>
                   {opt.label}
                 </SelectItem>
@@ -184,10 +186,12 @@ export function FieldForm({
       {fieldType && (
         <>
           <Field>
-            <FieldLabel>{isStaticText ? 'Text' : 'Label'}</FieldLabel>
+            <FieldLabel>
+              {isStaticText ? t('textLabel') : t('labelLabel')}
+            </FieldLabel>
             {isStaticText ? (
               <Textarea
-                placeholder="e.g. Please read the following information"
+                placeholder={t('textPlaceholder')}
                 value={label}
                 onChange={(e) => {
                   setLabel(e.target.value);
@@ -197,7 +201,7 @@ export function FieldForm({
               />
             ) : (
               <Input
-                placeholder="e.g. Favorite color"
+                placeholder={t('labelPlaceholder')}
                 value={label}
                 onChange={(e) => {
                   setLabel(e.target.value);
@@ -210,17 +214,17 @@ export function FieldForm({
           {!isDocument && !isStaticText && (
             <>
               <Field>
-                <FieldLabel>Description</FieldLabel>
+                <FieldLabel>{t('descriptionLabel')}</FieldLabel>
                 <Input
-                  placeholder="Optional help text"
+                  placeholder={t('descriptionPlaceholder')}
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
                 />
               </Field>
               <Field>
-                <FieldLabel>Placeholder</FieldLabel>
+                <FieldLabel>{t('placeholderLabel')}</FieldLabel>
                 <Input
-                  placeholder="e.g. Enter your answer"
+                  placeholder={t('placeholderPlaceholder')}
                   value={placeholder}
                   onChange={(e) => setPlaceholder(e.target.value)}
                 />
@@ -230,23 +234,22 @@ export function FieldForm({
 
           {autoSystemKey && (
             <p className="text-muted-foreground text-xs">
-              Profile field: <strong>{autoSystemKey}</strong> — value will be
-              saved to the user&apos;s profile for pre-fill on future forms.
+              {t('profileField', { key: autoSystemKey })}
             </p>
           )}
 
           {showSystemKeyPicker && (
             <Field>
-              <FieldLabel>Profile field (optional)</FieldLabel>
+              <FieldLabel>{t('profileFieldOptional')}</FieldLabel>
               <Select
                 value={manualSystemKey}
                 onValueChange={setManualSystemKey}
               >
                 <SelectTrigger className="w-full">
-                  <SelectValue placeholder="None" />
+                  <SelectValue placeholder={t('profileFieldNone')} />
                 </SelectTrigger>
                 <SelectContent>
-                  {TEXT_SYSTEM_KEY_OPTIONS.map((opt) => (
+                  {textSystemKeyOptions.map((opt) => (
                     <SelectItem key={opt.value || '__none'} value={opt.value}>
                       {opt.label}
                     </SelectItem>
@@ -258,9 +261,9 @@ export function FieldForm({
 
           {isDocument && (
             <Field>
-              <FieldLabel>Document URL</FieldLabel>
+              <FieldLabel>{t('documentUrlLabel')}</FieldLabel>
               <Input
-                placeholder="https://example.com/document.pdf"
+                placeholder={t('documentUrlPlaceholder')}
                 value={documentUrl}
                 onChange={(e) => {
                   setDocumentUrl(e.target.value);
@@ -282,7 +285,7 @@ export function FieldForm({
                 onCheckedChange={setRequired}
               />
               <FieldLabel htmlFor="field-required" className="mb-0">
-                Required
+                {t('required')}
               </FieldLabel>
             </div>
           )}
@@ -293,10 +296,10 @@ export function FieldForm({
 
       <div className="flex justify-end gap-2">
         <Button variant="outline" onClick={onCancel}>
-          Cancel
+          {tCommon('cancel')}
         </Button>
         <Button onClick={commit} disabled={!canSubmit}>
-          {isEdit ? 'Save' : 'Add'}
+          {isEdit ? t('save') : t('add')}
         </Button>
       </div>
     </div>
