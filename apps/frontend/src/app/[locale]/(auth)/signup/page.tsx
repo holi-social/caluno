@@ -1,7 +1,7 @@
 import { getTranslations, setRequestLocale } from 'next-intl/server';
 import { redirect } from '@/i18n/navigation';
 import { resolveAuthPageRedirects } from '@/lib/auth-page-redirect';
-import { getSession } from '@/lib/auth-server';
+import { isAuthenticated } from '@/lib/auth-server';
 import { AuthPageShell } from '../auth-page-shell';
 import { SignupForm } from './signup-form';
 
@@ -21,7 +21,7 @@ export default async function SignupPage({
   const { formRedirectTo, authenticatedRedirect } =
     await resolveAuthPageRedirects(await searchParams);
 
-  if (await getSession()) {
+  if (await isAuthenticated()) {
     redirect({ href: await authenticatedRedirect(), locale });
   }
 
