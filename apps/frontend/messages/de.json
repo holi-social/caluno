@@ -214,5 +214,65 @@
       "nameMin": "Name muss mindestens 2 Zeichen lang sein",
       "typeRequired": "Ein Typ für die Organisationseinheit ist erforderlich"
     }
+  },
+  "Role": {
+    "page": {
+      "title": "Rollen",
+      "subtitle": "Verwalte Rollen und Berechtigungen für {orgName}",
+      "createButton": "Rolle erstellen",
+      "empty": "Noch keine Rollen. Erstelle deine erste Rolle, um loszulegen."
+    },
+    "detail": {
+      "noPermissions": "Dieser Rolle sind keine Berechtigungen zugewiesen.",
+      "typeLabel": "Typ",
+      "system": "System",
+      "custom": "Benutzerdefiniert",
+      "totalPermissionsLabel": "Berechtigungen insgesamt"
+    },
+    "form": {
+      "nameLabel": "Name",
+      "namePlaceholder": "z. B. Projektmanager",
+      "descriptionLabel": "Beschreibung",
+      "descriptionPlaceholder": "Wofür ist diese Rolle gedacht?",
+      "permissionsLabel": "Berechtigungen",
+      "permissionsHint": "Wähle aus, was Benutzer mit dieser Rolle tun dürfen."
+    },
+    "table": {
+      "name": "Name",
+      "description": "Beschreibung",
+      "permissions": "Berechtigungen",
+      "systemBadge": "System",
+      "permissionsCount": "{n} Berechtigungen"
+    },
+    "permissions": {
+      "all": "Alle",
+      "partial": "Teilweise",
+      "none": "Keine"
+    },
+    "action": {
+      "editAria": "Rolle bearbeiten",
+      "deleteTitle": "Rolle löschen",
+      "deleteDescription": "Bist du sicher, dass du diese Rolle löschen möchtest?",
+      "deleteAria": "Rolle löschen",
+      "deleteError": "Rolle konnte nicht gelöscht werden. {error}",
+      "deleteSuccess": "Rolle gelöscht"
+    },
+    "owner": "Eigentümer",
+    "noRole": "Keine Rolle",
+    "select": {
+      "searchPlaceholder": "Rollen suchen...",
+      "empty": "Keine Rollen gefunden.",
+      "addCustom": "Benutzerdefiniert hinzufügen"
+    },
+    "sheet": {
+      "createTitle": "Rolle erstellen",
+      "createDescription": "Definiere eine neue Rolle mit spezifischen Berechtigungen.",
+      "editTitle": "Rolle bearbeiten",
+      "editDescription": "Berechtigungen für die Rolle aktualisieren"
+    },
+    "validation": {
+      "nameMin": "Name muss mindestens 2 Zeichen lang sein",
+      "permissionsRequired": "Mindestens eine Berechtigung ist erforderlich"
+    }
   }
 }

@@ -2,6 +2,7 @@
 
 import type { GetPermissionGroupsQuery } from '@repo/data';
 import { Card, Label, Separator, Switch } from '@repo/ui';
+import { useTranslations } from 'next-intl';
 
 type PermissionGroup = GetPermissionGroupsQuery['permissionGroups'][number];
 
@@ -18,6 +19,7 @@ export function PermissionPicker({
   onChange,
   disabled = false,
 }: PermissionPickerProps) {
+  const t = useTranslations('Role.permissions');
   const togglePermission = (id: string) => {
     if (selectedIds.includes(id)) {
       onChange(selectedIds.filter((sid) => sid !== id));
@@ -52,7 +54,11 @@ export function PermissionPicker({
               <Label className="text-sm font-semibold">{group.label}</Label>
               <div className="flex items-center gap-2">
                 <Label className="text-xs text-muted-foreground">
-                  {allSelected ? 'All' : someSelected ? 'Partial' : 'None'}
+                  {allSelected
+                    ? t('all')
+                    : someSelected
+                      ? t('partial')
+                      : t('none')}
                 </Label>
                 <Switch
                   size="sm"

@@ -4,10 +4,10 @@ import type { CreateRoleInput } from '@repo/data';
 import z from 'zod';
 import { getDataClient } from '@/lib/data-client';
 import { actionClient } from '@/lib/safe-action';
-import { roleSchema } from './schemas';
+import { serverRoleSchema } from './schemas';
 
 export const createRole = actionClient
-  .inputSchema(roleSchema)
+  .inputSchema(serverRoleSchema)
   .action(async ({ parsedInput }) => {
     const data = await getDataClient(parsedInput.organizationUnitId);
 
@@ -21,7 +21,7 @@ export const createRole = actionClient
   });
 
 export const updateRole = actionClient
-  .inputSchema(roleSchema)
+  .inputSchema(serverRoleSchema)
   .bindArgsSchemas<[id: z.ZodUUID]>([z.uuid()])
   .action(async ({ bindArgsParsedInputs: [id], parsedInput }) => {
     const data = await getDataClient(parsedInput.organizationUnitId);

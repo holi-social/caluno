@@ -214,5 +214,65 @@
       "nameMin": "Name must be at least 2 characters",
       "typeRequired": "Organization unit type is required"
     }
+  },
+  "Role": {
+    "page": {
+      "title": "Roles",
+      "subtitle": "Manage roles and permissions for {orgName}",
+      "createButton": "Create Role",
+      "empty": "No roles yet. Create your first role to get started."
+    },
+    "detail": {
+      "noPermissions": "No permissions assigned to this role.",
+      "typeLabel": "Type",
+      "system": "System",
+      "custom": "Custom",
+      "totalPermissionsLabel": "Total permissions"
+    },
+    "form": {
+      "nameLabel": "Name",
+      "namePlaceholder": "e.g. Project Manager",
+      "descriptionLabel": "Description",
+      "descriptionPlaceholder": "What is this role for?",
+      "permissionsLabel": "Permissions",
+      "permissionsHint": "Select what users with this role can do."
+    },
+    "table": {
+      "name": "Name",
+      "description": "Description",
+      "permissions": "Permissions",
+      "systemBadge": "System",
+      "permissionsCount": "{n} permissions"
+    },
+    "permissions": {
+      "all": "All",
+      "partial": "Partial",
+      "none": "None"
+    },
+    "action": {
+      "editAria": "Edit role",
+      "deleteTitle": "Delete Role",
+      "deleteDescription": "Are you sure you wish to delete this Role?",
+      "deleteAria": "Delete role",
+      "deleteError": "Failed to delete Role. {error}",
+      "deleteSuccess": "Role deleted"
+    },
+    "owner": "Owner",
+    "noRole": "No role",
+    "select": {
+      "searchPlaceholder": "Search roles...",
+      "empty": "No roles found.",
+      "addCustom": "Add custom"
+    },
+    "sheet": {
+      "createTitle": "Create Role",
+      "createDescription": "Define a new role with specific permissions.",
+      "editTitle": "Edit Role",
+      "editDescription": "Update permissions for the role"
+    },
+    "validation": {
+      "nameMin": "Name must be at least 2 characters",
+      "permissionsRequired": "At least one permission required"
+    }
   }
 }
