@@ -21,6 +21,7 @@ import {
 } from '@repo/ui';
 import { LogIn, UserRound } from 'lucide-react';
 import { useSearchParams } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import { ButtonClipboard } from '@/components/button-clipboard';
 import MembershipRequestCard from '@/domain/membership-requests/components/membership-request-card';
 import { organizationUnitUrl } from '@/domain/organization/share';
@@ -33,17 +34,12 @@ const TAB_APPROVED = 'APPROVED';
 const TAB_PENDING = MembershipRequestStatus.Pending;
 const TAB_REJECTED = MembershipRequestStatus.Rejected;
 
-const TABS = [
-  { value: TAB_APPROVED, label: 'Approved' },
-  { value: TAB_PENDING, label: 'Pending' },
-  { value: TAB_REJECTED, label: 'Rejected' },
-];
-
 interface Props {
   orgUId: string;
 }
 
 function ApprovedTab({ orgUId }: { orgUId: string }) {
+  const t = useTranslations('Volunteer');
   const { data, isPending } = useMemberships(orgUId);
   const { open: openVolunteerSheet } = useSheetTrigger('volunteer-profile');
 
@@ -63,9 +59,9 @@ function ApprovedTab({ orgUId }: { orgUId: string }) {
     return (
       <EmptyVolunteers>
         <ButtonClipboard
-          text="Copy invite link"
+          text={t('page.copyInviteLink')}
           copyText={organizationUnitUrl(orgUId)}
-          toastMessage="Invite link copied to clipboard"
+          toastMessage={t('page.inviteLinkCopied')}
         />
       </EmptyVolunteers>
     );
@@ -76,9 +72,9 @@ function ApprovedTab({ orgUId }: { orgUId: string }) {
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead>Name</TableHead>
-            <TableHead>Email</TableHead>
-            <TableHead>Roles</TableHead>
+            <TableHead>{t('table.name')}</TableHead>
+            <TableHead>{t('table.email')}</TableHead>
+            <TableHead>{t('table.roles')}</TableHead>
             <TableHead></TableHead>
           </TableRow>
         </TableHeader>
@@ -99,7 +95,7 @@ function ApprovedTab({ orgUId }: { orgUId: string }) {
                   <Button
                     size="icon-xs"
                     variant="outline"
-                    aria-label="View volunteer profile"
+                    aria-label={t('action.viewProfileAria')}
                     onClick={() =>
                       openVolunteerSheet({
                         userId: membership.user.id,
@@ -114,12 +110,12 @@ function ApprovedTab({ orgUId }: { orgUId: string }) {
                   </Button>
                   <Link
                     href={`/admin/${orgUId}/check-in/${membership.user.checkInId}/check-in`}
-                    aria-label="Check-in volunteer"
+                    aria-label={t('action.checkInAria')}
                   >
                     <Button
                       size="icon-xs"
                       variant="outline"
-                      aria-label="Check-in the volunteer to a shift"
+                      aria-label={t('action.checkInShiftAria')}
                     >
                       <LogIn />
                     </Button>
@@ -141,6 +137,7 @@ function RequestsTab({
   orgUId: string;
   status: MembershipRequestStatus;
 }) {
+  const t = useTranslations('Volunteer');
   const { data, isPending } = useMembershipRequests(orgUId, status);
 
   if (isPending) {
@@ -158,7 +155,9 @@ function RequestsTab({
   if (requests.length === 0) {
     return (
       <p className="text-muted-foreground">
-        No {status.toLowerCase()} requests yet.
+        {status === TAB_PENDING
+          ? t('requests.pendingEmpty')
+          : t('requests.rejectedEmpty')}
       </p>
     );
   }
@@ -176,6 +175,8 @@ export default function ManageVolunteersClient({ orgUId }: Props) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const t = useTranslations('Volunteer');
+  const tMembershipStatus = useTranslations('MembershipRequest.status');
 
   const activeTab = searchParams.get('status') ?? TAB_APPROVED;
 
@@ -187,26 +188,30 @@ export default function ManageVolunteersClient({ orgUId }: Props) {
 
   const orgUnitUrl = organizationUnitUrl(orgUId);
 
+  const tabs = [
+    { value: TAB_APPROVED, label: tMembershipStatus('approved') },
+    { value: TAB_PENDING, label: tMembershipStatus('pending') },
+    { value: TAB_REJECTED, label: tMembershipStatus('rejected') },
+  ];
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="page-title">Volunteers</h1>
-          <p className="text-muted-foreground mt-1">
-            Manage volunteers in your organization
-          </p>
+          <h1 className="page-title">{t('page.title')}</h1>
+          <p className="text-muted-foreground mt-1">{t('page.subtitle')}</p>
         </div>
 
         <ButtonClipboard
-          text="Copy invite link"
+          text={t('page.copyInviteLink')}
           copyText={orgUnitUrl}
-          toastMessage="Invite link copied to clipboard"
+          toastMessage={t('page.inviteLinkCopied')}
         />
       </div>
 
       <Tabs value={activeTab} onValueChange={handleTabChange}>
         <TabsList>
-          {TABS.map((tab) => (
+          {tabs.map((tab) => (
             <TabsTrigger key={tab.value} value={tab.value}>
               {tab.label}
             </TabsTrigger>

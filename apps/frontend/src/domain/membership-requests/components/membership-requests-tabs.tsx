@@ -1,6 +1,7 @@
 'use client';
 
 import { MembershipRequestStatus } from '@repo/data';
+import { useTranslations } from 'next-intl';
 import { QueryParamTabs } from '@/components/query-param-tabs';
 
 interface Props<T> {
@@ -9,16 +10,24 @@ interface Props<T> {
   renderItem: (item: T) => React.ReactNode;
 }
 
-const TABS = [
-  { value: MembershipRequestStatus.Pending, label: 'Pending' },
-  { value: MembershipRequestStatus.Accepted, label: 'Approved' },
-  { value: MembershipRequestStatus.Rejected, label: 'Rejected' },
-];
-
 export function MembershipRequestsTabs<
   T extends { id: string; status: MembershipRequestStatus },
 >({ activeStatus, membershipRequests = [], renderItem }: Props<T>) {
-  const tabs = TABS.map((tab) => ({
+  const t = useTranslations('MembershipRequest');
+  const tabs = [
+    {
+      value: MembershipRequestStatus.Pending,
+      label: t('status.pending'),
+    },
+    {
+      value: MembershipRequestStatus.Accepted,
+      label: t('status.approved'),
+    },
+    {
+      value: MembershipRequestStatus.Rejected,
+      label: t('status.rejected'),
+    },
+  ].map((tab) => ({
     ...tab,
     items: membershipRequests.filter((r) => r.status === tab.value),
   }));
@@ -29,7 +38,7 @@ export function MembershipRequestsTabs<
       activeTab={activeStatus}
       searchParamName="status"
       renderItem={renderItem}
-      emptyMessage="No membership requests yet."
+      emptyMessage={t('empty')}
     />
   );
 }

@@ -16,6 +16,7 @@ import {
   Skeleton,
 } from '@repo/ui';
 import { ExternalLink } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import { useSheet } from '@/hooks/use-sheet';
 import { Link } from '@/i18n/navigation';
 
@@ -36,6 +37,22 @@ function InfoRow({ label, value }: { label: string; value: string }) {
   );
 }
 
+function statusLabel(
+  t: ReturnType<typeof useTranslations<'MembershipRequest.status'>>,
+  status: MembershipRequestStatus,
+) {
+  switch (status) {
+    case MembershipRequestStatus.Pending:
+      return t('pending');
+    case MembershipRequestStatus.Rejected:
+      return t('rejected');
+    case MembershipRequestStatus.Accepted:
+      return t('approved');
+    default:
+      return t('pending');
+  }
+}
+
 function VolunteerSheetContent({
   userId,
   status,
@@ -48,6 +65,8 @@ function VolunteerSheetContent({
   email: string;
   checkInId: string;
 }) {
+  const t = useTranslations('Volunteer.sheet');
+  const tStatus = useTranslations('MembershipRequest.status');
   const orgUId = useOrgUId();
   const { data: userProfile, isPending: profilePending } =
     useAdminUserProfile(userId);
@@ -66,13 +85,13 @@ function VolunteerSheetContent({
     <div className="flex flex-col gap-6 mt-4">
       <div className="flex items-center gap-2">
         <Badge variant={statusVariant(status)}>
-          {status.charAt(0) + status.slice(1).toLowerCase()}
+          {statusLabel(tStatus, status)}
         </Badge>
       </div>
 
       <div>
         <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-3">
-          User info
+          {t('userInfo')}
         </p>
         {profilePending ? (
           <div className="space-y-2">
@@ -81,10 +100,12 @@ function VolunteerSheetContent({
           </div>
         ) : (
           <div className="space-y-2">
-            <InfoRow label="Email" value={email} />
-            {address && <InfoRow label="Address" value={address} />}
-            {birthday && <InfoRow label="Birthday" value={birthday} />}
-            <InfoRow label="QR ID" value={checkInId} />
+            <InfoRow label={t('emailLabel')} value={email} />
+            {address && <InfoRow label={t('addressLabel')} value={address} />}
+            {birthday && (
+              <InfoRow label={t('birthdayLabel')} value={birthday} />
+            )}
+            <InfoRow label={t('qrIdLabel')} value={checkInId} />
           </div>
         )}
       </div>
@@ -93,7 +114,7 @@ function VolunteerSheetContent({
 
       <div>
         <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-3">
-          Submitted forms
+          {t('submittedForms')}
         </p>
         {submissionsPending ? (
           <div className="space-y-2">
@@ -101,9 +122,7 @@ function VolunteerSheetContent({
             <Skeleton className="h-9 w-full" />
           </div>
         ) : !submissions || submissions.length === 0 ? (
-          <p className="text-sm text-muted-foreground">
-            No submitted forms yet.
-          </p>
+          <p className="text-sm text-muted-foreground">{t('noSubmissions')}</p>
         ) : (
           <div className="space-y-2">
             {submissions.map((submission) => (
@@ -114,7 +133,7 @@ function VolunteerSheetContent({
                 rel="noopener noreferrer"
                 className="flex items-center justify-between rounded-md border px-3 py-2 text-sm hover:bg-accent transition-colors"
               >
-                <span>{submission.form?.name ?? 'Form'}</span>
+                <span>{submission.form?.name ?? t('formFallback')}</span>
                 <ExternalLink className="h-4 w-4 text-muted-foreground shrink-0 ml-2" />
               </Link>
             ))}
@@ -126,6 +145,7 @@ function VolunteerSheetContent({
 }
 
 export function VolunteerSheet() {
+  const t = useTranslations('Volunteer.sheet');
   const { isOpen, close, getParam } = useSheet(
     'volunteer-profile',
     'userId',
@@ -147,7 +167,7 @@ export function VolunteerSheet() {
     <Sheet open={isOpen} onOpenChange={(open) => !open && close()}>
       <SheetContent className="flex flex-col w-full sm:max-w-md overflow-y-auto">
         <SheetHeader className="px-6 pt-6">
-          <SheetTitle>{name || 'Volunteer'}</SheetTitle>
+          <SheetTitle>{name || t('titleFallback')}</SheetTitle>
         </SheetHeader>
 
         <div className="px-6 pb-10 flex-1">

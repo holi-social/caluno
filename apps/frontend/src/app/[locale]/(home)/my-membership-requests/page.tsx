@@ -1,4 +1,5 @@
 import { MembershipRequestStatus } from '@repo/data';
+import { getTranslations } from 'next-intl/server';
 import { getDataClient } from '@/lib/data-client';
 import Tabs from './tabs';
 
@@ -26,14 +27,13 @@ export default async function MyMembershipRequestsPage({
   const { items: membershipRequests } = await data.membershipRequest.findMine({
     status,
   });
+  const t = await getTranslations('MembershipRequest');
 
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold">My Membership Requests</h1>
-        <p className="text-muted-foreground mt-1">
-          Your requests to join organizations
-        </p>
+        <h1 className="text-3xl font-bold">{t('page.title')}</h1>
+        <p className="text-muted-foreground mt-1">{t('page.subtitle')}</p>
       </div>
 
       <Tabs activeStatus={status} membershipRequests={membershipRequests} />

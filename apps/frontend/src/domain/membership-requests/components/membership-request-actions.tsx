@@ -16,18 +16,13 @@ import {
   Textarea,
 } from '@repo/ui';
 import { CheckIcon, XIcon } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import { useState, useTransition } from 'react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 import z from 'zod';
 import { useRouter } from '@/i18n/navigation';
 import { rejectMembershipRequest } from '../actions';
-
-const rejectSchema = z.object({
-  rejectionReason: z.string().min(1, 'Rejection reason is required'),
-});
-
-type RejectFormValues = z.infer<typeof rejectSchema>;
 
 interface MembershipRequestActionsProps {
   id: string;
@@ -41,6 +36,14 @@ export function MembershipRequestActions({
   const router = useRouter();
   const [isRejectDialogOpen, setIsRejectDialogOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
+  const t = useTranslations('MembershipRequest');
+  const tCommon = useTranslations('Common');
+
+  const rejectSchema = z.object({
+    rejectionReason: z.string().min(1, t('validation.rejectionReasonRequired')),
+  });
+
+  type RejectFormValues = z.infer<typeof rejectSchema>;
 
   const approveMutation = useApproveMembershipRequest();
 
@@ -59,10 +62,10 @@ export function MembershipRequestActions({
   const handleApprove = async () => {
     try {
       await approveMutation.mutateAsync({ id, organizationUnitId });
-      toast.success('Membership request approved');
+      toast.success(t('toast.approved'));
       router.refresh();
     } catch {
-      toast.error('Failed to approve membership request');
+      toast.error(t('toast.approveFailed'));
     }
   };
 
@@ -76,7 +79,7 @@ export function MembershipRequestActions({
       if (result?.serverError) {
         toast.error(result.serverError);
       } else {
-        toast.success('Membership request rejected');
+        toast.success(t('toast.rejected'));
         setIsRejectDialogOpen(false);
         reset();
         router.refresh();
@@ -98,7 +101,7 @@ export function MembershipRequestActions({
         disabled={approveMutation.isPending}
       >
         <CheckIcon />
-        Approve
+        {t('actions.approve')}
       </Button>
 
       <Button
@@ -107,28 +110,27 @@ export function MembershipRequestActions({
         onClick={() => setIsRejectDialogOpen(true)}
       >
         <XIcon />
-        Reject
+        {t('actions.reject')}
       </Button>
 
       <Dialog open={isRejectDialogOpen} onOpenChange={setIsRejectDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Reject membership request</DialogTitle>
+            <DialogTitle>{t('actions.rejectDialogTitle')}</DialogTitle>
             <DialogDescription>
-              Are you sure you want to reject this membership request? Please
-              provide a reason so the volunteer understands why their request
-              was declined.
+              {t('actions.rejectDialogDescription')}
             </DialogDescription>
           </DialogHeader>
 
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
             <Field>
               <FieldLabel htmlFor="rejectionReason">
-                Rejection reason <span className="text-destructive">*</span>
+                {t('actions.rejectionReasonLabel')}{' '}
+                <span className="text-destructive">*</span>
               </FieldLabel>
               <Textarea
                 id="rejectionReason"
-                placeholder="Explain why the request is being rejected..."
+                placeholder={t('actions.rejectionReasonPlaceholder')}
                 disabled={isPending}
                 aria-invalid={!!errors.rejectionReason}
                 {...register('rejectionReason')}
@@ -145,10 +147,10 @@ export function MembershipRequestActions({
                 onClick={handleCancel}
                 disabled={isPending}
               >
-                Cancel
+                {tCommon('cancel')}
               </Button>
               <Button type="submit" variant="destructive" disabled={isPending}>
-                {isPending ? 'Rejecting...' : 'Reject'}
+                {isPending ? t('actions.rejecting') : t('actions.reject')}
               </Button>
             </DialogFooter>
           </form>

@@ -274,5 +274,81 @@
       "nameMin": "Name muss mindestens 2 Zeichen lang sein",
       "permissionsRequired": "Mindestens eine Berechtigung ist erforderlich"
     }
+  },
+  "MembershipRequest": {
+    "page": {
+      "title": "Meine Mitgliedschaftsanfragen",
+      "subtitle": "Deine Anfragen, Organisationen beizutreten"
+    },
+    "status": {
+      "pending": "Ausstehend",
+      "approved": "Genehmigt",
+      "rejected": "Abgelehnt"
+    },
+    "empty": "Noch keine Mitgliedschaftsanfragen.",
+    "card": {
+      "viewButton": "Freiwilligen ansehen",
+      "viewAria": "Freiwilligen ansehen",
+      "rejectionReasonLabel": "Ablehnungsgrund:"
+    },
+    "actions": {
+      "approve": "Genehmigen",
+      "reject": "Ablehnen",
+      "rejecting": "Wird abgelehnt...",
+      "rejectDialogTitle": "Mitgliedschaftsanfrage ablehnen",
+      "rejectDialogDescription": "Bist du sicher, dass du diese Mitgliedschaftsanfrage ablehnen möchtest? Bitte gib einen Grund an, damit der Freiwillige versteht, warum seine Anfrage abgelehnt wurde.",
+      "rejectionReasonLabel": "Ablehnungsgrund",
+      "rejectionReasonPlaceholder": "Erkläre, warum die Anfrage abgelehnt wird...",
+      "cancel": "Abbrechen"
+    },
+    "toast": {
+      "approved": "Mitgliedschaftsanfrage genehmigt",
+      "approveFailed": "Mitgliedschaftsanfrage konnte nicht genehmigt werden",
+      "rejected": "Mitgliedschaftsanfrage abgelehnt",
+      "cancelled": "Mitgliedschaftsanfrage zurückgezogen",
+      "cancelFailed": "Mitgliedschaftsanfrage konnte nicht zurückgezogen werden"
+    },
+    "cancelButton": "Anfrage zurückziehen",
+    "cancelButtonSubmitting": "Wird zurückgezogen...",
+    "validation": {
+      "rejectionReasonRequired": "Ein Ablehnungsgrund ist erforderlich"
+    }
+  },
+  "Volunteer": {
+    "page": {
+      "title": "Freiwillige",
+      "subtitle": "Verwalte Freiwillige in deiner Organisation",
+      "copyInviteLink": "Einladungslink kopieren",
+      "inviteLinkCopied": "Einladungslink in Zwischenablage kopiert"
+    },
+    "table": {
+      "name": "Name",
+      "email": "E-Mail",
+      "roles": "Rollen"
+    },
+    "action": {
+      "viewProfileAria": "Freiwilligenprofil ansehen",
+      "checkInAria": "Freiwilligen einchecken",
+      "checkInShiftAria": "Freiwilligen zu einer Schicht einchecken"
+    },
+    "requests": {
+      "pendingEmpty": "Noch keine ausstehenden Anfragen.",
+      "rejectedEmpty": "Noch keine abgelehnten Anfragen."
+    },
+    "empty": {
+      "title": "Noch keine Freiwilligen",
+      "description": "Teile den Einladungslink, damit sich Freiwillige anmelden."
+    },
+    "sheet": {
+      "userInfo": "Benutzerinfo",
+      "emailLabel": "E-Mail",
+      "addressLabel": "Adresse",
+      "birthdayLabel": "Geburtstag",
+      "qrIdLabel": "QR-ID",
+      "submittedForms": "Eingereichte Formulare",
+      "noSubmissions": "Noch keine eingereichten Formulare.",
+      "formFallback": "Formular",
+      "titleFallback": "Freiwilliger"
+    }
   }
 }

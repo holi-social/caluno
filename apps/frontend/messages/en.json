@@ -274,5 +274,81 @@
       "nameMin": "Name must be at least 2 characters",
       "permissionsRequired": "At least one permission required"
     }
+  },
+  "MembershipRequest": {
+    "page": {
+      "title": "My Membership Requests",
+      "subtitle": "Your requests to join organizations"
+    },
+    "status": {
+      "pending": "Pending",
+      "approved": "Approved",
+      "rejected": "Rejected"
+    },
+    "empty": "No membership requests yet.",
+    "card": {
+      "viewButton": "View volunteer",
+      "viewAria": "View volunteer",
+      "rejectionReasonLabel": "Rejection reason:"
+    },
+    "actions": {
+      "approve": "Approve",
+      "reject": "Reject",
+      "rejecting": "Rejecting...",
+      "rejectDialogTitle": "Reject membership request",
+      "rejectDialogDescription": "Are you sure you want to reject this membership request? Please provide a reason so the volunteer understands why their request was declined.",
+      "rejectionReasonLabel": "Rejection reason",
+      "rejectionReasonPlaceholder": "Explain why the request is being rejected...",
+      "cancel": "Cancel"
+    },
+    "toast": {
+      "approved": "Membership request approved",
+      "approveFailed": "Failed to approve membership request",
+      "rejected": "Membership request rejected",
+      "cancelled": "Membership request cancelled",
+      "cancelFailed": "Failed to cancel membership request"
+    },
+    "cancelButton": "Cancel Request",
+    "cancelButtonSubmitting": "Cancelling...",
+    "validation": {
+      "rejectionReasonRequired": "Rejection reason is required"
+    }
+  },
+  "Volunteer": {
+    "page": {
+      "title": "Volunteers",
+      "subtitle": "Manage volunteers in your organization",
+      "copyInviteLink": "Copy invite link",
+      "inviteLinkCopied": "Invite link copied to clipboard"
+    },
+    "table": {
+      "name": "Name",
+      "email": "Email",
+      "roles": "Roles"
+    },
+    "action": {
+      "viewProfileAria": "View volunteer profile",
+      "checkInAria": "Check-in volunteer",
+      "checkInShiftAria": "Check-in the volunteer to a shift"
+    },
+    "requests": {
+      "pendingEmpty": "No pending requests yet.",
+      "rejectedEmpty": "No rejected requests yet."
+    },
+    "empty": {
+      "title": "No volunteers yet",
+      "description": "Share the invitation link to get volunteers to sign-up."
+    },
+    "sheet": {
+      "userInfo": "User info",
+      "emailLabel": "Email",
+      "addressLabel": "Address",
+      "birthdayLabel": "Birthday",
+      "qrIdLabel": "QR ID",
+      "submittedForms": "Submitted forms",
+      "noSubmissions": "No submitted forms yet.",
+      "formFallback": "Form",
+      "titleFallback": "Volunteer"
+    }
   }
 }
