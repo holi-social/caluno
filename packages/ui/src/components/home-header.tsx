@@ -5,7 +5,7 @@ import { AnimatePresence, motion } from 'motion/react';
 import { useEffect, useState } from 'react';
 import { cn } from '../lib/utils';
 import { Avatar, AvatarFallback, AvatarImage } from './base/avatar';
-import { Cobranding } from './cobranding';
+import { Logo } from './logo';
 
 export type HomeHeaderVariant = 'open' | 'on-scroll';
 
@@ -18,14 +18,10 @@ export interface HomeHeaderProps {
   title?: string;
   /** Notification count rendered as a badge on the bell. */
   notificationCount?: number;
-  /** Organisation logo URL passed to `Cobranding`. */
-  orgLogoUrl?: string | null;
   /** Navigates to the user's profile. */
   onAvatarClick?: () => void;
   /** Opens the notifications panel. */
   onNotificationsClick?: () => void;
-  /** Navigates to the organisation screen. */
-  onOrgClick?: () => void;
   className?: string;
 }
 
@@ -149,10 +145,8 @@ export function HomeHeader({
   avatarUrl,
   title,
   notificationCount,
-  orgLogoUrl,
   onAvatarClick,
   onNotificationsClick,
-  onOrgClick,
   className,
 }: HomeHeaderProps) {
   const [scrolled, setScrolled] = useState(false);
@@ -179,11 +173,7 @@ export function HomeHeader({
         />
 
         <div className="flex shrink-0 items-center gap-3">
-          <Cobranding
-            logoUrl={orgLogoUrl}
-            size={isOpen ? 'big' : 'small'}
-            onClick={onOrgClick}
-          />
+          <Logo width={isOpen ? 42 : 38} />
 
           <BellButton
             count={notificationCount ?? 0}
