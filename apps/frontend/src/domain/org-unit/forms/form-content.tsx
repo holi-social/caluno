@@ -13,6 +13,7 @@ import {
   SelectValue,
   Textarea,
 } from '@repo/ui';
+import { useTranslations } from 'next-intl';
 import type { UseFormReturn } from 'react-hook-form';
 import type { CreateOrgUnitFormValues } from '../schemas';
 
@@ -33,16 +34,17 @@ export function OrgUnitFormContent({
     setValue,
     formState: { errors },
   } = formReturnValues;
+  const t = useTranslations('OrgUnit.form');
 
   return (
     <>
       <Field>
         <FieldLabel htmlFor="name">
-          Name <span className="text-destructive">*</span>
+          {t('nameLabel')} <span className="text-destructive">*</span>
         </FieldLabel>
         <Input
           id="name"
-          placeholder="e.g. Marketing"
+          placeholder={t('namePlaceholder')}
           disabled={isPending}
           aria-invalid={!!errors.name}
           {...register('name')}
@@ -52,7 +54,7 @@ export function OrgUnitFormContent({
 
       <Field>
         <FieldLabel htmlFor="type">
-          Type <span className="text-destructive">*</span>
+          {t('typeLabel')} <span className="text-destructive">*</span>
         </FieldLabel>
 
         <Select
@@ -64,13 +66,13 @@ export function OrgUnitFormContent({
           disabled={isPending}
         >
           <SelectTrigger id="type" aria-invalid={!!errors.typeId}>
-            <SelectValue placeholder="Select a type" />
+            <SelectValue placeholder={t('typePlaceholder')} />
           </SelectTrigger>
 
           <SelectContent>
-            {types.map((t) => (
-              <SelectItem key={t.id} value={t.id}>
-                {t.name}
+            {types.map((type) => (
+              <SelectItem key={type.id} value={type.id}>
+                {type.name}
               </SelectItem>
             ))}
           </SelectContent>
@@ -80,11 +82,11 @@ export function OrgUnitFormContent({
       </Field>
 
       <Field>
-        <FieldLabel htmlFor="contactEmail">Email</FieldLabel>
+        <FieldLabel htmlFor="contactEmail">{t('emailLabel')}</FieldLabel>
         <Input
           id="contactEmail"
           type="email"
-          placeholder="e.g. contact@example.com"
+          placeholder={t('emailPlaceholder')}
           disabled={isPending}
           aria-invalid={!!errors.contactEmail}
           {...register('contactEmail')}
@@ -95,11 +97,11 @@ export function OrgUnitFormContent({
       </Field>
 
       <Field>
-        <FieldLabel htmlFor="phone">Phone</FieldLabel>
+        <FieldLabel htmlFor="phone">{t('phoneLabel')}</FieldLabel>
         <Input
           id="phone"
           type="tel"
-          placeholder="e.g. +1 555 000 0000"
+          placeholder={t('phonePlaceholder')}
           disabled={isPending}
           aria-invalid={!!errors.phone}
           {...register('phone')}
@@ -108,11 +110,11 @@ export function OrgUnitFormContent({
       </Field>
 
       <Field>
-        <FieldLabel htmlFor="website">Website URL</FieldLabel>
+        <FieldLabel htmlFor="website">{t('websiteLabel')}</FieldLabel>
         <Input
           id="website"
           type="url"
-          placeholder="e.g. https://example.com"
+          placeholder={t('websitePlaceholder')}
           disabled={isPending}
           aria-invalid={!!errors.websiteUrl}
           {...register('websiteUrl')}
@@ -123,11 +125,11 @@ export function OrgUnitFormContent({
       </Field>
 
       <Field>
-        <FieldLabel htmlFor="logo">Logo URL</FieldLabel>
+        <FieldLabel htmlFor="logo">{t('logoLabel')}</FieldLabel>
         <Input
           id="logo"
           type="url"
-          placeholder="e.g. https://example.com/logo.png"
+          placeholder={t('logoPlaceholder')}
           disabled={isPending}
           aria-invalid={!!errors.logoUrl}
           {...register('logoUrl')}
@@ -136,10 +138,10 @@ export function OrgUnitFormContent({
       </Field>
 
       <Field>
-        <FieldLabel htmlFor="address">Address</FieldLabel>
+        <FieldLabel htmlFor="address">{t('addressLabel')}</FieldLabel>
         <Input
           id="address"
-          placeholder="e.g. 123 Main St, City"
+          placeholder={t('addressPlaceholder')}
           disabled={isPending}
           aria-invalid={!!errors.address}
           {...register('address')}
@@ -148,10 +150,10 @@ export function OrgUnitFormContent({
       </Field>
 
       <Field>
-        <FieldLabel htmlFor="description">Description</FieldLabel>
+        <FieldLabel htmlFor="description">{t('descriptionLabel')}</FieldLabel>
         <Textarea
           id="description"
-          placeholder="Describe this organizational unit..."
+          placeholder={t('descriptionPlaceholder')}
           disabled={isPending}
           aria-invalid={!!errors.description}
           {...register('description')}

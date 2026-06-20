@@ -10,6 +10,7 @@ import {
   TableHeader,
   TableRow,
 } from '@repo/ui';
+import { useTranslations } from 'next-intl';
 import { Link } from '@/i18n/navigation';
 import { formatDuration, formatTimeRange } from '../formating';
 import { ActionBar } from './action-bar';
@@ -25,15 +26,17 @@ export const TimesheetsTable = ({
   entries,
   organizationUnitId,
 }: TimesheetsTableProps) => {
+  const t = useTranslations('TimeEntry');
+
   return (
     <div className="rounded-md border overflow-hidden">
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead>Shift</TableHead>
-            <TableHead>Volunteer</TableHead>
-            <TableHead>Time</TableHead>
-            <TableHead>Duration</TableHead>
+            <TableHead>{t('table.shift')}</TableHead>
+            <TableHead>{t('table.volunteer')}</TableHead>
+            <TableHead>{t('table.time')}</TableHead>
+            <TableHead>{t('table.duration')}</TableHead>
             <TableHead className="w-0" />
           </TableRow>
         </TableHeader>
@@ -48,13 +51,16 @@ export const TimesheetsTable = ({
                   className="hover:underline block"
                   href={`/admin/${organizationUnitId}/timesheets/${entry.id}`}
                 >
-                  {entry.shiftInstance?.master?.title ?? 'N/A'}
+                  {entry.shiftInstance?.master?.title ??
+                    t('table.notAvailable')}
                 </Link>
               </TableCell>
               <TableCell>
-                {entry.volunteer?.name ?? entry.volunteer?.email ?? 'N/A'}
+                {entry.volunteer?.name ??
+                  entry.volunteer?.email ??
+                  t('table.notAvailable')}
               </TableCell>
-              <TableCell>{formatTimeRange(entry)}</TableCell>
+              <TableCell>{formatTimeRange(entry, t('format.open'))}</TableCell>
               <TableCell>{formatDuration(entry)}</TableCell>
               <TableCell>
                 <ActionBar

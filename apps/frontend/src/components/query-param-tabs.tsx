@@ -2,6 +2,7 @@
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@repo/ui';
 import { useSearchParams } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import { usePathname, useRouter } from '@/i18n/navigation';
 
 export interface StatusTab<T> {
@@ -23,8 +24,9 @@ export function QueryParamTabs<T extends { id: string }>({
   activeTab,
   renderItem,
   searchParamName,
-  emptyMessage = 'No items yet.',
+  emptyMessage,
 }: Props<T>) {
+  const t = useTranslations('QueryParamTabs');
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -49,7 +51,9 @@ export function QueryParamTabs<T extends { id: string }>({
         <TabsContent key={tab.value} value={tab.value}>
           <div className="flex flex-col gap-4">
             {tab.items.length === 0 ? (
-              <p className="text-muted-foreground">{emptyMessage}</p>
+              <p className="text-muted-foreground">
+                {emptyMessage ?? t('empty')}
+              </p>
             ) : (
               tab.items.map((item) => renderItem(item))
             )}

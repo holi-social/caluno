@@ -5,10 +5,10 @@ import { revalidatePath } from 'next/cache';
 import z from 'zod';
 import { getDataClient } from '@/lib/data-client';
 import { actionClient } from '@/lib/safe-action';
-import { createBlockSchema, createFormSchema } from './schemas';
+import { serverCreateBlockSchema, serverCreateFormSchema } from './schemas';
 
 export const createForm = actionClient
-  .inputSchema(createFormSchema)
+  .inputSchema(serverCreateFormSchema)
   .action(async ({ parsedInput }) => {
     const data = await getDataClient(parsedInput.organizationUnitId);
     const form = await data.requirementForm.createForm({
@@ -54,7 +54,7 @@ export const updateForm = actionClient
   });
 
 export const createBlock = actionClient
-  .inputSchema(createBlockSchema)
+  .inputSchema(serverCreateBlockSchema)
   .action(async ({ parsedInput }) => {
     const data = await getDataClient(parsedInput.organizationUnitId);
     const block = await data.requirementForm.createBlock({

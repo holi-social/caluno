@@ -2,6 +2,7 @@
 
 import { Button } from '@repo/ui';
 import { Timer } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import { useState, useTransition } from 'react';
 import { toast } from 'sonner';
 import { closeTimeEntry } from '@/domain/time-entry/actions';
@@ -18,6 +19,7 @@ export const CheckOutButton = ({
 }: CheckinFormProps) => {
   const [isPending, startTransition] = useTransition();
   const router = useRouter();
+  const t = useTranslations('Shift');
 
   const [serverError, setServerError] = useState<string | null>(null);
 
@@ -34,7 +36,7 @@ export const CheckOutButton = ({
       if (result?.serverError) {
         setServerError(result.serverError);
       } else {
-        toast.success('Volunteer checked-out');
+        toast.success(t('checkIn.volunteerCheckedOut'));
         router.push(`/admin/${organizationUnitId}/check-in/scan`);
       }
     });
@@ -55,7 +57,7 @@ export const CheckOutButton = ({
         onClick={handleCheckin}
         type="button"
       >
-        <Timer /> {isPending ? 'Checking-out...' : 'Check-out'}
+        <Timer /> {isPending ? t('checkIn.checkingOut') : t('checkIn.checkOut')}
       </Button>
     </div>
   );

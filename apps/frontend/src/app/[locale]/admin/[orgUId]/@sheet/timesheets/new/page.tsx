@@ -1,16 +1,18 @@
+import { getTranslations } from 'next-intl/server';
 import { createTimeEntry } from '@/domain/time-entry/actions';
 import { TimeEntryForm } from '@/domain/time-entry/components/time-entry-form';
 import { getDataClient } from '@/lib/data-client';
 
 interface CreateTimeEntryPageProps {
-  params: Promise<{ orgUId: string }>;
+  params: Promise<{ orgUId: string; locale: string }>;
 }
 
 export default async function CreateTimeEntryPage({
   params,
 }: CreateTimeEntryPageProps) {
-  const { orgUId } = await params;
+  const { orgUId, locale } = await params;
   const data = await getDataClient(orgUId);
+  const t = await getTranslations({ locale, namespace: 'TimeEntry.sheet' });
 
   const [shifts, allVolunteers] = await Promise.all([
     data.shift.findAll({ limit: 100, offset: 0 }),
@@ -19,8 +21,8 @@ export default async function CreateTimeEntryPage({
 
   return (
     <TimeEntryForm
-      title="Add Time Entry"
-      description="Record a new time entry for a volunteer shift session."
+      title={t('createTitle')}
+      description={t('createDescription')}
       organizationUnitId={orgUId}
       shifts={shifts.items}
       volunteers={allVolunteers}

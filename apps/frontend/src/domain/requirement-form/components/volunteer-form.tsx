@@ -26,7 +26,6 @@ import {
   SelectValue,
   Textarea,
 } from '@repo/ui';
-import { format } from 'date-fns';
 import {
   ArrowLeft,
   ArrowRight,
@@ -34,6 +33,7 @@ import {
   Check,
   Loader2,
 } from 'lucide-react';
+import { useFormatter, useTranslations } from 'next-intl';
 import { useMemo, useState } from 'react';
 import { Controller, type Resolver, useForm } from 'react-hook-form';
 import { toast } from 'sonner';
@@ -47,9 +47,23 @@ const ZIP_RE = /^[A-Z0-9\- ]{3,10}$/i;
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const NUM_RE = /^-?\d+(\.\d+)?$/;
 
+interface ValidationMessages {
+  fieldRequired: (label: string) => string;
+  mustBeNumber: (label: string) => string;
+  mustBeValidDate: (label: string) => string;
+  mustBeValidEmail: (label: string) => string;
+  mustBeValidPhone: (label: string) => string;
+  invalidOptions: (label: string) => string;
+  maxChars: (label: string, maxLen: number) => string;
+  invalidCharacters: (label: string) => string;
+  validPostalCode: (label: string) => string;
+  minAge: (minAge: number) => string;
+}
+
 function buildFieldSchema(
   field: FormBlockField,
   isRequired: boolean,
+  messages: ValidationMessages,
 ): z.ZodTypeAny {
   const { type, label, systemKey, options, minAge } = field;
 
@@ -59,7 +73,9 @@ function buildFieldSchema(
   ) {
     const base = z.enum(['true', 'false'] as const);
     return isRequired
-      ? base.refine((v) => v === 'true', { message: `${label} is required` })
+      ? base.refine((v) => v === 'true', {
+          message: messages.fieldRequired(label),
+        })
       : base.optional();
   }
 
@@ -71,10 +87,10 @@ function buildFieldSchema(
     return isRequired
       ? z
           .string()
-          .min(1, `${label} is required`)
-          .regex(NUM_RE, `${label} must be a number`)
+          .min(1, messages.fieldRequired(label))
+          .regex(NUM_RE, messages.mustBeNumber(label))
       : z.string().refine((v) => !v || NUM_RE.test(v), {
-          message: `${label} must be a number`,
+          message: messages.mustBeNumber(label),
         });
   }
 
@@ -82,12 +98,12 @@ function buildFieldSchema(
     let s = isRequired
       ? z
           .string()
-          .min(1, `${label} is required`)
+          .min(1, messages.fieldRequired(label))
           .refine((v) => !Number.isNaN(Date.parse(v)), {
-            message: `${label} must be a valid date`,
+            message: messages.mustBeValidDate(label),
           })
       : z.string().refine((v) => !v || !Number.isNaN(Date.parse(v)), {
-          message: `${label} must be a valid date`,
+          message: messages.mustBeValidDate(label),
         });
     if (minAge != null) {
       const requiredAge = minAge;
@@ -106,7 +122,7 @@ function buildFieldSchema(
           }
           return age >= requiredAge;
         },
-        { message: `You must be at least ${minAge} years old` },
+        { message: messages.minAge(minAge) },
       );
     }
     return s;
@@ -116,11 +132,11 @@ function buildFieldSchema(
     return isRequired
       ? z
           .string()
-          .min(1, `${label} is required`)
-          .regex(EMAIL_RE, `${label} must be a valid email`)
+          .min(1, messages.fieldRequired(label))
+          .regex(EMAIL_RE, messages.mustBeValidEmail(label))
           .max(254)
       : z.string().refine((v) => !v || (EMAIL_RE.test(v) && v.length <= 254), {
-          message: `${label} must be a valid email`,
+          message: messages.mustBeValidEmail(label),
         });
   }
 
@@ -128,10 +144,10 @@ function buildFieldSchema(
     return isRequired
       ? z
           .string()
-          .min(1, `${label} is required`)
-          .regex(PHONE_RE, `${label} must be a valid phone number`)
+          .min(1, messages.fieldRequired(label))
+          .regex(PHONE_RE, messages.mustBeValidPhone(label))
       : z.string().refine((v) => !v || PHONE_RE.test(v), {
-          message: `${label} must be a valid phone number`,
+          message: messages.mustBeValidPhone(label),
         });
   }
 
@@ -142,7 +158,7 @@ function buildFieldSchema(
       return isRequired ? e : e.optional();
     }
     return isRequired
-      ? z.string().min(1, `${label} is required`)
+      ? z.string().min(1, messages.fieldRequired(label))
       : z.string().optional();
   }
 
@@ -152,10 +168,10 @@ function buildFieldSchema(
       .string()
       .refine(
         (v) => !v || vals.size === 0 || v.split(',').every((t) => vals.has(t)),
-        { message: `${label} contains invalid options` },
+        { message: messages.invalidOptions(label) },
       );
     return isRequired
-      ? s.refine((v) => !!v, { message: `${label} is required` })
+      ? s.refine((v) => !!v, { message: messages.fieldRequired(label) })
       : s;
   }
 
@@ -170,9 +186,7 @@ function buildFieldSchema(
           : type === FieldType.Iban
             ? 34
             : 300; // TEXT and anything else
-  let s = z
-    .string()
-    .max(maxLen, `${label} must be ${maxLen} characters or fewer`);
+  let s = z.string().max(maxLen, messages.maxChars(label, maxLen));
 
   // System-key extra rules (applied regardless of FieldType for defensive coverage)
   const sk = systemKey ?? '';
@@ -183,29 +197,31 @@ function buildFieldSchema(
     sk === 'city'
   ) {
     s = s
-      .max(100, `${label} must be 100 characters or fewer`)
+      .max(100, messages.maxChars(label, 100))
       .refine((v) => !v || NAME_RE.test(v), {
-        message: `${label} contains invalid characters`,
+        message: messages.invalidCharacters(label),
       }) as z.ZodString;
   } else if (sk === 'email') {
     s = s
-      .regex(EMAIL_RE, `${label} must be a valid email`)
+      .regex(EMAIL_RE, messages.mustBeValidEmail(label))
       .max(254) as z.ZodString;
   } else if (sk === 'phone') {
     s = s.refine((v) => !v || PHONE_RE.test(v), {
-      message: `${label} must be a valid phone number`,
+      message: messages.mustBeValidPhone(label),
     }) as z.ZodString;
   } else if (sk === 'address') {
-    s = s.max(200, `${label} must be 200 characters or fewer`) as z.ZodString;
+    s = s.max(200, messages.maxChars(label, 200)) as z.ZodString;
   } else if (sk === 'zip') {
     s = s.refine((v) => !v || ZIP_RE.test(v), {
-      message: `${label} must be a valid postal code`,
+      message: messages.validPostalCode(label),
     }) as z.ZodString;
   } else if (sk === 'gender') {
-    s = s.max(50, `${label} must be 50 characters or fewer`) as z.ZodString;
+    s = s.max(50, messages.maxChars(label, 50)) as z.ZodString;
   }
 
-  return isRequired ? (s as z.ZodString).min(1, `${label} is required`) : s;
+  return isRequired
+    ? (s as z.ZodString).min(1, messages.fieldRequired(label))
+    : s;
 }
 
 export type PublicForm = NonNullable<
@@ -228,8 +244,27 @@ export function VolunteerForm({
   profileData = {},
 }: VolunteerFormProps) {
   const router = useRouter();
+  const t = useTranslations('RequirementForm.volunteerForm');
+  const tActions = useTranslations('RequirementForm.actions');
+  const tValidation = useTranslations('RequirementForm.validation');
   const [step, setStep] = useState(0);
   const [submitted, setSubmitted] = useState(false);
+
+  const validationMessages = useMemo<ValidationMessages>(
+    () => ({
+      fieldRequired: (label) => tValidation('fieldRequired', { label }),
+      mustBeNumber: (label) => tValidation('mustBeNumber', { label }),
+      mustBeValidDate: (label) => tValidation('mustBeValidDate', { label }),
+      mustBeValidEmail: (label) => tValidation('mustBeValidEmail', { label }),
+      mustBeValidPhone: (label) => tValidation('mustBeValidPhone', { label }),
+      invalidOptions: (label) => tValidation('invalidOptions', { label }),
+      maxChars: (label, maxLen) => tValidation('maxChars', { label, maxLen }),
+      invalidCharacters: (label) => tValidation('invalidCharacters', { label }),
+      validPostalCode: (label) => tValidation('validPostalCode', { label }),
+      minAge: (minAge) => tValidation('minAge', { minAge }),
+    }),
+    [tValidation],
+  );
 
   const blocks = useMemo(() => {
     return (
@@ -256,11 +291,15 @@ export function VolunteerForm({
     for (const block of blocks) {
       for (const field of block.fields ?? []) {
         const isRequired = block.effectiveRequired && field.required;
-        shape[field.id] = buildFieldSchema(field, isRequired);
+        shape[field.id] = buildFieldSchema(
+          field,
+          isRequired,
+          validationMessages,
+        );
       }
     }
     return z.object(shape);
-  }, [blocks]);
+  }, [blocks, validationMessages]);
 
   const defaultValues = useMemo(() => {
     const vals: Record<string, string> = {};
@@ -328,11 +367,11 @@ export function VolunteerForm({
           setSubmitted(true);
         }
       } else {
-        toast.error('Failed to submit form');
+        toast.error(tActions('failedToSubmitForm'));
       }
     } catch (error) {
       toast.error(
-        error instanceof Error ? error.message : 'Failed to submit form',
+        error instanceof Error ? error.message : tActions('failedToSubmitForm'),
       );
     }
   }
@@ -344,11 +383,10 @@ export function VolunteerForm({
           <Check className="h-6 w-6 text-green-600" />
         </div>
         <h2 className="mt-4 text-xl font-semibold">
-          {form.settings?.successTitle || 'Application received!'}
+          {form.settings?.successTitle || t('successTitle')}
         </h2>
         <p className="mt-2 text-muted-foreground">
-          {form.settings?.successMessage ||
-            'Your application is pending review. An admin will get back to you shortly.'}
+          {form.settings?.successMessage || t('successMessage')}
         </p>
       </div>
     );
@@ -357,7 +395,7 @@ export function VolunteerForm({
   if (!currentBlock) {
     return (
       <div className="rounded-lg border bg-card p-8 text-center">
-        <p className="text-muted-foreground">This form has no blocks.</p>
+        <p className="text-muted-foreground">{t('noBlocks')}</p>
       </div>
     );
   }
@@ -373,25 +411,21 @@ export function VolunteerForm({
 
       {!isMember && (
         <div className="rounded-lg border bg-blue-50 p-4 text-sm text-blue-800">
-          By submitting this form you will send a membership request to{' '}
-          <strong>{orgName ?? form.name}</strong>. An admin will review and
-          approve your request.
+          {t('membershipRequestNotice', { orgName: orgName ?? form.name })}
         </div>
       )}
 
       <div className="rounded-lg border bg-card p-6">
         <div className="mb-4 flex items-center justify-between">
           <span className="text-sm text-muted-foreground">
-            Step {step + 1} of {blocks.length}
+            {t('step', { current: step + 1, total: blocks.length })}
           </span>
           <span className="text-sm font-medium">{currentBlock.title}</span>
         </div>
 
         <div className="space-y-4">
           {(currentBlock.fields?.length ?? 0) === 0 && (
-            <p className="text-muted-foreground text-sm">
-              This block has no fields configured yet.
-            </p>
+            <p className="text-muted-foreground text-sm">{t('noFields')}</p>
           )}
           {currentBlock.fields?.map((field) => (
             <Controller
@@ -415,7 +449,7 @@ export function VolunteerForm({
           {!isFirstStep ? (
             <Button variant="outline" onClick={() => setStep((s) => s - 1)}>
               <ArrowLeft className="mr-2 h-4 w-4" />
-              Back
+              {t('back')}
             </Button>
           ) : (
             <div />
@@ -426,11 +460,11 @@ export function VolunteerForm({
               {isSubmitting && (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               )}
-              {form.settings?.submitButtonLabel || 'Submit'}
+              {form.settings?.submitButtonLabel || t('submit')}
             </Button>
           ) : (
             <Button onClick={handleNext}>
-              Next
+              {t('next')}
               <ArrowRight className="ml-2 h-4 w-4" />
             </Button>
           )}
@@ -451,6 +485,9 @@ function FieldRenderer({
   onChange: (value: string) => void;
   error?: string;
 }) {
+  const t = useTranslations('RequirementForm.volunteerForm');
+  const formatter = useFormatter();
+
   if (field.type === 'DOCUMENT_ACKNOWLEDGEMENT') {
     return (
       <Field>
@@ -470,7 +507,7 @@ function FieldRenderer({
             }
           />
           <label htmlFor={field.id} className="text-sm">
-            I acknowledge and accept
+            {t('documentAcknowledgement')}
           </label>
         </div>
         {error && <FieldError>{error}</FieldError>}
@@ -492,7 +529,9 @@ function FieldRenderer({
               onChange(checked === true ? 'true' : 'false')
             }
           />
-          <span className="text-sm">{field.description || 'Yes'}</span>
+          <span className="text-sm">
+            {field.description || t('checkboxYes')}
+          </span>
         </div>
         {error && <FieldError>{error}</FieldError>}
       </Field>
@@ -511,7 +550,7 @@ function FieldRenderer({
         )}
         <Select value={value || undefined} onValueChange={onChange}>
           <SelectTrigger className="w-full">
-            <SelectValue placeholder="Select an option" />
+            <SelectValue placeholder={t('selectOption')} />
           </SelectTrigger>
           <SelectContent>
             {field.options?.map((opt) => (
@@ -583,7 +622,9 @@ function FieldRenderer({
               className="w-full justify-start text-left font-normal"
             >
               <CalendarIcon className="mr-2 size-4" />
-              {dateValue ? format(dateValue, 'PPP') : 'Pick a date'}
+              {dateValue
+                ? formatter.dateTime(dateValue, { dateStyle: 'long' })
+                : t('pickDate')}
             </Button>
           </PopoverTrigger>
           <PopoverContent className="w-auto p-0" align="start">

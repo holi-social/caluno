@@ -16,8 +16,8 @@ import {
   SelectValue,
 } from '@repo/ui';
 import { Loader2 } from 'lucide-react';
+import { useFormatter, useTranslations } from 'next-intl';
 import { useEffect } from 'react';
-import { formatDate, formatTime } from '@/lib/formatting';
 import { ShiftInstanceCalendar } from './shift-instance-calendar';
 
 export type PickerValue = {
@@ -34,28 +34,14 @@ type ShiftPickerProps = {
   disabled?: boolean;
 };
 
-const shiftInstanceLabel = (shift: Shift, instance?: ShiftInstanceItem) => {
-  if (instance) {
-    const start = new Date(instance.actualStartsAt);
-    const end = new Date(instance.actualEndsAt);
-    return `${shift.title} · ${formatDate(start)} ${formatTime(start)}–${formatTime(end)}`;
-  } else {
-    return shiftLabel(shift);
-  }
-};
-
-const shiftLabel = (shift: Shift) => {
-  const start = new Date(shift.originalStartsAt);
-  const end = new Date(start.getTime() + shift.durationMinutes * 60000);
-  return `${shift.title} · ${formatRrulePattern(shift.rrule)}  ${formatTime(start)}–${formatTime(end)}`;
-};
-
 export function ShiftPicker({
   shifts,
   value,
   onChange,
   disabled,
 }: ShiftPickerProps) {
+  const t = useTranslations('TimeEntry');
+  const formatter = useFormatter();
   const {
     data: instances,
     isLoading,
@@ -66,6 +52,31 @@ export function ShiftPicker({
   const selectedInstance = instances?.find(
     (i) => i.id === value.shiftInstanceId,
   );
+
+  const shiftInstanceLabel = (shift: Shift, instance?: ShiftInstanceItem) => {
+    if (instance) {
+      const start = new Date(instance.actualStartsAt);
+      const end = new Date(instance.actualEndsAt);
+      return t('picker.shiftInstanceLabel', {
+        title: shift.title,
+        date: formatter.dateTime(start, { dateStyle: 'medium' }),
+        startTime: formatter.dateTime(start, { timeStyle: 'short' }),
+        endTime: formatter.dateTime(end, { timeStyle: 'short' }),
+      });
+    }
+    return shiftLabel(shift);
+  };
+
+  const shiftLabel = (shift: Shift) => {
+    const start = new Date(shift.originalStartsAt);
+    const end = new Date(start.getTime() + shift.durationMinutes * 60000);
+    return t('picker.shiftLabel', {
+      title: shift.title,
+      pattern: formatRrulePattern(shift.rrule),
+      startTime: formatter.dateTime(start, { timeStyle: 'short' }),
+      endTime: formatter.dateTime(end, { timeStyle: 'short' }),
+    });
+  };
 
   // Auto-select non-recurring shifts, as there's only 1 instance and so no choice to be made
   useEffect(() => {
@@ -98,7 +109,7 @@ export function ShiftPicker({
   return (
     <Field>
       <FieldLabel>
-        Select Shift <span className="text-destructive">*</span>
+        {t('form.selectShiftLabel')} <span className="text-destructive">*</span>
       </FieldLabel>
 
       <Select
@@ -111,7 +122,7 @@ export function ShiftPicker({
             placeholder={
               selectedShift
                 ? shiftInstanceLabel(selectedShift, selectedInstance)
-                : 'Select a shift'
+                : t('form.selectShiftPlaceholder')
             }
           />
         </SelectTrigger>
@@ -135,7 +146,7 @@ export function ShiftPicker({
 
           {isError && (
             <p className="text-sm text-destructive mt-1">
-              Failed to load instances.
+              {t('form.loadInstancesError')}
             </p>
           )}
 
@@ -150,7 +161,7 @@ export function ShiftPicker({
         </div>
       ) : (
         <div className="mt-2 rounded-md border border-dashed p-8 text-center text-sm text-muted-foreground">
-          Select a shift to view available dates
+          {t('form.selectShiftHint')}
         </div>
       )}
     </Field>

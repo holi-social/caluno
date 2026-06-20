@@ -1,5 +1,8 @@
+'use client';
+
 import { Button, Card, CardContent, CardHeader, CardTitle } from '@repo/ui';
 import { Send } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import { Link } from '@/i18n/navigation';
 
 interface RequestSentProps {
@@ -7,6 +10,8 @@ interface RequestSentProps {
 }
 
 export function RequestSent({ orgName }: RequestSentProps) {
+  const t = useTranslations('MembershipRequest');
+
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
       <Card className="w-full max-w-lg">
@@ -14,15 +19,16 @@ export function RequestSent({ orgName }: RequestSentProps) {
           <div className="flex justify-center mb-4">
             <Send className="size-12 text-primary" />
           </div>
-          <CardTitle className="text-2xl">Request sent</CardTitle>
+          <CardTitle className="text-2xl">{t('invite.sent.title')}</CardTitle>
           <p className="text-muted-foreground">
-            Your membership request for <strong>{orgName}</strong> has been sent
-            successfully. An admin will review it shortly.
+            {t('invite.sent.message', { orgName })}
           </p>
         </CardHeader>
         <CardContent className="flex justify-center">
           <Button asChild variant="outline">
-            <Link href="/my-membership-requests">View my requests</Link>
+            <Link href="/my-membership-requests">
+              {t('invite.sent.viewRequests')}
+            </Link>
           </Button>
         </CardContent>
       </Card>

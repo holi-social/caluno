@@ -1,4 +1,5 @@
 import { notFound, redirect } from 'next/navigation';
+import { getTranslations } from 'next-intl/server';
 import { VolunteerFormWrapper } from '@/domain/requirement-form/components/volunteer-form-wrapper';
 import { getSession } from '@/lib/auth-server';
 import { getDataClient } from '@/lib/data-client';
@@ -46,13 +47,17 @@ export default async function PublicFormPage({ params }: Props) {
     profileData = raw as Record<string, string>;
   }
 
+  const t = await getTranslations('RequirementForm.volunteerForm');
+
   if (existingSubmission && existingSubmission.status !== 'REJECTED') {
     return (
       <div className="min-h-screen bg-muted/30 py-10 px-4">
         <div className="mx-auto max-w-xl rounded-lg border bg-card p-8 text-center">
-          <h2 className="text-xl font-semibold">Form submitted</h2>
+          <h2 className="text-xl font-semibold">
+            {t('alreadySubmittedTitle')}
+          </h2>
           <p className="mt-2 text-muted-foreground">
-            Your form has been submitted correctly.
+            {t('alreadySubmittedMessage')}
           </p>
         </div>
       </div>

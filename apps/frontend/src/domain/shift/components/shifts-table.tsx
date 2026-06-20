@@ -9,6 +9,7 @@ import {
   TableHeader,
   TableRow,
 } from '@repo/ui';
+import { getTranslations } from 'next-intl/server';
 import { Link } from '@/i18n/navigation';
 import { getFormatting } from '@/lib/formatting-server';
 import { ActionBar } from './action-bar';
@@ -20,23 +21,33 @@ type ShiftsTableProps = {
   orgUId: string;
 };
 
-export const visibilityConfig = {
-  ALL_MEMBERS: { variant: 'outline' as const, label: 'Open shift' },
-  INVITED_MEMBERS: { variant: 'secondary' as const, label: 'Invite only' },
-};
+export function getVisibilityConfig(t: (key: string) => string) {
+  return {
+    ALL_MEMBERS: {
+      variant: 'outline' as const,
+      label: t('visibility.ALL_MEMBERS'),
+    },
+    INVITED_MEMBERS: {
+      variant: 'secondary' as const,
+      label: t('visibility.INVITED_MEMBERS'),
+    },
+  };
+}
 
 export async function ShiftsTable({ shifts, orgUId }: ShiftsTableProps) {
+  const t = await getTranslations('Shift');
   const { formatRange } = await getFormatting();
+  const visibilityConfig = getVisibilityConfig(t);
 
   return (
     <div className="rounded-md border overflow-x-auto">
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead>Name</TableHead>
-            <TableHead>First Date</TableHead>
-            <TableHead>Pattern</TableHead>
-            <TableHead>Visibility</TableHead>
+            <TableHead>{t('table.name')}</TableHead>
+            <TableHead>{t('table.firstDate')}</TableHead>
+            <TableHead>{t('table.pattern')}</TableHead>
+            <TableHead>{t('table.visibility')}</TableHead>
             <TableHead></TableHead>
           </TableRow>
         </TableHeader>

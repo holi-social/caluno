@@ -20,6 +20,7 @@ import {
   PopoverTrigger,
 } from '@repo/ui';
 import { CheckIcon, ChevronDownIcon, PlusIcon } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import { useState } from 'react';
 import { useRouter } from '@/i18n/navigation';
 
@@ -45,6 +46,8 @@ export function RoleSelectCell({
   const { mutate: updateRoles, isPending: isUpdating } =
     useUpdateMembershipRoles();
 
+  const t = useTranslations('Role');
+  const tCommon = useTranslations('Common');
   const isOwner = roles.some(
     (role) => role.isInternal && role.name === 'Owner',
   );
@@ -53,7 +56,7 @@ export function RoleSelectCell({
 
   // Owner is always shown as plain text, no dropdown
   if (isOwner) {
-    return <span className="text-sm">Owner</span>;
+    return <span className="text-sm">{t('owner')}</span>;
   }
 
   // Read-only users see custom role name or nothing
@@ -61,7 +64,7 @@ export function RoleSelectCell({
     return customRole ? (
       <span className="text-sm">{customRole.name}</span>
     ) : (
-      <span className="text-sm text-muted-foreground">-</span>
+      <span className="text-sm text-muted-foreground">{tCommon('dash')}</span>
     );
   }
 
@@ -83,7 +86,7 @@ export function RoleSelectCell({
           disabled={rolesLoading || isUpdating}
         >
           <span className="truncate">
-            {customRole ? customRole.name : 'No role'}
+            {customRole ? customRole.name : t('noRole')}
           </span>
           <ChevronDownIcon className="ml-2 size-4 shrink-0 opacity-50" />
         </Button>
@@ -95,9 +98,9 @@ export function RoleSelectCell({
         sideOffset={4}
       >
         <Command>
-          <CommandInput placeholder="Search roles..." />
+          <CommandInput placeholder={t('select.searchPlaceholder')} />
           <CommandList>
-            <CommandEmpty>No roles found.</CommandEmpty>
+            <CommandEmpty>{t('select.empty')}</CommandEmpty>
             <CommandGroup>
               {availableRoles
                 ?.filter((role) => !role.isInternal)
@@ -140,7 +143,7 @@ export function RoleSelectCell({
                 }}
               >
                 <PlusIcon className="mr-2 size-4" />
-                Add custom
+                {t('select.addCustom')}
               </CommandItem>
             </CommandGroup>
           </CommandList>

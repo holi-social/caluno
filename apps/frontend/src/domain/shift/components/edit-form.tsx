@@ -1,6 +1,7 @@
 'use client';
 
 import { useQueryClient, useShift } from '@repo/data/react';
+import { useTranslations } from 'next-intl';
 import { useEffect, useMemo, useState, useTransition } from 'react';
 import { updateShift } from '../actions';
 import type { ShiftFormValues } from '../schemas';
@@ -25,6 +26,7 @@ export function EditShiftForm({
   const [serverError, setServerError] = useState<string | null>(null);
   const { data: shift, error, isLoading } = useShift(shiftId);
   const queryClient = useQueryClient();
+  const t = useTranslations('Shift');
 
   useEffect(() => {
     onPendingChange?.(isPending);
@@ -79,11 +81,11 @@ export function EditShiftForm({
   };
 
   if (isLoading) {
-    return <p className="text-sm text-muted-foreground">Loading...</p>;
+    return <p className="text-sm text-muted-foreground">{t('loading')}</p>;
   }
 
   if (error || !shift) {
-    return <p className="text-sm text-muted-foreground">Shift not found.</p>;
+    return <p className="text-sm text-muted-foreground">{t('notFound')}</p>;
   }
 
   return (

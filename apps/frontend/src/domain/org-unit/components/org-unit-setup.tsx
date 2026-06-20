@@ -1,6 +1,7 @@
 'use client';
 
 import type { OrganizationUnitType, OrgUnitTreeNode } from '@repo/data';
+import { useTranslations } from 'next-intl';
 import { useState } from 'react';
 import { useSheetTrigger } from '@/hooks/use-sheet';
 import { DeleteOrgUnitDialog } from './delete-org-unit-dialog';
@@ -27,13 +28,10 @@ export function OrgUnitSetup({
     useState<OrgUnitTreeNode | null>(null);
 
   const { open: openOrgUnitSheet } = useSheetTrigger(CREATE_EDIT_FORM_ID);
+  const t = useTranslations('OrgUnit.tree');
 
   if (!tree) {
-    return (
-      <p className="text-muted-foreground">
-        No org unit tree found. Contact your administrator.
-      </p>
-    );
+    return <p className="text-muted-foreground">{t('empty')}</p>;
   }
 
   return (

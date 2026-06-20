@@ -4,6 +4,7 @@ import { Button } from '@repo/ui';
 import { addDays, addWeeks, format, getISOWeek, subWeeks } from 'date-fns';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { useSearchParams } from 'next/navigation';
+import { useFormatter, useTranslations } from 'next-intl';
 import { useCallback } from 'react';
 import { useRouter } from '@/i18n/navigation';
 
@@ -18,6 +19,8 @@ export function WeeklyCalendarNav({
 }: WeeklyCalendarNavProps) {
   const searchParams = useSearchParams();
   const router = useRouter();
+  const t = useTranslations('Shift');
+  const formatter = useFormatter();
 
   const navigate = useCallback(
     (direction: 'prev' | 'next') => {
@@ -38,9 +41,15 @@ export function WeeklyCalendarNav({
       </Button>
 
       <span className="text-sm font-medium">
-        <span className="font-bold">KW {getISOWeek(weekStart)}</span>{' '}
-        {format(weekStart, 'MMM d')} –{' '}
-        {format(addDays(weekStart, 6), 'MMM d, yyyy')}
+        <span className="font-bold">
+          {t('calendar.week', { week: getISOWeek(weekStart) })}
+        </span>{' '}
+        {formatter.dateTime(weekStart, { month: 'short', day: 'numeric' })} –{' '}
+        {formatter.dateTime(addDays(weekStart, 6), {
+          month: 'short',
+          day: 'numeric',
+          year: 'numeric',
+        })}
       </span>
 
       <Button variant="outline" size="icon-sm" onClick={() => navigate('next')}>

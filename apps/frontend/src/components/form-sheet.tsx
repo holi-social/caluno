@@ -12,6 +12,7 @@ import {
   SheetTitle,
   useIsMobile,
 } from '@repo/ui';
+import { useTranslations } from 'next-intl';
 import { useState } from 'react';
 import { useRouter } from '@/i18n/navigation';
 import { wait } from '@/lib/wait';
@@ -53,6 +54,7 @@ export const FormSheet = ({
   children,
 }: Props) => {
   const isMobile = useIsMobile();
+  const t = useTranslations('Common');
 
   return (
     <Sheet open={open} onOpenChange={() => onOpenChange(!open)} defaultOpen>
@@ -82,12 +84,12 @@ export const FormSheet = ({
           <SheetFooter className="flex flex-row">
             <SheetClose asChild>
               <Button variant="secondary" className="flex-1" disabled={pending}>
-                Cancel
+                {t('cancel')}
               </Button>
             </SheetClose>
 
             <Button type="submit" className="flex-1" disabled={pending}>
-              {pending ? 'Saving...' : 'Save changes'}
+              {pending ? t('saving') : t('saveChanges')}
             </Button>
           </SheetFooter>
         </form>

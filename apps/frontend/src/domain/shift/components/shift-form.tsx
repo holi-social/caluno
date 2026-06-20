@@ -9,6 +9,7 @@ import {
   Input,
   Textarea,
 } from '@repo/ui';
+import { useTranslations } from 'next-intl';
 import { type Resolver, useForm } from 'react-hook-form';
 import { type ShiftFormValues, shiftFormSchema } from '../schemas';
 import { RecurrenceSelect } from './recurrence-select';
@@ -30,8 +31,20 @@ export const ShiftForm = ({
   formId,
   defaultLocation,
 }: FormProps) => {
+  const t = useTranslations('Shift');
+
+  const schema = shiftFormSchema({
+    nameRequired: t('validation.nameRequired'),
+    startTimeRequired: t('validation.startTimeRequired'),
+    endTimeRequired: t('validation.endTimeRequired'),
+    organizationUnitRequired: t('validation.organizationUnitRequired'),
+    organizationUnitIdRequired: t('validation.organizationUnitRequired'),
+    shiftIdRequired: t('validation.shiftIdRequired'),
+    minMaxVolunteers: t('validation.minMaxVolunteers'),
+  });
+
   const form = useForm<ShiftFormValues>({
-    resolver: zodResolver(shiftFormSchema) as Resolver<ShiftFormValues>,
+    resolver: zodResolver(schema) as Resolver<ShiftFormValues>,
     defaultValues: {
       name: '',
       location: defaultLocation ?? '',
@@ -58,12 +71,12 @@ export const ShiftForm = ({
     <form id={formId} onSubmit={handleSubmit(onSubmit)} className="space-y-4">
       <Field>
         <FieldLabel htmlFor="name">
-          Shift name <span className="text-destructive">*</span>
+          {t('form.nameLabel')} <span className="text-destructive">*</span>
         </FieldLabel>
         <Input
           id="name"
           disabled={isPending}
-          placeholder="e.g. Morning cashier shift"
+          placeholder={t('form.namePlaceholder')}
           aria-invalid={!!errors.name}
           {...register('name')}
         />
@@ -72,7 +85,8 @@ export const ShiftForm = ({
 
       <Field>
         <FieldLabel>
-          Date and time<span className="text-destructive"> *</span>
+          {t('form.dateTimeLabel')}
+          <span className="text-destructive"> *</span>
         </FieldLabel>
         <DatePickerWithTimeRange
           value={{ start: startsAt ?? null, end: endsAt ?? null }}
@@ -94,11 +108,11 @@ export const ShiftForm = ({
       />
 
       <Field>
-        <FieldLabel htmlFor="location">Location</FieldLabel>
+        <FieldLabel htmlFor="location">{t('form.locationLabel')}</FieldLabel>
         <Input
           id="location"
           disabled={isPending}
-          placeholder="Main Hall, 123 Main St"
+          placeholder={t('form.locationPlaceholder')}
           aria-invalid={!!errors.location}
           {...register('location')}
         />
@@ -106,11 +120,13 @@ export const ShiftForm = ({
       </Field>
 
       <Field>
-        <FieldLabel htmlFor="instructions">Instructions</FieldLabel>
+        <FieldLabel htmlFor="instructions">
+          {t('form.instructionsLabel')}
+        </FieldLabel>
         <Textarea
           id="instructions"
           rows={4}
-          placeholder="Describe volunteers' responsibilities and requirements for this shift"
+          placeholder={t('form.instructionsPlaceholder')}
           disabled={isPending}
           aria-invalid={!!errors.instructions}
           {...register('instructions')}

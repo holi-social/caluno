@@ -2,6 +2,7 @@
 
 import { Button } from '@repo/ui';
 import { Edit, Loader2, Trash } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import { useTransition } from 'react';
 import { toast } from 'sonner';
 import { DeleteAlertDialog } from '@/components/delete-alert-dialog';
@@ -20,6 +21,7 @@ export const ActionBar = ({
   size = 'sm',
 }: ActionBarProps) => {
   const router = useRouter();
+  const t = useTranslations('TimeEntry');
 
   const [isDeleting, startDeleteTransition] = useTransition();
 
@@ -29,9 +31,9 @@ export const ActionBar = ({
     startDeleteTransition(async () => {
       const result = await deleteTimeEntry({ id, organizationUnitId });
       if (result?.serverError) {
-        toast.error(`Failed to delete time entry. ${result.serverError}`);
+        toast.error(t('action.deleteError', { error: result.serverError }));
       } else {
-        toast.success('Time entry deleted');
+        toast.success(t('action.deleteSuccess'));
         router.push(`/admin/${organizationUnitId}/timesheets`);
       }
     });
@@ -43,20 +45,20 @@ export const ActionBar = ({
         <Button
           size={buttonSize}
           variant="outline"
-          aria-label="Edit Time Entry"
+          aria-label={t('action.editAria')}
         >
           <Edit />
         </Button>
       </Link>
       <DeleteAlertDialog
-        title="Delete time entry"
-        description="Are you sure you wish to delete this time entry?"
+        title={t('action.deleteTitle')}
+        description={t('action.deleteDescription')}
         onDelete={handleDelete}
         trigger={
           <Button
             size={buttonSize}
             variant="destructive"
-            aria-label="Delete time entry"
+            aria-label={t('action.deleteTitle')}
             disabled={isDeleting}
           >
             {isDeleting ? <Loader2 className="animate-spin" /> : <Trash />}

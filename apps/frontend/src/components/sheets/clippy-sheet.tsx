@@ -13,6 +13,7 @@ import {
   SheetTrigger,
   useIsMobile,
 } from '@repo/ui';
+import { useTranslations } from 'next-intl';
 
 interface Props extends React.PropsWithChildren {
   open: () => void;
@@ -41,6 +42,7 @@ export function ClippySheet({
   children,
 }: Props) {
   const isMobile = useIsMobile();
+  const t = useTranslations('Common');
 
   return (
     <Sheet open={isOpen} onOpenChange={(isOpen) => (isOpen ? open() : close())}>
@@ -67,7 +69,7 @@ export function ClippySheet({
           {showCancelButton && (
             <SheetClose asChild>
               <Button variant="outline" className="flex-1" disabled={isPending}>
-                Cancel
+                {t('cancel')}
               </Button>
             </SheetClose>
           )}
@@ -79,7 +81,7 @@ export function ClippySheet({
               className="flex-1"
               disabled={isPending}
             >
-              {isPending ? 'Saving...' : 'Save changes'}
+              {isPending ? t('saving') : t('saveChanges')}
             </Button>
           )}
         </SheetFooter>

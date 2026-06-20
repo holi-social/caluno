@@ -9,6 +9,7 @@ import {
   Input,
   Textarea,
 } from '@repo/ui';
+import { useTranslations } from 'next-intl';
 import { useTransition } from 'react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
@@ -23,10 +24,15 @@ interface CreateBlockProps {
 
 export function CreateBlock({ orgUId, organizationId }: CreateBlockProps) {
   const router = useRouter();
+  const t = useTranslations('RequirementForm.block');
+  const tActions = useTranslations('RequirementForm.actions');
+  const tValidation = useTranslations('RequirementForm.validation');
   const [isPending, startTransition] = useTransition();
 
   const form = useForm<CreateBlockValues>({
-    resolver: zodResolver(createBlockSchema),
+    resolver: zodResolver(
+      createBlockSchema({ titleRequired: tValidation('titleRequired') }),
+    ),
     defaultValues: {
       organizationUnitId: orgUId,
       organizationId,
@@ -53,7 +59,7 @@ export function CreateBlock({ orgUId, organizationId }: CreateBlockProps) {
           `/admin/${orgUId}/requirement-forms/blocks/${result.data.id}/edit`,
         );
       } else {
-        toast.error('Failed to create block');
+        toast.error(tActions('failedToSaveBlock'));
       }
     });
   };
@@ -62,12 +68,12 @@ export function CreateBlock({ orgUId, organizationId }: CreateBlockProps) {
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
       <Field>
         <FieldLabel htmlFor="title">
-          Block Title <span className="text-destructive">*</span>
+          {t('blockTitleLabel')} <span className="text-destructive">*</span>
         </FieldLabel>
         <Input
           id="title"
           type="text"
-          placeholder="e.g. Personal Information"
+          placeholder={t('titlePlaceholder')}
           disabled={isPending}
           aria-invalid={!!errors.title}
           {...register('title')}
@@ -76,10 +82,10 @@ export function CreateBlock({ orgUId, organizationId }: CreateBlockProps) {
       </Field>
 
       <Field>
-        <FieldLabel htmlFor="description">Description</FieldLabel>
+        <FieldLabel htmlFor="description">{t('descriptionLabel')}</FieldLabel>
         <Textarea
           id="description"
-          placeholder="What does this block collect?"
+          placeholder={t('createDescriptionPlaceholder')}
           disabled={isPending}
           aria-invalid={!!errors.description}
           {...register('description')}
@@ -90,11 +96,11 @@ export function CreateBlock({ orgUId, organizationId }: CreateBlockProps) {
       </Field>
 
       <Field>
-        <FieldLabel htmlFor="icon">Icon</FieldLabel>
+        <FieldLabel htmlFor="icon">{t('iconLabel')}</FieldLabel>
         <Input
           id="icon"
           type="text"
-          placeholder="e.g. user"
+          placeholder={t('iconPlaceholder')}
           disabled={isPending}
           aria-invalid={!!errors.icon}
           {...register('icon')}
@@ -111,10 +117,10 @@ export function CreateBlock({ orgUId, organizationId }: CreateBlockProps) {
             router.push(`/admin/${orgUId}/requirement-forms/blocks`)
           }
         >
-          Cancel
+          {t('cancel')}
         </Button>
         <Button type="submit" disabled={isPending}>
-          {isPending ? 'Creating...' : 'Create Block'}
+          {isPending ? t('creating') : t('createBlock')}
         </Button>
       </div>
     </form>

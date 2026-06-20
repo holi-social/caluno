@@ -1,4 +1,5 @@
-import { addDays, format } from 'date-fns';
+import { addDays } from 'date-fns';
+import { getFormatter } from 'next-intl/server';
 import { getDataClient } from '@/lib/data-client';
 import { ShiftCard } from './shift-card';
 
@@ -7,8 +8,6 @@ type WeeklyCalendarProps = {
   canManage?: boolean;
   weekStart: Date;
 };
-
-const DAY_LABELS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
 function isSameUtcDay(a: Date, b: Date): boolean {
   return (
@@ -27,13 +26,14 @@ export async function WeeklyCalendar({
 
   const dataClient = await getDataClient(orgUId);
   const instances = await dataClient.shift.findForWeek(weekStart, weekEnd);
+  const formatter = await getFormatter();
 
   const days = Array.from({ length: 7 }, (_, i) => {
     const date = addDays(weekStart, i);
     return {
       date,
-      label: DAY_LABELS[i],
-      dateLabel: format(date, 'MMM. d'),
+      label: formatter.dateTime(date, { weekday: 'short' }),
+      dateLabel: formatter.dateTime(date, { month: 'short', day: 'numeric' }),
       instances: instances.filter((inst) =>
         isSameUtcDay(new Date(inst.actualStartsAt), date),
       ),

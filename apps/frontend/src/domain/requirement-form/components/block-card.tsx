@@ -4,8 +4,8 @@ import type { FormBlock, RequirementForm } from '@repo/data';
 import { Badge, Button, Card, CardContent } from '@repo/ui';
 import type { LucideIcon } from 'lucide-react';
 import { Eye, FileCheck, MapPin, Pencil, Trash2, User } from 'lucide-react';
+import { useFormatter, useTranslations } from 'next-intl';
 import { useState } from 'react';
-import { FormattedDate } from '@/components/formatted-date';
 import { useSheetTrigger } from '@/hooks/use-sheet';
 import { ConfirmDialog } from './confirm-dialog';
 
@@ -24,6 +24,9 @@ export function BlockCard({
   forms: RequirementForm[];
   onDelete?: (id: string) => Promise<void>;
 }) {
+  const t = useTranslations('RequirementForm.card');
+  const tTable = useTranslations('RequirementForm.table');
+  const { dateTime } = useFormatter();
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const { open: openSheet } = useSheetTrigger('block-form');
@@ -63,11 +66,11 @@ export function BlockCard({
 
           <div className="mt-4">
             <p className="text-muted-foreground text-xs font-medium uppercase tracking-wide">
-              Fields
+              {t('fields')}
             </p>
             {fieldCount === 0 ? (
               <p className="text-muted-foreground mt-2 text-sm">
-                No fields yet.
+                {t('noFieldsYet')}
               </p>
             ) : (
               <div className="mt-2 flex flex-wrap gap-1.5">
@@ -83,7 +86,7 @@ export function BlockCard({
           {usedInForms.length > 0 && (
             <div className="mt-4">
               <p className="text-muted-foreground text-xs font-medium uppercase tracking-wide">
-                Used in
+                {t('usedIn')}
               </p>
               <div className="mt-2 flex flex-wrap gap-1.5">
                 {usedInForms.map((f) => (
@@ -96,7 +99,7 @@ export function BlockCard({
           )}
 
           <p className="text-muted-foreground mt-4 text-xs">
-            Updated <FormattedDate date={block.updatedAt} />
+            {t('updated', { date: dateTime(new Date(block.updatedAt)) })}
           </p>
         </div>
 
@@ -113,12 +116,12 @@ export function BlockCard({
             {!locked && block.isEditable ? (
               <>
                 <Pencil className="mr-1.5 size-4" />
-                Edit
+                {t('edit')}
               </>
             ) : (
               <>
                 <Eye className="mr-1.5 size-4" />
-                View
+                {t('view')}
               </>
             )}
           </Button>
@@ -128,8 +131,8 @@ export function BlockCard({
               size="icon"
               className="text-muted-foreground hover:text-destructive size-10 shrink-0"
               onClick={() => setConfirmOpen(true)}
-              aria-label="Delete block"
-              title="Delete block"
+              aria-label={tTable('deleteBlockAria')}
+              title={tTable('deleteBlockAria')}
               disabled={locked}
             >
               <Trash2 className="size-4" />
@@ -141,21 +144,21 @@ export function BlockCard({
       <ConfirmDialog
         open={confirmOpen}
         onOpenChange={setConfirmOpen}
-        title="Delete block?"
+        title={t('deleteBlockTitle')}
         description={
           <>
-            <strong>{block.title}</strong> will be permanently removed.
+            <strong>{block.title}</strong> {t('deleteBlockDescription')}
           </>
         }
-        confirmLabel="Delete"
-        pendingLabel="Deleting..."
+        confirmLabel={tTable('deleteBlockAria')}
+        pendingLabel={t('deleting')}
         pending={deleting}
         onConfirm={handleDelete}
       >
         {usedInForms.length > 0 && (
           <div>
             <p className="text-destructive mb-2 text-sm font-medium">
-              Used in the following forms:
+              {t('usedInForms')}
             </p>
             <div className="flex flex-wrap gap-1.5">
               {usedInForms.map((f) => (

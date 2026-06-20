@@ -14,6 +14,7 @@ import {
   CardTitle,
 } from '@repo/ui';
 import { UserRound } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import { MembershipRequestActions } from '@/domain/membership-requests/components/membership-request-actions';
 import { useSheetTrigger } from '@/hooks/use-sheet';
 import { formatDate } from '@/lib/formatting';
@@ -24,6 +25,7 @@ interface Props {
 
 export default function MembershipRequestCard({ request }: Props) {
   const { open } = useSheetTrigger('volunteer-profile');
+  const t = useTranslations('MembershipRequest');
 
   const handleViewVolunteer = () => {
     open({
@@ -58,7 +60,7 @@ export default function MembershipRequestCard({ request }: Props) {
       {request.status === MembershipRequestStatus.Pending && (
         <CardContent className="flex justify-between items-center">
           <Button variant="outline" size="sm" onClick={handleViewVolunteer}>
-            View volunteer
+            {t('card.viewButton')}
           </Button>
           <MembershipRequestActions
             id={request.id}
@@ -72,7 +74,7 @@ export default function MembershipRequestCard({ request }: Props) {
           {request.rejectionReason ? (
             <p className="text-muted-foreground text-sm">
               <span className="font-medium text-foreground">
-                Rejection reason:
+                {t('card.rejectionReasonLabel')}
               </span>{' '}
               {request.rejectionReason}
             </p>
@@ -83,7 +85,7 @@ export default function MembershipRequestCard({ request }: Props) {
             variant="outline"
             size="icon-xs"
             onClick={handleViewVolunteer}
-            aria-label="View volunteer"
+            aria-label={t('card.viewAria')}
           >
             <UserRound />
           </Button>

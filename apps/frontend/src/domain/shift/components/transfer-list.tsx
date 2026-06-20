@@ -2,6 +2,7 @@
 
 import { Badge, Button, Input } from '@repo/ui';
 import { ArrowLeftRight, CirclePlus, CircleX } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import { useState } from 'react';
 
 type Member = {
@@ -26,6 +27,7 @@ export function TransferList({
 }: TransferListProps) {
   const [availableSearch, setAvailableSearch] = useState('');
   const [invitedSearch, setInvitedSearch] = useState('');
+  const t = useTranslations('Shift');
 
   const invitedIds = new Set(invited.map((m) => m.id));
   const readonlySet = new Set(readonlyIds);
@@ -57,13 +59,15 @@ export function TransferList({
       {/* Available panel */}
       <div className="flex flex-col gap-2 flex-1 h-full min-w-0">
         <div className="flex items-center justify-between">
-          <span className="text-sm font-medium">Available</span>
+          <span className="text-sm font-medium">
+            {t('transferList.available')}
+          </span>
           <Badge variant="outline">{filteredAvailable.length}</Badge>
         </div>
         <div className="flex flex-col border rounded-md overflow-hidden flex-1 min-h-0 shadow-xs">
           <div className="flex items-center gap-2 px-3 py-2.5 border-b">
             <Input
-              placeholder="Name or email"
+              placeholder={t('transferList.searchPlaceholder')}
               value={availableSearch}
               onChange={(e) => setAvailableSearch(e.target.value)}
               className="border-0 shadow-none p-0 h-auto focus-visible:ring-0"
@@ -87,7 +91,7 @@ export function TransferList({
                   variant="ghost"
                   size="icon-xs"
                   onClick={() => addMember(member)}
-                  aria-label={`Add ${member.name}`}
+                  aria-label={t('transferList.addAria', { name: member.name })}
                 >
                   <CirclePlus className="size-4" />
                 </Button>
@@ -102,13 +106,15 @@ export function TransferList({
       {/* Invited panel */}
       <div className="flex flex-col gap-2 flex-1 h-full min-w-0">
         <div className="flex items-center justify-between">
-          <span className="text-sm font-medium">Invited</span>
+          <span className="text-sm font-medium">
+            {t('transferList.invited')}
+          </span>
           <Badge variant="outline">{invited.length}</Badge>
         </div>
         <div className="flex flex-col border rounded-md overflow-hidden flex-1 min-h-0 shadow-xs">
           <div className="flex items-center gap-2 px-3 py-2.5 border-b">
             <Input
-              placeholder="Name or email"
+              placeholder={t('transferList.searchPlaceholder')}
               value={invitedSearch}
               onChange={(e) => setInvitedSearch(e.target.value)}
               className="border-0 shadow-none p-0 h-auto focus-visible:ring-0"
@@ -133,7 +139,9 @@ export function TransferList({
                     variant="ghost"
                     size="icon-xs"
                     onClick={() => removeMember(member.id)}
-                    aria-label={`Remove ${member.name}`}
+                    aria-label={t('transferList.removeAria', {
+                      name: member.name,
+                    })}
                   >
                     <CircleX className="size-4" />
                   </Button>

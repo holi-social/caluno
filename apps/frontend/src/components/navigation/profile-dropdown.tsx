@@ -3,6 +3,7 @@
 import { Button, Popover, PopoverContent, PopoverTrigger } from '@repo/ui';
 import { SettingsIcon, UserIcon } from 'lucide-react';
 import Image from 'next/image';
+import { useTranslations } from 'next-intl';
 import { Link } from '@/i18n/navigation';
 
 interface ProfileDropdownProps {
@@ -11,6 +12,8 @@ interface ProfileDropdownProps {
 }
 
 export function ProfileDropdown({ userName, userImage }: ProfileDropdownProps) {
+  const t = useTranslations('Navigation');
+
   return (
     <Popover>
       <PopoverTrigger asChild>
@@ -36,7 +39,7 @@ export function ProfileDropdown({ userName, userImage }: ProfileDropdownProps) {
           className="flex items-center gap-2 rounded-sm px-2 py-1.5 text-sm hover:bg-accent"
         >
           <SettingsIcon className="h-4 w-4" />
-          Edit profile
+          {t('editProfile')}
         </Link>
       </PopoverContent>
     </Popover>

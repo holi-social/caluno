@@ -9,6 +9,7 @@ import {
   Input,
   Textarea,
 } from '@repo/ui';
+import { useTranslations } from 'next-intl';
 import { useTransition } from 'react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
@@ -23,10 +24,15 @@ interface CreateFormProps {
 
 export function CreateForm({ orgUId, organizationId }: CreateFormProps) {
   const router = useRouter();
+  const t = useTranslations('RequirementForm.form');
+  const tActions = useTranslations('RequirementForm.actions');
+  const tValidation = useTranslations('RequirementForm.validation');
   const [isPending, startTransition] = useTransition();
 
   const form = useForm<CreateFormValues>({
-    resolver: zodResolver(createFormSchema),
+    resolver: zodResolver(
+      createFormSchema({ nameRequired: tValidation('nameRequired') }),
+    ),
     defaultValues: {
       organizationUnitId: orgUId,
       organizationId,
@@ -51,7 +57,7 @@ export function CreateForm({ orgUId, organizationId }: CreateFormProps) {
           `/admin/${orgUId}/requirement-forms/${result.data.id}/builder`,
         );
       } else {
-        toast.error('Failed to create form');
+        toast.error(tActions('failedToCreateForm'));
       }
     });
   };
@@ -60,12 +66,12 @@ export function CreateForm({ orgUId, organizationId }: CreateFormProps) {
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
       <Field>
         <FieldLabel htmlFor="name">
-          Form Name <span className="text-destructive">*</span>
+          {t('nameLabel')} <span className="text-destructive">*</span>
         </FieldLabel>
         <Input
           id="name"
           type="text"
-          placeholder="e.g. Onboarding Form"
+          placeholder={t('namePlaceholder')}
           disabled={isPending}
           aria-invalid={!!errors.name}
           {...register('name')}
@@ -74,10 +80,10 @@ export function CreateForm({ orgUId, organizationId }: CreateFormProps) {
       </Field>
 
       <Field>
-        <FieldLabel htmlFor="description">Description</FieldLabel>
+        <FieldLabel htmlFor="description">{t('descriptionLabel')}</FieldLabel>
         <Textarea
           id="description"
-          placeholder="What is this form for?"
+          placeholder={t('descriptionPlaceholder')}
           disabled={isPending}
           aria-invalid={!!errors.description}
           {...register('description')}
@@ -94,10 +100,10 @@ export function CreateForm({ orgUId, organizationId }: CreateFormProps) {
           disabled={isPending}
           onClick={() => router.push(`/admin/${orgUId}/requirement-forms`)}
         >
-          Cancel
+          {t('cancel')}
         </Button>
         <Button type="submit" disabled={isPending}>
-          {isPending ? 'Creating...' : 'Create Form'}
+          {isPending ? t('creating') : t('create')}
         </Button>
       </div>
     </form>

@@ -20,22 +20,23 @@ import {
   HomeIcon,
   LogOutIcon,
 } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import { Link, useRouter } from '@/i18n/navigation';
 import { signOut } from '@/lib/auth';
 
 export const menuItems = [
   {
-    title: 'Home',
+    titleKey: 'home',
     href: '/',
     icon: HomeIcon,
   },
   {
-    title: 'Organizations',
+    titleKey: 'organizations',
     href: '/organizations',
     icon: BuildingIcon,
   },
   {
-    title: 'My Membership Requests',
+    titleKey: 'myMembershipRequests',
     href: '/my-membership-requests',
     icon: ClipboardListIcon,
   },
@@ -43,6 +44,8 @@ export const menuItems = [
 
 export function HomeSidebar() {
   const router = useRouter();
+  const t = useTranslations('Navigation');
+  const tCommon = useTranslations('Common');
 
   async function handleSignOut() {
     await signOut();
@@ -57,13 +60,13 @@ export function HomeSidebar() {
           <div className="bg-primary flex h-8 w-8 items-center justify-center rounded-lg">
             <Building2 className="text-primary-foreground h-4 w-4" />
           </div>
-          <span className="font-semibold">Clippy</span>
+          <span className="font-semibold">{tCommon('brand')}</span>
         </div>
       </SidebarHeader>
 
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel>Menu</SidebarGroupLabel>
+          <SidebarGroupLabel>{tCommon('menu')}</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {menuItems.map((item) => (
@@ -71,7 +74,7 @@ export function HomeSidebar() {
                   <SidebarMenuButton asChild>
                     <Link href={item.href}>
                       <item.icon className="h-4 w-4" />
-                      <span>{item.title}</span>
+                      <span>{t(item.titleKey as Parameters<typeof t>[0])}</span>
                     </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
@@ -88,7 +91,7 @@ export function HomeSidebar() {
           onClick={handleSignOut}
         >
           <LogOutIcon className="mr-2 h-4 w-4" />
-          Sign Out
+          {tCommon('signOut')}
         </Button>
       </SidebarFooter>
     </Sidebar>

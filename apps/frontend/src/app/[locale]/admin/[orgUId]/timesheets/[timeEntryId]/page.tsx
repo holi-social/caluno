@@ -9,6 +9,7 @@ import {
   User,
 } from 'lucide-react';
 import { notFound } from 'next/navigation';
+import { getTranslations } from 'next-intl/server';
 import { ActionBar } from '@/domain/time-entry/components/action-bar';
 import { formatDuration, formatTimeRange } from '@/domain/time-entry/formating';
 import { getDataClient } from '@/lib/data-client';
@@ -30,13 +31,15 @@ export default async function TimeEntryDetailPage({
     notFound();
   }
 
+  const t = await getTranslations('TimeEntry');
+
   const isOpen = !entry.endedAt;
 
   return (
     <div className="space-y-6">
       <div className="flex justify-between">
         <div>
-          <h1 className="page-title">Time Entry</h1>
+          <h1 className="page-title">{t('detail.title')}</h1>
         </div>
         <ActionBar id={timeEntryId} organizationUnitId={orgUId} />
       </div>
@@ -51,7 +54,7 @@ export default async function TimeEntryDetailPage({
                   <span>
                     {entry.volunteer?.name ??
                       entry.volunteer?.email ??
-                      'Unknown volunteer'}
+                      t('detail.unknownVolunteer')}
                   </span>
                 </li>
                 <li className="flex gap-2">
@@ -60,7 +63,7 @@ export default async function TimeEntryDetailPage({
                 </li>
                 <li className="flex gap-2">
                   <Calendars className="text-muted-foreground shrink-0" />
-                  <span>{formatTimeRange(entry)}</span>
+                  <span>{formatTimeRange(entry, t('format.open'))}</span>
                 </li>
 
                 {entry.notes && (
@@ -80,27 +83,32 @@ export default async function TimeEntryDetailPage({
               <dl className="space-y-4">
                 <div>
                   <dt className="text-muted-foreground mb-2 flex gap-2 items-center">
-                    <Calendar className="size-4 shrink-0" /> Shift
+                    <Calendar className="size-4 shrink-0" />{' '}
+                    {t('detail.shiftLabel')}
                   </dt>
                   <dd className="ml-6">{entry.shiftInstance?.master?.title}</dd>
                 </div>
 
                 <div>
                   <dt className="text-muted-foreground mb-2 flex gap-2 items-center">
-                    <CalendarFold className="size-4 shrink-0" /> Status
+                    <CalendarFold className="size-4 shrink-0" />{' '}
+                    {t('detail.statusLabel')}
                   </dt>
                   <dd className="ml-6">
                     {isOpen ? (
-                      <Badge variant="info">Open</Badge>
+                      <Badge variant="info">{t('detail.openStatus')}</Badge>
                     ) : (
-                      <Badge variant="success">Closed</Badge>
+                      <Badge variant="success">
+                        {t('detail.closedStatus')}
+                      </Badge>
                     )}
                   </dd>
                 </div>
 
                 <div>
                   <dt className="text-muted-foreground mb-2 flex gap-2 items-center">
-                    <Clock className="size-4 shrink-0" /> Created
+                    <Clock className="size-4 shrink-0" />{' '}
+                    {t('detail.createdLabel')}
                   </dt>
                   <dd className="ml-6">
                     {formatDateTime(new Date(entry.createdAt))}
