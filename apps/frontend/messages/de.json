@@ -96,7 +96,9 @@
     "orgUnits": " Organisationseinheiten",
     "selectOrganization": "Organisation auswählen",
     "editProfile": "Profil bearbeiten",
-    "admin": "Admin"
+    "admin": "Admin",
+    "qrIdTitle": "QR-ID",
+    "qrIdDescription": "Dies ist dein persönlicher QR-Code zum Einchecken in Schichten"
   },
   "Pagination": {
     "showing": "{start}-{end} von {total} {name} werden angezeigt",
@@ -108,11 +110,41 @@
     "reloadPage": "Seite neu laden",
     "goHome": "Zur Startseite",
     "generic": "Etwas ist schiefgelaufen",
+    "digestLabel": "ID: {digest}",
     "orgNotFound": {
       "title": "Organisation nicht gefunden",
       "description": "Die gesuchte Organisation existiert nicht.",
       "homeLink": "Zu deinen Organisationen"
     }
+  },
+  "MemberSelect": {
+    "availableLabel": "Verfügbar",
+    "invitedLabel": "Eingeladen",
+    "searchPlaceholder": "Name oder E-Mail suchen...",
+    "noResults": "Keine Mitglieder gefunden",
+    "allSelected": "Alle Mitglieder wurden ausgewählt",
+    "inviteByLink": "Per Link einladen",
+    "copyToast": "Teile diesen Link mit der Freiwilligen"
+  },
+  "QRScanner": {
+    "error": {
+      "noPermission": {
+        "title": "Kamerazugriff erforderlich",
+        "description": "Bitte erlaube den Kamerazugriff in den Browsereinstellungen, um QR-Codes zu scannen."
+      },
+      "noCamera": {
+        "title": "Keine Kamera gefunden",
+        "description": "Auf diesem Gerät wurde keine Kamera erkannt. Bitte schließe eine Kamera an oder verwende ein Gerät mit eingebauter Kamera."
+      },
+      "generic": {
+        "title": "Kamerafehler",
+        "description": "Auf die Kamera konnte nicht zugegriffen werden. Bitte versuche es erneut."
+      }
+    },
+    "rescan": "Erneut scannen"
+  },
+  "QueryParamTabs": {
+    "empty": "Noch keine Einträge."
   },
   "Settings": {
     "title": "Einstellungen"
@@ -312,6 +344,42 @@
     "cancelButtonSubmitting": "Wird zurückgezogen...",
     "validation": {
       "rejectionReasonRequired": "Ein Ablehnungsgrund ist erforderlich"
+    },
+    "invite": {
+      "accepted": {
+        "title": "Alles erledigt",
+        "message": "Du bist bereits Mitglied von {orgName}.",
+        "cta": "Zu {orgName} gehen"
+      },
+      "pending": {
+        "title": "Anfrage ausstehend",
+        "message": "Deine Mitgliedschaftsanfrage für {orgName} wird noch geprüft. Ein Admin wird sie in Kürze bearbeiten.",
+        "viewRequests": "Meine Anfragen ansehen"
+      },
+      "rejected": {
+        "title": "Anfrage abgelehnt",
+        "message": "Deine Mitgliedschaftsanfrage für {orgName} wurde abgelehnt. Kontaktiere einen Admin, wenn du denkst, dass das ein Fehler war.",
+        "homeButton": "Zur Startseite",
+        "requestsButton": "Meine Anfragen"
+      },
+      "sent": {
+        "title": "Anfrage gesendet",
+        "message": "Deine Mitgliedschaftsanfrage für {orgName} wurde erfolgreich gesendet. Ein Admin wird sie in Kürze bearbeiten.",
+        "viewRequests": "Meine Anfragen ansehen"
+      },
+      "requirements": {
+        "title": "{orgName} beitreten",
+        "description": "Bevor du dieser Organisation beitreten kannst, musst du die folgenden Anforderungen erfüllen.",
+        "requiredBadge": "Erforderlich",
+        "statusLabel": "Status: {status, select, approved {genehmigt} rejected {abgelehnt} pending {ausstehend} other {ausstehend}}"
+      },
+      "error": {
+        "title": "Etwas ist schiefgelaufen",
+        "homeButton": "Zur Startseite",
+        "requestsButton": "Meine Anfragen"
+      },
+      "joinErrorFallback": "Organisation konnte nicht beigetreten werden",
+      "unexpectedError": "Unerwartete Antwort vom Server"
     }
   },
   "Volunteer": {
@@ -461,6 +529,8 @@
       "searchVolunteerTitle": "Oder suche nach einer Freiwilligen",
       "checkInTitle": "Einchecken",
       "checkOutTitle": "Auschecken",
+      "selectOrgTitle": "Einchecken",
+      "selectOrgDescription": "Wähle die Organisation aus, in die der Freiwillige eingecheckt werden soll.",
       "blockedTitle": "Check-in verweigert",
       "blockedDescription": "Der Freiwillige darf nicht einchecken. Er muss sich an die Zentrale wenden, um Hilfe zu erhalten.",
       "checkedInAt": "Eingecheckt: {time}",
@@ -524,7 +594,9 @@
       "createdLabel": "Erstellt",
       "volunteersBadge": "{count}",
       "volunteersBadgeWithMax": "{count} von {max}",
-      "timesheetsBadge": "{count}"
+      "timesheetsBadge": "{count}",
+      "volunteersEmpty": "Noch keine Freiwilligen.",
+      "timesheetsEmpty": "Noch keine Stundenzettel."
     },
     "notFound": "Schicht nicht gefunden.",
     "loading": "Wird geladen...",

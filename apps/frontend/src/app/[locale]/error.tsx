@@ -23,7 +23,9 @@ export default function RootError({ error, reset }: ErrorProps) {
         <div className="rounded-lg bg-destructive/10 p-4 text-sm text-destructive">
           <p className="font-medium">{error.message}</p>
           {error.digest && (
-            <p className="text-xs mt-1 opacity-70">ID: {error.digest}</p>
+            <p className="text-xs mt-1 opacity-70">
+              {t('digestLabel', { digest: error.digest })}
+            </p>
           )}
         </div>
         <div className="flex justify-center gap-2">

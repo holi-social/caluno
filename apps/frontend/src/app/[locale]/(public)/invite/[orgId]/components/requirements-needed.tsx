@@ -2,6 +2,7 @@
 
 import { Button, Card, CardContent, CardHeader, CardTitle } from '@repo/ui';
 import { CheckCircle2, Circle, XCircle } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import { Link } from '@/i18n/navigation';
 
 interface Requirement {
@@ -42,6 +43,7 @@ export function OrgRequirementsNeeded({
   requirements,
   requirementStatuses,
 }: OrgRequirementsProps) {
+  const t = useTranslations('MembershipRequest');
   const statusMap = new Map(
     requirementStatuses.map((s) => [s.requirementId, s.status]),
   );
@@ -50,10 +52,11 @@ export function OrgRequirementsNeeded({
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
       <Card className="w-full max-w-lg">
         <CardHeader className="text-center">
-          <CardTitle className="text-2xl">Join {orgName}</CardTitle>
+          <CardTitle className="text-2xl">
+            {t('invite.requirements.title', { orgName })}
+          </CardTitle>
           <p className="text-muted-foreground">
-            Before you can join this organization, you need to complete the
-            following requirements.
+            {t('invite.requirements.description')}
           </p>
         </CardHeader>
         <CardContent className="space-y-6">
@@ -82,7 +85,7 @@ export function OrgRequirementsNeeded({
                       <span className="font-medium">{req.name}</span>
                       {req.mandatory && (
                         <span className="text-xs text-red-500 font-medium">
-                          Required
+                          {t('invite.requirements.requiredBadge')}
                         </span>
                       )}
                     </div>
@@ -92,7 +95,9 @@ export function OrgRequirementsNeeded({
                       </p>
                     )}
                     <span className="text-xs text-muted-foreground capitalize mt-1 block">
-                      Status: {status.toLowerCase()}
+                      {t('invite.requirements.statusLabel', {
+                        status: status.toLowerCase(),
+                      })}
                     </span>
                   </div>
                 </div>
@@ -102,7 +107,7 @@ export function OrgRequirementsNeeded({
 
           <div className="flex justify-center">
             <Button asChild variant="outline">
-              <Link href="/">Go to home</Link>
+              <Link href="/">{t('invite.error.homeButton')}</Link>
             </Button>
           </div>
         </CardContent>

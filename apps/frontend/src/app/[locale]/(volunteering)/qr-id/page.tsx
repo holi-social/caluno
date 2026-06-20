@@ -1,9 +1,11 @@
 import { Hash, User } from 'lucide-react';
+import { getTranslations } from 'next-intl/server';
 import { QRCodeSVG } from 'qrcode.react';
 import { getDataClient } from '@/lib/data-client';
 
 export default async function QrIdPage() {
   const data = await getDataClient();
+  const t = await getTranslations('Navigation');
 
   const { checkInId, name } = await data.user.getMe();
   const easyReadCheckinId = checkInId.match(/.{1,4}/g)?.join('-') ?? checkInId;
@@ -14,10 +16,8 @@ export default async function QrIdPage() {
     <div className="max-w-2xl">
       <div>
         <div>
-          <h1 className="page-title">QR iD</h1>
-          <p className="text-muted-foreground">
-            This is your personal QR code to check-in to shifts
-          </p>
+          <h1 className="page-title">{t('qrIdTitle')}</h1>
+          <p className="text-muted-foreground">{t('qrIdDescription')}</p>
         </div>
         <div className="px-2 py-8">
           <div className="flex justify-center">

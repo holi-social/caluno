@@ -96,7 +96,9 @@
     "orgUnits": "Org Units",
     "selectOrganization": "Select organization",
     "editProfile": "Edit profile",
-    "admin": "Admin"
+    "admin": "Admin",
+    "qrIdTitle": "QR iD",
+    "qrIdDescription": "This is your personal QR code to check in to shifts"
   },
   "Pagination": {
     "showing": "Showing {start}-{end} of {total} {name}",
@@ -108,11 +110,41 @@
     "reloadPage": "Reload page",
     "goHome": "Go home",
     "generic": "Something went wrong",
+    "digestLabel": "ID: {digest}",
     "orgNotFound": {
       "title": "Organization Not Found",
       "description": "The organization you're looking for doesn't exist.",
       "homeLink": "Go to your organizations"
     }
+  },
+  "MemberSelect": {
+    "availableLabel": "Available",
+    "invitedLabel": "Invited",
+    "searchPlaceholder": "Search name or email...",
+    "noResults": "No members found",
+    "allSelected": "All members have been selected",
+    "inviteByLink": "Invite by link",
+    "copyToast": "Share this link with the volunteer"
+  },
+  "QRScanner": {
+    "error": {
+      "noPermission": {
+        "title": "Camera access required",
+        "description": "Please allow camera access in your browser settings to scan QR codes."
+      },
+      "noCamera": {
+        "title": "No camera found",
+        "description": "No camera was detected on this device. Please connect a camera or use a device with a built-in camera."
+      },
+      "generic": {
+        "title": "Camera error",
+        "description": "Unable to access the camera. Please try again."
+      }
+    },
+    "rescan": "Rescan"
+  },
+  "QueryParamTabs": {
+    "empty": "No items yet."
   },
   "Settings": {
     "title": "Settings"
@@ -312,6 +344,42 @@
     "cancelButtonSubmitting": "Cancelling...",
     "validation": {
       "rejectionReasonRequired": "Rejection reason is required"
+    },
+    "invite": {
+      "accepted": {
+        "title": "You're all set",
+        "message": "You're already a member of {orgName}.",
+        "cta": "Go to {orgName}"
+      },
+      "pending": {
+        "title": "Request pending",
+        "message": "Your membership request for {orgName} is pending approval. An admin will review it shortly.",
+        "viewRequests": "View my requests"
+      },
+      "rejected": {
+        "title": "Request rejected",
+        "message": "Your membership request for {orgName} was rejected. Contact an admin if you believe this was a mistake.",
+        "homeButton": "Go to home",
+        "requestsButton": "My requests"
+      },
+      "sent": {
+        "title": "Request sent",
+        "message": "Your membership request for {orgName} has been sent successfully. An admin will review it shortly.",
+        "viewRequests": "View my requests"
+      },
+      "requirements": {
+        "title": "Join {orgName}",
+        "description": "Before you can join this organization, you need to complete the following requirements.",
+        "requiredBadge": "Required",
+        "statusLabel": "Status: {status, select, approved {approved} rejected {rejected} pending {pending} other {pending}}"
+      },
+      "error": {
+        "title": "Something went wrong",
+        "homeButton": "Go to home",
+        "requestsButton": "My requests"
+      },
+      "joinErrorFallback": "Failed to join organization",
+      "unexpectedError": "Unexpected response from server"
     }
   },
   "Volunteer": {
@@ -461,6 +529,8 @@
       "searchVolunteerTitle": "Or search for a volunteer",
       "checkInTitle": "Check-in",
       "checkOutTitle": "Check-out",
+      "selectOrgTitle": "Check-in",
+      "selectOrgDescription": "Choose the organization you want to check the volunteer into.",
       "blockedTitle": "Check-in denied",
       "blockedDescription": "The volunteer is not permitted to check-in. They must contact Headquarters for assistance.",
       "checkedInAt": "Checked in: {time}",
@@ -524,7 +594,9 @@
       "createdLabel": "Created",
       "volunteersBadge": "{count}",
       "volunteersBadgeWithMax": "{count} of {max}",
-      "timesheetsBadge": "{count}"
+      "timesheetsBadge": "{count}",
+      "volunteersEmpty": "No volunteers yet.",
+      "timesheetsEmpty": "No timesheets yet."
     },
     "notFound": "Shift not found.",
     "loading": "Loading...",

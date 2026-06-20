@@ -108,7 +108,11 @@ export default async function ShiftViewPage({ params }: ShiftViewPageProps) {
                 </Button>
               </CardTitle>
             </CardHeader>
-            <CardContent>TODO</CardContent>
+            <CardContent>
+              <p className="text-muted-foreground">
+                {t('detail.volunteersEmpty')}
+              </p>
+            </CardContent>
           </Card>
 
           <Card>
@@ -125,7 +129,11 @@ export default async function ShiftViewPage({ params }: ShiftViewPageProps) {
                 </Button>
               </CardTitle>
             </CardHeader>
-            <CardContent>TODO</CardContent>
+            <CardContent>
+              <p className="text-muted-foreground">
+                {t('detail.timesheetsEmpty')}
+              </p>
+            </CardContent>
           </Card>
         </div>
 
