@@ -96,7 +96,9 @@ export class ShiftMutationResolver {
 
     return {
       status: result.status,
-      shift: this.shiftMapper.toModelOrThrow(result.shift),
+      shiftInstance: this.shiftInstanceMapper.toModelOrThrow(
+        result.shiftInstance,
+      ),
       membershipRequestId: result.membershipRequest?.id ?? null,
       requirementProfile: result.requirementProfile
         ? plainToInstance(RequirementProfile, result.requirementProfile)

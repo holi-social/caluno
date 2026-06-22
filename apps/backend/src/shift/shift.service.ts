@@ -773,7 +773,7 @@ export class ShiftService {
     instanceId: string,
   ): Promise<{
     status: JoinStatus;
-    shift: ShiftEntity;
+    shiftInstance: ShiftInstanceEntity;
     membershipRequest?: MembershipRequestEntity;
     requirementProfile?: RequirementProfileEntity;
     requirementStatuses?: Array<{
@@ -826,7 +826,7 @@ export class ShiftService {
       if (result.status === 'REQUIREMENTS_NEEDED') {
         return {
           status: JoinStatus.REQUIREMENTS_NEEDED,
-          shift,
+          shiftInstance: instance,
           requirementProfile: result.requirementProfile,
           requirementStatuses: result.requirementStatuses,
         };
@@ -835,7 +835,7 @@ export class ShiftService {
       if (result.status === 'PENDING') {
         return {
           status: JoinStatus.PENDING,
-          shift,
+          shiftInstance: instance,
           membershipRequest: result.membershipRequest,
         };
       }
@@ -843,7 +843,7 @@ export class ShiftService {
       if (result.status === 'REJECTED') {
         return {
           status: JoinStatus.REJECTED,
-          shift,
+          shiftInstance: instance,
           membershipRequest: result.membershipRequest,
         };
       }
@@ -851,14 +851,14 @@ export class ShiftService {
       await this.joinShiftInstance(userId, instanceId);
       return {
         status: JoinStatus.JOINED,
-        shift,
+        shiftInstance: instance,
       };
     }
 
     await this.joinShiftInstance(userId, instanceId);
     return {
       status: JoinStatus.JOINED,
-      shift,
+      shiftInstance: instance,
     };
   }
 }

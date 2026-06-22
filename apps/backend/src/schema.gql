@@ -296,7 +296,7 @@ type JoinShiftInstanceResult {
   membershipRequestId: ID
   requirementProfile: RequirementProfile
   requirementStatuses: [UserRequirementStatus!]
-  shift: Shift!
+  shiftInstance: ShiftInstance!
   status: JoinStatus!
 }
 

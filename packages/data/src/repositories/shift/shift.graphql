@@ -96,24 +96,20 @@ mutation InviteShiftInstanceVolunteers(
 mutation JoinShiftInstance($instanceId: String!) {
   joinShiftInstance(instanceId: $instanceId) {
     status
-    shift {
+    shiftInstance {
       id
-      title
-      slug
-      instructions
-      location
-      visibility
-      createdAt
-      maxVolunteers
-      rrule
-      originalStartsAt
-      durationMinutes
-      organizationUnitId
-      createdBy {
+      actualStartsAt
+      actualEndsAt
+      overrideTitle
+      overrideInstructions
+      overrideLocation
+      overrideMaxVolunteers
+      isException
+      isCancelled
+      occurrenceIndex
+      master {
         id
-        name
-        email
-        image
+        title
       }
     }
     membershipRequestId

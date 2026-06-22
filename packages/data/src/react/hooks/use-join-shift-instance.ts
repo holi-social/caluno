@@ -13,7 +13,7 @@ export function useJoinShiftInstance() {
     mutationFn: (instanceId: string) => repository.joinInstance(instanceId),
     onSuccess: (result) => {
       queryClient.invalidateQueries({
-        queryKey: ['shift', result.shift.id],
+        queryKey: ['shift', result.shiftInstance.master.id],
       });
       queryClient.invalidateQueries({
         queryKey: ['activeShifts'],
