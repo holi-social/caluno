@@ -108,7 +108,6 @@ export function InviteShiftForm({
       );
       if (newIds.length > 0) {
         const inviteResult = await inviteShiftVolunteers({
-          shiftId,
           instanceId,
           organizationUnitId: orgUId,
           memberIds: newIds,

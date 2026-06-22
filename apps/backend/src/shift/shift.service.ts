@@ -302,26 +302,25 @@ export class ShiftService {
     }
   }
 
-  async inviteMembersToShiftWithAutoApproval(
-    shiftId: string,
+  async inviteMembersToShiftInstanceWithAutoApproval(
     instanceId: string,
     memberIds: string[],
     organizationUnitId: string,
-  ): Promise<ShiftEntity> {
-    const shift = await this.findById(shiftId, organizationUnitId);
+  ): Promise<ShiftInstanceEntity> {
     const instance = await this.findInstanceById(
       instanceId,
       organizationUnitId,
     );
+    const shift = await this.findById(instance.masterId, organizationUnitId);
 
-    if (instance.masterId !== shiftId || instance.isCancelled) {
+    if (instance.isCancelled) {
       throw new NotFoundGraphQLError(
         `Shift instance with ID ${instanceId} not found`,
       );
     }
 
     if (memberIds.length === 0) {
-      return shift;
+      return instance;
     }
 
     const existingInvites = await this.db
@@ -339,14 +338,14 @@ export class ShiftService {
     const newMemberIds = memberIds.filter((id) => !alreadyInvited.has(id));
 
     if (newMemberIds.length === 0) {
-      return shift;
+      return instance;
     }
 
     const maxVolunteers = instance.overrideMaxVolunteers ?? shift.maxVolunteers;
 
     if (!maxVolunteers) {
       await this.createInvitesForInstances(this.db, [instanceId], newMemberIds);
-      return shift;
+      return instance;
     }
 
     await this.db.transaction(async (tx) => {
@@ -369,7 +368,7 @@ export class ShiftService {
       await this.createInvitesForInstances(tx, [instanceId], newMemberIds);
     });
 
-    return shift;
+    return instance;
   }
 
   async findVolunteers(

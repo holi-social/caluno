@@ -84,16 +84,11 @@ mutation DeleteShift($id: String!) {
   }
 }
 
-mutation InviteShiftVolunteers(
-  $shiftId: String!
+mutation InviteShiftInstanceVolunteers(
   $instanceId: String!
   $memberIds: [String!]!
 ) {
-  inviteMembersToShift(
-    shiftId: $shiftId
-    instanceId: $instanceId
-    memberIds: $memberIds
-  ) {
+  inviteMembersToShiftInstance(instanceId: $instanceId, memberIds: $memberIds) {
     id
   }
 }
