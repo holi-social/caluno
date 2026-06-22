@@ -2,13 +2,11 @@ import { Card, CardDescription, CardHeader, CardTitle } from '@repo/ui';
 import { redirect } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
 import { Link } from '@/i18n/navigation';
-import { getSession } from '@/lib/auth-server';
+import { isAuthenticated } from '@/lib/auth-server';
 import { getMyAccessibleOrganizationUnits } from '@/lib/org-context-server';
 
 export default async function OrganizationsPage() {
-  const session = await getSession();
-
-  if (!session?.user) {
+  if (await isAuthenticated()) {
     return redirect('/login');
   }
 

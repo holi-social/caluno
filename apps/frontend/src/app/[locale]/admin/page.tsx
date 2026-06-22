@@ -1,19 +1,12 @@
 import { redirect } from 'next/navigation';
 import HomePage from '@/domain/home/components/home-page';
-import {
-  getLastVisitedOrgServer,
-  getMyAccessibleOrganizationUnits,
-} from '@/lib/org-context-server';
+import { resolvePostAuthDestination } from '@/lib/post-auth-routing';
 
 export default async function Home() {
-  const orgs = await getMyAccessibleOrganizationUnits();
+  const destination = await resolvePostAuthDestination();
 
-  const lastorgUId = await getLastVisitedOrgServer();
-  if (lastorgUId) {
-    const hasAccess = orgs.some((org) => org.id === lastorgUId);
-    if (hasAccess) {
-      redirect(`/admin/${lastorgUId}`);
-    }
+  if (destination !== '/') {
+    redirect(destination);
   }
 
   return <HomePage />;
