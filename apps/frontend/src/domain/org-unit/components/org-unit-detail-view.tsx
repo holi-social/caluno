@@ -20,6 +20,7 @@ import {
   PencilIcon,
   PhoneIcon,
 } from 'lucide-react';
+import Image from 'next/image';
 import { useTranslations } from 'next-intl';
 import { useSheetTrigger } from '@/hooks/use-sheet';
 import { getDynamicIcon } from '@/lib/dynamic-icon';
@@ -56,9 +57,11 @@ export function OrgUnitDetailView({
         <div className="flex items-center gap-4">
           <div className="flex items-center justify-center h-14 w-14 rounded-xl bg-muted shrink-0">
             {orgUnit.logoUrl ? (
-              <img
+              <Image
                 src={orgUnit.logoUrl}
                 alt={orgUnit.name}
+                width={56}
+                height={56}
                 className="h-14 w-14 rounded-xl object-cover"
               />
             ) : (

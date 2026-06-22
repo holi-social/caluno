@@ -192,7 +192,10 @@ export function InviteShiftForm({
           variant="outline"
           className="w-full"
           onClick={() =>
-            copyToClipboard(shiftShareUrl(shiftId, instanceId), tCommon('linkCopied'))
+            copyToClipboard(
+              shiftShareUrl(shiftId, instanceId),
+              tCommon('linkCopied'),
+            )
           }
         >
           <Share2 className="size-4 mr-2" />
