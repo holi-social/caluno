@@ -113,13 +113,12 @@ export class MembershipLifecycleOrchestrator {
     if (metadata.intendedShiftInstanceIds?.length) {
       for (const instanceId of metadata.intendedShiftInstanceIds) {
         try {
-          const instance = await this.shiftService.findInstanceById(
+          await this.shiftService.findInstanceById(
             instanceId,
             membershipRequest.organizationUnitId,
           );
           await this.shiftService.joinShift(
             membershipRequest.userId,
-            instance.masterId,
             instanceId,
           );
         } catch (e) {

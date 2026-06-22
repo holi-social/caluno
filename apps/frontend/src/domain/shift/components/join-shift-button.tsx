@@ -45,7 +45,7 @@ export function JoinShiftButton({
     }
 
     try {
-      const result = await joinShift.mutateAsync({ shiftId, instanceId });
+      const result = await joinShift.mutateAsync(instanceId);
 
       if (result.status === JoinStatus.Joined) {
         toast.success('You have joined the shift');

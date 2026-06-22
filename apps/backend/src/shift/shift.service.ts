@@ -705,14 +705,13 @@ export class ShiftService {
 
   async joinShift(
     userId: string,
-    shiftId: string,
     instanceId: string,
     tx?: Database,
   ): Promise<ShiftEntity> {
     const db = tx ?? this.db;
 
     const instance = await db.query.shiftInstances.findFirst({
-      where: { id: instanceId, masterId: shiftId, isCancelled: false },
+      where: { id: instanceId, isCancelled: false },
       with: { master: true },
     });
 
@@ -771,7 +770,6 @@ export class ShiftService {
 
   async requestJoinShift(
     userId: string,
-    shiftId: string,
     instanceId: string,
   ): Promise<{
     status: JoinStatus;
@@ -784,15 +782,16 @@ export class ShiftService {
       status: string;
     }>;
   }> {
-    const shift = await this.findByIdPublic(shiftId);
+    const instance = await this.db.query.shiftInstances.findFirst({
+      where: { id: instanceId, isCancelled: false },
+      with: { master: true },
+    });
+
+    const shift = instance?.master ?? null;
 
     if (!shift || shift.isDeleted) {
       throw new NotFoundGraphQLError('Shift not found');
     }
-
-    const instance = await this.db.query.shiftInstances.findFirst({
-      where: { id: instanceId, masterId: shiftId, isCancelled: false },
-    });
 
     if (!instance) {
       throw new NotFoundGraphQLError('Shift instance not found');
@@ -821,7 +820,7 @@ export class ShiftService {
       const result = await this.membershipService.requestOrgJoin(
         userId,
         orgUnit.id,
-        shiftId,
+        instance.masterId,
         instanceId,
       );
 
@@ -850,14 +849,14 @@ export class ShiftService {
         };
       }
 
-      await this.joinShift(userId, shiftId, instanceId);
+      await this.joinShift(userId, instanceId);
       return {
         status: JoinStatus.JOINED,
         shift,
       };
     }
 
-    await this.joinShift(userId, shiftId, instanceId);
+    await this.joinShift(userId, instanceId);
     return {
       status: JoinStatus.JOINED,
       shift,
