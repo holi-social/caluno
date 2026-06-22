@@ -10,17 +10,11 @@ import { Logo } from './logo';
 export type HomeHeaderVariant = 'open' | 'on-scroll';
 
 export interface HomeHeaderProps {
-  /** Which header layout to render. */
   variant?: HomeHeaderVariant;
-  /** User avatar image URL. */
-  avatarUrl?: string | null;
-  /** Text shown below the top row in the `open` variant — greeting on home, page name on other tabs. */
+  avatarUrl?: string;
   title?: string;
-  /** Notification count rendered as a badge on the bell. */
   notificationCount?: number;
-  /** Navigates to the user's profile. */
   onAvatarClick?: () => void;
-  /** Opens the notifications panel. */
   onNotificationsClick?: () => void;
   className?: string;
 }
@@ -87,7 +81,7 @@ function AvatarTrigger({
   isOpen,
   onClick,
 }: {
-  avatarUrl?: string | null;
+  avatarUrl?: string;
   isOpen: boolean;
   onClick?: () => void;
 }) {
@@ -103,7 +97,7 @@ function AvatarTrigger({
       className="shrink-0"
     >
       <Avatar className="size-full border border-border shadow-sm">
-        <AvatarImage src={avatarUrl ?? undefined} alt="" />
+        <AvatarImage src={avatarUrl} alt="" />
         <AvatarFallback>
           <motion.div
             initial={{ width: iconSize, height: iconSize }}

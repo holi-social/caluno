@@ -11,18 +11,16 @@ const meta: Meta<typeof HomeHeader> = {
   args: {
     avatarUrl: 'https://placehold.co/112x112',
     title: 'Hi, Longfirstname!',
-    orgLogoUrl: 'https://placehold.co/96x64',
     notificationCount: 3,
     onAvatarClick: () => {},
     onNotificationsClick: () => {},
-    onOrgClick: () => {},
   },
 };
 
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-/** Expanded header with large avatar, greeting, and full cobranding. */
+/** Expanded header with large avatar, greeting, and logo. */
 export const Open: Story = {
   args: {
     variant: 'open',
@@ -47,15 +45,6 @@ export const NoNotifications: Story = {
   },
 };
 
-/** No org logo — Cobranding lockup is hidden entirely. */
-export const NoOrgLogo: Story = {
-  name: 'no org logo',
-  args: {
-    variant: 'open',
-    orgLogoUrl: null,
-  },
-};
-
 /** Long greeting wraps naturally while the top row stays single-line. */
 export const LongGreeting: Story = {
   name: 'long greeting',
@@ -66,13 +55,12 @@ export const LongGreeting: Story = {
   },
 };
 
-/** No callbacks — avatar, bell, and cobranding are non-interactive. */
+/** No callbacks — avatar and bell are non-interactive. */
 export const NonInteractive: Story = {
   name: 'non-interactive',
   args: {
     variant: 'open',
     onAvatarClick: undefined,
     onNotificationsClick: undefined,
-    onOrgClick: undefined,
   },
 };

@@ -1,13 +1,15 @@
 import type { ReactNode } from 'react';
 import { cn } from '../lib/utils';
+import { Button } from './base/button';
 import { Logo } from './logo';
 
 export interface CobrandingProps {
+  /** URL of the organisation logo. */
   logoUrl?: string | null;
   /** Slot for the platform logo. Falls back to a geometric placeholder. */
   ourLogo?: ReactNode;
+  organisationName?: string;
   size?: 'small' | 'big';
-  /** Optional click handler for the organisation logo area. */
   onClick?: () => void;
   className?: string;
 }
@@ -15,6 +17,7 @@ export interface CobrandingProps {
 export function Cobranding({
   logoUrl,
   ourLogo,
+  organisationName,
   size = 'small',
   onClick,
   className,
@@ -41,20 +44,21 @@ export function Cobranding({
 
   if (onClick) {
     return (
-      <button
+      <Button
         type="button"
+        variant="ghost"
         onClick={onClick}
-        aria-label="Organisation"
+        aria-label={
+          organisationName ? `Go to ${organisationName}` : 'Go to organisation'
+        }
         className={cn(
-          'flex items-center rounded-lg transition-colors',
+          'h-auto rounded-lg p-0',
           isBig ? 'gap-4' : 'gap-1',
-          'min-h-11 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60 focus-visible:ring-offset-1',
-          'hover:bg-accent',
           className,
         )}
       >
         {content}
-      </button>
+      </Button>
     );
   }
 
