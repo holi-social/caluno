@@ -1,7 +1,7 @@
 'use client';
 
 import { JoinStatus, ShiftVisibility } from '@repo/data';
-import { useJoinShift } from '@repo/data/react';
+import { useJoinShiftInstance } from '@repo/data/react';
 import { Button } from '@repo/ui';
 import { useCallback, useEffect, useState } from 'react';
 import { toast } from 'sonner';
@@ -23,7 +23,7 @@ export function JoinShiftButton({
   autoJoin = false,
 }: JoinShiftButtonProps) {
   const router = useRouter();
-  const joinShift = useJoinShift();
+  const joinShiftInstance = useJoinShiftInstance();
 
   const [hasAutoJoined, setHasAutoJoined] = useState(false);
 
@@ -45,7 +45,7 @@ export function JoinShiftButton({
     }
 
     try {
-      const result = await joinShift.mutateAsync(instanceId);
+      const result = await joinShiftInstance.mutateAsync(instanceId);
 
       if (result.status === JoinStatus.Joined) {
         toast.success('You have joined the shift');
@@ -87,7 +87,7 @@ export function JoinShiftButton({
         error instanceof Error ? error.message : 'Failed to join shift',
       );
     }
-  }, [isAuthenticated, shiftId, instanceId, joinShift, router]);
+  }, [isAuthenticated, shiftId, instanceId, joinShiftInstance, router]);
 
   useEffect(() => {
     if (
@@ -122,8 +122,11 @@ export function JoinShiftButton({
   }
 
   return (
-    <Button onClick={handleJoin} disabled={joinShift.isPending || !instanceId}>
-      {joinShift.isPending ? 'Joining...' : 'Join shift'}
+    <Button
+      onClick={handleJoin}
+      disabled={joinShiftInstance.isPending || !instanceId}
+    >
+      {joinShiftInstance.isPending ? 'Joining...' : 'Join shift'}
     </Button>
   );
 }

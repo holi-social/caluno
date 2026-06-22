@@ -10,7 +10,7 @@ import { CreateShiftInput } from '../inputs/create-shift.input';
 import { UpdateShiftInput } from '../inputs/update-shift.input';
 import { ShiftMapper } from '../mappers/shift.mapper';
 import { ShiftInstanceMapper } from '../mappers/shift-instance.mapper';
-import { JoinShiftResult } from '../models/join-shift-result.model';
+import { JoinShiftInstanceResult } from '../models/join-shift-instance-result.model';
 import { Shift } from '../models/shift.model';
 import { ShiftInstance } from '../models/shift-instance.model';
 import { ShiftService } from '../shift.service';
@@ -84,12 +84,12 @@ export class ShiftMutationResolver {
     return this.shiftMapper.toModelOrThrow(result);
   }
 
-  @Mutation(() => JoinShiftResult)
-  async joinShift(
+  @Mutation(() => JoinShiftInstanceResult)
+  async joinShiftInstance(
     @Args('instanceId', { type: () => String }) instanceId: string,
     @Session() session: UserSession,
-  ): Promise<JoinShiftResult> {
-    const result = await this.shiftService.requestJoinShift(
+  ): Promise<JoinShiftInstanceResult> {
+    const result = await this.shiftService.requestJoinShiftInstance(
       session.user.id,
       instanceId,
     );

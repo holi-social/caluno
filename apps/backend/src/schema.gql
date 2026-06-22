@@ -292,7 +292,7 @@ type JoinOrganizationResult {
   status: JoinStatus!
 }
 
-type JoinShiftResult {
+type JoinShiftInstanceResult {
   membershipRequestId: ID
   requirementProfile: RequirementProfile
   requirementStatuses: [UserRequirementStatus!]
@@ -371,7 +371,7 @@ type Mutation {
   inviteMembersToShiftInstance(instanceId: String!, memberIds: [String!]!): ShiftInstance!
   joinEvent(eventId: ID!): JoinEventResult!
   joinOrganization(organizationUnitId: ID!): JoinOrganizationResult!
-  joinShift(instanceId: String!): JoinShiftResult!
+  joinShiftInstance(instanceId: String!): JoinShiftInstanceResult!
   regenerateFormShareToken(id: String!): RequirementForm!
   rejectMembershipRequest(id: ID!, organizationUnitId: ID!, rejectionReason: String!): MembershipRequest!
   submitForm(input: SubmitFormInput!, token: String!): FormSubmission!

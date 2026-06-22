@@ -117,7 +117,7 @@ export class MembershipLifecycleOrchestrator {
             instanceId,
             membershipRequest.organizationUnitId,
           );
-          await this.shiftService.joinShift(
+          await this.shiftService.joinShiftInstance(
             membershipRequest.userId,
             instanceId,
           );

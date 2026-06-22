@@ -703,7 +703,7 @@ export class ShiftService {
     return this.userService.findByIdOrThrow(createdById);
   }
 
-  async joinShift(
+  async joinShiftInstance(
     userId: string,
     instanceId: string,
     tx?: Database,
@@ -768,7 +768,7 @@ export class ShiftService {
     return shift;
   }
 
-  async requestJoinShift(
+  async requestJoinShiftInstance(
     userId: string,
     instanceId: string,
   ): Promise<{
@@ -848,14 +848,14 @@ export class ShiftService {
         };
       }
 
-      await this.joinShift(userId, instanceId);
+      await this.joinShiftInstance(userId, instanceId);
       return {
         status: JoinStatus.JOINED,
         shift,
       };
     }
 
-    await this.joinShift(userId, instanceId);
+    await this.joinShiftInstance(userId, instanceId);
     return {
       status: JoinStatus.JOINED,
       shift,

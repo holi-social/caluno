@@ -93,8 +93,8 @@ mutation InviteShiftInstanceVolunteers(
   }
 }
 
-mutation JoinShift($instanceId: String!) {
-  joinShift(instanceId: $instanceId) {
+mutation JoinShiftInstance($instanceId: String!) {
+  joinShiftInstance(instanceId: $instanceId) {
     status
     shift {
       id

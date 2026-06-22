@@ -5,7 +5,7 @@ import { JoinStatus } from '../../shared/enums/join-status.enum';
 import { Shift } from './shift.model';
 
 @ObjectType()
-export class JoinShiftResult {
+export class JoinShiftInstanceResult {
   @Field(() => JoinStatus)
   status!: JoinStatus;
 
