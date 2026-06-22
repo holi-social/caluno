@@ -1,15 +1,9 @@
 import { Card, CardDescription, CardHeader, CardTitle } from '@repo/ui';
-import { redirect } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
 import { Link } from '@/i18n/navigation';
-import { isAuthenticated } from '@/lib/auth-server';
 import { getMyAccessibleOrganizationUnits } from '@/lib/org-context-server';
 
 export default async function OrganizationsPage() {
-  if (await isAuthenticated()) {
-    return redirect('/login');
-  }
-
   const organizations = await getMyAccessibleOrganizationUnits();
   const t = await getTranslations('Organization.list');
 
