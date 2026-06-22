@@ -2,7 +2,6 @@
 
 import { useCurrentOrg, useOrgUId } from '@repo/data/react';
 import { useEffect, useState, useTransition } from 'react';
-import { useSheet } from '@/hooks/use-sheet';
 import { createShift } from '../actions';
 import type { ShiftFormValues } from '../schemas';
 import { ShiftForm } from './shift-form';
@@ -20,7 +19,6 @@ export function CreateShiftForm({
   const [serverError, setServerError] = useState<string | null>(null);
   const orgUId = useOrgUId();
   const { address } = useCurrentOrg();
-  const inviteSheet = useSheet('invite-shift', 'id');
 
   useEffect(() => {
     onPendingChange?.(isPending);
@@ -35,11 +33,6 @@ export function CreateShiftForm({
       });
       if (result?.serverError) {
         setServerError(result.serverError);
-      } else {
-        const shiftId = result?.data?.id;
-        if (shiftId) {
-          inviteSheet.open({ id: shiftId });
-        }
       }
     });
   };

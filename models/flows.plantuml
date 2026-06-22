@@ -37,8 +37,8 @@ note right of Rejected
 end note
 
 note right of Pending
-  When approved, metadata.intendedShiftIds
-  auto-joins user to those shifts (if ALL_MEMBERS).
+  When approved, metadata.intendedShiftInstanceIds
+  auto-joins user to those specific shift instances.
 end note
 
 @enduml
@@ -144,7 +144,7 @@ IsVisible --> CheckingAccess : visibility = ALL_MEMBERS
 IsVisible --> [*] : visibility = INVITED_MEMBERS
 
 CheckingAccess --> IsMember
-IsMember --> JoinedShift : yes → joinShift()
+IsMember --> JoinedShift : yes → joinShiftInstance()
 IsMember --> RequirementsNeeded : no → requestOrgJoin()
 
 RequirementsNeeded --> ShiftRequirementsNeeded : requirements incomplete

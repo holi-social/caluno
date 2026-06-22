@@ -14,8 +14,10 @@ export function InviteShiftSheet() {
   const { setIsPending, getParam, ...sheetProps } = useSheet(
     'invite-shift',
     'id',
+    'instanceId',
   );
   const shiftId = getParam('id');
+  const instanceId = getParam('instanceId');
   const router = useRouter();
   const queryClient = useQueryClient();
   const t = useTranslations('Shift');
@@ -25,7 +27,9 @@ export function InviteShiftSheet() {
     sheetProps.close();
     toast.success(t('toast.inviteChanged'));
 
-    queryClient.invalidateQueries({ queryKey: ['shiftVolunteers', shiftId] });
+    queryClient.invalidateQueries({
+      queryKey: ['shiftVolunteers', instanceId],
+    });
     queryClient.invalidateQueries({ queryKey: ['shift', shiftId] });
   };
 
@@ -36,10 +40,11 @@ export function InviteShiftSheet() {
       formId={FORM_ID}
       {...sheetProps}
     >
-      {shiftId && (
+      {shiftId && instanceId && (
         <InviteShiftForm
           formId={FORM_ID}
           shiftId={shiftId}
+          instanceId={instanceId}
           onSuccess={handleSuccess}
           onPendingChange={setIsPending}
         />

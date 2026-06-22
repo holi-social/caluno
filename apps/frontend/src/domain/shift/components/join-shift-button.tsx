@@ -1,7 +1,7 @@
 'use client';
 
 import { JoinStatus, ShiftVisibility } from '@repo/data';
-import { useJoinShift } from '@repo/data/react';
+import { useJoinShiftInstance } from '@repo/data/react';
 import { Button } from '@repo/ui';
 import { useTranslations } from 'next-intl';
 import { useCallback, useEffect, useState } from 'react';
@@ -10,6 +10,7 @@ import { useRouter } from '@/i18n/navigation';
 
 interface JoinShiftButtonProps {
   shiftId: string;
+  instanceId?: string;
   visibility: ShiftVisibility;
   isAuthenticated: boolean;
   autoJoin?: boolean;
@@ -17,12 +18,13 @@ interface JoinShiftButtonProps {
 
 export function JoinShiftButton({
   shiftId,
+  instanceId,
   visibility,
   isAuthenticated,
   autoJoin = false,
 }: JoinShiftButtonProps) {
   const router = useRouter();
-  const joinShift = useJoinShift();
+  const joinShiftInstance = useJoinShiftInstance();
   const t = useTranslations('Shift');
 
   const [hasAutoJoined, setHasAutoJoined] = useState(false);
@@ -30,14 +32,22 @@ export function JoinShiftButton({
   const handleJoin = useCallback(async () => {
     if (!isAuthenticated) {
       const searchParams = new URLSearchParams({
-        redirectTo: `/shifts/${shiftId}?autoJoin=true`,
+        redirectTo: `/shifts/${shiftId}?${new URLSearchParams({
+          autoJoin: 'true',
+          ...(instanceId ? { instanceId } : {}),
+        })}`,
       });
       router.push(`/api/invite?${searchParams}`);
       return;
     }
 
+    if (!instanceId) {
+      toast.error('This shift link is missing an instance.');
+      return;
+    }
+
     try {
-      const result = await joinShift.mutateAsync(shiftId);
+      const result = await joinShiftInstance.mutateAsync(instanceId);
 
       if (result.status === JoinStatus.Joined) {
         toast.success(t('join.joined'));
@@ -74,12 +84,13 @@ export function JoinShiftButton({
     } catch (error) {
       toast.error(error instanceof Error ? error.message : t('join.failed'));
     }
-  }, [isAuthenticated, shiftId, joinShift, router, t]);
+  }, [isAuthenticated, shiftId, instanceId, joinShiftInstance, router, t]);
 
   useEffect(() => {
     if (
       autoJoin &&
       isAuthenticated &&
+      instanceId &&
       !hasAutoJoined &&
       visibility === ShiftVisibility.AllMembers
     ) {
@@ -90,7 +101,14 @@ export function JoinShiftButton({
 
       handleJoin();
     }
-  }, [autoJoin, isAuthenticated, hasAutoJoined, visibility, handleJoin]);
+  }, [
+    autoJoin,
+    isAuthenticated,
+    instanceId,
+    hasAutoJoined,
+    visibility,
+    handleJoin,
+  ]);
 
   if (visibility !== ShiftVisibility.AllMembers) {
     return (
@@ -101,8 +119,11 @@ export function JoinShiftButton({
   }
 
   return (
-    <Button onClick={handleJoin} disabled={joinShift.isPending}>
-      {joinShift.isPending ? t('join.joining') : t('join.joinShift')}
+    <Button
+      onClick={handleJoin}
+      disabled={joinShiftInstance.isPending || !instanceId}
+    >
+      {joinShiftInstance.isPending ? t('join.joining') : t('join.joinShift')}
     </Button>
   );
 }

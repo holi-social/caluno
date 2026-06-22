@@ -84,33 +84,32 @@ mutation DeleteShift($id: String!) {
   }
 }
 
-mutation InviteShiftVolunteers($shiftId: String!, $memberIds: [String!]!) {
-  inviteMembersToShift(shiftId: $shiftId, memberIds: $memberIds) {
+mutation InviteShiftInstanceVolunteers(
+  $instanceId: String!
+  $memberIds: [String!]!
+) {
+  inviteMembersToShiftInstance(instanceId: $instanceId, memberIds: $memberIds) {
     id
   }
 }
 
-mutation JoinShift($shiftId: String!) {
-  joinShift(shiftId: $shiftId) {
+mutation JoinShiftInstance($instanceId: String!) {
+  joinShiftInstance(instanceId: $instanceId) {
     status
-    shift {
+    shiftInstance {
       id
-      title
-      slug
-      instructions
-      location
-      visibility
-      createdAt
-      maxVolunteers
-      rrule
-      originalStartsAt
-      durationMinutes
-      organizationUnitId
-      createdBy {
+      actualStartsAt
+      actualEndsAt
+      overrideTitle
+      overrideInstructions
+      overrideLocation
+      overrideMaxVolunteers
+      isException
+      isCancelled
+      occurrenceIndex
+      master {
         id
-        name
-        email
-        image
+        title
       }
     }
     membershipRequestId
@@ -134,8 +133,8 @@ mutation JoinShift($shiftId: String!) {
   }
 }
 
-query GetShiftVolunteers($shiftId: ID!) {
-  shiftVolunteers(shiftId: $shiftId) {
+query GetShiftVolunteers($instanceId: ID!) {
+  shiftVolunteers(instanceId: $instanceId) {
     id
     name
     email

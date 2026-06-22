@@ -78,7 +78,7 @@ function StaffingBadge({
 
 export function ShiftCard({ instance, canManage = false }: ShiftCardProps) {
   const orgUId = useOrgUId();
-  const inviteSheet = useSheet('invite-shift', 'id');
+  const inviteSheet = useSheet('invite-shift', 'id', 'instanceId');
   const t = useTranslations('Shift');
 
   const count = instance.volunteers?.length ?? 0;
@@ -120,7 +120,12 @@ export function ShiftCard({ instance, canManage = false }: ShiftCardProps) {
               size="icon-sm"
               variant={buttonVariant}
               aria-label={t('card.inviteAria')}
-              onClick={() => inviteSheet.open({ id: instance.master.id })}
+              onClick={() =>
+                inviteSheet.open({
+                  id: instance.master.id,
+                  instanceId: instance.id,
+                })
+              }
             >
               <UserPlus className="size-4" />
             </Button>

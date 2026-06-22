@@ -302,28 +302,33 @@ export class ShiftService {
     }
   }
 
-  async inviteMembersToShiftWithAutoApproval(
-    shiftId: string,
+  async inviteMembersToShiftInstanceWithAutoApproval(
+    instanceId: string,
     memberIds: string[],
     organizationUnitId: string,
-  ): Promise<ShiftEntity> {
-    const shift = await this.findById(shiftId, organizationUnitId);
+  ): Promise<ShiftInstanceEntity> {
+    const instance = await this.findInstanceById(
+      instanceId,
+      organizationUnitId,
+    );
+    const shift = await this.findById(instance.masterId, organizationUnitId);
 
-    const instances = await this.db.query.shiftInstances.findMany({
-      where: {
-        masterId: shiftId,
-        isCancelled: false,
-      },
-    });
+    if (instance.isCancelled) {
+      throw new NotFoundGraphQLError(
+        `Shift instance with ID ${instanceId} not found`,
+      );
+    }
 
-    const instanceIds = instances.map((i) => i.id);
+    if (memberIds.length === 0) {
+      return instance;
+    }
 
     const existingInvites = await this.db
       .selectDistinct({ userId: schema.shiftInstanceInvites.userId })
       .from(schema.shiftInstanceInvites)
       .where(
         and(
-          inArray(schema.shiftInstanceInvites.instanceId, instanceIds),
+          eq(schema.shiftInstanceInvites.instanceId, instanceId),
           inArray(schema.shiftInstanceInvites.userId, memberIds),
           eq(schema.shiftInstanceInvites.status, ShiftInviteStatus.ACCEPTED),
         ),
@@ -333,48 +338,37 @@ export class ShiftService {
     const newMemberIds = memberIds.filter((id) => !alreadyInvited.has(id));
 
     if (newMemberIds.length === 0) {
-      return shift;
+      return instance;
     }
 
-    if (!shift.maxVolunteers) {
-      await this.createInvitesForInstances(this.db, instanceIds, newMemberIds);
-      return shift;
+    const maxVolunteers = instance.overrideMaxVolunteers ?? shift.maxVolunteers;
+
+    if (!maxVolunteers) {
+      await this.createInvitesForInstances(this.db, [instanceId], newMemberIds);
+      return instance;
     }
 
     await this.db.transaction(async (tx) => {
-      const capacityViolations = await tx
-        .select({
-          instanceId: schema.shiftInstanceInvites.instanceId,
-          current: count(),
-        })
+      const [capacity] = await tx
+        .select({ current: count() })
         .from(schema.shiftInstanceInvites)
-        .innerJoin(
-          schema.shiftInstances,
-          eq(schema.shiftInstanceInvites.instanceId, schema.shiftInstances.id),
-        )
         .where(
           and(
             eq(schema.shiftInstanceInvites.status, ShiftInviteStatus.ACCEPTED),
-            eq(schema.shiftInstances.masterId, shiftId),
+            eq(schema.shiftInstanceInvites.instanceId, instanceId),
           ),
-        )
-        .groupBy(schema.shiftInstanceInvites.instanceId);
+        );
 
-      const violations = capacityViolations.filter(
-        (c) =>
-          c.current + newMemberIds.length > (shift.maxVolunteers ?? Infinity),
-      );
-
-      if (violations.length > 0) {
+      if ((capacity?.current ?? 0) + newMemberIds.length > maxVolunteers) {
         throw new ConflictGraphQLError(
-          `Cannot invite members: ${violations.length} instance(s) would exceed capacity of ${shift.maxVolunteers}`,
+          `Cannot invite members: instance would exceed capacity of ${maxVolunteers}`,
         );
       }
 
-      await this.createInvitesForInstances(tx, instanceIds, newMemberIds);
+      await this.createInvitesForInstances(tx, [instanceId], newMemberIds);
     });
 
-    return shift;
+    return instance;
   }
 
   async findVolunteers(
@@ -709,18 +703,25 @@ export class ShiftService {
     return this.userService.findByIdOrThrow(createdById);
   }
 
-  async joinShift(
+  async joinShiftInstance(
     userId: string,
-    shiftId: string,
+    instanceId: string,
     tx?: Database,
   ): Promise<ShiftEntity> {
     const db = tx ?? this.db;
 
-    const shift = await db.query.shifts.findFirst({
-      where: { id: shiftId, isDeleted: false },
+    const instance = await db.query.shiftInstances.findFirst({
+      where: { id: instanceId, isCancelled: false },
+      with: { master: true },
     });
 
-    if (!shift) {
+    const shift = instance?.master ?? null;
+
+    if (!instance || !shift) {
+      throw new NotFoundGraphQLError('Shift not found');
+    }
+
+    if (shift.isDeleted || shift.visibility !== ShiftVisibility.ALL_MEMBERS) {
       throw new NotFoundGraphQLError('Shift not found');
     }
 
@@ -735,69 +736,44 @@ export class ShiftService {
       );
     }
 
-    const instances = await db.query.shiftInstances.findMany({
-      where: {
-        masterId: shiftId,
-        isCancelled: false,
-      },
-    });
+    const maxVolunteers = instance.overrideMaxVolunteers ?? shift.maxVolunteers;
 
-    if (instances.length === 0) {
-      throw new NotFoundGraphQLError('No instances found for this shift');
-    }
-
-    if (shift.maxVolunteers) {
-      const capacityViolations = await db
-        .select({
-          instanceId: schema.shiftInstanceInvites.instanceId,
-          current: count(),
-        })
+    if (maxVolunteers) {
+      const [capacity] = await db
+        .select({ current: count() })
         .from(schema.shiftInstanceInvites)
         .where(
           and(
             eq(schema.shiftInstanceInvites.status, ShiftInviteStatus.ACCEPTED),
-            inArray(
-              schema.shiftInstanceInvites.instanceId,
-              instances.map((i) => i.id),
-            ),
+            eq(schema.shiftInstanceInvites.instanceId, instanceId),
           ),
-        )
-        .groupBy(schema.shiftInstanceInvites.instanceId);
+        );
 
-      const violations = capacityViolations.filter(
-        (c) =>
-          shift.maxVolunteers !== null &&
-          shift.maxVolunteers !== undefined &&
-          c.current >= shift.maxVolunteers,
-      );
-
-      if (violations.length > 0) {
+      if ((capacity?.current ?? 0) >= maxVolunteers) {
         throw new ConflictGraphQLError(
-          `Cannot join shift: ${violations.length} instance(s) are at full capacity of ${shift.maxVolunteers}`,
+          `Cannot join shift: instance is at full capacity of ${maxVolunteers}`,
         );
       }
     }
 
-    const invites = instances.map((instance) => ({
-      instanceId: instance.id,
-      userId,
-      status: ShiftInviteStatus.ACCEPTED,
-    }));
-
     await db
       .insert(schema.shiftInstanceInvites)
-      .values(invites)
+      .values({
+        instanceId,
+        userId,
+        status: ShiftInviteStatus.ACCEPTED,
+      })
       .onConflictDoNothing();
 
     return shift;
   }
 
-  async requestJoinShift(
+  async requestJoinShiftInstance(
     userId: string,
-    shiftId: string,
+    instanceId: string,
   ): Promise<{
     status: JoinStatus;
-    shift: ShiftEntity;
+    shiftInstance: ShiftInstanceEntity;
     membershipRequest?: MembershipRequestEntity;
     requirementProfile?: RequirementProfileEntity;
     requirementStatuses?: Array<{
@@ -806,10 +782,19 @@ export class ShiftService {
       status: string;
     }>;
   }> {
-    const shift = await this.findByIdPublic(shiftId);
+    const instance = await this.db.query.shiftInstances.findFirst({
+      where: { id: instanceId, isCancelled: false },
+      with: { master: true },
+    });
+
+    const shift = instance?.master ?? null;
 
     if (!shift || shift.isDeleted) {
       throw new NotFoundGraphQLError('Shift not found');
+    }
+
+    if (!instance) {
+      throw new NotFoundGraphQLError('Shift instance not found');
     }
 
     if (shift.visibility !== ShiftVisibility.ALL_MEMBERS) {
@@ -835,13 +820,13 @@ export class ShiftService {
       const result = await this.membershipService.requestOrgJoin(
         userId,
         orgUnit.id,
-        shiftId,
+        instanceId,
       );
 
       if (result.status === 'REQUIREMENTS_NEEDED') {
         return {
           status: JoinStatus.REQUIREMENTS_NEEDED,
-          shift,
+          shiftInstance: instance,
           requirementProfile: result.requirementProfile,
           requirementStatuses: result.requirementStatuses,
         };
@@ -850,7 +835,7 @@ export class ShiftService {
       if (result.status === 'PENDING') {
         return {
           status: JoinStatus.PENDING,
-          shift,
+          shiftInstance: instance,
           membershipRequest: result.membershipRequest,
         };
       }
@@ -858,22 +843,22 @@ export class ShiftService {
       if (result.status === 'REJECTED') {
         return {
           status: JoinStatus.REJECTED,
-          shift,
+          shiftInstance: instance,
           membershipRequest: result.membershipRequest,
         };
       }
 
-      await this.joinShift(userId, shiftId);
+      await this.joinShiftInstance(userId, instanceId);
       return {
         status: JoinStatus.JOINED,
-        shift,
+        shiftInstance: instance,
       };
     }
 
-    await this.joinShift(userId, shiftId);
+    await this.joinShiftInstance(userId, instanceId);
     return {
       status: JoinStatus.JOINED,
-      shift,
+      shiftInstance: instance,
     };
   }
 }

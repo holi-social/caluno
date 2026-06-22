@@ -31,6 +31,7 @@ import { TransferList } from './transfer-list';
 interface InviteShiftFormProps {
   formId?: string;
   shiftId: string;
+  instanceId: string;
   onSuccess?: () => void;
   onPendingChange?: (isPending: boolean) => void;
 }
@@ -38,6 +39,7 @@ interface InviteShiftFormProps {
 export function InviteShiftForm({
   formId,
   shiftId,
+  instanceId,
   onSuccess,
   onPendingChange,
 }: InviteShiftFormProps) {
@@ -48,7 +50,7 @@ export function InviteShiftForm({
   const tCommon = useTranslations('Common');
 
   const { data: shift } = useShift(shiftId);
-  const { data: shiftVolunteers } = useShiftVolunteers(shiftId);
+  const { data: shiftVolunteers } = useShiftVolunteers(instanceId);
   const { data: memberships } = useMemberships(orgUId);
 
   const schema = inviteShiftFormSchema({
@@ -113,7 +115,7 @@ export function InviteShiftForm({
       );
       if (newIds.length > 0) {
         const inviteResult = await inviteShiftVolunteers({
-          shiftId,
+          instanceId,
           organizationUnitId: orgUId,
           memberIds: newIds,
         });
@@ -190,7 +192,10 @@ export function InviteShiftForm({
           variant="outline"
           className="w-full"
           onClick={() =>
-            copyToClipboard(shiftShareUrl(shiftId), tCommon('linkCopied'))
+            copyToClipboard(
+              shiftShareUrl(shiftId, instanceId),
+              tCommon('linkCopied'),
+            )
           }
         >
           <Share2 className="size-4 mr-2" />

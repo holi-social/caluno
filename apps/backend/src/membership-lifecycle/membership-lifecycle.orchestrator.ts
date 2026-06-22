@@ -8,7 +8,6 @@ import type {
 import { SubmitFormInput } from '../requirement-profile/inputs/submit-form.input';
 import type { FormSubmissionEntity } from '../requirement-profile/schemas/form-submission.schema';
 import { FormSubmissionService } from '../requirement-profile/services/form-submission.service';
-import { ShiftVisibility } from '../shift/enums';
 import { ShiftService } from '../shift/shift.service';
 
 @Injectable()
@@ -111,18 +110,21 @@ export class MembershipLifecycleOrchestrator {
       return;
     }
 
-    if (metadata.intendedShiftIds?.length) {
-      for (const shiftId of metadata.intendedShiftIds) {
+    if (metadata.intendedShiftInstanceIds?.length) {
+      for (const instanceId of metadata.intendedShiftInstanceIds) {
         try {
-          const shift = await this.shiftService.findByIdPublic(shiftId);
-          if (shift && shift.visibility === ShiftVisibility.ALL_MEMBERS) {
-            await this.shiftService.joinShift(
-              membershipRequest.userId,
-              shiftId,
-            );
-          }
+          await this.shiftService.findInstanceById(
+            instanceId,
+            membershipRequest.organizationUnitId,
+          );
+          await this.shiftService.joinShiftInstance(
+            membershipRequest.userId,
+            instanceId,
+          );
         } catch (e) {
-          this.logger.warn(`Failed to auto-join shift ${shiftId}: ${e}`);
+          this.logger.warn(
+            `Failed to auto-join shift instance ${instanceId}: ${e}`,
+          );
         }
       }
     }

@@ -92,11 +92,11 @@ export class ShiftQueryResolver {
   @Permissions(PERMISSIONS.SHIFT_VIEW)
   @Query(() => [User])
   async shiftVolunteers(
-    @Args('shiftId', { type: () => ID }) shiftId: string,
+    @Args('instanceId', { type: () => ID }) instanceId: string,
     @Context() context: AuthenticatedGraphQLContext,
   ): Promise<User[]> {
-    const volunteers = await this.shiftService.findShiftVolunteers(
-      shiftId,
+    const volunteers = await this.shiftService.findVolunteers(
+      instanceId,
       context.organizationUnitId,
     );
     return this.userMapper.toArray(volunteers);

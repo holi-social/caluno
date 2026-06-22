@@ -15,6 +15,7 @@ import { shiftShareUrl } from '../share';
 
 type ActionBarProps = {
   id: string;
+  instanceId?: string;
   organizationUnitId: string;
   size?: 'xs' | 'sm' | 'md';
   hideEdit?: boolean;
@@ -22,6 +23,7 @@ type ActionBarProps = {
 
 export const ActionBar = ({
   id,
+  instanceId,
   organizationUnitId,
   size = 'xs',
   hideEdit = false,
@@ -29,7 +31,7 @@ export const ActionBar = ({
   const router = useRouter();
   const [isDeleting, startDeleteTransition] = useTransition();
   const editSheet = useSheet(FORM_ID, 'id');
-  const inviteSheet = useSheet('invite-shift', 'id');
+  const inviteSheet = useSheet('invite-shift', 'id', 'instanceId');
   const t = useTranslations('Shift');
   const tCommon = useTranslations('Common');
 
@@ -50,7 +52,7 @@ export const ActionBar = ({
   return (
     <aside className="space-x-2">
       <Link
-        href={shiftShareUrl(id)}
+        href={shiftShareUrl(id, instanceId)}
         aria-label={t('action.viewAria')}
         target="_blank"
       >
@@ -70,21 +72,23 @@ export const ActionBar = ({
         </Button>
       )}
 
-      <Button
-        size={buttonSize}
-        variant="outline"
-        aria-label={t('action.inviteAria')}
-        onClick={() => inviteSheet.open({ id })}
-      >
-        <UserPlus />
-      </Button>
+      {instanceId && (
+        <Button
+          size={buttonSize}
+          variant="outline"
+          aria-label={t('action.inviteAria')}
+          onClick={() => inviteSheet.open({ id, instanceId })}
+        >
+          <UserPlus />
+        </Button>
+      )}
 
       <Button
         size={buttonSize}
         variant="outline"
         aria-label={t('action.copyLinkAria')}
         onClick={() =>
-          copyToClipboard(shiftShareUrl(id), tCommon('linkCopied'))
+          copyToClipboard(shiftShareUrl(id, instanceId), tCommon('linkCopied'))
         }
       >
         <Share2 />

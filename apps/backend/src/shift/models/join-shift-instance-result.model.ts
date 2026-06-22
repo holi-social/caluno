@@ -2,15 +2,15 @@ import { Field, ID, ObjectType } from '@nestjs/graphql';
 import { RequirementProfile } from '../../requirement-profile/models/requirement-profile.model';
 import { UserRequirementStatus } from '../../requirement-profile/models/user-requirement-status.model';
 import { JoinStatus } from '../../shared/enums/join-status.enum';
-import { Shift } from './shift.model';
+import { ShiftInstance } from './shift-instance.model';
 
 @ObjectType()
-export class JoinShiftResult {
+export class JoinShiftInstanceResult {
   @Field(() => JoinStatus)
   status!: JoinStatus;
 
-  @Field(() => Shift)
-  shift!: Shift;
+  @Field(() => ShiftInstance)
+  shiftInstance!: ShiftInstance;
 
   @Field(() => ID, { nullable: true })
   membershipRequestId!: string | null;

@@ -22,6 +22,8 @@ export default async function ShiftPage({
   const { shiftId } = await params;
   const search = await searchParams;
   const autoJoin = search.autoJoin === 'true';
+  const instanceId =
+    typeof search.instanceId === 'string' ? search.instanceId : undefined;
 
   const data = await getDataClient();
   const { formatRange } = await getFormatting();
@@ -113,6 +115,7 @@ export default async function ShiftPage({
             ) : (
               <JoinShiftButton
                 shiftId={shiftId}
+                instanceId={instanceId}
                 visibility={shift.visibility}
                 isAuthenticated={authenticated}
                 autoJoin={autoJoin}
