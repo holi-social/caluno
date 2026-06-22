@@ -14,7 +14,6 @@ import { organizationUnits } from '../../organization/schemas/organization-unit.
 import { MembershipRequestStatus } from '../enums';
 
 export type MembershipRequestMetadata = {
-  intendedShiftIds?: string[];
   intendedShiftInstanceIds?: string[];
   intendedEventIds?: string[];
 };

@@ -820,7 +820,6 @@ export class ShiftService {
       const result = await this.membershipService.requestOrgJoin(
         userId,
         orgUnit.id,
-        instance.masterId,
         instanceId,
       );
 

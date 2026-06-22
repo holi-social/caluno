@@ -248,7 +248,6 @@ describe('ShiftService.findShiftsForWeek', () => {
         organizationUnitId,
         status: MembershipRequestStatus.PENDING,
         metadata: {
-          intendedShiftIds: [shiftId],
           intendedShiftInstanceIds: [intendedInstanceId],
         },
       })

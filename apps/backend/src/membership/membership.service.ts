@@ -34,17 +34,10 @@ export class MembershipService {
 
   private appendIntendedIdsToMetadata(
     metadata: MembershipRequestMetadata,
-    intendedShiftId?: string,
     intendedShiftInstanceId?: string,
     intendedEventId?: string,
   ): MembershipRequestMetadata {
     const newMetadata: MembershipRequestMetadata = { ...metadata };
-
-    if (intendedShiftId) {
-      newMetadata.intendedShiftIds = Array.from(
-        new Set([...(newMetadata.intendedShiftIds ?? []), intendedShiftId]),
-      );
-    }
 
     if (intendedShiftInstanceId) {
       newMetadata.intendedShiftInstanceIds = Array.from(
@@ -65,15 +58,10 @@ export class MembershipService {
   }
 
   private buildInitialMetadata(
-    intendedShiftId?: string,
     intendedShiftInstanceId?: string,
     intendedEventId?: string,
   ): MembershipRequestMetadata | undefined {
     const metadata: MembershipRequestMetadata = {};
-
-    if (intendedShiftId) {
-      metadata.intendedShiftIds = [intendedShiftId];
-    }
 
     if (intendedShiftInstanceId) {
       metadata.intendedShiftInstanceIds = [intendedShiftInstanceId];
@@ -259,7 +247,6 @@ export class MembershipService {
   async createMembershipRequest(
     userId: string,
     organizationUnitId: string,
-    intendedShiftId?: string,
     intendedShiftInstanceId?: string,
     intendedEventId?: string,
   ): Promise<MembershipRequestEntity> {
@@ -272,10 +259,9 @@ export class MembershipService {
     });
 
     if (existing) {
-      if (intendedShiftId || intendedShiftInstanceId || intendedEventId) {
+      if (intendedShiftInstanceId || intendedEventId) {
         const metadata = this.appendIntendedIdsToMetadata(
           (existing.metadata ?? {}) as MembershipRequestMetadata,
-          intendedShiftId,
           intendedShiftInstanceId,
           intendedEventId,
         );
@@ -300,7 +286,6 @@ export class MembershipService {
         userId,
         organizationUnitId,
         metadata: this.buildInitialMetadata(
-          intendedShiftId,
           intendedShiftInstanceId,
           intendedEventId,
         ),
@@ -538,7 +523,6 @@ export class MembershipService {
   async requestOrgJoin(
     userId: string,
     organizationUnitId: string,
-    intendedShiftId?: string,
     intendedShiftInstanceId?: string,
     intendedEventId?: string,
   ): Promise<
@@ -604,10 +588,9 @@ export class MembershipService {
 
     if (existing) {
       if (existing.status === MembershipRequestStatus.PENDING) {
-        if (intendedShiftId || intendedShiftInstanceId || intendedEventId) {
+        if (intendedShiftInstanceId || intendedEventId) {
           const metadata = this.appendIntendedIdsToMetadata(
             (existing.metadata ?? {}) as MembershipRequestMetadata,
-            intendedShiftId,
             intendedShiftInstanceId,
             intendedEventId,
           );
@@ -637,7 +620,6 @@ export class MembershipService {
     const request = await this.createMembershipRequest(
       userId,
       organizationUnitId,
-      intendedShiftId,
       intendedShiftInstanceId,
       intendedEventId,
     );
