@@ -30,3 +30,11 @@ Use shadcn cli, do not create them by hand. Every shadcn component gets a Storyb
 `src/styles/default.css` is the primary file for frontends to import (tailwind, theming, custom classes).
 - Use OKLCH color space for color definitions
 - Prefer shadcn theme colors instead of tailwind base colors
+
+## Known constraints
+
+**SVG accessibility** — Biome `a11y/noSvgWithoutTitle` fires on every `<svg>` without either a `<title>` child or `role="img"` + `aria-label`. Use `role="img"` + `aria-label` (not `aria-hidden`) even for brand marks; decorative-but-named is the correct pattern.
+
+**Dark/light icon toggling** — Use CSS class toggling (`dark:hidden` / `hidden dark:inline`) rather than `useTheme`. `useTheme` resolves on the client and causes a hydration flash on the first render; CSS toggling is instant and SSR-safe.
+
+**SVGs in `@repo/ui`** — Inline SVG paths as JSX; do not import `.svg` files. The package is consumed by both Next.js and Storybook (Vite); file-based SVG imports require bundler-specific config that breaks one or the other.
