@@ -8,6 +8,7 @@ import {
 } from '@repo/ui';
 import { LogIn } from 'lucide-react';
 import { redirect } from 'next/navigation';
+import { getTranslations } from 'next-intl/server';
 import { Link } from '@/i18n/navigation';
 import {
   getLastVisitedOrgServer,
@@ -20,6 +21,7 @@ type CheckInPageProps = {
 
 export default async function CheckInPage({ params }: CheckInPageProps) {
   const { checkInId } = await params;
+  const t = await getTranslations('Shift.checkIn');
 
   const lastVisitedOrganizationId = await getLastVisitedOrgServer();
 
@@ -41,10 +43,8 @@ export default async function CheckInPage({ params }: CheckInPageProps) {
     <div className="flex justify-center p-4 pt-20">
       <Card className="w-2xl">
         <CardHeader>
-          <CardTitle>Check-in</CardTitle>
-          <CardDescription>
-            Choose your the organization you want to check the volunteer into.
-          </CardDescription>
+          <CardTitle>{t('selectOrgTitle')}</CardTitle>
+          <CardDescription>{t('selectOrgDescription')}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           {organizations.map((o) => (

@@ -1,17 +1,19 @@
 import { notFound } from 'next/navigation';
+import { getTranslations } from 'next-intl/server';
 import { updateTimeEntry } from '@/domain/time-entry/actions';
 import { TimeEntryForm } from '@/domain/time-entry/components/time-entry-form';
 import { getDataClient } from '@/lib/data-client';
 
 interface TimeEntryUpdatePageProps {
-  params: Promise<{ orgUId: string; timeEntryId: string }>;
+  params: Promise<{ orgUId: string; timeEntryId: string; locale: string }>;
 }
 
 export default async function TimeEntryUpdatePage({
   params,
 }: TimeEntryUpdatePageProps) {
-  const { orgUId, timeEntryId } = await params;
+  const { orgUId, timeEntryId, locale } = await params;
   const data = await getDataClient(orgUId);
+  const t = await getTranslations({ locale, namespace: 'TimeEntry.sheet' });
 
   const [entry, shifts, allVolunteers] = await Promise.all([
     data.timeEntry.findById(timeEntryId),
@@ -25,8 +27,8 @@ export default async function TimeEntryUpdatePage({
 
   return (
     <TimeEntryForm
-      title="Edit Time Entry"
-      description="Adjust the details of this Time Entry."
+      title={t('editTitle')}
+      description={t('editDescription')}
       organizationUnitId={orgUId}
       shifts={shifts.items}
       volunteers={allVolunteers}

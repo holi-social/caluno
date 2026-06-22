@@ -20,6 +20,7 @@ import {
   PencilIcon,
   PhoneIcon,
 } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import { useSheetTrigger } from '@/hooks/use-sheet';
 import { getDynamicIcon } from '@/lib/dynamic-icon';
 import { FORM_ID, OrgUnitCreateEditSheet } from './org-unit-create-edit-sheet';
@@ -41,6 +42,7 @@ export function OrgUnitDetailView({
 }: OrgUnitDetailViewProps) {
   const { open } = useSheetTrigger(FORM_ID);
   const TypeIcon = getDynamicIcon(orgUnit.type.icon, BuildingIcon);
+  const t = useTranslations('OrgUnit.detail');
 
   const hasContact =
     orgUnit.contactEmail ||
@@ -75,7 +77,7 @@ export function OrgUnitDetailView({
             onClick={() => open({ id: orgUnit.id })}
           >
             <PencilIcon className="h-4 w-4" />
-            Edit
+            {t('editButton')}
           </Button>
         )}
       </div>
@@ -83,7 +85,7 @@ export function OrgUnitDetailView({
       {orgUnit.description && (
         <Card>
           <CardHeader>
-            <CardTitle>About</CardTitle>
+            <CardTitle>{t('aboutTitle')}</CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-sm text-muted-foreground">
@@ -96,7 +98,7 @@ export function OrgUnitDetailView({
       {hasContact && (
         <Card>
           <CardHeader>
-            <CardTitle>Contact</CardTitle>
+            <CardTitle>{t('contactTitle')}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
             {orgUnit.contactEmail && (
@@ -142,11 +144,11 @@ export function OrgUnitDetailView({
       {orgUnit.parent && (
         <Card>
           <CardHeader>
-            <CardTitle>Hierarchy</CardTitle>
+            <CardTitle>{t('hierarchyTitle')}</CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-sm">
-              <span className="text-muted-foreground">Part of </span>
+              <span className="text-muted-foreground">{t('partOf')}</span>
               <span className="font-medium">{orgUnit.parent.name}</span>
             </p>
           </CardContent>

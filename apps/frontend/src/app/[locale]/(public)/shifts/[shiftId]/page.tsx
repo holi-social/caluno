@@ -1,11 +1,8 @@
-import {
-  type GetShiftQuery,
-  MembershipRequestStatus,
-  ShiftVisibility,
-} from '@repo/data';
+import { MembershipRequestStatus, ShiftVisibility } from '@repo/data';
 import { Badge, Button, Card, CardContent } from '@repo/ui';
 import { Calendar, Clock, DoorOpen, FileText } from 'lucide-react';
 import { notFound } from 'next/navigation';
+import { getTranslations } from 'next-intl/server';
 import { UserCard } from '@/components/user-card';
 import { JoinShiftButton } from '@/domain/shift/components/join-shift-button';
 import { isAuthenticated } from '@/lib/auth-server';
@@ -17,14 +14,6 @@ interface ShiftPageProps {
   params: Promise<{ shiftId: string }>;
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }
-
-const status = (shift: GetShiftQuery['shift']) => {
-  if (shift.visibility === ShiftVisibility.AllMembers) {
-    return 'Open';
-  } else {
-    return 'Invite Only';
-  }
-};
 
 export default async function ShiftPage({
   params,
@@ -43,6 +32,8 @@ export default async function ShiftPage({
   if (!shift) {
     notFound();
   }
+
+  const t = await getTranslations('Shift');
 
   const startDate = new Date(shift.originalStartsAt);
   const endDate = new Date(startDate.getTime() + shift.durationMinutes * 60000);
@@ -71,7 +62,11 @@ export default async function ShiftPage({
         <div>
           <h1 className="page-title">{shift.title}</h1>
         </div>
-        <Badge variant="secondary">{status(shift)}</Badge>
+        <Badge variant="secondary">
+          {shift.visibility === ShiftVisibility.AllMembers
+            ? t('visibility.ALL_MEMBERS')
+            : t('visibility.INVITED_MEMBERS')}
+        </Badge>
       </div>
 
       <div className="w-full max-w-2xl space-y-4">
@@ -104,19 +99,18 @@ export default async function ShiftPage({
             {isMember ? (
               <div className="space-x-2">
                 <Button>
-                  <Clock /> Record time
+                  <Clock /> {t('action.recordTime')}
                 </Button>
                 <Button variant="destructive">
-                  <DoorOpen /> Leave shift
+                  <DoorOpen /> {t('action.leaveShift')}
                 </Button>
               </div>
             ) : pendingRequest ? (
               <div className="space-y-2">
                 <p className="text-sm text-muted-foreground">
-                  Your membership request for this organization is pending
-                  approval. You will be able to join this shift once approved.
+                  {t('join.pendingMessage')}
                 </p>
-                <Button disabled>Request sent</Button>
+                <Button disabled>{t('join.requestSent')}</Button>
               </div>
             ) : (
               <JoinShiftButton

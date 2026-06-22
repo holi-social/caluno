@@ -3,6 +3,7 @@
 import type { FormBlock, RequirementForm } from '@repo/data';
 import { Button, Tabs, TabsContent, TabsList, TabsTrigger } from '@repo/ui';
 import { Plus } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import { useMemo, useState } from 'react';
 import { toast } from 'sonner';
 import { deleteBlock, deleteForm } from '../actions';
@@ -25,6 +26,7 @@ export function DashboardContent({
   orgUnitName: string;
   organizationId: string;
 }) {
+  const t = useTranslations('RequirementForm.dashboard');
   const [tab, setTab] = useState('forms');
 
   // --- Create flows ---
@@ -76,10 +78,10 @@ export function DashboardContent({
         <div className="flex justify-center">
           <TabsList className="h-12!">
             <TabsTrigger value="forms" className="rounded-xl px-9 text-base">
-              Forms
+              {t('formsTab')}
             </TabsTrigger>
             <TabsTrigger value="blocks" className="rounded-xl px-9 text-base">
-              Blocks
+              {t('blocksTab')}
             </TabsTrigger>
           </TabsList>
         </div>
@@ -91,7 +93,7 @@ export function DashboardContent({
               onClick={() => setCreateFormOpen(true)}
             >
               <Plus className="mr-2 size-5" />
-              Create Form
+              {t('createForm')}
             </Button>
           ) : (
             <CreateBlockButton size="lg" className="w-full lg:w-auto" />
@@ -102,19 +104,19 @@ export function DashboardContent({
       <TabsContent value="forms" className="mt-8">
         {forms.length === 0 ? (
           <p className="text-muted-foreground py-12 text-center">
-            No forms yet. Create your first form.
+            {t('noForms')}
           </p>
         ) : (
           <>
             <ListControls
               search={formSearch}
               onSearchChange={setFormSearch}
-              searchPlaceholder="Search forms..."
+              searchPlaceholder={t('searchForms')}
               filters={[]}
             />
             {visibleForms.length === 0 ? (
               <p className="text-muted-foreground py-12 text-center">
-                No forms match the current filters.
+                {t('noFormsMatch')}
               </p>
             ) : (
               <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -137,19 +139,19 @@ export function DashboardContent({
       <TabsContent value="blocks" className="mt-8">
         {blocks.length === 0 ? (
           <p className="text-muted-foreground py-12 text-center">
-            No blocks yet. Create your first block.
+            {t('noBlocks')}
           </p>
         ) : (
           <>
             <ListControls
               search={blockSearch}
               onSearchChange={setBlockSearch}
-              searchPlaceholder="Search blocks..."
+              searchPlaceholder={t('searchBlocks')}
               filters={[]}
             />
             {visibleBlocks.length === 0 ? (
               <p className="text-muted-foreground py-12 text-center">
-                No blocks match the current filters.
+                {t('noBlocksMatch')}
               </p>
             ) : (
               <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">

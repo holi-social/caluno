@@ -7,10 +7,10 @@ import type {
 import z from 'zod';
 import { getDataClient } from '@/lib/data-client';
 import { actionClient } from '@/lib/safe-action';
-import { createOrgUnitSchema, deleteOrgUnitSchema } from './schemas';
+import { deleteOrgUnitSchema, serverCreateOrgUnitSchema } from './schemas';
 
 export const createOrgUnit = actionClient
-  .inputSchema(createOrgUnitSchema)
+  .inputSchema(serverCreateOrgUnitSchema)
   .bindArgsSchemas<[parentId: z.ZodUUID]>([z.uuid()])
   .action(async ({ bindArgsParsedInputs: [parentId], parsedInput }) => {
     const data = await getDataClient(parsedInput.organizationUnitId);
@@ -32,7 +32,7 @@ export const createOrgUnit = actionClient
   });
 
 export const updateOrgUnit = actionClient
-  .inputSchema(createOrgUnitSchema)
+  .inputSchema(serverCreateOrgUnitSchema)
   .bindArgsSchemas<[id: z.ZodUUID]>([z.uuid()])
   .action(async ({ bindArgsParsedInputs: [id], parsedInput }) => {
     const data = await getDataClient(parsedInput.organizationUnitId);

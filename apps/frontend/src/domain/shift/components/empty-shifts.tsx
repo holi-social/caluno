@@ -7,19 +7,22 @@ import {
   EmptyTitle,
 } from '@repo/ui';
 import { Users } from 'lucide-react';
+import { getTranslations } from 'next-intl/server';
 import type { PropsWithChildren } from 'react';
 
-export const EmptyShifts = ({ children }: PropsWithChildren) => (
-  <Empty className="border border-dashed">
-    <EmptyHeader>
-      <EmptyMedia variant="icon">
-        <Users />
-      </EmptyMedia>
-      <EmptyTitle>No shifts yet</EmptyTitle>
-      <EmptyDescription>
-        Get started by creating your first shift and inviting volunteers.
-      </EmptyDescription>
-    </EmptyHeader>
-    <EmptyContent>{children}</EmptyContent>
-  </Empty>
-);
+export const EmptyShifts = async ({ children }: PropsWithChildren) => {
+  const t = await getTranslations('Shift');
+
+  return (
+    <Empty className="border border-dashed">
+      <EmptyHeader>
+        <EmptyMedia variant="icon">
+          <Users />
+        </EmptyMedia>
+        <EmptyTitle>{t('empty.title')}</EmptyTitle>
+        <EmptyDescription>{t('empty.description')}</EmptyDescription>
+      </EmptyHeader>
+      <EmptyContent>{children}</EmptyContent>
+    </Empty>
+  );
+};

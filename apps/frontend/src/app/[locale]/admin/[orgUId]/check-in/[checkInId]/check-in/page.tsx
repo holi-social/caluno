@@ -1,5 +1,6 @@
 import { Alert, AlertDescription, AlertTitle } from '@repo/ui';
 import { AlertCircle } from 'lucide-react';
+import { getTranslations } from 'next-intl/server';
 import { CheckinForm } from '@/domain/shift/components/checkin-form';
 import { getDataClient } from '@/lib/data-client';
 import { requireOrgAccess } from '@/lib/org-context-server';
@@ -28,6 +29,8 @@ export default async function CheckinPage({ params }: CheckinPageProps) {
     offset: 0,
   });
 
+  const t = await getTranslations('Shift.checkIn');
+
   if (!user) {
     return;
   }
@@ -39,17 +42,14 @@ export default async function CheckinPage({ params }: CheckinPageProps) {
     <div className="max-w-2xl">
       <div>
         <div>
-          <h1 className="page-title">Check-in</h1>
+          <h1 className="page-title">{t('checkInTitle')}</h1>
         </div>
         <div className="lg:px-2 lg:py-8 py-4 space-y-4">
           {status === 'blocked' && (
             <Alert variant="destructive">
               <AlertCircle />
-              <AlertTitle>Check-in denied</AlertTitle>
-              <AlertDescription>
-                The volunteer is not permitted to check-in. They must contact
-                Headquarters for assistance.
-              </AlertDescription>
+              <AlertTitle>{t('blockedTitle')}</AlertTitle>
+              <AlertDescription>{t('blockedDescription')}</AlertDescription>
             </Alert>
           )}
 

@@ -1,3 +1,5 @@
+'use client';
+
 import type { ActiveShift } from '@repo/data';
 import {
   Alert,
@@ -10,6 +12,7 @@ import {
   SelectValue,
 } from '@repo/ui';
 import { AlertCircle } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import { Link } from '@/i18n/navigation';
 import { MiniShiftCard } from './mini-shift-card';
 
@@ -26,25 +29,29 @@ export const ShiftSelectorCard = ({
   onChange,
   value,
 }: ShiftSelectorCardProps) => {
+  const t = useTranslations('Shift');
+
   if (shifts.length === 0) {
     return (
       <Alert variant="destructive">
         <AlertCircle />
-        <AlertTitle>No active shifts</AlertTitle>
+        <AlertTitle>{t('selector.noActiveShifts')}</AlertTitle>
         <AlertDescription>
-          <span>
-            Please{' '}
-            <Link href="?sheet=shift-form" className="underline">
-              add a shift
-            </Link>{' '}
-            or adjust the time-range of an{' '}
-            <Link
-              href={`/admin/${organizationUnitId}/shifts`}
-              className="underline"
-            >
-              existing shift.
-            </Link>
-          </span>
+          {t.rich('selector.noActiveShiftsDescription', {
+            addShift: (chunks) => (
+              <Link href="?sheet=shift-form" className="underline">
+                {chunks}
+              </Link>
+            ),
+            existingShift: (chunks) => (
+              <Link
+                href={`/admin/${organizationUnitId}/shifts`}
+                className="underline"
+              >
+                {chunks}
+              </Link>
+            ),
+          })}
         </AlertDescription>
       </Alert>
     );
@@ -69,7 +76,7 @@ export const ShiftSelectorCard = ({
     <div className="space-y-4">
       <Select value="" onValueChange={onChange}>
         <SelectTrigger>
-          <SelectValue placeholder="Choose a shift" />
+          <SelectValue placeholder={t('selector.chooseShift')} />
         </SelectTrigger>
         <SelectContent>
           {shifts.map((shift) => (

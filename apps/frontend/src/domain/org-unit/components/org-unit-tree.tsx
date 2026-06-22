@@ -20,6 +20,7 @@ import {
   Share2Icon,
   TrashIcon,
 } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import { Link } from '@/i18n/navigation';
 import { orgUnitAdminHref } from '@/lib/admin-routes';
 import { getDynamicIcon } from '@/lib/dynamic-icon';
@@ -68,6 +69,7 @@ function OrgUnitNodeItem({
   const Icon = getDynamicIcon(node.type.icon, HouseIcon);
   const children = node.children ?? [];
   const hasChildren = children.length > 0;
+  const t = useTranslations('OrgUnit.tree');
 
   // Replicate TreeNode's parentPath computation so children receive the correct path
   const currentPath = level === 0 ? [] : [...parentPath];
@@ -102,7 +104,7 @@ function OrgUnitNodeItem({
             <Button
               size="icon-xs"
               variant="outline"
-              aria-label="Visit org unit"
+              aria-label={t('visitAria')}
               asChild
             >
               <Link
@@ -116,13 +118,10 @@ function OrgUnitNodeItem({
             <Button
               size="icon-xs"
               variant="outline"
-              aria-label="Copy org unit link to clipboard"
+              aria-label={t('copyLinkAria')}
               onClick={(e) => {
                 e.stopPropagation();
-                copyToClipboard(
-                  organizationUnitUrl(node.id),
-                  'Org unit link copied to clipboard',
-                );
+                copyToClipboard(organizationUnitUrl(node.id), t('copyToast'));
               }}
             >
               <Share2Icon />
@@ -133,7 +132,7 @@ function OrgUnitNodeItem({
                 <Button
                   size="icon-xs"
                   variant="outline"
-                  aria-label="Add child"
+                  aria-label={t('addChildAria')}
                   onClick={(e) => {
                     e.stopPropagation();
                     onCreate(node);
@@ -145,7 +144,7 @@ function OrgUnitNodeItem({
                 <Button
                   size="icon-xs"
                   variant="outline"
-                  aria-label="Edit"
+                  aria-label={t('editAria')}
                   onClick={(e) => {
                     e.stopPropagation();
                     onEdit(node);
@@ -158,7 +157,7 @@ function OrgUnitNodeItem({
                   <Button
                     size="icon-xs"
                     variant="destructive"
-                    aria-label="Delete"
+                    aria-label={t('deleteAria')}
                     onClick={(e) => {
                       e.stopPropagation();
                       onDelete(node);

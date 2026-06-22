@@ -1,6 +1,7 @@
 import { type JoinOrganizationMutation, JoinStatus } from '@repo/data';
 import { cookies } from 'next/headers';
 import { notFound, redirect } from 'next/navigation';
+import { getTranslations } from 'next-intl/server';
 import { isAuthenticated } from '@/lib/auth-server';
 import { getDataClient } from '@/lib/data-client';
 import { getSafeRedirect } from '@/lib/safe-redirect';
@@ -16,6 +17,7 @@ interface InvitePageProps {
 export default async function InvitePage({ params }: InvitePageProps) {
   const { orgId } = await params;
   const organizationUnitId = orgId;
+  const t = await getTranslations('MembershipRequest');
 
   if (!(await isAuthenticated())) {
     const searchParams = new URLSearchParams({ orgUId: organizationUnitId });
@@ -34,7 +36,7 @@ export default async function InvitePage({ params }: InvitePageProps) {
     result = await data.membershipRequest.join(organizationUnitId);
   } catch (error) {
     const message =
-      error instanceof Error ? error.message : 'Failed to join organization';
+      error instanceof Error ? error.message : t('invite.joinErrorFallback');
     return <JoinError message={message} />;
   }
 
@@ -66,5 +68,5 @@ export default async function InvitePage({ params }: InvitePageProps) {
     );
   }
 
-  return <JoinError message="Unexpected response from server" />;
+  return <JoinError message={t('invite.unexpectedError')} />;
 }

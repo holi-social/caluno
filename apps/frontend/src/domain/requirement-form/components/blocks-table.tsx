@@ -12,6 +12,7 @@ import {
   TableRow,
 } from '@repo/ui';
 import { Eye, Loader2, Pencil, Trash2 } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import { useTransition } from 'react';
 import { DeleteAlertDialog } from '@/components/delete-alert-dialog';
 import { FormattedDate } from '@/components/formatted-date';
@@ -24,6 +25,7 @@ function BlockActions({
   block: FormBlock;
   onDelete: (id: string) => Promise<void>;
 }) {
+  const t = useTranslations('RequirementForm.table');
   const [isDeleting, startDeleteTransition] = useTransition();
   const { open: openSheet } = useSheetTrigger('block-form');
 
@@ -36,20 +38,20 @@ function BlockActions({
       <Button
         size="icon-xs"
         variant="outline"
-        aria-label={block.isEditable ? 'Edit block' : 'View block'}
+        aria-label={block.isEditable ? t('editBlockAria') : t('viewBlockAria')}
         onClick={() => openSheet({ id: block.id })}
       >
         {block.isEditable ? <Pencil /> : <Eye />}
       </Button>
       <DeleteAlertDialog
-        title="Delete block?"
-        description={`"${block.title}" will be permanently removed.`}
+        title={t('deleteBlockAria')}
+        description={t('deleteBlockDescription', { name: block.title })}
         onDelete={handleDelete}
         trigger={
           <Button
             size="icon-xs"
             variant="destructive"
-            aria-label="Delete block"
+            aria-label={t('deleteBlockAria')}
             disabled={isDeleting}
           >
             {isDeleting ? <Loader2 className="animate-spin" /> : <Trash2 />}
@@ -69,6 +71,8 @@ export function BlocksTable({
   forms: RequirementForm[];
   onDelete: (id: string) => Promise<void>;
 }) {
+  const t = useTranslations('RequirementForm.table');
+  const tCommon = useTranslations('Common');
   const { open: openSheet } = useSheetTrigger('block-form');
 
   return (
@@ -76,11 +80,11 @@ export function BlocksTable({
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead>Title</TableHead>
-            <TableHead>Fields</TableHead>
-            <TableHead>Used in</TableHead>
-            <TableHead>Editable</TableHead>
-            <TableHead>Updated</TableHead>
+            <TableHead>{t('title')}</TableHead>
+            <TableHead>{t('fields')}</TableHead>
+            <TableHead>{t('usedIn')}</TableHead>
+            <TableHead>{t('editable')}</TableHead>
+            <TableHead>{t('updated')}</TableHead>
             <TableHead />
           </TableRow>
         </TableHeader>
@@ -104,12 +108,14 @@ export function BlocksTable({
                 </TableCell>
                 <TableCell>
                   <Badge variant="outline" className="text-xs">
-                    {fieldCount} {fieldCount === 1 ? 'field' : 'fields'}
+                    {t('fieldCount', { count: fieldCount })}
                   </Badge>
                 </TableCell>
                 <TableCell>
                   {usedInForms.length === 0 ? (
-                    <span className="text-muted-foreground text-sm">—</span>
+                    <span className="text-muted-foreground text-sm">
+                      {tCommon('dash')}
+                    </span>
                   ) : (
                     <div className="flex flex-wrap gap-1">
                       {usedInForms.map((f) => (
@@ -130,10 +136,12 @@ export function BlocksTable({
                       variant="outline"
                       className="bg-emerald-50 text-emerald-700 border-emerald-200 text-xs"
                     >
-                      Yes
+                      {t('yes')}
                     </Badge>
                   ) : (
-                    <span className="text-muted-foreground text-sm">No</span>
+                    <span className="text-muted-foreground text-sm">
+                      {tCommon('no')}
+                    </span>
                   )}
                 </TableCell>
                 <TableCell className="text-muted-foreground whitespace-nowrap">

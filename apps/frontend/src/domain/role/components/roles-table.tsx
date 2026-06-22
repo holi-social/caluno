@@ -11,6 +11,7 @@ import {
   TableHeader,
   TableRow,
 } from '@repo/ui';
+import { useTranslations } from 'next-intl';
 import { Link } from '@/i18n/navigation';
 import { ActionBar } from './action-bar';
 
@@ -20,15 +21,17 @@ interface RolesTableProps {
 
 export function RolesTable({ roles }: RolesTableProps) {
   const orgUId = useOrgUId();
+  const t = useTranslations('Role');
+  const tCommon = useTranslations('Common');
 
   return (
     <div className="rounded-md border overflow-x-auto">
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead>Name</TableHead>
-            <TableHead>Description</TableHead>
-            <TableHead>Permissions</TableHead>
+            <TableHead>{t('table.name')}</TableHead>
+            <TableHead>{t('table.description')}</TableHead>
+            <TableHead>{t('table.permissions')}</TableHead>
             <TableHead className="w-25" />
           </TableRow>
         </TableHeader>
@@ -43,13 +46,17 @@ export function RolesTable({ roles }: RolesTableProps) {
                   >
                     {role.name}
                   </Link>
-                  {role.isInternal && <Badge variant="secondary">System</Badge>}
+                  {role.isInternal && (
+                    <Badge variant="secondary">{t('table.systemBadge')}</Badge>
+                  )}
                 </div>
               </TableCell>
               <TableCell className="text-muted-foreground">
-                {role.description || '-'}
+                {role.description || tCommon('dash')}
               </TableCell>
-              <TableCell>{role.permissions.length} permissions</TableCell>
+              <TableCell>
+                {t('table.permissionsCount', { n: role.permissions.length })}
+              </TableCell>
               <TableCell className="text-right">
                 <ActionBar
                   id={role.id}

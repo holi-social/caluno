@@ -2,6 +2,7 @@
 
 import { Alert, AlertDescription, AlertTitle } from '@repo/ui';
 import { AlertCircle } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { QRScanner } from '@/components/qr-scanner';
@@ -19,6 +20,7 @@ type CheckinScannerProps = {
 export const CheckInScanner = ({ organizationUnitId }: CheckinScannerProps) => {
   const [error, setError] = useState(false);
   const router = useRouter();
+  const t = useTranslations('Shift');
 
   const handleScan = (data: string) => {
     setError(false);
@@ -28,7 +30,7 @@ export const CheckInScanner = ({ organizationUnitId }: CheckinScannerProps) => {
       router.push(`/admin/${organizationUnitId}/check-in/${checkinId}/decide`);
     } else {
       setError(true);
-      toast.error('Not a valid check-in iD. Please try again.');
+      toast.error(t('scanner.invalidToast'));
     }
   };
   return (
@@ -36,10 +38,8 @@ export const CheckInScanner = ({ organizationUnitId }: CheckinScannerProps) => {
       {error && (
         <Alert variant="destructive" className="mb-4">
           <AlertCircle />
-          <AlertTitle>Invalid check-in iD</AlertTitle>
-          <AlertDescription>
-            Please try rescanning or rescan a different copy of QR iD.
-          </AlertDescription>
+          <AlertTitle>{t('scanner.title')}</AlertTitle>
+          <AlertDescription>{t('scanner.description')}</AlertDescription>
         </Alert>
       )}
 

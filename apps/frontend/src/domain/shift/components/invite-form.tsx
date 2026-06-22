@@ -17,6 +17,7 @@ import {
   Separator,
 } from '@repo/ui';
 import { Share2 } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import { useEffect, useTransition } from 'react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
@@ -45,13 +46,19 @@ export function InviteShiftForm({
   const orgUId = useOrgUId();
   const session = useSession();
   const [isPending, startTransition] = useTransition();
+  const t = useTranslations('Shift');
+  const tCommon = useTranslations('Common');
 
   const { data: shift } = useShift(shiftId);
   const { data: shiftVolunteers } = useShiftVolunteers(instanceId);
   const { data: memberships } = useMemberships(orgUId);
 
+  const schema = inviteShiftFormSchema({
+    minMaxVolunteers: t('validation.minMaxVolunteers'),
+  });
+
   const form = useForm<InviteShiftFormValues>({
-    resolver: zodResolver(inviteShiftFormSchema),
+    resolver: zodResolver(schema),
     defaultValues: {
       minVolunteers: null,
       maxVolunteers: null,
@@ -131,35 +138,39 @@ export function InviteShiftForm({
       {/* Min / Max row */}
       <div className="flex gap-3">
         <Field className="flex-1">
-          <FieldLabel htmlFor="minVolunteers">Min volunteers</FieldLabel>
+          <FieldLabel htmlFor="minVolunteers">
+            {t('inviteForm.minVolunteersLabel')}
+          </FieldLabel>
           <Input
             id="minVolunteers"
             type="number"
             min={1}
-            placeholder="e.g. 2"
+            placeholder={t('inviteForm.minVolunteersPlaceholder')}
             disabled={isPending}
             {...form.register('minVolunteers', {
               setValueAs: (v) => (v === '' || v == null ? null : Number(v)),
             })}
           />
           <FieldDescription>
-            Minimum number of people required to open the shift
+            {t('inviteForm.minVolunteersDescription')}
           </FieldDescription>
         </Field>
         <Field className="flex-1">
-          <FieldLabel htmlFor="maxVolunteers">Max volunteers</FieldLabel>
+          <FieldLabel htmlFor="maxVolunteers">
+            {t('inviteForm.maxVolunteersLabel')}
+          </FieldLabel>
           <Input
             id="maxVolunteers"
             type="number"
             min={1}
-            placeholder="e.g. 50"
+            placeholder={t('inviteForm.maxVolunteersPlaceholder')}
             disabled={isPending}
             {...form.register('maxVolunteers', {
               setValueAs: (v) => (v === '' || v == null ? null : Number(v)),
             })}
           />
           <FieldDescription>
-            Maximum number of people allowed to sign up for the shift
+            {t('inviteForm.maxVolunteersDescription')}
           </FieldDescription>
           <FieldError errors={[form.formState.errors.maxVolunteers]} />
         </Field>
@@ -169,7 +180,7 @@ export function InviteShiftForm({
 
       {/* Invite section */}
       <div className="flex flex-col gap-4 flex-1">
-        <p className="text-xl font-bold">Invite and manage participants</p>
+        <p className="text-xl font-bold">{t('inviteForm.title')}</p>
         <TransferList
           available={allMembers}
           invited={invitedMembers}
@@ -181,14 +192,11 @@ export function InviteShiftForm({
           variant="outline"
           className="w-full"
           onClick={() =>
-            copyToClipboard(
-              shiftShareUrl(shiftId, instanceId),
-              'Invite link copied',
-            )
+            copyToClipboard(shiftShareUrl(shiftId, instanceId), tCommon('linkCopied'))
           }
         >
           <Share2 className="size-4 mr-2" />
-          Copy invite link
+          {t('inviteForm.copyInviteLink')}
         </Button>
       </div>
     </form>

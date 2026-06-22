@@ -12,7 +12,8 @@ import {
   Textarea,
 } from '@repo/ui';
 import { ArrowLeft, Plus, Save, Trash2 } from 'lucide-react';
-import { useState, useTransition } from 'react';
+import { useTranslations } from 'next-intl';
+import { useMemo, useState, useTransition } from 'react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 import { z } from 'zod';
@@ -26,14 +27,6 @@ import {
 import { ConfirmDialog } from './confirm-dialog';
 import { FieldForm } from './field-form';
 
-const editBlockSchema = z.object({
-  title: z.string().min(1, 'Title is required'),
-  description: z.string().optional(),
-  icon: z.string().optional(),
-});
-
-type EditBlockValues = z.infer<typeof editBlockSchema>;
-
 export function EditBlockForm({
   block,
   orgUId,
@@ -42,11 +35,28 @@ export function EditBlockForm({
   orgUId: string;
 }) {
   const router = useRouter();
+  const t = useTranslations('RequirementForm.block');
+  const tCard = useTranslations('RequirementForm.card');
+  const tCommon = useTranslations('Common');
+  const tActions = useTranslations('RequirementForm.actions');
+  const tValidation = useTranslations('RequirementForm.validation');
   const [isPending, startTransition] = useTransition();
   const [addingField, setAddingField] = useState(false);
   const [editingFieldId, setEditingFieldId] = useState<string | null>(null);
   const [deletingFieldId, setDeletingFieldId] = useState<string | null>(null);
   const [fields, setFields] = useState<FormBlockField[]>(block.fields ?? []);
+
+  const editBlockSchema = useMemo(
+    () =>
+      z.object({
+        title: z.string().min(1, tValidation('titleRequired')),
+        description: z.string().optional(),
+        icon: z.string().optional(),
+      }),
+    [tValidation],
+  );
+
+  type EditBlockValues = z.infer<typeof editBlockSchema>;
 
   const form = useForm<EditBlockValues>({
     resolver: zodResolver(editBlockSchema),
@@ -75,9 +85,9 @@ export function EditBlockForm({
       if (result?.serverError) {
         toast.error(result.serverError);
       } else if (result?.data) {
-        toast.success('Block saved');
+        toast.success(tActions('blockSaved'));
       } else {
-        toast.error('Failed to save block');
+        toast.error(tActions('failedToSaveBlock'));
       }
     });
   };
@@ -105,9 +115,9 @@ export function EditBlockForm({
       } else if (result?.data) {
         setFields(result.data.fields ?? []);
         setAddingField(false);
-        toast.success('Field added');
+        toast.success(tActions('fieldAdded'));
       } else {
-        toast.error('Failed to add field');
+        toast.error(tActions('failedToAddField'));
       }
     });
   }
@@ -136,9 +146,9 @@ export function EditBlockForm({
       } else if (result?.data) {
         setFields(result.data.fields ?? []);
         setEditingFieldId(null);
-        toast.success('Field updated');
+        toast.success(tActions('fieldUpdated'));
       } else {
-        toast.error('Failed to update field');
+        toast.error(tActions('failedToUpdateField'));
       }
     });
   }
@@ -154,9 +164,9 @@ export function EditBlockForm({
       } else if (result?.data) {
         setFields((prev) => prev.filter((f) => f.id !== fieldId));
         setDeletingFieldId(null);
-        toast.success('Field deleted');
+        toast.success(tActions('fieldDeleted'));
       } else {
-        toast.error('Failed to delete field');
+        toast.error(tActions('failedToDeleteField'));
       }
     });
   }
@@ -204,16 +214,16 @@ export function EditBlockForm({
           }
         >
           <ArrowLeft className="mr-1 size-4" />
-          Back
+          {t('back')}
         </Button>
-        <h1 className="page-title">Edit Block</h1>
+        <h1 className="page-title">{t('editTitle')}</h1>
       </div>
 
       {/* Block metadata */}
       <form onSubmit={handleSubmit(onSaveMeta)} className="space-y-4">
         <Field>
           <FieldLabel htmlFor="title">
-            Block Title <span className="text-destructive">*</span>
+            {t('blockTitleLabel')} <span className="text-destructive">*</span>
           </FieldLabel>
           <Input
             id="title"
@@ -226,7 +236,7 @@ export function EditBlockForm({
         </Field>
 
         <Field>
-          <FieldLabel htmlFor="description">Description</FieldLabel>
+          <FieldLabel htmlFor="description">{t('descriptionLabel')}</FieldLabel>
           <Textarea
             id="description"
             disabled={isPending}
@@ -239,11 +249,11 @@ export function EditBlockForm({
         </Field>
 
         <Field>
-          <FieldLabel htmlFor="icon">Icon</FieldLabel>
+          <FieldLabel htmlFor="icon">{t('iconLabel')}</FieldLabel>
           <Input
             id="icon"
             type="text"
-            placeholder="e.g. user"
+            placeholder={t('iconPlaceholder')}
             disabled={isPending}
             aria-invalid={!!errors.icon}
             {...register('icon')}
@@ -253,7 +263,7 @@ export function EditBlockForm({
         <div className="flex gap-3 pt-2">
           <Button type="submit" disabled={isPending || !isDirty} size="lg">
             <Save className="mr-2 size-4" />
-            Save Block
+            {t('saveBlock')}
           </Button>
         </div>
       </form>
@@ -263,7 +273,9 @@ export function EditBlockForm({
       {/* Fields section */}
       <div className="space-y-4">
         <div className="flex items-center justify-between">
-          <h2 className="text-xl font-semibold">Fields ({fields.length})</h2>
+          <h2 className="text-xl font-semibold">
+            {t('fieldsTitle', { count: fields.length })}
+          </h2>
           {!addingField && (
             <Button
               variant="outline"
@@ -273,16 +285,14 @@ export function EditBlockForm({
               }}
             >
               <Plus className="mr-2 size-4" />
-              Add Field
+              {t('addField')}
             </Button>
           )}
         </div>
 
         {fields.length === 0 && !addingField && (
           <div className="rounded-lg border border-dashed px-4 py-6 text-center">
-            <p className="text-muted-foreground text-sm">
-              No fields yet. Add your first field to this block.
-            </p>
+            <p className="text-muted-foreground text-sm">{t('noFields')}</p>
           </div>
         )}
 
@@ -321,7 +331,7 @@ export function EditBlockForm({
                   )}
                   {field.systemKey && (
                     <span className="text-muted-foreground text-xs">
-                      (system)
+                      {t('systemField')}
                     </span>
                   )}
                 </div>
@@ -356,7 +366,7 @@ export function EditBlockForm({
                     setEditingFieldId(field.id);
                   }}
                 >
-                  Edit
+                  {t('edit')}
                 </Button>
                 <Button
                   variant="ghost"
@@ -396,9 +406,16 @@ export function EditBlockForm({
         onOpenChange={(open) => {
           if (!open) setDeletingFieldId(null);
         }}
-        title="Delete field?"
-        description="This field will be permanently removed from the block."
-        confirmLabel="Delete"
+        title={tCard('deleteBlockTitle')}
+        description={
+          <>
+            <strong>
+              {fields.find((f) => f.id === deletingFieldId)?.label ?? ''}
+            </strong>{' '}
+            {tCard('deleteBlockDescription')}
+          </>
+        }
+        confirmLabel={tCommon('delete')}
         onConfirm={() => {
           if (deletingFieldId) handleDeleteField(deletingFieldId);
         }}

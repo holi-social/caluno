@@ -6,7 +6,11 @@ import { RRule } from 'rrule';
 import z from 'zod';
 import { getDataClient } from '@/lib/data-client';
 import { actionClient } from '@/lib/safe-action';
-import { shiftDeleteSchema, shiftFormSchema } from './schemas';
+import {
+  serverShiftDeleteSchema,
+  serverShiftFormSchema,
+  serverUpdateShiftFormSchema,
+} from './schemas';
 
 const dayToRRule: Record<string, number> = {
   MONDAY: RRule.MO.weekday,
@@ -47,7 +51,7 @@ export async function getShift(id: string, organizationUnitId: string) {
 }
 
 export const createShift = actionClient
-  .inputSchema(shiftFormSchema)
+  .inputSchema(serverShiftFormSchema)
   .action(async ({ parsedInput }) => {
     const data = await getDataClient(parsedInput.organizationUnitId);
 
@@ -72,12 +76,7 @@ export const createShift = actionClient
   });
 
 export const updateShift = actionClient
-  .inputSchema(shiftFormSchema)
-  .inputSchema(async (prevSchema) => {
-    return prevSchema.extend({
-      id: z.string().min(1, 'Shift ID is required'),
-    });
-  })
+  .inputSchema(serverUpdateShiftFormSchema)
   .action(async ({ parsedInput }) => {
     const data = await getDataClient(parsedInput.organizationUnitId);
 
@@ -101,7 +100,7 @@ export const updateShift = actionClient
   });
 
 export const deleteShift = actionClient
-  .inputSchema(shiftDeleteSchema)
+  .inputSchema(serverShiftDeleteSchema)
   .action(async ({ parsedInput }) => {
     const data = await getDataClient(parsedInput.organizationUnitId);
 

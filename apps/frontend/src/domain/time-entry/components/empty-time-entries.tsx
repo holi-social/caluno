@@ -1,3 +1,5 @@
+'use client';
+
 import {
   Empty,
   EmptyContent,
@@ -7,19 +9,22 @@ import {
   EmptyTitle,
 } from '@repo/ui';
 import { Users } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import type { PropsWithChildren } from 'react';
 
-export const EmptyTimeEntries = ({ children }: PropsWithChildren) => (
-  <Empty className="border border-dashed">
-    <EmptyHeader>
-      <EmptyMedia variant="icon">
-        <Users />
-      </EmptyMedia>
-      <EmptyTitle>No time entries</EmptyTitle>
-      <EmptyDescription>
-        You can check somebody into a Shift or manually add a Time Entry.
-      </EmptyDescription>
-    </EmptyHeader>
-    <EmptyContent>{children}</EmptyContent>
-  </Empty>
-);
+export const EmptyTimeEntries = ({ children }: PropsWithChildren) => {
+  const t = useTranslations('TimeEntry');
+
+  return (
+    <Empty className="border border-dashed">
+      <EmptyHeader>
+        <EmptyMedia variant="icon">
+          <Users />
+        </EmptyMedia>
+        <EmptyTitle>{t('empty.title')}</EmptyTitle>
+        <EmptyDescription>{t('empty.description')}</EmptyDescription>
+      </EmptyHeader>
+      <EmptyContent>{children}</EmptyContent>
+    </Empty>
+  );
+};

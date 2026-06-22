@@ -1,3 +1,4 @@
+import { getTranslations } from 'next-intl/server';
 import { CreateTimeEntryButton } from '@/domain/time-entry/components/create-time-entry-button';
 import { EmptyTimeEntries } from '@/domain/time-entry/components/empty-time-entries';
 import { TimesheetsTable } from '@/domain/time-entry/components/timesheets-table';
@@ -9,6 +10,7 @@ interface TimesheetsPageProps {
 
 export default async function TimesheetsPage({ params }: TimesheetsPageProps) {
   const { orgUId } = await params;
+  const t = await getTranslations('TimeEntry');
 
   const data = await getDataClient(orgUId);
 
@@ -18,7 +20,7 @@ export default async function TimesheetsPage({ params }: TimesheetsPageProps) {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="page-title">Timesheets</h1>
+        <h1 className="page-title">{t('page.title')}</h1>
         <CreateTimeEntryButton orgUId={orgUId} />
       </div>
 

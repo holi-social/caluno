@@ -3,6 +3,7 @@
 import { Alert, AlertDescription, AlertTitle, Button } from '@repo/ui';
 import { type IDetectedBarcode, Scanner } from '@yudiel/react-qr-scanner';
 import { AlertCircle, ScanQrCode } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import { useState } from 'react';
 
 interface QRScannerProps {
@@ -44,6 +45,7 @@ const highlightCodeOnCanvas = (
 };
 
 export function QRScanner({ onScan }: QRScannerProps) {
+  const t = useTranslations('QRScanner');
   const [isPaused, setIsPaused] = useState(false);
   const [error, setError] = useState<ErrorMessage>();
   const [showSuccessFlash, setShowSuccessFlash] = useState(false);
@@ -67,24 +69,22 @@ export function QRScanner({ onScan }: QRScannerProps) {
         err.message.includes('Permission')
       ) {
         setError({
-          title: 'Camera access required',
-          description:
-            'Please allow camera access in your browser settings to scan QR codes.',
+          title: t('error.noPermission.title'),
+          description: t('error.noPermission.description'),
         });
         return;
       }
       if (err.name === 'NotFoundError' || err.message.includes('No camera')) {
         setError({
-          title: 'No camera found',
-          description:
-            'No camera was detected on this device. Please connect a camera or use a device with a built-in camera.',
+          title: t('error.noCamera.title'),
+          description: t('error.noCamera.description'),
         });
         return;
       }
     }
     setError({
-      title: 'Camera error',
-      description: 'Unable to access the camera. Please try again.',
+      title: t('error.generic.title'),
+      description: t('error.generic.description'),
     });
   };
 
@@ -127,7 +127,7 @@ export function QRScanner({ onScan }: QRScannerProps) {
       {isPaused && (
         <div className="mt-4 text-center">
           <Button onClick={() => setIsPaused(false)}>
-            <ScanQrCode /> Rescan
+            <ScanQrCode /> {t('rescan')}
           </Button>
         </div>
       )}

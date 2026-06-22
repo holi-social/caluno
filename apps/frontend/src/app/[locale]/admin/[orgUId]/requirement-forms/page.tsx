@@ -3,7 +3,7 @@ import { getDataClient } from '@/lib/data-client';
 import { requireOrgAccess } from '@/lib/org-context-server';
 
 interface Props {
-  params: Promise<{ orgUId: string }>;
+  params: Promise<{ orgUId: string; locale: string }>;
 }
 
 export default async function RequirementFormsPage({ params }: Props) {

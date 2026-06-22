@@ -1,3 +1,5 @@
+'use client';
+
 import {
   AlertDialog,
   AlertDialogAction,
@@ -9,6 +11,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@repo/ui';
+import { useTranslations } from 'next-intl';
 
 interface DeleteAlertDialogProps {
   title: string;
@@ -23,6 +26,8 @@ export function DeleteAlertDialog({
   onDelete,
   trigger,
 }: DeleteAlertDialogProps) {
+  const t = useTranslations('Common');
+
   return (
     <AlertDialog>
       <AlertDialogTrigger asChild>{trigger}</AlertDialogTrigger>
@@ -32,9 +37,9 @@ export function DeleteAlertDialog({
           <AlertDialogDescription>{description}</AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel>Cancel</AlertDialogCancel>
+          <AlertDialogCancel>{t('cancel')}</AlertDialogCancel>
           <AlertDialogAction onClick={onDelete} variant="destructive">
-            Delete
+            {t('delete')}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

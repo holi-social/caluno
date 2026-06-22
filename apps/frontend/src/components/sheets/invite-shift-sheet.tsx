@@ -1,6 +1,7 @@
 'use client';
 
 import { useQueryClient } from '@repo/data/react';
+import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 import { ClippySheet } from '@/components/sheets/clippy-sheet';
 import { InviteShiftForm } from '@/domain/shift/components/invite-form';
@@ -19,11 +20,12 @@ export function InviteShiftSheet() {
   const instanceId = getParam('instanceId');
   const router = useRouter();
   const queryClient = useQueryClient();
+  const t = useTranslations('Shift');
 
   const handleSuccess = () => {
     router.refresh();
     sheetProps.close();
-    toast.success('Volunteers invitations changed');
+    toast.success(t('toast.inviteChanged'));
 
     queryClient.invalidateQueries({
       queryKey: ['shiftVolunteers', instanceId],
@@ -33,8 +35,8 @@ export function InviteShiftSheet() {
 
   return (
     <ClippySheet
-      title="Invite volunteers"
-      description="Invited volunteers will receive an invitation email with shift details and a link to the system."
+      title={t('sheet.inviteTitle')}
+      description={t('sheet.inviteDescription')}
       formId={FORM_ID}
       {...sheetProps}
     >

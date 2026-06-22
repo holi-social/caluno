@@ -1,5 +1,6 @@
 import { Card, CardContent } from '@repo/ui';
 import { Calendar, Hand, LogIn } from 'lucide-react';
+import { getTranslations } from 'next-intl/server';
 import { CheckOutButton } from '@/domain/shift/components/checkout-button';
 import { getDataClient } from '@/lib/data-client';
 import { formatDateTime } from '@/lib/formatting';
@@ -16,6 +17,8 @@ export default async function CheckOutPage({ params }: CheckOutPageProps) {
   const data = await getDataClient(orgUId);
   const user = await data.user.findByCheckInId(checkInId);
 
+  const t = await getTranslations('Shift.checkIn');
+
   if (!user) {
     return;
   }
@@ -27,7 +30,7 @@ export default async function CheckOutPage({ params }: CheckOutPageProps) {
     <div className="max-w-2xl">
       <div>
         <div>
-          <h1 className="page-title">Check-out</h1>
+          <h1 className="page-title">{t('checkOutTitle')}</h1>
         </div>
         <div className="lg:px-2 lg:py-8 py-4 space-y-4">
           {openTimeEntries.map((entry) => (
@@ -41,12 +44,16 @@ export default async function CheckOutPage({ params }: CheckOutPageProps) {
                         {entry.shiftInstance.master.title}
                       </li>
                       <li className="flex gap-2">
-                        <LogIn className="text-muted-foreground" /> Checked in:{' '}
-                        {formatDateTime(new Date(entry.startedAt))}
+                        <LogIn className="text-muted-foreground" />{' '}
+                        {t('checkedInAt', {
+                          time: formatDateTime(new Date(entry.startedAt)),
+                        })}
                       </li>
                       <li className="flex gap-2">
-                        <Hand className="text-muted-foreground" /> Checking out:{' '}
-                        {formatDateTime(new Date())}
+                        <Hand className="text-muted-foreground" />{' '}
+                        {t('checkingOutAt', {
+                          time: formatDateTime(new Date()),
+                        })}
                       </li>
                     </ul>
                   </CardContent>

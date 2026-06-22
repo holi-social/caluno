@@ -8,6 +8,7 @@ import {
   InputGroupInput,
 } from '@repo/ui';
 import { ArrowRightLeft, CircleX, Link2, Search } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import { useState } from 'react';
 import { copyToClipboard } from '@/lib/clipboard';
 import { UserCard } from './user-card';
@@ -41,6 +42,7 @@ export const MemberSelect = ({
   readonlyIds = [],
   inviteLinkUrl,
 }: MemberSelectProps) => {
+  const t = useTranslations('MemberSelect');
   const effectiveSelectedIds = [
     ...new Set([...selectedMemberIds, ...readonlyIds]),
   ];
@@ -62,16 +64,16 @@ export const MemberSelect = ({
 
   const handleCopyLink = () => {
     if (inviteLinkUrl) {
-      copyToClipboard(inviteLinkUrl, 'Share this link with the volunteer');
+      copyToClipboard(inviteLinkUrl, t('copyToast'));
     }
   };
 
   return (
     <div className="flex gap-4 items-center">
       <FilteredMemberList
-        title="Available"
+        title={t('availableLabel')}
         members={availableMembers}
-        emptyMessage="All members have been selected"
+        emptyMessage={t('allSelected')}
         className="min-w-0 flex-1"
         inviteLinkUrl={inviteLinkUrl}
         onInviteByLink={handleCopyLink}
@@ -87,7 +89,7 @@ export const MemberSelect = ({
       />
       <ArrowRightLeft className="size-6 shrink-0" />
       <FilteredMemberList
-        title="Invited"
+        title={t('invitedLabel')}
         className="min-w-0 flex-1"
         members={selectedMembers}
         renderItem={(member) => (
@@ -128,6 +130,7 @@ export const FilteredMemberList = ({
   inviteLinkUrl,
   onInviteByLink,
 }: FilteredMemberListProps) => {
+  const t = useTranslations('MemberSelect');
   const [searchQuery, setSearchQuery] = useState('');
   const membersFiltered = filterUsers(members, searchQuery);
 
@@ -143,7 +146,7 @@ export const FilteredMemberList = ({
         <InputGroup className="rounded-md rounded-b-none -m-px w-[calc(100%+2px)] shadow-xs">
           <InputGroupInput
             id="searchInput"
-            placeholder="Search name or email..."
+            placeholder={t('searchPlaceholder')}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
@@ -156,7 +159,9 @@ export const FilteredMemberList = ({
           {membersFiltered.length === 0 ? (
             <div className="space-y-2 p-2">
               <p className="text-sm text-muted-foreground">
-                {searchQuery ? 'No members found' : emptyMessage}
+                {searchQuery
+                  ? t('noResults')
+                  : (emptyMessage ?? t('allSelected'))}
               </p>
               {showInviteLink && onInviteByLink && (
                 <Button
@@ -166,7 +171,7 @@ export const FilteredMemberList = ({
                   onClick={onInviteByLink}
                 >
                   <Link2 />
-                  Invite by link
+                  {t('inviteByLink')}
                 </Button>
               )}
             </div>

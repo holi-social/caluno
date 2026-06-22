@@ -1,19 +1,21 @@
 import { Badge, Card, CardContent } from '@repo/ui';
 import { Lock, Shield, ShieldCheck, Unlock } from 'lucide-react';
 import { notFound } from 'next/navigation';
+import { getTranslations } from 'next-intl/server';
 import { ActionBar } from '@/domain/role/components/action-bar';
 import { getDataClient } from '@/lib/data-client';
 
 interface RoleDetailsPageProps {
-  params: Promise<{ orgUId: string; roleId: string }>;
+  params: Promise<{ orgUId: string; roleId: string; locale: string }>;
 }
 
 export default async function RoleDetailsPage({
   params,
 }: RoleDetailsPageProps) {
-  const { orgUId, roleId } = await params;
+  const { orgUId, roleId, locale } = await params;
 
   const data = await getDataClient(orgUId);
+  const t = await getTranslations({ locale, namespace: 'Role' });
   const [role, permissionGroups] = await Promise.all([
     data.role.findById(roleId),
     data.role.findPermissionGroups(),
@@ -53,7 +55,7 @@ export default async function RoleDetailsPage({
             <CardContent>
               {assignedGroups.length === 0 ? (
                 <p className="text-muted-foreground">
-                  No permissions assigned to this role.
+                  {t('detail.noPermissions')}
                 </p>
               ) : (
                 <div className="space-y-4">
@@ -85,16 +87,17 @@ export default async function RoleDetailsPage({
               <dl className="space-y-4">
                 <div>
                   <dt className="text-muted-foreground mb-2 flex gap-2 items-center">
-                    <Shield className="size-4 shrink-0" /> Type
+                    <Shield className="size-4 shrink-0" />{' '}
+                    {t('detail.typeLabel')}
                   </dt>
                   <dd className="ml-6">
                     {role.isInternal ? (
                       <Badge variant="secondary">
-                        <Lock /> System
+                        <Lock /> {t('detail.system')}
                       </Badge>
                     ) : (
                       <Badge variant="secondary">
-                        <Unlock /> Custom
+                        <Unlock /> {t('detail.custom')}
                       </Badge>
                     )}
                   </dd>
@@ -103,7 +106,7 @@ export default async function RoleDetailsPage({
                 <div>
                   <dt className="text-muted-foreground mb-2 flex gap-2 items-center">
                     <ShieldCheck className="size-4 shrink-0" />
-                    Total permissions
+                    {t('detail.totalPermissionsLabel')}
                   </dt>
                   <dd className="ml-6">{role.permissions.length}</dd>
                 </div>

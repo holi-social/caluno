@@ -2,6 +2,7 @@
 
 import { Button } from '@repo/ui';
 import { Copy } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import { copyToClipboard } from '@/lib/clipboard';
 
 interface Props {
@@ -13,13 +14,16 @@ interface Props {
 
 export function ButtonClipboard({
   copyText,
-  text = 'Copy to clipboard',
+  text,
   toastMessage,
   onClick,
 }: Props) {
+  const t = useTranslations('Common');
+  const displayText = text ?? t('copyToClipboard');
+
   const handleCopyToClipboard = () => {
     onClick?.();
-    copyToClipboard(copyText, toastMessage);
+    copyToClipboard(copyText, toastMessage ?? t('linkCopied'));
   };
 
   return (
@@ -30,7 +34,7 @@ export function ButtonClipboard({
       className="group relative"
     >
       <p className="opacity-100 transition-opacity group-hover:opacity-0">
-        {text}
+        {displayText}
       </p>
 
       <div className="absolute left-4 right-4 flex gap-4 opacity-0 transition-opacity group-hover:opacity-100">
