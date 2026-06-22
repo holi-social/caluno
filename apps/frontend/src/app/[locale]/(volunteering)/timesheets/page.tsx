@@ -1,11 +1,5 @@
-import { getTranslations } from 'next-intl/server';
+import { MyTime } from '@/domain/time-entry/components/my-time';
 
-export default async function MyTimePage() {
-  const t = await getTranslations('Navigation');
-
-  return (
-    <div>
-      <h1 className="page-title">{t('myTime')}</h1>
-    </div>
-  );
+export default function MyTimePage() {
+  return <MyTime />;
 }

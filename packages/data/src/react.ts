@@ -28,6 +28,7 @@ export * from './react/hooks/use-join-shift';
 export * from './react/hooks/use-membership-request';
 export * from './react/hooks/use-memberships';
 export * from './react/hooks/use-my-permissions';
+export * from './react/hooks/use-my-time-entries';
 export * from './react/hooks/use-organizations';
 export * from './react/hooks/use-roles';
 export * from './react/hooks/use-shift';

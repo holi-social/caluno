@@ -177,6 +177,40 @@ export class TimeTrackingService {
 
     return { entries: paginated as TimeEntryEntity[], total: filtered.length };
   }
+
+  /**
+   * Volunteering "My Time": the current user's time entries across every
+   * organisation they have worked for. Security boundary is the `where`
+   * clause — only the requesting user's entries are ever loaded.
+   */
+  async findMyEntries(
+    userId: string,
+    pagination: PaginationInput,
+  ): Promise<{ entries: TimeEntryEntity[]; total: number }> {
+    const allEntries = await this.db.query.timeEntries.findMany({
+      where: { volunteerId: userId },
+      with: {
+        shiftInstance: {
+          with: {
+            master: {
+              with: { organizationUnit: { with: { organization: true } } },
+            },
+          },
+        },
+      },
+      orderBy: { startedAt: 'desc' },
+    });
+
+    const paginated = allEntries.slice(
+      pagination.offset,
+      pagination.offset + pagination.limit,
+    );
+
+    return {
+      entries: paginated as TimeEntryEntity[],
+      total: allEntries.length,
+    };
+  }
 }
 
 const existsInOrgUnit = (

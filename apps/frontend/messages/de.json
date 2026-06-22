@@ -672,6 +672,20 @@
       "startedAtRequired": "Startzeit ist erforderlich",
       "endedAtRequired": "Endzeit ist erforderlich",
       "timeEntryIdRequired": "Zeiteintrags-ID ist erforderlich"
+    },
+    "myTime": {
+      "weekTotal": "Gesamt: {duration}",
+      "duration": "Dauer",
+      "verification": {
+        "open": "Offen",
+        "awaiting": "Wartet auf Verifizierung",
+        "verified": "Verifiziert"
+      },
+      "empty": {
+        "title": "Noch keine Zeiteinträge",
+        "description": "Finde eine Schicht, um deine Freiwilligenstunden zu erfassen.",
+        "cta": "Schicht finden"
+      }
     }
   },
   "RequirementForm": {

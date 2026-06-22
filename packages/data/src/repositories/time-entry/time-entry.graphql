@@ -103,3 +103,22 @@ query GetTimeEntriesByUser($userId: String!, $limit: Int!, $offset: Int!) {
     }
   }
 }
+
+query GetMyTimeEntries($limit: Int!, $offset: Int!) {
+  myTimeEntries(limit: $limit, offset: $offset) {
+    items {
+      id
+      startedAt
+      endedAt
+      shiftName
+      organizationName
+      organizationUnitName
+    }
+    pagination {
+      total
+      limit
+      offset
+      hasMore
+    }
+  }
+}

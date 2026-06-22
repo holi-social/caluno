@@ -1,6 +1,7 @@
 import type {
   AddTimeEntryInput,
   CloseTimeEntryInput,
+  GetMyTimeEntriesQuery,
   GetTimeEntryQuery,
   UpdateTimeEntryInput,
 } from '../../generated/graphql';
@@ -10,6 +11,9 @@ import {
 } from '../base/base.repository';
 
 export type TimeEntryDetail = GetTimeEntryQuery['timeEntry'];
+
+export type MyTimeEntryItem =
+  GetMyTimeEntriesQuery['myTimeEntries']['items'][number];
 
 export class TimeEntryRepository extends BaseRepository {
   async findById(id: string): Promise<TimeEntryDetail> {
@@ -52,5 +56,13 @@ export class TimeEntryRepository extends BaseRepository {
       offset: options.offset ?? 0,
     });
     return data.timeEntriesByUser;
+  }
+
+  async findMyEntries(options: PaginationOptions = {}) {
+    const data = await this.sdk.GetMyTimeEntries({
+      limit: options.limit ?? 10,
+      offset: options.offset ?? 0,
+    });
+    return data.myTimeEntries;
   }
 }

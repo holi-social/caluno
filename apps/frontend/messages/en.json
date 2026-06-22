@@ -672,6 +672,20 @@
       "startedAtRequired": "Start time is required",
       "endedAtRequired": "End time is required",
       "timeEntryIdRequired": "Time Entry ID is required"
+    },
+    "myTime": {
+      "weekTotal": "Total: {duration}",
+      "duration": "Duration",
+      "verification": {
+        "open": "Open",
+        "awaiting": "Awaiting verification",
+        "verified": "Verified"
+      },
+      "empty": {
+        "title": "No time entries yet",
+        "description": "Find a shift to start tracking your volunteering hours.",
+        "cta": "Find a shift"
+      }
     }
   },
   "RequirementForm": {
