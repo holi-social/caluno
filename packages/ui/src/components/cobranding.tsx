@@ -4,11 +4,11 @@ import { Button } from './base/button';
 import { Logo } from './logo';
 
 export interface CobrandingProps {
-  /** URL of the organisation logo. */
+  /** URL of the organization logo. */
   logoUrl?: string | null;
   /** Slot for the platform logo. Falls back to a geometric placeholder. */
   ourLogo?: ReactNode;
-  organisationName?: string;
+  organizationName?: string;
   size?: 'small' | 'big';
   onClick?: () => void;
   className?: string;
@@ -17,7 +17,7 @@ export interface CobrandingProps {
 export function Cobranding({
   logoUrl,
   ourLogo,
-  organisationName,
+  organizationName,
   size = 'small',
   onClick,
   className,
@@ -49,7 +49,7 @@ export function Cobranding({
         variant="ghost"
         onClick={onClick}
         aria-label={
-          organisationName ? `Go to ${organisationName}` : 'Go to organisation'
+          organizationName ? `Go to ${organizationName}` : 'Go to organization'
         }
         className={cn(
           'h-auto rounded-lg p-0',

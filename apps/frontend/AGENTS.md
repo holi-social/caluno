@@ -1,6 +1,6 @@
 # Clippy Frontend Web App
 
-The frontend web app for securely managing volunteers and shifts in multi-tiered organisations. Includes the backoffice (`/admin/[orgUId]` routes) — there is no separate backoffice app.
+The frontend web app for securely managing volunteers and shifts in multi-tiered organizations. Includes the backoffice (`/admin/[orgUId]` routes) — there is no separate backoffice app.
 
 ## Commands
 - `bun run dev` - Start NextJS development server

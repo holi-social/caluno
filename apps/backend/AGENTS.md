@@ -1,6 +1,6 @@
 # Clippy Backend GraphQL API
 
-The backend api for securely managing volunteers and shifts in multi-tiered organisations.
+The backend api for securely managing volunteers and shifts in multi-tiered organizations.
 
 ## Commands
 - `bun run dev` - Start NestJS development server

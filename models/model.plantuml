@@ -3,8 +3,8 @@
 skinparam classAttributeIconSize 0
 skinparam linetype ortho
 
-' package "Identity & Organisation" {
-    class Organisation {
+' package "Identity & Organization" {
+    class Organization {
         name
         slug
         email
@@ -25,7 +25,7 @@ skinparam linetype ortho
         address
         deletedAt
     }
-    'note left: Root OrgUnit has parentId = NULL.\nOnly one root per Organisation.\nPermissions cascade downward.
+    'note left: Root OrgUnit has parentId = NULL.\nOnly one root per Organization.\nPermissions cascade downward.
 
     class OrgUnitType {
         name
@@ -41,7 +41,7 @@ skinparam linetype ortho
     }
     'note: GDPR: anonymize on deletion,\npreserve audit trails.
 
-    class OrganisationUserProfile {
+    class OrganizationUserProfile {
         note
         status {ACTIVE, INACTIVE, BLACKLISTED, PENDING}
         userProfileAccessApproved
@@ -114,7 +114,7 @@ package "Compliance & Qualifications" {
         submittedAt
         reviewedAt
     }
-    ' note left: Anchored to OrganisationUserProfile\nfor reuse across OrgUnits.
+    ' note left: Anchored to OrganizationUserProfile\nfor reuse across OrgUnits.
     class RequirementFulfillmentUpload extends RequirementFulfillment {}
     class RequirementFulfillmentCheck extends RequirementFulfillment {}
     class RequirementFulfillmentDate extends RequirementFulfillment {}
@@ -176,10 +176,10 @@ package "Operations" {
     }
 }
 
-' --- Identity & Organisation ---
-Organisation "1" -- "1\nroot" OrgUnit
-Organisation "1" -- "*" OrganisationUserProfile
-User "1" -- "*" OrganisationUserProfile
+' --- Identity & Organization ---
+Organization "1" -- "1\nroot" OrgUnit
+Organization "1" -- "*" OrganizationUserProfile
+User "1" -- "*" OrganizationUserProfile
 OrgUnit "*" -up- "1" OrgUnitType
 OrgUnit "*\nchild" o-- "1\nparent" OrgUnit
 
@@ -188,28 +188,28 @@ OrgUnit "1" -left- "*" Membership
 Membership "*" -- "1" User
 Role "*" -up- "*" Permission
 Role "*" -- "*" Membership
-Organisation "1" -right- "*" Role : "defines >"
+Organization "1" -right- "*" Role : "defines >"
 
 ' --- Membership Requests ---
 OrgUnit "1" -- "*" MembershipRequest : "receives >"
 MembershipRequest "*" -- "1" User : "submitted by >"
 
 ' --- Requirement Profiles ---
-Organisation "1" -- "*" RequirementProfile : "defines >"
-Organisation "1" -- "*" RequirementBlock : "defines >"
+Organization "1" -- "*" RequirementProfile : "defines >"
+Organization "1" -- "*" RequirementBlock : "defines >"
 RequirementProfile "*" -left- "*" RequirementBlock : "groups >"
 RequirementBlock "*" -left- "*" Requirement : "contains >"
 
 ' --- Submissions & Fulfillments ---
 Membership "0..1" -- "*" RequirementProfileSubmission
 MembershipRequest "0..1" -- "*" RequirementProfileSubmission
-RequirementProfileSubmission "*" -- "0..1" OrganisationUserProfile : "stored for reuse <"
+RequirementProfileSubmission "*" -- "0..1" OrganizationUserProfile : "stored for reuse <"
 RequirementProfileSubmission "*" -up- "1" RequirementProfile : "fulfills >"
 RequirementProfileSubmission "*" -left- "*" RequirementBlockFulfillment : "contains >"
 RequirementBlockFulfillment "*" -up- "1" RequirementBlock : "fulfills >"
 RequirementBlockFulfillment "*" -left- "*" RequirementFulfillment : "contains >"
 RequirementFulfillment "*" -up- "1" Requirement : "satisfies >"
-RequirementFulfillment "*" -- "0..1" OrganisationUserProfile : "stored for reuse <"
+RequirementFulfillment "*" -- "0..1" OrganizationUserProfile : "stored for reuse <"
 RequirementFulfillmentUpload "*" -- "0..1" Document : "backed by >"
 User "1" -- "*" Document : "owns >"
 

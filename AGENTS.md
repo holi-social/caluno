@@ -1,6 +1,6 @@
 # Clippy
 
-A multi-tenant project for managing volunteers and shifts in organisations.
+A multi-tenant project for managing volunteers and shifts in organizations.
 
 ## Monorepo structure
 Mono-repo powered by TurboRepo.

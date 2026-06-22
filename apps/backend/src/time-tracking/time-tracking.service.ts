@@ -32,7 +32,7 @@ export class TimeTrackingService {
       instance.master.organizationUnitId !== organizationUnitId
     ) {
       throw new NotFoundGraphQLError(
-        'Shift instance does not exist in this organisation',
+        'Shift instance does not exist in this organization',
       );
     }
 

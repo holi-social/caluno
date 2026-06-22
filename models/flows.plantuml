@@ -117,7 +117,7 @@ APPROVED --> [*]
 REJECTED --> DRAFT : user updates value
 
 note right of DRAFT
-  Fulfillments are anchored to OrganisationUserProfile
+  Fulfillments are anchored to OrganizationUserProfile
   so they can be reused across multiple OrgUnits
   that share the same RequirementProfile.
 end note

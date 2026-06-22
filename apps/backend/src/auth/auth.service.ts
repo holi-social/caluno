@@ -27,7 +27,7 @@ export class AuthService {
     organizationUnitId: string,
     input: CreateRoleInput,
   ): Promise<RoleEntity> {
-    const organization = await this.getOrganisation(organizationUnitId);
+    const organization = await this.getOrganization(organizationUnitId);
 
     const [role] = await this.db
       .insert(schema.roles)
@@ -231,7 +231,7 @@ export class AuthService {
   }
 
   async findAllRoles(organizationUnitId: string): Promise<RoleEntity[]> {
-    const organization = await this.getOrganisation(organizationUnitId);
+    const organization = await this.getOrganization(organizationUnitId);
 
     return this.db.query.roles.findMany({
       where: { organizationId: organization.id },
@@ -340,7 +340,7 @@ export class AuthService {
     return deletedRole;
   }
 
-  async getOrganisation(
+  async getOrganization(
     organizationUnitId: string,
   ): Promise<OrganizationEntity> {
     const organization =
