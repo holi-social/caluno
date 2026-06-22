@@ -129,17 +129,6 @@ export class MembershipLifecycleOrchestrator {
       }
     }
 
-    if (
-      !metadata.intendedShiftInstanceIds?.length &&
-      metadata.intendedShiftIds?.length
-    ) {
-      for (const shiftId of metadata.intendedShiftIds) {
-        this.logger.warn(
-          `Skipped legacy shift auto-join ${shiftId}: no intended shift instance was captured`,
-        );
-      }
-    }
-
     if (metadata.intendedEventIds?.length) {
       for (const eventId of metadata.intendedEventIds) {
         try {
