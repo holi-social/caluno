@@ -48,7 +48,11 @@ export const ActionBar = ({
 
   return (
     <aside className="space-x-2">
-      <Link href={shiftShareUrl(id)} aria-label="View shift" target="_blank">
+      <Link
+        href={shiftShareUrl(id, instanceId)}
+        aria-label="View shift"
+        target="_blank"
+      >
         <Button size={buttonSize} variant="outline">
           <Eye />
         </Button>
@@ -81,7 +85,10 @@ export const ActionBar = ({
         variant="outline"
         aria-label="Copy shift link to clipboard"
         onClick={() =>
-          copyToClipboard(shiftShareUrl(id), 'Shift link copied to clipboard')
+          copyToClipboard(
+            shiftShareUrl(id, instanceId),
+            'Shift link copied to clipboard',
+          )
         }
       >
         <Share2 />

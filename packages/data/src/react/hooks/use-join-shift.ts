@@ -10,8 +10,14 @@ export function useJoinShift() {
   const repository = new ShiftRepository(sdk);
 
   return useMutation({
-    mutationFn: (shiftId: string) => repository.join(shiftId),
-    onSuccess: (_, shiftId) => {
+    mutationFn: ({
+      shiftId,
+      instanceId,
+    }: {
+      shiftId: string;
+      instanceId: string;
+    }) => repository.join(shiftId, instanceId),
+    onSuccess: (_, { shiftId }) => {
       queryClient.invalidateQueries({
         queryKey: ['shift', shiftId],
       });

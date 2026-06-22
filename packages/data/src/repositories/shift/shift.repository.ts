@@ -103,8 +103,11 @@ export class ShiftRepository extends BaseRepository {
     return { id: data.inviteMembersToShiftInstance.id };
   }
 
-  async join(shiftId: string): Promise<JoinShiftMutation['joinShift']> {
-    const data = await this.sdk.JoinShift({ shiftId });
+  async join(
+    shiftId: string,
+    instanceId: string,
+  ): Promise<JoinShiftMutation['joinShift']> {
+    const data = await this.sdk.JoinShift({ shiftId, instanceId });
     return data.joinShift;
   }
 

@@ -371,7 +371,7 @@ type Mutation {
   inviteMembersToShiftInstance(instanceId: String!, memberIds: [String!]!): ShiftInstance!
   joinEvent(eventId: ID!): JoinEventResult!
   joinOrganization(organizationUnitId: ID!): JoinOrganizationResult!
-  joinShift(shiftId: String!): JoinShiftResult!
+  joinShift(instanceId: String!, shiftId: String!): JoinShiftResult!
   regenerateFormShareToken(id: String!): RequirementForm!
   rejectMembershipRequest(id: ID!, organizationUnitId: ID!, rejectionReason: String!): MembershipRequest!
   submitForm(input: SubmitFormInput!, token: String!): FormSubmission!

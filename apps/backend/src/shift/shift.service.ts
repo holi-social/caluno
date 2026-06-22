@@ -706,15 +706,23 @@ export class ShiftService {
   async joinShift(
     userId: string,
     shiftId: string,
+    instanceId: string,
     tx?: Database,
   ): Promise<ShiftEntity> {
     const db = tx ?? this.db;
 
-    const shift = await db.query.shifts.findFirst({
-      where: { id: shiftId, isDeleted: false },
+    const instance = await db.query.shiftInstances.findFirst({
+      where: { id: instanceId, masterId: shiftId, isCancelled: false },
+      with: { master: true },
     });
 
-    if (!shift) {
+    const shift = instance?.master ?? null;
+
+    if (!instance || !shift) {
+      throw new NotFoundGraphQLError('Shift not found');
+    }
+
+    if (shift.isDeleted || shift.visibility !== ShiftVisibility.ALL_MEMBERS) {
       throw new NotFoundGraphQLError('Shift not found');
     }
 
@@ -729,58 +737,33 @@ export class ShiftService {
       );
     }
 
-    const instances = await db.query.shiftInstances.findMany({
-      where: {
-        masterId: shiftId,
-        isCancelled: false,
-      },
-    });
+    const maxVolunteers = instance.overrideMaxVolunteers ?? shift.maxVolunteers;
 
-    if (instances.length === 0) {
-      throw new NotFoundGraphQLError('No instances found for this shift');
-    }
-
-    if (shift.maxVolunteers) {
-      const capacityViolations = await db
-        .select({
-          instanceId: schema.shiftInstanceInvites.instanceId,
-          current: count(),
-        })
+    if (maxVolunteers) {
+      const [capacity] = await db
+        .select({ current: count() })
         .from(schema.shiftInstanceInvites)
         .where(
           and(
             eq(schema.shiftInstanceInvites.status, ShiftInviteStatus.ACCEPTED),
-            inArray(
-              schema.shiftInstanceInvites.instanceId,
-              instances.map((i) => i.id),
-            ),
+            eq(schema.shiftInstanceInvites.instanceId, instanceId),
           ),
-        )
-        .groupBy(schema.shiftInstanceInvites.instanceId);
+        );
 
-      const violations = capacityViolations.filter(
-        (c) =>
-          shift.maxVolunteers !== null &&
-          shift.maxVolunteers !== undefined &&
-          c.current >= shift.maxVolunteers,
-      );
-
-      if (violations.length > 0) {
+      if ((capacity?.current ?? 0) >= maxVolunteers) {
         throw new ConflictGraphQLError(
-          `Cannot join shift: ${violations.length} instance(s) are at full capacity of ${shift.maxVolunteers}`,
+          `Cannot join shift: instance is at full capacity of ${maxVolunteers}`,
         );
       }
     }
 
-    const invites = instances.map((instance) => ({
-      instanceId: instance.id,
-      userId,
-      status: ShiftInviteStatus.ACCEPTED,
-    }));
-
     await db
       .insert(schema.shiftInstanceInvites)
-      .values(invites)
+      .values({
+        instanceId,
+        userId,
+        status: ShiftInviteStatus.ACCEPTED,
+      })
       .onConflictDoNothing();
 
     return shift;
@@ -789,6 +772,7 @@ export class ShiftService {
   async requestJoinShift(
     userId: string,
     shiftId: string,
+    instanceId: string,
   ): Promise<{
     status: JoinStatus;
     shift: ShiftEntity;
@@ -804,6 +788,14 @@ export class ShiftService {
 
     if (!shift || shift.isDeleted) {
       throw new NotFoundGraphQLError('Shift not found');
+    }
+
+    const instance = await this.db.query.shiftInstances.findFirst({
+      where: { id: instanceId, masterId: shiftId, isCancelled: false },
+    });
+
+    if (!instance) {
+      throw new NotFoundGraphQLError('Shift instance not found');
     }
 
     if (shift.visibility !== ShiftVisibility.ALL_MEMBERS) {
@@ -830,6 +822,7 @@ export class ShiftService {
         userId,
         orgUnit.id,
         shiftId,
+        instanceId,
       );
 
       if (result.status === 'REQUIREMENTS_NEEDED') {
@@ -857,14 +850,14 @@ export class ShiftService {
         };
       }
 
-      await this.joinShift(userId, shiftId);
+      await this.joinShift(userId, shiftId, instanceId);
       return {
         status: JoinStatus.JOINED,
         shift,
       };
     }
 
-    await this.joinShift(userId, shiftId);
+    await this.joinShift(userId, shiftId, instanceId);
     return {
       status: JoinStatus.JOINED,
       shift,

@@ -87,11 +87,13 @@ export class ShiftMutationResolver {
   @Mutation(() => JoinShiftResult)
   async joinShift(
     @Args('shiftId', { type: () => String }) shiftId: string,
+    @Args('instanceId', { type: () => String }) instanceId: string,
     @Session() session: UserSession,
   ): Promise<JoinShiftResult> {
     const result = await this.shiftService.requestJoinShift(
       session.user.id,
       shiftId,
+      instanceId,
     );
 
     return {

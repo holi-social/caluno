@@ -9,6 +9,7 @@ import { useRouter } from '@/i18n/navigation';
 
 interface JoinShiftButtonProps {
   shiftId: string;
+  instanceId?: string;
   visibility: ShiftVisibility;
   isAuthenticated: boolean;
   autoJoin?: boolean;
@@ -16,6 +17,7 @@ interface JoinShiftButtonProps {
 
 export function JoinShiftButton({
   shiftId,
+  instanceId,
   visibility,
   isAuthenticated,
   autoJoin = false,
@@ -28,14 +30,22 @@ export function JoinShiftButton({
   const handleJoin = useCallback(async () => {
     if (!isAuthenticated) {
       const searchParams = new URLSearchParams({
-        redirectTo: `/shifts/${shiftId}?autoJoin=true`,
+        redirectTo: `/shifts/${shiftId}?${new URLSearchParams({
+          autoJoin: 'true',
+          ...(instanceId ? { instanceId } : {}),
+        })}`,
       });
       router.push(`/api/invite?${searchParams}`);
       return;
     }
 
+    if (!instanceId) {
+      toast.error('This shift link is missing an instance.');
+      return;
+    }
+
     try {
-      const result = await joinShift.mutateAsync(shiftId);
+      const result = await joinShift.mutateAsync({ shiftId, instanceId });
 
       if (result.status === JoinStatus.Joined) {
         toast.success('You have joined the shift');
@@ -77,12 +87,13 @@ export function JoinShiftButton({
         error instanceof Error ? error.message : 'Failed to join shift',
       );
     }
-  }, [isAuthenticated, shiftId, joinShift, router]);
+  }, [isAuthenticated, shiftId, instanceId, joinShift, router]);
 
   useEffect(() => {
     if (
       autoJoin &&
       isAuthenticated &&
+      instanceId &&
       !hasAutoJoined &&
       visibility === ShiftVisibility.AllMembers
     ) {
@@ -93,7 +104,14 @@ export function JoinShiftButton({
 
       handleJoin();
     }
-  }, [autoJoin, isAuthenticated, hasAutoJoined, visibility, handleJoin]);
+  }, [
+    autoJoin,
+    isAuthenticated,
+    instanceId,
+    hasAutoJoined,
+    visibility,
+    handleJoin,
+  ]);
 
   if (visibility !== ShiftVisibility.AllMembers) {
     return (
@@ -104,7 +122,7 @@ export function JoinShiftButton({
   }
 
   return (
-    <Button onClick={handleJoin} disabled={joinShift.isPending}>
+    <Button onClick={handleJoin} disabled={joinShift.isPending || !instanceId}>
       {joinShift.isPending ? 'Joining...' : 'Join shift'}
     </Button>
   );

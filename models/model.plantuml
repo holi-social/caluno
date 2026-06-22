@@ -75,7 +75,7 @@ skinparam linetype ortho
         status {PENDING, ACCEPTED, REJECTED, CANCELLED}
         reviewedAt
         rejectionReason
-        metadata: { intendedShiftIds?: string[], intendedEventIds?: string[] }
+        metadata: { intendedShiftIds?: string[], intendedShiftInstanceIds?: string[], intendedEventIds?: string[] }
     }
     'note top: The "Waiting Room".\nUnique constraint on (userId, orgUnitId).\nA rejected/cancelled request blocks\nre-application unless constraint is removed.
 ' }

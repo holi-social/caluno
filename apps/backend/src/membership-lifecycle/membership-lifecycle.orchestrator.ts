@@ -8,7 +8,6 @@ import type {
 import { SubmitFormInput } from '../requirement-profile/inputs/submit-form.input';
 import type { FormSubmissionEntity } from '../requirement-profile/schemas/form-submission.schema';
 import { FormSubmissionService } from '../requirement-profile/services/form-submission.service';
-import { ShiftVisibility } from '../shift/enums';
 import { ShiftService } from '../shift/shift.service';
 
 @Injectable()
@@ -111,19 +110,34 @@ export class MembershipLifecycleOrchestrator {
       return;
     }
 
-    if (metadata.intendedShiftIds?.length) {
-      for (const shiftId of metadata.intendedShiftIds) {
+    if (metadata.intendedShiftInstanceIds?.length) {
+      for (const instanceId of metadata.intendedShiftInstanceIds) {
         try {
-          const shift = await this.shiftService.findByIdPublic(shiftId);
-          if (shift && shift.visibility === ShiftVisibility.ALL_MEMBERS) {
-            await this.shiftService.joinShift(
-              membershipRequest.userId,
-              shiftId,
-            );
-          }
+          const instance = await this.shiftService.findInstanceById(
+            instanceId,
+            membershipRequest.organizationUnitId,
+          );
+          await this.shiftService.joinShift(
+            membershipRequest.userId,
+            instance.masterId,
+            instanceId,
+          );
         } catch (e) {
-          this.logger.warn(`Failed to auto-join shift ${shiftId}: ${e}`);
+          this.logger.warn(
+            `Failed to auto-join shift instance ${instanceId}: ${e}`,
+          );
         }
+      }
+    }
+
+    if (
+      !metadata.intendedShiftInstanceIds?.length &&
+      metadata.intendedShiftIds?.length
+    ) {
+      for (const shiftId of metadata.intendedShiftIds) {
+        this.logger.warn(
+          `Skipped legacy shift auto-join ${shiftId}: no intended shift instance was captured`,
+        );
       }
     }
 

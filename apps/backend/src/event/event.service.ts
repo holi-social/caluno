@@ -292,6 +292,7 @@ export class EventService {
         userId,
         orgUnit.id,
         undefined,
+        undefined,
         eventId,
       );
 
