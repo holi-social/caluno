@@ -44,22 +44,23 @@ export const ActionBar = ({
         toast.error(t('action.deleteError', { error: result.serverError }));
       } else {
         toast.success(t('action.deleteSuccess'));
-        router.push(`/admin/${organizationUnitId}/shifts`);
+        router.refresh();
       }
     });
   };
 
   return (
     <aside className="space-x-2">
-      <Link
-        href={shiftShareUrl(id, instanceId)}
-        aria-label={t('action.viewAria')}
-        target="_blank"
-      >
-        <Button size={buttonSize} variant="outline">
+      <Button size={buttonSize} variant="outline" asChild>
+        <Link
+          href={shiftShareUrl(id, instanceId)}
+          aria-label={t('action.viewAria')}
+          target="_blank"
+          rel="noopener noreferrer"
+        >
           <Eye />
-        </Button>
-      </Link>
+        </Link>
+      </Button>
 
       {!hideEdit && (
         <Button
