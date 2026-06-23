@@ -2,6 +2,7 @@ export const NotificationEvent = {
   ORGANIZATION_CREATED: 'notification.organization.created',
   MEMBERSHIP_REQUESTED: 'notification.membership.requested',
   MEMBERSHIP_APPROVED: 'notification.membership.approved',
+  SHIFT_INSTANCE_JOINED: 'notification.shift-instance.joined',
 } as const;
 
 export type NotificationEvent =

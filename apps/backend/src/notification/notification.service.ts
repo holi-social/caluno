@@ -25,6 +25,9 @@ type MembershipRequestedInput =
 type MembershipApprovedInput =
   NotificationEventPayloadMap[typeof NotificationEvent.MEMBERSHIP_APPROVED];
 
+type ShiftInstanceJoinedInput =
+  NotificationEventPayloadMap[typeof NotificationEvent.SHIFT_INSTANCE_JOINED];
+
 @Injectable()
 export class NotificationService {
   private readonly logger = new Logger(NotificationService.name);
@@ -111,5 +114,9 @@ export class NotificationService {
 
   notifyMembershipApproved(input: MembershipApprovedInput): void {
     this.emitter.emit(NotificationEvent.MEMBERSHIP_APPROVED, input);
+  }
+
+  notifyShiftInstanceJoined(input: ShiftInstanceJoinedInput): void {
+    this.emitter.emit(NotificationEvent.SHIFT_INSTANCE_JOINED, input);
   }
 }
