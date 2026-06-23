@@ -9,11 +9,13 @@ import { ShiftForm } from './shift-form';
 interface CreateShiftFormProps {
   onPendingChange?: (isPending: boolean) => void;
   formId?: string;
+  onSuccess?: (result: { shiftId: string; instanceId?: string }) => void;
 }
 
 export function CreateShiftForm({
   onPendingChange,
   formId,
+  onSuccess,
 }: CreateShiftFormProps) {
   const [isPending, startTransition] = useTransition();
   const [serverError, setServerError] = useState<string | null>(null);
@@ -33,6 +35,11 @@ export function CreateShiftForm({
       });
       if (result?.serverError) {
         setServerError(result.serverError);
+      } else if (result?.data) {
+        onSuccess?.({
+          shiftId: result.data.id,
+          instanceId: result.data.instanceId,
+        });
       }
     });
   };
