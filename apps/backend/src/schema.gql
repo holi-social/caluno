@@ -391,6 +391,20 @@ type Mutation {
   updateTimeEntry(id: ID!, input: UpdateTimeEntryInput!): TimeEntry!
 }
 
+type MyTimeEntry {
+  endedAt: DateTime
+  id: ID!
+  organizationName: String!
+  organizationUnitName: String!
+  shiftName: String!
+  startedAt: DateTime!
+}
+
+type MyTimeEntryPaginatedResponse {
+  items: [MyTimeEntry!]!
+  pagination: PaginationInfo!
+}
+
 type Organization {
   address: String
   contactEmail: String
@@ -519,6 +533,7 @@ type Query {
   myAccessibleOrganizationUnits: [OrganizationUnit!]!
   myFormSubmissionByToken(token: String!): FormSubmission
   myMembershipRequests(limit: Int! = 10, offset: Int! = 0, status: MembershipRequestStatus): MembershipRequestPaginatedResponse!
+  myTime(limit: Int! = 10, offset: Int! = 0): MyTimeEntryPaginatedResponse!
   myUserProfile: UserProfile
   organization(id: String!): Organization
   organizationBySlug(slug: String!): Organization!

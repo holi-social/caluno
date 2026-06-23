@@ -1,9 +1,11 @@
 import { Args, Context, Query, Resolver } from '@nestjs/graphql';
+import { Session, type UserSession } from '@thallesp/nestjs-better-auth';
 import { PERMISSIONS } from '../../auth/constants';
 import { Permissions } from '../../auth/decorators/permissions.decorator';
 import type { AuthenticatedGraphQLContext } from '../../graphql/graphql.context';
 import { PaginationInput } from '../../graphql/pagination.input';
 import { TimeEntryMapper } from '../mappers/time-entry.mapper';
+import { MyTimeEntryPaginatedResponse } from '../models/my-time-entry.model';
 import {
   TimeEntry,
   TimeEntryPaginatedResponse,
@@ -63,6 +65,23 @@ export class TimeTrackingQueryResolver {
     return new TimeEntryPaginatedResponse({
       items: this.timeEntryMapper.toArray(entries),
       total: total,
+      limit: pagination.limit,
+      offset: pagination.offset,
+    });
+  }
+
+  @Query(() => MyTimeEntryPaginatedResponse)
+  async myTime(
+    @Session() session: UserSession,
+    @Args() pagination: PaginationInput,
+  ): Promise<MyTimeEntryPaginatedResponse> {
+    const { items, total } = await this.timeTrackingService.findMyTime(
+      session.user.id,
+      pagination,
+    );
+    return new MyTimeEntryPaginatedResponse({
+      items,
+      total,
       limit: pagination.limit,
       offset: pagination.offset,
     });
