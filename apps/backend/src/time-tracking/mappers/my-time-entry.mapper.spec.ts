@@ -18,8 +18,8 @@ const baseEntity = {
 
 describe('toMyTimeEntry', () => {
   it('maps shift name, org, and org unit names', () => {
-    const result = toMyTimeEntry(baseEntity as any);
-    expect(result.shiftName).toBe('Front Desk');
+    const result = toMyTimeEntry(baseEntity);
+    expect(result.shiftName).toBe('Kitchen Cleaning Crew');
     expect(result.organizationName).toBe('Red Cross');
     expect(result.organizationUnitName).toBe('Downtown');
   });
@@ -32,22 +32,22 @@ describe('toMyTimeEntry', () => {
         overrideTitle: 'Special Edition',
       },
     };
-    expect(toMyTimeEntry(entity as any).shiftName).toBe('Special Edition');
+    expect(toMyTimeEntry(entity).shiftName).toBe('Special Edition');
   });
 
   it('falls back to master.title when overrideTitle is null', () => {
-    expect(toMyTimeEntry(baseEntity as any).shiftName).toBe('Front Desk');
+    expect(toMyTimeEntry(baseEntity).shiftName).toBe('Kitchen Cleaning Crew');
   });
 
   it('preserves id, startedAt, endedAt', () => {
-    const result = toMyTimeEntry(baseEntity as any);
+    const result = toMyTimeEntry(baseEntity);
     expect(result.id).toBe('te-1');
     expect(result.startedAt).toEqual(baseEntity.startedAt);
     expect(result.endedAt).toEqual(baseEntity.endedAt);
   });
 
   it('defaults names to empty string when relations are missing', () => {
-    const broken = { ...baseEntity, shiftInstance: null } as any;
+    const broken = { ...baseEntity, shiftInstance: null };
     const result = toMyTimeEntry(broken);
     expect(result.shiftName).toBe('');
     expect(result.organizationName).toBe('');
