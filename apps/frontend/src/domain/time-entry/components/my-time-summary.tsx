@@ -1,5 +1,3 @@
-'use client';
-
 import { Card, CardContent, CardHeader, CardTitle } from '@repo/ui';
 import { useTranslations } from 'next-intl';
 import { formatTotalMinutes } from '../my-time-grouping';

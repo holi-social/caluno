@@ -1,5 +1,3 @@
-'use client';
-
 import { useFormatter } from 'next-intl';
 import { formatTotalMinutes, type WeekGroup } from '../my-time-grouping';
 import { MyTimeEntryRow } from './my-time-entry-row';

@@ -1,5 +1,3 @@
-'use client';
-
 import type { GroupedMyTime } from '../my-time-grouping';
 import { MyTimeSummary } from './my-time-summary';
 import { MyTimeWeekGroup } from './my-time-week-group';

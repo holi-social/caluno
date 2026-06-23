@@ -1,5 +1,3 @@
-'use client';
-
 import { Badge, Card, CardContent } from '@repo/ui';
 import { useTranslations } from 'next-intl';
 import { formatDuration } from '@/lib/formatting';
