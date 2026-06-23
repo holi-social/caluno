@@ -1,4 +1,4 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable, Logger } from '@nestjs/common';
 import { and, count, eq, gte, inArray } from 'drizzle-orm';
 import { AuthService } from '../auth/auth.service';
 import { PERMISSIONS } from '../auth/constants';
@@ -14,6 +14,7 @@ import {
 import type { PaginationInput } from '../graphql/pagination.input';
 import { MembershipService } from '../membership/membership.service';
 import type { MembershipRequestEntity } from '../membership/schemas/membership-request.schema';
+import { NotificationService } from '../notification/notification.service';
 import type { RequirementProfileEntity } from '../requirement-profile/schemas/requirement-profile.schema';
 import { JoinStatus } from '../shared/enums/join-status.enum';
 import { UserService } from '../user/user.service';
@@ -27,12 +28,15 @@ import { expandShift } from './utils/rrule-expander';
 
 @Injectable()
 export class ShiftService {
+  private readonly logger = new Logger(ShiftService.name);
+
   constructor(
     @Inject(DATABASE_CONNECTION)
     private readonly db: Database,
     private readonly authService: AuthService,
     private readonly userService: UserService,
     private readonly membershipService: MembershipService,
+    private readonly notificationService: NotificationService,
   ) {}
 
   async findById(id: string, organizationUnitId: string): Promise<ShiftEntity> {
@@ -703,6 +707,48 @@ export class ShiftService {
     return this.userService.findByIdOrThrow(createdById);
   }
 
+  private async notifyShiftInstanceJoined(
+    userId: string,
+    shift: ShiftEntity,
+    instance: ShiftInstanceEntity,
+  ): Promise<void> {
+    try {
+      const organizationUnit = await this.db.query.organizationUnits.findFirst({
+        where: { id: shift.organizationUnitId },
+        columns: { id: true, name: true },
+      });
+
+      if (!organizationUnit) {
+        return;
+      }
+
+      const shiftManagers = await this.authService.findUsersWithPermission(
+        shift.organizationUnitId,
+        PERMISSIONS.SHIFT_EDIT,
+      );
+      const recipientUserIds = shiftManagers
+        .filter((manager) => manager.id !== userId)
+        .map((manager) => manager.id);
+
+      if (recipientUserIds.length === 0) {
+        return;
+      }
+
+      this.notificationService.notifyShiftInstanceJoined({
+        organizationUnitId: shift.organizationUnitId,
+        organizationUnitName: organizationUnit.name,
+        shiftTitle: shift.title,
+        joinedUserId: userId,
+        recipientUserIds,
+        startsAt: instance.actualStartsAt,
+      });
+    } catch (error) {
+      this.logger.error(
+        `Failed to emit shift instance joined notification: ${error instanceof Error ? error.message : String(error)}`,
+      );
+    }
+  }
+
   async joinShiftInstance(
     userId: string,
     instanceId: string,
@@ -736,6 +782,18 @@ export class ShiftService {
       );
     }
 
+    const existingInvite = await db.query.shiftInstanceInvites.findFirst({
+      where: {
+        instanceId,
+        userId,
+      },
+      columns: { id: true },
+    });
+
+    if (existingInvite) {
+      return shift;
+    }
+
     const maxVolunteers = instance.overrideMaxVolunteers ?? shift.maxVolunteers;
 
     if (maxVolunteers) {
@@ -764,6 +822,8 @@ export class ShiftService {
         status: ShiftInviteStatus.ACCEPTED,
       })
       .onConflictDoNothing();
+
+    void this.notifyShiftInstanceJoined(userId, shift, instance);
 
     return shift;
   }
