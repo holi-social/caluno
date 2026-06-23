@@ -6,6 +6,7 @@ import { RRule } from 'rrule';
 import z from 'zod';
 import { getDataClient } from '@/lib/data-client';
 import { actionClient } from '@/lib/safe-action';
+import { pickFirstShiftInstanceId } from './create-shift-flow';
 import {
   serverShiftDeleteSchema,
   serverShiftFormSchema,
@@ -72,7 +73,13 @@ export const createShift = actionClient
       rrule,
     };
 
-    return await data.shift.create(input);
+    const shift = await data.shift.create(input);
+    const instances = await data.shift.findInstances(shift.id);
+
+    return {
+      id: shift.id,
+      instanceId: pickFirstShiftInstanceId(instances),
+    };
   });
 
 export const updateShift = actionClient

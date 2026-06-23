@@ -7,13 +7,15 @@ import { toast } from 'sonner';
 import { ClippySheet } from '@/components/sheets/clippy-sheet';
 import { CreateShiftForm } from '@/domain/shift/components/create-form';
 import { EditShiftForm } from '@/domain/shift/components/edit-form';
-import { useSheet } from '@/hooks/use-sheet';
+import { resolveCreateShiftSuccessNavigation } from '@/domain/shift/create-shift-flow';
+import { useSheet, useSheetTrigger } from '@/hooks/use-sheet';
 import { useRouter } from '@/i18n/navigation';
 
 export const FORM_ID = 'shift-form';
 
 export function ShiftSheet() {
   const { setIsPending, getParam, ...sheetProps } = useSheet(FORM_ID, 'id');
+  const inviteSheet = useSheetTrigger('invite-shift');
   const shiftId = getParam('id');
   const isEdit = !!shiftId;
   const orgUId = useOrgUId();
@@ -21,10 +23,28 @@ export function ShiftSheet() {
   const t = useTranslations('Shift');
   const tCommon = useTranslations('Common');
 
-  const handleSuccess = () => {
+  const handleEditSuccess = () => {
     router.refresh();
     sheetProps.close();
-    toast.success(isEdit ? t('toast.updated') : t('toast.created'));
+    toast.success(t('toast.updated'));
+  };
+
+  const handleCreateSuccess = (result: {
+    shiftId: string;
+    instanceId?: string;
+  }) => {
+    router.refresh();
+    toast.success(t('toast.created'));
+
+    const navigation = resolveCreateShiftSuccessNavigation(result);
+    if (navigation.action === 'open-invite') {
+      inviteSheet.open({
+        id: navigation.shiftId,
+        instanceId: navigation.instanceId,
+      });
+    } else {
+      sheetProps.close();
+    }
   };
 
   return (
@@ -47,13 +67,17 @@ export function ShiftSheet() {
           <EditShiftForm
             orgUId={orgUId}
             shiftId={shiftId}
-            onSuccess={handleSuccess}
+            onSuccess={handleEditSuccess}
             onPendingChange={setIsPending}
             formId={FORM_ID}
           />
         </Suspense>
       ) : (
-        <CreateShiftForm formId={FORM_ID} onPendingChange={setIsPending} />
+        <CreateShiftForm
+          formId={FORM_ID}
+          onPendingChange={setIsPending}
+          onSuccess={handleCreateSuccess}
+        />
       )}
     </ClippySheet>
   );
