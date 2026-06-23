@@ -5,6 +5,7 @@ import { getEntryState, type MyTimeEntry } from '../my-time-grouping';
 
 export const MyTimeEntryRow = ({ entry }: { entry: MyTimeEntry }) => {
   const t = useTranslations('MyTime');
+
   const state = getEntryState(entry);
   const inProgress = state === 'in-progress';
   const duration = inProgress
@@ -15,17 +16,15 @@ export const MyTimeEntryRow = ({ entry }: { entry: MyTimeEntry }) => {
       );
 
   return (
-    <Card>
-      <CardContent className="flex items-center justify-between gap-3 p-4">
-        <div className="min-w-0">
-          <p className="truncate font-medium">{entry.shiftName}</p>
-          <p className="truncate text-sm text-muted-foreground">
-            {entry.organizationName} · {entry.organizationUnitName}
-          </p>
-        </div>
-        <div className="flex shrink-0 items-center gap-2 text-sm">
-          <span className="tabular-nums">{duration}</span>
-          <Badge variant={inProgress ? 'info' : 'success'}>
+    <Card className="py-4">
+      <CardContent className="">
+        <h2 className="truncate">{entry.shiftName}</h2>
+        <h3 className="truncate text-sm text-muted-foreground">
+          {entry.organizationName} · {entry.organizationUnitName}
+        </h3>
+        <div className="mt-2 flex items-center justify-between">
+          <span className="text-base">{duration}</span>
+          <Badge variant={inProgress ? 'outline' : 'success'}>
             {t(inProgress ? 'state.inProgress' : 'state.completed')}
           </Badge>
         </div>

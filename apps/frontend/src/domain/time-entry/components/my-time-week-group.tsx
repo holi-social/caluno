@@ -13,7 +13,7 @@ export const MyTimeWeekGroup = ({ week }: { week: WeekGroup }) => {
   const formatter = useFormatter();
   return (
     <section className="space-y-2">
-      <header className="flex items-center justify-between px-1 text-sm font-medium text-muted-foreground">
+      <header className="flex items-center justify-between px-1 text-sm font-semibold text-muted-foreground">
         <span>
           {formatter.dateTime(week.weekStart, weekRangeOptions)} –{' '}
           {formatter.dateTime(week.weekEnd, weekRangeEndOptions)}
