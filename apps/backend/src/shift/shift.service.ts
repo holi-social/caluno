@@ -753,7 +753,7 @@ export class ShiftService {
     userId: string,
     instanceId: string,
     tx?: Database,
-  ): Promise<ShiftEntity> {
+  ): Promise<void> {
     const db = tx ?? this.db;
 
     const instance = await db.query.shiftInstances.findFirst({
@@ -791,7 +791,7 @@ export class ShiftService {
     });
 
     if (existingInvite) {
-      return shift;
+      return;
     }
 
     const maxVolunteers = instance.overrideMaxVolunteers ?? shift.maxVolunteers;
@@ -824,8 +824,6 @@ export class ShiftService {
       .onConflictDoNothing();
 
     void this.notifyShiftInstanceJoined(userId, shift, instance);
-
-    return shift;
   }
 
   async requestJoinShiftInstance(
