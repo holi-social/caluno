@@ -6,6 +6,7 @@ import { RRule } from 'rrule';
 import z from 'zod';
 import { getDataClient } from '@/lib/data-client';
 import { actionClient } from '@/lib/safe-action';
+import { pickFirstShiftInstanceId } from './create-shift-flow';
 import {
   serverShiftDeleteSchema,
   serverShiftFormSchema,
@@ -74,15 +75,10 @@ export const createShift = actionClient
 
     const shift = await data.shift.create(input);
     const instances = await data.shift.findInstances(shift.id);
-    const firstInstance = [...instances].sort(
-      (a, b) =>
-        new Date(a.actualStartsAt).getTime() -
-        new Date(b.actualStartsAt).getTime(),
-    )[0];
 
     return {
       id: shift.id,
-      instanceId: firstInstance?.id,
+      instanceId: pickFirstShiftInstanceId(instances),
     };
   });
 

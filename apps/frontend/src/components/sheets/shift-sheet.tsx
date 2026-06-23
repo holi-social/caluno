@@ -7,6 +7,7 @@ import { toast } from 'sonner';
 import { ClippySheet } from '@/components/sheets/clippy-sheet';
 import { CreateShiftForm } from '@/domain/shift/components/create-form';
 import { EditShiftForm } from '@/domain/shift/components/edit-form';
+import { resolveCreateShiftSuccessNavigation } from '@/domain/shift/create-shift-flow';
 import { useSheet, useSheetTrigger } from '@/hooks/use-sheet';
 import { useRouter } from '@/i18n/navigation';
 
@@ -35,8 +36,12 @@ export function ShiftSheet() {
     router.refresh();
     toast.success(t('toast.created'));
 
-    if (result.instanceId) {
-      inviteSheet.open({ id: result.shiftId, instanceId: result.instanceId });
+    const navigation = resolveCreateShiftSuccessNavigation(result);
+    if (navigation.action === 'open-invite') {
+      inviteSheet.open({
+        id: navigation.shiftId,
+        instanceId: navigation.instanceId,
+      });
     } else {
       sheetProps.close();
     }

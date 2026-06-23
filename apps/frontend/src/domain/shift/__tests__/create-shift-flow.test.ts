@@ -21,10 +21,6 @@ mock.module('@/lib/data-client', () => ({
   }),
 }));
 
-mock.module('next-intl/server', () => ({
-  getTranslations: async () => (key: string) => key,
-}));
-
 const { createShift } = await import('../actions');
 const { pickFirstShiftInstanceId, resolveCreateShiftSuccessNavigation } =
   await import('../create-shift-flow');
