@@ -20,6 +20,8 @@ import { GraphqlModule } from './graphql/graphql.module';
 import { LoaderInterceptor } from './graphql/interceptors';
 import { MembershipModule } from './membership/membership.module';
 import { MembershipLifecycleModule } from './membership-lifecycle/membership-lifecycle.module';
+import { EmailService } from './notification/email/email.service';
+import { accountVerificationOtpTemplate } from './notification/email/templates/account-verification-otp.template';
 import { NotificationModule } from './notification/notification.module';
 import { OrganizationModule } from './organization/organization.module';
 import { RequirementProfileModule } from './requirement-profile/requirement-profile.module';
@@ -56,17 +58,38 @@ const autoSchemaFile =
       }),
     }),
     BetterAuthModule.forRootAsync({
-      imports: [DatabaseModule, ConfigModule],
-      useFactory: (database: Database, configService: ConfigService) => ({
+      imports: [DatabaseModule, ConfigModule, NotificationModule],
+      useFactory: (
+        database: Database,
+        configService: ConfigService,
+        emailService: EmailService,
+      ) => ({
         auth: betterAuth(
           createAuthConfig({
             database,
             trustedOrigins: [configService.getOrThrow('WEB_URL')],
             cookieDomain: configService.get('COOKIE_DOMAIN'),
+            sendVerificationOTP: async ({ email, otp, type }) => {
+              // TODO: When enabling OTP sign-in, password reset, or email change,
+              // add type-specific templates here instead of sending generic copy.
+              if (type !== 'email-verification') {
+                return;
+              }
+
+              const emailContent = await accountVerificationOtpTemplate({
+                otp,
+                expiresInMinutes: 5,
+              });
+
+              await emailService.send({
+                to: email,
+                ...emailContent,
+              });
+            },
           }),
         ),
       }),
-      inject: [DATABASE_CONNECTION, ConfigService],
+      inject: [DATABASE_CONNECTION, ConfigService, EmailService],
     }),
     UserModule,
     OrganizationModule,
