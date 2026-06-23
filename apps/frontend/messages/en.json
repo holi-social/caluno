@@ -44,6 +44,7 @@
       "noAccount": "Don't have an account?",
       "signUpLink": "Sign up",
       "invalidCredentials": "Invalid credentials",
+      "sendVerificationFailed": "Email is not verified, and we couldn't send a new verification code.",
       "genericError": "Sign in failed. Please try again."
     },
     "signup": {
@@ -61,6 +62,26 @@
       "signInLink": "Sign in",
       "createAccountFailed": "Failed to create account",
       "genericError": "Creating your account failed. Please try again."
+    },
+    "verifyEmail": {
+      "title": "Verify your email",
+      "requestDescription": "Enter your email address and we'll send you a verification code.",
+      "emailLabel": "Email",
+      "emailPlaceholder": "you@example.com",
+      "sendCode": "Send verification code",
+      "sending": "Sending code...",
+      "codeSent": "Check {email} for your verification code.",
+      "codeRequested": "If email delivery is available, a verification code will arrive at {email} shortly.",
+      "verificationDescription": "Enter the verification code for {email}.",
+      "otpLabel": "Verification code",
+      "otpPlaceholder": "123456",
+      "verifySubmit": "Verify email",
+      "verifying": "Verifying...",
+      "resendCode": "Resend code",
+      "sendCodeFailed": "Failed to send verification code",
+      "verifyCodeFailed": "Failed to verify code",
+      "remembered": "Already verified?",
+      "signInLink": "Sign in"
     }
   },
   "Metadata": {

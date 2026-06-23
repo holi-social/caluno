@@ -5,6 +5,7 @@ import { useTranslations } from 'next-intl';
 import { useState } from 'react';
 import { Link, useRouter } from '@/i18n/navigation';
 import { signIn } from '@/lib/auth';
+import { getVerifyEmailPath } from '@/lib/verify-email-url';
 
 interface LoginFormProps {
   redirectTo?: string;
@@ -15,6 +16,16 @@ export function LoginForm({ redirectTo = '/' }: LoginFormProps) {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [isPending, setIsPending] = useState(false);
+
+  function isEmailNotVerifiedError(error: { code?: string; message?: string }) {
+    const code = error.code?.toUpperCase();
+    const message = error.message?.toLowerCase() ?? '';
+
+    return (
+      code === 'EMAIL_NOT_VERIFIED' ||
+      (message.includes('email') && message.includes('verified'))
+    );
+  }
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -29,6 +40,11 @@ export function LoginForm({ redirectTo = '/' }: LoginFormProps) {
       const result = await signIn.email({ email, password });
 
       if (result.error) {
+        if (isEmailNotVerifiedError(result.error)) {
+          router.push(getVerifyEmailPath({ email, redirectTo }));
+          return;
+        }
+
         setError(result.error.message || t('invalidCredentials'));
         setIsPending(false);
         return;
