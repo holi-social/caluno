@@ -39,12 +39,14 @@ export default async function MyTimePage({
     <div className="space-y-6">
       <h1 className="page-title">{t('title')}</h1>
       <MyTimeView grouped={grouped} />
-      <Pagination
-        pagination={result.pagination}
-        url="/timesheets"
-        currentPage={currentPage}
-        name="entries"
-      />
+      {result.pagination.total > result.pagination.limit && (
+        <Pagination
+          pagination={result.pagination}
+          url="/timesheets"
+          currentPage={currentPage}
+          name="entries"
+        />
+      )}
     </div>
   );
 }
