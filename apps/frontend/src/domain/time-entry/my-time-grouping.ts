@@ -34,14 +34,6 @@ export const entryDurationMinutes = (entry: MyTimeEntry): number => {
   );
 };
 
-// Compact headline format for totals (all-time + per-week). Entry-level durations
-// reuse the localized date-fns formatter in the row component; totals are headline numbers.
-export const formatTotalMinutes = (minutes: number): string => {
-  const hours = Math.floor(minutes / 60);
-  const mins = minutes % 60;
-  return `${hours}h ${mins}m`;
-};
-
 export const groupMyTime = (entries: MyTimeEntry[]): GroupedMyTime => {
   const byWeek = new Map<number, MyTimeEntry[]>();
   let allTimeMinutes = 0;

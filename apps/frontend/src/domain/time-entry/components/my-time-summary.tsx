@@ -1,6 +1,6 @@
 import { Sparkles } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import { formatTotalMinutes } from '../my-time-grouping';
+import { formatTotalMinutes } from '../formating';
 
 export const MyTimeSummary = ({
   allTimeMinutes,
