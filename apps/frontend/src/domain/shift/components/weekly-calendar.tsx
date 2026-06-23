@@ -1,4 +1,4 @@
-import { addDays } from 'date-fns';
+import { addDays, isSameDay } from 'date-fns';
 import { getFormatter } from 'next-intl/server';
 import { getDataClient } from '@/lib/data-client';
 import { ShiftCard } from './shift-card';
@@ -8,14 +8,6 @@ type WeeklyCalendarProps = {
   canManage?: boolean;
   weekStart: Date;
 };
-
-function isSameUtcDay(a: Date, b: Date): boolean {
-  return (
-    a.getUTCFullYear() === b.getUTCFullYear() &&
-    a.getUTCMonth() === b.getUTCMonth() &&
-    a.getUTCDate() === b.getUTCDate()
-  );
-}
 
 export async function WeeklyCalendar({
   orgUId,
@@ -35,7 +27,7 @@ export async function WeeklyCalendar({
       label: formatter.dateTime(date, { weekday: 'short' }),
       dateLabel: formatter.dateTime(date, { month: 'short', day: 'numeric' }),
       instances: instances.filter((inst) =>
-        isSameUtcDay(new Date(inst.actualStartsAt), date),
+        isSameDay(new Date(inst.actualStartsAt), date),
       ),
     };
   });
