@@ -72,7 +72,18 @@ export const createShift = actionClient
       rrule,
     };
 
-    return await data.shift.create(input);
+    const shift = await data.shift.create(input);
+    const instances = await data.shift.findInstances(shift.id);
+    const firstInstance = [...instances].sort(
+      (a, b) =>
+        new Date(a.actualStartsAt).getTime() -
+        new Date(b.actualStartsAt).getTime(),
+    )[0];
+
+    return {
+      id: shift.id,
+      instanceId: firstInstance?.id,
+    };
   });
 
 export const updateShift = actionClient
