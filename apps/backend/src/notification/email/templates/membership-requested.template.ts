@@ -5,8 +5,10 @@ import {
   emailTheme,
   escapeHtml,
   heading,
+  note,
+  paragraph,
   renderEmail,
-  text,
+  strong,
   volunteersAdminUrl,
 } from './shared';
 
@@ -27,16 +29,12 @@ export async function membershipRequestedTemplate(
 
   const body = card(`
     ${heading('New membership request')}
-    ${text(
-      `Hi ${firstName}, <strong style="color:${emailTheme.colors.ink}">${requesterName}</strong> has requested to join <strong style="color:${emailTheme.colors.ink}">${organizationName}</strong>. Review the request when you have a moment.`,
-      { color: emailTheme.colors.muted, padding: '0 0 24px' },
+    ${paragraph(
+      `Hi ${firstName}, ${strong(requesterName)} has requested to join ${strong(organizationName)}. Review the request when you have a moment so they know whether they can start volunteering.`,
     )}
     ${button({ href: volunteersUrl, label: 'Review request' })}
     ${divider()}
-    ${text(
-      'You are receiving this because you can review membership requests for this organization.',
-      { size: '14px', color: emailTheme.colors.muted },
-    )}
+    ${note('Pending requests stay open until an admin approves or rejects them.')}
   `);
 
   return renderEmail({

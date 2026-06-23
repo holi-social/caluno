@@ -7,8 +7,9 @@ import {
   heading,
   orderedListItem,
   organizationAdminUrl,
+  paragraph,
   renderEmail,
-  text,
+  strong,
 } from './shared';
 
 export interface OrganizationCreatedTemplateData {
@@ -26,16 +27,15 @@ export async function organizationCreatedTemplate(
 
   const body = card(`
     ${heading('Your organization is ready')}
-    ${text(
-      `Hi ${firstName}, <strong style="color:${emailTheme.colors.ink}">${organizationName}</strong> is now set up on ${emailTheme.brandName}. You can start inviting teammates and scheduling shifts right away.`,
-      { color: emailTheme.colors.muted, padding: '0 0 24px' },
+    ${paragraph(
+      `Hi ${firstName}, ${strong(organizationName)} is now set up on ${emailTheme.brandName}. You can start inviting teammates and scheduling shifts right away.`,
     )}
     ${button({ href: organizationUrl, label: `Open ${organizationName}` })}
     ${divider()}
     ${heading('What to do next', { size: '18px', padding: '0 0 16px', letterSpacing: '-0.01em' })}
-    ${orderedListItem(1, '<strong>Invite your team</strong>: add admins and coordinators so you are not scheduling alone.')}
-    ${orderedListItem(2, '<strong>Create your first shifts</strong>: set the times, roles, and how many volunteers you need.')}
-    ${orderedListItem(3, '<strong>Bring in volunteers</strong>: share your sign-up link and watch the schedule fill in.', { last: true })}
+    ${orderedListItem(1, `${strong('Invite your team')}: add admins and coordinators so you are not scheduling alone.`)}
+    ${orderedListItem(2, `${strong('Create your first shifts')}: set the times, roles, and how many volunteers you need.`)}
+    ${orderedListItem(3, `${strong('Bring in volunteers')}: share your sign-up link and watch the schedule fill in.`, { last: true })}
   `);
 
   return renderEmail({

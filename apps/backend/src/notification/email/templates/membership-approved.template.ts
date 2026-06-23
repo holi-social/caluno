@@ -7,8 +7,9 @@ import {
   heading,
   orderedListItem,
   organizationAdminUrl,
+  paragraph,
   renderEmail,
-  text,
+  strong,
 } from './shared';
 
 export interface MembershipApprovedTemplateData {
@@ -26,22 +27,21 @@ export async function membershipApprovedTemplate(
 
   const body = card(`
     ${heading('Welcome aboard')}
-    ${text(
-      `Hi ${firstName}, your membership request for <strong style="color:${emailTheme.colors.ink}">${organizationName}</strong> has been approved. You can now view shifts and start volunteering.`,
-      { color: emailTheme.colors.muted, padding: '0 0 24px' },
+    ${paragraph(
+      `Hi ${firstName}, your membership request for ${strong(organizationName)} has been approved. You can now browse shifts and sign up when something fits your availability.`,
     )}
     ${button({ href: organizationUrl, label: `Open ${organizationName}` })}
     ${divider()}
     ${heading('What to do next', { size: '18px', padding: '0 0 16px', letterSpacing: '-0.01em' })}
-    ${orderedListItem(1, '<strong>Complete your profile</strong>: make sure your details are up to date.')}
-    ${orderedListItem(2, '<strong>Browse open shifts</strong>: find times and roles that work for you.')}
-    ${orderedListItem(3, '<strong>Sign up</strong>: join a shift and you are all set.', { last: true })}
+    ${orderedListItem(1, `${strong('Complete your profile')}: make sure your details are up to date.`)}
+    ${orderedListItem(2, `${strong('Browse open shifts')}: find times and roles that work for you.`)}
+    ${orderedListItem(3, `${strong('Sign up')}: join a shift and you are all set.`, { last: true })}
   `);
 
   return renderEmail({
     templateName: 'membershipApprovedTemplate',
-    subject: `Your membership to "${data.organizationName}" has been approved`,
-    previewText: `Your membership to ${organizationName} has been approved. Browse shifts and start volunteering.`,
+    subject: `You're approved for ${data.organizationName}`,
+    previewText: `Your membership to ${organizationName} has been approved. Browse shifts and sign up when you are ready.`,
     body,
     footerNote: `You are receiving this because your membership request to ${organizationName} was approved on ${emailTheme.brandName}.`,
   });

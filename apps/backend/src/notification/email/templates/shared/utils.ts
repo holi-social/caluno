@@ -30,3 +30,8 @@ export function organizationAdminUrl(organizationUnitId: string): string {
 export function volunteersAdminUrl(organizationUnitId: string): string {
   return `${resolveAppUrl()}/admin/${encodeURIComponent(organizationUnitId)}/volunteers`;
 }
+
+/** Deep link to the shifts admin page for managing schedules. */
+export function shiftsAdminUrl(organizationUnitId: string): string {
+  return `${resolveAppUrl()}/admin/${encodeURIComponent(organizationUnitId)}/shifts`;
+}

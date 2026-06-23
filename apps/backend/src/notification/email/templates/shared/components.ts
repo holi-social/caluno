@@ -37,6 +37,43 @@ export function text(content: string, options: TextOptions = {}): string {
   return `<mj-text ${attrs.join(' ')}>${content}</mj-text>`;
 }
 
+/** Emphasized inline text with email-client-safe styling. */
+export function strong(content: string): string {
+  return `<strong style="color:${colors.ink};font-weight:700">${content}</strong>`;
+}
+
+/** Primary body copy. */
+export function paragraph(
+  content: string,
+  options: Pick<TextOptions, 'padding'> = {},
+): string {
+  return text(content, {
+    color: colors.muted,
+    padding: options.padding ?? '0 0 24px',
+  });
+}
+
+/** Small supporting copy for role or status notes. */
+export function note(content: string): string {
+  return text(content, {
+    size: '14px',
+    color: colors.muted,
+    padding: '0',
+  });
+}
+
+/** Label/value pair for compact transactional details. */
+export function detailItem(
+  label: string,
+  value: string,
+  options: { last?: boolean } = {},
+): string {
+  return text(`${strong(label)}<br />${value}`, {
+    color: colors.muted,
+    padding: options.last ? '0 0 24px' : '0 0 12px',
+  });
+}
+
 export interface HeadingOptions {
   size?: string;
   padding?: string;

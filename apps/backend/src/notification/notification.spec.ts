@@ -9,8 +9,10 @@ import { EmailService } from './email/email.service';
 import { membershipApprovedTemplate } from './email/templates/membership-approved.template';
 import { membershipRequestedTemplate } from './email/templates/membership-requested.template';
 import { organizationCreatedTemplate } from './email/templates/organization-created.template';
+import { shiftInstanceJoinedTemplate } from './email/templates/shift-instance-joined.template';
 import { MembershipListener } from './listeners/membership.listener';
 import { OrganizationListener } from './listeners/organization.listener';
+import { ShiftListener } from './listeners/shift.listener';
 import { NotificationService } from './notification.service';
 import { TypedNotificationEmitter } from './typed-notification-emitter.service';
 
@@ -44,6 +46,7 @@ describe('NotificationModule', () => {
         NotificationService,
         OrganizationListener,
         MembershipListener,
+        ShiftListener,
         { provide: EmailService, useValue: emailService },
         { provide: UserService, useValue: userService },
       ],
@@ -191,6 +194,82 @@ describe('NotificationModule', () => {
       to: user.email,
       subject: expected.subject,
       html: expected.html,
+    });
+  });
+
+  it('sends shift joined email to each shift manager', async () => {
+    const startsAt = new Date('2026-07-01T10:00:00.000Z');
+    const users = new Map([
+      [
+        'volunteer-1',
+        {
+          id: 'volunteer-1',
+          name: 'Sam Volunteer',
+          email: 'volunteer@example.com',
+        },
+      ],
+      [
+        'manager-1',
+        {
+          id: 'manager-1',
+          name: 'Alice Manager',
+          email: 'alice@example.com',
+        },
+      ],
+      [
+        'manager-2',
+        {
+          id: 'manager-2',
+          name: 'Bob Manager',
+          email: 'bob@example.com',
+        },
+      ],
+    ]);
+    userService.findById.mockImplementation((id: string) =>
+      Promise.resolve(users.get(id)),
+    );
+
+    const payload = {
+      organizationUnitId: 'unit-root-1',
+      organizationUnitName: 'Acme Volunteers',
+      shiftTitle: 'Morning Kitchen',
+      joinedUserId: 'volunteer-1',
+      recipientUserIds: ['manager-1', 'manager-2'],
+      startsAt,
+    };
+    const expectedAlice = await shiftInstanceJoinedTemplate({
+      organizationUnitId: payload.organizationUnitId,
+      organizationUnitName: payload.organizationUnitName,
+      shiftTitle: payload.shiftTitle,
+      volunteerName: 'Sam Volunteer',
+      recipientFirstName: 'Alice',
+      startsAt,
+    });
+    const expectedBob = await shiftInstanceJoinedTemplate({
+      organizationUnitId: payload.organizationUnitId,
+      organizationUnitName: payload.organizationUnitName,
+      shiftTitle: payload.shiftTitle,
+      volunteerName: 'Sam Volunteer',
+      recipientFirstName: 'Bob',
+      startsAt,
+    });
+
+    notificationService.notifyShiftInstanceJoined(payload);
+
+    await new Promise((resolve) => setTimeout(resolve, 50));
+
+    expect(userService.findById).toHaveBeenCalledWith('volunteer-1');
+    expect(userService.findById).toHaveBeenCalledWith('manager-1');
+    expect(userService.findById).toHaveBeenCalledWith('manager-2');
+    expect(emailService.send).toHaveBeenCalledWith({
+      to: 'alice@example.com',
+      subject: expectedAlice.subject,
+      html: expectedAlice.html,
+    });
+    expect(emailService.send).toHaveBeenCalledWith({
+      to: 'bob@example.com',
+      subject: expectedBob.subject,
+      html: expectedBob.html,
     });
   });
 });
