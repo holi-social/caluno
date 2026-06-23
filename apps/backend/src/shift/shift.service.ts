@@ -371,6 +371,123 @@ export class ShiftService {
     return instance;
   }
 
+  async inviteMembersToShiftWithAutoApproval(
+    shiftId: string,
+    memberIds: string[],
+    organizationUnitId: string,
+  ): Promise<ShiftEntity> {
+    const shift = await this.findById(shiftId, organizationUnitId);
+
+    if (memberIds.length === 0) {
+      return shift;
+    }
+
+    await this.db.transaction(async (tx) => {
+      const instances = await tx.query.shiftInstances.findMany({
+        where: {
+          masterId: shift.id,
+          isCancelled: false,
+        },
+        columns: {
+          id: true,
+          overrideMaxVolunteers: true,
+        },
+      });
+
+      if (instances.length === 0) {
+        return;
+      }
+
+      const instanceIds = instances.map((instance) => instance.id);
+      const capacityLimitedInstances = instances.filter(
+        (instance) => instance.overrideMaxVolunteers ?? shift.maxVolunteers,
+      );
+
+      if (capacityLimitedInstances.length > 0) {
+        const capacityLimitedInstanceIds = capacityLimitedInstances.map(
+          (instance) => instance.id,
+        );
+        const [capacities, acceptedRequestedInvites] = await Promise.all([
+          tx
+            .select({
+              instanceId: schema.shiftInstanceInvites.instanceId,
+              current: count(),
+            })
+            .from(schema.shiftInstanceInvites)
+            .where(
+              and(
+                inArray(
+                  schema.shiftInstanceInvites.instanceId,
+                  capacityLimitedInstanceIds,
+                ),
+                eq(
+                  schema.shiftInstanceInvites.status,
+                  ShiftInviteStatus.ACCEPTED,
+                ),
+              ),
+            )
+            .groupBy(schema.shiftInstanceInvites.instanceId),
+          tx
+            .select({
+              instanceId: schema.shiftInstanceInvites.instanceId,
+              userId: schema.shiftInstanceInvites.userId,
+            })
+            .from(schema.shiftInstanceInvites)
+            .where(
+              and(
+                inArray(
+                  schema.shiftInstanceInvites.instanceId,
+                  capacityLimitedInstanceIds,
+                ),
+                inArray(schema.shiftInstanceInvites.userId, memberIds),
+                eq(
+                  schema.shiftInstanceInvites.status,
+                  ShiftInviteStatus.ACCEPTED,
+                ),
+              ),
+            ),
+        ]);
+
+        const capacityByInstanceId = new Map(
+          capacities.map((capacity) => [capacity.instanceId, capacity.current]),
+        );
+        const acceptedRequestedByInstanceId = new Map<string, Set<string>>();
+
+        for (const invite of acceptedRequestedInvites) {
+          const accepted =
+            acceptedRequestedByInstanceId.get(invite.instanceId) ?? new Set();
+          accepted.add(invite.userId);
+          acceptedRequestedByInstanceId.set(invite.instanceId, accepted);
+        }
+
+        for (const instance of capacityLimitedInstances) {
+          const maxVolunteers =
+            instance.overrideMaxVolunteers ?? shift.maxVolunteers;
+          if (!maxVolunteers) continue;
+
+          const alreadyAccepted =
+            acceptedRequestedByInstanceId.get(instance.id) ?? new Set();
+          const newInviteCount = memberIds.filter(
+            (memberId) => !alreadyAccepted.has(memberId),
+          ).length;
+
+          if (
+            (capacityByInstanceId.get(instance.id) ?? 0) + newInviteCount >
+            maxVolunteers
+          ) {
+            throw new ConflictGraphQLError(
+              `Cannot invite members: instance would exceed capacity of ${maxVolunteers}`,
+            );
+          }
+        }
+      }
+
+      await this.createInvitesForInstances(tx, instanceIds, memberIds);
+    });
+
+    return shift;
+  }
+
   async findVolunteers(
     instanceId: string,
     organizationUnitId: string,
@@ -764,6 +881,35 @@ export class ShiftService {
         status: ShiftInviteStatus.ACCEPTED,
       })
       .onConflictDoNothing();
+
+    return shift;
+  }
+
+  async joinShift(userId: string, shiftId: string): Promise<ShiftEntity> {
+    const shift = await this.db.query.shifts.findFirst({
+      where: { id: shiftId, isDeleted: false },
+    });
+
+    if (!shift || shift.visibility !== ShiftVisibility.ALL_MEMBERS) {
+      throw new NotFoundGraphQLError('Shift not found');
+    }
+
+    const isAllowed = await this.membershipService.isMemberOfUnitOrAncestor(
+      userId,
+      shift.organizationUnitId,
+    );
+
+    if (!isAllowed) {
+      throw new ConflictGraphQLError(
+        'You must be a member of the organization to join this shift.',
+      );
+    }
+
+    await this.inviteMembersToShiftWithAutoApproval(
+      shift.id,
+      [userId],
+      shift.organizationUnitId,
+    );
 
     return shift;
   }

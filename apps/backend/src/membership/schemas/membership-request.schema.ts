@@ -15,6 +15,7 @@ import { MembershipRequestStatus } from '../enums';
 
 export type MembershipRequestMetadata = {
   intendedShiftInstanceIds?: string[];
+  intendedShiftIds?: string[];
   intendedEventIds?: string[];
 };
 

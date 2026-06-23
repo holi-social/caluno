@@ -73,6 +73,21 @@ export class ShiftMutationResolver {
 
   @Permissions(PERMISSIONS.SHIFT_EDIT)
   @Mutation(() => Shift)
+  async inviteMembersToShift(
+    @Args('shiftId', { type: () => String }) shiftId: string,
+    @Args('memberIds', { type: () => [String] }) memberIds: string[],
+    @Context() context: AuthenticatedGraphQLContext,
+  ): Promise<Shift> {
+    const shift = await this.shiftService.inviteMembersToShiftWithAutoApproval(
+      shiftId,
+      memberIds,
+      context.organizationUnitId,
+    );
+    return this.shiftMapper.toModelOrThrow(shift);
+  }
+
+  @Permissions(PERMISSIONS.SHIFT_EDIT)
+  @Mutation(() => Shift)
   async deleteShift(
     @Args('id', { type: () => String }) id: string,
     @Context() context: AuthenticatedGraphQLContext,

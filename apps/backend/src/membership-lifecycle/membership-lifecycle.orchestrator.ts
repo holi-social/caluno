@@ -129,6 +129,16 @@ export class MembershipLifecycleOrchestrator {
       }
     }
 
+    if (metadata.intendedShiftIds?.length) {
+      for (const shiftId of metadata.intendedShiftIds) {
+        try {
+          await this.shiftService.joinShift(membershipRequest.userId, shiftId);
+        } catch (e) {
+          this.logger.warn(`Failed to auto-join shift ${shiftId}: ${e}`);
+        }
+      }
+    }
+
     if (metadata.intendedEventIds?.length) {
       for (const eventId of metadata.intendedEventIds) {
         try {

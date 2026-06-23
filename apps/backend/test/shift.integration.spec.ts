@@ -174,6 +174,124 @@ describe('ShiftService.findShiftsForWeek', () => {
     ).not.toContain(instanceId);
   });
 
+  it('invites members to all non-cancelled instances of a shift', async () => {
+    const userId = `shift-wide-invite-user-${crypto.randomUUID()}`;
+    await db.insert(schema.users).values({
+      id: userId,
+      name: 'Shift Wide Invite User',
+      email: `shift-wide-invite-${crypto.randomUUID()}@example.com`,
+    });
+
+    const createShiftData = await graphqlRequestRequiringData<{
+      createShift: { id: string };
+    }>(
+      app,
+      {
+        query: `
+          mutation CreateShift($input: CreateShiftInput!) {
+            createShift(input: $input) {
+              id
+            }
+          }
+        `,
+        variables: {
+          input: {
+            title: `All Instances Invite Shift ${crypto.randomUUID()}`,
+            instructions: null,
+            location: null,
+            startsAt: '2026-06-18T08:00:00.000Z',
+            endsAt: '2026-06-18T10:00:00.000Z',
+            visibility: 'INVITED_MEMBERS',
+            maxVolunteers: null,
+            minVolunteers: null,
+            invitedMemberIds: [],
+            rrule: null,
+          },
+        },
+        headers: {
+          'x-organization-unit-id': organizationUnitId,
+        },
+      },
+      'createShift',
+    );
+
+    const shiftId = createShiftData.createShift.id;
+    const [secondInstance, thirdInstance] = await db
+      .insert(schema.shiftInstances)
+      .values([
+        {
+          masterId: shiftId,
+          actualStartsAt: new Date('2026-06-19T08:00:00.000Z'),
+          actualEndsAt: new Date('2026-06-19T10:00:00.000Z'),
+          occurrenceIndex: 1,
+        },
+        {
+          masterId: shiftId,
+          actualStartsAt: new Date('2026-06-20T08:00:00.000Z'),
+          actualEndsAt: new Date('2026-06-20T10:00:00.000Z'),
+          occurrenceIndex: 2,
+        },
+      ])
+      .returning();
+
+    if (!secondInstance || !thirdInstance) {
+      throw new Error('Expected additional shift instances to be created');
+    }
+
+    const instances = await db.query.shiftInstances.findMany({
+      where: { masterId: shiftId },
+      orderBy: { actualStartsAt: 'asc' },
+    });
+    expect(instances).toHaveLength(3);
+
+    const cancelledInstanceId = instances[1]?.id;
+    if (!cancelledInstanceId) {
+      throw new Error('Expected a shift instance to cancel');
+    }
+
+    await db
+      .update(schema.shiftInstances)
+      .set({ isCancelled: true })
+      .where(eq(schema.shiftInstances.id, cancelledInstanceId));
+
+    await graphqlRequestRequiringData<{
+      inviteMembersToShift: { id: string };
+    }>(
+      app,
+      {
+        query: `
+          mutation InviteMembersToShift($shiftId: String!, $memberIds: [String!]!) {
+            inviteMembersToShift(shiftId: $shiftId, memberIds: $memberIds) {
+              id
+            }
+          }
+        `,
+        variables: {
+          shiftId,
+          memberIds: [userId],
+        },
+        headers: {
+          'x-organization-unit-id': organizationUnitId,
+        },
+      },
+      'inviteMembersToShift',
+    );
+
+    const invites = await db.query.shiftInstanceInvites.findMany({
+      where: { userId, status: ShiftInviteStatus.ACCEPTED },
+    });
+    const activeInstanceIds = instances
+      .map((instance) => instance.id)
+      .filter((id) => id !== cancelledInstanceId);
+
+    expect(invites.map((invite) => invite.instanceId).sort()).toEqual(
+      activeInstanceIds.sort(),
+    );
+    expect(invites.map((invite) => invite.instanceId)).not.toContain(
+      cancelledInstanceId,
+    );
+  });
+
   it('approves a shift membership request into only the intended shift instance', async () => {
     const userId = `shift-join-user-${crypto.randomUUID()}`;
     await db.insert(schema.users).values({
@@ -288,6 +406,130 @@ describe('ShiftService.findShiftsForWeek', () => {
     ]);
     expect(invites.map((invite) => invite.instanceId)).not.toContain(
       otherInstance.id,
+    );
+  });
+
+  it('approves a shift membership request into all intended shift instances', async () => {
+    const userId = `shift-all-instances-user-${crypto.randomUUID()}`;
+    await db.insert(schema.users).values({
+      id: userId,
+      name: 'Shift All Instances User',
+      email: `shift-all-instances-${crypto.randomUUID()}@example.com`,
+    });
+
+    const createShiftData = await graphqlRequestRequiringData<{
+      createShift: { id: string };
+    }>(
+      app,
+      {
+        query: `
+          mutation CreateShift($input: CreateShiftInput!) {
+            createShift(input: $input) {
+              id
+            }
+          }
+        `,
+        variables: {
+          input: {
+            title: `Approval Whole Shift ${crypto.randomUUID()}`,
+            instructions: null,
+            location: null,
+            startsAt: '2026-06-21T08:00:00.000Z',
+            endsAt: '2026-06-21T10:00:00.000Z',
+            visibility: 'ALL_MEMBERS',
+            maxVolunteers: null,
+            minVolunteers: null,
+            invitedMemberIds: [],
+            rrule: null,
+          },
+        },
+        headers: {
+          'x-organization-unit-id': organizationUnitId,
+        },
+      },
+      'createShift',
+    );
+
+    const shiftId = createShiftData.createShift.id;
+    const [secondInstance, cancelledInstance] = await db
+      .insert(schema.shiftInstances)
+      .values([
+        {
+          masterId: shiftId,
+          actualStartsAt: new Date('2026-06-22T08:00:00.000Z'),
+          actualEndsAt: new Date('2026-06-22T10:00:00.000Z'),
+          occurrenceIndex: 1,
+        },
+        {
+          masterId: shiftId,
+          actualStartsAt: new Date('2026-06-23T08:00:00.000Z'),
+          actualEndsAt: new Date('2026-06-23T10:00:00.000Z'),
+          isCancelled: true,
+          occurrenceIndex: 2,
+        },
+      ])
+      .returning();
+
+    if (!secondInstance || !cancelledInstance) {
+      throw new Error('Expected additional shift instances to be created');
+    }
+
+    const instances = await db.query.shiftInstances.findMany({
+      where: { masterId: shiftId },
+      orderBy: { actualStartsAt: 'asc' },
+    });
+    expect(instances).toHaveLength(3);
+
+    const [membershipRequest] = await db
+      .insert(schema.membershipRequests)
+      .values({
+        userId,
+        organizationUnitId,
+        status: MembershipRequestStatus.PENDING,
+        metadata: {
+          intendedShiftIds: [shiftId],
+        },
+      })
+      .returning();
+
+    await graphqlRequestRequiringData<{
+      approveMembershipRequest: { id: string };
+    }>(
+      app,
+      {
+        query: `
+          mutation ApproveMembershipRequest($id: ID!, $organizationUnitId: ID!) {
+            approveMembershipRequest(
+              id: $id
+              organizationUnitId: $organizationUnitId
+            ) {
+              id
+            }
+          }
+        `,
+        variables: {
+          id: membershipRequest.id,
+          organizationUnitId,
+        },
+        headers: {
+          'x-organization-unit-id': organizationUnitId,
+        },
+      },
+      'approveMembershipRequest',
+    );
+
+    const invites = await db.query.shiftInstanceInvites.findMany({
+      where: { userId, status: ShiftInviteStatus.ACCEPTED },
+    });
+    const activeInstanceIds = instances
+      .filter((instance) => !instance.isCancelled)
+      .map((instance) => instance.id);
+
+    expect(invites.map((invite) => invite.instanceId).sort()).toEqual(
+      activeInstanceIds.sort(),
+    );
+    expect(invites.map((invite) => invite.instanceId)).not.toContain(
+      cancelledInstance.id,
     );
   });
 });
