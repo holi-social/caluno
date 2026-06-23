@@ -12,7 +12,7 @@ export const MyTimeEntryRow = ({ entry }: { entry: MyTimeEntry }) => {
     ? '—'
     : formatDuration(
         new Date(entry.startedAt),
-        new Date(entry.endedAt as string),
+        new Date(entry.endedAt ?? new Date()),
       );
 
   return (
