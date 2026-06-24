@@ -11,19 +11,9 @@ export function CreateShiftButton() {
   const t = useTranslations('Shift');
 
   return (
-    <>
-      <Button size="icon-sm" className="sm:hidden" onClick={() => open()}>
-        <PlusIcon />
-      </Button>
-
-      <Button
-        size="icon-sm"
-        className="hidden inline-flex"
-        onClick={() => open()}
-      >
-        <PlusIcon />
-        {t('page.createButton')}
-      </Button>
-    </>
+    <Button size="sm" onClick={() => open()}>
+      <PlusIcon />
+      {t('page.createButton')}
+    </Button>
   );
 }
