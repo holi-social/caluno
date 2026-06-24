@@ -81,7 +81,11 @@ export default async function ShiftsPage({
         />
       ) : tableContent && tableContent.pagination.total > 0 ? (
         <>
-          <ShiftsTable shifts={tableContent.items} orgUId={orgUId} />
+          <ShiftsTable
+            shifts={tableContent.items}
+            orgUId={orgUId}
+            page={currentPage}
+          />
           {tableContent.pagination.total > ITEMS_PER_PAGE && (
             <Pagination
               pagination={tableContent.pagination}

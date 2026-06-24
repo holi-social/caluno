@@ -1,0 +1,51 @@
+export type ShiftListView = 'weekplan' | 'shifts';
+
+export type ShiftListQuery = {
+  view?: ShiftListView;
+  week?: string;
+  page?: string;
+};
+
+function parseQuery(query?: ShiftListQuery) {
+  const params = new URLSearchParams();
+  if (query?.view) params.set('view', query.view);
+  if (query?.week) params.set('week', query.week);
+  if (query?.page) params.set('page', query.page);
+  return params.toString();
+}
+
+export function shiftsListPath(
+  orgUId: string,
+  query: ShiftListQuery = {},
+): string {
+  const queryString = parseQuery(query);
+  return `/admin/${orgUId}/shifts${queryString ? `?${queryString}` : ''}`;
+}
+
+export function shiftDetailPath(
+  orgUId: string,
+  shiftId: string,
+  query?: ShiftListQuery,
+): string {
+  const queryString = parseQuery(query);
+  return `/admin/${orgUId}/shifts/${shiftId}${queryString ? `?${queryString}` : ''}`;
+}
+
+export function parseShiftListQuery(
+  searchParams: Record<string, string | string[] | undefined>,
+): ShiftListQuery {
+  const view = searchParams.view;
+  const week = searchParams.week;
+  const page = searchParams.page;
+
+  return {
+    view:
+      view === 'shifts'
+        ? 'shifts'
+        : view === 'weekplan'
+          ? 'weekplan'
+          : undefined,
+    week: typeof week === 'string' ? week : undefined,
+    page: typeof page === 'string' ? page : undefined,
+  };
+}
