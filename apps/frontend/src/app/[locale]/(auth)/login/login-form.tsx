@@ -17,16 +17,6 @@ export function LoginForm({ redirectTo = '/' }: LoginFormProps) {
   const [error, setError] = useState<string | null>(null);
   const [isPending, setIsPending] = useState(false);
 
-  function isEmailNotVerifiedError(error: { code?: string; message?: string }) {
-    const code = error.code?.toUpperCase();
-    const message = error.message?.toLowerCase() ?? '';
-
-    return (
-      code === 'EMAIL_NOT_VERIFIED' ||
-      (message.includes('email') && message.includes('verified'))
-    );
-  }
-
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setError(null);
@@ -40,7 +30,7 @@ export function LoginForm({ redirectTo = '/' }: LoginFormProps) {
       const result = await signIn.email({ email, password });
 
       if (result.error) {
-        if (isEmailNotVerifiedError(result.error)) {
+        if (result.error.code === 'EMAIL_NOT_VERIFIED') {
           router.push(getVerifyEmailPath({ email, redirectTo }));
           return;
         }
