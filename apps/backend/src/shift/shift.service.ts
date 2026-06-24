@@ -51,6 +51,20 @@ export class ShiftService {
     return shift;
   }
 
+  async findOrgUnitsShift(
+    id: string,
+    organizationUnitId: string,
+  ): Promise<ShiftEntity> {
+    const shift = await this.db.query.shifts.findFirst({
+      where: { id, organizationUnitId },
+    });
+
+    if (!shift) {
+      throw new NotFoundGraphQLError(`Shift with ID ${id} not found`);
+    }
+    return shift;
+  }
+
   async findInstanceById(
     id: string,
     organizationUnitId: string,
@@ -305,7 +319,10 @@ export class ShiftService {
       instanceId,
       organizationUnitId,
     );
-    const shift = await this.findById(instance.masterId, organizationUnitId);
+    const shift = await this.findOrgUnitsShift(
+      instance.masterId,
+      organizationUnitId,
+    );
 
     if (instance.isCancelled) {
       throw new NotFoundGraphQLError(
@@ -370,7 +387,7 @@ export class ShiftService {
     memberIds: string[],
     organizationUnitId: string,
   ): Promise<ShiftEntity> {
-    const shift = await this.findById(shiftId, organizationUnitId);
+    const shift = await this.findOrgUnitsShift(shiftId, organizationUnitId);
 
     if (memberIds.length === 0) {
       return shift;
