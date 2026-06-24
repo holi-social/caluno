@@ -68,7 +68,9 @@ export const createShift = actionClient
       endsAt: parsedInput.endsAt.toISOString(),
       instructions: parsedInput.instructions,
       location: parsedInput.location,
-      visibility: ShiftVisibility.AllMembers,
+      visibility: parsedInput.openShift
+        ? ShiftVisibility.AllMembers
+        : ShiftVisibility.InvitedMembers,
       invitedMemberIds: parsedInput.invitedMemberIds,
       rrule,
     };
@@ -99,6 +101,9 @@ export const updateShift = actionClient
       endsAt: parsedInput.endsAt.toISOString(),
       instructions: parsedInput.instructions,
       location: parsedInput.location,
+      visibility: parsedInput.openShift
+        ? ShiftVisibility.AllMembers
+        : ShiftVisibility.InvitedMembers,
       invitedMemberIds: parsedInput.invitedMemberIds,
       rrule,
     };

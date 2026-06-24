@@ -39,7 +39,22 @@ export class ShiftService {
     private readonly notificationService: NotificationService,
   ) {}
 
-  async findById(id: string, organizationUnitId: string): Promise<ShiftEntity> {
+  async findById(id: string): Promise<ShiftEntity> {
+    const shift = await this.db.query.shifts.findFirst({
+      where: { id },
+    });
+
+    if (!shift) {
+      throw new NotFoundGraphQLError(`Shift with ID ${id} not found`);
+    }
+
+    return shift;
+  }
+
+  async findOrgUnitsShift(
+    id: string,
+    organizationUnitId: string,
+  ): Promise<ShiftEntity> {
     const shift = await this.db.query.shifts.findFirst({
       where: { id, organizationUnitId },
     });
@@ -48,17 +63,6 @@ export class ShiftService {
       throw new NotFoundGraphQLError(`Shift with ID ${id} not found`);
     }
     return shift;
-  }
-
-  async findByIdPublic(id: string): Promise<ShiftEntity | null> {
-    const result = await this.db.query.shifts.findFirst({
-      where: {
-        id,
-        isDeleted: false,
-        visibility: ShiftVisibility.ALL_MEMBERS,
-      },
-    });
-    return result ?? null;
   }
 
   async findInstanceById(
@@ -315,7 +319,10 @@ export class ShiftService {
       instanceId,
       organizationUnitId,
     );
-    const shift = await this.findById(instance.masterId, organizationUnitId);
+    const shift = await this.findOrgUnitsShift(
+      instance.masterId,
+      organizationUnitId,
+    );
 
     if (instance.isCancelled) {
       throw new NotFoundGraphQLError(
@@ -380,7 +387,7 @@ export class ShiftService {
     memberIds: string[],
     organizationUnitId: string,
   ): Promise<ShiftEntity> {
-    const shift = await this.findById(shiftId, organizationUnitId);
+    const shift = await this.findOrgUnitsShift(shiftId, organizationUnitId);
 
     if (memberIds.length === 0) {
       return shift;
@@ -544,36 +551,32 @@ export class ShiftService {
     const { invitedMemberIds, ...shiftInput } = input;
 
     return this.db.transaction(async (tx) => {
-      const existingShift = await tx.query.shifts.findFirst({
+      let shift = await tx.query.shifts.findFirst({
         where: { id, organizationUnitId },
       });
 
-      if (!existingShift) {
+      if (!shift) {
         throw new NotFoundGraphQLError('Shift not found');
       }
 
-      const [shift] = await tx
-        .update(schema.shifts)
-        .set({
-          title: shiftInput.title,
-          slug: shiftInput.title ? slugify(shiftInput.title) : undefined,
-          instructions: shiftInput.instructions,
-          location: shiftInput.location,
-          visibility: shiftInput.visibility,
-          maxVolunteers: shiftInput.maxVolunteers,
-          minVolunteers: shiftInput.minVolunteers,
-          rrule: shiftInput.rrule,
-        })
-        .where(
-          and(
-            eq(schema.shifts.id, id),
-            eq(schema.shifts.organizationUnitId, organizationUnitId),
-          ),
-        )
-        .returning();
+      const hasValuesToUpdate = Object.keys(shiftInput).length > 0;
 
-      if (!shift) {
-        throw new NotFoundGraphQLError('Shift not found');
+      if (hasValuesToUpdate) {
+        const [updatedShift] = await tx
+          .update(schema.shifts)
+          .set({
+            ...shiftInput,
+            slug: shiftInput.title ? slugify(shiftInput.title) : undefined,
+          })
+          .where(
+            and(
+              eq(schema.shifts.id, id),
+              eq(schema.shifts.organizationUnitId, organizationUnitId),
+            ),
+          )
+          .returning();
+
+        shift = updatedShift;
       }
 
       if (shiftInput.rrule) {
@@ -680,7 +683,7 @@ export class ShiftService {
 
       if (
         shiftInput.visibility &&
-        existingShift?.visibility === ShiftVisibility.ALL_MEMBERS &&
+        shift?.visibility === ShiftVisibility.ALL_MEMBERS &&
         shiftInput.visibility === ShiftVisibility.INVITED_MEMBERS
       ) {
         const instances = await tx.query.shiftInstances.findMany({

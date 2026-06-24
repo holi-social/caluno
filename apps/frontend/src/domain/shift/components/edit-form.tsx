@@ -1,6 +1,6 @@
 'use client';
 
-import { useQueryClient, useShift } from '@repo/data/react';
+import { ShiftVisibility, useQueryClient, useShift } from '@repo/data/react';
 import { useTranslations } from 'next-intl';
 import { useEffect, useMemo, useState, useTransition } from 'react';
 import { updateShift } from '../actions';
@@ -41,6 +41,7 @@ export function EditShiftForm({
         location: undefined,
         startsAt: new Date(),
         endsAt: new Date(),
+        openShift: true,
         invitedMemberIds: [],
         recurrenceDays: [],
         recurrenceEndsAt: undefined,
@@ -54,6 +55,7 @@ export function EditShiftForm({
       location: shift.location ?? undefined,
       startsAt: shift.startDate,
       endsAt: shift.endDate,
+      openShift: shift.visibility === ShiftVisibility.AllMembers,
       invitedMemberIds: [],
       recurrenceDays: shift.recurrenceDays,
       recurrenceEndsAt: shift.recurrenceEndsAt,

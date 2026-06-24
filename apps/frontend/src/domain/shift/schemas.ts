@@ -27,6 +27,7 @@ export function shiftFormSchema(t: ShiftSchemaMessages) {
     endsAt: z.date(t.endTimeRequired),
     location: z.string().trim().optional(),
     instructions: z.string().trim().optional(),
+    openShift: z.boolean().optional(),
     organizationUnitId: z.string().min(1, t.organizationUnitRequired),
     invitedMemberIds: z.array(z.string()).optional(),
     recurrenceDays: z.array(recurrenceDayEnum).optional(),
