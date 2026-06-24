@@ -544,36 +544,32 @@ export class ShiftService {
     const { invitedMemberIds, ...shiftInput } = input;
 
     return this.db.transaction(async (tx) => {
-      const existingShift = await tx.query.shifts.findFirst({
+      let shift = await tx.query.shifts.findFirst({
         where: { id, organizationUnitId },
       });
 
-      if (!existingShift) {
+      if (!shift) {
         throw new NotFoundGraphQLError('Shift not found');
       }
 
-      const [shift] = await tx
-        .update(schema.shifts)
-        .set({
-          title: shiftInput.title,
-          slug: shiftInput.title ? slugify(shiftInput.title) : undefined,
-          instructions: shiftInput.instructions,
-          location: shiftInput.location,
-          visibility: shiftInput.visibility,
-          maxVolunteers: shiftInput.maxVolunteers,
-          minVolunteers: shiftInput.minVolunteers,
-          rrule: shiftInput.rrule,
-        })
-        .where(
-          and(
-            eq(schema.shifts.id, id),
-            eq(schema.shifts.organizationUnitId, organizationUnitId),
-          ),
-        )
-        .returning();
+      const hasValuesToUpdate = Object.keys(shiftInput).length > 0;
 
-      if (!shift) {
-        throw new NotFoundGraphQLError('Shift not found');
+      if (hasValuesToUpdate) {
+        const [updatedShift] = await tx
+          .update(schema.shifts)
+          .set({
+            ...shiftInput,
+            slug: shiftInput.title ? slugify(shiftInput.title) : undefined,
+          })
+          .where(
+            and(
+              eq(schema.shifts.id, id),
+              eq(schema.shifts.organizationUnitId, organizationUnitId),
+            ),
+          )
+          .returning();
+
+        shift = updatedShift;
       }
 
       if (shiftInput.rrule) {
@@ -680,7 +676,7 @@ export class ShiftService {
 
       if (
         shiftInput.visibility &&
-        existingShift?.visibility === ShiftVisibility.ALL_MEMBERS &&
+        shift?.visibility === ShiftVisibility.ALL_MEMBERS &&
         shiftInput.visibility === ShiftVisibility.INVITED_MEMBERS
       ) {
         const instances = await tx.query.shiftInstances.findMany({
