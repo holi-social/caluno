@@ -4,7 +4,7 @@ import { Button, Input } from '@repo/ui';
 import { useTranslations } from 'next-intl';
 import { useState } from 'react';
 import { Link, useRouter } from '@/i18n/navigation';
-import { signUp } from '@/lib/auth';
+import { signIn, signUp } from '@/lib/auth';
 import { getVerifyEmailPath } from '@/lib/verify-email-url';
 
 interface SignupFormProps {
@@ -33,6 +33,20 @@ export function SignupForm({ redirectTo = '/' }: SignupFormProps) {
       if (result.error) {
         setError(result.error.message || t('createAccountFailed'));
         setIsPending(false);
+        return;
+      }
+
+      if (process.env.NODE_ENV !== 'production') {
+        const signInResult = await signIn.email({ email, password });
+
+        if (signInResult.error) {
+          setError(signInResult.error.message || t('genericError'));
+          setIsPending(false);
+          return;
+        }
+
+        router.push(redirectTo);
+        router.refresh();
         return;
       }
 

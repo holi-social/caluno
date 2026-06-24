@@ -20,6 +20,7 @@ export interface AuthConfigOptions {
   trustedOrigins: string[];
   /** Root domain for cross-subdomain cookies (e.g. "clippy.holi.social"). Set when frontend and API use different subdomains. */
   cookieDomain?: string;
+  emailVerificationEnabled?: boolean;
   sendVerificationOTP: (options: SendVerificationOtpOptions) => Promise<void>;
 }
 
@@ -27,6 +28,7 @@ export const createAuthConfig = ({
   database,
   trustedOrigins,
   cookieDomain,
+  emailVerificationEnabled = true,
   sendVerificationOTP,
 }: AuthConfigOptions): BetterAuthOptions => ({
   database: drizzleAdapter(database, {
@@ -47,10 +49,10 @@ export const createAuthConfig = ({
     minPasswordLength: 6,
     maxPasswordLength: 128,
     autoSignIn: false,
-    requireEmailVerification: true,
+    requireEmailVerification: emailVerificationEnabled,
   },
   emailVerification: {
-    sendOnSignUp: true,
+    sendOnSignUp: emailVerificationEnabled,
     autoSignInAfterVerification: true,
   },
   plugins: [

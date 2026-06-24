@@ -63,32 +63,38 @@ const autoSchemaFile =
         database: Database,
         configService: ConfigService,
         emailService: EmailService,
-      ) => ({
-        auth: betterAuth(
-          createAuthConfig({
-            database,
-            trustedOrigins: [configService.getOrThrow('WEB_URL')],
-            cookieDomain: configService.get('COOKIE_DOMAIN'),
-            sendVerificationOTP: async ({ email, otp, type }) => {
-              // TODO: When enabling OTP sign-in, password reset, or email change,
-              // add type-specific templates here instead of sending generic copy.
-              if (type !== 'email-verification') {
-                return;
-              }
+      ) => {
+        const webUrl = configService.getOrThrow<string>('WEB_URL');
+        const shouldVerifyEmail = process.env.NODE_ENV !== 'development';
 
-              const emailContent = await accountVerificationOtpTemplate({
-                otp,
-                expiresInMinutes: 5,
-              });
+        return {
+          auth: betterAuth(
+            createAuthConfig({
+              database,
+              trustedOrigins: [webUrl],
+              cookieDomain: configService.get('COOKIE_DOMAIN'),
+              emailVerificationEnabled: shouldVerifyEmail,
+              sendVerificationOTP: async ({ email, otp, type }) => {
+                // TODO: When enabling OTP sign-in, password reset, or email change,
+                // add type-specific templates here instead of sending generic copy.
+                if (type !== 'email-verification') {
+                  return;
+                }
 
-              await emailService.send({
-                to: email,
-                ...emailContent,
-              });
-            },
-          }),
-        ),
-      }),
+                const emailContent = await accountVerificationOtpTemplate({
+                  otp,
+                  expiresInMinutes: 5,
+                });
+
+                await emailService.send({
+                  to: email,
+                  ...emailContent,
+                });
+              },
+            }),
+          ),
+        };
+      },
       inject: [DATABASE_CONNECTION, ConfigService, EmailService],
     }),
     UserModule,
