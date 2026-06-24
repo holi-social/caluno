@@ -5,6 +5,7 @@ import { Pagination } from '@/components/pagination';
 import { ShiftSheet } from '@/components/sheets';
 import { CreateShiftButton } from '@/domain/shift/components/create-shift-button';
 import { EmptyShifts } from '@/domain/shift/components/empty-shifts';
+import { ShiftTabSwitcher } from '@/domain/shift/components/shift-tab-switcher';
 import { ShiftsTable } from '@/domain/shift/components/shifts-table';
 import { WeeklyCalendar } from '@/domain/shift/components/weekly-calendar';
 import { WeeklyCalendarNav } from '@/domain/shift/components/weekly-calendar-nav';
@@ -54,10 +55,15 @@ export default async function ShiftsPage({
   return (
     <div className="flex flex-col h-full gap-4">
       {/* Page header */}
-      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-        <h1 className="page-title">{t('page.title')}</h1>
+      <div>
+        <h1 className="page-title mb-2">{t('page.title')}</h1>
 
-        <div className="flex items-center justify-between sm:gap-4">
+        <div className="flex flex-col gap-2 lg:flex-row justify-between">
+          <ShiftTabSwitcher
+            orgUId={orgUId}
+            activeTab={isWeekplan ? 'weekplan' : 'shifts'}
+            week={week}
+          />
           {isWeekplan && (
             <WeeklyCalendarNav weekStart={weekStart} orgUId={orgUId} />
           )}
