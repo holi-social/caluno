@@ -465,7 +465,9 @@
       "instructionsPlaceholder": "Beschreibe Aufgaben und Anforderungen für diese Schicht",
       "recurring": "Wiederkehrende Schicht",
       "noRecurrence": "Keine Wiederholung",
-      "chooseDays": "Wähle die Tage, an denen sich diese Schicht wiederholt"
+      "chooseDays": "Wähle die Tage, an denen sich diese Schicht wiederholt",
+      "openShiftLabel": "Offene Schicht",
+      "openShiftDescription": "Jeder Freiwillige kann sich für diese Schicht anmelden"
     },
     "recurrence": {
       "preset": {

@@ -465,7 +465,9 @@
       "instructionsPlaceholder": "Describe volunteers' responsibilities and requirements for this shift",
       "recurring": "Recurring shift",
       "noRecurrence": "No recurrence",
-      "chooseDays": "Choose which days this shift repeats"
+      "chooseDays": "Choose which days this shift repeats",
+      "openShiftLabel": "Open shift",
+      "openShiftDescription": "Any volunteer can sign up for this shift"
     },
     "recurrence": {
       "preset": {

@@ -2,11 +2,15 @@
 
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
+  Card,
   DatePickerWithTimeRange,
   Field,
+  FieldContent,
+  FieldDescription,
   FieldError,
   FieldLabel,
   Input,
+  Switch,
   Textarea,
 } from '@repo/ui';
 import { useTranslations } from 'next-intl';
@@ -49,6 +53,7 @@ export const ShiftForm = ({
       name: '',
       location: defaultLocation ?? '',
       instructions: '',
+      openShift: true,
       organizationUnitId,
       invitedMemberIds: [],
       recurrenceDays: [],
@@ -135,6 +140,26 @@ export const ShiftForm = ({
           <FieldError>{errors.instructions.message}</FieldError>
         )}
       </Field>
+      <Card className="rounded-md p-4 space-y-3">
+        <Field orientation="horizontal">
+          <FieldContent>
+            <FieldLabel htmlFor="openShift">
+              {t('form.openShiftLabel')}
+            </FieldLabel>
+
+            <FieldDescription>
+              {t('form.openShiftDescription')}
+            </FieldDescription>
+          </FieldContent>
+
+          <Switch
+            id="openShift"
+            checked={watch('openShift')}
+            onCheckedChange={(checked) => setValue('openShift', checked)}
+            disabled={isPending}
+          />
+        </Field>
+      </Card>
     </form>
   );
 };
