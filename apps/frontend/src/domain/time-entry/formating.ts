@@ -23,3 +23,9 @@ export const formatDuration = (entry: TimeEntry) => {
   const end = entry.endedAt ? new Date(entry.endedAt) : new Date();
   return formatDateDuration(start, end);
 };
+
+export const formatTotalMinutes = (minutes: number): string => {
+  const hours = Math.floor(minutes / 60);
+  const mins = minutes % 60;
+  return `${hours}h ${mins}m`;
+};

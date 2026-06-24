@@ -53,4 +53,12 @@ export class TimeEntryRepository extends BaseRepository {
     });
     return data.timeEntriesByUser;
   }
+
+  async findMyTime(options: PaginationOptions = {}) {
+    const data = await this.sdk.GetMyTime({
+      limit: options.limit ?? 10,
+      offset: options.offset ?? 0,
+    });
+    return data.myTime;
+  }
 }

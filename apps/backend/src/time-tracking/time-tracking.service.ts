@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { eq } from 'drizzle-orm';
+import { count, eq } from 'drizzle-orm';
 import type { Database } from '../database/database.module';
 import { DATABASE_CONNECTION } from '../database/database-connection';
 import * as schema from '../database/schema';
@@ -9,7 +9,10 @@ import { MembershipService } from '../membership/membership.service';
 import { AddTimeEntryInput } from './inputs/add-time-entry.input';
 import { CloseTimeEntryInput } from './inputs/close-time-enty-input';
 import { UpdateTimeEntryInput } from './inputs/update-time-entry.input';
-import type { TimeEntryEntity } from './schemas/time-entry.schema';
+import type {
+  TimeEntryEntity,
+  TimeEntryEntityWithRelations,
+} from './schemas/time-entry.schema';
 
 @Injectable()
 export class TimeTrackingService {
@@ -176,6 +179,35 @@ export class TimeTrackingService {
     );
 
     return { entries: paginated as TimeEntryEntity[], total: filtered.length };
+  }
+
+  async findMyTime(
+    userId: string,
+    pagination: PaginationInput,
+  ): Promise<{ entries: TimeEntryEntityWithRelations[]; total: number }> {
+    const entries = await this.db.query.timeEntries.findMany({
+      where: { volunteerId: userId },
+      with: {
+        volunteer: true,
+        shiftInstance: {
+          with: {
+            master: {
+              with: { organizationUnit: { with: { organization: true } } },
+            },
+          },
+        },
+      },
+      orderBy: { startedAt: 'desc' },
+      limit: pagination.limit,
+      offset: pagination.offset,
+    });
+
+    const [{ total }] = await this.db
+      .select({ total: count() })
+      .from(schema.timeEntries)
+      .where(eq(schema.timeEntries.volunteerId, userId));
+
+    return { entries: entries as TimeEntryEntity[], total };
   }
 }
 

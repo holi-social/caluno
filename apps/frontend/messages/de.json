@@ -927,5 +927,20 @@
       "linkCopiedDescription": "{url}",
       "couldNotCopyLink": "Link konnte nicht kopiert werden"
     }
+  },
+  "MyTime": {
+    "title": "Meine Zeit",
+    "summary": {
+      "total": "Insgesamt geleistet"
+    },
+    "state": {
+      "inProgress": "Läuft",
+      "completed": "Abgeschlossen"
+    },
+    "empty": {
+      "title": "Noch keine Stunden",
+      "description": "Sobald du dich zu einer Schicht eincheckst, erscheinen deine Stunden hier.",
+      "cta": "Schicht finden"
+    }
   }
 }
