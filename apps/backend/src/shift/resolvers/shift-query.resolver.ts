@@ -30,11 +30,11 @@ export class ShiftQueryResolver {
 
   @AllowAnonymous()
   @Query(() => Shift)
-  async shift(@Args('id') id: string): Promise<Shift> {
-    const shift = await this.shiftService.findByIdPublic(id);
-    if (!shift) {
-      throw new Error('Shift not found');
-    }
+  async shift(
+    @Args('id') id: string,
+    @Session() session: UserSession,
+  ): Promise<Shift> {
+    const shift = await this.shiftService.findById(id);
     return this.shiftMapper.toModelOrThrow(shift);
   }
 

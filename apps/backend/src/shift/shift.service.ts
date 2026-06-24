@@ -39,26 +39,16 @@ export class ShiftService {
     private readonly notificationService: NotificationService,
   ) {}
 
-  async findById(id: string, organizationUnitId: string): Promise<ShiftEntity> {
+  async findById(id: string): Promise<ShiftEntity> {
     const shift = await this.db.query.shifts.findFirst({
-      where: { id, organizationUnitId },
+      where: { id },
     });
 
     if (!shift) {
       throw new NotFoundGraphQLError(`Shift with ID ${id} not found`);
     }
-    return shift;
-  }
 
-  async findByIdPublic(id: string): Promise<ShiftEntity | null> {
-    const result = await this.db.query.shifts.findFirst({
-      where: {
-        id,
-        isDeleted: false,
-        visibility: ShiftVisibility.ALL_MEMBERS,
-      },
-    });
-    return result ?? null;
+    return shift;
   }
 
   async findInstanceById(
