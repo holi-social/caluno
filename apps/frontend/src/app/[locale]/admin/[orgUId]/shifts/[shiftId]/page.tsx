@@ -22,10 +22,10 @@ import {
 import { notFound } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
 import { UserCard } from '@/components/user-card';
-import { ActionBar } from '@/domain/shift/components/action-bar';
 import { getVisibilityConfig } from '@/domain/shift/components/shifts-table';
 import { getDataClient } from '@/lib/data-client';
 import { getFormatting } from '@/lib/formatting-server';
+import { ShiftViewActionBar } from './shift-view-action-bar';
 
 interface ShiftViewPageProps {
   params: Promise<{ orgUId: string; shiftId: string }>;
@@ -55,7 +55,11 @@ export default async function ShiftViewPage({ params }: ShiftViewPageProps) {
           <h1 className="page-title">{shift.title}</h1>
           <p className="text-muted-foreground mt-1">{t('page.subtitle')}</p>
         </div>
-        <ActionBar id={shiftId} organizationUnitId={orgUId} size="sm" />
+        <ShiftViewActionBar
+          id={shiftId}
+          organizationUnitId={orgUId}
+          size="sm"
+        />
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">

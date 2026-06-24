@@ -19,6 +19,7 @@ type ActionBarProps = {
   organizationUnitId: string;
   size?: 'xs' | 'sm' | 'md';
   hideEdit?: boolean;
+  onDeleteSuccess?: () => void;
 };
 
 export const ActionBar = ({
@@ -27,6 +28,7 @@ export const ActionBar = ({
   organizationUnitId,
   size = 'xs',
   hideEdit = false,
+  onDeleteSuccess,
 }: ActionBarProps) => {
   const router = useRouter();
   const [isDeleting, startDeleteTransition] = useTransition();
@@ -44,7 +46,11 @@ export const ActionBar = ({
         toast.error(t('action.deleteError', { error: result.serverError }));
       } else {
         toast.success(t('action.deleteSuccess'));
-        router.refresh();
+        if (onDeleteSuccess) {
+          onDeleteSuccess();
+        } else {
+          router.refresh();
+        }
       }
     });
   };
