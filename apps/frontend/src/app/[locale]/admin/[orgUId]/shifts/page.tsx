@@ -2,7 +2,6 @@ import { PermissionKey } from '@repo/data';
 import { startOfWeek } from 'date-fns';
 import { getTranslations } from 'next-intl/server';
 import { Pagination } from '@/components/pagination';
-import { ShiftSheet } from '@/components/sheets';
 import { CreateShiftButton } from '@/domain/shift/components/create-shift-button';
 import { EmptyShifts } from '@/domain/shift/components/empty-shifts';
 import { ShiftTabSwitcher } from '@/domain/shift/components/shift-tab-switcher';
@@ -96,8 +95,6 @@ export default async function ShiftsPage({
           <CreateShiftButton />
         </EmptyShifts>
       )}
-
-      <ShiftSheet />
     </div>
   );
 }
