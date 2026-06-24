@@ -8,6 +8,7 @@ The frontend web app for securely managing volunteers and shifts in multi-tiered
 - `bun run lint` - Lint with Biome
 - `bun run format` - Format with Biome
 - `bun run check-types` - Check for type errors
+- `bun test` - Run tests
 
 ## Tech Stack
 - **Next.js 16** with App Router (React 19)
@@ -23,6 +24,8 @@ src/
 ├── components    # Shared React components, specific to this app and used across domains
 ├── hooks         # Shared React hooks, specific to this app and used across domains
 └── lib           # Shared generic code
+
+tests are placed in __tests__ subdirectories
 ```
 Route groups: `(auth)` unauthenticated, `(dashboard)/[orgUId]` protected + org-scoped, `(public)` invites/shifts/forms, `api/` auth routes, `unauthorized/` 403 fallback.
 

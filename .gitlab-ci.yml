@@ -70,19 +70,7 @@ commit_lint:
     - |
       BASE="${CI_MERGE_REQUEST_DIFF_BASE_SHA:-}"
       if [ -z "$BASE" ]; then echo "no MR base sha; skipping"; exit 0; fi
-      git log --format='%s' "${BASE}..HEAD" > /tmp/subjects.txt
-      bad=0
-      while IFS= read -r subj; do
-        case "$subj" in ""|Merge\ *) continue ;; esac
-        if ! printf '%s' "$subj" | grep -Eq '^(feat|fix|refactor|chore|test|docs)(\([a-z-]+\))?: .+'; then
-          echo "✖ bad commit subject: $subj"; bad=1
-        fi
-      done < /tmp/subjects.txt
-      if [ "$bad" -ne 0 ]; then
-        echo "Commit subjects must be 'type(scope): description' — see .ai/PIPELINE.md Commit Convention."
-        exit 1
-      fi
-      echo "✓ commit subjects OK"
+      bash .ai/scripts/commit-lint.sh range "${BASE}..HEAD"
 
 check_migrations:
   stage: test
