@@ -12,6 +12,7 @@ import {
 import { getTranslations } from 'next-intl/server';
 import { Link } from '@/i18n/navigation';
 import { getFormatting } from '@/lib/formatting-server';
+import { shiftDetailPath } from '../routes';
 import { ActionBar } from './action-bar';
 
 type ShiftListItem = GetShiftsQuery['shifts']['items'][number];
@@ -19,6 +20,7 @@ type ShiftListItem = GetShiftsQuery['shifts']['items'][number];
 type ShiftsTableProps = {
   shifts: ShiftListItem[];
   orgUId: string;
+  page?: number;
 };
 
 export function getVisibilityConfig(t: (key: string) => string) {
@@ -34,7 +36,7 @@ export function getVisibilityConfig(t: (key: string) => string) {
   };
 }
 
-export async function ShiftsTable({ shifts, orgUId }: ShiftsTableProps) {
+export async function ShiftsTable({ shifts, orgUId, page }: ShiftsTableProps) {
   const t = await getTranslations('Shift');
   const { formatRange } = await getFormatting();
   const visibilityConfig = getVisibilityConfig(t);
@@ -63,7 +65,10 @@ export async function ShiftsTable({ shifts, orgUId }: ShiftsTableProps) {
                 <TableCell>
                   <Link
                     className="hover:underline block"
-                    href={`/admin/${orgUId}/shifts/${shift.id}`}
+                    href={shiftDetailPath(orgUId, shift.id, {
+                      view: 'shifts',
+                      ...(page && page > 1 ? { page: String(page) } : {}),
+                    })}
                   >
                     {shift.title}
                   </Link>

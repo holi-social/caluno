@@ -48,7 +48,12 @@ export async function WeeklyCalendar({
             </div>
 
             {dayInstances.map((inst) => (
-              <ShiftCard key={inst.id} instance={inst} canManage={canManage} />
+              <ShiftCard
+                key={inst.id}
+                instance={inst}
+                canManage={canManage}
+                weekStart={weekStart}
+              />
             ))}
           </div>
         ))}

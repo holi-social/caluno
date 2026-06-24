@@ -16,10 +16,12 @@ import { TriangleAlert, UserPlus, UsersRound } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useSheet } from '@/hooks/use-sheet';
 import { Link } from '@/i18n/navigation';
+import { shiftDetailPath } from '../routes';
 
 type ShiftCardProps = {
   instance: WeeklyShiftInstance;
   canManage?: boolean;
+  weekStart: Date;
 };
 
 function getStaffingState(
@@ -76,7 +78,11 @@ function StaffingBadge({
   );
 }
 
-export function ShiftCard({ instance, canManage = false }: ShiftCardProps) {
+export function ShiftCard({
+  instance,
+  canManage = false,
+  weekStart,
+}: ShiftCardProps) {
   const orgUId = useOrgUId();
   const inviteSheet = useSheet('invite-shift', 'id', 'instanceId');
   const t = useTranslations('Shift');
@@ -104,7 +110,10 @@ export function ShiftCard({ instance, canManage = false }: ShiftCardProps) {
 
           <Link
             className="hover:underline block"
-            href={`/admin/${orgUId}/shifts/${instance.master.id}`}
+            href={shiftDetailPath(orgUId, instance.master.id, {
+              view: 'weekplan',
+              week: format(weekStart, 'yyyy-MM-dd'),
+            })}
           >
             <p className="text-lg text-card-foreground">
               {instance.master.title}
