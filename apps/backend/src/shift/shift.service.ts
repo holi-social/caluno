@@ -562,11 +562,18 @@ export class ShiftService {
       const hasValuesToUpdate = Object.keys(shiftInput).length > 0;
 
       if (hasValuesToUpdate) {
+        const durationMinutes =
+          input.endsAt && input.startsAt
+            ? (input.endsAt.getTime() - input.startsAt.getTime()) / 60000
+            : undefined;
+
         const [updatedShift] = await tx
           .update(schema.shifts)
           .set({
             ...shiftInput,
             slug: shiftInput.title ? slugify(shiftInput.title) : undefined,
+            originalStartsAt: input.startsAt,
+            durationMinutes,
           })
           .where(
             and(
