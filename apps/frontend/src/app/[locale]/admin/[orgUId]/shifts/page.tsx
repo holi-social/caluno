@@ -58,7 +58,7 @@ export default async function ShiftsPage({
       <div>
         <h1 className="page-title mb-2">{t('page.title')}</h1>
 
-        <div className="flex flex-col gap-2 lg:flex-row justify-between">
+        <div className="flex flex-col gap-2 lg:flex-row justify-between items-start">
           <ShiftTabSwitcher
             orgUId={orgUId}
             activeTab={isWeekplan ? 'weekplan' : 'shifts'}
