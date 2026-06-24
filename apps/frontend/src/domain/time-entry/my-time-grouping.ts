@@ -1,13 +1,7 @@
+import type { GetMyTimeQuery } from '@repo/data';
 import { addDays, startOfWeek } from 'date-fns';
 
-export type MyTimeEntry = {
-  id: string;
-  startedAt: string;
-  endedAt?: string | null;
-  shiftName: string;
-  organizationName: string;
-  organizationUnitName: string;
-};
+export type TimeEntry = GetMyTimeQuery['myTime']['items'][number];
 
 export type EntryState = 'in-progress' | 'completed';
 
@@ -15,7 +9,7 @@ export type WeekGroup = {
   weekStart: Date;
   weekEnd: Date;
   totalMinutes: number;
-  entries: MyTimeEntry[];
+  entries: TimeEntry[];
 };
 
 export type GroupedMyTime = {
@@ -23,10 +17,10 @@ export type GroupedMyTime = {
   weeks: WeekGroup[];
 };
 
-export const getEntryState = (entry: MyTimeEntry): EntryState =>
+export const getEntryState = (entry: TimeEntry): EntryState =>
   entry.endedAt ? 'completed' : 'in-progress';
 
-export const entryDurationMinutes = (entry: MyTimeEntry): number => {
+export const entryDurationMinutes = (entry: TimeEntry): number => {
   if (!entry.endedAt) return 0;
   return Math.round(
     (new Date(entry.endedAt).getTime() - new Date(entry.startedAt).getTime()) /
@@ -34,8 +28,8 @@ export const entryDurationMinutes = (entry: MyTimeEntry): number => {
   );
 };
 
-export const groupMyTime = (entries: MyTimeEntry[]): GroupedMyTime => {
-  const byWeek = new Map<number, MyTimeEntry[]>();
+export const groupMyTime = (entries: TimeEntry[]): GroupedMyTime => {
+  const byWeek = new Map<number, TimeEntry[]>();
   let allTimeMinutes = 0;
 
   for (const entry of entries) {

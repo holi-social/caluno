@@ -9,9 +9,10 @@ import { MembershipService } from '../membership/membership.service';
 import { AddTimeEntryInput } from './inputs/add-time-entry.input';
 import { CloseTimeEntryInput } from './inputs/close-time-enty-input';
 import { UpdateTimeEntryInput } from './inputs/update-time-entry.input';
-import { toMyTimeEntry } from './mappers/my-time-entry.mapper';
-import type { MyTimeEntry } from './models/my-time-entry.model';
-import type { TimeEntryEntity } from './schemas/time-entry.schema';
+import type {
+  TimeEntryEntity,
+  TimeEntryEntityWithRelations,
+} from './schemas/time-entry.schema';
 
 @Injectable()
 export class TimeTrackingService {
@@ -183,10 +184,11 @@ export class TimeTrackingService {
   async findMyTime(
     userId: string,
     pagination: PaginationInput,
-  ): Promise<{ items: MyTimeEntry[]; total: number }> {
+  ): Promise<{ entries: TimeEntryEntityWithRelations[]; total: number }> {
     const entries = await this.db.query.timeEntries.findMany({
       where: { volunteerId: userId },
       with: {
+        volunteer: true,
         shiftInstance: {
           with: {
             master: {
@@ -205,7 +207,7 @@ export class TimeTrackingService {
       .from(schema.timeEntries)
       .where(eq(schema.timeEntries.volunteerId, userId));
 
-    return { items: entries.map(toMyTimeEntry), total };
+    return { entries: entries as TimeEntryEntity[], total };
   }
 }
 

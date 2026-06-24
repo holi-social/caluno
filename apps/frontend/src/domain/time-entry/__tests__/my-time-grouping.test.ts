@@ -3,17 +3,30 @@ import {
   entryDurationMinutes,
   getEntryState,
   groupMyTime,
-  type MyTimeEntry,
+  type TimeEntry,
 } from '../my-time-grouping';
 
 const entry = (
-  over: Partial<MyTimeEntry> & { startedAt: string },
-): MyTimeEntry => ({
+  over: Partial<TimeEntry> & { startedAt: string },
+): TimeEntry => ({
   id: 'x',
   endedAt: null,
-  shiftName: 'Shift',
-  organizationName: 'Org',
-  organizationUnitName: 'Unit',
+  shiftInstance: {
+    id: 'shift-instance-x',
+    overrideTitle: null,
+    master: {
+      id: 'shift-x',
+      title: 'Shift',
+      organizationUnit: {
+        id: 'unit-x',
+        name: 'Unit',
+        organization: {
+          id: 'org-x',
+          name: 'Org',
+        },
+      },
+    },
+  },
   ...over,
 });
 

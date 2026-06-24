@@ -1,12 +1,14 @@
 import { Badge, Card, CardContent } from '@repo/ui';
 import { useTranslations } from 'next-intl';
 import { formatDuration } from '@/lib/formatting';
-import { getEntryState, type MyTimeEntry } from '../my-time-grouping';
+import { getEntryState, type TimeEntry } from '../my-time-grouping';
 
-export const MyTimeEntryRow = ({ entry }: { entry: MyTimeEntry }) => {
+export const MyTimeEntryRow = ({ entry }: { entry: TimeEntry }) => {
   const t = useTranslations('MyTime');
 
   const state = getEntryState(entry);
+  const shift = entry.shiftInstance.master;
+  const organizationUnit = shift.organizationUnit;
   const inProgress = state === 'in-progress';
   const duration = inProgress
     ? '—'
@@ -18,9 +20,11 @@ export const MyTimeEntryRow = ({ entry }: { entry: MyTimeEntry }) => {
   return (
     <Card className="py-4">
       <CardContent className="">
-        <h2 className="truncate">{entry.shiftName}</h2>
+        <h2 className="truncate">
+          {entry.shiftInstance.overrideTitle ?? shift.title}
+        </h2>
         <h3 className="truncate text-sm text-muted-foreground">
-          {entry.organizationName} · {entry.organizationUnitName}
+          {organizationUnit.organization.name} · {organizationUnit.name}
         </h3>
         <div className="mt-2 flex items-center justify-between">
           <span className="text-base">{duration}</span>

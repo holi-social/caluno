@@ -1,6 +1,7 @@
 import { Field, ID, Int, ObjectType } from '@nestjs/graphql';
 import { createPaginatedResponseType } from '../../graphql/paginated-response.model';
 import { Organization } from '../../organization/models/organization.model';
+import { OrganizationUnit } from '../../organization/models/organization-unit.model';
 import { User } from '../../user/models/user.model';
 import { ShiftVisibility } from '../enums';
 
@@ -20,6 +21,9 @@ export class Shift {
 
   @Field(() => Organization)
   organization!: Organization;
+
+  @Field(() => OrganizationUnit)
+  organizationUnit!: OrganizationUnit;
 
   @Field(() => ID)
   organizationUnitId!: string;

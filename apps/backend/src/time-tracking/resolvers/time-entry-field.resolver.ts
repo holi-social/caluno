@@ -7,7 +7,10 @@ import { UserMapper } from '../../user/mappers/user.mapper';
 import { User } from '../../user/models/user.model';
 import { UserService } from '../../user/user.service';
 import { TimeEntry } from '../models/time-entry.model';
-import type { TimeEntryEntity } from '../schemas/time-entry.schema';
+import type {
+  TimeEntryEntity,
+  TimeEntryEntityWithRelations,
+} from '../schemas/time-entry.schema';
 
 @Resolver(() => TimeEntry)
 export class TimeEntryFieldResolver {
@@ -26,9 +29,13 @@ export class TimeEntryFieldResolver {
 
   @ResolveField(() => ShiftInstance)
   async shiftInstance(
-    @Parent() timeEntry: TimeEntryEntity,
+    @Parent() timeEntry: TimeEntryEntityWithRelations,
     @Context() context: AuthenticatedGraphQLContext,
   ): Promise<ShiftInstance> {
+    if (timeEntry.shiftInstance) {
+      return this.shiftInstanceMapper.toModelOrThrow(timeEntry.shiftInstance);
+    }
+
     const instance = await this.shiftService.findInstanceById(
       timeEntry.shiftInstanceId,
       context.organizationUnitId,

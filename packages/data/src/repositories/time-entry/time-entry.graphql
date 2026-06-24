@@ -110,9 +110,22 @@ query GetMyTime($limit: Int!, $offset: Int!) {
       id
       startedAt
       endedAt
-      shiftName
-      organizationName
-      organizationUnitName
+      shiftInstance {
+        id
+        overrideTitle
+        master {
+          id
+          title
+          organizationUnit {
+            id
+            name
+            organization {
+              id
+              name
+            }
+          }
+        }
+      }
     }
     pagination {
       total

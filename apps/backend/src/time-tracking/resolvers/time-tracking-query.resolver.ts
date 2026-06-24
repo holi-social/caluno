@@ -5,7 +5,6 @@ import { Permissions } from '../../auth/decorators/permissions.decorator';
 import type { AuthenticatedGraphQLContext } from '../../graphql/graphql.context';
 import { PaginationInput } from '../../graphql/pagination.input';
 import { TimeEntryMapper } from '../mappers/time-entry.mapper';
-import { MyTimeEntryPaginatedResponse } from '../models/my-time-entry.model';
 import {
   TimeEntry,
   TimeEntryPaginatedResponse,
@@ -70,17 +69,17 @@ export class TimeTrackingQueryResolver {
     });
   }
 
-  @Query(() => MyTimeEntryPaginatedResponse)
+  @Query(() => TimeEntryPaginatedResponse)
   async myTime(
     @Session() session: UserSession,
     @Args() pagination: PaginationInput,
-  ): Promise<MyTimeEntryPaginatedResponse> {
-    const { items, total } = await this.timeTrackingService.findMyTime(
+  ): Promise<TimeEntryPaginatedResponse> {
+    const { entries, total } = await this.timeTrackingService.findMyTime(
       session.user.id,
       pagination,
     );
-    return new MyTimeEntryPaginatedResponse({
-      items,
+    return new TimeEntryPaginatedResponse({
+      items: this.timeEntryMapper.toArray(entries),
       total,
       limit: pagination.limit,
       offset: pagination.offset,
