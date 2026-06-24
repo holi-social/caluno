@@ -65,7 +65,7 @@ const autoSchemaFile =
         emailService: EmailService,
       ) => {
         const webUrl = configService.getOrThrow<string>('WEB_URL');
-        const shouldVerifyEmail = process.env.NODE_ENV !== 'development';
+        const shouldVerifyEmail = process.env.NODE_ENV === 'production';
 
         return {
           auth: betterAuth(
