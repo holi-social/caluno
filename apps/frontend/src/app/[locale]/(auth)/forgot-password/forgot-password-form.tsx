@@ -51,7 +51,7 @@ export function ForgotPasswordForm() {
 
       {isSent && (
         <output
-          className="space-y-2 rounded-md bg-primary/10 p-4 text-sm text-primary"
+          className="block space-y-2 rounded-md bg-primary/10 p-4 text-sm text-primary"
           tabIndex={-1}
         >
           <p>{t('emailSent')}</p>
