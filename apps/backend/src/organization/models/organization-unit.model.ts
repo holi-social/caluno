@@ -2,7 +2,8 @@ import { Field, ID, ObjectType } from '@nestjs/graphql';
 
 import { createPaginatedResponseType } from '../../graphql/paginated-response.model';
 import { RequirementProfile } from '../../requirement-profile/models/requirement-profile.model';
-import { Organization } from './organization.model';
+import type { Organization } from './organization.model';
+import { Organization as OrganizationModel } from './organization.model';
 import { OrganizationUnitType } from './organization-unit-type.model';
 
 @ObjectType()
@@ -37,7 +38,7 @@ export class OrganizationUnit {
   @Field(() => String, { nullable: true })
   description!: string | null;
 
-  @Field(() => Organization)
+  @Field(() => OrganizationModel)
   organization!: Organization;
 
   @Field(() => OrganizationUnitType)

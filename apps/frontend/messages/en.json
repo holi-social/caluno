@@ -486,7 +486,9 @@
       "instructionsPlaceholder": "Describe volunteers' responsibilities and requirements for this shift",
       "recurring": "Recurring shift",
       "noRecurrence": "No recurrence",
-      "chooseDays": "Choose which days this shift repeats"
+      "chooseDays": "Choose which days this shift repeats",
+      "openShiftLabel": "Open shift",
+      "openShiftDescription": "Any volunteer can sign up for this shift"
     },
     "recurrence": {
       "preset": {
@@ -947,6 +949,21 @@
       "linkCopied": "Link copied",
       "linkCopiedDescription": "{url}",
       "couldNotCopyLink": "Could not copy link"
+    }
+  },
+  "MyTime": {
+    "title": "My Time",
+    "summary": {
+      "total": "Total volunteered"
+    },
+    "state": {
+      "inProgress": "In progress",
+      "completed": "Completed"
+    },
+    "empty": {
+      "title": "No hours yet",
+      "description": "Once you check in to a shift, your volunteering hours will appear here.",
+      "cta": "Find a shift"
     }
   }
 }

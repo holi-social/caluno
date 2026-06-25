@@ -19,6 +19,7 @@ type ActionBarProps = {
   organizationUnitId: string;
   size?: 'xs' | 'sm' | 'md';
   hideEdit?: boolean;
+  onDeleteSuccess?: () => void;
 };
 
 export const ActionBar = ({
@@ -27,6 +28,7 @@ export const ActionBar = ({
   organizationUnitId,
   size = 'xs',
   hideEdit = false,
+  onDeleteSuccess,
 }: ActionBarProps) => {
   const router = useRouter();
   const [isDeleting, startDeleteTransition] = useTransition();
@@ -44,22 +46,27 @@ export const ActionBar = ({
         toast.error(t('action.deleteError', { error: result.serverError }));
       } else {
         toast.success(t('action.deleteSuccess'));
-        router.push(`/admin/${organizationUnitId}/shifts`);
+        if (onDeleteSuccess) {
+          onDeleteSuccess();
+        } else {
+          router.refresh();
+        }
       }
     });
   };
 
   return (
     <aside className="space-x-2">
-      <Link
-        href={shiftShareUrl(id, instanceId)}
-        aria-label={t('action.viewAria')}
-        target="_blank"
-      >
-        <Button size={buttonSize} variant="outline">
+      <Button size={buttonSize} variant="outline" asChild>
+        <Link
+          href={shiftShareUrl(id, instanceId)}
+          aria-label={t('action.viewAria')}
+          target="_blank"
+          rel="noopener noreferrer"
+        >
           <Eye />
-        </Button>
-      </Link>
+        </Link>
+      </Button>
 
       {!hideEdit && (
         <Button

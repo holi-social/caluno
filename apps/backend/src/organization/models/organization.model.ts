@@ -1,7 +1,8 @@
 import { Field, ID, ObjectType } from '@nestjs/graphql';
 
 import { createPaginatedResponseType } from '../../graphql/paginated-response.model';
-import { OrganizationUnit } from './organization-unit.model';
+import type { OrganizationUnit } from './organization-unit.model';
+import { OrganizationUnit as OrganizationUnitModel } from './organization-unit.model';
 
 @ObjectType()
 export class Organization {
@@ -31,10 +32,10 @@ export class Organization {
   @Field(() => String, { nullable: true })
   description!: string | null;
 
-  @Field(() => OrganizationUnit)
+  @Field(() => OrganizationUnitModel)
   root!: OrganizationUnit;
 
-  @Field(() => [OrganizationUnit])
+  @Field(() => [OrganizationUnitModel])
   units!: OrganizationUnit[];
 
   @Field(() => Date)
