@@ -18,6 +18,6 @@ import { TypedNotificationEmitter } from './typed-notification-emitter.service';
     MembershipListener,
     ShiftListener,
   ],
-  exports: [NotificationService],
+  exports: [NotificationService, EmailService],
 })
 export class NotificationModule {}

@@ -4,7 +4,8 @@ import { Button, Input } from '@repo/ui';
 import { useTranslations } from 'next-intl';
 import { useState } from 'react';
 import { Link, useRouter } from '@/i18n/navigation';
-import { signUp } from '@/lib/auth';
+import { signIn, signUp } from '@/lib/auth';
+import { getVerifyEmailPath } from '@/lib/verify-email-url';
 
 interface SignupFormProps {
   redirectTo?: string;
@@ -16,7 +17,7 @@ export function SignupForm({ redirectTo = '/' }: SignupFormProps) {
   const [error, setError] = useState<string | null>(null);
   const [isPending, setIsPending] = useState(false);
 
-  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+  async function handleSignupSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setError(null);
     setIsPending(true);
@@ -35,12 +36,21 @@ export function SignupForm({ redirectTo = '/' }: SignupFormProps) {
         return;
       }
 
-      if (result.data?.user) {
+      if (process.env.NODE_ENV !== 'production') {
+        const signInResult = await signIn.email({ email, password });
+
+        if (signInResult.error) {
+          setError(signInResult.error.message || t('genericError'));
+          setIsPending(false);
+          return;
+        }
+
         router.push(redirectTo);
-      } else {
-        setError(t('genericError'));
-        setIsPending(false);
+        router.refresh();
+        return;
       }
+
+      router.push(getVerifyEmailPath({ email, redirectTo, codeSent: true }));
     } catch {
       setError(t('genericError'));
       setIsPending(false);
@@ -48,7 +58,7 @@ export function SignupForm({ redirectTo = '/' }: SignupFormProps) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="mt-8 space-y-6">
+    <form onSubmit={handleSignupSubmit} className="mt-8 space-y-6">
       {error && (
         <div className="rounded-md bg-destructive/10 p-4 text-sm text-destructive">
           {error}

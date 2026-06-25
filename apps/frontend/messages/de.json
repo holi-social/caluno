@@ -44,6 +44,7 @@
       "noAccount": "Noch kein Konto?",
       "signUpLink": "Registrieren",
       "invalidCredentials": "Ungültige Anmeldedaten",
+      "sendVerificationFailed": "Die E-Mail ist nicht bestätigt, und wir konnten keinen neuen Bestätigungscode senden.",
       "genericError": "Anmeldung fehlgeschlagen. Bitte versuche es erneut."
     },
     "signup": {
@@ -61,6 +62,26 @@
       "signInLink": "Anmelden",
       "createAccountFailed": "Konto konnte nicht erstellt werden",
       "genericError": "Konto konnte nicht erstellt werden. Bitte versuche es erneut."
+    },
+    "verifyEmail": {
+      "title": "E-Mail bestätigen",
+      "requestDescription": "Gib deine E-Mail-Adresse ein, und wir senden dir einen Bestätigungscode.",
+      "emailLabel": "E-Mail",
+      "emailPlaceholder": "du@beispiel.de",
+      "sendCode": "Bestätigungscode senden",
+      "sending": "Code wird gesendet...",
+      "codeSent": "Prüfe {email} auf deinen Bestätigungscode.",
+      "codeRequested": "Wenn der E-Mail-Versand verfügbar ist, erhältst du in Kürze einen Bestätigungscode an {email}.",
+      "verificationDescription": "Gib den Bestätigungscode für {email} ein.",
+      "otpLabel": "Bestätigungscode",
+      "otpPlaceholder": "123456",
+      "verifySubmit": "E-Mail bestätigen",
+      "verifying": "Wird bestätigt...",
+      "resendCode": "Code erneut senden",
+      "sendCodeFailed": "Bestätigungscode konnte nicht gesendet werden",
+      "verifyCodeFailed": "Code konnte nicht bestätigt werden",
+      "remembered": "Bereits bestätigt?",
+      "signInLink": "Anmelden"
     }
   },
   "Metadata": {

@@ -50,8 +50,10 @@ export class EmailService {
 
     const url = `https://api.scaleway.com/transactional-email/v1alpha1/regions/${this.scaleway.region}/emails`;
 
+    let response: Response;
+
     try {
-      const response = await fetch(url, {
+      response = await fetch(url, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -69,21 +71,21 @@ export class EmailService {
           project_id: this.scaleway.projectId,
         }),
       });
-
-      if (!response.ok) {
-        const body = await response.text();
-        this.logger.error(
-          `Scaleway Transactional Email responded ${response.status} for ${maskedTo}: ${body}`,
-        );
-        return;
-      }
-
-      this.logger.debug(`Email sent to ${maskedTo}`);
     } catch (error) {
-      this.logger.error(
-        `Failed to send email to ${maskedTo}: ${error instanceof Error ? error.message : String(error)}`,
-      );
+      const message = error instanceof Error ? error.message : String(error);
+      this.logger.error(`Failed to send email to ${maskedTo}: ${message}`);
+      throw new Error('Failed to send email');
     }
+
+    if (!response.ok) {
+      const body = await response.text();
+      this.logger.error(
+        `Scaleway Transactional Email responded ${response.status} for ${maskedTo}: ${body}`,
+      );
+      throw new Error('Failed to send email');
+    }
+
+    this.logger.debug(`Email sent to ${maskedTo}`);
   }
 
   private maskEmail(email: string): string {
