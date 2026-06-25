@@ -82,8 +82,6 @@ class MockRRule {
   static DAILY = 3;
   static MONTHLY = 1;
 
-  constructor(_options: unknown) {}
-
   toString() {
     return 'FREQ=WEEKLY';
   }
