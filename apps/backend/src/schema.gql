@@ -127,7 +127,7 @@ input CreateShiftInput {
   rrule: String
   startsAt: DateTime!
   title: String!
-  visibility: ShiftVisibility! = ALL_MEMBERS
+  visibility: ShiftVisibility!
 }
 
 """
@@ -908,7 +908,7 @@ input UpdateShiftInput {
   rrule: String
   startsAt: DateTime
   title: String
-  visibility: ShiftVisibility = ALL_MEMBERS
+  visibility: ShiftVisibility
 }
 
 input UpdateTimeEntryInput {
