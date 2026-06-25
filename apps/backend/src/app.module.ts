@@ -22,6 +22,7 @@ import { MembershipModule } from './membership/membership.module';
 import { MembershipLifecycleModule } from './membership-lifecycle/membership-lifecycle.module';
 import { EmailService } from './notification/email/email.service';
 import { accountVerificationOtpTemplate } from './notification/email/templates/account-verification-otp.template';
+import { passwordResetTemplate } from './notification/email/templates/password-reset.template';
 import { NotificationModule } from './notification/notification.module';
 import { OrganizationModule } from './organization/organization.module';
 import { RequirementProfileModule } from './requirement-profile/requirement-profile.module';
@@ -65,7 +66,7 @@ const autoSchemaFile =
         emailService: EmailService,
       ) => {
         const webUrl = configService.getOrThrow<string>('WEB_URL');
-        const shouldVerifyEmail = process.env.NODE_ENV !== 'development';
+        const shouldVerifyEmail = process.env.NODE_ENV === 'production';
 
         return {
           auth: betterAuth(
@@ -74,8 +75,20 @@ const autoSchemaFile =
               trustedOrigins: [webUrl],
               cookieDomain: configService.get('COOKIE_DOMAIN'),
               emailVerificationEnabled: shouldVerifyEmail,
+              sendResetPassword: async ({ email, token }) => {
+                const resetUrl = `${webUrl.replace(/\/+$/, '')}/reset-password?token=${encodeURIComponent(token)}`;
+                const emailContent = await passwordResetTemplate({
+                  resetUrl,
+                  expiresInMinutes: 60,
+                });
+
+                await emailService.send({
+                  to: email,
+                  ...emailContent,
+                });
+              },
               sendVerificationOTP: async ({ email, otp, type }) => {
-                // TODO: When enabling OTP sign-in, password reset, or email change,
+                // TODO: When enabling OTP sign-in or email change,
                 // add type-specific templates here instead of sending generic copy.
                 if (type !== 'email-verification') {
                   return;

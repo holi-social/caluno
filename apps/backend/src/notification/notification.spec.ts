@@ -9,6 +9,7 @@ import { EmailService } from './email/email.service';
 import { membershipApprovedTemplate } from './email/templates/membership-approved.template';
 import { membershipRequestedTemplate } from './email/templates/membership-requested.template';
 import { organizationCreatedTemplate } from './email/templates/organization-created.template';
+import { passwordResetTemplate } from './email/templates/password-reset.template';
 import { shiftInstanceJoinedTemplate } from './email/templates/shift-instance-joined.template';
 import { MembershipListener } from './listeners/membership.listener';
 import { OrganizationListener } from './listeners/organization.listener';
@@ -95,6 +96,19 @@ describe('NotificationModule', () => {
       subject: expected.subject,
       html: expected.html,
     });
+  });
+
+  it('renders password reset email with reset link and expiry', async () => {
+    const resetUrl = 'http://localhost:3000/reset-password?token=reset-token-1';
+
+    const email = await passwordResetTemplate({
+      resetUrl,
+      expiresInMinutes: 60,
+    });
+
+    expect(email.subject).toBe('Reset your Clippy password');
+    expect(email.html).toContain(resetUrl);
+    expect(email.html).toContain('This link expires in 60 minutes.');
   });
 
   it('sends membership requested email to each reviewer', async () => {

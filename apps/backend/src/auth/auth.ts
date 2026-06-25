@@ -15,6 +15,11 @@ export interface SendVerificationOtpOptions {
   type: EmailOtpType;
 }
 
+export interface SendResetPasswordOptions {
+  email: string;
+  token: string;
+}
+
 export interface AuthConfigOptions {
   database: Database | object;
   trustedOrigins: string[];
@@ -22,6 +27,7 @@ export interface AuthConfigOptions {
   cookieDomain?: string;
   emailVerificationEnabled?: boolean;
   sendVerificationOTP: (options: SendVerificationOtpOptions) => Promise<void>;
+  sendResetPassword: (options: SendResetPasswordOptions) => Promise<void>;
 }
 
 export const createAuthConfig = ({
@@ -30,6 +36,7 @@ export const createAuthConfig = ({
   cookieDomain,
   emailVerificationEnabled = true,
   sendVerificationOTP,
+  sendResetPassword,
 }: AuthConfigOptions): BetterAuthOptions => ({
   database: drizzleAdapter(database, {
     usePlural: true,
@@ -50,6 +57,9 @@ export const createAuthConfig = ({
     maxPasswordLength: 128,
     autoSignIn: false,
     requireEmailVerification: emailVerificationEnabled,
+    async sendResetPassword({ user, token }) {
+      await sendResetPassword({ email: user.email, token });
+    },
   },
   emailVerification: {
     sendOnSignUp: emailVerificationEnabled,
@@ -71,5 +81,6 @@ export const auth = betterAuth(
     trustedOrigins: [],
     cookieDomain: undefined,
     sendVerificationOTP: async () => {},
+    sendResetPassword: async () => {},
   }),
 );
