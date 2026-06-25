@@ -1,23 +1,19 @@
+import type { GetWeeklyShiftsQuery } from '@repo/data';
 import { addDays, isSameDay } from 'date-fns';
 import { getFormatter } from 'next-intl/server';
-import { getDataClient } from '@/lib/data-client';
 import { ShiftCard } from './shift-card';
 
 type WeeklyCalendarProps = {
-  orgUId: string;
+  instances: GetWeeklyShiftsQuery['weeklyShifts'];
   canManage?: boolean;
   weekStart: Date;
 };
 
 export async function WeeklyCalendar({
-  orgUId,
+  instances,
   canManage = false,
   weekStart,
 }: WeeklyCalendarProps) {
-  const weekEnd = addDays(weekStart, 7);
-
-  const dataClient = await getDataClient(orgUId);
-  const instances = await dataClient.shift.findForWeek(weekStart, weekEnd);
   const formatter = await getFormatter();
 
   const days = Array.from({ length: 7 }, (_, i) => {

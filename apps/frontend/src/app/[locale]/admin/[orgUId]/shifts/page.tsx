@@ -1,5 +1,9 @@
-import { PermissionKey } from '@repo/data';
-import { startOfWeek } from 'date-fns';
+import {
+  GetShiftsQuery,
+  GetWeeklyShiftsQuery,
+  PermissionKey,
+} from '@repo/data';
+import { addDays, startOfWeek } from 'date-fns';
 import { getTranslations } from 'next-intl/server';
 import { Pagination } from '@/components/pagination';
 import { CreateShiftButton } from '@/domain/shift/components/create-shift-button';
@@ -44,9 +48,14 @@ export default async function ShiftsPage({
 
   const t = await getTranslations('Shift');
 
-  let tableContent = null;
-  if (!isWeekplan) {
-    const data = await getDataClient(orgUId);
+  const data = await getDataClient(orgUId);
+  let tableContent: GetShiftsQuery['shifts'] | null = null;
+  let instances: GetWeeklyShiftsQuery['weeklyShifts'] | null = null;
+
+  if (isWeekplan) {
+    const weekEnd = addDays(weekStart, 7);
+    instances = await data.shift.findForWeek(weekStart, weekEnd);
+  } else {
     const result = await data.shift.findAll({ limit: ITEMS_PER_PAGE, offset });
     tableContent = { items: result.items, pagination: result.pagination };
   }
@@ -63,9 +72,10 @@ export default async function ShiftsPage({
             activeTab={isWeekplan ? 'weekplan' : 'shifts'}
             week={week}
           />
-          {isWeekplan && (
-            <WeeklyCalendarNav weekStart={weekStart} orgUId={orgUId} />
-          )}
+          {isWeekplan &&
+            (instances?.length ? (
+              <WeeklyCalendarNav weekStart={weekStart} orgUId={orgUId} />
+            ) : null)}
 
           <CreateShiftButton />
         </div>
@@ -73,12 +83,18 @@ export default async function ShiftsPage({
 
       {/* Content */}
       {isWeekplan ? (
-        <WeeklyCalendar
-          orgUId={orgUId}
-          canManage={canManage}
-          weekStart={weekStart}
-        />
-      ) : tableContent && tableContent.pagination.total > 0 ? (
+        instances?.length ? (
+          <WeeklyCalendar
+            instances={instances ?? []}
+            canManage={canManage}
+            weekStart={weekStart}
+          />
+        ) : (
+          <EmptyShifts>
+            <CreateShiftButton />
+          </EmptyShifts>
+        )
+      ) : tableContent?.pagination.total ? (
         <>
           <ShiftsTable
             shifts={tableContent.items}
