@@ -1,1 +1,0 @@
-ALTER TABLE "memberships" ADD COLUMN "role" "organization_role" DEFAULT 'VOLUNTEER' NOT NULL;

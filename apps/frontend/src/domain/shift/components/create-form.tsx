@@ -1,0 +1,63 @@
+'use client';
+
+import { useCurrentOrg, useOrgUId } from '@repo/data/react';
+import { useEffect, useState, useTransition } from 'react';
+import { createShift } from '../actions';
+import type { ShiftFormValues } from '../schemas';
+import { ShiftForm } from './shift-form';
+
+interface CreateShiftFormProps {
+  onPendingChange?: (isPending: boolean) => void;
+  formId?: string;
+  onSuccess?: (result: { shiftId: string; instanceId?: string }) => void;
+}
+
+export function CreateShiftForm({
+  onPendingChange,
+  formId,
+  onSuccess,
+}: CreateShiftFormProps) {
+  const [isPending, startTransition] = useTransition();
+  const [serverError, setServerError] = useState<string | null>(null);
+  const orgUId = useOrgUId();
+  const { address } = useCurrentOrg();
+
+  useEffect(() => {
+    onPendingChange?.(isPending);
+  }, [isPending, onPendingChange]);
+
+  const onSubmit = async (formData: ShiftFormValues) => {
+    setServerError(null);
+    startTransition(async () => {
+      const result = await createShift({
+        ...formData,
+        invitedMemberIds: [],
+      });
+      if (result?.serverError) {
+        setServerError(result.serverError);
+      } else if (result?.data) {
+        onSuccess?.({
+          shiftId: result.data.id,
+          instanceId: result.data.instanceId,
+        });
+      }
+    });
+  };
+
+  return (
+    <>
+      {serverError && (
+        <div className="rounded-md bg-destructive/10 p-4 text-sm text-destructive mb-4">
+          {serverError}
+        </div>
+      )}
+      <ShiftForm
+        organizationUnitId={orgUId}
+        isPending={isPending}
+        onSubmit={onSubmit}
+        formId={formId}
+        defaultLocation={address ?? ''}
+      />
+    </>
+  );
+}

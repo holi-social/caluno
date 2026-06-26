@@ -1,0 +1,3 @@
+ALTER TABLE "requirement_forms" ADD COLUMN "organization_unit_id" uuid;--> statement-breakpoint
+CREATE INDEX "idx_requirement_forms_organization_unit_id" ON "requirement_forms" ("organization_unit_id");--> statement-breakpoint
+ALTER TABLE "requirement_forms" ADD CONSTRAINT "requirement_forms_WaMssqa2Hv1A_fkey" FOREIGN KEY ("organization_unit_id") REFERENCES "organization_units"("id") ON DELETE CASCADE;

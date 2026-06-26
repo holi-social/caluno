@@ -4,7 +4,7 @@ import { MembershipRequestStatus } from '../enums';
 @InputType()
 export class UpdateMembershipRequestInput {
   @Field(() => ID)
-  reviewedBy?: string;
+  reviewedById?: string;
 
   @Field(() => Date)
   reviewedAt?: Date;
@@ -13,5 +13,5 @@ export class UpdateMembershipRequestInput {
   rejectionReason?: string;
 
   @Field(() => MembershipRequestStatus)
-  status: MembershipRequestStatus;
+  status!: MembershipRequestStatus;
 }

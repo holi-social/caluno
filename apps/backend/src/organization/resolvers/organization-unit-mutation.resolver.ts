@@ -1,0 +1,53 @@
+import { Args, Mutation, Resolver } from '@nestjs/graphql';
+import type { UserSession } from '@thallesp/nestjs-better-auth';
+import { Session } from '@thallesp/nestjs-better-auth';
+import { PERMISSIONS } from '../../auth/constants';
+import { Permissions } from '../../auth/decorators/permissions.decorator';
+import { CreateOrganizationUnitInput } from '../inputs/create-organization-unit.input';
+import { UpdateOrganizationUnitInput } from '../inputs/update-organization-unit.input';
+import { OrganizationUnitMapper } from '../mappers/organization-unit.mapper';
+import { OrganizationUnit } from '../models/organization-unit.model';
+import { OrganizationUnitService } from '../organization-unit.service';
+
+@Resolver(() => OrganizationUnit)
+export class OrganizationUnitMutationResolver {
+  constructor(
+    private readonly organizationUnitService: OrganizationUnitService,
+    private readonly organizationUnitMapper: OrganizationUnitMapper,
+  ) {}
+
+  @Permissions(PERMISSIONS.ORG_EDIT)
+  @Mutation(() => OrganizationUnit)
+  async createOrganizationUnit(
+    @Args('input') input: CreateOrganizationUnitInput,
+    @Session() session: UserSession,
+  ): Promise<OrganizationUnit> {
+    const organizationUnit = await this.organizationUnitService.create(
+      session.user.id,
+      input,
+    );
+    return this.organizationUnitMapper.toModelOrThrow(organizationUnit);
+  }
+
+  @Permissions(PERMISSIONS.ORG_EDIT)
+  @Mutation(() => OrganizationUnit)
+  async updateOrganizationUnit(
+    @Args('id') id: string,
+    @Args('input') input: UpdateOrganizationUnitInput,
+  ): Promise<OrganizationUnit> {
+    const organizationUnit = await this.organizationUnitService.update(
+      id,
+      input,
+    );
+    return this.organizationUnitMapper.toModelOrThrow(organizationUnit);
+  }
+
+  @Permissions(PERMISSIONS.ORG_EDIT)
+  @Mutation(() => OrganizationUnit)
+  async deleteOrganizationUnit(
+    @Args('id') id: string,
+  ): Promise<OrganizationUnit> {
+    const organizationUnit = await this.organizationUnitService.delete(id);
+    return this.organizationUnitMapper.toModelOrThrow(organizationUnit);
+  }
+}

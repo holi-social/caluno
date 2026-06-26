@@ -12,7 +12,7 @@ export interface DataProviderProps {
   apiUrl: string;
   queryClient?: QueryClient;
   showDevTools?: boolean;
-  organizationId?: string;
+  organizationUnitId?: string;
 }
 
 const defaultQueryClient = new QueryClient({
@@ -35,13 +35,13 @@ export function DataProvider({
   apiUrl,
   queryClient: customQueryClient,
   showDevTools = process.env.NODE_ENV === 'development',
-  organizationId,
+  organizationUnitId,
 }: DataProviderProps) {
   const queryClient = customQueryClient ?? defaultQueryClient;
   const graphqlClient = useMemo(() => {
-    const getHeaders = organizationId
+    const getHeaders = organizationUnitId
       ? (): Record<string, string> => {
-          return { 'x-organization-id': organizationId };
+          return { 'x-organization-unit-id': organizationUnitId };
         }
       : undefined;
 
@@ -50,7 +50,7 @@ export function DataProvider({
       credentials: 'include',
       headers: getHeaders,
     });
-  }, [apiUrl, organizationId]);
+  }, [apiUrl, organizationUnitId]);
 
   return (
     <QueryClientProvider client={queryClient}>

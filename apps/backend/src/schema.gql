@@ -3,21 +3,56 @@
 # ------------------------------------------------------
 
 input AddTimeEntryInput {
-  endedAt: DateTime!
+  endedAt: DateTime
   notes: String
-  sessionId: String!
+  shiftInstanceId: String!
   startedAt: DateTime!
+  volunteerId: String!
 }
 
-input ApproveVolunteerSessionInput {
-  id: String!
+input CloseTimeEntryInput {
+  endedAt: DateTime!
+  notes: String
+}
+
+input CreateEventInput {
+  coverUrl: String
+  endsAt: DateTime!
+  invitedMemberIds: [String!]
+  location: String
+  logoUrl: String
+  startsAt: DateTime!
+  title: String!
+}
+
+input CreateFormBlockFieldInput {
+  description: String
+  documentLabel: String
+  documentUrl: String
+  fieldOrder: Float
+  label: String!
+  lockType: Boolean
+  minAge: Float
+  options: [SelectOptionInput!]
+  placeholder: String
+  required: Boolean
+  systemKey: String
+  type: FieldType!
+}
+
+input CreateFormBlockInput {
+  description: String
+  fields: [CreateFormBlockFieldInput!]
+  icon: String
   organizationId: String!
+  required: Boolean
+  title: String!
 }
 
 input CreateOrganizationInput {
   address: String
+  contactEmail: String
   description: String
-  email: String
   logoUrl: String
   name: String!
   parentId: String
@@ -25,14 +60,61 @@ input CreateOrganizationInput {
   websiteUrl: String
 }
 
-input CreateProjectInput {
-  description: String!
-  endsAt: DateTime!
-  location: String!
-  organizationId: ID!
-  startsAt: DateTime!
-  status: ProjectStatus! = DRAFT
-  title: String!
+input CreateOrganizationUnitInput {
+  address: String
+  contactEmail: String
+  description: String
+  logoUrl: String
+  name: String!
+  organizationId: String!
+  parentId: String!
+  phone: String
+  typeId: String!
+  websiteUrl: String
+}
+
+input CreateRequirementFormInput {
+  blockRefs: [FormBlockRefInput!]
+  description: String
+  name: String!
+  organizationId: String!
+  settings: FormSettingsInput
+}
+
+input CreateRequirementInput {
+  description: String
+  mandatory: Boolean! = false
+  name: String!
+  organizationId: String!
+  type: RequirementType!
+}
+
+input CreateRequirementProfileInput {
+  description: String
+  name: String!
+  organizationId: String!
+  requirementIds: [String!]
+}
+
+input CreateRequirementProfileSubmissionInput {
+  fulfillments: [CreateRequirementSubmissionFulfillmentInput!]
+  membershipId: String
+  membershipRequestId: String
+  profileId: String!
+}
+
+input CreateRequirementSubmissionFulfillmentInput {
+  checked: Boolean
+  date: DateTime
+  documentId: String
+  requirementId: String!
+  text: String
+}
+
+input CreateRoleInput {
+  description: String
+  name: String!
+  permissionIds: [String!]!
 }
 
 input CreateShiftInput {
@@ -40,25 +122,12 @@ input CreateShiftInput {
   instructions: String
   invitedMemberIds: [String!]
   location: String
-  projectId: String
+  maxVolunteers: Int
+  minVolunteers: Int
+  rrule: String
   startsAt: DateTime!
   title: String!
-  visibility: ShiftVisibility! = ALL_MEMBERS
-}
-
-input CreateTaskAssignmentInput {
-  assigneeId: String!
-  organizationId: String!
-  taskId: String!
-}
-
-input CreateTaskInput {
-  description: String!
-  dueDate: DateTime!
-  organizationId: String!
-  projectId: String!
-  status: TaskStatus! = TODO
-  title: String!
+  visibility: ShiftVisibility!
 }
 
 """
@@ -66,23 +135,200 @@ A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date
 """
 scalar DateTime
 
+type Event {
+  coverUrl: String
+  createdAt: DateTime!
+  endsAt: DateTime!
+  id: ID!
+  isDeleted: Boolean!
+  location: String
+  logoUrl: String
+  organizationUnitId: ID!
+  organizer: User
+  slug: String!
+  startsAt: DateTime!
+  title: String!
+}
+
+type EventPaginatedResponse {
+  items: [Event!]!
+  pagination: PaginationInfo!
+}
+
+enum FieldType {
+  CHECKBOX
+  DATE
+  DOCUMENT_ACKNOWLEDGEMENT
+  EMAIL
+  IBAN
+  LASTNAME
+  MULTI_CHOICE
+  NAME
+  NUMBERS
+  PHONE
+  SINGLE_CHOICE
+  STATIC_TEXT
+  TEXT
+  TEXTAREA
+  ZIP
+}
+
+type FormBlock {
+  createdAt: DateTime!
+  createdBy: String!
+  description: String
+  fields: [FormBlockField!]
+  icon: String
+  id: ID!
+  isEditable: Boolean!
+  organizationId: String!
+  required: Boolean!
+  title: String!
+  updatedAt: DateTime!
+  updatedBy: String!
+}
+
+type FormBlockField {
+  blockId: String!
+  createdAt: DateTime!
+  description: String
+  documentLabel: String
+  documentUrl: String
+  fieldOrder: Float!
+  id: ID!
+  label: String!
+  lockType: Boolean!
+  minAge: Float
+  options: [SelectOption!]
+  placeholder: String
+  required: Boolean!
+  systemKey: String
+  type: FieldType!
+  updatedAt: DateTime!
+}
+
+type FormBlockPaginatedResponse {
+  items: [FormBlock!]!
+  pagination: PaginationInfo!
+}
+
+input FormBlockRefInput {
+  blockId: String!
+  order: Float
+  required: Boolean
+}
+
+input FormFieldValueInput {
+  blockId: String!
+  fieldId: String!
+  value: String!
+}
+
+type FormSettings {
+  allowEmbed: Boolean
+  submitButtonLabel: String
+  successMessage: String
+  successTitle: String
+}
+
+input FormSettingsInput {
+  allowEmbed: Boolean
+  submitButtonLabel: String
+  successMessage: String
+  successTitle: String
+}
+
+type FormSubmission {
+  createdAt: DateTime!
+  form: RequirementForm
+  formId: String!
+  id: ID!
+  membershipId: String
+  status: FormSubmissionStatus!
+  submittedAt: DateTime!
+  updatedAt: DateTime!
+  user: User
+  userId: String!
+  values: [FormSubmissionValue!]
+}
+
+type FormSubmissionPaginatedResponse {
+  items: [FormSubmission!]!
+  pagination: PaginationInfo!
+}
+
+enum FormSubmissionStatus {
+  REJECTED
+  SUBMITTED
+}
+
+type FormSubmissionValue {
+  blockId: String!
+  createdAt: DateTime!
+  fieldId: String!
+  id: ID!
+  submissionId: String!
+  updatedAt: DateTime!
+  value: String!
+}
+
+"""
+The `JSON` scalar type represents JSON values as specified by [ECMA-404](http://www.ecma-international.org/publications/files/ECMA-ST/ECMA-404.pdf).
+"""
+scalar JSON @specifiedBy(url: "http://www.ecma-international.org/publications/files/ECMA-ST/ECMA-404.pdf")
+
+type JoinEventResult {
+  event: Event!
+  membershipRequestId: ID
+  requirementProfile: RequirementProfile
+  requirementStatuses: [UserRequirementStatus!]
+  status: JoinStatus!
+}
+
+type JoinOrganizationResult {
+  membershipRequestId: ID
+  requirementProfile: RequirementProfile
+  requirementStatuses: [UserRequirementStatus!]
+  status: JoinStatus!
+}
+
+type JoinShiftInstanceResult {
+  membershipRequestId: ID
+  requirementProfile: RequirementProfile
+  requirementStatuses: [UserRequirementStatus!]
+  shiftInstance: ShiftInstance!
+  status: JoinStatus!
+}
+
+enum JoinStatus {
+  JOINED
+  PENDING
+  REJECTED
+  REQUIREMENTS_NEEDED
+}
+
 type Membership {
   id: ID!
-  organization: Organization!
-  role: OrganizationRole!
+  organizationUnit: OrganizationUnit!
+  roles: [Role!]!
   user: User!
 }
 
 type MembershipRequest {
   createdAt: DateTime!
   id: ID!
-  organization: Organization!
-  rejectionReason: String!
-  reviewedAt: DateTime!
-  reviewedBy: User!
+  organizationUnit: OrganizationUnit!
+  rejectionReason: String
+  reviewedAt: DateTime
+  reviewedBy: User
   status: MembershipRequestStatus!
   updatedAt: DateTime!
-  user: String!
+  user: User!
+}
+
+type MembershipRequestPaginatedResponse {
+  items: [MembershipRequest!]!
+  pagination: PaginationInfo!
 }
 
 enum MembershipRequestStatus {
@@ -94,44 +340,72 @@ enum MembershipRequestStatus {
 
 type Mutation {
   addTimeEntry(input: AddTimeEntryInput!): TimeEntry!
-  approveMembershipRequest(id: ID!, organizationId: ID!): MembershipRequest!
-  approveVolunteerSession(input: ApproveVolunteerSessionInput!): VolunteerSession!
-  assignTask(input: CreateTaskAssignmentInput!): Task!
-  cancelMembershipRequest(id: ID!, organizationId: ID!): MembershipRequest!
-  createMembershipRequest(organizationId: ID!): MembershipRequest!
+  approveMembershipRequest(id: ID!, organizationUnitId: ID!): MembershipRequest!
+  cancelMembershipRequest(id: ID!, organizationUnitId: ID!): MembershipRequest!
+  closeTimeEntry(id: ID!, input: CloseTimeEntryInput!): TimeEntry!
+  createEvent(input: CreateEventInput!): Event!
+  createFormBlock(input: CreateFormBlockInput!): FormBlock!
+  createFormBlockField(blockId: String!, input: CreateFormBlockFieldInput!): FormBlock!
   createOrganization(input: CreateOrganizationInput!): Organization!
-  createProject(input: CreateProjectInput!): Project!
+  createOrganizationUnit(input: CreateOrganizationUnitInput!): OrganizationUnit!
+  createRequirement(input: CreateRequirementInput!): Requirement!
+  createRequirementForm(input: CreateRequirementFormInput!): RequirementForm!
+  createRequirementProfile(input: CreateRequirementProfileInput!): RequirementProfile!
+  createRequirementProfileSubmission(input: CreateRequirementProfileSubmissionInput!): RequirementProfileSubmission!
+  createRole(input: CreateRoleInput!): Role!
   createShift(input: CreateShiftInput!): Shift!
-  createTask(input: CreateTaskInput!): Task!
+  deleteEvent(id: ID!): Event!
+  deleteFormBlock(id: String!): FormBlock!
+  deleteFormBlockField(fieldId: String!): FormBlock!
+  deleteOrganizationUnit(id: String!): OrganizationUnit!
+  deleteRequirement(id: String!): Requirement!
+  deleteRequirementForm(id: String!): RequirementForm!
+  deleteRequirementFulfillment(id: String!): RequirementFulfillment!
+  deleteRequirementProfile(id: String!): RequirementProfile!
+  deleteRequirementProfileSubmission(id: String!): RequirementProfileSubmission!
+  deleteRole(id: ID!): Role!
   deleteShift(id: String!): Shift!
   deleteTimeEntry(id: ID!): TimeEntry!
-  endVolunteerSession(id: ID!): VolunteerSession!
+  generateDocumentUploadUrl(filename: String!, mimeType: String!): String!
+  inviteMembersToEvent(eventId: ID!, memberIds: [String!]!): Event!
   inviteMembersToShift(memberIds: [String!]!, shiftId: String!): Shift!
-  publishProject(id: ID!): Project!
-  rejectMembershipRequest(id: ID!, organizationId: ID!, rejectionReason: String!): MembershipRequest!
-  rejectVolunteerSession(input: RejectVolunteerSessionInput!): VolunteerSession!
-  startVolunteerSession(input: StartVolunteerSessionInput!): VolunteerSession!
-  updateProject(id: ID!, input: UpdateProjectInput!): Project!
+  inviteMembersToShiftInstance(instanceId: String!, memberIds: [String!]!): ShiftInstance!
+  joinEvent(eventId: ID!): JoinEventResult!
+  joinOrganization(organizationUnitId: ID!): JoinOrganizationResult!
+  joinShiftInstance(instanceId: String!): JoinShiftInstanceResult!
+  regenerateFormShareToken(id: String!): RequirementForm!
+  rejectMembershipRequest(id: ID!, organizationUnitId: ID!, rejectionReason: String!): MembershipRequest!
+  submitForm(input: SubmitFormInput!, token: String!): FormSubmission!
+  updateEvent(id: ID!, input: UpdateEventInput!): Event!
+  updateFormBlock(id: String!, input: UpdateFormBlockInput!): FormBlock!
+  updateFormBlockField(fieldId: String!, input: UpdateFormBlockFieldInput!): FormBlock!
+  updateMembersForShiftInstance(instanceId: String!, memberIds: [String!]!): ShiftInstance!
+  updateMembershipRoles(membershipId: ID!, roleIds: [ID!]!): Membership!
+  updateMyUserProfile(input: UpdateUserProfileInput!): UserProfile!
+  updateOrganizationUnit(id: String!, input: UpdateOrganizationUnitInput!): OrganizationUnit!
+  updateRequirement(id: String!, input: UpdateRequirementInput!): Requirement!
+  updateRequirementForm(id: String!, input: UpdateRequirementFormInput!): RequirementForm!
+  updateRequirementFulfillment(id: String!, input: UpdateRequirementFulfillmentInput!): RequirementFulfillment!
+  updateRequirementProfile(id: String!, input: UpdateRequirementProfileInput!): RequirementProfile!
+  updateRequirementProfileSubmission(id: String!, input: UpdateRequirementProfileSubmissionInput!): RequirementProfileSubmission!
+  updateRole(id: ID!, input: CreateRoleInput!): Role!
   updateShift(id: String!, input: UpdateShiftInput!): Shift!
+  updateTimeEntry(id: ID!, input: UpdateTimeEntryInput!): TimeEntry!
 }
 
 type Organization {
   address: String
-  admins: [User!]
-  children: [Organization!]!
+  contactEmail: String
   createdAt: DateTime!
   description: String
-  email: String
   id: ID!
   logoUrl: String
-  moderators: [User!]
   name: String!
-  parent: Organization
   phone: String
-  projects(limit: Int! = 10, offset: Int! = 0): [Project!]
+  root: OrganizationUnit!
   slug: String!
+  units: [OrganizationUnit!]!
   updatedAt: DateTime
-  volunteers: [User!]
   websiteUrl: String
 }
 
@@ -140,9 +414,53 @@ type OrganizationPaginatedResponse {
   pagination: PaginationInfo!
 }
 
-enum OrganizationRole {
-  ADMIN
-  VOLUNTEER
+type OrganizationTree {
+  root: JSON!
+}
+
+type OrganizationUnit {
+  address: String
+  children: [OrganizationUnit!]!
+  contactEmail: String
+  deletedAt: DateTime
+  description: String
+  id: ID!
+  logoUrl: String
+  name: String!
+  organization: Organization!
+  organizationId: String!
+  parent: OrganizationUnit
+  phone: String
+  requiredMembershipRequirementProfile: RequirementProfile
+  slug: String!
+  type: OrganizationUnitType!
+  websiteUrl: String
+}
+
+type OrganizationUnitPaginatedResponse {
+  items: [OrganizationUnit!]!
+  pagination: PaginationInfo!
+}
+
+type OrganizationUnitType {
+  description: String
+  icon: String!
+  id: ID!
+  name: String!
+}
+
+type OrganizationUserProfile {
+  id: ID!
+  note: String
+  status: OrganizationUserProfileStatus!
+  userProfileAccessApproved: Boolean!
+}
+
+enum OrganizationUserProfileStatus {
+  ACTIVE
+  BLACKLISTED
+  INACTIVE
+  PENDING
 }
 
 type PaginationInfo {
@@ -152,77 +470,324 @@ type PaginationInfo {
   total: Int!
 }
 
-type Project {
-  createdAt: DateTime!
-  createdBy: User!
-  description: String!
-  endsAt: DateTime!
+type Permission {
+  description: String
   id: ID!
-  location: String!
-  organization: Organization!
-  slug: String!
-  startsAt: DateTime!
-  status: ProjectStatus!
-  tasks: [Task!]
-  title: String!
-  updatedAt: DateTime
+  key: PermissionKey!
 }
 
-type ProjectPaginatedResponse {
-  items: [Project!]!
-  pagination: PaginationInfo!
+type PermissionGroup {
+  items: [PermissionGroupItem!]!
+  key: String!
+  label: String!
 }
 
-enum ProjectStatus {
-  ACTIVE
-  ARCHIVED
-  DRAFT
-  EXPIRED
+type PermissionGroupItem {
+  label: String!
+  permission: Permission!
+}
+
+enum PermissionKey {
+  ORG_EDIT
+  ORG_VIEW
+  REQUIREMENT_PROFILE_EDIT
+  REQUIREMENT_PROFILE_VIEW
+  SHIFT_EDIT
+  SHIFT_VIEW
+  VOLUNTEER_EDIT
+  VOLUNTEER_VIEW
 }
 
 type Query {
-  isUserOrganizationAdmin(organizationId: ID!): Boolean!
-  isUserOrganizationMember(organizationId: ID!): Boolean!
-  isUserOrganizationStaff(organizationId: ID!): Boolean!
-  isUserOrganizationVolunteer(organizationId: ID!): Boolean!
+  activeShifts(limit: Int! = 10, offset: Int! = 0): ShiftInstancePaginatedResponse!
+  adminUserProfile(userId: String!): UserProfile
+  adminVolunteerSubmission(id: String!): FormSubmission
+  event(id: ID!): Event!
+  eventAttendees(eventId: ID!): [User!]!
+  events(limit: Int! = 10, offset: Int! = 0): EventPaginatedResponse!
+  formBlock(id: String!): FormBlock
+  formBlocks(limit: Int! = 10, offset: Int! = 0, organizationId: String!): FormBlockPaginatedResponse!
+  formSubmission(id: String!): FormSubmission
+  formSubmissionsByForm(formId: String!, limit: Int! = 10, offset: Int! = 0): FormSubmissionPaginatedResponse!
+  formSubmissionsByMembershipRequest(membershipRequestId: String!): [FormSubmission!]!
+  formSubmissionsForVolunteer(userId: String!): [FormSubmission!]!
+  isMemberOfUnitOrAncestor(organizationUnitId: ID!): Boolean!
   me: User!
-  membership(organizationId: ID!): Membership!
-  membershipRequests(limit: Int! = 10, offset: Int! = 0, organizationId: ID!): MembershipRequest!
-  myTasks(limit: Int! = 10, offset: Int! = 0): TaskPaginatedResponse!
-  organization(id: String!): Organization!
+  members(organizationUnitId: ID!): [User!]!
+  membership(organizationUnitId: ID!): Membership
+  membershipRequestCount(status: MembershipRequestStatus): Int!
+  membershipRequests(limit: Int! = 10, offset: Int! = 0, status: MembershipRequestStatus): MembershipRequestPaginatedResponse!
+  memberships: [Membership!]!
+  myAccessibleOrganizationUnits: [OrganizationUnit!]!
+  myFormSubmissionByToken(token: String!): FormSubmission
+  myMembershipRequests(limit: Int! = 10, offset: Int! = 0, status: MembershipRequestStatus): MembershipRequestPaginatedResponse!
+  myTime(limit: Int! = 10, offset: Int! = 0): TimeEntryPaginatedResponse!
+  myUserProfile: UserProfile
+  organization(id: String!): Organization
   organizationBySlug(slug: String!): Organization!
+  organizationTree: OrganizationTree
+  organizationUnit(id: String!): OrganizationUnit
+  organizationUnitBySlug(slug: String!): OrganizationUnit
+  organizationUnitTypes: [OrganizationUnitType!]!
+  organizationUnits(limit: Int! = 10, offset: Int! = 0, organizationId: String!): OrganizationUnitPaginatedResponse!
   organizations(limit: Int! = 10, offset: Int! = 0): OrganizationPaginatedResponse!
-  project(id: ID!): Project!
-  projects(limit: Int! = 10, offset: Int! = 0, organizationId: ID!): ProjectPaginatedResponse!
+  permissionGroups: [PermissionGroup!]!
+  permissions: [Permission!]!
+  requirement(id: String!): Requirement
+  requirementForm(id: String!): RequirementForm
+  requirementFormByShareToken(token: String!): RequirementForm
+  requirementForms(limit: Int! = 10, offset: Int! = 0, organizationId: String!): RequirementFormPaginatedResponse!
+  requirementFulfillment(id: String!): RequirementFulfillment
+  requirementFulfillments(limit: Int! = 10, offset: Int! = 0): RequirementFulfillmentPaginatedResponse!
+  requirementProfile(id: String!): RequirementProfile
+  requirementProfileSubmission(id: String!): RequirementProfileSubmission
+  requirementProfileSubmissions(limit: Int! = 10, offset: Int! = 0): RequirementProfileSubmissionPaginatedResponse!
+  requirementProfiles(limit: Int! = 10, offset: Int! = 0): RequirementProfilePaginatedResponse!
+  requirements(limit: Int! = 10, offset: Int! = 0): RequirementPaginatedResponse!
+  role(id: String!): Role!
+  roles: [Role!]!
   shift(id: String!): Shift!
+  shiftInstances(shiftId: ID!): [ShiftInstance!]!
+  shiftVolunteers(instanceId: ID!): [User!]!
   shifts(limit: Int! = 10, offset: Int! = 0): ShiftPaginatedResponse!
-  shiftsByProjectId(limit: Int! = 10, offset: Int! = 0, projectId: String!): ShiftPaginatedResponse!
-  task(id: String!): Task!
-  tasksByUserId(limit: Int! = 10, offset: Int! = 0, userId: String!): TaskPaginatedResponse!
+  timeEntries(limit: Int! = 10, offset: Int! = 0): TimeEntryPaginatedResponse!
+  timeEntriesByUser(limit: Int! = 10, offset: Int! = 0, userId: String!): TimeEntryPaginatedResponse!
+  timeEntry(id: String!): TimeEntry!
   user(id: String!): User
-  usersByRole(organizationId: ID!, role: OrganizationRole!): User!
-  volunteerSessions(status: VolunteerSessionStatus): [VolunteerSession!]!
+  userByCheckInId(checkInId: String!): User
+  weeklyShifts(from: DateTime!, to: DateTime!): [ShiftInstance!]!
 }
 
-input RejectVolunteerSessionInput {
-  id: String!
+type Requirement {
+  description: String
+  id: ID!
+  mandatory: Boolean!
+  name: String!
   organizationId: String!
-  rejectionReason: String
+  type: RequirementType!
+}
+
+type RequirementForm {
+  blockRefs: [RequirementFormBlockRef!]
+  createdAt: DateTime!
+  createdBy: String!
+  description: String
+  id: ID!
+  name: String!
+  organizationId: String!
+  organizationUnitId: String
+  settings: FormSettings!
+  shareToken: String!
+  slug: String!
+  submissionCount: Float!
+  updatedAt: DateTime!
+  updatedBy: String!
+}
+
+type RequirementFormBlockRef {
+  block: FormBlock
+  blockId: String!
+  createdAt: DateTime!
+  fieldOrder: Float!
+  formId: String!
+  id: ID!
+  required: Boolean
+  updatedAt: DateTime!
+}
+
+type RequirementFormPaginatedResponse {
+  items: [RequirementForm!]!
+  pagination: PaginationInfo!
+}
+
+interface RequirementFulfillment {
+  id: ID!
+  organizationUserProfile: OrganizationUserProfile
+  requirement: Requirement!
+  reviewedAt: DateTime
+  reviewedBy: User
+  reviewer: User
+  status: RequirementFulfillmentStatus!
+  submission: RequirementProfileSubmission!
+  submittedAt: DateTime
+  type: RequirementType!
+}
+
+type RequirementFulfillmentCheck implements RequirementFulfillment {
+  checked: Boolean
+  id: ID!
+  organizationUserProfile: OrganizationUserProfile
+  requirement: Requirement!
+  reviewedAt: DateTime
+  reviewedBy: User
+  reviewer: User
+  status: RequirementFulfillmentStatus!
+  submission: RequirementProfileSubmission!
+  submittedAt: DateTime
+  type: RequirementType!
+}
+
+type RequirementFulfillmentDate implements RequirementFulfillment {
+  date: DateTime
+  id: ID!
+  organizationUserProfile: OrganizationUserProfile
+  requirement: Requirement!
+  reviewedAt: DateTime
+  reviewedBy: User
+  reviewer: User
+  status: RequirementFulfillmentStatus!
+  submission: RequirementProfileSubmission!
+  submittedAt: DateTime
+  type: RequirementType!
+}
+
+type RequirementFulfillmentPaginatedResponse {
+  items: [RequirementFulfillment!]!
+  pagination: PaginationInfo!
+}
+
+enum RequirementFulfillmentStatus {
+  APPROVED
+  DRAFT
+  REJECTED
+  SUBMITTED
+}
+
+type RequirementFulfillmentText implements RequirementFulfillment {
+  id: ID!
+  organizationUserProfile: OrganizationUserProfile
+  requirement: Requirement!
+  reviewedAt: DateTime
+  reviewedBy: User
+  reviewer: User
+  status: RequirementFulfillmentStatus!
+  submission: RequirementProfileSubmission!
+  submittedAt: DateTime
+  text: String
+  type: RequirementType!
+}
+
+type RequirementFulfillmentUpload implements RequirementFulfillment {
+  documentId: String
+  id: ID!
+  organizationUserProfile: OrganizationUserProfile
+  requirement: Requirement!
+  reviewedAt: DateTime
+  reviewedBy: User
+  reviewer: User
+  status: RequirementFulfillmentStatus!
+  submission: RequirementProfileSubmission!
+  submittedAt: DateTime
+  type: RequirementType!
+}
+
+type RequirementPaginatedResponse {
+  items: [Requirement!]!
+  pagination: PaginationInfo!
+}
+
+type RequirementProfile {
+  description: String
+  id: ID!
+  name: String!
+  organizationId: String!
+  requirements: [Requirement!]
+}
+
+type RequirementProfilePaginatedResponse {
+  items: [RequirementProfile!]!
+  pagination: PaginationInfo!
+}
+
+type RequirementProfileSubmission {
+  fulfillments: [RequirementFulfillment!]
+  id: ID!
+  membership: Membership
+  membershipRequest: MembershipRequest
+  requirementProfile: RequirementProfile!
+  reviewedAt: DateTime
+  reviewedBy: User
+  reviewer: User
+  status: RequirementProfileSubmissionStatus!
+  submittedAt: DateTime
+}
+
+type RequirementProfileSubmissionPaginatedResponse {
+  items: [RequirementProfileSubmission!]!
+  pagination: PaginationInfo!
+}
+
+enum RequirementProfileSubmissionStatus {
+  APPROVED
+  DRAFT
+  REJECTED
+  SUBMITTED
+}
+
+enum RequirementType {
+  CHECK
+  DATE
+  DOCUMENT
+  TEXT
+}
+
+type Role {
+  description: String
+  id: ID!
+  isInternal: Boolean!
+  name: String!
+  organization: Organization!
+  permissions: [Permission!]!
+}
+
+type SelectOption {
+  label: String!
+  value: String!
+}
+
+input SelectOptionInput {
+  label: String!
+  value: String!
 }
 
 type Shift {
-  createdBy: User!
-  endsAt: DateTime!
+  createdAt: DateTime!
+  createdBy: User
+  durationMinutes: Int!
   id: ID!
   instructions: String
+  isDeleted: Boolean!
   location: String
+  maxVolunteers: Int
+  minVolunteers: Int
   organization: Organization!
-  project: Project
+  organizationUnit: OrganizationUnit!
+  organizationUnitId: ID!
+  originalStartsAt: DateTime!
+  rrule: String
   slug: String!
-  startsAt: DateTime!
   title: String!
   visibility: ShiftVisibility!
+}
+
+type ShiftInstance {
+  actualEndsAt: DateTime!
+  actualStartsAt: DateTime!
+  id: ID!
+  isCancelled: Boolean!
+  isException: Boolean!
+  master: Shift!
+  occurrenceIndex: Int!
+  overrideInstructions: String
+  overrideLocation: String
+  overrideMaxVolunteers: Int
+  overrideTitle: String
   volunteers: [User!]
+}
+
+type ShiftInstancePaginatedResponse {
+  items: [ShiftInstance!]!
+  pagination: PaginationInfo!
 }
 
 type ShiftPaginatedResponse {
@@ -235,54 +800,103 @@ enum ShiftVisibility {
   INVITED_MEMBERS
 }
 
-input StartVolunteerSessionInput {
-  shiftId: String!
-  status: VolunteerSessionStatus! = SUBMITTED
-  volunteerId: String!
-}
-
-type Task {
-  assignees: [User!]
-  createdAt: DateTime!
-  createdBy: User!
-  description: String!
-  dueDate: DateTime!
-  id: ID!
-  project: Project!
-  slug: String!
-  status: TaskStatus!
-  title: String!
-  updatedAt: DateTime
-}
-
-type TaskPaginatedResponse {
-  items: [Task!]!
-  pagination: PaginationInfo!
-}
-
-enum TaskStatus {
-  ARCHIVED
-  DONE
-  IN_PROGRESS
-  TODO
+input SubmitFormInput {
+  values: [FormFieldValueInput!]!
 }
 
 type TimeEntry {
   createdAt: DateTime!
-  endedAt: DateTime!
+  endedAt: DateTime
   id: ID!
   notes: String
+  shiftInstance: ShiftInstance!
   startedAt: DateTime!
+  volunteer: User!
 }
 
-input UpdateProjectInput {
-  description: String
+type TimeEntryPaginatedResponse {
+  items: [TimeEntry!]!
+  pagination: PaginationInfo!
+}
+
+input UpdateEventInput {
+  coverUrl: String
   endsAt: DateTime
+  invitedMemberIds: [String!]
   location: String
-  organizationId: ID
+  logoUrl: String
   startsAt: DateTime
-  status: ProjectStatus = DRAFT
   title: String
+}
+
+input UpdateFormBlockFieldInput {
+  description: String
+  documentLabel: String
+  documentUrl: String
+  fieldOrder: Float
+  label: String
+  lockType: Boolean
+  minAge: Float
+  options: [SelectOptionInput!]
+  placeholder: String
+  required: Boolean
+  systemKey: String
+  type: FieldType
+}
+
+input UpdateFormBlockInput {
+  description: String
+  icon: String
+  required: Boolean
+  title: String
+}
+
+input UpdateOrganizationUnitInput {
+  address: String
+  contactEmail: String
+  description: String
+  logoUrl: String
+  name: String
+  organizationId: String!
+  parentId: String
+  phone: String
+  requiredMembershipRequirementProfileId: String
+  typeId: String
+  websiteUrl: String
+}
+
+input UpdateRequirementFormInput {
+  blockRefs: [FormBlockRefInput!]
+  description: String
+  name: String
+  settings: FormSettingsInput
+}
+
+input UpdateRequirementFulfillmentInput {
+  checked: Boolean
+  date: DateTime
+  documentId: String
+  text: String
+}
+
+input UpdateRequirementInput {
+  description: String
+  mandatory: Boolean = false
+  name: String
+  type: RequirementType
+}
+
+input UpdateRequirementProfileInput {
+  description: String
+  name: String
+  requirementIds: [String!]
+}
+
+input UpdateRequirementProfileSubmissionInput {
+  fulfillments: [CreateRequirementSubmissionFulfillmentInput!]
+  membershipId: String
+  membershipRequestId: String
+  profileId: String
 }
 
 input UpdateShiftInput {
@@ -290,38 +904,44 @@ input UpdateShiftInput {
   instructions: String
   invitedMemberIds: [String!]
   location: String
-  projectId: String
+  maxVolunteers: Int
+  minVolunteers: Int
+  rrule: String
   startsAt: DateTime
   title: String
-  visibility: ShiftVisibility = ALL_MEMBERS
+  visibility: ShiftVisibility
+}
+
+input UpdateTimeEntryInput {
+  endedAt: DateTime
+  notes: String
+  shiftInstanceId: String!
+  startedAt: DateTime!
+}
+
+input UpdateUserProfileInput {
+  data: String!
 }
 
 type User {
+  checkInId: ID!
   email: String!
   id: ID!
   image: String
   name: String!
+  permissions: [Permission!]
 }
 
-type VolunteerSession {
+type UserProfile {
   createdAt: DateTime!
-  entries: [TimeEntry!]!
+  data: JSON!
   id: ID!
-  rejectionReason: String
-  shift: Shift
-  status: VolunteerSessionStatus!
-  task: Task!
-  updatedAt: DateTime
-  user: User!
-  validatedAt: DateTime
-  validatedBy: User
+  updatedAt: DateTime!
+  userId: String!
 }
 
-enum VolunteerSessionStatus {
-  APPROVED
-  CANCELLED
-  IN_PROGRESS
-  PENDING
-  REJECTED
-  SUBMITTED
+type UserRequirementStatus {
+  name: String!
+  requirementId: ID!
+  status: RequirementFulfillmentStatus!
 }

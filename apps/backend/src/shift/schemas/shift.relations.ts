@@ -1,23 +1,19 @@
 import { defineRelationsPart } from 'drizzle-orm';
 import * as schema from '../../database/schema';
 
-export const shiftRelations = defineRelationsPart(schema, (r) => ({
+export const shiftsRelations = defineRelationsPart(schema, (r) => ({
   shifts: {
-    organization: r.one.organizations({
-      from: r.shifts.organizationId,
-      to: r.organizations.id,
-    }),
-    project: r.one.projects({
-      from: r.shifts.projectId,
-      to: r.projects.id,
+    organizationUnit: r.one.organizationUnits({
+      from: r.shifts.organizationUnitId,
+      to: r.organizationUnits.id,
     }),
     createdBy: r.one.users({
       from: r.shifts.createdById,
       to: r.users.id,
     }),
-    invites: r.many.shiftInvites({
+    instances: r.many.shiftInstances({
       from: r.shifts.id,
-      to: r.shiftInvites.shiftId,
+      to: r.shiftInstances.masterId,
     }),
   },
 }));

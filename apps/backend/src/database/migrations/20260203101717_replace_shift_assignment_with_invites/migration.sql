@@ -1,1 +1,0 @@
-DROP TABLE "shift_assignments" CASCADE;

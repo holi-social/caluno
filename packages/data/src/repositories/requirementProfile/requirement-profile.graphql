@@ -1,0 +1,22 @@
+query GetAdminUserProfile($userId: String!) {
+  adminUserProfile(userId: $userId) {
+    id
+    userId
+    data
+    createdAt
+    updatedAt
+  }
+}
+
+mutation CreateRequirementProfileSubmission(
+  $input: CreateRequirementProfileSubmissionInput!
+) {
+  createRequirementProfileSubmission(input: $input) {
+    id
+    status
+    requirementProfile {
+      id
+      name
+    }
+  }
+}

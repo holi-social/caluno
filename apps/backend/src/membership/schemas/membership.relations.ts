@@ -7,9 +7,23 @@ export const membershipRelations = defineRelationsPart(schema, (r) => ({
       from: r.memberships.userId,
       to: r.users.id,
     }),
-    organization: r.one.organizations({
-      from: r.memberships.organizationId,
-      to: r.organizations.id,
+    organizationUnit: r.one.organizationUnits({
+      from: r.memberships.organizationUnitId,
+      to: r.organizationUnits.id,
+    }),
+    roles: r.many.membershipRoles({
+      from: r.memberships.id,
+      to: r.membershipRoles.membershipId,
+    }),
+  },
+  membershipRoles: {
+    membership: r.one.memberships({
+      from: r.membershipRoles.membershipId,
+      to: r.memberships.id,
+    }),
+    role: r.one.roles({
+      from: r.membershipRoles.roleId,
+      to: r.roles.id,
     }),
   },
 }));

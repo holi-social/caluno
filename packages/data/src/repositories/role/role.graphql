@@ -1,0 +1,81 @@
+query GetRole($id: String!) {
+  role(id: $id) {
+    id
+    name
+    description
+    isInternal
+    permissions {
+      id
+      key
+      description
+    }
+  }
+}
+
+query GetRoles {
+  roles {
+    id
+    name
+    description
+    isInternal
+    permissions {
+      id
+      key
+      description
+    }
+  }
+}
+
+query GetPermissions {
+  permissions {
+    id
+    key
+    description
+  }
+}
+
+query GetPermissionGroups {
+  permissionGroups {
+    key
+    label
+    items {
+      label
+      permission {
+        id
+        key
+        description
+      }
+    }
+  }
+}
+
+mutation createRole($input: CreateRoleInput!) {
+  createRole(input: $input) {
+    id
+    name
+    description
+    permissions {
+      id
+      key
+    }
+  }
+}
+
+mutation UpdateRole($id: ID!, $input: CreateRoleInput!) {
+  updateRole(id: $id, input: $input) {
+    id
+    name
+    description
+    permissions {
+      id
+      key
+    }
+  }
+}
+
+mutation DeleteRole($id: ID!) {
+  deleteRole(id: $id) {
+    id
+    name
+  }
+}

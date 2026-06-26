@@ -3,9 +3,13 @@ import * as schema from '../../database/schema';
 
 export const timeEntryRelations = defineRelationsPart(schema, (r) => ({
   timeEntries: {
-    session: r.one.volunteerSessions({
-      from: r.timeEntries.sessionId,
-      to: r.volunteerSessions.id,
+    volunteer: r.one.users({
+      from: r.timeEntries.volunteerId,
+      to: r.users.id,
+    }),
+    shiftInstance: r.one.shiftInstances({
+      from: r.timeEntries.shiftInstanceId,
+      to: r.shiftInstances.id,
     }),
   },
 }));

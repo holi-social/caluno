@@ -1,5 +1,7 @@
 import {
+  boolean,
   index,
+  integer,
   pgEnum,
   pgTable,
   text,
@@ -8,8 +10,7 @@ import {
 } from 'drizzle-orm/pg-core';
 import { users } from '../../auth/schemas/auth.schema';
 import { idColumn, timestampColumns } from '../../database/database-columns';
-import { organizations } from '../../organization/schemas/organization.schema';
-import { projects } from '../../project/schemas/project.schema';
+import { organizationUnits } from '../../organization/schemas/organization-unit.schema';
 import { ShiftVisibility } from '../enums';
 
 export const shiftVisibilityEnum = pgEnum(
@@ -24,33 +25,29 @@ export const shifts = pgTable(
     title: text('title').notNull(),
     slug: text('slug').notNull().unique(),
     instructions: text('instructions'),
-    organizationId: uuid('organization_id')
-      .references(() => organizations.id, {
-        onDelete: 'cascade',
-      })
+    organizationUnitId: uuid('organization_unit_id')
+      .references(() => organizationUnits.id, { onDelete: 'cascade' })
       .notNull(),
-    projectId: uuid('project_id').references(() => projects.id, {
-      onDelete: 'restrict',
-    }),
-    startsAt: timestamp('starts_at').notNull(),
-    endsAt: timestamp('ends_at').notNull(),
     createdById: text('created_by_id')
-      .references(() => users.id, {
-        onDelete: 'restrict',
-      })
+      .references(() => users.id, { onDelete: 'restrict' })
       .notNull(),
     location: text('location'),
     visibility: shiftVisibilityEnum('visibility')
       .notNull()
       .default(ShiftVisibility.ALL_MEMBERS),
+    maxVolunteers: integer('max_volunteers'),
+    minVolunteers: integer('min_volunteers'),
+    rrule: text('rrule'),
+    originalStartsAt: timestamp('original_starts_at').notNull(),
+    durationMinutes: integer('duration_minutes').notNull(),
+    isDeleted: boolean('is_deleted').notNull().default(false),
     ...timestampColumns,
   },
   (table) => [
-    index('idx_shifts_organization_id').on(table.organizationId),
-    index('idx_shifts_project_id').on(table.projectId),
+    index('idx_shifts_org_unit_id').on(table.organizationUnitId),
     index('idx_shifts_created_by_id').on(table.createdById),
-    index('idx_shifts_starts_at').on(table.startsAt),
-    index('idx_shifts_ends_at').on(table.endsAt),
+    index('idx_shifts_slug').on(table.slug),
+    index('idx_shifts_is_deleted').on(table.isDeleted),
   ],
 );
 

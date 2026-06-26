@@ -43,3 +43,16 @@ docker-compose.override.yml
 
 # Generated Code
 packages/data/src/generated/
+*storybook.log
+storybook-static
+
+CLAUDE.local.md
+AGENTS.local.md
+
+# AI pipeline — transient local state (pipeline files under .ai/ are committed; these are not)
+.ai/TASKS.md
+.ai/PHASE
+.ai/SESSION
+.ai/metrics.jsonl
+.ai/specs/
+.ai/handoff/

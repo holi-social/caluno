@@ -11,33 +11,17 @@ export const authRelations = defineRelationsPart(schema, (r) => ({
       from: r.users.id,
       to: r.accounts.userId,
     }),
-    organizations: r.many.organizations({
-      from: r.users.id.through(r.memberships.userId),
-      to: r.organizations.id.through(r.memberships.organizationId),
-    }),
-    projects: r.many.projects({
-      from: r.users.id,
-      to: r.projects.createdById,
-    }),
-    tasks: r.many.tasks({
-      from: r.users.id,
-      to: r.tasks.createdById,
-    }),
-    assignments: r.many.taskAssignments({
-      from: r.users.id,
-      to: r.taskAssignments.assignedToId,
-    }),
     memberships: r.many.memberships({
       from: r.users.id,
       to: r.memberships.userId,
     }),
-    volunteerSessions: r.many.volunteerSessions({
-      from: r.users.id.through(r.taskAssignments.assignedToId),
-      to: r.volunteerSessions.assignmentId.through(r.taskAssignments.id),
-    }),
-    shiftInvites: r.many.shiftInvites({
+    shiftInstanceInvites: r.many.shiftInstanceInvites({
       from: r.users.id,
-      to: r.shiftInvites.userId,
+      to: r.shiftInstanceInvites.userId,
+    }),
+    eventInvites: r.many.eventInvites({
+      from: r.users.id,
+      to: r.eventInvites.userId,
     }),
   },
   sessions: {
@@ -50,6 +34,46 @@ export const authRelations = defineRelationsPart(schema, (r) => ({
     users: r.one.users({
       from: r.accounts.userId,
       to: r.users.id,
+    }),
+  },
+  roles: {
+    organization: r.one.organizations({
+      from: r.roles.organizationId,
+      to: r.organizations.id,
+    }),
+    permissions: r.many.rolePermissions({
+      from: r.roles.id,
+      to: r.rolePermissions.roleId,
+    }),
+    memberships: r.many.membershipRoles({
+      from: r.roles.id,
+      to: r.membershipRoles.roleId,
+    }),
+  },
+  permissions: {
+    roles: r.many.rolePermissions({
+      from: r.permissions.id,
+      to: r.rolePermissions.permissionId,
+    }),
+  },
+  rolePermissions: {
+    role: r.one.roles({
+      from: r.rolePermissions.roleId,
+      to: r.roles.id,
+    }),
+    permission: r.one.permissions({
+      from: r.rolePermissions.permissionId,
+      to: r.permissions.id,
+    }),
+  },
+  membershipRoles: {
+    membership: r.one.memberships({
+      from: r.membershipRoles.membershipId,
+      to: r.memberships.id,
+    }),
+    role: r.one.roles({
+      from: r.membershipRoles.roleId,
+      to: r.roles.id,
     }),
   },
 }));

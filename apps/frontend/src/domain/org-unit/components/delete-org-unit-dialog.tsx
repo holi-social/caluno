@@ -1,0 +1,117 @@
+'use client';
+
+import type { OrgUnitTreeNode } from '@repo/data';
+import {
+  AlertDialog,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  Button,
+  Field,
+  FieldError,
+  FieldLabel,
+  Input,
+} from '@repo/ui';
+import { useTranslations } from 'next-intl';
+import { useState, useTransition } from 'react';
+import { deleteOrgUnit } from '@/domain/org-unit/actions';
+import { useRouter } from '@/i18n/navigation';
+
+interface DeleteOrgUnitDialogProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  organizationUnitId: string;
+  unit: OrgUnitTreeNode | null;
+}
+
+export function DeleteOrgUnitDialog({
+  open,
+  onOpenChange,
+  organizationUnitId,
+  unit,
+}: DeleteOrgUnitDialogProps) {
+  const router = useRouter();
+  const [isPending, startTransition] = useTransition();
+  const [serverError, setServerError] = useState<string | null>(null);
+  const [confirmation, setConfirmation] = useState('');
+  const t = useTranslations('OrgUnit.delete');
+  const tCommon = useTranslations('Common');
+
+  const hasChildren = (unit?.children?.length ?? 0) > 0;
+  const confirmed = confirmation === 'DELETE';
+
+  const handleClose = (nextOpen: boolean) => {
+    if (!nextOpen) {
+      setConfirmation('');
+      setServerError(null);
+    }
+    onOpenChange(nextOpen);
+  };
+
+  const handleDelete = () => {
+    if (!unit || !confirmed) return;
+    setServerError(null);
+
+    startTransition(async () => {
+      const result = await deleteOrgUnit({ id: unit.id, organizationUnitId });
+      if (result?.serverError) {
+        setServerError(result.serverError);
+      } else {
+        handleClose(false);
+        router.refresh();
+      }
+    });
+  };
+
+  return (
+    <AlertDialog open={open} onOpenChange={handleClose}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>
+            {t('title', { name: unit?.name ?? '' })}
+          </AlertDialogTitle>
+
+          <AlertDialogDescription>
+            {t('description')}
+            {hasChildren && (
+              <span className="mt-2 block font-medium text-destructive">
+                {t('childrenWarning')}
+              </span>
+            )}
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+
+        <Field className="space-y-1">
+          <FieldLabel htmlFor="delete-confirm">{t('confirmLabel')}</FieldLabel>
+
+          <Input
+            id="delete-confirm"
+            value={confirmation}
+            onChange={(e) => setConfirmation(e.target.value)}
+            placeholder={t('confirmPlaceholder')}
+            disabled={isPending}
+          />
+        </Field>
+
+        {serverError && <FieldError>{serverError}</FieldError>}
+
+        <AlertDialogFooter>
+          <AlertDialogCancel disabled={isPending}>
+            {tCommon('cancel')}
+          </AlertDialogCancel>
+
+          <Button
+            variant="destructive"
+            onClick={handleDelete}
+            disabled={isPending || !confirmed}
+          >
+            {isPending ? tCommon('deleting') : tCommon('delete')}
+          </Button>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+  );
+}

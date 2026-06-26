@@ -2,10 +2,13 @@ workflow:
   rules:
     - if: '$CI_COMMIT_BRANCH == "main" || $CI_COMMIT_BRANCH == "production"'
     - if: '$CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "main" || $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "production"'
+    - if: '$CI_PIPELINE_SOURCE == "push" && $CI_OPEN_MERGE_REQUESTS'
+      when: never
     - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BRANCH && $CI_COMMIT_BRANCH != "main" && $CI_COMMIT_BRANCH != "production"'
     - when: never
 
 stages:
+  - test
   - build
   - terraform_plan
   - terraform_apply
@@ -19,15 +22,107 @@ default:
     - 4cpu-16gb
 
 variables:
-  DOCKER_TLS_CERTDIR: "/certs"
-  TF_ROOT: "packages/infra"
-  TF_IN_AUTOMATION: "true"
-  TF_INPUT: "false"
+  DOCKER_TLS_CERTDIR: '/certs'
+  TF_ROOT: 'packages/infra'
+  TF_IN_AUTOMATION: 'true'
+  TF_INPUT: 'false'
+
+# ─── TEST ─────────────────────────────────────────────────────────────────────
+
+# AI pipeline structural quality gate. Runs on every MR and branch pipeline; make it a
+# required check on protected `main` (Settings → Merge requests → "Pipelines must succeed").
+# This is the enforcement the local pre-commit hook only approximates — the agent's shell
+# cannot bypass it. See .ai/PIPELINE.md (Enforcement Model).
+quality:
+  stage: test
+  image: europe-north1-docker.pkg.dev/holi-shared/docker-hub-remote/oven/bun:1
+  needs: []
+  before_script:
+    - bun install --frozen-lockfile
+  script:
+    - bun run lint
+    - bun run check-types
+
+# AI pipeline gate-script self-test: the structural guards must stay green.
+ai_gate_tests:
+  stage: test
+  image: europe-north1-docker.pkg.dev/holi-shared/docker-hub-remote/oven/bun:1
+  needs: []
+  before_script:
+    - apt-get update && apt-get install -y --no-install-recommends git jq >/dev/null
+  script:
+    - bash .ai/scripts/__tests__/gates.test.sh
+
+# AI pipeline commit-convention gate: every MR commit subject must be
+# `type(scope): description` (see .ai/PIPELINE.md Commit Convention). Structural backing
+# for the otherwise prose-only convention. POSIX sh (GitLab default shell).
+commit_lint:
+  stage: test
+  image: europe-north1-docker.pkg.dev/holi-shared/docker-hub-remote/oven/bun:1
+  needs: []
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+  variables:
+    GIT_DEPTH: 0
+  before_script:
+    - apt-get update && apt-get install -y --no-install-recommends git >/dev/null
+  script:
+    - |
+      BASE="${CI_MERGE_REQUEST_DIFF_BASE_SHA:-}"
+      if [ -z "$BASE" ]; then echo "no MR base sha; skipping"; exit 0; fi
+      bash .ai/scripts/commit-lint.sh range "${BASE}..HEAD"
+
+check_migrations:
+  stage: test
+  image: europe-north1-docker.pkg.dev/holi-shared/docker-hub-remote/oven/bun:1
+  needs: []
+  before_script:
+    - bun install --frozen-lockfile
+  script:
+    # drizzle-kit generate diffs the schema against committed migration
+    # snapshots. Redirecting stdin from /dev/null makes any interactive
+    # rename prompt fail instead of hanging. We capture the output and only
+    # pass when drizzle reports there is nothing to migrate.
+    - |
+      set -o pipefail
+      OUTPUT="$(bun run --cwd apps/backend db:generate < /dev/null 2>&1 | tee /dev/stderr)"
+      if ! echo "$OUTPUT" | grep -q "No schema changes, nothing to migrate"; then
+        echo "✖ Schema changes are not reflected in committed migrations."
+        echo "  Run 'bun run --cwd apps/backend db:generate' locally and commit the result."
+        exit 1
+      fi
+
+integration_tests:
+  stage: test
+  image: europe-north1-docker.pkg.dev/holi-shared/docker-hub-remote/oven/bun:1
+  needs: []
+  services:
+    - name: europe-north1-docker.pkg.dev/holi-shared/docker-hub-remote/postgres:17
+      alias: postgres
+  variables:
+    POSTGRES_DB: clippy_test
+    POSTGRES_USER: clippy
+    POSTGRES_PASSWORD: clippy
+    DATABASE_URL: postgres://clippy:clippy@postgres:5432/clippy_test
+    DB_HOST: postgres
+    DB_PORT: 5432
+    DB_USER: clippy
+    DB_PASSWORD: clippy
+    DB_NAME: clippy_test
+  before_script:
+    - bun install --frozen-lockfile
+    - bun run build
+    - until bunx --yes wait-on tcp:postgres:5432; do echo "waiting for postgres..."; sleep 1; done
+    - bun run --cwd apps/backend db:migrate
+    - bun run --cwd apps/backend db:seed
+  script:
+    - bun test
 
 # ─── BUILD ────────────────────────────────────────────────────────────────────
 
 .build-images-base:
   stage: build
+  needs: ['check_migrations']
   before_script:
     - echo "Logging into Scaleway registry"
     - unset DOCKER_AUTH_CONFIG
@@ -46,6 +141,7 @@ variables:
       else
         echo "Unsupported branch $CI_COMMIT_BRANCH"; exit 1
       fi
+
 .build-images-backend:
   extends: .build-images-base
   script:
@@ -66,12 +162,13 @@ variables:
       --build-arg NEXT_PUBLIC_WEB_URL="$NEXT_PUBLIC_WEB_URL"
       -t "$REGISTRY_NAMESPACE/$FRONTEND_IMAGE_NAME:$IMAGE_TAG_SHA"
       -t "$REGISTRY_NAMESPACE/$FRONTEND_IMAGE_NAME:$STABLE_TAG"
-      -f apps/backoffice-frontend/Dockerfile .
+      -f apps/frontend/Dockerfile .
     - docker push "$REGISTRY_NAMESPACE/$FRONTEND_IMAGE_NAME:$IMAGE_TAG_SHA"
     - docker push "$REGISTRY_NAMESPACE/$FRONTEND_IMAGE_NAME:$STABLE_TAG"
 
 .build-images-base-branch:
   stage: build
+  needs: ['check_migrations']
   before_script:
     - echo "Building Docker images for branch (no push)"
     - unset DOCKER_AUTH_CONFIG
@@ -93,7 +190,7 @@ variables:
       --build-arg NEXT_PUBLIC_API_URL="http://localhost"
       --build-arg NEXT_PUBLIC_WEB_URL="http://localhost"
       -t "$FRONTEND_IMAGE_NAME:$IMAGE_TAG_SHA"
-      -f apps/backoffice-frontend/Dockerfile .
+      -f apps/frontend/Dockerfile .
 
 build_staging_backend:
   extends: .build-images-backend
@@ -118,21 +215,20 @@ build_production_frontend:
 build_branch_backend:
   extends: .build-images-backend-branch
   rules:
-    - if: '$CI_COMMIT_BRANCH != "main" && $CI_COMMIT_BRANCH != "production" && $CI_PIPELINE_SOURCE == "push"'
+    - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BRANCH != "main" && $CI_COMMIT_BRANCH != "production"'
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event" && $CI_MERGE_REQUEST_SOURCE_BRANCH_NAME != "main" && $CI_MERGE_REQUEST_SOURCE_BRANCH_NAME != "production"'
 
 build_branch_frontend:
   extends: .build-images-frontend-branch
   rules:
-    - if: '$CI_COMMIT_BRANCH != "main" && $CI_COMMIT_BRANCH != "production" && $CI_PIPELINE_SOURCE == "push"'
+    - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BRANCH != "main" && $CI_COMMIT_BRANCH != "production"'
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event" && $CI_MERGE_REQUEST_SOURCE_BRANCH_NAME != "main" && $CI_MERGE_REQUEST_SOURCE_BRANCH_NAME != "production"'
 
 .terraform:
   image:
-    name: hashicorp/terraform:1.14
-    entrypoint: [""]
+    name: hashicorp/terraform:1.15
+    entrypoint: ['']
   before_script:
-    - apk add --no-cache curl bash glab
-    - glab auth login --job-token "$CI_JOB_TOKEN" --hostname "$CI_SERVER_FQDN" --api-protocol "$CI_SERVER_PROTOCOL"
-    - glab -R "$CI_PROJECT_PATH" securefile download --all --output-dir "$TF_ROOT"
     - cd "$TF_ROOT"
     - terraform --version
     - terraform init
@@ -142,12 +238,12 @@ build_branch_frontend:
 terraform_plan_staging_mr:
   extends: .terraform
   stage: terraform_plan
-  needs: []
+  needs: ['check_migrations']
   rules:
     - if: '$CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "main" && $CI_COMMIT_REF_PROTECTED == "true"'
   variables:
-    TF_VAR_image_tag: "$CI_COMMIT_SHORT_SHA"
-    TF_VAR_active_environment: "staging"
+    TF_VAR_image_tag: '$CI_COMMIT_SHORT_SHA'
+    TF_VAR_active_environment: 'staging'
   script:
     - terraform validate
     - terraform plan -var-file="terraform.tfvars" -target='module.env["staging"]'
@@ -155,12 +251,13 @@ terraform_plan_staging_mr:
 terraform_plan_staging:
   extends: .terraform
   stage: terraform_plan
-  needs: ["build_staging_backend", "build_staging_frontend"]
+  retry: 2
+  needs: ['build_staging_backend', 'build_staging_frontend']
   rules:
     - if: '$CI_COMMIT_BRANCH == "main"'
   variables:
-    TF_VAR_image_tag: "$CI_COMMIT_SHORT_SHA"
-    TF_VAR_active_environment: "staging"
+    TF_VAR_image_tag: '$CI_COMMIT_SHORT_SHA'
+    TF_VAR_active_environment: 'staging'
   script:
     - terraform validate
     - |
@@ -188,8 +285,8 @@ terraform_plan_staging:
 terraform_apply_staging:
   extends: .terraform
   stage: terraform_apply
-  needs: ["terraform_plan_staging"]
-  resource_group: "terraform-staging"
+  needs: ['terraform_plan_staging']
+  resource_group: 'terraform-staging'
   rules:
     - if: '$CI_COMMIT_BRANCH == "main" && $CI_PIPELINE_SOURCE == "push"'
   environment:
@@ -208,12 +305,12 @@ terraform_apply_staging:
 terraform_plan_production_mr:
   extends: .terraform
   stage: terraform_plan
-  needs: []
+  needs: ['check_migrations']
   rules:
     - if: '$CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "production" && $CI_COMMIT_REF_PROTECTED == "true"'
   variables:
-    TF_VAR_image_tag: "$CI_COMMIT_SHORT_SHA"
-    TF_VAR_active_environment: "production"
+    TF_VAR_image_tag: '$CI_COMMIT_SHORT_SHA'
+    TF_VAR_active_environment: 'production'
   script:
     - terraform validate
     - terraform plan -var-file="terraform.tfvars" -target='module.env["production"]'
@@ -221,12 +318,13 @@ terraform_plan_production_mr:
 terraform_plan_production:
   extends: .terraform
   stage: terraform_plan
-  needs: ["build_production_backend", "build_production_frontend"]
+  retry: 2
+  needs: ['build_production_backend', 'build_production_frontend']
   rules:
     - if: '$CI_COMMIT_BRANCH == "production"'
   variables:
-    TF_VAR_image_tag: "$CI_COMMIT_SHORT_SHA"
-    TF_VAR_active_environment: "production"
+    TF_VAR_image_tag: '$CI_COMMIT_SHORT_SHA'
+    TF_VAR_active_environment: 'production'
   script:
     - terraform validate
     - |
@@ -254,8 +352,8 @@ terraform_plan_production:
 terraform_apply_production:
   extends: .terraform
   stage: terraform_apply
-  needs: ["terraform_plan_production"]
-  resource_group: "terraform-production"
+  needs: ['terraform_plan_production']
+  resource_group: 'terraform-production'
   rules:
     - if: '$CI_COMMIT_BRANCH == "production" && $CI_PIPELINE_SOURCE == "push"'
       when: manual

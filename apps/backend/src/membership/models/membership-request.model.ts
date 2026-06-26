@@ -1,7 +1,6 @@
 import { Field, ID, ObjectType, registerEnumType } from '@nestjs/graphql';
 import { createPaginatedResponseType } from '../../graphql/paginated-response.model';
-import { OrganizationRole } from '../../organization/enums';
-import { Organization } from '../../organization/models/organization.model';
+import { OrganizationUnit } from '../../organization/models/organization-unit.model';
 import { User } from '../../user/models/user.model';
 import { MembershipRequestStatus } from '../enums';
 
@@ -12,31 +11,31 @@ registerEnumType(MembershipRequestStatus, {
 @ObjectType()
 export class MembershipRequest {
   @Field(() => ID)
-  id: string;
-
-  @Field(() => String)
-  user: User;
-
-  @Field(() => Organization)
-  organization: Organization;
+  id!: string;
 
   @Field(() => User)
-  reviewedBy: User;
+  user!: User;
 
-  @Field(() => Date)
-  reviewedAt: Date;
+  @Field(() => OrganizationUnit)
+  organizationUnit!: OrganizationUnit;
 
-  @Field(() => String)
-  rejectionReason: string;
+  @Field(() => User, { nullable: true })
+  reviewedBy!: User | null;
+
+  @Field(() => Date, { nullable: true })
+  reviewedAt!: Date | null;
+
+  @Field(() => String, { nullable: true })
+  rejectionReason!: string | null;
 
   @Field(() => MembershipRequestStatus)
-  status: MembershipRequestStatus;
+  status!: MembershipRequestStatus;
 
   @Field(() => Date)
-  createdAt: Date;
+  createdAt!: Date;
 
   @Field(() => Date)
-  updatedAt: Date;
+  updatedAt!: Date;
 }
 
 export const MembershipRequestPaginatedResponse =

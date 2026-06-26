@@ -1,25 +1,25 @@
 import { authRelations } from '../auth/schemas/auth.relations';
+import { eventsRelations } from '../event/schemas/event.relations';
+import { eventInvitesRelations } from '../event/schemas/event-invite.relations';
 import { membershipRelations } from '../membership/schemas/membership.relations';
 import { membershipRequestRelations } from '../membership/schemas/membership-request.relations';
 import { organizationRelations } from '../organization/schemas/organization.relations';
-import { projectRelations } from '../project/schemas/project.relations';
-import { shiftRelations } from '../shift/schemas/shift.relations';
-import { shiftInviteRelations } from '../shift/schemas/shift-invite.relations';
-import { taskRelations } from '../task/schemas/task.relations';
-import { taskAssignmentRelations } from '../task/schemas/task-assignment.relations';
+import { requirementProfilesRelations } from '../requirement-profile/schemas/requirement-profiles.relations';
+import { shiftsRelations } from '../shift/schemas/shift.relations';
+import { shiftInstancesRelations } from '../shift/schemas/shift-instance.relations';
+import { shiftInstanceInvitesRelations } from '../shift/schemas/shift-instance-invite.relations';
 import { timeEntryRelations } from '../time-tracking/schemas/time-entry.relations';
-import { volunteerSessionRelations } from '../time-tracking/schemas/volunteer-sessions.relation';
 
 export const relations = {
   ...authRelations,
+  ...eventsRelations,
+  ...eventInvitesRelations,
   ...membershipRelations,
   ...membershipRequestRelations,
   ...organizationRelations,
-  ...projectRelations,
-  ...shiftRelations,
-  ...shiftInviteRelations,
-  ...taskRelations,
-  ...taskAssignmentRelations,
+  ...requirementProfilesRelations,
+  ...shiftsRelations,
+  ...shiftInstancesRelations,
+  ...shiftInstanceInvitesRelations,
   ...timeEntryRelations,
-  ...volunteerSessionRelations,
 };

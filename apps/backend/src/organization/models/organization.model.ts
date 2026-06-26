@@ -1,66 +1,48 @@
-import { Field, ID, ObjectType, registerEnumType } from '@nestjs/graphql';
+import { Field, ID, ObjectType } from '@nestjs/graphql';
 
 import { createPaginatedResponseType } from '../../graphql/paginated-response.model';
-import { Project } from '../../project/models/project.model';
-import { User } from '../../user/models/user.model';
-import { OrganizationRole } from '../enums';
-
-registerEnumType(OrganizationRole, {
-  name: 'OrganizationRole',
-});
+import type { OrganizationUnit } from './organization-unit.model';
+import { OrganizationUnit as OrganizationUnitModel } from './organization-unit.model';
 
 @ObjectType()
 export class Organization {
   @Field(() => ID)
-  id: string;
+  id!: string;
+  @Field(() => String)
+  name!: string;
 
   @Field(() => String)
-  name: string;
-
-  @Field(() => String)
-  slug: string;
+  slug!: string;
 
   @Field(() => String, { nullable: true })
-  logoUrl: string | null;
+  logoUrl!: string | null;
 
   @Field(() => String, { nullable: true })
-  websiteUrl: string | null;
+  websiteUrl!: string | null;
 
   @Field(() => String, { nullable: true })
-  email: string | null;
+  contactEmail!: string | null;
 
   @Field(() => String, { nullable: true })
-  phone: string | null;
+  phone!: string | null;
 
   @Field(() => String, { nullable: true })
-  address: string | null;
+  address!: string | null;
 
   @Field(() => String, { nullable: true })
-  description: string | null;
+  description!: string | null;
 
-  @Field(() => Organization, { nullable: true })
-  parent: Organization | null;
+  @Field(() => OrganizationUnitModel)
+  root!: OrganizationUnit;
 
-  @Field(() => [Organization])
-  children: Organization[];
-
-  @Field(() => [User], { nullable: true })
-  admins: User[];
-
-  @Field(() => [User], { nullable: true })
-  moderators: User[];
-
-  @Field(() => [User], { nullable: true })
-  volunteers: User[];
-
-  @Field(() => [Project], { nullable: true })
-  projects: Project[];
+  @Field(() => [OrganizationUnitModel])
+  units!: OrganizationUnit[];
 
   @Field(() => Date)
-  createdAt: Date;
+  createdAt!: Date;
 
   @Field(() => Date, { nullable: true })
-  updatedAt: Date;
+  updatedAt!: Date;
 }
 
 export const OrganizationPaginatedResponse =

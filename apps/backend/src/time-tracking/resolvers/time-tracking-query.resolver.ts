@@ -1,29 +1,88 @@
 import { Args, Context, Query, Resolver } from '@nestjs/graphql';
-import { Roles } from '../../auth/decorators/roles.decorator';
+import { Session, type UserSession } from '@thallesp/nestjs-better-auth';
+import { PERMISSIONS } from '../../auth/constants';
+import { Permissions } from '../../auth/decorators/permissions.decorator';
 import type { AuthenticatedGraphQLContext } from '../../graphql/graphql.context';
-import { VolunteerSessionStatus } from '../enums';
-import { VolunteerSessionMapper } from '../mappers/volunteer-session.mapper';
-import { VolunteerSession } from '../models/volunteer-session.model';
+import { PaginationInput } from '../../graphql/pagination.input';
+import { TimeEntryMapper } from '../mappers/time-entry.mapper';
+import {
+  TimeEntry,
+  TimeEntryPaginatedResponse,
+} from '../models/time-entry.model';
 import { TimeTrackingService } from '../time-tracking.service';
 
-@Resolver()
+@Resolver(() => TimeEntry)
 export class TimeTrackingQueryResolver {
   constructor(
     private readonly timeTrackingService: TimeTrackingService,
-    private readonly volunteerSessionMapper: VolunteerSessionMapper,
+    private readonly timeEntryMapper: TimeEntryMapper,
   ) {}
 
-  @Roles('MEMBER')
-  @Query(() => [VolunteerSession])
-  async volunteerSessions(
-    @Args('status', { type: () => VolunteerSessionStatus, nullable: true })
-    status: VolunteerSessionStatus | null,
+  @Permissions(PERMISSIONS.SHIFT_VIEW)
+  @Query(() => TimeEntry)
+  async timeEntry(
+    @Args('id') id: string,
     @Context() context: AuthenticatedGraphQLContext,
-  ): Promise<VolunteerSession[]> {
-    const sessions = await this.timeTrackingService.findAll(
-      context.organizationId,
-      status ?? undefined,
+  ): Promise<TimeEntry> {
+    const entry = await this.timeTrackingService.findById(
+      id,
+      context.organizationUnitId,
     );
-    return this.volunteerSessionMapper.toArray(sessions);
+    return this.timeEntryMapper.toModelOrThrow(entry);
+  }
+
+  @Permissions(PERMISSIONS.SHIFT_VIEW)
+  @Query(() => TimeEntryPaginatedResponse)
+  async timeEntries(
+    @Args() pagination: PaginationInput,
+    @Context() context: AuthenticatedGraphQLContext,
+  ): Promise<TimeEntryPaginatedResponse> {
+    const { entries, total } = await this.timeTrackingService.findAll(
+      context.organizationUnitId,
+      pagination,
+    );
+    return new TimeEntryPaginatedResponse({
+      items: this.timeEntryMapper.toArray(entries),
+      total: total,
+      limit: pagination.limit,
+      offset: pagination.offset,
+    });
+  }
+
+  @Permissions(PERMISSIONS.SHIFT_VIEW)
+  @Query(() => TimeEntryPaginatedResponse)
+  async timeEntriesByUser(
+    @Args('userId') userId: string,
+    @Args() pagination: PaginationInput,
+    @Context() context: AuthenticatedGraphQLContext,
+  ): Promise<TimeEntryPaginatedResponse> {
+    const { entries, total } = await this.timeTrackingService.findByUser(
+      context.organizationUnitId,
+      userId,
+      pagination,
+    );
+    return new TimeEntryPaginatedResponse({
+      items: this.timeEntryMapper.toArray(entries),
+      total: total,
+      limit: pagination.limit,
+      offset: pagination.offset,
+    });
+  }
+
+  @Query(() => TimeEntryPaginatedResponse)
+  async myTime(
+    @Session() session: UserSession,
+    @Args() pagination: PaginationInput,
+  ): Promise<TimeEntryPaginatedResponse> {
+    const { entries, total } = await this.timeTrackingService.findMyTime(
+      session.user.id,
+      pagination,
+    );
+    return new TimeEntryPaginatedResponse({
+      items: this.timeEntryMapper.toArray(entries),
+      total,
+      limit: pagination.limit,
+      offset: pagination.offset,
+    });
   }
 }

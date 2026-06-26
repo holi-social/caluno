@@ -1,0 +1,45 @@
+query GetOrganizationUnitMemberships {
+  memberships {
+    id
+    user {
+      id
+      name
+      email
+      image
+      checkInId
+    }
+    organizationUnit {
+      id
+      name
+    }
+    roles {
+      id
+      name
+      description
+      isInternal
+    }
+  }
+}
+
+mutation UpdateMembershipRoles($membershipId: ID!, $roleIds: [ID!]!) {
+  updateMembershipRoles(membershipId: $membershipId, roleIds: $roleIds) {
+    id
+    user {
+      id
+      name
+      email
+      image
+      checkInId
+    }
+    organizationUnit {
+      id
+      name
+    }
+    roles {
+      id
+      name
+      description
+      isInternal
+    }
+  }
+}

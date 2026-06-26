@@ -1,0 +1,232 @@
+@startuml clippy
+
+skinparam classAttributeIconSize 0
+skinparam linetype ortho
+
+' package "Identity & Organization" {
+    class Organization {
+        name
+        slug
+        email
+        phone
+        websiteUrl
+        description
+        logoUrl
+    }
+
+    class OrgUnit {
+        name
+        slug
+        logoUrl
+        websiteUrl
+        email
+        phone
+        description
+        address
+        deletedAt
+    }
+    'note left: Root OrgUnit has parentId = NULL.\nOnly one root per Organization.\nPermissions cascade downward.
+
+    class OrgUnitType {
+        name
+        description
+        icon
+    }
+
+    class User {
+        name
+        email
+        image
+        checkInId
+    }
+    'note: GDPR: anonymize on deletion,\npreserve audit trails.
+
+    class OrganizationUserProfile {
+        note
+        status {ACTIVE, INACTIVE, BLACKLISTED, PENDING}
+        userProfileAccessApproved
+    }
+
+    class Document {
+        name
+        mimeType
+        storageKey
+        uploadedAt
+    }
+' }
+
+' package "Access & Roles" {
+    class Membership {
+    }
+    'note bottom: Links User to OrgUnit.\nA user can have multiple memberships\nacross the OrgUnit tree.
+
+    class Role {
+        name
+        description
+        isInternal
+    }
+
+    class Permission {
+        key
+        description
+    }
+
+    class MembershipRequest {
+        status {PENDING, ACCEPTED, REJECTED, CANCELLED}
+        reviewedAt
+        rejectionReason
+        metadata: { intendedShiftInstanceIds?: string[], intendedEventIds?: string[] }
+    }
+    'note top: The "Waiting Room".\nUnique constraint on (userId, orgUnitId).\nA rejected/cancelled request blocks\nre-application unless constraint is removed.
+' }
+
+package "Compliance & Qualifications" {
+    class RequirementProfile {
+        name
+        description
+    }
+
+    class RequirementBlock {
+        name
+        description
+    }
+
+    class Requirement {
+        type {CHECK, DATE, DOCUMENT, TEXT}
+        name
+        description
+        mandatory
+    }
+
+    class RequirementProfileSubmission {
+        status {DRAFT, SUBMITTED, APPROVED, REJECTED}
+        submittedAt
+        reviewedAt
+    }
+
+    class RequirementBlockFulfillment {
+    }
+
+    class RequirementFulfillment {
+        type {CHECK, DATE, DOCUMENT, TEXT}
+        value: JSON
+        status {DRAFT, SUBMITTED, APPROVED, REJECTED}
+        submittedAt
+        reviewedAt
+    }
+    ' note left: Anchored to OrganizationUserProfile\nfor reuse across OrgUnits.
+    class RequirementFulfillmentUpload extends RequirementFulfillment {}
+    class RequirementFulfillmentCheck extends RequirementFulfillment {}
+    class RequirementFulfillmentDate extends RequirementFulfillment {}
+    class RequirementFulfillmentText extends RequirementFulfillment {}
+}
+
+package "Operations" {
+    class Shift {
+        title
+        slug
+        instructions
+        location
+        visibility {ALL_MEMBERS, INVITED_MEMBERS}
+        maxVolunteers
+        rrule
+        originalStartsAt
+        durationMinutes
+        isDeleted
+    }
+    note left: A Shift is a recurring pattern (master).\nrrule defines recurrence.\nVolunteers join ShiftInstances, not Shifts.
+
+    class ShiftInstance {
+        actualStartsAt
+        actualEndsAt
+        overrideTitle
+        overrideInstructions
+        overrideLocation
+        overrideMaxVolunteers
+        isException
+        isCancelled
+        occurrenceIndex
+    }
+    note left: A concrete occurrence of a Shift.\nCan override master fields.\nisException = one-off change.\nisCancelled = skipped occurrence.
+
+    class ShiftInstanceInvite {
+        status {PENDING, ACCEPTED, REJECTED}
+    }
+
+    class TimeEntry {
+        startedAt
+        endedAt
+        notes
+    }
+
+    class Event {
+        title
+        slug
+        location
+        logoUrl
+        coverUrl
+        startsAt
+        endsAt
+        isDeleted
+    }
+    note left: A standalone calendar event tied to an OrgUnit.\nVisible to all members.\nVolunteers join the Event directly (no instances).
+
+    class EventInvite {
+        status {PENDING, ACCEPTED, REJECTED}
+    }
+}
+
+' --- Identity & Organization ---
+Organization "1" -- "1\nroot" OrgUnit
+Organization "1" -- "*" OrganizationUserProfile
+User "1" -- "*" OrganizationUserProfile
+OrgUnit "*" -up- "1" OrgUnitType
+OrgUnit "*\nchild" o-- "1\nparent" OrgUnit
+
+' --- Access & Roles ---
+OrgUnit "1" -left- "*" Membership
+Membership "*" -- "1" User
+Role "*" -up- "*" Permission
+Role "*" -- "*" Membership
+Organization "1" -right- "*" Role : "defines >"
+
+' --- Membership Requests ---
+OrgUnit "1" -- "*" MembershipRequest : "receives >"
+MembershipRequest "*" -- "1" User : "submitted by >"
+
+' --- Requirement Profiles ---
+Organization "1" -- "*" RequirementProfile : "defines >"
+Organization "1" -- "*" RequirementBlock : "defines >"
+RequirementProfile "*" -left- "*" RequirementBlock : "groups >"
+RequirementBlock "*" -left- "*" Requirement : "contains >"
+
+' --- Submissions & Fulfillments ---
+Membership "0..1" -- "*" RequirementProfileSubmission
+MembershipRequest "0..1" -- "*" RequirementProfileSubmission
+RequirementProfileSubmission "*" -- "0..1" OrganizationUserProfile : "stored for reuse <"
+RequirementProfileSubmission "*" -up- "1" RequirementProfile : "fulfills >"
+RequirementProfileSubmission "*" -left- "*" RequirementBlockFulfillment : "contains >"
+RequirementBlockFulfillment "*" -up- "1" RequirementBlock : "fulfills >"
+RequirementBlockFulfillment "*" -left- "*" RequirementFulfillment : "contains >"
+RequirementFulfillment "*" -up- "1" Requirement : "satisfies >"
+RequirementFulfillment "*" -- "0..1" OrganizationUserProfile : "stored for reuse <"
+RequirementFulfillmentUpload "*" -- "0..1" Document : "backed by >"
+User "1" -- "*" Document : "owns >"
+
+' --- Shifts ---
+OrgUnit "1" -- "*" Shift : "manages >"
+Shift "1" -- "*" ShiftInstance : "occurs as >"
+ShiftInstance "1" -- "*" ShiftInstanceInvite : "includes >"
+ShiftInstanceInvite "*" -- "1" User : "assigned to >"
+
+' --- Events ---
+OrgUnit "1" -- "*" Event : "hosts >"
+Event "1" -- "*" EventInvite : "includes >"
+EventInvite "*" -- "1" User : "assigned to >"
+User "1" -- "*" Event : "created by <"
+
+' --- Time Tracking ---
+ShiftInstance "1" -- "*" TimeEntry : "logged against >"
+User "1" -- "*" TimeEntry : "clocked by >"
+
+@enduml

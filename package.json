@@ -9,14 +9,19 @@
     "check-types": "turbo run check-types",
     "format-and-lint": "biome check .",
     "format-and-lint:fix": "biome check . --write",
+    "format-and-lint:staged": "biome check --staged --write",
     "db:up": "docker compose up -d postgres && bun run db:wait",
     "db:down": "docker compose down",
-    "db:wait": "docker compose exec postgres sh -c 'until pg_isready -U ${POSTGRES_USER:-postgres}; do sleep 1; done'"
+    "db:wait": "docker compose exec postgres sh -c 'until pg_isready -U ${POSTGRES_USER:-postgres}; do sleep 1; done'",
+    "db:migrate": "bun run --cwd apps/backend db:migrate",
+    "db:seed": "bun run --cwd apps/backend db:seed",
+    "codegen": "turbo run codegen",
+    "setup:hooks": "bash .ai/scripts/install-hooks.sh"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.3.11",
-    "turbo": "^2.8.7",
-    "typescript": "5.9.2"
+    "turbo": "^2.9.9",
+    "typescript": "6.0.3"
   },
   "engines": {
     "node": ">=18"

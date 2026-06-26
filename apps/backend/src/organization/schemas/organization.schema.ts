@@ -1,32 +1,15 @@
-import {
-  index,
-  pgEnum,
-  pgTable,
-  text,
-  timestamp,
-  uuid,
-} from 'drizzle-orm/pg-core';
-import { users } from '../../auth/schemas/auth.schema';
+import { index, pgTable, text, timestamp } from 'drizzle-orm/pg-core';
 import { idColumn, timestampColumns } from '../../database/database-columns';
-import { OrganizationRole } from '../enums';
-
-export const organizationRoleEnum = pgEnum(
-  'organization_role',
-  OrganizationRole as Record<string, string>,
-);
 
 export const organizations = pgTable(
   'organizations',
   {
     ...idColumn,
-    parentId: uuid('parent_id').references((): any => organizations.id, {
-      onDelete: 'cascade',
-    }),
     name: text('name').notNull(),
     slug: text('slug').notNull().unique(),
     logoUrl: text('logo_url'),
     websiteUrl: text('website_url'),
-    email: text('email'),
+    contactEmail: text('contact_email'),
     phone: text('phone'),
     description: text('description'),
     address: text('address'),
@@ -34,7 +17,6 @@ export const organizations = pgTable(
     ...timestampColumns,
   },
   (table) => [
-    index('idx_organizations_parent_id').on(table.parentId),
     index('idx_organizations_name').on(table.name),
     index('idx_organizations_deleted_at').on(table.deletedAt),
   ],

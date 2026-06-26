@@ -1,1 +1,0 @@
-ALTER TABLE "shifts" ALTER COLUMN "instructions" DROP NOT NULL;

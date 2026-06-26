@@ -7,13 +7,17 @@ export const membershipRequestRelations = defineRelationsPart(schema, (r) => ({
       from: r.membershipRequests.userId,
       to: r.users.id,
     }),
-    organization: r.one.organizations({
-      from: r.membershipRequests.organizationId,
-      to: r.organizations.id,
+    organizationUnit: r.one.organizationUnits({
+      from: r.membershipRequests.organizationUnitId,
+      to: r.organizationUnits.id,
     }),
     reviewedBy: r.one.users({
       from: r.membershipRequests.reviewedById,
       to: r.users.id,
+    }),
+    requirementProfileSubmissions: r.many.requirementProfileSubmissions({
+      from: r.membershipRequests.id,
+      to: r.requirementProfileSubmissions.membershipRequestId,
     }),
   },
 }));

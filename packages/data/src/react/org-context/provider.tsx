@@ -4,10 +4,12 @@ import { createContext, type ReactNode, useContext } from 'react';
 
 export interface OrganizationData {
   id: string;
+  organizationId: string;
   slug: string;
   name: string;
   description?: string | null;
   logoUrl?: string | null;
+  address?: string | null;
 }
 
 interface OrgContextValue {
@@ -43,7 +45,7 @@ export function useOrg(): OrgContextValue {
   return context;
 }
 
-export function useOrgId(): string {
+export function useOrgUId(): string {
   return useOrg().org.id;
 }
 

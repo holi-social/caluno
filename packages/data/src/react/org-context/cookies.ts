@@ -2,10 +2,11 @@
 
 import Cookies from 'js-cookie';
 import { LAST_ORG_COOKIE } from '../../constants';
+
 export { LAST_ORG_COOKIE };
 
-export function setLastVisitedOrg(orgId: string): void {
-  Cookies.set(LAST_ORG_COOKIE, orgId, {
+export function setLastVisitedOrg(orgUId: string): void {
+  Cookies.set(LAST_ORG_COOKIE, orgUId, {
     expires: 365,
     sameSite: 'lax',
   });

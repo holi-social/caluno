@@ -1,0 +1,108 @@
+mutation JoinOrganization($organizationUnitId: ID!) {
+  joinOrganization(organizationUnitId: $organizationUnitId) {
+    status
+    membershipRequestId
+    requirementProfile {
+      id
+      name
+      description
+      requirements {
+        id
+        name
+        description
+        type
+        mandatory
+      }
+    }
+    requirementStatuses {
+      requirementId
+      name
+      status
+    }
+  }
+}
+
+mutation ApproveMembershipRequest($id: ID!, $organizationUnitId: ID!) {
+  approveMembershipRequest(id: $id, organizationUnitId: $organizationUnitId) {
+    id
+  }
+}
+
+mutation RejectMembershipRequest(
+  $id: ID!
+  $organizationUnitId: ID!
+  $rejectionReason: String!
+) {
+  rejectMembershipRequest(
+    id: $id
+    organizationUnitId: $organizationUnitId
+    rejectionReason: $rejectionReason
+  ) {
+    id
+  }
+}
+
+mutation CancelMembershipRequest($id: ID!, $organizationUnitId: ID!) {
+  cancelMembershipRequest(id: $id, organizationUnitId: $organizationUnitId) {
+    id
+  }
+}
+
+query GetMembershipRequests(
+  $status: MembershipRequestStatus
+  $limit: Int!
+  $offset: Int!
+) {
+  membershipRequests(status: $status, limit: $limit, offset: $offset) {
+    items {
+      id
+      organizationUnit {
+        id
+        name
+      }
+      user {
+        id
+        name
+        email
+        checkInId
+      }
+      status
+      reviewedBy {
+        id
+        name
+      }
+      reviewedAt
+      rejectionReason
+      createdAt
+      updatedAt
+    }
+  }
+}
+
+query GetMembershipRequestCount($status: MembershipRequestStatus) {
+  membershipRequestCount(status: $status)
+}
+
+query GetMyMembershipRequests(
+  $status: MembershipRequestStatus
+  $limit: Int!
+  $offset: Int!
+) {
+  myMembershipRequests(status: $status, limit: $limit, offset: $offset) {
+    items {
+      id
+      organizationUnit {
+        id
+        name
+      }
+      user {
+        id
+        name
+        email
+      }
+      status
+      reviewedAt
+      createdAt
+    }
+  }
+}

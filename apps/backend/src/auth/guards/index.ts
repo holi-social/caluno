@@ -1,1 +1,1 @@
-export * from './membership-role.guard';
+export * from './permission.guard';

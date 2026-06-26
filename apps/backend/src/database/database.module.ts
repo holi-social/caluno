@@ -16,7 +16,7 @@ export type Database = NodePgDatabase<typeof schema, typeof relations>;
       useFactory: (configService: ConfigService): Database => {
         const pool = new Pool({
           host: configService.getOrThrow('DB_HOST'),
-          port: parseInt(configService.getOrThrow('DB_PORT')),
+          port: parseInt(configService.getOrThrow('DB_PORT'), 10),
           user: configService.getOrThrow('DB_USER'),
           password: configService.getOrThrow('DB_PASSWORD'),
           database: configService.getOrThrow('DB_NAME'),

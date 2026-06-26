@@ -1,4 +1,5 @@
 'use client';
+import { emailOTPClient } from 'better-auth/client/plugins';
 import { createAuthClient as createBetterAuthClient } from 'better-auth/react';
 import type { Session } from 'better-auth/types';
 import { clearLastVisitedOrg } from '../org-context';
@@ -6,6 +7,7 @@ import { clearLastVisitedOrg } from '../org-context';
 export function createAuthClient(baseURL: string) {
   const client = createBetterAuthClient({
     baseURL,
+    plugins: [emailOTPClient()],
   });
 
   const signOut = async (...args: Parameters<typeof client.signOut>) => {

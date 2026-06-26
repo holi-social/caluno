@@ -1,19 +1,137 @@
 mutation AddTimeEntry($input: AddTimeEntryInput!) {
   addTimeEntry(input: $input) {
     id
-    startedAt
-    endedAt
-    notes
-    createdAt
   }
 }
 
 mutation DeleteTimeEntry($id: ID!) {
   deleteTimeEntry(id: $id) {
     id
+  }
+}
+
+mutation CloseTimeEntry($id: ID!, $input: CloseTimeEntryInput!) {
+  closeTimeEntry(id: $id, input: $input) {
+    id
+  }
+}
+
+query GetTimeEntry($id: String!) {
+  timeEntry(id: $id) {
+    id
     startedAt
     endedAt
     notes
     createdAt
+    volunteer {
+      id
+      name
+      email
+    }
+    shiftInstance {
+      id
+      actualStartsAt
+      actualEndsAt
+      overrideTitle
+      master {
+        id
+        title
+      }
+    }
+  }
+}
+
+mutation UpdateTimeEntry($id: ID!, $input: UpdateTimeEntryInput!) {
+  updateTimeEntry(id: $id, input: $input) {
+    id
+  }
+}
+
+query GetTimeEntries($limit: Int!, $offset: Int!) {
+  timeEntries(limit: $limit, offset: $offset) {
+    items {
+      id
+      startedAt
+      endedAt
+      volunteer {
+        id
+        name
+        email
+      }
+      shiftInstance {
+        id
+        actualStartsAt
+        actualEndsAt
+        overrideTitle
+        master {
+          id
+          title
+        }
+      }
+    }
+    pagination {
+      total
+      limit
+      offset
+      hasMore
+    }
+  }
+}
+
+query GetTimeEntriesByUser($userId: String!, $limit: Int!, $offset: Int!) {
+  timeEntriesByUser(userId: $userId, limit: $limit, offset: $offset) {
+    items {
+      id
+      startedAt
+      endedAt
+      shiftInstance {
+        id
+        actualStartsAt
+        actualEndsAt
+        overrideTitle
+        master {
+          id
+          title
+        }
+      }
+    }
+    pagination {
+      total
+      limit
+      offset
+      hasMore
+    }
+  }
+}
+
+query GetMyTime($limit: Int!, $offset: Int!) {
+  myTime(limit: $limit, offset: $offset) {
+    items {
+      id
+      startedAt
+      endedAt
+      shiftInstance {
+        id
+        overrideTitle
+        master {
+          id
+          title
+          organizationUnit {
+            id
+            name
+            organization {
+              id
+              name
+            }
+          }
+        }
+      }
+    }
+    pagination {
+      total
+      limit
+      offset
+      hasMore
+    }
   }
 }

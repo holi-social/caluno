@@ -1,54 +1,26 @@
 'use client';
 
-import {
-  type CreateOrganizationInput,
-  OrganizationRepository,
-} from '@repo/data';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useGraphQLClient } from './use-graphql-client';
+import { useQuery, useSuspenseQuery } from '@tanstack/react-query';
+import { OrganizationUnitRepository } from '../../repositories/organization/organization-unit.repository';
+import { useSdk } from './use-graphql-client';
 
-export function useOrganizations(limit = 10, offset = 0) {
-  const client = useGraphQLClient();
-  const repository = new OrganizationRepository(client);
+export function useOrganizationUnitWithSuspense(id: string) {
+  const sdk = useSdk();
+  const repository = new OrganizationUnitRepository(sdk);
 
-  return useQuery({
-    queryKey: ['organizations', { limit, offset }],
-    queryFn: () => repository.findAll({ limit, offset }),
-  });
-}
-
-export function useOrganization(id: string) {
-  const client = useGraphQLClient();
-  const repository = new OrganizationRepository(client);
-
-  return useQuery({
-    queryKey: ['organization', id],
+  return useSuspenseQuery({
+    queryKey: ['organization-unit', id],
     queryFn: () => repository.findById(id),
-    enabled: !!id,
   });
 }
 
-export function useOrganizationBySlug(slug: string) {
-  const client = useGraphQLClient();
-  const repository = new OrganizationRepository(client);
+export function useIsMemberOfOrgUnitOrAncestor(organizationUnitId: string) {
+  const sdk = useSdk();
+  const repository = new OrganizationUnitRepository(sdk);
 
   return useQuery({
-    queryKey: ['organization', 'slug', slug],
-    queryFn: () => repository.findBySlug(slug),
-    enabled: !!slug,
-  });
-}
-
-export function useCreateOrganization() {
-  const client = useGraphQLClient();
-  const queryClient = useQueryClient();
-  const repository = new OrganizationRepository(client);
-
-  return useMutation({
-    mutationFn: (input: CreateOrganizationInput) => repository.create(input),
-    onSuccess: () => {
-      // Invalidate organizations list to refetch
-      queryClient.invalidateQueries({ queryKey: ['organizations'] });
-    },
+    queryKey: ['organization-unit', 'is-member', organizationUnitId],
+    queryFn: () => repository.isMemberOfOrgUnitOrAncestor(organizationUnitId),
+    enabled: !!organizationUnitId,
   });
 }

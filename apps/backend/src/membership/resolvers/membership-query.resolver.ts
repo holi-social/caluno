@@ -1,6 +1,9 @@
-import { Args, ID, Query, Resolver } from '@nestjs/graphql';
+import { Args, Context, ID, Query, Resolver } from '@nestjs/graphql';
 import { Session, type UserSession } from '@thallesp/nestjs-better-auth';
-import { OrganizationRole } from '../../organization/enums';
+import { PERMISSIONS } from '../../auth/constants';
+import { Permissions } from '../../auth/decorators/permissions.decorator';
+import type { AuthenticatedGraphQLContext } from '../../graphql/graphql.context';
+import { UserMapper } from '../../user/mappers/user.mapper';
 import { User } from '../../user/models/user.model';
 import { MembershipMapper } from '../mappers/membership.mepper';
 import { MembershipService } from '../membership.service';
@@ -11,57 +14,54 @@ export class MembershipQueryResolver {
   constructor(
     private readonly membershipService: MembershipService,
     private readonly membershipMapper: MembershipMapper,
+    private readonly userMapper: UserMapper,
   ) {}
 
-  @Query(() => Membership)
+  @Permissions(PERMISSIONS.VOLUNTEER_VIEW)
+  @Query(() => Membership, { nullable: true })
   async membership(
-    @Args('organizationId', { type: () => ID }) organizationId: string,
+    @Args('organizationUnitId', { type: () => ID }) organizationUnitId: string,
     @Session() session: UserSession,
   ): Promise<Membership | null> {
     const entity = await this.membershipService.getMembership(
       session.user.id,
-      organizationId,
+      organizationUnitId,
     );
     return this.membershipMapper.toModel(entity);
   }
 
-  @Query(() => User)
-  async usersByRole(
-    @Args('organizationId', { type: () => ID }) organizationId: string,
-    @Args('role', { type: () => OrganizationRole }) role: OrganizationRole,
+  @Permissions(PERMISSIONS.VOLUNTEER_VIEW)
+  @Query(() => Boolean)
+  async isMemberOfUnitOrAncestor(
+    @Args('organizationUnitId', { type: () => ID }) organizationUnitId: string,
+    @Session() session: UserSession,
+  ): Promise<boolean> {
+    return this.membershipService.isMemberOfUnitOrAncestor(
+      session.user.id,
+      organizationUnitId,
+    );
+  }
+
+  @Permissions(PERMISSIONS.VOLUNTEER_VIEW)
+  @Query(() => [User])
+  async members(
+    @Args('organizationUnitId', { type: () => ID }) organizationUnitId: string,
+    @Context() context: AuthenticatedGraphQLContext,
   ): Promise<User[]> {
-    return this.membershipService.findUsersByRole(organizationId, role);
+    const users = await this.membershipService.getMembers(
+      context.organizationUnitId,
+    );
+    return this.userMapper.toArray(users);
   }
 
-  @Query(() => Boolean)
-  async isUserOrganizationAdmin(
-    @Args('organizationId', { type: () => ID }) organizationId: string,
-    @Session() session: UserSession,
-  ): Promise<boolean> {
-    return this.membershipService.isAdmin(session.user.id, organizationId);
-  }
-
-  @Query(() => Boolean)
-  async isUserOrganizationVolunteer(
-    @Args('organizationId', { type: () => ID }) organizationId: string,
-    @Session() session: UserSession,
-  ): Promise<boolean> {
-    return this.membershipService.isVolunteer(session.user.id, organizationId);
-  }
-
-  @Query(() => Boolean)
-  async isUserOrganizationStaff(
-    @Args('organizationId', { type: () => ID }) organizationId: string,
-    @Session() session: UserSession,
-  ): Promise<boolean> {
-    return this.membershipService.isStaff(session.user.id, organizationId);
-  }
-
-  @Query(() => Boolean)
-  async isUserOrganizationMember(
-    @Args('organizationId', { type: () => ID }) organizationId: string,
-    @Session() session: UserSession,
-  ): Promise<boolean> {
-    return this.membershipService.isMember(session.user.id, organizationId);
+  @Permissions(PERMISSIONS.VOLUNTEER_VIEW)
+  @Query(() => [Membership])
+  async memberships(
+    @Context() context: AuthenticatedGraphQLContext,
+  ): Promise<Membership[]> {
+    const memberships = await this.membershipService.getMemberships(
+      context.organizationUnitId,
+    );
+    return this.membershipMapper.toArray(memberships);
   }
 }

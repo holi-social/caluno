@@ -1,23 +1,64 @@
-import { DataError } from '../../errors/data-error';
-import type { AddTimeEntryInput, TimeEntry } from '../../generated/graphql';
-import { BaseRepository } from '../base/base.repository';
+import type {
+  AddTimeEntryInput,
+  CloseTimeEntryInput,
+  GetTimeEntryQuery,
+  UpdateTimeEntryInput,
+} from '../../generated/graphql';
+import {
+  BaseRepository,
+  type PaginationOptions,
+} from '../base/base.repository';
+
+export type TimeEntryDetail = GetTimeEntryQuery['timeEntry'];
 
 export class TimeEntryRepository extends BaseRepository {
-  async add(input: AddTimeEntryInput): Promise<TimeEntry> {
-    try {
-      const data = await this.sdk.AddTimeEntry({ input });
-      return data.addTimeEntry;
-    } catch (error) {
-      throw DataError.fromGraphQLError(error);
-    }
+  async findById(id: string): Promise<TimeEntryDetail> {
+    const data = await this.sdk.GetTimeEntry({ id });
+    return data.timeEntry;
   }
 
-  async delete(id: string): Promise<TimeEntry> {
-    try {
-      const data = await this.sdk.DeleteTimeEntry({ id });
-      return data.deleteTimeEntry;
-    } catch (error) {
-      throw DataError.fromGraphQLError(error);
-    }
+  async add(input: AddTimeEntryInput) {
+    const data = await this.sdk.AddTimeEntry({ input });
+    return data.addTimeEntry;
+  }
+
+  async delete(id: string) {
+    const data = await this.sdk.DeleteTimeEntry({ id });
+    return data.deleteTimeEntry;
+  }
+
+  async close(id: string, input: CloseTimeEntryInput) {
+    const data = await this.sdk.CloseTimeEntry({ id, input });
+    return data.closeTimeEntry;
+  }
+
+  async update(id: string, input: UpdateTimeEntryInput) {
+    const data = await this.sdk.UpdateTimeEntry({ id, input });
+    return data.updateTimeEntry;
+  }
+
+  async findAll(options: PaginationOptions = {}) {
+    const data = await this.sdk.GetTimeEntries({
+      limit: options.limit ?? 10,
+      offset: options.offset ?? 0,
+    });
+    return data.timeEntries;
+  }
+
+  async findByUser(userId: string, options: PaginationOptions = {}) {
+    const data = await this.sdk.GetTimeEntriesByUser({
+      userId,
+      limit: options.limit ?? 10,
+      offset: options.offset ?? 0,
+    });
+    return data.timeEntriesByUser;
+  }
+
+  async findMyTime(options: PaginationOptions = {}) {
+    const data = await this.sdk.GetMyTime({
+      limit: options.limit ?? 10,
+      offset: options.offset ?? 0,
+    });
+    return data.myTime;
   }
 }

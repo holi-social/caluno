@@ -5,17 +5,21 @@
   "tsx": true,
   "tailwind": {
     "config": "",
-    "prefix": "",
-    "cssVariables": true,
+    "css": "src/styles/default.css",
     "baseColor": "neutral",
-    "css": "src/styles/default.css"
+    "cssVariables": true,
+    "prefix": ""
   },
+  "iconLibrary": "lucide",
   "aliases": {
-    "components": "src/components",
-    "ui": "src/components/base",
-    "utils": "src/lib/utils",
-    "hooks": "src/hooks",
-    "lib": "src/lib"
+    "components": "@/components",
+    "utils": "@/lib/utils",
+    "ui": "@/components/base",
+    "lib": "@/lib",
+    "hooks": "@/hooks"
   },
-  "iconLibrary": "lucide"
+  "registries": {
+    "@storybook": "https://registry.lloydrichards.dev/v3/radix/{name}.json",
+    "@kibo-ui": "https://www.kibo-ui.com/r/{name}.json"
+  }
 }

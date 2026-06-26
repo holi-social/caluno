@@ -3,26 +3,26 @@ import { Field, InputType } from '@nestjs/graphql';
 @InputType()
 export class CreateOrganizationInput {
   @Field(() => String)
-  name: string;
+  name!: string;
 
   @Field(() => String, { nullable: true })
-  logoUrl: string | null;
+  logoUrl!: string | null;
 
   @Field(() => String, { nullable: true })
-  websiteUrl: string | null;
+  websiteUrl!: string | null;
 
   @Field(() => String, { nullable: true })
-  email: string | null;
+  contactEmail!: string | null;
 
   @Field(() => String, { nullable: true })
-  phone: string | null;
+  phone!: string | null;
 
   @Field(() => String, { nullable: true })
-  description: string | null;
+  description!: string | null;
 
   @Field(() => String, { nullable: true })
-  address: string | null;
+  address!: string | null;
 
   @Field(() => String, { nullable: true })
-  parentId: string | null;
+  parentId!: string | null;
 }

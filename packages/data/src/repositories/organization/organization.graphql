@@ -6,7 +6,7 @@ query GetOrganization($id: String!) {
     description
     logoUrl
     websiteUrl
-    email
+    contactEmail
     phone
     address
     createdAt
@@ -14,14 +14,121 @@ query GetOrganization($id: String!) {
   }
 }
 
-query GetVolunteers($id: String!) {
+query GetOrganizationBySlug($slug: String!) {
+  organizationBySlug(slug: $slug) {
+    id
+    name
+    slug
+    description
+    logoUrl
+    websiteUrl
+    contactEmail
+    phone
+    address
+    createdAt
+  }
+}
+
+query GetOrganizationRoot($id: String!) {
   organization(id: $id) {
     id
-    volunteers {
+    root {
+      id
+    }
+  }
+}
+
+query GetOrganizationUnit($id: String!) {
+  organizationUnit(id: $id) {
+    id
+    slug
+    name
+    description
+    logoUrl
+    websiteUrl
+    contactEmail
+    phone
+    address
+    organizationId
+    parent {
       id
       name
-      email
-      image
+    }
+    type {
+      id
+      name
+      icon
+    }
+  }
+}
+
+query GetOrganizationVolunteersByUnit($id: ID!) {
+  members(organizationUnitId: $id) {
+    id
+    name
+    email
+    image
+    checkInId
+  }
+}
+
+query GetOrganizationUnitWithOrg($id: String!) {
+  organizationUnit(id: $id) {
+    id
+    name
+    organization {
+      name
+    }
+  }
+}
+
+query GetOrganizationUnitPublicInfo($id: String!) {
+  organizationUnit(id: $id) {
+    id
+    name
+    description
+    logoUrl
+    websiteUrl
+    contactEmail
+    phone
+  }
+}
+
+query GetOrganizationsWithRoot($limit: Int!, $offset: Int!) {
+  organizations(limit: $limit, offset: $offset) {
+    items {
+      id
+      name
+      description
+      logoUrl
+      root {
+        id
+        slug
+        name
+        description
+        logoUrl
+        address
+      }
+    }
+  }
+}
+
+query GetMyAccessibleOrganizationUnits {
+  myAccessibleOrganizationUnits {
+    id
+    slug
+    name
+    description
+    logoUrl
+    address
+    parent {
+      id
+    }
+    organization {
+      id
+      name
+      description
+      logoUrl
     }
   }
 }
@@ -45,21 +152,6 @@ query GetOrganizations($limit: Int!, $offset: Int!) {
   }
 }
 
-query GetOrganizationBySlug($slug: String!) {
-  organizationBySlug(slug: $slug) {
-    id
-    name
-    slug
-    description
-    logoUrl
-    websiteUrl
-    email
-    phone
-    address
-    createdAt
-  }
-}
-
 mutation CreateOrganization($input: CreateOrganizationInput!) {
   createOrganization(input: $input) {
     id
@@ -69,5 +161,72 @@ mutation CreateOrganization($input: CreateOrganizationInput!) {
     logoUrl
     websiteUrl
     createdAt
+    root {
+      id
+    }
   }
+}
+
+query GetOrganizationTree {
+  organizationTree {
+    root
+  }
+}
+
+query GetOrganizationUnitTypes {
+  organizationUnitTypes {
+    id
+    name
+    description
+    icon
+  }
+}
+
+mutation CreateOrganizationUnit($input: CreateOrganizationUnitInput!) {
+  createOrganizationUnit(input: $input) {
+    id
+    name
+    slug
+    deletedAt
+    parent {
+      id
+      name
+    }
+    type {
+      id
+      name
+      icon
+    }
+  }
+}
+
+mutation UpdateOrganizationUnit(
+  $id: String!
+  $input: UpdateOrganizationUnitInput!
+) {
+  updateOrganizationUnit(id: $id, input: $input) {
+    id
+    name
+    slug
+    deletedAt
+    parent {
+      id
+    }
+    type {
+      id
+      name
+      icon
+    }
+  }
+}
+
+mutation DeleteOrganizationUnit($id: String!) {
+  deleteOrganizationUnit(id: $id) {
+    id
+    name
+  }
+}
+
+query IsMemberOfOrgUnitOrAncestor($organizationUnitId: ID!) {
+  isMemberOfUnitOrAncestor(organizationUnitId: $organizationUnitId)
 }

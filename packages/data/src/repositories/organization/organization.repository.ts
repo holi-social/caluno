@@ -1,4 +1,3 @@
-import { DataError } from '../../errors/data-error';
 import type { CreateOrganizationInput } from '../../generated/graphql';
 import { BaseRepository } from '../base/base.repository';
 
@@ -9,48 +8,53 @@ export interface FindOrganizationsOptions {
 
 export class OrganizationRepository extends BaseRepository {
   async findById(id: string) {
-    try {
-      const data = await this.sdk.GetOrganization({ id });
-      return data.organization;
-    } catch (error) {
-      throw DataError.fromGraphQLError(error);
-    }
+    const data = await this.sdk.GetOrganization({ id });
+    return data.organization;
   }
 
   async findBySlug(slug: string) {
-    try {
-      const data = await this.sdk.GetOrganizationBySlug({ slug });
-      return data.organizationBySlug;
-    } catch (error) {
-      throw DataError.fromGraphQLError(error);
-    }
+    const data = await this.sdk.GetOrganizationBySlug({ slug });
+    return data.organizationBySlug;
+  }
+
+  async findRootUnit(organizationId: string) {
+    const data = await this.sdk.GetOrganizationRoot({ id: organizationId });
+    return data.organization?.root ?? null;
+  }
+
+  async findVolunteersByUnit(organizationUnitId: string) {
+    const data = await this.sdk.GetOrganizationVolunteersByUnit({
+      id: organizationUnitId,
+    });
+    return data.members ?? [];
+  }
+
+  async findUnitWithOrg(organizationUnitId: string) {
+    const data = await this.sdk.GetOrganizationUnitPublicInfo({
+      id: organizationUnitId,
+    });
+    return data.organizationUnit ?? null;
+  }
+
+  async findAllWithRoot(options: FindOrganizationsOptions = {}) {
+    const { limit = 100, offset = 0 } = options;
+    const data = await this.sdk.GetOrganizationsWithRoot({ limit, offset });
+    return data.organizations.items;
+  }
+
+  async findMyAccessibleOrganizationUnits() {
+    const data = await this.sdk.GetMyAccessibleOrganizationUnits();
+    return data.myAccessibleOrganizationUnits;
   }
 
   async findAll(options: FindOrganizationsOptions = {}) {
     const { limit = 10, offset = 0 } = options;
-    try {
-      const data = await this.sdk.GetOrganizations({ limit, offset });
-      return data.organizations;
-    } catch (error) {
-      throw DataError.fromGraphQLError(error);
-    }
-  }
-
-  async findVolunteers(organizationId: string) {
-    try {
-      const data = await this.sdk.GetVolunteers({ id: organizationId });
-      return data.organization.volunteers;
-    } catch (error) {
-      throw DataError.fromGraphQLError(error);
-    }
+    const data = await this.sdk.GetOrganizations({ limit, offset });
+    return data.organizations;
   }
 
   async create(input: CreateOrganizationInput) {
-    try {
-      const data = await this.sdk.CreateOrganization({ input });
-      return data.createOrganization;
-    } catch (error) {
-      throw DataError.fromGraphQLError(error);
-    }
+    const data = await this.sdk.CreateOrganization({ input });
+    return data.createOrganization;
   }
 }
