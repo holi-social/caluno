@@ -60,13 +60,15 @@ export default async function ShiftPage({
     <div className="flex flex-col items-center p-4 mt-8">
       <div className="flex justify-between w-full max-w-2xl py-6 px-2">
         <div>
-          <h1 className="page-title">{shift.title}</h1>
+          <h1 className="page-title line-clamp-2">{shift.title}</h1>
         </div>
-        <Badge variant="secondary">
-          {shift.visibility === ShiftVisibility.AllMembers
-            ? t('visibility.ALL_MEMBERS')
-            : t('visibility.INVITED_MEMBERS')}
-        </Badge>
+        <div>
+          <Badge variant="secondary">
+            {shift.visibility === ShiftVisibility.AllMembers
+              ? t('visibility.ALL_MEMBERS')
+              : t('visibility.INVITED_MEMBERS')}
+          </Badge>
+        </div>
       </div>
 
       <div className="w-full max-w-2xl space-y-4">
