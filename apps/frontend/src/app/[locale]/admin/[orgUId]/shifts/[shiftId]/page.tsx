@@ -60,17 +60,19 @@ export default async function ShiftViewPage({
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between">
-        <div>
-          <h1 className="page-title">{shift.title}</h1>
+      <div className="flex justify-between gap-2">
+        <div className="min-w-0">
+          <h1 className="page-title line-clamp-2">{shift.title}</h1>
           <p className="text-muted-foreground mt-1">{t('page.subtitle')}</p>
         </div>
-        <ShiftViewActionBar
-          id={shiftId}
-          organizationUnitId={orgUId}
-          size="sm"
-          returnQuery={returnQuery}
-        />
+        <div className="shrink-0">
+          <ShiftViewActionBar
+            id={shiftId}
+            organizationUnitId={orgUId}
+            size="sm"
+            returnQuery={returnQuery}
+          />
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -95,9 +97,9 @@ export default async function ShiftViewPage({
                 {shift.instructions && (
                   <li className="flex gap-2">
                     <FileText className="text-muted-foreground shrink-0" />
-                    <span className="whitespace-pre-wrap">
+                    <p className="whitespace-pre-wrap break-words min-w-0">
                       {shift.instructions}
-                    </span>
+                    </p>
                   </li>
                 )}
               </ul>

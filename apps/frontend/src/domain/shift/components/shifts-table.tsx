@@ -43,10 +43,10 @@ export async function ShiftsTable({ shifts, orgUId, page }: ShiftsTableProps) {
 
   return (
     <div className="rounded-md border overflow-x-auto">
-      <Table>
+      <Table className="table-fixed">
         <TableHeader>
           <TableRow>
-            <TableHead>{t('table.name')}</TableHead>
+            <TableHead className="w-1/5">{t('table.name')}</TableHead>
             <TableHead>{t('table.firstDate')}</TableHead>
             <TableHead>{t('table.pattern')}</TableHead>
             <TableHead>{t('table.visibility')}</TableHead>
@@ -64,7 +64,7 @@ export async function ShiftsTable({ shifts, orgUId, page }: ShiftsTableProps) {
               <TableRow key={shift.id}>
                 <TableCell>
                   <Link
-                    className="hover:underline block"
+                    className="hover:underline block truncate"
                     href={shiftDetailPath(orgUId, shift.id, {
                       view: 'shifts',
                       ...(page && page > 1 ? { page: String(page) } : {}),

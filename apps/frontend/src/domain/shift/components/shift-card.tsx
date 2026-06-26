@@ -118,7 +118,7 @@ export function ShiftCard({
               week: format(weekStart, 'yyyy-MM-dd'),
             })}
           >
-            <p className="text-lg text-card-foreground">
+            <p className="text-lg text-card-foreground line-clamp-2">
               {instance.master.title}
             </p>
           </Link>
