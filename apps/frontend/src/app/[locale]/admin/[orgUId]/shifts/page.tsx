@@ -1,6 +1,6 @@
 import {
-  GetShiftsQuery,
-  GetWeeklyShiftsQuery,
+  type GetShiftsQuery,
+  type GetWeeklyShiftsQuery,
   PermissionKey,
 } from '@repo/data';
 import { addDays, startOfWeek } from 'date-fns';
