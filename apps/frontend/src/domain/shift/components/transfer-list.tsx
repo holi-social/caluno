@@ -16,21 +16,18 @@ type TransferListProps = {
   available: Member[];
   invited: Member[];
   onInvitedChange: (ids: string[]) => void;
-  readonlyIds?: string[];
 };
 
 export function TransferList({
   available,
   invited,
   onInvitedChange,
-  readonlyIds = [],
 }: TransferListProps) {
   const [availableSearch, setAvailableSearch] = useState('');
   const [invitedSearch, setInvitedSearch] = useState('');
   const t = useTranslations('Shift');
 
   const invitedIds = new Set(invited.map((m) => m.id));
-  const readonlySet = new Set(readonlyIds);
 
   const filteredAvailable = available.filter(
     (m) =>
@@ -50,7 +47,6 @@ export function TransferList({
   };
 
   const removeMember = (memberId: string) => {
-    if (readonlySet.has(memberId)) return;
     onInvitedChange(invited.filter((m) => m.id !== memberId).map((m) => m.id));
   };
 
@@ -133,19 +129,17 @@ export function TransferList({
                     {member.email}
                   </p>
                 </div>
-                {!readonlySet.has(member.id) && (
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon-xs"
-                    onClick={() => removeMember(member.id)}
-                    aria-label={t('transferList.removeAria', {
-                      name: member.name,
-                    })}
-                  >
-                    <CircleX className="size-4" />
-                  </Button>
-                )}
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon-xs"
+                  onClick={() => removeMember(member.id)}
+                  aria-label={t('transferList.removeAria', {
+                    name: member.name,
+                  })}
+                >
+                  <CircleX className="size-4" />
+                </Button>
               </div>
             ))}
           </div>

@@ -379,6 +379,7 @@ type Mutation {
   updateEvent(id: ID!, input: UpdateEventInput!): Event!
   updateFormBlock(id: String!, input: UpdateFormBlockInput!): FormBlock!
   updateFormBlockField(fieldId: String!, input: UpdateFormBlockFieldInput!): FormBlock!
+  updateMembersForShiftInstance(instanceId: String!, memberIds: [String!]!): ShiftInstance!
   updateMembershipRoles(membershipId: ID!, roleIds: [ID!]!): Membership!
   updateMyUserProfile(input: UpdateUserProfileInput!): UserProfile!
   updateOrganizationUnit(id: String!, input: UpdateOrganizationUnitInput!): OrganizationUnit!
