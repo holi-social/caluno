@@ -119,17 +119,17 @@ export const deleteShift = actionClient
     return await data.shift.delete(parsedInput.id);
   });
 
-const inviteShiftVolunteersSchema = z.object({
+const updateShiftVolunteersSchema = z.object({
   instanceId: z.string().min(1),
   organizationUnitId: z.string().min(1),
   memberIds: z.array(z.string()),
 });
 
-export const inviteShiftVolunteers = actionClient
-  .inputSchema(inviteShiftVolunteersSchema)
+export const updateShiftVolunteers = actionClient
+  .inputSchema(updateShiftVolunteersSchema)
   .action(async ({ parsedInput }) => {
     const data = await getDataClient(parsedInput.organizationUnitId);
-    return await data.shift.inviteMembers(
+    return await data.shift.updateMembers(
       parsedInput.instanceId,
       parsedInput.memberIds,
     );

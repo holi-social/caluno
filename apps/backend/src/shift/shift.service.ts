@@ -382,6 +382,70 @@ export class ShiftService {
     return instance;
   }
 
+  async uninviteMembersFromShiftInstance(
+    instanceId: string,
+    memberIds: string[],
+    organizationUnitId: string,
+  ): Promise<ShiftInstanceEntity> {
+    const instance = await this.findInstanceById(
+      instanceId,
+      organizationUnitId,
+    );
+
+    if (memberIds.length > 0) {
+      await this.db
+        .delete(schema.shiftInstanceInvites)
+        .where(
+          and(
+            eq(schema.shiftInstanceInvites.instanceId, instanceId),
+            inArray(schema.shiftInstanceInvites.userId, memberIds),
+          ),
+        );
+    }
+
+    return instance;
+  }
+
+  async updateMembersForShiftInstance(
+    instanceId: string,
+    memberIds: string[],
+    organizationUnitId: string,
+  ): Promise<ShiftInstanceEntity> {
+    const currentVolunteers = await this.db
+      .selectDistinct({ userId: schema.shiftInstanceInvites.userId })
+      .from(schema.shiftInstanceInvites)
+      .where(
+        and(
+          eq(schema.shiftInstanceInvites.instanceId, instanceId),
+          eq(schema.shiftInstanceInvites.status, ShiftInviteStatus.ACCEPTED),
+        ),
+      );
+
+    const currentIds = new Set(currentVolunteers.map((v) => v.userId));
+    const newIds = new Set(memberIds);
+
+    const toAdd = memberIds.filter((id) => !currentIds.has(id));
+    const toRemove = [...currentIds].filter((id) => !newIds.has(id));
+
+    if (toAdd.length > 0) {
+      await this.inviteMembersToShiftInstanceWithAutoApproval(
+        instanceId,
+        toAdd,
+        organizationUnitId,
+      );
+    }
+
+    if (toRemove.length > 0) {
+      await this.uninviteMembersFromShiftInstance(
+        instanceId,
+        toRemove,
+        organizationUnitId,
+      );
+    }
+
+    return this.findInstanceById(instanceId, organizationUnitId);
+  }
+
   async inviteMembersToShiftWithAutoApproval(
     shiftId: string,
     memberIds: string[],

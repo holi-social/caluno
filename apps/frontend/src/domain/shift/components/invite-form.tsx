@@ -23,7 +23,7 @@ import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 import { useSession } from '@/lib/auth';
 import { copyToClipboard } from '@/lib/clipboard';
-import { inviteShiftVolunteers, updateShiftStaffing } from '../actions';
+import { updateShiftStaffing, updateShiftVolunteers } from '../actions';
 import { type InviteShiftFormValues, inviteShiftFormSchema } from '../schemas';
 import { shiftShareUrl } from '../share';
 import { TransferList } from './transfer-list';
@@ -87,8 +87,6 @@ export function InviteShiftForm({
   }, [shiftVolunteers, form.setValue]);
 
   const currentUserId = session.data?.user?.id;
-  const existingVolunteers = shiftVolunteers ?? [];
-  const existingIds = existingVolunteers.map((v) => v.id);
 
   const allMembers = (memberships ?? [])
     .map((m) => m.user)
@@ -110,19 +108,14 @@ export function InviteShiftForm({
         return;
       }
 
-      const newIds = data.invitedMemberIds.filter(
-        (id) => !existingIds.includes(id),
-      );
-      if (newIds.length > 0) {
-        const inviteResult = await inviteShiftVolunteers({
-          instanceId,
-          organizationUnitId: orgUId,
-          memberIds: newIds,
-        });
-        if (inviteResult?.serverError) {
-          toast.error(inviteResult.serverError);
-          return;
-        }
+      const updateResult = await updateShiftVolunteers({
+        instanceId,
+        organizationUnitId: orgUId,
+        memberIds: data.invitedMemberIds,
+      });
+      if (updateResult?.serverError) {
+        toast.error(updateResult.serverError);
+        return;
       }
 
       onSuccess?.();
@@ -185,7 +178,6 @@ export function InviteShiftForm({
           available={allMembers}
           invited={invitedMembers}
           onInvitedChange={(ids) => form.setValue('invitedMemberIds', ids)}
-          readonlyIds={existingIds}
         />
         <Button
           type="button"
