@@ -42,10 +42,12 @@ function StaffingBadge({
   count,
   min,
   max,
+  onClick,
 }: {
   count: number;
   min: number | null | undefined;
   max: number | null | undefined;
+  onClick?: () => void;
 }) {
   const state = getStaffingState(count, min, max);
 
@@ -70,7 +72,8 @@ function StaffingBadge({
   return (
     <Badge
       variant={variant}
-      className="flex-1 justify-center self-stretch gap-1"
+      className={`flex-1 justify-center self-stretch gap-1${onClick ? ' cursor-pointer' : ''}`}
+      onClick={onClick}
     >
       <Icon className="size-3" />
       {text}
@@ -122,7 +125,20 @@ export function ShiftCard({
         </div>
 
         <div className="flex gap-1 items-start w-full">
-          <StaffingBadge count={count} min={min} max={max} />
+          <StaffingBadge
+            count={count}
+            min={min}
+            max={max}
+            onClick={
+              showButton
+                ? () =>
+                    inviteSheet.open({
+                      id: instance.master.id,
+                      instanceId: instance.id,
+                    })
+                : undefined
+            }
+          />
 
           {showButton && (
             <Button
