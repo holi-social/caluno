@@ -84,8 +84,8 @@ export default async function ShiftPage({
                   </span>
                 </li>
                 <li className="flex gap-2">
-                  <FileText className="size-4 text-muted-foreground shrink-0 mt-0.5" />
-                  <span>{shift.instructions}</span>
+                  <FileText className="size-4 text-muted-foreground shrink-0 mt-1.5" />
+                  <p className="break-words min-w-0">{shift.instructions}</p>
                 </li>
               </ul>
             </div>
