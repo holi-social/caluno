@@ -43,9 +43,37 @@
       "submitting": "Wird angemeldet...",
       "noAccount": "Noch kein Konto?",
       "signUpLink": "Registrieren",
+      "forgotPasswordLink": "Passwort vergessen?",
       "invalidCredentials": "Ungültige Anmeldedaten",
       "sendVerificationFailed": "Die E-Mail ist nicht bestätigt, und wir konnten keinen neuen Bestätigungscode senden.",
       "genericError": "Anmeldung fehlgeschlagen. Bitte versuche es erneut."
+    },
+    "forgotPassword": {
+      "title": "Passwort zurücksetzen",
+      "description": "Gib deine E-Mail-Adresse ein, und wir senden dir einen Link zum Zurücksetzen deines Passworts.",
+      "emailLabel": "E-Mail",
+      "emailPlaceholder": "du@beispiel.de",
+      "submit": "Reset-Link senden",
+      "sending": "Reset-Link wird gesendet...",
+      "emailSent": "Wenn ein Konto für diese E-Mail existiert, erhältst du in Kürze einen Link zum Zurücksetzen des Passworts.",
+      "checkSpam": "Wenn du ihn nicht siehst, prüfe deinen Spam-Ordner.",
+      "sendFailed": "Reset-Link konnte nicht gesendet werden. Bitte versuche es erneut.",
+      "remembered": "Passwort wieder eingefallen?",
+      "signInLink": "Anmelden"
+    },
+    "resetPassword": {
+      "title": "Neues Passwort wählen",
+      "description": "Gib ein neues Passwort für dein Konto ein.",
+      "newPasswordLabel": "Neues Passwort",
+      "confirmPasswordLabel": "Passwort bestätigen",
+      "passwordPlaceholder": "••••••••",
+      "submit": "Passwort zurücksetzen",
+      "submitting": "Passwort wird zurückgesetzt...",
+      "passwordMismatch": "Die Passwörter stimmen nicht überein",
+      "missingToken": "In diesem Link zum Zurücksetzen fehlt ein Token.",
+      "invalidToken": "Dieser Link zum Zurücksetzen ist ungültig oder abgelaufen.",
+      "resetFailed": "Passwort konnte nicht zurückgesetzt werden. Bitte fordere einen neuen Link an.",
+      "signInLink": "Zurück zur Anmeldung"
     },
     "signup": {
       "title": "Erstelle dein Konto",

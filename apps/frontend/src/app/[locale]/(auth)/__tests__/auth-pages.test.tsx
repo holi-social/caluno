@@ -3,15 +3,23 @@ import type { ReactElement } from 'react';
 
 type AuthPageProps = {
   params: Promise<{ locale: string }>;
-  searchParams: Promise<{ redirectTo?: string }>;
+  searchParams: Promise<{
+    error?: string;
+    redirectTo?: string;
+    token?: string;
+  }>;
 };
 
 type AuthPage = (props: AuthPageProps) => Promise<ReactElement>;
 
 type AuthFormElement = ReactElement<{ redirectTo?: string }>;
+type ResetPasswordFormElement = ReactElement<{
+  token?: string;
+  tokenError?: string;
+}>;
 type AuthPageShellElement = ReactElement<{
   title: string;
-  children: AuthFormElement;
+  children: AuthFormElement | ResetPasswordFormElement;
 }>;
 
 const cookieValues = new Map<string, string>();
@@ -53,6 +61,14 @@ mock.module('../login/login-form', () => ({
   LoginForm: () => null,
 }));
 
+mock.module('../forgot-password/forgot-password-form', () => ({
+  ForgotPasswordForm: () => null,
+}));
+
+mock.module('../reset-password/reset-password-form', () => ({
+  ResetPasswordForm: () => null,
+}));
+
 mock.module('../signup/signup-form', () => ({
   SignupForm: () => null,
 }));
@@ -69,11 +85,22 @@ mock.module('@/lib/auth-server', () => ({
 
 const LoginPage = (await import('../login/page')).default as AuthPage;
 
+const ForgotPasswordPage = (await import('../forgot-password/page'))
+  .default as AuthPage;
+
+const ResetPasswordPage = (await import('../reset-password/page'))
+  .default as AuthPage;
+
 const SignupPage = (await import('../signup/page')).default as AuthPage;
 
 function getFormRedirectTo(element: ReactElement): string | undefined {
   const shell = element as AuthPageShellElement;
-  return shell.props.children.props.redirectTo;
+  return (shell.props.children as AuthFormElement).props.redirectTo;
+}
+
+function getResetFormProps(element: ReactElement) {
+  const shell = element as AuthPageShellElement;
+  return (shell.props.children as ResetPasswordFormElement).props;
 }
 
 async function expectRedirect(
@@ -144,6 +171,46 @@ describe('auth pages', () => {
       });
 
       expect(getFormRedirectTo(page)).toBe('/invite/token-abc');
+    });
+  });
+
+  describe('forgot password page', () => {
+    it('redirects authenticated users to explicit redirectTo', async () => {
+      hasSession = true;
+
+      await expectRedirect(
+        ForgotPasswordPage,
+        { redirectTo: '/admin/org-1' },
+        '/admin/org-1',
+      );
+    });
+
+    it('renders forgot password form for unauthenticated users', async () => {
+      const page = await ForgotPasswordPage({
+        params: Promise.resolve({ locale: 'en' }),
+        searchParams: Promise.resolve({}),
+      });
+
+      expect(redirectCalls).toHaveLength(0);
+      const shell = page as AuthPageShellElement;
+      expect(shell.props.title).toBe('title');
+    });
+  });
+
+  describe('reset password page', () => {
+    it('passes token and token error to ResetPasswordForm', async () => {
+      const page = await ResetPasswordPage({
+        params: Promise.resolve({ locale: 'en' }),
+        searchParams: Promise.resolve({
+          error: 'INVALID_TOKEN',
+          token: 'reset-token-1',
+        }),
+      });
+
+      expect(getResetFormProps(page)).toEqual({
+        token: 'reset-token-1',
+        tokenError: 'INVALID_TOKEN',
+      });
     });
   });
 

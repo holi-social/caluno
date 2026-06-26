@@ -43,9 +43,37 @@
       "submitting": "Signing in...",
       "noAccount": "Don't have an account?",
       "signUpLink": "Sign up",
+      "forgotPasswordLink": "Forgot password?",
       "invalidCredentials": "Invalid credentials",
       "sendVerificationFailed": "Email is not verified, and we couldn't send a new verification code.",
       "genericError": "Sign in failed. Please try again."
+    },
+    "forgotPassword": {
+      "title": "Reset your password",
+      "description": "Enter your email address and we'll send you a link to reset your password.",
+      "emailLabel": "Email",
+      "emailPlaceholder": "you@example.com",
+      "submit": "Send reset link",
+      "sending": "Sending reset link...",
+      "emailSent": "If an account exists for that email, a password reset link will arrive shortly.",
+      "checkSpam": "If you don't see it, check your spam folder.",
+      "sendFailed": "Failed to send reset link. Please try again.",
+      "remembered": "Remembered your password?",
+      "signInLink": "Sign in"
+    },
+    "resetPassword": {
+      "title": "Choose a new password",
+      "description": "Enter a new password for your account.",
+      "newPasswordLabel": "New password",
+      "confirmPasswordLabel": "Confirm password",
+      "passwordPlaceholder": "••••••••",
+      "submit": "Reset password",
+      "submitting": "Resetting password...",
+      "passwordMismatch": "Passwords do not match",
+      "missingToken": "This password reset link is missing a token.",
+      "invalidToken": "This password reset link is invalid or has expired.",
+      "resetFailed": "Failed to reset password. Please request a new reset link.",
+      "signInLink": "Back to sign in"
     },
     "signup": {
       "title": "Create your account",
