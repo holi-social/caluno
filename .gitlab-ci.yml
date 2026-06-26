@@ -288,6 +288,8 @@ terraform_apply_staging:
   extends: .terraform
   stage: terraform_apply
   needs: ['terraform_plan_staging']
+  variables:
+    TF_VAR_active_environment: 'staging'
   resource_group: 'terraform-staging'
   rules:
     - if: '$CI_COMMIT_BRANCH == "main" && $CI_PIPELINE_SOURCE == "push"'
@@ -356,6 +358,8 @@ terraform_apply_production:
   extends: .terraform
   stage: terraform_apply
   needs: ['terraform_plan_production']
+  variables:
+    TF_VAR_active_environment: 'production'
   resource_group: 'terraform-production'
   rules:
     - if: '$CI_COMMIT_BRANCH == "production" && $CI_PIPELINE_SOURCE == "push"'
