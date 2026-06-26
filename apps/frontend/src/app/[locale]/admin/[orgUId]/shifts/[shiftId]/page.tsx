@@ -95,9 +95,9 @@ export default async function ShiftViewPage({
                 {shift.instructions && (
                   <li className="flex gap-2">
                     <FileText className="text-muted-foreground shrink-0" />
-                    <span className="whitespace-pre-wrap">
+                    <p className="whitespace-pre-wrap break-words min-w-0">
                       {shift.instructions}
-                    </span>
+                    </p>
                   </li>
                 )}
               </ul>
