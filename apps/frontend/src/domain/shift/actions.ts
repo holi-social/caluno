@@ -151,3 +151,19 @@ export const updateShiftStaffing = actionClient
       maxVolunteers: parsedInput.maxVolunteers ?? undefined,
     });
   });
+
+const inviteMembersToShiftSchema = z.object({
+  shiftId: z.string().min(1),
+  organizationUnitId: z.string().min(1),
+  memberIds: z.array(z.string()),
+});
+
+export const inviteMembersToShift = actionClient
+  .inputSchema(inviteMembersToShiftSchema)
+  .action(async ({ parsedInput }) => {
+    const data = await getDataClient(parsedInput.organizationUnitId);
+    return await data.shift.inviteMembersToShift(
+      parsedInput.shiftId,
+      parsedInput.memberIds,
+    );
+  });

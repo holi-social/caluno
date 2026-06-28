@@ -5,10 +5,14 @@ import {
   useMemberships,
   useOrgUId,
   useShift,
+  useShiftInstances,
   useShiftVolunteers,
 } from '@repo/data/react';
 import {
   Button,
+  Card,
+  CardContent,
+  Checkbox,
   Field,
   FieldDescription,
   FieldError,
@@ -17,13 +21,17 @@ import {
   Separator,
 } from '@repo/ui';
 import { Share2 } from 'lucide-react';
-import { useTranslations } from 'next-intl';
-import { useEffect, useTransition } from 'react';
+import { useLocale, useTranslations } from 'next-intl';
+import { useEffect, useId, useTransition } from 'react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 import { useSession } from '@/lib/auth';
 import { copyToClipboard } from '@/lib/clipboard';
-import { updateShiftStaffing, updateShiftVolunteers } from '../actions';
+import {
+  inviteMembersToShift,
+  updateShiftStaffing,
+  updateShiftVolunteers,
+} from '../actions';
 import { type InviteShiftFormValues, inviteShiftFormSchema } from '../schemas';
 import { shiftShareUrl } from '../share';
 import { TransferList } from './transfer-list';
@@ -48,10 +56,14 @@ export function InviteShiftForm({
   const [isPending, startTransition] = useTransition();
   const t = useTranslations('Shift');
   const tCommon = useTranslations('Common');
+  const locale = useLocale();
+  const formatWithOptions = (date: Date, options: Intl.DateTimeFormatOptions) =>
+    new Intl.DateTimeFormat(locale, options).format(date);
 
   const { data: shift } = useShift(shiftId);
   const { data: shiftVolunteers } = useShiftVolunteers(instanceId);
   const { data: memberships } = useMemberships(orgUId);
+  const { data: shiftInstances } = useShiftInstances(shiftId);
 
   const schema = inviteShiftFormSchema({
     minMaxVolunteers: t('validation.minMaxVolunteers'),
@@ -63,6 +75,7 @@ export function InviteShiftForm({
       minVolunteers: null,
       maxVolunteers: null,
       invitedMemberIds: [],
+      inviteAllInstances: false,
     },
   });
 
@@ -95,6 +108,34 @@ export function InviteShiftForm({
   const watchedIds = form.watch('invitedMemberIds');
   const invitedMembers = allMembers.filter((m) => watchedIds.includes(m.id));
 
+  const selectedInstance = shiftInstances?.find((i) => i.id === instanceId);
+  const isRecurring = !!shift?.rrule && (shift.recurrenceDays.length ?? 0) > 0;
+  const inviteAllCheckboxId = useId();
+
+  const instanceStartDate = selectedInstance
+    ? new Date(selectedInstance.actualStartsAt)
+    : null;
+  const instanceEndDate = selectedInstance
+    ? new Date(selectedInstance.actualEndsAt)
+    : null;
+
+  const dateOptions: Intl.DateTimeFormatOptions = {
+    weekday: 'short',
+    month: 'long',
+    day: 'numeric',
+  };
+  const timeOptions: Intl.DateTimeFormatOptions = {
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+  };
+
+  const formattedDays = isRecurring
+    ? new Intl.ListFormat(locale, { type: 'conjunction' }).format(
+        shift.recurrenceDays.map((day) => t(`recurrence.weekDay.${day}`)),
+      )
+    : '';
+
   const onSubmit = (data: InviteShiftFormValues) => {
     startTransition(async () => {
       const staffingResult = await updateShiftStaffing({
@@ -118,6 +159,18 @@ export function InviteShiftForm({
         return;
       }
 
+      if (data.inviteAllInstances) {
+        const inviteAllResult = await inviteMembersToShift({
+          shiftId,
+          organizationUnitId: orgUId,
+          memberIds: data.invitedMemberIds,
+        });
+        if (inviteAllResult?.serverError) {
+          toast.error(inviteAllResult.serverError);
+          return;
+        }
+      }
+
       onSuccess?.();
     });
   };
@@ -128,6 +181,65 @@ export function InviteShiftForm({
       onSubmit={form.handleSubmit(onSubmit)}
       className="flex flex-col gap-6 h-full"
     >
+      {selectedInstance && instanceStartDate && instanceEndDate && shift && (
+        <div className="flex flex-col gap-2">
+          <p className="text-sm text-muted-foreground">
+            {t('inviteForm.managingLabel')}
+          </p>
+          <Card>
+            <CardContent className="flex justify-between items-start gap-4">
+              <div>
+                <p className="text-lg font-semibold">
+                  {formatWithOptions(instanceStartDate, dateOptions)}
+                </p>
+                <p className="text-muted-foreground">{shift.title}</p>
+              </div>
+              <p className="text-lg font-semibold whitespace-nowrap">
+                {formatWithOptions(instanceStartDate, timeOptions)} -{' '}
+                {formatWithOptions(instanceEndDate, timeOptions)}
+              </p>
+            </CardContent>
+            {isRecurring && (
+              <>
+                <Separator />
+                <CardContent>
+                  <div className="flex items-start gap-3">
+                    <Checkbox
+                      id={inviteAllCheckboxId}
+                      checked={form.watch('inviteAllInstances')}
+                      onCheckedChange={(checked) =>
+                        form.setValue('inviteAllInstances', checked === true, {
+                          shouldValidate: true,
+                        })
+                      }
+                      disabled={isPending}
+                    />
+                    <div className="grid gap-1">
+                      <FieldLabel
+                        htmlFor={inviteAllCheckboxId}
+                        className="font-normal"
+                      >
+                        {t('inviteForm.inviteAllLabel')}
+                      </FieldLabel>
+                      <FieldDescription>
+                        {t('inviteForm.inviteAllDescription', {
+                          startDate: formatWithOptions(shift.startDate, {
+                            day: '2-digit',
+                            month: '2-digit',
+                            year: 'numeric',
+                          }),
+                          days: formattedDays,
+                        })}
+                      </FieldDescription>
+                    </div>
+                  </div>
+                </CardContent>
+              </>
+            )}
+          </Card>
+        </div>
+      )}
+
       {/* Min / Max row */}
       <div className="flex gap-3">
         <Field className="flex-1">
