@@ -14,7 +14,10 @@ import * as schema from '../src/database/schema';
 import { MembershipRequestStatus } from '../src/membership/enums';
 import { ShiftInviteStatus } from '../src/shift/enums';
 import { applyBunAuthMocks } from './helpers/auth-mocks';
-import { graphqlRequestRequiringData } from './helpers/graphql-request';
+import {
+  graphqlRequest,
+  graphqlRequestRequiringData,
+} from './helpers/graphql-request';
 import { getGraphqlTestContext } from './helpers/graphql-test-context';
 
 applyBunAuthMocks(mock.module);
@@ -629,5 +632,152 @@ describe('ShiftService.findShiftsForWeek', () => {
     expect(invites.map((invite) => invite.instanceId)).not.toContain(
       cancelledInstance.id,
     );
+  });
+
+  it('rejects inviting members to a deleted shift', async () => {
+    const userId = `deleted-shift-invite-user-${crypto.randomUUID()}`;
+    await db.insert(schema.users).values({
+      id: userId,
+      name: 'Deleted Shift Invite User',
+      email: `deleted-shift-invite-${crypto.randomUUID()}@example.com`,
+    });
+
+    const createShiftData = await graphqlRequestRequiringData<{
+      createShift: { id: string };
+    }>(
+      app,
+      {
+        query: `
+          mutation CreateShift($input: CreateShiftInput!) {
+            createShift(input: $input) {
+              id
+            }
+          }
+        `,
+        variables: {
+          input: {
+            title: `Deleted Invite Shift ${crypto.randomUUID()}`,
+            instructions: null,
+            location: null,
+            startsAt: '2026-06-18T08:00:00.000Z',
+            endsAt: '2026-06-18T10:00:00.000Z',
+            visibility: 'INVITED_MEMBERS',
+            maxVolunteers: null,
+            minVolunteers: null,
+            invitedMemberIds: [],
+            rrule: null,
+          },
+        },
+        headers: {
+          'x-organization-unit-id': organizationUnitId,
+        },
+      },
+      'createShift',
+    );
+
+    const shiftId = createShiftData.createShift.id;
+
+    await db
+      .update(schema.shifts)
+      .set({ isDeleted: true })
+      .where(eq(schema.shifts.id, shiftId));
+
+    const response = await graphqlRequest<{
+      inviteMembersToShift: { id: string };
+    }>(app, {
+      query: `
+        mutation InviteMembersToShift($shiftId: String!, $memberIds: [String!]!) {
+          inviteMembersToShift(shiftId: $shiftId, memberIds: $memberIds) {
+            id
+          }
+        }
+      `,
+      variables: {
+        shiftId,
+        memberIds: [userId],
+      },
+      headers: {
+        'x-organization-unit-id': organizationUnitId,
+      },
+    });
+
+    expect(response.errors).toBeDefined();
+    expect(response.errors?.[0]?.message).toMatch(/Shift with ID .* not found/);
+  });
+
+  it('rejects inviting members to an instance of a deleted shift', async () => {
+    const userId = `deleted-master-invite-user-${crypto.randomUUID()}`;
+    await db.insert(schema.users).values({
+      id: userId,
+      name: 'Deleted Master Invite User',
+      email: `deleted-master-invite-${crypto.randomUUID()}@example.com`,
+    });
+
+    const createShiftData = await graphqlRequestRequiringData<{
+      createShift: { id: string };
+    }>(
+      app,
+      {
+        query: `
+          mutation CreateShift($input: CreateShiftInput!) {
+            createShift(input: $input) {
+              id
+            }
+          }
+        `,
+        variables: {
+          input: {
+            title: `Deleted Master Invite Shift ${crypto.randomUUID()}`,
+            instructions: null,
+            location: null,
+            startsAt: '2026-06-18T08:00:00.000Z',
+            endsAt: '2026-06-18T10:00:00.000Z',
+            visibility: 'INVITED_MEMBERS',
+            maxVolunteers: null,
+            minVolunteers: null,
+            invitedMemberIds: [],
+            rrule: null,
+          },
+        },
+        headers: {
+          'x-organization-unit-id': organizationUnitId,
+        },
+      },
+      'createShift',
+    );
+
+    const shiftId = createShiftData.createShift.id;
+    const instances = await db.query.shiftInstances.findMany({
+      where: { masterId: shiftId },
+    });
+    const instanceId = instances[0]?.id;
+    expect(instanceId).toBeDefined();
+
+    await db
+      .update(schema.shifts)
+      .set({ isDeleted: true })
+      .where(eq(schema.shifts.id, shiftId));
+
+    const response = await graphqlRequest<{
+      inviteMembersToShiftInstance: { id: string };
+    }>(app, {
+      query: `
+        mutation InviteMembersToShiftInstance($instanceId: String!, $memberIds: [String!]!) {
+          inviteMembersToShiftInstance(instanceId: $instanceId, memberIds: $memberIds) {
+            id
+          }
+        }
+      `,
+      variables: {
+        instanceId,
+        memberIds: [userId],
+      },
+      headers: {
+        'x-organization-unit-id': organizationUnitId,
+      },
+    });
+
+    expect(response.errors).toBeDefined();
+    expect(response.errors?.[0]?.message).toMatch(/Shift with ID .* not found/);
   });
 });
