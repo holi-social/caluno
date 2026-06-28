@@ -292,6 +292,104 @@ describe('ShiftService.findShiftsForWeek', () => {
     );
   });
 
+  it('invites members to past instances as well as future instances', async () => {
+    const userId = `shift-past-future-invite-user-${crypto.randomUUID()}`;
+    await db.insert(schema.users).values({
+      id: userId,
+      name: 'Shift Past Future Invite User',
+      email: `shift-past-future-invite-${crypto.randomUUID()}@example.com`,
+    });
+
+    const createShiftData = await graphqlRequestRequiringData<{
+      createShift: { id: string };
+    }>(
+      app,
+      {
+        query: `
+          mutation CreateShift($input: CreateShiftInput!) {
+            createShift(input: $input) {
+              id
+            }
+          }
+        `,
+        variables: {
+          input: {
+            title: `Past Future Invite Shift ${crypto.randomUUID()}`,
+            instructions: null,
+            location: null,
+            startsAt: '2020-01-01T08:00:00.000Z',
+            endsAt: '2020-01-01T10:00:00.000Z',
+            visibility: 'INVITED_MEMBERS',
+            maxVolunteers: null,
+            minVolunteers: null,
+            invitedMemberIds: [],
+            rrule: null,
+          },
+        },
+        headers: {
+          'x-organization-unit-id': organizationUnitId,
+        },
+      },
+      'createShift',
+    );
+
+    const shiftId = createShiftData.createShift.id;
+    const [pastInstance, futureInstance] = await db
+      .insert(schema.shiftInstances)
+      .values([
+        {
+          masterId: shiftId,
+          actualStartsAt: new Date('2020-01-02T08:00:00.000Z'),
+          actualEndsAt: new Date('2020-01-02T10:00:00.000Z'),
+          occurrenceIndex: 1,
+        },
+        {
+          masterId: shiftId,
+          actualStartsAt: new Date('2030-01-01T08:00:00.000Z'),
+          actualEndsAt: new Date('2030-01-01T10:00:00.000Z'),
+          occurrenceIndex: 2,
+        },
+      ])
+      .returning();
+
+    if (!pastInstance || !futureInstance) {
+      throw new Error('Expected additional shift instances to be created');
+    }
+
+    await graphqlRequestRequiringData<{
+      inviteMembersToShift: { id: string };
+    }>(
+      app,
+      {
+        query: `
+          mutation InviteMembersToShift($shiftId: String!, $memberIds: [String!]!) {
+            inviteMembersToShift(shiftId: $shiftId, memberIds: $memberIds) {
+              id
+            }
+          }
+        `,
+        variables: {
+          shiftId,
+          memberIds: [userId],
+        },
+        headers: {
+          'x-organization-unit-id': organizationUnitId,
+        },
+      },
+      'inviteMembersToShift',
+    );
+
+    const invites = await db.query.shiftInstanceInvites.findMany({
+      where: { userId, status: ShiftInviteStatus.ACCEPTED },
+    });
+
+    const invitedInstanceIds = invites
+      .map((invite) => invite.instanceId)
+      .sort();
+    expect(invitedInstanceIds).toContain(pastInstance.id);
+    expect(invitedInstanceIds).toContain(futureInstance.id);
+  });
+
   it('approves a shift membership request into only the intended shift instance', async () => {
     const userId = `shift-join-user-${crypto.randomUUID()}`;
     await db.insert(schema.users).values({
