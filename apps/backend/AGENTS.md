@@ -53,7 +53,7 @@ domain/
 
 ## Patterns
 - GraphQL schema is code-first via decorators. `src/schema.gql` is auto-generated — never edit it manually.
-- GraphQL context shape: `{ req, user?, organizationUnitId?, loaders? }` (`graphql/graphql.context.ts`). In resolvers: `@Session() session`, `@Context() ctx`.
+- GraphQL context shape: `{ req, locale, user?, organizationUnitId?, loaders? }` (`graphql/graphql.context.ts`). `locale` is derived from `x-locale` (fallback `en`) and is request metadata, not a GraphQL arg. In resolvers: `@Session() session`, `@Context() ctx`.
 - Resolvers: `@Permissions(PERMISSIONS.X)` guard on the method; queries/mutations/field-resolvers in separate files per domain.
 - N+1 prevention is mandatory for field resolvers: `@RegisterLoader()` + `@Injectable({ scope: Scope.REQUEST })` DataLoader classes, injected via `@Loader(ChildLoader)`. Never query per-parent in a `@ResolveField`.
 - Mappers extend `BaseMapper`: `toModel()`, `toModelOrThrow()`, `toArray()`.

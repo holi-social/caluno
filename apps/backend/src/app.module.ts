@@ -18,6 +18,7 @@ import { DATABASE_CONNECTION } from './database/database-connection';
 import { EventModule } from './event/event.module';
 import { GraphqlModule } from './graphql/graphql.module';
 import { LoaderInterceptor } from './graphql/interceptors';
+import { resolveRequestLocale } from './graphql/locale';
 import { MembershipModule } from './membership/membership.module';
 import { MembershipLifecycleModule } from './membership-lifecycle/membership-lifecycle.module';
 import { EmailService } from './notification/email/email.service';
@@ -55,6 +56,7 @@ const autoSchemaFile =
       context: ({ req }) => ({
         req,
         user: req.user,
+        locale: resolveRequestLocale(req.headers),
         organizationUnitId: req.headers['x-organization-unit-id'],
       }),
     }),
