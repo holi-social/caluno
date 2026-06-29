@@ -30,6 +30,7 @@ import { RequirementProfileModule } from './requirement-profile/requirement-prof
 import { ShiftModule } from './shift/shift.module';
 import { TimeTrackingModule } from './time-tracking/time-tracking.module';
 import { UserModule } from './user/user.module';
+import { UserService } from './user/user.service';
 
 const autoSchemaFile =
   process.env.NODE_ENV === 'test'
@@ -47,18 +48,29 @@ const autoSchemaFile =
       global: true,
     }),
     DatabaseModule,
-    GraphQLModule.forRoot<ApolloDriverConfig>({
+    GraphQLModule.forRootAsync<ApolloDriverConfig>({
       driver: ApolloDriver,
-      autoSchemaFile,
-      graphiql: true,
-      sortSchema: true,
-      fieldResolverEnhancers: ['guards'],
-      context: ({ req }) => ({
-        req,
-        user: req.user,
-        locale: resolveRequestLocale(req.headers),
-        organizationUnitId: req.headers['x-organization-unit-id'],
+      imports: [UserModule],
+      useFactory: (userService: UserService) => ({
+        autoSchemaFile,
+        graphiql: true,
+        sortSchema: true,
+        fieldResolverEnhancers: ['guards'],
+        context: async ({ req }) => {
+          const user = req.user;
+          const locale = user
+            ? await userService.resolveLocale(user.id, req.headers)
+            : resolveRequestLocale(req.headers);
+
+          return {
+            req,
+            user,
+            locale,
+            organizationUnitId: req.headers['x-organization-unit-id'],
+          };
+        },
       }),
+      inject: [UserService],
     }),
     BetterAuthModule.forRootAsync({
       imports: [DatabaseModule, ConfigModule, NotificationModule],
