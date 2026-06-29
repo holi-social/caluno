@@ -9,10 +9,96 @@ The backend api for securely managing volunteers and shifts in multi-tiered orga
 - `bun run format` - Format with Biome
 - `bun run check-types` - Check for type errors
 - `bun run test` - Jest unit tests (`src/**/*.spec.ts`; pattern: `src/notification/notification.spec.ts`)
-- `bun test apps/backend/test/` - Bun integration tests (`test/*.integration.spec.ts`, `bun:test` API; need a migrated Postgres — `bun run db:up && bun run db:migrate`)
-- `bun run --cwd apps/backend test:integration` - Drops/creates `clippy_test`, migrates it, and runs integration tests against the isolated test DB
+- `bun run --cwd apps/backend test:integration` - Drops/creates `clippy_test`, migrates/seeds it, and runs integration tests against the isolated test DB
 - `bun run db:generate` - Generate database migrations based on schema changes
 - `bun run db:migrate` - Run drizzle database migrations
+
+## Testing
+
+### Test runners
+The backend has two test suites:
+
+1. **Unit tests** — Jest, files under `src/**/*.spec.ts`.
+   - Use for pure business logic, event handlers, and utilities that do not touch the database.
+   - Mock external collaborators (services, repositories, event emitters).
+   - Run with `bun run test`.
+
+2. **Integration tests** — `bun:test`, files under `test/*.integration.spec.ts`.
+   - Use for anything that depends on actual SQL queries, transactions, GraphQL resolvers, auth guards, or multi-tenancy scoping.
+   - They spin up the real NestJS app and connect to a PostgreSQL database.
+   - Run with `bun run --cwd apps/backend test:integration`. This command drops/creates `${POSTGRES_DB}_test` (default `clippy_test`), runs migrations, seeds permissions, and executes the tests.
+
+### Writing integration tests
+
+Use the shared test context and factories. Do not duplicate setup boilerplate.
+
+```typescript
+import { beforeAll, describe, expect, it, mock, setDefaultTimeout } from 'bun:test';
+import type { INestApplication } from '@nestjs/common';
+import type { Database } from '../src/database/database.module';
+import { applyBunAuthMocks } from './helpers/auth-mocks';
+import { getGraphqlTestContext } from './helpers/graphql-test-context';
+import { createShift, createShiftInstance, createUser } from './factories';
+
+applyBunAuthMocks(mock.module);
+setDefaultTimeout(20_000);
+
+describe('Shift feature', () => {
+  let app: INestApplication;
+  let db: Database;
+  let organizationUnitId: string;
+
+  beforeAll(async () => {
+    const context = await getGraphqlTestContext();
+    app = context.app;
+    db = context.db;
+    organizationUnitId = context.organizationUnitId;
+  });
+
+  it('does something useful', async () => {
+    const user = await createUser(db);
+    const shift = await createShift(app, organizationUnitId);
+    const instance = await createShiftInstance(db, shift.id);
+    // act + assert
+  });
+});
+```
+
+### Factory rules
+
+Factories live in `test/factories/`:
+
+- **`createUser(db, overrides?)`** — inserts into `users` directly.
+- **`createShift(app, organizationUnitId, overrides?)`** — uses the `createShift` GraphQL mutation so the full resolver/service path is exercised.
+- **`createShiftInstance(db, shiftId, overrides?)`** — inserts into `shiftInstances` directly for cases that need extra instances beyond the one created by `createShift`.
+- **`createMembershipRequest(db, { userId, organizationUnitId, metadata? })`** — inserts into `membershipRequests` directly.
+- **`cancelShiftInstance(db, instanceId)`** — helper to set `isCancelled = true`.
+
+Guidelines:
+- Prefer GraphQL mutations for the entity under test so resolvers, guards, and services run.
+- Use direct DB inserts only for entities that are not the focus of the test or are not exposed through mutations.
+- Always pass `organizationUnitId` from the test context; never hard-code one.
+- Use `crypto.randomUUID()` in names/emails to avoid collisions when tests run against the same test DB.
+
+### What to test
+
+- **Multi-tenancy:** any query/mutation that takes an `organizationUnitId` must reject or hide cross-org data. Add integration tests for scoping.
+- **Soft deletes:** queries that should exclude `isDeleted` records.
+- **Permissions:** mutations guarded by `@Permissions()` should return `ForbiddenGraphQLError` when the caller lacks access.
+- **Business invariants:** capacity checks, invite deduplication, membership request approval scoping, etc.
+- **Error shapes:** use `graphqlRequest` (not `graphqlRequestRequiringData`) and assert on `response.errors[0].message` when testing error paths.
+
+### Running integration tests locally
+
+```bash
+# Start Postgres (only needed once)
+bun run db:up
+
+# Run integration tests with a fresh, migrated, seeded test DB
+bun run --cwd apps/backend test:integration
+```
+
+The setup script connects to the `postgres` maintenance database to drop/create `${POSTGRES_DB}_test`, so the Postgres user needs CREATEDB privileges (the default `postgres` superuser has this).
 
 ## Tech Stack
 - **NestJS 11** primary web framework
