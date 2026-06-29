@@ -10,6 +10,7 @@ The backend api for securely managing volunteers and shifts in multi-tiered orga
 - `bun run check-types` - Check for type errors
 - `bun run test` - Jest unit tests (`src/**/*.spec.ts`; pattern: `src/notification/notification.spec.ts`)
 - `bun test apps/backend/test/` - Bun integration tests (`test/*.integration.spec.ts`, `bun:test` API; need a migrated Postgres — `bun run db:up && bun run db:migrate`)
+- `bun run --cwd apps/backend test:integration` - Drops/creates `clippy_test`, migrates it, and runs integration tests against the isolated test DB
 - `bun run db:generate` - Generate database migrations based on schema changes
 - `bun run db:migrate` - Run drizzle database migrations
 

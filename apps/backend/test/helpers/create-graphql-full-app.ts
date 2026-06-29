@@ -86,14 +86,14 @@ const ensureBackendBuild = (backendRoot: string) => {
 };
 
 const applyTestEnvironmentDefaults = (backendRoot: string) => {
+  process.env.NODE_ENV = 'test';
   process.env.DB_HOST ??= 'localhost';
   process.env.DB_PORT ??= process.env.POSTGRES_PORT ?? '5432';
   process.env.DB_USER ??= process.env.POSTGRES_USER ?? 'postgres';
   process.env.DB_PASSWORD ??= process.env.POSTGRES_PASSWORD ?? 'postgres';
-  process.env.DB_NAME ??= process.env.POSTGRES_DB ?? 'clippy';
+  process.env.DB_NAME = `${process.env.POSTGRES_DB ?? 'clippy'}_test`;
   process.env.WEB_URL ??= 'http://localhost:3000';
   process.env.COOKIE_DOMAIN ??= 'localhost';
-  process.env.NODE_ENV = 'test';
 };
 
 export const createGraphqlFullTestApp = async (
