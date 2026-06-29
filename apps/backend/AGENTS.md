@@ -9,7 +9,8 @@ The backend api for securely managing volunteers and shifts in multi-tiered orga
 - `bun run format` - Format with Biome
 - `bun run check-types` - Check for type errors
 - `bun run test` - Jest unit tests (`src/**/*.spec.ts`; pattern: `src/notification/notification.spec.ts`)
-- `bun run --cwd apps/backend test:integration` - Drops/creates `clippy_test`, migrates/seeds it, and runs integration tests against the isolated test DB
+- `bun test apps/backend/test/` - Bun integration tests; auto-creates `${POSTGRES_DB}_test` (or uses it if `POSTGRES_DB` already ends with `_test`), migrates/seeds, then runs tests
+- `bun run --cwd apps/backend test:integration` - Local helper that drops/creates the test DB fresh before running integration tests
 - `bun run db:generate` - Generate database migrations based on schema changes
 - `bun run db:migrate` - Run drizzle database migrations
 
@@ -26,7 +27,9 @@ The backend has two test suites:
 2. **Integration tests** — `bun:test`, files under `test/*.integration.spec.ts`.
    - Use for anything that depends on actual SQL queries, transactions, GraphQL resolvers, auth guards, or multi-tenancy scoping.
    - They spin up the real NestJS app and connect to a PostgreSQL database.
-   - Run with `bun run --cwd apps/backend test:integration`. This command drops/creates `${POSTGRES_DB}_test` (default `clippy_test`), runs migrations, seeds permissions, and executes the tests.
+   - The first integration test to start auto-creates the test DB if it does not exist, runs migrations, and seeds permissions. If `POSTGRES_DB` already ends with `_test`, that name is used as-is; otherwise `_test` is appended.
+   - Run with `bun test apps/backend/test/` (or `bun test` from `apps/backend`).
+   - For a completely fresh local test DB, use `bun run --cwd apps/backend test:integration`, which drops/creates the DB first.
 
 ### Writing integration tests
 

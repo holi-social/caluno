@@ -1,23 +1,17 @@
-import { spawnSync } from 'node:child_process';
 import { Client } from 'pg';
-
-const getBackendRoot = () => {
-  const cwd = process.cwd();
-  return cwd.endsWith('apps/backend') ? cwd : `${cwd}/apps/backend`;
-};
+import {
+  applyTestDatabaseEnvironment,
+  getTestDatabaseName,
+  runMigrationsAndSeed,
+} from './helpers/ensure-test-database';
 
 const main = async () => {
-  process.env.NODE_ENV = 'test';
-  process.env.DB_HOST ??= 'localhost';
-  process.env.DB_PORT ??= process.env.POSTGRES_PORT ?? '5432';
-  process.env.DB_USER ??= process.env.POSTGRES_USER ?? 'postgres';
-  process.env.DB_PASSWORD ??= process.env.POSTGRES_PASSWORD ?? 'postgres';
-  const testDbName = `${process.env.POSTGRES_DB ?? 'clippy'}_test`;
-  process.env.DB_NAME = testDbName;
+  applyTestDatabaseEnvironment();
+  const testDbName = getTestDatabaseName();
 
-  const port = parseInt(process.env.DB_PORT, 10);
+  const port = parseInt(process.env.DB_PORT ?? '5432', 10);
 
-  console.log(`Setting up test database ${testDbName}...`);
+  console.log(`Setting up fresh test database ${testDbName}...`);
 
   const adminClient = new Client({
     host: process.env.DB_HOST,
@@ -38,31 +32,7 @@ const main = async () => {
     await adminClient.end();
   }
 
-  const migrateResult = spawnSync('bun', ['run', 'db:migrate'], {
-    cwd: getBackendRoot(),
-    stdio: 'inherit',
-    env: {
-      ...process.env,
-      DB_NAME: testDbName,
-    },
-  });
-
-  if (migrateResult.status !== 0) {
-    throw new Error('Failed to migrate test database.');
-  }
-
-  const seedResult = spawnSync('bun', ['run', 'src/database/seed.ts'], {
-    cwd: getBackendRoot(),
-    stdio: 'inherit',
-    env: {
-      ...process.env,
-      DB_NAME: testDbName,
-    },
-  });
-
-  if (seedResult.status !== 0) {
-    throw new Error('Failed to seed test database.');
-  }
+  runMigrationsAndSeed(testDbName);
 
   console.log('Test database ready.');
 };
