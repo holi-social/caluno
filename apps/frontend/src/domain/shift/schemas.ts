@@ -92,6 +92,7 @@ export function inviteShiftFormSchema(t: InviteShiftSchemaMessages) {
       minVolunteers: z.number().int().min(1).nullable().optional(),
       maxVolunteers: z.number().int().min(1).nullable().optional(),
       invitedMemberIds: z.array(z.string()),
+      inviteAllInstances: z.boolean().optional(),
     })
     .refine(
       (data) => {

@@ -56,7 +56,7 @@ export class ShiftService {
     organizationUnitId: string,
   ): Promise<ShiftEntity> {
     const shift = await this.db.query.shifts.findFirst({
-      where: { id, organizationUnitId },
+      where: { id, organizationUnitId, isDeleted: false },
     });
 
     if (!shift) {
