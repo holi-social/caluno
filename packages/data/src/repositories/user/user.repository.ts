@@ -1,6 +1,7 @@
 import type {
   GetMyOrganizationsQuery,
   GetMyPermissionsQuery,
+  UpdateMyLocaleMutation,
   User,
 } from '../../generated/graphql';
 import { BaseRepository } from '../base/base.repository';
@@ -34,5 +35,12 @@ export class UserRepository extends BaseRepository {
     const { limit = 10, offset = 0 } = options;
     const data = await this.sdk.GetMyOrganizations({ limit, offset });
     return data.organizations;
+  }
+
+  async updateMyLocale(
+    locale: string,
+  ): Promise<UpdateMyLocaleMutation['updateMyLocale']> {
+    const data = await this.sdk.UpdateMyLocale({ locale });
+    return data.updateMyLocale;
   }
 }

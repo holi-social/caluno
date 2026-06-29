@@ -33,6 +33,7 @@ export * from './react/hooks/use-roles';
 export * from './react/hooks/use-shift';
 export * from './react/hooks/use-shift-instances';
 export * from './react/hooks/use-shift-volunteers';
+export * from './react/hooks/use-update-user-locale';
 export * from './react/hooks/use-volunteer-submissions';
 export * from './react/hooks/use-weekly-shifts';
 // Organization context (provider, hooks, and cookie utilities)
