@@ -18,7 +18,7 @@ export default async function CheckOutPage({
   const { orgUId, checkInId } = await params;
 
   await requireOrgAccess(orgUId);
-  const data = await getDataClient(orgUId);
+  const data = await getDataClient({ orgUId });
   const user = await data.user.findByCheckInId(checkInId);
 
   const t = await getTranslations('Shift.checkIn');

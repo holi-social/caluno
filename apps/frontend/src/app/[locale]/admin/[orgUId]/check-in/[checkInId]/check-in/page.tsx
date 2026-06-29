@@ -21,7 +21,7 @@ export default async function CheckinPage({ params }: CheckinPageProps) {
   const { orgUId, checkInId } = await params;
 
   await requireOrgAccess(orgUId);
-  const data = await getDataClient(orgUId);
+  const data = await getDataClient({ orgUId });
   const user = await data.user.findByCheckInId(checkInId);
 
   const activeShiftsResult = await data.shift.activeShifts({

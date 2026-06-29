@@ -11,7 +11,7 @@ export default async function CreateTimeEntryPage({
   params,
 }: CreateTimeEntryPageProps) {
   const { orgUId, locale } = await params;
-  const data = await getDataClient(orgUId);
+  const data = await getDataClient({ orgUId });
   const t = await getTranslations({ locale, namespace: 'TimeEntry.sheet' });
 
   const [shifts, allVolunteers] = await Promise.all([

@@ -13,7 +13,9 @@ const rejectMembershipRequestSchema = z.object({
 export const rejectMembershipRequest = actionClient
   .inputSchema(rejectMembershipRequestSchema)
   .action(async ({ parsedInput }) => {
-    const data = await getDataClient(parsedInput.organizationUnitId);
+    const data = await getDataClient({
+      orgUId: parsedInput.organizationUnitId,
+    });
     return await data.membershipRequest.reject(
       parsedInput.id,
       parsedInput.organizationUnitId,

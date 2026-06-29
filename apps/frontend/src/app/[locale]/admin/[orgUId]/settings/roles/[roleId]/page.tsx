@@ -14,7 +14,7 @@ export default async function RoleDetailsPage({
 }: RoleDetailsPageProps) {
   const { orgUId, roleId, locale } = await params;
 
-  const data = await getDataClient(orgUId);
+  const data = await getDataClient({ orgUId });
   const t = await getTranslations({ locale, namespace: 'Role' });
   const [role, permissionGroups] = await Promise.all([
     data.role.findById(roleId),

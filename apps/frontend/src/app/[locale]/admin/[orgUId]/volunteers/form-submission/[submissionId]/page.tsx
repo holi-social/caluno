@@ -46,7 +46,7 @@ function resolveFieldAnswer(
 
 export default async function FormSubmissionPage({ params }: Props) {
   const { orgUId, submissionId, locale } = await params;
-  const data = await getDataClient(orgUId);
+  const data = await getDataClient({ orgUId });
   const t = await getTranslations({ locale, namespace: 'RequirementForm' });
   const tCommon = await getTranslations({ locale, namespace: 'Common' });
   const { formatDate } = await getFormatting();

@@ -15,7 +15,7 @@ export default async function OrgUnitDetailPage({
 }: OrgUnitDetailPageProps) {
   const { orgUId } = await params;
   await requireOrgAccess(orgUId);
-  const data = await getDataClient(orgUId);
+  const data = await getDataClient({ orgUId });
 
   const [[canEdit = false], orgUnit, types] = await Promise.all([
     checkPermission(orgUId, PermissionKey.OrgEdit),
