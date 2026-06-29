@@ -18,6 +18,9 @@ export class User {
   @Field(() => ID)
   checkInId!: string;
 
+  @Field(() => String, { nullable: true })
+  locale!: string | null;
+
   @Field(() => [Permission], { nullable: true })
   permissions!: Permission[];
 }
