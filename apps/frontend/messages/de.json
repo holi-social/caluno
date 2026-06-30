@@ -489,6 +489,7 @@
       "name": "Name",
       "firstDate": "Erster Termin",
       "pattern": "Muster",
+      "time": "Zeit",
       "visibility": "Sichtbarkeit"
     },
     "visibility": {

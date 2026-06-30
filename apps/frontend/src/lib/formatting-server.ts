@@ -5,6 +5,11 @@ import {
   timeOptions,
 } from '@/lib/date-time-options';
 
+const isSameDay = (from: Date, to: Date) =>
+  from.getDate() === to.getDate() &&
+  from.getMonth() === to.getMonth() &&
+  from.getFullYear() === to.getFullYear();
+
 export async function getFormatting() {
   const formatter = await getFormatter();
 
@@ -17,16 +22,18 @@ export async function getFormatting() {
     const fromDate = new Date(from);
     const toDate = new Date(to);
 
-    const isSameDay =
-      fromDate.getDate() === toDate.getDate() &&
-      fromDate.getMonth() === toDate.getMonth() &&
-      fromDate.getFullYear() === toDate.getFullYear();
-
-    if (isSameDay) {
+    if (isSameDay(fromDate, toDate)) {
       return `${formatDate(fromDate)} ${formatTime(fromDate)} - ${formatTime(toDate)}`;
     }
 
     return `${formatDateTime(fromDate)} - ${formatDateTime(toDate)}`;
+  };
+
+  const formatTimeRange = (from: string | Date, to: string | Date) => {
+    const fromDate = new Date(from);
+    const toDate = new Date(to);
+
+    return `${formatTime(fromDate)} - ${formatTime(toDate)}`;
   };
 
   return {
@@ -34,5 +41,6 @@ export async function getFormatting() {
     formatDateTime,
     formatTime,
     formatRange,
+    formatTimeRange,
   };
 }
