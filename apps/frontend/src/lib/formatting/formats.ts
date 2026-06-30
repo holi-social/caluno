@@ -51,6 +51,13 @@ export const formats = (locale: string) => {
     }
   };
 
+  const formatTimeRange = (from: string | Date, to: string | Date) => {
+    const fromDate = new Date(from);
+    const toDate = new Date(to);
+
+    return `${formatTime(fromDate)} - ${formatTime(toDate)}`;
+  };
+
   const formatDuration = (from: Date | string, to?: Date | string | null) => {
     const start = new Date(from);
     const end = to ? new Date(to) : new Date();
@@ -85,6 +92,7 @@ export const formats = (locale: string) => {
     formatDateTime,
     formatTime,
     formatRange,
+    formatTimeRange,
     formatDuration,
     formatDurationByMinutes,
   };
