@@ -1,4 +1,6 @@
+import { tz } from '@date-fns/tz';
 import {
+  format as dateFnsFormat,
   formatDuration as dateFnsFormatDuration,
   intervalToDuration,
   isSameDay,
@@ -6,8 +8,7 @@ import {
 } from 'date-fns';
 import { de, enGB } from 'date-fns/locale';
 
-import type { createFormatter } from 'next-intl';
-import { dateOptions, dateTimeOptions, timeOptions } from './date-time-options';
+export const DEFAULT_TIMEZONE = 'Europe/Berlin';
 
 const supportedLocales: Record<string, Locale> = {
   en: enGB,
@@ -17,14 +18,16 @@ const supportedLocales: Record<string, Locale> = {
 const getLocale = (locale: string): Locale =>
   supportedLocales[locale.toLocaleLowerCase()] ?? de;
 
-export const formats = (
-  formatter: ReturnType<typeof createFormatter>,
-  locale: string,
-) => {
-  const formatDate = (date: Date) => formatter.dateTime(date, dateOptions);
-  const formatDateTime = (date: Date) =>
-    formatter.dateTime(date, dateTimeOptions);
-  const formatTime = (date: Date) => formatter.dateTime(date, timeOptions);
+export const formats = (locale: string) => {
+  const format = (date: Date, formatting: string) =>
+    dateFnsFormat(date, formatting, {
+      locale: getLocale(locale),
+      in: tz(DEFAULT_TIMEZONE),
+    });
+
+  const formatDate = (date: Date) => format(date, 'P');
+  const formatDateTime = (date: Date) => format(date, 'Pp');
+  const formatTime = (date: Date) => format(date, 'p');
 
   const formatRange = (
     from: string | Date,
@@ -36,7 +39,7 @@ export const formats = (
     if (to) {
       const toDate = new Date(to);
 
-      if (isSameDay(to, from)) {
+      if (isSameDay(to, from, { in: tz(DEFAULT_TIMEZONE) })) {
         return `${formatDate(fromDate)} ${formatTime(fromDate)} - ${formatTime(toDate)}`;
       }
 
@@ -50,7 +53,11 @@ export const formats = (
     const start = new Date(from);
     const end = to ? new Date(to) : new Date();
 
-    const duration = intervalToDuration({ start, end });
+    const duration = intervalToDuration(
+      { start, end },
+      { in: tz(DEFAULT_TIMEZONE) },
+    );
+
     return dateFnsFormatDuration(duration, {
       zero: false,
       format: ['days', 'hours', 'minutes'],
@@ -59,7 +66,10 @@ export const formats = (
   };
 
   const formatDurationByMinutes = (minutes: number): string => {
-    const duration = intervalToDuration({ start: 0, end: minutes * 60 * 1000 });
+    const duration = intervalToDuration(
+      { start: 0, end: minutes * 60 * 1000 },
+      { in: tz(DEFAULT_TIMEZONE) },
+    );
 
     return dateFnsFormatDuration(duration, {
       zero: false,
