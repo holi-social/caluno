@@ -1,3 +1,4 @@
+import { isSameDay } from 'date-fns';
 import { useFormatter } from 'next-intl';
 import {
   dateOptions,
@@ -13,20 +14,24 @@ export function useFormatting() {
     formatter.dateTime(date, dateTimeOptions);
   const formatTime = (date: Date) => formatter.dateTime(date, timeOptions);
 
-  const formatRange = (from: string | Date, to: string | Date) => {
+  const formatRange = (
+    from: string | Date,
+    to?: string | Date | null,
+    noEndDateLabel = 'open',
+  ) => {
     const fromDate = new Date(from);
-    const toDate = new Date(to);
 
-    const isSameDay =
-      fromDate.getDate() === toDate.getDate() &&
-      fromDate.getMonth() === toDate.getMonth() &&
-      fromDate.getFullYear() === toDate.getFullYear();
+    if (to) {
+      const toDate = new Date(to);
 
-    if (isSameDay) {
-      return `${formatDate(fromDate)} ${formatTime(fromDate)} - ${formatTime(toDate)}`;
+      if (isSameDay(to, from)) {
+        return `${formatDate(fromDate)} ${formatTime(fromDate)} - ${formatTime(toDate)}`;
+      }
+
+      return `${formatDateTime(fromDate)} - ${formatDateTime(toDate)}`;
+    } else {
+      return `${formatDateTime(fromDate)} - ${noEndDateLabel}`;
     }
-
-    return `${formatDateTime(fromDate)} - ${formatDateTime(toDate)}`;
   };
 
   return {
