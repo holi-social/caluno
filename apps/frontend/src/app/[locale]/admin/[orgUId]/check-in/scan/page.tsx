@@ -13,7 +13,7 @@ export default async function ScanPage({ params }: ScanPageProps) {
   const { orgUId } = await params;
   const t = await getTranslations('Shift.checkIn');
 
-  const data = await getDataClient(orgUId);
+  const data = await getDataClient({ orgUId });
 
   const volunteers = await data.organization.findVolunteersByUnit(orgUId);
 

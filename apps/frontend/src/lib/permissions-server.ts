@@ -8,7 +8,7 @@ export async function checkPermission(
   orgUId: string,
   ...permission: PermissionKey[]
 ): Promise<boolean[]> {
-  const data = await getDataClient(orgUId);
+  const data = await getDataClient({ orgUId });
   const permissions = await data.user.getMyPermissions();
   const userKeys = new Set(permissions.map((p) => p.key));
   const required = Array.isArray(permission) ? permission : [permission];

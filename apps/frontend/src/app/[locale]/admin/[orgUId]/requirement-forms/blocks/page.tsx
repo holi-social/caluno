@@ -11,7 +11,7 @@ interface Props {
 export default async function BlocksPage({ params }: Props) {
   const { orgUId, locale } = await params;
   const { org } = await requireOrgAccess(orgUId);
-  const data = await getDataClient(orgUId);
+  const data = await getDataClient({ orgUId });
   const t = await getTranslations({
     locale,
     namespace: 'RequirementForm.blockLibrary',

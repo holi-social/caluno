@@ -381,6 +381,7 @@ type Mutation {
   updateFormBlockField(fieldId: String!, input: UpdateFormBlockFieldInput!): FormBlock!
   updateMembersForShiftInstance(instanceId: String!, memberIds: [String!]!): ShiftInstance!
   updateMembershipRoles(membershipId: ID!, roleIds: [ID!]!): Membership!
+  updateMyLocale(locale: String!): User!
   updateMyUserProfile(input: UpdateUserProfileInput!): UserProfile!
   updateOrganizationUnit(id: String!, input: UpdateOrganizationUnitInput!): OrganizationUnit!
   updateRequirement(id: String!, input: UpdateRequirementInput!): Requirement!
@@ -928,6 +929,7 @@ type User {
   email: String!
   id: ID!
   image: String
+  locale: String
   name: String!
   permissions: [Permission!]
 }

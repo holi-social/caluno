@@ -2,6 +2,8 @@ import {
   createDataClient,
   type DataClient,
   ForbiddenDataError,
+  LOCALE_HEADER,
+  type Locale,
 } from '@repo/data';
 import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
@@ -22,7 +24,15 @@ if (process.env.NODE_ENV !== 'production') {
   globalForData.dataClient = data;
 }
 
-export async function getDataClient(orgUId?: string): Promise<DataClient> {
+interface GetDataClientOptions {
+  orgUId?: string;
+  locale?: Locale;
+}
+
+export async function getDataClient(
+  options?: GetDataClientOptions,
+): Promise<DataClient> {
+  const { orgUId, locale } = options ?? {};
   const headersList = await headers();
   const cookieHeader = headersList.get('cookie');
 
@@ -30,6 +40,10 @@ export async function getDataClient(orgUId?: string): Promise<DataClient> {
 
   if (orgUId) {
     clientHeaders['x-organization-unit-id'] = orgUId;
+  }
+
+  if (locale) {
+    clientHeaders[LOCALE_HEADER] = locale;
   }
 
   if (cookieHeader) {

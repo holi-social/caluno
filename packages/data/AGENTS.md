@@ -18,4 +18,5 @@ src/
 ## Patterns
 - Repositories 'wrap' the GraphQL queries and mutations (*.graphql)
 - GraphQL queries and mutations (*.graphql) are co-located with the repositories that use them
+- Locale is request metadata: pass `locale` to `createDataClient` / `DataProvider`; `@repo/data` maps it to the `x-locale` header.
 - Adding a query/mutation: see skill `.agents/skills/add-data-query`

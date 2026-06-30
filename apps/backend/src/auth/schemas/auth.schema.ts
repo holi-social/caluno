@@ -8,6 +8,7 @@ export const users = pgTable('users', {
   email: text('email').notNull().unique(),
   emailVerified: boolean('email_verified').default(false).notNull(),
   image: text('image'),
+  locale: text('locale'),
   checkInId: text('check_in_id')
     .notNull()
     .unique()

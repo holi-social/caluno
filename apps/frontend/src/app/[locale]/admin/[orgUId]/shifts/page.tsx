@@ -48,7 +48,7 @@ export default async function ShiftsPage({
 
   const t = await getTranslations('Shift');
 
-  const data = await getDataClient(orgUId);
+  const data = await getDataClient({ orgUId });
   let tableContent: GetShiftsQuery['shifts'] | null = null;
   let instances: GetWeeklyShiftsQuery['weeklyShifts'] | null = null;
 

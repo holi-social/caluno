@@ -10,7 +10,7 @@ export default async function DecidePage({ params }: CheckinPageProps) {
   const { orgUId, checkInId } = await params;
 
   await requireOrgAccess(orgUId);
-  const data = await getDataClient(orgUId);
+  const data = await getDataClient({ orgUId });
   const user = await data.user.findByCheckInId(checkInId);
 
   if (!user) {

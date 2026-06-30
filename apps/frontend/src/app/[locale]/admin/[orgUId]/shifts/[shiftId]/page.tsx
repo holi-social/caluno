@@ -45,7 +45,7 @@ export default async function ShiftViewPage({
   const returnQuery = parseShiftListQuery(await searchParams);
 
   const t = await getTranslations('Shift');
-  const data = await getDataClient(orgUId);
+  const data = await getDataClient({ orgUId });
   const { formatDateTime, formatRange } = await getFormatting();
   const visibilityConfig = getVisibilityConfig(t);
   const shift = await data.shift.findById(shiftId);
