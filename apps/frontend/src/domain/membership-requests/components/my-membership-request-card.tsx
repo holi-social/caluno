@@ -3,7 +3,7 @@ import {
   MembershipRequestStatus,
 } from '@repo/data';
 import { Card, CardAction, CardContent, CardHeader, CardTitle } from '@repo/ui';
-import { formatDate } from '@/lib/formatting';
+import { useFormatting } from '@/hooks/use-formatting';
 import { CancelMembershipRequestButton } from './cancel-membership-request-button';
 
 type MyMembershipRequestItem =
@@ -14,6 +14,7 @@ interface Props {
 }
 
 export default function MyMembershipRequestCard({ request }: Props) {
+  const { formatDate } = useFormatting();
   const date =
     request.status === MembershipRequestStatus.Pending
       ? request.createdAt

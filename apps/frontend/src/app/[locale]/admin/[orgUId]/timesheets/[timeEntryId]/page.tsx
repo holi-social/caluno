@@ -11,9 +11,9 @@ import {
 import { notFound } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
 import { ActionBar } from '@/domain/time-entry/components/action-bar';
-import { formatDuration, formatTimeRange } from '@/domain/time-entry/formating';
+import { formatDuration } from '@/domain/time-entry/formating';
+import { useFormatting } from '@/hooks/use-formatting';
 import { getDataClient } from '@/lib/data-client';
-import { formatDateTime } from '@/lib/formatting';
 
 interface TimeEntryDetailPageProps {
   params: Promise<{ orgUId: string; timeEntryId: string }>;
@@ -32,6 +32,7 @@ export default async function TimeEntryDetailPage({
   }
 
   const t = await getTranslations('TimeEntry');
+  const { formatDateTime, formatRange } = useFormatting();
 
   const isOpen = !entry.endedAt;
 
@@ -63,7 +64,13 @@ export default async function TimeEntryDetailPage({
                 </li>
                 <li className="flex gap-2">
                   <Calendars className="text-muted-foreground shrink-0" />
-                  <span>{formatTimeRange(entry, t('format.open'))}</span>
+                  <span>
+                    {formatRange(
+                      entry.startedAt,
+                      entry.endedAt,
+                      t('format.open'),
+                    )}
+                  </span>
                 </li>
 
                 {entry.notes && (
