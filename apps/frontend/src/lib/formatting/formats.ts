@@ -1,4 +1,8 @@
-import { isSameDay } from 'date-fns';
+import {
+  formatDuration as dateFnsFormatDuration,
+  intervalToDuration,
+  isSameDay,
+} from 'date-fns';
 import type { createFormatter } from 'next-intl';
 import { dateOptions, dateTimeOptions, timeOptions } from './date-time-options';
 
@@ -28,10 +32,32 @@ export const formats = (formatter: ReturnType<typeof createFormatter>) => {
     }
   };
 
+  const formatDuration = (from: Date | string, to?: Date | string | null) => {
+    const start = new Date(from);
+    const end = to ? new Date(to) : new Date();
+
+    const duration = intervalToDuration({ start, end });
+    return dateFnsFormatDuration(duration, {
+      zero: false,
+      format: ['days', 'hours', 'minutes'],
+    });
+  };
+
+  const formatDurationByMinutes = (minutes: number): string => {
+    const duration = intervalToDuration({ start: 0, end: minutes * 60 * 1000 });
+
+    return dateFnsFormatDuration(duration, {
+      zero: false,
+      format: ['days', 'hours', 'minutes'],
+    });
+  };
+
   return {
     formatDate,
     formatDateTime,
     formatTime,
     formatRange,
+    formatDuration,
+    formatDurationByMinutes,
   };
 };

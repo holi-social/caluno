@@ -11,7 +11,6 @@ import {
 import { useTranslations } from 'next-intl';
 import { Link } from '@/i18n/navigation';
 import { useFormatting } from '@/lib/formatting/use-formatting';
-import { formatDuration } from '../formating';
 import { ActionBar } from './action-bar';
 
 type TimeEntry = GetTimeEntriesQuery['timeEntries']['items'][number];
@@ -26,7 +25,7 @@ export const TimesheetsTable = ({
   organizationUnitId,
 }: TimesheetsTableProps) => {
   const t = useTranslations('TimeEntry');
-  const { formatRange } = useFormatting();
+  const { formatRange, formatDuration } = useFormatting();
 
   return (
     <div className="rounded-md border overflow-hidden">
@@ -63,7 +62,9 @@ export const TimesheetsTable = ({
               <TableCell>
                 {formatRange(entry.startedAt, entry.endedAt, t('format.open'))}
               </TableCell>
-              <TableCell>{formatDuration(entry)}</TableCell>
+              <TableCell>
+                {formatDuration(entry.startedAt, entry.endedAt)}
+              </TableCell>
               <TableCell>
                 <ActionBar
                   id={entry.id}
