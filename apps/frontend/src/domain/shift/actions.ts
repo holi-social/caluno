@@ -171,7 +171,9 @@ const inviteMembersToShiftSchema = z.object({
 export const inviteMembersToShift = actionClient
   .inputSchema(inviteMembersToShiftSchema)
   .action(async ({ parsedInput }) => {
-    const data = await getDataClient(parsedInput.organizationUnitId);
+    const data = await getDataClient({
+      orgUId: parsedInput.organizationUnitId,
+    });
     return await data.shift.inviteMembersToShift(
       parsedInput.shiftId,
       parsedInput.memberIds,
