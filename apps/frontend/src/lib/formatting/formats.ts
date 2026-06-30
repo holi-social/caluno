@@ -33,6 +33,8 @@ export const formats = (locale: string) => {
     from: string | Date,
     to?: string | Date | null,
     noEndDateLabel = 'open',
+    fromFormat = 'Pp',
+    toFormat = 'Pp',
   ) => {
     const fromDate = new Date(from);
 
@@ -43,9 +45,9 @@ export const formats = (locale: string) => {
         return `${formatDate(fromDate)} ${formatTime(fromDate)} - ${formatTime(toDate)}`;
       }
 
-      return `${formatDateTime(fromDate)} - ${formatDateTime(toDate)}`;
+      return `${format(fromDate, fromFormat)} - ${format(toDate, toFormat)}`;
     } else {
-      return `${formatDateTime(fromDate)} - ${noEndDateLabel}`;
+      return `${format(fromDate, fromFormat)} - ${noEndDateLabel}`;
     }
   };
 

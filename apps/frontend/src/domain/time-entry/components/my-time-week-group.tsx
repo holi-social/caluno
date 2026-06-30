@@ -8,7 +8,9 @@ export const MyTimeWeekGroup = ({ week }: { week: WeekGroup }) => {
   return (
     <section className="space-y-2">
       <header className="flex items-center justify-between px-1 text-sm font-semibold text-muted-foreground">
-        <span>{formatRange(week.weekStart, week.weekEnd)}</span>
+        <span>
+          {formatRange(week.weekStart, week.weekEnd, '', 'e LLL', 'e LLL y')}
+        </span>
         <span className="tabular-nums">
           {formatDurationByMinutes(week.totalMinutes)}
         </span>
