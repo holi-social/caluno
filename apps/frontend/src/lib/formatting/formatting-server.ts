@@ -1,7 +1,8 @@
-import { getFormatter } from 'next-intl/server';
+import { getFormatter, getLocale } from 'next-intl/server';
 import { formats } from './formats';
 
 export async function getFormatting() {
   const formatter = await getFormatter();
-  return formats(formatter);
+  const locale = await getLocale();
+  return formats(formatter, locale);
 }

@@ -12,7 +12,7 @@ export const MyTimeEntryRow = ({ entry }: { entry: TimeEntry }) => {
   const organizationUnit = shift.organizationUnit;
   const inProgress = state === 'in-progress';
   const duration = inProgress
-    ? '—'
+    ? ''
     : formatDuration(entry.startedAt, entry.endedAt);
 
   return (

@@ -2,11 +2,25 @@ import {
   formatDuration as dateFnsFormatDuration,
   intervalToDuration,
   isSameDay,
+  type Locale,
 } from 'date-fns';
+import { de, enGB } from 'date-fns/locale';
+
 import type { createFormatter } from 'next-intl';
 import { dateOptions, dateTimeOptions, timeOptions } from './date-time-options';
 
-export const formats = (formatter: ReturnType<typeof createFormatter>) => {
+const supportedLocales: Record<string, Locale> = {
+  en: enGB,
+  de,
+};
+
+const getLocale = (locale: string): Locale =>
+  supportedLocales[locale.toLocaleLowerCase()] ?? de;
+
+export const formats = (
+  formatter: ReturnType<typeof createFormatter>,
+  locale: string,
+) => {
   const formatDate = (date: Date) => formatter.dateTime(date, dateOptions);
   const formatDateTime = (date: Date) =>
     formatter.dateTime(date, dateTimeOptions);
@@ -40,6 +54,7 @@ export const formats = (formatter: ReturnType<typeof createFormatter>) => {
     return dateFnsFormatDuration(duration, {
       zero: false,
       format: ['days', 'hours', 'minutes'],
+      locale: getLocale(locale),
     });
   };
 
@@ -49,6 +64,7 @@ export const formats = (formatter: ReturnType<typeof createFormatter>) => {
     return dateFnsFormatDuration(duration, {
       zero: false,
       format: ['days', 'hours', 'minutes'],
+      locale: getLocale(locale),
     });
   };
 

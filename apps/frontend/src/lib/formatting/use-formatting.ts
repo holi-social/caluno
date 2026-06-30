@@ -1,7 +1,8 @@
-import { useFormatter } from 'next-intl';
+import { useFormatter, useLocale } from 'next-intl';
 import { formats } from './formats';
 
 export function useFormatting() {
   const formatter = useFormatter();
-  return formats(formatter);
+  const locale = useLocale();
+  return formats(formatter, locale);
 }
