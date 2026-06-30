@@ -489,6 +489,7 @@
       "name": "Name",
       "firstDate": "First Date",
       "pattern": "Pattern",
+      "time": "Time",
       "visibility": "Visibility"
     },
     "visibility": {
