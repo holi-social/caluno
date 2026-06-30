@@ -69,9 +69,16 @@ error messages, or empty-state text in components. Add new keys to both locales 
 keep namespaces/key shapes in sync.
 
 ### Locale switching
-Use `useLocale`, `usePathname`, and `useRouter` from `@/i18n/navigation`. Call
-`router.replace(pathname, { locale })` to switch locale while preserving the current
-path. next-intl updates the locale cookie automatically.
+Use `useLocale`, `usePathname`, and `useRouter` from `@/i18n/navigation`. The
+LocaleSwitcher persists the selected locale to the backend via
+`useUpdateUserLocale()` from `@repo/data/react`, stores it in the
+`clippy.locale` cookie via `setUserLocaleCookie()`, and then calls
+`router.replace(pathname, { locale })` to update the URL.
+
+The locale proxy (`src/proxy.ts`) reads the `clippy.locale` cookie and redirects
+any locale-prefixed route to the user's stored locale when it differs from the
+URL locale. Profile pages additionally fetch `me.locale` server-side and redirect
+on the first visit before the cookie is present.
 
 ## New features
 Always study UI/UX patterns in existing similar features before starting a new one — consistent experience across features.

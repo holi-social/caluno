@@ -13,7 +13,7 @@ export default async function RoleUpdatePage({
 }: TimeEntryUpdatePageProps) {
   const { orgUId, roleId, locale } = await params;
 
-  const data = await getDataClient(orgUId);
+  const data = await getDataClient({ orgUId });
   const t = await getTranslations({ locale, namespace: 'Role.sheet' });
 
   const [role, permissionGroups] = await Promise.all([

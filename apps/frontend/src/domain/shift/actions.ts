@@ -47,14 +47,16 @@ function generateRrule(
 }
 
 export async function getShift(id: string, organizationUnitId: string) {
-  const data = await getDataClient(organizationUnitId);
+  const data = await getDataClient({ orgUId: organizationUnitId });
   return data.shift.findById(id);
 }
 
 export const createShift = actionClient
   .inputSchema(serverShiftFormSchema)
   .action(async ({ parsedInput }) => {
-    const data = await getDataClient(parsedInput.organizationUnitId);
+    const data = await getDataClient({
+      orgUId: parsedInput.organizationUnitId,
+    });
 
     const rrule = generateRrule(
       parsedInput.startsAt,
@@ -87,7 +89,9 @@ export const createShift = actionClient
 export const updateShift = actionClient
   .inputSchema(serverUpdateShiftFormSchema)
   .action(async ({ parsedInput }) => {
-    const data = await getDataClient(parsedInput.organizationUnitId);
+    const data = await getDataClient({
+      orgUId: parsedInput.organizationUnitId,
+    });
 
     const rrule = generateRrule(
       parsedInput.startsAt,
@@ -114,7 +118,9 @@ export const updateShift = actionClient
 export const deleteShift = actionClient
   .inputSchema(serverShiftDeleteSchema)
   .action(async ({ parsedInput }) => {
-    const data = await getDataClient(parsedInput.organizationUnitId);
+    const data = await getDataClient({
+      orgUId: parsedInput.organizationUnitId,
+    });
 
     return await data.shift.delete(parsedInput.id);
   });
@@ -128,7 +134,9 @@ const updateShiftVolunteersSchema = z.object({
 export const updateShiftVolunteers = actionClient
   .inputSchema(updateShiftVolunteersSchema)
   .action(async ({ parsedInput }) => {
-    const data = await getDataClient(parsedInput.organizationUnitId);
+    const data = await getDataClient({
+      orgUId: parsedInput.organizationUnitId,
+    });
     return await data.shift.updateMembers(
       parsedInput.instanceId,
       parsedInput.memberIds,
@@ -145,7 +153,9 @@ const updateShiftStaffingSchema = z.object({
 export const updateShiftStaffing = actionClient
   .inputSchema(updateShiftStaffingSchema)
   .action(async ({ parsedInput }) => {
-    const data = await getDataClient(parsedInput.organizationUnitId);
+    const data = await getDataClient({
+      orgUId: parsedInput.organizationUnitId,
+    });
     await data.shift.update(parsedInput.shiftId, {
       minVolunteers: parsedInput.minVolunteers ?? undefined,
       maxVolunteers: parsedInput.maxVolunteers ?? undefined,

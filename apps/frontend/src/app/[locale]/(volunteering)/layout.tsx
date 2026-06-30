@@ -4,22 +4,27 @@ import type { ReactNode } from 'react';
 import { ProfileDropdown } from '@/components/navigation/profile-dropdown';
 import { VolunteerNav } from '@/components/navigation/volunteer-nav';
 import { Link } from '@/i18n/navigation';
+import { resolveLocale } from '@/i18n/routing';
 import { requireAuth } from '@/lib/auth-server';
 import { GRAPHQL_API_URL } from '@/lib/constants';
 
 interface VolunteeringOrgLayoutProps {
   children: ReactNode;
+  params: Promise<{ locale: string }>;
 }
 
 export default async function VolunteeringOrgLayout({
   children,
+  params,
 }: VolunteeringOrgLayoutProps) {
   const session = await requireAuth();
+  const { locale: rawLocale } = await params;
+  const locale = resolveLocale(rawLocale);
 
   const user = session.user;
 
   return (
-    <DataProvider apiUrl={GRAPHQL_API_URL}>
+    <DataProvider apiUrl={GRAPHQL_API_URL} locale={locale}>
       <div className="flex min-h-screen flex-col">
         <header className="shrink border-b">
           <div className="container mx-auto px-4 flex items-center h-14 max-w-4xl">

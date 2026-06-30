@@ -8,18 +8,25 @@ import {
 import type { ReactNode } from 'react';
 import { HomeSidebar } from '@/components/navigation/home-sidebar';
 import { PageTitle } from '@/components/page-title';
+import { resolveLocale } from '@/i18n/routing';
 import { requireAuth } from '@/lib/auth-server';
 import { GRAPHQL_API_URL } from '@/lib/constants';
 
 interface HomeLayoutProps {
   children: ReactNode;
+  params: Promise<{ locale: string }>;
 }
 
-export default async function HomeLayout({ children }: HomeLayoutProps) {
+export default async function HomeLayout({
+  children,
+  params,
+}: HomeLayoutProps) {
   await requireAuth('/login');
+  const { locale: rawLocale } = await params;
+  const locale = resolveLocale(rawLocale);
 
   return (
-    <DataProvider apiUrl={GRAPHQL_API_URL}>
+    <DataProvider apiUrl={GRAPHQL_API_URL} locale={locale}>
       <SidebarProvider>
         <HomeSidebar />
         <SidebarInset>

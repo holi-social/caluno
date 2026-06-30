@@ -13,7 +13,9 @@ export const createOrgUnit = actionClient
   .inputSchema(serverCreateOrgUnitSchema)
   .bindArgsSchemas<[parentId: z.ZodUUID]>([z.uuid()])
   .action(async ({ bindArgsParsedInputs: [parentId], parsedInput }) => {
-    const data = await getDataClient(parsedInput.organizationUnitId);
+    const data = await getDataClient({
+      orgUId: parsedInput.organizationUnitId,
+    });
 
     const input: CreateOrganizationUnitInput = {
       organizationId: parsedInput.organizationId,
@@ -35,7 +37,9 @@ export const updateOrgUnit = actionClient
   .inputSchema(serverCreateOrgUnitSchema)
   .bindArgsSchemas<[id: z.ZodUUID]>([z.uuid()])
   .action(async ({ bindArgsParsedInputs: [id], parsedInput }) => {
-    const data = await getDataClient(parsedInput.organizationUnitId);
+    const data = await getDataClient({
+      orgUId: parsedInput.organizationUnitId,
+    });
 
     const input: UpdateOrganizationUnitInput = {
       organizationId: parsedInput.organizationId,
@@ -55,6 +59,8 @@ export const updateOrgUnit = actionClient
 export const deleteOrgUnit = actionClient
   .inputSchema(deleteOrgUnitSchema)
   .action(async ({ parsedInput }) => {
-    const data = await getDataClient(parsedInput.organizationUnitId);
+    const data = await getDataClient({
+      orgUId: parsedInput.organizationUnitId,
+    });
     return await data.organizationUnit.delete(parsedInput.id);
   });

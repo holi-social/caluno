@@ -10,7 +10,7 @@ interface CreateRolePageProps {
 export default async function CreateRolePage({ params }: CreateRolePageProps) {
   const { orgUId, locale } = await params;
 
-  const dataClient = await getDataClient(orgUId);
+  const dataClient = await getDataClient({ orgUId });
   const permissionGroups = await dataClient.role.findPermissionGroups();
   const t = await getTranslations({ locale, namespace: 'Role.sheet' });
 

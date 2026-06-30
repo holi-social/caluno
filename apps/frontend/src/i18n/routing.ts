@@ -8,3 +8,9 @@ export const routing = defineRouting({
 });
 
 export type Locale = (typeof routing.locales)[number];
+
+export function resolveLocale(locale: string): Locale {
+  return (routing.locales as readonly string[]).includes(locale)
+    ? (locale as Locale)
+    : routing.defaultLocale;
+}

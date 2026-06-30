@@ -12,7 +12,7 @@ export default async function TimesheetsPage({ params }: TimesheetsPageProps) {
   const { orgUId } = await params;
   const t = await getTranslations('TimeEntry');
 
-  const data = await getDataClient(orgUId);
+  const data = await getDataClient({ orgUId });
 
   const timeEntries = await data.timeEntry.findAll();
   const hasTimeEntries = timeEntries.pagination.total > 0;

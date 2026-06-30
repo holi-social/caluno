@@ -9,7 +9,7 @@ interface Props {
 export default async function RequirementFormsPage({ params }: Props) {
   const { orgUId } = await params;
   const { org } = await requireOrgAccess(orgUId);
-  const data = await getDataClient(orgUId);
+  const data = await getDataClient({ orgUId });
 
   const [formsResult, blocksResult] = await Promise.all([
     data.requirementForm.findForms(org.organizationId, {

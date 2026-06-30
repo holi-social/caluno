@@ -5,6 +5,7 @@ query GetMe {
     email
     image
     checkInId
+    locale
   }
 }
 
@@ -15,6 +16,7 @@ query GetUser($id: String!) {
     email
     image
     checkInId
+    locale
   }
 }
 
@@ -25,6 +27,7 @@ query GetUserByCheckInId($checkInId: String!) {
     email
     image
     checkInId
+    locale
   }
 }
 
@@ -53,5 +56,12 @@ query GetMyOrganizations($limit: Int!, $offset: Int!) {
       offset
       hasMore
     }
+  }
+}
+
+mutation UpdateMyLocale($locale: String!) {
+  updateMyLocale(locale: $locale) {
+    id
+    locale
   }
 }

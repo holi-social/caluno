@@ -24,7 +24,7 @@ export default async function TimeEntryDetailPage({
 }: TimeEntryDetailPageProps) {
   const { orgUId, timeEntryId } = await params;
 
-  const data = await getDataClient(orgUId);
+  const data = await getDataClient({ orgUId });
   const entry = await data.timeEntry.findById(timeEntryId);
 
   if (!entry) {

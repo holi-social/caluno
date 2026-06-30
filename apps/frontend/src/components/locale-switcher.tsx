@@ -1,5 +1,6 @@
 'use client';
 
+import { useUpdateUserLocale } from '@repo/data/react';
 import {
   Button,
   Label,
@@ -12,6 +13,8 @@ import {
 import { useLocale, useTranslations } from 'next-intl';
 import { useEffect, useState } from 'react';
 import { usePathname, useRouter } from '@/i18n/navigation';
+import type { Locale } from '@/i18n/routing';
+import { setUserLocaleCookie } from '@/lib/locale-cookie';
 
 const locales = [
   { key: 'en', label: 'English' },
@@ -23,6 +26,7 @@ export function LocaleSwitcher() {
   const locale = useLocale();
   const pathname = usePathname();
   const router = useRouter();
+  const updateLocale = useUpdateUserLocale();
   const [selected, setSelected] = useState(locale);
   const selectedLabel =
     locales.find(({ key }) => key === selected)?.label ?? selected;
@@ -31,8 +35,10 @@ export function LocaleSwitcher() {
     setSelected(locale);
   }, [locale]);
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (selected === locale) return;
+    await updateLocale.mutateAsync(selected);
+    setUserLocaleCookie(selected as Locale);
     router.replace(pathname, { locale: selected });
   };
 
