@@ -1,4 +1,5 @@
 import { Context, Parent, ResolveField, Resolver } from '@nestjs/graphql';
+import { Session, type UserSession } from '@thallesp/nestjs-better-auth';
 import { AuthService } from '../../auth/auth.service';
 import { PermissionMapper } from '../../auth/mappers/permission.mapper';
 import { Permission } from '../../auth/models/permission.model';
@@ -16,9 +17,10 @@ export class UserFieldResolver {
   @ResolveField(() => [Permission])
   async permissions(
     @Parent() user: User,
+    @Session() session: UserSession,
     @Context() ctx: AuthenticatedGraphQLContext,
   ): Promise<Permission[]> {
-    if (user.id !== ctx.user.id) {
+    if (user.id !== session.user.id) {
       throw new ForbiddenGraphQLError('You can only view your own permissions');
     }
 
