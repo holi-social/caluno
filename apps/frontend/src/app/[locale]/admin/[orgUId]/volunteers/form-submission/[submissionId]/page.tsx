@@ -9,7 +9,7 @@ import {
 import { notFound } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
 import { getDataClient } from '@/lib/data-client';
-import { getFormatting } from '@/lib/formatting-server';
+import { getFormatting } from '@/lib/formatting/formatting-server';
 
 interface Props {
   params: Promise<{ orgUId: string; submissionId: string; locale: string }>;

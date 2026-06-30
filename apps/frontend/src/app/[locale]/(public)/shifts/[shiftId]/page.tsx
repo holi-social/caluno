@@ -7,7 +7,7 @@ import { UserCard } from '@/components/user-card';
 import { JoinShiftButton } from '@/domain/shift/components/join-shift-button';
 import { isAuthenticated } from '@/lib/auth-server';
 import { getDataClient } from '@/lib/data-client';
-import { getFormatting } from '@/lib/formatting-server';
+import { getFormatting } from '@/lib/formatting/formatting-server';
 import { validateUserOrgAccess } from '@/lib/org-context-server';
 
 interface ShiftPageProps {

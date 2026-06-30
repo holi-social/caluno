@@ -1,14 +1,8 @@
 import { isSameDay } from 'date-fns';
-import { useFormatter } from 'next-intl';
-import {
-  dateOptions,
-  dateTimeOptions,
-  timeOptions,
-} from '@/lib/date-time-options';
+import type { createFormatter } from 'next-intl';
+import { dateOptions, dateTimeOptions, timeOptions } from './date-time-options';
 
-export function useFormatting() {
-  const formatter = useFormatter();
-
+export const formats = (formatter: ReturnType<typeof createFormatter>) => {
   const formatDate = (date: Date) => formatter.dateTime(date, dateOptions);
   const formatDateTime = (date: Date) =>
     formatter.dateTime(date, dateTimeOptions);
@@ -40,4 +34,4 @@ export function useFormatting() {
     formatTime,
     formatRange,
   };
-}
+};

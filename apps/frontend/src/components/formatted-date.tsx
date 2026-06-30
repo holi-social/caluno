@@ -1,6 +1,6 @@
 'use client';
 
-import { useFormatting } from '@/hooks/use-formatting';
+import { useFormatting } from '@/lib/formatting/use-formatting';
 
 export function FormattedDate({ date }: { date: Date | string }) {
   const { formatDate } = useFormatting();

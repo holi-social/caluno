@@ -12,8 +12,8 @@ import { notFound } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
 import { ActionBar } from '@/domain/time-entry/components/action-bar';
 import { formatDuration } from '@/domain/time-entry/formating';
-import { useFormatting } from '@/hooks/use-formatting';
 import { getDataClient } from '@/lib/data-client';
+import { getFormatting } from '@/lib/formatting/formatting-server';
 
 interface TimeEntryDetailPageProps {
   params: Promise<{ orgUId: string; timeEntryId: string }>;
@@ -32,7 +32,7 @@ export default async function TimeEntryDetailPage({
   }
 
   const t = await getTranslations('TimeEntry');
-  const { formatDateTime, formatRange } = useFormatting();
+  const { formatDateTime, formatRange } = await getFormatting();
 
   const isOpen = !entry.endedAt;
 

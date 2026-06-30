@@ -25,7 +25,7 @@ import { UserCard } from '@/components/user-card';
 import { getVisibilityConfig } from '@/domain/shift/components/shifts-table';
 import { parseShiftListQuery } from '@/domain/shift/routes';
 import { getDataClient } from '@/lib/data-client';
-import { getFormatting } from '@/lib/formatting-server';
+import { getFormatting } from '@/lib/formatting/formatting-server';
 import { ShiftViewActionBar } from './shift-view-action-bar';
 
 interface ShiftViewPageProps {

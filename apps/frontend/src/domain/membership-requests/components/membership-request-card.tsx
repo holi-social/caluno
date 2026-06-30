@@ -16,8 +16,8 @@ import {
 import { UserRound } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { MembershipRequestActions } from '@/domain/membership-requests/components/membership-request-actions';
-import { useFormatting } from '@/hooks/use-formatting';
 import { useSheetTrigger } from '@/hooks/use-sheet';
+import { useFormatting } from '@/lib/formatting/use-formatting';
 
 interface Props {
   request: GetMembershipRequestsQuery['membershipRequests']['items'][number];

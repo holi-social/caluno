@@ -9,8 +9,8 @@ import {
   TableRow,
 } from '@repo/ui';
 import { useTranslations } from 'next-intl';
-import { useFormatting } from '@/hooks/use-formatting';
 import { Link } from '@/i18n/navigation';
+import { useFormatting } from '@/lib/formatting/use-formatting';
 import { formatDuration } from '../formating';
 import { ActionBar } from './action-bar';
 

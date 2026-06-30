@@ -3,7 +3,7 @@ import {
   MembershipRequestStatus,
 } from '@repo/data';
 import { Card, CardAction, CardContent, CardHeader, CardTitle } from '@repo/ui';
-import { useFormatting } from '@/hooks/use-formatting';
+import { useFormatting } from '@/lib/formatting/use-formatting';
 import { CancelMembershipRequestButton } from './cancel-membership-request-button';
 
 type MyMembershipRequestItem =

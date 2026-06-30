@@ -3,7 +3,7 @@ import { Calendar, Hand, LogIn } from 'lucide-react';
 import { getTranslations } from 'next-intl/server';
 import { CheckOutButton } from '@/domain/shift/components/checkout-button';
 import { getDataClient } from '@/lib/data-client';
-import { getFormatting } from '@/lib/formatting-server';
+import { getFormatting } from '@/lib/formatting/formatting-server';
 import { requireOrgAccess } from '@/lib/org-context-server';
 
 interface CheckOutPageProps {
