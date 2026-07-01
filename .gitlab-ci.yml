@@ -36,11 +36,17 @@ variables:
 
 # ─── TEST ─────────────────────────────────────────────────────────────────────
 
-# AI pipeline structural quality gate. Runs on every MR and branch pipeline; make it a
-# required check on protected `main` (Settings → Merge requests → "Pipelines must succeed").
-# This is the enforcement the local pre-commit hook only approximates — the agent's shell
-# cannot bypass it. See .ai/PIPELINE.md (Enforcement Model).
+# Merge gates: MR pipelines targeting main/production only. Post-merge main pipelines
+# run check_migrations + deploy; re-running lint/tests/SAST on main is redundant once
+# "Pipelines must succeed" is enforced on the MR.
+.mr-to-main-or-production:
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event" && ($CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "main" || $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "production")'
+
+# AI pipeline structural quality gate. Required MR check on protected `main`
+# (Settings → Merge requests → "Pipelines must succeed"). See .ai/PIPELINE.md.
 quality:
+  extends: .mr-to-main-or-production
   stage: test
   image: europe-north1-docker.pkg.dev/holi-shared/docker-hub-remote/oven/bun:1
   needs: []
@@ -52,6 +58,7 @@ quality:
 
 # AI pipeline gate-script self-test: the structural guards must stay green.
 ai_gate_tests:
+  extends: .mr-to-main-or-production
   stage: test
   image: europe-north1-docker.pkg.dev/holi-shared/docker-hub-remote/oven/bun:1
   needs: []
@@ -79,6 +86,7 @@ commit_lint:
       if [ -z "$BASE" ]; then echo "no MR base sha; skipping"; exit 0; fi
       bash .ai/scripts/commit-lint.sh range "${BASE}..HEAD"
 
+# Runs on every pipeline (MR, main/production deploy, feature-branch builds).
 check_migrations:
   stage: test
   image: europe-north1-docker.pkg.dev/holi-shared/docker-hub-remote/oven/bun:1
@@ -100,6 +108,7 @@ check_migrations:
       fi
 
 integration_tests:
+  extends: .mr-to-main-or-production
   stage: test
   image: europe-north1-docker.pkg.dev/holi-shared/docker-hub-remote/oven/bun:1
   needs: []
@@ -125,12 +134,17 @@ integration_tests:
   script:
     - bun test
 
-# ─── SAST POST-PROCESSING ─────────────────────────────────────────────────────
+# ─── SAST ─────────────────────────────────────────────────────────────────────
 # semgrep-sast (template) scans TS/JS and uploads gl-sast-report.json.
 # sast_summary posts Critical/High table (job log + MR comment); sast_gate blocks merge;
 # sast_medium_issues files Medium findings as grouped GitLab issues (one per file+rule). Both need SAST_ISSUES_TOKEN.
 
+semgrep-sast:
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event" && ($CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "main" || $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "production")'
+
 .sast-postprocess:
+  extends: .mr-to-main-or-production
   stage: test
   image: europe-north1-docker.pkg.dev/holi-shared/docker-hub-remote/alpine:3
   tags:
@@ -141,18 +155,9 @@ integration_tests:
     - job: semgrep-sast
       artifacts: true
       optional: true
-  rules:
-    - if: '$CI_PIPELINE_SOURCE == "merge_request_event" && ($CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "main" || $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "production")'
-    - if: '$CI_COMMIT_BRANCH == "main" || $CI_COMMIT_BRANCH == "production"'
-    - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BRANCH && $CI_COMMIT_BRANCH != "main" && $CI_COMMIT_BRANCH != "production"'
-
-.sast-mr-only:
-  extends: .sast-postprocess
-  rules:
-    - if: '$CI_PIPELINE_SOURCE == "merge_request_event" && ($CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "main" || $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "production")'
 
 sast_summary:
-  extends: .sast-mr-only
+  extends: .sast-postprocess
   allow_failure: true
   script:
     - bash .ai/scripts/sast-mr-comment.sh gl-sast-report.json
