@@ -3,18 +3,44 @@ import { NextRequest } from 'next/server';
 import { USER_LOCALE_COOKIE } from '@/lib/locale-constants';
 import { localePreferenceRedirect } from './proxy';
 
-function makeRequest(pathname: string, cookieLocale?: string): NextRequest {
+function makeRequest(
+  pathname: string,
+  cookieLocale?: string,
+  { loggedIn = true }: { loggedIn?: boolean } = {},
+): NextRequest {
   const url = new URL(`http://localhost:3000${pathname}`);
+  const cookies = [
+    loggedIn ? 'better-auth.session_token=abc.def' : undefined,
+    cookieLocale ? `${USER_LOCALE_COOKIE}=${cookieLocale}` : undefined,
+  ].filter(Boolean);
   return new NextRequest(url, {
-    headers: cookieLocale
-      ? { cookie: `${USER_LOCALE_COOKIE}=${cookieLocale}` }
-      : undefined,
+    headers: cookies.length ? { cookie: cookies.join('; ') } : undefined,
   });
 }
 
 describe('localePreferenceRedirect', () => {
   it('returns null when no locale cookie is set', () => {
     expect(localePreferenceRedirect(makeRequest('/en/dashboard'))).toBeNull();
+  });
+
+  it('returns null for a logged-out user even with a mismatching cookie', () => {
+    // No session cookie → preference is not applied; next-intl handles the URL.
+    expect(
+      localePreferenceRedirect(
+        makeRequest('/en/dashboard', 'de', { loggedIn: false }),
+      ),
+    ).toBeNull();
+  });
+
+  it('redirects a logged-in user whose cookie differs from the URL', () => {
+    const response = localePreferenceRedirect(
+      makeRequest('/en/dashboard', 'de', { loggedIn: true }),
+    );
+
+    expect(response?.status).toBe(307);
+    expect(response?.headers.get('location')).toBe(
+      'http://localhost:3000/de/dashboard',
+    );
   });
 
   it('returns null when the cookie locale matches the URL locale', () => {

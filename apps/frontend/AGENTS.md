@@ -77,9 +77,16 @@ keep namespaces/key shapes in sync.
 
 ### Locale switching
 The `clippy.locale` cookie is the single frontend locale-preference source, and
-**the preference always wins over the URL** (a `/de/…` link is redirected to the
-user's locale — this is a private dashboard, shareable per-locale URLs are not a
-goal). The switcher persists the choice through `saveLocalePreference()`
+**for authenticated users the preference always wins over the URL** (a `/de/…`
+link is redirected to the user's locale — this is a private dashboard, shareable
+per-locale URLs are not a goal). **Logged-out users are exempt**: the proxy only
+applies the override when a Better Auth session cookie is present
+(`hasSessionCookie` → `getSessionCookie` from `better-auth/cookies`, cookie-only,
+no fetch — never use the RSC `getSession` in middleware). So logged-out visitors
+switch locale via the URL / browser `Accept-Language`. The cookie is also cleared
+on sign-out (`clearLocaleCookie` in the auth client's `signOut`), so an expired
+or ended session cannot leave a stale preference. The switcher persists the
+choice through `saveLocalePreference()`
 (`@/lib/save-locale-preference`): backend via `useUpdateUserLocale()` → cookie
 via `setLocaleCookie()` → `router.replace(pathname, { locale })`. Writing the
 cookie before navigating means the proxy sees a matching cookie and does not

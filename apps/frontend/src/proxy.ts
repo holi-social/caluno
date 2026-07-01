@@ -4,6 +4,7 @@ import { NextResponse } from 'next/server';
 import createMiddleware from 'next-intl/middleware';
 import { routing } from '@/i18n/routing';
 import { USER_LOCALE_COOKIE } from '@/lib/locale-constants';
+import { hasSessionCookie } from '@/lib/session-cookie';
 
 type Middleware = (request: NextRequest) => NextResponse;
 
@@ -25,6 +26,13 @@ function isSupportedLocale(value: string): value is Locale {
 export function localePreferenceRedirect(
   request: NextRequest,
 ): NextResponse | null {
+  // Only authenticated users have an explicit stored preference. Logged-out
+  // visitors fall through to next-intl (URL-authoritative + Accept-Language
+  // detection) so they can still switch locale via the URL.
+  if (!hasSessionCookie(request)) {
+    return null;
+  }
+
   const cookieLocale = request.cookies.get(USER_LOCALE_COOKIE)?.value;
 
   if (!cookieLocale || !isSupportedLocale(cookieLocale)) {
