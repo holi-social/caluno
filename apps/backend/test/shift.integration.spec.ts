@@ -8,7 +8,9 @@ import {
   setDefaultTimeout,
 } from 'bun:test';
 import type { INestApplication } from '@nestjs/common';
+import { eq } from 'drizzle-orm';
 import type { Database } from '../src/database/database.module';
+import * as schema from '../src/database/schema';
 import { ShiftInviteStatus, ShiftVisibility } from '../src/shift/enums';
 import {
   cancelShiftInstance,
