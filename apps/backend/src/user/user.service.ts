@@ -5,14 +5,7 @@ import type { Database } from '../database/database.module';
 import { DATABASE_CONNECTION } from '../database/database-connection';
 import * as schema from '../database/schema';
 import { NotFoundGraphQLError } from '../graphql/errors';
-import {
-  ACCEPT_LANGUAGE_HEADER,
-  DEFAULT_LOCALE,
-  LOCALE_HEADER,
-  type Locale,
-  parseAcceptLanguageHeader,
-  parseLocaleHeader,
-} from '../graphql/locale';
+import { type Locale, resolveRequestLocale } from '../graphql/locale';
 import type { OrganizationUserProfileEntity } from '../requirement-profile/schemas/organization-user-profile.schema';
 
 @Injectable()
@@ -25,6 +18,12 @@ export class UserService {
   async findById(id: string): Promise<UserEntity | undefined> {
     return this.db.query.users.findFirst({
       where: { id },
+    });
+  }
+
+  async findByEmail(email: string): Promise<UserEntity | undefined> {
+    return this.db.query.users.findFirst({
+      where: { email },
     });
   }
 
@@ -71,10 +70,7 @@ export class UserService {
       return user.locale as Locale;
     }
 
-    const detected =
-      parseAcceptLanguageHeader(headers[ACCEPT_LANGUAGE_HEADER]) ??
-      parseLocaleHeader(headers[LOCALE_HEADER]) ??
-      DEFAULT_LOCALE;
+    const detected = resolveRequestLocale(headers);
 
     await this.db
       .update(schema.users)
