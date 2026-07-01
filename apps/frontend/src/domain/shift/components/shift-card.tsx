@@ -111,17 +111,9 @@ export function ShiftCard({
             {startTime} - {endTime}
           </p>
 
-          <Link
-            className="hover:underline block"
-            href={shiftDetailPath(orgUId, instance.master.id, {
-              view: 'weekplan',
-              week: format(weekStart, 'yyyy-MM-dd'),
-            })}
-          >
-            <p className="text-lg text-card-foreground line-clamp-2">
-              {instance.master.title}
-            </p>
-          </Link>
+          <p className="text-lg text-card-foreground line-clamp-2">
+            {instance.master.title}
+          </p>
         </div>
 
         <div className="flex gap-1 items-start w-full">
