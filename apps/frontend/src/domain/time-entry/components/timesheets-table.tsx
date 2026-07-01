@@ -1,5 +1,3 @@
-'use client';
-
 import type { GetTimeEntriesQuery } from '@repo/data';
 import {
   cn,
@@ -12,7 +10,7 @@ import {
 } from '@repo/ui';
 import { useTranslations } from 'next-intl';
 import { Link } from '@/i18n/navigation';
-import { formatDuration, formatTimeRange } from '../formating';
+import { useFormatting } from '@/lib/formatting/use-formatting';
 import { ActionBar } from './action-bar';
 
 type TimeEntry = GetTimeEntriesQuery['timeEntries']['items'][number];
@@ -27,6 +25,7 @@ export const TimesheetsTable = ({
   organizationUnitId,
 }: TimesheetsTableProps) => {
   const t = useTranslations('TimeEntry');
+  const { formatRange, formatDuration } = useFormatting();
 
   return (
     <div className="rounded-md border overflow-hidden">
@@ -60,8 +59,12 @@ export const TimesheetsTable = ({
                   entry.volunteer?.email ??
                   t('table.notAvailable')}
               </TableCell>
-              <TableCell>{formatTimeRange(entry, t('format.open'))}</TableCell>
-              <TableCell>{formatDuration(entry)}</TableCell>
+              <TableCell>
+                {formatRange(entry.startedAt, entry.endedAt, t('format.open'))}
+              </TableCell>
+              <TableCell>
+                {formatDuration(entry.startedAt, entry.endedAt)}
+              </TableCell>
               <TableCell>
                 <ActionBar
                   id={entry.id}
