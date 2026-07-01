@@ -1,67 +1,80 @@
-import type { INestApplication } from '@nestjs/common';
+import type { Database } from '../../src/database/database.module';
+import * as schema from '../../src/database/schema';
 import { ShiftVisibility } from '../../src/shift/enums';
-import type { CreateShiftInput } from '../../src/shift/inputs/create-shift.input';
-import { graphqlRequestRequiringData } from '../helpers/graphql-request';
+import { expandShift } from '../../src/shift/utils/rrule-expander';
+import { slugify } from '../../src/utils/slug.util';
+import { createUser } from './user.factory';
 
-const defaultShiftInput: Omit<CreateShiftInput, 'title'> = {
-  instructions: null,
-  location: null,
-  startsAt: new Date('2026-06-18T08:00:00.000Z'),
-  endsAt: new Date('2026-06-18T10:00:00.000Z'),
-  visibility: ShiftVisibility.ALL_MEMBERS,
-  maxVolunteers: null,
-  minVolunteers: null,
-  invitedMemberIds: [],
-  rrule: null,
-};
+export type Shift = typeof schema.shifts.$inferSelect;
 
-export type CreateShiftOptions = Partial<CreateShiftInput> & {
+export type CreateShiftOptions = {
+  organizationUnitId: string;
+  /** Defaults to a freshly created user when omitted. */
+  createdById?: string;
   title?: string;
+  startsAt?: Date;
+  endsAt?: Date;
+  rrule?: string | null;
+  visibility?: ShiftVisibility;
+  location?: string | null;
+  instructions?: string | null;
+  maxVolunteers?: number | null;
+  minVolunteers?: number | null;
 };
 
+const defaultStartsAt = new Date('2026-06-18T08:00:00.000Z');
+const defaultEndsAt = new Date('2026-06-18T10:00:00.000Z');
+
+/**
+ * Inserts a shift (template) plus its expanded instances directly into the
+ * database, mirroring what `ShiftService.create` persists — without going
+ * through the service or GraphQL, so test setup stays decoupled from the code
+ * under test.
+ */
 export const createShift = async (
-  app: INestApplication,
-  organizationUnitId: string,
-  options: CreateShiftOptions = {},
-): Promise<{ id: string }> => {
+  db: Database,
+  options: CreateShiftOptions,
+): Promise<Shift> => {
   const title = options.title ?? `Test Shift ${crypto.randomUUID()}`;
-  const input = {
-    ...defaultShiftInput,
-    ...options,
-    title,
-  };
+  const startsAt = options.startsAt ?? defaultStartsAt;
+  const endsAt = options.endsAt ?? defaultEndsAt;
+  const durationMinutes = (endsAt.getTime() - startsAt.getTime()) / 60000;
+  const rrule = options.rrule ?? null;
+  const createdById = options.createdById ?? (await createUser(db)).id;
 
-  const data = await graphqlRequestRequiringData<{
-    createShift: { id: string };
-  }>(
-    app,
-    {
-      query: `
-        mutation CreateShift($input: CreateShiftInput!) {
-          createShift(input: $input) {
-            id
-          }
-        }
-      `,
-      variables: {
-        input: {
-          ...input,
-          startsAt:
-            input.startsAt instanceof Date
-              ? input.startsAt.toISOString()
-              : input.startsAt,
-          endsAt:
-            input.endsAt instanceof Date
-              ? input.endsAt.toISOString()
-              : input.endsAt,
-        },
-      },
-      headers: {
-        'x-organization-unit-id': organizationUnitId,
-      },
-    },
-    'createShift',
-  );
+  const [shift] = await db
+    .insert(schema.shifts)
+    .values({
+      title,
+      slug: slugify(title),
+      instructions: options.instructions ?? null,
+      organizationUnitId: options.organizationUnitId,
+      createdById,
+      location: options.location ?? null,
+      visibility: options.visibility ?? ShiftVisibility.ALL_MEMBERS,
+      maxVolunteers: options.maxVolunteers ?? null,
+      minVolunteers: options.minVolunteers ?? null,
+      rrule,
+      originalStartsAt: startsAt,
+      durationMinutes,
+    })
+    .returning();
 
-  return data.createShift;
+  if (!shift) {
+    throw new Error('Failed to create test shift');
+  }
+
+  const instances = expandShift(rrule, startsAt, durationMinutes);
+  if (instances.length > 0) {
+    await db.insert(schema.shiftInstances).values(
+      instances.map((instance) => ({
+        masterId: shift.id,
+        actualStartsAt: instance.actualStartsAt,
+        actualEndsAt: instance.actualEndsAt,
+        occurrenceIndex: instance.occurrenceIndex,
+      })),
+    );
+  }
+
+  return shift;
 };
