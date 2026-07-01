@@ -40,7 +40,8 @@ describe('ShiftService.findShiftsForWeek', () => {
   });
 
   it('returns instances within the week and excludes cancelled instances', async () => {
-    const { id: shiftId } = await createShift(app, organizationUnitId, {
+    const { id: shiftId } = await createShift(db, {
+      organizationUnitId,
       startsAt: new Date('2026-06-15T08:00:00.000Z'),
       endsAt: new Date('2026-06-15T10:00:00.000Z'),
     });
@@ -113,7 +114,8 @@ describe('ShiftService.findShiftsForWeek', () => {
 
   it('invites members to all non-cancelled instances of a shift', async () => {
     const user = await createUser(db);
-    const { id: shiftId } = await createShift(app, organizationUnitId, {
+    const { id: shiftId } = await createShift(db, {
+      organizationUnitId,
       visibility: ShiftVisibility.INVITED_MEMBERS,
     });
 
@@ -278,7 +280,7 @@ describe('ShiftService.findShiftsForWeek', () => {
 
   it('approves a shift membership request into only the intended shift instance', async () => {
     const user = await createUser(db);
-    const { id: shiftId } = await createShift(app, organizationUnitId);
+    const { id: shiftId } = await createShift(db, { organizationUnitId });
 
     const existingInstances = await db.query.shiftInstances.findMany({
       where: { masterId: shiftId },
@@ -340,7 +342,7 @@ describe('ShiftService.findShiftsForWeek', () => {
 
   it('approves a shift membership request into all intended shift instances', async () => {
     const user = await createUser(db);
-    const { id: shiftId } = await createShift(app, organizationUnitId);
+    const { id: shiftId } = await createShift(db, { organizationUnitId });
 
     const [, cancelledInstance] = await Promise.all([
       createShiftInstance(db, shiftId, {

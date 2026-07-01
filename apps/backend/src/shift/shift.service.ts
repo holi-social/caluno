@@ -750,6 +750,22 @@ export class ShiftService {
             .set({ isException: false })
             .where(inArray(schema.shiftInstances.id, orphanedIds));
         }
+      } else {
+        if (input.startsAt && input.endsAt) {
+          await tx
+            .update(schema.shiftInstances)
+            .set({
+              actualStartsAt: input.startsAt,
+              actualEndsAt: input.endsAt,
+            })
+            .where(
+              and(
+                eq(schema.shiftInstances.masterId, id),
+                eq(schema.shiftInstances.isException, false),
+                eq(schema.shiftInstances.isCancelled, false),
+              ),
+            );
+        }
       }
 
       if (
