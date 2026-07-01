@@ -1,6 +1,6 @@
 export const LAST_ORG_COOKIE = 'clippy.last_org_slug';
 export const LOCALE_HEADER = 'x-locale';
-export const LOCALE_COOKIE = 'NEXT_LOCALE';
+export const LOCALE_COOKIE = 'clippy.locale';
 export const SUPPORTED_LOCALES = ['en', 'de'] as const;
 export const DEFAULT_LOCALE: Locale = 'en';
 
