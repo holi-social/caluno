@@ -2,6 +2,7 @@
 
 import {
   MembershipRequestStatus,
+  useMembershipRequestCount,
   useMembershipRequests,
   useMemberships,
 } from '@repo/data/react';
@@ -180,6 +181,11 @@ export default function ManageVolunteersClient({ orgUId }: Props) {
 
   const activeTab = searchParams.get('status') ?? TAB_APPROVED;
 
+  const { data: pendingCount } = useMembershipRequestCount(
+    orgUId ?? '',
+    MembershipRequestStatus.Pending,
+  );
+
   const handleTabChange = (value: string) => {
     const params = new URLSearchParams(searchParams.toString());
     params.set('status', value);
@@ -214,6 +220,11 @@ export default function ManageVolunteersClient({ orgUId }: Props) {
           {tabs.map((tab) => (
             <TabsTrigger key={tab.value} value={tab.value}>
               {tab.label}
+              {tab.value === TAB_PENDING && (pendingCount ?? 0) > 0 && (
+                <span className="inline-flex h-5 min-w-[20px] items-center justify-center rounded-full bg-muted px-1.5 text-xs font-medium text-muted-foreground">
+                  {pendingCount}
+                </span>
+              )}
             </TabsTrigger>
           ))}
         </TabsList>
