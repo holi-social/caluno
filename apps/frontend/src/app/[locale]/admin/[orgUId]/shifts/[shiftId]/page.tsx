@@ -105,53 +105,6 @@ export default async function ShiftViewPage({
               </ul>
             </CardContent>
           </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex justify-between">
-                <span>
-                  {t('detail.volunteersTitle')}{' '}
-                  <Badge variant="outline">
-                    {shift.maxVolunteers
-                      ? t('detail.volunteersBadgeWithMax', {
-                          count: 0,
-                          max: shift.maxVolunteers,
-                        })
-                      : t('detail.volunteersBadge', { count: 0 })}
-                  </Badge>
-                </span>
-                <Button size="xs">
-                  <UserPlus /> {t('detail.inviteButton')}
-                </Button>
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-muted-foreground">
-                {t('detail.volunteersEmpty')}
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex justify-between">
-                <span>
-                  {t('detail.timesheetsTitle')}{' '}
-                  <Badge variant="outline">
-                    {t('detail.timesheetsBadge', { count: 0 })}
-                  </Badge>
-                </span>
-                <Button size="xs">
-                  <ClockPlus /> {t('detail.addTimeButton')}
-                </Button>
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-muted-foreground">
-                {t('detail.timesheetsEmpty')}
-              </p>
-            </CardContent>
-          </Card>
         </div>
 
         <aside>
