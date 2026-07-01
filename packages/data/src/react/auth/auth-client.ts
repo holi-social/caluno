@@ -4,6 +4,7 @@ import { createAuthClient as createBetterAuthClient } from 'better-auth/react';
 import type { Session } from 'better-auth/types';
 import { LOCALE_HEADER } from '../../constants';
 import { clearLastVisitedOrg } from '../org-context';
+import { clearLocaleCookie } from './locale-cookie';
 import { readRequestLocale } from './read-request-locale';
 
 export function createAuthClient(baseURL: string) {
@@ -19,6 +20,7 @@ export function createAuthClient(baseURL: string) {
 
   const signOut = async (...args: Parameters<typeof client.signOut>) => {
     clearLastVisitedOrg();
+    clearLocaleCookie();
     return await client.signOut(...args);
   };
 
