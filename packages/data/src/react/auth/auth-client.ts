@@ -2,48 +2,10 @@
 import { emailOTPClient } from 'better-auth/client/plugins';
 import { createAuthClient as createBetterAuthClient } from 'better-auth/react';
 import type { Session } from 'better-auth/types';
-import {
-  DEFAULT_LOCALE,
-  LOCALE_COOKIE,
-  LOCALE_HEADER,
-  type Locale,
-  SUPPORTED_LOCALES,
-} from '../../constants';
+import { LOCALE_HEADER } from '../../constants';
 import { clearLastVisitedOrg } from '../org-context';
-
-function readLocaleCookie(): Locale | undefined {
-  if (typeof document === 'undefined') {
-    return undefined;
-  }
-
-  const cookieValue = document.cookie
-    .split('; ')
-    .find((entry) => entry.startsWith(`${LOCALE_COOKIE}=`))
-    ?.split('=')[1];
-
-  if (cookieValue && SUPPORTED_LOCALES.includes(cookieValue as Locale)) {
-    return cookieValue as Locale;
-  }
-
-  return undefined;
-}
-
-function readLocaleFromPathname(): Locale | undefined {
-  if (typeof window === 'undefined') {
-    return undefined;
-  }
-
-  const segment = window.location.pathname.split('/').filter(Boolean)[0];
-  if (segment && SUPPORTED_LOCALES.includes(segment as Locale)) {
-    return segment as Locale;
-  }
-
-  return undefined;
-}
-
-function readRequestLocale(): Locale {
-  return readLocaleCookie() ?? readLocaleFromPathname() ?? DEFAULT_LOCALE;
-}
+import { clearLocaleCookie } from './locale-cookie';
+import { readRequestLocale } from './read-request-locale';
 
 export function createAuthClient(baseURL: string) {
   const client = createBetterAuthClient({
@@ -58,6 +20,7 @@ export function createAuthClient(baseURL: string) {
 
   const signOut = async (...args: Parameters<typeof client.signOut>) => {
     clearLastVisitedOrg();
+    clearLocaleCookie();
     return await client.signOut(...args);
   };
 
