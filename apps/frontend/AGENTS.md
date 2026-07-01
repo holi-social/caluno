@@ -71,14 +71,12 @@ keep namespaces/key shapes in sync.
 ### Locale switching
 Use `useLocale`, `usePathname`, and `useRouter` from `@/i18n/navigation`. The
 LocaleSwitcher persists the selected locale to the backend via
-`useUpdateUserLocale()` from `@repo/data/react`, stores it in the
-`clippy.locale` cookie via `setUserLocaleCookie()`, and then calls
-`router.replace(pathname, { locale })` to update the URL.
+`useUpdateUserLocale()` from `@repo/data/react`, then calls
+`router.replace(pathname, { locale })` to update the URL (next-intl keeps the
+`NEXT_LOCALE` cookie in sync).
 
-The locale proxy (`src/proxy.ts`) reads the `clippy.locale` cookie and redirects
-any locale-prefixed route to the user's stored locale when it differs from the
-URL locale. Profile pages additionally fetch `me.locale` server-side and redirect
-on the first visit before the cookie is present.
+Profile pages fetch `me.locale` server-side and redirect on the first visit
+when the URL locale differs from the stored preference.
 
 ## New features
 Always study UI/UX patterns in existing similar features before starting a new one — consistent experience across features.

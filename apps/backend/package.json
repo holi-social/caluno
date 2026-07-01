@@ -48,6 +48,7 @@
     "graphql-scalars": "^1.25.0",
     "mjml": "^5.3.0",
     "nanoid": "^5.1.7",
+    "nestjs-i18n": "^10.8.4",
     "pg": "^8.17.1",
     "reflect-metadata": "^0.2.2",
     "rrule": "^2.8.1",

@@ -1,3 +1,4 @@
+import type { EmailTemplateContext } from '../../../i18n/email-translate';
 import {
   button,
   card,
@@ -17,26 +18,26 @@ export interface PasswordResetTemplateData {
 
 export async function passwordResetTemplate(
   data: PasswordResetTemplateData,
+  { t }: EmailTemplateContext,
 ): Promise<{ subject: string; html: string }> {
   const resetUrl = escapeHtml(data.resetUrl);
-  const expiresInMinutes = escapeHtml(String(data.expiresInMinutes));
+  const expiresInMinutes = data.expiresInMinutes;
+  const brandName = emailTheme.brandName;
 
   const body = card(`
-    ${heading('Reset your password')}
-    ${paragraph(
-      `Use the button below to choose a new password for your ${emailTheme.brandName} account.`,
-    )}
-    ${button({ href: resetUrl, label: 'Reset password' })}
-    ${paragraph(`This link expires in ${expiresInMinutes} minutes.`)}
+    ${heading(t('passwordReset.heading'))}
+    ${paragraph(t('passwordReset.intro', { brandName }))}
+    ${button({ href: resetUrl, label: t('passwordReset.buttonLabel') })}
+    ${paragraph(t('passwordReset.expiry', { minutes: expiresInMinutes }))}
     ${divider()}
-    ${note('If you did not request this password reset, you can ignore this email.')}
+    ${note(t('passwordReset.note'))}
   `);
 
   return renderEmail({
     templateName: 'passwordResetTemplate',
-    subject: `Reset your ${emailTheme.brandName} password`,
-    previewText: `Reset your ${emailTheme.brandName} password.`,
+    subject: t('passwordReset.subject', { brandName }),
+    previewText: t('passwordReset.previewText', { brandName }),
     body,
-    footerNote: `You are receiving this because a password reset was requested for your ${emailTheme.brandName} account.`,
+    footerNote: t('passwordReset.footerNote', { brandName }),
   });
 }
