@@ -1,3 +1,6 @@
+include:
+  - template: Jobs/SAST.gitlab-ci.yml
+
 workflow:
   rules:
     - if: '$CI_COMMIT_BRANCH == "main" || $CI_COMMIT_BRANCH == "production"'
@@ -26,6 +29,10 @@ variables:
   TF_ROOT: 'packages/infra'
   TF_IN_AUTOMATION: 'true'
   TF_INPUT: 'false'
+  # SAST: run on MR pipelines (GitLab ≥18). Skips duplicate branch scan when MR is open.
+  AST_ENABLE_MR_PIPELINES: 'true'
+  # Repeat GitLab defaults when overriding; add monorepo noise paths.
+  SAST_EXCLUDED_PATHS: 'spec,test,tests,tmp,.ai,.agents,dist,.next,storybook-static,node_modules,packages/infra'
 
 # ─── TEST ─────────────────────────────────────────────────────────────────────
 
@@ -117,6 +124,49 @@ integration_tests:
     - bun run --cwd apps/backend db:seed
   script:
     - bun test
+
+# ─── SAST POST-PROCESSING ─────────────────────────────────────────────────────
+# semgrep-sast (template) scans TS/JS and uploads gl-sast-report.json.
+# sast_summary posts Critical/High table (job log + MR comment); sast_gate blocks merge;
+# sast_medium_issues files Medium findings as grouped GitLab issues (one per file+rule). Both need SAST_ISSUES_TOKEN.
+
+.sast-postprocess:
+  stage: test
+  image: europe-north1-docker.pkg.dev/holi-shared/docker-hub-remote/alpine:3
+  tags:
+    - 4cpu-16gb
+  before_script:
+    - apk add --no-cache bash jq curl
+  needs:
+    - job: semgrep-sast
+      artifacts: true
+      optional: true
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event" && ($CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "main" || $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "production")'
+    - if: '$CI_COMMIT_BRANCH == "main" || $CI_COMMIT_BRANCH == "production"'
+    - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BRANCH && $CI_COMMIT_BRANCH != "main" && $CI_COMMIT_BRANCH != "production"'
+
+.sast-mr-only:
+  extends: .sast-postprocess
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event" && ($CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "main" || $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "production")'
+
+sast_summary:
+  extends: .sast-mr-only
+  allow_failure: true
+  script:
+    - bash .ai/scripts/sast-mr-comment.sh gl-sast-report.json
+
+sast_gate:
+  extends: .sast-postprocess
+  script:
+    - bash .ai/scripts/sast-gate.sh gl-sast-report.json
+
+sast_medium_issues:
+  extends: .sast-postprocess
+  allow_failure: true
+  script:
+    - bash .ai/scripts/sast-open-medium-issues.sh gl-sast-report.json
 
 # ─── BUILD ────────────────────────────────────────────────────────────────────
 
