@@ -1,6 +1,5 @@
 // Components
 
-export * from '../../../apps/frontend/src/components/navigation/home-header';
 export * from './components/base/accordion';
 export * from './components/base/alert';
 export * from './components/base/alert-dialog';

@@ -1,6 +1,6 @@
-import { HomeHeader } from '@repo/ui';
 import { getTranslations } from 'next-intl/server';
 import type { ReactNode } from 'react';
+import { HomeHeader } from '@/components/navigation/home-header';
 import { requireAuth } from '@/lib/auth-server';
 
 interface RootPagesLayoutProps {
