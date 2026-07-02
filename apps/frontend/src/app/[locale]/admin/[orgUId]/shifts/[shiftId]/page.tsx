@@ -1,23 +1,14 @@
 import { formatRrulePattern } from '@repo/data';
-import {
-  Badge,
-  Button,
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from '@repo/ui';
+import { Badge, Card, CardContent } from '@repo/ui';
 import {
   Calendar,
   CalendarFold,
   CalendarSync,
   Clock,
-  ClockPlus,
   FileText,
   LockKeyholeOpen,
   MapPin,
   User,
-  UserPlus,
 } from 'lucide-react';
 import { notFound } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
