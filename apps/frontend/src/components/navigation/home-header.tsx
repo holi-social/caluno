@@ -1,20 +1,22 @@
 'use client';
 
+import { Avatar, AvatarFallback, AvatarImage } from '@repo/ui/base/avatar';
+import { Logo } from '@repo/ui/logo';
+import { cn } from '@repo/ui/utils';
 import { BellIcon, UserIcon } from 'lucide-react';
 import { AnimatePresence, motion } from 'motion/react';
+import { useTranslations } from 'next-intl';
 import { useEffect, useState } from 'react';
-import { cn } from '../lib/utils';
-import { Avatar, AvatarFallback, AvatarImage } from './base/avatar';
-import { Logo } from './logo';
+import { Link } from '@/i18n/navigation';
 
 export type HomeHeaderVariant = 'open' | 'on-scroll';
 
 export interface HomeHeaderProps {
   variant?: HomeHeaderVariant;
   avatarUrl?: string;
+  avatarHref?: string;
   title?: string;
   notificationCount?: number;
-  onAvatarClick?: () => void;
   onNotificationsClick?: () => void;
   className?: string;
 }
@@ -79,15 +81,14 @@ function NotificationBadge({ count }: { count: number }) {
 function AvatarTrigger({
   avatarUrl,
   isOpen,
-  onClick,
 }: {
   avatarUrl?: string;
   isOpen: boolean;
-  onClick?: () => void;
 }) {
   const avatarSize = isOpen ? 56 : 32;
   const iconSize = isOpen ? 24 : 16;
   const buttonSize = isOpen ? 56 : 44;
+  const t = useTranslations('Navigation');
 
   const avatar = (
     <motion.div
@@ -111,26 +112,25 @@ function AvatarTrigger({
     </motion.div>
   );
 
-  if (!onClick) {
-    return avatar;
-  }
-
   return (
-    <motion.button
-      type="button"
-      onClick={onClick}
-      aria-label="Profil"
-      initial={{ width: buttonSize, height: buttonSize }}
-      animate={{ width: buttonSize, height: buttonSize }}
-      transition={{ duration: 0.2 }}
+    <Link
+      href="/profile"
+      aria-label={t('profile')}
       className={cn(
         'flex shrink-0 items-center justify-center rounded-full transition-colors',
         'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60 focus-visible:ring-offset-1',
         'hover:bg-accent',
       )}
     >
-      {avatar}
-    </motion.button>
+      <motion.span
+        initial={{ width: buttonSize, height: buttonSize }}
+        animate={{ width: buttonSize, height: buttonSize }}
+        transition={{ duration: 0.2 }}
+        className="flex items-center justify-center"
+      >
+        {avatar}
+      </motion.span>
+    </Link>
   );
 }
 
@@ -138,10 +138,10 @@ export function HomeHeader({
   variant,
   avatarUrl,
   title,
-  onAvatarClick,
   className,
 }: HomeHeaderProps) {
   const [scrolled, setScrolled] = useState(false);
+  const t = useTranslations('Navigation');
 
   useEffect(() => {
     if (variant !== undefined) return;
@@ -159,14 +159,12 @@ export function HomeHeader({
     >
       <div className="container mx-auto max-w-4xl px-6">
         <div className="flex w-full items-center justify-between gap-3">
-          <AvatarTrigger
-            avatarUrl={avatarUrl}
-            isOpen={isOpen}
-            onClick={onAvatarClick}
-          />
+          <AvatarTrigger avatarUrl={avatarUrl} isOpen={isOpen} />
 
           <div className="flex shrink-0 items-center gap-3">
-            <Logo width={isOpen ? 42 : 38} />
+            <Link href="/" aria-label={t('home')}>
+              <Logo width={isOpen ? 42 : 38} />
+            </Link>
           </div>
         </div>
 
