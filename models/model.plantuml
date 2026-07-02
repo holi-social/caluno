@@ -134,7 +134,7 @@ package "Operations" {
         durationMinutes
         isDeleted
     }
-    note left: A Shift is a recurring pattern (master).\nrrule defines recurrence.\nVolunteers join ShiftInstances, not Shifts.
+    note right: A Shift is a recurring pattern (master).\nrrule defines recurrence.\nVolunteers join ShiftInstances, not Shifts.
 
     class ShiftInstance {
         actualStartsAt
@@ -147,7 +147,12 @@ package "Operations" {
         isCancelled
         occurrenceIndex
     }
-    note left: A concrete occurrence of a Shift.\nCan override master fields.\nisException = one-off change.\nisCancelled = skipped occurrence.
+    note right: A concrete occurrence of a Shift.\nCan override master fields.\nisException = one-off change.\nisCancelled = skipped occurrence.
+
+    class ShiftInvite {
+        status {PENDING, ACCEPTED, REJECTED}
+    }
+    note left: A user added to the Shift series\nis automatically added to all future\nShiftIstances
 
     class ShiftInstanceInvite {
         status {PENDING, ACCEPTED, REJECTED}
@@ -218,6 +223,8 @@ OrgUnit "1" -- "*" Shift : "manages >"
 Shift "1" -- "*" ShiftInstance : "occurs as >"
 ShiftInstance "1" -- "*" ShiftInstanceInvite : "includes >"
 ShiftInstanceInvite "*" -- "1" User : "assigned to >"
+ShiftInvite "*" -- "1" User : "assigned to >"
+Shift "1" -- "*" ShiftInvite
 
 ' --- Events ---
 OrgUnit "1" -- "*" Event : "hosts >"
