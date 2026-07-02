@@ -16,7 +16,7 @@
     "@repo/data": "*",
     "@repo/ui": "*",
     "@yudiel/react-qr-scanner": "^2.5.1",
-    "better-auth": "1.6.2",
+    "better-auth": "1.6.11",
     "date-fns": "^4.1.0",
     "js-cookie": "^3.0.5",
     "lucide-react": "^1.8.0",
