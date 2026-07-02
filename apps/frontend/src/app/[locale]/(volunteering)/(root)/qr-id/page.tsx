@@ -15,10 +15,7 @@ export default async function QrIdPage() {
   return (
     <div className="max-w-2xl">
       <div>
-        <div>
-          <h1 className="page-title">{t('qrIdTitle')}</h1>
-          <p className="text-muted-foreground">{t('qrIdDescription')}</p>
-        </div>
+        <p className="text-muted-foreground">{t('qrIdDescription')}</p>
         <div className="px-2 py-8">
           <div className="flex justify-center">
             <div className="rounded-lg border p-8 pb-4 bg-white text-black space-y-2">

@@ -1,4 +1,4 @@
-import { getTranslations, setRequestLocale } from 'next-intl/server';
+import { setRequestLocale } from 'next-intl/server';
 import { LocaleSwitcher } from '@/components/locale-switcher';
 import { redirect } from '@/i18n/navigation';
 import { resolveLocale } from '@/i18n/routing';
@@ -17,14 +17,11 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
   const me = await data.user.getMe();
 
   if (me.locale && me.locale !== locale) {
-    redirect({ href: '/volunteering/profile', locale: me.locale });
+    redirect({ href: '/profile', locale: me.locale });
   }
-
-  const t = await getTranslations('Profile');
 
   return (
     <div className="space-y-6">
-      <h1 className="page-title">{t('title')}</h1>
       <LocaleSwitcher />
     </div>
   );

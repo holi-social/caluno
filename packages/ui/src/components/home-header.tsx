@@ -138,9 +138,7 @@ export function HomeHeader({
   variant,
   avatarUrl,
   title,
-  notificationCount,
   onAvatarClick,
-  onNotificationsClick,
   className,
 }: HomeHeaderProps) {
   const [scrolled, setScrolled] = useState(false);
@@ -157,39 +155,36 @@ export function HomeHeader({
 
   return (
     <header
-      className={cn('flex w-full flex-col gap-3 bg-muted px-6 py-3', className)}
+      className={cn('flex w-full flex-col gap-3 bg-muted py-3', className)}
     >
-      <div className="flex w-full items-center justify-between gap-3">
-        <AvatarTrigger
-          avatarUrl={avatarUrl}
-          isOpen={isOpen}
-          onClick={onAvatarClick}
-        />
-
-        <div className="flex shrink-0 items-center gap-3">
-          <Logo width={isOpen ? 42 : 38} />
-
-          <BellButton
-            count={notificationCount ?? 0}
-            onClick={onNotificationsClick}
+      <div className="container mx-auto max-w-4xl px-6">
+        <div className="flex w-full items-center justify-between gap-3">
+          <AvatarTrigger
+            avatarUrl={avatarUrl}
+            isOpen={isOpen}
+            onClick={onAvatarClick}
           />
-        </div>
-      </div>
 
-      <AnimatePresence initial={false}>
-        {isOpen && title && (
-          <motion.h1
-            key="title"
-            initial={{ scale: 1, y: 0, opacity: 1 }}
-            animate={{ scale: 1, y: 0, opacity: 1 }}
-            exit={GREETING_EXIT}
-            transition={{ duration: 0.2 }}
-            className="w-full text-xl font-bold leading-tight text-foreground"
-          >
-            {title}
-          </motion.h1>
-        )}
-      </AnimatePresence>
+          <div className="flex shrink-0 items-center gap-3">
+            <Logo width={isOpen ? 42 : 38} />
+          </div>
+        </div>
+
+        <AnimatePresence initial={false}>
+          {isOpen && title && (
+            <motion.h1
+              key="title"
+              initial={{ scale: 1, y: 0, opacity: 1 }}
+              animate={{ scale: 1, y: 0, opacity: 1 }}
+              exit={GREETING_EXIT}
+              transition={{ duration: 0.2 }}
+              className="w-full text-xl font-bold leading-tight text-foreground mt-3"
+            >
+              {title}
+            </motion.h1>
+          )}
+        </AnimatePresence>
+      </div>
     </header>
   );
 }

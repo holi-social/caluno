@@ -30,7 +30,8 @@
     "toggleTheme": "Design wechseln",
     "menu": "Menü",
     "signOut": "Abmelden",
-    "brand": "Clippy"
+    "brand": "Clippy",
+    "greeting": "Hallo {name}"
   },
   "Auth": {
     "login": {
