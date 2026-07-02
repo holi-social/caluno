@@ -15,7 +15,6 @@ import {
 } from '@repo/ui';
 import {
   Building2,
-  BuildingIcon,
   ClipboardListIcon,
   HomeIcon,
   LogOutIcon,
@@ -29,11 +28,6 @@ export const menuItems = [
     titleKey: 'home',
     href: '/',
     icon: HomeIcon,
-  },
-  {
-    titleKey: 'organizations',
-    href: '/organizations',
-    icon: BuildingIcon,
   },
   {
     titleKey: 'myMembershipRequests',

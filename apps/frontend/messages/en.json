@@ -208,10 +208,6 @@
         "cta": "Get started"
       }
     },
-    "list": {
-      "title": "Your Organizations",
-      "subtitle": "Select an organization to continue"
-    },
     "create": {
       "title": "Create an organization",
       "nameLabel": "Organization Name",

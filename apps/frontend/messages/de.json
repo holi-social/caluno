@@ -208,10 +208,6 @@
         "cta": "Loslegen"
       }
     },
-    "list": {
-      "title": "Deine Organisationen",
-      "subtitle": "Wähle eine Organisation aus, um fortzufahren"
-    },
     "create": {
       "title": "Organisation erstellen",
       "nameLabel": "Name der Organisation",
