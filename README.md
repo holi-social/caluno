@@ -81,6 +81,44 @@ The backend uses Drizzle ORM for database management. Run these commands from `a
 - `bun run lint` - Lint all code with Biome
 - `bun run format` - Format and fix all code with Biome
 
+### Secret leak prevention
+
+Commits are scanned for leaked credentials before they reach CI.
+
+1. **Install git hooks** (once per clone):
+
+   ```bash
+   bun run setup:hooks
+   ```
+
+   The pre-commit hook runs gitleaks on staged files, then formats with Biome.
+
+   **gitleaks** (optional, faster than Docker) — if not on `PATH`, the hook uses Docker automatically:
+
+   ```bash
+   # macOS
+   brew install gitleaks
+
+   # Linux (pick your arch from https://github.com/gitleaks/gitleaks/releases — v8.24.2)
+   curl -sSfL "https://github.com/gitleaks/gitleaks/releases/download/v8.24.2/gitleaks_8.24.2_linux_x64.tar.gz" \
+     | tar -xz && sudo install gitleaks /usr/local/bin/
+   # arm64: .../gitleaks_8.24.2_linux_arm64.tar.gz
+   ```
+
+2. **Test locally**:
+
+   ```bash
+   # Scan staged changes (same as pre-commit)
+   bash .ai/scripts/pre-commit-secrets.sh
+
+   # Scan the whole repo
+   gitleaks detect --source . --config .gitleaks.toml --redact
+   ```
+
+3. **CI**: MRs targeting `main`/`production` run GitLab `secret_detection`; `secret_detection_gate` blocks merge on findings still present in the branch tip (add as a required pipeline check). CI allowlists live in `.gitleaks.toml` for local pre-commit; GitLab ruleset customization (`.gitlab/secret-detection-ruleset.toml`) requires **Ultimate** — we rely on the gate instead.
+
+Placeholder values in `.env.example` are allowlisted in `.gitleaks.toml`. Never commit real `.env` files — they are gitignored (only `.env.example` is tracked).
+
 ### Scaleway deployment
 
 The root `scaleway.sh` script helps you build and push Docker images for:
