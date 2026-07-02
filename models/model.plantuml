@@ -149,6 +149,10 @@ package "Operations" {
     }
     note left: A concrete occurrence of a Shift.\nCan override master fields.\nisException = one-off change.\nisCancelled = skipped occurrence.
 
+    class ShiftInvite {
+        status {PENDING, ACCEPTED, REJECTED}
+    }
+
     class ShiftInstanceInvite {
         status {PENDING, ACCEPTED, REJECTED}
     }
@@ -218,6 +222,8 @@ OrgUnit "1" -- "*" Shift : "manages >"
 Shift "1" -- "*" ShiftInstance : "occurs as >"
 ShiftInstance "1" -- "*" ShiftInstanceInvite : "includes >"
 ShiftInstanceInvite "*" -- "1" User : "assigned to >"
+ShiftInvite "*" -- "1" User : "assigned to >"
+Shift "1" -- "*" ShiftInvite
 
 ' --- Events ---
 OrgUnit "1" -- "*" Event : "hosts >"
