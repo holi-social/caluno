@@ -1,7 +1,7 @@
-import { createAuthClient } from '@repo/data/react';
+import { type AuthClient, createAuthClient } from '@repo/data/react';
 import { API_URL } from '@/lib/constants';
 
-export const auth = createAuthClient(API_URL);
+export const auth: AuthClient = createAuthClient(API_URL);
 export const {
   emailOtp,
   requestPasswordReset,
