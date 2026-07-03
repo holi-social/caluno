@@ -44,7 +44,7 @@ variables:
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event" && ($CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "main" || $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "production")'
 
 # AI pipeline structural quality gate. Required MR check on protected `main`
-# (Settings → Merge requests → "Pipelines must succeed"). See .ai/PIPELINE.md.
+# (Settings → Merge requests → "Pipelines must succeed"). See .varco/README.md.
 quality:
   extends: .mr-to-main-or-production
   stage: test
@@ -65,10 +65,10 @@ ai_gate_tests:
   before_script:
     - apt-get update && apt-get install -y --no-install-recommends git jq >/dev/null
   script:
-    - bash .ai/scripts/__tests__/gates.test.sh
+    - bash scripts/__tests__/gates.test.sh
 
 # AI pipeline commit-convention gate: every MR commit subject must be
-# `type(scope): description` (see .ai/PIPELINE.md Commit Convention). Structural backing
+# `type(scope): description` (see the commit-convention skill). Structural backing
 # for the otherwise prose-only convention. POSIX sh (GitLab default shell).
 commit_lint:
   stage: test
@@ -84,7 +84,7 @@ commit_lint:
     - |
       BASE="${CI_MERGE_REQUEST_DIFF_BASE_SHA:-}"
       if [ -z "$BASE" ]; then echo "no MR base sha; skipping"; exit 0; fi
-      bash .ai/scripts/commit-lint.sh range "${BASE}..HEAD"
+      bash scripts/commit-lint.sh range "${BASE}..HEAD"
 
 # Runs on every pipeline (MR, main/production deploy, feature-branch builds).
 check_migrations:
@@ -160,18 +160,18 @@ sast_summary:
   extends: .sast-postprocess
   allow_failure: true
   script:
-    - bash .ai/scripts/sast-mr-comment.sh gl-sast-report.json
+    - bash scripts/sast-mr-comment.sh gl-sast-report.json
 
 sast_gate:
   extends: .sast-postprocess
   script:
-    - bash .ai/scripts/sast-gate.sh gl-sast-report.json
+    - bash scripts/sast-gate.sh gl-sast-report.json
 
 sast_medium_issues:
   extends: .sast-postprocess
   allow_failure: true
   script:
-    - bash .ai/scripts/sast-open-medium-issues.sh gl-sast-report.json
+    - bash scripts/sast-open-medium-issues.sh gl-sast-report.json
 
 # ─── BUILD ────────────────────────────────────────────────────────────────────
 
