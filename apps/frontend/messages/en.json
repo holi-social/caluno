@@ -1033,7 +1033,94 @@
       "title": "Reimbursements"
     },
     "templates": {
-      "title": "Templates"
+      "title": "Templates",
+      "sections": {
+        "ep": "Ehrenamtspauschale",
+        "ul": "Übungsleiterpauschale",
+        "unconfiguredWarning": "Shifts of this Pauschalen type cannot be scheduled until both templates are configured."
+      },
+      "documentKind": {
+        "contract": "Contract",
+        "invoice": "Invoice"
+      },
+      "loadError": "Templates could not be loaded. Please reload the page.",
+      "builder": {
+        "breadcrumb": {
+          "accounting": "Accounting",
+          "templates": "Templates"
+        },
+        "saveButton": "Save template",
+        "replacePdfButton": "Replace PDF",
+        "upload": {
+          "title": "Upload PDF",
+          "description": "Upload a PDF file to start editing this template.",
+          "dragHint": "Drag a PDF file here or",
+          "browseButton": "Browse file",
+          "fileConstraint": "PDF files only"
+        },
+        "fieldList": {
+          "title": "Fields",
+          "emptyHint": "No fields placed yet. Drag fields from the toolbar onto the template.",
+          "dataSource": "Data source",
+          "unbound": "Not linked",
+          "unboundCount": "{count} not linked",
+          "requiresCollection": "Requires profile",
+          "profileWarning": "This field is missing from the requirement profile.",
+          "configureProfile": "Configure profile"
+        },
+        "dataSources": {
+          "groupAlways": "Always available",
+          "groupProfile": "Requires profile",
+          "volunteer_first_name": "First name (Volunteer)",
+          "volunteer_last_name": "Last name (Volunteer)",
+          "org_name": "Organisation name",
+          "org_address": "Organisation address",
+          "org_legal_rep": "Legal representative",
+          "pauschalen_type": "Pauschale type",
+          "hourly_rate": "Hourly rate",
+          "period_start": "Period start",
+          "period_end": "Period end",
+          "total_hours": "Total hours",
+          "total_amount": "Total amount",
+          "generated_date": "Generated date",
+          "document_number": "Document number",
+          "volunteer_iban": "IBAN",
+          "volunteer_address": "Address (Volunteer)",
+          "volunteer_dob": "Date of birth",
+          "volunteer_tax_id": "Tax ID (Steueridentifikationsnummer)"
+        }
+      },
+      "card": {
+        "empty": {
+          "alertText": "Not yet configured",
+          "createButton": "Create template"
+        },
+        "editButton": "Edit template",
+        "filled": {
+          "signeesTitle": "Signatures",
+          "signeesTooltip": "People who need to sign this document, in order. You can leave this empty if no signature is needed.",
+          "addSignee": "Add signee",
+          "blockedActionsTitle": "Blocked actions",
+          "blockedActionsTooltip": "Things volunteers can't do until this document has been generated and signed. Leave it empty if nothing should be blocked.",
+          "addBlockedAction": "Add action",
+          "removeSignee": "Remove {role}",
+          "removeAction": "Remove {gate}"
+        },
+        "signeeRoles": {
+          "volunteer": "Volunteer",
+          "coordinator": "Coordinator",
+          "hq_manager": "HQ Manager",
+          "supervisor": "Supervisor"
+        },
+        "gatePoints": {
+          "check_in": "Check-in",
+          "shift_signup": "Shift sign-up",
+          "document_ep_contract": "Volunteer allowance – create contract",
+          "document_ep_invoice": "Volunteer allowance – create invoice",
+          "document_ul_contract": "Trainer allowance – create contract",
+          "document_ul_invoice": "Trainer allowance – create invoice"
+        }
+      }
     }
   },
   "MyTime": {

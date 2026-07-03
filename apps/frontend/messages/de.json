@@ -1033,7 +1033,94 @@
       "title": "Reimbursements"
     },
     "templates": {
-      "title": "Templates"
+      "title": "Templates",
+      "sections": {
+        "ep": "Ehrenamtspauschale",
+        "ul": "Übungsleiterpauschale",
+        "unconfiguredWarning": "Schichten dieses Typs können nicht geplant werden, solange nicht beide Vorlagen konfiguriert sind."
+      },
+      "documentKind": {
+        "contract": "Vertrag",
+        "invoice": "Abrechnung"
+      },
+      "loadError": "Vorlagen konnten nicht geladen werden. Bitte Seite neu laden.",
+      "builder": {
+        "breadcrumb": {
+          "accounting": "Accounting",
+          "templates": "Vorlagen"
+        },
+        "saveButton": "Vorlage speichern",
+        "replacePdfButton": "PDF ersetzen",
+        "upload": {
+          "title": "PDF hochladen",
+          "description": "Lade eine PDF-Datei hoch, um mit dem Bearbeiten der Vorlage zu beginnen.",
+          "dragHint": "PDF-Datei hierher ziehen oder",
+          "browseButton": "Datei auswählen",
+          "fileConstraint": "Nur PDF-Dateien"
+        },
+        "fieldList": {
+          "title": "Felder",
+          "emptyHint": "Noch keine Felder platziert. Ziehe Felder aus der Werkzeugleiste auf die Vorlage.",
+          "dataSource": "Datenquelle",
+          "unbound": "Nicht verknüpft",
+          "unboundCount": "{count} nicht verknüpft",
+          "requiresCollection": "Erfordert Profil",
+          "profileWarning": "Dieses Feld fehlt im Anforderungsprofil.",
+          "configureProfile": "Profil konfigurieren"
+        },
+        "dataSources": {
+          "groupAlways": "Immer verfügbar",
+          "groupProfile": "Erfordert Profil",
+          "volunteer_first_name": "Vorname (Ehrenamtliche:r)",
+          "volunteer_last_name": "Nachname (Ehrenamtliche:r)",
+          "org_name": "Organisationsname",
+          "org_address": "Organisationsadresse",
+          "org_legal_rep": "Gesetzliche Vertretung",
+          "pauschalen_type": "Pauschalentyp",
+          "hourly_rate": "Stundensatz",
+          "period_start": "Zeitraum Beginn",
+          "period_end": "Zeitraum Ende",
+          "total_hours": "Gesamtstunden",
+          "total_amount": "Gesamtbetrag",
+          "generated_date": "Erstellungsdatum",
+          "document_number": "Dokumentennummer",
+          "volunteer_iban": "IBAN",
+          "volunteer_address": "Adresse (Ehrenamtliche:r)",
+          "volunteer_dob": "Geburtsdatum",
+          "volunteer_tax_id": "Steueridentifikationsnummer"
+        }
+      },
+      "card": {
+        "empty": {
+          "alertText": "Noch nicht konfiguriert",
+          "createButton": "Vorlage erstellen"
+        },
+        "editButton": "Vorlage bearbeiten",
+        "filled": {
+          "signeesTitle": "Unterschriften",
+          "signeesTooltip": "Personen, die dieses Dokument der Reihe nach unterschreiben müssen. Du kannst die Liste auch leer lassen, wenn keine Unterschrift nötig ist.",
+          "addSignee": "Unterzeichner:in hinzufügen",
+          "blockedActionsTitle": "Blockierte Aktionen",
+          "blockedActionsTooltip": "Aktionen, die Ehrenamtliche erst ausführen können, nachdem dieses Dokument erstellt und unterschrieben wurde. Du kannst die Liste leer lassen, wenn nichts blockiert werden soll.",
+          "addBlockedAction": "Aktion hinzufügen",
+          "removeSignee": "{role} entfernen",
+          "removeAction": "{gate} entfernen"
+        },
+        "signeeRoles": {
+          "volunteer": "Ehrenamtliche:r",
+          "coordinator": "Koordinator:in",
+          "hq_manager": "HQ Manager",
+          "supervisor": "Vorgesetzte:r"
+        },
+        "gatePoints": {
+          "check_in": "Check-in",
+          "shift_signup": "Schichtanmeldung",
+          "document_ep_contract": "Ehrenamtspauschale – Vertrag erstellen",
+          "document_ep_invoice": "Ehrenamtspauschale – Abrechnung erstellen",
+          "document_ul_contract": "Übungsleiterpauschale – Vertrag erstellen",
+          "document_ul_invoice": "Übungsleiterpauschale – Abrechnung erstellen"
+        }
+      }
     }
   },
   "MyTime": {
