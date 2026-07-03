@@ -991,10 +991,10 @@
   "Accounting": {
     "settings": {
       "title": "Accounting Settings",
-      "subtitle": "Stundensätze und Dokument-Lifecycle für bezahltes Ehrenamt konfigurieren.",
+      "subtitle": "Stundensätze und Dokumentvorlagen für bezahltes Ehrenamt konfigurieren.",
       "tabs": {
         "rates": "Stundensätze",
-        "lifecycle": "Lifecycle"
+        "templates": "Vorlagen"
       },
       "rates": {
         "sectionTitle": "Stundensatz",
@@ -1013,6 +1013,10 @@
         "provenance": {
           "inherited": "Org-Standard"
         }
+      },
+      "templates": {
+        "sectionTitle": "Dokumentvorlagen",
+        "sectionSubtitle": "Alle Vorlagen für Dokumente, die zur Auszahlung der jeweiligen Pauschale benötigt werden."
       },
       "lifecycle": {
         "subtitle": "Dokumentvorlagen für vergütete Schichten und ihre Lifecycle-Abhängigkeiten.",
