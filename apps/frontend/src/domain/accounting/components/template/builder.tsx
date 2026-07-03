@@ -4,6 +4,7 @@ import { Button } from '@repo/ui';
 import { ChevronRightIcon } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useState } from 'react';
+import { Link } from '@/i18n/navigation';
 import type { DocumentKind, PauschalenType } from '../doc-type-header';
 import { TemplateBuilderDesignerMock } from './builder-canvas-designer';
 import { TemplateBuilderUploadZone } from './builder-canvas-upload';
@@ -15,12 +16,14 @@ interface TemplateBuilderProps {
   kind: DocumentKind;
   /** mock: pre-populated fields for the "designer active" state */
   initialFields?: PlacedField[];
+  backHref?: string;
 }
 
 export function TemplateBuilder({
   pauschale,
   kind,
   initialFields,
+  backHref,
 }: TemplateBuilderProps) {
   const t = useTranslations('Accounting.templates.builder');
   const tSections = useTranslations('Accounting.templates');
@@ -62,7 +65,13 @@ export function TemplateBuilder({
         >
           <span>{t('breadcrumb.accounting')}</span>
           <ChevronRightIcon size={14} aria-hidden="true" />
-          <span>{t('breadcrumb.templates')}</span>
+          {backHref ? (
+            <Link href={backHref} className="hover:text-foreground transition-colors">
+              {t('breadcrumb.templates')}
+            </Link>
+          ) : (
+            <span>{t('breadcrumb.templates')}</span>
+          )}
           <ChevronRightIcon size={14} aria-hidden="true" />
           <span className="text-foreground font-medium">
             {typeLabel} · {kindLabel}

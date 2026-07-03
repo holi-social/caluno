@@ -57,11 +57,13 @@ const MOCK_SECTIONS: TemplateSectionData[] = [
 interface AccountingSettingsTabsProps {
   orgUId: string;
   canEditRates?: boolean;
+  builderBasePath?: string;
 }
 
 export function AccountingSettingsTabs({
   orgUId,
   canEditRates = true,
+  builderBasePath,
 }: AccountingSettingsTabsProps) {
   const tTabs = useTranslations('Accounting.settings.tabs');
   const t = useTranslations('Accounting.settings.templates');
@@ -85,7 +87,7 @@ export function AccountingSettingsTabs({
               {t('sectionSubtitle')}
             </p>
           </div>
-          <TemplateListingPage sections={MOCK_SECTIONS} orgUId={orgUId} />
+          <TemplateListingPage sections={MOCK_SECTIONS} orgUId={orgUId} builderBasePath={builderBasePath} />
         </div>
       </TabsContent>
     </Tabs>

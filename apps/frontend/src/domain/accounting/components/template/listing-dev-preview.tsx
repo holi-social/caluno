@@ -210,6 +210,7 @@ export function DevTemplateListingPreview() {
         <TemplateListingPage
           sections={MOCK_BY_STATE[viewState]}
           orgUId="dev-org"
+          builderBasePath="/dev/accounting-templates"
         />
       )}
     </div>

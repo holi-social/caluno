@@ -3,6 +3,7 @@
 import { Button } from '@repo/ui';
 import { useState } from 'react';
 import { TemplateBuilder } from './builder';
+import type { DocumentKind, PauschalenType } from '../doc-type-header';
 import type { PlacedField } from './builder-types';
 
 const MOCK_FIELDS_CLEAN: PlacedField[] = [
@@ -37,7 +38,17 @@ const VARIANT_LABELS: Record<BuilderVariant, string> = {
   unbound: 'Save blocked (unbound)',
 };
 
-export function DevTemplateBuilderPreview() {
+interface DevTemplateBuilderPreviewProps {
+  pauschale?: PauschalenType;
+  kind?: DocumentKind;
+  backHref?: string;
+}
+
+export function DevTemplateBuilderPreview({
+  pauschale = 'ehrenamt',
+  kind = 'contract',
+  backHref,
+}: DevTemplateBuilderPreviewProps) {
   const [variant, setVariant] = useState<BuilderVariant>('upload');
 
   const getFields = (): PlacedField[] | undefined => {
@@ -68,9 +79,10 @@ export function DevTemplateBuilderPreview() {
       <div className="flex-1 overflow-hidden">
         <TemplateBuilder
           key={variant}
-          pauschale="ehrenamt"
-          kind="contract"
+          pauschale={pauschale}
+          kind={kind}
           initialFields={getFields()}
+          backHref={backHref}
         />
       </div>
     </div>

@@ -9,7 +9,10 @@ export default function DevAccountingSettingsPreview() {
           Dev preview — no auth required
         </p>
       </div>
-      <AccountingSettingsTabs orgUId="dev-org" />
+      <AccountingSettingsTabs
+        orgUId="dev-org"
+        builderBasePath="/dev/accounting-templates"
+      />
     </div>
   );
 }

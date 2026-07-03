@@ -12,11 +12,13 @@ import type { TemplateSectionData, TemplateSlot } from './types';
 function TemplateSlotCard({
   slot,
   orgUId,
+  builderBasePath,
 }: {
   slot: TemplateSlot;
   orgUId: string;
+  builderBasePath?: string;
 }) {
-  const builderHref = `/admin/${orgUId}/accounting/templates/${slot.slug}`;
+  const builderHref = `${builderBasePath ?? `/admin/${orgUId}/accounting/templates`}/${slot.slug}`;
 
   if (!slot.configured) {
     return (
@@ -45,11 +47,13 @@ function TemplateSlotCard({
 interface TemplateListingPageProps {
   sections: TemplateSectionData[];
   orgUId: string;
+  builderBasePath?: string;
 }
 
 export function TemplateListingPage({
   sections,
   orgUId,
+  builderBasePath,
 }: TemplateListingPageProps) {
   return (
     <div className="space-y-8">
@@ -60,7 +64,12 @@ export function TemplateListingPage({
           hasUnconfigured={section.slots.some((s) => !s.configured)}
         >
           {section.slots.map((slot) => (
-            <TemplateSlotCard key={slot.slug} slot={slot} orgUId={orgUId} />
+            <TemplateSlotCard
+              key={slot.slug}
+              slot={slot}
+              orgUId={orgUId}
+              builderBasePath={builderBasePath}
+            />
           ))}
         </TemplateListingSection>
       ))}
