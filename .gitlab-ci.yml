@@ -193,7 +193,7 @@ sast_merge_reports:
   tags:
     - 4cpu-16gb
   before_script:
-    - apk add --no-cache bash jq curl
+    - apk add --no-cache bash jq curl git
   needs:
     - job: sast_merge_reports
       artifacts: true
