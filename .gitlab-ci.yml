@@ -144,7 +144,7 @@ integration_tests:
 # kics.config limits KICS to Terraform only — no Kubernetes manifests or Dockerfiles.
 # sast_merge_reports combines gl-sast-report.json + gl-sast-report-iac.json.
 # sast_summary posts Critical/High table (job log + MR comment); sast_gate blocks merge;
-# sast_medium_issues files Medium findings as grouped GitLab issues (one per file+rule). Both need SAST_ISSUES_TOKEN.
+# sast_medium_issues closes fixed + opens new Medium findings as grouped GitLab issues. Needs SAST_ISSUES_TOKEN.
 
 semgrep-sast:
   rules:
@@ -214,6 +214,7 @@ sast_medium_issues:
   extends: .sast-postprocess
   allow_failure: true
   script:
+    - bash .ai/scripts/sast-close-medium-issues.sh gl-sast-report.json
     - bash .ai/scripts/sast-open-medium-issues.sh gl-sast-report.json
 
 # ─── SECRET DETECTION ─────────────────────────────────────────────────────────
