@@ -1,0 +1,126 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "varco loop manifest",
+  "type": "object",
+  "required": [
+    "manifest",
+    "states"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "$schema": {
+      "type": "string"
+    },
+    "manifest": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string"
+    },
+    "states": {
+      "type": "array",
+      "items": {
+        "enum": [
+          "PLANNING",
+          "IMPLEMENTING",
+          "REVIEWING",
+          "QUALITY",
+          "DELIVERING"
+        ]
+      },
+      "contains": {
+        "const": "DELIVERING"
+      },
+      "description": "Subset of the canonical states; DELIVERING is required (the human gate)."
+    },
+    "budget": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "skills": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Agent skills piped into this loop's agent step \u2014 a name under .agents/skills/ or a path (folder/markdown file)."
+    },
+    "bind": {
+      "type": "object",
+      "propertyNames": {
+        "enum": [
+          "*",
+          "onEnter:IDLE",
+          "onEnter:PLANNING",
+          "onEnter:IMPLEMENTING",
+          "onEnter:REVIEWING",
+          "onEnter:QUALITY",
+          "onEnter:DELIVERING",
+          "onEnter:DELIVERED",
+          "onExit:IDLE",
+          "onExit:PLANNING",
+          "onExit:IMPLEMENTING",
+          "onExit:REVIEWING",
+          "onExit:QUALITY",
+          "onExit:DELIVERING",
+          "onExit:DELIVERED"
+        ]
+      },
+      "additionalProperties": {
+        "type": "array",
+        "items": {
+          "anyOf": [
+            {
+              "const": "agent-implement",
+              "description": "Run the agent for the implementation step; ENV-HALT if the agent is missing"
+            },
+            {
+              "const": "brainstorm",
+              "description": "Elicit / draft / critique the spec before approval (advisory)"
+            },
+            {
+              "const": "decision-routing",
+              "description": "(stub \u2014 not yet implemented)"
+            },
+            {
+              "const": "domain-accretion",
+              "description": "Harvest grounded facts (agent-proposed or spec-derived) and propose them to the domain layer"
+            },
+            {
+              "const": "glossary-lookup",
+              "description": "(stub \u2014 not yet implemented)"
+            },
+            {
+              "const": "grounding-check",
+              "description": "(stub \u2014 not yet implemented)"
+            },
+            {
+              "const": "learning-mode",
+              "description": "(stub \u2014 not yet implemented)"
+            },
+            {
+              "const": "migration-safety",
+              "description": "(stub \u2014 not yet implemented)"
+            },
+            {
+              "const": "observability",
+              "description": "(stub \u2014 not yet implemented)"
+            },
+            {
+              "const": "quality-gate",
+              "description": "Run the project's quality command (tests/lint) at QUALITY; failures drive the back-edge"
+            },
+            {
+              "const": "security-review",
+              "description": "Diff-aware LLM security review via the agent seam (regex fallback; fail-closed)"
+            },
+            {
+              "const": "spec-conformance",
+              "description": "Diff the tree against the spec's acceptance criteria; blocking findings"
+            }
+          ]
+        }
+      },
+      "description": "lifecycle point -> ordered plug-ins"
+    }
+  }
+}

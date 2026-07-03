@@ -1,0 +1,11 @@
+# Merge this [[hooks]] block into your Kimi global config: ~/.kimi-code/config.toml
+# (or $KIMI_CODE_HOME/config.toml). Setup walkthrough: ./README.md ("Kimi steps").
+# `matcher` matches Kimi's tool names; the file-writing tools are `Write` and `Edit`
+# (Built-in Tools reference: https://www.kimi.com/code/docs/en/kimi-code-cli/reference/tools.html).
+# `[[hooks]]` accepts ONLY event/matcher/command/timeout — any extra field fails to load.
+# Note: Kimi hooks are fail-open (timeout/crash = allow). This is session phase-discipline
+# only (write-block during plan/read-only); real enforcement is CI (see ../../docs/HUMAN_GUIDE.md).
+[[hooks]]
+event = "PreToolUse"
+matcher = "Write|Edit"
+command = "AI_HOST=kimi scripts/guard-write.sh"

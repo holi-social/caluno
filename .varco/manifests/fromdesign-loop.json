@@ -1,0 +1,15 @@
+{
+  "$schema": "./manifest.schema.json",
+  "manifest": "fromdesign-loop",
+  "description": "Design->code bridge (was >>fromdesign): a design brief exists at design/specs/<slug>.md. feature-loop seeded from the brief via the design-bridge skill.",
+  "states": ["PLANNING", "IMPLEMENTING", "REVIEWING", "QUALITY", "DELIVERING"],
+  "budget": 3,
+  "skills": ["design-bridge", "glossary-protocol", "clippy-tdd", "grounding", "scope-guard", "commit-convention", "decision-routing"],
+  "bind": {
+    "onEnter:PLANNING": ["brainstorm"],
+    "onEnter:IMPLEMENTING": ["agent-implement"],
+    "onEnter:REVIEWING": ["spec-conformance", "security-review"],
+    "onEnter:QUALITY": ["quality-gate"],
+    "onEnter:DELIVERED": ["domain-accretion"]
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "$schema": "./manifest.schema.json",
+  "manifest": "hotfix-loop",
+  "description": "Known-cause fix (was the skip-logic path: implement -> quality -> deliver). Thinnest loop that keeps the human gate; budget 2.",
+  "states": ["IMPLEMENTING", "QUALITY", "DELIVERING"],
+  "budget": 2,
+  "skills": ["diagnosing-bugs", "grounding", "commit-convention"],
+  "bind": {
+    "onEnter:IMPLEMENTING": ["agent-implement"],
+    "onEnter:QUALITY": ["quality-gate"],
+    "onEnter:DELIVERED": ["domain-accretion"]
+  }
+}

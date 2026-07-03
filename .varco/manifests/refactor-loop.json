@@ -1,0 +1,14 @@
+{
+  "$schema": "./manifest.schema.json",
+  "manifest": "refactor-loop",
+  "description": "Behavior-preserving restructure (was >>refactor: 2-3 design questions -> STOP -> refactor; no spec). Review = security + smells, no spec-conformance; tests stay green.",
+  "states": ["PLANNING", "IMPLEMENTING", "REVIEWING", "QUALITY", "DELIVERING"],
+  "budget": 3,
+  "skills": ["clippy-tdd", "grounding", "scope-guard", "commit-convention", "decision-routing"],
+  "bind": {
+    "onEnter:IMPLEMENTING": ["agent-implement"],
+    "onEnter:REVIEWING": ["security-review"],
+    "onEnter:QUALITY": ["quality-gate"],
+    "onEnter:DELIVERED": ["domain-accretion"]
+  }
+}

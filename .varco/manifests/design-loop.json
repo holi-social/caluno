@@ -1,0 +1,15 @@
+{
+  "$schema": "./manifest.schema.json",
+  "manifest": "design-loop",
+  "description": "The design pipeline as a loop: intake+ideate (PLANNING) -> craft (IMPLEMENTING) -> critique+refine gates (REVIEWING, findings drive repair cycles) -> lint/types (QUALITY) -> handoff brief at the human gate. Write-guard fences design tasks to the frontend blast radius.",
+  "states": ["PLANNING", "IMPLEMENTING", "REVIEWING", "QUALITY", "DELIVERING"],
+  "budget": 3,
+  "skills": ["design-intake", "design-ideate", "design-craft", "design-critique", "design-refine"],
+  "bind": {
+    "onEnter:PLANNING": ["brainstorm"],
+    "onEnter:IMPLEMENTING": ["agent-implement"],
+    "onEnter:REVIEWING": ["spec-conformance"],
+    "onEnter:QUALITY": ["quality-gate"],
+    "onEnter:DELIVERED": ["domain-accretion"]
+  }
+}
