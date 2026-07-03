@@ -6,20 +6,20 @@ import {
   FileUserIcon,
 } from 'lucide-react';
 
-export type DocumentKind = 'contract' | 'invoice' | 'custom' | 'payment';
-export type PauschalenType = 'ep' | 'ul';
+export type DocumentKind = 'contract' | 'invoice' | 'custom' | 'settings';
+export type PauschalenType = 'ehrenamt' | 'uebungleiter';
 
-// Intentional brand literals — legal type differentiation, exempt from token rule (SF-0 spec)
+// Intentional brand literals — legal type differentiation, exempt from token rule. Idk if this is the best way to do this, or if we need new tokens.
 const TYPE_COLOR: Record<PauschalenType, string> = {
-  ep: '#17857c',
-  ul: '#7f22fe',
+  ehrenamt: 'oklch(0.7 0.1 166)', // #17857c
+  uebungleiter: 'oklch(0.5405 0.2811 292.85)', // #7f22fe
 };
 
 const KIND_ICON: Record<DocumentKind, React.ElementType> = {
   contract: FileUserIcon,
   invoice: FileSpreadsheetIcon,
   custom: FileIcon,
-  payment: CoinsIcon,
+  settings: CoinsIcon,
 };
 
 interface DocTypeHeaderProps {
