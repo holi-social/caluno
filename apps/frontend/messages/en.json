@@ -991,10 +991,10 @@
   "Accounting": {
     "settings": {
       "title": "Accounting Settings",
-      "subtitle": "Configure rates and document lifecycle for paid volunteering.",
+      "subtitle": "Configure rates and document templates for paid volunteering.",
       "tabs": {
         "rates": "Rates",
-        "lifecycle": "Lifecycle"
+        "templates": "Templates"
       },
       "rates": {
         "sectionTitle": "Hourly rate",
@@ -1013,6 +1013,10 @@
         "provenance": {
           "inherited": "Org default"
         }
+      },
+      "templates": {
+        "sectionTitle": "Document templates",
+        "sectionSubtitle": "All templates for documents needed to pay out a respective Pauschale."
       },
       "lifecycle": {
         "subtitle": "Document templates for paid shifts and their lifecycle dependencies.",

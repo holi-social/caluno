@@ -8,7 +8,7 @@ interface AccountingSettingsPageProps {
 export default async function AccountingSettingsPage({
   params,
 }: AccountingSettingsPageProps) {
-  const { locale } = await params;
+  const { locale, orgUId } = await params;
   const t = await getTranslations({ locale, namespace: 'Accounting' });
 
   return (
@@ -18,7 +18,7 @@ export default async function AccountingSettingsPage({
         <p className="text-muted-foreground mt-1">{t('settings.subtitle')}</p>
       </div>
 
-      <AccountingSettingsTabs />
+      <AccountingSettingsTabs orgUId={orgUId} />
     </div>
   );
 }

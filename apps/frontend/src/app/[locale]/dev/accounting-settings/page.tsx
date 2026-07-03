@@ -9,7 +9,7 @@ export default function DevAccountingSettingsPreview() {
           Dev preview — no auth required
         </p>
       </div>
-      <AccountingSettingsTabs />
+      <AccountingSettingsTabs orgUId="dev-org" />
     </div>
   );
 }
