@@ -16,6 +16,7 @@
     "previous": "Zurück",
     "next": "Weiter",
     "back": "Zurück",
+    "done": "Fertig",
     "searchPlaceholder": "Suchen...",
     "yes": "Ja",
     "no": "Nein",
@@ -140,6 +141,10 @@
     "checkIn": "Einchecken",
     "myTime": "Meine Zeit",
     "requirementForms": "Anforderungsformulare",
+    "accounting": "Accounting",
+    "reimbursements": "Reimbursements",
+    "templates": "Templates",
+    "accountingSettings": "Einstellungen",
     "settings": "Einstellungen",
     "roles": "Rollen",
     "orgUnits": " Organisationseinheiten",
@@ -981,6 +986,54 @@
       "linkCopied": "Link kopiert",
       "linkCopiedDescription": "{url}",
       "couldNotCopyLink": "Link konnte nicht kopiert werden"
+    }
+  },
+  "Accounting": {
+    "settings": {
+      "title": "Accounting Settings",
+      "subtitle": "Stundensätze und Dokument-Lifecycle für bezahltes Ehrenamt konfigurieren.",
+      "tabs": {
+        "rates": "Stundensätze",
+        "lifecycle": "Lifecycle"
+      },
+      "rates": {
+        "sectionTitle": "Stundensatz",
+        "sectionSubtitle": "Organisationsweiter Stundensatz für vergütete Schichten, je Pauschalentyp. Einzelne Schichten können davon abweichen.",
+        "epLabel": "Ehrenamtspauschale",
+        "epLegal": "§3 Nr. 26a EStG",
+        "epYearlyLimit": "Bis zu 840 €/Jahr",
+        "ulLabel": "Übungsleiterpauschale",
+        "ulLegal": "§3 Nr. 26 EStG",
+        "ulYearlyLimit": "Bis zu 3.000 €/Jahr",
+        "saveSuccess": "Satz aktualisiert",
+        "errors": {
+          "invalidRate": "Bitte einen gültigen Satz größer als null eingeben"
+        },
+        "rateUnit": "€/Std.",
+        "provenance": {
+          "inherited": "Org-Standard"
+        }
+      },
+      "lifecycle": {
+        "subtitle": "Dokumentvorlagen für vergütete Schichten und ihre Lifecycle-Abhängigkeiten.",
+        "editTemplate": "Vorlage bearbeiten",
+        "noDocuments": "Keine Vorlagen konfiguriert.",
+        "noDocumentsHint": "Dokumentvorlagen erscheinen hier, sobald sie hinzugefügt wurden.",
+        "relationship": {
+          "unrelated": "Unabhängig",
+          "blocking": "Muss unterschrieben sein, bevor das nächste Dokument erstellt werden kann"
+        },
+        "pauschaleLabel": {
+          "ep": "Ehrenamtspauschale",
+          "ul": "Übungsleiterpauschale"
+        }
+      }
+    },
+    "reimbursements": {
+      "title": "Reimbursements"
+    },
+    "templates": {
+      "title": "Templates"
     }
   },
   "MyTime": {

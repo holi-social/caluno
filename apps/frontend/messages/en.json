@@ -16,6 +16,7 @@
     "previous": "Previous",
     "next": "Next",
     "back": "Back",
+    "done": "Done",
     "searchPlaceholder": "Search...",
     "yes": "Yes",
     "no": "No",
@@ -140,6 +141,10 @@
     "checkIn": "Check in",
     "myTime": "My Time",
     "requirementForms": "Requirement Forms",
+    "accounting": "Accounting",
+    "reimbursements": "Reimbursements",
+    "templates": "Templates",
+    "accountingSettings": "Settings",
     "settings": "Settings",
     "roles": "Roles",
     "orgUnits": "Org Units",
@@ -981,6 +986,54 @@
       "linkCopied": "Link copied",
       "linkCopiedDescription": "{url}",
       "couldNotCopyLink": "Could not copy link"
+    }
+  },
+  "Accounting": {
+    "settings": {
+      "title": "Accounting Settings",
+      "subtitle": "Configure rates and document lifecycle for paid volunteering.",
+      "tabs": {
+        "rates": "Rates",
+        "lifecycle": "Lifecycle"
+      },
+      "rates": {
+        "sectionTitle": "Hourly rate",
+        "sectionSubtitle": "Org-wide hourly rate for paid shifts, by Pauschale type. Individual shifts can override this rate.",
+        "epLabel": "Ehrenamtspauschale",
+        "epLegal": "§3 Nr. 26a EStG",
+        "epYearlyLimit": "Up to 840 €/year",
+        "ulLabel": "Übungsleiterpauschale",
+        "ulLegal": "§3 Nr. 26 EStG",
+        "ulYearlyLimit": "Up to 3,000 €/year",
+        "saveSuccess": "Rate updated",
+        "errors": {
+          "invalidRate": "Enter a valid rate greater than zero"
+        },
+        "rateUnit": "€/hr",
+        "provenance": {
+          "inherited": "Org default"
+        }
+      },
+      "lifecycle": {
+        "subtitle": "Document templates for paid shifts and their lifecycle dependencies.",
+        "editTemplate": "Edit template",
+        "noDocuments": "No templates configured.",
+        "noDocumentsHint": "Document templates appear here once added.",
+        "relationship": {
+          "unrelated": "Independent",
+          "blocking": "Must be signed before the next document can be generated"
+        },
+        "pauschaleLabel": {
+          "ep": "Ehrenamtspauschale",
+          "ul": "Übungsleiterpauschale"
+        }
+      }
+    },
+    "reimbursements": {
+      "title": "Reimbursements"
+    },
+    "templates": {
+      "title": "Templates"
     }
   },
   "MyTime": {
