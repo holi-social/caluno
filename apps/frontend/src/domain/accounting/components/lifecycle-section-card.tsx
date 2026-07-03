@@ -1,15 +1,11 @@
 'use client';
 
 import { Button, cn, Skeleton, Switch } from '@repo/ui';
-import { LockIcon, PlusIcon } from 'lucide-react';
+import { LockIcon } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useState } from 'react';
 import type { DocumentKind, PauschalenType } from './doc-type-header';
 import { DocTypeHeader } from './doc-type-header';
-import {
-  SigningChainEditable,
-  type SigningStep,
-} from './signing-chain-editable';
 
 export type DocumentRelationship = 'unrelated' | 'blocking';
 
@@ -18,45 +14,32 @@ export interface LifecycleDocument {
   kind: DocumentKind;
   pauschale: PauschalenType;
   name: string;
-  signingSteps: SigningStep[];
 }
 
-// Mocked initial data — dev pipeline replaces with real queries
 const MOCK_DOCUMENTS: LifecycleDocument[] = [
   {
     id: 'doc-1',
     kind: 'contract',
     pauschale: 'ep',
     name: 'Contract',
-    signingSteps: [
-      { id: 's1', role: 'volunteer' },
-      { id: 's2', role: 'coordinator' },
-    ],
   },
   {
     id: 'doc-2',
     kind: 'invoice',
     pauschale: 'ep',
     name: 'Invoice',
-    signingSteps: [
-      { id: 's3', role: 'volunteer' },
-      { id: 's4', role: 'coordinator' },
-    ],
   },
 ];
 
-// One relationship per adjacent pair; index i is between doc[i] and doc[i+1]
 const MOCK_RELATIONSHIPS: DocumentRelationship[] = ['blocking'];
 
 interface RelationshipConnectorProps {
   relationship: DocumentRelationship;
-  editable: boolean;
   onChange: (r: DocumentRelationship) => void;
 }
 
 function RelationshipConnector({
   relationship,
-  editable,
   onChange,
 }: RelationshipConnectorProps) {
   const t = useTranslations('Accounting.settings.lifecycle');
@@ -93,48 +76,33 @@ function RelationshipConnector({
         />
       </div>
 
-      <span className="text-xs">
+      <span className="text-sm">
         {isBlocking ? t('relationship.blocking') : t('relationship.unrelated')}
       </span>
 
-      {editable && (
-        <Switch
-          className="ml-auto"
-          checked={isBlocking}
-          onCheckedChange={(checked) =>
-            onChange(checked ? 'blocking' : 'unrelated')
-          }
-          aria-label={
-            isBlocking
-              ? t('relationship.blocking')
-              : t('relationship.unrelated')
-          }
-        />
-      )}
+      <Switch
+        className="ml-auto"
+        checked={isBlocking}
+        onCheckedChange={(checked) =>
+          onChange(checked ? 'blocking' : 'unrelated')
+        }
+        aria-label={
+          isBlocking ? t('relationship.blocking') : t('relationship.unrelated')
+        }
+      />
     </div>
   );
 }
 
 interface DocumentItemProps {
   doc: LifecycleDocument;
-  editable: boolean;
-  onStepsChange: (steps: SigningStep[]) => void;
-  onEditToggle: () => void;
-  isEditing: boolean;
 }
 
-function DocumentItem({
-  doc,
-  editable,
-  onStepsChange,
-  onEditToggle,
-  isEditing,
-}: DocumentItemProps) {
+function DocumentItem({ doc }: DocumentItemProps) {
   const t = useTranslations('Accounting.settings.lifecycle');
-  const tCommon = useTranslations('Common');
 
   return (
-    <div className="rounded-xl border bg-background px-4 py-4 space-y-3">
+    <div className="rounded-xl border bg-background px-4 py-4">
       <div className="flex items-start justify-between gap-2">
         <DocTypeHeader
           kind={doc.kind}
@@ -144,25 +112,14 @@ function DocumentItem({
           )}
           name={doc.name}
         />
-        {editable && (
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            onClick={onEditToggle}
-            className="shrink-0 text-sm"
-          >
-            {isEditing ? tCommon('cancel') : tCommon('edit')}
-          </Button>
-        )}
-      </div>
-
-      <div className="ml-10">
-        <SigningChainEditable
-          steps={doc.signingSteps}
-          editable={isEditing}
-          onStepsChange={onStepsChange}
-        />
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          className="shrink-0 text-sm"
+        >
+          {t('editTemplate')}
+        </Button>
       </div>
     </div>
   );
@@ -170,20 +127,10 @@ function DocumentItem({
 
 export function LifecycleSectionCard() {
   const t = useTranslations('Accounting.settings.lifecycle');
-  const tCommon = useTranslations('Common');
 
-  const [documents, setDocuments] =
-    useState<LifecycleDocument[]>(MOCK_DOCUMENTS);
+  const [documents] = useState<LifecycleDocument[]>(MOCK_DOCUMENTS);
   const [relationships, setRelationships] =
     useState<DocumentRelationship[]>(MOCK_RELATIONSHIPS);
-  const [editingId, setEditingId] = useState<string | null>(null);
-  const [globalEditable, setGlobalEditable] = useState(false);
-
-  function updateDocSteps(docId: string, steps: SigningStep[]) {
-    setDocuments((prev) =>
-      prev.map((d) => (d.id === docId ? { ...d, signingSteps: steps } : d)),
-    );
-  }
 
   function updateRelationship(index: number, rel: DocumentRelationship) {
     setRelationships((prev) => prev.map((r, i) => (i === index ? rel : r)));
@@ -191,24 +138,10 @@ export function LifecycleSectionCard() {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-start justify-between gap-4">
-        <p className="text-sm text-muted-foreground">{t('subtitle')}</p>
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          className="shrink-0"
-          onClick={() => {
-            setGlobalEditable((v) => !v);
-            setEditingId(null);
-          }}
-        >
-          {globalEditable ? tCommon('done') : tCommon('edit')}
-        </Button>
-      </div>
+      <p className="text-sm text-muted-foreground">{t('subtitle')}</p>
 
       <div>
-        {documents.length === 0 && !globalEditable && (
+        {documents.length === 0 && (
           <div className="py-6 text-center space-y-1">
             <p className="text-sm font-medium text-muted-foreground">
               {t('noDocuments')}
@@ -221,40 +154,15 @@ export function LifecycleSectionCard() {
 
         {documents.map((doc, index) => (
           <div key={doc.id}>
-            <DocumentItem
-              doc={doc}
-              editable={globalEditable}
-              isEditing={editingId === doc.id}
-              onEditToggle={() =>
-                setEditingId(editingId === doc.id ? null : doc.id)
-              }
-              onStepsChange={(steps) => updateDocSteps(doc.id, steps)}
-            />
-
+            <DocumentItem doc={doc} />
             {index < documents.length - 1 && (
               <RelationshipConnector
                 relationship={relationships[index] ?? 'unrelated'}
-                editable={globalEditable}
                 onChange={(rel) => updateRelationship(index, rel)}
               />
             )}
           </div>
         ))}
-
-        {globalEditable && (
-          <div className="pt-2">
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              className="text-muted-foreground gap-1"
-              disabled
-            >
-              <PlusIcon size={14} />
-              {t('addDocument')}
-            </Button>
-          </div>
-        )}
       </div>
     </div>
   );
@@ -263,42 +171,36 @@ export function LifecycleSectionCard() {
 export function LifecycleSectionCardSkeleton() {
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <Skeleton className="h-4 w-72" />
-        <Skeleton className="h-8 w-16 rounded-md" />
-      </div>
+      <Skeleton className="h-4 w-80" />
       <div className="space-y-0">
-        <div className="rounded-xl border px-4 py-4 space-y-3">
-          <div className="flex items-center gap-2">
-            <Skeleton className="h-8 w-8 rounded-[5px]" />
-            <div className="space-y-1">
-              <Skeleton className="h-3 w-24" />
-              <Skeleton className="h-5 w-32" />
+        <div className="rounded-xl border px-4 py-4">
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2">
+              <Skeleton className="h-8 w-8 rounded-[5px]" />
+              <div className="space-y-1">
+                <Skeleton className="h-3 w-24" />
+                <Skeleton className="h-5 w-32" />
+              </div>
             </div>
-          </div>
-          <div className="ml-10 flex gap-2">
-            <Skeleton className="h-6 w-20 rounded" />
-            <Skeleton className="h-4 w-4 self-center" />
-            <Skeleton className="h-6 w-24 rounded" />
+            <Skeleton className="h-8 w-24 rounded-md" />
           </div>
         </div>
         <div className="flex items-center gap-3 px-4 py-1">
           <Skeleton className="h-px flex-1" />
           <Skeleton className="h-4 w-20" />
           <Skeleton className="h-px flex-1" />
+          <Skeleton className="h-5 w-9 rounded-full" />
         </div>
-        <div className="rounded-xl border px-4 py-4 space-y-3">
-          <div className="flex items-center gap-2">
-            <Skeleton className="h-8 w-8 rounded-[5px]" />
-            <div className="space-y-1">
-              <Skeleton className="h-3 w-24" />
-              <Skeleton className="h-5 w-28" />
+        <div className="rounded-xl border px-4 py-4">
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2">
+              <Skeleton className="h-8 w-8 rounded-[5px]" />
+              <div className="space-y-1">
+                <Skeleton className="h-3 w-24" />
+                <Skeleton className="h-5 w-28" />
+              </div>
             </div>
-          </div>
-          <div className="ml-10 flex gap-2">
-            <Skeleton className="h-6 w-20 rounded" />
-            <Skeleton className="h-4 w-4 self-center" />
-            <Skeleton className="h-6 w-24 rounded" />
+            <Skeleton className="h-8 w-24 rounded-md" />
           </div>
         </div>
       </div>

@@ -43,7 +43,7 @@ export function DocTypeHeader({
   const color = TYPE_COLOR[pauschale];
 
   return (
-    <div className={cn('flex items-center gap-2', className)}>
+    <div className={cn('flex items-start gap-2', className)}>
       <div
         className="flex h-8 w-8 shrink-0 items-center justify-center rounded-[5px] border"
         style={{
