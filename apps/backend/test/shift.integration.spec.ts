@@ -1021,12 +1021,13 @@ describe('Volunteer home fields and check-in', () => {
       app,
       {
         query: `
-          query MyShiftInstances {
-            myShiftInstances {
+          query MyShiftInstances($includePast: Boolean!) {
+            myShiftInstances(includePast: $includePast) {
               id
             }
           }
         `,
+        variables: { includePast: true },
         headers: {
           'x-organization-unit-id': organizationUnitId,
         },
