@@ -107,6 +107,20 @@ mutation InviteMembersToShift(
   }
 }
 
+mutation UpdateMembersForShift(
+  $shiftId: String!
+  $memberIds: [String!]!
+  $fromDate: DateTime
+) {
+  updateMembersForShift(
+    shiftId: $shiftId
+    memberIds: $memberIds
+    fromDate: $fromDate
+  ) {
+    id
+  }
+}
+
 mutation UpdateShiftInstanceVolunteers(
   $instanceId: String!
   $memberIds: [String!]!

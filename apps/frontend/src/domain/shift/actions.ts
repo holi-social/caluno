@@ -162,6 +162,26 @@ export const updateShiftStaffing = actionClient
     });
   });
 
+const updateMembersForShiftSchema = z.object({
+  shiftId: z.string().min(1),
+  organizationUnitId: z.string().min(1),
+  memberIds: z.array(z.string()),
+  fromDate: z.coerce.date().optional(),
+});
+
+export const updateMembersForShift = actionClient
+  .inputSchema(updateMembersForShiftSchema)
+  .action(async ({ parsedInput }) => {
+    const data = await getDataClient({
+      orgUId: parsedInput.organizationUnitId,
+    });
+    return await data.shift.updateMembersForShift(
+      parsedInput.shiftId,
+      parsedInput.memberIds,
+      parsedInput.fromDate,
+    );
+  });
+
 const inviteMembersToShiftSchema = z.object({
   shiftId: z.string().min(1),
   organizationUnitId: z.string().min(1),

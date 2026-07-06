@@ -28,7 +28,7 @@ import { toast } from 'sonner';
 import { useSession } from '@/lib/auth';
 import { copyToClipboard } from '@/lib/clipboard';
 import {
-  inviteMembersToShift,
+  updateMembersForShift,
   updateShiftStaffing,
   updateShiftVolunteers,
 } from '../actions';
@@ -149,27 +149,21 @@ export function InviteShiftForm({
         return;
       }
 
-      const updateResult = await updateShiftVolunteers({
-        instanceId,
-        organizationUnitId: orgUId,
-        memberIds: data.invitedMemberIds,
-      });
+      const updateResult = data.inviteAllInstances
+        ? await updateMembersForShift({
+            shiftId,
+            organizationUnitId: orgUId,
+            memberIds: data.invitedMemberIds,
+            fromDate: instanceStartDate ?? undefined,
+          })
+        : await updateShiftVolunteers({
+            instanceId,
+            organizationUnitId: orgUId,
+            memberIds: data.invitedMemberIds,
+          });
       if (updateResult?.serverError) {
         toast.error(updateResult.serverError);
         return;
-      }
-
-      if (data.inviteAllInstances) {
-        const inviteAllResult = await inviteMembersToShift({
-          shiftId,
-          organizationUnitId: orgUId,
-          memberIds: data.invitedMemberIds,
-          fromDate: instanceStartDate,
-        });
-        if (inviteAllResult?.serverError) {
-          toast.error(inviteAllResult.serverError);
-          return;
-        }
       }
 
       onSuccess?.();
