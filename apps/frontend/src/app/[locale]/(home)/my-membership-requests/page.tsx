@@ -1,7 +1,7 @@
 import { MembershipRequestStatus } from '@repo/data';
 import { getTranslations } from 'next-intl/server';
+import MyMembershipRequests from '@/domain/membership-requests/components/my-membership-requests';
 import { getDataClient } from '@/lib/data-client';
-import Tabs from './tabs';
 
 const VALID_STATUSES = [
   MembershipRequestStatus.Pending,
@@ -36,7 +36,10 @@ export default async function MyMembershipRequestsPage({
         <p className="text-muted-foreground mt-1">{t('page.subtitle')}</p>
       </div>
 
-      <Tabs activeStatus={status} membershipRequests={membershipRequests} />
+      <MyMembershipRequests
+        activeStatus={status}
+        membershipRequests={membershipRequests}
+      />
     </div>
   );
 }

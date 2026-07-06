@@ -354,7 +354,7 @@
   },
   "MembershipRequest": {
     "page": {
-      "title": "My Membership Requests",
+      "title": "Membership Requests",
       "subtitle": "Your requests to join organizations"
     },
     "status": {

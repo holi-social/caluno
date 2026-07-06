@@ -12,7 +12,10 @@ interface Props {
   membershipRequests: MyMembershipRequestItem[];
 }
 
-export default function Tabs({ activeStatus, membershipRequests }: Props) {
+export default function MyMembershipRequests({
+  activeStatus,
+  membershipRequests,
+}: Props) {
   return (
     <MembershipRequestsTabs
       activeStatus={activeStatus}
