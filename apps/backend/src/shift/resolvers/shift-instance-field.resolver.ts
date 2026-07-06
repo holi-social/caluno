@@ -1,4 +1,5 @@
 import { Args, Context, Parent, ResolveField, Resolver } from '@nestjs/graphql';
+import { Session, type UserSession } from '@thallesp/nestjs-better-auth';
 import { PERMISSIONS } from '../../auth/constants';
 import { Permissions } from '../../auth/decorators/permissions.decorator';
 import type { AuthenticatedGraphQLContext } from '../../graphql/graphql.context';
@@ -47,5 +48,22 @@ export class ShiftInstanceFieldResolver {
     } else {
       return null;
     }
+  }
+
+  @ResolveField(() => Boolean)
+  async isCheckedIn(
+    @Parent() instance: ShiftInstanceEntity,
+    @Session() session: UserSession,
+  ): Promise<boolean> {
+    if (!session?.user) {
+      return false;
+    }
+
+    return this.shiftService.hasOpenTimeEntry(instance.id, session.user.id);
+  }
+
+  @ResolveField(() => Number)
+  async filledCount(@Parent() instance: ShiftInstanceEntity): Promise<number> {
+    return this.shiftService.getFilledCount(instance.id);
   }
 }

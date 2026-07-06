@@ -1,11 +1,16 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { count, eq } from 'drizzle-orm';
+import { and, count, eq, isNull } from 'drizzle-orm';
 import type { Database } from '../database/database.module';
 import { DATABASE_CONNECTION } from '../database/database-connection';
 import * as schema from '../database/schema';
-import { NotFoundGraphQLError } from '../graphql/errors';
+import {
+  ConflictGraphQLError,
+  ForbiddenGraphQLError,
+  NotFoundGraphQLError,
+} from '../graphql/errors';
 import { PaginationInput } from '../graphql/pagination.input';
 import { MembershipService } from '../membership/membership.service';
+import { ShiftService } from '../shift/shift.service';
 import { AddTimeEntryInput } from './inputs/add-time-entry.input';
 import { CloseTimeEntryInput } from './inputs/close-time-enty-input';
 import { UpdateTimeEntryInput } from './inputs/update-time-entry.input';
@@ -20,6 +25,7 @@ export class TimeTrackingService {
     @Inject(DATABASE_CONNECTION)
     private readonly db: Database,
     readonly _membershipService: MembershipService,
+    private readonly shiftService: ShiftService,
   ) {}
   async addTimeEntry(
     organizationUnitId: string,
@@ -208,6 +214,96 @@ export class TimeTrackingService {
       .where(eq(schema.timeEntries.volunteerId, userId));
 
     return { entries: entries as TimeEntryEntity[], total };
+  }
+
+  async checkIn(
+    shiftInstanceId: string,
+    userId: string,
+  ): Promise<TimeEntryEntity> {
+    const instance =
+      await this.shiftService.findInstanceWithMaster(shiftInstanceId);
+
+    if (instance.isCancelled) {
+      throw new NotFoundGraphQLError('Shift instance not found');
+    }
+
+    const organizationUnitId = instance.master.organizationUnitId;
+    const isMember = await this._membershipService.isMemberOfUnitOrAncestor(
+      userId,
+      organizationUnitId,
+    );
+    if (!isMember) {
+      throw new ForbiddenGraphQLError('You are not a member of this unit');
+    }
+
+    const isBooked = await this.shiftService.isVolunteerBooked(
+      shiftInstanceId,
+      userId,
+    );
+    if (!isBooked) {
+      throw new ForbiddenGraphQLError('You are not signed up for this shift');
+    }
+
+    const alreadyCheckedIn = await this.shiftService.hasOpenTimeEntry(
+      shiftInstanceId,
+      userId,
+    );
+    if (alreadyCheckedIn) {
+      throw new ConflictGraphQLError('Already checked in');
+    }
+
+    const input = new AddTimeEntryInput();
+    input.shiftInstanceId = shiftInstanceId;
+    input.volunteerId = userId;
+    input.startedAt = new Date();
+    input.endedAt = null;
+    input.notes = null;
+
+    return this.addTimeEntry(organizationUnitId, input);
+  }
+
+  async checkOut(
+    shiftInstanceId: string,
+    userId: string,
+  ): Promise<TimeEntryEntity> {
+    const instance =
+      await this.shiftService.findInstanceWithMaster(shiftInstanceId);
+
+    if (instance.isCancelled) {
+      throw new NotFoundGraphQLError('Shift instance not found');
+    }
+
+    const organizationUnitId = instance.master.organizationUnitId;
+    const isMember = await this._membershipService.isMemberOfUnitOrAncestor(
+      userId,
+      organizationUnitId,
+    );
+    if (!isMember) {
+      throw new ForbiddenGraphQLError('You are not a member of this unit');
+    }
+
+    const entries = await this.db
+      .select()
+      .from(schema.timeEntries)
+      .where(
+        and(
+          eq(schema.timeEntries.shiftInstanceId, shiftInstanceId),
+          eq(schema.timeEntries.volunteerId, userId),
+          isNull(schema.timeEntries.endedAt),
+        ),
+      )
+      .limit(1);
+
+    const entry = entries[0];
+    if (!entry) {
+      throw new NotFoundGraphQLError('No open check-in found for this shift');
+    }
+
+    const closeInput = new CloseTimeEntryInput();
+    closeInput.endedAt = new Date();
+    closeInput.notes = null;
+
+    return this.closeTimeEntry(entry.id, organizationUnitId, closeInput);
   }
 }
 

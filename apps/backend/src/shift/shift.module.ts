@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { AuthModule } from '../auth/auth.module';
 import { DatabaseModule } from '../database/database.module';
+import { EventModule } from '../event/event.module';
 import { MembershipModule } from '../membership/membership.module';
 import { NotificationModule } from '../notification/notification.module';
 import { UserModule } from '../user/user.module';
@@ -19,6 +20,7 @@ import { ShiftService } from './shift.service';
     UserModule,
     MembershipModule,
     NotificationModule,
+    EventModule,
   ],
   providers: [
     ShiftService,
