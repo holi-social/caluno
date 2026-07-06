@@ -532,6 +532,23 @@ export class ShiftService {
       return shift;
     }
 
+    const newMemberIds = await this.addMembersToAllShiftInstances(
+      shift,
+      memberIds,
+    );
+    void this.emitShiftInvitedNotification(shift, newMemberIds);
+
+    return shift;
+  }
+
+  private async addMembersToAllShiftInstances(
+    shift: ShiftEntity,
+    memberIds: string[],
+  ): Promise<string[]> {
+    if (memberIds.length === 0) {
+      return [];
+    }
+
     const newMemberIds = await this.filterMembersNotFullyInvitedToShift(
       shift.id,
       memberIds,
@@ -640,9 +657,7 @@ export class ShiftService {
       await this.createInvitesForInstances(tx, instanceIds, memberIds);
     });
 
-    void this.emitShiftInvitedNotification(shift, newMemberIds);
-
-    return shift;
+    return newMemberIds;
   }
 
   private async filterMembersNotFullyInvitedToShift(
@@ -1339,11 +1354,7 @@ export class ShiftService {
       );
     }
 
-    await this.inviteMembersToShiftWithAutoApproval(
-      shift.id,
-      [userId],
-      shift.organizationUnitId,
-    );
+    await this.addMembersToAllShiftInstances(shift, [userId]);
 
     return shift;
   }
