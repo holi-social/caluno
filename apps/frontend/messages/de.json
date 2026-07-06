@@ -547,8 +547,8 @@
       "maxVolunteersDescription": "Maximale Anzahl an Personen, die sich für die Schicht anmelden dürfen",
       "copyInviteLink": "Einladungslink kopieren",
       "managingLabel": "Du verwaltest Freiwillige für:",
-      "inviteAllLabel": "Zu allen Terminen dieser Schicht einladen",
-      "inviteAllDescription": "Freiwillige werden zu allen Schichten ab {startDate}, jeden {days}, eingeladen."
+      "inviteAllLabel": "Zu allen zukünftigen Terminen dieser Schicht einladen",
+      "inviteAllDescription": "Freiwillige werden zu allen Schichten ab dem {startDate}, jeden {days}, eingeladen."
     },
     "transferList": {
       "available": "Verfügbar",

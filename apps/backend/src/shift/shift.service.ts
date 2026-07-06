@@ -470,6 +470,7 @@ export class ShiftService {
     shiftId: string,
     memberIds: string[],
     organizationUnitId: string,
+    fromDate?: Date,
   ): Promise<ShiftEntity> {
     const shift = await this.findOrgUnitsShift(shiftId, organizationUnitId);
 
@@ -482,6 +483,7 @@ export class ShiftService {
         where: {
           masterId: shift.id,
           isCancelled: false,
+          ...(fromDate ? { actualStartsAt: { gte: fromDate } } : {}),
         },
         columns: {
           id: true,

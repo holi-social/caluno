@@ -91,12 +91,15 @@ export class ShiftMutationResolver {
   async inviteMembersToShift(
     @Args('shiftId', { type: () => String }) shiftId: string,
     @Args('memberIds', { type: () => [String] }) memberIds: string[],
+    @Args('fromDate', { type: () => Date, nullable: true })
+    fromDate: Date | null,
     @Context() context: AuthenticatedGraphQLContext,
   ): Promise<Shift> {
     const shift = await this.shiftService.inviteMembersToShiftWithAutoApproval(
       shiftId,
       memberIds,
       context.organizationUnitId,
+      fromDate ?? undefined,
     );
     return this.shiftMapper.toModelOrThrow(shift);
   }

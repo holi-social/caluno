@@ -93,8 +93,16 @@ mutation InviteShiftInstanceVolunteers(
   }
 }
 
-mutation InviteMembersToShift($shiftId: String!, $memberIds: [String!]!) {
-  inviteMembersToShift(shiftId: $shiftId, memberIds: $memberIds) {
+mutation InviteMembersToShift(
+  $shiftId: String!
+  $memberIds: [String!]!
+  $fromDate: DateTime
+) {
+  inviteMembersToShift(
+    shiftId: $shiftId
+    memberIds: $memberIds
+    fromDate: $fromDate
+  ) {
     id
   }
 }

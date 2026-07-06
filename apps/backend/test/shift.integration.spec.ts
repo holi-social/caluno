@@ -191,7 +191,7 @@ describe('ShiftService.findShiftsForWeek', () => {
     expect(shiftInvites).toHaveLength(1);
   });
 
-  it('invites members to past instances as well as future instances', async () => {
+  it('invites members only to instances from the given date onwards', async () => {
     const userId = `shift-past-future-invite-user-${crypto.randomUUID()}`;
     await db.insert(schema.users).values({
       id: userId,
@@ -261,8 +261,16 @@ describe('ShiftService.findShiftsForWeek', () => {
       app,
       {
         query: `
-          mutation InviteMembersToShift($shiftId: String!, $memberIds: [String!]!) {
-            inviteMembersToShift(shiftId: $shiftId, memberIds: $memberIds) {
+          mutation InviteMembersToShift(
+            $shiftId: String!
+            $memberIds: [String!]!
+            $fromDate: DateTime
+          ) {
+            inviteMembersToShift(
+              shiftId: $shiftId
+              memberIds: $memberIds
+              fromDate: $fromDate
+            ) {
               id
             }
           }
@@ -270,6 +278,7 @@ describe('ShiftService.findShiftsForWeek', () => {
         variables: {
           shiftId,
           memberIds: [userId],
+          fromDate: futureInstance.actualStartsAt.toISOString(),
         },
         headers: {
           'x-organization-unit-id': organizationUnitId,
@@ -285,8 +294,8 @@ describe('ShiftService.findShiftsForWeek', () => {
     const invitedInstanceIds = invites
       .map((invite) => invite.instanceId)
       .sort();
-    expect(invitedInstanceIds).toContain(pastInstance.id);
     expect(invitedInstanceIds).toContain(futureInstance.id);
+    expect(invitedInstanceIds).not.toContain(pastInstance.id);
 
     const shiftInvites = await db.query.shiftInvites.findMany({
       where: {

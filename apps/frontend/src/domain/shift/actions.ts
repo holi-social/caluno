@@ -166,6 +166,7 @@ const inviteMembersToShiftSchema = z.object({
   shiftId: z.string().min(1),
   organizationUnitId: z.string().min(1),
   memberIds: z.array(z.string()),
+  fromDate: z.coerce.date().optional(),
 });
 
 export const inviteMembersToShift = actionClient
@@ -177,5 +178,6 @@ export const inviteMembersToShift = actionClient
     return await data.shift.inviteMembersToShift(
       parsedInput.shiftId,
       parsedInput.memberIds,
+      parsedInput.fromDate,
     );
   });

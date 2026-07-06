@@ -164,6 +164,7 @@ export function InviteShiftForm({
           shiftId,
           organizationUnitId: orgUId,
           memberIds: data.invitedMemberIds,
+          fromDate: instanceStartDate,
         });
         if (inviteAllResult?.serverError) {
           toast.error(inviteAllResult.serverError);
@@ -223,7 +224,7 @@ export function InviteShiftForm({
                       </FieldLabel>
                       <FieldDescription>
                         {t('inviteForm.inviteAllDescription', {
-                          startDate: formatWithOptions(shift.startDate, {
+                          startDate: formatWithOptions(instanceStartDate, {
                             day: '2-digit',
                             month: '2-digit',
                             year: 'numeric',
