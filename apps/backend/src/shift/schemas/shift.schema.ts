@@ -10,6 +10,7 @@ import {
 } from 'drizzle-orm/pg-core';
 import { users } from '../../auth/schemas/auth.schema';
 import { idColumn, timestampColumns } from '../../database/database-columns';
+import { events } from '../../event/schemas/event.schema';
 import { organizationUnits } from '../../organization/schemas/organization-unit.schema';
 import { ShiftVisibility } from '../enums';
 
@@ -37,6 +38,9 @@ export const shifts = pgTable(
       .default(ShiftVisibility.ALL_MEMBERS),
     maxVolunteers: integer('max_volunteers'),
     minVolunteers: integer('min_volunteers'),
+    eventId: uuid('event_id').references(() => events.id, {
+      onDelete: 'set null',
+    }),
     rrule: text('rrule'),
     originalStartsAt: timestamp('original_starts_at').notNull(),
     durationMinutes: integer('duration_minutes').notNull(),

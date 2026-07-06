@@ -231,6 +231,7 @@ OrgUnit "1" -- "*" Event : "hosts >"
 Event "1" -- "*" EventInvite : "includes >"
 EventInvite "*" -- "1" User : "assigned to >"
 User "1" -- "*" Event : "created by <"
+Shift "*" -- "0..1" Event : "is part of >"
 
 ' --- Time Tracking ---
 ShiftInstance "1" -- "*" TimeEntry : "logged against >"

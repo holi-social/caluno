@@ -15,5 +15,9 @@ export const eventsRelations = defineRelationsPart(schema, (r) => ({
       from: r.events.id,
       to: r.eventInvites.eventId,
     }),
+    shifts: r.many.shifts({
+      from: r.events.id,
+      to: r.shifts.eventId,
+    }),
   },
 }));
