@@ -1,10 +1,10 @@
 'use server';
 
+import { getDataClient } from '@/lib/data-client';
+import { actionClient } from '@/lib/safe-action';
 import { FieldType } from '@repo/data';
 import { revalidatePath } from 'next/cache';
 import z from 'zod';
-import { getDataClient } from '@/lib/data-client';
-import { actionClient } from '@/lib/safe-action';
 import { serverCreateBlockSchema, serverCreateFormSchema } from './schemas';
 
 export const createForm = actionClient
@@ -94,7 +94,6 @@ export const submitForm = actionClient
     const result = await data.requirementForm.submitForm(parsedInput.token, {
       values: parsedInput.values,
     });
-    revalidatePath('/admin/my-membership-requests');
     return result;
   });
 
@@ -288,7 +287,6 @@ export const joinOrganization = actionClient
     const result = await data.membershipRequest.join(
       parsedInput.organizationUnitId,
     );
-    revalidatePath('/admin/my-membership-requests');
     return result;
   });
 

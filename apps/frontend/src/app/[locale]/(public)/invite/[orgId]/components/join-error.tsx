@@ -27,7 +27,7 @@ export function JoinError({ message }: JoinErrorProps) {
             <Link href="/">{t('invite.error.homeButton')}</Link>
           </Button>
           <Button asChild variant="outline">
-            <Link href="/my-membership-requests">
+            <Link href="/profile#memberships">
               {t('invite.error.requestsButton')}
             </Link>
           </Button>

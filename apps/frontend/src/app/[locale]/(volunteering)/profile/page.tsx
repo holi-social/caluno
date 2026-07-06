@@ -42,7 +42,7 @@ export default async function ProfilePage({
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-xl font-bold">
+        <h2 id="memberships" className="text-xl font-bold">
           {tMembershipRequests('page.title')}
         </h2>
         <p className="text-muted-foreground mt-1">
