@@ -1,3 +1,29 @@
-export default async function VolunteerHomePage() {
-  return <div>TODO: add the shift & event discovery here</div>;
+import { VolunteerHomeContent } from '@/domain/home/components/volunteer-home-content';
+import { requireAuth } from '@/lib/auth-server';
+import { getDataClient } from '@/lib/data-client';
+
+interface VolunteeringHomePageProps {
+  params: Promise<{ locale: string }>;
+}
+
+export default async function VolunteeringHomePage({
+  params,
+}: VolunteeringHomePageProps) {
+  await params;
+  const client = await getDataClient();
+
+  const [myShiftInstances, availableShiftInstances, organizationUnits] =
+    await Promise.all([
+      client.shift.findMyShiftInstances(false),
+      client.shift.findAvailableShiftInstances({}),
+      client.organization.findMyAccessibleOrganizationUnits(),
+    ]);
+
+  return (
+    <VolunteerHomeContent
+      initialMyShiftInstances={myShiftInstances}
+      initialAvailableShiftInstances={availableShiftInstances}
+      initialOrganizationUnits={organizationUnits}
+    />
+  );
 }

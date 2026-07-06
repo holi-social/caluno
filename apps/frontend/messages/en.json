@@ -1079,6 +1079,29 @@
     "error": {
       "title": "Failed to load events",
       "tryAgain": "Try again"
-    }
+    },
+  "VolunteerHome": {
+    "greeting": "Hi, {firstName}!",
+    "greetingFallback": "Welcome back!",
+    "yourShiftsHeading": "Your shifts",
+    "yourShiftsCount": "{n, plural, one {# shift} other {# shifts}}",
+    "yourShiftsSeeAll": "See all",
+    "yourShiftsEmpty": "You have no upcoming shifts.",
+    "discoverHeading": "Discover",
+    "discoverCta": "Discover shifts",
+    "discoverEmpty": "No shifts match these filters",
+    "discoverEmptyBody": "Try adjusting your filters, or check back later.",
+    "filterNextWeek": "Next week",
+    "filterThisWeekend": "This weekend",
+    "weekly": "Weekly",
+    "spotsLeft": "{n, plural, one {# spot left} other {# spots left}}",
+    "fullyBooked": "Fully booked",
+    "overlapWarning": "You have overlapping shifts in your schedule",
+    "todayButton": "Today",
+    "checkIn": "Check in",
+    "checkOut": "Check out",
+    "timerStartsIn": "starts in {time}",
+    "timerStartedAgo": "Started {time} ago",
+    "timerVolunteering": "You're volunteering for {time}"
   }
 }
