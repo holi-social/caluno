@@ -1,28 +1,19 @@
-'use client';
-
 import type { GetMyMembershipRequestsQuery } from '@repo/data';
-import { MembershipRequestsTabs } from '@/domain/membership-requests/components/membership-requests-tabs';
 import MyMembershipRequestCard from '@/domain/membership-requests/components/my-membership-request-card';
 
 type MyMembershipRequestItem =
   GetMyMembershipRequestsQuery['myMembershipRequests']['items'][number];
 
 interface Props {
-  activeStatus: string;
   membershipRequests: MyMembershipRequestItem[];
 }
 
-export default function MyMembershipRequests({
-  activeStatus,
-  membershipRequests,
-}: Props) {
-  return (
-    <MembershipRequestsTabs
-      activeStatus={activeStatus}
-      membershipRequests={membershipRequests}
-      renderItem={(request) => (
-        <MyMembershipRequestCard key={request.id} request={request} />
-      )}
-    />
-  );
-}
+const MyMembershipRequests = ({ membershipRequests }: Props) => (
+  <div className="grid grid-cols-1 md:grid-cols-2">
+    {membershipRequests.map((m) => (
+      <MyMembershipRequestCard key={m.id} request={m} />
+    ))}
+  </div>
+);
+
+export default MyMembershipRequests;

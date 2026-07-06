@@ -353,7 +353,7 @@
   },
   "MembershipRequest": {
     "page": {
-      "title": "Mitgliedschaftsanfragen",
+      "title": "Mitgliedschaften",
       "subtitle": "Deine Anfragen, Organisationen beizutreten"
     },
     "status": {

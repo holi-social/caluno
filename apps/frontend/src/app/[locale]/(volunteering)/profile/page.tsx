@@ -10,50 +10,30 @@ const VALID_STATUSES = [
   MembershipRequestStatus.Accepted,
   MembershipRequestStatus.Rejected,
 ] as const;
-type ValidStatus = (typeof VALID_STATUSES)[number];
 
 interface ProfilePageProps {
   params: Promise<{ locale: string }>;
-  searchParams: Promise<{ status?: ValidStatus }>;
 }
 
-export default async function ProfilePage({
-  params,
-  searchParams,
-}: ProfilePageProps) {
+export default async function ProfilePage({ params }: ProfilePageProps) {
   const { locale: rawLocale } = await params;
   const locale = resolveLocale(rawLocale);
   setRequestLocale(locale);
 
-  const t = await getTranslations('Profile');
-
-  const { status: statusParam } = await searchParams;
-  const status =
-    statusParam && VALID_STATUSES.includes(statusParam)
-      ? statusParam
-      : MembershipRequestStatus.Pending;
-
   const data = await getDataClient();
-  const { items: membershipRequests } = await data.membershipRequest.findMine({
-    status,
-  });
-  const tMembershipRequests = await getTranslations('MembershipRequest');
+  const { items: membershipRequests } = await data.membershipRequest.findMine();
+  const t = await getTranslations('MembershipRequest');
 
   return (
     <div className="space-y-6">
       <div>
         <h2 id="memberships" className="text-xl font-bold">
-          {tMembershipRequests('page.title')}
+          {t('page.title')}
         </h2>
-        <p className="text-muted-foreground mt-1">
-          {tMembershipRequests('page.subtitle')}
-        </p>
+        <p className="text-muted-foreground mt-1">{t('page.subtitle')}</p>
       </div>
 
-      <MyMembershipRequests
-        activeStatus={status}
-        membershipRequests={membershipRequests}
-      />
+      <MyMembershipRequests membershipRequests={membershipRequests} />
 
       <LocaleSwitcher />
     </div>
