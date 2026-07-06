@@ -180,6 +180,15 @@ describe('ShiftService.findShiftsForWeek', () => {
     expect(invites.map((invite) => invite.instanceId)).not.toContain(
       cancelledInstanceId,
     );
+
+    const shiftInvites = await db.query.shiftInvites.findMany({
+      where: {
+        shiftId,
+        userId: user.id,
+        status: ShiftInviteStatus.ACCEPTED,
+      },
+    });
+    expect(shiftInvites).toHaveLength(1);
   });
 
   it('invites members to past instances as well as future instances', async () => {
@@ -278,6 +287,15 @@ describe('ShiftService.findShiftsForWeek', () => {
       .sort();
     expect(invitedInstanceIds).toContain(pastInstance.id);
     expect(invitedInstanceIds).toContain(futureInstance.id);
+
+    const shiftInvites = await db.query.shiftInvites.findMany({
+      where: {
+        shiftId,
+        userId,
+        status: ShiftInviteStatus.ACCEPTED,
+      },
+    });
+    expect(shiftInvites).toHaveLength(1);
   });
 
   it('approves a shift membership request into only the intended shift instance', async () => {

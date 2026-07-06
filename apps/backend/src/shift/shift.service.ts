@@ -275,7 +275,7 @@ export class ShiftService {
     });
   }
 
-  private readonly MAX_INVITES_PER_OPERATION = 100000; // same as below easy guard to avoid not reasnable operations
+  private readonly MAX_INVITES_PER_OPERATION = 100000; // same as below easy guard to avoid unreasonable operations
 
   private async createInvitesForInstances(
     tx: Pick<Database, 'insert' | 'select'>,
@@ -292,7 +292,7 @@ export class ShiftService {
       );
     }
 
-    const BATCH_SIZE = 1000; // this manual batch is just an easy guard to avoid going over the 65k pg linit
+    const BATCH_SIZE = 1000; // this manual batch is just an easy guard to avoid going over the 65k pg limit
     const invites = instanceIds.flatMap((instanceId) =>
       memberIds.map((userId) => ({
         instanceId,
@@ -307,6 +307,26 @@ export class ShiftService {
         .insert(schema.shiftInstanceInvites)
         .values(batch)
         .onConflictDoNothing();
+    }
+  }
+
+  private async createInvitesForShift(
+    tx: Pick<Database, 'insert'>,
+    shiftId: string,
+    memberIds: string[],
+  ): Promise<void> {
+    if (memberIds.length === 0) return;
+
+    const BATCH_SIZE = 1000;
+    const invites = memberIds.map((userId) => ({
+      shiftId,
+      userId,
+      status: ShiftInviteStatus.ACCEPTED,
+    }));
+
+    for (let i = 0; i < invites.length; i += BATCH_SIZE) {
+      const batch = invites.slice(i, i + BATCH_SIZE);
+      await tx.insert(schema.shiftInvites).values(batch).onConflictDoNothing();
     }
   }
 
@@ -470,6 +490,7 @@ export class ShiftService {
       });
 
       if (instances.length === 0) {
+        await this.createInvitesForShift(tx, shift.id, memberIds);
         return;
       }
 
@@ -557,6 +578,7 @@ export class ShiftService {
         }
       }
 
+      await this.createInvitesForShift(tx, shift.id, memberIds);
       await this.createInvitesForInstances(tx, instanceIds, memberIds);
     });
 
