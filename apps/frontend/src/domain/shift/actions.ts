@@ -129,6 +129,7 @@ const updateShiftVolunteersSchema = z.object({
   instanceId: z.string().min(1),
   organizationUnitId: z.string().min(1),
   memberIds: z.array(z.string()),
+  inviteToAllInstances: z.boolean().optional(),
 });
 
 export const updateShiftVolunteers = actionClient
@@ -140,6 +141,9 @@ export const updateShiftVolunteers = actionClient
     return await data.shift.updateMembers(
       parsedInput.instanceId,
       parsedInput.memberIds,
+      {
+        inviteToAllInstances: parsedInput.inviteToAllInstances,
+      },
     );
   });
 
