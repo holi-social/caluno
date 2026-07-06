@@ -119,6 +119,7 @@ input CreateRoleInput {
 
 input CreateShiftInput {
   endsAt: DateTime!
+  eventId: ID
   instructions: String
   invitedMemberIds: [String!]
   location: String
@@ -145,6 +146,8 @@ type Event {
   logoUrl: String
   organizationUnitId: ID!
   organizer: User
+  shifts: [Shift!]!
+  shiftsCount: Int!
   slug: String!
   startsAt: DateTime!
   title: String!
@@ -505,6 +508,7 @@ type Query {
   adminVolunteerSubmission(id: String!): FormSubmission
   event(id: ID!): Event!
   eventAttendees(eventId: ID!): [User!]!
+  eventShifts(eventId: ID!): [Shift!]!
   events(limit: Int! = 10, offset: Int! = 0): EventPaginatedResponse!
   formBlock(id: String!): FormBlock
   formBlocks(limit: Int! = 10, offset: Int! = 0, organizationId: String!): FormBlockPaginatedResponse!
@@ -902,6 +906,7 @@ input UpdateRequirementProfileSubmissionInput {
 
 input UpdateShiftInput {
   endsAt: DateTime
+  eventId: ID
   instructions: String
   invitedMemberIds: [String!]
   location: String

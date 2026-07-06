@@ -30,6 +30,7 @@ const shift = {
   originalStartsAt: now,
   durationMinutes: 120,
   isDeleted: false,
+  eventId: null,
   createdAt: now,
   updatedAt: now,
 } satisfies ShiftEntity;
