@@ -118,6 +118,7 @@ export function TemplateBuilder({
         <div className="flex-[35] border-l p-4 overflow-hidden">
           <TemplateBuilderFieldList
             fields={fields}
+            pauschale={pauschale}
             onDataSourceChange={handleDataSourceChange}
             unboundCount={unboundCount}
           />

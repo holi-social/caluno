@@ -1064,13 +1064,16 @@
         },
         "fieldList": {
           "title": "Felder",
+          "bindingTitle": "Datenbindung",
+          "bindingHint": "Jedes Feld in der PDF-Vorlage kann mit einer Datenquelle verknüpft werden. Beim Generieren eines Dokuments für eine Ehrenamtliche wird der verknüpfte Wert automatisch eingesetzt.",
           "emptyHint": "Noch keine Felder platziert. Ziehe Felder aus der Werkzeugleiste auf die Vorlage.",
           "dataSource": "Datenquelle",
           "unbound": "Nicht verknüpft",
           "unboundCount": "{count} nicht verknüpft",
-          "requiresCollection": "Erfordert Profil",
-          "profileWarning": "Dieses Feld fehlt im Anforderungsprofil.",
-          "configureProfile": "Profil konfigurieren"
+          "requiresCollection": "Fehlende Daten",
+          "profileWarningBefore": "Ehrenamtliche werden noch nicht nach diesen Daten gefragt.",
+          "profileWarningAction": "Formular im Formular-Builder erstellen",
+          "profileWarningAfter": "um diese Daten abzufragen — es wird an alle {pauschale}-Schichten angehängt."
         },
         "dataSources": {
           "groupAlways": "Immer verfügbar",

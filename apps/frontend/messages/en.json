@@ -1064,13 +1064,16 @@
         },
         "fieldList": {
           "title": "Fields",
+          "bindingTitle": "Data binding",
+          "bindingHint": "Each field in your PDF template can be linked to a data source. When a document is generated for a volunteer, the linked value is filled in automatically.",
           "emptyHint": "No fields placed yet. Drag fields from the toolbar onto the template.",
           "dataSource": "Data source",
           "unbound": "Not linked",
           "unboundCount": "{count} not linked",
-          "requiresCollection": "Requires profile",
-          "profileWarning": "This field is missing from the requirement profile.",
-          "configureProfile": "Configure profile"
+          "requiresCollection": "Missing data",
+          "profileWarningBefore": "Volunteers aren't asked for this yet.",
+          "profileWarningAction": "Create a form in Form builder",
+          "profileWarningAfter": "to collect it — it will be attached to all {pauschale} shifts."
         },
         "dataSources": {
           "groupAlways": "Always available",
