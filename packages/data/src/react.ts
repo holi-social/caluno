@@ -22,13 +22,18 @@ export * from './generated/graphql';
 export * from './react/auth/auth-client';
 // Data fetching hooks
 export * from './react/hooks/use-admin-user-profile';
+export * from './react/hooks/use-available-shift-instances';
 export * from './react/hooks/use-block';
+export * from './react/hooks/use-check-in';
+export * from './react/hooks/use-check-out';
 export * from './react/hooks/use-events';
 export * from './react/hooks/use-graphql-client';
 export * from './react/hooks/use-join-shift-instance';
 export * from './react/hooks/use-membership-request';
 export * from './react/hooks/use-memberships';
+export * from './react/hooks/use-my-accessible-organization-units';
 export * from './react/hooks/use-my-permissions';
+export * from './react/hooks/use-my-shift-instances';
 export * from './react/hooks/use-organizations';
 export * from './react/hooks/use-roles';
 export * from './react/hooks/use-shift';
@@ -47,6 +52,8 @@ export type {
   RawEvent,
 } from './repositories/event/event.repository';
 export type {
+  AvailableShiftInstance,
+  MyShiftInstance,
   RawShift,
   ShiftDetail,
   WeeklyShiftInstance,
