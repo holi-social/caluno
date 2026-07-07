@@ -1,4 +1,4 @@
-import { setRequestLocale } from 'next-intl/server';
+import { getTranslations, setRequestLocale } from 'next-intl/server';
 import { LocaleSwitcher } from '@/components/locale-switcher';
 import MyMembershipRequests from '@/domain/membership-requests/components/my-membership-requests';
 import { resolveLocale } from '@/i18n/routing';
