@@ -1,9 +1,9 @@
-import { pgTable, unique, uuid } from 'drizzle-orm/pg-core';
+import { snakeCase, unique, uuid } from 'drizzle-orm/pg-core';
 import { idColumn, timestampColumns } from '../../database/database-columns';
 import { permissions } from './permission.schema';
 import { roles } from './role.schema';
 
-export const rolePermissions = pgTable(
+export const rolePermissions = snakeCase.table(
   'role_permissions',
   {
     ...idColumn,

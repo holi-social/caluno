@@ -1,7 +1,7 @@
 import {
   boolean,
   index,
-  pgTable,
+  snakeCase,
   text,
   unique,
   uuid,
@@ -9,7 +9,7 @@ import {
 import { idColumn, timestampColumns } from '../../database/database-columns';
 import { organizations } from '../../organization/schemas/organization.schema';
 
-export const roles = pgTable(
+export const roles = snakeCase.table(
   'roles',
   {
     ...idColumn,

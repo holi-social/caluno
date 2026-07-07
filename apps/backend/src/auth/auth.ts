@@ -4,6 +4,12 @@ import { emailOTP } from 'better-auth/plugins';
 import { Database } from '../database/database.module';
 import { resolveRequestLocale } from '../graphql/locale';
 import { headersFromRequest } from './auth-headers';
+import {
+  accounts,
+  sessions,
+  users,
+  verifications,
+} from './schemas/auth.schema';
 
 type EmailOtpType =
   | 'sign-in'
@@ -44,6 +50,12 @@ export const createAuthConfig = ({
   sendResetPassword,
 }: AuthConfigOptions): BetterAuthOptions => ({
   database: drizzleAdapter(database, {
+    schema: {
+      users,
+      sessions,
+      accounts,
+      verifications,
+    },
     usePlural: true,
     provider: 'pg',
   }),
