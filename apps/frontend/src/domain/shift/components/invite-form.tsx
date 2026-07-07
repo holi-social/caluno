@@ -152,9 +152,9 @@ export function InviteShiftForm({
       const updateResult = data.inviteAllInstances
         ? await updateMembersForShift({
             shiftId,
+            shiftInstanceId: instanceId,
             organizationUnitId: orgUId,
             memberIds: data.invitedMemberIds,
-            fromDate: instanceStartDate ?? undefined,
           })
         : await updateShiftVolunteers({
             instanceId,

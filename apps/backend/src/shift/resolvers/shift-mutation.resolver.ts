@@ -90,16 +90,15 @@ export class ShiftMutationResolver {
   @Mutation(() => Shift)
   async updateMembersForShift(
     @Args('shiftId', { type: () => String }) shiftId: string,
+    @Args('shiftInstanceId', { type: () => String }) shiftInstanceId: string,
     @Args('memberIds', { type: () => [String] }) memberIds: string[],
-    @Args('fromDate', { type: () => Date, nullable: true })
-    fromDate: Date | null,
     @Context() context: AuthenticatedGraphQLContext,
   ): Promise<Shift> {
     const shift = await this.shiftService.updateMembersForShiftWithAutoApproval(
       shiftId,
+      shiftInstanceId,
       memberIds,
       context.organizationUnitId,
-      fromDate ?? undefined,
     );
     return this.shiftMapper.toModelOrThrow(shift);
   }

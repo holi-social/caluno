@@ -164,9 +164,9 @@ export const updateShiftStaffing = actionClient
 
 const updateMembersForShiftSchema = z.object({
   shiftId: z.string().min(1),
+  shiftInstanceId: z.string().min(1),
   organizationUnitId: z.string().min(1),
   memberIds: z.array(z.string()),
-  fromDate: z.coerce.date().optional(),
 });
 
 export const updateMembersForShift = actionClient
@@ -177,8 +177,8 @@ export const updateMembersForShift = actionClient
     });
     return await data.shift.updateMembersForShift(
       parsedInput.shiftId,
+      parsedInput.shiftInstanceId,
       parsedInput.memberIds,
-      parsedInput.fromDate,
     );
   });
 

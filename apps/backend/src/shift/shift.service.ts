@@ -472,23 +472,41 @@ export class ShiftService {
 
   async updateMembersForShiftWithAutoApproval(
     shiftId: string,
+    shiftInstanceId: string,
     memberIds: string[],
     organizationUnitId: string,
-    fromDate?: Date,
   ): Promise<ShiftEntity> {
     const shift = await this.findOrgUnitsShift(shiftId, organizationUnitId);
 
     await this.db.transaction(async (tx) => {
-      const currentShiftInvites = await tx
-        .selectDistinct({ userId: schema.shiftInvites.userId })
-        .from(schema.shiftInvites)
-        .where(and(eq(schema.shiftInvites.shiftId, shiftId)));
-
-      const currentShiftUserIds = currentShiftInvites.map((i) => i.userId);
-      const userIdsToAdd = memberIds.filter(
-        (id) => !currentShiftUserIds.includes(id),
+      const currentShiftInstance = await tx.query.shiftInstances.findFirst({
+        where: {
+          id: shiftInstanceId,
+        },
+        columns: {
+          id: true,
+          actualStartsAt: true,
+          overrideMaxVolunteers: true,
+        },
+        with: {
+          invites: {
+            columns: {
+              userId: true,
+            },
+          },
+        },
+      });
+      if (!currentShiftInstance) {
+        throw new ConflictGraphQLError(`Could not find shift instance`);
+      }
+      const currentInstanceInviteUserIds = currentShiftInstance.invites.map(
+        (inv) => inv.userId,
       );
-      const userIdsToRemove = currentShiftUserIds.filter(
+
+      const userIdsToAdd = memberIds.filter(
+        (id) => !currentInstanceInviteUserIds.includes(id),
+      );
+      const userIdsToRemove = currentInstanceInviteUserIds.filter(
         (id) => !memberIds.includes(id),
       );
 
@@ -498,7 +516,7 @@ export class ShiftService {
           .where(
             and(
               eq(schema.shiftInvites.shiftId, shiftId),
-              notInArray(schema.shiftInvites.userId, memberIds),
+              inArray(schema.shiftInvites.userId, userIdsToRemove),
             ),
           );
       }
@@ -509,6 +527,7 @@ export class ShiftService {
 
       // update shift instance invites
 
+      const fromDate = currentShiftInstance.actualStartsAt;
       const futureShiftInstances = await tx.query.shiftInstances.findMany({
         where: {
           masterId: shift.id,
@@ -536,7 +555,7 @@ export class ShiftService {
               schema.shiftInstanceInvites.instanceId,
               futureShiftInstanceIds,
             ),
-            notInArray(schema.shiftInstanceInvites.userId, memberIds),
+            inArray(schema.shiftInstanceInvites.userId, userIdsToRemove),
           ),
         );
 
@@ -563,7 +582,7 @@ export class ShiftService {
       const toAddByInstance = new Map<string, string[]>();
       for (const instance of futureShiftInstancesWithInvites) {
         const capacity = instance.overrideMaxVolunteers ?? shift.maxVolunteers;
-        const membersToAdd = memberIds.filter(
+        const membersToAdd = userIdsToAdd.filter(
           (id) => !instance.invites.includes({ userId: id }),
         );
         if (

@@ -405,13 +405,13 @@ describe('ShiftService.findShiftsForWeek', () => {
         query: `
           mutation UpdateMembersForShift(
             $shiftId: String!
+            $shiftInstanceId: String!
             $memberIds: [String!]!
-            $fromDate: DateTime
           ) {
             updateMembersForShift(
               shiftId: $shiftId
+              shiftInstanceId: $shiftInstanceId
               memberIds: $memberIds
-              fromDate: $fromDate
             ) {
               id
             }
@@ -419,8 +419,8 @@ describe('ShiftService.findShiftsForWeek', () => {
         `,
         variables: {
           shiftId,
+          shiftInstanceId: futureInstance.id,
           memberIds: [],
-          fromDate: futureInstance.actualStartsAt.toISOString(),
         },
         headers: {
           'x-organization-unit-id': organizationUnitId,
