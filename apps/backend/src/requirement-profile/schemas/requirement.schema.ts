@@ -2,7 +2,7 @@ import {
   boolean,
   index,
   pgEnum,
-  pgTable,
+  snakeCase,
   text,
   uuid,
 } from 'drizzle-orm/pg-core';
@@ -15,7 +15,7 @@ export const requirementTypeEnum = pgEnum(
   RequirementType as Record<string, string>,
 );
 
-export const requirements = pgTable(
+export const requirements = snakeCase.table(
   'requirements',
   {
     ...idColumn,

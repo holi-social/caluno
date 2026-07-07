@@ -4,9 +4,8 @@ import { drizzle, type NodePgDatabase } from 'drizzle-orm/node-postgres';
 import { Pool } from 'pg';
 import { DATABASE_CONNECTION } from './database-connection';
 import { relations } from './relations';
-import * as schema from './schema';
 
-export type Database = NodePgDatabase<typeof schema, typeof relations>;
+export type Database = NodePgDatabase<typeof relations>;
 
 @Module({
   imports: [ConfigModule],
@@ -24,9 +23,7 @@ export type Database = NodePgDatabase<typeof schema, typeof relations>;
         });
         const db = drizzle({
           client: pool,
-          schema,
           relations,
-          casing: 'snake_case',
         });
         return db;
       },
