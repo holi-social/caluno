@@ -4,6 +4,8 @@ The backend api for securely managing volunteers and shifts in multi-tiered orga
 
 ## Commands
 - `bun run dev` - Start NestJS development server
+- `bun bootstrap` (from repo root) - Wipe local Postgres volume, migrate, seed permissions, load Playground fixtures, then start all dev servers
+- `bun run db:fixtures` - Load Playground dev fixtures only (run after migrate + seed)
 - `bun run build` - Build a production bundle
 - `bun run lint` - Lint with Biome
 - `bun run format` - Format with Biome
@@ -102,6 +104,20 @@ bun run --cwd apps/backend test:integration
 ```
 
 The setup script connects to the `postgres` maintenance database to drop/create `${POSTGRES_DB}_test`, so the Postgres user needs CREATEDB privileges (the default `postgres` superuser has this).
+
+### Playground fixtures (`bun bootstrap`)
+
+`bun bootstrap` resets the **development** database (not `_test`) via `docker compose down -v`, then migrates, seeds permissions, and loads [`src/database/fixtures.ts`](src/database/fixtures.ts). Refuses to run unless `DB_HOST` is `localhost`, `127.0.0.1`, or `postgres`.
+
+| Account | Role / status |
+|---|---|
+| `admin@clippy.social` | Owner |
+| `supervisor@clippy.social` | Supervisor |
+| `member01@` … `member10@clippy.social` | Member |
+| `pending01@`, `pending02@` | Pending membership request |
+| `rejected01@` | Rejected membership request |
+
+Password for all fixture accounts: `abcd1234`. Organization: **Playground**. Shifts (weekly, Europe/Berlin): Community Support (Mon 08:00–12:00), Food Distribution (Wed 12:00–16:00), Event Assistance (Fri 16:00–20:00).
 
 ## Tech Stack
 - **NestJS 11** primary web framework

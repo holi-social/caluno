@@ -42,34 +42,77 @@ This monorepo includes the following packages/apps:
 
 4. **Start the development environment**
 
+   **First time or a clean slate** — wipe the local database, migrate, seed permissions, load Playground fixtures, then start dev:
+
+   ```bash
+   bun bootstrap
+   ```
+
+   **Day-to-day** — keep your existing database and start services:
+
    ```bash
    bun dev
    ```
 
-   This single command will:
+   Both commands will:
    - Start the PostgreSQL database in Docker
    - Wait for the database to be ready
    - Start all applications in parallel (backend and frontend)
+
+   `bun bootstrap` additionally resets the Postgres volume, runs migrations, seeds permissions, and loads the Playground fixture dataset (see below).
 
    The services will be available at:
    - Backend API: http://localhost:8080
    - Frontend: http://localhost:3000
 
+### Playground fixtures
+
+After `bun bootstrap`, the database contains a **Playground** organization with sample users, weekly shifts, and time entries. All fixture accounts use password `abcd1234`.
+
+| Account | Role / status |
+|---|---|
+| `admin@clippy.social` | Owner |
+| `supervisor@clippy.social` | Supervisor |
+| `member01@` … `member10@clippy.social` | Member |
+| `pending01@`, `pending02@` | Pending membership request |
+| `rejected01@` | Rejected membership request |
+
+Weekly shifts (Europe/Berlin):
+
+| Shift | Recurrence | Time | Invites |
+|---|---|---|---|
+| Community Support | Every Monday | 08:00–12:00 | All 12 approved members |
+| Food Distribution | Every Wednesday | 12:00–16:00 | Supervisor + member01–04 |
+| Event Assistance | Every Friday | 16:00–20:00 | None |
+
+`bun bootstrap` only runs against local databases (`DB_HOST` must be `localhost`, `127.0.0.1`, or `postgres`).
+
 ## Available Scripts
 
 ### Development
 
-- `bun dev` - Start all services (database + apps)
+- `bun bootstrap` - Reset local DB, migrate, seed, load Playground fixtures, then start all services
+- `bun dev` - Start all services (database + apps) without resetting data
 - `bun run db:up` - Start the PostgreSQL database
 - `bun run db:down` - Stop the PostgreSQL database
 
 ### Database Management
 
-The backend uses Drizzle ORM for database management. Run these commands from `apps/backend`:
+The backend uses Drizzle ORM for database management.
+
+From the repo root:
+
+- `bun run db:migrate` - Run pending migrations
+- `bun run db:seed` - Seed permissions (idempotent; also used by tests)
+- `bun run db:bootstrap` - Reset local DB, migrate, seed, and load fixtures (no dev servers)
+- `bun run db:fixtures` - Load Playground fixtures only (after migrate + seed)
+
+From `apps/backend`:
 
 - `bun run db:generate` - Generate migrations from schema changes
 - `bun run db:migrate` - Run pending migrations
 - `bun run db:studio` - Open Drizzle Studio (database GUI)
+- `bun run db:fixtures` - Load Playground fixtures
 
 ### Building
 
@@ -201,6 +244,7 @@ If you encounter database connection errors:
 1. Ensure Docker is running
 2. Check if PostgreSQL is healthy: `docker compose ps`
 3. Restart the database: `bun run db:down && bun run db:up`
+4. For a full local reset with sample data: `bun bootstrap`
 
 ### Port conflicts
 
