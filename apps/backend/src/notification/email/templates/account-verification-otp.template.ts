@@ -1,3 +1,4 @@
+import type { EmailTemplateContext } from '../../../i18n/email-translate';
 import {
   card,
   divider,
@@ -7,7 +8,6 @@ import {
   note,
   paragraph,
   renderEmail,
-  strong,
   text,
 } from './shared';
 
@@ -18,15 +18,15 @@ export interface AccountVerificationOtpTemplateData {
 
 export async function accountVerificationOtpTemplate(
   data: AccountVerificationOtpTemplateData,
+  { t }: EmailTemplateContext,
 ): Promise<{ subject: string; html: string }> {
   const otp = escapeHtml(data.otp);
-  const expiresInMinutes = escapeHtml(String(data.expiresInMinutes));
+  const expiresInMinutes = data.expiresInMinutes;
+  const brandName = emailTheme.brandName;
 
   const body = card(`
-    ${heading('Verify your email')}
-    ${paragraph(
-      `Use this code to verify your ${emailTheme.brandName} account email address.`,
-    )}
+    ${heading(t('accountVerificationOtp.heading'))}
+    ${paragraph(t('accountVerificationOtp.intro', { brandName }))}
     ${text(otp, {
       size: '32px',
       weight: 700,
@@ -36,16 +36,18 @@ export async function accountVerificationOtpTemplate(
       letterSpacing: '0.16em',
       lineHeight: '1',
     })}
-    ${paragraph(`This code expires in ${strong(`${expiresInMinutes} minutes`)}.`)}
+    ${paragraph(
+      t('accountVerificationOtp.expiry', { minutes: expiresInMinutes }),
+    )}
     ${divider()}
-    ${note('If you did not create an account, you can ignore this email.')}
+    ${note(t('accountVerificationOtp.note'))}
   `);
 
   return renderEmail({
     templateName: 'accountVerificationOtpTemplate',
-    subject: `Your ${emailTheme.brandName} verification code`,
-    previewText: `Your ${emailTheme.brandName} verification code is ${otp}.`,
+    subject: t('accountVerificationOtp.subject', { brandName }),
+    previewText: t('accountVerificationOtp.previewText', { brandName, otp }),
     body,
-    footerNote: `You are receiving this because this email was used to create an account on ${emailTheme.brandName}.`,
+    footerNote: t('accountVerificationOtp.footerNote', { brandName }),
   });
 }

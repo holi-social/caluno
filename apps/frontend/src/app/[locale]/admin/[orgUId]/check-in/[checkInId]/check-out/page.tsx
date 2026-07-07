@@ -3,7 +3,7 @@ import { Calendar, Hand, LogIn } from 'lucide-react';
 import { getTranslations } from 'next-intl/server';
 import { CheckOutButton } from '@/domain/shift/components/checkout-button';
 import { getDataClient } from '@/lib/data-client';
-import { formatDateTime } from '@/lib/formatting';
+import { getFormatting } from '@/lib/formatting/formatting-server';
 import { requireOrgAccess } from '@/lib/org-context-server';
 
 interface CheckOutPageProps {
@@ -18,6 +18,7 @@ export default async function CheckOutPage({ params }: CheckOutPageProps) {
   const user = await data.user.findByCheckInId(checkInId);
 
   const t = await getTranslations('Shift.checkIn');
+  const { formatDateTime } = await getFormatting();
 
   if (!user) {
     return;

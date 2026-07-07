@@ -1,6 +1,7 @@
 import type { DataError } from '../errors/data-error';
 import { fromGraphQLError } from '../errors/translate';
 import { getSdk, type SdkFunctionWrapper } from '../generated/graphql';
+import { EventRepository } from '../repositories/event/event.repository';
 import { MembershipRepository } from '../repositories/membership/membership.repository';
 import { MembershipRequestRepository } from '../repositories/membershipRequest/membershipRequest.repository';
 import { OrganizationRepository } from '../repositories/organization/organization.repository';
@@ -29,6 +30,7 @@ export class DataClient {
   public readonly user: UserRepository;
   public readonly organization: OrganizationRepository;
   public readonly organizationUnit: OrganizationUnitRepository;
+  public readonly event: EventRepository;
   public readonly shift: ShiftRepository;
   public readonly timeEntry: TimeEntryRepository;
   public readonly membership: MembershipRepository;
@@ -61,6 +63,7 @@ export class DataClient {
     this.user = new UserRepository(sdk);
     this.organization = new OrganizationRepository(sdk);
     this.organizationUnit = new OrganizationUnitRepository(sdk);
+    this.event = new EventRepository(sdk);
     this.shift = new ShiftRepository(sdk);
     this.timeEntry = new TimeEntryRepository(sdk);
     this.membership = new MembershipRepository(sdk);

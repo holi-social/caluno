@@ -6,11 +6,13 @@ import {
   SidebarTrigger,
 } from '@repo/ui';
 import type { ReactNode } from 'react';
+import { LocaleCookieSeeder } from '@/components/locale-cookie-seeder';
 import { HomeSidebar } from '@/components/navigation/home-sidebar';
 import { PageTitle } from '@/components/page-title';
 import { resolveLocale } from '@/i18n/routing';
 import { requireAuth } from '@/lib/auth-server';
 import { GRAPHQL_API_URL } from '@/lib/constants';
+import { resolveLocaleSeed } from '@/lib/locale-seed';
 
 interface HomeLayoutProps {
   children: ReactNode;
@@ -24,9 +26,11 @@ export default async function HomeLayout({
   await requireAuth('/login');
   const { locale: rawLocale } = await params;
   const locale = resolveLocale(rawLocale);
+  const localeSeed = await resolveLocaleSeed();
 
   return (
     <DataProvider apiUrl={GRAPHQL_API_URL} locale={locale}>
+      {localeSeed && <LocaleCookieSeeder value={localeSeed} />}
       <SidebarProvider>
         <HomeSidebar />
         <SidebarInset>

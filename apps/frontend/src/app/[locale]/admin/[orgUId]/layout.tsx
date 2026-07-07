@@ -7,6 +7,7 @@ import {
 } from '@repo/ui';
 import { Loader2 } from 'lucide-react';
 import { type ReactNode, Suspense } from 'react';
+import { LocaleCookieSeeder } from '@/components/locale-cookie-seeder';
 import { DashboardSidebar } from '@/components/navigation/dashboard-sidebar';
 import { ProfileNavIcon } from '@/components/navigation/profile-nav-icon';
 import { InviteShiftSheet } from '@/components/sheets/invite-shift-sheet';
@@ -19,6 +20,7 @@ import { resolveLocale } from '@/i18n/routing';
 import { requireAuth } from '@/lib/auth-server';
 import { GRAPHQL_API_URL } from '@/lib/constants';
 import { getDataClient } from '@/lib/data-client';
+import { resolveLocaleSeed } from '@/lib/locale-seed';
 import { requireOrgAccess } from '@/lib/org-context-server';
 
 interface OrgLayoutProps {
@@ -42,6 +44,7 @@ export default async function OrgLayout({
     data.user.getMyPermissions(),
   ]);
   const permissionKeys = userPermissions.map((p) => p.key);
+  const localeSeed = await resolveLocaleSeed(orgUId);
 
   return (
     <OrgProvider org={org} organizations={organizations}>
@@ -50,6 +53,7 @@ export default async function OrgLayout({
         organizationUnitId={orgUId}
         locale={locale}
       >
+        {localeSeed && <LocaleCookieSeeder value={localeSeed} />}
         <OrgSyncProvider orgUId={orgUId}>
           <SidebarProvider>
             <DashboardSidebar permissions={permissionKeys} />

@@ -1,6 +1,6 @@
 import { Sparkles } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import { formatTotalMinutes } from '../formating';
+import { useFormatting } from '@/lib/formatting/use-formatting';
 
 export const MyTimeSummary = ({
   allTimeMinutes,
@@ -8,6 +8,8 @@ export const MyTimeSummary = ({
   allTimeMinutes: number;
 }) => {
   const t = useTranslations('MyTime');
+  const { formatDurationByMinutes } = useFormatting();
+
   return (
     <div className="rounded-2xl bg-linear-to-br from-primary/10 to-primary/5 p-6">
       <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
@@ -15,7 +17,7 @@ export const MyTimeSummary = ({
         {t('summary.total')}
       </div>
       <p className="mt-2 text-4xl font-bold text-primary tabular-nums">
-        {formatTotalMinutes(allTimeMinutes)}
+        {formatDurationByMinutes(allTimeMinutes)}
       </p>
     </div>
   );

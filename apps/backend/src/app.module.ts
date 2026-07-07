@@ -19,9 +19,13 @@ import { EventModule } from './event/event.module';
 import { GraphqlModule } from './graphql/graphql.module';
 import { LoaderInterceptor } from './graphql/interceptors';
 import { resolveRequestLocale } from './graphql/locale';
+import { AppI18nService } from './i18n/app-i18n.service';
+import { AppI18nModule } from './i18n/i18n.module';
+import { UserLocaleService } from './i18n/user-locale.service';
 import { MembershipModule } from './membership/membership.module';
 import { MembershipLifecycleModule } from './membership-lifecycle/membership-lifecycle.module';
 import { EmailService } from './notification/email/email.service';
+import { createEmailTemplateContext } from './notification/email/email-template-context';
 import { accountVerificationOtpTemplate } from './notification/email/templates/account-verification-otp.template';
 import { passwordResetTemplate } from './notification/email/templates/password-reset.template';
 import { NotificationModule } from './notification/notification.module';
@@ -48,6 +52,7 @@ const autoSchemaFile =
       global: true,
     }),
     DatabaseModule,
+    AppI18nModule,
     GraphQLModule.forRootAsync<ApolloDriverConfig>({
       driver: ApolloDriver,
       imports: [UserModule],
@@ -73,11 +78,18 @@ const autoSchemaFile =
       inject: [UserService],
     }),
     BetterAuthModule.forRootAsync({
-      imports: [DatabaseModule, ConfigModule, NotificationModule],
+      imports: [
+        DatabaseModule,
+        ConfigModule,
+        NotificationModule,
+        AppI18nModule,
+      ],
       useFactory: (
         database: Database,
         configService: ConfigService,
         emailService: EmailService,
+        userLocaleService: UserLocaleService,
+        appI18n: AppI18nService,
       ) => {
         const webUrl = configService.getOrThrow<string>('WEB_URL');
         const shouldVerifyEmail = process.env.NODE_ENV === 'production';
@@ -89,29 +101,51 @@ const autoSchemaFile =
               trustedOrigins: [webUrl],
               cookieDomain: configService.get('COOKIE_DOMAIN'),
               emailVerificationEnabled: shouldVerifyEmail,
-              sendResetPassword: async ({ email, token }) => {
+              sendResetPassword: async ({ email, token, userId, headers }) => {
+                const locale = await userLocaleService.resolveForUser(
+                  userId,
+                  headers,
+                );
+                const templateContext = createEmailTemplateContext(
+                  appI18n,
+                  locale,
+                );
                 const resetUrl = `${webUrl.replace(/\/+$/, '')}/reset-password?token=${encodeURIComponent(token)}`;
-                const emailContent = await passwordResetTemplate({
-                  resetUrl,
-                  expiresInMinutes: 60,
-                });
+                const emailContent = await passwordResetTemplate(
+                  {
+                    resetUrl,
+                    expiresInMinutes: 60,
+                  },
+                  templateContext,
+                );
 
                 await emailService.send({
                   to: email,
                   ...emailContent,
                 });
               },
-              sendVerificationOTP: async ({ email, otp, type }) => {
+              sendVerificationOTP: async ({ email, otp, type, headers }) => {
                 // TODO: When enabling OTP sign-in or email change,
                 // add type-specific templates here instead of sending generic copy.
                 if (type !== 'email-verification') {
                   return;
                 }
 
-                const emailContent = await accountVerificationOtpTemplate({
-                  otp,
-                  expiresInMinutes: 5,
-                });
+                const locale = await userLocaleService.resolveForEmail(
+                  email,
+                  headers,
+                );
+                const templateContext = createEmailTemplateContext(
+                  appI18n,
+                  locale,
+                );
+                const emailContent = await accountVerificationOtpTemplate(
+                  {
+                    otp,
+                    expiresInMinutes: 5,
+                  },
+                  templateContext,
+                );
 
                 await emailService.send({
                   to: email,
@@ -122,7 +156,13 @@ const autoSchemaFile =
           ),
         };
       },
-      inject: [DATABASE_CONNECTION, ConfigService, EmailService],
+      inject: [
+        DATABASE_CONNECTION,
+        ConfigService,
+        EmailService,
+        UserLocaleService,
+        AppI18nService,
+      ],
     }),
     UserModule,
     OrganizationModule,

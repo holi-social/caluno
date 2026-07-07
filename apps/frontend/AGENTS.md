@@ -43,6 +43,13 @@ Route groups: `(auth)` unauthenticated, `(dashboard)/[orgUId]` protected + org-s
 - Server Actions for a domain in `actions.ts`; zod schemas in `schemas.ts` (e.g. `src/domain/shift/schemas.ts`).
 - Do not write GraphQL in this project — use `@repo/data` for data access.
 
+## Testing — `bun:test` only
+- The test runner is **`bun:test`** (`import { describe, it, expect, mock } from 'bun:test'`). **Do NOT add Jest, Vitest, `@testing-library`, jsdom, or happy-dom** — they are intentionally absent. Run with `bun test <path>`.
+- **No DOM / no rendered-component tests.** There is no DOM environment. Test logic, not React output: keep components thin and push side-effects into small, injectable helpers you can unit-test directly (see `lib/save-locale-preference.ts`, `lib/locale-seed.ts`, `proxy.ts`'s `localePreferenceRedirect`). Do not render a component and simulate clicks.
+- Isolate dependencies with `mock.module('path', () => ({ ... }))`; stub globals (e.g. `document`, `window`) via `Object.defineProperty(globalThis, ...)`.
+- Location & naming: co-located `*.spec.ts` next to the unit, or `__tests__/*.test.ts(x)`.
+- `bun:test` types come from the local ambient shim `src/bun-test.d.ts` (packages that prefer it use `@types/bun` + `"types": ["...","bun"]` instead — do not mix Jest types in).
+
 ## Dates — always use active-locale formatters
 - **Client components**: `const { formatDate, formatDateTime, formatTime, formatRange } = useFormatting()` from `@/hooks/use-formatting`.
 - **Server components**: `const { formatDate, formatDateTime, formatTime, formatRange } = await getFormatting()` from `@/lib/formatting-server`.
@@ -69,16 +76,40 @@ error messages, or empty-state text in components. Add new keys to both locales 
 keep namespaces/key shapes in sync.
 
 ### Locale switching
-Use `useLocale`, `usePathname`, and `useRouter` from `@/i18n/navigation`. The
-LocaleSwitcher persists the selected locale to the backend via
-`useUpdateUserLocale()` from `@repo/data/react`, stores it in the
-`clippy.locale` cookie via `setUserLocaleCookie()`, and then calls
-`router.replace(pathname, { locale })` to update the URL.
+The `clippy.locale` cookie is the single frontend locale-preference source, and
+**for authenticated users the preference always wins over the URL** (a `/de/…`
+link is redirected to the user's locale — this is a private dashboard, shareable
+per-locale URLs are not a goal). **Logged-out users are exempt**: the proxy only
+applies the override when a Better Auth session cookie is present
+(`hasSessionCookie` → `getSessionCookie` from `better-auth/cookies`, cookie-only,
+no fetch — never use the RSC `getSession` in middleware). So logged-out visitors
+switch locale via the URL / browser `Accept-Language`. The cookie is also cleared
+on sign-out (`clearLocaleCookie` in the auth client's `signOut`), so an expired
+or ended session cannot leave a stale preference. The switcher persists the
+choice through `saveLocalePreference()`
+(`@/lib/save-locale-preference`): backend via `useUpdateUserLocale()` → cookie
+via `setLocaleCookie()` → `router.replace(pathname, { locale })`. Writing the
+cookie before navigating means the proxy sees a matching cookie and does not
+redirect.
 
-The locale proxy (`src/proxy.ts`) reads the `clippy.locale` cookie and redirects
-any locale-prefixed route to the user's stored locale when it differs from the
-URL locale. Profile pages additionally fetch `me.locale` server-side and redirect
-on the first visit before the cookie is present.
+`src/proxy.ts` is the single place that performs locale redirects. It composes a
+pure `localePreferenceRedirect()` in front of next-intl via
+`withLocalePreference(intlMiddleware)`: when the supported `clippy.locale` cookie
+differs from the URL locale it returns a 307 to `/<cookie-locale>/<path>`
+(stacked prefixes normalised, so no `/en/en/…` loop); otherwise it falls through
+to next-intl, which is load-bearing (prefixes bare paths, Accept-Language
+detection for cookieless visitors). next-intl's own cookie sync is disabled
+(`localeCookie: false` in `src/i18n/routing.ts`) so it never rewrites the
+preference to the last-visited URL. `USER_LOCALE_COOKIE` is a local literal in
+`@/lib/locale-constants` (not imported from `@repo/data`) to keep the edge
+middleware bundle free of the data barrel.
+
+The preference cookie is seeded from `me.locale` for authenticated users when it
+is missing: the authenticated layouts call `resolveLocaleSeed()` server-side
+(cookie read + `getMe`) and render the client `<LocaleCookieSeeder>`, which
+performs the actual cookie write. Server Component renders may read cookies but
+not set them, so seeding must not happen in a layout/page render directly. No
+page-level locale redirects.
 
 ## New features
 Always study UI/UX patterns in existing similar features before starting a new one — consistent experience across features.

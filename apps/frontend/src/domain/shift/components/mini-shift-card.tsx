@@ -2,7 +2,7 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from '@repo/ui';
 import { Clock } from 'lucide-react';
-import { useFormatting } from '@/hooks/use-formatting';
+import { useFormatting } from '@/lib/formatting/use-formatting';
 
 type MiniShiftCardProps = {
   title: string;
