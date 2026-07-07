@@ -1,7 +1,6 @@
 'use client';
 
 import type { WeeklyShiftInstance } from '@repo/data';
-import { useOrgUId } from '@repo/data/react';
 import {
   Accordion,
   AccordionContent,
@@ -15,13 +14,10 @@ import { format } from 'date-fns';
 import { TriangleAlert, UserPlus, UsersRound } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useSheet } from '@/hooks/use-sheet';
-import { Link } from '@/i18n/navigation';
-import { shiftDetailPath } from '../routes';
 
 type ShiftCardProps = {
   instance: WeeklyShiftInstance;
   canManage?: boolean;
-  weekStart: Date;
 };
 
 function getStaffingState(
@@ -81,12 +77,7 @@ function StaffingBadge({
   );
 }
 
-export function ShiftCard({
-  instance,
-  canManage = false,
-  weekStart,
-}: ShiftCardProps) {
-  const orgUId = useOrgUId();
+export function ShiftCard({ instance, canManage = false }: ShiftCardProps) {
   const inviteSheet = useSheet('invite-shift', 'id', 'instanceId');
   const t = useTranslations('Shift');
 
@@ -111,17 +102,9 @@ export function ShiftCard({
             {startTime} - {endTime}
           </p>
 
-          <Link
-            className="hover:underline block"
-            href={shiftDetailPath(orgUId, instance.master.id, {
-              view: 'weekplan',
-              week: format(weekStart, 'yyyy-MM-dd'),
-            })}
-          >
-            <p className="text-lg text-card-foreground line-clamp-2">
-              {instance.master.title}
-            </p>
-          </Link>
+          <p className="text-lg text-card-foreground line-clamp-2">
+            {instance.master.title}
+          </p>
         </div>
 
         <div className="flex gap-1 items-start w-full">

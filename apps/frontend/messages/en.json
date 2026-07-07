@@ -31,7 +31,8 @@
     "toggleTheme": "Toggle theme",
     "menu": "Menu",
     "signOut": "Sign Out",
-    "brand": "Clippy"
+    "brand": "Clippy",
+    "greeting": "Hi {name}"
   },
   "Auth": {
     "login": {
@@ -152,7 +153,8 @@
     "editProfile": "Edit profile",
     "admin": "Admin",
     "qrIdTitle": "QR iD",
-    "qrIdDescription": "This is your personal QR code to check in to shifts"
+    "qrIdDescription": "This is your personal QR code to check in to shifts",
+    "profile": "Profile"
   },
   "Pagination": {
     "showing": "Showing {start}-{end} of {total} {name}",
@@ -476,7 +478,7 @@
   "Shift": {
     "page": {
       "title": "Shifts",
-      "subtitle": "Shift details and volunteers",
+      "subtitle": "Shift details",
       "createButton": "Create shift"
     },
     "empty": {
@@ -644,19 +646,10 @@
       "inviteChanged": "Volunteers invitations changed"
     },
     "detail": {
-      "volunteersTitle": "Volunteers",
-      "inviteButton": "Invite",
-      "timesheetsTitle": "Timesheets",
-      "addTimeButton": "Add time",
       "visibilityLabel": "Visibility",
       "statusLabel": "Status",
       "createdByLabel": "Created by",
-      "createdLabel": "Created",
-      "volunteersBadge": "{count}",
-      "volunteersBadgeWithMax": "{count} of {max}",
-      "timesheetsBadge": "{count}",
-      "volunteersEmpty": "No volunteers yet.",
-      "timesheetsEmpty": "No timesheets yet."
+      "createdLabel": "Created"
     },
     "notFound": "Shift not found.",
     "loading": "Loading...",
