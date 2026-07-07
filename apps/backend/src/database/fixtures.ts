@@ -1,6 +1,6 @@
 import { hashPassword } from 'better-auth/crypto';
 import { inArray } from 'drizzle-orm';
-import { drizzle } from 'drizzle-orm/node-postgres';
+import { drizzle, type NodePgDatabase } from 'drizzle-orm/node-postgres';
 import { Pool } from 'pg';
 import {
   DEFAULT_MEMBER_ROLE_NAME,
@@ -13,6 +13,7 @@ import { MembershipRequestStatus } from '../membership/enums';
 import { ShiftInviteStatus, ShiftVisibility } from '../shift/enums';
 import { expandShift } from '../shift/utils/rrule-expander';
 import { slugify } from '../utils/slug.util';
+import { relations } from './relations';
 import * as schema from './schema';
 
 process.env.TZ = 'Europe/Berlin';
@@ -37,7 +38,7 @@ const SUPERVISOR_PERMISSIONS = [
   PERMISSIONS.VOLUNTEER_VIEW,
 ] as const;
 
-type Database = ReturnType<typeof drizzle<typeof schema>>;
+type Database = NodePgDatabase<typeof relations>;
 
 type FixtureUser = {
   id: string;
@@ -566,7 +567,7 @@ async function seedFixtures() {
     ssl: false,
   });
 
-  const db = drizzle({ client: pool, schema, casing: 'snake_case' });
+  const db = drizzle({ client: pool, relations });
   const hashedPassword = await hashPassword(FIXTURE_PASSWORD);
 
   const admin = await createAuthUser(db, hashedPassword, {
