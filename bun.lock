@@ -62,13 +62,6 @@
         "typescript": "^6.0.0",
       },
     },
-    "apps/e2e": {
-      "name": "clippy-e2e",
-      "version": "0.0.0",
-      "devDependencies": {
-        "@playwright/test": "^1.61.1",
-      },
-    },
     "apps/frontend": {
       "name": "clippy-frontend",
       "version": "0.0.0",
@@ -1587,8 +1580,6 @@
     "client-only": ["client-only@0.0.1", "", {}, "sha512-IV3Ou0jSMzZrd3pZ48nLkT9DA7Ag1pnPzaiQhpW7c3RbcqqzvzzVu+L8gfqMp/8IM2MQtSiqaCxrrcfu8I8rMA=="],
 
     "clippy-backend": ["clippy-backend@workspace:apps/backend"],
-
-    "clippy-e2e": ["clippy-e2e@workspace:apps/e2e"],
 
     "clippy-frontend": ["clippy-frontend@workspace:apps/frontend"],
 
