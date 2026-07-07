@@ -1,5 +1,7 @@
 include:
   - template: Jobs/SAST.gitlab-ci.yml
+  - template: Jobs/SAST-IaC.gitlab-ci.yml
+  - template: Jobs/Secret-Detection.gitlab-ci.yml
 
 workflow:
   rules:
@@ -31,8 +33,12 @@ variables:
   TF_INPUT: 'false'
   # SAST: run on MR pipelines (GitLab ≥18). Skips duplicate branch scan when MR is open.
   AST_ENABLE_MR_PIPELINES: 'true'
-  # Repeat GitLab defaults when overriding; add monorepo noise paths.
-  SAST_EXCLUDED_PATHS: 'spec,test,tests,tmp,.ai,.agents,dist,.next,storybook-static,node_modules,packages/infra'
+  # SAST (semgrep): TS/JS. KICS (SAST-IaC): Scaleway Terraform in packages/infra only (no K8s/Dockerfile).
+  SAST_EXCLUDED_PATHS: 'spec,test,tests,tmp,.ai,.agents,dist,.next,storybook-static,node_modules'
+  # Kubesec (main SAST template) — we deploy Scaleway serverless containers, not Kubernetes.
+  SCAN_KUBERNETES_MANIFESTS: 'false'
+  # Secret detection: scan infra — tfvars, backend config, and .tf must not carry real keys.
+  SECRET_DETECTION_EXCLUDED_PATHS: 'spec,test,tests,tmp,.ai,.agents,dist,.next,storybook-static,node_modules'
 
 # ─── TEST ─────────────────────────────────────────────────────────────────────
 
@@ -119,7 +125,6 @@ integration_tests:
     POSTGRES_DB: clippy_test
     POSTGRES_USER: clippy
     POSTGRES_PASSWORD: clippy
-    DATABASE_URL: postgres://clippy:clippy@postgres:5432/clippy_test
     DB_HOST: postgres
     DB_PORT: 5432
     DB_USER: clippy
@@ -135,13 +140,51 @@ integration_tests:
     - bun test
 
 # ─── SAST ─────────────────────────────────────────────────────────────────────
-# semgrep-sast (template) scans TS/JS and uploads gl-sast-report.json.
+# semgrep-sast (template) scans TS/JS; kics-iac-sast scans Scaleway Terraform (packages/infra).
+# kics.config limits KICS to Terraform only — no Kubernetes manifests or Dockerfiles.
+# sast_merge_reports combines gl-sast-report.json + gl-sast-report-iac.json.
 # sast_summary posts Critical/High table (job log + MR comment); sast_gate blocks merge;
 # sast_medium_issues files Medium findings as grouped GitLab issues (one per file+rule). Both need SAST_ISSUES_TOKEN.
 
 semgrep-sast:
   rules:
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event" && ($CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "main" || $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "production")'
+
+kics-iac-sast:
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event" && ($CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "main" || $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "production")'
+  after_script:
+    - |
+      if [ -f gl-sast-report.json ]; then
+        mv gl-sast-report.json gl-sast-report-iac.json
+      fi
+  artifacts:
+    access: 'developer'
+    reports:
+      sast: gl-sast-report-iac.json
+    paths:
+      - gl-sast-report-iac.json
+
+sast_merge_reports:
+  extends: .mr-to-main-or-production
+  stage: test
+  image: europe-north1-docker.pkg.dev/holi-shared/docker-hub-remote/alpine:3
+  tags:
+    - 4cpu-16gb
+  before_script:
+    - apk add --no-cache bash jq
+  needs:
+    - job: semgrep-sast
+      artifacts: true
+      optional: true
+    - job: kics-iac-sast
+      artifacts: true
+      optional: true
+  script:
+    - bash .ai/scripts/sast-merge-reports.sh gl-sast-report.json gl-sast-report.json gl-sast-report-iac.json
+  artifacts:
+    paths:
+      - gl-sast-report.json
 
 .sast-postprocess:
   extends: .mr-to-main-or-production
@@ -152,7 +195,7 @@ semgrep-sast:
   before_script:
     - apk add --no-cache bash jq curl
   needs:
-    - job: semgrep-sast
+    - job: sast_merge_reports
       artifacts: true
       optional: true
 
@@ -172,6 +215,32 @@ sast_medium_issues:
   allow_failure: true
   script:
     - bash .ai/scripts/sast-open-medium-issues.sh gl-sast-report.json
+
+# ─── SECRET DETECTION ─────────────────────────────────────────────────────────
+# secret_detection (template) scans the repo and uploads gl-secret-detection-report.json.
+# secret_detection_gate blocks merge on any finding.
+
+secret_detection:
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event" && ($CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "main" || $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "production")'
+
+.secret-postprocess:
+  extends: .mr-to-main-or-production
+  stage: test
+  image: europe-north1-docker.pkg.dev/holi-shared/docker-hub-remote/alpine:3
+  tags:
+    - 4cpu-16gb
+  before_script:
+    - apk add --no-cache bash jq
+  needs:
+    - job: secret_detection
+      artifacts: true
+      optional: true
+
+secret_detection_gate:
+  extends: .secret-postprocess
+  script:
+    - bash .ai/scripts/secret-gate.sh gl-secret-detection-report.json
 
 # ─── BUILD ────────────────────────────────────────────────────────────────────
 
