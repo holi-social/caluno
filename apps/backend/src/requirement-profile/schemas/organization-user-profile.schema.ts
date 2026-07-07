@@ -2,7 +2,7 @@ import {
   boolean,
   index,
   pgEnum,
-  pgTable,
+  snakeCase,
   text,
   uuid,
 } from 'drizzle-orm/pg-core';
@@ -16,7 +16,7 @@ export const organizationUserProfileStatusEnum = pgEnum(
   OrganizationUserProfileStatus as Record<string, string>,
 );
 
-export const organizationUserProfiles = pgTable(
+export const organizationUserProfiles = snakeCase.table(
   'organization_user_profiles',
   {
     ...idColumn,

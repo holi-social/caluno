@@ -3,7 +3,7 @@ import {
   index,
   integer,
   pgEnum,
-  pgTable,
+  snakeCase,
   text,
   timestamp,
   uuid,
@@ -19,7 +19,7 @@ export const shiftVisibilityEnum = pgEnum(
   ShiftVisibility as Record<string, string>,
 );
 
-export const shifts = pgTable(
+export const shifts = snakeCase.table(
   'shifts',
   {
     ...idColumn,
