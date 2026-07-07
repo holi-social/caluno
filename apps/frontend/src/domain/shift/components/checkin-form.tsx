@@ -2,7 +2,7 @@
 
 import type { ActiveShift, User } from '@repo/data';
 import { Button, Card, CardContent, CardHeader, CardTitle } from '@repo/ui';
-import { CheckCircle2, Timer, UserIcon } from 'lucide-react';
+import { CheckCircle2, PlaneTakeoff, UserIcon } from 'lucide-react';
 import Image from 'next/image';
 import { useTranslations } from 'next-intl';
 import { useState, useTransition } from 'react';
@@ -124,7 +124,7 @@ export const CheckinForm = ({
         onClick={handleCheckin}
         type="button"
       >
-        <Timer /> {isPending ? t('checkIn.checkingIn') : t('checkIn.checkIn')}
+        <PlaneTakeoff /> {isPending ? t('checkIn.checkingIn') : t('checkIn.checkIn')}
       </Button>
     </div>
   );
