@@ -30,7 +30,8 @@
     "toggleTheme": "Design wechseln",
     "menu": "Menü",
     "signOut": "Abmelden",
-    "brand": "Clippy"
+    "brand": "Clippy",
+    "greeting": "Hallo {name}"
   },
   "Auth": {
     "login": {
@@ -146,7 +147,8 @@
     "editProfile": "Profil bearbeiten",
     "admin": "Admin",
     "qrIdTitle": "QR-ID",
-    "qrIdDescription": "Dies ist dein persönlicher QR-Code zum Einchecken in Schichten"
+    "qrIdDescription": "Dies ist dein persönlicher QR-Code zum Einchecken in Schichten",
+    "profile": "Profil"
   },
   "Pagination": {
     "showing": "{start}-{end} von {total} {name} werden angezeigt",
