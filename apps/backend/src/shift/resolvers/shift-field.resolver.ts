@@ -7,6 +7,11 @@ import {
 import { EventService } from '../../event/event.service';
 import { EventMapper } from '../../event/mappers/event.mapper';
 import { Event } from '../../event/models/event.model';
+import { OrganizationMapper } from '../../organization/mappers/organization.mapper';
+import { OrganizationUnitMapper } from '../../organization/mappers/organization-unit.mapper';
+import { Organization } from '../../organization/models/organization.model';
+import { OrganizationUnit } from '../../organization/models/organization-unit.model';
+import { OrganizationUnitService } from '../../organization/organization-unit.service';
 import { UserMapper } from '../../user/mappers/user.mapper';
 import { User } from '../../user/models/user.model';
 import { Shift } from '../models/shift.model';
@@ -18,8 +23,11 @@ export class ShiftFieldResolver {
   constructor(
     private readonly shiftService: ShiftService,
     private readonly eventService: EventService,
+    private readonly organizationUnitService: OrganizationUnitService,
     private readonly userMapper: UserMapper,
     private readonly eventMapper: EventMapper,
+    private readonly organizationMapper: OrganizationMapper,
+    private readonly organizationUnitMapper: OrganizationUnitMapper,
   ) {}
 
   @AllowAnonymous()
@@ -45,5 +53,26 @@ export class ShiftFieldResolver {
 
     const event = await this.eventService.findByIdPublic(shift.eventId);
     return event ? this.eventMapper.toModelOrThrow(event) : null;
+  }
+
+  @AllowAnonymous()
+  @ResolveField(() => OrganizationUnit)
+  async organizationUnit(
+    @Parent() shift: ShiftEntity,
+  ): Promise<OrganizationUnit> {
+    const unit = await this.organizationUnitService.findById(
+      shift.organizationUnitId,
+    );
+    return this.organizationUnitMapper.toModelOrThrow(unit);
+  }
+
+  @AllowAnonymous()
+  @ResolveField(() => Organization)
+  async organization(@Parent() shift: ShiftEntity): Promise<Organization> {
+    const organization =
+      await this.organizationUnitService.findOrganizationByUnitId(
+        shift.organizationUnitId,
+      );
+    return this.organizationMapper.toModelOrThrow(organization);
   }
 }

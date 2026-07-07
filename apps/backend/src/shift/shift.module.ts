@@ -4,6 +4,9 @@ import { DatabaseModule } from '../database/database.module';
 import { EventModule } from '../event/event.module';
 import { MembershipModule } from '../membership/membership.module';
 import { NotificationModule } from '../notification/notification.module';
+import { OrganizationMapper } from '../organization/mappers/organization.mapper';
+import { OrganizationUnitMapper } from '../organization/mappers/organization-unit.mapper';
+import { OrganizationUnitService } from '../organization/organization-unit.service';
 import { UserModule } from '../user/user.module';
 import { ShiftMapper } from './mappers/shift.mapper';
 import { ShiftInstanceMapper } from './mappers/shift-instance.mapper';
@@ -30,6 +33,9 @@ import { ShiftService } from './shift.service';
     ShiftMutationResolver,
     ShiftFieldResolver,
     ShiftInstanceFieldResolver,
+    OrganizationUnitService,
+    OrganizationMapper,
+    OrganizationUnitMapper,
   ],
   exports: [ShiftMapper, ShiftInstanceMapper, ShiftService],
 })
