@@ -2,17 +2,22 @@ import type { GetWeeklyShiftsQuery } from '@repo/data';
 import { addDays, isSameDay } from 'date-fns';
 import { getFormatter } from 'next-intl/server';
 import { ShiftCard } from './shift-card';
+import { type ShiftListQuery } from '../routes';
 
 type WeeklyCalendarProps = {
   instances: GetWeeklyShiftsQuery['weeklyShifts'];
   canManage?: boolean;
   weekStart: Date;
+  orgUId: string;
+  returnQuery?: ShiftListQuery;
 };
 
 export async function WeeklyCalendar({
   instances,
   canManage = false,
   weekStart,
+  orgUId,
+  returnQuery,
 }: WeeklyCalendarProps) {
   const formatter = await getFormatter();
 
@@ -44,7 +49,13 @@ export async function WeeklyCalendar({
             </div>
 
             {dayInstances.map((inst) => (
-              <ShiftCard key={inst.id} instance={inst} canManage={canManage} />
+              <ShiftCard
+                key={inst.id}
+                instance={inst}
+                canManage={canManage}
+                orgUId={orgUId}
+                returnQuery={returnQuery}
+              />
             ))}
           </div>
         ))}

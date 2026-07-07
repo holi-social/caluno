@@ -657,6 +657,40 @@
       "minMaxVolunteers": "Minimum volunteers cannot exceed maximum volunteers"
     }
   },
+  "ShiftInstanceDetail": {
+    "status": {
+      "cancelled": "Cancelled"
+    },
+    "detail": {
+      "staffingLabel": "Staffing",
+      "staffingCount": "{count}/{max}",
+      "seriesLabel": "Shift series",
+      "emptyLocation": "No location set",
+      "emptyInstructions": "No instructions set"
+    },
+    "volunteers": {
+      "heading": "Volunteers",
+      "invite": "Invite",
+      "empty": "No volunteers for this occurrence yet."
+    },
+    "sheet": {
+      "editTitle": "Edit occurrence",
+      "editDescription": "Changes apply to this shift occurrence only."
+    },
+    "toast": {
+      "updated": "Occurrence updated"
+    },
+    "notFound": "Shift occurrence not found",
+    "action": {
+      "editAria": "Edit occurrence",
+      "shareAria": "Copy link to this occurrence",
+      "shareSuccess": "Link copied to clipboard",
+      "shareError": "Could not copy link",
+      "deleteTitle": "Delete occurrence",
+      "deleteDescription": "Are you sure you want to delete only this shift occurrence? The shift series will remain.",
+      "deleteNotImplemented": "Occurrence deletion is not implemented yet — a developer still needs to wire this up."
+    }
+  },
   "TimeEntry": {
     "page": {
       "title": "Timesheets",

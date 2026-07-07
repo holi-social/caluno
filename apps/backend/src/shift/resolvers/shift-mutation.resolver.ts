@@ -8,6 +8,7 @@ import { RequirementProfile } from '../../requirement-profile/models/requirement
 import { UserRequirementStatus } from '../../requirement-profile/models/user-requirement-status.model';
 import { CreateShiftInput } from '../inputs/create-shift.input';
 import { UpdateShiftInput } from '../inputs/update-shift.input';
+import { UpdateShiftInstanceInput } from '../inputs/update-shift-instance.input';
 import { ShiftMapper } from '../mappers/shift.mapper';
 import { ShiftInstanceMapper } from '../mappers/shift-instance.mapper';
 import { JoinShiftInstanceResult } from '../models/join-shift-instance-result.model';
@@ -82,6 +83,21 @@ export class ShiftMutationResolver {
       instanceId,
       memberIds,
       context.organizationUnitId,
+    );
+    return this.shiftInstanceMapper.toModelOrThrow(instance);
+  }
+
+  @Permissions(PERMISSIONS.SHIFT_EDIT)
+  @Mutation(() => ShiftInstance)
+  async updateShiftInstance(
+    @Args('instanceId', { type: () => String }) instanceId: string,
+    @Args('input') input: UpdateShiftInstanceInput,
+    @Context() context: AuthenticatedGraphQLContext,
+  ): Promise<ShiftInstance> {
+    const instance = await this.shiftService.updateShiftInstance(
+      instanceId,
+      context.organizationUnitId,
+      input,
     );
     return this.shiftInstanceMapper.toModelOrThrow(instance);
   }

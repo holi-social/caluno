@@ -47,6 +47,51 @@ export const serverShiftFormSchema = shiftFormSchema({
 
 export type ShiftFormValues = z.infer<typeof serverShiftFormSchema>;
 
+export function shiftInstanceFormSchema(
+  t: Pick<
+    ShiftSchemaMessages,
+    'nameRequired' | 'startTimeRequired' | 'endTimeRequired' | 'minMaxVolunteers'
+  >,
+) {
+  return z.object({
+    name: z.string().trim().min(1, t.nameRequired),
+    startsAt: z.date(t.startTimeRequired),
+    endsAt: z.date(t.endTimeRequired),
+    location: z.string().trim().optional(),
+    instructions: z.string().trim().optional(),
+  });
+}
+
+export const serverShiftInstanceFormSchema = shiftInstanceFormSchema({
+  nameRequired: 'Name is required',
+  startTimeRequired: 'Start time is required',
+  endTimeRequired: 'End time is required',
+  minMaxVolunteers: 'Minimum volunteers cannot exceed maximum volunteers',
+});
+
+export type ShiftInstanceFormValues = z.infer<
+  typeof serverShiftInstanceFormSchema
+>;
+
+export function updateShiftInstanceFormSchema(t: ShiftSchemaMessages) {
+  return shiftInstanceFormSchema(t).extend({
+    instanceId: z.string().min(1, t.shiftIdRequired),
+    organizationUnitId: z.string().min(1, t.organizationUnitIdRequired),
+  });
+}
+
+export const serverUpdateShiftInstanceFormSchema = updateShiftInstanceFormSchema(
+  {
+    nameRequired: 'Name is required',
+    startTimeRequired: 'Start time is required',
+    endTimeRequired: 'End time is required',
+    organizationUnitRequired: 'Organization unit is required',
+    organizationUnitIdRequired: 'Organization unit ID is required',
+    shiftIdRequired: 'Shift instance ID is required',
+    minMaxVolunteers: 'Minimum volunteers cannot exceed maximum volunteers',
+  },
+);
+
 export function updateShiftFormSchema(t: ShiftSchemaMessages) {
   return shiftFormSchema(t).extend({
     id: z.string().min(1, t.shiftIdRequired),

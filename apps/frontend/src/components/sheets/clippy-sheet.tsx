@@ -45,7 +45,14 @@ export function ClippySheet({
   const t = useTranslations('Common');
 
   return (
-    <Sheet open={isOpen} onOpenChange={(isOpen) => (isOpen ? open() : close())}>
+    <Sheet
+      open={isOpen}
+      onOpenChange={(nextOpen) => {
+        if (nextOpen === isOpen) return;
+        if (nextOpen) open();
+        else close();
+      }}
+    >
       {trigger && <SheetTrigger asChild>{trigger}</SheetTrigger>}
 
       <SheetContent

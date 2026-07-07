@@ -12,6 +12,7 @@ import { ShiftTabSwitcher } from '@/domain/shift/components/shift-tab-switcher';
 import { ShiftsTable } from '@/domain/shift/components/shifts-table';
 import { WeeklyCalendar } from '@/domain/shift/components/weekly-calendar';
 import { WeeklyCalendarNav } from '@/domain/shift/components/weekly-calendar-nav';
+import { type ShiftListView } from '@/domain/shift/routes';
 import { getDataClient } from '@/lib/data-client';
 import { requireOrgAccess } from '@/lib/org-context-server';
 import { checkPermission } from '@/lib/permissions-server';
@@ -45,6 +46,11 @@ export default async function ShiftsPage({
 
   const isWeekplan = view !== 'shifts';
   const weekStart = parseWeekStart(week);
+  const returnQuery = {
+    view: (isWeekplan ? 'weekplan' : 'shifts') as ShiftListView,
+    week,
+    page,
+  };
 
   const t = await getTranslations('Shift');
 
@@ -88,6 +94,8 @@ export default async function ShiftsPage({
             instances={instances ?? []}
             canManage={canManage}
             weekStart={weekStart}
+            orgUId={orgUId}
+            returnQuery={returnQuery}
           />
         ) : (
           <EmptyShifts>

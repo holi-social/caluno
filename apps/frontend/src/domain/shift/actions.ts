@@ -11,6 +11,7 @@ import {
   serverShiftDeleteSchema,
   serverShiftFormSchema,
   serverUpdateShiftFormSchema,
+  serverUpdateShiftInstanceFormSchema,
 } from './schemas';
 
 const dayToRRule: Record<string, number> = {
@@ -113,6 +114,22 @@ export const updateShift = actionClient
     };
 
     return await data.shift.update(parsedInput.id, input);
+  });
+
+export const updateShiftInstance = actionClient
+  .inputSchema(serverUpdateShiftInstanceFormSchema)
+  .action(async ({ parsedInput }) => {
+    const data = await getDataClient({
+      orgUId: parsedInput.organizationUnitId,
+    });
+
+    return await data.shift.updateInstance(parsedInput.instanceId, {
+      title: parsedInput.name,
+      startsAt: parsedInput.startsAt.toISOString(),
+      endsAt: parsedInput.endsAt.toISOString(),
+      location: parsedInput.location,
+      instructions: parsedInput.instructions,
+    });
   });
 
 export const deleteShift = actionClient

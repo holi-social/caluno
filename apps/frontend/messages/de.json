@@ -657,6 +657,40 @@
       "minMaxVolunteers": "Die Mindestanzahl an Freiwilligen darf die Höchstanzahl nicht überschreiten"
     }
   },
+  "ShiftInstanceDetail": {
+    "status": {
+      "cancelled": "Abgesagt"
+    },
+    "detail": {
+      "staffingLabel": "Besetzung",
+      "staffingCount": "{count}/{max}",
+      "seriesLabel": "Schichtserie",
+      "emptyLocation": "Kein Ort angegeben",
+      "emptyInstructions": "Keine Anweisungen angegeben"
+    },
+    "volunteers": {
+      "heading": "Freiwillige",
+      "invite": "Einladen",
+      "empty": "Noch keine Freiwilligen für diesen Termin."
+    },
+    "sheet": {
+      "editTitle": "Termin bearbeiten",
+      "editDescription": "Änderungen gelten nur für diesen Schichttermin."
+    },
+    "toast": {
+      "updated": "Termin aktualisiert"
+    },
+    "notFound": "Schichttermin nicht gefunden",
+    "action": {
+      "editAria": "Termin bearbeiten",
+      "shareAria": "Link zu diesem Termin kopieren",
+      "shareSuccess": "Link in Zwischenablage kopiert",
+      "shareError": "Link konnte nicht kopiert werden",
+      "deleteTitle": "Termin löschen",
+      "deleteDescription": "Bist du sicher, dass du nur diesen Schichttermin löschen möchtest? Die Schichtserie bleibt bestehen.",
+      "deleteNotImplemented": "Terminlöschung ist noch nicht implementiert — ein Entwickler muss das noch anbinden."
+    }
+  },
   "TimeEntry": {
     "page": {
       "title": "Stundenzettel",

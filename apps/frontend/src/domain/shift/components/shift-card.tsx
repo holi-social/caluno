@@ -14,10 +14,17 @@ import { format } from 'date-fns';
 import { TriangleAlert, UserPlus, UsersRound } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useSheet } from '@/hooks/use-sheet';
+import { Link } from '@/i18n/navigation';
+import {
+  shiftInstanceDetailPath,
+  type ShiftListQuery,
+} from '../routes';
 
 type ShiftCardProps = {
   instance: WeeklyShiftInstance;
   canManage?: boolean;
+  orgUId?: string;
+  returnQuery?: ShiftListQuery;
 };
 
 function getStaffingState(
@@ -77,7 +84,12 @@ function StaffingBadge({
   );
 }
 
-export function ShiftCard({ instance, canManage = false }: ShiftCardProps) {
+export function ShiftCard({
+  instance,
+  canManage = false,
+  orgUId,
+  returnQuery,
+}: ShiftCardProps) {
   const inviteSheet = useSheet('invite-shift', 'id', 'instanceId');
   const t = useTranslations('Shift');
 
@@ -93,19 +105,41 @@ export function ShiftCard({ instance, canManage = false }: ShiftCardProps) {
   const startTime = format(new Date(instance.actualStartsAt), 'HH:mm');
   const endTime = format(new Date(instance.actualEndsAt), 'HH:mm');
 
+  const detailHref =
+    orgUId != null
+      ? shiftInstanceDetailPath(
+          orgUId,
+          instance.master.id,
+          instance.id,
+          returnQuery,
+        )
+      : null;
+
+  const timeAndTitle = (
+    <div className="flex flex-col gap-1 w-full">
+      <p className="text-lg font-bold text-muted-foreground leading-none">
+        {startTime} - {endTime}
+      </p>
+      <p className="text-lg text-card-foreground line-clamp-2">
+        {instance.master.title}
+      </p>
+    </div>
+  );
+
   return (
     <Card className="rounded-xl gap-1 shadow-sm pt-4 pb-2 px-2 overflow-hidden">
       {/* Header */}
       <div className="flex flex-col gap-2 items-end">
-        <div className="flex flex-col gap-1 w-full">
-          <p className="text-lg font-bold text-muted-foreground leading-none">
-            {startTime} - {endTime}
-          </p>
-
-          <p className="text-lg text-card-foreground line-clamp-2">
-            {instance.master.title}
-          </p>
-        </div>
+        {detailHref ? (
+          <Link
+            href={detailHref}
+            className="flex flex-col gap-1 w-full rounded-md hover:bg-muted/50 transition-colors -m-1 p-1"
+          >
+            {timeAndTitle}
+          </Link>
+        ) : (
+          timeAndTitle
+        )}
 
         <div className="flex gap-1 items-start w-full">
           <StaffingBadge

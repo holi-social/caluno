@@ -99,6 +99,15 @@ mutation InviteMembersToShift($shiftId: String!, $memberIds: [String!]!) {
   }
 }
 
+mutation UpdateShiftInstance(
+  $instanceId: String!
+  $input: UpdateShiftInstanceInput!
+) {
+  updateShiftInstance(instanceId: $instanceId, input: $input) {
+    id
+  }
+}
+
 mutation UpdateShiftInstanceVolunteers(
   $instanceId: String!
   $memberIds: [String!]!
@@ -190,6 +199,8 @@ query GetShiftInstances($shiftId: ID!) {
     actualStartsAt
     actualEndsAt
     overrideTitle
+    overrideInstructions
+    overrideLocation
     isCancelled
   }
 }

@@ -11,6 +11,7 @@ import { LocaleCookieSeeder } from '@/components/locale-cookie-seeder';
 import { DashboardSidebar } from '@/components/navigation/dashboard-sidebar';
 import { ProfileNavIcon } from '@/components/navigation/profile-nav-icon';
 import { InviteShiftSheet } from '@/components/sheets/invite-shift-sheet';
+import { ShiftInstanceSheet } from '@/components/sheets/shift-instance-sheet';
 import { ShiftSheet } from '@/components/sheets/shift-sheet';
 import { VolunteerSheet } from '@/components/sheets/volunteer-sheet';
 import { ThemeToggle } from '@/components/theme-toggle';
@@ -81,6 +82,7 @@ export default async function OrgLayout({
           </SidebarProvider>
           <InviteShiftSheet />
           <ShiftSheet />
+          <ShiftInstanceSheet />
           <BlockSheet />
           <VolunteerSheet />
         </OrgSyncProvider>

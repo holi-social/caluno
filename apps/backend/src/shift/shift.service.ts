@@ -23,6 +23,7 @@ import { slugify } from '../utils/slug.util';
 import { ShiftInviteStatus, ShiftVisibility } from './enums';
 import { CreateShiftInput } from './inputs/create-shift.input';
 import { UpdateShiftInput } from './inputs/update-shift.input';
+import { UpdateShiftInstanceInput } from './inputs/update-shift-instance.input';
 import type { ShiftEntity } from './schemas/shift.schema';
 import type { ShiftInstanceEntity } from './schemas/shift-instance.schema';
 import { expandShift } from './utils/rrule-expander';
@@ -475,6 +476,65 @@ export class ShiftService {
     }
 
     return this.findInstanceById(instanceId, organizationUnitId);
+  }
+
+  async updateShiftInstance(
+    instanceId: string,
+    organizationUnitId: string,
+    input: UpdateShiftInstanceInput,
+  ): Promise<ShiftInstanceEntity> {
+    const instance = await this.db.query.shiftInstances.findFirst({
+      where: { id: instanceId },
+      with: { master: true },
+    });
+
+    if (
+      !instance?.master ||
+      instance.master.organizationUnitId !== organizationUnitId
+    ) {
+      throw new NotFoundGraphQLError(
+        `Shift instance with ID ${instanceId} not found`,
+      );
+    }
+
+    const master = instance.master;
+
+    const title = input.title.trim();
+    if (!title) {
+      throw new BadRequestGraphQLError('Title is required');
+    }
+
+    if (input.startsAt >= input.endsAt) {
+      throw new BadRequestGraphQLError('End time must be after start time');
+    }
+
+    const location = input.location?.trim() || null;
+    const instructions = input.instructions?.trim() || null;
+
+    const [updated] = await this.db
+      .update(schema.shiftInstances)
+      .set({
+        actualStartsAt: input.startsAt,
+        actualEndsAt: input.endsAt,
+        overrideTitle: title !== master.title ? title : null,
+        overrideLocation:
+          location !== (master.location ?? null) ? location : null,
+        overrideInstructions:
+          instructions !== (master.instructions ?? null)
+            ? instructions
+            : null,
+        isException: true,
+      })
+      .where(eq(schema.shiftInstances.id, instanceId))
+      .returning();
+
+    if (!updated) {
+      throw new NotFoundGraphQLError(
+        `Shift instance with ID ${instanceId} not found`,
+      );
+    }
+
+    return updated;
   }
 
   async inviteMembersToShiftWithAutoApproval(
