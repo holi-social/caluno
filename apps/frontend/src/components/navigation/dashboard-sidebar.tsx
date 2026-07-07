@@ -75,7 +75,7 @@ export function DashboardSidebar({ permissions }: DashboardSidebarProps) {
         count: pendingCount,
       },
       {
-        titleKey: 'checkInOut',
+        titleKey: 'checkIn',
         href: `/admin/${orgUId}/check-in/scan`,
         icon: ScanQrCode,
       },
