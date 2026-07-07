@@ -27,6 +27,7 @@
     "db:migrate": "drizzle-kit migrate",
     "db:seed": "node dist/src/database/seed.js",
     "db:seed:dev": "ts-node -r tsconfig-paths/register src/database/seed.ts",
+    "db:fixtures": "bun run src/database/fixtures.ts",
     "db:studio": "drizzle-kit studio"
   },
   "dependencies": {

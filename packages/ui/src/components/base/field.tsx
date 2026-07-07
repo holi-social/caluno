@@ -213,6 +213,7 @@ function FieldError({
         {uniqueErrors.map(
           (error, index) =>
             error?.message && (
+              // biome-ignore lint: lint/suspicious/noArrayIndexKey: is OK for errors here, since they don't have a unique key
               <li key={`fieldset-error-${error.message.toString()}-${index}`}>
                 {error.message}
               </li>

@@ -1,7 +1,7 @@
 import {
   index,
   pgEnum,
-  pgTable,
+  snakeCase,
   text,
   timestamp,
   uuid,
@@ -18,7 +18,7 @@ export const requirementProfileSubmissionStatusEnum = pgEnum(
   RequirementProfileSubmissionStatus as Record<string, string>,
 );
 
-export const requirementProfileSubmissions = pgTable(
+export const requirementProfileSubmissions = snakeCase.table(
   'requirement_profile_submissions',
   {
     ...idColumn,
