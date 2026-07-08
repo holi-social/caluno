@@ -904,13 +904,18 @@ export class ShiftService {
           columns: { id: true },
         },
       },
-      orderBy: { actualStartsAt: 'asc' },
     });
 
-    return instances.map(({ invites, ...instance }) => ({
-      ...instance,
-      accepted: invites.length > 0,
-    }));
+    return instances
+      .map(({ invites, ...instance }) => ({
+        ...instance,
+        accepted: invites.length > 0,
+      }))
+      .sort(
+        (a, b) =>
+          Number(b.accepted) - Number(a.accepted) ||
+          a.actualStartsAt.getTime() - b.actualStartsAt.getTime(),
+      );
   }
 
   async findInstances(

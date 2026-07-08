@@ -30,11 +30,7 @@ export const CheckinForm = ({
   const t = useTranslations('Shift');
   const [serverError, setServerError] = useState<string | null>(null);
 
-  const selectedShift = shifts.length === 1 ? shifts[0] : undefined;
-
-  const [selectedShiftId, setSelectedShiftId] = useState<string | undefined>(
-    selectedShift?.id,
-  );
+  const [selectedShiftId, setSelectedShiftId] = useState(shifts[0]?.id);
 
   const handleCheckin = () => {
     setServerError(null);
