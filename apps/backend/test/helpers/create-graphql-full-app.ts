@@ -1,5 +1,5 @@
 import { spawnSync } from 'node:child_process';
-import { existsSync, readdirSync, statSync } from 'node:fs';
+import { cpSync, existsSync, readdirSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import type { INestApplication } from '@nestjs/common';
@@ -74,6 +74,7 @@ const isBackendBuildStale = (
 const ensureBackendBuild = (backendRoot: string) => {
   const buildMarker = join(backendRoot, 'dist', 'src', 'app.module.js');
   if (!isBackendBuildStale(backendRoot, buildMarker)) {
+    ensureI18nLocalesInDist(backendRoot);
     return;
   }
 
@@ -83,6 +84,21 @@ const ensureBackendBuild = (backendRoot: string) => {
   });
   if (buildResult.status !== 0) {
     throw new Error('Failed to compile backend sources for Bun test runtime.');
+  }
+
+  ensureI18nLocalesInDist(backendRoot);
+};
+
+const ensureI18nLocalesInDist = (backendRoot: string) => {
+  const srcLocales = join(backendRoot, 'src', 'i18n', 'locales');
+  const distLocales = join(backendRoot, 'dist', 'src', 'i18n', 'locales');
+
+  if (!existsSync(srcLocales)) {
+    return;
+  }
+
+  if (!existsSync(distLocales)) {
+    cpSync(srcLocales, distLocales, { recursive: true });
   }
 };
 
@@ -116,7 +132,7 @@ export const createGraphqlFullTestApp = async (
     imports: [AppModule],
   }).compile();
 
-  const app = moduleRef.createNestApplication();
+  const app = moduleRef.createNestApplication({ logger: false });
   app.use((req, _res, next) => {
     const mutableReq = req as { user?: { id: string } };
     mutableReq.user = mutableReq.user ?? { id: testUserId };
