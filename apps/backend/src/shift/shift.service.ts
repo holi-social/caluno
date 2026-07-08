@@ -131,7 +131,7 @@ export class ShiftService {
       with: { master: true },
     });
 
-    if (!instance || !instance.master) {
+    if (!instance?.master) {
       throw new NotFoundGraphQLError(
         `Shift instance with ID ${instanceId} not found`,
       );

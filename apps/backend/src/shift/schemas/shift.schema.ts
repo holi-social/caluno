@@ -32,9 +32,6 @@ export const shifts = snakeCase.table(
     createdById: text('created_by_id')
       .references(() => users.id, { onDelete: 'restrict' })
       .notNull(),
-    eventId: uuid('event_id').references(() => events.id, {
-      onDelete: 'set null',
-    }),
     location: text('location'),
     visibility: shiftVisibilityEnum('visibility')
       .notNull()
