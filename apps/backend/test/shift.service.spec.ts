@@ -1,16 +1,22 @@
 import 'reflect-metadata';
-import { afterAll, beforeAll, describe, expect, it } from 'bun:test';
+import { beforeAll, describe, expect, it } from 'bun:test';
 import { ConfigModule } from '@nestjs/config';
 import { Test, type TestingModule } from '@nestjs/testing';
+import { eq } from 'drizzle-orm';
 import { AuthService } from '../src/auth/auth.service';
 import { type Database, DatabaseModule } from '../src/database/database.module';
 import { DATABASE_CONNECTION } from '../src/database/database-connection';
+import * as schema from '../src/database/schema';
 import { MembershipService } from '../src/membership/membership.service';
 import { NotificationService } from '../src/notification/notification.service';
 import { ShiftService } from '../src/shift/shift.service';
 import { UserService } from '../src/user/user.service';
+import { slugify } from '../src/utils/slug.util';
 import { createShift, createShiftInstance, createUser } from './factories';
-import { applyTestDatabaseEnvironment } from './helpers/ensure-test-database';
+import {
+  ensureTestDatabase,
+  registerTestResourceCleanup,
+} from './helpers/ensure-test-database';
 
 describe('ShiftService', () => {
   let moduleRef: TestingModule;
@@ -20,11 +26,11 @@ describe('ShiftService', () => {
   let organizationUnitId: string;
 
   beforeAll(async () => {
-    applyTestDatabaseEnvironment();
+    await ensureTestDatabase();
     moduleRef = await Test.createTestingModule({
       imports: [ConfigModule.forRoot({ isGlobal: true }), DatabaseModule],
     }).compile();
-    db = moduleRef.get(DATABASE_CONNECTION);
+    db = moduleRef.get<Database>(DATABASE_CONNECTION);
 
     shiftService = new ShiftService(
       db,
@@ -35,15 +41,39 @@ describe('ShiftService', () => {
     );
 
     userId = (await createUser(db)).id;
-    const rootUnit = await db.query.organizationUnits.findFirst({
-      where: { parentId: { isNull: true } },
-      columns: { id: true },
-    });
-    organizationUnitId = rootUnit?.id ?? '';
-  });
 
-  afterAll(async () => {
-    await moduleRef.close();
+    const orgName = `Shift Service Test Org ${crypto.randomUUID()}`;
+    const [organization] = await db
+      .insert(schema.organizations)
+      .values({
+        name: orgName,
+        slug: slugify(orgName),
+      })
+      .returning();
+    const [rootType] = await db
+      .insert(schema.organizationUnitTypes)
+      .values({
+        name: 'management',
+        description: `organization management unit for ${orgName}`,
+        icon: 'building-2',
+      })
+      .returning();
+    const [rootUnit] = await db
+      .insert(schema.organizationUnits)
+      .values({
+        organizationId: organization.id,
+        parentId: null,
+        typeId: rootType.id,
+        name: organization.name,
+        slug: organization.slug,
+      })
+      .returning();
+
+    organizationUnitId = rootUnit.id;
+
+    registerTestResourceCleanup(async () => {
+      await moduleRef.close();
+    });
   });
 
   const createNoneRecurringShift = async (startsAt: Date, endsAt: Date) =>
@@ -73,9 +103,10 @@ describe('ShiftService', () => {
         rrule: null,
       });
 
-      const instances = await db.query.shiftInstances.findMany({
-        where: { masterId: shiftId },
-      });
+      const instances = await db
+        .select()
+        .from(schema.shiftInstances)
+        .where(eq(schema.shiftInstances.masterId, shiftId));
 
       expect(instances).toHaveLength(1);
       expect(instances[0]?.actualStartsAt.toISOString()).toBe(
@@ -92,9 +123,10 @@ describe('ShiftService', () => {
         new Date('2026-07-15T10:00:00.000Z'),
       );
 
-      const [normalInstance] = await db.query.shiftInstances.findMany({
-        where: { masterId: shiftId },
-      });
+      const [normalInstance] = await db
+        .select()
+        .from(schema.shiftInstances)
+        .where(eq(schema.shiftInstances.masterId, shiftId));
 
       const cancelledInstance = await createShiftInstance(db, shiftId, {
         actualStartsAt: new Date('2026-07-16T08:00:00.000Z'),
@@ -119,9 +151,10 @@ describe('ShiftService', () => {
         rrule: null,
       });
 
-      const updated = await db.query.shiftInstances.findMany({
-        where: { masterId: shiftId },
-      });
+      const updated = await db
+        .select()
+        .from(schema.shiftInstances)
+        .where(eq(schema.shiftInstances.masterId, shiftId));
       const normal = updated.find((i) => i.id === normalInstance.id);
       const cancelled = updated.find((i) => i.id === cancelledInstance.id);
       const exception = updated.find((i) => i.id === exceptionInstance.id);
