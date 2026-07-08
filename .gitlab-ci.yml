@@ -43,6 +43,10 @@ variables:
   TRIVY_VERSION: '0.72.0'
   TRIVY_NO_PROGRESS: 'true'
   TRIVY_CACHE_DIR: '.trivycache/'
+  # Trivy issue filing noise control:
+  # false (default): create issues only when a fix is available ("Upgrade ...")
+  # true: also create issues with no known fix yet.
+  TRIVY_INCLUDE_UNFIXED: 'false'
 
 # ─── TEST ─────────────────────────────────────────────────────────────────────
 
