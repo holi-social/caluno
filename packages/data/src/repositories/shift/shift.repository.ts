@@ -61,19 +61,8 @@ export class ShiftRepository extends BaseRepository {
     return data.shifts;
   }
 
-  async findAllForTimeEntryCreation(options: PaginationOptions = {}) {
-    const data = await this.sdk.GetShiftsForTimeEntryCreation({
-      limit: options.limit ?? 100,
-      offset: options.offset ?? 0,
-    });
-    return data.activeShifts.items;
-  }
-
-  async activeShifts(options: PaginationOptions = {}) {
-    const data = await this.sdk.GetActiveShifts({
-      limit: options.limit ?? 100,
-      offset: options.offset ?? 0,
-    });
+  async activeShifts(userId: string) {
+    const data = await this.sdk.GetActiveShifts({ userId });
     return data.activeShifts;
   }
 

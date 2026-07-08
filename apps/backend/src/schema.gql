@@ -503,7 +503,7 @@ enum PermissionKey {
 }
 
 type Query {
-  activeShifts(limit: Int! = 10, offset: Int! = 0): ShiftInstancePaginatedResponse!
+  activeShifts(userId: String!): [ShiftInstance!]!
   adminUserProfile(userId: String!): UserProfile
   adminVolunteerSubmission(id: String!): FormSubmission
   event(id: ID!): Event!
@@ -788,11 +788,6 @@ type ShiftInstance {
   overrideMaxVolunteers: Int
   overrideTitle: String
   volunteers: [User!]
-}
-
-type ShiftInstancePaginatedResponse {
-  items: [ShiftInstance!]!
-  pagination: PaginationInfo!
 }
 
 type ShiftPaginatedResponse {

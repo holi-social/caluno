@@ -19,21 +19,19 @@ export type CheckInStatus =
 
 export default async function CheckinPage({ params }: CheckinPageProps) {
   const { orgUId, checkInId } = await params;
+  const t = await getTranslations('Shift.checkIn');
 
   await requireOrgAccess(orgUId);
   const data = await getDataClient({ orgUId });
   const user = await data.user.findByCheckInId(checkInId);
 
-  const activeShiftsResult = await data.shift.activeShifts({
-    limit: 100,
-    offset: 0,
-  });
-
-  const t = await getTranslations('Shift.checkIn');
+  data.organizationUnit.isMemberOfOrgUnitOrAncestor;
 
   if (!user) {
     return;
   }
+
+  const shifts = await data.shift.activeShifts(user.id);
 
   //  TODO: temporary status checking, until blocking & dossier features land
   const status: CheckInStatus = 'valid' as CheckInStatus;
@@ -55,7 +53,7 @@ export default async function CheckinPage({ params }: CheckinPageProps) {
 
           <CheckinForm
             volunteer={user}
-            shifts={activeShiftsResult.items}
+            shifts={shifts}
             organizationUnitId={orgUId}
             status={status}
           />

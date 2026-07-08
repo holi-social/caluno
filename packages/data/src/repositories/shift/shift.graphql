@@ -47,25 +47,6 @@ query GetShifts($limit: Int!, $offset: Int!) {
   }
 }
 
-query GetShiftsForTimeEntryCreation($limit: Int!, $offset: Int!) {
-  activeShifts(limit: $limit, offset: $offset) {
-    items {
-      id
-      actualStartsAt
-      actualEndsAt
-      master {
-        id
-        title
-      }
-      volunteers {
-        id
-        name
-        email
-      }
-    }
-  }
-}
-
 mutation CreateShift($input: CreateShiftInput!) {
   createShift(input: $input) {
     id
@@ -160,26 +141,19 @@ query GetShiftVolunteers($instanceId: ID!) {
   }
 }
 
-query GetActiveShifts($limit: Int!, $offset: Int!) {
-  activeShifts(limit: $limit, offset: $offset) {
-    items {
+query GetActiveShifts($userId: String!) {
+  activeShifts(userId: $userId) {
+    id
+    actualStartsAt
+    actualEndsAt
+    overrideTitle
+    master {
       id
-      actualStartsAt
-      actualEndsAt
-      master {
-        id
-        title
-        location
-        instructions
-        visibility
-        maxVolunteers
-      }
-    }
-    pagination {
-      total
-      limit
-      offset
-      hasMore
+      title
+      location
+      instructions
+      visibility
+      maxVolunteers
     }
   }
 }
