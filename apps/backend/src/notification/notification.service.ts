@@ -31,6 +31,12 @@ type MembershipApprovedInput =
 type ShiftInstanceJoinedInput =
   NotificationEventPayloadMap[typeof NotificationEvent.SHIFT_INSTANCE_JOINED];
 
+type ShiftInstanceInvitedInput =
+  NotificationEventPayloadMap[typeof NotificationEvent.SHIFT_INSTANCE_INVITED];
+
+type ShiftInvitedInput =
+  NotificationEventPayloadMap[typeof NotificationEvent.SHIFT_INVITED];
+
 @Injectable()
 export class NotificationService {
   private readonly logger = new Logger(NotificationService.name);
@@ -125,5 +131,13 @@ export class NotificationService {
 
   notifyShiftInstanceJoined(input: ShiftInstanceJoinedInput): void {
     this.emitter.emit(NotificationEvent.SHIFT_INSTANCE_JOINED, input);
+  }
+
+  notifyShiftInstanceInvited(input: ShiftInstanceInvitedInput): void {
+    this.emitter.emit(NotificationEvent.SHIFT_INSTANCE_INVITED, input);
+  }
+
+  notifyShiftInvited(input: ShiftInvitedInput): void {
+    this.emitter.emit(NotificationEvent.SHIFT_INVITED, input);
   }
 }

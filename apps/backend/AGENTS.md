@@ -11,8 +11,8 @@ The backend api for securely managing volunteers and shifts in multi-tiered orga
 - `bun run format` - Format with Biome
 - `bun run check-types` - Check for type errors
 - `bun run test` - Jest unit tests (`src/**/*.spec.ts`; pattern: `src/notification/notification.spec.ts`)
-- `bun test apps/backend/test/` - Bun integration tests; auto-creates `${POSTGRES_DB}_test` (or uses it if `POSTGRES_DB` already ends with `_test`), migrates/seeds, then runs tests
-- `bun run --cwd apps/backend test:integration` - Local helper that drops/creates the test DB fresh before running integration tests
+- `bun test apps/backend/test/` - Bun integration tests; creates an isolated `${POSTGRES_DB}_test_<pid>_<id>` database per run, migrates/seeds, then drops it when the process exits
+- `bun run --cwd apps/backend test:integration` - Same as `bun test test/` from `apps/backend`
 - `bun run db:generate` - Generate database migrations based on schema changes
 - `bun run db:migrate` - Run drizzle database migrations
 
@@ -29,9 +29,8 @@ The backend has two test suites:
 2. **Integration tests** — `bun:test`, files under `test/*.integration.spec.ts`.
    - Use for anything that depends on actual SQL queries, transactions, GraphQL resolvers, auth guards, or multi-tenancy scoping.
    - They spin up the real NestJS app and connect to a PostgreSQL database.
-   - The first integration test to start auto-creates the test DB if it does not exist, runs migrations, and seeds permissions. If `POSTGRES_DB` already ends with `_test`, that name is used as-is; otherwise `_test` is appended.
+   - The preload script provisions a fresh isolated database (create → migrate → seed permissions) in a global `beforeAll` before any integration spec runs, then drops it in global `afterAll` when the process exits.
    - Run with `bun test apps/backend/test/` (or `bun test` from `apps/backend`).
-   - For a completely fresh local test DB, use `bun run --cwd apps/backend test:integration`, which drops/creates the DB first.
 
 ### Writing integration tests
 
@@ -99,11 +98,11 @@ Guidelines:
 # Start Postgres (only needed once)
 bun run db:up
 
-# Run integration tests with a fresh, migrated, seeded test DB
-bun run --cwd apps/backend test:integration
+# Run integration tests (creates and drops an isolated test database automatically)
+bun test apps/backend/test/
 ```
 
-The setup script connects to the `postgres` maintenance database to drop/create `${POSTGRES_DB}_test`, so the Postgres user needs CREATEDB privileges (the default `postgres` superuser has this).
+Integration tests connect to the `postgres` maintenance database to create/drop an isolated `${POSTGRES_DB}_test_<pid>_<id>` database, so the Postgres user needs CREATEDB privileges (the default `postgres` superuser has this).
 
 ### Playground fixtures (`bun bootstrap`)
 
@@ -166,7 +165,7 @@ domain/
 - Errors: throw `ForbiddenGraphQLError` / `NotFoundGraphQLError` / `BadRequestGraphQLError` / `ConflictGraphQLError` from `graphql/errors` — never raw exceptions.
 
 ## i18n
-`AppI18nModule` wraps `nestjs-i18n` with catalogs at `src/i18n/locales/{locale}/*.json`. `AppI18nService.translate(locale, key)` and `createTranslator(locale, namespace)` are namespace-agnostic. `UserLocaleService` resolves locale via `UserService.resolveLocale` (stored user locale, request headers, fallback `en`). Transactional emails use namespace `email` via `createEmailTemplateContext()` in `notification/email/`; pure template functions take `{ t, formatDateTime }`. Auth callbacks forward Better Auth `request` headers; the frontend auth client sends `x-locale` from the `clippy.locale` cookie.
+`AppI18nModule` wraps `nestjs-i18n` with catalogs at `src/i18n/locales/{locale}/*.json`. `AppI18nService.translate(locale, key)` and `createTranslator(locale, namespace)` are namespace-agnostic. `UserLocaleService` resolves locale via `UserService.resolveLocale` (stored user locale, request headers, fallback `en`). Transactional emails use namespace `email` via `createEmailTemplateContext()` in `notification/email/`; pure template functions take `{ t, formatDateTime, formatDate, formatTime, formatList }`. Date/time formatting uses `Europe/Berlin` and ICU regional tags `en-DE` / `de-DE` so English copy still follows German date order and 24h time. Auth callbacks forward Better Auth `request` headers; the frontend auth client sends `x-locale` from the `clippy.locale` cookie.
 
 ## Drizzle
 Database schema in `src/database/schema.ts` (re-exports domain schemas; relations in `database/schema.relations.ts`).

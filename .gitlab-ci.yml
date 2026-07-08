@@ -39,6 +39,14 @@ variables:
   SCAN_KUBERNETES_MANIFESTS: 'false'
   # Secret detection: scan infra — tfvars, backend config, and .tf must not carry real keys.
   SECRET_DETECTION_EXCLUDED_PATHS: 'spec,test,tests,tmp,.ai,.agents,dist,.next,storybook-static,node_modules'
+  # Trivy container scanning (https://trivy.dev/docs/latest/tutorials/integrations/gitlab-ci/)
+  TRIVY_VERSION: '0.72.0'
+  TRIVY_NO_PROGRESS: 'true'
+  TRIVY_CACHE_DIR: '.trivycache/'
+  # Trivy issue filing noise control:
+  # false (default): create issues only when a fix is available ("Upgrade ...")
+  # true: also create issues with no known fix yet.
+  TRIVY_INCLUDE_UNFIXED: 'false'
 
 # ─── TEST ─────────────────────────────────────────────────────────────────────
 
@@ -69,7 +77,8 @@ ai_gate_tests:
   image: europe-north1-docker.pkg.dev/holi-shared/docker-hub-remote/oven/bun:1
   needs: []
   before_script:
-    - apt-get update && apt-get install -y --no-install-recommends git jq >/dev/null
+    - apt-get update && apt-get install -y --no-install-recommends git jq curl ca-certificates >/dev/null
+    - update-ca-certificates >/dev/null 2>&1 || true
   script:
     - bash .ai/scripts/__tests__/gates.test.sh
 
@@ -242,6 +251,122 @@ secret_detection_gate:
   script:
     - bash .ai/scripts/secret-gate.sh gl-secret-detection-report.json
 
+# ─── CONTAINER SCANNING (TRIVY) ───────────────────────────────────────────────
+# Branch builds scan local images; staging/production scan the Scaleway registry.
+# trivy_merge_reports combines per-image reports; trivy_summary posts Critical/High
+# table (job log + MR comment); trivy_issues files Critical/High as GitLab work items (non-blocking).
+
+.trivy-scan-registry:
+  stage: build
+  image:
+    name: europe-north1-docker.pkg.dev/holi-shared/docker-hub-remote/aquasec/trivy:0.72.0
+    entrypoint: ['']
+  variables:
+    GIT_DEPTH: 1
+    TRIVY_USERNAME: nologin
+    TRIVY_PASSWORD: $SCW_SECRET_KEY
+  before_script:
+    - trivy --version
+    - trivy image --download-db-only
+  script:
+    - sh .ai/scripts/trivy-gitlab-report.sh "$TRIVY_IMAGE_REF" "$TRIVY_REPORT_PATH"
+    - trivy image --exit-code 0 --severity HIGH,CRITICAL "$TRIVY_IMAGE_REF"
+  cache:
+    key: trivy-db
+    paths:
+      - .trivycache/
+  artifacts:
+    when: always
+    paths:
+      - $TRIVY_REPORT_PATH
+
+.trivy-postprocess:
+  extends: .mr-to-main-or-production
+  stage: build
+  image: europe-north1-docker.pkg.dev/holi-shared/docker-hub-remote/alpine:3
+  tags:
+    - 4cpu-16gb
+  before_script:
+    - apk add --no-cache bash jq curl
+  needs:
+    - job: build_branch_backend
+      artifacts: true
+      optional: true
+    - job: build_branch_frontend
+      artifacts: true
+      optional: true
+
+trivy_merge_reports:
+  extends: .trivy-postprocess
+  script:
+    - bash .ai/scripts/trivy-merge-reports.sh gl-container-scanning-report.json gl-container-scanning-report-backend.json gl-container-scanning-report-frontend.json
+  artifacts:
+    when: always
+    paths:
+      - gl-container-scanning-report.json
+    reports:
+      container_scanning: gl-container-scanning-report.json
+
+trivy_issues:
+  extends: .trivy-postprocess
+  allow_failure: true
+  needs:
+    - job: trivy_merge_reports
+      artifacts: true
+      optional: true
+  script:
+    - bash .ai/scripts/trivy-open-issues.sh gl-container-scanning-report.json
+
+trivy_summary:
+  extends: .trivy-postprocess
+  allow_failure: true
+  needs:
+    - job: trivy_merge_reports
+      artifacts: true
+      optional: true
+  script:
+    - bash .ai/scripts/trivy-mr-comment.sh gl-container-scanning-report.json
+
+trivy_scan_staging_backend:
+  extends: .trivy-scan-registry
+  needs: ['build_staging_backend']
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+  variables:
+    TRIVY_IMAGE_REF: '$SCW_REGISTRY_HOST/$SCW_REGISTRY_NAMESPACE/clippy-backend:$CI_COMMIT_SHORT_SHA'
+    TRIVY_REPORT_PATH: gl-container-scanning-report-staging-backend.json
+  allow_failure: true
+
+trivy_scan_staging_frontend:
+  extends: .trivy-scan-registry
+  needs: ['build_staging_frontend']
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+  variables:
+    TRIVY_IMAGE_REF: '$SCW_REGISTRY_HOST/$SCW_REGISTRY_NAMESPACE/clippy-frontend:$CI_COMMIT_SHORT_SHA'
+    TRIVY_REPORT_PATH: gl-container-scanning-report-staging-frontend.json
+  allow_failure: true
+
+trivy_scan_production_backend:
+  extends: .trivy-scan-registry
+  needs: ['build_production_backend']
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "production"'
+  variables:
+    TRIVY_IMAGE_REF: '$SCW_REGISTRY_HOST/$SCW_REGISTRY_NAMESPACE/clippy-backend:$CI_COMMIT_SHORT_SHA'
+    TRIVY_REPORT_PATH: gl-container-scanning-report-production-backend.json
+  allow_failure: true
+
+trivy_scan_production_frontend:
+  extends: .trivy-scan-registry
+  needs: ['build_production_frontend']
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "production"'
+  variables:
+    TRIVY_IMAGE_REF: '$SCW_REGISTRY_HOST/$SCW_REGISTRY_NAMESPACE/clippy-frontend:$CI_COMMIT_SHORT_SHA'
+    TRIVY_REPORT_PATH: gl-container-scanning-report-production-frontend.json
+  allow_failure: true
+
 # ─── BUILD ────────────────────────────────────────────────────────────────────
 
 .build-images-base:
@@ -295,6 +420,7 @@ secret_detection_gate:
   needs: ['check_migrations']
   before_script:
     - echo "Building Docker images for branch (no push)"
+    - apk add --no-cache bash curl
     - unset DOCKER_AUTH_CONFIG
     - export IMAGE_TAG_SHA="$CI_COMMIT_SHORT_SHA"
 
@@ -305,6 +431,18 @@ secret_detection_gate:
     - docker buildx build --load
       -t "$BACKEND_IMAGE_NAME:$IMAGE_TAG_SHA"
       -f apps/backend/Dockerfile .
+    - export TRIVY_IMAGE_REF="$BACKEND_IMAGE_NAME:$IMAGE_TAG_SHA"
+    - export TRIVY_REPORT_PATH="gl-container-scanning-report-backend.json"
+    - sh .ai/scripts/trivy-scan-image.sh "$TRIVY_IMAGE_REF" "$TRIVY_REPORT_PATH"
+  artifacts:
+    when: always
+    paths:
+      - gl-container-scanning-report-backend.json
+    expire_in: 1 day
+  cache:
+    key: trivy-db
+    paths:
+      - .trivycache/
 
 .build-images-frontend-branch:
   extends: .build-images-base-branch
@@ -315,6 +453,18 @@ secret_detection_gate:
       --build-arg NEXT_PUBLIC_WEB_URL="http://localhost"
       -t "$FRONTEND_IMAGE_NAME:$IMAGE_TAG_SHA"
       -f apps/frontend/Dockerfile .
+    - export TRIVY_IMAGE_REF="$FRONTEND_IMAGE_NAME:$IMAGE_TAG_SHA"
+    - export TRIVY_REPORT_PATH="gl-container-scanning-report-frontend.json"
+    - sh .ai/scripts/trivy-scan-image.sh "$TRIVY_IMAGE_REF" "$TRIVY_REPORT_PATH"
+  artifacts:
+    when: always
+    paths:
+      - gl-container-scanning-report-frontend.json
+    expire_in: 1 day
+  cache:
+    key: trivy-db
+    paths:
+      - .trivycache/
 
 build_staging_backend:
   extends: .build-images-backend

@@ -86,13 +86,7 @@ export class MembershipLifecycleMutationResolver {
     @Args('id', { type: () => ID }) id: string,
     @Args('organizationUnitId', { type: () => ID }) organizationUnitId: string,
     @Session() session: UserSession,
-    @Context() context: AuthenticatedGraphQLContext,
   ): Promise<MembershipRequest> {
-    if (organizationUnitId !== context.organizationUnitId) {
-      throw new ForbiddenGraphQLError(
-        'Organization unit ID does not match the current context',
-      );
-    }
     const entity = await this.membershipService.cancelMembershipRequest(
       id,
       organizationUnitId,

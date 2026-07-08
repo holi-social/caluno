@@ -106,10 +106,12 @@ export class ShiftRepository extends BaseRepository {
   async updateMembers(
     instanceId: string,
     memberIds: string[],
+    options?: { inviteToAllInstances?: boolean },
   ): Promise<{ id: string }> {
     const data = await this.sdk.UpdateShiftInstanceVolunteers({
       instanceId,
       memberIds,
+      inviteToAllInstances: options?.inviteToAllInstances,
     });
     return { id: data.updateMembersForShiftInstance.id };
   }

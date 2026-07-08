@@ -362,7 +362,7 @@ export function VolunteerForm({
         toast.error(result.serverError);
       } else if (result?.data) {
         if (!isMember) {
-          router.push('/my-membership-requests');
+          router.push('/profile#memberships');
         } else {
           setSubmitted(true);
         }
