@@ -133,6 +133,7 @@
     "home": "Home",
     "organizations": "Organizations",
     "overview": "Overview",
+    "events": "Events",
     "shifts": "Shifts",
     "timesheets": "Timesheets",
     "volunteers": "Volunteers",
@@ -983,6 +984,37 @@
       "title": "No hours yet",
       "description": "Once you check in to a shift, your volunteering hours will appear here.",
       "cta": "Find a shift"
+    }
+  },
+  "Event": {
+    "list": {
+      "title": "Events",
+      "subtitle": "Manage your organization's events",
+      "createButton": "Create event"
+    },
+    "table": {
+      "event": "Event",
+      "dates": "Dates",
+      "location": "Location",
+      "shifts": "Shifts"
+    },
+    "action": {
+      "viewAria": "View event",
+      "editAria": "Edit event",
+      "inviteAria": "Invite members",
+      "shareAria": "Copy invite link",
+      "deleteAria": "Delete event"
+    },
+    "empty": {
+      "title": "No events yet",
+      "description": "Get started by creating your first event."
+    },
+    "toast": {
+      "linkCopied": "Invite link copied to clipboard"
+    },
+    "error": {
+      "title": "Failed to load events",
+      "tryAgain": "Try again"
     }
   }
 }

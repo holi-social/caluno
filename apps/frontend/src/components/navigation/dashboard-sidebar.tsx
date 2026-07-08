@@ -24,6 +24,7 @@ import {
   ScanQrCode,
   SettingsIcon,
   ShieldIcon,
+  TicketIcon,
   UsersIcon,
 } from 'lucide-react';
 import { useParams } from 'next/navigation';
@@ -57,6 +58,11 @@ export function DashboardSidebar({ permissions }: DashboardSidebarProps) {
         titleKey: 'overview',
         href: `/admin/${orgUId}`,
         icon: BuildingIcon,
+      },
+      {
+        titleKey: 'events',
+        href: `/admin/${orgUId}/events`,
+        icon: TicketIcon,
       },
       {
         titleKey: 'shifts',
