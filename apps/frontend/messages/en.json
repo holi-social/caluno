@@ -1027,7 +1027,135 @@
       }
     },
     "reimbursements": {
-      "title": "Reimbursements"
+      "title": "Reimbursements",
+      "subtitle": "Create, sign, and bundle payout documents.",
+      "periodLabel": "Period",
+      "periodPicker": {
+        "thisMonth": "This month",
+        "lastMonth": "Last month",
+        "customPeriod": "Custom period",
+        "apply": "Apply"
+      },
+      "filters": {
+        "docTypeLabel": "Document type",
+        "docTypeAll": "All documents",
+        "docTypeContracts": "Contracts only",
+        "docTypeTimesheets": "Timesheets only",
+        "pauschaletypeLabel": "Allowance type"
+      },
+      "tableHead": {
+        "volunteer": "Volunteer",
+        "status": "Status",
+        "hours": "Hrs.",
+        "lastAction": "Last action",
+        "amount": "Amount",
+        "action": "Action"
+      },
+      "orgLimits": {
+        "trigger": "Limits by org unit",
+        "heading": "Annual budget by org unit",
+        "used": "Used",
+        "cap": "Budget"
+      },
+      "tiles": {
+        "all": "All process stages",
+        "docCount": "{count} Documents",
+        "contractGenerate": "Create contracts",
+        "contractSigning": "Sign contracts",
+        "timesheetGenerate": "Create timesheets",
+        "timesheetSigning": "Sign timesheets",
+        "readyToGo": "Ready to go"
+      },
+      "toolbar": {
+        "typeAll": "All",
+        "typeEP": "Ehrenamt",
+        "typeUL": "Übungsleiter",
+        "searchPlaceholder": "Search volunteers …"
+      },
+      "empty": {
+        "allDone": "All done",
+        "allDoneHint": "No open documents in this period.",
+        "filtered": "No entries in this category."
+      },
+      "bundle": {
+        "actionLabel": "Download bundle",
+        "readyCount": "{count} ready"
+      },
+      "batchBar": {
+        "selected": "{count} selected",
+        "createAll": "Create all",
+        "countersignAll": "Sign all",
+        "remindAll": "Remind all",
+        "bundleAll": "Download all bundles",
+        "mixed": "Mixed selection",
+        "clearSelection": "Clear"
+      },
+      "docs": {
+        "docCount": "{count} documents",
+        "kindLabel": {
+          "contract": "Contract",
+          "timesheet": "Timesheet"
+        },
+        "sheet": {
+          "period": "Period",
+          "pipelineLabel": "Process steps",
+          "pipeline": {
+            "generate": "Create",
+            "sign": "Sign",
+            "volSign": "Volunteer",
+            "coordSign": "Coordinator",
+            "superSign": "Supervisor",
+            "active": "Active",
+            "ready": "Ready",
+            "roleAdmin": "NGO Admin"
+          },
+          "limitSection": "Annual budget",
+          "invoicesPaidOut": "Paid out",
+          "invoicesPending": "Pending payment",
+          "timelineSection": "Timeline",
+          "timelineEmpty": "No activity yet",
+          "timelineCreated": "Created",
+          "timelineSigned": "Signed",
+          "timelineCountersigned": "Countersigned",
+          "timelineActivated": "Activated",
+          "noAction": "No action required",
+          "pdfView": "View PDF",
+          "pdfDownload": "Download",
+          "timesheetHours": {
+            "title": "Working hours",
+            "paidShifts": "Paid shifts",
+            "shifts": "{count} shifts",
+            "grossAmount": "Gross amount",
+            "rateTooltip": "Default hourly rate for this allowance type. Shifts can use a different rate.",
+            "viewBtn": "View timesheets"
+          }
+        },
+        "statusLabel": {
+          "contractGenerate": "Create contract",
+          "contractSigningVol": "Waiting for signature",
+          "contractSigningCoord": "Countersignature required",
+          "contractActive": "Active contract",
+          "timesheetGenerate": "Create timesheet",
+          "timesheetSigningVol": "Waiting for signature",
+          "timesheetSigningSuper": "Supervisor signature",
+          "timesheetReady": "Ready to go",
+          "nonCompliant": "No active contract",
+          "nonCompliantHint": "Timesheet submitted without an active contract — create or activate a contract first",
+          "notYetCreated": "Not yet created"
+        },
+        "lastActionLabel": {
+          "created": "Created",
+          "sent": "Sent",
+          "signed": "Signed",
+          "activated": "Activated",
+          "approved": "Approved"
+        },
+        "actions": {
+          "create": "Create",
+          "remind": "Remind",
+          "countersign": "Sign"
+        }
+      }
     },
     "templates": {
       "title": "Templates",
