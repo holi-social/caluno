@@ -9,7 +9,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@repo/ui';
-import { AlertCircle, CalendarCheck, Clock, Lock } from 'lucide-react';
+import { AlertCircle, CalendarCheck, Clock, LockKeyhole } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { Link } from '@/i18n/navigation';
 import { useFormatting } from '@/lib/formatting/use-formatting';
@@ -38,7 +38,7 @@ export const ShiftSelectItem = ({ shift }: ShiftOptionProps) => {
           <CalendarCheck className="size-4 text-primary" />
         ) : (
           shift.master.visibility === ShiftVisibility.InvitedMembers && (
-            <Lock className="size-4 text-muted" />
+            <LockKeyhole className="size-4 text-muted-foreground" />
           )
         )}
       </dt>
