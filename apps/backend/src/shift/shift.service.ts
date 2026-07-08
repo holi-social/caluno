@@ -16,6 +16,7 @@ import type { PaginationInput } from '../graphql/pagination.input';
 import { MembershipService } from '../membership/membership.service';
 import type { MembershipRequestEntity } from '../membership/schemas/membership-request.schema';
 import { NotificationService } from '../notification/notification.service';
+import { buildShiftInviteSchedule } from '../notification/shift-invite-schedule';
 import type { RequirementProfileEntity } from '../requirement-profile/schemas/requirement-profile.schema';
 import { JoinStatus } from '../shared/enums/join-status.enum';
 import { UserService } from '../user/user.service';
@@ -253,7 +254,7 @@ export class ShiftService {
       );
     }
 
-    return this.db.transaction(async (tx) => {
+    const shift = await this.db.transaction(async (tx) => {
       const [shift] = await tx
         .insert(schema.shifts)
         .values({
@@ -304,6 +305,12 @@ export class ShiftService {
 
       return shift;
     });
+
+    if (invitedMemberIds?.length) {
+      void this.emitShiftInvitedNotification(shift, invitedMemberIds);
+    }
+
+    return shift;
   }
 
   private readonly MAX_INVITES_PER_OPERATION = 100000; // same as below easy guard to avoid not reasnable operations
@@ -387,6 +394,11 @@ export class ShiftService {
 
     if (!maxVolunteers) {
       await this.createInvitesForInstances(this.db, [instanceId], newMemberIds);
+      void this.emitShiftInstanceInvitedNotification(
+        shift,
+        newMemberIds,
+        instance,
+      );
       return instance;
     }
 
@@ -409,6 +421,12 @@ export class ShiftService {
 
       await this.createInvitesForInstances(tx, [instanceId], newMemberIds);
     });
+
+    void this.emitShiftInstanceInvitedNotification(
+      shift,
+      newMemberIds,
+      instance,
+    );
 
     return instance;
   }
@@ -441,7 +459,13 @@ export class ShiftService {
     instanceId: string,
     memberIds: string[],
     organizationUnitId: string,
+    options: { inviteToAllInstances?: boolean } = {},
   ): Promise<ShiftInstanceEntity> {
+    const instance = await this.findInstanceById(
+      instanceId,
+      organizationUnitId,
+    );
+
     const currentVolunteers = await this.db
       .selectDistinct({ userId: schema.shiftInstanceInvites.userId })
       .from(schema.shiftInstanceInvites)
@@ -457,6 +481,26 @@ export class ShiftService {
 
     const toAdd = memberIds.filter((id) => !currentIds.has(id));
     const toRemove = [...currentIds].filter((id) => !newIds.has(id));
+
+    if (options.inviteToAllInstances) {
+      if (toRemove.length > 0) {
+        await this.uninviteMembersFromShiftInstance(
+          instanceId,
+          toRemove,
+          organizationUnitId,
+        );
+      }
+
+      if (memberIds.length > 0) {
+        await this.inviteMembersToShiftWithAutoApproval(
+          instance.masterId,
+          memberIds,
+          organizationUnitId,
+        );
+      }
+
+      return this.findInstanceById(instanceId, organizationUnitId);
+    }
 
     if (toAdd.length > 0) {
       await this.inviteMembersToShiftInstanceWithAutoApproval(
@@ -487,6 +531,28 @@ export class ShiftService {
     if (memberIds.length === 0) {
       return shift;
     }
+
+    const newMemberIds = await this.addMembersToAllShiftInstances(
+      shift,
+      memberIds,
+    );
+    void this.emitShiftInvitedNotification(shift, newMemberIds);
+
+    return shift;
+  }
+
+  private async addMembersToAllShiftInstances(
+    shift: ShiftEntity,
+    memberIds: string[],
+  ): Promise<string[]> {
+    if (memberIds.length === 0) {
+      return [];
+    }
+
+    const newMemberIds = await this.filterMembersNotFullyInvitedToShift(
+      shift.id,
+      memberIds,
+    );
 
     await this.db.transaction(async (tx) => {
       const instances = await tx.query.shiftInstances.findMany({
@@ -591,7 +657,57 @@ export class ShiftService {
       await this.createInvitesForInstances(tx, instanceIds, memberIds);
     });
 
-    return shift;
+    return newMemberIds;
+  }
+
+  private async filterMembersNotFullyInvitedToShift(
+    shiftId: string,
+    memberIds: string[],
+  ): Promise<string[]> {
+    if (memberIds.length === 0) {
+      return [];
+    }
+
+    const instances = await this.db.query.shiftInstances.findMany({
+      where: {
+        masterId: shiftId,
+        isCancelled: false,
+      },
+      columns: { id: true },
+    });
+    const instanceIds = instances.map((instance) => instance.id);
+
+    if (instanceIds.length === 0) {
+      return memberIds;
+    }
+
+    const existingInvites = await this.db
+      .select({
+        userId: schema.shiftInstanceInvites.userId,
+        instanceId: schema.shiftInstanceInvites.instanceId,
+      })
+      .from(schema.shiftInstanceInvites)
+      .where(
+        and(
+          inArray(schema.shiftInstanceInvites.instanceId, instanceIds),
+          inArray(schema.shiftInstanceInvites.userId, memberIds),
+          eq(schema.shiftInstanceInvites.status, ShiftInviteStatus.ACCEPTED),
+        ),
+      );
+
+    const invitedInstancesByUser = new Map<string, Set<string>>();
+
+    for (const invite of existingInvites) {
+      const invitedInstances =
+        invitedInstancesByUser.get(invite.userId) ?? new Set<string>();
+      invitedInstances.add(invite.instanceId);
+      invitedInstancesByUser.set(invite.userId, invitedInstances);
+    }
+
+    return memberIds.filter(
+      (memberId) =>
+        (invitedInstancesByUser.get(memberId)?.size ?? 0) < instanceIds.length,
+    );
   }
 
   async findVolunteers(
@@ -985,6 +1101,120 @@ export class ShiftService {
     return this.userService.findByIdOrThrow(createdById);
   }
 
+  private emitShiftInstanceInvitedNotification(
+    shift: ShiftEntity,
+    invitedUserIds: string[],
+    instance: ShiftInstanceEntity,
+  ): void {
+    if (invitedUserIds.length === 0) {
+      return;
+    }
+
+    void this.loadAndEmitShiftInstanceInvitedNotification(
+      shift,
+      invitedUserIds,
+      instance,
+    );
+  }
+
+  private emitShiftInvitedNotification(
+    shift: ShiftEntity,
+    invitedUserIds: string[],
+  ): void {
+    if (invitedUserIds.length === 0) {
+      return;
+    }
+
+    void this.loadAndEmitShiftInvitedNotification(shift, invitedUserIds);
+  }
+
+  private async loadAndEmitShiftInstanceInvitedNotification(
+    shift: ShiftEntity,
+    invitedUserIds: string[],
+    instance: ShiftInstanceEntity,
+  ): Promise<void> {
+    try {
+      const organizationUnit = await this.db.query.organizationUnits.findFirst({
+        where: { id: shift.organizationUnitId },
+        columns: { id: true, name: true },
+      });
+
+      if (!organizationUnit) {
+        return;
+      }
+
+      this.notificationService.notifyShiftInstanceInvited({
+        organizationUnitId: organizationUnit.id,
+        organizationUnitName: organizationUnit.name,
+        shiftId: shift.id,
+        shiftTitle: shift.title,
+        shiftLocation: shift.location,
+        shiftInstructions:
+          instance.overrideInstructions ?? shift.instructions ?? null,
+        recipientUserIds: invitedUserIds,
+        startsAt: instance.actualStartsAt,
+        endsAt: instance.actualEndsAt,
+        instanceId: instance.id,
+      });
+    } catch (error) {
+      this.logger.error(
+        `Failed to emit shift instance invited notification: ${error instanceof Error ? error.message : String(error)}`,
+      );
+    }
+  }
+
+  private async loadAndEmitShiftInvitedNotification(
+    shift: ShiftEntity,
+    invitedUserIds: string[],
+  ): Promise<void> {
+    try {
+      const [organizationUnit, instances] = await Promise.all([
+        this.db.query.organizationUnits.findFirst({
+          where: { id: shift.organizationUnitId },
+          columns: { id: true, name: true },
+        }),
+        this.db.query.shiftInstances.findMany({
+          where: {
+            masterId: shift.id,
+            isCancelled: false,
+          },
+          orderBy: { actualStartsAt: 'asc' },
+          columns: {
+            actualStartsAt: true,
+            actualEndsAt: true,
+          },
+        }),
+      ]);
+
+      if (!organizationUnit) {
+        return;
+      }
+
+      const schedule = buildShiftInviteSchedule(
+        shift,
+        instances.map((instance) => ({
+          startsAt: instance.actualStartsAt,
+          endsAt: instance.actualEndsAt,
+        })),
+      );
+
+      this.notificationService.notifyShiftInvited({
+        organizationUnitId: organizationUnit.id,
+        organizationUnitName: organizationUnit.name,
+        shiftId: shift.id,
+        shiftTitle: shift.title,
+        shiftLocation: shift.location,
+        shiftInstructions: shift.instructions ?? null,
+        recipientUserIds: invitedUserIds,
+        schedule,
+      });
+    } catch (error) {
+      this.logger.error(
+        `Failed to emit shift invited notification: ${error instanceof Error ? error.message : String(error)}`,
+      );
+    }
+  }
+
   private async notifyShiftInstanceJoined(
     userId: string,
     shift: ShiftEntity,
@@ -1124,11 +1354,7 @@ export class ShiftService {
       );
     }
 
-    await this.inviteMembersToShiftWithAutoApproval(
-      shift.id,
-      [userId],
-      shift.organizationUnitId,
-    );
+    await this.addMembersToAllShiftInstances(shift, [userId]);
 
     return shift;
   }

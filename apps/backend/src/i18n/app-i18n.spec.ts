@@ -56,4 +56,15 @@ describe('formatLocaleDateTime', () => {
     expect(formatted).toMatch(/01[./]07[./]2026/);
     expect(formatted).toMatch(/12:00/);
   });
+
+  it('uses German regional date order for English copy', () => {
+    const formatted = formatLocaleDateTime(
+      new Date('2026-07-06T10:00:00.000Z'),
+      'en',
+    );
+
+    expect(formatted).toMatch(/06[./]07[./]2026/);
+    expect(formatted).not.toMatch(/^07[./]06/);
+    expect(formatted).toMatch(/12:00/);
+  });
 });
