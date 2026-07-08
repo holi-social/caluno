@@ -5,8 +5,10 @@ import { Test, type TestingModule } from '@nestjs/testing';
 import { AuthService } from '../src/auth/auth.service';
 import { type Database, DatabaseModule } from '../src/database/database.module';
 import { DATABASE_CONNECTION } from '../src/database/database-connection';
+import * as schema from '../src/database/schema';
 import { MembershipService } from '../src/membership/membership.service';
 import { NotificationService } from '../src/notification/notification.service';
+import { ShiftInviteStatus } from '../src/shift/enums';
 import { ShiftService } from '../src/shift/shift.service';
 import { UserService } from '../src/user/user.service';
 import { createShift, createShiftInstance, createUser } from './factories';
@@ -146,6 +148,96 @@ describe('ShiftService', () => {
       expect(exception?.actualEndsAt.toISOString()).toBe(
         exceptionInstance.actualEndsAt.toISOString(),
       );
+    });
+  });
+
+  describe('findActiveShifts', () => {
+    const activeWindow = () => {
+      const now = Date.now();
+      return {
+        startsAt: new Date(now + 10 * 60 * 1000),
+        endsAt: new Date(now + 30 * 60 * 1000),
+      };
+    };
+
+    it('Shift instance is accepted, when the user has an ACCEPTED invite to it', async () => {
+      const { startsAt, endsAt } = activeWindow();
+      const shiftId = await createNoneRecurringShift(startsAt, endsAt);
+      const [instance] = await db.query.shiftInstances.findMany({
+        where: { masterId: shiftId },
+      });
+
+      await db.insert(schema.shiftInstanceInvites).values({
+        instanceId: instance.id,
+        userId,
+        status: ShiftInviteStatus.ACCEPTED,
+      });
+
+      const result = await shiftService.findActiveShifts(
+        organizationUnitId,
+        userId,
+      );
+      const active = result.find((row) => row.id === instance.id);
+
+      expect(active).toBeDefined();
+      expect(active?.accepted).toBe(true);
+    });
+
+    it('Shift instance is not accepted, when the user has not been invited', async () => {
+      const { startsAt, endsAt } = activeWindow();
+      const shiftId = await createNoneRecurringShift(startsAt, endsAt);
+      const [instance] = await db.query.shiftInstances.findMany({
+        where: { masterId: shiftId },
+      });
+
+      const result = await shiftService.findActiveShifts(
+        organizationUnitId,
+        userId,
+      );
+      const active = result.find((row) => row.id === instance.id);
+
+      expect(active).toBeDefined();
+      expect(active?.accepted).toBe(false);
+    });
+
+    it('Shift instance is not accepted, when the user has an invite but has not accepted it', async () => {
+      const pending = activeWindow();
+      const pendingShiftId = await createNoneRecurringShift(
+        pending.startsAt,
+        pending.endsAt,
+      );
+      const [pendingInstance] = await db.query.shiftInstances.findMany({
+        where: { masterId: pendingShiftId },
+      });
+      await db.insert(schema.shiftInstanceInvites).values({
+        instanceId: pendingInstance.id,
+        userId,
+        status: ShiftInviteStatus.PENDING,
+      });
+
+      const rejected = activeWindow();
+      const rejectedShiftId = await createNoneRecurringShift(
+        rejected.startsAt,
+        rejected.endsAt,
+      );
+      const [rejectedInstance] = await db.query.shiftInstances.findMany({
+        where: { masterId: rejectedShiftId },
+      });
+      await db.insert(schema.shiftInstanceInvites).values({
+        instanceId: rejectedInstance.id,
+        userId,
+        status: ShiftInviteStatus.REJECTED,
+      });
+
+      const result = await shiftService.findActiveShifts(
+        organizationUnitId,
+        userId,
+      );
+      const pendingRow = result.find((row) => row.id === pendingInstance.id);
+      const rejectedRow = result.find((row) => row.id === rejectedInstance.id);
+
+      expect(pendingRow?.accepted).toBe(false);
+      expect(rejectedRow?.accepted).toBe(false);
     });
   });
 });

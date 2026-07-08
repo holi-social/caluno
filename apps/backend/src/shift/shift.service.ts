@@ -883,57 +883,33 @@ export class ShiftService {
 
   async findActiveShifts(
     organizationUnitId: string,
-    pagination: PaginationInput,
-  ): Promise<{
-    instances: ShiftInstanceEntity[];
-    total: number;
-  }> {
+    userId: string,
+  ): Promise<(ShiftInstanceEntity & { accepted: boolean })[]> {
     const now = new Date();
     const oneHourAgo = new Date(now.getTime() - 60 * 60 * 1000);
     const oneHourFromNow = new Date(now.getTime() + 60 * 60 * 1000);
-
-    const shifts = await this.db.query.shifts.findMany({
-      where: {
-        organizationUnitId,
-        isDeleted: false,
-      },
-      columns: { id: true },
-    });
-    const shiftIds = shifts.map((s) => s.id);
-
-    if (shiftIds.length === 0) {
-      return { instances: [], total: 0 };
-    }
 
     const instances = await this.db.query.shiftInstances.findMany({
       where: {
         actualStartsAt: { lt: oneHourFromNow },
         actualEndsAt: { gt: oneHourAgo },
         isCancelled: false,
-        masterId: { in: shiftIds },
+        master: { organizationUnitId, isDeleted: false },
       },
       with: {
         master: true,
+        invites: {
+          where: { userId, status: ShiftInviteStatus.ACCEPTED },
+          columns: { id: true },
+        },
       },
       orderBy: { actualStartsAt: 'asc' },
-      limit: pagination.limit,
-      offset: pagination.offset,
     });
 
-    const totalResult = await this.db.query.shiftInstances.findMany({
-      where: {
-        actualStartsAt: { gte: oneHourAgo, lte: oneHourFromNow },
-        isCancelled: false,
-        masterId: { in: shiftIds },
-      },
-      columns: {},
-      extras: { total: count() },
-    });
-
-    return {
-      instances,
-      total: totalResult[0]?.total ?? 0,
-    };
+    return instances.map(({ invites, ...instance }) => ({
+      ...instance,
+      accepted: invites.length > 0,
+    }));
   }
 
   async findInstances(
