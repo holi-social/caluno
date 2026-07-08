@@ -113,3 +113,5 @@ export const applyBunAuthMocks = (registerModuleMock: RegisterModuleMock) => {
 export const setAuthMockUserId = (userId: string) => {
   mockedUserId = userId;
 };
+
+export const getAuthMockUserId = (): string => mockedUserId;
