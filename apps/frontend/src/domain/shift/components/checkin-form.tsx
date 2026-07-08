@@ -10,7 +10,7 @@ import { toast } from 'sonner';
 import type { CheckInStatus } from '@/app/[locale]/admin/[orgUId]/check-in/[checkInId]/check-in/page';
 import { createTimeEntry } from '@/domain/time-entry/actions';
 import { useRouter } from '@/i18n/navigation';
-import { ShiftSelectorCard } from './shift-selector-card';
+import { ShiftSelector } from './shift-selector';
 
 type CheckinFormProps = {
   organizationUnitId: string;
@@ -71,7 +71,7 @@ export const CheckinForm = ({
         </div>
       )}
 
-      <ShiftSelectorCard
+      <ShiftSelector
         shifts={shifts}
         organizationUnitId={organizationUnitId}
         onChange={setSelectedShiftId}

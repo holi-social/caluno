@@ -9,24 +9,48 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@repo/ui';
-import { AlertCircle } from 'lucide-react';
+import { AlertCircle, Clock } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { Link } from '@/i18n/navigation';
-import { MiniShiftCard } from './mini-shift-card';
+import { useFormatting } from '@/lib/formatting/use-formatting';
 
-type ShiftSelectorCardProps = {
+type ShiftSelectorProps = {
   organizationUnitId: string;
   shifts: ActiveShift[];
   onChange: (shiftId: string) => void;
   value?: string;
 };
 
-export const ShiftSelectorCard = ({
+type ShiftOptionProps = {
+  title: string;
+  actualStartsAt: string;
+  actualEndsAt: string;
+};
+
+const ShiftOption = ({
+  title,
+  actualStartsAt,
+  actualEndsAt,
+}: ShiftOptionProps) => {
+  const { formatTimeRange } = useFormatting();
+
+  return (
+    <div className="p-1">
+      <dt className="truncate font-bold text-left">{title}</dt>
+      <dl className="text-xs truncate flex items-center gap-1">
+        <Clock className="size-3 shrink-0" />{' '}
+        {formatTimeRange(actualStartsAt, actualEndsAt)}
+      </dl>
+    </div>
+  );
+};
+
+export const ShiftSelector = ({
   shifts,
   organizationUnitId,
   onChange,
   value,
-}: ShiftSelectorCardProps) => {
+}: ShiftSelectorProps) => {
   const t = useTranslations('Shift');
 
   if (shifts.length === 0) {
@@ -63,7 +87,7 @@ export const ShiftSelectorCard = ({
       <SelectTrigger className="w-full h-16!">
         <SelectValue placeholder={t('selector.chooseShift')}>
           {selectedShift && (
-            <MiniShiftCard
+            <ShiftOption
               title={selectedShift.master.title}
               actualStartsAt={selectedShift.actualStartsAt}
               actualEndsAt={selectedShift.actualEndsAt}
@@ -74,7 +98,7 @@ export const ShiftSelectorCard = ({
       <SelectContent>
         {shifts.map((shift) => (
           <SelectItem key={shift.id} value={shift.id}>
-            <MiniShiftCard
+            <ShiftOption
               title={shift.master.title}
               actualStartsAt={shift.actualStartsAt}
               actualEndsAt={shift.actualEndsAt}
