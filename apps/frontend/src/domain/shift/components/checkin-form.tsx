@@ -81,16 +81,18 @@ export const CheckinForm = ({
 
       <UserCard user={volunteer} size="lg" />
 
-      <Button
-        size="lg"
-        className="w-full mt-2"
-        disabled={!canCheckin || isPending}
-        onClick={handleCheckin}
-        type="button"
-      >
-        <PlaneTakeoff />{' '}
-        {isPending ? t('checkIn.checkingIn') : t('checkIn.checkIn')}
-      </Button>
+      <div className="mt-2 fixed bottom-0 left-4 right-4 z-50 pb-[calc(1rem+env(safe-area-inset-bottom))] md:static md:w-full">
+        <Button
+          size="lg"
+          disabled={!canCheckin || isPending}
+          onClick={handleCheckin}
+          className="w-full"
+          type="button"
+        >
+          <PlaneTakeoff />{' '}
+          {isPending ? t('checkIn.checkingIn') : t('checkIn.checkIn')}
+        </Button>
+      </div>
     </div>
   );
 };
