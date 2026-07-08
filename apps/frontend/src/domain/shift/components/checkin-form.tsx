@@ -71,6 +71,13 @@ export const CheckinForm = ({
         </div>
       )}
 
+      <ShiftSelectorCard
+        shifts={shifts}
+        organizationUnitId={organizationUnitId}
+        onChange={setSelectedShiftId}
+        value={selectedShiftId}
+      />
+
       <Card className="p-4 gap-2">
         <CardHeader className="px-0">
           <CardTitle>
@@ -91,31 +98,16 @@ export const CheckinForm = ({
           )}
         </CardContent>
       </Card>
-      <div className="grid grid-cols-2 gap-4">
-        <Card className="gap-2">
-          <CardHeader>
-            <CardTitle>{t('checkIn.requirements')}</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex gap-2">
-              <CheckCircle2 className="text-green-500" /> {t('checkIn.allMet')}
-            </div>
-          </CardContent>
-        </Card>
-        <Card className="gap-2">
-          <CardHeader>
-            <CardTitle>{t('checkIn.shift')}</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ShiftSelectorCard
-              shifts={shifts}
-              organizationUnitId={organizationUnitId}
-              onChange={setSelectedShiftId}
-              value={selectedShiftId}
-            />
-          </CardContent>
-        </Card>
-      </div>
+      <Card className="gap-2">
+        <CardHeader>
+          <CardTitle>{t('checkIn.requirements')}</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex gap-2">
+            <CheckCircle2 className="text-green-500" /> {t('checkIn.allMet')}
+          </div>
+        </CardContent>
+      </Card>
 
       <Button
         size="lg"
@@ -124,7 +116,8 @@ export const CheckinForm = ({
         onClick={handleCheckin}
         type="button"
       >
-        <PlaneTakeoff /> {isPending ? t('checkIn.checkingIn') : t('checkIn.checkIn')}
+        <PlaneTakeoff />{' '}
+        {isPending ? t('checkIn.checkingIn') : t('checkIn.checkIn')}
       </Button>
     </div>
   );

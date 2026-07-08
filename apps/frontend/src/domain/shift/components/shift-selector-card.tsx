@@ -1,5 +1,3 @@
-'use client';
-
 import type { ActiveShift } from '@repo/data';
 import {
   Alert,
@@ -57,47 +55,33 @@ export const ShiftSelectorCard = ({
     );
   }
 
-  if (shifts.length === 1) {
-    const shift = shifts[0];
-    return (
-      shift && (
-        <MiniShiftCard
-          title={shift.master.title}
-          actualStartsAt={shift.actualStartsAt}
-          actualEndsAt={shift.actualEndsAt}
-        />
-      )
-    );
-  }
-
-  const selectedShift = shifts.find((s) => s.id === value);
+  const selectedShift =
+    shifts.length === 1 ? shifts[0] : shifts.find((s) => s.id === value);
 
   return (
-    <div className="space-y-4">
-      <Select value="" onValueChange={onChange}>
-        <SelectTrigger>
-          <SelectValue placeholder={t('selector.chooseShift')} />
-        </SelectTrigger>
-        <SelectContent>
-          {shifts.map((shift) => (
-            <SelectItem key={shift.id} value={shift.id}>
-              <MiniShiftCard
-                title={shift.master.title}
-                actualStartsAt={shift.actualStartsAt}
-                actualEndsAt={shift.actualEndsAt}
-              />
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-
-      {selectedShift && (
-        <MiniShiftCard
-          title={selectedShift.master.title}
-          actualStartsAt={selectedShift.actualStartsAt}
-          actualEndsAt={selectedShift.actualEndsAt}
-        />
-      )}
-    </div>
+    <Select value={value} onValueChange={onChange}>
+      <SelectTrigger className="w-full h-16!">
+        <SelectValue placeholder={t('selector.chooseShift')}>
+          {selectedShift && (
+            <MiniShiftCard
+              title={selectedShift.master.title}
+              actualStartsAt={selectedShift.actualStartsAt}
+              actualEndsAt={selectedShift.actualEndsAt}
+            />
+          )}
+        </SelectValue>
+      </SelectTrigger>
+      <SelectContent>
+        {shifts.map((shift) => (
+          <SelectItem key={shift.id} value={shift.id}>
+            <MiniShiftCard
+              title={shift.master.title}
+              actualStartsAt={shift.actualStartsAt}
+              actualEndsAt={shift.actualEndsAt}
+            />
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
   );
 };
