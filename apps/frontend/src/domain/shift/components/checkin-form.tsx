@@ -10,6 +10,7 @@ import { toast } from 'sonner';
 import type { CheckInStatus } from '@/app/[locale]/admin/[orgUId]/check-in/[checkInId]/check-in/page';
 import { createTimeEntry } from '@/domain/time-entry/actions';
 import { useRouter } from '@/i18n/navigation';
+import { UserCard } from '../../../components/user-card';
 import { ShiftSelector } from './shift-selector';
 
 type CheckinFormProps = {
@@ -78,26 +79,8 @@ export const CheckinForm = ({
         value={selectedShiftId}
       />
 
-      <Card className="p-4 gap-2">
-        <CardHeader className="px-0">
-          <CardTitle>
-            {volunteer.name}{' '}
-            <span className="font-light">({volunteer.email})</span>
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="px-0">
-          {volunteer.image ? (
-            <Image
-              src={volunteer.image}
-              alt={t('checkIn.volunteerProfilePhoto')}
-            />
-          ) : (
-            <div className="border-8 rounded-2xl inline-block">
-              <UserIcon className="size-72 max-w-full text-accent/90" />
-            </div>
-          )}
-        </CardContent>
-      </Card>
+      <UserCard user={volunteer} size="lg" />
+
       <Card className="gap-2">
         <CardHeader>
           <CardTitle>{t('checkIn.requirements')}</CardTitle>
