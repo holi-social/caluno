@@ -398,35 +398,33 @@ describe('ShiftService.findShiftsForWeek', () => {
     );
 
     await graphqlRequestRequiringData<{
-      updateMembersForShift: { id: string };
+      updateMembersForShiftInstance: { id: string };
     }>(
       app,
       {
         query: `
-          mutation UpdateMembersForShift(
-            $shiftId: String!
-            $shiftInstanceId: String!
+          mutation UpdateMembersForShiftInstance(
+            $instanceId: String!
             $memberIds: [String!]!
           ) {
-            updateMembersForShift(
-              shiftId: $shiftId
-              shiftInstanceId: $shiftInstanceId
+            updateMembersForShiftInstance(
+              instanceId: $instanceId
               memberIds: $memberIds
+              inviteToAllInstances: true
             ) {
               id
             }
           }
         `,
         variables: {
-          shiftId,
-          shiftInstanceId: futureInstance.id,
+          instanceId: futureInstance.id,
           memberIds: [],
         },
         headers: {
           'x-organization-unit-id': organizationUnitId,
         },
       },
-      'updateMembersForShift',
+      'updateMembersForShiftInstance',
     );
 
     const instanceInvites = await db.query.shiftInstanceInvites.findMany({
@@ -704,11 +702,11 @@ describe('ShiftService.findShiftsForWeek', () => {
       .where(eq(schema.shifts.id, shiftId));
 
     const response = await graphqlRequest<{
-      inviteMembersToShiftInstance: { id: string };
+      updateMembersForShiftInstance: { id: string };
     }>(app, {
       query: `
-        mutation InviteMembersToShiftInstance($instanceId: String!, $memberIds: [String!]!) {
-          inviteMembersToShiftInstance(instanceId: $instanceId, memberIds: $memberIds) {
+        mutation updateMembersForShiftInstance($instanceId: String!, $memberIds: [String!]!) {
+          updateMembersForShiftInstance(instanceId: $instanceId, memberIds: $memberIds) {
             id
           }
         }
@@ -723,6 +721,8 @@ describe('ShiftService.findShiftsForWeek', () => {
     });
 
     expect(response.errors).toBeDefined();
-    expect(response.errors?.[0]?.message).toMatch(/Shift with ID .* not found/);
+    expect(response.errors?.[0]?.message).toMatch(
+      /Shift instance with ID .* not found/,
+    );
   });
 });

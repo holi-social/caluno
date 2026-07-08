@@ -129,6 +129,7 @@ const updateShiftVolunteersSchema = z.object({
   instanceId: z.string().min(1),
   organizationUnitId: z.string().min(1),
   memberIds: z.array(z.string()),
+  inviteToAllInstances: z.boolean().optional(),
 });
 
 export const updateShiftVolunteers = actionClient
@@ -140,6 +141,9 @@ export const updateShiftVolunteers = actionClient
     return await data.shift.updateMembers(
       parsedInput.instanceId,
       parsedInput.memberIds,
+      {
+        inviteToAllInstances: parsedInput.inviteToAllInstances,
+      },
     );
   });
 
@@ -160,44 +164,4 @@ export const updateShiftStaffing = actionClient
       minVolunteers: parsedInput.minVolunteers ?? undefined,
       maxVolunteers: parsedInput.maxVolunteers ?? undefined,
     });
-  });
-
-const updateMembersForShiftSchema = z.object({
-  shiftId: z.string().min(1),
-  shiftInstanceId: z.string().min(1),
-  organizationUnitId: z.string().min(1),
-  memberIds: z.array(z.string()),
-});
-
-export const updateMembersForShift = actionClient
-  .inputSchema(updateMembersForShiftSchema)
-  .action(async ({ parsedInput }) => {
-    const data = await getDataClient({
-      orgUId: parsedInput.organizationUnitId,
-    });
-    return await data.shift.updateMembersForShift(
-      parsedInput.shiftId,
-      parsedInput.shiftInstanceId,
-      parsedInput.memberIds,
-    );
-  });
-
-const inviteMembersToShiftSchema = z.object({
-  shiftId: z.string().min(1),
-  organizationUnitId: z.string().min(1),
-  memberIds: z.array(z.string()),
-  fromDate: z.coerce.date().optional(),
-});
-
-export const inviteMembersToShift = actionClient
-  .inputSchema(inviteMembersToShiftSchema)
-  .action(async ({ parsedInput }) => {
-    const data = await getDataClient({
-      orgUId: parsedInput.organizationUnitId,
-    });
-    return await data.shift.inviteMembersToShift(
-      parsedInput.shiftId,
-      parsedInput.memberIds,
-      parsedInput.fromDate,
-    );
   });

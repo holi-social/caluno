@@ -15,5 +15,5 @@ export async function resolvePostAuthDestination(): Promise<string> {
     return `/admin/${lastOrgUId}`;
   }
 
-  return '/organizations';
+  return '/';
 }

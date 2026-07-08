@@ -16,6 +16,7 @@ import type { PaginationInput } from '../graphql/pagination.input';
 import { MembershipService } from '../membership/membership.service';
 import type { MembershipRequestEntity } from '../membership/schemas/membership-request.schema';
 import { NotificationService } from '../notification/notification.service';
+import { buildShiftInviteSchedule } from '../notification/shift-invite-schedule';
 import type { RequirementProfileEntity } from '../requirement-profile/schemas/requirement-profile.schema';
 import { JoinStatus } from '../shared/enums/join-status.enum';
 import { UserService } from '../user/user.service';
@@ -253,7 +254,7 @@ export class ShiftService {
       );
     }
 
-    return this.db.transaction(async (tx) => {
+    const shift = await this.db.transaction(async (tx) => {
       const [shift] = await tx
         .insert(schema.shifts)
         .values({
@@ -304,6 +305,12 @@ export class ShiftService {
 
       return shift;
     });
+
+    if (invitedMemberIds?.length) {
+      void this.emitShiftInvitedNotification(shift, invitedMemberIds);
+    }
+
+    return shift;
   }
 
   private readonly MAX_INVITES_PER_OPERATION = 100000; // same as below easy guard to avoid unreasonable operations
@@ -362,277 +369,50 @@ export class ShiftService {
   }
 
   async inviteMembersToShiftInstanceWithAutoApproval(
-    instanceId: string,
+    shiftInstance,
     memberIds: string[],
-    organizationUnitId: string,
-  ): Promise<ShiftInstanceEntity> {
-    const instance = await this.findInstanceById(
-      instanceId,
-      organizationUnitId,
-    );
-    const shift = await this.findOrgUnitsShift(
-      instance.masterId,
-      organizationUnitId,
-    );
-
-    if (instance.isCancelled) {
-      throw new NotFoundGraphQLError(
-        `Shift instance with ID ${instanceId} not found`,
-      );
-    }
-
+  ): Promise<void> {
     if (memberIds.length === 0) {
-      return instance;
+      return;
     }
+    const maxVolunteers =
+      shiftInstance.overrideMaxVolunteers ?? shiftInstance.master.maxVolunteers;
 
-    const existingInvites = await this.db
-      .selectDistinct({ userId: schema.shiftInstanceInvites.userId })
-      .from(schema.shiftInstanceInvites)
-      .where(
-        and(
-          eq(schema.shiftInstanceInvites.instanceId, instanceId),
-          inArray(schema.shiftInstanceInvites.userId, memberIds),
-          eq(schema.shiftInstanceInvites.status, ShiftInviteStatus.ACCEPTED),
-        ),
+    if (
+      maxVolunteers &&
+      shiftInstance.invites.length + memberIds.length > maxVolunteers
+    ) {
+      throw new ConflictGraphQLError(
+        `Cannot invite members: instance would exceed capacity of ${maxVolunteers}`,
       );
-
-    const alreadyInvited = new Set(existingInvites.map((i) => i.userId));
-    const newMemberIds = memberIds.filter((id) => !alreadyInvited.has(id));
-
-    if (newMemberIds.length === 0) {
-      return instance;
     }
 
-    const maxVolunteers = instance.overrideMaxVolunteers ?? shift.maxVolunteers;
-
-    if (!maxVolunteers) {
-      await this.createInvitesForInstances(this.db, [instanceId], newMemberIds);
-      return instance;
-    }
-
-    await this.db.transaction(async (tx) => {
-      const [capacity] = await tx
-        .select({ current: count() })
-        .from(schema.shiftInstanceInvites)
-        .where(
-          and(
-            eq(schema.shiftInstanceInvites.status, ShiftInviteStatus.ACCEPTED),
-            eq(schema.shiftInstanceInvites.instanceId, instanceId),
-          ),
-        );
-
-      if ((capacity?.current ?? 0) + newMemberIds.length > maxVolunteers) {
-        throw new ConflictGraphQLError(
-          `Cannot invite members: instance would exceed capacity of ${maxVolunteers}`,
-        );
-      }
-
-      await this.createInvitesForInstances(tx, [instanceId], newMemberIds);
-    });
-
-    return instance;
+    await this.createInvitesForInstances(
+      this.db,
+      [shiftInstance.id],
+      memberIds,
+    );
+    void this.emitShiftInstanceInvitedNotification(
+      shiftInstance.master,
+      memberIds,
+      shiftInstance,
+    );
   }
 
   async uninviteMembersFromShiftInstance(
     instanceId: string,
-    memberIds: string[],
-    organizationUnitId: string,
-  ): Promise<ShiftInstanceEntity> {
-    const instance = await this.findInstanceById(
-      instanceId,
-      organizationUnitId,
-    );
-
-    if (memberIds.length > 0) {
+    memberToRemoveIds: string[],
+  ): Promise<void> {
+    if (memberToRemoveIds.length > 0) {
       await this.db
         .delete(schema.shiftInstanceInvites)
         .where(
           and(
             eq(schema.shiftInstanceInvites.instanceId, instanceId),
-            inArray(schema.shiftInstanceInvites.userId, memberIds),
+            inArray(schema.shiftInstanceInvites.userId, memberToRemoveIds),
           ),
         );
     }
-
-    return instance;
-  }
-
-  async updateMembersForShiftInstance(
-    instanceId: string,
-    memberIds: string[],
-    organizationUnitId: string,
-  ): Promise<ShiftInstanceEntity> {
-    const currentVolunteers = await this.db
-      .selectDistinct({ userId: schema.shiftInstanceInvites.userId })
-      .from(schema.shiftInstanceInvites)
-      .where(
-        and(
-          eq(schema.shiftInstanceInvites.instanceId, instanceId),
-          eq(schema.shiftInstanceInvites.status, ShiftInviteStatus.ACCEPTED),
-        ),
-      );
-
-    const currentVolunteersUserIds = new Set(
-      currentVolunteers.map((v) => v.userId),
-    );
-    const newIds = new Set(memberIds);
-
-    const toAdd = memberIds.filter((id) => !currentVolunteersUserIds.has(id));
-    const toRemove = [...currentVolunteersUserIds].filter(
-      (id) => !newIds.has(id),
-    );
-
-    if (toAdd.length > 0) {
-      await this.inviteMembersToShiftInstanceWithAutoApproval(
-        instanceId,
-        toAdd,
-        organizationUnitId,
-      );
-    }
-
-    if (toRemove.length > 0) {
-      await this.uninviteMembersFromShiftInstance(
-        instanceId,
-        toRemove,
-        organizationUnitId,
-      );
-    }
-
-    return this.findInstanceById(instanceId, organizationUnitId);
-  }
-
-  async updateMembersForShiftWithAutoApproval(
-    shiftId: string,
-    shiftInstanceId: string,
-    memberIds: string[],
-    organizationUnitId: string,
-  ): Promise<ShiftEntity> {
-    const shift = await this.findOrgUnitsShift(shiftId, organizationUnitId);
-
-    await this.db.transaction(async (tx) => {
-      const currentShiftInstance = await tx.query.shiftInstances.findFirst({
-        where: {
-          id: shiftInstanceId,
-        },
-        columns: {
-          id: true,
-          actualStartsAt: true,
-          overrideMaxVolunteers: true,
-        },
-        with: {
-          invites: {
-            columns: {
-              userId: true,
-            },
-          },
-        },
-      });
-      if (!currentShiftInstance) {
-        throw new ConflictGraphQLError(`Could not find shift instance`);
-      }
-      const currentInstanceInviteUserIds = currentShiftInstance.invites.map(
-        (inv) => inv.userId,
-      );
-
-      const userIdsToAdd = memberIds.filter(
-        (id) => !currentInstanceInviteUserIds.includes(id),
-      );
-      const userIdsToRemove = currentInstanceInviteUserIds.filter(
-        (id) => !memberIds.includes(id),
-      );
-
-      if (userIdsToRemove.length > 0) {
-        await tx
-          .delete(schema.shiftInvites)
-          .where(
-            and(
-              eq(schema.shiftInvites.shiftId, shiftId),
-              inArray(schema.shiftInvites.userId, userIdsToRemove),
-            ),
-          );
-      }
-
-      if (userIdsToAdd.length > 0) {
-        await this.createInvitesForShift(tx, shiftId, userIdsToAdd);
-      }
-
-      // update shift instance invites
-
-      const fromDate = currentShiftInstance.actualStartsAt;
-      const futureShiftInstances = await tx.query.shiftInstances.findMany({
-        where: {
-          masterId: shift.id,
-          isCancelled: false,
-          ...(fromDate ? { actualStartsAt: { gte: fromDate } } : {}),
-        },
-        columns: {
-          id: true,
-        },
-      });
-
-      if (futureShiftInstances.length === 0) {
-        return;
-      }
-
-      const futureShiftInstanceIds = futureShiftInstances.map(
-        (instance) => instance.id,
-      );
-
-      await tx
-        .delete(schema.shiftInstanceInvites)
-        .where(
-          and(
-            inArray(
-              schema.shiftInstanceInvites.instanceId,
-              futureShiftInstanceIds,
-            ),
-            inArray(schema.shiftInstanceInvites.userId, userIdsToRemove),
-          ),
-        );
-
-      const futureShiftInstancesWithInvites =
-        await tx.query.shiftInstances.findMany({
-          where: {
-            masterId: shift.id,
-            isCancelled: false,
-            ...(fromDate ? { actualStartsAt: { gte: fromDate } } : {}),
-          },
-          columns: {
-            id: true,
-            overrideMaxVolunteers: true,
-          },
-          with: {
-            invites: {
-              columns: {
-                userId: true,
-              },
-            },
-          },
-        });
-
-      const toAddByInstance = new Map<string, string[]>();
-      for (const instance of futureShiftInstancesWithInvites) {
-        const capacity = instance.overrideMaxVolunteers ?? shift.maxVolunteers;
-        const membersToAdd = userIdsToAdd.filter(
-          (id) => !instance.invites.includes({ userId: id }),
-        );
-        if (
-          capacity &&
-          membersToAdd.length + instance.invites.length > capacity
-        ) {
-          throw new ConflictGraphQLError(
-            `Cannot invite members: instance would exceed capacity of ${capacity}`,
-          );
-        }
-        toAddByInstance.set(instance.id, membersToAdd);
-      }
-
-      for (const [instanceId, userIds] of toAddByInstance) {
-        await this.createInvitesForInstances(tx, [instanceId], userIds);
-      }
-    });
-
-    return shift;
   }
 
   async inviteMembersToShiftWithAutoApproval(
@@ -641,119 +421,196 @@ export class ShiftService {
     organizationUnitId: string,
     fromDate?: Date,
   ): Promise<ShiftEntity> {
-    const shift = await this.findOrgUnitsShift(shiftId, organizationUnitId);
-
-    if (memberIds.length === 0) {
-      return shift;
+    const shift = await this.db.query.shifts.findFirst({
+      where: { id: shiftId, isDeleted: false },
+    });
+    if (!shift) {
+      throw new NotFoundGraphQLError(`Shift with ID ${shiftId} not found`);
+    }
+    const firstShiftInstance = await this.db.query.shiftInstances.findFirst({
+      where: {
+        masterId: shiftId,
+        ...(fromDate ? { actualStartsAt: { gte: fromDate } } : {}),
+      },
+      orderBy: { actualStartsAt: 'asc' },
+    });
+    if (firstShiftInstance) {
+      await this.updateMembersForShiftWithAutoApproval(
+        firstShiftInstance.id,
+        memberIds,
+        shift.organizationUnitId,
+        { inviteToAllInstances: true },
+      );
     }
 
-    await this.db.transaction(async (tx) => {
-      const instances = await tx.query.shiftInstances.findMany({
-        where: {
-          masterId: shift.id,
-          isCancelled: false,
-          ...(fromDate ? { actualStartsAt: { gte: fromDate } } : {}),
-        },
-        columns: {
-          id: true,
-          overrideMaxVolunteers: true,
-        },
-      });
+    return shift;
+  }
 
-      if (instances.length === 0) {
-        await this.createInvitesForShift(tx, shift.id, memberIds);
-        return;
-      }
-
-      const instanceIds = instances.map((instance) => instance.id);
-      const capacityLimitedInstances = instances.filter(
-        (instance) => instance.overrideMaxVolunteers ?? shift.maxVolunteers,
+  async updateMembersForShiftWithAutoApproval(
+    shiftInstanceId: string,
+    memberIds: string[],
+    organizationUnitId: string,
+    options: { inviteToAllInstances?: boolean } = {},
+  ): Promise<ShiftInstanceEntity> {
+    const currentShiftInstance = await this.db.query.shiftInstances.findFirst({
+      where: {
+        id: shiftInstanceId,
+        master: {
+          organizationUnitId: organizationUnitId,
+          isDeleted: false,
+        },
+        isCancelled: false,
+      },
+      with: {
+        invites: {
+          columns: {
+            userId: true,
+          },
+        },
+        master: true,
+      },
+    });
+    if (!currentShiftInstance) {
+      throw new NotFoundGraphQLError(
+        `Shift instance with ID ${shiftInstanceId} not found`,
       );
+    }
 
-      if (capacityLimitedInstances.length > 0) {
-        const capacityLimitedInstanceIds = capacityLimitedInstances.map(
+    const currentInstanceInviteUserIds = currentShiftInstance.invites.map(
+      (inv) => inv.userId,
+    );
+    const { userIdsToAdd, userIdsToRemove } = this.getUserIdDifferences(
+      currentInstanceInviteUserIds,
+      memberIds,
+    );
+
+    await this.db.transaction(async (tx) => {
+      if (!options.inviteToAllInstances) {
+        if (userIdsToAdd.length > 0) {
+          await this.inviteMembersToShiftInstanceWithAutoApproval(
+            currentShiftInstance,
+            userIdsToAdd,
+          );
+        }
+        if (userIdsToRemove.length > 0) {
+          await this.uninviteMembersFromShiftInstance(
+            shiftInstanceId,
+            userIdsToRemove,
+          );
+        }
+      } else {
+        const shift = currentShiftInstance.master;
+        if (!shift) {
+          // this never happens because of a foreign key and NOT NULL constraint in the DB
+          throw new NotFoundGraphQLError(
+            `Shift instance with ID ${shiftInstanceId} has no shift master attached`,
+          );
+        }
+
+        if (userIdsToRemove.length > 0) {
+          await tx
+            .delete(schema.shiftInvites)
+            .where(
+              and(
+                eq(schema.shiftInvites.shiftId, shift.id),
+                inArray(schema.shiftInvites.userId, userIdsToRemove),
+              ),
+            );
+        }
+
+        if (userIdsToAdd.length > 0) {
+          await this.createInvitesForShift(tx, shift.id, userIdsToAdd);
+        }
+
+        // update shift instance invites
+
+        const fromDate = currentShiftInstance.actualStartsAt;
+        const futureShiftInstances = await tx.query.shiftInstances.findMany({
+          where: {
+            masterId: shift.id,
+            isCancelled: false,
+            ...(fromDate ? { actualStartsAt: { gte: fromDate } } : {}),
+          },
+          columns: {
+            id: true,
+          },
+        });
+
+        if (futureShiftInstances.length === 0) {
+          return;
+        }
+
+        const futureShiftInstanceIds = futureShiftInstances.map(
           (instance) => instance.id,
         );
-        const [capacities, acceptedRequestedInvites] = await Promise.all([
-          tx
-            .select({
-              instanceId: schema.shiftInstanceInvites.instanceId,
-              current: count(),
-            })
-            .from(schema.shiftInstanceInvites)
-            .where(
-              and(
-                inArray(
-                  schema.shiftInstanceInvites.instanceId,
-                  capacityLimitedInstanceIds,
-                ),
-                eq(
-                  schema.shiftInstanceInvites.status,
-                  ShiftInviteStatus.ACCEPTED,
-                ),
+
+        await tx
+          .delete(schema.shiftInstanceInvites)
+          .where(
+            and(
+              inArray(
+                schema.shiftInstanceInvites.instanceId,
+                futureShiftInstanceIds,
               ),
-            )
-            .groupBy(schema.shiftInstanceInvites.instanceId),
-          tx
-            .select({
-              instanceId: schema.shiftInstanceInvites.instanceId,
-              userId: schema.shiftInstanceInvites.userId,
-            })
-            .from(schema.shiftInstanceInvites)
-            .where(
-              and(
-                inArray(
-                  schema.shiftInstanceInvites.instanceId,
-                  capacityLimitedInstanceIds,
-                ),
-                inArray(schema.shiftInstanceInvites.userId, memberIds),
-                eq(
-                  schema.shiftInstanceInvites.status,
-                  ShiftInviteStatus.ACCEPTED,
-                ),
-              ),
+              inArray(schema.shiftInstanceInvites.userId, userIdsToRemove),
             ),
-        ]);
+          );
 
-        const capacityByInstanceId = new Map(
-          capacities.map((capacity) => [capacity.instanceId, capacity.current]),
-        );
-        const acceptedRequestedByInstanceId = new Map<string, Set<string>>();
+        const futureShiftInstancesWithInvites =
+          await tx.query.shiftInstances.findMany({
+            where: {
+              masterId: shift.id,
+              isCancelled: false,
+              ...(fromDate ? { actualStartsAt: { gte: fromDate } } : {}),
+            },
+            columns: {
+              id: true,
+              overrideMaxVolunteers: true,
+            },
+            with: {
+              invites: {
+                columns: {
+                  userId: true,
+                },
+              },
+            },
+          });
 
-        for (const invite of acceptedRequestedInvites) {
-          const accepted =
-            acceptedRequestedByInstanceId.get(invite.instanceId) ?? new Set();
-          accepted.add(invite.userId);
-          acceptedRequestedByInstanceId.set(invite.instanceId, accepted);
-        }
-
-        for (const instance of capacityLimitedInstances) {
-          const maxVolunteers =
+        const toAddByInstance = new Map<string, string[]>();
+        for (const instance of futureShiftInstancesWithInvites) {
+          const capacity =
             instance.overrideMaxVolunteers ?? shift.maxVolunteers;
-          if (!maxVolunteers) continue;
-
-          const alreadyAccepted =
-            acceptedRequestedByInstanceId.get(instance.id) ?? new Set();
-          const newInviteCount = memberIds.filter(
-            (memberId) => !alreadyAccepted.has(memberId),
-          ).length;
-
+          const membersToAdd = userIdsToAdd.filter(
+            (id) => !instance.invites.includes({ userId: id }),
+          );
           if (
-            (capacityByInstanceId.get(instance.id) ?? 0) + newInviteCount >
-            maxVolunteers
+            capacity &&
+            membersToAdd.length + instance.invites.length > capacity
           ) {
             throw new ConflictGraphQLError(
-              `Cannot invite members: instance would exceed capacity of ${maxVolunteers}`,
+              `Cannot invite members: instance would exceed capacity of ${capacity}`,
             );
           }
+          toAddByInstance.set(instance.id, membersToAdd);
+        }
+
+        for (const [instanceId, userIds] of toAddByInstance) {
+          await this.createInvitesForInstances(tx, [instanceId], userIds);
         }
       }
-
-      await this.createInvitesForShift(tx, shift.id, memberIds);
-      await this.createInvitesForInstances(tx, instanceIds, memberIds);
     });
 
-    return shift;
+    return currentShiftInstance;
+  }
+
+  private getUserIdDifferences(currentUserIds: string[], newUserIds: string[]) {
+    const userIdsToAdd = newUserIds.filter(
+      (id) => !currentUserIds.includes(id),
+    );
+    const userIdsToRemove = currentUserIds.filter(
+      (id) => !newUserIds.includes(id),
+    );
+    return { userIdsToAdd, userIdsToRemove };
   }
 
   async findVolunteers(
@@ -770,30 +627,6 @@ export class ShiftService {
         shiftInstanceInvites: {
           instanceId: instance.id,
           status: ShiftInviteStatus.ACCEPTED,
-        },
-      },
-    });
-  }
-
-  async findShiftVolunteers(
-    shiftId: string,
-    organizationUnitId: string,
-  ): Promise<UserEntity[]> {
-    const shift = await this.db.query.shifts.findFirst({
-      where: { id: shiftId, organizationUnitId },
-    });
-    if (!shift) {
-      throw new NotFoundGraphQLError('Shift not found');
-    }
-
-    return this.db.query.users.findMany({
-      where: {
-        shiftInstanceInvites: {
-          status: ShiftInviteStatus.ACCEPTED,
-          instance: {
-            masterId: shiftId,
-            isCancelled: false,
-          },
         },
       },
     });
@@ -1147,6 +980,120 @@ export class ShiftService {
     return this.userService.findByIdOrThrow(createdById);
   }
 
+  private emitShiftInstanceInvitedNotification(
+    shift: ShiftEntity,
+    invitedUserIds: string[],
+    instance: ShiftInstanceEntity,
+  ): void {
+    if (invitedUserIds.length === 0) {
+      return;
+    }
+
+    void this.loadAndEmitShiftInstanceInvitedNotification(
+      shift,
+      invitedUserIds,
+      instance,
+    );
+  }
+
+  private emitShiftInvitedNotification(
+    shift: ShiftEntity,
+    invitedUserIds: string[],
+  ): void {
+    if (invitedUserIds.length === 0) {
+      return;
+    }
+
+    void this.loadAndEmitShiftInvitedNotification(shift, invitedUserIds);
+  }
+
+  private async loadAndEmitShiftInstanceInvitedNotification(
+    shift: ShiftEntity,
+    invitedUserIds: string[],
+    instance: ShiftInstanceEntity,
+  ): Promise<void> {
+    try {
+      const organizationUnit = await this.db.query.organizationUnits.findFirst({
+        where: { id: shift.organizationUnitId },
+        columns: { id: true, name: true },
+      });
+
+      if (!organizationUnit) {
+        return;
+      }
+
+      this.notificationService.notifyShiftInstanceInvited({
+        organizationUnitId: organizationUnit.id,
+        organizationUnitName: organizationUnit.name,
+        shiftId: shift.id,
+        shiftTitle: shift.title,
+        shiftLocation: shift.location,
+        shiftInstructions:
+          instance.overrideInstructions ?? shift.instructions ?? null,
+        recipientUserIds: invitedUserIds,
+        startsAt: instance.actualStartsAt,
+        endsAt: instance.actualEndsAt,
+        instanceId: instance.id,
+      });
+    } catch (error) {
+      this.logger.error(
+        `Failed to emit shift instance invited notification: ${error instanceof Error ? error.message : String(error)}`,
+      );
+    }
+  }
+
+  private async loadAndEmitShiftInvitedNotification(
+    shift: ShiftEntity,
+    invitedUserIds: string[],
+  ): Promise<void> {
+    try {
+      const [organizationUnit, instances] = await Promise.all([
+        this.db.query.organizationUnits.findFirst({
+          where: { id: shift.organizationUnitId },
+          columns: { id: true, name: true },
+        }),
+        this.db.query.shiftInstances.findMany({
+          where: {
+            masterId: shift.id,
+            isCancelled: false,
+          },
+          orderBy: { actualStartsAt: 'asc' },
+          columns: {
+            actualStartsAt: true,
+            actualEndsAt: true,
+          },
+        }),
+      ]);
+
+      if (!organizationUnit) {
+        return;
+      }
+
+      const schedule = buildShiftInviteSchedule(
+        shift,
+        instances.map((instance) => ({
+          startsAt: instance.actualStartsAt,
+          endsAt: instance.actualEndsAt,
+        })),
+      );
+
+      this.notificationService.notifyShiftInvited({
+        organizationUnitId: organizationUnit.id,
+        organizationUnitName: organizationUnit.name,
+        shiftId: shift.id,
+        shiftTitle: shift.title,
+        shiftLocation: shift.location,
+        shiftInstructions: shift.instructions ?? null,
+        recipientUserIds: invitedUserIds,
+        schedule,
+      });
+    } catch (error) {
+      this.logger.error(
+        `Failed to emit shift invited notification: ${error instanceof Error ? error.message : String(error)}`,
+      );
+    }
+  }
+
   private async notifyShiftInstanceJoined(
     userId: string,
     shift: ShiftEntity,
@@ -1286,11 +1233,18 @@ export class ShiftService {
       );
     }
 
-    await this.inviteMembersToShiftWithAutoApproval(
-      shift.id,
-      [userId],
-      shift.organizationUnitId,
-    );
+    const firstShiftInstance = await this.db.query.shiftInstances.findFirst({
+      where: { masterId: shiftId },
+      orderBy: { actualStartsAt: 'asc' },
+    });
+    if (firstShiftInstance) {
+      await this.updateMembersForShiftWithAutoApproval(
+        firstShiftInstance.id,
+        [userId],
+        shift.organizationUnitId,
+        { inviteToAllInstances: true },
+      );
+    }
 
     return shift;
   }

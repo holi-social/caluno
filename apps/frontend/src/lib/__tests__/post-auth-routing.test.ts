@@ -28,10 +28,10 @@ describe('resolvePostAuthDestination', () => {
     expect(await resolvePostAuthDestination()).toBe('/');
   });
 
-  it('returns /organizations when orgs exist but no last visited cookie is set', async () => {
+  it('returns / when orgs exist but no last visited cookie is set', async () => {
     accessibleOrgs.push(orgUnit);
 
-    expect(await resolvePostAuthDestination()).toBe('/organizations');
+    expect(await resolvePostAuthDestination()).toBe('/');
   });
 
   it('returns /admin/{id} when last visited cookie matches an accessible org unit', async () => {
@@ -41,10 +41,10 @@ describe('resolvePostAuthDestination', () => {
     expect(await resolvePostAuthDestination()).toBe('/admin/org-unit-1');
   });
 
-  it('returns /organizations when last visited cookie does not match an accessible org unit', async () => {
+  it('returns / when last visited cookie does not match an accessible org unit', async () => {
     accessibleOrgs.push(orgUnit);
     lastVisitedOrgId = 'other-org-unit';
 
-    expect(await resolvePostAuthDestination()).toBe('/organizations');
+    expect(await resolvePostAuthDestination()).toBe('/');
   });
 });

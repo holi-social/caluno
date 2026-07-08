@@ -31,7 +31,7 @@ export function RequestRejected({ orgName }: RequestRejectedProps) {
             <Link href="/">{t('invite.rejected.homeButton')}</Link>
           </Button>
           <Button asChild variant="outline">
-            <Link href="/my-membership-requests">
+            <Link href="/profile#memberships">
               {t('invite.rejected.requestsButton')}
             </Link>
           </Button>

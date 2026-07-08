@@ -27,11 +27,7 @@ import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 import { useSession } from '@/lib/auth';
 import { copyToClipboard } from '@/lib/clipboard';
-import {
-  updateMembersForShift,
-  updateShiftStaffing,
-  updateShiftVolunteers,
-} from '../actions';
+import { updateShiftStaffing, updateShiftVolunteers } from '../actions';
 import { type InviteShiftFormValues, inviteShiftFormSchema } from '../schemas';
 import { shiftShareUrl } from '../share';
 import { TransferList } from './transfer-list';
@@ -149,18 +145,12 @@ export function InviteShiftForm({
         return;
       }
 
-      const updateResult = data.inviteAllInstances
-        ? await updateMembersForShift({
-            shiftId,
-            shiftInstanceId: instanceId,
-            organizationUnitId: orgUId,
-            memberIds: data.invitedMemberIds,
-          })
-        : await updateShiftVolunteers({
-            instanceId,
-            organizationUnitId: orgUId,
-            memberIds: data.invitedMemberIds,
-          });
+      const updateResult = await updateShiftVolunteers({
+        instanceId,
+        organizationUnitId: orgUId,
+        memberIds: data.invitedMemberIds,
+        inviteToAllInstances: data.inviteAllInstances,
+      });
       if (updateResult?.serverError) {
         toast.error(updateResult.serverError);
         return;

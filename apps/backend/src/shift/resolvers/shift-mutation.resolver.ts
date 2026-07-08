@@ -57,50 +57,21 @@ export class ShiftMutationResolver {
 
   @Permissions(PERMISSIONS.SHIFT_EDIT)
   @Mutation(() => ShiftInstance)
-  async inviteMembersToShiftInstance(
-    @Args('instanceId', { type: () => String }) instanceId: string,
-    @Args('memberIds', { type: () => [String] }) memberIds: string[],
-    @Context() context: AuthenticatedGraphQLContext,
-  ): Promise<ShiftInstance> {
-    const instance =
-      await this.shiftService.inviteMembersToShiftInstanceWithAutoApproval(
-        instanceId,
-        memberIds,
-        context.organizationUnitId,
-      );
-    return this.shiftInstanceMapper.toModelOrThrow(instance);
-  }
-
-  @Permissions(PERMISSIONS.SHIFT_EDIT)
-  @Mutation(() => ShiftInstance)
   async updateMembersForShiftInstance(
     @Args('instanceId', { type: () => String }) instanceId: string,
     @Args('memberIds', { type: () => [String] }) memberIds: string[],
+    @Args('inviteToAllInstances', { type: () => Boolean, nullable: true })
+    inviteToAllInstances: boolean | undefined,
     @Context() context: AuthenticatedGraphQLContext,
   ): Promise<ShiftInstance> {
-    const instance = await this.shiftService.updateMembersForShiftInstance(
-      instanceId,
-      memberIds,
-      context.organizationUnitId,
-    );
+    const instance =
+      await this.shiftService.updateMembersForShiftWithAutoApproval(
+        instanceId,
+        memberIds,
+        context.organizationUnitId,
+        { inviteToAllInstances },
+      );
     return this.shiftInstanceMapper.toModelOrThrow(instance);
-  }
-
-  @Permissions(PERMISSIONS.SHIFT_EDIT)
-  @Mutation(() => Shift)
-  async updateMembersForShift(
-    @Args('shiftId', { type: () => String }) shiftId: string,
-    @Args('shiftInstanceId', { type: () => String }) shiftInstanceId: string,
-    @Args('memberIds', { type: () => [String] }) memberIds: string[],
-    @Context() context: AuthenticatedGraphQLContext,
-  ): Promise<Shift> {
-    const shift = await this.shiftService.updateMembersForShiftWithAutoApproval(
-      shiftId,
-      shiftInstanceId,
-      memberIds,
-      context.organizationUnitId,
-    );
-    return this.shiftMapper.toModelOrThrow(shift);
   }
 
   @Permissions(PERMISSIONS.SHIFT_EDIT)

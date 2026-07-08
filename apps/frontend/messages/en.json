@@ -132,8 +132,8 @@
   "Navigation": {
     "home": "Home",
     "organizations": "Organizations",
-    "myMembershipRequests": "My Membership Requests",
     "overview": "Overview",
+    "events": "Events",
     "shifts": "Shifts",
     "timesheets": "Timesheets",
     "volunteers": "Volunteers",
@@ -145,7 +145,6 @@
     "roles": "Roles",
     "orgUnits": "Org Units",
     "selectOrganization": "Select organization",
-    "editProfile": "Edit profile",
     "admin": "Admin",
     "qrIdTitle": "QR iD",
     "qrIdDescription": "This is your personal QR code to check in to shifts",
@@ -209,10 +208,6 @@
         "description": "Set up a new organization to start managing your volunteers and shifts.",
         "cta": "Get started"
       }
-    },
-    "list": {
-      "title": "Your Organizations",
-      "subtitle": "Select an organization to continue"
     },
     "create": {
       "title": "Create an organization",
@@ -360,7 +355,7 @@
   },
   "MembershipRequest": {
     "page": {
-      "title": "My Membership Requests",
+      "title": "Memberships",
       "subtitle": "Your requests to join organizations"
     },
     "status": {
@@ -989,6 +984,37 @@
       "title": "No hours yet",
       "description": "Once you check in to a shift, your volunteering hours will appear here.",
       "cta": "Find a shift"
+    }
+  },
+  "Event": {
+    "list": {
+      "title": "Events",
+      "subtitle": "Manage your organization's events",
+      "createButton": "Create event"
+    },
+    "table": {
+      "event": "Event",
+      "dates": "Dates",
+      "location": "Location",
+      "shifts": "Shifts"
+    },
+    "action": {
+      "viewAria": "View event",
+      "editAria": "Edit event",
+      "inviteAria": "Invite members",
+      "shareAria": "Copy invite link",
+      "deleteAria": "Delete event"
+    },
+    "empty": {
+      "title": "No events yet",
+      "description": "Get started by creating your first event."
+    },
+    "toast": {
+      "linkCopied": "Invite link copied to clipboard"
+    },
+    "error": {
+      "title": "Failed to load events",
+      "tryAgain": "Try again"
     }
   }
 }

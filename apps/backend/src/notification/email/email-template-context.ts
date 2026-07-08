@@ -1,7 +1,12 @@
 import type { Locale } from '../../graphql/locale';
 import type { AppI18nService } from '../../i18n/app-i18n.service';
 import type { EmailTemplateContext } from '../../i18n/email-translate';
-import { formatLocaleDateTime } from '../../i18n/format-date-time';
+import {
+  formatLocaleDate,
+  formatLocaleDateTime,
+  formatLocaleList,
+  formatLocaleTime,
+} from '../../i18n/format-date-time';
 
 const EMAIL_NAMESPACE = 'email';
 
@@ -14,5 +19,8 @@ export function createEmailTemplateContext(
   return {
     t,
     formatDateTime: (date) => formatLocaleDateTime(date, locale),
+    formatDate: (date) => formatLocaleDate(date, locale),
+    formatTime: (date) => formatLocaleTime(date, locale),
+    formatList: (items) => formatLocaleList(items, locale),
   };
 }
