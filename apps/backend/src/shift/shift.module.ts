@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { AuthModule } from '../auth/auth.module';
 import { DatabaseModule } from '../database/database.module';
 import { EventModule } from '../event/event.module';
@@ -23,7 +23,7 @@ import { ShiftService } from './shift.service';
     UserModule,
     MembershipModule,
     NotificationModule,
-    EventModule,
+    forwardRef(() => EventModule),
   ],
   providers: [
     ShiftService,
