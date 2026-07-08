@@ -7,17 +7,25 @@ import { Test, type TestingModule } from '@nestjs/testing';
 import type { Locale } from '../graphql/locale';
 import { AppI18nService } from '../i18n/app-i18n.service';
 import type { EmailTemplateContext } from '../i18n/email-translate';
-import { formatLocaleDateTime } from '../i18n/format-date-time';
+import {
+  formatLocaleDate,
+  formatLocaleDateTime,
+  formatLocaleList,
+  formatLocaleTime,
+} from '../i18n/format-date-time';
 import deEmail from '../i18n/locales/de/email.json';
 import enEmail from '../i18n/locales/en/email.json';
 import { UserLocaleService } from '../i18n/user-locale.service';
+import { RecurrenceDay } from '../shift/enums';
 import { UserService } from '../user/user.service';
 import { EmailService } from './email/email.service';
 import { membershipApprovedTemplate } from './email/templates/membership-approved.template';
 import { membershipRequestedTemplate } from './email/templates/membership-requested.template';
 import { organizationCreatedTemplate } from './email/templates/organization-created.template';
 import { passwordResetTemplate } from './email/templates/password-reset.template';
+import { shiftInstanceInvitedTemplate } from './email/templates/shift-instance-invited.template';
 import { shiftInstanceJoinedTemplate } from './email/templates/shift-instance-joined.template';
+import { shiftInvitedTemplate } from './email/templates/shift-invited.template';
 import { MembershipListener } from './listeners/membership.listener';
 import { OrganizationListener } from './listeners/organization.listener';
 import { ShiftListener } from './listeners/shift.listener';
@@ -46,6 +54,9 @@ function createFixtureTranslator(locale: Locale): EmailTemplateContext {
   return {
     t,
     formatDateTime: (date: Date) => formatLocaleDateTime(date, locale),
+    formatDate: (date: Date) => formatLocaleDate(date, locale),
+    formatTime: (date: Date) => formatLocaleTime(date, locale),
+    formatList: (items: string[]) => formatLocaleList(items, locale),
   };
 }
 
@@ -386,6 +397,116 @@ describe('NotificationModule', () => {
       to: 'bob@example.com',
       subject: expectedBob.subject,
       html: expectedBob.html,
+    });
+  });
+
+  it('sends shift instance invited emails to invited volunteers', async () => {
+    const startsAt = new Date('2026-07-10T09:00:00.000Z');
+    const endsAt = new Date('2026-07-10T12:00:00.000Z');
+
+    userService.findById.mockImplementation((id: string) =>
+      Promise.resolve({
+        id,
+        name: id === 'volunteer-1' ? 'Sam Volunteer' : 'Other User',
+        email: id === 'volunteer-1' ? 'sam@example.com' : 'other@example.com',
+      }),
+    );
+
+    const payload = {
+      organizationUnitId: 'unit-root-1',
+      organizationUnitName: 'Acme Volunteers',
+      shiftId: 'shift-1',
+      shiftTitle: 'Morning Kitchen',
+      shiftLocation: 'Main hall',
+      shiftInstructions: 'Bring gloves.\nArrive 10 min early.',
+      recipientUserIds: ['volunteer-1'],
+      startsAt,
+      endsAt,
+      instanceId: 'instance-1',
+    };
+    const expected = await shiftInstanceInvitedTemplate(
+      {
+        organizationUnitName: payload.organizationUnitName,
+        shiftId: payload.shiftId,
+        shiftTitle: payload.shiftTitle,
+        shiftLocation: payload.shiftLocation,
+        shiftInstructions: payload.shiftInstructions,
+        recipientFirstName: 'Sam',
+        startsAt,
+        endsAt,
+        instanceId: payload.instanceId,
+      },
+      createFixtureTranslator('en'),
+    );
+
+    notificationService.notifyShiftInstanceInvited(payload);
+
+    await new Promise((resolve) => setTimeout(resolve, 50));
+
+    expect(userService.findById).toHaveBeenCalledWith('volunteer-1');
+    expect(emailService.send).toHaveBeenCalledWith({
+      to: 'sam@example.com',
+      subject: expected.subject,
+      html: expected.html,
+    });
+    expect(expected.html).toContain('Bring gloves.<br />Arrive 10 min early.');
+  });
+
+  it('sends shift invited emails for all-instance invites', async () => {
+    const firstOccurrenceStartsAt = new Date('2026-07-10T09:00:00.000Z');
+    const firstOccurrenceEndsAt = new Date('2026-07-10T12:00:00.000Z');
+    const secondOccurrenceStartsAt = new Date('2026-07-12T09:00:00.000Z');
+
+    userService.findById.mockImplementation((id: string) =>
+      Promise.resolve({
+        id,
+        name: 'Sam Volunteer',
+        email: 'sam@example.com',
+      }),
+    );
+
+    const schedule = {
+      isRecurring: true,
+      occurrenceCount: 2,
+      recurrenceDays: [RecurrenceDay.MONDAY, RecurrenceDay.WEDNESDAY],
+      recurrenceEndDate: new Date('2026-08-31T00:00:00.000Z'),
+      firstOccurrenceStartsAt,
+      firstOccurrenceEndsAt,
+      lastOccurrenceStartsAt: secondOccurrenceStartsAt,
+    };
+
+    const payload = {
+      organizationUnitId: 'unit-root-1',
+      organizationUnitName: 'Acme Volunteers',
+      shiftId: 'shift-1',
+      shiftTitle: 'Morning Kitchen',
+      shiftLocation: 'Main hall',
+      shiftInstructions: 'Check in at reception.',
+      recipientUserIds: ['volunteer-1'],
+      schedule,
+    };
+    const expected = await shiftInvitedTemplate(
+      {
+        organizationUnitName: payload.organizationUnitName,
+        shiftId: payload.shiftId,
+        shiftTitle: payload.shiftTitle,
+        shiftLocation: payload.shiftLocation,
+        shiftInstructions: payload.shiftInstructions,
+        recipientFirstName: 'Sam',
+        schedule,
+      },
+      createFixtureTranslator('en'),
+    );
+
+    notificationService.notifyShiftInvited(payload);
+
+    await new Promise((resolve) => setTimeout(resolve, 50));
+
+    expect(userService.findById).toHaveBeenCalledWith('volunteer-1');
+    expect(emailService.send).toHaveBeenCalledWith({
+      to: 'sam@example.com',
+      subject: expected.subject,
+      html: expected.html,
     });
   });
 });

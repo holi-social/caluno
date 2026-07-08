@@ -13,6 +13,11 @@ export function escapeHtml(value: string): string {
     .replace(/'/g, '&#39;');
 }
 
+/** Escapes plain text and preserves line breaks for email HTML. */
+export function formatMultilineHtml(value: string): string {
+  return escapeHtml(value).replace(/\n/g, '<br />');
+}
+
 /**
  * Normalizes WEB_URL (falling back to the production default)
  * by stripping any trailing slashes so paths can be appended safely.
@@ -34,4 +39,14 @@ export function volunteersAdminUrl(organizationUnitId: string): string {
 /** Deep link to the shifts admin page for managing schedules. */
 export function shiftsAdminUrl(organizationUnitId: string): string {
   return `${resolveAppUrl()}/admin/${encodeURIComponent(organizationUnitId)}/shifts`;
+}
+
+/** Public deep link to a shift, optionally scoped to a specific instance. */
+export function shiftPublicUrl(shiftId: string, instanceId?: string): string {
+  const path = `/shifts/${encodeURIComponent(shiftId)}`;
+  if (!instanceId) {
+    return `${resolveAppUrl()}${path}`;
+  }
+
+  return `${resolveAppUrl()}${path}?instanceId=${encodeURIComponent(instanceId)}`;
 }
