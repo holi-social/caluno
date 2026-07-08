@@ -2,11 +2,11 @@ import { Card, CardContent } from '@repo/ui';
 import { Calendar, Hand, LogIn } from 'lucide-react';
 import { notFound } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
+import { UserCard } from '@/components/user-card';
 import { CheckOutButton } from '@/domain/shift/components/checkout-button';
 import { getDataClient } from '@/lib/data-client';
 import { getFormatting } from '@/lib/formatting/formatting-server';
 import { requireOrgAccess } from '@/lib/org-context-server';
-import { UserCard } from '../../../../../../../components/user-card';
 
 interface CheckOutPageProps {
   params: Promise<{ orgUId: string; checkInId: string }>;
