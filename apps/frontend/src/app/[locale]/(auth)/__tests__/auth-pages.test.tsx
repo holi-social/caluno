@@ -23,7 +23,7 @@ type AuthPageShellElement = ReactElement<{
 }>;
 
 const cookieValues = new Map<string, string>();
-let postAuthDestination = '/organizations';
+let postAuthDestination = '/';
 let hasSession = false;
 let isAuthenticatedUser = false;
 
@@ -121,7 +121,7 @@ async function expectRedirect(
 describe('auth pages', () => {
   beforeEach(() => {
     cookieValues.clear();
-    postAuthDestination = '/organizations';
+    postAuthDestination = '/';
     hasSession = false;
     isAuthenticatedUser = false;
     redirectCalls.length = 0;

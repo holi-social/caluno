@@ -94,7 +94,6 @@ export const submitForm = actionClient
     const result = await data.requirementForm.submitForm(parsedInput.token, {
       values: parsedInput.values,
     });
-    revalidatePath('/admin/my-membership-requests');
     return result;
   });
 
@@ -288,7 +287,6 @@ export const joinOrganization = actionClient
     const result = await data.membershipRequest.join(
       parsedInput.organizationUnitId,
     );
-    revalidatePath('/admin/my-membership-requests');
     return result;
   });
 
