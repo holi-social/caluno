@@ -596,7 +596,8 @@
           "title": "Check-in verweigert",
           "description": "Der Freiwillige gehört nicht zu dieser Organisationseinheit."
         }
-      }
+      },
+      "successNext": "Weiter"
     },
     "scanner": {
       "title": "Ungültige Check-in-ID",

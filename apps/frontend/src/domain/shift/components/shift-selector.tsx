@@ -25,7 +25,7 @@ type ShiftOptionProps = {
   shift: ActiveShift;
 };
 
-const ShiftOption = ({ shift }: ShiftOptionProps) => {
+export const ShiftSelectItem = ({ shift }: ShiftOptionProps) => {
   const { formatTimeRange } = useFormatting();
 
   return (
@@ -84,13 +84,13 @@ export const ShiftSelector = ({
     <Select value={value} onValueChange={onChange}>
       <SelectTrigger className="w-full h-16! [&>span]:w-full">
         <SelectValue placeholder={t('selector.chooseShift')}>
-          {selectedShift && <ShiftOption shift={selectedShift} />}
+          {selectedShift && <ShiftSelectItem shift={selectedShift} />}
         </SelectValue>
       </SelectTrigger>
       <SelectContent>
         {shifts.map((shift) => (
           <SelectItem key={shift.id} value={shift.id}>
-            <ShiftOption shift={shift} />
+            <ShiftSelectItem shift={shift} />
           </SelectItem>
         ))}
       </SelectContent>

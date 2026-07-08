@@ -596,7 +596,8 @@
           "title": "Check-in denied",
           "description": "The volunteer is not a member of this Organization Unit."
         }
-      }
+      },
+      "successNext": "Next"
     },
     "scanner": {
       "title": "Invalid check-in ID",

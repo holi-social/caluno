@@ -1,5 +1,6 @@
 import { Alert, AlertDescription, AlertTitle } from '@repo/ui';
 import { AlertCircle } from 'lucide-react';
+import { notFound } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
 import { CheckinForm } from '@/domain/shift/components/checkin-form';
 import { getDataClient } from '@/lib/data-client';
@@ -27,7 +28,7 @@ export default async function CheckinPage({ params }: CheckinPageProps) {
   const user = await data.user.findByCheckInId(checkInId);
 
   if (!user) {
-    return;
+    notFound();
   }
 
   const isMember = await data.organizationUnit.isMemberOfOrgUnitOrAncestor(
