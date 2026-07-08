@@ -132,7 +132,6 @@
   "Navigation": {
     "home": "Startseite",
     "organizations": "Organisationen",
-    "myMembershipRequests": "Meine Mitgliedschaftsanfragen",
     "overview": "Übersicht",
     "shifts": "Schichten",
     "timesheets": "Zeiterfassung",
@@ -209,10 +208,6 @@
         "description": "Richte eine neue Organisation ein, um deine Freiwilligen und Schichten zu verwalten.",
         "cta": "Loslegen"
       }
-    },
-    "list": {
-      "title": "Deine Organisationen",
-      "subtitle": "Wähle eine Organisation aus, um fortzufahren"
     },
     "create": {
       "title": "Organisation erstellen",
@@ -360,7 +355,7 @@
   },
   "MembershipRequest": {
     "page": {
-      "title": "Meine Mitgliedschaftsanfragen",
+      "title": "Mitgliedschaften",
       "subtitle": "Deine Anfragen, Organisationen beizutreten"
     },
     "status": {

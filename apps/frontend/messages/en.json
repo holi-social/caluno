@@ -132,7 +132,6 @@
   "Navigation": {
     "home": "Home",
     "organizations": "Organizations",
-    "myMembershipRequests": "My Membership Requests",
     "overview": "Overview",
     "shifts": "Shifts",
     "timesheets": "Timesheets",
@@ -209,10 +208,6 @@
         "description": "Set up a new organization to start managing your volunteers and shifts.",
         "cta": "Get started"
       }
-    },
-    "list": {
-      "title": "Your Organizations",
-      "subtitle": "Select an organization to continue"
     },
     "create": {
       "title": "Create an organization",
@@ -360,7 +355,7 @@
   },
   "MembershipRequest": {
     "page": {
-      "title": "My Membership Requests",
+      "title": "Memberships",
       "subtitle": "Your requests to join organizations"
     },
     "status": {
