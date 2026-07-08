@@ -12,10 +12,11 @@ interface CheckinPageProps {
 //  TODO: what's the true different states
 export type CheckInStatus =
   | 'valid'
+  | 'notMember'
   | 'blocked'
-  | 'information-required'
-  | 'id-check'
-  | 'already-checked-in';
+  | 'informationRequired'
+  | 'idCheckRequired'
+  | 'alreadyCheckedIn';
 
 export default async function CheckinPage({ params }: CheckinPageProps) {
   const { orgUId, checkInId } = await params;
@@ -25,16 +26,19 @@ export default async function CheckinPage({ params }: CheckinPageProps) {
   const data = await getDataClient({ orgUId });
   const user = await data.user.findByCheckInId(checkInId);
 
-  data.organizationUnit.isMemberOfOrgUnitOrAncestor;
-
   if (!user) {
     return;
   }
 
+  const isMember = await data.organizationUnit.isMemberOfOrgUnitOrAncestor(
+    orgUId,
+    user.id,
+  );
+
   const shifts = await data.shift.activeShifts(user.id);
 
-  //  TODO: temporary status checking, until blocking & dossier features land
-  const status: CheckInStatus = 'valid' as CheckInStatus;
+  //  TODO: temporary status checking, until blocking & requirement profile checks land
+  const status: CheckInStatus = isMember ? 'valid' : 'notMember';
 
   return (
     <div className="max-w-2xl">
@@ -43,11 +47,13 @@ export default async function CheckinPage({ params }: CheckinPageProps) {
           <h1 className="page-title">{t('checkInTitle')}</h1>
         </div>
         <div className="lg:px-2 lg:py-8 py-4 space-y-4">
-          {status === 'blocked' && (
+          {status !== 'valid' && (
             <Alert variant="destructive">
               <AlertCircle />
-              <AlertTitle>{t('blockedTitle')}</AlertTitle>
-              <AlertDescription>{t('blockedDescription')}</AlertDescription>
+              <AlertTitle>{t(`invalidCheckin.${status}.title`)}</AlertTitle>
+              <AlertDescription>
+                {t(`invalidCheckin.${status}.description`)}
+              </AlertDescription>
             </Alert>
           )}
 

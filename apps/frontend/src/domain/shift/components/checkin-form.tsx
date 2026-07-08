@@ -1,9 +1,8 @@
 'use client';
 
 import type { ActiveShift, User } from '@repo/data';
-import { Button, Card, CardContent, CardHeader, CardTitle } from '@repo/ui';
-import { CheckCircle2, PlaneTakeoff, UserIcon } from 'lucide-react';
-import Image from 'next/image';
+import { Button } from '@repo/ui';
+import { PlaneTakeoff } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useState, useTransition } from 'react';
 import { toast } from 'sonner';

@@ -582,13 +582,21 @@
       "checkOutTitle": "Auschecken",
       "selectOrgTitle": "Einchecken",
       "selectOrgDescription": "Wähle die Organisation aus, in die der Freiwillige eingecheckt werden soll.",
-      "blockedTitle": "Check-in verweigert",
-      "blockedDescription": "Der Freiwillige darf nicht einchecken. Er muss sich an die Zentrale wenden, um Hilfe zu erhalten.",
       "checkedInAt": "Eingecheckt: {time}",
       "checkingOutAt": "Wird ausgecheckt: {time}",
       "volunteerNotFoundTitle": "Freiwilliger nicht gefunden",
       "volunteerNotFoundDescription": "Es gibt keinen Freiwilligen, der zu dieser QR-ID passt. Die QR-ID wurde möglicherweise neu generiert und ist daher nicht mehr gültig. <tryAgain>Versuche es erneut</tryAgain>, indem du die QR-ID manuell eingibst oder nach der Freiwilligen suchst, um sie einzuchecken.",
-      "tryAgain": "Versuche es erneut"
+      "tryAgain": "Versuche es erneut",
+      "invalidCheckin": {
+        "blocked": {
+          "title": "Check-in verweigert",
+          "description": "Der Freiwillige darf nicht einchecken. Er muss sich an die Zentrale wenden, um Hilfe zu erhalten."
+        },
+        "notMember": {
+          "title": "Check-in verweigert",
+          "description": "Der Freiwillige gehört nicht zu dieser Organisationseinheit."
+        }
+      }
     },
     "scanner": {
       "title": "Ungültige Check-in-ID",
