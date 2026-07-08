@@ -1,5 +1,6 @@
 'use client';
 
+import { Button } from '@repo/ui';
 import { Avatar, AvatarFallback, AvatarImage } from '@repo/ui/base/avatar';
 import { Logo } from '@repo/ui/logo';
 import { cn } from '@repo/ui/utils';
@@ -8,6 +9,7 @@ import { AnimatePresence, motion } from 'motion/react';
 import { useTranslations } from 'next-intl';
 import { useEffect, useState } from 'react';
 import { Link } from '@/i18n/navigation';
+import { ProfileDropdown } from './ProfileDropdown';
 
 export type HomeHeaderVariant = 'open' | 'on-scroll';
 
@@ -113,24 +115,23 @@ function AvatarTrigger({
   );
 
   return (
-    <Link
-      href="/profile"
-      aria-label={t('profile')}
-      className={cn(
-        'flex shrink-0 items-center justify-center rounded-full transition-colors',
-        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60 focus-visible:ring-offset-1',
-        'hover:bg-accent',
-      )}
-    >
-      <motion.span
-        initial={{ width: buttonSize, height: buttonSize }}
-        animate={{ width: buttonSize, height: buttonSize }}
-        transition={{ duration: 0.2 }}
-        className="flex items-center justify-center"
+    <ProfileDropdown>
+      <Button
+        size="icon"
+        variant="ghost"
+        aria-label={t('profile')}
+        className="size-auto"
       >
-        {avatar}
-      </motion.span>
-    </Link>
+        <motion.span
+          initial={{ width: buttonSize, height: buttonSize }}
+          animate={{ width: buttonSize, height: buttonSize }}
+          transition={{ duration: 0.2 }}
+          className="flex items-center justify-center"
+        >
+          {avatar}
+        </motion.span>
+      </Button>
+    </ProfileDropdown>
   );
 }
 
