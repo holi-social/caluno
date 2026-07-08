@@ -63,14 +63,17 @@ function TBtn({ children }: { children: React.ReactNode }) {
 
 function TLabel({ children }: { children: React.ReactNode }) {
   return (
-    <span className="shrink-0 select-none text-[10px] text-zinc-500">{children}</span>
+    <span className="shrink-0 select-none text-[10px] text-zinc-500">
+      {children}
+    </span>
   );
 }
 
-export function TemplateBuilderDesignerMock({ fields }: TemplateBuilderDesignerMockProps) {
+export function TemplateBuilderDesignerMock({
+  fields,
+}: TemplateBuilderDesignerMockProps) {
   return (
     <div className="flex h-full select-none flex-col overflow-hidden rounded-xl border border-zinc-700 bg-zinc-900 text-zinc-300">
-
       {/* ── Top toolbar ── */}
       <div className="flex shrink-0 items-center gap-1 overflow-x-auto border-b border-zinc-700 bg-zinc-800 px-2 py-1.5">
         {/* Lang */}
@@ -101,7 +104,6 @@ export function TemplateBuilderDesignerMock({ fields }: TemplateBuilderDesignerM
 
       {/* ── Body ── */}
       <div className="flex flex-1 overflow-hidden">
-
         {/* Left icon strip */}
         <div className="flex w-9 shrink-0 flex-col items-center gap-0.5 border-r border-zinc-700 bg-zinc-800 py-2">
           {LEFT_TOOLS.map((Icon, i) => (
@@ -141,17 +143,20 @@ export function TemplateBuilderDesignerMock({ fields }: TemplateBuilderDesignerM
             style={{ width: 'min(100%, 480px)', aspectRatio: '1 / 1.414' }}
           >
             <div className="absolute inset-0 p-[6%] text-zinc-800">
-
               {/* Invoice header */}
               <div className="mb-[4%] flex items-start justify-between">
                 <div className="space-y-[2%] text-[9px] text-zinc-500">
                   <div className="flex items-center gap-1">
                     <span className="w-6 font-semibold text-zinc-600">NO.</span>
-                    <span className="border border-zinc-300 px-1.5 py-0.5">123456789</span>
+                    <span className="border border-zinc-300 px-1.5 py-0.5">
+                      123456789
+                    </span>
                   </div>
                   <div className="flex items-center gap-1">
                     <span className="w-6 font-semibold text-zinc-600">DUE</span>
-                    <span className="border border-zinc-300 px-1.5 py-0.5">02/02/2026</span>
+                    <span className="border border-zinc-300 px-1.5 py-0.5">
+                      02/02/2026
+                    </span>
                   </div>
                 </div>
                 <h1 className="text-[22px] font-black tracking-widest text-zinc-800">
@@ -185,7 +190,9 @@ export function TemplateBuilderDesignerMock({ fields }: TemplateBuilderDesignerM
               <table className="mb-[4%] w-full text-[8px]">
                 <thead>
                   <tr className="bg-teal-700 text-white">
-                    <th className="px-2 py-1 text-left font-medium">Description</th>
+                    <th className="px-2 py-1 text-left font-medium">
+                      Description
+                    </th>
                     <th className="px-2 py-1 text-right font-medium">Price</th>
                   </tr>
                 </thead>
@@ -207,15 +214,21 @@ export function TemplateBuilderDesignerMock({ fields }: TemplateBuilderDesignerM
               <div className="ml-auto w-[38%] text-[8px]">
                 <div className="flex justify-between border-b border-zinc-100 py-0.5">
                   <span className="text-zinc-400">Subtotal</span>
-                  <span className="border border-zinc-200 px-2 text-zinc-600">$400</span>
+                  <span className="border border-zinc-200 px-2 text-zinc-600">
+                    $400
+                  </span>
                 </div>
                 <div className="flex justify-between border-b border-zinc-100 py-0.5">
                   <span className="text-zinc-400">Tax (10%)</span>
-                  <span className="border border-zinc-200 px-2 text-zinc-600">$40</span>
+                  <span className="border border-zinc-200 px-2 text-zinc-600">
+                    $40
+                  </span>
                 </div>
                 <div className="flex justify-between py-0.5 font-semibold">
                   <span className="text-zinc-600">TOTAL</span>
-                  <span className="border border-zinc-300 bg-zinc-50 px-2 text-zinc-700">$440</span>
+                  <span className="border border-zinc-300 bg-zinc-50 px-2 text-zinc-700">
+                    $440
+                  </span>
                 </div>
               </div>
 
@@ -225,7 +238,10 @@ export function TemplateBuilderDesignerMock({ fields }: TemplateBuilderDesignerM
                   className="select-none text-center text-[13px] font-bold uppercase tracking-widest text-zinc-400/40"
                   style={{ transform: 'rotate(-30deg)', lineHeight: 1.4 }}
                 >
-                  Mock —<br />pdfme integration<br />not yet wired
+                  Mock —<br />
+                  pdfme integration
+                  <br />
+                  not yet wired
                 </span>
               </div>
 
@@ -234,7 +250,8 @@ export function TemplateBuilderDesignerMock({ fields }: TemplateBuilderDesignerM
                 const pos = FIELD_POSITIONS[i];
                 if (!pos) return null;
                 const isUnbound = field.dataSource === null;
-                const label = field.dataSource?.replace(/_/g, ' ') ?? 'not linked';
+                const label =
+                  field.dataSource?.replace(/_/g, ' ') ?? 'not linked';
                 return (
                   <div
                     key={field.id}
@@ -257,23 +274,30 @@ export function TemplateBuilderDesignerMock({ fields }: TemplateBuilderDesignerM
         {/* Right sidebar — pdfme Field List */}
         <div className="flex w-44 shrink-0 flex-col border-l border-zinc-700 bg-zinc-800">
           <div className="flex shrink-0 items-center justify-between border-b border-zinc-700 px-3 py-2">
-            <span className="text-[10px] font-semibold text-zinc-200">Field List</span>
+            <span className="text-[10px] font-semibold text-zinc-200">
+              Field List
+            </span>
             <span className="text-zinc-500 text-xs">›</span>
           </div>
 
           <div className="flex-1 overflow-y-auto">
             {fields.length === 0 ? (
-              <p className="px-3 py-2 text-[10px] text-zinc-500">No fields placed yet</p>
+              <p className="px-3 py-2 text-[10px] text-zinc-500">
+                No fields placed yet
+              </p>
             ) : (
               fields.map((field) => {
                 const isUnbound = field.dataSource === null;
-                const name = field.dataSource ?? `field_${field.id.slice(0, 4)}`;
+                const name =
+                  field.dataSource ?? `field_${field.id.slice(0, 4)}`;
                 return (
                   <div
                     key={field.id}
                     className="flex cursor-default items-center gap-1.5 px-2 py-[5px] text-[10px] hover:bg-zinc-700"
                   >
-                    <span className="shrink-0 text-[10px] text-zinc-600">⠿</span>
+                    <span className="shrink-0 text-[10px] text-zinc-600">
+                      ⠿
+                    </span>
                     <span className="shrink-0 rounded bg-zinc-700 px-0.5 text-[8px] text-zinc-400">
                       T
                     </span>

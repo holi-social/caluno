@@ -23,6 +23,8 @@ export type GatePoint =
 export interface Signee {
   id: string;
   role: SigneeRole;
+  /** Bound org Role — when set, display name comes from here instead of the generic i18n label. */
+  orgRole?: { id: string; name: string } | null;
 }
 
 export interface BlockedAction {

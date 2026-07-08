@@ -2,8 +2,8 @@
 
 import { Button } from '@repo/ui';
 import { useState } from 'react';
-import { TemplateBuilder } from './builder';
 import type { DocumentKind, PauschalenType } from '../doc-type-header';
+import { TemplateBuilder } from './builder';
 import type { PlacedField } from './builder-types';
 
 const MOCK_FIELDS_CLEAN: PlacedField[] = [

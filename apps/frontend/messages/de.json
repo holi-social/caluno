@@ -1027,7 +1027,135 @@
       }
     },
     "reimbursements": {
-      "title": "Reimbursements"
+      "title": "Reimbursements",
+      "subtitle": "Auszahlungsdokumente erstellen, unterzeichnen und bündeln.",
+      "periodLabel": "Zeitraum",
+      "periodPicker": {
+        "thisMonth": "Dieser Monat",
+        "lastMonth": "Letzter Monat",
+        "customPeriod": "Benutzerdefinierter Zeitraum",
+        "apply": "Anwenden"
+      },
+      "filters": {
+        "docTypeLabel": "Dokumenttyp",
+        "docTypeAll": "Alle Dokumente",
+        "docTypeContracts": "Nur Verträge",
+        "docTypeTimesheets": "Nur Stundennachweise",
+        "pauschaletypeLabel": "Pauschale"
+      },
+      "tableHead": {
+        "volunteer": "Mitarbeiter",
+        "status": "Status",
+        "hours": "Std.",
+        "lastAction": "Letzte Aktion",
+        "amount": "Betrag",
+        "action": "Aktion"
+      },
+      "orgLimits": {
+        "trigger": "Limits je Orgeinheit",
+        "heading": "Jahresbudget nach Organisationseinheit",
+        "used": "Verbraucht",
+        "cap": "Budget"
+      },
+      "tiles": {
+        "all": "Alle Prozessstufen",
+        "docCount": "{count} Dokumente",
+        "contractGenerate": "Verträge erstellen",
+        "contractSigning": "Verträge unterzeichnen",
+        "timesheetGenerate": "Nachweise erstellen",
+        "timesheetSigning": "Nachweise unterzeichnen",
+        "readyToGo": "Bereit zur Abgabe"
+      },
+      "toolbar": {
+        "typeAll": "Alle",
+        "typeEP": "Ehrenamt",
+        "typeUL": "Übungsleiter",
+        "searchPlaceholder": "Freiwillige suchen …"
+      },
+      "empty": {
+        "allDone": "Alles erledigt",
+        "allDoneHint": "Keine offenen Dokumente in diesem Zeitraum.",
+        "filtered": "Keine Einträge in dieser Kategorie."
+      },
+      "bundle": {
+        "actionLabel": "Paket herunterladen",
+        "readyCount": "{count} bereit"
+      },
+      "batchBar": {
+        "selected": "{count} ausgewählt",
+        "createAll": "Alle erstellen",
+        "countersignAll": "Alle unterzeichnen",
+        "remindAll": "Alle erinnern",
+        "bundleAll": "Alle Pakete herunterladen",
+        "mixed": "Gemischte Auswahl",
+        "clearSelection": "Aufheben"
+      },
+      "docs": {
+        "docCount": "{count} Dokumente",
+        "kindLabel": {
+          "contract": "Vertrag",
+          "timesheet": "Stundennachweis"
+        },
+        "sheet": {
+          "period": "Zeitraum",
+          "pipelineLabel": "Prozessschritte",
+          "pipeline": {
+            "generate": "Erstellen",
+            "sign": "Unterzeichnen",
+            "volSign": "Freiwillige/r",
+            "coordSign": "Koordinator",
+            "superSign": "Supervisor",
+            "active": "Aktiv",
+            "ready": "Bereit",
+            "roleAdmin": "NGO-Admin"
+          },
+          "limitSection": "Jahresbudget",
+          "invoicesPaidOut": "Ausgezahlt",
+          "invoicesPending": "Ausstehende Zahlung",
+          "timelineSection": "Verlauf",
+          "timelineEmpty": "Noch keine Aktivität",
+          "timelineCreated": "Erstellt",
+          "timelineSigned": "Unterzeichnet",
+          "timelineCountersigned": "Gegengezeichnet",
+          "timelineActivated": "Aktiviert",
+          "noAction": "Keine Aktion erforderlich",
+          "pdfView": "PDF anzeigen",
+          "pdfDownload": "Herunterladen",
+          "timesheetHours": {
+            "title": "Arbeitsstunden",
+            "paidShifts": "Bezahlte Schichten",
+            "shifts": "{count} Schichten",
+            "grossAmount": "Bruttobetrag",
+            "rateTooltip": "Standardstundensatz für diese Pauschale. Schichten können einen eigenen Satz haben.",
+            "viewBtn": "Stundennachweise anzeigen"
+          }
+        },
+        "statusLabel": {
+          "contractGenerate": "Vertrag erstellen",
+          "contractSigningVol": "Wartet auf Unterzeichnung",
+          "contractSigningCoord": "Gegenzeichnung erforderlich",
+          "contractActive": "Aktiver Vertrag",
+          "timesheetGenerate": "Stundennachweis erstellen",
+          "timesheetSigningVol": "Wartet auf Unterzeichnung",
+          "timesheetSigningSuper": "Supervisorunterschrift",
+          "timesheetReady": "Bereit zur Abgabe",
+          "nonCompliant": "Kein aktiver Vertrag",
+          "nonCompliantHint": "Stundennachweis ohne aktiven Vertrag — Vertrag zuerst erstellen oder aktivieren",
+          "notYetCreated": "Noch nicht erstellt"
+        },
+        "lastActionLabel": {
+          "created": "Erstellt",
+          "sent": "Versandt",
+          "signed": "Unterschrieben",
+          "activated": "Aktiviert",
+          "approved": "Freigegeben"
+        },
+        "actions": {
+          "create": "Erstellen",
+          "remind": "Erinnern",
+          "countersign": "Unterzeichnen"
+        }
+      }
     },
     "templates": {
       "title": "Templates",

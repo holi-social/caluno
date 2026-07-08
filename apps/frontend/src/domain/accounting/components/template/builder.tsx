@@ -30,7 +30,9 @@ export function TemplateBuilder({
 
   const [hasPdf, setHasPdf] = useState(initialFields !== undefined);
   const [fields, setFields] = useState<PlacedField[]>(initialFields ?? []);
-  const unboundCount = hasPdf ? fields.filter((f) => f.dataSource === null).length : 0;
+  const unboundCount = hasPdf
+    ? fields.filter((f) => f.dataSource === null).length
+    : 0;
 
   const kindLabel = tSections(
     `documentKind.${kind}` as Parameters<typeof tSections>[0],
@@ -66,7 +68,10 @@ export function TemplateBuilder({
           <span>{t('breadcrumb.accounting')}</span>
           <ChevronRightIcon size={14} aria-hidden="true" />
           {backHref ? (
-            <Link href={backHref} className="hover:text-foreground transition-colors">
+            <Link
+              href={backHref}
+              className="hover:text-foreground transition-colors"
+            >
               {t('breadcrumb.templates')}
             </Link>
           ) : (

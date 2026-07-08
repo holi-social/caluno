@@ -83,40 +83,35 @@ export function TemplateBlockedActions({
       {actions.length > 0 && (
         <div className="flex flex-wrap gap-2">
           {actions.map((action) => {
-              const gateLabel = t(
-                `gatePoints.${action.gate}` as Parameters<typeof t>[0],
-              );
-              return (
-                <span
-                  key={action.id}
-                  className="inline-flex w-fit items-center gap-1 rounded-md border border-border bg-background px-2 py-0.5 text-sm text-foreground"
+            const gateLabel = t(
+              `gatePoints.${action.gate}` as Parameters<typeof t>[0],
+            );
+            return (
+              <span
+                key={action.id}
+                className="inline-flex w-fit items-center gap-1 rounded-md border border-border bg-background px-2 py-0.5 text-sm text-foreground"
+              >
+                {gateLabel}
+                <button
+                  type="button"
+                  onClick={() => removeAction(action.id)}
+                  className="text-muted-foreground hover:text-foreground transition-colors"
+                  aria-label={t('filled.removeAction', {
+                    gate: gateLabel,
+                  } as Parameters<typeof t>[1])}
                 >
-                  {gateLabel}
-                  <button
-                    type="button"
-                    onClick={() => removeAction(action.id)}
-                    className="text-muted-foreground hover:text-foreground transition-colors"
-                    aria-label={t('filled.removeAction', {
-                      gate: gateLabel,
-                    } as Parameters<typeof t>[1])}
-                  >
-                    <XIcon size={12} aria-hidden="true" />
-                  </button>
-                </span>
-              );
-            })}
+                  <XIcon size={12} aria-hidden="true" />
+                </button>
+              </span>
+            );
+          })}
         </div>
       )}
 
       {availableGates.length > 0 && (
         <Popover open={pickerOpen} onOpenChange={setPickerOpen}>
           <PopoverTrigger asChild>
-            <Button
-              type="button"
-              variant="ghost"
-              size="md"
-              className="gap-1.5"
-            >
+            <Button type="button" variant="ghost" size="md" className="gap-1.5">
               <PlusIcon size={14} aria-hidden="true" />
               {t('filled.addBlockedAction')}
             </Button>

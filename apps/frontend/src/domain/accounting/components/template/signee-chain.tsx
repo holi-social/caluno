@@ -76,9 +76,9 @@ export function TemplateSigneeChain({
             />
           )}
           {signees.map((signee, index) => {
-            const roleLabel = t(
-              `signeeRoles.${signee.role}` as Parameters<typeof t>[0],
-            );
+            const roleLabel =
+              signee.orgRole?.name ??
+              t(`signeeRoles.${signee.role}` as Parameters<typeof t>[0]);
             return (
               <div key={signee.id} className="flex items-center gap-2">
                 <span

@@ -2,9 +2,9 @@
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@repo/ui';
 import { useTranslations } from 'next-intl';
+import { RatesSectionCard } from './rates-section-card';
 import { TemplateListingPage } from './template/listing-page';
 import type { TemplateSectionData } from './template/types';
-import { RatesSectionCard } from './rates-section-card';
 
 const MOCK_SECTIONS: TemplateSectionData[] = [
   {
@@ -87,7 +87,11 @@ export function AccountingSettingsTabs({
               {t('sectionSubtitle')}
             </p>
           </div>
-          <TemplateListingPage sections={MOCK_SECTIONS} orgUId={orgUId} builderBasePath={builderBasePath} />
+          <TemplateListingPage
+            sections={MOCK_SECTIONS}
+            orgUId={orgUId}
+            builderBasePath={builderBasePath}
+          />
         </div>
       </TabsContent>
     </Tabs>

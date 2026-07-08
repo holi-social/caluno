@@ -10,7 +10,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@repo/ui';
-import { AlertCircleIcon, LightbulbIcon, TriangleAlertIcon } from 'lucide-react';
+import {
+  AlertCircleIcon,
+  LightbulbIcon,
+  TriangleAlertIcon,
+} from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import type { PauschalenType } from '../doc-type-header';
 import {
@@ -27,11 +31,18 @@ interface FieldRowProps {
   onDataSourceChange: (id: string, source: DataSourceKey | null) => void;
 }
 
-function FieldRow({ field, index, pauschale, onDataSourceChange }: FieldRowProps) {
+function FieldRow({
+  field,
+  index,
+  pauschale,
+  onDataSourceChange,
+}: FieldRowProps) {
   const t = useTranslations('Accounting.templates.builder');
   const tSections = useTranslations('Accounting.templates');
   const pauschaleLabel = tSections(
-    `sections.${pauschale === 'ehrenamt' ? 'ep' : 'ul'}` as Parameters<typeof tSections>[0],
+    `sections.${pauschale === 'ehrenamt' ? 'ep' : 'ul'}` as Parameters<
+      typeof tSections
+    >[0],
   );
   const isUnbound = field.dataSource === null;
   const isProfileRequired =
@@ -138,14 +149,20 @@ export function TemplateBuilderFieldList({
         {unboundCount > 0 && (
           <span className="inline-flex items-center gap-1 text-xs font-medium text-destructive">
             <AlertCircleIcon size={12} aria-hidden="true" />
-            {t('fieldList.unboundCount', { count: unboundCount } as Parameters<typeof t>[1])}
+            {t('fieldList.unboundCount', { count: unboundCount } as Parameters<
+              typeof t
+            >[1])}
           </span>
         )}
       </div>
 
       {/* Info banner */}
       <div className="flex items-start gap-2.5 rounded-lg border border-border bg-muted/50 px-3 py-2.5">
-        <LightbulbIcon size={15} className="mt-0.5 shrink-0 text-muted-foreground" aria-hidden="true" />
+        <LightbulbIcon
+          size={15}
+          className="mt-0.5 shrink-0 text-muted-foreground"
+          aria-hidden="true"
+        />
         <p className="text-sm text-muted-foreground leading-snug">
           {t('fieldList.bindingHint')}
         </p>
