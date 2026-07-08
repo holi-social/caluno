@@ -17,9 +17,14 @@ import {
   EmptyTitle,
   Skeleton,
 } from '@repo/ui';
-import { CalendarXIcon, SearchXIcon } from 'lucide-react';
+import {
+  CalendarHeartIcon,
+  CalendarPlus2Icon,
+  CalendarXIcon,
+  SearchXIcon,
+} from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useRouter } from '@/i18n/navigation';
 import { useFormatting } from '@/lib/formatting/use-formatting';
 import {
@@ -90,9 +95,13 @@ export function DiscoverView({
     () => groupByDay(availableShiftList),
     [availableShiftList],
   );
-  const activeGroup = grouped.find(
-    (group) => group.date.getTime() === activeDay.getTime(),
-  );
+
+  const groupRefs = useRef<Map<number, HTMLHeadingElement>>(new Map());
+
+  useEffect(() => {
+    const heading = groupRefs.current.get(activeDay.getTime());
+    heading?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, [activeDay]);
 
   const hasActiveFilters = dateFilter !== null || selectedOrgUnitIds.length > 0;
 
@@ -117,6 +126,7 @@ export function DiscoverView({
           onClick={() =>
             setDateFilter((prev) => (prev === 'next-week' ? null : 'next-week'))
           }
+          icon={CalendarPlus2Icon}
         />
         <FilterChip
           label={t('filterThisWeekend')}
@@ -126,6 +136,7 @@ export function DiscoverView({
               prev === 'this-weekend' ? null : 'this-weekend',
             )
           }
+          icon={CalendarHeartIcon}
         />
         {(organizationUnits ?? []).map((unit) => (
           <FilterChip
@@ -168,33 +179,43 @@ export function DiscoverView({
             </Button>
           )}
         </Empty>
-      ) : activeGroup ? (
-        <div className="space-y-4">
-          <h3 className="text-sm font-medium text-muted-foreground">
-            {formatDate(activeGroup.date, {
-              weekday: 'long',
-              day: 'numeric',
-              month: 'long',
-            })}
-            <span className="ml-2">{activeGroup.items.length}</span>
-          </h3>
-          <div className="space-y-3">
-            {activeGroup.items.map((shift) =>
-              shift.master.event ? (
-                <ShiftCardDiscoveryEvent key={shift.id} shiftInstance={shift} />
-              ) : (
-                <ShiftCardDiscoverySolo key={shift.id} shiftInstance={shift} />
-              ),
-            )}
-          </div>
-        </div>
       ) : (
-        <Empty>
-          <EmptyMedia variant="icon">
-            <CalendarXIcon />
-          </EmptyMedia>
-          <EmptyTitle>{t('discoverEmpty')}</EmptyTitle>
-        </Empty>
+        <div className="space-y-6">
+          {grouped.map((group) => (
+            <div key={group.date.toISOString()} className="space-y-4">
+              <h3
+                ref={(el) => {
+                  if (el) {
+                    groupRefs.current.set(group.date.getTime(), el);
+                  }
+                }}
+                className="text-sm font-medium text-muted-foreground"
+              >
+                {formatDate(group.date, {
+                  weekday: 'long',
+                  day: 'numeric',
+                  month: 'long',
+                })}
+                <span className="ml-2">({group.items.length})</span>
+              </h3>
+              <div className="space-y-3">
+                {group.items.map((shift) =>
+                  shift.master.event ? (
+                    <ShiftCardDiscoveryEvent
+                      key={shift.id}
+                      shiftInstance={shift}
+                    />
+                  ) : (
+                    <ShiftCardDiscoverySolo
+                      key={shift.id}
+                      shiftInstance={shift}
+                    />
+                  ),
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
       )}
     </div>
   );

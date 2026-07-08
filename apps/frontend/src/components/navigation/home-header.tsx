@@ -29,7 +29,7 @@ const GREETING_EXIT = {
   opacity: 0,
 };
 
-export function BellButton({
+function _BellButton({
   count,
   onClick,
 }: {

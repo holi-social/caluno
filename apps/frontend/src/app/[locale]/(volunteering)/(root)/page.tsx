@@ -1,5 +1,4 @@
 import { VolunteerHomeContent } from '@/domain/home/components/volunteer-home-content';
-import { requireAuth } from '@/lib/auth-server';
 import { getDataClient } from '@/lib/data-client';
 
 interface VolunteeringHomePageProps {

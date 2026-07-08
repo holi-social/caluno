@@ -12,7 +12,7 @@ import {
 } from '@repo/ui';
 import { CalendarXIcon, TriangleAlertIcon } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useRouter } from '@/i18n/navigation';
 import { useFormatting } from '@/lib/formatting/use-formatting';
 import {
@@ -53,9 +53,13 @@ export function MyShiftsView({ initialMyShiftInstances }: MyShiftsViewProps) {
     [myShiftList],
   );
   const grouped = useMemo(() => groupByDay(myShiftList), [myShiftList]);
-  const activeGroup = grouped.find(
-    (group) => group.date.getTime() === activeDay.getTime(),
-  );
+
+  const groupRefs = useRef<Map<number, HTMLHeadingElement>>(new Map());
+
+  useEffect(() => {
+    const heading = groupRefs.current.get(activeDay.getTime());
+    heading?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, [activeDay]);
 
   const now = new Date();
   const firstUpcomingIndex = myShiftList.findIndex(
@@ -63,31 +67,7 @@ export function MyShiftsView({ initialMyShiftInstances }: MyShiftsViewProps) {
   );
   const nextShift =
     firstUpcomingIndex >= 0 ? myShiftList[firstUpcomingIndex] : null;
-
-  const overlaps = useMemo(() => {
-    const result = new Set<string>();
-    if (!activeGroup) return result;
-
-    for (let i = 0; i < activeGroup.items.length; i++) {
-      for (let j = i + 1; j < activeGroup.items.length; j++) {
-        const a = activeGroup.items[i];
-        const b = activeGroup.items[j];
-        if (!a || !b) continue;
-        if (
-          intervalsOverlap(
-            new Date(a.actualStartsAt),
-            new Date(a.actualEndsAt),
-            new Date(b.actualStartsAt),
-            new Date(b.actualEndsAt),
-          )
-        ) {
-          result.add(a.id);
-          result.add(b.id);
-        }
-      }
-    }
-    return result;
-  }, [activeGroup]);
+  const nextShiftId = nextShift?.id;
 
   return (
     <div className="flex flex-col gap-4">
@@ -139,51 +119,84 @@ export function MyShiftsView({ initialMyShiftInstances }: MyShiftsViewProps) {
             />
           )}
 
-          {activeGroup ? (
-            <div className="space-y-4">
-              <h3 className="text-sm font-medium text-muted-foreground">
-                {formatDate(activeGroup.date, {
-                  weekday: 'long',
-                  day: 'numeric',
-                  month: 'long',
-                })}
-              </h3>
-              {overlaps.size > 0 && (
-                <p className="flex items-center gap-2 text-sm text-alert">
-                  <TriangleAlertIcon className="size-4" aria-hidden="true" />
-                  {t('overlapWarning')}
-                </p>
-              )}
-              <div className="space-y-3">
-                {activeGroup.items.map((shift) => {
-                  const isPast =
-                    new Date(shift.actualEndsAt).getTime() < now.getTime();
-                  const isNextShift = shift.id === nextShift?.id;
-
-                  if (isNextShift) {
-                    return null;
+          <div className="space-y-6">
+            {grouped.map((group) => {
+              const overlaps = new Set<string>();
+              for (let i = 0; i < group.items.length; i++) {
+                for (let j = i + 1; j < group.items.length; j++) {
+                  const a = group.items[i];
+                  const b = group.items[j];
+                  if (!a || !b) continue;
+                  if (
+                    intervalsOverlap(
+                      new Date(a.actualStartsAt),
+                      new Date(a.actualEndsAt),
+                      new Date(b.actualStartsAt),
+                      new Date(b.actualEndsAt),
+                    )
+                  ) {
+                    overlaps.add(a.id);
+                    overlaps.add(b.id);
                   }
+                }
+              }
 
-                  if (isPast) {
-                    return (
-                      <ShiftCardMyPast key={shift.id} shiftInstance={shift} />
-                    );
-                  }
+              return (
+                <div key={group.date.toISOString()} className="space-y-4">
+                  <h3
+                    ref={(el) => {
+                      if (el) {
+                        groupRefs.current.set(group.date.getTime(), el);
+                      }
+                    }}
+                    className="text-sm font-medium text-muted-foreground"
+                  >
+                    {formatDate(group.date, {
+                      weekday: 'long',
+                      day: 'numeric',
+                      month: 'long',
+                    })}
+                    <span className="ml-2">({group.items.length})</span>
+                  </h3>
+                  {overlaps.size > 0 && (
+                    <p className="flex items-center gap-2 text-sm text-alert">
+                      <TriangleAlertIcon
+                        className="size-4"
+                        aria-hidden="true"
+                      />
+                      {t('overlapWarning')}
+                    </p>
+                  )}
+                  <div className="space-y-3">
+                    {group.items.map((shift) => {
+                      const isPast =
+                        new Date(shift.actualEndsAt).getTime() < now.getTime();
 
-                  return (
-                    <ShiftCardMyFuture key={shift.id} shiftInstance={shift} />
-                  );
-                })}
-              </div>
-            </div>
-          ) : (
-            <Empty>
-              <EmptyMedia variant="icon">
-                <CalendarXIcon />
-              </EmptyMedia>
-              <EmptyTitle>{t('yourShiftsEmpty')}</EmptyTitle>
-            </Empty>
-          )}
+                      if (shift.id === nextShiftId) {
+                        return null;
+                      }
+
+                      if (isPast) {
+                        return (
+                          <ShiftCardMyPast
+                            key={shift.id}
+                            shiftInstance={shift}
+                          />
+                        );
+                      }
+
+                      return (
+                        <ShiftCardMyFuture
+                          key={shift.id}
+                          shiftInstance={shift}
+                        />
+                      );
+                    })}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
         </>
       )}
     </div>
