@@ -225,6 +225,16 @@ sast_medium_issues:
   script:
     - bash .ai/scripts/sast-open-medium-issues.sh gl-sast-report.json
 
+sast_close_fixed_medium_issues:
+  extends: .sast-postprocess
+  allow_failure: true
+  needs:
+    - job: sast_merge_reports
+      artifacts: true
+      optional: true
+  script:
+    - bash .ai/scripts/sast-close-fixed-medium-issues.sh gl-sast-report.json
+
 # ─── SECRET DETECTION ─────────────────────────────────────────────────────────
 # secret_detection (template) scans the repo and uploads gl-secret-detection-report.json.
 # secret_detection_gate blocks merge on any finding.
@@ -316,6 +326,16 @@ trivy_issues:
       optional: true
   script:
     - bash .ai/scripts/trivy-open-issues.sh gl-container-scanning-report.json
+
+trivy_close_fixed_issues:
+  extends: .trivy-postprocess
+  allow_failure: true
+  needs:
+    - job: trivy_merge_reports
+      artifacts: true
+      optional: true
+  script:
+    - bash .ai/scripts/trivy-close-fixed-issues.sh gl-container-scanning-report.json
 
 trivy_summary:
   extends: .trivy-postprocess
