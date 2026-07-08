@@ -886,13 +886,14 @@ export class ShiftService {
     userId: string,
   ): Promise<(ShiftInstanceEntity & { accepted: boolean })[]> {
     const now = new Date();
-    const oneHourAgo = new Date(now.getTime() - 60 * 60 * 1000);
-    const oneHourFromNow = new Date(now.getTime() + 60 * 60 * 1000);
+    const twoHours = 2 * 60 * 60 * 1000;
+    const twoHoursAgo = new Date(now.getTime() - twoHours);
+    const twoHoursFromNow = new Date(now.getTime() + twoHours);
 
     const instances = await this.db.query.shiftInstances.findMany({
       where: {
-        actualStartsAt: { lt: oneHourFromNow },
-        actualEndsAt: { gt: oneHourAgo },
+        actualStartsAt: { lt: twoHoursFromNow },
+        actualEndsAt: { gt: twoHoursAgo },
         isCancelled: false,
         master: { organizationUnitId, isDeleted: false },
       },
