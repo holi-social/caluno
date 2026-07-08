@@ -19,6 +19,7 @@ const PASSIVE_DURING_SHIFT: ShiftVolunteeringDisplayState[] = [
   'invited',
   'requested',
   'declined',
+  'cancelled',
 ];
 
 function isPassiveDuringShift(
@@ -85,24 +86,30 @@ export function VolunteeringVolunteerRow({
           <AvatarImage src={image ?? ''} alt="" />
           <AvatarFallback>{getInitials(name)}</AvatarFallback>
         </Avatar>
-        <p className="truncate text-base font-medium">{name}</p>
+        <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2">
+          <p className="truncate text-base font-medium">{name}</p>
+          {passiveHint ? (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <span className="inline-flex shrink-0 cursor-default">
+                  {statusBadge}
+                </span>
+              </TooltipTrigger>
+              <TooltipContent side="top" className="max-w-xs">
+                {passiveHint}
+              </TooltipContent>
+            </Tooltip>
+          ) : (
+            <span className="shrink-0">{statusBadge}</span>
+          )}
+        </div>
       </div>
 
-      <div className="flex min-w-0 flex-wrap items-center gap-2 pl-11 sm:ml-auto sm:shrink-0 sm:gap-3 sm:pl-0">
-        <VolunteeringActionButtons actions={actions} onAction={onAction} />
-        {passiveHint ? (
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <span className="inline-flex cursor-default">{statusBadge}</span>
-            </TooltipTrigger>
-            <TooltipContent side="top" className="max-w-xs">
-              {passiveHint}
-            </TooltipContent>
-          </Tooltip>
-        ) : (
-          statusBadge
-        )}
-      </div>
+      {actions.length > 0 ? (
+        <div className="flex shrink-0 pl-11 sm:pl-0">
+          <VolunteeringActionButtons actions={actions} onAction={onAction} />
+        </div>
+      ) : null}
     </div>
   );
 }

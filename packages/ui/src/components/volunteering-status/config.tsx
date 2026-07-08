@@ -3,7 +3,6 @@ import {
   Check,
   CircleCheck,
   CircleDashed,
-  CircleSlash,
   Clock,
   Inbox,
   LogIn,
@@ -31,7 +30,8 @@ export const volunteeringStatusIcons: Record<
   invited: Clock,
   requested: Inbox,
   accepted: Check,
-  declined: CircleSlash,
+  declined: X,
+  cancelled: Ban,
   checked_in: CircleCheck,
   not_checked_in: CircleDashed,
   completed: Timer,
@@ -48,7 +48,8 @@ export const volunteeringStatusIconTone: Record<
   invited: 'neutral',
   requested: 'neutral',
   accepted: 'positive',
-  declined: 'neutral',
+  declined: 'destructive',
+  cancelled: 'warning',
   checked_in: 'positive',
   not_checked_in: 'warning',
   completed: 'positive',
@@ -75,6 +76,7 @@ export const volunteeringStatusIconClass: Record<
   neutral: 'text-muted-foreground',
   positive: 'text-success',
   warning: 'text-alert',
+  destructive: 'text-destructive',
 };
 
 export type PresentationOptions = {
@@ -91,6 +93,7 @@ export const volunteeringLifecycleDescriptions: Record<
   requested: 'Accept or decline to add them.',
   accepted: 'Confirmed for this shift.',
   declined: 'Not joining this shift.',
+  cancelled: 'Invite withdrawn by coordinator.',
   checked_in: 'Here — time is tracking.',
   not_checked_in: 'Expected but not here yet.',
   completed: 'Volunteer time recorded.',
@@ -106,6 +109,7 @@ export const passiveDuringShiftHints: Partial<
   invited: 'Not in check-in — awaiting reply.',
   requested: 'Not in check-in — needs your decision.',
   declined: 'Not on this shift.',
+  cancelled: 'Invite no longer active.',
 };
 
 export function getPassiveDuringShiftHint(
@@ -148,6 +152,13 @@ export function getVolunteeringStatusPresentation(
         label: 'Declined',
         description: volunteeringLifecycleDescriptions.declined,
         actions: phase === 'after' ? ['Add timesheet'] : ['Uninvite'],
+      };
+    case 'cancelled':
+      return {
+        iconTone: volunteeringStatusIconTone.cancelled,
+        label: 'Canceled',
+        description: volunteeringLifecycleDescriptions.cancelled,
+        actions: ['Uninvite'],
       };
     case 'checked_in':
       return {

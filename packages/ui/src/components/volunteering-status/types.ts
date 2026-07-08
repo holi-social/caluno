@@ -10,6 +10,7 @@ export type ShiftVolunteeringDisplayState =
   | 'requested'
   | 'accepted'
   | 'declined'
+  | 'cancelled'
   | 'checked_in'
   | 'not_checked_in'
   | 'completed'
@@ -18,7 +19,11 @@ export type ShiftVolunteeringDisplayState =
   | 'requested_never_responded';
 
 /** Semantic icon color — the primary status signal across the app. */
-export type VolunteeringStatusIconTone = 'neutral' | 'positive' | 'warning';
+export type VolunteeringStatusIconTone =
+  | 'neutral'
+  | 'positive'
+  | 'warning'
+  | 'destructive';
 
 export type VolunteeringActionLabel =
   | 'Accept'

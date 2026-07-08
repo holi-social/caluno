@@ -32,9 +32,9 @@ export function VolunteeringStatusBadge({
 
   return (
     <Badge
-      variant="secondary"
+      variant="ghost"
       className={cn(
-        'gap-1.5 rounded-lg px-2.5 py-1 text-sm font-medium',
+        'gap-1 rounded-lg border-0 bg-transparent px-0 py-0 text-sm shadow-none hover:bg-transparent',
         className,
       )}
     >
@@ -43,7 +43,14 @@ export function VolunteeringStatusBadge({
         completedDuration={completedDuration}
         phase={phase}
       />
-      <span className={cn(emphasizeLabel && 'font-semibold')}>{label}</span>
+      <span
+        className={cn(
+          'text-sm font-normal text-muted-foreground',
+          emphasizeLabel && 'font-medium text-foreground',
+        )}
+      >
+        {label}
+      </span>
     </Badge>
   );
 }
