@@ -570,8 +570,6 @@
     "checkIn": {
       "checkIn": "Check in",
       "checkingIn": "Checking-in...",
-      "requirements": "Requirements",
-      "allMet": "All met",
       "noShiftSelected": "No shift selected",
       "volunteerCheckedIn": "Volunteer checked-in",
       "checkOut": "Check-out",

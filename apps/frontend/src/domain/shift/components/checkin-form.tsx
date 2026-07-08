@@ -65,7 +65,7 @@ export const CheckinForm = ({
   const canCheckin = status === 'valid' && selectedShiftId;
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
       {serverError && (
         <div className="rounded-md bg-destructive/10 p-4 text-sm text-destructive mb-4">
           {serverError}
@@ -81,20 +81,9 @@ export const CheckinForm = ({
 
       <UserCard user={volunteer} size="lg" />
 
-      <Card className="gap-2">
-        <CardHeader>
-          <CardTitle>{t('checkIn.requirements')}</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex gap-2">
-            <CheckCircle2 className="text-green-500" /> {t('checkIn.allMet')}
-          </div>
-        </CardContent>
-      </Card>
-
       <Button
         size="lg"
-        className="w-full"
+        className="w-full mt-2"
         disabled={!canCheckin || isPending}
         onClick={handleCheckin}
         type="button"
