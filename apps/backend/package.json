@@ -6,7 +6,7 @@
   "private": true,
   "license": "UNLICENSED",
   "scripts": {
-    "build": "nest build && cp -r src/database/migrations dist/src/database/",
+    "build": "nest build && cp -r src/database/migrations dist/src/database/ && cp -r src/i18n/locales dist/src/i18n/",
     "dev": "nest start --watch",
     "start": "nest start",
     "start:debug": "nest start --debug --watch",
@@ -22,11 +22,12 @@
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "jest --config ./test/jest-e2e.json",
     "test:integration:setup": "bun run test/setup-test-db.ts",
-    "test:integration": "bun run test:integration:setup && bun test test/",
+    "test:integration": "bun test test/",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
     "db:seed": "node dist/src/database/seed.js",
     "db:seed:dev": "ts-node -r tsconfig-paths/register src/database/seed.ts",
+    "db:fixtures": "bun run src/database/fixtures.ts",
     "db:studio": "drizzle-kit studio"
   },
   "dependencies": {

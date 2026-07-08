@@ -1,7 +1,7 @@
-import { index, pgTable, text } from 'drizzle-orm/pg-core';
+import { index, snakeCase, text } from 'drizzle-orm/pg-core';
 import { idColumn, timestampColumns } from '../../database/database-columns';
 
-export const organizationUnitTypes = pgTable(
+export const organizationUnitTypes = snakeCase.table(
   'organization_unit_types',
   {
     ...idColumn,

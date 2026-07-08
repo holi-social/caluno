@@ -3,14 +3,14 @@ import {
   index,
   integer,
   jsonb,
-  pgTable,
+  snakeCase,
   text,
   uuid,
 } from 'drizzle-orm/pg-core';
 import { idColumn, timestampColumns } from '../../database/database-columns';
 import { formBlocks } from './form-block.schema';
 
-export const formBlockFields = pgTable(
+export const formBlockFields = snakeCase.table(
   'form_block_fields',
   {
     ...idColumn,

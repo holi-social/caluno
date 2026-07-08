@@ -4,13 +4,15 @@ The backend api for securely managing volunteers and shifts in multi-tiered orga
 
 ## Commands
 - `bun run dev` - Start NestJS development server
+- `bun bootstrap` (from repo root) - Wipe local Postgres volume, migrate, seed permissions, load Playground fixtures, then start all dev servers
+- `bun run db:fixtures` - Load Playground dev fixtures only (run after migrate + seed)
 - `bun run build` - Build a production bundle
 - `bun run lint` - Lint with Biome
 - `bun run format` - Format with Biome
 - `bun run check-types` - Check for type errors
 - `bun run test` - Jest unit tests (`src/**/*.spec.ts`; pattern: `src/notification/notification.spec.ts`)
-- `bun test apps/backend/test/` - Bun integration tests; auto-creates `${POSTGRES_DB}_test` (or uses it if `POSTGRES_DB` already ends with `_test`), migrates/seeds, then runs tests
-- `bun run --cwd apps/backend test:integration` - Local helper that drops/creates the test DB fresh before running integration tests
+- `bun test apps/backend/test/` - Bun integration tests; creates an isolated `${POSTGRES_DB}_test_<pid>_<id>` database per run, migrates/seeds, then drops it when the process exits
+- `bun run --cwd apps/backend test:integration` - Same as `bun test test/` from `apps/backend`
 - `bun run db:generate` - Generate database migrations based on schema changes
 - `bun run db:migrate` - Run drizzle database migrations
 
@@ -27,9 +29,8 @@ The backend has two test suites:
 2. **Integration tests** — `bun:test`, files under `test/*.integration.spec.ts`.
    - Use for anything that depends on actual SQL queries, transactions, GraphQL resolvers, auth guards, or multi-tenancy scoping.
    - They spin up the real NestJS app and connect to a PostgreSQL database.
-   - The first integration test to start auto-creates the test DB if it does not exist, runs migrations, and seeds permissions. If `POSTGRES_DB` already ends with `_test`, that name is used as-is; otherwise `_test` is appended.
+   - The preload script provisions a fresh isolated database (create → migrate → seed permissions) in a global `beforeAll` before any integration spec runs, then drops it in global `afterAll` when the process exits.
    - Run with `bun test apps/backend/test/` (or `bun test` from `apps/backend`).
-   - For a completely fresh local test DB, use `bun run --cwd apps/backend test:integration`, which drops/creates the DB first.
 
 ### Writing integration tests
 
@@ -97,11 +98,25 @@ Guidelines:
 # Start Postgres (only needed once)
 bun run db:up
 
-# Run integration tests with a fresh, migrated, seeded test DB
-bun run --cwd apps/backend test:integration
+# Run integration tests (creates and drops an isolated test database automatically)
+bun test apps/backend/test/
 ```
 
-The setup script connects to the `postgres` maintenance database to drop/create `${POSTGRES_DB}_test`, so the Postgres user needs CREATEDB privileges (the default `postgres` superuser has this).
+Integration tests connect to the `postgres` maintenance database to create/drop an isolated `${POSTGRES_DB}_test_<pid>_<id>` database, so the Postgres user needs CREATEDB privileges (the default `postgres` superuser has this).
+
+### Playground fixtures (`bun bootstrap`)
+
+`bun bootstrap` resets the **development** database (not `_test`) via `docker compose down -v`, then migrates, seeds permissions, and loads [`src/database/fixtures.ts`](src/database/fixtures.ts). Refuses to run unless `DB_HOST` is `localhost`, `127.0.0.1`, or `postgres`.
+
+| Account | Role / status |
+|---|---|
+| `admin@clippy.social` | Owner |
+| `supervisor@clippy.social` | Supervisor |
+| `member01@` … `member10@clippy.social` | Member |
+| `pending01@`, `pending02@` | Pending membership request |
+| `rejected01@` | Rejected membership request |
+
+Password for all fixture accounts: `abcd1234`. Organization: **Playground**. Shifts (weekly, Europe/Berlin): Community Support (Mon 08:00–12:00), Food Distribution (Wed 12:00–16:00), Event Assistance (Fri 16:00–20:00).
 
 ## Tech Stack
 - **NestJS 11** primary web framework

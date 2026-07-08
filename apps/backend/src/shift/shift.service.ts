@@ -1,5 +1,5 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
-import { and, count, eq, gte, inArray, notInArray } from 'drizzle-orm';
+import { and, count, eq, gte, inArray } from 'drizzle-orm';
 import { AuthService } from '../auth/auth.service';
 import { PERMISSIONS } from '../auth/constants';
 import type { Database } from '../database/database.module';
@@ -7,6 +7,7 @@ import { DATABASE_CONNECTION } from '../database/database-connection';
 import * as schema from '../database/schema';
 import { UserEntity } from '../database/schema';
 import {
+  BadRequestGraphQLError,
   ConflictGraphQLError,
   ForbiddenGraphQLError,
   NotFoundGraphQLError,
@@ -214,14 +215,43 @@ export class ShiftService {
       .map(([id]) => id);
   }
 
+  private async assertShiftWindowValid(
+    startsAt: Date,
+    endsAt: Date,
+    eventId: string,
+    organizationUnitId: string,
+  ): Promise<void> {
+    const event = await this.db.query.events.findFirst({
+      where: { id: eventId, organizationUnitId, isDeleted: false },
+      columns: { startsAt: true, endsAt: true },
+    });
+
+    if (!event) {
+      throw new NotFoundGraphQLError(`Event with ID ${eventId} not found`);
+    }
+
+    if (startsAt < event.startsAt || endsAt > event.endsAt) {
+      throw new BadRequestGraphQLError('shift_window_violation');
+    }
+  }
+
   async create(
     userId: string,
     organizationUnitId: string,
     input: CreateShiftInput,
   ): Promise<ShiftEntity> {
-    const { invitedMemberIds, ...shiftInput } = input;
+    const { invitedMemberIds, eventId, ...shiftInput } = input;
     const durationMinutes =
       (shiftInput.endsAt.getTime() - shiftInput.startsAt.getTime()) / 60000;
+
+    if (eventId) {
+      await this.assertShiftWindowValid(
+        shiftInput.startsAt,
+        shiftInput.endsAt,
+        eventId,
+        organizationUnitId,
+      );
+    }
 
     return this.db.transaction(async (tx) => {
       const [shift] = await tx
@@ -239,6 +269,7 @@ export class ShiftService {
           rrule: shiftInput.rrule,
           originalStartsAt: shiftInput.startsAt,
           durationMinutes,
+          eventId: eventId ?? null,
         })
         .returning();
 
@@ -768,13 +799,33 @@ export class ShiftService {
     });
   }
 
+  async countByEventId(eventId: string): Promise<number> {
+    const result = await this.db
+      .select({ count: count() })
+      .from(schema.shifts)
+      .where(
+        and(
+          eq(schema.shifts.eventId, eventId),
+          eq(schema.shifts.isDeleted, false),
+        ),
+      );
+    return result[0]?.count ?? 0;
+  }
+
+  async findByEventId(eventId: string): Promise<ShiftEntity[]> {
+    return this.db.query.shifts.findMany({
+      where: { eventId, isDeleted: false },
+      orderBy: { originalStartsAt: 'asc' },
+    });
+  }
+
   async update(
     userId: string,
     id: string,
     organizationUnitId: string,
     input: UpdateShiftInput,
   ): Promise<ShiftEntity> {
-    const { invitedMemberIds, ...shiftInput } = input;
+    const { invitedMemberIds, eventId: inputEventId, ...shiftInput } = input;
 
     return this.db.transaction(async (tx) => {
       let shift = await tx.query.shifts.findFirst({
@@ -785,7 +836,26 @@ export class ShiftService {
         throw new NotFoundGraphQLError('Shift not found');
       }
 
-      const hasValuesToUpdate = Object.keys(shiftInput).length > 0;
+      const effectiveEventId =
+        inputEventId !== undefined ? inputEventId : shift.eventId;
+      const effectiveStartsAt = shiftInput.startsAt ?? shift.originalStartsAt;
+      const effectiveEndsAt =
+        shiftInput.endsAt ??
+        new Date(
+          shift.originalStartsAt.getTime() + shift.durationMinutes * 60000,
+        );
+
+      if (effectiveEventId) {
+        await this.assertShiftWindowValid(
+          effectiveStartsAt,
+          effectiveEndsAt,
+          effectiveEventId,
+          organizationUnitId,
+        );
+      }
+
+      const hasValuesToUpdate =
+        Object.keys(shiftInput).length > 0 || inputEventId !== undefined;
 
       if (hasValuesToUpdate) {
         const durationMinutes =
@@ -800,6 +870,7 @@ export class ShiftService {
             slug: shiftInput.title ? slugify(shiftInput.title) : undefined,
             originalStartsAt: input.startsAt,
             durationMinutes,
+            ...(inputEventId !== undefined ? { eventId: inputEventId } : {}),
           })
           .where(
             and(

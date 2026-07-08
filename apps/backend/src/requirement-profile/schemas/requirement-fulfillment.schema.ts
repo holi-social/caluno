@@ -2,7 +2,7 @@ import {
   index,
   jsonb,
   pgEnum,
-  pgTable,
+  snakeCase,
   text,
   timestamp,
   uuid,
@@ -19,7 +19,7 @@ export const requirementFulfillmentStatusEnum = pgEnum(
   RequirementFulfillmentStatus as Record<string, string>,
 );
 
-export const requirementFulfillments = pgTable(
+export const requirementFulfillments = snakeCase.table(
   'requirement_fulfillments',
   {
     ...idColumn,
