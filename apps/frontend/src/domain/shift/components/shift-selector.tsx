@@ -1,4 +1,4 @@
-import type { ActiveShift } from '@repo/data';
+import { type ActiveShift, ShiftVisibility } from '@repo/data';
 import {
   Alert,
   AlertDescription,
@@ -9,7 +9,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@repo/ui';
-import { AlertCircle, CalendarCheck, Clock } from 'lucide-react';
+import { AlertCircle, CalendarCheck, Clock, Lock } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { Link } from '@/i18n/navigation';
 import { useFormatting } from '@/lib/formatting/use-formatting';
@@ -34,7 +34,13 @@ export const ShiftSelectItem = ({ shift }: ShiftOptionProps) => {
         <span className="truncate">
           {shift.overrideTitle ?? shift.master.title}
         </span>
-        {shift.accepted && <CalendarCheck className="size-4 text-primary" />}
+        {shift.accepted ? (
+          <CalendarCheck className="size-4 text-primary" />
+        ) : (
+          shift.master.visibility === ShiftVisibility.InvitedMembers && (
+            <Lock className="size-4 text-muted" />
+          )
+        )}
       </dt>
       <dl className="text-xs truncate flex items-center gap-1">
         <Clock className="size-3 shrink-0" />{' '}
