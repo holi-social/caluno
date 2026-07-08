@@ -269,7 +269,7 @@ secret_detection_gate:
     - trivy --version
     - trivy image --download-db-only
   script:
-    - bash .ai/scripts/trivy-gitlab-report.sh "$TRIVY_IMAGE_REF" "$TRIVY_REPORT_PATH"
+    - sh .ai/scripts/trivy-gitlab-report.sh "$TRIVY_IMAGE_REF" "$TRIVY_REPORT_PATH"
     - trivy image --exit-code 0 --severity HIGH,CRITICAL "$TRIVY_IMAGE_REF"
   cache:
     key: trivy-db
@@ -433,7 +433,7 @@ trivy_scan_production_frontend:
       -f apps/backend/Dockerfile .
     - export TRIVY_IMAGE_REF="$BACKEND_IMAGE_NAME:$IMAGE_TAG_SHA"
     - export TRIVY_REPORT_PATH="gl-container-scanning-report-backend.json"
-    - bash .ai/scripts/trivy-scan-image.sh "$TRIVY_IMAGE_REF" "$TRIVY_REPORT_PATH"
+    - sh .ai/scripts/trivy-scan-image.sh "$TRIVY_IMAGE_REF" "$TRIVY_REPORT_PATH"
   artifacts:
     when: always
     paths:
@@ -455,7 +455,7 @@ trivy_scan_production_frontend:
       -f apps/frontend/Dockerfile .
     - export TRIVY_IMAGE_REF="$FRONTEND_IMAGE_NAME:$IMAGE_TAG_SHA"
     - export TRIVY_REPORT_PATH="gl-container-scanning-report-frontend.json"
-    - bash .ai/scripts/trivy-scan-image.sh "$TRIVY_IMAGE_REF" "$TRIVY_REPORT_PATH"
+    - sh .ai/scripts/trivy-scan-image.sh "$TRIVY_IMAGE_REF" "$TRIVY_REPORT_PATH"
   artifacts:
     when: always
     paths:
