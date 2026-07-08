@@ -776,6 +776,7 @@ type Shift {
 }
 
 type ShiftInstance {
+  accepted: Boolean
   actualEndsAt: DateTime!
   actualStartsAt: DateTime!
   id: ID!

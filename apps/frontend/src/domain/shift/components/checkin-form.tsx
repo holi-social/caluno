@@ -28,10 +28,13 @@ export const CheckinForm = ({
   const [isPending, startTransition] = useTransition();
   const router = useRouter();
   const t = useTranslations('Shift');
-  const [selectedShiftId, setSelectedShiftId] = useState<string | undefined>(
-    shifts.length === 1 ? shifts[0]?.id : undefined,
-  );
   const [serverError, setServerError] = useState<string | null>(null);
+
+  const selectedShift = shifts.length === 1 ? shifts[0] : undefined;
+
+  const [selectedShiftId, setSelectedShiftId] = useState<string | undefined>(
+    selectedShift?.id,
+  );
 
   const handleCheckin = () => {
     setServerError(null);

@@ -9,7 +9,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@repo/ui';
-import { AlertCircle, Clock } from 'lucide-react';
+import { AlertCircle, CalendarCheck, Clock } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { Link } from '@/i18n/navigation';
 import { useFormatting } from '@/lib/formatting/use-formatting';
@@ -22,24 +22,23 @@ type ShiftSelectorProps = {
 };
 
 type ShiftOptionProps = {
-  title: string;
-  actualStartsAt: string;
-  actualEndsAt: string;
+  shift: ActiveShift;
 };
 
-const ShiftOption = ({
-  title,
-  actualStartsAt,
-  actualEndsAt,
-}: ShiftOptionProps) => {
+const ShiftOption = ({ shift }: ShiftOptionProps) => {
   const { formatTimeRange } = useFormatting();
 
   return (
-    <div className="p-1">
-      <dt className="truncate text-left">{title}</dt>
+    <div className="p-1 w-full">
+      <dt className="flex items-center gap-2">
+        <span className="truncate">
+          {shift.overrideTitle ?? shift.master.title}
+        </span>
+        {shift.accepted && <CalendarCheck className="size-4 text-primary" />}
+      </dt>
       <dl className="text-xs truncate flex items-center gap-1">
         <Clock className="size-3 shrink-0" />{' '}
-        {formatTimeRange(actualStartsAt, actualEndsAt)}
+        {formatTimeRange(shift.actualStartsAt, shift.actualEndsAt)}
       </dl>
     </div>
   );
@@ -79,30 +78,19 @@ export const ShiftSelector = ({
     );
   }
 
-  const selectedShift =
-    shifts.length === 1 ? shifts[0] : shifts.find((s) => s.id === value);
+  const selectedShift = shifts.find((s) => s.id === value);
 
   return (
     <Select value={value} onValueChange={onChange}>
-      <SelectTrigger className="w-full h-16!">
+      <SelectTrigger className="w-full h-16! [&>span]:w-full">
         <SelectValue placeholder={t('selector.chooseShift')}>
-          {selectedShift && (
-            <ShiftOption
-              title={selectedShift.master.title}
-              actualStartsAt={selectedShift.actualStartsAt}
-              actualEndsAt={selectedShift.actualEndsAt}
-            />
-          )}
+          {selectedShift && <ShiftOption shift={selectedShift} />}
         </SelectValue>
       </SelectTrigger>
       <SelectContent>
         {shifts.map((shift) => (
           <SelectItem key={shift.id} value={shift.id}>
-            <ShiftOption
-              title={shift.master.title}
-              actualStartsAt={shift.actualStartsAt}
-              actualEndsAt={shift.actualEndsAt}
-            />
+            <ShiftOption shift={shift} />
           </SelectItem>
         ))}
       </SelectContent>

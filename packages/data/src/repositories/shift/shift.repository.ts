@@ -17,7 +17,7 @@ import {
   type PaginationOptions,
 } from '../base/base.repository';
 
-export type ActiveShift = GetActiveShiftsQuery['activeShifts']['items'][number];
+export type ActiveShift = GetActiveShiftsQuery['activeShifts'][number];
 export type ShiftInstanceItem =
   GetShiftInstancesQuery['shiftInstances'][number];
 export type RawShift = GetShiftQuery['shift'];

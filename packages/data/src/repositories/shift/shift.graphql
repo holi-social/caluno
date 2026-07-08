@@ -147,6 +147,7 @@ query GetActiveShifts($userId: String!) {
     actualStartsAt
     actualEndsAt
     overrideTitle
+    accepted
     master {
       id
       title
