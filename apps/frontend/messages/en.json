@@ -1079,7 +1079,8 @@
     "error": {
       "title": "Failed to load events",
       "tryAgain": "Try again"
-    },
+    }
+  },
   "VolunteerHome": {
     "greeting": "Hi, {firstName}!",
     "greetingFallback": "Welcome back!",

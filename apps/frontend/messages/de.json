@@ -1079,7 +1079,8 @@
     "error": {
       "title": "Veranstaltungen konnten nicht geladen werden",
       "tryAgain": "Erneut versuchen"
-    },
+    }
+  },
   "VolunteerHome": {
     "greeting": "Hallo, {firstName}!",
     "greetingFallback": "Willkommen zurück!",
