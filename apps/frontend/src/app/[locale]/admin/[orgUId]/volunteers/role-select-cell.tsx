@@ -48,27 +48,17 @@ export function RoleSelectCell({
 
   const t = useTranslations('Role');
   const tCommon = useTranslations('Common');
-  const isOwner = roles.some(
-    (role) => role.isInternal && role.name === 'Owner',
-  );
-  const systemRoles = roles.filter((role) => role.isInternal);
   const customRole = roles.find((role) => !role.isInternal);
-
-  // Owner is always shown as plain text, no dropdown
-  if (isOwner) {
-    return <span className="text-sm">{t('owner')}</span>;
-  }
+  const currentRole = customRole || roles[0];
 
   // Read-only users see custom role name or nothing
   if (!canEdit) {
-    return customRole ? (
-      <span className="text-sm">{customRole.name}</span>
+    return currentRole ? (
+      <span className="text-sm">{currentRole.name}</span>
     ) : (
       <span className="text-sm text-muted-foreground">{tCommon('dash')}</span>
     );
   }
-
-  const systemRoleIds = systemRoles.map((role) => role.id);
 
   return (
     <Popover
@@ -86,7 +76,7 @@ export function RoleSelectCell({
           disabled={rolesLoading || isUpdating}
         >
           <span className="truncate">
-            {customRole ? customRole.name : t('noRole')}
+            {currentRole ? currentRole.name : t('noRole')}
           </span>
           <ChevronDownIcon className="ml-2 size-4 shrink-0 opacity-50" />
         </Button>
@@ -102,36 +92,34 @@ export function RoleSelectCell({
           <CommandList>
             <CommandEmpty>{t('select.empty')}</CommandEmpty>
             <CommandGroup>
-              {availableRoles
-                ?.filter((role) => !role.isInternal)
-                .map((role) => {
-                  const isSelected = role.id === customRole?.id;
-                  return (
-                    <CommandItem
-                      key={role.id}
-                      value={role.name}
-                      onSelect={() => {
-                        if (!isSelected) {
-                          updateRoles({
-                            membershipId,
-                            roleIds: [...systemRoleIds, role.id],
-                          });
-                        }
-                        setOpen(false);
-                      }}
-                      className="cursor-pointer"
+              {availableRoles?.map((role) => {
+                const isSelected = role.id === currentRole?.id;
+                return (
+                  <CommandItem
+                    key={role.id}
+                    value={role.name}
+                    onSelect={() => {
+                      if (!isSelected) {
+                        updateRoles({
+                          membershipId,
+                          roleIds: [role.id],
+                        });
+                      }
+                      setOpen(false);
+                    }}
+                    className="cursor-pointer"
+                  >
+                    {isSelected && (
+                      <CheckIcon className="mr-2 size-4 text-primary" />
+                    )}
+                    <span
+                      className={`truncate ${isSelected ? 'font-medium' : ''}`}
                     >
-                      {isSelected && (
-                        <CheckIcon className="mr-2 size-4 text-primary" />
-                      )}
-                      <span
-                        className={`truncate ${isSelected ? 'font-medium' : ''}`}
-                      >
-                        {role.name}
-                      </span>
-                    </CommandItem>
-                  );
-                })}
+                      {role.name}
+                    </span>
+                  </CommandItem>
+                );
+              })}
             </CommandGroup>
             <CommandSeparator />
             <CommandGroup>
