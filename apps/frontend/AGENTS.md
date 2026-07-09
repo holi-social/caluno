@@ -31,7 +31,7 @@ Route groups: `(auth)` unauthenticated, `(dashboard)/[orgUId]` protected + org-s
 
 ## Server-side auth & org context — use these, never roll your own
 - `lib/auth-server.ts`: `getSession()`, `requireAuth(redirectTo?)`, `getCurrentUser()`, `isAuthenticated()` — server components, layouts, and server actions only
-- `lib/org-context-server.ts`: `requireOrgAccess(orgUId)`, `getMyAccessibleOrganizationUnits()` (cached), `resolveOrgFromId(orgUId)`
+- `lib/org-context-server.ts`: `requireOrgAccess(orgUId)`, `getMyAccessibleOrganizationUnits()`
 - Data access: `const data = await getDataClient(orgUId)` (`lib/data-client.ts`) — auto-adds the `x-organization-unit-id` header and auth cookies; a 403 throws `ForbiddenDataError` → server-side `redirect('/unauthorized')` in `data-client.ts` / server components. This is the org-safety mechanism: never construct GraphQL calls that bypass it.
 
 ## Patterns
@@ -111,8 +111,9 @@ performs the actual cookie write. Server Component renders may read cookies but
 not set them, so seeding must not happen in a layout/page render directly. No
 page-level locale redirects.
 
-## New features
+## New Admin features
 Always study UI/UX patterns in existing similar features before starting a new one — consistent experience across features.
-- List pages: follow `src/app/(dashboard)/[orgUId]/shifts/page.tsx`
-- Detail pages: follow `src/app/(dashboard)/[orgUId]/shifts/[shiftId]/page.tsx`
-- Create/edit pages: use `clippy-sheet`, follow `src/components/sheets/shift-sheet.tsx`
+- List pages: follow `src/app/[locale]/admin/[orgUId]/timesheets/page.tsx`
+- Detail pages: follow `src/app/[locale]/admin/[orgUId]/timesheets/[timeEntryId]/page.tsx`
+- Create pages: use `<FormSheet />`, follow `src/app/[locale]/admin/[orgUId]/@sheet/timesheets/new/page.tsx`
+- Edit pages: use `<FormSheet />`, follow `src/app/[locale]/admin/[orgUId]/@sheet/timesheets/[timeEntryId]/edit/page.tsx`

@@ -37,30 +37,6 @@ export async function getMyAccessibleOrganizationUnits(): Promise<
     .sort((a, b) => a.name.localeCompare(b.name));
 }
 
-export async function resolveOrgFromId(
-  orgUId: string,
-): Promise<OrgContextData> {
-  const organizations = await getMyAccessibleOrganizationUnits();
-  const org =
-    organizations.find((item) => item.id === orgUId) ??
-    organizations.find((item) => item.organizationId === orgUId);
-  if (!org) {
-    return notFound();
-  }
-  return org;
-}
-
-export async function resolveOrgFromSlug(
-  orgSlug: string,
-): Promise<OrgContextData> {
-  const organizations = await getMyAccessibleOrganizationUnits();
-  const org = organizations.find((item) => item.slug === orgSlug);
-  if (!org) {
-    return notFound();
-  }
-  return org;
-}
-
 export async function validateUserOrgAccess(orgUId: string): Promise<boolean> {
   const organizations = await getMyAccessibleOrganizationUnits();
   return organizations.some(
