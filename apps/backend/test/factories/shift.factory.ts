@@ -1,6 +1,7 @@
 import type { Database } from '../../src/database/database.module';
 import * as schema from '../../src/database/schema';
 import { ShiftVisibility } from '../../src/shift/enums';
+import { getDurationMinutes } from '../../src/shift/shift.service';
 import { expandShift } from '../../src/shift/utils/rrule-expander';
 import { slugify } from '../../src/utils/slug.util';
 import { createUser } from './user.factory';
@@ -22,8 +23,8 @@ export type CreateShiftOptions = {
   minVolunteers?: number | null;
 };
 
-const defaultStartsAt = new Date('2026-06-18T08:00:00.000Z');
-const defaultEndsAt = new Date('2026-06-18T10:00:00.000Z');
+const defaultStartsAt = new Date(Date.now() + 100000);
+const defaultEndsAt = new Date(Date.now() + 200000);
 
 /**
  * Inserts a shift (template) plus its expanded instances directly into the
@@ -38,7 +39,7 @@ export const createShift = async (
   const title = options.title ?? `Test Shift ${crypto.randomUUID()}`;
   const startsAt = options.startsAt ?? defaultStartsAt;
   const endsAt = options.endsAt ?? defaultEndsAt;
-  const durationMinutes = (endsAt.getTime() - startsAt.getTime()) / 60000;
+  const durationMinutes = getDurationMinutes(startsAt, endsAt);
   const rrule = options.rrule ?? null;
   const createdById = options.createdById ?? (await createUser(db)).id;
 

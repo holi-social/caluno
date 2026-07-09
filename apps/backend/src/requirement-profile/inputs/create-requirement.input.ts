@@ -13,7 +13,7 @@ export class CreateRequirementInput {
   name!: string;
 
   @Field(() => String, { nullable: true })
-  description!: string | null;
+  description?: string | null;
 
   @Field(() => Boolean, { defaultValue: false })
   mandatory!: boolean;
