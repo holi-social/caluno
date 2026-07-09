@@ -107,8 +107,12 @@ export class ShiftService {
     return result?.total ?? 0;
   }
 
-  async hasOpenTimeEntry(instanceId: string, userId: string): Promise<boolean> {
-    const entries = await this.db
+  /** The volunteer's open (not-yet-checked-out) time entry for an instance, if any. */
+  async findOpenTimeEntry(
+    instanceId: string,
+    userId: string,
+  ): Promise<typeof schema.timeEntries.$inferSelect | null> {
+    const [entry] = await this.db
       .select()
       .from(schema.timeEntries)
       .where(
@@ -120,7 +124,11 @@ export class ShiftService {
       )
       .limit(1);
 
-    return entries.length > 0;
+    return entry ?? null;
+  }
+
+  async hasOpenTimeEntry(instanceId: string, userId: string): Promise<boolean> {
+    return (await this.findOpenTimeEntry(instanceId, userId)) !== null;
   }
 
   async findInstanceWithMaster(

@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { and, count, eq, isNull } from 'drizzle-orm';
+import { count, eq } from 'drizzle-orm';
 import type { Database } from '../database/database.module';
 import { DATABASE_CONNECTION } from '../database/database-connection';
 import * as schema from '../database/schema';
@@ -216,10 +216,14 @@ export class TimeTrackingService {
     return { entries: entries as TimeEntryEntity[], total };
   }
 
-  async checkIn(
+  /**
+   * Resolves the org unit a volunteer may self-track for a shift instance, after
+   * verifying the instance exists (not cancelled) and the user is a member.
+   */
+  private async resolveTrackableUnit(
     shiftInstanceId: string,
     userId: string,
-  ): Promise<TimeEntryEntity> {
+  ): Promise<string> {
     const instance =
       await this.shiftService.findInstanceWithMaster(shiftInstanceId);
 
@@ -235,6 +239,18 @@ export class TimeTrackingService {
     if (!isMember) {
       throw new ForbiddenGraphQLError('You are not a member of this unit');
     }
+
+    return organizationUnitId;
+  }
+
+  async checkIn(
+    shiftInstanceId: string,
+    userId: string,
+  ): Promise<TimeEntryEntity> {
+    const organizationUnitId = await this.resolveTrackableUnit(
+      shiftInstanceId,
+      userId,
+    );
 
     const isBooked = await this.shiftService.isVolunteerBooked(
       shiftInstanceId,
@@ -266,35 +282,15 @@ export class TimeTrackingService {
     shiftInstanceId: string,
     userId: string,
   ): Promise<TimeEntryEntity> {
-    const instance =
-      await this.shiftService.findInstanceWithMaster(shiftInstanceId);
-
-    if (instance.isCancelled) {
-      throw new NotFoundGraphQLError('Shift instance not found');
-    }
-
-    const organizationUnitId = instance.master.organizationUnitId;
-    const isMember = await this._membershipService.isMemberOfUnitOrAncestor(
+    const organizationUnitId = await this.resolveTrackableUnit(
+      shiftInstanceId,
       userId,
-      organizationUnitId,
     );
-    if (!isMember) {
-      throw new ForbiddenGraphQLError('You are not a member of this unit');
-    }
 
-    const entries = await this.db
-      .select()
-      .from(schema.timeEntries)
-      .where(
-        and(
-          eq(schema.timeEntries.shiftInstanceId, shiftInstanceId),
-          eq(schema.timeEntries.volunteerId, userId),
-          isNull(schema.timeEntries.endedAt),
-        ),
-      )
-      .limit(1);
-
-    const entry = entries[0];
+    const entry = await this.shiftService.findOpenTimeEntry(
+      shiftInstanceId,
+      userId,
+    );
     if (!entry) {
       throw new NotFoundGraphQLError('No open check-in found for this shift');
     }
