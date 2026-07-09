@@ -28,6 +28,7 @@ import { CreateShiftInput } from './inputs/create-shift.input';
 import { UpdateShiftInput } from './inputs/update-shift.input';
 import type { ShiftEntity } from './schemas/shift.schema';
 import type { ShiftInstanceEntity } from './schemas/shift-instance.schema';
+import { startOfTodayInAppTimeZone } from './utils/app-time';
 import { expandShift } from './utils/rrule-expander';
 
 export function getDurationMinutes(start: Date, end: Date) {
@@ -179,9 +180,7 @@ export class ShiftService {
   }
 
   private getStartOfToday(): Date {
-    const now = new Date();
-    now.setUTCHours(0, 0, 0, 0);
-    return now;
+    return startOfTodayInAppTimeZone();
   }
 
   async findMyShiftInstances(
