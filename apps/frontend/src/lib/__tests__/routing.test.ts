@@ -9,7 +9,7 @@ mock.module('../org-context-server', () => ({
   getLastVisitedOrgServer: async () => lastVisitedOrgId,
 }));
 
-const { resolvePostAuthDestination } = await import('../post-auth-routing');
+const { resolvePostAuthDestination } = await import('../routing');
 
 const orgUnit: OrgContextData = {
   id: 'org-unit-1',
