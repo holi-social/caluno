@@ -148,7 +148,8 @@
     "admin": "Admin",
     "qrIdTitle": "QR-ID",
     "qrIdDescription": "Dies ist dein persönlicher QR-Code zum Einchecken in Schichten",
-    "profile": "Profil"
+    "profile": "Profil",
+    "volunteering": "Freiwilligenarbeit"
   },
   "Pagination": {
     "showing": "{start}-{end} von {total} {name} werden angezeigt",

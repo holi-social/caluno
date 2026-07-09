@@ -148,7 +148,8 @@
     "admin": "Admin",
     "qrIdTitle": "QR iD",
     "qrIdDescription": "This is your personal QR code to check in to shifts",
-    "profile": "Profile"
+    "profile": "Profile",
+    "volunteering": "Volunteering"
   },
   "Pagination": {
     "showing": "Showing {start}-{end} of {total} {name}",
