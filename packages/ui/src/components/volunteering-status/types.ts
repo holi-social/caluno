@@ -9,6 +9,7 @@ export type ShiftVolunteeringDisplayState =
   | 'invited'
   | 'requested'
   | 'accepted'
+  | 'signed_up'
   | 'declined'
   | 'cancelled'
   | 'checked_in'

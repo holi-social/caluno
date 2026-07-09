@@ -14,12 +14,53 @@ import {
 import type { ShiftVolunteeringDisplayState } from '@/components/volunteering-status/types';
 
 /** Coordinator-visible invite response states (maps to ShiftInstanceInvite). */
-const INVITE_STATES = [
+const INVITE_FLOW_STATES = [
   'invited',
   'accepted',
   'declined',
   'cancelled',
 ] as const satisfies readonly ShiftVolunteeringDisplayState[];
+
+const SIGNUP_FLOW_STATES = [
+  'signed_up',
+] as const satisfies readonly ShiftVolunteeringDisplayState[];
+
+function StatusFlowSection({
+  title,
+  description,
+  states,
+  variant,
+}: {
+  title: string;
+  description?: string;
+  states: readonly ShiftVolunteeringDisplayState[];
+  variant: 'icon' | 'badge';
+}) {
+  return (
+    <section className="space-y-3">
+      <div>
+        <h3 className="text-sm font-semibold">{title}</h3>
+        {description ? (
+          <p className="text-xs text-muted-foreground">{description}</p>
+        ) : null}
+      </div>
+      <div className="flex flex-wrap items-center gap-6">
+        {states.map((state) => (
+          <div key={state} className="flex flex-col items-center gap-2">
+            {variant === 'icon' ? (
+              <VolunteeringStatusIcon state={state} size="md" accessible />
+            ) : (
+              <VolunteeringStatusBadge state={state} />
+            )}
+            {variant === 'icon' ? (
+              <span className="text-xs text-muted-foreground">{state}</span>
+            ) : null}
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
 
 const meta = {
   title: 'ui/Shift invite status',
@@ -38,6 +79,7 @@ const invitedVolunteers = [
   { id: '2', name: 'Hans Test', state: 'invited' as const },
   { id: '3', name: 'Lena Müller', state: 'declined' as const },
   { id: '4', name: 'Sara Klein', state: 'cancelled' as const },
+  { id: '5', name: 'Tom Weber', state: 'signed_up' as const },
 ];
 
 const invitePanelMembers = [
@@ -67,29 +109,44 @@ const invitePanelMembers = [
   },
 ];
 
-/** Icons for pending, accepted, and declined. */
+/** Icons grouped by how the volunteer joined the shift. */
 export const StatusIcons: Story = {
   name: 'Status icons',
   render: () => (
-    <div className="flex max-w-xl flex-wrap items-center gap-6">
-      {INVITE_STATES.map((state) => (
-        <div key={state} className="flex flex-col items-center gap-2">
-          <VolunteeringStatusIcon state={state} size="md" accessible />
-          <span className="text-xs text-muted-foreground">{state}</span>
-        </div>
-      ))}
+    <div className="flex max-w-2xl flex-col gap-8">
+      <StatusFlowSection
+        title="Org invites volunteer"
+        description="Coordinator sends invite → volunteer responds (or coordinator cancels)."
+        states={INVITE_FLOW_STATES}
+        variant="icon"
+      />
+      <StatusFlowSection
+        title="Volunteer signs up for shift"
+        description="No invite — volunteer joins directly; lands on shift immediately."
+        states={SIGNUP_FLOW_STATES}
+        variant="icon"
+      />
     </div>
   ),
 };
 
-/** Badge labels for each invite response. */
+/** Badge labels grouped by how the volunteer joined the shift. */
 export const StatusBadges: Story = {
   name: 'Status badges',
   render: () => (
-    <div className="flex max-w-xl flex-wrap gap-2">
-      {INVITE_STATES.map((state) => (
-        <VolunteeringStatusBadge key={state} state={state} />
-      ))}
+    <div className="flex max-w-2xl flex-col gap-8">
+      <StatusFlowSection
+        title="Org invites volunteer"
+        description="Coordinator sends invite → volunteer responds (or coordinator cancels)."
+        states={INVITE_FLOW_STATES}
+        variant="badge"
+      />
+      <StatusFlowSection
+        title="Volunteer signs up for shift"
+        description="No invite — volunteer joins directly; lands on shift immediately."
+        states={SIGNUP_FLOW_STATES}
+        variant="badge"
+      />
     </div>
   ),
 };
@@ -100,7 +157,7 @@ export const InstanceDetail: Story = {
   render: () => (
     <div className="mx-auto max-w-2xl">
       <VolunteeringVolunteerList
-        summary="4 invited · 2 accepted · 12 spots"
+        summary="4 invited · 2 accepted · 1 signed up · 12 spots"
         volunteers={invitedVolunteers}
       />
     </div>
@@ -135,6 +192,7 @@ export const ShiftCard: Story = {
           { id: '2', name: 'Elia Grams', state: 'invited' },
           { id: '3', name: 'Rico Schaefer', state: 'declined' },
           { id: '4', name: 'Jan Vogel', state: 'cancelled' },
+          { id: '5', name: 'Tom Weber', state: 'signed_up' },
         ]}
       />
     </Card>
@@ -182,10 +240,11 @@ export const Surfaces: Story = {
         <p className="text-sm font-semibold">Instance detail</p>
         <div className="rounded-xl border px-4">
           <VolunteeringVolunteerRow
-            name="Sara Klein"
-            state="cancelled"
+            name="Katharina Zimmer"
+            state="accepted"
             onAction={() => {}}
           />
+          <VolunteeringVolunteerRow name="Tom Weber" state="signed_up" />
         </div>
       </div>
     </div>

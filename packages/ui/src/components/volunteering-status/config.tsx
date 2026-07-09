@@ -30,6 +30,7 @@ export const volunteeringStatusIcons: Record<
   invited: Clock,
   requested: Inbox,
   accepted: Check,
+  signed_up: Check,
   declined: X,
   cancelled: Ban,
   checked_in: CircleCheck,
@@ -48,6 +49,7 @@ export const volunteeringStatusIconTone: Record<
   invited: 'neutral',
   requested: 'neutral',
   accepted: 'positive',
+  signed_up: 'positive',
   declined: 'destructive',
   cancelled: 'warning',
   checked_in: 'positive',
@@ -91,7 +93,8 @@ export const volunteeringLifecycleDescriptions: Record<
 > = {
   invited: 'Waiting for their reply.',
   requested: 'Accept or decline to add them.',
-  accepted: 'Confirmed for this shift.',
+  accepted: 'Accepted your invite.',
+  signed_up: 'Joined without an invite.',
   declined: 'Not joining this shift.',
   cancelled: 'Invite withdrawn by coordinator.',
   checked_in: 'Here — time is tracking.',
@@ -145,6 +148,13 @@ export function getVolunteeringStatusPresentation(
         label: 'Accepted',
         description: volunteeringLifecycleDescriptions.accepted,
         actions: ['Uninvite'],
+      };
+    case 'signed_up':
+      return {
+        iconTone: volunteeringStatusIconTone.signed_up,
+        label: 'Signed up',
+        description: volunteeringLifecycleDescriptions.signed_up,
+        actions: [],
       };
     case 'declined':
       return {
