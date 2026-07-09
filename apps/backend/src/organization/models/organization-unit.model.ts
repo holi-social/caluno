@@ -21,22 +21,22 @@ export class OrganizationUnit {
   organizationId!: string;
 
   @Field(() => String, { nullable: true })
-  logoUrl!: string | null;
+  logoUrl?: string | null;
 
   @Field(() => String, { nullable: true })
-  websiteUrl!: string | null;
+  websiteUrl?: string | null;
 
   @Field(() => String, { nullable: true })
-  contactEmail!: string | null;
+  contactEmail?: string | null;
 
   @Field(() => String, { nullable: true })
-  phone!: string | null;
+  phone?: string | null;
 
   @Field(() => String, { nullable: true })
-  address!: string | null;
+  address?: string | null;
 
   @Field(() => String, { nullable: true })
-  description!: string | null;
+  description?: string | null;
 
   @Field(() => OrganizationModel)
   organization!: Organization;
@@ -45,16 +45,16 @@ export class OrganizationUnit {
   type!: OrganizationUnitType;
 
   @Field(() => OrganizationUnit, { nullable: true })
-  parent!: OrganizationUnit | null;
+  parent?: OrganizationUnit | null;
 
   @Field(() => [OrganizationUnit])
   children!: OrganizationUnit[];
 
   @Field(() => RequirementProfile, { nullable: true })
-  requiredMembershipRequirementProfile!: RequirementProfile | null;
+  requiredMembershipRequirementProfile?: RequirementProfile | null;
 
   @Field(() => Date, { nullable: true })
-  deletedAt!: Date;
+  deletedAt?: Date | null;
 }
 
 export const OrganizationUnitPaginatedResponse =

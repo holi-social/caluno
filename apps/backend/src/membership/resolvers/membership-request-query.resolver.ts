@@ -23,7 +23,7 @@ export class MembershipRequestQueryResolver {
   @Query(() => MembershipRequestPaginatedResponse)
   async membershipRequests(
     @Args('status', { type: () => MembershipRequestStatus, nullable: true })
-    status: MembershipRequestStatus | null,
+    status: MembershipRequestStatus | null | undefined,
     @Args() pagination: PaginationInput,
     @Context() context: AuthenticatedGraphQLContext,
   ): Promise<MembershipRequestPaginatedResponse> {
@@ -43,7 +43,7 @@ export class MembershipRequestQueryResolver {
   @Query(() => Int)
   async membershipRequestCount(
     @Args('status', { type: () => MembershipRequestStatus, nullable: true })
-    status: MembershipRequestStatus | null,
+    status: MembershipRequestStatus | null | undefined,
     @Context() context: AuthenticatedGraphQLContext,
   ): Promise<number> {
     return this.membershipRequestService.getMembershipRequestCount(
@@ -56,7 +56,7 @@ export class MembershipRequestQueryResolver {
   async myMembershipRequests(
     @Session() session: UserSession,
     @Args('status', { type: () => MembershipRequestStatus, nullable: true })
-    status: MembershipRequestStatus | null,
+    status: MembershipRequestStatus | null | undefined,
     @Args() pagination: PaginationInput,
   ): Promise<MembershipRequestPaginatedResponse> {
     const items = await this.membershipRequestService.getMyMembershipRequests(

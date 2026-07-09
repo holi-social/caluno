@@ -61,7 +61,7 @@ export class ShiftMutationResolver {
     @Args('instanceId', { type: () => String }) instanceId: string,
     @Args('memberIds', { type: () => [String] }) memberIds: string[],
     @Args('inviteToAllInstances', { type: () => Boolean, nullable: true })
-    inviteToAllInstances: boolean | undefined,
+    inviteToAllInstances: boolean | null | undefined,
     @Context() context: AuthenticatedGraphQLContext,
   ): Promise<ShiftInstance> {
     const instance =

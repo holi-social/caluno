@@ -403,8 +403,8 @@ export class ShiftService {
     await this.createInvitesForInstances(tx, [shiftInstance.id], memberIds);
     void this.loadAndEmitShiftInstanceInvitedNotification(
       shiftInstance.master,
-      memberIds,
       shiftInstance,
+      memberIds,
     );
   }
 
@@ -429,7 +429,7 @@ export class ShiftService {
     shiftInstanceId: string,
     memberIds: string[],
     organizationUnitId: string,
-    options: { inviteToAllInstances?: boolean } = {},
+    options: { inviteToAllInstances?: boolean | null } = {},
   ): Promise<ShiftInstanceEntity> {
     const currentShiftInstance = await this.db.query.shiftInstances.findFirst({
       where: {
@@ -959,8 +959,8 @@ export class ShiftService {
 
   private async loadAndEmitShiftInstanceInvitedNotification(
     shift: ShiftEntity,
-    invitedUserIds: string[],
     instance: ShiftInstanceEntity,
+    invitedUserIds: string[],
   ): Promise<void> {
     if (invitedUserIds.length === 0) {
       return;
@@ -997,9 +997,9 @@ export class ShiftService {
 
   private async loadAndEmitShiftInvitedNotification(
     shift: ShiftEntity,
-    invitedUserIds: string[],
+    invitedUserIds?: string[] | null,
   ): Promise<void> {
-    if (invitedUserIds.length === 0) {
+    if (!invitedUserIds || invitedUserIds.length === 0) {
       return;
     }
 
