@@ -31,7 +31,6 @@ export * from './react/hooks/use-graphql-client';
 export * from './react/hooks/use-join-shift-instance';
 export * from './react/hooks/use-membership-request';
 export * from './react/hooks/use-memberships';
-export * from './react/hooks/use-my-accessible-organization-units';
 export * from './react/hooks/use-my-permissions';
 export * from './react/hooks/use-my-shift-instances';
 export * from './react/hooks/use-organizations';
