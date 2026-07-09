@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, mock } from 'bun:test';
 import type { OrgContextData } from '../org-context-server';
+import { resolveAdminDestination } from '../routing';
 
 const accessibleOrgs: OrgContextData[] = [];
 let lastVisitedOrgId: string | null = null;
@@ -18,33 +19,77 @@ const orgUnit: OrgContextData = {
   organizationId: 'org-1',
 };
 
-describe('resolvePostAuthDestination', () => {
-  beforeEach(() => {
-    accessibleOrgs.length = 0;
-    lastVisitedOrgId = null;
+const anotherOrgUnit: OrgContextData = {
+  id: 'org-unit-2',
+  slug: 'org-unit-2',
+  name: 'Org Unit 2',
+  organizationId: 'org-2',
+};
+
+describe('routing', () => {
+  describe('resolvePostAuthDestination', () => {
+    beforeEach(() => {
+      accessibleOrgs.length = 0;
+      lastVisitedOrgId = null;
+    });
+
+    it('returns / when the user has no accessible organization units', async () => {
+      expect(await resolvePostAuthDestination()).toBe('/');
+    });
+
+    it('returns / when orgs exist but no last visited cookie is set', async () => {
+      accessibleOrgs.push(orgUnit);
+
+      expect(await resolvePostAuthDestination()).toBe('/');
+    });
+
+    it('returns /admin/{id} when last visited cookie matches an accessible org unit', async () => {
+      accessibleOrgs.push(orgUnit);
+      lastVisitedOrgId = orgUnit.id;
+
+      expect(await resolvePostAuthDestination()).toBe('/admin/org-unit-1');
+    });
+
+    it('returns / when last visited cookie does not match an accessible org unit', async () => {
+      accessibleOrgs.push(orgUnit);
+      lastVisitedOrgId = 'other-org-unit';
+
+      expect(await resolvePostAuthDestination()).toBe('/');
+    });
   });
 
-  it('returns / when the user has no accessible organization units', async () => {
-    expect(await resolvePostAuthDestination()).toBe('/');
-  });
+  describe('resolveAdminDestination', () => {
+    beforeEach(() => {
+      accessibleOrgs.length = 0;
+      lastVisitedOrgId = null;
+    });
 
-  it('returns / when orgs exist but no last visited cookie is set', async () => {
-    accessibleOrgs.push(orgUnit);
+    it('Resolves to nowhere, when the user has no accessible organization units', async () => {
+      expect(await resolveAdminDestination()).toBeNull();
+    });
 
-    expect(await resolvePostAuthDestination()).toBe('/');
-  });
+    it('Resolves to previously visited org unit, when last visited cookie matches an accessible org unit', async () => {
+      accessibleOrgs.push(orgUnit);
+      accessibleOrgs.push(anotherOrgUnit);
 
-  it('returns /admin/{id} when last visited cookie matches an accessible org unit', async () => {
-    accessibleOrgs.push(orgUnit);
-    lastVisitedOrgId = orgUnit.id;
+      lastVisitedOrgId = anotherOrgUnit.id;
 
-    expect(await resolvePostAuthDestination()).toBe('/admin/org-unit-1');
-  });
+      expect(await resolveAdminDestination()).toBe('/admin/org-unit-2');
+    });
 
-  it('returns / when last visited cookie does not match an accessible org unit', async () => {
-    accessibleOrgs.push(orgUnit);
-    lastVisitedOrgId = 'other-org-unit';
+    it('Resolves to first org unit, when orgs exist but no last visited cookie is set', async () => {
+      accessibleOrgs.push(orgUnit);
+      accessibleOrgs.push(anotherOrgUnit);
 
-    expect(await resolvePostAuthDestination()).toBe('/');
+      expect(await resolveAdminDestination()).toBe('/admin/org-unit-1');
+    });
+
+    it('Resolves to first org unit, when last visited cookie does not match an accessible org unit', async () => {
+      accessibleOrgs.push(orgUnit);
+      accessibleOrgs.push(anotherOrgUnit);
+      lastVisitedOrgId = 'some-other-org-unit';
+
+      expect(await resolveAdminDestination()).toBe('/admin/org-unit-1');
+    });
   });
 });

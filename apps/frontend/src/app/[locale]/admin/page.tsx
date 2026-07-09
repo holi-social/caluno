@@ -1,11 +1,11 @@
 import { redirect } from 'next/navigation';
 import HomePage from '@/domain/home/components/home-page';
-import { resolvePostAuthDestination } from '@/lib/post-auth-routing';
+import { resolveAdminDestination } from '@/lib/routing';
 
 export default async function Home() {
-  const destination = await resolvePostAuthDestination();
+  const destination = await resolveAdminDestination();
 
-  if (destination !== '/') {
+  if (destination) {
     redirect(destination);
   }
 
