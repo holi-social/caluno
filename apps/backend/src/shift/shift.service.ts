@@ -164,7 +164,7 @@ export class ShiftService {
       }),
     ]);
 
-    return this.mergeShiftIdsByRecency([...openShifts, ...joinedShifts]);
+    return this.dedupAndSortByCreation([...openShifts, ...joinedShifts]);
   }
 
   private async findAllVisibleToMember(
@@ -199,7 +199,7 @@ export class ShiftService {
     return { shifts: orderedShifts, total };
   }
 
-  private mergeShiftIdsByRecency(
+  private dedupAndSortByCreation(
     shifts: Array<{ id: string; createdAt: Date }>,
   ): string[] {
     const byId = new Map<string, Date>();
@@ -306,9 +306,7 @@ export class ShiftService {
       return shift;
     });
 
-    if (invitedMemberIds?.length) {
-      void this.emitShiftInvitedNotification(shift, invitedMemberIds);
-    }
+    void this.loadAndEmitShiftInvitedNotification(shift, invitedMemberIds);
 
     return shift;
   }
@@ -392,7 +390,7 @@ export class ShiftService {
       [shiftInstance.id],
       memberIds,
     );
-    void this.emitShiftInstanceInvitedNotification(
+    void this.loadAndEmitShiftInstanceInvitedNotification(
       shiftInstance.master,
       memberIds,
       shiftInstance,
@@ -401,15 +399,15 @@ export class ShiftService {
 
   async uninviteMembersFromShiftInstance(
     instanceId: string,
-    memberToRemoveIds: string[],
+    membersToRemoveIds: string[],
   ): Promise<void> {
-    if (memberToRemoveIds.length > 0) {
+    if (membersToRemoveIds.length > 0) {
       await this.db
         .delete(schema.shiftInstanceInvites)
         .where(
           and(
             eq(schema.shiftInstanceInvites.instanceId, instanceId),
-            inArray(schema.shiftInstanceInvites.userId, memberToRemoveIds),
+            inArray(schema.shiftInstanceInvites.userId, membersToRemoveIds),
           ),
         );
     }
@@ -980,38 +978,14 @@ export class ShiftService {
     return this.userService.findByIdOrThrow(createdById);
   }
 
-  private emitShiftInstanceInvitedNotification(
-    shift: ShiftEntity,
-    invitedUserIds: string[],
-    instance: ShiftInstanceEntity,
-  ): void {
-    if (invitedUserIds.length === 0) {
-      return;
-    }
-
-    void this.loadAndEmitShiftInstanceInvitedNotification(
-      shift,
-      invitedUserIds,
-      instance,
-    );
-  }
-
-  private emitShiftInvitedNotification(
-    shift: ShiftEntity,
-    invitedUserIds: string[],
-  ): void {
-    if (invitedUserIds.length === 0) {
-      return;
-    }
-
-    void this.loadAndEmitShiftInvitedNotification(shift, invitedUserIds);
-  }
-
   private async loadAndEmitShiftInstanceInvitedNotification(
     shift: ShiftEntity,
     invitedUserIds: string[],
     instance: ShiftInstanceEntity,
   ): Promise<void> {
+    if (invitedUserIds.length === 0) {
+      return;
+    }
     try {
       const organizationUnit = await this.db.query.organizationUnits.findFirst({
         where: { id: shift.organizationUnitId },
@@ -1046,6 +1020,10 @@ export class ShiftService {
     shift: ShiftEntity,
     invitedUserIds: string[],
   ): Promise<void> {
+    if (invitedUserIds.length === 0) {
+      return;
+    }
+
     try {
       const [organizationUnit, instances] = await Promise.all([
         this.db.query.organizationUnits.findFirst({
@@ -1233,13 +1211,16 @@ export class ShiftService {
       );
     }
 
-    const firstShiftInstance = await this.db.query.shiftInstances.findFirst({
-      where: { masterId: shiftId },
+    const nextShiftInstance = await this.db.query.shiftInstances.findFirst({
+      where: {
+        masterId: shiftId,
+        actualStartsAt: { gte: new Date() },
+      },
       orderBy: { actualStartsAt: 'asc' },
     });
-    if (firstShiftInstance) {
+    if (nextShiftInstance) {
       await this.updateMembersForShiftWithAutoApproval(
-        firstShiftInstance.id,
+        nextShiftInstance.id,
         [userId],
         shift.organizationUnitId,
         { inviteToAllInstances: true },
