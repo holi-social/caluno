@@ -202,13 +202,9 @@
   },
   "Organization": {
     "home": {
-      "welcomeBack": "Willkommen zurück",
-      "subtitle": "Verwalte deine Organisationen und Freiwilligen an einem Ort.",
-      "createCard": {
-        "title": "Organisation erstellen",
-        "description": "Richte eine neue Organisation ein, um deine Freiwilligen und Schichten zu verwalten.",
-        "cta": "Loslegen"
-      }
+      "title": "Keine Organisationen",
+      "description": "Sie haben keine Organisationen zu verwalten",
+      "toVolunteering": "Zurück zur Freiwilligenarbeit"
     },
     "create": {
       "title": "Organisation erstellen",

@@ -202,13 +202,9 @@
   },
   "Organization": {
     "home": {
-      "welcomeBack": "Welcome back",
-      "subtitle": "Manage your organizations and volunteers all in one place.",
-      "createCard": {
-        "title": "Create an Organization",
-        "description": "Set up a new organization to start managing your volunteers and shifts.",
-        "cta": "Get started"
-      }
+      "title": "No organizations",
+      "description": "You don't have any organizations to administer",
+      "toVolunteering": "Back to volunteering"
     },
     "create": {
       "title": "Create an organization",
