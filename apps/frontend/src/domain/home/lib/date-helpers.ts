@@ -18,27 +18,6 @@ export function addDays(date: Date, days: number): Date {
   return result;
 }
 
-export function getNextWeekRange(now = new Date()): { from: Date; to: Date } {
-  const from = startOfDay(addDays(now, 1));
-  const to = startOfDay(addDays(now, 8));
-  to.setMilliseconds(-1);
-  return { from, to };
-}
-
-export function getThisWeekendRange(now = new Date()): {
-  from: Date;
-  to: Date;
-} {
-  const day = now.getDay();
-  const daysUntilSaturday = day === 6 ? 0 : 6 - day;
-  const daysUntilSunday = day === 0 ? 0 : 7 - day;
-
-  const from = startOfDay(addDays(now, daysUntilSaturday));
-  const to = startOfDay(addDays(now, daysUntilSunday + 1));
-  to.setMilliseconds(-1);
-  return { from, to };
-}
-
 export function groupByDay<T extends { actualStartsAt: string }>(
   items: T[],
 ): Array<{ date: Date; items: T[] }> {
@@ -62,26 +41,31 @@ export function groupByDay<T extends { actualStartsAt: string }>(
 
 export function getDayStripDays<T extends { actualStartsAt: string }>(
   items: T[],
-  options: { includePast?: boolean } = {},
+  options: { includePast?: boolean; minDays?: number } = {},
 ): Array<{ date: Date; shiftCount: number }> {
   const today = startOfDay(new Date());
+  const minDays = Math.max(1, options.minDays ?? 1);
   const grouped = groupByDay(items);
 
-  if (grouped.length === 0) {
-    return [{ date: today, shiftCount: 0 }];
-  }
+  // Default window: at least `minDays` starting today.
+  let firstDate = today;
+  let lastDate = addDays(today, minDays - 1);
 
   const firstGroup = grouped[0];
   const lastGroup = grouped[grouped.length - 1];
-  if (!firstGroup || !lastGroup) {
-    return [{ date: today, shiftCount: 0 }];
-  }
+  if (firstGroup && lastGroup) {
+    firstDate = firstGroup.date;
+    lastDate = lastGroup.date;
 
-  let firstDate = firstGroup.date;
-  const lastDate = lastGroup.date;
+    if (!options.includePast && firstDate.getTime() < today.getTime()) {
+      firstDate = today;
+    }
 
-  if (!options.includePast && firstDate.getTime() < today.getTime()) {
-    firstDate = today;
+    // Guarantee the strip always spans at least `minDays` from its start.
+    const minLast = addDays(firstDate, minDays - 1);
+    if (lastDate.getTime() < minLast.getTime()) {
+      lastDate = minLast;
+    }
   }
 
   const days: Array<{ date: Date; shiftCount: number }> = [];

@@ -11,18 +11,15 @@ export default async function VolunteeringHomePage({
   await params;
   const client = await getDataClient();
 
-  const [myShiftInstances, availableShiftInstances, organizationUnits] =
-    await Promise.all([
-      client.shift.findMyShiftInstances(false),
-      client.shift.findAvailableShiftInstances({}),
-      client.organization.findMyAccessibleOrganizationUnits(),
-    ]);
+  const [myShiftInstances, availableShiftInstances] = await Promise.all([
+    client.shift.findMyShiftInstances(false),
+    client.shift.findAvailableShiftInstances({}),
+  ]);
 
   return (
     <VolunteerHomeContent
       initialMyShiftInstances={myShiftInstances}
       initialAvailableShiftInstances={availableShiftInstances}
-      initialOrganizationUnits={organizationUnits}
     />
   );
 }

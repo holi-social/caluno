@@ -11,15 +11,10 @@ export default async function DiscoverPage({ params }: DiscoverPageProps) {
   await requireAuth(`/${locale}/auth/login`);
   const client = await getDataClient();
 
-  const [availableShiftInstances, organizationUnits] = await Promise.all([
-    client.shift.findAvailableShiftInstances({}),
-    client.organization.findMyAccessibleOrganizationUnits(),
-  ]);
+  const availableShiftInstances =
+    await client.shift.findAvailableShiftInstances({});
 
   return (
-    <DiscoverView
-      initialAvailableShiftInstances={availableShiftInstances}
-      initialOrganizationUnits={organizationUnits}
-    />
+    <DiscoverView initialAvailableShiftInstances={availableShiftInstances} />
   );
 }

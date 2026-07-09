@@ -1,23 +1,21 @@
 'use client';
 
-import { Button, Card, CardContent, cn } from '@repo/ui';
+import { Button, Card } from '@repo/ui';
 import {
-  BellRingIcon,
   Clock4Icon,
   DoorOpenIcon,
   MapPinIcon,
   PlayIcon,
   QrCodeIcon,
+  RepeatIcon,
 } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import { useEffect, useMemo, useState } from 'react';
+import { Link } from '@/i18n/navigation';
 import { useFormatting } from '@/lib/formatting/use-formatting';
 import { useRecurrenceLabel } from '../lib/recurrence-label';
 
-type TimerState =
-  | { kind: 'far'; label: string }
-  | { kind: 'soon'; label: string }
-  | { kind: 'overdue'; label: string }
-  | { kind: 'active'; label: string };
+type TimerKind = 'far' | 'soon' | 'overdue' | 'active';
 
 export interface ShiftCardMyProps {
   shiftInstance: {
@@ -32,25 +30,18 @@ export interface ShiftCardMyProps {
       rrule?: string | null;
     };
   };
-  timerStartsInLabel: string;
-  timerStartedAgoLabel: string;
-  timerVolunteeringLabel: string;
-  checkInLabel: string;
-  checkOutLabel: string;
   onCheckIn: () => void;
   onCheckOut: () => void;
 }
 
 const THREE_HOURS = 3 * 60 * 60 * 1000;
 
-function useTimerState(
+function useTimer(
   startsAt: string,
   isCheckedIn: boolean,
-  timerStartsInLabel: string,
-  timerStartedAgoLabel: string,
-  timerVolunteeringLabel: string,
-): TimerState {
+): { kind: TimerKind; label: string } {
   const { formatDuration } = useFormatting();
+  const t = useTranslations('VolunteerHome');
   const [now, setNow] = useState(() => new Date());
 
   useEffect(() => {
@@ -64,129 +55,103 @@ function useTimerState(
   if (isCheckedIn) {
     return {
       kind: 'active',
-      label: timerVolunteeringLabel.replace(
-        '{time}',
-        formatDuration(start, now.toISOString()),
-      ),
+      label: t('timerVolunteering', {
+        time: formatDuration(start, now.toISOString()),
+      }),
     };
   }
 
   if (diff <= 0) {
     return {
       kind: 'overdue',
-      label: timerStartedAgoLabel.replace(
-        '{time}',
-        formatDuration(start, now.toISOString()),
-      ),
+      label: t('timerStartedAgo', {
+        time: formatDuration(start, now.toISOString()),
+      }),
     };
   }
 
-  if (diff <= THREE_HOURS) {
-    return {
-      kind: 'soon',
-      label: timerStartsInLabel.replace(
-        '{time}',
-        formatDuration(now.toISOString(), start.toISOString()),
-      ),
-    };
-  }
-
+  const time = formatDuration(now.toISOString(), start.toISOString());
   return {
-    kind: 'far',
-    label: timerStartsInLabel.replace(
-      '{time}',
-      formatDuration(now.toISOString(), start.toISOString()),
-    ),
+    kind: diff <= THREE_HOURS ? 'soon' : 'far',
+    label: t('timerStartsIn', { time }),
   };
 }
 
 export function ShiftCardMy({
   shiftInstance,
-  timerStartsInLabel,
-  timerStartedAgoLabel,
-  timerVolunteeringLabel,
-  checkInLabel,
-  checkOutLabel,
   onCheckIn,
   onCheckOut,
 }: ShiftCardMyProps) {
+  const t = useTranslations('VolunteerHome');
   const { formatTimeRange } = useFormatting();
   const getRecurrenceLabel = useRecurrenceLabel();
-  const timer = useTimerState(
+  const recurrence = getRecurrenceLabel(shiftInstance.master.rrule);
+  const timer = useTimer(
     shiftInstance.actualStartsAt,
     shiftInstance.isCheckedIn,
-    timerStartsInLabel,
-    timerStartedAgoLabel,
-    timerVolunteeringLabel,
   );
 
-  const TimerIcon = {
-    far: Clock4Icon,
-    soon: Clock4Icon,
-    overdue: BellRingIcon,
-    active: PlayIcon,
-  }[timer.kind];
-
+  const TimerIcon = timer.kind === 'active' ? PlayIcon : Clock4Icon;
   const showCheckIn = timer.kind === 'soon' || timer.kind === 'overdue';
   const showCheckOut = timer.kind === 'active';
 
   return (
-    <Card className="rounded-xl border border-border bg-card p-3">
-      <div
-        className={cn(
-          'flex items-center gap-2 rounded-t-lg bg-muted px-3 py-2 text-sm',
-          timer.kind === 'overdue' && 'text-alert',
-        )}
-      >
+    <Card className="relative flex flex-col gap-0 overflow-hidden rounded-xl border border-border bg-card p-0">
+      <Link
+        href={`/shifts/${shiftInstance.master.id}`}
+        aria-label={shiftInstance.master.title}
+        className="absolute inset-0 rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60 focus-visible:ring-offset-1"
+      />
+      <div className="flex items-center justify-center gap-2 border-b border-border bg-card px-3 py-2 text-sm text-foreground">
         <TimerIcon className="size-4 shrink-0" />
         <span>{timer.label}</span>
       </div>
-      <div className="flex rounded-b-lg border-x border-b">
-        <CardContent className="flex-1 p-3">
-          <p className="text-sm text-muted-foreground">
-            {formatTimeRange(
-              shiftInstance.actualStartsAt,
-              shiftInstance.actualEndsAt,
+
+      <div className="flex gap-3 p-3">
+        <div className="flex min-w-0 flex-1 flex-col gap-1.5">
+          <div className="flex items-start justify-between gap-2">
+            <p className="font-semibold text-foreground">
+              {formatTimeRange(
+                shiftInstance.actualStartsAt,
+                shiftInstance.actualEndsAt,
+              )}
+            </p>
+            {recurrence && (
+              <span className="flex shrink-0 items-center gap-1 text-sm text-muted-foreground">
+                <RepeatIcon className="size-3.5" />
+                {recurrence}
+              </span>
             )}
-          </p>
-          <h3 className="font-semibold text-foreground">
+          </div>
+          <h3 className="text-lg font-semibold text-foreground">
             {shiftInstance.master.title}
           </h3>
-          {shiftInstance.master.rrule && (
-            <p className="text-sm text-muted-foreground">
-              {getRecurrenceLabel(shiftInstance.master.rrule)}
-            </p>
-          )}
           {shiftInstance.master.location && (
-            <p className="text-sm text-muted-foreground flex items-center gap-1">
-              <MapPinIcon className="size-3 shrink-0" />
+            <p className="flex items-center gap-1 text-sm text-muted-foreground">
+              <MapPinIcon className="size-3.5 shrink-0" />
               {shiftInstance.master.location}
             </p>
           )}
-        </CardContent>
+        </div>
 
-        {(showCheckIn || showCheckOut) && (
-          <div className="w-[100px] border-l">
-            {showCheckIn && (
-              <Button
-                onClick={onCheckIn}
-                className="h-full w-full rounded-none rounded-br-lg bg-primary text-primary-foreground flex flex-col gap-1"
-              >
-                <QrCodeIcon className="size-5" />
-                <span>{checkInLabel}</span>
-              </Button>
-            )}
-            {showCheckOut && (
-              <Button
-                variant="outline"
-                onClick={onCheckOut}
-                className="h-full w-full rounded-none rounded-br-lg flex flex-col gap-1"
-              >
-                <DoorOpenIcon className="size-5" />
-                <span>{checkOutLabel}</span>
-              </Button>
-            )}
-          </div>
+        {showCheckIn && (
+          <Button
+            onClick={onCheckIn}
+            className="relative z-10 flex h-auto w-[100px] shrink-0 flex-col gap-1 self-stretch rounded-xl bg-primary text-primary-foreground"
+          >
+            <QrCodeIcon className="size-5" />
+            <span>{t('checkIn')}</span>
+          </Button>
+        )}
+        {showCheckOut && (
+          <Button
+            variant="outline"
+            onClick={onCheckOut}
+            className="relative z-10 flex h-auto w-[100px] shrink-0 flex-col gap-1 self-stretch rounded-xl"
+          >
+            <DoorOpenIcon className="size-5" />
+            <span>{t('checkOut')}</span>
+          </Button>
         )}
       </div>
     </Card>
