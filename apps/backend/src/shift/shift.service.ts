@@ -6,6 +6,7 @@ import type { Database } from '../database/database.module';
 import { DATABASE_CONNECTION } from '../database/database-connection';
 import * as schema from '../database/schema';
 import { UserEntity } from '../database/schema';
+import { InferResultType } from '../database/typeutil';
 import {
   BadRequestGraphQLError,
   ConflictGraphQLError,
@@ -27,6 +28,10 @@ import { UpdateShiftInput } from './inputs/update-shift.input';
 import type { ShiftEntity } from './schemas/shift.schema';
 import type { ShiftInstanceEntity } from './schemas/shift-instance.schema';
 import { expandShift } from './utils/rrule-expander';
+
+export function getDurationMinutes(start: Date, end: Date) {
+  return Math.round((end.getTime() - start.getTime()) / 60000);
+}
 
 @Injectable()
 export class ShiftService {
@@ -242,8 +247,10 @@ export class ShiftService {
     input: CreateShiftInput,
   ): Promise<ShiftEntity> {
     const { invitedMemberIds, eventId, ...shiftInput } = input;
-    const durationMinutes =
-      (shiftInput.endsAt.getTime() - shiftInput.startsAt.getTime()) / 60000;
+    const durationMinutes = getDurationMinutes(
+      shiftInput.startsAt,
+      shiftInput.endsAt,
+    );
 
     if (eventId) {
       await this.assertShiftWindowValid(
@@ -367,7 +374,18 @@ export class ShiftService {
   }
 
   async inviteMembersToShiftInstanceWithAutoApproval(
-    shiftInstance,
+    tx: Database,
+    shiftInstance: InferResultType<
+      'shiftInstances',
+      {
+        invites: {
+          columns: {
+            userId: true;
+          };
+        };
+        master: true;
+      }
+    >,
     memberIds: string[],
   ): Promise<void> {
     if (memberIds.length === 0) {
@@ -385,11 +403,7 @@ export class ShiftService {
       );
     }
 
-    await this.createInvitesForInstances(
-      this.db,
-      [shiftInstance.id],
-      memberIds,
-    );
+    await this.createInvitesForInstances(tx, [shiftInstance.id], memberIds);
     void this.loadAndEmitShiftInstanceInvitedNotification(
       shiftInstance.master,
       memberIds,
@@ -398,11 +412,12 @@ export class ShiftService {
   }
 
   async uninviteMembersFromShiftInstance(
+    tx: Database,
     instanceId: string,
     membersToRemoveIds: string[],
   ): Promise<void> {
     if (membersToRemoveIds.length > 0) {
-      await this.db
+      await tx
         .delete(schema.shiftInstanceInvites)
         .where(
           and(
@@ -486,12 +501,14 @@ export class ShiftService {
       if (!options.inviteToAllInstances) {
         if (userIdsToAdd.length > 0) {
           await this.inviteMembersToShiftInstanceWithAutoApproval(
+            tx,
             currentShiftInstance,
             userIdsToAdd,
           );
         }
         if (userIdsToRemove.length > 0) {
           await this.uninviteMembersFromShiftInstance(
+            tx,
             shiftInstanceId,
             userIdsToRemove,
           );
@@ -691,7 +708,7 @@ export class ShiftService {
       if (hasValuesToUpdate) {
         const durationMinutes =
           input.endsAt && input.startsAt
-            ? (input.endsAt.getTime() - input.startsAt.getTime()) / 60000
+            ? getDurationMinutes(input.startsAt, input.endsAt)
             : undefined;
 
         const [updatedShift] = await tx
