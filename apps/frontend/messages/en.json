@@ -544,8 +544,8 @@
       "maxVolunteersDescription": "Maximum number of people allowed to sign up for the shift",
       "copyInviteLink": "Copy invite link",
       "managingLabel": "You are managing volunteers for:",
-      "inviteAllLabel": "Invite to all instances of this shift",
-      "inviteAllDescription": "Volunteers will get invited to all shifts from {startDate}, every {days}."
+      "inviteAllLabel": "Invite to all future instances of this shift",
+      "inviteAllDescription": "Volunteers will get invited to all shifts starting from {startDate}, every {days}."
     },
     "transferList": {
       "available": "Available",

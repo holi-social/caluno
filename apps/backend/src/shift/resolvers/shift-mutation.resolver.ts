@@ -57,22 +57,6 @@ export class ShiftMutationResolver {
 
   @Permissions(PERMISSIONS.SHIFT_EDIT)
   @Mutation(() => ShiftInstance)
-  async inviteMembersToShiftInstance(
-    @Args('instanceId', { type: () => String }) instanceId: string,
-    @Args('memberIds', { type: () => [String] }) memberIds: string[],
-    @Context() context: AuthenticatedGraphQLContext,
-  ): Promise<ShiftInstance> {
-    const instance =
-      await this.shiftService.inviteMembersToShiftInstanceWithAutoApproval(
-        instanceId,
-        memberIds,
-        context.organizationUnitId,
-      );
-    return this.shiftInstanceMapper.toModelOrThrow(instance);
-  }
-
-  @Permissions(PERMISSIONS.SHIFT_EDIT)
-  @Mutation(() => ShiftInstance)
   async updateMembersForShiftInstance(
     @Args('instanceId', { type: () => String }) instanceId: string,
     @Args('memberIds', { type: () => [String] }) memberIds: string[],
@@ -80,12 +64,13 @@ export class ShiftMutationResolver {
     inviteToAllInstances: boolean | undefined,
     @Context() context: AuthenticatedGraphQLContext,
   ): Promise<ShiftInstance> {
-    const instance = await this.shiftService.updateMembersForShiftInstance(
-      instanceId,
-      memberIds,
-      context.organizationUnitId,
-      { inviteToAllInstances },
-    );
+    const instance =
+      await this.shiftService.updateMembersForShiftWithAutoApproval(
+        instanceId,
+        memberIds,
+        context.organizationUnitId,
+        { inviteToAllInstances },
+      );
     return this.shiftInstanceMapper.toModelOrThrow(instance);
   }
 
@@ -94,12 +79,15 @@ export class ShiftMutationResolver {
   async inviteMembersToShift(
     @Args('shiftId', { type: () => String }) shiftId: string,
     @Args('memberIds', { type: () => [String] }) memberIds: string[],
+    @Args('fromDate', { type: () => Date, nullable: true })
+    fromDate: Date | null,
     @Context() context: AuthenticatedGraphQLContext,
   ): Promise<Shift> {
     const shift = await this.shiftService.inviteMembersToShiftWithAutoApproval(
       shiftId,
       memberIds,
       context.organizationUnitId,
+      fromDate ?? undefined,
     );
     return this.shiftMapper.toModelOrThrow(shift);
   }

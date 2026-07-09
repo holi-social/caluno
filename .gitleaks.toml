@@ -13,6 +13,7 @@ paths = [
   '''^\.ai/metrics\.jsonl$''',
   '''^\.ai/specs/''',
   '''^\.ai/handoff/''',
+  '''^\.ai/design/design_files/.*\.pen''',
 ]
 regexes = [
   '''your-secret-key-change-in-production''',
