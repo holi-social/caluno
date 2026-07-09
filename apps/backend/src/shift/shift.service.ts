@@ -85,10 +85,7 @@ export class ShiftService {
       throw new NotFoundGraphQLError(`Shift instance with ID ${id} not found`);
     }
 
-    if (
-      !instance.master ||
-      instance.master.organizationUnitId !== organizationUnitId
-    ) {
+    if (instance.master.organizationUnitId !== organizationUnitId) {
       throw new NotFoundGraphQLError(`Shift instance with ID ${id} not found`);
     }
 
@@ -428,37 +425,6 @@ export class ShiftService {
     }
   }
 
-  async inviteMembersToShiftWithAutoApproval(
-    shiftId: string,
-    memberIds: string[],
-    organizationUnitId: string,
-    fromDate?: Date,
-  ): Promise<ShiftEntity> {
-    const shift = await this.db.query.shifts.findFirst({
-      where: { id: shiftId, isDeleted: false },
-    });
-    if (!shift) {
-      throw new NotFoundGraphQLError(`Shift with ID ${shiftId} not found`);
-    }
-    const firstShiftInstance = await this.db.query.shiftInstances.findFirst({
-      where: {
-        masterId: shiftId,
-        ...(fromDate ? { actualStartsAt: { gte: fromDate } } : {}),
-      },
-      orderBy: { actualStartsAt: 'asc' },
-    });
-    if (firstShiftInstance) {
-      await this.updateMembersForShiftWithAutoApproval(
-        firstShiftInstance.id,
-        memberIds,
-        shift.organizationUnitId,
-        { inviteToAllInstances: true },
-      );
-    }
-
-    return shift;
-  }
-
   async updateMembersForShiftWithAutoApproval(
     shiftInstanceId: string,
     memberIds: string[],
@@ -515,12 +481,6 @@ export class ShiftService {
         }
       } else {
         const shift = currentShiftInstance.master;
-        if (!shift) {
-          // this never happens because of a foreign key and NOT NULL constraint in the DB
-          throw new NotFoundGraphQLError(
-            `Shift instance with ID ${shiftInstanceId} has no shift master attached`,
-          );
-        }
 
         if (userIdsToRemove.length > 0) {
           await tx
@@ -612,6 +572,8 @@ export class ShiftService {
         for (const [instanceId, userIds] of toAddByInstance) {
           await this.createInvitesForInstances(tx, [instanceId], userIds);
         }
+
+        void this.loadAndEmitShiftInvitedNotification(shift, userIdsToAdd);
       }
     });
 
