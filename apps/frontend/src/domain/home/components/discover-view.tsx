@@ -7,15 +7,13 @@ import { CalendarXIcon } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useMemo } from 'react';
 import {
-  addDays,
   getDayStripDays,
+  getDiscoverWindow,
   groupByDay,
-  startOfDay,
 } from '../lib/date-helpers';
 import { useDelayedLoading } from '../lib/use-delayed-loading';
 import { type DayGroup, DayTimelineView } from './day-timeline-view';
-import { ShiftCardDiscoveryEvent } from './shift-card-discovery-event';
-import { ShiftCardDiscoverySolo } from './shift-card-discovery-solo';
+import { ShiftCardDiscovery } from './shift-card-discovery';
 
 interface DiscoverViewProps {
   initialAvailableShiftInstances: AvailableShiftInstance[];
@@ -26,13 +24,7 @@ export function DiscoverView({
 }: DiscoverViewProps) {
   const t = useTranslations('VolunteerHome');
 
-  const discoverOptions = useMemo(
-    () => ({
-      from: startOfDay(new Date()),
-      to: addDays(startOfDay(new Date()), 90),
-    }),
-    [],
-  );
+  const discoverOptions = useMemo(() => getDiscoverWindow(), []);
 
   const { data, isLoading } = useAvailableShiftInstances(discoverOptions, {
     initialData: initialAvailableShiftInstances,
@@ -51,13 +43,9 @@ export function DiscoverView({
 
   const renderContent = (group: DayGroup<AvailableShiftInstance>) => (
     <div className="space-y-3">
-      {group.items.map((shift) =>
-        shift.master.event ? (
-          <ShiftCardDiscoveryEvent key={shift.id} shiftInstance={shift} />
-        ) : (
-          <ShiftCardDiscoverySolo key={shift.id} shiftInstance={shift} />
-        ),
-      )}
+      {group.items.map((shift) => (
+        <ShiftCardDiscovery key={shift.id} shiftInstance={shift} />
+      ))}
     </div>
   );
 

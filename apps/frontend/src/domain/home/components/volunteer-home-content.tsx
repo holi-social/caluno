@@ -16,6 +16,7 @@ import { useFormatting } from '@/lib/formatting/use-formatting';
 import {
   addDays,
   getDayStripDays,
+  getDiscoverWindow,
   groupByDay,
   intervalsOverlap,
   isSameDay,
@@ -24,10 +25,9 @@ import {
 import { useDelayedLoading } from '../lib/use-delayed-loading';
 import { DayStrip } from './day-strip';
 import { DayStripSkeleton } from './day-strip-skeleton';
-import { ShiftCardDiscoveryEvent } from './shift-card-discovery-event';
-import { ShiftCardDiscoverySolo } from './shift-card-discovery-solo';
+import { ShiftCardDiscovery } from './shift-card-discovery';
 import { ShiftCardMy } from './shift-card-my';
-import { ShiftCardMyFuture } from './shift-card-my-future';
+import { ShiftCardMyShift } from './shift-card-my-shift';
 
 interface VolunteerHomeContentProps {
   initialMyShiftInstances: MyShiftInstance[];
@@ -49,13 +49,7 @@ export function VolunteerHomeContent({
   const { mutate: checkIn } = useCheckIn();
   const { mutate: checkOut } = useCheckOut();
 
-  const discoverOptions = useMemo(
-    () => ({
-      from: startOfDay(new Date()),
-      to: addDays(startOfDay(new Date()), 90),
-    }),
-    [],
-  );
+  const discoverOptions = useMemo(() => getDiscoverWindow(), []);
 
   const { data: availableShiftInstances, isLoading: isLoadingAvailable } =
     useAvailableShiftInstances(discoverOptions, {
@@ -78,16 +72,19 @@ export function VolunteerHomeContent({
     [availableShiftList],
   );
 
-  const countThisWeek = <T extends { actualStartsAt: string }>(list: T[]) => {
+  const { myThisWeekCount, discoverThisWeekCount } = useMemo(() => {
     const start = startOfDay(new Date());
     const end = addDays(start, 7);
-    return list.filter((item) => {
-      const date = new Date(item.actualStartsAt);
-      return date >= start && date < end;
-    }).length;
-  };
-  const myThisWeekCount = countThisWeek(myShiftList);
-  const discoverThisWeekCount = countThisWeek(availableShiftList);
+    const countThisWeek = (list: { actualStartsAt: string }[]) =>
+      list.filter((item) => {
+        const date = new Date(item.actualStartsAt);
+        return date >= start && date < end;
+      }).length;
+    return {
+      myThisWeekCount: countThisWeek(myShiftList),
+      discoverThisWeekCount: countThisWeek(availableShiftList),
+    };
+  }, [myShiftList, availableShiftList]);
 
   const conflictingShiftIds = useMemo(() => {
     const booked = myShiftList.map((shift) => ({
@@ -120,8 +117,16 @@ export function VolunteerHomeContent({
     if (group) setActiveDiscoverDay(group.date);
   };
 
-  const nextShift = myShiftList[0];
-  const futureShifts = myShiftList.slice(1);
+  // The soonest shift that hasn't ended yet — a shift that started today but
+  // already finished must not be shown as the actionable "next" card.
+  const now = Date.now();
+  const firstUpcomingIndex = myShiftList.findIndex(
+    (shift) => new Date(shift.actualEndsAt).getTime() >= now,
+  );
+  const nextShift =
+    firstUpcomingIndex >= 0 ? myShiftList[firstUpcomingIndex] : undefined;
+  const futureShifts =
+    firstUpcomingIndex >= 0 ? myShiftList.slice(firstUpcomingIndex + 1) : [];
 
   const seeAllLink = (href: string) => (
     <Link
@@ -178,7 +183,7 @@ export function VolunteerHomeContent({
             <div className="flex gap-3 overflow-x-auto pb-2">
               {futureShifts.map((shift) => (
                 <div key={shift.id} className="w-[168px] shrink-0">
-                  <ShiftCardMyFuture shiftInstance={shift} showDate />
+                  <ShiftCardMyShift shiftInstance={shift} showDate />
                 </div>
               ))}
             </div>
@@ -196,7 +201,7 @@ export function VolunteerHomeContent({
             {t('discoverHeading')}
           </h2>
           <p className="text-base text-muted-foreground">
-            {t('yourShiftsThisWeek', { n: discoverThisWeekCount })}
+            {t('discoverThisWeek', { n: discoverThisWeekCount })}
           </p>
         </div>
         {seeAllLink('/discover')}
@@ -252,21 +257,13 @@ export function VolunteerHomeContent({
               </span>
             </div>
             <div className="grid gap-3 lg:grid-cols-2 lg:items-start">
-              {selectedGroup.items.map((shift) =>
-                shift.master.event ? (
-                  <ShiftCardDiscoveryEvent
-                    key={shift.id}
-                    shiftInstance={shift}
-                    conflictsWithBooked={conflictingShiftIds.has(shift.id)}
-                  />
-                ) : (
-                  <ShiftCardDiscoverySolo
-                    key={shift.id}
-                    shiftInstance={shift}
-                    conflictsWithBooked={conflictingShiftIds.has(shift.id)}
-                  />
-                ),
-              )}
+              {selectedGroup.items.map((shift) => (
+                <ShiftCardDiscovery
+                  key={shift.id}
+                  shiftInstance={shift}
+                  conflictsWithBooked={conflictingShiftIds.has(shift.id)}
+                />
+              ))}
             </div>
           </div>
         )

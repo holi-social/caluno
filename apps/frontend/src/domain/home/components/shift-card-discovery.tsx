@@ -1,9 +1,15 @@
 'use client';
 
 import { Badge, Card, cn } from '@repo/ui';
-import { CircleAlertIcon, CircleDot, RepeatIcon } from 'lucide-react';
+import {
+  CalendarIcon,
+  ChevronRightIcon,
+  CircleAlertIcon,
+  CircleDot,
+  RepeatIcon,
+} from 'lucide-react';
+import Image from 'next/image';
 import { useTranslations } from 'next-intl';
-import type { ReactNode } from 'react';
 import { Link } from '@/i18n/navigation';
 import { useFormatting } from '@/lib/formatting/use-formatting';
 import { useRecurrenceLabel } from '../lib/recurrence-label';
@@ -19,24 +25,23 @@ export interface DiscoveryShiftInstance {
     maxVolunteers?: number | null;
     rrule?: string | null;
     organizationUnit: { name: string };
+    event?: { title: string; coverImageUrl?: string | null } | null;
   };
 }
 
 interface ShiftCardDiscoveryProps {
   shiftInstance: DiscoveryShiftInstance;
   conflictsWithBooked?: boolean;
-  /** Optional media rendered flush at the top (e.g. an event cover). */
-  cover?: ReactNode;
 }
 
 export function ShiftCardDiscovery({
   shiftInstance,
   conflictsWithBooked = false,
-  cover,
 }: ShiftCardDiscoveryProps) {
   const { formatTimeRange } = useFormatting();
   const getRecurrenceLabel = useRecurrenceLabel();
   const t = useTranslations('VolunteerHome');
+  const event = shiftInstance.master.event;
   const recurrence = getRecurrenceLabel(shiftInstance.master.rrule);
   const spotsLeft =
     shiftInstance.master.maxVolunteers != null
@@ -51,7 +56,27 @@ export function ShiftCardDiscovery({
         fullyBooked && 'bg-muted',
       )}
     >
-      {cover}
+      {event && (
+        <div className="relative h-[120px] w-full bg-muted">
+          {event.coverImageUrl && (
+            <Image
+              src={event.coverImageUrl}
+              alt=""
+              fill
+              unoptimized
+              className="object-cover"
+              sizes="100vw"
+            />
+          )}
+          <div className="absolute left-3 top-3 flex max-w-[calc(100%-24px)] items-center gap-1.5 rounded-full bg-black/70 px-3 py-1.5 text-sm font-medium text-white">
+            <CalendarIcon className="size-4 shrink-0" />
+            <span className="truncate">
+              {t('partOfEvent', { event: event.title })}
+            </span>
+            <ChevronRightIcon className="size-4 shrink-0" />
+          </div>
+        </div>
+      )}
       <div className="flex flex-col gap-2 p-3">
         <div className="flex items-start justify-between gap-2">
           <p className="text-base font-semibold text-foreground">

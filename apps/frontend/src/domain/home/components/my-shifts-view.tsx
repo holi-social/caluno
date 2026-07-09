@@ -16,8 +16,7 @@ import {
 import { useDelayedLoading } from '../lib/use-delayed-loading';
 import { type DayGroup, DayTimelineView } from './day-timeline-view';
 import { ShiftCardMy } from './shift-card-my';
-import { ShiftCardMyFuture } from './shift-card-my-future';
-import { ShiftCardMyPast } from './shift-card-my-past';
+import { ShiftCardMyShift } from './shift-card-my-shift';
 
 interface MyShiftsViewProps {
   initialMyShiftInstances: MyShiftInstance[];
@@ -91,9 +90,11 @@ export function MyShiftsView({ initialMyShiftInstances }: MyShiftsViewProps) {
               );
             }
             if (isPast) {
-              return <ShiftCardMyPast key={shift.id} shiftInstance={shift} />;
+              return (
+                <ShiftCardMyShift key={shift.id} shiftInstance={shift} past />
+              );
             }
-            return <ShiftCardMyFuture key={shift.id} shiftInstance={shift} />;
+            return <ShiftCardMyShift key={shift.id} shiftInstance={shift} />;
           })}
         </div>
       </>

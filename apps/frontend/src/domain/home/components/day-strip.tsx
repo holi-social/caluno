@@ -2,8 +2,10 @@
 
 import { Button, cn } from '@repo/ui';
 import { ChevronLeftIcon, ChevronRightIcon } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useFormatting } from '@/lib/formatting/use-formatting';
+import { isSameDay } from '../lib/date-helpers';
 
 export interface DayStripDay {
   date: Date;
@@ -28,28 +30,22 @@ export interface DayStripProps {
   onNext?: () => void;
 }
 
-function isSameDate(a: Date, b: Date): boolean {
-  return (
-    a.getFullYear() === b.getFullYear() &&
-    a.getMonth() === b.getMonth() &&
-    a.getDate() === b.getDate()
-  );
-}
-
 function ArrowButton({
   direction,
   enabled,
+  label,
   onClick,
 }: {
   direction: 'left' | 'right';
   enabled: boolean;
+  label: string;
   onClick?: () => void;
 }) {
   const Icon = direction === 'left' ? ChevronLeftIcon : ChevronRightIcon;
   return (
     <button
       type="button"
-      aria-label={direction === 'left' ? 'Previous days' : 'Next days'}
+      aria-label={label}
       disabled={!enabled}
       onClick={onClick}
       className={cn(
@@ -68,6 +64,7 @@ interface DayPillProps {
   day: DayStripDay;
   active: boolean;
   weekdayLabel: string;
+  dayLabel: string;
   shiftCountLabel?: (count: number) => string;
   onSelect: (date: Date) => void;
   className?: string;
@@ -77,6 +74,7 @@ function DayPill({
   day,
   active,
   weekdayLabel,
+  dayLabel,
   shiftCountLabel,
   onSelect,
   className,
@@ -107,9 +105,7 @@ function DayPill({
       <span className={cn('text-xs font-medium', metaMuted)}>
         {weekdayLabel}
       </span>
-      <span className="text-lg font-bold leading-none">
-        {day.date.getDate()}
-      </span>
+      <span className="text-lg font-bold leading-none">{dayLabel}</span>
       <span className={cn('whitespace-nowrap text-xs', metaMuted)}>
         {shiftCountLabel ? shiftCountLabel(day.shiftCount) : day.shiftCount}
       </span>
@@ -142,6 +138,7 @@ function PagedDayStrip({
   onPrev,
   onNext,
 }: DayStripProps & { formatDate: FormatDate; today: Date }) {
+  const t = useTranslations('VolunteerHome');
   const active = activeDates ?? [];
 
   const handleKeyDown = useCallback(
@@ -159,11 +156,16 @@ function PagedDayStrip({
 
   return (
     <div className={cn('flex items-stretch gap-2', className)}>
-      <ArrowButton direction="left" enabled={!!hasPrev} onClick={onPrev} />
+      <ArrowButton
+        direction="left"
+        enabled={!!hasPrev}
+        label={t('dayStripPrevious')}
+        onClick={onPrev}
+      />
 
       <div
         role="tablist"
-        aria-label="Day selector"
+        aria-label={t('dayStripLabel')}
         onKeyDown={handleKeyDown}
         className="flex flex-1 gap-2 overflow-x-auto scrollbar-hide"
       >
@@ -171,8 +173,9 @@ function PagedDayStrip({
           <DayPill
             key={day.date.toISOString()}
             day={day}
-            active={active.some((d) => isSameDate(d, day.date))}
+            active={active.some((d) => isSameDay(d, day.date))}
             weekdayLabel={formatDate(day.date, { weekday: 'short' })}
+            dayLabel={formatDate(day.date, { day: 'numeric' })}
             shiftCountLabel={shiftCountLabel}
             onSelect={onSelect}
             className="min-w-[72px] flex-1"
@@ -180,7 +183,12 @@ function PagedDayStrip({
         ))}
       </div>
 
-      <ArrowButton direction="right" enabled={!!hasNext} onClick={onNext} />
+      <ArrowButton
+        direction="right"
+        enabled={!!hasNext}
+        label={t('dayStripNext')}
+        onClick={onNext}
+      />
     </div>
   );
 }
@@ -196,12 +204,13 @@ function ScrollDayStrip({
   formatDate,
   today,
 }: DayStripProps & { formatDate: FormatDate; today: Date }) {
+  const t = useTranslations('VolunteerHome');
   const stripRef = useRef<HTMLDivElement>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(false);
 
-  const todayIndex = days.findIndex((day) => isSameDate(day.date, today));
-  const activeIsToday = isSameDate(activeDate, today);
+  const todayIndex = days.findIndex((day) => isSameDay(day.date, today));
+  const activeIsToday = isSameDay(activeDate, today);
 
   const updateArrows = useCallback(() => {
     const strip = stripRef.current;
@@ -251,7 +260,7 @@ function ScrollDayStrip({
 
   // Keep the active pill in view as the selection changes (e.g. scroll-spy).
   const activeDayIndex = days.findIndex((day) =>
-    isSameDate(day.date, activeDate),
+    isSameDay(day.date, activeDate),
   );
   useEffect(() => {
     if (activeDayIndex < 0) return;
@@ -273,7 +282,7 @@ function ScrollDayStrip({
 
       event.preventDefault();
       const activeIndex = days.findIndex((day) =>
-        isSameDate(day.date, activeDate),
+        isSameDay(day.date, activeDate),
       );
       const direction = event.key === 'ArrowLeft' ? -1 : 1;
 
@@ -301,13 +310,14 @@ function ScrollDayStrip({
         <ArrowButton
           direction="left"
           enabled={canScrollLeft}
+          label={t('dayStripPrevious')}
           onClick={() => scrollByPage(-1)}
         />
 
         <div
           ref={stripRef}
           role="tablist"
-          aria-label="Day selector"
+          aria-label={t('dayStripLabel')}
           onKeyDown={handleKeyDown}
           className="flex flex-1 gap-2 overflow-x-auto scrollbar-hide py-1"
         >
@@ -315,8 +325,9 @@ function ScrollDayStrip({
             <DayPill
               key={day.date.toISOString()}
               day={day}
-              active={isSameDate(day.date, activeDate)}
+              active={isSameDay(day.date, activeDate)}
               weekdayLabel={formatDate(day.date, { weekday: 'short' })}
+              dayLabel={formatDate(day.date, { day: 'numeric' })}
               shiftCountLabel={shiftCountLabel}
               onSelect={onSelect}
               className="min-w-[72px] flex-1"
@@ -327,6 +338,7 @@ function ScrollDayStrip({
         <ArrowButton
           direction="right"
           enabled={canScrollRight}
+          label={t('dayStripNext')}
           onClick={() => scrollByPage(1)}
         />
       </div>

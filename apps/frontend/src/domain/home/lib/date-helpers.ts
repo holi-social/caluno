@@ -1,21 +1,35 @@
+import { tz } from '@date-fns/tz';
+import {
+  addDays as dfAddDays,
+  isSameDay as dfIsSameDay,
+  startOfDay as dfStartOfDay,
+} from 'date-fns';
+import { DEFAULT_TIMEZONE } from '@/lib/formatting/formats';
+
+// Day boundaries must be computed in the same timezone the app renders dates in
+// (see formats.ts DEFAULT_TIMEZONE), otherwise grouping/"today" logic disagrees
+// with the displayed day for viewers whose browser timezone differs.
+const appTz = { in: tz(DEFAULT_TIMEZONE) } as const;
+
+/** Number of days ahead the discover feed looks. */
+export const DISCOVER_HORIZON_DAYS = 90;
+
 export function startOfDay(date: Date): Date {
-  const result = new Date(date);
-  result.setUTCHours(0, 0, 0, 0);
-  return result;
+  return dfStartOfDay(date, appTz);
 }
 
 export function isSameDay(a: Date, b: Date): boolean {
-  return (
-    a.getFullYear() === b.getFullYear() &&
-    a.getMonth() === b.getMonth() &&
-    a.getDate() === b.getDate()
-  );
+  return dfIsSameDay(a, b, appTz);
 }
 
 export function addDays(date: Date, days: number): Date {
-  const result = new Date(date);
-  result.setDate(result.getDate() + days);
-  return result;
+  return dfAddDays(date, days, appTz);
+}
+
+/** The discover query window: today → today + DISCOVER_HORIZON_DAYS (app tz). */
+export function getDiscoverWindow(): { from: Date; to: Date } {
+  const from = startOfDay(new Date());
+  return { from, to: addDays(from, DISCOVER_HORIZON_DAYS) };
 }
 
 export function groupByDay<T extends { actualStartsAt: string }>(
