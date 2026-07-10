@@ -609,22 +609,39 @@ export class ShiftService {
     });
   }
 
-  async countByEventId(eventId: string): Promise<number> {
-    const result = await this.db
-      .select({ count: count() })
+  async countByEventIds(eventIds: string[]) {
+    if (eventIds.length === 0) {
+      return [];
+    }
+
+    return this.db
+      .select({
+        eventId: schema.shifts.eventId,
+        count: count(),
+      })
       .from(schema.shifts)
       .where(
         and(
-          eq(schema.shifts.eventId, eventId),
+          inArray(schema.shifts.eventId, eventIds),
           eq(schema.shifts.isDeleted, false),
         ),
-      );
-    return result[0]?.count ?? 0;
+      )
+      .groupBy(schema.shifts.eventId);
   }
 
   async findByEventId(eventId: string): Promise<ShiftEntity[]> {
     return this.db.query.shifts.findMany({
       where: { eventId, isDeleted: false },
+      orderBy: { originalStartsAt: 'asc' },
+    });
+  }
+
+  async findByEventIds(eventIds: string[]): Promise<ShiftEntity[]> {
+    if (eventIds.length === 0) {
+      return [];
+    }
+    return this.db.query.shifts.findMany({
+      where: { eventId: { in: eventIds }, isDeleted: false },
       orderBy: { originalStartsAt: 'asc' },
     });
   }
