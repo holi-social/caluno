@@ -503,7 +503,7 @@ enum PermissionKey {
 }
 
 type Query {
-  activeShifts: [ShiftInstance!]!
+  activeShiftInstances: [ShiftInstance!]!
   adminUserProfile(userId: String!): UserProfile
   adminVolunteerSubmission(id: String!): FormSubmission
   event(id: ID!): Event!

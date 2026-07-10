@@ -143,8 +143,8 @@ query GetShiftVolunteers($instanceId: ID!) {
   }
 }
 
-query GetActiveShifts($userId: String!) {
-  activeShifts {
+query GetActiveShiftInstances($userId: String!) {
+  activeShiftInstances {
     id
     actualStartsAt
     actualEndsAt

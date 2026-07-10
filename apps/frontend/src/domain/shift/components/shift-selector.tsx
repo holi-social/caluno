@@ -1,5 +1,5 @@
 import {
-  type ActiveShift,
+  type ActiveShiftInstance,
   ShiftInviteStatus,
   ShiftVisibility,
 } from '@repo/data';
@@ -20,13 +20,13 @@ import { useFormatting } from '@/lib/formatting/use-formatting';
 
 type ShiftSelectorProps = {
   organizationUnitId: string;
-  shifts: ActiveShift[];
+  shifts: ActiveShiftInstance[];
   onChange: (shiftId: string) => void;
   value?: string;
 };
 
 type ShiftOptionProps = {
-  shift: ActiveShift;
+  shift: ActiveShiftInstance;
 };
 
 export const ShiftSelectItem = ({ shift }: ShiftOptionProps) => {

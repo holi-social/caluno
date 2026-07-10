@@ -59,10 +59,10 @@ export class ShiftQueryResolver {
 
   @Permissions(PERMISSIONS.SHIFT_VIEW)
   @Query(() => [ShiftInstance])
-  async activeShifts(
+  async activeShiftInstances(
     @Context() context: AuthenticatedGraphQLContext,
   ): Promise<ShiftInstance[]> {
-    const instances = await this.shiftService.findActiveShifts(
+    const instances = await this.shiftService.findActiveShiftInstances(
       context.organizationUnitId,
     );
 

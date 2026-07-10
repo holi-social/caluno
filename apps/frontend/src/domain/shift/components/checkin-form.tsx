@@ -1,6 +1,6 @@
 'use client';
 
-import type { ActiveShift, User } from '@repo/data';
+import type { ActiveShiftInstance, User } from '@repo/data';
 import {
   Button,
   Card,
@@ -22,7 +22,7 @@ import { ShiftSelectItem, ShiftSelector } from './shift-selector';
 type CheckinFormProps = {
   organizationUnitId: string;
   volunteer: User;
-  shifts: ActiveShift[];
+  shifts: ActiveShiftInstance[];
   status: CheckInStatus;
 };
 

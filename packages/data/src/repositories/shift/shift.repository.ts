@@ -5,7 +5,7 @@ import {
 } from '../../constants';
 import type {
   CreateShiftInput,
-  GetActiveShiftsQuery,
+  GetActiveShiftInstancesQuery,
   GetShiftInstancesQuery,
   GetShiftQuery,
   GetWeeklyShiftsQuery,
@@ -17,7 +17,8 @@ import {
   type PaginationOptions,
 } from '../base/base.repository';
 
-export type ActiveShift = GetActiveShiftsQuery['activeShifts'][number];
+export type ActiveShiftInstance =
+  GetActiveShiftInstancesQuery['activeShiftInstances'][number];
 export type ShiftInstanceItem =
   GetShiftInstancesQuery['shiftInstances'][number];
 export type RawShift = GetShiftQuery['shift'];
@@ -61,9 +62,9 @@ export class ShiftRepository extends BaseRepository {
     return data.shifts;
   }
 
-  async activeShifts(userId: string) {
-    const data = await this.sdk.GetActiveShifts({ userId });
-    return data.activeShifts;
+  async activeShiftInstances(userId: string) {
+    const data = await this.sdk.GetActiveShiftInstances({ userId });
+    return data.activeShiftInstances;
   }
 
   async create(input: CreateShiftInput) {

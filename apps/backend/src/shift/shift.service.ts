@@ -1016,7 +1016,7 @@ export class ShiftService {
     return shift;
   }
 
-  async findActiveShifts(
+  async findActiveShiftInstances(
     organizationUnitId: string,
   ): Promise<ShiftInstanceEntity[]> {
     const now = new Date();
