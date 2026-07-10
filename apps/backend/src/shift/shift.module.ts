@@ -6,6 +6,7 @@ import { NotificationModule } from '../notification/notification.module';
 import { UserModule } from '../user/user.module';
 import { ShiftMapper } from './mappers/shift.mapper';
 import { ShiftInstanceMapper } from './mappers/shift-instance.mapper';
+import { ShiftInstanceInvitesLoader } from './resolvers/loader';
 import { ShiftFieldResolver } from './resolvers/shift-field.resolver';
 import { ShiftInstanceFieldResolver } from './resolvers/shift-instance-field.resolver';
 import { ShiftMutationResolver } from './resolvers/shift-mutation.resolver';
@@ -28,6 +29,7 @@ import { ShiftService } from './shift.service';
     ShiftMutationResolver,
     ShiftFieldResolver,
     ShiftInstanceFieldResolver,
+    ShiftInstanceInvitesLoader,
   ],
   exports: [ShiftMapper, ShiftInstanceMapper, ShiftService],
 })

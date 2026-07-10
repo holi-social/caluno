@@ -1,6 +1,7 @@
 import { Args, Context, Parent, ResolveField, Resolver } from '@nestjs/graphql';
 import { PERMISSIONS } from '../../auth/constants';
 import { Permissions } from '../../auth/decorators/permissions.decorator';
+import { Loader } from '../../graphql/decorators';
 import type { AuthenticatedGraphQLContext } from '../../graphql/graphql.context';
 import { UserMapper } from '../../user/mappers/user.mapper';
 import { User } from '../../user/models/user.model';
@@ -8,6 +9,7 @@ import { ShiftInviteStatus } from '../enums';
 import { ShiftInstance } from '../models/shift-instance.model';
 import type { ShiftInstanceEntity } from '../schemas/shift-instance.schema';
 import { ShiftService } from '../shift.service';
+import { ShiftInstanceInvitesLoader } from './loader';
 
 @Resolver(() => ShiftInstance)
 export class ShiftInstanceFieldResolver {
@@ -35,17 +37,12 @@ export class ShiftInstanceFieldResolver {
     @Parent() instance: ShiftInstanceEntity,
     @Context() context: AuthenticatedGraphQLContext,
     @Args('userId') userId: string,
+    @Loader(ShiftInstanceInvitesLoader) loader: ShiftInstanceInvitesLoader,
   ): Promise<ShiftInviteStatus | null> {
-    const invite = await this.shiftService.findInvite(
-      context.organizationUnitId,
-      instance.id,
+    return loader.inviteStatusByInstanceId.load({
+      organizationUnitId: context.organizationUnitId,
+      instanceId: instance.id,
       userId,
-    );
-
-    if (invite) {
-      return invite.status as ShiftInviteStatus;
-    } else {
-      return null;
-    }
+    });
   }
 }
