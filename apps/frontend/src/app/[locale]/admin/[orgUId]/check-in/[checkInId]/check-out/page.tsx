@@ -20,7 +20,7 @@ export default async function CheckOutPage({ params }: CheckOutPageProps) {
   const user = await data.user.findByCheckInId(checkInId);
 
   const t = await getTranslations('Shift.checkIn');
-  const { formatTime } = await getFormatting();
+  const { formatDateTime } = await getFormatting();
 
   if (!user) {
     notFound();
@@ -52,13 +52,13 @@ export default async function CheckOutPage({ params }: CheckOutPageProps) {
                 <li className="flex gap-2">
                   <LogIn className="text-muted-foreground" />{' '}
                   {t('checkedInAt', {
-                    time: formatTime(new Date(entry.startedAt)),
+                    time: formatDateTime(new Date(entry.startedAt)),
                   })}
                 </li>
                 <li className="flex gap-2">
                   <Hand className="text-muted-foreground" />{' '}
                   {t('checkingOutAt', {
-                    time: formatTime(new Date()),
+                    time: formatDateTime(new Date()),
                   })}
                 </li>
               </ul>
