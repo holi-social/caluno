@@ -50,9 +50,6 @@ export class ShiftLoader {
   );
 }
 
-// Resolve each id independently so one missing/failing id fails only its own
-// field (DataLoader treats an `Error` element as a per-key rejection) instead
-// of rejecting the whole batch and taking every sibling field down with it.
 async function settleEach<T>(
   ids: readonly string[],
   load: (id: string) => Promise<T>,
