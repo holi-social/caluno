@@ -113,8 +113,28 @@ query GetOrganizationsWithRoot($limit: Int!, $offset: Int!) {
   }
 }
 
-query GetMyAccessibleOrganizationUnits {
-  myAccessibleOrganizationUnits {
+query GetMyOrganizationUnits {
+  myOrganizationUnits {
+    id
+    slug
+    name
+    description
+    logoUrl
+    address
+    parent {
+      id
+    }
+    organization {
+      id
+      name
+      description
+      logoUrl
+    }
+  }
+}
+
+query GetMyAdminstableOrganizationUnits {
+  myAdminstableOrganizationUnits {
     id
     slug
     name

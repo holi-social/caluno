@@ -29,6 +29,10 @@ type OrganizationUnitWithType = OrganizationUnitEntity & {
   type: OrganizationUnitTypeEntity;
 };
 
+type SeedMembership = {
+  organizationUnit: { id: string; organizationId: string | null } | null;
+};
+
 @Injectable()
 export class OrganizationService {
   constructor(
@@ -130,7 +134,7 @@ export class OrganizationService {
     };
   }
 
-  async findAccessibleUnits(userId: string): Promise<OrganizationUnitEntity[]> {
+  async findUnits(userId: string): Promise<OrganizationUnitEntity[]> {
     const userMemberships = await this.db.query.memberships.findMany({
       where: { userId },
       with: {
@@ -140,8 +144,46 @@ export class OrganizationService {
       },
     });
 
+    return this.expandToChildOrgUnits(userMemberships);
+  }
+
+  async findAdministrableUnits(
+    userId: string,
+  ): Promise<OrganizationUnitEntity[]> {
+    const userMemberships = await this.db.query.memberships.findMany({
+      where: { userId },
+      with: {
+        organizationUnit: {
+          columns: { id: true, organizationId: true },
+        },
+        roles: {
+          with: {
+            role: {
+              with: {
+                permissions: {
+                  columns: { id: true },
+                },
+              },
+            },
+          },
+        },
+      },
+    });
+
+    const administrableMemberships = userMemberships.filter((membership) =>
+      membership.roles.some(
+        (membershipRole) => (membershipRole.role?.permissions.length ?? 0) > 0,
+      ),
+    );
+
+    return this.expandToChildOrgUnits(administrableMemberships);
+  }
+
+  private async expandToChildOrgUnits(
+    seedMemberships: SeedMembership[],
+  ): Promise<OrganizationUnitEntity[]> {
     const memberUnitIdsByOrgId = new Map<string, Set<string>>();
-    for (const membership of userMemberships) {
+    for (const membership of seedMemberships) {
       const unit = membership.organizationUnit;
       if (!unit?.organizationId) continue;
       const memberUnitIds =
