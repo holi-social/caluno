@@ -61,14 +61,14 @@ export function BlockForm({
   organizationId,
   readOnly,
   onPendingChange,
-  onCreated,
+  onSuccess,
 }: {
   blockId?: string;
   orgUId: string;
   organizationId: string;
   readOnly?: boolean;
   onPendingChange?: (isPending: boolean) => void;
-  onCreated?: (id: string) => void;
+  onSuccess: (id: string) => void;
 }) {
   const t = useTranslations('RequirementForm.block');
   const tField = useTranslations('RequirementForm.fieldForm');
@@ -261,9 +261,7 @@ export function BlockForm({
     } else if (result?.data) {
       toast.success(isEdit ? tActions('blockSaved') : tActions('blockCreated'));
       reset(data);
-      if (!isEdit && result.data.blockId) {
-        onCreated?.(result.data.blockId);
-      }
+      onSuccess(result.data.blockId);
     } else {
       toast.error(tActions('failedToSaveBlock'));
     }

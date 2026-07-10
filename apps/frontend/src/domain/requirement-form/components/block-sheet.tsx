@@ -24,6 +24,10 @@ export function BlockSheet() {
 
   if (!orgUId || !organizationId) return null;
 
+  const handleSuccess = () => {
+    sheetProps.close();
+  };
+
   return (
     <ClippySheet
       {...sheetProps}
@@ -51,7 +55,7 @@ export function BlockSheet() {
           organizationId={organizationId}
           readOnly={readOnly}
           onPendingChange={setIsPending}
-          onCreated={(id) => sheetProps.open({ id })}
+          onSuccess={handleSuccess}
         />
       </Suspense>
     </ClippySheet>
