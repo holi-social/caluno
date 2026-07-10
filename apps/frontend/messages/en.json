@@ -147,7 +147,8 @@
     "admin": "Admin",
     "qrIdTitle": "QR iD",
     "qrIdDescription": "This is your personal QR code to check in to shifts",
-    "profile": "Profile"
+    "profile": "Profile",
+    "volunteering": "Volunteering"
   },
   "Pagination": {
     "showing": "Showing {start}-{end} of {total} {name}",
@@ -543,8 +544,8 @@
       "maxVolunteersDescription": "Maximum number of people allowed to sign up for the shift",
       "copyInviteLink": "Copy invite link",
       "managingLabel": "You are managing volunteers for:",
-      "inviteAllLabel": "Invite to all instances of this shift",
-      "inviteAllDescription": "Volunteers will get invited to all shifts from {startDate}, every {days}."
+      "inviteAllLabel": "Invite to all future instances of this shift",
+      "inviteAllDescription": "Volunteers will get invited to all shifts starting from {startDate}, every {days}."
     },
     "transferList": {
       "available": "Available",
@@ -1012,7 +1013,63 @@
       "title": "No events yet",
       "description": "Get started by creating your first event."
     },
+    "sheet": {
+      "createTitle": "Create event",
+      "createDescription": "Add a new event to group related shifts.",
+      "editTitle": "Edit event",
+      "editDescription": "Update the event details below."
+    },
+    "detail": {
+      "backLink": "Back to events",
+      "editButton": "Edit",
+      "inviteButton": "Invite members",
+      "volunteersCard": {
+        "title": "Volunteers",
+        "inviteAria": "Invite members",
+        "viewProfileAria": "View profile",
+        "checkInAria": "Check in",
+        "empty": "No volunteers invited yet."
+      },
+      "shiftsCard": {
+        "title": "Shifts",
+        "addAria": "Add shift",
+        "addButton": "Add shift",
+        "emptyTitle": "No shifts yet",
+        "emptyDescription": "Add a shift to this event to get started.",
+        "table": {
+          "name": "Name",
+          "schedule": "Schedule",
+          "volunteers": "Volunteers"
+        }
+      }
+    },
+    "invite": {
+      "title": "Invite members to {eventTitle}",
+      "description": "Invite members to this event. This does not assign them to any shift.",
+      "copyInviteLink": "Copy invite link",
+      "helperText": "Inviting notifies about the event only — does not assign members to event shifts."
+    },
+    "form": {
+      "titleLabel": "Title",
+      "titlePlaceholder": "Event title",
+      "startsAtLabel": "Start",
+      "endsAtLabel": "End",
+      "locationLabel": "Location",
+      "logoUrlLabel": "Logo URL",
+      "coverUrlLabel": "Cover URL",
+      "validation": {
+        "titleRequired": "Title is required",
+        "startRequired": "Start date is required",
+        "endRequired": "End date is required",
+        "endAfterStart": "End date must be after start date",
+        "invalidUrl": "Must be a valid URL"
+      }
+    },
     "toast": {
+      "created": "Event created",
+      "updated": "Event updated",
+      "deleted": "Event deleted",
+      "invited": "Members invited",
       "linkCopied": "Invite link copied to clipboard"
     },
     "error": {

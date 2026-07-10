@@ -23,13 +23,13 @@ export class CreateRequirementProfileSubmissionInput {
   profileId!: string;
 
   @Field(() => String, { nullable: true })
-  membershipId!: string | null;
+  membershipId?: string | null;
 
   @Field(() => String, { nullable: true })
-  membershipRequestId!: string | null;
+  membershipRequestId?: string | null;
 
   @Field(() => [CreateRequirementSubmissionFulfillmentInput], {
     nullable: true,
   })
-  fulfillments?: CreateRequirementSubmissionFulfillmentInput[];
+  fulfillments?: CreateRequirementSubmissionFulfillmentInput[] | null;
 }

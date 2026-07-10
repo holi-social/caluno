@@ -9,7 +9,7 @@ export class OrganizationUnitType {
   name!: string;
 
   @Field(() => String, { nullable: true })
-  description!: string | null;
+  description?: string | null;
 
   @Field(() => String)
   icon!: string;

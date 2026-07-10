@@ -208,7 +208,7 @@ export function InviteShiftForm({
                       </FieldLabel>
                       <FieldDescription>
                         {t('inviteForm.inviteAllDescription', {
-                          startDate: formatWithOptions(shift.startDate, {
+                          startDate: formatWithOptions(instanceStartDate, {
                             day: '2-digit',
                             month: '2-digit',
                             year: 'numeric',

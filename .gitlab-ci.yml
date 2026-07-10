@@ -13,8 +13,11 @@ workflow:
     - when: never
 
 stages:
+  - lint_test
   - test
-  - build
+  - security_scan
+  - security_postprocess
+  - build_scan
   - terraform_plan
   - terraform_apply
 
@@ -31,6 +34,10 @@ variables:
   TF_ROOT: 'packages/infra'
   TF_IN_AUTOMATION: 'true'
   TF_INPUT: 'false'
+  # GitLab SAST templates default to `test`; pin to our security scan stage.
+  SAST_STAGE: 'security_scan'
+  # Keep secret-detection template jobs in the same scan stage model.
+  SECRET_DETECTION_STAGE: 'security_scan'
   # SAST: run on MR pipelines (GitLab ≥18). Skips duplicate branch scan when MR is open.
   AST_ENABLE_MR_PIPELINES: 'true'
   # SAST (semgrep): TS/JS. KICS (SAST-IaC): Scaleway Terraform in packages/infra only (no K8s/Dockerfile).
@@ -48,10 +55,13 @@ variables:
   # true: also create issues with no known fix yet.
   TRIVY_INCLUDE_UNFIXED: 'false'
 
+sast:
+  stage: security_scan
+
 # ─── TEST ─────────────────────────────────────────────────────────────────────
 
 # Merge gates: MR pipelines targeting main/production only. Post-merge main pipelines
-# run check_migrations + deploy; re-running lint/tests/SAST on main is redundant once
+# run quality:check-migrations + deploy; re-running lint/tests/SAST on main is redundant once
 # "Pipelines must succeed" is enforced on the MR.
 .mr-to-main-or-production:
   rules:
@@ -59,9 +69,9 @@ variables:
 
 # AI pipeline structural quality gate. Required MR check on protected `main`
 # (Settings → Merge requests → "Pipelines must succeed"). See .ai/PIPELINE.md.
-quality:
+'quality:lint-and-types':
   extends: .mr-to-main-or-production
-  stage: test
+  stage: lint_test
   image: europe-north1-docker.pkg.dev/holi-shared/docker-hub-remote/oven/bun:1
   needs: []
   before_script:
@@ -71,9 +81,9 @@ quality:
     - bun run check-types
 
 # AI pipeline gate-script self-test: the structural guards must stay green.
-ai_gate_tests:
+'quality:ai-gate-tests':
   extends: .mr-to-main-or-production
-  stage: test
+  stage: lint_test
   image: europe-north1-docker.pkg.dev/holi-shared/docker-hub-remote/oven/bun:1
   needs: []
   before_script:
@@ -85,8 +95,8 @@ ai_gate_tests:
 # AI pipeline commit-convention gate: every MR commit subject must be
 # `type(scope): description` (see .ai/PIPELINE.md Commit Convention). Structural backing
 # for the otherwise prose-only convention. POSIX sh (GitLab default shell).
-commit_lint:
-  stage: test
+'quality:commit-lint':
+  stage: lint_test
   image: europe-north1-docker.pkg.dev/holi-shared/docker-hub-remote/oven/bun:1
   needs: []
   rules:
@@ -102,8 +112,8 @@ commit_lint:
       bash .ai/scripts/commit-lint.sh range "${BASE}..HEAD"
 
 # Runs on every pipeline (MR, main/production deploy, feature-branch builds).
-check_migrations:
-  stage: test
+'quality:check-migrations':
+  stage: lint_test
   image: europe-north1-docker.pkg.dev/holi-shared/docker-hub-remote/oven/bun:1
   needs: []
   before_script:
@@ -122,9 +132,9 @@ check_migrations:
         exit 1
       fi
 
-integration_tests:
+'quality:integration-tests':
   extends: .mr-to-main-or-production
-  stage: test
+  stage: lint_test
   image: europe-north1-docker.pkg.dev/holi-shared/docker-hub-remote/oven/bun:1
   needs: []
   services:
@@ -151,15 +161,19 @@ integration_tests:
 # ─── SAST ─────────────────────────────────────────────────────────────────────
 # semgrep-sast (template) scans TS/JS; kics-iac-sast scans Scaleway Terraform (packages/infra).
 # kics.config limits KICS to Terraform only — no Kubernetes manifests or Dockerfiles.
-# sast_merge_reports combines gl-sast-report.json + gl-sast-report-iac.json.
-# sast_summary posts Critical/High table (job log + MR comment); sast_gate blocks merge;
-# sast_medium_issues files Medium findings as grouped GitLab issues (one per file+rule). Both need SAST_ISSUES_TOKEN.
+# sast:merge-reports combines gl-sast-report.json + gl-sast-report-iac.json.
+# sast:summary posts Critical/High table (job log + MR comment); sast:gate blocks merge;
+# sast:medium-issues files Medium findings as grouped GitLab issues (one per file+rule). Both need SAST_ISSUES_TOKEN.
 
 semgrep-sast:
+  stage: security_scan
+  needs: []
   rules:
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event" && ($CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "main" || $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "production")'
 
 kics-iac-sast:
+  stage: security_scan
+  needs: []
   rules:
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event" && ($CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "main" || $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "production")'
   after_script:
@@ -174,9 +188,9 @@ kics-iac-sast:
     paths:
       - gl-sast-report-iac.json
 
-sast_merge_reports:
+'sast:merge-reports':
   extends: .mr-to-main-or-production
-  stage: test
+  stage: security_postprocess
   image: europe-north1-docker.pkg.dev/holi-shared/docker-hub-remote/alpine:3
   tags:
     - 4cpu-16gb
@@ -197,45 +211,57 @@ sast_merge_reports:
 
 .sast-postprocess:
   extends: .mr-to-main-or-production
-  stage: test
+  stage: security_postprocess
   image: europe-north1-docker.pkg.dev/holi-shared/docker-hub-remote/alpine:3
   tags:
     - 4cpu-16gb
   before_script:
     - apk add --no-cache bash jq curl
   needs:
-    - job: sast_merge_reports
+    - job: 'sast:merge-reports'
       artifacts: true
       optional: true
 
-sast_summary:
+'sast:summary':
   extends: .sast-postprocess
   allow_failure: true
   script:
     - bash .ai/scripts/sast-mr-comment.sh gl-sast-report.json
 
-sast_gate:
+'sast:gate':
   extends: .sast-postprocess
   script:
     - bash .ai/scripts/sast-gate.sh gl-sast-report.json
 
-sast_medium_issues:
+'sast:medium-issues':
   extends: .sast-postprocess
   allow_failure: true
   script:
     - bash .ai/scripts/sast-open-medium-issues.sh gl-sast-report.json
 
+'sast:close-fixed-issues':
+  extends: .sast-postprocess
+  allow_failure: true
+  needs:
+    - job: 'sast:merge-reports'
+      artifacts: true
+      optional: true
+  script:
+    - bash .ai/scripts/sast-close-fixed-medium-issues.sh gl-sast-report.json
+
 # ─── SECRET DETECTION ─────────────────────────────────────────────────────────
 # secret_detection (template) scans the repo and uploads gl-secret-detection-report.json.
-# secret_detection_gate blocks merge on any finding.
+# secret:detection-gate blocks merge on any finding.
 
 secret_detection:
+  stage: security_scan
+  needs: []
   rules:
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event" && ($CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "main" || $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "production")'
 
 .secret-postprocess:
   extends: .mr-to-main-or-production
-  stage: test
+  stage: security_postprocess
   image: europe-north1-docker.pkg.dev/holi-shared/docker-hub-remote/alpine:3
   tags:
     - 4cpu-16gb
@@ -246,18 +272,18 @@ secret_detection:
       artifacts: true
       optional: true
 
-secret_detection_gate:
+'secret:detection-gate':
   extends: .secret-postprocess
   script:
     - bash .ai/scripts/secret-gate.sh gl-secret-detection-report.json
 
 # ─── CONTAINER SCANNING (TRIVY) ───────────────────────────────────────────────
 # Branch builds scan local images; staging/production scan the Scaleway registry.
-# trivy_merge_reports combines per-image reports; trivy_summary posts Critical/High
-# table (job log + MR comment); trivy_issues files Critical/High as GitLab work items (non-blocking).
+# trivy:merge-reports combines per-image reports; trivy:summary posts Critical/High
+# table (job log + MR comment); trivy:issues files Critical/High as GitLab work items (non-blocking).
 
 .trivy-scan-registry:
-  stage: build
+  stage: build_scan
   image:
     name: europe-north1-docker.pkg.dev/holi-shared/docker-hub-remote/aquasec/trivy:0.72.0
     entrypoint: ['']
@@ -282,21 +308,21 @@ secret_detection_gate:
 
 .trivy-postprocess:
   extends: .mr-to-main-or-production
-  stage: build
+  stage: build_scan
   image: europe-north1-docker.pkg.dev/holi-shared/docker-hub-remote/alpine:3
   tags:
     - 4cpu-16gb
   before_script:
     - apk add --no-cache bash jq curl
   needs:
-    - job: build_branch_backend
+    - job: 'build:backend-branch'
       artifacts: true
       optional: true
-    - job: build_branch_frontend
+    - job: 'build:frontend-branch'
       artifacts: true
       optional: true
 
-trivy_merge_reports:
+'trivy:merge-reports':
   extends: .trivy-postprocess
   script:
     - bash .ai/scripts/trivy-merge-reports.sh gl-container-scanning-report.json gl-container-scanning-report-backend.json gl-container-scanning-report-frontend.json
@@ -307,29 +333,39 @@ trivy_merge_reports:
     reports:
       container_scanning: gl-container-scanning-report.json
 
-trivy_issues:
+'trivy:issues':
   extends: .trivy-postprocess
   allow_failure: true
   needs:
-    - job: trivy_merge_reports
+    - job: 'trivy:merge-reports'
       artifacts: true
       optional: true
   script:
     - bash .ai/scripts/trivy-open-issues.sh gl-container-scanning-report.json
 
-trivy_summary:
+'trivy:close-fixed-issues':
   extends: .trivy-postprocess
   allow_failure: true
   needs:
-    - job: trivy_merge_reports
+    - job: 'trivy:merge-reports'
+      artifacts: true
+      optional: true
+  script:
+    - bash .ai/scripts/trivy-close-fixed-issues.sh gl-container-scanning-report.json
+
+'trivy:summary':
+  extends: .trivy-postprocess
+  allow_failure: true
+  needs:
+    - job: 'trivy:merge-reports'
       artifacts: true
       optional: true
   script:
     - bash .ai/scripts/trivy-mr-comment.sh gl-container-scanning-report.json
 
-trivy_scan_staging_backend:
+'trivy:scan-staging-backend':
   extends: .trivy-scan-registry
-  needs: ['build_staging_backend']
+  needs: ["build:staging-backend"]
   rules:
     - if: '$CI_COMMIT_BRANCH == "main"'
   variables:
@@ -337,9 +373,9 @@ trivy_scan_staging_backend:
     TRIVY_REPORT_PATH: gl-container-scanning-report-staging-backend.json
   allow_failure: true
 
-trivy_scan_staging_frontend:
+'trivy:scan-staging-frontend':
   extends: .trivy-scan-registry
-  needs: ['build_staging_frontend']
+  needs: ["build:staging-frontend"]
   rules:
     - if: '$CI_COMMIT_BRANCH == "main"'
   variables:
@@ -347,9 +383,9 @@ trivy_scan_staging_frontend:
     TRIVY_REPORT_PATH: gl-container-scanning-report-staging-frontend.json
   allow_failure: true
 
-trivy_scan_production_backend:
+'trivy:scan-production-backend':
   extends: .trivy-scan-registry
-  needs: ['build_production_backend']
+  needs: ["build:production-backend"]
   rules:
     - if: '$CI_COMMIT_BRANCH == "production"'
   variables:
@@ -357,9 +393,9 @@ trivy_scan_production_backend:
     TRIVY_REPORT_PATH: gl-container-scanning-report-production-backend.json
   allow_failure: true
 
-trivy_scan_production_frontend:
+'trivy:scan-production-frontend':
   extends: .trivy-scan-registry
-  needs: ['build_production_frontend']
+  needs: ["build:production-frontend"]
   rules:
     - if: '$CI_COMMIT_BRANCH == "production"'
   variables:
@@ -370,8 +406,12 @@ trivy_scan_production_frontend:
 # ─── BUILD ────────────────────────────────────────────────────────────────────
 
 .build-images-base:
-  stage: build
-  needs: ['check_migrations']
+  stage: build_scan
+  # Deploy-path image builds (main/production) should wait for migration-sync
+  # validation before producing/pushing deployment artifacts.
+  needs:
+    - job: 'quality:check-migrations'
+      optional: true
   before_script:
     - echo "Logging into Scaleway registry"
     - unset DOCKER_AUTH_CONFIG
@@ -416,8 +456,10 @@ trivy_scan_production_frontend:
     - docker push "$REGISTRY_NAMESPACE/$FRONTEND_IMAGE_NAME:$STABLE_TAG"
 
 .build-images-base-branch:
-  stage: build
-  needs: ['check_migrations']
+  stage: build_scan
+  # Branch/MR builds are scan inputs; they do not consume quality artifacts.
+  # Start immediately to reduce security feedback latency.
+  needs: []
   before_script:
     - echo "Building Docker images for branch (no push)"
     - apk add --no-cache bash curl
@@ -466,33 +508,33 @@ trivy_scan_production_frontend:
     paths:
       - .trivycache/
 
-build_staging_backend:
+'build:staging-backend':
   extends: .build-images-backend
   rules:
     - if: '$CI_COMMIT_BRANCH == "main"'
 
-build_staging_frontend:
+'build:staging-frontend':
   extends: .build-images-frontend
   rules:
     - if: '$CI_COMMIT_BRANCH == "main"'
 
-build_production_backend:
+'build:production-backend':
   extends: .build-images-backend
   rules:
     - if: '$CI_COMMIT_BRANCH == "production"'
 
-build_production_frontend:
+'build:production-frontend':
   extends: .build-images-frontend
   rules:
     - if: '$CI_COMMIT_BRANCH == "production"'
 
-build_branch_backend:
+'build:backend-branch':
   extends: .build-images-backend-branch
   rules:
     - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BRANCH != "main" && $CI_COMMIT_BRANCH != "production"'
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event" && $CI_MERGE_REQUEST_SOURCE_BRANCH_NAME != "main" && $CI_MERGE_REQUEST_SOURCE_BRANCH_NAME != "production"'
 
-build_branch_frontend:
+'build:frontend-branch':
   extends: .build-images-frontend-branch
   rules:
     - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BRANCH != "main" && $CI_COMMIT_BRANCH != "production"'
@@ -510,10 +552,11 @@ build_branch_frontend:
 
 # ─── STAGING PLAN ─────────────────────────────────────────────────────────────
 
-terraform_plan_staging_mr:
+'terraform:staging-plan-mr':
   extends: .terraform
   stage: terraform_plan
-  needs: ['check_migrations']
+  # MR plan is advisory feedback and does not require build/test artifacts.
+  needs: []
   resource_group: 'terraform-staging'
   rules:
     - if: '$CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "main" && $CI_COMMIT_REF_PROTECTED == "true"'
@@ -524,11 +567,11 @@ terraform_plan_staging_mr:
     - terraform validate
     - terraform plan -var-file="terraform.tfvars"
 
-terraform_plan_staging:
+'terraform:staging-plan':
   extends: .terraform
   stage: terraform_plan
   retry: 2
-  needs: ['build_staging_backend', 'build_staging_frontend']
+  needs: ['build:staging-backend', 'build:staging-frontend']
   resource_group: 'terraform-staging'
   rules:
     - if: '$CI_COMMIT_BRANCH == "main"'
@@ -558,10 +601,10 @@ terraform_plan_staging:
     paths:
       - packages/infra/plan-staging.tfplan
 
-terraform_apply_staging:
+'terraform:staging-apply':
   extends: .terraform
   stage: terraform_apply
-  needs: ['terraform_plan_staging']
+  needs: ["terraform:staging-plan"]
   variables:
     TF_VAR_active_environment: 'staging'
   resource_group: 'terraform-staging'
@@ -580,10 +623,11 @@ terraform_apply_staging:
 
 # ─── PRODUCTION PLAN ──────────────────────────────────────────────────────────
 
-terraform_plan_production_mr:
+'terraform:production-plan-mr':
   extends: .terraform
   stage: terraform_plan
-  needs: ['check_migrations']
+  # MR plan is advisory feedback and does not require build/test artifacts.
+  needs: []
   resource_group: 'terraform-production'
   rules:
     - if: '$CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "production" && $CI_COMMIT_REF_PROTECTED == "true"'
@@ -594,11 +638,11 @@ terraform_plan_production_mr:
     - terraform validate
     - terraform plan -var-file="terraform.tfvars"
 
-terraform_plan_production:
+'terraform:production-plan':
   extends: .terraform
   stage: terraform_plan
   retry: 2
-  needs: ['build_production_backend', 'build_production_frontend']
+  needs: ['build:production-backend', 'build:production-frontend']
   resource_group: 'terraform-production'
   rules:
     - if: '$CI_COMMIT_BRANCH == "production"'
@@ -628,10 +672,10 @@ terraform_plan_production:
     paths:
       - packages/infra/plan-production.tfplan
 
-terraform_apply_production:
+'terraform:production-apply':
   extends: .terraform
   stage: terraform_apply
-  needs: ['terraform_plan_production']
+  needs: ["terraform:production-plan"]
   variables:
     TF_VAR_active_environment: 'production'
   resource_group: 'terraform-production'

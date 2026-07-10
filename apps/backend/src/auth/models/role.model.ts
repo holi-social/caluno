@@ -11,7 +11,7 @@ export class Role {
   name!: string;
 
   @Field(() => String, { nullable: true })
-  description!: string | null;
+  description?: string | null;
 
   @Field(() => Boolean)
   isInternal!: boolean;

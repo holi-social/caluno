@@ -8,6 +8,7 @@ import { requirementProfilesRelations } from '../requirement-profile/schemas/req
 import { shiftsRelations } from '../shift/schemas/shift.relations';
 import { shiftInstancesRelations } from '../shift/schemas/shift-instance.relations';
 import { shiftInstanceInvitesRelations } from '../shift/schemas/shift-instance-invite.relations';
+import { shiftInvitesRelations } from '../shift/schemas/shift-invite.relations';
 import { timeEntryRelations } from '../time-tracking/schemas/time-entry.relations';
 
 export const relations = {
@@ -21,5 +22,6 @@ export const relations = {
   ...shiftsRelations,
   ...shiftInstancesRelations,
   ...shiftInstanceInvitesRelations,
+  ...shiftInvitesRelations,
   ...timeEntryRelations,
 };

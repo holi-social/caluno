@@ -19,6 +19,7 @@ import {
   CalendarIcon,
   ClipboardListIcon,
   ClockIcon,
+  HandHeart,
   LogOutIcon,
   NetworkIcon,
   ScanQrCode,
@@ -89,6 +90,11 @@ export function DashboardSidebar({ permissions }: DashboardSidebarProps) {
         titleKey: 'requirementForms',
         href: `/admin/${orgUId}/requirement-forms`,
         icon: ClipboardListIcon,
+      },
+      {
+        titleKey: 'volunteering',
+        href: `/`,
+        icon: HandHeart,
       },
     ];
   }, [orgUId, pendingCount]);

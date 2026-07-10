@@ -371,8 +371,6 @@ type Mutation {
   deleteTimeEntry(id: ID!): TimeEntry!
   generateDocumentUploadUrl(filename: String!, mimeType: String!): String!
   inviteMembersToEvent(eventId: ID!, memberIds: [String!]!): Event!
-  inviteMembersToShift(memberIds: [String!]!, shiftId: String!): Shift!
-  inviteMembersToShiftInstance(instanceId: String!, memberIds: [String!]!): ShiftInstance!
   joinEvent(eventId: ID!): JoinEventResult!
   joinOrganization(organizationUnitId: ID!): JoinOrganizationResult!
   joinShiftInstance(instanceId: String!): JoinShiftInstanceResult!

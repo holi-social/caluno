@@ -82,34 +82,12 @@ export class ShiftRepository extends BaseRepository {
     return { id: data.deleteShift.id };
   }
 
-  async inviteMembers(
-    instanceId: string,
-    memberIds: string[],
-  ): Promise<{ id: string }> {
-    const data = await this.sdk.InviteShiftInstanceVolunteers({
-      instanceId,
-      memberIds,
-    });
-    return { id: data.inviteMembersToShiftInstance.id };
-  }
-
-  async inviteMembersToShift(
-    shiftId: string,
-    memberIds: string[],
-  ): Promise<{ id: string }> {
-    const data = await this.sdk.InviteMembersToShift({
-      shiftId,
-      memberIds,
-    });
-    return { id: data.inviteMembersToShift.id };
-  }
-
   async updateMembers(
     instanceId: string,
     memberIds: string[],
     options?: { inviteToAllInstances?: boolean },
   ): Promise<{ id: string }> {
-    const data = await this.sdk.UpdateShiftInstanceVolunteers({
+    const data = await this.sdk.UpdateMembersForShiftInstance({
       instanceId,
       memberIds,
       inviteToAllInstances: options?.inviteToAllInstances,

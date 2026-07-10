@@ -9,11 +9,11 @@ export class JoinOrganizationResult {
   status!: JoinStatus;
 
   @Field(() => ID, { nullable: true })
-  membershipRequestId!: string | null;
+  membershipRequestId?: string | null;
 
   @Field(() => RequirementProfile, { nullable: true })
-  requirementProfile!: RequirementProfile | null;
+  requirementProfile?: RequirementProfile | null;
 
   @Field(() => [UserRequirementStatus], { nullable: true })
-  requirementStatuses!: UserRequirementStatus[] | null;
+  requirementStatuses?: UserRequirementStatus[] | null;
 }

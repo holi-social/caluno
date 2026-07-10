@@ -147,7 +147,8 @@
     "admin": "Admin",
     "qrIdTitle": "QR-ID",
     "qrIdDescription": "Dies ist dein persönlicher QR-Code zum Einchecken in Schichten",
-    "profile": "Profil"
+    "profile": "Profil",
+    "volunteering": "Freiwilligenarbeit"
   },
   "Pagination": {
     "showing": "{start}-{end} von {total} {name} werden angezeigt",
@@ -543,8 +544,8 @@
       "maxVolunteersDescription": "Maximale Anzahl an Personen, die sich für die Schicht anmelden dürfen",
       "copyInviteLink": "Einladungslink kopieren",
       "managingLabel": "Du verwaltest Freiwillige für:",
-      "inviteAllLabel": "Zu allen Terminen dieser Schicht einladen",
-      "inviteAllDescription": "Freiwillige werden zu allen Schichten ab {startDate}, jeden {days}, eingeladen."
+      "inviteAllLabel": "Zu allen zukünftigen Terminen dieser Schicht einladen",
+      "inviteAllDescription": "Freiwillige werden zu allen Schichten ab dem {startDate}, jeden {days}, eingeladen."
     },
     "transferList": {
       "available": "Verfügbar",
@@ -1012,7 +1013,63 @@
       "title": "Noch keine Veranstaltungen",
       "description": "Erstelle deine erste Veranstaltung."
     },
+    "sheet": {
+      "createTitle": "Veranstaltung erstellen",
+      "createDescription": "Erstelle eine neue Veranstaltung, um zusammengehörige Schichten zu gruppieren.",
+      "editTitle": "Veranstaltung bearbeiten",
+      "editDescription": "Aktualisiere die Details der Veranstaltung."
+    },
+    "detail": {
+      "backLink": "Zurück zu Veranstaltungen",
+      "editButton": "Bearbeiten",
+      "inviteButton": "Mitglieder einladen",
+      "volunteersCard": {
+        "title": "Freiwillige",
+        "inviteAria": "Mitglieder einladen",
+        "viewProfileAria": "Profil ansehen",
+        "checkInAria": "Einchecken",
+        "empty": "Noch keine Freiwilligen eingeladen."
+      },
+      "shiftsCard": {
+        "title": "Schichten",
+        "addAria": "Schicht hinzufügen",
+        "addButton": "Schicht hinzufügen",
+        "emptyTitle": "Noch keine Schichten",
+        "emptyDescription": "Füge dieser Veranstaltung eine Schicht hinzu, um loszulegen.",
+        "table": {
+          "name": "Name",
+          "schedule": "Zeitplan",
+          "volunteers": "Freiwillige"
+        }
+      }
+    },
+    "invite": {
+      "title": "Mitglieder zu {eventTitle} einladen",
+      "description": "Lade Mitglieder zu dieser Veranstaltung ein. Dies weist sie keiner Schicht zu.",
+      "copyInviteLink": "Einladungslink kopieren",
+      "helperText": "Die Einladung informiert nur über die Veranstaltung – Mitglieder werden dadurch keinen Schichten der Veranstaltung zugewiesen."
+    },
+    "form": {
+      "titleLabel": "Titel",
+      "titlePlaceholder": "Titel der Veranstaltung",
+      "startsAtLabel": "Beginn",
+      "endsAtLabel": "Ende",
+      "locationLabel": "Ort",
+      "logoUrlLabel": "Logo-URL",
+      "coverUrlLabel": "Cover-URL",
+      "validation": {
+        "titleRequired": "Titel ist erforderlich",
+        "startRequired": "Startdatum ist erforderlich",
+        "endRequired": "Enddatum ist erforderlich",
+        "endAfterStart": "Enddatum muss nach dem Startdatum liegen",
+        "invalidUrl": "Muss eine gültige URL sein"
+      }
+    },
     "toast": {
+      "created": "Veranstaltung erstellt",
+      "updated": "Veranstaltung aktualisiert",
+      "deleted": "Veranstaltung gelöscht",
+      "invited": "Mitglieder eingeladen",
       "linkCopied": "Einladungslink in die Zwischenablage kopiert"
     },
     "error": {
