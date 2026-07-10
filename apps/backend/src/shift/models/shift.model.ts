@@ -1,4 +1,5 @@
 import { Field, ID, Int, ObjectType } from '@nestjs/graphql';
+import { Event } from '../../event/models/event.model';
 import { createPaginatedResponseType } from '../../graphql/paginated-response.model';
 import { Organization } from '../../organization/models/organization.model';
 import { OrganizationUnit } from '../../organization/models/organization-unit.model';
@@ -45,6 +46,9 @@ export class Shift {
 
   @Field(() => String, { nullable: true })
   rrule?: string | null;
+
+  @Field(() => Event, { nullable: true })
+  event!: Event | null;
 
   @Field(() => Date)
   originalStartsAt!: Date;

@@ -27,7 +27,7 @@ const createContext = async (): Promise<GraphqlTestContext> => {
   const testUserId = `test-user-${crypto.randomUUID()}`;
 
   setAuthMockUserId(testUserId);
-  const app = await createGraphqlFullTestApp({ testUserId });
+  const app = await createGraphqlFullTestApp();
   const db: Database = app.get(DATABASE_CONNECTION);
 
   await db

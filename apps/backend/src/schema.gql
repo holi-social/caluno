@@ -137,6 +137,7 @@ A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date
 scalar DateTime
 
 type Event {
+  coverImageUrl: String
   coverUrl: String
   createdAt: DateTime!
   endsAt: DateTime!
@@ -345,6 +346,8 @@ type Mutation {
   addTimeEntry(input: AddTimeEntryInput!): TimeEntry!
   approveMembershipRequest(id: ID!, organizationUnitId: ID!): MembershipRequest!
   cancelMembershipRequest(id: ID!, organizationUnitId: ID!): MembershipRequest!
+  checkIn(shiftInstanceId: ID!): TimeEntry!
+  checkOut(shiftInstanceId: ID!): TimeEntry!
   closeTimeEntry(id: ID!, input: CloseTimeEntryInput!): TimeEntry!
   createEvent(input: CreateEventInput!): Event!
   createFormBlock(input: CreateFormBlockInput!): FormBlock!
@@ -504,6 +507,7 @@ type Query {
   activeShiftInstances: [ShiftInstance!]!
   adminUserProfile(userId: String!): UserProfile
   adminVolunteerSubmission(id: String!): FormSubmission
+  availableShiftInstances(from: DateTime, organizationUnitIds: [ID!], to: DateTime): [ShiftInstance!]!
   event(id: ID!): Event!
   eventAttendees(eventId: ID!): [User!]!
   eventShifts(eventId: ID!): [Shift!]!
@@ -524,6 +528,7 @@ type Query {
   myAccessibleOrganizationUnits: [OrganizationUnit!]!
   myFormSubmissionByToken(token: String!): FormSubmission
   myMembershipRequests(limit: Int! = 10, offset: Int! = 0, status: MembershipRequestStatus): MembershipRequestPaginatedResponse!
+  myShiftInstances(includePast: Boolean! = false): [ShiftInstance!]!
   myTime(limit: Int! = 10, offset: Int! = 0): TimeEntryPaginatedResponse!
   myUserProfile: UserProfile
   organization(id: String!): Organization
@@ -757,6 +762,7 @@ type Shift {
   createdAt: DateTime!
   createdBy: User
   durationMinutes: Int!
+  event: Event
   id: ID!
   instructions: String
   isDeleted: Boolean!
@@ -776,9 +782,11 @@ type Shift {
 type ShiftInstance {
   actualEndsAt: DateTime!
   actualStartsAt: DateTime!
+  filledCount: Int!
   id: ID!
   inviteStatus(userId: String!): ShiftInviteStatus
   isCancelled: Boolean!
+  isCheckedIn: Boolean!
   isException: Boolean!
   master: Shift!
   occurrenceIndex: Int!

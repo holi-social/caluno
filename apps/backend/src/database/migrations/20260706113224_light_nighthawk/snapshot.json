@@ -1,7 +1,7 @@
 {
   "version": "8",
   "dialect": "postgres",
-  "id": "243aed02-7712-463b-9d95-642921e48bf5",
+  "id": "42ca2e4f-7883-4a46-82f5-54e30d4d3fc0",
   "prevIds": ["a16d48da-9193-48dc-b551-7972d4eac17f"],
   "ddl": [
     {
@@ -3546,6 +3546,19 @@
       "table": "shifts"
     },
     {
+      "type": "uuid",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "event_id",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "shifts"
+    },
+    {
       "type": "text",
       "typeSchema": null,
       "notNull": false,
@@ -3593,19 +3606,6 @@
       "generated": null,
       "identity": null,
       "name": "min_volunteers",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "shifts"
-    },
-    {
-      "type": "uuid",
-      "typeSchema": null,
-      "notNull": false,
-      "dimensions": 0,
-      "default": null,
-      "generated": null,
-      "identity": null,
-      "name": "event_id",
       "entityType": "columns",
       "schema": "public",
       "table": "shifts"
@@ -5295,6 +5295,27 @@
       "method": "btree",
       "concurrently": false,
       "name": "idx_shifts_created_by_id",
+      "entityType": "indexes",
+      "schema": "public",
+      "table": "shifts"
+    },
+    {
+      "nameExplicit": true,
+      "columns": [
+        {
+          "value": "event_id",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "with": "",
+      "method": "btree",
+      "concurrently": false,
+      "name": "idx_shifts_event_id",
       "entityType": "indexes",
       "schema": "public",
       "table": "shifts"
