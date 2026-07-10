@@ -218,12 +218,10 @@ export class ShiftService {
       return [];
     }
 
-    const startOfToday = this.getStartOfToday();
-
     return this.db.query.shiftInstances.findMany({
       where: {
         isCancelled: false,
-        actualStartsAt: includePast ? undefined : { gte: startOfToday },
+        actualEndsAt: includePast ? undefined : { gte: new Date() },
         master: {
           isDeleted: false,
           organizationUnitId: { in: organizationUnitIds },

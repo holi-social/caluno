@@ -1087,6 +1087,100 @@ describe('Volunteer home fields and check-in', () => {
     expect(data.myShiftInstances.map((i) => i.id)).toContain(instanceId);
   });
 
+  it('includes an ongoing overnight shift when includePast is false', async () => {
+    await db.insert(schema.memberships).values({
+      userId: testUserId,
+      organizationUnitId,
+    });
+
+    const now = Date.now();
+    const { id: shiftId } = await createShift(db, {
+      organizationUnitId,
+      startsAt: new Date(now - 25 * 60 * 60 * 1000), // started yesterday
+      endsAt: new Date(now + 60 * 60 * 1000), // ends in an hour
+    });
+    const instances = await db.query.shiftInstances.findMany({
+      where: { masterId: shiftId },
+    });
+    const instanceId = instances[0]?.id;
+    expect(instanceId).toBeDefined();
+
+    await db.insert(schema.shiftInstanceInvites).values({
+      instanceId: instanceId ?? '',
+      userId: testUserId,
+      status: ShiftInviteStatus.ACCEPTED,
+    });
+
+    const data = await graphqlRequestRequiringData<{
+      myShiftInstances: Array<{ id: string }>;
+    }>(
+      app,
+      {
+        query: `
+          query MyShiftInstances($includePast: Boolean!) {
+            myShiftInstances(includePast: $includePast) {
+              id
+            }
+          }
+        `,
+        variables: { includePast: false },
+        headers: {
+          'x-organization-unit-id': organizationUnitId,
+        },
+      },
+      'myShiftInstances',
+    );
+
+    expect(data.myShiftInstances.map((i) => i.id)).toContain(instanceId);
+  });
+
+  it('excludes a finished shift when includePast is false', async () => {
+    await db.insert(schema.memberships).values({
+      userId: testUserId,
+      organizationUnitId,
+    });
+
+    const now = Date.now();
+    const { id: shiftId } = await createShift(db, {
+      organizationUnitId,
+      startsAt: new Date(now - 3 * 60 * 60 * 1000),
+      endsAt: new Date(now - 60 * 60 * 1000),
+    });
+    const instances = await db.query.shiftInstances.findMany({
+      where: { masterId: shiftId },
+    });
+    const instanceId = instances[0]?.id;
+    expect(instanceId).toBeDefined();
+
+    await db.insert(schema.shiftInstanceInvites).values({
+      instanceId: instanceId ?? '',
+      userId: testUserId,
+      status: ShiftInviteStatus.ACCEPTED,
+    });
+
+    const data = await graphqlRequestRequiringData<{
+      myShiftInstances: Array<{ id: string }>;
+    }>(
+      app,
+      {
+        query: `
+          query MyShiftInstances($includePast: Boolean!) {
+            myShiftInstances(includePast: $includePast) {
+              id
+            }
+          }
+        `,
+        variables: { includePast: false },
+        headers: {
+          'x-organization-unit-id': organizationUnitId,
+        },
+      },
+      'myShiftInstances',
+    );
+
+    expect(data.myShiftInstances.map((i) => i.id)).not.toContain(instanceId);
+  });
+
   it('lists available shift instances', async () => {
     await db.insert(schema.memberships).values({
       userId: testUserId,
