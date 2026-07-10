@@ -936,6 +936,15 @@ describe('Volunteer home fields and check-in', () => {
     const instanceId = instances[0]?.id;
     expect(instanceId).toBeDefined();
 
+    // Self check-in is only valid around the shift time; put this instance now.
+    await db
+      .update(schema.shiftInstances)
+      .set({
+        actualStartsAt: new Date(),
+        actualEndsAt: new Date(Date.now() + 60 * 60 * 1000),
+      })
+      .where(eq(schema.shiftInstances.id, instanceId ?? ''));
+
     await db.insert(schema.shiftInstanceInvites).values({
       instanceId: instanceId ?? '',
       userId: volunteer.id,
@@ -989,6 +998,46 @@ describe('Volunteer home fields and check-in', () => {
 
     expect(checkOutData.checkOut.endedAt).not.toBeNull();
     expect(checkOutData.checkOut.id).toBe(checkInData.checkIn.id);
+
+    setAuthMockUserId(testUserId);
+  });
+
+  it('rejects self check-in outside the shift window', async () => {
+    const volunteer = await createUser(db);
+    setAuthMockUserId(volunteer.id);
+
+    await db.insert(schema.memberships).values({
+      userId: volunteer.id,
+      organizationUnitId,
+    });
+
+    // Default factory instance is dated 2026-06-18 — well outside the window.
+    const { id: shiftId } = await createShift(db, { organizationUnitId });
+    const instances = await db.query.shiftInstances.findMany({
+      where: { masterId: shiftId },
+    });
+    const instanceId = instances[0]?.id;
+
+    await db.insert(schema.shiftInstanceInvites).values({
+      instanceId: instanceId ?? '',
+      userId: volunteer.id,
+      status: ShiftInviteStatus.ACCEPTED,
+    });
+
+    const response = await graphqlRequest<{ checkIn: { id: string } }>(app, {
+      query: `
+        mutation CheckIn($shiftInstanceId: ID!) {
+          checkIn(shiftInstanceId: $shiftInstanceId) {
+            id
+          }
+        }
+      `,
+      variables: { shiftInstanceId: instanceId },
+      headers: { 'x-organization-unit-id': organizationUnitId },
+    });
+
+    expect(response.errors).toBeDefined();
+    expect(response.errors?.[0]?.message).toMatch(/around the shift time/);
 
     setAuthMockUserId(testUserId);
   });

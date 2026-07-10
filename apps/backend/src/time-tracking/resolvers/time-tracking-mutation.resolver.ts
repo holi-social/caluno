@@ -73,6 +73,10 @@ export class TimeTrackingMutationResolver {
     return this.entryMapper.toModelOrThrow(entity);
   }
 
+  // checkIn/checkOut are intentionally NOT @Permissions()-gated: they are
+  // volunteer self-service, authorized in the service by membership + an
+  // ACCEPTED invite for the current user (not an admin role). The admin path
+  // (addTimeEntry) remains permission-gated.
   @Mutation(() => TimeEntry)
   async checkIn(
     @Args('shiftInstanceId', { type: () => ID }) shiftInstanceId: string,

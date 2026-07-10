@@ -4,6 +4,7 @@ import type { Database } from '../database/database.module';
 import { DATABASE_CONNECTION } from '../database/database-connection';
 import * as schema from '../database/schema';
 import {
+  BadRequestGraphQLError,
   ConflictGraphQLError,
   ForbiddenGraphQLError,
   NotFoundGraphQLError,
@@ -217,13 +218,13 @@ export class TimeTrackingService {
   }
 
   /**
-   * Resolves the org unit a volunteer may self-track for a shift instance, after
-   * verifying the instance exists (not cancelled) and the user is a member.
+   * Resolves a shift instance a volunteer may self-track, after verifying it
+   * exists (not cancelled) and the user is a member of its org unit.
    */
-  private async resolveTrackableUnit(
+  private async resolveTrackableInstance(
     shiftInstanceId: string,
     userId: string,
-  ): Promise<string> {
+  ): Promise<Awaited<ReturnType<ShiftService['findInstanceWithMaster']>>> {
     const instance =
       await this.shiftService.findInstanceWithMaster(shiftInstanceId);
 
@@ -231,26 +232,37 @@ export class TimeTrackingService {
       throw new NotFoundGraphQLError('Shift instance not found');
     }
 
-    const organizationUnitId = instance.master.organizationUnitId;
     const isMember = await this._membershipService.isMemberOfUnitOrAncestor(
       userId,
-      organizationUnitId,
+      instance.master.organizationUnitId,
     );
     if (!isMember) {
       throw new ForbiddenGraphQLError('You are not a member of this unit');
     }
 
-    return organizationUnitId;
+    return instance;
   }
 
   async checkIn(
     shiftInstanceId: string,
     userId: string,
   ): Promise<TimeEntryEntity> {
-    const organizationUnitId = await this.resolveTrackableUnit(
+    const instance = await this.resolveTrackableInstance(
       shiftInstanceId,
       userId,
     );
+
+    // Self check-in is only valid around the shift time (a supervisor/admin can
+    // still add or correct entries anytime via addTimeEntry, which is unbounded).
+    const now = Date.now();
+    const opensAt =
+      instance.actualStartsAt.getTime() - CHECK_IN_OPENS_BEFORE_MS;
+    const closesAt = instance.actualEndsAt.getTime() + CHECK_IN_CLOSES_AFTER_MS;
+    if (now < opensAt || now > closesAt) {
+      throw new BadRequestGraphQLError(
+        'Check-in is only available around the shift time',
+      );
+    }
 
     const isBooked = await this.shiftService.isVolunteerBooked(
       shiftInstanceId,
@@ -275,14 +287,14 @@ export class TimeTrackingService {
     input.endedAt = null;
     input.notes = null;
 
-    return this.addTimeEntry(organizationUnitId, input);
+    return this.addTimeEntry(instance.master.organizationUnitId, input);
   }
 
   async checkOut(
     shiftInstanceId: string,
     userId: string,
   ): Promise<TimeEntryEntity> {
-    const organizationUnitId = await this.resolveTrackableUnit(
+    const instance = await this.resolveTrackableInstance(
       shiftInstanceId,
       userId,
     );
@@ -299,9 +311,17 @@ export class TimeTrackingService {
     closeInput.endedAt = new Date();
     closeInput.notes = null;
 
-    return this.closeTimeEntry(entry.id, organizationUnitId, closeInput);
+    return this.closeTimeEntry(
+      entry.id,
+      instance.master.organizationUnitId,
+      closeInput,
+    );
   }
 }
+
+// Self check-in window (relative to the shift instance's actual start/end).
+const CHECK_IN_OPENS_BEFORE_MS = 3 * 60 * 60 * 1000; // 3h before start
+const CHECK_IN_CLOSES_AFTER_MS = 60 * 60 * 1000; // 1h after end
 
 const existsInOrgUnit = (
   organizationUnitId: string,
