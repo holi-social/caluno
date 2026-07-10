@@ -58,22 +58,15 @@ export class ShiftQueryResolver {
   }
 
   @Permissions(PERMISSIONS.SHIFT_VIEW)
-  @Query(() => ShiftInstancePaginatedResponse)
-  async activeShifts(
-    @Args() pagination: PaginationInput,
+  @Query(() => [ShiftInstance])
+  async activeShiftInstances(
     @Context() context: AuthenticatedGraphQLContext,
-  ): Promise<ShiftInstancePaginatedResponse> {
-    const { instances, total } = await this.shiftService.findActiveShifts(
+  ): Promise<ShiftInstance[]> {
+    const instances = await this.shiftService.findActiveShiftInstances(
       context.organizationUnitId,
-      pagination,
     );
 
-    return new ShiftInstancePaginatedResponse({
-      items: this.shiftInstanceMapper.toArray(instances),
-      total: total,
-      limit: pagination.limit,
-      offset: pagination.offset,
-    });
+    return this.shiftInstanceMapper.toArray(instances);
   }
 
   @Permissions(PERMISSIONS.SHIFT_VIEW)

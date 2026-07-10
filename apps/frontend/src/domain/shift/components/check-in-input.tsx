@@ -8,7 +8,7 @@ import {
   InputOTPSlot,
   REGEXP_ONLY_DIGITS_AND_CHARS,
 } from '@repo/ui/base/input-otp';
-import { LogIn } from 'lucide-react';
+import { PlaneTakeoff } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useState } from 'react';
 import { useRouter } from '@/i18n/navigation';
@@ -28,7 +28,7 @@ export const CheckInInput = ({ organizationUnitId }: CheckInInputProps) => {
     );
 
   return (
-    <div className="flex gap-2">
+    <div className="flex gap-2 flex-wrap">
       <InputOTP
         maxLength={12}
         pattern={REGEXP_ONLY_DIGITS_AND_CHARS}
@@ -58,7 +58,7 @@ export const CheckInInput = ({ organizationUnitId }: CheckInInputProps) => {
         </InputOTPGroup>
       </InputOTP>
       <Button onClick={handleCheckIn} disabled={value.length < 12}>
-        {t('checkIn.checkIn')} <LogIn />
+        {t('checkIn.checkIn')} <PlaneTakeoff />
       </Button>
     </div>
   );

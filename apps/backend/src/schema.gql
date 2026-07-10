@@ -501,7 +501,7 @@ enum PermissionKey {
 }
 
 type Query {
-  activeShifts(limit: Int! = 10, offset: Int! = 0): ShiftInstancePaginatedResponse!
+  activeShiftInstances: [ShiftInstance!]!
   adminUserProfile(userId: String!): UserProfile
   adminVolunteerSubmission(id: String!): FormSubmission
   event(id: ID!): Event!
@@ -514,7 +514,7 @@ type Query {
   formSubmissionsByForm(formId: String!, limit: Int! = 10, offset: Int! = 0): FormSubmissionPaginatedResponse!
   formSubmissionsByMembershipRequest(membershipRequestId: String!): [FormSubmission!]!
   formSubmissionsForVolunteer(userId: String!): [FormSubmission!]!
-  isMemberOfUnitOrAncestor(organizationUnitId: ID!): Boolean!
+  isMemberOfUnitOrAncestor(organizationUnitId: ID!, userId: String!): Boolean!
   me: User!
   members(organizationUnitId: ID!): [User!]!
   membership(organizationUnitId: ID!): Membership
@@ -777,6 +777,7 @@ type ShiftInstance {
   actualEndsAt: DateTime!
   actualStartsAt: DateTime!
   id: ID!
+  inviteStatus(userId: String!): ShiftInviteStatus
   isCancelled: Boolean!
   isException: Boolean!
   master: Shift!
@@ -788,9 +789,10 @@ type ShiftInstance {
   volunteers: [User!]
 }
 
-type ShiftInstancePaginatedResponse {
-  items: [ShiftInstance!]!
-  pagination: PaginationInfo!
+enum ShiftInviteStatus {
+  ACCEPTED
+  PENDING
+  REJECTED
 }
 
 type ShiftPaginatedResponse {

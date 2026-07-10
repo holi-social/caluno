@@ -34,10 +34,10 @@ export class MembershipQueryResolver {
   @Query(() => Boolean)
   async isMemberOfUnitOrAncestor(
     @Args('organizationUnitId', { type: () => ID }) organizationUnitId: string,
-    @Session() session: UserSession,
+    @Args('userId') userId: string,
   ): Promise<boolean> {
     return this.membershipService.isMemberOfUnitOrAncestor(
-      session.user.id,
+      userId,
       organizationUnitId,
     );
   }
