@@ -2,6 +2,7 @@ import { Args, Context, Parent, ResolveField, Resolver } from '@nestjs/graphql';
 import { Session, type UserSession } from '@thallesp/nestjs-better-auth';
 import { PERMISSIONS } from '../../auth/constants';
 import { Permissions } from '../../auth/decorators/permissions.decorator';
+import { Loader } from '../../graphql/decorators';
 import type { AuthenticatedGraphQLContext } from '../../graphql/graphql.context';
 import { UserMapper } from '../../user/mappers/user.mapper';
 import { User } from '../../user/models/user.model';
@@ -9,6 +10,7 @@ import { ShiftInviteStatus } from '../enums';
 import { ShiftInstance } from '../models/shift-instance.model';
 import type { ShiftInstanceEntity } from '../schemas/shift-instance.schema';
 import { ShiftService } from '../shift.service';
+import { ShiftInstanceLoader } from './shift-instance.loader';
 
 @Resolver(() => ShiftInstance)
 export class ShiftInstanceFieldResolver {
@@ -54,16 +56,20 @@ export class ShiftInstanceFieldResolver {
   async isCheckedIn(
     @Parent() instance: ShiftInstanceEntity,
     @Session() session: UserSession,
+    @Loader(ShiftInstanceLoader) loader: ShiftInstanceLoader,
   ): Promise<boolean> {
     if (!session?.user) {
       return false;
     }
 
-    return this.shiftService.hasOpenTimeEntry(instance.id, session.user.id);
+    return loader.isCheckedInByKey.load(`${instance.id}::${session.user.id}`);
   }
 
   @ResolveField(() => Number)
-  async filledCount(@Parent() instance: ShiftInstanceEntity): Promise<number> {
-    return this.shiftService.getFilledCount(instance.id);
+  async filledCount(
+    @Parent() instance: ShiftInstanceEntity,
+    @Loader(ShiftInstanceLoader) loader: ShiftInstanceLoader,
+  ): Promise<number> {
+    return loader.filledCountByInstanceId.load(instance.id);
   }
 }

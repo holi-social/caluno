@@ -4,30 +4,22 @@ import {
   Session,
   type UserSession,
 } from '@thallesp/nestjs-better-auth';
-import { EventService } from '../../event/event.service';
-import { EventMapper } from '../../event/mappers/event.mapper';
 import { Event } from '../../event/models/event.model';
-import { OrganizationMapper } from '../../organization/mappers/organization.mapper';
-import { OrganizationUnitMapper } from '../../organization/mappers/organization-unit.mapper';
+import { Loader } from '../../graphql/decorators';
 import { Organization } from '../../organization/models/organization.model';
 import { OrganizationUnit } from '../../organization/models/organization-unit.model';
-import { OrganizationUnitService } from '../../organization/organization-unit.service';
 import { UserMapper } from '../../user/mappers/user.mapper';
 import { User } from '../../user/models/user.model';
 import { Shift } from '../models/shift.model';
 import type { ShiftEntity } from '../schemas/shift.schema';
 import { ShiftService } from '../shift.service';
+import { ShiftLoader } from './shift.loader';
 
 @Resolver(() => Shift)
 export class ShiftFieldResolver {
   constructor(
     private readonly shiftService: ShiftService,
-    private readonly eventService: EventService,
-    private readonly organizationUnitService: OrganizationUnitService,
     private readonly userMapper: UserMapper,
-    private readonly eventMapper: EventMapper,
-    private readonly organizationMapper: OrganizationMapper,
-    private readonly organizationUnitMapper: OrganizationUnitMapper,
   ) {}
 
   @AllowAnonymous()
@@ -46,33 +38,32 @@ export class ShiftFieldResolver {
 
   @AllowAnonymous()
   @ResolveField(() => Event, { nullable: true })
-  async event(@Parent() shift: ShiftEntity): Promise<Event | null> {
+  async event(
+    @Parent() shift: ShiftEntity,
+    @Loader(ShiftLoader) loader: ShiftLoader,
+  ): Promise<Event | null> {
     if (!shift.eventId) {
       return null;
     }
 
-    const event = await this.eventService.findByIdPublic(shift.eventId);
-    return event ? this.eventMapper.toModelOrThrow(event) : null;
+    return loader.eventById.load(shift.eventId);
   }
 
   @AllowAnonymous()
   @ResolveField(() => OrganizationUnit)
   async organizationUnit(
     @Parent() shift: ShiftEntity,
+    @Loader(ShiftLoader) loader: ShiftLoader,
   ): Promise<OrganizationUnit> {
-    const unit = await this.organizationUnitService.findById(
-      shift.organizationUnitId,
-    );
-    return this.organizationUnitMapper.toModelOrThrow(unit);
+    return loader.organizationUnitById.load(shift.organizationUnitId);
   }
 
   @AllowAnonymous()
   @ResolveField(() => Organization)
-  async organization(@Parent() shift: ShiftEntity): Promise<Organization> {
-    const organization =
-      await this.organizationUnitService.findOrganizationByUnitId(
-        shift.organizationUnitId,
-      );
-    return this.organizationMapper.toModelOrThrow(organization);
+  async organization(
+    @Parent() shift: ShiftEntity,
+    @Loader(ShiftLoader) loader: ShiftLoader,
+  ): Promise<Organization> {
+    return loader.organizationByUnitId.load(shift.organizationUnitId);
   }
 }

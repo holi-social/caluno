@@ -94,18 +94,44 @@ export class ShiftService {
     return instance;
   }
 
-  async getFilledCount(instanceId: string): Promise<number> {
-    const [result] = await this.db
-      .select({ total: count() })
+  /** ACCEPTED-invite counts for many instances in one query (DataLoader batch). */
+  async getFilledCounts(instanceIds: string[]): Promise<Map<string, number>> {
+    if (instanceIds.length === 0) return new Map();
+
+    const rows = await this.db
+      .select({
+        instanceId: schema.shiftInstanceInvites.instanceId,
+        total: count(),
+      })
       .from(schema.shiftInstanceInvites)
       .where(
         and(
-          eq(schema.shiftInstanceInvites.instanceId, instanceId),
+          inArray(schema.shiftInstanceInvites.instanceId, instanceIds),
           eq(schema.shiftInstanceInvites.status, ShiftInviteStatus.ACCEPTED),
         ),
-      );
+      )
+      .groupBy(schema.shiftInstanceInvites.instanceId);
 
-    return result?.total ?? 0;
+    return new Map(rows.map((row) => [row.instanceId, Number(row.total)]));
+  }
+
+  /** A user's open time entries across many instances in one query (DataLoader batch). */
+  async findOpenTimeEntriesForUser(
+    userId: string,
+    instanceIds: string[],
+  ): Promise<{ shiftInstanceId: string }[]> {
+    if (instanceIds.length === 0) return [];
+
+    return this.db
+      .select({ shiftInstanceId: schema.timeEntries.shiftInstanceId })
+      .from(schema.timeEntries)
+      .where(
+        and(
+          eq(schema.timeEntries.volunteerId, userId),
+          inArray(schema.timeEntries.shiftInstanceId, instanceIds),
+          isNull(schema.timeEntries.endedAt),
+        ),
+      );
   }
 
   /** The volunteer's open (not-yet-checked-out) time entry for an instance, if any. */
