@@ -545,8 +545,8 @@
       "maxVolunteersDescription": "Maximale Anzahl an Personen, die sich für diesen Einsatz anmelden dürfen",
       "copyInviteLink": "Einladungslink kopieren",
       "managingLabel": "Du verwaltest Freiwillige für:",
-      "inviteAllLabel": "Zu allen zukünftigen Terminen dieser Schicht einladen",
-      "inviteAllDescription": "Freiwillige werden zu allen Schichten ab dem {startDate}, jeden {days}, eingeladen."
+      "inviteAllLabel": "Zu allen zukünftigen Terminen dieses Einsatzes einladen",
+      "inviteAllDescription": "Freiwillige werden zu allen Einsätzen ab dem {startDate}, jeden {days}, eingeladen."
     },
     "transferList": {
       "available": "Verfügbar",
@@ -1001,7 +1001,7 @@
       "event": "Veranstaltung",
       "dates": "Datum",
       "location": "Ort",
-      "shifts": "Schichten"
+      "shifts": "Einsätze"
     },
     "action": {
       "viewAria": "Veranstaltung ansehen",
