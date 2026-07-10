@@ -1178,4 +1178,137 @@ describe('Volunteer home fields and check-in', () => {
       instanceId,
     );
   });
+
+  it('lists available shift instances in descendant units for parent-unit members', async () => {
+    const parentMember = await createUser(db);
+
+    const rootUnit = await db.query.organizationUnits.findFirst({
+      where: { id: organizationUnitId },
+      columns: { organizationId: true, typeId: true },
+    });
+    if (!rootUnit?.organizationId || !rootUnit?.typeId) {
+      throw new Error('Root unit missing organizationId or typeId');
+    }
+
+    const [childUnit] = await db
+      .insert(schema.organizationUnits)
+      .values({
+        organizationId: rootUnit.organizationId,
+        parentId: organizationUnitId,
+        typeId: rootUnit.typeId,
+        name: `Child Unit ${crypto.randomUUID()}`,
+        slug: `child-unit-${crypto.randomUUID()}`,
+      })
+      .returning();
+    expect(childUnit).toBeDefined();
+
+    await db.insert(schema.memberships).values({
+      userId: parentMember.id,
+      organizationUnitId,
+    });
+
+    const { id: shiftId } = await createShift(db, {
+      organizationUnitId: childUnit.id,
+      visibility: ShiftVisibility.ALL_MEMBERS,
+    });
+    const instances = await db.query.shiftInstances.findMany({
+      where: { masterId: shiftId },
+    });
+    const instanceId = instances[0]?.id;
+    expect(instanceId).toBeDefined();
+
+    setAuthMockUserId(parentMember.id);
+
+    const from = new Date('2026-06-01T00:00:00.000Z').toISOString();
+    const to = new Date('2026-12-31T23:59:59.000Z').toISOString();
+
+    const data = await graphqlRequestRequiringData<{
+      availableShiftInstances: Array<{ id: string }>;
+    }>(
+      app,
+      {
+        query: `
+          query AvailableShiftInstances($from: DateTime, $to: DateTime) {
+            availableShiftInstances(from: $from, to: $to) {
+              id
+            }
+          }
+        `,
+        variables: { from, to },
+      },
+      'availableShiftInstances',
+    );
+
+    expect(data.availableShiftInstances.map((i) => i.id)).toContain(instanceId);
+
+    setAuthMockUserId(testUserId);
+  });
+
+  it('lists my booked shift instances in descendant units for parent-unit members', async () => {
+    const parentMember = await createUser(db);
+
+    const rootUnit = await db.query.organizationUnits.findFirst({
+      where: { id: organizationUnitId },
+      columns: { organizationId: true, typeId: true },
+    });
+    if (!rootUnit?.organizationId || !rootUnit?.typeId) {
+      throw new Error('Root unit missing organizationId or typeId');
+    }
+
+    const [childUnit] = await db
+      .insert(schema.organizationUnits)
+      .values({
+        organizationId: rootUnit.organizationId,
+        parentId: organizationUnitId,
+        typeId: rootUnit.typeId,
+        name: `Child Unit ${crypto.randomUUID()}`,
+        slug: `child-unit-${crypto.randomUUID()}`,
+      })
+      .returning();
+    expect(childUnit).toBeDefined();
+
+    await db.insert(schema.memberships).values({
+      userId: parentMember.id,
+      organizationUnitId,
+    });
+
+    const { id: shiftId } = await createShift(db, {
+      organizationUnitId: childUnit.id,
+      visibility: ShiftVisibility.INVITED_MEMBERS,
+    });
+    const instances = await db.query.shiftInstances.findMany({
+      where: { masterId: shiftId },
+    });
+    const instanceId = instances[0]?.id;
+    expect(instanceId).toBeDefined();
+
+    await db.insert(schema.shiftInstanceInvites).values({
+      instanceId: instanceId ?? '',
+      userId: parentMember.id,
+      status: ShiftInviteStatus.ACCEPTED,
+    });
+
+    setAuthMockUserId(parentMember.id);
+
+    const data = await graphqlRequestRequiringData<{
+      myShiftInstances: Array<{ id: string }>;
+    }>(
+      app,
+      {
+        query: `
+          query MyShiftInstances($includePast: Boolean!) {
+            myShiftInstances(includePast: $includePast) {
+              id
+            }
+          }
+        `,
+        variables: { includePast: true },
+      },
+      'myShiftInstances',
+    );
+
+    expect(data.myShiftInstances.map((i) => i.id)).toContain(instanceId);
+
+    setAuthMockUserId(testUserId);
+  });
 });

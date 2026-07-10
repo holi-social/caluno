@@ -19,6 +19,7 @@ import { MembershipService } from '../membership/membership.service';
 import type { MembershipRequestEntity } from '../membership/schemas/membership-request.schema';
 import { NotificationService } from '../notification/notification.service';
 import { buildShiftInviteSchedule } from '../notification/shift-invite-schedule';
+import { OrganizationService } from '../organization/organization.service';
 import type { RequirementProfileEntity } from '../requirement-profile/schemas/requirement-profile.schema';
 import { JoinStatus } from '../shared/enums/join-status.enum';
 import { UserService } from '../user/user.service';
@@ -46,6 +47,7 @@ export class ShiftService {
     private readonly userService: UserService,
     private readonly membershipService: MembershipService,
     private readonly notificationService: NotificationService,
+    private readonly organizationService: OrganizationService,
   ) {}
 
   async findById(id: string): Promise<ShiftEntity> {
@@ -194,15 +196,11 @@ export class ShiftService {
     return invites.length > 0;
   }
 
-  private async getUserOrganizationUnitIds(userId: string): Promise<string[]> {
-    const memberships = await this.db.query.memberships.findMany({
-      where: { userId },
-      columns: { organizationUnitId: true },
-    });
-
-    return memberships
-      .map((membership) => membership.organizationUnitId)
-      .filter((id): id is string => id !== null);
+  private async getAccessibleOrganizationUnitIds(
+    userId: string,
+  ): Promise<string[]> {
+    const units = await this.organizationService.findAccessibleUnits(userId);
+    return units.map((unit) => unit.id);
   }
 
   private getStartOfToday(): Date {
@@ -213,7 +211,8 @@ export class ShiftService {
     userId: string,
     includePast: boolean,
   ): Promise<ShiftInstanceEntity[]> {
-    const organizationUnitIds = await this.getUserOrganizationUnitIds(userId);
+    const organizationUnitIds =
+      await this.getAccessibleOrganizationUnitIds(userId);
 
     if (organizationUnitIds.length === 0) {
       return [];
@@ -246,7 +245,7 @@ export class ShiftService {
     organizationUnitIds: string[] | null,
   ): Promise<ShiftInstanceEntity[]> {
     const userOrganizationUnitIds =
-      await this.getUserOrganizationUnitIds(userId);
+      await this.getAccessibleOrganizationUnitIds(userId);
 
     if (userOrganizationUnitIds.length === 0) {
       return [];
