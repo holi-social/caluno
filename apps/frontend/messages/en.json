@@ -137,7 +137,6 @@
     "shifts": "Shifts",
     "timesheets": "Timesheets",
     "volunteers": "Volunteers",
-    "checkInOut": "Check-in/out",
     "checkIn": "Check in",
     "myTime": "My Time",
     "requirementForms": "Requirement Forms",
@@ -567,16 +566,11 @@
     "checkIn": {
       "checkIn": "Check in",
       "checkingIn": "Checking-in...",
-      "requirements": "Requirements",
-      "allMet": "All met",
-      "shift": "Shift",
       "noShiftSelected": "No shift selected",
       "volunteerCheckedIn": "Volunteer checked-in",
-      "volunteerProfilePhoto": "Volunteer's profile photo",
       "checkOut": "Check-out",
       "checkingOut": "Checking-out...",
       "volunteerCheckedOut": "Volunteer checked-out",
-      "scanTitle": "Check-in/out",
       "scanDescription": "Scan the volunteers QR iD to check them in or out",
       "enterQrTitle": "Or enter their QR iD",
       "searchVolunteerTitle": "Or search for a volunteer",
@@ -584,13 +578,22 @@
       "checkOutTitle": "Check-out",
       "selectOrgTitle": "Check-in",
       "selectOrgDescription": "Choose the organization you want to check the volunteer into.",
-      "blockedTitle": "Check-in denied",
-      "blockedDescription": "The volunteer is not permitted to check-in. They must contact Headquarters for assistance.",
       "checkedInAt": "Checked in: {time}",
       "checkingOutAt": "Checking out: {time}",
       "volunteerNotFoundTitle": "Volunteer does not exist",
       "volunteerNotFoundDescription": "There is no volunteer that matches this QR iD. The QR iD may have been re-generated and so this QR iD is no longer valid. <tryAgain>Try again</tryAgain> by entering the QR iD manually or search for the volunteer to check them in.",
-      "tryAgain": "Try again"
+      "tryAgain": "Try again",
+      "invalidCheckin": {
+        "blocked": {
+          "title": "Check-in denied",
+          "description": "The volunteer is not permitted to check-in. They must contact Headquarters for assistance."
+        },
+        "notMember": {
+          "title": "Check-in denied",
+          "description": "The volunteer is not a member of this Organization Unit."
+        }
+      },
+      "successNext": "Next"
     },
     "scanner": {
       "title": "Invalid check-in ID",
@@ -1010,7 +1013,63 @@
       "title": "No events yet",
       "description": "Get started by creating your first event."
     },
+    "sheet": {
+      "createTitle": "Create event",
+      "createDescription": "Add a new event to group related shifts.",
+      "editTitle": "Edit event",
+      "editDescription": "Update the event details below."
+    },
+    "detail": {
+      "backLink": "Back to events",
+      "editButton": "Edit",
+      "inviteButton": "Invite members",
+      "volunteersCard": {
+        "title": "Volunteers",
+        "inviteAria": "Invite members",
+        "viewProfileAria": "View profile",
+        "checkInAria": "Check in",
+        "empty": "No volunteers invited yet."
+      },
+      "shiftsCard": {
+        "title": "Shifts",
+        "addAria": "Add shift",
+        "addButton": "Add shift",
+        "emptyTitle": "No shifts yet",
+        "emptyDescription": "Add a shift to this event to get started.",
+        "table": {
+          "name": "Name",
+          "schedule": "Schedule",
+          "volunteers": "Volunteers"
+        }
+      }
+    },
+    "invite": {
+      "title": "Invite members to {eventTitle}",
+      "description": "Invite members to this event. This does not assign them to any shift.",
+      "copyInviteLink": "Copy invite link",
+      "helperText": "Inviting notifies about the event only — does not assign members to event shifts."
+    },
+    "form": {
+      "titleLabel": "Title",
+      "titlePlaceholder": "Event title",
+      "startsAtLabel": "Start",
+      "endsAtLabel": "End",
+      "locationLabel": "Location",
+      "logoUrlLabel": "Logo URL",
+      "coverUrlLabel": "Cover URL",
+      "validation": {
+        "titleRequired": "Title is required",
+        "startRequired": "Start date is required",
+        "endRequired": "End date is required",
+        "endAfterStart": "End date must be after start date",
+        "invalidUrl": "Must be a valid URL"
+      }
+    },
     "toast": {
+      "created": "Event created",
+      "updated": "Event updated",
+      "deleted": "Event deleted",
+      "invited": "Members invited",
       "linkCopied": "Invite link copied to clipboard"
     },
     "error": {

@@ -137,7 +137,6 @@
     "shifts": "Schichten",
     "timesheets": "Zeiterfassung",
     "volunteers": "Freiwillige",
-    "checkInOut": "Check-in/out",
     "checkIn": "Einchecken",
     "myTime": "Meine Zeit",
     "requirementForms": "Anforderungsformulare",
@@ -567,16 +566,11 @@
     "checkIn": {
       "checkIn": "Einchecken",
       "checkingIn": "Wird eingecheckt...",
-      "requirements": "Anforderungen",
-      "allMet": "Alle erfüllt",
-      "shift": "Schicht",
       "noShiftSelected": "Keine Schicht ausgewählt",
       "volunteerCheckedIn": "Freiwilliger eingecheckt",
-      "volunteerProfilePhoto": "Profilfoto des Freiwilligen",
       "checkOut": "Auschecken",
       "checkingOut": "Wird ausgecheckt...",
       "volunteerCheckedOut": "Freiwilliger ausgecheckt",
-      "scanTitle": "Check-in/out",
       "scanDescription": "Scanne die QR-ID der Freiwilligen, um sie ein- oder auszuchecken",
       "enterQrTitle": "Oder gib ihre QR-ID ein",
       "searchVolunteerTitle": "Oder suche nach einer Freiwilligen",
@@ -584,13 +578,22 @@
       "checkOutTitle": "Auschecken",
       "selectOrgTitle": "Einchecken",
       "selectOrgDescription": "Wähle die Organisation aus, in die der Freiwillige eingecheckt werden soll.",
-      "blockedTitle": "Check-in verweigert",
-      "blockedDescription": "Der Freiwillige darf nicht einchecken. Er muss sich an die Zentrale wenden, um Hilfe zu erhalten.",
       "checkedInAt": "Eingecheckt: {time}",
       "checkingOutAt": "Wird ausgecheckt: {time}",
       "volunteerNotFoundTitle": "Freiwilliger nicht gefunden",
       "volunteerNotFoundDescription": "Es gibt keinen Freiwilligen, der zu dieser QR-ID passt. Die QR-ID wurde möglicherweise neu generiert und ist daher nicht mehr gültig. <tryAgain>Versuche es erneut</tryAgain>, indem du die QR-ID manuell eingibst oder nach der Freiwilligen suchst, um sie einzuchecken.",
-      "tryAgain": "Versuche es erneut"
+      "tryAgain": "Versuche es erneut",
+      "invalidCheckin": {
+        "blocked": {
+          "title": "Check-in verweigert",
+          "description": "Der Freiwillige darf nicht einchecken. Er muss sich an die Zentrale wenden, um Hilfe zu erhalten."
+        },
+        "notMember": {
+          "title": "Check-in verweigert",
+          "description": "Der Freiwillige gehört nicht zu dieser Organisationseinheit."
+        }
+      },
+      "successNext": "Weiter"
     },
     "scanner": {
       "title": "Ungültige Check-in-ID",
@@ -1010,7 +1013,63 @@
       "title": "Noch keine Veranstaltungen",
       "description": "Erstelle deine erste Veranstaltung."
     },
+    "sheet": {
+      "createTitle": "Veranstaltung erstellen",
+      "createDescription": "Erstelle eine neue Veranstaltung, um zusammengehörige Schichten zu gruppieren.",
+      "editTitle": "Veranstaltung bearbeiten",
+      "editDescription": "Aktualisiere die Details der Veranstaltung."
+    },
+    "detail": {
+      "backLink": "Zurück zu Veranstaltungen",
+      "editButton": "Bearbeiten",
+      "inviteButton": "Mitglieder einladen",
+      "volunteersCard": {
+        "title": "Freiwillige",
+        "inviteAria": "Mitglieder einladen",
+        "viewProfileAria": "Profil ansehen",
+        "checkInAria": "Einchecken",
+        "empty": "Noch keine Freiwilligen eingeladen."
+      },
+      "shiftsCard": {
+        "title": "Schichten",
+        "addAria": "Schicht hinzufügen",
+        "addButton": "Schicht hinzufügen",
+        "emptyTitle": "Noch keine Schichten",
+        "emptyDescription": "Füge dieser Veranstaltung eine Schicht hinzu, um loszulegen.",
+        "table": {
+          "name": "Name",
+          "schedule": "Zeitplan",
+          "volunteers": "Freiwillige"
+        }
+      }
+    },
+    "invite": {
+      "title": "Mitglieder zu {eventTitle} einladen",
+      "description": "Lade Mitglieder zu dieser Veranstaltung ein. Dies weist sie keiner Schicht zu.",
+      "copyInviteLink": "Einladungslink kopieren",
+      "helperText": "Die Einladung informiert nur über die Veranstaltung – Mitglieder werden dadurch keinen Schichten der Veranstaltung zugewiesen."
+    },
+    "form": {
+      "titleLabel": "Titel",
+      "titlePlaceholder": "Titel der Veranstaltung",
+      "startsAtLabel": "Beginn",
+      "endsAtLabel": "Ende",
+      "locationLabel": "Ort",
+      "logoUrlLabel": "Logo-URL",
+      "coverUrlLabel": "Cover-URL",
+      "validation": {
+        "titleRequired": "Titel ist erforderlich",
+        "startRequired": "Startdatum ist erforderlich",
+        "endRequired": "Enddatum ist erforderlich",
+        "endAfterStart": "Enddatum muss nach dem Startdatum liegen",
+        "invalidUrl": "Muss eine gültige URL sein"
+      }
+    },
     "toast": {
+      "created": "Veranstaltung erstellt",
+      "updated": "Veranstaltung aktualisiert",
+      "deleted": "Veranstaltung gelöscht",
+      "invited": "Mitglieder eingeladen",
       "linkCopied": "Einladungslink in die Zwischenablage kopiert"
     },
     "error": {

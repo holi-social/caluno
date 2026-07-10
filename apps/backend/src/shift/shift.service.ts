@@ -5,7 +5,8 @@ import { PERMISSIONS } from '../auth/constants';
 import type { Database } from '../database/database.module';
 import { DATABASE_CONNECTION } from '../database/database-connection';
 import * as schema from '../database/schema';
-import { UserEntity } from '../database/schema';
+import { ShiftInstanceInviteEntity, UserEntity } from '../database/schema';
+
 import { InferResultType } from '../database/typeutil';
 import {
   BadRequestGraphQLError,
@@ -609,6 +610,24 @@ export class ShiftService {
     });
   }
 
+  findInvite(
+    organizationUnitId: string,
+    instanceId: string,
+    userId: string,
+  ): Promise<ShiftInstanceInviteEntity | undefined> {
+    const instanceInvite = this.db.query.shiftInstanceInvites.findFirst({
+      where: {
+        userId,
+        instance: {
+          master: { organizationUnitId, isDeleted: false },
+          id: instanceId,
+        },
+      },
+    });
+
+    return instanceInvite;
+  }
+
   async countByEventIds(eventIds: string[]) {
     if (eventIds.length === 0) {
       return [];
@@ -870,59 +889,28 @@ export class ShiftService {
     return shift;
   }
 
-  async findActiveShifts(
+  async findActiveShiftInstances(
     organizationUnitId: string,
-    pagination: PaginationInput,
-  ): Promise<{
-    instances: ShiftInstanceEntity[];
-    total: number;
-  }> {
+  ): Promise<ShiftInstanceEntity[]> {
     const now = new Date();
-    const oneHourAgo = new Date(now.getTime() - 60 * 60 * 1000);
-    const oneHourFromNow = new Date(now.getTime() + 60 * 60 * 1000);
-
-    const shifts = await this.db.query.shifts.findMany({
-      where: {
-        organizationUnitId,
-        isDeleted: false,
-      },
-      columns: { id: true },
-    });
-    const shiftIds = shifts.map((s) => s.id);
-
-    if (shiftIds.length === 0) {
-      return { instances: [], total: 0 };
-    }
+    const threeHours = 3 * 60 * 60 * 1000;
+    const threeHoursAgo = new Date(now.getTime() - threeHours);
+    const threeHoursFromNow = new Date(now.getTime() + threeHours);
 
     const instances = await this.db.query.shiftInstances.findMany({
       where: {
-        actualStartsAt: { lt: oneHourFromNow },
-        actualEndsAt: { gt: oneHourAgo },
+        actualStartsAt: { lt: threeHoursFromNow },
+        actualEndsAt: { gt: threeHoursAgo },
         isCancelled: false,
-        masterId: { in: shiftIds },
+        master: { organizationUnitId, isDeleted: false },
       },
       with: {
         master: true,
       },
-      orderBy: { actualStartsAt: 'asc' },
-      limit: pagination.limit,
-      offset: pagination.offset,
+      //orderBy: { actualStartsAt: 'asc' },
     });
 
-    const totalResult = await this.db.query.shiftInstances.findMany({
-      where: {
-        actualStartsAt: { gte: oneHourAgo, lte: oneHourFromNow },
-        isCancelled: false,
-        masterId: { in: shiftIds },
-      },
-      columns: {},
-      extras: { total: count() },
-    });
-
-    return {
-      instances,
-      total: totalResult[0]?.total ?? 0,
-    };
+    return instances;
   }
 
   async findInstances(

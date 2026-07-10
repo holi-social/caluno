@@ -47,9 +47,11 @@ export class OrganizationUnitRepository extends BaseRepository {
 
   async isMemberOfOrgUnitOrAncestor(
     organizationUnitId: string,
+    userId: string,
   ): Promise<boolean> {
     const data = await this.sdk.IsMemberOfOrgUnitOrAncestor({
       organizationUnitId,
+      userId,
     });
     return data.isMemberOfUnitOrAncestor;
   }

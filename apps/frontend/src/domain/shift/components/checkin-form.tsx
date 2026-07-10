@@ -1,21 +1,28 @@
 'use client';
 
-import type { ActiveShift, User } from '@repo/data';
-import { Button, Card, CardContent, CardHeader, CardTitle } from '@repo/ui';
-import { CheckCircle2, Timer, UserIcon } from 'lucide-react';
-import Image from 'next/image';
+import type { ActiveShiftInstance, User } from '@repo/data';
+import {
+  Button,
+  Card,
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+} from '@repo/ui';
+import { Check, PlaneTakeoff, SkipForward } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useState, useTransition } from 'react';
 import { toast } from 'sonner';
 import type { CheckInStatus } from '@/app/[locale]/admin/[orgUId]/check-in/[checkInId]/check-in/page';
 import { createTimeEntry } from '@/domain/time-entry/actions';
 import { useRouter } from '@/i18n/navigation';
-import { ShiftSelectorCard } from './shift-selector-card';
+import { UserCard } from '../../../components/user-card';
+import { ShiftSelectItem, ShiftSelector } from './shift-selector';
 
 type CheckinFormProps = {
   organizationUnitId: string;
   volunteer: User;
-  shifts: ActiveShift[];
+  shifts: ActiveShiftInstance[];
   status: CheckInStatus;
 };
 
@@ -28,10 +35,9 @@ export const CheckinForm = ({
   const [isPending, startTransition] = useTransition();
   const router = useRouter();
   const t = useTranslations('Shift');
-  const [selectedShiftId, setSelectedShiftId] = useState<string | undefined>(
-    shifts.length === 1 ? shifts[0]?.id : undefined,
-  );
   const [serverError, setServerError] = useState<string | null>(null);
+  const [selectedShiftId, setSelectedShiftId] = useState(shifts[0]?.id);
+  const [successDialogOpen, setSuccessDialogOpen] = useState(false);
 
   const handleCheckin = () => {
     setServerError(null);
@@ -53,79 +59,71 @@ export const CheckinForm = ({
       if (result?.serverError) {
         setServerError(result.serverError);
       } else {
-        // TODO: prolly need a prompt, so they get clearer confirmation that the volunteer was checked and then they can move on to checking in another,
-        // or not. DO we block them and ask for a click or just take them to check-in again ?
         toast.success(t('checkIn.volunteerCheckedIn'));
-        router.push(`/admin/${organizationUnitId}/check-in/scan`);
+        setSuccessDialogOpen(true);
       }
     });
   };
 
+  const handleNextCheckin = () =>
+    router.push(`/admin/${organizationUnitId}/check-in/scan`);
+
+  const selectedShift = shifts.find((s) => s.id === selectedShiftId);
   const canCheckin = status === 'valid' && selectedShiftId;
 
   return (
-    <div className="space-y-4">
-      {serverError && (
-        <div className="rounded-md bg-destructive/10 p-4 text-sm text-destructive mb-4">
-          {serverError}
-        </div>
-      )}
+    <>
+      <div className="space-y-6">
+        {serverError && (
+          <div className="rounded-md bg-destructive/10 p-4 text-sm text-destructive mb-4">
+            {serverError}
+          </div>
+        )}
 
-      <Card className="p-4 gap-2">
-        <CardHeader className="px-0">
-          <CardTitle>
-            {volunteer.name}{' '}
-            <span className="font-light">({volunteer.email})</span>
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="px-0">
-          {volunteer.image ? (
-            <Image
-              src={volunteer.image}
-              alt={t('checkIn.volunteerProfilePhoto')}
-            />
-          ) : (
-            <div className="border-8 rounded-2xl inline-block">
-              <UserIcon className="size-72 max-w-full text-accent/90" />
-            </div>
-          )}
-        </CardContent>
-      </Card>
-      <div className="grid grid-cols-2 gap-4">
-        <Card className="gap-2">
-          <CardHeader>
-            <CardTitle>{t('checkIn.requirements')}</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex gap-2">
-              <CheckCircle2 className="text-green-500" /> {t('checkIn.allMet')}
-            </div>
-          </CardContent>
-        </Card>
-        <Card className="gap-2">
-          <CardHeader>
-            <CardTitle>{t('checkIn.shift')}</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ShiftSelectorCard
-              shifts={shifts}
-              organizationUnitId={organizationUnitId}
-              onChange={setSelectedShiftId}
-              value={selectedShiftId}
-            />
-          </CardContent>
-        </Card>
+        <ShiftSelector
+          shifts={shifts}
+          organizationUnitId={organizationUnitId}
+          onChange={setSelectedShiftId}
+          value={selectedShiftId}
+        />
+
+        <UserCard user={volunteer} size="lg" />
+
+        <div className="mt-2 fixed bottom-0 left-4 right-4 z-50 pb-[calc(1rem+env(safe-area-inset-bottom))] md:static md:w-full">
+          <Button
+            size="lg"
+            disabled={!canCheckin || isPending}
+            onClick={handleCheckin}
+            className="w-full"
+            type="button"
+          >
+            <PlaneTakeoff />{' '}
+            {isPending ? t('checkIn.checkingIn') : t('checkIn.checkIn')}
+          </Button>
+        </div>
       </div>
 
-      <Button
-        size="lg"
-        className="w-full"
-        disabled={!canCheckin || isPending}
-        onClick={handleCheckin}
-        type="button"
-      >
-        <Timer /> {isPending ? t('checkIn.checkingIn') : t('checkIn.checkIn')}
-      </Button>
-    </div>
+      <Dialog open={successDialogOpen}>
+        <DialogContent showCloseButton={false}>
+          <DialogHeader className="flex items-center justify-center p-4">
+            <div className="bg-primary rounded-full p-6 text-primary-foreground">
+              <Check className="size-32" />
+            </div>
+          </DialogHeader>
+
+          <div className="min-w-0 space-y-4">
+            <UserCard user={volunteer} size="lg" />
+            <Card className="p-2 bg-accent mb-6">
+              {selectedShift && <ShiftSelectItem shift={selectedShift} />}
+            </Card>
+          </div>
+          <DialogFooter>
+            <Button onClick={handleNextCheckin}>
+              <SkipForward /> {t('checkIn.successNext')}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 };
