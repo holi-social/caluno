@@ -137,7 +137,6 @@
     "shifts": "Shifts",
     "timesheets": "Timesheets",
     "volunteers": "Volunteers",
-    "checkInOut": "Check-in/out",
     "checkIn": "Check in",
     "myTime": "My Time",
     "requirementForms": "Requirement Forms",
@@ -567,16 +566,11 @@
     "checkIn": {
       "checkIn": "Check in",
       "checkingIn": "Checking-in...",
-      "requirements": "Requirements",
-      "allMet": "All met",
-      "shift": "Shift",
       "noShiftSelected": "No shift selected",
       "volunteerCheckedIn": "Volunteer checked-in",
-      "volunteerProfilePhoto": "Volunteer's profile photo",
       "checkOut": "Check-out",
       "checkingOut": "Checking-out...",
       "volunteerCheckedOut": "Volunteer checked-out",
-      "scanTitle": "Check-in/out",
       "scanDescription": "Scan the volunteers QR iD to check them in or out",
       "enterQrTitle": "Or enter their QR iD",
       "searchVolunteerTitle": "Or search for a volunteer",
@@ -584,13 +578,22 @@
       "checkOutTitle": "Check-out",
       "selectOrgTitle": "Check-in",
       "selectOrgDescription": "Choose the organization you want to check the volunteer into.",
-      "blockedTitle": "Check-in denied",
-      "blockedDescription": "The volunteer is not permitted to check-in. They must contact Headquarters for assistance.",
       "checkedInAt": "Checked in: {time}",
       "checkingOutAt": "Checking out: {time}",
       "volunteerNotFoundTitle": "Volunteer does not exist",
       "volunteerNotFoundDescription": "There is no volunteer that matches this QR iD. The QR iD may have been re-generated and so this QR iD is no longer valid. <tryAgain>Try again</tryAgain> by entering the QR iD manually or search for the volunteer to check them in.",
-      "tryAgain": "Try again"
+      "tryAgain": "Try again",
+      "invalidCheckin": {
+        "blocked": {
+          "title": "Check-in denied",
+          "description": "The volunteer is not permitted to check-in. They must contact Headquarters for assistance."
+        },
+        "notMember": {
+          "title": "Check-in denied",
+          "description": "The volunteer is not a member of this Organization Unit."
+        }
+      },
+      "successNext": "Next"
     },
     "scanner": {
       "title": "Invalid check-in ID",
