@@ -1011,8 +1011,13 @@ describe('Volunteer home fields and check-in', () => {
       organizationUnitId,
     });
 
-    // Default factory instance is dated 2026-06-18 — well outside the window.
-    const { id: shiftId } = await createShift(db, { organizationUnitId });
+    // A shift ~10 days in the past, well outside the [start-3h, end+1h] window.
+    const outsideWindowStart = new Date(Date.now() - 10 * 24 * 60 * 60 * 1000);
+    const { id: shiftId } = await createShift(db, {
+      organizationUnitId,
+      startsAt: outsideWindowStart,
+      endsAt: new Date(outsideWindowStart.getTime() + 2 * 60 * 60 * 1000),
+    });
     const instances = await db.query.shiftInstances.findMany({
       where: { masterId: shiftId },
     });
