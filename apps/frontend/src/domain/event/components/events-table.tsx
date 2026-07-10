@@ -19,10 +19,8 @@ import {
 } from '@repo/ui';
 import { TicketIcon } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import { useSheetTrigger } from '@/hooks/use-sheet';
 import { Link } from '@/i18n/navigation';
 import { useFormatting } from '@/lib/formatting/use-formatting';
-import { EVENT_FORM_SHEET } from '../constants';
 import { eventDetailPath } from '../routes';
 import { EventActionBar } from './event-action-bar';
 
@@ -35,8 +33,6 @@ interface EventsTableProps {
 export function EventsTable({ events, orgUId, canEdit }: EventsTableProps) {
   const t = useTranslations('Event');
   const { formatRange } = useFormatting();
-  const createSheet = useSheetTrigger(EVENT_FORM_SHEET);
-
   if (events.length === 0) {
     return (
       <Empty className="border border-dashed">
@@ -49,9 +45,9 @@ export function EventsTable({ events, orgUId, canEdit }: EventsTableProps) {
         </EmptyHeader>
         {canEdit && (
           <EmptyContent>
-            <Button size="sm" onClick={() => createSheet.open()}>
-              {t('list.createButton')}
-            </Button>
+            <Link href={`/admin/${orgUId}/events/new`}>
+              <Button size="sm">{t('list.createButton')}</Button>
+            </Link>
           </EmptyContent>
         )}
       </Empty>
