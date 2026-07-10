@@ -890,15 +890,19 @@
       "birthDate": "Geburtsdatum",
       "documentUrlLabel": "Dokument-URL",
       "documentUrlPlaceholder": "https://example.com/dokument.pdf",
+      "documentLabelLabel": "Dokumentenbezeichnung",
+      "documentLabelPlaceholder": "z. B. Datenschutzerklärung",
       "required": "Erforderlich",
       "selectTypeError": "Bitte wähle einen Feldtyp aus.",
       "enterTextError": "Bitte gib einen Text ein.",
       "enterLabelError": "Bitte gib eine Bezeichnung ein.",
       "enterDocumentUrlError": "Bitte gib eine Dokument-URL ein.",
+      "enterDocumentLabelError": "Bitte gib eine Dokumentenbezeichnung ein.",
       "enterOptionError": "Bitte gib mindestens eine Option ein.",
       "cancel": "Abbrechen",
       "save": "Speichern",
-      "add": "Hinzufügen"
+      "add": "Hinzufügen",
+      "optionsLabel": "Optionen"
     },
     "blockSheet": {
       "viewTitle": "Block ansehen",
