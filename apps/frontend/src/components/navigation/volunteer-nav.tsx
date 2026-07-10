@@ -1,6 +1,6 @@
 'use client';
 
-import { TabBar, type TabBarItem } from '@repo/ui';
+import { TabBar, type TabBarIsland, type TabBarItem } from '@repo/ui';
 import {
   Building2Icon,
   FileClockIcon,
@@ -11,7 +11,11 @@ import { useTranslations } from 'next-intl';
 import { useMemo } from 'react';
 import { usePathname, useRouter } from '@/i18n/navigation';
 
-export function VolunteerNav() {
+type VolunteerNavProps = {
+  isAdmin: boolean;
+};
+
+export function VolunteerNav({ isAdmin }: VolunteerNavProps) {
   const pathname = usePathname();
   const router = useRouter();
   const t = useTranslations('Navigation');
@@ -25,6 +29,17 @@ export function VolunteerNav() {
     [t],
   );
 
+  const adminMenuItem: TabBarIsland | undefined = isAdmin
+    ? {
+        side: 'right',
+        icon: Building2Icon,
+        label: t('admin'),
+        onClick: () => {
+          router.push('/admin');
+        },
+      }
+    : undefined;
+
   return (
     <div className="fixed inset-x-0 bottom-0 z-50 pb-[calc(0.25rem+env(safe-area-inset-bottom))] flex justify-center">
       <TabBar
@@ -32,14 +47,7 @@ export function VolunteerNav() {
         onSelect={router.push}
         activeKey={pathname}
         className="w-full max-w-xl"
-        island={{
-          side: 'right',
-          icon: Building2Icon,
-          label: t('admin'),
-          onClick: () => {
-            router.push('/admin');
-          },
-        }}
+        island={adminMenuItem}
       />
     </div>
   );

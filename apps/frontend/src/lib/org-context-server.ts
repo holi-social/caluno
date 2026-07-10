@@ -1,4 +1,4 @@
-import { LAST_ORG_COOKIE } from '@repo/data';
+import { LAST_ORG_COOKIE, type MyOrganizationUnit } from '@repo/data';
 import { cookies } from 'next/headers';
 import { notFound, redirect } from 'next/navigation';
 import { getDataClient } from './data-client';
@@ -13,10 +13,7 @@ export interface OrgContextData {
   organizationId: string;
 }
 
-export async function getMyOrgUnits(): Promise<OrgContextData[]> {
-  const data = await getDataClient();
-  const units = await data.organization.findMyAccessibleOrganizationUnits();
-
+function normalizeUnits(units: MyOrganizationUnit[]): OrgContextData[] {
   return units
     .map((unit) => {
       const isRoot = unit.parent === null;
@@ -35,26 +32,22 @@ export async function getMyOrgUnits(): Promise<OrgContextData[]> {
     .sort((a, b) => a.name.localeCompare(b.name));
 }
 
+export async function getMyOrgUnits(): Promise<OrgContextData[]> {
+  const data = await getDataClient();
+  const units = await data.organization.findMyOrganizationUnits();
+
+  return normalizeUnits(units);
+}
+
 export async function getMyAdministrableOrgUnits(): Promise<OrgContextData[]> {
   const data = await getDataClient();
-  const units = await data.organization.findMyAccessibleOrganizationUnits();
+  const units = await data.organization.findMyAdminstrableOrganizationUnits();
 
-  return units
-    .map((unit) => {
-      const isRoot = unit.parent === null;
-      return {
-        id: unit.id,
-        slug: unit.slug,
-        name: isRoot
-          ? unit.organization.name
-          : `${unit.organization.name} › ${unit.name}`,
-        description: unit.description ?? unit.organization.description ?? null,
-        logoUrl: unit.logoUrl ?? unit.organization.logoUrl ?? null,
-        address: unit.address,
-        organizationId: unit.organization.id,
-      };
-    })
-    .sort((a, b) => a.name.localeCompare(b.name));
+  return normalizeUnits(units);
+}
+
+export async function isAnAdminstrator() {
+  return (await getMyAdministrableOrgUnits()).length > 0;
 }
 
 export async function resolveOrgFromId(

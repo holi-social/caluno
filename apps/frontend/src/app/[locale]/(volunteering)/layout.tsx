@@ -6,6 +6,7 @@ import { resolveLocale } from '@/i18n/routing';
 import { requireAuth } from '@/lib/auth-server';
 import { GRAPHQL_API_URL } from '@/lib/constants';
 import { resolveLocaleSeed } from '@/lib/locale-seed';
+import { isAnAdminstrator } from '@/lib/org-context-server';
 
 interface VolunteeringOrgLayoutProps {
   children: ReactNode;
@@ -21,6 +22,7 @@ export default async function VolunteeringOrgLayout({
   const locale = resolveLocale(rawLocale);
 
   const localeSeed = await resolveLocaleSeed();
+  const isAdmin = await isAnAdminstrator();
 
   return (
     <DataProvider apiUrl={GRAPHQL_API_URL} locale={locale}>
@@ -28,7 +30,7 @@ export default async function VolunteeringOrgLayout({
       <div className="flex min-h-screen flex-col">
         {children}
 
-        <VolunteerNav />
+        <VolunteerNav isAdmin={isAdmin} />
       </div>
     </DataProvider>
   );
