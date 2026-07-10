@@ -5,7 +5,8 @@ import { PERMISSIONS } from '../auth/constants';
 import type { Database } from '../database/database.module';
 import { DATABASE_CONNECTION } from '../database/database-connection';
 import * as schema from '../database/schema';
-import { UserEntity } from '../database/schema';
+import { ShiftInstanceInviteEntity, UserEntity } from '../database/schema';
+
 import {
   BadRequestGraphQLError,
   ConflictGraphQLError,
@@ -753,6 +754,24 @@ export class ShiftService {
     });
   }
 
+  findInvite(
+    organizationUnitId: string,
+    instanceId: string,
+    userId: string,
+  ): Promise<ShiftInstanceInviteEntity | undefined> {
+    const instanceInvite = this.db.query.shiftInstanceInvites.findFirst({
+      where: {
+        userId,
+        instance: {
+          master: { organizationUnitId, isDeleted: false },
+          id: instanceId,
+        },
+      },
+    });
+
+    return instanceInvite;
+  }
+
   async countByEventId(eventId: string): Promise<number> {
     const result = await this.db
       .select({ count: count() })
@@ -999,39 +1018,26 @@ export class ShiftService {
 
   async findActiveShifts(
     organizationUnitId: string,
-    userId: string,
-  ): Promise<(ShiftInstanceEntity & { accepted: boolean })[]> {
+  ): Promise<ShiftInstanceEntity[]> {
     const now = new Date();
-    const twoHours = 2 * 60 * 60 * 1000;
-    const twoHoursAgo = new Date(now.getTime() - twoHours);
-    const twoHoursFromNow = new Date(now.getTime() + twoHours);
+    const threeHours = 3 * 60 * 60 * 1000;
+    const threeHoursAgo = new Date(now.getTime() - threeHours);
+    const threeHoursFromNow = new Date(now.getTime() + threeHours);
 
     const instances = await this.db.query.shiftInstances.findMany({
       where: {
-        actualStartsAt: { lt: twoHoursFromNow },
-        actualEndsAt: { gt: twoHoursAgo },
+        actualStartsAt: { lt: threeHoursFromNow },
+        actualEndsAt: { gt: threeHoursAgo },
         isCancelled: false,
         master: { organizationUnitId, isDeleted: false },
       },
       with: {
         master: true,
-        invites: {
-          where: { userId, status: ShiftInviteStatus.ACCEPTED },
-          columns: { id: true },
-        },
       },
+      //orderBy: { actualStartsAt: 'asc' },
     });
 
-    return instances
-      .map(({ invites, ...instance }) => ({
-        ...instance,
-        accepted: invites.length > 0,
-      }))
-      .sort(
-        (a, b) =>
-          Number(b.accepted) - Number(a.accepted) ||
-          a.actualStartsAt.getTime() - b.actualStartsAt.getTime(),
-      );
+    return instances;
   }
 
   async findInstances(

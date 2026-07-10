@@ -1,4 +1,8 @@
-import { type ActiveShift, ShiftVisibility } from '@repo/data';
+import {
+  type ActiveShift,
+  ShiftInviteStatus,
+  ShiftVisibility,
+} from '@repo/data';
 import {
   Alert,
   AlertDescription,
@@ -34,7 +38,7 @@ export const ShiftSelectItem = ({ shift }: ShiftOptionProps) => {
         <span className="truncate">
           {shift.overrideTitle ?? shift.master.title}
         </span>
-        {shift.accepted ? (
+        {shift.inviteStatus === ShiftInviteStatus.Accepted ? (
           <CalendarCheck className="size-4 text-primary" />
         ) : (
           shift.master.visibility === ShiftVisibility.InvitedMembers && (

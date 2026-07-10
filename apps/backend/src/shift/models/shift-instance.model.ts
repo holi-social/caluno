@@ -40,9 +40,6 @@ export class ShiftInstance {
 
   @Field(() => [User], { nullable: true })
   volunteers!: User[];
-
-  @Field(() => Boolean, { nullable: true })
-  accepted?: boolean | null;
 }
 
 export const ShiftInstancePaginatedResponse =

@@ -1,3 +1,4 @@
+import { ShiftInviteStatus } from '@repo/data';
 import { Alert, AlertDescription, AlertTitle } from '@repo/ui';
 import { AlertCircle } from 'lucide-react';
 import { notFound } from 'next/navigation';
@@ -37,6 +38,15 @@ export default async function CheckinPage({ params }: CheckinPageProps) {
   );
 
   const shifts = await data.shift.activeShifts(user.id);
+  const acceptedShiftsFirst = shifts.sort((a, b) => {
+    const aAccepted = a.inviteStatus === ShiftInviteStatus.Accepted;
+    const bAccepted = b.inviteStatus === ShiftInviteStatus.Accepted;
+    return (
+      Number(bAccepted) - Number(aAccepted) ||
+      new Date(a.actualStartsAt).getTime() -
+        new Date(b.actualStartsAt).getTime()
+    );
+  });
 
   //  TODO: temporary status checking, until blocking & requirement profile checks land
   const status: CheckInStatus = isMember ? 'valid' : 'notMember';
@@ -60,7 +70,7 @@ export default async function CheckinPage({ params }: CheckinPageProps) {
 
           <CheckinForm
             volunteer={user}
-            shifts={shifts}
+            shifts={acceptedShiftsFirst}
             organizationUnitId={orgUId}
             status={status}
           />

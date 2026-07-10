@@ -144,12 +144,12 @@ query GetShiftVolunteers($instanceId: ID!) {
 }
 
 query GetActiveShifts($userId: String!) {
-  activeShifts(userId: $userId) {
+  activeShifts {
     id
     actualStartsAt
     actualEndsAt
     overrideTitle
-    accepted
+    inviteStatus(userId: $userId)
     master {
       id
       title

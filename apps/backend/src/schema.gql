@@ -503,7 +503,7 @@ enum PermissionKey {
 }
 
 type Query {
-  activeShifts(userId: String!): [ShiftInstance!]!
+  activeShifts: [ShiftInstance!]!
   adminUserProfile(userId: String!): UserProfile
   adminVolunteerSubmission(id: String!): FormSubmission
   event(id: ID!): Event!
@@ -776,10 +776,10 @@ type Shift {
 }
 
 type ShiftInstance {
-  accepted: Boolean
   actualEndsAt: DateTime!
   actualStartsAt: DateTime!
   id: ID!
+  inviteStatus(userId: String!): ShiftInviteStatus
   isCancelled: Boolean!
   isException: Boolean!
   master: Shift!
@@ -789,6 +789,12 @@ type ShiftInstance {
   overrideMaxVolunteers: Int
   overrideTitle: String
   volunteers: [User!]
+}
+
+enum ShiftInviteStatus {
+  ACCEPTED
+  PENDING
+  REJECTED
 }
 
 type ShiftPaginatedResponse {
