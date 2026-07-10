@@ -22,39 +22,48 @@ export class ShiftLoader {
   ) {}
 
   // Many shifts share an event/unit/org, so DataLoader dedups the repeated ids.
-  public readonly eventById = new DataLoader<string, Event | null>(
-    async (eventIds) => {
-      const events = await Promise.all(
-        eventIds.map((id) => this.eventService.findByIdPublic(id)),
-      );
-      return events.map((event) =>
-        event ? this.eventMapper.toModelOrThrow(event) : null,
-      );
-    },
+  public readonly eventById = new DataLoader<string, Event | null>((eventIds) =>
+    settleEach(eventIds, async (id) => {
+      const event = await this.eventService.findByIdPublic(id);
+      return event ? this.eventMapper.toModelOrThrow(event) : null;
+    }),
   );
 
   public readonly organizationUnitById = new DataLoader<
     string,
     OrganizationUnit
-  >(async (unitIds) => {
-    const units = await Promise.all(
-      unitIds.map((id) => this.organizationUnitService.findById(id)),
-    );
-    return units.map((unit) =>
-      this.organizationUnitMapper.toModelOrThrow(unit),
-    );
-  });
+  >((unitIds) =>
+    settleEach(unitIds, async (id) =>
+      this.organizationUnitMapper.toModelOrThrow(
+        await this.organizationUnitService.findById(id),
+      ),
+    ),
+  );
 
   public readonly organizationByUnitId = new DataLoader<string, Organization>(
-    async (unitIds) => {
-      const organizations = await Promise.all(
-        unitIds.map((id) =>
-          this.organizationUnitService.findOrganizationByUnitId(id),
+    (unitIds) =>
+      settleEach(unitIds, async (id) =>
+        this.organizationMapper.toModelOrThrow(
+          await this.organizationUnitService.findOrganizationByUnitId(id),
         ),
-      );
-      return organizations.map((organization) =>
-        this.organizationMapper.toModelOrThrow(organization),
-      );
-    },
+      ),
+  );
+}
+
+// Resolve each id independently so one missing/failing id fails only its own
+// field (DataLoader treats an `Error` element as a per-key rejection) instead
+// of rejecting the whole batch and taking every sibling field down with it.
+async function settleEach<T>(
+  ids: readonly string[],
+  load: (id: string) => Promise<T>,
+): Promise<(T | Error)[]> {
+  return Promise.all(
+    ids.map(async (id) => {
+      try {
+        return await load(id);
+      } catch (error) {
+        return error instanceof Error ? error : new Error(String(error));
+      }
+    }),
   );
 }
