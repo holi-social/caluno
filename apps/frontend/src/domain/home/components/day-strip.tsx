@@ -167,7 +167,7 @@ function PagedDayStrip({
         role="tablist"
         aria-label={t('dayStripLabel')}
         onKeyDown={handleKeyDown}
-        className="flex flex-1 gap-2 overflow-x-auto scrollbar-hide"
+        className="flex flex-1 gap-3 overflow-x-auto scrollbar-hide"
       >
         {days.map((day) => (
           <DayPill
@@ -178,7 +178,7 @@ function PagedDayStrip({
             dayLabel={formatDate(day.date, { day: 'numeric' })}
             shiftCountLabel={shiftCountLabel}
             onSelect={onSelect}
-            className="min-w-[72px] flex-1"
+            className="min-w-[84px] flex-1"
           />
         ))}
       </div>
@@ -319,7 +319,7 @@ function ScrollDayStrip({
           role="tablist"
           aria-label={t('dayStripLabel')}
           onKeyDown={handleKeyDown}
-          className="flex flex-1 gap-2 overflow-x-auto scrollbar-hide py-1"
+          className="flex flex-1 gap-3 overflow-x-auto scrollbar-hide py-1"
         >
           {days.map((day) => (
             <DayPill
@@ -330,7 +330,7 @@ function ScrollDayStrip({
               dayLabel={formatDate(day.date, { day: 'numeric' })}
               shiftCountLabel={shiftCountLabel}
               onSelect={onSelect}
-              className="min-w-[72px] flex-1"
+              className="min-w-[84px] flex-1"
             />
           ))}
         </div>
