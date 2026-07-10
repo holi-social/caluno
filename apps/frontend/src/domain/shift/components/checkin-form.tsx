@@ -111,7 +111,7 @@ export const CheckinForm = ({
             </div>
           </DialogHeader>
 
-          <div className="space-y-4">
+          <div className="min-w-0 space-y-4">
             <UserCard user={volunteer} size="lg" />
             <Card className="p-2 bg-accent mb-6">
               {selectedShift && <ShiftSelectItem shift={selectedShift} />}
