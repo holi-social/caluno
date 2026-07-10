@@ -1,10 +1,10 @@
 import {
   getLastVisitedOrgServer,
-  getMyAccessibleOrganizationUnits,
+  getMyAdministrableOrgUnits,
 } from './org-context-server';
 
 export async function resolvePostAuthDestination(): Promise<string> {
-  const orgs = await getMyAccessibleOrganizationUnits();
+  const orgs = await getMyAdministrableOrgUnits();
 
   if (orgs.length === 0) {
     return '/';

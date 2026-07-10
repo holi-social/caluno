@@ -5,7 +5,7 @@ const accessibleOrgs: OrgContextData[] = [];
 let lastVisitedOrgId: string | null = null;
 
 mock.module('../org-context-server', () => ({
-  getMyAccessibleOrganizationUnits: async () => accessibleOrgs,
+  getMyAdministrableOrgUnits: async () => accessibleOrgs,
   getLastVisitedOrgServer: async () => lastVisitedOrgId,
 }));
 

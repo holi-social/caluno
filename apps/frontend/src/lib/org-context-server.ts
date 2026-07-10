@@ -13,9 +13,29 @@ export interface OrgContextData {
   organizationId: string;
 }
 
-export async function getMyAccessibleOrganizationUnits(): Promise<
-  OrgContextData[]
-> {
+export async function getMyOrgUnits(): Promise<OrgContextData[]> {
+  const data = await getDataClient();
+  const units = await data.organization.findMyAccessibleOrganizationUnits();
+
+  return units
+    .map((unit) => {
+      const isRoot = unit.parent === null;
+      return {
+        id: unit.id,
+        slug: unit.slug,
+        name: isRoot
+          ? unit.organization.name
+          : `${unit.organization.name} › ${unit.name}`,
+        description: unit.description ?? unit.organization.description ?? null,
+        logoUrl: unit.logoUrl ?? unit.organization.logoUrl ?? null,
+        address: unit.address,
+        organizationId: unit.organization.id,
+      };
+    })
+    .sort((a, b) => a.name.localeCompare(b.name));
+}
+
+export async function getMyAdministrableOrgUnits(): Promise<OrgContextData[]> {
   const data = await getDataClient();
   const units = await data.organization.findMyAccessibleOrganizationUnits();
 
@@ -40,7 +60,7 @@ export async function getMyAccessibleOrganizationUnits(): Promise<
 export async function resolveOrgFromId(
   orgUId: string,
 ): Promise<OrgContextData> {
-  const organizations = await getMyAccessibleOrganizationUnits();
+  const organizations = await getMyAdministrableOrgUnits();
   const org =
     organizations.find((item) => item.id === orgUId) ??
     organizations.find((item) => item.organizationId === orgUId);
@@ -53,7 +73,7 @@ export async function resolveOrgFromId(
 export async function resolveOrgFromSlug(
   orgSlug: string,
 ): Promise<OrgContextData> {
-  const organizations = await getMyAccessibleOrganizationUnits();
+  const organizations = await getMyAdministrableOrgUnits();
   const org = organizations.find((item) => item.slug === orgSlug);
   if (!org) {
     return notFound();
@@ -61,8 +81,8 @@ export async function resolveOrgFromSlug(
   return org;
 }
 
-export async function validateUserOrgAccess(orgUId: string): Promise<boolean> {
-  const organizations = await getMyAccessibleOrganizationUnits();
+export async function isMember(orgUId: string): Promise<boolean> {
+  const organizations = await getMyOrgUnits();
   return organizations.some(
     (item) => item.id === orgUId || item.organizationId === orgUId,
   );
@@ -71,7 +91,7 @@ export async function validateUserOrgAccess(orgUId: string): Promise<boolean> {
 export async function requireOrgAccess(
   orgUId: string,
 ): Promise<{ org: OrgContextData; organizations: OrgContextData[] }> {
-  const organizations = await getMyAccessibleOrganizationUnits();
+  const organizations = await getMyAdministrableOrgUnits();
   const org = organizations.find((item) => item.id === orgUId);
   const legacyOrg = organizations.find(
     (item) => item.organizationId === orgUId,

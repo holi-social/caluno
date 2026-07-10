@@ -49,21 +49,6 @@ export function createServerOrgContext(deps: ServerOrgContextDeps) {
     }
   }
 
-  async function validateUserOrgAccess(orgUId: string): Promise<boolean> {
-    try {
-      const data = await getDataClient();
-      const myOrgs = await data.user.getMyOrganizations({
-        limit: 100,
-        offset: 0,
-      });
-
-      return myOrgs.items.some((org) => org.id === orgUId);
-    } catch (error) {
-      console.error('Failed to validate org access:', error);
-      return false;
-    }
-  }
-
   async function requireOrgAccess(
     orgUId: string,
   ): Promise<{ org: OrgContextData; organizations: OrgContextData[] }> {
@@ -96,7 +81,6 @@ export function createServerOrgContext(deps: ServerOrgContextDeps) {
   return {
     resolveOrgFromId,
     resolveOrgFromSlug,
-    validateUserOrgAccess,
     requireOrgAccess,
     getLastVisitedOrgServer,
   };
