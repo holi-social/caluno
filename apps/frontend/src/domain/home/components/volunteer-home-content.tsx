@@ -273,7 +273,7 @@ export function VolunteerHomeContent({
 
   return (
     <div className="flex flex-col gap-8">
-      {yourShiftsSection}
+      {(showLoadingMy || myShiftList.length > 0) && yourShiftsSection}
       {discoverSection}
     </div>
   );
