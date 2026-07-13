@@ -13,14 +13,3 @@ export function useOrganizationUnitWithSuspense(id: string) {
     queryFn: () => repository.findById(id),
   });
 }
-
-export function useIsMemberOfOrgUnitOrAncestor(organizationUnitId: string) {
-  const sdk = useSdk();
-  const repository = new OrganizationUnitRepository(sdk);
-
-  return useQuery({
-    queryKey: ['organization-unit', 'is-member', organizationUnitId],
-    queryFn: () => repository.isMemberOfOrgUnitOrAncestor(organizationUnitId),
-    enabled: !!organizationUnitId,
-  });
-}

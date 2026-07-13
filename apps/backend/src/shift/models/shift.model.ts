@@ -1,4 +1,5 @@
 import { Field, ID, Int, ObjectType } from '@nestjs/graphql';
+import { Event } from '../../event/models/event.model';
 import { createPaginatedResponseType } from '../../graphql/paginated-response.model';
 import { Organization } from '../../organization/models/organization.model';
 import { OrganizationUnit } from '../../organization/models/organization-unit.model';
@@ -17,7 +18,7 @@ export class Shift {
   slug!: string;
 
   @Field(() => String, { nullable: true })
-  instructions!: string | null;
+  instructions?: string | null;
 
   @Field(() => Organization)
   organization!: Organization;
@@ -29,22 +30,25 @@ export class Shift {
   organizationUnitId!: string;
 
   @Field(() => User, { nullable: true })
-  createdBy!: User | null;
+  createdBy?: User | null;
 
   @Field(() => String, { nullable: true })
-  location!: string | null;
+  location?: string | null;
 
   @Field(() => ShiftVisibility)
   visibility!: ShiftVisibility;
 
   @Field(() => Int, { nullable: true })
-  maxVolunteers!: number | null;
+  maxVolunteers?: number | null;
 
   @Field(() => Int, { nullable: true })
-  minVolunteers!: number | null;
+  minVolunteers?: number | null;
 
   @Field(() => String, { nullable: true })
-  rrule!: string | null;
+  rrule?: string | null;
+
+  @Field(() => Event, { nullable: true })
+  event!: Event | null;
 
   @Field(() => Date)
   originalStartsAt!: Date;

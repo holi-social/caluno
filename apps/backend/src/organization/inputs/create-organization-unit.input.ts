@@ -15,20 +15,20 @@ export class CreateOrganizationUnitInput {
   name!: string;
 
   @Field(() => String, { nullable: true })
-  logoUrl!: string | null;
+  logoUrl?: string | null;
 
   @Field(() => String, { nullable: true })
-  websiteUrl!: string | null;
+  websiteUrl?: string | null;
 
   @Field(() => String, { nullable: true })
-  contactEmail!: string | null;
+  contactEmail?: string | null;
 
   @Field(() => String, { nullable: true })
-  phone!: string | null;
+  phone?: string | null;
 
   @Field(() => String, { nullable: true })
-  description!: string | null;
+  description?: string | null;
 
   @Field(() => String, { nullable: true })
-  address!: string | null;
+  address?: string | null;
 }

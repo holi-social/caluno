@@ -46,7 +46,7 @@ export class RequirementFulfillment {
   id!: string;
 
   @Field(() => OrganizationUserProfile, { nullable: true })
-  organizationUserProfile!: OrganizationUserProfile | null;
+  organizationUserProfile?: OrganizationUserProfile | null;
 
   @Field(() => RequirementType)
   type!: RequirementType;
@@ -57,10 +57,10 @@ export class RequirementFulfillment {
   status!: RequirementFulfillmentStatus;
 
   @Field(() => Date, { nullable: true })
-  submittedAt!: Date | null;
+  submittedAt?: Date | null;
 
   @Field(() => Date, { nullable: true })
-  reviewedAt!: Date | null;
+  reviewedAt?: Date | null;
 
   @Field(() => RequirementProfileSubmission)
   submission!: RequirementProfileSubmission;
@@ -69,7 +69,7 @@ export class RequirementFulfillment {
   requirement!: Requirement;
 
   @Field(() => User, { nullable: true })
-  reviewedBy!: User | null;
+  reviewedBy?: User | null;
 }
 
 @ObjectType({

@@ -58,22 +58,15 @@ export class ShiftQueryResolver {
   }
 
   @Permissions(PERMISSIONS.SHIFT_VIEW)
-  @Query(() => ShiftInstancePaginatedResponse)
-  async activeShifts(
-    @Args() pagination: PaginationInput,
+  @Query(() => [ShiftInstance])
+  async activeShiftInstances(
     @Context() context: AuthenticatedGraphQLContext,
-  ): Promise<ShiftInstancePaginatedResponse> {
-    const { instances, total } = await this.shiftService.findActiveShifts(
+  ): Promise<ShiftInstance[]> {
+    const instances = await this.shiftService.findActiveShiftInstances(
       context.organizationUnitId,
-      pagination,
     );
 
-    return new ShiftInstancePaginatedResponse({
-      items: this.shiftInstanceMapper.toArray(instances),
-      total: total,
-      limit: pagination.limit,
-      offset: pagination.offset,
-    });
+    return this.shiftInstanceMapper.toArray(instances);
   }
 
   @Permissions(PERMISSIONS.SHIFT_VIEW)
@@ -113,6 +106,36 @@ export class ShiftQueryResolver {
       context.organizationUnitId,
       from,
       to,
+    );
+    return this.shiftInstanceMapper.toArray(instances);
+  }
+
+  @Query(() => [ShiftInstance])
+  async myShiftInstances(
+    @Args('includePast', { type: () => Boolean, defaultValue: false })
+    includePast: boolean,
+    @Session() session: UserSession,
+  ): Promise<ShiftInstance[]> {
+    const instances = await this.shiftService.findMyShiftInstances(
+      session.user.id,
+      includePast,
+    );
+    return this.shiftInstanceMapper.toArray(instances);
+  }
+
+  @Query(() => [ShiftInstance])
+  async availableShiftInstances(
+    @Args('from', { type: () => Date, nullable: true }) from: Date | null,
+    @Args('to', { type: () => Date, nullable: true }) to: Date | null,
+    @Args('organizationUnitIds', { type: () => [ID], nullable: true })
+    organizationUnitIds: string[] | null,
+    @Session() session: UserSession,
+  ): Promise<ShiftInstance[]> {
+    const instances = await this.shiftService.findAvailableShiftInstances(
+      session.user.id,
+      from,
+      to,
+      organizationUnitIds,
     );
     return this.shiftInstanceMapper.toArray(instances);
   }

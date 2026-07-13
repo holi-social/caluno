@@ -3,10 +3,8 @@
 import { Button } from '@repo/ui';
 import { Eye, Share2, SquarePen, Trash2, UserPlus } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import { useSheetTrigger } from '@/hooks/use-sheet';
 import { Link } from '@/i18n/navigation';
 import { copyToClipboard } from '@/lib/clipboard';
-import { EVENT_FORM_SHEET, EVENT_INVITE_SHEET } from '../constants';
 import { eventDetailPath } from '../routes';
 import { eventShareUrl } from '../share';
 
@@ -24,8 +22,6 @@ export function EventActionBar({
   canEdit,
 }: EventActionBarProps) {
   const t = useTranslations('Event');
-  const editSheet = useSheetTrigger(EVENT_FORM_SHEET);
-  const inviteSheet = useSheetTrigger(EVENT_INVITE_SHEET);
 
   const handleShare = () => {
     copyToClipboard(eventShareUrl(slug), t('toast.linkCopied'));
@@ -45,23 +41,25 @@ export function EventActionBar({
 
       {canEdit && (
         <>
-          <Button
-            size="icon-xs"
-            variant="outline"
-            aria-label={t('action.editAria')}
-            onClick={() => editSheet.open({ id })}
-          >
-            <SquarePen />
-          </Button>
+          <Link href={`/admin/${orgUId}/events/${id}/edit`}>
+            <Button
+              size="icon-xs"
+              variant="outline"
+              aria-label={t('action.editAria')}
+            >
+              <SquarePen />
+            </Button>
+          </Link>
 
-          <Button
-            size="icon-xs"
-            variant="outline"
-            aria-label={t('action.inviteAria')}
-            onClick={() => inviteSheet.open({ id })}
-          >
-            <UserPlus />
-          </Button>
+          <Link href={`/admin/${orgUId}/events/${id}/invite`}>
+            <Button
+              size="icon-xs"
+              variant="outline"
+              aria-label={t('action.inviteAria')}
+            >
+              <UserPlus />
+            </Button>
+          </Link>
         </>
       )}
 

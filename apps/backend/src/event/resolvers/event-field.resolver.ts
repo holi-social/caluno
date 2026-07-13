@@ -44,4 +44,9 @@ export class EventFieldResolver {
   ): Promise<Shift[]> {
     return loader.shiftsByEventId.load(event.id);
   }
+
+  @ResolveField(() => String, { nullable: true })
+  coverImageUrl(@Parent() event: EventEntity): string | null {
+    return event.coverUrl ?? null;
+  }
 }

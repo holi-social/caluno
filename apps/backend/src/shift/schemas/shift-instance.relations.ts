@@ -6,6 +6,7 @@ export const shiftInstancesRelations = defineRelationsPart(schema, (r) => ({
     master: r.one.shifts({
       from: r.shiftInstances.masterId,
       to: r.shifts.id,
+      optional: false,
     }),
     invites: r.many.shiftInstanceInvites({
       from: r.shiftInstances.id,

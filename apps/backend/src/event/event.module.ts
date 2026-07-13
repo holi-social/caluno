@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { AuthModule } from '../auth/auth.module';
 import { DatabaseModule } from '../database/database.module';
 import { MembershipModule } from '../membership/membership.module';
@@ -17,7 +17,7 @@ import { EventShiftsLoader } from './resolvers/loader';
     AuthModule,
     UserModule,
     MembershipModule,
-    ShiftModule,
+    forwardRef(() => ShiftModule),
   ],
   providers: [
     EventService,

@@ -15,12 +15,10 @@ export default async function RootPagesLayout({
 
   return (
     <>
-      <div className="fixed w-full">
+      <div className="fixed inset-x-0 top-0 z-40 w-full">
         <HomeHeader title={t('greeting', { name: session.user.name })} />
       </div>
-      <main className="grow pb-16 pt-28">
-        <div className="container mx-auto p-6 pt-8 max-w-4xl">{children}</div>
-      </main>
+      <div className="mx-auto w-full max-w-4xl px-6 pt-36 pb-4">{children}</div>
     </>
   );
 }

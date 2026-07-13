@@ -25,7 +25,15 @@ export const formats = (locale: string) => {
       in: tz(DEFAULT_TIMEZONE),
     });
 
-  const formatDate = (date: Date) => format(date, 'P');
+  const formatDate = (date: Date, options?: Intl.DateTimeFormatOptions) => {
+    if (options) {
+      return new Intl.DateTimeFormat(locale, {
+        timeZone: DEFAULT_TIMEZONE,
+        ...options,
+      }).format(date);
+    }
+    return format(date, 'P');
+  };
   const formatDateTime = (date: Date) => format(date, 'Pp');
   const formatTime = (date: Date) => format(date, 'p');
 

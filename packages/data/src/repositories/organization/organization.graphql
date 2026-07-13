@@ -227,6 +227,9 @@ mutation DeleteOrganizationUnit($id: String!) {
   }
 }
 
-query IsMemberOfOrgUnitOrAncestor($organizationUnitId: ID!) {
-  isMemberOfUnitOrAncestor(organizationUnitId: $organizationUnitId)
+query IsMemberOfOrgUnitOrAncestor($organizationUnitId: ID!, $userId: String!) {
+  isMemberOfUnitOrAncestor(
+    organizationUnitId: $organizationUnitId
+    userId: $userId
+  )
 }

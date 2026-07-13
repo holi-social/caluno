@@ -61,7 +61,7 @@ export class ShiftMutationResolver {
     @Args('instanceId', { type: () => String }) instanceId: string,
     @Args('memberIds', { type: () => [String] }) memberIds: string[],
     @Args('inviteToAllInstances', { type: () => Boolean, nullable: true })
-    inviteToAllInstances: boolean | undefined,
+    inviteToAllInstances: boolean | null | undefined,
     @Context() context: AuthenticatedGraphQLContext,
   ): Promise<ShiftInstance> {
     const instance =
@@ -72,24 +72,6 @@ export class ShiftMutationResolver {
         { inviteToAllInstances },
       );
     return this.shiftInstanceMapper.toModelOrThrow(instance);
-  }
-
-  @Permissions(PERMISSIONS.SHIFT_EDIT)
-  @Mutation(() => Shift)
-  async inviteMembersToShift(
-    @Args('shiftId', { type: () => String }) shiftId: string,
-    @Args('memberIds', { type: () => [String] }) memberIds: string[],
-    @Args('fromDate', { type: () => Date, nullable: true })
-    fromDate: Date | null,
-    @Context() context: AuthenticatedGraphQLContext,
-  ): Promise<Shift> {
-    const shift = await this.shiftService.inviteMembersToShiftWithAutoApproval(
-      shiftId,
-      memberIds,
-      context.organizationUnitId,
-      fromDate ?? undefined,
-    );
-    return this.shiftMapper.toModelOrThrow(shift);
   }
 
   @Permissions(PERMISSIONS.SHIFT_EDIT)
