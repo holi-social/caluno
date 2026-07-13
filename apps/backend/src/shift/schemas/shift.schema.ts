@@ -33,6 +33,7 @@ export const shifts = snakeCase.table(
       .references(() => users.id, { onDelete: 'restrict' })
       .notNull(),
     location: text('location'),
+    imageUrl: text('image_url'),
     visibility: shiftVisibilityEnum('visibility')
       .notNull()
       .default(ShiftVisibility.ALL_MEMBERS),

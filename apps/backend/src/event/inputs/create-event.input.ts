@@ -9,10 +9,10 @@ export class CreateEventInput {
   location!: string | null;
 
   @Field(() => String, { nullable: true })
-  logoUrl!: string | null;
+  logoFileId!: string | null;
 
   @Field(() => String, { nullable: true })
-  coverUrl!: string | null;
+  coverFileId!: string | null;
 
   @Field(() => Date)
   startsAt!: Date;
