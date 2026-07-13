@@ -40,6 +40,11 @@ describe('ShiftService', () => {
       {} as MembershipService,
       {} as NotificationService,
       {} as OrganizationService,
+      {
+        assertUploadedFileForPurpose: async () => ({}),
+        resolvePublicUrlForUploadedFile: async () =>
+          'https://example.com/image.png',
+      } as never,
     );
 
     userId = (await createUser(db)).id;

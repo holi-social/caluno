@@ -23,6 +23,7 @@ const shift = {
   organizationUnitId: 'unit-1',
   createdById: 'user-owner',
   location: null,
+  imageUrl: null,
   visibility: ShiftVisibility.ALL_MEMBERS,
   maxVolunteers: null,
   minVolunteers: null,

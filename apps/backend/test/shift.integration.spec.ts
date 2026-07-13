@@ -816,8 +816,8 @@ describe('Volunteer home fields and check-in', () => {
           input: {
             title: 'Test Event',
             location: null,
-            logoUrl: null,
-            coverUrl: 'https://example.com/cover.jpg',
+            logoFileId: null,
+            coverFileId: null,
             startsAt: '2026-06-18T08:00:00.000Z',
             endsAt: '2026-06-18T10:00:00.000Z',
             invitedMemberIds: null,
@@ -833,6 +833,10 @@ describe('Volunteer home fields and check-in', () => {
     const { id: shiftId } = await createShift(db, {
       organizationUnitId,
     });
+    await db
+      .update(schema.events)
+      .set({ coverUrl: 'https://example.com/cover.jpg' })
+      .where(eq(schema.events.id, eventData.createEvent.id));
     await db
       .update(schema.shifts)
       .set({ eventId: eventData.createEvent.id })
