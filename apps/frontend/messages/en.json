@@ -127,7 +127,10 @@
     "label": "Language"
   },
   "Profile": {
-    "title": "Edit Profile"
+    "title": "Edit Profile",
+    "pictureLabel": "Profile picture",
+    "saved": "Profile updated",
+    "saveFailed": "Failed to update profile"
   },
   "Navigation": {
     "home": "Home",
@@ -223,6 +226,7 @@
       "websitePlaceholder": "https://organization.org",
       "addressLabel": "Address",
       "addressPlaceholder": "123 Main St, City, State 12345",
+      "logoLabel": "Logo",
       "submit": "Create organization",
       "submitting": "Creating organization...",
       "errors": {
@@ -248,7 +252,7 @@
       "phonePlaceholder": "e.g. +1 555 000 0000",
       "websiteLabel": "Website URL",
       "websitePlaceholder": "e.g. https://example.com",
-      "logoLabel": "Logo URL",
+      "logoLabel": "Logo",
       "logoPlaceholder": "e.g. https://example.com/logo.png",
       "addressLabel": "Address",
       "addressPlaceholder": "e.g. 123 Main St, City",
@@ -417,7 +421,14 @@
         "title": "Join {orgName}",
         "description": "Before you can join this organization, you need to complete the following requirements.",
         "requiredBadge": "Required",
-        "statusLabel": "Status: {status, select, approved {approved} rejected {rejected} pending {pending} other {pending}}"
+        "statusLabel": "Status: {status, select, approved {approved} rejected {rejected} pending {pending} other {pending}}",
+        "documentsTitle": "Upload required documents",
+        "documentsDescription": "Upload each required document, then submit them for review.",
+        "missingDocuments": "Upload all required documents before submitting.",
+        "submitDocuments": "Submit documents",
+        "submitting": "Submitting...",
+        "submitSuccess": "Documents submitted",
+        "submitFailed": "Failed to submit documents"
       },
       "error": {
         "title": "Something went wrong",
@@ -514,7 +525,8 @@
       "noRecurrence": "No recurrence",
       "chooseDays": "Choose which days this shift repeats",
       "openShiftLabel": "Open shift",
-      "openShiftDescription": "Any volunteer can sign up for this shift"
+      "openShiftDescription": "Any volunteer can sign up for this shift",
+      "imageLabel": "Image"
     },
     "recurrence": {
       "preset": {
@@ -643,7 +655,8 @@
       "visibilityLabel": "Visibility",
       "statusLabel": "Status",
       "createdByLabel": "Created by",
-      "createdLabel": "Created"
+      "createdLabel": "Created",
+      "imageAlt": "Image for {title}"
     },
     "notFound": "Shift not found.",
     "loading": "Loading...",
@@ -773,8 +786,9 @@
       "descriptionPlaceholder": "Help text for this field",
       "placeholderLabel": "Placeholder",
       "placeholderPlaceholder": "e.g. Enter your name",
-      "documentUrlLabel": "Document URL",
-      "documentUrlPlaceholder": "https://example.com/document.pdf",
+      "documentFileLabel": "Document",
+      "documentFileDescription": "PDF or image, max 10 MB",
+      "enterDocumentFileError": "Please upload a document.",
       "documentLabelLabel": "Document Label",
       "documentLabelPlaceholder": "e.g. Terms of Service",
       "optionsLabel": "Options",
@@ -891,15 +905,15 @@
       "zipCode": "ZIP code",
       "city": "City",
       "birthDate": "Birth date",
-      "documentUrlLabel": "Document URL",
-      "documentUrlPlaceholder": "https://example.com/document.pdf",
+      "documentFileLabel": "Document",
+      "documentFileDescription": "PDF or image, max 10 MB",
+      "enterDocumentFileError": "Please upload a document.",
       "documentLabelLabel": "Document Label",
       "documentLabelPlaceholder": "e.g. Data Privacy Policy",
       "required": "Required",
       "selectTypeError": "Please select a field type.",
       "enterTextError": "Please enter text.",
       "enterLabelError": "Please enter a label.",
-      "enterDocumentUrlError": "Please enter a document URL.",
       "enterDocumentLabelError": "Please enter a document label.",
       "enterOptionError": "Please enter at least one option.",
       "cancel": "Cancel",
@@ -1025,6 +1039,7 @@
     },
     "detail": {
       "backLink": "Back to events",
+      "coverImageAlt": "Cover image for {title}",
       "editButton": "Edit",
       "inviteButton": "Invite members",
       "volunteersCard": {
@@ -1059,8 +1074,8 @@
       "startsAtLabel": "Start",
       "endsAtLabel": "End",
       "locationLabel": "Location",
-      "logoUrlLabel": "Logo URL",
-      "coverUrlLabel": "Cover URL",
+      "logoUrlLabel": "Logo",
+      "coverUrlLabel": "Cover image",
       "validation": {
         "titleRequired": "Title is required",
         "startRequired": "Start date is required",
@@ -1079,6 +1094,22 @@
     "error": {
       "title": "Failed to load events",
       "tryAgain": "Try again"
+    }
+  },
+  "Storage": {
+    "upload": {
+      "label": "Upload file",
+      "chooseFile": "Choose a file",
+      "browse": "Browse files",
+      "dropHint": "Drag and drop a file here, or click to browse",
+      "replace": "Replace",
+      "uploaded": "File uploaded",
+      "uploading": "Uploading...",
+      "failed": "Upload failed",
+      "invalidFileType": "This file type is not allowed. Use JPEG, PNG, or HEIC.",
+      "clear": "Remove",
+      "previewAlt": "Uploaded file preview",
+      "imageHint": "Recommended: JPEG or PNG, up to 2 MB"
     }
   },
   "VolunteerHome": {
