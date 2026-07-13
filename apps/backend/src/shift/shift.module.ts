@@ -1,13 +1,11 @@
-import { forwardRef, Module } from '@nestjs/common';
+import { Module } from '@nestjs/common';
 import { AuthModule } from '../auth/auth.module';
 import { DatabaseModule } from '../database/database.module';
-import { EventModule } from '../event/event.module';
 import { MembershipModule } from '../membership/membership.module';
 import { NotificationModule } from '../notification/notification.module';
-import { OrganizationMapper } from '../organization/mappers/organization.mapper';
-import { OrganizationUnitMapper } from '../organization/mappers/organization-unit.mapper';
-import { OrganizationService } from '../organization/organization.service';
-import { OrganizationUnitService } from '../organization/organization-unit.service';
+import { OrganizationModule } from '../organization/organization.module';
+import { OrganizationUnitDataModule } from '../organization/organization-unit-data.module';
+import { StorageModule } from '../storage/storage.module';
 import { UserModule } from '../user/user.module';
 import { ShiftMapper } from './mappers/shift.mapper';
 import { ShiftInstanceMapper } from './mappers/shift-instance.mapper';
@@ -27,7 +25,9 @@ import { ShiftService } from './shift.service';
     UserModule,
     MembershipModule,
     NotificationModule,
-    forwardRef(() => EventModule),
+    OrganizationModule,
+    OrganizationUnitDataModule,
+    StorageModule,
   ],
   providers: [
     ShiftService,
@@ -40,10 +40,6 @@ import { ShiftService } from './shift.service';
     ShiftInstanceInvitesLoader,
     ShiftLoader,
     ShiftInstanceLoader,
-    OrganizationService,
-    OrganizationUnitService,
-    OrganizationMapper,
-    OrganizationUnitMapper,
   ],
   exports: [ShiftMapper, ShiftInstanceMapper, ShiftService],
 })
