@@ -23,6 +23,9 @@ export class Event {
   @Field(() => String, { nullable: true })
   coverUrl!: string | null;
 
+  @Field(() => String, { nullable: true })
+  coverImageUrl!: string | null;
+
   @Field(() => ID)
   organizationUnitId!: string;
 

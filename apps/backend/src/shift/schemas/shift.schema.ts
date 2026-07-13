@@ -50,6 +50,7 @@ export const shifts = snakeCase.table(
   (table) => [
     index('idx_shifts_org_unit_id').on(table.organizationUnitId),
     index('idx_shifts_created_by_id').on(table.createdById),
+    index('idx_shifts_event_id').on(table.eventId),
     index('idx_shifts_slug').on(table.slug),
     index('idx_shifts_is_deleted').on(table.isDeleted),
   ],

@@ -61,14 +61,14 @@ export function BlockForm({
   organizationId,
   readOnly,
   onPendingChange,
-  onCreated,
+  onSuccess,
 }: {
   blockId?: string;
   orgUId: string;
   organizationId: string;
   readOnly?: boolean;
   onPendingChange?: (isPending: boolean) => void;
-  onCreated?: (id: string) => void;
+  onSuccess: (id: string) => void;
 }) {
   const t = useTranslations('RequirementForm.block');
   const tField = useTranslations('RequirementForm.fieldForm');
@@ -261,9 +261,7 @@ export function BlockForm({
     } else if (result?.data) {
       toast.success(isEdit ? tActions('blockSaved') : tActions('blockCreated'));
       reset(data);
-      if (!isEdit && result.data.blockId) {
-        onCreated?.(result.data.blockId);
-      }
+      onSuccess(result.data.blockId);
     } else {
       toast.error(tActions('failedToSaveBlock'));
     }
@@ -279,6 +277,9 @@ export function BlockForm({
       systemKey: '',
       lockType: false,
       options: [],
+      ...(type === FieldType.DocumentAcknowledgement
+        ? { documentUrl: '', documentLabel: '' }
+        : {}),
     });
   }
 
@@ -619,7 +620,8 @@ function FieldCard({
       <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
         <Field>
           <FieldLabel>
-            {tField('typeLabel')} <span className="text-destructive">*</span>
+            {tField('fieldTypeLabel')}{' '}
+            <span className="text-destructive">*</span>
           </FieldLabel>
           {lockType && fieldType ? (
             <div className="border-input bg-muted/50 text-muted-foreground flex h-9 w-full items-center rounded-md border px-3 text-sm">
@@ -636,7 +638,7 @@ function FieldCard({
                   disabled={readOnly}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder={tField('typePlaceholder')} />
+                    <SelectValue placeholder={tField('fieldTypePlaceholder')} />
                   </SelectTrigger>
                   <SelectContent>
                     {customFieldTypes.map((t) => (
@@ -691,20 +693,40 @@ function FieldCard({
         {isDocument && (
           <>
             <Field className="md:col-span-2">
-              <FieldLabel>{tField('documentUrlLabel')}</FieldLabel>
+              <FieldLabel>
+                {tField('documentUrlLabel')}{' '}
+                <span className="text-destructive">*</span>
+              </FieldLabel>
               <Input
-                {...register(`fields.${index}.documentUrl`)}
+                {...register(`fields.${index}.documentUrl`, {
+                  required: tField('enterDocumentUrlError'),
+                })}
                 placeholder={tField('documentUrlPlaceholder')}
                 disabled={readOnly}
               />
+              {errors?.documentUrl && (
+                <p className="text-destructive text-sm">
+                  {errors.documentUrl.message}
+                </p>
+              )}
             </Field>
             <Field className="md:col-span-2">
-              <FieldLabel>{tField('documentLabelLabel')}</FieldLabel>
+              <FieldLabel>
+                {tField('documentLabelLabel')}{' '}
+                <span className="text-destructive">*</span>
+              </FieldLabel>
               <Input
-                {...register(`fields.${index}.documentLabel`)}
+                {...register(`fields.${index}.documentLabel`, {
+                  required: tField('enterDocumentLabelError'),
+                })}
                 placeholder={tField('documentLabelPlaceholder')}
                 disabled={readOnly}
               />
+              {errors?.documentLabel && (
+                <p className="text-destructive text-sm">
+                  {errors.documentLabel.message}
+                </p>
+              )}
             </Field>
           </>
         )}

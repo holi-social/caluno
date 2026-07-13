@@ -1,8 +1,12 @@
 import { Field, ID, InputType, Int, registerEnumType } from '@nestjs/graphql';
-import { ShiftVisibility } from '../enums';
+import { ShiftInviteStatus, ShiftVisibility } from '../enums';
 
 registerEnumType(ShiftVisibility, {
   name: 'ShiftVisibility',
+});
+
+registerEnumType(ShiftInviteStatus, {
+  name: 'ShiftInviteStatus',
 });
 
 @InputType()

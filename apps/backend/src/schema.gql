@@ -137,6 +137,7 @@ A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date
 scalar DateTime
 
 type Event {
+  coverImageUrl: String
   coverUrl: String
   createdAt: DateTime!
   endsAt: DateTime!
@@ -345,6 +346,8 @@ type Mutation {
   addTimeEntry(input: AddTimeEntryInput!): TimeEntry!
   approveMembershipRequest(id: ID!, organizationUnitId: ID!): MembershipRequest!
   cancelMembershipRequest(id: ID!, organizationUnitId: ID!): MembershipRequest!
+  checkIn(shiftInstanceId: ID!): TimeEntry!
+  checkOut(shiftInstanceId: ID!): TimeEntry!
   closeTimeEntry(id: ID!, input: CloseTimeEntryInput!): TimeEntry!
   createEvent(input: CreateEventInput!): Event!
   createFormBlock(input: CreateFormBlockInput!): FormBlock!
@@ -501,9 +504,10 @@ enum PermissionKey {
 }
 
 type Query {
-  activeShifts(limit: Int! = 10, offset: Int! = 0): ShiftInstancePaginatedResponse!
+  activeShiftInstances: [ShiftInstance!]!
   adminUserProfile(userId: String!): UserProfile
   adminVolunteerSubmission(id: String!): FormSubmission
+  availableShiftInstances(from: DateTime, organizationUnitIds: [ID!], to: DateTime): [ShiftInstance!]!
   event(id: ID!): Event!
   eventAttendees(eventId: ID!): [User!]!
   eventShifts(eventId: ID!): [Shift!]!
@@ -514,7 +518,7 @@ type Query {
   formSubmissionsByForm(formId: String!, limit: Int! = 10, offset: Int! = 0): FormSubmissionPaginatedResponse!
   formSubmissionsByMembershipRequest(membershipRequestId: String!): [FormSubmission!]!
   formSubmissionsForVolunteer(userId: String!): [FormSubmission!]!
-  isMemberOfUnitOrAncestor(organizationUnitId: ID!): Boolean!
+  isMemberOfUnitOrAncestor(organizationUnitId: ID!, userId: String!): Boolean!
   me: User!
   members(organizationUnitId: ID!): [User!]!
   membership(organizationUnitId: ID!): Membership
@@ -525,6 +529,7 @@ type Query {
   myFormSubmissionByToken(token: String!): FormSubmission
   myMembershipRequests(limit: Int! = 10, offset: Int! = 0, status: MembershipRequestStatus): MembershipRequestPaginatedResponse!
   myOrganizationUnits: [OrganizationUnit!]!
+  myShiftInstances(includePast: Boolean! = false): [ShiftInstance!]!
   myTime(limit: Int! = 10, offset: Int! = 0): TimeEntryPaginatedResponse!
   myUserProfile: UserProfile
   organization(id: String!): Organization
@@ -758,6 +763,7 @@ type Shift {
   createdAt: DateTime!
   createdBy: User
   durationMinutes: Int!
+  event: Event
   id: ID!
   instructions: String
   isDeleted: Boolean!
@@ -777,8 +783,11 @@ type Shift {
 type ShiftInstance {
   actualEndsAt: DateTime!
   actualStartsAt: DateTime!
+  filledCount: Int!
   id: ID!
+  inviteStatus(userId: String!): ShiftInviteStatus
   isCancelled: Boolean!
+  isCheckedIn: Boolean!
   isException: Boolean!
   master: Shift!
   occurrenceIndex: Int!
@@ -789,9 +798,10 @@ type ShiftInstance {
   volunteers: [User!]
 }
 
-type ShiftInstancePaginatedResponse {
-  items: [ShiftInstance!]!
-  pagination: PaginationInfo!
+enum ShiftInviteStatus {
+  ACCEPTED
+  PENDING
+  REJECTED
 }
 
 type ShiftPaginatedResponse {

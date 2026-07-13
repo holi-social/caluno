@@ -1,6 +1,7 @@
 import { LAST_ORG_COOKIE, type MyOrganizationUnit } from '@repo/data';
 import { cookies } from 'next/headers';
 import { notFound, redirect } from 'next/navigation';
+import { getCurrentUser } from './auth-server';
 import { getDataClient } from './data-client';
 
 export interface OrgContextData {
@@ -99,8 +100,11 @@ export async function requireOrgAccess(
   }
 
   const data = await getDataClient();
-  const isMember =
-    await data.organizationUnit.isMemberOfOrgUnitOrAncestor(orgUId);
+  const loggedInUser = await getCurrentUser();
+  const isMember = await data.organizationUnit.isMemberOfOrgUnitOrAncestor(
+    orgUId,
+    loggedInUser.id,
+  );
   if (!isMember) {
     redirect('/unauthorized');
   }

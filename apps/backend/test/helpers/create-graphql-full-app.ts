@@ -4,11 +4,8 @@ import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import type { INestApplication } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
+import { getAuthMockUserId } from './auth-mocks';
 import { ensureTestDatabase } from './ensure-test-database';
-
-type CreateGraphqlFullAppOptions = {
-  testUserId?: string;
-};
 
 const getBackendRoot = () => {
   const currentWorkingDirectory = process.cwd();
@@ -107,10 +104,7 @@ const applyRemainingTestEnvironmentDefaults = () => {
   process.env.COOKIE_DOMAIN ??= 'localhost';
 };
 
-export const createGraphqlFullTestApp = async (
-  options: CreateGraphqlFullAppOptions = {},
-): Promise<INestApplication> => {
-  const { testUserId = 'test-user-id' } = options;
+export const createGraphqlFullTestApp = async (): Promise<INestApplication> => {
   const backendRoot = getBackendRoot();
 
   await ensureTestDatabase();
@@ -135,7 +129,7 @@ export const createGraphqlFullTestApp = async (
   const app = moduleRef.createNestApplication({ logger: false });
   app.use((req, _res, next) => {
     const mutableReq = req as { user?: { id: string } };
-    mutableReq.user = mutableReq.user ?? { id: testUserId };
+    mutableReq.user = { id: getAuthMockUserId() };
     next();
   });
 
