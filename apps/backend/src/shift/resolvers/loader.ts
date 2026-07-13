@@ -58,10 +58,4 @@ export class ShiftInstanceInvitesLoader {
         `${key.organizationUnitId}:${key.instanceId}:${key.userId}`,
     },
   );
-
-  // loadInviteStatus(
-  //   params: InviteInstanceQueryParams,
-  // ): Promise<ShiftInviteStatus | null> {
-  //   return this.inviteStatusByInstanceId.load(toInviteLoaderKey(params));
-  // }
 }
