@@ -9,6 +9,7 @@ import { DATABASE_CONNECTION } from '../src/database/database-connection';
 import * as schema from '../src/database/schema';
 import { MembershipService } from '../src/membership/membership.service';
 import { NotificationService } from '../src/notification/notification.service';
+import { OrganizationService } from '../src/organization/organization.service';
 import { ShiftService } from '../src/shift/shift.service';
 import { UserService } from '../src/user/user.service';
 import { slugify } from '../src/utils/slug.util';
@@ -38,6 +39,7 @@ describe('ShiftService', () => {
       {} as UserService,
       {} as MembershipService,
       {} as NotificationService,
+      {} as OrganizationService,
     );
 
     userId = (await createUser(db)).id;

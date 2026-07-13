@@ -103,4 +103,34 @@ export class ShiftQueryResolver {
     );
     return this.shiftInstanceMapper.toArray(instances);
   }
+
+  @Query(() => [ShiftInstance])
+  async myShiftInstances(
+    @Args('includePast', { type: () => Boolean, defaultValue: false })
+    includePast: boolean,
+    @Session() session: UserSession,
+  ): Promise<ShiftInstance[]> {
+    const instances = await this.shiftService.findMyShiftInstances(
+      session.user.id,
+      includePast,
+    );
+    return this.shiftInstanceMapper.toArray(instances);
+  }
+
+  @Query(() => [ShiftInstance])
+  async availableShiftInstances(
+    @Args('from', { type: () => Date, nullable: true }) from: Date | null,
+    @Args('to', { type: () => Date, nullable: true }) to: Date | null,
+    @Args('organizationUnitIds', { type: () => [ID], nullable: true })
+    organizationUnitIds: string[] | null,
+    @Session() session: UserSession,
+  ): Promise<ShiftInstance[]> {
+    const instances = await this.shiftService.findAvailableShiftInstances(
+      session.user.id,
+      from,
+      to,
+      organizationUnitIds,
+    );
+    return this.shiftInstanceMapper.toArray(instances);
+  }
 }

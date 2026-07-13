@@ -25,12 +25,23 @@ export function VolunteerNav() {
     [t],
   );
 
+  const activeKey = useMemo(() => {
+    if (
+      pathname === '/' ||
+      pathname.startsWith('/discover') ||
+      pathname.startsWith('/my-shifts')
+    ) {
+      return '/';
+    }
+    return pathname;
+  }, [pathname]);
+
   return (
     <div className="fixed inset-x-0 bottom-0 z-50 pb-[calc(0.25rem+env(safe-area-inset-bottom))] flex justify-center">
       <TabBar
         items={volunteerTabs}
         onSelect={router.push}
-        activeKey={pathname}
+        activeKey={activeKey}
         className="w-full max-w-xl"
         island={{
           side: 'right',

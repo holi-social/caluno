@@ -6,6 +6,8 @@ import {
 import type {
   CreateShiftInput,
   GetActiveShiftInstancesQuery,
+  GetAvailableShiftInstancesQuery,
+  GetMyShiftInstancesQuery,
   GetShiftInstancesQuery,
   GetShiftQuery,
   GetWeeklyShiftsQuery,
@@ -23,6 +25,10 @@ export type ShiftInstanceItem =
   GetShiftInstancesQuery['shiftInstances'][number];
 export type RawShift = GetShiftQuery['shift'];
 export type WeeklyShiftInstance = GetWeeklyShiftsQuery['weeklyShifts'][number];
+export type MyShiftInstance =
+  GetMyShiftInstancesQuery['myShiftInstances'][number];
+export type AvailableShiftInstance =
+  GetAvailableShiftInstancesQuery['availableShiftInstances'][number];
 export interface ShiftDetail extends RawShift {
   startDate: Date;
   endDate: Date;
@@ -118,5 +124,31 @@ export class ShiftRepository extends BaseRepository {
       to: to.toISOString(),
     });
     return data.weeklyShifts;
+  }
+
+  async findMyShiftInstances(includePast = false): Promise<MyShiftInstance[]> {
+    const data = await this.sdk.GetMyShiftInstances({ includePast });
+    return data.myShiftInstances;
+  }
+
+  async findAvailableShiftInstances(
+    options: { from?: Date; to?: Date; organizationUnitIds?: string[] } = {},
+  ): Promise<AvailableShiftInstance[]> {
+    const data = await this.sdk.GetAvailableShiftInstances({
+      from: options.from?.toISOString(),
+      to: options.to?.toISOString(),
+      organizationUnitIds: options.organizationUnitIds,
+    });
+    return data.availableShiftInstances;
+  }
+
+  async checkIn(shiftInstanceId: string): Promise<string> {
+    const data = await this.sdk.CheckIn({ shiftInstanceId });
+    return data.checkIn.id;
+  }
+
+  async checkOut(shiftInstanceId: string): Promise<string> {
+    const data = await this.sdk.CheckOut({ shiftInstanceId });
+    return data.checkOut.id;
   }
 }

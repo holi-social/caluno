@@ -1080,5 +1080,38 @@
       "title": "Veranstaltungen konnten nicht geladen werden",
       "tryAgain": "Erneut versuchen"
     }
+  },
+  "VolunteerHome": {
+    "greeting": "Hallo, {firstName}!",
+    "greetingFallback": "Willkommen zurück!",
+    "yourShiftsHeading": "Deine Schichten",
+    "yourShiftsCount": "{n, plural, one {# Schicht} other {# Schichten}}",
+    "yourShiftsThisWeek": "{n, plural, one {# Schicht diese Woche} other {# Schichten diese Woche}}",
+    "yourShiftsSeeAll": "Alle anzeigen",
+    "yourShiftsEmpty": "Du hast keine bevorstehenden Schichten.",
+    "discoverHeading": "Entdecken",
+    "discoverCta": "Schichten entdecken",
+    "discoverEmpty": "Keine Schichten für diese Filter",
+    "discoverEmptyBody": "Passe deine Filter an oder schau später nochmal vorbei.",
+    "discoverEmptyHome": "Zurzeit keine Schichten zum Entdecken. Schau bald wieder vorbei.",
+    "discoverConflict": "Überschneidet sich mit einer Schicht, für die du dich angemeldet hast",
+    "partOfEvent": "Teil von {event}",
+    "filterNextWeek": "Nächste Woche",
+    "filterThisWeekend": "Dieses Wochenende",
+    "weekly": "Wöchentlich",
+    "spotsLeft": "{n, plural, one {# Platz frei} other {# Plätze frei}}",
+    "fullyBooked": "Ausgebucht",
+    "overlapWarning": "Du hast überschneidende Schichten in deinem Plan",
+    "todayButton": "Heute",
+    "goToToday": "Zu heute",
+    "discoverThisWeek": "{n, plural, one {# Schicht diese Woche} other {# Schichten diese Woche}}",
+    "dayStripLabel": "Tagauswahl",
+    "dayStripPrevious": "Vorherige Tage",
+    "dayStripNext": "Nächste Tage",
+    "checkIn": "Einchecken",
+    "checkOut": "Auschecken",
+    "timerStartsIn": "beginnt in {time}",
+    "timerStartedAgo": "Gestartet vor {time}",
+    "timerVolunteering": "Du hilfst seit {time}"
   }
 }

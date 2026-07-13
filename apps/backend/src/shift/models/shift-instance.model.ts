@@ -38,6 +38,12 @@ export class ShiftInstance {
   @Field(() => Int)
   occurrenceIndex!: number;
 
+  @Field(() => Boolean)
+  isCheckedIn!: boolean;
+
+  @Field(() => Int)
+  filledCount!: number;
+
   @Field(() => [User], { nullable: true })
   volunteers?: User[] | null;
 }

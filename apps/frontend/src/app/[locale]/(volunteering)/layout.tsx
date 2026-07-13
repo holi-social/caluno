@@ -26,7 +26,7 @@ export default async function VolunteeringOrgLayout({
     <DataProvider apiUrl={GRAPHQL_API_URL} locale={locale}>
       {localeSeed && <LocaleCookieSeeder value={localeSeed} />}
       <div className="flex min-h-screen flex-col">
-        {children}
+        <main className="grow pb-24">{children}</main>
 
         <VolunteerNav />
       </div>
