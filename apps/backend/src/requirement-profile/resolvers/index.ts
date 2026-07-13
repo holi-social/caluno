@@ -1,5 +1,5 @@
-export * from './document-upload-mutation.resolver';
 export * from './form-block-field.resolver';
+export * from './form-block-field-document.resolver';
 export * from './form-block-mutation.resolver';
 export * from './form-block-query.resolver';
 export * from './form-submission-field.resolver';

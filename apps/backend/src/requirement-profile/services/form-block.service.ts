@@ -10,6 +10,8 @@ import {
 } from '../../graphql/errors';
 import type { PaginationInput } from '../../graphql/pagination.input';
 import { patch } from '../../shared/patch';
+import { FilePurpose } from '../../storage/enums';
+import { FileService } from '../../storage/services/file.service';
 import { SYSTEM_PROFILE_KEYS } from '../constants';
 import { CreateFormBlockInput } from '../inputs/create-form-block.input';
 import { CreateFormBlockFieldInput } from '../inputs/create-form-block-field.input';
@@ -27,6 +29,7 @@ export class FormBlockService {
   constructor(
     @Inject(DATABASE_CONNECTION)
     private readonly db: Database,
+    private readonly fileService: FileService,
   ) {}
 
   async findById(id: string): Promise<FormBlockEntity | undefined> {
@@ -208,18 +211,15 @@ export class FormBlockService {
     return deleted;
   }
 
-  private validateDocumentUrl(url: string | null | undefined): void {
-    if (!url) return;
-    try {
-      const parsed = new URL(url);
-      if (parsed.protocol !== 'https:' && parsed.protocol !== 'http:') {
-        throw new Error();
-      }
-    } catch {
-      throw new BadRequestGraphQLError(
-        'documentUrl must be a valid http/https URL',
-      );
-    }
+  private async validateDocumentFile(
+    fileId: string | null | undefined,
+  ): Promise<void> {
+    if (!fileId) return;
+
+    await this.fileService.assertUploadedFileForPurpose(
+      fileId,
+      FilePurpose.FORM_DOCUMENT,
+    );
   }
 
   async createField(
@@ -232,7 +232,7 @@ export class FormBlockService {
         `Invalid systemKey: "${input.systemKey}". Must be one of: ${[...SYSTEM_PROFILE_KEYS].join(', ')}`,
       );
     }
-    this.validateDocumentUrl(input.documentUrl);
+    await this.validateDocumentFile(input.documentFileId);
 
     const block = await this.findById(blockId);
     if (!block) {
@@ -273,7 +273,7 @@ export class FormBlockService {
         `Invalid systemKey: "${input.systemKey}". Must be one of: ${[...SYSTEM_PROFILE_KEYS].join(', ')}`,
       );
     }
-    this.validateDocumentUrl(input.documentUrl);
+    await this.validateDocumentFile(input.documentFileId);
 
     const field = await this.db.query.formBlockFields.findFirst({
       where: { id: fieldId },
@@ -343,7 +343,7 @@ export class FormBlockService {
       lockType: input.lockType ?? false,
       systemKey: input.systemKey,
       options: input.options,
-      documentUrl: input.documentUrl,
+      documentFileId: input.documentFileId,
       documentLabel: input.documentLabel,
       minAge: input.minAge,
       fieldOrder: input.fieldOrder ?? order,

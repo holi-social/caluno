@@ -5,7 +5,7 @@ export class CreateRequirementSubmissionFulfillmentInput {
   requirementId!: string;
 
   @Field(() => String, { nullable: true })
-  documentId?: string | null;
+  fileId?: string | null;
 
   @Field(() => Boolean, { nullable: true })
   checked?: boolean | null;

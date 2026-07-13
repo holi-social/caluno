@@ -43,10 +43,16 @@ export class FormBlockField {
   options!: SelectOption[] | null;
 
   @Field(() => String, { nullable: true })
-  documentUrl!: string | null;
+  documentFileId!: string | null;
 
   @Field(() => String, { nullable: true })
   documentLabel!: string | null;
+
+  @Field(() => String, { nullable: true })
+  documentDownloadUrl?: string | null;
+
+  @Field(() => String, { nullable: true })
+  documentFilename?: string | null;
 
   @Field(() => Number, { nullable: true })
   minAge!: number | null;
