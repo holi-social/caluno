@@ -59,6 +59,7 @@ export function EditShiftForm({
       invitedMemberIds: [],
       recurrenceDays: shift.recurrenceDays,
       recurrenceEndsAt: shift.recurrenceEndsAt,
+      imageFileId: undefined,
     };
   }, [shift, orgUId]);
 
@@ -103,6 +104,7 @@ export function EditShiftForm({
         isPending={isPending}
         initialValues={initialValues}
         formId={formId}
+        imagePreviewUrl={shift.imageUrl}
       />
     </>
   );

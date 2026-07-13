@@ -29,9 +29,9 @@ export default async function EditEventPage({ params }: EditEventPageProps) {
         startsAt: new Date(event.startsAt),
         endsAt: new Date(event.endsAt),
         location: event.location ?? undefined,
-        logoUrl: event.logoUrl ?? undefined,
-        coverUrl: event.coverUrl ?? undefined,
       }}
+      logoPreviewUrl={event.logoUrl}
+      coverPreviewUrl={event.coverUrl}
     />
   );
 }

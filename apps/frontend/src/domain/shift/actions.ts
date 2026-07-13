@@ -75,6 +75,7 @@ export const createShift = actionClient
         : ShiftVisibility.InvitedMembers,
       invitedMemberIds: parsedInput.invitedMemberIds,
       rrule,
+      imageFileId: parsedInput.imageFileId ?? null,
     };
 
     const shift = await data.shift.create(input);
@@ -110,6 +111,7 @@ export const updateShift = actionClient
         : ShiftVisibility.InvitedMembers,
       invitedMemberIds: parsedInput.invitedMemberIds,
       rrule,
+      imageFileId: parsedInput.imageFileId,
     };
 
     return await data.shift.update(parsedInput.id, input);

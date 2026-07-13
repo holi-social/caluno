@@ -2,15 +2,18 @@
 
 import { Button, Input } from '@repo/ui';
 import { useTranslations } from 'next-intl';
-import { useActionState } from 'react';
+import { useActionState, useState } from 'react';
 import { createOrganization } from '@/domain/organization/actions';
+import { FileUpload } from '@/domain/storage/components/file-upload';
 
 export function CreateOrganizationForm() {
   const [state, formAction, isPending] = useActionState(
     createOrganization,
     null,
   );
+  const [logoFileId, setLogoFileId] = useState<string | undefined>();
   const t = useTranslations('Organization.create');
+  const tUpload = useTranslations('Storage.upload');
 
   return (
     <form action={formAction} className="mt-8 space-y-6">
@@ -19,6 +22,8 @@ export function CreateOrganizationForm() {
           {state.error}
         </div>
       )}
+
+      <input type="hidden" name="logoFileId" value={logoFileId ?? ''} />
 
       <div className="space-y-4">
         <div>
@@ -49,6 +54,16 @@ export function CreateOrganizationForm() {
             disabled={isPending}
           />
         </div>
+
+        <FileUpload
+          purpose="organization_logo"
+          label={t('logoLabel')}
+          description={tUpload('imageHint')}
+          value={logoFileId}
+          disabled={isPending}
+          onUploaded={(result) => setLogoFileId(result.fileId)}
+          onClear={() => setLogoFileId(undefined)}
+        />
 
         <div>
           <label htmlFor="contactEmail" className="block text-sm font-medium">
