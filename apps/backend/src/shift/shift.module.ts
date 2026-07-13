@@ -11,6 +11,7 @@ import { OrganizationUnitService } from '../organization/organization-unit.servi
 import { UserModule } from '../user/user.module';
 import { ShiftMapper } from './mappers/shift.mapper';
 import { ShiftInstanceMapper } from './mappers/shift-instance.mapper';
+import { ShiftInstanceInvitesLoader } from './resolvers/loader';
 import { ShiftLoader } from './resolvers/shift.loader';
 import { ShiftFieldResolver } from './resolvers/shift-field.resolver';
 import { ShiftInstanceLoader } from './resolvers/shift-instance.loader';
@@ -36,6 +37,7 @@ import { ShiftService } from './shift.service';
     ShiftMutationResolver,
     ShiftFieldResolver,
     ShiftInstanceFieldResolver,
+    ShiftInstanceInvitesLoader,
     ShiftLoader,
     ShiftInstanceLoader,
     OrganizationService,

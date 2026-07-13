@@ -13,10 +13,7 @@ import { User } from '../../user/models/user.model';
 import { ShiftMapper } from '../mappers/shift.mapper';
 import { ShiftInstanceMapper } from '../mappers/shift-instance.mapper';
 import { Shift, ShiftPaginatedResponse } from '../models/shift.model';
-import {
-  ShiftInstance,
-  ShiftInstancePaginatedResponse,
-} from '../models/shift-instance.model';
+import { ShiftInstance } from '../models/shift-instance.model';
 import { ShiftService } from '../shift.service';
 
 @Resolver(() => Shift)
@@ -30,10 +27,7 @@ export class ShiftQueryResolver {
 
   @AllowAnonymous()
   @Query(() => Shift)
-  async shift(
-    @Args('id') id: string,
-    @Session() session: UserSession,
-  ): Promise<Shift> {
+  async shift(@Args('id') id: string): Promise<Shift> {
     const shift = await this.shiftService.findById(id);
     return this.shiftMapper.toModelOrThrow(shift);
   }

@@ -826,22 +826,26 @@ export class ShiftService {
     });
   }
 
-  findInvite(
+  async findInvites(
     organizationUnitId: string,
-    instanceId: string,
-    userId: string,
-  ): Promise<ShiftInstanceInviteEntity | undefined> {
-    const instanceInvite = this.db.query.shiftInstanceInvites.findFirst({
+    instanceIds: string[],
+    userIds: string[],
+  ): Promise<ShiftInstanceInviteEntity[]> {
+    if (instanceIds.length === 0 || userIds.length === 0) {
+      return [];
+    }
+    const instanceInvites = this.db.query.shiftInstanceInvites.findMany({
       where: {
-        userId,
+        userId: { in: userIds },
         instance: {
+          id: { in: instanceIds },
           master: { organizationUnitId, isDeleted: false },
-          id: instanceId,
+          isCancelled: false,
         },
       },
     });
 
-    return instanceInvite;
+    return instanceInvites;
   }
 
   async countByEventIds(eventIds: string[]) {
