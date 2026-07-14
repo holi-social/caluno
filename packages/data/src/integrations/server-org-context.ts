@@ -18,36 +18,6 @@ export interface ServerOrgContextDeps {
 
 export function createServerOrgContext(deps: ServerOrgContextDeps) {
   const { getCookie, notFound, redirect, getDataClient } = deps;
-  async function resolveOrgFromId(orgUId: string): Promise<OrgContextData> {
-    try {
-      const data = await getDataClient(orgUId);
-      const org = await data.organization.findById(orgUId);
-
-      if (!org) {
-        return notFound();
-      }
-
-      return org;
-    } catch (error) {
-      console.error('Failed to resolve org from ID:', error);
-      return notFound();
-    }
-  }
-  async function resolveOrgFromSlug(orgSlug: string): Promise<OrgContextData> {
-    try {
-      const data = await getDataClient();
-      const org = await data.organization.findBySlug(orgSlug);
-
-      if (!org) {
-        return notFound();
-      }
-
-      return org;
-    } catch (error) {
-      console.error('Failed to resolve org from slug:', error);
-      return notFound();
-    }
-  }
 
   async function requireOrgAccess(
     orgUId: string,
@@ -79,8 +49,6 @@ export function createServerOrgContext(deps: ServerOrgContextDeps) {
   }
 
   return {
-    resolveOrgFromId,
-    resolveOrgFromSlug,
     requireOrgAccess,
     getLastVisitedOrgServer,
   };
