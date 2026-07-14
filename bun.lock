@@ -62,13 +62,6 @@
         "typescript": "^6.0.0",
       },
     },
-    "apps/e2e": {
-      "name": "clippy-e2e",
-      "version": "0.0.0",
-      "devDependencies": {
-        "@playwright/test": "^1.61.1",
-      },
-    },
     "apps/frontend": {
       "name": "clippy-frontend",
       "version": "0.0.0",
@@ -106,6 +99,13 @@
         "@types/react-dom": "^19",
         "tailwindcss": "^4",
         "typescript": "^6.0.0",
+      },
+    },
+    "e2e": {
+      "name": "clippy-e2e",
+      "version": "0.0.0",
+      "devDependencies": {
+        "@playwright/test": "^1.61.1",
       },
     },
     "packages/data": {
@@ -1645,7 +1645,7 @@
 
     "clippy-backend": ["clippy-backend@workspace:apps/backend"],
 
-    "clippy-e2e": ["clippy-e2e@workspace:apps/e2e"],
+    "clippy-e2e": ["clippy-e2e@workspace:e2e"],
 
     "clippy-frontend": ["clippy-frontend@workspace:apps/frontend"],
 
