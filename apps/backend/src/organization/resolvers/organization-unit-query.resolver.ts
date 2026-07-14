@@ -24,10 +24,18 @@ export class OrganizationUnitQueryResolver {
   ) {}
 
   @Query(() => [OrganizationUnit])
-  async myAccessibleOrganizationUnits(
+  async myOrganizationUnits(
     @Session() session: UserSession,
   ): Promise<OrganizationUnit[]> {
-    const units = await this.organizationService.findAccessibleUnits(
+    const units = await this.organizationService.findUnits(session.user.id);
+    return this.organizationUnitMapper.toArray(units);
+  }
+
+  @Query(() => [OrganizationUnit])
+  async myAdminstableOrganizationUnits(
+    @Session() session: UserSession,
+  ): Promise<OrganizationUnit[]> {
+    const units = await this.organizationService.findAdministrableUnits(
       session.user.id,
     );
     return this.organizationUnitMapper.toArray(units);

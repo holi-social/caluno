@@ -525,9 +525,10 @@ type Query {
   membershipRequestCount(status: MembershipRequestStatus): Int!
   membershipRequests(limit: Int! = 10, offset: Int! = 0, status: MembershipRequestStatus): MembershipRequestPaginatedResponse!
   memberships: [Membership!]!
-  myAccessibleOrganizationUnits: [OrganizationUnit!]!
+  myAdminstableOrganizationUnits: [OrganizationUnit!]!
   myFormSubmissionByToken(token: String!): FormSubmission
   myMembershipRequests(limit: Int! = 10, offset: Int! = 0, status: MembershipRequestStatus): MembershipRequestPaginatedResponse!
+  myOrganizationUnits: [OrganizationUnit!]!
   myShiftInstances(includePast: Boolean! = false): [ShiftInstance!]!
   myTime(limit: Int! = 10, offset: Int! = 0): TimeEntryPaginatedResponse!
   myUserProfile: UserProfile

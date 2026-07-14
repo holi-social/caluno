@@ -15,7 +15,7 @@ mock.module('next/headers', () => ({
 }));
 
 mock.module('../org-context-server', () => ({
-  getMyAccessibleOrganizationUnits: async () => accessibleOrgs,
+  getMyAdministrableOrgUnits: async () => accessibleOrgs,
   getLastVisitedOrgServer: async () => lastVisitedOrgId,
 }));
 

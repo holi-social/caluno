@@ -8,7 +8,7 @@ import { JoinShiftButton } from '@/domain/shift/components/join-shift-button';
 import { isAuthenticated } from '@/lib/auth-server';
 import { getDataClient } from '@/lib/data-client';
 import { getFormatting } from '@/lib/formatting/formatting-server';
-import { validateUserOrgAccess } from '@/lib/org-context-server';
+import { isMember as isMemberOfOrgUnit } from '@/lib/org-context-server';
 
 interface ShiftPageProps {
   params: Promise<{ shiftId: string }>;
@@ -40,7 +40,7 @@ export default async function ShiftPage({
 
   const authenticated = await isAuthenticated();
   const isMember = authenticated
-    ? await validateUserOrgAccess(shift.organizationUnitId)
+    ? await isMemberOfOrgUnit(shift.organizationUnitId)
     : false;
 
   const pendingRequest =

@@ -3,7 +3,7 @@ import { getTranslations } from 'next-intl/server';
 import { VolunteerFormWrapper } from '@/domain/requirement-form/components/volunteer-form-wrapper';
 import { getSession } from '@/lib/auth-server';
 import { getDataClient } from '@/lib/data-client';
-import { validateUserOrgAccess } from '@/lib/org-context-server';
+import { isMember as isMemberOfOrgUnit } from '@/lib/org-context-server';
 
 interface Props {
   params: Promise<{ token: string }>;
@@ -32,7 +32,7 @@ export default async function PublicFormPage({ params }: Props) {
   const [isMember, userProfile, orgUnit, existingSubmission] =
     await Promise.all([
       form.organizationUnitId
-        ? validateUserOrgAccess(form.organizationUnitId)
+        ? isMemberOfOrgUnit(form.organizationUnitId)
         : Promise.resolve(false),
       data.requirementForm.getMyUserProfile(),
       form.organizationUnitId
