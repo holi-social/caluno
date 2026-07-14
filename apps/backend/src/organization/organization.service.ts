@@ -150,31 +150,21 @@ export class OrganizationService {
   async findAdministrableUnits(
     userId: string,
   ): Promise<OrganizationUnitEntity[]> {
-    const userMemberships = await this.db.query.memberships.findMany({
-      where: { userId },
+    const administrableMemberships = await this.db.query.memberships.findMany({
+      where: {
+        userId,
+        roles: {
+          role: {
+            permissions: {},
+          },
+        },
+      },
       with: {
         organizationUnit: {
           columns: { id: true, organizationId: true },
         },
-        roles: {
-          with: {
-            role: {
-              with: {
-                permissions: {
-                  columns: { id: true },
-                },
-              },
-            },
-          },
-        },
       },
     });
-
-    const administrableMemberships = userMemberships.filter((membership) =>
-      membership.roles.some(
-        (membershipRole) => (membershipRole.role?.permissions.length ?? 0) > 0,
-      ),
-    );
 
     return this.expandToChildOrgUnits(administrableMemberships);
   }

@@ -1,9 +1,14 @@
-import { Field, ID, ObjectType } from '@nestjs/graphql';
+import { Field, ID, ObjectType, registerEnumType } from '@nestjs/graphql';
 import { createPaginatedResponseType } from '../../graphql/paginated-response.model';
 import { Membership } from '../../membership/models/membership.model';
 import { MembershipRequest } from '../../membership/models/membership-request.model';
 import { User } from '../../user/models/user.model';
 import { RequirementProfileSubmissionStatus } from '../enums';
+
+registerEnumType(RequirementProfileSubmissionStatus, {
+  name: 'RequirementProfileSubmissionStatus',
+});
+
 import { RequirementFulfillment } from './requirement-fulfillment.model';
 import { RequirementProfile } from './requirement-profile.model';
 
