@@ -155,7 +155,7 @@ export class OrganizationService {
         userId,
         roles: {
           role: {
-            permissions: {},
+            permissions: {}, // select all memberships that have a role that has at least one permission
           },
         },
       },
