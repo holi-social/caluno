@@ -46,8 +46,10 @@ export class ShiftsPage {
   }
 
   async goto(orgUId: string) {
+    // Heavy admin page — `load` is unreliably slow on staging; rely on the
+    // visibility waits in expectLoaded() for readiness instead.
     await this.page.goto(`${BASE_URL}/en/admin/${orgUId}/shifts`, {
-      waitUntil: 'load',
+      waitUntil: 'domcontentloaded',
     });
   }
 
@@ -57,9 +59,14 @@ export class ShiftsPage {
   }
 
   async openCreateForm() {
-    await this.createShiftButton.click();
-    await this.page.waitForURL(/sheet=shift-form/, { timeout: 20000 });
-    await this.shiftNameInput.waitFor({ state: 'visible', timeout: 20000 });
+    // After a DCL navigation the page can be briefly un-hydrated, so the first
+    // click may be dropped — retry idempotently until the sheet opens.
+    await expect(async () => {
+      if (/sheet=shift-form/.test(this.page.url())) return;
+      await this.createShiftButton.click();
+      await this.page.waitForURL(/sheet=shift-form/, { timeout: 5_000 });
+    }).toPass({ timeout: 30_000 });
+    await this.shiftNameInput.waitFor({ state: 'visible', timeout: 20_000 });
   }
 
   // Fills the required fields and submits. Date = next month's 15th (a future,
