@@ -1140,8 +1140,10 @@
           "timesheetSigningSuper": "Supervisor signature",
           "timesheetReady": "Ready to go",
           "nonCompliant": "No active contract",
-          "nonCompliantHint": "Timesheet submitted without an active contract — create or activate a contract first",
-          "notYetCreated": "Not yet created"
+          "nonCompliantHint": "No active contract for this allowance type yet — create or activate one to make this timesheet compliant",
+          "notYetCreated": "Not yet created",
+          "overCap": "At annual cap",
+          "overCapHint": "This timesheet's amount pushes the volunteer at or over their yearly allowance cap"
         },
         "lastActionLabel": {
           "created": "Created",
@@ -1154,6 +1156,19 @@
           "create": "Create",
           "remind": "Remind",
           "countersign": "Sign"
+        },
+        "nonCompliantDialog": {
+          "titleSingle": "{action, select, create {Create} remind {Send a reminder for} countersign {Countersign} other {Proceed with}} a non-compliant timesheet?",
+          "titleBatchAll": "{action, select, create {Create} remind {Send reminders for} countersign {Countersign} other {Proceed with}} {count} non-compliant timesheets?",
+          "titleBatchMixed": "{count} of {total} timesheets are non-compliant",
+          "descriptionSingle": "This volunteer has no active contract for this allowance type yet. You can still {action, select, create {create} remind {send a reminder for} countersign {countersign} other {proceed with}} this timesheet, but it stays flagged as non-compliant until a contract is active.",
+          "descriptionBatchAll": "None of the selected volunteers have an active contract for this allowance type yet. You can still {action, select, create {create} remind {send reminders for} countersign {countersign} other {proceed with}} these timesheets, but they stay flagged as non-compliant until a contract is active.",
+          "descriptionBatchMixed": "{count} of the selected timesheets belong to volunteers without an active contract for this allowance type.",
+          "actionAnyway": "{action, select, create {Create anyway} remind {Remind anyway} countersign {Sign anyway} other {Proceed anyway}}",
+          "actionAllAnyway": "{action, select, create {Create all anyway} remind {Remind all anyway} countersign {Sign all anyway} other {Proceed with all anyway}}",
+          "onlyCompliantAction": "{action, select, create {Only create compliant} remind {Only remind compliant} countersign {Only sign compliant} other {Only proceed with compliant}}",
+          "generateContractInstead": "Generate contract instead",
+          "viewContractInstead": "View contract instead"
         }
       }
     },
