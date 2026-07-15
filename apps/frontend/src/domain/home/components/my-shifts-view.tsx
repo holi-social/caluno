@@ -34,7 +34,7 @@ export function MyShiftsView({ initialMyShiftInstances }: MyShiftsViewProps) {
 
   const myShiftList = data ?? [];
   const dayStrip = useMemo(
-    () => getDayStripDays(myShiftList, { includePast: true }),
+    () => getDayStripDays(myShiftList, { includePast: true, minDays: 7 }),
     [myShiftList],
   );
   const grouped = useMemo(() => groupByDay(myShiftList), [myShiftList]);
