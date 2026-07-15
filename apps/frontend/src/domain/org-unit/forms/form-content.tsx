@@ -3,7 +3,6 @@
 import type { OrganizationUnitType } from '@repo/data';
 import { Field, FieldError, FieldLabel, Input, Textarea } from '@repo/ui';
 import { useTranslations } from 'next-intl';
-import { useEffect } from 'react';
 import type { UseFormReturn } from 'react-hook-form';
 import type { CreateOrgUnitFormValues } from '../schemas';
 
@@ -14,27 +13,17 @@ interface Props {
 }
 
 export function OrgUnitFormContent({
-  types,
+  types: _types,
   isPending,
   formReturnValues,
 }: Props) {
   const {
     register,
-    watch,
-    setValue,
+    /* watch,
+    setValue,*/
     formState: { errors },
   } = formReturnValues;
   const t = useTranslations('OrgUnit.form');
-  const typeId = watch('typeId');
-
-  useEffect(() => {
-    if (!typeId) {
-      const firstTypeId = types[0]?.id;
-      if (firstTypeId) {
-        setValue('typeId', firstTypeId, { shouldValidate: true });
-      }
-    }
-  }, [typeId, types, setValue]);
 
   return (
     <>
@@ -60,7 +49,7 @@ export function OrgUnitFormContent({
 
         <Select
           {...register('typeId')}
-          value={typeId}
+          value={watch('typeId')}
           onValueChange={(value) =>
             setValue('typeId', value, { shouldValidate: true })
           }
@@ -82,6 +71,9 @@ export function OrgUnitFormContent({
         {errors.typeId && <FieldError>{errors.typeId.message}</FieldError>}
       </Field>
       */}
+
+      <input type="hidden" {...register('typeId')} />
+      {errors.typeId && <FieldError>{errors.typeId.message}</FieldError>}
 
       <Field>
         <FieldLabel htmlFor="contactEmail">{t('emailLabel')}</FieldLabel>
