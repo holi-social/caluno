@@ -362,8 +362,9 @@ export class OrganizationService {
       const [rootType] = await tx
         .insert(schema.organizationUnitTypes)
         .values({
-          name: 'management',
-          description: `organization managment unit for ${createdOrganization.name}`,
+          organizationId: createdOrganization.id,
+          name: 'organisation unit',
+          description: `organization unit for ${createdOrganization.name}`,
           icon: 'building-2',
         })
         .returning();
