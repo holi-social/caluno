@@ -37,21 +37,6 @@ export class ShiftInstanceFieldResolver {
   }
 
   @Permissions(PERMISSIONS.SHIFT_VIEW)
-  @ResolveField(() => ShiftInviteStatus, { nullable: true })
-  async inviteStatus(
-    @Parent() instance: ShiftInstanceEntity,
-    @Context() context: AuthenticatedGraphQLContext,
-    @Args('userId') userId: string,
-    @Loader(ShiftInstanceInvitesLoader) loader: ShiftInstanceInvitesLoader,
-  ): Promise<ShiftInviteStatus | null> {
-    return loader.inviteStatusByInstanceId.load({
-      organizationUnitId: context.organizationUnitId,
-      instanceId: instance.id,
-      userId,
-    });
-  }
-
-  @Permissions(PERMISSIONS.SHIFT_VIEW)
   @ResolveField(() => ShiftInstanceInvite, { nullable: true })
   async invites(
     @Parent() instance: ShiftInstanceEntity,
