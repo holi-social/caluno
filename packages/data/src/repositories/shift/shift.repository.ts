@@ -5,7 +5,9 @@ import {
 } from '../../constants';
 import type {
   CreateShiftInput,
-  GetActiveShiftsQuery,
+  GetActiveShiftInstancesQuery,
+  GetAvailableShiftInstancesQuery,
+  GetMyShiftInstancesQuery,
   GetShiftInstancesQuery,
   GetShiftQuery,
   GetWeeklyShiftsQuery,
@@ -17,11 +19,16 @@ import {
   type PaginationOptions,
 } from '../base/base.repository';
 
-export type ActiveShift = GetActiveShiftsQuery['activeShifts']['items'][number];
+export type ActiveShiftInstance =
+  GetActiveShiftInstancesQuery['activeShiftInstances'][number];
 export type ShiftInstanceItem =
   GetShiftInstancesQuery['shiftInstances'][number];
 export type RawShift = GetShiftQuery['shift'];
 export type WeeklyShiftInstance = GetWeeklyShiftsQuery['weeklyShifts'][number];
+export type MyShiftInstance =
+  GetMyShiftInstancesQuery['myShiftInstances'][number];
+export type AvailableShiftInstance =
+  GetAvailableShiftInstancesQuery['availableShiftInstances'][number];
 export interface ShiftDetail extends RawShift {
   startDate: Date;
   endDate: Date;
@@ -61,20 +68,9 @@ export class ShiftRepository extends BaseRepository {
     return data.shifts;
   }
 
-  async findAllForTimeEntryCreation(options: PaginationOptions = {}) {
-    const data = await this.sdk.GetShiftsForTimeEntryCreation({
-      limit: options.limit ?? 100,
-      offset: options.offset ?? 0,
-    });
-    return data.activeShifts.items;
-  }
-
-  async activeShifts(options: PaginationOptions = {}) {
-    const data = await this.sdk.GetActiveShifts({
-      limit: options.limit ?? 100,
-      offset: options.offset ?? 0,
-    });
-    return data.activeShifts;
+  async activeShiftInstances(userId: string) {
+    const data = await this.sdk.GetActiveShiftInstances({ userId });
+    return data.activeShiftInstances;
   }
 
   async create(input: CreateShiftInput) {
@@ -92,24 +88,15 @@ export class ShiftRepository extends BaseRepository {
     return { id: data.deleteShift.id };
   }
 
-  async inviteMembers(
-    instanceId: string,
-    memberIds: string[],
-  ): Promise<{ id: string }> {
-    const data = await this.sdk.InviteShiftInstanceVolunteers({
-      instanceId,
-      memberIds,
-    });
-    return { id: data.inviteMembersToShiftInstance.id };
-  }
-
   async updateMembers(
     instanceId: string,
     memberIds: string[],
+    options?: { inviteToAllInstances?: boolean },
   ): Promise<{ id: string }> {
-    const data = await this.sdk.UpdateShiftInstanceVolunteers({
+    const data = await this.sdk.UpdateMembersForShiftInstance({
       instanceId,
       memberIds,
+      inviteToAllInstances: options?.inviteToAllInstances,
     });
     return { id: data.updateMembersForShiftInstance.id };
   }
@@ -137,5 +124,31 @@ export class ShiftRepository extends BaseRepository {
       to: to.toISOString(),
     });
     return data.weeklyShifts;
+  }
+
+  async findMyShiftInstances(includePast = false): Promise<MyShiftInstance[]> {
+    const data = await this.sdk.GetMyShiftInstances({ includePast });
+    return data.myShiftInstances;
+  }
+
+  async findAvailableShiftInstances(
+    options: { from?: Date; to?: Date; organizationUnitIds?: string[] } = {},
+  ): Promise<AvailableShiftInstance[]> {
+    const data = await this.sdk.GetAvailableShiftInstances({
+      from: options.from?.toISOString(),
+      to: options.to?.toISOString(),
+      organizationUnitIds: options.organizationUnitIds,
+    });
+    return data.availableShiftInstances;
+  }
+
+  async checkIn(shiftInstanceId: string): Promise<string> {
+    const data = await this.sdk.CheckIn({ shiftInstanceId });
+    return data.checkIn.id;
+  }
+
+  async checkOut(shiftInstanceId: string): Promise<string> {
+    const data = await this.sdk.CheckOut({ shiftInstanceId });
+    return data.checkOut.id;
   }
 }

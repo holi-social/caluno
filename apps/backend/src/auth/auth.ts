@@ -2,6 +2,14 @@ import { drizzleAdapter } from '@better-auth/drizzle-adapter';
 import { type BetterAuthOptions, betterAuth } from 'better-auth';
 import { emailOTP } from 'better-auth/plugins';
 import { Database } from '../database/database.module';
+import { resolveRequestLocale } from '../graphql/locale';
+import { headersFromRequest } from './auth-headers';
+import {
+  accounts,
+  sessions,
+  users,
+  verifications,
+} from './schemas/auth.schema';
 
 type EmailOtpType =
   | 'sign-in'
@@ -13,11 +21,14 @@ export interface SendVerificationOtpOptions {
   email: string;
   otp: string;
   type: EmailOtpType;
+  headers: Record<string, unknown>;
 }
 
 export interface SendResetPasswordOptions {
   email: string;
   token: string;
+  userId: string;
+  headers: Record<string, unknown>;
 }
 
 export interface AuthConfigOptions {
@@ -39,9 +50,39 @@ export const createAuthConfig = ({
   sendResetPassword,
 }: AuthConfigOptions): BetterAuthOptions => ({
   database: drizzleAdapter(database, {
+    schema: {
+      users,
+      sessions,
+      accounts,
+      verifications,
+    },
     usePlural: true,
     provider: 'pg',
   }),
+  user: {
+    additionalFields: {
+      locale: {
+        type: 'string',
+        required: false,
+      },
+    },
+  },
+  databaseHooks: {
+    user: {
+      create: {
+        before: async (user, ctx) => {
+          const locale = resolveRequestLocale(headersFromRequest(ctx?.request));
+
+          return {
+            data: {
+              ...user,
+              locale,
+            },
+          };
+        },
+      },
+    },
+  },
   trustedOrigins,
   ...(cookieDomain && {
     advanced: {
@@ -57,8 +98,13 @@ export const createAuthConfig = ({
     maxPasswordLength: 128,
     autoSignIn: false,
     requireEmailVerification: emailVerificationEnabled,
-    async sendResetPassword({ user, token }) {
-      await sendResetPassword({ email: user.email, token });
+    async sendResetPassword({ user, token }, request) {
+      await sendResetPassword({
+        email: user.email,
+        token,
+        userId: user.id,
+        headers: headersFromRequest(request),
+      });
     },
   },
   emailVerification: {
@@ -68,8 +114,13 @@ export const createAuthConfig = ({
   plugins: [
     emailOTP({
       overrideDefaultEmailVerification: true,
-      async sendVerificationOTP({ email, otp, type }) {
-        await sendVerificationOTP({ email, otp, type });
+      async sendVerificationOTP({ email, otp, type }, ctx) {
+        await sendVerificationOTP({
+          email,
+          otp,
+          type,
+          headers: headersFromRequest(ctx?.request),
+        });
       },
     }),
   ],

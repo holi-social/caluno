@@ -11,7 +11,7 @@ import {
 } from '@repo/ui';
 import { getTranslations } from 'next-intl/server';
 import { Link } from '@/i18n/navigation';
-import { getFormatting } from '@/lib/formatting-server';
+import { getFormatting } from '@/lib/formatting/formatting-server';
 import { shiftDetailPath } from '../routes';
 import { ActionBar } from './action-bar';
 
@@ -38,7 +38,7 @@ export function getVisibilityConfig(t: (key: string) => string) {
 
 export async function ShiftsTable({ shifts, orgUId, page }: ShiftsTableProps) {
   const t = await getTranslations('Shift');
-  const { formatRange } = await getFormatting();
+  const { formatDate, formatTimeRange } = await getFormatting();
   const visibilityConfig = getVisibilityConfig(t);
 
   return (
@@ -49,6 +49,7 @@ export async function ShiftsTable({ shifts, orgUId, page }: ShiftsTableProps) {
             <TableHead className="w-1/5">{t('table.name')}</TableHead>
             <TableHead>{t('table.firstDate')}</TableHead>
             <TableHead>{t('table.pattern')}</TableHead>
+            <TableHead>{t('table.time')}</TableHead>
             <TableHead>{t('table.visibility')}</TableHead>
             <TableHead></TableHead>
           </TableRow>
@@ -74,12 +75,15 @@ export async function ShiftsTable({ shifts, orgUId, page }: ShiftsTableProps) {
                   </Link>
                 </TableCell>
                 <TableCell className="text-muted-foreground">
-                  {formatRange(shift.originalStartsAt, endDate.toISOString())}
+                  {formatDate(startDate)}
                 </TableCell>
                 <TableCell>
                   <Badge variant="outline">
                     {formatRrulePattern(shift.rrule)}
                   </Badge>
+                </TableCell>
+                <TableCell className="text-muted-foreground">
+                  {formatTimeRange(startDate, endDate)}
                 </TableCell>
                 <TableCell>
                   <Badge variant={visibilityConfig[shift.visibility].variant}>

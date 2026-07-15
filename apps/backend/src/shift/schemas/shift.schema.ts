@@ -3,13 +3,14 @@ import {
   index,
   integer,
   pgEnum,
-  pgTable,
+  snakeCase,
   text,
   timestamp,
   uuid,
 } from 'drizzle-orm/pg-core';
 import { users } from '../../auth/schemas/auth.schema';
 import { idColumn, timestampColumns } from '../../database/database-columns';
+import { events } from '../../event/schemas/event.schema';
 import { organizationUnits } from '../../organization/schemas/organization-unit.schema';
 import { ShiftVisibility } from '../enums';
 
@@ -18,7 +19,7 @@ export const shiftVisibilityEnum = pgEnum(
   ShiftVisibility as Record<string, string>,
 );
 
-export const shifts = pgTable(
+export const shifts = snakeCase.table(
   'shifts',
   {
     ...idColumn,
@@ -37,6 +38,9 @@ export const shifts = pgTable(
       .default(ShiftVisibility.ALL_MEMBERS),
     maxVolunteers: integer('max_volunteers'),
     minVolunteers: integer('min_volunteers'),
+    eventId: uuid('event_id').references(() => events.id, {
+      onDelete: 'set null',
+    }),
     rrule: text('rrule'),
     originalStartsAt: timestamp('original_starts_at').notNull(),
     durationMinutes: integer('duration_minutes').notNull(),
@@ -46,6 +50,7 @@ export const shifts = pgTable(
   (table) => [
     index('idx_shifts_org_unit_id').on(table.organizationUnitId),
     index('idx_shifts_created_by_id').on(table.createdById),
+    index('idx_shifts_event_id').on(table.eventId),
     index('idx_shifts_slug').on(table.slug),
     index('idx_shifts_is_deleted').on(table.isDeleted),
   ],

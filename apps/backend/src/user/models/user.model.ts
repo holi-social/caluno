@@ -13,11 +13,14 @@ export class User {
   email!: string;
 
   @Field(() => String, { nullable: true })
-  image!: string | null;
+  image?: string | null;
 
   @Field(() => ID)
   checkInId!: string;
 
+  @Field(() => String, { nullable: true })
+  locale?: string | null;
+
   @Field(() => [Permission], { nullable: true })
-  permissions!: Permission[];
+  permissions?: Permission[] | null;
 }

@@ -1,5 +1,6 @@
-import { Field, ID, ObjectType } from '@nestjs/graphql';
+import { Field, ID, Int, ObjectType } from '@nestjs/graphql';
 import { createPaginatedResponseType } from '../../graphql/paginated-response.model';
+import { Shift } from '../../shift/models/shift.model';
 import { User } from '../../user/models/user.model';
 
 @ObjectType()
@@ -22,6 +23,9 @@ export class Event {
   @Field(() => String, { nullable: true })
   coverUrl!: string | null;
 
+  @Field(() => String, { nullable: true })
+  coverImageUrl!: string | null;
+
   @Field(() => ID)
   organizationUnitId!: string;
 
@@ -36,6 +40,12 @@ export class Event {
 
   @Field(() => Boolean)
   isDeleted!: boolean;
+
+  @Field(() => Int)
+  shiftsCount!: number;
+
+  @Field(() => [Shift])
+  shifts!: Shift[];
 
   @Field(() => Date)
   createdAt!: Date;

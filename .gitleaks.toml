@@ -1,0 +1,20 @@
+title = "Clippy gitleaks config"
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Placeholder env examples and local pipeline state"
+paths = [
+  '''(^|/)\.env\.example$''',
+  '''^\.ai/TASKS\.md$''',
+  '''^\.ai/PHASE$''',
+  '''^\.ai/SESSION$''',
+  '''^\.ai/metrics\.jsonl$''',
+  '''^\.ai/specs/''',
+  '''^\.ai/handoff/''',
+  '''^\.ai/design/design_files/.*\.pen''',
+]
+regexes = [
+  '''your-secret-key-change-in-production''',
+]

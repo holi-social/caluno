@@ -1,8 +1,12 @@
-import { Field, InputType, Int, registerEnumType } from '@nestjs/graphql';
-import { ShiftVisibility } from '../enums';
+import { Field, ID, InputType, Int, registerEnumType } from '@nestjs/graphql';
+import { ShiftInviteStatus, ShiftVisibility } from '../enums';
 
 registerEnumType(ShiftVisibility, {
   name: 'ShiftVisibility',
+});
+
+registerEnumType(ShiftInviteStatus, {
+  name: 'ShiftInviteStatus',
 });
 
 @InputType()
@@ -10,8 +14,11 @@ export class CreateShiftInput {
   @Field(() => String)
   title!: string;
 
+  @Field(() => ID, { nullable: true })
+  eventId?: string | null;
+
   @Field(() => String, { nullable: true })
-  instructions!: string | null;
+  instructions?: string | null;
 
   @Field(() => Date)
   startsAt!: Date;
@@ -20,20 +27,20 @@ export class CreateShiftInput {
   endsAt!: Date;
 
   @Field(() => String, { nullable: true })
-  location!: string | null;
+  location?: string | null;
 
   @Field(() => [String], { nullable: true })
-  invitedMemberIds!: string[];
+  invitedMemberIds?: string[] | null;
 
   @Field(() => ShiftVisibility)
   visibility!: ShiftVisibility;
 
   @Field(() => Int, { nullable: true })
-  maxVolunteers!: number | null;
+  maxVolunteers?: number | null;
 
   @Field(() => Int, { nullable: true })
-  minVolunteers!: number | null;
+  minVolunteers?: number | null;
 
   @Field(() => String, { nullable: true })
-  rrule!: string | null;
+  rrule?: string | null;
 }

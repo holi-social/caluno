@@ -1,7 +1,7 @@
 import {
   index,
   pgEnum,
-  pgTable,
+  snakeCase,
   text,
   unique,
   uuid,
@@ -16,7 +16,7 @@ export const shiftInstanceInviteStatusEnum = pgEnum(
   ShiftInviteStatus as Record<string, string>,
 );
 
-export const shiftInstanceInvites = pgTable(
+export const shiftInstanceInvites = snakeCase.table(
   'shift_instance_invites',
   {
     ...idColumn,

@@ -12,7 +12,7 @@ export default async function TimeEntryUpdatePage({
   params,
 }: TimeEntryUpdatePageProps) {
   const { orgUId, timeEntryId, locale } = await params;
-  const data = await getDataClient(orgUId);
+  const data = await getDataClient({ orgUId });
   const t = await getTranslations({ locale, namespace: 'TimeEntry.sheet' });
 
   const [entry, shifts, allVolunteers] = await Promise.all([

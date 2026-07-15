@@ -1,7 +1,18 @@
-import { Field, ID, InterfaceType, ObjectType } from '@nestjs/graphql';
+import {
+  Field,
+  ID,
+  InterfaceType,
+  ObjectType,
+  registerEnumType,
+} from '@nestjs/graphql';
 import { createPaginatedResponseType } from '../../graphql/paginated-response.model';
 import { User } from '../../user/models/user.model';
 import { RequirementFulfillmentStatus, RequirementType } from '../enums';
+
+registerEnumType(RequirementFulfillmentStatus, {
+  name: 'RequirementFulfillmentStatus',
+});
+
 import { OrganizationUserProfile } from './organization-user-profile.model';
 import { Requirement } from './requirement.model';
 import { RequirementProfileSubmission } from './requirement-profile-submission.model';
@@ -46,7 +57,7 @@ export class RequirementFulfillment {
   id!: string;
 
   @Field(() => OrganizationUserProfile, { nullable: true })
-  organizationUserProfile!: OrganizationUserProfile | null;
+  organizationUserProfile?: OrganizationUserProfile | null;
 
   @Field(() => RequirementType)
   type!: RequirementType;
@@ -57,10 +68,10 @@ export class RequirementFulfillment {
   status!: RequirementFulfillmentStatus;
 
   @Field(() => Date, { nullable: true })
-  submittedAt!: Date | null;
+  submittedAt?: Date | null;
 
   @Field(() => Date, { nullable: true })
-  reviewedAt!: Date | null;
+  reviewedAt?: Date | null;
 
   @Field(() => RequirementProfileSubmission)
   submission!: RequirementProfileSubmission;
@@ -69,7 +80,7 @@ export class RequirementFulfillment {
   requirement!: Requirement;
 
   @Field(() => User, { nullable: true })
-  reviewedBy!: User | null;
+  reviewedBy?: User | null;
 }
 
 @ObjectType({

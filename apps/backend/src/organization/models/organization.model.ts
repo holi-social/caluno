@@ -15,22 +15,22 @@ export class Organization {
   slug!: string;
 
   @Field(() => String, { nullable: true })
-  logoUrl!: string | null;
+  logoUrl?: string | null;
 
   @Field(() => String, { nullable: true })
-  websiteUrl!: string | null;
+  websiteUrl?: string | null;
 
   @Field(() => String, { nullable: true })
-  contactEmail!: string | null;
+  contactEmail?: string | null;
 
   @Field(() => String, { nullable: true })
-  phone!: string | null;
+  phone?: string | null;
 
   @Field(() => String, { nullable: true })
-  address!: string | null;
+  address?: string | null;
 
   @Field(() => String, { nullable: true })
-  description!: string | null;
+  description?: string | null;
 
   @Field(() => OrganizationUnitModel)
   root!: OrganizationUnit;
@@ -42,7 +42,7 @@ export class Organization {
   createdAt!: Date;
 
   @Field(() => Date, { nullable: true })
-  updatedAt!: Date;
+  updatedAt?: Date | null;
 }
 
 export const OrganizationPaginatedResponse =

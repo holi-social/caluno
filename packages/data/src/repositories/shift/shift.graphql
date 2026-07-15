@@ -47,25 +47,6 @@ query GetShifts($limit: Int!, $offset: Int!) {
   }
 }
 
-query GetShiftsForTimeEntryCreation($limit: Int!, $offset: Int!) {
-  activeShifts(limit: $limit, offset: $offset) {
-    items {
-      id
-      actualStartsAt
-      actualEndsAt
-      master {
-        id
-        title
-      }
-      volunteers {
-        id
-        name
-        email
-      }
-    }
-  }
-}
-
 mutation CreateShift($input: CreateShiftInput!) {
   createShift(input: $input) {
     id
@@ -84,11 +65,16 @@ mutation DeleteShift($id: String!) {
   }
 }
 
-mutation InviteShiftInstanceVolunteers(
+mutation UpdateMembersForShiftInstance(
   $instanceId: String!
   $memberIds: [String!]!
+  $inviteToAllInstances: Boolean
 ) {
-  inviteMembersToShiftInstance(instanceId: $instanceId, memberIds: $memberIds) {
+  updateMembersForShiftInstance(
+    instanceId: $instanceId
+    memberIds: $memberIds
+    inviteToAllInstances: $inviteToAllInstances
+  ) {
     id
   }
 }
@@ -154,26 +140,20 @@ query GetShiftVolunteers($instanceId: ID!) {
   }
 }
 
-query GetActiveShifts($limit: Int!, $offset: Int!) {
-  activeShifts(limit: $limit, offset: $offset) {
-    items {
+query GetActiveShiftInstances($userId: String!) {
+  activeShiftInstances {
+    id
+    actualStartsAt
+    actualEndsAt
+    overrideTitle
+    inviteStatus(userId: $userId)
+    master {
       id
-      actualStartsAt
-      actualEndsAt
-      master {
-        id
-        title
-        location
-        instructions
-        visibility
-        maxVolunteers
-      }
-    }
-    pagination {
-      total
-      limit
-      offset
-      hasMore
+      title
+      location
+      instructions
+      visibility
+      maxVolunteers
     }
   }
 }
@@ -205,5 +185,60 @@ query GetWeeklyShifts($from: DateTime!, $to: DateTime!) {
       id
       name
     }
+  }
+}
+
+fragment VolunteerHomeShiftInstance on ShiftInstance {
+  id
+  actualStartsAt
+  actualEndsAt
+  isCheckedIn
+  filledCount
+  master {
+    id
+    title
+    location
+    rrule
+    maxVolunteers
+    organizationUnit {
+      id
+      name
+    }
+    event {
+      title
+      coverImageUrl
+    }
+  }
+}
+
+query GetMyShiftInstances($includePast: Boolean = false) {
+  myShiftInstances(includePast: $includePast) {
+    ...VolunteerHomeShiftInstance
+  }
+}
+
+query GetAvailableShiftInstances(
+  $from: DateTime
+  $to: DateTime
+  $organizationUnitIds: [ID!]
+) {
+  availableShiftInstances(
+    from: $from
+    to: $to
+    organizationUnitIds: $organizationUnitIds
+  ) {
+    ...VolunteerHomeShiftInstance
+  }
+}
+
+mutation CheckIn($shiftInstanceId: ID!) {
+  checkIn(shiftInstanceId: $shiftInstanceId) {
+    id
+  }
+}
+
+mutation CheckOut($shiftInstanceId: ID!) {
+  checkOut(shiftInstanceId: $shiftInstanceId) {
+    id
   }
 }

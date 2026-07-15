@@ -10,7 +10,9 @@ import { serverCreateBlockSchema, serverCreateFormSchema } from './schemas';
 export const createForm = actionClient
   .inputSchema(serverCreateFormSchema)
   .action(async ({ parsedInput }) => {
-    const data = await getDataClient(parsedInput.organizationUnitId);
+    const data = await getDataClient({
+      orgUId: parsedInput.organizationUnitId,
+    });
     const form = await data.requirementForm.createForm({
       organizationId: parsedInput.organizationId,
       name: parsedInput.name,
@@ -41,7 +43,9 @@ const updateFormSchema = z.object({
 export const updateForm = actionClient
   .inputSchema(updateFormSchema)
   .action(async ({ parsedInput }) => {
-    const data = await getDataClient(parsedInput.organizationUnitId);
+    const data = await getDataClient({
+      orgUId: parsedInput.organizationUnitId,
+    });
     const form = await data.requirementForm.updateForm(parsedInput.formId, {
       name: parsedInput.name,
       description: parsedInput.description,
@@ -56,7 +60,9 @@ export const updateForm = actionClient
 export const createBlock = actionClient
   .inputSchema(serverCreateBlockSchema)
   .action(async ({ parsedInput }) => {
-    const data = await getDataClient(parsedInput.organizationUnitId);
+    const data = await getDataClient({
+      orgUId: parsedInput.organizationUnitId,
+    });
     const block = await data.requirementForm.createBlock({
       organizationId: parsedInput.organizationId,
       title: parsedInput.title,
@@ -88,7 +94,6 @@ export const submitForm = actionClient
     const result = await data.requirementForm.submitForm(parsedInput.token, {
       values: parsedInput.values,
     });
-    revalidatePath('/admin/my-membership-requests');
     return result;
   });
 
@@ -100,7 +105,9 @@ const deleteFormSchema = z.object({
 export const deleteForm = actionClient
   .inputSchema(deleteFormSchema)
   .action(async ({ parsedInput }) => {
-    const data = await getDataClient(parsedInput.organizationUnitId);
+    const data = await getDataClient({
+      orgUId: parsedInput.organizationUnitId,
+    });
     await data.requirementForm.deleteForm(parsedInput.formId);
     revalidatePath(
       `/admin/${parsedInput.organizationUnitId}/requirement-forms`,
@@ -116,7 +123,9 @@ const deleteBlockSchema = z.object({
 export const deleteBlock = actionClient
   .inputSchema(deleteBlockSchema)
   .action(async ({ parsedInput }) => {
-    const data = await getDataClient(parsedInput.organizationUnitId);
+    const data = await getDataClient({
+      orgUId: parsedInput.organizationUnitId,
+    });
     await data.requirementForm.deleteBlock(parsedInput.blockId);
     revalidatePath(
       `/admin/${parsedInput.organizationUnitId}/requirement-forms`,
@@ -136,7 +145,9 @@ const updateBlockSchema = z.object({
 export const updateBlock = actionClient
   .inputSchema(updateBlockSchema)
   .action(async ({ parsedInput }) => {
-    const data = await getDataClient(parsedInput.organizationUnitId);
+    const data = await getDataClient({
+      orgUId: parsedInput.organizationUnitId,
+    });
     const block = await data.requirementForm.updateBlock(parsedInput.blockId, {
       title: parsedInput.title,
       description: parsedInput.description,
@@ -174,7 +185,9 @@ const createBlockFieldSchema = z.object({
 export const createBlockField = actionClient
   .inputSchema(createBlockFieldSchema)
   .action(async ({ parsedInput }) => {
-    const data = await getDataClient(parsedInput.organizationUnitId);
+    const data = await getDataClient({
+      orgUId: parsedInput.organizationUnitId,
+    });
     const block = await data.requirementForm.createBlockField(
       parsedInput.blockId,
       {
@@ -221,7 +234,9 @@ const updateBlockFieldSchema = z.object({
 export const updateBlockField = actionClient
   .inputSchema(updateBlockFieldSchema)
   .action(async ({ parsedInput }) => {
-    const data = await getDataClient(parsedInput.organizationUnitId);
+    const data = await getDataClient({
+      orgUId: parsedInput.organizationUnitId,
+    });
     const block = await data.requirementForm.updateBlockField(
       parsedInput.fieldId,
       {
@@ -251,7 +266,9 @@ const deleteBlockFieldSchema = z.object({
 export const deleteBlockField = actionClient
   .inputSchema(deleteBlockFieldSchema)
   .action(async ({ parsedInput }) => {
-    const data = await getDataClient(parsedInput.organizationUnitId);
+    const data = await getDataClient({
+      orgUId: parsedInput.organizationUnitId,
+    });
     await data.requirementForm.deleteBlockField(parsedInput.fieldId);
     revalidatePath(
       `/admin/${parsedInput.organizationUnitId}/requirement-forms/blocks`,
@@ -270,7 +287,6 @@ export const joinOrganization = actionClient
     const result = await data.membershipRequest.join(
       parsedInput.organizationUnitId,
     );
-    revalidatePath('/admin/my-membership-requests');
     return result;
   });
 
@@ -308,7 +324,9 @@ const saveBlockSchema = z.object({
 export const saveBlock = actionClient
   .inputSchema(saveBlockSchema)
   .action(async ({ parsedInput }) => {
-    const data = await getDataClient(parsedInput.organizationUnitId);
+    const data = await getDataClient({
+      orgUId: parsedInput.organizationUnitId,
+    });
 
     // Step 1: Create or update block
     let blockId: string;

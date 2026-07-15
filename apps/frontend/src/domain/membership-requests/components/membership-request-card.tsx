@@ -17,7 +17,7 @@ import { UserRound } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { MembershipRequestActions } from '@/domain/membership-requests/components/membership-request-actions';
 import { useSheetTrigger } from '@/hooks/use-sheet';
-import { formatDate } from '@/lib/formatting';
+import { useFormatting } from '@/lib/formatting/use-formatting';
 
 interface Props {
   request: GetMembershipRequestsQuery['membershipRequests']['items'][number];
@@ -26,6 +26,7 @@ interface Props {
 export default function MembershipRequestCard({ request }: Props) {
   const { open } = useSheetTrigger('volunteer-profile');
   const t = useTranslations('MembershipRequest');
+  const { formatDate } = useFormatting();
 
   const handleViewVolunteer = () => {
     open({

@@ -2,7 +2,7 @@ import {
   boolean,
   index,
   integer,
-  pgTable,
+  snakeCase,
   text,
   timestamp,
   uuid,
@@ -10,7 +10,7 @@ import {
 import { idColumn, timestampColumns } from '../../database/database-columns';
 import { shifts } from './shift.schema';
 
-export const shiftInstances = pgTable(
+export const shiftInstances = snakeCase.table(
   'shift_instances',
   {
     ...idColumn,

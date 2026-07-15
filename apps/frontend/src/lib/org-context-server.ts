@@ -1,6 +1,7 @@
-import { LAST_ORG_COOKIE } from '@repo/data';
+import { LAST_ORG_COOKIE, type MyOrganizationUnit } from '@repo/data';
 import { cookies } from 'next/headers';
 import { notFound, redirect } from 'next/navigation';
+import { getCurrentUser } from './auth-server';
 import { getDataClient } from './data-client';
 
 export interface OrgContextData {
@@ -13,12 +14,7 @@ export interface OrgContextData {
   organizationId: string;
 }
 
-export async function getMyAccessibleOrganizationUnits(): Promise<
-  OrgContextData[]
-> {
-  const data = await getDataClient();
-  const units = await data.organization.findMyAccessibleOrganizationUnits();
-
+function normalizeUnits(units: MyOrganizationUnit[]): OrgContextData[] {
   return units
     .map((unit) => {
       const isRoot = unit.parent === null;
@@ -37,10 +33,28 @@ export async function getMyAccessibleOrganizationUnits(): Promise<
     .sort((a, b) => a.name.localeCompare(b.name));
 }
 
+export async function getMyOrgUnits(): Promise<OrgContextData[]> {
+  const data = await getDataClient();
+  const units = await data.organization.findMyOrganizationUnits();
+
+  return normalizeUnits(units);
+}
+
+export async function getMyAdministrableOrgUnits(): Promise<OrgContextData[]> {
+  const data = await getDataClient();
+  const units = await data.organization.findMyAdminstrableOrganizationUnits();
+
+  return normalizeUnits(units);
+}
+
+export async function isAnAdminstrator() {
+  return (await getMyAdministrableOrgUnits()).length > 0;
+}
+
 export async function resolveOrgFromId(
   orgUId: string,
 ): Promise<OrgContextData> {
-  const organizations = await getMyAccessibleOrganizationUnits();
+  const organizations = await getMyAdministrableOrgUnits();
   const org =
     organizations.find((item) => item.id === orgUId) ??
     organizations.find((item) => item.organizationId === orgUId);
@@ -53,7 +67,7 @@ export async function resolveOrgFromId(
 export async function resolveOrgFromSlug(
   orgSlug: string,
 ): Promise<OrgContextData> {
-  const organizations = await getMyAccessibleOrganizationUnits();
+  const organizations = await getMyAdministrableOrgUnits();
   const org = organizations.find((item) => item.slug === orgSlug);
   if (!org) {
     return notFound();
@@ -61,8 +75,8 @@ export async function resolveOrgFromSlug(
   return org;
 }
 
-export async function validateUserOrgAccess(orgUId: string): Promise<boolean> {
-  const organizations = await getMyAccessibleOrganizationUnits();
+export async function isMember(orgUId: string): Promise<boolean> {
+  const organizations = await getMyOrgUnits();
   return organizations.some(
     (item) => item.id === orgUId || item.organizationId === orgUId,
   );
@@ -71,7 +85,7 @@ export async function validateUserOrgAccess(orgUId: string): Promise<boolean> {
 export async function requireOrgAccess(
   orgUId: string,
 ): Promise<{ org: OrgContextData; organizations: OrgContextData[] }> {
-  const organizations = await getMyAccessibleOrganizationUnits();
+  const organizations = await getMyAdministrableOrgUnits();
   const org = organizations.find((item) => item.id === orgUId);
   const legacyOrg = organizations.find(
     (item) => item.organizationId === orgUId,
@@ -86,8 +100,11 @@ export async function requireOrgAccess(
   }
 
   const data = await getDataClient();
-  const isMember =
-    await data.organizationUnit.isMemberOfOrgUnitOrAncestor(orgUId);
+  const loggedInUser = await getCurrentUser();
+  const isMember = await data.organizationUnit.isMemberOfOrgUnitOrAncestor(
+    orgUId,
+    loggedInUser.id,
+  );
   if (!isMember) {
     redirect('/unauthorized');
   }

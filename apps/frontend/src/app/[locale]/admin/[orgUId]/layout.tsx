@@ -7,6 +7,7 @@ import {
 } from '@repo/ui';
 import { Loader2 } from 'lucide-react';
 import { type ReactNode, Suspense } from 'react';
+import { LocaleCookieSeeder } from '@/components/locale-cookie-seeder';
 import { DashboardSidebar } from '@/components/navigation/dashboard-sidebar';
 import { ProfileNavIcon } from '@/components/navigation/profile-nav-icon';
 import { InviteShiftSheet } from '@/components/sheets/invite-shift-sheet';
@@ -15,15 +16,17 @@ import { VolunteerSheet } from '@/components/sheets/volunteer-sheet';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { OrgSyncProvider } from '@/domain/organization/components/org-sync-provider';
 import { BlockSheet } from '@/domain/requirement-form/components/block-sheet';
+import { resolveLocale } from '@/i18n/routing';
 import { requireAuth } from '@/lib/auth-server';
 import { GRAPHQL_API_URL } from '@/lib/constants';
 import { getDataClient } from '@/lib/data-client';
+import { resolveLocaleSeed } from '@/lib/locale-seed';
 import { requireOrgAccess } from '@/lib/org-context-server';
 
 interface OrgLayoutProps {
   children: ReactNode;
   sheet: ReactNode;
-  params: Promise<{ orgUId: string }>;
+  params: Promise<{ orgUId: string; locale: string }>;
 }
 
 export default async function OrgLayout({
@@ -32,18 +35,25 @@ export default async function OrgLayout({
   params,
 }: OrgLayoutProps) {
   await requireAuth();
-  const { orgUId } = await params;
-  const data = await getDataClient(orgUId);
+  const { orgUId, locale: rawLocale } = await params;
+  const locale = resolveLocale(rawLocale);
+  const data = await getDataClient({ orgUId, locale });
 
   const [{ org, organizations }, userPermissions] = await Promise.all([
     requireOrgAccess(orgUId),
     data.user.getMyPermissions(),
   ]);
   const permissionKeys = userPermissions.map((p) => p.key);
+  const localeSeed = await resolveLocaleSeed(orgUId);
 
   return (
     <OrgProvider org={org} organizations={organizations}>
-      <DataProvider apiUrl={GRAPHQL_API_URL} organizationUnitId={orgUId}>
+      <DataProvider
+        apiUrl={GRAPHQL_API_URL}
+        organizationUnitId={orgUId}
+        locale={locale}
+      >
+        {localeSeed && <LocaleCookieSeeder value={localeSeed} />}
         <OrgSyncProvider orgUId={orgUId}>
           <SidebarProvider>
             <DashboardSidebar permissions={permissionKeys} />

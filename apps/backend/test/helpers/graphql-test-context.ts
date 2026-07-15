@@ -1,9 +1,11 @@
 import type { INestApplication } from '@nestjs/common';
+import { and, eq, isNull } from 'drizzle-orm';
 import type { Database } from '../../src/database/database.module';
 import { DATABASE_CONNECTION } from '../../src/database/database-connection';
 import * as schema from '../../src/database/schema';
 import { setAuthMockUserId } from './auth-mocks';
 import { createGraphqlFullTestApp } from './create-graphql-full-app';
+import { registerTestResourceCleanup } from './ensure-test-database';
 import { graphqlRequestRequiringData } from './graphql-request';
 
 type GraphqlTestContext = {
@@ -11,6 +13,7 @@ type GraphqlTestContext = {
   db: Database;
   testUserId: string;
   organizationId: string;
+  organizationUnitId: string;
 };
 
 declare global {
@@ -24,8 +27,8 @@ const createContext = async (): Promise<GraphqlTestContext> => {
   const testUserId = `test-user-${crypto.randomUUID()}`;
 
   setAuthMockUserId(testUserId);
-  const app = await createGraphqlFullTestApp({ testUserId });
-  const db = app.get<Database>(DATABASE_CONNECTION);
+  const app = await createGraphqlFullTestApp();
+  const db: Database = app.get(DATABASE_CONNECTION);
 
   await db
     .insert(schema.users)
@@ -58,11 +61,29 @@ const createContext = async (): Promise<GraphqlTestContext> => {
     'createOrganization',
   );
 
+  const organizationId = createOrganizationData.createOrganization.id;
+
+  const [rootUnit] = await db
+    .select({ id: schema.organizationUnits.id })
+    .from(schema.organizationUnits)
+    .where(
+      and(
+        eq(schema.organizationUnits.organizationId, organizationId),
+        isNull(schema.organizationUnits.parentId),
+      ),
+    )
+    .limit(1);
+
+  if (!rootUnit) {
+    throw new Error('Root organization unit not found');
+  }
+
   return {
     app,
     db,
     testUserId,
-    organizationId: createOrganizationData.createOrganization.id,
+    organizationId,
+    organizationUnitId: rootUnit.id,
   };
 };
 
@@ -74,7 +95,7 @@ export const getGraphqlTestContext = (): Promise<GraphqlTestContext> => {
   if (!globalThis.__graphqlIntegrationTestContextCleanupRegistered) {
     globalThis.__graphqlIntegrationTestContextCleanupRegistered = true;
 
-    process.once('beforeExit', async () => {
+    registerTestResourceCleanup(async () => {
       const context = await globalThis.__graphqlIntegrationTestContextPromise;
       await context?.app.close();
     });

@@ -1,4 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
+import type { Locale } from '../graphql/locale';
+import { UserLocaleService } from '../i18n/user-locale.service';
 import { UserService } from '../user/user.service';
 import { EmailService } from './email/email.service';
 import type { NotificationEventPayloadMap } from './notification-event-map';
@@ -10,6 +12,7 @@ export interface UserNotificationData {
   name: string;
   email: string;
   firstName: string;
+  locale: Locale;
 }
 
 export interface ResolveUserNotificationDataOptions {
@@ -28,6 +31,12 @@ type MembershipApprovedInput =
 type ShiftInstanceJoinedInput =
   NotificationEventPayloadMap[typeof NotificationEvent.SHIFT_INSTANCE_JOINED];
 
+type ShiftInstanceInvitedInput =
+  NotificationEventPayloadMap[typeof NotificationEvent.SHIFT_INSTANCE_INVITED];
+
+type ShiftInvitedInput =
+  NotificationEventPayloadMap[typeof NotificationEvent.SHIFT_INVITED];
+
 @Injectable()
 export class NotificationService {
   private readonly logger = new Logger(NotificationService.name);
@@ -36,6 +45,7 @@ export class NotificationService {
     private readonly emitter: TypedNotificationEmitter,
     private readonly userService: UserService,
     private readonly emailService: EmailService,
+    private readonly userLocaleService: UserLocaleService,
   ) {}
 
   async resolveUserNotificationData(
@@ -49,11 +59,14 @@ export class NotificationService {
       return undefined;
     }
 
+    const locale = await this.userLocaleService.resolveForUser(userId);
+
     return {
       userId: user.id,
       name: user.name,
       email: user.email,
       firstName: user.name.split(' ')[0],
+      locale,
     };
   }
 
@@ -118,5 +131,13 @@ export class NotificationService {
 
   notifyShiftInstanceJoined(input: ShiftInstanceJoinedInput): void {
     this.emitter.emit(NotificationEvent.SHIFT_INSTANCE_JOINED, input);
+  }
+
+  notifyShiftInstanceInvited(input: ShiftInstanceInvitedInput): void {
+    this.emitter.emit(NotificationEvent.SHIFT_INSTANCE_INVITED, input);
+  }
+
+  notifyShiftInvited(input: ShiftInvitedInput): void {
+    this.emitter.emit(NotificationEvent.SHIFT_INVITED, input);
   }
 }

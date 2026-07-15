@@ -1,10 +1,10 @@
-import { pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
+import { snakeCase, text, timestamp, uuid } from 'drizzle-orm/pg-core';
 import { users } from '../../auth/schemas/auth.schema';
 import { idColumn, timestampColumns } from '../../database/database-columns';
 import type { ShiftInstanceEntity } from '../../shift/schemas/shift-instance.schema';
 import { shiftInstances } from '../../shift/schemas/shift-instance.schema';
 
-export const timeEntries = pgTable('time_entries', {
+export const timeEntries = snakeCase.table('time_entries', {
   ...idColumn,
   shiftInstanceId: uuid('shift_instance_id')
     .references(() => shiftInstances.id, {

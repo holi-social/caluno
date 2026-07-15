@@ -14,7 +14,7 @@ export default async function OrgUnitsPage({ params }: OrgUnitsPageProps) {
   const { org } = await requireOrgAccess(orgUId);
   await requirePermission(orgUId, PermissionKey.OrgView);
 
-  const data = await getDataClient(orgUId);
+  const data = await getDataClient({ orgUId });
   const t = await getTranslations({ locale, namespace: 'OrgUnit' });
 
   const [[canEdit], tree, types] = await Promise.all([

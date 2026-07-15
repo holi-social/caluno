@@ -29,7 +29,7 @@ async function seed() {
     ssl: false,
   });
 
-  const db = drizzle({ client: pool, schema, casing: 'snake_case' });
+  const db = drizzle({ client: pool });
 
   const values = Object.values(PERMISSIONS).map((key) => ({
     key,

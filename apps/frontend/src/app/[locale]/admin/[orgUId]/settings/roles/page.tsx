@@ -17,7 +17,7 @@ export default async function RolesPage({ params }: RolesPageProps) {
   const { org } = await requireOrgAccess(orgUId);
   await requirePermission(orgUId, PermissionKey.OrgView);
   const [canEdit] = await checkPermission(orgUId, PermissionKey.OrgEdit);
-  const data = await getDataClient(orgUId);
+  const data = await getDataClient({ orgUId });
   const t = await getTranslations({ locale, namespace: 'Role' });
 
   const roles = await data.role.findAll();

@@ -12,10 +12,10 @@ export class TimeEntry {
   startedAt!: Date;
 
   @Field(() => Date, { nullable: true })
-  endedAt!: Date | null;
+  endedAt?: Date | null;
 
   @Field(() => String, { nullable: true })
-  notes!: string | null;
+  notes?: string | null;
 
   @Field(() => Date)
   createdAt!: Date;

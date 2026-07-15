@@ -119,6 +119,7 @@ input CreateRoleInput {
 
 input CreateShiftInput {
   endsAt: DateTime!
+  eventId: ID
   instructions: String
   invitedMemberIds: [String!]
   location: String
@@ -136,6 +137,7 @@ A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date
 scalar DateTime
 
 type Event {
+  coverImageUrl: String
   coverUrl: String
   createdAt: DateTime!
   endsAt: DateTime!
@@ -145,6 +147,8 @@ type Event {
   logoUrl: String
   organizationUnitId: ID!
   organizer: User
+  shifts: [Shift!]!
+  shiftsCount: Int!
   slug: String!
   startsAt: DateTime!
   title: String!
@@ -342,6 +346,8 @@ type Mutation {
   addTimeEntry(input: AddTimeEntryInput!): TimeEntry!
   approveMembershipRequest(id: ID!, organizationUnitId: ID!): MembershipRequest!
   cancelMembershipRequest(id: ID!, organizationUnitId: ID!): MembershipRequest!
+  checkIn(shiftInstanceId: ID!): TimeEntry!
+  checkOut(shiftInstanceId: ID!): TimeEntry!
   closeTimeEntry(id: ID!, input: CloseTimeEntryInput!): TimeEntry!
   createEvent(input: CreateEventInput!): Event!
   createFormBlock(input: CreateFormBlockInput!): FormBlock!
@@ -368,8 +374,6 @@ type Mutation {
   deleteTimeEntry(id: ID!): TimeEntry!
   generateDocumentUploadUrl(filename: String!, mimeType: String!): String!
   inviteMembersToEvent(eventId: ID!, memberIds: [String!]!): Event!
-  inviteMembersToShift(memberIds: [String!]!, shiftId: String!): Shift!
-  inviteMembersToShiftInstance(instanceId: String!, memberIds: [String!]!): ShiftInstance!
   joinEvent(eventId: ID!): JoinEventResult!
   joinOrganization(organizationUnitId: ID!): JoinOrganizationResult!
   joinShiftInstance(instanceId: String!): JoinShiftInstanceResult!
@@ -379,8 +383,9 @@ type Mutation {
   updateEvent(id: ID!, input: UpdateEventInput!): Event!
   updateFormBlock(id: String!, input: UpdateFormBlockInput!): FormBlock!
   updateFormBlockField(fieldId: String!, input: UpdateFormBlockFieldInput!): FormBlock!
-  updateMembersForShiftInstance(instanceId: String!, memberIds: [String!]!): ShiftInstance!
+  updateMembersForShiftInstance(instanceId: String!, inviteToAllInstances: Boolean, memberIds: [String!]!): ShiftInstance!
   updateMembershipRoles(membershipId: ID!, roleIds: [ID!]!): Membership!
+  updateMyLocale(locale: String!): User!
   updateMyUserProfile(input: UpdateUserProfileInput!): UserProfile!
   updateOrganizationUnit(id: String!, input: UpdateOrganizationUnitInput!): OrganizationUnit!
   updateRequirement(id: String!, input: UpdateRequirementInput!): Requirement!
@@ -499,11 +504,13 @@ enum PermissionKey {
 }
 
 type Query {
-  activeShifts(limit: Int! = 10, offset: Int! = 0): ShiftInstancePaginatedResponse!
+  activeShiftInstances: [ShiftInstance!]!
   adminUserProfile(userId: String!): UserProfile
   adminVolunteerSubmission(id: String!): FormSubmission
+  availableShiftInstances(from: DateTime, organizationUnitIds: [ID!], to: DateTime): [ShiftInstance!]!
   event(id: ID!): Event!
   eventAttendees(eventId: ID!): [User!]!
+  eventShifts(eventId: ID!): [Shift!]!
   events(limit: Int! = 10, offset: Int! = 0): EventPaginatedResponse!
   formBlock(id: String!): FormBlock
   formBlocks(limit: Int! = 10, offset: Int! = 0, organizationId: String!): FormBlockPaginatedResponse!
@@ -511,16 +518,18 @@ type Query {
   formSubmissionsByForm(formId: String!, limit: Int! = 10, offset: Int! = 0): FormSubmissionPaginatedResponse!
   formSubmissionsByMembershipRequest(membershipRequestId: String!): [FormSubmission!]!
   formSubmissionsForVolunteer(userId: String!): [FormSubmission!]!
-  isMemberOfUnitOrAncestor(organizationUnitId: ID!): Boolean!
+  isMemberOfUnitOrAncestor(organizationUnitId: ID!, userId: String!): Boolean!
   me: User!
   members(organizationUnitId: ID!): [User!]!
   membership(organizationUnitId: ID!): Membership
   membershipRequestCount(status: MembershipRequestStatus): Int!
   membershipRequests(limit: Int! = 10, offset: Int! = 0, status: MembershipRequestStatus): MembershipRequestPaginatedResponse!
   memberships: [Membership!]!
-  myAccessibleOrganizationUnits: [OrganizationUnit!]!
+  myAdminstableOrganizationUnits: [OrganizationUnit!]!
   myFormSubmissionByToken(token: String!): FormSubmission
   myMembershipRequests(limit: Int! = 10, offset: Int! = 0, status: MembershipRequestStatus): MembershipRequestPaginatedResponse!
+  myOrganizationUnits: [OrganizationUnit!]!
+  myShiftInstances(includePast: Boolean! = false): [ShiftInstance!]!
   myTime(limit: Int! = 10, offset: Int! = 0): TimeEntryPaginatedResponse!
   myUserProfile: UserProfile
   organization(id: String!): Organization
@@ -754,6 +763,7 @@ type Shift {
   createdAt: DateTime!
   createdBy: User
   durationMinutes: Int!
+  event: Event
   id: ID!
   instructions: String
   isDeleted: Boolean!
@@ -773,8 +783,11 @@ type Shift {
 type ShiftInstance {
   actualEndsAt: DateTime!
   actualStartsAt: DateTime!
+  filledCount: Int!
   id: ID!
+  inviteStatus(userId: String!): ShiftInviteStatus
   isCancelled: Boolean!
+  isCheckedIn: Boolean!
   isException: Boolean!
   master: Shift!
   occurrenceIndex: Int!
@@ -785,9 +798,10 @@ type ShiftInstance {
   volunteers: [User!]
 }
 
-type ShiftInstancePaginatedResponse {
-  items: [ShiftInstance!]!
-  pagination: PaginationInfo!
+enum ShiftInviteStatus {
+  ACCEPTED
+  PENDING
+  REJECTED
 }
 
 type ShiftPaginatedResponse {
@@ -901,6 +915,7 @@ input UpdateRequirementProfileSubmissionInput {
 
 input UpdateShiftInput {
   endsAt: DateTime
+  eventId: ID
   instructions: String
   invitedMemberIds: [String!]
   location: String
@@ -928,6 +943,7 @@ type User {
   email: String!
   id: ID!
   image: String
+  locale: String
   name: String!
   permissions: [Permission!]
 }

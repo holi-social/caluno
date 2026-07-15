@@ -1,13 +1,20 @@
-import { boolean, index, pgTable, text, timestamp } from 'drizzle-orm/pg-core';
+import {
+  boolean,
+  index,
+  snakeCase,
+  text,
+  timestamp,
+} from 'drizzle-orm/pg-core';
 import { timestampColumns } from '../../database/database-columns';
 import { generateCheckInId } from '../checkInId';
 
-export const users = pgTable('users', {
+export const users = snakeCase.table('users', {
   id: text('id').primaryKey(),
   name: text('name').notNull(),
   email: text('email').notNull().unique(),
   emailVerified: boolean('email_verified').default(false).notNull(),
   image: text('image'),
+  locale: text('locale'),
   checkInId: text('check_in_id')
     .notNull()
     .unique()
@@ -15,7 +22,7 @@ export const users = pgTable('users', {
   ...timestampColumns,
 });
 
-export const sessions = pgTable(
+export const sessions = snakeCase.table(
   'sessions',
   {
     id: text('id').primaryKey(),
@@ -31,7 +38,7 @@ export const sessions = pgTable(
   (table) => [index('sessions_userId_idx').on(table.userId)],
 );
 
-export const accounts = pgTable(
+export const accounts = snakeCase.table(
   'accounts',
   {
     id: text('id').primaryKey(),
@@ -52,7 +59,7 @@ export const accounts = pgTable(
   (table) => [index('accounts_userId_idx').on(table.userId)],
 );
 
-export const verifications = pgTable(
+export const verifications = snakeCase.table(
   'verifications',
   {
     id: text('id').primaryKey(),

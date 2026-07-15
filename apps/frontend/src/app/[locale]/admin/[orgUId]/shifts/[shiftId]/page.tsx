@@ -1,23 +1,14 @@
 import { formatRrulePattern } from '@repo/data';
-import {
-  Badge,
-  Button,
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from '@repo/ui';
+import { Badge, Card, CardContent } from '@repo/ui';
 import {
   Calendar,
   CalendarFold,
   CalendarSync,
   Clock,
-  ClockPlus,
   FileText,
   LockKeyholeOpen,
   MapPin,
   User,
-  UserPlus,
 } from 'lucide-react';
 import { notFound } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
@@ -25,7 +16,7 @@ import { UserCard } from '@/components/user-card';
 import { getVisibilityConfig } from '@/domain/shift/components/shifts-table';
 import { parseShiftListQuery } from '@/domain/shift/routes';
 import { getDataClient } from '@/lib/data-client';
-import { getFormatting } from '@/lib/formatting-server';
+import { getFormatting } from '@/lib/formatting/formatting-server';
 import { ShiftViewActionBar } from './shift-view-action-bar';
 
 interface ShiftViewPageProps {
@@ -45,7 +36,7 @@ export default async function ShiftViewPage({
   const returnQuery = parseShiftListQuery(await searchParams);
 
   const t = await getTranslations('Shift');
-  const data = await getDataClient(orgUId);
+  const data = await getDataClient({ orgUId });
   const { formatDateTime, formatRange } = await getFormatting();
   const visibilityConfig = getVisibilityConfig(t);
   const shift = await data.shift.findById(shiftId);
@@ -103,53 +94,6 @@ export default async function ShiftViewPage({
                   </li>
                 )}
               </ul>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex justify-between">
-                <span>
-                  {t('detail.volunteersTitle')}{' '}
-                  <Badge variant="outline">
-                    {shift.maxVolunteers
-                      ? t('detail.volunteersBadgeWithMax', {
-                          count: 0,
-                          max: shift.maxVolunteers,
-                        })
-                      : t('detail.volunteersBadge', { count: 0 })}
-                  </Badge>
-                </span>
-                <Button size="xs">
-                  <UserPlus /> {t('detail.inviteButton')}
-                </Button>
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-muted-foreground">
-                {t('detail.volunteersEmpty')}
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex justify-between">
-                <span>
-                  {t('detail.timesheetsTitle')}{' '}
-                  <Badge variant="outline">
-                    {t('detail.timesheetsBadge', { count: 0 })}
-                  </Badge>
-                </span>
-                <Button size="xs">
-                  <ClockPlus /> {t('detail.addTimeButton')}
-                </Button>
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-muted-foreground">
-                {t('detail.timesheetsEmpty')}
-              </p>
             </CardContent>
           </Card>
         </div>

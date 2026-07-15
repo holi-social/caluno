@@ -1,7 +1,9 @@
 import { beforeEach, describe, expect, it, mock } from 'bun:test';
+import type { OrgContextData } from '../org-context-server';
 
 const cookieValues = new Map<string, string>();
-let postAuthDestination = '/organizations';
+const accessibleOrgs: OrgContextData[] = [];
+let lastVisitedOrgId: string | null = null;
 
 mock.module('next/headers', () => ({
   cookies: async () => ({
@@ -12,16 +14,25 @@ mock.module('next/headers', () => ({
   }),
 }));
 
-mock.module('../post-auth-routing', () => ({
-  resolvePostAuthDestination: async () => postAuthDestination,
+mock.module('../org-context-server', () => ({
+  getMyAdministrableOrgUnits: async () => accessibleOrgs,
+  getLastVisitedOrgServer: async () => lastVisitedOrgId,
 }));
 
 const { resolveAuthPageRedirects } = await import('../auth-page-redirect');
 
+const lastOrg: OrgContextData = {
+  id: 'last-org',
+  slug: 'last-org',
+  name: 'Last Org',
+  organizationId: 'last-org',
+};
+
 describe('resolveAuthPageRedirects', () => {
   beforeEach(() => {
     cookieValues.clear();
-    postAuthDestination = '/organizations';
+    accessibleOrgs.length = 0;
+    lastVisitedOrgId = null;
   });
 
   describe('authenticatedRedirect', () => {
@@ -34,7 +45,8 @@ describe('resolveAuthPageRedirects', () => {
     });
 
     it('falls back to resolvePostAuthDestination when no explicit redirect', async () => {
-      postAuthDestination = '/admin/last-org';
+      accessibleOrgs.push(lastOrg);
+      lastVisitedOrgId = lastOrg.id;
 
       const { authenticatedRedirect } = await resolveAuthPageRedirects({});
 

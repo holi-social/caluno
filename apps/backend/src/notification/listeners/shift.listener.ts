@@ -1,13 +1,20 @@
 import { Injectable } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
+import { AppI18nService } from '../../i18n/app-i18n.service';
+import { createEmailTemplateContext } from '../email/email-template-context';
+import { shiftInstanceInvitedTemplate } from '../email/templates/shift-instance-invited.template';
 import { shiftInstanceJoinedTemplate } from '../email/templates/shift-instance-joined.template';
+import { shiftInvitedTemplate } from '../email/templates/shift-invited.template';
 import { NotificationService } from '../notification.service';
 import type { NotificationEventPayloadMap } from '../notification-event-map';
 import { NotificationEvent } from '../notification-events';
 
 @Injectable()
 export class ShiftListener {
-  constructor(private readonly notificationService: NotificationService) {}
+  constructor(
+    private readonly notificationService: NotificationService,
+    private readonly appI18n: AppI18nService,
+  ) {}
 
   @OnEvent(NotificationEvent.SHIFT_INSTANCE_JOINED)
   async handleShiftInstanceJoined(
@@ -29,15 +36,85 @@ export class ShiftListener {
       {
         event: NotificationEvent.SHIFT_INSTANCE_JOINED,
       },
-      async (recipient) =>
-        await shiftInstanceJoinedTemplate({
-          organizationUnitId: payload.organizationUnitId,
-          organizationUnitName: payload.organizationUnitName,
-          shiftTitle: payload.shiftTitle,
-          volunteerName: volunteer.name,
-          recipientFirstName: recipient.firstName,
-          startsAt: payload.startsAt,
-        }),
+      async (recipient) => {
+        const templateContext = createEmailTemplateContext(
+          this.appI18n,
+          recipient.locale,
+        );
+        return shiftInstanceJoinedTemplate(
+          {
+            organizationUnitId: payload.organizationUnitId,
+            organizationUnitName: payload.organizationUnitName,
+            shiftTitle: payload.shiftTitle,
+            volunteerName: volunteer.name,
+            recipientFirstName: recipient.firstName,
+            startsAt: payload.startsAt,
+          },
+          templateContext,
+        );
+      },
+    );
+  }
+
+  @OnEvent(NotificationEvent.SHIFT_INSTANCE_INVITED)
+  async handleShiftInstanceInvited(
+    payload: NotificationEventPayloadMap[typeof NotificationEvent.SHIFT_INSTANCE_INVITED],
+  ): Promise<void> {
+    await this.notificationService.sendNotification(
+      payload.recipientUserIds,
+      {
+        event: NotificationEvent.SHIFT_INSTANCE_INVITED,
+      },
+      async (recipient) => {
+        const templateContext = createEmailTemplateContext(
+          this.appI18n,
+          recipient.locale,
+        );
+        return shiftInstanceInvitedTemplate(
+          {
+            organizationUnitName: payload.organizationUnitName,
+            shiftId: payload.shiftId,
+            shiftTitle: payload.shiftTitle,
+            shiftLocation: payload.shiftLocation,
+            shiftInstructions: payload.shiftInstructions,
+            recipientFirstName: recipient.firstName,
+            startsAt: payload.startsAt,
+            endsAt: payload.endsAt,
+            instanceId: payload.instanceId,
+          },
+          templateContext,
+        );
+      },
+    );
+  }
+
+  @OnEvent(NotificationEvent.SHIFT_INVITED)
+  async handleShiftInvited(
+    payload: NotificationEventPayloadMap[typeof NotificationEvent.SHIFT_INVITED],
+  ): Promise<void> {
+    await this.notificationService.sendNotification(
+      payload.recipientUserIds,
+      {
+        event: NotificationEvent.SHIFT_INVITED,
+      },
+      async (recipient) => {
+        const templateContext = createEmailTemplateContext(
+          this.appI18n,
+          recipient.locale,
+        );
+        return shiftInvitedTemplate(
+          {
+            organizationUnitName: payload.organizationUnitName,
+            shiftId: payload.shiftId,
+            shiftTitle: payload.shiftTitle,
+            shiftLocation: payload.shiftLocation,
+            shiftInstructions: payload.shiftInstructions,
+            recipientFirstName: recipient.firstName,
+            schedule: payload.schedule,
+          },
+          templateContext,
+        );
+      },
     );
   }
 }

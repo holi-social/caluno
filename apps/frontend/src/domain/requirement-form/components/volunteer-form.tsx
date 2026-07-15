@@ -31,6 +31,7 @@ import {
   ArrowRight,
   CalendarIcon,
   Check,
+  Link,
   Loader2,
 } from 'lucide-react';
 import { useFormatter, useTranslations } from 'next-intl';
@@ -362,7 +363,7 @@ export function VolunteerForm({
         toast.error(result.serverError);
       } else if (result?.data) {
         if (!isMember) {
-          router.push('/my-membership-requests');
+          router.push('/profile#memberships');
         } else {
           setSubmitted(true);
         }
@@ -496,9 +497,20 @@ function FieldRenderer({
           {field.required && <span className="text-destructive">*</span>}
         </FieldLabel>
         {field.documentLabel && (
-          <FieldDescription>{field.documentLabel}</FieldDescription>
+          <FieldDescription>
+            {field.documentUrl ? (
+              <span className="flex items-center gap-1">
+                <a href={field.documentUrl} target="_blank" rel="noopener">
+                  {field.documentLabel}
+                </a>
+                <Link className="size-3" />
+              </span>
+            ) : (
+              field.documentLabel
+            )}
+          </FieldDescription>
         )}
-        <div className="flex items-start gap-2">
+        <div className="flex gap-2 items-center">
           <Checkbox
             id={field.id}
             checked={value === 'true'}

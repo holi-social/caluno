@@ -2,7 +2,7 @@ import {
   index,
   jsonb,
   pgEnum,
-  pgTable,
+  snakeCase,
   text,
   timestamp,
   unique,
@@ -24,7 +24,7 @@ export const membershipRequestStatusEnum = pgEnum(
   MembershipRequestStatus as Record<string, string>,
 );
 
-export const membershipRequests = pgTable(
+export const membershipRequests = snakeCase.table(
   'membership_requests',
   {
     ...idColumn,

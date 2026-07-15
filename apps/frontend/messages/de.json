@@ -30,7 +30,8 @@
     "toggleTheme": "Design wechseln",
     "menu": "Menü",
     "signOut": "Abmelden",
-    "brand": "Clippy"
+    "brand": "Clippy",
+    "greeting": "Hallo {name}"
   },
   "Auth": {
     "login": {
@@ -83,10 +84,10 @@
       "emailPlaceholder": "du@beispiel.de",
       "passwordLabel": "Passwort",
       "passwordPlaceholder": "••••••••",
-      "passwordHint": "Mindestens 6 Zeichen",
+      "passwordHint": "Es werden mindestens 6 Zeichen benötigt",
       "submit": "Konto erstellen",
       "submitting": "Konto wird erstellt...",
-      "hasAccount": "Bereits ein Konto?",
+      "hasAccount": "Hast Du bereits ein Konto?",
       "signInLink": "Anmelden",
       "createAccountFailed": "Konto konnte nicht erstellt werden",
       "genericError": "Konto konnte nicht erstellt werden. Bitte versuche es erneut."
@@ -114,7 +115,7 @@
   },
   "Metadata": {
     "title": "Clippy",
-    "description": "Plattform zur Verwaltung von Freiwilligen",
+    "description": "Plattform zur Verwaltung von ehrenamtlich Engagierten",
     "unauthorizedTitle": "Zugriff verweigert | Clippy"
   },
   "Unauthorized": {
@@ -131,23 +132,23 @@
   "Navigation": {
     "home": "Startseite",
     "organizations": "Organisationen",
-    "myMembershipRequests": "Meine Mitgliedschaftsanfragen",
     "overview": "Übersicht",
-    "shifts": "Schichten",
+    "events": "Veranstaltungen",
+    "shifts": "Einsätze",
     "timesheets": "Zeiterfassung",
     "volunteers": "Freiwillige",
-    "checkInOut": "Check-in/out",
     "checkIn": "Einchecken",
-    "myTime": "Meine Zeit",
+    "myTime": "Meine Einsätze",
     "requirementForms": "Anforderungsformulare",
     "settings": "Einstellungen",
     "roles": "Rollen",
     "orgUnits": " Organisationseinheiten",
     "selectOrganization": "Organisation auswählen",
-    "editProfile": "Profil bearbeiten",
     "admin": "Admin",
     "qrIdTitle": "QR-ID",
-    "qrIdDescription": "Dies ist dein persönlicher QR-Code zum Einchecken in Schichten"
+    "qrIdDescription": "Mit deinem QR-Code kannst du deine Anwesenheit bei Einsätzen bestätigen. Wenn dies nötig ist, wird ihn jemand vor Ort scannen oder kontrollieren.",
+    "profile": "Profil",
+    "volunteering": "Freiwilligenarbeit"
   },
   "Pagination": {
     "showing": "{start}-{end} von {total} {name} werden angezeigt",
@@ -200,17 +201,9 @@
   },
   "Organization": {
     "home": {
-      "welcomeBack": "Willkommen zurück",
-      "subtitle": "Verwalte deine Organisationen und Freiwilligen an einem Ort.",
-      "createCard": {
-        "title": "Organisation erstellen",
-        "description": "Richte eine neue Organisation ein, um deine Freiwilligen und Schichten zu verwalten.",
-        "cta": "Loslegen"
-      }
-    },
-    "list": {
-      "title": "Deine Organisationen",
-      "subtitle": "Wähle eine Organisation aus, um fortzufahren"
+      "title": "Keine Organisationen",
+      "description": "Sie haben keine Organisationen zu verwalten",
+      "toVolunteering": "Zurück zur Freiwilligenarbeit"
     },
     "create": {
       "title": "Organisation erstellen",
@@ -358,7 +351,7 @@
   },
   "MembershipRequest": {
     "page": {
-      "title": "Meine Mitgliedschaftsanfragen",
+      "title": "Mitgliedschaften",
       "subtitle": "Deine Anfragen, Organisationen beizutreten"
     },
     "status": {
@@ -446,7 +439,7 @@
     "action": {
       "viewProfileAria": "Freiwilligenprofil ansehen",
       "checkInAria": "Freiwilligen einchecken",
-      "checkInShiftAria": "Freiwilligen zu einer Schicht einchecken"
+      "checkInShiftAria": "Freiwilligen zu einem Einsatz einchecken"
     },
     "requests": {
       "pendingEmpty": "Noch keine ausstehenden Anfragen.",
@@ -470,17 +463,17 @@
   },
   "Shift": {
     "page": {
-      "title": "Schichten",
-      "subtitle": "Schichtdetails und Freiwillige",
-      "createButton": "Schicht erstellen"
+      "title": "Einsätze",
+      "subtitle": "Einsatzdetails und Freiwillige",
+      "createButton": "Einsatz erstellen"
     },
     "empty": {
-      "title": "Noch keine Schichten",
-      "description": "Erstelle deine erste Schicht und lade Freiwillige ein, um loszulegen."
+      "title": "Noch keine Einsätze",
+      "description": "Erstelle deinen ersten Einsatz und lade Freiwillige ein, um loszulegen."
     },
     "tabs": {
       "weekplan": "Wochenplan",
-      "allShifts": "Alle Schichten"
+      "allShifts": "Alle Einsätze"
     },
     "calendar": {
       "week": "KW {week}"
@@ -489,10 +482,11 @@
       "name": "Name",
       "firstDate": "Erster Termin",
       "pattern": "Muster",
+      "time": "Zeit",
       "visibility": "Sichtbarkeit"
     },
     "visibility": {
-      "ALL_MEMBERS": "Offene Schicht",
+      "ALL_MEMBERS": "Offene Einsätze",
       "INVITED_MEMBERS": "Nur mit Einladung"
     },
     "status": {
@@ -505,18 +499,18 @@
       "inviteAria": "Freiwillige einladen"
     },
     "form": {
-      "nameLabel": "Schichtname",
-      "namePlaceholder": "z. B. Morgendliche Kassaschicht",
+      "nameLabel": "Titel des Einsatzes",
+      "namePlaceholder": "z. B. Morgendliche Essensausgabe",
       "dateTimeLabel": "Datum und Uhrzeit",
       "locationLabel": "Ort",
       "locationPlaceholder": "Hauptsaal, Musterstraße 123",
-      "instructionsLabel": "Anweisungen",
-      "instructionsPlaceholder": "Beschreibe Aufgaben und Anforderungen für diese Schicht",
-      "recurring": "Wiederkehrende Schicht",
-      "noRecurrence": "Keine Wiederholung",
-      "chooseDays": "Wähle die Tage, an denen sich diese Schicht wiederholt",
-      "openShiftLabel": "Offene Schicht",
-      "openShiftDescription": "Jeder Freiwillige kann sich für diese Schicht anmelden"
+      "instructionsLabel": "Beschreibung",
+      "instructionsPlaceholder": "Beschreibe Aufgaben und Anforderungen für diesen Einsatz",
+      "recurring": "Frequenz festlegen",
+      "noRecurrence": "Einmalig",
+      "chooseDays": "Wähle die Tage, an denen sich dieser Einsatz wiederholt",
+      "openShiftLabel": "Offener Einsatz",
+      "openShiftDescription": "Jeder Freiwillige kann sich für diesen Einsatz anmelden"
     },
     "recurrence": {
       "preset": {
@@ -540,11 +534,14 @@
       "title": "Teilnehmer einladen und verwalten",
       "minVolunteersLabel": "Min. Freiwillige",
       "minVolunteersPlaceholder": "z. B. 2",
-      "minVolunteersDescription": "Mindestanzahl an Personen, die nötig ist, um die Schicht zu öffnen",
+      "minVolunteersDescription": "Mindestanzahl an Personen, die nötig ist, um diesen Einsatz zu öffnen",
       "maxVolunteersLabel": "Max. Freiwillige",
       "maxVolunteersPlaceholder": "z. B. 50",
-      "maxVolunteersDescription": "Maximale Anzahl an Personen, die sich für die Schicht anmelden dürfen",
-      "copyInviteLink": "Einladungslink kopieren"
+      "maxVolunteersDescription": "Maximale Anzahl an Personen, die sich für diesen Einsatz anmelden dürfen",
+      "copyInviteLink": "Einladungslink kopieren",
+      "managingLabel": "Du verwaltest Freiwillige für:",
+      "inviteAllLabel": "Zu allen zukünftigen Terminen dieses Einsatzes einladen",
+      "inviteAllDescription": "Freiwillige werden zu allen Einsätzen ab dem {startDate}, jeden {days}, eingeladen."
     },
     "transferList": {
       "available": "Verfügbar",
@@ -554,9 +551,9 @@
       "removeAria": "{name} entfernen"
     },
     "selector": {
-      "noActiveShifts": "Keine aktiven Schichten",
-      "noActiveShiftsDescription": "Bitte <addShift>eine Schicht hinzufügen</addShift> oder den Zeitraum einer <existingShift>bestehenden Schicht</existingShift> anpassen.",
-      "chooseShift": "Wähle eine Schicht"
+      "noActiveShifts": "Keine aktiven Einsätze",
+      "noActiveShiftsDescription": "Bitte <addShift>einen Einsatz hinzufügen</addShift> oder den Zeitraum eines <existingShift>bestehenden Einsatzes</existingShift> anpassen.",
+      "chooseShift": "Wähle einen Einsatz"
     },
     "checkInSelector": {
       "placeholder": "Freiwilligen auswählen",
@@ -565,98 +562,93 @@
     "checkIn": {
       "checkIn": "Einchecken",
       "checkingIn": "Wird eingecheckt...",
-      "requirements": "Anforderungen",
-      "allMet": "Alle erfüllt",
-      "shift": "Schicht",
-      "noShiftSelected": "Keine Schicht ausgewählt",
+      "noShiftSelected": "Keine Einsatz ausgewählt",
       "volunteerCheckedIn": "Freiwilliger eingecheckt",
-      "volunteerProfilePhoto": "Profilfoto des Freiwilligen",
       "checkOut": "Auschecken",
       "checkingOut": "Wird ausgecheckt...",
       "volunteerCheckedOut": "Freiwilliger ausgecheckt",
-      "scanTitle": "Check-in/out",
-      "scanDescription": "Scanne die QR-ID der Freiwilligen, um sie ein- oder auszuchecken",
-      "enterQrTitle": "Oder gib ihre QR-ID ein",
-      "searchVolunteerTitle": "Oder suche nach einer Freiwilligen",
+      "scanDescription": "Scanne die QR-ID der Freiwilligen mit der Kamera, um sie zu einem Einsatz ein- oder auszuchecken",
+      "enterQrTitle": "Oder gib ihre QR-ID manuell ein, um die Anwesenheit zu bestätigen",
+      "searchVolunteerTitle": "Oder wähle die Person zur Anmeldung aus der Liste aus",
       "checkInTitle": "Einchecken",
       "checkOutTitle": "Auschecken",
       "selectOrgTitle": "Einchecken",
-      "selectOrgDescription": "Wähle die Organisation aus, in die der Freiwillige eingecheckt werden soll.",
-      "blockedTitle": "Check-in verweigert",
-      "blockedDescription": "Der Freiwillige darf nicht einchecken. Er muss sich an die Zentrale wenden, um Hilfe zu erhalten.",
+      "selectOrgDescription": "Wähle die Organisation aus, in die die Person eingecheckt werden soll.",
       "checkedInAt": "Eingecheckt: {time}",
       "checkingOutAt": "Wird ausgecheckt: {time}",
-      "volunteerNotFoundTitle": "Freiwilliger nicht gefunden",
-      "volunteerNotFoundDescription": "Es gibt keinen Freiwilligen, der zu dieser QR-ID passt. Die QR-ID wurde möglicherweise neu generiert und ist daher nicht mehr gültig. <tryAgain>Versuche es erneut</tryAgain>, indem du die QR-ID manuell eingibst oder nach der Freiwilligen suchst, um sie einzuchecken.",
-      "tryAgain": "Versuche es erneut"
+      "volunteerNotFoundTitle": "Freiwillige:n nicht gefunden",
+      "volunteerNotFoundDescription": "Es gibt keine:n Freiwillige:n, die/der zu dieser QR-ID passt. Die QR-ID wurde möglicherweise neu generiert und ist daher nicht mehr gültig. <tryAgain>Versuche es erneut</tryAgain>, indem du die QR-ID manuell eingibst oder nach der/dem Freiwilligen suchst, um sie einzuchecken.",
+      "tryAgain": "Versuche es erneut",
+      "invalidCheckin": {
+        "blocked": {
+          "title": "Check-in verweigert",
+          "description": "Der Freiwillige darf nicht einchecken. Er muss sich an die Zentrale wenden, um Hilfe zu erhalten."
+        },
+        "notMember": {
+          "title": "Check-in verweigert",
+          "description": "Der Freiwillige gehört nicht zu dieser Organisationseinheit."
+        }
+      },
+      "successNext": "Weiter"
     },
     "scanner": {
       "title": "Ungültige Check-in-ID",
-      "description": "Bitte versuche es erneut zu scannen oder scanne eine andere Kopie der QR-ID.",
+      "description": "Bitte versuche es erneut oder scanne eine andere Kopie der QR-ID.",
       "invalidToast": "Keine gültige Check-in-ID. Bitte versuche es erneut."
     },
     "join": {
-      "joinShift": "Schicht beitreten",
+      "joinShift": "Einsatz beitreten",
       "joining": "Wird beigetreten...",
       "inviteOnly": "Nur mit Einladung",
-      "joined": "Du bist der Schicht beigetreten",
-      "pending": "Deine Mitgliedschaftsanfrage ist ausstehend. Du wirst der Schicht hinzugefügt, sobald sie genehmigt wurde.",
-      "rejected": "Deine Mitgliedschaftsanfrage für diese Organisation wurde abgelehnt. Kontaktiere einen Admin, wenn du denkst, dass das ein Fehler war.",
+      "joined": "Du bist dem Einsatz beigetreten",
+      "pending": "Deine Mitgliedschaftsanfrage ist ausstehend. Du wirst dem Einsatz hinzugefügt, sobald er genehmigt wurde.",
+      "rejected": "Deine Mitgliedschaftsanfrage für diese Organisation wurde abgelehnt. Kontaktiere einen Administrator, wenn du denkst, dass das ein Fehler war.",
       "requirementsNeeded": "Erforderliche Anforderungen: {missing}{hasCompleted, select, yes { (bereits erledigt: {completed})} other {}}",
       "requirementsFallback": "Anforderungsprofil-Oberfläche (noch zu implementieren)",
-      "failed": "Schichtbeitritt fehlgeschlagen",
+      "failed": "Einsatzbeitritt fehlgeschlagen",
       "unexpected": "Unerwartete Antwort vom Server",
       "requestSent": "Anfrage gesendet",
-      "pendingMessage": "Deine Mitgliedschaftsanfrage für diese Organisation wird noch geprüft. Du kannst der Schicht beitreten, sobald sie genehmigt wurde."
+      "pendingMessage": "Deine Mitgliedschaftsanfrage für diese Organisation wird noch geprüft. Du kannst dich für den Einsatz anmelden, sobald sie genehmigt wurde."
     },
     "action": {
-      "viewAria": "Schicht ansehen",
-      "editAria": "Schicht bearbeiten",
+      "viewAria": "Einsatz ansehen",
+      "editAria": "Einsatz bearbeiten",
       "inviteAria": "Freiwillige einladen",
-      "copyLinkAria": "Schichtlink in Zwischenablage kopieren",
+      "copyLinkAria": "Link zum Einsatz in Zwischenablage kopieren",
       "recordTime": "Zeit erfassen",
-      "leaveShift": "Schicht verlassen",
-      "deleteTitle": "Schicht löschen",
-      "deleteDescription": "Bist du sicher, dass du diese Schicht und alle zugehörigen Stundenzettel löschen möchtest?",
-      "deleteSuccess": "Schicht erfolgreich gelöscht.",
-      "deleteError": "Schicht konnte nicht gelöscht werden. {error}"
+      "leaveShift": "Einsatz verlassen",
+      "deleteTitle": "Einsatz löschen",
+      "deleteDescription": "Bist du sicher, dass du diesen Einsatz und alle zugehörigen Stundenzettel löschen möchtest?",
+      "deleteSuccess": "Einsatz erfolgreich gelöscht.",
+      "deleteError": "Einsatz konnte nicht gelöscht werden. {error}"
     },
     "sheet": {
-      "createTitle": "Schicht erstellen",
-      "createDescription": "Erstelle eine neue Schicht.",
-      "editTitle": "Schicht bearbeiten",
-      "editDescription": "Bearbeite die Schicht.",
+      "createTitle": "Einsatz erstellen",
+      "createDescription": "Erstelle einen neuen Einsatz.",
+      "editTitle": "Einsatz bearbeiten",
+      "editDescription": "Bearbeite diesen Einsatz.",
       "inviteTitle": "Freiwillige einladen",
-      "inviteDescription": "Eingeladene Freiwillige erhalten eine E-Mail mit Schichtdetails und einem Link zum System."
+      "inviteDescription": "Eingeladene Freiwillige erhalten eine E-Mail mit Einsatzetails und einem Link zum System."
     },
     "toast": {
-      "created": "Schicht erstellt",
-      "updated": "Schicht aktualisiert",
+      "created": "Einsatz erstellt",
+      "updated": "Einsatz aktualisiert",
       "inviteChanged": "Einladungen der Freiwilligen aktualisiert"
     },
     "detail": {
-      "volunteersTitle": "Freiwillige",
-      "inviteButton": "Einladen",
-      "timesheetsTitle": "Stundenzettel",
-      "addTimeButton": "Zeit hinzufügen",
       "visibilityLabel": "Sichtbarkeit",
       "statusLabel": "Status",
       "createdByLabel": "Erstellt von",
-      "createdLabel": "Erstellt",
-      "volunteersBadge": "{count}",
-      "volunteersBadgeWithMax": "{count} von {max}",
-      "timesheetsBadge": "{count}",
-      "volunteersEmpty": "Noch keine Freiwilligen.",
-      "timesheetsEmpty": "Noch keine Stundenzettel."
+      "createdLabel": "Erstellt"
     },
-    "notFound": "Schicht nicht gefunden.",
+    "notFound": "Einsatz nicht gefunden.",
     "loading": "Wird geladen...",
     "validation": {
       "nameRequired": "Name ist erforderlich",
       "startTimeRequired": "Startzeit ist erforderlich",
       "endTimeRequired": "Endzeit ist erforderlich",
       "organizationUnitRequired": "Organisationseinheit ist erforderlich",
-      "shiftIdRequired": "Schicht-ID ist erforderlich",
+      "shiftIdRequired": "Einsatz-ID ist erforderlich",
       "minMaxVolunteers": "Die Mindestanzahl an Freiwilligen darf die Höchstanzahl nicht überschreiten"
     }
   },
@@ -667,21 +659,21 @@
     },
     "empty": {
       "title": "Keine Zeiteinträge",
-      "description": "Du kannst jemanden zu einer Schicht einchecken oder manuell einen Zeiteintrag hinzufügen."
+      "description": "Du kannst jemanden zu einem Einsatz einchecken oder manuell einen Zeiteintrag hinzufügen."
     },
     "table": {
-      "shift": "Schicht",
-      "volunteer": "Freiwilliger",
+      "shift": "Einsatz",
+      "volunteer": "Freiwillige:r",
       "time": "Zeit",
       "duration": "Dauer",
       "notAvailable": "k. A."
     },
     "form": {
-      "selectShiftLabel": "Schicht auswählen",
-      "selectShiftPlaceholder": "Schicht auswählen",
-      "selectShiftHint": "Wähle eine Schicht, um verfügbare Termine zu sehen",
-      "selectVolunteerLabel": "Freiwilligen auswählen",
-      "selectVolunteerPlaceholder": "Freiwilligen auswählen",
+      "selectShiftLabel": "Einsatz auswählen",
+      "selectShiftPlaceholder": "Einsatz auswählen",
+      "selectShiftHint": "Wähle einen Einsatz, um verfügbare Termine zu sehen",
+      "selectVolunteerLabel": "Freiwillige:n auswählen",
+      "selectVolunteerPlaceholder": "Freiwillige:n auswählen",
       "startEndTimeLabel": "Start- und Endzeit",
       "notesLabel": "Notizen",
       "notesPlaceholder": "Notizen zu diesem Zeiteintrag hinzufügen...",
@@ -693,14 +685,14 @@
     },
     "sheet": {
       "createTitle": "Zeiteintrag hinzufügen",
-      "createDescription": "Erfasse einen neuen Zeiteintrag für eine Schicht.",
+      "createDescription": "Erfasse einen neuen Zeiteintrag für einen Einsatz.",
       "editTitle": "Zeiteintrag bearbeiten",
       "editDescription": "Passe die Details dieses Zeiteintrags an."
     },
     "detail": {
       "title": "Zeiteintrag",
-      "unknownVolunteer": "Unbekannter Freiwilliger",
-      "shiftLabel": "Schicht",
+      "unknownVolunteer": "Unbekannte:r Freiwillige:r",
+      "shiftLabel": "Einsatz",
       "statusLabel": "Status",
       "createdLabel": "Erstellt",
       "openStatus": "Offen",
@@ -718,7 +710,7 @@
     },
     "validation": {
       "organizationUnitRequired": "Organisationseinheit ist erforderlich",
-      "shiftInstanceRequired": "Schichttermin ist erforderlich",
+      "shiftInstanceRequired": "Einsatztermin ist erforderlich",
       "volunteerRequired": "Freiwilliger ist erforderlich",
       "startedAtRequired": "Startzeit ist erforderlich",
       "endedAtRequired": "Endzeit ist erforderlich",
@@ -884,7 +876,7 @@
       "descriptionPlaceholder": "Optionaler Hilfetext",
       "placeholderLabel": "Platzhalter",
       "placeholderPlaceholder": "z. B. Gib deine Antwort ein",
-      "profileField": "Profilfeld: {key} — der Wert wird im Profil des Nutzers gespeichert und bei zukünftigen Formularen vorausgefüllt.",
+      "profileField": "Profilfeld: {key} — der Wert wird im Profil der Nutzenden gespeichert und bei zukünftigen Formularen vorausgefüllt.",
       "profileFieldOptional": "Profilfeld (optional)",
       "profileFieldNone": "Keines",
       "firstName": "Vorname",
@@ -897,15 +889,19 @@
       "birthDate": "Geburtsdatum",
       "documentUrlLabel": "Dokument-URL",
       "documentUrlPlaceholder": "https://example.com/dokument.pdf",
+      "documentLabelLabel": "Dokumentenbezeichnung",
+      "documentLabelPlaceholder": "z. B. Datenschutzerklärung",
       "required": "Erforderlich",
       "selectTypeError": "Bitte wähle einen Feldtyp aus.",
       "enterTextError": "Bitte gib einen Text ein.",
       "enterLabelError": "Bitte gib eine Bezeichnung ein.",
       "enterDocumentUrlError": "Bitte gib eine Dokument-URL ein.",
+      "enterDocumentLabelError": "Bitte gib eine Dokumentenbezeichnung ein.",
       "enterOptionError": "Bitte gib mindestens eine Option ein.",
       "cancel": "Abbrechen",
       "save": "Speichern",
-      "add": "Hinzufügen"
+      "add": "Hinzufügen",
+      "optionsLabel": "Optionen"
     },
     "blockSheet": {
       "viewTitle": "Block ansehen",
@@ -917,10 +913,10 @@
       "loading": "Wird geladen…"
     },
     "volunteerForm": {
-      "successTitle": "Bewerbung eingegangen!",
-      "successMessage": "Deine Bewerbung wird geprüft. Ein Admin meldet sich in Kürze bei dir.",
+      "successTitle": "Anfrage eingegangen!",
+      "successMessage": "Deine Anfrage wird geprüft. Ein:e Administrator:in meldet sich in Kürze bei dir.",
       "noBlocks": "Dieses Formular hat keine Blöcke.",
-      "membershipRequestNotice": "Mit dem Absenden dieses Formulars sendest du eine Mitgliedschaftsanfrage an {orgName}. Ein Admin prüft und genehmigt deine Anfrage.",
+      "membershipRequestNotice": "Mit dem Absenden dieses Formulars sendest du eine Mitgliedschaftsanfrage an {orgName}. Ein:e Administrator:in prüft und genehmigt deine Anfrage.",
       "step": "Schritt {current} von {total}",
       "noFields": "Dieser Block hat noch keine konfigurierten Felder.",
       "back": "Zurück",
@@ -936,7 +932,7 @@
       "alreadySubmittedMessage": "Dein Formular wurde erfolgreich abgesendet."
     },
     "submission": {
-      "fallbackVolunteer": "Freiwilliger",
+      "fallbackVolunteer": "Freiwillige:r",
       "fallbackForm": "Formular",
       "fieldColumn": "Feld",
       "answerColumn": "Antwort",
@@ -980,7 +976,7 @@
     }
   },
   "MyTime": {
-    "title": "Meine Zeit",
+    "title": "Meine Einsätze",
     "summary": {
       "total": "Insgesamt geleistet"
     },
@@ -990,8 +986,128 @@
     },
     "empty": {
       "title": "Noch keine Stunden",
-      "description": "Sobald du dich zu einer Schicht eincheckst, erscheinen deine Stunden hier.",
-      "cta": "Schicht finden"
+      "description": "Sobald du dich zu einem Einsatz eincheckst, erscheinen hier deine geleisteten Stunden.",
+      "cta": "Einsätze finden"
     }
+  },
+  "Event": {
+    "list": {
+      "title": "Veranstaltungen",
+      "subtitle": "Verwalte die Veranstaltungen deiner Organisation",
+      "createButton": "Veranstaltung erstellen"
+    },
+    "table": {
+      "event": "Veranstaltung",
+      "dates": "Datum",
+      "location": "Ort",
+      "shifts": "Einsätze"
+    },
+    "action": {
+      "viewAria": "Veranstaltung ansehen",
+      "editAria": "Veranstaltung bearbeiten",
+      "inviteAria": "Mitglieder einladen",
+      "shareAria": "Einladungslink kopieren",
+      "deleteAria": "Veranstaltung löschen"
+    },
+    "empty": {
+      "title": "Noch keine Veranstaltungen",
+      "description": "Erstelle deine erste Veranstaltung."
+    },
+    "sheet": {
+      "createTitle": "Veranstaltung erstellen",
+      "createDescription": "Erstelle eine neue Veranstaltung, um zusammengehörige Schichten zu gruppieren.",
+      "editTitle": "Veranstaltung bearbeiten",
+      "editDescription": "Aktualisiere die Details der Veranstaltung."
+    },
+    "detail": {
+      "backLink": "Zurück zu Veranstaltungen",
+      "editButton": "Bearbeiten",
+      "inviteButton": "Mitglieder einladen",
+      "volunteersCard": {
+        "title": "Freiwillige",
+        "inviteAria": "Mitglieder einladen",
+        "viewProfileAria": "Profil ansehen",
+        "checkInAria": "Einchecken",
+        "empty": "Noch keine Freiwilligen eingeladen."
+      },
+      "shiftsCard": {
+        "title": "Schichten",
+        "addAria": "Schicht hinzufügen",
+        "addButton": "Schicht hinzufügen",
+        "emptyTitle": "Noch keine Schichten",
+        "emptyDescription": "Füge dieser Veranstaltung eine Schicht hinzu, um loszulegen.",
+        "table": {
+          "name": "Name",
+          "schedule": "Zeitplan",
+          "volunteers": "Freiwillige"
+        }
+      }
+    },
+    "invite": {
+      "title": "Mitglieder zu {eventTitle} einladen",
+      "description": "Lade Mitglieder zu dieser Veranstaltung ein. Dies weist sie keiner Schicht zu.",
+      "copyInviteLink": "Einladungslink kopieren",
+      "helperText": "Die Einladung informiert nur über die Veranstaltung – Mitglieder werden dadurch keinen Schichten der Veranstaltung zugewiesen."
+    },
+    "form": {
+      "titleLabel": "Titel",
+      "titlePlaceholder": "Titel der Veranstaltung",
+      "startsAtLabel": "Beginn",
+      "endsAtLabel": "Ende",
+      "locationLabel": "Ort",
+      "logoUrlLabel": "Logo-URL",
+      "coverUrlLabel": "Cover-URL",
+      "validation": {
+        "titleRequired": "Titel ist erforderlich",
+        "startRequired": "Startdatum ist erforderlich",
+        "endRequired": "Enddatum ist erforderlich",
+        "endAfterStart": "Enddatum muss nach dem Startdatum liegen",
+        "invalidUrl": "Muss eine gültige URL sein"
+      }
+    },
+    "toast": {
+      "created": "Veranstaltung erstellt",
+      "updated": "Veranstaltung aktualisiert",
+      "deleted": "Veranstaltung gelöscht",
+      "invited": "Mitglieder eingeladen",
+      "linkCopied": "Einladungslink in die Zwischenablage kopiert"
+    },
+    "error": {
+      "title": "Veranstaltungen konnten nicht geladen werden",
+      "tryAgain": "Erneut versuchen"
+    }
+  },
+  "VolunteerHome": {
+    "greeting": "Hallo, {firstName}!",
+    "greetingFallback": "Willkommen zurück!",
+    "yourShiftsHeading": "Deine Schichten",
+    "yourShiftsCount": "{n, plural, one {# Schicht} other {# Schichten}}",
+    "yourShiftsThisWeek": "{n, plural, one {# Schicht diese Woche} other {# Schichten diese Woche}}",
+    "yourShiftsSeeAll": "Alle anzeigen",
+    "yourShiftsEmpty": "Du hast keine bevorstehenden Schichten.",
+    "discoverHeading": "Entdecken",
+    "discoverCta": "Schichten entdecken",
+    "discoverEmpty": "Keine Schichten für diese Filter",
+    "discoverEmptyBody": "Passe deine Filter an oder schau später nochmal vorbei.",
+    "discoverEmptyHome": "Zurzeit keine Schichten zum Entdecken. Schau bald wieder vorbei.",
+    "discoverConflict": "Überschneidet sich mit einer Schicht, für die du dich angemeldet hast",
+    "partOfEvent": "Teil von {event}",
+    "filterNextWeek": "Nächste Woche",
+    "filterThisWeekend": "Dieses Wochenende",
+    "weekly": "Wöchentlich",
+    "spotsLeft": "{n, plural, one {# Platz frei} other {# Plätze frei}}",
+    "fullyBooked": "Ausgebucht",
+    "overlapWarning": "Du hast überschneidende Schichten in deinem Plan",
+    "todayButton": "Heute",
+    "goToToday": "Zu heute",
+    "discoverThisWeek": "{n, plural, one {# Schicht diese Woche} other {# Schichten diese Woche}}",
+    "dayStripLabel": "Tagauswahl",
+    "dayStripPrevious": "Vorherige Tage",
+    "dayStripNext": "Nächste Tage",
+    "checkIn": "Einchecken",
+    "checkOut": "Auschecken",
+    "timerStartsIn": "beginnt in {time}",
+    "timerStartedAgo": "Gestartet vor {time}",
+    "timerVolunteering": "Du hilfst seit {time}"
   }
 }

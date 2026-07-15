@@ -1,5 +1,3 @@
-import { registerEnumType } from '@nestjs/graphql';
-
 export enum RequirementType {
   DOCUMENT = 'DOCUMENT',
   CHECK = 'CHECK',
@@ -50,27 +48,3 @@ export enum FormSubmissionStatus {
   SUBMITTED = 'SUBMITTED',
   REJECTED = 'REJECTED',
 }
-
-registerEnumType(OrganizationUserProfileStatus, {
-  name: 'OrganizationUserProfileStatus',
-});
-
-registerEnumType(RequirementType, {
-  name: 'RequirementType',
-});
-
-registerEnumType(RequirementProfileSubmissionStatus, {
-  name: 'RequirementProfileSubmissionStatus',
-});
-
-registerEnumType(RequirementFulfillmentStatus, {
-  name: 'RequirementFulfillmentStatus',
-});
-
-registerEnumType(FieldType, {
-  name: 'FieldType',
-});
-
-registerEnumType(FormSubmissionStatus, {
-  name: 'FormSubmissionStatus',
-});

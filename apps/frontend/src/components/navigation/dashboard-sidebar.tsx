@@ -19,11 +19,13 @@ import {
   CalendarIcon,
   ClipboardListIcon,
   ClockIcon,
+  HandHeart,
   LogOutIcon,
   NetworkIcon,
   ScanQrCode,
   SettingsIcon,
   ShieldIcon,
+  TicketIcon,
   UsersIcon,
 } from 'lucide-react';
 import { useParams } from 'next/navigation';
@@ -59,6 +61,11 @@ export function DashboardSidebar({ permissions }: DashboardSidebarProps) {
         icon: BuildingIcon,
       },
       {
+        titleKey: 'events',
+        href: `/admin/${orgUId}/events`,
+        icon: TicketIcon,
+      },
+      {
         titleKey: 'shifts',
         href: `/admin/${orgUId}/shifts`,
         icon: CalendarIcon,
@@ -75,7 +82,7 @@ export function DashboardSidebar({ permissions }: DashboardSidebarProps) {
         count: pendingCount,
       },
       {
-        titleKey: 'checkInOut',
+        titleKey: 'checkIn',
         href: `/admin/${orgUId}/check-in/scan`,
         icon: ScanQrCode,
       },
@@ -83,6 +90,11 @@ export function DashboardSidebar({ permissions }: DashboardSidebarProps) {
         titleKey: 'requirementForms',
         href: `/admin/${orgUId}/requirement-forms`,
         icon: ClipboardListIcon,
+      },
+      {
+        titleKey: 'volunteering',
+        href: `/`,
+        icon: HandHeart,
       },
     ];
   }, [orgUId, pendingCount]);

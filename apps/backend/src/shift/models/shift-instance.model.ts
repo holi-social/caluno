@@ -18,16 +18,16 @@ export class ShiftInstance {
   actualEndsAt!: Date;
 
   @Field(() => String, { nullable: true })
-  overrideTitle!: string | null;
+  overrideTitle?: string | null;
 
   @Field(() => String, { nullable: true })
-  overrideInstructions!: string | null;
+  overrideInstructions?: string | null;
 
   @Field(() => String, { nullable: true })
-  overrideLocation!: string | null;
+  overrideLocation?: string | null;
 
   @Field(() => Int, { nullable: true })
-  overrideMaxVolunteers!: number | null;
+  overrideMaxVolunteers?: number | null;
 
   @Field(() => Boolean)
   isException!: boolean;
@@ -38,8 +38,14 @@ export class ShiftInstance {
   @Field(() => Int)
   occurrenceIndex!: number;
 
+  @Field(() => Boolean)
+  isCheckedIn!: boolean;
+
+  @Field(() => Int)
+  filledCount!: number;
+
   @Field(() => [User], { nullable: true })
-  volunteers!: User[];
+  volunteers?: User[] | null;
 }
 
 export const ShiftInstancePaginatedResponse =

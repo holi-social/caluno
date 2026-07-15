@@ -1,0 +1,5 @@
+# Playwright output (also keeps Biome from linting generated artifacts)
+/test-results/
+/playwright-report/
+/blob-report/
+/.last-run.json

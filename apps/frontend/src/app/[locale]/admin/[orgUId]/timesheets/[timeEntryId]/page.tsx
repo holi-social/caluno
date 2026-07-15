@@ -11,9 +11,8 @@ import {
 import { notFound } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
 import { ActionBar } from '@/domain/time-entry/components/action-bar';
-import { formatDuration, formatTimeRange } from '@/domain/time-entry/formating';
 import { getDataClient } from '@/lib/data-client';
-import { formatDateTime } from '@/lib/formatting';
+import { getFormatting } from '@/lib/formatting/formatting-server';
 
 interface TimeEntryDetailPageProps {
   params: Promise<{ orgUId: string; timeEntryId: string }>;
@@ -24,7 +23,7 @@ export default async function TimeEntryDetailPage({
 }: TimeEntryDetailPageProps) {
   const { orgUId, timeEntryId } = await params;
 
-  const data = await getDataClient(orgUId);
+  const data = await getDataClient({ orgUId });
   const entry = await data.timeEntry.findById(timeEntryId);
 
   if (!entry) {
@@ -32,6 +31,7 @@ export default async function TimeEntryDetailPage({
   }
 
   const t = await getTranslations('TimeEntry');
+  const { formatDateTime, formatRange, formatDuration } = await getFormatting();
 
   const isOpen = !entry.endedAt;
 
@@ -59,11 +59,17 @@ export default async function TimeEntryDetailPage({
                 </li>
                 <li className="flex gap-2">
                   <Timer className="text-muted-foreground shrink-0" />
-                  <span>{formatDuration(entry)}</span>
+                  <span>{formatDuration(entry.startedAt, entry.endedAt)}</span>
                 </li>
                 <li className="flex gap-2">
                   <Calendars className="text-muted-foreground shrink-0" />
-                  <span>{formatTimeRange(entry, t('format.open'))}</span>
+                  <span>
+                    {formatRange(
+                      entry.startedAt,
+                      entry.endedAt,
+                      t('format.open'),
+                    )}
+                  </span>
                 </li>
 
                 {entry.notes && (

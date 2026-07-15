@@ -20,13 +20,13 @@ export class MembershipRequest {
   organizationUnit!: OrganizationUnit;
 
   @Field(() => User, { nullable: true })
-  reviewedBy!: User | null;
+  reviewedBy?: User | null;
 
   @Field(() => Date, { nullable: true })
-  reviewedAt!: Date | null;
+  reviewedAt?: Date | null;
 
   @Field(() => String, { nullable: true })
-  rejectionReason!: string | null;
+  rejectionReason?: string | null;
 
   @Field(() => MembershipRequestStatus)
   status!: MembershipRequestStatus;

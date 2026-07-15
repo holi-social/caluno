@@ -1,21 +1,19 @@
 import { Badge, Card, CardContent } from '@repo/ui';
 import { useTranslations } from 'next-intl';
-import { formatDuration } from '@/lib/formatting';
+import { useFormatting } from '@/lib/formatting/use-formatting';
 import { getEntryState, type TimeEntry } from '../my-time-grouping';
 
 export const MyTimeEntryRow = ({ entry }: { entry: TimeEntry }) => {
   const t = useTranslations('MyTime');
+  const { formatDuration } = useFormatting();
 
   const state = getEntryState(entry);
   const shift = entry.shiftInstance.master;
   const organizationUnit = shift.organizationUnit;
   const inProgress = state === 'in-progress';
   const duration = inProgress
-    ? '—'
-    : formatDuration(
-        new Date(entry.startedAt),
-        new Date(entry.endedAt ?? new Date()),
-      );
+    ? ''
+    : formatDuration(entry.startedAt, entry.endedAt);
 
   return (
     <Card className="py-4">

@@ -1,7 +1,7 @@
 import {
   boolean,
   index,
-  pgTable,
+  snakeCase,
   text,
   timestamp,
   uuid,
@@ -10,7 +10,7 @@ import { users } from '../../auth/schemas/auth.schema';
 import { idColumn, timestampColumns } from '../../database/database-columns';
 import { organizationUnits } from '../../organization/schemas/organization-unit.schema';
 
-export const events = pgTable(
+export const events = snakeCase.table(
   'events',
   {
     ...idColumn,

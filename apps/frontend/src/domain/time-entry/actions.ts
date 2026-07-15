@@ -17,7 +17,9 @@ import {
 export const createTimeEntry = actionClient
   .inputSchema(serverTimeEntrySchema)
   .action(async ({ parsedInput }) => {
-    const data = await getDataClient(parsedInput.organizationUnitId);
+    const data = await getDataClient({
+      orgUId: parsedInput.organizationUnitId,
+    });
 
     const input: AddTimeEntryInput = {
       shiftInstanceId: parsedInput.shiftInstanceId,
@@ -33,7 +35,9 @@ export const createTimeEntry = actionClient
 export const closeTimeEntry = actionClient
   .inputSchema(serverCloseTimeEntrySchema)
   .action(async ({ parsedInput }) => {
-    const data = await getDataClient(parsedInput.organizationUnitId);
+    const data = await getDataClient({
+      orgUId: parsedInput.organizationUnitId,
+    });
 
     const input: CloseTimeEntryInput = {
       endedAt: parsedInput.endedAt.toISOString(),
@@ -47,7 +51,9 @@ export const updateTimeEntry = actionClient
   .inputSchema(serverTimeEntrySchema)
   .bindArgsSchemas([z.string()])
   .action(async ({ parsedInput, bindArgsParsedInputs: [timeEntryId] }) => {
-    const data = await getDataClient(parsedInput.organizationUnitId);
+    const data = await getDataClient({
+      orgUId: parsedInput.organizationUnitId,
+    });
 
     const input: UpdateTimeEntryInput = {
       shiftInstanceId: parsedInput.shiftInstanceId,
@@ -62,6 +68,8 @@ export const updateTimeEntry = actionClient
 export const deleteTimeEntry = actionClient
   .inputSchema(serverDeleteTimeEntrySchema)
   .action(async ({ parsedInput }) => {
-    const data = await getDataClient(parsedInput.organizationUnitId);
+    const data = await getDataClient({
+      orgUId: parsedInput.organizationUnitId,
+    });
     return await data.timeEntry.delete(parsedInput.id);
   });

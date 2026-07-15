@@ -113,8 +113,28 @@ query GetOrganizationsWithRoot($limit: Int!, $offset: Int!) {
   }
 }
 
-query GetMyAccessibleOrganizationUnits {
-  myAccessibleOrganizationUnits {
+query GetMyOrganizationUnits {
+  myOrganizationUnits {
+    id
+    slug
+    name
+    description
+    logoUrl
+    address
+    parent {
+      id
+    }
+    organization {
+      id
+      name
+      description
+      logoUrl
+    }
+  }
+}
+
+query GetMyAdminstableOrganizationUnits {
+  myAdminstableOrganizationUnits {
     id
     slug
     name
@@ -227,6 +247,9 @@ mutation DeleteOrganizationUnit($id: String!) {
   }
 }
 
-query IsMemberOfOrgUnitOrAncestor($organizationUnitId: ID!) {
-  isMemberOfUnitOrAncestor(organizationUnitId: $organizationUnitId)
+query IsMemberOfOrgUnitOrAncestor($organizationUnitId: ID!, $userId: String!) {
+  isMemberOfUnitOrAncestor(
+    organizationUnitId: $organizationUnitId
+    userId: $userId
+  )
 }
