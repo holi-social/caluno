@@ -30,8 +30,8 @@ export interface ShiftCardMyProps {
       rrule?: string | null;
     };
   };
-  onCheckIn: () => void;
-  onCheckOut: () => void;
+  /** Show the inline time range. Off when an external time rail already shows it. */
+  showTime?: boolean;
 }
 
 const THREE_HOURS = 3 * 60 * 60 * 1000;
@@ -79,8 +79,7 @@ function useTimer(
 
 export function ShiftCardMy({
   shiftInstance,
-  onCheckIn,
-  onCheckOut,
+  showTime = true,
 }: ShiftCardMyProps) {
   const t = useTranslations('VolunteerHome');
   const { formatTimeRange } = useFormatting();
@@ -110,12 +109,14 @@ export function ShiftCardMy({
       <div className="flex gap-3 p-3">
         <div className="flex min-w-0 flex-1 flex-col gap-1.5">
           <div className="flex items-start justify-between gap-2">
-            <p className="font-semibold text-foreground">
-              {formatTimeRange(
-                shiftInstance.actualStartsAt,
-                shiftInstance.actualEndsAt,
-              )}
-            </p>
+            {showTime && (
+              <p className="font-semibold text-foreground">
+                {formatTimeRange(
+                  shiftInstance.actualStartsAt,
+                  shiftInstance.actualEndsAt,
+                )}
+              </p>
+            )}
             {recurrence && (
               <span className="flex shrink-0 items-center gap-1 text-sm text-muted-foreground">
                 <RepeatIcon className="size-3.5" />
@@ -136,21 +137,25 @@ export function ShiftCardMy({
 
         {showCheckIn && (
           <Button
-            onClick={onCheckIn}
+            asChild
             className="relative z-10 flex h-auto w-[100px] shrink-0 flex-col gap-1 self-stretch rounded-xl bg-primary text-primary-foreground"
           >
-            <QrCodeIcon className="size-5" />
-            <span>{t('checkIn')}</span>
+            <Link href="/qr-id">
+              <QrCodeIcon className="size-5" />
+              <span>{t('checkIn')}</span>
+            </Link>
           </Button>
         )}
         {showCheckOut && (
           <Button
+            asChild
             variant="outline"
-            onClick={onCheckOut}
             className="relative z-10 flex h-auto w-[100px] shrink-0 flex-col gap-1 self-stretch rounded-xl"
           >
-            <DoorOpenIcon className="size-5" />
-            <span>{t('checkOut')}</span>
+            <Link href="/qr-id">
+              <DoorOpenIcon className="size-5" />
+              <span>{t('checkOut')}</span>
+            </Link>
           </Button>
         )}
       </div>

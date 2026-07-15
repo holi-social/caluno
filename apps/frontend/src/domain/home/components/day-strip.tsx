@@ -1,11 +1,19 @@
 'use client';
 
 import { Button, cn } from '@repo/ui';
-import { ChevronLeftIcon, ChevronRightIcon } from 'lucide-react';
+import {
+  ChevronLeftIcon,
+  ChevronRightIcon,
+  MoreHorizontalIcon,
+} from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useFormatting } from '@/lib/formatting/use-formatting';
-import { isSameDay } from '../lib/date-helpers';
+import {
+  getClosestShiftDayOnOrAfter,
+  isSameDay,
+  type SparseDayStripEntry,
+} from '../lib/date-helpers';
 
 export interface DayStripDay {
   date: Date;
@@ -33,6 +41,16 @@ export interface DayStripProps {
    * dims inactive pills so the active-day handoff reads less as a blink.
    */
   isScrolling?: boolean;
+  /**
+   * Sparse mode: only days that actually have shifts, with "…" gap markers
+   * for stretches of empty days — used by my-shifts instead of the full
+   * contiguous `days` window. When set, `sparseDays` is used instead of
+   * `days`.
+   */
+  sparse?: boolean;
+  sparseDays?: SparseDayStripEntry[];
+  /** Label for the "go to top" button (sparse mode only). */
+  goToTopLabel?: string;
 }
 
 function ArrowButton({
@@ -122,12 +140,30 @@ function DayPill({
   );
 }
 
+/** Non-interactive divider for a collapsed stretch of empty days (sparse mode). */
+function GapPill() {
+  return (
+    <div
+      aria-hidden="true"
+      className="flex w-9 shrink-0 items-center justify-center rounded-xl bg-muted text-muted-foreground"
+    >
+      <MoreHorizontalIcon className="size-4" />
+    </div>
+  );
+}
+
 export function DayStrip(props: DayStripProps) {
   const { formatDate } = useFormatting();
   const today = useMemo(() => new Date(), []);
 
   if (props.paged) {
     return <PagedDayStrip {...props} formatDate={formatDate} today={today} />;
+  }
+
+  if (props.sparse) {
+    return (
+      <SparseScrollDayStrip {...props} formatDate={formatDate} today={today} />
+    );
   }
 
   return <ScrollDayStrip {...props} formatDate={formatDate} today={today} />;
@@ -388,6 +424,163 @@ function ScrollDayStrip({
           disabled={activeIsToday}
         >
           {activeIsToday ? todayLabel : (goToTodayLabel ?? todayLabel)}
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Sparse day strip (my-shifts): only days with shifts, plus non-interactive
+ * "…" gap dividers for stretches of empty days (see `sparseDays`). Mirrors
+ * `ScrollDayStrip`'s scaffolding, but "go to top" always jumps to the
+ * closest upcoming shift-day rather than specifically "today" — the label
+ * and enabled state don't depend on whether the active day happens to be
+ * today.
+ */
+function SparseScrollDayStrip({
+  sparseDays,
+  activeDate,
+  onSelect,
+  goToTopLabel,
+  className,
+  shiftCountLabel,
+  formatDate,
+  isScrolling,
+}: DayStripProps & { formatDate: FormatDate; today: Date }) {
+  const t = useTranslations('VolunteerHome');
+  const stripRef = useRef<HTMLDivElement>(null);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(false);
+
+  const entries = sparseDays ?? [];
+  const dayEntries = useMemo(
+    () => entries.filter((entry) => entry.type === 'day'),
+    [entries],
+  );
+
+  const updateArrows = useCallback(() => {
+    const strip = stripRef.current;
+    if (!strip) return;
+    setCanScrollLeft(strip.scrollLeft > 1);
+    setCanScrollRight(
+      strip.scrollLeft < strip.scrollWidth - strip.clientWidth - 1,
+    );
+  }, []);
+
+  useEffect(() => {
+    const strip = stripRef.current;
+    if (!strip) return;
+    strip.addEventListener('scroll', updateArrows, { passive: true });
+    window.addEventListener('resize', updateArrows);
+    return () => {
+      strip.removeEventListener('scroll', updateArrows);
+      window.removeEventListener('resize', updateArrows);
+    };
+  }, [updateArrows]);
+
+  useEffect(() => {
+    if (entries.length === 0) {
+      setCanScrollLeft(false);
+      setCanScrollRight(false);
+      return;
+    }
+    updateArrows();
+  }, [updateArrows, entries]);
+
+  const scrollByPage = (direction: -1 | 1) => {
+    const strip = stripRef.current;
+    if (!strip) return;
+    strip.scrollBy({
+      left: direction * strip.clientWidth * 0.8,
+      behavior: 'smooth',
+    });
+  };
+
+  const scrollToTop = useCallback(() => {
+    const target = getClosestShiftDayOnOrAfter(dayEntries, new Date());
+    if (target) onSelect(target.date);
+  }, [dayEntries, onSelect]);
+
+  // Keep the active pill in view as the selection changes (e.g. scroll-spy).
+  // Snapped instantly — see the equivalent effect in `ScrollDayStrip` for why.
+  const activeEntryIndex = entries.findIndex(
+    (entry) => entry.type === 'day' && isSameDay(entry.date, activeDate),
+  );
+  useEffect(() => {
+    if (activeEntryIndex < 0) return;
+    const pill = stripRef.current?.children[activeEntryIndex] as
+      | HTMLElement
+      | undefined;
+    pill?.scrollIntoView({
+      behavior: 'auto',
+      inline: 'center',
+      block: 'nearest',
+    });
+  }, [activeEntryIndex]);
+
+  const handleKeyDown = useCallback(
+    (event: React.KeyboardEvent<HTMLDivElement>) => {
+      if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') return;
+
+      event.preventDefault();
+      const activeIndex = dayEntries.findIndex((entry) =>
+        isSameDay(entry.date, activeDate),
+      );
+      const direction = event.key === 'ArrowLeft' ? -1 : 1;
+      const nextEntry = dayEntries[activeIndex + direction];
+      if (nextEntry) onSelect(nextEntry.date);
+    },
+    [activeDate, dayEntries, onSelect],
+  );
+
+  return (
+    <div className={cn('flex flex-col gap-2', className)}>
+      <div className="flex items-stretch gap-2">
+        <ArrowButton
+          direction="left"
+          enabled={canScrollLeft}
+          label={t('dayStripPrevious')}
+          onClick={() => scrollByPage(-1)}
+        />
+
+        <div
+          ref={stripRef}
+          role="tablist"
+          aria-label={t('dayStripLabel')}
+          onKeyDown={handleKeyDown}
+          className="flex flex-1 gap-3 overflow-x-auto scrollbar-hide py-1"
+        >
+          {entries.map((entry) =>
+            entry.type === 'gap' ? (
+              <GapPill key={entry.key} />
+            ) : (
+              <DayPill
+                key={entry.date.toISOString()}
+                day={entry}
+                active={isSameDay(entry.date, activeDate)}
+                dimmed={isScrolling}
+                weekdayLabel={formatDate(entry.date, { weekday: 'short' })}
+                dayLabel={formatDate(entry.date, { day: 'numeric' })}
+                shiftCountLabel={shiftCountLabel}
+                onSelect={onSelect}
+                className="min-w-[84px] flex-1"
+              />
+            ),
+          )}
+        </div>
+
+        <ArrowButton
+          direction="right"
+          enabled={canScrollRight}
+          label={t('dayStripNext')}
+          onClick={() => scrollByPage(1)}
+        />
+      </div>
+
+      <div className="flex justify-end">
+        <Button variant="outline" size="md" onClick={scrollToTop}>
+          {goToTopLabel}
         </Button>
       </div>
     </div>

@@ -11,7 +11,11 @@ import {
 } from 'react';
 import { useRouter } from '@/i18n/navigation';
 import { useFormatting } from '@/lib/formatting/use-formatting';
-import { startOfDay } from '../lib/date-helpers';
+import {
+  getClosestShiftDayOnOrAfter,
+  type SparseDayStripEntry,
+  startOfDay,
+} from '../lib/date-helpers';
 import { DayStrip, type DayStripDay } from './day-strip';
 import { DayStripSkeleton } from './day-strip-skeleton';
 
@@ -37,6 +41,13 @@ interface DayTimelineViewProps<T> {
   renderContent: (group: DayGroup<T>) => ReactNode;
   /** Dim the day head (e.g. for past days). */
   isDayDimmed?: (group: DayGroup<T>) => boolean;
+  /**
+   * Sparse day strip (my-shifts only) — only days with shifts, with "…" gap
+   * markers for stretches of empty days. When set, the strip switches to
+   * sparse mode and `goToTopLabel` is used for its "go to top" button.
+   */
+  sparseDays?: SparseDayStripEntry[];
+  goToTopLabel?: string;
 }
 
 export function DayTimelineView<T>({
@@ -49,6 +60,8 @@ export function DayTimelineView<T>({
   empty,
   renderContent,
   isDayDimmed,
+  sparseDays,
+  goToTopLabel,
 }: DayTimelineViewProps<T>) {
   const t = useTranslations('VolunteerHome');
   const ct = useTranslations('Common');
@@ -151,11 +164,7 @@ export function DayTimelineView<T>({
   // On first load, land on today (or the closest upcoming day).
   useEffect(() => {
     if (didInitialScroll.current || groups.length === 0) return;
-    const todayStart = startOfDay(new Date()).getTime();
-    const target =
-      groups.find((group) => group.date.getTime() === todayStart) ??
-      groups.find((group) => group.date.getTime() >= todayStart) ??
-      groups[groups.length - 1];
+    const target = getClosestShiftDayOnOrAfter(groups, new Date());
     if (!target) return;
     didInitialScroll.current = true;
     scrollToDay(target.date, false);
@@ -184,6 +193,9 @@ export function DayTimelineView<T>({
                   goToTodayLabel={t('goToToday')}
                   shiftCountLabel={(n) => t('yourShiftsCount', { n })}
                   isScrolling={isScrolling}
+                  sparse={!!sparseDays}
+                  sparseDays={sparseDays}
+                  goToTopLabel={goToTopLabel}
                 />
               )}
             </div>
