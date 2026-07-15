@@ -1,19 +1,9 @@
 'use client';
 
 import type { OrganizationUnitType } from '@repo/data';
-import {
-  Field,
-  FieldError,
-  FieldLabel,
-  Input,
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-  Textarea,
-} from '@repo/ui';
+import { Field, FieldError, FieldLabel, Input, Textarea } from '@repo/ui';
 import { useTranslations } from 'next-intl';
+import { useEffect } from 'react';
 import type { UseFormReturn } from 'react-hook-form';
 import type { CreateOrgUnitFormValues } from '../schemas';
 
@@ -35,6 +25,16 @@ export function OrgUnitFormContent({
     formState: { errors },
   } = formReturnValues;
   const t = useTranslations('OrgUnit.form');
+  const typeId = watch('typeId');
+
+  useEffect(() => {
+    if (!typeId) {
+      const firstTypeId = types[0]?.id;
+      if (firstTypeId) {
+        setValue('typeId', firstTypeId, { shouldValidate: true });
+      }
+    }
+  }, [typeId, types, setValue]);
 
   return (
     <>
@@ -52,6 +52,7 @@ export function OrgUnitFormContent({
         {errors.name && <FieldError>{errors.name.message}</FieldError>}
       </Field>
 
+      {/* Can be re-integrated later when OrgUnitTypes are implemented
       <Field>
         <FieldLabel htmlFor="type">
           {t('typeLabel')} <span className="text-destructive">*</span>
@@ -59,7 +60,7 @@ export function OrgUnitFormContent({
 
         <Select
           {...register('typeId')}
-          value={watch('typeId')}
+          value={typeId}
           onValueChange={(value) =>
             setValue('typeId', value, { shouldValidate: true })
           }
@@ -80,6 +81,7 @@ export function OrgUnitFormContent({
 
         {errors.typeId && <FieldError>{errors.typeId.message}</FieldError>}
       </Field>
+      */}
 
       <Field>
         <FieldLabel htmlFor="contactEmail">{t('emailLabel')}</FieldLabel>
