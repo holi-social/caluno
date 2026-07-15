@@ -38,7 +38,7 @@ export const ShiftSelectItem = ({ shift }: ShiftOptionProps) => {
         <span className="truncate">
           {shift.overrideTitle ?? shift.master.title}
         </span>
-        {shift.inviteStatus === ShiftInviteStatus.Accepted ? (
+        {shift.invites?.status === ShiftInviteStatus.Accepted ? (
           <CalendarCheck className="size-4 text-primary" />
         ) : (
           shift.master.visibility === ShiftVisibility.InvitedMembers && (
