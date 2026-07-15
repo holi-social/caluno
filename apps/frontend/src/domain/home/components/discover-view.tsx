@@ -33,7 +33,7 @@ export function DiscoverView({
 
   const availableShiftList = data ?? [];
   const dayStrip = useMemo(
-    () => getDayStripDays(availableShiftList),
+    () => getDayStripDays(availableShiftList, { minDays: 7 }),
     [availableShiftList],
   );
   const grouped = useMemo(

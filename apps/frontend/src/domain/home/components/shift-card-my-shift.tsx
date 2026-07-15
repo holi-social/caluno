@@ -22,12 +22,15 @@ export interface ShiftCardMyShiftProps {
   showDate?: boolean;
   /** Past shift: dimmed and non-interactive (no link). */
   past?: boolean;
+  /** Show the inline time range. Off when an external time rail already shows it. */
+  showTime?: boolean;
 }
 
 export function ShiftCardMyShift({
   shiftInstance,
   showDate = false,
   past = false,
+  showTime = true,
 }: ShiftCardMyShiftProps) {
   const { formatTimeRange, formatDate } = useFormatting();
   const getRecurrenceLabel = useRecurrenceLabel();
@@ -49,12 +52,14 @@ export function ShiftCardMyShift({
           })}
         </p>
       )}
-      <p className="text-sm text-muted-foreground">
-        {formatTimeRange(
-          shiftInstance.actualStartsAt,
-          shiftInstance.actualEndsAt,
-        )}
-      </p>
+      {showTime && (
+        <p className="text-sm text-muted-foreground">
+          {formatTimeRange(
+            shiftInstance.actualStartsAt,
+            shiftInstance.actualEndsAt,
+          )}
+        </p>
+      )}
       {recurrence && (
         <span className="flex items-center gap-1 text-sm text-muted-foreground">
           <RepeatIcon className="size-3.5 shrink-0" />

@@ -3,8 +3,6 @@
 import type { AvailableShiftInstance, MyShiftInstance } from '@repo/data/react';
 import {
   useAvailableShiftInstances,
-  useCheckIn,
-  useCheckOut,
   useMyShiftInstances,
 } from '@repo/data/react';
 import { Button, Empty, EmptyMedia, EmptyTitle, Skeleton } from '@repo/ui';
@@ -46,8 +44,6 @@ export function VolunteerHomeContent({
 
   const { data: myShiftInstances, isLoading: isLoadingMy } =
     useMyShiftInstances(false, { initialData: initialMyShiftInstances });
-  const { mutate: checkIn } = useCheckIn();
-  const { mutate: checkOut } = useCheckOut();
 
   const discoverOptions = useMemo(() => getDiscoverWindow(), []);
 
@@ -172,13 +168,7 @@ export function VolunteerHomeContent({
         </Empty>
       ) : (
         <div className="flex flex-col gap-3">
-          {nextShift && (
-            <ShiftCardMy
-              shiftInstance={nextShift}
-              onCheckIn={() => checkIn(nextShift.id)}
-              onCheckOut={() => checkOut(nextShift.id)}
-            />
-          )}
+          {nextShift && <ShiftCardMy shiftInstance={nextShift} />}
           {futureShifts.length > 0 && (
             <div className="flex gap-3 overflow-x-auto pb-2">
               {futureShifts.map((shift) => (
@@ -273,7 +263,7 @@ export function VolunteerHomeContent({
 
   return (
     <div className="flex flex-col gap-8">
-      {yourShiftsSection}
+      {(showLoadingMy || myShiftList.length > 0) && yourShiftsSection}
       {discoverSection}
     </div>
   );

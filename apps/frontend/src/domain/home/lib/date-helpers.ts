@@ -1,6 +1,7 @@
 import { tz } from '@date-fns/tz';
 import {
   addDays as dfAddDays,
+  differenceInCalendarDays as dfDifferenceInCalendarDays,
   isSameDay as dfIsSameDay,
   startOfDay as dfStartOfDay,
 } from 'date-fns';
@@ -109,4 +110,105 @@ export function intervalsOverlap(
   bEnd: Date,
 ): boolean {
   return aStart < bEnd && bStart < aEnd;
+}
+
+export type SparseDayStripEntry =
+  | { type: 'day'; date: Date; shiftCount: number }
+  | { type: 'gap'; key: string };
+
+/**
+ * A sparse day list for strips that should only show days that actually have
+ * shifts (e.g. my-shifts), instead of `getDayStripDays`' contiguous window.
+ * Adjacent shift-days (gap of exactly 1 day) render back-to-back; any wider
+ * gap collapses to a single non-interactive "gap" marker instead of showing
+ * every empty day in between.
+ */
+export function getSparseDayStripDays<T extends { actualStartsAt: string }>(
+  items: T[],
+): SparseDayStripEntry[] {
+  const grouped = groupByDay(items);
+  const result: SparseDayStripEntry[] = [];
+
+  grouped.forEach((group, index) => {
+    result.push({
+      type: 'day',
+      date: group.date,
+      shiftCount: group.items.length,
+    });
+
+    const next = grouped[index + 1];
+    if (next && dfDifferenceInCalendarDays(next.date, group.date, appTz) > 1) {
+      result.push({ type: 'gap', key: `gap-${group.date.toISOString()}` });
+    }
+  });
+
+  return result;
+}
+
+/**
+ * The day matching `reference`, else the nearest one after it, else the last
+ * one — the "today, or the closest upcoming day" pattern used both for the
+ * initial scroll position and the "go to top" shortcut.
+ */
+export function getClosestShiftDayOnOrAfter<T extends { date: Date }>(
+  groups: T[],
+  reference: Date,
+): T | undefined {
+  const refStart = startOfDay(reference).getTime();
+  return (
+    groups.find((group) => startOfDay(group.date).getTime() === refStart) ??
+    groups.find((group) => startOfDay(group.date).getTime() >= refStart) ??
+    groups[groups.length - 1]
+  );
+}
+
+export interface ShiftCluster<T> {
+  /** Sorted by `actualStartsAt`. */
+  items: T[];
+  earliestStart: Date;
+}
+
+/**
+ * Groups shifts into clusters of mutually-reachable overlapping time ranges
+ * (a sweep over items sorted by start time, tracking the running max end of
+ * the open cluster) — this correctly chains A-overlaps-B-overlaps-C into one
+ * cluster even when A and C don't directly overlap, unlike a pairwise-only
+ * check.
+ */
+export function clusterOverlappingShifts<
+  T extends { actualStartsAt: string; actualEndsAt: string },
+>(items: T[]): ShiftCluster<T>[] {
+  const sorted = [...items].sort(
+    (a, b) => +new Date(a.actualStartsAt) - +new Date(b.actualStartsAt),
+  );
+
+  const clusters: ShiftCluster<T>[] = [];
+  let current: T[] = [];
+  let currentEnd = -Infinity;
+
+  const flush = () => {
+    const first = current[0];
+    if (first) {
+      clusters.push({
+        items: current,
+        earliestStart: new Date(first.actualStartsAt),
+      });
+    }
+  };
+
+  for (const item of sorted) {
+    const start = +new Date(item.actualStartsAt);
+    const end = +new Date(item.actualEndsAt);
+    if (current.length > 0 && start < currentEnd) {
+      current.push(item);
+      currentEnd = Math.max(currentEnd, end);
+    } else {
+      flush();
+      current = [item];
+      currentEnd = end;
+    }
+  }
+  flush();
+
+  return clusters;
 }

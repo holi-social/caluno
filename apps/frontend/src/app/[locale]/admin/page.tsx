@@ -10,6 +10,7 @@ import {
 
 import { Building2, HandHeart } from 'lucide-react';
 import { redirect } from 'next/navigation';
+
 import { getTranslations } from 'next-intl/server';
 import { Link } from '@/i18n/navigation';
 import { resolveAdminDestination } from '@/lib/routing';
