@@ -1140,8 +1140,10 @@
           "timesheetSigningSuper": "Supervisorunterschrift",
           "timesheetReady": "Bereit zur Abgabe",
           "nonCompliant": "Kein aktiver Vertrag",
-          "nonCompliantHint": "Stundennachweis ohne aktiven Vertrag — Vertrag zuerst erstellen oder aktivieren",
-          "notYetCreated": "Noch nicht erstellt"
+          "nonCompliantHint": "Noch kein aktiver Vertrag für diese Pauschale — Vertrag erstellen oder aktivieren, damit dieser Stundennachweis compliant ist",
+          "notYetCreated": "Noch nicht erstellt",
+          "overCap": "Jahreslimit erreicht",
+          "overCapHint": "Der Betrag dieses Stundennachweises bringt die Person an oder über ihr Jahreslimit"
         },
         "lastActionLabel": {
           "created": "Erstellt",
@@ -1154,6 +1156,19 @@
           "create": "Erstellen",
           "remind": "Erinnern",
           "countersign": "Unterzeichnen"
+        },
+        "nonCompliantDialog": {
+          "titleSingle": "Nicht-konformen Stundennachweis {action, select, create {erstellen} remind {anmahnen} countersign {gegenzeichnen} other {bearbeiten}}?",
+          "titleBatchAll": "{count} nicht-konforme Stundennachweise {action, select, create {erstellen} remind {anmahnen} countersign {gegenzeichnen} other {bearbeiten}}?",
+          "titleBatchMixed": "{count} von {total} Stundennachweisen sind nicht konform",
+          "descriptionSingle": "Für diese Pauschale liegt noch kein aktiver Vertrag vor. Der Stundennachweis kann trotzdem {action, select, create {erstellt} remind {angemahnt} countersign {gegengezeichnet} other {bearbeitet}} werden, bleibt aber als nicht konform markiert, bis ein Vertrag aktiv ist.",
+          "descriptionBatchAll": "Für keine der ausgewählten Personen liegt ein aktiver Vertrag für diese Pauschale vor. Diese Stundennachweise können trotzdem {action, select, create {erstellt} remind {angemahnt} countersign {gegengezeichnet} other {bearbeitet}} werden, bleiben aber als nicht konform markiert, bis ein Vertrag aktiv ist.",
+          "descriptionBatchMixed": "{count} der ausgewählten Stundennachweise gehören zu Personen ohne aktiven Vertrag für diese Pauschale.",
+          "actionAnyway": "{action, select, create {Trotzdem erstellen} remind {Trotzdem erinnern} countersign {Trotzdem gegenzeichnen} other {Trotzdem fortfahren}}",
+          "actionAllAnyway": "{action, select, create {Alle trotzdem erstellen} remind {Alle trotzdem erinnern} countersign {Alle trotzdem gegenzeichnen} other {Trotzdem mit allen fortfahren}}",
+          "onlyCompliantAction": "{action, select, create {Nur konforme erstellen} remind {Nur konforme erinnern} countersign {Nur konforme gegenzeichnen} other {Nur konforme bearbeiten}}",
+          "generateContractInstead": "Stattdessen Vertrag erstellen",
+          "viewContractInstead": "Stattdessen Vertrag ansehen"
         }
       }
     },

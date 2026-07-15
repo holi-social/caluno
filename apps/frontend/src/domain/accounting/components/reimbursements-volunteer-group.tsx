@@ -10,23 +10,23 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
 } from '@repo/ui';
-import { ChevronDownIcon, FileTextIcon, TriangleAlertIcon } from 'lucide-react';
+import { ChevronDownIcon, FileTextIcon } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useState } from 'react';
-import { DocTypeHeader } from './doc-type-header';
+import { AlertIconTooltip } from './alert-icon-tooltip';
 import type { PauschalenType } from './doc-type-header';
+import { DocTypeHeader } from './doc-type-header';
 import { LimitHeadroomBar } from './limit-headroom-bar';
+import type { NonCompliantAction } from './non-compliant-timesheet-dialog';
 import type {
   BoardDocument,
   BoardVolunteer,
   DocStatus,
+  DocVolPair,
   PauschalenLimit,
 } from './reimbursements-board';
+import { isTimesheetNonCompliant } from './reimbursements-board';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -56,14 +56,46 @@ interface StatusMeta {
 }
 
 const STATUS_META: Record<DocStatus, StatusMeta> = {
-  'contract-generate': { labelKey: 'contractGenerate', actionKey: 'create', isYourAction: true },
-  'contract-signing-vol': { labelKey: 'contractSigningVol', actionKey: 'remind', isYourAction: false },
-  'contract-signing-coord': { labelKey: 'contractSigningCoord', actionKey: 'countersign', isYourAction: true },
-  'contract-active': { labelKey: 'contractActive', actionKey: null, isYourAction: false },
-  'timesheet-generate': { labelKey: 'timesheetGenerate', actionKey: 'create', isYourAction: true },
-  'timesheet-signing-vol': { labelKey: 'timesheetSigningVol', actionKey: 'remind', isYourAction: false },
-  'timesheet-signing-super': { labelKey: 'timesheetSigningSuper', actionKey: 'countersign', isYourAction: true },
-  'timesheet-ready': { labelKey: 'timesheetReady', actionKey: null, isYourAction: false },
+  'contract-generate': {
+    labelKey: 'contractGenerate',
+    actionKey: 'create',
+    isYourAction: true,
+  },
+  'contract-signing-vol': {
+    labelKey: 'contractSigningVol',
+    actionKey: 'remind',
+    isYourAction: false,
+  },
+  'contract-signing-coord': {
+    labelKey: 'contractSigningCoord',
+    actionKey: 'countersign',
+    isYourAction: true,
+  },
+  'contract-active': {
+    labelKey: 'contractActive',
+    actionKey: null,
+    isYourAction: false,
+  },
+  'timesheet-generate': {
+    labelKey: 'timesheetGenerate',
+    actionKey: 'create',
+    isYourAction: true,
+  },
+  'timesheet-signing-vol': {
+    labelKey: 'timesheetSigningVol',
+    actionKey: 'remind',
+    isYourAction: false,
+  },
+  'timesheet-signing-super': {
+    labelKey: 'timesheetSigningSuper',
+    actionKey: 'countersign',
+    isYourAction: true,
+  },
+  'timesheet-ready': {
+    labelKey: 'timesheetReady',
+    actionKey: null,
+    isYourAction: false,
+  },
 };
 
 // ─── CTA variant ──────────────────────────────────────────────────────────────
@@ -102,6 +134,7 @@ interface VolunteerTableGroupProps {
   onToggleDoc: (docId: string) => void;
   onToggleVolDocs: (vol: BoardVolunteer) => void;
   onDocumentClick: (doc: BoardDocument, vol: BoardVolunteer) => void;
+  onRequestAction: (items: DocVolPair[], action: NonCompliantAction) => void;
   docTypeFilter: DocTypeFilter;
 }
 
@@ -111,6 +144,7 @@ function VolunteerTableGroup({
   onToggleDoc,
   onToggleVolDocs,
   onDocumentClick,
+  onRequestAction,
   docTypeFilter,
 }: VolunteerTableGroupProps) {
   const t = useTranslations('Accounting.reimbursements');
@@ -118,7 +152,11 @@ function VolunteerTableGroup({
 
   // Filter displayed docs by docTypeFilter
   const sortedDocs = [...vol.documents]
-    .sort((a, b) => STATUS_SORT_ORDER.indexOf(a.status) - STATUS_SORT_ORDER.indexOf(b.status))
+    .sort(
+      (a, b) =>
+        STATUS_SORT_ORDER.indexOf(a.status) -
+        STATUS_SORT_ORDER.indexOf(b.status),
+    )
     .filter((doc) => {
       if (docTypeFilter === 'all') return true;
       return doc.status.startsWith(docTypeFilter);
@@ -128,12 +166,19 @@ function VolunteerTableGroup({
   const actionDocs = sortedDocs.filter(
     (d) => STATUS_META[d.status].isYourAction && d.status !== 'contract-active',
   ).length;
-  const hasNonCompliant = sortedDocs.some((d) => d.isNonCompliant);
+  const hasNonCompliant = sortedDocs.some((d) =>
+    isTimesheetNonCompliant(vol, d),
+  );
+  const hasOverCap = sortedDocs.some((d) => d.isOverCap);
 
   // Checkbox state for vol header
-  const selectedCount = sortedDocs.filter((d) => selectedDocIds.has(d.id)).length;
-  const isVolChecked = selectedCount === sortedDocs.length && sortedDocs.length > 0;
-  const isVolIndeterminate = selectedCount > 0 && selectedCount < sortedDocs.length;
+  const selectedCount = sortedDocs.filter((d) =>
+    selectedDocIds.has(d.id),
+  ).length;
+  const isVolChecked =
+    selectedCount === sortedDocs.length && sortedDocs.length > 0;
+  const isVolIndeterminate =
+    selectedCount > 0 && selectedCount < sortedDocs.length;
 
   return (
     <>
@@ -167,12 +212,27 @@ function VolunteerTableGroup({
             </div>
             {vol.limits && Object.keys(vol.limits).length > 1 ? (
               <div className="flex gap-2 mt-1">
-                {(Object.entries(vol.limits) as [PauschalenType, PauschalenLimit][]).map(([, lim]) => (
-                  <LimitHeadroomBar key={lim.total} used={lim.used} total={lim.total} density="text" />
+                {(
+                  Object.entries(vol.limits) as [
+                    PauschalenType,
+                    PauschalenLimit,
+                  ][]
+                ).map(([, lim]) => (
+                  <LimitHeadroomBar
+                    key={lim.total}
+                    used={lim.used}
+                    total={lim.total}
+                    density="text"
+                  />
                 ))}
               </div>
             ) : (
-              <LimitHeadroomBar used={vol.usedAmount} total={vol.totalCap} density="text" className="mt-1" />
+              <LimitHeadroomBar
+                used={vol.usedAmount}
+                total={vol.totalCap}
+                density="text"
+                className="mt-1"
+              />
             )}
           </div>
         </TableCell>
@@ -181,18 +241,22 @@ function VolunteerTableGroup({
           <div className="flex items-center gap-1.5">
             {t('docs.docCount', { count: sortedDocs.length })}
             {hasNonCompliant && (
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <span className="inline-flex shrink-0" onClick={(e) => e.stopPropagation()}>
-                      <TriangleAlertIcon size={12} className="text-alert" />
-                    </span>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    {t('docs.statusLabel.nonCompliantHint' as Parameters<typeof t>[0])}
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
+              <AlertIconTooltip
+                hint={t(
+                  'docs.statusLabel.nonCompliantHint' as Parameters<
+                    typeof t
+                  >[0],
+                )}
+                className="text-alert"
+              />
+            )}
+            {hasOverCap && (
+              <AlertIconTooltip
+                hint={t(
+                  'docs.statusLabel.overCapHint' as Parameters<typeof t>[0],
+                )}
+                className="text-destructive"
+              />
             )}
           </div>
         </TableCell>
@@ -230,24 +294,33 @@ function VolunteerTableGroup({
       {isOpen &&
         sortedDocs.map((doc) => {
           const meta = STATUS_META[doc.status];
+          const actionKey = meta.actionKey;
           const isActive = doc.status === 'contract-active';
           const isTimesheet = doc.status.startsWith('timesheet');
-          const isGenerate = doc.status === 'contract-generate' || doc.status === 'timesheet-generate';
+          const isGenerate =
+            doc.status === 'contract-generate' ||
+            doc.status === 'timesheet-generate';
           const isDocSelected = selectedDocIds.has(doc.id);
           const effectivePauschale = doc.pauschale ?? vol.pauschale;
+          const docNonCompliant = isTimesheetNonCompliant(vol, doc);
 
           return (
             <TableRow
               key={doc.id}
               className={cn(
                 'transition-colors',
-                isGenerate ? 'cursor-default' : 'cursor-pointer hover:bg-muted/30',
+                isGenerate
+                  ? 'cursor-default'
+                  : 'cursor-pointer hover:bg-muted/30',
                 !isActive && !meta.isYourAction && !isGenerate && 'bg-muted/20',
                 isDocSelected && 'bg-primary/5',
               )}
               onClick={() => !isGenerate && onDocumentClick(doc, vol)}
             >
-              <TableCell className="py-3 align-top" onClick={(e) => e.stopPropagation()}>
+              <TableCell
+                className="py-3 align-top"
+                onClick={(e) => e.stopPropagation()}
+              >
                 {!isActive && !isGenerate && (
                   <Checkbox
                     checked={isDocSelected}
@@ -257,7 +330,12 @@ function VolunteerTableGroup({
                 )}
               </TableCell>
 
-              <TableCell className={cn('pl-6 py-3 align-top overflow-hidden', isGenerate && 'opacity-40')}>
+              <TableCell
+                className={cn(
+                  'pl-6 py-3 align-top overflow-hidden',
+                  isGenerate && 'opacity-40',
+                )}
+              >
                 <DocTypeHeader
                   kind={isTimesheet ? 'invoice' : 'contract'}
                   pauschale={doc.pauschale ?? vol.pauschale}
@@ -270,30 +348,32 @@ function VolunteerTableGroup({
                 />
               </TableCell>
 
-              <TableCell className="py-3 align-top">
-                {isActive ? (
-                  <span className="text-sm text-success font-medium">
-                    {t('docs.statusLabel.contractActive' as Parameters<typeof t>[0])}
-                  </span>
-                ) : isGenerate ? (
-                  <span className="text-sm text-muted-foreground">
-                    {t('docs.statusLabel.notYetCreated' as Parameters<typeof t>[0])}
-                  </span>
-                ) : doc.isNonCompliant && (
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <span className="flex items-center gap-1 text-sm text-alert cursor-default">
-                          <TriangleAlertIcon size={12} />
-                          {t('docs.statusLabel.nonCompliant' as Parameters<typeof t>[0])}
-                        </span>
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        {t('docs.statusLabel.nonCompliantHint' as Parameters<typeof t>[0])}
-                      </TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
-                )}
+              <TableCell className="py-3 align-top text-left">
+                <div className="flex flex-col gap-1">
+                  {docNonCompliant && (
+                    <span className="text-sm text-alert">
+                      {t(
+                        'docs.statusLabel.nonCompliant' as Parameters<
+                          typeof t
+                        >[0],
+                      )}
+                    </span>
+                  )}
+                  {doc.isOverCap && (
+                    <span className="text-sm text-destructive">
+                      {t('docs.statusLabel.overCap' as Parameters<typeof t>[0])}
+                    </span>
+                  )}
+                  {isGenerate && (
+                    <span className="text-sm text-muted-foreground">
+                      {t(
+                        'docs.statusLabel.notYetCreated' as Parameters<
+                          typeof t
+                        >[0],
+                      )}
+                    </span>
+                  )}
+                </div>
               </TableCell>
 
               <TableCell className="py-3 align-top text-right">
@@ -316,7 +396,11 @@ function VolunteerTableGroup({
                 {!isGenerate && doc.lastActionDate && (
                   <div className="flex flex-col gap-1">
                     <span className="text-sm font-medium text-card-foreground">
-                      {t(`docs.lastActionLabel.${LAST_ACTION_LABEL[doc.status]}` as Parameters<typeof t>[0])}
+                      {t(
+                        `docs.lastActionLabel.${LAST_ACTION_LABEL[doc.status]}` as Parameters<
+                          typeof t
+                        >[0],
+                      )}
                     </span>
                     <span className="text-sm tabular-nums text-muted-foreground">
                       {doc.lastActionDate}
@@ -326,16 +410,29 @@ function VolunteerTableGroup({
               </TableCell>
 
               <TableCell className="py-3 align-top">
-                <div className="flex justify-end">
-                  {!isActive && meta.actionKey && (
+                <div className="flex items-center justify-end gap-2">
+                  {docNonCompliant && actionKey && (
+                    <AlertIconTooltip
+                      hint={t(
+                        'docs.statusLabel.nonCompliantHint' as Parameters<
+                          typeof t
+                        >[0],
+                      )}
+                      className="text-alert"
+                    />
+                  )}
+                  {!isActive && actionKey && (
                     <Button
                       size="sm"
-                      variant={getActionVariant(meta.actionKey)}
+                      variant={getActionVariant(actionKey)}
                       onClick={(e) => {
                         e.stopPropagation();
+                        onRequestAction([{ doc, vol }], actionKey);
                       }}
                     >
-                      {t(`docs.actions.${meta.actionKey}` as Parameters<typeof t>[0])}
+                      {t(
+                        `docs.actions.${actionKey}` as Parameters<typeof t>[0],
+                      )}
                     </Button>
                   )}
                 </div>
@@ -356,6 +453,7 @@ interface ReimbursementsTableProps {
   onToggleVolDocs: (vol: BoardVolunteer) => void;
   onToggleAll: (docIds: string[], select: boolean) => void;
   onDocumentClick: (doc: BoardDocument, vol: BoardVolunteer) => void;
+  onRequestAction: (items: DocVolPair[], action: NonCompliantAction) => void;
   docTypeFilter: DocTypeFilter;
 }
 
@@ -366,6 +464,7 @@ export function ReimbursementsTable({
   onToggleVolDocs,
   onToggleAll,
   onDocumentClick,
+  onRequestAction,
   docTypeFilter,
 }: ReimbursementsTableProps) {
   const t = useTranslations('Accounting.reimbursements');
@@ -392,7 +491,9 @@ export function ReimbursementsTable({
           <TableRow className="hover:bg-transparent">
             <TableHead className="w-10">
               <Checkbox
-                checked={someSelected && !allSelected ? 'indeterminate' : allSelected}
+                checked={
+                  someSelected && !allSelected ? 'indeterminate' : allSelected
+                }
                 onCheckedChange={(checked) =>
                   onToggleAll(allVisibleDocIds, checked === true)
                 }
@@ -401,10 +502,16 @@ export function ReimbursementsTable({
             </TableHead>
             <TableHead className="w-52">{t('tableHead.volunteer')}</TableHead>
             <TableHead className="w-36">{t('tableHead.status')}</TableHead>
-            <TableHead className="w-14 text-right">{t('tableHead.hours')}</TableHead>
-            <TableHead className="w-24 text-right">{t('tableHead.amount')}</TableHead>
+            <TableHead className="w-14 text-right">
+              {t('tableHead.hours')}
+            </TableHead>
+            <TableHead className="w-24 text-right">
+              {t('tableHead.amount')}
+            </TableHead>
             <TableHead className="w-36">{t('tableHead.lastAction')}</TableHead>
-            <TableHead className="w-36 text-right">{t('tableHead.action')}</TableHead>
+            <TableHead className="w-36 text-right">
+              {t('tableHead.action')}
+            </TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -416,6 +523,7 @@ export function ReimbursementsTable({
               onToggleDoc={onToggleDoc}
               onToggleVolDocs={onToggleVolDocs}
               onDocumentClick={onDocumentClick}
+              onRequestAction={onRequestAction}
               docTypeFilter={docTypeFilter}
             />
           ))}

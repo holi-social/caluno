@@ -2,7 +2,10 @@
 
 import { Button, cn } from '@repo/ui';
 import { useTranslations } from 'next-intl';
-import type { BoardDocument, DocStatus } from './reimbursements-board';
+import { AlertIconTooltip } from './alert-icon-tooltip';
+import type { NonCompliantAction } from './non-compliant-timesheet-dialog';
+import type { DocStatus, DocVolPair } from './reimbursements-board';
+import { isTimesheetNonCompliant } from './reimbursements-board';
 
 type BatchAction = 'create' | 'countersign' | 'bundle' | 'remind';
 
@@ -24,20 +27,30 @@ const ACTION_VARIANT: Record<BatchAction, 'default' | 'outline'> = {
 };
 
 interface BatchBarProps {
-  selectedDocs: BoardDocument[];
+  selectedDocs: DocVolPair[];
   onClear: () => void;
+  onRequestAction: (items: DocVolPair[], action: NonCompliantAction) => void;
   className?: string;
 }
 
-export function BatchBar({ selectedDocs, onClear, className }: BatchBarProps) {
+export function BatchBar({
+  selectedDocs,
+  onClear,
+  onRequestAction,
+  className,
+}: BatchBarProps) {
   const t = useTranslations('Accounting.reimbursements.batchBar');
+  const tDocs = useTranslations('Accounting.reimbursements.docs.statusLabel');
 
   if (selectedDocs.length === 0) return null;
 
-  const groups = new Map<BatchAction, number>();
-  for (const doc of selectedDocs) {
-    const action = DOC_ACTION[doc.status];
-    if (action) groups.set(action, (groups.get(action) ?? 0) + 1);
+  const groups = new Map<BatchAction, DocVolPair[]>();
+  for (const entry of selectedDocs) {
+    const action = DOC_ACTION[entry.doc.status];
+    if (!action) continue;
+    const items = groups.get(action) ?? [];
+    items.push(entry);
+    groups.set(action, items);
   }
   const groupEntries = [...groups.entries()];
 
@@ -62,20 +75,35 @@ export function BatchBar({ selectedDocs, onClear, className }: BatchBarProps) {
 
       <div className="h-4 w-px bg-border" />
 
-      {groupEntries.map(([action, count]) => (
-        <Button
-          key={action}
-          size="sm"
-          variant={ACTION_VARIANT[action]}
-          onClick={() => {
-            // batch action handler — wired to mutations in production
-          }}
-        >
-          {groupEntries.length > 1
-            ? `${ACTION_LABEL[action]} · ${count}`
-            : ACTION_LABEL[action]}
-        </Button>
-      ))}
+      {groupEntries.map(([action, items]) => {
+        const hasNonCompliant = items.some(({ doc, vol }) =>
+          isTimesheetNonCompliant(vol, doc),
+        );
+        return (
+          <div key={action} className="flex items-center gap-1.5">
+            {hasNonCompliant && (
+              <AlertIconTooltip
+                hint={tDocs('nonCompliantHint')}
+                className="text-alert"
+              />
+            )}
+            <Button
+              size="sm"
+              variant={ACTION_VARIANT[action]}
+              onClick={() => {
+                if (action !== 'bundle') {
+                  onRequestAction(items, action);
+                }
+                // bundle action — wired to mutations in production
+              }}
+            >
+              {groupEntries.length > 1
+                ? `${ACTION_LABEL[action]} · ${items.length}`
+                : ACTION_LABEL[action]}
+            </Button>
+          </div>
+        );
+      })}
 
       <Button size="sm" variant="ghost" onClick={onClear}>
         {t('clearSelection')}

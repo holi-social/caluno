@@ -14,17 +14,28 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@repo/ui';
-import { CheckIcon, ClockIcon, CoinsIcon, DownloadIcon, EyeIcon, TriangleAlertIcon } from 'lucide-react';
+import {
+  CheckIcon,
+  ClockIcon,
+  CoinsIcon,
+  DownloadIcon,
+  EyeIcon,
+  TriangleAlertIcon,
+} from 'lucide-react';
 import Link from 'next/link';
 import { useTranslations } from 'next-intl';
+import { AlertIconTooltip } from './alert-icon-tooltip';
 import type { PauschalenType } from './doc-type-header';
 import { TYPE_COLOR } from './doc-type-header';
 import { LimitHeadroomBar } from './limit-headroom-bar';
+import type { NonCompliantAction } from './non-compliant-timesheet-dialog';
 import type {
   BoardDocument,
   BoardVolunteer,
   DocStatus,
+  DocVolPair,
 } from './reimbursements-board';
+import { isTimesheetNonCompliant } from './reimbursements-board';
 import type { Signee, SigneeRole } from './template/types';
 
 // ─── Pipeline step definitions ────────────────────────────────────────────────
@@ -38,8 +49,10 @@ interface PipelineStep {
 }
 
 function getActiveStepIdx(status: DocStatus, signees: Signee[]): number {
-  if (status === 'contract-generate' || status === 'timesheet-generate') return 0;
-  if (status === 'contract-active' || status === 'timesheet-ready') return signees.length + 1;
+  if (status === 'contract-generate' || status === 'timesheet-generate')
+    return 0;
+  if (status === 'contract-active' || status === 'timesheet-ready')
+    return signees.length + 1;
   const activeRole: SigneeRole | null =
     status === 'contract-signing-vol' || status === 'timesheet-signing-vol'
       ? 'volunteer'
@@ -57,7 +70,10 @@ function signeeLabel(
   signee: Signee,
   tR: ReturnType<typeof useTranslations<'Accounting.templates.card'>>,
 ): string {
-  return signee.orgRole?.name ?? tR(`signeeRoles.${signee.role}` as Parameters<typeof tR>[0]);
+  return (
+    signee.orgRole?.name ??
+    tR(`signeeRoles.${signee.role}` as Parameters<typeof tR>[0])
+  );
 }
 
 function buildDocSteps(
@@ -83,7 +99,8 @@ function buildDocSteps(
     steps.push({
       labelKey: t('pipeline.sign'),
       role: signeeLabel(signee, tR),
-      state: idx < activeIdx ? 'done' : idx === activeIdx ? 'active' : 'pending',
+      state:
+        idx < activeIdx ? 'done' : idx === activeIdx ? 'active' : 'pending',
     });
   });
 
@@ -91,7 +108,12 @@ function buildDocSteps(
   steps.push({
     labelKey: isContract ? t('pipeline.active') : t('pipeline.ready'),
     role: '',
-    state: finalIdx < activeIdx ? 'done' : finalIdx === activeIdx ? 'active' : 'pending',
+    state:
+      finalIdx < activeIdx
+        ? 'done'
+        : finalIdx === activeIdx
+          ? 'active'
+          : 'pending',
   });
 
   return steps;
@@ -178,13 +200,21 @@ function buildTimeline(
 
   const DATES = ['03.07.2026', '06.07.2026', '07.07.2026'];
 
-  const created = { label: t('timelineCreated'), actor: adminActor, date: '01.07.2026' };
+  const created = {
+    label: t('timelineCreated'),
+    actor: adminActor,
+    date: '01.07.2026',
+  };
   const signedEntries = signees.map((_, i) => ({
     label: i === 0 ? t('timelineSigned') : t('timelineCountersigned'),
     actor: signeeActors[i] ?? '',
     date: DATES[i] ?? '07.07.2026',
   }));
-  const activated = { label: t('timelineActivated'), actor: adminActor, date: '07.07.2026' };
+  const activated = {
+    label: t('timelineActivated'),
+    actor: adminActor,
+    date: '07.07.2026',
+  };
 
   switch (doc.status) {
     case 'contract-generate':
@@ -226,7 +256,10 @@ const MOCK_VOL_ORG_UNITS: Record<
 
 // ─── Mock timesheet hours per volunteer ──────────────────────────────────────
 
-const MOCK_TIMESHEET_HOURS: Record<string, { totalHours: number; shiftCount: number }> = {
+const MOCK_TIMESHEET_HOURS: Record<
+  string,
+  { totalHours: number; shiftCount: number }
+> = {
   v1: { totalHours: 24, shiftCount: 6 },
   v2: { totalHours: 40, shiftCount: 8 },
   v3: { totalHours: 16, shiftCount: 4 },
@@ -242,6 +275,7 @@ interface DocumentSheetProps {
   signees: Signee[];
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  onRequestAction: (items: DocVolPair[], action: NonCompliantAction) => void;
   selectedDate: Date;
   orgUId: string;
 }
@@ -252,6 +286,7 @@ export function DocumentSheet({
   signees,
   open,
   onOpenChange,
+  onRequestAction,
   selectedDate,
   orgUId,
 }: DocumentSheetProps) {
@@ -265,17 +300,26 @@ export function DocumentSheet({
   const steps = buildDocSteps(doc.status, signees, isContract, ts, tR);
   const timeline = buildTimeline(doc, signees, ts, tR);
 
-  const periodLabel = selectedDate.toLocaleDateString('de-DE', { month: 'long', year: 'numeric' });
+  const periodLabel = selectedDate.toLocaleDateString('de-DE', {
+    month: 'long',
+    year: 'numeric',
+  });
   const monthParam = `${selectedDate.getFullYear()}-${String(selectedDate.getMonth() + 1).padStart(2, '0')}`;
   const timesheetsUrl = `/admin/${orgUId}/timesheets?month=${monthParam}&volunteer=${vol.id}`;
-  const _timesheetMock = MOCK_TIMESHEET_HOURS[vol.id] ?? { totalHours: 0, shiftCount: 0 };
+  const _timesheetMock = MOCK_TIMESHEET_HOURS[vol.id] ?? {
+    totalHours: 0,
+    shiftCount: 0,
+  };
   const timesheetHours = {
     totalHours: doc.hours ?? _timesheetMock.totalHours,
     shiftCount: _timesheetMock.shiftCount,
   };
 
   const effectivePauschale = doc.pauschale ?? vol.pauschale;
-  const docLimit = vol.limits?.[effectivePauschale] ?? { used: vol.usedAmount, total: vol.totalCap };
+  const docLimit = vol.limits?.[effectivePauschale] ?? {
+    used: vol.usedAmount,
+    total: vol.totalCap,
+  };
 
   const orgBreakdown = MOCK_VOL_ORG_UNITS[vol.id] ?? [
     { name: vol.id, used: docLimit.used, cap: docLimit.total },
@@ -302,7 +346,7 @@ export function DocumentSheet({
           <div className="flex items-center gap-2">
             <p className="text-sm text-muted-foreground">
               {ts('period')}: {doc.periodLabel}
-              {doc.isNonCompliant && (
+              {isTimesheetNonCompliant(vol, doc) && (
                 <span className="inline-flex items-center gap-1 ml-2 text-alert">
                   <TriangleAlertIcon size={12} />
                   {t('statusLabel.nonCompliant')}
@@ -311,11 +355,18 @@ export function DocumentSheet({
             </p>
             {(() => {
               const color = TYPE_COLOR[effectivePauschale];
-              const label = effectivePauschale === 'ehrenamt' ? 'Ehrenamtspauschale' : 'Übungsleiterpauschale';
+              const label =
+                effectivePauschale === 'ehrenamt'
+                  ? 'Ehrenamtspauschale'
+                  : 'Übungsleiterpauschale';
               return (
                 <span
                   className="inline-flex items-center rounded-md border px-1.5 py-0.5 text-xs font-medium shrink-0"
-                  style={{ color, backgroundColor: `${color}18`, borderColor: color }}
+                  style={{
+                    color,
+                    backgroundColor: `${color}18`,
+                    borderColor: color,
+                  }}
                 >
                   {label}
                 </span>
@@ -356,7 +407,9 @@ export function DocumentSheet({
                   <div className="flex items-start justify-between gap-4">
                     <div className="flex items-center gap-2 text-muted-foreground">
                       <ClockIcon size={14} />
-                      <span className="text-sm">{ts('timesheetHours.paidShifts')}</span>
+                      <span className="text-sm">
+                        {ts('timesheetHours.paidShifts')}
+                      </span>
                     </div>
                     <div className="text-right">
                       <p className="text-xl font-bold tabular-nums text-card-foreground">
@@ -368,35 +421,50 @@ export function DocumentSheet({
                         rel="noreferrer"
                         className="text-xs text-muted-foreground hover:text-foreground hover:underline"
                       >
-                        {ts('timesheetHours.shifts', { count: timesheetHours.shiftCount })}
+                        {ts('timesheetHours.shifts', {
+                          count: timesheetHours.shiftCount,
+                        })}
                       </Link>
                     </div>
                   </div>
                   {doc.amount !== undefined && (
                     <div className="mt-3 border-t border-border/50 pt-3 flex items-center justify-between gap-4">
-                      <span className="text-sm text-muted-foreground">{ts('timesheetHours.grossAmount')}</span>
+                      <span className="text-sm text-muted-foreground">
+                        {ts('timesheetHours.grossAmount')}
+                      </span>
                       <div className="flex items-baseline gap-2">
-                        {timesheetHours.totalHours > 0 && (() => {
-                          const color = TYPE_COLOR[effectivePauschale];
-                          return (
-                            <TooltipProvider>
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <span
-                                    className="inline-flex items-center gap-1 rounded-md border px-1.5 py-0.5 text-xs font-semibold tabular-nums cursor-default"
-                                    style={{ color, backgroundColor: `${color}18`, borderColor: `${color}40` }}
-                                  >
-                                    <CoinsIcon size={11} strokeWidth={2.5} />
-                                    {formatEuro(Math.round(doc.amount / timesheetHours.totalHours))}/h
-                                  </span>
-                                </TooltipTrigger>
-                                <TooltipContent>
-                                  {ts('timesheetHours.rateTooltip')}
-                                </TooltipContent>
-                              </Tooltip>
-                            </TooltipProvider>
-                          );
-                        })()}
+                        {timesheetHours.totalHours > 0 &&
+                          (() => {
+                            const color = TYPE_COLOR[effectivePauschale];
+                            return (
+                              <TooltipProvider>
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <span
+                                      className="inline-flex items-center gap-1 rounded-md border px-1.5 py-0.5 text-xs font-semibold tabular-nums cursor-default"
+                                      style={{
+                                        color,
+                                        backgroundColor: `${color}18`,
+                                        borderColor: `${color}40`,
+                                      }}
+                                    >
+                                      <CoinsIcon size={11} strokeWidth={2.5} />
+                                      {formatEuro(
+                                        Math.round(
+                                          doc.amount /
+                                            timesheetHours.totalHours,
+                                        ),
+                                      )}
+                                      /h
+                                    </span>
+                                  </TooltipTrigger>
+                                  <TooltipContent>
+                                    {ts('timesheetHours.rateTooltip')}
+                                  </TooltipContent>
+                                </Tooltip>
+                              </TooltipProvider>
+                            );
+                          })()}
                         <span className="text-xl font-bold tabular-nums text-card-foreground">
                           {formatEuro(doc.amount)}
                         </span>
@@ -421,10 +489,15 @@ export function DocumentSheet({
             />
             {(() => {
               const timesheetDocs = vol.documents.filter(
-                (d) => d.status.startsWith('timesheet') && d.amount !== undefined,
+                (d) =>
+                  d.status.startsWith('timesheet') && d.amount !== undefined,
               );
-              const paidOut = timesheetDocs.filter((d) => d.status === 'timesheet-ready');
-              const pending = timesheetDocs.filter((d) => d.status !== 'timesheet-ready');
+              const paidOut = timesheetDocs.filter(
+                (d) => d.status === 'timesheet-ready',
+              );
+              const pending = timesheetDocs.filter(
+                (d) => d.status !== 'timesheet-ready',
+              );
               if (paidOut.length === 0 && pending.length === 0) return null;
               return (
                 <div className="mt-4 space-y-4">
@@ -435,9 +508,16 @@ export function DocumentSheet({
                       </p>
                       <ul className="space-y-1.5">
                         {paidOut.map((d) => (
-                          <li key={d.id} className="flex justify-between text-sm">
-                            <span className="text-card-foreground">{d.periodLabel}</span>
-                            <span className="tabular-nums font-medium text-success">{formatEuro(d.amount!)}</span>
+                          <li
+                            key={d.id}
+                            className="flex justify-between text-sm"
+                          >
+                            <span className="text-card-foreground">
+                              {d.periodLabel}
+                            </span>
+                            <span className="tabular-nums font-medium text-success">
+                              {formatEuro(d.amount!)}
+                            </span>
                           </li>
                         ))}
                       </ul>
@@ -450,9 +530,16 @@ export function DocumentSheet({
                       </p>
                       <ul className="space-y-1.5">
                         {pending.map((d) => (
-                          <li key={d.id} className="flex justify-between text-sm">
-                            <span className="text-muted-foreground">{d.periodLabel}</span>
-                            <span className="tabular-nums text-muted-foreground">{formatEuro(d.amount!)}</span>
+                          <li
+                            key={d.id}
+                            className="flex justify-between text-sm"
+                          >
+                            <span className="text-muted-foreground">
+                              {d.periodLabel}
+                            </span>
+                            <span className="tabular-nums text-muted-foreground">
+                              {formatEuro(d.amount!)}
+                            </span>
                           </li>
                         ))}
                       </ul>
@@ -506,7 +593,9 @@ export function DocumentSheet({
                 ))}
               </ol>
             ) : (
-              <p className="text-sm text-muted-foreground">{ts('timelineEmpty')}</p>
+              <p className="text-sm text-muted-foreground">
+                {ts('timelineEmpty')}
+              </p>
             )}
           </section>
         </div>
@@ -514,16 +603,24 @@ export function DocumentSheet({
         {/* Footer action — sticky: stays visible without scrolling */}
         <SheetFooter className="px-6 py-4 border-t border-border shrink-0">
           {actionKey ? (
-            <Button
-              className="w-full"
-              variant={actionKey === 'create' ? 'default' : 'outline'}
-              onClick={() => {
-                // action handler — wired in production to mutations
-                onOpenChange(false);
-              }}
-            >
-              {t(`actions.${actionKey}` as Parameters<typeof t>[0])}
-            </Button>
+            <div className="flex w-full items-center gap-2">
+              {isTimesheetNonCompliant(vol, doc) && (
+                <AlertIconTooltip
+                  hint={t('statusLabel.nonCompliantHint')}
+                  className="text-alert"
+                />
+              )}
+              <Button
+                className="flex-1"
+                variant={actionKey === 'create' ? 'default' : 'outline'}
+                onClick={() => {
+                  onRequestAction([{ doc, vol }], actionKey);
+                  onOpenChange(false);
+                }}
+              >
+                {t(`actions.${actionKey}` as Parameters<typeof t>[0])}
+              </Button>
+            </div>
           ) : (
             <p className="text-sm text-muted-foreground text-center w-full">
               {ts('noAction')}

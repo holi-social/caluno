@@ -30,39 +30,52 @@ import {
 import { useTranslations } from 'next-intl';
 import { Fragment, useEffect, useMemo, useState } from 'react';
 import type { PauschalenType } from './doc-type-header';
+import type {
+  NonCompliantAction,
+  NonCompliantDialogState,
+} from './non-compliant-timesheet-dialog';
+import { NonCompliantTimesheetDialog } from './non-compliant-timesheet-dialog';
 import { BatchBar } from './reimbursements-batch-bar';
 import { DocumentSheet } from './reimbursements-document-sheet';
-import type { Signee } from './template/types';
 import {
-  ReimbursementsTable,
   type DocTypeFilter,
+  ReimbursementsTable,
 } from './reimbursements-volunteer-group';
+import type { Signee } from './template/types';
 
 // ─── Mock org roles ───────────────────────────────────────────────────────────
 
 const MOCK_ORG_ROLES = {
-  volunteer:   { id: 'role-1', name: 'Vereinsmitglied' },
+  volunteer: { id: 'role-1', name: 'Vereinsmitglied' },
   coordinator: { id: 'role-2', name: 'Übungsleitung' },
-  supervisor:  { id: 'role-3', name: 'Vorstandsmitglied' },
+  supervisor: { id: 'role-3', name: 'Vorstandsmitglied' },
 } as const;
 
 // ─── Mock template signing chains ─────────────────────────────────────────────
 
 const MOCK_TEMPLATE_SIGNEES: Record<string, Signee[]> = {
   'ehrenamt-contract': [
-    { id: 's-eh-c-1', role: 'volunteer',   orgRole: MOCK_ORG_ROLES.volunteer },
-    { id: 's-eh-c-2', role: 'coordinator', orgRole: MOCK_ORG_ROLES.coordinator },
+    { id: 's-eh-c-1', role: 'volunteer', orgRole: MOCK_ORG_ROLES.volunteer },
+    {
+      id: 's-eh-c-2',
+      role: 'coordinator',
+      orgRole: MOCK_ORG_ROLES.coordinator,
+    },
   ],
   'ehrenamt-invoice': [
-    { id: 's-eh-i-1', role: 'volunteer',  orgRole: MOCK_ORG_ROLES.volunteer },
+    { id: 's-eh-i-1', role: 'volunteer', orgRole: MOCK_ORG_ROLES.volunteer },
     { id: 's-eh-i-2', role: 'supervisor', orgRole: MOCK_ORG_ROLES.supervisor },
   ],
   'uebungleiter-contract': [
-    { id: 's-ul-c-1', role: 'volunteer',   orgRole: MOCK_ORG_ROLES.volunteer },
-    { id: 's-ul-c-2', role: 'coordinator', orgRole: MOCK_ORG_ROLES.coordinator },
+    { id: 's-ul-c-1', role: 'volunteer', orgRole: MOCK_ORG_ROLES.volunteer },
+    {
+      id: 's-ul-c-2',
+      role: 'coordinator',
+      orgRole: MOCK_ORG_ROLES.coordinator,
+    },
   ],
   'uebungleiter-invoice': [
-    { id: 's-ul-i-1', role: 'volunteer',  orgRole: MOCK_ORG_ROLES.volunteer },
+    { id: 's-ul-i-1', role: 'volunteer', orgRole: MOCK_ORG_ROLES.volunteer },
     { id: 's-ul-i-2', role: 'supervisor', orgRole: MOCK_ORG_ROLES.supervisor },
   ],
 };
@@ -108,7 +121,8 @@ export interface BoardDocument {
   hours?: number;
   lastActionDate?: string;
   periodLabel: string;
-  isNonCompliant?: boolean;
+  /** Manually flagged: this timesheet's amount pushed the volunteer at/over their yearly cap. Unrelated to contract compliance. */
+  isOverCap?: boolean;
   pauschale?: PauschalenType;
 }
 
@@ -128,8 +142,42 @@ export interface BoardVolunteer {
   documents: BoardDocument[];
 }
 
-// ─── Mock data ────────────────────────────────────────────────────────────────
+/** A document paired with the volunteer it belongs to — needed once actions act across volunteers (batch selection). */
+export interface DocVolPair {
+  doc: BoardDocument;
+  vol: BoardVolunteer;
+}
 
+/**
+ * A timesheet is non-compliant when no active contract exists for its pauschale type —
+ * contracts must be active before a timesheet can be created. Derived, not stored, so it
+ * always reflects the volunteer's current contract state.
+ */
+export function isTimesheetNonCompliant(
+  vol: BoardVolunteer,
+  doc: BoardDocument,
+): boolean {
+  if (!doc.status.startsWith('timesheet')) return false;
+  const pauschale = doc.pauschale ?? vol.pauschale;
+  return !vol.documents.some(
+    (d) =>
+      d.status === 'contract-active' &&
+      (d.pauschale ?? vol.pauschale) === pauschale,
+  );
+}
+
+function findContractDoc(
+  vol: BoardVolunteer,
+  pauschale: PauschalenType,
+): BoardDocument | undefined {
+  return vol.documents.find(
+    (d) =>
+      d.status.startsWith('contract') &&
+      (d.pauschale ?? vol.pauschale) === pauschale,
+  );
+}
+
+// ─── Mock data ────────────────────────────────────────────────────────────────
 const MOCK_VOLUNTEERS: BoardVolunteer[] = [
   // ── 1–15: ehrenamt ────────────────────────────────────────────────────────
   {
@@ -161,12 +209,13 @@ const MOCK_VOLUNTEERS: BoardVolunteer[] = [
     id: 'v4', name: 'David Fischer', initials: 'DF', pauschale: 'ehrenamt', usedAmount: 840, totalCap: 840,
     documents: [
       { id: 'd6', status: 'contract-active', lastActionDate: '01.01.2026', periodLabel: '2026' },
-      { id: 'd7', status: 'timesheet-ready', amount: 120, hours: 8, lastActionDate: '05.07.2026', periodLabel: 'Juli 2026', isNonCompliant: true },
+      { id: 'd7', status: 'timesheet-ready', amount: 120, hours: 8, lastActionDate: '05.07.2026', periodLabel: 'Juli 2026', isOverCap: true },
     ],
   },
   {
     id: 'v5', name: 'Emma Wagner', initials: 'EW', pauschale: 'ehrenamt', usedAmount: 360, totalCap: 840,
     documents: [
+      { id: 'd151', status: 'contract-generate', lastActionDate: '01.07.2026', periodLabel: '2026' },
       { id: 'd8', status: 'timesheet-generate', amount: 60, hours: 4, lastActionDate: '07.07.2026', periodLabel: 'Juli 2026' },
     ],
   },
@@ -212,6 +261,7 @@ const MOCK_VOLUNTEERS: BoardVolunteer[] = [
   {
     id: 'v11', name: 'Klara Richter', initials: 'KR', pauschale: 'ehrenamt', usedAmount: 300, totalCap: 840,
     documents: [
+      { id: 'd152', status: 'contract-active', lastActionDate: '01.01.2026', periodLabel: '2026' },
       { id: 'd18', status: 'timesheet-signing-super', amount: 60, hours: 4, lastActionDate: '30.06.2026', periodLabel: 'Juni 2026' },
     ],
   },
@@ -219,7 +269,7 @@ const MOCK_VOLUNTEERS: BoardVolunteer[] = [
     id: 'v12', name: 'Lena Klein', initials: 'LK', pauschale: 'ehrenamt', usedAmount: 120, totalCap: 840,
     documents: [
       { id: 'd19', status: 'contract-signing-vol', lastActionDate: '05.07.2026', periodLabel: '2026' },
-      { id: 'd20', status: 'timesheet-generate', amount: 120, hours: 8, lastActionDate: '07.07.2026', periodLabel: 'Juli 2026', isNonCompliant: true },
+      { id: 'd20', status: 'timesheet-generate', amount: 120, hours: 8, lastActionDate: '07.07.2026', periodLabel: 'Juli 2026' },
     ],
   },
   {
@@ -332,7 +382,7 @@ const MOCK_VOLUNTEERS: BoardVolunteer[] = [
     id: 'v25', name: 'Zoé Meier', initials: 'ZM', pauschale: 'uebungleiter', usedAmount: 3000, totalCap: 3000,
     documents: [
       { id: 'd45', status: 'contract-active', lastActionDate: '01.01.2026', periodLabel: '2026' },
-      { id: 'd46', status: 'timesheet-ready', amount: 240, hours: 16, lastActionDate: '07.07.2026', periodLabel: 'Juli 2026', isNonCompliant: true },
+      { id: 'd46', status: 'timesheet-ready', amount: 240, hours: 16, lastActionDate: '07.07.2026', periodLabel: 'Juli 2026', isOverCap: true },
     ],
   },
   {
@@ -416,6 +466,8 @@ const MOCK_VOLUNTEERS: BoardVolunteer[] = [
     id: 'v34', name: 'Ingo Brandt', initials: 'IB', pauschale: 'ehrenamt', usedAmount: 720, totalCap: 840,
     limits: { ehrenamt: { used: 720, total: 840 }, uebungleiter: { used: 2400, total: 3000 } },
     documents: [
+      { id: 'd153', status: 'contract-generate', lastActionDate: '01.07.2026', periodLabel: '2026', pauschale: 'ehrenamt' },
+      { id: 'd154', status: 'contract-active', lastActionDate: '01.01.2026', periodLabel: '2026', pauschale: 'uebungleiter' },
       { id: 'd68', status: 'timesheet-generate', amount: 60, hours: 4, lastActionDate: '07.07.2026', periodLabel: 'Juli 2026', pauschale: 'ehrenamt' },
       { id: 'd69', status: 'timesheet-signing-vol', amount: 240, hours: 16, lastActionDate: '03.07.2026', periodLabel: 'Juli 2026', pauschale: 'uebungleiter' },
     ],
@@ -435,7 +487,7 @@ const MOCK_VOLUNTEERS: BoardVolunteer[] = [
       { id: 'd72', status: 'contract-active', lastActionDate: '01.01.2026', periodLabel: '2026', pauschale: 'ehrenamt' },
       { id: 'd73', status: 'contract-active', lastActionDate: '01.01.2026', periodLabel: '2026', pauschale: 'uebungleiter' },
       { id: 'd74', status: 'timesheet-ready', amount: 120, hours: 8, lastActionDate: '01.07.2026', periodLabel: 'Juli 2026', pauschale: 'ehrenamt' },
-      { id: 'd75', status: 'timesheet-signing-super', amount: 480, hours: 32, lastActionDate: '04.07.2026', periodLabel: 'Juli 2026', pauschale: 'uebungleiter', isNonCompliant: true },
+      { id: 'd75', status: 'timesheet-signing-super', amount: 480, hours: 32, lastActionDate: '04.07.2026', periodLabel: 'Juli 2026', pauschale: 'uebungleiter', isOverCap: true },
     ],
   },
   {
@@ -451,6 +503,8 @@ const MOCK_VOLUNTEERS: BoardVolunteer[] = [
     id: 'v38', name: 'Markus Berg', initials: 'MB', pauschale: 'ehrenamt', usedAmount: 60, totalCap: 840,
     limits: { ehrenamt: { used: 60, total: 840 }, uebungleiter: { used: 240, total: 3000 } },
     documents: [
+      { id: 'd155', status: 'contract-generate', lastActionDate: '01.07.2026', periodLabel: '2026', pauschale: 'ehrenamt' },
+      { id: 'd156', status: 'contract-active', lastActionDate: '01.01.2026', periodLabel: '2026', pauschale: 'uebungleiter' },
       { id: 'd79', status: 'timesheet-generate', amount: 60, hours: 4, lastActionDate: '07.07.2026', periodLabel: 'Juli 2026', pauschale: 'ehrenamt' },
       { id: 'd80', status: 'timesheet-signing-super', amount: 240, hours: 16, lastActionDate: '06.07.2026', periodLabel: 'Juli 2026', pauschale: 'uebungleiter' },
     ],
@@ -520,7 +574,8 @@ const MOCK_VOLUNTEERS: BoardVolunteer[] = [
   {
     id: 'v47', name: 'Volker Sauer', initials: 'VoS', pauschale: 'ehrenamt', usedAmount: 60, totalCap: 840,
     documents: [
-      { id: 'd100', status: 'timesheet-generate', amount: 60, hours: 4, lastActionDate: '07.07.2026', periodLabel: 'Juli 2026', isNonCompliant: true },
+      { id: 'd157', status: 'contract-generate', lastActionDate: '01.07.2026', periodLabel: '2026' },
+      { id: 'd100', status: 'timesheet-generate', amount: 60, hours: 4, lastActionDate: '07.07.2026', periodLabel: 'Juli 2026' },
     ],
   },
   {
@@ -546,7 +601,6 @@ const MOCK_VOLUNTEERS: BoardVolunteer[] = [
     ],
   },
 ];
-
 // ─── Date helpers ─────────────────────────────────────────────────────────────
 
 function parseDocDate(s: string): Date | null {
@@ -574,11 +628,16 @@ function matchesTile(status: DocStatus, tile: TileFilter): boolean {
     case 'contract-generate':
       return status === 'contract-generate';
     case 'contract-signing':
-      return status === 'contract-signing-vol' || status === 'contract-signing-coord';
+      return (
+        status === 'contract-signing-vol' || status === 'contract-signing-coord'
+      );
     case 'timesheet-generate':
       return status === 'timesheet-generate';
     case 'timesheet-signing':
-      return status === 'timesheet-signing-vol' || status === 'timesheet-signing-super';
+      return (
+        status === 'timesheet-signing-vol' ||
+        status === 'timesheet-signing-super'
+      );
     case 'ready-to-go':
       return status === 'timesheet-ready';
   }
@@ -587,7 +646,8 @@ function matchesTile(status: DocStatus, tile: TileFilter): boolean {
 function countForTile(volunteers: BoardVolunteer[], tile: TileFilter): number {
   if (!tile) return 0;
   return volunteers.reduce(
-    (sum, vol) => sum + vol.documents.filter((d) => matchesTile(d.status, tile)).length,
+    (sum, vol) =>
+      sum + vol.documents.filter((d) => matchesTile(d.status, tile)).length,
     0,
   );
 }
@@ -609,10 +669,20 @@ function applyFilters(
     }))
     .filter((vol) => {
       if (vol.documents.length === 0) return false;
-      if (pauschale !== 'all' && !vol.documents.some((d) => (d.pauschale ?? vol.pauschale) === pauschale)) return false;
-      if (search && !vol.name.toLowerCase().includes(search.toLowerCase())) return false;
-      if (tile && !vol.documents.some((d) => matchesTile(d.status, tile))) return false;
-      if (docType !== 'all' && !vol.documents.some((d) => d.status.startsWith(docType))) return false;
+      if (
+        pauschale !== 'all' &&
+        !vol.documents.some((d) => (d.pauschale ?? vol.pauschale) === pauschale)
+      )
+        return false;
+      if (search && !vol.name.toLowerCase().includes(search.toLowerCase()))
+        return false;
+      if (tile && !vol.documents.some((d) => matchesTile(d.status, tile)))
+        return false;
+      if (
+        docType !== 'all' &&
+        !vol.documents.some((d) => d.status.startsWith(docType))
+      )
+        return false;
       return true;
     });
 }
@@ -667,9 +737,14 @@ export function ReimbursementsBoard({ orgUId }: ReimbursementsBoardProps) {
   const [datePreset, setDatePreset] = useState<DatePreset>('this-month');
   const [dateRange, setDateRange] = useState<DateRange | undefined>(() => {
     const now = new Date();
-    return { from: new Date(now.getFullYear(), now.getMonth(), 1), to: new Date(now.getFullYear(), now.getMonth() + 1, 0) };
+    return {
+      from: new Date(now.getFullYear(), now.getMonth(), 1),
+      to: new Date(now.getFullYear(), now.getMonth() + 1, 0),
+    };
   });
-  const [pendingRange, setPendingRange] = useState<DateRange | undefined>(dateRange);
+  const [pendingRange, setPendingRange] = useState<DateRange | undefined>(
+    dateRange,
+  );
   const [periodOpen, setPeriodOpen] = useState(false);
 
   // Filters
@@ -686,6 +761,78 @@ export function ReimbursementsBoard({ orgUId }: ReimbursementsBoardProps) {
 
   // Doc-level selection (derives vol-level for batch bar)
   const [selectedDocIds, setSelectedDocIds] = useState<Set<string>>(new Set());
+
+  // Non-compliant timesheet confirmation
+  const [pendingItems, setPendingItems] = useState<DocVolPair[]>([]);
+  const [nonCompliantDialog, setNonCompliantDialog] =
+    useState<NonCompliantDialogState | null>(null);
+
+  function requestAction(items: DocVolPair[], action: NonCompliantAction) {
+    const nonCompliant = items.filter(({ doc, vol }) =>
+      isTimesheetNonCompliant(vol, doc),
+    );
+
+    if (nonCompliant.length === 0) {
+      // action handler — wired to mutations in production
+      return;
+    }
+
+    setPendingItems(items);
+
+    const single = items.length === 1 ? items[0] : undefined;
+    if (single) {
+      const contractDoc = findContractDoc(
+        single.vol,
+        single.doc.pauschale ?? single.vol.pauschale,
+      );
+      setNonCompliantDialog({
+        kind: 'single',
+        action,
+        contractStatus: contractDoc?.status ?? 'contract-generate',
+      });
+      return;
+    }
+
+    if (nonCompliant.length === items.length) {
+      setNonCompliantDialog({ kind: 'batch-all', action, count: items.length });
+    } else {
+      setNonCompliantDialog({
+        kind: 'batch-mixed',
+        action,
+        nonCompliantCount: nonCompliant.length,
+        totalCount: items.length,
+      });
+    }
+  }
+
+  function closeNonCompliantDialog() {
+    setNonCompliantDialog(null);
+    setPendingItems([]);
+  }
+
+  function handleProceedAnyway() {
+    // action handler — wired to mutations in production, applies to every item in pendingItems
+    closeNonCompliantDialog();
+  }
+
+  function handleOnlyCompliant() {
+    // action handler — wired to mutations in production, applies only to the compliant subset
+    closeNonCompliantDialog();
+  }
+
+  function handleGenerateContractInstead() {
+    const first = pendingItems[0];
+    closeNonCompliantDialog();
+    if (!first) return;
+    const { doc, vol } = first;
+    const contractDoc = findContractDoc(vol, doc.pauschale ?? vol.pauschale);
+    if (!contractDoc) return;
+    if (contractDoc.status === 'contract-generate') {
+      // create action — wired to mutations in production (generates the contract)
+      return;
+    }
+    setSelectedDoc({ doc: contractDoc, vol });
+  }
 
   function toggleDoc(docId: string) {
     setSelectedDocIds((prev) => {
@@ -781,7 +928,11 @@ export function ReimbursementsBoard({ orgUId }: ReimbursementsBoardProps) {
   const baseFilteredVols = useMemo(
     () =>
       MOCK_VOLUNTEERS.filter((v) => {
-        if (pauschale !== 'all' && !v.documents.some((d) => (d.pauschale ?? v.pauschale) === pauschale)) return false;
+        if (
+          pauschale !== 'all' &&
+          !v.documents.some((d) => (d.pauschale ?? v.pauschale) === pauschale)
+        )
+          return false;
         if (
           docTypeFilter !== 'all' &&
           !v.documents.some((d) => d.status.startsWith(docTypeFilter))
@@ -801,7 +952,15 @@ export function ReimbursementsBoard({ orgUId }: ReimbursementsBoardProps) {
   );
 
   const filteredVols = useMemo(
-    () => applyFilters(MOCK_VOLUNTEERS, activeTile, pauschale, docTypeFilter, search, dateRange),
+    () =>
+      applyFilters(
+        MOCK_VOLUNTEERS,
+        activeTile,
+        pauschale,
+        docTypeFilter,
+        search,
+        dateRange,
+      ),
     [activeTile, pauschale, docTypeFilter, search, dateRange],
   );
 
@@ -824,7 +983,10 @@ export function ReimbursementsBoard({ orgUId }: ReimbursementsBoardProps) {
 
   // Derive selected docs for BatchBar from doc-level selection
   const selectedDocs = useMemo(
-    () => MOCK_VOLUNTEERS.flatMap((v) => v.documents).filter((d) => selectedDocIds.has(d.id)),
+    () =>
+      MOCK_VOLUNTEERS.flatMap((v) =>
+        v.documents.map((doc) => ({ doc, vol: v })),
+      ).filter((entry) => selectedDocIds.has(entry.doc.id)),
     [selectedDocIds],
   );
 
@@ -867,8 +1029,12 @@ export function ReimbursementsBoard({ orgUId }: ReimbursementsBoardProps) {
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">{t('filters.docTypeAll')}</SelectItem>
-            <SelectItem value="contract">{t('filters.docTypeContracts')}</SelectItem>
-            <SelectItem value="timesheet">{t('filters.docTypeTimesheets')}</SelectItem>
+            <SelectItem value="contract">
+              {t('filters.docTypeContracts')}
+            </SelectItem>
+            <SelectItem value="timesheet">
+              {t('filters.docTypeTimesheets')}
+            </SelectItem>
           </SelectContent>
         </Select>
 
@@ -982,6 +1148,7 @@ export function ReimbursementsBoard({ orgUId }: ReimbursementsBoardProps) {
           onToggleVolDocs={toggleVolDocs}
           onToggleAll={toggleAll}
           onDocumentClick={(doc, vol) => setSelectedDoc({ doc, vol })}
+          onRequestAction={requestAction}
           docTypeFilter={docTypeFilter}
         />
       )}
@@ -990,12 +1157,15 @@ export function ReimbursementsBoard({ orgUId }: ReimbursementsBoardProps) {
         doc={selectedDoc?.doc ?? null}
         vol={selectedDoc?.vol ?? null}
         signees={
-          selectedDoc ? getTemplateSignees(selectedDoc.doc, selectedDoc.vol) : []
+          selectedDoc
+            ? getTemplateSignees(selectedDoc.doc, selectedDoc.vol)
+            : []
         }
         open={selectedDoc !== null}
         onOpenChange={(open) => {
           if (!open) setSelectedDoc(null);
         }}
+        onRequestAction={requestAction}
         selectedDate={selectedDate}
         orgUId={orgUId}
       />
@@ -1003,6 +1173,17 @@ export function ReimbursementsBoard({ orgUId }: ReimbursementsBoardProps) {
       <BatchBar
         selectedDocs={selectedDocs}
         onClear={() => setSelectedDocIds(new Set())}
+        onRequestAction={requestAction}
+      />
+
+      <NonCompliantTimesheetDialog
+        state={nonCompliantDialog}
+        onOpenChange={(open) => {
+          if (!open) closeNonCompliantDialog();
+        }}
+        onProceedAnyway={handleProceedAnyway}
+        onOnlyCompliant={handleOnlyCompliant}
+        onGenerateContractInstead={handleGenerateContractInstead}
       />
     </div>
   );
@@ -1016,7 +1197,11 @@ export function ReimbursementsBoardSkeleton() {
       <div className="flex gap-1 overflow-x-auto pb-1">
         {Array.from({ length: 5 }).map((_, i) => (
           <Fragment key={i}>
-            {i > 0 && <div className="flex items-center px-1"><Skeleton className="h-3 w-3" /></div>}
+            {i > 0 && (
+              <div className="flex items-center px-1">
+                <Skeleton className="h-3 w-3" />
+              </div>
+            )}
             <div className="flex min-w-[100px] flex-1 flex-col gap-2 rounded-xl border border-border bg-card p-3">
               <div className="flex items-center justify-between">
                 <Skeleton className="h-3 w-3" />
@@ -1037,7 +1222,10 @@ export function ReimbursementsBoardSkeleton() {
 
       <div className="rounded-xl border border-border overflow-hidden">
         {Array.from({ length: 3 }).map((_, i) => (
-          <div key={i} className="flex items-center gap-3 border-b border-border px-4 py-3">
+          <div
+            key={i}
+            className="flex items-center gap-3 border-b border-border px-4 py-3"
+          >
             <Skeleton className="h-4 w-4 rounded" />
             <Skeleton className="h-8 w-8 rounded-full" />
             <div className="flex-1 space-y-1.5">
