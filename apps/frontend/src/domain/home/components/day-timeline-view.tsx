@@ -55,6 +55,7 @@ export function DayTimelineView<T>({
   const router = useRouter();
   const { formatDate } = useFormatting();
   const [activeDay, setActiveDay] = useState<Date>(startOfDay(new Date()));
+  const [isScrolling, setIsScrolling] = useState(false);
 
   const listRef = useRef<HTMLDivElement>(null);
   const headerRef = useRef<HTMLDivElement>(null);
@@ -127,8 +128,15 @@ export function DayTimelineView<T>({
       const key = Number(active.getAttribute('data-day'));
       setActiveDay((prev) => (prev.getTime() === key ? prev : new Date(key)));
     };
+    // Dim inactive pills while a scroll gesture is in flight, and undim once
+    // it settles — softens the active-pill handoff so it reads as a fade
+    // rather than a blink.
+    let scrollEndTimeout: ReturnType<typeof setTimeout> | undefined;
     const onScroll = () => {
       if (!raf) raf = requestAnimationFrame(update);
+      setIsScrolling(true);
+      clearTimeout(scrollEndTimeout);
+      scrollEndTimeout = setTimeout(() => setIsScrolling(false), 150);
     };
 
     window.addEventListener('scroll', onScroll, { passive: true });
@@ -136,6 +144,7 @@ export function DayTimelineView<T>({
     return () => {
       window.removeEventListener('scroll', onScroll);
       if (raf) cancelAnimationFrame(raf);
+      clearTimeout(scrollEndTimeout);
     };
   }, [groups]);
 
@@ -174,6 +183,7 @@ export function DayTimelineView<T>({
                   todayLabel={t('todayButton')}
                   goToTodayLabel={t('goToToday')}
                   shiftCountLabel={(n) => t('yourShiftsCount', { n })}
+                  isScrolling={isScrolling}
                 />
               )}
             </div>

@@ -28,6 +28,11 @@ export interface DayStripProps {
   hasNext?: boolean;
   onPrev?: () => void;
   onNext?: () => void;
+  /**
+   * The vertical list is actively being scrolled (scroll-spy mode only) —
+   * dims inactive pills so the active-day handoff reads less as a blink.
+   */
+  isScrolling?: boolean;
 }
 
 function ArrowButton({
@@ -63,6 +68,8 @@ function ArrowButton({
 interface DayPillProps {
   day: DayStripDay;
   active: boolean;
+  /** De-emphasize this pill while the list is actively being scrolled. */
+  dimmed?: boolean;
   weekdayLabel: string;
   dayLabel: string;
   shiftCountLabel?: (count: number) => string;
@@ -73,6 +80,7 @@ interface DayPillProps {
 function DayPill({
   day,
   active,
+  dimmed,
   weekdayLabel,
   dayLabel,
   shiftCountLabel,
@@ -93,12 +101,13 @@ function DayPill({
       tabIndex={active ? 0 : -1}
       onClick={() => hasShifts && onSelect(day.date)}
       className={cn(
-        'flex flex-col items-center justify-center gap-0.5 rounded-xl px-2 py-2.5 text-center transition-colors',
+        'flex flex-col items-center justify-center gap-0.5 rounded-xl px-2 py-2.5 text-center transition-all duration-300',
         active && 'bg-primary text-primary-foreground',
         !active &&
           (hasShifts
             ? 'bg-border text-foreground hover:bg-accent'
             : 'cursor-default bg-muted text-muted-foreground'),
+        dimmed && !active && 'opacity-60',
         className,
       )}
     >
@@ -140,6 +149,7 @@ function PagedDayStrip({
 }: DayStripProps & { formatDate: FormatDate; today: Date }) {
   const t = useTranslations('VolunteerHome');
   const active = activeDates ?? [];
+  const stripRef = useRef<HTMLDivElement>(null);
 
   const handleKeyDown = useCallback(
     (event: React.KeyboardEvent<HTMLDivElement>) => {
@@ -154,6 +164,25 @@ function PagedDayStrip({
     [hasPrev, hasNext, onPrev, onNext],
   );
 
+  // Keep the active pill in view as prev/next is used — otherwise the strip
+  // can keep showing its old scroll position while the day below it changes,
+  // looking out of sync with the list. Smooth is fine here: this only fires
+  // on an explicit arrow/pill click, not on passive scroll-spy.
+  const activeDayIndex = days.findIndex((day) =>
+    active.some((d) => isSameDay(d, day.date)),
+  );
+  useEffect(() => {
+    if (activeDayIndex < 0) return;
+    const pill = stripRef.current?.children[activeDayIndex] as
+      | HTMLElement
+      | undefined;
+    pill?.scrollIntoView({
+      behavior: 'smooth',
+      inline: 'center',
+      block: 'nearest',
+    });
+  }, [activeDayIndex]);
+
   return (
     <div className={cn('flex items-stretch gap-2', className)}>
       <ArrowButton
@@ -164,6 +193,7 @@ function PagedDayStrip({
       />
 
       <div
+        ref={stripRef}
         role="tablist"
         aria-label={t('dayStripLabel')}
         onKeyDown={handleKeyDown}
@@ -203,6 +233,7 @@ function ScrollDayStrip({
   shiftCountLabel,
   formatDate,
   today,
+  isScrolling,
 }: DayStripProps & { formatDate: FormatDate; today: Date }) {
   const t = useTranslations('VolunteerHome');
   const stripRef = useRef<HTMLDivElement>(null);
@@ -259,6 +290,11 @@ function ScrollDayStrip({
   }, [days, onSelect, todayIndex]);
 
   // Keep the active pill in view as the selection changes (e.g. scroll-spy).
+  // Snapped instantly, not smoothly: scroll-spy can retarget on every frame of
+  // a vertical scroll, and a smooth glide per retarget is what caused the
+  // strip to visibly jitter left/right while the user scrolled the list.
+  // Smooth scrolling is reserved for explicit actions (arrow buttons, keyboard
+  // nav, "today"), which already animate via their own calls below.
   const activeDayIndex = days.findIndex((day) =>
     isSameDay(day.date, activeDate),
   );
@@ -270,7 +306,7 @@ function ScrollDayStrip({
     // `inline: center` scrolls the strip horizontally to the pill; `block:
     // nearest` avoids any vertical page scroll (the strip is already visible).
     pill?.scrollIntoView({
-      behavior: 'smooth',
+      behavior: 'auto',
       inline: 'center',
       block: 'nearest',
     });
@@ -326,6 +362,7 @@ function ScrollDayStrip({
               key={day.date.toISOString()}
               day={day}
               active={isSameDay(day.date, activeDate)}
+              dimmed={isScrolling}
               weekdayLabel={formatDate(day.date, { weekday: 'short' })}
               dayLabel={formatDate(day.date, { day: 'numeric' })}
               shiftCountLabel={shiftCountLabel}
