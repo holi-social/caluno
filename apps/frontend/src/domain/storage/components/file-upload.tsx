@@ -80,11 +80,9 @@ export function FileUpload({
   const [error, setError] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
-  const [uploadedPreviewUrl, setUploadedPreviewUrl] = useState<string | null>(
+  const [uploadedResult, setUploadedResult] = useState<UploadFileResult | null>(
     null,
   );
-  const [uploadedFilename, setUploadedFilename] = useState<string | null>(null);
-  const [uploadedMimeType, setUploadedMimeType] = useState<string | null>(null);
   const initialKey = `${initialPreviewUrl ?? ''}\0${initialFilename ?? ''}`;
   const [clearedInitialKey, setClearedInitialKey] = useState<string | null>(
     null,
@@ -93,9 +91,9 @@ export function FileUpload({
 
   const effectiveInitialPreviewUrl = initialCleared ? null : initialPreviewUrl;
   const effectiveInitialFilename = initialCleared ? null : initialFilename;
-  const previewUrl = uploadedPreviewUrl ?? effectiveInitialPreviewUrl;
-  const filename = uploadedFilename ?? effectiveInitialFilename;
-  const mimeType = uploadedMimeType;
+  const previewUrl = uploadedResult?.publicUrl ?? effectiveInitialPreviewUrl;
+  const filename = uploadedResult?.filename ?? effectiveInitialFilename;
+  const mimeType = uploadedResult?.mimeType ?? null;
   const displayError = externalError ?? error;
   const hasFile = hasFileSelection({
     value,
@@ -126,9 +124,7 @@ export function FileUpload({
         organizationUnitId,
       });
       setClearedInitialKey(null);
-      setUploadedPreviewUrl(result.publicUrl ?? null);
-      setUploadedFilename(result.filename);
-      setUploadedMimeType(result.mimeType);
+      setUploadedResult(result);
       onUploaded(result);
     } catch (uploadError) {
       setError(
@@ -174,9 +170,7 @@ export function FileUpload({
 
   const handleClear = () => {
     setClearedInitialKey(initialKey);
-    setUploadedPreviewUrl(null);
-    setUploadedFilename(null);
-    setUploadedMimeType(null);
+    setUploadedResult(null);
     onClear?.();
   };
 
