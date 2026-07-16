@@ -226,6 +226,18 @@ export class RequirementFormService {
 
     await isUnitInOrg(this.db, organizationUnitId, existing.organizationId);
 
+    const isRequired =
+      await this.db.query.organizationUnitRequiredForms.findFirst({
+        where: { formId: id },
+        columns: { organizationUnitId: true },
+      });
+
+    if (isRequired) {
+      throw new ConflictGraphQLError(
+        'Cannot delete form because it is required by an organization unit',
+      );
+    }
+
     return this.db.transaction(async (tx) => {
       const hasSubmissions = await tx.query.formSubmissions.findFirst({
         where: { formId: id },
