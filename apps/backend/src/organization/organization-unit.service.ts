@@ -69,9 +69,31 @@ export class OrganizationUnitService {
 
   async findType(
     typeId: string,
+    organizationId?: string,
   ): Promise<OrganizationUnitTypeEntity | undefined> {
     return this.db.query.organizationUnitTypes.findFirst({
-      where: { id: typeId },
+      where: {
+        id: typeId,
+        ...(organizationId ? { organizationId } : {}),
+      },
+    });
+  }
+
+  async findOrganizationIdByUnitId(
+    organizationUnitId: string,
+  ): Promise<string | undefined> {
+    const unit = await this.db.query.organizationUnits.findFirst({
+      where: { id: organizationUnitId },
+      columns: { organizationId: true },
+    });
+    return unit?.organizationId;
+  }
+
+  async findAllTypes(
+    organizationId: string,
+  ): Promise<OrganizationUnitTypeEntity[]> {
+    return this.db.query.organizationUnitTypes.findMany({
+      where: { organizationId },
     });
   }
 
@@ -128,7 +150,7 @@ export class OrganizationUnitService {
     userId: string,
     input: CreateOrganizationUnitInput,
   ): Promise<OrganizationUnitEntity> {
-    const type = await this.findType(input.typeId);
+    const type = await this.findType(input.typeId, input.organizationId);
     if (!type) {
       throw new NotFoundGraphQLError('Organization unit type not found');
     }
@@ -231,7 +253,7 @@ export class OrganizationUnitService {
     }
 
     if (input.typeId) {
-      const type = await this.findType(input.typeId);
+      const type = await this.findType(input.typeId, unit.organizationId);
       if (!type) {
         throw new NotFoundGraphQLError('Organization unit type not found');
       }
@@ -267,10 +289,6 @@ export class OrganizationUnitService {
     }
 
     return updated;
-  }
-
-  async findAllTypes(): Promise<OrganizationUnitTypeEntity[]> {
-    return this.db.query.organizationUnitTypes.findMany();
   }
 
   async delete(id: string): Promise<OrganizationUnitEntity> {

@@ -14,7 +14,11 @@ export const createOrganizationWithType = async (
     .returning();
   const [type] = await db
     .insert(schema.organizationUnitTypes)
-    .values({ name: `${name}-type`, icon: 'building-2' })
+    .values({
+      organizationId: organization.id,
+      name: `${name}-type`,
+      icon: 'building-2',
+    })
     .returning();
   return { organization, type };
 };

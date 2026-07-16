@@ -55,8 +55,9 @@ describe('ShiftService', () => {
     const [rootType] = await db
       .insert(schema.organizationUnitTypes)
       .values({
-        name: 'management',
-        description: `organization management unit for ${orgName}`,
+        organizationId: organization.id,
+        name: 'organisation unit',
+        description: `organization unit for ${orgName}`,
         icon: 'building-2',
       })
       .returning();
