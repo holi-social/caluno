@@ -26,6 +26,7 @@ export * from './react/hooks/use-available-shift-instances';
 export * from './react/hooks/use-block';
 export * from './react/hooks/use-check-in';
 export * from './react/hooks/use-check-out';
+export * from './react/hooks/use-create-requirement-profile-submission';
 export * from './react/hooks/use-events';
 export * from './react/hooks/use-graphql-client';
 export * from './react/hooks/use-join-shift-instance';

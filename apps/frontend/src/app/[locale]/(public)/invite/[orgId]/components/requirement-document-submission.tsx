@@ -1,11 +1,11 @@
 'use client';
 
+import { useCreateRequirementProfileSubmission } from '@repo/data/react';
 import { Button } from '@repo/ui';
 import { useTranslations } from 'next-intl';
-import { useMemo, useState, useTransition } from 'react';
+import { useMemo, useState } from 'react';
 import { toast } from 'sonner';
 import { FileUpload } from '@/domain/storage/components/file-upload';
-import { GRAPHQL_API_URL } from '@/lib/constants';
 
 interface Requirement {
   id: string;
@@ -40,7 +40,7 @@ export function RequirementDocumentSubmission({
   const [fileIdsByRequirement, setFileIdsByRequirement] = useState<
     Record<string, string>
   >({});
-  const [isPending, startTransition] = useTransition();
+  const { mutateAsync, isPending } = useCreateRequirementProfileSubmission();
 
   const pendingDocumentRequirements = useMemo(() => {
     const statusMap = new Map(
@@ -61,64 +61,39 @@ export function RequirementDocumentSubmission({
     return null;
   }
 
-  const submitDocuments = () => {
-    startTransition(async () => {
-      const fulfillments = pendingDocumentRequirements
-        .map((requirement) => {
-          const fileId = fileIdsByRequirement[requirement.id];
-          if (!fileId) {
-            return null;
-          }
+  const submitDocuments = async () => {
+    const fulfillments = pendingDocumentRequirements
+      .map((requirement) => {
+        const fileId = fileIdsByRequirement[requirement.id];
+        if (!fileId) {
+          return null;
+        }
 
-          return {
-            requirementId: requirement.id,
-            fileId,
-          };
-        })
-        .filter((fulfillment) => fulfillment !== null);
+        return {
+          requirementId: requirement.id,
+          fileId,
+        };
+      })
+      .filter((fulfillment) => fulfillment !== null);
 
-      if (fulfillments.length !== pendingDocumentRequirements.length) {
-        toast.error(t('missingDocuments'));
-        return;
-      }
+    if (fulfillments.length !== pendingDocumentRequirements.length) {
+      toast.error(t('missingDocuments'));
+      return;
+    }
 
-      const response = await fetch(GRAPHQL_API_URL, {
-        method: 'POST',
-        credentials: 'include',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-organization-unit-id': organizationUnitId,
-        },
-        body: JSON.stringify({
-          query: `
-            mutation CreateRequirementProfileSubmission($input: CreateRequirementProfileSubmissionInput!) {
-              createRequirementProfileSubmission(input: $input) {
-                id
-              }
-            }
-          `,
-          variables: {
-            input: {
-              profileId,
-              membershipRequestId: membershipRequestId ?? null,
-              fulfillments,
-            },
-          },
-        }),
+    try {
+      await mutateAsync({
+        profileId,
+        membershipRequestId,
+        fulfillments,
       });
-
-      const body = (await response.json()) as {
-        errors?: Array<{ message: string }>;
-      };
-
-      if (!response.ok || body.errors?.length) {
-        toast.error(body.errors?.[0]?.message ?? t('submitFailed'));
-        return;
-      }
-
       toast.success(t('submitSuccess'));
       window.location.reload();
-    });
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : t('submitFailed');
+      toast.error(message);
+    }
   };
 
   return (
