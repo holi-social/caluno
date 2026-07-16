@@ -5,6 +5,9 @@ import {
   MembershipRequestStatus,
 } from '@repo/data';
 import {
+  Avatar,
+  AvatarFallback,
+  AvatarImage,
   Button,
   Card,
   CardAction,
@@ -26,6 +29,7 @@ interface Props {
 export default function MembershipRequestCard({ request }: Props) {
   const { open } = useSheetTrigger('volunteer-profile');
   const t = useTranslations('MembershipRequest');
+  const tCommon = useTranslations('Common');
   const { formatDate } = useFormatting();
 
   const handleViewVolunteer = () => {
@@ -40,22 +44,30 @@ export default function MembershipRequestCard({ request }: Props) {
 
   return (
     <Card key={request.id} className="w-full">
-      <CardHeader className="flex flex-row gap-3 ">
-        <div className="width-full flex flex-col gap-3">
-          <CardTitle className="truncate">{request.user.name}</CardTitle>
-
-          <CardDescription className="truncate">
-            {request.user.email}
-          </CardDescription>
+      <CardHeader className="gap-3">
+        <div className="flex min-w-0 items-center gap-2">
+          <Avatar size="sm">
+            <AvatarImage
+              src={request.user.image ?? undefined}
+              alt={tCommon('avatarAlt', { name: request.user.name })}
+            />
+            <AvatarFallback>
+              <UserRound className="size-3" />
+            </AvatarFallback>
+          </Avatar>
+          <div className="flex min-w-0 flex-col gap-1">
+            <CardTitle className="truncate">{request.user.name}</CardTitle>
+            <CardDescription className="truncate">
+              {request.user.email}
+            </CardDescription>
+          </div>
         </div>
 
-        <div className="w-full flex justify-end items-center">
-          <CardAction>
-            <p className="text-muted-foreground text-xs">
-              {formatDate(new Date(request.createdAt))}
-            </p>
-          </CardAction>
-        </div>
+        <CardAction>
+          <p className="text-muted-foreground text-xs">
+            {formatDate(new Date(request.createdAt))}
+          </p>
+        </CardAction>
       </CardHeader>
 
       {request.status === MembershipRequestStatus.Pending && (

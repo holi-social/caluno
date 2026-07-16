@@ -4,26 +4,30 @@ import type { OrganizationUnitType } from '@repo/data';
 import { Field, FieldError, FieldLabel, Input, Textarea } from '@repo/ui';
 import { useTranslations } from 'next-intl';
 import type { UseFormReturn } from 'react-hook-form';
+import { FileUpload } from '@/domain/storage/components/file-upload';
 import type { CreateOrgUnitFormValues } from '../schemas';
 
 interface Props {
   types: OrganizationUnitType[];
   isPending?: boolean;
+  logoPreviewUrl?: string | null;
   formReturnValues: UseFormReturn<CreateOrgUnitFormValues>;
 }
 
 export function OrgUnitFormContent({
   types: _types,
   isPending,
+  logoPreviewUrl,
   formReturnValues,
 }: Props) {
   const {
     register,
-    /* watch,
-    setValue,*/
+    watch,
+    setValue,
     formState: { errors },
   } = formReturnValues;
   const t = useTranslations('OrgUnit.form');
+  const tUpload = useTranslations('Storage.upload');
 
   return (
     <>
@@ -118,18 +122,22 @@ export function OrgUnitFormContent({
         )}
       </Field>
 
-      <Field>
-        <FieldLabel htmlFor="logo">{t('logoLabel')}</FieldLabel>
-        <Input
-          id="logo"
-          type="url"
-          placeholder={t('logoPlaceholder')}
-          disabled={isPending}
-          aria-invalid={!!errors.logoUrl}
-          {...register('logoUrl')}
-        />
-        {errors.logoUrl && <FieldError>{errors.logoUrl.message}</FieldError>}
-      </Field>
+      <FileUpload
+        purpose="org_logo"
+        organizationUnitId={watch('organizationUnitId')}
+        label={t('logoLabel')}
+        description={tUpload('imageHint')}
+        value={watch('logoFileId')}
+        initialPreviewUrl={logoPreviewUrl}
+        disabled={isPending}
+        error={errors.logoFileId?.message}
+        onUploaded={(result) => {
+          setValue('logoFileId', result.fileId, { shouldValidate: true });
+        }}
+        onClear={() => {
+          setValue('logoFileId', null, { shouldValidate: true });
+        }}
+      />
 
       <Field>
         <FieldLabel htmlFor="address">{t('addressLabel')}</FieldLabel>

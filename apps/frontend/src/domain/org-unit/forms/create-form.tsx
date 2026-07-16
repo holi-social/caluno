@@ -59,7 +59,7 @@ export function CreateOrgUnitForm({
         organizationId,
         name: formData.name,
         typeId: formData.typeId,
-        logoUrl: formData.logoUrl,
+        logoFileId: formData.logoFileId,
         websiteUrl: formData.websiteUrl,
         contactEmail: formData.contactEmail,
         phone: formData.phone,

@@ -117,14 +117,6 @@ export class RequirementFormRepository extends BaseRepository {
     return data.updateMyUserProfile;
   }
 
-  async generateDocumentUploadUrl(filename: string, mimeType: string) {
-    const data = await this.sdk.GenerateDocumentUploadUrl({
-      filename,
-      mimeType,
-    });
-    return data.generateDocumentUploadUrl;
-  }
-
   async findSubmissionsByMembershipRequestId(membershipRequestId: string) {
     const data = await this.sdk.GetFormSubmissionsByMembershipRequest({
       membershipRequestId,

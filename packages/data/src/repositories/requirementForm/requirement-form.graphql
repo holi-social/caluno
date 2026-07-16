@@ -25,7 +25,9 @@ query GetFormBlock($id: String!) {
         label
         value
       }
-      documentUrl
+      documentFileId
+      documentDownloadUrl
+      documentFilename
       documentLabel
       minAge
       fieldOrder
@@ -63,7 +65,9 @@ query GetFormBlocks($organizationId: String!, $limit: Int!, $offset: Int!) {
           label
           value
         }
-        documentUrl
+        documentFileId
+        documentDownloadUrl
+        documentFilename
         documentLabel
         minAge
         fieldOrder
@@ -107,7 +111,9 @@ mutation CreateFormBlock($input: CreateFormBlockInput!) {
         label
         value
       }
-      documentUrl
+      documentFileId
+      documentDownloadUrl
+      documentFilename
       documentLabel
       minAge
       fieldOrder
@@ -144,7 +150,9 @@ mutation UpdateFormBlock($id: String!, $input: UpdateFormBlockInput!) {
         label
         value
       }
-      documentUrl
+      documentFileId
+      documentDownloadUrl
+      documentFilename
       documentLabel
       minAge
       fieldOrder
@@ -190,7 +198,9 @@ mutation CreateFormBlockField(
         label
         value
       }
-      documentUrl
+      documentFileId
+      documentDownloadUrl
+      documentFilename
       documentLabel
       minAge
       fieldOrder
@@ -230,7 +240,9 @@ mutation UpdateFormBlockField(
         label
         value
       }
-      documentUrl
+      documentFileId
+      documentDownloadUrl
+      documentFilename
       documentLabel
       minAge
       fieldOrder
@@ -267,7 +279,9 @@ mutation DeleteFormBlockField($fieldId: String!) {
         label
         value
       }
-      documentUrl
+      documentFileId
+      documentDownloadUrl
+      documentFilename
       documentLabel
       minAge
       fieldOrder
@@ -331,7 +345,9 @@ query GetRequirementForm($id: String!) {
             label
             value
           }
-          documentUrl
+          documentFileId
+          documentDownloadUrl
+          documentFilename
           documentLabel
           minAge
           fieldOrder
@@ -380,7 +396,9 @@ query GetRequirementFormByShareToken($token: String!) {
             label
             value
           }
-          documentUrl
+          documentFileId
+          documentDownloadUrl
+          documentFilename
           documentLabel
         }
       }
@@ -531,10 +549,6 @@ mutation UpdateMyUserProfile($input: UpdateUserProfileInput!) {
     data
     updatedAt
   }
-}
-
-mutation GenerateDocumentUploadUrl($filename: String!, $mimeType: String!) {
-  generateDocumentUploadUrl(filename: $filename, mimeType: $mimeType)
 }
 
 query GetFormSubmissionsByMembershipRequest($membershipRequestId: String!) {

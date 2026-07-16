@@ -29,8 +29,10 @@ import {
   type UseFormRegister,
   useFieldArray,
   useForm,
+  useWatch,
 } from 'react-hook-form';
 import { toast } from 'sonner';
+import { FileUpload } from '@/domain/storage/components/file-upload';
 import { saveBlock } from '../actions';
 import { OptionsEditor } from './options-editor';
 
@@ -44,7 +46,9 @@ interface BlockFormFieldInput {
   systemKey?: string;
   lockType?: boolean;
   options?: { label: string; value: string }[];
-  documentUrl?: string;
+  documentFileId?: string | null;
+  documentDownloadUrl?: string;
+  documentFilename?: string;
   documentLabel?: string;
 }
 
@@ -214,7 +218,9 @@ export function BlockForm({
             systemKey: f.systemKey ?? '',
             lockType: f.lockType ?? false,
             options: f.options ?? [],
-            documentUrl: f.documentUrl ?? '',
+            documentFileId: f.documentFileId ?? null,
+            documentDownloadUrl: f.documentDownloadUrl ?? '',
+            documentFilename: f.documentFilename ?? '',
             documentLabel: f.documentLabel ?? '',
           })) ?? [],
       });
@@ -251,7 +257,7 @@ export function BlockForm({
         systemKey: f.systemKey || undefined,
         lockType: f.lockType ?? false,
         options: f.options,
-        documentUrl: f.documentUrl || undefined,
+        documentFileId: f.documentFileId,
         documentLabel: f.documentLabel || undefined,
       })),
     });
@@ -278,7 +284,7 @@ export function BlockForm({
       lockType: false,
       options: [],
       ...(type === FieldType.DocumentAcknowledgement
-        ? { documentUrl: '', documentLabel: '' }
+        ? { documentFileId: null, documentLabel: '' }
         : {}),
     });
   }
@@ -373,6 +379,7 @@ export function BlockForm({
           <FieldCard
             key={field.id}
             index={index}
+            orgUId={orgUId}
             control={control}
             register={register}
             errors={errors.fields?.[index]}
@@ -511,6 +518,7 @@ export function BlockForm({
 
 function FieldCard({
   index,
+  orgUId,
   control,
   register,
   errors,
@@ -529,6 +537,7 @@ function FieldCard({
   fieldTypeLabels,
 }: {
   index: number;
+  orgUId: string;
   control: Control<BlockFormData>;
   register: UseFormRegister<BlockFormData>;
   errors?: FieldErrors<BlockFormFieldInput>;
@@ -552,6 +561,14 @@ function FieldCard({
   const showOptions =
     fieldType === FieldType.SingleChoice || fieldType === FieldType.MultiChoice;
   const isDocument = fieldType === FieldType.DocumentAcknowledgement;
+  const documentPreviewUrl = useWatch({
+    control,
+    name: `fields.${index}.documentDownloadUrl`,
+  });
+  const documentFilename = useWatch({
+    control,
+    name: `fields.${index}.documentFilename`,
+  });
 
   return (
     <div className="rounded-lg border p-4 space-y-3">
@@ -693,22 +710,25 @@ function FieldCard({
         {isDocument && (
           <>
             <Field className="md:col-span-2">
-              <FieldLabel>
-                {tField('documentUrlLabel')}{' '}
-                <span className="text-destructive">*</span>
-              </FieldLabel>
-              <Input
-                {...register(`fields.${index}.documentUrl`, {
-                  required: tField('enterDocumentUrlError'),
-                })}
-                placeholder={tField('documentUrlPlaceholder')}
-                disabled={readOnly}
+              <Controller
+                control={control}
+                name={`fields.${index}.documentFileId`}
+                rules={{ required: tField('enterDocumentFileError') }}
+                render={({ field, fieldState }) => (
+                  <FileUpload
+                    purpose="form_document"
+                    organizationUnitId={orgUId}
+                    label={tField('documentFileLabel')}
+                    value={field.value || null}
+                    initialPreviewUrl={documentPreviewUrl || null}
+                    initialFilename={documentFilename || null}
+                    disabled={readOnly}
+                    error={fieldState.error?.message}
+                    onUploaded={(result) => field.onChange(result.fileId)}
+                    onClear={() => field.onChange(null)}
+                  />
+                )}
               />
-              {errors?.documentUrl && (
-                <p className="text-destructive text-sm">
-                  {errors.documentUrl.message}
-                </p>
-              )}
             </Field>
             <Field className="md:col-span-2">
               <FieldLabel>

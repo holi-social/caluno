@@ -17,6 +17,8 @@ import {
 import type { PaginationInput } from '../graphql/pagination.input';
 import { MembershipService } from '../membership/membership.service';
 import { NotificationService } from '../notification';
+import { FilePurpose } from '../storage/enums';
+import { FileService } from '../storage/services/file.service';
 import { slugify } from '../utils';
 import type { CreateOrganizationInput } from './inputs/create-organization.input';
 import { OrganizationMapper } from './mappers/organization.mapper';
@@ -42,6 +44,7 @@ export class OrganizationService {
     private readonly membershipService: MembershipService,
     private readonly organizationUnitService: OrganizationUnitService,
     private readonly notificationService: NotificationService,
+    private readonly fileService: FileService,
   ) {}
 
   async findById(id: string): Promise<OrganizationEntity | undefined> {
@@ -344,6 +347,11 @@ export class OrganizationService {
     userId: string,
     input: CreateOrganizationInput,
   ): Promise<Organization> {
+    const { logoFileId, ...organizationInput } = input;
+    const logoUrl = logoFileId
+      ? await this.resolveLogoUrl(logoFileId)
+      : (organizationInput.logoUrl ?? null);
+
     const allPermissionKeys = Object.values(PERMISSIONS).filter(
       (permission) => !permission.startsWith('org-role:'),
     );
@@ -353,8 +361,9 @@ export class OrganizationService {
       const [createdOrganization] = await tx
         .insert(schema.organizations)
         .values({
-          ...input,
-          slug: slugify(input.name),
+          ...organizationInput,
+          logoUrl,
+          slug: slugify(organizationInput.name),
         })
         .returning();
 
@@ -462,5 +471,13 @@ export class OrganizationService {
     });
 
     return this.mapper.toModelOrThrow(organization);
+  }
+
+  private async resolveLogoUrl(logoFileId: string): Promise<string> {
+    await this.fileService.assertUploadedFileForPurpose(
+      logoFileId,
+      FilePurpose.ORGANIZATION_LOGO,
+    );
+    return this.fileService.resolvePublicUrlForUploadedFile(logoFileId);
   }
 }

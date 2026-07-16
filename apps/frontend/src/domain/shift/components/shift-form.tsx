@@ -15,6 +15,7 @@ import {
 } from '@repo/ui';
 import { useTranslations } from 'next-intl';
 import { type Resolver, useForm } from 'react-hook-form';
+import { FileUpload } from '@/domain/storage/components/file-upload';
 import { type ShiftFormValues, shiftFormSchema } from '../schemas';
 import { RecurrenceSelect } from './recurrence-select';
 
@@ -25,6 +26,7 @@ type FormProps = {
   initialValues?: Partial<ShiftFormValues>;
   formId?: string;
   defaultLocation?: string;
+  imagePreviewUrl?: string | null;
 };
 
 export const ShiftForm = ({
@@ -34,8 +36,10 @@ export const ShiftForm = ({
   initialValues,
   formId,
   defaultLocation,
+  imagePreviewUrl,
 }: FormProps) => {
   const t = useTranslations('Shift');
+  const tUpload = useTranslations('Storage.upload');
 
   const schema = shiftFormSchema({
     nameRequired: t('validation.nameRequired'),
@@ -57,6 +61,7 @@ export const ShiftForm = ({
       organizationUnitId,
       invitedMemberIds: [],
       recurrenceDays: [],
+      imageFileId: undefined,
       ...initialValues,
     },
   });
@@ -140,6 +145,23 @@ export const ShiftForm = ({
           <FieldError>{errors.instructions.message}</FieldError>
         )}
       </Field>
+
+      <FileUpload
+        purpose="shift_image"
+        organizationUnitId={organizationUnitId}
+        label={t('form.imageLabel')}
+        description={tUpload('imageHint')}
+        value={watch('imageFileId')}
+        initialPreviewUrl={imagePreviewUrl}
+        disabled={isPending}
+        onUploaded={(result) => {
+          setValue('imageFileId', result.fileId, { shouldValidate: true });
+        }}
+        onClear={() => {
+          setValue('imageFileId', null, { shouldValidate: true });
+        }}
+      />
+
       <Card className="rounded-md p-4 space-y-3">
         <Field orientation="horizontal">
           <FieldContent>

@@ -39,9 +39,10 @@ export default async function OrgLayout({
   const locale = resolveLocale(rawLocale);
   const data = await getDataClient({ orgUId, locale });
 
-  const [{ org, organizations }, userPermissions] = await Promise.all([
+  const [{ org, organizations }, userPermissions, me] = await Promise.all([
     requireOrgAccess(orgUId),
     data.user.getMyPermissions(),
+    data.user.getMe(),
   ]);
   const permissionKeys = userPermissions.map((p) => p.key);
   const localeSeed = await resolveLocaleSeed(orgUId);
@@ -72,7 +73,11 @@ export default async function OrgLayout({
                       {sheet}
                     </Suspense>
                     <ThemeToggle />
-                    <ProfileNavIcon orgUId={orgUId} />
+                    <ProfileNavIcon
+                      orgUId={orgUId}
+                      imageUrl={me.image}
+                      name={me.name}
+                    />
                   </div>
                 </div>
               </header>

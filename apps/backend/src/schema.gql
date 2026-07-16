@@ -16,19 +16,19 @@ input CloseTimeEntryInput {
 }
 
 input CreateEventInput {
-  coverUrl: String
+  coverFileId: String
   endsAt: DateTime!
   invitedMemberIds: [String!]
   location: String
-  logoUrl: String
+  logoFileId: String
   startsAt: DateTime!
   title: String!
 }
 
 input CreateFormBlockFieldInput {
   description: String
+  documentFileId: String
   documentLabel: String
-  documentUrl: String
   fieldOrder: Float
   label: String!
   lockType: Boolean
@@ -53,6 +53,7 @@ input CreateOrganizationInput {
   address: String
   contactEmail: String
   description: String
+  logoFileId: String
   logoUrl: String
   name: String!
   parentId: String
@@ -64,7 +65,7 @@ input CreateOrganizationUnitInput {
   address: String
   contactEmail: String
   description: String
-  logoUrl: String
+  logoFileId: String
   name: String!
   organizationId: String!
   parentId: String!
@@ -106,7 +107,7 @@ input CreateRequirementProfileSubmissionInput {
 input CreateRequirementSubmissionFulfillmentInput {
   checked: Boolean
   date: DateTime
-  documentId: String
+  fileId: String
   requirementId: String!
   text: String
 }
@@ -120,6 +121,7 @@ input CreateRoleInput {
 input CreateShiftInput {
   endsAt: DateTime!
   eventId: ID
+  imageFileId: String
   instructions: String
   invitedMemberIds: [String!]
   location: String
@@ -196,8 +198,10 @@ type FormBlockField {
   blockId: String!
   createdAt: DateTime!
   description: String
+  documentDownloadUrl: String
+  documentFileId: String
+  documentFilename: String
   documentLabel: String
-  documentUrl: String
   fieldOrder: Float!
   id: ID!
   label: String!
@@ -372,7 +376,6 @@ type Mutation {
   deleteRole(id: ID!): Role!
   deleteShift(id: String!): Shift!
   deleteTimeEntry(id: ID!): TimeEntry!
-  generateDocumentUploadUrl(filename: String!, mimeType: String!): String!
   inviteMembersToEvent(eventId: ID!, memberIds: [String!]!): Event!
   joinEvent(eventId: ID!): JoinEventResult!
   joinOrganization(organizationUnitId: ID!): JoinOrganizationResult!
@@ -385,6 +388,7 @@ type Mutation {
   updateFormBlockField(fieldId: String!, input: UpdateFormBlockFieldInput!): FormBlock!
   updateMembersForShiftInstance(instanceId: String!, inviteToAllInstances: Boolean, memberIds: [String!]!): ShiftInstance!
   updateMembershipRoles(membershipId: ID!, roleIds: [ID!]!): Membership!
+  updateMyImage(input: UpdateMyImageInput!): User!
   updateMyLocale(locale: String!): User!
   updateMyUserProfile(input: UpdateUserProfileInput!): UserProfile!
   updateOrganizationUnit(id: String!, input: UpdateOrganizationUnitInput!): OrganizationUnit!
@@ -677,7 +681,8 @@ type RequirementFulfillmentText implements RequirementFulfillment {
 }
 
 type RequirementFulfillmentUpload implements RequirementFulfillment {
-  documentId: String
+  downloadUrl: String
+  fileId: String
   id: ID!
   organizationUserProfile: OrganizationUserProfile
   requirement: Requirement!
@@ -765,6 +770,7 @@ type Shift {
   durationMinutes: Int!
   event: Event
   id: ID!
+  imageUrl: String
   instructions: String
   isDeleted: Boolean!
   location: String
@@ -842,19 +848,19 @@ type TimeEntryPaginatedResponse {
 }
 
 input UpdateEventInput {
-  coverUrl: String
+  coverFileId: String
   endsAt: DateTime
   invitedMemberIds: [String!]
   location: String
-  logoUrl: String
+  logoFileId: String
   startsAt: DateTime
   title: String
 }
 
 input UpdateFormBlockFieldInput {
   description: String
+  documentFileId: String
   documentLabel: String
-  documentUrl: String
   fieldOrder: Float
   label: String
   lockType: Boolean
@@ -873,11 +879,15 @@ input UpdateFormBlockInput {
   title: String
 }
 
+input UpdateMyImageInput {
+  imageFileId: String
+}
+
 input UpdateOrganizationUnitInput {
   address: String
   contactEmail: String
   description: String
-  logoUrl: String
+  logoFileId: String
   name: String
   organizationId: String!
   parentId: String
@@ -897,7 +907,7 @@ input UpdateRequirementFormInput {
 input UpdateRequirementFulfillmentInput {
   checked: Boolean
   date: DateTime
-  documentId: String
+  fileId: String
   text: String
 }
 
@@ -924,6 +934,7 @@ input UpdateRequirementProfileSubmissionInput {
 input UpdateShiftInput {
   endsAt: DateTime
   eventId: ID
+  imageFileId: String
   instructions: String
   invitedMemberIds: [String!]
   location: String

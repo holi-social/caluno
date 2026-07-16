@@ -22,6 +22,8 @@ import { buildShiftInviteSchedule } from '../notification/shift-invite-schedule'
 import { OrganizationService } from '../organization/organization.service';
 import type { RequirementProfileEntity } from '../requirement-profile/schemas/requirement-profile.schema';
 import { JoinStatus } from '../shared/enums/join-status.enum';
+import { FilePurpose } from '../storage/enums';
+import { FileService } from '../storage/services/file.service';
 import { UserService } from '../user/user.service';
 import { slugify } from '../utils/slug.util';
 import { ShiftInviteStatus, ShiftVisibility } from './enums';
@@ -30,11 +32,10 @@ import { UpdateShiftInput } from './inputs/update-shift.input';
 import type { ShiftEntity } from './schemas/shift.schema';
 import type { ShiftInstanceEntity } from './schemas/shift-instance.schema';
 import { startOfTodayInAppTimeZone } from './utils/app-time';
+import { getDurationMinutes } from './utils/duration';
 import { expandShift } from './utils/rrule-expander';
 
-export function getDurationMinutes(start: Date, end: Date) {
-  return Math.round((end.getTime() - start.getTime()) / 60000);
-}
+export { getDurationMinutes } from './utils/duration';
 
 @Injectable()
 export class ShiftService {
@@ -48,6 +49,7 @@ export class ShiftService {
     private readonly membershipService: MembershipService,
     private readonly notificationService: NotificationService,
     private readonly organizationService: OrganizationService,
+    private readonly fileService: FileService,
   ) {}
 
   async findById(id: string): Promise<ShiftEntity> {
@@ -460,11 +462,14 @@ export class ShiftService {
     organizationUnitId: string,
     input: CreateShiftInput,
   ): Promise<ShiftEntity> {
-    const { invitedMemberIds, eventId, ...shiftInput } = input;
+    const { invitedMemberIds, eventId, imageFileId, ...shiftInput } = input;
     const durationMinutes = getDurationMinutes(
       shiftInput.startsAt,
       shiftInput.endsAt,
     );
+    const imageUrl = imageFileId
+      ? await this.resolveImageUrl(imageFileId)
+      : null;
 
     if (eventId) {
       await this.assertShiftWindowValid(
@@ -485,6 +490,7 @@ export class ShiftService {
           organizationUnitId,
           createdById: userId,
           location: shiftInput.location,
+          imageUrl,
           visibility: shiftInput.visibility,
           maxVolunteers: shiftInput.maxVolunteers,
           minVolunteers: shiftInput.minVolunteers,
@@ -891,7 +897,12 @@ export class ShiftService {
     organizationUnitId: string,
     input: UpdateShiftInput,
   ): Promise<ShiftEntity> {
-    const { invitedMemberIds, eventId: inputEventId, ...shiftInput } = input;
+    const {
+      invitedMemberIds,
+      eventId: inputEventId,
+      imageFileId,
+      ...shiftInput
+    } = input;
 
     return this.db.transaction(async (tx) => {
       let shift = await tx.query.shifts.findFirst({
@@ -921,13 +932,22 @@ export class ShiftService {
       }
 
       const hasValuesToUpdate =
-        Object.keys(shiftInput).length > 0 || inputEventId !== undefined;
+        Object.keys(shiftInput).length > 0 ||
+        inputEventId !== undefined ||
+        imageFileId !== undefined;
 
       if (hasValuesToUpdate) {
         const durationMinutes =
           input.endsAt && input.startsAt
             ? getDurationMinutes(input.startsAt, input.endsAt)
             : undefined;
+
+        const imageUrl =
+          imageFileId === undefined
+            ? undefined
+            : imageFileId
+              ? await this.resolveImageUrl(imageFileId)
+              : null;
 
         const [updatedShift] = await tx
           .update(schema.shifts)
@@ -937,6 +957,7 @@ export class ShiftService {
             originalStartsAt: input.startsAt,
             durationMinutes,
             ...(inputEventId !== undefined ? { eventId: inputEventId } : {}),
+            ...(imageUrl !== undefined ? { imageUrl } : {}),
           })
           .where(
             and(
@@ -1526,5 +1547,13 @@ export class ShiftService {
       status: JoinStatus.JOINED,
       shiftInstance: instance,
     };
+  }
+
+  private async resolveImageUrl(fileId: string): Promise<string> {
+    await this.fileService.assertUploadedFileForPurpose(
+      fileId,
+      FilePurpose.SHIFT_IMAGE,
+    );
+    return this.fileService.resolvePublicUrlForUploadedFile(fileId);
   }
 }

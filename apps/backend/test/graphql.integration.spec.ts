@@ -8,6 +8,8 @@ import {
   setDefaultTimeout,
 } from 'bun:test';
 import type { INestApplication } from '@nestjs/common';
+import * as schema from '../src/database/schema';
+import { FilePurpose, FileStatus, FileVisibility } from '../src/storage/enums';
 import { applyBunAuthMocks } from './helpers/auth-mocks';
 import {
   graphqlRequest,
@@ -20,12 +22,18 @@ setDefaultTimeout(20_000);
 
 describe('GraphQL API Integration', () => {
   let app: INestApplication;
+  let db: Awaited<ReturnType<typeof getGraphqlTestContext>>['db'];
+  let testUserId: string;
   let organizationId: string;
+  let organizationUnitId: string;
 
   beforeAll(async () => {
     const context = await getGraphqlTestContext();
     app = context.app;
+    db = context.db;
+    testUserId = context.testUserId;
     organizationId = context.organizationId;
+    organizationUnitId = context.organizationUnitId;
   });
 
   it('creates and retrieves requirement profile and submission', async () => {
@@ -131,6 +139,23 @@ describe('GraphQL API Integration', () => {
       getProfileResponse.data?.requirementProfile?.requirements,
     ).toHaveLength(4);
 
+    const [documentFile] = await db
+      .insert(schema.files)
+      .values({
+        storageKey: `private/${organizationUnitId}/${testUserId}/test-document.pdf`,
+        bucket: process.env.STORAGE_BUCKET ?? 'clippy',
+        visibility: FileVisibility.PRIVATE,
+        purpose: FilePurpose.REQUIREMENT_DOCUMENT,
+        mimeType: 'application/pdf',
+        filename: 'test-document.pdf',
+        byteSize: 10,
+        status: FileStatus.UPLOADED,
+        uploadedByUserId: testUserId,
+        organizationUnitId,
+        uploadedAt: new Date(),
+      })
+      .returning();
+
     const createRequirementProfileSubmissionData =
       await graphqlRequestRequiringData<{
         createRequirementProfileSubmission: {
@@ -162,7 +187,7 @@ describe('GraphQL API Integration', () => {
               fulfillments: [
                 {
                   requirementId: requirementIdByType.DOCUMENT,
-                  documentId: 'doc-123',
+                  fileId: documentFile.id,
                 },
                 {
                   requirementId: requirementIdByType.CHECK,
@@ -200,7 +225,7 @@ describe('GraphQL API Integration', () => {
           id: string;
           type: string;
           status: string;
-          documentId?: string | null;
+          fileId?: string | null;
           checked?: boolean | null;
           date?: string | null;
           text?: string | null;
@@ -220,7 +245,7 @@ describe('GraphQL API Integration', () => {
               type
               status
               ... on RequirementFulfillmentUpload {
-                documentId
+                fileId
               }
               ... on RequirementFulfillmentCheck {
                 checked
@@ -264,7 +289,7 @@ describe('GraphQL API Integration', () => {
     const textFulfillment = fulfillments.find(
       (fulfillment) => fulfillment.type === 'TEXT',
     );
-    expect(documentFulfillment?.documentId).toBe('doc-123');
+    expect(documentFulfillment?.fileId).toBe(documentFile.id);
     expect(checkFulfillment?.checked).toBe(true);
     expect(dateFulfillment?.date).toBe('2026-01-01T00:00:00.000Z');
     expect(textFulfillment?.text).toBe('This is the text fulfillment.');

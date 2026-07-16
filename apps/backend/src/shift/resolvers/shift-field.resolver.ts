@@ -4,7 +4,6 @@ import {
   Session,
   type UserSession,
 } from '@thallesp/nestjs-better-auth';
-import { Event } from '../../event/models/event.model';
 import { Loader } from '../../graphql/decorators';
 import { Organization } from '../../organization/models/organization.model';
 import { OrganizationUnit } from '../../organization/models/organization-unit.model';
@@ -34,19 +33,6 @@ export class ShiftFieldResolver {
 
     const creator = await this.shiftService.findCreator(shift.createdById);
     return this.userMapper.toModelOrThrow(creator);
-  }
-
-  @AllowAnonymous()
-  @ResolveField(() => Event, { nullable: true })
-  async event(
-    @Parent() shift: ShiftEntity,
-    @Loader(ShiftLoader) loader: ShiftLoader,
-  ): Promise<Event | null> {
-    if (!shift.eventId) {
-      return null;
-    }
-
-    return loader.eventById.load(shift.eventId);
   }
 
   @AllowAnonymous()
