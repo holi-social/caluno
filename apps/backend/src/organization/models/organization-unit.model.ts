@@ -4,6 +4,7 @@ import { createPaginatedResponseType } from '../../graphql/paginated-response.mo
 import { RequirementProfile } from '../../requirement-profile/models/requirement-profile.model';
 import type { Organization } from './organization.model';
 import { Organization as OrganizationModel } from './organization.model';
+import { RequiredFormRef } from './organization-unit-required-form.model';
 import { OrganizationUnitType } from './organization-unit-type.model';
 
 @ObjectType()
@@ -52,6 +53,12 @@ export class OrganizationUnit {
 
   @Field(() => RequirementProfile, { nullable: true })
   requiredMembershipRequirementProfile?: RequirementProfile | null;
+
+  @Field(() => Boolean)
+  requiredFormsEnabled!: boolean;
+
+  @Field(() => [RequiredFormRef])
+  requiredForms!: RequiredFormRef[];
 
   @Field(() => Date, { nullable: true })
   deletedAt?: Date | null;
