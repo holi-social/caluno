@@ -373,7 +373,8 @@
       "rejectDialogDescription": "Bist du sicher, dass du diese Mitgliedschaftsanfrage ablehnen möchtest? Bitte gib einen Grund an, damit der Freiwillige versteht, warum seine Anfrage abgelehnt wurde.",
       "rejectionReasonLabel": "Ablehnungsgrund",
       "rejectionReasonPlaceholder": "Erkläre, warum die Anfrage abgelehnt wird...",
-      "cancel": "Abbrechen"
+      "cancel": "Abbrechen",
+      "approveDisabledTitle": "Erforderliche Formulare sind unvollständig"
     },
     "toast": {
       "approved": "Mitgliedschaftsanfrage genehmigt",
@@ -422,6 +423,24 @@
       },
       "joinErrorFallback": "Organisation konnte nicht beigetreten werden",
       "unexpectedError": "Unerwartete Antwort vom Server"
+    },
+    "joinForms": {
+      "title": "{orgName} beitreten",
+      "description": "Bitte fülle die erforderlichen Formulare aus, bevor du eine Beitrittsanfrage stellst.",
+      "noForms": "Es sind keine Formulare erforderlich.",
+      "completed": "Abgeschlossen",
+      "pending": "Ausstehend",
+      "fillOut": "Ausfüllen",
+      "fillFormTitle": "Formular ausfüllen",
+      "requestToJoin": "Beitrittsanfrage senden",
+      "joined": "Du bist der Organisation beigetreten",
+      "requestPending": "Deine Anfrage wird geprüft",
+      "rejected": "Deine Anfrage wurde abgelehnt",
+      "requirementsNeeded": "Bitte fülle zuerst alle erforderlichen Formulare aus",
+      "requestFailed": "Anfrage konnte nicht gesendet werden"
+    },
+    "requiredForms": {
+      "title": "Erforderliche Formulare"
     }
   },
   "Volunteer": {
@@ -459,6 +478,28 @@
       "noSubmissions": "Noch keine eingereichten Formulare.",
       "formFallback": "Formular",
       "titleFallback": "Freiwilliger"
+    },
+    "requiredForms": {
+      "pill": {
+        "required": "{count, plural, one {1 Formular erforderlich} other {{count} Formulare erforderlich}}",
+        "none": "Keine Formulare erforderlich"
+      },
+      "toggleLabel": "Formulare erforderlich",
+      "toggleDescription": "Freiwillige müssen Formulare ausfüllen, bevor sie beitreten",
+      "attachedFormsLabel": "Angehängte Formulare",
+      "noFormsAttached": "Noch keine Formulare angehängt.",
+      "questionCount": "{count, plural, one {1 Frage} other {{count} Fragen}}",
+      "addExisting": "Bestehendes Formular hinzufügen",
+      "createNew": "Neues Formular erstellen",
+      "searchForms": "Formulare suchen...",
+      "noFormsFound": "Keine Formulare gefunden",
+      "dedupHint": "Freiwillige müssen Informationen, die sie bereits angegeben haben, nicht erneut eingeben.",
+      "enabledToast": "Erforderliche Formulare aktiviert",
+      "disabledToast": "Erforderliche Formulare deaktiviert",
+      "toggleFailedToast": "Einstellung konnte nicht aktualisiert werden",
+      "addedToast": "Formular angehängt",
+      "removedToast": "Formular entfernt",
+      "updateFailedToast": "Erforderliche Formulare konnten nicht aktualisiert werden"
     }
   },
   "Shift": {

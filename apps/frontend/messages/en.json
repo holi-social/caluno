@@ -373,7 +373,8 @@
       "rejectDialogDescription": "Are you sure you want to reject this membership request? Please provide a reason so the volunteer understands why their request was declined.",
       "rejectionReasonLabel": "Rejection reason",
       "rejectionReasonPlaceholder": "Explain why the request is being rejected...",
-      "cancel": "Cancel"
+      "cancel": "Cancel",
+      "approveDisabledTitle": "Required forms are incomplete"
     },
     "toast": {
       "approved": "Membership request approved",
@@ -422,6 +423,24 @@
       },
       "joinErrorFallback": "Failed to join organization",
       "unexpectedError": "Unexpected response from server"
+    },
+    "joinForms": {
+      "title": "Join {orgName}",
+      "description": "Please complete the required forms before requesting to join.",
+      "noForms": "No forms are required.",
+      "completed": "Completed",
+      "pending": "Pending",
+      "fillOut": "Fill out",
+      "fillFormTitle": "Fill out form",
+      "requestToJoin": "Request to join",
+      "joined": "You have joined the organization",
+      "requestPending": "Your request is pending approval",
+      "rejected": "Your request was rejected",
+      "requirementsNeeded": "Please complete all required forms first",
+      "requestFailed": "Failed to send request"
+    },
+    "requiredForms": {
+      "title": "Required forms"
     }
   },
   "Volunteer": {
@@ -459,6 +478,28 @@
       "noSubmissions": "No submitted forms yet.",
       "formFallback": "Form",
       "titleFallback": "Volunteer"
+    },
+    "requiredForms": {
+      "pill": {
+        "required": "{count, plural, one {1 form required} other {{count} forms required}}",
+        "none": "No forms required"
+      },
+      "toggleLabel": "Require forms",
+      "toggleDescription": "Ask volunteers to complete forms before joining",
+      "attachedFormsLabel": "Attached forms",
+      "noFormsAttached": "No forms attached yet.",
+      "questionCount": "{count, plural, one {1 question} other {{count} questions}}",
+      "addExisting": "Add existing form",
+      "createNew": "Create new form",
+      "searchForms": "Search forms...",
+      "noFormsFound": "No forms found",
+      "dedupHint": "Volunteers won't be asked for information they've already provided.",
+      "enabledToast": "Required forms enabled",
+      "disabledToast": "Required forms disabled",
+      "toggleFailedToast": "Failed to update setting",
+      "addedToast": "Form attached",
+      "removedToast": "Form removed",
+      "updateFailedToast": "Failed to update required forms"
     }
   },
   "Shift": {
