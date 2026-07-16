@@ -102,6 +102,19 @@ export class RequirementFormRepository extends BaseRepository {
     return data.submitForm;
   }
 
+  async submitRequiredForm(
+    organizationUnitId: string,
+    formId: string,
+    input: SubmitFormInput,
+  ) {
+    const data = await this.sdk.SubmitRequiredForm({
+      organizationUnitId,
+      formId,
+      input,
+    });
+    return data.submitRequiredForm;
+  }
+
   async getMyFormSubmissionByToken(token: string) {
     const data = await this.sdk.GetMyFormSubmissionByToken({ token });
     return data.myFormSubmissionByToken;
@@ -135,6 +148,11 @@ export class RequirementFormRepository extends BaseRepository {
   async findSubmissionsForVolunteer(userId: string) {
     const data = await this.sdk.GetFormSubmissionsForVolunteer({ userId });
     return data.formSubmissionsForVolunteer;
+  }
+
+  async findMyFormSubmissions(organizationUnitId: string) {
+    const data = await this.sdk.GetMyFormSubmissions({ organizationUnitId });
+    return data.myFormSubmissions;
   }
 
   async findAdminSubmission(id: string) {

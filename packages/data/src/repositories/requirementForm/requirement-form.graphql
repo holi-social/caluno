@@ -504,6 +504,24 @@ mutation SubmitForm($token: String!, $input: SubmitFormInput!) {
   }
 }
 
+mutation SubmitRequiredForm(
+  $organizationUnitId: String!
+  $formId: String!
+  $input: SubmitFormInput!
+) {
+  submitRequiredForm(
+    organizationUnitId: $organizationUnitId
+    formId: $formId
+    input: $input
+  ) {
+    id
+    formId
+    userId
+    status
+    submittedAt
+  }
+}
+
 query GetMyFormSubmissionByToken($token: String!) {
   myFormSubmissionByToken(token: $token) {
     id
@@ -511,6 +529,18 @@ query GetMyFormSubmissionByToken($token: String!) {
     userId
     status
     submittedAt
+  }
+}
+
+query GetMyFormSubmissions($organizationUnitId: ID!) {
+  myFormSubmissions(organizationUnitId: $organizationUnitId) {
+    id
+    status
+    submittedAt
+    form {
+      id
+      name
+    }
   }
 }
 

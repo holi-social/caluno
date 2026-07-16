@@ -33,6 +33,7 @@ export function useMembershipRequests(
 export function useMembershipRequestCount(
   organizationUnitId: string,
   status?: MembershipRequestStatus,
+  enabled = true,
 ) {
   const sdk = useSdk();
   const repository = new MembershipRequestRepository(sdk);
@@ -42,6 +43,7 @@ export function useMembershipRequestCount(
     queryFn: () => repository.getCount(status),
     staleTime: 5 * 60 * 1000,
     placeholderData: keepPreviousData,
+    enabled: !!organizationUnitId && enabled,
   });
 }
 
@@ -82,6 +84,25 @@ export function useCancelMembershipRequest() {
     onSuccess: (_, { organizationUnitId }) => {
       queryClient.invalidateQueries({
         queryKey: ['membershipRequests', organizationUnitId],
+      });
+    },
+  });
+}
+
+export function useJoinOrganization() {
+  const sdk = useSdk();
+  const queryClient = useQueryClient();
+  const repository = new MembershipRequestRepository(sdk);
+
+  return useMutation({
+    mutationFn: ({ organizationUnitId }: { organizationUnitId: string }) =>
+      repository.join(organizationUnitId),
+    onSuccess: (_, { organizationUnitId }) => {
+      queryClient.invalidateQueries({
+        queryKey: ['membershipRequests', organizationUnitId],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ['membershipRequestCount', organizationUnitId],
       });
     },
   });
