@@ -785,7 +785,7 @@ type ShiftInstance {
   actualStartsAt: DateTime!
   filledCount: Int!
   id: ID!
-  inviteStatus(userId: String!): ShiftInviteStatus
+  invites(userId: String!): ShiftInstanceInvite
   isCancelled: Boolean!
   isCheckedIn: Boolean!
   isException: Boolean!
@@ -796,6 +796,14 @@ type ShiftInstance {
   overrideMaxVolunteers: Int
   overrideTitle: String
   volunteers: [User!]
+}
+
+type ShiftInstanceInvite {
+  createdAt: DateTime!
+  id: ID!
+  status: ShiftInviteStatus!
+  updatedAt: DateTime!
+  userId: String!
 }
 
 enum ShiftInviteStatus {

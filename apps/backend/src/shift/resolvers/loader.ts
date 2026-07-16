@@ -1,7 +1,7 @@
 import { Injectable, Scope } from '@nestjs/common';
 import DataLoader from 'dataloader';
 import { RegisterLoader } from '../../graphql/interceptors';
-import { ShiftInviteStatus } from '../enums';
+import type { ShiftInstanceInviteEntity } from '../schemas/shift-instance-invite.schema';
 import { ShiftService } from '../shift.service';
 
 type InviteInstanceQueryParams = {
@@ -22,9 +22,9 @@ const toInviteLoaderKey = ({
 export class ShiftInstanceInvitesLoader {
   constructor(private readonly shiftService: ShiftService) {}
 
-  public readonly inviteStatusByInstanceId = new DataLoader<
+  public readonly invitesByInstanceId = new DataLoader<
     InviteInstanceQueryParams,
-    ShiftInviteStatus | null,
+    ShiftInstanceInviteEntity | null,
     string
   >(
     async (keys: readonly InviteInstanceQueryParams[]) => {
@@ -37,20 +37,19 @@ export class ShiftInstanceInvitesLoader {
         userIds,
       );
 
-      const inviteStatusByInstanceAndUser = new Map(
+      const inviteByInstanceAndUser = new Map(
         results.map((row) => [
           toInviteLoaderKey({
             organizationUnitId,
             instanceId: row.instanceId,
             userId: row.userId,
           }),
-          row.status as ShiftInviteStatus,
+          row,
         ]),
       );
 
       return keys.map(
-        (key) =>
-          inviteStatusByInstanceAndUser.get(toInviteLoaderKey(key)) ?? null,
+        (key) => inviteByInstanceAndUser.get(toInviteLoaderKey(key)) ?? null,
       );
     },
     {
