@@ -31,11 +31,13 @@ import { rejectMembershipRequest } from '../actions';
 interface MembershipRequestActionsProps {
   id: string;
   organizationUnitId: string;
+  canApprove?: boolean;
 }
 
 export function MembershipRequestActions({
   id,
   organizationUnitId,
+  canApprove = true,
 }: MembershipRequestActionsProps) {
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -115,7 +117,8 @@ export function MembershipRequestActions({
         variant="default"
         size="sm"
         onClick={handleApprove}
-        disabled={approveMutation.isPending}
+        disabled={approveMutation.isPending || !canApprove}
+        title={canApprove ? undefined : t('actions.approveDisabledTitle')}
       >
         <CheckIcon />
         {t('actions.approve')}
