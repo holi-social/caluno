@@ -29,6 +29,7 @@ interface Props {
 export default function MembershipRequestCard({ request }: Props) {
   const { open } = useSheetTrigger('volunteer-profile');
   const t = useTranslations('MembershipRequest');
+  const tCommon = useTranslations('Common');
   const { formatDate } = useFormatting();
 
   const handleViewVolunteer = () => {
@@ -46,7 +47,10 @@ export default function MembershipRequestCard({ request }: Props) {
       <CardHeader className="gap-3">
         <div className="flex min-w-0 items-center gap-2">
           <Avatar size="sm">
-            <AvatarImage src={request.user.image ?? undefined} alt="" />
+            <AvatarImage
+              src={request.user.image ?? undefined}
+              alt={tCommon('avatarAlt', { name: request.user.name })}
+            />
             <AvatarFallback>
               <UserRound className="size-3" />
             </AvatarFallback>

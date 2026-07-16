@@ -31,7 +31,8 @@
     "menu": "Menü",
     "signOut": "Abmelden",
     "brand": "Clippy",
-    "greeting": "Hallo {name}"
+    "greeting": "Hallo {name}",
+    "avatarAlt": "Avatar von {name}"
   },
   "Auth": {
     "login": {
@@ -1143,6 +1144,7 @@
     "checkOut": "Auschecken",
     "timerStartsIn": "beginnt in {time}",
     "timerStartedAgo": "Gestartet vor {time}",
-    "timerVolunteering": "Du hilfst seit {time}"
+    "timerVolunteering": "Du hilfst seit {time}",
+    "eventCoverImageAlt": "Titelbild für {title}"
   }
 }

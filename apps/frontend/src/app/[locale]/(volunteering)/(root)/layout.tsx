@@ -21,6 +21,7 @@ export default async function RootPagesLayout({
         <HomeHeader
           title={t('greeting', { name: session.user.name })}
           avatarUrl={me.image ?? undefined}
+          avatarName={session.user.name}
         />
       </div>
       <div className="mx-auto w-full max-w-4xl px-6 pt-36 pb-4">{children}</div>

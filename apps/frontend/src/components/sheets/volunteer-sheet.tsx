@@ -59,16 +59,19 @@ function statusLabel(
 
 function VolunteerSheetContent({
   userId,
+  name,
   status,
   email,
   checkInId,
 }: {
   userId: string;
+  name: string;
   status: MembershipRequestStatus;
   email: string;
   checkInId: string;
 }) {
   const t = useTranslations('Volunteer.sheet');
+  const tCommon = useTranslations('Common');
   const tStatus = useTranslations('MembershipRequest.status');
   const orgUId = useOrgUId();
   const { data: user, isPending: userPending } = useUser(userId);
@@ -92,7 +95,10 @@ function VolunteerSheetContent({
           <Skeleton className="size-10 rounded-full" />
         ) : (
           <Avatar size="lg">
-            <AvatarImage src={user?.image ?? undefined} alt="" />
+            <AvatarImage
+              src={user?.image ?? undefined}
+              alt={tCommon('avatarAlt', { name: user?.name ?? name })}
+            />
             <AvatarFallback>
               <UserRound className="size-6" />
             </AvatarFallback>
@@ -188,6 +194,7 @@ export function VolunteerSheet() {
           {isOpen && userId && (
             <VolunteerSheetContent
               userId={userId}
+              name={name}
               status={status}
               email={email}
               checkInId={checkInId}

@@ -44,6 +44,7 @@ interface Props {
 
 function ApprovedTab({ orgUId }: { orgUId: string }) {
   const t = useTranslations('Volunteer');
+  const tCommon = useTranslations('Common');
   const { data, isPending } = useMemberships(orgUId);
   const { open: openVolunteerSheet } = useSheetTrigger('volunteer-profile');
 
@@ -90,7 +91,7 @@ function ApprovedTab({ orgUId }: { orgUId: string }) {
                   <Avatar size="sm">
                     <AvatarImage
                       src={membership.user.image ?? undefined}
-                      alt=""
+                      alt={tCommon('avatarAlt', { name: membership.user.name })}
                     />
                     <AvatarFallback>
                       <UserRound className="size-3" />
