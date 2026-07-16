@@ -150,12 +150,12 @@ package "Operations" {
     note right: A concrete occurrence of a Shift.\nCan override master fields.\nisException = one-off change.\nisCancelled = skipped occurrence.
 
     class ShiftInvite {
-        status {PENDING, ACCEPTED, REJECTED}
+        status {INVITED, ACCEPTED, REJECTED, CANCELLED, SELF_JOINED}
     }
     note left: A user added to the Shift series\nis automatically added to all future\nShiftIstances
 
     class ShiftInstanceInvite {
-        status {PENDING, ACCEPTED, REJECTED}
+        status {INVITED, ACCEPTED, REJECTED, CANCELLED, SELF_JOINED}
     }
 
     class TimeEntry {
@@ -177,7 +177,7 @@ package "Operations" {
     note left: A standalone calendar event tied to an OrgUnit.\nVisible to all members.\nVolunteers join the Event directly (no instances).
 
     class EventInvite {
-        status {PENDING, ACCEPTED, REJECTED}
+        status {INVITED, ACCEPTED, REJECTED, CANCELLED, SELF_JOINED}
     }
 }
 
