@@ -1,5 +1,11 @@
-import type { CreateOrganizationInput } from '../../generated/graphql';
+import type {
+  CreateOrganizationInput,
+  GetMyOrganizationUnitsQuery,
+} from '../../generated/graphql';
 import { BaseRepository } from '../base/base.repository';
+
+export type MyOrganizationUnit =
+  GetMyOrganizationUnitsQuery['myOrganizationUnits'][number];
 
 export interface FindOrganizationsOptions {
   limit?: number;
@@ -42,9 +48,14 @@ export class OrganizationRepository extends BaseRepository {
     return data.organizations.items;
   }
 
-  async findMyAccessibleOrganizationUnits() {
-    const data = await this.sdk.GetMyAccessibleOrganizationUnits();
-    return data.myAccessibleOrganizationUnits;
+  async findMyOrganizationUnits() {
+    const data = await this.sdk.GetMyOrganizationUnits();
+    return data.myOrganizationUnits;
+  }
+
+  async findMyAdminstrableOrganizationUnits() {
+    const data = await this.sdk.GetMyAdminstableOrganizationUnits();
+    return data.myAdminstableOrganizationUnits;
   }
 
   async findAll(options: FindOrganizationsOptions = {}) {

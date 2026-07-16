@@ -24,10 +24,18 @@ export class OrganizationUnitQueryResolver {
   ) {}
 
   @Query(() => [OrganizationUnit])
-  async myAccessibleOrganizationUnits(
+  async myOrganizationUnits(
     @Session() session: UserSession,
   ): Promise<OrganizationUnit[]> {
-    const units = await this.organizationService.findAccessibleUnits(
+    const units = await this.organizationService.findUnits(session.user.id);
+    return this.organizationUnitMapper.toArray(units);
+  }
+
+  @Query(() => [OrganizationUnit])
+  async myAdminstableOrganizationUnits(
+    @Session() session: UserSession,
+  ): Promise<OrganizationUnit[]> {
+    const units = await this.organizationService.findAdministrableUnits(
       session.user.id,
     );
     return this.organizationUnitMapper.toArray(units);
@@ -54,8 +62,20 @@ export class OrganizationUnitQueryResolver {
 
   @Permissions(PERMISSIONS.ORG_VIEW)
   @Query(() => [OrganizationUnitType])
-  async organizationUnitTypes(): Promise<OrganizationUnitType[]> {
-    const types = await this.organizationUnitService.findAllTypes();
+  async organizationUnitTypes(
+    @Context() context: AuthenticatedGraphQLContext,
+  ): Promise<OrganizationUnitType[]> {
+    const organizationId =
+      await this.organizationUnitService.findOrganizationIdByUnitId(
+        context.organizationUnitId,
+      );
+
+    if (!organizationId) {
+      return [];
+    }
+
+    const types =
+      await this.organizationUnitService.findAllTypes(organizationId);
     return this.organizationUnitTypeMapper.toArray(types);
   }
 

@@ -31,6 +31,10 @@ type OrganizationUnitWithType = OrganizationUnitEntity & {
   type: OrganizationUnitTypeEntity;
 };
 
+type SeedMembership = {
+  organizationUnit: { id: string; organizationId: string | null } | null;
+};
+
 @Injectable()
 export class OrganizationService {
   constructor(
@@ -133,7 +137,7 @@ export class OrganizationService {
     };
   }
 
-  async findAccessibleUnits(userId: string): Promise<OrganizationUnitEntity[]> {
+  async findUnits(userId: string): Promise<OrganizationUnitEntity[]> {
     const userMemberships = await this.db.query.memberships.findMany({
       where: { userId },
       with: {
@@ -143,8 +147,36 @@ export class OrganizationService {
       },
     });
 
+    return this.expandToChildOrgUnits(userMemberships);
+  }
+
+  async findAdministrableUnits(
+    userId: string,
+  ): Promise<OrganizationUnitEntity[]> {
+    const administrableMemberships = await this.db.query.memberships.findMany({
+      where: {
+        userId,
+        roles: {
+          role: {
+            permissions: {}, // select all memberships that have a role that has at least one permission
+          },
+        },
+      },
+      with: {
+        organizationUnit: {
+          columns: { id: true, organizationId: true },
+        },
+      },
+    });
+
+    return this.expandToChildOrgUnits(administrableMemberships);
+  }
+
+  private async expandToChildOrgUnits(
+    seedMemberships: SeedMembership[],
+  ): Promise<OrganizationUnitEntity[]> {
     const memberUnitIdsByOrgId = new Map<string, Set<string>>();
-    for (const membership of userMemberships) {
+    for (const membership of seedMemberships) {
       const unit = membership.organizationUnit;
       if (!unit?.organizationId) continue;
       const memberUnitIds =
@@ -339,8 +371,9 @@ export class OrganizationService {
       const [rootType] = await tx
         .insert(schema.organizationUnitTypes)
         .values({
-          name: 'management',
-          description: `organization managment unit for ${createdOrganization.name}`,
+          organizationId: createdOrganization.id,
+          name: 'organisation unit',
+          description: `organization unit for ${createdOrganization.name}`,
           icon: 'building-2',
         })
         .returning();

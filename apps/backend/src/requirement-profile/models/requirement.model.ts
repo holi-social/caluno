@@ -1,6 +1,10 @@
-import { Field, ID, ObjectType } from '@nestjs/graphql';
+import { Field, ID, ObjectType, registerEnumType } from '@nestjs/graphql';
 import { createPaginatedResponseType } from '../../graphql/paginated-response.model';
 import { RequirementType } from '../enums';
+
+registerEnumType(RequirementType, {
+  name: 'RequirementType',
+});
 
 @ObjectType()
 export class Requirement {

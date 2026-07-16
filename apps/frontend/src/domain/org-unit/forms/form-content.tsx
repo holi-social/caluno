@@ -1,18 +1,7 @@
 'use client';
 
 import type { OrganizationUnitType } from '@repo/data';
-import {
-  Field,
-  FieldError,
-  FieldLabel,
-  Input,
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-  Textarea,
-} from '@repo/ui';
+import { Field, FieldError, FieldLabel, Input, Textarea } from '@repo/ui';
 import { useTranslations } from 'next-intl';
 import type { UseFormReturn } from 'react-hook-form';
 import { FileUpload } from '@/domain/storage/components/file-upload';
@@ -26,15 +15,15 @@ interface Props {
 }
 
 export function OrgUnitFormContent({
-  types,
+  types: _types,
   isPending,
   logoPreviewUrl,
   formReturnValues,
 }: Props) {
   const {
     register,
-    watch,
-    setValue,
+    /* watch,
+    setValue,*/
     formState: { errors },
   } = formReturnValues;
   const t = useTranslations('OrgUnit.form');
@@ -56,6 +45,7 @@ export function OrgUnitFormContent({
         {errors.name && <FieldError>{errors.name.message}</FieldError>}
       </Field>
 
+      {/* Can be re-integrated later when OrgUnitTypes are implemented
       <Field>
         <FieldLabel htmlFor="type">
           {t('typeLabel')} <span className="text-destructive">*</span>
@@ -84,6 +74,10 @@ export function OrgUnitFormContent({
 
         {errors.typeId && <FieldError>{errors.typeId.message}</FieldError>}
       </Field>
+      */}
+
+      <input type="hidden" {...register('typeId')} />
+      {errors.typeId && <FieldError>{errors.typeId.message}</FieldError>}
 
       <Field>
         <FieldLabel htmlFor="contactEmail">{t('emailLabel')}</FieldLabel>

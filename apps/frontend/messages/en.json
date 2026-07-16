@@ -205,13 +205,9 @@
   },
   "Organization": {
     "home": {
-      "welcomeBack": "Welcome back",
-      "subtitle": "Manage your organizations and volunteers all in one place.",
-      "createCard": {
-        "title": "Create an Organization",
-        "description": "Set up a new organization to start managing your volunteers and shifts.",
-        "cta": "Get started"
-      }
+      "title": "No organizations",
+      "description": "You don't have any organizations to administer",
+      "toVolunteering": "Back to volunteering"
     },
     "create": {
       "title": "Create an organization",
@@ -1136,6 +1132,10 @@
     "overlapWarning": "You have overlapping shifts in your schedule",
     "todayButton": "Today",
     "goToToday": "Go to today",
+    "goToTop": "Go to top",
+    "conflictExpand": "Show all {n} overlapping shifts",
+    "conflictMore": "+{n} more",
+    "conflictCollapse": "Show less",
     "discoverThisWeek": "{n, plural, one {# shift this week} other {# shifts this week}}",
     "dayStripLabel": "Day selector",
     "dayStripPrevious": "Previous days",

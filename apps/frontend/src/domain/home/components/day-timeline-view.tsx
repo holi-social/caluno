@@ -11,7 +11,11 @@ import {
 } from 'react';
 import { useRouter } from '@/i18n/navigation';
 import { useFormatting } from '@/lib/formatting/use-formatting';
-import { startOfDay } from '../lib/date-helpers';
+import {
+  getClosestShiftDayOnOrAfter,
+  type SparseDayStripEntry,
+  startOfDay,
+} from '../lib/date-helpers';
 import { DayStrip, type DayStripDay } from './day-strip';
 import { DayStripSkeleton } from './day-strip-skeleton';
 
@@ -37,6 +41,13 @@ interface DayTimelineViewProps<T> {
   renderContent: (group: DayGroup<T>) => ReactNode;
   /** Dim the day head (e.g. for past days). */
   isDayDimmed?: (group: DayGroup<T>) => boolean;
+  /**
+   * Sparse day strip (my-shifts only) — only days with shifts, with "…" gap
+   * markers for stretches of empty days. When set, the strip switches to
+   * sparse mode and `goToTopLabel` is used for its "go to top" button.
+   */
+  sparseDays?: SparseDayStripEntry[];
+  goToTopLabel?: string;
 }
 
 export function DayTimelineView<T>({
@@ -49,12 +60,15 @@ export function DayTimelineView<T>({
   empty,
   renderContent,
   isDayDimmed,
+  sparseDays,
+  goToTopLabel,
 }: DayTimelineViewProps<T>) {
   const t = useTranslations('VolunteerHome');
   const ct = useTranslations('Common');
   const router = useRouter();
   const { formatDate } = useFormatting();
   const [activeDay, setActiveDay] = useState<Date>(startOfDay(new Date()));
+  const [isScrolling, setIsScrolling] = useState(false);
 
   const listRef = useRef<HTMLDivElement>(null);
   const headerRef = useRef<HTMLDivElement>(null);
@@ -127,8 +141,15 @@ export function DayTimelineView<T>({
       const key = Number(active.getAttribute('data-day'));
       setActiveDay((prev) => (prev.getTime() === key ? prev : new Date(key)));
     };
+    // Dim inactive pills while a scroll gesture is in flight, and undim once
+    // it settles — softens the active-pill handoff so it reads as a fade
+    // rather than a blink.
+    let scrollEndTimeout: ReturnType<typeof setTimeout> | undefined;
     const onScroll = () => {
       if (!raf) raf = requestAnimationFrame(update);
+      setIsScrolling(true);
+      clearTimeout(scrollEndTimeout);
+      scrollEndTimeout = setTimeout(() => setIsScrolling(false), 150);
     };
 
     window.addEventListener('scroll', onScroll, { passive: true });
@@ -136,17 +157,14 @@ export function DayTimelineView<T>({
     return () => {
       window.removeEventListener('scroll', onScroll);
       if (raf) cancelAnimationFrame(raf);
+      clearTimeout(scrollEndTimeout);
     };
   }, [groups]);
 
   // On first load, land on today (or the closest upcoming day).
   useEffect(() => {
     if (didInitialScroll.current || groups.length === 0) return;
-    const todayStart = startOfDay(new Date()).getTime();
-    const target =
-      groups.find((group) => group.date.getTime() === todayStart) ??
-      groups.find((group) => group.date.getTime() >= todayStart) ??
-      groups[groups.length - 1];
+    const target = getClosestShiftDayOnOrAfter(groups, new Date());
     if (!target) return;
     didInitialScroll.current = true;
     scrollToDay(target.date, false);
@@ -174,6 +192,10 @@ export function DayTimelineView<T>({
                   todayLabel={t('todayButton')}
                   goToTodayLabel={t('goToToday')}
                   shiftCountLabel={(n) => t('yourShiftsCount', { n })}
+                  isScrolling={isScrolling}
+                  sparse={!!sparseDays}
+                  sparseDays={sparseDays}
+                  goToTopLabel={goToTopLabel}
                 />
               )}
             </div>

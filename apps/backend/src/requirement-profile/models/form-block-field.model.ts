@@ -1,5 +1,9 @@
-import { Field, ID, ObjectType } from '@nestjs/graphql';
+import { Field, ID, ObjectType, registerEnumType } from '@nestjs/graphql';
 import { FieldType } from '../enums';
+
+registerEnumType(FieldType, {
+  name: 'FieldType',
+});
 
 @ObjectType()
 export class SelectOption {

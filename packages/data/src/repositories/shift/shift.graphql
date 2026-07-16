@@ -147,7 +147,9 @@ query GetActiveShiftInstances($userId: String!) {
     actualStartsAt
     actualEndsAt
     overrideTitle
-    inviteStatus(userId: $userId)
+    invites(userId: $userId) {
+      status
+    }
     master {
       id
       title

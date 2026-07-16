@@ -6,8 +6,9 @@ import { Loader } from '../../graphql/decorators';
 import type { AuthenticatedGraphQLContext } from '../../graphql/graphql.context';
 import { UserMapper } from '../../user/mappers/user.mapper';
 import { User } from '../../user/models/user.model';
-import { ShiftInviteStatus } from '../enums';
+import { ShiftInstanceInviteMapper } from '../mappers/shift-instance-invite.mapper';
 import { ShiftInstance } from '../models/shift-instance.model';
+import { ShiftInstanceInvite } from '../models/shift-instance-invite.model';
 import type { ShiftInstanceEntity } from '../schemas/shift-instance.schema';
 import { ShiftService } from '../shift.service';
 import { ShiftInstanceInvitesLoader } from './loader';
@@ -18,6 +19,7 @@ export class ShiftInstanceFieldResolver {
   constructor(
     private readonly shiftService: ShiftService,
     private readonly userMapper: UserMapper,
+    private readonly shiftInstanceInviteMapper: ShiftInstanceInviteMapper,
   ) {}
 
   @Permissions(PERMISSIONS.SHIFT_VIEW)
@@ -34,18 +36,19 @@ export class ShiftInstanceFieldResolver {
   }
 
   @Permissions(PERMISSIONS.SHIFT_VIEW)
-  @ResolveField(() => ShiftInviteStatus, { nullable: true })
-  async inviteStatus(
+  @ResolveField(() => ShiftInstanceInvite, { nullable: true })
+  async invites(
     @Parent() instance: ShiftInstanceEntity,
     @Context() context: AuthenticatedGraphQLContext,
     @Args('userId') userId: string,
     @Loader(ShiftInstanceInvitesLoader) loader: ShiftInstanceInvitesLoader,
-  ): Promise<ShiftInviteStatus | null> {
-    return loader.inviteStatusByInstanceId.load({
+  ): Promise<ShiftInstanceInvite | null> {
+    const invite = await loader.invitesByInstanceId.load({
       organizationUnitId: context.organizationUnitId,
       instanceId: instance.id,
       userId,
     });
+    return this.shiftInstanceInviteMapper.toModel(invite);
   }
 
   @ResolveField(() => Boolean)

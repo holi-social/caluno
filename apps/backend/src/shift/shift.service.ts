@@ -201,7 +201,7 @@ export class ShiftService {
   private async getAccessibleOrganizationUnitIds(
     userId: string,
   ): Promise<string[]> {
-    const units = await this.organizationService.findAccessibleUnits(userId);
+    const units = await this.organizationService.findUnits(userId);
     return units.map((unit) => unit.id);
   }
 
