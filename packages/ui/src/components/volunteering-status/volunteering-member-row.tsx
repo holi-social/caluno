@@ -38,7 +38,6 @@ export function VolunteeringMemberRow({
         state={state}
         completedDuration={completedDuration}
         phase={phase}
-        size="md"
         accessible
         ariaLabel={name}
       />

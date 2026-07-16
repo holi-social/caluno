@@ -48,12 +48,12 @@ function StatusFlowSection({
         {states.map((state) => (
           <div key={state} className="flex flex-col items-center gap-2">
             {variant === 'icon' ? (
-              <VolunteeringStatusIcon state={state} size="md" accessible />
+              <VolunteeringStatusIcon state={state} accessible />
             ) : (
               <VolunteeringStatusBadge state={state} />
             )}
             {variant === 'icon' ? (
-              <span className="text-xs text-muted-foreground">{state}</span>
+              <span className="text-base text-muted-foreground">{state}</span>
             ) : null}
           </div>
         ))}

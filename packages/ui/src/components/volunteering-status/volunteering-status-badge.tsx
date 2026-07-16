@@ -34,7 +34,7 @@ export function VolunteeringStatusBadge({
     <Badge
       variant="ghost"
       className={cn(
-        'gap-1 rounded-lg border-0 bg-transparent px-0 py-0 text-sm shadow-none hover:bg-transparent',
+        'gap-1 rounded-lg border-0 bg-transparent px-0 py-0 text-base shadow-none hover:bg-transparent',
         className,
       )}
     >
@@ -45,7 +45,7 @@ export function VolunteeringStatusBadge({
       />
       <span
         className={cn(
-          'text-sm font-normal text-muted-foreground',
+          'text-base font-normal text-muted-foreground',
           emphasizeLabel && 'font-medium text-foreground',
         )}
       >
