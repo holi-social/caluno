@@ -4,6 +4,7 @@ import { plainToInstance } from 'class-transformer';
 import { PERMISSIONS } from '../../auth/constants';
 import { Permissions } from '../../auth/decorators/permissions.decorator';
 import type { AuthenticatedGraphQLContext } from '../../graphql/graphql.context';
+import { RequirementForm } from '../../requirement-profile/models/requirement-form.model';
 import { RequirementProfile } from '../../requirement-profile/models/requirement-profile.model';
 import { UserRequirementStatus } from '../../requirement-profile/models/user-requirement-status.model';
 import { CreateShiftInput } from '../inputs/create-shift.input';
@@ -110,6 +111,13 @@ export class ShiftMutationResolver {
         result.requirementStatuses?.map((s) =>
           plainToInstance(UserRequirementStatus, s),
         ) ?? null,
+      requiredForms:
+        result.requiredForms?.map((s) => ({
+          form: plainToInstance(RequirementForm, s.form),
+          order: s.order,
+          submitted: s.submitted,
+          submissionId: s.submissionId,
+        })) ?? null,
     };
   }
 }

@@ -4,9 +4,9 @@ import { plainToInstance } from 'class-transformer';
 import { PERMISSIONS } from '../../auth/constants';
 import { Permissions } from '../../auth/decorators/permissions.decorator';
 import type { AuthenticatedGraphQLContext } from '../../graphql/graphql.context';
+import { RequirementForm } from '../../requirement-profile/models/requirement-form.model';
 import { RequirementProfile } from '../../requirement-profile/models/requirement-profile.model';
 import { UserRequirementStatus } from '../../requirement-profile/models/user-requirement-status.model';
-
 import { JoinStatus } from '../../shared/enums/join-status.enum';
 import { MembershipMapper } from '../mappers/membership.mepper';
 import { MembershipService } from '../membership.service';
@@ -37,6 +37,7 @@ export class MembershipMutationResolver {
         membershipRequestId: null,
         requirementProfile: null,
         requirementStatuses: null,
+        requiredForms: null,
       };
     }
 
@@ -46,6 +47,7 @@ export class MembershipMutationResolver {
         membershipRequestId: result.membershipRequest.id,
         requirementProfile: null,
         requirementStatuses: null,
+        requiredForms: null,
       };
     }
 
@@ -55,6 +57,7 @@ export class MembershipMutationResolver {
         membershipRequestId: result.membershipRequest.id,
         requirementProfile: null,
         requirementStatuses: null,
+        requiredForms: null,
       };
     }
 
@@ -64,9 +67,19 @@ export class MembershipMutationResolver {
       requirementProfile: result.requirementProfile
         ? plainToInstance(RequirementProfile, result.requirementProfile)
         : null,
-      requirementStatuses: result.requirementStatuses.map((s) =>
-        plainToInstance(UserRequirementStatus, s),
-      ),
+      requirementStatuses: result.requirementStatuses
+        ? result.requirementStatuses.map((s) =>
+            plainToInstance(UserRequirementStatus, s),
+          )
+        : null,
+      requiredForms: result.requiredForms
+        ? result.requiredForms.map((s) => ({
+            form: plainToInstance(RequirementForm, s.form),
+            order: s.order,
+            submitted: s.submitted,
+            submissionId: s.submissionId,
+          }))
+        : null,
     };
   }
 

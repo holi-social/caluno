@@ -10,6 +10,8 @@ import * as schema from '../database/schema';
 import { ConflictGraphQLError, NotFoundGraphQLError } from '../graphql/errors';
 import { NotificationService } from '../notification';
 import type { RequirementProfileEntity } from '../requirement-profile/schemas/requirement-profile.schema';
+import type { RequiredFormStatus } from '../requirement-profile/services/required-form.service';
+import { RequiredFormService } from '../requirement-profile/services/required-form.service';
 import { RequirementProfileService } from '../requirement-profile/services/requirement-profile.service';
 import { JoinStatus } from '../shared/enums/join-status.enum';
 import { MembershipRequestStatus } from './enums';
@@ -30,6 +32,7 @@ export class MembershipService {
     private readonly requirementProfileService: RequirementProfileService,
     private readonly authService: AuthService,
     private readonly notificationService: NotificationService,
+    private readonly requiredFormService: RequiredFormService,
   ) {}
 
   private appendIntendedIdsToMetadata(
@@ -400,6 +403,19 @@ export class MembershipService {
           }
         }
 
+        if (requestToApprove.userId) {
+          const formsSatisfied =
+            await this.requiredFormService.areRequiredFormsSatisfied(
+              requestToApprove.userId,
+              organizationUnitId,
+            );
+          if (!formsSatisfied) {
+            throw new ConflictGraphQLError(
+              'Cannot approve: user has not completed the required forms.',
+            );
+          }
+        }
+
         const [updatedRequest] = await tx
           .update(schema.membershipRequests)
           .set({
@@ -553,12 +569,13 @@ export class MembershipService {
       }
     | {
         status: 'REQUIREMENTS_NEEDED';
-        requirementProfile: RequirementProfileEntity;
-        requirementStatuses: Array<{
+        requirementProfile?: RequirementProfileEntity;
+        requirementStatuses?: Array<{
           requirementId: string;
           name: string;
           status: string;
         }>;
+        requiredForms?: RequiredFormStatus[];
       }
   > {
     const membership = await this.getMembership(userId, organizationUnitId);
@@ -572,6 +589,11 @@ export class MembershipService {
     if (!orgUnit) {
       throw new NotFoundGraphQLError('Organization unit not found');
     }
+
+    let requirementProfile: RequirementProfileEntity | undefined;
+    let requirementStatuses:
+      | Array<{ requirementId: string; name: string; status: string }>
+      | undefined;
 
     if (orgUnit.requiredMembershipRequirementProfileId) {
       const statuses =
@@ -587,12 +609,27 @@ export class MembershipService {
         if (!profile) {
           throw new NotFoundGraphQLError('Requirement profile not found');
         }
-        return {
-          status: 'REQUIREMENTS_NEEDED',
-          requirementProfile: profile,
-          requirementStatuses: statuses,
-        };
+        requirementProfile = profile;
+        requirementStatuses = statuses;
       }
+    }
+
+    const requiredFormStatuses =
+      await this.requiredFormService.getRequiredFormStatuses(
+        userId,
+        organizationUnitId,
+      );
+    const missingForms = requiredFormStatuses.filter((s) => !s.submitted);
+
+    if (requirementProfile || missingForms.length > 0) {
+      return {
+        status: 'REQUIREMENTS_NEEDED',
+        ...(requirementProfile && {
+          requirementProfile,
+          requirementStatuses,
+        }),
+        requiredForms: requiredFormStatuses,
+      };
     }
 
     const existing = await this.db.query.membershipRequests.findFirst({
