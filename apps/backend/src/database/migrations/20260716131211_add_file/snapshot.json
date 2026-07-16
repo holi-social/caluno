@@ -1,11 +1,8 @@
 {
   "version": "8",
   "dialect": "postgres",
-  "id": "70a14d6b-f5ed-4b26-8f1c-95a4f836c650",
-  "prevIds": [
-    "42ca2e4f-7883-4a46-82f5-54e30d4d3fc0",
-    "fde1871d-42ab-467d-87a2-f13e6c1db300"
-  ],
+  "id": "a8252074-b45f-466d-a1c9-c25f7707b50e",
+  "prevIds": ["6681c67e-219e-42c2-9848-d1cff9bd1ae7"],
   "ddl": [
     {
       "values": ["PENDING", "ACCEPTED", "REJECTED"],
@@ -1866,6 +1863,19 @@
       "generated": null,
       "identity": null,
       "name": "id",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "organization_unit_types"
+    },
+    {
+      "type": "uuid",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "organization_id",
       "entityType": "columns",
       "schema": "public",
       "table": "organization_unit_types"
@@ -4916,6 +4926,27 @@
       "nameExplicit": true,
       "columns": [
         {
+          "value": "organization_id",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "with": "",
+      "method": "btree",
+      "concurrently": false,
+      "name": "idx_organization_unit_types_organization_id",
+      "entityType": "indexes",
+      "schema": "public",
+      "table": "organization_unit_types"
+    },
+    {
+      "nameExplicit": true,
+      "columns": [
+        {
           "value": "name",
           "isExpression": false,
           "asc": true,
@@ -6286,6 +6317,19 @@
     },
     {
       "nameExplicit": false,
+      "columns": ["organization_id"],
+      "schemaTo": "public",
+      "tableTo": "organizations",
+      "columnsTo": ["id"],
+      "onUpdate": "NO ACTION",
+      "onDelete": "CASCADE",
+      "name": "organization_unit_types_organization_id_organizations_id_fkey",
+      "entityType": "fks",
+      "schema": "public",
+      "table": "organization_unit_types"
+    },
+    {
+      "nameExplicit": false,
       "columns": ["user_id"],
       "schemaTo": "public",
       "tableTo": "users",
@@ -7211,6 +7255,15 @@
       "entityType": "uniques",
       "schema": "public",
       "table": "organization_units"
+    },
+    {
+      "nameExplicit": true,
+      "columns": ["organization_id", "name"],
+      "nullsNotDistinct": false,
+      "name": "uq_organization_unit_types_organization_id_name",
+      "entityType": "uniques",
+      "schema": "public",
+      "table": "organization_unit_types"
     },
     {
       "nameExplicit": true,
