@@ -9,7 +9,7 @@ import {
 import { Button, Empty, EmptyMedia, EmptyTitle, Skeleton } from '@repo/ui';
 import { CalendarXIcon } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from '@/i18n/navigation';
 import {
   getDayStripDays,
@@ -47,6 +47,26 @@ export function MyShiftsView({ initialFuturePage }: MyShiftsViewProps) {
 
   const isLoading = futureQuery.isLoading || pastQuery.isLoading;
   const showLoading = useDelayedLoading(isLoading);
+
+  // Preserve the viewport position when past shifts are prepended above the
+  // fold. Measure scroll height before the fetch, then offset by the growth
+  // after the new page renders.
+  const previousScrollHeightRef = useRef(0);
+  useEffect(() => {
+    if (pastQuery.isFetching) {
+      previousScrollHeightRef.current = document.documentElement.scrollHeight;
+    }
+  }, [pastQuery.isFetching]);
+  useEffect(() => {
+    if (!pastQuery.isFetching && previousScrollHeightRef.current > 0) {
+      const heightDiff =
+        document.documentElement.scrollHeight - previousScrollHeightRef.current;
+      if (heightDiff > 0) {
+        window.scrollBy({ top: heightDiff, behavior: 'instant' });
+      }
+      previousScrollHeightRef.current = 0;
+    }
+  }, [pastQuery.isFetching]);
 
   const pastItems = useMemo<MyShiftInstance[]>(() => {
     if (!pastQuery.data) return [];
