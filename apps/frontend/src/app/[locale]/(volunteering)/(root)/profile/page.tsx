@@ -1,6 +1,6 @@
 import { getTranslations, setRequestLocale } from 'next-intl/server';
-import { LocaleSwitcher } from '@/components/locale-switcher';
 import MyMembershipRequests from '@/domain/membership-requests/components/my-membership-requests';
+import { ProfileForm } from '@/domain/user/components/profile-form';
 import { resolveLocale } from '@/i18n/routing';
 import { getDataClient } from '@/lib/data-client';
 
@@ -13,8 +13,10 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
   const locale = resolveLocale(rawLocale);
   setRequestLocale(locale);
   const t = await getTranslations('MembershipRequest');
+  const tProfile = await getTranslations('Profile');
 
   const data = await getDataClient();
+  const me = await data.user.getMe();
   const { items: membershipRequests } = await data.membershipRequest.findMine();
 
   return (
@@ -28,7 +30,12 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
 
       <MyMembershipRequests membershipRequests={membershipRequests} />
 
-      <LocaleSwitcher />
+      <div>
+        <h2 className="text-xl font-bold">{tProfile('title')}</h2>
+        <div className="mt-4">
+          <ProfileForm imageUrl={me.image} />
+        </div>
+      </div>
     </div>
   );
 }

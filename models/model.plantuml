@@ -184,6 +184,7 @@ package "Operations" {
 ' --- Identity & Organization ---
 Organization "1" -- "1\nroot" OrgUnit
 Organization "1" -- "*" OrganizationUserProfile
+Organization "1" -- "1..*" OrgUnitType
 User "1" -- "*" OrganizationUserProfile
 OrgUnit "*" -up- "1" OrgUnitType
 OrgUnit "*\nchild" o-- "1\nparent" OrgUnit

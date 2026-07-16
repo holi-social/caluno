@@ -21,7 +21,7 @@ type RequirementFulfillmentValue = {
   text: string | null;
   date: string | null;
   checked: boolean | null;
-  documentId: string | null;
+  fileId: string | null;
 };
 
 function parseValue(value: string | null): RequirementFulfillmentValue | null {
@@ -88,12 +88,15 @@ export class RequirementFulfillment {
 })
 export class RequirementFulfillmentUpload extends RequirementFulfillment {
   @Field(() => String, { nullable: true })
-  get documentId(): string | null {
-    return parseValue(this.value)?.documentId ?? null;
+  get fileId(): string | null {
+    return parseValue(this.value)?.fileId ?? null;
   }
 
-  set documentId(value: string | null) {
-    this.value = JSON.stringify({ documentId: value });
+  @Field(() => String, { nullable: true })
+  downloadUrl?: string | null;
+
+  set fileId(value: string | null) {
+    this.value = JSON.stringify({ fileId: value });
   }
 }
 

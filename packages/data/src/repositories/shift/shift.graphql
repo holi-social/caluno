@@ -5,6 +5,7 @@ query GetShift($id: String!) {
     slug
     instructions
     location
+    imageUrl
     visibility
     createdAt
     maxVolunteers

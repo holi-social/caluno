@@ -249,8 +249,9 @@ const createPlaygroundOrganization = async (
     const [rootType] = await tx
       .insert(schema.organizationUnitTypes)
       .values({
-        name: 'management',
-        description: `organization managment unit for ${organization.name}`,
+        organizationId: organization.id,
+        name: 'organisation unit',
+        description: `organization unit for ${organization.name}`,
         icon: 'building-2',
       })
       .returning();

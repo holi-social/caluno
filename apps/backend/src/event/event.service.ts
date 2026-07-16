@@ -11,6 +11,8 @@ import type { MembershipRequestEntity } from '../membership/schemas/membership-r
 import type { RequirementFormEntity } from '../requirement-profile/schemas/requirement-form.schema';
 import type { RequirementProfileEntity } from '../requirement-profile/schemas/requirement-profile.schema';
 import { JoinStatus } from '../shared/enums/join-status.enum';
+import { FilePurpose } from '../storage/enums';
+import { FileService } from '../storage/services/file.service';
 import { slugify } from '../utils/slug.util';
 import { EventInviteStatus } from './enums';
 import { CreateEventInput } from './inputs/create-event.input';
@@ -24,6 +26,7 @@ export class EventService {
     @Inject(DATABASE_CONNECTION)
     private readonly db: Database,
     private readonly membershipService: MembershipService,
+    private readonly fileService: FileService,
   ) {}
 
   async findById(id: string, organizationUnitId: string): Promise<EventEntity> {
@@ -75,7 +78,13 @@ export class EventService {
     organizationUnitId: string,
     input: CreateEventInput,
   ): Promise<EventEntity> {
-    const { invitedMemberIds, ...eventInput } = input;
+    const { invitedMemberIds, logoFileId, coverFileId, ...eventInput } = input;
+    const logoUrl = logoFileId
+      ? await this.resolveImageUrl(logoFileId, FilePurpose.EVENT_IMAGE)
+      : null;
+    const coverUrl = coverFileId
+      ? await this.resolveImageUrl(coverFileId, FilePurpose.EVENT_IMAGE)
+      : null;
 
     return this.db.transaction(async (tx) => {
       const [event] = await tx
@@ -84,8 +93,8 @@ export class EventService {
           title: eventInput.title,
           slug: slugify(eventInput.title),
           location: eventInput.location,
-          logoUrl: eventInput.logoUrl,
-          coverUrl: eventInput.coverUrl,
+          logoUrl,
+          coverUrl,
           startsAt: eventInput.startsAt,
           endsAt: eventInput.endsAt,
           organizationUnitId,
@@ -127,16 +136,18 @@ export class EventService {
       throw new NotFoundGraphQLError(`Event with ID ${id} not found`);
     }
 
+    const resolved = await this.resolveEventUpdateInput(input);
+
     const [event] = await this.db
       .update(schema.events)
       .set({
-        title: input.title,
-        slug: input.title ? slugify(input.title) : undefined,
-        location: input.location,
-        logoUrl: input.logoUrl,
-        coverUrl: input.coverUrl,
-        startsAt: input.startsAt,
-        endsAt: input.endsAt,
+        title: resolved.title,
+        slug: resolved.title ? slugify(resolved.title) : undefined,
+        location: resolved.location,
+        logoUrl: resolved.logoUrl,
+        coverUrl: resolved.coverUrl,
+        startsAt: resolved.startsAt,
+        endsAt: resolved.endsAt,
       })
       .where(
         and(
@@ -368,5 +379,44 @@ export class EventService {
         },
       },
     });
+  }
+
+  private async resolveImageUrl(
+    fileId: string,
+    purpose: FilePurpose,
+  ): Promise<string> {
+    await this.fileService.assertUploadedFileForPurpose(fileId, purpose);
+    return this.fileService.resolvePublicUrlForUploadedFile(fileId);
+  }
+
+  private async resolveEventUpdateInput(input: UpdateEventInput): Promise<{
+    title?: string;
+    location?: string | null;
+    logoUrl?: string | null;
+    coverUrl?: string | null;
+    startsAt?: Date;
+    endsAt?: Date;
+  }> {
+    const { logoFileId, coverFileId, ...rest } = input;
+
+    const logoUrl =
+      logoFileId === undefined
+        ? undefined
+        : logoFileId
+          ? await this.resolveImageUrl(logoFileId, FilePurpose.EVENT_IMAGE)
+          : null;
+
+    const coverUrl =
+      coverFileId === undefined
+        ? undefined
+        : coverFileId
+          ? await this.resolveImageUrl(coverFileId, FilePurpose.EVENT_IMAGE)
+          : null;
+
+    return {
+      ...rest,
+      ...(logoUrl !== undefined ? { logoUrl } : {}),
+      ...(coverUrl !== undefined ? { coverUrl } : {}),
+    };
   }
 }

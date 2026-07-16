@@ -65,3 +65,10 @@ mutation UpdateMyLocale($locale: String!) {
     locale
   }
 }
+
+mutation UpdateMyImage($input: UpdateMyImageInput!) {
+  updateMyImage(input: $input) {
+    id
+    image
+  }
+}

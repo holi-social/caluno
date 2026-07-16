@@ -74,6 +74,7 @@ query GetMembershipRequests(
         id
         name
         email
+        image
         checkInId
       }
       status

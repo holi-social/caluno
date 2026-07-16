@@ -7,6 +7,9 @@ import {
   useMemberships,
 } from '@repo/data/react';
 import {
+  Avatar,
+  AvatarFallback,
+  AvatarImage,
   Button,
   Skeleton,
   Table,
@@ -42,6 +45,7 @@ interface Props {
 
 function ApprovedTab({ orgUId }: { orgUId: string }) {
   const t = useTranslations('Volunteer');
+  const tCommon = useTranslations('Common');
   const { data, isPending } = useMemberships(orgUId);
   const { open: openVolunteerSheet } = useSheetTrigger('volunteer-profile');
 
@@ -83,7 +87,20 @@ function ApprovedTab({ orgUId }: { orgUId: string }) {
         <TableBody>
           {memberships.map((membership) => (
             <TableRow key={membership.id}>
-              <TableCell>{membership.user.name}</TableCell>
+              <TableCell>
+                <div className="flex items-center gap-2">
+                  <Avatar size="sm">
+                    <AvatarImage
+                      src={membership.user.image ?? undefined}
+                      alt={tCommon('avatarAlt', { name: membership.user.name })}
+                    />
+                    <AvatarFallback>
+                      <UserRound className="size-3" />
+                    </AvatarFallback>
+                  </Avatar>
+                  {membership.user.name}
+                </div>
+              </TableCell>
               <TableCell>{membership.user.email}</TableCell>
               <TableCell>
                 <RoleSelectCell

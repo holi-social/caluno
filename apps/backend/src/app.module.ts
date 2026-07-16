@@ -32,6 +32,7 @@ import { NotificationModule } from './notification/notification.module';
 import { OrganizationModule } from './organization/organization.module';
 import { RequirementProfileModule } from './requirement-profile/requirement-profile.module';
 import { ShiftModule } from './shift/shift.module';
+import { StorageModule } from './storage/storage.module';
 import { TimeTrackingModule } from './time-tracking/time-tracking.module';
 import { UserModule } from './user/user.module';
 import { UserService } from './user/user.service';
@@ -174,6 +175,7 @@ const autoSchemaFile =
     GraphqlModule,
     ShiftModule,
     EventModule,
+    StorageModule,
     BetterAuthModule,
     AuthModule,
   ],

@@ -5,7 +5,6 @@ interface EventSchemaMessages {
   startRequired: string;
   endRequired: string;
   endAfterStart: string;
-  invalidUrl: string;
 }
 
 export function eventFormSchema(t: EventSchemaMessages) {
@@ -15,8 +14,8 @@ export function eventFormSchema(t: EventSchemaMessages) {
       startsAt: z.date(t.startRequired),
       endsAt: z.date(t.endRequired),
       location: z.string().trim().optional(),
-      logoUrl: z.union([z.url(), z.literal('')], t.invalidUrl).optional(),
-      coverUrl: z.union([z.url(), z.literal('')], t.invalidUrl).optional(),
+      logoFileId: z.uuid().nullish(),
+      coverFileId: z.uuid().nullish(),
     })
     .refine((d) => d.endsAt > d.startsAt, {
       message: t.endAfterStart,
@@ -29,7 +28,6 @@ export const serverEventFormSchema = eventFormSchema({
   startRequired: 'Start date is required',
   endRequired: 'End date is required',
   endAfterStart: 'End date must be after start date',
-  invalidUrl: 'Invalid URL',
 });
 
 export type EventFormValues = z.infer<typeof serverEventFormSchema>;

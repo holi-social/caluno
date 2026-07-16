@@ -44,7 +44,12 @@ export function CreateOrgUnitForm({
         typeRequired: tValidation('typeRequired'),
       }),
     ),
-    defaultValues: { organizationUnitId, organizationId, name: '' },
+    defaultValues: {
+      organizationUnitId,
+      organizationId,
+      name: '',
+      typeId: types[0]?.id,
+    },
   });
 
   const onSubmit = (formData: CreateOrgUnitFormValues) => {
@@ -54,7 +59,7 @@ export function CreateOrgUnitForm({
         organizationId,
         name: formData.name,
         typeId: formData.typeId,
-        logoUrl: formData.logoUrl,
+        logoFileId: formData.logoFileId,
         websiteUrl: formData.websiteUrl,
         contactEmail: formData.contactEmail,
         phone: formData.phone,

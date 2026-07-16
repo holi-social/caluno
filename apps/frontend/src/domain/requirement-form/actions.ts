@@ -200,7 +200,7 @@ const createBlockFieldSchema = z.object({
       }),
     )
     .optional(),
-  documentUrl: z.string().optional(),
+  documentFileId: z.string().nullish(),
   documentLabel: z.string().optional(),
   systemKey: z.string().optional(),
   lockType: z.boolean().optional(),
@@ -221,7 +221,7 @@ export const createBlockField = actionClient
         placeholder: parsedInput.placeholder,
         required: parsedInput.required,
         options: parsedInput.options,
-        documentUrl: parsedInput.documentUrl,
+        documentFileId: parsedInput.documentFileId,
         documentLabel: parsedInput.documentLabel,
         systemKey: parsedInput.systemKey,
         lockType: parsedInput.lockType,
@@ -248,7 +248,7 @@ const updateBlockFieldSchema = z.object({
       }),
     )
     .optional(),
-  documentUrl: z.string().optional(),
+  documentFileId: z.string().nullish(),
   documentLabel: z.string().optional(),
   fieldOrder: z.number().optional(),
   systemKey: z.string().nullable().optional(),
@@ -269,7 +269,7 @@ export const updateBlockField = actionClient
         placeholder: parsedInput.placeholder,
         required: parsedInput.required,
         options: parsedInput.options,
-        documentUrl: parsedInput.documentUrl,
+        documentFileId: parsedInput.documentFileId,
         documentLabel: parsedInput.documentLabel,
         fieldOrder: parsedInput.fieldOrder,
         systemKey: parsedInput.systemKey,
@@ -339,7 +339,7 @@ const saveBlockSchema = z.object({
           }),
         )
         .optional(),
-      documentUrl: z.string().optional(),
+      documentFileId: z.string().nullish(),
       documentLabel: z.string().optional(),
     }),
   ),
@@ -404,7 +404,7 @@ export const saveBlock = actionClient
             systemKey: field.systemKey ?? null,
             lockType: field.lockType,
             options: field.options,
-            documentUrl: field.documentUrl,
+            documentFileId: field.documentFileId,
             documentLabel: field.documentLabel,
             fieldOrder: i,
           });
@@ -418,7 +418,7 @@ export const saveBlock = actionClient
             systemKey: field.systemKey,
             lockType: field.lockType,
             options: field.options,
-            documentUrl: field.documentUrl,
+            documentFileId: field.documentFileId,
             documentLabel: field.documentLabel,
             fieldOrder: i,
           });
@@ -438,7 +438,7 @@ export const saveBlock = actionClient
           systemKey: field.systemKey,
           lockType: field.lockType,
           options: field.options,
-          documentUrl: field.documentUrl,
+          documentFileId: field.documentFileId,
           documentLabel: field.documentLabel,
           fieldOrder: i,
         });

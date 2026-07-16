@@ -16,6 +16,7 @@ export type HomeHeaderVariant = 'open' | 'on-scroll';
 export interface HomeHeaderProps {
   variant?: HomeHeaderVariant;
   avatarUrl?: string;
+  avatarName?: string;
   avatarHref?: string;
   title?: string;
   notificationCount?: number;
@@ -82,15 +83,18 @@ function NotificationBadge({ count }: { count: number }) {
 
 function AvatarTrigger({
   avatarUrl,
+  avatarName,
   isOpen,
 }: {
   avatarUrl?: string;
+  avatarName?: string;
   isOpen: boolean;
 }) {
   const avatarSize = isOpen ? 56 : 32;
   const iconSize = isOpen ? 24 : 16;
   const buttonSize = isOpen ? 56 : 44;
   const t = useTranslations('Navigation');
+  const tCommon = useTranslations('Common');
 
   const avatar = (
     <motion.div
@@ -100,7 +104,14 @@ function AvatarTrigger({
       className="shrink-0"
     >
       <Avatar className="size-full border border-border shadow-sm">
-        <AvatarImage src={avatarUrl} alt="" />
+        <AvatarImage
+          src={avatarUrl}
+          alt={
+            avatarName
+              ? tCommon('avatarAlt', { name: avatarName })
+              : t('profile')
+          }
+        />
         <AvatarFallback>
           <motion.div
             initial={{ width: iconSize, height: iconSize }}
@@ -138,6 +149,7 @@ function AvatarTrigger({
 export function HomeHeader({
   variant,
   avatarUrl,
+  avatarName,
   title,
   className,
 }: HomeHeaderProps) {
@@ -160,7 +172,11 @@ export function HomeHeader({
     >
       <div className="container mx-auto max-w-4xl px-6">
         <div className="flex w-full items-center justify-between gap-3">
-          <AvatarTrigger avatarUrl={avatarUrl} isOpen={isOpen} />
+          <AvatarTrigger
+            avatarUrl={avatarUrl}
+            avatarName={avatarName}
+            isOpen={isOpen}
+          />
 
           <div className="flex shrink-0 items-center gap-3">
             <Link href="/" aria-label={t('home')}>

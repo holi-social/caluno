@@ -9,6 +9,8 @@ import { BadRequestGraphQLError } from '../../graphql/errors/bad-request.error';
 import type { PaginationInput } from '../../graphql/pagination.input';
 import type { MembershipEntity } from '../../membership/schemas/membership.schema';
 import type { MembershipRequestEntity } from '../../membership/schemas/membership-request.schema';
+import { FilePurpose } from '../../storage/enums';
+import { FileService } from '../../storage/services/file.service';
 import { UserService } from '../../user/user.service';
 import { RequirementType } from '../enums';
 import {
@@ -33,6 +35,7 @@ export class RequirementProfileSubmissionService {
     private readonly userService: UserService,
     private readonly requirementProfileService: RequirementProfileService,
     private readonly requirementService: RequirementService,
+    private readonly fileService: FileService,
   ) {}
 
   async findById(
@@ -63,6 +66,18 @@ export class RequirementProfileSubmissionService {
     input: CreateRequirementProfileSubmissionInput,
     userId: string,
   ): Promise<RequirementProfileSubmissionEntity> {
+    if (input.fulfillments?.length) {
+      const requirementToTypeMap = await this.createRequirementToTypeMap(
+        input.fulfillments.map((fulfillment) => fulfillment.requirementId),
+      );
+      await this.validateDocumentFulfillments(
+        input.fulfillments,
+        requirementToTypeMap,
+        userId,
+        true,
+      );
+    }
+
     return this.db.transaction(async (tx) => {
       const { fulfillments, ...submissionInput } = input;
       const requirementProfile = await this.findProfile(
@@ -118,13 +133,15 @@ export class RequirementProfileSubmissionService {
     valueRequired: boolean,
   ) {
     switch (requirementType) {
-      case RequirementType.DOCUMENT:
-        if (input.documentId === undefined && valueRequired) {
+      case RequirementType.DOCUMENT: {
+        const fileId = input.fileId;
+        if (fileId === undefined && valueRequired) {
           throw new BadRequestGraphQLError(
-            'Document ID is required for document fulfillment',
+            'File ID is required for document fulfillment',
           );
         }
-        return input.documentId ? { documentId: input.documentId } : null;
+        return fileId ? { fileId } : null;
+      }
       case RequirementType.CHECK:
         if (input.checked === undefined && valueRequired) {
           throw new BadRequestGraphQLError(
@@ -234,6 +251,13 @@ export class RequirementProfileSubmissionService {
       throw new NotFoundGraphQLError('Requirement fulfillment not found');
     }
 
+    if (existingFulfillment.type === RequirementType.DOCUMENT && input.fileId) {
+      await this.fileService.assertUploadedFileForPurpose(
+        input.fileId,
+        FilePurpose.REQUIREMENT_DOCUMENT,
+      );
+    }
+
     const updatePayload = this.buildFulfillmentUpdatePayload(
       existingFulfillment,
       input,
@@ -337,6 +361,38 @@ export class RequirementProfileSubmissionService {
     }
 
     return requirementTypes;
+  }
+
+  private async validateDocumentFulfillments(
+    fulfillments: CreateRequirementSubmissionFulfillmentInput[],
+    requirementToTypeMap: Record<string, RequirementEntity['type']>,
+    userId: string,
+    valueRequired: boolean,
+  ): Promise<void> {
+    for (const fulfillment of fulfillments) {
+      if (
+        requirementToTypeMap[fulfillment.requirementId] !==
+        RequirementType.DOCUMENT
+      ) {
+        continue;
+      }
+
+      const fileId = fulfillment.fileId;
+      if (!fileId) {
+        if (valueRequired) {
+          throw new BadRequestGraphQLError(
+            'File ID is required for document fulfillment',
+          );
+        }
+        continue;
+      }
+
+      await this.fileService.assertUploadedFileOwnedByUser(
+        fileId,
+        userId,
+        FilePurpose.REQUIREMENT_DOCUMENT,
+      );
+    }
   }
 
   private buildFulfillmentUpdatePayload(

@@ -1,8 +1,10 @@
 import { Module } from '@nestjs/common';
+import './enums/register-graphql-enums';
 import { DatabaseModule } from '../database/database.module';
 import { MembershipMapper } from '../membership/mappers/membership.mepper';
 import { MembershipRequestMapper } from '../membership/mappers/membership-request.mepper';
 import { SharedModule } from '../shared/shared.module';
+import { StorageModule } from '../storage/storage.module';
 import { UserModule } from '../user/user.module';
 import { FormBlockMapper } from './mappers/form-block.mapper';
 import { FormBlockFieldMapper } from './mappers/form-block-field.mapper';
@@ -29,8 +31,8 @@ import {
   RequirementProfileSubmissionQueryResolver,
   RequirementQueryResolver,
 } from './resolvers';
-import { DocumentUploadMutationResolver } from './resolvers/document-upload-mutation.resolver';
 import { FormBlockFieldResolver } from './resolvers/form-block-field.resolver';
+import { FormBlockFieldDocumentResolver } from './resolvers/form-block-field-document.resolver';
 import { FormBlockMutationResolver } from './resolvers/form-block-mutation.resolver';
 import { FormBlockQueryResolver } from './resolvers/form-block-query.resolver';
 import { FormSubmissionFieldResolver } from './resolvers/form-submission-field.resolver';
@@ -39,10 +41,10 @@ import { RequirementFormBlockRefFieldResolver } from './resolvers/requirement-fo
 import { RequirementFormFieldResolver } from './resolvers/requirement-form-field.resolver';
 import { RequirementFormMutationResolver } from './resolvers/requirement-form-mutation.resolver';
 import { RequirementFormQueryResolver } from './resolvers/requirement-form-query.resolver';
+import { RequirementFulfillmentUploadFieldResolver } from './resolvers/requirement-fulfillment-upload-field.resolver';
 import { UserProfileMutationResolver } from './resolvers/user-profile-mutation.resolver';
 import { UserProfileQueryResolver } from './resolvers/user-profile-query.resolver';
 import {
-  DocumentUploadService,
   FormBlockService,
   FormSubmissionService,
   RequiredFormService,
@@ -54,7 +56,7 @@ import {
 } from './services';
 
 @Module({
-  imports: [DatabaseModule, SharedModule, UserModule],
+  imports: [DatabaseModule, SharedModule, UserModule, StorageModule],
   providers: [
     RequirementService,
     RequirementProfileService,
@@ -64,7 +66,6 @@ import {
     FormSubmissionService,
     RequiredFormService,
     UserProfileService,
-    DocumentUploadService,
     RequirementProfileMapper,
     RequirementMapper,
     RequirementProfileSubmissionMapper,
@@ -90,9 +91,11 @@ import {
     RequirementFulfillmentQueryResolver,
     RequirementFulfillmentMutationResolver,
     RequirementFulfillmentFieldResolver,
+    RequirementFulfillmentUploadFieldResolver,
     FormBlockQueryResolver,
     FormBlockMutationResolver,
     FormBlockFieldResolver,
+    FormBlockFieldDocumentResolver,
     RequirementFormQueryResolver,
     RequirementFormMutationResolver,
     RequirementFormFieldResolver,
@@ -101,7 +104,6 @@ import {
     FormSubmissionFieldResolver,
     UserProfileQueryResolver,
     UserProfileMutationResolver,
-    DocumentUploadMutationResolver,
   ],
   exports: [
     RequirementService,
@@ -112,7 +114,6 @@ import {
     FormSubmissionService,
     RequiredFormService,
     UserProfileService,
-    DocumentUploadService,
   ],
 })
 export class RequirementProfileModule {}

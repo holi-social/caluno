@@ -89,7 +89,9 @@ query GetOrganizationUnit($id: String!) {
                 label
                 value
               }
-              documentUrl
+              documentFileId
+              documentDownloadUrl
+              documentFilename
               documentLabel
               minAge
               fieldOrder
@@ -361,7 +363,9 @@ mutation SetRequiredFormsEnabled(
                 label
                 value
               }
-              documentUrl
+              documentFileId
+              documentDownloadUrl
+              documentFilename
               documentLabel
               minAge
               fieldOrder

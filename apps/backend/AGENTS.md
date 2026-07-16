@@ -164,6 +164,20 @@ domain/
 - Mappers extend `BaseMapper`: `toModel()`, `toModelOrThrow()`, `toArray()`.
 - Errors: throw `ForbiddenGraphQLError` / `NotFoundGraphQLError` / `BadRequestGraphQLError` / `ConflictGraphQLError` from `graphql/errors` — never raw exceptions.
 - GraphQL InputType Field defined with { nullable: true } need to be typed as optional and nullable: `fieldname?: type | null`
+- **File bytes never go through GraphQL.** Uploads use REST storage endpoints; GraphQL only links `fileId` to domain entities.
+
+## Storage (REST)
+Authenticated file uploads use presigned PUT to Scaleway Object Storage (MinIO locally). Module: `src/storage/`.
+
+| Endpoint | Auth | Purpose |
+|---|---|---|
+| `POST /storage/uploads/presign` | Session + purpose-specific `@Permissions()` | Mint presigned PUT URL; creates `files` row (`pending`) |
+| `POST /storage/uploads/:fileId/complete` | Session (owner) | HEAD-verify object; set `uploaded` |
+| `POST /storage/objects/:fileId/presign-download` | Session + owner or `requirement-profile:view` | Presigned GET for private files |
+
+Env: `STORAGE_ENDPOINT`, `STORAGE_BUCKET`, `STORAGE_REGION`, `STORAGE_ACCESS_KEY`, `STORAGE_SECRET_KEY`. Local dev: MinIO via root `docker-compose` (`:9000` API).
+
+`StorageModule` applies `express.json()` middleware scoped to `/storage/*` because `main.ts` disables the global body parser for Better Auth.
 
 ## i18n
 `AppI18nModule` wraps `nestjs-i18n` with catalogs at `src/i18n/locales/{locale}/*.json`. `AppI18nService.translate(locale, key)` and `createTranslator(locale, namespace)` are namespace-agnostic. `UserLocaleService` resolves locale via `UserService.resolveLocale` (stored user locale, request headers, fallback `en`). Transactional emails use namespace `email` via `createEmailTemplateContext()` in `notification/email/`; pure template functions take `{ t, formatDateTime, formatDate, formatTime, formatList }`. Date/time formatting uses `Europe/Berlin` and ICU regional tags `en-DE` / `de-DE` so English copy still follows German date order and 24h time. Auth callbacks forward Better Auth `request` headers; the frontend auth client sends `x-locale` from the `clippy.locale` cookie.
@@ -186,6 +200,7 @@ Do **not** use Query v1 (`db._query…findMany({ where: (t,{eq}) => … })`).
 
 ## Known constraints (decision-log extracts — architectural, must stay)
 Update this section when a decision changes one of these (pipeline Decision routing). Each carries the decision that set it:
-- **`FormSubmissionService` ↔ `MembershipService` circular dependency**: both inject each other; `forwardRef()` must stay on BOTH sides or DI breaks. (VOLI-592)
 - **`UserProfile.data` is `@Field(() => GraphQLJSON)`**, not `String`. graphql-js v16 throws serializing an object as a String; returning it as String silently yielded `null`. (VOLI-592)
 - **`FormSubmissionStatus` is `SUBMITTED` / `REJECTED` only** (no DRAFT/APPROVED). Gating logic keys off these two. (form-submission-status-simplification)
+- **No `forwardRef` in `apps/backend`**. Module dependencies must form a DAG. Cycles are broken by extracting lower-level data modules (`OrganizationUnitDataModule`) or by moving cross-domain GraphQL field resolution into the higher-level module (`EventModule` owns the `Shift.event` field).
+- **`OrganizationUnitDataModule`** sits below `AuthModule` in the dependency graph. `AuthService` uses `OrganizationUnitDataService` for ancestor-unit lookups and org resolution, so `AuthModule` does not depend on `OrganizationModule`.

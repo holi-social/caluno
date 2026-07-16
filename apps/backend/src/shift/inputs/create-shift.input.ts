@@ -43,4 +43,7 @@ export class CreateShiftInput {
 
   @Field(() => String, { nullable: true })
   rrule?: string | null;
+
+  @Field(() => String, { nullable: true })
+  imageFileId?: string | null;
 }

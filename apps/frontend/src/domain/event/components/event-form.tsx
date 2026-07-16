@@ -1,6 +1,7 @@
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
+import { useOrgUId } from '@repo/data/react';
 import {
   DatePickerWithTimeRange,
   Field,
@@ -12,6 +13,7 @@ import { useTranslations } from 'next-intl';
 import { useState, useTransition } from 'react';
 import { useForm } from 'react-hook-form';
 import { FormSheet, useFormSheet } from '@/components/form-sheet';
+import { FileUpload } from '@/domain/storage/components/file-upload';
 import { useRouter } from '@/i18n/navigation';
 import { type EventFormValues, eventFormSchema } from '../schemas';
 
@@ -19,6 +21,8 @@ interface EventFormProps {
   title: string;
   description: string;
   initialValues?: Partial<EventFormValues>;
+  logoPreviewUrl?: string | null;
+  coverPreviewUrl?: string | null;
   mutate: (data: EventFormValues) => Promise<{ serverError?: string }>;
 }
 
@@ -26,11 +30,15 @@ export const EventForm = ({
   title,
   description,
   initialValues,
+  logoPreviewUrl,
+  coverPreviewUrl,
   mutate,
 }: EventFormProps) => {
   const router = useRouter();
+  const organizationUnitId = useOrgUId();
   const t = useTranslations('Event.form');
   const tValidation = useTranslations('Event.form.validation');
+  const tUpload = useTranslations('Storage.upload');
   const [pending, startTransition] = useTransition();
   const [serverError, setServerError] = useState<string>();
 
@@ -41,7 +49,6 @@ export const EventForm = ({
     startRequired: tValidation('startRequired'),
     endRequired: tValidation('endRequired'),
     endAfterStart: tValidation('endAfterStart'),
-    invalidUrl: tValidation('invalidUrl'),
   });
 
   const {
@@ -55,8 +62,8 @@ export const EventForm = ({
     defaultValues: {
       title: '',
       location: '',
-      logoUrl: '',
-      coverUrl: '',
+      logoFileId: undefined,
+      coverFileId: undefined,
       ...initialValues,
     },
   });
@@ -130,29 +137,37 @@ export const EventForm = ({
         {errors.location && <FieldError>{errors.location.message}</FieldError>}
       </Field>
 
-      <Field>
-        <FieldLabel htmlFor="event-logo-url">{t('logoUrlLabel')}</FieldLabel>
-        <Input
-          id="event-logo-url"
-          disabled={pending}
-          placeholder="https://"
-          aria-invalid={!!errors.logoUrl}
-          {...register('logoUrl')}
-        />
-        {errors.logoUrl && <FieldError>{errors.logoUrl.message}</FieldError>}
-      </Field>
+      <FileUpload
+        purpose="event_image"
+        organizationUnitId={organizationUnitId}
+        label={t('logoUrlLabel')}
+        description={tUpload('imageHint')}
+        value={watch('logoFileId')}
+        initialPreviewUrl={logoPreviewUrl}
+        disabled={pending}
+        onUploaded={(result) => {
+          setValue('logoFileId', result.fileId, { shouldValidate: true });
+        }}
+        onClear={() => {
+          setValue('logoFileId', null, { shouldValidate: true });
+        }}
+      />
 
-      <Field>
-        <FieldLabel htmlFor="event-cover-url">{t('coverUrlLabel')}</FieldLabel>
-        <Input
-          id="event-cover-url"
-          disabled={pending}
-          placeholder="https://"
-          aria-invalid={!!errors.coverUrl}
-          {...register('coverUrl')}
-        />
-        {errors.coverUrl && <FieldError>{errors.coverUrl.message}</FieldError>}
-      </Field>
+      <FileUpload
+        purpose="event_image"
+        organizationUnitId={organizationUnitId}
+        label={t('coverUrlLabel')}
+        description={tUpload('imageHint')}
+        value={watch('coverFileId')}
+        initialPreviewUrl={coverPreviewUrl}
+        disabled={pending}
+        onUploaded={(result) => {
+          setValue('coverFileId', result.fileId, { shouldValidate: true });
+        }}
+        onClear={() => {
+          setValue('coverFileId', null, { shouldValidate: true });
+        }}
+      />
     </FormSheet>
   );
 };

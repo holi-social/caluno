@@ -6,7 +6,6 @@ import { Loader } from '../../graphql/decorators';
 import type { AuthenticatedGraphQLContext } from '../../graphql/graphql.context';
 import { UserMapper } from '../../user/mappers/user.mapper';
 import { User } from '../../user/models/user.model';
-import { ShiftInviteStatus } from '../enums';
 import { ShiftInstanceInviteMapper } from '../mappers/shift-instance-invite.mapper';
 import { ShiftInstance } from '../models/shift-instance.model';
 import { ShiftInstanceInvite } from '../models/shift-instance-invite.model';

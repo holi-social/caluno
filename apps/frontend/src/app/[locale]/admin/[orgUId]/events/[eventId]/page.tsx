@@ -3,6 +3,10 @@ import { Button } from '@repo/ui';
 import { ArrowLeft, MapPin, SquarePen, UserPlus } from 'lucide-react';
 import { notFound } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
+import {
+  DetailCoverImage,
+  DetailLogoImage,
+} from '@/components/detail-entity-image';
 import { EventShiftsCard } from '@/domain/event/components/event-shifts-card';
 import { EventVolunteersCard } from '@/domain/event/components/event-volunteers-card';
 import { eventsListPath } from '@/domain/event/routes';
@@ -45,16 +49,28 @@ export default async function EventDetailPage({
         {t('backLink')}
       </Link>
 
+      {event.coverUrl ? (
+        <DetailCoverImage
+          src={event.coverUrl}
+          alt={t('coverImageAlt', { title: event.title })}
+        />
+      ) : null}
+
       <div className="flex items-start justify-between gap-4">
-        <div className="min-w-0">
-          <h1 className="page-title line-clamp-2">{event.title}</h1>
-          <p className="text-muted-foreground mt-1">
-            {formatRange(event.startsAt, event.endsAt)}
-          </p>
-          <p className="text-muted-foreground flex items-center gap-1 mt-1">
-            <MapPin className="size-4 shrink-0" />
-            {event.location ?? '—'}
-          </p>
+        <div className="flex min-w-0 items-start gap-4">
+          {event.logoUrl ? (
+            <DetailLogoImage src={event.logoUrl} alt={event.title} />
+          ) : null}
+          <div className="min-w-0">
+            <h1 className="page-title line-clamp-2">{event.title}</h1>
+            <p className="text-muted-foreground mt-1">
+              {formatRange(event.startsAt, event.endsAt)}
+            </p>
+            <p className="text-muted-foreground flex items-center gap-1 mt-1">
+              <MapPin className="size-4 shrink-0" />
+              {event.location ?? '—'}
+            </p>
+          </div>
         </div>
 
         {canEdit && (

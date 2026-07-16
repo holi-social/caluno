@@ -1,11 +1,8 @@
 {
   "version": "8",
   "dialect": "postgres",
-  "id": "9466904f-7ed6-47af-bc7c-875b960e809f",
-  "prevIds": [
-    "42ca2e4f-7883-4a46-82f5-54e30d4d3fc0",
-    "fde1871d-42ab-467d-87a2-f13e6c1db300"
-  ],
+  "id": "a8252074-b45f-466d-a1c9-c25f7707b50e",
+  "prevIds": ["6681c67e-219e-42c2-9848-d1cff9bd1ae7"],
   "ddl": [
     {
       "values": ["PENDING", "ACCEPTED", "REJECTED"],
@@ -58,6 +55,32 @@
     {
       "values": ["PENDING", "ACCEPTED", "REJECTED"],
       "name": "shift_invite_status",
+      "entityType": "enums",
+      "schema": "public"
+    },
+    {
+      "values": [
+        "requirement_document",
+        "form_document",
+        "org_logo",
+        "organization_logo",
+        "event_image",
+        "shift_image",
+        "profile_picture"
+      ],
+      "name": "file_purpose",
+      "entityType": "enums",
+      "schema": "public"
+    },
+    {
+      "values": ["pending", "uploaded", "failed"],
+      "name": "file_status",
+      "entityType": "enums",
+      "schema": "public"
+    },
+    {
+      "values": ["private", "public"],
+      "name": "file_visibility",
       "entityType": "enums",
       "schema": "public"
     },
@@ -142,12 +165,6 @@
     {
       "isRlsEnabled": false,
       "name": "organization_units",
-      "entityType": "tables",
-      "schema": "public"
-    },
-    {
-      "isRlsEnabled": false,
-      "name": "organization_unit_required_forms",
       "entityType": "tables",
       "schema": "public"
     },
@@ -262,6 +279,12 @@
     {
       "isRlsEnabled": false,
       "name": "shift_invites",
+      "entityType": "tables",
+      "schema": "public"
+    },
+    {
+      "isRlsEnabled": false,
+      "name": "files",
       "entityType": "tables",
       "schema": "public"
     },
@@ -1793,19 +1816,6 @@
       "table": "organization_units"
     },
     {
-      "type": "boolean",
-      "typeSchema": null,
-      "notNull": true,
-      "dimensions": 0,
-      "default": "false",
-      "generated": null,
-      "identity": null,
-      "name": "required_forms_enabled",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "organization_units"
-    },
-    {
       "type": "timestamp",
       "typeSchema": null,
       "notNull": false,
@@ -1855,7 +1865,7 @@
       "name": "id",
       "entityType": "columns",
       "schema": "public",
-      "table": "organization_unit_required_forms"
+      "table": "organization_unit_types"
     },
     {
       "type": "uuid",
@@ -1865,46 +1875,7 @@
       "default": null,
       "generated": null,
       "identity": null,
-      "name": "organization_unit_id",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "organization_unit_required_forms"
-    },
-    {
-      "type": "uuid",
-      "typeSchema": null,
-      "notNull": true,
-      "dimensions": 0,
-      "default": null,
-      "generated": null,
-      "identity": null,
-      "name": "form_id",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "organization_unit_required_forms"
-    },
-    {
-      "type": "integer",
-      "typeSchema": null,
-      "notNull": true,
-      "dimensions": 0,
-      "default": "0",
-      "generated": null,
-      "identity": null,
-      "name": "order",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "organization_unit_required_forms"
-    },
-    {
-      "type": "uuid",
-      "typeSchema": null,
-      "notNull": true,
-      "dimensions": 0,
-      "default": "gen_random_uuid()",
-      "generated": null,
-      "identity": null,
-      "name": "id",
+      "name": "organization_id",
       "entityType": "columns",
       "schema": "public",
       "table": "organization_unit_types"
@@ -2326,14 +2297,14 @@
       "table": "form_block_fields"
     },
     {
-      "type": "text",
+      "type": "uuid",
       "typeSchema": null,
       "notNull": false,
       "dimensions": 0,
       "default": null,
       "generated": null,
       "identity": null,
-      "name": "document_url",
+      "name": "document_file_id",
       "entityType": "columns",
       "schema": "public",
       "table": "form_block_fields"
@@ -3639,6 +3610,19 @@
       "table": "shifts"
     },
     {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "image_url",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "shifts"
+    },
+    {
       "type": "shift_visibility",
       "typeSchema": "public",
       "notNull": true,
@@ -4092,6 +4076,201 @@
       "entityType": "columns",
       "schema": "public",
       "table": "shift_invites"
+    },
+    {
+      "type": "uuid",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "gen_random_uuid()",
+      "generated": null,
+      "identity": null,
+      "name": "id",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "files"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "storage_key",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "files"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "bucket",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "files"
+    },
+    {
+      "type": "file_visibility",
+      "typeSchema": "public",
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "visibility",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "files"
+    },
+    {
+      "type": "file_purpose",
+      "typeSchema": "public",
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "purpose",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "files"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "mime_type",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "files"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "filename",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "files"
+    },
+    {
+      "type": "integer",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "byte_size",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "files"
+    },
+    {
+      "type": "file_status",
+      "typeSchema": "public",
+      "notNull": true,
+      "dimensions": 0,
+      "default": "'pending'",
+      "generated": null,
+      "identity": null,
+      "name": "status",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "files"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "uploaded_by_user_id",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "files"
+    },
+    {
+      "type": "uuid",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "organization_unit_id",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "files"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "public_url",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "files"
+    },
+    {
+      "type": "timestamp",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "uploaded_at",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "files"
+    },
+    {
+      "type": "timestamp",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "now()",
+      "generated": null,
+      "identity": null,
+      "name": "created_at",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "files"
+    },
+    {
+      "type": "timestamp",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "now()",
+      "generated": null,
+      "identity": null,
+      "name": "updated_at",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "files"
     },
     {
       "type": "uuid",
@@ -4742,6 +4921,27 @@
       "entityType": "indexes",
       "schema": "public",
       "table": "organization_units"
+    },
+    {
+      "nameExplicit": true,
+      "columns": [
+        {
+          "value": "organization_id",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "with": "",
+      "method": "btree",
+      "concurrently": false,
+      "name": "idx_organization_unit_types_organization_id",
+      "entityType": "indexes",
+      "schema": "public",
+      "table": "organization_unit_types"
     },
     {
       "nameExplicit": true,
@@ -5780,6 +5980,69 @@
       "table": "shift_invites"
     },
     {
+      "nameExplicit": true,
+      "columns": [
+        {
+          "value": "uploaded_by_user_id",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "with": "",
+      "method": "btree",
+      "concurrently": false,
+      "name": "idx_files_uploaded_by_user_id",
+      "entityType": "indexes",
+      "schema": "public",
+      "table": "files"
+    },
+    {
+      "nameExplicit": true,
+      "columns": [
+        {
+          "value": "organization_unit_id",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "with": "",
+      "method": "btree",
+      "concurrently": false,
+      "name": "idx_files_organization_unit_id",
+      "entityType": "indexes",
+      "schema": "public",
+      "table": "files"
+    },
+    {
+      "nameExplicit": true,
+      "columns": [
+        {
+          "value": "status",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "with": "",
+      "method": "btree",
+      "concurrently": false,
+      "name": "idx_files_status",
+      "entityType": "indexes",
+      "schema": "public",
+      "table": "files"
+    },
+    {
       "nameExplicit": false,
       "columns": ["user_id"],
       "schemaTo": "public",
@@ -6054,29 +6317,16 @@
     },
     {
       "nameExplicit": false,
-      "columns": ["organization_unit_id"],
+      "columns": ["organization_id"],
       "schemaTo": "public",
-      "tableTo": "organization_units",
+      "tableTo": "organizations",
       "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "CASCADE",
-      "name": "organization_unit_required_forms_Hp7pYD82jLLL_fkey",
+      "name": "organization_unit_types_organization_id_organizations_id_fkey",
       "entityType": "fks",
       "schema": "public",
-      "table": "organization_unit_required_forms"
-    },
-    {
-      "nameExplicit": false,
-      "columns": ["form_id"],
-      "schemaTo": "public",
-      "tableTo": "requirement_forms",
-      "columnsTo": ["id"],
-      "onUpdate": "NO ACTION",
-      "onDelete": "RESTRICT",
-      "name": "organization_unit_required_forms_twV1Hml42qxX_fkey",
-      "entityType": "fks",
-      "schema": "public",
-      "table": "organization_unit_required_forms"
+      "table": "organization_unit_types"
     },
     {
       "nameExplicit": false,
@@ -6139,6 +6389,19 @@
       "onUpdate": "NO ACTION",
       "onDelete": "CASCADE",
       "name": "form_block_fields_block_id_form_blocks_id_fkey",
+      "entityType": "fks",
+      "schema": "public",
+      "table": "form_block_fields"
+    },
+    {
+      "nameExplicit": false,
+      "columns": ["document_file_id"],
+      "schemaTo": "public",
+      "tableTo": "files",
+      "columnsTo": ["id"],
+      "onUpdate": "NO ACTION",
+      "onDelete": "SET NULL",
+      "name": "form_block_fields_document_file_id_files_id_fkey",
       "entityType": "fks",
       "schema": "public",
       "table": "form_block_fields"
@@ -6600,6 +6863,32 @@
     },
     {
       "nameExplicit": false,
+      "columns": ["uploaded_by_user_id"],
+      "schemaTo": "public",
+      "tableTo": "users",
+      "columnsTo": ["id"],
+      "onUpdate": "NO ACTION",
+      "onDelete": "CASCADE",
+      "name": "files_uploaded_by_user_id_users_id_fkey",
+      "entityType": "fks",
+      "schema": "public",
+      "table": "files"
+    },
+    {
+      "nameExplicit": false,
+      "columns": ["organization_unit_id"],
+      "schemaTo": "public",
+      "tableTo": "organization_units",
+      "columnsTo": ["id"],
+      "onUpdate": "NO ACTION",
+      "onDelete": "SET NULL",
+      "name": "files_organization_unit_id_organization_units_id_fkey",
+      "entityType": "fks",
+      "schema": "public",
+      "table": "files"
+    },
+    {
+      "nameExplicit": false,
       "columns": ["shift_instance_id"],
       "schemaTo": "public",
       "tableTo": "shift_instances",
@@ -6623,14 +6912,6 @@
       "entityType": "fks",
       "schema": "public",
       "table": "time_entries"
-    },
-    {
-      "columns": ["organization_unit_id", "form_id"],
-      "nameExplicit": true,
-      "name": "pk_organization_unit_required_forms",
-      "entityType": "pks",
-      "schema": "public",
-      "table": "organization_unit_required_forms"
     },
     {
       "columns": ["id"],
@@ -6899,6 +7180,14 @@
     {
       "columns": ["id"],
       "nameExplicit": false,
+      "name": "files_pkey",
+      "schema": "public",
+      "table": "files",
+      "entityType": "pks"
+    },
+    {
+      "columns": ["id"],
+      "nameExplicit": false,
       "name": "time_entries_pkey",
       "schema": "public",
       "table": "time_entries",
@@ -6966,6 +7255,15 @@
       "entityType": "uniques",
       "schema": "public",
       "table": "organization_units"
+    },
+    {
+      "nameExplicit": true,
+      "columns": ["organization_id", "name"],
+      "nullsNotDistinct": false,
+      "name": "uq_organization_unit_types_organization_id_name",
+      "entityType": "uniques",
+      "schema": "public",
+      "table": "organization_unit_types"
     },
     {
       "nameExplicit": true,
@@ -7109,6 +7407,15 @@
       "name": "shifts_slug_key",
       "schema": "public",
       "table": "shifts",
+      "entityType": "uniques"
+    },
+    {
+      "nameExplicit": false,
+      "columns": ["storage_key"],
+      "nullsNotDistinct": false,
+      "name": "files_storage_key_key",
+      "schema": "public",
+      "table": "files",
       "entityType": "uniques"
     },
     {

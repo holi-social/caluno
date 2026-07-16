@@ -8,6 +8,7 @@ import { getSafeRedirect } from '@/lib/safe-redirect';
 import { JoinError } from './components/join-error';
 import { RequestPending } from './components/request-pending';
 import { RequestRejected } from './components/request-rejected';
+import { RequirementDocumentSubmission } from './components/requirement-document-submission';
 import { OrgRequirementsNeeded } from './components/requirements-needed';
 
 interface InvitePageProps {
@@ -73,6 +74,17 @@ export default async function InvitePage({ params }: InvitePageProps) {
         profileDescription={result.requirementProfile?.description}
         requirements={result.requirementProfile?.requirements ?? []}
         requirementStatuses={result.requirementStatuses ?? []}
+        documentSubmission={
+          result.requirementProfile ? (
+            <RequirementDocumentSubmission
+              organizationUnitId={organizationUnitId}
+              profileId={result.requirementProfile.id}
+              membershipRequestId={result.membershipRequestId}
+              requirements={result.requirementProfile.requirements ?? []}
+              requirementStatuses={result.requirementStatuses ?? []}
+            />
+          ) : null
+        }
       />
     );
   }

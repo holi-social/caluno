@@ -485,7 +485,9 @@ export type RenderableField = Pick<
   | 'placeholder'
   | 'systemKey'
   | 'options'
-  | 'documentUrl'
+  | 'documentFileId'
+  | 'documentDownloadUrl'
+  | 'documentFilename'
   | 'documentLabel'
   | 'minAge'
 >;
@@ -513,9 +515,13 @@ export function FieldRenderer({
         </FieldLabel>
         {field.documentLabel && (
           <FieldDescription>
-            {field.documentUrl ? (
+            {field.documentDownloadUrl ? (
               <span className="flex items-center gap-1">
-                <a href={field.documentUrl} target="_blank" rel="noopener">
+                <a
+                  href={field.documentDownloadUrl}
+                  target="_blank"
+                  rel="noopener"
+                >
                   {field.documentLabel}
                 </a>
                 <Link className="size-3" />

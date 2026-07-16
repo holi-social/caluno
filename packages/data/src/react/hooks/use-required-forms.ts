@@ -16,7 +16,9 @@ export type RequiredFormField = {
   required: boolean;
   lockType: boolean;
   systemKey?: string | null;
-  documentUrl?: string | null;
+  documentFileId?: string | null;
+  documentDownloadUrl?: string | null;
+  documentFilename?: string | null;
   documentLabel?: string | null;
   minAge?: number | null;
   fieldOrder: number;

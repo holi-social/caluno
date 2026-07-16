@@ -10,7 +10,7 @@ import {
   UserEntity,
 } from '../database/schema';
 import { ForbiddenGraphQLError, NotFoundGraphQLError } from '../graphql/errors';
-import { OrganizationUnitService } from '../organization/organization-unit.service';
+import { OrganizationUnitDataService } from '../organization/organization-unit-data.service';
 import { PERMISSION_GROUPS } from './constants/permission-groups';
 import { CreateRoleInput } from './inputs/create-role.input';
 import { UpdateRoleInput } from './inputs/update-role.input';
@@ -20,7 +20,7 @@ export class AuthService {
   constructor(
     @Inject(DATABASE_CONNECTION)
     private readonly db: Database,
-    private readonly organizationUnitService: OrganizationUnitService,
+    private readonly organizationUnitDataService: OrganizationUnitDataService,
   ) {}
 
   async createRole(
@@ -59,7 +59,7 @@ export class AuthService {
     organizationUnitId: string,
   ): Promise<PermissionEntity[]> {
     const ancestorUnitIds =
-      await this.organizationUnitService.listInclusiveAncestorUnitIds(
+      await this.organizationUnitDataService.listInclusiveAncestorUnitIds(
         organizationUnitId,
       );
 
@@ -101,7 +101,7 @@ export class AuthService {
     organizationUnitId: string,
   ): Promise<Set<string>> {
     const ancestorUnitIds =
-      await this.organizationUnitService.listInclusiveAncestorUnitIds(
+      await this.organizationUnitDataService.listInclusiveAncestorUnitIds(
         organizationUnitId,
       );
 
@@ -139,7 +139,7 @@ export class AuthService {
     permissionKey: string,
   ): Promise<Array<Pick<UserEntity, 'id' | 'email' | 'name'>>> {
     const ancestorUnitIds =
-      await this.organizationUnitService.listInclusiveAncestorUnitIds(
+      await this.organizationUnitDataService.listInclusiveAncestorUnitIds(
         organizationUnitId,
       );
 
@@ -368,7 +368,7 @@ export class AuthService {
     organizationUnitId: string,
   ): Promise<OrganizationEntity> {
     const organization =
-      await this.organizationUnitService.findOrganizationByUnitId(
+      await this.organizationUnitDataService.findOrganizationByUnitId(
         organizationUnitId,
       );
 

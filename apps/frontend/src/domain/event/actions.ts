@@ -17,8 +17,8 @@ export const createEvent = actionClient
       startsAt: parsedInput.startsAt.toISOString(),
       endsAt: parsedInput.endsAt.toISOString(),
       location: parsedInput.location,
-      logoUrl: parsedInput.logoUrl || undefined,
-      coverUrl: parsedInput.coverUrl || undefined,
+      logoFileId: parsedInput.logoFileId ?? null,
+      coverFileId: parsedInput.coverFileId ?? null,
     };
 
     return await data.event.create(input);
@@ -35,8 +35,8 @@ export const updateEvent = actionClient
       startsAt: parsedInput.startsAt.toISOString(),
       endsAt: parsedInput.endsAt.toISOString(),
       location: parsedInput.location,
-      logoUrl: parsedInput.logoUrl || undefined,
-      coverUrl: parsedInput.coverUrl || undefined,
+      logoFileId: parsedInput.logoFileId,
+      coverFileId: parsedInput.coverFileId,
     };
 
     return await data.event.update(eventId, input);

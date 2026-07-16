@@ -32,6 +32,7 @@ export function shiftFormSchema(t: ShiftSchemaMessages) {
     invitedMemberIds: z.array(z.string()).optional(),
     recurrenceDays: z.array(recurrenceDayEnum).optional(),
     recurrenceEndsAt: z.date().optional(),
+    imageFileId: z.uuid().nullish(),
   });
 }
 
