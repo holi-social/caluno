@@ -1253,7 +1253,9 @@
     "timerStartsIn": "starts in {time}",
     "timerStartedAgo": "Started {time} ago",
     "timerVolunteering": "You're volunteering for {time}",
-    "eventCoverImageAlt": "Cover image for {title}"
+    "eventCoverImageAlt": "Cover image for {title}",
+    "loadPast": "Load past",
+    "loadMore": "Load more"
   },
   "OrgDetail": {
     "coverImageAlt": "Cover image for {title}",

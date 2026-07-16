@@ -555,7 +555,7 @@ type Query {
   activeShiftInstances: [ShiftInstance!]!
   adminUserProfile(userId: String!): UserProfile
   adminVolunteerSubmission(id: String!): FormSubmission
-  availableShiftInstances(from: DateTime, organizationUnitIds: [ID!], to: DateTime): [ShiftInstance!]!
+  availableShiftInstances(from: DateTime, limit: Int! = 15, offset: Int! = 0, organizationUnitIds: [ID!], to: DateTime): ShiftInstancePaginatedResponse!
   event(id: ID!): Event!
   eventAttendees(eventId: ID!): [User!]!
   eventShifts(eventId: ID!, limit: Int! = 10, offset: Int! = 0): ShiftPaginatedResponse!
@@ -579,7 +579,7 @@ type Query {
   myMembershipRequests(limit: Int! = 10, offset: Int! = 0, status: MembershipRequestStatus): MembershipRequestPaginatedResponse!
   myMembershipStatus(organizationUnitId: ID!): Boolean!
   myOrganizationUnits: [OrganizationUnit!]!
-  myShiftInstances(includePast: Boolean! = false): [ShiftInstance!]!
+  myShiftInstances(from: DateTime, includePast: Boolean! = false, limit: Int! = 15, offset: Int! = 0, order: SortOrder! = ASC, to: DateTime): ShiftInstancePaginatedResponse!
   myTime(limit: Int! = 10, offset: Int! = 0): TimeEntryPaginatedResponse!
   myUserProfile: UserProfile
   organization(id: String!): Organization
@@ -880,6 +880,11 @@ type ShiftInstanceInvite {
   userId: String!
 }
 
+type ShiftInstancePaginatedResponse {
+  items: [ShiftInstance!]!
+  pagination: PaginationInfo!
+}
+
 type ShiftInstancesByMaster {
   instances: [ShiftInstance!]!
   masterId: ID!
@@ -910,6 +915,11 @@ type ShiftPaginatedResponse {
 enum ShiftVisibility {
   ALL_MEMBERS
   INVITED_MEMBERS
+}
+
+enum SortOrder {
+  ASC
+  DESC
 }
 
 input SubmitFormInput {

@@ -23,6 +23,7 @@ export * from './react/auth/auth-client';
 // Data fetching hooks
 export * from './react/hooks/use-admin-user-profile';
 export * from './react/hooks/use-available-shift-instances';
+export * from './react/hooks/use-available-shift-instances-infinite';
 export * from './react/hooks/use-block';
 export * from './react/hooks/use-check-in';
 export * from './react/hooks/use-check-out';
@@ -35,6 +36,7 @@ export * from './react/hooks/use-memberships';
 export * from './react/hooks/use-my-form-submissions';
 export * from './react/hooks/use-my-permissions';
 export * from './react/hooks/use-my-shift-instances';
+export * from './react/hooks/use-my-shift-instances-infinite';
 export * from './react/hooks/use-organizations';
 export * from './react/hooks/use-required-forms';
 export * from './react/hooks/use-requirement-forms';

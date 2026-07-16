@@ -1,8 +1,11 @@
 'use client';
 
-import type { AvailableShiftInstance } from '@repo/data/react';
-import { useAvailableShiftInstances } from '@repo/data/react';
-import { Empty, EmptyMedia, EmptyTitle, Skeleton } from '@repo/ui';
+import type { AvailableShiftInstancesInfiniteResult } from '@repo/data/react';
+import {
+  type AvailableShiftInstance,
+  useAvailableShiftInstancesInfinite,
+} from '@repo/data/react';
+import { Button, Empty, EmptyMedia, EmptyTitle, Skeleton } from '@repo/ui';
 import { CalendarXIcon } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useMemo } from 'react';
@@ -16,22 +19,30 @@ import { type DayGroup, DayTimelineView } from './day-timeline-view';
 import { ShiftCardDiscovery } from './shift-card-discovery';
 
 interface DiscoverViewProps {
-  initialAvailableShiftInstances: AvailableShiftInstance[];
+  initialAvailableShiftInstancesPage?: AvailableShiftInstancesInfiniteResult;
 }
 
 export function DiscoverView({
-  initialAvailableShiftInstances,
+  initialAvailableShiftInstancesPage,
 }: DiscoverViewProps) {
   const t = useTranslations('VolunteerHome');
+  const ct = useTranslations('Common');
 
   const discoverOptions = useMemo(() => getDiscoverWindow(), []);
 
-  const { data, isLoading } = useAvailableShiftInstances(discoverOptions, {
-    initialData: initialAvailableShiftInstances,
-  });
+  const { data, isLoading, isFetching, hasNextPage, fetchNextPage } =
+    useAvailableShiftInstancesInfinite(discoverOptions, {
+      initialData: initialAvailableShiftInstancesPage
+        ? { pages: [initialAvailableShiftInstancesPage], pageParams: [0] }
+        : undefined,
+    });
   const showLoading = useDelayedLoading(isLoading);
 
-  const availableShiftList = data ?? [];
+  const availableShiftList = useMemo<AvailableShiftInstance[]>(() => {
+    if (!data) return [];
+    return data.pages.flatMap((page) => page.items);
+  }, [data]);
+
   const dayStrip = useMemo(
     () => getDayStripDays(availableShiftList, { minDays: 7 }),
     [availableShiftList],
@@ -46,6 +57,19 @@ export function DiscoverView({
       {group.items.map((shift) => (
         <ShiftCardDiscovery key={shift.id} shiftInstance={shift} />
       ))}
+      {group.date.getTime() === grouped[grouped.length - 1]?.date.getTime() &&
+        (hasNextPage || isFetching) && (
+          <div className="flex justify-center py-4">
+            <Button
+              variant="outline"
+              size="md"
+              onClick={() => fetchNextPage()}
+              disabled={isFetching}
+            >
+              {isFetching ? ct('loading') : t('loadMore')}
+            </Button>
+          </div>
+        )}
     </div>
   );
 

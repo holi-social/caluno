@@ -12,15 +12,17 @@ export default async function VolunteeringHomePage({
   await params;
   const client = await getDataClient();
 
-  const [myShiftInstances, availableShiftInstances] = await Promise.all([
-    client.shift.findMyShiftInstances(false),
-    client.shift.findAvailableShiftInstances(getDiscoverWindow()),
-  ]);
+  const [myShiftInstancesPage, availableShiftInstancesPage] = await Promise.all(
+    [
+      client.shift.findMyShiftInstances({ limit: 10 }),
+      client.shift.findAvailableShiftInstances(getDiscoverWindow()),
+    ],
+  );
 
   return (
     <VolunteerHomeContent
-      initialMyShiftInstances={myShiftInstances}
-      initialAvailableShiftInstances={availableShiftInstances}
+      initialMyShiftInstances={myShiftInstancesPage.items}
+      initialAvailableShiftInstances={availableShiftInstancesPage.items}
     />
   );
 }

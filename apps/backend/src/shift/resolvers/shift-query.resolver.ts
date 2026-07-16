@@ -1,4 +1,4 @@
-import { Args, Context, ID, Query, Resolver } from '@nestjs/graphql';
+import { Args, Context, ID, Int, Query, Resolver } from '@nestjs/graphql';
 import {
   AllowAnonymous,
   Session,
@@ -10,11 +10,14 @@ import type { AuthenticatedGraphQLContext } from '../../graphql/graphql.context'
 import { PaginationInput } from '../../graphql/pagination.input';
 import { UserMapper } from '../../user/mappers/user.mapper';
 import { User } from '../../user/models/user.model';
-import { ShiftInviteStatus } from '../enums';
+import { ShiftInviteStatus, SortOrder } from '../enums';
 import { ShiftMapper } from '../mappers/shift.mapper';
 import { ShiftInstanceMapper } from '../mappers/shift-instance.mapper';
 import { Shift, ShiftPaginatedResponse } from '../models/shift.model';
-import { ShiftInstance } from '../models/shift-instance.model';
+import {
+  ShiftInstance,
+  ShiftInstancePaginatedResponse,
+} from '../models/shift-instance.model';
 import { ShiftInstancesByMaster } from '../models/shift-instances-by-master.model';
 import { ShiftService } from '../shift.service';
 
@@ -146,33 +149,59 @@ export class ShiftQueryResolver {
     return this.shiftInstanceMapper.toArray(instances);
   }
 
-  @Query(() => [ShiftInstance])
+  @Query(() => ShiftInstancePaginatedResponse)
   async myShiftInstances(
     @Args('includePast', { type: () => Boolean, defaultValue: false })
     includePast: boolean,
+    @Args('from', { type: () => Date, nullable: true }) from: Date | null,
+    @Args('to', { type: () => Date, nullable: true }) to: Date | null,
+    @Args('limit', { type: () => Int, defaultValue: 15 }) limit: number,
+    @Args('offset', { type: () => Int, defaultValue: 0 }) offset: number,
+    @Args('order', { type: () => SortOrder, defaultValue: SortOrder.ASC })
+    order: SortOrder,
     @Session() session: UserSession,
-  ): Promise<ShiftInstance[]> {
-    const instances = await this.shiftService.findMyShiftInstances(
+  ): Promise<ShiftInstancePaginatedResponse> {
+    const { instances, total } = await this.shiftService.findMyShiftInstances(
       session.user.id,
       includePast,
+      from,
+      to,
+      limit,
+      offset,
+      order,
     );
-    return this.shiftInstanceMapper.toArray(instances);
+    return new ShiftInstancePaginatedResponse({
+      items: this.shiftInstanceMapper.toArray(instances),
+      total,
+      limit,
+      offset,
+    });
   }
 
-  @Query(() => [ShiftInstance])
+  @Query(() => ShiftInstancePaginatedResponse)
   async availableShiftInstances(
     @Args('from', { type: () => Date, nullable: true }) from: Date | null,
     @Args('to', { type: () => Date, nullable: true }) to: Date | null,
     @Args('organizationUnitIds', { type: () => [ID], nullable: true })
     organizationUnitIds: string[] | null,
+    @Args('limit', { type: () => Int, defaultValue: 15 }) limit: number,
+    @Args('offset', { type: () => Int, defaultValue: 0 }) offset: number,
     @Session() session: UserSession,
-  ): Promise<ShiftInstance[]> {
-    const instances = await this.shiftService.findAvailableShiftInstances(
-      session.user.id,
-      from,
-      to,
-      organizationUnitIds,
-    );
-    return this.shiftInstanceMapper.toArray(instances);
+  ): Promise<ShiftInstancePaginatedResponse> {
+    const { instances, total } =
+      await this.shiftService.findAvailableShiftInstances(
+        session.user.id,
+        from,
+        to,
+        organizationUnitIds,
+        limit,
+        offset,
+      );
+    return new ShiftInstancePaginatedResponse({
+      items: this.shiftInstanceMapper.toArray(instances),
+      total,
+      limit,
+      offset,
+    });
   }
 }

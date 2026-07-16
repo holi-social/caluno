@@ -12,10 +12,12 @@ export default async function DiscoverPage({ params }: DiscoverPageProps) {
   await requireAuth(`/${locale}/auth/login`);
   const client = await getDataClient();
 
-  const availableShiftInstances =
+  const availableShiftInstancesPage =
     await client.shift.findAvailableShiftInstances(getDiscoverWindow());
 
   return (
-    <DiscoverView initialAvailableShiftInstances={availableShiftInstances} />
+    <DiscoverView
+      initialAvailableShiftInstancesPage={availableShiftInstancesPage}
+    />
   );
 }

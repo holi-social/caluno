@@ -33,7 +33,7 @@ import { FilePurpose } from '../storage/enums';
 import { FileService } from '../storage/services/file.service';
 import { UserService } from '../user/user.service';
 import { slugify } from '../utils/slug.util';
-import { ShiftInviteStatus, ShiftVisibility } from './enums';
+import { ShiftInviteStatus, ShiftVisibility, SortOrder } from './enums';
 import { CreateShiftInput } from './inputs/create-shift.input';
 import { UpdateShiftInput } from './inputs/update-shift.input';
 import type { ShiftEntity } from './schemas/shift.schema';
@@ -315,29 +315,63 @@ export class ShiftService {
   async findMyShiftInstances(
     userId: string,
     includePast: boolean,
-  ): Promise<ShiftInstanceEntity[]> {
+    from: Date | null,
+    to: Date | null,
+    limit: number,
+    offset: number,
+    order: SortOrder,
+  ): Promise<{ instances: ShiftInstanceEntity[]; total: number }> {
     const organizationUnitIds =
       await this.getAccessibleOrganizationUnitIds(userId);
 
     if (organizationUnitIds.length === 0) {
-      return [];
+      return { instances: [], total: 0 };
     }
 
-    return this.db.query.shiftInstances.findMany({
-      where: {
-        isCancelled: false,
-        actualEndsAt: includePast ? undefined : { gte: new Date() },
-        master: {
-          isDeleted: false,
-          organizationUnitId: { in: organizationUnitIds },
-        },
-        invites: {
-          userId,
-        },
+    const dateCondition = this.buildMyShiftDateCondition(includePast, from, to);
+
+    const where = {
+      isCancelled: false,
+      ...dateCondition,
+      master: {
+        isDeleted: false,
+        organizationUnitId: { in: organizationUnitIds },
       },
+      invites: {
+        userId,
+      },
+    };
+
+    const allInstances = await this.db.query.shiftInstances.findMany({
+      where,
       with: { master: true },
-      orderBy: { actualStartsAt: 'asc' },
+      orderBy: { actualStartsAt: order.toLowerCase() as 'asc' | 'desc' },
     });
+
+    return {
+      instances: allInstances.slice(offset, offset + limit),
+      total: allInstances.length,
+    };
+  }
+
+  private buildMyShiftDateCondition(
+    includePast: boolean,
+    from: Date | null,
+    to: Date | null,
+  ): Record<string, unknown> {
+    if (to) {
+      return { actualEndsAt: { lt: to } };
+    }
+
+    if (from) {
+      return { actualStartsAt: { gte: from } };
+    }
+
+    if (!includePast) {
+      return { actualEndsAt: { gte: new Date() } };
+    }
+
+    return {};
   }
 
   async findAvailableShiftInstances(
@@ -345,12 +379,14 @@ export class ShiftService {
     from: Date | null,
     to: Date | null,
     organizationUnitIds: string[] | null,
-  ): Promise<ShiftInstanceEntity[]> {
+    limit: number,
+    offset: number,
+  ): Promise<{ instances: ShiftInstanceEntity[]; total: number }> {
     const userOrganizationUnitIds =
       await this.getAccessibleOrganizationUnitIds(userId);
 
     if (userOrganizationUnitIds.length === 0) {
-      return [];
+      return { instances: [], total: 0 };
     }
 
     const effectiveOrgUnitIds = organizationUnitIds?.length
@@ -358,7 +394,7 @@ export class ShiftService {
       : userOrganizationUnitIds;
 
     if (effectiveOrgUnitIds.length === 0) {
-      return [];
+      return { instances: [], total: 0 };
     }
 
     const startOfToday = this.getStartOfToday();
@@ -379,7 +415,7 @@ export class ShiftService {
     });
 
     if (instances.length === 0) {
-      return [];
+      return { instances: [], total: 0 };
     }
 
     const instanceIds = instances.map((instance) => instance.id);
@@ -394,7 +430,7 @@ export class ShiftService {
       userInvites.map((invite) => [invite.instanceId, invite]),
     );
 
-    return instances.filter((instance) => {
+    const filtered = instances.filter((instance) => {
       const master = instance.master;
       if (!master) return false;
 
@@ -411,6 +447,11 @@ export class ShiftService {
 
       return invite?.status === ShiftInviteStatus.INVITED;
     });
+
+    return {
+      instances: filtered.slice(offset, offset + limit),
+      total: filtered.length,
+    };
   }
 
   async findAll(
