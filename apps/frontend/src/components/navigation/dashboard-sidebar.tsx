@@ -45,10 +45,13 @@ export function DashboardSidebar({ permissions }: DashboardSidebarProps) {
   const orgUId = params.orgUId as string | undefined;
   const t = useTranslations('Navigation');
   const tCommon = useTranslations('Common');
+  const permissionSet = useMemo(() => new Set(permissions), [permissions]);
+  const canViewVolunteers = permissionSet.has(PermissionKey.VolunteerView);
 
   const { data: pendingCount } = useMembershipRequestCount(
     orgUId ?? '',
     MembershipRequestStatus.Pending,
+    canViewVolunteers,
   );
 
   const menuItems = useMemo(() => {
@@ -98,8 +101,6 @@ export function DashboardSidebar({ permissions }: DashboardSidebarProps) {
       },
     ];
   }, [orgUId, pendingCount]);
-
-  const permissionSet = useMemo(() => new Set(permissions), [permissions]);
 
   const settingsItems = useMemo(() => {
     if (!orgUId) return [];
