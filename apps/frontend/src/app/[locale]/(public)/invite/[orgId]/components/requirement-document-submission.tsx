@@ -6,6 +6,7 @@ import { useTranslations } from 'next-intl';
 import { useMemo, useState } from 'react';
 import { toast } from 'sonner';
 import { FileUpload } from '@/domain/storage/components/file-upload';
+import { useRouter } from '@/i18n/navigation';
 
 interface Requirement {
   id: string;
@@ -37,6 +38,7 @@ export function RequirementDocumentSubmission({
   requirementStatuses,
 }: RequirementDocumentSubmissionProps) {
   const t = useTranslations('MembershipRequest.invite.requirements');
+  const router = useRouter();
   const [fileIdsByRequirement, setFileIdsByRequirement] = useState<
     Record<string, string>
   >({});
@@ -88,7 +90,7 @@ export function RequirementDocumentSubmission({
         fulfillments,
       });
       toast.success(t('submitSuccess'));
-      window.location.reload();
+      router.refresh();
     } catch (error) {
       const message =
         error instanceof Error ? error.message : t('submitFailed');
