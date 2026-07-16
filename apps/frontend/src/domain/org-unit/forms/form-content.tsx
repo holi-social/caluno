@@ -22,8 +22,8 @@ export function OrgUnitFormContent({
 }: Props) {
   const {
     register,
-    /* watch,
-    setValue,*/
+    watch,
+    setValue,
     formState: { errors },
   } = formReturnValues;
   const t = useTranslations('OrgUnit.form');
