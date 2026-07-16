@@ -57,6 +57,15 @@ export default async function InvitePage({ params }: InvitePageProps) {
   }
 
   if (result.status === JoinStatus.RequirementsNeeded) {
+    const hasMissingForms = (result.requiredForms ?? []).some(
+      (f) => !f.submitted,
+    );
+    if (hasMissingForms) {
+      redirect(
+        `/join/${organizationUnitId}/forms?redirectTo=${encodeURIComponent(`/invite/${organizationUnitId}`)}`,
+      );
+    }
+
     return (
       <OrgRequirementsNeeded
         orgName={orgUnit.name}

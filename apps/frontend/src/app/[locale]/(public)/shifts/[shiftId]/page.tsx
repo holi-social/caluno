@@ -118,6 +118,7 @@ export default async function ShiftPage({
               <JoinShiftButton
                 shiftId={shiftId}
                 instanceId={instanceId}
+                organizationUnitId={shift.organizationUnitId}
                 visibility={shift.visibility}
                 isAuthenticated={authenticated}
                 autoJoin={autoJoin}
