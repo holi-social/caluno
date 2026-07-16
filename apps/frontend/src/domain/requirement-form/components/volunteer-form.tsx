@@ -61,8 +61,8 @@ interface ValidationMessages {
   minAge: (minAge: number) => string;
 }
 
-function buildFieldSchema(
-  field: FormBlockField,
+export function buildFieldSchema(
+  field: RenderableField,
   isRequired: boolean,
   messages: ValidationMessages,
 ): z.ZodTypeAny {
@@ -475,13 +475,28 @@ export function VolunteerForm({
   );
 }
 
-function FieldRenderer({
+export type RenderableField = Pick<
+  FormBlockField,
+  | 'id'
+  | 'type'
+  | 'label'
+  | 'required'
+  | 'description'
+  | 'placeholder'
+  | 'systemKey'
+  | 'options'
+  | 'documentUrl'
+  | 'documentLabel'
+  | 'minAge'
+>;
+
+export function FieldRenderer({
   field,
   value,
   onChange,
   error,
 }: {
-  field: FormBlockField;
+  field: RenderableField;
   value: string;
   onChange: (value: string) => void;
   error?: string;

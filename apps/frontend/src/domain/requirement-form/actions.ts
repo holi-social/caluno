@@ -97,6 +97,30 @@ export const submitForm = actionClient
     return result;
   });
 
+const submitRequiredFormSchema = z.object({
+  organizationUnitId: z.string().min(1),
+  formId: z.string().min(1),
+  values: z.array(
+    z.object({
+      fieldId: z.string(),
+      blockId: z.string(),
+      value: z.string(),
+    }),
+  ),
+});
+
+export const submitRequiredForm = actionClient
+  .inputSchema(submitRequiredFormSchema)
+  .action(async ({ parsedInput }) => {
+    const data = await getDataClient();
+    const result = await data.requirementForm.submitRequiredForm(
+      parsedInput.organizationUnitId,
+      parsedInput.formId,
+      { values: parsedInput.values },
+    );
+    return result;
+  });
+
 const deleteFormSchema = z.object({
   organizationUnitId: z.string().min(1),
   formId: z.string().min(1),
