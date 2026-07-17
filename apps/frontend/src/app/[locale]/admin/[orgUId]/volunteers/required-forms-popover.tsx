@@ -1,7 +1,9 @@
 'use client';
 
+import { FieldType } from '@repo/data';
 import {
   PermissionKey,
+  type RequiredForm,
   useHasPermission,
   useOrganizationUnitWithSuspense,
   useRequirementForms,
@@ -16,14 +18,12 @@ import {
   CommandInput,
   CommandItem,
   CommandList,
-  Label,
   Popover,
   PopoverContent,
   PopoverTrigger,
-  Separator,
   Switch,
 } from '@repo/ui';
-import { Check, FileText, Plus, X } from 'lucide-react';
+import { FileCheck, FilePlus, FileText, Info, X } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useMemo, useState } from 'react';
 import { toast } from 'sonner';
@@ -33,8 +33,19 @@ interface RequiredFormsPopoverProps {
   orgUId: string;
 }
 
+function formHasFileUpload(form: RequiredForm): boolean {
+  return (
+    form.blockRefs?.some((ref) =>
+      ref.block?.fields?.some(
+        (field) => field.type === FieldType.DocumentAcknowledgement,
+      ),
+    ) ?? false
+  );
+}
+
 export function RequiredFormsPopover({ orgUId }: RequiredFormsPopoverProps) {
   const t = useTranslations('Volunteer.requiredForms');
+  const commonT = useTranslations('Common');
   const [open, setOpen] = useState(false);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [commandOpen, setCommandOpen] = useState(false);
@@ -66,6 +77,15 @@ export function RequiredFormsPopover({ orgUId }: RequiredFormsPopoverProps) {
       (formsData?.items ?? []).filter((form) => !attachedFormIds.has(form.id)),
     [formsData, attachedFormIds],
   );
+
+  const getFormDescription = (form: RequiredForm) => {
+    const count = form.blockRefs?.length ?? 0;
+    const hasUpload = formHasFileUpload(form);
+    const questionLabel = t('questionCount', { count });
+    return hasUpload
+      ? `${questionLabel} · ${t('fileUploadLabel')}`
+      : questionLabel;
+  };
 
   const handleToggle = async (checked: boolean) => {
     try {
@@ -114,7 +134,7 @@ export function RequiredFormsPopover({ orgUId }: RequiredFormsPopoverProps) {
     }
   };
 
-  const _handleCreated = async (formId: string) => {
+  const handleCreated = async (formId: string) => {
     setCreateDialogOpen(false);
     const nextIds = [...requiredForms.map((ref) => ref.form.id), formId];
     try {
@@ -153,77 +173,70 @@ export function RequiredFormsPopover({ orgUId }: RequiredFormsPopoverProps) {
               : t('pill.none')}
           </Button>
         </PopoverTrigger>
-        <PopoverContent className="w-80 p-0" align="end">
-          <div className="p-4 space-y-4">
-            <div className="flex items-center justify-between">
-              <div className="space-y-0.5">
-                <Label
-                  htmlFor="required-forms-toggle"
-                  className="text-sm font-medium"
-                >
-                  {t('toggleLabel')}
-                </Label>
-                <p className="text-xs text-muted-foreground">
-                  {t('toggleDescription')}
+        <PopoverContent className="w-[400px] p-0" align="end">
+          <div className="p-5 space-y-5">
+            <div className="flex items-start justify-between gap-4">
+              <div className="space-y-1">
+                <h3 className="text-base font-semibold">{t('title')}</h3>
+                <p className="text-sm text-muted-foreground">
+                  {t('subtitle', {
+                    brand: commonT('brand'),
+                    unitName: orgUnit?.name ?? '',
+                  })}
                 </p>
               </div>
               <Switch
-                id="required-forms-toggle"
                 checked={enabled}
                 onCheckedChange={handleToggle}
                 disabled={setRequiredFormsEnabled.isPending}
+                aria-label={t('toggleLabel')}
               />
             </div>
 
-            <Separator />
-
-            <div className="space-y-2">
-              <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                {t('attachedFormsLabel')}
-              </p>
-              {requiredForms.length === 0 ? (
-                <p className="text-sm text-muted-foreground">
-                  {t('noFormsAttached')}
-                </p>
-              ) : (
-                <div className="space-y-2">
-                  {requiredForms.map((ref) => (
-                    <div
-                      key={ref.form.id}
-                      className="flex items-center justify-between rounded-md border px-3 py-2"
-                    >
-                      <div className="flex items-center gap-2 min-w-0">
-                        <FileText className="h-4 w-4 shrink-0 text-muted-foreground" />
-                        <div className="min-w-0">
-                          <p className="text-sm font-medium truncate">
-                            {ref.form.name}
-                          </p>
-                          <p className="text-xs text-muted-foreground">
-                            {t('questionCount', {
-                              count: ref.form.blockRefs?.length ?? 0,
-                            })}
-                          </p>
-                        </div>
+            {requiredForms.length > 0 && (
+              <div className="space-y-3">
+                {requiredForms.map((ref) => (
+                  <div
+                    key={ref.form.id}
+                    className="flex items-center justify-between gap-3 rounded-lg border px-3 py-3"
+                  >
+                    <div className="flex items-center gap-3 min-w-0">
+                      {formHasFileUpload(ref.form) ? (
+                        <FileCheck className="h-5 w-5 shrink-0 text-muted-foreground" />
+                      ) : (
+                        <FileText className="h-5 w-5 shrink-0 text-muted-foreground" />
+                      )}
+                      <div className="min-w-0">
+                        <p className="text-sm font-medium truncate">
+                          {ref.form.name}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          {getFormDescription(ref.form)}
+                        </p>
                       </div>
-                      <Button
-                        variant="ghost"
-                        size="icon-xs"
-                        onClick={() => handleRemove(ref.form.id)}
-                        disabled={setRequiredForms.isPending}
-                      >
-                        <X className="h-4 w-4" />
-                      </Button>
                     </div>
-                  ))}
-                </div>
-              )}
-            </div>
+                    <Button
+                      variant="ghost"
+                      size="icon-xs"
+                      onClick={() => handleRemove(ref.form.id)}
+                      disabled={setRequiredForms.isPending}
+                      aria-label={t('removeAria', { name: ref.form.name })}
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            )}
 
-            <div className="space-y-2">
+            <div className="flex items-center gap-3">
               <Popover open={commandOpen} onOpenChange={setCommandOpen}>
                 <PopoverTrigger asChild>
-                  <Button variant="outline" size="sm" className="w-full">
-                    <Plus className="mr-2 h-4 w-4" />
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="flex-1 border-primary text-primary hover:bg-primary/5"
+                  >
                     {t('addExisting')}
                   </Button>
                 </PopoverTrigger>
@@ -239,9 +252,6 @@ export function RequiredFormsPopover({ orgUId }: RequiredFormsPopoverProps) {
                             value={form.id}
                             onSelect={() => handleAddExisting(form.id)}
                           >
-                            <Check
-                              className={`mr-2 h-4 w-4 ${attachedFormIds.has(form.id) ? 'opacity-100' : 'opacity-0'}`}
-                            />
                             {form.name}
                           </CommandItem>
                         ))}
@@ -254,15 +264,18 @@ export function RequiredFormsPopover({ orgUId }: RequiredFormsPopoverProps) {
               <Button
                 variant="outline"
                 size="sm"
-                className="w-full"
+                className="flex-1"
                 onClick={() => setCreateDialogOpen(true)}
               >
-                <Plus className="mr-2 h-4 w-4" />
+                <FilePlus className="mr-2 h-4 w-4" />
                 {t('createNew')}
               </Button>
             </div>
 
-            <p className="text-xs text-muted-foreground">{t('dedupHint')}</p>
+            <div className="flex items-start gap-2 text-xs text-muted-foreground">
+              <Info className="h-4 w-4 shrink-0 mt-0.5" />
+              <p>{t('dedupHint')}</p>
+            </div>
           </div>
         </PopoverContent>
       </Popover>
@@ -272,6 +285,7 @@ export function RequiredFormsPopover({ orgUId }: RequiredFormsPopoverProps) {
         onOpenChange={(isOpen) => {
           if (!isOpen) setCreateDialogOpen(false);
         }}
+        onCreated={handleCreated}
         orgUId={orgUId}
         organizationId={orgUnit?.organizationId ?? ''}
       />

@@ -492,6 +492,8 @@
       "titleFallback": "Freiwilliger"
     },
     "requiredForms": {
+      "title": "Formulare, die zum Beitritt benötigt werden",
+      "subtitle": "Vor der Freigabe in {brand} › {unitName} ausgefüllt",
       "pill": {
         "required": "{count, plural, one {1 Formular erforderlich} other {{count} Formulare erforderlich}}",
         "none": "Keine Formulare erforderlich"
@@ -501,11 +503,13 @@
       "attachedFormsLabel": "Angehängte Formulare",
       "noFormsAttached": "Noch keine Formulare angehängt.",
       "questionCount": "{count, plural, one {1 Frage} other {{count} Fragen}}",
-      "addExisting": "Bestehendes Formular hinzufügen",
-      "createNew": "Neues Formular erstellen",
+      "addExisting": "+ Bestehendes hinzufügen",
+      "createNew": "Neues erstellen",
       "searchForms": "Formulare suchen...",
       "noFormsFound": "Keine Formulare gefunden",
       "dedupHint": "Freiwillige müssen Informationen, die sie bereits angegeben haben, nicht erneut eingeben.",
+      "fileUploadLabel": "Datei-Upload",
+      "removeAria": "{name} entfernen",
       "enabledToast": "Erforderliche Formulare aktiviert",
       "disabledToast": "Erforderliche Formulare deaktiviert",
       "toggleFailedToast": "Einstellung konnte nicht aktualisiert werden",
