@@ -14,6 +14,7 @@ import {
 import { ChevronDownIcon, FileTextIcon } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useState } from 'react';
+import { toast } from 'sonner';
 import { AlertIconTooltip } from './alert-icon-tooltip';
 import type { PauschalenType } from './doc-type-header';
 import { DocTypeHeader } from './doc-type-header';
@@ -31,19 +32,6 @@ import { isTimesheetNonCompliant } from './reimbursements-board';
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 export type DocTypeFilter = 'all' | 'contract' | 'timesheet';
-
-// ─── Last-action label per status ────────────────────────────────────────────
-
-const LAST_ACTION_LABEL: Record<DocStatus, string> = {
-  'contract-generate': 'created',
-  'contract-signing-vol': 'sent',
-  'contract-signing-coord': 'signed',
-  'contract-active': 'activated',
-  'timesheet-generate': 'created',
-  'timesheet-signing-vol': 'sent',
-  'timesheet-signing-super': 'signed',
-  'timesheet-ready': 'approved',
-};
 
 // ─── Status meta ──────────────────────────────────────────────────────────────
 
@@ -76,6 +64,15 @@ const STATUS_META: Record<DocStatus, StatusMeta> = {
     actionKey: null,
     isYourAction: false,
   },
+  'contract-missing': {
+    labelKey: 'contractMissing',
+    actionKey: 'create',
+    // false, not true: this keeps the row muted (bg-muted/20, see the
+    // isYourAction check below) per the "at least in muted state" rule —
+    // it still renders a Create button via actionKey, just outside the
+    // normal actionable-count/sort weighting.
+    isYourAction: false,
+  },
   'timesheet-generate': {
     labelKey: 'timesheetGenerate',
     actionKey: 'create',
@@ -96,12 +93,22 @@ const STATUS_META: Record<DocStatus, StatusMeta> = {
     actionKey: null,
     isYourAction: false,
   },
+  'timesheet-muted': {
+    labelKey: 'timesheetMuted',
+    actionKey: null,
+    isYourAction: false,
+  },
 };
 
 // ─── CTA variant ──────────────────────────────────────────────────────────────
 
 function getActionVariant(actionKey: ActionKey): 'default' | 'outline' {
   return actionKey === 'remind' ? 'outline' : 'default';
+}
+
+/** Whether this status is actionable by the org (coordinator/supervisor) right now, as opposed to waiting on the volunteer or already resolved. */
+export function isYourActionStatus(status: DocStatus): boolean {
+  return STATUS_META[status].isYourAction;
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -115,16 +122,40 @@ function formatEuro(amount: number): string {
   }).format(amount);
 }
 
+/** "Julia Vorstand" -> "J. Vorstand" */
+function abbreviateName(name: string): string {
+  const parts = name.trim().split(/\s+/);
+  if (parts.length < 2) return name;
+  const [first, ...rest] = parts;
+  return `${first![0]}. ${rest.join(' ')}`;
+}
+
 const STATUS_SORT_ORDER: DocStatus[] = [
   'contract-generate',
   'timesheet-generate',
+  'contract-missing',
   'contract-signing-coord',
   'timesheet-signing-super',
   'timesheet-ready',
   'contract-signing-vol',
   'timesheet-signing-vol',
   'contract-active',
+  'timesheet-muted',
 ];
+
+// ─── Mock: last bundle download per volunteer + pauschale type ───────────────
+
+const MOCK_LAST_BUNDLE_DOWNLOAD: Record<
+  string,
+  Partial<Record<PauschalenType, { by: string; at: string }>>
+> = {
+  v1: { ehrenamt: { by: 'Julia Vorstand', at: '05.07.2026' } },
+  v8: { ehrenamt: { by: 'Julia Vorstand', at: '30.06.2026' } },
+  v33: {
+    ehrenamt: { by: 'Julia Vorstand', at: '30.05.2026' },
+    uebungleiter: { by: 'Markus Kassier', at: '30.05.2026' },
+  },
+};
 
 // ─── VolunteerTableGroup ──────────────────────────────────────────────────────
 
@@ -162,14 +193,19 @@ function VolunteerTableGroup({
       return doc.status.startsWith(docTypeFilter);
     });
 
-  const ready = sortedDocs.filter((d) => d.status === 'timesheet-ready').length;
-  const actionDocs = sortedDocs.filter(
-    (d) => STATUS_META[d.status].isYourAction && d.status !== 'contract-active',
-  ).length;
-  const hasNonCompliant = sortedDocs.some((d) =>
-    isTimesheetNonCompliant(vol, d),
-  );
-  const hasOverCap = sortedDocs.some((d) => d.isOverCap);
+  // Ready timesheets bundle separately per pauschale type — never combined
+  // into one download, since each type is its own reimbursement batch.
+  const readyByType: Partial<Record<PauschalenType, number>> = {};
+  for (const d of sortedDocs) {
+    if (d.status !== 'timesheet-ready') continue;
+    const type = d.pauschale ?? vol.pauschale;
+    readyByType[type] = (readyByType[type] ?? 0) + 1;
+  }
+  const readyTypes = Object.keys(readyByType) as PauschalenType[];
+  const TYPE_LABEL: Record<PauschalenType, string> = {
+    ehrenamt: t('toolbar.typeEP'),
+    uebungleiter: t('toolbar.typeUL'),
+  };
 
   // Checkbox state for vol header
   const selectedCount = sortedDocs.filter((d) =>
@@ -190,7 +226,10 @@ function VolunteerTableGroup({
         )}
         onClick={() => setIsOpen((o) => !o)}
       >
-        <TableCell onClick={(e) => e.stopPropagation()}>
+        <TableCell
+          className="align-middle py-4"
+          onClick={(e) => e.stopPropagation()}
+        >
           <Checkbox
             checked={isVolIndeterminate ? 'indeterminate' : isVolChecked}
             onCheckedChange={() => onToggleVolDocs(vol)}
@@ -198,17 +237,12 @@ function VolunteerTableGroup({
           />
         </TableCell>
 
-        <TableCell className="overflow-hidden">
+        <TableCell className="align-middle overflow-hidden py-4">
           <div className="min-w-0 overflow-hidden">
             <div className="flex items-center gap-2 min-w-0">
               <span className="text-base font-medium text-card-foreground truncate">
                 {vol.name}
               </span>
-              {actionDocs > 0 && (
-                <span className="inline-flex h-4 min-w-4 shrink-0 items-center justify-center rounded-full bg-primary px-1 text-xs text-primary-foreground font-medium tabular-nums">
-                  {actionDocs}
-                </span>
-              )}
             </div>
             {vol.limits && Object.keys(vol.limits).length > 1 ? (
               <div className="flex gap-2 mt-1">
@@ -237,47 +271,67 @@ function VolunteerTableGroup({
           </div>
         </TableCell>
 
-        <TableCell className="text-sm text-muted-foreground">
-          <div className="flex items-center gap-1.5">
-            {t('docs.docCount', { count: sortedDocs.length })}
-            {hasNonCompliant && (
-              <AlertIconTooltip
-                hint={t(
-                  'docs.statusLabel.nonCompliantHint' as Parameters<
-                    typeof t
-                  >[0],
-                )}
-                className="text-alert"
-              />
-            )}
-            {hasOverCap && (
-              <AlertIconTooltip
-                hint={t(
-                  'docs.statusLabel.overCapHint' as Parameters<typeof t>[0],
-                )}
-                className="text-destructive"
-              />
-            )}
-          </div>
-        </TableCell>
+        <TableCell className="align-middle py-4" />
 
-        <TableCell />
-        <TableCell />
-        <TableCell />
+        <TableCell className="align-middle py-4" />
+        <TableCell className="align-middle py-4" />
 
-        <TableCell>
-          {/* Bundle button stops propagation; chevron lets click through to row */}
-          <div className="flex items-center gap-2 justify-end">
-            {ready > 0 && (
-              <Button
-                size="sm"
-                variant="outline"
-                className="gap-1.5 shrink-0"
-                onClick={(e) => e.stopPropagation()}
-              >
-                <FileTextIcon size={13} />
-                {t('bundle.actionLabel')} · {ready}
-              </Button>
+        <TableCell className="align-middle py-4">
+          {/* Bundle buttons stop propagation; chevron lets click through to row */}
+          <div className="flex items-center gap-3 justify-end">
+            {readyTypes.length > 0 && (
+              <div className="flex flex-col items-end gap-3">
+                {readyTypes.map((type) => {
+                  const download = MOCK_LAST_BUNDLE_DOWNLOAD[vol.id]?.[type];
+                  const readyCount = readyByType[type] ?? 0;
+                  return (
+                    <div
+                      key={type}
+                      className="flex flex-col items-end gap-1 max-w-[220px]"
+                    >
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="gap-1.5 shrink-0"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          toast.success(
+                            t('batchBar.bundleDownloadToast', {
+                              count: readyCount,
+                            }),
+                          );
+                        }}
+                      >
+                        <FileTextIcon size={13} />
+                        {t('bundle.actionLabel')} · {readyCount}
+                      </Button>
+                      <span className="text-xs text-muted-foreground text-right leading-snug">
+                        <span className="font-medium text-card-foreground">
+                          {TYPE_LABEL[type]}
+                        </span>{' '}
+                        ·{' '}
+                        {download
+                          ? t.rich('bundle.lastDownloaded', {
+                              by: abbreviateName(download.by),
+                              at: download.at,
+                              // Stubbed: no volunteer-profile route exists yet
+                              // in this prototype — becomes a real link there.
+                              name: (chunks) => (
+                                <button
+                                  type="button"
+                                  className="text-primary hover:underline"
+                                  onClick={(e) => e.stopPropagation()}
+                                >
+                                  {chunks}
+                                </button>
+                              ),
+                            })
+                          : t('bundle.neverDownloaded')}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
             )}
             <ChevronDownIcon
               size={16}
@@ -300,6 +354,10 @@ function VolunteerTableGroup({
           const isGenerate =
             doc.status === 'contract-generate' ||
             doc.status === 'timesheet-generate';
+          // Contract-generate has nothing to show yet (no signing chain has
+          // started); timesheet-generate already has computed hours/amount,
+          // so it stays visually dimmed but is still openable.
+          const canOpenSheet = doc.status !== 'contract-generate';
           const isDocSelected = selectedDocIds.has(doc.id);
           const effectivePauschale = doc.pauschale ?? vol.pauschale;
           const docNonCompliant = isTimesheetNonCompliant(vol, doc);
@@ -309,13 +367,13 @@ function VolunteerTableGroup({
               key={doc.id}
               className={cn(
                 'transition-colors',
-                isGenerate
-                  ? 'cursor-default'
-                  : 'cursor-pointer hover:bg-muted/30',
+                canOpenSheet
+                  ? 'cursor-pointer hover:bg-muted/30'
+                  : 'cursor-default',
                 !isActive && !meta.isYourAction && !isGenerate && 'bg-muted/20',
                 isDocSelected && 'bg-primary/5',
               )}
-              onClick={() => !isGenerate && onDocumentClick(doc, vol)}
+              onClick={() => canOpenSheet && onDocumentClick(doc, vol)}
             >
               <TableCell
                 className="py-3 align-top"
@@ -373,6 +431,24 @@ function VolunteerTableGroup({
                       )}
                     </span>
                   )}
+                  {doc.status === 'contract-missing' && (
+                    <span className="text-sm text-muted-foreground">
+                      {t(
+                        'docs.statusLabel.contractMissing' as Parameters<
+                          typeof t
+                        >[0],
+                      )}
+                    </span>
+                  )}
+                  {doc.status === 'timesheet-muted' && (
+                    <span className="text-sm text-muted-foreground">
+                      {t(
+                        'docs.statusLabel.timesheetMuted' as Parameters<
+                          typeof t
+                        >[0],
+                      )}
+                    </span>
+                  )}
                 </div>
               </TableCell>
 
@@ -389,23 +465,6 @@ function VolunteerTableGroup({
                   <span className="text-sm font-medium tabular-nums text-card-foreground">
                     {formatEuro(doc.amount)}
                   </span>
-                )}
-              </TableCell>
-
-              <TableCell className="py-3 align-top">
-                {!isGenerate && doc.lastActionDate && (
-                  <div className="flex flex-col gap-1">
-                    <span className="text-sm font-medium text-card-foreground">
-                      {t(
-                        `docs.lastActionLabel.${LAST_ACTION_LABEL[doc.status]}` as Parameters<
-                          typeof t
-                        >[0],
-                      )}
-                    </span>
-                    <span className="text-sm tabular-nums text-muted-foreground">
-                      {doc.lastActionDate}
-                    </span>
-                  </div>
                 )}
               </TableCell>
 
@@ -508,7 +567,6 @@ export function ReimbursementsTable({
             <TableHead className="w-24 text-right">
               {t('tableHead.amount')}
             </TableHead>
-            <TableHead className="w-36">{t('tableHead.lastAction')}</TableHead>
             <TableHead className="w-36 text-right">
               {t('tableHead.action')}
             </TableHead>

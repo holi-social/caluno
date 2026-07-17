@@ -2,6 +2,7 @@
 
 import { Button, cn } from '@repo/ui';
 import { useTranslations } from 'next-intl';
+import { toast } from 'sonner';
 import { AlertIconTooltip } from './alert-icon-tooltip';
 import type { NonCompliantAction } from './non-compliant-timesheet-dialog';
 import type { DocStatus, DocVolPair } from './reimbursements-board';
@@ -11,6 +12,7 @@ type BatchAction = 'create' | 'countersign' | 'bundle' | 'remind';
 
 const DOC_ACTION: Partial<Record<DocStatus, BatchAction>> = {
   'contract-generate': 'create',
+  'contract-missing': 'create',
   'timesheet-generate': 'create',
   'contract-signing-coord': 'countersign',
   'timesheet-signing-super': 'countersign',
@@ -93,8 +95,12 @@ export function BatchBar({
               onClick={() => {
                 if (action !== 'bundle') {
                   onRequestAction(items, action);
+                  return;
                 }
                 // bundle action — wired to mutations in production
+                toast.success(
+                  t('bundleDownloadToast', { count: items.length }),
+                );
               }}
             >
               {groupEntries.length > 1

@@ -84,7 +84,13 @@ export function LimitHeadroomBar({
     return (
       <Tooltip>
         <TooltipTrigger asChild>
-          <span className={cn('text-sm tabular-nums font-medium cursor-default', TEXT_CLASS[state], className)}>
+          <span
+            className={cn(
+              'text-sm tabular-nums font-medium cursor-default',
+              TEXT_CLASS[state],
+              className,
+            )}
+          >
             {formatEuro(used)} / {formatEuro(total)}
           </span>
         </TooltipTrigger>

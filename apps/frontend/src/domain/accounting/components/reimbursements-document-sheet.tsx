@@ -24,6 +24,7 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { useTranslations } from 'next-intl';
+import { toast } from 'sonner';
 import { AlertIconTooltip } from './alert-icon-tooltip';
 import type { PauschalenType } from './doc-type-header';
 import { TYPE_COLOR } from './doc-type-header';
@@ -44,9 +45,21 @@ type StepState = 'done' | 'active' | 'pending';
 
 interface PipelineStep {
   labelKey: string;
-  role: string;
+  actorName: string;
   state: StepState;
 }
+
+// Mock — no admin/staff profile page or backend record exists for these
+// people yet (dev dependency); stands in for "who actually performed this
+// step" in place of the generic role label previously shown here.
+type StaffActorRole = 'admin' | 'coordinator' | 'supervisor' | 'hq_manager';
+
+const MOCK_STAFF_ACTORS: Record<StaffActorRole, string> = {
+  admin: 'Julia Vorstand',
+  coordinator: 'Nina Übungsleitung',
+  supervisor: 'Markus Kassier',
+  hq_manager: 'Petra Geschäftsführung',
+};
 
 function getActiveStepIdx(status: DocStatus, signees: Signee[]): number {
   if (status === 'contract-generate' || status === 'timesheet-generate')
@@ -66,22 +79,17 @@ function getActiveStepIdx(status: DocStatus, signees: Signee[]): number {
   return pos === -1 ? 1 : pos + 1;
 }
 
-function signeeLabel(
-  signee: Signee,
-  tR: ReturnType<typeof useTranslations<'Accounting.templates.card'>>,
-): string {
-  return (
-    signee.orgRole?.name ??
-    tR(`signeeRoles.${signee.role}` as Parameters<typeof tR>[0])
-  );
+function signeeActorName(signee: Signee, volunteerName: string): string {
+  if (signee.role === 'volunteer') return volunteerName;
+  return MOCK_STAFF_ACTORS[signee.role];
 }
 
 function buildDocSteps(
   status: DocStatus,
   signees: Signee[],
   isContract: boolean,
+  volunteerName: string,
   t: ReturnType<typeof useTranslations<'Accounting.reimbursements.docs.sheet'>>,
-  tR: ReturnType<typeof useTranslations<'Accounting.templates.card'>>,
 ): PipelineStep[] {
   const activeIdx = getActiveStepIdx(status, signees);
   const totalSteps = signees.length + 2;
@@ -90,7 +98,7 @@ function buildDocSteps(
 
   steps.push({
     labelKey: t('pipeline.generate'),
-    role: t('pipeline.roleAdmin'),
+    actorName: MOCK_STAFF_ACTORS.admin,
     state: 0 < activeIdx ? 'done' : 0 === activeIdx ? 'active' : 'pending',
   });
 
@@ -98,7 +106,7 @@ function buildDocSteps(
     const idx = i + 1;
     steps.push({
       labelKey: t('pipeline.sign'),
-      role: signeeLabel(signee, tR),
+      actorName: signeeActorName(signee, volunteerName),
       state:
         idx < activeIdx ? 'done' : idx === activeIdx ? 'active' : 'pending',
     });
@@ -107,7 +115,7 @@ function buildDocSteps(
   const finalIdx = totalSteps - 1;
   steps.push({
     labelKey: isContract ? t('pipeline.active') : t('pipeline.ready'),
-    role: '',
+    actorName: '',
     state:
       finalIdx < activeIdx
         ? 'done'
@@ -177,9 +185,15 @@ function PipelineTracker({ steps }: { steps: PipelineStep[] }) {
             >
               {step.labelKey}
             </span>
-            <span className="text-center text-[10px] leading-tight text-muted-foreground/70">
-              {step.role}
-            </span>
+            {step.actorName && (
+              <button
+                type="button"
+                className="text-center text-[10px] leading-tight text-muted-foreground hover:underline"
+                onClick={(e) => e.stopPropagation()}
+              >
+                {step.actorName}
+              </button>
+            )}
           </div>
         </div>
       ))}
@@ -192,11 +206,11 @@ function PipelineTracker({ steps }: { steps: PipelineStep[] }) {
 function buildTimeline(
   doc: BoardDocument,
   signees: Signee[],
+  volunteerName: string,
   t: ReturnType<typeof useTranslations<'Accounting.reimbursements.docs.sheet'>>,
-  tR: ReturnType<typeof useTranslations<'Accounting.templates.card'>>,
 ): Array<{ label: string; actor: string; date: string }> {
-  const adminActor = t('pipeline.roleAdmin');
-  const signeeActors = signees.map((s) => signeeLabel(s, tR));
+  const adminActor = MOCK_STAFF_ACTORS.admin;
+  const signeeActors = signees.map((s) => signeeActorName(s, volunteerName));
 
   const DATES = ['03.07.2026', '06.07.2026', '07.07.2026'];
 
@@ -241,19 +255,6 @@ function formatEuro(amount: number): string {
   }).format(amount);
 }
 
-// ─── Cross-org-unit breakdown (mock) ─────────────────────────────────────────
-
-const MOCK_VOL_ORG_UNITS: Record<
-  string,
-  Array<{ name: string; used: number; cap: number }>
-> = {
-  v1: [
-    { name: 'Kreisverband München', used: 480, cap: 560 },
-    { name: 'Ortsverein Schwabing', used: 240, cap: 280 },
-  ],
-  v3: [{ name: 'Kreisverband München', used: 380, cap: 840 }],
-};
-
 // ─── Mock timesheet hours per volunteer ──────────────────────────────────────
 
 const MOCK_TIMESHEET_HOURS: Record<
@@ -292,13 +293,12 @@ export function DocumentSheet({
 }: DocumentSheetProps) {
   const t = useTranslations('Accounting.reimbursements.docs');
   const ts = useTranslations('Accounting.reimbursements.docs.sheet');
-  const tR = useTranslations('Accounting.templates.card');
 
   if (!doc || !vol) return null;
 
   const isContract = doc.status.startsWith('contract');
-  const steps = buildDocSteps(doc.status, signees, isContract, ts, tR);
-  const timeline = buildTimeline(doc, signees, ts, tR);
+  const steps = buildDocSteps(doc.status, signees, isContract, vol.name, ts);
+  const timeline = buildTimeline(doc, signees, vol.name, ts);
 
   const periodLabel = selectedDate.toLocaleDateString('de-DE', {
     month: 'long',
@@ -320,10 +320,6 @@ export function DocumentSheet({
     used: vol.usedAmount,
     total: vol.totalCap,
   };
-
-  const orgBreakdown = MOCK_VOL_ORG_UNITS[vol.id] ?? [
-    { name: vol.id, used: docLimit.used, cap: docLimit.total },
-  ];
 
   const actionKey =
     doc.status === 'contract-generate' || doc.status === 'timesheet-generate'
@@ -374,11 +370,27 @@ export function DocumentSheet({
             })()}
           </div>
           <div className="flex items-center gap-2 pt-1">
-            <Button variant="outline" size="sm" className="flex-1 gap-1.5">
+            <Button
+              variant="outline"
+              size="sm"
+              className="flex-1 gap-1.5"
+              onClick={() =>
+                toast.success(ts('pdfViewToast', { period: doc.periodLabel }))
+              }
+            >
               <EyeIcon size={13} />
               {ts('pdfView')}
             </Button>
-            <Button variant="outline" size="sm" className="flex-1 gap-1.5">
+            <Button
+              variant="outline"
+              size="sm"
+              className="flex-1 gap-1.5"
+              onClick={() =>
+                toast.success(
+                  ts('pdfDownloadToast', { period: doc.periodLabel }),
+                )
+              }
+            >
               <DownloadIcon size={13} />
               {ts('pdfDownload')}
             </Button>
@@ -488,9 +500,14 @@ export function DocumentSheet({
               density="block"
             />
             {(() => {
+              // Scoped to this document's own pauschale type only — a
+              // dual-pauschale volunteer's other type never appears in this
+              // list, so payments of different types are never mixed.
               const timesheetDocs = vol.documents.filter(
                 (d) =>
-                  d.status.startsWith('timesheet') && d.amount !== undefined,
+                  d.status.startsWith('timesheet') &&
+                  d.amount !== undefined &&
+                  (d.pauschale ?? vol.pauschale) === effectivePauschale,
               );
               const paidOut = timesheetDocs.filter(
                 (d) => d.status === 'timesheet-ready',
@@ -548,20 +565,6 @@ export function DocumentSheet({
                 </div>
               );
             })()}
-            {orgBreakdown.length > 1 && (
-              <div className="mt-4 space-y-3">
-                {orgBreakdown.map((ou) => (
-                  <div key={ou.name} className="space-y-1">
-                    <p className="text-sm text-muted-foreground">{ou.name}</p>
-                    <LimitHeadroomBar
-                      used={ou.used}
-                      total={ou.cap}
-                      density="block"
-                    />
-                  </div>
-                ))}
-              </div>
-            )}
           </section>
 
           <Separator />
@@ -582,9 +585,13 @@ export function DocumentSheet({
                       <span className="text-sm text-card-foreground">
                         {entry.label}
                       </span>
-                      <span className="block text-xs text-muted-foreground mt-0.5">
+                      <button
+                        type="button"
+                        className="block text-xs text-muted-foreground hover:underline mt-0.5"
+                        onClick={(e) => e.stopPropagation()}
+                      >
                         {entry.actor}
-                      </span>
+                      </button>
                     </div>
                     <span className="text-sm tabular-nums text-muted-foreground shrink-0">
                       {entry.date}
