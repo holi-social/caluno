@@ -2653,6 +2653,14 @@ export function ReimbursementsBoard({ orgUId }: ReimbursementsBoardProps) {
     }));
   }
 
+  // Undoes every in-session mock-data mutation (status overrides from sent
+  // contracts/invoices) — a testing convenience, not a real reset endpoint.
+  function handleResetPrototype() {
+    setDocStatusOverrides({});
+    setSelectedDocIds(new Set());
+    toast.success(t('resetPrototypeToast'));
+  }
+
   return (
     <div className="space-y-6 pb-24">
       {/* Pipeline steps (connected filter tiles) */}
@@ -2836,6 +2844,17 @@ export function ReimbursementsBoard({ orgUId }: ReimbursementsBoardProps) {
           docTypeFilter={docTypeFilter}
         />
       )}
+
+      <div className="flex justify-end">
+        <Button
+          variant="ghost"
+          size="sm"
+          className="h-auto px-2 py-1 text-xs text-muted-foreground/70 hover:text-muted-foreground"
+          onClick={handleResetPrototype}
+        >
+          {t('resetPrototype')}
+        </Button>
+      </div>
 
       <DocumentSheet
         doc={selectedDoc?.doc ?? null}
