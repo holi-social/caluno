@@ -1,13 +1,14 @@
 import { JoinStatus } from '@repo/data';
 import { redirect } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
+import { redirect as redirectWithLocale } from '@/i18n/navigation';
 import { getSession } from '@/lib/auth-server';
 import { getDataClient } from '@/lib/data-client';
 import { getSafeRedirect } from '@/lib/safe-redirect';
 import { JoinFormsClient, type RequiredFormItem } from './join-forms-client';
 
 interface JoinFormsPageProps {
-  params: Promise<{ orgUId: string }>;
+  params: Promise<{ locale: string; orgUId: string }>;
   searchParams: Promise<{ redirectTo?: string }>;
 }
 
@@ -15,7 +16,7 @@ export default async function JoinFormsPage({
   params,
   searchParams,
 }: JoinFormsPageProps) {
-  const { orgUId } = await params;
+  const { locale, orgUId } = await params;
   const { redirectTo } = await searchParams;
   const _t = await getTranslations('MembershipRequest');
 
@@ -25,7 +26,7 @@ export default async function JoinFormsPage({
       orgUId,
       redirectTo: redirectTo ?? `/join/${orgUId}/forms`,
     });
-    redirect(`/api/invite?${searchParams}`);
+    redirectWithLocale({ href: `/api/invite?${searchParams}`, locale });
   }
 
   const data = await getDataClient();
