@@ -1074,6 +1074,8 @@
         "allDoneHint": "Keine offenen Dokumente in diesem Zeitraum.",
         "filtered": "Keine Einträge in dieser Kategorie."
       },
+      "resetPrototype": "Prototyp zurücksetzen",
+      "resetPrototypeToast": "Prototyp-Daten zurückgesetzt.",
       "bundle": {
         "actionLabel": "Paket herunterladen",
         "readyCount": "{count} bereit",

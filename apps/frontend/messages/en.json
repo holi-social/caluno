@@ -1074,6 +1074,8 @@
         "allDoneHint": "No open documents in this period.",
         "filtered": "No entries in this category."
       },
+      "resetPrototype": "Reset prototype",
+      "resetPrototypeToast": "Prototype data reset.",
       "bundle": {
         "actionLabel": "Download bundle",
         "readyCount": "{count} ready",
