@@ -9,29 +9,18 @@ import {
 } from 'drizzle-orm/pg-core';
 import { users } from '../../auth/schemas/auth.schema';
 import { idColumn, timestampColumns } from '../../database/database-columns';
+import { enumValues } from '../../database/typeutil';
 import { organizationUnits } from '../../organization/schemas/organization-unit.schema';
 import { FilePurpose, FileStatus, FileVisibility } from '../enums';
 
-export const fileVisibilityEnum = pgEnum('file_visibility', [
-  FileVisibility.PRIVATE,
-  FileVisibility.PUBLIC,
-]);
+export const fileVisibilityEnum = pgEnum(
+  'file_visibility',
+  enumValues(FileVisibility),
+);
 
-export const filePurposeEnum = pgEnum('file_purpose', [
-  FilePurpose.REQUIREMENT_DOCUMENT,
-  FilePurpose.FORM_DOCUMENT,
-  FilePurpose.ORG_LOGO,
-  FilePurpose.ORGANIZATION_LOGO,
-  FilePurpose.EVENT_IMAGE,
-  FilePurpose.SHIFT_IMAGE,
-  FilePurpose.PROFILE_PICTURE,
-]);
+export const filePurposeEnum = pgEnum('file_purpose', enumValues(FilePurpose));
 
-export const fileStatusEnum = pgEnum('file_status', [
-  FileStatus.PENDING,
-  FileStatus.UPLOADED,
-  FileStatus.FAILED,
-]);
+export const fileStatusEnum = pgEnum('file_status', enumValues(FileStatus));
 
 export const files = snakeCase.table(
   'files',

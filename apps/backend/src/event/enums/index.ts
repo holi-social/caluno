@@ -1,5 +1,7 @@
 export enum EventInviteStatus {
-  PENDING = 'PENDING',
+  INVITED = 'INVITED',
   ACCEPTED = 'ACCEPTED',
   REJECTED = 'REJECTED',
+  CANCELLED = 'CANCELLED',
+  SELF_JOINED = 'SELF_JOINED',
 }
