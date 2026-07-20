@@ -1089,7 +1089,7 @@
         "remindAll": "Alle erinnern",
         "bundleAll": "Alle Pakete herunterladen",
         "mixed": "Gemischte Auswahl",
-        "clearSelection": "Aufheben",
+        "clearSelection": "Abbrechen",
         "bundleDownloadToast": "{count, plural, =1 {Paket-Download gestartet.} other {{count} Paket-Downloads gestartet.}}"
       },
       "actionToasts": {
