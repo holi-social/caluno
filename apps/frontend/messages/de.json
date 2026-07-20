@@ -143,7 +143,7 @@
     "myTime": "Meine Zeit",
     "requirementForms": "Anforderungsformulare",
     "accounting": "Accounting",
-    "reimbursements": "Reimbursements",
+    "reimbursements": "Aufwandsentschädigung",
     "templates": "Templates",
     "accountingSettings": "Einstellungen",
     "settings": "Einstellungen",
@@ -1027,7 +1027,7 @@
       }
     },
     "reimbursements": {
-      "title": "Reimbursements",
+      "title": "Aufwandsentschädigung",
       "subtitle": "Auszahlungsdokumente erstellen, unterzeichnen und bündeln.",
       "periodLabel": "Zeitraum",
       "periodPicker": {
