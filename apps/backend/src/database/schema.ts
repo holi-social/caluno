@@ -28,4 +28,5 @@ export * from '../shift/schemas/shift.schema';
 export * from '../shift/schemas/shift-instance.schema';
 export * from '../shift/schemas/shift-instance-invite.schema';
 export * from '../shift/schemas/shift-invite.schema';
+export * from '../storage/schemas/file.schema';
 export * from '../time-tracking/schemas/time-entry.schema';

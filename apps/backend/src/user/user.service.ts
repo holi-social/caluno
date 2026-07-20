@@ -57,6 +57,23 @@ export class UserService {
     return user;
   }
 
+  async updateImage(
+    userId: string,
+    imageUrl: string | null,
+  ): Promise<UserEntity> {
+    const [user] = await this.db
+      .update(schema.users)
+      .set({ image: imageUrl })
+      .where(eq(schema.users.id, userId))
+      .returning();
+
+    if (!user) {
+      throw new NotFoundGraphQLError('User not found');
+    }
+
+    return user;
+  }
+
   async resolveLocale(
     userId: string,
     headers: Record<string, unknown>,

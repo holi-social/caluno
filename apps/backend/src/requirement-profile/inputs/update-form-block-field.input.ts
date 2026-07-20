@@ -34,7 +34,7 @@ export class UpdateFormBlockFieldInput {
   options?: SelectOptionInput[] | null;
 
   @Field(() => String, { nullable: true })
-  documentUrl?: string | null;
+  documentFileId?: string | null;
 
   @Field(() => String, { nullable: true })
   documentLabel?: string | null;

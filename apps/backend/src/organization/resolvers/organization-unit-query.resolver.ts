@@ -62,8 +62,20 @@ export class OrganizationUnitQueryResolver {
 
   @Permissions(PERMISSIONS.ORG_VIEW)
   @Query(() => [OrganizationUnitType])
-  async organizationUnitTypes(): Promise<OrganizationUnitType[]> {
-    const types = await this.organizationUnitService.findAllTypes();
+  async organizationUnitTypes(
+    @Context() context: AuthenticatedGraphQLContext,
+  ): Promise<OrganizationUnitType[]> {
+    const organizationId =
+      await this.organizationUnitService.findOrganizationIdByUnitId(
+        context.organizationUnitId,
+      );
+
+    if (!organizationId) {
+      return [];
+    }
+
+    const types =
+      await this.organizationUnitService.findAllTypes(organizationId);
     return this.organizationUnitTypeMapper.toArray(types);
   }
 

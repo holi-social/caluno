@@ -61,7 +61,7 @@ export function ShiftCardDiscovery({
           {event.coverImageUrl && (
             <Image
               src={event.coverImageUrl}
-              alt=""
+              alt={t('eventCoverImageAlt', { title: event.title })}
               fill
               unoptimized
               className="object-cover"

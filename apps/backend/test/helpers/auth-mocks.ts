@@ -17,6 +17,15 @@ const createNoopDecorator = () => {
 
 const sessionDecorator = createParamDecorator(
   (_data: unknown, context: ExecutionContext) => {
+    if (context.getType() === 'http') {
+      const request = context
+        .switchToHttp()
+        .getRequest<{ user?: { id: string } }>();
+      return {
+        user: request.user ?? { id: mockedUserId },
+      };
+    }
+
     const gqlContext = GqlExecutionContext.create(context).getContext();
     return gqlContext?.req?.user
       ? { user: gqlContext.req.user }
@@ -35,7 +44,14 @@ class MockBetterAuthModule {
 }
 
 class MockAuthGuard {
-  canActivate() {
+  canActivate(context: ExecutionContext) {
+    if (context.getType() === 'http') {
+      const request = context
+        .switchToHttp()
+        .getRequest<{ user?: { id: string } }>();
+      request.user = { id: mockedUserId };
+    }
+
     return true;
   }
 }

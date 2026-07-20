@@ -1,7 +1,7 @@
 import type { Database } from '../../src/database/database.module';
 import * as schema from '../../src/database/schema';
 import { ShiftVisibility } from '../../src/shift/enums';
-import { getDurationMinutes } from '../../src/shift/shift.service';
+import { getDurationMinutes } from '../../src/shift/utils/duration';
 import { expandShift } from '../../src/shift/utils/rrule-expander';
 import { slugify } from '../../src/utils/slug.util';
 import { createUser } from './user.factory';

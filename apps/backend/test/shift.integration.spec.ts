@@ -799,6 +799,116 @@ describe('Volunteer home fields and check-in', () => {
     expect(instance?.filledCount).toBe(1);
   });
 
+  it('returns invites for the requested user', async () => {
+    const volunteer = await createUser(db);
+    const { id: shiftId } = await createShift(db, {
+      organizationUnitId,
+      maxVolunteers: 5,
+    });
+    const instances = await db.query.shiftInstances.findMany({
+      where: { masterId: shiftId },
+    });
+    const instanceId = instances[0]?.id;
+    expect(instanceId).toBeDefined();
+
+    const [insertedInvite] = await db
+      .insert(schema.shiftInstanceInvites)
+      .values({
+        instanceId: instanceId ?? '',
+        userId: volunteer.id,
+        status: ShiftInviteStatus.PENDING,
+      })
+      .returning();
+
+    const data = await graphqlRequestRequiringData<{
+      shiftInstances: Array<{
+        id: string;
+        invites: {
+          id: string;
+          status: ShiftInviteStatus;
+          userId: string;
+        } | null;
+      }>;
+    }>(
+      app,
+      {
+        query: `
+          query ShiftInstances($shiftId: ID!, $userId: String!) {
+            shiftInstances(shiftId: $shiftId) {
+              id
+              invites(userId: $userId) {
+                id
+                status
+                userId
+              }
+            }
+          }
+        `,
+        variables: { shiftId, userId: volunteer.id },
+        headers: {
+          'x-organization-unit-id': organizationUnitId,
+        },
+      },
+      'shiftInstances',
+    );
+
+    const instance = data.shiftInstances.find((i) => i.id === instanceId);
+    expect(instance?.invites).toEqual({
+      id: insertedInvite?.id,
+      status: ShiftInviteStatus.PENDING,
+      userId: volunteer.id,
+    });
+  });
+
+  it('returns null invites when the user has no invite', async () => {
+    const volunteer = await createUser(db);
+    const otherUser = await createUser(db);
+    const { id: shiftId } = await createShift(db, {
+      organizationUnitId,
+      maxVolunteers: 5,
+    });
+    const instances = await db.query.shiftInstances.findMany({
+      where: { masterId: shiftId },
+    });
+    const instanceId = instances[0]?.id;
+    expect(instanceId).toBeDefined();
+
+    await db.insert(schema.shiftInstanceInvites).values({
+      instanceId: instanceId ?? '',
+      userId: volunteer.id,
+      status: ShiftInviteStatus.ACCEPTED,
+    });
+
+    const data = await graphqlRequestRequiringData<{
+      shiftInstances: Array<{
+        id: string;
+        invites: { id: string } | null;
+      }>;
+    }>(
+      app,
+      {
+        query: `
+          query ShiftInstances($shiftId: ID!, $userId: String!) {
+            shiftInstances(shiftId: $shiftId) {
+              id
+              invites(userId: $userId) {
+                id
+              }
+            }
+          }
+        `,
+        variables: { shiftId, userId: otherUser.id },
+        headers: {
+          'x-organization-unit-id': organizationUnitId,
+        },
+      },
+      'shiftInstances',
+    );
+
+    const instance = data.shiftInstances.find((i) => i.id === instanceId);
+    expect(instance?.invites).toBeNull();
+  });
+
   it('returns event data on a shift linked to an event', async () => {
     const eventData = await graphqlRequestRequiringData<{
       createEvent: { id: string };
@@ -816,8 +926,8 @@ describe('Volunteer home fields and check-in', () => {
           input: {
             title: 'Test Event',
             location: null,
-            logoUrl: null,
-            coverUrl: 'https://example.com/cover.jpg',
+            logoFileId: null,
+            coverFileId: null,
             startsAt: '2026-06-18T08:00:00.000Z',
             endsAt: '2026-06-18T10:00:00.000Z',
             invitedMemberIds: null,
@@ -833,6 +943,10 @@ describe('Volunteer home fields and check-in', () => {
     const { id: shiftId } = await createShift(db, {
       organizationUnitId,
     });
+    await db
+      .update(schema.events)
+      .set({ coverUrl: 'https://example.com/cover.jpg' })
+      .where(eq(schema.events.id, eventData.createEvent.id));
     await db
       .update(schema.shifts)
       .set({ eventId: eventData.createEvent.id })

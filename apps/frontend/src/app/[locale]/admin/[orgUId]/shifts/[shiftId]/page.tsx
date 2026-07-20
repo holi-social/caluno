@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import { notFound } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
+import { DetailCoverImage } from '@/components/detail-entity-image';
 import { UserCard } from '@/components/user-card';
 import { getVisibilityConfig } from '@/domain/shift/components/shifts-table';
 import { parseShiftListQuery } from '@/domain/shift/routes';
@@ -65,6 +66,13 @@ export default async function ShiftViewPage({
           />
         </div>
       </div>
+
+      {shift.imageUrl ? (
+        <DetailCoverImage
+          src={shift.imageUrl}
+          alt={t('detail.imageAlt', { title: shift.title })}
+        />
+      ) : null}
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="md:col-span-2 space-y-6">

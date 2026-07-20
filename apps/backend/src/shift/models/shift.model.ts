@@ -35,6 +35,9 @@ export class Shift {
   @Field(() => String, { nullable: true })
   location?: string | null;
 
+  @Field(() => String, { nullable: true })
+  imageUrl?: string | null;
+
   @Field(() => ShiftVisibility)
   visibility!: ShiftVisibility;
 

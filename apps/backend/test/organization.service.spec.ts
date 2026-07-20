@@ -8,6 +8,7 @@ import { NotificationService } from '../src/notification/notification.service';
 import { OrganizationMapper } from '../src/organization/mappers/organization.mapper';
 import { OrganizationService } from '../src/organization/organization.service';
 import { OrganizationUnitService } from '../src/organization/organization-unit.service';
+import { FileService } from '../src/storage/services';
 import { createUser } from './factories';
 import {
   addMembership,
@@ -76,6 +77,7 @@ describe('OrganizationService', () => {
       {} as MembershipService,
       {} as OrganizationUnitService,
       {} as NotificationService,
+      {} as FileService,
     );
 
     registerTestResourceCleanup(async () => {

@@ -9,6 +9,9 @@ export class CreateOrganizationInput {
   logoUrl?: string | null;
 
   @Field(() => String, { nullable: true })
+  logoFileId?: string | null;
+
+  @Field(() => String, { nullable: true })
   websiteUrl?: string | null;
 
   @Field(() => String, { nullable: true })

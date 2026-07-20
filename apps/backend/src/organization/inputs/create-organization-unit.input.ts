@@ -15,7 +15,7 @@ export class CreateOrganizationUnitInput {
   name!: string;
 
   @Field(() => String, { nullable: true })
-  logoUrl?: string | null;
+  logoFileId?: string | null;
 
   @Field(() => String, { nullable: true })
   websiteUrl?: string | null;

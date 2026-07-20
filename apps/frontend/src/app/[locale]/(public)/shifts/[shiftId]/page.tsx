@@ -3,6 +3,7 @@ import { Badge, Button, Card, CardContent } from '@repo/ui';
 import { Calendar, Clock, DoorOpen, FileText } from 'lucide-react';
 import { notFound } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
+import { DetailCoverImage } from '@/components/detail-entity-image';
 import { UserCard } from '@/components/user-card';
 import { JoinShiftButton } from '@/domain/shift/components/join-shift-button';
 import { isAuthenticated } from '@/lib/auth-server';
@@ -72,6 +73,13 @@ export default async function ShiftPage({
       </div>
 
       <div className="w-full max-w-2xl space-y-4">
+        {shift.imageUrl ? (
+          <DetailCoverImage
+            src={shift.imageUrl}
+            alt={t('detail.imageAlt', { title: shift.title })}
+          />
+        ) : null}
+
         <Card>
           <CardContent className="py-4">
             <div className="mb-4">

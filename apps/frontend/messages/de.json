@@ -31,7 +31,8 @@
     "menu": "Menü",
     "signOut": "Abmelden",
     "brand": "Clippy",
-    "greeting": "Hallo {name}"
+    "greeting": "Hallo {name}",
+    "avatarAlt": "Avatar von {name}"
   },
   "Auth": {
     "login": {
@@ -127,7 +128,10 @@
     "label": "Sprache"
   },
   "Profile": {
-    "title": "Profil bearbeiten"
+    "title": "Profil bearbeiten",
+    "pictureLabel": "Profilbild",
+    "saved": "Profil aktualisiert",
+    "saveFailed": "Profil konnte nicht aktualisiert werden"
   },
   "Navigation": {
     "home": "Startseite",
@@ -219,6 +223,7 @@
       "websitePlaceholder": "https://organisation.org",
       "addressLabel": "Adresse",
       "addressPlaceholder": "Musterstraße 1, 12345 Berlin",
+      "logoLabel": "Logo",
       "submit": "Organisation erstellen",
       "submitting": "Organisation wird erstellt...",
       "errors": {
@@ -244,7 +249,7 @@
       "phonePlaceholder": "z. B. +49 30 00000000",
       "websiteLabel": "Website-URL",
       "websitePlaceholder": "z. B. https://beispiel.de",
-      "logoLabel": "Logo-URL",
+      "logoLabel": "Logo",
       "logoPlaceholder": "z. B. https://beispiel.de/logo.png",
       "addressLabel": "Adresse",
       "addressPlaceholder": "z. B. Musterstraße 1, Berlin",
@@ -413,7 +418,14 @@
         "title": "{orgName} beitreten",
         "description": "Bevor du dieser Organisation beitreten kannst, musst du die folgenden Anforderungen erfüllen.",
         "requiredBadge": "Erforderlich",
-        "statusLabel": "Status: {status, select, approved {genehmigt} rejected {abgelehnt} pending {ausstehend} other {ausstehend}}"
+        "statusLabel": "Status: {status, select, approved {genehmigt} rejected {abgelehnt} pending {ausstehend} other {ausstehend}}",
+        "documentsTitle": "Erforderliche Dokumente hochladen",
+        "documentsDescription": "Lade jedes erforderliche Dokument hoch und reiche sie zur Prüfung ein.",
+        "missingDocuments": "Lade alle erforderlichen Dokumente hoch, bevor du sie einreichst.",
+        "submitDocuments": "Dokumente einreichen",
+        "submitting": "Wird eingereicht...",
+        "submitSuccess": "Dokumente eingereicht",
+        "submitFailed": "Dokumente konnten nicht eingereicht werden"
       },
       "error": {
         "title": "Etwas ist schiefgelaufen",
@@ -510,7 +522,8 @@
       "noRecurrence": "Einmalig",
       "chooseDays": "Wähle die Tage, an denen sich dieser Einsatz wiederholt",
       "openShiftLabel": "Offener Einsatz",
-      "openShiftDescription": "Jeder Freiwillige kann sich für diesen Einsatz anmelden"
+      "openShiftDescription": "Jeder Freiwillige kann sich für diesen Einsatz anmelden",
+      "imageLabel": "Bild"
     },
     "recurrence": {
       "preset": {
@@ -639,7 +652,8 @@
       "visibilityLabel": "Sichtbarkeit",
       "statusLabel": "Status",
       "createdByLabel": "Erstellt von",
-      "createdLabel": "Erstellt"
+      "createdLabel": "Erstellt",
+      "imageAlt": "Bild für {title}"
     },
     "notFound": "Einsatz nicht gefunden.",
     "loading": "Wird geladen...",
@@ -769,8 +783,9 @@
       "descriptionPlaceholder": "Hilfetext für dieses Feld",
       "placeholderLabel": "Platzhalter",
       "placeholderPlaceholder": "z. B. Gib deinen Namen ein",
-      "documentUrlLabel": "Dokument-URL",
-      "documentUrlPlaceholder": "https://example.com/dokument.pdf",
+      "documentFileLabel": "Dokument",
+      "documentFileDescription": "PDF oder Bild, max. 10 MB",
+      "enterDocumentFileError": "Bitte lade ein Dokument hoch.",
       "documentLabelLabel": "Dokumentenbezeichnung",
       "documentLabelPlaceholder": "z. B. Nutzungsbedingungen",
       "optionsLabel": "Optionen",
@@ -887,15 +902,15 @@
       "zipCode": "Postleitzahl",
       "city": "Stadt",
       "birthDate": "Geburtsdatum",
-      "documentUrlLabel": "Dokument-URL",
-      "documentUrlPlaceholder": "https://example.com/dokument.pdf",
+      "documentFileLabel": "Dokument",
+      "documentFileDescription": "PDF oder Bild, max. 10 MB",
+      "enterDocumentFileError": "Bitte lade ein Dokument hoch.",
       "documentLabelLabel": "Dokumentenbezeichnung",
       "documentLabelPlaceholder": "z. B. Datenschutzerklärung",
       "required": "Erforderlich",
       "selectTypeError": "Bitte wähle einen Feldtyp aus.",
       "enterTextError": "Bitte gib einen Text ein.",
       "enterLabelError": "Bitte gib eine Bezeichnung ein.",
-      "enterDocumentUrlError": "Bitte gib eine Dokument-URL ein.",
       "enterDocumentLabelError": "Bitte gib eine Dokumentenbezeichnung ein.",
       "enterOptionError": "Bitte gib mindestens eine Option ein.",
       "cancel": "Abbrechen",
@@ -1021,6 +1036,7 @@
     },
     "detail": {
       "backLink": "Zurück zu Veranstaltungen",
+      "coverImageAlt": "Titelbild für {title}",
       "editButton": "Bearbeiten",
       "inviteButton": "Mitglieder einladen",
       "volunteersCard": {
@@ -1055,8 +1071,8 @@
       "startsAtLabel": "Beginn",
       "endsAtLabel": "Ende",
       "locationLabel": "Ort",
-      "logoUrlLabel": "Logo-URL",
-      "coverUrlLabel": "Cover-URL",
+      "logoUrlLabel": "Logo",
+      "coverUrlLabel": "Titelbild",
       "validation": {
         "titleRequired": "Titel ist erforderlich",
         "startRequired": "Startdatum ist erforderlich",
@@ -1075,6 +1091,22 @@
     "error": {
       "title": "Veranstaltungen konnten nicht geladen werden",
       "tryAgain": "Erneut versuchen"
+    }
+  },
+  "Storage": {
+    "upload": {
+      "label": "Datei hochladen",
+      "chooseFile": "Datei auswählen",
+      "browse": "Dateien durchsuchen",
+      "dropHint": "Datei hierher ziehen oder zum Durchsuchen klicken",
+      "replace": "Ersetzen",
+      "uploaded": "Datei hochgeladen",
+      "uploading": "Wird hochgeladen...",
+      "failed": "Upload fehlgeschlagen",
+      "invalidFileType": "Dieser Dateityp ist nicht erlaubt. Verwende JPEG, PNG oder HEIC.",
+      "clear": "Entfernen",
+      "previewAlt": "Vorschau der hochgeladenen Datei",
+      "imageHint": "Empfohlen: JPEG oder PNG, bis zu 2 MB"
     }
   },
   "VolunteerHome": {
@@ -1100,6 +1132,10 @@
     "overlapWarning": "Du hast überschneidende Schichten in deinem Plan",
     "todayButton": "Heute",
     "goToToday": "Zu heute",
+    "goToTop": "Nach oben",
+    "conflictExpand": "Alle {n} überschneidenden Schichten anzeigen",
+    "conflictMore": "+{n} weitere",
+    "conflictCollapse": "Weniger anzeigen",
     "discoverThisWeek": "{n, plural, one {# Schicht diese Woche} other {# Schichten diese Woche}}",
     "dayStripLabel": "Tagauswahl",
     "dayStripPrevious": "Vorherige Tage",
@@ -1108,6 +1144,7 @@
     "checkOut": "Auschecken",
     "timerStartsIn": "beginnt in {time}",
     "timerStartedAgo": "Gestartet vor {time}",
-    "timerVolunteering": "Du hilfst seit {time}"
+    "timerVolunteering": "Du hilfst seit {time}",
+    "eventCoverImageAlt": "Titelbild für {title}"
   }
 }

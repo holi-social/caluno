@@ -16,6 +16,7 @@ import {
 } from '@repo/ui';
 import { useTranslations } from 'next-intl';
 import { useState } from 'react';
+import { FileUpload } from '@/domain/storage/components/file-upload';
 import { OptionsEditor } from './options-editor';
 
 // Field types that have a fixed, unambiguous system key
@@ -28,10 +29,12 @@ const TEXT_LIKE_TYPES = new Set(['TEXT', 'TEXTAREA', 'DATE', 'NUMBERS']);
 
 export function FieldForm({
   initial,
+  orgUId,
   onSubmit,
   onCancel,
 }: {
   initial?: FormBlockField;
+  orgUId: string;
   onSubmit: (data: {
     type: string;
     label: string;
@@ -40,7 +43,7 @@ export function FieldForm({
     required?: boolean;
     systemKey?: string;
     options?: { label: string; value: string }[];
-    documentUrl?: string;
+    documentFileId?: string | null;
     documentLabel?: string;
   }) => void;
   onCancel: () => void;
@@ -98,7 +101,9 @@ export function FieldForm({
       ];
     },
   );
-  const [documentUrl, setDocumentUrl] = useState(initial?.documentUrl ?? '');
+  const [documentFileId, setDocumentFileId] = useState<string | null>(
+    initial?.documentFileId ?? null,
+  );
   const [error, setError] = useState<string | null>(null);
 
   const showOptions =
@@ -117,8 +122,8 @@ export function FieldForm({
       setError(isStaticText ? t('enterTextError') : t('enterLabelError'));
       return;
     }
-    if (isDocument && !documentUrl.trim()) {
-      setError(t('enterDocumentUrlError'));
+    if (isDocument && !documentFileId) {
+      setError(t('enterDocumentFileError'));
       return;
     }
     if (showOptions && !options.some((o) => o.label.trim() !== '')) {
@@ -150,7 +155,7 @@ export function FieldForm({
         : {}),
       ...(isDocument
         ? {
-            documentUrl: documentUrl.trim(),
+            documentFileId,
             documentLabel: `${label.trim()} read`,
           }
         : {}),
@@ -160,7 +165,7 @@ export function FieldForm({
   const canSubmit =
     !!fieldType &&
     label.trim() !== '' &&
-    (!isDocument || documentUrl.trim() !== '') &&
+    (!isDocument || Boolean(documentFileId)) &&
     (!showOptions || options.some((o) => o.label.trim() !== ''));
 
   return (
@@ -260,17 +265,23 @@ export function FieldForm({
           )}
 
           {isDocument && (
-            <Field>
-              <FieldLabel>{t('documentUrlLabel')}</FieldLabel>
-              <Input
-                placeholder={t('documentUrlPlaceholder')}
-                value={documentUrl}
-                onChange={(e) => {
-                  setDocumentUrl(e.target.value);
-                  if (error) setError(null);
-                }}
-              />
-            </Field>
+            <FileUpload
+              purpose="form_document"
+              organizationUnitId={orgUId}
+              label={t('documentFileLabel')}
+              value={documentFileId || null}
+              initialPreviewUrl={initial?.documentDownloadUrl}
+              initialFilename={initial?.documentFilename}
+              error={error ?? undefined}
+              onUploaded={(result) => {
+                setDocumentFileId(result.fileId);
+                if (error) setError(null);
+              }}
+              onClear={() => {
+                setDocumentFileId(null);
+                if (error) setError(null);
+              }}
+            />
           )}
 
           {showOptions && (

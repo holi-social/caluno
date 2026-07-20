@@ -30,6 +30,10 @@ const WEEKLY_RRULE = {
   FRIDAY: 'FREQ=WEEKLY;BYDAY=FR;WKST=MO',
 } as const;
 
+/** A single, non-recurring occurrence — used for the fixed overlap-test shifts below. */
+const ONE_TIME_RRULE = 'FREQ=DAILY;COUNT=1';
+const OVERLAP_MEMBER_INDEX = 2;
+
 const SUPERVISOR_ROLE_NAME = 'Supervisor';
 const SUPERVISOR_PERMISSIONS = [
   PERMISSIONS.ORG_VIEW,
@@ -245,8 +249,9 @@ const createPlaygroundOrganization = async (
     const [rootType] = await tx
       .insert(schema.organizationUnitTypes)
       .values({
-        name: 'management',
-        description: `organization managment unit for ${organization.name}`,
+        organizationId: organization.id,
+        name: 'organisation unit',
+        description: `organization unit for ${organization.name}`,
         icon: 'building-2',
       })
       .returning();
@@ -377,6 +382,8 @@ type ShiftFixture = {
   startsAt: Date;
   rrule: string;
   inviteUserIds: string[];
+  /** Defaults to `SHIFT_DURATION_MINUTES`; override for fixed-length overlap-test shifts. */
+  durationMinutes?: number;
 };
 
 const pickRecentPastInstance = (
@@ -404,6 +411,8 @@ const createShiftWithInvites = async (
   createdById: string,
   shift: ShiftFixture,
 ): Promise<{ shiftId: string; instanceId: string; instanceStartsAt: Date }> => {
+  const durationMinutes = shift.durationMinutes ?? SHIFT_DURATION_MINUTES;
+
   const [createdShift] = await db
     .insert(schema.shifts)
     .values({
@@ -413,7 +422,7 @@ const createShiftWithInvites = async (
       createdById,
       visibility: ShiftVisibility.INVITED_MEMBERS,
       originalStartsAt: shift.startsAt,
-      durationMinutes: SHIFT_DURATION_MINUTES,
+      durationMinutes,
       rrule: shift.rrule,
     })
     .returning();
@@ -422,11 +431,7 @@ const createShiftWithInvites = async (
     throw new Error(`Failed to create shift: ${shift.title}`);
   }
 
-  const instances = expandShift(
-    shift.rrule,
-    shift.startsAt,
-    SHIFT_DURATION_MINUTES,
-  );
+  const instances = expandShift(shift.rrule, shift.startsAt, durationMinutes);
   const insertedInstances = await db
     .insert(schema.shiftInstances)
     .values(
@@ -702,6 +707,86 @@ async function seedFixtures() {
     rrule: WEEKLY_RRULE.FRIDAY,
     inviteUserIds: [],
   });
+
+  // Fixed, one-time overlap-test shifts for the my-shifts conflict-clustering
+  // UI (a 2-shift "pair" and a 3-shift "pile"), invited to a single member
+  // (not member01, which other tests use as the "no conflicts" baseline).
+  // Anchored `today + N days` rather than a weekday, so they land a stable
+  // number of days out regardless of which day fixtures happen to run on.
+  const overlapMember = members[OVERLAP_MEMBER_INDEX - 1];
+  if (!overlapMember) {
+    throw new Error(
+      `No member at index ${OVERLAP_MEMBER_INDEX} for overlap fixtures`,
+    );
+  }
+
+  // +2/+9 days are chosen so that, as of when this comment was written, they
+  // land on days with no other recurring shift invited to this member
+  // (Community Support is Monday, Food Distribution is Wednesday) — keeping
+  // the pair/pile clusters below exactly 2 and 3 shifts. If fixtures are
+  // reseeded on a date where +2/+9 happens to fall on Mon/Wed, the affected
+  // cluster picks up that recurring shift too — still a valid (larger)
+  // conflict cluster, just not the minimal pair/pile example.
+  const today = getDateInFixtureTimezone(new Date());
+  const pairDay = addDaysInFixtureTimezone(
+    today.year,
+    today.month,
+    today.day,
+    2,
+  );
+  const pileDay = addDaysInFixtureTimezone(
+    today.year,
+    today.month,
+    today.day,
+    9,
+  );
+
+  await createShiftWithInvites(db, org.rootUnitId, admin.id, {
+    title: 'Overlap Test Pair A',
+    startsAt: fixtureWallClockToUtc(
+      pairDay.year,
+      pairDay.month,
+      pairDay.day,
+      10,
+    ),
+    rrule: ONE_TIME_RRULE,
+    durationMinutes: 240,
+    inviteUserIds: [overlapMember.id],
+  });
+  await createShiftWithInvites(db, org.rootUnitId, admin.id, {
+    title: 'Overlap Test Pair B',
+    startsAt: fixtureWallClockToUtc(
+      pairDay.year,
+      pairDay.month,
+      pairDay.day,
+      10,
+      30,
+    ),
+    rrule: ONE_TIME_RRULE,
+    durationMinutes: 210,
+    inviteUserIds: [overlapMember.id],
+  });
+
+  // 6 shifts (> the 5-visible-before-collapsing threshold in
+  // my-shifts-day-rows.tsx), each starting 30min after the previous with a
+  // 2h duration — a chained overlap where every shift overlaps its neighbor,
+  // so the sweep-line clusterer groups all 6 together.
+  const PILE_LETTERS = ['A', 'B', 'C', 'D', 'E', 'F'] as const;
+  for (const [index, letter] of PILE_LETTERS.entries()) {
+    await createShiftWithInvites(db, org.rootUnitId, admin.id, {
+      title: `Overlap Test Pile ${letter}`,
+      startsAt: fixtureWallClockToUtc(
+        pileDay.year,
+        pileDay.month,
+        pileDay.day,
+        8 + Math.floor(index / 2),
+        (index % 2) * 30,
+      ),
+      rrule: ONE_TIME_RRULE,
+      durationMinutes: 120,
+      inviteUserIds: [overlapMember.id],
+    });
+  }
 
   await createTimeEntries(db, [supervisor, ...members], {
     communitySupport: {

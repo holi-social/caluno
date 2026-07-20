@@ -100,7 +100,7 @@ export function EditBlockForm({
     required?: boolean;
     systemKey?: string;
     options?: { label: string; value: string }[];
-    documentUrl?: string;
+    documentFileId?: string | null;
     documentLabel?: string;
   }) {
     startTransition(async () => {
@@ -131,7 +131,7 @@ export function EditBlockForm({
       required?: boolean;
       systemKey?: string;
       options?: { label: string; value: string }[];
-      documentUrl?: string;
+      documentFileId?: string | null;
       documentLabel?: string;
     },
   ) {
@@ -300,6 +300,7 @@ export function EditBlockForm({
           editingFieldId === field.id ? (
             <FieldForm
               key={field.id}
+              orgUId={orgUId}
               initial={field}
               onSubmit={(data) =>
                 handleEditField(field.id, {
@@ -309,7 +310,7 @@ export function EditBlockForm({
                   required: data.required,
                   systemKey: data.systemKey,
                   options: data.options,
-                  documentUrl: data.documentUrl,
+                  documentFileId: data.documentFileId,
                   documentLabel: data.documentLabel,
                 })
               }
@@ -383,6 +384,7 @@ export function EditBlockForm({
 
         {addingField && (
           <FieldForm
+            orgUId={orgUId}
             onSubmit={(data) =>
               handleAddField({
                 type: data.type,
@@ -392,7 +394,7 @@ export function EditBlockForm({
                 required: data.required,
                 systemKey: data.systemKey,
                 options: data.options,
-                documentUrl: data.documentUrl,
+                documentFileId: data.documentFileId,
                 documentLabel: data.documentLabel,
               })
             }
