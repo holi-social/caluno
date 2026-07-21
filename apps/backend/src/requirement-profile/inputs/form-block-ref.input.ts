@@ -6,8 +6,8 @@ export class FormBlockRefInput {
   blockId!: string;
 
   @Field(() => Number, { nullable: true })
-  order!: number | null;
+  order?: number | null;
 
   @Field(() => Boolean, { nullable: true })
-  required!: boolean | null;
+  required?: boolean | null;
 }

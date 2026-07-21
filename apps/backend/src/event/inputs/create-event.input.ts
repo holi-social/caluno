@@ -6,13 +6,13 @@ export class CreateEventInput {
   title!: string;
 
   @Field(() => String, { nullable: true })
-  location!: string | null;
+  location?: string | null;
 
   @Field(() => String, { nullable: true })
-  logoFileId!: string | null;
+  logoFileId?: string | null;
 
   @Field(() => String, { nullable: true })
-  coverFileId!: string | null;
+  coverFileId?: string | null;
 
   @Field(() => Date)
   startsAt!: Date;
@@ -21,5 +21,5 @@ export class CreateEventInput {
   endsAt!: Date;
 
   @Field(() => [String], { nullable: true })
-  invitedMemberIds!: string[] | null;
+  invitedMemberIds?: string[] | null;
 }

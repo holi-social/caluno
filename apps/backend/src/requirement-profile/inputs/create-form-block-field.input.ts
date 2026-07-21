@@ -19,32 +19,32 @@ export class CreateFormBlockFieldInput {
   label!: string;
 
   @Field(() => String, { nullable: true })
-  placeholder!: string | null;
+  placeholder?: string | null;
 
   @Field(() => String, { nullable: true })
-  description!: string | null;
+  description?: string | null;
 
   @Field(() => Boolean, { nullable: true })
-  required!: boolean | null;
+  required?: boolean | null;
 
   @Field(() => Boolean, { nullable: true })
-  lockType!: boolean | null;
+  lockType?: boolean | null;
 
   @Field(() => String, { nullable: true })
-  systemKey!: string | null;
+  systemKey?: string | null;
 
   @Field(() => [SelectOptionInput], { nullable: true })
-  options!: SelectOptionInput[] | null;
+  options?: SelectOptionInput[] | null;
 
   @Field(() => String, { nullable: true })
-  documentFileId!: string | null;
+  documentFileId?: string | null;
 
   @Field(() => String, { nullable: true })
-  documentLabel!: string | null;
+  documentLabel?: string | null;
 
   @Field(() => Number, { nullable: true })
-  minAge!: number | null;
+  minAge?: number | null;
 
   @Field(() => Number, { nullable: true })
-  fieldOrder!: number | null;
+  fieldOrder?: number | null;
 }

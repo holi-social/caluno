@@ -29,10 +29,10 @@ export class FormBlockField {
   label!: string;
 
   @Field(() => String, { nullable: true })
-  placeholder!: string | null;
+  placeholder?: string | null;
 
   @Field(() => String, { nullable: true })
-  description!: string | null;
+  description?: string | null;
 
   @Field(() => Boolean)
   required!: boolean;
@@ -41,16 +41,16 @@ export class FormBlockField {
   lockType!: boolean;
 
   @Field(() => String, { nullable: true })
-  systemKey!: string | null;
+  systemKey?: string | null;
 
   @Field(() => [SelectOption], { nullable: true })
-  options!: SelectOption[] | null;
+  options?: SelectOption[] | null;
 
   @Field(() => String, { nullable: true })
-  documentFileId!: string | null;
+  documentFileId?: string | null;
 
   @Field(() => String, { nullable: true })
-  documentLabel!: string | null;
+  documentLabel?: string | null;
 
   @Field(() => String, { nullable: true })
   documentDownloadUrl?: string | null;
@@ -59,7 +59,7 @@ export class FormBlockField {
   documentFilename?: string | null;
 
   @Field(() => Number, { nullable: true })
-  minAge!: number | null;
+  minAge?: number | null;
 
   @Field(() => Number)
   fieldOrder!: number;

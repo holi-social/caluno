@@ -11,11 +11,11 @@ export class CreateRequirementFormInput {
   name!: string;
 
   @Field(() => String, { nullable: true })
-  description!: string | null;
+  description?: string | null;
 
   @Field(() => FormSettingsInput, { nullable: true })
-  settings!: FormSettingsInput | null;
+  settings?: FormSettingsInput | null;
 
   @Field(() => [FormBlockRefInput], { nullable: true })
-  blockRefs!: FormBlockRefInput[] | null;
+  blockRefs?: FormBlockRefInput[] | null;
 }

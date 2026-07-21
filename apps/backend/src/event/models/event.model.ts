@@ -15,22 +15,22 @@ export class Event {
   slug!: string;
 
   @Field(() => String, { nullable: true })
-  location!: string | null;
+  location?: string | null;
 
   @Field(() => String, { nullable: true })
-  logoUrl!: string | null;
+  logoUrl?: string | null;
 
   @Field(() => String, { nullable: true })
-  coverUrl!: string | null;
+  coverUrl?: string | null;
 
   @Field(() => String, { nullable: true })
-  coverImageUrl!: string | null;
+  coverImageUrl?: string | null;
 
   @Field(() => ID)
   organizationUnitId!: string;
 
   @Field(() => User, { nullable: true })
-  organizer!: User | null;
+  organizer?: User | null;
 
   @Field(() => Date)
   startsAt!: Date;
