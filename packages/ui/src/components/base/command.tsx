@@ -2,7 +2,7 @@
 
 import { Command as CommandPrimitive } from 'cmdk';
 import { SearchIcon } from 'lucide-react';
-import type * as React from 'react';
+import * as React from 'react';
 import { cn } from '../../lib/utils';
 import {
   Dialog,
@@ -12,19 +12,50 @@ import {
   DialogTitle,
 } from './dialog';
 
+interface CommandContextValue {
+  itemCount: number;
+  registerItem: () => () => void;
+  forceShowInput: boolean;
+}
+
+const CommandContext = React.createContext<CommandContextValue>({
+  itemCount: 0,
+  registerItem: () => () => {},
+  forceShowInput: false,
+});
+
+const SEARCH_HIDE_THRESHOLD = 8;
+
 function Command({
+  forceShowInput = false,
   className,
   ...props
-}: React.ComponentProps<typeof CommandPrimitive>) {
+}: React.ComponentProps<typeof CommandPrimitive> & {
+  forceShowInput?: boolean;
+}) {
+  const [itemCount, setItemCount] = React.useState(0);
+
+  const registerItem = React.useCallback(() => {
+    setItemCount((count) => count + 1);
+    return () => setItemCount((count) => Math.max(0, count - 1));
+  }, []);
+
+  const value = React.useMemo(
+    () => ({ itemCount, registerItem, forceShowInput }),
+    [itemCount, registerItem, forceShowInput],
+  );
+
   return (
-    <CommandPrimitive
-      data-slot="command"
-      className={cn(
-        'bg-popover text-popover-foreground flex h-full w-full flex-col overflow-hidden rounded-md',
-        className,
-      )}
-      {...props}
-    />
+    <CommandContext.Provider value={value}>
+      <CommandPrimitive
+        data-slot="command"
+        className={cn(
+          'bg-popover text-popover-foreground flex h-full w-full flex-col overflow-hidden rounded-md',
+          className,
+        )}
+        {...props}
+      />
+    </CommandContext.Provider>
   );
 }
 
@@ -51,7 +82,10 @@ function CommandDialog({
         className={cn('overflow-hidden p-0', className)}
         showCloseButton={showCloseButton}
       >
-        <Command className="[&_[cmdk-group-heading]]:text-muted-foreground **:data-[slot=command-input-wrapper]:h-12 [&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:font-medium [&_[cmdk-group]]:px-2 [&_[cmdk-group]:not([hidden])_~[cmdk-group]]:pt-0 [&_[cmdk-input-wrapper]_svg]:h-5 [&_[cmdk-input-wrapper]_svg]:w-5 [&_[cmdk-input]]:h-12 [&_[cmdk-item]]:px-2 [&_[cmdk-item]]:py-3 [&_[cmdk-item]_svg]:h-5 [&_[cmdk-item]_svg]:w-5">
+        <Command
+          forceShowInput
+          className="[&_[cmdk-group-heading]]:text-muted-foreground **:data-[slot=command-input-wrapper]:h-12 [&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:font-medium [&_[cmdk-group]]:px-2 [&_[cmdk-group]:not([hidden])_~[cmdk-group]]:pt-0 [&_[cmdk-input-wrapper]_svg]:h-5 [&_[cmdk-input-wrapper]_svg]:w-5 [&_[cmdk-input]]:h-12 [&_[cmdk-item]]:px-2 [&_[cmdk-item]]:py-3 [&_[cmdk-item]_svg]:h-5 [&_[cmdk-item]_svg]:w-5"
+        >
           {children}
         </Command>
       </DialogContent>
@@ -60,9 +94,18 @@ function CommandDialog({
 }
 
 function CommandInput({
+  hideSearchThreshold = SEARCH_HIDE_THRESHOLD,
   className,
   ...props
-}: React.ComponentProps<typeof CommandPrimitive.Input>) {
+}: React.ComponentProps<typeof CommandPrimitive.Input> & {
+  hideSearchThreshold?: number;
+}) {
+  const { itemCount, forceShowInput } = React.useContext(CommandContext);
+
+  if (!forceShowInput && itemCount > 0 && itemCount < hideSearchThreshold) {
+    return null;
+  }
+
   return (
     <div
       data-slot="command-input-wrapper"
@@ -142,6 +185,12 @@ function CommandItem({
   className,
   ...props
 }: React.ComponentProps<typeof CommandPrimitive.Item>) {
+  const { registerItem } = React.useContext(CommandContext);
+
+  React.useLayoutEffect(() => {
+    return registerItem();
+  }, [registerItem]);
+
   return (
     <CommandPrimitive.Item
       data-slot="command-item"
