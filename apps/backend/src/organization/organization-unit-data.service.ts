@@ -17,6 +17,14 @@ export class OrganizationUnitDataService {
     });
   }
 
+  /** Many org units by id in one query (DataLoader batch). */
+  async findByIds(ids: string[]): Promise<OrganizationUnitEntity[]> {
+    if (ids.length === 0) return [];
+    return this.db.query.organizationUnits.findMany({
+      where: { id: { in: ids } },
+    });
+  }
+
   async findOrganizationByUnitId(
     organizationUnitId: string,
   ): Promise<OrganizationEntity | undefined> {

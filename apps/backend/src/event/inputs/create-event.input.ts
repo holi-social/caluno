@@ -6,6 +6,9 @@ export class CreateEventInput {
   title!: string;
 
   @Field(() => String, { nullable: true })
+  description?: string | null;
+
+  @Field(() => String, { nullable: true })
   location?: string | null;
 
   @Field(() => String, { nullable: true })

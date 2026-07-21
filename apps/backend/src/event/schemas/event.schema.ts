@@ -16,6 +16,7 @@ export const events = snakeCase.table(
     ...idColumn,
     title: text('title').notNull(),
     slug: text('slug').notNull().unique(),
+    description: text('description'),
     location: text('location'),
     logoUrl: text('logo_url'),
     coverUrl: text('cover_url'),

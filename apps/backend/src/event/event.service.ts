@@ -74,6 +74,16 @@ export class EventService {
     return { events, total: totalResult[0]?.total ?? 0 };
   }
 
+  /** Public (non-deleted) events for an org unit, no pagination. */
+  async findAllPublicByOrgUnit(
+    organizationUnitId: string,
+  ): Promise<EventEntity[]> {
+    return this.db.query.events.findMany({
+      where: { organizationUnitId, isDeleted: false },
+      orderBy: { startsAt: 'asc' },
+    });
+  }
+
   async create(
     userId: string,
     organizationUnitId: string,
@@ -93,6 +103,7 @@ export class EventService {
         .values({
           title: eventInput.title,
           slug: slugify(eventInput.title),
+          description: eventInput.description,
           location: eventInput.location,
           logoUrl,
           coverUrl,
@@ -144,6 +155,7 @@ export class EventService {
       .set({
         title: resolved.title,
         slug: resolved.title ? slugify(resolved.title) : undefined,
+        description: resolved.description,
         location: resolved.location,
         logoUrl: resolved.logoUrl,
         coverUrl: resolved.coverUrl,
@@ -354,6 +366,18 @@ export class EventService {
     };
   }
 
+  async findInvite(
+    eventId: string,
+    userId: string,
+  ): Promise<EventInviteEntity | undefined> {
+    return this.db.query.eventInvites.findFirst({
+      where: {
+        eventId,
+        userId,
+      },
+    });
+  }
+
   async findInvites(
     eventId: string,
     organizationUnitId: string,
@@ -392,6 +416,7 @@ export class EventService {
 
   private async resolveEventUpdateInput(input: UpdateEventInput): Promise<{
     title?: string;
+    description?: string | null;
     location?: string | null;
     logoUrl?: string | null;
     coverUrl?: string | null;
