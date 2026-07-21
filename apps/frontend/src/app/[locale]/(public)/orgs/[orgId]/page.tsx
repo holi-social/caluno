@@ -76,12 +76,12 @@ export default async function OrgPage({ params }: OrgPageProps) {
 
       <main className="mx-auto w-full max-w-[1400px] flex-1 px-4 py-6 md:px-20">
         <div className="flex flex-col gap-6 lg:flex-row lg:gap-12">
-          <div className="order-2 flex flex-col gap-8 lg:order-1 lg:w-[680px]">
+          <div className="order-2 flex min-w-0 flex-1 flex-col gap-8 lg:order-1 lg:max-w-[680px]">
             <OrgEventsList events={events} />
             <OrgShiftsList shifts={shifts} />
           </div>
 
-          <aside className="order-1 flex-1 lg:order-2 lg:w-[392px]">
+          <aside className="order-1 min-w-0 lg:order-2 lg:w-[392px] lg:shrink-0">
             <div className="flex flex-col gap-4 rounded-xl border border-border bg-card p-6 shadow-sm">
               <div className="flex items-center gap-4">
                 <p className="flex items-center gap-1.5 text-base text-muted-foreground">

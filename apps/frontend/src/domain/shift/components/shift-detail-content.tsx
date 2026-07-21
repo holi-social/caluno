@@ -47,8 +47,8 @@ export function ShiftDetailContent({
 
   return (
     <div className="mx-auto w-full max-w-[1400px] flex-1 px-4 py-6 md:px-20">
-      <div className="flex flex-col md:grid md:grid-cols-[680px_392px] md:gap-12">
-        <aside className="order-1 md:order-2">
+      <div className="flex flex-col md:flex-row md:gap-12">
+        <aside className="order-1 min-w-0 md:order-2 md:w-[392px] md:shrink-0">
           <ShiftActionCard
             shiftId={shift.id}
             instances={orderedInstances}
@@ -59,7 +59,7 @@ export function ShiftDetailContent({
           />
         </aside>
 
-        <div className="order-2 mt-6 md:order-1 md:mt-0">
+        <div className="order-2 mt-6 min-w-0 md:order-1 md:mt-0 md:max-w-[680px] md:flex-1">
           {shift.instructions ? (
             <>
               <section>

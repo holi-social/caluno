@@ -82,7 +82,7 @@ export default async function EventPage({ params }: EventPageProps) {
 
       <main className="mx-auto w-full max-w-[1400px] flex-1 px-4 py-6 md:px-20">
         <div className="flex flex-col gap-6 lg:flex-row lg:gap-12">
-          <div className="order-2 flex-1 lg:order-1 lg:w-[680px]">
+          <div className="order-2 min-w-0 flex-1 lg:order-1 lg:max-w-[680px]">
             <EventShiftsSection
               startsAt={event.startsAt}
               endsAt={event.endsAt}
@@ -90,7 +90,7 @@ export default async function EventPage({ params }: EventPageProps) {
             />
           </div>
 
-          <aside className="order-1 flex-1 lg:order-2 lg:w-[392px]">
+          <aside className="order-1 min-w-0 lg:order-2 lg:w-[392px] lg:shrink-0">
             <div className="flex flex-col gap-4 rounded-xl border border-border bg-card p-6 shadow-sm">
               <p className="text-2xl font-bold text-foreground">
                 {formatDateRange(event.startsAt, event.endsAt)}
