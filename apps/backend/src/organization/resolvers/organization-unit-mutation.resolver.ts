@@ -1,12 +1,18 @@
 import { Args, Mutation, Resolver } from '@nestjs/graphql';
 import type { UserSession } from '@thallesp/nestjs-better-auth';
 import { Session } from '@thallesp/nestjs-better-auth';
+import { plainToInstance } from 'class-transformer';
+import { AuthService } from '../../auth/auth.service';
 import { PERMISSIONS } from '../../auth/constants';
 import { Permissions } from '../../auth/decorators/permissions.decorator';
+import { ForbiddenGraphQLError } from '../../graphql/errors';
+import { RequirementForm } from '../../requirement-profile/models/requirement-form.model';
+import { RequiredFormService } from '../../requirement-profile/services/required-form.service';
 import { CreateOrganizationUnitInput } from '../inputs/create-organization-unit.input';
 import { UpdateOrganizationUnitInput } from '../inputs/update-organization-unit.input';
 import { OrganizationUnitMapper } from '../mappers/organization-unit.mapper';
 import { OrganizationUnit } from '../models/organization-unit.model';
+import { RequiredFormRef } from '../models/organization-unit-required-form.model';
 import { OrganizationUnitService } from '../organization-unit.service';
 
 @Resolver(() => OrganizationUnit)
@@ -14,7 +20,27 @@ export class OrganizationUnitMutationResolver {
   constructor(
     private readonly organizationUnitService: OrganizationUnitService,
     private readonly organizationUnitMapper: OrganizationUnitMapper,
+    private readonly authService: AuthService,
+    private readonly requiredFormService: RequiredFormService,
   ) {}
+
+  private async assertCanConfigureRequiredForms(
+    userId: string,
+    organizationUnitId: string,
+  ): Promise<void> {
+    const keys = await this.authService.findUserPermissionKeys(
+      userId,
+      organizationUnitId,
+    );
+    if (
+      !keys.has(PERMISSIONS.ORG_EDIT) &&
+      !keys.has(PERMISSIONS.REQUIREMENT_PROFILE_EDIT)
+    ) {
+      throw new ForbiddenGraphQLError(
+        'You do not have permission to configure required forms',
+      );
+    }
+  }
 
   @Permissions(PERMISSIONS.ORG_EDIT)
   @Mutation(() => OrganizationUnit)
@@ -48,6 +74,48 @@ export class OrganizationUnitMutationResolver {
     @Args('id') id: string,
   ): Promise<OrganizationUnit> {
     const organizationUnit = await this.organizationUnitService.delete(id);
+    return this.organizationUnitMapper.toModelOrThrow(organizationUnit);
+  }
+
+  @Mutation(() => [RequiredFormRef])
+  async setRequiredForms(
+    @Args('organizationUnitId') organizationUnitId: string,
+    @Args('formIds', { type: () => [String] }) formIds: string[],
+    @Session() session: UserSession,
+  ): Promise<RequiredFormRef[]> {
+    await this.assertCanConfigureRequiredForms(
+      session.user.id,
+      organizationUnitId,
+    );
+
+    const requiredForms = await this.requiredFormService.setRequiredForms(
+      organizationUnitId,
+      formIds,
+    );
+
+    return requiredForms.map(({ form, order }) => ({
+      form: plainToInstance(RequirementForm, form),
+      order,
+    }));
+  }
+
+  @Mutation(() => OrganizationUnit)
+  async setRequiredFormsEnabled(
+    @Args('organizationUnitId') organizationUnitId: string,
+    @Args('enabled') enabled: boolean,
+    @Session() session: UserSession,
+  ): Promise<OrganizationUnit> {
+    await this.assertCanConfigureRequiredForms(
+      session.user.id,
+      organizationUnitId,
+    );
+
+    const organizationUnit =
+      await this.requiredFormService.setRequiredFormsEnabled(
+        organizationUnitId,
+        enabled,
+      );
+
     return this.organizationUnitMapper.toModelOrThrow(organizationUnit);
   }
 }

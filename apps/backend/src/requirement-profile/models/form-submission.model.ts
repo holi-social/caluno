@@ -22,7 +22,7 @@ export class FormSubmission {
   userId!: string;
 
   @Field(() => String, { nullable: true })
-  membershipId!: string | null;
+  membershipId?: string | null;
 
   @Field(() => FormSubmissionStatus)
   status!: FormSubmissionStatus;
@@ -37,13 +37,13 @@ export class FormSubmission {
   updatedAt!: Date;
 
   @Field(() => [FormSubmissionValue], { nullable: true })
-  values!: FormSubmissionValue[];
+  values?: FormSubmissionValue[] | null;
 
   @Field(() => RequirementForm, { nullable: true })
-  form!: RequirementForm | null;
+  form?: RequirementForm | null;
 
   @Field(() => User, { nullable: true })
-  user!: User | null;
+  user?: User | null;
 }
 
 export const FormSubmissionPaginatedResponse =

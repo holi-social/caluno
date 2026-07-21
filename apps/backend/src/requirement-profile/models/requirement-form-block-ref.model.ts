@@ -16,7 +16,7 @@ export class RequirementFormBlockRef {
   fieldOrder!: number;
 
   @Field(() => Boolean, { nullable: true })
-  required!: boolean | null;
+  required?: boolean | null;
 
   @Field(() => Date)
   createdAt!: Date;
@@ -25,5 +25,5 @@ export class RequirementFormBlockRef {
   updatedAt!: Date;
 
   @Field(() => FormBlock, { nullable: true })
-  block!: FormBlock | null;
+  block?: FormBlock | null;
 }

@@ -21,11 +21,13 @@ export function CreateFormDialog({
   onOpenChange,
   orgUId,
   organizationId,
+  onCreated,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   orgUId: string;
   organizationId: string;
+  onCreated?: (formId: string) => void;
 }) {
   const router = useRouter();
   const t = useTranslations('RequirementForm.form');
@@ -54,9 +56,13 @@ export function CreateFormDialog({
         toast.error(result.serverError);
       } else if (result?.data?.id) {
         onOpenChange(false);
-        router.push(
-          `/admin/${orgUId}/requirement-forms/${result.data.id}/builder`,
-        );
+        if (onCreated) {
+          onCreated(result.data.id);
+        } else {
+          router.push(
+            `/admin/${orgUId}/requirement-forms/${result.data.id}/builder`,
+          );
+        }
       }
     } finally {
       setCreating(false);

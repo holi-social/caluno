@@ -11,6 +11,7 @@ import { useRouter } from '@/i18n/navigation';
 interface JoinShiftButtonProps {
   shiftId: string;
   instanceId?: string;
+  organizationUnitId: string;
   visibility: ShiftVisibility;
   isAuthenticated: boolean;
   autoJoin?: boolean;
@@ -19,6 +20,7 @@ interface JoinShiftButtonProps {
 export function JoinShiftButton({
   shiftId,
   instanceId,
+  organizationUnitId,
   visibility,
   isAuthenticated,
   autoJoin = false,
@@ -58,6 +60,17 @@ export function JoinShiftButton({
       } else if (result.status === JoinStatus.Rejected) {
         toast.error(t('join.rejected'));
       } else if (result.status === JoinStatus.RequirementsNeeded) {
+        const missingForms = (result.requiredForms ?? []).filter(
+          (f) => !f.submitted,
+        );
+        if (missingForms.length > 0) {
+          const currentUrl = window.location.href;
+          router.push(
+            `/join/${organizationUnitId}/forms?redirectTo=${encodeURIComponent(currentUrl)}`,
+          );
+          return;
+        }
+
         const missing = result.requirementStatuses?.filter(
           (s) => s.status !== 'APPROVED',
         );
@@ -84,7 +97,15 @@ export function JoinShiftButton({
     } catch (error) {
       toast.error(error instanceof Error ? error.message : t('join.failed'));
     }
-  }, [isAuthenticated, shiftId, instanceId, joinShiftInstance, router, t]);
+  }, [
+    isAuthenticated,
+    shiftId,
+    instanceId,
+    joinShiftInstance,
+    router,
+    t,
+    organizationUnitId,
+  ]);
 
   useEffect(() => {
     if (

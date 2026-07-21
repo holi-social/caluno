@@ -30,6 +30,18 @@ export class MembershipQueryResolver {
     return this.membershipMapper.toModel(entity);
   }
 
+  @Query(() => Boolean)
+  async myMembershipStatus(
+    @Args('organizationUnitId', { type: () => ID })
+    organizationUnitId: string,
+    @Session() session: UserSession,
+  ): Promise<boolean> {
+    return this.membershipService.isMemberOfUnitOrAncestor(
+      session.user.id,
+      organizationUnitId,
+    );
+  }
+
   @Permissions(PERMISSIONS.VOLUNTEER_VIEW)
   @Query(() => Boolean)
   async isMemberOfUnitOrAncestor(

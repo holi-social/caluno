@@ -32,6 +32,7 @@ import { organizationUnitUrl } from '@/domain/organization/share';
 import { EmptyVolunteers } from '@/domain/volunteer/empty-volunteers';
 import { useSheetTrigger } from '@/hooks/use-sheet';
 import { Link, usePathname, useRouter } from '@/i18n/navigation';
+import { RequiredFormsPopover } from './required-forms-popover';
 import { RoleSelectCell } from './role-select-cell';
 
 const TAB_APPROVED = 'APPROVED';
@@ -225,11 +226,14 @@ export default function ManageVolunteersClient({ orgUId }: Props) {
           <p className="text-muted-foreground mt-1">{t('page.subtitle')}</p>
         </div>
 
-        <ButtonClipboard
-          text={t('page.copyInviteLink')}
-          copyText={orgUnitUrl}
-          toastMessage={t('page.inviteLinkCopied')}
-        />
+        <div className="flex items-center gap-2">
+          <RequiredFormsPopover orgUId={orgUId} />
+          <ButtonClipboard
+            text={t('page.copyInviteLink')}
+            copyText={orgUnitUrl}
+            toastMessage={t('page.inviteLinkCopied')}
+          />
+        </div>
       </div>
 
       <Tabs value={activeTab} onValueChange={handleTabChange}>

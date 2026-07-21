@@ -5,7 +5,7 @@ import { FormSettingsInput } from './form-settings.input';
 @InputType()
 export class UpdateRequirementFormInput {
   @Field(() => String, { nullable: true })
-  name?: string;
+  name?: string | null;
 
   // Nullable in DB — null clears the value
   @Field(() => String, { nullable: true })

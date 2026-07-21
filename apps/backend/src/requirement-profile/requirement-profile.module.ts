@@ -47,6 +47,7 @@ import { UserProfileQueryResolver } from './resolvers/user-profile-query.resolve
 import {
   FormBlockService,
   FormSubmissionService,
+  RequiredFormService,
   RequirementFormService,
   RequirementProfileService,
   RequirementProfileSubmissionService,
@@ -63,6 +64,7 @@ import {
     FormBlockService,
     RequirementFormService,
     FormSubmissionService,
+    RequiredFormService,
     UserProfileService,
     RequirementProfileMapper,
     RequirementMapper,
@@ -110,6 +112,7 @@ import {
     FormBlockService,
     RequirementFormService,
     FormSubmissionService,
+    RequiredFormService,
     UserProfileService,
   ],
 })

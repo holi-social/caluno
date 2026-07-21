@@ -2,6 +2,7 @@ import { type JoinOrganizationMutation, JoinStatus } from '@repo/data';
 import { cookies } from 'next/headers';
 import { notFound, redirect } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
+import { redirect as redirectWithLocale } from '@/i18n/navigation';
 import { isAuthenticated } from '@/lib/auth-server';
 import { getDataClient } from '@/lib/data-client';
 import { getSafeRedirect } from '@/lib/safe-redirect';
@@ -12,17 +13,17 @@ import { RequirementDocumentSubmission } from './components/requirement-document
 import { OrgRequirementsNeeded } from './components/requirements-needed';
 
 interface InvitePageProps {
-  params: Promise<{ orgId: string }>;
+  params: Promise<{ locale: string; orgId: string }>;
 }
 
 export default async function InvitePage({ params }: InvitePageProps) {
-  const { orgId } = await params;
+  const { locale, orgId } = await params;
   const organizationUnitId = orgId;
   const t = await getTranslations('MembershipRequest');
 
   if (!(await isAuthenticated())) {
     const searchParams = new URLSearchParams({ orgUId: organizationUnitId });
-    redirect(`/api/invite?${searchParams}`);
+    redirectWithLocale({ href: `/api/invite?${searchParams}`, locale });
   }
 
   const data = await getDataClient();
@@ -58,6 +59,15 @@ export default async function InvitePage({ params }: InvitePageProps) {
   }
 
   if (result.status === JoinStatus.RequirementsNeeded) {
+    const hasMissingForms = (result.requiredForms ?? []).some(
+      (f) => !f.submitted,
+    );
+    if (hasMissingForms) {
+      redirect(
+        `/join/${organizationUnitId}/forms?redirectTo=${encodeURIComponent(`/invite/${organizationUnitId}`)}`,
+      );
+    }
+
     return (
       <OrgRequirementsNeeded
         orgName={orgUnit.name}

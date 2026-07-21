@@ -19,6 +19,10 @@ import {
 import { UserRound } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { MembershipRequestActions } from '@/domain/membership-requests/components/membership-request-actions';
+import {
+  MembershipRequestRequiredForms,
+  useRequiredFormsSatisfied,
+} from '@/domain/membership-requests/components/membership-request-required-forms';
 import { useSheetTrigger } from '@/hooks/use-sheet';
 import { useFormatting } from '@/lib/formatting/use-formatting';
 
@@ -31,6 +35,10 @@ export default function MembershipRequestCard({ request }: Props) {
   const t = useTranslations('MembershipRequest');
   const tCommon = useTranslations('Common');
   const { formatDate } = useFormatting();
+  const requiredFormsSatisfied = useRequiredFormsSatisfied(
+    request.user.id,
+    request.organizationUnit.id,
+  );
 
   const handleViewVolunteer = () => {
     open({
@@ -71,14 +79,21 @@ export default function MembershipRequestCard({ request }: Props) {
       </CardHeader>
 
       {request.status === MembershipRequestStatus.Pending && (
-        <CardContent className="flex justify-between items-center">
-          <Button variant="outline" size="sm" onClick={handleViewVolunteer}>
-            {t('card.viewButton')}
-          </Button>
-          <MembershipRequestActions
-            id={request.id}
+        <CardContent className="space-y-4">
+          <MembershipRequestRequiredForms
+            userId={request.user.id}
             organizationUnitId={request.organizationUnit.id}
           />
+          <div className="flex justify-between items-center">
+            <Button variant="outline" size="sm" onClick={handleViewVolunteer}>
+              {t('card.viewButton')}
+            </Button>
+            <MembershipRequestActions
+              id={request.id}
+              organizationUnitId={request.organizationUnit.id}
+              canApprove={requiredFormsSatisfied}
+            />
+          </div>
         </CardContent>
       )}
 

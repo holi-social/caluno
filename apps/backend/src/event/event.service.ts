@@ -8,6 +8,7 @@ import { ConflictGraphQLError, NotFoundGraphQLError } from '../graphql/errors';
 import type { PaginationInput } from '../graphql/pagination.input';
 import { MembershipService } from '../membership/membership.service';
 import type { MembershipRequestEntity } from '../membership/schemas/membership-request.schema';
+import type { RequirementFormEntity } from '../requirement-profile/schemas/requirement-form.schema';
 import type { RequirementProfileEntity } from '../requirement-profile/schemas/requirement-profile.schema';
 import { JoinStatus } from '../shared/enums/join-status.enum';
 import { PARTICIPATING_EVENT_INVITE_STATUSES } from '../shared/invite-status';
@@ -279,6 +280,12 @@ export class EventService {
       name: string;
       status: string;
     }>;
+    requiredForms?: Array<{
+      form: RequirementFormEntity;
+      order: number;
+      submitted: boolean;
+      submissionId: string | null;
+    }>;
   }> {
     const event = await this.findByIdPublic(eventId);
 
@@ -313,6 +320,7 @@ export class EventService {
           event,
           requirementProfile: result.requirementProfile,
           requirementStatuses: result.requirementStatuses,
+          requiredForms: result.requiredForms,
         };
       }
 
