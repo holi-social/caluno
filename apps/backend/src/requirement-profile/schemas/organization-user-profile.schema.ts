@@ -8,12 +8,13 @@ import {
 } from 'drizzle-orm/pg-core';
 import { users } from '../../auth/schemas/auth.schema';
 import { idColumn, timestampColumns } from '../../database/database-columns';
+import { enumValues } from '../../database/typeutil';
 import { organizations } from '../../organization/schemas/organization.schema';
 import { OrganizationUserProfileStatus } from '../enums';
 
 export const organizationUserProfileStatusEnum = pgEnum(
   'organization_user_profile_status',
-  OrganizationUserProfileStatus as Record<string, string>,
+  enumValues(OrganizationUserProfileStatus),
 );
 
 export const organizationUserProfiles = snakeCase.table(
@@ -31,6 +32,7 @@ export const organizationUserProfiles = snakeCase.table(
       })
       .notNull(),
     status: organizationUserProfileStatusEnum('status')
+      .$type<OrganizationUserProfileStatus>()
       .notNull()
       .default(OrganizationUserProfileStatus.PENDING),
     userProfileAccessApproved: boolean('user_profile_access_approved')

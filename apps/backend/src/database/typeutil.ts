@@ -18,3 +18,7 @@ export type InferResultType<
   Schema[TTableName],
   TWith extends undefined ? true : { with: TWith }
 >;
+
+export function enumValues<T extends Record<string, string>>(enumObject: T) {
+  return Object.values(enumObject) as [T[keyof T], ...T[keyof T][]];
+}

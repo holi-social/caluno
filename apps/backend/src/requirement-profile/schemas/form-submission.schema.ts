@@ -8,13 +8,14 @@ import {
 } from 'drizzle-orm/pg-core';
 import { users } from '../../auth/schemas/auth.schema';
 import { idColumn, timestampColumns } from '../../database/database-columns';
+import { enumValues } from '../../database/typeutil';
 import { memberships } from '../../membership/schemas/membership.schema';
 import { FormSubmissionStatus } from '../enums';
 import { requirementForms } from './requirement-form.schema';
 
 export const formSubmissionStatusEnum = pgEnum(
   'form_submission_status',
-  FormSubmissionStatus as Record<string, string>,
+  enumValues(FormSubmissionStatus),
 );
 
 export const formSubmissions = snakeCase.table(
@@ -31,6 +32,7 @@ export const formSubmissions = snakeCase.table(
       onDelete: 'set null',
     }),
     status: formSubmissionStatusEnum('status')
+      .$type<FormSubmissionStatus>()
       .notNull()
       .default(FormSubmissionStatus.SUBMITTED),
     submittedAt: timestamp('submitted_at').notNull().defaultNow(),

@@ -3,7 +3,7 @@ import { users } from '../../auth/schemas/auth.schema';
 import { idColumn, timestampColumns } from '../../database/database-columns';
 import { ShiftInviteStatus } from '../enums';
 import { shifts } from './shift.schema';
-import { shiftInstanceInviteStatusEnum } from './shift-instance-invite.schema';
+import { shiftInviteStatusEnum } from './shift-instance-invite.schema';
 
 export const shiftInvites = pgTable(
   'shift_invites',
@@ -15,9 +15,9 @@ export const shiftInvites = pgTable(
     userId: text('user_id')
       .references(() => users.id, { onDelete: 'restrict' })
       .notNull(),
-    status: shiftInstanceInviteStatusEnum('status')
+    status: shiftInviteStatusEnum('status')
       .notNull()
-      .default(ShiftInviteStatus.PENDING),
+      .default(ShiftInviteStatus.INVITED),
     ...timestampColumns,
   },
   (table) => [
