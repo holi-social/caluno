@@ -1,9 +1,16 @@
-import { Parent, ResolveField, Resolver } from '@nestjs/graphql';
+import { Int, Parent, ResolveField, Resolver } from '@nestjs/graphql';
+import {
+  AllowAnonymous,
+  Session,
+  type UserSession,
+} from '@thallesp/nestjs-better-auth';
 import { plainToInstance } from 'class-transformer';
+import { MembershipService } from '../../membership/membership.service';
 import { RequirementForm } from '../../requirement-profile/models/requirement-form.model';
 import { RequirementProfile } from '../../requirement-profile/models/requirement-profile.model';
 import { RequirementProfileService } from '../../requirement-profile/services';
 import { RequiredFormService } from '../../requirement-profile/services/required-form.service';
+import { JoinStatus } from '../../shared/enums/join-status.enum';
 import { OrganizationMapper } from '../mappers/organization.mapper';
 import { OrganizationUnitMapper } from '../mappers/organization-unit.mapper';
 import { OrganizationUnitTypeMapper } from '../mappers/organization-unit-type.mapper';
@@ -23,7 +30,40 @@ export class OrganizationUnitFieldResolver {
     private readonly organizationUnitTypeMapper: OrganizationUnitTypeMapper,
     private readonly requirementProfileService: RequirementProfileService,
     private readonly requiredFormService: RequiredFormService,
+    private readonly membershipService: MembershipService,
   ) {}
+
+  @AllowAnonymous()
+  @ResolveField(() => Int)
+  async memberCount(
+    @Parent() organizationUnit: OrganizationUnitEntity,
+  ): Promise<number> {
+    return this.organizationUnitService.countMembers(organizationUnit.id);
+  }
+
+  @AllowAnonymous()
+  @ResolveField(() => Int)
+  async openShiftsCount(
+    @Parent() organizationUnit: OrganizationUnitEntity,
+  ): Promise<number> {
+    return this.organizationUnitService.countOpenShifts(organizationUnit.id);
+  }
+
+  @AllowAnonymous()
+  @ResolveField(() => JoinStatus)
+  async myMembershipState(
+    @Parent() organizationUnit: OrganizationUnitEntity,
+    @Session() session: UserSession,
+  ): Promise<JoinStatus> {
+    if (!session?.user) {
+      return JoinStatus.NONE;
+    }
+    return this.membershipService.getMembershipState(
+      session.user.id,
+      organizationUnit.id,
+    );
+  }
+
   @ResolveField(() => Organization)
   async organization(
     @Parent() organizationUnit: OrganizationUnitEntity,

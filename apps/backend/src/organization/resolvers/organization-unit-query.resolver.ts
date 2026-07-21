@@ -1,7 +1,12 @@
-import { Args, Context, Query, Resolver } from '@nestjs/graphql';
-import { Session, type UserSession } from '@thallesp/nestjs-better-auth';
+import { Args, Context, ID, Query, Resolver } from '@nestjs/graphql';
+import {
+  AllowAnonymous,
+  Session,
+  type UserSession,
+} from '@thallesp/nestjs-better-auth';
 import { PERMISSIONS } from '../../auth/constants';
 import { Permissions } from '../../auth/decorators/permissions.decorator';
+import { NotFoundGraphQLError } from '../../graphql/errors/not-found.error';
 import type { AuthenticatedGraphQLContext } from '../../graphql/graphql.context';
 import { PaginationInput } from '../../graphql/pagination.input';
 import { OrganizationUnitMapper } from '../mappers/organization-unit.mapper';
@@ -47,6 +52,20 @@ export class OrganizationUnitQueryResolver {
   ): Promise<OrganizationUnit | null> {
     const organizationUnit = await this.organizationUnitService.findById(id);
     return this.organizationUnitMapper.toModel(organizationUnit);
+  }
+
+  @AllowAnonymous()
+  @Query(() => OrganizationUnit)
+  async publicOrganizationUnit(
+    @Args('id', { type: () => ID }) id: string,
+  ): Promise<OrganizationUnit> {
+    const organizationUnit = await this.organizationUnitService.findById(id);
+    if (!organizationUnit || organizationUnit.deletedAt) {
+      throw new NotFoundGraphQLError(
+        `Organization unit with ID ${id} not found`,
+      );
+    }
+    return this.organizationUnitMapper.toModelOrThrow(organizationUnit);
   }
 
   @Permissions(PERMISSIONS.ORG_VIEW)

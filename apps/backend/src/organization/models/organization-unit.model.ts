@@ -1,4 +1,4 @@
-import { Field, ID, ObjectType } from '@nestjs/graphql';
+import { Field, ID, Int, ObjectType } from '@nestjs/graphql';
 
 import { createPaginatedResponseType } from '../../graphql/paginated-response.model';
 import { RequirementProfile } from '../../requirement-profile/models/requirement-profile.model';
@@ -23,6 +23,9 @@ export class OrganizationUnit {
 
   @Field(() => String, { nullable: true })
   logoUrl?: string | null;
+
+  @Field(() => String, { nullable: true })
+  coverUrl?: string | null;
 
   @Field(() => String, { nullable: true })
   websiteUrl?: string | null;
@@ -62,6 +65,12 @@ export class OrganizationUnit {
 
   @Field(() => Date, { nullable: true })
   deletedAt?: Date | null;
+
+  @Field(() => Int)
+  memberCount!: number;
+
+  @Field(() => Int)
+  openShiftsCount!: number;
 }
 
 export const OrganizationUnitPaginatedResponse =

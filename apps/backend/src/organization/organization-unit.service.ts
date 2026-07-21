@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { and, count, eq, isNull } from 'drizzle-orm';
+import { and, count, countDistinct, eq, gte, isNull } from 'drizzle-orm';
 import { DEFAULT_OWNER_ROLE_NAME } from '../auth/constants';
 import type { Database } from '../database/database.module';
 import { DATABASE_CONNECTION } from '../database/database-connection';
@@ -10,6 +10,7 @@ import {
   NotFoundGraphQLError,
 } from '../graphql/errors';
 import type { PaginationInput } from '../graphql/pagination.input';
+import { startOfTodayInAppTimeZone } from '../shift/utils/app-time';
 import { FilePurpose } from '../storage/enums';
 import { FileService } from '../storage/services/file.service';
 import { slugify } from '../utils';
@@ -308,6 +309,43 @@ export class OrganizationUnitService {
       ...rest,
       logoUrl: logoFileId ? await this.resolveLogoUrl(logoFileId) : null,
     };
+  }
+
+  async countMembers(organizationUnitId: string): Promise<number> {
+    const [row] = await this.db
+      .select({ total: count() })
+      .from(schema.memberships)
+      .where(eq(schema.memberships.organizationUnitId, organizationUnitId));
+
+    return row?.total ?? 0;
+  }
+
+  /**
+   * Count of shifts under an org unit with at least one upcoming,
+   * non-cancelled instance — a simple "still has capacity to sign up"
+   * signal. Doesn't account for per-instance capacity being full.
+   */
+  async countOpenShifts(organizationUnitId: string): Promise<number> {
+    const [row] = await this.db
+      .select({ total: countDistinct(schema.shifts.id) })
+      .from(schema.shifts)
+      .innerJoin(
+        schema.shiftInstances,
+        eq(schema.shiftInstances.masterId, schema.shifts.id),
+      )
+      .where(
+        and(
+          eq(schema.shifts.organizationUnitId, organizationUnitId),
+          eq(schema.shifts.isDeleted, false),
+          eq(schema.shiftInstances.isCancelled, false),
+          gte(
+            schema.shiftInstances.actualStartsAt,
+            startOfTodayInAppTimeZone(),
+          ),
+        ),
+      );
+
+    return row?.total ?? 0;
   }
 
   async delete(id: string): Promise<OrganizationUnitEntity> {
