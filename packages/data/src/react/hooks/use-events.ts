@@ -1,6 +1,6 @@
 'use client';
 
-import { EventRepository } from '@repo/data';
+import { EventRepository, PublicEventRepository } from '@repo/data';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type {
   CreateEventInput,
@@ -97,6 +97,30 @@ export function useInviteMembersToEvent() {
     }) => repository.inviteMembers(eventId, memberIds),
     onSuccess: (_, { eventId }) => {
       queryClient.invalidateQueries({ queryKey: ['eventAttendees', eventId] });
+    },
+  });
+}
+
+export function usePublicEvent(id: string) {
+  const sdk = useSdk();
+  const repository = new PublicEventRepository(sdk);
+
+  return useQuery({
+    queryKey: ['publicEvent', id],
+    queryFn: () => repository.findById(id),
+    staleTime: 30 * 1000,
+  });
+}
+
+export function useJoinEvent() {
+  const sdk = useSdk();
+  const queryClient = useQueryClient();
+  const repository = new PublicEventRepository(sdk);
+
+  return useMutation({
+    mutationFn: (eventId: string) => repository.join(eventId),
+    onSuccess: (_, eventId) => {
+      queryClient.invalidateQueries({ queryKey: ['publicEvent', eventId] });
     },
   });
 }

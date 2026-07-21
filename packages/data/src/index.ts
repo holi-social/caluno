@@ -31,6 +31,8 @@ export * from './repositories/membership/membership.repository';
 export * from './repositories/membershipRequest/membershipRequest.repository';
 export * from './repositories/organization/organization.repository';
 export * from './repositories/organization/organization-unit.repository';
+export * from './repositories/public-event/public-event.repository';
+export * from './repositories/public-organization-unit/public-organization-unit.repository';
 export * from './repositories/requirementForm/requirement-form.repository';
 export * from './repositories/requirementProfile/requirement-profile.repository';
 export * from './repositories/role/role.repository';
