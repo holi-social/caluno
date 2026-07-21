@@ -114,6 +114,39 @@ export class MembershipService {
     return membership ?? null;
   }
 
+  /**
+   * Read-only membership state for a user against an org unit — the same
+   * lookups `requestOrgJoin` does before it would create anything, exposed
+   * separately so a page can show the right button state before the user
+   * clicks "join".
+   */
+  async getMembershipState(
+    userId: string,
+    organizationUnitId: string,
+  ): Promise<JoinStatus> {
+    const membership = await this.getMembership(userId, organizationUnitId);
+    if (membership) {
+      return JoinStatus.JOINED;
+    }
+
+    const existing = await this.db.query.membershipRequests.findFirst({
+      where: { userId, organizationUnitId },
+    });
+
+    if (existing?.status === MembershipRequestStatus.PENDING) {
+      return JoinStatus.PENDING;
+    }
+
+    if (
+      existing?.status === MembershipRequestStatus.REJECTED ||
+      existing?.status === MembershipRequestStatus.CANCELLED
+    ) {
+      return JoinStatus.REJECTED;
+    }
+
+    return JoinStatus.NONE;
+  }
+
   async getMemberships(
     organizationUnitId: string,
   ): Promise<MembershipEntity[]> {
