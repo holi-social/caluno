@@ -167,7 +167,11 @@ export class FormBlockService {
 
     const [updated] = await this.db
       .update(schema.formBlocks)
-      .set({ ...patch(input), updatedBy: userId, updatedAt: new Date() })
+      .set({
+        ...patch(input, { ignoreNull: ['title', 'required'] }),
+        updatedBy: userId,
+        updatedAt: new Date(),
+      })
       .where(eq(schema.formBlocks.id, id))
       .returning();
 
@@ -294,7 +298,12 @@ export class FormBlockService {
 
     await this.db
       .update(schema.formBlockFields)
-      .set({ ...patch(input), updatedAt: new Date() })
+      .set({
+        ...patch(input, {
+          ignoreNull: ['type', 'label', 'required', 'lockType', 'fieldOrder'],
+        }),
+        updatedAt: new Date(),
+      })
       .where(eq(schema.formBlockFields.id, fieldId));
 
     return this.findById(field.block.id) as Promise<FormBlockEntity>;

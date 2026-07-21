@@ -180,7 +180,7 @@ export class RequirementFormService {
       const [updated] = await tx
         .update(schema.requirementForms)
         .set({
-          ...patch(rest),
+          ...patch(rest, { ignoreNull: ['name'] }),
           ...(settings !== undefined && {
             settings: this.normalizeSettings(settings),
           }),
