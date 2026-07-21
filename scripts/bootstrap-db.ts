@@ -83,6 +83,7 @@ const logFixtureSummary = (): void => {
   console.log('Accounts:');
   console.log('  admin@clippy.social          (Owner)');
   console.log('  supervisor@clippy.social   (Supervisor)');
+  console.log('  demo@clippy.social         (Member — use this one for demos)');
   console.log('  member01@clippy.social … member10@clippy.social (Member)');
   console.log(
     '  pending01@clippy.social, pending02@clippy.social (pending request)',
@@ -90,12 +91,18 @@ const logFixtureSummary = (): void => {
   console.log('  rejected01@clippy.social   (rejected request)');
   console.log('\nShifts (weekly, Europe/Berlin):');
   console.log(
-    '  Community Support   Mon 08:00–12:00  (all 12 members invited)',
+    '  Community Support   Mon 08:00–12:00  (all members + demo invited)',
   );
   console.log(
-    '  Food Distribution   Wed 12:00–16:00  (supervisor + member01–04)',
+    '  Food Distribution   Wed 12:00–16:00  (supervisor + demo + member01–04)',
   );
-  console.log('  Event Assistance    Fri 16:00–20:00  (no invites)');
+  console.log(
+    '  Event Assistance    Fri 16:00–20:00  (demo + member05–07 invited)',
+  );
+  console.log(
+    '\nDemo account also follows the Volunteer Fair event and has 4 more',
+  );
+  console.log('shifts across the next 3 weeks left to discover.');
 };
 
 const main = (): void => {
