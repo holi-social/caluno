@@ -59,6 +59,18 @@ export const formats = (locale: string) => {
     }
   };
 
+  const formatDateRange = (from: string | Date, to: string | Date) => {
+    const fromDate = new Date(from);
+    const toDate = new Date(to);
+
+    return new Intl.DateTimeFormat(locale, {
+      timeZone: DEFAULT_TIMEZONE,
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric',
+    }).formatRange(fromDate, toDate);
+  };
+
   const formatTimeRange = (from: string | Date, to: string | Date) => {
     const fromDate = new Date(from);
     const toDate = new Date(to);
@@ -100,6 +112,7 @@ export const formats = (locale: string) => {
     formatDateTime,
     formatTime,
     formatRange,
+    formatDateRange,
     formatTimeRange,
     formatDuration,
     formatDurationByMinutes,

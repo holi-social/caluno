@@ -3,8 +3,8 @@
 import { TabBar, type TabBarIsland, type TabBarItem } from '@repo/ui';
 import {
   Building2Icon,
+  CalendarIcon,
   FileClockIcon,
-  HomeIcon,
   QrCodeIcon,
 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
@@ -22,7 +22,7 @@ export function VolunteerNav({ isAdmin }: VolunteerNavProps) {
 
   const volunteerTabs: TabBarItem[] = useMemo(
     () => [
-      { label: t('home'), icon: HomeIcon, key: '/' },
+      { label: t('shifts'), icon: CalendarIcon, key: '/' },
       { label: t('checkIn'), icon: QrCodeIcon, key: '/qr-id' },
       { label: t('myTime'), icon: FileClockIcon, key: '/timesheets' },
     ],
@@ -44,7 +44,8 @@ export function VolunteerNav({ isAdmin }: VolunteerNavProps) {
     if (
       pathname === '/' ||
       pathname.startsWith('/discover') ||
-      pathname.startsWith('/my-shifts')
+      pathname.startsWith('/my-shifts') ||
+      pathname.startsWith('/shifts')
     ) {
       return '/';
     }
@@ -52,12 +53,12 @@ export function VolunteerNav({ isAdmin }: VolunteerNavProps) {
   }, [pathname]);
 
   return (
-    <div className="fixed inset-x-0 bottom-0 z-50 pb-[calc(0.25rem+env(safe-area-inset-bottom))] flex justify-center">
+    <div className="pointer-events-none fixed inset-x-0 bottom-0 z-50 flex justify-center pb-[calc(0.25rem+env(safe-area-inset-bottom))]">
       <TabBar
         items={volunteerTabs}
         onSelect={router.push}
         activeKey={activeKey}
-        className="w-full max-w-xl"
+        className="pointer-events-auto w-full max-w-xl"
         island={adminMenuItem}
       />
     </div>
