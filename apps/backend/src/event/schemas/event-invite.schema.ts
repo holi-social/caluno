@@ -8,12 +8,13 @@ import {
 } from 'drizzle-orm/pg-core';
 import { users } from '../../auth/schemas/auth.schema';
 import { idColumn, timestampColumns } from '../../database/database-columns';
+import { enumValues } from '../../database/typeutil';
 import { EventInviteStatus } from '../enums';
 import { events } from './event.schema';
 
 export const eventInviteStatusEnum = pgEnum(
   'event_invite_status',
-  EventInviteStatus as Record<string, string>,
+  enumValues(EventInviteStatus),
 );
 
 export const eventInvites = snakeCase.table(
@@ -27,8 +28,9 @@ export const eventInvites = snakeCase.table(
       .references(() => users.id, { onDelete: 'restrict' })
       .notNull(),
     status: eventInviteStatusEnum('status')
+      .$type<EventInviteStatus>()
       .notNull()
-      .default(EventInviteStatus.PENDING),
+      .default(EventInviteStatus.INVITED),
     ...timestampColumns,
   },
   (table) => [

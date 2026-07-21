@@ -43,4 +43,41 @@ export class SignupPage extends AuthPage {
       this.page.getByRole('heading', { name: 'Verify your email' }),
     ).toBeVisible();
   }
+
+  // Server-side errors (invalid email, rate limit, ...) surface as a toast.
+  get errorToast() {
+    return this.page.locator('[data-sonner-toast]');
+  }
+
+  async submit() {
+    await this.submitButton.click();
+  }
+
+  // Fills only the provided fields; leaves the rest untouched.
+  async fillForm(values: { name?: string; email?: string; password?: string }) {
+    if (values.name !== undefined) await this.nameInput.fill(values.name);
+    if (values.email !== undefined) await this.emailInput.fill(values.email);
+    if (values.password !== undefined) {
+      await this.passwordInput.fill(values.password);
+    }
+  }
+
+  private fieldLocator(field: 'name' | 'email' | 'password') {
+    if (field === 'name') return this.nameInput;
+    if (field === 'email') return this.emailInput;
+    return this.passwordInput;
+  }
+
+  // Native HTML5 constraint-validation state for a field.
+  fieldValidity(field: 'name' | 'email' | 'password') {
+    return this.fieldLocator(field).evaluate((el) => {
+      const input = el as HTMLInputElement;
+      return {
+        valid: input.validity.valid,
+        valueMissing: input.validity.valueMissing,
+        typeMismatch: input.validity.typeMismatch,
+        tooShort: input.validity.tooShort,
+      };
+    });
+  }
 }

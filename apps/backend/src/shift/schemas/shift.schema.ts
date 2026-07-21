@@ -10,13 +10,14 @@ import {
 } from 'drizzle-orm/pg-core';
 import { users } from '../../auth/schemas/auth.schema';
 import { idColumn, timestampColumns } from '../../database/database-columns';
+import { enumValues } from '../../database/typeutil';
 import { events } from '../../event/schemas/event.schema';
 import { organizationUnits } from '../../organization/schemas/organization-unit.schema';
 import { ShiftVisibility } from '../enums';
 
 export const shiftVisibilityEnum = pgEnum(
   'shift_visibility',
-  ShiftVisibility as Record<string, string>,
+  enumValues(ShiftVisibility),
 );
 
 export const shifts = snakeCase.table(
@@ -35,6 +36,7 @@ export const shifts = snakeCase.table(
     location: text('location'),
     imageUrl: text('image_url'),
     visibility: shiftVisibilityEnum('visibility')
+      .$type<ShiftVisibility>()
       .notNull()
       .default(ShiftVisibility.ALL_MEMBERS),
     maxVolunteers: integer('max_volunteers'),

@@ -21,6 +21,14 @@
     "check-types": {
       "dependsOn": ["^check-types", "codegen"]
     },
+    "all-checks": {
+      "dependsOn": [
+        "^all-checks",
+        "//#format-and-lint:fix",
+        "check-types",
+        "codegen"
+      ]
+    },
     "codegen": {
       "dependsOn": ["^codegen"],
       "inputs": ["../../apps/backend/src/schema.gql", "src/**/*.graphql"],

@@ -4,9 +4,11 @@ export enum ShiftVisibility {
 }
 
 export enum ShiftInviteStatus {
-  PENDING = 'PENDING',
+  INVITED = 'INVITED',
   ACCEPTED = 'ACCEPTED',
   REJECTED = 'REJECTED',
+  CANCELLED = 'CANCELLED',
+  SELF_JOINED = 'SELF_JOINED',
 }
 
 export enum RecurrenceDay {

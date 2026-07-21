@@ -11,6 +11,7 @@ import type { MembershipRequestEntity } from '../membership/schemas/membership-r
 import type { RequirementFormEntity } from '../requirement-profile/schemas/requirement-form.schema';
 import type { RequirementProfileEntity } from '../requirement-profile/schemas/requirement-profile.schema';
 import { JoinStatus } from '../shared/enums/join-status.enum';
+import { PARTICIPATING_EVENT_INVITE_STATUSES } from '../shared/invite-status';
 import { FilePurpose } from '../storage/enums';
 import { FileService } from '../storage/services/file.service';
 import { slugify } from '../utils/slug.util';
@@ -113,7 +114,7 @@ export class EventService {
             invitedMemberIds.map((memberId) => ({
               eventId: event.id,
               userId: memberId,
-              status: EventInviteStatus.ACCEPTED,
+              status: EventInviteStatus.INVITED,
             })),
           )
           .onConflictDoNothing();
@@ -217,7 +218,7 @@ export class EventService {
         newMemberIds.map((userId) => ({
           eventId,
           userId,
-          status: EventInviteStatus.ACCEPTED,
+          status: EventInviteStatus.INVITED,
         })),
       )
       .onConflictDoNothing();
@@ -375,7 +376,7 @@ export class EventService {
       where: {
         eventInvites: {
           eventId,
-          status: EventInviteStatus.ACCEPTED,
+          status: { in: [...PARTICIPATING_EVENT_INVITE_STATUSES] },
         },
       },
     });

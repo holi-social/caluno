@@ -2,9 +2,6 @@
   "name": "clippy-e2e",
   "version": "0.0.0",
   "private": true,
-  "scripts": {
-    "e2etest": "npx playwright test"
-  },
   "devDependencies": {
     "@playwright/test": "^1.61.1"
   }

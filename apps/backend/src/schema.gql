@@ -836,8 +836,10 @@ type ShiftInstanceInvite {
 
 enum ShiftInviteStatus {
   ACCEPTED
-  PENDING
+  CANCELLED
+  INVITED
   REJECTED
+  SELF_JOINED
 }
 
 type ShiftPaginatedResponse {
