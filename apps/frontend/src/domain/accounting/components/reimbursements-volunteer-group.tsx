@@ -23,11 +23,17 @@ import type { NonCompliantAction } from './non-compliant-timesheet-dialog';
 import type {
   BoardDocument,
   BoardVolunteer,
+  DateRange,
   DocStatus,
   DocVolPair,
   PauschalenLimit,
+  TileFilter,
 } from './reimbursements-board';
-import { isTimesheetNonCompliant } from './reimbursements-board';
+import {
+  docVisibleInRange,
+  getReadyToGoDocs,
+  isTimesheetNonCompliant,
+} from './reimbursements-board';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -167,6 +173,8 @@ interface VolunteerTableGroupProps {
   onDocumentClick: (doc: BoardDocument, vol: BoardVolunteer) => void;
   onRequestAction: (items: DocVolPair[], action: NonCompliantAction) => void;
   docTypeFilter: DocTypeFilter;
+  dateRange: DateRange | undefined;
+  activeTile: TileFilter;
 }
 
 function VolunteerTableGroup({
@@ -177,21 +185,33 @@ function VolunteerTableGroup({
   onDocumentClick,
   onRequestAction,
   docTypeFilter,
+  dateRange,
+  activeTile,
 }: VolunteerTableGroupProps) {
   const t = useTranslations('Accounting.reimbursements');
   const [isOpen, setIsOpen] = useState(true);
 
-  // Filter displayed docs by docTypeFilter
-  const sortedDocs = [...vol.documents]
-    .sort(
-      (a, b) =>
-        STATUS_SORT_ORDER.indexOf(a.status) -
-        STATUS_SORT_ORDER.indexOf(b.status),
-    )
-    .filter((doc) => {
-      if (docTypeFilter === 'all') return true;
-      return doc.status.startsWith(docTypeFilter);
-    });
+  // Ready-to-go gets its own row set (ready timesheets + one contract row
+  // per pauschale in play — real if it exists, a greyed placeholder if
+  // not); every other tab filters the volunteer's real documents by
+  // doc-type + date, without ever touching `vol.documents` itself so
+  // compliance checks stay accurate regardless of what's on screen.
+  const visibleDocs =
+    activeTile === 'ready-to-go'
+      ? getReadyToGoDocs(vol, dateRange)
+      : vol.documents
+          .filter(
+            (doc) =>
+              docTypeFilter === 'all' || doc.status.startsWith(docTypeFilter),
+          )
+          .filter((doc) => docVisibleInRange(doc, dateRange));
+
+  const sortedDocs = [...visibleDocs].sort(
+    (a, b) =>
+      STATUS_SORT_ORDER.indexOf(a.status) - STATUS_SORT_ORDER.indexOf(b.status),
+  );
+
+  if (sortedDocs.length === 0) return null;
 
   // Ready timesheets bundle separately per pauschale type — never combined
   // into one download, since each type is its own reimbursement batch.
@@ -514,6 +534,8 @@ interface ReimbursementsTableProps {
   onDocumentClick: (doc: BoardDocument, vol: BoardVolunteer) => void;
   onRequestAction: (items: DocVolPair[], action: NonCompliantAction) => void;
   docTypeFilter: DocTypeFilter;
+  dateRange: DateRange | undefined;
+  activeTile: TileFilter;
 }
 
 export function ReimbursementsTable({
@@ -525,18 +547,25 @@ export function ReimbursementsTable({
   onDocumentClick,
   onRequestAction,
   docTypeFilter,
+  dateRange,
+  activeTile,
 }: ReimbursementsTableProps) {
   const t = useTranslations('Accounting.reimbursements');
 
-  const allVisibleDocIds = vols.flatMap((v) =>
-    v.documents
-      .filter(
-        (d) =>
-          d.status !== 'contract-active' &&
-          (docTypeFilter === 'all' || d.status.startsWith(docTypeFilter)),
-      )
-      .map((d) => d.id),
-  );
+  const allVisibleDocIds = vols.flatMap((v) => {
+    const visible =
+      activeTile === 'ready-to-go'
+        ? getReadyToGoDocs(v, dateRange)
+        : v.documents
+            .filter(
+              (d) =>
+                docTypeFilter === 'all' || d.status.startsWith(docTypeFilter),
+            )
+            .filter((d) => docVisibleInRange(d, dateRange));
+    return visible
+      .filter((d) => d.status !== 'contract-active')
+      .map((d) => d.id);
+  });
 
   const allSelected =
     allVisibleDocIds.length > 0 &&
@@ -583,6 +612,8 @@ export function ReimbursementsTable({
               onDocumentClick={onDocumentClick}
               onRequestAction={onRequestAction}
               docTypeFilter={docTypeFilter}
+              dateRange={dateRange}
+              activeTile={activeTile}
             />
           ))}
         </TableBody>

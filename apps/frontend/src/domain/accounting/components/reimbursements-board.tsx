@@ -126,7 +126,7 @@ type PauschalenFilter = 'all' | PauschalenType;
 type DatePreset = 'all-time' | 'this-month' | 'last-month' | null;
 type SortOption = 'action-needed' | 'newest';
 
-interface DateRange {
+export interface DateRange {
   from: Date | undefined;
   to?: Date | undefined;
 }
@@ -210,6 +210,48 @@ function findContractDoc(
       d.status.startsWith('contract') &&
       (d.pauschale ?? vol.pauschale) === pauschale,
   );
+}
+
+/**
+ * Row set for the "Ready to go" tab: only the ready timesheets (date-scoped)
+ * plus, per pauschale type they cover, that type's real contract document —
+ * whatever its status, so an in-progress signing keeps its normal action —
+ * or a synthesized, greyed `contract-missing` placeholder for the
+ * timesheet's year when no contract exists at all. Every other document
+ * (generate/signing docs from other periods) is excluded, so nothing but the
+ * bundle-download action and this one placeholder's "Create" can surface
+ * here.
+ */
+export function getReadyToGoDocs(
+  vol: BoardVolunteer,
+  range: DateRange | undefined,
+): BoardDocument[] {
+  const readyTimesheets = vol.documents.filter(
+    (d) => d.status === 'timesheet-ready' && docInRange(d, range),
+  );
+  if (readyTimesheets.length === 0) return [];
+
+  const pauschaleTypes = Array.from(
+    new Set(readyTimesheets.map((d) => d.pauschale ?? vol.pauschale)),
+  );
+
+  const contractRows: BoardDocument[] = pauschaleTypes.map((type) => {
+    const contract = findContractDoc(vol, type);
+    if (contract) return contract;
+
+    const sample = readyTimesheets.find(
+      (d) => (d.pauschale ?? vol.pauschale) === type,
+    );
+    const year = (sample && periodYear(sample)) ?? '';
+    return {
+      id: `${vol.id}-contract-missing-${type}-${year}`,
+      status: 'contract-missing',
+      periodLabel: year,
+      pauschale: type,
+    };
+  });
+
+  return [...readyTimesheets, ...contractRows];
 }
 
 // ─── Mock data ────────────────────────────────────────────────────────────────
@@ -2056,6 +2098,37 @@ function docInRange(doc: BoardDocument, range: DateRange | undefined): boolean {
   return date >= range.from && date <= to;
 }
 
+/** A contract's `periodLabel` is its coverage year (e.g. "2026"); a timesheet's is "<Month> <year>" — either way the year is the last 4 digits. */
+function periodYear(doc: BoardDocument): string | undefined {
+  return doc.periodLabel.match(/\d{4}/)?.[0];
+}
+
+/** Contracts run the calendar year, so they're "in range" whenever their year overlaps the selected period — never by the exact day they were signed. */
+function contractCoversRange(doc: BoardDocument, range: DateRange): boolean {
+  const year = periodYear(doc);
+  if (!year || !range.from) return true;
+  const fromYear = range.from.getFullYear();
+  const toYear = (range.to ?? range.from).getFullYear();
+  const y = Number(year);
+  return y >= fromYear && y <= toYear;
+}
+
+/**
+ * Display-time date filter for a document. Contracts are annual — active for
+ * every month of their year — so they never get hidden by an exact-day
+ * range; timesheets still match by their own date. Never mutates the
+ * volunteer's document list (see `applyFilters`) — this only decides what to
+ * render, so compliance checks keep seeing the true, unfiltered data.
+ */
+export function docVisibleInRange(
+  doc: BoardDocument,
+  range: DateRange | undefined,
+): boolean {
+  if (!range?.from) return true;
+  if (doc.status.startsWith('contract')) return contractCoversRange(doc, range);
+  return docInRange(doc, range);
+}
+
 function newestDocTimestamp(vol: BoardVolunteer): number {
   return vol.documents.reduce((max, d) => {
     const t = d.lastActionDate
@@ -2125,8 +2198,8 @@ const TILE_DOC_TYPE: Record<Exclude<TileFilter, null>, DocTypeFilter> = {
   'timesheet-generate': 'timesheet',
   'timesheet-signing': 'timesheet',
   // Ready-to-go is the terminal bundling stage — leave the doc-type filter
-  // on "all" rather than narrowing it, since the tile itself already scopes
-  // the table.
+  // on "all"; the tile's own row-builder (getReadyToGoDocs) scopes the
+  // table to ready timesheets + their contract row, not this dropdown.
   'ready-to-go': 'all',
 };
 
@@ -2139,6 +2212,14 @@ function countForTile(volunteers: BoardVolunteer[], tile: TileFilter): number {
   );
 }
 
+/**
+ * Decides which volunteers show, without ever touching `vol.documents` —
+ * compliance checks (and the table itself) always read the true, unfiltered
+ * document list; only *inclusion* is filtered here, and *display* is
+ * filtered separately per-document (see `docVisibleInRange` and
+ * `getReadyToGoDocs`) so a volunteer's real data is never corrupted by the
+ * current view.
+ */
 function applyFilters(
   volunteers: BoardVolunteer[],
   tile: TileFilter,
@@ -2147,31 +2228,26 @@ function applyFilters(
   search: string,
   range: DateRange | undefined,
 ): BoardVolunteer[] {
-  return volunteers
-    .map((vol) => ({
-      ...vol,
-      documents: range?.from
-        ? vol.documents.filter((d) => docInRange(d, range))
-        : vol.documents,
-    }))
-    .filter((vol) => {
-      if (vol.documents.length === 0) return false;
-      if (
-        pauschale !== 'all' &&
-        !vol.documents.some((d) => (d.pauschale ?? vol.pauschale) === pauschale)
-      )
-        return false;
-      if (search && !vol.name.toLowerCase().includes(search.toLowerCase()))
-        return false;
-      if (tile && !vol.documents.some((d) => matchesTile(d.status, tile)))
-        return false;
-      if (
-        docType !== 'all' &&
-        !vol.documents.some((d) => d.status.startsWith(docType))
-      )
-        return false;
-      return true;
-    });
+  return volunteers.filter((vol) => {
+    if (vol.documents.length === 0) return false;
+    if (
+      pauschale !== 'all' &&
+      !vol.documents.some((d) => (d.pauschale ?? vol.pauschale) === pauschale)
+    )
+      return false;
+    if (search && !vol.name.toLowerCase().includes(search.toLowerCase()))
+      return false;
+    if (tile && !vol.documents.some((d) => matchesTile(d.status, tile)))
+      return false;
+    if (
+      docType !== 'all' &&
+      !vol.documents.some((d) => d.status.startsWith(docType))
+    )
+      return false;
+    if (range?.from && !vol.documents.some((d) => docVisibleInRange(d, range)))
+      return false;
+    return true;
+  });
 }
 
 // ─── FilterTile (step card, no icon box) ─────────────────────────────────────
@@ -2513,6 +2589,11 @@ export function ReimbursementsBoard({ orgUId }: ReimbursementsBoardProps) {
     'ready-to-go',
   ];
 
+  // Pipeline-tile counts are pauschale-scoped only. docTypeFilter is not an
+  // independent user choice here — selecting a tile sets it as a side
+  // effect (TILE_DOC_TYPE) — so letting it narrow this list would make every
+  // tile's count shrink whenever any one tile is selected, instead of
+  // reflecting the org's true, stable totals.
   const baseFilteredVols = useMemo(
     () =>
       volunteers.filter((v) => {
@@ -2521,14 +2602,9 @@ export function ReimbursementsBoard({ orgUId }: ReimbursementsBoardProps) {
           !v.documents.some((d) => (d.pauschale ?? v.pauschale) === pauschale)
         )
           return false;
-        if (
-          docTypeFilter !== 'all' &&
-          !v.documents.some((d) => d.status.startsWith(docTypeFilter))
-        )
-          return false;
         return true;
       }),
-    [volunteers, pauschale, docTypeFilter],
+    [volunteers, pauschale],
   );
 
   const tileCounts = useMemo(
@@ -2615,10 +2691,26 @@ export function ReimbursementsBoard({ orgUId }: ReimbursementsBoardProps) {
     setDocTypeFilter('all');
   }
 
-  // Deselect docs that scroll out of view when filters change
+  // Deselect docs that scroll out of view when filters change — mirrors
+  // exactly what VolunteerTableGroup renders, so a doc scrolled out by
+  // date/doc-type/tile never lingers selected.
   const visibleDocIds = useMemo(
-    () => new Set(filteredVols.flatMap((v) => v.documents.map((d) => d.id))),
-    [filteredVols],
+    () =>
+      new Set(
+        filteredVols.flatMap((v) =>
+          (activeTile === 'ready-to-go'
+            ? getReadyToGoDocs(v, dateRange)
+            : v.documents
+                .filter(
+                  (d) =>
+                    docTypeFilter === 'all' ||
+                    d.status.startsWith(docTypeFilter),
+                )
+                .filter((d) => docVisibleInRange(d, dateRange))
+          ).map((d) => d.id),
+        ),
+      ),
+    [filteredVols, docTypeFilter, dateRange, activeTile],
   );
 
   useEffect(() => {
@@ -2842,6 +2934,8 @@ export function ReimbursementsBoard({ orgUId }: ReimbursementsBoardProps) {
           onDocumentClick={(doc, vol) => setSelectedDoc({ doc, vol })}
           onRequestAction={requestAction}
           docTypeFilter={docTypeFilter}
+          dateRange={dateRange}
+          activeTile={activeTile}
         />
       )}
 
