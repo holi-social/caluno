@@ -173,7 +173,7 @@ export function RequiredFormsPopover({ orgUId }: RequiredFormsPopoverProps) {
               : t('pill.none')}
           </Button>
         </PopoverTrigger>
-        <PopoverContent className="w-[400px] p-0" align="end">
+        <PopoverContent className="w-[520px] p-0" align="end">
           <div className="p-5 space-y-5">
             <div className="flex items-start justify-between gap-4">
               <div className="space-y-1">
