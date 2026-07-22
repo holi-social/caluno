@@ -88,13 +88,20 @@ export function FormCard({
           </p>
         </div>
 
-        <div className="mt-5 space-y-2 sm:flex sm:gap-2 sm:space-y-0">
-          <div className="flex gap-2 sm:contents">
-            <Button className="h-10 flex-1" onClick={handleShare}>
+        <div className="mt-5 space-y-2 lg:flex lg:flex-col lg:gap-2 xl:flex-row xl:space-y-0">
+          <div className="flex gap-2 sm:flex-col lg:flex-row">
+            <Button
+              className="h-10 flex-1 has-[>svg]:px-6"
+              onClick={handleShare}
+            >
               <Share2 className="mr-1.5 size-4" />
               {t('share')}
             </Button>
-            <Button asChild variant="outline" className="h-10 flex-1">
+            <Button
+              asChild
+              variant="outline"
+              className="h-10 flex-1 has-[>svg]:px-6"
+            >
               <Link
                 href={`/admin/${orgUId}/requirement-forms/${form.id}/builder`}
               >
@@ -112,11 +119,11 @@ export function FormCard({
               </Link>
             </Button>
           </div>
-          <div className="flex gap-2 sm:contents">
+          <div className="flex gap-2 sm:flex-col lg:flex-row">
             <Button
               asChild
               variant="outline"
-              className="h-10 flex-1 sm:size-10 sm:flex-none sm:shrink-0"
+              className="h-10 flex-1 has-[>svg]:px-6 xl:size-10 xl:flex-none xl:shrink-0"
               aria-label={t('submissions')}
               title={t('submissions')}
             >
@@ -124,20 +131,22 @@ export function FormCard({
                 href={`/admin/${orgUId}/requirement-forms/${form.id}/submissions`}
               >
                 <Users className="size-4" />
-                <span className="ml-1.5 sm:hidden">{t('submissions')}</span>
+                <span className="ml-1.5 xl:hidden">{t('submissions')}</span>
               </Link>
             </Button>
             {onDelete && (
               <Button
                 variant="outline"
-                size="icon"
-                className="text-muted-foreground hover:text-destructive size-10 shrink-0"
+                className="text-muted-foreground hover:text-destructive h-10 flex-1 has-[>svg]:px-6 lg:size-10 lg:flex-none lg:shrink-0"
                 onClick={() => setConfirmOpen(true)}
                 aria-label={tTable('deleteFormAria')}
                 title={tTable('deleteFormAria')}
                 disabled={locked}
               >
                 <Trash2 className="size-4" />
+                <span className="ml-1.5 hidden sm:block lg:hidden">
+                  {t('delete')}
+                </span>
               </Button>
             )}
           </div>
