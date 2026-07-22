@@ -129,6 +129,43 @@ export class ShiftService {
     return new Map(rows.map((row) => [row.instanceId, Number(row.total)]));
   }
 
+  /** Public (non-cancelled) upcoming instances for a single shift. */
+  async findPublicInstancesByShiftId(
+    shiftId: string,
+  ): Promise<ShiftInstanceEntity[]> {
+    return this.findPublicInstancesByShiftIds([shiftId]);
+  }
+
+  /** Public (non-cancelled) upcoming instances for many shifts in one query (DataLoader batch). */
+  async findPublicInstancesByShiftIds(
+    shiftIds: string[],
+  ): Promise<ShiftInstanceEntity[]> {
+    if (shiftIds.length === 0) return [];
+    return this.db.query.shiftInstances.findMany({
+      where: {
+        masterId: { in: shiftIds },
+        isCancelled: false,
+        actualStartsAt: { gte: startOfTodayInAppTimeZone() },
+      },
+      with: { master: true },
+      orderBy: { actualStartsAt: 'asc' },
+    });
+  }
+
+  /** Public (non-deleted) shifts for an org unit that aren't tied to an event. */
+  async findIndividualShiftsByOrgUnit(
+    organizationUnitId: string,
+  ): Promise<ShiftEntity[]> {
+    return this.db.query.shifts.findMany({
+      where: {
+        organizationUnitId,
+        eventId: { isNull: true },
+        isDeleted: false,
+      },
+      orderBy: { originalStartsAt: 'asc' },
+    });
+  }
+
   /** A user's open time entries across many instances in one query (DataLoader batch). */
   async findOpenTimeEntriesForUser(
     userId: string,
@@ -146,6 +183,32 @@ export class ShiftService {
           isNull(schema.timeEntries.endedAt),
         ),
       );
+  }
+
+  /** A user's shift-instance invite statuses across many instances in one query (DataLoader batch). */
+  async findInviteStatusesForUser(
+    userId: string,
+    instanceIds: string[],
+  ): Promise<{ shiftInstanceId: string; status: ShiftInviteStatus }[]> {
+    if (instanceIds.length === 0) return [];
+
+    const rows = await this.db
+      .select({
+        shiftInstanceId: schema.shiftInstanceInvites.instanceId,
+        status: schema.shiftInstanceInvites.status,
+      })
+      .from(schema.shiftInstanceInvites)
+      .where(
+        and(
+          eq(schema.shiftInstanceInvites.userId, userId),
+          inArray(schema.shiftInstanceInvites.instanceId, instanceIds),
+        ),
+      );
+
+    return rows.map((row) => ({
+      shiftInstanceId: row.shiftInstanceId,
+      status: row.status as ShiftInviteStatus,
+    }));
   }
 
   /** The volunteer's open (not-yet-checked-out) time entry for an instance, if any. */

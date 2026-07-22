@@ -47,43 +47,45 @@ export function DetailPageHeader({
   return (
     <header
       className={cn(
-        'flex w-full items-center justify-between gap-3 p-3',
+        'flex w-full items-center',
         transparent
           ? 'border-b border-border bg-muted/70 backdrop-blur-sm'
           : 'bg-muted',
         className,
       )}
     >
-      {/* Left lockup: back button + optional page title */}
-      <div className="flex min-w-0 items-center gap-3">
-        <button
-          type="button"
-          onClick={onBack}
-          aria-label={backLabel}
-          className={cn(
-            'flex size-11 shrink-0 items-center justify-center rounded-lg',
-            'text-foreground transition-colors',
-            'hover:bg-accent',
-            'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60 focus-visible:ring-offset-1',
+      <div className="mx-auto flex w-full max-w-[1400px] items-center justify-between gap-3 px-4 py-3 md:px-20">
+        {/* Left lockup: back button + optional page title */}
+        <div className="flex min-w-0 items-center gap-3">
+          <button
+            type="button"
+            onClick={onBack}
+            aria-label={backLabel}
+            className={cn(
+              'flex size-11 shrink-0 items-center justify-center rounded-lg',
+              'text-foreground transition-colors',
+              'hover:bg-accent',
+              'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60 focus-visible:ring-offset-1',
+            )}
+          >
+            <ChevronLeftIcon className="size-6" />
+          </button>
+
+          {showTitle && title && (
+            <span className="truncate text-base font-bold leading-none text-foreground">
+              {title}
+            </span>
           )}
-        >
-          <ChevronLeftIcon className="size-6" />
-        </button>
+        </div>
 
-        {showTitle && title && (
-          <span className="truncate text-base font-bold leading-none text-foreground">
-            {title}
-          </span>
-        )}
-      </div>
+        {/* Right side: cobranding + actions */}
+        <div className="flex shrink-0 items-center gap-3">
+          <Cobranding logoUrl={logoUrl} ourLogo={ourLogo} size="small" />
 
-      {/* Right side: cobranding + actions */}
-      <div className="flex shrink-0 items-center gap-3">
-        <Cobranding logoUrl={logoUrl} ourLogo={ourLogo} size="small" />
-
-        {showActions && actions && (
-          <div className="flex items-center">{actions}</div>
-        )}
+          {showActions && actions && (
+            <div className="flex items-center">{actions}</div>
+          )}
+        </div>
       </div>
     </header>
   );

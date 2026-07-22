@@ -17,6 +17,7 @@ input CloseTimeEntryInput {
 
 input CreateEventInput {
   coverFileId: String
+  description: String
   endsAt: DateTime!
   invitedMemberIds: [String!]
   location: String
@@ -142,11 +143,14 @@ type Event {
   coverImageUrl: String
   coverUrl: String
   createdAt: DateTime!
+  description: String
   endsAt: DateTime!
   id: ID!
   isDeleted: Boolean!
   location: String
   logoUrl: String
+  myJoinStatus: JoinStatus!
+  organizationUnit: EventOrganizationUnit
   organizationUnitId: ID!
   organizer: User
   shifts: [Shift!]!
@@ -154,6 +158,13 @@ type Event {
   slug: String!
   startsAt: DateTime!
   title: String!
+}
+
+type EventOrganizationUnit {
+  id: ID!
+  logoUrl: String
+  name: String!
+  slug: String!
 }
 
 type EventPaginatedResponse {
@@ -313,6 +324,7 @@ type JoinShiftInstanceResult {
 
 enum JoinStatus {
   JOINED
+  NONE
   PENDING
   REJECTED
   REQUIREMENTS_NEEDED
@@ -437,11 +449,15 @@ type OrganizationUnit {
   address: String
   children: [OrganizationUnit!]!
   contactEmail: String
+  coverUrl: String
   deletedAt: DateTime
   description: String
   id: ID!
   logoUrl: String
+  memberCount: Int!
+  myMembershipState: JoinStatus!
   name: String!
+  openShiftsCount: Int!
   organization: Organization!
   organizationId: String!
   parent: OrganizationUnit
@@ -556,6 +572,11 @@ type Query {
   organizations(limit: Int! = 10, offset: Int! = 0): OrganizationPaginatedResponse!
   permissionGroups: [PermissionGroup!]!
   permissions: [Permission!]!
+  publicEvent(id: ID!): Event!
+  publicEventsByOrganizationUnit(organizationUnitId: ID!): [Event!]!
+  publicOrganizationUnit(id: ID!): OrganizationUnit!
+  publicShiftInstances(shiftId: ID!): [ShiftInstance!]!
+  publicShiftsByOrganizationUnit(organizationUnitId: ID!): [Shift!]!
   requirement(id: String!): Requirement
   requirementForm(id: String!): RequirementForm
   requirementFormByShareToken(token: String!): RequirementForm
@@ -793,6 +814,7 @@ type Shift {
   event: Event
   id: ID!
   imageUrl: String
+  instances: [ShiftInstance!]!
   instructions: String
   isDeleted: Boolean!
   location: String
@@ -818,11 +840,13 @@ type ShiftInstance {
   isCheckedIn: Boolean!
   isException: Boolean!
   master: Shift!
+  myJoinStatus: JoinStatus!
   occurrenceIndex: Int!
   overrideInstructions: String
   overrideLocation: String
   overrideMaxVolunteers: Int
   overrideTitle: String
+  spotsLeft: Int
   volunteers: [User!]
 }
 
@@ -873,6 +897,7 @@ type TimeEntryPaginatedResponse {
 
 input UpdateEventInput {
   coverFileId: String
+  description: String
   endsAt: DateTime
   invitedMemberIds: [String!]
   location: String

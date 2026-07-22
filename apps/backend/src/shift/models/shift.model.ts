@@ -5,6 +5,8 @@ import { Organization } from '../../organization/models/organization.model';
 import { OrganizationUnit } from '../../organization/models/organization-unit.model';
 import { User } from '../../user/models/user.model';
 import { ShiftVisibility } from '../enums';
+import type { ShiftInstance } from './shift-instance.model';
+import { ShiftInstance as ShiftInstanceModel } from './shift-instance.model';
 
 @ObjectType()
 export class Shift {
@@ -64,6 +66,9 @@ export class Shift {
 
   @Field(() => Date)
   createdAt!: Date;
+
+  @Field(() => [ShiftInstanceModel])
+  instances!: ShiftInstance[];
 }
 
 export const ShiftPaginatedResponse = createPaginatedResponseType<Shift>(

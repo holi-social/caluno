@@ -1,3 +1,4 @@
+export { createEvent } from './event.factory';
 export { createMembershipRequest } from './membership-request.factory';
 export {
   createFormSubmission,

@@ -3,6 +3,7 @@
 import { JoinStatus, ShiftVisibility } from '@repo/data';
 import { useJoinShiftInstance } from '@repo/data/react';
 import { Button } from '@repo/ui';
+import { CheckIcon } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useCallback, useEffect, useState } from 'react';
 import { toast } from 'sonner';
@@ -15,6 +16,11 @@ interface JoinShiftButtonProps {
   visibility: ShiftVisibility;
   isAuthenticated: boolean;
   autoJoin?: boolean;
+  isFull?: boolean;
+  status?: JoinStatus;
+  onStatusChange?: (status: JoinStatus) => void;
+  label?: string;
+  className?: string;
 }
 
 export function JoinShiftButton({
@@ -24,6 +30,11 @@ export function JoinShiftButton({
   visibility,
   isAuthenticated,
   autoJoin = false,
+  isFull = false,
+  status = JoinStatus.None,
+  onStatusChange,
+  label,
+  className,
 }: JoinShiftButtonProps) {
   const router = useRouter();
   const joinShiftInstance = useJoinShiftInstance();
@@ -53,12 +64,13 @@ export function JoinShiftButton({
 
       if (result.status === JoinStatus.Joined) {
         toast.success(t('join.joined'));
-        router.refresh();
+        onStatusChange?.(JoinStatus.Joined);
       } else if (result.status === JoinStatus.Pending) {
         toast.success(t('join.pending'));
-        router.refresh();
+        onStatusChange?.(JoinStatus.Pending);
       } else if (result.status === JoinStatus.Rejected) {
         toast.error(t('join.rejected'));
+        onStatusChange?.(JoinStatus.Rejected);
       } else if (result.status === JoinStatus.RequirementsNeeded) {
         const missingForms = (result.requiredForms ?? []).filter(
           (f) => !f.submitted,
@@ -105,6 +117,7 @@ export function JoinShiftButton({
     router,
     t,
     organizationUnitId,
+    onStatusChange,
   ]);
 
   useEffect(() => {
@@ -131,9 +144,42 @@ export function JoinShiftButton({
     handleJoin,
   ]);
 
+  if (status === JoinStatus.Joined) {
+    return (
+      <Button disabled variant="secondary" size="xl" className={className}>
+        <CheckIcon className="size-5" />
+        {t('join.joinedCta')}
+      </Button>
+    );
+  }
+
+  if (status === JoinStatus.Pending) {
+    return (
+      <Button disabled variant="secondary" size="xl" className={className}>
+        {t('join.pendingCta')}
+      </Button>
+    );
+  }
+
+  if (status === JoinStatus.Rejected) {
+    return (
+      <Button disabled variant="outline" size="xl" className={className}>
+        {t('join.rejectedCta')}
+      </Button>
+    );
+  }
+
+  if (isFull) {
+    return (
+      <Button disabled variant="outline" size="xl" className={className}>
+        {t('join.full')}
+      </Button>
+    );
+  }
+
   if (visibility !== ShiftVisibility.AllMembers) {
     return (
-      <Button disabled variant="outline">
+      <Button disabled variant="outline" size="xl" className={className}>
         {t('join.inviteOnly')}
       </Button>
     );
@@ -143,8 +189,12 @@ export function JoinShiftButton({
     <Button
       onClick={handleJoin}
       disabled={joinShiftInstance.isPending || !instanceId}
+      size="xl"
+      className={className}
     >
-      {joinShiftInstance.isPending ? t('join.joining') : t('join.joinShift')}
+      {joinShiftInstance.isPending
+        ? t('join.joining')
+        : (label ?? t('join.joinShift'))}
     </Button>
   );
 }

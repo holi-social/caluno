@@ -1,6 +1,8 @@
 import { Args, Context, ID, Query, Resolver } from '@nestjs/graphql';
+import { AllowAnonymous } from '@thallesp/nestjs-better-auth';
 import { PERMISSIONS } from '../../auth/constants';
 import { Permissions } from '../../auth/decorators/permissions.decorator';
+import { NotFoundGraphQLError } from '../../graphql/errors/not-found.error';
 import type { AuthenticatedGraphQLContext } from '../../graphql/graphql.context';
 import { PaginationInput } from '../../graphql/pagination.input';
 import { ShiftMapper } from '../../shift/mappers/shift.mapper';
@@ -35,6 +37,18 @@ export class EventQueryResolver {
     return this.eventMapper.toModelOrThrow(event);
   }
 
+  @AllowAnonymous()
+  @Query(() => Event)
+  async publicEvent(
+    @Args('id', { type: () => ID }) id: string,
+  ): Promise<Event> {
+    const event = await this.eventService.findByIdPublic(id);
+    if (!event) {
+      throw new NotFoundGraphQLError(`Event with ID ${id} not found`);
+    }
+    return this.eventMapper.toModelOrThrow(event);
+  }
+
   @Permissions(PERMISSIONS.SHIFT_VIEW)
   @Query(() => EventPaginatedResponse)
   async events(
@@ -64,6 +78,16 @@ export class EventQueryResolver {
       context.organizationUnitId,
     );
     return this.userMapper.toArray(attendees);
+  }
+
+  @AllowAnonymous()
+  @Query(() => [Event])
+  async publicEventsByOrganizationUnit(
+    @Args('organizationUnitId', { type: () => ID }) organizationUnitId: string,
+  ): Promise<Event[]> {
+    const events =
+      await this.eventService.findAllPublicByOrgUnit(organizationUnitId);
+    return this.eventMapper.toArray(events);
   }
 
   @Permissions(PERMISSIONS.SHIFT_VIEW)

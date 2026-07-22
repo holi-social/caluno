@@ -1,0 +1,68 @@
+fragment PublicOrganizationUnitFields on OrganizationUnit {
+  id
+  name
+  slug
+  description
+  logoUrl
+  coverUrl
+  address
+  memberCount
+  openShiftsCount
+  myMembershipState
+}
+
+fragment PublicOrgEventFields on Event {
+  id
+  title
+  slug
+  startsAt
+  endsAt
+  location
+  shiftsCount
+  shifts {
+    id
+    instances {
+      id
+      spotsLeft
+    }
+  }
+}
+
+fragment PublicOrgShiftInstanceFields on ShiftInstance {
+  id
+  actualStartsAt
+  actualEndsAt
+  overrideMaxVolunteers
+  filledCount
+  spotsLeft
+}
+
+fragment PublicOrgShiftFields on Shift {
+  id
+  title
+  maxVolunteers
+  rrule
+  originalStartsAt
+  durationMinutes
+  instances {
+    ...PublicOrgShiftInstanceFields
+  }
+}
+
+query GetPublicOrganizationUnit($id: ID!) {
+  publicOrganizationUnit(id: $id) {
+    ...PublicOrganizationUnitFields
+  }
+}
+
+query GetPublicEventsByOrganizationUnit($organizationUnitId: ID!) {
+  publicEventsByOrganizationUnit(organizationUnitId: $organizationUnitId) {
+    ...PublicOrgEventFields
+  }
+}
+
+query GetPublicShiftsByOrganizationUnit($organizationUnitId: ID!) {
+  publicShiftsByOrganizationUnit(organizationUnitId: $organizationUnitId) {
+    ...PublicOrgShiftFields
+  }
+}

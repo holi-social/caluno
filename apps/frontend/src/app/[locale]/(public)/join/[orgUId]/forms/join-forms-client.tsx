@@ -76,9 +76,7 @@ export function JoinFormsClient({
 
   const handleRequestToJoin = async () => {
     try {
-      const result = await joinOrganization.mutateAsync({
-        organizationUnitId: orgUId,
-      });
+      const result = await joinOrganization.mutateAsync(orgUId);
 
       if (result.status === JoinStatus.Joined) {
         toast.success(t('joined'));
