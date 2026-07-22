@@ -866,6 +866,7 @@
       "share": "Share",
       "view": "View",
       "edit": "Edit",
+      "delete": "Delete",
       "submissions": "Submissions",
       "deleteFormTitle": "Delete form?",
       "deleteFormDescription": "will be permanently removed.",
