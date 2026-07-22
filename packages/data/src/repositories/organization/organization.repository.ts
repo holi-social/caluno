@@ -68,4 +68,20 @@ export class OrganizationRepository extends BaseRepository {
     const data = await this.sdk.CreateOrganization({ input });
     return data.createOrganization;
   }
+
+  async setRequiredForms(organizationUnitId: string, formIds: string[]) {
+    const data = await this.sdk.SetRequiredForms({
+      organizationUnitId,
+      formIds,
+    });
+    return data.setRequiredForms;
+  }
+
+  async setRequiredFormsEnabled(organizationUnitId: string, enabled: boolean) {
+    const data = await this.sdk.SetRequiredFormsEnabled({
+      organizationUnitId,
+      enabled,
+    });
+    return data.setRequiredFormsEnabled;
+  }
 }

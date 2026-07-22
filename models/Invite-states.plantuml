@@ -1,0 +1,10 @@
+@startuml InviteStatusModel
+
+[*] --> INVITED
+[*] --> SELF_JOINED ' means the member self-joined without an invite
+INVITED --> ACCEPTED
+INVITED --> REJECTED
+ACCEPTED --> CANCELLED
+SELF_JOINED --> CANCELLED
+
+@enduml

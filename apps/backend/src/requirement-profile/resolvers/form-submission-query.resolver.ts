@@ -1,4 +1,4 @@
-import { Args, Context, Query, Resolver } from '@nestjs/graphql';
+import { Args, Context, ID, Query, Resolver } from '@nestjs/graphql';
 import { Session, type UserSession } from '@thallesp/nestjs-better-auth';
 import { PERMISSIONS } from '../../auth/constants';
 import { Permissions } from '../../auth/decorators/permissions.decorator';
@@ -34,6 +34,19 @@ export class FormSubmissionQueryResolver {
       form.id,
     );
     return this.formSubmissionMapper.toModel(item);
+  }
+
+  @Query(() => [FormSubmission])
+  async myFormSubmissions(
+    @Args('organizationUnitId', { type: () => ID })
+    organizationUnitId: string,
+    @Session() session: UserSession,
+  ): Promise<FormSubmission[]> {
+    const items = await this.formSubmissionService.findByUserAndOrgUnit(
+      session.user.id,
+      organizationUnitId,
+    );
+    return this.formSubmissionMapper.toArray(items);
   }
 
   @Permissions(PERMISSIONS.VOLUNTEER_VIEW)

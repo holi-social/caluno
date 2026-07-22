@@ -450,7 +450,7 @@ const createShiftWithInvites = async (
         shift.inviteUserIds.map((userId) => ({
           instanceId: instance.id,
           userId,
-          status: ShiftInviteStatus.ACCEPTED,
+          status: ShiftInviteStatus.INVITED,
         })),
       ),
     );

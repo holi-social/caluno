@@ -8,7 +8,7 @@ export async function GET(request: Request) {
   const redirectTo = isSafeRedirect(rawRedirectTo) ? rawRedirectTo : undefined;
 
   const baseUrl = process.env.NEXT_PUBLIC_WEB_URL ?? request.url;
-  const response = NextResponse.redirect(new URL('/signup', baseUrl));
+  const response = NextResponse.redirect(new URL('/login', baseUrl));
 
   if (orgUId) {
     response.cookies.set('pending_invite', orgUId, {

@@ -288,6 +288,7 @@ scalar JSON @specifiedBy(url: "http://www.ecma-international.org/publications/fi
 type JoinEventResult {
   event: Event!
   membershipRequestId: ID
+  requiredForms: [RequiredFormWithStatus!]
   requirementProfile: RequirementProfile
   requirementStatuses: [UserRequirementStatus!]
   status: JoinStatus!
@@ -295,6 +296,7 @@ type JoinEventResult {
 
 type JoinOrganizationResult {
   membershipRequestId: ID
+  requiredForms: [RequiredFormWithStatus!]
   requirementProfile: RequirementProfile
   requirementStatuses: [UserRequirementStatus!]
   status: JoinStatus!
@@ -302,6 +304,7 @@ type JoinOrganizationResult {
 
 type JoinShiftInstanceResult {
   membershipRequestId: ID
+  requiredForms: [RequiredFormWithStatus!]
   requirementProfile: RequirementProfile
   requirementStatuses: [UserRequirementStatus!]
   shiftInstance: ShiftInstance!
@@ -382,7 +385,10 @@ type Mutation {
   joinShiftInstance(instanceId: String!): JoinShiftInstanceResult!
   regenerateFormShareToken(id: String!): RequirementForm!
   rejectMembershipRequest(id: ID!, organizationUnitId: ID!, rejectionReason: String!): MembershipRequest!
+  setRequiredForms(formIds: [String!]!, organizationUnitId: String!): [RequiredFormRef!]!
+  setRequiredFormsEnabled(enabled: Boolean!, organizationUnitId: String!): OrganizationUnit!
   submitForm(input: SubmitFormInput!, token: String!): FormSubmission!
+  submitRequiredForm(formId: String!, input: SubmitFormInput!, organizationUnitId: String!): FormSubmission!
   updateEvent(id: ID!, input: UpdateEventInput!): Event!
   updateFormBlock(id: String!, input: UpdateFormBlockInput!): FormBlock!
   updateFormBlockField(fieldId: String!, input: UpdateFormBlockFieldInput!): FormBlock!
@@ -440,6 +446,8 @@ type OrganizationUnit {
   organizationId: String!
   parent: OrganizationUnit
   phone: String
+  requiredForms: [RequiredFormRef!]!
+  requiredFormsEnabled: Boolean!
   requiredMembershipRequirementProfile: RequirementProfile
   slug: String!
   type: OrganizationUnitType!
@@ -531,7 +539,9 @@ type Query {
   memberships: [Membership!]!
   myAdminstableOrganizationUnits: [OrganizationUnit!]!
   myFormSubmissionByToken(token: String!): FormSubmission
+  myFormSubmissions(organizationUnitId: ID!): [FormSubmission!]!
   myMembershipRequests(limit: Int! = 10, offset: Int! = 0, status: MembershipRequestStatus): MembershipRequestPaginatedResponse!
+  myMembershipStatus(organizationUnitId: ID!): Boolean!
   myOrganizationUnits: [OrganizationUnit!]!
   myShiftInstances(includePast: Boolean! = false): [ShiftInstance!]!
   myTime(limit: Int! = 10, offset: Int! = 0): TimeEntryPaginatedResponse!
@@ -569,6 +579,18 @@ type Query {
   user(id: String!): User
   userByCheckInId(checkInId: String!): User
   weeklyShifts(from: DateTime!, to: DateTime!): [ShiftInstance!]!
+}
+
+type RequiredFormRef {
+  form: RequirementForm!
+  order: Int!
+}
+
+type RequiredFormWithStatus {
+  form: RequirementForm!
+  order: Int!
+  submissionId: ID
+  submitted: Boolean!
 }
 
 type Requirement {
@@ -814,8 +836,10 @@ type ShiftInstanceInvite {
 
 enum ShiftInviteStatus {
   ACCEPTED
-  PENDING
+  CANCELLED
+  INVITED
   REJECTED
+  SELF_JOINED
 }
 
 type ShiftPaginatedResponse {

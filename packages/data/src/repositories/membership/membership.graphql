@@ -21,6 +21,10 @@ query GetOrganizationUnitMemberships {
   }
 }
 
+query GetMyMembershipStatus($organizationUnitId: ID!) {
+  myMembershipStatus(organizationUnitId: $organizationUnitId)
+}
+
 mutation UpdateMembershipRoles($membershipId: ID!, $roleIds: [ID!]!) {
   updateMembershipRoles(membershipId: $membershipId, roleIds: $roleIds) {
     id

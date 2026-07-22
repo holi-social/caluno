@@ -102,7 +102,7 @@ export class FormSubmissionService {
     return this.findByUserAndOrgUnit(userId, orgUnitId);
   }
 
-  private async findByUserAndOrgUnit(
+  async findByUserAndOrgUnit(
     userId: string,
     orgUnitId: string,
   ): Promise<FormSubmissionEntity[]> {
@@ -136,6 +136,54 @@ export class FormSubmissionService {
       throw new NotFoundGraphQLError('Form not found');
     }
 
+    return this.submitToForm(form, input, userId);
+  }
+
+  async submitRequiredForm(
+    organizationUnitId: string,
+    formId: string,
+    input: SubmitFormInput,
+    userId: string,
+  ): Promise<FormSubmissionEntity> {
+    const orgUnit = await this.db.query.organizationUnits.findFirst({
+      where: { id: organizationUnitId },
+      columns: { requiredFormsEnabled: true },
+    });
+
+    if (!orgUnit) {
+      throw new NotFoundGraphQLError('Organization unit not found');
+    }
+
+    const required =
+      await this.db.query.organizationUnitRequiredForms.findFirst({
+        where: {
+          organizationUnitId,
+          formId,
+        },
+      });
+
+    if (!required || !orgUnit.requiredFormsEnabled) {
+      throw new ForbiddenGraphQLError(
+        'This form is not required for the organization unit',
+      );
+    }
+
+    const form = await this.db.query.requirementForms.findFirst({
+      where: { id: formId },
+    });
+
+    if (!form) {
+      throw new NotFoundGraphQLError('Form not found');
+    }
+
+    return this.submitToForm(form, input, userId);
+  }
+
+  private async submitToForm(
+    form: schema.RequirementFormEntity,
+    input: SubmitFormInput,
+    userId: string,
+  ): Promise<FormSubmissionEntity> {
     const existing = await this.findByUserAndForm(userId, form.id);
     if (existing) {
       if (existing.status !== FormSubmissionStatus.REJECTED) {

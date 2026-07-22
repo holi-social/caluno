@@ -1,12 +1,15 @@
 import { Parent, ResolveField, Resolver } from '@nestjs/graphql';
 import { plainToInstance } from 'class-transformer';
+import { RequirementForm } from '../../requirement-profile/models/requirement-form.model';
 import { RequirementProfile } from '../../requirement-profile/models/requirement-profile.model';
 import { RequirementProfileService } from '../../requirement-profile/services';
+import { RequiredFormService } from '../../requirement-profile/services/required-form.service';
 import { OrganizationMapper } from '../mappers/organization.mapper';
 import { OrganizationUnitMapper } from '../mappers/organization-unit.mapper';
 import { OrganizationUnitTypeMapper } from '../mappers/organization-unit-type.mapper';
 import { Organization } from '../models/organization.model';
 import { OrganizationUnit } from '../models/organization-unit.model';
+import { RequiredFormRef } from '../models/organization-unit-required-form.model';
 import { OrganizationUnitType } from '../models/organization-unit-type.model';
 import { OrganizationUnitService } from '../organization-unit.service';
 import type { OrganizationUnitEntity } from '../schemas/organization-unit.schema';
@@ -19,6 +22,7 @@ export class OrganizationUnitFieldResolver {
     private readonly organizationUnitMapper: OrganizationUnitMapper,
     private readonly organizationUnitTypeMapper: OrganizationUnitTypeMapper,
     private readonly requirementProfileService: RequirementProfileService,
+    private readonly requiredFormService: RequiredFormService,
   ) {}
   @ResolveField(() => Organization)
   async organization(
@@ -76,5 +80,19 @@ export class OrganizationUnitFieldResolver {
       organizationUnit.requiredMembershipRequirementProfileId,
     );
     return profile ? plainToInstance(RequirementProfile, profile) : null;
+  }
+
+  @ResolveField(() => [RequiredFormRef])
+  async requiredForms(
+    @Parent() organizationUnit: OrganizationUnitEntity,
+  ): Promise<RequiredFormRef[]> {
+    const requiredForms = await this.requiredFormService.getRequiredForms(
+      organizationUnit.id,
+    );
+
+    return requiredForms.map(({ form, order }) => ({
+      form: plainToInstance(RequirementForm, form),
+      order,
+    }));
   }
 }

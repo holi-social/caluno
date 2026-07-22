@@ -1,16 +1,17 @@
-import { notFound, redirect } from 'next/navigation';
+import { notFound } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
 import { VolunteerFormWrapper } from '@/domain/requirement-form/components/volunteer-form-wrapper';
+import { redirect as redirectWithLocale } from '@/i18n/navigation';
 import { getSession } from '@/lib/auth-server';
 import { getDataClient } from '@/lib/data-client';
 import { isMember as isMemberOfOrgUnit } from '@/lib/org-context-server';
 
 interface Props {
-  params: Promise<{ token: string }>;
+  params: Promise<{ locale: string; token: string }>;
 }
 
 export default async function PublicFormPage({ params }: Props) {
-  const { token } = await params;
+  const { locale, token } = await params;
   const data = await getDataClient();
 
   const form = await data.requirementForm.findFormByShareToken(token);
@@ -22,11 +23,15 @@ export default async function PublicFormPage({ params }: Props) {
   if (!session) {
     const orgUId = form.organizationUnitId;
     if (orgUId) {
-      redirect(
-        `/api/invite?orgUId=${orgUId}&redirectTo=${encodeURIComponent(`/f/${token}`)}`,
-      );
+      redirectWithLocale({
+        href: `/api/invite?orgUId=${orgUId}&redirectTo=${encodeURIComponent(`/f/${token}`)}`,
+        locale,
+      });
     }
-    redirect(`/login?redirectTo=${encodeURIComponent(`/f/${token}`)}`);
+    redirectWithLocale({
+      href: `/login?redirectTo=${encodeURIComponent(`/f/${token}`)}`,
+      locale,
+    });
   }
 
   const [isMember, userProfile, orgUnit, existingSubmission] =

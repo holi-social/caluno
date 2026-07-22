@@ -6,6 +6,11 @@ export class MembershipRepository extends BaseRepository {
     return data.memberships;
   }
 
+  async getMyMembershipStatus(organizationUnitId: string) {
+    const data = await this.sdk.GetMyMembershipStatus({ organizationUnitId });
+    return data.myMembershipStatus;
+  }
+
   async updateRoles(membershipId: string, roleIds: string[]) {
     const data = await this.sdk.UpdateMembershipRoles({
       membershipId,

@@ -129,6 +129,16 @@ mutation JoinShiftInstance($instanceId: String!) {
       name
       status
     }
+    requiredForms {
+      form {
+        id
+        name
+        description
+      }
+      order
+      submitted
+      submissionId
+    }
   }
 }
 

@@ -7,12 +7,13 @@ import {
   uuid,
 } from 'drizzle-orm/pg-core';
 import { idColumn, timestampColumns } from '../../database/database-columns';
+import { enumValues } from '../../database/typeutil';
 import { organizations } from '../../organization/schemas/organization.schema';
 import { RequirementType } from '../enums';
 
 export const requirementTypeEnum = pgEnum(
   'requirement_type',
-  RequirementType as Record<string, string>,
+  enumValues(RequirementType),
 );
 
 export const requirements = snakeCase.table(
@@ -24,7 +25,7 @@ export const requirements = snakeCase.table(
         onDelete: 'cascade',
       })
       .notNull(),
-    type: requirementTypeEnum('type').notNull(),
+    type: requirementTypeEnum('type').$type<RequirementType>().notNull(),
     name: text('name').notNull(),
     description: text('description'),
     mandatory: boolean('mandatory').notNull().default(false),

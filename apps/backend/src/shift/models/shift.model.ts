@@ -51,7 +51,7 @@ export class Shift {
   rrule?: string | null;
 
   @Field(() => Event, { nullable: true })
-  event!: Event | null;
+  event?: Event | null;
 
   @Field(() => Date)
   originalStartsAt!: Date;

@@ -17,5 +17,5 @@ export class OrganizationUserProfile {
   userProfileAccessApproved!: boolean;
 
   @Field(() => String, { nullable: true })
-  note!: string | null;
+  note?: string | null;
 }

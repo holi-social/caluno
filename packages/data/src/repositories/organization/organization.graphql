@@ -50,6 +50,57 @@ query GetOrganizationUnit($id: String!) {
     phone
     address
     organizationId
+    requiredFormsEnabled
+    requiredForms {
+      form {
+        id
+        name
+        description
+        settings {
+          submitButtonLabel
+          successTitle
+          successMessage
+        }
+        blockRefs {
+          id
+          formId
+          blockId
+          fieldOrder
+          required
+          block {
+            id
+            organizationId
+            title
+            description
+            icon
+            required
+            isEditable
+            fields {
+              id
+              blockId
+              type
+              label
+              placeholder
+              description
+              required
+              lockType
+              systemKey
+              options {
+                label
+                value
+              }
+              documentFileId
+              documentDownloadUrl
+              documentFilename
+              documentLabel
+              minAge
+              fieldOrder
+            }
+          }
+        }
+      }
+      order
+    }
     parent {
       id
       name
@@ -252,4 +303,77 @@ query IsMemberOfOrgUnitOrAncestor($organizationUnitId: ID!, $userId: String!) {
     organizationUnitId: $organizationUnitId
     userId: $userId
   )
+}
+mutation SetRequiredForms($organizationUnitId: String!, $formIds: [String!]!) {
+  setRequiredForms(organizationUnitId: $organizationUnitId, formIds: $formIds) {
+    form {
+      id
+      name
+      description
+    }
+    order
+  }
+}
+
+mutation SetRequiredFormsEnabled(
+  $organizationUnitId: String!
+  $enabled: Boolean!
+) {
+  setRequiredFormsEnabled(
+    organizationUnitId: $organizationUnitId
+    enabled: $enabled
+  ) {
+    id
+    requiredFormsEnabled
+    requiredForms {
+      form {
+        id
+        name
+        description
+        settings {
+          submitButtonLabel
+          successTitle
+          successMessage
+        }
+        blockRefs {
+          id
+          formId
+          blockId
+          fieldOrder
+          required
+          block {
+            id
+            organizationId
+            title
+            description
+            icon
+            required
+            isEditable
+            fields {
+              id
+              blockId
+              type
+              label
+              placeholder
+              description
+              required
+              lockType
+              systemKey
+              options {
+                label
+                value
+              }
+              documentFileId
+              documentDownloadUrl
+              documentFilename
+              documentLabel
+              minAge
+              fieldOrder
+            }
+          }
+        }
+      }
+      order
+    }
+  }
 }
