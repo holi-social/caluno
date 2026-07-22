@@ -7,6 +7,7 @@ import { ShiftActionCard } from './shift-action-card';
 
 interface Shift {
   id: string;
+  organizationUnitId: string;
   title: string;
   instructions?: string | null;
   location?: string | null;
@@ -51,6 +52,7 @@ export function ShiftDetailContent({
         <aside className="order-1 min-w-0 md:order-2 md:w-[392px] md:shrink-0">
           <ShiftActionCard
             shiftId={shift.id}
+            organizationUnitId={shift.organizationUnitId}
             instances={orderedInstances}
             visibility={shift.visibility}
             isAuthenticated={isAuthenticated}

@@ -15,6 +15,7 @@ import { ShiftDayPicker } from './shift-day-picker';
 
 interface ShiftActionCardProps {
   shiftId: string;
+  organizationUnitId: string;
   instances: PublicShiftInstance[];
   visibility: ShiftVisibility;
   isAuthenticated: boolean;
@@ -24,6 +25,7 @@ interface ShiftActionCardProps {
 
 export function ShiftActionCard({
   shiftId,
+  organizationUnitId,
   instances,
   visibility,
   isAuthenticated,
@@ -130,6 +132,7 @@ export function ShiftActionCard({
         <JoinShiftButton
           key={selected.id}
           shiftId={shiftId}
+          organizationUnitId={organizationUnitId}
           instanceId={selected.id}
           visibility={visibility}
           isAuthenticated={isAuthenticated}

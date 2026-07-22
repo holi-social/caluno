@@ -47,22 +47,6 @@ export function useMembershipRequestCount(
   });
 }
 
-export function useJoinOrganization() {
-  const sdk = useSdk();
-  const queryClient = useQueryClient();
-  const repository = new MembershipRequestRepository(sdk);
-
-  return useMutation({
-    mutationFn: (organizationUnitId: string) =>
-      repository.join(organizationUnitId),
-    onSuccess: (_, organizationUnitId) => {
-      queryClient.invalidateQueries({
-        queryKey: ['publicOrganizationUnit', organizationUnitId],
-      });
-    },
-  });
-}
-
 export function useApproveMembershipRequest() {
   const sdk = useSdk();
   const queryClient = useQueryClient();
@@ -111,9 +95,12 @@ export function useJoinOrganization() {
   const repository = new MembershipRequestRepository(sdk);
 
   return useMutation({
-    mutationFn: ({ organizationUnitId }: { organizationUnitId: string }) =>
+    mutationFn: (organizationUnitId: string) =>
       repository.join(organizationUnitId),
-    onSuccess: (_, { organizationUnitId }) => {
+    onSuccess: (_, organizationUnitId) => {
+      queryClient.invalidateQueries({
+        queryKey: ['publicOrganizationUnit', organizationUnitId],
+      });
       queryClient.invalidateQueries({
         queryKey: ['membershipRequests', organizationUnitId],
       });
