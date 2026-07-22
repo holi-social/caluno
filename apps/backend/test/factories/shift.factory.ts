@@ -21,6 +21,7 @@ export type CreateShiftOptions = {
   instructions?: string | null;
   maxVolunteers?: number | null;
   minVolunteers?: number | null;
+  eventId?: string | null;
 };
 
 const defaultStartsAt = new Date(Date.now() + 100000);
@@ -55,6 +56,7 @@ export const createShift = async (
       visibility: options.visibility ?? ShiftVisibility.ALL_MEMBERS,
       maxVolunteers: options.maxVolunteers ?? null,
       minVolunteers: options.minVolunteers ?? null,
+      eventId: options.eventId ?? null,
       rrule,
       originalStartsAt: startsAt,
       durationMinutes,

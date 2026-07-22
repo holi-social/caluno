@@ -8,6 +8,7 @@ import type {
   GetActiveShiftInstancesQuery,
   GetAvailableShiftInstancesQuery,
   GetMyShiftInstancesQuery,
+  GetPublicShiftInstancesQuery,
   GetShiftInstancesQuery,
   GetShiftQuery,
   GetWeeklyShiftsQuery,
@@ -29,6 +30,10 @@ export type MyShiftInstance =
   GetMyShiftInstancesQuery['myShiftInstances'][number];
 export type AvailableShiftInstance =
   GetAvailableShiftInstancesQuery['availableShiftInstances'][number];
+export type PublicShiftInstance =
+  GetPublicShiftInstancesQuery['publicShiftInstances'][number];
+export type RawPublicShiftInstance =
+  GetPublicShiftInstancesQuery['publicShiftInstances'];
 export interface ShiftDetail extends RawShift {
   startDate: Date;
   endDate: Date;
@@ -53,6 +58,13 @@ export class ShiftRepository extends BaseRepository {
   async findById(id: string): Promise<RawShift> {
     const data = await this.sdk.GetShift({ id });
     return data.shift;
+  }
+
+  async findPublicInstancesByShiftId(
+    shiftId: string,
+  ): Promise<PublicShiftInstance[]> {
+    const data = await this.sdk.GetPublicShiftInstances({ shiftId });
+    return data.publicShiftInstances;
   }
 
   async findByIdDetailed(id: string): Promise<ShiftDetail> {

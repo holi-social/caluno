@@ -9,6 +9,7 @@ import {
   PERMISSIONS,
 } from '../auth/constants';
 import { permissions } from '../auth/schemas/permission.schema';
+import { EventInviteStatus } from '../event/enums';
 import { MembershipRequestStatus } from '../membership/enums';
 import { ShiftInviteStatus, ShiftVisibility } from '../shift/enums';
 import { expandShift } from '../shift/utils/rrule-expander';
@@ -23,6 +24,22 @@ const ORG_NAME = 'Playground';
 const FIXTURE_TIMEZONE = 'Europe/Berlin';
 const SHIFT_DURATION_MINUTES = 240;
 const RECURRENCE_WEEKS_BACK = 12;
+
+// Stable IDs so e2e specs can rely on fixture data without querying the DB.
+const PUBLIC_EVENT_ID = '213e6757-af0c-4ce3-ba29-fb3500309351';
+const EVENT_ASSISTANCE_SHIFT_ID = 'e2915169-290d-42b2-a2e2-6d9992bb8814';
+const SHOWCASE_EVENT_ID = 'a6f6f1a1-1f2a-4a2a-9c1a-2f6b8b2f9a11';
+const SHOWCASE_OPEN_SHIFT_ID = 'b1e2a3c4-5d6e-4f70-8a91-b2c3d4e5f601';
+const SHOWCASE_FULL_SHIFT_ID = 'c2f3b4d5-6e7f-4081-9a02-c3d4e5f60712';
+const SHOWCASE_UNLIMITED_SHIFT_ID = 'd3a4c5e6-7f80-4192-ab13-d4e5f6071823';
+
+const EVENT_COVER_IMAGE_URL =
+  'https://images.unsplash.com/photo-1593113646773-028c64a8f1b8?auto=format&fit=crop&w=1200&q=80';
+const SHOWCASE_SHIFT_IMAGE_URL =
+  'https://images.unsplash.com/photo-1593113598332-cd288d649433?auto=format&fit=crop&w=1200&q=80';
+const ORG_COVER_IMAGE_URL =
+  'https://images.unsplash.com/photo-1593113646773-028c64a8f1b8?auto=format&fit=crop&w=1200&q=80';
+const DEMO_USER_EMAIL = 'demo@clippy.social';
 
 const WEEKLY_RRULE = {
   MONDAY: 'FREQ=WEEKLY;BYDAY=MO;WKST=MO',
@@ -270,6 +287,8 @@ const createPlaygroundOrganization = async (
         slug: organization.slug,
         contactEmail: organization.contactEmail,
         description: organization.description,
+        coverUrl: ORG_COVER_IMAGE_URL,
+        address: 'Hauptstraße 1, 10115 Berlin',
       })
       .returning();
 
@@ -378,12 +397,25 @@ const createPlaygroundOrganization = async (
 };
 
 type ShiftFixture = {
+  /** Defaults to a random UUID. */
+  id?: string;
   title: string;
   startsAt: Date;
   rrule: string;
   inviteUserIds: string[];
   /** Defaults to `SHIFT_DURATION_MINUTES`; override for fixed-length overlap-test shifts. */
   durationMinutes?: number;
+  /** Associates the shift with an event. */
+  eventId?: string;
+  /** Defaults to `ShiftVisibility.INVITED_MEMBERS`. */
+  visibility?: ShiftVisibility;
+  /** Capacity cap; omit for unlimited spots. */
+  maxVolunteers?: number;
+  instructions?: string;
+  location?: string;
+  imageUrl?: string;
+  /** Invites inserted with this status instead of ACCEPTED (does not count toward capacity). */
+  pendingInviteUserIds?: string[];
 };
 
 const pickRecentPastInstance = (
@@ -416,14 +448,20 @@ const createShiftWithInvites = async (
   const [createdShift] = await db
     .insert(schema.shifts)
     .values({
+      id: shift.id,
       title: shift.title,
       slug: slugify(shift.title),
+      instructions: shift.instructions ?? null,
+      location: shift.location ?? null,
+      imageUrl: shift.imageUrl ?? null,
       organizationUnitId,
       createdById,
-      visibility: ShiftVisibility.INVITED_MEMBERS,
+      visibility: shift.visibility ?? ShiftVisibility.INVITED_MEMBERS,
+      maxVolunteers: shift.maxVolunteers ?? null,
       originalStartsAt: shift.startsAt,
       durationMinutes,
       rrule: shift.rrule,
+      eventId: shift.eventId ?? null,
     })
     .returning();
 
@@ -450,6 +488,18 @@ const createShiftWithInvites = async (
         shift.inviteUserIds.map((userId) => ({
           instanceId: instance.id,
           userId,
+          status: ShiftInviteStatus.ACCEPTED,
+        })),
+      ),
+    );
+  }
+
+  if (shift.pendingInviteUserIds && shift.pendingInviteUserIds.length > 0) {
+    await db.insert(schema.shiftInstanceInvites).values(
+      insertedInstances.flatMap((instance) =>
+        (shift.pendingInviteUserIds ?? []).map((userId) => ({
+          instanceId: instance.id,
+          userId,
           status: ShiftInviteStatus.INVITED,
         })),
       ),
@@ -463,6 +513,45 @@ const createShiftWithInvites = async (
     instanceId: recentInstance.id,
     instanceStartsAt: recentInstance.actualStartsAt,
   };
+};
+
+const createEvent = async (
+  db: Database,
+  organizationUnitId: string,
+  createdById: string,
+  event: {
+    id: string;
+    title: string;
+    description?: string | null;
+    location?: string | null;
+    coverUrl?: string | null;
+    logoUrl?: string | null;
+    startsAt: Date;
+    endsAt: Date;
+  },
+): Promise<typeof schema.events.$inferSelect> => {
+  const [createdEvent] = await db
+    .insert(schema.events)
+    .values({
+      id: event.id,
+      title: event.title,
+      slug: slugify(event.title),
+      description: event.description ?? null,
+      location: event.location ?? null,
+      logoUrl: event.logoUrl ?? null,
+      coverUrl: event.coverUrl ?? null,
+      startsAt: event.startsAt,
+      endsAt: event.endsAt,
+      organizationUnitId,
+      createdById,
+    })
+    .returning();
+
+  if (!createdEvent) {
+    throw new Error(`Failed to create event: ${event.title}`);
+  }
+
+  return createdEvent;
 };
 
 const createTimeEntries = async (
@@ -597,11 +686,26 @@ async function seedFixtures() {
     );
   }
 
+  // The account to log into for demos: a member with existing shift/event
+  // invites plus untouched ALL_MEMBERS shifts left to discover, so both the
+  // "my shifts" and "discover" flows have real content on first login.
+  const demoUser = await createAuthUser(db, hashedPassword, {
+    email: DEMO_USER_EMAIL,
+    name: 'Demo Volunteer',
+  });
+
   await createMembershipWithRole(
     db,
     supervisor.id,
     org.rootUnitId,
     org.supervisorRoleId,
+  );
+
+  await createMembershipWithRole(
+    db,
+    demoUser.id,
+    org.rootUnitId,
+    org.memberRoleId,
   );
 
   for (const member of members) {
@@ -646,11 +750,13 @@ async function seedFixtures() {
   const approvedUserIds = [
     admin.id,
     supervisor.id,
+    demoUser.id,
     ...members.map((member) => member.id),
   ];
 
   const partialInviteUserIds = [
     supervisor.id,
+    demoUser.id,
     ...members.slice(0, 4).map((member) => member.id),
   ];
 
@@ -677,6 +783,17 @@ async function seedFixtures() {
     16,
   );
 
+  const publicEvent = await createEvent(db, org.rootUnitId, admin.id, {
+    id: PUBLIC_EVENT_ID,
+    title: 'Public Test Event',
+    description:
+      'A recurring weekly program at the Playground Community Center: community support on Mondays, food distribution on Wednesdays, and general event assistance on Fridays.',
+    location: 'Playground Community Center, Hauptstraße 1, 10115 Berlin',
+    coverUrl: ORG_COVER_IMAGE_URL,
+    startsAt: communitySupportStart,
+    endsAt: addHours(eventAssistanceStart, SHIFT_DURATION_MINUTES / 60 + 4),
+  });
+
   const communitySupport = await createShiftWithInvites(
     db,
     org.rootUnitId,
@@ -685,6 +802,12 @@ async function seedFixtures() {
       title: 'Community Support',
       startsAt: communitySupportStart,
       rrule: WEEKLY_RRULE.MONDAY,
+      visibility: ShiftVisibility.ALL_MEMBERS,
+      maxVolunteers: approvedUserIds.length + 3,
+      instructions:
+        'Staff the weekly community desk: check people in, hand out care packages, and point visitors to the right resource table. A short briefing runs 15 minutes before the desk opens.',
+      location: 'Playground Community Center, Front Desk',
+      imageUrl: SHOWCASE_SHIFT_IMAGE_URL,
       inviteUserIds: approvedUserIds,
     },
   );
@@ -697,15 +820,242 @@ async function seedFixtures() {
       title: 'Food Distribution',
       startsAt: foodDistributionStart,
       rrule: WEEKLY_RRULE.WEDNESDAY,
+      visibility: ShiftVisibility.ALL_MEMBERS,
+      maxVolunteers: partialInviteUserIds.length + 5,
+      instructions:
+        'Sort donated groceries into family-sized boxes, then help load them into pickup vehicles at the loading dock. Closed-toe shoes required.',
+      location: 'Playground Community Center, Loading Dock B',
+      imageUrl: EVENT_COVER_IMAGE_URL,
       inviteUserIds: partialInviteUserIds,
     },
   );
 
   await createShiftWithInvites(db, org.rootUnitId, admin.id, {
+    id: EVENT_ASSISTANCE_SHIFT_ID,
     title: 'Event Assistance',
     startsAt: eventAssistanceStart,
     rrule: WEEKLY_RRULE.FRIDAY,
-    inviteUserIds: [],
+    visibility: ShiftVisibility.ALL_MEMBERS,
+    maxVolunteers: 8,
+    instructions:
+      'General support for whatever the Friday program needs that week — registration, signage, seating, or directing attendees. Great shift for new volunteers.',
+    location: 'Playground Community Center, Main Hall',
+    imageUrl: SHOWCASE_SHIFT_IMAGE_URL,
+    inviteUserIds: [
+      demoUser.id,
+      ...members.slice(4, 7).map((member) => member.id),
+    ],
+    eventId: publicEvent.id,
+  });
+
+  // Showcase fixtures for the public shift/event detail pages: a single
+  // event carrying three shifts that between them cover every capacity
+  // state the design calls for (open with a partial progress bar, fully
+  // booked with no CTA, and unlimited spots), plus a cover image, a pending
+  // (not-yet-accepted) invite, and instructions/location text on every shift.
+  const showcaseToday = getDateInFixtureTimezone(new Date());
+  const showcaseAnchor = addDaysInFixtureTimezone(
+    showcaseToday.year,
+    showcaseToday.month,
+    showcaseToday.day,
+    5,
+  );
+
+  const showcaseOpenStart = fixtureWallClockToUtc(
+    showcaseAnchor.year,
+    showcaseAnchor.month,
+    showcaseAnchor.day,
+    9,
+  );
+  const showcaseFullStart = fixtureWallClockToUtc(
+    showcaseAnchor.year,
+    showcaseAnchor.month,
+    showcaseAnchor.day,
+    14,
+  );
+  const showcaseUnlimitedDay = addDaysInFixtureTimezone(
+    showcaseAnchor.year,
+    showcaseAnchor.month,
+    showcaseAnchor.day,
+    2,
+  );
+  const showcaseUnlimitedStart = fixtureWallClockToUtc(
+    showcaseUnlimitedDay.year,
+    showcaseUnlimitedDay.month,
+    showcaseUnlimitedDay.day,
+    10,
+  );
+
+  const showcaseEvent = await createEvent(db, org.rootUnitId, admin.id, {
+    id: SHOWCASE_EVENT_ID,
+    title: 'Volunteer Fair',
+    description:
+      'A showcase event bringing together every shift capacity state: open with spots left, fully booked, and unlimited. Come see the whole program in one place.',
+    location: 'Playground Exhibition Hall, Hauptstraße 1, 10115 Berlin',
+    coverUrl: EVENT_COVER_IMAGE_URL,
+    startsAt: showcaseOpenStart,
+    endsAt: addHours(showcaseFullStart, SHIFT_DURATION_MINUTES / 60),
+  });
+
+  const showcaseOpenInviteIds = [
+    supervisor.id,
+    ...members.slice(0, 7).map((member) => member.id),
+  ];
+  await createShiftWithInvites(db, org.rootUnitId, admin.id, {
+    id: SHOWCASE_OPEN_SHIFT_ID,
+    title: 'Welcome Desk',
+    startsAt: showcaseOpenStart,
+    rrule: ONE_TIME_RRULE,
+    durationMinutes: SHIFT_DURATION_MINUTES,
+    visibility: ShiftVisibility.ALL_MEMBERS,
+    maxVolunteers: 12,
+    instructions:
+      'Greet arriving volunteers, hand out name badges, and point them to their assigned stations. No experience needed — a quick briefing happens on site.',
+    location: 'Hauptstraße 1, 10115 Berlin · Main entrance',
+    imageUrl: SHOWCASE_SHIFT_IMAGE_URL,
+    eventId: showcaseEvent.id,
+    inviteUserIds: showcaseOpenInviteIds,
+    pendingInviteUserIds: [pendingUsers[0]?.id].filter((id): id is string =>
+      Boolean(id),
+    ),
+  });
+
+  const showcaseFullInviteIds = [
+    admin.id,
+    supervisor.id,
+    ...members.slice(0, 4).map((member) => member.id),
+  ];
+  await createShiftWithInvites(db, org.rootUnitId, admin.id, {
+    id: SHOWCASE_FULL_SHIFT_ID,
+    title: 'Stage Setup',
+    startsAt: showcaseFullStart,
+    rrule: ONE_TIME_RRULE,
+    durationMinutes: SHIFT_DURATION_MINUTES,
+    visibility: ShiftVisibility.ALL_MEMBERS,
+    maxVolunteers: showcaseFullInviteIds.length,
+    instructions:
+      'Build the stage, run sound checks, and set up seating for the afternoon program.',
+    location: 'Hauptstraße 1, 10115 Berlin · Exhibition Hall B',
+    imageUrl: EVENT_COVER_IMAGE_URL,
+    eventId: showcaseEvent.id,
+    inviteUserIds: showcaseFullInviteIds,
+  });
+
+  await createShiftWithInvites(db, org.rootUnitId, admin.id, {
+    id: SHOWCASE_UNLIMITED_SHIFT_ID,
+    title: 'Cleanup Crew',
+    startsAt: showcaseUnlimitedStart,
+    rrule: ONE_TIME_RRULE,
+    durationMinutes: SHIFT_DURATION_MINUTES,
+    visibility: ShiftVisibility.ALL_MEMBERS,
+    instructions:
+      'Help break down the exhibition hall after the fair: fold tables, bag trash, and load the van. As many hands as show up — no cap.',
+    location: 'Hauptstraße 1, 10115 Berlin · Exhibition Hall B',
+    imageUrl: SHOWCASE_SHIFT_IMAGE_URL,
+    eventId: showcaseEvent.id,
+    inviteUserIds: [members[8]?.id, members[9]?.id].filter((id): id is string =>
+      Boolean(id),
+    ),
+  });
+
+  // Demo account follows the Volunteer Fair (so the event page shows the
+  // "You're helping" state) but not the Public Test Event, so both the
+  // followed and not-yet-followed states are there to demo.
+  await db.insert(schema.eventInvites).values({
+    eventId: showcaseEvent.id,
+    userId: demoUser.id,
+    status: EventInviteStatus.ACCEPTED,
+  });
+
+  // Standalone ALL_MEMBERS shifts spread across the next few weeks, left
+  // un-invited for the demo account so /discover has real content on
+  // several different upcoming days, not just the showcase event's two.
+  const discoverDay = (daysOut: number) =>
+    addDaysInFixtureTimezone(
+      showcaseToday.year,
+      showcaseToday.month,
+      showcaseToday.day,
+      daysOut,
+    );
+
+  const parkCleanupDay = discoverDay(1);
+  const warehouseSortingDay = discoverDay(3);
+  const tutoringDay = discoverDay(11);
+  const gardenDay = discoverDay(18);
+
+  await createShiftWithInvites(db, org.rootUnitId, admin.id, {
+    title: 'Park Cleanup Day',
+    startsAt: fixtureWallClockToUtc(
+      parkCleanupDay.year,
+      parkCleanupDay.month,
+      parkCleanupDay.day,
+      9,
+    ),
+    rrule: ONE_TIME_RRULE,
+    durationMinutes: 180,
+    visibility: ShiftVisibility.ALL_MEMBERS,
+    maxVolunteers: 15,
+    instructions:
+      'Pick up litter, clear brush from the walking paths, and help repaint the playground fence. Gloves and bags provided — wear clothes you don’t mind getting dirty.',
+    location: 'Tiergarten Park, Berlin · Main gate',
+    imageUrl: SHOWCASE_SHIFT_IMAGE_URL,
+    inviteUserIds: members.slice(0, 2).map((member) => member.id),
+  });
+
+  await createShiftWithInvites(db, org.rootUnitId, admin.id, {
+    title: 'Warehouse Sorting',
+    startsAt: fixtureWallClockToUtc(
+      warehouseSortingDay.year,
+      warehouseSortingDay.month,
+      warehouseSortingDay.day,
+      13,
+    ),
+    rrule: ONE_TIME_RRULE,
+    durationMinutes: 210,
+    visibility: ShiftVisibility.ALL_MEMBERS,
+    maxVolunteers: 8,
+    instructions:
+      'Sort incoming donation pallets by category, check items for damage, and restock the shelves ready for next week’s distribution.',
+    location: 'Playground Warehouse, Hauptstraße 1, 10115 Berlin',
+    imageUrl: EVENT_COVER_IMAGE_URL,
+    inviteUserIds: members.slice(2, 4).map((member) => member.id),
+  });
+
+  await createShiftWithInvites(db, org.rootUnitId, admin.id, {
+    title: 'After-School Tutoring',
+    startsAt: fixtureWallClockToUtc(
+      tutoringDay.year,
+      tutoringDay.month,
+      tutoringDay.day,
+      15,
+    ),
+    rrule: ONE_TIME_RRULE,
+    durationMinutes: 90,
+    visibility: ShiftVisibility.ALL_MEMBERS,
+    instructions:
+      'Help kids aged 8–12 with homework and reading practice. No teaching experience needed, just patience and a friendly face — materials are provided.',
+    location: 'Playground Community Center, Room 2',
+    imageUrl: SHOWCASE_SHIFT_IMAGE_URL,
+    inviteUserIds: members.slice(4, 5).map((member) => member.id),
+  });
+
+  await createShiftWithInvites(db, org.rootUnitId, admin.id, {
+    title: 'Community Garden Planting',
+    startsAt: fixtureWallClockToUtc(
+      gardenDay.year,
+      gardenDay.month,
+      gardenDay.day,
+      10,
+    ),
+    rrule: ONE_TIME_RRULE,
+    durationMinutes: 150,
+    visibility: ShiftVisibility.ALL_MEMBERS,
+    maxVolunteers: 10,
+    instructions:
+      'Plant the spring vegetable beds, turn compost, and set up the new watering system. Great outdoor shift for beginners.',
+    location: 'Playground Community Garden, Hauptstraße 1, 10115 Berlin',
+    imageUrl: EVENT_COVER_IMAGE_URL,
+    inviteUserIds: members.slice(5, 7).map((member) => member.id),
   });
 
   // Fixed, one-time overlap-test shifts for the my-shifts conflict-clustering
@@ -801,10 +1151,20 @@ async function seedFixtures() {
 
   console.log(`Created Playground organization (${org.organizationId})`);
   console.log(`Root unit: ${org.rootUnitId}`);
-  console.log('Users: 15 accounts with password abcd1234');
-  console.log('Memberships: 12 approved, 2 pending, 1 rejected');
+  console.log('Users: 16 accounts with password abcd1234');
+  console.log('Memberships: 13 approved, 2 pending, 1 rejected');
+  console.log(
+    `Demo account: ${DEMO_USER_EMAIL} — member with invited shifts (Community Support, Food Distribution, Event Assistance), follows Volunteer Fair, and has Welcome Desk/Stage Setup/Cleanup Crew plus 4 more shifts across the next 3 weeks left to discover`,
+  );
   console.log(
     'Shifts: Community Support (Mon), Food Distribution (Wed), Event Assistance (Fri)',
+  );
+  console.log(`Event: Public Test Event (${publicEvent.id})`);
+  console.log(
+    `Event: Volunteer Fair (${showcaseEvent.id}) — Welcome Desk (open, ${showcaseOpenInviteIds.length}/12), Stage Setup (full, ${showcaseFullInviteIds.length}/${showcaseFullInviteIds.length}), Cleanup Crew (unlimited)`,
+  );
+  console.log(
+    'Discover: Park Cleanup Day, Warehouse Sorting, After-School Tutoring, Community Garden Planting',
   );
   console.log(
     'Time entries: created across Community Support and Food Distribution',

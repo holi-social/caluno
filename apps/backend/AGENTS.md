@@ -61,7 +61,7 @@ describe('Shift feature', () => {
 
   it('does something useful', async () => {
     const user = await createUser(db);
-    const shift = await createShift(app, organizationUnitId);
+    const shift = await createShift(db, { organizationUnitId });
     const instance = await createShiftInstance(db, shift.id);
     // act + assert
   });
@@ -70,17 +70,19 @@ describe('Shift feature', () => {
 
 ### Factory rules
 
-Factories live in `test/factories/`:
+Factories live in `test/factories/`, all inserting directly into the database
+(mirroring what the corresponding service method persists) rather than going
+through GraphQL — this keeps test setup decoupled from the resolvers/services
+the tests actually exercise:
 
 - **`createUser(db, overrides?)`** — inserts into `users` directly.
-- **`createShift(app, organizationUnitId, overrides?)`** — uses the `createShift` GraphQL mutation so the full resolver/service path is exercised.
-- **`createShiftInstance(db, shiftId, overrides?)`** — inserts into `shiftInstances` directly for cases that need extra instances beyond the one created by `createShift`.
+- **`createShift(db, options)`** — inserts into `shifts` (plus expanded `shiftInstances`) directly.
+- **`createShiftInstance(db, shiftId, overrides?)`** — inserts into `shiftInstances` directly for cases that need extra instances beyond the ones created by `createShift`.
+- **`createEvent(db, options)`** — inserts into `events` directly.
 - **`createMembershipRequest(db, { userId, organizationUnitId, metadata? })`** — inserts into `membershipRequests` directly.
 - **`cancelShiftInstance(db, instanceId)`** — helper to set `isCancelled = true`.
 
 Guidelines:
-- Prefer GraphQL mutations for the entity under test so resolvers, guards, and services run.
-- Use direct DB inserts only for entities that are not the focus of the test or are not exposed through mutations.
 - Always pass `organizationUnitId` from the test context; never hard-code one.
 - Use `crypto.randomUUID()` in names/emails to avoid collisions when tests run against the same test DB.
 

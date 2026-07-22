@@ -14,10 +14,20 @@ query GetShift($id: String!) {
     originalStartsAt
     durationMinutes
     organizationUnitId
+    organizationUnit {
+      id
+      name
+      logoUrl
+    }
     createdBy {
       id
       name
       image
+    }
+    event {
+      id
+      title
+      coverImageUrl
     }
   }
 }
@@ -106,6 +116,7 @@ mutation JoinShiftInstance($instanceId: String!) {
       isException
       isCancelled
       occurrenceIndex
+      myJoinStatus
       master {
         id
         title
@@ -201,6 +212,23 @@ query GetWeeklyShifts($from: DateTime!, $to: DateTime!) {
   }
 }
 
+fragment PublicShiftDetailInstanceFields on ShiftInstance {
+  id
+  actualStartsAt
+  actualEndsAt
+  overrideTitle
+  overrideMaxVolunteers
+  filledCount
+  spotsLeft
+  myJoinStatus
+}
+
+query GetPublicShiftInstances($shiftId: ID!) {
+  publicShiftInstances(shiftId: $shiftId) {
+    ...PublicShiftDetailInstanceFields
+  }
+}
+
 fragment VolunteerHomeShiftInstance on ShiftInstance {
   id
   actualStartsAt
@@ -218,6 +246,7 @@ fragment VolunteerHomeShiftInstance on ShiftInstance {
       name
     }
     event {
+      id
       title
       coverImageUrl
     }

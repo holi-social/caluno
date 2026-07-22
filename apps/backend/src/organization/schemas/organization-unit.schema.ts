@@ -36,6 +36,7 @@ export const organizationUnits = snakeCase.table(
     name: text('name').notNull(),
     slug: text('slug').notNull().unique(),
     logoUrl: text('logo_url'),
+    coverUrl: text('cover_url'),
     websiteUrl: text('website_url'),
     contactEmail: text('contact_email'),
     phone: text('phone'),

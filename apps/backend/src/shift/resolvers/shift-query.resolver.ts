@@ -32,6 +32,26 @@ export class ShiftQueryResolver {
     return this.shiftMapper.toModelOrThrow(shift);
   }
 
+  @AllowAnonymous()
+  @Query(() => [ShiftInstance])
+  async publicShiftInstances(
+    @Args('shiftId', { type: () => ID }) shiftId: string,
+  ): Promise<ShiftInstance[]> {
+    const instances =
+      await this.shiftService.findPublicInstancesByShiftId(shiftId);
+    return this.shiftInstanceMapper.toArray(instances);
+  }
+
+  @AllowAnonymous()
+  @Query(() => [Shift])
+  async publicShiftsByOrganizationUnit(
+    @Args('organizationUnitId', { type: () => ID }) organizationUnitId: string,
+  ): Promise<Shift[]> {
+    const shifts =
+      await this.shiftService.findIndividualShiftsByOrgUnit(organizationUnitId);
+    return this.shiftMapper.toArray(shifts);
+  }
+
   @Query(() => ShiftPaginatedResponse)
   async shifts(
     @Args() pagination: PaginationInput,
