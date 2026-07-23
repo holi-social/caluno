@@ -305,7 +305,6 @@ export class ShiftService {
         },
         invites: {
           userId,
-          status: ShiftInviteStatus.ACCEPTED,
         },
       },
       with: { master: true },
