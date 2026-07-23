@@ -17,6 +17,7 @@
     "bootstrap": "bun run db:bootstrap && turbo run dev",
     "db:wait": "docker compose exec postgres sh -c 'until pg_isready -U ${POSTGRES_USER:-postgres}; do sleep 1; done'",
     "db:migrate": "bun run --cwd apps/backend db:migrate",
+    "db:generate": "bun run --cwd apps/backend db:generate",
     "db:seed": "bun run --cwd apps/backend db:seed",
     "codegen": "turbo run codegen",
     "setup:hooks": "bash .ai/scripts/install-hooks.sh"
