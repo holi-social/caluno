@@ -1035,24 +1035,41 @@ export class ShiftService {
     });
   }
 
-  async findInstanceInvites(
-    instanceId: string,
+  /** Invites for many instances in one query (DataLoader batch). */
+  async findInstanceInvitesByInstanceIds(
+    instanceIds: string[],
     organizationUnitId: string,
     statuses?: readonly ShiftInviteStatus[] | null,
   ): Promise<ShiftInstanceInviteEntity[]> {
-    const instance = await this.findInstanceById(
-      instanceId,
-      organizationUnitId,
-    );
+    if (instanceIds.length === 0) {
+      return [];
+    }
 
     return this.db.query.shiftInstanceInvites.findMany({
       where: {
-        instanceId: instance.id,
+        instanceId: { in: instanceIds },
+        instance: {
+          master: { organizationUnitId, isDeleted: false },
+        },
         ...(statuses?.length ? { status: { in: [...statuses] } } : {}),
       },
       // Tie-break on id so batch invites (same createdAt) keep stable order after updates.
       orderBy: { createdAt: 'asc', id: 'asc' },
     });
+  }
+
+  async findInstanceInvites(
+    instanceId: string,
+    organizationUnitId: string,
+    statuses?: readonly ShiftInviteStatus[] | null,
+  ): Promise<ShiftInstanceInviteEntity[]> {
+    await this.findInstanceById(instanceId, organizationUnitId);
+
+    return this.findInstanceInvitesByInstanceIds(
+      [instanceId],
+      organizationUnitId,
+      statuses,
+    );
   }
 
   async findUsersByIds(userIds: string[]): Promise<UserEntity[]> {

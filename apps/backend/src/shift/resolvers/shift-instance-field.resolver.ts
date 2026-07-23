@@ -78,12 +78,13 @@ export class ShiftInstanceFieldResolver {
     @Context() context: AuthenticatedGraphQLContext,
     @Args('statuses', { type: () => [ShiftInviteStatus], nullable: true })
     statuses: ShiftInviteStatus[] | null | undefined,
+    @Loader(ShiftInstanceInvitesLoader) loader: ShiftInstanceInvitesLoader,
   ): Promise<ShiftInstanceInvite[]> {
-    const invites = await this.shiftService.findInstanceInvites(
-      instance.id,
-      context.organizationUnitId,
+    const invites = await loader.instanceInvitesByKey.load({
+      organizationUnitId: context.organizationUnitId,
+      instanceId: instance.id,
       statuses,
-    );
+    });
     return this.shiftInstanceInviteMapper.toArray(invites);
   }
 
