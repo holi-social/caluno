@@ -7,13 +7,18 @@ import type { AuthenticatedGraphQLContext } from '../../graphql/graphql.context'
 import { RequirementForm } from '../../requirement-profile/models/requirement-form.model';
 import { RequirementProfile } from '../../requirement-profile/models/requirement-profile.model';
 import { UserRequirementStatus } from '../../requirement-profile/models/user-requirement-status.model';
+import { ShiftInviteStatus } from '../enums';
 import { CreateShiftInput } from '../inputs/create-shift.input';
 import { UpdateShiftInput } from '../inputs/update-shift.input';
 import { ShiftMapper } from '../mappers/shift.mapper';
 import { ShiftInstanceMapper } from '../mappers/shift-instance.mapper';
+import { ShiftInstanceInviteMapper } from '../mappers/shift-instance-invite.mapper';
+import { ShiftInviteMapper } from '../mappers/shift-invite.mapper';
 import { JoinShiftInstanceResult } from '../models/join-shift-instance-result.model';
 import { Shift } from '../models/shift.model';
 import { ShiftInstance } from '../models/shift-instance.model';
+import { ShiftInstanceInvite } from '../models/shift-instance-invite.model';
+import { ShiftInvite } from '../models/shift-invite.model';
 import { ShiftService } from '../shift.service';
 
 @Resolver(() => Shift)
@@ -22,6 +27,8 @@ export class ShiftMutationResolver {
     private readonly shiftService: ShiftService,
     private readonly shiftMapper: ShiftMapper,
     private readonly shiftInstanceMapper: ShiftInstanceMapper,
+    private readonly shiftInviteMapper: ShiftInviteMapper,
+    private readonly shiftInstanceInviteMapper: ShiftInstanceInviteMapper,
   ) {}
 
   @Permissions(PERMISSIONS.SHIFT_EDIT)
@@ -118,5 +125,35 @@ export class ShiftMutationResolver {
           submissionId: s.submissionId,
         })) ?? null,
     };
+  }
+
+  @Mutation(() => ShiftInvite)
+  async updateShiftInviteStatus(
+    @Session() session: UserSession,
+    @Args('shiftId', { type: () => String }) shiftId: string,
+    @Args('status', { type: () => ShiftInviteStatus })
+    status: ShiftInviteStatus,
+  ): Promise<ShiftInvite> {
+    const invite = await this.shiftService.updateShiftInviteStatus(
+      session.user.id,
+      shiftId,
+      status,
+    );
+    return this.shiftInviteMapper.toModelOrThrow(invite);
+  }
+
+  @Mutation(() => ShiftInstanceInvite)
+  async updateShiftInstanceInviteStatus(
+    @Session() session: UserSession,
+    @Args('instanceId', { type: () => String }) instanceId: string,
+    @Args('status', { type: () => ShiftInviteStatus })
+    status: ShiftInviteStatus,
+  ): Promise<ShiftInstanceInvite> {
+    const invite = await this.shiftService.updateShiftInstanceInviteStatus(
+      session.user.id,
+      instanceId,
+      status,
+    );
+    return this.shiftInstanceInviteMapper.toModelOrThrow(invite);
   }
 }

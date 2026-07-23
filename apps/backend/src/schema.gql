@@ -160,6 +160,23 @@ type Event {
   title: String!
 }
 
+type EventInvite {
+  createdAt: DateTime!
+  id: ID!
+  status: EventInviteStatus!
+  updatedAt: DateTime!
+  userId: String!
+}
+
+enum EventInviteStatus {
+  ACCEPTED
+  ADMIN_REJECTED
+  CANCELLED
+  INVITED
+  SELF_JOINED
+  VOLUNTEER_REJECTED
+}
+
 type EventOrganizationUnit {
   id: ID!
   logoUrl: String
@@ -402,6 +419,7 @@ type Mutation {
   submitForm(input: SubmitFormInput!, token: String!): FormSubmission!
   submitRequiredForm(formId: String!, input: SubmitFormInput!, organizationUnitId: String!): FormSubmission!
   updateEvent(id: ID!, input: UpdateEventInput!): Event!
+  updateEventInviteStatus(eventId: ID!, status: EventInviteStatus!): EventInvite!
   updateFormBlock(id: String!, input: UpdateFormBlockInput!): FormBlock!
   updateFormBlockField(fieldId: String!, input: UpdateFormBlockFieldInput!): FormBlock!
   updateMembersForShiftInstance(instanceId: String!, inviteToAllInstances: Boolean, memberIds: [String!]!): ShiftInstance!
@@ -417,6 +435,8 @@ type Mutation {
   updateRequirementProfileSubmission(id: String!, input: UpdateRequirementProfileSubmissionInput!): RequirementProfileSubmission!
   updateRole(id: ID!, input: CreateRoleInput!): Role!
   updateShift(id: String!, input: UpdateShiftInput!): Shift!
+  updateShiftInstanceInviteStatus(instanceId: String!, status: ShiftInviteStatus!): ShiftInstanceInvite!
+  updateShiftInviteStatus(shiftId: String!, status: ShiftInviteStatus!): ShiftInvite!
   updateTimeEntry(id: ID!, input: UpdateTimeEntryInput!): TimeEntry!
 }
 
@@ -865,12 +885,21 @@ type ShiftInstancesByMaster {
   masterId: ID!
 }
 
+type ShiftInvite {
+  createdAt: DateTime!
+  id: ID!
+  status: ShiftInviteStatus!
+  updatedAt: DateTime!
+  userId: String!
+}
+
 enum ShiftInviteStatus {
   ACCEPTED
+  ADMIN_REJECTED
   CANCELLED
   INVITED
-  REJECTED
   SELF_JOINED
+  VOLUNTEER_REJECTED
 }
 
 type ShiftPaginatedResponse {

@@ -10,6 +10,7 @@ import { UserModule } from '../user/user.module';
 import { ShiftMapper } from './mappers/shift.mapper';
 import { ShiftInstanceMapper } from './mappers/shift-instance.mapper';
 import { ShiftInstanceInviteMapper } from './mappers/shift-instance-invite.mapper';
+import { ShiftInviteMapper } from './mappers/shift-invite.mapper';
 import { ShiftInstanceInvitesLoader } from './resolvers/loader';
 import { ShiftLoader } from './resolvers/shift.loader';
 import { ShiftFieldResolver } from './resolvers/shift-field.resolver';
@@ -35,6 +36,7 @@ import { ShiftService } from './shift.service';
     ShiftQueryResolver,
     ShiftMapper,
     ShiftInstanceInviteMapper,
+    ShiftInviteMapper,
     ShiftInstanceMapper,
     ShiftMutationResolver,
     ShiftFieldResolver,

@@ -1639,10 +1639,9 @@ describe('Shift invite status model', () => {
     });
 
     await shiftService.updateShiftInviteStatus(
-      shiftId,
       user.id,
+      shiftId,
       ShiftInviteStatus.ACCEPTED,
-      organizationUnitId,
     );
 
     const instanceInvite = await db.query.shiftInstanceInvites.findFirst({
