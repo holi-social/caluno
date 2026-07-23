@@ -14,6 +14,8 @@ export type VolunteeringStatusBadgeProps = {
   state: ShiftVolunteeringDisplayState;
   completedDuration?: string;
   phase?: ShiftVolunteeringPhase;
+  /** Overrides presentation label (e.g. i18n). */
+  label?: string;
   className?: string;
 };
 
@@ -22,12 +24,14 @@ export function VolunteeringStatusBadge({
   state,
   completedDuration,
   phase,
+  label: labelOverride,
   className,
 }: VolunteeringStatusBadgeProps) {
-  const { label } = getVolunteeringStatusPresentation(state, {
+  const { label: defaultLabel } = getVolunteeringStatusPresentation(state, {
     completedDuration,
     phase,
   });
+  const label = labelOverride ?? defaultLabel;
   const emphasizeLabel = isRequestedVolunteeringState(state);
 
   return (

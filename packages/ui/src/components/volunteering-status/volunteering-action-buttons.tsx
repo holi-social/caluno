@@ -7,14 +7,21 @@ import {
 } from './config';
 import type { VolunteeringActionLabel } from './types';
 
+export type VolunteeringActionLabels = Partial<
+  Record<VolunteeringActionLabel, string>
+>;
+
 export type VolunteeringActionButtonsProps = {
   actions: VolunteeringActionLabel[];
+  /** Localized button labels keyed by action id (defaults to English labels). */
+  labels?: VolunteeringActionLabels;
   onAction?: (action: VolunteeringActionLabel) => void;
   className?: string;
 };
 
 export function VolunteeringActionButtons({
   actions,
+  labels,
   onAction,
   className,
 }: VolunteeringActionButtonsProps) {
@@ -39,7 +46,7 @@ export function VolunteeringActionButtons({
             onClick={() => onAction?.(actionLabel)}
           >
             {ActionIcon ? <ActionIcon aria-hidden /> : null}
-            {actionLabel}
+            {labels?.[actionLabel] ?? actionLabel}
           </Button>
         );
       })}

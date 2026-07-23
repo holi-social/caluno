@@ -11,6 +11,7 @@ import {
   LogOut,
   type LucideIcon,
   Timer,
+  UserPlus,
   UserX,
   X,
 } from 'lucide-react';
@@ -34,6 +35,7 @@ export const volunteeringStatusIcons: Record<
   accepted: CircleCheck,
   signed_up: CircleCheck,
   declined: CircleX,
+  rejected: CircleX,
   cancelled: CircleMinus,
   checked_in: CircleCheck,
   not_checked_in: CircleDashed,
@@ -53,6 +55,7 @@ export const volunteeringStatusIconTone: Record<
   accepted: 'positive',
   signed_up: 'positive',
   declined: 'destructive',
+  rejected: 'destructive',
   cancelled: 'warning',
   checked_in: 'positive',
   not_checked_in: 'warning',
@@ -98,6 +101,7 @@ export const volunteeringLifecycleDescriptions: Record<
   accepted: 'Accepted your invite.',
   signed_up: 'Joined without an invite.',
   declined: 'Not joining this shift.',
+  rejected: 'Removed by coordinator.',
   cancelled: 'Invite withdrawn by coordinator.',
   checked_in: 'Here — time is tracking.',
   not_checked_in: 'Expected but not here yet.',
@@ -114,6 +118,7 @@ export const passiveDuringShiftHints: Partial<
   invited: 'Not in check-in — awaiting reply.',
   requested: 'Not in check-in — needs your decision.',
   declined: 'Not on this shift.',
+  rejected: 'Not on this shift.',
   cancelled: 'Invite no longer active.',
 };
 
@@ -156,21 +161,28 @@ export function getVolunteeringStatusPresentation(
         iconTone: volunteeringStatusIconTone.signed_up,
         label: 'Signed up',
         description: volunteeringLifecycleDescriptions.signed_up,
-        actions: [],
+        actions: ['Uninvite'],
       };
     case 'declined':
       return {
         iconTone: volunteeringStatusIconTone.declined,
         label: 'Declined',
         description: volunteeringLifecycleDescriptions.declined,
-        actions: phase === 'after' ? ['Add timesheet'] : ['Uninvite'],
+        actions: phase === 'after' ? ['Add timesheet'] : [],
+      };
+    case 'rejected':
+      return {
+        iconTone: volunteeringStatusIconTone.rejected,
+        label: 'Rejected',
+        description: volunteeringLifecycleDescriptions.rejected,
+        actions: ['Invite'],
       };
     case 'cancelled':
       return {
         iconTone: volunteeringStatusIconTone.cancelled,
         label: 'Canceled',
         description: volunteeringLifecycleDescriptions.cancelled,
-        actions: ['Uninvite'],
+        actions: [],
       };
     case 'checked_in':
       return {
@@ -234,6 +246,7 @@ export const volunteeringActionIcons: Partial<
 > = {
   Accept: Check,
   Decline: X,
+  Invite: UserPlus,
   'Check in': LogIn,
   'Check out': LogOut,
   Uninvite: Ban,

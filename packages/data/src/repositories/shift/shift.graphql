@@ -138,6 +138,21 @@ mutation UpdateShiftInstanceVolunteers(
   }
 }
 
+mutation UpdateShiftInstanceInviteStatus(
+  $instanceId: String!
+  $status: ShiftInviteStatus!
+  $userId: String
+) {
+  updateShiftInstanceInviteStatus(
+    instanceId: $instanceId
+    status: $status
+    userId: $userId
+  ) {
+    status
+    userId
+  }
+}
+
 mutation JoinShiftInstance($instanceId: String!) {
   joinShiftInstance(instanceId: $instanceId) {
     status
@@ -228,6 +243,37 @@ query GetShiftInstances($shiftId: ID!) {
   }
 }
 
+query GetShiftInstanceDetail($shiftId: ID!) {
+  shiftInstances(shiftId: $shiftId) {
+    id
+    actualStartsAt
+    actualEndsAt
+    overrideTitle
+    overrideMaxVolunteers
+    isCancelled
+    filledCount
+    spotsLeft
+    master {
+      id
+      title
+      location
+      instructions
+      minVolunteers
+      maxVolunteers
+      visibility
+    }
+    instanceInvites {
+      status
+      user {
+        id
+        name
+        email
+        image
+      }
+    }
+  }
+}
+
 query GetWeeklyShifts($from: DateTime!, $to: DateTime!) {
   weeklyShifts(from: $from, to: $to) {
     id
@@ -244,6 +290,15 @@ query GetWeeklyShifts($from: DateTime!, $to: DateTime!) {
     volunteers {
       id
       name
+    }
+    instanceInvites {
+      status
+      user {
+        id
+        name
+        email
+        image
+      }
     }
   }
 }

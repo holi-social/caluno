@@ -32,6 +32,7 @@ type Member = {
   name: string;
   email: string;
   image?: string | null;
+  inviteStatus?: import('@repo/data').ShiftInviteStatus | null;
 };
 
 interface InviteShiftFormProps {
@@ -51,7 +52,7 @@ interface InviteShiftFormProps {
     actualEndsAt: string | Date;
   };
   availableMembers: Member[];
-  invitedMemberIds: string[];
+  invitedMembers: Member[];
   mutateStaffing: (data: {
     minVolunteers: number | null;
     maxVolunteers: number | null;
@@ -70,7 +71,7 @@ export function InviteShiftForm({
   shift,
   selectedInstance,
   availableMembers,
-  invitedMemberIds,
+  invitedMembers,
   mutateStaffing,
   mutateVolunteers,
 }: InviteShiftFormProps) {
@@ -95,16 +96,33 @@ export function InviteShiftForm({
     defaultValues: {
       minVolunteers: shift.minVolunteers ?? null,
       maxVolunteers: shift.maxVolunteers ?? null,
-      invitedMemberIds,
+      invitedMemberIds: invitedMembers.map((m) => m.id),
       inviteAllInstances: false,
     },
   });
 
   const currentUserId = session.data?.user?.id;
   const allMembers = availableMembers.filter((m) => m.id !== currentUserId);
+  const statusById = new Map(
+    invitedMembers.map((m) => [m.id, m.inviteStatus] as const),
+  );
 
   const watchedIds = form.watch('invitedMemberIds');
-  const invitedMembers = allMembers.filter((m) => watchedIds.includes(m.id));
+  const invitedForList: Member[] = watchedIds.map((id) => {
+    const fromAll = allMembers.find((m) => m.id === id);
+    if (fromAll) {
+      return { ...fromAll, inviteStatus: statusById.get(id) ?? null };
+    }
+    const fromInvited = invitedMembers.find((m) => m.id === id);
+    return (
+      fromInvited ?? {
+        id,
+        name: id,
+        email: '',
+        inviteStatus: statusById.get(id) ?? null,
+      }
+    );
+  });
 
   const inviteAllCheckboxId = useId();
 
@@ -269,7 +287,7 @@ export function InviteShiftForm({
         <p className="text-xl font-bold">{t('inviteForm.title')}</p>
         <TransferList
           available={allMembers}
-          invited={invitedMembers}
+          invited={invitedForList}
           onInvitedChange={(ids) => form.setValue('invitedMemberIds', ids)}
         />
         <Button

@@ -12,13 +12,17 @@ import type {
   ShiftVolunteeringPhase,
   VolunteeringActionLabel,
 } from './types';
-import { VolunteeringActionButtons } from './volunteering-action-buttons';
+import {
+  VolunteeringActionButtons,
+  type VolunteeringActionLabels,
+} from './volunteering-action-buttons';
 import { VolunteeringStatusBadge } from './volunteering-status-badge';
 
 const PASSIVE_DURING_SHIFT: ShiftVolunteeringDisplayState[] = [
   'invited',
   'requested',
   'declined',
+  'rejected',
   'cancelled',
 ];
 
@@ -44,6 +48,12 @@ export type VolunteeringVolunteerRowProps = {
   state: ShiftVolunteeringDisplayState;
   phase?: ShiftVolunteeringPhase;
   completedDuration?: string;
+  /** Overrides status badge label (e.g. i18n). */
+  statusLabel?: string;
+  /** When set, overrides default actions from status presentation. */
+  actions?: VolunteeringActionLabel[];
+  /** Localized button labels keyed by action id. */
+  actionLabels?: VolunteeringActionLabels;
   onAction?: (action: VolunteeringActionLabel) => void;
   className?: string;
 };
@@ -55,6 +65,9 @@ export function VolunteeringVolunteerRow({
   state,
   phase,
   completedDuration,
+  statusLabel,
+  actions: actionsOverride,
+  actionLabels,
   onAction,
   className,
 }: VolunteeringVolunteerRowProps) {
@@ -63,7 +76,7 @@ export function VolunteeringVolunteerRow({
     phase,
   });
   const passive = isPassiveDuringShift(phase, state);
-  const actions = passive ? [] : presentation.actions;
+  const actions = passive ? [] : (actionsOverride ?? presentation.actions);
   const passiveHint = passive ? getPassiveDuringShiftHint(state) : undefined;
 
   const statusBadge = (
@@ -71,6 +84,7 @@ export function VolunteeringVolunteerRow({
       state={state}
       completedDuration={completedDuration}
       phase={phase}
+      label={statusLabel}
     />
   );
 
@@ -107,7 +121,11 @@ export function VolunteeringVolunteerRow({
 
       {actions.length > 0 ? (
         <div className="flex shrink-0 pl-11 sm:pl-0">
-          <VolunteeringActionButtons actions={actions} onAction={onAction} />
+          <VolunteeringActionButtons
+            actions={actions}
+            labels={actionLabels}
+            onAction={onAction}
+          />
         </div>
       ) : null}
     </div>

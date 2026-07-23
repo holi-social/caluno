@@ -26,14 +26,11 @@ export default async function InviteShiftPage({
   const data = await getDataClient({ orgUId });
   const t = await getTranslations({ locale, namespace: 'Shift.sheet' });
 
-  const [shift, shiftInstances, shiftVolunteers, memberships] =
+  const [shift, shiftInstances, instanceDetail, memberships] =
     await Promise.all([
       data.shift.findByIdDetailed(shiftId),
       data.shift.findInstances(shiftId),
-      data.shift.findVolunteersByInstanceId(
-        instanceId,
-        INVITE_SHEET_INVITEE_STATUSES,
-      ),
+      data.shift.findInstanceDetail(shiftId, instanceId),
       data.membership.findAllByOrganizationUnitId(),
     ]);
 
@@ -45,6 +42,17 @@ export default async function InviteShiftPage({
   if (!selectedInstance) {
     notFound();
   }
+
+  const activeStatuses = new Set(INVITE_SHEET_INVITEE_STATUSES);
+  const invitedMembers = (instanceDetail?.instanceInvites ?? [])
+    .filter((invite) => activeStatuses.has(invite.status))
+    .map((invite) => ({
+      id: invite.user.id,
+      name: invite.user.name,
+      email: invite.user.email ?? '',
+      image: invite.user.image,
+      inviteStatus: invite.status,
+    }));
 
   return (
     <InviteShiftForm
@@ -64,7 +72,7 @@ export default async function InviteShiftPage({
         actualEndsAt: selectedInstance.actualEndsAt,
       }}
       availableMembers={memberships.map((m) => m.user)}
-      invitedMemberIds={shiftVolunteers.map((v) => v.id)}
+      invitedMembers={invitedMembers}
       mutateStaffing={updateShiftStaffing.bind(null, orgUId, shift.id)}
       mutateVolunteers={updateShiftVolunteers.bind(null, orgUId, instanceId)}
     />

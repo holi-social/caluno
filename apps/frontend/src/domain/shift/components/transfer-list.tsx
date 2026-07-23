@@ -1,15 +1,18 @@
 'use client';
 
-import { Badge, Button, Input } from '@repo/ui';
+import type { ShiftInviteStatus } from '@repo/data';
+import { Badge, Button, Input, VolunteeringStatusIcon } from '@repo/ui';
 import { ArrowLeftRight, CirclePlus, CircleX } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useState } from 'react';
+import { toInviteDisplayState } from '../invite-status-display';
 
 type Member = {
   id: string;
   name: string;
   email: string;
   image?: string | null;
+  inviteStatus?: import('@repo/data').ShiftInviteStatus | null;
 };
 
 type TransferListProps = {
@@ -122,7 +125,16 @@ export function TransferList({
                 key={member.id}
                 className="flex items-center gap-2 px-2 py-1.5 rounded-sm hover:bg-accent"
               >
-                <div className="size-5 rounded-full bg-muted shrink-0" />
+                {member.inviteStatus ? (
+                  <VolunteeringStatusIcon
+                    state={toInviteDisplayState(
+                      member.inviteStatus as ShiftInviteStatus,
+                    )}
+                    phase="before"
+                  />
+                ) : (
+                  <div className="size-5 rounded-full bg-muted shrink-0" />
+                )}
                 <div className="flex-1 min-w-0">
                   <p className="text-sm truncate">{member.name}</p>
                   <p className="text-xs text-muted-foreground truncate">

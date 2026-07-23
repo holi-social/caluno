@@ -1,20 +1,19 @@
 'use client';
 
-import type { WeeklyShiftInstance } from '@repo/data';
+import type { ShiftInviteStatus, WeeklyShiftInstance } from '@repo/data';
 import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
   Badge,
   Button,
   Card,
+  type VolunteeringShiftCardVolunteer,
+  VolunteeringShiftCardVolunteers,
 } from '@repo/ui';
 import { format } from 'date-fns';
 import { TriangleAlert, UserPlus, UsersRound } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { Link } from '@/i18n/navigation';
-import { shiftInvitePath } from '../routes';
+import { toInviteDisplayState } from '../invite-status-display';
+import { shiftInstanceDetailPath, shiftInvitePath } from '../routes';
 
 type ShiftCardProps = {
   instance: WeeklyShiftInstance;
@@ -85,42 +84,64 @@ export function ShiftCard({
 }: ShiftCardProps) {
   const t = useTranslations('Shift');
 
-  const count = instance.volunteers?.length ?? 0;
+  const participatingCount = instance.volunteers?.length ?? 0;
+  const invites = instance.instanceInvites ?? [];
   const min = instance.master.minVolunteers;
   const max = instance.master.maxVolunteers;
-  const state = getStaffingState(count, min, max);
+  const state = getStaffingState(participatingCount, min, max);
 
-  const isAtCapacity = max != null && count >= max;
+  const isAtCapacity = max != null && participatingCount >= max;
   const showButton = canManage && !isAtCapacity;
   const buttonVariant = state === 'alert' ? 'default' : 'outline';
 
   const startTime = format(new Date(instance.actualStartsAt), 'HH:mm');
   const endTime = format(new Date(instance.actualEndsAt), 'HH:mm');
 
+  const cardVolunteers: VolunteeringShiftCardVolunteer[] = invites.map(
+    (invite) => ({
+      id: invite.user.id,
+      name: invite.user.name,
+      state: toInviteDisplayState(invite.status as ShiftInviteStatus),
+    }),
+  );
+
+  const instanceHref = shiftInstanceDetailPath(
+    orgUId,
+    instance.master.id,
+    instance.id,
+  );
+
   return (
     <Card className="rounded-xl gap-1 shadow-sm pt-4 pb-2 px-2 overflow-hidden">
-      {/* Header */}
       <div className="flex flex-col gap-2 items-end">
-        <div className="flex flex-col gap-1 w-full">
-          <p className="text-lg font-bold text-muted-foreground leading-none">
+        <Link
+          href={instanceHref}
+          className="flex w-full flex-col gap-1 rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          aria-label={t('card.openInstanceAria')}
+        >
+          <p className="text-lg font-bold leading-none text-muted-foreground">
             {startTime} - {endTime}
           </p>
-
-          <p className="text-lg text-card-foreground line-clamp-2">
+          <p className="line-clamp-2 text-lg text-card-foreground">
             {instance.master.title}
           </p>
-        </div>
+        </Link>
 
-        <div className="flex gap-1 items-stretch w-full">
+        <div className="flex w-full items-stretch gap-1">
           {showButton ? (
             <Link
               href={shiftInvitePath(orgUId, instance.master.id, instance.id)}
-              className="flex-1 flex"
+              className="flex flex-1"
             >
-              <StaffingBadge count={count} min={min} max={max} interactive />
+              <StaffingBadge
+                count={participatingCount}
+                min={min}
+                max={max}
+                interactive
+              />
             </Link>
           ) : (
-            <StaffingBadge count={count} min={min} max={max} />
+            <StaffingBadge count={participatingCount} min={min} max={max} />
           )}
 
           {showButton && (
@@ -139,30 +160,12 @@ export function ShiftCard({
         </div>
       </div>
 
-      {/* Accordion with volunteer list */}
-      {count > 0 ? (
-        <Accordion type="single" collapsible>
-          <AccordionItem value="volunteers" className="border-0">
-            <AccordionTrigger className="items-center py-1 text-base font-bold hover:no-underline flex-row-reverse justify-end gap-1">
-              {t('card.invited')}
-            </AccordionTrigger>
-
-            <AccordionContent className="pb-2">
-              <div className="flex flex-col gap-2">
-                {(instance.volunteers ?? []).map(({ id, name }) => (
-                  <p key={id} className="text-base truncate">
-                    {name}
-                  </p>
-                ))}
-              </div>
-            </AccordionContent>
-          </AccordionItem>
-        </Accordion>
-      ) : (
-        <p className="text-sm text-muted-foreground italic">
-          {t('card.noVolunteers')}
-        </p>
-      )}
+      <VolunteeringShiftCardVolunteers
+        volunteers={cardVolunteers}
+        phase="before"
+        sectionLabel={t('card.invited')}
+        emptyMessage={t('card.noVolunteers')}
+      />
     </Card>
   );
 }

@@ -11,6 +11,7 @@ export type ShiftVolunteeringDisplayState =
   | 'accepted'
   | 'signed_up'
   | 'declined'
+  | 'rejected'
   | 'cancelled'
   | 'checked_in'
   | 'not_checked_in'
@@ -29,6 +30,7 @@ export type VolunteeringStatusIconTone =
 export type VolunteeringActionLabel =
   | 'Accept'
   | 'Decline'
+  | 'Invite'
   | 'Uninvite'
   | 'Check in'
   | 'Check out'

@@ -76,6 +76,15 @@ export class ShiftService {
     return shift;
   }
 
+  /** Batch load shifts by id (DataLoader). */
+  async findByIds(ids: string[]): Promise<ShiftEntity[]> {
+    if (ids.length === 0) return [];
+
+    return this.db.query.shifts.findMany({
+      where: { id: { in: ids }, isDeleted: false },
+    });
+  }
+
   async findOrgUnitsShift(
     id: string,
     organizationUnitId: string,
@@ -1023,6 +1032,35 @@ export class ShiftService {
           status: { in: [...statuses] },
         },
       },
+    });
+  }
+
+  async findInstanceInvites(
+    instanceId: string,
+    organizationUnitId: string,
+    statuses?: readonly ShiftInviteStatus[] | null,
+  ): Promise<ShiftInstanceInviteEntity[]> {
+    const instance = await this.findInstanceById(
+      instanceId,
+      organizationUnitId,
+    );
+
+    return this.db.query.shiftInstanceInvites.findMany({
+      where: {
+        instanceId: instance.id,
+        ...(statuses?.length ? { status: { in: [...statuses] } } : {}),
+      },
+      // Tie-break on id so batch invites (same createdAt) keep stable order after updates.
+      orderBy: { createdAt: 'asc', id: 'asc' },
+    });
+  }
+
+  async findUsersByIds(userIds: string[]): Promise<UserEntity[]> {
+    if (userIds.length === 0) {
+      return [];
+    }
+    return this.db.query.users.findMany({
+      where: { id: { in: userIds } },
     });
   }
 
