@@ -24,6 +24,7 @@ import type { RequirementFormEntity } from '../requirement-profile/schemas/requi
 import type { RequirementProfileEntity } from '../requirement-profile/schemas/requirement-profile.schema';
 import { JoinStatus } from '../shared/enums/join-status.enum';
 import {
+  ACTIVE_SHIFT_INVITE_STATUSES,
   canTransitionInviteStatus,
   isParticipatingShiftInviteStatus,
   PARTICIPATING_SHIFT_INVITE_STATUSES,
@@ -797,6 +798,7 @@ export class ShiftService {
         invites: {
           columns: {
             userId: true,
+            status: true,
           },
         },
         master: true,
@@ -808,9 +810,13 @@ export class ShiftService {
       );
     }
 
-    const currentInstanceInviteUserIds = currentShiftInstance.invites.map(
-      (inv) => inv.userId,
-    );
+    // Only active (pending or participating) invites count as "currently
+    // invited" — REJECTED/CANCELLED rows must not block re-invites or
+    // trigger removals.
+    const activeStatuses: readonly string[] = ACTIVE_SHIFT_INVITE_STATUSES;
+    const currentInstanceInviteUserIds = currentShiftInstance.invites
+      .filter((inv) => activeStatuses.includes(inv.status))
+      .map((inv) => inv.userId);
     const { userIdsToAdd, userIdsToRemove } = this.getUserIdDifferences(
       currentInstanceInviteUserIds,
       memberIds,
@@ -825,6 +831,17 @@ export class ShiftService {
             userIdsToAdd,
             inviteStatus,
           );
+          // Resurrect pre-existing inactive (REJECTED/CANCELLED) invite rows —
+          // the insert above no-ops on conflict for those.
+          await tx
+            .update(schema.shiftInstanceInvites)
+            .set({ status: inviteStatus })
+            .where(
+              and(
+                eq(schema.shiftInstanceInvites.instanceId, shiftInstanceId),
+                inArray(schema.shiftInstanceInvites.userId, userIdsToAdd),
+              ),
+            );
         }
         if (userIdsToRemove.length > 0) {
           await this.uninviteMembersFromShiftInstance(
@@ -904,6 +921,7 @@ export class ShiftService {
               invites: {
                 columns: {
                   userId: true,
+                  status: true,
                 },
               },
             },
@@ -914,7 +932,9 @@ export class ShiftService {
           const capacity =
             instance.overrideMaxVolunteers ?? shift.maxVolunteers;
           const invitedUserIds = new Set(
-            instance.invites.map((invite) => invite.userId),
+            instance.invites
+              .filter((invite) => activeStatuses.includes(invite.status))
+              .map((invite) => invite.userId),
           );
           const membersToAdd = userIdsToAdd.filter(
             (id) => !invitedUserIds.has(id),
@@ -936,6 +956,23 @@ export class ShiftService {
             [instanceId],
             this.toInviteMembers(userIds, inviteStatus),
           );
+        }
+
+        // Resurrect pre-existing inactive (REJECTED/CANCELLED) invite rows —
+        // the inserts above no-op on conflict for those.
+        if (userIdsToAdd.length > 0) {
+          await tx
+            .update(schema.shiftInstanceInvites)
+            .set({ status: inviteStatus })
+            .where(
+              and(
+                inArray(
+                  schema.shiftInstanceInvites.instanceId,
+                  futureShiftInstanceIds,
+                ),
+                inArray(schema.shiftInstanceInvites.userId, userIdsToAdd),
+              ),
+            );
         }
       }
     });
@@ -972,6 +1009,7 @@ export class ShiftService {
   async findVolunteers(
     instanceId: string,
     organizationUnitId: string,
+    statuses: readonly ShiftInviteStatus[] = PARTICIPATING_SHIFT_INVITE_STATUSES,
   ): Promise<UserEntity[]> {
     const instance = await this.findInstanceById(
       instanceId,
@@ -982,7 +1020,7 @@ export class ShiftService {
       where: {
         shiftInstanceInvites: {
           instanceId: instance.id,
-          status: { in: [...PARTICIPATING_SHIFT_INVITE_STATUSES] },
+          status: { in: [...statuses] },
         },
       },
     });
