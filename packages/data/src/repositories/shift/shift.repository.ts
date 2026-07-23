@@ -3,18 +3,19 @@ import {
   parseRruleEndDate,
   type RecurrenceDayValue,
 } from '../../constants';
-import type {
-  CreateShiftInput,
-  GetActiveShiftInstancesQuery,
-  GetAvailableShiftInstancesQuery,
-  GetMyShiftInstancesQuery,
-  GetPublicShiftInstancesQuery,
-  GetShiftInstancesQuery,
-  GetShiftQuery,
-  GetWeeklyShiftsQuery,
-  JoinShiftInstanceMutation,
-  ShiftInviteStatus,
-  UpdateShiftInput,
+import {
+  type CreateShiftInput,
+  type GetActiveShiftInstancesQuery,
+  type GetAvailableShiftInstancesQuery,
+  type GetMyShiftInstancesQuery,
+  type GetPublicShiftInstancesQuery,
+  type GetShiftInstancesQuery,
+  type GetShiftQuery,
+  type GetWeeklyShiftsQuery,
+  type JoinShiftInstanceMutation,
+  type ShiftInviteStatus,
+  SortOrder,
+  type UpdateShiftInput,
 } from '../../generated/graphql';
 import {
   BaseRepository,
@@ -28,9 +29,9 @@ export type ShiftInstanceItem =
 export type RawShift = GetShiftQuery['shift'];
 export type WeeklyShiftInstance = GetWeeklyShiftsQuery['weeklyShifts'][number];
 export type MyShiftInstance =
-  GetMyShiftInstancesQuery['myShiftInstances'][number];
+  GetMyShiftInstancesQuery['myShiftInstances']['items'][number];
 export type AvailableShiftInstance =
-  GetAvailableShiftInstancesQuery['availableShiftInstances'][number];
+  GetAvailableShiftInstancesQuery['availableShiftInstances']['items'][number];
 export type PublicShiftInstance =
   GetPublicShiftInstancesQuery['publicShiftInstances'][number];
 export type RawPublicShiftInstance =
@@ -156,18 +157,58 @@ export class ShiftRepository extends BaseRepository {
     return data.weeklyShifts;
   }
 
-  async findMyShiftInstances(includePast = false): Promise<MyShiftInstance[]> {
-    const data = await this.sdk.GetMyShiftInstances({ includePast });
+  async findMyShiftInstances(
+    options: {
+      includePast?: boolean;
+      from?: Date;
+      to?: Date;
+      limit?: number;
+      offset?: number;
+      order?: SortOrder;
+    } = {},
+  ): Promise<{
+    items: MyShiftInstance[];
+    pagination: {
+      total: number;
+      limit: number;
+      offset: number;
+      hasMore: boolean;
+    };
+  }> {
+    const data = await this.sdk.GetMyShiftInstances({
+      includePast: options.includePast ?? false,
+      startsAfter: options.from?.toISOString(),
+      endsBefore: options.to?.toISOString(),
+      limit: options.limit ?? 15,
+      offset: options.offset ?? 0,
+      order: options.order ?? SortOrder.Asc,
+    });
     return data.myShiftInstances;
   }
 
   async findAvailableShiftInstances(
-    options: { from?: Date; to?: Date; organizationUnitIds?: string[] } = {},
-  ): Promise<AvailableShiftInstance[]> {
+    options: {
+      from?: Date;
+      to?: Date;
+      organizationUnitIds?: string[];
+      limit?: number;
+      offset?: number;
+    } = {},
+  ): Promise<{
+    items: AvailableShiftInstance[];
+    pagination: {
+      total: number;
+      limit: number;
+      offset: number;
+      hasMore: boolean;
+    };
+  }> {
     const data = await this.sdk.GetAvailableShiftInstances({
-      from: options.from?.toISOString(),
-      to: options.to?.toISOString(),
+      startsAfter: options.from?.toISOString(),
+      endsBefore: options.to?.toISOString(),
       organizationUnitIds: options.organizationUnitIds,
+      limit: options.limit ?? 15,
+      offset: options.offset ?? 0,
     });
     return data.availableShiftInstances;
   }

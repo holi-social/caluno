@@ -42,21 +42,42 @@ export function VolunteerHomeContent({
     startOfDay(new Date()),
   );
 
-  const { data: myShiftInstances, isLoading: isLoadingMy } =
-    useMyShiftInstances(false, { initialData: initialMyShiftInstances });
+  const { data: myShiftInstancesPage, isLoading: isLoadingMy } =
+    useMyShiftInstances(
+      { limit: 10 },
+      {
+        initialData: {
+          items: initialMyShiftInstances,
+          pagination: {
+            total: initialMyShiftInstances.length,
+            limit: 10,
+            offset: 0,
+            hasMore: false,
+          },
+        },
+      },
+    );
 
   const discoverOptions = useMemo(() => getDiscoverWindow(), []);
 
-  const { data: availableShiftInstances, isLoading: isLoadingAvailable } =
+  const { data: availableShiftInstancesPage, isLoading: isLoadingAvailable } =
     useAvailableShiftInstances(discoverOptions, {
-      initialData: initialAvailableShiftInstances,
+      initialData: {
+        items: initialAvailableShiftInstances,
+        pagination: {
+          total: initialAvailableShiftInstances.length,
+          limit: 15,
+          offset: 0,
+          hasMore: false,
+        },
+      },
     });
 
   const showLoadingMy = useDelayedLoading(isLoadingMy);
   const showLoadingAvailable = useDelayedLoading(isLoadingAvailable);
 
-  const myShiftList = myShiftInstances ?? [];
-  const availableShiftList = availableShiftInstances ?? [];
+  const myShiftList = myShiftInstancesPage?.items ?? [];
+  const availableShiftList = availableShiftInstancesPage?.items ?? [];
 
   const discoverDayStrip = useMemo(
     () => getDayStripDays(availableShiftList, { minDays: 7 }),

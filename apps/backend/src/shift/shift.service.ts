@@ -33,7 +33,7 @@ import { FilePurpose } from '../storage/enums';
 import { FileService } from '../storage/services/file.service';
 import { UserService } from '../user/user.service';
 import { slugify } from '../utils/slug.util';
-import { ShiftInviteStatus, ShiftVisibility } from './enums';
+import { ShiftInviteStatus, ShiftVisibility, SortOrder } from './enums';
 import { CreateShiftInput } from './inputs/create-shift.input';
 import { UpdateShiftInput } from './inputs/update-shift.input';
 import type { ShiftEntity } from './schemas/shift.schema';
@@ -48,6 +48,11 @@ import { syncShiftInstances } from './utils/shift-instance-sync';
 export { getDurationMinutes } from './utils/duration';
 
 type InviteMemberInput = { userId: string; status: ShiftInviteStatus };
+
+const EMPTY_SHIFT_INSTANCE_PAGE: {
+  instances: ShiftInstanceEntity[];
+  total: number;
+} = { instances: [], total: 0 };
 
 @Injectable()
 export class ShiftService {
@@ -315,42 +320,92 @@ export class ShiftService {
   async findMyShiftInstances(
     userId: string,
     includePast: boolean,
-  ): Promise<ShiftInstanceEntity[]> {
+    startsAfter: Date | null,
+    endsBefore: Date | null,
+    limit: number,
+    offset: number,
+    order: SortOrder,
+  ): Promise<{ instances: ShiftInstanceEntity[]; total: number }> {
     const organizationUnitIds =
       await this.getAccessibleOrganizationUnitIds(userId);
 
     if (organizationUnitIds.length === 0) {
-      return [];
+      return EMPTY_SHIFT_INSTANCE_PAGE;
     }
 
-    return this.db.query.shiftInstances.findMany({
-      where: {
-        isCancelled: false,
-        actualEndsAt: includePast ? undefined : { gte: new Date() },
-        master: {
-          isDeleted: false,
-          organizationUnitId: { in: organizationUnitIds },
-        },
-        invites: {
-          userId,
-        },
+    const dateCondition = this.buildMyShiftDateCondition(
+      includePast,
+      startsAfter,
+      endsBefore,
+    );
+
+    const where = {
+      isCancelled: false,
+      ...dateCondition,
+      master: {
+        isDeleted: false,
+        organizationUnitId: { in: organizationUnitIds },
       },
-      with: { master: true },
-      orderBy: { actualStartsAt: 'asc' },
-    });
+      invites: {
+        userId,
+      },
+    };
+
+    const orderBy = {
+      actualStartsAt: order.toLowerCase() as 'asc' | 'desc',
+    };
+
+    const [instances, totalResult] = await Promise.all([
+      this.db.query.shiftInstances.findMany({
+        where,
+        with: { master: true },
+        orderBy,
+        limit,
+        offset,
+      }),
+      this.db.query.shiftInstances.findMany({
+        where,
+        columns: {},
+        extras: { total: count() },
+      }),
+    ]);
+
+    return { instances, total: totalResult[0]?.total ?? 0 };
+  }
+
+  private buildMyShiftDateCondition(
+    includePast: boolean,
+    startsAfter: Date | null,
+    endsBefore: Date | null,
+  ): Record<string, unknown> {
+    if (endsBefore) {
+      return { actualEndsAt: { lt: endsBefore } };
+    }
+
+    if (startsAfter) {
+      return { actualStartsAt: { gte: startsAfter } };
+    }
+
+    if (!includePast) {
+      return { actualEndsAt: { gte: new Date() } };
+    }
+
+    return {};
   }
 
   async findAvailableShiftInstances(
     userId: string,
-    from: Date | null,
-    to: Date | null,
+    startsAfter: Date | null,
+    endsBefore: Date | null,
     organizationUnitIds: string[] | null,
-  ): Promise<ShiftInstanceEntity[]> {
+    limit: number,
+    offset: number,
+  ): Promise<{ instances: ShiftInstanceEntity[]; total: number }> {
     const userOrganizationUnitIds =
       await this.getAccessibleOrganizationUnitIds(userId);
 
     if (userOrganizationUnitIds.length === 0) {
-      return [];
+      return EMPTY_SHIFT_INSTANCE_PAGE;
     }
 
     const effectiveOrgUnitIds = organizationUnitIds?.length
@@ -358,59 +413,49 @@ export class ShiftService {
       : userOrganizationUnitIds;
 
     if (effectiveOrgUnitIds.length === 0) {
-      return [];
+      return EMPTY_SHIFT_INSTANCE_PAGE;
     }
 
     const startOfToday = this.getStartOfToday();
-    const effectiveFrom = from ?? startOfToday;
-    const effectiveTo = to ?? new Date('2099-12-31T23:59:59.999Z');
+    const effectiveStartsAfter = startsAfter ?? startOfToday;
+    const effectiveEndsBefore =
+      endsBefore ?? new Date('2099-12-31T23:59:59.999Z');
 
-    const instances = await this.db.query.shiftInstances.findMany({
-      where: {
-        isCancelled: false,
-        actualStartsAt: { gte: effectiveFrom, lte: effectiveTo },
-        master: {
-          isDeleted: false,
-          organizationUnitId: { in: effectiveOrgUnitIds },
+    const where = {
+      isCancelled: false,
+      actualStartsAt: { gte: effectiveStartsAfter, lte: effectiveEndsBefore },
+      master: {
+        isDeleted: false,
+        organizationUnitId: { in: effectiveOrgUnitIds },
+      },
+      NOT: {
+        invites: {
+          userId,
+          status: { in: [...PARTICIPATING_SHIFT_INVITE_STATUSES] },
         },
       },
-      with: { master: true },
-      orderBy: { actualStartsAt: 'asc' },
-    });
+      OR: [
+        { master: { visibility: ShiftVisibility.ALL_MEMBERS } },
+        { invites: { userId, status: ShiftInviteStatus.INVITED } },
+      ],
+    };
 
-    if (instances.length === 0) {
-      return [];
-    }
+    const [instances, totalResult] = await Promise.all([
+      this.db.query.shiftInstances.findMany({
+        where,
+        with: { master: true },
+        orderBy: { actualStartsAt: 'asc' },
+        limit,
+        offset,
+      }),
+      this.db.query.shiftInstances.findMany({
+        where,
+        columns: {},
+        extras: { total: count() },
+      }),
+    ]);
 
-    const instanceIds = instances.map((instance) => instance.id);
-    const userInvites = await this.db.query.shiftInstanceInvites.findMany({
-      where: {
-        instanceId: { in: instanceIds },
-        userId,
-      },
-    });
-
-    const inviteByInstanceId = new Map(
-      userInvites.map((invite) => [invite.instanceId, invite]),
-    );
-
-    return instances.filter((instance) => {
-      const master = instance.master;
-      if (!master) return false;
-
-      const invite = inviteByInstanceId.get(instance.id);
-      const isSignedUp = isParticipatingShiftInviteStatus(invite?.status);
-
-      if (isSignedUp) {
-        return false;
-      }
-
-      if (master.visibility === ShiftVisibility.ALL_MEMBERS) {
-        return true;
-      }
-
-      return invite?.status === ShiftInviteStatus.INVITED;
-    });
+    return { instances, total: totalResult[0]?.total ?? 0 };
   }
 
   async findAll(

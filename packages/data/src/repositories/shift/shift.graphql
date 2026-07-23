@@ -289,23 +289,57 @@ fragment VolunteerHomeShiftInstance on ShiftInstance {
   }
 }
 
-query GetMyShiftInstances($includePast: Boolean = false) {
-  myShiftInstances(includePast: $includePast) {
-    ...VolunteerHomeShiftInstance
+query GetMyShiftInstances(
+  $includePast: Boolean = false
+  $startsAfter: DateTime
+  $endsBefore: DateTime
+  $limit: Int = 15
+  $offset: Int = 0
+  $order: SortOrder = ASC
+) {
+  myShiftInstances(
+    includePast: $includePast
+    startsAfter: $startsAfter
+    endsBefore: $endsBefore
+    limit: $limit
+    offset: $offset
+    order: $order
+  ) {
+    items {
+      ...VolunteerHomeShiftInstance
+    }
+    pagination {
+      total
+      limit
+      offset
+      hasMore
+    }
   }
 }
 
 query GetAvailableShiftInstances(
-  $from: DateTime
-  $to: DateTime
+  $startsAfter: DateTime
+  $endsBefore: DateTime
   $organizationUnitIds: [ID!]
+  $limit: Int = 15
+  $offset: Int = 0
 ) {
   availableShiftInstances(
-    from: $from
-    to: $to
+    startsAfter: $startsAfter
+    endsBefore: $endsBefore
     organizationUnitIds: $organizationUnitIds
+    limit: $limit
+    offset: $offset
   ) {
-    ...VolunteerHomeShiftInstance
+    items {
+      ...VolunteerHomeShiftInstance
+    }
+    pagination {
+      total
+      limit
+      offset
+      hasMore
+    }
   }
 }
 

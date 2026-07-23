@@ -2,11 +2,19 @@
 
 import { ShiftRepository } from '@repo/data';
 import { type UseQueryOptions, useQuery } from '@tanstack/react-query';
+import type { SortOrder } from '../../generated/graphql';
 import { useSdk } from './use-graphql-client';
 
 export function useMyShiftInstances(
-  includePast = false,
-  options?: Omit<
+  options: {
+    includePast?: boolean;
+    from?: Date;
+    to?: Date;
+    limit?: number;
+    offset?: number;
+    order?: SortOrder;
+  } = {},
+  queryOptions?: Omit<
     UseQueryOptions<
       Awaited<ReturnType<ShiftRepository['findMyShiftInstances']>>
     >,
@@ -17,9 +25,9 @@ export function useMyShiftInstances(
   const repository = new ShiftRepository(sdk);
 
   return useQuery({
-    queryKey: ['myShiftInstances', includePast],
-    queryFn: () => repository.findMyShiftInstances(includePast),
+    queryKey: ['myShiftInstances', options],
+    queryFn: () => repository.findMyShiftInstances(options),
     staleTime: 30 * 1000,
-    ...options,
+    ...queryOptions,
   });
 }

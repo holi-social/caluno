@@ -1253,7 +1253,9 @@
     "timerStartsIn": "beginnt in {time}",
     "timerStartedAgo": "Gestartet vor {time}",
     "timerVolunteering": "Du hilfst seit {time}",
-    "eventCoverImageAlt": "Titelbild für {title}"
+    "eventCoverImageAlt": "Titelbild für {title}",
+    "loadPast": "Vergangene laden",
+    "loadMore": "Mehr laden"
   },
   "OrgDetail": {
     "coverImageAlt": "Titelbild für {title}",

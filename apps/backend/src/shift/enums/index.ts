@@ -3,6 +3,8 @@ export enum ShiftVisibility {
   ALL_MEMBERS = 'ALL_MEMBERS',
 }
 
+export { SortOrder } from './sort-order.enum';
+
 export enum ShiftInviteStatus {
   INVITED = 'INVITED',
   ACCEPTED = 'ACCEPTED',
