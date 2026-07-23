@@ -8,6 +8,7 @@ import { StorageModule } from '../storage/storage.module';
 import { UserModule } from '../user/user.module';
 import { EventService } from './event.service';
 import { EventMapper } from './mappers/event.mapper';
+import { EventInviteMapper } from './mappers/event-invite.mapper';
 import { EventFieldResolver } from './resolvers/event-field.resolver';
 import { EventMutationResolver } from './resolvers/event-mutation.resolver';
 import { EventOrganizationUnitLoader } from './resolvers/event-organization-unit.loader';
@@ -29,6 +30,7 @@ import { ShiftEventFieldResolver } from './resolvers/shift-event-field.resolver'
   providers: [
     EventService,
     EventMapper,
+    EventInviteMapper,
     EventQueryResolver,
     EventMutationResolver,
     EventFieldResolver,

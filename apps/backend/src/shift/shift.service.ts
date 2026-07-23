@@ -24,6 +24,7 @@ import type { RequirementFormEntity } from '../requirement-profile/schemas/requi
 import type { RequirementProfileEntity } from '../requirement-profile/schemas/requirement-profile.schema';
 import { JoinStatus } from '../shared/enums/join-status.enum';
 import {
+  canTransitionInviteStatus,
   isParticipatingShiftInviteStatus,
   PARTICIPATING_SHIFT_INVITE_STATUSES,
 } from '../shared/invite-status';
@@ -36,6 +37,7 @@ import { CreateShiftInput } from './inputs/create-shift.input';
 import { UpdateShiftInput } from './inputs/update-shift.input';
 import type { ShiftEntity } from './schemas/shift.schema';
 import type { ShiftInstanceEntity } from './schemas/shift-instance.schema';
+import type { ShiftInviteEntity } from './schemas/shift-invite.schema';
 import { propagateShiftInviteStatusToFutureInstances } from './shift-invite-propagation';
 import { startOfTodayInAppTimeZone } from './utils/app-time';
 import { getDurationMinutes } from './utils/duration';
@@ -1461,19 +1463,59 @@ export class ShiftService {
       );
     }
 
+    const maxVolunteers = instance.overrideMaxVolunteers ?? shift.maxVolunteers;
+
     const existingInvite = await db.query.shiftInstanceInvites.findFirst({
       where: {
         instanceId,
         userId,
       },
-      columns: { id: true },
     });
 
     if (existingInvite) {
+      if (isParticipatingShiftInviteStatus(existingInvite.status)) {
+        return;
+      }
+
+      if (
+        existingInvite.status === ShiftInviteStatus.CANCELLED &&
+        status === ShiftInviteStatus.SELF_JOINED
+      ) {
+        this.assertInviteStatusTransition(
+          existingInvite.status,
+          ShiftInviteStatus.SELF_JOINED,
+        );
+
+        if (maxVolunteers) {
+          const [capacity] = await db
+            .select({ current: count() })
+            .from(schema.shiftInstanceInvites)
+            .where(
+              and(
+                inArray(schema.shiftInstanceInvites.status, [
+                  ...PARTICIPATING_SHIFT_INVITE_STATUSES,
+                ]),
+                eq(schema.shiftInstanceInvites.instanceId, instanceId),
+              ),
+            );
+
+          if ((capacity?.current ?? 0) >= maxVolunteers) {
+            throw new ConflictGraphQLError(
+              `Cannot join shift: instance is at full capacity of ${maxVolunteers}`,
+            );
+          }
+        }
+
+        await db
+          .update(schema.shiftInstanceInvites)
+          .set({ status: ShiftInviteStatus.SELF_JOINED })
+          .where(eq(schema.shiftInstanceInvites.id, existingInvite.id));
+
+        void this.notifyShiftInstanceJoined(userId, shift, instance);
+      }
+
       return;
     }
-
-    const maxVolunteers = instance.overrideMaxVolunteers ?? shift.maxVolunteers;
 
     if (maxVolunteers) {
       const [capacity] = await db
@@ -1670,28 +1712,42 @@ export class ShiftService {
   }
 
   async updateShiftInviteStatus(
-    shiftId: string,
     userId: string,
+    shiftId: string,
     status: ShiftInviteStatus,
-    organizationUnitId: string,
-  ): Promise<void> {
-    await this.findOrgUnitsShift(shiftId, organizationUnitId);
+  ): Promise<ShiftInviteEntity> {
+    const shift = await this.db.query.shifts.findFirst({
+      where: { id: shiftId, isDeleted: false },
+    });
 
-    await this.db.transaction(async (tx) => {
+    if (!shift) {
+      throw new NotFoundGraphQLError('Shift not found');
+    }
+
+    const invite = await this.db.query.shiftInvites.findFirst({
+      where: { shiftId, userId },
+    });
+
+    if (!invite) {
+      throw new NotFoundGraphQLError('Shift invite not found');
+    }
+
+    this.assertInviteStatusTransition(invite.status, status);
+
+    if (invite.status === status) {
+      return invite;
+    }
+
+    if (status === ShiftInviteStatus.ACCEPTED) {
+      await this.assertShiftSeriesAcceptanceCapacity(shiftId, userId);
+    }
+
+    return this.db.transaction(async (tx) => {
       const [updated] = await tx
         .update(schema.shiftInvites)
         .set({ status })
-        .where(
-          and(
-            eq(schema.shiftInvites.shiftId, shiftId),
-            eq(schema.shiftInvites.userId, userId),
-          ),
-        )
-        .returning({ id: schema.shiftInvites.id });
-
-      if (!updated) {
-        throw new NotFoundGraphQLError('Shift invite not found');
-      }
+        .where(eq(schema.shiftInvites.id, invite.id))
+        .returning();
 
       await propagateShiftInviteStatusToFutureInstances(
         tx,
@@ -1699,7 +1755,131 @@ export class ShiftService {
         userId,
         status,
       );
+
+      return updated;
     });
+  }
+
+  async updateShiftInstanceInviteStatus(
+    userId: string,
+    instanceId: string,
+    status: ShiftInviteStatus,
+  ): Promise<ShiftInstanceInviteEntity> {
+    const instance = await this.db.query.shiftInstances.findFirst({
+      where: { id: instanceId, isCancelled: false },
+      with: { master: true },
+    });
+
+    if (!instance?.master || instance.master.isDeleted) {
+      throw new NotFoundGraphQLError('Shift instance not found');
+    }
+
+    const invite = await this.db.query.shiftInstanceInvites.findFirst({
+      where: { instanceId, userId },
+    });
+
+    if (!invite) {
+      throw new NotFoundGraphQLError('Shift instance invite not found');
+    }
+
+    this.assertInviteStatusTransition(invite.status, status);
+
+    if (invite.status === status) {
+      return invite;
+    }
+
+    if (status === ShiftInviteStatus.ACCEPTED) {
+      await this.assertShiftInstanceAcceptanceCapacity(instanceId);
+    }
+
+    const [updated] = await this.db
+      .update(schema.shiftInstanceInvites)
+      .set({ status })
+      .where(eq(schema.shiftInstanceInvites.id, invite.id))
+      .returning();
+
+    if (status === ShiftInviteStatus.ACCEPTED) {
+      void this.notifyShiftInstanceJoined(userId, instance.master, instance);
+    }
+
+    return updated;
+  }
+
+  private assertInviteStatusTransition(
+    from: ShiftInviteStatus,
+    to: ShiftInviteStatus,
+  ): void {
+    if (!canTransitionInviteStatus(from, to)) {
+      throw new BadRequestGraphQLError(
+        `Cannot transition invite status from ${from} to ${to}`,
+      );
+    }
+  }
+
+  private async assertShiftInstanceAcceptanceCapacity(
+    instanceId: string,
+    db: Database = this.db,
+  ): Promise<void> {
+    const instance = await db.query.shiftInstances.findFirst({
+      where: { id: instanceId, isCancelled: false },
+      with: { master: true },
+    });
+
+    if (!instance?.master) {
+      throw new NotFoundGraphQLError('Shift instance not found');
+    }
+
+    const maxVolunteers =
+      instance.overrideMaxVolunteers ?? instance.master.maxVolunteers;
+
+    if (!maxVolunteers) {
+      return;
+    }
+
+    const [capacity] = await db
+      .select({ current: count() })
+      .from(schema.shiftInstanceInvites)
+      .where(
+        and(
+          inArray(schema.shiftInstanceInvites.status, [
+            ...PARTICIPATING_SHIFT_INVITE_STATUSES,
+          ]),
+          eq(schema.shiftInstanceInvites.instanceId, instanceId),
+        ),
+      );
+
+    if ((capacity?.current ?? 0) >= maxVolunteers) {
+      throw new ConflictGraphQLError(
+        `Cannot accept invite: instance is at full capacity of ${maxVolunteers}`,
+      );
+    }
+  }
+
+  private async assertShiftSeriesAcceptanceCapacity(
+    shiftId: string,
+    userId: string,
+  ): Promise<void> {
+    const now = new Date();
+
+    const futureInstanceInvites =
+      await this.db.query.shiftInstanceInvites.findMany({
+        where: {
+          userId,
+          status: {
+            notIn: [...PARTICIPATING_SHIFT_INVITE_STATUSES],
+          },
+          instance: {
+            masterId: shiftId,
+            isCancelled: false,
+            actualStartsAt: { gte: now },
+          },
+        },
+        columns: { instanceId: true },
+      });
+
+    for (const invite of futureInstanceInvites) {
+      await this.assertShiftInstanceAcceptanceCapacity(invite.instanceId);
+    }
   }
 
   private async resolveImageUrl(fileId: string): Promise<string> {

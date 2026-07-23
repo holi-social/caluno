@@ -6,7 +6,7 @@ export enum ShiftVisibility {
 export enum ShiftInviteStatus {
   INVITED = 'INVITED',
   ACCEPTED = 'ACCEPTED',
-  REJECTED = 'REJECTED',
+  VOLUNTEER_REJECTED = 'VOLUNTEER_REJECTED',
   CANCELLED = 'CANCELLED',
   SELF_JOINED = 'SELF_JOINED',
 }
