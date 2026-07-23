@@ -16,7 +16,9 @@ export default async function CreateEventPage({
     <EventForm
       title={t('createTitle')}
       description={t('createDescription')}
+      orgUId={orgUId}
       mutate={createEvent.bind(null, orgUId)}
+      redirectToInviteOnCreate
     />
   );
 }

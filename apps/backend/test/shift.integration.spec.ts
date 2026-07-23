@@ -11,6 +11,7 @@ import type { INestApplication } from '@nestjs/common';
 import { eq } from 'drizzle-orm';
 import type { Database } from '../src/database/database.module';
 import * as schema from '../src/database/schema';
+import { NotFoundGraphQLError } from '../src/graphql/errors';
 import { ShiftInviteStatus, ShiftVisibility } from '../src/shift/enums';
 import { ShiftService } from '../src/shift/shift.service';
 import {
@@ -29,6 +30,33 @@ import { getGraphqlTestContext } from './helpers/graphql-test-context';
 
 applyBunAuthMocks(mock.module);
 setDefaultTimeout(20_000);
+
+describe('ShiftService.findById', () => {
+  let app: INestApplication;
+  let db: Database;
+  let organizationUnitId: string;
+  let shiftService: ShiftService;
+
+  beforeAll(async () => {
+    const context = await getGraphqlTestContext();
+    app = context.app;
+    db = context.db;
+    organizationUnitId = context.organizationUnitId;
+    shiftService = app.get(ShiftService);
+  });
+
+  it('does not return soft-deleted shifts', async () => {
+    const deletedShift = await createShift(db, { organizationUnitId });
+    await db
+      .update(schema.shifts)
+      .set({ isDeleted: true })
+      .where(eq(schema.shifts.id, deletedShift.id));
+
+    await expect(shiftService.findById(deletedShift.id)).rejects.toThrow(
+      NotFoundGraphQLError,
+    );
+  });
+});
 
 describe('ShiftService.findShiftsForWeek', () => {
   let app: INestApplication;
@@ -987,6 +1015,8 @@ describe('Volunteer home fields and check-in', () => {
   });
 
   it('returns isCheckedIn when the user has an open time entry', async () => {
+    setAuthMockUserId(testUserId);
+
     const { id: shiftId } = await createShift(db, {
       organizationUnitId,
     });

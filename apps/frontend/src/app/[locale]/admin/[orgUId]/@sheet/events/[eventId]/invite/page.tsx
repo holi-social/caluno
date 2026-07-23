@@ -30,8 +30,8 @@ export default async function InviteEventPage({
 
   return (
     <EventInviteForm
-      title={t('title', { eventTitle: event.title })}
-      description={t('description')}
+      title={t('title')}
+      description={t('description', { eventTitle: event.title })}
       slug={event.slug}
       availableMembers={availableMembers}
       invitedMembers={attendees}

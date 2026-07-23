@@ -11,7 +11,6 @@ import { toast } from 'sonner';
 import { FormSheet, useFormSheet } from '@/components/form-sheet';
 import { TransferList } from '@/domain/shift/components/transfer-list';
 import { useRouter } from '@/i18n/navigation';
-import { useSession } from '@/lib/auth';
 import { copyToClipboard } from '@/lib/clipboard';
 import { serverEventInviteFormSchema } from '../schemas';
 import { eventShareUrl } from '../share';
@@ -36,7 +35,6 @@ export const EventInviteForm = ({
   mutate,
 }: EventInviteFormProps) => {
   const router = useRouter();
-  const session = useSession();
   const t = useTranslations('Event.invite');
   const tToast = useTranslations('Event.toast');
   const tCommon = useTranslations('Common');
@@ -44,9 +42,6 @@ export const EventInviteForm = ({
   const [serverError, setServerError] = useState<string>();
 
   const { open, setOpen } = useFormSheet();
-
-  const currentUserId = session.data?.user?.id;
-  const allMembers = availableMembers.filter((m) => m.id !== currentUserId);
 
   const { handleSubmit, watch, setValue } = useForm<{ memberIds: string[] }>({
     resolver: zodResolver(serverEventInviteFormSchema),
@@ -56,7 +51,7 @@ export const EventInviteForm = ({
   });
 
   const watchedIds = watch('memberIds');
-  const invited = allMembers.filter((m) => watchedIds.includes(m.id));
+  const invited = availableMembers.filter((m) => watchedIds.includes(m.id));
 
   const onSubmit = async (formData: { memberIds: string[] }) => {
     setServerError(undefined);
@@ -85,10 +80,11 @@ export const EventInviteForm = ({
     >
       <div className="flex flex-col gap-4">
         <TransferList
-          available={allMembers}
+          available={availableMembers}
           invited={invited}
           onInvitedChange={(ids) => setValue('memberIds', ids)}
         />
+        <p className="text-sm text-muted-foreground">{t('helperText')}</p>
         <Button
           type="button"
           variant="outline"
@@ -100,7 +96,6 @@ export const EventInviteForm = ({
           <Share2 className="size-4 mr-2" />
           {t('copyInviteLink')}
         </Button>
-        <p className="text-sm text-muted-foreground">{t('helperText')}</p>
       </div>
     </FormSheet>
   );

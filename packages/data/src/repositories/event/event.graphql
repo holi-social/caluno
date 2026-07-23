@@ -17,14 +17,6 @@ fragment EventDetailFields on Event {
   }
   coverUrl
   logoUrl
-  shifts {
-    id
-    title
-    originalStartsAt
-    durationMinutes
-    minVolunteers
-    maxVolunteers
-  }
 }
 
 query GetEvents($limit: Int!, $offset: Int!) {
