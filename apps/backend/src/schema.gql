@@ -170,6 +170,7 @@ type EventInvite {
 
 enum EventInviteStatus {
   ACCEPTED
+  ADMIN_REJECTED
   CANCELLED
   INVITED
   SELF_JOINED
@@ -887,6 +888,7 @@ type ShiftInvite {
 
 enum ShiftInviteStatus {
   ACCEPTED
+  ADMIN_REJECTED
   CANCELLED
   INVITED
   SELF_JOINED

@@ -31,6 +31,9 @@ describe('invite-status', () => {
     expect(isParticipatingShiftInviteStatus(ShiftInviteStatus.CANCELLED)).toBe(
       false,
     );
+    expect(
+      isParticipatingShiftInviteStatus(ShiftInviteStatus.ADMIN_REJECTED),
+    ).toBe(false);
   });
 
   describe('canTransitionInviteStatus', () => {
@@ -43,7 +46,7 @@ describe('invite-status', () => {
       ).toBe(true);
     });
 
-    it('allows INVITED to ACCEPTED or VOLUNTEER_REJECTED', () => {
+    it('allows INVITED to ACCEPTED, VOLUNTEER_REJECTED, or ADMIN_REJECTED', () => {
       expect(
         canTransitionInviteStatus(
           ShiftInviteStatus.INVITED,
@@ -54,6 +57,12 @@ describe('invite-status', () => {
         canTransitionInviteStatus(
           ShiftInviteStatus.INVITED,
           ShiftInviteStatus.VOLUNTEER_REJECTED,
+        ),
+      ).toBe(true);
+      expect(
+        canTransitionInviteStatus(
+          ShiftInviteStatus.INVITED,
+          ShiftInviteStatus.ADMIN_REJECTED,
         ),
       ).toBe(true);
     });
@@ -78,6 +87,24 @@ describe('invite-status', () => {
         canTransitionInviteStatus(
           ShiftInviteStatus.SELF_JOINED,
           ShiftInviteStatus.CANCELLED,
+        ),
+      ).toBe(true);
+    });
+
+    it('allows SELF_JOINED to ADMIN_REJECTED', () => {
+      expect(
+        canTransitionInviteStatus(
+          ShiftInviteStatus.SELF_JOINED,
+          ShiftInviteStatus.ADMIN_REJECTED,
+        ),
+      ).toBe(true);
+    });
+
+    it('allows ADMIN_REJECTED to INVITED', () => {
+      expect(
+        canTransitionInviteStatus(
+          ShiftInviteStatus.ADMIN_REJECTED,
+          ShiftInviteStatus.INVITED,
         ),
       ).toBe(true);
     });
