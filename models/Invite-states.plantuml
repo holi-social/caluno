@@ -1,17 +1,17 @@
 @startuml InviteStatusModel
 
-[*] --> INVITED
+[*] --> INVITED : admin
 ' means the member self-joined without an invite
-[*] --> SELF_JOINED
-INVITED --> ACCEPTED
-INVITED --> VOLUNTEER_REJECTED
-VOLUNTEER_REJECTED -left-> ACCEPTED
-SELF_JOINED -down-> CANCELLED
-ACCEPTED -down-> CANCELLED
-CANCELLED -up-> SELF_JOINED
-CANCELLED -up-> ACCEPTED
+[*] --> SELF_JOINED : volunteer
+INVITED --> ACCEPTED : volunteer
+INVITED --> VOLUNTEER_REJECTED : volunteer
+VOLUNTEER_REJECTED -left-> ACCEPTED : volunteer
+SELF_JOINED -down-> CANCELLED : volunteer
+ACCEPTED -down-> CANCELLED : volunteer
+CANCELLED -up-> SELF_JOINED : volunteer
+CANCELLED -up-> ACCEPTED : volunteer
 
-INVITED -down-> ADMIN_REJECTED
-ADMIN_REJECTED -up-> INVITED
-SELF_JOINED --> ADMIN_REJECTED
+INVITED -down-> ADMIN_REJECTED : admin
+ADMIN_REJECTED -up-> INVITED : admin
+SELF_JOINED --> ADMIN_REJECTED : admin
 @enduml
