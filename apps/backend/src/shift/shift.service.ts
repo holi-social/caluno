@@ -1,5 +1,5 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
-import { and, count, eq, gte, inArray, isNull } from 'drizzle-orm';
+import { and, count, eq, inArray, isNull } from 'drizzle-orm';
 import { AuthService } from '../auth/auth.service';
 import { PERMISSIONS } from '../auth/constants';
 import type { Database } from '../database/database.module';
@@ -40,6 +40,7 @@ import { propagateShiftInviteStatusToFutureInstances } from './shift-invite-prop
 import { startOfTodayInAppTimeZone } from './utils/app-time';
 import { getDurationMinutes } from './utils/duration';
 import { expandShift } from './utils/rrule-expander';
+import { syncShiftInstances } from './utils/shift-instance-sync';
 
 export { getDurationMinutes } from './utils/duration';
 
@@ -1026,6 +1027,12 @@ export class ShiftService {
         throw new NotFoundGraphQLError('Shift not found');
       }
 
+      const previousSeries = {
+        rrule: shift.rrule,
+        originalStartsAt: shift.originalStartsAt,
+        durationMinutes: shift.durationMinutes,
+      };
+
       const effectiveEventId =
         inputEventId !== undefined ? inputEventId : shift.eventId;
       const effectiveStartsAt = shiftInput.startsAt ?? shift.originalStartsAt;
@@ -1083,98 +1090,39 @@ export class ShiftService {
         shift = updatedShift;
       }
 
-      if (shiftInput.rrule) {
-        const now = new Date();
+      const wasRecurring = previousSeries.rrule !== null;
+      const isRecurring = shift.rrule !== null;
 
-        const seriesInvites = await tx.query.shiftInvites.findMany({
-          where: { shiftId: id },
-          columns: { userId: true, status: true },
-        });
+      if (wasRecurring || isRecurring) {
+        const seriesChanged =
+          shift.rrule !== previousSeries.rrule ||
+          shift.originalStartsAt.getTime() !==
+            previousSeries.originalStartsAt.getTime() ||
+          shift.durationMinutes !== previousSeries.durationMinutes;
 
+        if (seriesChanged) {
+          const target = expandShift(
+            shift.rrule,
+            shift.originalStartsAt,
+            shift.durationMinutes,
+          );
+          await syncShiftInstances(tx, id, target);
+        }
+      } else if (input.startsAt && input.endsAt) {
+        // One-off shift: move the single instance in place, preserving signups.
         await tx
-          .delete(schema.shiftInstances)
+          .update(schema.shiftInstances)
+          .set({
+            actualStartsAt: input.startsAt,
+            actualEndsAt: input.endsAt,
+          })
           .where(
             and(
               eq(schema.shiftInstances.masterId, id),
               eq(schema.shiftInstances.isException, false),
-              gte(schema.shiftInstances.actualStartsAt, now),
+              eq(schema.shiftInstances.isCancelled, false),
             ),
           );
-
-        const instances = expandShift(
-          shift.rrule,
-          shift.originalStartsAt,
-          shift.durationMinutes,
-        );
-
-        let createdInstanceIds: string[] = [];
-        if (instances.length > 0) {
-          const futureInstances = instances.filter(
-            (i) => i.actualStartsAt >= now,
-          );
-
-          if (futureInstances.length > 0) {
-            const created = await tx
-              .insert(schema.shiftInstances)
-              .values(
-                futureInstances.map((inst) => ({
-                  masterId: shift.id,
-                  actualStartsAt: inst.actualStartsAt,
-                  actualEndsAt: inst.actualEndsAt,
-                  occurrenceIndex: inst.occurrenceIndex,
-                })),
-              )
-              .returning({ id: schema.shiftInstances.id });
-            createdInstanceIds = created.map((c) => c.id);
-          }
-        }
-
-        if (seriesInvites.length > 0 && createdInstanceIds.length > 0) {
-          await this.createInvitesForInstances(
-            tx,
-            createdInstanceIds,
-            seriesInvites.map(({ userId, status }) => ({ userId, status })),
-          );
-        }
-
-        const futureExceptions = await tx.query.shiftInstances.findMany({
-          where: {
-            masterId: id,
-            isException: true,
-            actualStartsAt: { gte: now },
-          },
-        });
-
-        const newInstanceDates = new Set(
-          instances.map((i) => i.actualStartsAt.toISOString()),
-        );
-        const orphanedExceptions = futureExceptions.filter(
-          (e) => !newInstanceDates.has(e.actualStartsAt.toISOString()),
-        );
-
-        if (orphanedExceptions.length > 0) {
-          const orphanedIds = orphanedExceptions.map((e) => e.id);
-          await tx
-            .update(schema.shiftInstances)
-            .set({ isException: false })
-            .where(inArray(schema.shiftInstances.id, orphanedIds));
-        }
-      } else {
-        if (input.startsAt && input.endsAt) {
-          await tx
-            .update(schema.shiftInstances)
-            .set({
-              actualStartsAt: input.startsAt,
-              actualEndsAt: input.endsAt,
-            })
-            .where(
-              and(
-                eq(schema.shiftInstances.masterId, id),
-                eq(schema.shiftInstances.isException, false),
-                eq(schema.shiftInstances.isCancelled, false),
-              ),
-            );
-        }
       }
 
       if (
