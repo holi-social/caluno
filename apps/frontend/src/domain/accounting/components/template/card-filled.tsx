@@ -6,14 +6,12 @@ import { Link } from '@/i18n/navigation';
 import type { DocumentKind, PauschalenType } from '../doc-type-header';
 import { DocTypeHeader } from '../doc-type-header';
 import { TemplateBlockedActions } from './blocked-actions';
-import { TemplateSigneeChain } from './signee-chain';
-import type { BlockedAction, Signee, TemplateSlug } from './types';
+import type { BlockedAction, TemplateSlug } from './types';
 
 interface TemplateCardFilledProps {
   slug: TemplateSlug;
   pauschale: PauschalenType;
   kind: DocumentKind;
-  initialSignees: Signee[];
   initialBlockedActions: BlockedAction[];
   builderHref: string;
 }
@@ -22,12 +20,10 @@ export function TemplateCardFilled({
   slug,
   pauschale,
   kind,
-  initialSignees,
   initialBlockedActions,
   builderHref,
 }: TemplateCardFilledProps) {
   const t = useTranslations('Accounting.templates');
-  const [signees, setSignees] = useState<Signee[]>(initialSignees);
   const [blockedActions, setBlockedActions] = useState<BlockedAction[]>(
     initialBlockedActions,
   );
@@ -55,10 +51,6 @@ export function TemplateCardFilled({
           >
             {t('card.editButton')}
           </Link>
-        </div>
-
-        <div className="border-t pt-4">
-          <TemplateSigneeChain signees={signees} onSigneesChange={setSignees} />
         </div>
 
         <div className="border-t pt-4">

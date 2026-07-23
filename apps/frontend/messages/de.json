@@ -1054,34 +1054,62 @@
           "templates": "Vorlagen"
         },
         "saveButton": "Vorlage speichern",
-        "replacePdfButton": "PDF ersetzen",
-        "upload": {
-          "title": "PDF hochladen",
-          "description": "Lade eine PDF-Datei hoch, um mit dem Bearbeiten der Vorlage zu beginnen.",
-          "dragHint": "PDF-Datei hierher ziehen oder",
-          "browseButton": "Datei auswählen",
-          "fileConstraint": "Nur PDF-Dateien"
+        "saveSuccessToast": "Vorlage gespeichert",
+        "previewScrollRegionLabel": "Dokumentvorschau, scrollbar",
+        "blockEditor": {
+          "headerTitle": "Kopfbereich",
+          "invoiceNumberFormatLabel": "Format der Rechnungsnummer",
+          "lockedHint": "Pflichtblock — immer im generierten Dokument enthalten.",
+          "tableFixedHint": "Wird beim Erstellen einer Abrechnung aus den Zeiterfassungen befüllt. Hier nichts zu konfigurieren.",
+          "incompleteCount": "{count, plural, one {Hier fehlt noch eine Angabe} other {Hier fehlen noch {count} Angaben}}",
+          "notSetYet": "noch nicht festgelegt",
+          "sameAsAbove": "gleicher Wert wie oben festgelegt",
+          "scrollRegionLabel": "Vorlagen-Editor, scrollbar"
+        },
+        "editorGroups": {
+          "org": "Angaben der Organisation",
+          "volunteer": "Angaben der ehrenamtlich tätigen Person",
+          "engagement": "Einsatzdetails",
+          "extra": "Weitere Vereinbarungen"
+        },
+        "manualFieldLabels": {
+          "contract-lifespan": "Vertragslaufzeit (Monat/Jahr)",
+          "tasks": "Tätigkeitsbeschreibung",
+          "hours-per-week": "Wochenstunden",
+          "freeform-text": "Freitext",
+          "kostenstelle": "Kostenstelle"
+        },
+        "manualFieldPlaceholders": {
+          "contract-lifespan": "Zeitraum wählen",
+          "tasks": "Beschreibe die Haupttätigkeiten für {pauschale}",
+          "hours-per-week": "z. B. 5",
+          "freeform-text": "Ergänze hier weitere Klauseln, falls nötig",
+          "kostenstelle": "z. B. K-4200"
+        },
+        "fieldSource": {
+          "volunteerProfile": "Wird aus dem Profil der ehrenamtlich tätigen Person übernommen.",
+          "generationTime": "Wird beim Erstellen des Dokuments automatisch eingetragen.",
+          "organizationProfile": "Wird aus den Daten deiner Organisation übernommen.",
+          "rateSettings": "Wird aus dem in den Buchhaltungseinstellungen hinterlegten Satz übernommen."
+        },
+        "invoiceNumberFormats": {
+          "date-number": "TT-MM-JJJJ-Nummer",
+          "date-kostenstelle-number": "TT-MM-JJJJ-Kostenstelle-Nummer",
+          "compact-date-number": "TTMMJJJJ-Nummer",
+          "kostenstelle-month-year-number": "Kostenstelle-MMJJJJ-Nummer"
         },
         "fieldList": {
-          "title": "Felder",
-          "bindingTitle": "Datenbindung",
-          "bindingHint": "Jedes Feld in der PDF-Vorlage kann mit einer Datenquelle verknüpft werden. Beim Generieren eines Dokuments für eine Ehrenamtliche wird der verknüpfte Wert automatisch eingesetzt.",
-          "emptyHint": "Noch keine Felder platziert. Ziehe Felder aus der Werkzeugleiste auf die Vorlage.",
-          "dataSource": "Datenquelle",
-          "unbound": "Nicht verknüpft",
-          "unboundCount": "{count} nicht verknüpft",
           "requiresCollection": "Fehlende Daten",
           "profileWarningBefore": "Ehrenamtliche werden noch nicht nach diesen Daten gefragt.",
           "profileWarningAction": "Formular im Formular-Builder erstellen",
-          "profileWarningAfter": "um diese Daten abzufragen — es wird an alle {pauschale}-Schichten angehängt."
+          "profileWarningAfter": "um diese Daten abzufragen."
         },
         "dataSources": {
-          "groupAlways": "Immer verfügbar",
-          "groupProfile": "Erfordert Profil",
           "volunteer_first_name": "Vorname (Ehrenamtliche:r)",
           "volunteer_last_name": "Nachname (Ehrenamtliche:r)",
           "org_name": "Organisationsname",
           "org_address": "Organisationsadresse",
+          "org_city": "Stadt (Organisation)",
           "org_legal_rep": "Gesetzliche Vertretung",
           "pauschalen_type": "Pauschalentyp",
           "hourly_rate": "Stundensatz",
@@ -1091,9 +1119,10 @@
           "total_amount": "Gesamtbetrag",
           "generated_date": "Erstellungsdatum",
           "document_number": "Dokumentennummer",
-          "volunteer_iban": "IBAN",
+          "volunteer_iban": "IBAN (Ehrenamtliche:r)",
+          "volunteer_bic": "BIC (Ehrenamtliche:r)",
           "volunteer_address": "Adresse (Ehrenamtliche:r)",
-          "volunteer_dob": "Geburtsdatum",
+          "volunteer_dob": "Geburtsdatum (Ehrenamtliche:r)",
           "volunteer_tax_id": "Steueridentifikationsnummer"
         }
       },
@@ -1104,20 +1133,10 @@
         },
         "editButton": "Vorlage bearbeiten",
         "filled": {
-          "signeesTitle": "Unterschriften",
-          "signeesTooltip": "Personen, die dieses Dokument der Reihe nach unterschreiben müssen. Du kannst die Liste auch leer lassen, wenn keine Unterschrift nötig ist.",
-          "addSignee": "Unterzeichner:in hinzufügen",
           "blockedActionsTitle": "Blockierte Aktionen",
           "blockedActionsTooltip": "Aktionen, die Ehrenamtliche erst ausführen können, nachdem dieses Dokument erstellt und unterschrieben wurde. Du kannst die Liste leer lassen, wenn nichts blockiert werden soll.",
           "addBlockedAction": "Aktion hinzufügen",
-          "removeSignee": "{role} entfernen",
           "removeAction": "{gate} entfernen"
-        },
-        "signeeRoles": {
-          "volunteer": "Ehrenamtliche:r",
-          "coordinator": "Koordinator:in",
-          "hq_manager": "HQ Manager",
-          "supervisor": "Vorgesetzte:r"
         },
         "gatePoints": {
           "check_in": "Check-in",

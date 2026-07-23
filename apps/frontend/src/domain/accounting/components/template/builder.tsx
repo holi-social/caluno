@@ -3,34 +3,50 @@
 import { Button } from '@repo/ui';
 import { ChevronRightIcon } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import { useState } from 'react';
-import { Link } from '@/i18n/navigation';
+import { useEffect, useMemo, useState } from 'react';
+import { toast } from 'sonner';
+import { usePageBreadcrumb } from '@/components/navigation/page-header-context';
+import { Link, useRouter } from '@/i18n/navigation';
 import type { DocumentKind, PauschalenType } from '../doc-type-header';
-import { TemplateBuilderDesignerMock } from './builder-canvas-designer';
-import { TemplateBuilderUploadZone } from './builder-canvas-upload';
-import { TemplateBuilderFieldList } from './builder-field-list';
-import type { DataSourceKey, PlacedField } from './builder-types';
+import { TemplateBuilderBlockEditor } from './builder-block-editor';
+import {
+  getContractDocument,
+  getInvoiceDocument,
+  getKnownOrgValues,
+} from './builder-document-presets';
+import { TemplateBuilderPreview } from './builder-preview';
+import {
+  countIncompleteManualFields,
+  type DataSourceKey,
+  type TemplateDocument,
+} from './builder-types';
+
+// Mock: profile-required sources this org hasn't collected yet.
+const MOCK_PROFILE_GAPS = new Set<DataSourceKey>(['volunteer_tax_id']);
 
 interface TemplateBuilderProps {
   pauschale: PauschalenType;
   kind: DocumentKind;
-  /** mock: pre-populated fields for the "designer active" state */
-  initialFields?: PlacedField[];
   backHref?: string;
 }
 
 export function TemplateBuilder({
   pauschale,
   kind,
-  initialFields,
   backHref,
 }: TemplateBuilderProps) {
   const t = useTranslations('Accounting.templates.builder');
   const tSections = useTranslations('Accounting.templates');
+  const router = useRouter();
 
-  const [hasPdf, setHasPdf] = useState(initialFields !== undefined);
-  const [fields, setFields] = useState<PlacedField[]>(initialFields ?? []);
-  const unboundCount = hasPdf ? fields.filter((f) => f.dataSource === null).length : 0;
+  const [templateDoc, setTemplateDoc] = useState<TemplateDocument>(() =>
+    kind === 'contract'
+      ? getContractDocument(pauschale)
+      : getInvoiceDocument(pauschale),
+  );
+
+  const incompleteCount = countIncompleteManualFields(templateDoc);
+  const knownValues = getKnownOrgValues(pauschale);
 
   const kindLabel = tSections(
     `documentKind.${kind}` as Parameters<typeof tSections>[0],
@@ -41,88 +57,94 @@ export function TemplateBuilder({
     >[0],
   );
 
-  function handleFileSelected(_file: File) {
-    setHasPdf(true);
-  }
-
-  function handleDataSourceChange(id: string, source: DataSourceKey | null) {
-    setFields((prev) =>
-      prev.map((f) => (f.id === id ? { ...f, dataSource: source } : f)),
-    );
-  }
-
   function handleSave() {
-    // TODO: persist and navigate back to listing
+    // No backend yet — stub success toast, same convention as the reimbursements board.
+    toast.success(t('saveSuccessToast'));
+    if (backHref) router.push(backHref);
   }
+
+  const breadcrumb = useMemo(
+    () => (
+      <nav
+        className="hidden items-center gap-1 text-sm text-muted-foreground sm:flex"
+        aria-label="Breadcrumb"
+      >
+        <span>{t('breadcrumb.accounting')}</span>
+        <ChevronRightIcon size={14} aria-hidden="true" />
+        {backHref ? (
+          <Link
+            href={backHref}
+            className="hover:text-foreground transition-colors"
+          >
+            {t('breadcrumb.templates')}
+          </Link>
+        ) : (
+          <span>{t('breadcrumb.templates')}</span>
+        )}
+        <ChevronRightIcon size={14} aria-hidden="true" />
+        <span className="text-foreground font-medium">
+          {typeLabel} · {kindLabel}
+        </span>
+      </nav>
+    ),
+    [backHref, typeLabel, kindLabel, t],
+  );
+  usePageBreadcrumb(breadcrumb);
+
+  // Locks page scroll while mounted: the admin shell's `min-h-svh` wrapper can grow past
+  // the viewport, so overflow can land on <html>, not just <body> — both need locking.
+  useEffect(() => {
+    const previousHtmlOverflow = document.documentElement.style.overflow;
+    const previousBodyOverflow = document.body.style.overflow;
+    document.documentElement.style.overflow = 'hidden';
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.documentElement.style.overflow = previousHtmlOverflow;
+      document.body.style.overflow = previousBodyOverflow;
+    };
+  }, []);
 
   return (
-    <div className="flex h-screen flex-col">
-      {/* Header */}
-      <div className="flex items-center justify-between border-b px-6 py-3 shrink-0">
-        <nav
-          className="flex items-center gap-1 text-sm text-muted-foreground"
-          aria-label="Breadcrumb"
+    <div className="flex h-[calc(100svh-6rem-1px)] flex-col gap-6">
+      <div className="grid min-h-0 flex-1 grid-cols-[3fr_2fr] gap-6">
+        <TemplateBuilderPreview
+          document={templateDoc}
+          profileGaps={MOCK_PROFILE_GAPS}
+          knownValues={knownValues}
+          kind={kind}
+        />
+        <section
+          className="min-h-0 overflow-y-auto pb-12 [mask-image:linear-gradient(to_bottom,black_0,black_calc(100%-2rem),transparent_100%)]"
+          // biome-ignore lint/a11y/noNoninteractiveTabindex: WCAG 2.1.1 requires this independently-scrollable region to be keyboard-reachable (axe "scrollable-region-focusable").
+          tabIndex={0}
+          aria-label={t('blockEditor.scrollRegionLabel')}
         >
-          <span>{t('breadcrumb.accounting')}</span>
-          <ChevronRightIcon size={14} aria-hidden="true" />
-          {backHref ? (
-            <Link href={backHref} className="hover:text-foreground transition-colors">
-              {t('breadcrumb.templates')}
-            </Link>
-          ) : (
-            <span>{t('breadcrumb.templates')}</span>
-          )}
-          <ChevronRightIcon size={14} aria-hidden="true" />
-          <span className="text-foreground font-medium">
-            {typeLabel} · {kindLabel}
-          </span>
-        </nav>
-
-        <div className="flex items-center gap-3">
-          {hasPdf && unboundCount > 0 && (
-            <span className="text-xs text-muted-foreground">
-              {t('fieldList.unboundCount', { count: unboundCount })}
-            </span>
-          )}
-          {hasPdf && (
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => setHasPdf(false)}
-            >
-              {t('replacePdfButton')}
-            </Button>
-          )}
-          <Button
-            type="button"
-            onClick={handleSave}
-            disabled={!hasPdf || unboundCount > 0}
-          >
-            {t('saveButton')}
-          </Button>
-        </div>
+          <TemplateBuilderBlockEditor
+            document={templateDoc}
+            kind={kind}
+            profileGaps={MOCK_PROFILE_GAPS}
+            knownValues={knownValues}
+            typeLabel={typeLabel}
+            onChange={setTemplateDoc}
+          />
+        </section>
       </div>
 
-      {/* Two-panel body */}
-      <div className="flex flex-1 overflow-hidden">
-        {/* Left panel — canvas (~65%) */}
-        <div className="flex-[65] p-4 overflow-hidden">
-          {hasPdf ? (
-            <TemplateBuilderDesignerMock fields={fields} />
-          ) : (
-            <TemplateBuilderUploadZone onFileSelected={handleFileSelected} />
-          )}
-        </div>
-
-        {/* Right panel — field list (~35%) */}
-        <div className="flex-[35] border-l p-4 overflow-hidden">
-          <TemplateBuilderFieldList
-            fields={fields}
-            pauschale={pauschale}
-            onDataSourceChange={handleDataSourceChange}
-            unboundCount={unboundCount}
-          />
-        </div>
+      <div className="flex shrink-0 items-center justify-end gap-3">
+        {incompleteCount > 0 && (
+          <span className="text-sm text-muted-foreground">
+            {t('blockEditor.incompleteCount', {
+              count: incompleteCount,
+            } as Parameters<typeof t>[1])}
+          </span>
+        )}
+        <Button
+          type="button"
+          onClick={handleSave}
+          disabled={incompleteCount > 0}
+        >
+          {t('saveButton')}
+        </Button>
       </div>
     </div>
   );

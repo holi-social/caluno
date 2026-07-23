@@ -18,7 +18,7 @@ function TemplateSlotCard({
   orgUId: string;
   builderBasePath?: string;
 }) {
-  const builderHref = `${builderBasePath ?? `/admin/${orgUId}/accounting/templates`}/${slot.slug}`;
+  const builderHref = `${builderBasePath ?? `/admin/${orgUId}/accounting/settings/templates`}/${slot.slug}`;
 
   if (!slot.configured) {
     return (
@@ -37,7 +37,6 @@ function TemplateSlotCard({
       slug={slot.slug}
       pauschale={slot.pauschale}
       kind={slot.kind}
-      initialSignees={slot.signees}
       initialBlockedActions={slot.blockedActions}
       builderHref={builderHref}
     />

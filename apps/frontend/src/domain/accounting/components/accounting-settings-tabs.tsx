@@ -2,9 +2,9 @@
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@repo/ui';
 import { useTranslations } from 'next-intl';
+import { RatesSectionCard } from './rates-section-card';
 import { TemplateListingPage } from './template/listing-page';
 import type { TemplateSectionData } from './template/types';
-import { RatesSectionCard } from './rates-section-card';
 
 const MOCK_SECTIONS: TemplateSectionData[] = [
   {
@@ -15,10 +15,6 @@ const MOCK_SECTIONS: TemplateSectionData[] = [
         pauschale: 'ehrenamt',
         kind: 'contract',
         configured: true,
-        signees: [
-          { id: 's1', role: 'volunteer' },
-          { id: 's2', role: 'coordinator' },
-        ],
         blockedActions: [{ id: 'a1', gate: 'check_in' }],
       },
       {
@@ -26,7 +22,6 @@ const MOCK_SECTIONS: TemplateSectionData[] = [
         pauschale: 'ehrenamt',
         kind: 'invoice',
         configured: false,
-        signees: [],
         blockedActions: [],
       },
     ],
@@ -39,7 +34,6 @@ const MOCK_SECTIONS: TemplateSectionData[] = [
         pauschale: 'uebungleiter',
         kind: 'contract',
         configured: false,
-        signees: [],
         blockedActions: [],
       },
       {
@@ -47,7 +41,6 @@ const MOCK_SECTIONS: TemplateSectionData[] = [
         pauschale: 'uebungleiter',
         kind: 'invoice',
         configured: false,
-        signees: [],
         blockedActions: [],
       },
     ],
@@ -63,7 +56,7 @@ interface AccountingSettingsTabsProps {
 export function AccountingSettingsTabs({
   orgUId,
   canEditRates = true,
-  builderBasePath,
+  builderBasePath = `/admin/${orgUId}/accounting/settings/templates`,
 }: AccountingSettingsTabsProps) {
   const tTabs = useTranslations('Accounting.settings.tabs');
   const t = useTranslations('Accounting.settings.templates');
@@ -87,7 +80,11 @@ export function AccountingSettingsTabs({
               {t('sectionSubtitle')}
             </p>
           </div>
-          <TemplateListingPage sections={MOCK_SECTIONS} orgUId={orgUId} builderBasePath={builderBasePath} />
+          <TemplateListingPage
+            sections={MOCK_SECTIONS}
+            orgUId={orgUId}
+            builderBasePath={builderBasePath}
+          />
         </div>
       </TabsContent>
     </Tabs>
