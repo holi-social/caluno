@@ -555,7 +555,7 @@ type Query {
   activeShiftInstances: [ShiftInstance!]!
   adminUserProfile(userId: String!): UserProfile
   adminVolunteerSubmission(id: String!): FormSubmission
-  availableShiftInstances(from: DateTime, limit: Int! = 15, offset: Int! = 0, organizationUnitIds: [ID!], to: DateTime): ShiftInstancePaginatedResponse!
+  availableShiftInstances(endsBefore: DateTime = null, limit: Int! = 15, offset: Int! = 0, organizationUnitIds: [ID!], startsAfter: DateTime = null): ShiftInstancePaginatedResponse!
   event(id: ID!): Event!
   eventAttendees(eventId: ID!): [User!]!
   eventShifts(eventId: ID!, limit: Int! = 10, offset: Int! = 0): ShiftPaginatedResponse!
@@ -579,7 +579,7 @@ type Query {
   myMembershipRequests(limit: Int! = 10, offset: Int! = 0, status: MembershipRequestStatus): MembershipRequestPaginatedResponse!
   myMembershipStatus(organizationUnitId: ID!): Boolean!
   myOrganizationUnits: [OrganizationUnit!]!
-  myShiftInstances(from: DateTime, includePast: Boolean! = false, limit: Int! = 15, offset: Int! = 0, order: SortOrder! = ASC, to: DateTime): ShiftInstancePaginatedResponse!
+  myShiftInstances(endsBefore: DateTime = null, includePast: Boolean! = false, limit: Int! = 15, offset: Int! = 0, order: SortOrder! = ASC, startsAfter: DateTime = null): ShiftInstancePaginatedResponse!
   myTime(limit: Int! = 10, offset: Int! = 0): TimeEntryPaginatedResponse!
   myUserProfile: UserProfile
   organization(id: String!): Organization

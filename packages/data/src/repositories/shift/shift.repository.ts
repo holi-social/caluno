@@ -177,8 +177,8 @@ export class ShiftRepository extends BaseRepository {
   }> {
     const data = await this.sdk.GetMyShiftInstances({
       includePast: options.includePast ?? false,
-      from: options.from?.toISOString(),
-      to: options.to?.toISOString(),
+      startsAfter: options.from?.toISOString(),
+      endsBefore: options.to?.toISOString(),
       limit: options.limit ?? 15,
       offset: options.offset ?? 0,
       order: options.order ?? SortOrder.Asc,
@@ -204,8 +204,8 @@ export class ShiftRepository extends BaseRepository {
     };
   }> {
     const data = await this.sdk.GetAvailableShiftInstances({
-      from: options.from?.toISOString(),
-      to: options.to?.toISOString(),
+      startsAfter: options.from?.toISOString(),
+      endsBefore: options.to?.toISOString(),
       organizationUnitIds: options.organizationUnitIds,
       limit: options.limit ?? 15,
       offset: options.offset ?? 0,

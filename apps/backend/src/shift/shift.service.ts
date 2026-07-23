@@ -49,6 +49,11 @@ export { getDurationMinutes } from './utils/duration';
 
 type InviteMemberInput = { userId: string; status: ShiftInviteStatus };
 
+const EMPTY_SHIFT_INSTANCE_PAGE: {
+  instances: ShiftInstanceEntity[];
+  total: number;
+} = { instances: [], total: 0 };
+
 @Injectable()
 export class ShiftService {
   private readonly logger = new Logger(ShiftService.name);
@@ -315,8 +320,8 @@ export class ShiftService {
   async findMyShiftInstances(
     userId: string,
     includePast: boolean,
-    from: Date | null,
-    to: Date | null,
+    startsAfter: Date | null,
+    endsBefore: Date | null,
     limit: number,
     offset: number,
     order: SortOrder,
@@ -325,10 +330,14 @@ export class ShiftService {
       await this.getAccessibleOrganizationUnitIds(userId);
 
     if (organizationUnitIds.length === 0) {
-      return { instances: [], total: 0 };
+      return EMPTY_SHIFT_INSTANCE_PAGE;
     }
 
-    const dateCondition = this.buildMyShiftDateCondition(includePast, from, to);
+    const dateCondition = this.buildMyShiftDateCondition(
+      includePast,
+      startsAfter,
+      endsBefore,
+    );
 
     const where = {
       isCancelled: false,
@@ -342,29 +351,39 @@ export class ShiftService {
       },
     };
 
-    const allInstances = await this.db.query.shiftInstances.findMany({
-      where,
-      with: { master: true },
-      orderBy: { actualStartsAt: order.toLowerCase() as 'asc' | 'desc' },
-    });
-
-    return {
-      instances: allInstances.slice(offset, offset + limit),
-      total: allInstances.length,
+    const orderBy = {
+      actualStartsAt: order.toLowerCase() as 'asc' | 'desc',
     };
+
+    const [instances, totalResult] = await Promise.all([
+      this.db.query.shiftInstances.findMany({
+        where,
+        with: { master: true },
+        orderBy,
+        limit,
+        offset,
+      }),
+      this.db.query.shiftInstances.findMany({
+        where,
+        columns: {},
+        extras: { total: count() },
+      }),
+    ]);
+
+    return { instances, total: totalResult[0]?.total ?? 0 };
   }
 
   private buildMyShiftDateCondition(
     includePast: boolean,
-    from: Date | null,
-    to: Date | null,
+    startsAfter: Date | null,
+    endsBefore: Date | null,
   ): Record<string, unknown> {
-    if (to) {
-      return { actualEndsAt: { lt: to } };
+    if (endsBefore) {
+      return { actualEndsAt: { lt: endsBefore } };
     }
 
-    if (from) {
-      return { actualStartsAt: { gte: from } };
+    if (startsAfter) {
+      return { actualStartsAt: { gte: startsAfter } };
     }
 
     if (!includePast) {
@@ -376,8 +395,8 @@ export class ShiftService {
 
   async findAvailableShiftInstances(
     userId: string,
-    from: Date | null,
-    to: Date | null,
+    startsAfter: Date | null,
+    endsBefore: Date | null,
     organizationUnitIds: string[] | null,
     limit: number,
     offset: number,
@@ -386,7 +405,7 @@ export class ShiftService {
       await this.getAccessibleOrganizationUnitIds(userId);
 
     if (userOrganizationUnitIds.length === 0) {
-      return { instances: [], total: 0 };
+      return EMPTY_SHIFT_INSTANCE_PAGE;
     }
 
     const effectiveOrgUnitIds = organizationUnitIds?.length
@@ -394,64 +413,49 @@ export class ShiftService {
       : userOrganizationUnitIds;
 
     if (effectiveOrgUnitIds.length === 0) {
-      return { instances: [], total: 0 };
+      return EMPTY_SHIFT_INSTANCE_PAGE;
     }
 
     const startOfToday = this.getStartOfToday();
-    const effectiveFrom = from ?? startOfToday;
-    const effectiveTo = to ?? new Date('2099-12-31T23:59:59.999Z');
+    const effectiveStartsAfter = startsAfter ?? startOfToday;
+    const effectiveEndsBefore =
+      endsBefore ?? new Date('2099-12-31T23:59:59.999Z');
 
-    const instances = await this.db.query.shiftInstances.findMany({
-      where: {
-        isCancelled: false,
-        actualStartsAt: { gte: effectiveFrom, lte: effectiveTo },
-        master: {
-          isDeleted: false,
-          organizationUnitId: { in: effectiveOrgUnitIds },
+    const where = {
+      isCancelled: false,
+      actualStartsAt: { gte: effectiveStartsAfter, lte: effectiveEndsBefore },
+      master: {
+        isDeleted: false,
+        organizationUnitId: { in: effectiveOrgUnitIds },
+      },
+      NOT: {
+        invites: {
+          userId,
+          status: { in: [...PARTICIPATING_SHIFT_INVITE_STATUSES] },
         },
       },
-      with: { master: true },
-      orderBy: { actualStartsAt: 'asc' },
-    });
-
-    if (instances.length === 0) {
-      return { instances: [], total: 0 };
-    }
-
-    const instanceIds = instances.map((instance) => instance.id);
-    const userInvites = await this.db.query.shiftInstanceInvites.findMany({
-      where: {
-        instanceId: { in: instanceIds },
-        userId,
-      },
-    });
-
-    const inviteByInstanceId = new Map(
-      userInvites.map((invite) => [invite.instanceId, invite]),
-    );
-
-    const filtered = instances.filter((instance) => {
-      const master = instance.master;
-      if (!master) return false;
-
-      const invite = inviteByInstanceId.get(instance.id);
-      const isSignedUp = isParticipatingShiftInviteStatus(invite?.status);
-
-      if (isSignedUp) {
-        return false;
-      }
-
-      if (master.visibility === ShiftVisibility.ALL_MEMBERS) {
-        return true;
-      }
-
-      return invite?.status === ShiftInviteStatus.INVITED;
-    });
-
-    return {
-      instances: filtered.slice(offset, offset + limit),
-      total: filtered.length,
+      OR: [
+        { master: { visibility: ShiftVisibility.ALL_MEMBERS } },
+        { invites: { userId, status: ShiftInviteStatus.INVITED } },
+      ],
     };
+
+    const [instances, totalResult] = await Promise.all([
+      this.db.query.shiftInstances.findMany({
+        where,
+        with: { master: true },
+        orderBy: { actualStartsAt: 'asc' },
+        limit,
+        offset,
+      }),
+      this.db.query.shiftInstances.findMany({
+        where,
+        columns: {},
+        extras: { total: count() },
+      }),
+    ]);
+
+    return { instances, total: totalResult[0]?.total ?? 0 };
   }
 
   async findAll(

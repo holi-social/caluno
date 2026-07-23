@@ -1,4 +1,4 @@
-import { Args, Context, ID, Int, Query, Resolver } from '@nestjs/graphql';
+import { Args, Context, ID, Query, Resolver } from '@nestjs/graphql';
 import {
   AllowAnonymous,
   Session,
@@ -7,7 +7,10 @@ import {
 import { PERMISSIONS } from '../../auth/constants';
 import { Permissions } from '../../auth/decorators/permissions.decorator';
 import type { AuthenticatedGraphQLContext } from '../../graphql/graphql.context';
-import { PaginationInput } from '../../graphql/pagination.input';
+import {
+  DateRangePaginationInput,
+  PaginationInput,
+} from '../../graphql/pagination.input';
 import { UserMapper } from '../../user/mappers/user.mapper';
 import { User } from '../../user/models/user.model';
 import { ShiftInviteStatus, SortOrder } from '../enums';
@@ -153,10 +156,7 @@ export class ShiftQueryResolver {
   async myShiftInstances(
     @Args('includePast', { type: () => Boolean, defaultValue: false })
     includePast: boolean,
-    @Args('from', { type: () => Date, nullable: true }) from: Date | null,
-    @Args('to', { type: () => Date, nullable: true }) to: Date | null,
-    @Args('limit', { type: () => Int, defaultValue: 15 }) limit: number,
-    @Args('offset', { type: () => Int, defaultValue: 0 }) offset: number,
+    @Args() pagination: DateRangePaginationInput,
     @Args('order', { type: () => SortOrder, defaultValue: SortOrder.ASC })
     order: SortOrder,
     @Session() session: UserSession,
@@ -164,44 +164,41 @@ export class ShiftQueryResolver {
     const { instances, total } = await this.shiftService.findMyShiftInstances(
       session.user.id,
       includePast,
-      from,
-      to,
-      limit,
-      offset,
+      pagination.startsAfter,
+      pagination.endsBefore,
+      pagination.limit,
+      pagination.offset,
       order,
     );
     return new ShiftInstancePaginatedResponse({
       items: this.shiftInstanceMapper.toArray(instances),
       total,
-      limit,
-      offset,
+      limit: pagination.limit,
+      offset: pagination.offset,
     });
   }
 
   @Query(() => ShiftInstancePaginatedResponse)
   async availableShiftInstances(
-    @Args('from', { type: () => Date, nullable: true }) from: Date | null,
-    @Args('to', { type: () => Date, nullable: true }) to: Date | null,
+    @Args() pagination: DateRangePaginationInput,
     @Args('organizationUnitIds', { type: () => [ID], nullable: true })
     organizationUnitIds: string[] | null,
-    @Args('limit', { type: () => Int, defaultValue: 15 }) limit: number,
-    @Args('offset', { type: () => Int, defaultValue: 0 }) offset: number,
     @Session() session: UserSession,
   ): Promise<ShiftInstancePaginatedResponse> {
     const { instances, total } =
       await this.shiftService.findAvailableShiftInstances(
         session.user.id,
-        from,
-        to,
+        pagination.startsAfter,
+        pagination.endsBefore,
         organizationUnitIds,
-        limit,
-        offset,
+        pagination.limit,
+        pagination.offset,
       );
     return new ShiftInstancePaginatedResponse({
       items: this.shiftInstanceMapper.toArray(instances),
       total,
-      limit,
-      offset,
+      limit: pagination.limit,
+      offset: pagination.offset,
     });
   }
 }

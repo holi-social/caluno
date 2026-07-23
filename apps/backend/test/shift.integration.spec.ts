@@ -1376,8 +1376,8 @@ describe('Volunteer home fields and check-in', () => {
     const instanceId = instances[0]?.id;
     expect(instanceId).toBeDefined();
 
-    const from = new Date('2026-06-01T00:00:00.000Z').toISOString();
-    const to = new Date('2026-12-31T23:59:59.000Z').toISOString();
+    const startsAfter = new Date('2026-06-01T00:00:00.000Z').toISOString();
+    const endsBefore = new Date('2026-12-31T23:59:59.000Z').toISOString();
 
     const data = await graphqlRequestRequiringData<{
       availableShiftInstances: {
@@ -1393,14 +1393,14 @@ describe('Volunteer home fields and check-in', () => {
       app,
       {
         query: `
-          query AvailableShiftInstances($from: DateTime, $to: DateTime) {
-            availableShiftInstances(from: $from, to: $to) {
+          query AvailableShiftInstances($startsAfter: DateTime, $endsBefore: DateTime) {
+            availableShiftInstances(startsAfter: $startsAfter, endsBefore: $endsBefore) {
               items { id }
               pagination { total limit offset hasMore }
             }
           }
         `,
-        variables: { from, to },
+        variables: { startsAfter, endsBefore },
         headers: {
           'x-organization-unit-id': organizationUnitId,
         },
@@ -1435,8 +1435,8 @@ describe('Volunteer home fields and check-in', () => {
       status: ShiftInviteStatus.ACCEPTED,
     });
 
-    const from = new Date('2026-06-01T00:00:00.000Z').toISOString();
-    const to = new Date('2026-12-31T23:59:59.000Z').toISOString();
+    const startsAfter = new Date('2026-06-01T00:00:00.000Z').toISOString();
+    const endsBefore = new Date('2026-12-31T23:59:59.000Z').toISOString();
 
     const data = await graphqlRequestRequiringData<{
       availableShiftInstances: {
@@ -1452,14 +1452,14 @@ describe('Volunteer home fields and check-in', () => {
       app,
       {
         query: `
-          query AvailableShiftInstances($from: DateTime, $to: DateTime) {
-            availableShiftInstances(from: $from, to: $to) {
+          query AvailableShiftInstances($startsAfter: DateTime, $endsBefore: DateTime) {
+            availableShiftInstances(startsAfter: $startsAfter, endsBefore: $endsBefore) {
               items { id }
               pagination { total limit offset hasMore }
             }
           }
         `,
-        variables: { from, to },
+        variables: { startsAfter, endsBefore },
         headers: {
           'x-organization-unit-id': organizationUnitId,
         },
@@ -1512,8 +1512,8 @@ describe('Volunteer home fields and check-in', () => {
 
     setAuthMockUserId(parentMember.id);
 
-    const from = new Date('2026-06-01T00:00:00.000Z').toISOString();
-    const to = new Date('2026-12-31T23:59:59.000Z').toISOString();
+    const startsAfter = new Date('2026-06-01T00:00:00.000Z').toISOString();
+    const endsBefore = new Date('2026-12-31T23:59:59.000Z').toISOString();
 
     const data = await graphqlRequestRequiringData<{
       availableShiftInstances: {
@@ -1529,14 +1529,14 @@ describe('Volunteer home fields and check-in', () => {
       app,
       {
         query: `
-          query AvailableShiftInstances($from: DateTime, $to: DateTime) {
-            availableShiftInstances(from: $from, to: $to) {
+          query AvailableShiftInstances($startsAfter: DateTime, $endsBefore: DateTime) {
+            availableShiftInstances(startsAfter: $startsAfter, endsBefore: $endsBefore) {
               items { id }
               pagination { total limit offset hasMore }
             }
           }
         `,
-        variables: { from, to },
+        variables: { startsAfter, endsBefore },
       },
       'availableShiftInstances',
     );
@@ -1742,9 +1742,9 @@ describe('Volunteer shifts pagination', () => {
       });
     }
 
-    const from = new Date();
-    from.setDate(from.getDate() + 1);
-    from.setHours(0, 0, 0, 0);
+    const startsAfter = new Date();
+    startsAfter.setDate(startsAfter.getDate() + 1);
+    startsAfter.setHours(0, 0, 0, 0);
 
     const data = await graphqlRequestRequiringData<{
       myShiftInstances: {
@@ -1755,14 +1755,14 @@ describe('Volunteer shifts pagination', () => {
       app,
       {
         query: `
-          query MyShiftInstances($from: DateTime!) {
-            myShiftInstances(from: $from) {
+          query MyShiftInstances($startsAfter: DateTime!) {
+            myShiftInstances(startsAfter: $startsAfter) {
               items { id actualStartsAt }
               pagination { total hasMore }
             }
           }
         `,
-        variables: { from: from.toISOString() },
+        variables: { startsAfter: startsAfter.toISOString() },
         headers: {
           'x-organization-unit-id': organizationUnitId,
         },
@@ -1773,7 +1773,8 @@ describe('Volunteer shifts pagination', () => {
     expect(data.myShiftInstances.items.length).toBeGreaterThan(0);
     expect(
       data.myShiftInstances.items.every(
-        (item) => new Date(item.actualStartsAt).getTime() >= from.getTime(),
+        (item) =>
+          new Date(item.actualStartsAt).getTime() >= startsAfter.getTime(),
       ),
     ).toBe(true);
 
@@ -1812,9 +1813,9 @@ describe('Volunteer shifts pagination', () => {
       });
     }
 
-    const to = new Date();
-    to.setDate(to.getDate() - 7);
-    to.setHours(0, 0, 0, 0);
+    const endsBefore = new Date();
+    endsBefore.setDate(endsBefore.getDate() - 7);
+    endsBefore.setHours(0, 0, 0, 0);
 
     const data = await graphqlRequestRequiringData<{
       myShiftInstances: {
@@ -1829,14 +1830,14 @@ describe('Volunteer shifts pagination', () => {
       app,
       {
         query: `
-          query MyShiftInstances($to: DateTime!, $order: SortOrder!) {
-            myShiftInstances(to: $to, order: $order) {
+          query MyShiftInstances($endsBefore: DateTime!, $order: SortOrder!) {
+            myShiftInstances(endsBefore: $endsBefore, order: $order) {
               items { id actualStartsAt actualEndsAt }
               pagination { total hasMore }
             }
           }
         `,
-        variables: { to: to.toISOString(), order: 'DESC' },
+        variables: { endsBefore: endsBefore.toISOString(), order: 'DESC' },
         headers: {
           'x-organization-unit-id': organizationUnitId,
         },
@@ -1853,7 +1854,7 @@ describe('Volunteer shifts pagination', () => {
     }
     expect(
       data.myShiftInstances.items.every(
-        (item) => new Date(item.actualEndsAt).getTime() < to.getTime(),
+        (item) => new Date(item.actualEndsAt).getTime() < endsBefore.getTime(),
       ),
     ).toBe(true);
 
@@ -1879,10 +1880,10 @@ describe('Volunteer shifts pagination', () => {
       rrule: 'FREQ=DAILY;COUNT=5',
     });
 
-    const from = new Date(availBaseDate);
-    from.setHours(0, 0, 0, 0);
-    const to = new Date(availBaseDate);
-    to.setDate(to.getDate() + 7);
+    const startsAfter = new Date(availBaseDate);
+    startsAfter.setHours(0, 0, 0, 0);
+    const endsBefore = new Date(availBaseDate);
+    endsBefore.setDate(endsBefore.getDate() + 7);
 
     const data = await graphqlRequestRequiringData<{
       availableShiftInstances: {
@@ -1898,16 +1899,16 @@ describe('Volunteer shifts pagination', () => {
       app,
       {
         query: `
-          query AvailableShiftInstances($from: DateTime, $to: DateTime, $limit: Int!, $offset: Int!) {
-            availableShiftInstances(from: $from, to: $to, limit: $limit, offset: $offset) {
+          query AvailableShiftInstances($startsAfter: DateTime, $endsBefore: DateTime, $limit: Int!, $offset: Int!) {
+            availableShiftInstances(startsAfter: $startsAfter, endsBefore: $endsBefore, limit: $limit, offset: $offset) {
               items { id }
               pagination { total limit offset hasMore }
             }
           }
         `,
         variables: {
-          from: from.toISOString(),
-          to: to.toISOString(),
+          startsAfter: startsAfter.toISOString(),
+          endsBefore: endsBefore.toISOString(),
           limit: 2,
           offset: 0,
         },
