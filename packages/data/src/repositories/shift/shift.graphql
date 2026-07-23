@@ -189,8 +189,8 @@ mutation JoinShiftInstance($instanceId: String!) {
   }
 }
 
-query GetShiftVolunteers($instanceId: ID!) {
-  shiftVolunteers(instanceId: $instanceId) {
+query GetShiftVolunteers($instanceId: ID!, $statuses: [ShiftInviteStatus!]) {
+  shiftVolunteers(instanceId: $instanceId, statuses: $statuses) {
     id
     name
     email

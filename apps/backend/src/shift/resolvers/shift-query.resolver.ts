@@ -10,6 +10,7 @@ import type { AuthenticatedGraphQLContext } from '../../graphql/graphql.context'
 import { PaginationInput } from '../../graphql/pagination.input';
 import { UserMapper } from '../../user/mappers/user.mapper';
 import { User } from '../../user/models/user.model';
+import { ShiftInviteStatus } from '../enums';
 import { ShiftMapper } from '../mappers/shift.mapper';
 import { ShiftInstanceMapper } from '../mappers/shift-instance.mapper';
 import { Shift, ShiftPaginatedResponse } from '../models/shift.model';
@@ -118,11 +119,14 @@ export class ShiftQueryResolver {
   @Query(() => [User])
   async shiftVolunteers(
     @Args('instanceId', { type: () => ID }) instanceId: string,
+    @Args('statuses', { type: () => [ShiftInviteStatus], nullable: true })
+    statuses: ShiftInviteStatus[] | null | undefined,
     @Context() context: AuthenticatedGraphQLContext,
   ): Promise<User[]> {
     const volunteers = await this.shiftService.findVolunteers(
       instanceId,
       context.organizationUnitId,
+      statuses ?? undefined,
     );
     return this.userMapper.toArray(volunteers);
   }
