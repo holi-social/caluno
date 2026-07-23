@@ -3,7 +3,7 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useOrgUId } from '@repo/data/react';
 import {
-  DatePickerWithTimeRange,
+  DatePickerWithRange,
   Field,
   FieldError,
   FieldLabel,
@@ -15,24 +15,31 @@ import { useForm } from 'react-hook-form';
 import { FormSheet, useFormSheet } from '@/components/form-sheet';
 import { FileUpload } from '@/domain/storage/components/file-upload';
 import { useRouter } from '@/i18n/navigation';
+import { inviteEventPath } from '../routes';
 import { type EventFormValues, eventFormSchema } from '../schemas';
 
 interface EventFormProps {
   title: string;
   description: string;
+  orgUId: string;
   initialValues?: Partial<EventFormValues>;
   logoPreviewUrl?: string | null;
   coverPreviewUrl?: string | null;
-  mutate: (data: EventFormValues) => Promise<{ serverError?: string }>;
+  mutate: (
+    data: EventFormValues,
+  ) => Promise<{ serverError?: string; data?: { id: string } }>;
+  redirectToInviteOnCreate?: boolean;
 }
 
 export const EventForm = ({
   title,
   description,
-  initialValues,
+  orgUId,
+  initialValues = {},
   logoPreviewUrl,
   coverPreviewUrl,
   mutate,
+  redirectToInviteOnCreate = false,
 }: EventFormProps) => {
   const router = useRouter();
   const organizationUnitId = useOrgUId();
@@ -76,8 +83,13 @@ export const EventForm = ({
 
     startTransition(async () => {
       const result = await mutate(formData);
+
       if (result.serverError) {
         setServerError(result.serverError);
+      } else if (redirectToInviteOnCreate && result.data?.id) {
+        await setOpen(false, () => null);
+        router.replace(inviteEventPath(orgUId, result.data.id));
+        router.refresh();
       } else {
         await setOpen(false);
         router.refresh();
@@ -114,13 +126,15 @@ export const EventForm = ({
           {t('startsAtLabel')} / {t('endsAtLabel')}
           <span className="text-destructive"> *</span>
         </FieldLabel>
-        <DatePickerWithTimeRange
+        <DatePickerWithRange
+          id="event-dates"
           value={{ start: startsAt ?? null, end: endsAt ?? null }}
           onChange={(start, end) => {
             setValue('startsAt', start as Date, { shouldValidate: true });
             setValue('endsAt', end as Date, { shouldValidate: true });
           }}
           errors={[errors.startsAt?.message, errors.endsAt?.message]}
+          includeTime
           disabled={pending}
         />
       </Field>
@@ -130,7 +144,7 @@ export const EventForm = ({
         <Input
           id="event-location"
           disabled={pending}
-          placeholder={t('locationLabel')}
+          placeholder={t('locationPlaceholder')}
           aria-invalid={!!errors.location}
           {...register('location')}
         />

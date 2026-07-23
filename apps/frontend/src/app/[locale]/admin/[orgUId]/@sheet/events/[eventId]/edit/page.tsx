@@ -23,6 +23,7 @@ export default async function EditEventPage({ params }: EditEventPageProps) {
     <EventForm
       title={t('editTitle')}
       description={t('editDescription')}
+      orgUId={orgUId}
       mutate={updateEvent.bind(null, orgUId, event.id)}
       initialValues={{
         title: event.title,

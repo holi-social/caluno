@@ -46,16 +46,23 @@ export class TimeTrackingService {
       );
     }
 
-    const [timeEntry] = await this.db
-      .insert(schema.timeEntries)
-      .values({
-        shiftInstanceId: input.shiftInstanceId,
-        volunteerId: input.volunteerId,
-        startedAt: input.startedAt,
-        notes: input.notes,
-      })
-      .returning();
-    return timeEntry;
+    try {
+      const [timeEntry] = await this.db
+        .insert(schema.timeEntries)
+        .values({
+          shiftInstanceId: input.shiftInstanceId,
+          volunteerId: input.volunteerId,
+          startedAt: input.startedAt,
+          notes: input.notes,
+        })
+        .returning();
+      return timeEntry;
+    } catch (error) {
+      if (isConstraintViolation(error, UNIQUE_OPEN_ENTRY_CONSTRAINT)) {
+        throw new ConflictGraphQLError('Already checked in');
+      }
+      throw error;
+    }
   }
 
   async closeTimeEntry(
@@ -322,6 +329,30 @@ export class TimeTrackingService {
 // Self check-in window (relative to the shift instance's actual start/end).
 const CHECK_IN_OPENS_BEFORE_MS = 3 * 60 * 60 * 1000; // 3h before start
 const CHECK_IN_CLOSES_AFTER_MS = 60 * 60 * 1000; // 1h after end
+
+const UNIQUE_OPEN_ENTRY_CONSTRAINT =
+  'uq_time_entries_open_per_instance_volunteer';
+
+// Drizzle wraps postgres errors, so the driver error lives on `error.cause`.
+// '23505' is the Postgres unique-violation SQLSTATE.
+const isConstraintViolation = (
+  error: unknown,
+  constraintName: string,
+): boolean => {
+  const driverError =
+    error instanceof Error && 'cause' in error && error.cause
+      ? error.cause
+      : error;
+
+  return (
+    !!driverError &&
+    typeof driverError === 'object' &&
+    'code' in driverError &&
+    driverError.code === '23505' &&
+    'constraint' in driverError &&
+    driverError.constraint === constraintName
+  );
+};
 
 const existsInOrgUnit = (
   organizationUnitId: string,

@@ -10,6 +10,9 @@ export class ShiftInstance {
   @Field(() => ID)
   id!: string;
 
+  @Field(() => ID)
+  masterId!: string;
+
   @Field(() => ShiftModel)
   master!: Shift;
 

@@ -10,17 +10,24 @@ import {
   TableRow,
 } from '@repo/ui';
 import { getTranslations } from 'next-intl/server';
+import {
+  eventShiftEditPath,
+  eventShiftInvitePath,
+} from '@/domain/event/routes';
 import { Link } from '@/i18n/navigation';
 import { getFormatting } from '@/lib/formatting/formatting-server';
-import { shiftDetailPath } from '../routes';
+import { shiftDetailPath, shiftEditPath } from '../routes';
 import { ActionBar } from './action-bar';
 
-type ShiftListItem = GetShiftsQuery['shifts']['items'][number];
+type ShiftListItem = GetShiftsQuery['shifts']['items'][number] & {
+  instance?: { id: string } | null;
+};
 
 type ShiftsTableProps = {
   shifts: ShiftListItem[];
   orgUId: string;
   page?: number;
+  eventId?: string;
 };
 
 export function getVisibilityConfig(t: (key: string) => string) {
@@ -36,7 +43,12 @@ export function getVisibilityConfig(t: (key: string) => string) {
   };
 }
 
-export async function ShiftsTable({ shifts, orgUId, page }: ShiftsTableProps) {
+export async function ShiftsTable({
+  shifts,
+  orgUId,
+  page,
+  eventId,
+}: ShiftsTableProps) {
   const t = await getTranslations('Shift');
   const { formatDate, formatTimeRange } = await getFormatting();
   const visibilityConfig = getVisibilityConfig(t);
@@ -91,7 +103,25 @@ export async function ShiftsTable({ shifts, orgUId, page }: ShiftsTableProps) {
                   </Badge>
                 </TableCell>
                 <TableCell className="space-x-2">
-                  <ActionBar organizationUnitId={orgUId} id={shift.id} />
+                  <ActionBar
+                    organizationUnitId={orgUId}
+                    id={shift.id}
+                    editHref={
+                      eventId
+                        ? eventShiftEditPath(orgUId, eventId, shift.id)
+                        : shiftEditPath(orgUId, shift.id)
+                    }
+                    inviteHref={
+                      eventId && shift.instance
+                        ? eventShiftInvitePath(
+                            orgUId,
+                            eventId,
+                            shift.id,
+                            shift.instance.id,
+                          )
+                        : undefined
+                    }
+                  />
                 </TableCell>
               </TableRow>
             );

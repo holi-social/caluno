@@ -10,7 +10,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@repo/ui';
-import { LogIn, UserPlus, UserRound } from 'lucide-react';
+import { LogIn, UserPlus } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { UserCard } from '@/components/user-card';
 import { Link } from '@/i18n/navigation';
@@ -22,7 +22,7 @@ interface EventVolunteersCardProps {
   canEdit: boolean;
 }
 
-export function EventVolunteersCard({
+export function EventVolunteersSection({
   orgUId,
   eventId,
   attendees,
@@ -31,8 +31,8 @@ export function EventVolunteersCard({
   const t = useTranslations('Event.detail.volunteersCard');
 
   return (
-    <Card>
-      <CardHeader>
+    <Card className="py-4">
+      <CardHeader className="border-b [.border-b]:pb-4">
         <CardTitle className="flex items-center gap-2">
           {t('title')}
           <Badge variant="outline">{attendees.length}</Badge>
@@ -41,12 +41,9 @@ export function EventVolunteersCard({
         {canEdit && (
           <CardAction>
             <Link href={`/admin/${orgUId}/events/${eventId}/invite`}>
-              <Button
-                size="icon-xs"
-                variant="outline"
-                aria-label={t('inviteAria')}
-              >
+              <Button>
                 <UserPlus />
+                {t('inviteButton')}
               </Button>
             </Link>
           </CardAction>
@@ -65,14 +62,6 @@ export function EventVolunteersCard({
               >
                 <UserCard user={attendee} size="sm" />
                 <div className="flex items-center gap-1 shrink-0">
-                  <Button
-                    size="icon-xs"
-                    variant="outline"
-                    aria-label={t('viewProfileAria')}
-                  >
-                    <UserRound />
-                  </Button>
-
                   <Link
                     href={`/admin/${orgUId}/check-in/${attendee.checkInId}/check-in`}
                     aria-label={t('checkInAria')}
