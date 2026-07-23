@@ -63,7 +63,7 @@ export class ShiftService {
 
   async findById(id: string): Promise<ShiftEntity> {
     const shift = await this.db.query.shifts.findFirst({
-      where: { id },
+      where: { id, isDeleted: false },
     });
 
     if (!shift) {
@@ -128,6 +128,30 @@ export class ShiftService {
       .groupBy(schema.shiftInstanceInvites.instanceId);
 
     return new Map(rows.map((row) => [row.instanceId, Number(row.total)]));
+  }
+
+  /** Instances of the given shifts in the org unit, keyed by masterId, ordered by start time. */
+  async findInstancesByMasterIds(
+    shiftIds: string[],
+    organizationUnitId: string,
+  ): Promise<Map<string, ShiftInstanceEntity[]>> {
+    if (shiftIds.length === 0) return new Map();
+
+    const instances = await this.db.query.shiftInstances.findMany({
+      where: {
+        masterId: { in: shiftIds },
+        master: { organizationUnitId, isDeleted: false },
+      },
+      orderBy: { actualStartsAt: 'asc' },
+    });
+
+    const byMasterId = new Map<string, ShiftInstanceEntity[]>();
+    for (const instance of instances) {
+      const existing = byMasterId.get(instance.masterId) ?? [];
+      byMasterId.set(instance.masterId, [...existing, instance]);
+    }
+
+    return byMasterId;
   }
 
   /** Public (non-cancelled) upcoming instances for a single shift. */
@@ -888,8 +912,11 @@ export class ShiftService {
         for (const instance of futureShiftInstancesWithInvites) {
           const capacity =
             instance.overrideMaxVolunteers ?? shift.maxVolunteers;
+          const invitedUserIds = new Set(
+            instance.invites.map((invite) => invite.userId),
+          );
           const membersToAdd = userIdsToAdd.filter(
-            (id) => !instance.invites.includes({ userId: id }),
+            (id) => !invitedUserIds.has(id),
           );
           if (
             capacity &&
@@ -909,10 +936,24 @@ export class ShiftService {
             this.toInviteMembers(userIds, inviteStatus),
           );
         }
-
-        void this.loadAndEmitShiftInvitedNotification(shift, userIdsToAdd);
       }
     });
+
+    // Emit notifications after successful commit
+    if (userIdsToAdd.length > 0) {
+      if (!options.inviteToAllInstances) {
+        void this.loadAndEmitShiftInstanceInvitedNotification(
+          currentShiftInstance.master,
+          currentShiftInstance,
+          userIdsToAdd,
+        );
+      } else {
+        void this.loadAndEmitShiftInvitedNotification(
+          currentShiftInstance.master,
+          userIdsToAdd,
+        );
+      }
+    }
 
     return currentShiftInstance;
   }
@@ -988,11 +1029,33 @@ export class ShiftService {
       .groupBy(schema.shifts.eventId);
   }
 
-  async findByEventId(eventId: string): Promise<ShiftEntity[]> {
-    return this.db.query.shifts.findMany({
-      where: { eventId, isDeleted: false },
-      orderBy: { originalStartsAt: 'asc' },
+  async findAllForEvent(
+    eventId: string,
+    organizationUnitId: string,
+    pagination: PaginationInput,
+  ): Promise<{ shifts: ShiftEntity[]; total: number }> {
+    const shifts = await this.db.query.shifts.findMany({
+      where: {
+        eventId,
+        organizationUnitId,
+        isDeleted: false,
+      },
+      orderBy: { createdAt: 'desc' },
+      limit: pagination.limit,
+      offset: pagination.offset,
     });
+
+    const totalResult = await this.db.query.shifts.findMany({
+      where: {
+        eventId,
+        organizationUnitId,
+        isDeleted: false,
+      },
+      columns: {},
+      extras: { total: count() },
+    });
+
+    return { shifts, total: totalResult[0]?.total ?? 0 };
   }
 
   async findByEventIds(eventIds: string[]): Promise<ShiftEntity[]> {

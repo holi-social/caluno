@@ -569,6 +569,7 @@
       "chooseDays": "Wähle die Tage, an denen sich dieser Einsatz wiederholt",
       "openShiftLabel": "Offener Einsatz",
       "openShiftDescription": "Jeder Freiwillige kann sich für diesen Einsatz anmelden",
+      "timeRangeConstraint": "Einsätze müssen innerhalb von ({window}) beginnen und enden.",
       "imageLabel": "Bild"
     },
     "recurrence": {
@@ -688,6 +689,8 @@
     "sheet": {
       "createTitle": "Einsatz erstellen",
       "createDescription": "Erstelle einen neuen Einsatz.",
+      "createEventTitle": "Einsatz hinzufügen",
+      "createEventDescription": "Plane eine Einsatz für diese Veranstaltung.",
       "editTitle": "Einsatz bearbeiten",
       "editDescription": "Bearbeite diesen Einsatz.",
       "inviteTitle": "Freiwillige einladen",
@@ -713,7 +716,8 @@
       "endTimeRequired": "Endzeit ist erforderlich",
       "organizationUnitRequired": "Organisationseinheit ist erforderlich",
       "shiftIdRequired": "Einsatz-ID ist erforderlich",
-      "minMaxVolunteers": "Die Mindestanzahl an Freiwilligen darf die Höchstanzahl nicht überschreiten"
+      "minMaxVolunteers": "Die Mindestanzahl an Freiwilligen darf die Höchstanzahl nicht überschreiten",
+      "windowViolation": "Muss innerhalb des Veranstaltungszeitraums liegen"
     }
   },
   "TimeEntry": {
@@ -1127,6 +1131,11 @@
       "shareAria": "Einladungslink kopieren",
       "deleteAria": "Veranstaltung löschen"
     },
+    "deleteDialog": {
+      "title": "Veranstaltung löschen",
+      "description": "Bist du sicher, dass du diese Veranstaltung löschen möchtest? Diese Aktion kann nicht rückgängig gemacht werden.",
+      "confirm": "Löschen"
+    },
     "empty": {
       "title": "Noch keine Veranstaltungen",
       "description": "Erstelle deine erste Veranstaltung."
@@ -1144,8 +1153,8 @@
       "inviteButton": "Mitglieder einladen",
       "volunteersCard": {
         "title": "Freiwillige",
+        "inviteButton": "Einladen",
         "inviteAria": "Mitglieder einladen",
-        "viewProfileAria": "Profil ansehen",
         "checkInAria": "Einchecken",
         "empty": "Noch keine Freiwilligen eingeladen."
       },
@@ -1154,28 +1163,24 @@
         "addAria": "Schicht hinzufügen",
         "addButton": "Schicht hinzufügen",
         "emptyTitle": "Noch keine Schichten",
-        "emptyDescription": "Füge dieser Veranstaltung eine Schicht hinzu, um loszulegen.",
-        "table": {
-          "name": "Name",
-          "schedule": "Zeitplan",
-          "volunteers": "Freiwillige"
-        }
+        "emptyDescription": "Füge dieser Veranstaltung eine Schicht hinzu, um loszulegen."
       }
     },
     "invite": {
-      "title": "Mitglieder zu {eventTitle} einladen",
-      "description": "Lade Mitglieder zu dieser Veranstaltung ein. Dies weist sie keiner Schicht zu.",
+      "title": "Mitglieder einladen",
+      "description": "Lade Mitglieder zu {eventTitle} ein. Sie werden über die Veranstaltung benachrichtigt – dies weist sie keiner Schicht zu.",
       "copyInviteLink": "Einladungslink kopieren",
-      "helperText": "Die Einladung informiert nur über die Veranstaltung – Mitglieder werden dadurch keinen Schichten der Veranstaltung zugewiesen."
+      "helperText": "Lieber einen Link? Teile ihn mit allen, die du zur Veranstaltung einladen möchtest."
     },
     "form": {
       "titleLabel": "Titel",
-      "titlePlaceholder": "Titel der Veranstaltung",
+      "titlePlaceholder": "z. B. Sommer Festival",
       "startsAtLabel": "Beginn",
       "endsAtLabel": "Ende",
       "locationLabel": "Ort",
-      "logoUrlLabel": "Logo",
-      "coverUrlLabel": "Titelbild",
+      "locationPlaceholder": "z. B. Fönix Park",
+      "logoUrlLabel": "Logo-URL",
+      "coverUrlLabel": "Cover-URL",
       "validation": {
         "titleRequired": "Titel ist erforderlich",
         "startRequired": "Startdatum ist erforderlich",

@@ -569,6 +569,7 @@
       "chooseDays": "Choose which days this shift repeats",
       "openShiftLabel": "Open shift",
       "openShiftDescription": "Any volunteer can sign up for this shift",
+      "timeRangeConstraint": "Shifts must start and end within ({window}).",
       "imageLabel": "Image"
     },
     "recurrence": {
@@ -688,6 +689,8 @@
     "sheet": {
       "createTitle": "Create shift",
       "createDescription": "Create a new shift.",
+      "createEventTitle": "Add shift",
+      "createEventDescription": "Schedule a shift for this event.",
       "editTitle": "Edit shift",
       "editDescription": "Edit shift.",
       "inviteTitle": "Invite volunteers",
@@ -713,7 +716,8 @@
       "endTimeRequired": "End time is required",
       "organizationUnitRequired": "Organization unit is required",
       "shiftIdRequired": "Shift ID is required",
-      "minMaxVolunteers": "Minimum volunteers cannot exceed maximum volunteers"
+      "minMaxVolunteers": "Minimum volunteers cannot exceed maximum volunteers",
+      "windowViolation": "Must fall within the event window"
     }
   },
   "TimeEntry": {
@@ -1127,6 +1131,11 @@
       "shareAria": "Copy invite link",
       "deleteAria": "Delete event"
     },
+    "deleteDialog": {
+      "title": "Delete event",
+      "description": "Are you sure you want to delete this event? This action cannot be undone.",
+      "confirm": "Delete"
+    },
     "empty": {
       "title": "No events yet",
       "description": "Get started by creating your first event."
@@ -1144,8 +1153,8 @@
       "inviteButton": "Invite members",
       "volunteersCard": {
         "title": "Volunteers",
+        "inviteButton": "Invite",
         "inviteAria": "Invite members",
-        "viewProfileAria": "View profile",
         "checkInAria": "Check in",
         "empty": "No volunteers invited yet."
       },
@@ -1154,28 +1163,24 @@
         "addAria": "Add shift",
         "addButton": "Add shift",
         "emptyTitle": "No shifts yet",
-        "emptyDescription": "Add a shift to this event to get started.",
-        "table": {
-          "name": "Name",
-          "schedule": "Schedule",
-          "volunteers": "Volunteers"
-        }
+        "emptyDescription": "Add a shift to this event to get started."
       }
     },
     "invite": {
-      "title": "Invite members to {eventTitle}",
-      "description": "Invite members to this event. This does not assign them to any shift.",
+      "title": "Invite members",
+      "description": "Invite members to {eventTitle}. They’re notified about the event — this doesn’t assign them to its shifts.",
       "copyInviteLink": "Copy invite link",
-      "helperText": "Inviting notifies about the event only — does not assign members to event shifts."
+      "helperText": "Prefer a link? Share it with anyone to invite them to the event."
     },
     "form": {
       "titleLabel": "Title",
-      "titlePlaceholder": "Event title",
+      "titlePlaceholder": "e.g. Summer Festival",
       "startsAtLabel": "Start",
       "endsAtLabel": "End",
       "locationLabel": "Location",
-      "logoUrlLabel": "Logo",
-      "coverUrlLabel": "Cover image",
+      "locationPlaceholder": "e.g. Phoenix Park",
+      "logoUrlLabel": "Logo URL",
+      "coverUrlLabel": "Cover URL",
       "validation": {
         "titleRequired": "Title is required",
         "startRequired": "Start date is required",

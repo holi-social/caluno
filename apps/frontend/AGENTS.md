@@ -42,6 +42,7 @@ Route groups: `(auth)` unauthenticated, `(dashboard)/[orgUId]` protected + org-s
 - Use `@/*` to import from `src/*` (e.g., `@/domain/shift/actions.ts`).
 - Server Actions for a domain in `actions.ts`; zod schemas in `schemas.ts` (e.g. `src/domain/shift/schemas.ts`).
 - Do not write GraphQL in this project — use `@repo/data` for data access.
+- Sheets use the `@sheet` parallel-route slot (`app/[locale]/admin/[orgUId]/@sheet/**`) with `FormSheet`/`useFormSheet`.
 
 ## Testing — `bun:test` only
 - The test runner is **`bun:test`** (`import { describe, it, expect, mock } from 'bun:test'`). **Do NOT add Jest, Vitest, `@testing-library`, jsdom, or happy-dom** — they are intentionally absent. Run with `bun test <path>`.

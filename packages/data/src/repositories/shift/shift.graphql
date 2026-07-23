@@ -58,6 +58,42 @@ query GetShifts($limit: Int!, $offset: Int!) {
   }
 }
 
+query GetEventShifts($eventId: ID!, $limit: Int!, $offset: Int!) {
+  eventShifts(eventId: $eventId, limit: $limit, offset: $offset) {
+    items {
+      id
+      title
+      rrule
+      originalStartsAt
+      durationMinutes
+      visibility
+      maxVolunteers
+      minVolunteers
+      createdBy {
+        id
+        name
+        email
+      }
+    }
+    pagination {
+      total
+      limit
+      offset
+      hasMore
+    }
+  }
+}
+
+query GetShiftInstancesByMasterIds($masterIds: [ID!]!) {
+  shiftInstancesByMasterIds(masterIds: $masterIds) {
+    masterId
+    instances {
+      id
+      masterId
+    }
+  }
+}
+
 mutation CreateShift($input: CreateShiftInput!) {
   createShift(input: $input) {
     id

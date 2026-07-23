@@ -6,7 +6,7 @@ import { NotFoundGraphQLError } from '../../graphql/errors/not-found.error';
 import type { AuthenticatedGraphQLContext } from '../../graphql/graphql.context';
 import { PaginationInput } from '../../graphql/pagination.input';
 import { ShiftMapper } from '../../shift/mappers/shift.mapper';
-import { Shift } from '../../shift/models/shift.model';
+import { ShiftPaginatedResponse } from '../../shift/models/shift.model';
 import { ShiftService } from '../../shift/shift.service';
 import { UserMapper } from '../../user/mappers/user.mapper';
 import { User } from '../../user/models/user.model';
@@ -91,13 +91,23 @@ export class EventQueryResolver {
   }
 
   @Permissions(PERMISSIONS.SHIFT_VIEW)
-  @Query(() => [Shift])
+  @Query(() => ShiftPaginatedResponse)
   async eventShifts(
     @Args('eventId', { type: () => ID }) eventId: string,
+    @Args() pagination: PaginationInput,
     @Context() context: AuthenticatedGraphQLContext,
-  ): Promise<Shift[]> {
+  ): Promise<ShiftPaginatedResponse> {
     await this.eventService.findById(eventId, context.organizationUnitId);
-    const shifts = await this.shiftService.findByEventId(eventId);
-    return this.shiftMapper.toArray(shifts);
+    const { shifts, total } = await this.shiftService.findAllForEvent(
+      eventId,
+      context.organizationUnitId,
+      pagination,
+    );
+    return new ShiftPaginatedResponse({
+      items: this.shiftMapper.toArray(shifts),
+      total,
+      limit: pagination.limit,
+      offset: pagination.offset,
+    });
   }
 }

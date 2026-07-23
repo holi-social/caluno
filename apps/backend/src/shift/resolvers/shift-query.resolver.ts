@@ -14,6 +14,7 @@ import { ShiftMapper } from '../mappers/shift.mapper';
 import { ShiftInstanceMapper } from '../mappers/shift-instance.mapper';
 import { Shift, ShiftPaginatedResponse } from '../models/shift.model';
 import { ShiftInstance } from '../models/shift-instance.model';
+import { ShiftInstancesByMaster } from '../models/shift-instances-by-master.model';
 import { ShiftService } from '../shift.service';
 
 @Resolver(() => Shift)
@@ -94,6 +95,23 @@ export class ShiftQueryResolver {
       context.organizationUnitId,
     );
     return this.shiftInstanceMapper.toArray(instances);
+  }
+
+  @Permissions(PERMISSIONS.SHIFT_VIEW)
+  @Query(() => [ShiftInstancesByMaster])
+  async shiftInstancesByMasterIds(
+    @Args('masterIds', { type: () => [ID] }) masterIds: string[],
+    @Context() context: AuthenticatedGraphQLContext,
+  ): Promise<ShiftInstancesByMaster[]> {
+    const instancesByMasterId =
+      await this.shiftService.findInstancesByMasterIds(
+        masterIds,
+        context.organizationUnitId,
+      );
+    return [...instancesByMasterId.entries()].map(([masterId, instances]) => ({
+      masterId,
+      instances: this.shiftInstanceMapper.toArray(instances),
+    }));
   }
 
   @Permissions(PERMISSIONS.SHIFT_VIEW)

@@ -3,17 +3,22 @@
 import { Button } from '@repo/ui';
 import { PlusIcon } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import { FORM_ID } from '@/components/sheets/shift-sheet';
-import { useSheetTrigger } from '@/hooks/use-sheet';
+import { Link } from '@/i18n/navigation';
+import { shiftNewPath } from '../routes';
 
-export function CreateShiftButton() {
-  const { open } = useSheetTrigger(FORM_ID);
+interface CreateShiftButtonProps {
+  orgUId: string;
+}
+
+export function CreateShiftButton({ orgUId }: CreateShiftButtonProps) {
   const t = useTranslations('Shift');
 
   return (
-    <Button size="sm" onClick={() => open()}>
-      <PlusIcon />
-      {t('page.createButton')}
-    </Button>
+    <Link href={shiftNewPath(orgUId)}>
+      <Button>
+        <PlusIcon />
+        {t('page.createButton')}
+      </Button>
+    </Link>
   );
 }

@@ -538,7 +538,7 @@ type Query {
   availableShiftInstances(from: DateTime, organizationUnitIds: [ID!], to: DateTime): [ShiftInstance!]!
   event(id: ID!): Event!
   eventAttendees(eventId: ID!): [User!]!
-  eventShifts(eventId: ID!): [Shift!]!
+  eventShifts(eventId: ID!, limit: Int! = 10, offset: Int! = 0): ShiftPaginatedResponse!
   events(limit: Int! = 10, offset: Int! = 0): EventPaginatedResponse!
   formBlock(id: String!): FormBlock
   formBlocks(limit: Int! = 10, offset: Int! = 0, organizationId: String!): FormBlockPaginatedResponse!
@@ -592,6 +592,7 @@ type Query {
   roles: [Role!]!
   shift(id: String!): Shift!
   shiftInstances(shiftId: ID!): [ShiftInstance!]!
+  shiftInstancesByMasterIds(masterIds: [ID!]!): [ShiftInstancesByMaster!]!
   shiftVolunteers(instanceId: ID!): [User!]!
   shifts(limit: Int! = 10, offset: Int! = 0): ShiftPaginatedResponse!
   timeEntries(limit: Int! = 10, offset: Int! = 0): TimeEntryPaginatedResponse!
@@ -840,6 +841,7 @@ type ShiftInstance {
   isCheckedIn: Boolean!
   isException: Boolean!
   master: Shift!
+  masterId: ID!
   myJoinStatus: JoinStatus!
   occurrenceIndex: Int!
   overrideInstructions: String
@@ -856,6 +858,11 @@ type ShiftInstanceInvite {
   status: ShiftInviteStatus!
   updatedAt: DateTime!
   userId: String!
+}
+
+type ShiftInstancesByMaster {
+  instances: [ShiftInstance!]!
+  masterId: ID!
 }
 
 enum ShiftInviteStatus {

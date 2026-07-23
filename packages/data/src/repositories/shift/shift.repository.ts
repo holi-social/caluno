@@ -80,6 +80,20 @@ export class ShiftRepository extends BaseRepository {
     return data.shifts;
   }
 
+  async findAllForEvent(eventId: string, options: PaginationOptions = {}) {
+    const data = await this.sdk.GetEventShifts({
+      eventId,
+      limit: options.limit ?? 10,
+      offset: options.offset ?? 0,
+    });
+    return data.eventShifts;
+  }
+
+  async findInstancesByMasterIds(masterIds: string[]) {
+    const data = await this.sdk.GetShiftInstancesByMasterIds({ masterIds });
+    return data.shiftInstancesByMasterIds;
+  }
+
   async activeShiftInstances(userId: string) {
     const data = await this.sdk.GetActiveShiftInstances({ userId });
     return data.activeShiftInstances;

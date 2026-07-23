@@ -14,13 +14,10 @@ interface ShiftSchemaMessages {
   nameRequired: string;
   startTimeRequired: string;
   endTimeRequired: string;
-  organizationUnitRequired: string;
-  organizationUnitIdRequired: string;
-  shiftIdRequired: string;
-  minMaxVolunteers: string;
+  windowViolation?: string;
 }
 
-export function shiftFormSchema(t: ShiftSchemaMessages) {
+function shiftShape(t: ShiftSchemaMessages) {
   return z.object({
     name: z.string().trim().min(1, t.nameRequired),
     startsAt: z.date(t.startTimeRequired),
@@ -28,7 +25,6 @@ export function shiftFormSchema(t: ShiftSchemaMessages) {
     location: z.string().trim().optional(),
     instructions: z.string().trim().optional(),
     openShift: z.boolean().optional(),
-    organizationUnitId: z.string().min(1, t.organizationUnitRequired),
     invitedMemberIds: z.array(z.string()).optional(),
     recurrenceDays: z.array(recurrenceDayEnum).optional(),
     recurrenceEndsAt: z.date().optional(),
@@ -36,40 +32,33 @@ export function shiftFormSchema(t: ShiftSchemaMessages) {
   });
 }
 
+export function shiftFormSchema(
+  t: ShiftSchemaMessages,
+  event?: { startsAt: Date; endsAt: Date },
+) {
+  return shiftShape(t).refine(
+    (d) => {
+      if (!event) return true;
+      return d.startsAt >= event.startsAt && d.endsAt <= event.endsAt;
+    },
+    { message: t.windowViolation ?? '', path: ['endsAt'] },
+  );
+}
+
 export const serverShiftFormSchema = shiftFormSchema({
   nameRequired: 'Name is required',
   startTimeRequired: 'Start time is required',
   endTimeRequired: 'End time is required',
-  organizationUnitRequired: 'Organization unit is required',
-  organizationUnitIdRequired: 'Organization unit ID is required',
-  shiftIdRequired: 'Shift ID is required',
-  minMaxVolunteers: 'Minimum volunteers cannot exceed maximum volunteers',
 });
 
 export type ShiftFormValues = z.infer<typeof serverShiftFormSchema>;
 
-export function updateShiftFormSchema(t: ShiftSchemaMessages) {
-  return shiftFormSchema(t).extend({
-    id: z.string().min(1, t.shiftIdRequired),
-  });
+interface ShiftDeleteSchemaMessages {
+  shiftIdRequired: string;
+  organizationUnitIdRequired: string;
 }
 
-export const serverUpdateShiftFormSchema = updateShiftFormSchema({
-  nameRequired: 'Name is required',
-  startTimeRequired: 'Start time is required',
-  endTimeRequired: 'End time is required',
-  organizationUnitRequired: 'Organization unit is required',
-  organizationUnitIdRequired: 'Organization unit ID is required',
-  shiftIdRequired: 'Shift ID is required',
-  minMaxVolunteers: 'Minimum volunteers cannot exceed maximum volunteers',
-});
-
-export function shiftDeleteSchema(
-  t: Pick<
-    ShiftSchemaMessages,
-    'shiftIdRequired' | 'organizationUnitIdRequired'
-  >,
-) {
+export function shiftDeleteSchema(t: ShiftDeleteSchemaMessages) {
   return z.object({
     id: z.string().min(1, t.shiftIdRequired),
     organizationUnitId: z.string().min(1, t.organizationUnitIdRequired),

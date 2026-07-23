@@ -7,12 +7,14 @@ type WeeklyCalendarProps = {
   instances: GetWeeklyShiftsQuery['weeklyShifts'];
   canManage?: boolean;
   weekStart: Date;
+  orgUId: string;
 };
 
 export async function WeeklyCalendar({
   instances,
   canManage = false,
   weekStart,
+  orgUId,
 }: WeeklyCalendarProps) {
   const formatter = await getFormatter();
 
@@ -44,7 +46,12 @@ export async function WeeklyCalendar({
             </div>
 
             {dayInstances.map((inst) => (
-              <ShiftCard key={inst.id} instance={inst} canManage={canManage} />
+              <ShiftCard
+                key={inst.id}
+                instance={inst}
+                canManage={canManage}
+                orgUId={orgUId}
+              />
             ))}
           </div>
         ))}

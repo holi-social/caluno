@@ -77,7 +77,7 @@ export default async function ShiftsPage({
               <WeeklyCalendarNav weekStart={weekStart} orgUId={orgUId} />
             ) : null)}
 
-          <CreateShiftButton />
+          <CreateShiftButton orgUId={orgUId} />
         </div>
       </div>
 
@@ -88,10 +88,11 @@ export default async function ShiftsPage({
             instances={instances ?? []}
             canManage={canManage}
             weekStart={weekStart}
+            orgUId={orgUId}
           />
         ) : (
           <EmptyShifts>
-            <CreateShiftButton />
+            <CreateShiftButton orgUId={orgUId} />
           </EmptyShifts>
         )
       ) : tableContent?.pagination.total ? (
@@ -112,7 +113,7 @@ export default async function ShiftsPage({
         </>
       ) : (
         <EmptyShifts>
-          <CreateShiftButton />
+          <CreateShiftButton orgUId={orgUId} />
         </EmptyShifts>
       )}
     </div>

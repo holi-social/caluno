@@ -13,11 +13,13 @@ import {
 import { format } from 'date-fns';
 import { TriangleAlert, UserPlus, UsersRound } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import { useSheet } from '@/hooks/use-sheet';
+import { Link } from '@/i18n/navigation';
+import { shiftInvitePath } from '../routes';
 
 type ShiftCardProps = {
   instance: WeeklyShiftInstance;
   canManage?: boolean;
+  orgUId: string;
 };
 
 function getStaffingState(
@@ -38,12 +40,12 @@ function StaffingBadge({
   count,
   min,
   max,
-  onClick,
+  interactive,
 }: {
   count: number;
   min: number | null | undefined;
   max: number | null | undefined;
-  onClick?: () => void;
+  interactive?: boolean;
 }) {
   const state = getStaffingState(count, min, max);
 
@@ -68,8 +70,7 @@ function StaffingBadge({
   return (
     <Badge
       variant={variant}
-      className={`flex-1 justify-center self-stretch gap-1${onClick ? ' cursor-pointer' : ''}`}
-      onClick={onClick}
+      className={`flex-1 justify-center self-stretch gap-1${interactive ? ' cursor-pointer' : ''}`}
     >
       <Icon className="size-3" />
       {text}
@@ -77,8 +78,11 @@ function StaffingBadge({
   );
 }
 
-export function ShiftCard({ instance, canManage = false }: ShiftCardProps) {
-  const inviteSheet = useSheet('invite-shift', 'id', 'instanceId');
+export function ShiftCard({
+  instance,
+  canManage = false,
+  orgUId,
+}: ShiftCardProps) {
   const t = useTranslations('Shift');
 
   const count = instance.volunteers?.length ?? 0;
@@ -107,36 +111,30 @@ export function ShiftCard({ instance, canManage = false }: ShiftCardProps) {
           </p>
         </div>
 
-        <div className="flex gap-1 items-start w-full">
-          <StaffingBadge
-            count={count}
-            min={min}
-            max={max}
-            onClick={
-              showButton
-                ? () =>
-                    inviteSheet.open({
-                      id: instance.master.id,
-                      instanceId: instance.id,
-                    })
-                : undefined
-            }
-          />
+        <div className="flex gap-1 items-stretch w-full">
+          {showButton ? (
+            <Link
+              href={shiftInvitePath(orgUId, instance.master.id, instance.id)}
+              className="flex-1 flex"
+            >
+              <StaffingBadge count={count} min={min} max={max} interactive />
+            </Link>
+          ) : (
+            <StaffingBadge count={count} min={min} max={max} />
+          )}
 
           {showButton && (
-            <Button
-              size="icon-sm"
-              variant={buttonVariant}
-              aria-label={t('card.inviteAria')}
-              onClick={() =>
-                inviteSheet.open({
-                  id: instance.master.id,
-                  instanceId: instance.id,
-                })
-              }
+            <Link
+              href={shiftInvitePath(orgUId, instance.master.id, instance.id)}
             >
-              <UserPlus className="size-4" />
-            </Button>
+              <Button
+                size="icon-sm"
+                variant={buttonVariant}
+                aria-label={t('card.inviteAria')}
+              >
+                <UserPlus className="size-4" />
+              </Button>
+            </Link>
           )}
         </div>
       </div>

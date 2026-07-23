@@ -1,5 +1,5 @@
 import 'reflect-metadata';
-import { beforeAll, describe, expect, it } from 'bun:test';
+import { beforeAll, describe, expect, it, mock } from 'bun:test';
 import { ConfigModule } from '@nestjs/config';
 import { Test, type TestingModule } from '@nestjs/testing';
 import { asc, eq } from 'drizzle-orm';
@@ -7,11 +7,13 @@ import { AuthService } from '../src/auth/auth.service';
 import { type Database, DatabaseModule } from '../src/database/database.module';
 import { DATABASE_CONNECTION } from '../src/database/database-connection';
 import * as schema from '../src/database/schema';
+import { ConflictGraphQLError } from '../src/graphql/errors/conflict.error';
 import { MembershipService } from '../src/membership/membership.service';
 import { NotificationService } from '../src/notification/notification.service';
 import { OrganizationService } from '../src/organization/organization.service';
 import { ShiftInviteStatus } from '../src/shift/enums';
 import { ShiftService } from '../src/shift/shift.service';
+import { FileService } from '../src/storage/services';
 import { UserService } from '../src/user/user.service';
 import { slugify } from '../src/utils/slug.util';
 import { createShift, createShiftInstance, createUser } from './factories';
@@ -218,6 +220,331 @@ describe('ShiftService', () => {
     });
   });
 
+  describe('findAllForEvent', () => {
+    const createTestEvent = async () => {
+      const title = `Test Event ${crypto.randomUUID()}`;
+      const [event] = await db
+        .insert(schema.events)
+        .values({
+          title,
+          slug: slugify(title),
+          organizationUnitId,
+          createdById: userId,
+          startsAt: new Date(),
+          endsAt: new Date(Date.now() + 3600000),
+        })
+        .returning();
+
+      if (!event) {
+        throw new Error('Failed to create test event');
+      }
+
+      return event;
+    };
+
+    it('returns only shifts belonging to the given event', async () => {
+      const event = await createTestEvent();
+      const otherEvent = await createTestEvent();
+
+      const matchingShift = await createShift(db, {
+        organizationUnitId,
+        createdById: userId,
+        eventId: event.id,
+      });
+      await createShift(db, {
+        organizationUnitId,
+        createdById: userId,
+        eventId: otherEvent.id,
+      });
+      await createShift(db, {
+        organizationUnitId,
+        createdById: userId,
+        eventId: null,
+      });
+
+      const { shifts, total } = await shiftService.findAllForEvent(
+        event.id,
+        organizationUnitId,
+        { limit: 10, offset: 0 },
+      );
+
+      expect(total).toBe(1);
+      expect(shifts.map((shift) => shift.id)).toEqual([matchingShift.id]);
+    });
+
+    it('paginates results and reports the correct total', async () => {
+      const event = await createTestEvent();
+      const shiftA = await createShift(db, {
+        organizationUnitId,
+        createdById: userId,
+        eventId: event.id,
+      });
+      const shiftB = await createShift(db, {
+        organizationUnitId,
+        createdById: userId,
+        eventId: event.id,
+      });
+      const shiftC = await createShift(db, {
+        organizationUnitId,
+        createdById: userId,
+        eventId: event.id,
+      });
+
+      const firstPage = await shiftService.findAllForEvent(
+        event.id,
+        organizationUnitId,
+        { limit: 2, offset: 0 },
+      );
+      const secondPage = await shiftService.findAllForEvent(
+        event.id,
+        organizationUnitId,
+        { limit: 2, offset: 2 },
+      );
+
+      expect(firstPage.total).toBe(3);
+      expect(firstPage.shifts).toHaveLength(2);
+      expect(secondPage.shifts).toHaveLength(1);
+
+      const allIds = [...firstPage.shifts, ...secondPage.shifts]
+        .map((shift) => shift.id)
+        .sort();
+      expect(allIds).toEqual([shiftA.id, shiftB.id, shiftC.id].sort());
+    });
+
+    it('excludes soft-deleted shifts', async () => {
+      const event = await createTestEvent();
+      const activeShift = await createShift(db, {
+        organizationUnitId,
+        createdById: userId,
+        eventId: event.id,
+      });
+      const deletedShift = await createShift(db, {
+        organizationUnitId,
+        createdById: userId,
+        eventId: event.id,
+      });
+
+      await db
+        .update(schema.shifts)
+        .set({ isDeleted: true })
+        .where(eq(schema.shifts.id, deletedShift.id));
+
+      const { shifts, total } = await shiftService.findAllForEvent(
+        event.id,
+        organizationUnitId,
+        { limit: 10, offset: 0 },
+      );
+
+      expect(total).toBe(1);
+      expect(shifts.map((shift) => shift.id)).toEqual([activeShift.id]);
+    });
+  });
+
+  describe('findInstancesByMasterIds', () => {
+    it('returns an empty map when given no shift ids', async () => {
+      const result = await shiftService.findInstancesByMasterIds(
+        [],
+        organizationUnitId,
+      );
+
+      expect(result.size).toBe(0);
+    });
+
+    it('returns the instance for each one-time shift keyed by masterId', async () => {
+      const shiftA = await createNoneRecurringShift(
+        new Date('2026-08-01T08:00:00.000Z'),
+        new Date('2026-08-01T10:00:00.000Z'),
+      );
+      const shiftB = await createNoneRecurringShift(
+        new Date('2026-08-02T08:00:00.000Z'),
+        new Date('2026-08-02T10:00:00.000Z'),
+      );
+
+      const result = await shiftService.findInstancesByMasterIds(
+        [shiftA, shiftB],
+        organizationUnitId,
+      );
+
+      expect(result.size).toBe(2);
+      expect(result.get(shiftA)?.[0]?.masterId).toBe(shiftA);
+      expect(result.get(shiftB)?.[0]?.masterId).toBe(shiftB);
+    });
+
+    it('returns all instances of a shift ordered by start time', async () => {
+      const shiftId = await createNoneRecurringShift(
+        new Date('2026-08-06T08:00:00.000Z'),
+        new Date('2026-08-06T10:00:00.000Z'),
+      );
+      const later = await createShiftInstance(db, shiftId, {
+        actualStartsAt: new Date('2026-08-07T08:00:00.000Z'),
+        actualEndsAt: new Date('2026-08-07T10:00:00.000Z'),
+        occurrenceIndex: 1,
+      });
+
+      const result = await shiftService.findInstancesByMasterIds(
+        [shiftId],
+        organizationUnitId,
+      );
+
+      const instances = result.get(shiftId);
+      expect(instances).toHaveLength(2);
+      expect(instances?.[1]?.id).toBe(later.id);
+    });
+
+    it('omits shifts that have no instance', async () => {
+      const shiftId = await createNoneRecurringShift(
+        new Date('2026-08-03T08:00:00.000Z'),
+        new Date('2026-08-03T10:00:00.000Z'),
+      );
+      await db
+        .delete(schema.shiftInstances)
+        .where(eq(schema.shiftInstances.masterId, shiftId));
+
+      const result = await shiftService.findInstancesByMasterIds(
+        [shiftId],
+        organizationUnitId,
+      );
+
+      expect(result.has(shiftId)).toBe(false);
+      expect(result.size).toBe(0);
+    });
+
+    it('omits instances when the org unit does not match the master shift', async () => {
+      const shiftId = await createNoneRecurringShift(
+        new Date('2026-08-04T08:00:00.000Z'),
+        new Date('2026-08-04T10:00:00.000Z'),
+      );
+
+      const result = await shiftService.findInstancesByMasterIds(
+        [shiftId],
+        crypto.randomUUID(),
+      );
+
+      expect(result.size).toBe(0);
+    });
+
+    it('omits instances whose master shift is soft-deleted', async () => {
+      const shiftId = await createNoneRecurringShift(
+        new Date('2026-08-05T08:00:00.000Z'),
+        new Date('2026-08-05T10:00:00.000Z'),
+      );
+      await db
+        .update(schema.shifts)
+        .set({ isDeleted: true })
+        .where(eq(schema.shifts.id, shiftId));
+
+      const result = await shiftService.findInstancesByMasterIds(
+        [shiftId],
+        organizationUnitId,
+      );
+
+      expect(result.size).toBe(0);
+    });
+  });
+
+  describe('updateMembersForShiftInstance', () => {
+    it('does not double-count existing instance invites when inviting to all instances', async () => {
+      const shift = await createShift(db, {
+        organizationUnitId,
+        createdById: userId,
+        maxVolunteers: 1,
+      });
+      const instances = await db.query.shiftInstances.findMany({
+        where: { masterId: shift.id },
+      });
+      const firstInstanceId = instances[0]?.id;
+      expect(firstInstanceId).toBeDefined();
+
+      const user = await createUser(db);
+
+      const originalNotificationHandler =
+        // biome-ignore lint/complexity/useLiteralKeys: accessing private method for test stubbing
+        shiftService['loadAndEmitShiftInvitedNotification'];
+      // biome-ignore lint/complexity/useLiteralKeys: assigning private method for test stubbing
+      shiftService['loadAndEmitShiftInvitedNotification'] = async () => {};
+
+      try {
+        await shiftService.updateMembersForShiftInstance(
+          firstInstanceId,
+          [user.id],
+          organizationUnitId,
+          { inviteToAllInstances: true },
+        );
+
+        await expect(
+          shiftService.updateMembersForShiftInstance(
+            firstInstanceId,
+            [user.id],
+            organizationUnitId,
+            { inviteToAllInstances: true },
+          ),
+        ).resolves.toBeDefined();
+
+        const invites = await db.query.shiftInstanceInvites.findMany({
+          where: { userId: user.id },
+        });
+        expect(invites).toHaveLength(instances.length);
+        const uniqueInstanceIds = new Set(
+          invites.map((invite) => invite.instanceId),
+        );
+        expect(uniqueInstanceIds.size).toBe(invites.length);
+      } finally {
+        // biome-ignore lint/complexity/useLiteralKeys: restoring private method after test stubbing
+        shiftService['loadAndEmitShiftInvitedNotification'] =
+          originalNotificationHandler;
+      }
+    });
+
+    it('does not emit invite notifications when the transaction rolls back', async () => {
+      const shift = await createShift(db, {
+        organizationUnitId,
+        createdById: userId,
+        maxVolunteers: 1,
+      });
+      const instances = await db.query.shiftInstances.findMany({
+        where: { masterId: shift.id },
+      });
+      const instanceId = instances[0]?.id;
+      expect(instanceId).toBeDefined();
+
+      const existingUser = await createUser(db);
+      const newUser = await createUser(db);
+
+      await db.insert(schema.shiftInstanceInvites).values({
+        instanceId: instanceId,
+        userId: existingUser.id,
+        status: ShiftInviteStatus.INVITED,
+      });
+
+      const notificationService = {
+        notifyShiftInstanceInvited: mock(() => {}),
+        notifyShiftInvited: mock(() => {}),
+      } as unknown as NotificationService;
+
+      const service = new ShiftService(
+        db,
+        {} as AuthService,
+        {} as UserService,
+        {} as MembershipService,
+        notificationService,
+        {} as OrganizationService,
+        {} as FileService,
+      );
+
+      await expect(
+        service.updateMembersForShiftInstance(
+          instanceId,
+          [newUser.id],
+          organizationUnitId,
+        ),
+      ).rejects.toThrow(ConflictGraphQLError);
+
+      expect(
+        notificationService.notifyShiftInstanceInvited,
+      ).not.toHaveBeenCalled();
+      expect(notificationService.notifyShiftInvited).not.toHaveBeenCalled();
+    });
+  });
   describe('update — series resync', () => {
     it('does not touch instances when the series definition is unchanged', async () => {
       const startsAt = daysAgo(7, 8);

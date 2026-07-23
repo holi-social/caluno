@@ -31,12 +31,22 @@ export const useFormSheet = (openedByNavigation = true) => {
   const router = useRouter();
   const [open, setOpenState] = useState(true);
 
-  const setOpen = async (opening: boolean) => {
+  const setOpen = async (opening: boolean, onClose?: () => void) => {
     setOpenState(opening);
-    if (!opening && openedByNavigation) {
+
+    if (!opening) {
       // wait a moment to allow the sheet animation to slide closed, before going back.
       await wait(500);
-      router.back();
+
+      if (onClose) {
+        onClose();
+        return;
+      }
+
+      if (openedByNavigation) {
+        router.back();
+        return;
+      }
     }
   };
 
