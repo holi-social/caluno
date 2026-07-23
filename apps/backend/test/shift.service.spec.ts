@@ -11,6 +11,7 @@ import { ConflictGraphQLError } from '../src/graphql/errors/conflict.error';
 import { MembershipService } from '../src/membership/membership.service';
 import { NotificationService } from '../src/notification/notification.service';
 import { OrganizationService } from '../src/organization/organization.service';
+import { ACTIVE_SHIFT_INVITE_STATUSES } from '../src/shared/invite-status';
 import { ShiftInviteStatus } from '../src/shift/enums';
 import { ShiftService } from '../src/shift/shift.service';
 import { FileService } from '../src/storage/services';
@@ -28,6 +29,7 @@ describe('ShiftService', () => {
   let db: Database;
   let userId: string;
   let organizationUnitId: string;
+  let notificationService: NotificationService;
 
   beforeAll(async () => {
     await ensureTestDatabase();
@@ -36,12 +38,17 @@ describe('ShiftService', () => {
     }).compile();
     db = moduleRef.get<Database>(DATABASE_CONNECTION);
 
+    notificationService = {
+      notifyShiftInstanceInvited: mock(() => {}),
+      notifyShiftInvited: mock(() => {}),
+    } as unknown as NotificationService;
+
     shiftService = new ShiftService(
       db,
       {} as AuthService,
       {} as UserService,
       {} as MembershipService,
-      {} as NotificationService,
+      notificationService,
       {} as OrganizationService,
       {
         assertUploadedFileForPurpose: async () => ({}),
@@ -516,23 +523,8 @@ describe('ShiftService', () => {
         status: ShiftInviteStatus.INVITED,
       });
 
-      const notificationService = {
-        notifyShiftInstanceInvited: mock(() => {}),
-        notifyShiftInvited: mock(() => {}),
-      } as unknown as NotificationService;
-
-      const service = new ShiftService(
-        db,
-        {} as AuthService,
-        {} as UserService,
-        {} as MembershipService,
-        notificationService,
-        {} as OrganizationService,
-        {} as FileService,
-      );
-
       await expect(
-        service.updateMembersForShiftInstance(
+        shiftService.updateMembersForShiftInstance(
           instanceId,
           [newUser.id],
           organizationUnitId,
@@ -543,6 +535,101 @@ describe('ShiftService', () => {
         notificationService.notifyShiftInstanceInvited,
       ).not.toHaveBeenCalled();
       expect(notificationService.notifyShiftInvited).not.toHaveBeenCalled();
+    });
+
+    it('keeps pending invites when re-saving the same member list', async () => {
+      const shift = await createShift(db, {
+        organizationUnitId,
+        createdById: userId,
+      });
+      const instances = await db.query.shiftInstances.findMany({
+        where: { masterId: shift.id },
+      });
+      const instanceId = instances[0]?.id;
+      expect(instanceId).toBeDefined();
+
+      const user = await createUser(db);
+
+      await shiftService.updateMembersForShiftInstance(
+        instanceId,
+        [user.id],
+        organizationUnitId,
+      );
+      // Re-save with the same list — the pending invite must survive.
+      await shiftService.updateMembersForShiftInstance(
+        instanceId,
+        [user.id],
+        organizationUnitId,
+      );
+
+      const invites = await db.query.shiftInstanceInvites.findMany({
+        where: { instanceId, userId: user.id },
+      });
+      expect(invites).toHaveLength(1);
+      expect(invites[0]?.status).toBe(ShiftInviteStatus.INVITED);
+    });
+
+    it('resurrects a REJECTED invite when re-inviting the member', async () => {
+      const shift = await createShift(db, {
+        organizationUnitId,
+        createdById: userId,
+      });
+      const instances = await db.query.shiftInstances.findMany({
+        where: { masterId: shift.id },
+      });
+      const instanceId = instances[0]?.id;
+      expect(instanceId).toBeDefined();
+
+      const user = await createUser(db);
+      await db.insert(schema.shiftInstanceInvites).values({
+        instanceId,
+        userId: user.id,
+        status: ShiftInviteStatus.ADMIN_REJECTED,
+      });
+
+      await shiftService.updateMembersForShiftInstance(
+        instanceId,
+        [user.id],
+        organizationUnitId,
+      );
+
+      const invites = await db.query.shiftInstanceInvites.findMany({
+        where: { instanceId, userId: user.id },
+      });
+      expect(invites).toHaveLength(1);
+      expect(invites[0]?.status).toBe(ShiftInviteStatus.INVITED);
+    });
+
+    it('returns pending invitees via findVolunteers when active statuses are requested', async () => {
+      const shift = await createShift(db, {
+        organizationUnitId,
+        createdById: userId,
+      });
+      const instances = await db.query.shiftInstances.findMany({
+        where: { masterId: shift.id },
+      });
+      const instanceId = instances[0]?.id;
+      expect(instanceId).toBeDefined();
+
+      const user = await createUser(db);
+      await db.insert(schema.shiftInstanceInvites).values({
+        instanceId,
+        userId: user.id,
+        status: ShiftInviteStatus.INVITED,
+      });
+
+      const withActiveStatuses = await shiftService.findVolunteers(
+        instanceId,
+        organizationUnitId,
+        ACTIVE_SHIFT_INVITE_STATUSES,
+      );
+      expect(withActiveStatuses.map((u) => u.id)).toContain(user.id);
+
+      const withDefaults = await shiftService.findVolunteers(
+        instanceId,
+        organizationUnitId,
+      );
+      expect(withDefaults.map((u) => u.id)).not.toContain(user.id);
     });
   });
   describe('update — series resync', () => {

@@ -13,6 +13,7 @@ import type {
   GetShiftQuery,
   GetWeeklyShiftsQuery,
   JoinShiftInstanceMutation,
+  ShiftInviteStatus,
   UpdateShiftInput,
 } from '../../generated/graphql';
 import {
@@ -134,8 +135,11 @@ export class ShiftRepository extends BaseRepository {
     return data.joinShiftInstance;
   }
 
-  async findVolunteersByInstanceId(instanceId: string) {
-    const data = await this.sdk.GetShiftVolunteers({ instanceId });
+  async findVolunteersByInstanceId(
+    instanceId: string,
+    statuses?: ShiftInviteStatus[],
+  ) {
+    const data = await this.sdk.GetShiftVolunteers({ instanceId, statuses });
     return data.shiftVolunteers;
   }
 

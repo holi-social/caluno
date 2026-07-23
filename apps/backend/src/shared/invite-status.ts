@@ -63,3 +63,9 @@ export function isParticipatingShiftInviteStatus(
     status === ShiftInviteStatus.SELF_JOINED
   );
 }
+
+/** Statuses that count as "currently invited" — pending or participating. */
+export const ACTIVE_SHIFT_INVITE_STATUSES = [
+  ShiftInviteStatus.INVITED,
+  ...PARTICIPATING_SHIFT_INVITE_STATUSES,
+] as const;

@@ -5,6 +5,7 @@ import {
   updateShiftVolunteers,
 } from '@/domain/shift/actions';
 import { InviteShiftForm } from '@/domain/shift/components/invite-form';
+import { INVITE_SHEET_INVITEE_STATUSES } from '@/domain/shift/constants';
 import { getDataClient } from '@/lib/data-client';
 
 interface InviteEventShiftPageProps {
@@ -35,7 +36,10 @@ export default async function InviteEventShiftPage({
       data.event.findById(eventId),
       data.shift.findByIdDetailed(shiftId),
       data.shift.findInstances(shiftId),
-      data.shift.findVolunteersByInstanceId(instanceId),
+      data.shift.findVolunteersByInstanceId(
+        instanceId,
+        INVITE_SHEET_INVITEE_STATUSES,
+      ),
       data.membership.findAllByOrganizationUnitId(),
     ]);
 
