@@ -20,7 +20,6 @@ import {
   ClipboardListIcon,
   ClockIcon,
   CoinsIcon,
-  FileTextIcon,
   LayoutListIcon,
   LogOutIcon,
   NetworkIcon,
@@ -98,11 +97,6 @@ export function DashboardSidebar({ permissions }: DashboardSidebarProps) {
         titleKey: 'reimbursements',
         href: `/admin/${orgUId}/accounting/reimbursements`,
         icon: LayoutListIcon,
-      },
-      {
-        titleKey: 'templates',
-        href: `/admin/${orgUId}/accounting/templates`,
-        icon: FileTextIcon,
       },
       {
         titleKey: 'accountingSettings',

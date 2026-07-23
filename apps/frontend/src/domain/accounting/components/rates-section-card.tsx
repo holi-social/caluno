@@ -9,18 +9,18 @@ import { DocTypeHeader } from './doc-type-header';
 import { RateProvenanceRow } from './rate-provenance-row';
 
 const MOCK_HQ_DEFAULTS: Record<PauschalenType, number> = {
-  ep: 5.0,
-  ul: 8.0,
+  ehrenamt: 5.0,
+  uebungleiter: 8.0,
 };
 
 const MOCK_SAVED_OVERRIDES: Record<PauschalenType, number | undefined> = {
-  ep: 4.5,
-  ul: undefined,
+  ehrenamt: 4.5,
+  uebungleiter: undefined,
 };
 
 const RATE_CONFIG: Record<PauschalenType, { kind: DocumentKind }> = {
-  ep: { kind: 'payment' },
-  ul: { kind: 'payment' },
+  ehrenamt: { kind: 'settings' },
+  uebungleiter: { kind: 'settings' },
 };
 
 interface RateRowProps {
@@ -53,9 +53,10 @@ function RateRow({ type, canEdit }: RateRowProps) {
 
   const effectiveRate = savedOverride ?? MOCK_HQ_DEFAULTS[type];
   const { kind } = RATE_CONFIG[type];
-  const typeLabel = type === 'ep' ? t('epLabel') : t('ulLabel');
-  const legalRef = type === 'ep' ? t('epLegal') : t('ulLegal');
-  const yearlyLimit = type === 'ep' ? t('epYearlyLimit') : t('ulYearlyLimit');
+  const typeLabel = type === 'ehrenamt' ? t('epLabel') : t('ulLabel');
+  const legalRef = type === 'ehrenamt' ? t('epLegal') : t('ulLegal');
+  const yearlyLimit =
+    type === 'ehrenamt' ? t('epYearlyLimit') : t('ulYearlyLimit');
 
   function handleSave() {
     const trimmed = inputValue.trim();
@@ -183,9 +184,9 @@ export function RatesSectionCard({ canEdit = true }: RatesSectionCardProps) {
           {t('sectionSubtitle')}
         </p>
       </div>
-      <RateRow type="ep" canEdit={canEdit} />
+      <RateRow type="ehrenamt" canEdit={canEdit} />
       <Separator />
-      <RateRow type="ul" canEdit={canEdit} />
+      <RateRow type="uebungleiter" canEdit={canEdit} />
     </div>
   );
 }

@@ -6,11 +6,21 @@ export type TemplateSlug =
   | 'uebungsleiterpauschale-contract'
   | 'uebungsleiterpauschale-invoice';
 
-export type SigneeRole =
-  | 'volunteer'
-  | 'coordinator'
-  | 'hq_manager'
-  | 'supervisor';
+export const SLUG_TO_SLOT: Record<
+  TemplateSlug,
+  { pauschale: PauschalenType; kind: DocumentKind }
+> = {
+  'ehrenamtspauschale-contract': { pauschale: 'ehrenamt', kind: 'contract' },
+  'ehrenamtspauschale-invoice': { pauschale: 'ehrenamt', kind: 'invoice' },
+  'uebungsleiterpauschale-contract': {
+    pauschale: 'uebungleiter',
+    kind: 'contract',
+  },
+  'uebungsleiterpauschale-invoice': {
+    pauschale: 'uebungleiter',
+    kind: 'invoice',
+  },
+};
 
 export type GatePoint =
   | 'check_in'
@@ -19,11 +29,6 @@ export type GatePoint =
   | 'document_ep_invoice'
   | 'document_ul_contract'
   | 'document_ul_invoice';
-
-export interface Signee {
-  id: string;
-  role: SigneeRole;
-}
 
 export interface BlockedAction {
   id: string;
@@ -35,7 +40,6 @@ export interface TemplateSlot {
   pauschale: PauschalenType;
   kind: DocumentKind;
   configured: boolean;
-  signees: Signee[];
   blockedActions: BlockedAction[];
 }
 

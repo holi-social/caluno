@@ -7,6 +7,11 @@ import { useState } from 'react';
 import type { DocumentKind, PauschalenType } from './doc-type-header';
 import { DocTypeHeader } from './doc-type-header';
 
+const PAUSCHALE_I18N_KEY: Record<PauschalenType, 'ep' | 'ul'> = {
+  ehrenamt: 'ep',
+  uebungleiter: 'ul',
+};
+
 export type DocumentRelationship = 'unrelated' | 'blocking';
 
 export interface LifecycleDocument {
@@ -20,13 +25,13 @@ const MOCK_DOCUMENTS: LifecycleDocument[] = [
   {
     id: 'doc-1',
     kind: 'contract',
-    pauschale: 'ep',
+    pauschale: 'ehrenamt',
     name: 'Contract',
   },
   {
     id: 'doc-2',
     kind: 'invoice',
-    pauschale: 'ep',
+    pauschale: 'ehrenamt',
     name: 'Invoice',
   },
 ];
@@ -108,7 +113,9 @@ function DocumentItem({ doc }: DocumentItemProps) {
           kind={doc.kind}
           pauschale={doc.pauschale}
           topLine={t(
-            `pauschaleLabel.${doc.pauschale}` as Parameters<typeof t>[0],
+            `pauschaleLabel.${PAUSCHALE_I18N_KEY[doc.pauschale]}` as Parameters<
+              typeof t
+            >[0],
           )}
           name={doc.name}
         />

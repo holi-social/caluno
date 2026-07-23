@@ -8,6 +8,10 @@ import {
 import { Loader2 } from 'lucide-react';
 import { type ReactNode, Suspense } from 'react';
 import { DashboardSidebar } from '@/components/navigation/dashboard-sidebar';
+import {
+  PageHeaderProvider,
+  PageHeaderSlot,
+} from '@/components/navigation/page-header-context';
 import { ProfileNavIcon } from '@/components/navigation/profile-nav-icon';
 import { InviteShiftSheet } from '@/components/sheets/invite-shift-sheet';
 import { ShiftSheet } from '@/components/sheets/shift-sheet';
@@ -54,25 +58,25 @@ export default async function OrgLayout({
           <SidebarProvider>
             <DashboardSidebar permissions={permissionKeys} />
             <SidebarInset>
-              <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4">
-                <SidebarTrigger className="-ml-1" />
-                <Separator orientation="vertical" className="mr-2 h-4" />
-                <div className="flex justify-between gap-2 flex-1">
-                  <h1 className="text-lg font-semibold hidden sm:block">
-                    Clippy
-                  </h1>
-                  <div className="flex gap-2 items-center ml-auto sm:ml-0">
-                    <Suspense
-                      fallback={<Loader2 className="animate-spin size-4" />}
-                    >
-                      {sheet}
-                    </Suspense>
-                    <ThemeToggle />
-                    <ProfileNavIcon orgUId={orgUId} />
+              <PageHeaderProvider>
+                <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4">
+                  <SidebarTrigger className="-ml-1" />
+                  <Separator orientation="vertical" className="mr-2 h-4" />
+                  <div className="flex justify-between gap-2 flex-1">
+                    <PageHeaderSlot />
+                    <div className="flex gap-2 items-center ml-auto sm:ml-0">
+                      <Suspense
+                        fallback={<Loader2 className="animate-spin size-4" />}
+                      >
+                        {sheet}
+                      </Suspense>
+                      <ThemeToggle />
+                      <ProfileNavIcon orgUId={orgUId} />
+                    </div>
                   </div>
-                </div>
-              </header>
-              <div className="flex flex-1 flex-col gap-4 p-4">{children}</div>
+                </header>
+                <div className="flex flex-1 flex-col gap-4 p-4">{children}</div>
+              </PageHeaderProvider>
             </SidebarInset>
           </SidebarProvider>
           <InviteShiftSheet />
