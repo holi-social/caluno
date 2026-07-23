@@ -5,7 +5,6 @@ import {
   updateShiftVolunteers,
 } from '@/domain/shift/actions';
 import { InviteShiftForm } from '@/domain/shift/components/invite-form';
-import { INVITE_SHEET_INVITEE_STATUSES } from '@/domain/shift/constants';
 import { getDataClient } from '@/lib/data-client';
 
 interface InviteEventShiftPageProps {
@@ -49,16 +48,13 @@ export default async function InviteEventShiftPage({
     notFound();
   }
 
-  const activeStatuses = new Set(INVITE_SHEET_INVITEE_STATUSES);
-  const invitedMembers = (instanceDetail?.invites ?? [])
-    // .filter((invite) => activeStatuses.has(invite.status))
-    .map((invite) => ({
-      id: invite.user.id,
-      name: invite.user.name,
-      email: invite.user.email ?? '',
-      image: invite.user.image,
-      inviteStatus: invite.status,
-    }));
+  const invitedMembers = (instanceDetail?.invites ?? []).map((invite) => ({
+    id: invite.user.id,
+    name: invite.user.name,
+    email: invite.user.email ?? '',
+    image: invite.user.image,
+    inviteStatus: invite.status,
+  }));
 
   return (
     <InviteShiftForm

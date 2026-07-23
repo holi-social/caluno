@@ -10,13 +10,6 @@ import {
   WORKING_DAYS,
 } from '@repo/data';
 
-/** Invite statuses shown as "invited" in the admin invite sheet — pending or participating. */
-export const INVITE_SHEET_INVITEE_STATUSES = [
-  ShiftInviteStatus.Invited,
-  ShiftInviteStatus.Accepted,
-  ShiftInviteStatus.SelfJoined,
-];
-
 export {
   ALL_RECURRENCE_DAYS,
   DAY_VALUE_TO_RRULE,
