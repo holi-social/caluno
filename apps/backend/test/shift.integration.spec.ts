@@ -1720,6 +1720,9 @@ describe('ShiftInstance.invites (VOLI-842)', () => {
     });
     const instanceId = instances[0]?.id;
     expect(instanceId).toBeDefined();
+    if (!instanceId) {
+      throw new Error('Expected shift instance');
+    }
 
     const invited = await createUser(db);
     const accepted = await createUser(db);
@@ -1730,32 +1733,32 @@ describe('ShiftInstance.invites (VOLI-842)', () => {
 
     await db.insert(schema.shiftInstanceInvites).values([
       {
-        instanceId: instanceId!,
+        instanceId,
         userId: invited.id,
         status: ShiftInviteStatus.INVITED,
       },
       {
-        instanceId: instanceId!,
+        instanceId,
         userId: accepted.id,
         status: ShiftInviteStatus.ACCEPTED,
       },
       {
-        instanceId: instanceId!,
+        instanceId,
         userId: signedUp.id,
         status: ShiftInviteStatus.SELF_JOINED,
       },
       {
-        instanceId: instanceId!,
+        instanceId,
         userId: declined.id,
         status: ShiftInviteStatus.VOLUNTEER_REJECTED,
       },
       {
-        instanceId: instanceId!,
+        instanceId,
         userId: cancelled.id,
         status: ShiftInviteStatus.CANCELLED,
       },
       {
-        instanceId: instanceId!,
+        instanceId,
         userId: rejected.id,
         status: ShiftInviteStatus.ADMIN_REJECTED,
       },
@@ -1791,8 +1794,11 @@ describe('ShiftInstance.invites (VOLI-842)', () => {
 
     const instance = data.shiftInstances.find((row) => row.id === instanceId);
     expect(instance).toBeDefined();
+    if (!instance) {
+      throw new Error('Expected shift instance in GraphQL response');
+    }
     const byUser = new Map(
-      instance!.invites.map((invite) => [invite.user.id, invite.status]),
+      instance.invites.map((invite) => [invite.user.id, invite.status]),
     );
     expect(byUser.get(invited.id)).toBe(ShiftInviteStatus.INVITED);
     expect(byUser.get(accepted.id)).toBe(ShiftInviteStatus.ACCEPTED);
@@ -1810,10 +1816,13 @@ describe('ShiftInstance.invites (VOLI-842)', () => {
     });
     const instanceId = instances[0]?.id;
     expect(instanceId).toBeDefined();
+    if (!instanceId) {
+      throw new Error('Expected shift instance');
+    }
 
     const volunteer = await createUser(db);
     await db.insert(schema.shiftInstanceInvites).values({
-      instanceId: instanceId!,
+      instanceId,
       userId: volunteer.id,
       status: ShiftInviteStatus.ADMIN_REJECTED,
     });
@@ -1855,7 +1864,7 @@ describe('ShiftInstance.invites (VOLI-842)', () => {
     expect(data.updateShiftInstanceInviteStatus.userId).toBe(volunteer.id);
 
     const row = await db.query.shiftInstanceInvites.findFirst({
-      where: { instanceId: instanceId!, userId: volunteer.id },
+      where: { instanceId, userId: volunteer.id },
     });
     expect(row?.status).toBe(ShiftInviteStatus.INVITED);
   });
@@ -1867,10 +1876,13 @@ describe('ShiftInstance.invites (VOLI-842)', () => {
     });
     const instanceId = instances[0]?.id;
     expect(instanceId).toBeDefined();
+    if (!instanceId) {
+      throw new Error('Expected shift instance');
+    }
 
     const volunteer = await createUser(db);
     await db.insert(schema.shiftInstanceInvites).values({
-      instanceId: instanceId!,
+      instanceId,
       userId: volunteer.id,
       status: ShiftInviteStatus.ACCEPTED,
     });
@@ -1912,7 +1924,7 @@ describe('ShiftInstance.invites (VOLI-842)', () => {
     expect(data.updateShiftInstanceInviteStatus.userId).toBe(volunteer.id);
 
     const row = await db.query.shiftInstanceInvites.findFirst({
-      where: { instanceId: instanceId!, userId: volunteer.id },
+      where: { instanceId, userId: volunteer.id },
     });
     expect(row?.status).toBe(ShiftInviteStatus.ADMIN_REJECTED);
   });
@@ -1924,10 +1936,13 @@ describe('ShiftInstance.invites (VOLI-842)', () => {
     });
     const instanceId = instances[0]?.id;
     expect(instanceId).toBeDefined();
+    if (!instanceId) {
+      throw new Error('Expected shift instance');
+    }
 
     const volunteer = await createUser(db);
     await db.insert(schema.shiftInstanceInvites).values({
-      instanceId: instanceId!,
+      instanceId,
       userId: volunteer.id,
       status: ShiftInviteStatus.SELF_JOINED,
     });
@@ -1969,7 +1984,7 @@ describe('ShiftInstance.invites (VOLI-842)', () => {
     expect(data.updateShiftInstanceInviteStatus.userId).toBe(volunteer.id);
 
     const row = await db.query.shiftInstanceInvites.findFirst({
-      where: { instanceId: instanceId!, userId: volunteer.id },
+      where: { instanceId, userId: volunteer.id },
     });
     expect(row?.status).toBe(ShiftInviteStatus.ADMIN_REJECTED);
   });
@@ -1981,6 +1996,9 @@ describe('ShiftInstance.invites (VOLI-842)', () => {
     });
     const instanceId = instances[0]?.id;
     expect(instanceId).toBeDefined();
+    if (!instanceId) {
+      throw new Error('Expected shift instance');
+    }
 
     const first = await createUser(db);
     const second = await createUser(db);
@@ -1989,21 +2007,21 @@ describe('ShiftInstance.invites (VOLI-842)', () => {
 
     await db.insert(schema.shiftInstanceInvites).values([
       {
-        instanceId: instanceId!,
+        instanceId,
         userId: first.id,
         status: ShiftInviteStatus.INVITED,
         createdAt: sharedCreatedAt,
         updatedAt: sharedCreatedAt,
       },
       {
-        instanceId: instanceId!,
+        instanceId,
         userId: second.id,
         status: ShiftInviteStatus.INVITED,
         createdAt: sharedCreatedAt,
         updatedAt: sharedCreatedAt,
       },
       {
-        instanceId: instanceId!,
+        instanceId,
         userId: third.id,
         status: ShiftInviteStatus.INVITED,
         createdAt: sharedCreatedAt,
@@ -2099,10 +2117,13 @@ describe('ShiftInstance.invites (VOLI-842)', () => {
     });
     const foreignInstanceId = foreignInstances[0]?.id;
     expect(foreignInstanceId).toBeDefined();
+    if (!foreignInstanceId) {
+      throw new Error('Expected foreign shift instance');
+    }
 
     const foreignUser = await createUser(db);
     await db.insert(schema.shiftInstanceInvites).values({
-      instanceId: foreignInstanceId!,
+      instanceId: foreignInstanceId,
       userId: foreignUser.id,
       status: ShiftInviteStatus.INVITED,
     });
