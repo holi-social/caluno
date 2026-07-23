@@ -1,8 +1,10 @@
+import { cn } from '../../lib/utils';
+import { getVolunteeringStatusPresentation } from './config';
 import type {
   ShiftVolunteeringDisplayState,
   ShiftVolunteeringPhase,
 } from './types';
-import { VolunteeringMemberRow } from './volunteering-member-row';
+import { VolunteeringStatusIcon } from './volunteering-status-icon';
 
 export type VolunteeringVolunteerCompactRowProps = {
   name: string;
@@ -12,7 +14,7 @@ export type VolunteeringVolunteerCompactRowProps = {
   className?: string;
 };
 
-/** Same row layout as the invite panel — name + status icon. */
+/** Name + status icon — for shift cards and other dense lists. */
 export function VolunteeringVolunteerCompactRow({
   name,
   state,
@@ -20,13 +22,22 @@ export function VolunteeringVolunteerCompactRow({
   completedDuration,
   className,
 }: VolunteeringVolunteerCompactRowProps) {
+  const { label } = getVolunteeringStatusPresentation(state, {
+    completedDuration,
+    phase,
+  });
+
   return (
-    <VolunteeringMemberRow
-      name={name}
-      state={state}
-      phase={phase}
-      completedDuration={completedDuration}
-      className={className}
-    />
+    <div className={cn('flex items-center justify-between gap-2', className)}>
+      <p className="min-w-0 truncate text-base">{name}</p>
+      <VolunteeringStatusIcon
+        state={state}
+        completedDuration={completedDuration}
+        phase={phase}
+        size="md"
+        accessible
+        ariaLabel={`${name}: ${label}`}
+      />
+    </div>
   );
 }

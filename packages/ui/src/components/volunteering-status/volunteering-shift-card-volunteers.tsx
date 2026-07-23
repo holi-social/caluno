@@ -51,8 +51,8 @@ export function VolunteeringShiftCardVolunteers({
         <AccordionTrigger className="flex-row-reverse items-center justify-end gap-1 py-1 text-base font-bold hover:no-underline">
           {sectionLabel}
         </AccordionTrigger>
-        <AccordionContent className="pb-2 pt-0">
-          <div className="flex flex-col p-1">
+        <AccordionContent className="pb-2">
+          <div className="flex flex-col gap-2">
             {volunteers.map((volunteer) => (
               <VolunteeringVolunteerCompactRow
                 key={volunteer.id}

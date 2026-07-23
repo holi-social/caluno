@@ -1,11 +1,20 @@
 import type { ReactNode } from 'react';
 
 import { cn } from '../../lib/utils';
+import { getVolunteeringStatusPresentation } from './config';
 import type {
   ShiftVolunteeringDisplayState,
   ShiftVolunteeringPhase,
+  VolunteeringStatusIconTone,
 } from './types';
 import { VolunteeringStatusIcon } from './volunteering-status-icon';
+
+const iconFrameClass: Record<VolunteeringStatusIconTone, string> = {
+  neutral: 'bg-muted',
+  positive: 'bg-success/10',
+  warning: 'bg-alert/10',
+  destructive: 'bg-alert/10',
+};
 
 export type VolunteeringMemberRowProps = {
   name: string;
@@ -27,6 +36,11 @@ export function VolunteeringMemberRow({
   trailing,
   className,
 }: VolunteeringMemberRowProps) {
+  const { iconTone } = getVolunteeringStatusPresentation(state, {
+    completedDuration,
+    phase,
+  });
+
   return (
     <div
       className={cn(
@@ -34,13 +48,21 @@ export function VolunteeringMemberRow({
         className,
       )}
     >
-      <VolunteeringStatusIcon
-        state={state}
-        completedDuration={completedDuration}
-        phase={phase}
-        accessible
-        ariaLabel={name}
-      />
+      <span
+        className={cn(
+          'inline-flex shrink-0 items-center justify-center rounded-md p-0.5',
+          iconFrameClass[iconTone],
+        )}
+      >
+        <VolunteeringStatusIcon
+          state={state}
+          completedDuration={completedDuration}
+          phase={phase}
+          size="md"
+          accessible
+          ariaLabel={name}
+        />
+      </span>
       <div className="min-w-0 flex-1">
         <p className="truncate text-sm font-medium">{name}</p>
         {email ? (

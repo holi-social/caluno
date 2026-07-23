@@ -4,6 +4,7 @@ import { Badge } from '@/components/base/badge';
 import { Button } from '@/components/base/button';
 import { Card } from '@/components/base/card';
 import {
+  VolunteeringLifecyclePanel,
   VolunteeringMemberListPanel,
   VolunteeringShiftCardVolunteers,
   VolunteeringStatusBadge,
@@ -13,57 +14,8 @@ import {
 } from '@/components/volunteering-status';
 import type { ShiftVolunteeringDisplayState } from '@/components/volunteering-status/types';
 
-/** Coordinator-visible invite response states (maps to ShiftInstanceInvite). */
-const INVITE_FLOW_STATES = [
-  'invited',
-  'accepted',
-  'declined',
-  'cancelled',
-] as const satisfies readonly ShiftVolunteeringDisplayState[];
-
-const SIGNUP_FLOW_STATES = [
-  'signed_up',
-] as const satisfies readonly ShiftVolunteeringDisplayState[];
-
-function StatusFlowSection({
-  title,
-  description,
-  states,
-  variant,
-}: {
-  title: string;
-  description?: string;
-  states: readonly ShiftVolunteeringDisplayState[];
-  variant: 'icon' | 'badge';
-}) {
-  return (
-    <section className="space-y-3">
-      <div>
-        <h3 className="text-sm font-semibold">{title}</h3>
-        {description ? (
-          <p className="text-xs text-muted-foreground">{description}</p>
-        ) : null}
-      </div>
-      <div className="flex flex-wrap items-center gap-6">
-        {states.map((state) => (
-          <div key={state} className="flex flex-col items-center gap-2">
-            {variant === 'icon' ? (
-              <VolunteeringStatusIcon state={state} accessible />
-            ) : (
-              <VolunteeringStatusBadge state={state} />
-            )}
-            {variant === 'icon' ? (
-              <span className="text-base text-muted-foreground">{state}</span>
-            ) : null}
-          </div>
-        ))}
-      </div>
-    </section>
-  );
-}
-
 const meta = {
-  title: 'ui/Shift invite status',
+  title: 'ui/Volunteering lifecycle',
   tags: ['autodocs'],
   parameters: {
     layout: 'padded',
@@ -74,13 +26,221 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-const invitedVolunteers = [
+function LifecycleSection({
+  title,
+  subtitle,
+  states,
+  phase,
+}: {
+  title: string;
+  subtitle: string;
+  states: ShiftVolunteeringDisplayState[];
+  phase?: 'before' | 'during' | 'after';
+}) {
+  return (
+    <section className="space-y-3">
+      <div>
+        <h3 className="text-sm font-semibold">{title}</h3>
+        <p className="text-sm text-muted-foreground">{subtitle}</p>
+      </div>
+      <div className="flex flex-col gap-2">
+        {states.map((state) => (
+          <VolunteeringLifecyclePanel
+            key={state}
+            state={state}
+            phase={phase}
+            completedDuration={state === 'completed' ? '3h 57m' : undefined}
+          />
+        ))}
+      </div>
+    </section>
+  );
+}
+
+/** Reference board — all lifecycle states with descriptions and CTAs. */
+export const LifecycleReferenceBoard: Story = {
+  name: 'Lifecycle reference board',
+  render: () => (
+    <div className="mx-auto flex max-w-3xl flex-col gap-10">
+      <LifecycleSection
+        title="Before shift"
+        subtitle="Status depends on how they joined."
+        phase="before"
+        states={['invited', 'requested', 'accepted', 'declined']}
+      />
+      <LifecycleSection
+        title="During shift"
+        subtitle="Check-in for accepted volunteers. Hover other badges for why."
+        phase="during"
+        states={[
+          'checked_in',
+          'not_checked_in',
+          'invited',
+          'requested',
+          'declined',
+        ]}
+      />
+      <LifecycleSection
+        title="After shift"
+        subtitle="Final status is inferred automatically."
+        phase="after"
+        states={[
+          'completed',
+          'no_show',
+          'invited_never_responded',
+          'requested_never_responded',
+          'declined',
+        ]}
+      />
+    </div>
+  ),
+};
+
+/** Colored icons alone — reusable signal outside badges. */
+export const StatusIcons: Story = {
+  name: 'Status icons (reusable)',
+  render: () => (
+    <div className="flex max-w-xl flex-wrap items-center gap-6">
+      {(
+        [
+          'invited',
+          'requested',
+          'accepted',
+          'declined',
+          'checked_in',
+          'not_checked_in',
+          'completed',
+          'no_show',
+        ] as const
+      ).map((state) => (
+        <div key={state} className="flex flex-col items-center gap-2">
+          <VolunteeringStatusIcon state={state} size="md" accessible />
+          <span className="text-xs text-muted-foreground">{state}</span>
+        </div>
+      ))}
+    </div>
+  ),
+};
+
+/** All badge variants in isolation. */
+export const StatusBadges: Story = {
+  name: 'Status badges',
+  render: () => (
+    <div className="flex max-w-xl flex-wrap gap-2">
+      {(
+        [
+          'invited',
+          'requested',
+          'accepted',
+          'declined',
+          'checked_in',
+          'not_checked_in',
+          'completed',
+          'no_show',
+          'invited_never_responded',
+          'requested_never_responded',
+        ] as const
+      ).map((state) => (
+        <VolunteeringStatusBadge
+          key={state}
+          state={state}
+          completedDuration={state === 'completed' ? '3h 57m' : undefined}
+        />
+      ))}
+    </div>
+  ),
+};
+
+const sampleVolunteers = [
   { id: '1', name: 'Katharina Zimmer', state: 'accepted' as const },
   { id: '2', name: 'Hans Test', state: 'invited' as const },
   { id: '3', name: 'Lena Müller', state: 'declined' as const },
-  { id: '4', name: 'Sara Klein', state: 'cancelled' as const },
-  { id: '5', name: 'Tom Weber', state: 'signed_up' as const },
+  { id: '4', name: 'Tom Becker', state: 'requested' as const },
+  { id: '5', name: 'Sara Klein', state: 'accepted' as const },
 ];
+
+/** Detail page volunteers card — before shift (matches product mockup). */
+export const DetailPageBeforeShift: Story = {
+  name: 'Detail page / before shift',
+  render: () => (
+    <div className="mx-auto max-w-2xl">
+      <VolunteeringVolunteerList
+        phase="before"
+        summary="5 invited · 12 spots"
+        volunteers={sampleVolunteers}
+      />
+    </div>
+  ),
+};
+
+/** During shift — accepted volunteers tracked; others passive (no CTA). */
+export const DetailPageDuringShift: Story = {
+  name: 'Detail page / during shift',
+  render: () => (
+    <div className="mx-auto max-w-2xl">
+      <VolunteeringVolunteerList
+        phase="during"
+        summary="2 checked in · 5 accepted"
+        volunteers={[
+          { id: '1', name: 'Katharina Zimmer', state: 'checked_in' },
+          { id: '2', name: 'Hans Test', state: 'not_checked_in' },
+          { id: '3', name: 'Lena Müller', state: 'invited' },
+          { id: '4', name: 'Tom Becker', state: 'requested' },
+          { id: '5', name: 'Sara Klein', state: 'declined' },
+        ]}
+      />
+    </div>
+  ),
+};
+
+/** After shift — inferred timesheet states. */
+export const DetailPageAfterShift: Story = {
+  name: 'Detail page / after shift',
+  render: () => (
+    <div className="mx-auto max-w-2xl">
+      <VolunteeringVolunteerList
+        phase="after"
+        summary="1 completed · 1 no-show"
+        volunteers={[
+          {
+            id: '1',
+            name: 'Katharina Zimmer',
+            state: 'completed',
+            completedDuration: '3h 57m',
+          },
+          { id: '2', name: 'Hans Test', state: 'no_show' },
+          { id: '3', name: 'Lena Müller', state: 'invited_never_responded' },
+          { id: '4', name: 'Tom Becker', state: 'declined' },
+        ]}
+      />
+    </div>
+  ),
+};
+
+/** Single row playground. */
+export const SingleRow: Story = {
+  name: 'Single volunteer row',
+  render: () => (
+    <div className="mx-auto flex max-w-2xl flex-col gap-6">
+      <div className="rounded-xl border px-4">
+        <VolunteeringVolunteerRow
+          name="Tom Becker"
+          state="requested"
+          phase="before"
+          onAction={() => {}}
+        />
+      </div>
+      <div className="rounded-xl border px-4">
+        <VolunteeringVolunteerRow
+          name="Katharina Zimmer"
+          state="accepted"
+          phase="before"
+          onAction={() => {}}
+        />
+      </div>
+    </div>
+  ),
+};
 
 const invitePanelMembers = [
   {
@@ -99,7 +259,7 @@ const invitePanelMembers = [
     id: '3',
     name: 'Frau Ylvi Grams',
     email: 'member008@clippy.social',
-    state: 'invited' as const,
+    state: 'accepted' as const,
   },
   {
     id: '4',
@@ -109,64 +269,9 @@ const invitePanelMembers = [
   },
 ];
 
-/** Icons grouped by how the volunteer joined the shift. */
-export const StatusIcons: Story = {
-  name: 'Status icons',
-  render: () => (
-    <div className="flex max-w-2xl flex-col gap-8">
-      <StatusFlowSection
-        title="Org invites volunteer"
-        description="Coordinator sends invite → volunteer responds (or coordinator cancels)."
-        states={INVITE_FLOW_STATES}
-        variant="icon"
-      />
-      <StatusFlowSection
-        title="Volunteer signs up for shift"
-        description="No invite — volunteer joins directly; lands on shift immediately."
-        states={SIGNUP_FLOW_STATES}
-        variant="icon"
-      />
-    </div>
-  ),
-};
-
-/** Badge labels grouped by how the volunteer joined the shift. */
-export const StatusBadges: Story = {
-  name: 'Status badges',
-  render: () => (
-    <div className="flex max-w-2xl flex-col gap-8">
-      <StatusFlowSection
-        title="Org invites volunteer"
-        description="Coordinator sends invite → volunteer responds (or coordinator cancels)."
-        states={INVITE_FLOW_STATES}
-        variant="badge"
-      />
-      <StatusFlowSection
-        title="Volunteer signs up for shift"
-        description="No invite — volunteer joins directly; lands on shift immediately."
-        states={SIGNUP_FLOW_STATES}
-        variant="badge"
-      />
-    </div>
-  ),
-};
-
-/** Shift instance detail — invited volunteers with status. */
-export const InstanceDetail: Story = {
-  name: 'Instance detail',
-  render: () => (
-    <div className="mx-auto max-w-2xl">
-      <VolunteeringVolunteerList
-        summary="4 invited · 2 accepted · 1 signed up · 12 spots"
-        volunteers={invitedVolunteers}
-      />
-    </div>
-  ),
-};
-
-/** Shift calendar card — compact invite list with status icons. */
-export const ShiftCard: Story = {
-  name: 'Shift card',
+/** Shift calendar card — compact name + status icon (accordion). */
+export const ShiftCardVolunteers: Story = {
+  name: 'Shift card / invited accordion',
   render: () => (
     <Card className="mx-auto max-w-xs gap-1 overflow-hidden rounded-xl px-2 pb-2 pt-4 shadow-sm">
       <div className="flex flex-col items-end gap-2">
@@ -187,34 +292,34 @@ export const ShiftCard: Story = {
       </div>
       <VolunteeringShiftCardVolunteers
         sectionLabel="Invited"
+        phase="before"
         volunteers={[
           { id: '1', name: 'Sofie Gabius', state: 'accepted' },
-          { id: '2', name: 'Elia Grams', state: 'invited' },
+          { id: '2', name: 'Elia Grams', state: 'accepted' },
           { id: '3', name: 'Rico Schaefer', state: 'declined' },
-          { id: '4', name: 'Jan Vogel', state: 'cancelled' },
-          { id: '5', name: 'Tom Weber', state: 'signed_up' },
         ]}
       />
     </Card>
   ),
 };
 
-/** Invite sheet — searchable list with per-member status. */
-export const InvitePanel: Story = {
-  name: 'Invite panel',
+/** Invite sheet — searchable member list with status icons. */
+export const InviteMemberPanel: Story = {
+  name: 'Invite panel / member list',
   render: () => (
     <div className="mx-auto max-w-sm">
       <VolunteeringMemberListPanel
         title="Invited"
+        phase="before"
         members={invitePanelMembers}
       />
     </div>
   ),
 };
 
-/** All three backoffice surfaces. */
-export const Surfaces: Story = {
-  name: 'All surfaces',
+/** All three surfaces side by side. */
+export const SurfaceComparison: Story = {
+  name: 'Surfaces comparison',
   render: () => (
     <div className="mx-auto grid max-w-5xl gap-8 lg:grid-cols-3">
       <div className="space-y-2">
@@ -222,6 +327,7 @@ export const Surfaces: Story = {
         <Card className="gap-1 overflow-hidden rounded-xl px-2 pb-2 pt-4 shadow-sm">
           <VolunteeringShiftCardVolunteers
             sectionLabel="Invited"
+            phase="before"
             volunteers={[
               { id: '1', name: 'Sofie Gabius', state: 'accepted' },
               { id: '2', name: 'Rico Schaefer', state: 'declined' },
@@ -233,6 +339,7 @@ export const Surfaces: Story = {
         <p className="text-sm font-semibold">Invite panel</p>
         <VolunteeringMemberListPanel
           title="Invited"
+          phase="before"
           members={invitePanelMembers.slice(0, 3)}
         />
       </div>
@@ -240,11 +347,10 @@ export const Surfaces: Story = {
         <p className="text-sm font-semibold">Instance detail</p>
         <div className="rounded-xl border px-4">
           <VolunteeringVolunteerRow
-            name="Katharina Zimmer"
-            state="accepted"
-            onAction={() => {}}
+            name="Tom Becker"
+            state="requested"
+            phase="before"
           />
-          <VolunteeringVolunteerRow name="Tom Weber" state="signed_up" />
         </div>
       </div>
     </div>
