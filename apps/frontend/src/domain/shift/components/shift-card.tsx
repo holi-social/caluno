@@ -85,7 +85,7 @@ export function ShiftCard({
   const t = useTranslations('Shift');
 
   const participatingCount = instance.volunteers?.length ?? 0;
-  const invites = instance.instanceInvites ?? [];
+  const invites = instance.invites ?? [];
   const min = instance.master.minVolunteers;
   const max = instance.master.maxVolunteers;
   const state = getStaffingState(participatingCount, min, max);

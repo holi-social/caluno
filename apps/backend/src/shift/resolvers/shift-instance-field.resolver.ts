@@ -73,7 +73,7 @@ export class ShiftInstanceFieldResolver {
 
   @Permissions(PERMISSIONS.SHIFT_VIEW)
   @ResolveField(() => [ShiftInstanceInvite])
-  async instanceInvites(
+  async invites(
     @Parent() instance: ShiftInstanceEntity,
     @Context() context: AuthenticatedGraphQLContext,
     @Args('statuses', { type: () => [ShiftInviteStatus], nullable: true })
@@ -89,7 +89,7 @@ export class ShiftInstanceFieldResolver {
 
   @Permissions(PERMISSIONS.SHIFT_VIEW)
   @ResolveField(() => ShiftInstanceInvite, { nullable: true })
-  async invites(
+  async invite(
     @Parent() instance: ShiftInstanceEntity,
     @Context() context: AuthenticatedGraphQLContext,
     @Args('userId') userId: string,

@@ -856,8 +856,8 @@ type ShiftInstance {
   actualStartsAt: DateTime!
   filledCount: Int!
   id: ID!
-  instanceInvites(statuses: [ShiftInviteStatus!]): [ShiftInstanceInvite!]
-  invites(userId: String!): ShiftInstanceInvite
+  invite(userId: String!): ShiftInstanceInvite
+  invites(statuses: [ShiftInviteStatus!]): [ShiftInstanceInvite!]
   isCancelled: Boolean!
   isCheckedIn: Boolean!
   isException: Boolean!

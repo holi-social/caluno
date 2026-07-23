@@ -80,7 +80,7 @@ export default async function ShiftInstanceDetailPage({
       <ShiftInstanceVolunteersPanel
         orgUId={orgUId}
         instanceId={instanceId}
-        invites={instance.instanceInvites ?? []}
+        invites={instance.invites ?? []}
         spotsLeft={instance.spotsLeft}
         canManage={canManage}
       />

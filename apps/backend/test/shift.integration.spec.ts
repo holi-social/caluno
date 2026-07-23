@@ -874,7 +874,7 @@ describe('Volunteer home fields and check-in', () => {
     expect(instance?.master).toEqual({ id: shiftId, title });
   });
 
-  it('returns invites for the requested user', async () => {
+  it('returns invite for the requested user', async () => {
     const volunteer = await createUser(db);
     const { id: shiftId } = await createShift(db, {
       organizationUnitId,
@@ -898,7 +898,7 @@ describe('Volunteer home fields and check-in', () => {
     const data = await graphqlRequestRequiringData<{
       shiftInstances: Array<{
         id: string;
-        invites: {
+        invite: {
           id: string;
           status: ShiftInviteStatus;
           userId: string;
@@ -911,7 +911,7 @@ describe('Volunteer home fields and check-in', () => {
           query ShiftInstances($shiftId: ID!, $userId: String!) {
             shiftInstances(shiftId: $shiftId) {
               id
-              invites(userId: $userId) {
+              invite(userId: $userId) {
                 id
                 status
                 userId
@@ -928,14 +928,14 @@ describe('Volunteer home fields and check-in', () => {
     );
 
     const instance = data.shiftInstances.find((i) => i.id === instanceId);
-    expect(instance?.invites).toEqual({
+    expect(instance?.invite).toEqual({
       id: insertedInvite?.id,
       status: ShiftInviteStatus.INVITED,
       userId: volunteer.id,
     });
   });
 
-  it('returns null invites when the user has no invite', async () => {
+  it('returns null invite when the user has no invite', async () => {
     const volunteer = await createUser(db);
     const otherUser = await createUser(db);
     const { id: shiftId } = await createShift(db, {
@@ -957,7 +957,7 @@ describe('Volunteer home fields and check-in', () => {
     const data = await graphqlRequestRequiringData<{
       shiftInstances: Array<{
         id: string;
-        invites: { id: string } | null;
+        invite: { id: string } | null;
       }>;
     }>(
       app,
@@ -966,7 +966,7 @@ describe('Volunteer home fields and check-in', () => {
           query ShiftInstances($shiftId: ID!, $userId: String!) {
             shiftInstances(shiftId: $shiftId) {
               id
-              invites(userId: $userId) {
+              invite(userId: $userId) {
                 id
               }
             }
@@ -981,7 +981,7 @@ describe('Volunteer home fields and check-in', () => {
     );
 
     const instance = data.shiftInstances.find((i) => i.id === instanceId);
-    expect(instance?.invites).toBeNull();
+    expect(instance?.invite).toBeNull();
   });
 
   it('returns event data on a shift linked to an event', async () => {
@@ -1701,7 +1701,7 @@ describe('Shift invite status model', () => {
   });
 });
 
-describe('ShiftInstance.instanceInvites (VOLI-842)', () => {
+describe('ShiftInstance.invites (VOLI-842)', () => {
   let app: INestApplication;
   let db: Database;
   let organizationUnitId: string;
@@ -1764,7 +1764,7 @@ describe('ShiftInstance.instanceInvites (VOLI-842)', () => {
     const data = await graphqlRequestRequiringData<{
       shiftInstances: Array<{
         id: string;
-        instanceInvites: Array<{
+        invites: Array<{
           status: string;
           user: { id: string; name: string };
         }>;
@@ -1776,7 +1776,7 @@ describe('ShiftInstance.instanceInvites (VOLI-842)', () => {
           query ShiftInstanceInvites($shiftId: ID!) {
             shiftInstances(shiftId: $shiftId) {
               id
-              instanceInvites {
+              invites {
                 status
                 user { id name }
               }
@@ -1792,10 +1792,7 @@ describe('ShiftInstance.instanceInvites (VOLI-842)', () => {
     const instance = data.shiftInstances.find((row) => row.id === instanceId);
     expect(instance).toBeDefined();
     const byUser = new Map(
-      instance!.instanceInvites.map((invite) => [
-        invite.user.id,
-        invite.status,
-      ]),
+      instance!.invites.map((invite) => [invite.user.id, invite.status]),
     );
     expect(byUser.get(invited.id)).toBe(ShiftInviteStatus.INVITED);
     expect(byUser.get(accepted.id)).toBe(ShiftInviteStatus.ACCEPTED);
@@ -1977,7 +1974,7 @@ describe('ShiftInstance.instanceInvites (VOLI-842)', () => {
     expect(row?.status).toBe(ShiftInviteStatus.ADMIN_REJECTED);
   });
 
-  it('keeps instanceInvites order stable after admin uninvite', async () => {
+  it('keeps invites order stable after admin uninvite', async () => {
     const { id: shiftId } = await createShift(db, { organizationUnitId });
     const instances = await db.query.shiftInstances.findMany({
       where: { masterId: shiftId },
@@ -2018,7 +2015,7 @@ describe('ShiftInstance.instanceInvites (VOLI-842)', () => {
       graphqlRequestRequiringData<{
         shiftInstances: Array<{
           id: string;
-          instanceInvites: Array<{ user: { id: string } }>;
+          invites: Array<{ user: { id: string } }>;
         }>;
       }>(
         app,
@@ -2027,7 +2024,7 @@ describe('ShiftInstance.instanceInvites (VOLI-842)', () => {
             query ShiftInstanceInvites($shiftId: ID!) {
               shiftInstances(shiftId: $shiftId) {
                 id
-                instanceInvites {
+                invites {
                   user { id }
                 }
               }
@@ -2043,7 +2040,7 @@ describe('ShiftInstance.instanceInvites (VOLI-842)', () => {
     const orderBefore =
       before.shiftInstances
         .find((row) => row.id === instanceId)
-        ?.instanceInvites.map((invite) => invite.user.id) ?? [];
+        ?.invites.map((invite) => invite.user.id) ?? [];
     expect(orderBefore).toHaveLength(3);
 
     await graphqlRequestRequiringData(
@@ -2078,12 +2075,12 @@ describe('ShiftInstance.instanceInvites (VOLI-842)', () => {
     const orderAfter =
       after.shiftInstances
         .find((row) => row.id === instanceId)
-        ?.instanceInvites.map((invite) => invite.user.id) ?? [];
+        ?.invites.map((invite) => invite.user.id) ?? [];
 
     expect(orderAfter).toEqual(orderBefore);
   });
 
-  it('does not leak instanceInvites across organizations', async () => {
+  it('does not leak invites across organizations', async () => {
     const { organization, type } = await createOrganizationWithType(
       db,
       `Other Org ${crypto.randomUUID()}`,
@@ -2113,14 +2110,14 @@ describe('ShiftInstance.instanceInvites (VOLI-842)', () => {
     const response = await graphqlRequest<{
       shiftInstances: Array<{
         id: string;
-        instanceInvites: Array<{ user: { id: string } }>;
+        invites: Array<{ user: { id: string } }>;
       }>;
     }>(app, {
       query: `
         query ShiftInstanceInvites($shiftId: ID!) {
           shiftInstances(shiftId: $shiftId) {
             id
-            instanceInvites {
+            invites {
               user { id }
             }
           }
@@ -2138,7 +2135,7 @@ describe('ShiftInstance.instanceInvites (VOLI-842)', () => {
       return;
     }
     const invites =
-      response.data?.shiftInstances.flatMap((row) => row.instanceInvites) ?? [];
+      response.data?.shiftInstances.flatMap((row) => row.invites) ?? [];
     expect(invites.map((invite) => invite.user.id)).not.toContain(
       foreignUser.id,
     );

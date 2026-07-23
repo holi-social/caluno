@@ -50,8 +50,8 @@ export default async function InviteEventShiftPage({
   }
 
   const activeStatuses = new Set(INVITE_SHEET_INVITEE_STATUSES);
-  const invitedMembers = (instanceDetail?.instanceInvites ?? [])
-    .filter((invite) => activeStatuses.has(invite.status))
+  const invitedMembers = (instanceDetail?.invites ?? [])
+    // .filter((invite) => activeStatuses.has(invite.status))
     .map((invite) => ({
       id: invite.user.id,
       name: invite.user.name,

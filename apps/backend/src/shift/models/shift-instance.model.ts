@@ -53,7 +53,7 @@ export class ShiftInstance {
   volunteers?: User[] | null;
 
   @Field(() => [ShiftInstanceInvite], { nullable: true })
-  instanceInvites?: ShiftInstanceInvite[] | null;
+  invites?: ShiftInstanceInvite[] | null;
 
   @Field(() => JoinStatus)
   myJoinStatus!: JoinStatus;

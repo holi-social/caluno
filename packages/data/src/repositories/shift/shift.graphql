@@ -219,7 +219,7 @@ query GetActiveShiftInstances($userId: String!) {
     actualStartsAt
     actualEndsAt
     overrideTitle
-    invites(userId: $userId) {
+    invite(userId: $userId) {
       status
     }
     master {
@@ -262,7 +262,7 @@ query GetShiftInstanceDetail($shiftId: ID!) {
       maxVolunteers
       visibility
     }
-    instanceInvites {
+    invites {
       status
       user {
         id
@@ -291,7 +291,7 @@ query GetWeeklyShifts($from: DateTime!, $to: DateTime!) {
       id
       name
     }
-    instanceInvites {
+    invites {
       status
       user {
         id
