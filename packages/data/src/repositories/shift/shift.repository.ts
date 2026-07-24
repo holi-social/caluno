@@ -150,7 +150,7 @@ export class ShiftRepository extends BaseRepository {
     return data.shiftInstances.find((instance) => instance.id === instanceId);
   }
 
-  async updateInstanceInviteStatus(
+  async updateShiftInstanceInviteStatus(
     instanceId: string,
     status: ShiftInviteStatus,
     userId?: string,
@@ -232,19 +232,6 @@ export class ShiftRepository extends BaseRepository {
       offset: options.offset ?? 0,
     });
     return data.availableShiftInstances;
-  }
-
-  async updateShiftInstanceInviteStatus(
-    instanceId: string,
-    status: ShiftInviteStatus,
-  ): Promise<
-    UpdateShiftInstanceInviteStatusMutation['updateShiftInstanceInviteStatus']
-  > {
-    const data = await this.sdk.UpdateShiftInstanceInviteStatus({
-      instanceId,
-      status,
-    });
-    return data.updateShiftInstanceInviteStatus;
   }
 
   async checkIn(shiftInstanceId: string): Promise<string> {

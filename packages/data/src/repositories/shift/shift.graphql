@@ -400,16 +400,6 @@ query GetAvailableShiftInstances(
   }
 }
 
-mutation UpdateShiftInstanceInviteStatus(
-  $instanceId: String!
-  $status: ShiftInviteStatus!
-) {
-  updateShiftInstanceInviteStatus(instanceId: $instanceId, status: $status) {
-    id
-    status
-  }
-}
-
 mutation CheckIn($shiftInstanceId: ID!) {
   checkIn(shiftInstanceId: $shiftInstanceId) {
     id
