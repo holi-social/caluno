@@ -1,32 +1,33 @@
 'use client';
 
+import { Button } from '@repo/ui';
 import { useTranslations } from 'next-intl';
-import { useState } from 'react';
+import { useFormatting } from '@/hooks/use-formatting';
 import { Link } from '@/i18n/navigation';
 import type { DocumentKind, PauschalenType } from '../doc-type-header';
 import { DocTypeHeader } from '../doc-type-header';
-import { TemplateBlockedActions } from './blocked-actions';
-import type { BlockedAction, TemplateSlug } from './types';
+import { TemplateCardBadges } from './card-badges';
+import type { TemplateCardSummary } from './types';
 
 interface TemplateCardFilledProps {
-  slug: TemplateSlug;
   pauschale: PauschalenType;
   kind: DocumentKind;
-  initialBlockedActions: BlockedAction[];
+  summary: TemplateCardSummary;
+  lastEditedAt: string;
+  lastEditedBy: string;
   builderHref: string;
 }
 
 export function TemplateCardFilled({
-  slug,
   pauschale,
   kind,
-  initialBlockedActions,
+  summary,
+  lastEditedAt,
+  lastEditedBy,
   builderHref,
 }: TemplateCardFilledProps) {
   const t = useTranslations('Accounting.templates');
-  const [blockedActions, setBlockedActions] = useState<BlockedAction[]>(
-    initialBlockedActions,
-  );
+  const { formatDate } = useFormatting();
 
   const kindLabel = t(`documentKind.${kind}` as Parameters<typeof t>[0]);
   const typeLabel = t(
@@ -38,28 +39,27 @@ export function TemplateCardFilled({
   return (
     <div className="rounded-xl border bg-card flex flex-col overflow-hidden">
       <div className="p-4 space-y-4">
-        <div className="flex items-start justify-between gap-2">
-          <DocTypeHeader
-            kind={kind}
-            pauschale={pauschale}
-            topLine={typeLabel}
-            name={kindLabel}
-          />
-          <Link
-            href={builderHref}
-            className="shrink-0 inline-flex h-8 items-center rounded-md border border-border bg-background px-3 text-sm font-medium text-foreground hover:bg-muted transition-colors"
-          >
-            {t('card.editButton')}
-          </Link>
-        </div>
+        <DocTypeHeader
+          kind={kind}
+          pauschale={pauschale}
+          topLine={typeLabel}
+          name={kindLabel}
+        />
 
-        <div className="border-t pt-4">
-          <TemplateBlockedActions
-            slug={slug}
-            actions={blockedActions}
-            onActionsChange={setBlockedActions}
-          />
-        </div>
+        <TemplateCardBadges summary={summary} />
+
+        <p className="text-sm text-muted-foreground">
+          {t('card.lastEdited', {
+            date: formatDate(new Date(lastEditedAt)),
+            name: lastEditedBy,
+          } as Parameters<typeof t>[1])}
+        </p>
+      </div>
+
+      <div className="mt-auto border-t p-3">
+        <Button asChild type="button" variant="outline" className="w-full">
+          <Link href={builderHref}>{t('card.editButton')}</Link>
+        </Button>
       </div>
     </div>
   );

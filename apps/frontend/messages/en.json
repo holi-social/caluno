@@ -1132,20 +1132,7 @@
           "createButton": "Create template"
         },
         "editButton": "Edit template",
-        "filled": {
-          "blockedActionsTitle": "Blocked actions",
-          "blockedActionsTooltip": "Things volunteers can't do until this document has been generated and signed. Leave it empty if nothing should be blocked.",
-          "addBlockedAction": "Add action",
-          "removeAction": "Remove {gate}"
-        },
-        "gatePoints": {
-          "check_in": "Check-in",
-          "shift_signup": "Shift sign-up",
-          "document_ep_contract": "Volunteer allowance – create contract",
-          "document_ep_invoice": "Volunteer allowance – create invoice",
-          "document_ul_contract": "Trainer allowance – create contract",
-          "document_ul_invoice": "Trainer allowance – create invoice"
-        }
+        "lastEdited": "Last edited {date} by {name}"
       }
     }
   },

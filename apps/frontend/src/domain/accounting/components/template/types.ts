@@ -1,4 +1,5 @@
 import type { DocumentKind, PauschalenType } from '../doc-type-header';
+import type { InvoiceNumberFormat } from './builder-types';
 
 export type TemplateSlug =
   | 'ehrenamtspauschale-contract'
@@ -22,26 +23,35 @@ export const SLUG_TO_SLOT: Record<
   },
 };
 
-export type GatePoint =
-  | 'check_in'
-  | 'shift_signup'
-  | 'document_ep_contract'
-  | 'document_ep_invoice'
-  | 'document_ul_contract'
-  | 'document_ul_invoice';
-
-export interface BlockedAction {
-  id: string;
-  gate: GatePoint;
+export interface ContractCardSummary {
+  task: string;
+  hourlyRate: string;
 }
 
-export interface TemplateSlot {
-  slug: TemplateSlug;
-  pauschale: PauschalenType;
-  kind: DocumentKind;
-  configured: boolean;
-  blockedActions: BlockedAction[];
+export interface InvoiceCardSummary {
+  /** Only shown when the template's Kostenstelle line is enabled. */
+  kostenstelle?: string;
+  invoiceNumberFormat: InvoiceNumberFormat;
 }
+
+export type TemplateCardSummary = ContractCardSummary | InvoiceCardSummary;
+
+export type TemplateSlot =
+  | {
+      slug: TemplateSlug;
+      pauschale: PauschalenType;
+      kind: DocumentKind;
+      configured: false;
+    }
+  | {
+      slug: TemplateSlug;
+      pauschale: PauschalenType;
+      kind: DocumentKind;
+      configured: true;
+      summary: TemplateCardSummary;
+      lastEditedAt: string;
+      lastEditedBy: string;
+    };
 
 export interface TemplateSectionData {
   pauschale: PauschalenType;

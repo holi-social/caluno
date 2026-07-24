@@ -34,10 +34,11 @@ function TemplateSlotCard({
 
   return (
     <TemplateCardFilled
-      slug={slot.slug}
       pauschale={slot.pauschale}
       kind={slot.kind}
-      initialBlockedActions={slot.blockedActions}
+      summary={slot.summary}
+      lastEditedAt={slot.lastEditedAt}
+      lastEditedBy={slot.lastEditedBy}
       builderHref={builderHref}
     />
   );
