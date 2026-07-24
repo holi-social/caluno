@@ -1,7 +1,7 @@
 'use client';
 
 import type { ShiftInviteStatus } from '@repo/data';
-import { Badge, Button, Input, VolunteeringStatusIcon } from '@repo/ui';
+import { Badge, Button, Input, VolunteeringMemberRow } from '@repo/ui';
 import { ArrowLeftRight, CirclePlus, CircleX } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useState } from 'react';
@@ -121,38 +121,33 @@ export function TransferList({
           </div>
           <div className="overflow-y-auto flex-1 p-1">
             {filteredInvited.map((member) => (
-              <div
+              <VolunteeringMemberRow
                 key={member.id}
-                className="flex items-center gap-2 px-2 py-1.5 rounded-sm hover:bg-accent"
-              >
-                {member.inviteStatus ? (
-                  <VolunteeringStatusIcon
-                    state={toInviteDisplayState(
-                      member.inviteStatus as ShiftInviteStatus,
-                    )}
-                    phase="before"
-                  />
-                ) : (
-                  <div className="size-5 rounded-full bg-muted shrink-0" />
-                )}
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm truncate">{member.name}</p>
-                  <p className="text-xs text-muted-foreground truncate">
-                    {member.email}
-                  </p>
-                </div>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon-xs"
-                  onClick={() => removeMember(member.id)}
-                  aria-label={t('transferList.removeAria', {
-                    name: member.name,
-                  })}
-                >
-                  <CircleX className="size-4" />
-                </Button>
-              </div>
+                name={member.name}
+                email={member.email}
+                state={
+                  member.inviteStatus
+                    ? toInviteDisplayState(
+                        member.inviteStatus as ShiftInviteStatus,
+                      )
+                    : 'invited'
+                }
+                phase="before"
+                className="hover:bg-accent"
+                trailing={
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon-xs"
+                    onClick={() => removeMember(member.id)}
+                    aria-label={t('transferList.removeAria', {
+                      name: member.name,
+                    })}
+                  >
+                    <CircleX className="size-4" />
+                  </Button>
+                }
+              />
             ))}
           </div>
         </div>
