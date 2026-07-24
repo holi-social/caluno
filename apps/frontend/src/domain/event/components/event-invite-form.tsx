@@ -77,18 +77,21 @@ export const EventInviteForm = ({
       open={open}
       onOpenChange={setOpen}
       formError={serverError}
+      fillContent
     >
-      <div className="flex flex-col gap-4">
+      <div className="flex min-h-full flex-col gap-4">
         <TransferList
           available={availableMembers}
           invited={invited}
           onInvitedChange={(ids) => setValue('memberIds', ids)}
         />
-        <p className="text-sm text-muted-foreground">{t('helperText')}</p>
+        <p className="shrink-0 text-sm text-muted-foreground">
+          {t('helperText')}
+        </p>
         <Button
           type="button"
           variant="outline"
-          className="w-full"
+          className="w-full shrink-0"
           onClick={() =>
             copyToClipboard(eventShareUrl(slug), tCommon('linkCopied'))
           }

@@ -554,7 +554,8 @@
     "card": {
       "invited": "Invited",
       "noVolunteers": "No volunteers invited",
-      "inviteAria": "Invite volunteers"
+      "inviteAria": "Invite volunteers",
+      "openInstanceAria": "Open shift instance details"
     },
     "form": {
       "nameLabel": "Shift name",
@@ -718,6 +719,31 @@
       "shiftIdRequired": "Shift ID is required",
       "minMaxVolunteers": "Minimum volunteers cannot exceed maximum volunteers",
       "windowViolation": "Must fall within the event window"
+    },
+    "inviteStatus": {
+      "invited": "Invited",
+      "accepted": "Accepted",
+      "signedUp": "Signed up",
+      "declined": "Declined",
+      "cancelled": "Canceled",
+      "rejected": "Rejected",
+      "summaryInvited": "invited",
+      "summaryAccepted": "accepted",
+      "summarySignedUp": "signed up",
+      "summarySpots": "spots",
+      "volunteersTitle": "Volunteers",
+      "actionInvite": "Invite",
+      "actionUninvite": "Uninvite",
+      "uninviteSuccess": "Volunteer removed from shift",
+      "uninviteError": "Could not remove volunteer",
+      "inviteSuccess": "Volunteer invited again",
+      "inviteError": "Could not invite volunteer"
+    },
+    "instanceDetail": {
+      "title": "Shift instance",
+      "subtitle": "Volunteers and invite status for this occurrence",
+      "inviteCta": "Manage invites",
+      "backToShift": "Back to shift"
     }
   },
   "TimeEntry": {

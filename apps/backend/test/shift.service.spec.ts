@@ -14,7 +14,6 @@ import { OrganizationService } from '../src/organization/organization.service';
 import { ACTIVE_SHIFT_INVITE_STATUSES } from '../src/shared/invite-status';
 import { ShiftInviteStatus } from '../src/shift/enums';
 import { ShiftService } from '../src/shift/shift.service';
-import { FileService } from '../src/storage/services';
 import { UserService } from '../src/user/user.service';
 import { slugify } from '../src/utils/slug.util';
 import { createShift, createShiftInstance, createUser } from './factories';

@@ -19,23 +19,44 @@ import { MembershipService } from '../../membership/membership.service';
 import { JoinStatus } from '../../shared/enums/join-status.enum';
 import { UserMapper } from '../../user/mappers/user.mapper';
 import { User } from '../../user/models/user.model';
+import { ShiftInviteStatus } from '../enums';
+import { ShiftMapper } from '../mappers/shift.mapper';
 import { ShiftInstanceInviteMapper } from '../mappers/shift-instance-invite.mapper';
+import { Shift as ShiftModel } from '../models/shift.model';
 import { ShiftInstance } from '../models/shift-instance.model';
 import { ShiftInstanceInvite } from '../models/shift-instance-invite.model';
 import type { ShiftEntity } from '../schemas/shift.schema';
 import type { ShiftInstanceEntity } from '../schemas/shift-instance.schema';
 import { ShiftService } from '../shift.service';
 import { ShiftInstanceInvitesLoader } from './loader';
+import { ShiftLoader } from './shift.loader';
 import { ShiftInstanceLoader } from './shift-instance.loader';
 
 @Resolver(() => ShiftInstance)
 export class ShiftInstanceFieldResolver {
   constructor(
     private readonly shiftService: ShiftService,
+    private readonly shiftMapper: ShiftMapper,
     private readonly userMapper: UserMapper,
     private readonly shiftInstanceInviteMapper: ShiftInstanceInviteMapper,
     private readonly membershipService: MembershipService,
   ) {}
+
+  @AllowAnonymous()
+  @ResolveField(() => ShiftModel)
+  async master(
+    @Parent()
+    instance: ShiftInstanceEntity & {
+      master?: ShiftEntity;
+    },
+    @Loader(ShiftLoader) loader: ShiftLoader,
+  ): Promise<ShiftModel> {
+    if (instance.master) {
+      return this.shiftMapper.toModelOrThrow(instance.master);
+    }
+
+    return loader.shiftById.load(instance.masterId);
+  }
 
   @Permissions(PERMISSIONS.SHIFT_VIEW)
   @ResolveField(() => [User])
@@ -51,8 +72,25 @@ export class ShiftInstanceFieldResolver {
   }
 
   @Permissions(PERMISSIONS.SHIFT_VIEW)
-  @ResolveField(() => ShiftInstanceInvite, { nullable: true })
+  @ResolveField(() => [ShiftInstanceInvite])
   async invites(
+    @Parent() instance: ShiftInstanceEntity,
+    @Context() context: AuthenticatedGraphQLContext,
+    @Args('statuses', { type: () => [ShiftInviteStatus], nullable: true })
+    statuses: ShiftInviteStatus[] | null | undefined,
+    @Loader(ShiftInstanceInvitesLoader) loader: ShiftInstanceInvitesLoader,
+  ): Promise<ShiftInstanceInvite[]> {
+    const invites = await loader.instanceInvitesByKey.load({
+      organizationUnitId: context.organizationUnitId,
+      instanceId: instance.id,
+      statuses,
+    });
+    return this.shiftInstanceInviteMapper.toArray(invites);
+  }
+
+  @Permissions(PERMISSIONS.SHIFT_VIEW)
+  @ResolveField(() => ShiftInstanceInvite, { nullable: true })
+  async invite(
     @Parent() instance: ShiftInstanceEntity,
     @Context() context: AuthenticatedGraphQLContext,
     @Args('userId') userId: string,

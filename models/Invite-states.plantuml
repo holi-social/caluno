@@ -11,6 +11,7 @@ ACCEPTED -down-> CANCELLED : volunteer
 CANCELLED -up-> SELF_JOINED : volunteer
 CANCELLED -up-> ACCEPTED : volunteer
 
+ACCEPTED --> ADMIN_REJECTED : admin
 INVITED -down-> ADMIN_REJECTED : admin
 ADMIN_REJECTED -up-> INVITED : admin
 SELF_JOINED --> ADMIN_REJECTED : admin

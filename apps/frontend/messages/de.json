@@ -554,7 +554,8 @@
     "card": {
       "invited": "Eingeladen",
       "noVolunteers": "Noch keine Freiwilligen eingeladen",
-      "inviteAria": "Freiwillige einladen"
+      "inviteAria": "Freiwillige einladen",
+      "openInstanceAria": "Schichttermin öffnen"
     },
     "form": {
       "nameLabel": "Titel des Einsatzes",
@@ -718,6 +719,31 @@
       "shiftIdRequired": "Einsatz-ID ist erforderlich",
       "minMaxVolunteers": "Die Mindestanzahl an Freiwilligen darf die Höchstanzahl nicht überschreiten",
       "windowViolation": "Muss innerhalb des Veranstaltungszeitraums liegen"
+    },
+    "inviteStatus": {
+      "invited": "Eingeladen",
+      "accepted": "Angenommen",
+      "signedUp": "Selbst angemeldet",
+      "declined": "Abgelehnt",
+      "cancelled": "Zurückgezogen",
+      "rejected": "Zurückgewiesen",
+      "summaryInvited": "eingeladen",
+      "summaryAccepted": "angenommen",
+      "summarySignedUp": "selbst angemeldet",
+      "summarySpots": "Plätze",
+      "volunteersTitle": "Freiwillige",
+      "actionInvite": "Einladen",
+      "actionUninvite": "Zurückweisen",
+      "uninviteSuccess": "Freiwillige:r von der Schicht entfernt",
+      "uninviteError": "Entfernen fehlgeschlagen",
+      "inviteSuccess": "Freiwillige:r erneut eingeladen",
+      "inviteError": "Einladen fehlgeschlagen"
+    },
+    "instanceDetail": {
+      "title": "Schichttermin",
+      "subtitle": "Freiwillige und Einladungsstatus für diesen Termin",
+      "inviteCta": "Einladungen verwalten",
+      "backToShift": "Zurück zur Schicht"
     }
   },
   "TimeEntry": {

@@ -76,7 +76,7 @@ describe('invite-status', () => {
       ).toBe(true);
     });
 
-    it('allows ACCEPTED and SELF_JOINED to CANCELLED', () => {
+    it('allows ACCEPTED to CANCELLED or ADMIN_REJECTED', () => {
       expect(
         canTransitionInviteStatus(
           ShiftInviteStatus.ACCEPTED,
@@ -85,13 +85,19 @@ describe('invite-status', () => {
       ).toBe(true);
       expect(
         canTransitionInviteStatus(
-          ShiftInviteStatus.SELF_JOINED,
-          ShiftInviteStatus.CANCELLED,
+          ShiftInviteStatus.ACCEPTED,
+          ShiftInviteStatus.ADMIN_REJECTED,
         ),
       ).toBe(true);
     });
 
-    it('allows SELF_JOINED to ADMIN_REJECTED', () => {
+    it('allows SELF_JOINED to CANCELLED or ADMIN_REJECTED', () => {
+      expect(
+        canTransitionInviteStatus(
+          ShiftInviteStatus.SELF_JOINED,
+          ShiftInviteStatus.CANCELLED,
+        ),
+      ).toBe(true);
       expect(
         canTransitionInviteStatus(
           ShiftInviteStatus.SELF_JOINED,
