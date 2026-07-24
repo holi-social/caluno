@@ -16,7 +16,6 @@ import {
   type ShiftInviteStatus,
   SortOrder,
   type UpdateShiftInput,
-  type UpdateShiftInstanceInviteStatusMutation,
 } from '../../generated/graphql';
 import {
   BaseRepository,

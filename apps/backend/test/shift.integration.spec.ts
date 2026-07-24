@@ -1646,7 +1646,7 @@ describe('Volunteer home fields and check-in', () => {
       organizationUnitId: childUnit.id,
       visibility: ShiftVisibility.ALL_MEMBERS,
       startsAt: new Date('2026-06-12T12:00:00.000Z'),
-      endsAt: new Date('2026-06-12T13:00:00.000Z')
+      endsAt: new Date('2026-06-12T13:00:00.000Z'),
     });
     const instances = await db.query.shiftInstances.findMany({
       where: { masterId: shiftId },
