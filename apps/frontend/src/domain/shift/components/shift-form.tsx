@@ -17,6 +17,7 @@ import { useTranslations } from 'next-intl';
 import { type Resolver, useForm } from 'react-hook-form';
 import { type ShiftFormValues, shiftFormSchema } from '../schemas';
 import { RecurrenceSelect } from './recurrence-select';
+import { ShiftTypeSelect } from './shift-type-select';
 
 type FormProps = {
   organizationUnitId: string;
@@ -51,6 +52,7 @@ export const ShiftForm = ({
     resolver: zodResolver(schema) as Resolver<ShiftFormValues>,
     defaultValues: {
       name: '',
+      shiftType: 'non-paid',
       location: defaultLocation ?? '',
       instructions: '',
       openShift: true,
@@ -74,6 +76,15 @@ export const ShiftForm = ({
 
   return (
     <form id={formId} onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+      <Field>
+        <FieldLabel>{t('form.shiftTypeLabel')}</FieldLabel>
+        <ShiftTypeSelect
+          value={watch('shiftType')}
+          onChange={(value) => setValue('shiftType', value)}
+          disabled={isPending}
+        />
+      </Field>
+
       <Field>
         <FieldLabel htmlFor="name">
           {t('form.nameLabel')} <span className="text-destructive">*</span>
