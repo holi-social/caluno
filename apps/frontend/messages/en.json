@@ -508,9 +508,16 @@
     "card": {
       "invited": "Invited",
       "noVolunteers": "No volunteers invited",
-      "inviteAria": "Invite volunteers"
+      "inviteAria": "Invite volunteers",
+      "shiftTypeTooltip": {
+        "nonPaid": "This shift is not paid.",
+        "ehrenamt": "Paid via the Ehrenamtspauschale ({rate} €/hr)",
+        "uebungleiter": "Paid via the Übungsleiterpauschale ({rate} €/hr)"
+      }
     },
     "form": {
+      "shiftTypeLabel": "Shift type",
+      "shiftTypeNonPaid": "Non-paid",
       "nameLabel": "Shift name",
       "namePlaceholder": "e.g. Morning cashier shift",
       "dateTimeLabel": "Date and time",
