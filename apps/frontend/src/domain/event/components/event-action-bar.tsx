@@ -3,9 +3,13 @@
 import { Button } from '@repo/ui';
 import { Eye, Share2, SquarePen, Trash2, UserPlus } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import { Link } from '@/i18n/navigation';
+import { useState, useTransition } from 'react';
+import { toast } from 'sonner';
+import { ConfirmDialog } from '@/domain/requirement-form/components/confirm-dialog';
+import { Link, useRouter } from '@/i18n/navigation';
 import { copyToClipboard } from '@/lib/clipboard';
-import { eventDetailPath } from '../routes';
+import { deleteEvent } from '../actions';
+import { eventDetailPath, eventsListPath } from '../routes';
 import { eventShareUrl } from '../share';
 
 type EventActionBarProps = {
@@ -22,9 +26,25 @@ export function EventActionBar({
   canEdit,
 }: EventActionBarProps) {
   const t = useTranslations('Event');
+  const router = useRouter();
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isDeleting, startDeleteTransition] = useTransition();
 
   const handleShare = () => {
     copyToClipboard(eventShareUrl(slug), t('toast.linkCopied'));
+  };
+
+  const handleDelete = () => {
+    startDeleteTransition(async () => {
+      const result = await deleteEvent.bind(null, orgUId, id)({});
+      if (result.serverError) {
+        toast.error(result.serverError);
+      } else {
+        toast.success(t('toast.deleted'));
+        router.push(eventsListPath(orgUId));
+      }
+      setIsDeleteDialogOpen(false);
+    });
   };
 
   return (
@@ -73,13 +93,24 @@ export function EventActionBar({
       </Button>
 
       {canEdit && (
-        <Button
-          size="icon-xs"
-          variant="destructive"
-          aria-label={t('action.deleteAria')}
-        >
-          <Trash2 />
-        </Button>
+        <ConfirmDialog
+          open={isDeleteDialogOpen}
+          onOpenChange={setIsDeleteDialogOpen}
+          title={t('deleteDialog.title')}
+          description={t('deleteDialog.description')}
+          confirmLabel={t('deleteDialog.confirm')}
+          pending={isDeleting}
+          onConfirm={handleDelete}
+          trigger={
+            <Button
+              size="icon-xs"
+              variant="destructive"
+              aria-label={t('action.deleteAria')}
+            >
+              <Trash2 />
+            </Button>
+          }
+        />
       )}
     </aside>
   );

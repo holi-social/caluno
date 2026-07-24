@@ -10,8 +10,6 @@ import { type ReactNode, Suspense } from 'react';
 import { LocaleCookieSeeder } from '@/components/locale-cookie-seeder';
 import { DashboardSidebar } from '@/components/navigation/dashboard-sidebar';
 import { ProfileNavIcon } from '@/components/navigation/profile-nav-icon';
-import { InviteShiftSheet } from '@/components/sheets/invite-shift-sheet';
-import { ShiftSheet } from '@/components/sheets/shift-sheet';
 import { VolunteerSheet } from '@/components/sheets/volunteer-sheet';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { OrgSyncProvider } from '@/domain/organization/components/org-sync-provider';
@@ -84,8 +82,6 @@ export default async function OrgLayout({
               <div className="flex flex-1 flex-col gap-4 p-4">{children}</div>
             </SidebarInset>
           </SidebarProvider>
-          <InviteShiftSheet />
-          <ShiftSheet />
           <BlockSheet />
           <VolunteerSheet />
         </OrgSyncProvider>

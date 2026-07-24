@@ -31,6 +31,32 @@ export function shiftDetailPath(
   return `/admin/${orgUId}/shifts/${shiftId}${queryString ? `?${queryString}` : ''}`;
 }
 
+export function shiftNewPath(orgUId: string): string {
+  return `/admin/${orgUId}/shifts/new`;
+}
+
+export function shiftEditPath(orgUId: string, shiftId: string): string {
+  return `/admin/${orgUId}/shifts/${shiftId}/edit`;
+}
+
+export function shiftInvitePath(
+  orgUId: string,
+  shiftId: string,
+  instanceId: string,
+): string {
+  return `/admin/${orgUId}/shifts/${shiftId}/invite?instanceId=${encodeURIComponent(instanceId)}`;
+}
+
+export function shiftInstanceDetailPath(
+  orgUId: string,
+  shiftId: string,
+  instanceId: string,
+  query?: ShiftListQuery,
+): string {
+  const queryString = parseQuery(query);
+  return `/admin/${orgUId}/shifts/${shiftId}/instances/${instanceId}${queryString ? `?${queryString}` : ''}`;
+}
+
 export function parseShiftListQuery(
   searchParams: Record<string, string | string[] | undefined>,
 ): ShiftListQuery {

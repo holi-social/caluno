@@ -4,14 +4,21 @@ import type { Database } from '../database/database.module';
 import { DATABASE_CONNECTION } from '../database/database-connection';
 import type { UserEntity } from '../database/schema';
 import * as schema from '../database/schema';
-import { ConflictGraphQLError, NotFoundGraphQLError } from '../graphql/errors';
+import {
+  BadRequestGraphQLError,
+  ConflictGraphQLError,
+  NotFoundGraphQLError,
+} from '../graphql/errors';
 import type { PaginationInput } from '../graphql/pagination.input';
 import { MembershipService } from '../membership/membership.service';
 import type { MembershipRequestEntity } from '../membership/schemas/membership-request.schema';
 import type { RequirementFormEntity } from '../requirement-profile/schemas/requirement-form.schema';
 import type { RequirementProfileEntity } from '../requirement-profile/schemas/requirement-profile.schema';
 import { JoinStatus } from '../shared/enums/join-status.enum';
-import { PARTICIPATING_EVENT_INVITE_STATUSES } from '../shared/invite-status';
+import {
+  canTransitionInviteStatus,
+  PARTICIPATING_EVENT_INVITE_STATUSES,
+} from '../shared/invite-status';
 import { FilePurpose } from '../storage/enums';
 import { FileService } from '../storage/services/file.service';
 import { slugify } from '../utils/slug.util';
@@ -264,6 +271,34 @@ export class EventService {
       );
     }
 
+    const existingInvite = await db.query.eventInvites.findFirst({
+      where: { eventId, userId },
+    });
+
+    if (existingInvite) {
+      if (
+        !canTransitionInviteStatus(
+          existingInvite.status,
+          EventInviteStatus.ACCEPTED,
+        )
+      ) {
+        throw new BadRequestGraphQLError(
+          `Cannot transition invite status from ${existingInvite.status} to ${EventInviteStatus.ACCEPTED}`,
+        );
+      }
+
+      if (existingInvite.status === EventInviteStatus.ACCEPTED) {
+        return event;
+      }
+
+      await db
+        .update(schema.eventInvites)
+        .set({ status: EventInviteStatus.ACCEPTED })
+        .where(eq(schema.eventInvites.id, existingInvite.id));
+
+      return event;
+    }
+
     await db
       .insert(schema.eventInvites)
       .values({
@@ -271,10 +306,7 @@ export class EventService {
         userId,
         status: EventInviteStatus.ACCEPTED,
       })
-      .onConflictDoUpdate({
-        target: [schema.eventInvites.eventId, schema.eventInvites.userId],
-        set: { status: EventInviteStatus.ACCEPTED },
-      });
+      .onConflictDoNothing();
 
     return event;
   }
@@ -364,6 +396,44 @@ export class EventService {
       status: JoinStatus.JOINED,
       event,
     };
+  }
+
+  async updateEventInviteStatus(
+    userId: string,
+    eventId: string,
+    status: EventInviteStatus,
+  ): Promise<EventInviteEntity> {
+    const event = await this.db.query.events.findFirst({
+      where: { id: eventId, isDeleted: false },
+    });
+
+    if (!event) {
+      throw new NotFoundGraphQLError('Event not found');
+    }
+
+    const invite = await this.findInvite(eventId, userId);
+
+    if (!invite) {
+      throw new NotFoundGraphQLError('Event invite not found');
+    }
+
+    if (invite.status === status) {
+      return invite;
+    }
+
+    if (!canTransitionInviteStatus(invite.status, status)) {
+      throw new BadRequestGraphQLError(
+        `Cannot transition invite status from ${invite.status} to ${status}`,
+      );
+    }
+
+    const [updated] = await this.db
+      .update(schema.eventInvites)
+      .set({ status })
+      .where(eq(schema.eventInvites.id, invite.id))
+      .returning();
+
+    return updated;
   }
 
   async findInvite(

@@ -25,6 +25,7 @@ export const shiftInstances = snakeCase.table(
     overrideMaxVolunteers: integer('override_max_volunteers'),
     isException: boolean('is_exception').notNull().default(false),
     isCancelled: boolean('is_cancelled').notNull().default(false),
+    cancelledBySync: boolean('cancelled_by_sync').notNull().default(false),
     occurrenceIndex: integer('occurrence_index').notNull(),
     ...timestampColumns,
   },

@@ -12,12 +12,15 @@ import {
 import { format, startOfDay } from 'date-fns';
 import { CalendarIcon } from 'lucide-react';
 import { useState } from 'react';
+import { buildDateRangeDisabledMatcher } from './date-range-matcher';
 
 export type Props = {
   disabled?: boolean;
   errors?: Array<string | undefined>;
   value: { start: Date | null; end: Date | null };
   onChange: (start: Date | null, end: Date | null) => void;
+  minDate?: Date;
+  maxDate?: Date;
 };
 
 const getTimeString = (date: Date | null | undefined): string => {
@@ -43,6 +46,8 @@ export const DatePickerWithTimeRange = ({
   onChange,
   disabled,
   errors = [],
+  minDate,
+  maxDate,
 }: Props) => {
   const [pickedDate, setPickedDate] = useState<Date | null>(() =>
     value.start ? startOfDay(value.start) : null,
@@ -121,6 +126,9 @@ export const DatePickerWithTimeRange = ({
               selected={calendarDate ?? undefined}
               onSelect={handleDateSelect}
               weekStartsOn={1}
+              disabled={buildDateRangeDisabledMatcher(minDate, maxDate)}
+              startMonth={minDate}
+              endMonth={maxDate}
             />
           </PopoverContent>
         </Popover>

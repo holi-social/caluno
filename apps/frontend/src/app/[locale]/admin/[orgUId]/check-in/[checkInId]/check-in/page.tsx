@@ -39,10 +39,14 @@ export default async function CheckinPage({ params }: CheckinPageProps) {
 
   const shiftsInstances = await data.shift.activeShiftInstances(user.id);
   const acceptedShiftsFirst = shiftsInstances.sort((a, b) => {
-    const aAccepted = a.invites?.status === ShiftInviteStatus.Accepted;
-    const bAccepted = b.invites?.status === ShiftInviteStatus.Accepted;
+    const participatingInA =
+      a.invite?.status === ShiftInviteStatus.Accepted ||
+      a.invite?.status === ShiftInviteStatus.SelfJoined;
+    const participatingInB =
+      b.invite?.status === ShiftInviteStatus.Accepted ||
+      b.invite?.status === ShiftInviteStatus.SelfJoined;
     return (
-      Number(bAccepted) - Number(aAccepted) ||
+      Number(participatingInB) - Number(participatingInA) ||
       new Date(a.actualStartsAt).getTime() -
         new Date(b.actualStartsAt).getTime()
     );

@@ -4,11 +4,14 @@ import { JoinStatus } from '../../shared/enums/join-status.enum';
 import { User } from '../../user/models/user.model';
 import type { Shift } from './shift.model';
 import { Shift as ShiftModel } from './shift.model';
-
+import { ShiftInstanceInvite } from './shift-instance-invite.model';
 @ObjectType()
 export class ShiftInstance {
   @Field(() => ID)
   id!: string;
+
+  @Field(() => ID)
+  masterId!: string;
 
   @Field(() => ShiftModel)
   master!: Shift;
@@ -48,6 +51,9 @@ export class ShiftInstance {
 
   @Field(() => [User], { nullable: true })
   volunteers?: User[] | null;
+
+  @Field(() => [ShiftInstanceInvite], { nullable: true })
+  invites?: ShiftInstanceInvite[] | null;
 
   @Field(() => JoinStatus)
   myJoinStatus!: JoinStatus;

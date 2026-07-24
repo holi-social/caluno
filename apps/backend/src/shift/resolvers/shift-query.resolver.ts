@@ -7,13 +7,21 @@ import {
 import { PERMISSIONS } from '../../auth/constants';
 import { Permissions } from '../../auth/decorators/permissions.decorator';
 import type { AuthenticatedGraphQLContext } from '../../graphql/graphql.context';
-import { PaginationInput } from '../../graphql/pagination.input';
+import {
+  DateRangePaginationInput,
+  PaginationInput,
+} from '../../graphql/pagination.input';
 import { UserMapper } from '../../user/mappers/user.mapper';
 import { User } from '../../user/models/user.model';
+import { ShiftInviteStatus, SortOrder } from '../enums';
 import { ShiftMapper } from '../mappers/shift.mapper';
 import { ShiftInstanceMapper } from '../mappers/shift-instance.mapper';
 import { Shift, ShiftPaginatedResponse } from '../models/shift.model';
-import { ShiftInstance } from '../models/shift-instance.model';
+import {
+  ShiftInstance,
+  ShiftInstancePaginatedResponse,
+} from '../models/shift-instance.model';
+import { ShiftInstancesByMaster } from '../models/shift-instances-by-master.model';
 import { ShiftService } from '../shift.service';
 
 @Resolver(() => Shift)
@@ -97,14 +105,34 @@ export class ShiftQueryResolver {
   }
 
   @Permissions(PERMISSIONS.SHIFT_VIEW)
+  @Query(() => [ShiftInstancesByMaster])
+  async shiftInstancesByMasterIds(
+    @Args('masterIds', { type: () => [ID] }) masterIds: string[],
+    @Context() context: AuthenticatedGraphQLContext,
+  ): Promise<ShiftInstancesByMaster[]> {
+    const instancesByMasterId =
+      await this.shiftService.findInstancesByMasterIds(
+        masterIds,
+        context.organizationUnitId,
+      );
+    return [...instancesByMasterId.entries()].map(([masterId, instances]) => ({
+      masterId,
+      instances: this.shiftInstanceMapper.toArray(instances),
+    }));
+  }
+
+  @Permissions(PERMISSIONS.SHIFT_VIEW)
   @Query(() => [User])
   async shiftVolunteers(
     @Args('instanceId', { type: () => ID }) instanceId: string,
+    @Args('statuses', { type: () => [ShiftInviteStatus], nullable: true })
+    statuses: ShiftInviteStatus[] | null | undefined,
     @Context() context: AuthenticatedGraphQLContext,
   ): Promise<User[]> {
     const volunteers = await this.shiftService.findVolunteers(
       instanceId,
       context.organizationUnitId,
+      statuses ?? undefined,
     );
     return this.userMapper.toArray(volunteers);
   }
@@ -124,33 +152,53 @@ export class ShiftQueryResolver {
     return this.shiftInstanceMapper.toArray(instances);
   }
 
-  @Query(() => [ShiftInstance])
+  @Query(() => ShiftInstancePaginatedResponse)
   async myShiftInstances(
     @Args('includePast', { type: () => Boolean, defaultValue: false })
     includePast: boolean,
+    @Args() pagination: DateRangePaginationInput,
+    @Args('order', { type: () => SortOrder, defaultValue: SortOrder.ASC })
+    order: SortOrder,
     @Session() session: UserSession,
-  ): Promise<ShiftInstance[]> {
-    const instances = await this.shiftService.findMyShiftInstances(
+  ): Promise<ShiftInstancePaginatedResponse> {
+    const { instances, total } = await this.shiftService.findMyShiftInstances(
       session.user.id,
       includePast,
+      pagination.startsAfter,
+      pagination.endsBefore,
+      pagination.limit,
+      pagination.offset,
+      order,
     );
-    return this.shiftInstanceMapper.toArray(instances);
+    return new ShiftInstancePaginatedResponse({
+      items: this.shiftInstanceMapper.toArray(instances),
+      total,
+      limit: pagination.limit,
+      offset: pagination.offset,
+    });
   }
 
-  @Query(() => [ShiftInstance])
+  @Query(() => ShiftInstancePaginatedResponse)
   async availableShiftInstances(
-    @Args('from', { type: () => Date, nullable: true }) from: Date | null,
-    @Args('to', { type: () => Date, nullable: true }) to: Date | null,
+    @Args() pagination: DateRangePaginationInput,
     @Args('organizationUnitIds', { type: () => [ID], nullable: true })
     organizationUnitIds: string[] | null,
     @Session() session: UserSession,
-  ): Promise<ShiftInstance[]> {
-    const instances = await this.shiftService.findAvailableShiftInstances(
-      session.user.id,
-      from,
-      to,
-      organizationUnitIds,
-    );
-    return this.shiftInstanceMapper.toArray(instances);
+  ): Promise<ShiftInstancePaginatedResponse> {
+    const { instances, total } =
+      await this.shiftService.findAvailableShiftInstances(
+        session.user.id,
+        pagination.startsAfter,
+        pagination.endsBefore,
+        organizationUnitIds,
+        pagination.limit,
+        pagination.offset,
+      );
+    return new ShiftInstancePaginatedResponse({
+      items: this.shiftInstanceMapper.toArray(instances),
+      total,
+      limit: pagination.limit,
+      offset: pagination.offset,
+    });
   }
 }

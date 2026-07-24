@@ -160,6 +160,23 @@ type Event {
   title: String!
 }
 
+type EventInvite {
+  createdAt: DateTime!
+  id: ID!
+  status: EventInviteStatus!
+  updatedAt: DateTime!
+  userId: String!
+}
+
+enum EventInviteStatus {
+  ACCEPTED
+  ADMIN_REJECTED
+  CANCELLED
+  INVITED
+  SELF_JOINED
+  VOLUNTEER_REJECTED
+}
+
 type EventOrganizationUnit {
   id: ID!
   logoUrl: String
@@ -402,6 +419,7 @@ type Mutation {
   submitForm(input: SubmitFormInput!, token: String!): FormSubmission!
   submitRequiredForm(formId: String!, input: SubmitFormInput!, organizationUnitId: String!): FormSubmission!
   updateEvent(id: ID!, input: UpdateEventInput!): Event!
+  updateEventInviteStatus(eventId: ID!, status: EventInviteStatus!): EventInvite!
   updateFormBlock(id: String!, input: UpdateFormBlockInput!): FormBlock!
   updateFormBlockField(fieldId: String!, input: UpdateFormBlockFieldInput!): FormBlock!
   updateMembersForShiftInstance(instanceId: String!, inviteToAllInstances: Boolean, memberIds: [String!]!): ShiftInstance!
@@ -417,6 +435,8 @@ type Mutation {
   updateRequirementProfileSubmission(id: String!, input: UpdateRequirementProfileSubmissionInput!): RequirementProfileSubmission!
   updateRole(id: ID!, input: CreateRoleInput!): Role!
   updateShift(id: String!, input: UpdateShiftInput!): Shift!
+  updateShiftInstanceInviteStatus(instanceId: String!, status: ShiftInviteStatus!, userId: String): ShiftInstanceInvite!
+  updateShiftInviteStatus(shiftId: String!, status: ShiftInviteStatus!): ShiftInvite!
   updateTimeEntry(id: ID!, input: UpdateTimeEntryInput!): TimeEntry!
 }
 
@@ -535,10 +555,10 @@ type Query {
   activeShiftInstances: [ShiftInstance!]!
   adminUserProfile(userId: String!): UserProfile
   adminVolunteerSubmission(id: String!): FormSubmission
-  availableShiftInstances(from: DateTime, organizationUnitIds: [ID!], to: DateTime): [ShiftInstance!]!
+  availableShiftInstances(endsBefore: DateTime = null, limit: Int! = 15, offset: Int! = 0, organizationUnitIds: [ID!], startsAfter: DateTime = null): ShiftInstancePaginatedResponse!
   event(id: ID!): Event!
   eventAttendees(eventId: ID!): [User!]!
-  eventShifts(eventId: ID!): [Shift!]!
+  eventShifts(eventId: ID!, limit: Int! = 10, offset: Int! = 0): ShiftPaginatedResponse!
   events(limit: Int! = 10, offset: Int! = 0): EventPaginatedResponse!
   formBlock(id: String!): FormBlock
   formBlocks(limit: Int! = 10, offset: Int! = 0, organizationId: String!): FormBlockPaginatedResponse!
@@ -559,7 +579,7 @@ type Query {
   myMembershipRequests(limit: Int! = 10, offset: Int! = 0, status: MembershipRequestStatus): MembershipRequestPaginatedResponse!
   myMembershipStatus(organizationUnitId: ID!): Boolean!
   myOrganizationUnits: [OrganizationUnit!]!
-  myShiftInstances(includePast: Boolean! = false): [ShiftInstance!]!
+  myShiftInstances(endsBefore: DateTime = null, includePast: Boolean! = false, limit: Int! = 15, offset: Int! = 0, order: SortOrder! = ASC, startsAfter: DateTime = null): ShiftInstancePaginatedResponse!
   myTime(limit: Int! = 10, offset: Int! = 0): TimeEntryPaginatedResponse!
   myUserProfile: UserProfile
   organization(id: String!): Organization
@@ -592,7 +612,8 @@ type Query {
   roles: [Role!]!
   shift(id: String!): Shift!
   shiftInstances(shiftId: ID!): [ShiftInstance!]!
-  shiftVolunteers(instanceId: ID!): [User!]!
+  shiftInstancesByMasterIds(masterIds: [ID!]!): [ShiftInstancesByMaster!]!
+  shiftVolunteers(instanceId: ID!, statuses: [ShiftInviteStatus!]): [User!]!
   shifts(limit: Int! = 10, offset: Int! = 0): ShiftPaginatedResponse!
   timeEntries(limit: Int! = 10, offset: Int! = 0): TimeEntryPaginatedResponse!
   timeEntriesByUser(limit: Int! = 10, offset: Int! = 0, userId: String!): TimeEntryPaginatedResponse!
@@ -835,11 +856,13 @@ type ShiftInstance {
   actualStartsAt: DateTime!
   filledCount: Int!
   id: ID!
-  invites(userId: String!): ShiftInstanceInvite
+  invite(userId: String!): ShiftInstanceInvite
+  invites(statuses: [ShiftInviteStatus!]): [ShiftInstanceInvite!]
   isCancelled: Boolean!
   isCheckedIn: Boolean!
   isException: Boolean!
   master: Shift!
+  masterId: ID!
   myJoinStatus: JoinStatus!
   occurrenceIndex: Int!
   overrideInstructions: String
@@ -855,15 +878,35 @@ type ShiftInstanceInvite {
   id: ID!
   status: ShiftInviteStatus!
   updatedAt: DateTime!
+  user: User!
+  userId: String!
+}
+
+type ShiftInstancePaginatedResponse {
+  items: [ShiftInstance!]!
+  pagination: PaginationInfo!
+}
+
+type ShiftInstancesByMaster {
+  instances: [ShiftInstance!]!
+  masterId: ID!
+}
+
+type ShiftInvite {
+  createdAt: DateTime!
+  id: ID!
+  status: ShiftInviteStatus!
+  updatedAt: DateTime!
   userId: String!
 }
 
 enum ShiftInviteStatus {
   ACCEPTED
+  ADMIN_REJECTED
   CANCELLED
   INVITED
-  REJECTED
   SELF_JOINED
+  VOLUNTEER_REJECTED
 }
 
 type ShiftPaginatedResponse {
@@ -874,6 +917,11 @@ type ShiftPaginatedResponse {
 enum ShiftVisibility {
   ALL_MEMBERS
   INVITED_MEMBERS
+}
+
+enum SortOrder {
+  ASC
+  DESC
 }
 
 input SubmitFormInput {

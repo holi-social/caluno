@@ -87,7 +87,7 @@ const createContext = async (): Promise<GraphqlTestContext> => {
   };
 };
 
-export const getGraphqlTestContext = (): Promise<GraphqlTestContext> => {
+export const getGraphqlTestContext = async (): Promise<GraphqlTestContext> => {
   if (!globalThis.__graphqlIntegrationTestContextPromise) {
     globalThis.__graphqlIntegrationTestContextPromise = createContext();
   }
@@ -101,5 +101,9 @@ export const getGraphqlTestContext = (): Promise<GraphqlTestContext> => {
     });
   }
 
-  return globalThis.__graphqlIntegrationTestContextPromise;
+  const context = await globalThis.__graphqlIntegrationTestContextPromise;
+  // All spec files share one process and one auth-mock user; re-pin it so a
+  // leak from a previously executed file cannot bleed into this one.
+  setAuthMockUserId(context.testUserId);
+  return context;
 };

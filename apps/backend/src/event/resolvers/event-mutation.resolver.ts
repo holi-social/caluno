@@ -7,11 +7,14 @@ import type { AuthenticatedGraphQLContext } from '../../graphql/graphql.context'
 import { RequirementForm } from '../../requirement-profile/models/requirement-form.model';
 import { RequirementProfile } from '../../requirement-profile/models/requirement-profile.model';
 import { UserRequirementStatus } from '../../requirement-profile/models/user-requirement-status.model';
+import { EventInviteStatus } from '../enums';
 import { EventService } from '../event.service';
 import { CreateEventInput } from '../inputs/create-event.input';
 import { UpdateEventInput } from '../inputs/update-event.input';
 import { EventMapper } from '../mappers/event.mapper';
+import { EventInviteMapper } from '../mappers/event-invite.mapper';
 import { Event } from '../models/event.model';
+import { EventInvite } from '../models/event-invite.model';
 import { JoinEventResult } from '../models/join-event-result.model';
 
 @Resolver(() => Event)
@@ -19,6 +22,7 @@ export class EventMutationResolver {
   constructor(
     private readonly eventService: EventService,
     private readonly eventMapper: EventMapper,
+    private readonly eventInviteMapper: EventInviteMapper,
   ) {}
 
   @Permissions(PERMISSIONS.SHIFT_EDIT)
@@ -108,5 +112,20 @@ export class EventMutationResolver {
           submissionId: s.submissionId,
         })) ?? null,
     };
+  }
+
+  @Mutation(() => EventInvite)
+  async updateEventInviteStatus(
+    @Session() session: UserSession,
+    @Args('eventId', { type: () => ID }) eventId: string,
+    @Args('status', { type: () => EventInviteStatus })
+    status: EventInviteStatus,
+  ): Promise<EventInvite> {
+    const invite = await this.eventService.updateEventInviteStatus(
+      session.user.id,
+      eventId,
+      status,
+    );
+    return this.eventInviteMapper.toModelOrThrow(invite);
   }
 }

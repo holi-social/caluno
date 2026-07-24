@@ -1,4 +1,5 @@
 import { Field, ID, ObjectType } from '@nestjs/graphql';
+import { User } from '../../user/models/user.model';
 import { ShiftInviteStatus } from '../enums';
 
 @ObjectType()
@@ -11,6 +12,9 @@ export class ShiftInstanceInvite {
 
   @Field(() => String)
   userId!: string;
+
+  @Field(() => User)
+  user!: User;
 
   @Field(() => Date)
   createdAt!: Date;

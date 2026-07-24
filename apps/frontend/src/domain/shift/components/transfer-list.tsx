@@ -1,27 +1,35 @@
 'use client';
 
-import { Badge, Button, Input } from '@repo/ui';
+import type { ShiftInviteStatus } from '@repo/data';
+import { Badge, Button, cn, Input, VolunteeringMemberRow } from '@repo/ui';
 import { ArrowLeftRight, CirclePlus, CircleX } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useState } from 'react';
+import { toInviteDisplayState } from '../invite-status-display';
+
+/** Label + gap + search bar + minimum list area */
+const TRANSFER_LIST_MIN_HEIGHT = 222;
 
 type Member = {
   id: string;
   name: string;
   email: string;
   image?: string | null;
+  inviteStatus?: import('@repo/data').ShiftInviteStatus | null;
 };
 
 type TransferListProps = {
   available: Member[];
   invited: Member[];
   onInvitedChange: (ids: string[]) => void;
+  className?: string;
 };
 
 export function TransferList({
   available,
   invited,
   onInvitedChange,
+  className,
 }: TransferListProps) {
   const [availableSearch, setAvailableSearch] = useState('');
   const [invitedSearch, setInvitedSearch] = useState('');
@@ -51,7 +59,10 @@ export function TransferList({
   };
 
   return (
-    <div className="flex gap-4 items-center h-[289px]">
+    <div
+      className={cn('flex flex-1 items-center gap-4', className)}
+      style={{ minHeight: TRANSFER_LIST_MIN_HEIGHT }}
+    >
       {/* Available panel */}
       <div className="flex flex-col gap-2 flex-1 h-full min-w-0">
         <div className="flex items-center justify-between">
@@ -118,29 +129,33 @@ export function TransferList({
           </div>
           <div className="overflow-y-auto flex-1 p-1">
             {filteredInvited.map((member) => (
-              <div
+              <VolunteeringMemberRow
                 key={member.id}
-                className="flex items-center gap-2 px-2 py-1.5 rounded-sm hover:bg-accent"
-              >
-                <div className="size-5 rounded-full bg-muted shrink-0" />
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm truncate">{member.name}</p>
-                  <p className="text-xs text-muted-foreground truncate">
-                    {member.email}
-                  </p>
-                </div>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon-xs"
-                  onClick={() => removeMember(member.id)}
-                  aria-label={t('transferList.removeAria', {
-                    name: member.name,
-                  })}
-                >
-                  <CircleX className="size-4" />
-                </Button>
-              </div>
+                name={member.name}
+                email={member.email}
+                state={
+                  member.inviteStatus
+                    ? toInviteDisplayState(
+                        member.inviteStatus as ShiftInviteStatus,
+                      )
+                    : 'invited'
+                }
+                phase="before"
+                className="hover:bg-accent"
+                trailing={
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon-xs"
+                    onClick={() => removeMember(member.id)}
+                    aria-label={t('transferList.removeAria', {
+                      name: member.name,
+                    })}
+                  >
+                    <CircleX className="size-4" />
+                  </Button>
+                }
+              />
             ))}
           </div>
         </div>

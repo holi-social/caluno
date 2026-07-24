@@ -13,7 +13,8 @@ function toJoinStatus(status: ShiftInviteStatus | undefined): JoinStatus {
       return JoinStatus.JOINED;
     case ShiftInviteStatus.INVITED:
       return JoinStatus.PENDING;
-    case ShiftInviteStatus.REJECTED:
+    case ShiftInviteStatus.VOLUNTEER_REJECTED:
+    case ShiftInviteStatus.ADMIN_REJECTED:
       return JoinStatus.REJECTED;
     default:
       return JoinStatus.NONE;

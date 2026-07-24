@@ -9,6 +9,8 @@ export function useAvailableShiftInstances(
     from?: Date;
     to?: Date;
     organizationUnitIds?: string[];
+    limit?: number;
+    offset?: number;
   } = {},
   queryOptions?: Omit<
     UseQueryOptions<

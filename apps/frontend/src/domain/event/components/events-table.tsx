@@ -46,7 +46,7 @@ export function EventsTable({ events, orgUId, canEdit }: EventsTableProps) {
         {canEdit && (
           <EmptyContent>
             <Link href={`/admin/${orgUId}/events/new`}>
-              <Button size="sm">{t('list.createButton')}</Button>
+              <Button>{t('list.createButton')}</Button>
             </Link>
           </EmptyContent>
         )}

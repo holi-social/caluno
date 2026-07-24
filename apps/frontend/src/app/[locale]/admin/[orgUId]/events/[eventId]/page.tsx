@@ -1,14 +1,15 @@
 import { PermissionKey } from '@repo/data';
 import { Button } from '@repo/ui';
-import { ArrowLeft, MapPin, SquarePen, UserPlus } from 'lucide-react';
+import { ArrowLeft, Calendar, MapPin, SquarePen, UserPlus } from 'lucide-react';
 import { notFound } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
 import {
   DetailCoverImage,
   DetailLogoImage,
 } from '@/components/detail-entity-image';
-import { EventShiftsCard } from '@/domain/event/components/event-shifts-card';
-import { EventVolunteersCard } from '@/domain/event/components/event-volunteers-card';
+import { AdminEventShiftsSection } from '@/domain/event/components/admin-event-shifts-section';
+import { EventVolunteersSection } from '@/domain/event/components/event-volunteers-section';
+
 import { eventsListPath } from '@/domain/event/routes';
 import { Link } from '@/i18n/navigation';
 import { getDataClient } from '@/lib/data-client';
@@ -17,12 +18,17 @@ import { checkPermission } from '@/lib/permissions-server';
 
 interface EventDetailPageProps {
   params: Promise<{ orgUId: string; eventId: string }>;
+  searchParams: Promise<{ page?: string }>;
 }
+
+const ITEMS_PER_PAGE = 10;
 
 export default async function EventDetailPage({
   params,
+  searchParams,
 }: EventDetailPageProps) {
   const { orgUId, eventId } = await params;
+  const { page } = await searchParams;
   const t = await getTranslations('Event.detail');
   const [canEdit = false] = await checkPermission(
     orgUId,
@@ -31,13 +37,34 @@ export default async function EventDetailPage({
   const data = await getDataClient({ orgUId });
   const { formatRange } = await getFormatting();
 
+  const currentPage = Number.parseInt(page ?? '1', 10) || 1;
+  const offset = (currentPage - 1) * ITEMS_PER_PAGE;
+
   const event = await data.event.findById(eventId);
 
   if (!event) {
     notFound();
   }
 
-  const attendees = await data.event.findAttendees(eventId);
+  const [attendees, { items: shifts, pagination: shiftsPagination }] =
+    await Promise.all([
+      await data.event.findAttendees(eventId),
+      await data.shift.findAllForEvent(eventId, {
+        limit: ITEMS_PER_PAGE,
+        offset,
+      }),
+    ]);
+
+  const instanceRefs = shifts.length
+    ? await data.shift.findInstancesByMasterIds(shifts.map((shift) => shift.id))
+    : [];
+  const instanceIdByShiftId = new Map(
+    instanceRefs.map((group) => [group.masterId, group.instances[0]?.id]),
+  );
+  const shiftsWithInstances = shifts.map((shift) => {
+    const instanceId = instanceIdByShiftId.get(shift.id);
+    return { ...shift, instance: instanceId ? { id: instanceId } : null };
+  });
 
   return (
     <div className="flex flex-col gap-6">
@@ -56,25 +83,26 @@ export default async function EventDetailPage({
         />
       ) : null}
 
-      <div className="flex items-start justify-between gap-4">
-        <div className="flex min-w-0 items-start gap-4">
-          {event.logoUrl ? (
-            <DetailLogoImage src={event.logoUrl} alt={event.title} />
-          ) : null}
-          <div className="min-w-0">
-            <h1 className="page-title line-clamp-2">{event.title}</h1>
-            <p className="text-muted-foreground mt-1">
-              {formatRange(event.startsAt, event.endsAt)}
-            </p>
-            <p className="text-muted-foreground flex items-center gap-1 mt-1">
-              <MapPin className="size-4 shrink-0" />
-              {event.location ?? '—'}
-            </p>
-          </div>
+      <div className="flex flex-col md:flex-row items-start justify-between gap-4">
+        {event.logoUrl ? (
+          <DetailLogoImage src={event.logoUrl} alt={event.title} />
+        ) : null}
+        <div className="flex flex-col min-w-0 gap-3">
+          <h1 className="page-title line-clamp-2">{event.title}</h1>
+
+          <p className="text-muted-foreground text-lg flex items-center gap-1 mt-1">
+            <Calendar className="shrink-0" />
+            {formatRange(event.startsAt, event.endsAt)}
+          </p>
+
+          <p className="text-muted-foreground text-lg flex items-center gap-1 mt-1">
+            <MapPin className="shrink-0" />
+            {event.location ?? '—'}
+          </p>
         </div>
 
         {canEdit && (
-          <div className="flex gap-2 shrink-0">
+          <div className="flex flex-col md:flex-row gap-2 shrink-0">
             <Link href={`/admin/${orgUId}/events/${eventId}/edit`}>
               <Button variant="outline">
                 <SquarePen />
@@ -92,16 +120,18 @@ export default async function EventDetailPage({
       </div>
 
       <div className="grid grid-cols-1 gap-6">
-        <EventVolunteersCard
+        <EventVolunteersSection
           orgUId={orgUId}
           eventId={eventId}
           attendees={attendees}
           canEdit={canEdit}
         />
-        <EventShiftsCard
+        <AdminEventShiftsSection
           orgUId={orgUId}
           eventId={eventId}
-          shifts={event.shifts}
+          shifts={shiftsWithInstances}
+          pagination={shiftsPagination}
+          currentPage={currentPage}
           canEdit={canEdit}
         />
       </div>
