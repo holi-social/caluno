@@ -1132,20 +1132,7 @@
           "createButton": "Vorlage erstellen"
         },
         "editButton": "Vorlage bearbeiten",
-        "filled": {
-          "blockedActionsTitle": "Blockierte Aktionen",
-          "blockedActionsTooltip": "Aktionen, die Ehrenamtliche erst ausführen können, nachdem dieses Dokument erstellt und unterschrieben wurde. Du kannst die Liste leer lassen, wenn nichts blockiert werden soll.",
-          "addBlockedAction": "Aktion hinzufügen",
-          "removeAction": "{gate} entfernen"
-        },
-        "gatePoints": {
-          "check_in": "Check-in",
-          "shift_signup": "Schichtanmeldung",
-          "document_ep_contract": "Ehrenamtspauschale – Vertrag erstellen",
-          "document_ep_invoice": "Ehrenamtspauschale – Abrechnung erstellen",
-          "document_ul_contract": "Übungsleiterpauschale – Vertrag erstellen",
-          "document_ul_invoice": "Übungsleiterpauschale – Abrechnung erstellen"
-        }
+        "lastEdited": "Zuletzt bearbeitet am {date} von {name}"
       }
     }
   },
