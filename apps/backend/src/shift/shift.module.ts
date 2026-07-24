@@ -16,6 +16,8 @@ import { ShiftLoader } from './resolvers/shift.loader';
 import { ShiftFieldResolver } from './resolvers/shift-field.resolver';
 import { ShiftInstanceLoader } from './resolvers/shift-instance.loader';
 import { ShiftInstanceFieldResolver } from './resolvers/shift-instance-field.resolver';
+import { ShiftInstanceInviteFieldResolver } from './resolvers/shift-instance-invite-field.resolver';
+import { ShiftInstanceInviteUsersLoader } from './resolvers/shift-instance-invite-users.loader';
 import { ShiftMutationResolver } from './resolvers/shift-mutation.resolver';
 import { ShiftQueryResolver } from './resolvers/shift-query.resolver';
 import { ShiftService } from './shift.service';
@@ -41,7 +43,9 @@ import { ShiftService } from './shift.service';
     ShiftMutationResolver,
     ShiftFieldResolver,
     ShiftInstanceFieldResolver,
+    ShiftInstanceInviteFieldResolver,
     ShiftInstanceInvitesLoader,
+    ShiftInstanceInviteUsersLoader,
     ShiftLoader,
     ShiftInstanceLoader,
   ],

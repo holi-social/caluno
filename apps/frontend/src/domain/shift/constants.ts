@@ -5,17 +5,9 @@ import {
   type RecurrenceDayValue,
   RRULE_DAY_CODES,
   type RRuleDayCode,
-  ShiftInviteStatus,
   WEEKEND_DAYS,
   WORKING_DAYS,
 } from '@repo/data';
-
-/** Invite statuses shown as "invited" in the admin invite sheet — pending or participating. */
-export const INVITE_SHEET_INVITEE_STATUSES = [
-  ShiftInviteStatus.Invited,
-  ShiftInviteStatus.Accepted,
-  ShiftInviteStatus.SelfJoined,
-];
 
 export {
   ALL_RECURRENCE_DAYS,

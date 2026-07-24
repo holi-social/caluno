@@ -25,6 +25,8 @@ type Props = React.PropsWithChildren & {
   open?: boolean;
   onOpenChange: (open: boolean) => void;
   pending?: boolean;
+  /** Stretch body to fill space between header and footer (for flex-growing content like transfer lists). */
+  fillContent?: boolean;
 };
 
 export const useFormSheet = (openedByNavigation = true) => {
@@ -61,6 +63,7 @@ export const FormSheet = ({
   open = true,
   onOpenChange,
   pending = false,
+  fillContent = false,
   children,
 }: Props) => {
   const isMobile = useIsMobile();
@@ -71,19 +74,26 @@ export const FormSheet = ({
       <SheetContent
         side={isMobile ? 'bottom' : 'right'}
         className={cn(
-          'w-full md:max-w-xl h-full',
+          'flex h-full w-full flex-col gap-0 overflow-hidden md:max-w-xl',
           isMobile && 'max-h-[calc(100vh-1.5rem)] rounded-t-2xl',
         )}
       >
-        <form onSubmit={onSubmit} className="flex flex-col h-full">
-          <SheetHeader className="px-6 pt-6">
+        <form onSubmit={onSubmit} className="flex h-full min-h-0 flex-col">
+          <SheetHeader className="shrink-0 px-6 pt-6">
             <SheetTitle className="text-2xl font-bold">{title}</SheetTitle>
             {description && <SheetDescription>{description}</SheetDescription>}
           </SheetHeader>
 
-          <div className="overflow-y-auto space-y-6 px-6 pb-6 pt-5 mask-linear-gradient(to_bottom,transparent_0,black_2rem,black_calc(100%-2rem),transparent_100%)]">
+          <div
+            className={cn(
+              'px-6 pb-6 pt-5',
+              fillContent
+                ? 'flex min-h-0 flex-1 flex-col overflow-y-auto mask-linear-gradient(to_bottom,transparent_0,black_2rem,black_calc(100%-2rem),transparent_100%)]'
+                : 'space-y-6 overflow-y-auto mask-linear-gradient(to_bottom,transparent_0,black_2rem,black_calc(100%-2rem),transparent_100%)]',
+            )}
+          >
             {formError && (
-              <div className="rounded-md bg-destructive/10 p-4 text-sm text-destructive">
+              <div className="shrink-0 rounded-md bg-destructive/10 p-4 text-sm text-destructive">
                 {formError}
               </div>
             )}
@@ -91,7 +101,7 @@ export const FormSheet = ({
             {children}
           </div>
 
-          <SheetFooter className="flex flex-row">
+          <SheetFooter className="flex shrink-0 flex-row">
             <SheetClose asChild>
               <Button variant="secondary" className="flex-1" disabled={pending}>
                 {t('cancel')}

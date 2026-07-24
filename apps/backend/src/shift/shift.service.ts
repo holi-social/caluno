@@ -81,6 +81,15 @@ export class ShiftService {
     return shift;
   }
 
+  /** Batch load shifts by id (DataLoader). */
+  async findByIds(ids: string[]): Promise<ShiftEntity[]> {
+    if (ids.length === 0) return [];
+
+    return this.db.query.shifts.findMany({
+      where: { id: { in: ids }, isDeleted: false },
+    });
+  }
+
   async findOrgUnitsShift(
     id: string,
     organizationUnitId: string,
@@ -1070,6 +1079,52 @@ export class ShiftService {
           status: { in: [...statuses] },
         },
       },
+    });
+  }
+
+  /** Invites for many instances in one query (DataLoader batch). */
+  async findInstanceInvitesByInstanceIds(
+    instanceIds: string[],
+    organizationUnitId: string,
+    statuses?: readonly ShiftInviteStatus[] | null,
+  ): Promise<ShiftInstanceInviteEntity[]> {
+    if (instanceIds.length === 0) {
+      return [];
+    }
+
+    return this.db.query.shiftInstanceInvites.findMany({
+      where: {
+        instanceId: { in: instanceIds },
+        instance: {
+          master: { organizationUnitId, isDeleted: false },
+        },
+        ...(statuses?.length ? { status: { in: [...statuses] } } : {}),
+      },
+      // Tie-break on id so batch invites (same createdAt) keep stable order after updates.
+      orderBy: { createdAt: 'asc', id: 'asc' },
+    });
+  }
+
+  async findInstanceInvites(
+    instanceId: string,
+    organizationUnitId: string,
+    statuses?: readonly ShiftInviteStatus[] | null,
+  ): Promise<ShiftInstanceInviteEntity[]> {
+    await this.findInstanceById(instanceId, organizationUnitId);
+
+    return this.findInstanceInvitesByInstanceIds(
+      [instanceId],
+      organizationUnitId,
+      statuses,
+    );
+  }
+
+  async findUsersByIds(userIds: string[]): Promise<UserEntity[]> {
+    if (userIds.length === 0) {
+      return [];
+    }
+    return this.db.query.users.findMany({
+      where: { id: { in: userIds } },
     });
   }
 

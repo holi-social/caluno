@@ -1,7 +1,7 @@
 'use server';
 
 import type { CreateShiftInput, UpdateShiftInput } from '@repo/data';
-import { ShiftVisibility } from '@repo/data';
+import { ShiftInviteStatus, ShiftVisibility } from '@repo/data';
 import z from 'zod';
 import { getDataClient } from '@/lib/data-client';
 import { actionClient } from '@/lib/safe-action';
@@ -102,6 +102,25 @@ export const updateShiftVolunteers = actionClient
       return await data.shift.updateMembers(instanceId, parsedInput.memberIds, {
         inviteToAllInstances: parsedInput.inviteToAllInstances,
       });
+    },
+  );
+
+const updateShiftInstanceInviteStatusSchema = z.object({
+  userId: z.string().min(1),
+  status: z.enum(ShiftInviteStatus),
+});
+
+export const updateShiftInstanceInviteStatus = actionClient
+  .inputSchema(updateShiftInstanceInviteStatusSchema)
+  .bindArgsSchemas([z.string(), z.string()])
+  .action(
+    async ({ parsedInput, bindArgsParsedInputs: [orgUId, instanceId] }) => {
+      const data = await getDataClient({ orgUId });
+      return await data.shift.updateInstanceInviteStatus(
+        instanceId,
+        parsedInput.status,
+        parsedInput.userId,
+      );
     },
   );
 

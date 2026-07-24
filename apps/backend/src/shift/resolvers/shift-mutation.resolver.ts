@@ -1,8 +1,10 @@
 import { Args, Context, Mutation, Resolver } from '@nestjs/graphql';
 import { Session, type UserSession } from '@thallesp/nestjs-better-auth';
 import { plainToInstance } from 'class-transformer';
+import { AuthService } from '../../auth/auth.service';
 import { PERMISSIONS } from '../../auth/constants';
 import { Permissions } from '../../auth/decorators/permissions.decorator';
+import { ForbiddenGraphQLError } from '../../graphql/errors';
 import type { AuthenticatedGraphQLContext } from '../../graphql/graphql.context';
 import { RequirementForm } from '../../requirement-profile/models/requirement-form.model';
 import { RequirementProfile } from '../../requirement-profile/models/requirement-profile.model';
@@ -29,7 +31,33 @@ export class ShiftMutationResolver {
     private readonly shiftInstanceMapper: ShiftInstanceMapper,
     private readonly shiftInviteMapper: ShiftInviteMapper,
     private readonly shiftInstanceInviteMapper: ShiftInstanceInviteMapper,
+    private readonly authService: AuthService,
   ) {}
+
+  private async assertCanManageInviteForUser(
+    actorUserId: string,
+    targetUserId: string,
+    instanceId: string,
+    organizationUnitId: string,
+  ): Promise<void> {
+    if (actorUserId === targetUserId) {
+      return;
+    }
+
+    const hasPermission = await this.authService.hasRequiredPermissions(
+      actorUserId,
+      organizationUnitId,
+      [PERMISSIONS.SHIFT_EDIT],
+    );
+
+    if (!hasPermission) {
+      throw new ForbiddenGraphQLError(
+        'You do not have permission to manage invites for other users',
+      );
+    }
+
+    await this.shiftService.findInstanceById(instanceId, organizationUnitId);
+  }
 
   @Permissions(PERMISSIONS.SHIFT_EDIT)
   @Mutation(() => Shift)
@@ -148,9 +176,21 @@ export class ShiftMutationResolver {
     @Args('instanceId', { type: () => String }) instanceId: string,
     @Args('status', { type: () => ShiftInviteStatus })
     status: ShiftInviteStatus,
+    @Args('userId', { type: () => String, nullable: true })
+    userId: string | null | undefined,
+    @Context() context: AuthenticatedGraphQLContext,
   ): Promise<ShiftInstanceInvite> {
-    const invite = await this.shiftService.updateShiftInstanceInviteStatus(
+    const targetUserId = userId ?? session.user.id;
+
+    await this.assertCanManageInviteForUser(
       session.user.id,
+      targetUserId,
+      instanceId,
+      context.organizationUnitId,
+    );
+
+    const invite = await this.shiftService.updateShiftInstanceInviteStatus(
+      targetUserId,
       instanceId,
       status,
     );

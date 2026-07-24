@@ -21,6 +21,10 @@ import {
   createShiftInstance,
   createUser,
 } from './factories';
+import {
+  createOrganizationWithType,
+  createUnit,
+} from './factories/org.factory';
 import { applyBunAuthMocks, setAuthMockUserId } from './helpers/auth-mocks';
 import {
   graphqlRequest,
@@ -828,7 +832,49 @@ describe('Volunteer home fields and check-in', () => {
     expect(instance?.filledCount).toBe(1);
   });
 
-  it('returns invites for the requested user', async () => {
+  it('returns master for shift instances when master is not eager-loaded', async () => {
+    const { id: shiftId, title } = await createShift(db, {
+      organizationUnitId,
+      title: 'Morning shift',
+    });
+    const instances = await db.query.shiftInstances.findMany({
+      where: { masterId: shiftId },
+    });
+    const instanceId = instances[0]?.id;
+    expect(instanceId).toBeDefined();
+
+    const data = await graphqlRequestRequiringData<{
+      shiftInstances: Array<{
+        id: string;
+        master: { id: string; title: string };
+      }>;
+    }>(
+      app,
+      {
+        query: `
+          query ShiftInstances($shiftId: ID!) {
+            shiftInstances(shiftId: $shiftId) {
+              id
+              master {
+                id
+                title
+              }
+            }
+          }
+        `,
+        variables: { shiftId },
+        headers: {
+          'x-organization-unit-id': organizationUnitId,
+        },
+      },
+      'shiftInstances',
+    );
+
+    const instance = data.shiftInstances.find((i) => i.id === instanceId);
+    expect(instance?.master).toEqual({ id: shiftId, title });
+  });
+
+  it('returns invite for the requested user', async () => {
     const volunteer = await createUser(db);
     const { id: shiftId } = await createShift(db, {
       organizationUnitId,
@@ -852,7 +898,7 @@ describe('Volunteer home fields and check-in', () => {
     const data = await graphqlRequestRequiringData<{
       shiftInstances: Array<{
         id: string;
-        invites: {
+        invite: {
           id: string;
           status: ShiftInviteStatus;
           userId: string;
@@ -865,7 +911,7 @@ describe('Volunteer home fields and check-in', () => {
           query ShiftInstances($shiftId: ID!, $userId: String!) {
             shiftInstances(shiftId: $shiftId) {
               id
-              invites(userId: $userId) {
+              invite(userId: $userId) {
                 id
                 status
                 userId
@@ -882,14 +928,14 @@ describe('Volunteer home fields and check-in', () => {
     );
 
     const instance = data.shiftInstances.find((i) => i.id === instanceId);
-    expect(instance?.invites).toEqual({
+    expect(instance?.invite).toEqual({
       id: insertedInvite?.id,
       status: ShiftInviteStatus.INVITED,
       userId: volunteer.id,
     });
   });
 
-  it('returns null invites when the user has no invite', async () => {
+  it('returns null invite when the user has no invite', async () => {
     const volunteer = await createUser(db);
     const otherUser = await createUser(db);
     const { id: shiftId } = await createShift(db, {
@@ -911,7 +957,7 @@ describe('Volunteer home fields and check-in', () => {
     const data = await graphqlRequestRequiringData<{
       shiftInstances: Array<{
         id: string;
-        invites: { id: string } | null;
+        invite: { id: string } | null;
       }>;
     }>(
       app,
@@ -920,7 +966,7 @@ describe('Volunteer home fields and check-in', () => {
           query ShiftInstances($shiftId: ID!, $userId: String!) {
             shiftInstances(shiftId: $shiftId) {
               id
-              invites(userId: $userId) {
+              invite(userId: $userId) {
                 id
               }
             }
@@ -935,7 +981,7 @@ describe('Volunteer home fields and check-in', () => {
     );
 
     const instance = data.shiftInstances.find((i) => i.id === instanceId);
-    expect(instance?.invites).toBeNull();
+    expect(instance?.invite).toBeNull();
   });
 
   it('returns event data on a shift linked to an event', async () => {
@@ -2120,5 +2166,467 @@ describe('Shift invite status model', () => {
     });
 
     expect(instanceInvite?.status).toBe(ShiftInviteStatus.ACCEPTED);
+  });
+});
+
+describe('ShiftInstance.invites (VOLI-842)', () => {
+  let app: INestApplication;
+  let db: Database;
+  let organizationUnitId: string;
+
+  beforeAll(async () => {
+    const context = await getGraphqlTestContext();
+    app = context.app;
+    db = context.db;
+    organizationUnitId = context.organizationUnitId;
+  });
+
+  it('returns invitees with status including SELF_JOINED distinct from ACCEPTED', async () => {
+    const { id: shiftId } = await createShift(db, { organizationUnitId });
+    const instances = await db.query.shiftInstances.findMany({
+      where: { masterId: shiftId },
+    });
+    const instanceId = instances[0]?.id;
+    expect(instanceId).toBeDefined();
+    if (!instanceId) {
+      throw new Error('Expected shift instance');
+    }
+
+    const invited = await createUser(db);
+    const accepted = await createUser(db);
+    const signedUp = await createUser(db);
+    const declined = await createUser(db);
+    const cancelled = await createUser(db);
+    const rejected = await createUser(db);
+
+    await db.insert(schema.shiftInstanceInvites).values([
+      {
+        instanceId,
+        userId: invited.id,
+        status: ShiftInviteStatus.INVITED,
+      },
+      {
+        instanceId,
+        userId: accepted.id,
+        status: ShiftInviteStatus.ACCEPTED,
+      },
+      {
+        instanceId,
+        userId: signedUp.id,
+        status: ShiftInviteStatus.SELF_JOINED,
+      },
+      {
+        instanceId,
+        userId: declined.id,
+        status: ShiftInviteStatus.VOLUNTEER_REJECTED,
+      },
+      {
+        instanceId,
+        userId: cancelled.id,
+        status: ShiftInviteStatus.CANCELLED,
+      },
+      {
+        instanceId,
+        userId: rejected.id,
+        status: ShiftInviteStatus.ADMIN_REJECTED,
+      },
+    ]);
+
+    const data = await graphqlRequestRequiringData<{
+      shiftInstances: Array<{
+        id: string;
+        invites: Array<{
+          status: string;
+          user: { id: string; name: string };
+        }>;
+      }>;
+    }>(
+      app,
+      {
+        query: `
+          query ShiftInstanceInvites($shiftId: ID!) {
+            shiftInstances(shiftId: $shiftId) {
+              id
+              invites {
+                status
+                user { id name }
+              }
+            }
+          }
+        `,
+        variables: { shiftId },
+        headers: { 'x-organization-unit-id': organizationUnitId },
+      },
+      'shiftInstances',
+    );
+
+    const instance = data.shiftInstances.find((row) => row.id === instanceId);
+    expect(instance).toBeDefined();
+    if (!instance) {
+      throw new Error('Expected shift instance in GraphQL response');
+    }
+    const byUser = new Map(
+      instance.invites.map((invite) => [invite.user.id, invite.status]),
+    );
+    expect(byUser.get(invited.id)).toBe(ShiftInviteStatus.INVITED);
+    expect(byUser.get(accepted.id)).toBe(ShiftInviteStatus.ACCEPTED);
+    expect(byUser.get(signedUp.id)).toBe(ShiftInviteStatus.SELF_JOINED);
+    expect(byUser.get(declined.id)).toBe(ShiftInviteStatus.VOLUNTEER_REJECTED);
+    expect(byUser.get(cancelled.id)).toBe(ShiftInviteStatus.CANCELLED);
+    expect(byUser.get(rejected.id)).toBe(ShiftInviteStatus.ADMIN_REJECTED);
+    expect(byUser.get(accepted.id)).not.toBe(byUser.get(signedUp.id));
+  });
+
+  it('updateShiftInstanceInviteStatus sets ADMIN_REJECTED to INVITED for admin', async () => {
+    const { id: shiftId } = await createShift(db, { organizationUnitId });
+    const instances = await db.query.shiftInstances.findMany({
+      where: { masterId: shiftId },
+    });
+    const instanceId = instances[0]?.id;
+    expect(instanceId).toBeDefined();
+    if (!instanceId) {
+      throw new Error('Expected shift instance');
+    }
+
+    const volunteer = await createUser(db);
+    await db.insert(schema.shiftInstanceInvites).values({
+      instanceId,
+      userId: volunteer.id,
+      status: ShiftInviteStatus.ADMIN_REJECTED,
+    });
+
+    const data = await graphqlRequestRequiringData<{
+      updateShiftInstanceInviteStatus: { status: string; userId: string };
+    }>(
+      app,
+      {
+        query: `
+          mutation UpdateInviteStatus(
+            $instanceId: String!
+            $userId: String!
+            $status: ShiftInviteStatus!
+          ) {
+            updateShiftInstanceInviteStatus(
+              instanceId: $instanceId
+              userId: $userId
+              status: $status
+            ) {
+              status
+              userId
+            }
+          }
+        `,
+        variables: {
+          instanceId,
+          userId: volunteer.id,
+          status: ShiftInviteStatus.INVITED,
+        },
+        headers: { 'x-organization-unit-id': organizationUnitId },
+      },
+      'updateShiftInstanceInviteStatus',
+    );
+
+    expect(data.updateShiftInstanceInviteStatus.status).toBe(
+      ShiftInviteStatus.INVITED,
+    );
+    expect(data.updateShiftInstanceInviteStatus.userId).toBe(volunteer.id);
+
+    const row = await db.query.shiftInstanceInvites.findFirst({
+      where: { instanceId, userId: volunteer.id },
+    });
+    expect(row?.status).toBe(ShiftInviteStatus.INVITED);
+  });
+
+  it('updateShiftInstanceInviteStatus sets ACCEPTED to ADMIN_REJECTED for admin', async () => {
+    const { id: shiftId } = await createShift(db, { organizationUnitId });
+    const instances = await db.query.shiftInstances.findMany({
+      where: { masterId: shiftId },
+    });
+    const instanceId = instances[0]?.id;
+    expect(instanceId).toBeDefined();
+    if (!instanceId) {
+      throw new Error('Expected shift instance');
+    }
+
+    const volunteer = await createUser(db);
+    await db.insert(schema.shiftInstanceInvites).values({
+      instanceId,
+      userId: volunteer.id,
+      status: ShiftInviteStatus.ACCEPTED,
+    });
+
+    const data = await graphqlRequestRequiringData<{
+      updateShiftInstanceInviteStatus: { status: string; userId: string };
+    }>(
+      app,
+      {
+        query: `
+          mutation UpdateInviteStatus(
+            $instanceId: String!
+            $userId: String!
+            $status: ShiftInviteStatus!
+          ) {
+            updateShiftInstanceInviteStatus(
+              instanceId: $instanceId
+              userId: $userId
+              status: $status
+            ) {
+              status
+              userId
+            }
+          }
+        `,
+        variables: {
+          instanceId,
+          userId: volunteer.id,
+          status: ShiftInviteStatus.ADMIN_REJECTED,
+        },
+        headers: { 'x-organization-unit-id': organizationUnitId },
+      },
+      'updateShiftInstanceInviteStatus',
+    );
+
+    expect(data.updateShiftInstanceInviteStatus.status).toBe(
+      ShiftInviteStatus.ADMIN_REJECTED,
+    );
+    expect(data.updateShiftInstanceInviteStatus.userId).toBe(volunteer.id);
+
+    const row = await db.query.shiftInstanceInvites.findFirst({
+      where: { instanceId, userId: volunteer.id },
+    });
+    expect(row?.status).toBe(ShiftInviteStatus.ADMIN_REJECTED);
+  });
+
+  it('updateShiftInstanceInviteStatus sets SELF_JOINED to ADMIN_REJECTED for admin', async () => {
+    const { id: shiftId } = await createShift(db, { organizationUnitId });
+    const instances = await db.query.shiftInstances.findMany({
+      where: { masterId: shiftId },
+    });
+    const instanceId = instances[0]?.id;
+    expect(instanceId).toBeDefined();
+    if (!instanceId) {
+      throw new Error('Expected shift instance');
+    }
+
+    const volunteer = await createUser(db);
+    await db.insert(schema.shiftInstanceInvites).values({
+      instanceId,
+      userId: volunteer.id,
+      status: ShiftInviteStatus.SELF_JOINED,
+    });
+
+    const data = await graphqlRequestRequiringData<{
+      updateShiftInstanceInviteStatus: { status: string; userId: string };
+    }>(
+      app,
+      {
+        query: `
+          mutation UpdateInviteStatus(
+            $instanceId: String!
+            $userId: String!
+            $status: ShiftInviteStatus!
+          ) {
+            updateShiftInstanceInviteStatus(
+              instanceId: $instanceId
+              userId: $userId
+              status: $status
+            ) {
+              status
+              userId
+            }
+          }
+        `,
+        variables: {
+          instanceId,
+          userId: volunteer.id,
+          status: ShiftInviteStatus.ADMIN_REJECTED,
+        },
+        headers: { 'x-organization-unit-id': organizationUnitId },
+      },
+      'updateShiftInstanceInviteStatus',
+    );
+
+    expect(data.updateShiftInstanceInviteStatus.status).toBe(
+      ShiftInviteStatus.ADMIN_REJECTED,
+    );
+    expect(data.updateShiftInstanceInviteStatus.userId).toBe(volunteer.id);
+
+    const row = await db.query.shiftInstanceInvites.findFirst({
+      where: { instanceId, userId: volunteer.id },
+    });
+    expect(row?.status).toBe(ShiftInviteStatus.ADMIN_REJECTED);
+  });
+
+  it('keeps invites order stable after admin uninvite', async () => {
+    const { id: shiftId } = await createShift(db, { organizationUnitId });
+    const instances = await db.query.shiftInstances.findMany({
+      where: { masterId: shiftId },
+    });
+    const instanceId = instances[0]?.id;
+    expect(instanceId).toBeDefined();
+    if (!instanceId) {
+      throw new Error('Expected shift instance');
+    }
+
+    const first = await createUser(db);
+    const second = await createUser(db);
+    const third = await createUser(db);
+    const sharedCreatedAt = new Date('2026-01-01T12:00:00.000Z');
+
+    await db.insert(schema.shiftInstanceInvites).values([
+      {
+        instanceId,
+        userId: first.id,
+        status: ShiftInviteStatus.INVITED,
+        createdAt: sharedCreatedAt,
+        updatedAt: sharedCreatedAt,
+      },
+      {
+        instanceId,
+        userId: second.id,
+        status: ShiftInviteStatus.INVITED,
+        createdAt: sharedCreatedAt,
+        updatedAt: sharedCreatedAt,
+      },
+      {
+        instanceId,
+        userId: third.id,
+        status: ShiftInviteStatus.INVITED,
+        createdAt: sharedCreatedAt,
+        updatedAt: sharedCreatedAt,
+      },
+    ]);
+
+    const queryInstanceInvites = () =>
+      graphqlRequestRequiringData<{
+        shiftInstances: Array<{
+          id: string;
+          invites: Array<{ user: { id: string } }>;
+        }>;
+      }>(
+        app,
+        {
+          query: `
+            query ShiftInstanceInvites($shiftId: ID!) {
+              shiftInstances(shiftId: $shiftId) {
+                id
+                invites {
+                  user { id }
+                }
+              }
+            }
+          `,
+          variables: { shiftId },
+          headers: { 'x-organization-unit-id': organizationUnitId },
+        },
+        'shiftInstances',
+      );
+
+    const before = await queryInstanceInvites();
+    const orderBefore =
+      before.shiftInstances
+        .find((row) => row.id === instanceId)
+        ?.invites.map((invite) => invite.user.id) ?? [];
+    expect(orderBefore).toHaveLength(3);
+
+    await graphqlRequestRequiringData(
+      app,
+      {
+        query: `
+          mutation UpdateInviteStatus(
+            $instanceId: String!
+            $userId: String!
+            $status: ShiftInviteStatus!
+          ) {
+            updateShiftInstanceInviteStatus(
+              instanceId: $instanceId
+              userId: $userId
+              status: $status
+            ) {
+              status
+            }
+          }
+        `,
+        variables: {
+          instanceId,
+          userId: second.id,
+          status: ShiftInviteStatus.ADMIN_REJECTED,
+        },
+        headers: { 'x-organization-unit-id': organizationUnitId },
+      },
+      'updateShiftInstanceInviteStatus',
+    );
+
+    const after = await queryInstanceInvites();
+    const orderAfter =
+      after.shiftInstances
+        .find((row) => row.id === instanceId)
+        ?.invites.map((invite) => invite.user.id) ?? [];
+
+    expect(orderAfter).toEqual(orderBefore);
+  });
+
+  it('does not leak invites across organizations', async () => {
+    const { organization, type } = await createOrganizationWithType(
+      db,
+      `Other Org ${crypto.randomUUID()}`,
+    );
+    const otherUnit = await createUnit(db, {
+      organizationId: organization.id,
+      typeId: type.id,
+      name: `Other Unit ${crypto.randomUUID()}`,
+    });
+
+    const { id: foreignShiftId } = await createShift(db, {
+      organizationUnitId: otherUnit.id,
+    });
+    const foreignInstances = await db.query.shiftInstances.findMany({
+      where: { masterId: foreignShiftId },
+    });
+    const foreignInstanceId = foreignInstances[0]?.id;
+    expect(foreignInstanceId).toBeDefined();
+    if (!foreignInstanceId) {
+      throw new Error('Expected foreign shift instance');
+    }
+
+    const foreignUser = await createUser(db);
+    await db.insert(schema.shiftInstanceInvites).values({
+      instanceId: foreignInstanceId,
+      userId: foreignUser.id,
+      status: ShiftInviteStatus.INVITED,
+    });
+
+    const response = await graphqlRequest<{
+      shiftInstances: Array<{
+        id: string;
+        invites: Array<{ user: { id: string } }>;
+      }>;
+    }>(app, {
+      query: `
+        query ShiftInstanceInvites($shiftId: ID!) {
+          shiftInstances(shiftId: $shiftId) {
+            id
+            invites {
+              user { id }
+            }
+          }
+        }
+      `,
+      variables: { shiftId: foreignShiftId },
+      headers: { 'x-organization-unit-id': organizationUnitId },
+    });
+
+    // Wrong-org shift must not return the foreign invitees (empty list or not found).
+    if (response.errors?.length) {
+      expect(response.errors[0]?.message).toMatch(
+        /not found|Forbidden|denied/i,
+      );
+      return;
+    }
+    const invites =
+      response.data?.shiftInstances.flatMap((row) => row.invites) ?? [];
+    expect(invites.map((invite) => invite.user.id)).not.toContain(
+      foreignUser.id,
+    );
   });
 });

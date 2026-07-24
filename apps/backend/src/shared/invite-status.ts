@@ -14,7 +14,10 @@ const INVITE_STATUS_TRANSITIONS: Record<
   ],
   [ShiftInviteStatus.VOLUNTEER_REJECTED]: [ShiftInviteStatus.ACCEPTED],
   [ShiftInviteStatus.ADMIN_REJECTED]: [ShiftInviteStatus.INVITED],
-  [ShiftInviteStatus.ACCEPTED]: [ShiftInviteStatus.CANCELLED],
+  [ShiftInviteStatus.ACCEPTED]: [
+    ShiftInviteStatus.CANCELLED,
+    ShiftInviteStatus.ADMIN_REJECTED,
+  ],
   [ShiftInviteStatus.SELF_JOINED]: [
     ShiftInviteStatus.CANCELLED,
     ShiftInviteStatus.ADMIN_REJECTED,

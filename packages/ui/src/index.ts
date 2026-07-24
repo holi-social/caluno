@@ -38,6 +38,8 @@ export * from './components/skeleton';
 export * from './components/tab-bar';
 export * from './components/tooltip';
 
+export * from './components/volunteering-status';
+
 // Hooks
 export { useIsMobile } from './hooks/use-mobile';
 // Utilities

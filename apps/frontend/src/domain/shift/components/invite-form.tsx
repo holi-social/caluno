@@ -32,6 +32,7 @@ type Member = {
   name: string;
   email: string;
   image?: string | null;
+  inviteStatus?: import('@repo/data').ShiftInviteStatus | null;
 };
 
 interface InviteShiftFormProps {
@@ -51,7 +52,7 @@ interface InviteShiftFormProps {
     actualEndsAt: string | Date;
   };
   availableMembers: Member[];
-  invitedMemberIds: string[];
+  invitedMembers: Member[];
   mutateStaffing: (data: {
     minVolunteers: number | null;
     maxVolunteers: number | null;
@@ -70,7 +71,7 @@ export function InviteShiftForm({
   shift,
   selectedInstance,
   availableMembers,
-  invitedMemberIds,
+  invitedMembers,
   mutateStaffing,
   mutateVolunteers,
 }: InviteShiftFormProps) {
@@ -95,16 +96,33 @@ export function InviteShiftForm({
     defaultValues: {
       minVolunteers: shift.minVolunteers ?? null,
       maxVolunteers: shift.maxVolunteers ?? null,
-      invitedMemberIds,
+      invitedMemberIds: invitedMembers.map((m) => m.id),
       inviteAllInstances: false,
     },
   });
 
   const currentUserId = session.data?.user?.id;
   const allMembers = availableMembers.filter((m) => m.id !== currentUserId);
+  const statusById = new Map(
+    invitedMembers.map((m) => [m.id, m.inviteStatus] as const),
+  );
 
   const watchedIds = form.watch('invitedMemberIds');
-  const invitedMembers = allMembers.filter((m) => watchedIds.includes(m.id));
+  const invitedForList: Member[] = watchedIds.map((id) => {
+    const fromAll = allMembers.find((m) => m.id === id);
+    if (fromAll) {
+      return { ...fromAll, inviteStatus: statusById.get(id) ?? null };
+    }
+    const fromInvited = invitedMembers.find((m) => m.id === id);
+    return (
+      fromInvited ?? {
+        id,
+        name: id,
+        email: '',
+        inviteStatus: statusById.get(id) ?? null,
+      }
+    );
+  });
 
   const inviteAllCheckboxId = useId();
 
@@ -165,127 +183,136 @@ export function InviteShiftForm({
       open={open}
       onOpenChange={setOpen}
       formError={serverError}
+      fillContent
     >
-      <div className="flex flex-col gap-2">
-        <p className="text-sm text-muted-foreground">
-          {t('inviteForm.managingLabel')}
-        </p>
-        <Card>
-          <CardContent className="flex justify-between items-start gap-4">
-            <div>
-              <p className="text-lg font-semibold">
-                {formatWithOptions(instanceStartDate, dateOptions)}
-              </p>
-              <p className="text-muted-foreground">{shift.title}</p>
-            </div>
-            <p className="text-lg font-semibold whitespace-nowrap">
-              {formatWithOptions(instanceStartDate, timeOptions)} -{' '}
-              {formatWithOptions(instanceEndDate, timeOptions)}
+      <div className="flex min-h-full flex-col gap-6">
+        <div className="flex shrink-0 flex-col gap-6">
+          <div className="flex flex-col gap-2">
+            <p className="text-sm text-muted-foreground">
+              {t('inviteForm.managingLabel')}
             </p>
-          </CardContent>
-          {shift.isRecurring && (
-            <>
-              <Separator />
-              <CardContent>
-                <div className="flex items-start gap-3">
-                  <Checkbox
-                    id={inviteAllCheckboxId}
-                    checked={form.watch('inviteAllInstances')}
-                    onCheckedChange={(checked) =>
-                      form.setValue('inviteAllInstances', checked === true, {
-                        shouldValidate: true,
-                      })
-                    }
-                    disabled={pending}
-                  />
-                  <div className="grid gap-1">
-                    <FieldLabel
-                      htmlFor={inviteAllCheckboxId}
-                      className="font-normal"
-                    >
-                      {t('inviteForm.inviteAllLabel')}
-                    </FieldLabel>
-                    <FieldDescription>
-                      {t('inviteForm.inviteAllDescription', {
-                        startDate: formatWithOptions(instanceStartDate, {
-                          day: '2-digit',
-                          month: '2-digit',
-                          year: 'numeric',
-                        }),
-                        days: formattedDays,
-                      })}
-                    </FieldDescription>
-                  </div>
+            <Card>
+              <CardContent className="flex justify-between items-start gap-4">
+                <div>
+                  <p className="text-lg font-semibold">
+                    {formatWithOptions(instanceStartDate, dateOptions)}
+                  </p>
+                  <p className="text-muted-foreground">{shift.title}</p>
                 </div>
+                <p className="text-lg font-semibold whitespace-nowrap">
+                  {formatWithOptions(instanceStartDate, timeOptions)} -{' '}
+                  {formatWithOptions(instanceEndDate, timeOptions)}
+                </p>
               </CardContent>
-            </>
-          )}
-        </Card>
-      </div>
+              {shift.isRecurring && (
+                <>
+                  <Separator />
+                  <CardContent>
+                    <div className="flex items-start gap-3">
+                      <Checkbox
+                        id={inviteAllCheckboxId}
+                        checked={form.watch('inviteAllInstances')}
+                        onCheckedChange={(checked) =>
+                          form.setValue(
+                            'inviteAllInstances',
+                            checked === true,
+                            {
+                              shouldValidate: true,
+                            },
+                          )
+                        }
+                        disabled={pending}
+                      />
+                      <div className="grid gap-1">
+                        <FieldLabel
+                          htmlFor={inviteAllCheckboxId}
+                          className="font-normal"
+                        >
+                          {t('inviteForm.inviteAllLabel')}
+                        </FieldLabel>
+                        <FieldDescription>
+                          {t('inviteForm.inviteAllDescription', {
+                            startDate: formatWithOptions(instanceStartDate, {
+                              day: '2-digit',
+                              month: '2-digit',
+                              year: 'numeric',
+                            }),
+                            days: formattedDays,
+                          })}
+                        </FieldDescription>
+                      </div>
+                    </div>
+                  </CardContent>
+                </>
+              )}
+            </Card>
+          </div>
 
-      <div className="flex gap-3">
-        <Field className="flex-1">
-          <FieldLabel htmlFor="minVolunteers">
-            {t('inviteForm.minVolunteersLabel')}
-          </FieldLabel>
-          <Input
-            id="minVolunteers"
-            type="number"
-            min={1}
-            placeholder={t('inviteForm.minVolunteersPlaceholder')}
-            disabled={pending}
-            {...form.register('minVolunteers', {
-              setValueAs: (v) => (v === '' || v == null ? null : Number(v)),
-            })}
+          <div className="flex gap-3">
+            <Field className="flex-1">
+              <FieldLabel htmlFor="minVolunteers">
+                {t('inviteForm.minVolunteersLabel')}
+              </FieldLabel>
+              <Input
+                id="minVolunteers"
+                type="number"
+                min={1}
+                placeholder={t('inviteForm.minVolunteersPlaceholder')}
+                disabled={pending}
+                {...form.register('minVolunteers', {
+                  setValueAs: (v) => (v === '' || v == null ? null : Number(v)),
+                })}
+              />
+              <FieldDescription>
+                {t('inviteForm.minVolunteersDescription')}
+              </FieldDescription>
+            </Field>
+            <Field className="flex-1">
+              <FieldLabel htmlFor="maxVolunteers">
+                {t('inviteForm.maxVolunteersLabel')}
+              </FieldLabel>
+              <Input
+                id="maxVolunteers"
+                type="number"
+                min={1}
+                placeholder={t('inviteForm.maxVolunteersPlaceholder')}
+                disabled={pending}
+                {...form.register('maxVolunteers', {
+                  setValueAs: (v) => (v === '' || v == null ? null : Number(v)),
+                })}
+              />
+              <FieldDescription>
+                {t('inviteForm.maxVolunteersDescription')}
+              </FieldDescription>
+              <FieldError errors={[form.formState.errors.maxVolunteers]} />
+            </Field>
+          </div>
+
+          <Separator />
+        </div>
+
+        <div className="flex min-h-0 flex-1 flex-col gap-4">
+          <p className="shrink-0 text-xl font-bold">{t('inviteForm.title')}</p>
+          <TransferList
+            available={allMembers}
+            invited={invitedForList}
+            onInvitedChange={(ids) => form.setValue('invitedMemberIds', ids)}
           />
-          <FieldDescription>
-            {t('inviteForm.minVolunteersDescription')}
-          </FieldDescription>
-        </Field>
-        <Field className="flex-1">
-          <FieldLabel htmlFor="maxVolunteers">
-            {t('inviteForm.maxVolunteersLabel')}
-          </FieldLabel>
-          <Input
-            id="maxVolunteers"
-            type="number"
-            min={1}
-            placeholder={t('inviteForm.maxVolunteersPlaceholder')}
-            disabled={pending}
-            {...form.register('maxVolunteers', {
-              setValueAs: (v) => (v === '' || v == null ? null : Number(v)),
-            })}
-          />
-          <FieldDescription>
-            {t('inviteForm.maxVolunteersDescription')}
-          </FieldDescription>
-          <FieldError errors={[form.formState.errors.maxVolunteers]} />
-        </Field>
-      </div>
-
-      <Separator />
-
-      <div className="flex flex-col gap-4">
-        <p className="text-xl font-bold">{t('inviteForm.title')}</p>
-        <TransferList
-          available={allMembers}
-          invited={invitedMembers}
-          onInvitedChange={(ids) => form.setValue('invitedMemberIds', ids)}
-        />
-        <Button
-          type="button"
-          variant="outline"
-          className="w-full"
-          onClick={() =>
-            copyToClipboard(
-              shiftShareUrl(shiftId, instanceId),
-              tCommon('linkCopied'),
-            )
-          }
-        >
-          <Share2 className="size-4 mr-2" />
-          {t('inviteForm.copyInviteLink')}
-        </Button>
+          <Button
+            type="button"
+            variant="outline"
+            className="w-full shrink-0"
+            onClick={() =>
+              copyToClipboard(
+                shiftShareUrl(shiftId, instanceId),
+                tCommon('linkCopied'),
+              )
+            }
+          >
+            <Share2 className="size-4 mr-2" />
+            {t('inviteForm.copyInviteLink')}
+          </Button>
+        </div>
       </div>
     </FormSheet>
   );
