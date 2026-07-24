@@ -12,18 +12,18 @@ import { useSession } from '@/lib/auth';
 
 interface EventFollowButtonProps {
   eventId: string;
-  initialStatus: JoinStatus;
+  initialFollowing: boolean;
 }
 
 export function EventFollowButton({
   eventId,
-  initialStatus,
+  initialFollowing,
 }: EventFollowButtonProps) {
   const t = useTranslations('EventDetail');
   const joinEvent = useJoinEvent();
   const searchParams = useSearchParams();
   const autoFollow = searchParams.get('autoFollow') === 'true';
-  const [status, setStatus] = useState(initialStatus);
+  const [following, setFollowing] = useState(initialFollowing);
   const session = useSession();
 
   const handleFollow = useCallback(async () => {
@@ -35,9 +35,10 @@ export function EventFollowButton({
 
     try {
       const result = await joinEvent.mutateAsync(eventId);
-      setStatus(result.status);
-
-      if (result.status === JoinStatus.Pending) {
+      if (result.status === JoinStatus.Joined) {
+        setFollowing(true);
+      } else if (result.status === JoinStatus.Pending) {
+        // Non-member: joining created an org membership request.
         toast.success(t('requestSentToast'));
       }
     } catch (error) {
@@ -49,7 +50,7 @@ export function EventFollowButton({
     if (
       autoFollow &&
       session.data?.user &&
-      status === JoinStatus.None &&
+      !following &&
       !joinEvent.isPending
     ) {
       const url = new URL(window.location.href);
@@ -60,12 +61,12 @@ export function EventFollowButton({
   }, [
     autoFollow,
     handleFollow,
-    status,
+    following,
     joinEvent.isPending,
     session.data?.user,
   ]);
 
-  if (status === JoinStatus.Joined) {
+  if (following) {
     return (
       <Button
         size="lg"
@@ -75,35 +76,6 @@ export function EventFollowButton({
       >
         <BellRingIcon className="size-[18px]" />
         {t('followingCta')}
-      </Button>
-    );
-  }
-
-  if (status === JoinStatus.Pending) {
-    return (
-      <div>
-        <Button
-          size="lg"
-          variant="secondary"
-          disabled
-          className="h-11 w-full font-semibold"
-        >
-          {t('pendingCta')}
-        </Button>
-        <p className="mt-2 text-sm text-muted-foreground">{t('pendingNote')}</p>
-      </div>
-    );
-  }
-
-  if (status === JoinStatus.Rejected) {
-    return (
-      <Button
-        size="lg"
-        variant="outline"
-        disabled
-        className="h-11 w-full font-semibold"
-      >
-        {t('rejectedCta')}
       </Button>
     );
   }

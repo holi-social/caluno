@@ -3,10 +3,17 @@
 import {
   JoinStatus,
   type PublicShiftInstance,
+  ShiftInviteStatus,
   type ShiftVisibility,
 } from '@repo/data';
-import { Card } from '@repo/ui';
-import { CalendarIcon, ClockIcon, UsersIcon } from 'lucide-react';
+import { Badge, Card } from '@repo/ui';
+import {
+  CalendarIcon,
+  CheckIcon,
+  ClockIcon,
+  UsersIcon,
+  XIcon,
+} from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useMemo, useState } from 'react';
 import { useFormatting } from '@/lib/formatting/use-formatting';
@@ -21,7 +28,15 @@ interface ShiftActionCardProps {
   isAuthenticated: boolean;
   autoJoin?: boolean;
   preselectedInstanceId?: string;
+  /** The viewer's org-membership state for this shift's org. */
+  membershipState: JoinStatus;
 }
+
+const isParticipatingInvite = (
+  status: ShiftInviteStatus | null | undefined,
+): boolean =>
+  status === ShiftInviteStatus.Accepted ||
+  status === ShiftInviteStatus.SelfJoined;
 
 export function ShiftActionCard({
   shiftId,
@@ -31,6 +46,7 @@ export function ShiftActionCard({
   isAuthenticated,
   autoJoin,
   preselectedInstanceId,
+  membershipState,
 }: ShiftActionCardProps) {
   const t = useTranslations('ShiftDetail');
   const { formatTimeRange, formatDate } = useFormatting();
@@ -45,11 +61,11 @@ export function ShiftActionCard({
     return (nextUpcoming ?? instances[0])?.id ?? '';
   });
 
-  // Overrides the server-fetched myJoinStatus per instance once the visitor
-  // successfully joins, so the capacity text updates immediately without a
-  // full page reload.
-  const [statusOverrides, setStatusOverrides] = useState<
-    Record<string, JoinStatus>
+  // Optimistic overrides so capacity/CTA update without a reload.
+  const [membershipStateOverride, setMembershipStateOverride] =
+    useState<JoinStatus | null>(null);
+  const [inviteStatusOverrides, setInviteStatusOverrides] = useState<
+    Record<string, ShiftInviteStatus>
   >({});
 
   const selected = useMemo(
@@ -63,10 +79,12 @@ export function ShiftActionCard({
 
   const isRecurring = instances.length > 1;
   const max = selected.overrideMaxVolunteers ?? undefined;
-  const joinStatus = statusOverrides[selected.id] ?? selected.myJoinStatus;
+  const inviteStatus =
+    inviteStatusOverrides[selected.id] ?? selected.myInviteStatus ?? null;
+  const effectiveMembershipState = membershipStateOverride ?? membershipState;
   const justJoined =
-    joinStatus === JoinStatus.Joined &&
-    selected.myJoinStatus !== JoinStatus.Joined;
+    isParticipatingInvite(inviteStatus) &&
+    !isParticipatingInvite(selected.myInviteStatus);
 
   const filled = (selected.filledCount ?? 0) + (justJoined ? 1 : 0);
   const spotsLeft =
@@ -77,6 +95,12 @@ export function ShiftActionCard({
   const unlimited = spotsLeft == null;
 
   const resolvedMax = max ?? filled + (spotsLeft ?? 0);
+
+  const longDate = formatDate(new Date(selected.actualStartsAt), {
+    weekday: 'short',
+    day: 'numeric',
+    month: 'long',
+  });
 
   return (
     <Card className="space-y-4 p-6">
@@ -110,6 +134,19 @@ export function ShiftActionCard({
         />
       )}
 
+      {inviteStatus === ShiftInviteStatus.Accepted && (
+        <Badge variant="secondary" className="gap-1">
+          <CheckIcon className="size-3.5" />
+          {t('acceptedBadge')}
+        </Badge>
+      )}
+      {inviteStatus === ShiftInviteStatus.Cancelled && (
+        <Badge variant="secondary" className="gap-1">
+          <XIcon className="size-3.5" />
+          {t('declinedBadge')}
+        </Badge>
+      )}
+
       <div className="space-y-2">
         <div className="flex items-center gap-1.5 text-sm">
           <UsersIcon className="size-5 text-foreground" />
@@ -138,13 +175,16 @@ export function ShiftActionCard({
           isAuthenticated={isAuthenticated}
           autoJoin={autoJoin}
           isFull={full}
-          status={joinStatus}
-          onStatusChange={(nextStatus) =>
-            setStatusOverrides((previous) => ({
+          membershipState={effectiveMembershipState}
+          onMembershipStateChange={setMembershipStateOverride}
+          inviteStatus={inviteStatus}
+          onInviteStatusChange={(nextStatus) =>
+            setInviteStatusOverrides((previous) => ({
               ...previous,
               [selected.id]: nextStatus,
             }))
           }
+          startsAt={selected.actualStartsAt}
           className="w-full"
           label={t('signUpCta', {
             date: formatDate(new Date(selected.actualStartsAt), {
@@ -155,13 +195,19 @@ export function ShiftActionCard({
           })}
         />
         <p className="text-center text-sm text-muted-foreground">
-          {joinStatus === JoinStatus.Joined
-            ? t('joinedNote')
-            : joinStatus === JoinStatus.Pending
-              ? t('pendingNote')
-              : full
-                ? t('fullNote')
-                : t('signUpNote')}
+          {inviteStatus === ShiftInviteStatus.Invited
+            ? t('respondBeforeNote', { date: longDate })
+            : inviteStatus === ShiftInviteStatus.Accepted
+              ? t('cancelUntilNote', { date: longDate })
+              : inviteStatus === ShiftInviteStatus.Cancelled
+                ? t('cancelledNote', { date: longDate })
+                : inviteStatus === ShiftInviteStatus.SelfJoined
+                  ? t('joinedNote')
+                  : effectiveMembershipState === JoinStatus.Pending
+                    ? t('pendingNote')
+                    : full
+                      ? t('fullNote')
+                      : t('signUpNote')}
         </p>
       </div>
     </Card>

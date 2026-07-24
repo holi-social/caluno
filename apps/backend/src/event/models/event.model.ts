@@ -1,6 +1,5 @@
 import { Field, ID, Int, ObjectType } from '@nestjs/graphql';
 import { createPaginatedResponseType } from '../../graphql/paginated-response.model';
-import { JoinStatus } from '../../shared/enums/join-status.enum';
 import { Shift } from '../../shift/models/shift.model';
 import { User } from '../../user/models/user.model';
 
@@ -48,8 +47,8 @@ export class Event {
   @Field(() => Int)
   shiftsCount!: number;
 
-  @Field(() => JoinStatus)
-  myJoinStatus!: JoinStatus;
+  @Field(() => Boolean)
+  isFollowing!: boolean;
 
   @Field(() => [Shift])
   shifts!: Shift[];

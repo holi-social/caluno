@@ -416,6 +416,13 @@ type ShiftFixture = {
   imageUrl?: string;
   /** Invites inserted with this status instead of ACCEPTED (does not count toward capacity). */
   pendingInviteUserIds?: string[];
+  /**
+   * Invites at explicit statuses (e.g. VOLUNTEER_REJECTED, CANCELLED,
+   * SELF_JOINED), seeded to every instance. Lets fixtures cover the full invite
+   * lifecycle beyond ACCEPTED/INVITED. Only participating statuses
+   * (ACCEPTED/SELF_JOINED) count toward capacity.
+   */
+  extraInvites?: Array<{ userIds: string[]; status: ShiftInviteStatus }>;
 };
 
 const pickRecentPastInstance = (
@@ -501,6 +508,21 @@ const createShiftWithInvites = async (
           instanceId: instance.id,
           userId,
           status: ShiftInviteStatus.INVITED,
+        })),
+      ),
+    );
+  }
+
+  for (const group of shift.extraInvites ?? []) {
+    if (group.userIds.length === 0) {
+      continue;
+    }
+    await db.insert(schema.shiftInstanceInvites).values(
+      insertedInstances.flatMap((instance) =>
+        group.userIds.map((userId) => ({
+          instanceId: instance.id,
+          userId,
+          status: group.status,
         })),
       ),
     );
@@ -1058,6 +1080,215 @@ async function seedFixtures() {
     inviteUserIds: members.slice(5, 7).map((member) => member.id),
   });
 
+  // --- Invite-response scenarios for the demo volunteer (VOLI-839) ---
+  // Give the demo account a full spread of shift invites so the volunteer
+  // invitation flows have real content on first login: a paginating set of
+  // pending invites (the home preview caps at 10, "See all" reveals the rest),
+  // a recurring pending invite (day picker on the detail), plus one shift in
+  // each terminal invite state.
+  const pendingInviteShifts: Array<{
+    title: string;
+    location: string;
+    hour: number;
+    maxVolunteers?: number;
+  }> = [
+    {
+      title: 'Soup Kitchen Service',
+      location: 'Community Center · Kitchen',
+      hour: 11,
+      maxVolunteers: 6,
+    },
+    {
+      title: 'Clothing Bank Sorting',
+      location: 'Hauptstraße 1 · Storeroom',
+      hour: 14,
+      maxVolunteers: 8,
+    },
+    {
+      title: 'Senior Home Visit',
+      location: 'Lindenhof Residence',
+      hour: 10,
+      maxVolunteers: 4,
+    },
+    {
+      title: 'Bike Repair Workshop',
+      location: 'Community Garage',
+      hour: 15,
+      maxVolunteers: 5,
+    },
+    {
+      title: 'Library Reading Hour',
+      location: 'Public Library · Room 3',
+      hour: 16,
+      maxVolunteers: 3,
+    },
+    {
+      title: 'Food Bank Packing',
+      location: 'Playground Warehouse',
+      hour: 9,
+      maxVolunteers: 10,
+    },
+    {
+      title: 'Beach Cleanup',
+      location: 'Wannsee Shore',
+      hour: 8,
+      maxVolunteers: 20,
+    },
+    {
+      title: 'Homework Helpers',
+      location: 'Community Center · Room 2',
+      hour: 15,
+      maxVolunteers: 6,
+    },
+    {
+      title: 'Blood Drive Support',
+      location: 'Town Hall Foyer',
+      hour: 12,
+      maxVolunteers: 8,
+    },
+  ];
+
+  for (const [index, entry] of pendingInviteShifts.entries()) {
+    const day = discoverDay(2 + index);
+    await createShiftWithInvites(db, org.rootUnitId, admin.id, {
+      title: entry.title,
+      startsAt: fixtureWallClockToUtc(day.year, day.month, day.day, entry.hour),
+      rrule: ONE_TIME_RRULE,
+      durationMinutes: SHIFT_DURATION_MINUTES,
+      visibility: ShiftVisibility.INVITED_MEMBERS,
+      maxVolunteers: entry.maxVolunteers,
+      location: entry.location,
+      imageUrl: SHOWCASE_SHIFT_IMAGE_URL,
+      inviteUserIds: [],
+      pendingInviteUserIds: [demoUser.id],
+    });
+  }
+
+  // Recurring pending invite (weekly x3) — exercises the day picker on the
+  // invite detail and brings the pending total to 12.
+  const recurringPendingDay = discoverDay(4);
+  await createShiftWithInvites(db, org.rootUnitId, admin.id, {
+    title: 'Weekly Meal Prep',
+    startsAt: fixtureWallClockToUtc(
+      recurringPendingDay.year,
+      recurringPendingDay.month,
+      recurringPendingDay.day,
+      17,
+    ),
+    rrule: 'FREQ=WEEKLY;COUNT=3',
+    durationMinutes: SHIFT_DURATION_MINUTES,
+    visibility: ShiftVisibility.INVITED_MEMBERS,
+    maxVolunteers: 6,
+    location: 'Community Center · Kitchen',
+    imageUrl: EVENT_COVER_IMAGE_URL,
+    inviteUserIds: [],
+    pendingInviteUserIds: [demoUser.id],
+  });
+
+  // Terminal invite states. ACCEPTED and SELF_JOINED surface under "Your
+  // shifts"; VOLUNTEER_REJECTED and CANCELLED are filtered off home but remain
+  // reachable at their shift-detail URL (logged in the fixtures summary) to
+  // demo the accepted/declined/cancelled detail states directly.
+  const acceptedDay = discoverDay(5);
+  const acceptedInvite = await createShiftWithInvites(
+    db,
+    org.rootUnitId,
+    admin.id,
+    {
+      title: 'Welcome Desk',
+      startsAt: fixtureWallClockToUtc(
+        acceptedDay.year,
+        acceptedDay.month,
+        acceptedDay.day,
+        9,
+      ),
+      rrule: ONE_TIME_RRULE,
+      durationMinutes: SHIFT_DURATION_MINUTES,
+      visibility: ShiftVisibility.INVITED_MEMBERS,
+      maxVolunteers: 5,
+      location: 'Town Hall Foyer',
+      inviteUserIds: [demoUser.id],
+    },
+  );
+
+  const declinedDay = discoverDay(6);
+  const declinedInvite = await createShiftWithInvites(
+    db,
+    org.rootUnitId,
+    admin.id,
+    {
+      title: 'Night Shelter Shift',
+      startsAt: fixtureWallClockToUtc(
+        declinedDay.year,
+        declinedDay.month,
+        declinedDay.day,
+        20,
+      ),
+      rrule: ONE_TIME_RRULE,
+      durationMinutes: SHIFT_DURATION_MINUTES,
+      visibility: ShiftVisibility.INVITED_MEMBERS,
+      maxVolunteers: 4,
+      location: 'City Shelter',
+      inviteUserIds: [],
+      extraInvites: [
+        {
+          userIds: [demoUser.id],
+          status: ShiftInviteStatus.VOLUNTEER_REJECTED,
+        },
+      ],
+    },
+  );
+
+  const cancelledDay = discoverDay(7);
+  const cancelledInvite = await createShiftWithInvites(
+    db,
+    org.rootUnitId,
+    admin.id,
+    {
+      title: 'Fundraiser Setup',
+      startsAt: fixtureWallClockToUtc(
+        cancelledDay.year,
+        cancelledDay.month,
+        cancelledDay.day,
+        13,
+      ),
+      rrule: ONE_TIME_RRULE,
+      durationMinutes: SHIFT_DURATION_MINUTES,
+      visibility: ShiftVisibility.INVITED_MEMBERS,
+      maxVolunteers: 6,
+      location: 'Exhibition Hall B',
+      inviteUserIds: [],
+      extraInvites: [
+        { userIds: [demoUser.id], status: ShiftInviteStatus.CANCELLED },
+      ],
+    },
+  );
+
+  const selfJoinedDay = discoverDay(8);
+  const selfJoinedShift = await createShiftWithInvites(
+    db,
+    org.rootUnitId,
+    admin.id,
+    {
+      title: 'Open Garden Day',
+      startsAt: fixtureWallClockToUtc(
+        selfJoinedDay.year,
+        selfJoinedDay.month,
+        selfJoinedDay.day,
+        10,
+      ),
+      rrule: ONE_TIME_RRULE,
+      durationMinutes: SHIFT_DURATION_MINUTES,
+      visibility: ShiftVisibility.ALL_MEMBERS,
+      maxVolunteers: 12,
+      location: 'Community Garden',
+      inviteUserIds: [],
+      extraInvites: [
+        { userIds: [demoUser.id], status: ShiftInviteStatus.SELF_JOINED },
+      ],
+    },
+  );
+
   // Fixed, one-time overlap-test shifts for the my-shifts conflict-clustering
   // UI (a 2-shift "pair" and a 3-shift "pile"), invited to a single member
   // (not member01, which other tests use as the "no conflicts" baseline).
@@ -1168,6 +1399,15 @@ async function seedFixtures() {
   );
   console.log(
     'Time entries: created across Community Support and Food Distribution',
+  );
+  console.log(
+    [
+      `Demo invites (${DEMO_USER_EMAIL}): 12 pending (9 one-time + Weekly Meal Prep x3) → home Invitations section (10 preview) + /invitations`,
+      `  accepted → /shifts/${acceptedInvite.shiftId} (Accepted badge + Cancel)`,
+      `  declined → /shifts/${declinedInvite.shiftId} (VOLUNTEER_REJECTED)`,
+      `  cancelled → /shifts/${cancelledInvite.shiftId} (CANCELLED, post-withdrawal)`,
+      `  self-joined → /shifts/${selfJoinedShift.shiftId} (SELF_JOINED, no Cancel)`,
+    ].join('\n'),
   );
 
   await pool.end();

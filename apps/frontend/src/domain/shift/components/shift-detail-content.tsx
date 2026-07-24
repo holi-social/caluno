@@ -1,4 +1,8 @@
-import type { PublicShiftInstance, ShiftVisibility } from '@repo/data';
+import {
+  JoinStatus,
+  type PublicShiftInstance,
+  type ShiftVisibility,
+} from '@repo/data';
 import { CalendarIcon, ClockIcon, MapPinIcon } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useRecurrenceLabel } from '@/domain/home/lib/recurrence-label';
@@ -15,6 +19,7 @@ interface Shift {
   originalStartsAt: string;
   durationMinutes: number;
   visibility: ShiftVisibility;
+  organizationUnit?: { myMembershipState: JoinStatus } | null;
 }
 
 interface ShiftDetailContentProps {
@@ -58,6 +63,9 @@ export function ShiftDetailContent({
             isAuthenticated={isAuthenticated}
             autoJoin={autoJoin}
             preselectedInstanceId={preselectedInstanceId}
+            membershipState={
+              shift.organizationUnit?.myMembershipState ?? JoinStatus.None
+            }
           />
         </aside>
 

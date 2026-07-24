@@ -5,8 +5,6 @@ import {
   type UserSession,
 } from '@thallesp/nestjs-better-auth';
 import { Loader } from '../../graphql/decorators/loader.decorator';
-import { MembershipService } from '../../membership/membership.service';
-import { JoinStatus } from '../../shared/enums/join-status.enum';
 import { Shift } from '../../shift/models/shift.model';
 import { UserMapper } from '../../user/mappers/user.mapper';
 import { User } from '../../user/models/user.model';
@@ -25,7 +23,6 @@ export class EventFieldResolver {
     private readonly userService: UserService,
     private readonly userMapper: UserMapper,
     private readonly eventService: EventService,
-    private readonly membershipService: MembershipService,
   ) {}
 
   @AllowAnonymous()
@@ -51,35 +48,22 @@ export class EventFieldResolver {
     return loader.countByEventId.load(event.id);
   }
 
+  // Events are a lower-commitment "following" shortlist, not an invite flow —
+  // deliberately a boolean, kept separate from shift invite vocabulary. Org
+  // membership pending/rejected is surfaced elsewhere (OrganizationUnit).
   @AllowAnonymous()
-  @ResolveField(() => JoinStatus)
-  async myJoinStatus(
+  @ResolveField(() => Boolean)
+  async isFollowing(
     @Parent() event: EventEntity,
     @Session() session: UserSession,
-  ): Promise<JoinStatus> {
-    if (!session?.user) return JoinStatus.NONE;
+  ): Promise<boolean> {
+    if (!session?.user) return false;
 
     const invite = await this.eventService.findInvite(
       event.id,
       session.user.id,
     );
-
-    if (invite?.status === EventInviteStatus.ACCEPTED) {
-      return JoinStatus.JOINED;
-    }
-
-    // Joining an event requires org membership — pending/rejected reflects
-    // the org-level membership request, since events don't have their own
-    // pending/rejected invite state (joinEvent only ever writes ACCEPTED).
-    // An existing org membership on its own doesn't mean the user has
-    // followed this event, so it's deliberately not mapped to JOINED here.
-    const orgState = await this.membershipService.getMembershipState(
-      session.user.id,
-      event.organizationUnitId,
-    );
-    return orgState === JoinStatus.PENDING || orgState === JoinStatus.REJECTED
-      ? orgState
-      : JoinStatus.NONE;
+    return invite?.status === EventInviteStatus.ACCEPTED;
   }
 
   @AllowAnonymous()

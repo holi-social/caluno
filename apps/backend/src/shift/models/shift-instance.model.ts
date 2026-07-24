@@ -1,7 +1,7 @@
 import { Field, ID, Int, ObjectType } from '@nestjs/graphql';
 import { createPaginatedResponseType } from '../../graphql/paginated-response.model';
-import { JoinStatus } from '../../shared/enums/join-status.enum';
 import { User } from '../../user/models/user.model';
+import { ShiftInviteStatus } from '../enums';
 import type { Shift } from './shift.model';
 import { Shift as ShiftModel } from './shift.model';
 import { ShiftInstanceInvite } from './shift-instance-invite.model';
@@ -55,8 +55,8 @@ export class ShiftInstance {
   @Field(() => [ShiftInstanceInvite], { nullable: true })
   invites?: ShiftInstanceInvite[] | null;
 
-  @Field(() => JoinStatus)
-  myJoinStatus!: JoinStatus;
+  @Field(() => ShiftInviteStatus, { nullable: true })
+  myInviteStatus?: ShiftInviteStatus | null;
 }
 
 export const ShiftInstancePaginatedResponse =

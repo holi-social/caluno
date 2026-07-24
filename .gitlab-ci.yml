@@ -30,6 +30,8 @@ default:
     - 4cpu-16gb
 
 variables:
+  GIT_SUBMODULE_STRATEGY: normal
+  GIT_SUBMODULE_FORCE_HTTPS: "true"
   DOCKER_TLS_CERTDIR: '/certs'
   TF_ROOT: 'packages/infra'
   TF_IN_AUTOMATION: 'true'
