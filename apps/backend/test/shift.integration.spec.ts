@@ -1645,6 +1645,8 @@ describe('Volunteer home fields and check-in', () => {
     const { id: shiftId } = await createShift(db, {
       organizationUnitId: childUnit.id,
       visibility: ShiftVisibility.ALL_MEMBERS,
+      startsAt: new Date('2026-06-12T12:00:00.000Z'),
+      endsAt: new Date('2026-06-12T13:00:00.000Z')
     });
     const instances = await db.query.shiftInstances.findMany({
       where: { masterId: shiftId },
@@ -1655,7 +1657,7 @@ describe('Volunteer home fields and check-in', () => {
     setAuthMockUserId(parentMember.id);
 
     const startsAfter = new Date('2026-06-01T00:00:00.000Z').toISOString();
-    const endsBefore = new Date('2026-12-31T23:59:59.000Z').toISOString();
+    const endsBefore = new Date('2026-06-30T23:59:59.000Z').toISOString();
 
     const data = await graphqlRequestRequiringData<{
       availableShiftInstances: {
