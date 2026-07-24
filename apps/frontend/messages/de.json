@@ -672,7 +672,17 @@
       "failed": "Einsatzbeitritt fehlgeschlagen",
       "unexpected": "Unerwartete Antwort vom Server",
       "requestSent": "Anfrage gesendet",
-      "pendingMessage": "Deine Mitgliedschaftsanfrage für diese Organisation wird noch geprüft. Du kannst dich für den Einsatz anmelden, sobald sie genehmigt wurde."
+      "pendingMessage": "Deine Mitgliedschaftsanfrage für diese Organisation wird noch geprüft. Du kannst dich für den Einsatz anmelden, sobald sie genehmigt wurde.",
+      "accept": "Annehmen",
+      "decline": "Ablehnen",
+      "accepted": "Du hast die Einladung angenommen.",
+      "declined": "Du hast die Einladung abgelehnt.",
+      "cancelShift": "Schicht absagen",
+      "cancelTitle": "Schicht absagen?",
+      "cancelBody": "Du gibst deinen Platz am {date} auf. Die Organisation wird benachrichtigt.",
+      "keepShift": "Schicht behalten",
+      "confirmCancel": "Ja, absagen",
+      "cancelled": "Du hast deine Schicht abgesagt."
     },
     "action": {
       "viewAria": "Einsatz ansehen",
@@ -1105,6 +1115,11 @@
     "fullNote": "Diese Schicht ist bereits ausgebucht.",
     "joinedNote": "Du bist für diese Schicht angemeldet.",
     "pendingNote": "Deine Mitgliedschaftsanfrage ist ausstehend. Du wirst dieser Schicht hinzugefügt, sobald sie genehmigt wurde.",
+    "respondBeforeNote": "Antworte bis {date}. Du kannst es dir bis zum Schichtbeginn anders überlegen.",
+    "acceptedBadge": "Angenommen",
+    "declinedBadge": "Abgelehnt",
+    "cancelUntilNote": "Du kannst bis {date} absagen.",
+    "cancelledNote": "Du bist nicht mehr für {date} angemeldet.",
     "whatYouDoHeading": "Was du tun wirst",
     "whenWhereHeading": "Wann & Wo",
     "locationDivider": "·",
@@ -1225,6 +1240,8 @@
     "yourShiftsThisWeek": "{n, plural, one {# Schicht diese Woche} other {# Schichten diese Woche}}",
     "yourShiftsSeeAll": "Alle anzeigen",
     "yourShiftsEmpty": "Du hast keine bevorstehenden Schichten.",
+    "invitationsHeading": "Einladungen",
+    "invitationsEmpty": "Keine offenen Einladungen",
     "discoverHeading": "Entdecken",
     "discoverCta": "Schichten entdecken",
     "discoverEmpty": "Keine Schichten für diese Filter",
@@ -1255,7 +1272,8 @@
     "timerVolunteering": "Du hilfst seit {time}",
     "eventCoverImageAlt": "Titelbild für {title}",
     "loadPast": "Vergangene laden",
-    "loadMore": "Mehr laden"
+    "loadMore": "Mehr laden",
+    "invitedOn": "Eingeladen · {date}"
   },
   "OrgDetail": {
     "coverImageAlt": "Titelbild für {title}",

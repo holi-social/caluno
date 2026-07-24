@@ -672,7 +672,17 @@
       "failed": "Failed to join shift",
       "unexpected": "Unexpected response from server",
       "requestSent": "Request sent",
-      "pendingMessage": "Your membership request for this organization is pending approval. You will be able to join this shift once approved."
+      "pendingMessage": "Your membership request for this organization is pending approval. You will be able to join this shift once approved.",
+      "accept": "Accept",
+      "decline": "Decline",
+      "accepted": "You've accepted the invitation.",
+      "declined": "You've declined the invitation.",
+      "cancelShift": "Cancel shift",
+      "cancelTitle": "Cancel shift?",
+      "cancelBody": "You'll give up your spot on {date}. The organisation will be notified.",
+      "keepShift": "Keep shift",
+      "confirmCancel": "Yes, cancel",
+      "cancelled": "You've cancelled your shift."
     },
     "action": {
       "viewAria": "View shift",
@@ -1105,6 +1115,11 @@
     "fullNote": "This shift is already full.",
     "joinedNote": "You're signed up for this shift.",
     "pendingNote": "Your membership request is pending. You will be added to this shift once approved.",
+    "respondBeforeNote": "Respond before {date}. You can change your mind until the shift starts.",
+    "acceptedBadge": "Accepted",
+    "declinedBadge": "Declined",
+    "cancelUntilNote": "You can cancel until {date}.",
+    "cancelledNote": "You're no longer signed up for {date}.",
     "whatYouDoHeading": "What you'll do",
     "whenWhereHeading": "When & Where",
     "locationDivider": "·",
@@ -1225,6 +1240,8 @@
     "yourShiftsThisWeek": "{n, plural, one {# shift this week} other {# shifts this week}}",
     "yourShiftsSeeAll": "See all",
     "yourShiftsEmpty": "You have no upcoming shifts.",
+    "invitationsHeading": "Invitations",
+    "invitationsEmpty": "No pending invitations",
     "discoverHeading": "Discover",
     "discoverCta": "Discover shifts",
     "discoverEmpty": "No shifts match these filters",
@@ -1255,7 +1272,8 @@
     "timerVolunteering": "You're volunteering for {time}",
     "eventCoverImageAlt": "Cover image for {title}",
     "loadPast": "Load past",
-    "loadMore": "Load more"
+    "loadMore": "Load more",
+    "invitedOn": "Invited · {date}"
   },
   "OrgDetail": {
     "coverImageAlt": "Cover image for {title}",
