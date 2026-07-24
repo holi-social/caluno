@@ -1,11 +1,14 @@
 'use client';
 
 import type { ShiftInviteStatus } from '@repo/data';
-import { Badge, Button, Input, VolunteeringMemberRow } from '@repo/ui';
+import { Badge, Button, cn, Input, VolunteeringMemberRow } from '@repo/ui';
 import { ArrowLeftRight, CirclePlus, CircleX } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useState } from 'react';
 import { toInviteDisplayState } from '../invite-status-display';
+
+/** Label + gap + search bar + minimum list area */
+const TRANSFER_LIST_MIN_HEIGHT = 222;
 
 type Member = {
   id: string;
@@ -19,12 +22,14 @@ type TransferListProps = {
   available: Member[];
   invited: Member[];
   onInvitedChange: (ids: string[]) => void;
+  className?: string;
 };
 
 export function TransferList({
   available,
   invited,
   onInvitedChange,
+  className,
 }: TransferListProps) {
   const [availableSearch, setAvailableSearch] = useState('');
   const [invitedSearch, setInvitedSearch] = useState('');
@@ -54,7 +59,10 @@ export function TransferList({
   };
 
   return (
-    <div className="flex gap-4 items-center h-[289px]">
+    <div
+      className={cn('flex flex-1 items-center gap-4', className)}
+      style={{ minHeight: TRANSFER_LIST_MIN_HEIGHT }}
+    >
       {/* Available panel */}
       <div className="flex flex-col gap-2 flex-1 h-full min-w-0">
         <div className="flex items-center justify-between">
