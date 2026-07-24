@@ -2,7 +2,7 @@
 
 import { ShiftRepository } from '@repo/data';
 import { type UseQueryOptions, useQuery } from '@tanstack/react-query';
-import type { SortOrder } from '../../generated/graphql';
+import type { ShiftInviteStatus, SortOrder } from '../../generated/graphql';
 import { useSdk } from './use-graphql-client';
 
 export function useMyShiftInstances(
@@ -13,6 +13,7 @@ export function useMyShiftInstances(
     limit?: number;
     offset?: number;
     order?: SortOrder;
+    statuses?: ShiftInviteStatus[];
   } = {},
   queryOptions?: Omit<
     UseQueryOptions<

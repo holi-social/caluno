@@ -334,6 +334,7 @@ export class ShiftService {
     limit: number,
     offset: number,
     order: SortOrder,
+    statuses: readonly ShiftInviteStatus[] = PARTICIPATING_SHIFT_INVITE_STATUSES,
   ): Promise<{ instances: ShiftInstanceEntity[]; total: number }> {
     const organizationUnitIds =
       await this.getAccessibleOrganizationUnitIds(userId);
@@ -357,6 +358,7 @@ export class ShiftService {
       },
       invites: {
         userId,
+        status: { in: [...statuses] },
       },
     };
 

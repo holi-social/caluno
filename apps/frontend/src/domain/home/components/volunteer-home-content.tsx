@@ -1,11 +1,19 @@
 'use client';
 
+import { ShiftInviteStatus } from '@repo/data';
 import type { AvailableShiftInstance, MyShiftInstance } from '@repo/data/react';
 import {
   useAvailableShiftInstances,
   useMyShiftInstances,
 } from '@repo/data/react';
-import { Button, Empty, EmptyMedia, EmptyTitle, Skeleton } from '@repo/ui';
+import {
+  Badge,
+  Button,
+  Empty,
+  EmptyMedia,
+  EmptyTitle,
+  Skeleton,
+} from '@repo/ui';
 import { CalendarXIcon, ChevronRightIcon } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useMemo, useState } from 'react';
@@ -25,16 +33,19 @@ import { DayStrip } from './day-strip';
 import { DayStripSkeleton } from './day-strip-skeleton';
 import { ShiftCardDiscovery } from './shift-card-discovery';
 import { ShiftCardMy } from './shift-card-my';
+import { ShiftCardMyInvited } from './shift-card-my-invited';
 import { ShiftCardMyShift } from './shift-card-my-shift';
 
 interface VolunteerHomeContentProps {
   initialMyShiftInstances: MyShiftInstance[];
   initialAvailableShiftInstances: AvailableShiftInstance[];
+  initialInvitations: MyShiftInstance[];
 }
 
 export function VolunteerHomeContent({
   initialMyShiftInstances,
   initialAvailableShiftInstances,
+  initialInvitations,
 }: VolunteerHomeContentProps) {
   const t = useTranslations('VolunteerHome');
   const { formatDate } = useFormatting();
@@ -72,6 +83,22 @@ export function VolunteerHomeContent({
         },
       },
     });
+
+  const { data: invitationsPage } = useMyShiftInstances(
+    { limit: 10, statuses: [ShiftInviteStatus.Invited] },
+    {
+      initialData: {
+        items: initialInvitations,
+        pagination: {
+          total: initialInvitations.length,
+          limit: 10,
+          offset: 0,
+          hasMore: false,
+        },
+      },
+    },
+  );
+  const invitationList = invitationsPage?.items ?? [];
 
   const showLoadingMy = useDelayedLoading(isLoadingMy);
   const showLoadingAvailable = useDelayedLoading(isLoadingAvailable);
@@ -204,6 +231,25 @@ export function VolunteerHomeContent({
     </section>
   );
 
+  const invitationsSection = (
+    <section>
+      <div className="mb-3 flex items-start justify-between gap-3">
+        <div className="flex items-center gap-2">
+          <h2 className="text-2xl font-semibold text-foreground">
+            {t('invitationsHeading')}
+          </h2>
+          <Badge variant="default">{invitationList.length}</Badge>
+        </div>
+        {seeAllLink('/invitations')}
+      </div>
+      <div className="flex flex-col gap-3">
+        {invitationList.map((invite) => (
+          <ShiftCardMyInvited key={invite.id} shiftInstance={invite} />
+        ))}
+      </div>
+    </section>
+  );
+
   const discoverSection = (
     <section>
       <div className="mb-3 flex items-start justify-between gap-3">
@@ -285,6 +331,7 @@ export function VolunteerHomeContent({
   return (
     <div className="flex flex-col gap-8">
       {(showLoadingMy || myShiftList.length > 0) && yourShiftsSection}
+      {invitationList.length > 0 && invitationsSection}
       {discoverSection}
     </div>
   );

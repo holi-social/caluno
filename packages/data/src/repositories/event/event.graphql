@@ -109,7 +109,7 @@ fragment PublicEventFields on Event {
   startsAt
   endsAt
   shiftsCount
-  myJoinStatus
+  isFollowing
   organizationUnit {
     ...PublicEventOrganizationUnitFields
   }

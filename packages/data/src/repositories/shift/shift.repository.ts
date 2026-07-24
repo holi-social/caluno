@@ -149,7 +149,7 @@ export class ShiftRepository extends BaseRepository {
     return data.shiftInstances.find((instance) => instance.id === instanceId);
   }
 
-  async updateInstanceInviteStatus(
+  async updateShiftInstanceInviteStatus(
     instanceId: string,
     status: ShiftInviteStatus,
     userId?: string,
@@ -183,6 +183,7 @@ export class ShiftRepository extends BaseRepository {
       limit?: number;
       offset?: number;
       order?: SortOrder;
+      statuses?: ShiftInviteStatus[];
     } = {},
   ): Promise<{
     items: MyShiftInstance[];
@@ -200,6 +201,7 @@ export class ShiftRepository extends BaseRepository {
       limit: options.limit ?? 15,
       offset: options.offset ?? 0,
       order: options.order ?? SortOrder.Asc,
+      statuses: options.statuses,
     });
     return data.myShiftInstances;
   }

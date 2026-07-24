@@ -18,6 +18,7 @@ query GetShift($id: String!) {
       id
       name
       logoUrl
+      myMembershipState
     }
     createdBy {
       id
@@ -167,7 +168,6 @@ mutation JoinShiftInstance($instanceId: String!) {
       isException
       isCancelled
       occurrenceIndex
-      myJoinStatus
       master {
         id
         title
@@ -311,7 +311,7 @@ fragment PublicShiftDetailInstanceFields on ShiftInstance {
   overrideMaxVolunteers
   filledCount
   spotsLeft
-  myJoinStatus
+  myInviteStatus
 }
 
 query GetPublicShiftInstances($shiftId: ID!) {
@@ -351,6 +351,7 @@ query GetMyShiftInstances(
   $limit: Int = 15
   $offset: Int = 0
   $order: SortOrder = ASC
+  $statuses: [ShiftInviteStatus!]
 ) {
   myShiftInstances(
     includePast: $includePast
@@ -359,6 +360,7 @@ query GetMyShiftInstances(
     limit: $limit
     offset: $offset
     order: $order
+    statuses: $statuses
   ) {
     items {
       ...VolunteerHomeShiftInstance

@@ -45,6 +45,7 @@ export * from './react/hooks/use-shift';
 export * from './react/hooks/use-shift-instances';
 export * from './react/hooks/use-shift-volunteers';
 export * from './react/hooks/use-update-my-image';
+export * from './react/hooks/use-update-shift-instance-invite-status';
 export * from './react/hooks/use-update-user-locale';
 export * from './react/hooks/use-user';
 export * from './react/hooks/use-volunteer-submissions';
