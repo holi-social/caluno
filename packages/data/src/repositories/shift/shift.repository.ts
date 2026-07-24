@@ -16,6 +16,7 @@ import {
   type ShiftInviteStatus,
   SortOrder,
   type UpdateShiftInput,
+  type UpdateShiftInstanceInviteStatusMutation,
 } from '../../generated/graphql';
 import {
   BaseRepository,
@@ -165,6 +166,7 @@ export class ShiftRepository extends BaseRepository {
       limit?: number;
       offset?: number;
       order?: SortOrder;
+      statuses?: ShiftInviteStatus[];
     } = {},
   ): Promise<{
     items: MyShiftInstance[];
@@ -182,6 +184,7 @@ export class ShiftRepository extends BaseRepository {
       limit: options.limit ?? 15,
       offset: options.offset ?? 0,
       order: options.order ?? SortOrder.Asc,
+      statuses: options.statuses,
     });
     return data.myShiftInstances;
   }
@@ -211,6 +214,19 @@ export class ShiftRepository extends BaseRepository {
       offset: options.offset ?? 0,
     });
     return data.availableShiftInstances;
+  }
+
+  async updateShiftInstanceInviteStatus(
+    instanceId: string,
+    status: ShiftInviteStatus,
+  ): Promise<
+    UpdateShiftInstanceInviteStatusMutation['updateShiftInstanceInviteStatus']
+  > {
+    const data = await this.sdk.UpdateShiftInstanceInviteStatus({
+      instanceId,
+      status,
+    });
+    return data.updateShiftInstanceInviteStatus;
   }
 
   async checkIn(shiftInstanceId: string): Promise<string> {
