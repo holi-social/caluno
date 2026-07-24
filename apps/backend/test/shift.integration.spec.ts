@@ -1360,6 +1360,102 @@ describe('Volunteer home fields and check-in', () => {
     );
   });
 
+  it('filters myShiftInstances by invite status', async () => {
+    await db.insert(schema.memberships).values({
+      userId: testUserId,
+      organizationUnitId,
+    });
+
+    const { id: invitedShiftId } = await createShift(db, {
+      organizationUnitId,
+    });
+    const invitedInstances = await db.query.shiftInstances.findMany({
+      where: { masterId: invitedShiftId },
+      orderBy: { actualStartsAt: 'asc' },
+    });
+    const invitedInstanceId = invitedInstances[0]?.id;
+    expect(invitedInstanceId).toBeDefined();
+
+    await db.insert(schema.shiftInstanceInvites).values({
+      instanceId: invitedInstanceId ?? '',
+      userId: testUserId,
+      status: ShiftInviteStatus.INVITED,
+    });
+
+    const { id: acceptedShiftId } = await createShift(db, {
+      organizationUnitId,
+    });
+    const acceptedInstances = await db.query.shiftInstances.findMany({
+      where: { masterId: acceptedShiftId },
+      orderBy: { actualStartsAt: 'asc' },
+    });
+    const acceptedInstanceId = acceptedInstances[0]?.id;
+    expect(acceptedInstanceId).toBeDefined();
+
+    await db.insert(schema.shiftInstanceInvites).values({
+      instanceId: acceptedInstanceId ?? '',
+      userId: testUserId,
+      status: ShiftInviteStatus.ACCEPTED,
+    });
+
+    const query = `
+      query MyShiftInstances($includePast: Boolean!, $statuses: [ShiftInviteStatus!]) {
+        myShiftInstances(includePast: $includePast, statuses: $statuses) {
+          items { id myInviteStatus }
+          pagination { total limit offset hasMore }
+        }
+      }
+    `;
+
+    type MyInstanceItem = {
+      id: string;
+      myInviteStatus: string | null;
+    };
+
+    const invitedOnly = await graphqlRequestRequiringData<{
+      myShiftInstances: { items: MyInstanceItem[] };
+    }>(
+      app,
+      {
+        query,
+        variables: { includePast: true, statuses: ['INVITED'] },
+        headers: { 'x-organization-unit-id': organizationUnitId },
+      },
+      'myShiftInstances',
+    );
+    const invitedOnlyIds = invitedOnly.myShiftInstances.items.map((i) => i.id);
+    expect(invitedOnlyIds).toContain(invitedInstanceId);
+    expect(invitedOnlyIds).not.toContain(acceptedInstanceId);
+
+    // The raw myInviteStatus reflects the actual invite — the distinction the
+    // volunteer accept/decline UI relies on (a coordinator invite vs a self-join
+    // or org request).
+    const invitedItem = invitedOnly.myShiftInstances.items.find(
+      (i) => i.id === invitedInstanceId,
+    );
+    expect(invitedItem?.myInviteStatus).toBe('INVITED');
+
+    const defaultStatuses = await graphqlRequestRequiringData<{
+      myShiftInstances: { items: MyInstanceItem[] };
+    }>(
+      app,
+      {
+        query,
+        variables: { includePast: true, statuses: null },
+        headers: { 'x-organization-unit-id': organizationUnitId },
+      },
+      'myShiftInstances',
+    );
+    const defaultIds = defaultStatuses.myShiftInstances.items.map((i) => i.id);
+    expect(defaultIds).toContain(acceptedInstanceId);
+    expect(defaultIds).not.toContain(invitedInstanceId);
+
+    const acceptedItem = defaultStatuses.myShiftInstances.items.find(
+      (i) => i.id === acceptedInstanceId,
+    );
+    expect(acceptedItem?.myInviteStatus).toBe('ACCEPTED');
+  });
+
   it('lists available shift instances', async () => {
     await db.insert(schema.memberships).values({
       userId: testUserId,

@@ -15,10 +15,9 @@ import { PERMISSIONS } from '../../auth/constants';
 import { Permissions } from '../../auth/decorators/permissions.decorator';
 import { Loader } from '../../graphql/decorators';
 import type { AuthenticatedGraphQLContext } from '../../graphql/graphql.context';
-import { MembershipService } from '../../membership/membership.service';
-import { JoinStatus } from '../../shared/enums/join-status.enum';
 import { UserMapper } from '../../user/mappers/user.mapper';
 import { User } from '../../user/models/user.model';
+import { ShiftInviteStatus } from '../enums';
 import { ShiftInstanceInviteMapper } from '../mappers/shift-instance-invite.mapper';
 import { ShiftInstance } from '../models/shift-instance.model';
 import { ShiftInstanceInvite } from '../models/shift-instance-invite.model';
@@ -34,7 +33,6 @@ export class ShiftInstanceFieldResolver {
     private readonly shiftService: ShiftService,
     private readonly userMapper: UserMapper,
     private readonly shiftInstanceInviteMapper: ShiftInstanceInviteMapper,
-    private readonly membershipService: MembershipService,
   ) {}
 
   @Permissions(PERMISSIONS.SHIFT_VIEW)
@@ -105,40 +103,19 @@ export class ShiftInstanceFieldResolver {
     return Math.max(0, max - filled);
   }
 
+  // Raw invite status for this instance, or null when there is no direct invite.
   @AllowAnonymous()
-  @ResolveField(() => JoinStatus)
-  async myJoinStatus(
-    @Parent()
-    instance: ShiftInstanceEntity & {
-      master?: ShiftEntity;
-    },
+  @ResolveField(() => ShiftInviteStatus, { nullable: true })
+  async myInviteStatus(
+    @Parent() instance: ShiftInstanceEntity,
     @Session() session: UserSession,
     @Loader(ShiftInstanceLoader) loader: ShiftInstanceLoader,
-  ): Promise<JoinStatus> {
+  ): Promise<ShiftInviteStatus | null> {
     if (!session?.user) {
-      return JoinStatus.NONE;
+      return null;
     }
-
-    const inviteStatus = await loader.myJoinStatusByKey.load(
+    return loader.myInviteStatusByKey.load(
       `${instance.id}::${session.user.id}`,
     );
-
-    if (inviteStatus !== JoinStatus.NONE) {
-      return inviteStatus;
-    }
-
-    // No direct invite yet — joining a shift requires org membership, so
-    // fall back to the org-level membership request state (mirrors
-    // Event.myJoinStatus) rather than always reporting NONE for a
-    // non-member with a pending/rejected request.
-    const master =
-      instance.master ?? (await this.shiftService.findById(instance.masterId));
-    const orgState = await this.membershipService.getMembershipState(
-      session.user.id,
-      master.organizationUnitId,
-    );
-    return orgState === JoinStatus.PENDING || orgState === JoinStatus.REJECTED
-      ? orgState
-      : JoinStatus.NONE;
   }
 }
