@@ -76,12 +76,4 @@ export class OrganizationRepository extends BaseRepository {
     });
     return data.setRequiredForms;
   }
-
-  async setRequiredFormsEnabled(organizationUnitId: string, enabled: boolean) {
-    const data = await this.sdk.SetRequiredFormsEnabled({
-      organizationUnitId,
-      enabled,
-    });
-    return data.setRequiredFormsEnabled;
-  }
 }

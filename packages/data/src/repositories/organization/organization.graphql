@@ -50,7 +50,6 @@ query GetOrganizationUnit($id: String!) {
     phone
     address
     organizationId
-    requiredFormsEnabled
     requiredForms {
       form {
         id
@@ -312,68 +311,5 @@ mutation SetRequiredForms($organizationUnitId: String!, $formIds: [String!]!) {
       description
     }
     order
-  }
-}
-
-mutation SetRequiredFormsEnabled(
-  $organizationUnitId: String!
-  $enabled: Boolean!
-) {
-  setRequiredFormsEnabled(
-    organizationUnitId: $organizationUnitId
-    enabled: $enabled
-  ) {
-    id
-    requiredFormsEnabled
-    requiredForms {
-      form {
-        id
-        name
-        description
-        settings {
-          submitButtonLabel
-          successTitle
-          successMessage
-        }
-        blockRefs {
-          id
-          formId
-          blockId
-          fieldOrder
-          required
-          block {
-            id
-            organizationId
-            title
-            description
-            icon
-            required
-            isEditable
-            fields {
-              id
-              blockId
-              type
-              label
-              placeholder
-              description
-              required
-              lockType
-              systemKey
-              options {
-                label
-                value
-              }
-              documentFileId
-              documentDownloadUrl
-              documentFilename
-              documentLabel
-              minAge
-              fieldOrder
-            }
-          }
-        }
-      }
-      order
-    }
   }
 }

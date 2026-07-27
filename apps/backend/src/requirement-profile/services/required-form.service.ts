@@ -2,10 +2,7 @@ import { Inject, Injectable } from '@nestjs/common';
 import { eq, sql } from 'drizzle-orm';
 import type { Database } from '../../database/database.module';
 import { DATABASE_CONNECTION } from '../../database/database-connection';
-import type {
-  OrganizationUnitEntity,
-  RequirementFormEntity,
-} from '../../database/schema';
+import type { RequirementFormEntity } from '../../database/schema';
 import * as schema from '../../database/schema';
 import {
   ConflictGraphQLError,
@@ -80,41 +77,14 @@ export class RequiredFormService {
   }
 
   async hasRequiredForms(organizationUnitId: string): Promise<boolean> {
-    const orgUnit = await this.db.query.organizationUnits.findFirst({
-      where: { id: organizationUnitId },
-      columns: { requiredFormsEnabled: true },
-    });
-
-    if (!orgUnit?.requiredFormsEnabled) {
-      return false;
-    }
-
-    const [row] = await this.db
-      .select({ count: sql<number>`count(*)` })
-      .from(schema.organizationUnitRequiredForms)
-      .where(
-        eq(
-          schema.organizationUnitRequiredForms.organizationUnitId,
-          organizationUnitId,
-        ),
-      );
-
-    return (row?.count ?? 0) > 0;
+    const requiredForms = await this.getRequiredForms(organizationUnitId);
+    return requiredForms.length > 0;
   }
 
   async areRequiredFormsSatisfied(
     userId: string,
     organizationUnitId: string,
   ): Promise<boolean> {
-    const orgUnit = await this.db.query.organizationUnits.findFirst({
-      where: { id: organizationUnitId },
-      columns: { requiredFormsEnabled: true },
-    });
-
-    if (!orgUnit?.requiredFormsEnabled) {
-      return true;
-    }
-
     const statuses = await this.getRequiredFormStatuses(
       userId,
       organizationUnitId,
@@ -185,30 +155,5 @@ export class RequiredFormService {
       .where(eq(schema.organizationUnitRequiredForms.formId, formId));
 
     return (row?.count ?? 0) > 0;
-  }
-
-  async setRequiredFormsEnabled(
-    organizationUnitId: string,
-    enabled: boolean,
-  ): Promise<OrganizationUnitEntity> {
-    const orgUnit = await this.db.query.organizationUnits.findFirst({
-      where: { id: organizationUnitId },
-    });
-
-    if (!orgUnit) {
-      throw new NotFoundGraphQLError('Organization unit not found');
-    }
-
-    const [updated] = await this.db
-      .update(schema.organizationUnits)
-      .set({ requiredFormsEnabled: enabled })
-      .where(eq(schema.organizationUnits.id, organizationUnitId))
-      .returning();
-
-    if (!updated) {
-      throw new NotFoundGraphQLError('Organization unit not found');
-    }
-
-    return updated;
   }
 }

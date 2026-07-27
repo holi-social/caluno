@@ -98,24 +98,4 @@ export class OrganizationUnitMutationResolver {
       order,
     }));
   }
-
-  @Mutation(() => OrganizationUnit)
-  async setRequiredFormsEnabled(
-    @Args('organizationUnitId') organizationUnitId: string,
-    @Args('enabled') enabled: boolean,
-    @Session() session: UserSession,
-  ): Promise<OrganizationUnit> {
-    await this.assertCanConfigureRequiredForms(
-      session.user.id,
-      organizationUnitId,
-    );
-
-    const organizationUnit =
-      await this.requiredFormService.setRequiredFormsEnabled(
-        organizationUnitId,
-        enabled,
-      );
-
-    return this.organizationUnitMapper.toModelOrThrow(organizationUnit);
-  }
 }
