@@ -80,27 +80,6 @@ export function useSetRequiredForms() {
   });
 }
 
-export function useSetRequiredFormsEnabled() {
-  const sdk = useSdk();
-  const queryClient = useQueryClient();
-  const repository = new OrganizationRepository(sdk);
-
-  return useMutation({
-    mutationFn: ({
-      organizationUnitId,
-      enabled,
-    }: {
-      organizationUnitId: string;
-      enabled: boolean;
-    }) => repository.setRequiredFormsEnabled(organizationUnitId, enabled),
-    onSuccess: (_, { organizationUnitId }) => {
-      queryClient.invalidateQueries({
-        queryKey: ['organization-unit', organizationUnitId],
-      });
-    },
-  });
-}
-
 export function useSubmitRequiredForm() {
   const sdk = useSdk();
   const queryClient = useQueryClient();

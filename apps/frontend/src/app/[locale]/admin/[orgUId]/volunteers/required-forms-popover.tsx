@@ -8,7 +8,6 @@ import {
   useOrganizationUnitWithSuspense,
   useRequirementForms,
   useSetRequiredForms,
-  useSetRequiredFormsEnabled,
 } from '@repo/data/react';
 import {
   Button,
@@ -21,7 +20,6 @@ import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-  Switch,
 } from '@repo/ui';
 import { FileCheck, FilePlus, FileText, Info, X } from 'lucide-react';
 import { useTranslations } from 'next-intl';
@@ -61,11 +59,9 @@ export function RequiredFormsPopover({ orgUId }: RequiredFormsPopoverProps) {
   );
 
   const setRequiredForms = useSetRequiredForms();
-  const setRequiredFormsEnabled = useSetRequiredFormsEnabled();
 
   const requiredForms = orgUnit?.requiredForms ?? [];
-  const enabled = orgUnit?.requiredFormsEnabled ?? false;
-  const effectiveEnabled = enabled && requiredForms.length > 0;
+  const effectiveEnabled = requiredForms.length > 0;
 
   const attachedFormIds = useMemo(
     () => new Set(requiredForms.map((ref) => ref.form.id)),
@@ -85,20 +81,6 @@ export function RequiredFormsPopover({ orgUId }: RequiredFormsPopoverProps) {
     return hasUpload
       ? `${questionLabel} · ${t('fileUploadLabel')}`
       : questionLabel;
-  };
-
-  const handleToggle = async (checked: boolean) => {
-    try {
-      await setRequiredFormsEnabled.mutateAsync({
-        organizationUnitId: orgUId,
-        enabled: checked,
-      });
-      toast.success(checked ? t('enabledToast') : t('disabledToast'));
-    } catch (error) {
-      toast.error(
-        error instanceof Error ? error.message : t('toggleFailedToast'),
-      );
-    }
   };
 
   const handleRemove = async (formId: string) => {
@@ -175,22 +157,14 @@ export function RequiredFormsPopover({ orgUId }: RequiredFormsPopoverProps) {
         </PopoverTrigger>
         <PopoverContent className="w-[520px] p-0" align="end">
           <div className="p-5 space-y-5">
-            <div className="flex items-start justify-between gap-4">
-              <div className="space-y-1">
-                <h3 className="text-base font-semibold">{t('title')}</h3>
-                <p className="text-sm text-muted-foreground">
-                  {t('subtitle', {
-                    brand: commonT('brand'),
-                    unitName: orgUnit?.name ?? '',
-                  })}
-                </p>
-              </div>
-              <Switch
-                checked={enabled}
-                onCheckedChange={handleToggle}
-                disabled={setRequiredFormsEnabled.isPending}
-                aria-label={t('toggleLabel')}
-              />
+            <div className="space-y-1">
+              <h3 className="text-base font-semibold">{t('title')}</h3>
+              <p className="text-sm text-muted-foreground">
+                {t('subtitle', {
+                  brand: commonT('brand'),
+                  unitName: orgUnit?.name ?? '',
+                })}
+              </p>
             </div>
 
             {requiredForms.length > 0 && (
