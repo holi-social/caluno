@@ -8,7 +8,12 @@ import {
   ConflictGraphQLError,
   NotFoundGraphQLError,
 } from '../../graphql/errors';
-import { FormSubmissionStatus } from '../enums';
+import { FormSubmissionStatus, RequiredFormTargetType } from '../enums';
+
+export type RequiredFormTarget = {
+  targetType: RequiredFormTargetType;
+  targetId: string;
+};
 
 export type RequiredFormStatus = {
   form: RequirementFormEntity;
@@ -25,29 +30,40 @@ export class RequiredFormService {
   ) {}
 
   async getRequiredForms(
-    organizationUnitId: string,
+    target: RequiredFormTarget,
   ): Promise<Array<{ form: RequirementFormEntity; order: number }>> {
-    const rows = await this.db.query.organizationUnitRequiredForms.findMany({
-      where: { organizationUnitId },
-      orderBy: { order: 'asc' },
-      with: { form: true },
-    });
+    switch (target.targetType) {
+      case RequiredFormTargetType.ORGANIZATION_UNIT: {
+        const rows = await this.db.query.organizationUnitRequiredForms.findMany(
+          {
+            where: { organizationUnitId: target.targetId },
+            orderBy: { order: 'asc' },
+            with: { form: true },
+          },
+        );
 
-    return rows
-      .map((row) => ({
-        form: row.form,
-        order: row.order,
-      }))
-      .filter((row): row is { form: RequirementFormEntity; order: number } =>
-        Boolean(row.form),
-      );
+        return rows
+          .map((row) => ({
+            form: row.form,
+            order: row.order,
+          }))
+          .filter(
+            (row): row is { form: RequirementFormEntity; order: number } =>
+              Boolean(row.form),
+          );
+      }
+      default:
+        throw new ConflictGraphQLError(
+          `Unsupported required-form target: ${target.targetType}`,
+        );
+    }
   }
 
   async getRequiredFormStatuses(
     userId: string,
-    organizationUnitId: string,
+    target: RequiredFormTarget,
   ): Promise<RequiredFormStatus[]> {
-    const requiredForms = await this.getRequiredForms(organizationUnitId);
+    const requiredForms = await this.getRequiredForms(target);
 
     if (requiredForms.length === 0) {
       return [];
@@ -76,19 +92,16 @@ export class RequiredFormService {
     });
   }
 
-  async hasRequiredForms(organizationUnitId: string): Promise<boolean> {
-    const requiredForms = await this.getRequiredForms(organizationUnitId);
+  async hasRequiredForms(target: RequiredFormTarget): Promise<boolean> {
+    const requiredForms = await this.getRequiredForms(target);
     return requiredForms.length > 0;
   }
 
   async areRequiredFormsSatisfied(
     userId: string,
-    organizationUnitId: string,
+    target: RequiredFormTarget,
   ): Promise<boolean> {
-    const statuses = await this.getRequiredFormStatuses(
-      userId,
-      organizationUnitId,
-    );
+    const statuses = await this.getRequiredFormStatuses(userId, target);
 
     if (statuses.length === 0) {
       return true;
@@ -98,6 +111,23 @@ export class RequiredFormService {
   }
 
   async setRequiredForms(
+    target: RequiredFormTarget,
+    formIds: string[],
+  ): Promise<Array<{ form: RequirementFormEntity; order: number }>> {
+    switch (target.targetType) {
+      case RequiredFormTargetType.ORGANIZATION_UNIT:
+        return this.setRequiredFormsForOrganizationUnit(
+          target.targetId,
+          formIds,
+        );
+      default:
+        throw new ConflictGraphQLError(
+          `Unsupported required-form target: ${target.targetType}`,
+        );
+    }
+  }
+
+  private async setRequiredFormsForOrganizationUnit(
     organizationUnitId: string,
     formIds: string[],
   ): Promise<Array<{ form: RequirementFormEntity; order: number }>> {
@@ -145,10 +175,13 @@ export class RequiredFormService {
       }
     });
 
-    return this.getRequiredForms(organizationUnitId);
+    return this.getRequiredForms({
+      targetType: RequiredFormTargetType.ORGANIZATION_UNIT,
+      targetId: organizationUnitId,
+    });
   }
 
-  async isFormRequiredByAnyOrgUnit(formId: string): Promise<boolean> {
+  async isFormRequiredByAnyTarget(formId: string): Promise<boolean> {
     const [row] = await this.db
       .select({ count: sql<number>`count(*)` })
       .from(schema.organizationUnitRequiredForms)
