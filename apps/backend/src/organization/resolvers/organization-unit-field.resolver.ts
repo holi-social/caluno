@@ -6,6 +6,7 @@ import {
 } from '@thallesp/nestjs-better-auth';
 import { plainToInstance } from 'class-transformer';
 import { MembershipService } from '../../membership/membership.service';
+import { RequiredFormTargetType } from '../../requirement-profile/enums';
 import { RequirementForm } from '../../requirement-profile/models/requirement-form.model';
 import { RequirementProfile } from '../../requirement-profile/models/requirement-profile.model';
 import { RequirementProfileService } from '../../requirement-profile/services';
@@ -126,9 +127,10 @@ export class OrganizationUnitFieldResolver {
   async requiredForms(
     @Parent() organizationUnit: OrganizationUnitEntity,
   ): Promise<RequiredFormRef[]> {
-    const requiredForms = await this.requiredFormService.getRequiredForms(
-      organizationUnit.id,
-    );
+    const requiredForms = await this.requiredFormService.getRequiredForms({
+      targetType: RequiredFormTargetType.ORGANIZATION_UNIT,
+      targetId: organizationUnit.id,
+    });
 
     return requiredForms.map(({ form, order }) => ({
       form: plainToInstance(RequirementForm, form),

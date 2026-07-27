@@ -17,12 +17,14 @@ import type {
   RequirementFormInsert,
 } from '../schemas/requirement-form.schema';
 import { isUnitInOrg } from './is-unit-in-org';
+import { RequiredFormService } from './required-form.service';
 
 @Injectable()
 export class RequirementFormService {
   constructor(
     @Inject(DATABASE_CONNECTION)
     private readonly db: Database,
+    private readonly requiredFormService: RequiredFormService,
   ) {}
 
   async findById(id: string): Promise<RequirementFormEntity | undefined> {
@@ -227,10 +229,7 @@ export class RequirementFormService {
     await isUnitInOrg(this.db, organizationUnitId, existing.organizationId);
 
     const isRequired =
-      await this.db.query.organizationUnitRequiredForms.findFirst({
-        where: { formId: id },
-        columns: { organizationUnitId: true },
-      });
+      await this.requiredFormService.isFormRequiredByAnyTarget(id);
 
     if (isRequired) {
       throw new ConflictGraphQLError(
