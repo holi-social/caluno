@@ -53,7 +53,7 @@ export function RequiredFormsPopover({ orgUId }: RequiredFormsPopoverProps) {
   ]);
 
   const { data: orgUnit } = useOrganizationUnitWithSuspense(orgUId);
-  const { data: formsData } = useRequirementForms(
+  const { data: formsData, refetch } = useRequirementForms(
     orgUnit?.organizationId ?? '',
   );
 
@@ -125,8 +125,15 @@ export function RequiredFormsPopover({ orgUId }: RequiredFormsPopoverProps) {
     );
   }
 
+  const handleOpenChange = (nextOpen: boolean) => {
+    setOpen(nextOpen);
+    if (nextOpen && orgUnit?.organizationId) {
+      void refetch();
+    }
+  };
+
   return (
-    <Popover open={open} onOpenChange={setOpen}>
+    <Popover open={open} onOpenChange={handleOpenChange}>
       <PopoverTrigger asChild>
         <Button variant="outline" size="sm">
           <span
