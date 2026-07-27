@@ -145,15 +145,6 @@ export class FormSubmissionService {
     input: SubmitFormInput,
     userId: string,
   ): Promise<FormSubmissionEntity> {
-    const orgUnit = await this.db.query.organizationUnits.findFirst({
-      where: { id: organizationUnitId },
-      columns: { requiredFormsEnabled: true },
-    });
-
-    if (!orgUnit) {
-      throw new NotFoundGraphQLError('Organization unit not found');
-    }
-
     const required =
       await this.db.query.organizationUnitRequiredForms.findFirst({
         where: {
@@ -162,7 +153,7 @@ export class FormSubmissionService {
         },
       });
 
-    if (!required || !orgUnit.requiredFormsEnabled) {
+    if (!required) {
       throw new ForbiddenGraphQLError(
         'This form is not required for the organization unit',
       );

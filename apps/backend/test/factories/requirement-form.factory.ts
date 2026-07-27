@@ -99,7 +99,6 @@ export const setRequiredForms = async (
   args: {
     organizationUnitId: string;
     formIds: string[];
-    enabled?: boolean;
   },
 ) => {
   await db.transaction(async (tx) => {
@@ -120,13 +119,6 @@ export const setRequiredForms = async (
           order: index,
         })),
       );
-    }
-
-    if (args.enabled !== undefined) {
-      await tx
-        .update(schema.organizationUnits)
-        .set({ requiredFormsEnabled: args.enabled })
-        .where(eq(schema.organizationUnits.id, args.organizationUnitId));
     }
   });
 };

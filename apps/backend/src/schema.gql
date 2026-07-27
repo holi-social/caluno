@@ -415,7 +415,6 @@ type Mutation {
   regenerateFormShareToken(id: String!): RequirementForm!
   rejectMembershipRequest(id: ID!, organizationUnitId: ID!, rejectionReason: String!): MembershipRequest!
   setRequiredForms(formIds: [String!]!, organizationUnitId: String!): [RequiredFormRef!]!
-  setRequiredFormsEnabled(enabled: Boolean!, organizationUnitId: String!): OrganizationUnit!
   submitForm(input: SubmitFormInput!, token: String!): FormSubmission!
   submitRequiredForm(formId: String!, input: SubmitFormInput!, organizationUnitId: String!): FormSubmission!
   updateEvent(id: ID!, input: UpdateEventInput!): Event!
@@ -483,7 +482,6 @@ type OrganizationUnit {
   parent: OrganizationUnit
   phone: String
   requiredForms: [RequiredFormRef!]!
-  requiredFormsEnabled: Boolean!
   requiredMembershipRequirementProfile: RequirementProfile
   slug: String!
   type: OrganizationUnitType!
