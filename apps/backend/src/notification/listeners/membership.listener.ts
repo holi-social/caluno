@@ -1,5 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
+import { AppI18nService } from '../../i18n/app-i18n.service';
+import { createEmailTemplateContext } from '../email/email-template-context';
 import { membershipApprovedTemplate } from '../email/templates/membership-approved.template';
 import { membershipRequestedTemplate } from '../email/templates/membership-requested.template';
 import { NotificationService } from '../notification.service';
@@ -8,7 +10,10 @@ import { NotificationEvent } from '../notification-events';
 
 @Injectable()
 export class MembershipListener {
-  constructor(private readonly notificationService: NotificationService) {}
+  constructor(
+    private readonly notificationService: NotificationService,
+    private readonly appI18n: AppI18nService,
+  ) {}
 
   @OnEvent(NotificationEvent.MEMBERSHIP_REQUESTED)
   async handleMembershipRequested(
@@ -30,13 +35,21 @@ export class MembershipListener {
       {
         event: NotificationEvent.MEMBERSHIP_REQUESTED,
       },
-      async (recipient) =>
-        await membershipRequestedTemplate({
-          organizationUnitId: payload.organizationUnitId,
-          organizationUnitName: payload.organizationUnitName,
-          requesterName: requester.name,
-          recipientFirstName: recipient.firstName,
-        }),
+      async (recipient) => {
+        const templateContext = createEmailTemplateContext(
+          this.appI18n,
+          recipient.locale,
+        );
+        return membershipRequestedTemplate(
+          {
+            organizationUnitId: payload.organizationUnitId,
+            organizationUnitName: payload.organizationUnitName,
+            requesterName: requester.name,
+            recipientFirstName: recipient.firstName,
+          },
+          templateContext,
+        );
+      },
     );
   }
 
@@ -49,12 +62,20 @@ export class MembershipListener {
       {
         event: NotificationEvent.MEMBERSHIP_APPROVED,
       },
-      async (recipient) =>
-        await membershipApprovedTemplate({
-          organizationUnitId: payload.organizationUnitId,
-          organizationName: payload.organizationName,
-          recipientFirstName: recipient.firstName,
-        }),
+      async (recipient) => {
+        const templateContext = createEmailTemplateContext(
+          this.appI18n,
+          recipient.locale,
+        );
+        return membershipApprovedTemplate(
+          {
+            organizationUnitId: payload.organizationUnitId,
+            organizationName: payload.organizationName,
+            recipientFirstName: recipient.firstName,
+          },
+          templateContext,
+        );
+      },
     );
   }
 }

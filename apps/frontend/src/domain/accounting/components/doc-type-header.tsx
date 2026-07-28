@@ -10,7 +10,7 @@ export type DocumentKind = 'contract' | 'invoice' | 'custom' | 'settings';
 export type PauschalenType = 'ehrenamt' | 'uebungleiter';
 
 // Intentional brand literals — legal type differentiation, exempt from token rule. Idk if this is the best way to do this, or if we need new tokens.
-const TYPE_COLOR: Record<PauschalenType, string> = {
+export const TYPE_COLOR: Record<PauschalenType, string> = {
   ehrenamt: 'oklch(0.7 0.1 166)', // #17857c
   uebungleiter: 'oklch(0.5405 0.2811 292.85)', // #7f22fe
 };

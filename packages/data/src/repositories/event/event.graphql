@@ -1,0 +1,81 @@
+fragment EventListFields on Event {
+  id
+  title
+  slug
+  startsAt
+  endsAt
+  location
+  shiftsCount
+}
+
+fragment EventDetailFields on Event {
+  ...EventListFields
+  organizer {
+    id
+    name
+    image
+  }
+  coverUrl
+  logoUrl
+  shifts {
+    id
+    title
+    originalStartsAt
+    durationMinutes
+    minVolunteers
+    maxVolunteers
+  }
+}
+
+query GetEvents($limit: Int!, $offset: Int!) {
+  events(limit: $limit, offset: $offset) {
+    items {
+      ...EventListFields
+    }
+    pagination {
+      total
+      limit
+      offset
+      hasMore
+    }
+  }
+}
+
+query GetEvent($id: ID!) {
+  event(id: $id) {
+    ...EventDetailFields
+  }
+}
+
+query GetEventAttendees($eventId: ID!) {
+  eventAttendees(eventId: $eventId) {
+    id
+    name
+    email
+    image
+  }
+}
+
+mutation CreateEvent($input: CreateEventInput!) {
+  createEvent(input: $input) {
+    ...EventDetailFields
+  }
+}
+
+mutation UpdateEvent($id: ID!, $input: UpdateEventInput!) {
+  updateEvent(id: $id, input: $input) {
+    ...EventDetailFields
+  }
+}
+
+mutation DeleteEvent($id: ID!) {
+  deleteEvent(id: $id) {
+    id
+  }
+}
+
+mutation InviteMembersToEvent($eventId: ID!, $memberIds: [String!]!) {
+  inviteMembersToEvent(eventId: $eventId, memberIds: $memberIds) {
+    id
+  }
+}
