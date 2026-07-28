@@ -18,3 +18,11 @@ export const MOCK_SAVED_OVERRIDES: Record<PauschalenType, number | undefined> =
 export function getEffectivePauschaleRate(type: PauschalenType): number {
   return MOCK_SAVED_OVERRIDES[type] ?? MOCK_HQ_DEFAULTS[type];
 }
+
+// Annual tax-free limits per Pauschale type (EStG §3 no. 26/26a), until VOLI-676's
+// accounting backend provides these. UserCard reads this to flag when a member's
+// projected total would exceed the legal limit.
+export const MOCK_PAUSCHALE_LIMITS: Record<PauschalenType, number> = {
+  ehrenamt: 840,
+  uebungleiter: 3000,
+};

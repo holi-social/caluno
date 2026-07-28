@@ -180,6 +180,11 @@
     "inviteByLink": "Per Link einladen",
     "copyToast": "Teile diesen Link mit der Freiwilligen"
   },
+  "UserCard": {
+    "entitled": "Berechtigt",
+    "amountLeft": "{amount}€ übrig",
+    "amountProjected": "{amount}€ prognostiziert"
+  },
   "QRScanner": {
     "error": {
       "noPermission": {

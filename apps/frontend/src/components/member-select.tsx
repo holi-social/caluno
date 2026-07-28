@@ -11,13 +11,14 @@ import { ArrowRightLeft, CircleX, Link2, Search } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useState } from 'react';
 import { copyToClipboard } from '@/lib/clipboard';
-import { UserCard } from './user-card';
+import { UserCard, type UserCardPauschale } from './user-card';
 
 type Member = {
   id: string;
   name: string;
   email: string;
   image?: string | null;
+  pauschale?: UserCardPauschale | null;
 };
 
 const filterUsers = (users: Member[], query: string) =>
@@ -83,7 +84,7 @@ export const MemberSelect = ({
             onClick={() => addMember(member.id)}
             className="w-full rounded-md p-1 hover:bg-muted/50 transition-colors"
           >
-            <UserCard user={member} size="sm" />
+            <UserCard user={member} size="sm" pauschale={member.pauschale} />
           </button>
         )}
       />
@@ -94,7 +95,7 @@ export const MemberSelect = ({
         members={selectedMembers}
         renderItem={(member) => (
           <div className="w-full flex justify-between p-1">
-            <UserCard user={member} size="sm" />
+            <UserCard user={member} size="sm" pauschale={member.pauschale} />
             {!readonlyIds.includes(member.id) && (
               <Button
                 size="icon-sm"
