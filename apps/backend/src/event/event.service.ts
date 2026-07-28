@@ -58,6 +58,13 @@ export class EventService {
     return result ?? null;
   }
 
+  async findBySlug(slug: string): Promise<EventEntity | null> {
+    const result = await this.db.query.events.findFirst({
+      where: { slug, isDeleted: false },
+    });
+    return result ?? null;
+  }
+
   async findAll(
     organizationUnitId: string,
     pagination: PaginationInput,
