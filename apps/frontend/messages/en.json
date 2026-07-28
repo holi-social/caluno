@@ -180,6 +180,11 @@
     "inviteByLink": "Invite by link",
     "copyToast": "Share this link with the volunteer"
   },
+  "UserCard": {
+    "entitled": "Entitled",
+    "amountLeft": "{amount}€ left",
+    "amountProjected": "{amount}€ projected"
+  },
   "QRScanner": {
     "error": {
       "noPermission": {
