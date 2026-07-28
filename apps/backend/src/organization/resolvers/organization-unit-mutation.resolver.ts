@@ -6,6 +6,7 @@ import { AuthService } from '../../auth/auth.service';
 import { PERMISSIONS } from '../../auth/constants';
 import { Permissions } from '../../auth/decorators/permissions.decorator';
 import { ForbiddenGraphQLError } from '../../graphql/errors';
+import { RequiredFormTargetType } from '../../requirement-profile/enums';
 import { RequirementForm } from '../../requirement-profile/models/requirement-form.model';
 import { RequiredFormService } from '../../requirement-profile/services/required-form.service';
 import { CreateOrganizationUnitInput } from '../inputs/create-organization-unit.input';
@@ -89,7 +90,10 @@ export class OrganizationUnitMutationResolver {
     );
 
     const requiredForms = await this.requiredFormService.setRequiredForms(
-      organizationUnitId,
+      {
+        targetType: RequiredFormTargetType.ORGANIZATION_UNIT,
+        targetId: organizationUnitId,
+      },
       formIds,
     );
 
@@ -97,25 +101,5 @@ export class OrganizationUnitMutationResolver {
       form: plainToInstance(RequirementForm, form),
       order,
     }));
-  }
-
-  @Mutation(() => OrganizationUnit)
-  async setRequiredFormsEnabled(
-    @Args('organizationUnitId') organizationUnitId: string,
-    @Args('enabled') enabled: boolean,
-    @Session() session: UserSession,
-  ): Promise<OrganizationUnit> {
-    await this.assertCanConfigureRequiredForms(
-      session.user.id,
-      organizationUnitId,
-    );
-
-    const organizationUnit =
-      await this.requiredFormService.setRequiredFormsEnabled(
-        organizationUnitId,
-        enabled,
-      );
-
-    return this.organizationUnitMapper.toModelOrThrow(organizationUnit);
   }
 }

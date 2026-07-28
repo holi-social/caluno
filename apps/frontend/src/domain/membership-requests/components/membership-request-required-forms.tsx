@@ -32,7 +32,7 @@ export function MembershipRequestRequiredForms({
       .filter(Boolean),
   );
 
-  if (!orgUnit?.requiredFormsEnabled || requiredForms.length === 0) {
+  if (requiredForms.length === 0) {
     return null;
   }
 
@@ -86,7 +86,7 @@ export function useRequiredFormsSatisfied(
   const { data: submissions } = useFormSubmissionsForVolunteer(userId);
 
   const requiredForms = orgUnit?.requiredForms ?? [];
-  if (!orgUnit?.requiredFormsEnabled || requiredForms.length === 0) {
+  if (requiredForms.length === 0) {
     return true;
   }
 

@@ -498,10 +498,6 @@
         "required": "{count, plural, one {1 Formular erforderlich} other {{count} Formulare erforderlich}}",
         "none": "Keine Formulare erforderlich"
       },
-      "toggleLabel": "Formulare erforderlich",
-      "toggleDescription": "Freiwillige müssen Formulare ausfüllen, bevor sie beitreten",
-      "attachedFormsLabel": "Angehängte Formulare",
-      "noFormsAttached": "Noch keine Formulare angehängt.",
       "questionCount": "{count, plural, one {1 Frage} other {{count} Fragen}}",
       "addExisting": "+ Bestehendes hinzufügen",
       "createNew": "Neues erstellen",
@@ -510,9 +506,6 @@
       "dedupHint": "Freiwillige müssen Informationen, die sie bereits angegeben haben, nicht erneut eingeben.",
       "fileUploadLabel": "Datei-Upload",
       "removeAria": "{name} entfernen",
-      "enabledToast": "Erforderliche Formulare aktiviert",
-      "disabledToast": "Erforderliche Formulare deaktiviert",
-      "toggleFailedToast": "Einstellung konnte nicht aktualisiert werden",
       "addedToast": "Formular angehängt",
       "removedToast": "Formular entfernt",
       "updateFailedToast": "Erforderliche Formulare konnten nicht aktualisiert werden"

@@ -57,9 +57,6 @@ export class OrganizationUnit {
   @Field(() => RequirementProfile, { nullable: true })
   requiredMembershipRequirementProfile?: RequirementProfile | null;
 
-  @Field(() => Boolean)
-  requiredFormsEnabled!: boolean;
-
   @Field(() => [RequiredFormRef])
   requiredForms!: RequiredFormRef[];
 

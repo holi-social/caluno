@@ -9,6 +9,7 @@ import { DATABASE_CONNECTION } from '../database/database-connection';
 import * as schema from '../database/schema';
 import { ConflictGraphQLError, NotFoundGraphQLError } from '../graphql/errors';
 import { NotificationService } from '../notification';
+import { RequiredFormTargetType } from '../requirement-profile/enums';
 import type { RequirementProfileEntity } from '../requirement-profile/schemas/requirement-profile.schema';
 import type { RequiredFormStatus } from '../requirement-profile/services/required-form.service';
 import { RequiredFormService } from '../requirement-profile/services/required-form.service';
@@ -440,7 +441,10 @@ export class MembershipService {
           const formsSatisfied =
             await this.requiredFormService.areRequiredFormsSatisfied(
               requestToApprove.userId,
-              organizationUnitId,
+              {
+                targetType: RequiredFormTargetType.ORGANIZATION_UNIT,
+                targetId: organizationUnitId,
+              },
             );
           if (!formsSatisfied) {
             throw new ConflictGraphQLError(
@@ -648,10 +652,10 @@ export class MembershipService {
     }
 
     const requiredFormStatuses =
-      await this.requiredFormService.getRequiredFormStatuses(
-        userId,
-        organizationUnitId,
-      );
+      await this.requiredFormService.getRequiredFormStatuses(userId, {
+        targetType: RequiredFormTargetType.ORGANIZATION_UNIT,
+        targetId: organizationUnitId,
+      });
     const missingForms = requiredFormStatuses.filter((s) => !s.submitted);
 
     if (requirementProfile || missingForms.length > 0) {

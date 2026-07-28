@@ -5,6 +5,7 @@ import type {
   MembershipRequestEntity,
   MembershipRequestMetadata,
 } from '../membership/schemas/membership-request.schema';
+import { RequiredFormTargetType } from '../requirement-profile/enums';
 import { SubmitFormInput } from '../requirement-profile/inputs/submit-form.input';
 import type { FormSubmissionEntity } from '../requirement-profile/schemas/form-submission.schema';
 import { FormSubmissionService } from '../requirement-profile/services/form-submission.service';
@@ -85,10 +86,10 @@ export class MembershipLifecycleOrchestrator {
       );
       if (!isMember) {
         const requiredFormsSatisfied =
-          await this.requiredFormService.areRequiredFormsSatisfied(
-            userId,
-            organizationUnitId,
-          );
+          await this.requiredFormService.areRequiredFormsSatisfied(userId, {
+            targetType: RequiredFormTargetType.ORGANIZATION_UNIT,
+            targetId: organizationUnitId,
+          });
         if (requiredFormsSatisfied) {
           try {
             await this.membershipService.createMembershipRequest(

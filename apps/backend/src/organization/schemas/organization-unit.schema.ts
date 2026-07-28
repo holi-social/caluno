@@ -1,6 +1,5 @@
 import { sql } from 'drizzle-orm';
 import {
-  boolean,
   check,
   foreignKey,
   index,
@@ -45,9 +44,6 @@ export const organizationUnits = snakeCase.table(
     requiredMembershipRequirementProfileId: uuid(
       'required_membership_requirement_profile_id',
     ).references(() => requirementProfiles.id, { onDelete: 'set null' }),
-    requiredFormsEnabled: boolean('required_forms_enabled')
-      .notNull()
-      .default(false),
     deletedAt: timestamp('deleted_at'),
     ...timestampColumns,
   },

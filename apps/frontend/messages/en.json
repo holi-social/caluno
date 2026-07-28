@@ -498,10 +498,6 @@
         "required": "{count, plural, one {1 form required} other {{count} forms required}}",
         "none": "No forms required"
       },
-      "toggleLabel": "Require forms",
-      "toggleDescription": "Ask volunteers to complete forms before joining",
-      "attachedFormsLabel": "Attached forms",
-      "noFormsAttached": "No forms attached yet.",
       "questionCount": "{count, plural, one {1 question} other {{count} questions}}",
       "addExisting": "+ Add existing",
       "createNew": "Create new",
@@ -510,9 +506,6 @@
       "dedupHint": "Volunteers won't be asked for information they've already provided.",
       "fileUploadLabel": "file upload",
       "removeAria": "Remove {name}",
-      "enabledToast": "Required forms enabled",
-      "disabledToast": "Required forms disabled",
-      "toggleFailedToast": "Failed to update setting",
       "addedToast": "Form attached",
       "removedToast": "Form removed",
       "updateFailedToast": "Failed to update required forms"

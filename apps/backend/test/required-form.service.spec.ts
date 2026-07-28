@@ -13,6 +13,7 @@ import {
 } from '../src/graphql/errors';
 import { MembershipService } from '../src/membership/membership.service';
 import { NotificationService } from '../src/notification/notification.service';
+import { RequiredFormTargetType } from '../src/requirement-profile/enums';
 import { FormSubmissionService } from '../src/requirement-profile/services/form-submission.service';
 import { RequiredFormService } from '../src/requirement-profile/services/required-form.service';
 import { RequirementFormService } from '../src/requirement-profile/services/requirement-form.service';
@@ -69,8 +70,15 @@ describe('RequiredFormService', () => {
 
     requiredFormService = new RequiredFormService(db);
     const userProfileService = new UserProfileService(db);
-    formSubmissionService = new FormSubmissionService(db, userProfileService);
-    requirementFormService = new RequirementFormService(db);
+    formSubmissionService = new FormSubmissionService(
+      db,
+      userProfileService,
+      requiredFormService,
+    );
+    requirementFormService = new RequirementFormService(
+      db,
+      requiredFormService,
+    );
 
     const authServiceMock = {
       findUsersWithPermission: async () => [],
@@ -107,6 +115,11 @@ describe('RequiredFormService', () => {
     return { user, organization, type, unit };
   };
 
+  const orgUnitTarget = (unitId: string) => ({
+    targetType: RequiredFormTargetType.ORGANIZATION_UNIT,
+    targetId: unitId,
+  });
+
   describe('getRequiredForms', () => {
     it('returns forms in the order they were attached', async () => {
       const { user, unit } = await setupOrg();
@@ -128,7 +141,9 @@ describe('RequiredFormService', () => {
         formIds: [formB.id, formA.id],
       });
 
-      const requiredForms = await requiredFormService.getRequiredForms(unit.id);
+      const requiredForms = await requiredFormService.getRequiredForms(
+        orgUnitTarget(unit.id),
+      );
 
       expect(requiredForms).toHaveLength(2);
       expect(requiredForms[0]?.form.id).toBe(formB.id);
@@ -139,7 +154,9 @@ describe('RequiredFormService', () => {
 
     it('returns an empty array when no forms are attached', async () => {
       const { unit } = await setupOrg();
-      const requiredForms = await requiredFormService.getRequiredForms(unit.id);
+      const requiredForms = await requiredFormService.getRequiredForms(
+        orgUnitTarget(unit.id),
+      );
       expect(requiredForms).toEqual([]);
     });
   });
@@ -155,7 +172,6 @@ describe('RequiredFormService', () => {
       await setRequiredForms(db, {
         organizationUnitId: unit.id,
         formIds: [form.id],
-        enabled: true,
       });
       const submission = await createFormSubmission(db, {
         formId: form.id,
@@ -164,7 +180,7 @@ describe('RequiredFormService', () => {
 
       const statuses = await requiredFormService.getRequiredFormStatuses(
         user.id,
-        unit.id,
+        orgUnitTarget(unit.id),
       );
 
       expect(statuses).toHaveLength(1);
@@ -182,12 +198,11 @@ describe('RequiredFormService', () => {
       await setRequiredForms(db, {
         organizationUnitId: unit.id,
         formIds: [form.id],
-        enabled: true,
       });
 
       const statuses = await requiredFormService.getRequiredFormStatuses(
         user.id,
-        unit.id,
+        orgUnitTarget(unit.id),
       );
 
       expect(statuses[0]?.submitted).toBe(false);
@@ -204,7 +219,6 @@ describe('RequiredFormService', () => {
       await setRequiredForms(db, {
         organizationUnitId: unit.id,
         formIds: [form.id],
-        enabled: true,
       });
       await createFormSubmission(db, {
         formId: form.id,
@@ -214,7 +228,7 @@ describe('RequiredFormService', () => {
 
       const statuses = await requiredFormService.getRequiredFormStatuses(
         user.id,
-        unit.id,
+        orgUnitTarget(unit.id),
       );
 
       expect(statuses[0]?.submitted).toBe(false);
@@ -222,7 +236,7 @@ describe('RequiredFormService', () => {
   });
 
   describe('hasRequiredForms', () => {
-    it('returns true only when enforcement is enabled and forms are attached', async () => {
+    it('returns true when forms are attached', async () => {
       const { user, unit } = await setupOrg();
       const { form } = await createRequirementForm(db, {
         organizationId: unit.organizationId,
@@ -230,54 +244,42 @@ describe('RequiredFormService', () => {
         createdById: user.id,
       });
 
-      expect(await requiredFormService.hasRequiredForms(unit.id)).toBe(false);
+      expect(
+        await requiredFormService.hasRequiredForms(orgUnitTarget(unit.id)),
+      ).toBe(false);
 
       await setRequiredForms(db, {
         organizationUnitId: unit.id,
         formIds: [form.id],
-        enabled: true,
       });
 
-      expect(await requiredFormService.hasRequiredForms(unit.id)).toBe(true);
+      expect(
+        await requiredFormService.hasRequiredForms(orgUnitTarget(unit.id)),
+      ).toBe(true);
     });
 
-    it('returns false when enforcement is disabled even if forms are attached', async () => {
-      const { user, unit } = await setupOrg();
-      const { form } = await createRequirementForm(db, {
-        organizationId: unit.organizationId,
-        organizationUnitId: unit.id,
-        createdById: user.id,
-      });
-      await setRequiredForms(db, {
-        organizationUnitId: unit.id,
-        formIds: [form.id],
-        enabled: false,
-      });
+    it('returns false when no forms are attached', async () => {
+      const { unit } = await setupOrg();
 
-      expect(await requiredFormService.hasRequiredForms(unit.id)).toBe(false);
+      expect(
+        await requiredFormService.hasRequiredForms(orgUnitTarget(unit.id)),
+      ).toBe(false);
     });
   });
 
   describe('areRequiredFormsSatisfied', () => {
-    it('is satisfied when required forms are disabled', async () => {
+    it('is satisfied when no required forms are attached', async () => {
       const { user, unit } = await setupOrg();
-      const { form } = await createRequirementForm(db, {
-        organizationId: unit.organizationId,
-        organizationUnitId: unit.id,
-        createdById: user.id,
-      });
-      await setRequiredForms(db, {
-        organizationUnitId: unit.id,
-        formIds: [form.id],
-        enabled: false,
-      });
 
       expect(
-        await requiredFormService.areRequiredFormsSatisfied(user.id, unit.id),
+        await requiredFormService.areRequiredFormsSatisfied(
+          user.id,
+          orgUnitTarget(unit.id),
+        ),
       ).toBe(true);
     });
 
-    it('is satisfied when enabled and all forms are submitted', async () => {
+    it('is satisfied when all forms are submitted', async () => {
       const { user, unit } = await setupOrg();
       const { form } = await createRequirementForm(db, {
         organizationId: unit.organizationId,
@@ -287,12 +289,14 @@ describe('RequiredFormService', () => {
       await setRequiredForms(db, {
         organizationUnitId: unit.id,
         formIds: [form.id],
-        enabled: true,
       });
       await createFormSubmission(db, { formId: form.id, userId: user.id });
 
       expect(
-        await requiredFormService.areRequiredFormsSatisfied(user.id, unit.id),
+        await requiredFormService.areRequiredFormsSatisfied(
+          user.id,
+          orgUnitTarget(unit.id),
+        ),
       ).toBe(true);
     });
 
@@ -306,11 +310,13 @@ describe('RequiredFormService', () => {
       await setRequiredForms(db, {
         organizationUnitId: unit.id,
         formIds: [form.id],
-        enabled: true,
       });
 
       expect(
-        await requiredFormService.areRequiredFormsSatisfied(user.id, unit.id),
+        await requiredFormService.areRequiredFormsSatisfied(
+          user.id,
+          orgUnitTarget(unit.id),
+        ),
       ).toBe(false);
     });
   });
@@ -335,16 +341,17 @@ describe('RequiredFormService', () => {
         organizationUnitId: unit.id,
         formIds: [formA.id],
       });
-      const result = await requiredFormService.setRequiredForms(unit.id, [
-        formB.id,
-      ]);
+      const result = await requiredFormService.setRequiredForms(
+        orgUnitTarget(unit.id),
+        [formB.id],
+      );
 
       expect(result).toHaveLength(1);
       expect(result[0]?.form.id).toBe(formB.id);
       expect(
-        (await requiredFormService.getRequiredForms(unit.id)).map(
-          (r) => r.form.id,
-        ),
+        (
+          await requiredFormService.getRequiredForms(orgUnitTarget(unit.id))
+        ).map((r) => r.form.id),
       ).toEqual([formB.id]);
     });
 
@@ -367,35 +374,23 @@ describe('RequiredFormService', () => {
       });
 
       await expect(
-        requiredFormService.setRequiredForms(unit.id, [otherForm.id]),
+        requiredFormService.setRequiredForms(orgUnitTarget(unit.id), [
+          otherForm.id,
+        ]),
       ).rejects.toBeInstanceOf(ConflictGraphQLError);
     });
 
     it('throws when the organization unit does not exist', async () => {
       await expect(
-        requiredFormService.setRequiredForms(crypto.randomUUID(), []),
+        requiredFormService.setRequiredForms(
+          orgUnitTarget(crypto.randomUUID()),
+          [],
+        ),
       ).rejects.toBeInstanceOf(NotFoundGraphQLError);
     });
   });
 
-  describe('setRequiredFormsEnabled', () => {
-    it('toggles the required forms master switch', async () => {
-      const { unit } = await setupOrg();
-      const updated = await requiredFormService.setRequiredFormsEnabled(
-        unit.id,
-        true,
-      );
-      expect(updated.requiredFormsEnabled).toBe(true);
-
-      const disabled = await requiredFormService.setRequiredFormsEnabled(
-        unit.id,
-        false,
-      );
-      expect(disabled.requiredFormsEnabled).toBe(false);
-    });
-  });
-
-  describe('isFormRequiredByAnyOrgUnit', () => {
+  describe('isFormRequiredByAnyTarget', () => {
     it('returns true when the form is attached to any org unit', async () => {
       const { user, unit } = await setupOrg();
       const { form } = await createRequirementForm(db, {
@@ -408,9 +403,9 @@ describe('RequiredFormService', () => {
         formIds: [form.id],
       });
 
-      expect(
-        await requiredFormService.isFormRequiredByAnyOrgUnit(form.id),
-      ).toBe(true);
+      expect(await requiredFormService.isFormRequiredByAnyTarget(form.id)).toBe(
+        true,
+      );
     });
 
     it('returns false when the form is not attached anywhere', async () => {
@@ -421,14 +416,14 @@ describe('RequiredFormService', () => {
         createdById: user.id,
       });
 
-      expect(
-        await requiredFormService.isFormRequiredByAnyOrgUnit(form.id),
-      ).toBe(false);
+      expect(await requiredFormService.isFormRequiredByAnyTarget(form.id)).toBe(
+        false,
+      );
     });
   });
 
   describe('FormSubmissionService.submitRequiredForm', () => {
-    it('creates a submission when the form is required and enforcement is enabled', async () => {
+    it('creates a submission when the form is required', async () => {
       const { user, unit } = await setupOrg();
       const { form } = await createRequirementForm(db, {
         organizationId: unit.organizationId,
@@ -438,7 +433,6 @@ describe('RequiredFormService', () => {
       await setRequiredForms(db, {
         organizationUnitId: unit.id,
         formIds: [form.id],
-        enabled: true,
       });
 
       const submission = await formSubmissionService.submitRequiredForm(
@@ -469,29 +463,6 @@ describe('RequiredFormService', () => {
         ),
       ).rejects.toBeInstanceOf(ForbiddenGraphQLError);
     });
-
-    it('rejects submission when enforcement is disabled', async () => {
-      const { user, unit } = await setupOrg();
-      const { form } = await createRequirementForm(db, {
-        organizationId: unit.organizationId,
-        organizationUnitId: unit.id,
-        createdById: user.id,
-      });
-      await setRequiredForms(db, {
-        organizationUnitId: unit.id,
-        formIds: [form.id],
-        enabled: false,
-      });
-
-      await expect(
-        formSubmissionService.submitRequiredForm(
-          unit.id,
-          form.id,
-          { values: [] },
-          user.id,
-        ),
-      ).rejects.toBeInstanceOf(ForbiddenGraphQLError);
-    });
   });
 
   describe('MembershipService.requestOrgJoin', () => {
@@ -505,7 +476,6 @@ describe('RequiredFormService', () => {
       await setRequiredForms(db, {
         organizationUnitId: unit.id,
         formIds: [form.id],
-        enabled: true,
       });
 
       const result = await membershipService.requestOrgJoin(user.id, unit.id);
@@ -527,7 +497,6 @@ describe('RequiredFormService', () => {
       await setRequiredForms(db, {
         organizationUnitId: unit.id,
         formIds: [form.id],
-        enabled: true,
       });
       await createFormSubmission(db, { formId: form.id, userId: user.id });
 
@@ -558,7 +527,6 @@ describe('RequiredFormService', () => {
       await setRequiredForms(db, {
         organizationUnitId: unit.id,
         formIds: [form.id],
-        enabled: true,
       });
       const membershipRequest = await createMembershipRequest(db, {
         userId: user.id,
@@ -589,7 +557,6 @@ describe('RequiredFormService', () => {
       await setRequiredForms(db, {
         organizationUnitId: unit.id,
         formIds: [form.id],
-        enabled: true,
       });
       await createFormSubmission(db, { formId: form.id, userId: user.id });
       const request = await membershipService.requestOrgJoin(user.id, unit.id);
