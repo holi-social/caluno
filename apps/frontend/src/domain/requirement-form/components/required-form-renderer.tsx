@@ -1,6 +1,7 @@
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
+import type { RequiredFormTargetType } from '@repo/data';
 import type {
   RequiredForm,
   RequiredFormBlock,
@@ -21,14 +22,16 @@ import {
 } from './volunteer-form';
 
 interface RequiredFormRendererProps {
-  organizationUnitId: string;
+  targetType: RequiredFormTargetType;
+  targetId: string;
   form: RequiredForm;
   profileData?: Record<string, string>;
   onSubmitted?: () => void;
 }
 
 export function RequiredFormRenderer({
-  organizationUnitId,
+  targetType,
+  targetId,
   form,
   profileData = {},
   onSubmitted,
@@ -153,7 +156,8 @@ export function RequiredFormRenderer({
     setIsSubmitting(true);
     try {
       const result = await submitRequiredForm({
-        organizationUnitId,
+        targetType,
+        targetId,
         formId: form.id,
         values: submissionValues,
       });

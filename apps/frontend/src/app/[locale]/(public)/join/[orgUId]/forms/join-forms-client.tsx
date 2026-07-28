@@ -1,5 +1,6 @@
 'use client';
 
+import { RequiredFormTargetType } from '@repo/data';
 import {
   JoinStatus,
   type RequiredForm,
@@ -186,7 +187,8 @@ export function JoinFormsClient({
           </DialogHeader>
           {activeForm && activeFormId && (
             <RequiredFormRenderer
-              organizationUnitId={orgUId}
+              targetType={RequiredFormTargetType.OrganizationUnit}
+              targetId={orgUId}
               form={activeForm}
               profileData={profileData}
               onSubmitted={() => handleFormSubmitted(activeFormId)}
