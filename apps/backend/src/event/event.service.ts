@@ -12,8 +12,10 @@ import {
 import type { PaginationInput } from '../graphql/pagination.input';
 import { MembershipService } from '../membership/membership.service';
 import type { MembershipRequestEntity } from '../membership/schemas/membership-request.schema';
+import { RequiredFormTargetType } from '../requirement-profile/enums';
 import type { RequirementFormEntity } from '../requirement-profile/schemas/requirement-form.schema';
 import type { RequirementProfileEntity } from '../requirement-profile/schemas/requirement-profile.schema';
+import { RequiredFormService } from '../requirement-profile/services/required-form.service';
 import { JoinStatus } from '../shared/enums/join-status.enum';
 import {
   canTransitionInviteStatus,
@@ -35,6 +37,7 @@ export class EventService {
     private readonly db: Database,
     private readonly membershipService: MembershipService,
     private readonly fileService: FileService,
+    private readonly requiredFormService: RequiredFormService,
   ) {}
 
   async findById(id: string, organizationUnitId: string): Promise<EventEntity> {
@@ -96,7 +99,13 @@ export class EventService {
     organizationUnitId: string,
     input: CreateEventInput,
   ): Promise<EventEntity> {
-    const { invitedMemberIds, logoFileId, coverFileId, ...eventInput } = input;
+    const {
+      invitedMemberIds,
+      requiredFormIds,
+      logoFileId,
+      coverFileId,
+      ...eventInput
+    } = input;
     const logoUrl = logoFileId
       ? await this.resolveImageUrl(logoFileId, FilePurpose.EVENT_IMAGE)
       : null;
@@ -138,6 +147,15 @@ export class EventService {
           .onConflictDoNothing();
       }
 
+      if (requiredFormIds && requiredFormIds.length > 0) {
+        await this.setRequiredFormsInTx(
+          tx,
+          event.id,
+          organizationUnitId,
+          requiredFormIds,
+        );
+      }
+
       return event;
     });
   }
@@ -157,31 +175,42 @@ export class EventService {
 
     const resolved = await this.resolveEventUpdateInput(input);
 
-    const [event] = await this.db
-      .update(schema.events)
-      .set({
-        title: resolved.title,
-        slug: resolved.title ? slugify(resolved.title) : undefined,
-        description: resolved.description,
-        location: resolved.location,
-        logoUrl: resolved.logoUrl,
-        coverUrl: resolved.coverUrl,
-        startsAt: resolved.startsAt,
-        endsAt: resolved.endsAt,
-      })
-      .where(
-        and(
-          eq(schema.events.id, id),
-          eq(schema.events.organizationUnitId, organizationUnitId),
-        ),
-      )
-      .returning();
+    return this.db.transaction(async (tx) => {
+      const [event] = await tx
+        .update(schema.events)
+        .set({
+          title: resolved.title,
+          slug: resolved.title ? slugify(resolved.title) : undefined,
+          description: resolved.description,
+          location: resolved.location,
+          logoUrl: resolved.logoUrl,
+          coverUrl: resolved.coverUrl,
+          startsAt: resolved.startsAt,
+          endsAt: resolved.endsAt,
+        })
+        .where(
+          and(
+            eq(schema.events.id, id),
+            eq(schema.events.organizationUnitId, organizationUnitId),
+          ),
+        )
+        .returning();
 
-    if (!event) {
-      throw new NotFoundGraphQLError(`Event with ID ${id} not found`);
-    }
+      if (!event) {
+        throw new NotFoundGraphQLError(`Event with ID ${id} not found`);
+      }
 
-    return event;
+      if (input.requiredFormIds !== undefined) {
+        await this.setRequiredFormsInTx(
+          tx,
+          event.id,
+          organizationUnitId,
+          input.requiredFormIds ?? [],
+        );
+      }
+
+      return event;
+    });
   }
 
   async delete(id: string, organizationUnitId: string): Promise<EventEntity> {
@@ -245,6 +274,43 @@ export class EventService {
     return event;
   }
 
+  private async getEventRequiredFormStatuses(
+    userId: string,
+    eventId: string,
+  ): Promise<
+    Array<{
+      form: RequirementFormEntity;
+      order: number;
+      submitted: boolean;
+      submissionId: string | null;
+    }>
+  > {
+    return this.requiredFormService.getRequiredFormStatuses(userId, {
+      targetType: RequiredFormTargetType.EVENT,
+      targetId: eventId,
+    });
+  }
+
+  private async checkEventRequiredForms(
+    userId: string,
+    eventId: string,
+  ): Promise<{
+    satisfied: boolean;
+    requiredForms: Array<{
+      form: RequirementFormEntity;
+      order: number;
+      submitted: boolean;
+      submissionId: string | null;
+    }>;
+  }> {
+    const requiredForms = await this.getEventRequiredFormStatuses(
+      userId,
+      eventId,
+    );
+    const missingForms = requiredForms.filter((s) => !s.submitted);
+    return { satisfied: missingForms.length === 0, requiredForms };
+  }
+
   async joinEvent(
     userId: string,
     eventId: string,
@@ -268,6 +334,17 @@ export class EventService {
     if (!isAllowed) {
       throw new ConflictGraphQLError(
         'You must be a member of the organization to join this event.',
+      );
+    }
+
+    const requiredFormStatuses = await this.getEventRequiredFormStatuses(
+      userId,
+      eventId,
+    );
+    const missingForms = requiredFormStatuses.filter((s) => !s.submitted);
+    if (missingForms.length > 0) {
+      throw new ConflictGraphQLError(
+        'You must complete the required forms before joining this event.',
       );
     }
 
@@ -384,10 +461,31 @@ export class EventService {
         };
       }
 
+      const eventFormsCheck = await this.checkEventRequiredForms(
+        userId,
+        eventId,
+      );
+      if (!eventFormsCheck.satisfied) {
+        return {
+          status: JoinStatus.REQUIREMENTS_NEEDED,
+          event,
+          requiredForms: eventFormsCheck.requiredForms,
+        };
+      }
+
       await this.joinEvent(userId, eventId);
       return {
         status: JoinStatus.JOINED,
         event,
+      };
+    }
+
+    const eventFormsCheck = await this.checkEventRequiredForms(userId, eventId);
+    if (!eventFormsCheck.satisfied) {
+      return {
+        status: JoinStatus.REQUIREMENTS_NEEDED,
+        event,
+        requiredForms: eventFormsCheck.requiredForms,
       };
     }
 
@@ -476,6 +574,50 @@ export class EventService {
     });
   }
 
+  private async setRequiredFormsInTx(
+    tx: Database,
+    eventId: string,
+    organizationUnitId: string,
+    formIds: string[],
+  ): Promise<void> {
+    const orgUnit = await tx.query.organizationUnits.findFirst({
+      where: { id: organizationUnitId },
+    });
+
+    if (!orgUnit) {
+      throw new NotFoundGraphQLError('Organization unit not found');
+    }
+
+    if (formIds.length > 0) {
+      const forms = await tx.query.requirementForms.findMany({
+        where: {
+          id: { in: formIds },
+          organizationId: orgUnit.organizationId,
+        },
+      });
+
+      if (forms.length !== formIds.length) {
+        throw new ConflictGraphQLError(
+          'One or more forms do not belong to this organization',
+        );
+      }
+    }
+
+    await tx
+      .delete(schema.eventRequiredForms)
+      .where(eq(schema.eventRequiredForms.eventId, eventId));
+
+    if (formIds.length > 0) {
+      await tx.insert(schema.eventRequiredForms).values(
+        formIds.map((formId, index) => ({
+          eventId,
+          formId,
+          order: index,
+        })),
+      );
+    }
+  }
+
   private async resolveImageUrl(
     fileId: string,
     purpose: FilePurpose,
@@ -493,7 +635,13 @@ export class EventService {
     startsAt?: Date;
     endsAt?: Date;
   }> {
-    const { logoFileId, coverFileId, ...rest } = input;
+    const {
+      logoFileId,
+      coverFileId,
+      invitedMemberIds: _,
+      requiredFormIds: __,
+      ...rest
+    } = input;
 
     const logoUrl =
       logoFileId === undefined

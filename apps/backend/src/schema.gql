@@ -22,6 +22,7 @@ input CreateEventInput {
   invitedMemberIds: [String!]
   location: String
   logoFileId: String
+  requiredFormIds: [String!]
   startsAt: DateTime!
   title: String!
 }
@@ -153,6 +154,8 @@ type Event {
   organizationUnit: EventOrganizationUnit
   organizationUnitId: ID!
   organizer: User
+  requiredForms: [RequiredFormRef!]!
+  requiredFormsCount: Int!
   shifts: [Shift!]!
   shiftsCount: Int!
   slug: String!
@@ -414,9 +417,10 @@ type Mutation {
   joinShiftInstance(instanceId: String!): JoinShiftInstanceResult!
   regenerateFormShareToken(id: String!): RequirementForm!
   rejectMembershipRequest(id: ID!, organizationUnitId: ID!, rejectionReason: String!): MembershipRequest!
+  setEventRequiredForms(eventId: ID!, formIds: [String!]!): [RequiredFormRef!]!
   setRequiredForms(formIds: [String!]!, organizationUnitId: String!): [RequiredFormRef!]!
   submitForm(input: SubmitFormInput!, token: String!): FormSubmission!
-  submitRequiredForm(formId: String!, input: SubmitFormInput!, organizationUnitId: String!): FormSubmission!
+  submitRequiredForm(formId: String!, input: SubmitFormInput!, targetId: String!, targetType: RequiredFormTargetType!): FormSubmission!
   updateEvent(id: ID!, input: UpdateEventInput!): Event!
   updateEventInviteStatus(eventId: ID!, status: EventInviteStatus!): EventInvite!
   updateFormBlock(id: String!, input: UpdateFormBlockInput!): FormBlock!
@@ -624,6 +628,11 @@ type Query {
 type RequiredFormRef {
   form: RequirementForm!
   order: Int!
+}
+
+enum RequiredFormTargetType {
+  EVENT
+  ORGANIZATION_UNIT
 }
 
 type RequiredFormWithStatus {
@@ -948,6 +957,7 @@ input UpdateEventInput {
   invitedMemberIds: [String!]
   location: String
   logoFileId: String
+  requiredFormIds: [String!]
   startsAt: DateTime
   title: String
 }

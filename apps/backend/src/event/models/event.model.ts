@@ -47,6 +47,9 @@ export class Event {
   @Field(() => Int)
   shiftsCount!: number;
 
+  @Field(() => Int)
+  requiredFormsCount!: number;
+
   @Field(() => Boolean)
   isFollowing!: boolean;
 

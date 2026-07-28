@@ -4,9 +4,12 @@ import { plainToInstance } from 'class-transformer';
 import { PERMISSIONS } from '../../auth/constants';
 import { Permissions } from '../../auth/decorators/permissions.decorator';
 import type { AuthenticatedGraphQLContext } from '../../graphql/graphql.context';
+import { RequiredFormRef } from '../../organization/models/organization-unit-required-form.model';
+import { RequiredFormTargetType } from '../../requirement-profile/enums';
 import { RequirementForm } from '../../requirement-profile/models/requirement-form.model';
 import { RequirementProfile } from '../../requirement-profile/models/requirement-profile.model';
 import { UserRequirementStatus } from '../../requirement-profile/models/user-requirement-status.model';
+import { RequiredFormService } from '../../requirement-profile/services/required-form.service';
 import { EventInviteStatus } from '../enums';
 import { EventService } from '../event.service';
 import { CreateEventInput } from '../inputs/create-event.input';
@@ -23,6 +26,7 @@ export class EventMutationResolver {
     private readonly eventService: EventService,
     private readonly eventMapper: EventMapper,
     private readonly eventInviteMapper: EventInviteMapper,
+    private readonly requiredFormService: RequiredFormService,
   ) {}
 
   @Permissions(PERMISSIONS.SHIFT_EDIT)
@@ -81,6 +85,27 @@ export class EventMutationResolver {
       context.organizationUnitId,
     );
     return this.eventMapper.toModelOrThrow(event);
+  }
+
+  @Permissions(PERMISSIONS.SHIFT_EDIT)
+  @Mutation(() => [RequiredFormRef])
+  async setEventRequiredForms(
+    @Args('eventId', { type: () => ID }) eventId: string,
+    @Args('formIds', { type: () => [String] }) formIds: string[],
+    @Session() session: UserSession,
+    @Context() context: AuthenticatedGraphQLContext,
+  ): Promise<RequiredFormRef[]> {
+    await this.eventService.findById(eventId, context.organizationUnitId);
+
+    const requiredForms = await this.requiredFormService.setRequiredForms(
+      { targetType: RequiredFormTargetType.EVENT, targetId: eventId },
+      formIds,
+    );
+
+    return requiredForms.map(({ form, order }) => ({
+      form: plainToInstance(RequirementForm, form),
+      order,
+    }));
   }
 
   @Mutation(() => JoinEventResult)
