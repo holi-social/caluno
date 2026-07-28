@@ -23,7 +23,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@repo/ui';
-import { FilePlus, FileText, Info, X } from 'lucide-react';
+import { FileText, Info, SquareArrowOutUpRight, X } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useMemo, useState, useTransition } from 'react';
 import { useForm } from 'react-hook-form';
@@ -329,7 +329,7 @@ export const EventForm = ({
               })
             }
           >
-            <FilePlus className="mr-2 h-4 w-4" />
+            <SquareArrowOutUpRight className="mr-2 h-4 w-4" />
             {tForms('createNew')}
           </Button>
         </div>
