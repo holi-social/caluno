@@ -6,6 +6,7 @@ import type {
   UpdateEventInput,
 } from '@repo/data';
 import { ShiftVisibility } from '@repo/data';
+import { revalidatePath } from 'next/cache';
 import z from 'zod';
 import { getDataClient } from '@/lib/data-client';
 import { actionClient } from '@/lib/safe-action';
@@ -27,9 +28,14 @@ export const createEvent = actionClient
       location: parsedInput.location,
       logoFileId: parsedInput.logoFileId ?? null,
       coverFileId: parsedInput.coverFileId ?? null,
+      requiredFormIds: parsedInput.requiredFormIds,
     };
 
-    return await data.event.create(input);
+    const result = await data.event.create(input);
+
+    revalidatePath(`/admin/${orgUId}/events`);
+
+    return result;
   });
 
 export const updateEvent = actionClient
@@ -45,9 +51,15 @@ export const updateEvent = actionClient
       location: parsedInput.location,
       logoFileId: parsedInput.logoFileId,
       coverFileId: parsedInput.coverFileId,
+      requiredFormIds: parsedInput.requiredFormIds,
     };
 
-    return await data.event.update(eventId, input);
+    const result = await data.event.update(eventId, input);
+
+    revalidatePath(`/admin/${orgUId}/events`);
+    revalidatePath(`/admin/${orgUId}/events/${eventId}`);
+
+    return result;
   });
 
 export const inviteMembersToEvent = actionClient
@@ -64,7 +76,11 @@ export const deleteEvent = actionClient
   .bindArgsSchemas([z.string(), z.string()])
   .action(async ({ bindArgsParsedInputs: [orgUId, eventId] }) => {
     const data = await getDataClient({ orgUId });
-    return await data.event.delete(eventId);
+    const result = await data.event.delete(eventId);
+
+    revalidatePath(`/admin/${orgUId}/events`);
+
+    return result;
   });
 
 export const createEventShift = actionClient
