@@ -243,8 +243,8 @@ query GetShiftInstances($shiftId: ID!) {
   }
 }
 
-query GetShiftInstanceDetail($shiftId: ID!) {
-  shiftInstances(shiftId: $shiftId) {
+query GetShiftInstance($id: ID!) {
+  shiftInstance(id: $id) {
     id
     actualStartsAt
     actualEndsAt

@@ -38,7 +38,7 @@ export default async function ShiftInstanceDetailPage({
   const t = await getTranslations('Shift');
   const { formatRange } = await getFormatting();
   const data = await getDataClient({ orgUId });
-  const instance = await data.shift.findInstanceDetail(shiftId, instanceId);
+  const instance = await data.shift.findInstance(instanceId);
 
   if (!instance || instance.isCancelled) {
     notFound();

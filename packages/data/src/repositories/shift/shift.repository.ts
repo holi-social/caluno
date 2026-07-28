@@ -144,9 +144,9 @@ export class ShiftRepository extends BaseRepository {
     return data.shiftVolunteers;
   }
 
-  async findInstanceDetail(shiftId: string, instanceId: string) {
-    const data = await this.sdk.GetShiftInstanceDetail({ shiftId });
-    return data.shiftInstances.find((instance) => instance.id === instanceId);
+  async findInstance(id: string) {
+    const data = await this.sdk.GetShiftInstance({ id });
+    return data.shiftInstance;
   }
 
   async updateShiftInstanceInviteStatus(
