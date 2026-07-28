@@ -3,6 +3,7 @@ import type {
   GetEventAttendeesQuery,
   GetEventQuery,
   GetEventsQuery,
+  SetEventRequiredFormsMutation,
   UpdateEventInput,
 } from '../../generated/graphql';
 import {
@@ -54,5 +55,13 @@ export class EventRepository extends BaseRepository {
   ): Promise<{ id: string }> {
     const data = await this.sdk.InviteMembersToEvent({ eventId, memberIds });
     return { id: data.inviteMembersToEvent.id };
+  }
+
+  async setRequiredForms(
+    eventId: string,
+    formIds: string[],
+  ): Promise<SetEventRequiredFormsMutation['setEventRequiredForms']> {
+    const data = await this.sdk.SetEventRequiredForms({ eventId, formIds });
+    return data.setEventRequiredForms;
   }
 }
