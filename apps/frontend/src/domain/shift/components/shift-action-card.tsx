@@ -102,6 +102,24 @@ export function ShiftActionCard({
     month: 'long',
   });
 
+  const getInviteStatusNote = () => {
+    switch (inviteStatus) {
+      case ShiftInviteStatus.Invited:
+        return t('respondBeforeNote', { date: longDate });
+      case ShiftInviteStatus.Accepted:
+        return t('cancelUntilNote', { date: longDate });
+      case ShiftInviteStatus.Cancelled:
+        return t('cancelledNote', { date: longDate });
+      case ShiftInviteStatus.SelfJoined:
+        return t('joinedNote');
+      default:
+        if (effectiveMembershipState === JoinStatus.Pending) {
+          return t('pendingNote');
+        }
+        return full ? t('fullNote') : t('signUpNote');
+    }
+  };
+
   return (
     <Card className="space-y-4 p-6">
       <div className="flex flex-col gap-2">
@@ -143,7 +161,7 @@ export function ShiftActionCard({
       {inviteStatus === ShiftInviteStatus.Cancelled && (
         <Badge variant="secondary" className="gap-1">
           <XIcon className="size-3.5" />
-          {t('declinedBadge')}
+          {t('cancelledBadge')}
         </Badge>
       )}
 
@@ -195,19 +213,7 @@ export function ShiftActionCard({
           })}
         />
         <p className="text-center text-sm text-muted-foreground">
-          {inviteStatus === ShiftInviteStatus.Invited
-            ? t('respondBeforeNote', { date: longDate })
-            : inviteStatus === ShiftInviteStatus.Accepted
-              ? t('cancelUntilNote', { date: longDate })
-              : inviteStatus === ShiftInviteStatus.Cancelled
-                ? t('cancelledNote', { date: longDate })
-                : inviteStatus === ShiftInviteStatus.SelfJoined
-                  ? t('joinedNote')
-                  : effectiveMembershipState === JoinStatus.Pending
-                    ? t('pendingNote')
-                    : full
-                      ? t('fullNote')
-                      : t('signUpNote')}
+          {getInviteStatusNote()}
         </p>
       </div>
     </Card>

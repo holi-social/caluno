@@ -65,3 +65,6 @@ AGENTS.local.md
 .ai/handoff/
 
 gitleaks-report.json
+
+# Subagent-driven-development scratch workspaces
+.superpowers/
