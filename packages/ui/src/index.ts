@@ -24,12 +24,10 @@ export * from './components/base/switch';
 export * from './components/base/table';
 export * from './components/base/tabs';
 export * from './components/base/textarea';
-
 export * from './components/calendar';
 export * from './components/cobranding';
 export * from './components/date-picker';
 export * from './components/detail-page-header';
-export * from './components/home-header';
 export * from './components/input';
 export * from './components/kibo-ui/tree';
 export * from './components/logo';

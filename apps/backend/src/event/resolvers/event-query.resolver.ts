@@ -3,6 +3,9 @@ import { PERMISSIONS } from '../../auth/constants';
 import { Permissions } from '../../auth/decorators/permissions.decorator';
 import type { AuthenticatedGraphQLContext } from '../../graphql/graphql.context';
 import { PaginationInput } from '../../graphql/pagination.input';
+import { ShiftMapper } from '../../shift/mappers/shift.mapper';
+import { Shift } from '../../shift/models/shift.model';
+import { ShiftService } from '../../shift/shift.service';
 import { UserMapper } from '../../user/mappers/user.mapper';
 import { User } from '../../user/models/user.model';
 import { EventService } from '../event.service';
@@ -15,6 +18,8 @@ export class EventQueryResolver {
     private readonly eventService: EventService,
     private readonly eventMapper: EventMapper,
     private readonly userMapper: UserMapper,
+    private readonly shiftService: ShiftService,
+    private readonly shiftMapper: ShiftMapper,
   ) {}
 
   @Permissions(PERMISSIONS.SHIFT_VIEW)
@@ -59,5 +64,16 @@ export class EventQueryResolver {
       context.organizationUnitId,
     );
     return this.userMapper.toArray(attendees);
+  }
+
+  @Permissions(PERMISSIONS.SHIFT_VIEW)
+  @Query(() => [Shift])
+  async eventShifts(
+    @Args('eventId', { type: () => ID }) eventId: string,
+    @Context() context: AuthenticatedGraphQLContext,
+  ): Promise<Shift[]> {
+    await this.eventService.findById(eventId, context.organizationUnitId);
+    const shifts = await this.shiftService.findByEventId(eventId);
+    return this.shiftMapper.toArray(shifts);
   }
 }

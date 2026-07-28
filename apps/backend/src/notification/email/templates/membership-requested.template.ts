@@ -1,3 +1,4 @@
+import type { EmailTemplateContext } from '../../../i18n/email-translate';
 import {
   button,
   card,
@@ -21,27 +22,34 @@ export interface MembershipRequestedTemplateData {
 
 export async function membershipRequestedTemplate(
   data: MembershipRequestedTemplateData,
+  { t }: EmailTemplateContext,
 ): Promise<{ subject: string; html: string }> {
   const firstName = escapeHtml(data.recipientFirstName);
   const organizationName = escapeHtml(data.organizationUnitName);
   const requesterName = escapeHtml(data.requesterName);
   const volunteersUrl = volunteersAdminUrl(data.organizationUnitId);
+  const brandName = emailTheme.brandName;
 
   const body = card(`
-    ${heading('New membership request')}
+    ${heading(t('membershipRequested.heading'))}
     ${paragraph(
-      `Hi ${firstName}, ${strong(requesterName)} has requested to join ${strong(organizationName)}. Review the request when you have a moment so they know whether they can start volunteering.`,
+      `${t('membershipRequested.greetingPrefix', { firstName })} ${strong(requesterName)} ${t('membershipRequested.greetingBetweenRequesterAndOrg')} ${strong(organizationName)}. ${t('membershipRequested.greetingSuffix')}`,
     )}
-    ${button({ href: volunteersUrl, label: 'Review request' })}
+    ${button({ href: volunteersUrl, label: t('membershipRequested.buttonLabel') })}
     ${divider()}
-    ${note('Pending requests stay open until an admin approves or rejects them.')}
+    ${note(t('membershipRequested.note'))}
   `);
 
   return renderEmail({
     templateName: 'membershipRequestedTemplate',
-    subject: `New membership request for ${data.organizationUnitName}`,
-    previewText: `${requesterName} wants to join ${organizationName}.`,
+    subject: t('membershipRequested.subject', {
+      organizationName: data.organizationUnitName,
+    }),
+    previewText: t('membershipRequested.previewText', {
+      requesterName: data.requesterName,
+      organizationName: data.organizationUnitName,
+    }),
     body,
-    footerNote: `You are receiving this because you can review membership requests on ${emailTheme.brandName}.`,
+    footerNote: t('membershipRequested.footerNote', { brandName }),
   });
 }

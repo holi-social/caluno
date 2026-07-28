@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
-# Local pre-commit hook — format/lint-fix staged files with Biome.
+# Local pre-commit hook — secret scan, then format/lint-fix staged files with Biome.
 ROOT=$(git rev-parse --show-toplevel 2>/dev/null) || exit 0
+"$ROOT/.ai/scripts/pre-commit-secrets.sh" || exit 1
 exec "$ROOT/.ai/scripts/pre-commit-format.sh"

@@ -1,7 +1,11 @@
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useApproveMembershipRequest } from '@repo/data/react';
+import {
+  MembershipRequestStatus,
+  useApproveMembershipRequest,
+  useQueryClient,
+} from '@repo/data/react';
 import {
   Button,
   Dialog,
@@ -34,6 +38,7 @@ export function MembershipRequestActions({
   organizationUnitId,
 }: MembershipRequestActionsProps) {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const [isRejectDialogOpen, setIsRejectDialogOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
   const t = useTranslations('MembershipRequest');
@@ -59,10 +64,20 @@ export function MembershipRequestActions({
     formState: { errors },
   } = form;
 
+  const invalidateQuery = (status: MembershipRequestStatus) => {
+    queryClient.invalidateQueries({
+      queryKey: ['membershipRequests', organizationUnitId, status],
+    });
+    queryClient.invalidateQueries({
+      queryKey: ['membershipRequestCount', organizationUnitId],
+    });
+  };
+
   const handleApprove = async () => {
     try {
       await approveMutation.mutateAsync({ id, organizationUnitId });
       toast.success(t('toast.approved'));
+      invalidateQuery(MembershipRequestStatus.Accepted);
       router.refresh();
     } catch {
       toast.error(t('toast.approveFailed'));
@@ -79,6 +94,8 @@ export function MembershipRequestActions({
       if (result?.serverError) {
         toast.error(result.serverError);
       } else {
+        invalidateQuery(MembershipRequestStatus.Pending);
+        invalidateQuery(MembershipRequestStatus.Rejected);
         toast.success(t('toast.rejected'));
         setIsRejectDialogOpen(false);
         reset();

@@ -23,6 +23,7 @@ export * from './react/auth/auth-client';
 // Data fetching hooks
 export * from './react/hooks/use-admin-user-profile';
 export * from './react/hooks/use-block';
+export * from './react/hooks/use-events';
 export * from './react/hooks/use-graphql-client';
 export * from './react/hooks/use-join-shift-instance';
 export * from './react/hooks/use-membership-request';
@@ -40,6 +41,11 @@ export * from './react/hooks/use-weekly-shifts';
 export * from './react/org-context';
 // React-specific exports
 export * from './react/providers/data-provider';
+export type {
+  EventAttendee,
+  EventListItem,
+  RawEvent,
+} from './repositories/event/event.repository';
 export type {
   RawShift,
   ShiftDetail,

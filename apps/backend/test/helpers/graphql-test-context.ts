@@ -11,6 +11,7 @@ type GraphqlTestContext = {
   db: Database;
   testUserId: string;
   organizationId: string;
+  organizationUnitId: string;
 };
 
 declare global {
@@ -58,11 +59,28 @@ const createContext = async (): Promise<GraphqlTestContext> => {
     'createOrganization',
   );
 
+  const organizationId = createOrganizationData.createOrganization.id;
+
+  const rootUnit = await db.query.organizationUnits.findFirst({
+    where: {
+      organizationId,
+      parentId: {
+        isNull: true,
+      },
+    },
+    columns: { id: true },
+  });
+
+  if (!rootUnit) {
+    throw new Error('Root organization unit not found');
+  }
+
   return {
     app,
     db,
     testUserId,
-    organizationId: createOrganizationData.createOrganization.id,
+    organizationId,
+    organizationUnitId: rootUnit.id,
   };
 };
 

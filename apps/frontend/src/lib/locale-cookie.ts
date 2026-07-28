@@ -1,11 +1,22 @@
+import type { Locale } from '@repo/data';
 import Cookies from 'js-cookie';
-import type { Locale } from '@/i18n/routing';
 import { USER_LOCALE_COOKIE } from './locale-constants';
 
-export function setUserLocaleCookie(locale: Locale): void {
-  Cookies.set(USER_LOCALE_COOKIE, locale, { path: '/', sameSite: 'Lax' });
+const COOKIE_OPTIONS: Cookies.CookieAttributes = {
+  path: '/',
+  sameSite: 'lax',
+  expires: 365,
+};
+
+export function getLocaleCookie(): Locale | undefined {
+  const value = Cookies.get(USER_LOCALE_COOKIE);
+  return value as Locale | undefined;
 }
 
-export function removeUserLocaleCookie(): void {
+export function setLocaleCookie(locale: Locale): void {
+  Cookies.set(USER_LOCALE_COOKIE, locale, COOKIE_OPTIONS);
+}
+
+export function deleteLocaleCookie(): void {
   Cookies.remove(USER_LOCALE_COOKIE, { path: '/' });
 }

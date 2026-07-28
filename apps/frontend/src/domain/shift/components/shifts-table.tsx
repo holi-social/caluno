@@ -11,7 +11,7 @@ import {
 } from '@repo/ui';
 import { getTranslations } from 'next-intl/server';
 import { Link } from '@/i18n/navigation';
-import { getFormatting } from '@/lib/formatting-server';
+import { getFormatting } from '@/lib/formatting/formatting-server';
 import { shiftDetailPath } from '../routes';
 import { ActionBar } from './action-bar';
 
