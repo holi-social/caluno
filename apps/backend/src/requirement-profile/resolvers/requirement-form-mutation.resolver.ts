@@ -3,6 +3,7 @@ import { Session, type UserSession } from '@thallesp/nestjs-better-auth';
 import { PERMISSIONS } from '../../auth/constants';
 import { Permissions } from '../../auth/decorators/permissions.decorator';
 import type { AuthenticatedGraphQLContext } from '../../graphql/graphql.context';
+import { RequiredFormTargetType } from '../enums';
 import { CreateRequirementFormInput } from '../inputs/create-requirement-form.input';
 import { SubmitFormInput } from '../inputs/submit-form.input';
 import { UpdateRequirementFormInput } from '../inputs/update-requirement-form.input';
@@ -82,13 +83,15 @@ export class RequirementFormMutationResolver {
 
   @Mutation(() => FormSubmission)
   async submitRequiredForm(
-    @Args('organizationUnitId') organizationUnitId: string,
+    @Args('targetType', { type: () => RequiredFormTargetType })
+    targetType: RequiredFormTargetType,
+    @Args('targetId') targetId: string,
     @Args('formId') formId: string,
     @Args('input') input: SubmitFormInput,
     @Session() session: UserSession,
   ): Promise<FormSubmission> {
     const submission = await this.formSubmissionService.submitRequiredForm(
-      organizationUnitId,
+      { targetType, targetId },
       formId,
       input,
       session.user.id,

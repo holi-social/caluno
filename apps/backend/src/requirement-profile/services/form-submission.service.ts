@@ -10,14 +10,13 @@ import {
 } from '../../graphql/errors';
 import type { PaginationInput } from '../../graphql/pagination.input';
 import { SYSTEM_PROFILE_KEYS } from '../constants';
-import {
-  FieldType,
-  FormSubmissionStatus,
-  RequiredFormTargetType,
-} from '../enums';
+import { FieldType, FormSubmissionStatus } from '../enums';
 import { SubmitFormInput } from '../inputs/submit-form.input';
 import type { FormSubmissionEntity } from '../schemas/form-submission.schema';
-import { RequiredFormService } from './required-form.service';
+import {
+  RequiredFormService,
+  type RequiredFormTarget,
+} from './required-form.service';
 import { UserProfileService } from './user-profile.service';
 
 @Injectable()
@@ -146,20 +145,18 @@ export class FormSubmissionService {
   }
 
   async submitRequiredForm(
-    organizationUnitId: string,
+    target: RequiredFormTarget,
     formId: string,
     input: SubmitFormInput,
     userId: string,
   ): Promise<FormSubmissionEntity> {
-    const requiredForms = await this.requiredFormService.getRequiredForms({
-      targetType: RequiredFormTargetType.ORGANIZATION_UNIT,
-      targetId: organizationUnitId,
-    });
+    const requiredForms =
+      await this.requiredFormService.getRequiredForms(target);
     const isRequired = requiredForms.some((item) => item.form.id === formId);
 
     if (!isRequired) {
       throw new ForbiddenGraphQLError(
-        'This form is not required for the organization unit',
+        'This form is not required for the target',
       );
     }
 
