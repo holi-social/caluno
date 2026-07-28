@@ -32,7 +32,7 @@ import { organizationUnitUrl } from '@/domain/organization/share';
 import { EmptyVolunteers } from '@/domain/volunteer/empty-volunteers';
 import { useSheetTrigger } from '@/hooks/use-sheet';
 import { Link, usePathname, useRouter } from '@/i18n/navigation';
-import { RequiredFormsPopover } from './required-forms-popover';
+import { VolunteerRequiredFormsPopover } from './required-forms-popover';
 import { RoleSelectCell } from './role-select-cell';
 
 const TAB_APPROVED = 'APPROVED';
@@ -227,7 +227,7 @@ export default function ManageVolunteersClient({ orgUId }: Props) {
         </div>
 
         <div className="flex items-center gap-2">
-          <RequiredFormsPopover orgUId={orgUId} />
+          <VolunteerRequiredFormsPopover orgUId={orgUId} />
           <ButtonClipboard
             text={t('page.copyInviteLink')}
             copyText={orgUnitUrl}
