@@ -22,10 +22,10 @@ export async function InviteShiftPageContent({
   const data = await getDataClient({ orgUId });
   const t = await getTranslations({ locale, namespace: 'Shift.sheet' });
 
-  const [event, shift, instanceDetail, memberships] = await Promise.all([
+  const [event, shift, instance, memberships] = await Promise.all([
     eventId ? data.event.findById(eventId) : Promise.resolve(null),
     data.shift.findByIdDetailed(shiftId),
-    data.shift.findInstanceDetail(shiftId, instanceId),
+    data.shift.findInstance(instanceId),
     data.membership.findAllByOrganizationUnitId(),
   ]);
 
@@ -33,11 +33,11 @@ export async function InviteShiftPageContent({
     notFound();
   }
 
-  if (!instanceDetail) {
+  if (!instance) {
     notFound();
   }
 
-  const invitedMembers = (instanceDetail?.invites ?? []).map((invite) => ({
+  const invitedMembers = (instance?.invites ?? []).map((invite) => ({
     id: invite.user.id,
     name: invite.user.name,
     email: invite.user.email ?? '',
@@ -59,8 +59,8 @@ export async function InviteShiftPageContent({
         recurrenceDays: shift.recurrenceDays,
       }}
       selectedInstance={{
-        actualStartsAt: instanceDetail.actualStartsAt,
-        actualEndsAt: instanceDetail.actualEndsAt,
+        actualStartsAt: instance.actualStartsAt,
+        actualEndsAt: instance.actualEndsAt,
       }}
       availableMembers={memberships.map((m) => m.user)}
       invitedMembers={invitedMembers}

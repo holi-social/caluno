@@ -40,6 +40,19 @@ export class ShiftQueryResolver {
     return this.shiftMapper.toModelOrThrow(shift);
   }
 
+  @Permissions(PERMISSIONS.SHIFT_VIEW)
+  @Query(() => ShiftInstance)
+  async shiftInstance(
+    @Args('id', { type: () => ID }) id: string,
+    @Context() context: AuthenticatedGraphQLContext,
+  ): Promise<ShiftInstance> {
+    const shiftInstance = await this.shiftService.findInstanceById(
+      id,
+      context.organizationUnitId,
+    );
+    return this.shiftInstanceMapper.toModelOrThrow(shiftInstance);
+  }
+
   @AllowAnonymous()
   @Query(() => [ShiftInstance])
   async publicShiftInstances(
