@@ -1,6 +1,7 @@
 'use client';
 
 import type { WeeklyShiftInstance } from '@repo/data';
+import { useOrgUId } from '@repo/data/react';
 import {
   Accordion,
   AccordionContent,
@@ -9,15 +10,26 @@ import {
   Badge,
   Button,
   Card,
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
 } from '@repo/ui';
 import { format } from 'date-fns';
 import { TriangleAlert, UserPlus, UsersRound } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useSheet } from '@/hooks/use-sheet';
+import { Link } from '@/i18n/navigation';
+import { shiftDetailPath } from '../routes';
+import {
+  getMockShiftType,
+  getShiftTypeRate,
+  ShiftTypeIcon,
+} from '../shift-type';
 
 type ShiftCardProps = {
   instance: WeeklyShiftInstance;
   canManage?: boolean;
+  weekStart: Date;
 };
 
 function getStaffingState(
@@ -77,7 +89,12 @@ function StaffingBadge({
   );
 }
 
-export function ShiftCard({ instance, canManage = false }: ShiftCardProps) {
+export function ShiftCard({
+  instance,
+  canManage = false,
+  weekStart,
+}: ShiftCardProps) {
+  const orgUId = useOrgUId();
   const inviteSheet = useSheet('invite-shift', 'id', 'instanceId');
   const t = useTranslations('Shift');
 
@@ -93,6 +110,18 @@ export function ShiftCard({ instance, canManage = false }: ShiftCardProps) {
   const startTime = format(new Date(instance.actualStartsAt), 'HH:mm');
   const endTime = format(new Date(instance.actualEndsAt), 'HH:mm');
 
+  const shiftType = getMockShiftType(instance.master.id);
+  const shiftTypeRate = getShiftTypeRate(shiftType);
+  const shiftTypeTooltipKey =
+    shiftType === 'non-paid'
+      ? 'card.shiftTypeTooltip.nonPaid'
+      : shiftType === 'ehrenamt'
+        ? 'card.shiftTypeTooltip.ehrenamt'
+        : 'card.shiftTypeTooltip.uebungleiter';
+  const shiftTypeTooltip = t(shiftTypeTooltipKey, {
+    rate: shiftTypeRate?.toFixed(2) ?? '',
+  });
+
   return (
     <Card className="rounded-xl gap-1 shadow-sm pt-4 pb-2 px-2 overflow-hidden">
       {/* Header */}
@@ -102,12 +131,27 @@ export function ShiftCard({ instance, canManage = false }: ShiftCardProps) {
             {startTime} - {endTime}
           </p>
 
-          <p className="text-lg text-card-foreground line-clamp-2">
-            {instance.master.title}
-          </p>
+          <Link
+            className="hover:underline block"
+            href={shiftDetailPath(orgUId, instance.master.id, {
+              view: 'weekplan',
+              week: format(weekStart, 'yyyy-MM-dd'),
+            })}
+          >
+            <p className="text-lg text-card-foreground line-clamp-2">
+              {instance.master.title}
+            </p>
+          </Link>
         </div>
 
-        <div className="flex gap-1 items-start w-full">
+        <div className="flex gap-1 items-center w-full">
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <ShiftTypeIcon type={shiftType} size={16} className="shrink-0" />
+            </TooltipTrigger>
+            <TooltipContent>{shiftTypeTooltip}</TooltipContent>
+          </Tooltip>
+
           <StaffingBadge
             count={count}
             min={min}

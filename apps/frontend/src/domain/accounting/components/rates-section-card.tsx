@@ -4,19 +4,10 @@ import { Button, Input, Separator, Skeleton } from '@repo/ui';
 import { useTranslations } from 'next-intl';
 import { useEffect, useId, useState } from 'react';
 import { toast } from 'sonner';
+import { MOCK_HQ_DEFAULTS, MOCK_SAVED_OVERRIDES } from '../mock-rates';
 import type { DocumentKind, PauschalenType } from './doc-type-header';
 import { DocTypeHeader, getPauschaleKey } from './doc-type-header';
 import { RateProvenanceRow } from './rate-provenance-row';
-
-const MOCK_HQ_DEFAULTS: Record<PauschalenType, number> = {
-  ehrenamt: 5.0,
-  uebungleiter: 8.0,
-};
-
-const MOCK_SAVED_OVERRIDES: Record<PauschalenType, number | undefined> = {
-  ehrenamt: 4.5,
-  uebungleiter: undefined,
-};
 
 const RATE_CONFIG: Record<PauschalenType, { kind: DocumentKind }> = {
   ehrenamt: { kind: 'settings' },
