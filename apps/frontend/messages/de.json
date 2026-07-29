@@ -182,6 +182,11 @@
     "inviteByLink": "Per Link einladen",
     "copyToast": "Teile diesen Link mit der Freiwilligen"
   },
+  "UserCard": {
+    "entitled": "Berechtigt",
+    "amountLeft": "{amount}€ übrig",
+    "amountProjected": "{amount}€ prognostiziert"
+  },
   "QRScanner": {
     "error": {
       "noPermission": {
@@ -510,9 +515,16 @@
     "card": {
       "invited": "Eingeladen",
       "noVolunteers": "Noch keine Freiwilligen eingeladen",
-      "inviteAria": "Freiwillige einladen"
+      "inviteAria": "Freiwillige einladen",
+      "shiftTypeTooltip": {
+        "nonPaid": "Diese Schicht wird nicht vergütet.",
+        "ehrenamt": "Vergütet über die Ehrenamtspauschale ({rate} €/Std.)",
+        "uebungleiter": "Vergütet über die Übungsleiterpauschale ({rate} €/Std.)"
+      }
     },
     "form": {
+      "shiftTypeLabel": "Schichtart",
+      "shiftTypeNonPaid": "Ohne Pauschale",
       "nameLabel": "Schichtname",
       "namePlaceholder": "z. B. Morgendliche Kassaschicht",
       "dateTimeLabel": "Datum und Uhrzeit",
