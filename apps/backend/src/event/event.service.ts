@@ -599,34 +599,12 @@ export class EventService {
       throw new NotFoundGraphQLError('Organization unit not found');
     }
 
-    if (formIds.length > 0) {
-      const forms = await tx.query.requirementForms.findMany({
-        where: {
-          id: { in: formIds },
-          organizationId: orgUnit.organizationId,
-        },
-      });
-
-      if (forms.length !== formIds.length) {
-        throw new ConflictGraphQLError(
-          'One or more forms do not belong to this organization',
-        );
-      }
-    }
-
-    await tx
-      .delete(schema.eventRequiredForms)
-      .where(eq(schema.eventRequiredForms.eventId, eventId));
-
-    if (formIds.length > 0) {
-      await tx.insert(schema.eventRequiredForms).values(
-        formIds.map((formId, index) => ({
-          eventId,
-          formId,
-          order: index,
-        })),
-      );
-    }
+    await this.requiredFormService.applyEventRequiredForms(
+      eventId,
+      orgUnit.organizationId,
+      formIds,
+      tx,
+    );
   }
 
   private async resolveImageUrl(

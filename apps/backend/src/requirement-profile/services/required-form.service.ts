@@ -279,12 +279,32 @@ export class RequiredFormService {
       );
     }
 
+    await this.applyEventRequiredForms(
+      eventId,
+      event.organizationUnit.organizationId,
+      formIds,
+    );
+
+    return this.getRequiredForms({
+      targetType: RequiredFormTargetType.EVENT,
+      targetId: eventId,
+    });
+  }
+
+  // Shared by the standalone setEventRequiredForms mutation (no tx: opens
+  // its own) and EventService.create/update (pass their surrounding tx so
+  // the write commits atomically with the rest of the event mutation).
+  async applyEventRequiredForms(
+    eventId: string,
+    organizationId: string,
+    formIds: string[],
+    tx?: Database,
+  ): Promise<void> {
+    const runner = tx ?? this.db;
+
     if (formIds.length > 0) {
-      const forms = await this.db.query.requirementForms.findMany({
-        where: {
-          id: { in: formIds },
-          organizationId: event.organizationUnit.organizationId,
-        },
+      const forms = await runner.query.requirementForms.findMany({
+        where: { id: { in: formIds }, organizationId },
       });
 
       if (forms.length !== formIds.length) {
@@ -294,13 +314,13 @@ export class RequiredFormService {
       }
     }
 
-    await this.db.transaction(async (tx) => {
-      await tx
+    const write = async (writer: Database) => {
+      await writer
         .delete(schema.eventRequiredForms)
         .where(eq(schema.eventRequiredForms.eventId, eventId));
 
       if (formIds.length > 0) {
-        await tx.insert(schema.eventRequiredForms).values(
+        await writer.insert(schema.eventRequiredForms).values(
           formIds.map((formId, index) => ({
             eventId,
             formId,
@@ -308,12 +328,13 @@ export class RequiredFormService {
           })),
         );
       }
-    });
+    };
 
-    return this.getRequiredForms({
-      targetType: RequiredFormTargetType.EVENT,
-      targetId: eventId,
-    });
+    if (tx) {
+      await write(tx);
+    } else {
+      await this.db.transaction((innerTx) => write(innerTx));
+    }
   }
 
   async isFormRequiredByAnyTarget(formId: string): Promise<boolean> {
