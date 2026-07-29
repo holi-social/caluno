@@ -76,7 +76,9 @@ export function buildFieldSchema(
     type === FieldType.Checkbox ||
     type === FieldType.DocumentAcknowledgement
   ) {
-    const base = z.enum(['true', 'false'] as const);
+    const base = z.enum(['true', 'false'] as const, {
+      message: messages.fieldRequired(label),
+    });
     return isRequired
       ? base.refine((v) => v === 'true', {
           message: messages.fieldRequired(label),
@@ -159,7 +161,9 @@ export function buildFieldSchema(
   if (type === FieldType.SingleChoice) {
     const vals = (options ?? []).map((o) => o.value);
     if (vals.length > 0) {
-      const e = z.enum(vals as [string, ...string[]]);
+      const e = z.enum(vals as [string, ...string[]], {
+        message: messages.fieldRequired(label),
+      });
       return isRequired ? e : z.preprocess(emptyAsUndefined, e.optional());
     }
     return isRequired
