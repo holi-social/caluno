@@ -1134,6 +1134,7 @@
     "fullNote": "This shift is already full.",
     "joinedNote": "You're signed up for this shift.",
     "pendingNote": "Your membership request is pending. You will be added to this shift once approved.",
+    "declinedNote": "You declined the invitation to this shift.",
     "respondBeforeNote": "Respond before {date}. You can change your mind until the shift starts.",
     "acceptedBadge": "Accepted",
     "declinedBadge": "Declined",

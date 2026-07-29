@@ -245,7 +245,10 @@ export function JoinShiftButton({
     );
   }
 
-  if (inviteStatus === ShiftInviteStatus.Cancelled) {
+  if (
+    inviteStatus === ShiftInviteStatus.Cancelled ||
+    inviteStatus === ShiftInviteStatus.VolunteerRejected
+  ) {
     return (
       <Button
         onClick={handleReenter}
@@ -307,10 +310,7 @@ export function JoinShiftButton({
     );
   }
 
-  if (
-    inviteStatus === ShiftInviteStatus.VolunteerRejected ||
-    inviteStatus === ShiftInviteStatus.AdminRejected
-  ) {
+  if (inviteStatus === ShiftInviteStatus.AdminRejected) {
     return (
       <Button disabled variant="outline" size="xl" className={className}>
         {t('join.rejectedCta')}
