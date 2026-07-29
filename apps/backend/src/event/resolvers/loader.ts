@@ -1,6 +1,7 @@
 import { Injectable, Scope } from '@nestjs/common';
 import DataLoader from 'dataloader';
 import { RegisterLoader } from '../../graphql/interceptors';
+import { MembershipService } from '../../membership/membership.service';
 import { ShiftVisibility } from '../../shift/enums';
 import { ShiftMapper } from '../../shift/mappers/shift.mapper';
 import type { Shift } from '../../shift/models/shift.model';
@@ -18,6 +19,7 @@ export class EventShiftsLoader {
   constructor(
     private readonly shiftService: ShiftService,
     private readonly shiftMapper: ShiftMapper,
+    private readonly membershipService: MembershipService,
   ) {}
 
   public readonly shiftsByEventId = new DataLoader<
@@ -30,12 +32,34 @@ export class EventShiftsLoader {
       const userId = keys[0]?.userId;
       const shifts = await this.shiftService.findByEventIds(eventIds);
 
-      const privateShiftIds = shifts
-        .filter((shift) => shift.visibility === ShiftVisibility.INVITED_MEMBERS)
-        .map((shift) => shift.id);
-      const invitedShiftIds = new Set(
+      // Members-only shifts are hidden from non-members; any member
+      // (volunteer or admin) of the shift's org unit or an ancestor sees them.
+      const privateOrgUnitIds = [
+        ...new Set(
+          shifts
+            .filter(
+              (shift) => shift.visibility === ShiftVisibility.INVITED_MEMBERS,
+            )
+            .map((shift) => shift.organizationUnitId),
+        ),
+      ];
+
+      const memberOrgUnitIds = new Set(
         userId
-          ? await this.shiftService.findInvitedShiftIds(privateShiftIds, userId)
+          ? (
+              await Promise.all(
+                privateOrgUnitIds.map(async (organizationUnitId) => ({
+                  organizationUnitId,
+                  isMember:
+                    await this.membershipService.isMemberOfUnitOrAncestor(
+                      userId,
+                      organizationUnitId,
+                    ),
+                })),
+              )
+            )
+              .filter((result) => result.isMember)
+              .map((result) => result.organizationUnitId)
           : [],
       );
 
@@ -43,7 +67,7 @@ export class EventShiftsLoader {
       for (const shift of shifts) {
         if (
           shift.visibility === ShiftVisibility.INVITED_MEMBERS &&
-          !invitedShiftIds.has(shift.id)
+          !memberOrgUnitIds.has(shift.organizationUnitId)
         ) {
           continue;
         }

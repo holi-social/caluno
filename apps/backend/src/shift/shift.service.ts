@@ -1209,25 +1209,6 @@ export class ShiftService {
     });
   }
 
-  async findInvitedShiftIds(
-    shiftIds: string[],
-    userId: string,
-  ): Promise<string[]> {
-    if (shiftIds.length === 0 || !userId) {
-      return [];
-    }
-
-    const invites = await this.db.query.shiftInvites.findMany({
-      where: {
-        shiftId: { in: shiftIds },
-        userId,
-      },
-      columns: { shiftId: true },
-    });
-
-    return invites.map((invite) => invite.shiftId);
-  }
-
   async update(
     userId: string,
     id: string,
