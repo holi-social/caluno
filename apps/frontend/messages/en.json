@@ -1121,6 +1121,7 @@
           "pipeline": {
             "generate": "Create",
             "sign": "Sign",
+            "declined": "Declined",
             "volSign": "Volunteer",
             "coordSign": "Coordinator",
             "superSign": "Supervisor",
@@ -1136,6 +1137,8 @@
           "timelineSigned": "Signed",
           "timelineCountersigned": "Countersigned",
           "timelineActivated": "Activated",
+          "timelineDeclined": "Declined",
+          "declineReasonTitle": "Decline reason",
           "noAction": "No action required",
           "pdfView": "View PDF",
           "pdfDownload": "Download",
@@ -1165,12 +1168,16 @@
           "overCap": "Annual cap will be exceeded",
           "overCapHint": "This timesheet's amount pushes the volunteer at or over their yearly allowance cap",
           "contractMissing": "No contract — create manually",
-          "timesheetMuted": "Recorded without a contract"
+          "timesheetMuted": "Recorded without a contract",
+          "declined": "Declined"
         },
         "actions": {
           "create": "Create",
           "remind": "Remind",
-          "countersign": "Sign"
+          "countersign": "Sign",
+          "decline": "Decline",
+          "seeDetails": "See details",
+          "createNew": "Create new {docType}"
         },
         "nonCompliantDialog": {
           "titleSingle": "{action, select, create {Create} remind {Send a reminder for} countersign {Countersign} other {Proceed with}} a non-compliant timesheet?",
@@ -1184,6 +1191,14 @@
           "onlyCompliantAction": "{action, select, create {Only create compliant} remind {Only remind compliant} countersign {Only sign compliant} other {Only proceed with compliant}}",
           "generateContractInstead": "Generate contract instead",
           "viewContractInstead": "View contract instead"
+        },
+        "declineDialog": {
+          "title": "Decline this {docType}?",
+          "description": "The volunteer will need a newly issued document — this one can't be resumed once declined.",
+          "reasonLabel": "Reason for declining",
+          "reasonPlaceholder": "Explain what needs to change …",
+          "submit": "Decline",
+          "toast": "{name}'s document was declined."
         }
       },
       "profileField": {
@@ -1206,12 +1221,6 @@
         "preview": {
           "disclaimerBadge": "Preview",
           "documentTitle": "Additional agreement",
-          "partiesIntro": "Between {orgName} and {name}",
-          "addressLabel": "Address",
-          "ibanLabel": "IBAN",
-          "effectiveDateLabel": "Effective from",
-          "clauseScope": "{name} volunteers for {orgName} under the terms of the {pauschale} allowance. This agreement governs the scope, compensation basis, and duration of that engagement.",
-          "clauseCompensation": "Compensation follows {orgName}'s published rate for this allowance type and is paid out per completed and confirmed shift period.",
           "signatureVolunteer": "Volunteer signature",
           "signatureCoordinator": "Coordinator signature",
           "unsigned": "Not yet signed"
@@ -1247,13 +1256,6 @@
         "preview": {
           "disclaimerBadge": "Preview",
           "documentTitle": "Invoice",
-          "partiesIntro": "Between {orgName} and {name}",
-          "periodLabel": "Period",
-          "ibanLabel": "IBAN",
-          "hoursLabel": "Eligible hours",
-          "hoursValue": "{hours}h",
-          "amountLabel": "Total amount",
-          "clauseCompensation": "This invoice covers {name}'s eligible hours for {orgName} under the {pauschale} allowance for the period {period}, payable to the IBAN on file.",
           "signatureVolunteer": "Volunteer signature",
           "signatureSupervisor": "Supervisor signature",
           "unsigned": "Not yet signed"
