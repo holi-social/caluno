@@ -5,12 +5,7 @@ import { LockIcon } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useState } from 'react';
 import type { DocumentKind, PauschalenType } from './doc-type-header';
-import { DocTypeHeader } from './doc-type-header';
-
-const PAUSCHALE_I18N_KEY: Record<PauschalenType, 'ep' | 'ul'> = {
-  ehrenamt: 'ep',
-  uebungleiter: 'ul',
-};
+import { DocTypeHeader, getPauschaleKey } from './doc-type-header';
 
 export type DocumentRelationship = 'unrelated' | 'blocking';
 
@@ -113,7 +108,7 @@ function DocumentItem({ doc }: DocumentItemProps) {
           kind={doc.kind}
           pauschale={doc.pauschale}
           topLine={t(
-            `pauschaleLabel.${PAUSCHALE_I18N_KEY[doc.pauschale]}` as Parameters<
+            `pauschaleLabel.${getPauschaleKey(doc.pauschale)}` as Parameters<
               typeof t
             >[0],
           )}

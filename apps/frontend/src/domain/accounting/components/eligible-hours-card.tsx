@@ -1,6 +1,7 @@
-import { Checkbox, cn, Separator } from '@repo/ui';
+import { Checkbox, Separator } from '@repo/ui';
 import { useTranslations } from 'next-intl';
 import { Link } from '@/i18n/navigation';
+import { InfoPanel } from './info-panel';
 
 export interface EligibleHourLine {
   id: string;
@@ -32,9 +33,7 @@ export function EligibleHoursCard({
   const t = useTranslations('Accounting.reimbursements.invoiceModal.hoursCard');
 
   return (
-    <div className={cn('rounded-xl bg-muted p-4', className)}>
-      <p className="text-sm font-semibold">{t('title')}</p>
-
+    <InfoPanel title={t('title')} className={className}>
       <ul className="mt-2 space-y-3">
         {lines.map((line) => (
           <li key={line.id} className="flex items-center gap-3">
@@ -72,6 +71,6 @@ export function EligibleHoursCard({
           ),
         })}
       </p>
-    </div>
+    </InfoPanel>
   );
 }

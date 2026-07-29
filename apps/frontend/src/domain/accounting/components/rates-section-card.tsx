@@ -5,7 +5,7 @@ import { useTranslations } from 'next-intl';
 import { useEffect, useId, useState } from 'react';
 import { toast } from 'sonner';
 import type { DocumentKind, PauschalenType } from './doc-type-header';
-import { DocTypeHeader } from './doc-type-header';
+import { DocTypeHeader, getPauschaleKey } from './doc-type-header';
 import { RateProvenanceRow } from './rate-provenance-row';
 
 const MOCK_HQ_DEFAULTS: Record<PauschalenType, number> = {
@@ -53,10 +53,12 @@ function RateRow({ type, canEdit }: RateRowProps) {
 
   const effectiveRate = savedOverride ?? MOCK_HQ_DEFAULTS[type];
   const { kind } = RATE_CONFIG[type];
-  const typeLabel = type === 'ehrenamt' ? t('epLabel') : t('ulLabel');
-  const legalRef = type === 'ehrenamt' ? t('epLegal') : t('ulLegal');
-  const yearlyLimit =
-    type === 'ehrenamt' ? t('epYearlyLimit') : t('ulYearlyLimit');
+  const pauschaleKey = getPauschaleKey(type);
+  const typeLabel = t(`${pauschaleKey}Label` as Parameters<typeof t>[0]);
+  const legalRef = t(`${pauschaleKey}Legal` as Parameters<typeof t>[0]);
+  const yearlyLimit = t(
+    `${pauschaleKey}YearlyLimit` as Parameters<typeof t>[0],
+  );
 
   function handleSave() {
     const trimmed = inputValue.trim();

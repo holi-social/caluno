@@ -7,7 +7,11 @@ import { useEffect, useMemo, useState } from 'react';
 import { toast } from 'sonner';
 import { usePageBreadcrumb } from '@/components/navigation/page-header-context';
 import { Link, useRouter } from '@/i18n/navigation';
-import type { DocumentKind, PauschalenType } from '../doc-type-header';
+import {
+  type DocumentKind,
+  getPauschaleKey,
+  type PauschalenType,
+} from '../doc-type-header';
 import { TemplateBuilderBlockEditor } from './builder-block-editor';
 import {
   getContractDocument,
@@ -52,9 +56,7 @@ export function TemplateBuilder({
     `documentKind.${kind}` as Parameters<typeof tSections>[0],
   );
   const typeLabel = tSections(
-    `sections.${pauschale === 'ehrenamt' ? 'ep' : 'ul'}` as Parameters<
-      typeof tSections
-    >[0],
+    `sections.${getPauschaleKey(pauschale)}` as Parameters<typeof tSections>[0],
   );
 
   function handleSave() {

@@ -9,6 +9,11 @@ import {
 export type DocumentKind = 'contract' | 'invoice' | 'custom' | 'settings';
 export type PauschalenType = 'ehrenamt' | 'uebungleiter';
 
+/** Short i18n key for a Pauschale type, used to build translation keys like `sections.${key}`. */
+export function getPauschaleKey(pauschale: PauschalenType): 'ep' | 'ul' {
+  return pauschale === 'ehrenamt' ? 'ep' : 'ul';
+}
+
 // Intentional brand literals — legal type differentiation, exempt from token rule. Idk if this is the best way to do this, or if we need new tokens.
 export const TYPE_COLOR: Record<PauschalenType, string> = {
   ehrenamt: 'oklch(0.7 0.1 166)', // #17857c

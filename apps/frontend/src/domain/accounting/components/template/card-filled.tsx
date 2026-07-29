@@ -5,7 +5,7 @@ import { useTranslations } from 'next-intl';
 import { useFormatting } from '@/hooks/use-formatting';
 import { Link } from '@/i18n/navigation';
 import type { DocumentKind, PauschalenType } from '../doc-type-header';
-import { DocTypeHeader } from '../doc-type-header';
+import { DocTypeHeader, getPauschaleKey } from '../doc-type-header';
 import { TemplateCardBadges } from './card-badges';
 import type { TemplateCardSummary } from './types';
 
@@ -31,9 +31,7 @@ export function TemplateCardFilled({
 
   const kindLabel = t(`documentKind.${kind}` as Parameters<typeof t>[0]);
   const typeLabel = t(
-    `sections.${pauschale === 'ehrenamt' ? 'ep' : 'ul'}` as Parameters<
-      typeof t
-    >[0],
+    `sections.${getPauschaleKey(pauschale)}` as Parameters<typeof t>[0],
   );
 
   return (

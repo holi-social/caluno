@@ -25,9 +25,10 @@ import {
 import Link from 'next/link';
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
+import { formatEuro } from '@/lib/formatting/formats';
 import { AlertIconTooltip } from './alert-icon-tooltip';
 import type { PauschalenType } from './doc-type-header';
-import { TYPE_COLOR } from './doc-type-header';
+import { getPauschaleKey, TYPE_COLOR } from './doc-type-header';
 import { LimitHeadroomBar } from './limit-headroom-bar';
 import type { NonCompliantAction } from './non-compliant-timesheet-dialog';
 import type {
@@ -246,15 +247,6 @@ function buildTimeline(
   }
 }
 
-function formatEuro(amount: number): string {
-  return new Intl.NumberFormat('de-DE', {
-    style: 'currency',
-    currency: 'EUR',
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  }).format(amount);
-}
-
 // ─── Mock timesheet hours per volunteer ──────────────────────────────────────
 
 const MOCK_TIMESHEET_HOURS: Record<
@@ -293,6 +285,7 @@ export function DocumentSheet({
 }: DocumentSheetProps) {
   const t = useTranslations('Accounting.reimbursements.docs');
   const ts = useTranslations('Accounting.reimbursements.docs.sheet');
+  const tSections = useTranslations('Accounting.templates.sections');
 
   if (!doc || !vol) return null;
 
@@ -351,10 +344,11 @@ export function DocumentSheet({
             </p>
             {(() => {
               const color = TYPE_COLOR[effectivePauschale];
-              const label =
-                effectivePauschale === 'ehrenamt'
-                  ? 'Ehrenamtspauschale'
-                  : 'Übungsleiterpauschale';
+              const label = tSections(
+                getPauschaleKey(effectivePauschale) as Parameters<
+                  typeof tSections
+                >[0],
+              );
               return (
                 <span
                   className="inline-flex items-center rounded-md border px-1.5 py-0.5 text-xs font-medium shrink-0"

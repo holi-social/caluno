@@ -1,14 +1,6 @@
-import { cn } from '@repo/ui';
 import { useTranslations } from 'next-intl';
-
-function formatEuro(amount: number): string {
-  return new Intl.NumberFormat('de-DE', {
-    style: 'currency',
-    currency: 'EUR',
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  }).format(amount);
-}
+import { formatEuro } from '@/lib/formatting/formats';
+import { InfoPanel } from './info-panel';
 
 interface InvoiceCapCardProps {
   usedBefore: number;
@@ -31,8 +23,7 @@ export function InvoiceCapCard({
   const t = useTranslations('Accounting.reimbursements.invoiceModal.capCard');
 
   return (
-    <div className={cn('rounded-xl bg-muted p-4', className)}>
-      <p className="text-sm font-semibold">{t('title')}</p>
+    <InfoPanel title={t('title')} className={className}>
       <p className="mt-2 text-base">
         {t('value', {
           before: formatEuro(usedBefore),
@@ -42,6 +33,6 @@ export function InvoiceCapCard({
       <p className="mt-1 text-xs text-muted-foreground">
         {t('subline', { total: formatEuro(total) })}
       </p>
-    </div>
+    </InfoPanel>
   );
 }

@@ -1,25 +1,18 @@
 'use client';
 
-import {
-  Alert,
-  AlertDescription,
-  AlertTitle,
-  Button,
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  Skeleton,
-} from '@repo/ui';
 import { format } from 'date-fns';
 import { useTranslations } from 'next-intl';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import { AccountingProfileFieldCard } from './accounting-profile-field-card';
-import type { PauschalenType } from './doc-type-header';
+import { getPauschaleKey, type PauschalenType } from './doc-type-header';
+import {
+  DocumentCreationDialog,
+  type DocumentCreationLoadStatus,
+} from './document-creation-dialog';
 import type { EligibleHourLine } from './eligible-hours-card';
 import { EligibleHoursCard } from './eligible-hours-card';
+import { InfoPanel } from './info-panel';
 import { InvoiceCapCard } from './invoice-cap-card';
 import type { DateRange } from './invoice-period-picker';
 import { InvoicePeriodPicker } from './invoice-period-picker';
@@ -95,8 +88,6 @@ function defaultPeriod(): DateRange {
   };
 }
 
-type LoadStatus = 'loading' | 'loaded' | 'error';
-
 interface NameFieldState {
   value: string;
   provenance: 'profile' | 'override';
@@ -136,7 +127,7 @@ export function InvoiceCreationModal({
   const tFields = useTranslations('Accounting.templates.builder.dataSources');
   const tPauschale = useTranslations('Accounting.reimbursements.toolbar');
 
-  const [status, setStatus] = useState<LoadStatus>('loading');
+  const [status, setStatus] = useState<DocumentCreationLoadStatus>('loading');
   const [nameField, setNameField] = useState<NameFieldState | null>(null);
   const [ibanField, setIbanField] = useState<IbanFieldState | null>(null);
   const [ratePerHour, setRatePerHour] = useState(0);
@@ -214,8 +205,11 @@ export function InvoiceCreationModal({
     onSent();
   };
 
-  const pauschaleLabel =
-    pauschale === 'ehrenamt' ? tPauschale('typeEP') : tPauschale('typeUL');
+  const pauschaleLabel = tPauschale(
+    `type${getPauschaleKey(pauschale).toUpperCase()}` as Parameters<
+      typeof tPauschale
+    >[0],
+  );
 
   const periodLabel = `${format(period.from ?? new Date(), 'dd.MM.yyyy')} – ${format(
     period.to ?? new Date(),
@@ -230,108 +224,79 @@ export function InvoiceCreationModal({
   const timesheetsHref = `/admin/${orgUId}/timesheets?month=${monthParam}&volunteer=${volunteerId}`;
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent size="lg">
-        <DialogHeader className="shrink-0 border-b p-6">
-          <DialogTitle>{t('title')}</DialogTitle>
-        </DialogHeader>
-
-        <div className="flex-1 overflow-y-auto p-6">
-          {status === 'error' ? (
-            <Alert variant="destructive">
-              <AlertTitle>{t('loadErrorTitle')}</AlertTitle>
-              <AlertDescription>
-                {t('loadError', { name: volunteerName })}
-              </AlertDescription>
-            </Alert>
-          ) : (
-            <div className="grid grid-cols-1 gap-6 md:grid-cols-[3fr_2fr]">
-              <div>
-                {status === 'loading' ? (
-                  <Skeleton className="h-96 w-full rounded-xl" />
-                ) : (
-                  <InvoicePreviewMock
-                    volunteerName={volunteerName}
-                    pauschale={pauschale}
-                    pauschaleLabel={pauschaleLabel}
-                    orgName={MOCK_ORG_NAME}
-                    iban={ibanField?.value ?? '—'}
-                    periodLabel={periodLabel}
-                    totalHours={selectedHours}
-                    totalAmount={selectedAmount}
-                  />
-                )}
+    <DocumentCreationDialog
+      open={open}
+      onOpenChange={onOpenChange}
+      title={t('title')}
+      status={status}
+      errorTitle={t('loadErrorTitle')}
+      errorDescription={t('loadError', { name: volunteerName })}
+      fieldsSkeletonKeys={['name', 'iban', 'period', 'cap', 'hours']}
+      cancelLabel={t('cancel')}
+      sendLabel={t('sendForSigning')}
+      sendingLabel={t('sending')}
+      isSending={isSending}
+      onSend={handleSend}
+      sendDisabled={selectedHours === 0}
+      preview={
+        <InvoicePreviewMock
+          volunteerName={volunteerName}
+          pauschale={pauschale}
+          pauschaleLabel={pauschaleLabel}
+          orgName={MOCK_ORG_NAME}
+          iban={ibanField?.value ?? '—'}
+          periodLabel={periodLabel}
+          totalHours={selectedHours}
+          totalAmount={selectedAmount}
+        />
+      }
+      fields={
+        nameField &&
+        ibanField && (
+          <>
+            <AccountingProfileFieldCard
+              label={t('nameFieldLabel')}
+              value={nameField.value}
+              provenance={nameField.provenance}
+              volunteerName={volunteerName}
+              docType="invoice"
+              onSave={(value) =>
+                setNameField({ value, provenance: 'override' })
+              }
+            />
+            <AccountingProfileFieldCard
+              label={tFields('volunteer_iban')}
+              value={ibanField.value}
+              provenance={ibanField.provenance}
+              volunteerName={volunteerName}
+              docType="invoice"
+              onSave={(value) =>
+                setIbanField({ value, provenance: 'override' })
+              }
+            />
+            <InfoPanel title={t('periodFieldLabel')}>
+              <div className="mt-2">
+                <InvoicePeriodPicker
+                  value={period}
+                  onChange={setPeriod}
+                  className="w-full"
+                />
               </div>
-
-              <div className="space-y-4">
-                {status === 'loading' &&
-                  ['name', 'iban', 'period', 'cap', 'hours'].map((key) => (
-                    <Skeleton key={key} className="h-24 w-full rounded-xl" />
-                  ))}
-                {status === 'loaded' && nameField && ibanField && (
-                  <>
-                    <AccountingProfileFieldCard
-                      label={t('nameFieldLabel')}
-                      value={nameField.value}
-                      provenance={nameField.provenance}
-                      volunteerName={volunteerName}
-                      docType="invoice"
-                      onSave={(value) =>
-                        setNameField({ value, provenance: 'override' })
-                      }
-                    />
-                    <AccountingProfileFieldCard
-                      label={tFields('volunteer_iban')}
-                      value={ibanField.value}
-                      provenance={ibanField.provenance}
-                      volunteerName={volunteerName}
-                      docType="invoice"
-                      onSave={(value) =>
-                        setIbanField({ value, provenance: 'override' })
-                      }
-                    />
-                    <div className="rounded-xl bg-muted p-4">
-                      <p className="text-sm font-semibold">
-                        {t('periodFieldLabel')}
-                      </p>
-                      <div className="mt-2">
-                        <InvoicePeriodPicker
-                          value={period}
-                          onChange={setPeriod}
-                          className="w-full"
-                        />
-                      </div>
-                    </div>
-                    <InvoiceCapCard
-                      usedBefore={usedBeforeAmount}
-                      projectedAfter={projectedAfter}
-                      total={totalCapAmount}
-                    />
-                    <EligibleHoursCard
-                      lines={lines}
-                      selectedIds={checkedIds}
-                      onToggle={toggleLine}
-                      timesheetsHref={timesheetsHref}
-                    />
-                  </>
-                )}
-              </div>
-            </div>
-          )}
-        </div>
-
-        <DialogFooter className="shrink-0 border-t p-6">
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
-            {t('cancel')}
-          </Button>
-          <Button
-            onClick={handleSend}
-            disabled={status !== 'loaded' || isSending || selectedHours === 0}
-          >
-            {isSending ? t('sending') : t('sendForSigning')}
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+            </InfoPanel>
+            <InvoiceCapCard
+              usedBefore={usedBeforeAmount}
+              projectedAfter={projectedAfter}
+              total={totalCapAmount}
+            />
+            <EligibleHoursCard
+              lines={lines}
+              selectedIds={checkedIds}
+              onToggle={toggleLine}
+              timesheetsHref={timesheetsHref}
+            />
+          </>
+        )
+      }
+    />
   );
 }

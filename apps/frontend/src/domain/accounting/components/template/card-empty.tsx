@@ -4,7 +4,7 @@ import { Button } from '@repo/ui';
 import { TriangleAlertIcon } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import type { DocumentKind, PauschalenType } from '../doc-type-header';
-import { DocTypeHeader } from '../doc-type-header';
+import { DocTypeHeader, getPauschaleKey } from '../doc-type-header';
 import type { TemplateSlug } from './types';
 
 interface TemplateCardEmptyProps {
@@ -23,9 +23,7 @@ export function TemplateCardEmpty({
 
   const kindLabel = t(`documentKind.${kind}` as Parameters<typeof t>[0]);
   const typeLabel = t(
-    `sections.${pauschale === 'ehrenamt' ? 'ep' : 'ul'}` as Parameters<
-      typeof t
-    >[0],
+    `sections.${getPauschaleKey(pauschale)}` as Parameters<typeof t>[0],
   );
 
   return (

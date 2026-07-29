@@ -10,6 +10,15 @@ import { de, enGB } from 'date-fns/locale';
 
 export const DEFAULT_TIMEZONE = 'Europe/Berlin';
 
+export function formatEuro(amount: number): string {
+  return new Intl.NumberFormat('de-DE', {
+    style: 'currency',
+    currency: 'EUR',
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }).format(amount);
+}
+
 const supportedLocales: Record<string, Locale> = {
   en: enGB,
   de,

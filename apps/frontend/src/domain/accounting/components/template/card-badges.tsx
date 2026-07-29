@@ -1,3 +1,4 @@
+import { Badge } from '@repo/ui';
 import { useTranslations } from 'next-intl';
 import type { TemplateCardSummary } from './types';
 
@@ -37,12 +38,9 @@ export function TemplateCardBadges({ summary }: TemplateCardBadgesProps) {
   return (
     <div className="flex flex-wrap gap-2">
       {items.map((item) => (
-        <span
-          key={item.key}
-          className="inline-flex w-fit items-center gap-1 rounded-md border border-border px-2 py-0.5 text-sm text-foreground"
-        >
+        <Badge key={item.key} variant="outline">
           {item.value}
-        </span>
+        </Badge>
       ))}
     </div>
   );

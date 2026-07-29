@@ -1,7 +1,6 @@
-import { Badge, Separator } from '@repo/ui';
 import { useTranslations } from 'next-intl';
 import type { PauschalenType } from './doc-type-header';
-import { DocTypeHeader } from './doc-type-header';
+import { DocumentPreviewShell } from './document-preview-shell';
 
 interface ContractPreviewMockProps {
   volunteerName: string;
@@ -32,64 +31,39 @@ export function ContractPreviewMock({
   const t = useTranslations('Accounting.reimbursements.contractModal.preview');
 
   return (
-    <div className={className}>
-      <div className="mx-auto max-w-[70ch] rounded-xl border bg-card p-8">
-        <div className="flex items-start justify-between gap-4">
-          <DocTypeHeader
-            kind="contract"
-            pauschale={pauschale}
-            topLine={pauschaleLabel}
-            name={t('documentTitle')}
-            subline={orgName}
-          />
-          <Badge variant="outline">{t('disclaimerBadge')}</Badge>
-        </div>
+    <DocumentPreviewShell
+      kind="contract"
+      pauschale={pauschale}
+      pauschaleLabel={pauschaleLabel}
+      documentTitle={t('documentTitle')}
+      orgName={orgName}
+      disclaimerLabel={t('disclaimerBadge')}
+      signerLeftLabel={t('signatureVolunteer')}
+      signerRightLabel={t('signatureCoordinator')}
+      unsignedLabel={t('unsigned')}
+      className={className}
+    >
+      <p className="font-medium">
+        {t('partiesIntro', { orgName, name: volunteerName })}
+      </p>
+      <p className="text-sm text-muted-foreground">
+        {t('addressLabel')}: {address}
+      </p>
+      <p className="text-sm text-muted-foreground">
+        {t('ibanLabel')}: {iban}
+      </p>
+      <p className="text-sm text-muted-foreground">
+        {t('effectiveDateLabel')}: {effectiveDate}
+      </p>
 
-        <Separator className="my-6" />
-
-        <div className="space-y-4 text-base">
-          <p className="font-medium">
-            {t('partiesIntro', { orgName, name: volunteerName })}
-          </p>
-          <p className="text-sm text-muted-foreground">
-            {t('addressLabel')}: {address}
-          </p>
-          <p className="text-sm text-muted-foreground">
-            {t('ibanLabel')}: {iban}
-          </p>
-          <p className="text-sm text-muted-foreground">
-            {t('effectiveDateLabel')}: {effectiveDate}
-          </p>
-
-          <p>
-            {t('clauseScope', {
-              name: volunteerName,
-              orgName,
-              pauschale: pauschaleLabel,
-            })}
-          </p>
-          <p>{t('clauseCompensation', { orgName })}</p>
-        </div>
-
-        <Separator className="my-6" />
-
-        <div className="grid grid-cols-2 gap-8">
-          <div>
-            <div className="h-10 border-b" />
-            <p className="mt-1 text-sm font-medium">
-              {t('signatureVolunteer')}
-            </p>
-            <p className="text-xs text-muted-foreground">{t('unsigned')}</p>
-          </div>
-          <div>
-            <div className="h-10 border-b" />
-            <p className="mt-1 text-sm font-medium">
-              {t('signatureCoordinator')}
-            </p>
-            <p className="text-xs text-muted-foreground">{t('unsigned')}</p>
-          </div>
-        </div>
-      </div>
-    </div>
+      <p>
+        {t('clauseScope', {
+          name: volunteerName,
+          orgName,
+          pauschale: pauschaleLabel,
+        })}
+      </p>
+      <p>{t('clauseCompensation', { orgName })}</p>
+    </DocumentPreviewShell>
   );
 }

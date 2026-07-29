@@ -15,6 +15,7 @@ import { ChevronDownIcon, FileTextIcon } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useState } from 'react';
 import { toast } from 'sonner';
+import { formatEuro } from '@/lib/formatting/formats';
 import { AlertIconTooltip } from './alert-icon-tooltip';
 import type { PauschalenType } from './doc-type-header';
 import { DocTypeHeader } from './doc-type-header';
@@ -118,15 +119,6 @@ export function isYourActionStatus(status: DocStatus): boolean {
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
-
-function formatEuro(amount: number): string {
-  return new Intl.NumberFormat('de-DE', {
-    style: 'currency',
-    currency: 'EUR',
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  }).format(amount);
-}
 
 /** "Julia Vorstand" -> "J. Vorstand" */
 function abbreviateName(name: string): string {

@@ -7,6 +7,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@repo/ui';
+import { formatEuro } from '@/lib/formatting/formats';
 
 export type LimitBarState = 'normal' | 'warn' | 'at-cap';
 
@@ -27,15 +28,6 @@ const TEXT_CLASS: Record<LimitBarState, string> = {
   warn: 'text-alert',
   'at-cap': 'text-destructive',
 };
-
-function formatEuro(amount: number): string {
-  return new Intl.NumberFormat('de-DE', {
-    style: 'currency',
-    currency: 'EUR',
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  }).format(amount);
-}
 
 function buildLabel(used: number, total: number, state: LimitBarState): string {
   const remaining = total - used;
