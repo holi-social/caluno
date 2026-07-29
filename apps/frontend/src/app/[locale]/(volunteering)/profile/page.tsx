@@ -24,13 +24,11 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
 
   return (
     <div>
-      <div className="bg-muted sticky top-0 z-30">
-        <div className="mx-auto w-full max-w-4xl">
-          <ProfileDetailHeader />
-        </div>
+      <div className="sticky top-0 z-30">
+        <ProfileDetailHeader />
       </div>
 
-      <div className="mx-auto w-full max-w-4xl space-y-8 px-6 py-6">
+      <div className="mx-auto w-full max-w-4xl space-y-8 px-4 py-6">
         <ProfileHeaderBlock name={me.name} imageUrl={me.image} />
 
         {/* Section slots — empty; headings inlined (later tickets add bodies) */}

@@ -11,7 +11,6 @@ export const ProfileDetailHeader = () => {
 
   return (
     <DetailPageHeader
-      className="bg-transparent px-6"
       title={tProfile('pageTitle')}
       onBack={router.back}
       backLabel={tCommon('back')}
