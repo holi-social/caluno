@@ -68,6 +68,10 @@ export function buildFieldSchema(
 ): z.ZodTypeAny {
   const { type, label, systemKey, options, minAge } = field;
 
+  // Controllers default every field to '' — treat it as "no value" so
+  // optional enum-based fields (dropdown, checkbox) stay submittable.
+  const emptyAsUndefined = (v: unknown) => (v === '' ? undefined : v);
+
   if (
     type === FieldType.Checkbox ||
     type === FieldType.DocumentAcknowledgement
@@ -77,7 +81,7 @@ export function buildFieldSchema(
       ? base.refine((v) => v === 'true', {
           message: messages.fieldRequired(label),
         })
-      : base.optional();
+      : z.preprocess(emptyAsUndefined, base.optional());
   }
 
   if (type === FieldType.StaticText) {
@@ -156,7 +160,7 @@ export function buildFieldSchema(
     const vals = (options ?? []).map((o) => o.value);
     if (vals.length > 0) {
       const e = z.enum(vals as [string, ...string[]]);
-      return isRequired ? e : e.optional();
+      return isRequired ? e : z.preprocess(emptyAsUndefined, e.optional());
     }
     return isRequired
       ? z.string().min(1, messages.fieldRequired(label))
