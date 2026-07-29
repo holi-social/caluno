@@ -640,3 +640,26 @@ query GetAdminFormSubmission($id: String!) {
     }
   }
 }
+
+query GetFormSubmissionsByForm($formId: String!, $limit: Int!, $offset: Int!) {
+  formSubmissionsByForm(formId: $formId, limit: $limit, offset: $offset) {
+    items {
+      id
+      status
+      submittedAt
+      user {
+        id
+        name
+        email
+        checkInId
+        image
+      }
+    }
+    pagination {
+      total
+      limit
+      offset
+      hasMore
+    }
+  }
+}

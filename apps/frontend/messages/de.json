@@ -1072,6 +1072,20 @@
       "linkCopied": "Link kopiert",
       "linkCopiedDescription": "{url}",
       "couldNotCopyLink": "Link konnte nicht kopiert werden"
+    },
+    "submissions": {
+      "title": "Einsendungen — {formName}",
+      "subtitle": "Freiwillige, die dieses Formular eingereicht haben. Klicke auf eine Person, um die Einsendung anzusehen.",
+      "tabSubmitted": "Eingereicht",
+      "tabRejected": "Abgelehnt",
+      "searchPlaceholder": "Freiwillige suchen…",
+      "volunteerColumn": "Freiwillige:r",
+      "emailColumn": "E-Mail",
+      "submissionsColumn": "Einsendungen",
+      "lastSubmittedColumn": "Zuletzt eingereicht",
+      "viewSubmission": "Ansehen →",
+      "empty": "Noch keine Einsendungen.",
+      "emptySearch": "Keine Freiwilligen gefunden."
     }
   },
   "MyTime": {
