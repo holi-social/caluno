@@ -1,5 +1,5 @@
 export const getInitials = (name?: string): string => {
-  if (!name) return '?';
+  if (!name?.trim()) return '?';
 
   return name
     .split(' ')

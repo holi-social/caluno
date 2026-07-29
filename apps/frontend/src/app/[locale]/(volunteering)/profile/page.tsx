@@ -6,9 +6,9 @@ import { ProfileForm } from '@/domain/user/components/profile-form';
 import { resolveLocale } from '@/i18n/routing';
 import { getDataClient } from '@/lib/data-client';
 
-interface ProfilePageProps {
+type ProfilePageProps = {
   params: Promise<{ locale: string }>;
-}
+};
 
 export default async function ProfilePage({ params }: ProfilePageProps) {
   const { locale: rawLocale } = await params;

@@ -5,6 +5,7 @@ describe('getInitials', () => {
   it('returns ? for a missing name', () => {
     expect(getInitials(undefined)).toBe('?');
     expect(getInitials('')).toBe('?');
+    expect(getInitials('   ')).toBe('?');
   });
 
   it('takes the first letter of the first two words', () => {
