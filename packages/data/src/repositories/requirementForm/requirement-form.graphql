@@ -630,6 +630,10 @@ query GetAdminFormSubmission($id: String!) {
             label
             type
             systemKey
+            options {
+              label
+              value
+            }
           }
         }
       }

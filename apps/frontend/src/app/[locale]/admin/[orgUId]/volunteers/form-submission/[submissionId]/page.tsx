@@ -16,7 +16,12 @@ interface Props {
 }
 
 function resolveFieldAnswer(
-  field: { id: string; type: string; systemKey?: string | null },
+  field: {
+    id: string;
+    type: string;
+    systemKey?: string | null;
+    options?: { label: string; value: string }[] | null;
+  },
   submissionValues: { fieldId: string; value: string }[],
   profileData: Record<string, unknown>,
   tCommon: { dash: string },
@@ -38,6 +43,13 @@ function resolveFieldAnswer(
   }
   if (field.type === 'CHECKBOX' || field.type === 'DOCUMENT_ACKNOWLEDGEMENT') {
     return raw === 'true' ? t.accepted : tCommon.dash;
+  }
+  if (field.type === 'MULTI_CHOICE') {
+    const options = field.options ?? [];
+    return raw
+      .split(',')
+      .map((v) => options.find((o) => o.value === v)?.label ?? v)
+      .join(', ');
   }
   if (field.type === 'STATIC_TEXT') return tCommon.dash;
 
