@@ -248,18 +248,6 @@ export function EditBlockForm({
           )}
         </Field>
 
-        <Field>
-          <FieldLabel htmlFor="icon">{t('iconLabel')}</FieldLabel>
-          <Input
-            id="icon"
-            type="text"
-            placeholder={t('iconPlaceholder')}
-            disabled={isPending}
-            aria-invalid={!!errors.icon}
-            {...register('icon')}
-          />
-        </Field>
-
         <div className="flex gap-3 pt-2">
           <Button type="submit" disabled={isPending || !isDirty} size="lg">
             <Save className="mr-2 size-4" />

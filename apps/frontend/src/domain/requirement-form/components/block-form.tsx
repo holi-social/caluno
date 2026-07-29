@@ -352,15 +352,6 @@ export function BlockForm({
             disabled={readOnly}
           />
         </Field>
-
-        <Field>
-          <FieldLabel>{t('iconLabel')}</FieldLabel>
-          <Input
-            {...register('icon')}
-            placeholder={t('iconPlaceholder')}
-            disabled={readOnly}
-          />
-        </Field>
       </div>
 
       {/* Fields */}
