@@ -640,6 +640,8 @@ type RequiredFormWithStatus {
   order: Int!
   submissionId: ID
   submitted: Boolean!
+  targetId: ID!
+  targetType: RequiredFormTargetType!
 }
 
 type Requirement {

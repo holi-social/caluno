@@ -1,6 +1,6 @@
 'use client';
 
-import { JoinStatus, RequiredFormTargetType } from '@repo/data';
+import { JoinStatus } from '@repo/data';
 import {
   type RequiredFormWithStatusFieldsFragment,
   useJoinEvent,
@@ -119,9 +119,10 @@ export function EventFollowButton({
     session.data?.user,
   ]);
 
-  const activeForm = activeFormId
-    ? pendingRequiredForms.find((ref) => ref.form.id === activeFormId)?.form
+  const activeFormRef = activeFormId
+    ? pendingRequiredForms.find((ref) => ref.form.id === activeFormId)
     : undefined;
+  const activeForm = activeFormRef?.form;
 
   if (following) {
     return (
@@ -156,10 +157,10 @@ export function EventFollowButton({
           <DialogHeader>
             <DialogTitle>{t('requiredFormsTitle')}</DialogTitle>
           </DialogHeader>
-          {activeForm && (
+          {activeForm && activeFormRef && (
             <RequiredFormRenderer
-              targetType={RequiredFormTargetType.Event}
-              targetId={eventId}
+              targetType={activeFormRef.targetType}
+              targetId={activeFormRef.targetId}
               form={activeForm}
               profileData={profileData}
               onSubmitted={() => handleFormSubmitted(activeForm.id)}

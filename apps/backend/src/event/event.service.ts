@@ -13,9 +13,11 @@ import type { PaginationInput } from '../graphql/pagination.input';
 import { MembershipService } from '../membership/membership.service';
 import type { MembershipRequestEntity } from '../membership/schemas/membership-request.schema';
 import { RequiredFormTargetType } from '../requirement-profile/enums';
-import type { RequirementFormEntity } from '../requirement-profile/schemas/requirement-form.schema';
 import type { RequirementProfileEntity } from '../requirement-profile/schemas/requirement-profile.schema';
-import { RequiredFormService } from '../requirement-profile/services/required-form.service';
+import {
+  RequiredFormService,
+  type RequiredFormStatus,
+} from '../requirement-profile/services/required-form.service';
 import { JoinStatus } from '../shared/enums/join-status.enum';
 import {
   canTransitionInviteStatus,
@@ -284,14 +286,7 @@ export class EventService {
   private async getEventRequiredFormStatuses(
     userId: string,
     eventId: string,
-  ): Promise<
-    Array<{
-      form: RequirementFormEntity;
-      order: number;
-      submitted: boolean;
-      submissionId: string | null;
-    }>
-  > {
+  ): Promise<RequiredFormStatus[]> {
     return this.requiredFormService.getRequiredFormStatuses(userId, {
       targetType: RequiredFormTargetType.EVENT,
       targetId: eventId,
@@ -303,12 +298,7 @@ export class EventService {
     eventId: string,
   ): Promise<{
     satisfied: boolean;
-    requiredForms: Array<{
-      form: RequirementFormEntity;
-      order: number;
-      submitted: boolean;
-      submissionId: string | null;
-    }>;
+    requiredForms: RequiredFormStatus[];
   }> {
     const requiredForms = await this.getEventRequiredFormStatuses(
       userId,
@@ -408,12 +398,7 @@ export class EventService {
       name: string;
       status: string;
     }>;
-    requiredForms?: Array<{
-      form: RequirementFormEntity;
-      order: number;
-      submitted: boolean;
-      submissionId: string | null;
-    }>;
+    requiredForms?: RequiredFormStatus[];
   }> {
     const event = await this.findByIdPublic(eventId);
 

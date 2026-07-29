@@ -71,6 +71,8 @@ fragment RequiredFormWithStatusFields on RequiredFormWithStatus {
   order
   submitted
   submissionId
+  targetType
+  targetId
 }
 
 fragment EventDetailFields on Event {

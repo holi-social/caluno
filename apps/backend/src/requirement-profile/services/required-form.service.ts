@@ -20,6 +20,8 @@ export type RequiredFormStatus = {
   order: number;
   submitted: boolean;
   submissionId: string | null;
+  targetType: RequiredFormTargetType;
+  targetId: string;
 };
 
 @Injectable()
@@ -105,6 +107,8 @@ export class RequiredFormService {
         order,
         submitted: Boolean(submission),
         submissionId: submission?.id ?? null,
+        targetType: target.targetType,
+        targetId: target.targetId,
       };
     });
   }
