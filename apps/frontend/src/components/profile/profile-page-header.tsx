@@ -4,7 +4,7 @@ import { DetailPageHeader } from '@repo/ui';
 import { useTranslations } from 'next-intl';
 import { useRouter } from '@/i18n/navigation';
 
-export const ProfileDetailHeader = () => {
+export const ProfilePageHeader = () => {
   const tProfile = useTranslations('Profile');
   const tCommon = useTranslations('Common');
   const router = useRouter();

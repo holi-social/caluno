@@ -1,6 +1,6 @@
 import { getTranslations, setRequestLocale } from 'next-intl/server';
-import { ProfileDetailHeader } from '@/components/profile/profile-detail-header';
-import { ProfileHeaderBlock } from '@/components/profile/profile-header-block';
+import { HeaderAvatar } from '@/components/profile/header-avatar';
+import { ProfilePageHeader } from '@/components/profile/profile-page-header';
 import MyMembershipRequests from '@/domain/membership-requests/components/my-membership-requests';
 import { ProfileForm } from '@/domain/user/components/profile-form';
 import { resolveLocale } from '@/i18n/routing';
@@ -25,11 +25,11 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
   return (
     <div>
       <div className="sticky top-0 z-30">
-        <ProfileDetailHeader />
+        <ProfilePageHeader />
       </div>
 
       <div className="mx-auto w-full max-w-4xl space-y-8 px-4 py-6">
-        <ProfileHeaderBlock name={me.name} imageUrl={me.image} />
+        <HeaderAvatar name={me.name} imageUrl={me.image} />
 
         {/* Section slots — empty; headings inlined (later tickets add bodies) */}
         <section>
