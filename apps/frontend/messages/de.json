@@ -1134,6 +1134,7 @@
     "fullNote": "Dieser Einsatz ist bereits ausgebucht.",
     "joinedNote": "Du bist für diesen Einsatz angemeldet.",
     "pendingNote": "Deine Mitgliedschaftsanfrage ist ausstehend. Du wirst diesem Einsatz hinzugefügt, sobald sie genehmigt wurde.",
+    "declinedNote": "Du hast die Einladung zu diesem Einsatz abgelehnt.",
     "respondBeforeNote": "Antworte bis {date}. Du kannst es dir bis zum Einsatzbeginn anders überlegen.",
     "acceptedBadge": "Angenommen",
     "declinedBadge": "Abgelehnt",
