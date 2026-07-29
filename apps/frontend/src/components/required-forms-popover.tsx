@@ -25,7 +25,7 @@ export interface RequiredFormRef {
 interface RequiredFormsPopoverProps {
   requiredForms: RequiredFormRef[];
   availableForms: RequiredForm[];
-  onChange: (formIds: string[]) => Promise<void>;
+  onChange: (formIds: string[]) => Promise<boolean>;
   isPending: boolean;
   disabled?: boolean;
   createNewHref: string;
@@ -88,8 +88,10 @@ export function RequiredFormsPopover({
 
   const handleAddExisting = async (formId: string) => {
     const nextIds = [...requiredForms.map((ref) => ref.form.id), formId];
-    await onChange(nextIds);
-    setCommandOpen(false);
+    const success = await onChange(nextIds);
+    if (success) {
+      setCommandOpen(false);
+    }
   };
 
   if (disabled) {

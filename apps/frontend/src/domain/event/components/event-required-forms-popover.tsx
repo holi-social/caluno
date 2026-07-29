@@ -58,10 +58,12 @@ export function EventRequiredFormsPopover({
       toast.success(
         formIds.length > previousCount ? t('addedToast') : t('removedToast'),
       );
+      return true;
     } catch (error) {
       toast.error(
         error instanceof Error ? error.message : t('updateFailedToast'),
       );
+      return false;
     }
   };
 
