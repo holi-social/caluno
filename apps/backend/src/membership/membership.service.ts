@@ -437,22 +437,6 @@ export class MembershipService {
           }
         }
 
-        if (requestToApprove.userId) {
-          const formsSatisfied =
-            await this.requiredFormService.areRequiredFormsSatisfied(
-              requestToApprove.userId,
-              {
-                targetType: RequiredFormTargetType.ORGANIZATION_UNIT,
-                targetId: organizationUnitId,
-              },
-            );
-          if (!formsSatisfied) {
-            throw new ConflictGraphQLError(
-              'Cannot approve: user has not completed the required forms.',
-            );
-          }
-        }
-
         const [updatedRequest] = await tx
           .update(schema.membershipRequests)
           .set({
