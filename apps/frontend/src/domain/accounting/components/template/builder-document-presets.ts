@@ -252,6 +252,14 @@ export function getInvoiceDocument(
             optional: true,
           },
         ),
+        line(
+          'meta-kostentraeger',
+          'Kostenträger: {kostentraeger}',
+          [manual('kostentraeger')],
+          {
+            optional: true,
+          },
+        ),
       ],
     },
     blocks: [

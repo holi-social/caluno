@@ -1301,14 +1301,16 @@
           "tasks": "Tätigkeitsbeschreibung",
           "hours-per-week": "Wochenstunden",
           "freeform-text": "Freitext",
-          "kostenstelle": "Kostenstelle"
+          "kostenstelle": "Kostenstelle",
+          "kostentraeger": "Kostenträger"
         },
         "manualFieldPlaceholders": {
           "contract-lifespan": "Zeitraum wählen",
           "tasks": "Beschreibe die Haupttätigkeiten für {pauschale}",
           "hours-per-week": "z. B. 5",
           "freeform-text": "Ergänze hier weitere Klauseln, falls nötig",
-          "kostenstelle": "z. B. K-4200"
+          "kostenstelle": "z. B. K-4200",
+          "kostentraeger": "z. B. KT-100"
         },
         "fieldSource": {
           "volunteerProfile": "Wird aus dem Profil der ehrenamtlich tätigen Person übernommen.",
