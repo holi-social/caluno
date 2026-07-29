@@ -82,7 +82,24 @@ export function EventFollowButton({
     } catch (error) {
       toast.error(error instanceof Error ? error.message : undefined);
     }
-  }, [eventId, joinEvent, router, session.data?.user, t, handleJoinResult]);
+  }, [eventId, joinEvent, router, session.data?.user, handleJoinResult]);
+
+  const handleFormSubmitted = useCallback(
+    async (formId: string) => {
+      setActiveFormId(null);
+      setPendingRequiredForms((prev) =>
+        prev.filter((ref) => ref.form.id !== formId),
+      );
+
+      try {
+        const result = await joinEvent.mutateAsync(eventId);
+        handleJoinResult(result);
+      } catch (error) {
+        toast.error(error instanceof Error ? error.message : undefined);
+      }
+    },
+    [eventId, joinEvent, handleJoinResult],
+  );
 
   useEffect(() => {
     if (
