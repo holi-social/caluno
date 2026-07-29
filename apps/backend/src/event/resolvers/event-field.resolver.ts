@@ -45,8 +45,12 @@ export class EventFieldResolver {
   async shiftsCount(
     @Parent() event: EventEntity,
     @Loader(EventShiftsLoader) loader: EventShiftsLoader,
+    @Session() session: UserSession,
   ): Promise<number> {
-    return loader.countByEventId.load(event.id);
+    return loader.countByEventId.load({
+      eventId: event.id,
+      userId: session?.user?.id,
+    });
   }
 
   @AllowAnonymous()
@@ -81,8 +85,12 @@ export class EventFieldResolver {
   async shifts(
     @Parent() event: EventEntity,
     @Loader(EventShiftsLoader) loader: EventShiftsLoader,
+    @Session() session: UserSession,
   ): Promise<Shift[]> {
-    return loader.shiftsByEventId.load(event.id);
+    return loader.shiftsByEventId.load({
+      eventId: event.id,
+      userId: session?.user?.id,
+    });
   }
 
   @AllowAnonymous()

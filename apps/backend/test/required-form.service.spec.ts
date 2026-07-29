@@ -579,7 +579,7 @@ describe('RequiredFormService', () => {
   });
 
   describe('MembershipService.approveMembershipRequest', () => {
-    it('throws when a required form is not submitted', async () => {
+    it('approves even when a required form is not submitted', async () => {
       const { user, unit } = await setupOrg();
       const { form } = await createRequirementForm(db, {
         organizationId: unit.organizationId,
@@ -600,13 +600,13 @@ describe('RequiredFormService', () => {
       await addMembership(db, reviewer.id, unit.id);
       await createDefaultMemberRole(db, unit.organizationId);
 
-      await expect(
-        membershipService.approveMembershipRequest(
-          membershipRequest.id,
-          unit.id,
-          reviewer.id,
-        ),
-      ).rejects.toBeInstanceOf(ConflictGraphQLError);
+      const approved = await membershipService.approveMembershipRequest(
+        membershipRequest.id,
+        unit.id,
+        reviewer.id,
+      );
+
+      expect(approved.status).toBe('ACCEPTED');
     });
 
     it('approves when all required forms are submitted', async () => {

@@ -25,11 +25,12 @@ import {
   Save,
   Trash2,
 } from 'lucide-react';
+import { useSearchParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import { useSheetTrigger } from '@/hooks/use-sheet';
-import { useRouter } from '@/i18n/navigation';
+import { usePathname, useRouter } from '@/i18n/navigation';
 import { updateForm } from '../actions';
 
 interface FormBuilderProps {
@@ -54,10 +55,40 @@ export function FormBuilder({
   const [saving, setSaving] = useState(false);
   const [addBlockOpen, setAddBlockOpen] = useState(false);
   const { open: openBlockSheet } = useSheetTrigger('block-form');
+  const searchParams = useSearchParams();
+  const pathname = usePathname();
 
   const hasSubmissions = (form.submissionCount ?? 0) > 0;
 
   const usedBlockIds = new Set(blockRefs.map((ref) => ref.blockId));
+
+  // A block created via the block sheet (opened with forForm=true) comes
+  // back as the addBlock search param — append it to the form.
+  useEffect(() => {
+    const newBlockId = searchParams.get('addBlock');
+    if (!newBlockId) return;
+    setBlockRefs((refs) =>
+      refs.some((r) => r.blockId === newBlockId)
+        ? refs
+        : [
+            ...refs,
+            {
+              id: `temp-${crypto.randomUUID()}`,
+              formId: form.id,
+              blockId: newBlockId,
+              fieldOrder: refs.length,
+              required: null,
+              createdAt: new Date().toISOString(),
+              updatedAt: new Date().toISOString(),
+            },
+          ],
+    );
+    const next = new URLSearchParams(searchParams.toString());
+    next.delete('addBlock');
+    const qs = next.toString();
+    router.replace(qs ? `${pathname}?${qs}` : pathname);
+    router.refresh();
+  }, [searchParams, router, pathname, form.id]);
 
   function handleMove(index: number, direction: 'up' | 'down') {
     const newRefs = [...blockRefs];
@@ -297,7 +328,7 @@ export function FormBuilder({
                   className="hover:border-primary hover:bg-accent flex cursor-pointer items-center justify-center gap-2 rounded-xl border border-dashed p-4 transition-colors"
                   onClick={() => {
                     setAddBlockOpen(false);
-                    openBlockSheet();
+                    openBlockSheet({ forForm: 'true' });
                   }}
                 >
                   <Plus className="text-muted-foreground size-5" />
@@ -310,9 +341,9 @@ export function FormBuilder({
           </Dialog>
         )}
 
-        <div className="space-y-2 pt-4">
+        <div className="flex justify-center gap-4 pt-4">
           {!hasSubmissions && (
-            <div className="flex gap-4">
+            <>
               <Button
                 size="lg"
                 onClick={handleSave}
@@ -331,14 +362,12 @@ export function FormBuilder({
                 <Plus className="mr-2 h-4 w-4" />
                 {t('addBlock')}
               </Button>
-            </div>
+            </>
           )}
-          <div className="flex justify-center">
-            <Button variant="outline" onClick={handleCopyShareLink}>
-              <Copy className="mr-2 h-4 w-4" />
-              {t('copyShareLink')}
-            </Button>
-          </div>
+          <Button size="lg" variant="outline" onClick={handleCopyShareLink}>
+            <Copy className="mr-2 h-4 w-4" />
+            {t('copyShareLink')}
+          </Button>
         </div>
       </div>
 

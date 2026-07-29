@@ -613,6 +613,7 @@ type Query {
   role(id: String!): Role!
   roles: [Role!]!
   shift(id: String!): Shift!
+  shiftInstance(id: ID!): ShiftInstance!
   shiftInstances(shiftId: ID!): [ShiftInstance!]!
   shiftInstancesByMasterIds(masterIds: [ID!]!): [ShiftInstancesByMaster!]!
   shiftVolunteers(instanceId: ID!, statuses: [ShiftInviteStatus!]): [User!]!

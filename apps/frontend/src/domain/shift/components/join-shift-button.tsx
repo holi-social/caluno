@@ -18,7 +18,7 @@ import {
   Button,
   cn,
 } from '@repo/ui';
-import { BanIcon, CheckIcon } from 'lucide-react';
+import { BanIcon } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useCallback, useEffect, useState } from 'react';
 import { toast } from 'sonner';
@@ -184,6 +184,14 @@ export function JoinShiftButton({
     onMembershipStateChange,
   ]);
 
+  const handleReenter = useCallback(async () => {
+    if (visibility === ShiftVisibility.AllMembers) {
+      await handleJoin();
+    } else {
+      await handleRespond(ShiftInviteStatus.Accepted, t('join.accepted'));
+    }
+  }, [visibility, handleJoin, handleRespond, t]);
+
   useEffect(() => {
     if (
       autoJoin &&
@@ -237,11 +245,30 @@ export function JoinShiftButton({
     );
   }
 
-  if (inviteStatus === ShiftInviteStatus.Cancelled) {
-    return null;
+  if (
+    inviteStatus === ShiftInviteStatus.Cancelled ||
+    inviteStatus === ShiftInviteStatus.VolunteerRejected
+  ) {
+    return (
+      <Button
+        onClick={handleReenter}
+        disabled={
+          joinShiftInstance.isPending ||
+          respondToInvite.isPending ||
+          !instanceId
+        }
+        size="xl"
+        className={className}
+      >
+        {t('join.reenter')}
+      </Button>
+    );
   }
 
-  if (inviteStatus === ShiftInviteStatus.Accepted) {
+  if (
+    inviteStatus === ShiftInviteStatus.Accepted ||
+    inviteStatus === ShiftInviteStatus.SelfJoined
+  ) {
     return (
       <AlertDialog>
         <AlertDialogTrigger asChild>
@@ -283,19 +310,7 @@ export function JoinShiftButton({
     );
   }
 
-  if (inviteStatus === ShiftInviteStatus.SelfJoined) {
-    return (
-      <Button disabled variant="secondary" size="xl" className={className}>
-        <CheckIcon className="size-5" />
-        {t('join.joinedCta')}
-      </Button>
-    );
-  }
-
-  if (
-    inviteStatus === ShiftInviteStatus.VolunteerRejected ||
-    inviteStatus === ShiftInviteStatus.AdminRejected
-  ) {
+  if (inviteStatus === ShiftInviteStatus.AdminRejected) {
     return (
       <Button disabled variant="outline" size="xl" className={className}>
         {t('join.rejectedCta')}

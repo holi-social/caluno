@@ -25,7 +25,7 @@ export async function generateMetadata({ params }: EventPageProps) {
   try {
     event = await data.publicEvent.findById(eventId);
   } catch (error) {
-    if (error instanceof DataError && error.options?.code === 'NOT_FOUND') {
+    if (error instanceof DataError) {
       notFound();
     }
     return { title: 'Event — Clippy' };
@@ -43,7 +43,7 @@ export default async function EventPage({ params }: EventPageProps) {
   try {
     event = await data.publicEvent.findById(eventId);
   } catch (error) {
-    if (error instanceof DataError && error.options?.code === 'NOT_FOUND') {
+    if (error instanceof DataError) {
       notFound();
     }
     throw error;

@@ -1,4 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
+import { isUUID } from 'class-validator';
 import { and, count, eq, inArray } from 'drizzle-orm';
 import type { Database } from '../database/database.module';
 import { DATABASE_CONNECTION } from '../database/database-connection';
@@ -53,11 +54,20 @@ export class EventService {
     return event;
   }
 
-  async findByIdPublic(id: string): Promise<EventEntity | null> {
-    const result = await this.db.query.events.findFirst({
-      where: { id, isDeleted: false },
+  async findByIdPublic(identifier: string): Promise<EventEntity | null> {
+    if (isUUID(identifier)) {
+      const event = await this.db.query.events.findFirst({
+        where: { id: identifier, isDeleted: false },
+      });
+      if (event) {
+        return event;
+      }
+    }
+
+    const event = await this.db.query.events.findFirst({
+      where: { slug: identifier, isDeleted: false },
     });
-    return result ?? null;
+    return event ?? null;
   }
 
   async findBySlug(slug: string): Promise<EventEntity | null> {

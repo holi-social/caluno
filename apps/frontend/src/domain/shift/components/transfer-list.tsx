@@ -88,8 +88,13 @@ export function TransferList({
               >
                 <div className="size-5 rounded-full bg-muted shrink-0" />
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm truncate">{member.name}</p>
-                  <p className="text-xs text-muted-foreground truncate">
+                  <p className="text-sm truncate" title={member.name}>
+                    {member.name}
+                  </p>
+                  <p
+                    className="text-xs text-muted-foreground truncate"
+                    title={member.email}
+                  >
                     {member.email}
                   </p>
                 </div>
