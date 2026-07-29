@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'bun:test';
-import { getInitials } from '../get-initials';
+import { getInitials } from './get-initials';
 
 describe('getInitials', () => {
   it('returns ? for a missing name', () => {
