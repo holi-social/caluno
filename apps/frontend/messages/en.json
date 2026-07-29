@@ -1301,14 +1301,16 @@
           "tasks": "Task description",
           "hours-per-week": "Hours per week",
           "freeform-text": "Freeform text",
-          "kostenstelle": "Kostenstelle"
+          "kostenstelle": "Kostenstelle",
+          "kostentraeger": "Kostenträger"
         },
         "manualFieldPlaceholders": {
           "contract-lifespan": "Select period",
           "tasks": "Describe the main activities for {pauschale}",
           "hours-per-week": "e.g. 5",
           "freeform-text": "Add other clauses here if you need to",
-          "kostenstelle": "e.g. K-4200"
+          "kostenstelle": "e.g. K-4200",
+          "kostentraeger": "e.g. KT-100"
         },
         "fieldSource": {
           "volunteerProfile": "Filled from the volunteer's profile.",
