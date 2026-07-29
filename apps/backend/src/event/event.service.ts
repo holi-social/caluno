@@ -312,6 +312,7 @@ export class EventService {
     userId: string,
     eventId: string,
     tx?: Database,
+    formsAlreadySatisfied?: boolean,
   ): Promise<EventEntity> {
     const db = tx ?? this.db;
 
@@ -334,15 +335,17 @@ export class EventService {
       );
     }
 
-    const requiredFormStatuses = await this.getEventRequiredFormStatuses(
-      userId,
-      eventId,
-    );
-    const missingForms = requiredFormStatuses.filter((s) => !s.submitted);
-    if (missingForms.length > 0) {
-      throw new ConflictGraphQLError(
-        'You must complete the required forms before joining this event.',
+    if (!formsAlreadySatisfied) {
+      const requiredFormStatuses = await this.getEventRequiredFormStatuses(
+        userId,
+        eventId,
       );
+      const missingForms = requiredFormStatuses.filter((s) => !s.submitted);
+      if (missingForms.length > 0) {
+        throw new ConflictGraphQLError(
+          'You must complete the required forms before joining this event.',
+        );
+      }
     }
 
     const existingInvite = await db.query.eventInvites.findFirst({
@@ -465,7 +468,7 @@ export class EventService {
         };
       }
 
-      await this.joinEvent(userId, eventId);
+      await this.joinEvent(userId, eventId, undefined, true);
       return {
         status: JoinStatus.JOINED,
         event,
@@ -481,7 +484,7 @@ export class EventService {
       };
     }
 
-    await this.joinEvent(userId, eventId);
+    await this.joinEvent(userId, eventId, undefined, true);
     return {
       status: JoinStatus.JOINED,
       event,
