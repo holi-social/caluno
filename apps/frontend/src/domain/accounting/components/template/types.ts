@@ -31,6 +31,8 @@ export interface ContractCardSummary {
 export interface InvoiceCardSummary {
   /** Only shown when the template's Kostenstelle line is enabled. */
   kostenstelle?: string;
+  /** Only shown when the template's Kostenträger line is enabled. */
+  kostentraeger?: string;
   invoiceNumberFormat: InvoiceNumberFormat;
 }
 

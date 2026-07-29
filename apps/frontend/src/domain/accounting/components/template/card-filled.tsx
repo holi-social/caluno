@@ -2,7 +2,7 @@
 
 import { Button } from '@repo/ui';
 import { useTranslations } from 'next-intl';
-import { useFormatting } from '@/hooks/use-formatting';
+import { useFormatting } from '@/lib/formatting/use-formatting';
 import { Link } from '@/i18n/navigation';
 import type { DocumentKind, PauschalenType } from '../doc-type-header';
 import { DocTypeHeader, getPauschaleKey } from '../doc-type-header';

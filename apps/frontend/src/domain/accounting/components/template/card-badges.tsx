@@ -11,21 +11,25 @@ export function TemplateCardBadges({ summary }: TemplateCardBadgesProps) {
     'Accounting.templates.builder.invoiceNumberFormats',
   );
 
-  const items: { key: string; value: string }[] =
+  const task = 'task' in summary ? summary.task : undefined;
+
+  const badgeItems: { key: string; value: string }[] =
     'task' in summary
-      ? [
-          { key: 'task', value: summary.task },
-          {
-            key: 'hourlyRate',
-            value: `${summary.hourlyRate} €/Std.`,
-          },
-        ]
+      ? [{ key: 'hourlyRate', value: `${summary.hourlyRate} €/Std.` }]
       : [
           ...(summary.kostenstelle
             ? [
                 {
                   key: 'kostenstelle',
                   value: summary.kostenstelle,
+                },
+              ]
+            : []),
+          ...(summary.kostentraeger
+            ? [
+                {
+                  key: 'kostentraeger',
+                  value: summary.kostentraeger,
                 },
               ]
             : []),
@@ -36,12 +40,15 @@ export function TemplateCardBadges({ summary }: TemplateCardBadgesProps) {
         ];
 
   return (
-    <div className="flex flex-wrap gap-2">
-      {items.map((item) => (
-        <Badge key={item.key} variant="outline">
-          {item.value}
-        </Badge>
-      ))}
+    <div className="space-y-2">
+      {task && <p className="text-sm text-foreground">{task}</p>}
+      <div className="flex flex-wrap gap-2">
+        {badgeItems.map((item) => (
+          <Badge key={item.key} variant="outline">
+            {item.value}
+          </Badge>
+        ))}
+      </div>
     </div>
   );
 }
