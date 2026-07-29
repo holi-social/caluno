@@ -1,0 +1,69 @@
+import { getTranslations, setRequestLocale } from 'next-intl/server';
+import { ProfileDetailHeader } from '@/components/profile/profile-detail-header';
+import { ProfileHeaderBlock } from '@/components/profile/profile-header-block';
+import MyMembershipRequests from '@/domain/membership-requests/components/my-membership-requests';
+import { ProfileForm } from '@/domain/user/components/profile-form';
+import { resolveLocale } from '@/i18n/routing';
+import { getDataClient } from '@/lib/data-client';
+
+interface ProfilePageProps {
+  params: Promise<{ locale: string }>;
+}
+
+export default async function ProfilePage({ params }: ProfilePageProps) {
+  const { locale: rawLocale } = await params;
+  const locale = resolveLocale(rawLocale);
+  setRequestLocale(locale);
+
+  const tProfile = await getTranslations('Profile');
+  const tMemberships = await getTranslations('MembershipRequest');
+
+  const data = await getDataClient();
+  const me = await data.user.getMe();
+  const { items: membershipRequests } = await data.membershipRequest.findMine();
+
+  return (
+    <div>
+      <div className="bg-muted sticky top-0 z-30">
+        <div className="mx-auto w-full max-w-4xl">
+          <ProfileDetailHeader />
+        </div>
+      </div>
+
+      <div className="mx-auto w-full max-w-4xl space-y-8 px-6 py-6">
+        <ProfileHeaderBlock name={me.name} imageUrl={me.image} />
+
+        {/* Section slots — empty; headings inlined (later tickets add bodies) */}
+        <section>
+          <h2 className="text-xl font-bold">{tProfile('organizations')}</h2>
+        </section>
+        <section>
+          <h2 className="text-xl font-bold">
+            {tProfile('personalInformation')}
+          </h2>
+        </section>
+        <section>
+          <h2 className="text-xl font-bold">{tProfile('accountSettings')}</h2>
+        </section>
+
+        {/* Transitional — kept working until the section tickets land */}
+        <div>
+          <h2 id="memberships" className="text-xl font-bold">
+            {tMemberships('page.title')}
+          </h2>
+          <p className="text-muted-foreground mt-1">
+            {tMemberships('page.subtitle')}
+          </p>
+          <MyMembershipRequests membershipRequests={membershipRequests} />
+        </div>
+
+        <div>
+          <h2 className="text-xl font-bold">{tProfile('title')}</h2>
+          <div className="mt-4">
+            <ProfileForm imageUrl={me.image} />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
