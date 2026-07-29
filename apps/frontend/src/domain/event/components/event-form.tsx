@@ -8,26 +8,22 @@ import {
 } from '@repo/data/react';
 import {
   Button,
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
   DatePickerWithRange,
   Field,
   FieldError,
   FieldLabel,
   Input,
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
 } from '@repo/ui';
-import { FileText, Info, SquareArrowOutUpRight, X } from 'lucide-react';
+import { SquareArrowOutUpRight } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useMemo, useState, useTransition } from 'react';
 import { useForm } from 'react-hook-form';
 import { FormSheet, useFormSheet } from '@/components/form-sheet';
+import {
+  RequiredFormsAddExisting,
+  RequiredFormsDedupHint,
+  RequiredFormsList,
+} from '@/components/required-forms-fields';
 import { FileUpload } from '@/domain/storage/components/file-upload';
 import { useRouter } from '@/i18n/navigation';
 import { inviteEventPath } from '../routes';
@@ -143,11 +139,6 @@ export const EventForm = ({
     });
   };
 
-  const getFormDescription = (form: (typeof requiredForms)[number]) => {
-    const count = form.blockRefs?.length ?? 0;
-    return tForms('questionCount', { count });
-  };
-
   const handleRemoveForm = (formId: string) => {
     setRequiredFormIds((prev) => prev.filter((id) => id !== formId));
   };
@@ -253,70 +244,22 @@ export const EventForm = ({
           </p>
         </div>
 
-        {requiredForms.length > 0 && (
-          <div className="space-y-3">
-            {requiredForms.map((form) => (
-              <div
-                key={form.id}
-                className="flex items-center justify-between gap-3 rounded-lg border px-3 py-3"
-              >
-                <div className="flex items-center gap-3 min-w-0">
-                  <FileText className="h-5 w-5 shrink-0 text-muted-foreground" />
-                  <div className="min-w-0">
-                    <p className="text-sm font-medium truncate">{form.name}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {getFormDescription(form)}
-                    </p>
-                  </div>
-                </div>
-                <Button
-                  variant="ghost"
-                  size="icon-xs"
-                  onClick={() => handleRemoveForm(form.id)}
-                  disabled={pending}
-                  aria-label={tForms('removeAria', { name: form.name })}
-                >
-                  <X className="h-4 w-4" />
-                </Button>
-              </div>
-            ))}
-          </div>
-        )}
+        <RequiredFormsList
+          forms={requiredForms}
+          onRemove={handleRemoveForm}
+          removeDisabled={pending}
+          t={tForms}
+        />
 
         <div className="flex items-center gap-3">
-          <Popover open={commandOpen} onOpenChange={setCommandOpen}>
-            <PopoverTrigger asChild>
-              <Button
-                variant="outline"
-                size="sm"
-                className="flex-1 border-primary text-primary hover:bg-primary/5"
-                disabled={
-                  pending || isLoadingForms || availableForms.length === 0
-                }
-              >
-                {tForms('addExisting')}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-72 p-0" align="start">
-              <Command>
-                <CommandInput placeholder={tForms('searchForms')} />
-                <CommandList>
-                  <CommandEmpty>{tForms('noFormsFound')}</CommandEmpty>
-                  <CommandGroup>
-                    {availableForms.map((form) => (
-                      <CommandItem
-                        key={form.id}
-                        value={form.id}
-                        onSelect={() => handleAddForm(form.id)}
-                      >
-                        {form.name}
-                      </CommandItem>
-                    ))}
-                  </CommandGroup>
-                </CommandList>
-              </Command>
-            </PopoverContent>
-          </Popover>
+          <RequiredFormsAddExisting
+            availableForms={availableForms}
+            onAdd={handleAddForm}
+            open={commandOpen}
+            onOpenChange={setCommandOpen}
+            disabled={pending || isLoadingForms || availableForms.length === 0}
+            t={tForms}
+          />
 
           <Button
             type="button"
@@ -334,10 +277,7 @@ export const EventForm = ({
           </Button>
         </div>
 
-        <div className="flex items-start gap-2 text-xs text-muted-foreground">
-          <Info className="h-4 w-4 shrink-0 mt-0.5" />
-          <p>{tForms('dedupHint')}</p>
-        </div>
+        <RequiredFormsDedupHint t={tForms} />
       </div>
     </FormSheet>
   );
