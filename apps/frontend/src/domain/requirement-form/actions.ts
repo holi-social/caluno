@@ -446,7 +446,8 @@ export const saveBlock = actionClient
     }
 
     revalidatePath(
-      `/admin/${parsedInput.organizationUnitId}/requirement-forms/blocks`,
+      `/admin/${parsedInput.organizationUnitId}/requirement-forms`,
+      'layout',
     );
     return { blockId };
   });
