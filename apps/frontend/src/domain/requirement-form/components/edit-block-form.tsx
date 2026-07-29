@@ -367,7 +367,7 @@ export function EditBlockForm({
                     setEditingFieldId(field.id);
                   }}
                 >
-                  {t('edit')}
+                  {tCommon('edit')}
                 </Button>
                 <Button
                   variant="ghost"
