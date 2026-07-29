@@ -310,9 +310,9 @@ export function FormBuilder({
           </Dialog>
         )}
 
-        <div className="space-y-2 pt-4">
+        <div className="flex justify-center gap-4 pt-4">
           {!hasSubmissions && (
-            <div className="flex gap-4">
+            <>
               <Button
                 size="lg"
                 onClick={handleSave}
@@ -331,14 +331,12 @@ export function FormBuilder({
                 <Plus className="mr-2 h-4 w-4" />
                 {t('addBlock')}
               </Button>
-            </div>
+            </>
           )}
-          <div className="flex justify-center">
-            <Button variant="outline" onClick={handleCopyShareLink}>
-              <Copy className="mr-2 h-4 w-4" />
-              {t('copyShareLink')}
-            </Button>
-          </div>
+          <Button size="lg" variant="outline" onClick={handleCopyShareLink}>
+            <Copy className="mr-2 h-4 w-4" />
+            {t('copyShareLink')}
+          </Button>
         </div>
       </div>
 
