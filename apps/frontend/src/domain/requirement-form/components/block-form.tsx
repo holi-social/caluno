@@ -427,6 +427,7 @@ export function BlockForm({
 
               {/* Profile field picker */}
               <Popover
+                modal
                 open={profilePickerOpen}
                 onOpenChange={setProfilePickerOpen}
               >
