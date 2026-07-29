@@ -22,25 +22,22 @@ export async function InviteShiftPageContent({
   const data = await getDataClient({ orgUId });
   const t = await getTranslations({ locale, namespace: 'Shift.sheet' });
 
-  const [event, shift, shiftInstances, instanceDetail, memberships] =
-    await Promise.all([
-      eventId ? data.event.findById(eventId) : Promise.resolve(null),
-      data.shift.findByIdDetailed(shiftId),
-      data.shift.findInstances(shiftId),
-      data.shift.findInstanceDetail(shiftId, instanceId),
-      data.membership.findAllByOrganizationUnitId(),
-    ]);
+  const [event, shift, instance, memberships] = await Promise.all([
+    eventId ? data.event.findById(eventId) : Promise.resolve(null),
+    data.shift.findByIdDetailed(shiftId),
+    data.shift.findInstance(instanceId),
+    data.membership.findAllByOrganizationUnitId(),
+  ]);
 
   if ((eventId && !event) || !shift) {
     notFound();
   }
 
-  const selectedInstance = shiftInstances.find((i) => i.id === instanceId);
-  if (!selectedInstance) {
+  if (!instance) {
     notFound();
   }
 
-  const invitedMembers = (instanceDetail?.invites ?? []).map((invite) => ({
+  const invitedMembers = (instance?.invites ?? []).map((invite) => ({
     id: invite.user.id,
     name: invite.user.name,
     email: invite.user.email ?? '',
@@ -62,8 +59,8 @@ export async function InviteShiftPageContent({
         recurrenceDays: shift.recurrenceDays,
       }}
       selectedInstance={{
-        actualStartsAt: selectedInstance.actualStartsAt,
-        actualEndsAt: selectedInstance.actualEndsAt,
+        actualStartsAt: instance.actualStartsAt,
+        actualEndsAt: instance.actualEndsAt,
       }}
       availableMembers={memberships.map((m) => m.user)}
       invitedMembers={invitedMembers}
