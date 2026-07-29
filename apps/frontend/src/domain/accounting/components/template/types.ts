@@ -1,6 +1,19 @@
 import type { DocumentKind, PauschalenType } from '../doc-type-header';
 import type { InvoiceNumberFormat } from './builder-types';
 
+export type SigneeRole = 'volunteer' | 'coordinator' | 'supervisor';
+
+export interface OrgRole {
+  id: string;
+  name: string;
+}
+
+export interface Signee {
+  id: string;
+  role: SigneeRole;
+  orgRole: OrgRole;
+}
+
 export type TemplateSlug =
   | 'ehrenamtspauschale-contract'
   | 'ehrenamtspauschale-invoice'

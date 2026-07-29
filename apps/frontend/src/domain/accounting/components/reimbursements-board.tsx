@@ -2,7 +2,6 @@
 
 import {
   Button,
-  Calendar,
   cn,
   Empty,
   EmptyDescription,
@@ -10,9 +9,6 @@ import {
   EmptyMedia,
   EmptyTitle,
   Input,
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
   Select,
   SelectContent,
   SelectItem,
@@ -22,9 +18,7 @@ import {
 } from '@repo/ui';
 import {
   ArrowUpDownIcon,
-  CalendarIcon,
   CheckCircle2Icon,
-  CheckIcon,
   ChevronRightIcon,
   FilterXIcon,
   SearchIcon,
@@ -47,7 +41,7 @@ import {
   isYourActionStatus,
   ReimbursementsTable,
 } from './reimbursements-volunteer-group';
-import type { Signee } from './template/types';
+import type { Signee, SigneeRole } from './template/types';
 
 // ─── Mock org roles ───────────────────────────────────────────────────────────
 
@@ -112,7 +106,11 @@ export type DocStatus =
   // Passive record: eligible hours from a paid shift where the contract
   // gate was bypassed. Rate × hours is still shown, but there's no "create"
   // CTA on this row — the fix is the paired contract-missing row instead.
-  | 'timesheet-muted';
+  | 'timesheet-muted'
+  // Terminal: signer rejected the document. Dead end — the fix is
+  // reissuing a new document, never resuming this one.
+  | 'contract-declined'
+  | 'timesheet-declined';
 
 export type TileFilter =
   | 'contract-generate'
@@ -123,7 +121,6 @@ export type TileFilter =
   | null;
 
 type PauschalenFilter = 'all' | PauschalenType;
-type DatePreset = 'all-time' | 'this-month' | 'last-month' | null;
 type SortOption = 'action-needed' | 'newest';
 
 export interface DateRange {
@@ -141,6 +138,21 @@ export interface BoardDocument {
   /** Manually flagged: this timesheet's amount pushed the volunteer at/over their yearly cap. Unrelated to contract compliance. */
   isOverCap?: boolean;
   pauschale?: PauschalenType;
+  /** Set together when a signer rejects the document (contract-declined/timesheet-declined only). */
+  declineReason?: string;
+  declinedBy?: string;
+  declinedAt?: string;
+  /** Which seat in the signing chain declined — determines where the pipeline/timeline gets cut off. */
+  declinedAtRole?: SigneeRole;
+}
+
+/** Status + decline-detail override layered onto a mock document in-session (see docOverrides). */
+export interface DocOverride {
+  status: DocStatus;
+  declineReason?: string;
+  declinedBy?: string;
+  declinedAt?: string;
+  declinedAtRole?: SigneeRole;
 }
 
 export interface PauschalenLimit {
@@ -165,10 +177,10 @@ export interface DocVolPair {
   vol: BoardVolunteer;
 }
 
-/** Applies in-session status overrides (e.g. after sending a contract for signing) onto the mock volunteer list — the mock data itself stays static. */
+/** Applies in-session overrides (status flips after sending/declining a document) onto the mock volunteer list — the mock data itself stays static. */
 function applyDocStatusOverrides(
   vols: BoardVolunteer[],
-  overrides: Record<string, DocStatus>,
+  overrides: Record<string, DocOverride>,
 ): BoardVolunteer[] {
   if (Object.keys(overrides).length === 0) return vols;
   return vols.map((v) => {
@@ -176,8 +188,8 @@ function applyDocStatusOverrides(
     return {
       ...v,
       documents: v.documents.map((d) => {
-        const status = overrides[d.id];
-        return status ? { ...d, status } : d;
+        const override = overrides[d.id];
+        return override ? { ...d, ...override } : d;
       }),
     };
   });
@@ -193,6 +205,9 @@ export function isTimesheetNonCompliant(
   doc: BoardDocument,
 ): boolean {
   if (!doc.status.startsWith('timesheet')) return false;
+  // Declined is a terminal dead end on its own — reissuing is the fix, not
+  // the paired contract, so it never carries the non-compliant flag too.
+  if (doc.status === 'timesheet-declined') return false;
   const pauschale = doc.pauschale ?? vol.pauschale;
   return !vol.documents.some(
     (d) =>
@@ -256,13 +271,15 @@ export function getReadyToGoDocs(
 
 // ─── Mock data ────────────────────────────────────────────────────────────────
 const MOCK_VOLUNTEERS: BoardVolunteer[] = [
-  // ── 1–15: ehrenamt ────────────────────────────────────────────────────────
+  // ── Anna Müller (ehrenamt): compliant history — an active contract, one
+  // timesheet a supervisor declined a while back, and this month's
+  // timesheet still waiting on her own signature.
   {
     id: 'v1',
     name: 'Anna Müller',
     initials: 'AM',
     pauschale: 'ehrenamt',
-    usedAmount: 360,
+    usedAmount: 240,
     totalCap: 840,
     documents: [
       {
@@ -273,1749 +290,158 @@ const MOCK_VOLUNTEERS: BoardVolunteer[] = [
       },
       {
         id: 'd2',
-        status: 'timesheet-ready',
+        status: 'timesheet-declined',
         amount: 120,
         hours: 8,
-        lastActionDate: '06.07.2026',
-        periodLabel: 'Juli 2026',
-      },
-      {
-        id: 'd108',
-        status: 'timesheet-ready',
-        amount: 120,
-        hours: 8,
-        lastActionDate: '28.06.2026',
+        lastActionDate: '10.06.2026',
         periodLabel: 'Juni 2026',
+        declineReason:
+          'Die angegebenen Stunden stimmen nicht mit dem Dienstplan überein — bitte mit den korrekten Schichten neu einreichen.',
+        declinedBy: 'Markus Kassier',
+        declinedAt: '10.06.2026',
+        declinedAtRole: 'supervisor',
       },
       {
-        id: 'd109',
-        status: 'timesheet-ready',
+        id: 'd3',
+        status: 'timesheet-signing-vol',
         amount: 120,
         hours: 8,
-        lastActionDate: '30.05.2026',
-        periodLabel: 'Mai 2026',
-      },
-      {
-        id: 'd110',
-        status: 'timesheet-ready',
-        amount: 120,
-        hours: 8,
-        lastActionDate: '29.04.2026',
-        periodLabel: 'April 2026',
-      },
-      {
-        id: 'd111',
-        status: 'timesheet-ready',
-        amount: 120,
-        hours: 8,
-        lastActionDate: '28.03.2026',
-        periodLabel: 'März 2026',
-      },
-      {
-        id: 'd112',
-        status: 'timesheet-ready',
-        amount: 120,
-        hours: 8,
-        lastActionDate: '27.02.2026',
-        periodLabel: 'Februar 2026',
+        lastActionDate: '03.07.2026',
+        periodLabel: 'Juli 2026',
       },
     ],
   },
+  // ── Ben Schmidt (ehrenamt): brand new — contract still being drafted,
+  // but hours were already logged, so the timesheet is non-compliant
+  // until the contract goes active.
   {
     id: 'v2',
     name: 'Ben Schmidt',
     initials: 'BS',
     pauschale: 'ehrenamt',
-    usedAmount: 480,
+    usedAmount: 0,
     totalCap: 840,
     documents: [
       {
-        id: 'd3',
-        status: 'contract-active',
-        lastActionDate: '15.01.2026',
+        id: 'd4',
+        status: 'contract-generate',
+        lastActionDate: '01.07.2026',
         periodLabel: '2026',
       },
       {
-        id: 'd4',
-        status: 'timesheet-signing-vol',
-        amount: 180,
-        hours: 12,
-        lastActionDate: '03.07.2026',
+        id: 'd5',
+        status: 'timesheet-generate',
+        amount: 60,
+        hours: 4,
+        lastActionDate: '07.07.2026',
         periodLabel: 'Juli 2026',
       },
     ],
   },
+  // ── Clara Weber (uebungleiter): her first contract was declined by her
+  // (wrong rate quoted) — a fresh one has since been drafted and is now
+  // mid-signature.
   {
     id: 'v3',
     name: 'Clara Weber',
     initials: 'CW',
-    pauschale: 'ehrenamt',
-    usedAmount: 240,
-    totalCap: 840,
+    pauschale: 'uebungleiter',
+    usedAmount: 0,
+    totalCap: 3000,
     documents: [
       {
-        id: 'd5',
-        status: 'contract-generate',
+        id: 'd6',
+        status: 'contract-declined',
+        lastActionDate: '20.06.2026',
+        periodLabel: '2026',
+        declineReason:
+          'Der genannte Stundensatz entspricht nicht der Zusage — bitte mit korrektem Satz neu ausstellen.',
+        declinedBy: 'Clara Weber',
+        declinedAt: '20.06.2026',
+        declinedAtRole: 'volunteer',
+      },
+      {
+        id: 'd7',
+        status: 'contract-signing-vol',
         lastActionDate: '01.07.2026',
         periodLabel: '2026',
       },
     ],
   },
+  // ── David Fischer (ehrenamt): one contract awaiting the coordinator's
+  // countersignature, and this month's timesheet awaiting the
+  // supervisor's — the live example for testing the new Decline action.
   {
     id: 'v4',
     name: 'David Fischer',
     initials: 'DF',
     pauschale: 'ehrenamt',
-    usedAmount: 840,
+    usedAmount: 480,
     totalCap: 840,
     documents: [
       {
-        id: 'd6',
-        status: 'contract-active',
-        lastActionDate: '01.01.2026',
+        id: 'd8',
+        status: 'contract-signing-coord',
+        lastActionDate: '06.07.2026',
         periodLabel: '2026',
       },
       {
-        id: 'd7',
-        status: 'timesheet-ready',
-        amount: 120,
-        hours: 8,
-        lastActionDate: '05.07.2026',
+        id: 'd9',
+        status: 'timesheet-signing-super',
+        amount: 180,
+        hours: 12,
+        lastActionDate: '02.07.2026',
         periodLabel: 'Juli 2026',
-        isOverCap: true,
       },
     ],
   },
+  // ── Emma Wagner: long-tenured, both Pauschale types. An active
+  // Übungsleiter contract sits alongside an Ehrenamt side that never got a
+  // contract at all — hours were paid anyway (muted), and this month's
+  // Übungsleiter timesheet is about to push her over the yearly cap.
   {
     id: 'v5',
     name: 'Emma Wagner',
     initials: 'EW',
     pauschale: 'ehrenamt',
-    usedAmount: 360,
-    totalCap: 840,
-    documents: [
-      {
-        id: 'd151',
-        status: 'contract-active',
-        lastActionDate: '01.01.2026',
-        periodLabel: '2026',
-      },
-      {
-        id: 'd8',
-        status: 'timesheet-generate',
-        amount: 60,
-        hours: 4,
-        lastActionDate: '07.07.2026',
-        periodLabel: 'Juli 2026',
-      },
-    ],
-  },
-  {
-    id: 'v6',
-    name: 'Felix Becker',
-    initials: 'FB',
-    pauschale: 'ehrenamt',
-    usedAmount: 600,
-    totalCap: 840,
-    documents: [
-      {
-        id: 'd9',
-        status: 'contract-active',
-        lastActionDate: '01.01.2026',
-        periodLabel: '2026',
-      },
-      {
-        id: 'd10',
-        status: 'timesheet-signing-super',
-        amount: 240,
-        hours: 16,
-        lastActionDate: '02.07.2026',
-        periodLabel: 'Juni 2026',
-      },
-    ],
-  },
-  {
-    id: 'v7',
-    name: 'Greta Hoffmann',
-    initials: 'GH',
-    pauschale: 'ehrenamt',
-    usedAmount: 160,
-    totalCap: 840,
-    documents: [
-      {
-        id: 'd11',
-        status: 'contract-signing-coord',
-        lastActionDate: '06.07.2026',
-        periodLabel: '2026',
-      },
-    ],
-  },
-  {
-    id: 'v8',
-    name: 'Hans Schulz',
-    initials: 'HS',
-    pauschale: 'ehrenamt',
-    usedAmount: 420,
-    totalCap: 840,
-    documents: [
-      {
-        id: 'd12',
-        status: 'contract-active',
-        lastActionDate: '01.01.2026',
-        periodLabel: '2026',
-      },
-      {
-        id: 'd13',
-        status: 'timesheet-signing-vol',
-        amount: 120,
-        hours: 8,
-        lastActionDate: '01.07.2026',
-        periodLabel: 'Juli 2026',
-      },
-      {
-        id: 'd14',
-        status: 'timesheet-ready',
-        amount: 120,
-        hours: 8,
-        lastActionDate: '05.06.2026',
-        periodLabel: 'Juni 2026',
-      },
-      {
-        id: 'd113',
-        status: 'timesheet-ready',
-        amount: 120,
-        hours: 8,
-        lastActionDate: '30.05.2026',
-        periodLabel: 'Mai 2026',
-      },
-      {
-        id: 'd114',
-        status: 'timesheet-ready',
-        amount: 120,
-        hours: 8,
-        lastActionDate: '29.04.2026',
-        periodLabel: 'April 2026',
-      },
-      {
-        id: 'd115',
-        status: 'timesheet-ready',
-        amount: 120,
-        hours: 8,
-        lastActionDate: '28.03.2026',
-        periodLabel: 'März 2026',
-      },
-      {
-        id: 'd116',
-        status: 'timesheet-ready',
-        amount: 120,
-        hours: 8,
-        lastActionDate: '27.02.2026',
-        periodLabel: 'Februar 2026',
-      },
-      {
-        id: 'd117',
-        status: 'timesheet-ready',
-        amount: 120,
-        hours: 8,
-        lastActionDate: '30.01.2026',
-        periodLabel: 'Januar 2026',
-      },
-    ],
-  },
-  {
-    id: 'v9',
-    name: 'Ida Koch',
-    initials: 'IK',
-    pauschale: 'ehrenamt',
-    usedAmount: 0,
-    totalCap: 840,
-    documents: [
-      {
-        id: 'd15',
-        status: 'contract-generate',
-        lastActionDate: '07.07.2026',
-        periodLabel: '2026',
-      },
-    ],
-  },
-  {
-    id: 'v10',
-    name: 'Jonas Bauer',
-    initials: 'JB',
-    pauschale: 'ehrenamt',
-    usedAmount: 480,
-    totalCap: 840,
-    documents: [
-      {
-        id: 'd16',
-        status: 'contract-active',
-        lastActionDate: '01.02.2026',
-        periodLabel: '2026',
-      },
-      {
-        id: 'd17',
-        status: 'timesheet-generate',
-        amount: 180,
-        hours: 12,
-        lastActionDate: '06.07.2026',
-        periodLabel: 'Juli 2026',
-      },
-    ],
-  },
-  {
-    id: 'v11',
-    name: 'Klara Richter',
-    initials: 'KR',
-    pauschale: 'ehrenamt',
-    usedAmount: 300,
-    totalCap: 840,
-    documents: [
-      {
-        id: 'd152',
-        status: 'contract-active',
-        lastActionDate: '01.01.2026',
-        periodLabel: '2026',
-      },
-      {
-        id: 'd18',
-        status: 'timesheet-signing-super',
-        amount: 60,
-        hours: 4,
-        lastActionDate: '30.06.2026',
-        periodLabel: 'Juni 2026',
-      },
-    ],
-  },
-  {
-    id: 'v12',
-    name: 'Lena Klein',
-    initials: 'LK',
-    pauschale: 'ehrenamt',
-    usedAmount: 120,
-    totalCap: 840,
-    documents: [
-      {
-        id: 'd19',
-        status: 'contract-active',
-        lastActionDate: '01.01.2026',
-        periodLabel: '2026',
-      },
-      {
-        id: 'd20',
-        status: 'timesheet-generate',
-        amount: 120,
-        hours: 8,
-        lastActionDate: '07.07.2026',
-        periodLabel: 'Juli 2026',
-      },
-    ],
-  },
-  {
-    id: 'v13',
-    name: 'Max Wolf',
-    initials: 'MW',
-    pauschale: 'ehrenamt',
-    usedAmount: 660,
-    totalCap: 840,
-    documents: [
-      {
-        id: 'd21',
-        status: 'contract-active',
-        lastActionDate: '01.03.2026',
-        periodLabel: '2026',
-      },
-      {
-        id: 'd22',
-        status: 'timesheet-ready',
-        amount: 60,
-        hours: 4,
-        lastActionDate: '07.07.2026',
-        periodLabel: 'Juli 2026',
-      },
-      {
-        id: 'd118',
-        status: 'timesheet-ready',
-        amount: 180,
-        hours: 12,
-        lastActionDate: '28.06.2026',
-        periodLabel: 'Juni 2026',
-      },
-      {
-        id: 'd119',
-        status: 'timesheet-ready',
-        amount: 180,
-        hours: 12,
-        lastActionDate: '30.05.2026',
-        periodLabel: 'Mai 2026',
-      },
-      {
-        id: 'd120',
-        status: 'timesheet-ready',
-        amount: 120,
-        hours: 8,
-        lastActionDate: '29.04.2026',
-        periodLabel: 'April 2026',
-      },
-      {
-        id: 'd121',
-        status: 'timesheet-ready',
-        amount: 120,
-        hours: 8,
-        lastActionDate: '31.03.2026',
-        periodLabel: 'März 2026',
-      },
-    ],
-  },
-  {
-    id: 'v14',
-    name: 'Nina Schröder',
-    initials: 'NS',
-    pauschale: 'ehrenamt',
-    usedAmount: 540,
-    totalCap: 840,
-    documents: [
-      {
-        id: 'd23',
-        status: 'contract-active',
-        lastActionDate: '01.01.2026',
-        periodLabel: '2026',
-      },
-      {
-        id: 'd24',
-        status: 'timesheet-signing-vol',
-        amount: 180,
-        hours: 12,
-        lastActionDate: '04.07.2026',
-        periodLabel: 'Juli 2026',
-      },
-    ],
-  },
-  {
-    id: 'v15',
-    name: 'Otto Braun',
-    initials: 'OB',
-    pauschale: 'ehrenamt',
-    usedAmount: 300,
-    totalCap: 840,
-    documents: [
-      {
-        id: 'd25',
-        status: 'contract-active',
-        lastActionDate: '01.01.2026',
-        periodLabel: '2026',
-      },
-      {
-        id: 'd26',
-        status: 'timesheet-ready',
-        amount: 120,
-        hours: 8,
-        lastActionDate: '02.07.2026',
-        periodLabel: 'Juli 2026',
-      },
-    ],
-  },
-  // ── 16–30: uebungleiter ───────────────────────────────────────────────────
-  {
-    id: 'v16',
-    name: 'Paula Zimmermann',
-    initials: 'PZ',
-    pauschale: 'uebungleiter',
-    usedAmount: 1200,
-    totalCap: 3000,
-    documents: [
-      {
-        id: 'd27',
-        status: 'contract-active',
-        lastActionDate: '01.01.2026',
-        periodLabel: '2026',
-      },
-      {
-        id: 'd28',
-        status: 'timesheet-ready',
-        amount: 240,
-        hours: 16,
-        lastActionDate: '06.07.2026',
-        periodLabel: 'Juli 2026',
-      },
-      {
-        id: 'd122',
-        status: 'timesheet-ready',
-        amount: 360,
-        hours: 24,
-        lastActionDate: '28.06.2026',
-        periodLabel: 'Juni 2026',
-      },
-      {
-        id: 'd123',
-        status: 'timesheet-ready',
-        amount: 360,
-        hours: 24,
-        lastActionDate: '30.05.2026',
-        periodLabel: 'Mai 2026',
-      },
-      {
-        id: 'd124',
-        status: 'timesheet-ready',
-        amount: 360,
-        hours: 24,
-        lastActionDate: '29.04.2026',
-        periodLabel: 'April 2026',
-      },
-      {
-        id: 'd125',
-        status: 'timesheet-ready',
-        amount: 360,
-        hours: 24,
-        lastActionDate: '28.03.2026',
-        periodLabel: 'März 2026',
-      },
-      {
-        id: 'd126',
-        status: 'timesheet-ready',
-        amount: 360,
-        hours: 24,
-        lastActionDate: '27.02.2026',
-        periodLabel: 'Februar 2026',
-      },
-      {
-        id: 'd127',
-        status: 'timesheet-ready',
-        amount: 360,
-        hours: 24,
-        lastActionDate: '30.01.2026',
-        periodLabel: 'Januar 2026',
-      },
-    ],
-  },
-  {
-    id: 'v17',
-    name: 'Romy Krause',
-    initials: 'RK',
-    pauschale: 'uebungleiter',
-    usedAmount: 1200,
-    totalCap: 3000,
-    documents: [
-      {
-        id: 'd29',
-        status: 'contract-active',
-        lastActionDate: '01.02.2026',
-        periodLabel: '2026',
-      },
-      {
-        id: 'd30',
-        status: 'timesheet-signing-vol',
-        amount: 360,
-        hours: 24,
-        lastActionDate: '03.07.2026',
-        periodLabel: 'Juli 2026',
-      },
-    ],
-  },
-  {
-    id: 'v18',
-    name: 'Stefan Lehmann',
-    initials: 'SL',
-    pauschale: 'uebungleiter',
-    usedAmount: 600,
-    totalCap: 3000,
-    documents: [
-      {
-        id: 'd31',
-        status: 'contract-active',
-        lastActionDate: '01.01.2026',
-        periodLabel: '2026',
-      },
-      {
-        id: 'd32',
-        status: 'timesheet-generate',
-        amount: 480,
-        hours: 32,
-        lastActionDate: '06.07.2026',
-        periodLabel: 'Juli 2026',
-      },
-    ],
-  },
-  {
-    id: 'v19',
-    name: 'Tina Schmitt',
-    initials: 'TS',
-    pauschale: 'uebungleiter',
-    usedAmount: 1800,
-    totalCap: 3000,
-    documents: [
-      {
-        id: 'd33',
-        status: 'contract-active',
-        lastActionDate: '01.01.2026',
-        periodLabel: '2026',
-      },
-      {
-        id: 'd34',
-        status: 'timesheet-signing-super',
-        amount: 240,
-        hours: 16,
-        lastActionDate: '01.07.2026',
-        periodLabel: 'Juli 2026',
-      },
-      {
-        id: 'd35',
-        status: 'timesheet-ready',
-        amount: 240,
-        hours: 16,
-        lastActionDate: '15.06.2026',
-        periodLabel: 'Juni 2026',
-      },
-      {
-        id: 'd128',
-        status: 'timesheet-ready',
-        amount: 240,
-        hours: 16,
-        lastActionDate: '30.05.2026',
-        periodLabel: 'Mai 2026',
-      },
-      {
-        id: 'd129',
-        status: 'timesheet-ready',
-        amount: 360,
-        hours: 24,
-        lastActionDate: '29.04.2026',
-        periodLabel: 'April 2026',
-      },
-      {
-        id: 'd130',
-        status: 'timesheet-ready',
-        amount: 360,
-        hours: 24,
-        lastActionDate: '28.03.2026',
-        periodLabel: 'März 2026',
-      },
-      {
-        id: 'd131',
-        status: 'timesheet-ready',
-        amount: 360,
-        hours: 24,
-        lastActionDate: '27.02.2026',
-        periodLabel: 'Februar 2026',
-      },
-      {
-        id: 'd132',
-        status: 'timesheet-ready',
-        amount: 240,
-        hours: 16,
-        lastActionDate: '30.01.2026',
-        periodLabel: 'Januar 2026',
-      },
-    ],
-  },
-  {
-    id: 'v20',
-    name: 'Ulrike Neumann',
-    initials: 'UN',
-    pauschale: 'uebungleiter',
-    usedAmount: 0,
-    totalCap: 3000,
-    documents: [
-      {
-        id: 'd36',
-        status: 'contract-generate',
-        lastActionDate: '07.07.2026',
-        periodLabel: '2026',
-      },
-    ],
-  },
-  {
-    id: 'v21',
-    name: 'Viktor Schwarz',
-    initials: 'VS',
-    pauschale: 'uebungleiter',
-    usedAmount: 1500,
-    totalCap: 3000,
-    documents: [
-      {
-        id: 'd37',
-        status: 'contract-active',
-        lastActionDate: '01.01.2026',
-        periodLabel: '2026',
-      },
-      {
-        id: 'd38',
-        status: 'timesheet-generate',
-        amount: 360,
-        hours: 24,
-        lastActionDate: '05.07.2026',
-        periodLabel: 'Juli 2026',
-      },
-      {
-        id: 'd133',
-        status: 'timesheet-ready',
-        amount: 480,
-        hours: 32,
-        lastActionDate: '28.06.2026',
-        periodLabel: 'Juni 2026',
-      },
-      {
-        id: 'd134',
-        status: 'timesheet-ready',
-        amount: 480,
-        hours: 32,
-        lastActionDate: '30.05.2026',
-        periodLabel: 'Mai 2026',
-      },
-      {
-        id: 'd135',
-        status: 'timesheet-ready',
-        amount: 480,
-        hours: 32,
-        lastActionDate: '29.04.2026',
-        periodLabel: 'April 2026',
-      },
-      {
-        id: 'd136',
-        status: 'timesheet-ready',
-        amount: 480,
-        hours: 32,
-        lastActionDate: '28.03.2026',
-        periodLabel: 'März 2026',
-      },
-      {
-        id: 'd137',
-        status: 'timesheet-ready',
-        amount: 480,
-        hours: 32,
-        lastActionDate: '27.02.2026',
-        periodLabel: 'Februar 2026',
-      },
-      {
-        id: 'd138',
-        status: 'timesheet-ready',
-        amount: 300,
-        hours: 20,
-        lastActionDate: '30.01.2026',
-        periodLabel: 'Januar 2026',
-      },
-    ],
-  },
-  {
-    id: 'v22',
-    name: 'Wendy Lange',
-    initials: 'WL',
-    pauschale: 'uebungleiter',
-    usedAmount: 480,
-    totalCap: 3000,
-    documents: [
-      {
-        id: 'd39',
-        status: 'contract-signing-vol',
-        lastActionDate: '04.07.2026',
-        periodLabel: '2026',
-      },
-    ],
-  },
-  {
-    id: 'v23',
-    name: 'Xaver Krüger',
-    initials: 'XK',
-    pauschale: 'uebungleiter',
-    usedAmount: 1440,
-    totalCap: 3000,
-    documents: [
-      {
-        id: 'd40',
-        status: 'contract-active',
-        lastActionDate: '01.03.2026',
-        periodLabel: '2026',
-      },
-      {
-        id: 'd41',
-        status: 'timesheet-ready',
-        amount: 480,
-        hours: 32,
-        lastActionDate: '30.06.2026',
-        periodLabel: 'Juni 2026',
-      },
-      {
-        id: 'd42',
-        status: 'timesheet-signing-vol',
-        amount: 360,
-        hours: 24,
-        lastActionDate: '02.07.2026',
-        periodLabel: 'Juli 2026',
-      },
-    ],
-  },
-  {
-    id: 'v24',
-    name: 'Yvonne Werner',
-    initials: 'YW',
-    pauschale: 'uebungleiter',
-    usedAmount: 960,
-    totalCap: 3000,
-    documents: [
-      {
-        id: 'd43',
-        status: 'contract-active',
-        lastActionDate: '01.01.2026',
-        periodLabel: '2026',
-      },
-      {
-        id: 'd44',
-        status: 'timesheet-generate',
-        amount: 240,
-        hours: 16,
-        lastActionDate: '07.07.2026',
-        periodLabel: 'Juli 2026',
-      },
-    ],
-  },
-  {
-    id: 'v25',
-    name: 'Zoé Meier',
-    initials: 'ZM',
-    pauschale: 'uebungleiter',
-    usedAmount: 3000,
-    totalCap: 3000,
-    documents: [
-      {
-        id: 'd45',
-        status: 'contract-active',
-        lastActionDate: '01.01.2026',
-        periodLabel: '2026',
-      },
-      {
-        id: 'd46',
-        status: 'timesheet-ready',
-        amount: 240,
-        hours: 16,
-        lastActionDate: '07.07.2026',
-        periodLabel: 'Juli 2026',
-        isOverCap: true,
-      },
-    ],
-  },
-  {
-    id: 'v26',
-    name: 'Arne Haas',
-    initials: 'AH',
-    pauschale: 'uebungleiter',
-    usedAmount: 1680,
-    totalCap: 3000,
-    documents: [
-      {
-        id: 'd47',
-        status: 'contract-active',
-        lastActionDate: '01.02.2026',
-        periodLabel: '2026',
-      },
-      {
-        id: 'd48',
-        status: 'timesheet-signing-super',
-        amount: 360,
-        hours: 24,
-        lastActionDate: '06.07.2026',
-        periodLabel: 'Juli 2026',
-      },
-    ],
-  },
-  {
-    id: 'v27',
-    name: 'Birgit Köhler',
-    initials: 'BK',
-    pauschale: 'uebungleiter',
-    usedAmount: 720,
-    totalCap: 3000,
-    documents: [
-      {
-        id: 'd49',
-        status: 'contract-active',
-        lastActionDate: '01.01.2026',
-        periodLabel: '2026',
-      },
-      {
-        id: 'd50',
-        status: 'timesheet-signing-vol',
-        amount: 240,
-        hours: 16,
-        lastActionDate: '03.07.2026',
-        periodLabel: 'Juli 2026',
-      },
-    ],
-  },
-  {
-    id: 'v28',
-    name: 'Carsten Schulze',
-    initials: 'CS',
-    pauschale: 'uebungleiter',
-    usedAmount: 2160,
-    totalCap: 3000,
-    documents: [
-      {
-        id: 'd51',
-        status: 'contract-active',
-        lastActionDate: '01.01.2026',
-        periodLabel: '2026',
-      },
-      {
-        id: 'd52',
-        status: 'timesheet-ready',
-        amount: 480,
-        hours: 32,
-        lastActionDate: '04.07.2026',
-        periodLabel: 'Juli 2026',
-      },
-      {
-        id: 'd139',
-        status: 'timesheet-ready',
-        amount: 360,
-        hours: 24,
-        lastActionDate: '28.06.2026',
-        periodLabel: 'Juni 2026',
-      },
-      {
-        id: 'd140',
-        status: 'timesheet-ready',
-        amount: 360,
-        hours: 24,
-        lastActionDate: '30.05.2026',
-        periodLabel: 'Mai 2026',
-      },
-      {
-        id: 'd141',
-        status: 'timesheet-ready',
-        amount: 360,
-        hours: 24,
-        lastActionDate: '29.04.2026',
-        periodLabel: 'April 2026',
-      },
-      {
-        id: 'd142',
-        status: 'timesheet-ready',
-        amount: 360,
-        hours: 24,
-        lastActionDate: '28.03.2026',
-        periodLabel: 'März 2026',
-      },
-      {
-        id: 'd143',
-        status: 'timesheet-ready',
-        amount: 240,
-        hours: 16,
-        lastActionDate: '27.02.2026',
-        periodLabel: 'Februar 2026',
-      },
-    ],
-  },
-  {
-    id: 'v29',
-    name: 'Diana Maier',
-    initials: 'DM',
-    pauschale: 'uebungleiter',
-    usedAmount: 360,
-    totalCap: 3000,
-    documents: [
-      {
-        id: 'd53',
-        status: 'contract-active',
-        lastActionDate: '01.01.2026',
-        periodLabel: '2026',
-      },
-      {
-        id: 'd54',
-        status: 'timesheet-generate',
-        amount: 120,
-        hours: 8,
-        lastActionDate: '07.07.2026',
-        periodLabel: 'Juli 2026',
-      },
-    ],
-  },
-  {
-    id: 'v30',
-    name: 'Erik Günther',
-    initials: 'EG',
-    pauschale: 'uebungleiter',
-    usedAmount: 1080,
-    totalCap: 3000,
-    documents: [
-      {
-        id: 'd55',
-        status: 'contract-active',
-        lastActionDate: '01.04.2026',
-        periodLabel: '2026',
-      },
-      {
-        id: 'd56',
-        status: 'timesheet-signing-vol',
-        amount: 360,
-        hours: 24,
-        lastActionDate: '01.07.2026',
-        periodLabel: 'Juli 2026',
-      },
-      {
-        id: 'd57',
-        status: 'timesheet-ready',
-        amount: 360,
-        hours: 24,
-        lastActionDate: '25.06.2026',
-        periodLabel: 'Juni 2026',
-      },
-    ],
-  },
-  // ── 31–40: dual pauschale ──────────────────────────────────────────────────
-  {
-    id: 'v31',
-    name: 'Franziska Möller',
-    initials: 'FM',
-    pauschale: 'ehrenamt',
-    usedAmount: 420,
-    totalCap: 840,
-    limits: {
-      ehrenamt: { used: 420, total: 840 },
-      uebungleiter: { used: 1200, total: 3000 },
-    },
-    documents: [
-      {
-        id: 'd58',
-        status: 'contract-active',
-        lastActionDate: '01.01.2026',
-        periodLabel: '2026',
-        pauschale: 'ehrenamt',
-      },
-      {
-        id: 'd59',
-        status: 'contract-active',
-        lastActionDate: '01.01.2026',
-        periodLabel: '2026',
-        pauschale: 'uebungleiter',
-      },
-      {
-        id: 'd60',
-        status: 'timesheet-ready',
-        amount: 120,
-        hours: 8,
-        lastActionDate: '07.07.2026',
-        periodLabel: 'Juli 2026',
-        pauschale: 'ehrenamt',
-      },
-      {
-        id: 'd61',
-        status: 'timesheet-signing-vol',
-        amount: 360,
-        hours: 24,
-        lastActionDate: '04.07.2026',
-        periodLabel: 'Juli 2026',
-        pauschale: 'uebungleiter',
-      },
-    ],
-  },
-  {
-    id: 'v32',
-    name: 'Georg Schäfer',
-    initials: 'GS',
-    pauschale: 'ehrenamt',
-    usedAmount: 300,
-    totalCap: 840,
-    limits: {
-      ehrenamt: { used: 300, total: 840 },
-      uebungleiter: { used: 600, total: 3000 },
-    },
-    documents: [
-      {
-        id: 'd62',
-        status: 'contract-active',
-        lastActionDate: '01.01.2026',
-        periodLabel: '2026',
-        pauschale: 'ehrenamt',
-      },
-      {
-        id: 'd160',
-        status: 'contract-active',
-        lastActionDate: '01.01.2026',
-        periodLabel: '2026',
-        pauschale: 'uebungleiter',
-      },
-      {
-        id: 'd63',
-        status: 'timesheet-generate',
-        amount: 240,
-        hours: 16,
-        lastActionDate: '07.07.2026',
-        periodLabel: 'Juli 2026',
-        pauschale: 'uebungleiter',
-      },
-    ],
-  },
-  {
-    id: 'v33',
-    name: 'Hannah Kaiser',
-    initials: 'HK',
-    pauschale: 'uebungleiter',
-    usedAmount: 1440,
-    totalCap: 3000,
-    limits: {
-      ehrenamt: { used: 600, total: 840 },
-      uebungleiter: { used: 1440, total: 3000 },
-    },
-    documents: [
-      {
-        id: 'd64',
-        status: 'contract-active',
-        lastActionDate: '01.01.2026',
-        periodLabel: '2026',
-        pauschale: 'ehrenamt',
-      },
-      {
-        id: 'd65',
-        status: 'contract-active',
-        lastActionDate: '01.01.2026',
-        periodLabel: '2026',
-        pauschale: 'uebungleiter',
-      },
-      {
-        id: 'd66',
-        status: 'timesheet-signing-super',
-        amount: 120,
-        hours: 8,
-        lastActionDate: '02.07.2026',
-        periodLabel: 'Juli 2026',
-        pauschale: 'ehrenamt',
-      },
-      {
-        id: 'd67',
-        status: 'timesheet-ready',
-        amount: 480,
-        hours: 32,
-        lastActionDate: '05.07.2026',
-        periodLabel: 'Juli 2026',
-        pauschale: 'uebungleiter',
-      },
-      {
-        id: 'd144',
-        status: 'timesheet-ready',
-        amount: 120,
-        hours: 8,
-        lastActionDate: '28.06.2026',
-        periodLabel: 'Juni 2026',
-        pauschale: 'ehrenamt',
-      },
-      {
-        id: 'd145',
-        status: 'timesheet-ready',
-        amount: 480,
-        hours: 32,
-        lastActionDate: '28.06.2026',
-        periodLabel: 'Juni 2026',
-        pauschale: 'uebungleiter',
-      },
-      {
-        id: 'd146',
-        status: 'timesheet-ready',
-        amount: 120,
-        hours: 8,
-        lastActionDate: '30.05.2026',
-        periodLabel: 'Mai 2026',
-        pauschale: 'ehrenamt',
-      },
-      {
-        id: 'd147',
-        status: 'timesheet-ready',
-        amount: 480,
-        hours: 32,
-        lastActionDate: '30.05.2026',
-        periodLabel: 'Mai 2026',
-        pauschale: 'uebungleiter',
-      },
-      {
-        id: 'd148',
-        status: 'timesheet-ready',
-        amount: 120,
-        hours: 8,
-        lastActionDate: '29.04.2026',
-        periodLabel: 'April 2026',
-        pauschale: 'ehrenamt',
-      },
-      {
-        id: 'd149',
-        status: 'timesheet-ready',
-        amount: 120,
-        hours: 8,
-        lastActionDate: '28.03.2026',
-        periodLabel: 'März 2026',
-        pauschale: 'ehrenamt',
-      },
-      {
-        id: 'd150',
-        status: 'timesheet-ready',
-        amount: 120,
-        hours: 8,
-        lastActionDate: '27.02.2026',
-        periodLabel: 'Februar 2026',
-        pauschale: 'ehrenamt',
-      },
-    ],
-  },
-  {
-    id: 'v34',
-    name: 'Ingo Brandt',
-    initials: 'IB',
-    pauschale: 'ehrenamt',
-    usedAmount: 360,
-    totalCap: 840,
-    limits: {
-      ehrenamt: { used: 360, total: 840 },
-      uebungleiter: { used: 1200, total: 3000 },
-    },
-    documents: [
-      {
-        id: 'd153',
-        status: 'contract-active',
-        lastActionDate: '01.01.2026',
-        periodLabel: '2026',
-        pauschale: 'ehrenamt',
-      },
-      {
-        id: 'd154',
-        status: 'contract-active',
-        lastActionDate: '01.01.2026',
-        periodLabel: '2026',
-        pauschale: 'uebungleiter',
-      },
-      {
-        id: 'd68',
-        status: 'timesheet-generate',
-        amount: 60,
-        hours: 4,
-        lastActionDate: '07.07.2026',
-        periodLabel: 'Juli 2026',
-        pauschale: 'ehrenamt',
-      },
-      {
-        id: 'd69',
-        status: 'timesheet-signing-vol',
-        amount: 240,
-        hours: 16,
-        lastActionDate: '03.07.2026',
-        periodLabel: 'Juli 2026',
-        pauschale: 'uebungleiter',
-      },
-    ],
-  },
-  {
-    id: 'v35',
-    name: 'Julia Vogt',
-    initials: 'JV',
-    pauschale: 'ehrenamt',
-    usedAmount: 180,
-    totalCap: 840,
-    limits: {
-      ehrenamt: { used: 180, total: 840 },
-      uebungleiter: { used: 900, total: 3000 },
-    },
-    documents: [
-      {
-        id: 'd70',
-        status: 'contract-signing-vol',
-        lastActionDate: '06.07.2026',
-        periodLabel: '2026',
-        pauschale: 'ehrenamt',
-      },
-      {
-        id: 'd71',
-        status: 'contract-signing-coord',
-        lastActionDate: '07.07.2026',
-        periodLabel: '2026',
-        pauschale: 'uebungleiter',
-      },
-    ],
-  },
-  {
-    id: 'v36',
-    name: 'Klaus Sommer',
-    initials: 'KS',
-    pauschale: 'uebungleiter',
-    usedAmount: 1500,
-    totalCap: 3000,
-    limits: {
-      ehrenamt: { used: 480, total: 840 },
-      uebungleiter: { used: 1500, total: 3000 },
-    },
-    documents: [
-      {
-        id: 'd72',
-        status: 'contract-active',
-        lastActionDate: '01.01.2026',
-        periodLabel: '2026',
-        pauschale: 'ehrenamt',
-      },
-      {
-        id: 'd73',
-        status: 'contract-active',
-        lastActionDate: '01.01.2026',
-        periodLabel: '2026',
-        pauschale: 'uebungleiter',
-      },
-      {
-        id: 'd74',
-        status: 'timesheet-ready',
-        amount: 120,
-        hours: 8,
-        lastActionDate: '01.07.2026',
-        periodLabel: 'Juli 2026',
-        pauschale: 'ehrenamt',
-      },
-      {
-        id: 'd75',
-        status: 'timesheet-signing-super',
-        amount: 480,
-        hours: 32,
-        lastActionDate: '04.07.2026',
-        periodLabel: 'Juli 2026',
-        pauschale: 'uebungleiter',
-      },
-    ],
-  },
-  {
-    id: 'v37',
-    name: 'Laura Kühn',
-    initials: 'LK2',
-    pauschale: 'ehrenamt',
-    usedAmount: 540,
-    totalCap: 840,
-    limits: {
-      ehrenamt: { used: 540, total: 840 },
-      uebungleiter: { used: 1560, total: 3000 },
-    },
-    documents: [
-      {
-        id: 'd76',
-        status: 'contract-active',
-        lastActionDate: '01.02.2026',
-        periodLabel: '2026',
-        pauschale: 'ehrenamt',
-      },
-      {
-        id: 'd161',
-        status: 'contract-active',
-        lastActionDate: '01.01.2026',
-        periodLabel: '2026',
-        pauschale: 'uebungleiter',
-      },
-      {
-        id: 'd77',
-        status: 'timesheet-generate',
-        amount: 180,
-        hours: 12,
-        lastActionDate: '07.07.2026',
-        periodLabel: 'Juli 2026',
-        pauschale: 'ehrenamt',
-      },
-      {
-        id: 'd78',
-        status: 'timesheet-signing-vol',
-        amount: 360,
-        hours: 24,
-        lastActionDate: '05.07.2026',
-        periodLabel: 'Juli 2026',
-        pauschale: 'uebungleiter',
-      },
-    ],
-  },
-  {
-    id: 'v38',
-    name: 'Markus Berg',
-    initials: 'MB',
-    pauschale: 'ehrenamt',
-    usedAmount: 60,
-    totalCap: 840,
-    limits: {
-      ehrenamt: { used: 60, total: 840 },
-      uebungleiter: { used: 240, total: 3000 },
-    },
-    documents: [
-      {
-        id: 'd155',
-        status: 'contract-active',
-        lastActionDate: '01.01.2026',
-        periodLabel: '2026',
-        pauschale: 'ehrenamt',
-      },
-      {
-        id: 'd156',
-        status: 'contract-active',
-        lastActionDate: '01.01.2026',
-        periodLabel: '2026',
-        pauschale: 'uebungleiter',
-      },
-      {
-        id: 'd79',
-        status: 'timesheet-generate',
-        amount: 60,
-        hours: 4,
-        lastActionDate: '07.07.2026',
-        periodLabel: 'Juli 2026',
-        pauschale: 'ehrenamt',
-      },
-      {
-        id: 'd80',
-        status: 'timesheet-signing-super',
-        amount: 240,
-        hours: 16,
-        lastActionDate: '06.07.2026',
-        periodLabel: 'Juli 2026',
-        pauschale: 'uebungleiter',
-      },
-    ],
-  },
-  {
-    id: 'v39',
-    name: 'Nicole Fuchs',
-    initials: 'NF',
-    pauschale: 'ehrenamt',
-    usedAmount: 400,
-    totalCap: 840,
-    limits: {
-      ehrenamt: { used: 400, total: 840 },
-      uebungleiter: { used: 800, total: 3000 },
-    },
-    documents: [
-      {
-        id: 'd81',
-        status: 'contract-signing-vol',
-        lastActionDate: '04.07.2026',
-        periodLabel: '2026',
-        pauschale: 'ehrenamt',
-      },
-      {
-        id: 'd82',
-        status: 'contract-generate',
-        lastActionDate: '05.07.2026',
-        periodLabel: '2026',
-        pauschale: 'uebungleiter',
-      },
-    ],
-  },
-  {
-    id: 'v40',
-    name: 'Oliver Peters',
-    initials: 'OP',
-    pauschale: 'uebungleiter',
-    usedAmount: 1320,
-    totalCap: 3000,
-    limits: {
-      ehrenamt: { used: 660, total: 840 },
-      uebungleiter: { used: 1320, total: 3000 },
-    },
-    documents: [
-      {
-        id: 'd83',
-        status: 'contract-active',
-        lastActionDate: '01.01.2026',
-        periodLabel: '2026',
-        pauschale: 'ehrenamt',
-      },
-      {
-        id: 'd84',
-        status: 'contract-active',
-        lastActionDate: '01.01.2026',
-        periodLabel: '2026',
-        pauschale: 'uebungleiter',
-      },
-      {
-        id: 'd85',
-        status: 'timesheet-ready',
-        amount: 120,
-        hours: 8,
-        lastActionDate: '07.07.2026',
-        periodLabel: 'Juli 2026',
-        pauschale: 'ehrenamt',
-      },
-      {
-        id: 'd86',
-        status: 'timesheet-generate',
-        amount: 360,
-        hours: 24,
-        lastActionDate: '05.07.2026',
-        periodLabel: 'Juli 2026',
-        pauschale: 'uebungleiter',
-      },
-    ],
-  },
-  // ── 41–50: additional mix ─────────────────────────────────────────────────
-  {
-    id: 'v41',
-    name: 'Patricia Roth',
-    initials: 'PR',
-    pauschale: 'ehrenamt',
-    usedAmount: 360,
-    totalCap: 840,
-    documents: [
-      {
-        id: 'd87',
-        status: 'contract-active',
-        lastActionDate: '01.01.2026',
-        periodLabel: '2026',
-      },
-      {
-        id: 'd88',
-        status: 'timesheet-signing-vol',
-        amount: 60,
-        hours: 4,
-        lastActionDate: '07.07.2026',
-        periodLabel: 'Juli 2026',
-      },
-    ],
-  },
-  {
-    id: 'v42',
-    name: 'Quentin Hahn',
-    initials: 'QH',
-    pauschale: 'uebungleiter',
-    usedAmount: 2880,
-    totalCap: 3000,
-    documents: [
-      {
-        id: 'd89',
-        status: 'contract-active',
-        lastActionDate: '01.01.2026',
-        periodLabel: '2026',
-      },
-      {
-        id: 'd90',
-        status: 'timesheet-signing-super',
-        amount: 480,
-        hours: 32,
-        lastActionDate: '03.07.2026',
-        periodLabel: 'Juli 2026',
-      },
-    ],
-  },
-  {
-    id: 'v43',
-    name: 'Rosa Herrmann',
-    initials: 'RH',
-    pauschale: 'ehrenamt',
-    usedAmount: 120,
-    totalCap: 840,
-    documents: [
-      {
-        id: 'd91',
-        status: 'timesheet-ready',
-        amount: 120,
-        hours: 8,
-        lastActionDate: '30.06.2026',
-        periodLabel: 'Juni 2026',
-      },
-      {
-        id: 'd92',
-        status: 'contract-generate',
-        lastActionDate: '06.07.2026',
-        periodLabel: '2026',
-      },
-    ],
-  },
-  {
-    id: 'v44',
-    name: 'Sabine Berger',
-    initials: 'SB',
-    pauschale: 'uebungleiter',
-    usedAmount: 840,
-    totalCap: 3000,
-    documents: [
-      {
-        id: 'd93',
-        status: 'contract-active',
-        lastActionDate: '01.03.2026',
-        periodLabel: '2026',
-      },
-      {
-        id: 'd94',
-        status: 'timesheet-generate',
-        amount: 240,
-        hours: 16,
-        lastActionDate: '04.07.2026',
-        periodLabel: 'Juli 2026',
-      },
-      {
-        id: 'd95',
-        status: 'timesheet-ready',
-        amount: 360,
-        hours: 24,
-        lastActionDate: '20.06.2026',
-        periodLabel: 'Juni 2026',
-      },
-    ],
-  },
-  {
-    id: 'v45',
-    name: 'Thomas Förster',
-    initials: 'TF',
-    pauschale: 'ehrenamt',
-    usedAmount: 440,
-    totalCap: 840,
-    documents: [
-      {
-        id: 'd96',
-        status: 'contract-active',
-        lastActionDate: '01.01.2026',
-        periodLabel: '2026',
-      },
-      {
-        id: 'd97',
-        status: 'timesheet-signing-super',
-        amount: 180,
-        hours: 12,
-        lastActionDate: '02.07.2026',
-        periodLabel: 'Juli 2026',
-      },
-    ],
-  },
-  {
-    id: 'v46',
-    name: 'Ursula Hartmann',
-    initials: 'UH',
-    pauschale: 'uebungleiter',
-    usedAmount: 1560,
-    totalCap: 3000,
-    documents: [
-      {
-        id: 'd98',
-        status: 'contract-active',
-        lastActionDate: '01.01.2026',
-        periodLabel: '2026',
-      },
-      {
-        id: 'd99',
-        status: 'timesheet-signing-vol',
-        amount: 480,
-        hours: 32,
-        lastActionDate: '01.07.2026',
-        periodLabel: 'Juli 2026',
-      },
-    ],
-  },
-  {
-    id: 'v47',
-    name: 'Volker Sauer',
-    initials: 'VoS',
-    pauschale: 'ehrenamt',
-    usedAmount: 60,
-    totalCap: 840,
-    documents: [
-      {
-        id: 'd157',
-        status: 'contract-active',
-        lastActionDate: '01.01.2026',
-        periodLabel: '2026',
-      },
-      {
-        id: 'd100',
-        status: 'timesheet-generate',
-        amount: 60,
-        hours: 4,
-        lastActionDate: '07.07.2026',
-        periodLabel: 'Juli 2026',
-      },
-    ],
-  },
-  {
-    id: 'v48',
-    name: 'Walter Steinbach',
-    initials: 'WS',
-    pauschale: 'uebungleiter',
-    usedAmount: 1400,
-    totalCap: 3000,
-    documents: [
-      {
-        id: 'd101',
-        status: 'contract-active',
-        lastActionDate: '01.01.2026',
-        periodLabel: '2026',
-      },
-      {
-        id: 'd102',
-        status: 'timesheet-ready',
-        amount: 360,
-        hours: 24,
-        lastActionDate: '06.07.2026',
-        periodLabel: 'Juli 2026',
-      },
-      {
-        id: 'd103',
-        status: 'timesheet-signing-super',
-        amount: 360,
-        hours: 24,
-        lastActionDate: '10.06.2026',
-        periodLabel: 'Juni 2026',
-      },
-    ],
-  },
-  {
-    id: 'v49',
-    name: 'Xenia Böhm',
-    initials: 'XB',
-    pauschale: 'ehrenamt',
-    usedAmount: 320,
-    totalCap: 840,
-    documents: [
-      {
-        id: 'd104',
-        status: 'contract-active',
-        lastActionDate: '01.01.2026',
-        periodLabel: '2026',
-      },
-      {
-        id: 'd105',
-        status: 'timesheet-ready',
-        amount: 120,
-        hours: 8,
-        lastActionDate: '25.06.2026',
-        periodLabel: 'Juni 2026',
-      },
-    ],
-  },
-  {
-    id: 'v50',
-    name: 'Yvette Pohl',
-    initials: 'YP',
-    pauschale: 'uebungleiter',
-    usedAmount: 720,
-    totalCap: 3000,
-    documents: [
-      {
-        id: 'd106',
-        status: 'contract-active',
-        lastActionDate: '01.01.2026',
-        periodLabel: '2026',
-      },
-      {
-        id: 'd107',
-        status: 'timesheet-signing-vol',
-        amount: 240,
-        hours: 16,
-        lastActionDate: '07.07.2026',
-        periodLabel: 'Juli 2026',
-      },
-    ],
-  },
-  // ── 51: override path — paid shift happened before the contract gate closed.
-  // Eligible hours surface as a muted timesheet; the invariant (any timesheet,
-  // muted or not, implies a contract row) is satisfied here by the paired
-  // contract-missing placeholder, not a real contract-generate.
-  {
-    id: 'v51',
-    name: 'Yannick Dorn',
-    initials: 'YD',
-    pauschale: 'ehrenamt',
     usedAmount: 90,
     totalCap: 840,
+    limits: {
+      ehrenamt: { used: 90, total: 840 },
+      uebungleiter: { used: 2700, total: 3000 },
+    },
     documents: [
-      { id: 'd158', status: 'contract-missing', periodLabel: '2026' },
       {
-        id: 'd159',
+        id: 'd10',
+        status: 'contract-active',
+        lastActionDate: '01.01.2026',
+        periodLabel: '2026',
+        pauschale: 'uebungleiter',
+      },
+      {
+        id: 'd11',
+        status: 'contract-missing',
+        periodLabel: '2026',
+        pauschale: 'ehrenamt',
+      },
+      {
+        id: 'd12',
         status: 'timesheet-muted',
         amount: 90,
         hours: 6,
         lastActionDate: '05.07.2026',
         periodLabel: 'Juli 2026',
+        pauschale: 'ehrenamt',
+      },
+      {
+        id: 'd13',
+        status: 'timesheet-ready',
+        amount: 360,
+        hours: 24,
+        lastActionDate: '07.07.2026',
+        periodLabel: 'Juli 2026',
+        pauschale: 'uebungleiter',
+        isOverCap: true,
       },
     ],
   },
@@ -2300,52 +726,22 @@ function FilterTile({
   );
 }
 
-// ─── PeriodPresetButton (checkmark on select, per the single-select convention) ─
-
-interface PeriodPresetButtonProps {
-  label: string;
-  selected: boolean;
-  onClick: () => void;
-}
-
-function PeriodPresetButton({
-  label,
-  selected,
-  onClick,
-}: PeriodPresetButtonProps) {
-  return (
-    <Button
-      size="sm"
-      variant="outline"
-      className={cn(
-        'flex-1 gap-1.5',
-        selected &&
-          'bg-foreground text-background border-foreground hover:bg-foreground/90',
-      )}
-      onClick={onClick}
-    >
-      {selected && <CheckIcon size={14} />}
-      {label}
-    </Button>
-  );
-}
-
 // ─── ReimbursementsBoard ──────────────────────────────────────────────────────
 
 interface ReimbursementsBoardProps {
   orgUId: string;
+  /** Owned by the page header now (same row as the title) — see reimbursements-page-header.tsx. */
+  dateRange: DateRange | undefined;
+  /** Fired when the "Ready to go" tile is selected — the page header narrows its own range to this month. */
+  onReadyToGoSelected: () => void;
 }
 
-export function ReimbursementsBoard({ orgUId }: ReimbursementsBoardProps) {
+export function ReimbursementsBoard({
+  orgUId,
+  dateRange,
+  onReadyToGoSelected,
+}: ReimbursementsBoardProps) {
   const t = useTranslations('Accounting.reimbursements');
-
-  // Period picker — defaults to "all time" (no range = any document at any time)
-  const [datePreset, setDatePreset] = useState<DatePreset>('all-time');
-  const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
-  const [pendingRange, setPendingRange] = useState<DateRange | undefined>(
-    dateRange,
-  );
-  const [periodOpen, setPeriodOpen] = useState(false);
 
   // Filters
   const [activeTile, setActiveTile] = useState<TileFilter>(null);
@@ -2376,13 +772,14 @@ export function ReimbursementsBoard({ orgUId }: ReimbursementsBoardProps) {
   const [invoiceCreationTarget, setInvoiceCreationTarget] =
     useState<DocVolPair | null>(null);
 
-  // In-session status overrides (e.g. flipping a row to contract-signing-vol after send) layered onto the static mock data
-  const [docStatusOverrides, setDocStatusOverrides] = useState<
-    Record<string, DocStatus>
-  >({});
+  // In-session overrides (e.g. flipping a row to contract-signing-vol after
+  // send, or to declined with its reason) layered onto the static mock data
+  const [docOverrides, setDocOverrides] = useState<Record<string, DocOverride>>(
+    {},
+  );
   const volunteers = useMemo(
-    () => applyDocStatusOverrides(MOCK_VOLUNTEERS, docStatusOverrides),
-    [docStatusOverrides],
+    () => applyDocStatusOverrides(MOCK_VOLUNTEERS, docOverrides),
+    [docOverrides],
   );
 
   // Fake success feedback — no mutation is actually wired yet, but every
@@ -2402,8 +799,22 @@ export function ReimbursementsBoard({ orgUId }: ReimbursementsBoardProps) {
 
   function requestAction(items: DocVolPair[], action: NonCompliantAction) {
     const single = items.length === 1 ? items[0] : undefined;
-    if (action === 'create' && single?.doc.status === 'contract-generate') {
+    // Reissuing a declined document goes through the same creation modal as
+    // a fresh contract/timesheet — declined is a dead end, not a resumable state.
+    if (
+      action === 'create' &&
+      (single?.doc.status === 'contract-generate' ||
+        single?.doc.status === 'contract-declined')
+    ) {
       setContractCreationTarget(single);
+      return;
+    }
+    if (
+      action === 'create' &&
+      (single?.doc.status === 'timesheet-generate' ||
+        single?.doc.status === 'timesheet-declined')
+    ) {
+      setInvoiceCreationTarget(single);
       return;
     }
 
@@ -2412,10 +823,6 @@ export function ReimbursementsBoard({ orgUId }: ReimbursementsBoardProps) {
     );
 
     if (nonCompliant.length === 0) {
-      if (action === 'create' && single?.doc.status === 'timesheet-generate') {
-        setInvoiceCreationTarget(single);
-        return;
-      }
       // action handler — wired to mutations in production
       showActionToast(action, items.length, single?.vol.name);
       return;
@@ -2521,57 +928,8 @@ export function ReimbursementsBoard({ orgUId }: ReimbursementsBoardProps) {
     });
   }
 
-  // Period handlers
-  function handleThisMonth() {
-    const now = new Date();
-    const range: DateRange = {
-      from: new Date(now.getFullYear(), now.getMonth(), 1),
-      to: new Date(now.getFullYear(), now.getMonth() + 1, 0),
-    };
-    setDateRange(range);
-    setPendingRange(range);
-    setDatePreset('this-month');
-    setPeriodOpen(false);
-  }
-
-  function handleLastMonth() {
-    const now = new Date();
-    const range: DateRange = {
-      from: new Date(now.getFullYear(), now.getMonth() - 1, 1),
-      to: new Date(now.getFullYear(), now.getMonth(), 0),
-    };
-    setDateRange(range);
-    setPendingRange(range);
-    setDatePreset('last-month');
-    setPeriodOpen(false);
-  }
-
-  function handleAllTime() {
-    setDateRange(undefined);
-    setPendingRange(undefined);
-    setDatePreset('all-time');
-    setPeriodOpen(false);
-  }
-
-  function handleApply() {
-    if (pendingRange?.from) {
-      setDateRange(pendingRange);
-      setDatePreset(null);
-      setPeriodOpen(false);
-    }
-  }
-
   // Derived for DocumentSheet
   const selectedDate = dateRange?.from ?? new Date();
-
-  const periodButtonLabel =
-    datePreset === 'all-time'
-      ? t('periodPicker.allTime')
-      : datePreset === 'this-month'
-        ? t('periodPicker.thisMonth')
-        : datePreset === 'last-month'
-          ? t('periodPicker.lastMonth')
-          : t('periodPicker.customPeriod');
 
   const tileLabels: Record<Exclude<TileFilter, null>, string> = {
     'contract-generate': t('tiles.contractGenerate'),
@@ -2676,7 +1034,7 @@ export function ReimbursementsBoard({ orgUId }: ReimbursementsBoardProps) {
       // Ready-to-go is a bundle-and-send-now action — auto-narrow to this
       // month so the list defaults to what's actually due, not the whole
       // history.
-      if (next === 'ready-to-go') handleThisMonth();
+      if (next === 'ready-to-go') onReadyToGoSelected();
       return next;
     });
   }
@@ -2732,23 +1090,47 @@ export function ReimbursementsBoard({ orgUId }: ReimbursementsBoardProps) {
   );
 
   function handleContractSent(docId: string) {
-    setDocStatusOverrides((prev) => ({
+    setDocOverrides((prev) => ({
       ...prev,
-      [docId]: 'contract-signing-vol',
+      [docId]: { status: 'contract-signing-vol' },
     }));
   }
 
   function handleInvoiceSent(docId: string) {
-    setDocStatusOverrides((prev) => ({
+    setDocOverrides((prev) => ({
       ...prev,
-      [docId]: 'timesheet-signing-vol',
+      [docId]: { status: 'timesheet-signing-vol' },
     }));
+  }
+
+  // Supervisor decline on a pending timesheet countersign — the only live
+  // decline trigger wired up so far (see decline-reason-dialog.tsx).
+  function handleDecline(
+    doc: BoardDocument,
+    vol: BoardVolunteer,
+    reason: string,
+  ) {
+    const declinedStatus: DocStatus = doc.status.startsWith('contract')
+      ? 'contract-declined'
+      : 'timesheet-declined';
+    setDocOverrides((prev) => ({
+      ...prev,
+      [doc.id]: {
+        status: declinedStatus,
+        declineReason: reason,
+        // Matches the mock supervisor actor used in reimbursements-document-sheet.tsx.
+        declinedBy: 'Markus Kassier',
+        declinedAt: new Date().toLocaleDateString('de-DE'),
+        declinedAtRole: 'supervisor',
+      },
+    }));
+    toast.success(t('docs.declineDialog.toast', { name: vol.name }));
   }
 
   // Undoes every in-session mock-data mutation (status overrides from sent
   // contracts/invoices) — a testing convenience, not a real reset endpoint.
   function handleResetPrototype() {
-    setDocStatusOverrides({});
+    setDocOverrides({});
     setSelectedDocIds(new Set());
     toast.success(t('resetPrototypeToast'));
   }
@@ -2775,7 +1157,10 @@ export function ReimbursementsBoard({ orgUId }: ReimbursementsBoardProps) {
               label={tileLabels[id]}
               count={tileCounts[id]}
               actionableCount={
-                id === 'contract-signing' || id === 'timesheet-signing'
+                id === 'contract-generate' ||
+                id === 'timesheet-generate' ||
+                id === 'contract-signing' ||
+                id === 'timesheet-signing'
                   ? tileActionableCounts[id]
                   : undefined
               }
@@ -2849,60 +1234,6 @@ export function ReimbursementsBoard({ orgUId }: ReimbursementsBoardProps) {
             <SelectItem value="newest">{t('toolbar.sortNewest')}</SelectItem>
           </SelectContent>
         </Select>
-
-        {/* Period picker — right-aligned */}
-        <Popover
-          open={periodOpen}
-          onOpenChange={(open) => {
-            if (open) setPendingRange(dateRange);
-            setPeriodOpen(open);
-          }}
-        >
-          <PopoverTrigger asChild>
-            <Button variant="outline" className="h-10 gap-2 shrink-0">
-              <CalendarIcon size={14} />
-              {periodButtonLabel}
-            </Button>
-          </PopoverTrigger>
-          {/* Width pinned to the calendar's own rendered size (7 cols × --cell-size + p-3), not the default w-72 — otherwise the calendar sits flush-left in a wider box with dead space on the right. */}
-          <PopoverContent className="p-0 w-[248px]" align="end">
-            <div className="flex flex-wrap gap-2 p-3 border-b border-border">
-              <PeriodPresetButton
-                label={t('periodPicker.allTime')}
-                selected={datePreset === 'all-time'}
-                onClick={handleAllTime}
-              />
-              <PeriodPresetButton
-                label={t('periodPicker.thisMonth')}
-                selected={datePreset === 'this-month'}
-                onClick={handleThisMonth}
-              />
-              <PeriodPresetButton
-                label={t('periodPicker.lastMonth')}
-                selected={datePreset === 'last-month'}
-                onClick={handleLastMonth}
-              />
-            </div>
-            <Calendar
-              mode="range"
-              selected={pendingRange}
-              onSelect={setPendingRange}
-              captionLayout="dropdown"
-              startMonth={new Date(2024, 0)}
-              endMonth={new Date(2028, 11)}
-            />
-            <div className="border-t border-border p-3">
-              <Button
-                size="sm"
-                className="w-full"
-                disabled={!pendingRange?.from}
-                onClick={handleApply}
-              >
-                {t('periodPicker.apply')}
-              </Button>
-            </div>
-          </PopoverContent>
-        </Popover>
       </div>
 
       {/* Table / empty state */}
@@ -2963,6 +1294,7 @@ export function ReimbursementsBoard({ orgUId }: ReimbursementsBoardProps) {
           if (!open) setSelectedDoc(null);
         }}
         onRequestAction={requestAction}
+        onDecline={handleDecline}
         selectedDate={selectedDate}
         orgUId={orgUId}
       />

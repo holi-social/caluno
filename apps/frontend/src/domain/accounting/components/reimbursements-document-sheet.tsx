@@ -21,12 +21,15 @@ import {
   DownloadIcon,
   EyeIcon,
   TriangleAlertIcon,
+  XIcon,
 } from 'lucide-react';
 import Link from 'next/link';
 import { useTranslations } from 'next-intl';
+import { useState } from 'react';
 import { toast } from 'sonner';
 import { formatEuro } from '@/lib/formatting/formats';
 import { AlertIconTooltip } from './alert-icon-tooltip';
+import { DeclineReasonDialog } from './decline-reason-dialog';
 import type { PauschalenType } from './doc-type-header';
 import { getPauschaleKey, TYPE_COLOR } from './doc-type-header';
 import { LimitHeadroomBar } from './limit-headroom-bar';
@@ -42,7 +45,7 @@ import type { Signee, SigneeRole } from './template/types';
 
 // ─── Pipeline step definitions ────────────────────────────────────────────────
 
-type StepState = 'done' | 'active' | 'pending';
+type StepState = 'done' | 'active' | 'pending' | 'declined';
 
 interface PipelineStep {
   labelKey: string;
@@ -85,14 +88,56 @@ function signeeActorName(signee: Signee, volunteerName: string): string {
   return MOCK_STAFF_ACTORS[signee.role];
 }
 
+/** Which seat in the signing chain declined — everything after this point never rendered as a step. */
+function getDeclinedStepIdx(
+  signees: Signee[],
+  declinedAtRole: SigneeRole | undefined,
+): number {
+  if (!declinedAtRole) return 0;
+  const pos = signees.findIndex((s) => s.role === declinedAtRole);
+  return pos === -1 ? 0 : pos + 1;
+}
+
 function buildDocSteps(
-  status: DocStatus,
+  doc: BoardDocument,
   signees: Signee[],
   isContract: boolean,
   volunteerName: string,
   t: ReturnType<typeof useTranslations<'Accounting.reimbursements.docs.sheet'>>,
 ): PipelineStep[] {
-  const activeIdx = getActiveStepIdx(status, signees);
+  if (
+    doc.status === 'contract-declined' ||
+    doc.status === 'timesheet-declined'
+  ) {
+    const declinedIdx = getDeclinedStepIdx(signees, doc.declinedAtRole);
+    const steps: PipelineStep[] = [
+      {
+        labelKey: t('pipeline.generate'),
+        actorName: MOCK_STAFF_ACTORS.admin,
+        state: 'done',
+      },
+    ];
+    signees.forEach((signee, i) => {
+      const idx = i + 1;
+      if (idx < declinedIdx) {
+        steps.push({
+          labelKey: t('pipeline.sign'),
+          actorName: signeeActorName(signee, volunteerName),
+          state: 'done',
+        });
+      } else if (idx === declinedIdx) {
+        steps.push({
+          labelKey: t('pipeline.declined'),
+          actorName: signeeActorName(signee, volunteerName),
+          state: 'declined',
+        });
+      }
+      // Steps after the decline point are dropped, not just marked pending.
+    });
+    return steps;
+  }
+
+  const activeIdx = getActiveStepIdx(doc.status, signees);
   const totalSteps = signees.length + 2;
 
   const steps: PipelineStep[] = [];
@@ -154,10 +199,13 @@ function PipelineTracker({ steps }: { steps: PipelineStep[] }) {
                   'bg-primary text-primary-foreground ring-2 ring-offset-1 ring-primary/30',
                 step.state === 'pending' &&
                   'border-2 border-border bg-background text-muted-foreground',
+                step.state === 'declined' && 'bg-alert text-white',
               )}
             >
               {step.state === 'done' ? (
                 <CheckIcon size={12} strokeWidth={3} />
+              ) : step.state === 'declined' ? (
+                <XIcon size={12} strokeWidth={3} />
               ) : (
                 i + 1
               )}
@@ -181,7 +229,9 @@ function PipelineTracker({ steps }: { steps: PipelineStep[] }) {
                   ? 'font-semibold text-primary'
                   : step.state === 'done'
                     ? 'font-medium text-success'
-                    : 'text-muted-foreground',
+                    : step.state === 'declined'
+                      ? 'font-semibold text-alert'
+                      : 'text-muted-foreground',
               )}
             >
               {step.labelKey}
@@ -242,6 +292,16 @@ function buildTimeline(
       return [created, ...signedEntries, activated];
     case 'timesheet-ready':
       return [created, ...signedEntries];
+    case 'contract-declined':
+    case 'timesheet-declined': {
+      const declinedIdx = getDeclinedStepIdx(signees, doc.declinedAtRole);
+      const declined = {
+        label: t('timelineDeclined'),
+        actor: doc.declinedBy ?? '',
+        date: doc.declinedAt ?? '',
+      };
+      return [created, ...signedEntries.slice(0, declinedIdx - 1), declined];
+    }
     default:
       return [created];
   }
@@ -269,6 +329,7 @@ interface DocumentSheetProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onRequestAction: (items: DocVolPair[], action: NonCompliantAction) => void;
+  onDecline: (doc: BoardDocument, vol: BoardVolunteer, reason: string) => void;
   selectedDate: Date;
   orgUId: string;
 }
@@ -280,17 +341,26 @@ export function DocumentSheet({
   open,
   onOpenChange,
   onRequestAction,
+  onDecline,
   selectedDate,
   orgUId,
 }: DocumentSheetProps) {
   const t = useTranslations('Accounting.reimbursements.docs');
   const ts = useTranslations('Accounting.reimbursements.docs.sheet');
   const tSections = useTranslations('Accounting.templates.sections');
+  const [declineDialogOpen, setDeclineDialogOpen] = useState(false);
 
   if (!doc || !vol) return null;
 
   const isContract = doc.status.startsWith('contract');
-  const steps = buildDocSteps(doc.status, signees, isContract, vol.name, ts);
+  const isDeclined =
+    doc.status === 'contract-declined' || doc.status === 'timesheet-declined';
+  const kindLabel = t(
+    `kindLabel.${isContract ? 'contract' : 'timesheet'}` as Parameters<
+      typeof t
+    >[0],
+  );
+  const steps = buildDocSteps(doc, signees, isContract, vol.name, ts);
   const timeline = buildTimeline(doc, signees, vol.name, ts);
 
   const periodLabel = selectedDate.toLocaleDateString('de-DE', {
@@ -399,6 +469,19 @@ export function DocumentSheet({
             </p>
             <PipelineTracker steps={steps} />
           </section>
+
+          {isDeclined && doc.declineReason && (
+            <section>
+              <p className="text-sm font-semibold text-muted-foreground mb-2">
+                {ts('declineReasonTitle')}
+              </p>
+              <div className="rounded-lg border border-border bg-muted/30 p-4">
+                <p className="text-sm text-card-foreground">
+                  {doc.declineReason}
+                </p>
+              </div>
+            </section>
+          )}
 
           <Separator />
 
@@ -603,7 +686,17 @@ export function DocumentSheet({
 
         {/* Footer action — sticky: stays visible without scrolling */}
         <SheetFooter className="px-6 py-4 border-t border-border shrink-0">
-          {actionKey ? (
+          {isDeclined ? (
+            <Button
+              className="w-full"
+              onClick={() => {
+                onRequestAction([{ doc, vol }], 'create');
+                onOpenChange(false);
+              }}
+            >
+              {t('actions.createNew', { docType: kindLabel })}
+            </Button>
+          ) : actionKey ? (
             <div className="flex w-full items-center gap-2">
               {isTimesheetNonCompliant(vol, doc) && (
                 <AlertIconTooltip
@@ -621,6 +714,15 @@ export function DocumentSheet({
               >
                 {t(`actions.${actionKey}` as Parameters<typeof t>[0])}
               </Button>
+              {doc.status === 'timesheet-signing-super' && (
+                <Button
+                  className="flex-1"
+                  variant="outline"
+                  onClick={() => setDeclineDialogOpen(true)}
+                >
+                  {t('actions.decline')}
+                </Button>
+              )}
             </div>
           ) : (
             <p className="text-sm text-muted-foreground text-center w-full">
@@ -629,6 +731,16 @@ export function DocumentSheet({
           )}
         </SheetFooter>
       </SheetContent>
+      <DeclineReasonDialog
+        open={declineDialogOpen}
+        docTypeLabel={kindLabel}
+        onOpenChange={setDeclineDialogOpen}
+        onConfirm={(reason) => {
+          onDecline(doc, vol, reason);
+          setDeclineDialogOpen(false);
+          onOpenChange(false);
+        }}
+      />
     </Sheet>
   );
 }

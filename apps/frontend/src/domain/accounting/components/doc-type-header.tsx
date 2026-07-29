@@ -60,11 +60,11 @@ export function DocTypeHeader({
       >
         <Icon size={18} strokeWidth={2} />
       </div>
-      <div className="min-w-0">
+      <div className="min-w-0 w-full flex-1">
         <p className="text-sm text-muted-foreground leading-none truncate">
           {topLine}
         </p>
-        <p className="text-base font-bold text-card-foreground leading-snug truncate">
+        <p className="text-base font-bold text-card-foreground leading-snug line-clamp-2 whitespace-normal break-words">
           {name}
         </p>
         {subline && (

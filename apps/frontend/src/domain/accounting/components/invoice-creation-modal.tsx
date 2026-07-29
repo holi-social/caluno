@@ -4,6 +4,7 @@ import { format } from 'date-fns';
 import { useTranslations } from 'next-intl';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
+import { formatEuro } from '@/lib/formatting/formats';
 import { AccountingProfileFieldCard } from './accounting-profile-field-card';
 import { getPauschaleKey, type PauschalenType } from './doc-type-header';
 import {
@@ -16,8 +17,17 @@ import { InfoPanel } from './info-panel';
 import { InvoiceCapCard } from './invoice-cap-card';
 import type { DateRange } from './invoice-period-picker';
 import { InvoicePeriodPicker } from './invoice-period-picker';
-import { InvoicePreviewMock } from './invoice-preview-mock';
 import { DEFAULT_PROFILE_DATA, MOCK_PROFILE_DATA } from './mock-profile-data';
+import { getKnownOrgValues } from './template/builder-document-presets';
+import type {
+  DataSourceKey,
+  InvoiceNumberFormat,
+} from './template/builder-types';
+import { GeneratedDocumentPreview } from './template/generated-document-preview';
+import {
+  MOCK_SAVED_TEMPLATES,
+  templateSlugFor,
+} from './template/mock-saved-templates';
 
 interface EligibleHoursMockEntry {
   ratePerHour: number;
@@ -80,12 +90,51 @@ const DEFAULT_ELIGIBLE_HOURS: EligibleHoursMockEntry = JONAS_BAUER_HOURS;
 // Mock — a real org display name doesn't exist in the data model yet (dev dependency).
 const MOCK_ORG_NAME = 'Musterverein e.V.';
 
+/** "Anna Müller" -> { first: "Anna", last: "Müller" } — matches the Vorname/Nachname fields the invoice text binds separately. */
+function splitName(name: string): { first: string; last: string } {
+  const [first, ...rest] = name.trim().split(/\s+/);
+  return { first: first ?? name, last: rest.join(' ') };
+}
+
 function defaultPeriod(): DateRange {
   const now = new Date();
   return {
     from: new Date(now.getFullYear(), now.getMonth(), 1),
     to: new Date(now.getFullYear(), now.getMonth() + 1, 0),
   };
+}
+
+/** "05.07.2026, 09:00–13:00" -> { begin: "05.07.2026, 09:00", end: "05.07.2026, 13:00" } — the table's Beginn/Ende columns need separate timestamps, the mock data stores one combined string. */
+function splitDateTimeRange(dateTime: string): { begin: string; end: string } {
+  const [datePart, timePart] = dateTime.split(', ');
+  const [start, end] = (timePart ?? '').split('–');
+  return {
+    begin: `${datePart}, ${start ?? ''}`,
+    end: `${datePart}, ${end ?? ''}`,
+  };
+}
+
+/** Mock document-number generation — no real sequence counter exists yet, so this only has to look plausible for the chosen format. */
+function formatDocumentNumber(
+  invoiceFormat: InvoiceNumberFormat,
+  period: DateRange,
+  kostenstelle: string | undefined,
+): string {
+  const d = period.from ?? new Date();
+  const yyyy = d.getFullYear();
+  const mm = String(d.getMonth() + 1).padStart(2, '0');
+  const dd = String(d.getDate()).padStart(2, '0');
+  const seq = '001';
+  switch (invoiceFormat) {
+    case 'date-number':
+      return `${yyyy}${mm}${dd}-${seq}`;
+    case 'date-kostenstelle-number':
+      return `${yyyy}${mm}${dd}-${kostenstelle ?? '—'}-${seq}`;
+    case 'compact-date-number':
+      return `${String(yyyy).slice(2)}${mm}${dd}${seq}`;
+    case 'kostenstelle-month-year-number':
+      return `${kostenstelle ?? '—'}-${mm}.${yyyy}-${seq}`;
+  }
 }
 
 interface NameFieldState {
@@ -129,6 +178,7 @@ export function InvoiceCreationModal({
 
   const [status, setStatus] = useState<DocumentCreationLoadStatus>('loading');
   const [nameField, setNameField] = useState<NameFieldState | null>(null);
+  const [addressField, setAddressField] = useState<IbanFieldState | null>(null);
   const [ibanField, setIbanField] = useState<IbanFieldState | null>(null);
   const [ratePerHour, setRatePerHour] = useState(0);
   const [lines, setLines] = useState<EligibleHourLine[]>([]);
@@ -140,6 +190,7 @@ export function InvoiceCreationModal({
     if (!open) return;
     setStatus('loading');
     setNameField(null);
+    setAddressField(null);
     setIbanField(null);
     setLines([]);
     setCheckedIds(new Set());
@@ -155,6 +206,10 @@ export function InvoiceCreationModal({
       const hoursData =
         (docId && MOCK_ELIGIBLE_HOURS[docId]) || DEFAULT_ELIGIBLE_HOURS;
       setNameField({ value: volunteerName, provenance: 'profile' });
+      setAddressField({
+        value: profile.address,
+        provenance: profile.address ? 'profile' : 'gap',
+      });
       setIbanField({
         value: profile.iban,
         provenance: profile.iban ? 'profile' : 'gap',
@@ -181,9 +236,11 @@ export function InvoiceCreationModal({
   )
     return null;
 
-  const selectedHours = lines
-    .filter((line) => checkedIds.has(line.id))
-    .reduce((sum, line) => sum + line.hours, 0);
+  const selectedLines = lines.filter((line) => checkedIds.has(line.id));
+  const selectedHours = selectedLines.reduce(
+    (sum, line) => sum + line.hours,
+    0,
+  );
   const selectedAmount = selectedHours * ratePerHour;
   const projectedAfter = usedBeforeAmount + selectedAmount;
 
@@ -211,17 +268,54 @@ export function InvoiceCreationModal({
     >[0],
   );
 
-  const periodLabel = `${format(period.from ?? new Date(), 'dd.MM.yyyy')} – ${format(
-    period.to ?? new Date(),
-    'dd.MM.yyyy',
-  )}`;
-
   // Same URL shape as DocumentSheet's "view on Timesheets" link — the route
   // doesn't read these params yet (dev dependency, see context file), but the
   // link commits to the shape that already exists elsewhere in this domain.
   const periodStart = period.from ?? new Date();
   const monthParam = `${periodStart.getFullYear()}-${String(periodStart.getMonth() + 1).padStart(2, '0')}`;
   const timesheetsHref = `/admin/${orgUId}/timesheets?month=${monthParam}&volunteer=${volunteerId}`;
+
+  const savedTemplate =
+    MOCK_SAVED_TEMPLATES[templateSlugFor(pauschale, 'invoice')];
+  const template = savedTemplate.document;
+  const kostenstelle =
+    'kostenstelle' in savedTemplate.summary
+      ? savedTemplate.summary.kostenstelle
+      : undefined;
+
+  const { first, last } = splitName(nameField?.value ?? volunteerName);
+
+  const values: Partial<Record<DataSourceKey, string>> = {
+    ...getKnownOrgValues(pauschale),
+    volunteer_first_name: first,
+    volunteer_last_name: last,
+    volunteer_address: addressField?.value ?? undefined,
+    volunteer_iban: ibanField?.value ?? undefined,
+    generated_date: format(new Date(), 'dd.MM.yyyy'),
+    document_number: template.invoiceNumberFormat
+      ? formatDocumentNumber(template.invoiceNumberFormat, period, kostenstelle)
+      : undefined,
+    period_start: format(period.from ?? new Date(), 'dd.MM.yyyy'),
+    period_end: format(period.to ?? new Date(), 'dd.MM.yyyy'),
+  };
+
+  const tableRows = selectedLines.map((line) => {
+    const { begin, end } = splitDateTimeRange(line.dateTime);
+    return [
+      line.shiftName,
+      begin,
+      end,
+      `${line.hours}h`,
+      `${ratePerHour.toFixed(2)} €`,
+    ];
+  });
+  const tableTotalRow = [
+    '',
+    '',
+    'Summe',
+    `${selectedHours}h`,
+    formatEuro(selectedAmount),
+  ];
 
   return (
     <DocumentCreationDialog
@@ -239,19 +333,25 @@ export function InvoiceCreationModal({
       onSend={handleSend}
       sendDisabled={selectedHours === 0}
       preview={
-        <InvoicePreviewMock
-          volunteerName={volunteerName}
+        <GeneratedDocumentPreview
+          document={template}
+          kind="invoice"
           pauschale={pauschale}
           pauschaleLabel={pauschaleLabel}
+          documentTitle={t('preview.documentTitle')}
           orgName={MOCK_ORG_NAME}
-          iban={ibanField?.value ?? '—'}
-          periodLabel={periodLabel}
-          totalHours={selectedHours}
-          totalAmount={selectedAmount}
+          disclaimerLabel={t('preview.disclaimerBadge')}
+          signerLeftLabel={t('preview.signatureVolunteer')}
+          signerRightLabel={t('preview.signatureSupervisor')}
+          unsignedLabel={t('preview.unsigned')}
+          values={values}
+          tableRows={tableRows}
+          tableTotalRow={tableTotalRow}
         />
       }
       fields={
         nameField &&
+        addressField &&
         ibanField && (
           <>
             <AccountingProfileFieldCard
@@ -262,6 +362,16 @@ export function InvoiceCreationModal({
               docType="invoice"
               onSave={(value) =>
                 setNameField({ value, provenance: 'override' })
+              }
+            />
+            <AccountingProfileFieldCard
+              label={tFields('volunteer_address')}
+              value={addressField.value}
+              provenance={addressField.provenance}
+              volunteerName={volunteerName}
+              docType="invoice"
+              onSave={(value) =>
+                setAddressField({ value, provenance: 'override' })
               }
             />
             <AccountingProfileFieldCard

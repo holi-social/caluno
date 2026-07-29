@@ -1,5 +1,5 @@
 import { getTranslations } from 'next-intl/server';
-import { ReimbursementsBoard } from '@/domain/accounting/components/reimbursements-board';
+import { ReimbursementsPageHeader } from '@/domain/accounting/components/reimbursements-page-header';
 
 interface ReimbursementsPageProps {
   params: Promise<{ orgUId: string; locale: string }>;
@@ -15,13 +15,10 @@ export default async function ReimbursementsPage({
   });
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="page-title">{t('title')}</h1>
-        <p className="text-muted-foreground mt-1">{t('subtitle')}</p>
-      </div>
-
-      <ReimbursementsBoard orgUId={orgUId} />
-    </div>
+    <ReimbursementsPageHeader
+      orgUId={orgUId}
+      title={t('title')}
+      subtitle={t('subtitle')}
+    />
   );
 }

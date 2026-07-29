@@ -1121,6 +1121,7 @@
           "pipeline": {
             "generate": "Erstellen",
             "sign": "Unterzeichnen",
+            "declined": "Abgelehnt",
             "volSign": "Freiwillige/r",
             "coordSign": "Koordinator",
             "superSign": "Supervisor",
@@ -1136,6 +1137,8 @@
           "timelineSigned": "Unterzeichnet",
           "timelineCountersigned": "Gegengezeichnet",
           "timelineActivated": "Aktiviert",
+          "timelineDeclined": "Abgelehnt",
+          "declineReasonTitle": "Ablehnungsgrund",
           "noAction": "Keine Aktion erforderlich",
           "pdfView": "PDF anzeigen",
           "pdfDownload": "Herunterladen",
@@ -1165,12 +1168,16 @@
           "overCap": "Jahreslimit wird überschritten",
           "overCapHint": "Der Betrag dieses Stundennachweises bringt die Person an oder über ihr Jahreslimit",
           "contractMissing": "Kein Vertrag — manuell anlegen",
-          "timesheetMuted": "Erfasst ohne Vertrag"
+          "timesheetMuted": "Erfasst ohne Vertrag",
+          "declined": "Abgelehnt"
         },
         "actions": {
           "create": "Erstellen",
           "remind": "Erinnern",
-          "countersign": "Unterzeichnen"
+          "countersign": "Unterzeichnen",
+          "decline": "Ablehnen",
+          "seeDetails": "Details ansehen",
+          "createNew": "Neues {docType} erstellen"
         },
         "nonCompliantDialog": {
           "titleSingle": "Nicht-konformen Stundennachweis {action, select, create {erstellen} remind {anmahnen} countersign {gegenzeichnen} other {bearbeiten}}?",
@@ -1184,6 +1191,14 @@
           "onlyCompliantAction": "{action, select, create {Nur konforme erstellen} remind {Nur konforme erinnern} countersign {Nur konforme gegenzeichnen} other {Nur konforme bearbeiten}}",
           "generateContractInstead": "Stattdessen Vertrag erstellen",
           "viewContractInstead": "Stattdessen Vertrag ansehen"
+        },
+        "declineDialog": {
+          "title": "{docType} ablehnen?",
+          "description": "Die freiwillige Person benötigt ein neu ausgestelltes Dokument — dieses kann nach der Ablehnung nicht fortgesetzt werden.",
+          "reasonLabel": "Ablehnungsgrund",
+          "reasonPlaceholder": "Erklären, was geändert werden muss …",
+          "submit": "Ablehnen",
+          "toast": "Das Dokument von {name} wurde abgelehnt."
         }
       },
       "profileField": {
@@ -1206,12 +1221,6 @@
         "preview": {
           "disclaimerBadge": "Vorschau",
           "documentTitle": "Zusatzvereinbarung",
-          "partiesIntro": "Zwischen {orgName} und {name}",
-          "addressLabel": "Adresse",
-          "ibanLabel": "IBAN",
-          "effectiveDateLabel": "Gültig ab",
-          "clauseScope": "{name} engagiert sich für {orgName} im Rahmen der {pauschale}. Diese Vereinbarung regelt Umfang, Vergütungsgrundlage und Dauer dieses Engagements.",
-          "clauseCompensation": "Die Vergütung richtet sich nach dem von {orgName} festgelegten Satz für diese Pauschalenart und wird je abgeschlossenem und bestätigtem Einsatzzeitraum ausgezahlt.",
           "signatureVolunteer": "Unterschrift Freiwillige:r",
           "signatureCoordinator": "Unterschrift Koordination",
           "unsigned": "Noch nicht unterschrieben"
@@ -1247,13 +1256,6 @@
         "preview": {
           "disclaimerBadge": "Vorschau",
           "documentTitle": "Abrechnung",
-          "partiesIntro": "Zwischen {orgName} und {name}",
-          "periodLabel": "Zeitraum",
-          "ibanLabel": "IBAN",
-          "hoursLabel": "Abrechenbare Stunden",
-          "hoursValue": "{hours} Std.",
-          "amountLabel": "Gesamtbetrag",
-          "clauseCompensation": "Diese Abrechnung umfasst die abrechenbaren Stunden von {name} für {orgName} im Rahmen der {pauschale} für den Zeitraum {period} und wird auf die hinterlegte IBAN ausgezahlt.",
           "signatureVolunteer": "Unterschrift Freiwillige:r",
           "signatureSupervisor": "Unterschrift Vorstand",
           "unsigned": "Noch nicht unterschrieben"

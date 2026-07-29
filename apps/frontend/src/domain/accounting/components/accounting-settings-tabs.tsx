@@ -4,53 +4,40 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@repo/ui';
 import { useTranslations } from 'next-intl';
 import { RatesSectionCard } from './rates-section-card';
 import { TemplateListingPage } from './template/listing-page';
-import type { TemplateSectionData } from './template/types';
+import { MOCK_SAVED_TEMPLATES } from './template/mock-saved-templates';
+import type { TemplateSectionData, TemplateSlot } from './template/types';
+import { SLUG_TO_SLOT } from './template/types';
+
+// Every slot reads the same saved-template store the creation modals render
+// from — the settings cards and the generated documents can never disagree,
+// since there's only one place either of them reads from.
+function slot(slug: TemplateSlot['slug']): TemplateSlot {
+  const { pauschale, kind } = SLUG_TO_SLOT[slug];
+  const saved = MOCK_SAVED_TEMPLATES[slug];
+  return {
+    slug,
+    pauschale,
+    kind,
+    configured: true,
+    summary: saved.summary,
+    lastEditedAt: saved.lastEditedAt,
+    lastEditedBy: saved.lastEditedBy,
+  };
+}
 
 const MOCK_SECTIONS: TemplateSectionData[] = [
   {
     pauschale: 'ehrenamt',
     slots: [
-      {
-        slug: 'ehrenamtspauschale-contract',
-        pauschale: 'ehrenamt',
-        kind: 'contract',
-        configured: true,
-        summary: {
-          task: 'Betreuung von Kindern und Jugendlichen bei Freizeitaktivitäten',
-          hourlyRate: '4,50',
-        },
-        lastEditedAt: '2026-07-18T10:30:00Z',
-        lastEditedBy: 'Julia Bauer',
-      },
-      {
-        slug: 'ehrenamtspauschale-invoice',
-        pauschale: 'ehrenamt',
-        kind: 'invoice',
-        configured: false,
-      },
+      slot('ehrenamtspauschale-contract'),
+      slot('ehrenamtspauschale-invoice'),
     ],
   },
   {
     pauschale: 'uebungleiter',
     slots: [
-      {
-        slug: 'uebungsleiterpauschale-contract',
-        pauschale: 'uebungleiter',
-        kind: 'contract',
-        configured: false,
-      },
-      {
-        slug: 'uebungsleiterpauschale-invoice',
-        pauschale: 'uebungleiter',
-        kind: 'invoice',
-        configured: true,
-        summary: {
-          kostenstelle: 'K-4200',
-          invoiceNumberFormat: 'kostenstelle-month-year-number',
-        },
-        lastEditedAt: '2026-06-02T14:15:00Z',
-        lastEditedBy: 'Jonas Weber',
-      },
+      slot('uebungsleiterpauschale-contract'),
+      slot('uebungsleiterpauschale-invoice'),
     ],
   },
 ];

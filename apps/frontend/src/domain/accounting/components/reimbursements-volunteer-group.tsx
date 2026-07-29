@@ -18,7 +18,7 @@ import { toast } from 'sonner';
 import { formatEuro } from '@/lib/formatting/formats';
 import { AlertIconTooltip } from './alert-icon-tooltip';
 import type { PauschalenType } from './doc-type-header';
-import { DocTypeHeader } from './doc-type-header';
+import { DocTypeHeader, getPauschaleKey } from './doc-type-header';
 import { LimitHeadroomBar } from './limit-headroom-bar';
 import type { NonCompliantAction } from './non-compliant-timesheet-dialog';
 import type {
@@ -105,6 +105,16 @@ const STATUS_META: Record<DocStatus, StatusMeta> = {
     actionKey: null,
     isYourAction: false,
   },
+  'contract-declined': {
+    labelKey: 'declined',
+    actionKey: null,
+    isYourAction: false,
+  },
+  'timesheet-declined': {
+    labelKey: 'declined',
+    actionKey: null,
+    isYourAction: false,
+  },
 };
 
 // ─── CTA variant ──────────────────────────────────────────────────────────────
@@ -139,6 +149,8 @@ const STATUS_SORT_ORDER: DocStatus[] = [
   'timesheet-signing-vol',
   'contract-active',
   'timesheet-muted',
+  'contract-declined',
+  'timesheet-declined',
 ];
 
 // ─── Mock: last bundle download per volunteer + pauschale type ───────────────
@@ -147,12 +159,7 @@ const MOCK_LAST_BUNDLE_DOWNLOAD: Record<
   string,
   Partial<Record<PauschalenType, { by: string; at: string }>>
 > = {
-  v1: { ehrenamt: { by: 'Julia Vorstand', at: '05.07.2026' } },
-  v8: { ehrenamt: { by: 'Julia Vorstand', at: '30.06.2026' } },
-  v33: {
-    ehrenamt: { by: 'Julia Vorstand', at: '30.05.2026' },
-    uebungleiter: { by: 'Markus Kassier', at: '30.05.2026' },
-  },
+  v5: { uebungleiter: { by: 'Markus Kassier', at: '30.05.2026' } },
 };
 
 // ─── VolunteerTableGroup ──────────────────────────────────────────────────────
@@ -181,6 +188,7 @@ function VolunteerTableGroup({
   activeTile,
 }: VolunteerTableGroupProps) {
   const t = useTranslations('Accounting.reimbursements');
+  const tSections = useTranslations('Accounting.templates.sections');
   const [isOpen, setIsOpen] = useState(true);
 
   // Ready-to-go gets its own row set (ready timesheets + one contract row
@@ -257,15 +265,15 @@ function VolunteerTableGroup({
               </span>
             </div>
             {vol.limits && Object.keys(vol.limits).length > 1 ? (
-              <div className="flex gap-2 mt-1">
+              <div className="flex flex-col gap-1 mt-1">
                 {(
                   Object.entries(vol.limits) as [
                     PauschalenType,
                     PauschalenLimit,
                   ][]
-                ).map(([, lim]) => (
+                ).map(([type, lim]) => (
                   <LimitHeadroomBar
-                    key={lim.total}
+                    key={type}
                     used={lim.used}
                     total={lim.total}
                     density="text"
@@ -373,6 +381,9 @@ function VolunteerTableGroup({
           const isDocSelected = selectedDocIds.has(doc.id);
           const effectivePauschale = doc.pauschale ?? vol.pauschale;
           const docNonCompliant = isTimesheetNonCompliant(vol, doc);
+          const isDeclined =
+            doc.status === 'contract-declined' ||
+            doc.status === 'timesheet-declined';
 
           return (
             <TableRow
@@ -391,7 +402,7 @@ function VolunteerTableGroup({
                 className="py-3 align-top"
                 onClick={(e) => e.stopPropagation()}
               >
-                {!isActive && !isGenerate && (
+                {!isActive && !isGenerate && !isDeclined && (
                   <Checkbox
                     checked={isDocSelected}
                     onCheckedChange={() => onToggleDoc(doc.id)}
@@ -408,13 +419,17 @@ function VolunteerTableGroup({
               >
                 <DocTypeHeader
                   kind={isTimesheet ? 'invoice' : 'contract'}
-                  pauschale={doc.pauschale ?? vol.pauschale}
+                  pauschale={effectivePauschale}
                   topLine={doc.periodLabel}
-                  name={t(
+                  name={`${t(
                     `docs.kindLabel.${isTimesheet ? 'timesheet' : 'contract'}` as Parameters<
                       typeof t
                     >[0],
-                  )}
+                  )} ${tSections(
+                    getPauschaleKey(effectivePauschale) as Parameters<
+                      typeof tSections
+                    >[0],
+                  )}`}
                 />
               </TableCell>
 
@@ -461,6 +476,13 @@ function VolunteerTableGroup({
                       )}
                     </span>
                   )}
+                  {isDeclined && (
+                    <span className="text-sm font-medium text-alert">
+                      {t(
+                        'docs.statusLabel.declined' as Parameters<typeof t>[0],
+                      )}
+                    </span>
+                  )}
                 </div>
               </TableCell>
 
@@ -492,7 +514,19 @@ function VolunteerTableGroup({
                       className="text-alert"
                     />
                   )}
-                  {!isActive && actionKey && (
+                  {isDeclined && (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onDocumentClick(doc, vol);
+                      }}
+                    >
+                      {t('docs.actions.seeDetails' as Parameters<typeof t>[0])}
+                    </Button>
+                  )}
+                  {!isActive && !isDeclined && actionKey && (
                     <Button
                       size="sm"
                       variant={getActionVariant(actionKey)}

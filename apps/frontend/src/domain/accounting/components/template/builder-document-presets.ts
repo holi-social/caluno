@@ -1,3 +1,4 @@
+import { getEffectivePauschaleRate } from '../../mock-rates';
 import type { PauschalenType } from '../doc-type-header';
 import type {
   DataSourceKey,
@@ -18,12 +19,17 @@ function manual(
   return { id, value: { kind: 'manual-template', value }, control };
 }
 
-// Effective hourly rates as configured on the Rates tab (see rates-section-card.tsx's
-// MOCK_HQ_DEFAULTS/MOCK_SAVED_OVERRIDES) — reused here so the two surfaces agree.
-const KNOWN_HOURLY_RATE: Record<PauschalenType, string> = {
-  ehrenamt: '4,50',
-  uebungleiter: '8,00',
-};
+/** German decimal-comma formatting for a rate, e.g. 4.5 -> "4,50". */
+export function formatRateComma(rate: number): string {
+  return rate.toFixed(2).replace('.', ',');
+}
+
+// Effective hourly rate as configured on the Rates tab — reads the same
+// single source of truth as rates-section-card.tsx (mock-rates.ts) so the
+// two surfaces can never drift into disagreeing placeholder numbers.
+function knownHourlyRate(pauschale: PauschalenType): string {
+  return formatRateComma(getEffectivePauschaleRate(pauschale));
+}
 
 const KNOWN_PAUSCHALE_LABEL: Record<PauschalenType, string> = {
   ehrenamt: 'Ehrenamtspauschale',
@@ -48,7 +54,7 @@ export function getKnownOrgValues(
 ): Partial<Record<DataSourceKey, string>> {
   return {
     ...KNOWN_ORG,
-    hourly_rate: KNOWN_HOURLY_RATE[pauschale],
+    hourly_rate: knownHourlyRate(pauschale),
     pauschalen_type: KNOWN_PAUSCHALE_LABEL[pauschale],
   };
 }
