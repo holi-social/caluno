@@ -538,6 +538,22 @@ export class EventService {
     });
   }
 
+  async findInvitesByEventIdsForUser(
+    eventIds: string[],
+    userId: string,
+  ): Promise<EventInviteEntity[]> {
+    if (eventIds.length === 0) {
+      return [];
+    }
+
+    return this.db.query.eventInvites.findMany({
+      where: {
+        eventId: { in: eventIds },
+        userId,
+      },
+    });
+  }
+
   async findInvites(
     eventId: string,
     organizationUnitId: string,

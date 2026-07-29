@@ -135,6 +135,40 @@ export class RequiredFormService {
     }));
   }
 
+  async getRequiredFormsByEventIds(eventIds: string[]): Promise<
+    Array<{
+      eventId: string;
+      form: RequirementFormEntity;
+      order: number;
+    }>
+  > {
+    if (eventIds.length === 0) {
+      return [];
+    }
+
+    const rows = await this.db.query.eventRequiredForms.findMany({
+      where: { eventId: { in: eventIds } },
+      orderBy: { order: 'asc' },
+      with: { form: true },
+    });
+
+    return rows
+      .map((row) => ({
+        eventId: row.eventId,
+        form: row.form,
+        order: row.order,
+      }))
+      .filter(
+        (
+          row,
+        ): row is {
+          eventId: string;
+          form: RequirementFormEntity;
+          order: number;
+        } => Boolean(row.form),
+      );
+  }
+
   async hasRequiredForms(target: RequiredFormTarget): Promise<boolean> {
     const requiredForms = await this.getRequiredForms(target);
     return requiredForms.length > 0;
