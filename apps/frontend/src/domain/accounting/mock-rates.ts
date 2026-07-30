@@ -23,6 +23,6 @@ export function getEffectivePauschaleRate(type: PauschalenType): number {
 // accounting backend provides these. UserCard reads this to flag when a member's
 // projected total would exceed the legal limit.
 export const MOCK_PAUSCHALE_LIMITS: Record<PauschalenType, number> = {
-  ehrenamt: 840,
-  uebungleiter: 3000,
+  ehrenamt: 960,
+  uebungleiter: 3300,
 };

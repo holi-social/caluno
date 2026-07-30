@@ -1006,10 +1006,10 @@
         "sectionSubtitle": "Organisationsweiter Stundensatz für vergütete Schichten, je Pauschalentyp. Einzelne Schichten können davon abweichen.",
         "epLabel": "Ehrenamtspauschale",
         "epLegal": "§3 Nr. 26a EStG",
-        "epYearlyLimit": "Bis zu 840 €/Jahr",
+        "epYearlyLimit": "Bis zu 960 €/Jahr",
         "ulLabel": "Übungsleiterpauschale",
         "ulLegal": "§3 Nr. 26 EStG",
-        "ulYearlyLimit": "Bis zu 3.000 €/Jahr",
+        "ulYearlyLimit": "Bis zu 3.300 €/Jahr",
         "saveSuccess": "Satz aktualisiert",
         "errors": {
           "invalidRate": "Bitte einen gültigen Satz größer als null eingeben"
