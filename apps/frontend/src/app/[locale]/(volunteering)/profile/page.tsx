@@ -1,7 +1,8 @@
 import { getTranslations, setRequestLocale } from 'next-intl/server';
 import { HeaderAvatar } from '@/components/profile/header-avatar';
 import { ProfilePageHeader } from '@/components/profile/profile-page-header';
-import MyMembershipRequests from '@/domain/membership-requests/components/my-membership-requests';
+import { MembershipCard } from '@/domain/memberships/components/membership-card';
+import { buildMembershipEntries } from '@/domain/memberships/lib/entries';
 import { ProfileForm } from '@/domain/user/components/profile-form';
 import { resolveLocale } from '@/i18n/routing';
 import { getDataClient } from '@/lib/data-client';
@@ -16,11 +17,11 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
   setRequestLocale(locale);
 
   const tProfile = await getTranslations('Profile');
-  const tMemberships = await getTranslations('MembershipRequest');
 
   const data = await getDataClient();
   const me = await data.user.getMe();
   const { items: membershipRequests } = await data.membershipRequest.findMine();
+  const membershipEntries = buildMembershipEntries(membershipRequests);
 
   return (
     <div>
@@ -32,8 +33,17 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
         <HeaderAvatar name={me.name} imageUrl={me.image} />
 
         {/* Section slots — empty; headings inlined (later tickets add bodies) */}
-        <section>
+        <section className="space-y-4">
           <h2 className="text-xl font-bold">{tProfile('organizations')}</h2>
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+            {membershipEntries.map((entry) => (
+              <MembershipCard
+                key={`${entry.state}-${entry.id}`}
+                entry={entry}
+                locale={locale}
+              />
+            ))}
+          </div>
         </section>
         <section>
           <h2 className="text-xl font-bold">
@@ -43,17 +53,6 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
         <section>
           <h2 className="text-xl font-bold">{tProfile('accountSettings')}</h2>
         </section>
-
-        {/* Transitional — kept working until the section tickets land */}
-        <div>
-          <h2 id="memberships" className="text-xl font-bold">
-            {tMemberships('page.title')}
-          </h2>
-          <p className="text-muted-foreground mt-1">
-            {tMemberships('page.subtitle')}
-          </p>
-          <MyMembershipRequests membershipRequests={membershipRequests} />
-        </div>
 
         <div>
           <h2 className="text-xl font-bold">{tProfile('title')}</h2>
