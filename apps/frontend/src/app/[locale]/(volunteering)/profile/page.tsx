@@ -1,8 +1,8 @@
 import { getTranslations, setRequestLocale } from 'next-intl/server';
-import { HeaderAvatar } from '@/components/profile/header-avatar';
-import { ProfilePageHeader } from '@/components/profile/profile-page-header';
 import MyMembershipRequests from '@/domain/membership-requests/components/my-membership-requests';
+import { HeaderAvatar } from '@/domain/user/components/header-avatar';
 import { ProfileForm } from '@/domain/user/components/profile-form';
+import { ProfilePageHeader } from '@/domain/user/components/profile-page-header';
 import { resolveLocale } from '@/i18n/routing';
 import { getDataClient } from '@/lib/data-client';
 

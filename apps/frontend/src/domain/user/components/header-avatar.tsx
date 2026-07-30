@@ -2,6 +2,7 @@ import { Avatar, AvatarFallback, AvatarImage, Button } from '@repo/ui';
 import { Pencil } from 'lucide-react';
 import { getTranslations } from 'next-intl/server';
 import { getInitials } from '@/lib/get-initials';
+import { Link } from '../../../i18n/navigation';
 
 type HeaderAvatarProps = {
   name: string;
@@ -29,8 +30,11 @@ export const HeaderAvatar = async ({ name, imageUrl }: HeaderAvatarProps) => {
           aria-label={tProfile('edit')}
           title={tProfile('edit')}
           className="absolute -bottom-1 -right-1 rounded-full"
+          asChild
         >
-          <Pencil className="size-4" />
+          <Link href={'/profile/avatar/edit'}>
+            <Pencil className="size-4" />
+          </Link>
         </Button>
       </div>
       <h2 className="text-center text-lg font-bold">{name}</h2>
