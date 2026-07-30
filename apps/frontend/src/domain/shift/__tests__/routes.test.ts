@@ -19,6 +19,8 @@ describe('shiftInvitePath', () => {
   it('appends flow=create when requested', () => {
     expect(
       shiftInvitePath('org-1', 'shift-1', 'instance-1', { flow: 'create' }),
-    ).toBe('/admin/org-1/shifts/shift-1/invite?instanceId=instance-1&flow=create');
+    ).toBe(
+      '/admin/org-1/shifts/shift-1/invite?instanceId=instance-1&flow=create',
+    );
   });
 });
