@@ -62,10 +62,17 @@ export default async function ShiftsPage({
   const t = await getTranslations('Shift');
 
   const data = await getDataClient({ orgUId });
-  const createdShift =
-    created === 'true' && createdShiftId
-      ? await data.shift.findByIdDetailed(createdShiftId)
-      : null;
+  let createdShift = null;
+  if (created === 'true' && createdShiftId) {
+    try {
+      createdShift = await data.shift.findByIdDetailed(createdShiftId);
+    } catch {
+      // Stale or invalid shift id in the URL (bookmarked, shared, or the
+      // shift was since deleted) — just skip the confirmation dialog
+      // instead of crashing the whole shifts page.
+      createdShift = null;
+    }
+  }
   let tableContent: GetShiftsQuery['shifts'] | null = null;
   let instances: GetWeeklyShiftsQuery['weeklyShifts'] | null = null;
 
