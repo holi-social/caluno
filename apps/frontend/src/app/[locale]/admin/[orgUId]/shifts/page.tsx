@@ -8,6 +8,7 @@ import { getTranslations } from 'next-intl/server';
 import { Pagination } from '@/components/pagination';
 import { CreateShiftButton } from '@/domain/shift/components/create-shift-button';
 import { EmptyShifts } from '@/domain/shift/components/empty-shifts';
+import { ShiftCreatedDialog } from '@/domain/shift/components/shift-created-dialog';
 import { ShiftTabSwitcher } from '@/domain/shift/components/shift-tab-switcher';
 import { ShiftsTable } from '@/domain/shift/components/shifts-table';
 import { WeeklyCalendar } from '@/domain/shift/components/weekly-calendar';
@@ -20,7 +21,13 @@ type ShiftViewType = 'weekplan' | 'shifts';
 
 interface ShiftsPageProps {
   params: Promise<{ orgUId: string }>;
-  searchParams: Promise<{ view?: ShiftViewType; page?: string; week?: string }>;
+  searchParams: Promise<{
+    view?: ShiftViewType;
+    page?: string;
+    week?: string;
+    created?: string;
+    shift?: string;
+  }>;
 }
 
 function parseWeekStart(param: string | null | undefined): Date {
@@ -34,7 +41,13 @@ export default async function ShiftsPage({
   searchParams,
 }: ShiftsPageProps) {
   const { orgUId } = await params;
-  const { page, view = 'weekplan', week } = await searchParams;
+  const {
+    page,
+    view = 'weekplan',
+    week,
+    created,
+    shift: createdShiftId,
+  } = await searchParams;
 
   await requireOrgAccess(orgUId);
   const [canManage] = await checkPermission(orgUId, PermissionKey.ShiftEdit);
@@ -49,6 +62,10 @@ export default async function ShiftsPage({
   const t = await getTranslations('Shift');
 
   const data = await getDataClient({ orgUId });
+  const createdShift =
+    created === 'true' && createdShiftId
+      ? await data.shift.findByIdDetailed(createdShiftId)
+      : null;
   let tableContent: GetShiftsQuery['shifts'] | null = null;
   let instances: GetWeeklyShiftsQuery['weeklyShifts'] | null = null;
 
@@ -62,6 +79,8 @@ export default async function ShiftsPage({
 
   return (
     <div className="flex flex-col h-full gap-4">
+      {createdShift && <ShiftCreatedDialog shift={createdShift} />}
+
       {/* Page header */}
       <div>
         <h1 className="page-title mb-2">{t('page.title')}</h1>
