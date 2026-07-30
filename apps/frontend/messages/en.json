@@ -604,7 +604,7 @@
     },
     "successDialog": {
       "title": "Shift created",
-      "bodyOpen": "Your open shift is live! It has been shared with all volunteers inside of our organisation. Now sit back and relax…",
+      "bodyOpen": "Your open shift is live! All volunteers inside of your organisation have been notified and can now sign up.",
       "bodyInvited": "Your shift is live! Invited volunteers have been notified.",
       "recurrence": {
         "oneTime": "One-time",

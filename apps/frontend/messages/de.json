@@ -604,7 +604,7 @@
     },
     "successDialog": {
       "title": "Einsatz erstellt",
-      "bodyOpen": "Dein offener Einsatz ist live! Er wurde mit allen Freiwilligen deiner Organisation geteilt. Jetzt kannst du dich entspannt zurücklehnen…",
+      "bodyOpen": "Dein offener Einsatz ist jetzt aktiv! Alle Freiwilligen innerhalb deiner Organisation wurden benachrichtigt und können sich jetzt anmelden.",
       "bodyInvited": "Dein Einsatz ist live! Eingeladene Freiwillige wurden benachrichtigt.",
       "recurrence": {
         "oneTime": "Einmalig",

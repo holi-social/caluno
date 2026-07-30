@@ -1,13 +1,5 @@
 import { describe, expect, it } from 'bun:test';
-import { shiftCreatedSuccessPath, shiftInvitePath } from '../routes';
-
-describe('shiftCreatedSuccessPath', () => {
-  it('builds the shifts list URL with created and shift params', () => {
-    expect(shiftCreatedSuccessPath('org-1', 'shift-1')).toBe(
-      '/admin/org-1/shifts?created=true&shift=shift-1',
-    );
-  });
-});
+import { shiftInvitePath } from '../routes';
 
 describe('shiftInvitePath', () => {
   it('builds the invite URL with just instanceId when no options are given', () => {

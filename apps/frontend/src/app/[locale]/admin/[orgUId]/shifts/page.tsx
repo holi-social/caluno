@@ -25,8 +25,6 @@ interface ShiftsPageProps {
     view?: ShiftViewType;
     page?: string;
     week?: string;
-    created?: string;
-    shift?: string;
   }>;
 }
 
@@ -41,13 +39,7 @@ export default async function ShiftsPage({
   searchParams,
 }: ShiftsPageProps) {
   const { orgUId } = await params;
-  const {
-    page,
-    view = 'weekplan',
-    week,
-    created,
-    shift: createdShiftId,
-  } = await searchParams;
+  const { page, view = 'weekplan', week } = await searchParams;
 
   await requireOrgAccess(orgUId);
   const [canManage] = await checkPermission(orgUId, PermissionKey.ShiftEdit);
@@ -62,17 +54,6 @@ export default async function ShiftsPage({
   const t = await getTranslations('Shift');
 
   const data = await getDataClient({ orgUId });
-  let createdShift = null;
-  if (created === 'true' && createdShiftId) {
-    try {
-      createdShift = await data.shift.findByIdDetailed(createdShiftId);
-    } catch {
-      // Stale or invalid shift id in the URL (bookmarked, shared, or the
-      // shift was since deleted) — just skip the confirmation dialog
-      // instead of crashing the whole shifts page.
-      createdShift = null;
-    }
-  }
   let tableContent: GetShiftsQuery['shifts'] | null = null;
   let instances: GetWeeklyShiftsQuery['weeklyShifts'] | null = null;
 
@@ -86,7 +67,7 @@ export default async function ShiftsPage({
 
   return (
     <div className="flex flex-col h-full gap-4">
-      {createdShift && <ShiftCreatedDialog shift={createdShift} />}
+      <ShiftCreatedDialog />
 
       {/* Page header */}
       <div>

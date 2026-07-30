@@ -22,8 +22,9 @@ import { FileUpload } from '@/domain/storage/components/file-upload';
 import { useRouter } from '@/i18n/navigation';
 import { useFormatting } from '@/lib/formatting/use-formatting';
 import { resolveCreateShiftSuccessNavigation } from '../create-shift-flow';
-import { shiftCreatedSuccessPath, shiftInvitePath } from '../routes';
+import { shiftInvitePath } from '../routes';
 import { type ShiftFormValues, shiftFormSchema } from '../schemas';
+import { SUCCESS_DIALOG_CREATE_SHIFT_ID } from '../success-dialog';
 import { RecurrenceSelect } from './recurrence-select';
 
 interface ShiftFormProps {
@@ -131,8 +132,11 @@ export const ShiftForm = ({
         }
 
         if (navigation.action === 'success') {
-          await setOpen(false, () => null);
-          router.replace(shiftCreatedSuccessPath(orgUId, navigation.shiftId));
+          sessionStorage.setItem(
+            SUCCESS_DIALOG_CREATE_SHIFT_ID,
+            navigation.shiftId,
+          );
+          await setOpen(false);
           router.refresh();
           return;
         }

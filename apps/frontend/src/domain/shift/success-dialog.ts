@@ -5,6 +5,8 @@ import {
   type RecurrencePresetValue,
 } from './constants';
 
+export const SUCCESS_DIALOG_CREATE_SHIFT_ID = 'success_dialog_create_shift_id';
+
 export type ShiftCreatedRecurrenceBadge =
   | {
       kind: 'preset';

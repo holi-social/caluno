@@ -52,14 +52,6 @@ export function shiftInvitePath(
   return `/admin/${orgUId}/shifts/${shiftId}/invite?${params.toString()}`;
 }
 
-export function shiftCreatedSuccessPath(
-  orgUId: string,
-  shiftId: string,
-): string {
-  const params = new URLSearchParams({ created: 'true', shift: shiftId });
-  return `/admin/${orgUId}/shifts?${params.toString()}`;
-}
-
 export function shiftInstanceDetailPath(
   orgUId: string,
   shiftId: string,

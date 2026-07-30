@@ -1,6 +1,7 @@
 'use client';
 
-import { type RecurrenceDayValue, ShiftVisibility } from '@repo/data';
+import { ShiftVisibility } from '@repo/data';
+import { useShift } from '@repo/data/react';
 import {
   Badge,
   Card,
@@ -12,47 +13,34 @@ import {
   DialogTitle,
 } from '@repo/ui';
 import { Check, Landmark, Repeat2 } from 'lucide-react';
-import { useSearchParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
-import { usePathname, useRouter } from '@/i18n/navigation';
+import { useState } from 'react';
 import { useFormatting } from '@/lib/formatting/use-formatting';
 import {
   formatShiftOrgUnitLabel,
   resolveShiftCreatedRecurrenceBadge,
+  SUCCESS_DIALOG_CREATE_SHIFT_ID,
 } from '../success-dialog';
 
-export interface ShiftCreatedDialogShift {
-  title: string;
-  visibility: ShiftVisibility;
-  recurrenceDays: RecurrenceDayValue[];
-  originalStartsAt: string;
-  durationMinutes: number;
-  organizationUnit: {
-    name: string;
-    organization: { name: string };
-  };
-}
-
-interface ShiftCreatedDialogProps {
-  shift: ShiftCreatedDialogShift;
-}
-
-export function ShiftCreatedDialog({ shift }: ShiftCreatedDialogProps) {
+export function ShiftCreatedDialog() {
   const t = useTranslations('Shift.successDialog');
-  const router = useRouter();
-  const pathname = usePathname();
-  const searchParams = useSearchParams();
+  const createShiftId =
+    sessionStorage.getItem(SUCCESS_DIALOG_CREATE_SHIFT_ID) ?? undefined;
+  const { data: shift, isLoading } = useShift(createShiftId);
   const { formatTimeRange } = useFormatting();
 
-  const handleOpenChange = (open: boolean) => {
-    if (open) return;
+  const [isDialogOpen, setIsDialogOpen] = useState(true);
 
-    const next = new URLSearchParams(searchParams.toString());
-    next.delete('created');
-    next.delete('shift');
-    const qs = next.toString();
-    router.replace(qs ? `${pathname}?${qs}` : pathname);
+  const handleOpenChange = (value: boolean) => {
+    if (value) return;
+
+    sessionStorage.removeItem(SUCCESS_DIALOG_CREATE_SHIFT_ID);
+    setIsDialogOpen(value);
   };
+
+  if (!createShiftId || isLoading || !shift) {
+    return null;
+  }
 
   const startsAt = new Date(shift.originalStartsAt);
   const endsAt = new Date(startsAt.getTime() + shift.durationMinutes * 60000);
@@ -68,7 +56,7 @@ export function ShiftCreatedDialog({ shift }: ShiftCreatedDialogProps) {
       : recurrenceBadge.days.map((day) => t(`weekDayShort.${day}`)).join(' ');
 
   return (
-    <Dialog open onOpenChange={handleOpenChange}>
+    <Dialog open={isDialogOpen} onOpenChange={handleOpenChange}>
       <DialogContent className="sm:max-w-lg">
         <DialogHeader className="items-center text-center">
           <div className="flex size-20 items-center justify-center rounded-full bg-primary/10">
