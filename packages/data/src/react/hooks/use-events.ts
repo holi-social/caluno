@@ -101,6 +101,26 @@ export function useInviteMembersToEvent() {
   });
 }
 
+export function useSetEventRequiredForms() {
+  const sdk = useSdk();
+  const queryClient = useQueryClient();
+  const repository = new EventRepository(sdk);
+
+  return useMutation({
+    mutationFn: ({
+      eventId,
+      formIds,
+    }: {
+      eventId: string;
+      formIds: string[];
+    }) => repository.setRequiredForms(eventId, formIds),
+    onSuccess: (_, { eventId }) => {
+      queryClient.invalidateQueries({ queryKey: ['event', eventId] });
+      queryClient.invalidateQueries({ queryKey: ['publicEvent', eventId] });
+    },
+  });
+}
+
 export function usePublicEvent(id: string) {
   const sdk = useSdk();
   const repository = new PublicEventRepository(sdk);

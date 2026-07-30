@@ -1,28 +1,44 @@
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useOrgUId } from '@repo/data/react';
 import {
+  useOrganizationUnit,
+  useOrgUId,
+  useRequirementForms,
+} from '@repo/data/react';
+import {
+  Button,
   DatePickerWithRange,
   Field,
   FieldError,
   FieldLabel,
   Input,
 } from '@repo/ui';
+import { SquareArrowOutUpRight } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import { useState, useTransition } from 'react';
+import { useMemo, useState, useTransition } from 'react';
 import { useForm } from 'react-hook-form';
 import { FormSheet, useFormSheet } from '@/components/form-sheet';
+import {
+  RequiredFormsAddExisting,
+  RequiredFormsDedupHint,
+  RequiredFormsList,
+} from '@/components/required-forms-fields';
 import { FileUpload } from '@/domain/storage/components/file-upload';
 import { useRouter } from '@/i18n/navigation';
 import { inviteEventPath } from '../routes';
-import { type EventFormValues, eventFormSchema } from '../schemas';
+import {
+  type EventFormClientValues,
+  type EventFormValues,
+  eventFormSchema,
+} from '../schemas';
 
 interface EventFormProps {
   title: string;
   description: string;
   orgUId: string;
   initialValues?: Partial<EventFormValues>;
+  initialRequiredFormIds?: string[];
   logoPreviewUrl?: string | null;
   coverPreviewUrl?: string | null;
   mutate: (
@@ -36,6 +52,7 @@ export const EventForm = ({
   description,
   orgUId,
   initialValues = {},
+  initialRequiredFormIds = [],
   logoPreviewUrl,
   coverPreviewUrl,
   mutate,
@@ -46,8 +63,30 @@ export const EventForm = ({
   const t = useTranslations('Event.form');
   const tValidation = useTranslations('Event.form.validation');
   const tUpload = useTranslations('Storage.upload');
+  const tForms = useTranslations('Event.detail.requiredForms');
   const [pending, startTransition] = useTransition();
   const [serverError, setServerError] = useState<string>();
+  const [requiredFormIds, setRequiredFormIds] = useState(
+    initialRequiredFormIds,
+  );
+  const [commandOpen, setCommandOpen] = useState(false);
+
+  const { data: orgUnit } = useOrganizationUnit(orgUId);
+  const { data: formsData, isPending: isLoadingForms } = useRequirementForms(
+    orgUnit?.organizationId ?? '',
+  );
+
+  const requiredForms = useMemo(() => {
+    const allForms = formsData?.items ?? [];
+    return requiredFormIds
+      .map((id) => allForms.find((form) => form.id === id))
+      .filter((form): form is NonNullable<typeof form> => Boolean(form));
+  }, [requiredFormIds, formsData]);
+
+  const availableForms = useMemo(() => {
+    const attachedIds = new Set(requiredFormIds);
+    return (formsData?.items ?? []).filter((form) => !attachedIds.has(form.id));
+  }, [requiredFormIds, formsData]);
 
   const { open, setOpen } = useFormSheet();
 
@@ -64,7 +103,7 @@ export const EventForm = ({
     setValue,
     watch,
     formState: { errors },
-  } = useForm<EventFormValues>({
+  } = useForm<EventFormClientValues>({
     resolver: zodResolver(schema),
     defaultValues: {
       title: '',
@@ -78,23 +117,35 @@ export const EventForm = ({
   const startsAt = watch('startsAt');
   const endsAt = watch('endsAt');
 
-  const onSubmit = async (formData: EventFormValues) => {
+  const onSubmit = async (formData: EventFormClientValues) => {
     setServerError(undefined);
 
     startTransition(async () => {
-      const result = await mutate(formData);
+      const result = await mutate({
+        ...formData,
+        requiredFormIds,
+      } as EventFormValues);
 
       if (result.serverError) {
         setServerError(result.serverError);
       } else if (redirectToInviteOnCreate && result.data?.id) {
-        await setOpen(false, () => null);
-        router.replace(inviteEventPath(orgUId, result.data.id));
-        router.refresh();
+        const eventId = result.data.id;
+        await setOpen(false, () => {
+          router.replace(inviteEventPath(orgUId, eventId));
+        });
       } else {
         await setOpen(false);
-        router.refresh();
       }
     });
+  };
+
+  const handleRemoveForm = (formId: string) => {
+    setRequiredFormIds((prev) => prev.filter((id) => id !== formId));
+  };
+
+  const handleAddForm = (formId: string) => {
+    setRequiredFormIds((prev) => [...prev, formId]);
+    setCommandOpen(false);
   };
 
   return (
@@ -182,6 +233,52 @@ export const EventForm = ({
           setValue('coverFileId', null, { shouldValidate: true });
         }}
       />
+
+      <div className="rounded-xl border p-5 space-y-5">
+        <div className="space-y-1">
+          <h3 className="text-base font-semibold">{tForms('title')}</h3>
+          <p className="text-sm text-muted-foreground">
+            {tForms('subtitle', {
+              eventTitle: watch('title') || initialValues.title || '',
+            })}
+          </p>
+        </div>
+
+        <RequiredFormsList
+          forms={requiredForms}
+          onRemove={handleRemoveForm}
+          removeDisabled={pending}
+          t={tForms}
+        />
+
+        <div className="flex items-center gap-3">
+          <RequiredFormsAddExisting
+            availableForms={availableForms}
+            onAdd={handleAddForm}
+            open={commandOpen}
+            onOpenChange={setCommandOpen}
+            disabled={pending || isLoadingForms || availableForms.length === 0}
+            t={tForms}
+          />
+
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="flex-1"
+            onClick={() =>
+              setOpen(false, () => {
+                router.push(`/admin/${orgUId}/requirement-forms/new`);
+              })
+            }
+          >
+            <SquareArrowOutUpRight className="mr-2 h-4 w-4" />
+            {tForms('createNew')}
+          </Button>
+        </div>
+
+        <RequiredFormsDedupHint t={tForms} />
+      </div>
     </FormSheet>
   );
 };

@@ -8,6 +8,7 @@ import { useSearchParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { useCallback, useEffect, useState } from 'react';
 import { toast } from 'sonner';
+import { useRouter } from '@/i18n/navigation';
 import { useSession } from '@/lib/auth';
 
 interface EventFollowButtonProps {
@@ -21,30 +22,41 @@ export function EventFollowButton({
 }: EventFollowButtonProps) {
   const t = useTranslations('EventDetail');
   const joinEvent = useJoinEvent();
+  const router = useRouter();
   const searchParams = useSearchParams();
   const autoFollow = searchParams.get('autoFollow') === 'true';
   const [following, setFollowing] = useState(initialFollowing);
   const session = useSession();
 
+  const redirectToFormsPage = useCallback(() => {
+    const currentUrl = window.location.href;
+    window.location.href = `/events/${eventId}/forms?redirectTo=${encodeURIComponent(currentUrl)}`;
+  }, [eventId]);
+
   const handleFollow = useCallback(async () => {
     if (!session.data?.user) {
       const redirectTo = `/events/${eventId}?autoFollow=true`;
-      window.location.href = `/api/invite?redirectTo=${encodeURIComponent(redirectTo)}`;
+      router.push(`/login?redirectTo=${encodeURIComponent(redirectTo)}`);
       return;
     }
 
     try {
       const result = await joinEvent.mutateAsync(eventId);
+
       if (result.status === JoinStatus.Joined) {
         setFollowing(true);
       } else if (result.status === JoinStatus.Pending) {
-        // Non-member: joining created an org membership request.
         toast.success(t('requestSentToast'));
+      } else if (result.status === JoinStatus.RequirementsNeeded) {
+        const missingForms = result.requiredForms?.filter((f) => !f.submitted);
+        if (missingForms && missingForms.length > 0) {
+          redirectToFormsPage();
+        }
       }
     } catch (error) {
       toast.error(error instanceof Error ? error.message : undefined);
     }
-  }, [eventId, joinEvent, session.data?.user, t]);
+  }, [eventId, joinEvent, router, session.data?.user, redirectToFormsPage, t]);
 
   useEffect(() => {
     if (

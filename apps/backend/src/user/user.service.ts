@@ -33,6 +33,16 @@ export class UserService {
     });
   }
 
+  async findByIds(ids: string[]): Promise<UserEntity[]> {
+    if (ids.length === 0) {
+      return [];
+    }
+
+    return this.db.query.users.findMany({
+      where: { id: { in: ids } },
+    });
+  }
+
   async findByIdOrThrow(id: string): Promise<UserEntity> {
     const user = await this.db.query.users.findFirst({
       where: { id },

@@ -6,6 +6,73 @@ fragment EventListFields on Event {
   endsAt
   location
   shiftsCount
+  requiredFormsCount
+}
+
+fragment RequiredFormFields on RequirementForm {
+  id
+  name
+  description
+  settings {
+    submitButtonLabel
+    successTitle
+    successMessage
+  }
+  blockRefs {
+    id
+    formId
+    blockId
+    fieldOrder
+    required
+    block {
+      id
+      organizationId
+      title
+      description
+      icon
+      required
+      isEditable
+      fields {
+        id
+        blockId
+        type
+        label
+        placeholder
+        description
+        required
+        lockType
+        systemKey
+        options {
+          label
+          value
+        }
+        documentFileId
+        documentDownloadUrl
+        documentFilename
+        documentLabel
+        minAge
+        fieldOrder
+      }
+    }
+  }
+}
+
+fragment RequiredFormRefFields on RequiredFormRef {
+  form {
+    ...RequiredFormFields
+  }
+  order
+}
+
+fragment RequiredFormWithStatusFields on RequiredFormWithStatus {
+  form {
+    ...RequiredFormFields
+  }
+  order
+  submitted
+  submissionId
+  targetType
+  targetId
 }
 
 fragment EventDetailFields on Event {
@@ -17,6 +84,9 @@ fragment EventDetailFields on Event {
   }
   coverUrl
   logoUrl
+  requiredForms {
+    ...RequiredFormRefFields
+  }
 }
 
 query GetEvents($limit: Int!, $offset: Int!) {
@@ -116,6 +186,9 @@ fragment PublicEventFields on Event {
   shifts {
     ...PublicShiftFields
   }
+  requiredForms {
+    ...RequiredFormRefFields
+  }
 }
 
 query GetPublicEvent($id: ID!) {
@@ -130,5 +203,14 @@ mutation JoinEvent($eventId: ID!) {
     event {
       id
     }
+    requiredForms {
+      ...RequiredFormWithStatusFields
+    }
+  }
+}
+
+mutation SetEventRequiredForms($eventId: ID!, $formIds: [String!]!) {
+  setEventRequiredForms(eventId: $eventId, formIds: $formIds) {
+    ...RequiredFormRefFields
   }
 }

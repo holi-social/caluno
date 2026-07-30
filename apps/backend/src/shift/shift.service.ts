@@ -20,8 +20,8 @@ import type { MembershipRequestEntity } from '../membership/schemas/membership-r
 import { NotificationService } from '../notification/notification.service';
 import { buildShiftInviteSchedule } from '../notification/shift-invite-schedule';
 import { OrganizationService } from '../organization/organization.service';
-import type { RequirementFormEntity } from '../requirement-profile/schemas/requirement-form.schema';
 import type { RequirementProfileEntity } from '../requirement-profile/schemas/requirement-profile.schema';
+import type { RequiredFormStatus } from '../requirement-profile/services/required-form.service';
 import { JoinStatus } from '../shared/enums/join-status.enum';
 import {
   ACTIVE_SHIFT_INVITE_STATUSES,
@@ -1766,12 +1766,7 @@ export class ShiftService {
       name: string;
       status: string;
     }>;
-    requiredForms?: Array<{
-      form: RequirementFormEntity;
-      order: number;
-      submitted: boolean;
-      submissionId: string | null;
-    }>;
+    requiredForms?: RequiredFormStatus[];
   }> {
     const instance = await this.db.query.shiftInstances.findFirst({
       where: { id: instanceId, isCancelled: false },

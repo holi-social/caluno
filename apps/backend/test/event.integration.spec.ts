@@ -10,14 +10,19 @@ import {
 import type { INestApplication } from '@nestjs/common';
 import type { Database } from '../src/database/database.module';
 import * as schema from '../src/database/schema';
-import { ShiftInviteStatus } from '../src/shift/enums';
+import { ShiftInviteStatus, ShiftVisibility } from '../src/shift/enums';
 import {
   createEvent,
   createShift,
   createShiftInstance,
   createUser,
 } from './factories';
-import { applyBunAuthMocks } from './helpers/auth-mocks';
+import { addMembership } from './factories/org.factory';
+import {
+  applyBunAuthMocks,
+  getAuthMockUserId,
+  setAuthMockUserId,
+} from './helpers/auth-mocks';
 import {
   graphqlRequest,
   graphqlRequestRequiringData,
@@ -141,5 +146,115 @@ describe('publicEvent', () => {
 
     expect(instanceResult).toBeDefined();
     expect(instanceResult?.spotsLeft).toBe(4);
+  });
+
+  it('hides members-only shifts from non-members', async () => {
+    const originalUserId = getAuthMockUserId();
+    const user = await createUser(db);
+    setAuthMockUserId(user.id);
+
+    const event = await createEvent(db, { organizationUnitId });
+    const publicShift = await createShift(db, {
+      organizationUnitId,
+      eventId: event.id,
+      visibility: ShiftVisibility.ALL_MEMBERS,
+    });
+    await createShift(db, {
+      organizationUnitId,
+      eventId: event.id,
+      visibility: ShiftVisibility.INVITED_MEMBERS,
+    });
+
+    const data = await graphqlRequestRequiringData<{
+      publicEvent: { shifts: Array<{ id: string }> };
+    }>(
+      app,
+      {
+        query: `
+          query PublicEvent($id: ID!) {
+            publicEvent(id: $id) {
+              shifts { id }
+            }
+          }
+        `,
+        variables: { id: event.id },
+      },
+      'publicEvent',
+    );
+
+    expect(data.publicEvent.shifts).toHaveLength(1);
+    expect(data.publicEvent.shifts[0]?.id).toBe(publicShift.id);
+
+    setAuthMockUserId(originalUserId);
+  });
+
+  it('shows members-only shifts to members', async () => {
+    const originalUserId = getAuthMockUserId();
+    const user = await createUser(db);
+    await addMembership(db, user.id, organizationUnitId);
+    setAuthMockUserId(user.id);
+
+    const event = await createEvent(db, { organizationUnitId });
+    const publicShift = await createShift(db, {
+      organizationUnitId,
+      eventId: event.id,
+      visibility: ShiftVisibility.ALL_MEMBERS,
+    });
+    const privateShift = await createShift(db, {
+      organizationUnitId,
+      eventId: event.id,
+      visibility: ShiftVisibility.INVITED_MEMBERS,
+    });
+
+    const data = await graphqlRequestRequiringData<{
+      publicEvent: { shifts: Array<{ id: string }> };
+    }>(
+      app,
+      {
+        query: `
+          query PublicEvent($id: ID!) {
+            publicEvent(id: $id) {
+              shifts { id }
+            }
+          }
+        `,
+        variables: { id: event.id },
+      },
+      'publicEvent',
+    );
+
+    const shiftIds = data.publicEvent.shifts.map((shift) => shift.id).sort();
+    expect(shiftIds).toEqual([publicShift.id, privateShift.id].sort());
+
+    setAuthMockUserId(originalUserId);
+  });
+
+  it('looks up a public event by slug', async () => {
+    const event = await createEvent(db, {
+      organizationUnitId,
+      title: 'Slug Lookup Event',
+      slug: 'slug-lookup-event',
+    });
+
+    const data = await graphqlRequestRequiringData<{
+      publicEvent: { id: string; title: string };
+    }>(
+      app,
+      {
+        query: `
+          query PublicEvent($id: ID!) {
+            publicEvent(id: $id) {
+              id
+              title
+            }
+          }
+        `,
+        variables: { id: event.slug },
+      },
+      'publicEvent',
+    );
+
+    expect(data.publicEvent.id).toBe(event.id);
+    expect(data.publicEvent.title).toBe('Slug Lookup Event');
   });
 });

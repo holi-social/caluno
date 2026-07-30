@@ -523,12 +523,14 @@ mutation SubmitForm($token: String!, $input: SubmitFormInput!) {
 }
 
 mutation SubmitRequiredForm(
-  $organizationUnitId: String!
+  $targetType: RequiredFormTargetType!
+  $targetId: String!
   $formId: String!
   $input: SubmitFormInput!
 ) {
   submitRequiredForm(
-    organizationUnitId: $organizationUnitId
+    targetType: $targetType
+    targetId: $targetId
     formId: $formId
     input: $input
   ) {
@@ -630,6 +632,10 @@ query GetAdminFormSubmission($id: String!) {
             label
             type
             systemKey
+            options {
+              label
+              value
+            }
           }
         }
       }

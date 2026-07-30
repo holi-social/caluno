@@ -122,3 +122,27 @@ export const setRequiredForms = async (
     }
   });
 };
+
+export const setEventRequiredForms = async (
+  db: Database,
+  args: {
+    eventId: string;
+    formIds: string[];
+  },
+) => {
+  await db.transaction(async (tx) => {
+    await tx
+      .delete(schema.eventRequiredForms)
+      .where(eq(schema.eventRequiredForms.eventId, args.eventId));
+
+    if (args.formIds.length > 0) {
+      await tx.insert(schema.eventRequiredForms).values(
+        args.formIds.map((formId, index) => ({
+          eventId: args.eventId,
+          formId,
+          order: index,
+        })),
+      );
+    }
+  });
+};

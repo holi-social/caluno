@@ -112,6 +112,8 @@ export function ShiftActionCard({
         return t('cancelledNote', { date: longDate });
       case ShiftInviteStatus.SelfJoined:
         return t('joinedNote');
+      case ShiftInviteStatus.VolunteerRejected:
+        return t('declinedNote');
       default:
         if (effectiveMembershipState === JoinStatus.Pending) {
           return t('pendingNote');
