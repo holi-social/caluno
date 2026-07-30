@@ -19,6 +19,10 @@ query GetShift($id: String!) {
       name
       logoUrl
       myMembershipState
+      organization {
+        id
+        name
+      }
     }
     createdBy {
       id
