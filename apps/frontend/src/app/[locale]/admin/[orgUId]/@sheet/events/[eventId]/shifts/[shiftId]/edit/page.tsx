@@ -52,6 +52,8 @@ export default async function EditEventShiftPage({
         recurrenceDays: shift.recurrenceDays,
         recurrenceEndsAt: shift.recurrenceEndsAt,
         imageFileId: shift.imageUrl ?? undefined,
+        minVolunteers: shift.minVolunteers ?? undefined,
+        maxVolunteers: shift.maxVolunteers ?? undefined,
       }}
     />
   );

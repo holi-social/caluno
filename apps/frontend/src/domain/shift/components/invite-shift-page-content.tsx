@@ -1,7 +1,7 @@
 import { notFound } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
 import { getDataClient } from '@/lib/data-client';
-import { updateShiftStaffing, updateShiftVolunteers } from '../actions';
+import { updateShiftVolunteers } from '../actions';
 import { InviteShiftForm } from './invite-form';
 
 interface InviteShiftPageContentProps {
@@ -53,8 +53,6 @@ export async function InviteShiftPageContent({
       instanceId={instanceId}
       shift={{
         title: shift.title,
-        minVolunteers: shift.minVolunteers,
-        maxVolunteers: shift.maxVolunteers,
         isRecurring: !!shift.rrule && shift.recurrenceDays.length > 0,
         recurrenceDays: shift.recurrenceDays,
       }}
@@ -64,7 +62,6 @@ export async function InviteShiftPageContent({
       }}
       availableMembers={memberships.map((m) => m.user)}
       invitedMembers={invitedMembers}
-      mutateStaffing={updateShiftStaffing.bind(null, orgUId, shift.id)}
       mutateVolunteers={updateShiftVolunteers.bind(null, orgUId, instanceId)}
     />
   );
