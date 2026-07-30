@@ -569,13 +569,6 @@
       "inviteAllLabel": "Invite to all instances of this shift",
       "inviteAllDescription": "Volunteers will get invited to all shifts from {startDate}, every {days}."
     },
-    "transferList": {
-      "available": "Available",
-      "invited": "Invited",
-      "searchPlaceholder": "Name or email",
-      "addAria": "Add {name}",
-      "removeAria": "Remove {name}"
-    },
     "selector": {
       "noActiveShifts": "No active shifts",
       "noActiveShiftsDescription": "Please <addShift>add a shift</addShift> or adjust the time-range of an <existingShift>existing shift</existingShift>.",

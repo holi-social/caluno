@@ -25,6 +25,11 @@ import { useLocale, useTranslations } from 'next-intl';
 import { useEffect, useId, useTransition } from 'react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
+import { MemberSelect } from '@/components/member-select';
+import {
+  getMockPauschaleEligibility,
+  getMockPauschaleUsage,
+} from '@/domain/accounting/mock-rates';
 import { useSession } from '@/lib/auth';
 import { copyToClipboard } from '@/lib/clipboard';
 import {
@@ -34,7 +39,7 @@ import {
 } from '../actions';
 import { type InviteShiftFormValues, inviteShiftFormSchema } from '../schemas';
 import { shiftShareUrl } from '../share';
-import { TransferList } from './transfer-list';
+import { getMockShiftType } from '../shift-type';
 
 interface InviteShiftFormProps {
   formId?: string;
@@ -101,13 +106,6 @@ export function InviteShiftForm({
 
   const currentUserId = session.data?.user?.id;
 
-  const allMembers = (memberships ?? [])
-    .map((m) => m.user)
-    .filter((u) => u.id !== currentUserId);
-
-  const watchedIds = form.watch('invitedMemberIds');
-  const invitedMembers = allMembers.filter((m) => watchedIds.includes(m.id));
-
   const selectedInstance = shiftInstances?.find((i) => i.id === instanceId);
   const isRecurring = !!shift?.rrule && (shift.recurrenceDays.length ?? 0) > 0;
   const inviteAllCheckboxId = useId();
@@ -118,6 +116,34 @@ export function InviteShiftForm({
   const instanceEndDate = selectedInstance
     ? new Date(selectedInstance.actualEndsAt)
     : null;
+  const shiftHours =
+    instanceStartDate &&
+    instanceEndDate &&
+    Number.isFinite(instanceStartDate.getTime()) &&
+    Number.isFinite(instanceEndDate.getTime())
+      ? (instanceEndDate.getTime() - instanceStartDate.getTime()) /
+        (1000 * 60 * 60)
+      : 0;
+
+  const shiftType = getMockShiftType(shiftId);
+  const pauschaleType = shiftType === 'non-paid' ? null : shiftType;
+
+  const allMembers = (memberships ?? [])
+    .map((m) => m.user)
+    .filter((u) => u.id !== currentUserId)
+    .map((user) => ({
+      ...user,
+      pauschale:
+        pauschaleType && getMockPauschaleEligibility(user.id)
+          ? {
+              type: pauschaleType,
+              ...getMockPauschaleUsage(user.id, pauschaleType, shiftHours),
+            }
+          : null,
+    }))
+    .sort((a, b) => (a.pauschale ? 0 : 1) - (b.pauschale ? 0 : 1));
+
+  const watchedIds = form.watch('invitedMemberIds');
 
   const dateOptions: Intl.DateTimeFormatOptions = {
     weekday: 'short',
@@ -286,10 +312,10 @@ export function InviteShiftForm({
       {/* Invite section */}
       <div className="flex flex-col gap-4 flex-1">
         <p className="text-xl font-bold">{t('inviteForm.title')}</p>
-        <TransferList
-          available={allMembers}
-          invited={invitedMembers}
-          onInvitedChange={(ids) => form.setValue('invitedMemberIds', ids)}
+        <MemberSelect
+          members={allMembers}
+          value={watchedIds}
+          onChange={(ids) => form.setValue('invitedMemberIds', ids)}
         />
         <Button
           type="button"

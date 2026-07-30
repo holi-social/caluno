@@ -6,7 +6,6 @@ import {
   type PauschalenType,
   TYPE_COLOR,
 } from '@/domain/accounting/components/doc-type-header';
-import { MOCK_PAUSCHALE_LIMITS } from '@/domain/accounting/mock-rates';
 
 export type UserCardPauschale = {
   type: PauschalenType;
@@ -64,7 +63,7 @@ const PauschaleStatus = ({ pauschale }: { pauschale: UserCardPauschale }) => {
   const format = useFormatter();
   const { type, amountLeft, amountProjected } = pauschale;
 
-  const isOverLimit = amountProjected > MOCK_PAUSCHALE_LIMITS[type];
+  const isOverLimit = amountProjected < 0;
   const amountClassName = cn('font-medium', isOverLimit && 'text-destructive');
   const amountStyle = isOverLimit ? undefined : { color: TYPE_COLOR[type] };
 
