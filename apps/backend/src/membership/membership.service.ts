@@ -580,7 +580,17 @@ export class MembershipService {
     status?: MembershipRequestStatus,
   ): Promise<MembershipRequestEntity[]> {
     return this.db.query.membershipRequests.findMany({
-      where: { userId, ...(status ? { status } : {}) },
+      where: {
+        userId,
+        ...(status
+          ? { status }
+          : {
+              OR: [
+                { status: MembershipRequestStatus.PENDING },
+                { status: MembershipRequestStatus.REJECTED },
+              ],
+            }),
+      },
       with: {
         user: true,
         organizationUnit: true,

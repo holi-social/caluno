@@ -7,6 +7,7 @@ import { type Database, DatabaseModule } from '../src/database/database.module';
 import { DATABASE_CONNECTION } from '../src/database/database-connection';
 import * as schema from '../src/database/schema';
 import { NotFoundGraphQLError } from '../src/graphql/errors';
+import { MembershipRequestStatus } from '../src/membership/enums';
 import { MembershipService } from '../src/membership/membership.service';
 import { NotificationService } from '../src/notification';
 import { RequiredFormService } from '../src/requirement-profile/services/required-form.service';
@@ -93,6 +94,99 @@ describe('MembershipService', () => {
         .from(schema.memberships)
         .where(eq(schema.memberships.id, membership.id));
       expect(stillThere.length).toBe(1);
+    });
+  });
+
+  describe('getMyMembershipRequests (profile filter)', () => {
+    it('returns only PENDING and REJECTED, excluding ACCEPTED and CANCELLED', async () => {
+      const user = await createUser(db);
+      const { organization, type } = await createOrganizationWithType(
+        db,
+        `Filter Org ${crypto.randomUUID()}`,
+      );
+      // The schema allows only one root unit (parentId IS NULL) per org
+      // (uq_organization_units_organization_id_is_root_true). Create the first
+      // unit as the root and nest the rest under it, so each is still distinct
+      // for the (userId, organizationUnitId) membership-request constraint.
+      const root = await createUnit(db, {
+        organizationId: organization.id,
+        typeId: type.id,
+        name: 'root',
+      });
+      const mkUnit = (name: string) =>
+        createUnit(db, {
+          organizationId: organization.id,
+          typeId: type.id,
+          name,
+          parentId: root.id,
+        });
+
+      const [pending, accepted, rejected, cancelled] = await Promise.all([
+        mkUnit('pending'),
+        mkUnit('accepted'),
+        mkUnit('rejected'),
+        mkUnit('cancelled'),
+      ]);
+
+      await db.insert(schema.membershipRequests).values([
+        {
+          userId: user.id,
+          organizationUnitId: pending.id,
+          status: MembershipRequestStatus.PENDING,
+          metadata: {},
+        },
+        {
+          userId: user.id,
+          organizationUnitId: accepted.id,
+          status: MembershipRequestStatus.ACCEPTED,
+          metadata: {},
+        },
+        {
+          userId: user.id,
+          organizationUnitId: rejected.id,
+          status: MembershipRequestStatus.REJECTED,
+          metadata: {},
+        },
+        {
+          userId: user.id,
+          organizationUnitId: cancelled.id,
+          status: MembershipRequestStatus.CANCELLED,
+          metadata: {},
+        },
+      ]);
+
+      const items = await service.getMyMembershipRequests(user.id);
+      const statuses = items.map((i) => i.status).sort();
+      expect(statuses).toEqual([
+        MembershipRequestStatus.PENDING,
+        MembershipRequestStatus.REJECTED,
+      ]);
+    });
+
+    it('honors an explicit status filter', async () => {
+      const user = await createUser(db);
+      const { organization, type } = await createOrganizationWithType(
+        db,
+        `Filter2 Org ${crypto.randomUUID()}`,
+      );
+      const unit = await createUnit(db, {
+        organizationId: organization.id,
+        typeId: type.id,
+        name: 'unit',
+      });
+      await db.insert(schema.membershipRequests).values({
+        userId: user.id,
+        organizationUnitId: unit.id,
+        status: MembershipRequestStatus.PENDING,
+        metadata: {},
+      });
+
+      const items = await service.getMyMembershipRequests(
+        user.id,
+        MembershipRequestStatus.PENDING,
+      );
+      expect(items).toHaveLength(1);
+      expect(items[0].status).toBe(MembershipRequestStatus.PENDING);
     });
   });
 });
