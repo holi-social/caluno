@@ -1,11 +1,12 @@
 import { JoinStatus } from '@repo/data';
 import { redirect } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
+import type { RequiredFormItem } from '@/domain/requirement-form/components/required-form-renderer';
 import { redirect as redirectWithLocale } from '@/i18n/navigation';
 import { getSession } from '@/lib/auth-server';
 import { getDataClient } from '@/lib/data-client';
 import { getSafeRedirect } from '@/lib/safe-redirect';
-import { JoinFormsClient, type RequiredFormItem } from './join-forms-client';
+import { JoinFormsClient } from './join-forms-client';
 
 interface JoinFormsPageProps {
   params: Promise<{ locale: string; orgUId: string }>;

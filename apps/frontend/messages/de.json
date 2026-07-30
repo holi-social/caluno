@@ -445,11 +445,6 @@
       "title": "{orgName} beitreten",
       "description": "Bitte fülle die erforderlichen Formulare aus, bevor du eine Beitrittsanfrage stellst.",
       "noForms": "Es sind keine Formulare erforderlich.",
-      "completed": "Abgeschlossen",
-      "pending": "Ausstehend",
-      "fillOut": "Ausfüllen",
-      "fillFormTitle": "Formular ausfüllen",
-      "requestToJoin": "Beitrittsanfrage senden",
       "joined": "Du bist der Organisation beigetreten",
       "requestPending": "Deine Anfrage wird geprüft",
       "rejected": "Deine Anfrage wurde abgelehnt",
@@ -1079,6 +1074,9 @@
       "couldNotCopyLink": "Link konnte nicht kopiert werden"
     }
   },
+  "RequiredFormRenderer": {
+    "noForms": "Es sind keine Formulare erforderlich."
+  },
   "MyTime": {
     "title": "Meine Einsätze",
     "summary": {
@@ -1120,7 +1118,17 @@
     "spotsLeft": "{n, plural, one {# Platz frei} other {# Plätze frei}}",
     "unlimitedSpots": "Offen",
     "today": "Heute",
-    "requiredFormsTitle": "Erforderliche Formulare"
+    "requiredFormsTitle": "Erforderliche Formulare",
+    "forms": {
+      "title": "{eventTitle} beitreten",
+      "description": "Bitte fülle die erforderlichen Formulare aus, bevor du dem Event beitrittst.",
+      "noForms": "Es sind keine Formulare erforderlich.",
+      "joinedToast": "Du machst jetzt bei {eventTitle} mit",
+      "requestSentToast": "Anfrage gesendet — ein Koordinator bestätigt sie.",
+      "rejectedToast": "Anfrage nicht genehmigt",
+      "requirementsNeededToast": "Bitte fülle zuerst alle erforderlichen Formulare aus",
+      "requestFailed": "Anfrage konnte nicht gesendet werden"
+    }
   },
   "ShiftDetail": {
     "coverImageAlt": "Titelbild für {title}",
