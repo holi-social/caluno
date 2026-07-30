@@ -602,6 +602,26 @@
       "inviteAllLabel": "Invite to all future instances of this shift",
       "inviteAllDescription": "Volunteers will get invited to all shifts starting from {startDate}, every {days}."
     },
+    "successDialog": {
+      "title": "Shift created",
+      "bodyOpen": "Your open shift is live! It has been shared with all volunteers inside of our organisation. Now sit back and relax…",
+      "bodyInvited": "Your shift is live! Invited volunteers have been notified.",
+      "recurrence": {
+        "oneTime": "One-time",
+        "daily": "Daily",
+        "workingDays": "Weekdays",
+        "weekend": "Weekends"
+      },
+      "weekDayShort": {
+        "MONDAY": "Mon.",
+        "TUESDAY": "Tue.",
+        "WEDNESDAY": "Wed.",
+        "THURSDAY": "Thu.",
+        "FRIDAY": "Fri.",
+        "SATURDAY": "Sat.",
+        "SUNDAY": "Sun."
+      }
+    },
     "transferList": {
       "available": "Available",
       "invited": "Invited",
