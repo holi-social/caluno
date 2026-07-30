@@ -1114,7 +1114,8 @@
     "fullyBooked": "Fully booked",
     "spotsLeft": "{n, plural, one {# spot left} other {# spots left}}",
     "unlimitedSpots": "Open",
-    "today": "Today"
+    "today": "Today",
+    "requiredFormsTitle": "Required forms"
   },
   "ShiftDetail": {
     "coverImageAlt": "Cover image for {title}",
@@ -1158,7 +1159,8 @@
       "event": "Event",
       "dates": "Dates",
       "location": "Location",
-      "shifts": "Shifts"
+      "shifts": "Shifts",
+      "requiredForms": "Forms"
     },
     "action": {
       "viewAria": "View event",
@@ -1200,6 +1202,25 @@
         "addButton": "Add shift",
         "emptyTitle": "No shifts yet",
         "emptyDescription": "Add a shift to this event to get started."
+      },
+      "requiredForms": {
+        "title": "Forms required to join",
+        "subtitle": "Completed before joining {eventTitle}",
+        "pill": {
+          "required": "{count, plural, one {1 form required} other {{count} forms required}}",
+          "none": "No forms required"
+        },
+        "questionCount": "{count, plural, one {1 question} other {{count} questions}}",
+        "addExisting": "+ Add existing",
+        "createNew": "Create new",
+        "searchForms": "Search forms...",
+        "noFormsFound": "No forms found",
+        "dedupHint": "Volunteers won't be asked for information they've already provided.",
+        "fileUploadLabel": "file upload",
+        "removeAria": "Remove {name}",
+        "addedToast": "Form attached",
+        "removedToast": "Form removed",
+        "updateFailedToast": "Failed to update required forms"
       }
     },
     "invite": {

@@ -8,6 +8,7 @@ import {
   DetailLogoImage,
 } from '@/components/detail-entity-image';
 import { AdminEventShiftsSection } from '@/domain/event/components/admin-event-shifts-section';
+import { EventRequiredFormsPopover } from '@/domain/event/components/event-required-forms-popover';
 import { EventVolunteersSection } from '@/domain/event/components/event-volunteers-section';
 
 import { eventsListPath } from '@/domain/event/routes';
@@ -103,6 +104,7 @@ export default async function EventDetailPage({
 
         {canEdit && (
           <div className="flex flex-col md:flex-row gap-2 shrink-0">
+            <EventRequiredFormsPopover orgUId={orgUId} eventId={eventId} />
             <Link href={`/admin/${orgUId}/events/${eventId}/edit`}>
               <Button variant="outline">
                 <SquarePen />

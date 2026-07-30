@@ -1,5 +1,6 @@
 import { Args, Context, ID, Query, Resolver } from '@nestjs/graphql';
 import { AllowAnonymous } from '@thallesp/nestjs-better-auth';
+import { isUUID } from 'class-validator';
 import { PERMISSIONS } from '../../auth/constants';
 import { Permissions } from '../../auth/decorators/permissions.decorator';
 import { NotFoundGraphQLError } from '../../graphql/errors/not-found.error';
@@ -42,7 +43,9 @@ export class EventQueryResolver {
   async publicEvent(
     @Args('id', { type: () => ID }) id: string,
   ): Promise<Event> {
-    const event = await this.eventService.findByIdPublic(id);
+    const event = isUUID(id)
+      ? await this.eventService.findByIdPublic(id)
+      : await this.eventService.findBySlug(id);
     if (!event) {
       throw new NotFoundGraphQLError(`Event with ID ${id} not found`);
     }

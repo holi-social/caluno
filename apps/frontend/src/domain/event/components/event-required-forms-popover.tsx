@@ -2,39 +2,40 @@
 
 import { PermissionKey } from '@repo/data';
 import {
+  useEvent,
   useHasPermission,
   useOrganizationUnitWithSuspense,
   useRequirementForms,
-  useSetRequiredForms,
+  useSetEventRequiredForms,
 } from '@repo/data/react';
 import { useTranslations } from 'next-intl';
 import { useMemo } from 'react';
 import { toast } from 'sonner';
 import { RequiredFormsPopover } from '@/components/required-forms-popover';
 
-interface VolunteerRequiredFormsPopoverProps {
+interface EventRequiredFormsPopoverProps {
   orgUId: string;
+  eventId: string;
 }
 
-export function VolunteerRequiredFormsPopover({
+export function EventRequiredFormsPopover({
   orgUId,
-}: VolunteerRequiredFormsPopoverProps) {
-  const t = useTranslations('Volunteer.requiredForms');
+  eventId,
+}: EventRequiredFormsPopoverProps) {
+  const t = useTranslations('Event.detail.requiredForms');
   const commonT = useTranslations('Common');
 
-  const canConfigure = useHasPermission([
-    PermissionKey.OrgEdit,
-    PermissionKey.RequirementProfileEdit,
-  ]);
+  const canConfigure = useHasPermission([PermissionKey.ShiftEdit]);
 
   const { data: orgUnit } = useOrganizationUnitWithSuspense(orgUId);
+  const { data: event } = useEvent(eventId);
   const { data: formsData, refetch } = useRequirementForms(
     orgUnit?.organizationId ?? '',
   );
 
-  const setRequiredForms = useSetRequiredForms();
+  const setEventRequiredForms = useSetEventRequiredForms();
 
-  const requiredForms = orgUnit?.requiredForms ?? [];
+  const requiredForms = event?.requiredForms ?? [];
 
   const attachedFormIds = useMemo(
     () => new Set(requiredForms.map((ref) => ref.form.id)),
@@ -50,8 +51,8 @@ export function VolunteerRequiredFormsPopover({
   const handleChange = async (formIds: string[]) => {
     try {
       const previousCount = requiredForms.length;
-      await setRequiredForms.mutateAsync({
-        organizationUnitId: orgUId,
+      await setEventRequiredForms.mutateAsync({
+        eventId,
         formIds,
       });
       toast.success(
@@ -77,13 +78,13 @@ export function VolunteerRequiredFormsPopover({
       requiredForms={requiredForms}
       availableForms={availableForms}
       onChange={handleChange}
-      isPending={setRequiredForms.isPending}
+      isPending={setEventRequiredForms.isPending}
       disabled={!canConfigure}
       createNewHref={`/admin/${orgUId}/requirement-forms/new`}
       t={t}
       subtitle={t('subtitle', {
         brand: commonT('brand'),
-        unitName: orgUnit?.name ?? '',
+        eventTitle: event?.title ?? '',
       })}
       onOpenChange={handleOpenChange}
     />

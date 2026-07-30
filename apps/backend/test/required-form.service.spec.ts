@@ -25,8 +25,10 @@ import {
   createMembershipRequest,
   createRequirementForm,
   createUser,
+  setEventRequiredForms,
   setRequiredForms,
 } from './factories';
+import { createEvent } from './factories/event.factory';
 import {
   addMembership,
   createOrganizationWithType,
@@ -267,6 +269,60 @@ describe('RequiredFormService', () => {
     });
   });
 
+  describe('countRequiredFormsByEventIds', () => {
+    it('returns counts for multiple events', async () => {
+      const { user, unit } = await setupOrg();
+      const eventA = await createEvent(db, { organizationUnitId: unit.id });
+      const eventB = await createEvent(db, { organizationUnitId: unit.id });
+      const { form: formA } = await createRequirementForm(db, {
+        organizationId: unit.organizationId,
+        organizationUnitId: unit.id,
+        createdById: user.id,
+      });
+      const { form: formB } = await createRequirementForm(db, {
+        organizationId: unit.organizationId,
+        organizationUnitId: unit.id,
+        createdById: user.id,
+      });
+
+      await setEventRequiredForms(db, {
+        eventId: eventA.id,
+        formIds: [formA.id, formB.id],
+      });
+      await setEventRequiredForms(db, {
+        eventId: eventB.id,
+        formIds: [formA.id],
+      });
+
+      const counts = await requiredFormService.countRequiredFormsByEventIds([
+        eventA.id,
+        eventB.id,
+      ]);
+
+      const countsByEventId = new Map(
+        counts.map((row) => [row.eventId, row.count]),
+      );
+      expect(countsByEventId.get(eventA.id)).toBe(2);
+      expect(countsByEventId.get(eventB.id)).toBe(1);
+    });
+
+    it('returns zero for events with no required forms', async () => {
+      const { unit } = await setupOrg();
+      const event = await createEvent(db, { organizationUnitId: unit.id });
+
+      const counts = await requiredFormService.countRequiredFormsByEventIds([
+        event.id,
+      ]);
+
+      expect(counts).toEqual([]);
+    });
+
+    it('returns an empty array for empty input', async () => {
+      const counts = await requiredFormService.countRequiredFormsByEventIds([]);
+      expect(counts).toEqual([]);
+    });
+  });
+
   describe('areRequiredFormsSatisfied', () => {
     it('is satisfied when no required forms are attached', async () => {
       const { user, unit } = await setupOrg();
@@ -436,7 +492,10 @@ describe('RequiredFormService', () => {
       });
 
       const submission = await formSubmissionService.submitRequiredForm(
-        unit.id,
+        {
+          targetType: RequiredFormTargetType.ORGANIZATION_UNIT,
+          targetId: unit.id,
+        },
         form.id,
         { values: [] },
         user.id,
@@ -456,7 +515,10 @@ describe('RequiredFormService', () => {
 
       await expect(
         formSubmissionService.submitRequiredForm(
-          unit.id,
+          {
+            targetType: RequiredFormTargetType.ORGANIZATION_UNIT,
+            targetId: unit.id,
+          },
           form.id,
           { values: [] },
           user.id,

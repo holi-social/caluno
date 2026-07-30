@@ -17,6 +17,7 @@ import {
   createShiftInstance,
   createUser,
 } from './factories';
+import { addMembership } from './factories/org.factory';
 import {
   applyBunAuthMocks,
   getAuthMockUserId,
@@ -147,7 +148,11 @@ describe('publicEvent', () => {
     expect(instanceResult?.spotsLeft).toBe(4);
   });
 
-  it('hides invite-only shifts from users who were not invited', async () => {
+  it('hides members-only shifts from non-members', async () => {
+    const originalUserId = getAuthMockUserId();
+    const user = await createUser(db);
+    setAuthMockUserId(user.id);
+
     const event = await createEvent(db, { organizationUnitId });
     const publicShift = await createShift(db, {
       organizationUnitId,
@@ -179,11 +184,14 @@ describe('publicEvent', () => {
 
     expect(data.publicEvent.shifts).toHaveLength(1);
     expect(data.publicEvent.shifts[0]?.id).toBe(publicShift.id);
+
+    setAuthMockUserId(originalUserId);
   });
 
-  it('shows invite-only shifts to invited users', async () => {
+  it('shows members-only shifts to members', async () => {
     const originalUserId = getAuthMockUserId();
     const user = await createUser(db);
+    await addMembership(db, user.id, organizationUnitId);
     setAuthMockUserId(user.id);
 
     const event = await createEvent(db, { organizationUnitId });
@@ -196,12 +204,6 @@ describe('publicEvent', () => {
       organizationUnitId,
       eventId: event.id,
       visibility: ShiftVisibility.INVITED_MEMBERS,
-    });
-
-    await db.insert(schema.shiftInvites).values({
-      shiftId: privateShift.id,
-      userId: user.id,
-      status: ShiftInviteStatus.INVITED,
     });
 
     const data = await graphqlRequestRequiringData<{

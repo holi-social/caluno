@@ -45,9 +45,11 @@ export function EventsTable({ events, orgUId, canEdit }: EventsTableProps) {
         </EmptyHeader>
         {canEdit && (
           <EmptyContent>
-            <Link href={`/admin/${orgUId}/events/new`}>
-              <Button>{t('list.createButton')}</Button>
-            </Link>
+            <Button asChild>
+              <Link href={`/admin/${orgUId}/events/new`}>
+                {t('list.createButton')}
+              </Link>
+            </Button>
           </EmptyContent>
         )}
       </Empty>
@@ -55,36 +57,59 @@ export function EventsTable({ events, orgUId, canEdit }: EventsTableProps) {
   }
 
   return (
-    <div className="rounded-md border overflow-x-auto">
-      <Table>
+    <div className="rounded-md border">
+      <Table className="table-fixed">
         <TableHeader>
           <TableRow>
-            <TableHead>{t('table.event')}</TableHead>
-            <TableHead>{t('table.dates')}</TableHead>
-            <TableHead>{t('table.location')}</TableHead>
-            <TableHead>{t('table.shifts')}</TableHead>
-            <TableHead />
+            <TableHead className="w-[40%] sm:w-[35%] lg:w-[30%]">
+              {t('table.event')}
+            </TableHead>
+            <TableHead className="w-[100px] sm:w-[120px] lg:w-[140px]">
+              {t('table.dates')}
+            </TableHead>
+            <TableHead className="hidden sm:table-cell w-[20%] lg:w-[18%]">
+              {t('table.location')}
+            </TableHead>
+            <TableHead className="w-[60px] sm:w-[70px]">
+              {t('table.shifts')}
+            </TableHead>
+            <TableHead className="w-[60px] sm:w-[70px]">
+              {t('table.requiredForms')}
+            </TableHead>
+            <TableHead className="w-[120px] sm:w-[140px]">
+              <span className="sr-only">{t('action.viewAria')}</span>
+            </TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {events.map((event) => (
             <TableRow key={event.id}>
-              <TableCell>
+              <TableCell className="min-w-0">
                 <Link
                   href={eventDetailPath(orgUId, event.id)}
                   className="hover:underline block truncate"
+                  title={event.title}
                 >
                   {event.title}
                 </Link>
               </TableCell>
-              <TableCell className="text-muted-foreground">
+              <TableCell
+                className="text-muted-foreground truncate"
+                title={formatRange(event.startsAt, event.endsAt)}
+              >
                 {formatRange(event.startsAt, event.endsAt)}
               </TableCell>
-              <TableCell className="text-muted-foreground">
+              <TableCell
+                className="text-muted-foreground truncate hidden sm:table-cell"
+                title={event.location ?? undefined}
+              >
                 {event.location ?? '—'}
               </TableCell>
               <TableCell>
                 <Badge variant="outline">{event.shiftsCount}</Badge>
+              </TableCell>
+              <TableCell>
+                <Badge variant="outline">{event.requiredFormsCount}</Badge>
               </TableCell>
               <TableCell>
                 <EventActionBar

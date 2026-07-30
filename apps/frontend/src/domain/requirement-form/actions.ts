@@ -1,6 +1,6 @@
 'use server';
 
-import { FieldType } from '@repo/data';
+import { FieldType, RequiredFormTargetType } from '@repo/data';
 import { revalidatePath } from 'next/cache';
 import z from 'zod';
 import { getDataClient } from '@/lib/data-client';
@@ -98,7 +98,8 @@ export const submitForm = actionClient
   });
 
 const submitRequiredFormSchema = z.object({
-  organizationUnitId: z.string().min(1),
+  targetType: z.nativeEnum(RequiredFormTargetType),
+  targetId: z.string().min(1),
   formId: z.string().min(1),
   values: z.array(
     z.object({
@@ -114,7 +115,8 @@ export const submitRequiredForm = actionClient
   .action(async ({ parsedInput }) => {
     const data = await getDataClient();
     const result = await data.requirementForm.submitRequiredForm(
-      parsedInput.organizationUnitId,
+      parsedInput.targetType,
+      parsedInput.targetId,
       parsedInput.formId,
       { values: parsedInput.values },
     );

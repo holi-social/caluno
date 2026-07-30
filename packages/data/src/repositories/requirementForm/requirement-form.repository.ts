@@ -2,6 +2,7 @@ import type {
   CreateFormBlockFieldInput,
   CreateFormBlockInput,
   CreateRequirementFormInput,
+  RequiredFormTargetType,
   SubmitFormInput,
   UpdateFormBlockFieldInput,
   UpdateFormBlockInput,
@@ -103,12 +104,14 @@ export class RequirementFormRepository extends BaseRepository {
   }
 
   async submitRequiredForm(
-    organizationUnitId: string,
+    targetType: RequiredFormTargetType,
+    targetId: string,
     formId: string,
     input: SubmitFormInput,
   ) {
     const data = await this.sdk.SubmitRequiredForm({
-      organizationUnitId,
+      targetType,
+      targetId,
       formId,
       input,
     });

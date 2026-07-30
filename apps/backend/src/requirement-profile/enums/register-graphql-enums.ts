@@ -3,6 +3,7 @@ import {
   FieldType,
   FormSubmissionStatus,
   OrganizationUserProfileStatus,
+  RequiredFormTargetType,
   RequirementFulfillmentStatus,
   RequirementProfileSubmissionStatus,
   RequirementType,
@@ -30,4 +31,8 @@ registerEnumType(FieldType, {
 
 registerEnumType(FormSubmissionStatus, {
   name: 'FormSubmissionStatus',
+});
+
+registerEnumType(RequiredFormTargetType, {
+  name: 'RequiredFormTargetType',
 });

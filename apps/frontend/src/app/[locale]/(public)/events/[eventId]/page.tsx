@@ -8,6 +8,7 @@ import { EventPageHeader } from '@/domain/event/components/event-page-header';
 import { EventShiftsSection } from '@/domain/event/components/event-shifts-section';
 import { getEventSpotsSummary } from '@/domain/event/lib/event-spots';
 import { resolveLocale } from '@/i18n/routing';
+import { getSession } from '@/lib/auth-server';
 import { getDataClient } from '@/lib/data-client';
 import { getFormatting } from '@/lib/formatting/formatting-server';
 
@@ -46,6 +47,23 @@ export default async function EventPage({ params }: EventPageProps) {
       notFound();
     }
     throw error;
+  }
+
+  const session = await getSession();
+  let profileData: Record<string, string> = {};
+  if (session) {
+    try {
+      const userProfile = await data.requirementForm.getMyUserProfile();
+      if (
+        userProfile?.data &&
+        typeof userProfile.data === 'object' &&
+        !Array.isArray(userProfile.data)
+      ) {
+        profileData = userProfile.data as Record<string, string>;
+      }
+    } catch {
+      // Ignore profile fetch errors; form will render without prefilled values.
+    }
   }
 
   const spotsSummary = getEventSpotsSummary(event.shifts);
@@ -109,6 +127,7 @@ export default async function EventPage({ params }: EventPageProps) {
               <EventFollowButton
                 eventId={event.id}
                 initialFollowing={event.isFollowing}
+                profileData={profileData}
               />
             </div>
 

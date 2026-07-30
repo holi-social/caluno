@@ -3,6 +3,7 @@ export { createMembershipRequest } from './membership-request.factory';
 export {
   createFormSubmission,
   createRequirementForm,
+  setEventRequiredForms,
   setRequiredForms,
 } from './requirement-form.factory';
 export { createShift } from './shift.factory';

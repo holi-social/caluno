@@ -25,4 +25,7 @@ export class CreateEventInput {
 
   @Field(() => [String], { nullable: true })
   invitedMemberIds?: string[] | null;
+
+  @Field(() => [String], { nullable: true })
+  requiredFormIds?: string[] | null;
 }

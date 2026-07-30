@@ -4,39 +4,40 @@ import {
   Session,
   type UserSession,
 } from '@thallesp/nestjs-better-auth';
+import { plainToInstance } from 'class-transformer';
 import { Loader } from '../../graphql/decorators/loader.decorator';
+import { RequiredFormRef } from '../../organization/models/organization-unit-required-form.model';
+import { RequirementForm } from '../../requirement-profile/models/requirement-form.model';
 import { Shift } from '../../shift/models/shift.model';
 import { UserMapper } from '../../user/mappers/user.mapper';
 import { User } from '../../user/models/user.model';
-import { UserService } from '../../user/user.service';
 import { EventInviteStatus } from '../enums';
-import { EventService } from '../event.service';
 import { Event } from '../models/event.model';
 import { EventOrganizationUnit } from '../models/event-organization-unit.model';
 import type { EventEntity } from '../schemas/event.schema';
+import { EventInviteLoader } from './event-invite.loader';
 import { EventOrganizationUnitLoader } from './event-organization-unit.loader';
+import { EventOrganizerLoader } from './event-organizer.loader';
+import { EventRequiredFormsLoader } from './event-required-forms.loader';
 import { EventShiftsLoader } from './loader';
 
 @Resolver(() => Event)
 export class EventFieldResolver {
-  constructor(
-    private readonly userService: UserService,
-    private readonly userMapper: UserMapper,
-    private readonly eventService: EventService,
-  ) {}
+  constructor(private readonly userMapper: UserMapper) {}
 
   @AllowAnonymous()
   @ResolveField(() => User, { nullable: true })
   async organizer(
     @Parent() event: EventEntity,
     @Session() session: UserSession,
+    @Loader(EventOrganizerLoader) loader: EventOrganizerLoader,
   ): Promise<User | null> {
     if (!session?.user) {
       return null;
     }
 
-    const organizer = await this.userService.findByIdOrThrow(event.createdById);
-    return this.userMapper.toModelOrThrow(organizer);
+    const organizer = await loader.userById.load(event.createdById);
+    return organizer ? this.userMapper.toModelOrThrow(organizer) : null;
   }
 
   @AllowAnonymous()
@@ -52,6 +53,15 @@ export class EventFieldResolver {
     });
   }
 
+  @AllowAnonymous()
+  @ResolveField(() => Int)
+  async requiredFormsCount(
+    @Parent() event: EventEntity,
+    @Loader(EventRequiredFormsLoader) loader: EventRequiredFormsLoader,
+  ): Promise<number> {
+    return loader.countByEventId.load(event.id);
+  }
+
   // Events are a lower-commitment "following" shortlist, not an invite flow —
   // deliberately a boolean, kept separate from shift invite vocabulary. Org
   // membership pending/rejected is surfaced elsewhere (OrganizationUnit).
@@ -60,12 +70,12 @@ export class EventFieldResolver {
   async isFollowing(
     @Parent() event: EventEntity,
     @Session() session: UserSession,
+    @Loader(EventInviteLoader) loader: EventInviteLoader,
   ): Promise<boolean> {
     if (!session?.user) return false;
 
-    const invite = await this.eventService.findInvite(
-      event.id,
-      session.user.id,
+    const invite = await loader.inviteByEventIdAndUserId.load(
+      `${event.id}:${session.user.id}`,
     );
     return invite?.status === EventInviteStatus.ACCEPTED;
   }
@@ -96,5 +106,19 @@ export class EventFieldResolver {
     @Loader(EventOrganizationUnitLoader) loader: EventOrganizationUnitLoader,
   ): Promise<EventOrganizationUnit | null> {
     return loader.organizationUnitById.load(event.organizationUnitId);
+  }
+
+  @AllowAnonymous()
+  @ResolveField(() => [RequiredFormRef])
+  async requiredForms(
+    @Parent() event: EventEntity,
+    @Loader(EventRequiredFormsLoader) loader: EventRequiredFormsLoader,
+  ): Promise<RequiredFormRef[]> {
+    const requiredForms = await loader.requiredFormsByEventId.load(event.id);
+
+    return requiredForms.map(({ form, order }) => ({
+      form: plainToInstance(RequirementForm, form),
+      order,
+    }));
   }
 }

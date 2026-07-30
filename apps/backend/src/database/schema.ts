@@ -4,6 +4,7 @@ export * from '../auth/schemas/role.schema';
 export * from '../auth/schemas/role-permission.schema';
 export * from '../event/schemas/event.schema';
 export * from '../event/schemas/event-invite.schema';
+export * from '../event/schemas/event-required-form.schema';
 export * from '../membership/schemas/membership.schema';
 export * from '../membership/schemas/membership-request.schema';
 export * from '../membership/schemas/membership-role.schema';

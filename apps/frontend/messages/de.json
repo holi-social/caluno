@@ -1114,7 +1114,8 @@
     "fullyBooked": "Ausgebucht",
     "spotsLeft": "{n, plural, one {# Platz frei} other {# Plätze frei}}",
     "unlimitedSpots": "Offen",
-    "today": "Heute"
+    "today": "Heute",
+    "requiredFormsTitle": "Erforderliche Formulare"
   },
   "ShiftDetail": {
     "coverImageAlt": "Titelbild für {title}",
@@ -1158,7 +1159,8 @@
       "event": "Veranstaltung",
       "dates": "Datum",
       "location": "Ort",
-      "shifts": "Einsätze"
+      "shifts": "Einsätze",
+      "requiredForms": "Formulare"
     },
     "action": {
       "viewAria": "Veranstaltung ansehen",
@@ -1200,6 +1202,25 @@
         "addButton": "Einsatz hinzufügen",
         "emptyTitle": "Noch keine Einsätze",
         "emptyDescription": "Füge dieser Veranstaltung einen Einsatz hinzu, um loszulegen."
+      },
+      "requiredForms": {
+        "title": "Für Beitritt erforderliche Formulare",
+        "subtitle": "Werden vor dem Beitritt zu {eventTitle} ausgefüllt",
+        "pill": {
+          "required": "{count, plural, one {1 Formular erforderlich} other {{count} Formulare erforderlich}}",
+          "none": "Keine Formulare erforderlich"
+        },
+        "questionCount": "{count, plural, one {1 Frage} other {{count} Fragen}}",
+        "addExisting": "+ Bestehendes hinzufügen",
+        "createNew": "Neues erstellen",
+        "searchForms": "Formulare suchen...",
+        "noFormsFound": "Keine Formulare gefunden",
+        "dedupHint": "Freiwillige werden nicht nach Informationen gefragt, die sie bereits angegeben haben.",
+        "fileUploadLabel": "Datei-Upload",
+        "removeAria": "{name} entfernen",
+        "addedToast": "Formular hinzugefügt",
+        "removedToast": "Formular entfernt",
+        "updateFailedToast": "Erforderliche Formulare konnten nicht aktualisiert werden"
       }
     },
     "invite": {
