@@ -1006,10 +1006,10 @@
         "sectionSubtitle": "Org-wide hourly rate for paid shifts, by Pauschale type. Individual shifts can override this rate.",
         "epLabel": "Ehrenamtspauschale",
         "epLegal": "§3 Nr. 26a EStG",
-        "epYearlyLimit": "Up to 840 €/year",
+        "epYearlyLimit": "Up to 960 €/year",
         "ulLabel": "Übungsleiterpauschale",
         "ulLegal": "§3 Nr. 26 EStG",
-        "ulYearlyLimit": "Up to 3,000 €/year",
+        "ulYearlyLimit": "Up to 3,300 €/year",
         "saveSuccess": "Rate updated",
         "errors": {
           "invalidRate": "Enter a valid rate greater than zero"
