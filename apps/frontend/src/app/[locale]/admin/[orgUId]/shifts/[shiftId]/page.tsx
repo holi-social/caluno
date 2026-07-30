@@ -5,6 +5,7 @@ import {
   CalendarFold,
   CalendarSync,
   Clock,
+  Clock10Icon,
   FileText,
   LockKeyholeOpen,
   MapPin,
@@ -38,7 +39,7 @@ export default async function ShiftViewPage({
 
   const t = await getTranslations('Shift');
   const data = await getDataClient({ orgUId });
-  const { formatDateTime, formatRange } = await getFormatting();
+  const { formatDateTime, formatDate, formatTimeRange } = await getFormatting();
   const visibilityConfig = getVisibilityConfig(t);
   const shift = await data.shift.findById(shiftId);
 
@@ -81,7 +82,11 @@ export default async function ShiftViewPage({
               <ul className="space-y-4">
                 <li className="flex gap-2">
                   <Calendar className="text-muted-foreground shrink-0" />
-                  <span>{formatRange(startsAt, endsAt)}</span>
+                  <span>{formatDate(startsAt)}</span>
+                </li>
+                <li className="flex gap-2">
+                  <Clock10Icon className="text-muted-foreground shrink-0" />
+                  <span>{formatTimeRange(startsAt, endsAt)}</span>
                 </li>
                 <li className="flex gap-2">
                   <CalendarSync className="text-muted-foreground shrink-0" />
