@@ -1,13 +1,12 @@
 'use client';
 
-import { useFormSubmissionsByForm } from '@repo/data/react';
+import type { GetFormSubmissionsByFormQuery } from '@repo/data/react';
 import {
   Avatar,
   AvatarFallback,
   AvatarImage,
   Badge,
   Input,
-  Skeleton,
   Table,
   TableBody,
   TableCell,
@@ -28,6 +27,9 @@ import { usePathname, useRouter } from '@/i18n/navigation';
 const TAB_SUBMITTED = 'SUBMITTED';
 const TAB_REJECTED = 'REJECTED';
 
+type Submission =
+  GetFormSubmissionsByFormQuery['formSubmissionsByForm']['items'][number];
+
 interface VolunteerSubmissions {
   user: {
     id: string;
@@ -42,10 +44,10 @@ interface VolunteerSubmissions {
 
 export function FormSubmissionsClient({
   orgUId,
-  formId,
+  submissions,
 }: {
   orgUId: string;
-  formId: string;
+  submissions: Submission[];
 }) {
   const t = useTranslations('RequirementForm.submissions');
   const tCommon = useTranslations('Common');
@@ -56,15 +58,12 @@ export function FormSubmissionsClient({
   const [search, setSearch] = useState('');
 
   const activeTab = searchParams.get('status') ?? TAB_SUBMITTED;
-  const { data, isPending } = useFormSubmissionsByForm(formId);
 
   const handleTabChange = (value: string) => {
     const params = new URLSearchParams(searchParams.toString());
     params.set('status', value);
     router.replace(`${pathname}?${params.toString()}`);
   };
-
-  const submissions = data?.items ?? [];
 
   const query = search.trim().toLowerCase();
 
@@ -179,16 +178,6 @@ export function FormSubmissionsClient({
       )}
     </>
   );
-
-  if (isPending) {
-    return (
-      <div className="space-y-4">
-        <Skeleton className="h-10 w-full" />
-        <Skeleton className="h-10 w-full" />
-        <Skeleton className="h-10 w-full" />
-      </div>
-    );
-  }
 
   return (
     <Tabs value={activeTab} onValueChange={handleTabChange}>

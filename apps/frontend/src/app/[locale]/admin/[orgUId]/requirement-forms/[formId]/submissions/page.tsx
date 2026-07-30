@@ -22,13 +22,15 @@ export default async function FormSubmissionsPage({ params }: Props) {
     notFound();
   }
 
+  const submissions = await data.requirementForm.findSubmissionsByForm(formId);
+
   return (
     <div className="space-y-6">
       <div>
         <h1 className="page-title">{t('title', { formName: form.name })}</h1>
         <p className="text-muted-foreground mt-1">{t('subtitle')}</p>
       </div>
-      <FormSubmissionsClient orgUId={orgUId} formId={formId} />
+      <FormSubmissionsClient orgUId={orgUId} submissions={submissions.items} />
     </div>
   );
 }
