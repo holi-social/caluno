@@ -58,7 +58,7 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
         <div>
           <h2 className="text-xl font-bold">{tProfile('title')}</h2>
           <div className="mt-4">
-            <ProfileForm imageUrl={me.image} />
+            <ProfileForm />
           </div>
         </div>
       </div>
