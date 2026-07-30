@@ -36,7 +36,10 @@ import type {
 import { NonCompliantTimesheetDialog } from './non-compliant-timesheet-dialog';
 import type { DateRange } from './period-picker';
 import { BatchBar } from './reimbursements-batch-bar';
-import { DocumentSheet } from './reimbursements-document-sheet';
+import {
+  DocumentSheet,
+  MOCK_STAFF_ACTORS,
+} from './reimbursements-document-sheet';
 import {
   type DocTypeFilter,
   isYourActionStatus,
@@ -1101,25 +1104,24 @@ export function ReimbursementsBoard({
     }));
   }
 
-  // Supervisor decline on a pending timesheet countersign — the only live
-  // decline trigger wired up so far (see decline-reason-dialog.tsx).
+  // Decline on a pending countersign — a contract at 'contract-signing-coord'
+  // declines as the coordinator, a timesheet at 'timesheet-signing-super'
+  // declines as the supervisor (see decline-reason-dialog.tsx).
   function handleDecline(
     doc: BoardDocument,
     vol: BoardVolunteer,
     reason: string,
   ) {
-    const declinedStatus: DocStatus = doc.status.startsWith('contract')
-      ? 'contract-declined'
-      : 'timesheet-declined';
+    const isContract = doc.status.startsWith('contract');
+    const declinedAtRole = isContract ? 'coordinator' : 'supervisor';
     setDocOverrides((prev) => ({
       ...prev,
       [doc.id]: {
-        status: declinedStatus,
+        status: isContract ? 'contract-declined' : 'timesheet-declined',
         declineReason: reason,
-        // Matches the mock supervisor actor used in reimbursements-document-sheet.tsx.
-        declinedBy: 'Markus Kassier',
+        declinedBy: MOCK_STAFF_ACTORS[declinedAtRole],
         declinedAt: new Date().toLocaleDateString('de-DE'),
-        declinedAtRole: 'supervisor',
+        declinedAtRole,
       },
     }));
     toast.success(t('docs.declineDialog.toast', { name: vol.name }));

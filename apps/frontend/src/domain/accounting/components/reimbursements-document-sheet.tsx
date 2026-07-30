@@ -56,9 +56,9 @@ interface PipelineStep {
 // Mock — no admin/staff profile page or backend record exists for these
 // people yet (dev dependency); stands in for "who actually performed this
 // step" in place of the generic role label previously shown here.
-type StaffActorRole = 'admin' | 'coordinator' | 'supervisor' | 'hq_manager';
+export type StaffActorRole = 'admin' | 'coordinator' | 'supervisor' | 'hq_manager';
 
-const MOCK_STAFF_ACTORS: Record<StaffActorRole, string> = {
+export const MOCK_STAFF_ACTORS: Record<StaffActorRole, string> = {
   admin: 'Julia Vorstand',
   coordinator: 'Nina Übungsleitung',
   supervisor: 'Markus Kassier',
@@ -714,7 +714,8 @@ export function DocumentSheet({
               >
                 {t(`actions.${actionKey}` as Parameters<typeof t>[0])}
               </Button>
-              {doc.status === 'timesheet-signing-super' && (
+              {(doc.status === 'timesheet-signing-super' ||
+                doc.status === 'contract-signing-coord') && (
                 <Button
                   className="flex-1"
                   variant="outline"
