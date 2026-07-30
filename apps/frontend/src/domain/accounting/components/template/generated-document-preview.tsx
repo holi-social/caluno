@@ -23,11 +23,38 @@ function SignatureLine({ label, unsignedLabel }: SignatureLineProps) {
   );
 }
 
-/** A value that hasn't been resolved yet — same amber "gap" convention as the template builder. */
-function Gap() {
+/**
+ * A value that hasn't been resolved.
+ * - `plain` (default): a real generated document missing a value it should have had — bare "—".
+ * - `source`: not yet known at this stage (e.g. no volunteer selected yet in the template
+ *   builder) — expected, rendered as a neutral dashed chip naming the source.
+ * - `gap`: a true profile-data gap (never collected) — the amber "warning" convention.
+ */
+function Gap({
+  variant = 'plain',
+  label,
+}: {
+  variant?: 'plain' | 'source' | 'gap';
+  label?: string;
+}) {
+  if (variant === 'plain' || !label) {
+    return (
+      <span className="rounded border border-dashed border-alert/50 bg-alert/10 px-1 text-alert">
+        —
+      </span>
+    );
+  }
+
   return (
-    <span className="rounded border border-dashed border-alert/50 bg-alert/10 px-1 text-alert">
-      —
+    <span
+      className={cn(
+        'rounded border border-dashed px-1 font-mono text-xs',
+        variant === 'gap'
+          ? 'border-alert/50 bg-alert/10 text-alert'
+          : 'border-muted-foreground/40 text-muted-foreground',
+      )}
+    >
+      {label}
     </span>
   );
 }
@@ -41,14 +68,30 @@ function resolveField(
   return manualOverrides[field.id] ?? (field.value.value || undefined);
 }
 
+/** Which `Gap` variant/label an unresolved bound field gets — `plain` when the caller supplies no labels (the creation modals). */
+function unresolvedGapProps(
+  field: TemplateLine['fields'][number],
+  unresolvedLabels: Partial<Record<DataSourceKey, string>>,
+  gapSources: Set<DataSourceKey>,
+): { variant: 'plain' | 'source' | 'gap'; label?: string } {
+  if (field.value.kind !== 'bound') return { variant: 'plain' };
+  const label = unresolvedLabels[field.value.source];
+  if (!label) return { variant: 'plain' };
+  return { variant: gapSources.has(field.value.source) ? 'gap' : 'source', label };
+}
+
 function LineRow({
   line,
   values,
   manualOverrides,
+  unresolvedLabels,
+  gapSources,
 }: {
   line: TemplateLine;
   values: Partial<Record<DataSourceKey, string>>;
   manualOverrides: Record<string, string>;
+  unresolvedLabels: Partial<Record<DataSourceKey, string>>;
+  gapSources: Set<DataSourceKey>;
 }) {
   if (!line.enabled) return null;
 
@@ -58,7 +101,7 @@ function LineRow({
     const value = resolveField(soleField, values, manualOverrides);
     return (
       <p className="whitespace-pre-wrap text-base leading-relaxed">
-        {value || <Gap />}
+        {value || <Gap {...unresolvedGapProps(soleField, unresolvedLabels, gapSources)} />}
       </p>
     );
   }
@@ -76,7 +119,12 @@ function LineRow({
         return (
           <span key={field?.id ?? 'tail'}>
             {part}
-            {field && (value ? value : <Gap />)}
+            {field &&
+              (value ? (
+                value
+              ) : (
+                <Gap {...unresolvedGapProps(field, unresolvedLabels, gapSources)} />
+              ))}
           </span>
         );
       })}
@@ -101,6 +149,14 @@ interface GeneratedDocumentPreviewProps {
   /** Real timesheet rows for the invoice table, replacing the builder's blank preview rows. */
   tableRows?: string[][];
   tableTotalRow?: string[];
+  /**
+   * Label for a bound source with no value yet (e.g. "IBAN (Volunteer)") — used by the
+   * template builder, where most sources have no volunteer/period to resolve against.
+   * Omit (the creation modals' case) to keep today's bare "—" for any gap.
+   */
+  unresolvedLabels?: Partial<Record<DataSourceKey, string>>;
+  /** Which of `unresolvedLabels`' sources are true profile-data gaps (never collected) — rendered amber instead of neutral. */
+  gapSources?: Set<DataSourceKey>;
   className?: string;
 }
 
@@ -125,11 +181,16 @@ export function GeneratedDocumentPreview({
   manualOverrides = {},
   tableRows,
   tableTotalRow,
+  unresolvedLabels = {},
+  gapSources = new Set(),
   className,
 }: GeneratedDocumentPreviewProps) {
   return (
     <div className={className}>
-      <div className="mx-auto max-w-[70ch] rounded-xl border bg-card p-8">
+      <div
+        className="mx-auto w-full max-w-[820px] rounded-sm border bg-card p-[7%] shadow-sm"
+        style={{ aspectRatio: '1 / 1.414' }}
+      >
         <div className="flex items-start justify-between gap-4">
           <DocTypeHeader
             kind={kind}
@@ -163,6 +224,8 @@ export function GeneratedDocumentPreview({
             line={templateDoc.header.orgIdentityLine}
             values={values}
             manualOverrides={manualOverrides}
+            unresolvedLabels={unresolvedLabels}
+            gapSources={gapSources}
           />
         </div>
 
@@ -174,6 +237,8 @@ export function GeneratedDocumentPreview({
                 line={line}
                 values={values}
                 manualOverrides={manualOverrides}
+                unresolvedLabels={unresolvedLabels}
+                gapSources={gapSources}
               />
             ))}
           </div>
@@ -258,6 +323,8 @@ export function GeneratedDocumentPreview({
                       line={line}
                       values={values}
                       manualOverrides={manualOverrides}
+                      unresolvedLabels={unresolvedLabels}
+                      gapSources={gapSources}
                     />
                   ))}
                 </div>
@@ -272,6 +339,8 @@ export function GeneratedDocumentPreview({
           line={templateDoc.footer.closingLine}
           values={values}
           manualOverrides={manualOverrides}
+          unresolvedLabels={unresolvedLabels}
+          gapSources={gapSources}
         />
 
         {templateDoc.footer.showSignatures && (

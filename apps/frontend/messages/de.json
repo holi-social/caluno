@@ -1172,9 +1172,9 @@
           "declined": "Abgelehnt"
         },
         "actions": {
-          "create": "Erstellen",
-          "remind": "Erinnern",
-          "countersign": "Unterzeichnen",
+          "create": "Überprüfen und erstellen",
+          "remind": "Erinnerung senden",
+          "countersign": "Gegengezeichnen",
           "decline": "Ablehnen",
           "seeDetails": "Details ansehen",
           "createNew": "Neues {docType} erstellen"
@@ -1282,6 +1282,17 @@
         "saveButton": "Vorlage speichern",
         "saveSuccessToast": "Vorlage gespeichert",
         "previewScrollRegionLabel": "Dokumentvorschau, scrollbar",
+        "preview": {
+          "disclaimerBadge": "Vorschau",
+          "documentTitle": {
+            "contract": "Zusatzvereinbarung",
+            "invoice": "Abrechnung"
+          },
+          "signatureVolunteer": "Unterschrift Freiwillige:r",
+          "signatureCoordinator": "Unterschrift Koordination",
+          "signatureSupervisor": "Unterschrift Vorstand",
+          "unsigned": "Noch nicht unterschrieben"
+        },
         "blockEditor": {
           "headerTitle": "Kopfbereich",
           "invoiceNumberFormatLabel": "Format der Rechnungsnummer",

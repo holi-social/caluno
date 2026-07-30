@@ -47,13 +47,15 @@ export const PROFILE_REQUIRED_SOURCES: DataSourceKey[] = [
 /**
  * Where a bound source's value comes from. Mostly drives the "filled from ..." line shown
  * under the field title when there's no concrete value yet to display — except
- * 'rate_settings', which annotates a value that IS already known (the hourly rate) with
- * where that number came from, since unlike org identity fields it's not self-evident.
+ * 'rate_settings' and 'organization_profile', which annotate a value that IS already known
+ * (the hourly rate, the org's own identity fields) with where it came from, since unlike
+ * volunteer/generation-time fields it's not self-evident.
  */
 export type FieldOrigin =
   | 'volunteer_profile'
   | 'generation_time'
-  | 'rate_settings';
+  | 'rate_settings'
+  | 'organization_profile';
 
 export const FIELD_ORIGIN: Partial<Record<DataSourceKey, FieldOrigin>> = {
   volunteer_first_name: 'volunteer_profile',
@@ -70,6 +72,10 @@ export const FIELD_ORIGIN: Partial<Record<DataSourceKey, FieldOrigin>> = {
   total_hours: 'generation_time',
   total_amount: 'generation_time',
   hourly_rate: 'rate_settings',
+  org_name: 'organization_profile',
+  org_address: 'organization_profile',
+  org_city: 'organization_profile',
+  org_legal_rep: 'organization_profile',
 };
 
 /** Coordinator-typed once, in the builder — reused verbatim on every document generated from this template. */

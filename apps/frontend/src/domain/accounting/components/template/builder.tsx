@@ -18,15 +18,33 @@ import {
   getInvoiceDocument,
   getKnownOrgValues,
 } from './builder-document-presets';
-import { TemplateBuilderPreview } from './builder-preview';
 import {
+  ALWAYS_AVAILABLE_SOURCES,
   countIncompleteManualFields,
   type DataSourceKey,
+  PROFILE_REQUIRED_SOURCES,
   type TemplateDocument,
 } from './builder-types';
+import { GeneratedDocumentPreview } from './generated-document-preview';
 
 // Mock: profile-required sources this org hasn't collected yet.
 const MOCK_PROFILE_GAPS = new Set<DataSourceKey>(['volunteer_tax_id']);
+
+const ALL_DATA_SOURCES: DataSourceKey[] = [
+  ...ALWAYS_AVAILABLE_SOURCES,
+  ...PROFILE_REQUIRED_SOURCES,
+];
+
+// Placeholder rows for the invoice's Stundennachweis table — no real timesheets
+// exist at template-configuration time, only the column shape (see
+// getInvoiceDocument's table block). Mirrors the `['', '', 'Summe', '—', '—']`
+// total-row convention InvoiceCreationModal uses for the real thing.
+const PLACEHOLDER_TABLE_ROWS: string[][] = [
+  ['', '', '', '', ''],
+  ['', '', '', '', ''],
+  ['', '', '', '', ''],
+];
+const PLACEHOLDER_TABLE_TOTAL_ROW = ['', '', 'Summe', '—', '—'];
 
 interface TemplateBuilderProps {
   pauschale: PauschalenType;
@@ -57,6 +75,27 @@ export function TemplateBuilder({
   );
   const typeLabel = tSections(
     `sections.${getPauschaleKey(pauschale)}` as Parameters<typeof tSections>[0],
+  );
+
+  // Label for every bound source with no value yet at config time (no volunteer/period
+  // exists) — GeneratedDocumentPreview only consults this for a source it can't resolve
+  // from `values`, so it's safe to hand it the full source list unconditionally.
+  const unresolvedLabels = Object.fromEntries(
+    ALL_DATA_SOURCES.map((key) => [
+      key,
+      t(`dataSources.${key}` as Parameters<typeof t>[0]),
+    ]),
+  ) as Partial<Record<DataSourceKey, string>>;
+
+  const documentTitle = t(
+    (kind === 'contract'
+      ? 'preview.documentTitle.contract'
+      : 'preview.documentTitle.invoice') as Parameters<typeof t>[0],
+  );
+  const signerRightLabel = t(
+    (kind === 'contract'
+      ? 'preview.signatureCoordinator'
+      : 'preview.signatureSupervisor') as Parameters<typeof t>[0],
   );
 
   function handleSave() {
@@ -93,8 +132,11 @@ export function TemplateBuilder({
   );
   usePageBreadcrumb(breadcrumb);
 
-  // Locks page scroll while mounted: the admin shell's `min-h-svh` wrapper can grow past
-  // the viewport, so overflow can land on <html>, not just <body> — both need locking.
+  // Locks page scroll while mounted: the two preview/editor panes own their own scrolling,
+  // but a wheel gesture over the non-scrollable footer row (Save button) would otherwise
+  // bubble to the admin shell's `min-h-svh` wrapper, which can grow past the viewport on
+  // <html> or <body> — both need locking, or that gesture scrolls the whole page behind
+  // this fixed-height layout instead of doing nothing.
   useEffect(() => {
     const previousHtmlOverflow = document.documentElement.style.overflow;
     const previousBodyOverflow = document.body.style.overflow;
@@ -109,12 +151,32 @@ export function TemplateBuilder({
   return (
     <div className="flex h-[calc(100svh-6rem-1px)] flex-col gap-6">
       <div className="grid min-h-0 flex-1 grid-cols-[3fr_2fr] gap-6">
-        <TemplateBuilderPreview
-          document={templateDoc}
-          profileGaps={MOCK_PROFILE_GAPS}
-          knownValues={knownValues}
-          kind={kind}
-        />
+        <section
+          className="min-h-0 overflow-y-auto pb-12 [mask-image:linear-gradient(to_bottom,black_0,black_calc(100%-2rem),transparent_100%)]"
+          // biome-ignore lint/a11y/noNoninteractiveTabindex: WCAG 2.1.1 requires this independently-scrollable region to be keyboard-reachable (axe "scrollable-region-focusable").
+          tabIndex={0}
+          aria-label={t('previewScrollRegionLabel')}
+        >
+          <GeneratedDocumentPreview
+            document={templateDoc}
+            kind={kind}
+            pauschale={pauschale}
+            pauschaleLabel={typeLabel}
+            documentTitle={documentTitle}
+            orgName={knownValues.org_name ?? ''}
+            disclaimerLabel={t('preview.disclaimerBadge')}
+            signerLeftLabel={t('preview.signatureVolunteer')}
+            signerRightLabel={signerRightLabel}
+            unsignedLabel={t('preview.unsigned')}
+            values={knownValues}
+            unresolvedLabels={unresolvedLabels}
+            gapSources={MOCK_PROFILE_GAPS}
+            tableRows={kind === 'invoice' ? PLACEHOLDER_TABLE_ROWS : undefined}
+            tableTotalRow={
+              kind === 'invoice' ? PLACEHOLDER_TABLE_TOTAL_ROW : undefined
+            }
+          />
+        </section>
         <section
           className="min-h-0 overflow-y-auto pb-12 [mask-image:linear-gradient(to_bottom,black_0,black_calc(100%-2rem),transparent_100%)]"
           // biome-ignore lint/a11y/noNoninteractiveTabindex: WCAG 2.1.1 requires this independently-scrollable region to be keyboard-reachable (axe "scrollable-region-focusable").

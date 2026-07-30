@@ -1,8 +1,8 @@
 'use client';
 
 import {
+  Button,
   Input,
-  Label,
   Select,
   SelectContent,
   SelectItem,
@@ -14,10 +14,11 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@repo/ui';
-import { LockIcon, TriangleAlertIcon } from 'lucide-react';
+import { CheckIcon, LockIcon, PencilIcon, TriangleAlertIcon } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import { useId } from 'react';
+import { useId, useState } from 'react';
 import type { DocumentKind } from '../doc-type-header';
+import { InfoPanel } from '../info-panel';
 import { TemplateBuilderMonthYearPicker } from './builder-month-year-picker';
 import {
   type DataSourceKey,
@@ -59,14 +60,14 @@ interface EditorFieldEntry {
   blockId: string;
 }
 
-interface ContractEditorGroups {
+export interface ContractEditorGroups {
   org: EditorFieldEntry[];
   volunteer: EditorFieldEntry[];
   engagement: EditorFieldEntry[];
   extraBlock: TemplateTextBlock | undefined;
 }
 
-function collectContractEditorGroups(
+export function collectContractEditorGroups(
   doc: TemplateDocument,
 ): ContractEditorGroups {
   const org: EditorFieldEntry[] = [];
@@ -127,8 +128,28 @@ function updateLineEnabled(
   return lines.map((l) => (l.id === lineId ? { ...l, enabled } : l));
 }
 
-const ROW_TITLE_CLASSNAME = 'text-base font-semibold text-foreground';
-const SECTION_TITLE_CLASSNAME = 'text-xl font-semibold text-foreground';
+const SECTION_TITLE_CLASSNAME = 'text-lg font-semibold text-foreground';
+
+/**
+ * Realistic-looking example content for a bound source with no value yet — reads like what
+ * will actually be there, not the field's own label. Same "always German" convention as the
+ * document's own literal text (see builder-document-presets.ts).
+ */
+const PLACEHOLDER_EXAMPLES: Partial<Record<DataSourceKey, string>> = {
+  volunteer_first_name: 'Vorname',
+  volunteer_last_name: 'Name',
+  volunteer_address: 'Musterstraße 1, 12345 Stadt',
+  volunteer_dob: 'TT.MM.JJJJ',
+  volunteer_iban: 'DE00 0000 0000 0000 0000 00',
+  volunteer_bic: 'XXXXXXXX',
+  volunteer_tax_id: 'XX XXX XXX XXX',
+  period_start: 'TT.MM.JJJJ',
+  period_end: 'TT.MM.JJJJ',
+  total_hours: '0',
+  total_amount: '0,00 €',
+  generated_date: 'TT.MM.JJJJ',
+  document_number: 'XXXX-XXX',
+};
 
 /** A field's display title — same lookup bound/manual fields use everywhere, shared so a parent (e.g. an optional line's header row) can render it once instead of duplicating it inside FieldRow. */
 function getFieldTitle(
@@ -152,6 +173,16 @@ interface FieldRowProps {
   hideTitle?: boolean;
 }
 
+/** Amber "profile data was never collected" badge — shared by a bound field's own card and its parent optional-line card. */
+function ProfileGapBadge({ t }: { t: ReturnType<typeof useTranslations> }) {
+  return (
+    <span className="inline-flex items-center gap-1 rounded-full border border-alert/30 bg-alert/15 px-2 py-0.5 text-xs font-medium text-alert">
+      <TriangleAlertIcon size={12} aria-hidden="true" />
+      {t('fieldList.requiresCollection')}
+    </span>
+  );
+}
+
 function FieldRow({
   field,
   line,
@@ -163,27 +194,74 @@ function FieldRow({
   hideTitle = false,
 }: FieldRowProps) {
   const t = useTranslations('Accounting.templates.builder');
+  const tCommon = useTranslations('Common');
   const inputId = useId();
   const title = getFieldTitle(field, t);
+  // Only meaningful on the bound branch below — hoisted so hook order never
+  // depends on which branch a given field takes.
+  const [isEditing, setIsEditing] = useState(false);
+  const [draft, setDraft] = useState('');
+  const [override, setOverride] = useState<string | null>(null);
 
   if (field.value.kind === 'bound') {
     const isGap = profileGaps.has(field.value.source);
     const known = knownValues[field.value.source];
-
     const origin = FIELD_ORIGIN[field.value.source];
+    const effectiveValue = override ?? known;
+    // Matches the reimbursements dashboard's profile-field cards: a value that
+    // exists is editable via a pencil; anything not yet known is a plain
+    // placeholder — nothing to edit until a real volunteer/document exists.
+    const hasValue = !!effectiveValue && !isGap;
+    const placeholderExample = PLACEHOLDER_EXAMPLES[field.value.source] ?? title;
 
-    const body =
-      known && !isGap ? (
+    function handleEdit() {
+      setDraft(effectiveValue ?? '');
+      setIsEditing(true);
+    }
+    function handleSave() {
+      setOverride(draft);
+      setIsEditing(false);
+    }
+
+    const body = hasValue ? (
+      isEditing ? (
+        <div className="flex items-center gap-1">
+          <Input
+            aria-label={title}
+            value={draft}
+            onChange={(e) => setDraft(e.target.value)}
+            autoFocus
+          />
+          <Button
+            type="button"
+            variant="outline"
+            size="icon-md"
+            onClick={handleSave}
+          >
+            <CheckIcon />
+            <span className="sr-only">{tCommon('save')}</span>
+          </Button>
+        </div>
+      ) : (
         <div className="space-y-0.5">
-          <p className="text-sm text-foreground">{known}</p>
-          {origin === 'rate_settings' && (
+          <p className="text-base text-foreground">{effectiveValue}</p>
+          {(origin === 'rate_settings' || origin === 'organization_profile') && (
             <p className="text-xs text-muted-foreground">
-              {t('fieldSource.rateSettings')}
+              {t(
+                origin === 'rate_settings'
+                  ? 'fieldSource.rateSettings'
+                  : 'fieldSource.organizationProfile',
+              )}
             </p>
           )}
         </div>
-      ) : isGap ? (
-        <p className="text-sm text-muted-foreground">
+      )
+    ) : isGap ? (
+      <div className="space-y-0.5">
+        <p className="text-base italic text-muted-foreground">
+          {placeholderExample}
+        </p>
+        <p className="text-xs text-muted-foreground">
           {t('fieldList.profileWarningBefore')}{' '}
           <button
             type="button"
@@ -193,31 +271,45 @@ function FieldRow({
           </button>{' '}
           {t('fieldList.profileWarningAfter')}
         </p>
-      ) : (
-        <p className="text-sm text-muted-foreground">
+      </div>
+    ) : (
+      <div className="space-y-0.5">
+        <p className="text-base italic text-muted-foreground">
+          {placeholderExample}
+        </p>
+        <p className="text-xs text-muted-foreground">
           {t(
             origin === 'generation_time'
               ? 'fieldSource.generationTime'
               : 'fieldSource.volunteerProfile',
           )}
         </p>
-      );
+      </div>
+    );
 
-    if (hideTitle) return <div className="space-y-1 py-1">{body}</div>;
+    if (hideTitle) return <div className="py-1">{body}</div>;
 
     return (
-      <div className="space-y-1 py-1">
-        <div className="flex items-center gap-2">
-          <span className={ROW_TITLE_CLASSNAME}>{title}</span>
-          {isGap && (
-            <span className="inline-flex items-center gap-1 rounded-full border border-alert/30 bg-alert/15 px-2 py-0.5 text-xs font-medium text-alert">
-              <TriangleAlertIcon size={12} aria-hidden="true" />
-              {t('fieldList.requiresCollection')}
-            </span>
-          )}
-        </div>
+      <InfoPanel
+        variant="outline"
+        title={title}
+        headerRight={
+          hasValue &&
+          !isEditing && (
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon-sm"
+              onClick={handleEdit}
+            >
+              <PencilIcon />
+              <span className="sr-only">{tCommon('edit')}</span>
+            </Button>
+          )
+        }
+      >
         {body}
-      </div>
+      </InfoPanel>
     );
   }
 
@@ -229,17 +321,18 @@ function FieldRow({
 
   if (isDuplicate) {
     const value = field.value.value.trim();
+    const body = (
+      <p className="text-sm text-muted-foreground">
+        {value || <span className="italic">{t('blockEditor.notSetYet')}</span>}
+        {' — '}
+        {t('blockEditor.sameAsAbove')}
+      </p>
+    );
+    if (hideTitle) return <div className="py-1">{body}</div>;
     return (
-      <div className="space-y-1 py-1">
-        {!hideTitle && <span className={ROW_TITLE_CLASSNAME}>{title}</span>}
-        <p className="text-sm text-muted-foreground">
-          {value || (
-            <span className="italic">{t('blockEditor.notSetYet')}</span>
-          )}
-          {' — '}
-          {t('blockEditor.sameAsAbove')}
-        </p>
-      </div>
+      <InfoPanel variant="outline" title={title}>
+        {body}
+      </InfoPanel>
     );
   }
 
@@ -250,7 +343,7 @@ function FieldRow({
         value={field.value.value}
         onChange={(e) => onManualChange(field.id, e.target.value)}
         placeholder={placeholder}
-        aria-label={hideTitle ? title : undefined}
+        aria-label={title}
         rows={4}
       />
     ) : field.control === 'month-year' ? (
@@ -267,19 +360,16 @@ function FieldRow({
         value={field.value.value}
         onChange={(e) => onManualChange(field.id, e.target.value)}
         placeholder={placeholder}
-        aria-label={hideTitle ? title : undefined}
+        aria-label={title}
       />
     );
 
-  if (hideTitle) return <div className="space-y-1 py-1">{control}</div>;
+  if (hideTitle) return <div className="py-1">{control}</div>;
 
   return (
-    <div className="space-y-1 py-1">
-      <Label htmlFor={inputId} className="text-base font-semibold">
-        {title}
-      </Label>
+    <InfoPanel variant="outline" title={title}>
       {control}
-    </div>
+    </InfoPanel>
   );
 }
 
@@ -312,25 +402,21 @@ function LineEditor({
       profileGaps.has(soleField.value.source);
 
     return (
-      <div>
-        <div className="flex items-center justify-between gap-2">
-          <div className="flex items-center gap-2">
-            <span className={ROW_TITLE_CLASSNAME}>{title}</span>
-            {isGap && (
-              <span className="inline-flex items-center gap-1 rounded-full border border-alert/30 bg-alert/15 px-2 py-0.5 text-xs font-medium text-alert">
-                <TriangleAlertIcon size={12} aria-hidden="true" />
-                {t('fieldList.requiresCollection')}
-              </span>
-            )}
-          </div>
+      <InfoPanel
+        variant="outline"
+        title={title}
+        inactive={!line.enabled}
+        badge={isGap && <ProfileGapBadge t={t} />}
+        headerRight={
           <Switch
             checked={line.enabled}
             onCheckedChange={(checked) => onToggle(line.id, checked)}
             aria-label={title}
           />
-        </div>
+        }
+      >
         {line.enabled && line.fields.length > 0 && (
-          <div className="mt-1.5 space-y-1 border-l-2 border-border/40 pl-3">
+          <div className="flex flex-col gap-3">
             {line.fields.map((field) => (
               <FieldRow
                 key={field.id}
@@ -346,14 +432,14 @@ function LineEditor({
             ))}
           </div>
         )}
-      </div>
+      </InfoPanel>
     );
   }
 
   if (line.fields.length === 0) return null;
 
   return (
-    <div className="space-y-1">
+    <div className="flex flex-col gap-3">
       {line.fields.map((field) => (
         <FieldRow
           key={field.id}
@@ -376,32 +462,31 @@ interface BlockEditorRowProps {
   profileGaps: Set<DataSourceKey>;
   knownValues: Partial<Record<DataSourceKey, string>>;
   typeLabel: string;
-  onBlockToggle: (blockId: string, enabled: boolean) => void;
   onLineToggle: (blockId: string, lineId: string, enabled: boolean) => void;
   onFieldChange: (fieldId: string, value: string) => void;
-  /** Editor-facing label, when it should differ from the block's own (document-internal) title. */
-  titleOverride?: string;
 }
 
+/**
+ * A section headline (never a card itself) followed by one card per line — every block
+ * reaching this component is locked/mandatory (the one switchable block, "Sonstiges", is
+ * rendered by `ExtraClausesCard` instead, with its switch on the field card, not the headline).
+ */
 function BlockEditorRow({
   block,
   firstOccurrenceByFieldId,
   profileGaps,
   knownValues,
   typeLabel,
-  onBlockToggle,
   onLineToggle,
   onFieldChange,
-  titleOverride,
 }: BlockEditorRowProps) {
   const t = useTranslations('Accounting.templates.builder');
-  const displayTitle = titleOverride ?? block.title;
 
   return (
-    <div className="border-b border-border pb-4 last:border-b-0 last:pb-0">
-      <div className="flex items-center justify-between gap-2">
-        <span className={SECTION_TITLE_CLASSNAME}>{displayTitle}</span>
-        {block.locked ? (
+    <div className="flex flex-col gap-3">
+      <div className="flex items-center gap-2">
+        <span className={SECTION_TITLE_CLASSNAME}>{block.title}</span>
+        {block.locked && (
           <Tooltip>
             <TooltipTrigger asChild>
               <LockIcon
@@ -412,41 +497,92 @@ function BlockEditorRow({
             </TooltipTrigger>
             <TooltipContent>{t('blockEditor.lockedHint')}</TooltipContent>
           </Tooltip>
-        ) : (
-          block.kind === 'text' && (
-            <Switch
-              checked={block.enabled}
-              onCheckedChange={(checked) => onBlockToggle(block.id, checked)}
-              aria-label={displayTitle}
-            />
-          )
         )}
       </div>
 
       {block.kind === 'table' ? (
-        <p className="mt-2 text-sm text-muted-foreground">
+        <p className="text-sm text-muted-foreground">
           {t('blockEditor.tableFixedHint')}
         </p>
       ) : (
-        (block.locked || block.enabled) && (
-          <div className="mt-2 space-y-2">
-            {block.lines.map((line) => (
-              <LineEditor
-                key={line.id}
-                line={line}
-                firstOccurrenceByFieldId={firstOccurrenceByFieldId}
-                profileGaps={profileGaps}
-                knownValues={knownValues}
-                typeLabel={typeLabel}
-                onToggle={(lineId, enabled) =>
-                  onLineToggle(block.id, lineId, enabled)
-                }
-                onFieldChange={onFieldChange}
-              />
-            ))}
-          </div>
-        )
+        <div className="flex flex-col gap-3">
+          {block.lines.map((line) => (
+            <LineEditor
+              key={line.id}
+              line={line}
+              firstOccurrenceByFieldId={firstOccurrenceByFieldId}
+              profileGaps={profileGaps}
+              knownValues={knownValues}
+              typeLabel={typeLabel}
+              onToggle={(lineId, enabled) =>
+                onLineToggle(block.id, lineId, enabled)
+              }
+              onFieldChange={onFieldChange}
+            />
+          ))}
+        </div>
       )}
+    </div>
+  );
+}
+
+/**
+ * The contract's one switchable block ("Sonstiges" / Extra clauses) has exactly one line, one
+ * field (the freeform textarea) — so instead of a headline that's secretly a card with the
+ * on/off switch (the bug this replaces), the headline stays plain text and the single field
+ * card itself carries the switch, matching every other optional-content card in this editor.
+ */
+function ExtraClausesCard({
+  block,
+  firstOccurrenceByFieldId,
+  profileGaps,
+  knownValues,
+  typeLabel,
+  onBlockToggle,
+  onFieldChange,
+}: {
+  block: TemplateTextBlock;
+  firstOccurrenceByFieldId: Map<string, string>;
+  profileGaps: Set<DataSourceKey>;
+  knownValues: Partial<Record<DataSourceKey, string>>;
+  typeLabel: string;
+  onBlockToggle: (blockId: string, enabled: boolean) => void;
+  onFieldChange: (fieldId: string, value: string) => void;
+}) {
+  const t = useTranslations('Accounting.templates.builder');
+  const [line] = block.lines;
+  const [field] = line?.fields ?? [];
+  if (!line || !field) return null;
+  const title = getFieldTitle(field, t);
+
+  return (
+    <div className="flex flex-col gap-3">
+      <span className={SECTION_TITLE_CLASSNAME}>{t('editorGroups.extra')}</span>
+      <InfoPanel
+        variant="outline"
+        title={title}
+        inactive={!block.enabled}
+        headerRight={
+          <Switch
+            checked={block.enabled}
+            onCheckedChange={(checked) => onBlockToggle(block.id, checked)}
+            aria-label={title}
+          />
+        }
+      >
+        {block.enabled && (
+          <FieldRow
+            field={field}
+            line={line}
+            firstOccurrenceByFieldId={firstOccurrenceByFieldId}
+            profileGaps={profileGaps}
+            knownValues={knownValues}
+            typeLabel={typeLabel}
+            onManualChange={onFieldChange}
+            hideTitle
+          />
+        )}
+      </InfoPanel>
     </div>
   );
 }
@@ -454,7 +590,6 @@ function BlockEditorRow({
 interface ContractGroupSectionProps {
   title: string;
   entries: EditorFieldEntry[];
-  note?: string;
   firstOccurrenceByFieldId: Map<string, string>;
   profileGaps: Set<DataSourceKey>;
   knownValues: Partial<Record<DataSourceKey, string>>;
@@ -466,7 +601,6 @@ interface ContractGroupSectionProps {
 function ContractGroupSection({
   title,
   entries,
-  note,
   firstOccurrenceByFieldId,
   profileGaps,
   knownValues,
@@ -477,9 +611,9 @@ function ContractGroupSection({
   if (entries.length === 0) return null;
 
   return (
-    <div className="border-b border-border pb-4 last:border-b-0 last:pb-0">
+    <div className="flex flex-col gap-3">
       <span className={SECTION_TITLE_CLASSNAME}>{title}</span>
-      <div className="mt-2 space-y-2">
+      <div className="flex flex-col gap-3">
         {entries.map(({ field, line, blockId }) =>
           line.optional ? (
             <LineEditor
@@ -508,7 +642,6 @@ function ContractGroupSection({
           ),
         )}
       </div>
-      {note && <p className="mt-2 text-xs text-muted-foreground">{note}</p>}
     </div>
   );
 }
@@ -579,11 +712,10 @@ export function TemplateBuilderBlockEditor({
     const groups = collectContractEditorGroups(templateDoc);
 
     return (
-      <div className="flex flex-col gap-4">
+      <div className="flex flex-col gap-6">
         <ContractGroupSection
           title={t('editorGroups.org')}
           entries={groups.org}
-          note={t('fieldSource.organizationProfile')}
           firstOccurrenceByFieldId={firstOccurrenceByFieldId}
           profileGaps={profileGaps}
           knownValues={knownValues}
@@ -612,15 +744,13 @@ export function TemplateBuilderBlockEditor({
           onFieldChange={handleFieldChange}
         />
         {groups.extraBlock && (
-          <BlockEditorRow
+          <ExtraClausesCard
             block={groups.extraBlock}
-            titleOverride={t('editorGroups.extra')}
             firstOccurrenceByFieldId={firstOccurrenceByFieldId}
             profileGaps={profileGaps}
             knownValues={knownValues}
             typeLabel={typeLabel}
             onBlockToggle={handleBlockToggle}
-            onLineToggle={handleLineToggle}
             onFieldChange={handleFieldChange}
           />
         )}
@@ -629,18 +759,18 @@ export function TemplateBuilderBlockEditor({
   }
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-6">
       {hasHeaderConfig && (
-        <div className="border-b border-border pb-4">
+        <div className="flex flex-col gap-3">
           <span className={SECTION_TITLE_CLASSNAME}>
             {t('blockEditor.headerTitle')}
           </span>
-          <div className="mt-2 space-y-2">
+          <div className="flex flex-col gap-3">
             {templateDoc.invoiceNumberFormat !== undefined && (
-              <div className="space-y-1">
-                <Label className="text-base font-semibold">
-                  {t('blockEditor.invoiceNumberFormatLabel')}
-                </Label>
+              <InfoPanel
+                variant="outline"
+                title={t('blockEditor.invoiceNumberFormatLabel')}
+              >
                 <Select
                   value={templateDoc.invoiceNumberFormat}
                   onValueChange={(value) =>
@@ -665,7 +795,7 @@ export function TemplateBuilderBlockEditor({
                     ))}
                   </SelectContent>
                 </Select>
-              </div>
+              </InfoPanel>
             )}
             {templateDoc.header.metaLines.map((line) => (
               <LineEditor
@@ -691,7 +821,6 @@ export function TemplateBuilderBlockEditor({
           profileGaps={profileGaps}
           knownValues={knownValues}
           typeLabel={typeLabel}
-          onBlockToggle={handleBlockToggle}
           onLineToggle={handleLineToggle}
           onFieldChange={handleFieldChange}
         />

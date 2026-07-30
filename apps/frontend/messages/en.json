@@ -1172,9 +1172,9 @@
           "declined": "Declined"
         },
         "actions": {
-          "create": "Create",
-          "remind": "Remind",
-          "countersign": "Sign",
+          "create": "Preview and create",
+          "remind": "Send reminder",
+          "countersign": "Countersign",
           "decline": "Decline",
           "seeDetails": "See details",
           "createNew": "Create new {docType}"
@@ -1282,6 +1282,17 @@
         "saveButton": "Save template",
         "saveSuccessToast": "Template saved",
         "previewScrollRegionLabel": "Document preview, scrollable",
+        "preview": {
+          "disclaimerBadge": "Preview",
+          "documentTitle": {
+            "contract": "Additional agreement",
+            "invoice": "Invoice"
+          },
+          "signatureVolunteer": "Volunteer signature",
+          "signatureCoordinator": "Coordinator signature",
+          "signatureSupervisor": "Supervisor signature",
+          "unsigned": "Not yet signed"
+        },
         "blockEditor": {
           "headerTitle": "Header",
           "invoiceNumberFormatLabel": "Invoice number format",
