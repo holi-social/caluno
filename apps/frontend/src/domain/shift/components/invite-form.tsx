@@ -6,11 +6,8 @@ import {
   Card,
   CardContent,
   Checkbox,
-  Field,
   FieldDescription,
-  FieldError,
   FieldLabel,
-  Input,
   Separator,
 } from '@repo/ui';
 import { Share2 } from 'lucide-react';
@@ -42,8 +39,6 @@ interface InviteShiftFormProps {
   instanceId: string;
   shift: {
     title: string;
-    minVolunteers: number | null | undefined;
-    maxVolunteers: number | null | undefined;
     isRecurring: boolean;
     recurrenceDays: RecurrenceDayValue[];
   };
@@ -53,10 +48,6 @@ interface InviteShiftFormProps {
   };
   availableMembers: Member[];
   invitedMembers: Member[];
-  mutateStaffing: (data: {
-    minVolunteers: number | null;
-    maxVolunteers: number | null;
-  }) => Promise<{ serverError?: string }>;
   mutateVolunteers: (data: {
     memberIds: string[];
     inviteToAllInstances?: boolean;
@@ -72,7 +63,6 @@ export function InviteShiftForm({
   selectedInstance,
   availableMembers,
   invitedMembers,
-  mutateStaffing,
   mutateVolunteers,
 }: InviteShiftFormProps) {
   const router = useRouter();
@@ -87,15 +77,11 @@ export function InviteShiftForm({
 
   const { open, setOpen } = useFormSheet();
 
-  const schema = inviteShiftFormSchema({
-    minMaxVolunteers: t('validation.minMaxVolunteers'),
-  });
+  const schema = inviteShiftFormSchema();
 
   const form = useForm<InviteShiftFormValues>({
     resolver: zodResolver(schema),
     defaultValues: {
-      minVolunteers: shift.minVolunteers ?? null,
-      maxVolunteers: shift.maxVolunteers ?? null,
       invitedMemberIds: invitedMembers.map((m) => m.id),
       inviteAllInstances: false,
     },
@@ -150,15 +136,6 @@ export function InviteShiftForm({
     setServerError(undefined);
 
     startTransition(async () => {
-      const staffingResult = await mutateStaffing({
-        minVolunteers: data.minVolunteers ?? null,
-        maxVolunteers: data.maxVolunteers ?? null,
-      });
-      if (staffingResult?.serverError) {
-        setServerError(staffingResult.serverError);
-        return;
-      }
-
       const volunteersResult = await mutateVolunteers({
         memberIds: data.invitedMemberIds,
         inviteToAllInstances: data.inviteAllInstances,
@@ -246,46 +223,6 @@ export function InviteShiftForm({
                 </>
               )}
             </Card>
-          </div>
-
-          <div className="flex gap-3">
-            <Field className="flex-1">
-              <FieldLabel htmlFor="minVolunteers">
-                {t('inviteForm.minVolunteersLabel')}
-              </FieldLabel>
-              <Input
-                id="minVolunteers"
-                type="number"
-                min={1}
-                placeholder={t('inviteForm.minVolunteersPlaceholder')}
-                disabled={pending}
-                {...form.register('minVolunteers', {
-                  setValueAs: (v) => (v === '' || v == null ? null : Number(v)),
-                })}
-              />
-              <FieldDescription>
-                {t('inviteForm.minVolunteersDescription')}
-              </FieldDescription>
-            </Field>
-            <Field className="flex-1">
-              <FieldLabel htmlFor="maxVolunteers">
-                {t('inviteForm.maxVolunteersLabel')}
-              </FieldLabel>
-              <Input
-                id="maxVolunteers"
-                type="number"
-                min={1}
-                placeholder={t('inviteForm.maxVolunteersPlaceholder')}
-                disabled={pending}
-                {...form.register('maxVolunteers', {
-                  setValueAs: (v) => (v === '' || v == null ? null : Number(v)),
-                })}
-              />
-              <FieldDescription>
-                {t('inviteForm.maxVolunteersDescription')}
-              </FieldDescription>
-              <FieldError errors={[form.formState.errors.maxVolunteers]} />
-            </Field>
           </div>
 
           <Separator />
