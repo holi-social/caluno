@@ -82,10 +82,12 @@ export function RequiredFormRenderer({
     () => sortedForms.filter((item) => !submittedFormIds.has(item.form.id)),
     [sortedForms, submittedFormIds],
   );
+  const submittedBatchRef = useRef<RequiredFormItem[] | null>(null);
+  const renderedForms = submittedBatchRef.current ?? pendingForms;
 
   const unifiedBlocks = useMemo(() => {
     const blockMap = new Map<string, UnifiedBlock>();
-    for (const item of pendingForms) {
+    for (const item of renderedForms) {
       for (const ref of item.form.blockRefs ?? []) {
         const block = ref.block;
         if (!block) continue;
@@ -104,7 +106,7 @@ export function RequiredFormRenderer({
       }
     }
     return Array.from(blockMap.values()).sort((a, b) => a.order - b.order);
-  }, [pendingForms]);
+  }, [renderedForms]);
 
   const validationMessages = useMemo(
     () => ({
@@ -202,6 +204,7 @@ export function RequiredFormRenderer({
     }
 
     const values = getValues();
+    submittedBatchRef.current = pendingForms;
     setIsSubmitting(true);
 
     try {
