@@ -15,9 +15,9 @@ import type { EligibleHourLine } from './eligible-hours-card';
 import { EligibleHoursCard } from './eligible-hours-card';
 import { InfoPanel } from './info-panel';
 import { InvoiceCapCard } from './invoice-cap-card';
-import type { DateRange } from './invoice-period-picker';
-import { InvoicePeriodPicker } from './invoice-period-picker';
 import { DEFAULT_PROFILE_DATA, MOCK_PROFILE_DATA } from './mock-profile-data';
+import type { DateRange } from './period-picker';
+import { lastMonthRange, PeriodPicker, thisMonthRange } from './period-picker';
 import { getKnownOrgValues } from './template/builder-document-presets';
 import type {
   DataSourceKey,
@@ -96,14 +96,6 @@ function splitName(name: string): { first: string; last: string } {
   return { first: first ?? name, last: rest.join(' ') };
 }
 
-function defaultPeriod(): DateRange {
-  const now = new Date();
-  return {
-    from: new Date(now.getFullYear(), now.getMonth(), 1),
-    to: new Date(now.getFullYear(), now.getMonth() + 1, 0),
-  };
-}
-
 /** "05.07.2026, 09:00–13:00" -> { begin: "05.07.2026, 09:00", end: "05.07.2026, 13:00" } — the table's Beginn/Ende columns need separate timestamps, the mock data stores one combined string. */
 function splitDateTimeRange(dateTime: string): { begin: string; end: string } {
   const [datePart, timePart] = dateTime.split(', ');
@@ -175,6 +167,9 @@ export function InvoiceCreationModal({
   const t = useTranslations('Accounting.reimbursements.invoiceModal');
   const tFields = useTranslations('Accounting.templates.builder.dataSources');
   const tPauschale = useTranslations('Accounting.reimbursements.toolbar');
+  const tPeriod = useTranslations(
+    'Accounting.reimbursements.invoiceModal.periodPicker',
+  );
 
   const [status, setStatus] = useState<DocumentCreationLoadStatus>('loading');
   const [nameField, setNameField] = useState<NameFieldState | null>(null);
@@ -183,7 +178,7 @@ export function InvoiceCreationModal({
   const [ratePerHour, setRatePerHour] = useState(0);
   const [lines, setLines] = useState<EligibleHourLine[]>([]);
   const [checkedIds, setCheckedIds] = useState<Set<string>>(new Set());
-  const [period, setPeriod] = useState<DateRange>(defaultPeriod);
+  const [period, setPeriod] = useState<DateRange>(thisMonthRange);
   const [isSending, setIsSending] = useState(false);
 
   useEffect(() => {
@@ -194,7 +189,7 @@ export function InvoiceCreationModal({
     setIbanField(null);
     setLines([]);
     setCheckedIds(new Set());
-    setPeriod(defaultPeriod());
+    setPeriod(thisMonthRange());
 
     const timeout = setTimeout(() => {
       if (!volunteerName) {
@@ -386,9 +381,23 @@ export function InvoiceCreationModal({
             />
             <InfoPanel title={t('periodFieldLabel')}>
               <div className="mt-2">
-                <InvoicePeriodPicker
+                <PeriodPicker
                   value={period}
-                  onChange={setPeriod}
+                  onChange={(range) => range && setPeriod(range)}
+                  presets={[
+                    {
+                      key: 'this-month',
+                      label: tPeriod('thisMonth'),
+                      range: thisMonthRange(),
+                    },
+                    {
+                      key: 'last-month',
+                      label: tPeriod('lastMonth'),
+                      range: lastMonthRange(),
+                    },
+                  ]}
+                  placeholderLabel={tPeriod('placeholder')}
+                  applyLabel={tPeriod('apply')}
                   className="w-full"
                 />
               </div>

@@ -4,7 +4,8 @@ import { Button } from '@repo/ui';
 import { TriangleAlertIcon } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import type { DocumentKind, PauschalenType } from '../doc-type-header';
-import { DocTypeHeader, getPauschaleKey } from '../doc-type-header';
+import { getPauschaleKey } from '../doc-type-header';
+import { TemplateCardShell } from './card-shell';
 import type { TemplateSlug } from './types';
 
 interface TemplateCardEmptyProps {
@@ -27,30 +28,25 @@ export function TemplateCardEmpty({
   );
 
   return (
-    <div className="rounded-xl border bg-card flex flex-col overflow-hidden">
-      <div className="p-4 space-y-3">
-        <DocTypeHeader
-          kind={kind}
-          pauschale={pauschale}
-          topLine={typeLabel}
-          name={kindLabel}
-        />
-
-        <div className="flex items-start gap-2 rounded-md border border-alert bg-card p-2 text-sm text-alert">
-          <TriangleAlertIcon
-            size={16}
-            className="mt-0.5 shrink-0"
-            aria-hidden="true"
-          />
-          <span>{tCard('alertText')}</span>
-        </div>
-      </div>
-
-      <div className="mt-auto border-t p-3">
+    <TemplateCardShell
+      pauschale={pauschale}
+      kind={kind}
+      topLine={typeLabel}
+      name={kindLabel}
+      footer={
         <Button type="button" variant="outline" className="w-full">
           {tCard('createButton')}
         </Button>
+      }
+    >
+      <div className="flex items-start gap-2 rounded-md border border-alert bg-card p-2 text-sm text-alert">
+        <TriangleAlertIcon
+          size={16}
+          className="mt-0.5 shrink-0"
+          aria-hidden="true"
+        />
+        <span>{tCard('alertText')}</span>
       </div>
-    </div>
+    </TemplateCardShell>
   );
 }

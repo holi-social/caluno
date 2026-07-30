@@ -34,6 +34,7 @@ import type {
   NonCompliantDialogState,
 } from './non-compliant-timesheet-dialog';
 import { NonCompliantTimesheetDialog } from './non-compliant-timesheet-dialog';
+import type { DateRange } from './period-picker';
 import { BatchBar } from './reimbursements-batch-bar';
 import { DocumentSheet } from './reimbursements-document-sheet';
 import {
@@ -123,10 +124,7 @@ export type TileFilter =
 type PauschalenFilter = 'all' | PauschalenType;
 type SortOption = 'action-needed' | 'newest';
 
-export interface DateRange {
-  from: Date | undefined;
-  to?: Date | undefined;
-}
+export type { DateRange };
 
 export interface BoardDocument {
   id: string;
@@ -970,7 +968,7 @@ export function ReimbursementsBoard({
       Object.fromEntries(
         TILE_IDS.map((id) => [id, countForTile(baseFilteredVols, id)]),
       ) as Record<Exclude<TileFilter, null>, number>,
-    [baseFilteredVols],
+    [baseFilteredVols, TILE_IDS.map],
   );
 
   const tileActionableCounts = useMemo(
@@ -981,7 +979,7 @@ export function ReimbursementsBoard({
           countActionableForTile(baseFilteredVols, id),
         ]),
       ) as Record<Exclude<TileFilter, null>, number>,
-    [baseFilteredVols],
+    [baseFilteredVols, TILE_IDS.map],
   );
 
   // Documentless volunteers bypass every other filter (tile/docType/pauschale/
