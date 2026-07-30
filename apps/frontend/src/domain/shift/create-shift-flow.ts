@@ -18,15 +18,21 @@ export function pickFirstShiftInstanceId(
 export type CreateShiftSuccessInput = {
   shiftId: string;
   instanceId?: string;
+  openShift: boolean;
 };
 
 export type CreateShiftSuccessNavigation =
   | { action: 'open-invite'; shiftId: string; instanceId: string }
+  | { action: 'success'; shiftId: string }
   | { action: 'close-create' };
 
 export function resolveCreateShiftSuccessNavigation(
   result: CreateShiftSuccessInput,
 ): CreateShiftSuccessNavigation {
+  if (result.openShift) {
+    return { action: 'success', shiftId: result.shiftId };
+  }
+
   if (result.instanceId) {
     return {
       action: 'open-invite',
