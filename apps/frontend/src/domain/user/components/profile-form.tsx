@@ -1,7 +1,7 @@
 'use client';
 
 import type { Locale } from '@repo/data';
-import { useUpdateMyImage, useUpdateUserLocale } from '@repo/data/react';
+import { useUpdateUserLocale } from '@repo/data/react';
 import {
   Button,
   FieldGroup,
@@ -15,7 +15,6 @@ import {
 import { useLocale, useTranslations } from 'next-intl';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
-import { FileUpload } from '@/components/storage/file-upload';
 import { usePathname, useRouter } from '@/i18n/navigation';
 import { saveLocalePreference } from '@/lib/save-locale-preference';
 
@@ -28,22 +27,15 @@ function isLocale(value: string): value is Locale {
   return locales.some(({ key }) => key === value);
 }
 
-interface ProfileFormProps {
-  imageUrl?: string | null;
-}
-
-export function ProfileForm({ imageUrl }: ProfileFormProps) {
+export function ProfileForm() {
   const t = useTranslations('Profile');
   const tLocale = useTranslations('LocaleSwitcher');
-  const tUpload = useTranslations('Storage.upload');
   const tCommon = useTranslations('Common');
   const locale = useLocale();
   const pathname = usePathname();
   const router = useRouter();
-  const updateMyImage = useUpdateMyImage();
   const updateLocale = useUpdateUserLocale();
 
-  const [imageFileId, setImageFileId] = useState<string | null | undefined>();
   const [selectedLocale, setSelectedLocale] = useState<Locale>(
     locale as Locale,
   );
@@ -53,14 +45,7 @@ export function ProfileForm({ imageUrl }: ProfileFormProps) {
     setSelectedLocale(locale as Locale);
   }, [locale]);
 
-  // biome-ignore lint/correctness/useExhaustiveDependencies: reset pending image edits when server image changes
-  useEffect(() => {
-    setImageFileId(undefined);
-  }, [imageUrl]);
-
-  const hasImageChange = imageFileId !== undefined;
-  const hasLocaleChange = selectedLocale !== locale;
-  const hasChanges = hasImageChange || hasLocaleChange;
+  const hasChanges = selectedLocale !== locale;
 
   const selectedLabel =
     locales.find(({ key }) => key === selectedLocale)?.label ?? selectedLocale;
@@ -78,23 +63,12 @@ export function ProfileForm({ imageUrl }: ProfileFormProps) {
 
     setIsSaving(true);
     try {
-      if (hasImageChange) {
-        await updateMyImage.mutateAsync({
-          imageFileId,
-        });
-        setImageFileId(undefined);
-      }
-
-      if (hasLocaleChange) {
-        await saveLocalePreference({
-          selected: selectedLocale,
-          current: locale,
-          updateLocale: (next) => updateLocale.mutateAsync(next),
-          navigate: (next) => router.replace(pathname, { locale: next }),
-        });
-      } else {
-        router.refresh();
-      }
+      await saveLocalePreference({
+        selected: selectedLocale,
+        current: locale,
+        updateLocale: (next) => updateLocale.mutateAsync(next),
+        navigate: (next) => router.replace(pathname, { locale: next }),
+      });
 
       toast.success(t('saved'));
     } catch (error) {
@@ -104,26 +78,10 @@ export function ProfileForm({ imageUrl }: ProfileFormProps) {
     }
   };
 
-  const isPending =
-    isSaving || updateMyImage.isPending || updateLocale.isPending;
+  const isPending = isSaving || updateLocale.isPending;
 
   return (
     <FieldGroup className="max-w-md">
-      <FileUpload
-        purpose="profile_picture"
-        label={t('pictureLabel')}
-        description={tUpload('imageHint')}
-        value={imageFileId ?? undefined}
-        initialPreviewUrl={imageUrl}
-        disabled={isPending}
-        onUploaded={(result) => {
-          setImageFileId(result.fileId);
-        }}
-        onClear={() => {
-          setImageFileId(null);
-        }}
-      />
-
       <div className="space-y-2">
         <Label htmlFor="locale">{tLocale('label')}</Label>
         <Select

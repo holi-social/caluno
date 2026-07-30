@@ -29,12 +29,10 @@ export function AvatarEditForm({ imageUrl }: AvatarEditFormProps) {
   const handleSave = async () => {
     setIsSaving(true);
     try {
-      if (hasImageChange) {
-        await updateMyImage.mutateAsync({
-          imageFileId,
-        });
-        setImageFileId(undefined);
-      }
+      await updateMyImage.mutateAsync({
+        imageFileId,
+      });
+      setImageFileId(undefined);
 
       router.replace('/profile');
       toast.success(t('saved'));
