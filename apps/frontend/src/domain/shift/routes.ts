@@ -43,8 +43,21 @@ export function shiftInvitePath(
   orgUId: string,
   shiftId: string,
   instanceId: string,
+  options?: { flow?: 'create' },
 ): string {
-  return `/admin/${orgUId}/shifts/${shiftId}/invite?instanceId=${encodeURIComponent(instanceId)}`;
+  const params = new URLSearchParams({ instanceId });
+  if (options?.flow) {
+    params.set('flow', options.flow);
+  }
+  return `/admin/${orgUId}/shifts/${shiftId}/invite?${params.toString()}`;
+}
+
+export function shiftCreatedSuccessPath(
+  orgUId: string,
+  shiftId: string,
+): string {
+  const params = new URLSearchParams({ created: 'true', shift: shiftId });
+  return `/admin/${orgUId}/shifts?${params.toString()}`;
 }
 
 export function shiftInstanceDetailPath(
