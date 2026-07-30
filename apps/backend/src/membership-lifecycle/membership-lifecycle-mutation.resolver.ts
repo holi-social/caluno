@@ -94,4 +94,12 @@ export class MembershipLifecycleMutationResolver {
     );
     return this.membershipRequestMapper.toModelOrThrow(entity);
   }
+
+  @Mutation(() => Boolean)
+  async leaveMembership(
+    @Args('id', { type: () => ID }) id: string,
+    @Session() session: UserSession,
+  ): Promise<boolean> {
+    return this.membershipService.leaveMembership(id, session.user.id);
+  }
 }
