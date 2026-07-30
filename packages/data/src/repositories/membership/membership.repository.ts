@@ -18,4 +18,9 @@ export class MembershipRepository extends BaseRepository {
     });
     return data.updateMembershipRoles;
   }
+
+  async leave(membershipId: string) {
+    const data = await this.sdk.LeaveMembership({ id: membershipId });
+    return data.leaveMembership;
+  }
 }
