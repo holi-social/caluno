@@ -129,6 +129,11 @@
   },
   "Profile": {
     "title": "Edit Profile",
+    "pageTitle": "Profile",
+    "organizations": "Your organizations",
+    "personalInformation": "Personal information",
+    "accountSettings": "Account settings",
+    "edit": "Edit profile",
     "pictureLabel": "Profile picture",
     "saved": "Profile updated",
     "saveFailed": "Failed to update profile"

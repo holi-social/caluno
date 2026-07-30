@@ -129,6 +129,11 @@
   },
   "Profile": {
     "title": "Profil bearbeiten",
+    "pageTitle": "Profil",
+    "organizations": "Deine Organisationen",
+    "personalInformation": "Persönliche Informationen",
+    "accountSettings": "Kontoeinstellungen",
+    "edit": "Profil bearbeiten",
     "pictureLabel": "Profilbild",
     "saved": "Profil aktualisiert",
     "saveFailed": "Profil konnte nicht aktualisiert werden"

@@ -1,22 +1,12 @@
 import type { User } from '@repo/data';
 import { Avatar, AvatarFallback, AvatarImage } from '@repo/ui';
 import { useTranslations } from 'next-intl';
+import { getInitials } from '@/lib/get-initials';
 
 type UserCardProps = {
   user: Pick<User, 'name' | 'image'> & { email?: string | null };
   size?: 'sm' | 'lg' | 'default';
   hideEmail?: boolean;
-};
-
-const getInitials = (name?: string): string => {
-  if (!name) return '?';
-
-  return name
-    .split(' ')
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((n) => n[0]?.toUpperCase())
-    .join('');
 };
 
 export const UserCard = ({
