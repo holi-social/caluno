@@ -10,6 +10,7 @@ interface InviteShiftPageContentProps {
   instanceId: string;
   locale: string;
   eventId?: string;
+  isCreationFlow?: boolean;
 }
 
 export async function InviteShiftPageContent({
@@ -18,6 +19,7 @@ export async function InviteShiftPageContent({
   instanceId,
   locale,
   eventId,
+  isCreationFlow = false,
 }: InviteShiftPageContentProps) {
   const data = await getDataClient({ orgUId });
   const t = await getTranslations({ locale, namespace: 'Shift.sheet' });
@@ -49,8 +51,10 @@ export async function InviteShiftPageContent({
     <InviteShiftForm
       title={t('inviteTitle')}
       description={t('inviteDescription')}
+      orgUId={orgUId}
       shiftId={shift.id}
       instanceId={instanceId}
+      isCreationFlow={isCreationFlow}
       shift={{
         title: shift.title,
         isRecurring: !!shift.rrule && shift.recurrenceDays.length > 0,

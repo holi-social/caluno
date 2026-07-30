@@ -20,6 +20,7 @@ import { useRouter } from '@/i18n/navigation';
 import { useSession } from '@/lib/auth';
 import { copyToClipboard } from '@/lib/clipboard';
 import type { RecurrenceDayValue } from '../constants';
+import { shiftCreatedSuccessPath } from '../routes';
 import { type InviteShiftFormValues, inviteShiftFormSchema } from '../schemas';
 import { shiftShareUrl } from '../share';
 import { TransferList } from './transfer-list';
@@ -35,8 +36,10 @@ type Member = {
 interface InviteShiftFormProps {
   title: string;
   description: string;
+  orgUId: string;
   shiftId: string;
   instanceId: string;
+  isCreationFlow?: boolean;
   shift: {
     title: string;
     isRecurring: boolean;
@@ -57,8 +60,10 @@ interface InviteShiftFormProps {
 export function InviteShiftForm({
   title,
   description,
+  orgUId,
   shiftId,
   instanceId,
+  isCreationFlow = false,
   shift,
   selectedInstance,
   availableMembers,
@@ -142,6 +147,13 @@ export function InviteShiftForm({
       });
       if (volunteersResult?.serverError) {
         setServerError(volunteersResult.serverError);
+        return;
+      }
+
+      if (isCreationFlow) {
+        await setOpen(false, () => null);
+        router.replace(shiftCreatedSuccessPath(orgUId, shiftId));
+        router.refresh();
         return;
       }
 
