@@ -9,6 +9,7 @@ import { OrgPageHeader } from '@/domain/org-unit/components/org-page-header';
 import { OrgShiftsList } from '@/domain/org-unit/components/org-shifts-list';
 import { resolveLocale } from '@/i18n/routing';
 import { getDataClient } from '@/lib/data-client';
+import { getInitials } from '@/lib/get-initials';
 
 interface OrgPageProps {
   params: Promise<{ orgId: string; locale: string }>;
@@ -17,14 +18,6 @@ interface OrgPageProps {
 type PublicOrganizationUnit = Awaited<
   ReturnType<DataClient['publicOrganizationUnit']['findById']>
 >;
-
-const getInitials = (name: string): string =>
-  name
-    .split(/\s+/)
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((word) => word[0]?.toUpperCase())
-    .join('');
 
 export async function generateMetadata({ params }: OrgPageProps) {
   const { orgId, locale } = await params;

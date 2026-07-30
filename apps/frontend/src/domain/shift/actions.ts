@@ -38,6 +38,8 @@ export const createShift = actionClient
       invitedMemberIds: parsedInput.invitedMemberIds,
       rrule,
       imageFileId: parsedInput.imageFileId ?? null,
+      minVolunteers: parsedInput.minVolunteers ?? null,
+      maxVolunteers: parsedInput.maxVolunteers ?? null,
     };
 
     const shift = await data.shift.create(input);
@@ -73,6 +75,8 @@ export const updateShift = actionClient
       invitedMemberIds: parsedInput.invitedMemberIds,
       rrule,
       imageFileId: parsedInput.imageFileId,
+      minVolunteers: parsedInput.minVolunteers ?? null,
+      maxVolunteers: parsedInput.maxVolunteers ?? null,
     };
 
     return await data.shift.update(shiftId, input);
@@ -123,19 +127,3 @@ export const updateShiftInstanceInviteStatus = actionClient
       );
     },
   );
-
-const updateShiftStaffingSchema = z.object({
-  minVolunteers: z.number().int().positive().nullable(),
-  maxVolunteers: z.number().int().positive().nullable(),
-});
-
-export const updateShiftStaffing = actionClient
-  .inputSchema(updateShiftStaffingSchema)
-  .bindArgsSchemas([z.string(), z.string()])
-  .action(async ({ parsedInput, bindArgsParsedInputs: [orgUId, shiftId] }) => {
-    const data = await getDataClient({ orgUId });
-    await data.shift.update(shiftId, {
-      minVolunteers: parsedInput.minVolunteers ?? undefined,
-      maxVolunteers: parsedInput.maxVolunteers ?? undefined,
-    });
-  });

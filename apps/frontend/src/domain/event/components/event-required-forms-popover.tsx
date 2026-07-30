@@ -25,10 +25,7 @@ export function EventRequiredFormsPopover({
   const t = useTranslations('Event.detail.requiredForms');
   const commonT = useTranslations('Common');
 
-  const canConfigure = useHasPermission([
-    PermissionKey.OrgEdit,
-    PermissionKey.RequirementProfileEdit,
-  ]);
+  const canConfigure = useHasPermission([PermissionKey.ShiftEdit]);
 
   const { data: orgUnit } = useOrganizationUnitWithSuspense(orgUId);
   const { data: event } = useEvent(eventId);
@@ -61,10 +58,12 @@ export function EventRequiredFormsPopover({
       toast.success(
         formIds.length > previousCount ? t('addedToast') : t('removedToast'),
       );
+      return true;
     } catch (error) {
       toast.error(
         error instanceof Error ? error.message : t('updateFailedToast'),
       );
+      return false;
     }
   };
 

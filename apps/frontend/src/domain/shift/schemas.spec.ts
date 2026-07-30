@@ -1,0 +1,79 @@
+import { describe, expect, it } from 'bun:test';
+import { shiftFormSchema } from './schemas';
+
+const messages = {
+  nameRequired: 'Name is required',
+  startTimeRequired: 'Start time is required',
+  endTimeRequired: 'End time is required',
+  minMaxVolunteers: 'Minimum volunteers cannot exceed maximum volunteers',
+};
+
+function baseShift(overrides: Record<string, unknown> = {}) {
+  return {
+    name: 'Morning shift',
+    startsAt: new Date('2026-08-01T09:00:00Z'),
+    endsAt: new Date('2026-08-01T12:00:00Z'),
+    ...overrides,
+  };
+}
+
+describe('shiftFormSchema min/max volunteers', () => {
+  it('accepts both fields empty', () => {
+    const result = shiftFormSchema(messages).safeParse(baseShift());
+    expect(result.success).toBe(true);
+  });
+
+  it('accepts only minVolunteers set', () => {
+    const result = shiftFormSchema(messages).safeParse(
+      baseShift({ minVolunteers: 2 }),
+    );
+    expect(result.success).toBe(true);
+  });
+
+  it('accepts only maxVolunteers set', () => {
+    const result = shiftFormSchema(messages).safeParse(
+      baseShift({ maxVolunteers: 10 }),
+    );
+    expect(result.success).toBe(true);
+  });
+
+  it('accepts minVolunteers equal to maxVolunteers', () => {
+    const result = shiftFormSchema(messages).safeParse(
+      baseShift({ minVolunteers: 5, maxVolunteers: 5 }),
+    );
+    expect(result.success).toBe(true);
+  });
+
+  it('accepts minVolunteers of 0', () => {
+    const result = shiftFormSchema(messages).safeParse(
+      baseShift({ minVolunteers: 0, maxVolunteers: 5 }),
+    );
+    expect(result.success).toBe(true);
+  });
+
+  it('rejects minVolunteers greater than maxVolunteers', () => {
+    const result = shiftFormSchema(messages).safeParse(
+      baseShift({ minVolunteers: 10, maxVolunteers: 5 }),
+    );
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      const issue = result.error.issues[0];
+      expect(issue?.path).toEqual(['maxVolunteers']);
+      expect(issue?.message).toBe(messages.minMaxVolunteers);
+    }
+  });
+
+  it('rejects negative minVolunteers', () => {
+    const result = shiftFormSchema(messages).safeParse(
+      baseShift({ minVolunteers: -1 }),
+    );
+    expect(result.success).toBe(false);
+  });
+
+  it('rejects non-integer maxVolunteers', () => {
+    const result = shiftFormSchema(messages).safeParse(
+      baseShift({ maxVolunteers: 2.5 }),
+    );
+    expect(result.success).toBe(false);
+  });
+});

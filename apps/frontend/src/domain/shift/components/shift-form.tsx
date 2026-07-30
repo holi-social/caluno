@@ -67,6 +67,7 @@ export const ShiftForm = ({
       startTimeRequired: t('validation.startTimeRequired'),
       endTimeRequired: t('validation.endTimeRequired'),
       windowViolation: t('validation.windowViolation'),
+      minMaxVolunteers: t('validation.minMaxVolunteers'),
     },
     event,
   );
@@ -262,6 +263,46 @@ export const ShiftForm = ({
           />
         </Field>
       </Card>
+
+      <div className="flex gap-3">
+        <Field className="flex-1">
+          <FieldLabel htmlFor="minVolunteers">
+            {t('form.minVolunteersLabel')}
+          </FieldLabel>
+          <Input
+            id="minVolunteers"
+            type="number"
+            min={0}
+            placeholder={t('form.minVolunteersPlaceholder')}
+            disabled={pending}
+            {...register('minVolunteers', {
+              setValueAs: (v) => (v === '' || v == null ? null : Number(v)),
+            })}
+          />
+          <FieldDescription>
+            {t('form.minVolunteersDescription')}
+          </FieldDescription>
+        </Field>
+        <Field className="flex-1">
+          <FieldLabel htmlFor="maxVolunteers">
+            {t('form.maxVolunteersLabel')}
+          </FieldLabel>
+          <Input
+            id="maxVolunteers"
+            type="number"
+            min={0}
+            placeholder={t('form.maxVolunteersPlaceholder')}
+            disabled={pending}
+            {...register('maxVolunteers', {
+              setValueAs: (v) => (v === '' || v == null ? null : Number(v)),
+            })}
+          />
+          <FieldDescription>
+            {t('form.maxVolunteersDescription')}
+          </FieldDescription>
+          <FieldError errors={[errors.maxVolunteers]} />
+        </Field>
+      </div>
     </FormSheet>
   );
 };

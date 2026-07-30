@@ -129,6 +129,11 @@
   },
   "Profile": {
     "title": "Edit Profile",
+    "pageTitle": "Profile",
+    "organizations": "Your organizations",
+    "personalInformation": "Personal information",
+    "accountSettings": "Account settings",
+    "edit": "Edit profile",
     "pictureLabel": "Profile picture",
     "saved": "Profile updated",
     "saveFailed": "Failed to update profile"
@@ -557,9 +562,15 @@
       "noRecurrence": "No recurrence",
       "chooseDays": "Choose which days this shift repeats",
       "openShiftLabel": "Open shift",
-      "openShiftDescription": "Any volunteer can sign up for this shift",
+      "openShiftDescription": "The shift is visible for your volunteers on the platform. Any of your volunteers can sign up for this shift",
       "timeRangeConstraint": "Shifts must start and end within ({window}).",
-      "imageLabel": "Image"
+      "imageLabel": "Image",
+      "minVolunteersLabel": "Min volunteers",
+      "minVolunteersPlaceholder": "e.g. 2",
+      "minVolunteersDescription": "Minimum number of people required to open the shift",
+      "maxVolunteersLabel": "Max volunteers",
+      "maxVolunteersPlaceholder": "e.g. 50",
+      "maxVolunteersDescription": "Maximum number of people allowed to sign up for the shift"
     },
     "recurrence": {
       "preset": {
@@ -581,12 +592,6 @@
     },
     "inviteForm": {
       "title": "Invite and manage participants",
-      "minVolunteersLabel": "Min volunteers",
-      "minVolunteersPlaceholder": "e.g. 2",
-      "minVolunteersDescription": "Minimum number of people required to open the shift",
-      "maxVolunteersLabel": "Max volunteers",
-      "maxVolunteersPlaceholder": "e.g. 50",
-      "maxVolunteersDescription": "Maximum number of people allowed to sign up for the shift",
       "copyInviteLink": "Copy invite link",
       "managingLabel": "You are managing volunteers for:",
       "inviteAllLabel": "Invite to all future instances of this shift",

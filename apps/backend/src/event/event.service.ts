@@ -1,4 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
+import { isUUID } from 'class-validator';
 import { and, count, eq, inArray } from 'drizzle-orm';
 import type { Database } from '../database/database.module';
 import { DATABASE_CONNECTION } from '../database/database-connection';
@@ -13,9 +14,11 @@ import type { PaginationInput } from '../graphql/pagination.input';
 import { MembershipService } from '../membership/membership.service';
 import type { MembershipRequestEntity } from '../membership/schemas/membership-request.schema';
 import { RequiredFormTargetType } from '../requirement-profile/enums';
-import type { RequirementFormEntity } from '../requirement-profile/schemas/requirement-form.schema';
 import type { RequirementProfileEntity } from '../requirement-profile/schemas/requirement-profile.schema';
-import { RequiredFormService } from '../requirement-profile/services/required-form.service';
+import {
+  RequiredFormService,
+  type RequiredFormStatus,
+} from '../requirement-profile/services/required-form.service';
 import { JoinStatus } from '../shared/enums/join-status.enum';
 import {
   canTransitionInviteStatus,
@@ -51,11 +54,20 @@ export class EventService {
     return event;
   }
 
-  async findByIdPublic(id: string): Promise<EventEntity | null> {
-    const result = await this.db.query.events.findFirst({
-      where: { id, isDeleted: false },
+  async findByIdPublic(identifier: string): Promise<EventEntity | null> {
+    if (isUUID(identifier)) {
+      const event = await this.db.query.events.findFirst({
+        where: { id: identifier, isDeleted: false },
+      });
+      if (event) {
+        return event;
+      }
+    }
+
+    const event = await this.db.query.events.findFirst({
+      where: { slug: identifier, isDeleted: false },
     });
-    return result ?? null;
+    return event ?? null;
   }
 
   async findBySlug(slug: string): Promise<EventEntity | null> {
@@ -284,14 +296,7 @@ export class EventService {
   private async getEventRequiredFormStatuses(
     userId: string,
     eventId: string,
-  ): Promise<
-    Array<{
-      form: RequirementFormEntity;
-      order: number;
-      submitted: boolean;
-      submissionId: string | null;
-    }>
-  > {
+  ): Promise<RequiredFormStatus[]> {
     return this.requiredFormService.getRequiredFormStatuses(userId, {
       targetType: RequiredFormTargetType.EVENT,
       targetId: eventId,
@@ -303,12 +308,7 @@ export class EventService {
     eventId: string,
   ): Promise<{
     satisfied: boolean;
-    requiredForms: Array<{
-      form: RequirementFormEntity;
-      order: number;
-      submitted: boolean;
-      submissionId: string | null;
-    }>;
+    requiredForms: RequiredFormStatus[];
   }> {
     const requiredForms = await this.getEventRequiredFormStatuses(
       userId,
@@ -322,6 +322,7 @@ export class EventService {
     userId: string,
     eventId: string,
     tx?: Database,
+    formsAlreadySatisfied?: boolean,
   ): Promise<EventEntity> {
     const db = tx ?? this.db;
 
@@ -344,15 +345,17 @@ export class EventService {
       );
     }
 
-    const requiredFormStatuses = await this.getEventRequiredFormStatuses(
-      userId,
-      eventId,
-    );
-    const missingForms = requiredFormStatuses.filter((s) => !s.submitted);
-    if (missingForms.length > 0) {
-      throw new ConflictGraphQLError(
-        'You must complete the required forms before joining this event.',
+    if (!formsAlreadySatisfied) {
+      const requiredFormStatuses = await this.getEventRequiredFormStatuses(
+        userId,
+        eventId,
       );
+      const missingForms = requiredFormStatuses.filter((s) => !s.submitted);
+      if (missingForms.length > 0) {
+        throw new ConflictGraphQLError(
+          'You must complete the required forms before joining this event.',
+        );
+      }
     }
 
     const existingInvite = await db.query.eventInvites.findFirst({
@@ -408,12 +411,7 @@ export class EventService {
       name: string;
       status: string;
     }>;
-    requiredForms?: Array<{
-      form: RequirementFormEntity;
-      order: number;
-      submitted: boolean;
-      submissionId: string | null;
-    }>;
+    requiredForms?: RequiredFormStatus[];
   }> {
     const event = await this.findByIdPublic(eventId);
 
@@ -480,7 +478,7 @@ export class EventService {
         };
       }
 
-      await this.joinEvent(userId, eventId);
+      await this.joinEvent(userId, eventId, undefined, true);
       return {
         status: JoinStatus.JOINED,
         event,
@@ -496,7 +494,7 @@ export class EventService {
       };
     }
 
-    await this.joinEvent(userId, eventId);
+    await this.joinEvent(userId, eventId, undefined, true);
     return {
       status: JoinStatus.JOINED,
       event,
@@ -553,6 +551,22 @@ export class EventService {
     });
   }
 
+  async findInvitesByEventIdsForUser(
+    eventIds: string[],
+    userId: string,
+  ): Promise<EventInviteEntity[]> {
+    if (eventIds.length === 0) {
+      return [];
+    }
+
+    return this.db.query.eventInvites.findMany({
+      where: {
+        eventId: { in: eventIds },
+        userId,
+      },
+    });
+  }
+
   async findInvites(
     eventId: string,
     organizationUnitId: string,
@@ -595,34 +609,12 @@ export class EventService {
       throw new NotFoundGraphQLError('Organization unit not found');
     }
 
-    if (formIds.length > 0) {
-      const forms = await tx.query.requirementForms.findMany({
-        where: {
-          id: { in: formIds },
-          organizationId: orgUnit.organizationId,
-        },
-      });
-
-      if (forms.length !== formIds.length) {
-        throw new ConflictGraphQLError(
-          'One or more forms do not belong to this organization',
-        );
-      }
-    }
-
-    await tx
-      .delete(schema.eventRequiredForms)
-      .where(eq(schema.eventRequiredForms.eventId, eventId));
-
-    if (formIds.length > 0) {
-      await tx.insert(schema.eventRequiredForms).values(
-        formIds.map((formId, index) => ({
-          eventId,
-          formId,
-          order: index,
-        })),
-      );
-    }
+    await this.requiredFormService.applyEventRequiredForms(
+      eventId,
+      orgUnit.organizationId,
+      formIds,
+      tx,
+    );
   }
 
   private async resolveImageUrl(

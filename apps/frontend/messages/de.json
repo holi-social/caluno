@@ -129,6 +129,11 @@
   },
   "Profile": {
     "title": "Profil bearbeiten",
+    "pageTitle": "Profil",
+    "organizations": "Deine Organisationen",
+    "personalInformation": "Persönliche Informationen",
+    "accountSettings": "Kontoeinstellungen",
+    "edit": "Profil bearbeiten",
     "pictureLabel": "Profilbild",
     "saved": "Profil aktualisiert",
     "saveFailed": "Profil konnte nicht aktualisiert werden"
@@ -557,9 +562,15 @@
       "noRecurrence": "Einmalig",
       "chooseDays": "Wähle die Tage, an denen sich dieser Einsatz wiederholt",
       "openShiftLabel": "Offener Einsatz",
-      "openShiftDescription": "Jeder Freiwillige kann sich für diesen Einsatz anmelden",
+      "openShiftDescription": "Der Einsatz ist für deine Freiwilligen auf der Plattform sichtbar. Jeder deiner Freiwilligen kann sich für diesen Einsatz anmelden",
       "timeRangeConstraint": "Einsätze müssen innerhalb von ({window}) beginnen und enden.",
-      "imageLabel": "Bild"
+      "imageLabel": "Bild",
+      "minVolunteersLabel": "Min. Freiwillige",
+      "minVolunteersPlaceholder": "z. B. 2",
+      "minVolunteersDescription": "Mindestanzahl an Personen, die nötig ist, um diesen Einsatz zu öffnen",
+      "maxVolunteersLabel": "Max. Freiwillige",
+      "maxVolunteersPlaceholder": "z. B. 50",
+      "maxVolunteersDescription": "Maximale Anzahl an Personen, die sich für diesen Einsatz anmelden dürfen"
     },
     "recurrence": {
       "preset": {
@@ -581,12 +592,6 @@
     },
     "inviteForm": {
       "title": "Teilnehmer einladen und verwalten",
-      "minVolunteersLabel": "Min. Freiwillige",
-      "minVolunteersPlaceholder": "z. B. 2",
-      "minVolunteersDescription": "Mindestanzahl an Personen, die nötig ist, um diesen Einsatz zu öffnen",
-      "maxVolunteersLabel": "Max. Freiwillige",
-      "maxVolunteersPlaceholder": "z. B. 50",
-      "maxVolunteersDescription": "Maximale Anzahl an Personen, die sich für diesen Einsatz anmelden dürfen",
       "copyInviteLink": "Einladungslink kopieren",
       "managingLabel": "Du verwaltest Freiwillige für:",
       "inviteAllLabel": "Zu allen zukünftigen Terminen dieses Einsatzes einladen",

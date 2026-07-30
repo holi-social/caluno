@@ -22,12 +22,16 @@ test.describe('public event detail page', () => {
     ).toBeVisible();
   });
 
-  test('redirects anonymous follow click to signup with redirect cookie', async ({
+  test('redirects anonymous follow click to login with redirect param', async ({
     page,
   }) => {
     await page.goto(`${BASE_URL}/en/events/${PUBLIC_EVENT_ID}`);
     await page.getByRole('button', { name: /step up to help/i }).click();
-    await expect(page).toHaveURL(/signup/);
+    await expect(page).toHaveURL(/\/en\/login.*/);
+    const url = new URL(page.url());
+    expect(url.searchParams.get('redirectTo')).toContain(
+      `/events/${PUBLIC_EVENT_ID}?autoFollow=true`,
+    );
   });
 
   test('shows event badge on shift detail when part of event', async ({
