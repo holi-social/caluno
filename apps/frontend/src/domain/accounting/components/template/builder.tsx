@@ -59,6 +59,7 @@ export function TemplateBuilder({
 }: TemplateBuilderProps) {
   const t = useTranslations('Accounting.templates.builder');
   const tSections = useTranslations('Accounting.templates');
+  const tCommon = useTranslations('Common');
   const router = useRouter();
 
   const [templateDoc, setTemplateDoc] = useState<TemplateDocument>(() =>
@@ -194,7 +195,7 @@ export function TemplateBuilder({
         </section>
       </div>
 
-      <div className="flex shrink-0 items-center justify-end gap-3">
+      <div className="flex shrink-0 flex-col items-end gap-3">
         {incompleteCount > 0 && (
           <span className="text-sm text-muted-foreground">
             {t('blockEditor.incompleteCount', {
@@ -202,13 +203,20 @@ export function TemplateBuilder({
             } as Parameters<typeof t>[1])}
           </span>
         )}
-        <Button
-          type="button"
-          onClick={handleSave}
-          disabled={incompleteCount > 0}
-        >
-          {t('saveButton')}
-        </Button>
+        <div className="flex items-center gap-2">
+          {backHref && (
+            <Button type="button" variant="outline" asChild>
+              <Link href={backHref}>{tCommon('cancel')}</Link>
+            </Button>
+          )}
+          <Button
+            type="button"
+            onClick={handleSave}
+            disabled={incompleteCount > 0}
+          >
+            {t('saveButton')}
+          </Button>
+        </div>
       </div>
     </div>
   );
