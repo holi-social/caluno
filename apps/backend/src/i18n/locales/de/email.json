@@ -123,12 +123,20 @@
   },
   "welcome": {
     "subject": "Willkommen bei {brandName}",
-    "previewText": "Dein Konto ist bestätigt. Erstelle deine erste Organisation und beginne mit der Schichtplanung.",
+    "previewText": "Dein Konto wurde bestätigt. Erstelle deine erste Organisation und beginne mit der Schichtplanung.",
     "heading": "Willkommen bei {brandName}",
-    "greeting": "Hallo {firstName}, willkommen bei {brandName}.",
-    "intro": "Dein Konto ist bestätigt. Du kannst jetzt deine erste Organisation erstellen und mit der Schichtplanung starten.",
+    "greeting": "Hallo {firstName},",
+    "intro": "Willkommen bei {brandName}! Dein Konto wurde bestätigt und du kannst loslegen.",
+    "description": "Mit {brandName} kannst du deine Organisation erstellen, Helferinnen und Teammitglieder einladen, Schichten planen und alle auf dem Laufenden halten.",
+    "nextStep": "Dein nächster Schritt:",
+    "nextStepDetail": "Erstelle deine erste Organisation.",
     "buttonLabel": "Erstelle deine erste Organisation",
-    "note": "Du weißt nicht, wo du anfangen sollst? Erstelle eine Organisation, lade dein Team ein und veröffentliche deine ersten Schichten.",
+    "notSureHeading": "Du weißt nicht, wo du anfangen sollst?",
+    "step1": "Erstelle deine Organisation.",
+    "step2": "Lade dein Team ein.",
+    "step3": "Erstelle und veröffentliche deine ersten Schichten.",
+    "closing": "Das dauert nur wenige Minuten, dann kannst du deine Helferinnen koordinieren.",
+    "excited": "Wir freuen uns, dich an Bord zu haben!",
     "footerNote": "Du erhältst diese E-Mail, weil dein Konto auf {brandName} bestätigt wurde."
   }
 }

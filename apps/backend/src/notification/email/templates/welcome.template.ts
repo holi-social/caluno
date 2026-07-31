@@ -7,9 +7,10 @@ import {
   emailTheme,
   escapeHtml,
   heading,
-  note,
+  orderedListItem,
   paragraph,
   renderEmail,
+  strong,
 } from './shared';
 
 export interface WelcomeTemplateData {
@@ -25,15 +26,22 @@ export async function welcomeTemplate(
   const createOrganizationLink = createOrganizationUrl();
 
   const body = card(`
-    ${heading(t('welcome.heading'))}
-    ${paragraph(t('welcome.greeting', { firstName, brandName }))}
+    ${heading(t('welcome.heading', { brandName }))}
+    ${paragraph(t('welcome.greeting', { firstName }))}
     ${paragraph(t('welcome.intro', { brandName }))}
+    ${paragraph(t('welcome.description', { brandName }))}
+    ${paragraph(`${strong(t('welcome.nextStep'))} ${t('welcome.nextStepDetail')}`)}
     ${button({
       href: createOrganizationLink,
       label: t('welcome.buttonLabel'),
     })}
     ${divider()}
-    ${note(t('welcome.note', { brandName }))}
+    ${paragraph(t('welcome.notSureHeading'))}
+    ${orderedListItem(1, t('welcome.step1'))}
+    ${orderedListItem(2, t('welcome.step2'))}
+    ${orderedListItem(3, t('welcome.step3'), { last: true })}
+    ${paragraph(t('welcome.closing'))}
+    ${paragraph(t('welcome.excited'))}
   `);
 
   return renderEmail({

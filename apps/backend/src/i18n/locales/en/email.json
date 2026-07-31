@@ -123,12 +123,20 @@
   },
   "welcome": {
     "subject": "Welcome to {brandName}",
-    "previewText": "Your account is verified. Create your first organization and start scheduling shifts.",
+    "previewText": "Your account has been verified. Create your first organization and start scheduling shifts.",
     "heading": "Welcome to {brandName}",
-    "greeting": "Hi {firstName}, welcome to {brandName}.",
-    "intro": "Your account is verified. You are ready to create your first organization and start scheduling shifts.",
+    "greeting": "Hi {firstName},",
+    "intro": "Welcome to {brandName}! Your account has been verified, and you're all set to get started.",
+    "description": "With {brandName}, you can create your organization, invite volunteers and team members, schedule shifts, and keep everyone in sync.",
+    "nextStep": "Your next step:",
+    "nextStepDetail": "create your first organization.",
     "buttonLabel": "Create your first organization",
-    "note": "Not sure where to start? Create an organization, invite your team, and publish your first shifts.",
+    "notSureHeading": "Not sure where to start?",
+    "step1": "Create your organization.",
+    "step2": "Invite your team.",
+    "step3": "Create and publish your first shifts.",
+    "closing": "It only takes a few minutes, and you'll be ready to start coordinating your volunteers.",
+    "excited": "We're excited to have you on board!",
     "footerNote": "You are receiving this because your account on {brandName} was verified."
   }
 }
