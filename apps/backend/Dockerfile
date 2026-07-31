@@ -41,7 +41,7 @@ COPY --from=builder /app/apps/backend/dist ./dist
 
 EXPOSE 8080
 
-COPY docker-entrypoint.sh ./
+COPY apps/backend/docker-entrypoint.sh ./
 RUN chmod +x docker-entrypoint.sh
 
 CMD ["./docker-entrypoint.sh"]
