@@ -41,12 +41,15 @@ export function ShiftFormsClient({
       if (result.status === JoinStatus.Joined) {
         toast.success(t('joinedToast', { shiftTitle }));
         router.push(getSafeRedirect(redirectTo) ?? `/shifts/${shiftId}`);
+        router.refresh();
       } else if (result.status === JoinStatus.Pending) {
         toast.success(t('requestSentToast'));
         router.push(`/shifts/${shiftId}`);
+        router.refresh();
       } else if (result.status === JoinStatus.Rejected) {
         toast.error(t('rejectedToast'));
         router.push(`/shifts/${shiftId}`);
+        router.refresh();
       } else if (result.status === JoinStatus.RequirementsNeeded) {
         toast.error(t('requirementsNeededToast'));
       }
