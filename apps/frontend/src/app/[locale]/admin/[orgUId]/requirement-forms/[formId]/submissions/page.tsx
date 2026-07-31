@@ -9,13 +9,10 @@ interface Props {
 }
 
 export default async function FormSubmissionsPage({ params }: Props) {
-  const { orgUId, formId, locale } = await params;
+  const { orgUId, formId } = await params;
   await requireOrgAccess(orgUId);
   const data = await getDataClient({ orgUId });
-  const t = await getTranslations({
-    locale,
-    namespace: 'RequirementForm.submissions',
-  });
+  const t = await getTranslations('RequirementForm.submissions');
 
   const form = await data.requirementForm.findFormById(formId);
   if (!form) {

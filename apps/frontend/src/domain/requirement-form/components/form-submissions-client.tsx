@@ -23,24 +23,16 @@ import { useSearchParams } from 'next/navigation';
 import { useFormatter, useTranslations } from 'next-intl';
 import { useState } from 'react';
 import { usePathname, useRouter } from '@/i18n/navigation';
+import {
+  groupSubmissionsByVolunteer,
+  type VolunteerSubmissions,
+} from './group-submissions';
 
 const TAB_SUBMITTED = 'SUBMITTED';
 const TAB_REJECTED = 'REJECTED';
 
 type Submission =
   GetFormSubmissionsByFormQuery['formSubmissionsByForm']['items'][number];
-
-interface VolunteerSubmissions {
-  user: {
-    id: string;
-    name: string;
-    email: string;
-    image?: string | null;
-  };
-  count: number;
-  latestSubmissionId: string;
-  latestSubmittedAt: string;
-}
 
 export function FormSubmissionsClient({
   orgUId,
@@ -67,36 +59,13 @@ export function FormSubmissionsClient({
 
   const query = search.trim().toLowerCase();
 
-  // Per status tab: filter submissions, then group by volunteer — one row
-  // per volunteer with their submission count and latest submission
-  // (clicking the row opens it).
-  const rowsForTab = (status: string): VolunteerSubmissions[] => {
-    const byVolunteer = new Map<string, VolunteerSubmissions>();
-    for (const submission of submissions) {
-      if (submission.status !== status || !submission.user) continue;
-      const user = submission.user;
-      const existing = byVolunteer.get(user.id);
-      if (
-        !existing ||
-        new Date(submission.submittedAt) > new Date(existing.latestSubmittedAt)
-      ) {
-        byVolunteer.set(user.id, {
-          user,
-          count: (existing?.count ?? 0) + 1,
-          latestSubmissionId: submission.id,
-          latestSubmittedAt: submission.submittedAt,
-        });
-      } else {
-        existing.count += 1;
-      }
-    }
-    return [...byVolunteer.values()].filter(
+  const rowsForTab = (status: string): VolunteerSubmissions[] =>
+    groupSubmissionsByVolunteer(submissions, status).filter(
       (entry) =>
         !query ||
         entry.user.name.toLowerCase().includes(query) ||
         entry.user.email.toLowerCase().includes(query),
     );
-  };
 
   const tabs = [
     { value: TAB_SUBMITTED, label: t('tabSubmitted') },
