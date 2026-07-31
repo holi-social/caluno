@@ -154,4 +154,13 @@ export class RequirementFormRepository extends BaseRepository {
     const data = await this.sdk.GetAdminFormSubmission({ id });
     return data.adminVolunteerSubmission;
   }
+
+  async findSubmissionsByForm(formId: string, options: PaginationOptions = {}) {
+    const data = await this.sdk.GetFormSubmissionsByForm({
+      formId,
+      limit: options.limit ?? 100,
+      offset: options.offset ?? 0,
+    });
+    return data.formSubmissionsByForm;
+  }
 }
