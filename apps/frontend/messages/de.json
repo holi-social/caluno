@@ -606,6 +606,8 @@
       "title": "Einsatz erstellt",
       "bodyOpen": "Dein offener Einsatz ist jetzt aktiv! Alle Freiwilligen innerhalb deiner Organisation wurden benachrichtigt und können sich jetzt anmelden.",
       "bodyInvited": "Dein Einsatz ist live! Eingeladene Freiwillige wurden benachrichtigt.",
+      "shareLabel": "Link zum Einsatz",
+      "copyInviteLink": "Einladungslink kopieren",
       "recurrence": {
         "oneTime": "Einmalig",
         "daily": "Täglich",

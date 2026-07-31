@@ -4,6 +4,7 @@ import { ShiftVisibility } from '@repo/data';
 import { useShift } from '@repo/data/react';
 import {
   Badge,
+  Button,
   Card,
   CardContent,
   Dialog,
@@ -12,10 +13,12 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@repo/ui';
-import { Check, Landmark, Repeat2 } from 'lucide-react';
+import { Check, Copy, Landmark, Link, Repeat2 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useState } from 'react';
+import { copyToClipboard } from '@/lib/clipboard';
 import { useFormatting } from '@/lib/formatting/use-formatting';
+import { shiftShareUrl } from '../share';
 import {
   clearSuccessDialogCreatedShift,
   formatShiftOrgUnitLabel,
@@ -25,6 +28,7 @@ import {
 
 export function ShiftCreatedDialog() {
   const t = useTranslations('Shift.successDialog');
+  const tCommon = useTranslations('Common');
   const { shiftId, instanceId } = getSuccessDialogCreatedShift() ?? {};
   const { data: shift, isLoading } = useShift(shiftId);
   const { formatTimeRange } = useFormatting();
@@ -49,6 +53,9 @@ export function ShiftCreatedDialog() {
     shift.recurrenceDays,
   );
   const orgUnitLabel = formatShiftOrgUnitLabel(shift.organizationUnit);
+  const shareUrl = shiftShareUrl(shiftId, instanceId);
+  const handleCopyShareLink = () =>
+    copyToClipboard(shareUrl, tCommon('linkCopied'));
 
   const recurrenceLabel =
     recurrenceBadge.kind === 'preset'
@@ -86,6 +93,32 @@ export function ShiftCreatedDialog() {
             </div>
           </CardContent>
         </Card>
+
+        {isOpenShift && instanceId && (
+          <div className="flex w-full min-w-0 flex-col gap-3">
+            <p className="text-xs font-semibold tracking-wide text-muted-foreground">
+              {t('shareLabel')}
+            </p>
+            <div className="flex w-full flex-col gap-2 sm:flex-row sm:items-center">
+              <button
+                type="button"
+                onClick={handleCopyShareLink}
+                className="flex h-10 min-w-0 items-center gap-2 overflow-hidden rounded-lg border bg-muted px-3 text-xs text-muted-foreground sm:flex-1"
+              >
+                <Link className="size-4 shrink-0" />
+                <span className="min-w-0 truncate">{shareUrl}</span>
+              </button>
+              <Button
+                type="button"
+                className="w-full sm:w-auto sm:shrink-0"
+                onClick={handleCopyShareLink}
+              >
+                <Copy className="size-4 mr-2" />
+                {t('copyInviteLink')}
+              </Button>
+            </div>
+          </div>
+        )}
       </DialogContent>
     </Dialog>
   );
