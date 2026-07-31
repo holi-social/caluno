@@ -5,6 +5,7 @@ import type { OrganizationCreatedPayload } from './payloads/organization-created
 import type { ShiftInstanceInvitedPayload } from './payloads/shift-instance-invited.payload';
 import type { ShiftInstanceJoinedPayload } from './payloads/shift-instance-joined.payload';
 import type { ShiftInvitedPayload } from './payloads/shift-invited.payload';
+import type { UserEmailVerifiedPayload } from './payloads/user-email-verified.payload';
 
 export interface NotificationEventPayloadMap {
   [NotificationEvent.ORGANIZATION_CREATED]: OrganizationCreatedPayload;
@@ -13,4 +14,5 @@ export interface NotificationEventPayloadMap {
   [NotificationEvent.SHIFT_INSTANCE_JOINED]: ShiftInstanceJoinedPayload;
   [NotificationEvent.SHIFT_INSTANCE_INVITED]: ShiftInstanceInvitedPayload;
   [NotificationEvent.SHIFT_INVITED]: ShiftInvitedPayload;
+  [NotificationEvent.USER_EMAIL_VERIFIED]: UserEmailVerifiedPayload;
 }

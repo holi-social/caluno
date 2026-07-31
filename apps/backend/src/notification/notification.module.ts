@@ -5,6 +5,7 @@ import { EmailService } from './email/email.service';
 import { MembershipListener } from './listeners/membership.listener';
 import { OrganizationListener } from './listeners/organization.listener';
 import { ShiftListener } from './listeners/shift.listener';
+import { UserListener } from './listeners/user.listener';
 import { NotificationService } from './notification.service';
 import { TypedNotificationEmitter } from './typed-notification-emitter.service';
 
@@ -17,6 +18,7 @@ import { TypedNotificationEmitter } from './typed-notification-emitter.service';
     OrganizationListener,
     MembershipListener,
     ShiftListener,
+    UserListener,
   ],
   exports: [NotificationService, EmailService],
 })

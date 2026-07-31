@@ -3,3 +3,4 @@ export { membershipRequestedTemplate } from './membership-requested.template';
 export { organizationCreatedTemplate } from './organization-created.template';
 export { passwordResetTemplate } from './password-reset.template';
 export { shiftInstanceJoinedTemplate } from './shift-instance-joined.template';
+export { welcomeTemplate } from './welcome.template';

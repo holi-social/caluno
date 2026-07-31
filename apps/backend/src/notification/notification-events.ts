@@ -5,6 +5,7 @@ export const NotificationEvent = {
   SHIFT_INSTANCE_JOINED: 'notification.shift-instance.joined',
   SHIFT_INSTANCE_INVITED: 'notification.shift-instance.invited',
   SHIFT_INVITED: 'notification.shift.invited',
+  USER_EMAIL_VERIFIED: 'notification.user.emailVerified',
 } as const;
 
 export type NotificationEvent =
