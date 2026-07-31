@@ -59,6 +59,7 @@ export async function InviteShiftPageContent({
         title: shift.title,
         isRecurring: !!shift.rrule && shift.recurrenceDays.length > 0,
         recurrenceDays: shift.recurrenceDays,
+        visibility: shift.visibility,
       }}
       selectedInstance={{
         actualStartsAt: instance.actualStartsAt,

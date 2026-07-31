@@ -1,6 +1,7 @@
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
+import { ShiftVisibility } from '@repo/data';
 import {
   Button,
   Card,
@@ -44,6 +45,7 @@ interface InviteShiftFormProps {
     title: string;
     isRecurring: boolean;
     recurrenceDays: RecurrenceDayValue[];
+    visibility: ShiftVisibility;
   };
   selectedInstance: {
     actualStartsAt: string | Date;
@@ -91,6 +93,7 @@ export function InviteShiftForm({
     },
   });
 
+  const isOpenShift = shift.visibility === ShiftVisibility.AllMembers;
   const currentUserId = session.data?.user?.id;
   const allMembers = availableMembers.filter((m) => m.id !== currentUserId);
   const statusById = new Map(
@@ -246,20 +249,22 @@ export function InviteShiftForm({
             invited={invitedForList}
             onInvitedChange={(ids) => form.setValue('invitedMemberIds', ids)}
           />
-          <Button
-            type="button"
-            variant="outline"
-            className="w-full shrink-0"
-            onClick={() =>
-              copyToClipboard(
-                shiftShareUrl(shiftId, instanceId),
-                tCommon('linkCopied'),
-              )
-            }
-          >
-            <Share2 className="size-4 mr-2" />
-            {t('inviteForm.copyInviteLink')}
-          </Button>
+          {isOpenShift && (
+            <Button
+              type="button"
+              variant="outline"
+              className="w-full shrink-0"
+              onClick={() =>
+                copyToClipboard(
+                  shiftShareUrl(shiftId, instanceId),
+                  tCommon('linkCopied'),
+                )
+              }
+            >
+              <Share2 className="size-4 mr-2" />
+              {t('inviteForm.copyInviteLink')}
+            </Button>
+          )}
         </div>
       </div>
     </FormSheet>
