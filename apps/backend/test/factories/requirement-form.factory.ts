@@ -146,3 +146,27 @@ export const setEventRequiredForms = async (
     }
   });
 };
+
+export const setShiftRequiredForms = async (
+  db: Database,
+  args: {
+    shiftId: string;
+    formIds: string[];
+  },
+) => {
+  await db.transaction(async (tx) => {
+    await tx
+      .delete(schema.shiftRequiredForms)
+      .where(eq(schema.shiftRequiredForms.shiftId, args.shiftId));
+
+    if (args.formIds.length > 0) {
+      await tx.insert(schema.shiftRequiredForms).values(
+        args.formIds.map((formId, index) => ({
+          shiftId: args.shiftId,
+          formId,
+          order: index,
+        })),
+      );
+    }
+  });
+};

@@ -54,6 +54,7 @@ describe('ShiftService', () => {
         resolvePublicUrlForUploadedFile: async () =>
           'https://example.com/image.png',
       } as never,
+      {} as never,
     );
 
     userId = (await createUser(db)).id;

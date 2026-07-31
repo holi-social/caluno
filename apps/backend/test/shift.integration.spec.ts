@@ -12,16 +12,22 @@ import { eq } from 'drizzle-orm';
 import type { Database } from '../src/database/database.module';
 import * as schema from '../src/database/schema';
 import { NotFoundGraphQLError } from '../src/graphql/errors';
+import { RequiredFormTargetType } from '../src/requirement-profile/enums';
+import { RequiredFormService } from '../src/requirement-profile/services/required-form.service';
+import { JoinStatus } from '../src/shared/enums/join-status.enum';
 import { ShiftInviteStatus, ShiftVisibility } from '../src/shift/enums';
 import { ShiftService } from '../src/shift/shift.service';
 import {
   cancelShiftInstance,
+  createFormSubmission,
   createMembershipRequest,
+  createRequirementForm,
   createShift,
   createShiftInstance,
   createUser,
 } from './factories';
 import {
+  addMembership,
   createOrganizationWithType,
   createUnit,
 } from './factories/org.factory';
@@ -2630,5 +2636,106 @@ describe('ShiftInstance.invites (VOLI-842)', () => {
     expect(invites.map((invite) => invite.user.id)).not.toContain(
       foreignUser.id,
     );
+  });
+});
+
+describe('ShiftService.requestJoinShiftInstance — required forms', () => {
+  let app: INestApplication;
+  let db: Database;
+  let organizationId: string;
+  let organizationUnitId: string;
+  let shiftService: ShiftService;
+  let requiredFormService: RequiredFormService;
+
+  beforeAll(async () => {
+    const context = await getGraphqlTestContext();
+    app = context.app;
+    db = context.db;
+    organizationId = context.organizationId;
+    organizationUnitId = context.organizationUnitId;
+    shiftService = app.get(ShiftService);
+    requiredFormService = app.get(RequiredFormService);
+  });
+
+  const setupJoinableShift = async () => {
+    const user = await createUser(db);
+    await addMembership(db, user.id, organizationUnitId);
+
+    const { id: shiftId } = await createShift(db, {
+      organizationUnitId,
+      visibility: ShiftVisibility.ALL_MEMBERS,
+    });
+    const instance = await db.query.shiftInstances.findFirst({
+      where: { masterId: shiftId },
+    });
+    if (!instance) throw new Error('Failed to create test shift instance');
+
+    const { form } = await createRequirementForm(db, {
+      organizationId,
+      organizationUnitId,
+      createdById: user.id,
+    });
+    await requiredFormService.setRequiredForms(
+      { targetType: RequiredFormTargetType.SHIFT, targetId: shiftId },
+      [form.id],
+    );
+
+    return { user, shiftId, instance, form };
+  };
+
+  it('returns REQUIREMENTS_NEEDED when the shift has an unsubmitted required form', async () => {
+    const { user, instance, form } = await setupJoinableShift();
+
+    const result = await shiftService.requestJoinShiftInstance(
+      user.id,
+      instance.id,
+    );
+
+    expect(result.status).toBe(JoinStatus.REQUIREMENTS_NEEDED);
+    expect(result.requiredForms).toHaveLength(1);
+    expect(result.requiredForms?.[0]?.form.id).toBe(form.id);
+    expect(result.requiredForms?.[0]?.submitted).toBe(false);
+
+    const invite = await db.query.shiftInstanceInvites.findFirst({
+      where: { instanceId: instance.id, userId: user.id },
+    });
+    expect(invite).toBeUndefined();
+  });
+
+  it('joins the shift once the required form is submitted', async () => {
+    const { user, instance, form } = await setupJoinableShift();
+    await createFormSubmission(db, { formId: form.id, userId: user.id });
+
+    const result = await shiftService.requestJoinShiftInstance(
+      user.id,
+      instance.id,
+    );
+
+    expect(result.status).toBe(JoinStatus.JOINED);
+
+    const invite = await db.query.shiftInstanceInvites.findFirst({
+      where: { instanceId: instance.id, userId: user.id },
+    });
+    expect(invite?.status).toBe(ShiftInviteStatus.SELF_JOINED);
+  });
+
+  it('joins normally when the shift has no required forms', async () => {
+    const user = await createUser(db);
+    await addMembership(db, user.id, organizationUnitId);
+    const { id: shiftId } = await createShift(db, {
+      organizationUnitId,
+      visibility: ShiftVisibility.ALL_MEMBERS,
+    });
+    const instance = await db.query.shiftInstances.findFirst({
+      where: { masterId: shiftId },
+    });
+    if (!instance) throw new Error('Failed to create test shift instance');
+
+    const result = await shiftService.requestJoinShiftInstance(
+      user.id,
+      instance.id,
+    );
+
+    expect(result.status).toBe(JoinStatus.JOINED);
   });
 });

@@ -5,6 +5,7 @@ export {
   createRequirementForm,
   setEventRequiredForms,
   setRequiredForms,
+  setShiftRequiredForms,
 } from './requirement-form.factory';
 export { createShift } from './shift.factory';
 export {
