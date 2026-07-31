@@ -1,6 +1,11 @@
 'use client';
 
-import { JoinStatus, ShiftInviteStatus, ShiftVisibility } from '@repo/data';
+import {
+  JoinStatus,
+  RequiredFormTargetType,
+  ShiftInviteStatus,
+  ShiftVisibility,
+} from '@repo/data';
 import {
   useJoinShiftInstance,
   useUpdateShiftInstanceInviteStatus,
@@ -140,9 +145,16 @@ export function JoinShiftButton({
         );
         if (missingForms.length > 0) {
           const currentUrl = window.location.href;
-          router.push(
-            `/join/${organizationUnitId}/forms?redirectTo=${encodeURIComponent(currentUrl)}`,
-          );
+          const redirectTo = encodeURIComponent(currentUrl);
+          if (missingForms[0]?.targetType === RequiredFormTargetType.Shift) {
+            router.push(
+              `/shifts/${shiftId}/forms?instanceId=${instanceId}&redirectTo=${redirectTo}`,
+            );
+          } else {
+            router.push(
+              `/join/${organizationUnitId}/forms?redirectTo=${redirectTo}`,
+            );
+          }
           return;
         }
 

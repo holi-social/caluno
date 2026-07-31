@@ -534,7 +534,8 @@
       "firstDate": "First Date",
       "pattern": "Pattern",
       "time": "Time",
-      "visibility": "Visibility"
+      "visibility": "Visibility",
+      "requiredForms": "Forms"
     },
     "visibility": {
       "ALL_MEMBERS": "Open shift",
@@ -710,7 +711,26 @@
       "statusLabel": "Status",
       "createdByLabel": "Created by",
       "createdLabel": "Created",
-      "imageAlt": "Image for {title}"
+      "imageAlt": "Image for {title}",
+      "requiredForms": {
+        "title": "Forms required to join",
+        "subtitle": "Completed before joining {shiftTitle}",
+        "pill": {
+          "required": "{count, plural, one {1 form required} other {{count} forms required}}",
+          "none": "No forms required"
+        },
+        "questionCount": "{count, plural, one {1 question} other {{count} questions}}",
+        "addExisting": "+ Add existing",
+        "createNew": "Create new",
+        "searchForms": "Search forms...",
+        "noFormsFound": "No forms found",
+        "dedupHint": "Volunteers won't be asked for information they've already provided.",
+        "fileUploadLabel": "file upload",
+        "removeAria": "Remove {name}",
+        "addedToast": "Form attached",
+        "removedToast": "Form removed",
+        "updateFailedToast": "Failed to update required forms"
+      }
     },
     "notFound": "Shift not found.",
     "loading": "Loading...",
@@ -1160,7 +1180,17 @@
     "locationDivider": "·",
     "errorHeading": "This shift no longer exists",
     "errorBody": "It was cancelled or the link is no longer valid.",
-    "errorOrgCta": "Go to organisation"
+    "errorOrgCta": "Go to organisation",
+    "forms": {
+      "title": "Join {shiftTitle}",
+      "description": "Please complete the required forms before joining this shift.",
+      "noForms": "No forms are required.",
+      "joinedToast": "You've joined {shiftTitle}",
+      "requestSentToast": "Request sent — a coordinator will confirm it.",
+      "rejectedToast": "Request not approved",
+      "requirementsNeededToast": "Please complete all required forms first",
+      "requestFailed": "Failed to send request"
+    }
   },
   "Event": {
     "list": {

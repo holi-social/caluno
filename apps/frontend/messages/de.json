@@ -534,7 +534,8 @@
       "firstDate": "Erster Termin",
       "pattern": "Muster",
       "time": "Zeit",
-      "visibility": "Sichtbarkeit"
+      "visibility": "Sichtbarkeit",
+      "requiredForms": "Formulare"
     },
     "visibility": {
       "ALL_MEMBERS": "Offene Einsätze",
@@ -710,7 +711,26 @@
       "statusLabel": "Status",
       "createdByLabel": "Erstellt von",
       "createdLabel": "Erstellt",
-      "imageAlt": "Bild für {title}"
+      "imageAlt": "Bild für {title}",
+      "requiredForms": {
+        "title": "Für Beitritt erforderliche Formulare",
+        "subtitle": "Werden vor dem Beitritt zu {shiftTitle} ausgefüllt",
+        "pill": {
+          "required": "{count, plural, one {1 Formular erforderlich} other {{count} Formulare erforderlich}}",
+          "none": "Keine Formulare erforderlich"
+        },
+        "questionCount": "{count, plural, one {1 Frage} other {{count} Fragen}}",
+        "addExisting": "+ Bestehendes hinzufügen",
+        "createNew": "Neues erstellen",
+        "searchForms": "Formulare suchen...",
+        "noFormsFound": "Keine Formulare gefunden",
+        "dedupHint": "Freiwillige werden nicht nach Informationen gefragt, die sie bereits angegeben haben.",
+        "fileUploadLabel": "Datei-Upload",
+        "removeAria": "{name} entfernen",
+        "addedToast": "Formular hinzugefügt",
+        "removedToast": "Formular entfernt",
+        "updateFailedToast": "Erforderliche Formulare konnten nicht aktualisiert werden"
+      }
     },
     "notFound": "Einsatz nicht gefunden.",
     "loading": "Wird geladen...",
@@ -1160,7 +1180,17 @@
     "locationDivider": "·",
     "errorHeading": "Dieser Einsatz existiert nicht mehr",
     "errorBody": "Sie wurde abgesagt oder der Link ist nicht mehr gültig.",
-    "errorOrgCta": "Zur Organisation"
+    "errorOrgCta": "Zur Organisation",
+    "forms": {
+      "title": "{shiftTitle} beitreten",
+      "description": "Bitte fülle die erforderlichen Formulare aus, bevor du dieser Schicht beitrittst.",
+      "noForms": "Es sind keine Formulare erforderlich.",
+      "joinedToast": "Du bist {shiftTitle} beigetreten",
+      "requestSentToast": "Anfrage gesendet — ein Koordinator bestätigt sie.",
+      "rejectedToast": "Anfrage nicht genehmigt",
+      "requirementsNeededToast": "Bitte fülle zuerst alle erforderlichen Formulare aus",
+      "requestFailed": "Anfrage konnte nicht gesendet werden"
+    }
   },
   "Event": {
     "list": {

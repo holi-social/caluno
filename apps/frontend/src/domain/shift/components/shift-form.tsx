@@ -1,7 +1,9 @@
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
+import { useOrganizationUnit, useRequirementForms } from '@repo/data/react';
 import {
+  Button,
   Card,
   DatePickerWithTimeRange,
   Field,
@@ -13,11 +15,16 @@ import {
   Switch,
   Textarea,
 } from '@repo/ui';
-import { CalendarClockIcon } from 'lucide-react';
+import { CalendarClockIcon, SquareArrowOutUpRight } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import { useState, useTransition } from 'react';
+import { useMemo, useState, useTransition } from 'react';
 import { type Resolver, useForm } from 'react-hook-form';
 import { FormSheet, useFormSheet } from '@/components/form-sheet';
+import {
+  RequiredFormsAddExisting,
+  RequiredFormsDedupHint,
+  RequiredFormsList,
+} from '@/components/required-forms-fields';
 import { FileUpload } from '@/domain/storage/components/file-upload';
 import { useRouter } from '@/i18n/navigation';
 import { useFormatting } from '@/lib/formatting/use-formatting';
@@ -31,6 +38,7 @@ interface ShiftFormProps {
   description: string;
   orgUId: string;
   initialValues?: Partial<ShiftFormValues>;
+  initialRequiredFormIds?: string[];
   mutate: (data: ShiftFormValues) => Promise<{
     serverError?: string;
     data?: { id: string; instanceId?: string };
@@ -46,6 +54,7 @@ export const ShiftForm = ({
   description,
   orgUId,
   initialValues,
+  initialRequiredFormIds = [],
   mutate,
   defaultLocation,
   redirectToInviteOnCreate = false,
@@ -55,9 +64,31 @@ export const ShiftForm = ({
   const router = useRouter();
   const t = useTranslations('Shift');
   const tUpload = useTranslations('Storage.upload');
+  const tForms = useTranslations('Shift.detail.requiredForms');
   const { formatRange } = useFormatting();
   const [pending, startTransition] = useTransition();
   const [serverError, setServerError] = useState<string>();
+  const [requiredFormIds, setRequiredFormIds] = useState(
+    initialRequiredFormIds,
+  );
+  const [commandOpen, setCommandOpen] = useState(false);
+
+  const { data: orgUnit } = useOrganizationUnit(orgUId);
+  const { data: formsData, isPending: isLoadingForms } = useRequirementForms(
+    orgUnit?.organizationId ?? '',
+  );
+
+  const requiredForms = useMemo(() => {
+    const allForms = formsData?.items ?? [];
+    return requiredFormIds
+      .map((id) => allForms.find((form) => form.id === id))
+      .filter((form): form is NonNullable<typeof form> => Boolean(form));
+  }, [requiredFormIds, formsData]);
+
+  const availableForms = useMemo(() => {
+    const attachedIds = new Set(requiredFormIds);
+    return (formsData?.items ?? []).filter((form) => !attachedIds.has(form.id));
+  }, [requiredFormIds, formsData]);
 
   const { open, setOpen } = useFormSheet();
 
@@ -100,7 +131,7 @@ export const ShiftForm = ({
     setServerError(undefined);
 
     startTransition(async () => {
-      const result = await mutate(formData);
+      const result = await mutate({ ...formData, requiredFormIds });
 
       if (result.serverError === 'shift_window_violation') {
         setError('endsAt', { message: t('validation.windowViolation') });
@@ -131,6 +162,15 @@ export const ShiftForm = ({
       await setOpen(false);
       router.refresh();
     });
+  };
+
+  const handleRemoveForm = (formId: string) => {
+    setRequiredFormIds((prev) => prev.filter((id) => id !== formId));
+  };
+
+  const handleAddForm = (formId: string) => {
+    setRequiredFormIds((prev) => [...prev, formId]);
+    setCommandOpen(false);
   };
 
   return (
@@ -302,6 +342,52 @@ export const ShiftForm = ({
           </FieldDescription>
           <FieldError errors={[errors.maxVolunteers]} />
         </Field>
+      </div>
+
+      <div className="rounded-xl border p-5 space-y-5">
+        <div className="space-y-1">
+          <h3 className="text-base font-semibold">{tForms('title')}</h3>
+          <p className="text-sm text-muted-foreground">
+            {tForms('subtitle', {
+              shiftTitle: watch('name') || initialValues?.name || '',
+            })}
+          </p>
+        </div>
+
+        <RequiredFormsList
+          forms={requiredForms}
+          onRemove={handleRemoveForm}
+          removeDisabled={pending}
+          t={tForms}
+        />
+
+        <div className="flex items-center gap-3">
+          <RequiredFormsAddExisting
+            availableForms={availableForms}
+            onAdd={handleAddForm}
+            open={commandOpen}
+            onOpenChange={setCommandOpen}
+            disabled={pending || isLoadingForms || availableForms.length === 0}
+            t={tForms}
+          />
+
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="flex-1"
+            onClick={() =>
+              setOpen(false, () => {
+                router.push(`/admin/${orgUId}/requirement-forms/new`);
+              })
+            }
+          >
+            <SquareArrowOutUpRight className="mr-2 h-4 w-4" />
+            {tForms('createNew')}
+          </Button>
+        </div>
+
+        <RequiredFormsDedupHint t={tForms} />
       </div>
     </FormSheet>
   );
