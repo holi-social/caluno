@@ -1092,6 +1092,20 @@
       "linkCopied": "Link copied",
       "linkCopiedDescription": "{url}",
       "couldNotCopyLink": "Could not copy link"
+    },
+    "submissions": {
+      "title": "Submissions — {formName}",
+      "subtitle": "Volunteers who submitted this form. Click a volunteer to view their submission.",
+      "tabSubmitted": "Submitted",
+      "tabRejected": "Rejected",
+      "searchPlaceholder": "Search volunteers…",
+      "volunteerColumn": "Volunteer",
+      "emailColumn": "Email",
+      "submissionsColumn": "Submissions",
+      "lastSubmittedColumn": "Last submitted",
+      "viewSubmission": "View →",
+      "empty": "No submissions yet.",
+      "emptySearch": "No volunteers match your search."
     }
   },
   "RequiredFormRenderer": {
