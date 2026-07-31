@@ -24,7 +24,7 @@ import { useFormatting } from '@/lib/formatting/use-formatting';
 import { resolveCreateShiftSuccessNavigation } from '../create-shift-flow';
 import { shiftInvitePath } from '../routes';
 import { type ShiftFormValues, shiftFormSchema } from '../schemas';
-import { SUCCESS_DIALOG_CREATE_SHIFT_ID } from '../success-dialog';
+import { setSuccessDialogCreatedShift } from '../success-dialog';
 import { RecurrenceSelect } from './recurrence-select';
 
 interface ShiftFormProps {
@@ -132,10 +132,10 @@ export const ShiftForm = ({
         }
 
         if (navigation.action === 'success') {
-          sessionStorage.setItem(
-            SUCCESS_DIALOG_CREATE_SHIFT_ID,
-            navigation.shiftId,
-          );
+          setSuccessDialogCreatedShift({
+            shiftId: navigation.shiftId,
+            instanceId: navigation?.instanceId,
+          });
           await setOpen(false);
           router.refresh();
           return;

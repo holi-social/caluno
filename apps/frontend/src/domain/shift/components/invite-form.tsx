@@ -22,7 +22,7 @@ import { copyToClipboard } from '@/lib/clipboard';
 import type { RecurrenceDayValue } from '../constants';
 import { type InviteShiftFormValues, inviteShiftFormSchema } from '../schemas';
 import { shiftShareUrl } from '../share';
-import { SUCCESS_DIALOG_CREATE_SHIFT_ID } from '../success-dialog';
+import { setSuccessDialogCreatedShift } from '../success-dialog';
 import { TransferList } from './transfer-list';
 
 type Member = {
@@ -150,7 +150,7 @@ export function InviteShiftForm({
       }
 
       if (isCreationFlow) {
-        sessionStorage.setItem(SUCCESS_DIALOG_CREATE_SHIFT_ID, shiftId);
+        setSuccessDialogCreatedShift({ shiftId, instanceId });
         await setOpen(false);
         router.refresh();
         return;

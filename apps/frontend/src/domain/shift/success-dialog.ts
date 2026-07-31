@@ -5,7 +5,36 @@ import {
   type RecurrencePresetValue,
 } from './constants';
 
-export const SUCCESS_DIALOG_CREATE_SHIFT_ID = 'success_dialog_create_shift_id';
+const SUCCESS_DIALOG_SHIFT_CREATED = 'success_dialog_shift_created';
+
+type SuccessDialogCreatedShift = {
+  shiftId: string;
+  instanceId?: string;
+};
+
+export const getSuccessDialogCreatedShift =
+  (): SuccessDialogCreatedShift | null => {
+    const data = sessionStorage.getItem(SUCCESS_DIALOG_SHIFT_CREATED);
+
+    if (!data) return null;
+
+    try {
+      return JSON.parse(data);
+    } catch (error) {
+      console.error('Failed to parse success dialog shift created data', error);
+      return null;
+    }
+  };
+
+export const setSuccessDialogCreatedShift = (
+  shift: SuccessDialogCreatedShift,
+) => {
+  sessionStorage.setItem(SUCCESS_DIALOG_SHIFT_CREATED, JSON.stringify(shift));
+};
+
+export const clearSuccessDialogCreatedShift = () => {
+  sessionStorage.removeItem(SUCCESS_DIALOG_SHIFT_CREATED);
+};
 
 export type ShiftCreatedRecurrenceBadge =
   | {

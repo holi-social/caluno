@@ -23,14 +23,18 @@ export type CreateShiftSuccessInput = {
 
 export type CreateShiftSuccessNavigation =
   | { action: 'open-invite'; shiftId: string; instanceId: string }
-  | { action: 'success'; shiftId: string }
+  | { action: 'success'; shiftId: string; instanceId?: string }
   | { action: 'close-create' };
 
 export function resolveCreateShiftSuccessNavigation(
   result: CreateShiftSuccessInput,
 ): CreateShiftSuccessNavigation {
   if (result.openShift) {
-    return { action: 'success', shiftId: result.shiftId };
+    return {
+      action: 'success',
+      shiftId: result.shiftId,
+      instanceId: result.instanceId,
+    };
   }
 
   if (result.instanceId) {

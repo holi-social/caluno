@@ -17,16 +17,16 @@ import { useTranslations } from 'next-intl';
 import { useState } from 'react';
 import { useFormatting } from '@/lib/formatting/use-formatting';
 import {
+  clearSuccessDialogCreatedShift,
   formatShiftOrgUnitLabel,
+  getSuccessDialogCreatedShift,
   resolveShiftCreatedRecurrenceBadge,
-  SUCCESS_DIALOG_CREATE_SHIFT_ID,
 } from '../success-dialog';
 
 export function ShiftCreatedDialog() {
   const t = useTranslations('Shift.successDialog');
-  const createShiftId =
-    sessionStorage.getItem(SUCCESS_DIALOG_CREATE_SHIFT_ID) ?? undefined;
-  const { data: shift, isLoading } = useShift(createShiftId);
+  const { shiftId, instanceId } = getSuccessDialogCreatedShift() ?? {};
+  const { data: shift, isLoading } = useShift(shiftId);
   const { formatTimeRange } = useFormatting();
 
   const [isDialogOpen, setIsDialogOpen] = useState(true);
@@ -34,11 +34,11 @@ export function ShiftCreatedDialog() {
   const handleOpenChange = (value: boolean) => {
     if (value) return;
 
-    sessionStorage.removeItem(SUCCESS_DIALOG_CREATE_SHIFT_ID);
+    clearSuccessDialogCreatedShift();
     setIsDialogOpen(value);
   };
 
-  if (!createShiftId || isLoading || !shift) {
+  if (!shiftId || isLoading || !shift) {
     return null;
   }
 
