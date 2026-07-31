@@ -57,18 +57,18 @@ export function ShiftCreatedDialog() {
 
   return (
     <Dialog open={isDialogOpen} onOpenChange={handleOpenChange}>
-      <DialogContent className="sm:max-w-lg">
+      <DialogContent className="sm:max-w-lg pt-16">
         <DialogHeader className="items-center text-center">
           <div className="flex size-20 items-center justify-center rounded-full bg-primary/10">
             <Check className="size-9 text-primary" strokeWidth={3} />
           </div>
           <DialogTitle className="text-2xl font-bold">{t('title')}</DialogTitle>
-          <DialogDescription className="text-center">
+          <DialogDescription className="text-center max-w-sm">
             {isOpenShift ? t('bodyOpen') : t('bodyInvited')}
           </DialogDescription>
         </DialogHeader>
 
-        <Card>
+        <Card className="shadow-none bg-muted">
           <CardContent className="space-y-2">
             <div className="flex items-center justify-between gap-2">
               <span className="font-bold text-sm">
