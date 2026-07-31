@@ -20,8 +20,12 @@ import type { MembershipRequestEntity } from '../membership/schemas/membership-r
 import { NotificationService } from '../notification/notification.service';
 import { buildShiftInviteSchedule } from '../notification/shift-invite-schedule';
 import { OrganizationService } from '../organization/organization.service';
+import { RequiredFormTargetType } from '../requirement-profile/enums';
 import type { RequirementProfileEntity } from '../requirement-profile/schemas/requirement-profile.schema';
-import type { RequiredFormStatus } from '../requirement-profile/services/required-form.service';
+import {
+  RequiredFormService,
+  type RequiredFormStatus,
+} from '../requirement-profile/services/required-form.service';
 import { JoinStatus } from '../shared/enums/join-status.enum';
 import {
   ACTIVE_SHIFT_INVITE_STATUSES,
@@ -67,6 +71,7 @@ export class ShiftService {
     private readonly notificationService: NotificationService,
     private readonly organizationService: OrganizationService,
     private readonly fileService: FileService,
+    private readonly requiredFormService: RequiredFormService,
   ) {}
 
   async findById(id: string): Promise<ShiftEntity> {
@@ -617,7 +622,13 @@ export class ShiftService {
     organizationUnitId: string,
     input: CreateShiftInput,
   ): Promise<ShiftEntity> {
-    const { invitedMemberIds, eventId, imageFileId, ...shiftInput } = input;
+    const {
+      invitedMemberIds,
+      eventId,
+      imageFileId,
+      requiredFormIds,
+      ...shiftInput
+    } = input;
     const durationMinutes = getDurationMinutes(
       shiftInput.startsAt,
       shiftInput.endsAt,
@@ -683,6 +694,15 @@ export class ShiftService {
             this.toInviteMembers(invitedMemberIds, ShiftInviteStatus.INVITED),
           );
         }
+      }
+
+      if (requiredFormIds && requiredFormIds.length > 0) {
+        await this.setRequiredFormsInTx(
+          tx,
+          shift.id,
+          organizationUnitId,
+          requiredFormIds,
+        );
       }
 
       return shift;
@@ -1219,6 +1239,7 @@ export class ShiftService {
       invitedMemberIds,
       eventId: inputEventId,
       imageFileId,
+      requiredFormIds,
       ...shiftInput
     } = input;
 
@@ -1346,6 +1367,15 @@ export class ShiftService {
               inArray(schema.shiftInstanceInvites.instanceId, instanceIds),
             );
         }
+      }
+
+      if (requiredFormIds !== undefined) {
+        await this.setRequiredFormsInTx(
+          tx,
+          shift.id,
+          organizationUnitId,
+          requiredFormIds ?? [],
+        );
       }
 
       return shift;
@@ -1835,6 +1865,18 @@ export class ShiftService {
         };
       }
 
+      const shiftFormsCheck = await this.checkShiftRequiredForms(
+        userId,
+        shift.id,
+      );
+      if (!shiftFormsCheck.satisfied) {
+        return {
+          status: JoinStatus.REQUIREMENTS_NEEDED,
+          shiftInstance: instance,
+          requiredForms: shiftFormsCheck.requiredForms,
+        };
+      }
+
       await this.joinShiftInstance(
         userId,
         instanceId,
@@ -1843,6 +1885,18 @@ export class ShiftService {
       return {
         status: JoinStatus.JOINED,
         shiftInstance: instance,
+      };
+    }
+
+    const shiftFormsCheck = await this.checkShiftRequiredForms(
+      userId,
+      shift.id,
+    );
+    if (!shiftFormsCheck.satisfied) {
+      return {
+        status: JoinStatus.REQUIREMENTS_NEEDED,
+        shiftInstance: instance,
+        requiredForms: shiftFormsCheck.requiredForms,
       };
     }
 
@@ -2034,5 +2088,52 @@ export class ShiftService {
       FilePurpose.SHIFT_IMAGE,
     );
     return this.fileService.resolvePublicUrlForUploadedFile(fileId);
+  }
+
+  private async setRequiredFormsInTx(
+    tx: Database,
+    shiftId: string,
+    organizationUnitId: string,
+    formIds: string[],
+  ): Promise<void> {
+    const orgUnit = await tx.query.organizationUnits.findFirst({
+      where: { id: organizationUnitId },
+    });
+
+    if (!orgUnit) {
+      throw new NotFoundGraphQLError('Organization unit not found');
+    }
+
+    await this.requiredFormService.applyShiftRequiredForms(
+      shiftId,
+      orgUnit.organizationId,
+      formIds,
+      tx,
+    );
+  }
+
+  private async getShiftRequiredFormStatuses(
+    userId: string,
+    shiftId: string,
+  ): Promise<RequiredFormStatus[]> {
+    return this.requiredFormService.getRequiredFormStatuses(userId, {
+      targetType: RequiredFormTargetType.SHIFT,
+      targetId: shiftId,
+    });
+  }
+
+  private async checkShiftRequiredForms(
+    userId: string,
+    shiftId: string,
+  ): Promise<{
+    satisfied: boolean;
+    requiredForms: RequiredFormStatus[];
+  }> {
+    const requiredForms = await this.getShiftRequiredFormStatuses(
+      userId,
+      shiftId,
+    );
+    const missingForms = requiredForms.filter((s) => !s.submitted);
+    return { satisfied: missingForms.length === 0, requiredForms };
   }
 }
