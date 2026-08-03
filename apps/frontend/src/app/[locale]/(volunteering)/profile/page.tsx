@@ -40,7 +40,6 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
               <MembershipCard
                 key={`${entry.state}-${entry.id}`}
                 entry={entry}
-                locale={locale}
               />
             ))}
           </div>

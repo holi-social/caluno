@@ -12,7 +12,11 @@ const LABEL_KEY: Record<MembershipEntry['state'], string> = {
   declined: 'status.declined',
 };
 
-export function MembershipStatusBadge({ state }: { state: MembershipEntry['state'] }) {
+export function MembershipStatusBadge({
+  state,
+}: {
+  state: MembershipEntry['state'];
+}) {
   const t = useTranslations('MembershipRequest');
   return <Badge variant={VARIANT[state]}>{t(LABEL_KEY[state])}</Badge>;
 }
