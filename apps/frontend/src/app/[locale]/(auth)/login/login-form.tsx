@@ -1,10 +1,12 @@
 'use client';
 
+import type { Locale } from '@repo/data';
 import { Button, Input } from '@repo/ui';
-import { useTranslations } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 import { useState } from 'react';
 import { Link, useRouter } from '@/i18n/navigation';
 import { signIn } from '@/lib/auth';
+import { setLocaleCookieIfSupported } from '@/lib/locale-cookie';
 import { getVerifyEmailPath } from '@/lib/verify-email-url';
 
 interface LoginFormProps {
@@ -14,6 +16,7 @@ interface LoginFormProps {
 export function LoginForm({ redirectTo = '/' }: LoginFormProps) {
   const t = useTranslations('Auth.login');
   const router = useRouter();
+  const currentLocale = useLocale();
   const [error, setError] = useState<string | null>(null);
   const [isPending, setIsPending] = useState(false);
 
@@ -41,7 +44,12 @@ export function LoginForm({ redirectTo = '/' }: LoginFormProps) {
       }
 
       if (result.data?.user) {
-        router.push(redirectTo);
+        const userLocale = setLocaleCookieIfSupported(
+          (result.data.user as { locale?: unknown }).locale,
+        );
+        router.push(redirectTo, {
+          locale: userLocale ?? (currentLocale as Locale),
+        });
         router.refresh();
       } else {
         setError(t('genericError'));

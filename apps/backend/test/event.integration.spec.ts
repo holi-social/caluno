@@ -105,8 +105,10 @@ describe('publicEvent', () => {
       maxVolunteers: 5,
     });
     const instance = await createShiftInstance(db, shift.id, {
-      actualStartsAt: new Date('2026-08-01T08:00:00.000Z'),
-      actualEndsAt: new Date('2026-08-01T10:00:00.000Z'),
+      actualStartsAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+      actualEndsAt: new Date(
+        Date.now() + 7 * 24 * 60 * 60 * 1000 + 2 * 60 * 60 * 1000,
+      ),
       occurrenceIndex: 1,
     });
 

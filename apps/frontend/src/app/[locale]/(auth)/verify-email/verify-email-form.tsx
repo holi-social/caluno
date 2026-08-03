@@ -1,10 +1,12 @@
 'use client';
 
+import type { Locale } from '@repo/data';
 import { Button, Input } from '@repo/ui';
-import { useTranslations } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 import { useState } from 'react';
 import { Link, useRouter } from '@/i18n/navigation';
 import { emailOtp } from '@/lib/auth';
+import { setLocaleCookieIfSupported } from '@/lib/locale-cookie';
 
 interface VerifyEmailFormProps {
   initialEmail?: string;
@@ -19,6 +21,7 @@ export function VerifyEmailForm({
 }: VerifyEmailFormProps) {
   const t = useTranslations('Auth.verifyEmail');
   const router = useRouter();
+  const currentLocale = useLocale();
   const [email, setEmail] = useState(initialEmail);
   const [hasCode, setHasCode] = useState(
     Boolean(initialEmail && initialCodeSent),
@@ -82,7 +85,12 @@ export function VerifyEmailForm({
         return;
       }
 
-      router.push(redirectTo);
+      const userLocale = setLocaleCookieIfSupported(
+        (result.data?.user as { locale?: unknown } | undefined)?.locale,
+      );
+      router.push(redirectTo, {
+        locale: userLocale ?? (currentLocale as Locale),
+      });
       router.refresh();
     } catch {
       setError(t('verifyCodeFailed'));
