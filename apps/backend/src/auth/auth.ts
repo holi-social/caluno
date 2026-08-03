@@ -31,10 +31,6 @@ export interface SendResetPasswordOptions {
   headers: Record<string, unknown>;
 }
 
-export interface OnEmailVerifiedOptions {
-  userId: string;
-}
-
 export interface AuthConfigOptions {
   database: Database | object;
   trustedOrigins: string[];
@@ -43,20 +39,6 @@ export interface AuthConfigOptions {
   emailVerificationEnabled?: boolean;
   sendVerificationOTP: (options: SendVerificationOtpOptions) => Promise<void>;
   sendResetPassword: (options: SendResetPasswordOptions) => Promise<void>;
-  onEmailVerified?: (options: OnEmailVerifiedOptions) => Promise<void> | void;
-}
-
-function isEmailVerificationRequest(request?: Request): boolean {
-  if (!request?.url) {
-    return false;
-  }
-
-  try {
-    const pathname = new URL(request.url).pathname;
-    return pathname.endsWith('/email-otp/verify-email');
-  } catch {
-    return false;
-  }
 }
 
 export const createAuthConfig = ({
@@ -66,7 +48,6 @@ export const createAuthConfig = ({
   emailVerificationEnabled = true,
   sendVerificationOTP,
   sendResetPassword,
-  onEmailVerified,
 }: AuthConfigOptions): BetterAuthOptions => ({
   database: drizzleAdapter(database, {
     schema: {
@@ -129,13 +110,6 @@ export const createAuthConfig = ({
   emailVerification: {
     sendOnSignUp: emailVerificationEnabled,
     autoSignInAfterVerification: true,
-    async afterEmailVerification(user, request) {
-      if (!onEmailVerified || !isEmailVerificationRequest(request)) {
-        return;
-      }
-
-      await onEmailVerified({ userId: user.id });
-    },
   },
   plugins: [
     emailOTP({

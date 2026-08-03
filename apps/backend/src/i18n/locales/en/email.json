@@ -120,15 +120,5 @@
     "expiry": "This code expires in {minutes} minutes.",
     "note": "If you did not create an account, you can ignore this email.",
     "footerNote": "You are receiving this because this email was used to create an account on {brandName}."
-  },
-  "welcome": {
-    "subject": "Welcome to {brandName}",
-    "previewText": "Your account is verified. Create your first organization and start scheduling shifts.",
-    "heading": "Welcome to {brandName}",
-    "greeting": "Hi {firstName}, welcome to {brandName}.",
-    "intro": "Your account is verified. You are ready to create your first organization and start scheduling shifts.",
-    "buttonLabel": "Create your first organization",
-    "note": "Not sure where to start? Create an organization, invite your team, and publish your first shifts.",
-    "footerNote": "You are receiving this because your account on {brandName} was verified."
   }
 }

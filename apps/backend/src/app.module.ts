@@ -29,7 +29,6 @@ import { createEmailTemplateContext } from './notification/email/email-template-
 import { accountVerificationOtpTemplate } from './notification/email/templates/account-verification-otp.template';
 import { passwordResetTemplate } from './notification/email/templates/password-reset.template';
 import { NotificationModule } from './notification/notification.module';
-import { NotificationService } from './notification/notification.service';
 import { OrganizationModule } from './organization/organization.module';
 import { RequirementProfileModule } from './requirement-profile/requirement-profile.module';
 import { ShiftModule } from './shift/shift.module';
@@ -92,7 +91,6 @@ const autoSchemaFile =
         emailService: EmailService,
         userLocaleService: UserLocaleService,
         appI18n: AppI18nService,
-        notificationService: NotificationService,
       ) => {
         const webUrl = configService.getOrThrow<string>('WEB_URL');
         const shouldVerifyEmail = process.env.NODE_ENV === 'production';
@@ -104,9 +102,6 @@ const autoSchemaFile =
               trustedOrigins: [webUrl],
               cookieDomain: configService.get('COOKIE_DOMAIN'),
               emailVerificationEnabled: shouldVerifyEmail,
-              onEmailVerified: async ({ userId }) => {
-                notificationService.notifyUserEmailVerified({ userId });
-              },
               sendResetPassword: async ({ email, token, userId, headers }) => {
                 const locale = await userLocaleService.resolveForUser(
                   userId,
@@ -168,7 +163,6 @@ const autoSchemaFile =
         EmailService,
         UserLocaleService,
         AppI18nService,
-        NotificationService,
       ],
     }),
     UserModule,

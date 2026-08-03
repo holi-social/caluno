@@ -26,11 +26,9 @@ import { passwordResetTemplate } from './email/templates/password-reset.template
 import { shiftInstanceInvitedTemplate } from './email/templates/shift-instance-invited.template';
 import { shiftInstanceJoinedTemplate } from './email/templates/shift-instance-joined.template';
 import { shiftInvitedTemplate } from './email/templates/shift-invited.template';
-import { welcomeTemplate } from './email/templates/welcome.template';
 import { MembershipListener } from './listeners/membership.listener';
 import { OrganizationListener } from './listeners/organization.listener';
 import { ShiftListener } from './listeners/shift.listener';
-import { UserListener } from './listeners/user.listener';
 import { NotificationService } from './notification.service';
 import { TypedNotificationEmitter } from './typed-notification-emitter.service';
 
@@ -97,7 +95,6 @@ describe('NotificationModule', () => {
         OrganizationListener,
         MembershipListener,
         ShiftListener,
-        UserListener,
         { provide: EmailService, useValue: emailService },
         { provide: UserService, useValue: userService },
         { provide: UserLocaleService, useValue: userLocaleService },
@@ -511,39 +508,5 @@ describe('NotificationModule', () => {
       subject: expected.subject,
       html: expected.html,
     });
-  });
-
-  it('sends welcome email when user email is verified', async () => {
-    const user = {
-      id: 'user-new-1',
-      name: 'Sam Newcomer',
-      email: 'sam@example.com',
-    };
-    userService.findById.mockResolvedValue(user);
-
-    const payload = {
-      userId: user.id,
-    };
-    const expected = await welcomeTemplate(
-      {
-        recipientFirstName: 'Sam',
-      },
-      createFixtureTranslator('en'),
-    );
-
-    notificationService.notifyUserEmailVerified(payload);
-
-    await new Promise((resolve) => setTimeout(resolve, 50));
-
-    expect(userService.findById).toHaveBeenCalledWith(user.id);
-    expect(userLocaleService.resolveForUser).toHaveBeenCalledWith(user.id);
-    expect(emailService.send).toHaveBeenCalledWith({
-      to: user.email,
-      subject: expected.subject,
-      html: expected.html,
-    });
-    expect(expected.html).toContain(
-      'http://localhost:3000/admin/create-organization',
-    );
   });
 });

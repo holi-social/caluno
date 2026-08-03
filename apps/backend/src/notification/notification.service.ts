@@ -37,9 +37,6 @@ type ShiftInstanceInvitedInput =
 type ShiftInvitedInput =
   NotificationEventPayloadMap[typeof NotificationEvent.SHIFT_INVITED];
 
-type UserEmailVerifiedInput =
-  NotificationEventPayloadMap[typeof NotificationEvent.USER_EMAIL_VERIFIED];
-
 @Injectable()
 export class NotificationService {
   private readonly logger = new Logger(NotificationService.name);
@@ -142,9 +139,5 @@ export class NotificationService {
 
   notifyShiftInvited(input: ShiftInvitedInput): void {
     this.emitter.emit(NotificationEvent.SHIFT_INVITED, input);
-  }
-
-  notifyUserEmailVerified(input: UserEmailVerifiedInput): void {
-    this.emitter.emit(NotificationEvent.USER_EMAIL_VERIFIED, input);
   }
 }

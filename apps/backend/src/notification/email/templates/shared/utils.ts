@@ -26,11 +26,6 @@ export function resolveAppUrl(): string {
   return (process.env.WEB_URL ?? DEFAULT_APP_URL).replace(/\/+$/, '');
 }
 
-/** Public deep link to the create-organization onboarding page. */
-export function createOrganizationUrl(): string {
-  return `${resolveAppUrl()}/admin/create-organization`;
-}
-
 /** Deep link to an organization's admin dashboard, keyed by its root unit id. */
 export function organizationAdminUrl(organizationUnitId: string): string {
   return `${resolveAppUrl()}/admin/${encodeURIComponent(organizationUnitId)}`;
