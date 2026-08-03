@@ -105,6 +105,16 @@ query GetMyMembershipRequests(
       organizationUnit {
         id
         name
+        logoUrl
+        type {
+          icon
+        }
+        parent {
+          id
+        }
+        organization {
+          name
+        }
       }
       user {
         id

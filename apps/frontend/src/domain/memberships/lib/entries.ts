@@ -1,12 +1,19 @@
 import { MembershipRequestStatus } from '@repo/data';
-import type { MembershipCardOrg, MembershipEntry } from '../types';
+import type { MembershipCardOrgUnit, MembershipEntry } from '../types';
 
 type MyRequestItem = {
   id: string;
   status: MembershipRequestStatus;
   createdAt: string;
   reviewedAt?: string | null;
-  organizationUnit: MembershipCardOrg;
+  organizationUnit: {
+    id: string;
+    name: string;
+    logoUrl?: string | null;
+    type: { icon: string };
+    parent?: { id: string } | null;
+    organization: { name: string };
+  };
 };
 
 const STATE_ORDER: Record<MembershipEntry['state'], number> = {
@@ -14,24 +21,36 @@ const STATE_ORDER: Record<MembershipEntry['state'], number> = {
   declined: 1,
 };
 
+const toOrgUnit = (
+  orgUnit: MyRequestItem['organizationUnit'],
+): MembershipCardOrgUnit => ({
+  id: orgUnit.id,
+  name: orgUnit.name,
+  logoUrl: orgUnit.logoUrl,
+  typeIcon: orgUnit.type.icon,
+  isRoot: !orgUnit.parent,
+});
+
 export function buildMembershipEntries(
   requests: MyRequestItem[],
 ): MembershipEntry[] {
   const entries: MembershipEntry[] = [];
   for (const request of requests) {
-    const org = request.organizationUnit;
+    const orgUnit = request.organizationUnit;
     if (request.status === MembershipRequestStatus.Pending) {
       entries.push({
         state: 'requested',
         id: request.id,
-        org,
+        organizationName: orgUnit.organization.name,
+        orgUnit: toOrgUnit(orgUnit),
         date: new Date(request.createdAt),
       });
     } else if (request.status === MembershipRequestStatus.Rejected) {
       entries.push({
         state: 'declined',
         id: request.id,
-        org,
+        organizationName: orgUnit.organization.name,
+        orgUnit: toOrgUnit(orgUnit),
         date: new Date(request.reviewedAt ?? request.createdAt),
       });
     }
@@ -48,13 +67,4 @@ export function sortMembershipEntries(
     if (byState !== 0) return byState;
     return b.date.getTime() - a.date.getTime();
   });
-}
-
-export function orgInitials(name: string): string {
-  return name
-    .split(/\s+/)
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((word) => word[0]?.toUpperCase() ?? '')
-    .join('');
 }
