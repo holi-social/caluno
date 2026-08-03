@@ -97,8 +97,8 @@ describe('MembershipService', () => {
     });
   });
 
-  describe('getMyMembershipRequests (profile filter)', () => {
-    it('returns only PENDING and REJECTED, excluding ACCEPTED and CANCELLED', async () => {
+  describe('getMyMembershipRequests', () => {
+    it("returns all of the user's requests across every status", async () => {
       const user = await createUser(db);
       const { organization, type } = await createOrganizationWithType(
         db,
@@ -158,35 +158,11 @@ describe('MembershipService', () => {
       const items = await service.getMyMembershipRequests(user.id);
       const statuses = items.map((i) => i.status).sort();
       expect(statuses).toEqual([
+        MembershipRequestStatus.ACCEPTED,
+        MembershipRequestStatus.CANCELLED,
         MembershipRequestStatus.PENDING,
         MembershipRequestStatus.REJECTED,
       ]);
-    });
-
-    it('honors an explicit status filter', async () => {
-      const user = await createUser(db);
-      const { organization, type } = await createOrganizationWithType(
-        db,
-        `Filter2 Org ${crypto.randomUUID()}`,
-      );
-      const unit = await createUnit(db, {
-        organizationId: organization.id,
-        typeId: type.id,
-        name: 'unit',
-      });
-      await db.insert(schema.membershipRequests).values({
-        userId: user.id,
-        organizationUnitId: unit.id,
-        status: MembershipRequestStatus.PENDING,
-        metadata: {},
-      });
-
-      const items = await service.getMyMembershipRequests(
-        user.id,
-        MembershipRequestStatus.PENDING,
-      );
-      expect(items).toHaveLength(1);
-      expect(items[0].status).toBe(MembershipRequestStatus.PENDING);
     });
   });
 });

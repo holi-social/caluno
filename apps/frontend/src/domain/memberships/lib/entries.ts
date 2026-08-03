@@ -56,7 +56,8 @@ export function buildMembershipEntries(
         rejectionReason: request.rejectionReason,
       });
     }
-    // ACCEPTED / CANCELLED are excluded by the backend filter and ignored here.
+    // The API returns requests of every status; only PENDING and REJECTED are
+    // surfaced for now — other statuses will get their own cards later.
   }
   return sortMembershipEntries(entries);
 }
