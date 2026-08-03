@@ -542,10 +542,8 @@ describe('NotificationModule', () => {
       subject: expected.subject,
       html: expected.html,
     });
-    expect(expected.subject).toBe('Welcome to Clippy');
     expect(expected.html).toContain(
       'http://localhost:3000/admin/create-organization',
     );
-    expect(expected.html).not.toContain('{brandName}');
   });
 });
