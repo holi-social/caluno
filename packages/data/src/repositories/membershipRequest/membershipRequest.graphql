@@ -123,6 +123,7 @@ query GetMyMembershipRequests(
       }
       status
       reviewedAt
+      rejectionReason
       createdAt
     }
   }

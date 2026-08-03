@@ -6,6 +6,7 @@ type MyRequestItem = {
   status: MembershipRequestStatus;
   createdAt: string;
   reviewedAt?: string | null;
+  rejectionReason?: string | null;
   organizationUnit: {
     id: string;
     name: string;
@@ -52,6 +53,7 @@ export function buildMembershipEntries(
         organizationName: orgUnit.organization.name,
         orgUnit: toOrgUnit(orgUnit),
         date: new Date(request.reviewedAt ?? request.createdAt),
+        rejectionReason: request.rejectionReason,
       });
     }
     // ACCEPTED / CANCELLED are excluded by the backend filter and ignored here.

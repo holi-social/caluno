@@ -51,6 +51,12 @@ export function MembershipCard({ entry }: Props) {
           )}
         </span>
 
+        {entry.state === 'declined' && entry.rejectionReason && (
+          <q className="text-muted-foreground text-sm">
+            {entry.rejectionReason}
+          </q>
+        )}
+
         {entry.state === 'requested' && (
           <div className="flex justify-start">
             <WithdrawMembershipButton
