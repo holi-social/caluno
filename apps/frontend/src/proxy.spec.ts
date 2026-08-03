@@ -74,25 +74,25 @@ describe('localePreferenceRedirect', () => {
   });
 
   it('redirects a bare root path to the cookie locale', () => {
-    const response = localePreferenceRedirect(makeRequest('/', 'de'));
+    const response = localePreferenceRedirect(makeRequest('/', 'en'));
 
     expect(response?.status).toBe(307);
-    expect(response?.headers.get('location')).toBe('http://localhost:3000/de');
+    expect(response?.headers.get('location')).toBe('http://localhost:3000/en');
   });
 
   it('redirects a path without a locale prefix to the cookie locale', () => {
-    const response = localePreferenceRedirect(makeRequest('/dashboard', 'de'));
+    const response = localePreferenceRedirect(makeRequest('/dashboard', 'en'));
 
     expect(response?.status).toBe(307);
     expect(response?.headers.get('location')).toBe(
-      'http://localhost:3000/de/dashboard',
+      'http://localhost:3000/en/dashboard',
     );
   });
 
   it('returns null for a bare path when the cookie matches the default locale', () => {
-    // `/dashboard` resolves to the default locale (`en`); intl adds the prefix.
+    // `/dashboard` resolves to the default locale (`de`); intl adds the prefix.
     expect(
-      localePreferenceRedirect(makeRequest('/dashboard', 'en')),
+      localePreferenceRedirect(makeRequest('/dashboard', 'de')),
     ).toBeNull();
   });
 
