@@ -396,8 +396,8 @@
       "leave": "Verlassen"
     },
     "dialog": {
-      "withdrawTitle": "Anfrage zurückziehen?",
-      "withdrawDescription": "Möchtest du deine Anfrage für {orgName} zurückziehen?",
+      "withdrawTitle": "Antrag auf Austritt aus der Mitgliedschaft",
+      "withdrawDescription": "Möchten Sie Ihren Beitrittsantrag wirklich {orgName} zurückziehen?",
       "leaveTitle": "Organisation verlassen?",
       "leaveDescription": "Möchtest du {orgName} wirklich verlassen?"
     },

@@ -396,8 +396,8 @@
       "leave": "Leave"
     },
     "dialog": {
-      "withdrawTitle": "Withdraw request?",
-      "withdrawDescription": "Withdraw your request to join {orgName}?",
+      "withdrawTitle": "Withdraw membership request",
+      "withdrawDescription": "Are you sure you want to withdraw your request to join {orgName}?",
       "leaveTitle": "Leave organization?",
       "leaveDescription": "Are you sure you want to leave {orgName}?"
     },

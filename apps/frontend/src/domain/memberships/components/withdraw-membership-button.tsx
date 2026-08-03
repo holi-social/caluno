@@ -36,6 +36,7 @@ export function WithdrawMembershipButton({
       title={t('dialog.withdrawTitle')}
       description={t('dialog.withdrawDescription', { orgName })}
       onDelete={handleWithdraw}
+      deleteLabel={t('actions.withdraw')}
       trigger={
         <Button variant="outline" size="sm" disabled={isPending}>
           {t('actions.withdraw')}
