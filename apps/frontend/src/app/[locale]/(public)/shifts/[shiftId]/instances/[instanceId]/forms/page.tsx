@@ -1,7 +1,7 @@
 import { type DataClient, DataError, JoinStatus } from '@repo/data';
 import { notFound, redirect } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
-import { ShiftFormsClient } from '@/app/[locale]/(public)/shifts/[shiftId]/forms/shift-forms-client';
+import { ShiftFormsClient } from '@/app/[locale]/(public)/shifts/[shiftId]/instances/[instanceId]/forms/shift-forms-client';
 import type { RequiredFormItem } from '@/domain/requirement-form/components/required-form-renderer';
 import { redirect as redirectWithLocale } from '@/i18n/navigation';
 import { resolveLocale } from '@/i18n/routing';
@@ -10,8 +10,8 @@ import { getDataClient } from '@/lib/data-client';
 import { getSafeRedirect } from '@/lib/safe-redirect';
 
 interface ShiftFormsPageProps {
-  params: Promise<{ locale: string; shiftId: string }>;
-  searchParams: Promise<{ instanceId?: string; redirectTo?: string }>;
+  params: Promise<{ locale: string; shiftId: string; instanceId: string }>;
+  searchParams: Promise<{ redirectTo?: string }>;
 }
 
 type PublicShift = Awaited<ReturnType<DataClient['shift']['findById']>>;
@@ -38,12 +38,8 @@ export default async function ShiftFormsPage({
   params,
   searchParams,
 }: ShiftFormsPageProps) {
-  const { locale, shiftId } = await params;
-  const { instanceId, redirectTo } = await searchParams;
-
-  if (!instanceId) {
-    notFound();
-  }
+  const { locale, shiftId, instanceId } = await params;
+  const { redirectTo } = await searchParams;
 
   const data = await getDataClient({ locale: resolveLocale(locale) });
 
@@ -61,7 +57,7 @@ export default async function ShiftFormsPage({
   if (!session) {
     const params = new URLSearchParams({
       redirectTo:
-        redirectTo ?? `/shifts/${shiftId}/forms?instanceId=${instanceId}`,
+        redirectTo ?? `/shifts/${shiftId}/instances/${instanceId}/forms`,
     });
     redirectWithLocale({ href: `/api/invite?${params}`, locale });
   }

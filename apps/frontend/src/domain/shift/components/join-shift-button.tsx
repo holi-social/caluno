@@ -148,7 +148,7 @@ export function JoinShiftButton({
           const redirectTo = encodeURIComponent(currentUrl);
           if (missingForms[0]?.targetType === RequiredFormTargetType.Shift) {
             router.push(
-              `/shifts/${shiftId}/forms?instanceId=${instanceId}&redirectTo=${redirectTo}`,
+              `/shifts/${shiftId}/instances/${instanceId}/forms?redirectTo=${redirectTo}`,
             );
           } else {
             router.push(
