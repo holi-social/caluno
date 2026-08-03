@@ -105,8 +105,8 @@ describe('publicEvent', () => {
       maxVolunteers: 5,
     });
     const instance = await createShiftInstance(db, shift.id, {
-      actualStartsAt: new Date('2026-08-01T08:00:00.000Z'),
-      actualEndsAt: new Date('2026-08-01T10:00:00.000Z'),
+      actualStartsAt: new Date('3026-08-01T08:00:00.000Z'),
+      actualEndsAt: new Date('3026-08-01T10:00:00.000Z'),
       occurrenceIndex: 1,
     });
 
@@ -130,7 +130,10 @@ describe('publicEvent', () => {
           query PublicEvent($id: ID!) {
             publicEvent(id: $id) {
               shifts {
-                instances { id spotsLeft }
+                instances { 
+                  id 
+                  spotsLeft
+                }
               }
             }
           }
