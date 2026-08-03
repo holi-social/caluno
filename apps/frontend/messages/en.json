@@ -464,11 +464,6 @@
       "title": "Join {orgName}",
       "description": "Please complete the required forms before requesting to join.",
       "noForms": "No forms are required.",
-      "completed": "Completed",
-      "pending": "Pending",
-      "fillOut": "Fill out",
-      "fillFormTitle": "Fill out form",
-      "requestToJoin": "Request to join",
       "joined": "You have joined the organization",
       "requestPending": "Your request is pending approval",
       "rejected": "Your request was rejected",
@@ -1096,7 +1091,24 @@
       "linkCopied": "Link copied",
       "linkCopiedDescription": "{url}",
       "couldNotCopyLink": "Could not copy link"
+    },
+    "submissions": {
+      "title": "Submissions — {formName}",
+      "subtitle": "Volunteers who submitted this form. Click a volunteer to view their submission.",
+      "tabSubmitted": "Submitted",
+      "tabRejected": "Rejected",
+      "searchPlaceholder": "Search volunteers…",
+      "volunteerColumn": "Volunteer",
+      "emailColumn": "Email",
+      "submissionsColumn": "Submissions",
+      "lastSubmittedColumn": "Last submitted",
+      "viewSubmission": "View →",
+      "empty": "No submissions yet.",
+      "emptySearch": "No volunteers match your search."
     }
+  },
+  "RequiredFormRenderer": {
+    "noForms": "No forms are required."
   },
   "MyTime": {
     "title": "My Time",
@@ -1139,7 +1151,17 @@
     "spotsLeft": "{n, plural, one {# spot left} other {# spots left}}",
     "unlimitedSpots": "Open",
     "today": "Today",
-    "requiredFormsTitle": "Required forms"
+    "requiredFormsTitle": "Required forms",
+    "forms": {
+      "title": "Join {eventTitle}",
+      "description": "Please complete the required forms before joining this event.",
+      "noForms": "No forms are required.",
+      "joinedToast": "You're now following {eventTitle}",
+      "requestSentToast": "Request sent — a coordinator will confirm it.",
+      "rejectedToast": "Request not approved",
+      "requirementsNeededToast": "Please complete all required forms first",
+      "requestFailed": "Failed to send request"
+    }
   },
   "ShiftDetail": {
     "coverImageAlt": "Cover image for {title}",

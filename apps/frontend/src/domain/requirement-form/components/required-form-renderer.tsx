@@ -7,41 +7,106 @@ import type {
   RequiredFormBlock,
   RequiredFormField,
 } from '@repo/data/react';
-import { Button } from '@repo/ui';
-import { ArrowLeft, ArrowRight, Check, Loader2 } from 'lucide-react';
+import {
+  Button,
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@repo/ui';
+import { Loader2 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Controller, type Resolver, useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 import { z } from 'zod';
-import { submitRequiredForm } from '../actions';
+import { submitRequiredForm } from '@/domain/requirement-form/actions';
 import {
   buildFieldSchema,
   FieldRenderer,
   type RenderableField,
-} from './volunteer-form';
+} from '@/domain/requirement-form/components/volunteer-form';
+
+export type RequiredFormItem = {
+  form: RequiredForm;
+  order: number;
+  submitted?: boolean;
+};
+
+type UnifiedBlock = RequiredFormBlock & {
+  effectiveRequired: boolean;
+  order: number;
+};
 
 interface RequiredFormRendererProps {
+  title: string;
+  description: string;
+  emptyMessage?: string;
   targetType: RequiredFormTargetType;
   targetId: string;
-  form: RequiredForm;
-  profileData?: Record<string, string>;
-  onSubmitted?: () => void;
+  forms: RequiredFormItem[];
+  profileData: Record<string, string>;
+  initialSubmittedFormIds: Set<string>;
+  onComplete: () => Promise<void>;
 }
 
 export function RequiredFormRenderer({
+  title,
+  description,
+  emptyMessage,
   targetType,
   targetId,
-  form,
-  profileData = {},
-  onSubmitted,
+  forms,
+  profileData,
+  initialSubmittedFormIds,
+  onComplete,
 }: RequiredFormRendererProps) {
-  const t = useTranslations('RequirementForm.volunteerForm');
+  const t = useTranslations('RequiredFormRenderer');
+  const tCommon = useTranslations('Common');
+  const tForm = useTranslations('RequirementForm.volunteerForm');
   const tActions = useTranslations('RequirementForm.actions');
   const tValidation = useTranslations('RequirementForm.validation');
-  const [step, setStep] = useState(0);
-  const [submitted, setSubmitted] = useState(false);
+
+  const [submittedFormIds, setSubmittedFormIds] = useState<Set<string>>(
+    initialSubmittedFormIds,
+  );
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const sortedForms = useMemo(
+    () => [...forms].sort((a, b) => a.order - b.order),
+    [forms],
+  );
+
+  const pendingForms = useMemo(
+    () => sortedForms.filter((item) => !submittedFormIds.has(item.form.id)),
+    [sortedForms, submittedFormIds],
+  );
+  const submittedBatchRef = useRef<RequiredFormItem[] | null>(null);
+  const renderedForms = submittedBatchRef.current ?? pendingForms;
+
+  const unifiedBlocks = useMemo(() => {
+    const blockMap = new Map<string, UnifiedBlock>();
+    for (const item of renderedForms) {
+      for (const ref of item.form.blockRefs ?? []) {
+        const block = ref.block;
+        if (!block) continue;
+
+        const existing = blockMap.get(block.id);
+        const effectiveRequired = ref.required ?? block.required ?? false;
+        const order = ref.fieldOrder ?? 0;
+
+        if (existing) {
+          existing.effectiveRequired =
+            existing.effectiveRequired || effectiveRequired;
+          existing.order = Math.min(existing.order, order);
+        } else {
+          blockMap.set(block.id, { ...block, effectiveRequired, order });
+        }
+      }
+    }
+    return Array.from(blockMap.values()).sort((a, b) => a.order - b.order);
+  }, [renderedForms]);
 
   const validationMessages = useMemo(
     () => ({
@@ -66,45 +131,24 @@ export function RequiredFormRenderer({
     [tValidation],
   );
 
-  const blocks = useMemo(() => {
-    return (
-      form.blockRefs
-        ?.map((ref) => {
-          const block = ref.block;
-          if (!block) return null;
-          return {
-            ...block,
-            effectiveRequired: ref.required ?? block.required,
-          };
-        })
-        .filter(
-          (b): b is RequiredFormBlock & { effectiveRequired: boolean } => !!b,
-        ) ?? []
-    );
-  }, [form.blockRefs]);
-
-  const currentBlock = blocks[step];
-  const isLastStep = step === blocks.length - 1;
-  const isFirstStep = step === 0;
-
   const formSchema = useMemo(() => {
     const shape: Record<string, z.ZodTypeAny> = {};
-    for (const block of blocks) {
+    for (const block of unifiedBlocks) {
       for (const field of block.fields ?? []) {
         const isRequired = block.effectiveRequired && field.required;
         shape[field.id] = buildFieldSchema(
-          field,
+          field as unknown as RenderableField,
           isRequired,
           validationMessages,
         );
       }
     }
     return z.object(shape);
-  }, [blocks, validationMessages]);
+  }, [unifiedBlocks, validationMessages]);
 
   const defaultValues = useMemo(() => {
     const vals: Record<string, string> = {};
-    for (const block of blocks) {
+    for (const block of unifiedBlocks) {
       for (const field of block.fields ?? []) {
         if (field.systemKey && profileData[field.systemKey]) {
           vals[field.id] = profileData[field.systemKey] ?? '';
@@ -112,7 +156,7 @@ export function RequiredFormRenderer({
       }
     }
     return vals;
-  }, [blocks, profileData]);
+  }, [unifiedBlocks, profileData]);
 
   const {
     control,
@@ -125,141 +169,174 @@ export function RequiredFormRenderer({
     mode: 'onChange',
   });
 
-  async function handleNext() {
-    if (!currentBlock) return;
-    const fieldIds = (currentBlock.fields ?? []).map((f) => f.id);
-    const valid = await trigger(fieldIds);
-    if (valid) {
-      setStep((s) => s + 1);
-    }
-  }
+  const onCompleteRef = useRef(onComplete);
+  onCompleteRef.current = onComplete;
+  const hasAutoCompleted = useRef(false);
 
-  async function handleSubmit() {
-    if (!currentBlock) return;
-    const fieldIds = (currentBlock.fields ?? []).map((f) => f.id);
-    const valid = await trigger(fieldIds);
-    if (!valid) return;
+  useEffect(() => {
+    if (
+      pendingForms.length === 0 &&
+      sortedForms.length > 0 &&
+      !hasAutoCompleted.current
+    ) {
+      hasAutoCompleted.current = true;
+      setIsSubmitting(true);
+      onCompleteRef
+        .current()
+        .catch((error: unknown) => {
+          toast.error(
+            error instanceof Error
+              ? error.message
+              : tActions('failedToSubmitForm'),
+          );
+        })
+        .finally(() => setIsSubmitting(false));
+    }
+  }, [pendingForms.length, sortedForms.length, tActions]);
+
+  const handleSubmit = async () => {
+    const fieldIds = unifiedBlocks.flatMap((block) =>
+      (block.fields ?? []).map((field) => field.id),
+    );
+    if (fieldIds.length > 0) {
+      const valid = await trigger(fieldIds);
+      if (!valid) return;
+    }
 
     const values = getValues();
-    const submissionValues = Object.entries(values).map(([fieldId, value]) => {
-      let blockId = '';
-      for (const block of blocks) {
-        const field = block.fields?.find((f) => f.id === fieldId);
-        if (field) {
-          blockId = block.id;
-          break;
-        }
-      }
-      return { fieldId, blockId, value: value ?? '' };
-    });
-
+    submittedBatchRef.current = pendingForms;
     setIsSubmitting(true);
-    try {
-      const result = await submitRequiredForm({
-        targetType,
-        targetId,
-        formId: form.id,
-        values: submissionValues,
-      });
 
-      if (result?.serverError) {
-        toast.error(result.serverError);
-      } else if (result?.data) {
-        setSubmitted(true);
-        onSubmitted?.();
-      } else {
-        toast.error(tActions('failedToSubmitForm'));
+    try {
+      for (const item of pendingForms) {
+        const submissionValues: Array<{
+          fieldId: string;
+          blockId: string;
+          value: string;
+        }> = [];
+
+        for (const ref of item.form.blockRefs ?? []) {
+          const block = ref.block;
+          if (!block) continue;
+          for (const field of block.fields ?? []) {
+            submissionValues.push({
+              fieldId: field.id,
+              blockId: block.id,
+              value: values[field.id] ?? '',
+            });
+          }
+        }
+
+        const result = await submitRequiredForm({
+          targetType,
+          targetId,
+          formId: item.form.id,
+          values: submissionValues,
+        });
+
+        if (result?.serverError) {
+          toast.error(result.serverError);
+          return;
+        }
+
+        if (!result?.data) {
+          toast.error(tActions('failedToSubmitForm'));
+          return;
+        }
+
+        setSubmittedFormIds((prev) => new Set([...prev, item.form.id]));
       }
+
+      // onComplete is triggered by the effect once pendingForms becomes empty.
     } catch (error) {
       toast.error(
         error instanceof Error ? error.message : tActions('failedToSubmitForm'),
       );
-    } finally {
-      setIsSubmitting(false);
     }
-  }
+    // isSubmitting stays true; the auto-complete effect will clear it.
+  };
 
-  if (submitted) {
+  if (sortedForms.length === 0) {
     return (
-      <div className="rounded-lg border bg-card p-6 text-center">
-        <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-full bg-green-100">
-          <Check className="h-5 w-5 text-green-600" />
-        </div>
-        <h3 className="mt-3 text-lg font-semibold">
-          {form.settings?.successTitle || t('successTitle')}
-        </h3>
-        <p className="mt-1 text-sm text-muted-foreground">
-          {form.settings?.successMessage || t('successMessage')}
-        </p>
-      </div>
-    );
-  }
-
-  if (!currentBlock) {
-    return (
-      <div className="rounded-lg border bg-card p-6 text-center">
-        <p className="text-muted-foreground text-sm">{t('noBlocks')}</p>
-      </div>
+      <Card>
+        <CardHeader>
+          <CardTitle>{title}</CardTitle>
+          <CardDescription>{description}</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <p className="text-muted-foreground text-sm">
+            {emptyMessage ?? t('noForms')}
+          </p>
+        </CardContent>
+      </Card>
     );
   }
 
   return (
-    <div className="rounded-lg border bg-card p-6 space-y-4">
-      <div className="mb-2 flex items-center justify-between">
-        <span className="text-sm text-muted-foreground">
-          {t('step', { current: step + 1, total: blocks.length })}
-        </span>
-        <span className="text-sm font-medium">{currentBlock.title}</span>
-      </div>
+    <Card>
+      <CardHeader>
+        <CardTitle>{title}</CardTitle>
+        <CardDescription>{description}</CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-6">
+        <div className="rounded-xl border bg-card p-4 sm:p-6">
+          {unifiedBlocks.length === 0 ? (
+            <p className="text-muted-foreground text-sm">{tForm('noBlocks')}</p>
+          ) : (
+            <div className="space-y-8">
+              {unifiedBlocks.map((block) => (
+                <div key={block.id} className="space-y-4">
+                  <div>
+                    <h3 className="text-lg font-semibold">{block.title}</h3>
+                    {block.description && (
+                      <p className="mt-1 text-sm text-muted-foreground">
+                        {block.description}
+                      </p>
+                    )}
+                  </div>
 
-      <div className="space-y-4">
-        {(currentBlock.fields?.length ?? 0) === 0 && (
-          <p className="text-muted-foreground text-sm">{t('noFields')}</p>
-        )}
-        {currentBlock.fields?.map((field: RequiredFormField) => (
-          <Controller
-            key={field.id}
-            name={field.id}
-            control={control}
-            defaultValue=""
-            render={({ field: ctrlField }) => (
-              <FieldRenderer
-                field={field as unknown as RenderableField}
-                value={ctrlField.value ?? ''}
-                onChange={ctrlField.onChange}
-                error={errors[field.id]?.message}
-              />
-            )}
-          />
-        ))}
-      </div>
+                  {(block.fields?.length ?? 0) === 0 && (
+                    <p className="text-muted-foreground text-sm">
+                      {tForm('noFields')}
+                    </p>
+                  )}
 
-      <div className="mt-4 flex items-center justify-between">
-        {!isFirstStep ? (
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setStep((s) => s - 1)}
-          >
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            {t('back')}
-          </Button>
-        ) : (
-          <div />
-        )}
+                  <div className="space-y-4">
+                    {block.fields
+                      ?.slice()
+                      .sort((a, b) => a.fieldOrder - b.fieldOrder)
+                      .map((field: RequiredFormField) => (
+                        <Controller
+                          key={field.id}
+                          name={field.id}
+                          control={control}
+                          defaultValue=""
+                          render={({ field: ctrlField }) => (
+                            <FieldRenderer
+                              field={field as unknown as RenderableField}
+                              value={ctrlField.value ?? ''}
+                              onChange={ctrlField.onChange}
+                              error={errors[field.id]?.message}
+                            />
+                          )}
+                        />
+                      ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
 
-        {isLastStep ? (
-          <Button size="sm" onClick={handleSubmit} disabled={isSubmitting}>
-            {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            {form.settings?.submitButtonLabel || t('submit')}
-          </Button>
-        ) : (
-          <Button size="sm" onClick={handleNext}>
-            {t('next')}
-            <ArrowRight className="ml-2 h-4 w-4" />
-          </Button>
-        )}
-      </div>
-    </div>
+          <div className="flex justify-end border-t pt-4 mt-6">
+            <Button onClick={handleSubmit} disabled={isSubmitting}>
+              {isSubmitting && (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              )}
+              {tCommon('submit')}
+            </Button>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
   );
 }
