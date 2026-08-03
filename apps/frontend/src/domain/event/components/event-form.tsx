@@ -24,7 +24,7 @@ import {
   RequiredFormsDedupHint,
   RequiredFormsList,
 } from '@/components/required-forms-fields';
-import { FileUpload } from '@/domain/storage/components/file-upload';
+import { FileUpload } from '@/components/storage/file-upload';
 import { useRouter } from '@/i18n/navigation';
 import { inviteEventPath } from '../routes';
 import {

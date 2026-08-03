@@ -18,7 +18,7 @@ import { useTranslations } from 'next-intl';
 import { useState, useTransition } from 'react';
 import { type Resolver, useForm } from 'react-hook-form';
 import { FormSheet, useFormSheet } from '@/components/form-sheet';
-import { FileUpload } from '@/domain/storage/components/file-upload';
+import { FileUpload } from '@/components/storage/file-upload';
 import { useRouter } from '@/i18n/navigation';
 import { useFormatting } from '@/lib/formatting/use-formatting';
 import { resolveCreateShiftSuccessNavigation } from '../create-shift-flow';
