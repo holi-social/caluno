@@ -4,7 +4,7 @@ import type { OrganizationUnitType } from '@repo/data';
 import { Field, FieldError, FieldLabel, Input, Textarea } from '@repo/ui';
 import { useTranslations } from 'next-intl';
 import type { UseFormReturn } from 'react-hook-form';
-import { FileUpload } from '@/domain/storage/components/file-upload';
+import { FileUpload } from '@/components/storage/file-upload';
 import type { CreateOrgUnitFormValues } from '../schemas';
 
 interface Props {

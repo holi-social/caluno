@@ -3,8 +3,8 @@
 import { Button, Input } from '@repo/ui';
 import { useTranslations } from 'next-intl';
 import { useActionState, useState } from 'react';
+import { FileUpload } from '@/components/storage/file-upload';
 import { createOrganization } from '@/domain/organization/actions';
-import { FileUpload } from '@/domain/storage/components/file-upload';
 
 export function CreateOrganizationForm() {
   const [state, formAction, isPending] = useActionState(

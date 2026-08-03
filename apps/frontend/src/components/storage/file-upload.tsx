@@ -253,7 +253,7 @@ export function FileUpload({
       ) : (
         <Empty
           className={cn(
-            'cursor-pointer border border-dashed p-4 transition-colors md:p-6',
+            'cursor-pointer border border-dashed px-6 py-8 transition-colors',
             isDragging && 'border-primary bg-primary/5',
             disabled && 'cursor-not-allowed opacity-50',
             displayError && 'border-destructive',
