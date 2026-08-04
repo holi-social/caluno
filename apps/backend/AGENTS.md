@@ -110,15 +110,18 @@ Integration tests connect to the `postgres` maintenance database to create/drop 
 
 `bun bootstrap` resets the **development** database (not `_test`) via `docker compose down -v`, then migrates, seeds permissions, and loads [`src/database/fixtures.ts`](src/database/fixtures.ts). Refuses to run unless `DB_HOST` is `localhost`, `127.0.0.1`, or `postgres`.
 
+The same fixture script is used for staging via `bun run db:fixtures:staging`.
+
 | Account | Role / status |
 |---|---|
-| `admin@clippy.social` | Owner |
-| `supervisor@clippy.social` | Supervisor |
-| `member01@` … `member10@clippy.social` | Member |
-| `pending01@`, `pending02@` | Pending membership request |
-| `rejected01@` | Rejected membership request |
+| `testing+admin@caluno.org` | Owner |
+| `testing+supervisor@caluno.org` | Supervisor |
+| `testing+demo@caluno.org` | Member (demo account) |
+| `testing+001@` … `testing+010@caluno.org` | Member |
+| `testing+pending01@`, `testing+pending02@caluno.org` | Pending membership request |
+| `testing+rejected01@caluno.org` | Rejected membership request |
 
-Password for all fixture accounts: `abcd1234`. Organization: **Playground**. Shifts (weekly, Europe/Berlin): Community Support (Mon 08:00–12:00), Food Distribution (Wed 12:00–16:00), Event Assistance (Fri 16:00–20:00).
+Password for all fixture accounts: `abcd1234` (override with `FIXTURE_PASSWORD`). Organization: **Playground**. Shifts (weekly, Europe/Berlin): Community Support (Mon 08:00–12:00), Food Distribution (Wed 12:00–16:00), Event Assistance (Fri 16:00–20:00). Requirement form: Personal Information — block with required First name and Last name fields.
 
 ## Tech Stack
 - **NestJS 11** primary web framework

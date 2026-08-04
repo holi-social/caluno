@@ -11,7 +11,7 @@ import { LoginPage } from '../pages/LoginPage';
 // (2 overlapping shifts) and "Overlap Test Pile" (6 overlapping shifts,
 // A-F) fixtures invited to it — member01 is kept conflict-free as a
 // baseline for other manual checks.
-const MEMBER_EMAIL = 'member02@clippy.social';
+const MEMBER_EMAIL = 'testing+002@caluno.org';
 const MEMBER_PASSWORD = 'abcd1234';
 
 test.describe('my-shifts conflict clustering + day strip', () => {
