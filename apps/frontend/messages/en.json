@@ -1134,8 +1134,8 @@
     "shiftsSummaryNoSpots": "{shifts} shifts",
     "followCta": "Step up to help",
     "followingCta": "You're helping ✓",
-    "pendingCta": "Request pending",
-    "rejectedCta": "Request not approved",
+    "pendingCta": "Pending request",
+    "rejectedCta": "You cannot join this event",
     "followNote": "Get invited to shifts, or sign up for one yourself.",
     "pendingNote": "A coordinator will confirm your request.",
     "requestSentToast": "Request sent — a coordinator will confirm it.",
@@ -1159,6 +1159,7 @@
       "noForms": "No forms are required.",
       "joinedToast": "You're now following {eventTitle}",
       "requestSentToast": "Request sent — a coordinator will confirm it.",
+      "pendingRequestToast": "Pending request — a coordinator will confirm your membership.",
       "rejectedToast": "Request not approved",
       "requirementsNeededToast": "Please complete all required forms first",
       "requestFailed": "Failed to send request"

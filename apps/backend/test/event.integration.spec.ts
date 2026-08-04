@@ -10,12 +10,17 @@ import {
 import type { INestApplication } from '@nestjs/common';
 import type { Database } from '../src/database/database.module';
 import * as schema from '../src/database/schema';
+import { MembershipRequestStatus } from '../src/membership/enums';
+import { JoinStatus } from '../src/shared/enums/join-status.enum';
 import { ShiftInviteStatus, ShiftVisibility } from '../src/shift/enums';
 import {
   createEvent,
+  createMembershipRequest,
+  createRequirementForm,
   createShift,
   createShiftInstance,
   createUser,
+  setEventRequiredForms,
 } from './factories';
 import { addMembership } from './factories/org.factory';
 import {
@@ -35,12 +40,14 @@ setDefaultTimeout(20_000);
 describe('publicEvent', () => {
   let app: INestApplication;
   let db: Database;
+  let organizationId: string;
   let organizationUnitId: string;
 
   beforeAll(async () => {
     const context = await getGraphqlTestContext();
     app = context.app;
     db = context.db;
+    organizationId = context.organizationId;
     organizationUnitId = context.organizationUnitId;
   });
 
@@ -258,5 +265,240 @@ describe('publicEvent', () => {
 
     expect(data.publicEvent.id).toBe(event.id);
     expect(data.publicEvent.title).toBe('Slug Lookup Event');
+  });
+
+  it('returns myJoinStatus NONE for a pending membership that has not started joining this event', async () => {
+    const originalUserId = getAuthMockUserId();
+    const user = await createUser(db);
+    setAuthMockUserId(user.id);
+
+    const event = await createEvent(db, { organizationUnitId });
+    await createMembershipRequest(db, {
+      userId: user.id,
+      organizationUnitId,
+      status: MembershipRequestStatus.PENDING,
+    });
+
+    const data = await graphqlRequestRequiringData<{
+      publicEvent: { myJoinStatus: JoinStatus };
+    }>(
+      app,
+      {
+        query: `
+          query PublicEvent($id: ID!) {
+            publicEvent(id: $id) { myJoinStatus }
+          }
+        `,
+        variables: { id: event.id },
+      },
+      'publicEvent',
+    );
+
+    expect(data.publicEvent.myJoinStatus).toBe(JoinStatus.NONE);
+
+    setAuthMockUserId(originalUserId);
+  });
+
+  it('returns myJoinStatus PENDING for a pending membership after starting to join this event', async () => {
+    const originalUserId = getAuthMockUserId();
+    const user = await createUser(db);
+    setAuthMockUserId(user.id);
+
+    const event = await createEvent(db, { organizationUnitId });
+    await createMembershipRequest(db, {
+      userId: user.id,
+      organizationUnitId,
+      status: MembershipRequestStatus.PENDING,
+      metadata: { intendedEventIds: [event.id] },
+    });
+
+    const data = await graphqlRequestRequiringData<{
+      publicEvent: { myJoinStatus: JoinStatus };
+    }>(
+      app,
+      {
+        query: `
+          query PublicEvent($id: ID!) {
+            publicEvent(id: $id) { myJoinStatus }
+          }
+        `,
+        variables: { id: event.id },
+      },
+      'publicEvent',
+    );
+
+    expect(data.publicEvent.myJoinStatus).toBe(JoinStatus.PENDING);
+
+    setAuthMockUserId(originalUserId);
+  });
+
+  it('returns myJoinStatus REJECTED for a rejected membership', async () => {
+    const originalUserId = getAuthMockUserId();
+    const user = await createUser(db);
+    setAuthMockUserId(user.id);
+
+    const event = await createEvent(db, { organizationUnitId });
+    await createMembershipRequest(db, {
+      userId: user.id,
+      organizationUnitId,
+      status: MembershipRequestStatus.REJECTED,
+    });
+
+    const data = await graphqlRequestRequiringData<{
+      publicEvent: { myJoinStatus: JoinStatus };
+    }>(
+      app,
+      {
+        query: `
+          query PublicEvent($id: ID!) {
+            publicEvent(id: $id) { myJoinStatus }
+          }
+        `,
+        variables: { id: event.id },
+      },
+      'publicEvent',
+    );
+
+    expect(data.publicEvent.myJoinStatus).toBe(JoinStatus.REJECTED);
+
+    setAuthMockUserId(originalUserId);
+  });
+
+  it('joinEvent returns REQUIREMENTS_NEEDED for pending members with missing event forms', async () => {
+    const originalUserId = getAuthMockUserId();
+    const user = await createUser(db);
+    setAuthMockUserId(user.id);
+
+    const event = await createEvent(db, { organizationUnitId });
+    await createMembershipRequest(db, {
+      userId: user.id,
+      organizationUnitId,
+      status: MembershipRequestStatus.PENDING,
+    });
+
+    const { form } = await createRequirementForm(db, {
+      organizationId,
+      organizationUnitId,
+      createdById: user.id,
+    });
+    await setEventRequiredForms(db, { eventId: event.id, formIds: [form.id] });
+
+    const data = await graphqlRequestRequiringData<{
+      joinEvent: {
+        status: JoinStatus;
+        requiredForms: Array<{ submitted: boolean }> | null;
+      };
+    }>(
+      app,
+      {
+        query: `
+          mutation JoinEvent($eventId: ID!) {
+            joinEvent(eventId: $eventId) {
+              status
+              requiredForms { submitted }
+            }
+          }
+        `,
+        variables: { eventId: event.id },
+      },
+      'joinEvent',
+    );
+
+    expect(data.joinEvent.status).toBe(JoinStatus.REQUIREMENTS_NEEDED);
+    expect(data.joinEvent.requiredForms?.some((f) => !f.submitted)).toBe(true);
+
+    setAuthMockUserId(originalUserId);
+  });
+
+  it('joinEvent returns PENDING for pending members with satisfied event forms', async () => {
+    const originalUserId = getAuthMockUserId();
+    const user = await createUser(db);
+    setAuthMockUserId(user.id);
+
+    const event = await createEvent(db, { organizationUnitId });
+    await createMembershipRequest(db, {
+      userId: user.id,
+      organizationUnitId,
+      status: MembershipRequestStatus.PENDING,
+    });
+
+    const data = await graphqlRequestRequiringData<{
+      joinEvent: { status: JoinStatus };
+    }>(
+      app,
+      {
+        query: `
+          mutation JoinEvent($eventId: ID!) {
+            joinEvent(eventId: $eventId) { status }
+          }
+        `,
+        variables: { eventId: event.id },
+      },
+      'joinEvent',
+    );
+
+    expect(data.joinEvent.status).toBe(JoinStatus.PENDING);
+
+    setAuthMockUserId(originalUserId);
+  });
+
+  it('joinEvent returns JOINED for members with satisfied event forms', async () => {
+    const originalUserId = getAuthMockUserId();
+    const user = await createUser(db);
+    await addMembership(db, user.id, organizationUnitId);
+    setAuthMockUserId(user.id);
+
+    const event = await createEvent(db, { organizationUnitId });
+
+    const data = await graphqlRequestRequiringData<{
+      joinEvent: { status: JoinStatus };
+    }>(
+      app,
+      {
+        query: `
+          mutation JoinEvent($eventId: ID!) {
+            joinEvent(eventId: $eventId) { status }
+          }
+        `,
+        variables: { eventId: event.id },
+      },
+      'joinEvent',
+    );
+
+    expect(data.joinEvent.status).toBe(JoinStatus.JOINED);
+
+    setAuthMockUserId(originalUserId);
+  });
+
+  it('joinEvent returns REJECTED for rejected memberships', async () => {
+    const originalUserId = getAuthMockUserId();
+    const user = await createUser(db);
+    setAuthMockUserId(user.id);
+
+    const event = await createEvent(db, { organizationUnitId });
+    await createMembershipRequest(db, {
+      userId: user.id,
+      organizationUnitId,
+      status: MembershipRequestStatus.REJECTED,
+    });
+
+    const data = await graphqlRequestRequiringData<{
+      joinEvent: { status: JoinStatus };
+    }>(
+      app,
+      {
+        query: `
+          mutation JoinEvent($eventId: ID!) {
+            joinEvent(eventId: $eventId) { status }
+          }
+        `,
+        variables: { eventId: event.id },
+      },
+      'joinEvent',
+    );
+
+    expect(data.joinEvent.status).toBe(JoinStatus.REJECTED);
+
+    setAuthMockUserId(originalUserId);
   });
 });
