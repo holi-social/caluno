@@ -1615,6 +1615,7 @@ export class ShiftService {
     instanceId: string,
     status: ShiftInviteStatus = ShiftInviteStatus.ACCEPTED,
     tx?: Database,
+    formsAlreadySatisfied?: boolean,
   ): Promise<void> {
     const db = tx ?? this.db;
 
@@ -1642,6 +1643,19 @@ export class ShiftService {
       throw new ConflictGraphQLError(
         'You must be a member of the organization to join this shift.',
       );
+    }
+
+    if (!formsAlreadySatisfied) {
+      const requiredFormStatuses = await this.getShiftRequiredFormStatuses(
+        userId,
+        shift.id,
+      );
+      const missingForms = requiredFormStatuses.filter((s) => !s.submitted);
+      if (missingForms.length > 0) {
+        throw new ConflictGraphQLError(
+          'You must complete the required forms before joining this shift.',
+        );
+      }
     }
 
     const maxVolunteers = instance.overrideMaxVolunteers ?? shift.maxVolunteers;
@@ -1750,6 +1764,17 @@ export class ShiftService {
       );
     }
 
+    const requiredFormStatuses = await this.getShiftRequiredFormStatuses(
+      userId,
+      shiftId,
+    );
+    const missingForms = requiredFormStatuses.filter((s) => !s.submitted);
+    if (missingForms.length > 0) {
+      throw new ConflictGraphQLError(
+        'You must complete the required forms before joining this shift.',
+      );
+    }
+
     const nextShiftInstance = await this.db.query.shiftInstances.findFirst({
       where: {
         masterId: shiftId,
@@ -1849,14 +1874,6 @@ export class ShiftService {
         };
       }
 
-      if (result.status === 'PENDING') {
-        return {
-          status: JoinStatus.PENDING,
-          shiftInstance: instance,
-          membershipRequest: result.membershipRequest,
-        };
-      }
-
       if (result.status === 'REJECTED') {
         return {
           status: JoinStatus.REJECTED,
@@ -1877,10 +1894,20 @@ export class ShiftService {
         };
       }
 
+      if (result.status === 'PENDING') {
+        return {
+          status: JoinStatus.PENDING,
+          shiftInstance: instance,
+          membershipRequest: result.membershipRequest,
+        };
+      }
+
       await this.joinShiftInstance(
         userId,
         instanceId,
         ShiftInviteStatus.SELF_JOINED,
+        undefined,
+        true,
       );
       return {
         status: JoinStatus.JOINED,
@@ -1904,6 +1931,8 @@ export class ShiftService {
       userId,
       instanceId,
       ShiftInviteStatus.SELF_JOINED,
+      undefined,
+      true,
     );
     return {
       status: JoinStatus.JOINED,
