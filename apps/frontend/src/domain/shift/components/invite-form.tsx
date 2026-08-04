@@ -1,6 +1,7 @@
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
+import { ShiftVisibility } from '@repo/data';
 import {
   Button,
   Card,
@@ -22,6 +23,7 @@ import { copyToClipboard } from '@/lib/clipboard';
 import type { RecurrenceDayValue } from '../constants';
 import { type InviteShiftFormValues, inviteShiftFormSchema } from '../schemas';
 import { shiftShareUrl } from '../share';
+import { setSuccessDialogCreatedShift } from '../success-dialog';
 import { TransferList } from './transfer-list';
 
 type Member = {
@@ -35,12 +37,15 @@ type Member = {
 interface InviteShiftFormProps {
   title: string;
   description: string;
+  orgUId: string;
   shiftId: string;
   instanceId: string;
+  isCreationFlow?: boolean;
   shift: {
     title: string;
     isRecurring: boolean;
     recurrenceDays: RecurrenceDayValue[];
+    visibility: ShiftVisibility;
   };
   selectedInstance: {
     actualStartsAt: string | Date;
@@ -59,6 +64,7 @@ export function InviteShiftForm({
   description,
   shiftId,
   instanceId,
+  isCreationFlow = false,
   shift,
   selectedInstance,
   availableMembers,
@@ -87,6 +93,7 @@ export function InviteShiftForm({
     },
   });
 
+  const isOpenShift = shift.visibility === ShiftVisibility.AllMembers;
   const currentUserId = session.data?.user?.id;
   const allMembers = availableMembers.filter((m) => m.id !== currentUserId);
   const statusById = new Map(
@@ -142,6 +149,13 @@ export function InviteShiftForm({
       });
       if (volunteersResult?.serverError) {
         setServerError(volunteersResult.serverError);
+        return;
+      }
+
+      if (isCreationFlow) {
+        setSuccessDialogCreatedShift({ shiftId, instanceId });
+        await setOpen(false);
+        router.refresh();
         return;
       }
 
@@ -235,20 +249,22 @@ export function InviteShiftForm({
             invited={invitedForList}
             onInvitedChange={(ids) => form.setValue('invitedMemberIds', ids)}
           />
-          <Button
-            type="button"
-            variant="outline"
-            className="w-full shrink-0"
-            onClick={() =>
-              copyToClipboard(
-                shiftShareUrl(shiftId, instanceId),
-                tCommon('linkCopied'),
-              )
-            }
-          >
-            <Share2 className="size-4 mr-2" />
-            {t('inviteForm.copyInviteLink')}
-          </Button>
+          {isOpenShift && (
+            <Button
+              type="button"
+              variant="outline"
+              className="w-full shrink-0"
+              onClick={() =>
+                copyToClipboard(
+                  shiftShareUrl(shiftId, instanceId),
+                  tCommon('linkCopied'),
+                )
+              }
+            >
+              <Share2 className="size-4 mr-2" />
+              {t('inviteForm.copyInviteLink')}
+            </Button>
+          )}
         </div>
       </div>
     </FormSheet>
