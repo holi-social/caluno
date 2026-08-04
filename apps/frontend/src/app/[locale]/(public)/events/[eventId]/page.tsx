@@ -108,7 +108,7 @@ export default async function EventPage({ params }: EventPageProps) {
               <hr className="border-border" />
               <EventFollowButton
                 eventId={event.id}
-                initialFollowing={event.isFollowing}
+                initialStatus={event.myJoinStatus}
               />
             </div>
 
