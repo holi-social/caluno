@@ -1167,12 +1167,123 @@ export class ShiftService {
   }
 
   private async updateShiftInstanceSeries(
-    _tx: Database,
+    tx: Database,
     instance: ShiftInstanceEntity & { master: ShiftEntity },
-    _input: UpdateShiftInstanceInput,
-    _organizationUnitId: string,
+    input: UpdateShiftInstanceInput,
+    organizationUnitId: string,
   ): Promise<ShiftInstanceEntity> {
-    return instance;
+    const shift = instance.master;
+    const fromDate = instance.actualStartsAt;
+
+    const durationMinutes = getDurationMinutes(input.startsAt, input.endsAt);
+    const newOriginalStartsAt = this.applyTimeOfDay(
+      shift.originalStartsAt,
+      input.startsAt,
+    );
+    const newRrule = input.rrule ?? shift.rrule;
+    const recurrenceChanged = newRrule !== shift.rrule;
+
+    const imageUrl =
+      input.imageFileId === undefined
+        ? undefined
+        : input.imageFileId
+          ? await this.resolveImageUrl(input.imageFileId)
+          : null;
+
+    const [updatedShift] = await tx
+      .update(schema.shifts)
+      .set({
+        title: input.title,
+        slug: slugify(input.title),
+        location: input.location ?? null,
+        instructions: input.instructions ?? null,
+        minVolunteers: input.minVolunteers ?? null,
+        maxVolunteers: input.maxVolunteers ?? null,
+        ...(input.visibility ? { visibility: input.visibility } : {}),
+        ...(imageUrl !== undefined ? { imageUrl } : {}),
+        rrule: newRrule,
+        originalStartsAt: newOriginalStartsAt,
+        durationMinutes,
+      })
+      .where(
+        and(
+          eq(schema.shifts.id, shift.id),
+          eq(schema.shifts.organizationUnitId, organizationUnitId),
+        ),
+      )
+      .returning();
+
+    if (!updatedShift) {
+      throw new NotFoundGraphQLError(`Shift with ID ${shift.id} not found`);
+    }
+
+    if (input.requiredFormIds !== undefined) {
+      await this.setRequiredFormsInTx(
+        tx,
+        shift.id,
+        organizationUnitId,
+        input.requiredFormIds ?? [],
+      );
+    }
+
+    if (recurrenceChanged) {
+      const target = expandShift(
+        updatedShift.rrule,
+        updatedShift.originalStartsAt,
+        updatedShift.durationMinutes,
+      );
+      await syncShiftInstances(tx, shift.id, target, { fromDate });
+    } else {
+      const startTime = this.toTimeOfDayString(input.startsAt);
+      const endTime = this.toTimeOfDayString(input.endsAt);
+
+      await tx
+        .update(schema.shiftInstances)
+        .set({
+          overrideTitle: null,
+          overrideLocation: null,
+          overrideInstructions: null,
+          overrideMinVolunteers: null,
+          overrideMaxVolunteers: null,
+          isException: false,
+          actualStartsAt: sql`date_trunc('day', ${schema.shiftInstances.actualStartsAt}) + ${startTime}::interval`,
+          actualEndsAt: sql`date_trunc('day', ${schema.shiftInstances.actualStartsAt}) + ${endTime}::interval`,
+        })
+        .where(
+          and(
+            eq(schema.shiftInstances.masterId, shift.id),
+            gte(schema.shiftInstances.actualStartsAt, fromDate),
+            eq(schema.shiftInstances.isCancelled, false),
+          ),
+        );
+    }
+
+    const [refreshedInstance] = await tx
+      .select()
+      .from(schema.shiftInstances)
+      .where(eq(schema.shiftInstances.id, instance.id));
+
+    if (!refreshedInstance) {
+      throw new NotFoundGraphQLError(
+        `Shift instance with ID ${instance.id} not found`,
+      );
+    }
+
+    return refreshedInstance;
+  }
+
+  /** Keeps `base`'s calendar date, adopts `time`'s hour/minute/second. */
+  private applyTimeOfDay(base: Date, time: Date): Date {
+    const result = new Date(base);
+    result.setHours(time.getHours(), time.getMinutes(), time.getSeconds(), 0);
+    return result;
+  }
+
+  private toTimeOfDayString(date: Date): string {
+    const hh = String(date.getHours()).padStart(2, '0');
+    const mm = String(date.getMinutes()).padStart(2, '0');
+    const ss = String(date.getSeconds()).padStart(2, '0');
+    return `${hh}:${mm}:${ss}`;
   }
 
   private getUserIdDifferences(currentUserIds: string[], newUserIds: string[]) {
