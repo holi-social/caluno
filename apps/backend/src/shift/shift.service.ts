@@ -1232,6 +1232,16 @@ export class ShiftService {
         updatedShift.originalStartsAt,
         updatedShift.durationMinutes,
       );
+
+      const editedOccurrenceSurvives = target.some(
+        (t) => t.actualStartsAt.getTime() === fromDate.getTime(),
+      );
+      if (!editedOccurrenceSurvives) {
+        throw new ConflictGraphQLError(
+          "The new recurrence pattern doesn't include this occurrence's day — adjust the recurrence or edit a different occurrence.",
+        );
+      }
+
       await syncShiftInstances(tx, shift.id, target, { fromDate });
     } else {
       const startTime = this.toTimeOfDayString(input.startsAt);
