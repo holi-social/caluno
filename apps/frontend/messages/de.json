@@ -132,6 +132,27 @@
     "pageTitle": "Profil",
     "organizations": "Deine Organisationen",
     "personalInformation": "Persönliche Informationen",
+    "identity": {
+      "fields": {
+        "preferredName": "Bevorzugter Name",
+        "firstName": "Vorname",
+        "lastName": "Nachname",
+        "gender": "Geschlecht",
+        "email": "E-Mail",
+        "phoneNumber": "Telefonnummer",
+        "dateOfBirth": "Geburtsdatum",
+        "address": "Adresse",
+        "postcode": "Postleitzahl",
+        "city": "Stadt",
+        "iban": "IBAN"
+      },
+      "subtitles": {
+        "preferredName": "Falls abweichend von deinem rechtlichen Namen",
+        "firstName": "Wie auf deinem Ausweis",
+        "lastName": "Wie auf deinem Ausweis",
+        "iban": "Für Auslagenerstattungen"
+      }
+    },
     "accountSettings": "Kontoeinstellungen",
     "edit": "Profil bearbeiten",
     "pictureLabel": "Profilbild",

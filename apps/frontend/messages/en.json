@@ -132,6 +132,27 @@
     "pageTitle": "Profile",
     "organizations": "Your organizations",
     "personalInformation": "Personal information",
+    "identity": {
+      "fields": {
+        "preferredName": "Preferred name",
+        "firstName": "First name",
+        "lastName": "Last name",
+        "gender": "Gender",
+        "email": "Email",
+        "phoneNumber": "Phone number",
+        "dateOfBirth": "Date of birth",
+        "address": "Address",
+        "postcode": "Postcode",
+        "city": "City",
+        "iban": "IBAN"
+      },
+      "subtitles": {
+        "preferredName": "If different from your legal name",
+        "firstName": "As on your ID",
+        "lastName": "As on your ID",
+        "iban": "For expense reimbursements"
+      }
+    },
     "accountSettings": "Account settings",
     "edit": "Edit profile",
     "pictureLabel": "Profile picture",
