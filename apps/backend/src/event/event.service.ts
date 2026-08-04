@@ -450,14 +450,6 @@ export class EventService {
         };
       }
 
-      if (result.status === 'PENDING') {
-        return {
-          status: JoinStatus.PENDING,
-          event,
-          membershipRequest: result.membershipRequest,
-        };
-      }
-
       if (result.status === 'REJECTED') {
         return {
           status: JoinStatus.REJECTED,
@@ -478,10 +470,18 @@ export class EventService {
         };
       }
 
-      await this.joinEvent(userId, eventId, undefined, true);
+      if (result.status === 'JOINED') {
+        await this.joinEvent(userId, eventId, undefined, true);
+        return {
+          status: JoinStatus.JOINED,
+          event,
+        };
+      }
+
       return {
-        status: JoinStatus.JOINED,
+        status: JoinStatus.PENDING,
         event,
+        membershipRequest: result.membershipRequest,
       };
     }
 
