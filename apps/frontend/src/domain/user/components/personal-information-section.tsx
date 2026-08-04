@@ -1,4 +1,5 @@
 import { getTranslations } from 'next-intl/server';
+import { SYSTEM_PROFILE_FIELDS } from '@/domain/requirement-form/system-profile-fields';
 import { getFormatting } from '@/lib/formatting/formatting-server';
 import { ProfileField } from './profile-field';
 
@@ -36,56 +37,28 @@ export const PersonalInformationSection = async ({
     }
   }
 
-  const fields: FieldItem[] = [
-    {
-      label: tFields('preferredName'),
-      subtitle: tSubtitles('preferredName'),
-      value: str('preferred-name'),
-    },
-    {
-      label: tFields('firstName'),
-      subtitle: tSubtitles('firstName'),
-      value: str('name'),
-    },
-    {
-      label: tFields('lastName'),
-      subtitle: tSubtitles('lastName'),
-      value: str('lastname'),
-    },
-    {
-      label: tFields('gender'),
-      value: str('gender'),
-    },
-    {
-      label: tFields('email'),
-      value: me.email,
-    },
-    {
-      label: tFields('phone'),
-      value: str('phone'),
-    },
-    {
-      label: tFields('birthDate'),
-      value: formattedBirthDate,
-    },
-    {
-      label: tFields('address'),
-      value: str('address'),
-    },
-    {
-      label: tFields('zipCode'),
-      value: str('zip'),
-    },
-    {
-      label: tFields('city'),
-      value: str('city'),
-    },
-    {
-      label: tFields('iban'),
-      subtitle: tSubtitles('iban'),
-      value: str('iban'),
-    },
-  ];
+  const subtitleByKey: Record<string, string> = {
+    'preferred-name': tSubtitles('preferredName'),
+    name: tSubtitles('firstName'),
+    lastname: tSubtitles('lastName'),
+    iban: tSubtitles('iban'),
+  };
+
+  const fields: FieldItem[] = SYSTEM_PROFILE_FIELDS.map((field) => {
+    let value: string | null;
+    if (field.key === 'email') {
+      value = me.email;
+    } else if (field.key === 'birth-date') {
+      value = formattedBirthDate;
+    } else {
+      value = str(field.key);
+    }
+    return {
+      label: tFields(field.labelKey),
+      value,
+      subtitle: subtitleByKey[field.key],
+    };
+  });
 
   return (
     <div className="space-y-3">
