@@ -1,10 +1,12 @@
 'use client';
 
+import type { Locale } from '@repo/data';
 import { Button, Input } from '@repo/ui';
-import { useTranslations } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 import { useState } from 'react';
 import { Link, useRouter } from '@/i18n/navigation';
 import { signIn, signUp } from '@/lib/auth';
+import { setLocaleCookieIfSupported } from '@/lib/locale-cookie';
 import { getVerifyEmailPath } from '@/lib/verify-email-url';
 
 interface SignupFormProps {
@@ -14,6 +16,7 @@ interface SignupFormProps {
 export function SignupForm({ redirectTo = '/' }: SignupFormProps) {
   const t = useTranslations('Auth.signup');
   const router = useRouter();
+  const currentLocale = useLocale();
   const [error, setError] = useState<string | null>(null);
   const [isPending, setIsPending] = useState(false);
 
@@ -45,7 +48,12 @@ export function SignupForm({ redirectTo = '/' }: SignupFormProps) {
           return;
         }
 
-        router.push(redirectTo);
+        const userLocale = setLocaleCookieIfSupported(
+          (signInResult.data.user as { locale?: unknown }).locale,
+        );
+        router.push(redirectTo, {
+          locale: userLocale ?? (currentLocale as Locale),
+        });
         router.refresh();
         return;
       }
