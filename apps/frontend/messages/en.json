@@ -369,7 +369,8 @@
       "approved": "Approved",
       "rejected": "Rejected",
       "requested": "Requested",
-      "declined": "Declined"
+      "declined": "Declined",
+      "accepted": "Accepted"
     },
     "meta": {
       "requestedDate": "Requested · {date}",

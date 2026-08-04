@@ -2,12 +2,15 @@ import { Badge } from '@repo/ui';
 import { useTranslations } from 'next-intl';
 import type { MembershipEntry } from '../types';
 
-const VARIANT: Record<MembershipEntry['state'], 'info' | 'error'> = {
-  requested: 'info',
-  declined: 'error',
-};
+const VARIANT: Record<MembershipEntry['state'], 'info' | 'error' | 'success'> =
+  {
+    accepted: 'success',
+    requested: 'info',
+    declined: 'error',
+  };
 
 const LABEL_KEY: Record<MembershipEntry['state'], string> = {
+  accepted: 'status.accepted',
   requested: 'status.requested',
   declined: 'status.declined',
 };

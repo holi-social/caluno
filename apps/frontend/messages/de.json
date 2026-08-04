@@ -369,7 +369,8 @@
       "approved": "Genehmigt",
       "rejected": "Abgelehnt",
       "requested": "Angefragt",
-      "declined": "Abgelehnt"
+      "declined": "Abgelehnt",
+      "accepted": "Akzeptiert"
     },
     "meta": {
       "requestedDate": "Angefragt · {date}",

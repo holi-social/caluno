@@ -19,9 +19,15 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
   const tProfile = await getTranslations('Profile');
 
   const data = await getDataClient();
-  const me = await data.user.getMe();
-  const { items: membershipRequests } = await data.membershipRequest.findMine();
-  const membershipEntries = buildMembershipEntries(membershipRequests);
+  const [me, requestPage, memberships] = await Promise.all([
+    data.user.getMe(),
+    data.membershipRequest.findMine(),
+    data.membership.findMine(),
+  ]);
+  const membershipEntries = buildMembershipEntries(
+    requestPage.items,
+    memberships,
+  );
 
   return (
     <div>
