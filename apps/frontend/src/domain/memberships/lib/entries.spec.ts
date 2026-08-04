@@ -85,13 +85,15 @@ describe('buildMembershipEntries', () => {
       [membership('m1', 'u1', ['Member'])],
     );
     expect(entries).toHaveLength(1);
-    expect(entries[0].state).toBe('accepted');
+    expect(entries[0]?.state).toBe('accepted');
   });
 
   it('omits roles as an empty array when the membership has no roles', () => {
     const entries = buildMembershipEntries([], [membership('m1', 'u1', [])]);
-    expect(entries[0].state).toBe('accepted');
-    expect((entries[0] as { roles: string[] }).roles).toEqual([]);
+    const entry = entries[0];
+    if (entry?.state === 'accepted') {
+      expect(entry.roles).toEqual([]);
+    }
   });
 
   it('orders newest-first within the same state', () => {
@@ -113,7 +115,7 @@ describe('buildMembershipEntries', () => {
       [],
     );
     expect(entries).toHaveLength(1);
-    expect(entries[0].state).toBe('requested');
+    expect(entries[0]?.state).toBe('requested');
   });
 
   it('returns an empty list for empty inputs', () => {
