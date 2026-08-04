@@ -2,6 +2,7 @@ import { getTranslations, setRequestLocale } from 'next-intl/server';
 import { MembershipCard } from '@/domain/memberships/components/membership-card';
 import { buildMembershipEntries } from '@/domain/memberships/lib/entries';
 import { HeaderAvatar } from '@/domain/user/components/header-avatar';
+import { PersonalInformationSection } from '@/domain/user/components/personal-information-section';
 import { ProfileForm } from '@/domain/user/components/profile-form';
 import { ProfilePageHeader } from '@/domain/user/components/profile-page-header';
 import { resolveLocale } from '@/i18n/routing';
@@ -19,9 +20,12 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
   const tProfile = await getTranslations('Profile');
 
   const data = await getDataClient();
-  const me = await data.user.getMe();
-  const { items: membershipRequests } = await data.membershipRequest.findMine();
-  const membershipEntries = buildMembershipEntries(membershipRequests);
+  const [me, membershipRequests, profile] = await Promise.all([
+    data.user.getMe(),
+    data.membershipRequest.findMine(),
+    data.requirementForm.getMyUserProfile(),
+  ]);
+  const membershipEntries = buildMembershipEntries(membershipRequests.items);
 
   return (
     <div>
@@ -44,10 +48,11 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
             ))}
           </div>
         </section>
-        <section>
+        <section className="space-y-4">
           <h2 className="text-xl font-bold">
             {tProfile('personalInformation')}
           </h2>
+          <PersonalInformationSection me={me} profile={profile ?? null} />
         </section>
         <section>
           <h2 className="text-xl font-bold">{tProfile('accountSettings')}</h2>
