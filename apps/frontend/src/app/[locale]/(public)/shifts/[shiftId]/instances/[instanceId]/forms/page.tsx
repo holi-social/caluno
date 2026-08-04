@@ -1,9 +1,9 @@
 import { type DataClient, DataError, JoinStatus } from '@repo/data';
-import { notFound, redirect } from 'next/navigation';
+import { notFound } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
 import { ShiftFormsClient } from '@/app/[locale]/(public)/shifts/[shiftId]/instances/[instanceId]/forms/shift-forms-client';
 import type { RequiredFormItem } from '@/domain/requirement-form/components/required-form-renderer';
-import { redirect as redirectWithLocale } from '@/i18n/navigation';
+import { redirect } from '@/i18n/navigation';
 import { resolveLocale } from '@/i18n/routing';
 import { getSession } from '@/lib/auth-server';
 import { getDataClient } from '@/lib/data-client';
@@ -59,7 +59,7 @@ export default async function ShiftFormsPage({
       redirectTo:
         redirectTo ?? `/shifts/${shiftId}/instances/${instanceId}/forms`,
     });
-    redirectWithLocale({ href: `/api/invite?${params}`, locale });
+    redirect({ href: `/api/invite?${params}`, locale });
   }
 
   const joinResult = await data.shift
@@ -67,7 +67,10 @@ export default async function ShiftFormsPage({
     .catch(() => null);
 
   if (joinResult?.status === JoinStatus.Joined) {
-    redirect(getSafeRedirect(redirectTo) ?? `/shifts/${shiftId}`);
+    redirect({
+      href: getSafeRedirect(redirectTo) ?? `/shifts/${shiftId}`,
+      locale,
+    });
   }
 
   const requiredForms =

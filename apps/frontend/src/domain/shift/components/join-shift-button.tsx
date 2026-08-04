@@ -27,7 +27,7 @@ import { BanIcon } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useCallback, useEffect, useState } from 'react';
 import { toast } from 'sonner';
-import { useRouter } from '@/i18n/navigation';
+import { usePathname, useRouter } from '@/i18n/navigation';
 import { useFormatting } from '@/lib/formatting/use-formatting';
 
 interface JoinShiftButtonProps {
@@ -66,6 +66,7 @@ export function JoinShiftButton({
   className,
 }: JoinShiftButtonProps) {
   const router = useRouter();
+  const pathname = usePathname();
   const joinShiftInstance = useJoinShiftInstance();
   const respondToInvite = useUpdateShiftInstanceInviteStatus();
   const t = useTranslations('Shift');
@@ -144,16 +145,13 @@ export function JoinShiftButton({
           (f) => !f.submitted,
         );
         if (missingForms.length > 0) {
-          const currentUrl = window.location.href;
-          const redirectTo = encodeURIComponent(currentUrl);
+          const redirectTo = encodeURIComponent(
+            `${pathname}${window.location.search}`,
+          );
           if (missingForms[0]?.targetType === RequiredFormTargetType.Shift) {
-            router.push(
-              `/shifts/${shiftId}/instances/${instanceId}/forms?redirectTo=${redirectTo}`,
-            );
+            window.location.href = `/shifts/${shiftId}/instances/${instanceId}/forms?redirectTo=${redirectTo}`;
           } else {
-            router.push(
-              `/join/${organizationUnitId}/forms?redirectTo=${redirectTo}`,
-            );
+            window.location.href = `/join/${organizationUnitId}/forms?redirectTo=${redirectTo}`;
           }
           return;
         }
@@ -190,6 +188,7 @@ export function JoinShiftButton({
     instanceId,
     joinShiftInstance,
     router,
+    pathname,
     t,
     organizationUnitId,
     onInviteStatusChange,
