@@ -1,4 +1,5 @@
-import { getFormatter, getTranslations } from 'next-intl/server';
+import { getTranslations } from 'next-intl/server';
+import { getFormatting } from '@/lib/formatting/formatting-server';
 import { ProfileField } from './profile-field';
 
 type PersonalInformationSectionProps = {
@@ -10,16 +11,15 @@ type FieldItem = {
   label: string;
   value: string | null;
   subtitle?: string;
-  href?: string;
 };
 
 export const PersonalInformationSection = async ({
   me,
   profile,
 }: PersonalInformationSectionProps) => {
-  const tFields = await getTranslations('Profile.identity.fields');
+  const tFields = await getTranslations('RequirementForm.fieldForm');
   const tSubtitles = await getTranslations('Profile.identity.subtitles');
-  const formatter = await getFormatter();
+  const { formatDate } = await getFormatting();
 
   const data = (profile?.data ?? {}) as Record<string, unknown>;
   const str = (key: string): string | null => {
@@ -27,18 +27,12 @@ export const PersonalInformationSection = async ({
     return typeof value === 'string' && value.trim() !== '' ? value : null;
   };
 
-  const phone = str('phone');
-
   let formattedBirthDate: string | null = null;
   const birthDate = str('birth-date');
   if (birthDate) {
     const parsed = new Date(birthDate);
     if (!Number.isNaN(parsed.getTime())) {
-      formattedBirthDate = formatter.dateTime(parsed, {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric',
-      });
+      formattedBirthDate = formatDate(parsed);
     }
   }
 
@@ -65,15 +59,13 @@ export const PersonalInformationSection = async ({
     {
       label: tFields('email'),
       value: me.email,
-      href: `mailto:${me.email}`,
     },
     {
-      label: tFields('phoneNumber'),
-      value: phone,
-      href: phone ? `tel:${phone.replace(/\s+/g, '')}` : undefined,
+      label: tFields('phone'),
+      value: str('phone'),
     },
     {
-      label: tFields('dateOfBirth'),
+      label: tFields('birthDate'),
       value: formattedBirthDate,
     },
     {
@@ -81,7 +73,7 @@ export const PersonalInformationSection = async ({
       value: str('address'),
     },
     {
-      label: tFields('postcode'),
+      label: tFields('zipCode'),
       value: str('zip'),
     },
     {
