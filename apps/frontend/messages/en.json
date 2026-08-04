@@ -1068,6 +1068,7 @@
       "zipCode": "ZIP code",
       "city": "City",
       "birthDate": "Birth date",
+      "iban": "IBAN",
       "documentFileLabel": "Document",
       "documentFileDescription": "PDF or image, max 10 MB",
       "enterDocumentFileError": "Please upload a document.",

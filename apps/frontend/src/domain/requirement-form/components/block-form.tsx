@@ -145,6 +145,12 @@ export function BlockForm({
       type: FieldType.Text,
       required: false,
     },
+    {
+      key: 'iban',
+      label: tField('iban'),
+      type: FieldType.Iban,
+      required: true,
+    },
   ] as const;
 
   const customFieldTypes = [
@@ -175,7 +181,7 @@ export function BlockForm({
     [FieldType.Name]: tField('firstName'),
     [FieldType.Lastname]: tField('lastName'),
     [FieldType.Zip]: tField('zipCode'),
-    [FieldType.Iban]: 'IBAN',
+    [FieldType.Iban]: tField('iban'),
   };
 
   const {
