@@ -766,7 +766,11 @@
       "organizationUnitRequired": "Organization unit is required",
       "shiftIdRequired": "Shift ID is required",
       "minMaxVolunteers": "Minimum volunteers cannot exceed maximum volunteers",
-      "windowViolation": "Must fall within the event window"
+      "windowViolation": "Must fall within the event window",
+      "instanceTimeConflict": "Another occurrence of this shift already starts at that time.",
+      "instanceDateMismatch": "The date doesn't match this occurrence. Reopen the edit form and try again.",
+      "instanceClearRecurrenceUnsupported": "Clearing recurrence isn't supported from this form. Edit the shift's recurrence from the main Edit Shift page instead.",
+      "instanceRecurrenceConflict": "The new recurrence pattern doesn't include this occurrence's day. Adjust the recurrence or edit a different occurrence."
     },
     "inviteStatus": {
       "invited": "Invited",

@@ -122,8 +122,21 @@ export const EditShiftInstanceForm = ({
     startTransition(async () => {
       const result = await mutate({ ...formData, requiredFormIds });
 
+      const knownServerErrors: Record<string, string> = {
+        shift_instance_time_conflict: t('validation.instanceTimeConflict'),
+        shift_instance_date_mismatch: t('validation.instanceDateMismatch'),
+        shift_instance_clear_recurrence_unsupported: t(
+          'validation.instanceClearRecurrenceUnsupported',
+        ),
+        shift_instance_recurrence_conflict: t(
+          'validation.instanceRecurrenceConflict',
+        ),
+      };
+
       if (result.serverError) {
-        setServerError(result.serverError);
+        setServerError(
+          knownServerErrors[result.serverError] ?? result.serverError,
+        );
         return;
       }
 

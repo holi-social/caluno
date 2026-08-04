@@ -122,7 +122,9 @@ export const updateShiftInstance = actionClient
               visibility: parsedInput.openShift
                 ? ShiftVisibility.AllMembers
                 : ShiftVisibility.InvitedMembers,
-              imageFileId: parsedInput.imageFileId ?? null,
+              ...(parsedInput.imageFileId !== undefined
+                ? { imageFileId: parsedInput.imageFileId }
+                : {}),
               requiredFormIds: parsedInput.requiredFormIds,
             }
           : {}),

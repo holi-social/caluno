@@ -766,7 +766,11 @@
       "organizationUnitRequired": "Organisationseinheit ist erforderlich",
       "shiftIdRequired": "Einsatz-ID ist erforderlich",
       "minMaxVolunteers": "Die Mindestanzahl an Freiwilligen darf die Höchstanzahl nicht überschreiten",
-      "windowViolation": "Muss innerhalb des Veranstaltungszeitraums liegen"
+      "windowViolation": "Muss innerhalb des Veranstaltungszeitraums liegen",
+      "instanceTimeConflict": "Ein anderer Termin dieses Einsatzes beginnt bereits zu dieser Zeit.",
+      "instanceDateMismatch": "Das Datum passt nicht zu diesem Termin. Bitte öffne das Bearbeitungsformular erneut und versuche es noch einmal.",
+      "instanceClearRecurrenceUnsupported": "Das Entfernen der Wiederholung wird in diesem Formular nicht unterstützt. Bearbeite die Wiederholung stattdessen auf der Seite „Einsatz bearbeiten“.",
+      "instanceRecurrenceConflict": "Das neue Wiederholungsmuster enthält den Wochentag dieses Termins nicht. Passe die Wiederholung an oder bearbeite einen anderen Termin."
     },
     "inviteStatus": {
       "invited": "Eingeladen",

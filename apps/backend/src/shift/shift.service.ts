@@ -47,6 +47,7 @@ import type { ShiftInviteEntity } from './schemas/shift-invite.schema';
 import { propagateShiftInviteStatusToFutureInstances } from './shift-invite-propagation';
 import { startOfTodayInAppTimeZone } from './utils/app-time';
 import { getDurationMinutes } from './utils/duration';
+import { parseRruleDays, parseRruleUntil } from './utils/parse-rrule';
 import { expandShift } from './utils/rrule-expander';
 import { syncShiftInstances } from './utils/shift-instance-sync';
 
@@ -1136,9 +1137,7 @@ export class ShiftService {
         .limit(1);
 
       if (collision) {
-        throw new ConflictGraphQLError(
-          'Another instance of this shift already starts at that time',
-        );
+        throw new ConflictGraphQLError('shift_instance_time_conflict');
       }
     }
 
@@ -1173,15 +1172,40 @@ export class ShiftService {
     organizationUnitId: string,
   ): Promise<ShiftInstanceEntity> {
     const shift = instance.master;
-    const fromDate = instance.actualStartsAt;
+    const fromDate = new Date(instance.actualStartsAt);
+    fromDate.setHours(0, 0, 0, 0);
+
+    if (
+      input.startsAt.getFullYear() !== instance.actualStartsAt.getFullYear() ||
+      input.startsAt.getMonth() !== instance.actualStartsAt.getMonth() ||
+      input.startsAt.getDate() !== instance.actualStartsAt.getDate()
+    ) {
+      throw new ConflictGraphQLError('shift_instance_date_mismatch');
+    }
 
     const durationMinutes = getDurationMinutes(input.startsAt, input.endsAt);
     const newOriginalStartsAt = this.applyTimeOfDay(
       shift.originalStartsAt,
       input.startsAt,
     );
-    const newRrule = input.rrule ?? shift.rrule;
-    const recurrenceChanged = newRrule !== shift.rrule;
+
+    // `input.rrule` is `null` when the user explicitly cleared recurrence,
+    // `undefined` when recurrence wasn't touched by this edit — `??` would
+    // treat both the same, silently discarding an explicit clear.
+    if (input.rrule === null && shift.rrule !== null) {
+      throw new ConflictGraphQLError(
+        'shift_instance_clear_recurrence_unsupported',
+      );
+    }
+    const newRrule = input.rrule === undefined ? shift.rrule : input.rrule;
+
+    // Compare the recurrence PATTERN (weekdays + end date), not the raw
+    // rrule string. The frontend's generateRrule() bakes a DTSTART tied to
+    // the edited occurrence's own date, which essentially never matches the
+    // series' stored anchor — a raw string compare is a false positive on
+    // nearly every save, which silently strands the safe time-only path
+    // below and routes every edit through the heavier resync path instead.
+    const recurrenceChanged = !this.rrulePatternsEqual(shift.rrule, newRrule);
 
     const imageUrl =
       input.imageFileId === undefined
@@ -1226,6 +1250,28 @@ export class ShiftService {
       );
     }
 
+    // Mirrors ShiftService.update()'s existing behavior: dropping visibility
+    // to invited-only clears standing invites, since "everyone" no longer
+    // applies. Scoped to fromDate onward, matching this method's contract.
+    if (
+      input.visibility &&
+      shift.visibility === ShiftVisibility.ALL_MEMBERS &&
+      input.visibility === ShiftVisibility.INVITED_MEMBERS
+    ) {
+      const futureInstances = await tx.query.shiftInstances.findMany({
+        where: { masterId: shift.id, actualStartsAt: { gte: fromDate } },
+        columns: { id: true },
+      });
+      const futureInstanceIds = futureInstances.map((i) => i.id);
+      if (futureInstanceIds.length > 0) {
+        await tx
+          .delete(schema.shiftInstanceInvites)
+          .where(
+            inArray(schema.shiftInstanceInvites.instanceId, futureInstanceIds),
+          );
+      }
+    }
+
     if (recurrenceChanged) {
       const target = expandShift(
         updatedShift.rrule,
@@ -1233,16 +1279,38 @@ export class ShiftService {
         updatedShift.durationMinutes,
       );
 
+      const editedDateKey = this.toLocalDateKey(instance.actualStartsAt);
       const editedOccurrenceSurvives = target.some(
-        (t) => t.actualStartsAt.getTime() === fromDate.getTime(),
+        (t) => this.toLocalDateKey(t.actualStartsAt) === editedDateKey,
       );
       if (!editedOccurrenceSurvives) {
-        throw new ConflictGraphQLError(
-          "The new recurrence pattern doesn't include this occurrence's day — adjust the recurrence or edit a different occurrence.",
-        );
+        throw new ConflictGraphQLError('shift_instance_recurrence_conflict');
       }
 
       await syncShiftInstances(tx, shift.id, target, { fromDate });
+
+      // syncShiftInstances only rewrites rows whose date/duration actually
+      // changed — rows that already matched the new pattern are left alone,
+      // so they'd otherwise keep stale per-occurrence overrides. Sweep them
+      // separately; the time-rewrite branch below does this as part of its
+      // own UPDATE instead.
+      await tx
+        .update(schema.shiftInstances)
+        .set({
+          overrideTitle: null,
+          overrideLocation: null,
+          overrideInstructions: null,
+          overrideMinVolunteers: null,
+          overrideMaxVolunteers: null,
+          isException: false,
+        })
+        .where(
+          and(
+            eq(schema.shiftInstances.masterId, shift.id),
+            gte(schema.shiftInstances.actualStartsAt, fromDate),
+            eq(schema.shiftInstances.isCancelled, false),
+          ),
+        );
     } else {
       const startTime = this.toTimeOfDayString(input.startsAt);
       const endTime = this.toTimeOfDayString(input.endsAt);
@@ -1280,6 +1348,22 @@ export class ShiftService {
     }
 
     return refreshedInstance;
+  }
+
+  private rrulePatternsEqual(a: string | null, b: string | null): boolean {
+    const daysA = new Set(parseRruleDays(a));
+    const daysB = new Set(parseRruleDays(b));
+    if (daysA.size !== daysB.size) return false;
+    for (const day of daysA) {
+      if (!daysB.has(day)) return false;
+    }
+    const untilA = parseRruleUntil(a)?.getTime() ?? null;
+    const untilB = parseRruleUntil(b)?.getTime() ?? null;
+    return untilA === untilB;
+  }
+
+  private toLocalDateKey(date: Date): string {
+    return `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`;
   }
 
   /** Keeps `base`'s calendar date, adopts `time`'s hour/minute/second. */

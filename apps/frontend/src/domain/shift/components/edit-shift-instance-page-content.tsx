@@ -47,7 +47,7 @@ export async function EditShiftInstancePageContent({
         openShift: shift.visibility === ShiftVisibility.AllMembers,
         recurrenceDays: shift.recurrenceDays,
         recurrenceEndsAt: shift.recurrenceEndsAt,
-        imageFileId: shift.imageUrl ?? undefined,
+        imageFileId: undefined,
       }}
       initialRequiredFormIds={shift.requiredForms.map((ref) => ref.form.id)}
       imagePreviewUrl={shift.imageUrl}
