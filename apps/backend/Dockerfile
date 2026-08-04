@@ -41,5 +41,8 @@ COPY --from=builder /app/apps/backend/dist ./dist
 
 EXPOSE 8080
 
-CMD ["sh", "-c", "bun run db:migrate && bun run db:seed && bun run start:prod"]
+COPY apps/backend/docker-entrypoint.sh ./
+RUN chmod +x docker-entrypoint.sh
+
+CMD ["./docker-entrypoint.sh"]
 

@@ -5,6 +5,7 @@ import type { Database } from '../../database/database.module';
 import { DATABASE_CONNECTION } from '../../database/database-connection';
 import * as schema from '../../database/schema';
 import {
+  BadRequestGraphQLError,
   ConflictGraphQLError,
   NotFoundGraphQLError,
 } from '../../graphql/errors';
@@ -63,6 +64,31 @@ export class RequirementFormService {
     });
   }
 
+  /**
+   * Multi-tenancy guard: block refs may only point at blocks owned by the
+   * form's organization — the ids are client-supplied.
+   */
+  private async verifyBlocksInOrg(
+    blockIds: string[],
+    organizationId: string,
+  ): Promise<void> {
+    if (blockIds.length === 0) {
+      return;
+    }
+    const blocks = await this.db.query.formBlocks.findMany({
+      where: { id: { in: blockIds } },
+      columns: { id: true, organizationId: true },
+    });
+    if (
+      blocks.length !== new Set(blockIds).size ||
+      blocks.some((block) => block.organizationId !== organizationId)
+    ) {
+      throw new BadRequestGraphQLError(
+        'One or more blocks do not belong to this organization',
+      );
+    }
+  }
+
   async findAll(
     organizationId: string,
     pagination: PaginationInput,
@@ -86,6 +112,13 @@ export class RequirementFormService {
     userId: string,
   ): Promise<RequirementFormEntity> {
     await isUnitInOrg(this.db, organizationUnitId, input.organizationId);
+
+    if (input.blockRefs?.length) {
+      await this.verifyBlocksInOrg(
+        input.blockRefs.map((ref) => ref.blockId),
+        input.organizationId,
+      );
+    }
 
     if (organizationUnitId) {
       const duplicate = await this.db.query.requirementForms.findFirst({
@@ -146,6 +179,13 @@ export class RequirementFormService {
     }
 
     await isUnitInOrg(this.db, organizationUnitId, existing.organizationId);
+
+    if (input.blockRefs) {
+      await this.verifyBlocksInOrg(
+        input.blockRefs.map((ref) => ref.blockId),
+        existing.organizationId,
+      );
+    }
 
     if (
       input.name &&
