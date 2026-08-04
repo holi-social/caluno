@@ -1,9 +1,9 @@
 import { defineRouting } from 'next-intl/routing';
 
 export const routing = defineRouting({
-  // Supported locales. `en` is the source/fallback language.
+  // Supported locales. `de` is the default/fallback language.
   locales: ['en', 'de'],
-  defaultLocale: 'en',
+  defaultLocale: 'de',
   // localePrefix defaults to 'always' → every path is prefixed (/en/…, /de/…).
   // We manage the preference cookie ourselves (`clippy.locale`) so next-intl
   // does not rewrite it on every navigation.

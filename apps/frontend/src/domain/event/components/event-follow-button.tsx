@@ -1,73 +1,42 @@
 'use client';
 
 import { JoinStatus } from '@repo/data';
-import {
-  type RequiredFormWithStatusFieldsFragment,
-  useJoinEvent,
-} from '@repo/data/react';
-import {
-  Button,
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from '@repo/ui';
+import { useJoinEvent } from '@repo/data/react';
+import { Button } from '@repo/ui';
 import { BellRingIcon } from 'lucide-react';
 import { useSearchParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { useCallback, useEffect, useState } from 'react';
 import { toast } from 'sonner';
-import { RequiredFormRenderer } from '@/domain/requirement-form/components/required-form-renderer';
 import { useRouter } from '@/i18n/navigation';
 import { useSession } from '@/lib/auth';
 
 interface EventFollowButtonProps {
   eventId: string;
-  initialFollowing: boolean;
-  profileData?: Record<string, string>;
+  initialStatus: JoinStatus;
 }
 
 export function EventFollowButton({
   eventId,
-  initialFollowing,
-  profileData = {},
+  initialStatus,
 }: EventFollowButtonProps) {
   const t = useTranslations('EventDetail');
   const joinEvent = useJoinEvent();
   const router = useRouter();
   const searchParams = useSearchParams();
   const autoFollow = searchParams.get('autoFollow') === 'true';
-  const [following, setFollowing] = useState(initialFollowing);
-  const [requiredFormsOpen, setRequiredFormsOpen] = useState(false);
-  const [pendingRequiredForms, setPendingRequiredForms] = useState<
-    RequiredFormWithStatusFieldsFragment[]
-  >([]);
-  const [activeFormId, setActiveFormId] = useState<string | null>(null);
+  const [status, setStatus] = useState(initialStatus);
   const session = useSession();
 
-  const handleJoinResult = useCallback(
-    (result: {
-      status: JoinStatus;
-      requiredForms?: RequiredFormWithStatusFieldsFragment[] | null;
-    }) => {
-      if (result.status === JoinStatus.Joined) {
-        setFollowing(true);
-        setRequiredFormsOpen(false);
-        setPendingRequiredForms([]);
-      } else if (result.status === JoinStatus.Pending) {
-        toast.success(t('requestSentToast'));
-      } else if (result.status === JoinStatus.RequirementsNeeded) {
-        const missingForms =
-          result.requiredForms?.filter((f) => !f.submitted) ?? [];
-        if (missingForms.length > 0) {
-          setPendingRequiredForms(missingForms);
-          setActiveFormId(missingForms[0]?.form.id ?? null);
-          setRequiredFormsOpen(true);
-        }
-      }
-    },
-    [t],
-  );
+  const isFinalStatus =
+    status === JoinStatus.Joined ||
+    status === JoinStatus.Pending ||
+    status === JoinStatus.Rejected;
+
+  const redirectToFormsPage = useCallback(() => {
+    const currentUrl = window.location.href;
+    window.location.href = `/events/${eventId}/forms?redirectTo=${encodeURIComponent(currentUrl)}`;
+  }, [eventId]);
 
   const handleFollow = useCallback(async () => {
     if (!session.data?.user) {
@@ -78,34 +47,31 @@ export function EventFollowButton({
 
     try {
       const result = await joinEvent.mutateAsync(eventId);
-      handleJoinResult(result);
+
+      if (result.status === JoinStatus.Joined) {
+        setStatus(JoinStatus.Joined);
+      } else if (result.status === JoinStatus.Pending) {
+        setStatus(JoinStatus.Pending);
+        toast.success(t('requestSentToast'));
+      } else if (result.status === JoinStatus.Rejected) {
+        setStatus(JoinStatus.Rejected);
+        toast.error(t('rejectedToast'));
+      } else if (result.status === JoinStatus.RequirementsNeeded) {
+        const missingForms = result.requiredForms?.filter((f) => !f.submitted);
+        if (missingForms && missingForms.length > 0) {
+          redirectToFormsPage();
+        }
+      }
     } catch (error) {
       toast.error(error instanceof Error ? error.message : undefined);
     }
-  }, [eventId, joinEvent, router, session.data?.user, handleJoinResult]);
-
-  const handleFormSubmitted = useCallback(
-    async (formId: string) => {
-      setActiveFormId(null);
-      setPendingRequiredForms((prev) =>
-        prev.filter((ref) => ref.form.id !== formId),
-      );
-
-      try {
-        const result = await joinEvent.mutateAsync(eventId);
-        handleJoinResult(result);
-      } catch (error) {
-        toast.error(error instanceof Error ? error.message : undefined);
-      }
-    },
-    [eventId, joinEvent, handleJoinResult],
-  );
+  }, [eventId, joinEvent, router, session.data?.user, redirectToFormsPage, t]);
 
   useEffect(() => {
     if (
       autoFollow &&
       session.data?.user &&
-      !following &&
+      !isFinalStatus &&
       !joinEvent.isPending
     ) {
       const url = new URL(window.location.href);
@@ -116,17 +82,12 @@ export function EventFollowButton({
   }, [
     autoFollow,
     handleFollow,
-    following,
+    isFinalStatus,
     joinEvent.isPending,
     session.data?.user,
   ]);
 
-  const activeFormRef = activeFormId
-    ? pendingRequiredForms.find((ref) => ref.form.id === activeFormId)
-    : undefined;
-  const activeForm = activeFormRef?.form;
-
-  if (following) {
+  if (status === JoinStatus.Joined) {
     return (
       <Button
         size="lg"
@@ -136,6 +97,34 @@ export function EventFollowButton({
       >
         <BellRingIcon className="size-[18px]" />
         {t('followingCta')}
+      </Button>
+    );
+  }
+
+  if (status === JoinStatus.Pending) {
+    return (
+      <Button
+        size="lg"
+        variant="secondary"
+        disabled
+        className="h-11 w-full font-semibold"
+      >
+        <BellRingIcon className="size-[18px]" />
+        {t('pendingCta')}
+      </Button>
+    );
+  }
+
+  if (status === JoinStatus.Rejected) {
+    return (
+      <Button
+        size="lg"
+        variant="secondary"
+        disabled
+        className="h-11 w-full font-semibold"
+      >
+        <BellRingIcon className="size-[18px]" />
+        {t('rejectedCta')}
       </Button>
     );
   }
@@ -153,23 +142,6 @@ export function EventFollowButton({
         {t('followCta')}
       </Button>
       <p className="mt-2 text-sm text-muted-foreground">{t('followNote')}</p>
-
-      <Dialog open={requiredFormsOpen} onOpenChange={setRequiredFormsOpen}>
-        <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-xl">
-          <DialogHeader>
-            <DialogTitle>{t('requiredFormsTitle')}</DialogTitle>
-          </DialogHeader>
-          {activeForm && activeFormRef && (
-            <RequiredFormRenderer
-              targetType={activeFormRef.targetType}
-              targetId={activeFormRef.targetId}
-              form={activeForm}
-              profileData={profileData}
-              onSubmitted={() => handleFormSubmitted(activeForm.id)}
-            />
-          )}
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }

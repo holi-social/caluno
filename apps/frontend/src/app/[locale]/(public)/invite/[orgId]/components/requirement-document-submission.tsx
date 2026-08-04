@@ -5,7 +5,7 @@ import { Button } from '@repo/ui';
 import { useTranslations } from 'next-intl';
 import { useMemo, useState } from 'react';
 import { toast } from 'sonner';
-import { FileUpload } from '@/domain/storage/components/file-upload';
+import { FileUpload } from '@/components/storage/file-upload';
 import { useRouter } from '@/i18n/navigation';
 
 interface Requirement {
