@@ -55,13 +55,10 @@ export class MembershipRequestQueryResolver {
   @Query(() => MembershipRequestPaginatedResponse)
   async myMembershipRequests(
     @Session() session: UserSession,
-    @Args('status', { type: () => MembershipRequestStatus, nullable: true })
-    status: MembershipRequestStatus | null | undefined,
     @Args() pagination: PaginationInput,
   ): Promise<MembershipRequestPaginatedResponse> {
     const items = await this.membershipRequestService.getMyMembershipRequests(
       session.user.id,
-      status ?? undefined,
     );
     return new MembershipRequestPaginatedResponse({
       items: this.membershipRequestMapper.toArray(items),

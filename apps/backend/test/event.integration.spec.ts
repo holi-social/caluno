@@ -139,7 +139,10 @@ describe('publicEvent', () => {
           query PublicEvent($id: ID!) {
             publicEvent(id: $id) {
               shifts {
-                instances { id spotsLeft }
+                instances { 
+                  id 
+                  spotsLeft
+                }
               }
             }
           }

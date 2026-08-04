@@ -367,7 +367,14 @@
     "status": {
       "pending": "Pending",
       "approved": "Approved",
-      "rejected": "Rejected"
+      "rejected": "Rejected",
+      "requested": "Requested",
+      "declined": "Declined"
+    },
+    "meta": {
+      "requestedDate": "Requested · {date}",
+      "declinedDate": "Declined · {date}",
+      "joinedDate": "Joined · {date}"
     },
     "empty": "No membership requests yet.",
     "card": {
@@ -384,14 +391,26 @@
       "rejectionReasonLabel": "Rejection reason",
       "rejectionReasonPlaceholder": "Explain why the request is being rejected...",
       "cancel": "Cancel",
-      "approveDisabledTitle": "Required forms are incomplete"
+      "approveDisabledTitle": "Required forms are incomplete",
+      "withdraw": "Withdraw",
+      "leave": "Leave"
+    },
+    "dialog": {
+      "withdrawTitle": "Withdraw membership request",
+      "withdrawDescription": "Are you sure you want to withdraw your request to join {orgName}?",
+      "leaveTitle": "Leave organization?",
+      "leaveDescription": "Are you sure you want to leave {orgName}?"
     },
     "toast": {
       "approved": "Membership request approved",
       "approveFailed": "Failed to approve membership request",
       "rejected": "Membership request rejected",
       "cancelled": "Membership request cancelled",
-      "cancelFailed": "Failed to cancel membership request"
+      "cancelFailed": "Failed to cancel membership request",
+      "withdrawn": "Membership request withdrawn",
+      "withdrawFailed": "Failed to withdraw request",
+      "left": "You have left {orgName}",
+      "leaveFailed": "Failed to leave organization"
     },
     "cancelButton": "Cancel Request",
     "cancelButtonSubmitting": "Cancelling...",

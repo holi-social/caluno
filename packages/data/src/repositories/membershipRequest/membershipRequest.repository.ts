@@ -58,11 +58,10 @@ export class MembershipRequestRepository extends BaseRepository {
     return data.cancelMembershipRequest;
   }
 
-  async findMine(options: FindMembershipRequestsOptions = {}) {
+  async findMine(options: { limit?: number; offset?: number } = {}) {
     const data = await this.sdk.GetMyMembershipRequests({
       limit: options.limit ?? 10,
       offset: options.offset ?? 0,
-      status: options.status,
     });
     return data.myMembershipRequests;
   }

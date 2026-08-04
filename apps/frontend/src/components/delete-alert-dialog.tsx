@@ -18,6 +18,7 @@ interface DeleteAlertDialogProps {
   description: string;
   onDelete: () => void;
   trigger: React.ReactNode;
+  deleteLabel?: string;
 }
 
 export function DeleteAlertDialog({
@@ -25,6 +26,7 @@ export function DeleteAlertDialog({
   description,
   onDelete,
   trigger,
+  deleteLabel,
 }: DeleteAlertDialogProps) {
   const t = useTranslations('Common');
 
@@ -39,7 +41,7 @@ export function DeleteAlertDialog({
         <AlertDialogFooter>
           <AlertDialogCancel>{t('cancel')}</AlertDialogCancel>
           <AlertDialogAction onClick={onDelete} variant="destructive">
-            {t('delete')}
+            {deleteLabel || t('delete')}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

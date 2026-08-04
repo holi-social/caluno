@@ -367,7 +367,14 @@
     "status": {
       "pending": "Ausstehend",
       "approved": "Genehmigt",
-      "rejected": "Abgelehnt"
+      "rejected": "Abgelehnt",
+      "requested": "Angefragt",
+      "declined": "Abgelehnt"
+    },
+    "meta": {
+      "requestedDate": "Angefragt · {date}",
+      "declinedDate": "Abgelehnt · {date}",
+      "joinedDate": "Beigetreten · {date}"
     },
     "empty": "Noch keine Mitgliedschaftsanfragen.",
     "card": {
@@ -384,14 +391,26 @@
       "rejectionReasonLabel": "Ablehnungsgrund",
       "rejectionReasonPlaceholder": "Erkläre, warum die Anfrage abgelehnt wird...",
       "cancel": "Abbrechen",
-      "approveDisabledTitle": "Erforderliche Formulare sind unvollständig"
+      "approveDisabledTitle": "Erforderliche Formulare sind unvollständig",
+      "withdraw": "Zurückziehen",
+      "leave": "Verlassen"
+    },
+    "dialog": {
+      "withdrawTitle": "Antrag auf Austritt aus der Mitgliedschaft",
+      "withdrawDescription": "Möchten Sie Ihren Beitrittsantrag wirklich {orgName} zurückziehen?",
+      "leaveTitle": "Organisation verlassen?",
+      "leaveDescription": "Möchtest du {orgName} wirklich verlassen?"
     },
     "toast": {
       "approved": "Mitgliedschaftsanfrage genehmigt",
       "approveFailed": "Mitgliedschaftsanfrage konnte nicht genehmigt werden",
       "rejected": "Mitgliedschaftsanfrage abgelehnt",
       "cancelled": "Mitgliedschaftsanfrage zurückgezogen",
-      "cancelFailed": "Mitgliedschaftsanfrage konnte nicht zurückgezogen werden"
+      "cancelFailed": "Mitgliedschaftsanfrage konnte nicht zurückgezogen werden",
+      "withdrawn": "Anfrage zurückgezogen",
+      "withdrawFailed": "Zurückziehen fehlgeschlagen",
+      "left": "Du hast {orgName} verlassen",
+      "leaveFailed": "Verlassen fehlgeschlagen"
     },
     "cancelButton": "Anfrage zurückziehen",
     "cancelButtonSubmitting": "Wird zurückgezogen...",
