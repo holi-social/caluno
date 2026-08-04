@@ -88,7 +88,11 @@ describe('resolveCreateShiftSuccessNavigation', () => {
         instanceId: 'instance-1',
         openShift: true,
       }),
-    ).toEqual({ action: 'success', shiftId: 'shift-1' });
+    ).toEqual({
+      action: 'success',
+      shiftId: 'shift-1',
+      instanceId: 'instance-1',
+    });
   });
 
   it('goes straight to the success dialog for an open shift with no instance id', () => {
