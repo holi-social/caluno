@@ -139,6 +139,20 @@ mutation UpdateMembersForShiftInstance(
   }
 }
 
+mutation UpdateShiftInstance(
+  $instanceId: String!
+  $input: UpdateShiftInstanceInput!
+  $applyToAllFuture: Boolean
+) {
+  updateShiftInstance(
+    instanceId: $instanceId
+    input: $input
+    applyToAllFuture: $applyToAllFuture
+  ) {
+    id
+  }
+}
+
 mutation UpdateShiftInstanceVolunteers(
   $instanceId: String!
   $memberIds: [String!]!
@@ -254,7 +268,10 @@ query GetShiftInstance($id: ID!) {
     actualStartsAt
     actualEndsAt
     overrideTitle
+    overrideLocation
+    overrideInstructions
     overrideMaxVolunteers
+    overrideMinVolunteers
     isCancelled
     filledCount
     spotsLeft

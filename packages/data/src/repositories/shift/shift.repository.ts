@@ -17,6 +17,7 @@ import {
   type ShiftInviteStatus,
   SortOrder,
   type UpdateShiftInput,
+  type UpdateShiftInstanceInput,
 } from '../../generated/graphql';
 import {
   BaseRepository,
@@ -136,6 +137,19 @@ export class ShiftRepository extends BaseRepository {
       inviteToAllInstances: options?.inviteToAllInstances,
     });
     return { id: data.updateMembersForShiftInstance.id };
+  }
+
+  async updateInstance(
+    instanceId: string,
+    input: UpdateShiftInstanceInput,
+    applyToAllFuture?: boolean,
+  ): Promise<{ id: string }> {
+    const data = await this.sdk.UpdateShiftInstance({
+      instanceId,
+      input,
+      applyToAllFuture,
+    });
+    return { id: data.updateShiftInstance.id };
   }
 
   async joinInstance(
