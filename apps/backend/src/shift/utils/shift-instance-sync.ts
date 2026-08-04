@@ -4,6 +4,14 @@ import * as schema from '../../database/schema';
 import type { ShiftInstanceEntity } from '../schemas/shift-instance.schema';
 import type { ShiftInstanceData } from './rrule-expander';
 
+export function filterFromDate<T extends { actualStartsAt: Date }>(
+  items: T[],
+  fromDate?: Date,
+): T[] {
+  if (!fromDate) return items;
+  return items.filter((item) => item.actualStartsAt >= fromDate);
+}
+
 export interface InstanceUpdate {
   id: string;
   actualEndsAt: Date;
@@ -75,9 +83,16 @@ export async function syncShiftInstances(
   tx: Pick<Database, 'select' | 'insert' | 'update' | 'delete' | 'query'>,
   masterId: string,
   target: ShiftInstanceData[],
+  options: { fromDate?: Date } = {},
 ): Promise<void> {
+  const { fromDate } = options;
+
   const existing = await tx.query.shiftInstances.findMany({
-    where: { masterId, isException: false },
+    where: {
+      masterId,
+      isException: false,
+      ...(fromDate ? { actualStartsAt: { gte: fromDate } } : {}),
+    },
   });
 
   const exceptions = await tx.query.shiftInstances.findMany({
@@ -88,7 +103,8 @@ export async function syncShiftInstances(
     exceptions.map((e) => e.actualStartsAt.toISOString()),
   );
 
-  const plan = diffShiftInstances(existing, target);
+  const filteredTarget = filterFromDate(target, fromDate);
+  const plan = diffShiftInstances(existing, filteredTarget);
 
   // TODO(instance-editing): reconcile exception instances with the series
   // instead of just skipping their dates:
