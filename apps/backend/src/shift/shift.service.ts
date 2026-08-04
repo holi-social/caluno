@@ -1,5 +1,5 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
-import { and, count, eq, inArray, isNull } from 'drizzle-orm';
+import { and, count, eq, gte, inArray, isNull, ne, sql } from 'drizzle-orm';
 import { AuthService } from '../auth/auth.service';
 import { PERMISSIONS } from '../auth/constants';
 import type { Database } from '../database/database.module';
@@ -40,6 +40,7 @@ import { slugify } from '../utils/slug.util';
 import { ShiftInviteStatus, ShiftVisibility, SortOrder } from './enums';
 import { CreateShiftInput } from './inputs/create-shift.input';
 import { UpdateShiftInput } from './inputs/update-shift.input';
+import { UpdateShiftInstanceInput } from './inputs/update-shift-instance.input';
 import type { ShiftEntity } from './schemas/shift.schema';
 import type { ShiftInstanceEntity } from './schemas/shift-instance.schema';
 import type { ShiftInviteEntity } from './schemas/shift-invite.schema';
@@ -1070,6 +1071,108 @@ export class ShiftService {
     }
 
     return currentShiftInstance;
+  }
+
+  async updateShiftInstance(
+    instanceId: string,
+    input: UpdateShiftInstanceInput,
+    organizationUnitId: string,
+    options: { applyToAllFuture?: boolean } = {},
+  ): Promise<ShiftInstanceEntity> {
+    return this.db.transaction(async (tx) => {
+      const instance = await tx.query.shiftInstances.findFirst({
+        where: { id: instanceId },
+        with: { master: true },
+      });
+
+      if (
+        !instance ||
+        instance.master.organizationUnitId !== organizationUnitId
+      ) {
+        throw new NotFoundGraphQLError(
+          `Shift instance with ID ${instanceId} not found`,
+        );
+      }
+
+      if (instance.actualEndsAt.getTime() < Date.now()) {
+        throw new ConflictGraphQLError(
+          'Cannot edit a past or completed shift instance',
+        );
+      }
+
+      if (!options.applyToAllFuture) {
+        return this.updateSingleShiftInstance(tx, instance, input);
+      }
+
+      return this.updateShiftInstanceSeries(
+        tx,
+        instance,
+        input,
+        organizationUnitId,
+      );
+    });
+  }
+
+  private async updateSingleShiftInstance(
+    tx: Database,
+    instance: ShiftInstanceEntity & { master: ShiftEntity },
+    input: UpdateShiftInstanceInput,
+  ): Promise<ShiftInstanceEntity> {
+    const startsAtChanged =
+      input.startsAt.getTime() !== instance.actualStartsAt.getTime();
+
+    if (startsAtChanged) {
+      const [collision] = await tx
+        .select({ id: schema.shiftInstances.id })
+        .from(schema.shiftInstances)
+        .where(
+          and(
+            eq(schema.shiftInstances.masterId, instance.masterId),
+            ne(schema.shiftInstances.id, instance.id),
+            eq(schema.shiftInstances.actualStartsAt, input.startsAt),
+            eq(schema.shiftInstances.isCancelled, false),
+          ),
+        )
+        .limit(1);
+
+      if (collision) {
+        throw new ConflictGraphQLError(
+          'Another instance of this shift already starts at that time',
+        );
+      }
+    }
+
+    const [updated] = await tx
+      .update(schema.shiftInstances)
+      .set({
+        overrideTitle: input.title,
+        overrideLocation: input.location ?? null,
+        overrideInstructions: input.instructions ?? null,
+        overrideMinVolunteers: input.minVolunteers ?? null,
+        overrideMaxVolunteers: input.maxVolunteers ?? null,
+        actualStartsAt: input.startsAt,
+        actualEndsAt: input.endsAt,
+        isException: true,
+      })
+      .where(eq(schema.shiftInstances.id, instance.id))
+      .returning();
+
+    if (!updated) {
+      throw new NotFoundGraphQLError(
+        `Shift instance with ID ${instance.id} not found`,
+      );
+    }
+
+    return updated;
+  }
+
+  private async updateShiftInstanceSeries(
+    _tx: Database,
+    instance: ShiftInstanceEntity & { master: ShiftEntity },
+    _input: UpdateShiftInstanceInput,
+    _organizationUnitId: string,
+  ): Promise<ShiftInstanceEntity> {
+    return instance;
   }
 
   private getUserIdDifferences(currentUserIds: string[], newUserIds: string[]) {
