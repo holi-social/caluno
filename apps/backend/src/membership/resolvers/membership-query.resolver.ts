@@ -76,4 +76,13 @@ export class MembershipQueryResolver {
     );
     return this.membershipMapper.toArray(memberships);
   }
+
+  @Permissions(PERMISSIONS.VOLUNTEER_VIEW)
+  @Query(() => [Membership])
+  async myMemberships(@Session() session: UserSession): Promise<Membership[]> {
+    const memberships = await this.membershipService.getMyMemberships(
+      session.user.id,
+    );
+    return this.membershipMapper.toArray(memberships);
+  }
 }

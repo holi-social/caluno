@@ -165,6 +165,20 @@ export class MembershipService {
     });
   }
 
+  async getMyMemberships(userId: string): Promise<MembershipEntity[]> {
+    return this.db.query.memberships.findMany({
+      where: { userId },
+      with: {
+        organizationUnit: true,
+        roles: {
+          with: {
+            role: true,
+          },
+        },
+      },
+    });
+  }
+
   async getMembershipUser(membershipId: string): Promise<UserEntity | null> {
     const membership = await this.db.query.memberships.findFirst({
       where: { id: membershipId },
