@@ -107,6 +107,7 @@ export const createEventShift = actionClient
       invitedMemberIds: parsedInput.invitedMemberIds,
       rrule,
       eventId,
+      requiredFormIds: parsedInput.requiredFormIds,
     };
 
     const shift = await data.shift.create(input);

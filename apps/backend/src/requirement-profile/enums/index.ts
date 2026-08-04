@@ -52,4 +52,5 @@ export enum FormSubmissionStatus {
 export enum RequiredFormTargetType {
   ORGANIZATION_UNIT = 'ORGANIZATION_UNIT',
   EVENT = 'EVENT',
+  SHIFT = 'SHIFT',
 }

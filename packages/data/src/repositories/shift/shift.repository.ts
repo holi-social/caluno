@@ -13,6 +13,7 @@ import {
   type GetShiftQuery,
   type GetWeeklyShiftsQuery,
   type JoinShiftInstanceMutation,
+  type SetShiftRequiredFormsMutation,
   type ShiftInviteStatus,
   SortOrder,
   type UpdateShiftInput,
@@ -114,6 +115,14 @@ export class ShiftRepository extends BaseRepository {
   async delete(id: string): Promise<{ id: string }> {
     const data = await this.sdk.DeleteShift({ id });
     return { id: data.deleteShift.id };
+  }
+
+  async setRequiredForms(
+    shiftId: string,
+    formIds: string[],
+  ): Promise<SetShiftRequiredFormsMutation['setShiftRequiredForms']> {
+    const data = await this.sdk.SetShiftRequiredForms({ shiftId, formIds });
+    return data.setShiftRequiredForms;
   }
 
   async updateMembers(

@@ -63,6 +63,7 @@ export async function ShiftsTable({
             <TableHead>{t('table.pattern')}</TableHead>
             <TableHead>{t('table.time')}</TableHead>
             <TableHead>{t('table.visibility')}</TableHead>
+            <TableHead>{t('table.requiredForms')}</TableHead>
             <TableHead></TableHead>
           </TableRow>
         </TableHeader>
@@ -101,6 +102,9 @@ export async function ShiftsTable({
                   <Badge variant={visibilityConfig[shift.visibility].variant}>
                     {visibilityConfig[shift.visibility].label}
                   </Badge>
+                </TableCell>
+                <TableCell>
+                  <Badge variant="outline">{shift.requiredFormsCount}</Badge>
                 </TableCell>
                 <TableCell className="space-x-2">
                   <ActionBar

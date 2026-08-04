@@ -64,6 +64,9 @@ export class Shift {
   @Field(() => Boolean)
   isDeleted!: boolean;
 
+  @Field(() => Int)
+  requiredFormsCount!: number;
+
   @Field(() => Date)
   createdAt!: Date;
 

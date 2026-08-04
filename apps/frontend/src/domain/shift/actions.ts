@@ -40,6 +40,7 @@ export const createShift = actionClient
       imageFileId: parsedInput.imageFileId ?? null,
       minVolunteers: parsedInput.minVolunteers ?? null,
       maxVolunteers: parsedInput.maxVolunteers ?? null,
+      requiredFormIds: parsedInput.requiredFormIds,
     };
 
     const shift = await data.shift.create(input);
@@ -77,6 +78,7 @@ export const updateShift = actionClient
       imageFileId: parsedInput.imageFileId,
       minVolunteers: parsedInput.minVolunteers ?? null,
       maxVolunteers: parsedInput.maxVolunteers ?? null,
+      requiredFormIds: parsedInput.requiredFormIds,
     };
 
     return await data.shift.update(shiftId, input);

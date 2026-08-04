@@ -1,8 +1,7 @@
 import { JoinStatus } from '@repo/data';
-import { redirect } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
 import type { RequiredFormItem } from '@/domain/requirement-form/components/required-form-renderer';
-import { redirect as redirectWithLocale } from '@/i18n/navigation';
+import { redirect } from '@/i18n/navigation';
 import { getSession } from '@/lib/auth-server';
 import { getDataClient } from '@/lib/data-client';
 import { getSafeRedirect } from '@/lib/safe-redirect';
@@ -27,7 +26,7 @@ export default async function JoinFormsPage({
       orgUId,
       redirectTo: redirectTo ?? `/join/${orgUId}/forms`,
     });
-    redirectWithLocale({ href: `/api/invite?${searchParams}`, locale });
+    redirect({ href: `/api/invite?${searchParams}`, locale });
   }
 
   const data = await getDataClient();
@@ -41,11 +40,15 @@ export default async function JoinFormsPage({
     ]);
 
   if (!orgUnit) {
-    redirect('/');
+    redirect({ href: '/', locale });
+    return;
   }
 
   if (joinResult?.status === JoinStatus.Joined) {
-    redirect(getSafeRedirect(redirectTo) ?? `/admin/${orgUId}`);
+    redirect({
+      href: getSafeRedirect(redirectTo) ?? `/admin/${orgUId}`,
+      locale,
+    });
   }
 
   const profileData =

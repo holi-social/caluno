@@ -1,6 +1,6 @@
 'use client';
 import { type ShiftDetail, ShiftRepository } from '@repo/data';
-import { useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useSdk } from './use-graphql-client';
 
 export function useShift(id: string) {
@@ -11,5 +11,24 @@ export function useShift(id: string) {
     queryKey: ['shift', id],
     queryFn: () => repository.findByIdDetailed(id),
     staleTime: 30 * 1000,
+  });
+}
+
+export function useSetShiftRequiredForms() {
+  const sdk = useSdk();
+  const queryClient = useQueryClient();
+  const repository = new ShiftRepository(sdk);
+
+  return useMutation({
+    mutationFn: ({
+      shiftId,
+      formIds,
+    }: {
+      shiftId: string;
+      formIds: string[];
+    }) => repository.setRequiredForms(shiftId, formIds),
+    onSuccess: (_, { shiftId }) => {
+      queryClient.invalidateQueries({ queryKey: ['shift', shiftId] });
+    },
   });
 }
