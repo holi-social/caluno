@@ -617,6 +617,28 @@
       "inviteAllLabel": "Zu allen zukünftigen Terminen dieses Einsatzes einladen",
       "inviteAllDescription": "Freiwillige werden zu allen Einsätzen ab dem {startDate}, jeden {days}, eingeladen."
     },
+    "successDialog": {
+      "title": "Einsatz erstellt",
+      "bodyOpen": "Dein offener Einsatz ist jetzt aktiv! Alle Freiwilligen innerhalb deiner Organisation wurden benachrichtigt und können sich jetzt anmelden.",
+      "bodyInvited": "Dein Einsatz ist live! Eingeladene Freiwillige wurden benachrichtigt.",
+      "shareLabel": "Link zum Einsatz",
+      "copyInviteLink": "Einladungslink kopieren",
+      "recurrence": {
+        "oneTime": "Einmalig",
+        "daily": "Täglich",
+        "workingDays": "Werktags",
+        "weekend": "Wochenende"
+      },
+      "weekDayShort": {
+        "MONDAY": "Mo.",
+        "TUESDAY": "Di.",
+        "WEDNESDAY": "Mi.",
+        "THURSDAY": "Do.",
+        "FRIDAY": "Fr.",
+        "SATURDAY": "Sa.",
+        "SUNDAY": "So."
+      }
+    },
     "transferList": {
       "available": "Verfügbar",
       "invited": "Eingeladen",
