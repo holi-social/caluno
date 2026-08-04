@@ -617,6 +617,10 @@
       "inviteAllLabel": "Invite to all future instances of this shift",
       "inviteAllDescription": "Volunteers will get invited to all shifts starting from {startDate}, every {days}."
     },
+    "editInstanceForm": {
+      "applyToAllLabel": "Apply to all future instances",
+      "applyToAllDescription": "Changes will also apply to every future occurrence of this shift and override any earlier per-occurrence edits. Past occurrences are not affected."
+    },
     "transferList": {
       "available": "Available",
       "invited": "Invited",
@@ -717,6 +721,8 @@
       "createEventDescription": "Schedule a shift for this event.",
       "editTitle": "Edit shift",
       "editDescription": "Edit shift.",
+      "editInstanceTitle": "Edit shift instance",
+      "editInstanceDescription": "Edit this occurrence of the shift.",
       "inviteTitle": "Invite volunteers",
       "inviteDescription": "Invited volunteers will receive an invitation email with shift details and a link to the system."
     },
@@ -785,6 +791,7 @@
       "title": "Shift instance",
       "subtitle": "Volunteers and invite status for this occurrence",
       "inviteCta": "Manage invites",
+      "editCta": "Edit",
       "backToShift": "Back to shift"
     }
   },

@@ -617,6 +617,10 @@
       "inviteAllLabel": "Zu allen zukünftigen Terminen dieses Einsatzes einladen",
       "inviteAllDescription": "Freiwillige werden zu allen Einsätzen ab dem {startDate}, jeden {days}, eingeladen."
     },
+    "editInstanceForm": {
+      "applyToAllLabel": "Auf alle zukünftigen Termine anwenden",
+      "applyToAllDescription": "Änderungen gelten auch für jeden zukünftigen Termin dieses Einsatzes und überschreiben frühere Änderungen an einzelnen Terminen. Vergangene Termine sind nicht betroffen."
+    },
     "transferList": {
       "available": "Verfügbar",
       "invited": "Eingeladen",
@@ -717,6 +721,8 @@
       "createEventDescription": "Plane eine Einsatz für diese Veranstaltung.",
       "editTitle": "Einsatz bearbeiten",
       "editDescription": "Bearbeite diesen Einsatz.",
+      "editInstanceTitle": "Einsatztermin bearbeiten",
+      "editInstanceDescription": "Bearbeite diesen Termin des Einsatzes.",
       "inviteTitle": "Freiwillige einladen",
       "inviteDescription": "Eingeladene Freiwillige erhalten eine E-Mail mit Einsatzetails und einem Link zum System."
     },
@@ -785,6 +791,7 @@
       "title": "Einsatztermin",
       "subtitle": "Freiwillige und Einladungsstatus für diesen Termin",
       "inviteCta": "Einladungen verwalten",
+      "editCta": "Bearbeiten",
       "backToShift": "Zurück zum Einsatz"
     }
   },
