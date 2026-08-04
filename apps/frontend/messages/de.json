@@ -1392,7 +1392,14 @@
     "eventCoverImageAlt": "Titelbild für {title}",
     "loadPast": "Vergangene laden",
     "loadMore": "Mehr laden",
-    "invitedOn": "Eingeladen · {date}"
+    "invitedOn": "Eingeladen · {date}",
+    "pendingRequestTitle": "Warte auf {orgName}",
+    "pendingRequestBody": "Ein Admin prüft deine Anfrage. In der Regel dauert das ein paar Tage.",
+    "pendingRequestContact": "Fragen? {name} kann helfen.",
+    "pendingRequestCta": "Meine Anfragen anzeigen",
+    "discoverPendingSubtitle": "Einsätze für {orgName} erscheinen hier nach der Freigabe",
+    "discoverPendingEmptyTitle": "Noch nichts zum Durchstöbern",
+    "discoverPendingEmptyBody": "Einsätze der Organisation erscheinen hier, sobald {orgName} dich akzeptiert.\nCheck-in und Meine Zeit sind jederzeit verfügbar."
   },
   "OrgDetail": {
     "coverImageAlt": "Titelbild für {title}",
