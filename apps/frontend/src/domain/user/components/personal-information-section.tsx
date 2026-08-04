@@ -88,7 +88,7 @@ export const PersonalInformationSection = async ({
   ];
 
   return (
-    <div className="divide-y divide-border">
+    <div className="space-y-3">
       {fields.map((field) => (
         <ProfileField key={field.label} {...field} />
       ))}
