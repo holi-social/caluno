@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'bun:test';
 import type { ShiftInstanceEntity } from '../schemas/shift-instance.schema';
-import { diffShiftInstances, filterFromDate } from './shift-instance-sync';
 import type { ShiftInstanceData } from './rrule-expander';
+import { diffShiftInstances, filterFromDate } from './shift-instance-sync';
 
 function makeInstance(
   overrides: Partial<ShiftInstanceEntity>,
@@ -26,9 +26,7 @@ function makeInstance(
   } as ShiftInstanceEntity;
 }
 
-function makeTarget(
-  overrides: Partial<ShiftInstanceData>,
-): ShiftInstanceData {
+function makeTarget(overrides: Partial<ShiftInstanceData>): ShiftInstanceData {
   return {
     actualStartsAt: new Date('2026-01-05T09:00:00Z'),
     actualEndsAt: new Date('2026-01-05T13:00:00Z'),
@@ -97,7 +95,10 @@ describe('diffShiftInstances with fromDate-filtered inputs', () => {
       }), // new time-of-day, at/after fromDate
     ];
 
-    const existing = filterFromDate([pastInstance, futureInstanceOldTime], fromDate);
+    const existing = filterFromDate(
+      [pastInstance, futureInstanceOldTime],
+      fromDate,
+    );
     const target = filterFromDate(fullNewTarget, fromDate);
 
     const plan = diffShiftInstances(existing, target);
