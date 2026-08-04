@@ -148,9 +148,9 @@ type Event {
   endsAt: DateTime!
   id: ID!
   isDeleted: Boolean!
-  isFollowing: Boolean!
   location: String
   logoUrl: String
+  myJoinStatus: JoinStatus!
   organizationUnit: EventOrganizationUnit
   organizationUnitId: ID!
   organizer: User

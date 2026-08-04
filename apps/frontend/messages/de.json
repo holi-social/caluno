@@ -445,11 +445,6 @@
       "title": "{orgName} beitreten",
       "description": "Bitte fülle die erforderlichen Formulare aus, bevor du eine Beitrittsanfrage stellst.",
       "noForms": "Es sind keine Formulare erforderlich.",
-      "completed": "Abgeschlossen",
-      "pending": "Ausstehend",
-      "fillOut": "Ausfüllen",
-      "fillFormTitle": "Formular ausfüllen",
-      "requestToJoin": "Beitrittsanfrage senden",
       "joined": "Du bist der Organisation beigetreten",
       "requestPending": "Deine Anfrage wird geprüft",
       "rejected": "Deine Anfrage wurde abgelehnt",
@@ -1077,7 +1072,24 @@
       "linkCopied": "Link kopiert",
       "linkCopiedDescription": "{url}",
       "couldNotCopyLink": "Link konnte nicht kopiert werden"
+    },
+    "submissions": {
+      "title": "Einsendungen — {formName}",
+      "subtitle": "Freiwillige, die dieses Formular eingereicht haben. Klicke auf eine Person, um die Einsendung anzusehen.",
+      "tabSubmitted": "Eingereicht",
+      "tabRejected": "Abgelehnt",
+      "searchPlaceholder": "Freiwillige suchen…",
+      "volunteerColumn": "Freiwillige:r",
+      "emailColumn": "E-Mail",
+      "submissionsColumn": "Einsendungen",
+      "lastSubmittedColumn": "Zuletzt eingereicht",
+      "viewSubmission": "Ansehen →",
+      "empty": "Noch keine Einsendungen.",
+      "emptySearch": "Keine Freiwilligen gefunden."
     }
+  },
+  "RequiredFormRenderer": {
+    "noForms": "Es sind keine Formulare erforderlich."
   },
   "MyTime": {
     "title": "Meine Einsätze",
@@ -1102,8 +1114,8 @@
     "shiftsSummaryNoSpots": "{shifts} Einsätze",
     "followCta": "Jetzt mitmachen",
     "followingCta": "Du machst mit",
-    "pendingCta": "Anfrage ausstehend",
-    "rejectedCta": "Anfrage nicht genehmigt",
+    "pendingCta": "Ausstehende Anfrage",
+    "rejectedCta": "Du kannst diesem Event nicht beitreten",
     "followNote": "Erhalte Einladungen zu Einsätzen oder melde dich selbst für eine an.",
     "pendingNote": "Ein Koordinator bestätigt deine Anfrage.",
     "requestSentToast": "Anfrage gesendet — ein Koordinator bestätigt sie.",
@@ -1120,7 +1132,18 @@
     "spotsLeft": "{n, plural, one {# Platz frei} other {# Plätze frei}}",
     "unlimitedSpots": "Offen",
     "today": "Heute",
-    "requiredFormsTitle": "Erforderliche Formulare"
+    "requiredFormsTitle": "Erforderliche Formulare",
+    "forms": {
+      "title": "{eventTitle} beitreten",
+      "description": "Bitte fülle die erforderlichen Formulare aus, bevor du dem Event beitrittst.",
+      "noForms": "Es sind keine Formulare erforderlich.",
+      "joinedToast": "Du machst jetzt bei {eventTitle} mit",
+      "requestSentToast": "Anfrage gesendet — ein Koordinator bestätigt sie.",
+      "pendingRequestToast": "Ausstehende Anfrage — ein Koordinator bestätigt deine Mitgliedschaft.",
+      "rejectedToast": "Anfrage nicht genehmigt",
+      "requirementsNeededToast": "Bitte fülle zuerst alle erforderlichen Formulare aus",
+      "requestFailed": "Anfrage konnte nicht gesendet werden"
+    }
   },
   "ShiftDetail": {
     "coverImageAlt": "Titelbild für {title}",

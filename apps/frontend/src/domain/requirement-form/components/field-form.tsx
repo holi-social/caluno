@@ -16,7 +16,7 @@ import {
 } from '@repo/ui';
 import { useTranslations } from 'next-intl';
 import { useState } from 'react';
-import { FileUpload } from '@/domain/storage/components/file-upload';
+import { FileUpload } from '@/components/storage/file-upload';
 import { OptionsEditor } from './options-editor';
 
 // Field types that have a fixed, unambiguous system key

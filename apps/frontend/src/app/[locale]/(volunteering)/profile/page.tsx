@@ -1,8 +1,8 @@
 import { getTranslations, setRequestLocale } from 'next-intl/server';
-import { HeaderAvatar } from '@/components/profile/header-avatar';
-import { ProfilePageHeader } from '@/components/profile/profile-page-header';
 import MyMembershipRequests from '@/domain/membership-requests/components/my-membership-requests';
+import { HeaderAvatar } from '@/domain/user/components/header-avatar';
 import { ProfileForm } from '@/domain/user/components/profile-form';
+import { ProfilePageHeader } from '@/domain/user/components/profile-page-header';
 import { resolveLocale } from '@/i18n/routing';
 import { getDataClient } from '@/lib/data-client';
 
@@ -58,7 +58,7 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
         <div>
           <h2 className="text-xl font-bold">{tProfile('title')}</h2>
           <div className="mt-4">
-            <ProfileForm imageUrl={me.image} />
+            <ProfileForm />
           </div>
         </div>
       </div>

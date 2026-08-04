@@ -1,7 +1,7 @@
 'use client';
 
 import { JoinStatus, RequiredFormTargetType } from '@repo/data';
-import { useJoinOrganization } from '@repo/data/react';
+import { useJoinEvent } from '@repo/data/react';
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 import {
@@ -11,42 +11,42 @@ import {
 import { useRouter } from '@/i18n/navigation';
 import { getSafeRedirect } from '@/lib/safe-redirect';
 
-interface JoinFormsClientProps {
-  orgUId: string;
-  orgName: string;
+interface EventFormsClientProps {
+  eventId: string;
+  eventTitle: string;
   requiredForms: RequiredFormItem[];
   profileData: Record<string, string>;
   initialSubmittedFormIds: Set<string>;
   redirectTo?: string;
 }
 
-export function JoinFormsClient({
-  orgUId,
-  orgName,
+export function EventFormsClient({
+  eventId,
+  eventTitle,
   requiredForms,
   profileData,
   initialSubmittedFormIds,
   redirectTo,
-}: JoinFormsClientProps) {
-  const t = useTranslations('MembershipRequest.joinForms');
+}: EventFormsClientProps) {
+  const t = useTranslations('EventDetail.forms');
   const router = useRouter();
-  const joinOrganization = useJoinOrganization();
+  const joinEvent = useJoinEvent();
 
   const handleComplete = async () => {
     try {
-      const result = await joinOrganization.mutateAsync(orgUId);
+      const result = await joinEvent.mutateAsync(eventId);
 
       if (result.status === JoinStatus.Joined) {
-        toast.success(t('joined'));
-        router.push(getSafeRedirect(redirectTo) ?? `/admin/${orgUId}`);
+        toast.success(t('joinedToast', { eventTitle }));
+        router.push(getSafeRedirect(redirectTo) ?? `/events/${eventId}`);
       } else if (result.status === JoinStatus.Pending) {
-        toast.success(t('requestPending'));
-        router.push(`/invite/${orgUId}`);
+        toast.success(t('pendingRequestToast'));
+        router.push(`/events/${eventId}`);
       } else if (result.status === JoinStatus.Rejected) {
-        toast.error(t('rejected'));
-        router.push(`/invite/${orgUId}`);
+        toast.error(t('rejectedToast'));
+        router.push(`/events/${eventId}`);
       } else if (result.status === JoinStatus.RequirementsNeeded) {
-        toast.error(t('requirementsNeeded'));
+        toast.error(t('requirementsNeededToast'));
       }
     } catch (error) {
       toast.error(error instanceof Error ? error.message : t('requestFailed'));
@@ -55,11 +55,11 @@ export function JoinFormsClient({
 
   return (
     <RequiredFormRenderer
-      title={t('title', { orgName })}
+      title={t('title', { eventTitle })}
       description={t('description')}
       emptyMessage={t('noForms')}
-      targetType={RequiredFormTargetType.OrganizationUnit}
-      targetId={orgUId}
+      targetType={RequiredFormTargetType.Event}
+      targetId={eventId}
       forms={requiredForms}
       profileData={profileData}
       initialSubmittedFormIds={initialSubmittedFormIds}

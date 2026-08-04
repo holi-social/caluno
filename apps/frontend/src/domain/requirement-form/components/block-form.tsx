@@ -32,7 +32,7 @@ import {
   useWatch,
 } from 'react-hook-form';
 import { toast } from 'sonner';
-import { FileUpload } from '@/domain/storage/components/file-upload';
+import { FileUpload } from '@/components/storage/file-upload';
 import { saveBlock } from '../actions';
 import { OptionsEditor } from './options-editor';
 

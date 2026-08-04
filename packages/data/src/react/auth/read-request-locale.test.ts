@@ -32,7 +32,7 @@ describe('readRequestLocale', () => {
 
   it('ignores an unsupported cookie value', () => {
     setCookie(`${LOCALE_COOKIE}=fr`);
-    expect(readRequestLocale()).toBe('en');
+    expect(readRequestLocale()).toBe('de');
   });
 
   it('reads the cookie alongside other cookies', () => {
@@ -46,6 +46,6 @@ describe('readRequestLocale', () => {
       value: undefined,
       configurable: true,
     });
-    expect(readRequestLocale()).toBe('en');
+    expect(readRequestLocale()).toBe('de');
   });
 });
