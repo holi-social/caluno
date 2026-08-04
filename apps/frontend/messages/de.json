@@ -1114,8 +1114,8 @@
     "shiftsSummaryNoSpots": "{shifts} Einsätze",
     "followCta": "Jetzt mitmachen",
     "followingCta": "Du machst mit",
-    "pendingCta": "Anfrage ausstehend",
-    "rejectedCta": "Anfrage nicht genehmigt",
+    "pendingCta": "Ausstehende Anfrage",
+    "rejectedCta": "Du kannst diesem Event nicht beitreten",
     "followNote": "Erhalte Einladungen zu Einsätzen oder melde dich selbst für eine an.",
     "pendingNote": "Ein Koordinator bestätigt deine Anfrage.",
     "requestSentToast": "Anfrage gesendet — ein Koordinator bestätigt sie.",
@@ -1139,6 +1139,7 @@
       "noForms": "Es sind keine Formulare erforderlich.",
       "joinedToast": "Du machst jetzt bei {eventTitle} mit",
       "requestSentToast": "Anfrage gesendet — ein Koordinator bestätigt sie.",
+      "pendingRequestToast": "Ausstehende Anfrage — ein Koordinator bestätigt deine Mitgliedschaft.",
       "rejectedToast": "Anfrage nicht genehmigt",
       "requirementsNeededToast": "Bitte fülle zuerst alle erforderlichen Formulare aus",
       "requestFailed": "Anfrage konnte nicht gesendet werden"
