@@ -14,6 +14,10 @@ query GetShift($id: String!) {
     originalStartsAt
     durationMinutes
     organizationUnitId
+    requiredFormsCount
+    requiredForms {
+      ...RequiredFormRefFields
+    }
     organizationUnit {
       id
       name
@@ -44,6 +48,7 @@ query GetShifts($limit: Int!, $offset: Int!) {
       visibility
       maxVolunteers
       minVolunteers
+      requiredFormsCount
       createdBy {
         id
         name
@@ -70,6 +75,7 @@ query GetEventShifts($eventId: ID!, $limit: Int!, $offset: Int!) {
       visibility
       maxVolunteers
       minVolunteers
+      requiredFormsCount
       createdBy {
         id
         name
@@ -110,6 +116,12 @@ mutation UpdateShift($id: String!, $input: UpdateShiftInput!) {
 mutation DeleteShift($id: String!) {
   deleteShift(id: $id) {
     id
+  }
+}
+
+mutation SetShiftRequiredForms($shiftId: ID!, $formIds: [String!]!) {
+  setShiftRequiredForms(shiftId: $shiftId, formIds: $formIds) {
+    ...RequiredFormRefFields
   }
 }
 
@@ -192,14 +204,7 @@ mutation JoinShiftInstance($instanceId: String!) {
       status
     }
     requiredForms {
-      form {
-        id
-        name
-        description
-      }
-      order
-      submitted
-      submissionId
+      ...RequiredFormWithStatusFields
     }
   }
 }

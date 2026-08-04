@@ -71,6 +71,23 @@ export class RequiredFormService {
               Boolean(row.form),
           );
       }
+      case RequiredFormTargetType.SHIFT: {
+        const rows = await this.db.query.shiftRequiredForms.findMany({
+          where: { shiftId: target.targetId },
+          orderBy: { order: 'asc' },
+          with: { form: true },
+        });
+
+        return rows
+          .map((row) => ({
+            form: row.form,
+            order: row.order,
+          }))
+          .filter(
+            (row): row is { form: RequirementFormEntity; order: number } =>
+              Boolean(row.form),
+          );
+      }
       default:
         throw new ConflictGraphQLError(
           `Unsupported required-form target: ${target.targetType}`,
@@ -199,6 +216,8 @@ export class RequiredFormService {
         );
       case RequiredFormTargetType.EVENT:
         return this.setRequiredFormsForEvent(target.targetId, formIds);
+      case RequiredFormTargetType.SHIFT:
+        return this.setRequiredFormsForShift(target.targetId, formIds);
       default:
         throw new ConflictGraphQLError(
           `Unsupported required-form target: ${target.targetType}`,
@@ -291,6 +310,139 @@ export class RequiredFormService {
     });
   }
 
+  private async setRequiredFormsForShift(
+    shiftId: string,
+    formIds: string[],
+  ): Promise<Array<{ form: RequirementFormEntity; order: number }>> {
+    const shift = await this.db.query.shifts.findFirst({
+      where: { id: shiftId, isDeleted: false },
+      with: { organizationUnit: true },
+    });
+
+    if (!shift) {
+      throw new NotFoundGraphQLError('Shift not found');
+    }
+
+    if (!shift.organizationUnit) {
+      throw new ConflictGraphQLError(
+        'Shift is not linked to an organization unit',
+      );
+    }
+
+    await this.applyShiftRequiredForms(
+      shiftId,
+      shift.organizationUnit.organizationId,
+      formIds,
+    );
+
+    return this.getRequiredForms({
+      targetType: RequiredFormTargetType.SHIFT,
+      targetId: shiftId,
+    });
+  }
+
+  // Shared by the standalone setShiftRequiredForms mutation (no tx: opens
+  // its own) and ShiftService.create/update (pass their surrounding tx so
+  // the write commits atomically with the rest of the shift mutation).
+  async applyShiftRequiredForms(
+    shiftId: string,
+    organizationId: string,
+    formIds: string[],
+    tx?: Database,
+  ): Promise<void> {
+    const runner = tx ?? this.db;
+
+    if (formIds.length > 0) {
+      const forms = await runner.query.requirementForms.findMany({
+        where: { id: { in: formIds }, organizationId },
+      });
+
+      if (forms.length !== formIds.length) {
+        throw new ConflictGraphQLError(
+          'One or more forms do not belong to this organization',
+        );
+      }
+    }
+
+    const write = async (writer: Database) => {
+      await writer
+        .delete(schema.shiftRequiredForms)
+        .where(eq(schema.shiftRequiredForms.shiftId, shiftId));
+
+      if (formIds.length > 0) {
+        await writer.insert(schema.shiftRequiredForms).values(
+          formIds.map((formId, index) => ({
+            shiftId,
+            formId,
+            order: index,
+          })),
+        );
+      }
+    };
+
+    if (tx) {
+      await write(tx);
+    } else {
+      await this.db.transaction((innerTx) => write(innerTx));
+    }
+  }
+
+  async countRequiredFormsByShiftIds(
+    shiftIds: string[],
+  ): Promise<Array<{ shiftId: string; count: number }>> {
+    if (shiftIds.length === 0) {
+      return [];
+    }
+
+    const rows = await this.db
+      .select({
+        shiftId: schema.shiftRequiredForms.shiftId,
+        count: count(),
+      })
+      .from(schema.shiftRequiredForms)
+      .where(inArray(schema.shiftRequiredForms.shiftId, shiftIds))
+      .groupBy(schema.shiftRequiredForms.shiftId);
+
+    return rows.map((row) => ({
+      shiftId: row.shiftId,
+      count: Number(row.count),
+    }));
+  }
+
+  async getRequiredFormsByShiftIds(shiftIds: string[]): Promise<
+    Array<{
+      shiftId: string;
+      form: RequirementFormEntity;
+      order: number;
+    }>
+  > {
+    if (shiftIds.length === 0) {
+      return [];
+    }
+
+    const rows = await this.db.query.shiftRequiredForms.findMany({
+      where: { shiftId: { in: shiftIds } },
+      orderBy: { order: 'asc' },
+      with: { form: true },
+    });
+
+    return rows
+      .map((row) => ({
+        shiftId: row.shiftId,
+        form: row.form,
+        order: row.order,
+      }))
+      .filter(
+        (
+          row,
+        ): row is {
+          shiftId: string;
+          form: RequirementFormEntity;
+          order: number;
+        } => Boolean(row.form),
+      );
+  }
+
   // Shared by the standalone setEventRequiredForms mutation (no tx: opens
   // its own) and EventService.create/update (pass their surrounding tx so
   // the write commits atomically with the rest of the event mutation).
@@ -352,6 +504,15 @@ export class RequiredFormService {
       .from(schema.eventRequiredForms)
       .where(eq(schema.eventRequiredForms.formId, formId));
 
-    return (eventRow?.count ?? 0) > 0;
+    if ((eventRow?.count ?? 0) > 0) {
+      return true;
+    }
+
+    const [shiftRow] = await this.db
+      .select({ count: sql<number>`count(*)` })
+      .from(schema.shiftRequiredForms)
+      .where(eq(schema.shiftRequiredForms.formId, formId));
+
+    return (shiftRow?.count ?? 0) > 0;
   }
 }

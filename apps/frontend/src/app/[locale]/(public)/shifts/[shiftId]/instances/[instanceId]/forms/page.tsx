@@ -1,7 +1,7 @@
 import { type DataClient, DataError, JoinStatus } from '@repo/data';
 import { notFound } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
-import { EventFormsClient } from '@/app/[locale]/(public)/events/[eventId]/forms/event-forms-client';
+import { ShiftFormsClient } from '@/app/[locale]/(public)/shifts/[shiftId]/instances/[instanceId]/forms/shift-forms-client';
 import type { RequiredFormItem } from '@/domain/requirement-form/components/required-form-renderer';
 import { redirect } from '@/i18n/navigation';
 import { resolveLocale } from '@/i18n/routing';
@@ -9,40 +9,43 @@ import { getSession } from '@/lib/auth-server';
 import { getDataClient } from '@/lib/data-client';
 import { getSafeRedirect } from '@/lib/safe-redirect';
 
-interface EventFormsPageProps {
-  params: Promise<{ locale: string; eventId: string }>;
+interface ShiftFormsPageProps {
+  params: Promise<{ locale: string; shiftId: string; instanceId: string }>;
   searchParams: Promise<{ redirectTo?: string }>;
 }
 
-type PublicEvent = Awaited<ReturnType<DataClient['publicEvent']['findById']>>;
+type PublicShift = Awaited<ReturnType<DataClient['shift']['findById']>>;
 
-export async function generateMetadata({ params }: EventFormsPageProps) {
-  const { eventId, locale } = await params;
+export async function generateMetadata({ params }: ShiftFormsPageProps) {
+  const { shiftId, locale } = await params;
   const data = await getDataClient({ locale: resolveLocale(locale) });
-  let event: PublicEvent;
+  let shift: PublicShift;
   try {
-    event = await data.publicEvent.findById(eventId);
+    shift = await data.shift.findById(shiftId);
   } catch (error) {
     if (error instanceof DataError && error.options?.code === 'NOT_FOUND') {
       notFound();
     }
-    return { title: 'Event — Clippy' };
+    return { title: 'Shift — Clippy' };
   }
-  const t = await getTranslations({ locale, namespace: 'EventDetail' });
-  return { title: `${t('forms.title', { eventTitle: event.title })} — Clippy` };
+  const t = await getTranslations({ locale, namespace: 'ShiftDetail' });
+  return {
+    title: `${t('forms.title', { shiftTitle: shift.title })} — Clippy`,
+  };
 }
 
-export default async function EventFormsPage({
+export default async function ShiftFormsPage({
   params,
   searchParams,
-}: EventFormsPageProps) {
-  const { locale, eventId } = await params;
+}: ShiftFormsPageProps) {
+  const { locale, shiftId, instanceId } = await params;
   const { redirectTo } = await searchParams;
+
   const data = await getDataClient({ locale: resolveLocale(locale) });
 
-  let event: PublicEvent;
+  let shift: PublicShift;
   try {
-    event = await data.publicEvent.findById(eventId);
+    shift = await data.shift.findById(shiftId);
   } catch (error) {
     if (error instanceof DataError && error.options?.code === 'NOT_FOUND') {
       notFound();
@@ -52,24 +55,27 @@ export default async function EventFormsPage({
 
   const session = await getSession();
   if (!session) {
-    const searchParams = new URLSearchParams({
-      redirectTo: redirectTo ?? `/events/${eventId}/forms`,
+    const params = new URLSearchParams({
+      redirectTo:
+        redirectTo ?? `/shifts/${shiftId}/instances/${instanceId}/forms`,
     });
-    redirect({ href: `/api/invite?${searchParams}`, locale });
+    redirect({ href: `/api/invite?${params}`, locale });
   }
 
-  const joinResult = await data.publicEvent.join(eventId).catch(() => null);
+  const joinResult = await data.shift
+    .joinInstance(instanceId)
+    .catch(() => null);
 
   if (joinResult?.status === JoinStatus.Joined) {
     redirect({
-      href: getSafeRedirect(redirectTo) ?? `/events/${eventId}`,
+      href: getSafeRedirect(redirectTo) ?? `/shifts/${shiftId}`,
       locale,
     });
   }
 
   const requiredForms =
     joinResult?.requiredForms ??
-    event.requiredForms?.map((ref) => ({ ...ref, submitted: false })) ??
+    shift.requiredForms?.map((ref) => ({ ...ref, submitted: false })) ??
     [];
 
   const submittedFormIds = new Set<string>(
@@ -96,9 +102,10 @@ export default async function EventFormsPage({
   return (
     <div className="min-h-screen bg-muted/30 px-4 py-10">
       <div className="mx-auto max-w-2xl">
-        <EventFormsClient
-          eventId={eventId}
-          eventTitle={event.title}
+        <ShiftFormsClient
+          shiftId={shiftId}
+          instanceId={instanceId}
+          shiftTitle={shift.title}
           requiredForms={requiredForms as RequiredFormItem[]}
           profileData={profileData}
           initialSubmittedFormIds={submittedFormIds}

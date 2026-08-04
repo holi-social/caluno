@@ -27,6 +27,7 @@ import {
   createUser,
   setEventRequiredForms,
   setRequiredForms,
+  setShiftRequiredForms,
 } from './factories';
 import { createEvent } from './factories/event.factory';
 import {
@@ -34,6 +35,7 @@ import {
   createOrganizationWithType,
   createUnit,
 } from './factories/org.factory';
+import { createShift } from './factories/shift.factory';
 import {
   ensureTestDatabase,
   registerTestResourceCleanup,
@@ -323,6 +325,97 @@ describe('RequiredFormService', () => {
     });
   });
 
+  describe('countRequiredFormsByShiftIds', () => {
+    it('returns counts for multiple shifts', async () => {
+      const { user, unit } = await setupOrg();
+      const shiftA = await createShift(db, { organizationUnitId: unit.id });
+      const shiftB = await createShift(db, { organizationUnitId: unit.id });
+      const { form: formA } = await createRequirementForm(db, {
+        organizationId: unit.organizationId,
+        organizationUnitId: unit.id,
+        createdById: user.id,
+      });
+      const { form: formB } = await createRequirementForm(db, {
+        organizationId: unit.organizationId,
+        organizationUnitId: unit.id,
+        createdById: user.id,
+      });
+
+      await setShiftRequiredForms(db, {
+        shiftId: shiftA.id,
+        formIds: [formA.id, formB.id],
+      });
+      await setShiftRequiredForms(db, {
+        shiftId: shiftB.id,
+        formIds: [formA.id],
+      });
+
+      const counts = await requiredFormService.countRequiredFormsByShiftIds([
+        shiftA.id,
+        shiftB.id,
+      ]);
+
+      const countsByShiftId = new Map(
+        counts.map((row) => [row.shiftId, row.count]),
+      );
+      expect(countsByShiftId.get(shiftA.id)).toBe(2);
+      expect(countsByShiftId.get(shiftB.id)).toBe(1);
+    });
+
+    it('returns zero for shifts with no required forms', async () => {
+      const { unit } = await setupOrg();
+      const shift = await createShift(db, { organizationUnitId: unit.id });
+
+      const counts = await requiredFormService.countRequiredFormsByShiftIds([
+        shift.id,
+      ]);
+
+      expect(counts).toEqual([]);
+    });
+
+    it('returns an empty array for empty input', async () => {
+      const counts = await requiredFormService.countRequiredFormsByShiftIds([]);
+      expect(counts).toEqual([]);
+    });
+  });
+
+  describe('getRequiredFormsByShiftIds', () => {
+    it('returns forms grouped by shift, ordered by attachment order', async () => {
+      const { user, unit } = await setupOrg();
+      const shift = await createShift(db, { organizationUnitId: unit.id });
+      const { form: formA } = await createRequirementForm(db, {
+        organizationId: unit.organizationId,
+        organizationUnitId: unit.id,
+        createdById: user.id,
+        name: 'Form A',
+      });
+      const { form: formB } = await createRequirementForm(db, {
+        organizationId: unit.organizationId,
+        organizationUnitId: unit.id,
+        createdById: user.id,
+        name: 'Form B',
+      });
+
+      await setShiftRequiredForms(db, {
+        shiftId: shift.id,
+        formIds: [formB.id, formA.id],
+      });
+
+      const rows = await requiredFormService.getRequiredFormsByShiftIds([
+        shift.id,
+      ]);
+
+      expect(rows).toHaveLength(2);
+      expect(rows[0]?.form.id).toBe(formB.id);
+      expect(rows[1]?.form.id).toBe(formA.id);
+    });
+
+    it('returns an empty array for empty input', async () => {
+      const rows = await requiredFormService.getRequiredFormsByShiftIds([]);
+      expect(rows).toEqual([]);
+    });
+  });
+
   describe('areRequiredFormsSatisfied', () => {
     it('is satisfied when no required forms are attached', async () => {
       const { user, unit } = await setupOrg();
@@ -444,6 +537,74 @@ describe('RequiredFormService', () => {
         ),
       ).rejects.toBeInstanceOf(NotFoundGraphQLError);
     });
+
+    it('replaces the required-form list for a shift', async () => {
+      const { user, unit } = await setupOrg();
+      const shift = await createShift(db, { organizationUnitId: unit.id });
+      const { form: formA } = await createRequirementForm(db, {
+        organizationId: unit.organizationId,
+        organizationUnitId: unit.id,
+        createdById: user.id,
+        name: 'Form A',
+      });
+      const { form: formB } = await createRequirementForm(db, {
+        organizationId: unit.organizationId,
+        organizationUnitId: unit.id,
+        createdById: user.id,
+        name: 'Form B',
+      });
+
+      await setShiftRequiredForms(db, {
+        shiftId: shift.id,
+        formIds: [formA.id],
+      });
+      const result = await requiredFormService.setRequiredForms(
+        { targetType: RequiredFormTargetType.SHIFT, targetId: shift.id },
+        [formB.id],
+      );
+
+      expect(result).toHaveLength(1);
+      expect(result[0]?.form.id).toBe(formB.id);
+    });
+
+    it('throws when a shift form does not belong to the organization', async () => {
+      const { user, unit } = await setupOrg();
+      const shift = await createShift(db, { organizationUnitId: unit.id });
+      const { organization: otherOrg, type: otherType } =
+        await createOrganizationWithType(
+          db,
+          `Other Org ${crypto.randomUUID()}`,
+        );
+      const otherUnit = await createUnit(db, {
+        organizationId: otherOrg.id,
+        typeId: otherType.id,
+        name: 'root',
+      });
+      const { form: otherForm } = await createRequirementForm(db, {
+        organizationId: otherOrg.id,
+        organizationUnitId: otherUnit.id,
+        createdById: user.id,
+      });
+
+      await expect(
+        requiredFormService.setRequiredForms(
+          { targetType: RequiredFormTargetType.SHIFT, targetId: shift.id },
+          [otherForm.id],
+        ),
+      ).rejects.toBeInstanceOf(ConflictGraphQLError);
+    });
+
+    it('throws when the shift does not exist', async () => {
+      await expect(
+        requiredFormService.setRequiredForms(
+          {
+            targetType: RequiredFormTargetType.SHIFT,
+            targetId: crypto.randomUUID(),
+          },
+          [],
+        ),
+      ).rejects.toBeInstanceOf(NotFoundGraphQLError);
+    });
   });
 
   describe('isFormRequiredByAnyTarget', () => {
@@ -456,6 +617,24 @@ describe('RequiredFormService', () => {
       });
       await setRequiredForms(db, {
         organizationUnitId: unit.id,
+        formIds: [form.id],
+      });
+
+      expect(await requiredFormService.isFormRequiredByAnyTarget(form.id)).toBe(
+        true,
+      );
+    });
+
+    it('returns true when the form is attached to a shift', async () => {
+      const { user, unit } = await setupOrg();
+      const shift = await createShift(db, { organizationUnitId: unit.id });
+      const { form } = await createRequirementForm(db, {
+        organizationId: unit.organizationId,
+        organizationUnitId: unit.id,
+        createdById: user.id,
+      });
+      await setShiftRequiredForms(db, {
+        shiftId: shift.id,
         formIds: [form.id],
       });
 
@@ -650,6 +829,24 @@ describe('RequiredFormService', () => {
       });
       await setRequiredForms(db, {
         organizationUnitId: unit.id,
+        formIds: [form.id],
+      });
+
+      await expect(
+        requirementFormService.delete(form.id, unit.id),
+      ).rejects.toBeInstanceOf(ConflictGraphQLError);
+    });
+
+    it('rejects deletion when the form is required by a shift', async () => {
+      const { user, unit } = await setupOrg();
+      const shift = await createShift(db, { organizationUnitId: unit.id });
+      const { form } = await createRequirementForm(db, {
+        organizationId: unit.organizationId,
+        organizationUnitId: unit.id,
+        createdById: user.id,
+      });
+      await setShiftRequiredForms(db, {
+        shiftId: shift.id,
         formIds: [form.id],
       });
 

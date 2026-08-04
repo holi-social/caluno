@@ -14,6 +14,7 @@ import { notFound } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
 import { DetailCoverImage } from '@/components/detail-entity-image';
 import { UserCard } from '@/components/user-card';
+import { ShiftRequiredFormsPopover } from '@/domain/shift/components/shift-required-forms-popover';
 import { getVisibilityConfig } from '@/domain/shift/components/shifts-table';
 import { parseShiftListQuery } from '@/domain/shift/routes';
 import { getDataClient } from '@/lib/data-client';
@@ -57,7 +58,8 @@ export default async function ShiftViewPage({
           <h1 className="page-title line-clamp-2">{shift.title}</h1>
           <p className="text-muted-foreground mt-1">{t('page.subtitle')}</p>
         </div>
-        <div className="shrink-0">
+        <div className="flex shrink-0 gap-2">
+          <ShiftRequiredFormsPopover orgUId={orgUId} shiftId={shiftId} />
           <ShiftViewActionBar
             id={shiftId}
             organizationUnitId={orgUId}

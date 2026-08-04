@@ -1,4 +1,4 @@
-import { Args, Context, Mutation, Resolver } from '@nestjs/graphql';
+import { Args, Context, ID, Mutation, Resolver } from '@nestjs/graphql';
 import { Session, type UserSession } from '@thallesp/nestjs-better-auth';
 import { plainToInstance } from 'class-transformer';
 import { AuthService } from '../../auth/auth.service';
@@ -6,9 +6,12 @@ import { PERMISSIONS } from '../../auth/constants';
 import { Permissions } from '../../auth/decorators/permissions.decorator';
 import { ForbiddenGraphQLError } from '../../graphql/errors';
 import type { AuthenticatedGraphQLContext } from '../../graphql/graphql.context';
+import { RequiredFormRef } from '../../organization/models/organization-unit-required-form.model';
+import { RequiredFormTargetType } from '../../requirement-profile/enums';
 import { RequirementForm } from '../../requirement-profile/models/requirement-form.model';
 import { RequirementProfile } from '../../requirement-profile/models/requirement-profile.model';
 import { UserRequirementStatus } from '../../requirement-profile/models/user-requirement-status.model';
+import { RequiredFormService } from '../../requirement-profile/services/required-form.service';
 import { ShiftInviteStatus } from '../enums';
 import { CreateShiftInput } from '../inputs/create-shift.input';
 import { UpdateShiftInput } from '../inputs/update-shift.input';
@@ -32,6 +35,7 @@ export class ShiftMutationResolver {
     private readonly shiftInviteMapper: ShiftInviteMapper,
     private readonly shiftInstanceInviteMapper: ShiftInstanceInviteMapper,
     private readonly authService: AuthService,
+    private readonly requiredFormService: RequiredFormService,
   ) {}
 
   private async assertCanManageInviteForUser(
@@ -120,6 +124,29 @@ export class ShiftMutationResolver {
       context.organizationUnitId,
     );
     return this.shiftMapper.toModelOrThrow(result);
+  }
+
+  @Permissions(PERMISSIONS.SHIFT_EDIT)
+  @Mutation(() => [RequiredFormRef])
+  async setShiftRequiredForms(
+    @Args('shiftId', { type: () => ID }) shiftId: string,
+    @Args('formIds', { type: () => [String] }) formIds: string[],
+    @Context() context: AuthenticatedGraphQLContext,
+  ): Promise<RequiredFormRef[]> {
+    await this.shiftService.findOrgUnitsShift(
+      shiftId,
+      context.organizationUnitId,
+    );
+
+    const requiredForms = await this.requiredFormService.setRequiredForms(
+      { targetType: RequiredFormTargetType.SHIFT, targetId: shiftId },
+      formIds,
+    );
+
+    return requiredForms.map(({ form, order }) => ({
+      form: plainToInstance(RequirementForm, form),
+      order,
+    }));
   }
 
   @Mutation(() => JoinShiftInstanceResult)
