@@ -1420,6 +1420,8 @@
     "loadPast": "Load past",
     "loadMore": "Load more",
     "invitedOn": "Invited · {date}",
+    "inviteKindEvent": "Event",
+    "inviteKindShift": "Shift",
     "pendingRequestTitle": "Waiting for {orgName}",
     "pendingRequestBody": "An admin is reviewing your request. Usually a few days.",
     "pendingRequestContact": "Questions? {name} can help.",

@@ -1420,6 +1420,8 @@
     "loadPast": "Vergangene laden",
     "loadMore": "Mehr laden",
     "invitedOn": "Eingeladen · {date}",
+    "inviteKindEvent": "Veranstaltung",
+    "inviteKindShift": "Einsatz",
     "pendingRequestTitle": "Warte auf {orgName}",
     "pendingRequestBody": "Ein Admin prüft deine Anfrage. In der Regel dauert das ein paar Tage.",
     "pendingRequestContact": "Fragen? {name} kann helfen.",
