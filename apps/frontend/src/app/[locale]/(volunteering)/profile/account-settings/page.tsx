@@ -19,7 +19,10 @@ export default async function AccountSettingsPage({
   return (
     <div>
       <div className="sticky top-0 z-30">
-        <ProfilePageHeader title={tProfile('accountSettings')} />
+        <ProfilePageHeader
+          title={tProfile('accountSettings')}
+          backHref="/profile"
+        />
       </div>
 
       <div className="mx-auto w-full max-w-4xl space-y-8 px-4 py-6">
