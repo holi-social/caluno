@@ -49,6 +49,9 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
             {tProfile('personalInformation')}
           </h2>
         </section>
+
+        <hr className="border-t border-border my-6" />
+
         <AccountSection locale={me.locale ?? locale} />
       </div>
     </div>
