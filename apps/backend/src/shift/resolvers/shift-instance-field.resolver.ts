@@ -155,4 +155,19 @@ export class ShiftInstanceFieldResolver {
       `${instance.id}::${session.user.id}`,
     );
   }
+
+  // True when the current user has this instance in their pending membership
+  // request's intendedShiftInstanceIds metadata.
+  @AllowAnonymous()
+  @ResolveField(() => Boolean)
+  async isIntended(
+    @Parent() instance: ShiftInstanceEntity,
+    @Session() session: UserSession,
+    @Loader(ShiftInstanceLoader) loader: ShiftInstanceLoader,
+  ): Promise<boolean> {
+    if (!session?.user) {
+      return false;
+    }
+    return loader.isIntendedByKey.load(`${instance.id}::${session.user.id}`);
+  }
 }

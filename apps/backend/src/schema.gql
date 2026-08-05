@@ -586,7 +586,7 @@ type Query {
   myMembershipStatus(organizationUnitId: ID!): Boolean!
   myMemberships: [Membership!]!
   myOrganizationUnits: [OrganizationUnit!]!
-  myShiftInstances(endsBefore: DateTime = null, includePast: Boolean! = false, limit: Int! = 15, offset: Int! = 0, order: SortOrder! = ASC, startsAfter: DateTime = null, statuses: [ShiftInviteStatus!]): ShiftInstancePaginatedResponse!
+  myShiftInstances(endsBefore: DateTime = null, includeIntended: Boolean = false, includePast: Boolean! = false, limit: Int! = 15, offset: Int! = 0, order: SortOrder! = ASC, startsAfter: DateTime = null, statuses: [ShiftInviteStatus!]): ShiftInstancePaginatedResponse!
   myTime(limit: Int! = 10, offset: Int! = 0): TimeEntryPaginatedResponse!
   myUserProfile: UserProfile
   organization(id: String!): Organization
@@ -879,6 +879,7 @@ type ShiftInstance {
   isCancelled: Boolean!
   isCheckedIn: Boolean!
   isException: Boolean!
+  isIntended: Boolean!
   master: Shift!
   masterId: ID!
   myInviteStatus: ShiftInviteStatus

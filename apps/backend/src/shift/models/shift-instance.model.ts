@@ -57,6 +57,9 @@ export class ShiftInstance {
 
   @Field(() => ShiftInviteStatus, { nullable: true })
   myInviteStatus?: ShiftInviteStatus | null;
+
+  @Field(() => Boolean)
+  isIntended!: boolean;
 }
 
 export const ShiftInstancePaginatedResponse =
