@@ -81,12 +81,20 @@ export function diffShiftInstances(
   const toRemove: ShiftInstanceEntity[] = [];
 
   for (const [day, targets] of targetByDay) {
-    const instances = existingByDay.get(day) ?? [];
+    const dayInstances = existingByDay.get(day) ?? [];
+    // Cancelled rows must never absorb a pairing slot ahead of a live row on
+    // the same day: the live row would fall into the surplus branch below
+    // and get sync-cancelled with nothing to replace it. Cancelled rows
+    // still block inserts from the leftovers, and still consume a slot once
+    // all live rows are paired, so they remain reachable as surplus/restore
+    // candidates.
+    const instances = [
+      ...dayInstances.filter((i) => !i.isCancelled),
+      ...dayInstances.filter((i) => i.isCancelled),
+    ];
 
-    for (let i = 0; i < targets.length; i++) {
-      const match = targets[i];
+    for (const [i, match] of targets.entries()) {
       const instance = instances[i];
-      if (!match) continue;
 
       if (!instance) {
         toInsert.push(match);
@@ -132,7 +140,13 @@ export function diffShiftInstances(
   // Whole days the target no longer covers.
   for (const [day, instances] of existingByDay) {
     if (targetByDay.has(day)) continue;
-    toRemove.push(...instances);
+    // Manually cancelled instances are left untouched by the resync, same
+    // as the matched-pair and surplus branches above: diffShiftInstances
+    // never puts a manually-cancelled row into toRemove.
+    for (const instance of instances) {
+      if (instance.isCancelled && !instance.cancelledBySync) continue;
+      toRemove.push(instance);
+    }
   }
 
   return { toInsert, toUpdate, toRemove };
@@ -170,8 +184,10 @@ export async function syncShiftInstances(
   // syncShiftInstances() only loads and diffs non-exception instances —
   // exceptions are user-made one-offs and the sync must never rewrite or
   // delete them. Skipping any day an exception already occupies prevents a
-  // duplicate row, but the exception itself still drifts from the series
-  // pattern (wrong time-of-day, stale duration) until someone edits it.
+  // duplicate INSERT on that day — plan.toUpdate is not filtered here, so a
+  // regular row could in principle still be moved onto an exception's day —
+  // but the exception itself still drifts from the series pattern (wrong
+  // time-of-day, stale duration) until someone edits it.
   const toInsert = plan.toInsert.filter(
     (i) => !exceptionDays.has(localDateKey(i.actualStartsAt)),
   );

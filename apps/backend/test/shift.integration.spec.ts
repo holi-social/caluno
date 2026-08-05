@@ -2982,5 +2982,8 @@ describe('ShiftService.updateShiftInstance applyToAllFuture', () => {
       expect(instance.actualStartsAt.getHours()).toBe(14);
       expect(instance.actualStartsAt.getDay()).not.toBe(4); // no Thursdays
     }
+    expect(instancesAfter.some((i) => i.actualStartsAt.getDay() === 5)).toBe(
+      true,
+    ); // new Fridays were actually inserted
   });
 });
