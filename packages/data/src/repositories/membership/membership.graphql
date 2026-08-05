@@ -76,3 +76,28 @@ query MyMemberships {
     }
   }
 }
+
+query MyMembership($id: ID!) {
+  myMembership(id: $id) {
+    id
+    createdAt
+    organizationUnit {
+      id
+      name
+      logoUrl
+      type {
+        icon
+      }
+      parent {
+        id
+      }
+      organization {
+        name
+      }
+    }
+    roles {
+      id
+      name
+    }
+  }
+}

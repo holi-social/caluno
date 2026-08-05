@@ -150,6 +150,16 @@ export class RequirementFormRepository extends BaseRepository {
     return data.myFormSubmissions;
   }
 
+  async findMyOrgUnitForms(organizationUnitId: string) {
+    const data = await this.sdk.MyOrgUnitForms({ organizationUnitId });
+    return data.myOrgUnitForms;
+  }
+
+  async findMySubmission(id: string) {
+    const data = await this.sdk.MyFormSubmission({ id });
+    return data.myFormSubmission;
+  }
+
   async findAdminSubmission(id: string) {
     const data = await this.sdk.GetAdminFormSubmission({ id });
     return data.adminVolunteerSubmission;
