@@ -158,8 +158,8 @@ export async function syncShiftInstances(
     where: { masterId, isException: true },
     columns: { actualStartsAt: true },
   });
-  const exceptionStarts = new Set(
-    exceptions.map((e) => e.actualStartsAt.toISOString()),
+  const exceptionDays = new Set(
+    exceptions.map((e) => localDateKey(e.actualStartsAt)),
   );
 
   const filteredTarget = filterFromDate(target, fromDate);
@@ -169,12 +169,11 @@ export async function syncShiftInstances(
   // instead of just skipping their dates:
   // syncShiftInstances() only loads and diffs non-exception instances —
   // exceptions are user-made one-offs and the sync must never rewrite or
-  // delete them.
-  // - But there's a collision risk: if an exception instance sits at a date
-  // that the regenerated series also produces, the sync would insert a fresh
-  // regular instance at that same date → two instances at the same wall time.
+  // delete them. Skipping any day an exception already occupies prevents a
+  // duplicate row, but the exception itself still drifts from the series
+  // pattern (wrong time-of-day, stale duration) until someone edits it.
   const toInsert = plan.toInsert.filter(
-    (i) => !exceptionStarts.has(i.actualStartsAt.toISOString()),
+    (i) => !exceptionDays.has(localDateKey(i.actualStartsAt)),
   );
 
   if (toInsert.length > 0) {
@@ -192,6 +191,7 @@ export async function syncShiftInstances(
     await tx
       .update(schema.shiftInstances)
       .set({
+        actualStartsAt: update.actualStartsAt,
         actualEndsAt: update.actualEndsAt,
         occurrenceIndex: update.occurrenceIndex,
         ...(update.restore

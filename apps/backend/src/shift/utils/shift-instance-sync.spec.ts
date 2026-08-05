@@ -68,12 +68,10 @@ describe('filterFromDate', () => {
 });
 
 describe('diffShiftInstances with fromDate-filtered inputs', () => {
-  it('never reports a past instance as removed even if its new-rrule target no longer matches it', () => {
-    // Same scenario the old unscoped resync would get wrong: a time-of-day
-    // change means the regenerated target for EVERY date has a new
-    // timestamp, so a past instance's old timestamp matches nothing in the
-    // unfiltered target. Filtering existing instances by fromDate before
-    // diffing must exclude the past instance from consideration entirely.
+  it('never touches a past instance when the time-of-day changed', () => {
+    // Filtering by fromDate is what keeps history intact. Day-keyed matching
+    // would otherwise MOVE the past instance to the new time — silently
+    // rewriting a shift that already happened, underneath its time entries.
     const pastInstance = makeInstance({
       id: 'past',
       actualStartsAt: new Date('2026-01-01T09:00:00Z'), // old time-of-day
@@ -84,13 +82,14 @@ describe('diffShiftInstances with fromDate-filtered inputs', () => {
     });
     const fromDate = new Date('2026-01-08T00:00:00Z');
 
+    const newFutureStart = new Date('2026-01-08T10:00:00Z');
     const fullNewTarget = [
       makeTarget({
         actualStartsAt: new Date('2026-01-01T10:00:00Z'),
         occurrenceIndex: 0,
       }), // new time-of-day, before fromDate
       makeTarget({
-        actualStartsAt: new Date('2026-01-08T10:00:00Z'),
+        actualStartsAt: newFutureStart,
         occurrenceIndex: 1,
       }), // new time-of-day, at/after fromDate
     ];
@@ -103,8 +102,14 @@ describe('diffShiftInstances with fromDate-filtered inputs', () => {
 
     const plan = diffShiftInstances(existing, target);
 
-    expect(plan.toRemove.map((i) => i.id)).not.toContain('past');
-    expect(plan.toRemove.map((i) => i.id)).toContain('future');
-    expect(plan.toInsert).toHaveLength(1);
+    // The past instance is out of scope entirely — not removed, not moved.
+    expect(plan.toRemove).toHaveLength(0);
+    expect(plan.toUpdate.map((u) => u.id)).not.toContain('past');
+
+    // The future instance survives its day and moves to the new time.
+    expect(plan.toInsert).toHaveLength(0);
+    expect(plan.toUpdate).toHaveLength(1);
+    expect(plan.toUpdate[0]?.id).toBe('future');
+    expect(plan.toUpdate[0]?.actualStartsAt).toEqual(newFutureStart);
   });
 });
