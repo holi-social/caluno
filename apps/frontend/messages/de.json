@@ -133,6 +133,8 @@
     "organizations": "Deine Organisationen",
     "personalInformation": "Persönliche Informationen",
     "accountSettings": "Kontoeinstellungen",
+    "language": "Sprache",
+    "languageDescription": "Anzeigesprache der App",
     "edit": "Profil bearbeiten",
     "pictureLabel": "Profilbild",
     "saved": "Profil aktualisiert",
