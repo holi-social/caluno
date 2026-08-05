@@ -258,6 +258,30 @@ describe('diffShiftInstances', () => {
     expect(plan.toInsert).toHaveLength(0);
   });
 
+  it('protects a manually cancelled surplus row from removal', () => {
+    // Two existing rows on one day, one target for that day. The active
+    // (earlier) row pairs with the sole target; the manually cancelled
+    // (later) row falls into the surplus branch and must be excluded from
+    // toRemove, matching the matched-pair branch's own invariant.
+    const morning = new Date(2026, 6, 1, 9, 0, 0, 0);
+    const evening = new Date(2026, 6, 1, 18, 0, 0, 0);
+    const activeInstance = makeInstance({ actualStartsAt: morning });
+    const manuallyCancelledInstance = makeInstance({
+      actualStartsAt: evening,
+      isCancelled: true,
+      cancelledBySync: false,
+    });
+
+    const plan = diffShiftInstances(
+      [activeInstance, manuallyCancelledInstance],
+      [makeTarget(morning)],
+    );
+
+    expect(plan.toRemove).toHaveLength(0);
+    expect(plan.toUpdate).toHaveLength(0);
+    expect(plan.toInsert).toHaveLength(0);
+  });
+
   it('inserts the surplus when a day has more targets than existing rows', () => {
     const morning = new Date(2026, 6, 1, 9, 0, 0, 0);
     const evening = new Date(2026, 6, 1, 18, 0, 0, 0);

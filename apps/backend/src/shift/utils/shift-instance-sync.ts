@@ -121,7 +121,11 @@ export function diffShiftInstances(
     // Surplus rows on a day the target still covers.
     for (let i = targets.length; i < instances.length; i++) {
       const surplus = instances[i];
-      if (surplus) toRemove.push(surplus);
+      if (!surplus) continue;
+      // Manually cancelled instances are left untouched by the resync, same
+      // as the matched-pair branch above.
+      if (surplus.isCancelled && !surplus.cancelledBySync) continue;
+      toRemove.push(surplus);
     }
   }
 
