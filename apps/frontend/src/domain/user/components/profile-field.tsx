@@ -10,7 +10,7 @@ export const ProfileField = ({ label, subtitle, value }: ProfileFieldProps) => {
   return (
     <div className="space-y-1">
       <div>
-        <h3 className="text-base">{label}</h3>
+        <h2 className="text-base">{label}</h2>
         {subtitle && (
           <p className="text-xs text-muted-foreground">{subtitle}</p>
         )}

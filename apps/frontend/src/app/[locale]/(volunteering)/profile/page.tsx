@@ -37,8 +37,10 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
         <HeaderAvatar name={me.name} imageUrl={me.image} />
 
         {/* Section slots — empty; headings inlined (later tickets add bodies) */}
-        <section className="space-y-4">
-          <h2 className="text-xl font-bold">{tProfile('organizations')}</h2>
+        <section>
+          <h1 className="text-xl font-bold mb-4">
+            {tProfile('organizations')}
+          </h1>
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             {membershipEntries.map((entry) => (
               <MembershipCard
@@ -48,14 +50,14 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
             ))}
           </div>
         </section>
-        <section className="space-y-4">
-          <h2 className="text-xl font-bold">
+        <section>
+          <h1 className="text-xl font-bold mb-4">
             {tProfile('personalInformation')}
-          </h2>
-          <PersonalInformationSection me={me} profile={profile ?? null} />
+          </h1>
+          <PersonalInformationSection user={me} profile={profile ?? null} />
         </section>
         <section>
-          <h2 className="text-xl font-bold">{tProfile('accountSettings')}</h2>
+          <h1 className="text-xl font-bold">{tProfile('accountSettings')}</h1>
         </section>
 
         <div>
