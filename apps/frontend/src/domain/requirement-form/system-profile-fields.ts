@@ -7,11 +7,6 @@ export type SystemProfileField = {
   required: boolean;
 };
 
-/**
- * The system profile fields, in canonical (form-builder) order.
- * `labelKey` is a key under the `RequirementForm.fieldForm` namespace.
- * Single source of truth shared by the form builder and the profile section.
- */
 export const SYSTEM_PROFILE_FIELDS: readonly SystemProfileField[] = [
   {
     key: 'preferred-name',
