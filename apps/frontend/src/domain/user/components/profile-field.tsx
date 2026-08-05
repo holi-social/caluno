@@ -8,12 +8,12 @@ export const ProfileField = ({ label, subtitle, value }: ProfileFieldProps) => {
   const isEmpty = value === null || value.trim() === '';
 
   return (
-    <div className="flex flex-col gap-1">
-      <div className="flex flex-col">
-        <span className="text-sm font-medium">{label}</span>
-        {subtitle ? (
-          <span className="text-xs text-muted-foreground">{subtitle}</span>
-        ) : null}
+    <div className="space-y-1">
+      <div>
+        <h3 className="text-base">{label}</h3>
+        {subtitle && (
+          <p className="text-xs text-muted-foreground">{subtitle}</p>
+        )}
       </div>
       {isEmpty ? (
         <span className="text-sm text-muted-foreground">-</span>

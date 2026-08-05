@@ -86,10 +86,8 @@ export function BlockForm({
   const [profilePickerOpen, setProfilePickerOpen] = useState(false);
 
   const systemPresets = SYSTEM_PROFILE_FIELDS.map((field) => ({
-    key: field.key,
+    ...field,
     label: tField(field.labelKey),
-    type: field.type,
-    required: field.required,
   }));
 
   const customFieldTypes = [

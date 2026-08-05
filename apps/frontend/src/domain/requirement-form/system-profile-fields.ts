@@ -13,6 +13,12 @@ export type SystemProfileField = {
  * Single source of truth shared by the form builder and the profile section.
  */
 export const SYSTEM_PROFILE_FIELDS: readonly SystemProfileField[] = [
+  {
+    key: 'preferred-name',
+    labelKey: 'preferredName',
+    type: FieldType.Text,
+    required: false,
+  },
   { key: 'name', labelKey: 'firstName', type: FieldType.Name, required: true },
   {
     key: 'lastname',
@@ -20,14 +26,16 @@ export const SYSTEM_PROFILE_FIELDS: readonly SystemProfileField[] = [
     type: FieldType.Lastname,
     required: true,
   },
-  {
-    key: 'preferred-name',
-    labelKey: 'preferredName',
-    type: FieldType.Text,
-    required: false,
-  },
+  { key: 'gender', labelKey: 'gender', type: FieldType.Text, required: false },
+
   { key: 'email', labelKey: 'email', type: FieldType.Email, required: true },
   { key: 'phone', labelKey: 'phone', type: FieldType.Phone, required: false },
+  {
+    key: 'birth-date',
+    labelKey: 'birthDate',
+    type: FieldType.Date,
+    required: false,
+  },
   {
     key: 'address',
     labelKey: 'address',
@@ -36,12 +44,5 @@ export const SYSTEM_PROFILE_FIELDS: readonly SystemProfileField[] = [
   },
   { key: 'zip', labelKey: 'zipCode', type: FieldType.Zip, required: false },
   { key: 'city', labelKey: 'city', type: FieldType.Text, required: false },
-  {
-    key: 'birth-date',
-    labelKey: 'birthDate',
-    type: FieldType.Date,
-    required: false,
-  },
-  { key: 'gender', labelKey: 'gender', type: FieldType.Text, required: false },
   { key: 'iban', labelKey: 'iban', type: FieldType.Iban, required: true },
 ];
