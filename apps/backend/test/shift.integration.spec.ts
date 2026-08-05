@@ -2899,3 +2899,88 @@ describe('ShiftService.requestJoinShiftInstance — required forms', () => {
     expect(invite?.status).toBe(ShiftInviteStatus.ACCEPTED);
   });
 });
+
+describe('ShiftService.updateShiftInstance applyToAllFuture', () => {
+  let app: INestApplication;
+  let db: Database;
+  let organizationUnitId: string;
+  let shiftService: ShiftService;
+
+  beforeAll(async () => {
+    const context = await getGraphqlTestContext();
+    app = context.app;
+    db = context.db;
+    organizationUnitId = context.organizationUnitId;
+    shiftService = app.get(ShiftService);
+  });
+
+  it('moves surviving instances in place when weekdays and time change together', async () => {
+    // Weekly Wed+Thu at 09:00, starting on a Wednesday well in the future so
+    // nothing is filtered out as past.
+    const seriesStart = new Date(2026, 8, 2, 9, 0, 0, 0); // Wed 2026-09-02
+    const shift = await createShift(db, {
+      organizationUnitId,
+      startsAt: seriesStart,
+      endsAt: new Date(2026, 8, 2, 11, 0, 0, 0),
+      rrule: 'FREQ=WEEKLY;BYDAY=WE,TH;UNTIL=20261001T000000Z',
+    });
+
+    const instancesBefore = await db.query.shiftInstances.findMany({
+      where: { masterId: shift.id },
+    });
+    const firstWednesday = instancesBefore
+      .slice()
+      .sort(
+        (a, b) => a.actualStartsAt.getTime() - b.actualStartsAt.getTime(),
+      )[0];
+    if (!firstWednesday) throw new Error('expected an expanded instance');
+
+    // A volunteer is signed up for a Wednesday that survives the edit.
+    const volunteer = await createUser(db);
+    await db.insert(schema.shiftInstanceInvites).values({
+      instanceId: firstWednesday.id,
+      userId: volunteer.id,
+      status: ShiftInviteStatus.ACCEPTED,
+    });
+
+    // Change BOTH: drop Thursday for Friday, and move 09:00 -> 14:00.
+    const newStart = new Date(2026, 8, 2, 14, 0, 0, 0);
+    const newEnd = new Date(2026, 8, 2, 16, 0, 0, 0);
+
+    const updated = await shiftService.updateShiftInstance(
+      firstWednesday.id,
+      {
+        title: shift.title,
+        startsAt: newStart,
+        endsAt: newEnd,
+        rrule: 'FREQ=WEEKLY;BYDAY=WE,FR;UNTIL=20261001T000000Z',
+      },
+      organizationUnitId,
+      { applyToAllFuture: true },
+    );
+
+    // The edited row is returned with the NEW times, not stale pre-edit data.
+    expect(updated.id).toBe(firstWednesday.id);
+    expect(updated.actualStartsAt).toEqual(newStart);
+    expect(updated.actualEndsAt).toEqual(newEnd);
+    expect(updated.isCancelled).toBe(false);
+
+    // The volunteer's invite is still attached to a live instance.
+    const [invite] = await db
+      .select()
+      .from(schema.shiftInstanceInvites)
+      .where(eq(schema.shiftInstanceInvites.userId, volunteer.id));
+    expect(invite?.instanceId).toBe(firstWednesday.id);
+
+    // No Thursdays survive; the Wednesdays kept their identity.
+    const instancesAfter = await db.query.shiftInstances.findMany({
+      where: { masterId: shift.id, isCancelled: false },
+    });
+    const survivingIds = new Set(instancesAfter.map((i) => i.id));
+    expect(survivingIds.has(firstWednesday.id)).toBe(true);
+    for (const instance of instancesAfter) {
+      expect(instance.actualStartsAt.getHours()).toBe(14);
+      expect(instance.actualStartsAt.getDay()).not.toBe(4); // no Thursdays
+    }
+  });
+});
