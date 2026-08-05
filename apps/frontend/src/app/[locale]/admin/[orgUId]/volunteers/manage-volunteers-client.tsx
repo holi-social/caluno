@@ -23,7 +23,7 @@ import {
   TabsList,
   TabsTrigger,
 } from '@repo/ui';
-import { LogIn, UserRound } from 'lucide-react';
+import { ScanQrCode, UserRound } from 'lucide-react';
 import { useSearchParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { ButtonClipboard } from '@/components/button-clipboard';
@@ -136,7 +136,7 @@ function ApprovedTab({ orgUId }: { orgUId: string }) {
                       variant="outline"
                       aria-label={t('action.checkInShiftAria')}
                     >
-                      <LogIn />
+                      <ScanQrCode />
                     </Button>
                   </Link>
                 </div>
