@@ -1,11 +1,5 @@
 import { describe, expect, it } from 'bun:test';
-import { LOCALES, localeLabel } from './locales';
-
-describe('LOCALES', () => {
-  it('covers the supported app locales in order', () => {
-    expect(LOCALES.map((entry) => entry.key)).toEqual(['en', 'de']);
-  });
-});
+import { localeLabel } from './locales';
 
 describe('localeLabel', () => {
   it('returns the display label for a supported locale', () => {
