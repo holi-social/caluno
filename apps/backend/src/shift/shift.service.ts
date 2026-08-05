@@ -49,7 +49,7 @@ import { startOfTodayInAppTimeZone } from './utils/app-time';
 import { getDurationMinutes } from './utils/duration';
 import { parseRruleDays, parseRruleUntil } from './utils/parse-rrule';
 import { expandShift } from './utils/rrule-expander';
-import { syncShiftInstances } from './utils/shift-instance-sync';
+import { localDateKey, syncShiftInstances } from './utils/shift-instance-sync';
 
 export { getDurationMinutes } from './utils/duration';
 
@@ -1279,9 +1279,9 @@ export class ShiftService {
         updatedShift.durationMinutes,
       );
 
-      const editedDateKey = this.toLocalDateKey(instance.actualStartsAt);
+      const editedDateKey = localDateKey(instance.actualStartsAt);
       const editedOccurrenceSurvives = target.some(
-        (t) => this.toLocalDateKey(t.actualStartsAt) === editedDateKey,
+        (t) => localDateKey(t.actualStartsAt) === editedDateKey,
       );
       if (!editedOccurrenceSurvives) {
         throw new ConflictGraphQLError('shift_instance_recurrence_conflict');
@@ -1360,10 +1360,6 @@ export class ShiftService {
     const untilA = parseRruleUntil(a)?.getTime() ?? null;
     const untilB = parseRruleUntil(b)?.getTime() ?? null;
     return untilA === untilB;
-  }
-
-  private toLocalDateKey(date: Date): string {
-    return `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`;
   }
 
   /** Keeps `base`'s calendar date, adopts `time`'s hour/minute/second. */
@@ -1639,7 +1635,15 @@ export class ShiftService {
             shift.originalStartsAt,
             shift.durationMinutes,
           );
-          await syncShiftInstances(tx, id, target);
+          // Past occurrences are the historical record of what actually
+          // happened. Day-keyed matching would otherwise move them to the
+          // new time, rewriting completed shifts underneath their time
+          // entries. Local midnight, matching updateShiftInstanceSeries —
+          // NOT startOfTodayInAppTimeZone(), which returns a UTC instant and
+          // would compare against these naive columns in a different frame.
+          const fromDate = new Date();
+          fromDate.setHours(0, 0, 0, 0);
+          await syncShiftInstances(tx, id, target, { fromDate });
         }
       } else if (input.startsAt && input.endsAt) {
         // One-off shift: move the single instance in place, preserving signups.
