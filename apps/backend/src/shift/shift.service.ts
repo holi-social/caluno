@@ -1635,15 +1635,7 @@ export class ShiftService {
             shift.originalStartsAt,
             shift.durationMinutes,
           );
-          // Past occurrences are the historical record of what actually
-          // happened. Day-keyed matching would otherwise move them to the
-          // new time, rewriting completed shifts underneath their time
-          // entries. Local midnight, matching updateShiftInstanceSeries —
-          // NOT startOfTodayInAppTimeZone(), which returns a UTC instant and
-          // would compare against these naive columns in a different frame.
-          const fromDate = new Date();
-          fromDate.setHours(0, 0, 0, 0);
-          await syncShiftInstances(tx, id, target, { fromDate });
+          await syncShiftInstances(tx, id, target);
         }
       } else if (input.startsAt && input.endsAt) {
         // One-off shift: move the single instance in place, preserving signups.
