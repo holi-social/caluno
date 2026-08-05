@@ -1,11 +1,13 @@
 'use client';
 
-import type { ShiftInviteStatus } from '@repo/data';
 import { Badge, Button, cn, Input, VolunteeringMemberRow } from '@repo/ui';
 import { ArrowLeftRight, CirclePlus, CircleX } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useState } from 'react';
-import { toInviteDisplayState } from '../invite-status-display';
+import {
+  type InviteStatus,
+  toInviteDisplayState,
+} from '../invite-status-display';
 
 /** Label + gap + search bar + minimum list area */
 const TRANSFER_LIST_MIN_HEIGHT = 222;
@@ -15,7 +17,7 @@ type Member = {
   name: string;
   email: string;
   image?: string | null;
-  inviteStatus?: import('@repo/data').ShiftInviteStatus | null;
+  inviteStatus?: InviteStatus | null;
 };
 
 type TransferListProps = {
@@ -140,9 +142,7 @@ export function TransferList({
                 email={member.email}
                 state={
                   member.inviteStatus
-                    ? toInviteDisplayState(
-                        member.inviteStatus as ShiftInviteStatus,
-                      )
+                    ? toInviteDisplayState(member.inviteStatus)
                     : 'invited'
                 }
                 phase="before"

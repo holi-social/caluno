@@ -1,5 +1,8 @@
-import { ShiftInviteStatus } from '@repo/data';
+import { EventInviteStatus, ShiftInviteStatus } from '@repo/data';
 import type { ShiftVolunteeringDisplayState } from '@repo/ui';
+
+/** Shared invite-status values for shift + event (identical GraphQL enums). */
+export type InviteStatus = ShiftInviteStatus | EventInviteStatus;
 
 const ADMIN_UNINVITE_SOURCE_STATUSES = [
   ShiftInviteStatus.Invited,
@@ -35,20 +38,26 @@ export function adminReinviteTargetStatus(
 
 /** Domain invite status → backoffice display state (VOLI-842). */
 export function toInviteDisplayState(
-  status: ShiftInviteStatus,
+  status: InviteStatus,
 ): ShiftVolunteeringDisplayState {
   switch (status) {
     case ShiftInviteStatus.Invited:
+    case EventInviteStatus.Invited:
       return 'invited';
     case ShiftInviteStatus.Accepted:
+    case EventInviteStatus.Accepted:
       return 'accepted';
     case ShiftInviteStatus.SelfJoined:
+    case EventInviteStatus.SelfJoined:
       return 'signed_up';
     case ShiftInviteStatus.VolunteerRejected:
+    case EventInviteStatus.VolunteerRejected:
       return 'declined';
     case ShiftInviteStatus.Cancelled:
+    case EventInviteStatus.Cancelled:
       return 'cancelled';
     case ShiftInviteStatus.AdminRejected:
+    case EventInviteStatus.AdminRejected:
       return 'rejected';
     default: {
       const _exhaustive: never = status;

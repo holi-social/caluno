@@ -27,7 +27,10 @@ export default async function InviteEventPage({
   ]);
 
   const availableMembers = memberships.map((m) => m.user);
-  const invitedMembers = invites.map((invite) => invite.user);
+  const invitedMembers = invites.map((invite) => ({
+    ...invite.user,
+    inviteStatus: invite.status,
+  }));
 
   return (
     <EventInviteForm
