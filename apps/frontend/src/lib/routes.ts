@@ -7,4 +7,6 @@ export const routes = {
   publicForm: (token: string) => `/f/${token}`,
   formSubmission: (submissionId: string) =>
     `/forms/submissions/${submissionId}`,
+  membershipDetail: (membershipId: string) =>
+    `/profile/memberships/${membershipId}`,
 };

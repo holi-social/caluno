@@ -6,6 +6,7 @@ import { ProfileForm } from '@/domain/user/components/profile-form';
 import { ProfilePageHeader } from '@/domain/user/components/profile-page-header';
 import { resolveLocale } from '@/i18n/routing';
 import { getDataClient } from '@/lib/data-client';
+import { routes } from '@/lib/routes';
 
 type ProfilePageProps = {
   params: Promise<{ locale: string }>;
@@ -46,6 +47,11 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
               <MembershipCard
                 key={`${entry.state}-${entry.id}`}
                 entry={entry}
+                detailHref={
+                  entry.state === 'accepted'
+                    ? routes.membershipDetail(entry.id)
+                    : undefined
+                }
               />
             ))}
           </div>
