@@ -7,18 +7,26 @@ import type { AuthenticatedGraphQLContext } from '../../graphql/graphql.context'
 import { PaginationInput } from '../../graphql/pagination.input';
 import { OrgAccessService } from '../../shared/org-access.service';
 import { FormSubmissionMapper } from '../mappers/form-submission.mapper';
+import { RequirementFormMapper } from '../mappers/requirement-form.mapper';
 import {
   FormSubmission,
   FormSubmissionPaginatedResponse,
 } from '../models/form-submission.model';
-import { FormSubmissionService, RequirementFormService } from '../services';
+import { MyOrgUnitForm } from '../models/my-org-unit-form.model';
+import {
+  FormSubmissionService,
+  RequiredFormService,
+  RequirementFormService,
+} from '../services';
 
 @Resolver(() => FormSubmission)
 export class FormSubmissionQueryResolver {
   constructor(
     private readonly formSubmissionService: FormSubmissionService,
     private readonly requirementFormService: RequirementFormService,
+    private readonly requiredFormService: RequiredFormService,
     private readonly formSubmissionMapper: FormSubmissionMapper,
+    private readonly requirementFormMapper: RequirementFormMapper,
     private readonly orgAccessService: OrgAccessService,
   ) {}
 
@@ -47,6 +55,24 @@ export class FormSubmissionQueryResolver {
       organizationUnitId,
     );
     return this.formSubmissionMapper.toArray(items);
+  }
+
+  @Query(() => [MyOrgUnitForm])
+  async myOrgUnitForms(
+    @Args('organizationUnitId', { type: () => ID })
+    organizationUnitId: string,
+    @Session() session: UserSession,
+  ): Promise<MyOrgUnitForm[]> {
+    const items = await this.requiredFormService.formsForUser(
+      session.user.id,
+      organizationUnitId,
+    );
+    return items.map((item) => ({
+      form: this.requirementFormMapper.toModelOrThrow(item.form),
+      completed: item.completed,
+      submissionId: item.submissionId,
+      submittedAt: item.submittedAt,
+    }));
   }
 
   @Permissions(PERMISSIONS.VOLUNTEER_VIEW)

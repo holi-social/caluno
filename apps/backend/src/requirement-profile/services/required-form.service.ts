@@ -24,6 +24,13 @@ export type RequiredFormStatus = {
   targetId: string;
 };
 
+export type MyOrgUnitFormItem = {
+  form: RequirementFormEntity;
+  completed: boolean;
+  submissionId: string | null;
+  submittedAt: Date | null;
+};
+
 @Injectable()
 export class RequiredFormService {
   constructor(
@@ -111,6 +118,95 @@ export class RequiredFormService {
         targetId: target.targetId,
       };
     });
+  }
+
+  /**
+   * Computes the union of forms a user has been asked to fill in or has
+   * submitted within an organization unit's organization:
+   *   1. forms required at the org-unit level,
+   *   2. forms required by events the user is invited to in this org,
+   *   3. the user's SUBMITTED forms for this org.
+   * Deduped by formId; an entry is `completed` when a SUBMITTED submission
+   * exists for it. Not-completed entries sort first.
+   */
+  async formsForUser(
+    userId: string,
+    organizationUnitId: string,
+  ): Promise<MyOrgUnitFormItem[]> {
+    // 1. resolve the org-unit's organization
+    const orgUnit = await this.db.query.organizationUnits.findFirst({
+      where: { id: organizationUnitId },
+      columns: { organizationId: true },
+    });
+    if (!orgUnit) return [];
+    const organizationId = orgUnit.organizationId;
+
+    // 2. requested: org-unit required forms
+    const orgUnitRequired = await this.getRequiredForms({
+      targetType: RequiredFormTargetType.ORGANIZATION_UNIT,
+      targetId: organizationUnitId,
+    });
+
+    // 3. requested: event required forms for events the user is invited to
+    //    within this org-unit's organization.
+    const invites = await this.db.query.eventInvites.findMany({
+      where: { userId },
+      with: {
+        event: {
+          with: { organizationUnit: { columns: { organizationId: true } } },
+        },
+      },
+    });
+    const inOrgEventIds = invites
+      .filter(
+        (invite) =>
+          invite.event?.organizationUnit?.organizationId === organizationId,
+      )
+      .map((invite) => invite.eventId);
+    const eventRequired: Array<{ form: RequirementFormEntity; order: number }> =
+      [];
+    for (const eventId of new Set(inOrgEventIds)) {
+      const forms = await this.getRequiredForms({
+        targetType: RequiredFormTargetType.EVENT,
+        targetId: eventId,
+      });
+      eventRequired.push(...forms);
+    }
+
+    // 4. union of requested forms, deduped by formId
+    const byForm = new Map<string, MyOrgUnitFormItem>();
+    for (const { form } of [...orgUnitRequired, ...eventRequired]) {
+      if (!byForm.has(form.id)) {
+        byForm.set(form.id, {
+          form,
+          completed: false,
+          submissionId: null,
+          submittedAt: null,
+        });
+      }
+    }
+
+    // 5. completed: user's submitted forms for this org. Either upgrades an
+    //    existing required entry to completed, or adds a submitted-but-not-
+    //    currently-required entry.
+    const submissions = await this.db.query.formSubmissions.findMany({
+      where: { userId, status: FormSubmissionStatus.SUBMITTED },
+      with: { form: true },
+    });
+    for (const submission of submissions) {
+      const form = submission.form;
+      if (!form || form.organizationId !== organizationId) continue;
+      byForm.set(form.id, {
+        form,
+        completed: true,
+        submissionId: submission.id,
+        submittedAt: submission.submittedAt,
+      });
+    }
+
+    // 6. not-completed first, then completed
+    const items = [...byForm.values()];
+    return items.sort((a, b) => Number(a.completed) - Number(b.completed));
   }
 
   async countRequiredFormsByEventIds(
