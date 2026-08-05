@@ -1,6 +1,13 @@
 'use client';
 
-import { Badge, Button, cn, Input, VolunteeringMemberRow } from '@repo/ui';
+import {
+  Badge,
+  Button,
+  cn,
+  Input,
+  type ShiftVolunteeringDisplayState,
+  VolunteeringMemberRow,
+} from '@repo/ui';
 import { ArrowLeftRight, CirclePlus, CircleX } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useState } from 'react';
@@ -18,6 +25,8 @@ type Member = {
   email: string;
   image?: string | null;
   inviteStatus?: InviteStatus | null;
+  /** When set, overrides inviteStatus → display mapping (e.g. events). */
+  displayState?: ShiftVolunteeringDisplayState;
 };
 
 type TransferListProps = {
@@ -141,9 +150,10 @@ export function TransferList({
                 name={member.name}
                 email={member.email}
                 state={
-                  member.inviteStatus
+                  member.displayState ??
+                  (member.inviteStatus
                     ? toInviteDisplayState(member.inviteStatus)
-                    : 'invited'
+                    : 'invited')
                 }
                 phase="before"
                 className="hover:bg-accent"

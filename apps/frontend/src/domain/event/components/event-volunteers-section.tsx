@@ -10,11 +10,13 @@ import {
   CardContent,
   CardHeader,
   CardTitle,
+  VolunteeringStatusBadge,
 } from '@repo/ui';
 import { LogIn, UserPlus } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { UserCard } from '@/components/user-card';
 import { Link } from '@/i18n/navigation';
+import { toEventInviteDisplayState } from '../invite-status-display';
 
 interface EventVolunteersCardProps {
   orgUId: string;
@@ -60,20 +62,27 @@ export function EventVolunteersSection({
               const isParticipating =
                 invite.status === EventInviteStatus.Accepted ||
                 invite.status === EventInviteStatus.SelfJoined;
+              const displayState = toEventInviteDisplayState(invite.status);
 
               return (
                 <li
                   key={invite.id}
-                  className="flex items-center justify-between gap-2"
+                  className="flex items-center gap-2 sm:gap-4"
                 >
-                  <div className="flex min-w-0 items-center gap-2">
+                  <div className="min-w-0 flex-1">
                     <UserCard user={invite.user} size="sm" />
-                    {!isParticipating && (
-                      <Badge variant="secondary">{t('invitedBadge')}</Badge>
-                    )}
                   </div>
-                  {isParticipating && (
-                    <div className="flex items-center gap-1 shrink-0">
+                  <div className="flex shrink-0 items-center gap-2 sm:gap-3">
+                    <VolunteeringStatusBadge
+                      state={displayState}
+                      phase="before"
+                      label={
+                        displayState === 'signed_up'
+                          ? t('status.signedUp')
+                          : t('status.invited')
+                      }
+                    />
+                    {isParticipating && (
                       <Link
                         href={`/admin/${orgUId}/check-in/${invite.user.checkInId}/check-in`}
                         aria-label={t('checkInAria')}
@@ -86,8 +95,8 @@ export function EventVolunteersSection({
                           <LogIn />
                         </Button>
                       </Link>
-                    </div>
-                  )}
+                    )}
+                  </div>
                 </li>
               );
             })}

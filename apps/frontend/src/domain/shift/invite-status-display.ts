@@ -76,7 +76,7 @@ export type InviteStatusCounts = {
 };
 
 export function countInviteDisplayStates(
-  statuses: readonly ShiftInviteStatus[],
+  statuses: readonly InviteStatus[],
 ): InviteStatusCounts {
   const counts: InviteStatusCounts = {
     invited: 0,

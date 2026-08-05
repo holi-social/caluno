@@ -12,6 +12,7 @@ import { FormSheet, useFormSheet } from '@/components/form-sheet';
 import { TransferList } from '@/domain/shift/components/transfer-list';
 import { useRouter } from '@/i18n/navigation';
 import { copyToClipboard } from '@/lib/clipboard';
+import { toEventInviteDisplayState } from '../invite-status-display';
 import { serverEventInviteFormSchema } from '../schemas';
 import { eventShareUrl } from '../share';
 
@@ -80,6 +81,13 @@ export const EventInviteForm = ({
     );
   });
 
+  const invitedForList = invited.map((member) => ({
+    ...member,
+    displayState: member.inviteStatus
+      ? toEventInviteDisplayState(member.inviteStatus)
+      : ('invited' as const),
+  }));
+
   const onSubmit = async (formData: { memberIds: string[] }) => {
     setServerError(undefined);
 
@@ -109,7 +117,7 @@ export const EventInviteForm = ({
       <div className="flex min-h-full flex-col gap-4">
         <TransferList
           available={availableMembers}
-          invited={invited}
+          invited={invitedForList}
           onInvitedChange={(ids) => setValue('memberIds', ids)}
         />
         <p className="shrink-0 text-sm text-muted-foreground">

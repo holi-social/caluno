@@ -1297,8 +1297,11 @@
           "inviteButton": "Invite",
           "inviteAria": "Invite members",
           "checkInAria": "Check in",
-          "invitedBadge": "Invited",
-          "empty": "No volunteers invited yet."
+          "empty": "No volunteers invited yet.",
+          "status": {
+            "invited": "Invited",
+            "signedUp": "Signed up"
+          }
         },
       "shiftsCard": {
         "title": "Shifts",

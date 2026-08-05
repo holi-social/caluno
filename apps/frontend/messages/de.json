@@ -1297,8 +1297,11 @@
           "inviteButton": "Einladen",
           "inviteAria": "Mitglieder einladen",
           "checkInAria": "Einchecken",
-          "invitedBadge": "Eingeladen",
-          "empty": "Noch keine Freiwilligen eingeladen."
+          "empty": "Noch keine Freiwilligen eingeladen.",
+          "status": {
+            "invited": "Eingeladen",
+            "signedUp": "Angemeldet"
+          }
         },
       "shiftsCard": {
         "title": "Einsätze",
