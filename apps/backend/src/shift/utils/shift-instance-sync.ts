@@ -14,6 +14,7 @@ export function filterFromDate<T extends { actualStartsAt: Date }>(
 
 export interface InstanceUpdate {
   id: string;
+  actualStartsAt: Date;
   actualEndsAt: Date;
   occurrenceIndex: number;
   restore: boolean;
@@ -25,55 +26,109 @@ export interface InstanceSyncPlan {
   toRemove: ShiftInstanceEntity[];
 }
 
+/**
+ * Calendar-day identity for an instance start.
+ *
+ * `actual_starts_at` is a `timestamp` without time zone, so node-postgres
+ * hands back a Date in server-local wall-clock — the same frame the local
+ * getters and SQL's `date_trunc('day', ...)` work in. Never key days off
+ * `toISOString()`, which would reintroduce a UTC/local mismatch.
+ */
+export function localDateKey(date: Date): string {
+  return `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`;
+}
+
+function groupByDay<T extends { actualStartsAt: Date }>(
+  items: T[],
+): Map<string, T[]> {
+  const groups = new Map<string, T[]>();
+  for (const item of items) {
+    const key = localDateKey(item.actualStartsAt);
+    const bucket = groups.get(key);
+    if (bucket) {
+      bucket.push(item);
+    } else {
+      groups.set(key, [item]);
+    }
+  }
+  for (const bucket of groups.values()) {
+    bucket.sort(
+      (a, b) => a.actualStartsAt.getTime() - b.actualStartsAt.getTime(),
+    );
+  }
+  return groups;
+}
+
+/**
+ * Matches existing rows to regenerated occurrences by CALENDAR DAY, not by
+ * exact instant. A day present on both sides keeps its row and moves it to
+ * the new time, so invites and time entries survive an edit that changes the
+ * recurrence weekdays and the time-of-day together.
+ *
+ * Days that hold more than one occurrence are not reachable via
+ * `generateRrule` (no BYHOUR), so chronological pairing is purely defensive
+ * against rrule strings from other sources.
+ */
 export function diffShiftInstances(
   existing: ShiftInstanceEntity[],
   target: ShiftInstanceData[],
 ): InstanceSyncPlan {
-  // Matching is done by `actualStartsAt.toISOString()`, which compares UTC
-  // instants. `expandShift` anchors occurrence times to `originalStartsAt`'s
-  // timezone offset, so moving a series start across a DST transition shifts
-  // post-transition occurrences by ±1h and they no longer match existing
-  // instances (they get cancelled/deleted and re-inserted).
-  // TODO: known follow-up, not handled here.
-  const targetByStart = new Map(
-    target.map((t) => [t.actualStartsAt.toISOString(), t]),
-  );
-  const existingStarts = new Set(
-    existing.map((e) => e.actualStartsAt.toISOString()),
-  );
+  const existingByDay = groupByDay(existing);
+  const targetByDay = groupByDay(target);
 
-  const toInsert = target.filter(
-    (t) => !existingStarts.has(t.actualStartsAt.toISOString()),
-  );
-
+  const toInsert: ShiftInstanceData[] = [];
   const toUpdate: InstanceUpdate[] = [];
   const toRemove: ShiftInstanceEntity[] = [];
 
-  for (const instance of existing) {
-    const match = targetByStart.get(instance.actualStartsAt.toISOString());
-    if (!match) {
-      toRemove.push(instance);
-      continue;
+  for (const [day, targets] of targetByDay) {
+    const instances = existingByDay.get(day) ?? [];
+
+    for (let i = 0; i < targets.length; i++) {
+      const match = targets[i];
+      const instance = instances[i];
+      if (!match) continue;
+
+      if (!instance) {
+        toInsert.push(match);
+        continue;
+      }
+
+      const restore = instance.isCancelled && instance.cancelledBySync;
+      // Manually cancelled instances are left untouched by the resync — and
+      // because their day still matched, no replacement row is inserted
+      // beside them.
+      if (instance.isCancelled && !restore) {
+        continue;
+      }
+
+      const startsChanged =
+        instance.actualStartsAt.getTime() !== match.actualStartsAt.getTime();
+      const endsChanged =
+        instance.actualEndsAt.getTime() !== match.actualEndsAt.getTime();
+      const indexChanged = instance.occurrenceIndex !== match.occurrenceIndex;
+
+      if (restore || startsChanged || endsChanged || indexChanged) {
+        toUpdate.push({
+          id: instance.id,
+          actualStartsAt: match.actualStartsAt,
+          actualEndsAt: match.actualEndsAt,
+          occurrenceIndex: match.occurrenceIndex,
+          restore,
+        });
+      }
     }
 
-    const restore = instance.isCancelled && instance.cancelledBySync;
-    // Manually cancelled instances are left untouched by the resync.
-    if (instance.isCancelled && !restore) {
-      continue;
+    // Surplus rows on a day the target still covers.
+    for (let i = targets.length; i < instances.length; i++) {
+      const surplus = instances[i];
+      if (surplus) toRemove.push(surplus);
     }
+  }
 
-    const endsChanged =
-      instance.actualEndsAt.getTime() !== match.actualEndsAt.getTime();
-    const indexChanged = instance.occurrenceIndex !== match.occurrenceIndex;
-
-    if (restore || endsChanged || indexChanged) {
-      toUpdate.push({
-        id: instance.id,
-        actualEndsAt: match.actualEndsAt,
-        occurrenceIndex: match.occurrenceIndex,
-        restore,
-      });
-    }
+  // Whole days the target no longer covers.
+  for (const [day, instances] of existingByDay) {
+    if (targetByDay.has(day)) continue;
+    toRemove.push(...instances);
   }
 
   return { toInsert, toUpdate, toRemove };
