@@ -1390,5 +1390,14 @@
     "requestPending": "Anfrage ausstehend",
     "requestRejected": "Anfrage nicht bestätigt",
     "requestSentToast": "Anfrage gesendet — ein Koordinator bestätigt sie."
+  },
+  "MembershipDetail": {
+    "submission": {
+      "fieldColumn": "Feld",
+      "answerColumn": "Antwort",
+      "noFields": "Dieses Formular hat keine Felder.",
+      "accepted": "Akzeptiert",
+      "submittedOn": "Eingereicht am {date}"
+    }
   }
 }

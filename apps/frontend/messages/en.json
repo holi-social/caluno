@@ -1390,5 +1390,14 @@
     "requestPending": "Request pending",
     "requestRejected": "Request not approved",
     "requestSentToast": "Request sent — a coordinator will confirm it."
+  },
+  "MembershipDetail": {
+    "submission": {
+      "fieldColumn": "Field",
+      "answerColumn": "Answer",
+      "noFields": "This form has no fields.",
+      "accepted": "Accepted",
+      "submittedOn": "Submitted on {date}"
+    }
   }
 }
