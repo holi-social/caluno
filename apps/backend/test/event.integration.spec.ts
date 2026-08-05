@@ -10,6 +10,7 @@ import {
 import type { INestApplication } from '@nestjs/common';
 import type { Database } from '../src/database/database.module';
 import * as schema from '../src/database/schema';
+import { EventInviteStatus } from '../src/event/enums';
 import { MembershipRequestStatus } from '../src/membership/enums';
 import { JoinStatus } from '../src/shared/enums/join-status.enum';
 import { ShiftInviteStatus, ShiftVisibility } from '../src/shift/enums';
@@ -501,6 +502,80 @@ describe('publicEvent', () => {
     );
 
     expect(data.joinEvent.status).toBe(JoinStatus.REJECTED);
+
+    setAuthMockUserId(originalUserId);
+  });
+});
+
+describe('myEvents', () => {
+  let app: INestApplication;
+  let db: Database;
+  let organizationUnitId: string;
+
+  beforeAll(async () => {
+    const context = await getGraphqlTestContext();
+    app = context.app;
+    db = context.db;
+    organizationUnitId = context.organizationUnitId;
+  });
+
+  it('filters myEvents by invite status', async () => {
+    const originalUserId = getAuthMockUserId();
+    const user = await createUser(db);
+    await addMembership(db, user.id, organizationUnitId);
+    setAuthMockUserId(user.id);
+
+    const invitedEvent = await createEvent(db, { organizationUnitId });
+    const acceptedEvent = await createEvent(db, { organizationUnitId });
+
+    await db.insert(schema.eventInvites).values([
+      {
+        eventId: invitedEvent.id,
+        userId: user.id,
+        status: EventInviteStatus.INVITED,
+      },
+      {
+        eventId: acceptedEvent.id,
+        userId: user.id,
+        status: EventInviteStatus.ACCEPTED,
+      },
+    ]);
+
+    const query = `
+      query MyEvents($includePast: Boolean!, $statuses: [EventInviteStatus!]) {
+        myEvents(includePast: $includePast, statuses: $statuses) {
+          items { id }
+        }
+      }
+    `;
+
+    const invitedOnly = await graphqlRequestRequiringData<{
+      myEvents: { items: Array<{ id: string }> };
+    }>(
+      app,
+      {
+        query,
+        variables: { includePast: true, statuses: ['INVITED'] },
+      },
+      'myEvents',
+    );
+    const invitedIds = invitedOnly.myEvents.items.map((item) => item.id);
+    expect(invitedIds).toContain(invitedEvent.id);
+    expect(invitedIds).not.toContain(acceptedEvent.id);
+
+    const defaultStatuses = await graphqlRequestRequiringData<{
+      myEvents: { items: Array<{ id: string }> };
+    }>(
+      app,
+      {
+        query,
+        variables: { includePast: true, statuses: null },
+      },
+      'myEvents',
+    );
+    const defaultIds = defaultStatuses.myEvents.items.map((item) => item.id);
+    expect(defaultIds).toContain(acceptedEvent.id);
+    expect(defaultIds).not.toContain(invitedEvent.id);
 
     setAuthMockUserId(originalUserId);
   });

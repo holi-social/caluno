@@ -21,12 +21,13 @@ export default async function InviteEventPage({
     notFound();
   }
 
-  const [memberships, attendees] = await Promise.all([
+  const [memberships, invites] = await Promise.all([
     data.membership.findAllByOrganizationUnitId(),
-    data.event.findAttendees(eventId),
+    data.event.findInvites(eventId),
   ]);
 
   const availableMembers = memberships.map((m) => m.user);
+  const invitedMembers = invites.map((invite) => invite.user);
 
   return (
     <EventInviteForm
@@ -34,7 +35,7 @@ export default async function InviteEventPage({
       description={t('description', { eventTitle: event.title })}
       slug={event.slug}
       availableMembers={availableMembers}
-      invitedMembers={attendees}
+      invitedMembers={invitedMembers}
       mutate={inviteMembersToEvent.bind(null, orgUId, event.id)}
     />
   );

@@ -1292,13 +1292,14 @@
       "coverImageAlt": "Titelbild für {title}",
       "editButton": "Bearbeiten",
       "inviteButton": "Mitglieder einladen",
-      "volunteersCard": {
-        "title": "Freiwillige",
-        "inviteButton": "Einladen",
-        "inviteAria": "Mitglieder einladen",
-        "checkInAria": "Einchecken",
-        "empty": "Noch keine Freiwilligen eingeladen."
-      },
+        "volunteersCard": {
+          "title": "Freiwillige",
+          "inviteButton": "Einladen",
+          "inviteAria": "Mitglieder einladen",
+          "checkInAria": "Einchecken",
+          "invitedBadge": "Eingeladen",
+          "empty": "Noch keine Freiwilligen eingeladen."
+        },
       "shiftsCard": {
         "title": "Einsätze",
         "addAria": "Einsatz hinzufügen",

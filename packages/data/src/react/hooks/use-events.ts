@@ -97,6 +97,7 @@ export function useInviteMembersToEvent() {
     }) => repository.inviteMembers(eventId, memberIds),
     onSuccess: (_, { eventId }) => {
       queryClient.invalidateQueries({ queryKey: ['eventAttendees', eventId] });
+      queryClient.invalidateQueries({ queryKey: ['eventInvites', eventId] });
     },
   });
 }
@@ -141,6 +142,7 @@ export function useJoinEvent() {
     mutationFn: (eventId: string) => repository.join(eventId),
     onSuccess: (_, eventId) => {
       queryClient.invalidateQueries({ queryKey: ['publicEvent', eventId] });
+      queryClient.invalidateQueries({ queryKey: ['myEvents'] });
     },
   });
 }

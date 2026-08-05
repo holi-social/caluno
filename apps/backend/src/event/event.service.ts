@@ -13,6 +13,7 @@ import {
 import type { PaginationInput } from '../graphql/pagination.input';
 import { MembershipService } from '../membership/membership.service';
 import type { MembershipRequestEntity } from '../membership/schemas/membership-request.schema';
+import { OrganizationService } from '../organization/organization.service';
 import { RequiredFormTargetType } from '../requirement-profile/enums';
 import type { RequirementProfileEntity } from '../requirement-profile/schemas/requirement-profile.schema';
 import {
@@ -22,8 +23,10 @@ import {
 import { JoinStatus } from '../shared/enums/join-status.enum';
 import {
   canTransitionInviteStatus,
+  ACTIVE_EVENT_INVITE_STATUSES,
   PARTICIPATING_EVENT_INVITE_STATUSES,
 } from '../shared/invite-status';
+import { SortOrder } from '../shift/enums';
 import { FilePurpose } from '../storage/enums';
 import { FileService } from '../storage/services/file.service';
 import { slugify } from '../utils/slug.util';
@@ -33,12 +36,18 @@ import { UpdateEventInput } from './inputs/update-event.input';
 import type { EventEntity } from './schemas/event.schema';
 import type { EventInviteEntity } from './schemas/event-invite.schema';
 
+const EMPTY_EVENT_PAGE: { events: EventEntity[]; total: number } = {
+  events: [],
+  total: 0,
+};
+
 @Injectable()
 export class EventService {
   constructor(
     @Inject(DATABASE_CONNECTION)
     private readonly db: Database,
     private readonly membershipService: MembershipService,
+    private readonly organizationService: OrganizationService,
     private readonly fileService: FileService,
     private readonly requiredFormService: RequiredFormService,
   ) {}
@@ -111,6 +120,92 @@ export class EventService {
       where: { organizationUnitId, isDeleted: false },
       orderBy: { startsAt: 'asc' },
     });
+  }
+
+  /**
+   * Events the session user has an invite for across accessible org units.
+   * Same contract as `ShiftService.findMyShiftInstances` — default statuses are
+   * participating; pass `[INVITED]` for the volunteer Invitations list.
+   */
+  async findMyEvents(
+    userId: string,
+    includePast: boolean,
+    startsAfter: Date | null,
+    endsBefore: Date | null,
+    limit: number,
+    offset: number,
+    order: SortOrder,
+    statuses: readonly EventInviteStatus[] = PARTICIPATING_EVENT_INVITE_STATUSES,
+  ): Promise<{ events: EventEntity[]; total: number }> {
+    const organizationUnitIds =
+      await this.getAccessibleOrganizationUnitIds(userId);
+
+    if (organizationUnitIds.length === 0) {
+      return EMPTY_EVENT_PAGE;
+    }
+
+    const dateCondition = this.buildMyEventDateCondition(
+      includePast,
+      startsAfter,
+      endsBefore,
+    );
+
+    const where = {
+      isDeleted: false,
+      organizationUnitId: { in: organizationUnitIds },
+      ...dateCondition,
+      invites: {
+        userId,
+        status: { in: [...statuses] },
+      },
+    };
+
+    const orderBy = {
+      startsAt: order.toLowerCase() as 'asc' | 'desc',
+    };
+
+    const [events, totalResult] = await Promise.all([
+      this.db.query.events.findMany({
+        where,
+        orderBy,
+        limit,
+        offset,
+      }),
+      this.db.query.events.findMany({
+        where,
+        columns: {},
+        extras: { total: count() },
+      }),
+    ]);
+
+    return { events, total: totalResult[0]?.total ?? 0 };
+  }
+
+  private async getAccessibleOrganizationUnitIds(
+    userId: string,
+  ): Promise<string[]> {
+    const units = await this.organizationService.findUnits(userId);
+    return units.map((unit) => unit.id);
+  }
+
+  private buildMyEventDateCondition(
+    includePast: boolean,
+    startsAfter: Date | null,
+    endsBefore: Date | null,
+  ): Record<string, unknown> {
+    if (endsBefore) {
+      return { endsAt: { lt: endsBefore } };
+    }
+
+    if (startsAfter) {
+      return { startsAt: { gte: startsAfter } };
+    }
+
+    if (!includePast) {
+      return { endsAt: { gte: new Date() } };
+    }
+
+    return {};
   }
 
   async create(
@@ -570,13 +665,22 @@ export class EventService {
   async findInvites(
     eventId: string,
     organizationUnitId: string,
-  ): Promise<EventInviteEntity[]> {
+  ): Promise<Array<EventInviteEntity & { user: UserEntity }>> {
     await this.findById(eventId, organizationUnitId);
 
-    return this.db.query.eventInvites.findMany({
-      where: { eventId },
+    const invites = await this.db.query.eventInvites.findMany({
+      where: {
+        eventId,
+        status: { in: [...ACTIVE_EVENT_INVITE_STATUSES] },
+      },
+      with: { user: true },
       orderBy: { createdAt: 'desc' },
     });
+
+    return invites.filter(
+      (invite): invite is EventInviteEntity & { user: UserEntity } =>
+        invite.user != null,
+    );
   }
 
   async findAttendees(

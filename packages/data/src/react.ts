@@ -33,6 +33,7 @@ export * from './react/hooks/use-graphql-client';
 export * from './react/hooks/use-join-shift-instance';
 export * from './react/hooks/use-membership-request';
 export * from './react/hooks/use-memberships';
+export * from './react/hooks/use-my-events';
 export * from './react/hooks/use-my-form-submissions';
 export * from './react/hooks/use-my-permissions';
 export * from './react/hooks/use-my-shift-instances';
@@ -56,7 +57,9 @@ export * from './react/org-context';
 export * from './react/providers/data-provider';
 export type {
   EventAttendee,
+  EventInviteItem,
   EventListItem,
+  MyEvent,
   RawEvent,
 } from './repositories/event/event.repository';
 export type {

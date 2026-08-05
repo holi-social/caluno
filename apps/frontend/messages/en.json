@@ -1292,13 +1292,14 @@
       "coverImageAlt": "Cover image for {title}",
       "editButton": "Edit",
       "inviteButton": "Invite members",
-      "volunteersCard": {
-        "title": "Volunteers",
-        "inviteButton": "Invite",
-        "inviteAria": "Invite members",
-        "checkInAria": "Check in",
-        "empty": "No volunteers invited yet."
-      },
+        "volunteersCard": {
+          "title": "Volunteers",
+          "inviteButton": "Invite",
+          "inviteAria": "Invite members",
+          "checkInAria": "Check in",
+          "invitedBadge": "Invited",
+          "empty": "No volunteers invited yet."
+        },
       "shiftsCard": {
         "title": "Shifts",
         "addAria": "Add shift",
