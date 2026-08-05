@@ -54,6 +54,8 @@ export type VolunteeringVolunteerRowProps = {
   statusLabel?: string;
   /** When set, overrides default actions from status presentation. */
   actions?: VolunteeringActionLabel[];
+  /** Far-right icon-only actions (e.g. View profile, Check in). */
+  iconActions?: VolunteeringActionLabel[];
   /** Localized button labels keyed by action id. */
   actionLabels?: VolunteeringActionLabels;
   onAction?: (action: VolunteeringActionLabel) => void;
@@ -69,6 +71,7 @@ export function VolunteeringVolunteerRow({
   completedDuration,
   statusLabel,
   actions: actionsOverride,
+  iconActions = [],
   actionLabels,
   onAction,
   className,
@@ -78,14 +81,8 @@ export function VolunteeringVolunteerRow({
     phase,
   });
   const passive = isPassiveDuringShift(phase, state);
-  const rawActions = actionsOverride ?? presentation.actions;
-  const showView = rawActions.includes('View');
-  const actions = (passive ? [] : rawActions).filter(
-    (action) => action !== 'View',
-  );
+  const actions = passive ? [] : (actionsOverride ?? presentation.actions);
   const passiveHint = passive ? getPassiveDuringShiftHint(state) : undefined;
-  const ViewIcon = volunteeringActionIcons.View;
-  const viewLabel = actionLabels?.View ?? 'View';
 
   const statusBadge = (
     <VolunteeringStatusBadge
@@ -131,17 +128,24 @@ export function VolunteeringVolunteerRow({
         )}
       </div>
 
-      {showView ? (
-        <Button
-          type="button"
-          variant="outline"
-          size="icon-xs"
-          className="ml-auto shrink-0"
-          aria-label={viewLabel}
-          onClick={() => onAction?.('View')}
-        >
-          {ViewIcon ? <ViewIcon aria-hidden /> : null}
-        </Button>
+      {iconActions.length > 0 ? (
+        <div className="ml-auto flex shrink-0 items-center gap-1">
+          {iconActions.map((actionLabel) => {
+            const ActionIcon = volunteeringActionIcons[actionLabel];
+            return (
+              <Button
+                key={actionLabel}
+                type="button"
+                variant="outline"
+                size="icon-xs"
+                aria-label={actionLabels?.[actionLabel] ?? actionLabel}
+                onClick={() => onAction?.(actionLabel)}
+              >
+                {ActionIcon ? <ActionIcon aria-hidden /> : null}
+              </Button>
+            );
+          })}
+        </div>
       ) : null}
     </div>
   );

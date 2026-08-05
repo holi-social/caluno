@@ -29,6 +29,7 @@ type InstanceInvite = {
     name: string;
     email?: string | null;
     image?: string | null;
+    checkInId: string;
   };
 };
 
@@ -89,7 +90,8 @@ export function ShiftInstanceVolunteersPanel({
     image: invite.user.image,
     state: toInviteDisplayState(invite.status),
     statusLabel: statusLabel(invite.status),
-    actions: [...manageActions(invite.status, canManage), 'View'],
+    actions: manageActions(invite.status, canManage),
+    iconActions: ['View', 'Check in'],
   }));
 
   const counts = countInviteDisplayStates(invites.map((i) => i.status));
@@ -100,33 +102,35 @@ export function ShiftInstanceVolunteersPanel({
     spots: t('inviteStatus.summarySpots'),
   });
 
-  const openProfile = (volunteerId: string) => {
-    const invite = invites.find((item) => item.user.id === volunteerId);
-    if (!invite) {
-      return;
-    }
-
+  const openProfile = (invite: InstanceInvite) => {
     openVolunteerSheet({
       userId: invite.user.id,
       volunteerName: invite.user.name,
       volunteerStatus: MembershipRequestStatus.Accepted,
       volunteerEmail: invite.user.email ?? '',
-      volunteerCheckInId: '',
+      volunteerCheckInId: invite.user.checkInId,
     });
   };
 
   const onAction = (volunteerId: string, action: VolunteeringActionLabel) => {
+    const invite = invites.find((item) => item.user.id === volunteerId);
+    if (!invite) {
+      return;
+    }
+
     if (action === 'View') {
-      openProfile(volunteerId);
+      openProfile(invite);
+      return;
+    }
+
+    if (action === 'Check in') {
+      router.push(
+        `/admin/${orgUId}/check-in/${invite.user.checkInId}/check-in`,
+      );
       return;
     }
 
     if (!canManage || pending) {
-      return;
-    }
-
-    const invite = invites.find((item) => item.user.id === volunteerId);
-    if (!invite) {
       return;
     }
 
@@ -170,6 +174,7 @@ export function ShiftInstanceVolunteersPanel({
       summary={summary}
       actionLabels={{
         View: tVolunteer('viewProfileAria'),
+        'Check in': tVolunteer('checkInAria'),
         Invite: t('inviteStatus.actionInvite'),
         Uninvite: t('inviteStatus.actionUninvite'),
       }}
