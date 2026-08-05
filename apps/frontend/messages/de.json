@@ -1392,6 +1392,17 @@
     "requestSentToast": "Anfrage gesendet — ein Koordinator bestätigt sie."
   },
   "MembershipDetail": {
+    "role": "Rolle",
+    "joinedDate": "Beigetreten · {date}",
+    "forms": {
+      "title": "Deine Formulare",
+      "subtitle": "Formulare, die diese Organisation von dir anfordert.",
+      "status": { "completed": "Abgeschlossen", "notCompleted": "Nicht abgeschlossen" },
+      "fillIn": "Formular ausfüllen",
+      "view": "Ansehen",
+      "completedOn": "Du hast das Formular am {date} ausgefüllt.",
+      "notCompletedPrompt": "Diese Organisation hat dich gebeten, dieses Formular auszufüllen."
+    },
     "submission": {
       "fieldColumn": "Feld",
       "answerColumn": "Antwort",

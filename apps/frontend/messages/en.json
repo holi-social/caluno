@@ -1392,6 +1392,17 @@
     "requestSentToast": "Request sent — a coordinator will confirm it."
   },
   "MembershipDetail": {
+    "role": "Role",
+    "joinedDate": "Joined · {date}",
+    "forms": {
+      "title": "Your forms",
+      "subtitle": "Forms this organisation has asked you to fill in.",
+      "status": { "completed": "Completed", "notCompleted": "Not completed" },
+      "fillIn": "Fill in form",
+      "view": "View",
+      "completedOn": "You filled in the form on {date}",
+      "notCompletedPrompt": "This organisation has asked you to fill in this form."
+    },
     "submission": {
       "fieldColumn": "Field",
       "answerColumn": "Answer",
