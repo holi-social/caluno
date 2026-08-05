@@ -2,10 +2,12 @@
 
 import { cn } from '../../lib/utils';
 import { Avatar, AvatarFallback, AvatarImage } from '../base/avatar';
+import { Button } from '../base/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '../tooltip';
 import {
   getPassiveDuringShiftHint,
   getVolunteeringStatusPresentation,
+  volunteeringActionIcons,
 } from './config';
 import type {
   ShiftVolunteeringDisplayState,
@@ -76,8 +78,14 @@ export function VolunteeringVolunteerRow({
     phase,
   });
   const passive = isPassiveDuringShift(phase, state);
-  const actions = passive ? [] : (actionsOverride ?? presentation.actions);
+  const rawActions = actionsOverride ?? presentation.actions;
+  const showView = rawActions.includes('View');
+  const actions = (passive ? [] : rawActions).filter(
+    (action) => action !== 'View',
+  );
   const passiveHint = passive ? getPassiveDuringShiftHint(state) : undefined;
+  const ViewIcon = volunteeringActionIcons.View;
+  const viewLabel = actionLabels?.View ?? 'View';
 
   const statusBadge = (
     <VolunteeringStatusBadge
@@ -103,7 +111,7 @@ export function VolunteeringVolunteerRow({
         <p className="truncate text-base font-medium">{name}</p>
       </div>
 
-      <div className="flex min-w-0 flex-wrap items-center gap-2 pl-11 sm:ml-auto sm:shrink-0 sm:gap-3 sm:pl-0">
+      <div className="flex min-w-0 flex-wrap items-center gap-2 pl-11 sm:shrink-0 sm:gap-3 sm:pl-0">
         <VolunteeringActionButtons
           actions={actions}
           labels={actionLabels}
@@ -122,6 +130,19 @@ export function VolunteeringVolunteerRow({
           statusBadge
         )}
       </div>
+
+      {showView ? (
+        <Button
+          type="button"
+          variant="outline"
+          size="icon-xs"
+          className="ml-auto shrink-0"
+          aria-label={viewLabel}
+          onClick={() => onAction?.('View')}
+        >
+          {ViewIcon ? <ViewIcon aria-hidden /> : null}
+        </Button>
+      ) : null}
     </div>
   );
 }

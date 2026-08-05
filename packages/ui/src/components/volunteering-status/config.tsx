@@ -12,6 +12,7 @@ import {
   type LucideIcon,
   Timer,
   UserPlus,
+  UserRound,
   UserX,
   X,
 } from 'lucide-react';
@@ -247,6 +248,7 @@ export const volunteeringActionIcons: Partial<
   Accept: Check,
   Decline: X,
   Invite: UserPlus,
+  View: UserRound,
   'Check in': LogIn,
   'Check out': LogOut,
   Uninvite: Ban,
