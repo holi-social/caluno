@@ -84,4 +84,16 @@ export class MembershipQueryResolver {
     );
     return this.membershipMapper.toArray(memberships);
   }
+
+  @Query(() => Membership, { nullable: true })
+  async myMembership(
+    @Args('id') id: string,
+    @Session() session: UserSession,
+  ): Promise<Membership | null> {
+    const membership = await this.membershipService.getMyMembership(
+      session.user.id,
+      id,
+    );
+    return membership ? this.membershipMapper.toModel(membership) : null;
+  }
 }
