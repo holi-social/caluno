@@ -1418,7 +1418,14 @@
     "eventCoverImageAlt": "Cover image for {title}",
     "loadPast": "Load past",
     "loadMore": "Load more",
-    "invitedOn": "Invited · {date}"
+    "invitedOn": "Invited · {date}",
+    "pendingRequestTitle": "Waiting for {orgName}",
+    "pendingRequestBody": "An admin is reviewing your request. Usually a few days.",
+    "pendingRequestContact": "Questions? {name} can help.",
+    "pendingRequestCta": "View my requests",
+    "discoverPendingSubtitle": "Shifts for {orgName} will show up here after approval",
+    "discoverPendingEmptyTitle": "Nothing to browse yet",
+    "discoverPendingEmptyBody": "Org shifts appear here once {orgName} accepts you.\nCheck-in and My Time stay available anytime."
   },
   "OrgDetail": {
     "coverImageAlt": "Cover image for {title}",
