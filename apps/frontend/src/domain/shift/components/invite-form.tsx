@@ -4,8 +4,6 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { ShiftVisibility } from '@repo/data';
 import {
   Button,
-  Card,
-  CardContent,
   Checkbox,
   FieldDescription,
   FieldLabel,
@@ -24,6 +22,7 @@ import type { RecurrenceDayValue } from '../constants';
 import { type InviteShiftFormValues, inviteShiftFormSchema } from '../schemas';
 import { shiftShareUrl } from '../share';
 import { setSuccessDialogCreatedShift } from '../success-dialog';
+import { ShiftInstanceSummaryCard } from './shift-instance-summary-card';
 import { TransferList } from './transfer-list';
 
 type Member = {
@@ -122,17 +121,6 @@ export function InviteShiftForm({
   const instanceStartDate = new Date(selectedInstance.actualStartsAt);
   const instanceEndDate = new Date(selectedInstance.actualEndsAt);
 
-  const dateOptions: Intl.DateTimeFormatOptions = {
-    weekday: 'short',
-    month: 'long',
-    day: 'numeric',
-  };
-  const timeOptions: Intl.DateTimeFormatOptions = {
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: false,
-  };
-
   const formattedDays = shift.isRecurring
     ? new Intl.ListFormat(locale, { type: 'conjunction' }).format(
         shift.recurrenceDays.map((day) => t(`recurrence.weekDay.${day}`)),
@@ -182,61 +170,44 @@ export function InviteShiftForm({
             <p className="text-sm text-muted-foreground">
               {t('inviteForm.managingLabel')}
             </p>
-            <Card>
-              <CardContent className="flex justify-between items-start gap-4">
-                <div>
-                  <p className="text-lg font-semibold">
-                    {formatWithOptions(instanceStartDate, dateOptions)}
-                  </p>
-                  <p className="text-muted-foreground">{shift.title}</p>
-                </div>
-                <p className="text-lg font-semibold whitespace-nowrap">
-                  {formatWithOptions(instanceStartDate, timeOptions)} -{' '}
-                  {formatWithOptions(instanceEndDate, timeOptions)}
-                </p>
-              </CardContent>
+            <ShiftInstanceSummaryCard
+              title={shift.title}
+              startsAt={instanceStartDate}
+              endsAt={instanceEndDate}
+            >
               {shift.isRecurring && (
-                <>
-                  <Separator />
-                  <CardContent>
-                    <div className="flex items-start gap-3">
-                      <Checkbox
-                        id={inviteAllCheckboxId}
-                        checked={form.watch('inviteAllInstances')}
-                        onCheckedChange={(checked) =>
-                          form.setValue(
-                            'inviteAllInstances',
-                            checked === true,
-                            {
-                              shouldValidate: true,
-                            },
-                          )
-                        }
-                        disabled={pending}
-                      />
-                      <div className="grid gap-1">
-                        <FieldLabel
-                          htmlFor={inviteAllCheckboxId}
-                          className="font-normal"
-                        >
-                          {t('inviteForm.inviteAllLabel')}
-                        </FieldLabel>
-                        <FieldDescription>
-                          {t('inviteForm.inviteAllDescription', {
-                            startDate: formatWithOptions(instanceStartDate, {
-                              day: '2-digit',
-                              month: '2-digit',
-                              year: 'numeric',
-                            }),
-                            days: formattedDays,
-                          })}
-                        </FieldDescription>
-                      </div>
-                    </div>
-                  </CardContent>
-                </>
+                <div className="flex items-start gap-3">
+                  <Checkbox
+                    id={inviteAllCheckboxId}
+                    checked={form.watch('inviteAllInstances')}
+                    onCheckedChange={(checked) =>
+                      form.setValue('inviteAllInstances', checked === true, {
+                        shouldValidate: true,
+                      })
+                    }
+                    disabled={pending}
+                  />
+                  <div className="grid gap-1">
+                    <FieldLabel
+                      htmlFor={inviteAllCheckboxId}
+                      className="font-normal"
+                    >
+                      {t('inviteForm.inviteAllLabel')}
+                    </FieldLabel>
+                    <FieldDescription>
+                      {t('inviteForm.inviteAllDescription', {
+                        startDate: formatWithOptions(instanceStartDate, {
+                          day: '2-digit',
+                          month: '2-digit',
+                          year: 'numeric',
+                        }),
+                        days: formattedDays,
+                      })}
+                    </FieldDescription>
+                  </div>
+                </div>
               )}
-            </Card>
+            </ShiftInstanceSummaryCard>
           </div>
 
           <Separator />

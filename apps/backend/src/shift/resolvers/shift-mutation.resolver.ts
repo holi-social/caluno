@@ -15,6 +15,7 @@ import { RequiredFormService } from '../../requirement-profile/services/required
 import { ShiftInviteStatus } from '../enums';
 import { CreateShiftInput } from '../inputs/create-shift.input';
 import { UpdateShiftInput } from '../inputs/update-shift.input';
+import { UpdateShiftInstanceInput } from '../inputs/update-shift-instance.input';
 import { ShiftMapper } from '../mappers/shift.mapper';
 import { ShiftInstanceMapper } from '../mappers/shift-instance.mapper';
 import { ShiftInstanceInviteMapper } from '../mappers/shift-instance-invite.mapper';
@@ -109,6 +110,24 @@ export class ShiftMutationResolver {
       memberIds,
       context.organizationUnitId,
       { inviteToAllInstances },
+    );
+    return this.shiftInstanceMapper.toModelOrThrow(instance);
+  }
+
+  @Permissions(PERMISSIONS.SHIFT_EDIT)
+  @Mutation(() => ShiftInstance)
+  async updateShiftInstance(
+    @Args('instanceId', { type: () => String }) instanceId: string,
+    @Args('input') input: UpdateShiftInstanceInput,
+    @Args('applyToAllFuture', { type: () => Boolean, nullable: true })
+    applyToAllFuture: boolean | null | undefined,
+    @Context() context: AuthenticatedGraphQLContext,
+  ): Promise<ShiftInstance> {
+    const instance = await this.shiftService.updateShiftInstance(
+      instanceId,
+      input,
+      context.organizationUnitId,
+      { applyToAllFuture: applyToAllFuture ?? false },
     );
     return this.shiftInstanceMapper.toModelOrThrow(instance);
   }

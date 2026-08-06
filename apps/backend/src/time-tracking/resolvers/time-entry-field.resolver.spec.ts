@@ -45,6 +45,7 @@ const shiftInstance = {
   overrideInstructions: null,
   overrideLocation: null,
   overrideMaxVolunteers: null,
+  overrideMinVolunteers: null,
   isException: false,
   isCancelled: false,
   cancelledBySync: false,
