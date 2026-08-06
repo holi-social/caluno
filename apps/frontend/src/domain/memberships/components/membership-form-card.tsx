@@ -1,12 +1,13 @@
 import {
   Badge,
+  Button,
   Card,
   CardAction,
   CardContent,
   CardHeader,
   CardTitle,
 } from '@repo/ui';
-import { FileText } from 'lucide-react';
+import { FileText, SquareArrowOutUpRight } from 'lucide-react';
 import { Link } from '@/i18n/navigation';
 
 type MembershipFormCardProps = {
@@ -29,23 +30,23 @@ export const MembershipFormCard = ({
   <Card>
     <CardHeader>
       <CardTitle className="flex items-center gap-2">
-        <FileText className="text-muted-foreground size-4" />
-        <span>{name}</span>
+        <div className="bg-muted p-2 border rounded-lg">
+          <FileText className="text-muted-foreground size-4" />
+        </div>
+        <span className="truncate">{name}</span>
       </CardTitle>
       <CardAction>
         <Badge variant={completed ? 'success' : 'alert'}>{statusLabel}</Badge>
       </CardAction>
     </CardHeader>
-    <CardContent className="flex flex-col gap-3">
-      <p className="text-muted-foreground text-sm">{description}</p>
-      <Link
-        href={actionHref}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="self-start"
-      >
-        {actionLabel}
-      </Link>
+    <CardContent>
+      <p className="text-muted-foreground text-sm mb-2">{description}</p>
+      <Button asChild className="w-full sm:w-auto">
+        <Link href={actionHref} target="_blank" rel="noopener noreferrer">
+          <SquareArrowOutUpRight />
+          {actionLabel}
+        </Link>
+      </Button>
     </CardContent>
   </Card>
 );

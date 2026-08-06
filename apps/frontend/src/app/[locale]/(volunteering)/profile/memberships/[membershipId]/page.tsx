@@ -1,22 +1,15 @@
 import { notFound } from 'next/navigation';
-import {
-  getFormatter,
-  getTranslations,
-  setRequestLocale,
-} from 'next-intl/server';
+import { getTranslations } from 'next-intl/server';
 import { MembershipDetailHeader } from '@/domain/memberships/components/membership-detail-header';
 import { MembershipFormCard } from '@/domain/memberships/components/membership-form-card';
 import { MembershipStatusBadge } from '@/domain/memberships/components/membership-status-badge';
-import { resolveLocale } from '@/i18n/routing';
 import { getDataClient } from '@/lib/data-client';
-import { routes } from '@/lib/routes';
+import { getFormatting } from '@/lib/formatting/formatting-server';
 
-type Props = { params: Promise<{ locale: string; membershipId: string }> };
+type Props = { params: Promise<{ membershipId: string }> };
 
 export default async function MembershipDetailPage({ params }: Props) {
-  const { locale: rawLocale, membershipId } = await params;
-  const locale = resolveLocale(rawLocale);
-  setRequestLocale(locale);
+  const { membershipId } = await params;
 
   const data = await getDataClient();
   const membership = await data.membership.findMineById(membershipId);
@@ -27,9 +20,7 @@ export default async function MembershipDetailPage({ params }: Props) {
   );
 
   const t = await getTranslations('MembershipDetail');
-  const format = await getFormatter();
-  const formatDate = (date: Date | string) =>
-    format.dateTime(new Date(date), { dateStyle: 'medium' });
+  const { formatDate } = await getFormatting();
 
   const orgUnit = membership.organizationUnit;
   const title = orgUnit.parent
@@ -38,51 +29,68 @@ export default async function MembershipDetailPage({ params }: Props) {
 
   return (
     <div className="space-y-6">
-      <MembershipDetailHeader title={title} logoUrl={orgUnit.logoUrl} />
+      <div className="sticky top-0 z-30">
+        <MembershipDetailHeader title={title} logoUrl={orgUnit.logoUrl} />
+      </div>
 
-      <section className="space-y-1">
-        <MembershipStatusBadge state="accepted" />
-        {membership.roles.length > 0 && (
+      <div className="mx-auto w-full max-w-4xl space-y-8 px-4 py-6">
+        <section className="space-y-1">
+          <MembershipStatusBadge state="accepted" />
           <p className="text-muted-foreground">
             {t('role')}: {membership.roles.map((r) => r.name).join(', ')}
           </p>
-        )}
-        <p className="text-muted-foreground">
-          {t('joinedDate', { date: formatDate(membership.createdAt) })}
-        </p>
-      </section>
+          <p className="text-muted-foreground">
+            {t('joinedDate', {
+              date: formatDate(new Date(membership.createdAt)),
+            })}
+          </p>
+        </section>
 
-      <section className="space-y-3">
-        <div>
-          <h2 className="text-lg font-semibold">{t('forms.title')}</h2>
-          <p className="text-muted-foreground text-sm">{t('forms.subtitle')}</p>
-        </div>
-        {forms.map((item) => (
-          <MembershipFormCard
-            key={item.form.id}
-            name={item.form.name}
-            statusLabel={t(
-              item.completed
-                ? 'forms.status.completed'
-                : 'forms.status.notCompleted',
-            )}
-            completed={item.completed}
-            description={
-              item.completed
-                ? t('forms.completedOn', {
-                    date: formatDate(item.submittedAt!),
-                  })
-                : t('forms.notCompletedPrompt')
-            }
-            actionLabel={t(item.completed ? 'forms.view' : 'forms.fillIn')}
-            actionHref={
-              item.completed
-                ? routes.formSubmission(item.submissionId!)
-                : routes.publicForm(item.form.shareToken)
-            }
-          />
-        ))}
-      </section>
+        <section className="space-y-3">
+          <div>
+            <h2 className="text-lg font-semibold">{t('forms.title')}</h2>
+            <p className="text-muted-foreground text-sm">
+              {t('forms.subtitle')}
+            </p>
+          </div>
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+            {forms.map((item) => {
+              const submission =
+                item.completed && item.submissionId && item.submittedAt
+                  ? {
+                      submissionId: item.submissionId,
+                      submittedAt: item.submittedAt,
+                    }
+                  : null;
+              return (
+                <MembershipFormCard
+                  key={item.form.id}
+                  name={item.form.name}
+                  statusLabel={t(
+                    submission
+                      ? 'forms.status.completed'
+                      : 'forms.status.notCompleted',
+                  )}
+                  completed={submission !== null}
+                  description={
+                    submission
+                      ? t('forms.completedOn', {
+                          date: formatDate(new Date(submission.submittedAt)),
+                        })
+                      : t('forms.notCompletedPrompt')
+                  }
+                  actionLabel={t(submission ? 'forms.view' : 'forms.fillIn')}
+                  actionHref={
+                    submission
+                      ? `/forms/submissions/${submission.submissionId}`
+                      : `/f/${item.form.shareToken}`
+                  }
+                />
+              );
+            })}
+          </div>
+        </section>
+      </div>
     </div>
   );
 }
