@@ -54,40 +54,9 @@ export default async function MembershipDetailPage({ params }: Props) {
             </p>
           </div>
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-            {forms.map((item) => {
-              const submission =
-                item.completed && item.submissionId && item.submittedAt
-                  ? {
-                      submissionId: item.submissionId,
-                      submittedAt: item.submittedAt,
-                    }
-                  : null;
-              return (
-                <MembershipFormCard
-                  key={item.form.id}
-                  name={item.form.name}
-                  statusLabel={t(
-                    submission
-                      ? 'forms.status.completed'
-                      : 'forms.status.notCompleted',
-                  )}
-                  completed={submission !== null}
-                  description={
-                    submission
-                      ? t('forms.completedOn', {
-                          date: formatDate(new Date(submission.submittedAt)),
-                        })
-                      : t('forms.notCompletedPrompt')
-                  }
-                  actionLabel={t(submission ? 'forms.view' : 'forms.fillIn')}
-                  actionHref={
-                    submission
-                      ? `/forms/submissions/${submission.submissionId}`
-                      : `/f/${item.form.shareToken}`
-                  }
-                />
-              );
-            })}
+            {forms.map((item) => (
+              <MembershipFormCard key={item.form.id} item={item} />
+            ))}
           </div>
         </section>
       </div>
