@@ -26,7 +26,7 @@ import {
   buildFieldSchema,
   FieldRenderer,
   type RenderableField,
-} from '@/domain/requirement-form/components/volunteer-form';
+} from './field-renderer';
 
 export type RequiredFormItem = {
   form: RequiredForm;
