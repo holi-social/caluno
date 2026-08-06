@@ -125,7 +125,10 @@ function VolunteerSheetContent({
             {birthday && (
               <InfoRow label={t('birthdayLabel')} value={birthday} />
             )}
-            <InfoRow label={t('qrIdLabel')} value={checkInId} />
+            <InfoRow
+              label={t('qrIdLabel')}
+              value={user?.checkInId ?? checkInId}
+            />
           </div>
         )}
       </div>

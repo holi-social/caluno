@@ -11,7 +11,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@repo/ui';
-import { LogIn, UserPlus, UserRound } from 'lucide-react';
+import { ScanQrCode, UserPlus, UserRound } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { UserCard } from '@/components/user-card';
 import { useSheetTrigger } from '@/hooks/use-sheet';
@@ -91,7 +91,7 @@ export function EventVolunteersSection({
                       variant="outline"
                       aria-label={t('checkInAria')}
                     >
-                      <LogIn />
+                      <ScanQrCode />
                     </Button>
                   </Link>
                 </div>
