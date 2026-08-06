@@ -133,6 +133,8 @@
     "organizations": "Your organizations",
     "personalInformation": "Personal information",
     "accountSettings": "Account settings",
+    "language": "Language",
+    "languageDescription": "App display language",
     "edit": "Edit profile",
     "pictureLabel": "Profile picture",
     "saved": "Profile updated",

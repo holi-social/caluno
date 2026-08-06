@@ -15,16 +15,12 @@ import {
 import { useLocale, useTranslations } from 'next-intl';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
+import { LOCALES, localeLabel } from '@/i18n/locales';
 import { usePathname, useRouter } from '@/i18n/navigation';
 import { saveLocalePreference } from '@/lib/save-locale-preference';
 
-const locales = [
-  { key: 'en', label: 'English' },
-  { key: 'de', label: 'Deutsch' },
-] as const;
-
 function isLocale(value: string): value is Locale {
-  return locales.some(({ key }) => key === value);
+  return LOCALES.some(({ key }) => key === value);
 }
 
 export function ProfileForm() {
@@ -47,8 +43,7 @@ export function ProfileForm() {
 
   const hasChanges = selectedLocale !== locale;
 
-  const selectedLabel =
-    locales.find(({ key }) => key === selectedLocale)?.label ?? selectedLocale;
+  const selectedLabel = localeLabel(selectedLocale);
 
   const handleLocaleSelect = (value: string) => {
     if (isLocale(value)) {
@@ -93,7 +88,7 @@ export function ProfileForm() {
             <SelectValue>{selectedLabel}</SelectValue>
           </SelectTrigger>
           <SelectContent>
-            {locales.map(({ key, label }) => (
+            {LOCALES.map(({ key, label }) => (
               <SelectItem key={key} value={key} textValue={label}>
                 {label}
               </SelectItem>
