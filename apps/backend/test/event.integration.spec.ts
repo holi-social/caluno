@@ -589,6 +589,65 @@ describe('myEvents', () => {
 
     setAuthMockUserId(originalUserId);
   });
+
+  it("does not leak another user's invites", async () => {
+    const originalUserId = getAuthMockUserId();
+
+    const userA = await createUser(db);
+    const userB = await createUser(db);
+    await addMembership(db, userA.id, organizationUnitId);
+    await addMembership(db, userB.id, organizationUnitId);
+
+    const eventForA = await createEvent(db, { organizationUnitId });
+    const eventForB = await createEvent(db, { organizationUnitId });
+
+    await db.insert(schema.eventInvites).values([
+      {
+        eventId: eventForA.id,
+        userId: userA.id,
+        status: EventInviteStatus.INVITED,
+      },
+      {
+        eventId: eventForB.id,
+        userId: userB.id,
+        status: EventInviteStatus.INVITED,
+      },
+    ]);
+
+    const query = `
+      query MyEvents($includePast: Boolean!, $statuses: [EventInviteStatus!]) {
+        myEvents(includePast: $includePast, statuses: $statuses) {
+          items { id }
+        }
+      }
+    `;
+
+    setAuthMockUserId(userA.id);
+    const asUserA = await graphqlRequestRequiringData<{
+      myEvents: { items: Array<{ id: string }> };
+    }>(
+      app,
+      { query, variables: { includePast: true, statuses: ['INVITED'] } },
+      'myEvents',
+    );
+    const idsForA = asUserA.myEvents.items.map((item) => item.id);
+    expect(idsForA).toContain(eventForA.id);
+    expect(idsForA).not.toContain(eventForB.id);
+
+    setAuthMockUserId(userB.id);
+    const asUserB = await graphqlRequestRequiringData<{
+      myEvents: { items: Array<{ id: string }> };
+    }>(
+      app,
+      { query, variables: { includePast: true, statuses: ['INVITED'] } },
+      'myEvents',
+    );
+    const idsForB = asUserB.myEvents.items.map((item) => item.id);
+    expect(idsForB).toContain(eventForB.id);
+    expect(idsForB).not.toContain(eventForA.id);
+
+    setAuthMockUserId(originalUserId);
+  });
 });
 
 describe('eventInvites', () => {
