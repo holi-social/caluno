@@ -16,6 +16,7 @@ import { useRecurrenceLabel } from '../lib/recurrence-label';
 
 export interface DiscoveryShiftInstance {
   id: string;
+  overrideTitle?: string | null;
   actualStartsAt: string;
   actualEndsAt: string;
   filledCount: number;
@@ -66,7 +67,7 @@ export function ShiftCardDiscovery({
         )}
       </div>
       <h3 className="text-lg font-semibold text-foreground">
-        {shiftInstance.master.title}
+        {shiftInstance.overrideTitle ?? shiftInstance.master.title}
       </h3>
       <p className="flex items-center gap-1.5 text-sm font-medium text-muted-foreground">
         <CircleDot className="size-3 shrink-0" />

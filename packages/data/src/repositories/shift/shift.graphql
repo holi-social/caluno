@@ -143,6 +143,20 @@ mutation UpdateMembersForShiftInstance(
   }
 }
 
+mutation UpdateShiftInstance(
+  $instanceId: String!
+  $input: UpdateShiftInstanceInput!
+  $applyToAllFuture: Boolean
+) {
+  updateShiftInstance(
+    instanceId: $instanceId
+    input: $input
+    applyToAllFuture: $applyToAllFuture
+  ) {
+    id
+  }
+}
+
 mutation UpdateShiftInstanceVolunteers(
   $instanceId: String!
   $memberIds: [String!]!
@@ -258,7 +272,10 @@ query GetShiftInstance($id: ID!) {
     actualStartsAt
     actualEndsAt
     overrideTitle
+    overrideLocation
+    overrideInstructions
     overrideMaxVolunteers
+    overrideMinVolunteers
     isCancelled
     filledCount
     spotsLeft
@@ -287,6 +304,7 @@ query GetShiftInstance($id: ID!) {
 query GetWeeklyShifts($from: DateTime!, $to: DateTime!) {
   weeklyShifts(from: $from, to: $to) {
     id
+    overrideTitle
     actualStartsAt
     actualEndsAt
     isCancelled
@@ -333,6 +351,7 @@ query GetPublicShiftInstances($shiftId: ID!) {
 
 fragment VolunteerHomeShiftInstance on ShiftInstance {
   id
+  overrideTitle
   actualStartsAt
   actualEndsAt
   isCheckedIn

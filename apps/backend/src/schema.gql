@@ -444,6 +444,7 @@ type Mutation {
   updateRequirementProfileSubmission(id: String!, input: UpdateRequirementProfileSubmissionInput!): RequirementProfileSubmission!
   updateRole(id: ID!, input: CreateRoleInput!): Role!
   updateShift(id: String!, input: UpdateShiftInput!): Shift!
+  updateShiftInstance(applyToAllFuture: Boolean, input: UpdateShiftInstanceInput!, instanceId: String!): ShiftInstance!
   updateShiftInstanceInviteStatus(instanceId: String!, status: ShiftInviteStatus!, userId: String): ShiftInstanceInvite!
   updateShiftInviteStatus(shiftId: String!, status: ShiftInviteStatus!): ShiftInvite!
   updateTimeEntry(id: ID!, input: UpdateTimeEntryInput!): TimeEntry!
@@ -890,6 +891,7 @@ type ShiftInstance {
   overrideInstructions: String
   overrideLocation: String
   overrideMaxVolunteers: Int
+  overrideMinVolunteers: Int
   overrideTitle: String
   spotsLeft: Int
   volunteers: [User!]
@@ -1064,6 +1066,20 @@ input UpdateShiftInput {
   rrule: String
   startsAt: DateTime
   title: String
+  visibility: ShiftVisibility
+}
+
+input UpdateShiftInstanceInput {
+  endsAt: DateTime!
+  imageFileId: String
+  instructions: String
+  location: String
+  maxVolunteers: Int
+  minVolunteers: Int
+  requiredFormIds: [String!]
+  rrule: String
+  startsAt: DateTime!
+  title: String!
   visibility: ShiftVisibility
 }
 
