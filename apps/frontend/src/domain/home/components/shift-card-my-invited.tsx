@@ -1,7 +1,7 @@
 'use client';
 
-import { Card } from '@repo/ui';
-import { MailIcon, MapPinIcon, RepeatIcon } from 'lucide-react';
+import { Badge, Card } from '@repo/ui';
+import { CalendarIcon, MailIcon, MapPinIcon, RepeatIcon } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { Link } from '@/i18n/navigation';
 import { useFormatting } from '@/lib/formatting/use-formatting';
@@ -39,17 +39,23 @@ export function ShiftCardMyInvited({
         aria-label={shiftInstance.master.title}
         className="absolute inset-0 rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60 focus-visible:ring-offset-1"
       />
-      <div className="flex items-center justify-center gap-2 border-b border-border bg-card px-3 py-2 text-sm text-foreground">
-        <MailIcon className="size-4 shrink-0" />
-        <span>
-          {t('invitedOn', {
-            date: formatDate(new Date(shiftInstance.actualStartsAt), {
-              weekday: 'short',
-              day: 'numeric',
-              month: 'short',
-            }),
-          })}
-        </span>
+      <div className="flex items-center justify-between gap-2 border-b border-border bg-card px-3 py-2 text-sm text-foreground">
+        <div className="flex min-w-0 items-center gap-2">
+          <MailIcon className="size-4 shrink-0" />
+          <span className="truncate">
+            {t('invitedOn', {
+              date: formatDate(new Date(shiftInstance.actualStartsAt), {
+                weekday: 'short',
+                day: 'numeric',
+                month: 'short',
+              }),
+            })}
+          </span>
+        </div>
+        <Badge variant="outline" className="shrink-0">
+          <CalendarIcon />
+          {t('inviteKindShift')}
+        </Badge>
       </div>
 
       <div className="flex gap-3 p-3">

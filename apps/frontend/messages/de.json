@@ -1309,7 +1309,11 @@
         "inviteButton": "Einladen",
         "inviteAria": "Mitglieder einladen",
         "checkInAria": "Einchecken",
-        "empty": "Noch keine Freiwilligen eingeladen."
+        "empty": "Noch keine Freiwilligen eingeladen.",
+        "status": {
+          "invited": "Eingeladen",
+          "signedUp": "Angemeldet"
+        }
       },
       "shiftsCard": {
         "title": "Einsätze",
@@ -1431,6 +1435,8 @@
     "loadPast": "Vergangene laden",
     "loadMore": "Mehr laden",
     "invitedOn": "Eingeladen · {date}",
+    "inviteKindEvent": "Veranstaltung",
+    "inviteKindShift": "Einsatz",
     "pendingBadge": "Ausstehend",
     "pendingRequestTitle": "Warte auf {orgName}",
     "pendingRequestBody": "Ein Admin prüft deine Anfrage. In der Regel dauert das ein paar Tage.",

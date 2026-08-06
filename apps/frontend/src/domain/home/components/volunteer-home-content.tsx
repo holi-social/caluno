@@ -1,9 +1,14 @@
 'use client';
 
-import { ShiftInviteStatus } from '@repo/data';
-import type { AvailableShiftInstance, MyShiftInstance } from '@repo/data/react';
+import { EventInviteStatus, ShiftInviteStatus } from '@repo/data';
+import type {
+  AvailableShiftInstance,
+  MyEvent,
+  MyShiftInstance,
+} from '@repo/data/react';
 import {
   useAvailableShiftInstances,
+  useMyEvents,
   useMyShiftInstances,
 } from '@repo/data/react';
 import {
@@ -34,9 +39,11 @@ import {
   isSameDay,
   startOfDay,
 } from '../lib/date-helpers';
+import { mergeInvitations } from '../lib/merge-invitations';
 import { useDelayedLoading } from '../lib/use-delayed-loading';
 import { DayStrip } from './day-strip';
 import { DayStripSkeleton } from './day-strip-skeleton';
+import { EventCardMyInvited } from './event-card-my-invited';
 import { PendingMembershipBanner } from './pending-membership-banner';
 import { ShiftCardDiscovery } from './shift-card-discovery';
 import { ShiftCardMy } from './shift-card-my';
@@ -52,7 +59,8 @@ interface PendingRequest {
 interface VolunteerHomeContentProps {
   initialMyShiftInstances: MyShiftInstance[];
   initialAvailableShiftInstances: AvailableShiftInstance[];
-  initialInvitations: MyShiftInstance[];
+  initialShiftInvitations: MyShiftInstance[];
+  initialEventInvitations: MyEvent[];
   hasMemberships: boolean;
   pendingRequest?: PendingRequest | null;
 }
@@ -60,7 +68,8 @@ interface VolunteerHomeContentProps {
 export function VolunteerHomeContent({
   initialMyShiftInstances,
   initialAvailableShiftInstances,
-  initialInvitations,
+  initialShiftInvitations,
+  initialEventInvitations,
   hasMemberships,
   pendingRequest,
 }: VolunteerHomeContentProps) {
@@ -101,13 +110,13 @@ export function VolunteerHomeContent({
       },
     });
 
-  const { data: invitationsPage } = useMyShiftInstances(
+  const { data: shiftInvitationsPage } = useMyShiftInstances(
     { limit: 10, statuses: [ShiftInviteStatus.Invited] },
     {
       initialData: {
-        items: initialInvitations,
+        items: initialShiftInvitations,
         pagination: {
-          total: initialInvitations.length,
+          total: initialShiftInvitations.length,
           limit: 10,
           offset: 0,
           hasMore: false,
@@ -115,7 +124,30 @@ export function VolunteerHomeContent({
       },
     },
   );
-  const invitationList = invitationsPage?.items ?? [];
+
+  const { data: eventInvitationsPage } = useMyEvents(
+    { limit: 10, statuses: [EventInviteStatus.Invited] },
+    {
+      initialData: {
+        items: initialEventInvitations,
+        pagination: {
+          total: initialEventInvitations.length,
+          limit: 10,
+          offset: 0,
+          hasMore: false,
+        },
+      },
+    },
+  );
+
+  const invitationList = useMemo(
+    () =>
+      mergeInvitations(
+        shiftInvitationsPage?.items ?? [],
+        eventInvitationsPage?.items ?? [],
+      ),
+    [shiftInvitationsPage?.items, eventInvitationsPage?.items],
+  );
 
   const showLoadingMy = useDelayedLoading(isLoadingMy);
   const showLoadingAvailable = useDelayedLoading(isLoadingAvailable);
@@ -269,9 +301,19 @@ export function VolunteerHomeContent({
         {seeAllLink('/invitations')}
       </div>
       <div className="flex flex-col gap-3">
-        {invitationList.map((invite) => (
-          <ShiftCardMyInvited key={invite.id} shiftInstance={invite} />
-        ))}
+        {invitationList.map((invite) =>
+          invite.kind === 'shift' ? (
+            <ShiftCardMyInvited
+              key={`shift-${invite.id}`}
+              shiftInstance={invite.shift}
+            />
+          ) : (
+            <EventCardMyInvited
+              key={`event-${invite.id}`}
+              event={invite.event}
+            />
+          ),
+        )}
       </div>
     </section>
   );

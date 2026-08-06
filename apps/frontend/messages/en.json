@@ -1309,7 +1309,11 @@
         "inviteButton": "Invite",
         "inviteAria": "Invite members",
         "checkInAria": "Check in",
-        "empty": "No volunteers invited yet."
+        "empty": "No volunteers invited yet.",
+        "status": {
+          "invited": "Invited",
+          "signedUp": "Signed up"
+        }
       },
       "shiftsCard": {
         "title": "Shifts",
@@ -1431,6 +1435,8 @@
     "loadPast": "Load past",
     "loadMore": "Load more",
     "invitedOn": "Invited · {date}",
+    "inviteKindEvent": "Event",
+    "inviteKindShift": "Shift",
     "pendingBadge": "Pending",
     "pendingRequestTitle": "Waiting for {orgName}",
     "pendingRequestBody": "An admin is reviewing your request. Usually a few days.",
