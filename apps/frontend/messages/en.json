@@ -546,7 +546,9 @@
       "allShifts": "All shifts"
     },
     "calendar": {
-      "week": "Week {week}"
+      "week": "Week {week}",
+      "prevAria": "Previous week",
+      "nextAria": "Next week"
     },
     "table": {
       "name": "Name",

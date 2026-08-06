@@ -17,6 +17,7 @@ import {
 import { FileIcon, Loader2, Upload, X } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useId, useRef, useState } from 'react';
+import { ActionTooltip } from '@/components/action-tooltip';
 import {
   getAcceptForPurpose,
   isMimeTypeAllowedForPurpose,
@@ -237,16 +238,31 @@ export function FileUpload({
                 {t('replace')}
               </Button>
               {onClear ? (
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon-sm"
-                  disabled={!isInteractive}
-                  aria-label={t('clear')}
-                  onClick={handleClear}
-                >
-                  <X />
-                </Button>
+                <ActionTooltip label={t('clear')}>
+                  {!isInteractive ? (
+                    <span>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon-sm"
+                        disabled
+                        aria-label={t('clear')}
+                      >
+                        <X />
+                      </Button>
+                    </span>
+                  ) : (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon-sm"
+                      aria-label={t('clear')}
+                      onClick={handleClear}
+                    >
+                      <X />
+                    </Button>
+                  )}
+                </ActionTooltip>
               ) : null}
             </div>
           )}

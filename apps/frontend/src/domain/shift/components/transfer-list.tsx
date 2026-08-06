@@ -5,6 +5,7 @@ import { Badge, Button, cn, Input, VolunteeringMemberRow } from '@repo/ui';
 import { ArrowLeftRight, CirclePlus, CircleX } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useState } from 'react';
+import { ActionTooltip } from '@/components/action-tooltip';
 import { toInviteDisplayState } from '../invite-status-display';
 
 /** Label + gap + search bar + minimum list area */
@@ -98,15 +99,21 @@ export function TransferList({
                     {member.email}
                   </p>
                 </div>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon-xs"
-                  onClick={() => addMember(member)}
-                  aria-label={t('transferList.addAria', { name: member.name })}
+                <ActionTooltip
+                  label={t('transferList.addAria', { name: member.name })}
                 >
-                  <CirclePlus className="size-4" />
-                </Button>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon-xs"
+                    onClick={() => addMember(member)}
+                    aria-label={t('transferList.addAria', {
+                      name: member.name,
+                    })}
+                  >
+                    <CirclePlus className="size-4" />
+                  </Button>
+                </ActionTooltip>
               </div>
             ))}
           </div>
@@ -148,17 +155,23 @@ export function TransferList({
                 phase="before"
                 className="hover:bg-accent"
                 trailing={
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon-xs"
-                    onClick={() => removeMember(member.id)}
-                    aria-label={t('transferList.removeAria', {
+                  <ActionTooltip
+                    label={t('transferList.removeAria', {
                       name: member.name,
                     })}
                   >
-                    <CircleX className="size-4" />
-                  </Button>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon-xs"
+                      onClick={() => removeMember(member.id)}
+                      aria-label={t('transferList.removeAria', {
+                        name: member.name,
+                      })}
+                    >
+                      <CircleX className="size-4" />
+                    </Button>
+                  </ActionTooltip>
                 }
               />
             ))}

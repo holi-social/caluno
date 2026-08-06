@@ -26,6 +26,7 @@ import {
 import { LogIn, UserRound } from 'lucide-react';
 import { useSearchParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
+import { ActionTooltip } from '@/components/action-tooltip';
 import { ButtonClipboard } from '@/components/button-clipboard';
 import MembershipRequestCard from '@/domain/membership-requests/components/membership-request-card';
 import { organizationUnitUrl } from '@/domain/organization/share';
@@ -111,34 +112,38 @@ function ApprovedTab({ orgUId }: { orgUId: string }) {
               </TableCell>
               <TableCell>
                 <div className="flex items-center gap-1">
-                  <Button
-                    size="icon-xs"
-                    variant="outline"
-                    aria-label={t('action.viewProfileAria')}
-                    onClick={() =>
-                      openVolunteerSheet({
-                        userId: membership.user.id,
-                        volunteerName: membership.user.name,
-                        volunteerStatus: MembershipRequestStatus.Accepted,
-                        volunteerEmail: membership.user.email,
-                        volunteerCheckInId: membership.user.checkInId,
-                      })
-                    }
-                  >
-                    <UserRound />
-                  </Button>
-                  <Link
-                    href={`/admin/${orgUId}/check-in/${membership.user.checkInId}/check-in`}
-                    aria-label={t('action.checkInAria')}
-                  >
+                  <ActionTooltip label={t('action.viewProfileAria')}>
                     <Button
                       size="icon-xs"
                       variant="outline"
-                      aria-label={t('action.checkInShiftAria')}
+                      aria-label={t('action.viewProfileAria')}
+                      onClick={() =>
+                        openVolunteerSheet({
+                          userId: membership.user.id,
+                          volunteerName: membership.user.name,
+                          volunteerStatus: MembershipRequestStatus.Accepted,
+                          volunteerEmail: membership.user.email,
+                          volunteerCheckInId: membership.user.checkInId,
+                        })
+                      }
                     >
-                      <LogIn />
+                      <UserRound />
                     </Button>
-                  </Link>
+                  </ActionTooltip>
+                  <ActionTooltip label={t('action.checkInShiftAria')}>
+                    <Link
+                      href={`/admin/${orgUId}/check-in/${membership.user.checkInId}/check-in`}
+                      aria-label={t('action.checkInAria')}
+                    >
+                      <Button
+                        size="icon-xs"
+                        variant="outline"
+                        aria-label={t('action.checkInShiftAria')}
+                      >
+                        <LogIn />
+                      </Button>
+                    </Link>
+                  </ActionTooltip>
                 </div>
               </TableCell>
             </TableRow>

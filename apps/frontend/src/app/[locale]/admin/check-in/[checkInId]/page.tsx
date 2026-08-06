@@ -9,6 +9,7 @@ import {
 import { LogIn } from 'lucide-react';
 import { redirect } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
+import { ActionTooltip } from '@/components/action-tooltip';
 import { Link } from '@/i18n/navigation';
 import {
   getLastVisitedOrgServer,
@@ -54,9 +55,11 @@ export default async function CheckInPage({ params }: CheckInPageProps) {
               className="flex gap-4 items-center text-xl"
             >
               {o.name}
-              <Button type="button" size="icon-sm">
-                <LogIn />
-              </Button>
+              <ActionTooltip label={t('checkIn')}>
+                <Button type="button" size="icon-sm" aria-label={t('checkIn')}>
+                  <LogIn />
+                </Button>
+              </ActionTooltip>
             </Link>
           ))}
         </CardContent>

@@ -546,7 +546,9 @@
       "allShifts": "Alle Einsätze"
     },
     "calendar": {
-      "week": "KW {week}"
+      "week": "KW {week}",
+      "prevAria": "Vorherige Woche",
+      "nextAria": "Nächste Woche"
     },
     "table": {
       "name": "Name",

@@ -12,6 +12,7 @@ import {
 } from '@repo/ui';
 import { LogIn, UserPlus } from 'lucide-react';
 import { useTranslations } from 'next-intl';
+import { ActionTooltip } from '@/components/action-tooltip';
 import { UserCard } from '@/components/user-card';
 import { Link } from '@/i18n/navigation';
 
@@ -62,18 +63,20 @@ export function EventVolunteersSection({
               >
                 <UserCard user={attendee} size="sm" />
                 <div className="flex items-center gap-1 shrink-0">
-                  <Link
-                    href={`/admin/${orgUId}/check-in/${attendee.checkInId}/check-in`}
-                    aria-label={t('checkInAria')}
-                  >
-                    <Button
-                      size="icon-xs"
-                      variant="outline"
+                  <ActionTooltip label={t('checkInAria')}>
+                    <Link
+                      href={`/admin/${orgUId}/check-in/${attendee.checkInId}/check-in`}
                       aria-label={t('checkInAria')}
                     >
-                      <LogIn />
-                    </Button>
-                  </Link>
+                      <Button
+                        size="icon-xs"
+                        variant="outline"
+                        aria-label={t('checkInAria')}
+                      >
+                        <LogIn />
+                      </Button>
+                    </Link>
+                  </ActionTooltip>
                 </div>
               </li>
             ))}

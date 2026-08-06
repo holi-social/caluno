@@ -14,6 +14,7 @@ import {
 import { Eye, Loader2, Pencil, Trash2 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useTransition } from 'react';
+import { ActionTooltip } from '@/components/action-tooltip';
 import { DeleteAlertDialog } from '@/components/delete-alert-dialog';
 import { FormattedDate } from '@/components/formatted-date';
 import { useSheetTrigger } from '@/hooks/use-sheet';
@@ -33,29 +34,35 @@ function BlockActions({
     startDeleteTransition(() => onDelete(block.id));
   }
 
+  const editLabel = block.isEditable ? t('editBlockAria') : t('viewBlockAria');
+
   return (
     <aside className="flex items-center gap-1">
-      <Button
-        size="icon-xs"
-        variant="outline"
-        aria-label={block.isEditable ? t('editBlockAria') : t('viewBlockAria')}
-        onClick={() => openSheet({ id: block.id })}
-      >
-        {block.isEditable ? <Pencil /> : <Eye />}
-      </Button>
+      <ActionTooltip label={editLabel}>
+        <Button
+          size="icon-xs"
+          variant="outline"
+          aria-label={editLabel}
+          onClick={() => openSheet({ id: block.id })}
+        >
+          {block.isEditable ? <Pencil /> : <Eye />}
+        </Button>
+      </ActionTooltip>
       <DeleteAlertDialog
         title={t('deleteBlockAria')}
         description={t('deleteBlockDescription', { name: block.title })}
         onDelete={handleDelete}
         trigger={
-          <Button
-            size="icon-xs"
-            variant="destructive"
-            aria-label={t('deleteBlockAria')}
-            disabled={isDeleting}
-          >
-            {isDeleting ? <Loader2 className="animate-spin" /> : <Trash2 />}
-          </Button>
+          <ActionTooltip label={t('deleteBlockAria')}>
+            <Button
+              size="icon-xs"
+              variant="destructive"
+              aria-label={t('deleteBlockAria')}
+              disabled={isDeleting}
+            >
+              {isDeleting ? <Loader2 className="animate-spin" /> : <Trash2 />}
+            </Button>
+          </ActionTooltip>
         }
       />
     </aside>

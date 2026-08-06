@@ -11,6 +11,7 @@ import {
 import { format } from 'date-fns';
 import { TriangleAlert, UserPlus, UsersRound } from 'lucide-react';
 import { useTranslations } from 'next-intl';
+import { ActionTooltip } from '@/components/action-tooltip';
 import { Link } from '@/i18n/navigation';
 import { toInviteDisplayState } from '../invite-status-display';
 import { shiftInstanceDetailPath, shiftInvitePath } from '../routes';
@@ -145,17 +146,19 @@ export function ShiftCard({
           )}
 
           {showButton && (
-            <Link
-              href={shiftInvitePath(orgUId, instance.master.id, instance.id)}
-            >
-              <Button
-                size="icon-sm"
-                variant={buttonVariant}
-                aria-label={t('card.inviteAria')}
+            <ActionTooltip label={t('card.inviteAria')}>
+              <Link
+                href={shiftInvitePath(orgUId, instance.master.id, instance.id)}
               >
-                <UserPlus className="size-4" />
-              </Button>
-            </Link>
+                <Button
+                  size="icon-sm"
+                  variant={buttonVariant}
+                  aria-label={t('card.inviteAria')}
+                >
+                  <UserPlus className="size-4" />
+                </Button>
+              </Link>
+            </ActionTooltip>
           )}
         </div>
       </div>

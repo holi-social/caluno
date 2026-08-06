@@ -4,6 +4,7 @@ import { Button, Input } from '@repo/ui';
 import { Plus, Trash2 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useState } from 'react';
+import { ActionTooltip } from '@/components/action-tooltip';
 
 interface OptionItem {
   id: string;
@@ -25,6 +26,7 @@ export function OptionsEditor({
   disabled?: boolean;
 }) {
   const t = useTranslations('RequirementForm.block');
+  const tCommon = useTranslations('Common');
   const [items, setItems] = useState<OptionItem[]>(() => toItems(options));
 
   function update(
@@ -72,16 +74,33 @@ export function OptionsEditor({
             className="flex-1"
             disabled={disabled}
           />
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            className="text-muted-foreground hover:text-destructive shrink-0"
-            onClick={() => remove(idx)}
-            disabled={disabled}
-          >
-            <Trash2 className="size-4" />
-          </Button>
+          <ActionTooltip label={tCommon('delete')}>
+            {disabled ? (
+              <span>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="text-muted-foreground hover:text-destructive shrink-0"
+                  disabled
+                  aria-label={tCommon('delete')}
+                >
+                  <Trash2 className="size-4" />
+                </Button>
+              </span>
+            ) : (
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="text-muted-foreground hover:text-destructive shrink-0"
+                onClick={() => remove(idx)}
+                aria-label={tCommon('delete')}
+              >
+                <Trash2 className="size-4" />
+              </Button>
+            )}
+          </ActionTooltip>
         </div>
       ))}
       <Button

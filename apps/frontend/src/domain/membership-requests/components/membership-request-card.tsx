@@ -18,6 +18,7 @@ import {
 } from '@repo/ui';
 import { Eye, UserRound } from 'lucide-react';
 import { useTranslations } from 'next-intl';
+import { ActionTooltip } from '@/components/action-tooltip';
 import { MembershipRequestActions } from '@/domain/membership-requests/components/membership-request-actions';
 import { MembershipRequestRequiredForms } from '@/domain/membership-requests/components/membership-request-required-forms';
 import { useSheetTrigger } from '@/hooks/use-sheet';
@@ -102,14 +103,16 @@ export default function MembershipRequestCard({ request }: Props) {
           ) : (
             <span />
           )}
-          <Button
-            variant="outline"
-            size="icon-xs"
-            onClick={handleViewVolunteer}
-            aria-label={t('card.viewAria')}
-          >
-            <UserRound />
-          </Button>
+          <ActionTooltip label={t('card.viewAria')}>
+            <Button
+              variant="outline"
+              size="icon-xs"
+              onClick={handleViewVolunteer}
+              aria-label={t('card.viewAria')}
+            >
+              <UserRound />
+            </Button>
+          </ActionTooltip>
         </CardContent>
       )}
     </Card>

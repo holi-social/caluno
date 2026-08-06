@@ -1,6 +1,7 @@
 import { Avatar, AvatarFallback, AvatarImage, Button } from '@repo/ui';
 import { Pencil } from 'lucide-react';
 import { getTranslations } from 'next-intl/server';
+import { ActionTooltip } from '@/components/action-tooltip';
 import { getInitials } from '@/lib/get-initials';
 import { Link } from '../../../i18n/navigation';
 
@@ -23,19 +24,20 @@ export const HeaderAvatar = async ({ name, imageUrl }: HeaderAvatarProps) => {
           />
           <AvatarFallback>{getInitials(name)}</AvatarFallback>
         </Avatar>
-        <Button
-          type="button"
-          variant="outline"
-          size="icon-sm"
-          aria-label={tProfile('edit')}
-          title={tProfile('edit')}
-          className="absolute -bottom-1 -right-1 rounded-full"
-          asChild
-        >
-          <Link href={'/profile/avatar/edit'}>
-            <Pencil className="size-4" />
-          </Link>
-        </Button>
+        <ActionTooltip label={tProfile('edit')}>
+          <Button
+            type="button"
+            variant="outline"
+            size="icon-sm"
+            aria-label={tProfile('edit')}
+            className="absolute -bottom-1 -right-1 rounded-full"
+            asChild
+          >
+            <Link href={'/profile/avatar/edit'}>
+              <Pencil className="size-4" />
+            </Link>
+          </Button>
+        </ActionTooltip>
       </div>
       <h2 className="text-center text-lg font-bold">{name}</h2>
     </div>

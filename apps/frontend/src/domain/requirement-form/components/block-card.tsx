@@ -6,6 +6,7 @@ import type { LucideIcon } from 'lucide-react';
 import { Eye, FileCheck, MapPin, Pencil, Trash2, User } from 'lucide-react';
 import { useFormatter, useTranslations } from 'next-intl';
 import { useState } from 'react';
+import { ActionTooltip } from '@/components/action-tooltip';
 import { useSheetTrigger } from '@/hooks/use-sheet';
 import { ConfirmDialog } from './confirm-dialog';
 
@@ -126,17 +127,31 @@ export function BlockCard({
             )}
           </Button>
           {onDelete && (
-            <Button
-              variant="outline"
-              size="icon"
-              className="text-muted-foreground hover:text-destructive size-10 shrink-0"
-              onClick={() => setConfirmOpen(true)}
-              aria-label={tTable('deleteBlockAria')}
-              title={tTable('deleteBlockAria')}
-              disabled={locked}
-            >
-              <Trash2 className="size-4" />
-            </Button>
+            <ActionTooltip label={tTable('deleteBlockAria')}>
+              {locked ? (
+                <span>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="text-muted-foreground hover:text-destructive size-10 shrink-0"
+                    aria-label={tTable('deleteBlockAria')}
+                    disabled
+                  >
+                    <Trash2 className="size-4" />
+                  </Button>
+                </span>
+              ) : (
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="text-muted-foreground hover:text-destructive size-10 shrink-0"
+                  onClick={() => setConfirmOpen(true)}
+                  aria-label={tTable('deleteBlockAria')}
+                >
+                  <Trash2 className="size-4" />
+                </Button>
+              )}
+            </ActionTooltip>
           )}
         </div>
       </CardContent>

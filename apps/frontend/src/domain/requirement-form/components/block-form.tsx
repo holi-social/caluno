@@ -19,7 +19,16 @@ import {
   Switch,
   Textarea,
 } from '@repo/ui';
-import { FileText, Lock, Plus, Save, Trash2, UserCircle2 } from 'lucide-react';
+import {
+  ArrowDown,
+  ArrowUp,
+  FileText,
+  Lock,
+  Plus,
+  Save,
+  Trash2,
+  UserCircle2,
+} from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useEffect, useState } from 'react';
 import {
@@ -32,6 +41,7 @@ import {
   useWatch,
 } from 'react-hook-form';
 import { toast } from 'sonner';
+import { ActionTooltip } from '@/components/action-tooltip';
 import { FileUpload } from '@/components/storage/file-upload';
 import { saveBlock } from '../actions';
 import { OptionsEditor } from './options-editor';
@@ -550,6 +560,7 @@ function FieldCard({
   const t = useTranslations('RequirementForm.block');
   const tField = useTranslations('RequirementForm.fieldForm');
   const tValidation = useTranslations('RequirementForm.validation');
+  const tCommon = useTranslations('Common');
   const showOptions =
     fieldType === FieldType.SingleChoice || fieldType === FieldType.MultiChoice;
   const isDocument = fieldType === FieldType.DocumentAcknowledgement;
@@ -594,33 +605,68 @@ function FieldCard({
           )}
           {!readOnly && (
             <div className="flex items-center gap-1">
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                disabled={!canMoveUp}
-                onClick={onMoveUp}
-              >
-                ↑
-              </Button>
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                disabled={!canMoveDown}
-                onClick={onMoveDown}
-              >
-                ↓
-              </Button>
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                className="text-muted-foreground hover:text-destructive size-8"
-                onClick={onRemove}
-              >
-                <Trash2 className="size-4" />
-              </Button>
+              <ActionTooltip label={tCommon('moveUp')}>
+                {!canMoveUp ? (
+                  <span>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      disabled
+                      aria-label={tCommon('moveUp')}
+                    >
+                      <ArrowUp className="size-4" />
+                    </Button>
+                  </span>
+                ) : (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    onClick={onMoveUp}
+                    aria-label={tCommon('moveUp')}
+                  >
+                    <ArrowUp className="size-4" />
+                  </Button>
+                )}
+              </ActionTooltip>
+              <ActionTooltip label={tCommon('moveDown')}>
+                {!canMoveDown ? (
+                  <span>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      disabled
+                      aria-label={tCommon('moveDown')}
+                    >
+                      <ArrowDown className="size-4" />
+                    </Button>
+                  </span>
+                ) : (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    onClick={onMoveDown}
+                    aria-label={tCommon('moveDown')}
+                  >
+                    <ArrowDown className="size-4" />
+                  </Button>
+                )}
+              </ActionTooltip>
+              <ActionTooltip label={tCommon('delete')}>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="text-muted-foreground hover:text-destructive size-8"
+                  onClick={onRemove}
+                  aria-label={tCommon('delete')}
+                >
+                  <Trash2 className="size-4" />
+                </Button>
+              </ActionTooltip>
             </div>
           )}
         </div>

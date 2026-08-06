@@ -14,6 +14,7 @@ import {
   PopoverTrigger,
 } from '@repo/ui';
 import { FileCheck, FileText, Info, Plus, X } from 'lucide-react';
+import { ActionTooltip } from '@/components/action-tooltip';
 
 type FormsT = (
   key: string,
@@ -78,15 +79,30 @@ export function RequiredFormsList({
               </p>
             </div>
           </div>
-          <Button
-            variant="ghost"
-            size="icon-xs"
-            onClick={() => onRemove(form.id)}
-            disabled={removeDisabled}
-            aria-label={t('removeAria', { name: form.name })}
-          >
-            <X className="h-4 w-4" />
-          </Button>
+          <ActionTooltip label={t('removeAria', { name: form.name })}>
+            {removeDisabled ? (
+              <span>
+                <Button
+                  variant="ghost"
+                  size="icon-xs"
+                  onClick={() => onRemove(form.id)}
+                  disabled
+                  aria-label={t('removeAria', { name: form.name })}
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </span>
+            ) : (
+              <Button
+                variant="ghost"
+                size="icon-xs"
+                onClick={() => onRemove(form.id)}
+                aria-label={t('removeAria', { name: form.name })}
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            )}
+          </ActionTooltip>
         </div>
       ))}
     </div>

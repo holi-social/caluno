@@ -21,6 +21,7 @@ import {
   TrashIcon,
 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
+import { ActionTooltip } from '@/components/action-tooltip';
 import { Link } from '@/i18n/navigation';
 import { orgUnitAdminHref } from '@/lib/admin-routes';
 import { getDynamicIcon } from '@/lib/dynamic-icon';
@@ -101,70 +102,80 @@ function OrgUnitNodeItem({
           </TreeLabel>
 
           <span className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-            <Button
-              size="icon-xs"
-              variant="outline"
-              aria-label={t('visitAria')}
-              asChild
-            >
-              <Link
-                href={orgUnitAdminHref(node.id)}
-                onClick={(e) => e.stopPropagation()}
+            <ActionTooltip label={t('visitAria')}>
+              <Button
+                size="icon-xs"
+                variant="outline"
+                aria-label={t('visitAria')}
+                asChild
               >
-                <EyeIcon />
-              </Link>
-            </Button>
+                <Link
+                  href={orgUnitAdminHref(node.id)}
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <EyeIcon />
+                </Link>
+              </Button>
+            </ActionTooltip>
 
-            <Button
-              size="icon-xs"
-              variant="outline"
-              aria-label={t('copyLinkAria')}
-              onClick={(e) => {
-                e.stopPropagation();
-                copyToClipboard(organizationUnitUrl(node.id), t('copyToast'));
-              }}
-            >
-              <Share2Icon />
-            </Button>
+            <ActionTooltip label={t('copyLinkAria')}>
+              <Button
+                size="icon-xs"
+                variant="outline"
+                aria-label={t('copyLinkAria')}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  copyToClipboard(organizationUnitUrl(node.id), t('copyToast'));
+                }}
+              >
+                <Share2Icon />
+              </Button>
+            </ActionTooltip>
 
             {canEdit && (
               <>
-                <Button
-                  size="icon-xs"
-                  variant="outline"
-                  aria-label={t('addChildAria')}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onCreate(node);
-                  }}
-                >
-                  <PlusIcon />
-                </Button>
-
-                <Button
-                  size="icon-xs"
-                  variant="outline"
-                  aria-label={t('editAria')}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onEdit(node);
-                  }}
-                >
-                  <PencilIcon />
-                </Button>
-
-                {!!node.parentId && (
+                <ActionTooltip label={t('addChildAria')}>
                   <Button
                     size="icon-xs"
-                    variant="destructive"
-                    aria-label={t('deleteAria')}
+                    variant="outline"
+                    aria-label={t('addChildAria')}
                     onClick={(e) => {
                       e.stopPropagation();
-                      onDelete(node);
+                      onCreate(node);
                     }}
                   >
-                    <TrashIcon />
+                    <PlusIcon />
                   </Button>
+                </ActionTooltip>
+
+                <ActionTooltip label={t('editAria')}>
+                  <Button
+                    size="icon-xs"
+                    variant="outline"
+                    aria-label={t('editAria')}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onEdit(node);
+                    }}
+                  >
+                    <PencilIcon />
+                  </Button>
+                </ActionTooltip>
+
+                {!!node.parentId && (
+                  <ActionTooltip label={t('deleteAria')}>
+                    <Button
+                      size="icon-xs"
+                      variant="destructive"
+                      aria-label={t('deleteAria')}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onDelete(node);
+                      }}
+                    >
+                      <TrashIcon />
+                    </Button>
+                  </ActionTooltip>
                 )}
               </>
             )}

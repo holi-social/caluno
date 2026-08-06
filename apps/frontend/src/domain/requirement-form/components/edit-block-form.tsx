@@ -11,12 +11,21 @@ import {
   Separator,
   Textarea,
 } from '@repo/ui';
-import { ArrowLeft, Plus, Save, SquarePen, Trash2 } from 'lucide-react';
+import {
+  ArrowDown,
+  ArrowLeft,
+  ArrowUp,
+  Plus,
+  Save,
+  SquarePen,
+  Trash2,
+} from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useMemo, useState, useTransition } from 'react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 import { z } from 'zod';
+import { ActionTooltip } from '@/components/action-tooltip';
 import { useRouter } from '@/i18n/navigation';
 import {
   createBlockField,
@@ -331,22 +340,52 @@ export function EditBlockForm({
                 )}
               </div>
               <div className="ml-4 flex shrink-0 items-center gap-1">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  disabled={idx === 0 || isPending}
-                  onClick={() => handleMoveField(field.id, 'up')}
-                >
-                  ↑
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  disabled={idx === fields.length - 1 || isPending}
-                  onClick={() => handleMoveField(field.id, 'down')}
-                >
-                  ↓
-                </Button>
+                <ActionTooltip label={tCommon('moveUp')}>
+                  {idx === 0 || isPending ? (
+                    <span>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        disabled
+                        aria-label={tCommon('moveUp')}
+                      >
+                        <ArrowUp className="size-4" />
+                      </Button>
+                    </span>
+                  ) : (
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => handleMoveField(field.id, 'up')}
+                      aria-label={tCommon('moveUp')}
+                    >
+                      <ArrowUp className="size-4" />
+                    </Button>
+                  )}
+                </ActionTooltip>
+                <ActionTooltip label={tCommon('moveDown')}>
+                  {idx === fields.length - 1 || isPending ? (
+                    <span>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        disabled
+                        aria-label={tCommon('moveDown')}
+                      >
+                        <ArrowDown className="size-4" />
+                      </Button>
+                    </span>
+                  ) : (
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => handleMoveField(field.id, 'down')}
+                      aria-label={tCommon('moveDown')}
+                    >
+                      <ArrowDown className="size-4" />
+                    </Button>
+                  )}
+                </ActionTooltip>
                 <Button
                   variant="ghost"
                   size="sm"
@@ -358,14 +397,17 @@ export function EditBlockForm({
                   <SquarePen />
                   {tCommon('edit')}
                 </Button>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="text-muted-foreground hover:text-destructive size-8"
-                  onClick={() => setDeletingFieldId(field.id)}
-                >
-                  <Trash2 className="size-4" />
-                </Button>
+                <ActionTooltip label={tCommon('delete')}>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="text-muted-foreground hover:text-destructive size-8"
+                    onClick={() => setDeletingFieldId(field.id)}
+                    aria-label={tCommon('delete')}
+                  >
+                    <Trash2 className="size-4" />
+                  </Button>
+                </ActionTooltip>
               </div>
             </div>
           ),

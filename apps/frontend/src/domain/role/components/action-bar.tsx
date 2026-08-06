@@ -6,6 +6,7 @@ import { Edit, Loader2, Trash } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useTransition } from 'react';
 import { toast } from 'sonner';
+import { ActionTooltip } from '@/components/action-tooltip';
 import { DeleteAlertDialog } from '@/components/delete-alert-dialog';
 import { RequirePermission } from '@/components/require-permission';
 import { Link, usePathname, useRouter } from '@/i18n/navigation';
@@ -50,25 +51,33 @@ export const ActionBar = ({
     <aside className="flex items-center gap-2">
       {!isInternal && (
         <RequirePermission permission={PermissionKey.OrgEdit}>
-          <Button variant="outline" size={buttonSize} asChild>
-            <Link href={editHref} aria-label={t('editAria')}>
-              <Edit />
-            </Link>
-          </Button>
+          <ActionTooltip label={t('editAria')}>
+            <Button variant="outline" size={buttonSize} asChild>
+              <Link href={editHref} aria-label={t('editAria')}>
+                <Edit />
+              </Link>
+            </Button>
+          </ActionTooltip>
 
           <DeleteAlertDialog
             title={t('deleteTitle')}
             description={t('deleteDescription')}
             onDelete={handleDelete}
             trigger={
-              <Button
-                size={buttonSize}
-                variant="destructive"
-                aria-label={t('deleteAria')}
-                disabled={isDeleting}
-              >
-                {isDeleting ? <Loader2 className="animate-spin" /> : <Trash />}
-              </Button>
+              <ActionTooltip label={t('deleteAria')}>
+                <Button
+                  size={buttonSize}
+                  variant="destructive"
+                  aria-label={t('deleteAria')}
+                  disabled={isDeleting}
+                >
+                  {isDeleting ? (
+                    <Loader2 className="animate-spin" />
+                  ) : (
+                    <Trash />
+                  )}
+                </Button>
+              </ActionTooltip>
             }
           />
         </RequirePermission>

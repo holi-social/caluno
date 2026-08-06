@@ -14,6 +14,7 @@ import {
 import { Loader2, Lock, Pencil, Share2, Trash2, Users } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useTransition } from 'react';
+import { ActionTooltip } from '@/components/action-tooltip';
 import { DeleteAlertDialog } from '@/components/delete-alert-dialog';
 import { FormattedDate } from '@/components/formatted-date';
 import { Link } from '@/i18n/navigation';
@@ -43,60 +44,71 @@ function FormActions({
 
   return (
     <aside className="flex items-center gap-1">
-      <Button
-        size="icon-xs"
-        variant="outline"
-        aria-label={t('copyShareLinkAria')}
-        onClick={handleShare}
-      >
-        <Share2 />
-      </Button>
-      <Button
-        size="icon-xs"
-        variant="outline"
-        aria-label={t('editFormAria')}
-        asChild
-      >
-        <Link href={`/admin/${orgUId}/requirement-forms/${form.id}/builder`}>
-          <Pencil />
-        </Link>
-      </Button>
-      <Button
-        size="icon-xs"
-        variant="outline"
-        aria-label={t('submissionsAria')}
-        asChild
-      >
-        <Link
-          href={`/admin/${orgUId}/requirement-forms/${form.id}/submissions`}
-        >
-          <Users />
-        </Link>
-      </Button>
-      {form.submissionCount > 0 ? (
+      <ActionTooltip label={t('copyShareLinkAria')}>
         <Button
           size="icon-xs"
           variant="outline"
-          aria-label={t('cannotDeleteAria')}
-          title={t('cannotDeleteAria')}
-          disabled
+          aria-label={t('copyShareLinkAria')}
+          onClick={handleShare}
         >
-          <Lock />
+          <Share2 />
         </Button>
+      </ActionTooltip>
+      <ActionTooltip label={t('editFormAria')}>
+        <Button
+          size="icon-xs"
+          variant="outline"
+          aria-label={t('editFormAria')}
+          asChild
+        >
+          <Link href={`/admin/${orgUId}/requirement-forms/${form.id}/builder`}>
+            <Pencil />
+          </Link>
+        </Button>
+      </ActionTooltip>
+      <ActionTooltip label={t('submissionsAria')}>
+        <Button
+          size="icon-xs"
+          variant="outline"
+          aria-label={t('submissionsAria')}
+          asChild
+        >
+          <Link
+            href={`/admin/${orgUId}/requirement-forms/${form.id}/submissions`}
+          >
+            <Users />
+          </Link>
+        </Button>
+      </ActionTooltip>
+      {form.submissionCount > 0 ? (
+        <ActionTooltip label={t('cannotDeleteAria')}>
+          <span>
+            <Button
+              size="icon-xs"
+              variant="outline"
+              aria-label={t('cannotDeleteAria')}
+              disabled
+            >
+              <Lock />
+            </Button>
+          </span>
+        </ActionTooltip>
       ) : (
         <DeleteAlertDialog
           title={t('deleteFormAria')}
           description={t('deleteFormDescription', { name: form.name })}
           onDelete={handleDelete}
           trigger={
-            <Button
-              size="icon-xs"
-              variant="destructive"
-              aria-label={t('deleteFormAria')}
-              disabled={isDeleting}
-            >
-              {isDeleting ? <Loader2 className="animate-spin" /> : <Trash2 />}
-            </Button>
+            <ActionTooltip label={t('deleteFormAria')}>
+              <Button
+                size="icon-xs"
+                variant="destructive"
+                aria-label={t('deleteFormAria')}
+                disabled={isDeleting}
+              >
+                {isDeleting ? <Loader2 className="animate-spin" /> : <Trash2 />}
+              </Button>
+            </ActionTooltip>
           }
         />
       )}

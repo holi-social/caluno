@@ -1,15 +1,10 @@
 'use client';
 
 import type { FormBlock } from '@repo/data';
-import {
-  Button,
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from '@repo/ui';
+import { Button } from '@repo/ui';
 import { ArrowDown, ArrowUp, Edit3, Eye, Plus, Trash2 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
+import { ActionTooltip } from '@/components/action-tooltip';
 import type { BuilderBlockRef } from './form-builder-state';
 
 interface FormBuilderBlockListProps {
@@ -32,12 +27,14 @@ export function FormBuilderBlockList({
   onAddBlock,
 }: FormBuilderBlockListProps) {
   const t = useTranslations('RequirementForm.builder');
+  const tCommon = useTranslations('Common');
 
   return (
     <>
       {blockRefs.map((ref, index) => {
         const block = availableBlocks.find((b) => b.id === ref.blockId);
         if (!block) return null;
+        const editLabel = hasSubmissions ? t('viewBlock') : t('editBlock');
         return (
           <div key={ref.id} className="rounded-lg border bg-card p-4 space-y-3">
             <div className="flex items-center justify-between">
@@ -50,57 +47,92 @@ export function FormBuilderBlockList({
               <div className="flex items-center gap-1">
                 {!hasSubmissions && (
                   <>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      disabled={index === 0}
-                      onClick={() => onMove(index, 'up')}
-                    >
-                      <ArrowUp className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      disabled={index === blockRefs.length - 1}
-                      onClick={() => onMove(index, 'down')}
-                    >
-                      <ArrowDown className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => onRemove(index)}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
+                    <ActionTooltip label={tCommon('moveUp')}>
+                      {index === 0 ? (
+                        <span>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            disabled
+                            aria-label={tCommon('moveUp')}
+                          >
+                            <ArrowUp className="h-4 w-4" />
+                          </Button>
+                        </span>
+                      ) : (
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => onMove(index, 'up')}
+                          aria-label={tCommon('moveUp')}
+                        >
+                          <ArrowUp className="h-4 w-4" />
+                        </Button>
+                      )}
+                    </ActionTooltip>
+                    <ActionTooltip label={tCommon('moveDown')}>
+                      {index === blockRefs.length - 1 ? (
+                        <span>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            disabled
+                            aria-label={tCommon('moveDown')}
+                          >
+                            <ArrowDown className="h-4 w-4" />
+                          </Button>
+                        </span>
+                      ) : (
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => onMove(index, 'down')}
+                          aria-label={tCommon('moveDown')}
+                        >
+                          <ArrowDown className="h-4 w-4" />
+                        </Button>
+                      )}
+                    </ActionTooltip>
+                    <ActionTooltip label={tCommon('delete')}>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => onRemove(index)}
+                        aria-label={tCommon('delete')}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </ActionTooltip>
                   </>
                 )}
                 {!block.isEditable && !hasSubmissions ? (
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <span>
-                          <Button variant="ghost" size="icon" disabled>
-                            <Edit3 className="h-4 w-4" />
-                          </Button>
-                        </span>
-                      </TooltipTrigger>
-                      <TooltipContent>{t('lockedTooltip')}</TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
+                  <ActionTooltip label={t('lockedTooltip')}>
+                    <span>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        disabled
+                        aria-label={t('lockedTooltip')}
+                      >
+                        <Edit3 className="h-4 w-4" />
+                      </Button>
+                    </span>
+                  </ActionTooltip>
                 ) : (
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => onEditBlock(block)}
-                    title={hasSubmissions ? t('viewBlock') : t('editBlock')}
-                  >
-                    {hasSubmissions ? (
-                      <Eye className="h-4 w-4" />
-                    ) : (
-                      <Edit3 className="h-4 w-4" />
-                    )}
-                  </Button>
+                  <ActionTooltip label={editLabel}>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => onEditBlock(block)}
+                      aria-label={editLabel}
+                    >
+                      {hasSubmissions ? (
+                        <Eye className="h-4 w-4" />
+                      ) : (
+                        <Edit3 className="h-4 w-4" />
+                      )}
+                    </Button>
+                  </ActionTooltip>
                 )}
               </div>
             </div>
