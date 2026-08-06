@@ -21,8 +21,8 @@ import {
 } from '../requirement-profile/services/required-form.service';
 import { JoinStatus } from '../shared/enums/join-status.enum';
 import {
-  canTransitionInviteStatus,
   ACTIVE_EVENT_INVITE_STATUSES,
+  canTransitionInviteStatus,
   PARTICIPATING_EVENT_INVITE_STATUSES,
 } from '../shared/invite-status';
 import { SortOrder } from '../shift/enums';
