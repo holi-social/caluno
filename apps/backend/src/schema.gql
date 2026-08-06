@@ -879,7 +879,7 @@ type ShiftInstance {
   isCancelled: Boolean!
   isCheckedIn: Boolean!
   isException: Boolean!
-  isIntended: Boolean!
+  isIntendingToJoin: Boolean!
   master: Shift!
   masterId: ID!
   myInviteStatus: ShiftInviteStatus

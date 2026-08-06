@@ -86,7 +86,7 @@ export function ShiftActionCard({
     inviteStatusOverrides[selected.id] ?? selected.myInviteStatus ?? null;
   const effectiveMembershipState = membershipStateOverride ?? membershipState;
   const isPendingIntended =
-    selected.isIntended || pendingInstanceIds.has(selected.id);
+    selected.isIntendingToJoin || pendingInstanceIds.has(selected.id);
   const justJoined =
     isParticipatingInvite(inviteStatus) &&
     !isParticipatingInvite(selected.myInviteStatus);

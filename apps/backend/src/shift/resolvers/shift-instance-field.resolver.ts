@@ -160,7 +160,7 @@ export class ShiftInstanceFieldResolver {
   // request's intendedShiftInstanceIds metadata.
   @AllowAnonymous()
   @ResolveField(() => Boolean)
-  async isIntended(
+  async isIntendingToJoin(
     @Parent() instance: ShiftInstanceEntity,
     @Session() session: UserSession,
     @Loader(ShiftInstanceLoader) loader: ShiftInstanceLoader,
@@ -168,6 +168,8 @@ export class ShiftInstanceFieldResolver {
     if (!session?.user) {
       return false;
     }
-    return loader.isIntendedByKey.load(`${instance.id}::${session.user.id}`);
+    return loader.isIntendingToJoinByKey.load(
+      `${instance.id}::${session.user.id}`,
+    );
   }
 }

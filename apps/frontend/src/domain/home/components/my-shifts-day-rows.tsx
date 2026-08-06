@@ -24,7 +24,7 @@ interface ShiftRowCardProps {
 }
 
 function ShiftRowCard({ shift, nextShiftId, now }: ShiftRowCardProps) {
-  const isPending = shift.isIntended;
+  const isPending = shift.isIntendingToJoin;
   if (shift.id === nextShiftId) {
     return (
       <ShiftCardMy
