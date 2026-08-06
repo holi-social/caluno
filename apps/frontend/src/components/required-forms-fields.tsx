@@ -13,7 +13,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@repo/ui';
-import { FileCheck, FileText, Info, X } from 'lucide-react';
+import { FileCheck, FileText, Info, Plus, X } from 'lucide-react';
 
 type FormsT = (
   key: string,
@@ -119,6 +119,7 @@ export function RequiredFormsAddExisting({
           className="flex-1 border-primary text-primary hover:bg-primary/5"
           disabled={disabled}
         >
+          <Plus />
           {t('addExisting')}
         </Button>
       </PopoverTrigger>

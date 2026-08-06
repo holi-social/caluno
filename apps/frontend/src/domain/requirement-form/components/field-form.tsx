@@ -14,6 +14,7 @@ import {
   Switch,
   Textarea,
 } from '@repo/ui';
+import { Plus, Save, X } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useState } from 'react';
 import { FileUpload } from '@/components/storage/file-upload';
@@ -307,9 +308,11 @@ export function FieldForm({
 
       <div className="flex justify-end gap-2">
         <Button variant="outline" onClick={onCancel}>
+          <X />
           {tCommon('cancel')}
         </Button>
         <Button onClick={commit} disabled={!canSubmit}>
+          {isEdit ? <Save /> : <Plus />}
           {isEdit ? t('save') : t('add')}
         </Button>
       </div>

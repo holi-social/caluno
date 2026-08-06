@@ -233,6 +233,7 @@ export function FileUpload({
                 disabled={!isInteractive}
                 onClick={openFilePicker}
               >
+                <Upload />
                 {t('replace')}
               </Button>
               {onClear ? (

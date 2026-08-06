@@ -11,7 +11,7 @@ import {
   Separator,
   Textarea,
 } from '@repo/ui';
-import { ArrowLeft, Plus, Save, Trash2 } from 'lucide-react';
+import { ArrowLeft, Plus, Save, SquarePen, Trash2 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useMemo, useState, useTransition } from 'react';
 import { useForm } from 'react-hook-form';
@@ -355,6 +355,7 @@ export function EditBlockForm({
                     setEditingFieldId(field.id);
                   }}
                 >
+                  <SquarePen />
                   {tCommon('edit')}
                 </Button>
                 <Button

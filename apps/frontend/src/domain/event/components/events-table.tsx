@@ -17,7 +17,7 @@ import {
   TableHeader,
   TableRow,
 } from '@repo/ui';
-import { TicketIcon } from 'lucide-react';
+import { PlusIcon, TicketIcon } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { Link } from '@/i18n/navigation';
 import { useFormatting } from '@/lib/formatting/use-formatting';
@@ -47,6 +47,7 @@ export function EventsTable({ events, orgUId, canEdit }: EventsTableProps) {
           <EmptyContent>
             <Button asChild>
               <Link href={`/admin/${orgUId}/events/new`}>
+                <PlusIcon />
                 {t('list.createButton')}
               </Link>
             </Button>
