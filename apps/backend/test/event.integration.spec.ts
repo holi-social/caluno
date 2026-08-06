@@ -719,4 +719,53 @@ describe('eventInvites', () => {
     expect(response.data).toBeNull();
     expect(response.errors?.[0]?.message).toContain('not found');
   });
+
+  it('resolves the invited user via the field resolver/loader', async () => {
+    const event = await createEvent(db, { organizationUnitId });
+    const invitedUser = await createUser(db);
+    const invite = await db
+      .insert(schema.eventInvites)
+      .values({
+        eventId: event.id,
+        userId: invitedUser.id,
+        status: EventInviteStatus.INVITED,
+      })
+      .returning();
+
+    const query = `
+      query EventInvites($eventId: ID!) {
+        eventInvites(eventId: $eventId) {
+          id
+          user {
+            id
+            name
+            email
+          }
+        }
+      }
+    `;
+
+    const data = await graphqlRequestRequiringData<{
+      eventInvites: Array<{
+        id: string;
+        user: { id: string; name: string; email: string };
+      }>;
+    }>(
+      app,
+      {
+        query,
+        variables: { eventId: event.id },
+        headers: { 'x-organization-unit-id': organizationUnitId },
+      },
+      'eventInvites',
+    );
+
+    expect(data.eventInvites).toHaveLength(1);
+    expect(data.eventInvites[0]?.id).toBe(invite[0]?.id);
+    expect(data.eventInvites[0]?.user).toEqual({
+      id: invitedUser.id,
+      name: invitedUser.name,
+      email: invitedUser.email,
+    });
+  });
 });

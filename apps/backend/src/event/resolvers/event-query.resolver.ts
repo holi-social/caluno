@@ -17,7 +17,6 @@ import { SortOrder } from '../../shift/enums';
 import { ShiftMapper } from '../../shift/mappers/shift.mapper';
 import { ShiftPaginatedResponse } from '../../shift/models/shift.model';
 import { ShiftService } from '../../shift/shift.service';
-import { UserMapper } from '../../user/mappers/user.mapper';
 import { EventInviteStatus } from '../enums';
 import { EventService } from '../event.service';
 import { EventMapper } from '../mappers/event.mapper';
@@ -31,7 +30,6 @@ export class EventQueryResolver {
     private readonly eventService: EventService,
     private readonly eventMapper: EventMapper,
     private readonly eventInviteMapper: EventInviteMapper,
-    private readonly userMapper: UserMapper,
     private readonly shiftService: ShiftService,
     private readonly shiftMapper: ShiftMapper,
   ) {}
@@ -120,11 +118,7 @@ export class EventQueryResolver {
       eventId,
       context.organizationUnitId,
     );
-    return invites.map((invite) => {
-      const model = this.eventInviteMapper.toModelOrThrow(invite);
-      model.user = this.userMapper.toModelOrThrow(invite.user);
-      return model;
-    });
+    return this.eventInviteMapper.toArray(invites);
   }
 
   @AllowAnonymous()

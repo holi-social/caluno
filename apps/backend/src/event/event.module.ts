@@ -13,6 +13,8 @@ import { EventMapper } from './mappers/event.mapper';
 import { EventInviteMapper } from './mappers/event-invite.mapper';
 import { EventFieldResolver } from './resolvers/event-field.resolver';
 import { EventInviteLoader } from './resolvers/event-invite.loader';
+import { EventInviteFieldResolver } from './resolvers/event-invite-field.resolver';
+import { EventInviteUsersLoader } from './resolvers/event-invite-users.loader';
 import { EventMutationResolver } from './resolvers/event-mutation.resolver';
 import { EventOrganizationUnitLoader } from './resolvers/event-organization-unit.loader';
 import { EventOrganizerLoader } from './resolvers/event-organizer.loader';
@@ -48,6 +50,8 @@ import { ShiftEventFieldResolver } from './resolvers/shift-event-field.resolver'
     EventOrganizationUnitLoader,
     EventOrganizerLoader,
     EventInviteLoader,
+    EventInviteFieldResolver,
+    EventInviteUsersLoader,
   ],
   exports: [EventMapper, EventService],
 })

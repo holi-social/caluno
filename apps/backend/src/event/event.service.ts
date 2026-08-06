@@ -3,7 +3,6 @@ import { isUUID } from 'class-validator';
 import { and, count, eq, inArray } from 'drizzle-orm';
 import type { Database } from '../database/database.module';
 import { DATABASE_CONNECTION } from '../database/database-connection';
-import type { UserEntity } from '../database/schema';
 import * as schema from '../database/schema';
 import {
   BadRequestGraphQLError,
@@ -665,22 +664,16 @@ export class EventService {
   async findInvites(
     eventId: string,
     organizationUnitId: string,
-  ): Promise<Array<EventInviteEntity & { user: UserEntity }>> {
+  ): Promise<EventInviteEntity[]> {
     await this.findById(eventId, organizationUnitId);
 
-    const invites = await this.db.query.eventInvites.findMany({
+    return this.db.query.eventInvites.findMany({
       where: {
         eventId,
         status: { in: [...ACTIVE_EVENT_INVITE_STATUSES] },
       },
-      with: { user: true },
       orderBy: { createdAt: 'desc' },
     });
-
-    return invites.filter(
-      (invite): invite is EventInviteEntity & { user: UserEntity } =>
-        invite.user != null,
-    );
   }
 
   private async setRequiredFormsInTx(
