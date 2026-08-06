@@ -29,6 +29,7 @@ export function LeaveMembershipButton({ membershipId, orgName }: Props) {
       title={t('dialog.leaveTitle')}
       description={t('dialog.leaveDescription', { orgName })}
       onDelete={handleLeave}
+      deleteLabel={t('actions.leave')}
       trigger={
         <Button variant="destructive" size="sm" disabled={isPending}>
           {t('actions.leave')}
