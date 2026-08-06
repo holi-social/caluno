@@ -21,8 +21,8 @@ import { copyToClipboard } from '@/lib/clipboard';
 import type { RecurrenceDayValue } from '../constants';
 import { type InviteShiftFormValues, inviteShiftFormSchema } from '../schemas';
 import { shiftShareUrl } from '../share';
-import { ShiftInstanceSummaryCard } from './shift-instance-summary-card';
 import { setSuccessDialogCreatedShift } from '../success-dialog';
+import { ShiftInstanceSummaryCard } from './shift-instance-summary-card';
 import { TransferList } from './transfer-list';
 
 type Member = {
