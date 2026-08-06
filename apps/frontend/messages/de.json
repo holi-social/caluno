@@ -132,6 +132,14 @@
     "pageTitle": "Profil",
     "organizations": "Deine Organisationen",
     "personalInformation": "Persönliche Informationen",
+    "identity": {
+      "subtitles": {
+        "preferredName": "Falls abweichend von deinem rechtlichen Namen",
+        "firstName": "Wie auf deinem Ausweis",
+        "lastName": "Wie auf deinem Ausweis",
+        "iban": "Für Auslagenerstattungen"
+      }
+    },
     "accountSettings": "Kontoeinstellungen",
     "language": "Sprache",
     "languageDescription": "Anzeigesprache der App",
@@ -1054,6 +1062,7 @@
       "zipCode": "Postleitzahl",
       "city": "Stadt",
       "birthDate": "Geburtsdatum",
+      "iban": "IBAN",
       "documentFileLabel": "Dokument",
       "documentFileDescription": "PDF oder Bild, max. 10 MB",
       "enterDocumentFileError": "Bitte lade ein Dokument hoch.",

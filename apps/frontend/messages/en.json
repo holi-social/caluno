@@ -132,6 +132,14 @@
     "pageTitle": "Profile",
     "organizations": "Your organizations",
     "personalInformation": "Personal information",
+    "identity": {
+      "subtitles": {
+        "preferredName": "If different from your legal name",
+        "firstName": "As on your ID",
+        "lastName": "As on your ID",
+        "iban": "For expense reimbursements"
+      }
+    },
     "accountSettings": "Account settings",
     "language": "Language",
     "languageDescription": "App display language",
@@ -1054,6 +1062,7 @@
       "zipCode": "ZIP code",
       "city": "City",
       "birthDate": "Birth date",
+      "iban": "IBAN",
       "documentFileLabel": "Document",
       "documentFileDescription": "PDF or image, max 10 MB",
       "enterDocumentFileError": "Please upload a document.",
