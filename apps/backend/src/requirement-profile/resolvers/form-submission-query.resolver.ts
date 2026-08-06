@@ -59,7 +59,7 @@ export class FormSubmissionQueryResolver {
 
   @Query(() => FormSubmission, { nullable: true })
   async myFormSubmission(
-    @Args('id') id: string,
+    @Args('id', { type: () => ID }) id: string,
     @Session() session: UserSession,
   ): Promise<FormSubmission | null> {
     const item = await this.formSubmissionService.findMySubmission(
