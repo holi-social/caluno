@@ -133,7 +133,7 @@
     "organizations": "Your organizations",
     "personalInformation": "Personal information",
     "accountSettings": "Account settings",
-    "edit": "Edit profile",
+    "edit": "Edit",
     "pictureLabel": "Profile picture",
     "saved": "Profile updated",
     "saveFailed": "Failed to update profile"
@@ -269,10 +269,10 @@
       "partOf": "Part of "
     },
     "tree": {
-      "visitAria": "Visit org unit",
-      "copyLinkAria": "Copy org unit link to clipboard",
+      "visitAria": "Visit",
+      "copyLinkAria": "Copy link",
       "copyToast": "Org unit link copied to clipboard",
-      "addChildAria": "Add child",
+      "addChildAria": "Add",
       "editAria": "Edit",
       "deleteAria": "Delete",
       "empty": "No org unit tree found. Contact your administrator."
@@ -334,10 +334,10 @@
       "none": "None"
     },
     "action": {
-      "editAria": "Edit role",
-      "deleteTitle": "Delete Role",
+      "editAria": "Edit",
+      "deleteTitle": "Delete",
       "deleteDescription": "Are you sure you wish to delete this Role?",
-      "deleteAria": "Delete role",
+      "deleteAria": "Delete",
       "deleteError": "Failed to delete Role. {error}",
       "deleteSuccess": "Role deleted"
     },
@@ -379,7 +379,7 @@
     "empty": "No membership requests yet.",
     "card": {
       "viewButton": "View volunteer",
-      "viewAria": "View volunteer",
+      "viewAria": "View",
       "rejectionReasonLabel": "Rejection reason:"
     },
     "actions": {
@@ -487,9 +487,9 @@
       "roles": "Roles"
     },
     "action": {
-      "viewProfileAria": "View volunteer profile",
-      "checkInAria": "Check-in volunteer",
-      "checkInShiftAria": "Check-in the volunteer to a shift"
+      "viewProfileAria": "View",
+      "checkInAria": "Check in",
+      "checkInShiftAria": "Check in"
     },
     "requests": {
       "pendingEmpty": "No pending requests yet.",
@@ -524,7 +524,7 @@
       "noFormsFound": "No forms found",
       "dedupHint": "Volunteers won't be asked for information they've already provided.",
       "fileUploadLabel": "file upload",
-      "removeAria": "Remove {name}",
+      "removeAria": "Remove",
       "addedToast": "Form attached",
       "removedToast": "Form removed",
       "updateFailedToast": "Failed to update required forms"
@@ -547,8 +547,8 @@
     },
     "calendar": {
       "week": "Week {week}",
-      "prevAria": "Previous week",
-      "nextAria": "Next week"
+      "prevAria": "Previous",
+      "nextAria": "Next"
     },
     "table": {
       "name": "Name",
@@ -569,8 +569,8 @@
     "card": {
       "invited": "Invited",
       "noVolunteers": "No volunteers invited",
-      "inviteAria": "Invite volunteers",
-      "openInstanceAria": "Open shift instance details"
+      "inviteAria": "Invite",
+      "openInstanceAria": "Open"
     },
     "form": {
       "nameLabel": "Shift name",
@@ -645,12 +645,12 @@
       "available": "Available",
       "invited": "Invited",
       "searchPlaceholder": "Name or email",
-      "addAria": "Add {name}",
-      "removeAria": "Remove {name}"
+      "addAria": "Add",
+      "removeAria": "Remove"
     },
     "selector": {
       "noActiveShifts": "No active shifts",
-      "noActiveShiftsDescription": "Please <addShift>add a shift</addShift> or adjust the time-range of an <existingShift>existing shift</existingShift>.",
+      "noActiveShiftsDescription": "Please <addShift>create a shift</addShift> or adjust the time-range of an <existingShift>existing shift</existingShift>.",
       "chooseShift": "Choose a shift"
     },
     "checkInSelector": {
@@ -723,13 +723,13 @@
       "reenter": "Re-enter shift"
     },
     "action": {
-      "viewAria": "View shift",
-      "editAria": "Edit shift",
-      "inviteAria": "Invite volunteers",
-      "copyLinkAria": "Copy shift link to clipboard",
+      "viewAria": "View",
+      "editAria": "Edit",
+      "inviteAria": "Invite",
+      "copyLinkAria": "Copy link",
       "recordTime": "Record time",
       "leaveShift": "Leave shift",
-      "deleteTitle": "Delete shift",
+      "deleteTitle": "Delete",
       "deleteDescription": "Are you sure you wish to delete this shift and all its timesheets?",
       "deleteSuccess": "Successfully deleted Shift.",
       "deleteError": "Failed to delete Shift. {error}"
@@ -737,7 +737,7 @@
     "sheet": {
       "createTitle": "Create shift",
       "createDescription": "Create a new shift.",
-      "createEventTitle": "Add shift",
+      "createEventTitle": "Create shift",
       "createEventDescription": "Schedule a shift for this event.",
       "editTitle": "Edit shift",
       "editDescription": "Edit shift.",
@@ -769,7 +769,7 @@
         "noFormsFound": "No forms found",
         "dedupHint": "Volunteers won't be asked for information they've already provided.",
         "fileUploadLabel": "file upload",
-        "removeAria": "Remove {name}",
+        "removeAria": "Remove",
         "addedToast": "Form attached",
         "removedToast": "Form removed",
         "updateFailedToast": "Failed to update required forms"
@@ -859,8 +859,8 @@
       "closedStatus": "Closed"
     },
     "action": {
-      "editAria": "Edit Time Entry",
-      "deleteTitle": "Delete time entry",
+      "editAria": "Edit",
+      "deleteTitle": "Delete",
       "deleteDescription": "Are you sure you wish to delete this time entry?",
       "deleteSuccess": "Time entry deleted",
       "deleteError": "Failed to delete time entry. {error}"
@@ -898,9 +898,9 @@
       "emptyDescription": "Add your first block to start building this form.",
       "addAnotherBlockHint": "Add another block to continue building this form",
       "saveDisabledHint": "Add a block to enable saving",
-      "lockedTooltip": "Cannot edit, block in use in a submitted form",
-      "viewBlock": "View block",
-      "editBlock": "Edit block",
+      "lockedTooltip": "Locked",
+      "viewBlock": "View",
+      "editBlock": "Edit",
       "fieldsCount": "{count} fields"
     },
     "block": {
@@ -993,14 +993,14 @@
       "deleteFormDescription": "{name} will be permanently removed.",
       "deleteBlockDescription": "{name} will be permanently removed.",
       "yes": "Yes",
-      "copyShareLinkAria": "Copy share link",
-      "editFormAria": "Edit form",
+      "copyShareLinkAria": "Copy link",
+      "editFormAria": "Edit",
       "submissionsAria": "Submissions",
-      "cannotDeleteAria": "Cannot delete — form has submissions",
-      "deleteFormAria": "Delete form",
-      "editBlockAria": "Edit block",
-      "viewBlockAria": "View block",
-      "deleteBlockAria": "Delete block"
+      "cannotDeleteAria": "Locked",
+      "deleteFormAria": "Delete",
+      "editBlockAria": "Edit",
+      "viewBlockAria": "View",
+      "deleteBlockAria": "Delete"
     },
     "dashboard": {
       "formsTab": "Forms",
@@ -1268,11 +1268,11 @@
       "requiredForms": "Forms"
     },
     "action": {
-      "viewAria": "View event",
-      "editAria": "Edit event",
-      "inviteAria": "Invite members",
-      "shareAria": "Copy invite link",
-      "deleteAria": "Delete event"
+      "viewAria": "View",
+      "editAria": "Edit",
+      "inviteAria": "Invite",
+      "shareAria": "Copy link",
+      "deleteAria": "Delete"
     },
     "deleteDialog": {
       "title": "Delete event",
@@ -1293,20 +1293,18 @@
       "backLink": "Back to events",
       "coverImageAlt": "Cover image for {title}",
       "editButton": "Edit",
-      "inviteButton": "Invite members",
+      "inviteButton": "Invite",
       "volunteersCard": {
         "title": "Volunteers",
-        "inviteButton": "Invite",
-        "inviteAria": "Invite members",
         "checkInAria": "Check in",
         "empty": "No volunteers invited yet."
       },
       "shiftsCard": {
         "title": "Shifts",
-        "addAria": "Add shift",
-        "addButton": "Add shift",
+        "addAria": "Create shift",
+        "addButton": "Create shift",
         "emptyTitle": "No shifts yet",
-        "emptyDescription": "Add a shift to this event to get started."
+        "emptyDescription": "Create a shift for this event to get started."
       },
       "requiredForms": {
         "title": "Forms required to join",
@@ -1322,7 +1320,7 @@
         "noFormsFound": "No forms found",
         "dedupHint": "Volunteers won't be asked for information they've already provided.",
         "fileUploadLabel": "file upload",
-        "removeAria": "Remove {name}",
+        "removeAria": "Remove",
         "addedToast": "Form attached",
         "removedToast": "Form removed",
         "updateFailedToast": "Failed to update required forms"

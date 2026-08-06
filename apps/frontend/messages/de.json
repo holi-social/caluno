@@ -133,7 +133,7 @@
     "organizations": "Deine Organisationen",
     "personalInformation": "Persönliche Informationen",
     "accountSettings": "Kontoeinstellungen",
-    "edit": "Profil bearbeiten",
+    "edit": "Bearbeiten",
     "pictureLabel": "Profilbild",
     "saved": "Profil aktualisiert",
     "saveFailed": "Profil konnte nicht aktualisiert werden"
@@ -269,10 +269,10 @@
       "partOf": "Teil von "
     },
     "tree": {
-      "visitAria": "Organisationseinheit besuchen",
-      "copyLinkAria": "Link zur Organisationseinheit kopieren",
+      "visitAria": "Besuchen",
+      "copyLinkAria": "Link kopieren",
       "copyToast": "Link zur Organisationseinheit kopiert",
-      "addChildAria": "Untergeordnete hinzufügen",
+      "addChildAria": "Hinzufügen",
       "editAria": "Bearbeiten",
       "deleteAria": "Löschen",
       "empty": "Keine Organisationseinheit-Hierarchie gefunden. Kontaktiere deinen Administrator."
@@ -334,10 +334,10 @@
       "none": "Keine"
     },
     "action": {
-      "editAria": "Rolle bearbeiten",
-      "deleteTitle": "Rolle löschen",
+      "editAria": "Bearbeiten",
+      "deleteTitle": "Löschen",
       "deleteDescription": "Bist du sicher, dass du diese Rolle löschen möchtest?",
-      "deleteAria": "Rolle löschen",
+      "deleteAria": "Löschen",
       "deleteError": "Rolle konnte nicht gelöscht werden. {error}",
       "deleteSuccess": "Rolle gelöscht"
     },
@@ -379,7 +379,7 @@
     "empty": "Noch keine Mitgliedschaftsanfragen.",
     "card": {
       "viewButton": "Freiwilligen ansehen",
-      "viewAria": "Freiwilligen ansehen",
+      "viewAria": "Ansehen",
       "rejectionReasonLabel": "Ablehnungsgrund:"
     },
     "actions": {
@@ -487,9 +487,9 @@
       "roles": "Rollen"
     },
     "action": {
-      "viewProfileAria": "Freiwilligenprofil ansehen",
-      "checkInAria": "Freiwilligen einchecken",
-      "checkInShiftAria": "Freiwilligen zu einem Einsatz einchecken"
+      "viewProfileAria": "Ansehen",
+      "checkInAria": "Einchecken",
+      "checkInShiftAria": "Einchecken"
     },
     "requests": {
       "pendingEmpty": "Noch keine ausstehenden Anfragen.",
@@ -524,7 +524,7 @@
       "noFormsFound": "Keine Formulare gefunden",
       "dedupHint": "Freiwillige müssen Informationen, die sie bereits angegeben haben, nicht erneut eingeben.",
       "fileUploadLabel": "Datei-Upload",
-      "removeAria": "{name} entfernen",
+      "removeAria": "Entfernen",
       "addedToast": "Formular angehängt",
       "removedToast": "Formular entfernt",
       "updateFailedToast": "Erforderliche Formulare konnten nicht aktualisiert werden"
@@ -547,8 +547,8 @@
     },
     "calendar": {
       "week": "KW {week}",
-      "prevAria": "Vorherige Woche",
-      "nextAria": "Nächste Woche"
+      "prevAria": "Zurück",
+      "nextAria": "Weiter"
     },
     "table": {
       "name": "Name",
@@ -569,8 +569,8 @@
     "card": {
       "invited": "Eingeladen",
       "noVolunteers": "Noch keine Freiwilligen eingeladen",
-      "inviteAria": "Freiwillige einladen",
-      "openInstanceAria": "Einsatztermin öffnen"
+      "inviteAria": "Einladen",
+      "openInstanceAria": "Öffnen"
     },
     "form": {
       "nameLabel": "Titel des Einsatzes",
@@ -645,12 +645,12 @@
       "available": "Verfügbar",
       "invited": "Eingeladen",
       "searchPlaceholder": "Name oder E-Mail",
-      "addAria": "{name} hinzufügen",
-      "removeAria": "{name} entfernen"
+      "addAria": "Hinzufügen",
+      "removeAria": "Entfernen"
     },
     "selector": {
       "noActiveShifts": "Keine aktiven Einsätze",
-      "noActiveShiftsDescription": "Bitte <addShift>einen Einsatz hinzufügen</addShift> oder den Zeitraum eines <existingShift>bestehenden Einsatzes</existingShift> anpassen.",
+      "noActiveShiftsDescription": "Bitte <addShift>einen Einsatz erstellen</addShift> oder den Zeitraum eines <existingShift>bestehenden Einsatzes</existingShift> anpassen.",
       "chooseShift": "Wähle einen Einsatz"
     },
     "checkInSelector": {
@@ -723,13 +723,13 @@
       "reenter": "Erneut beitreten"
     },
     "action": {
-      "viewAria": "Einsatz ansehen",
-      "editAria": "Einsatz bearbeiten",
-      "inviteAria": "Freiwillige einladen",
-      "copyLinkAria": "Link zum Einsatz in Zwischenablage kopieren",
+      "viewAria": "Ansehen",
+      "editAria": "Bearbeiten",
+      "inviteAria": "Einladen",
+      "copyLinkAria": "Link kopieren",
       "recordTime": "Zeit erfassen",
       "leaveShift": "Einsatz verlassen",
-      "deleteTitle": "Einsatz löschen",
+      "deleteTitle": "Löschen",
       "deleteDescription": "Bist du sicher, dass du diesen Einsatz und alle zugehörigen Stundenzettel löschen möchtest?",
       "deleteSuccess": "Einsatz erfolgreich gelöscht.",
       "deleteError": "Einsatz konnte nicht gelöscht werden. {error}"
@@ -737,7 +737,7 @@
     "sheet": {
       "createTitle": "Einsatz erstellen",
       "createDescription": "Erstelle einen neuen Einsatz.",
-      "createEventTitle": "Einsatz hinzufügen",
+      "createEventTitle": "Einsatz erstellen",
       "createEventDescription": "Plane eine Einsatz für diese Veranstaltung.",
       "editTitle": "Einsatz bearbeiten",
       "editDescription": "Bearbeite diesen Einsatz.",
@@ -769,7 +769,7 @@
         "noFormsFound": "Keine Formulare gefunden",
         "dedupHint": "Freiwillige werden nicht nach Informationen gefragt, die sie bereits angegeben haben.",
         "fileUploadLabel": "Datei-Upload",
-        "removeAria": "{name} entfernen",
+        "removeAria": "Entfernen",
         "addedToast": "Formular hinzugefügt",
         "removedToast": "Formular entfernt",
         "updateFailedToast": "Erforderliche Formulare konnten nicht aktualisiert werden"
@@ -859,8 +859,8 @@
       "closedStatus": "Abgeschlossen"
     },
     "action": {
-      "editAria": "Zeiteintrag bearbeiten",
-      "deleteTitle": "Zeiteintrag löschen",
+      "editAria": "Bearbeiten",
+      "deleteTitle": "Löschen",
       "deleteDescription": "Bist du sicher, dass du diesen Zeiteintrag löschen möchtest?",
       "deleteSuccess": "Zeiteintrag gelöscht",
       "deleteError": "Zeiteintrag konnte nicht gelöscht werden. {error}"
@@ -898,9 +898,9 @@
       "emptyDescription": "Füge deinen ersten Block hinzu, um dieses Formular zu erstellen.",
       "addAnotherBlockHint": "Füge einen weiteren Block hinzu, um dieses Formular weiterzubauen",
       "saveDisabledHint": "Füge einen Block hinzu, um das Speichern zu aktivieren",
-      "lockedTooltip": "Bearbeiten nicht möglich, Block wird in einem eingereichten Formular verwendet",
-      "viewBlock": "Block ansehen",
-      "editBlock": "Block bearbeiten",
+      "lockedTooltip": "Gesperrt",
+      "viewBlock": "Ansehen",
+      "editBlock": "Bearbeiten",
       "fieldsCount": "{count} Felder"
     },
     "block": {
@@ -993,14 +993,14 @@
       "deleteFormDescription": "{name} wird dauerhaft entfernt.",
       "deleteBlockDescription": "{name} wird dauerhaft entfernt.",
       "yes": "Ja",
-      "copyShareLinkAria": "Freigabelink kopieren",
-      "editFormAria": "Formular bearbeiten",
-      "submissionsAria": "Einsendungen",
-      "cannotDeleteAria": "Löschen nicht möglich — Formular hat Einsendungen",
-      "deleteFormAria": "Formular löschen",
-      "editBlockAria": "Block bearbeiten",
-      "viewBlockAria": "Block ansehen",
-      "deleteBlockAria": "Block löschen"
+      "copyShareLinkAria": "Link kopieren",
+      "editFormAria": "Bearbeiten",
+      "submissionsAria": "Einreichungen",
+      "cannotDeleteAria": "Gesperrt",
+      "deleteFormAria": "Löschen",
+      "editBlockAria": "Bearbeiten",
+      "viewBlockAria": "Ansehen",
+      "deleteBlockAria": "Löschen"
     },
     "dashboard": {
       "formsTab": "Formulare",
@@ -1268,11 +1268,11 @@
       "requiredForms": "Formulare"
     },
     "action": {
-      "viewAria": "Veranstaltung ansehen",
-      "editAria": "Veranstaltung bearbeiten",
-      "inviteAria": "Mitglieder einladen",
-      "shareAria": "Einladungslink kopieren",
-      "deleteAria": "Veranstaltung löschen"
+      "viewAria": "Ansehen",
+      "editAria": "Bearbeiten",
+      "inviteAria": "Einladen",
+      "shareAria": "Link kopieren",
+      "deleteAria": "Löschen"
     },
     "deleteDialog": {
       "title": "Veranstaltung löschen",
@@ -1293,20 +1293,18 @@
       "backLink": "Zurück zu Veranstaltungen",
       "coverImageAlt": "Titelbild für {title}",
       "editButton": "Bearbeiten",
-      "inviteButton": "Mitglieder einladen",
+      "inviteButton": "Einladen",
       "volunteersCard": {
         "title": "Freiwillige",
-        "inviteButton": "Einladen",
-        "inviteAria": "Mitglieder einladen",
         "checkInAria": "Einchecken",
         "empty": "Noch keine Freiwilligen eingeladen."
       },
       "shiftsCard": {
         "title": "Einsätze",
-        "addAria": "Einsatz hinzufügen",
-        "addButton": "Einsatz hinzufügen",
+        "addAria": "Einsatz erstellen",
+        "addButton": "Einsatz erstellen",
         "emptyTitle": "Noch keine Einsätze",
-        "emptyDescription": "Füge dieser Veranstaltung einen Einsatz hinzu, um loszulegen."
+        "emptyDescription": "Erstelle einen Einsatz für diese Veranstaltung, um loszulegen."
       },
       "requiredForms": {
         "title": "Für Beitritt erforderliche Formulare",
@@ -1322,7 +1320,7 @@
         "noFormsFound": "Keine Formulare gefunden",
         "dedupHint": "Freiwillige werden nicht nach Informationen gefragt, die sie bereits angegeben haben.",
         "fileUploadLabel": "Datei-Upload",
-        "removeAria": "{name} entfernen",
+        "removeAria": "Entfernen",
         "addedToast": "Formular hinzugefügt",
         "removedToast": "Formular entfernt",
         "updateFailedToast": "Erforderliche Formulare konnten nicht aktualisiert werden"

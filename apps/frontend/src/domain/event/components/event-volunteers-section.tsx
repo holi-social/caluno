@@ -5,12 +5,11 @@ import {
   Badge,
   Button,
   Card,
-  CardAction,
   CardContent,
   CardHeader,
   CardTitle,
 } from '@repo/ui';
-import { LogIn, UserPlus } from 'lucide-react';
+import { LogIn } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { ActionTooltip } from '@/components/action-tooltip';
 import { UserCard } from '@/components/user-card';
@@ -18,16 +17,12 @@ import { Link } from '@/i18n/navigation';
 
 interface EventVolunteersCardProps {
   orgUId: string;
-  eventId: string;
   attendees: EventAttendee[];
-  canEdit: boolean;
 }
 
 export function EventVolunteersSection({
   orgUId,
-  eventId,
   attendees,
-  canEdit,
 }: EventVolunteersCardProps) {
   const t = useTranslations('Event.detail.volunteersCard');
 
@@ -38,17 +33,6 @@ export function EventVolunteersSection({
           {t('title')}
           <Badge variant="outline">{attendees.length}</Badge>
         </CardTitle>
-
-        {canEdit && (
-          <CardAction>
-            <Link href={`/admin/${orgUId}/events/${eventId}/invite`}>
-              <Button>
-                <UserPlus />
-                {t('inviteButton')}
-              </Button>
-            </Link>
-          </CardAction>
-        )}
       </CardHeader>
 
       <CardContent>
