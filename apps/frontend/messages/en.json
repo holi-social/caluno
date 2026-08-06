@@ -132,7 +132,17 @@
     "pageTitle": "Profile",
     "organizations": "Your organizations",
     "personalInformation": "Personal information",
+    "identity": {
+      "subtitles": {
+        "preferredName": "If different from your legal name",
+        "firstName": "As on your ID",
+        "lastName": "As on your ID",
+        "iban": "For expense reimbursements"
+      }
+    },
     "accountSettings": "Account settings",
+    "language": "Language",
+    "languageDescription": "App display language",
     "edit": "Edit",
     "pictureLabel": "Profile picture",
     "saved": "Profile updated",
@@ -369,7 +379,8 @@
       "approved": "Approved",
       "rejected": "Rejected",
       "requested": "Requested",
-      "declined": "Declined"
+      "declined": "Declined",
+      "accepted": "Accepted"
     },
     "meta": {
       "requestedDate": "Requested · {date}",
@@ -398,7 +409,7 @@
     "dialog": {
       "withdrawTitle": "Withdraw membership request",
       "withdrawDescription": "Are you sure you want to withdraw your request to join {orgName}?",
-      "leaveTitle": "Leave organization?",
+      "leaveTitle": "Leave organization",
       "leaveDescription": "Are you sure you want to leave {orgName}?"
     },
     "toast": {
@@ -1053,6 +1064,7 @@
       "zipCode": "ZIP code",
       "city": "City",
       "birthDate": "Birth date",
+      "iban": "IBAN",
       "documentFileLabel": "Document",
       "documentFileDescription": "PDF or image, max 10 MB",
       "enterDocumentFileError": "Please upload a document.",

@@ -44,6 +44,7 @@ import { toast } from 'sonner';
 import { ActionTooltip } from '@/components/action-tooltip';
 import { FileUpload } from '@/components/storage/file-upload';
 import { saveBlock } from '../actions';
+import { SYSTEM_PROFILE_FIELDS } from '../system-profile-fields';
 import { OptionsEditor } from './options-editor';
 
 interface BlockFormFieldInput {
@@ -94,68 +95,10 @@ export function BlockForm({
   const [fieldPickerOpen, setFieldPickerOpen] = useState(false);
   const [profilePickerOpen, setProfilePickerOpen] = useState(false);
 
-  const systemPresets = [
-    {
-      key: 'name',
-      label: tField('firstName'),
-      type: FieldType.Name,
-      required: true,
-    },
-    {
-      key: 'lastname',
-      label: tField('lastName'),
-      type: FieldType.Lastname,
-      required: true,
-    },
-    {
-      key: 'preferred-name',
-      label: tField('preferredName'),
-      type: FieldType.Text,
-      required: false,
-    },
-    {
-      key: 'email',
-      label: tField('email'),
-      type: FieldType.Email,
-      required: true,
-    },
-    {
-      key: 'phone',
-      label: tField('phone'),
-      type: FieldType.Phone,
-      required: false,
-    },
-    {
-      key: 'address',
-      label: tField('address'),
-      type: FieldType.Text,
-      required: false,
-    },
-    {
-      key: 'zip',
-      label: tField('zipCode'),
-      type: FieldType.Zip,
-      required: false,
-    },
-    {
-      key: 'city',
-      label: tField('city'),
-      type: FieldType.Text,
-      required: false,
-    },
-    {
-      key: 'birth-date',
-      label: tField('birthDate'),
-      type: FieldType.Date,
-      required: false,
-    },
-    {
-      key: 'gender',
-      label: tField('gender'),
-      type: FieldType.Text,
-      required: false,
-    },
-  ] as const;
+  const systemPresets = SYSTEM_PROFILE_FIELDS.map((field) => ({
+    ...field,
+    label: tField(field.labelKey),
+  }));
 
   const customFieldTypes = [
     { value: FieldType.Text, label: tField('shortText') },
@@ -185,7 +128,7 @@ export function BlockForm({
     [FieldType.Name]: tField('firstName'),
     [FieldType.Lastname]: tField('lastName'),
     [FieldType.Zip]: tField('zipCode'),
-    [FieldType.Iban]: 'IBAN',
+    [FieldType.Iban]: tField('iban'),
   };
 
   const {

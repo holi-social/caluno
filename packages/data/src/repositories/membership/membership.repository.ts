@@ -6,8 +6,8 @@ export class MembershipRepository extends BaseRepository {
     return data.memberships;
   }
 
-  async findMyMemberships() {
-    const data = await this.sdk.GetMyMemberships();
+  async findMine() {
+    const data = await this.sdk.MyMemberships();
     return data.myMemberships;
   }
 
