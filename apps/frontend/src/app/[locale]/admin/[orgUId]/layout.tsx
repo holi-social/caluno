@@ -60,23 +60,18 @@ export default async function OrgLayout({
               <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4">
                 <SidebarTrigger className="-ml-1" />
                 <Separator orientation="vertical" className="mr-2 h-4" />
-                <div className="flex justify-between gap-2 flex-1">
-                  <h1 className="text-lg font-semibold hidden sm:block">
-                    Clippy
-                  </h1>
-                  <div className="flex gap-2 items-center ml-auto sm:ml-0">
-                    <Suspense
-                      fallback={<Loader2 className="animate-spin size-4" />}
-                    >
-                      {sheet}
-                    </Suspense>
-                    <ThemeToggle />
-                    <ProfileNavIcon
-                      orgUId={orgUId}
-                      imageUrl={me.image}
-                      name={me.name}
-                    />
-                  </div>
+                <div className="ml-auto flex items-center gap-2">
+                  <Suspense
+                    fallback={<Loader2 className="animate-spin size-4" />}
+                  >
+                    {sheet}
+                  </Suspense>
+                  <ThemeToggle />
+                  <ProfileNavIcon
+                    orgUId={orgUId}
+                    imageUrl={me.image}
+                    name={me.name}
+                  />
                 </div>
               </header>
               <div className="flex flex-1 flex-col gap-4 p-4">{children}</div>
