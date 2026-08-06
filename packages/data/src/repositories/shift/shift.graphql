@@ -278,6 +278,7 @@ query GetShiftInstance($id: ID!) {
         name
         email
         image
+        checkInId
       }
     }
   }
