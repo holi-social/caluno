@@ -13,6 +13,7 @@ import {
 import { useTranslations } from 'next-intl';
 import { useMemo, useState } from 'react';
 import {
+  getPresetFromDays,
   getRecurrenceDays,
   getRecurrencePresets,
   type RecurrenceDayValue,
@@ -23,24 +24,6 @@ interface RecurrenceSelectProps {
   value: string[] | undefined;
   onChange: (days: string[]) => void;
   disabled?: boolean;
-}
-
-function getPresetFromDays(
-  presets: { value: RecurrencePresetValue; days: string[] }[],
-  days: string[],
-): RecurrencePresetValue {
-  if (!days || days.length === 0) return 'none';
-
-  for (const preset of presets) {
-    if (preset.value === 'none' || preset.value === 'custom') continue;
-    if (
-      preset.days.length === days.length &&
-      preset.days.every((d) => days.includes(d))
-    ) {
-      return preset.value;
-    }
-  }
-  return 'custom';
 }
 
 export function RecurrenceSelect({
@@ -63,10 +46,7 @@ export function RecurrenceSelect({
   );
   const days = useMemo(() => getRecurrenceDays(t), [t]);
 
-  const detectedPreset = useMemo(
-    () => getPresetFromDays(presets, value),
-    [presets, value],
-  );
+  const detectedPreset = useMemo(() => getPresetFromDays(value), [value]);
   const [selectedPreset, setSelectedPreset] =
     useState<RecurrencePresetValue>(detectedPreset);
 

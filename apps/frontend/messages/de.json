@@ -621,6 +621,28 @@
       "applyToAllLabel": "Auf alle zukünftigen Termine anwenden",
       "applyToAllDescription": "Änderungen gelten auch für jeden zukünftigen Termin dieses Einsatzes und überschreiben frühere Änderungen an einzelnen Terminen. Vergangene Termine sind nicht betroffen."
     },
+    "successDialog": {
+      "title": "Einsatz erstellt",
+      "bodyOpen": "Dein offener Einsatz ist jetzt aktiv! Alle Freiwilligen innerhalb deiner Organisation wurden benachrichtigt und können sich jetzt anmelden.",
+      "bodyInvited": "Dein Einsatz ist live! Eingeladene Freiwillige wurden benachrichtigt.",
+      "shareLabel": "Link zum Einsatz",
+      "copyInviteLink": "Einladungslink kopieren",
+      "recurrence": {
+        "oneTime": "Einmalig",
+        "daily": "Täglich",
+        "workingDays": "Werktags",
+        "weekend": "Wochenende"
+      },
+      "weekDayShort": {
+        "MONDAY": "Mo.",
+        "TUESDAY": "Di.",
+        "WEDNESDAY": "Mi.",
+        "THURSDAY": "Do.",
+        "FRIDAY": "Fr.",
+        "SATURDAY": "Sa.",
+        "SUNDAY": "So."
+      }
+    },
     "transferList": {
       "available": "Verfügbar",
       "invited": "Eingeladen",
@@ -881,6 +903,10 @@
       "noFields": "Keine Felder",
       "allBlocksInUse": "Alle Blöcke werden bereits verwendet",
       "noPreview": "Füge Blöcke hinzu, um eine Vorschau zu sehen",
+      "emptyTitle": "Du hast noch keine Blöcke",
+      "emptyDescription": "Füge deinen ersten Block hinzu, um dieses Formular zu erstellen.",
+      "addAnotherBlockHint": "Füge einen weiteren Block hinzu, um dieses Formular weiterzubauen",
+      "saveDisabledHint": "Füge einen Block hinzu, um das Speichern zu aktivieren",
       "lockedTooltip": "Bearbeiten nicht möglich, Block wird in einem eingereichten Formular verwendet",
       "viewBlock": "Block ansehen",
       "editBlock": "Block bearbeiten",
@@ -1403,7 +1429,14 @@
     "eventCoverImageAlt": "Titelbild für {title}",
     "loadPast": "Vergangene laden",
     "loadMore": "Mehr laden",
-    "invitedOn": "Eingeladen · {date}"
+    "invitedOn": "Eingeladen · {date}",
+    "pendingRequestTitle": "Warte auf {orgName}",
+    "pendingRequestBody": "Ein Admin prüft deine Anfrage. In der Regel dauert das ein paar Tage.",
+    "pendingRequestContact": "Fragen? {name} kann helfen.",
+    "pendingRequestCta": "Meine Anfragen anzeigen",
+    "discoverPendingSubtitle": "Einsätze für {orgName} erscheinen hier nach der Freigabe",
+    "discoverPendingEmptyTitle": "Noch nichts zum Durchstöbern",
+    "discoverPendingEmptyBody": "Einsätze der Organisation erscheinen hier, sobald {orgName} dich akzeptiert.\nCheck-in und Meine Zeit sind jederzeit verfügbar."
   },
   "OrgDetail": {
     "coverImageAlt": "Titelbild für {title}",

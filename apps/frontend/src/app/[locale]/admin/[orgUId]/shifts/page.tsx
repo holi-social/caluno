@@ -8,6 +8,7 @@ import { getTranslations } from 'next-intl/server';
 import { Pagination } from '@/components/pagination';
 import { CreateShiftButton } from '@/domain/shift/components/create-shift-button';
 import { EmptyShifts } from '@/domain/shift/components/empty-shifts';
+import { ShiftCreatedDialog } from '@/domain/shift/components/shift-created-dialog';
 import { ShiftTabSwitcher } from '@/domain/shift/components/shift-tab-switcher';
 import { ShiftsTable } from '@/domain/shift/components/shifts-table';
 import { WeeklyCalendar } from '@/domain/shift/components/weekly-calendar';
@@ -20,7 +21,11 @@ type ShiftViewType = 'weekplan' | 'shifts';
 
 interface ShiftsPageProps {
   params: Promise<{ orgUId: string }>;
-  searchParams: Promise<{ view?: ShiftViewType; page?: string; week?: string }>;
+  searchParams: Promise<{
+    view?: ShiftViewType;
+    page?: string;
+    week?: string;
+  }>;
 }
 
 function parseWeekStart(param: string | null | undefined): Date {
@@ -62,6 +67,8 @@ export default async function ShiftsPage({
 
   return (
     <div className="flex flex-col h-full gap-4">
+      <ShiftCreatedDialog />
+
       {/* Page header */}
       <div>
         <h1 className="page-title mb-2">{t('page.title')}</h1>
