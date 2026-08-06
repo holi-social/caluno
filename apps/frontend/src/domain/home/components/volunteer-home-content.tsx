@@ -81,7 +81,7 @@ export function VolunteerHomeContent({
 
   const { data: myShiftInstancesPage, isLoading: isLoadingMy } =
     useMyShiftInstances(
-      { limit: 10 },
+      { limit: 10, includeIntended: true },
       {
         initialData: {
           items: initialMyShiftInstances,
@@ -265,12 +265,21 @@ export function VolunteerHomeContent({
         </Empty>
       ) : (
         <div className="flex flex-col gap-3">
-          {nextShift && <ShiftCardMy shiftInstance={nextShift} />}
+          {nextShift && (
+            <ShiftCardMy
+              shiftInstance={nextShift}
+              isPending={!nextShift.myInviteStatus}
+            />
+          )}
           {futureShifts.length > 0 && (
             <div className="flex gap-3 overflow-x-auto pb-2">
               {futureShifts.map((shift) => (
                 <div key={shift.id} className="w-[168px] shrink-0">
-                  <ShiftCardMyShift shiftInstance={shift} showDate />
+                  <ShiftCardMyShift
+                    shiftInstance={shift}
+                    showDate
+                    isPending={!shift.myInviteStatus}
+                  />
                 </div>
               ))}
             </div>

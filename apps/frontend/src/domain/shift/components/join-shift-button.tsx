@@ -47,6 +47,8 @@ interface JoinShiftButtonProps {
   startsAt?: string;
   label?: string;
   className?: string;
+  /** True when the user already clicked join for this instance and the backend returned a pending membership request. */
+  isPendingIntended?: boolean;
 }
 
 export function JoinShiftButton({
@@ -64,6 +66,7 @@ export function JoinShiftButton({
   startsAt,
   label,
   className,
+  isPendingIntended = false,
 }: JoinShiftButtonProps) {
   const router = useRouter();
   const pathname = usePathname();
@@ -330,18 +333,18 @@ export function JoinShiftButton({
   }
 
   // No instance invite: fall back to the org-membership state.
-  if (membershipState === JoinStatus.Pending) {
-    return (
-      <Button disabled variant="secondary" size="xl" className={className}>
-        {t('join.pendingCta')}
-      </Button>
-    );
-  }
-
   if (membershipState === JoinStatus.Rejected) {
     return (
       <Button disabled variant="outline" size="xl" className={className}>
         {t('join.rejectedCta')}
+      </Button>
+    );
+  }
+
+  if (isPendingIntended) {
+    return (
+      <Button disabled variant="secondary" size="xl" className={className}>
+        {t('join.pendingCta')}
       </Button>
     );
   }

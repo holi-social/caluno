@@ -278,6 +278,7 @@ query GetShiftInstance($id: ID!) {
         name
         email
         image
+        checkInId
       }
     }
   }
@@ -321,6 +322,7 @@ fragment PublicShiftDetailInstanceFields on ShiftInstance {
   filledCount
   spotsLeft
   myInviteStatus
+  isIntendingToJoin
 }
 
 query GetPublicShiftInstances($shiftId: ID!) {
@@ -335,6 +337,8 @@ fragment VolunteerHomeShiftInstance on ShiftInstance {
   actualEndsAt
   isCheckedIn
   filledCount
+  myInviteStatus
+  isIntendingToJoin
   master {
     id
     title
@@ -361,6 +365,7 @@ query GetMyShiftInstances(
   $offset: Int = 0
   $order: SortOrder = ASC
   $statuses: [ShiftInviteStatus!]
+  $includeIntended: Boolean = false
 ) {
   myShiftInstances(
     includePast: $includePast
@@ -370,6 +375,7 @@ query GetMyShiftInstances(
     offset: $offset
     order: $order
     statuses: $statuses
+    includeIntended: $includeIntended
   ) {
     items {
       ...VolunteerHomeShiftInstance

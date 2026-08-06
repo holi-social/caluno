@@ -25,7 +25,7 @@ export default async function VolunteeringHomePage({
     myMemberships,
     myMembershipRequests,
   ] = await Promise.all([
-    client.shift.findMyShiftInstances({ limit: 10 }),
+    client.shift.findMyShiftInstances({ limit: 10, includeIntended: true }),
     client.shift.findAvailableShiftInstances(getDiscoverWindow()),
     client.shift.findMyShiftInstances({
       limit: 10,
@@ -36,6 +36,7 @@ export default async function VolunteeringHomePage({
       statuses: [EventInviteStatus.Invited],
     }),
     client.membership.findMyMemberships(),
+    client.membership.findMine(),
     client.membershipRequest.findMine({ limit: 10, offset: 0 }),
   ]);
 

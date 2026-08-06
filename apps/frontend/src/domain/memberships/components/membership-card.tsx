@@ -2,6 +2,7 @@ import { Card, CardAction, CardContent, CardHeader, CardTitle } from '@repo/ui';
 import { useTranslations } from 'next-intl';
 import { useFormatting } from '@/lib/formatting/use-formatting';
 import type { MembershipEntry } from '../types';
+import { LeaveMembershipButton } from './leave-membership-button';
 import { MembershipStatusBadge } from './membership-status-badge';
 import { OrgUnitAvatar } from './org-unit-avatar';
 import { WithdrawMembershipButton } from './withdraw-membership-button';
@@ -36,11 +37,19 @@ export function MembershipCard({ entry }: Props) {
       </CardHeader>
 
       <CardContent className="flex flex-col gap-2">
+        {entry.state === 'accepted' && entry.roles.length > 0 && (
+          <span className="text-muted-foreground text-sm">
+            {entry.roles.join(', ')}
+          </span>
+        )}
+
         <span className="text-muted-foreground text-sm">
           {t(
-            entry.state === 'requested'
-              ? 'meta.requestedDate'
-              : 'meta.declinedDate',
+            entry.state === 'accepted'
+              ? 'meta.joinedDate'
+              : entry.state === 'requested'
+                ? 'meta.requestedDate'
+                : 'meta.declinedDate',
             {
               date: formatDate(date, {
                 day: 'numeric',
@@ -55,6 +64,15 @@ export function MembershipCard({ entry }: Props) {
           <q className="text-muted-foreground text-sm">
             {entry.rejectionReason}
           </q>
+        )}
+
+        {entry.state === 'accepted' && (
+          <div className="flex justify-start">
+            <LeaveMembershipButton
+              membershipId={entry.id}
+              orgName={organizationName}
+            />
+          </div>
         )}
 
         {entry.state === 'requested' && (

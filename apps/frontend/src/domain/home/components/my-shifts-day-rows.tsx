@@ -24,12 +24,24 @@ interface ShiftRowCardProps {
 }
 
 function ShiftRowCard({ shift, nextShiftId, now }: ShiftRowCardProps) {
+  const isPending = shift.isIntendingToJoin;
   if (shift.id === nextShiftId) {
-    return <ShiftCardMy shiftInstance={shift} showTime={false} />;
+    return (
+      <ShiftCardMy
+        shiftInstance={shift}
+        showTime={false}
+        isPending={isPending}
+      />
+    );
   }
   const isPast = new Date(shift.actualEndsAt).getTime() < now.getTime();
   return (
-    <ShiftCardMyShift shiftInstance={shift} past={isPast} showTime={false} />
+    <ShiftCardMyShift
+      shiftInstance={shift}
+      past={isPast}
+      showTime={false}
+      isPending={isPending}
+    />
   );
 }
 

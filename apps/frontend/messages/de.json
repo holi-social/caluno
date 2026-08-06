@@ -132,7 +132,17 @@
     "pageTitle": "Profil",
     "organizations": "Deine Organisationen",
     "personalInformation": "Persönliche Informationen",
+    "identity": {
+      "subtitles": {
+        "preferredName": "Falls abweichend von deinem rechtlichen Namen",
+        "firstName": "Wie auf deinem Ausweis",
+        "lastName": "Wie auf deinem Ausweis",
+        "iban": "Für Auslagenerstattungen"
+      }
+    },
     "accountSettings": "Kontoeinstellungen",
+    "language": "Sprache",
+    "languageDescription": "Anzeigesprache der App",
     "edit": "Profil bearbeiten",
     "pictureLabel": "Profilbild",
     "saved": "Profil aktualisiert",
@@ -369,7 +379,8 @@
       "approved": "Genehmigt",
       "rejected": "Abgelehnt",
       "requested": "Angefragt",
-      "declined": "Abgelehnt"
+      "declined": "Abgelehnt",
+      "accepted": "Akzeptiert"
     },
     "meta": {
       "requestedDate": "Angefragt · {date}",
@@ -398,7 +409,7 @@
     "dialog": {
       "withdrawTitle": "Antrag auf Austritt aus der Mitgliedschaft",
       "withdrawDescription": "Möchten Sie Ihren Beitrittsantrag wirklich {orgName} zurückziehen?",
-      "leaveTitle": "Organisation verlassen?",
+      "leaveTitle": "Organisation verlassen",
       "leaveDescription": "Möchtest du {orgName} wirklich verlassen?"
     },
     "toast": {
@@ -699,9 +710,9 @@
       "full": "Einsatz voll",
       "joined": "Du bist dem Einsatz beigetreten",
       "pending": "Deine Mitgliedschaftsanfrage ist ausstehend. Du wirst dem Einsatz hinzugefügt, sobald er genehmigt wurde.",
-      "pendingCta": "Anfrage ausstehend",
+      "pendingCta": "Ausstehende Anfrage",
       "rejected": "Deine Mitgliedschaftsanfrage für diese Organisation wurde abgelehnt. Kontaktiere einen Administrator, wenn du denkst, dass das ein Fehler war.",
-      "rejectedCta": "Anfrage nicht genehmigt",
+      "rejectedCta": "Du kannst diesem Einsatz nicht beitreten",
       "requirementsNeeded": "Erforderliche Anforderungen: {missing}{hasCompleted, select, yes { (bereits erledigt: {completed})} other {}}",
       "requirementsFallback": "Anforderungsprofil-Oberfläche (noch zu implementieren)",
       "failed": "Einsatzbeitritt fehlgeschlagen",
@@ -1051,6 +1062,7 @@
       "zipCode": "Postleitzahl",
       "city": "Stadt",
       "birthDate": "Geburtsdatum",
+      "iban": "IBAN",
       "documentFileLabel": "Dokument",
       "documentFileDescription": "PDF oder Bild, max. 10 MB",
       "enterDocumentFileError": "Bitte lade ein Dokument hoch.",
@@ -1425,6 +1437,7 @@
     "invitedOn": "Eingeladen · {date}",
     "inviteKindEvent": "Veranstaltung",
     "inviteKindShift": "Einsatz",
+    "pendingBadge": "Ausstehend",
     "pendingRequestTitle": "Warte auf {orgName}",
     "pendingRequestBody": "Ein Admin prüft deine Anfrage. In der Regel dauert das ein paar Tage.",
     "pendingRequestContact": "Fragen? {name} kann helfen.",

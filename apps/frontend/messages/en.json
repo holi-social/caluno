@@ -132,7 +132,17 @@
     "pageTitle": "Profile",
     "organizations": "Your organizations",
     "personalInformation": "Personal information",
+    "identity": {
+      "subtitles": {
+        "preferredName": "If different from your legal name",
+        "firstName": "As on your ID",
+        "lastName": "As on your ID",
+        "iban": "For expense reimbursements"
+      }
+    },
     "accountSettings": "Account settings",
+    "language": "Language",
+    "languageDescription": "App display language",
     "edit": "Edit profile",
     "pictureLabel": "Profile picture",
     "saved": "Profile updated",
@@ -369,7 +379,8 @@
       "approved": "Approved",
       "rejected": "Rejected",
       "requested": "Requested",
-      "declined": "Declined"
+      "declined": "Declined",
+      "accepted": "Accepted"
     },
     "meta": {
       "requestedDate": "Requested · {date}",
@@ -398,7 +409,7 @@
     "dialog": {
       "withdrawTitle": "Withdraw membership request",
       "withdrawDescription": "Are you sure you want to withdraw your request to join {orgName}?",
-      "leaveTitle": "Leave organization?",
+      "leaveTitle": "Leave organization",
       "leaveDescription": "Are you sure you want to leave {orgName}?"
     },
     "toast": {
@@ -699,9 +710,9 @@
       "full": "Shift full",
       "joined": "You have joined the shift",
       "pending": "Your membership request is pending. You will be added to this shift once approved.",
-      "pendingCta": "Request pending",
+      "pendingCta": "Pending request",
       "rejected": "Your membership request for this organization was rejected. Contact an admin if you believe this was a mistake.",
-      "rejectedCta": "Request not approved",
+      "rejectedCta": "You cannot join this shift",
       "requirementsNeeded": "Requirements needed: {missing}{hasCompleted, select, yes { (already completed: {completed})} other {}}",
       "requirementsFallback": "Requirement profile ui (to be implemented)",
       "failed": "Failed to join shift",
@@ -1051,6 +1062,7 @@
       "zipCode": "ZIP code",
       "city": "City",
       "birthDate": "Birth date",
+      "iban": "IBAN",
       "documentFileLabel": "Document",
       "documentFileDescription": "PDF or image, max 10 MB",
       "enterDocumentFileError": "Please upload a document.",
@@ -1425,6 +1437,7 @@
     "invitedOn": "Invited · {date}",
     "inviteKindEvent": "Event",
     "inviteKindShift": "Shift",
+    "pendingBadge": "Pending",
     "pendingRequestTitle": "Waiting for {orgName}",
     "pendingRequestBody": "An admin is reviewing your request. Usually a few days.",
     "pendingRequestContact": "Questions? {name} can help.",

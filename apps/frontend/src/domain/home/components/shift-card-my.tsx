@@ -32,6 +32,8 @@ export interface ShiftCardMyProps {
   };
   /** Show the inline time range. Off when an external time rail already shows it. */
   showTime?: boolean;
+  /** True when the user signed up but the org-unit membership request is still pending. */
+  isPending?: boolean;
 }
 
 const THREE_HOURS = 3 * 60 * 60 * 1000;
@@ -80,6 +82,7 @@ function useTimer(
 export function ShiftCardMy({
   shiftInstance,
   showTime = true,
+  isPending = false,
 }: ShiftCardMyProps) {
   const t = useTranslations('VolunteerHome');
   const { formatTimeRange } = useFormatting();
@@ -124,6 +127,12 @@ export function ShiftCardMy({
               </span>
             )}
           </div>
+          {isPending && (
+            <p className="flex items-center gap-1 text-sm text-muted-foreground">
+              <Clock4Icon className="size-3.5 shrink-0" />
+              {t('pendingBadge')}
+            </p>
+          )}
           <h3 className="text-lg font-semibold text-foreground">
             {shiftInstance.master.title}
           </h3>

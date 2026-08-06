@@ -1508,6 +1508,76 @@ describe('Volunteer home fields and check-in', () => {
     expect(acceptedItem?.myInviteStatus).toBe('ACCEPTED');
   });
 
+  it('includes intended shift instances when includeIntended is true', async () => {
+    // The user is not a member of the org unit; their signup is captured as a
+    // pending membership request with an intended shift instance id.
+    const { id: shiftId } = await createShift(db, {
+      organizationUnitId,
+      startsAt: new Date(Date.now() + 60 * 60 * 1000),
+      endsAt: new Date(Date.now() + 2 * 60 * 60 * 1000),
+    });
+    const instances = await db.query.shiftInstances.findMany({
+      where: { masterId: shiftId },
+      orderBy: { actualStartsAt: 'asc' },
+    });
+    const intendedInstanceId = instances[0]?.id;
+    expect(intendedInstanceId).toBeDefined();
+
+    await createMembershipRequest(db, {
+      userId: testUserId,
+      organizationUnitId,
+      metadata: {
+        intendedShiftInstanceIds: [intendedInstanceId ?? ''],
+      },
+    });
+
+    const query = `
+      query MyShiftInstances($includeIntended: Boolean!) {
+        myShiftInstances(includePast: true, includeIntended: $includeIntended) {
+          items { id myInviteStatus }
+          pagination { total limit offset hasMore }
+        }
+      }
+    `;
+
+    type MyInstanceItem = {
+      id: string;
+      myInviteStatus: string | null;
+    };
+
+    const withIntended = await graphqlRequestRequiringData<{
+      myShiftInstances: { items: MyInstanceItem[] };
+    }>(
+      app,
+      {
+        query,
+        variables: { includeIntended: true },
+        headers: { 'x-organization-unit-id': organizationUnitId },
+      },
+      'myShiftInstances',
+    );
+    const intendedItem = withIntended.myShiftInstances.items.find(
+      (i) => i.id === intendedInstanceId,
+    );
+    expect(intendedItem).toBeDefined();
+    expect(intendedItem?.myInviteStatus).toBeNull();
+
+    const withoutIntended = await graphqlRequestRequiringData<{
+      myShiftInstances: { items: MyInstanceItem[] };
+    }>(
+      app,
+      {
+        query,
+        variables: { includeIntended: false },
+        headers: { 'x-organization-unit-id': organizationUnitId },
+      },
+      'myShiftInstances',
+    );
+    expect(
+      withoutIntended.myShiftInstances.items.map((i) => i.id),
+    ).not.toContain(intendedInstanceId);
+  });
+
   it('lists available shift instances', async () => {
     await db.insert(schema.memberships).values({
       userId: testUserId,

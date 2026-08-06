@@ -193,6 +193,7 @@ export class ShiftRepository extends BaseRepository {
       offset?: number;
       order?: SortOrder;
       statuses?: ShiftInviteStatus[];
+      includeIntended?: boolean;
     } = {},
   ): Promise<{
     items: MyShiftInstance[];
@@ -211,6 +212,7 @@ export class ShiftRepository extends BaseRepository {
       offset: options.offset ?? 0,
       order: options.order ?? SortOrder.Asc,
       statuses: options.statuses,
+      includeIntended: options.includeIntended,
     });
     return data.myShiftInstances;
   }
