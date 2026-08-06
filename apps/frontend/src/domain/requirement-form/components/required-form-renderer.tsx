@@ -127,6 +127,8 @@ export function RequiredFormRenderer({
       validPostalCode: (label: string) =>
         tValidation('validPostalCode', { label }),
       minAge: (minAge: number) => tValidation('minAge', { minAge }),
+      invalidIban: (label: string) => tValidation('invalidIban', { label }),
+      dateNotFuture: (label: string) => tValidation('dateNotFuture', { label }),
     }),
     [tValidation],
   );

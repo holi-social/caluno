@@ -32,6 +32,23 @@ const ZIP_RE = /^[A-Z0-9\- ]{3,10}$/i;
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const NUM_RE = /^-?\d+(\.\d+)?$/;
 
+export const validateIban = (value: string): boolean => {
+  const iban = value.replace(/\s+/g, '').toUpperCase();
+  if (!/^[A-Z]{2}\d{2}[A-Z0-9]{11,30}$/.test(iban)) return false;
+  const rearranged = `${iban.slice(4)}${iban.slice(0, 4)}`;
+  const numeric = [...rearranged]
+    .map((ch) => (/[A-Z]/.test(ch) ? (ch.charCodeAt(0) - 55).toString() : ch))
+    .join('');
+  let remainder = '';
+  for (const digit of numeric) {
+    remainder = `${remainder}${digit}`.replace(/^0+/, '');
+    const n = Number.parseInt(remainder, 10);
+    if (Number.isNaN(n)) return false;
+    remainder = (n % 97).toString();
+  }
+  return remainder === '1';
+};
+
 export type ValidationMessages = {
   fieldRequired: (label: string) => string;
   mustBeNumber: (label: string) => string;
@@ -43,6 +60,8 @@ export type ValidationMessages = {
   invalidCharacters: (label: string) => string;
   validPostalCode: (label: string) => string;
   minAge: (minAge: number) => string;
+  invalidIban: (label: string) => string;
+  dateNotFuture: (label: string) => string;
 };
 
 export function buildFieldSchema(
@@ -114,6 +133,16 @@ export function buildFieldSchema(
           return age >= requiredAge;
         },
         { message: messages.minAge(minAge) },
+      );
+    }
+    if (systemKey === 'birth-date') {
+      s = s.refine(
+        (v) => {
+          if (!v) return true;
+          const d = new Date(v);
+          return !Number.isNaN(d.getTime()) && d.getTime() <= Date.now();
+        },
+        { message: messages.dateNotFuture(label) },
       );
     }
     return s;
@@ -210,6 +239,12 @@ export function buildFieldSchema(
     }) as z.ZodString;
   } else if (sk === 'gender') {
     s = s.max(50, messages.maxChars(label, 50)) as z.ZodString;
+  }
+
+  if (type === FieldType.Iban || systemKey === 'iban') {
+    s = s.refine((v) => !v || validateIban(v), {
+      message: messages.invalidIban(label),
+    }) as z.ZodString;
   }
 
   return isRequired
@@ -482,6 +517,8 @@ export const useValidationMessages = (): ValidationMessages => {
       invalidCharacters: (label) => tValidation('invalidCharacters', { label }),
       validPostalCode: (label) => tValidation('validPostalCode', { label }),
       minAge: (minAge) => tValidation('minAge', { minAge }),
+      invalidIban: (label) => tValidation('invalidIban', { label }),
+      dateNotFuture: (label) => tValidation('dateNotFuture', { label }),
     }),
     [tValidation],
   );
