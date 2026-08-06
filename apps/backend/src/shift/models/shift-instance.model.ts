@@ -57,6 +57,9 @@ export class ShiftInstance {
 
   @Field(() => ShiftInviteStatus, { nullable: true })
   myInviteStatus?: ShiftInviteStatus | null;
+
+  @Field(() => Boolean)
+  isIntendingToJoin!: boolean;
 }
 
 export const ShiftInstancePaginatedResponse =
