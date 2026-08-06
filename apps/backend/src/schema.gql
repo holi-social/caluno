@@ -445,6 +445,13 @@ type Mutation {
   updateTimeEntry(id: ID!, input: UpdateTimeEntryInput!): TimeEntry!
 }
 
+type MyOrgUnitForm {
+  completed: Boolean!
+  form: RequirementForm!
+  submissionId: ID
+  submittedAt: DateTime
+}
+
 type Organization {
   address: String
   contactEmail: String
@@ -585,8 +592,8 @@ type Query {
   myMembershipRequests(limit: Int! = 10, offset: Int! = 0): MembershipRequestPaginatedResponse!
   myMembershipStatus(organizationUnitId: ID!): Boolean!
   myMemberships: [Membership!]!
-  myOrganizationUnits: [OrganizationUnit!]!
   myOrgUnitForms(organizationUnitId: ID!): [MyOrgUnitForm!]!
+  myOrganizationUnits: [OrganizationUnit!]!
   myShiftInstances(endsBefore: DateTime = null, includePast: Boolean! = false, limit: Int! = 15, offset: Int! = 0, order: SortOrder! = ASC, startsAfter: DateTime = null, statuses: [ShiftInviteStatus!]): ShiftInstancePaginatedResponse!
   myTime(limit: Int! = 10, offset: Int! = 0): TimeEntryPaginatedResponse!
   myUserProfile: UserProfile
@@ -658,13 +665,6 @@ type Requirement {
   name: String!
   organizationId: String!
   type: RequirementType!
-}
-
-type MyOrgUnitForm {
-  completed: Boolean!
-  form: RequirementForm!
-  submissionId: ID
-  submittedAt: DateTime
 }
 
 type RequirementForm {

@@ -6,61 +6,28 @@ import {
   TableHeader,
   TableRow,
 } from '@repo/ui';
-import { getFormatter, getTranslations } from 'next-intl/server';
-
-type SubmissionField = {
-  id: string;
-  label: string;
-  type: string;
-  systemKey?: string | null;
-  options?: { label: string; value: string }[] | null;
-};
-
-type SubmissionValue = { fieldId: string; value: string };
-
-const resolveFieldAnswer = (
-  field: SubmissionField,
-  submissionValues: SubmissionValue[],
-  profileData: Record<string, unknown>,
-  dash: string,
-  accepted: string,
-  formatDate: (date: Date) => string,
-): string => {
-  const raw =
-    field.systemKey && profileData[field.systemKey] !== undefined
-      ? String(profileData[field.systemKey])
-      : (submissionValues.find((v) => v.fieldId === field.id)?.value ?? null);
-  if (!raw) return dash;
-  if (field.type === 'DATE') {
-    const d = new Date(raw);
-    return Number.isNaN(d.getTime()) ? raw : formatDate(d);
-  }
-  if (field.type === 'CHECKBOX' || field.type === 'DOCUMENT_ACKNOWLEDGEMENT') {
-    return raw === 'true' ? accepted : dash;
-  }
-  if (field.type === 'MULTI_CHOICE') {
-    const options = field.options ?? [];
-    return raw
-      .split(',')
-      .map((v) => options.find((o) => o.value === v)?.label ?? v)
-      .join(', ');
-  }
-  if (field.type === 'STATIC_TEXT') return dash;
-  return raw;
-};
+import { getTranslations } from 'next-intl/server';
+import { getFormatting } from '@/lib/formatting/formatting-server';
+import {
+  resolveFieldAnswer,
+  type SubmissionField,
+  type SubmissionValue,
+} from '../lib/resolve-field-answer';
 
 export const SubmissionView = async ({
   fields,
   submissionValues,
+  profileData = {},
 }: {
   fields: SubmissionField[];
   submissionValues: SubmissionValue[];
+  profileData?: Record<string, unknown>;
 }) => {
-  const t = await getTranslations('MembershipDetail.submission');
+  const t = await getTranslations('RequirementForm.submission');
   const tCommon = await getTranslations('Common');
-  const format = await getFormatter();
-  const formatDate = (date: Date) =>
-    format.dateTime(date, { dateStyle: 'medium' });
+  const { formatDate } = await getFormatting();
+
+  const displayFields = fields.filter((f) => f.type !== 'STATIC_TEXT');
 
   return (
     <div className="rounded-md border overflow-x-auto">
@@ -72,7 +39,7 @@ export const SubmissionView = async ({
           </TableRow>
         </TableHeader>
         <TableBody>
-          {fields.length === 0 ? (
+          {displayFields.length === 0 ? (
             <TableRow>
               <TableCell
                 colSpan={2}
@@ -82,18 +49,15 @@ export const SubmissionView = async ({
               </TableCell>
             </TableRow>
           ) : (
-            fields.map((field) => (
+            displayFields.map((field) => (
               <TableRow key={field.id}>
                 <TableCell className="font-medium">{field.label}</TableCell>
                 <TableCell>
-                  {resolveFieldAnswer(
-                    field,
-                    submissionValues,
-                    {},
-                    tCommon('dash'),
-                    t('accepted'),
+                  {resolveFieldAnswer(field, submissionValues, profileData, {
+                    dash: tCommon('dash'),
+                    accepted: t('accepted'),
                     formatDate,
-                  )}
+                  })}
                 </TableCell>
               </TableRow>
             ))

@@ -37,7 +37,7 @@ export default async function MembershipDetailPage({ params }: Props) {
         <section className="space-y-1">
           <MembershipStatusBadge state="accepted" />
           <p className="text-muted-foreground">
-            {t('role')}: {membership.roles.map((r) => r.name).join(', ')}
+            {t('role')} · {membership.roles.map((r) => r.name).join(', ')}
           </p>
           <p className="text-muted-foreground">
             {t('joinedDate', {
