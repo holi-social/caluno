@@ -66,6 +66,29 @@ export const serverShiftFormSchema = shiftFormSchema({
 
 export type ShiftFormValues = z.infer<typeof serverShiftFormSchema>;
 
+export function editShiftInstanceFormSchema(t: ShiftSchemaMessages) {
+  return shiftShape(t)
+    .extend({ applyToAllFuture: z.boolean().optional() })
+    .refine(
+      (d) => {
+        if (d.minVolunteers == null || d.maxVolunteers == null) return true;
+        return d.minVolunteers <= d.maxVolunteers;
+      },
+      { message: t.minMaxVolunteers, path: ['maxVolunteers'] },
+    );
+}
+
+export const serverEditShiftInstanceFormSchema = editShiftInstanceFormSchema({
+  nameRequired: 'Name is required',
+  startTimeRequired: 'Start time is required',
+  endTimeRequired: 'End time is required',
+  minMaxVolunteers: 'Minimum volunteers cannot exceed maximum volunteers',
+});
+
+export type EditShiftInstanceFormValues = z.infer<
+  typeof serverEditShiftInstanceFormSchema
+>;
+
 interface ShiftDeleteSchemaMessages {
   shiftIdRequired: string;
   organizationUnitIdRequired: string;

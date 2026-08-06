@@ -62,6 +62,14 @@ export function shiftInstanceDetailPath(
   return `/admin/${orgUId}/shifts/${shiftId}/instances/${instanceId}${queryString ? `?${queryString}` : ''}`;
 }
 
+export function shiftInstanceEditPath(
+  orgUId: string,
+  shiftId: string,
+  instanceId: string,
+): string {
+  return `/admin/${orgUId}/shifts/${shiftId}/instances/${instanceId}/edit`;
+}
+
 export function parseShiftListQuery(
   searchParams: Record<string, string | string[] | undefined>,
 ): ShiftListQuery {
