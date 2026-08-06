@@ -683,22 +683,6 @@ export class EventService {
     );
   }
 
-  async findAttendees(
-    eventId: string,
-    organizationUnitId: string,
-  ): Promise<UserEntity[]> {
-    await this.findById(eventId, organizationUnitId);
-
-    return this.db.query.users.findMany({
-      where: {
-        eventInvites: {
-          eventId,
-          status: { in: [...PARTICIPATING_EVENT_INVITE_STATUSES] },
-        },
-      },
-    });
-  }
-
   private async setRequiredFormsInTx(
     tx: Database,
     eventId: string,

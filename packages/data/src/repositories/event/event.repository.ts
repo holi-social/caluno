@@ -1,7 +1,6 @@
 import {
   type CreateEventInput,
   type EventInviteStatus,
-  type GetEventAttendeesQuery,
   type GetEventInvitesQuery,
   type GetEventQuery,
   type GetEventsQuery,
@@ -17,7 +16,6 @@ import {
 
 export type RawEvent = GetEventQuery['event'];
 export type EventListItem = GetEventsQuery['events']['items'][number];
-export type EventAttendee = GetEventAttendeesQuery['eventAttendees'][number];
 export type EventInviteItem = GetEventInvitesQuery['eventInvites'][number];
 export type MyEvent = GetMyEventsQuery['myEvents']['items'][number];
 
@@ -64,11 +62,6 @@ export class EventRepository extends BaseRepository {
   async findById(id: string): Promise<RawEvent> {
     const data = await this.sdk.GetEvent({ id });
     return data.event;
-  }
-
-  async findAttendees(eventId: string): Promise<EventAttendee[]> {
-    const data = await this.sdk.GetEventAttendees({ eventId });
-    return data.eventAttendees;
   }
 
   async findInvites(eventId: string): Promise<EventInviteItem[]> {

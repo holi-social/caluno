@@ -564,7 +564,6 @@ type Query {
   adminVolunteerSubmission(id: String!): FormSubmission
   availableShiftInstances(endsBefore: DateTime = null, limit: Int! = 15, offset: Int! = 0, organizationUnitIds: [ID!], startsAfter: DateTime = null): ShiftInstancePaginatedResponse!
   event(id: ID!): Event!
-  eventAttendees(eventId: ID!): [User!]!
   eventInvites(eventId: ID!): [EventInvite!]!
   eventShifts(eventId: ID!, limit: Int! = 10, offset: Int! = 0): ShiftPaginatedResponse!
   events(limit: Int! = 10, offset: Int! = 0): EventPaginatedResponse!

@@ -18,7 +18,6 @@ import { ShiftMapper } from '../../shift/mappers/shift.mapper';
 import { ShiftPaginatedResponse } from '../../shift/models/shift.model';
 import { ShiftService } from '../../shift/shift.service';
 import { UserMapper } from '../../user/mappers/user.mapper';
-import { User } from '../../user/models/user.model';
 import { EventInviteStatus } from '../enums';
 import { EventService } from '../event.service';
 import { EventMapper } from '../mappers/event.mapper';
@@ -109,19 +108,6 @@ export class EventQueryResolver {
       limit: pagination.limit,
       offset: pagination.offset,
     });
-  }
-
-  @Permissions(PERMISSIONS.SHIFT_VIEW)
-  @Query(() => [User])
-  async eventAttendees(
-    @Args('eventId', { type: () => ID }) eventId: string,
-    @Context() context: AuthenticatedGraphQLContext,
-  ): Promise<User[]> {
-    const attendees = await this.eventService.findAttendees(
-      eventId,
-      context.organizationUnitId,
-    );
-    return this.userMapper.toArray(attendees);
   }
 
   @Permissions(PERMISSIONS.SHIFT_VIEW)

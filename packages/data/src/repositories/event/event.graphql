@@ -147,16 +147,6 @@ query GetEvent($id: ID!) {
   }
 }
 
-query GetEventAttendees($eventId: ID!) {
-  eventAttendees(eventId: $eventId) {
-    id
-    name
-    email
-    image
-    checkInId
-  }
-}
-
 query GetEventInvites($eventId: ID!) {
   eventInvites(eventId: $eventId) {
     id

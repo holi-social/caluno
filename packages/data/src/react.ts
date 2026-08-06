@@ -56,7 +56,6 @@ export * from './react/org-context';
 // React-specific exports
 export * from './react/providers/data-provider';
 export type {
-  EventAttendee,
   EventInviteItem,
   EventListItem,
   MyEvent,
