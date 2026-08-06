@@ -76,23 +76,21 @@ export class FormSubmissionService {
     });
   }
 
-  /**
-   * Returns the calling user's form submission by id, including the form's
-   * `blockRefs -> block -> fields` graph and the submission `values` so the
-   * read-only renderer has everything it needs. Only matches when the
-   * submission belongs to `userId`; non-owners get undefined (→ notFound).
-   */
   async findMySubmission(
     userId: string,
     id: string,
-  ): Promise<FormSubmissionEntity | undefined> {
-    return this.db.query.formSubmissions.findFirst({
+  ): Promise<FormSubmissionEntity | null> {
+    const submission = await this.db.query.formSubmissions.findFirst({
       where: { id, userId },
       with: {
-        form: { with: { blockRefs: { with: { block: { with: { fields: true } } } } } },
+        form: {
+          with: { blockRefs: { with: { block: { with: { fields: true } } } } },
+        },
         values: true,
       },
     });
+
+    return submission ?? null;
   }
 
   async findValuesBySubmissionId(submissionId: string) {
