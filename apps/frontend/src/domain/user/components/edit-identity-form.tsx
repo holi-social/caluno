@@ -34,7 +34,7 @@ const fieldToRenderable = (
   systemKey: f.key,
   type: f.type,
   label,
-  required: f.required,
+  required: false,
   description: subtitle ?? null,
   placeholder: null,
   options: null,
@@ -82,7 +82,7 @@ const EditIdentityForm = ({ email, profile }: EditIdentityFormProps) => {
             f.key,
             buildFieldSchema(
               fieldToRenderable(f, tFields(f.labelKey), subtitleByKey[f.key]),
-              f.required,
+              false,
               messages,
             ),
           ]),
@@ -173,7 +173,7 @@ const EditIdentityForm = ({ email, profile }: EditIdentityFormProps) => {
         <Button
           type="button"
           variant="outline"
-          onClick={() => router.back()}
+          onClick={router.back}
           disabled={isSubmitting}
         >
           {tCommon('cancel')}
