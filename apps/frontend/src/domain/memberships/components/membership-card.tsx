@@ -70,7 +70,7 @@ export function MembershipCard({ entry }: Props) {
 
         {entry.state === 'accepted' && (
           <div className="flex justify-between items-center">
-            <div className="">
+            <div>
               <LeaveMembershipButton
                 membershipId={entry.id}
                 orgName={organizationName}

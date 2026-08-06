@@ -30,9 +30,7 @@ export const MembershipFormCard = async ({ item }: MembershipFormCardProps) => {
       }
     : null;
 
-  const statusLabel = t(
-    completed ? 'status.completed' : 'status.notCompleted',
-  );
+  const statusLabel = t(completed ? 'status.completed' : 'status.notCompleted');
   const description = submission
     ? t('completedOn', {
         date: formatDate(new Date(submission.submittedAt)),
@@ -40,7 +38,7 @@ export const MembershipFormCard = async ({ item }: MembershipFormCardProps) => {
     : t('notCompletedPrompt');
   const actionLabel = t(completed ? 'view' : 'fillIn');
   const actionHref = submission
-    ? `/forms/submissions/${submission.submissionId}`
+    ? `/profile/forms/submissions/${submission.submissionId}`
     : `/f/${item.form.shareToken}`;
 
   return (
@@ -59,8 +57,12 @@ export const MembershipFormCard = async ({ item }: MembershipFormCardProps) => {
       <CardContent>
         <p className="text-muted-foreground text-sm mb-2">{description}</p>
         <Button asChild className="w-full sm:w-auto">
-          <Link href={actionHref} target="_blank" rel="noopener noreferrer">
-            <SquareArrowOutUpRight />
+          <Link
+            href={actionHref}
+            target={item.completed ? '' : '_blank'}
+            rel="noopener noreferrer"
+          >
+            {!item.completed && <SquareArrowOutUpRight />}
             {actionLabel}
           </Link>
         </Button>

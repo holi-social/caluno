@@ -18,7 +18,7 @@ export const MembershipDetailHeader = ({
   return (
     <DetailPageHeader
       title={title}
-      onBack={() => router.back()}
+      onBack={router.back}
       backLabel={t('back')}
       logoUrl={logoUrl}
     />
