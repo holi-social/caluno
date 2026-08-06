@@ -22,6 +22,9 @@ export class MembershipRequest {
   @Field(() => User, { nullable: true })
   reviewedBy?: User | null;
 
+  @Field(() => User, { nullable: true })
+  contact?: User | null;
+
   @Field(() => Date, { nullable: true })
   reviewedAt?: Date | null;
 

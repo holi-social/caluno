@@ -110,15 +110,18 @@ Integration tests connect to the `postgres` maintenance database to create/drop 
 
 `bun bootstrap` resets the **development** database (not `_test`) via `docker compose down -v`, then migrates, seeds permissions, and loads [`src/database/fixtures.ts`](src/database/fixtures.ts). Refuses to run unless `DB_HOST` is `localhost`, `127.0.0.1`, or `postgres`.
 
+The same fixture script is used for staging via `bun run db:fixtures:staging`.
+
 | Account | Role / status |
 |---|---|
-| `admin@clippy.social` | Owner |
-| `supervisor@clippy.social` | Supervisor |
-| `member01@` … `member10@clippy.social` | Member |
-| `pending01@`, `pending02@` | Pending membership request |
-| `rejected01@` | Rejected membership request |
+| `testing+admin@caluno.org` | Owner |
+| `testing+supervisor@caluno.org` | Supervisor |
+| `testing+demo@caluno.org` | Member (demo account) |
+| `testing+001@` … `testing+010@caluno.org` | Member |
+| `testing+pending01@`, `testing+pending02@caluno.org` | Pending membership request |
+| `testing+rejected01@caluno.org` | Rejected membership request |
 
-Password for all fixture accounts: `abcd1234`. Organization: **Playground**. Shifts (weekly, Europe/Berlin): Community Support (Mon 08:00–12:00), Food Distribution (Wed 12:00–16:00), Event Assistance (Fri 16:00–20:00).
+Password for all fixture accounts: `abcd1234` (override with `FIXTURE_PASSWORD`). Organization: **Playground**. Shifts (weekly, Europe/Berlin): Community Support (Mon 08:00–12:00), Food Distribution (Wed 12:00–16:00), Event Assistance (Fri 16:00–20:00). Requirement form: Personal Information — block with required First name and Last name fields.
 
 ## Tech Stack
 - **NestJS 11** primary web framework
@@ -207,3 +210,4 @@ Update this section when a decision changes one of these (pipeline Decision rout
 - **No `forwardRef` in `apps/backend`**. Module dependencies must form a DAG. Cycles are broken by extracting lower-level data modules (`OrganizationUnitDataModule`) or by moving cross-domain GraphQL field resolution into the higher-level module (`EventModule` owns the `Shift.event` field).
 - **`OrganizationUnitDataModule`** sits below `AuthModule` in the dependency graph. `AuthService` uses `OrganizationUnitDataService` for ancestor-unit lookups and org resolution, so `AuthModule` does not depend on `OrganizationModule`.
 - **Shift vs event participation are separate vocabularies — do not unify them.** `ShiftInstance` exposes only the raw `myInviteStatus` (nullable `ShiftInviteStatus`); there is no coarse `myJoinStatus`. The volunteer CTA is derived client-side from `myInviteStatus` + `OrganizationUnit.myMembershipState` (two orthogonal facts). Events are a lower-commitment "following" shortlist, so `Event.isFollowing` is a boolean — deliberately not shift-invite vocabulary; org membership state is read separately. Retiring the old ambiguous `myJoinStatus` projection is the reason for this split. (volunteer-shift-invite-response / VOLI-839)
+- **`InviteStatus` (in `apps/frontend/src/domain/shift/invite-status-display.ts`) intentionally shares admin-invite vocabulary between shift and event.** `ShiftInviteStatus` and `EventInviteStatus` already mirror each other (`Invited`/`Accepted`/`SelfJoined`/`VolunteerRejected`/`Cancelled`/`AdminRejected`); `toInviteDisplayState()` maps both to the same `ShiftVolunteeringDisplayState` for admin UI (invite sheets, event/shift detail). This is a different axis from the follow vocabulary above (`isFollowing`/`myInviteStatus`), which stays unshared — this entry only covers the admin-invite enums. (event-invite-status-display / VOLI-1028)

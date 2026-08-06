@@ -38,6 +38,21 @@ const RECURRENCE_PRESET_VALUES: {
   { value: 'custom', days: [] },
 ];
 
+export function getPresetFromDays(days: string[]): RecurrencePresetValue {
+  if (!days || days.length === 0) return 'none';
+
+  for (const preset of RECURRENCE_PRESET_VALUES) {
+    if (preset.value === 'none' || preset.value === 'custom') continue;
+    if (
+      preset.days.length === days.length &&
+      preset.days.every((d) => days.includes(d))
+    ) {
+      return preset.value;
+    }
+  }
+  return 'custom';
+}
+
 interface RecurrencePresetMessages {
   none: string;
   daily: string;

@@ -132,7 +132,17 @@
     "pageTitle": "Profile",
     "organizations": "Your organizations",
     "personalInformation": "Personal information",
+    "identity": {
+      "subtitles": {
+        "preferredName": "If different from your legal name",
+        "firstName": "As on your ID",
+        "lastName": "As on your ID",
+        "iban": "For expense reimbursements"
+      }
+    },
     "accountSettings": "Account settings",
+    "language": "Language",
+    "languageDescription": "App display language",
     "edit": "Edit profile",
     "pictureLabel": "Profile picture",
     "saved": "Profile updated",
@@ -149,7 +159,7 @@
     "checkIn": "Check in",
     "myTime": "My Time",
     "requirementForms": "Requirement Forms",
-    "settings": "Settings",
+    "organizationSettings": "Organization Settings",
     "roles": "Roles",
     "orgUnits": "Org Units",
     "selectOrganization": "Select organization",
@@ -554,7 +564,8 @@
       "firstDate": "First Date",
       "pattern": "Pattern",
       "time": "Time",
-      "visibility": "Visibility"
+      "visibility": "Visibility",
+      "requiredForms": "Forms"
     },
     "visibility": {
       "ALL_MEMBERS": "Open shift",
@@ -617,6 +628,32 @@
       "inviteAllLabel": "Invite to all future instances of this shift",
       "inviteAllDescription": "Volunteers will get invited to all shifts starting from {startDate}, every {days}."
     },
+    "editInstanceForm": {
+      "applyToAllLabel": "Apply to all future instances",
+      "applyToAllDescription": "Changes will also apply to every future occurrence of this shift and override any earlier per-occurrence edits. Past occurrences are not affected."
+    },
+    "successDialog": {
+      "title": "Shift created",
+      "bodyOpen": "Your open shift is live! All volunteers inside of your organisation have been notified and can now sign up.",
+      "bodyInvited": "Your shift is live! Invited volunteers have been notified.",
+      "shareLabel": "Link to the shift",
+      "copyInviteLink": "Copy invite link",
+      "recurrence": {
+        "oneTime": "One-time",
+        "daily": "Daily",
+        "workingDays": "Weekdays",
+        "weekend": "Weekends"
+      },
+      "weekDayShort": {
+        "MONDAY": "Mon.",
+        "TUESDAY": "Tue.",
+        "WEDNESDAY": "Wed.",
+        "THURSDAY": "Thu.",
+        "FRIDAY": "Fri.",
+        "SATURDAY": "Sat.",
+        "SUNDAY": "Sun."
+      }
+    },
     "transferList": {
       "available": "Available",
       "invited": "Invited",
@@ -677,9 +714,9 @@
       "full": "Shift full",
       "joined": "You have joined the shift",
       "pending": "Your membership request is pending. You will be added to this shift once approved.",
-      "pendingCta": "Request pending",
+      "pendingCta": "Pending request",
       "rejected": "Your membership request for this organization was rejected. Contact an admin if you believe this was a mistake.",
-      "rejectedCta": "Request not approved",
+      "rejectedCta": "You cannot join this shift",
       "requirementsNeeded": "Requirements needed: {missing}{hasCompleted, select, yes { (already completed: {completed})} other {}}",
       "requirementsFallback": "Requirement profile ui (to be implemented)",
       "failed": "Failed to join shift",
@@ -717,6 +754,8 @@
       "createEventDescription": "Schedule a shift for this event.",
       "editTitle": "Edit shift",
       "editDescription": "Edit shift.",
+      "editInstanceTitle": "Edit shift instance",
+      "editInstanceDescription": "Edit this occurrence of the shift.",
       "inviteTitle": "Invite volunteers",
       "inviteDescription": "Invited volunteers will receive an invitation email with shift details and a link to the system."
     },
@@ -730,7 +769,26 @@
       "statusLabel": "Status",
       "createdByLabel": "Created by",
       "createdLabel": "Created",
-      "imageAlt": "Image for {title}"
+      "imageAlt": "Image for {title}",
+      "requiredForms": {
+        "title": "Forms required to join",
+        "subtitle": "Completed before joining {shiftTitle}",
+        "pill": {
+          "required": "{count, plural, one {1 form required} other {{count} forms required}}",
+          "none": "No forms required"
+        },
+        "questionCount": "{count, plural, one {1 question} other {{count} questions}}",
+        "addExisting": "+ Add existing",
+        "createNew": "Create new",
+        "searchForms": "Search forms...",
+        "noFormsFound": "No forms found",
+        "dedupHint": "Volunteers won't be asked for information they've already provided.",
+        "fileUploadLabel": "file upload",
+        "removeAria": "Remove {name}",
+        "addedToast": "Form attached",
+        "removedToast": "Form removed",
+        "updateFailedToast": "Failed to update required forms"
+      }
     },
     "notFound": "Shift not found.",
     "loading": "Loading...",
@@ -741,7 +799,11 @@
       "organizationUnitRequired": "Organization unit is required",
       "shiftIdRequired": "Shift ID is required",
       "minMaxVolunteers": "Minimum volunteers cannot exceed maximum volunteers",
-      "windowViolation": "Must fall within the event window"
+      "windowViolation": "Must fall within the event window",
+      "instanceTimeConflict": "Another occurrence of this shift already starts at that time.",
+      "instanceDateMismatch": "The date doesn't match this occurrence. Reopen the edit form and try again.",
+      "instanceClearRecurrenceUnsupported": "Clearing recurrence isn't supported from this form. Edit the shift's recurrence from the main Edit Shift page instead.",
+      "instanceRecurrenceConflict": "The new recurrence pattern doesn't include this occurrence's day. Adjust the recurrence or edit a different occurrence."
     },
     "inviteStatus": {
       "invited": "Invited",
@@ -766,6 +828,7 @@
       "title": "Shift instance",
       "subtitle": "Volunteers and invite status for this occurrence",
       "inviteCta": "Manage invites",
+      "editCta": "Edit",
       "backToShift": "Back to shift"
     }
   },
@@ -851,6 +914,10 @@
       "noFields": "No fields",
       "allBlocksInUse": "All blocks are already in use",
       "noPreview": "Add blocks to see a preview",
+      "emptyTitle": "You have no blocks yet",
+      "emptyDescription": "Add your first block to start building this form.",
+      "addAnotherBlockHint": "Add another block to continue building this form",
+      "saveDisabledHint": "Add a block to enable saving",
       "lockedTooltip": "Cannot edit, block in use in a submitted form",
       "viewBlock": "View block",
       "editBlock": "Edit block",
@@ -1006,6 +1073,7 @@
       "zipCode": "ZIP code",
       "city": "City",
       "birthDate": "Birth date",
+      "iban": "IBAN",
       "documentFileLabel": "Document",
       "documentFileDescription": "PDF or image, max 10 MB",
       "enterDocumentFileError": "Please upload a document.",
@@ -1195,7 +1263,17 @@
     "locationDivider": "·",
     "errorHeading": "This shift no longer exists",
     "errorBody": "It was cancelled or the link is no longer valid.",
-    "errorOrgCta": "Go to organisation"
+    "errorOrgCta": "Go to organisation",
+    "forms": {
+      "title": "Join {shiftTitle}",
+      "description": "Please complete the required forms before joining this shift.",
+      "noForms": "No forms are required.",
+      "joinedToast": "You've joined {shiftTitle}",
+      "requestSentToast": "Request sent — a coordinator will confirm it.",
+      "rejectedToast": "Request not approved",
+      "requirementsNeededToast": "Please complete all required forms first",
+      "requestFailed": "Failed to send request"
+    }
   },
   "Event": {
     "list": {
@@ -1242,7 +1320,11 @@
         "inviteButton": "Invite",
         "inviteAria": "Invite members",
         "checkInAria": "Check in",
-        "empty": "No volunteers invited yet."
+        "empty": "No volunteers invited yet.",
+        "status": {
+          "invited": "Invited",
+          "signedUp": "Signed up"
+        }
       },
       "shiftsCard": {
         "title": "Shifts",
@@ -1363,7 +1445,17 @@
     "eventCoverImageAlt": "Cover image for {title}",
     "loadPast": "Load past",
     "loadMore": "Load more",
-    "invitedOn": "Invited · {date}"
+    "invitedOn": "Invited · {date}",
+    "inviteKindEvent": "Event",
+    "inviteKindShift": "Shift",
+    "pendingBadge": "Pending",
+    "pendingRequestTitle": "Waiting for {orgName}",
+    "pendingRequestBody": "An admin is reviewing your request. Usually a few days.",
+    "pendingRequestContact": "Questions? {name} can help.",
+    "pendingRequestCta": "View my requests",
+    "discoverPendingSubtitle": "Shifts for {orgName} will show up here after approval",
+    "discoverPendingEmptyTitle": "Nothing to browse yet",
+    "discoverPendingEmptyBody": "Org shifts appear here once {orgName} accepts you.\nCheck-in and My Time stay available anytime."
   },
   "OrgDetail": {
     "coverImageAlt": "Cover image for {title}",

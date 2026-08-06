@@ -1,5 +1,5 @@
 import { Card, CardContent } from '@repo/ui';
-import { Calendar, Hand, LogIn } from 'lucide-react';
+import { Calendar, Hand, ScanQrCode } from 'lucide-react';
 import { notFound } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
 import { UserCard } from '@/components/user-card';
@@ -50,7 +50,7 @@ export default async function CheckOutPage({ params }: CheckOutPageProps) {
                     entry.shiftInstance.master.title}
                 </li>
                 <li className="flex gap-2">
-                  <LogIn className="text-muted-foreground" />{' '}
+                  <ScanQrCode className="text-muted-foreground" />{' '}
                   {t('checkedInAt', {
                     time: formatDateTime(new Date(entry.startedAt)),
                   })}

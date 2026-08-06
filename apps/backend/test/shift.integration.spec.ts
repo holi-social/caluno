@@ -12,16 +12,22 @@ import { eq } from 'drizzle-orm';
 import type { Database } from '../src/database/database.module';
 import * as schema from '../src/database/schema';
 import { NotFoundGraphQLError } from '../src/graphql/errors';
+import { RequiredFormTargetType } from '../src/requirement-profile/enums';
+import { RequiredFormService } from '../src/requirement-profile/services/required-form.service';
+import { JoinStatus } from '../src/shared/enums/join-status.enum';
 import { ShiftInviteStatus, ShiftVisibility } from '../src/shift/enums';
 import { ShiftService } from '../src/shift/shift.service';
 import {
   cancelShiftInstance,
+  createFormSubmission,
   createMembershipRequest,
+  createRequirementForm,
   createShift,
   createShiftInstance,
   createUser,
 } from './factories';
 import {
+  addMembership,
   createOrganizationWithType,
   createUnit,
 } from './factories/org.factory';
@@ -1502,6 +1508,76 @@ describe('Volunteer home fields and check-in', () => {
     expect(acceptedItem?.myInviteStatus).toBe('ACCEPTED');
   });
 
+  it('includes intended shift instances when includeIntended is true', async () => {
+    // The user is not a member of the org unit; their signup is captured as a
+    // pending membership request with an intended shift instance id.
+    const { id: shiftId } = await createShift(db, {
+      organizationUnitId,
+      startsAt: new Date(Date.now() + 60 * 60 * 1000),
+      endsAt: new Date(Date.now() + 2 * 60 * 60 * 1000),
+    });
+    const instances = await db.query.shiftInstances.findMany({
+      where: { masterId: shiftId },
+      orderBy: { actualStartsAt: 'asc' },
+    });
+    const intendedInstanceId = instances[0]?.id;
+    expect(intendedInstanceId).toBeDefined();
+
+    await createMembershipRequest(db, {
+      userId: testUserId,
+      organizationUnitId,
+      metadata: {
+        intendedShiftInstanceIds: [intendedInstanceId ?? ''],
+      },
+    });
+
+    const query = `
+      query MyShiftInstances($includeIntended: Boolean!) {
+        myShiftInstances(includePast: true, includeIntended: $includeIntended) {
+          items { id myInviteStatus }
+          pagination { total limit offset hasMore }
+        }
+      }
+    `;
+
+    type MyInstanceItem = {
+      id: string;
+      myInviteStatus: string | null;
+    };
+
+    const withIntended = await graphqlRequestRequiringData<{
+      myShiftInstances: { items: MyInstanceItem[] };
+    }>(
+      app,
+      {
+        query,
+        variables: { includeIntended: true },
+        headers: { 'x-organization-unit-id': organizationUnitId },
+      },
+      'myShiftInstances',
+    );
+    const intendedItem = withIntended.myShiftInstances.items.find(
+      (i) => i.id === intendedInstanceId,
+    );
+    expect(intendedItem).toBeDefined();
+    expect(intendedItem?.myInviteStatus).toBeNull();
+
+    const withoutIntended = await graphqlRequestRequiringData<{
+      myShiftInstances: { items: MyInstanceItem[] };
+    }>(
+      app,
+      {
+        query,
+        variables: { includeIntended: false },
+        headers: { 'x-organization-unit-id': organizationUnitId },
+      },
+      'myShiftInstances',
+    );
+    expect(
+      withoutIntended.myShiftInstances.items.map((i) => i.id),
+    ).not.toContain(intendedInstanceId);
+  });
+
   it('lists available shift instances', async () => {
     await db.insert(schema.memberships).values({
       userId: testUserId,
@@ -2630,5 +2706,354 @@ describe('ShiftInstance.invites (VOLI-842)', () => {
     expect(invites.map((invite) => invite.user.id)).not.toContain(
       foreignUser.id,
     );
+  });
+});
+
+describe('ShiftService.requestJoinShiftInstance — required forms', () => {
+  let app: INestApplication;
+  let db: Database;
+  let organizationId: string;
+  let organizationUnitId: string;
+  let shiftService: ShiftService;
+  let requiredFormService: RequiredFormService;
+
+  beforeAll(async () => {
+    const context = await getGraphqlTestContext();
+    app = context.app;
+    db = context.db;
+    organizationId = context.organizationId;
+    organizationUnitId = context.organizationUnitId;
+    shiftService = app.get(ShiftService);
+    requiredFormService = app.get(RequiredFormService);
+  });
+
+  const setupJoinableShift = async () => {
+    const user = await createUser(db);
+    await addMembership(db, user.id, organizationUnitId);
+
+    const { id: shiftId } = await createShift(db, {
+      organizationUnitId,
+      visibility: ShiftVisibility.ALL_MEMBERS,
+    });
+    const instance = await db.query.shiftInstances.findFirst({
+      where: { masterId: shiftId },
+    });
+    if (!instance) throw new Error('Failed to create test shift instance');
+
+    const { form } = await createRequirementForm(db, {
+      organizationId,
+      organizationUnitId,
+      createdById: user.id,
+    });
+    await requiredFormService.setRequiredForms(
+      { targetType: RequiredFormTargetType.SHIFT, targetId: shiftId },
+      [form.id],
+    );
+
+    return { user, shiftId, instance, form };
+  };
+
+  it('returns REQUIREMENTS_NEEDED when the shift has an unsubmitted required form', async () => {
+    const { user, instance, form } = await setupJoinableShift();
+
+    const result = await shiftService.requestJoinShiftInstance(
+      user.id,
+      instance.id,
+    );
+
+    expect(result.status).toBe(JoinStatus.REQUIREMENTS_NEEDED);
+    expect(result.requiredForms).toHaveLength(1);
+    expect(result.requiredForms?.[0]?.form.id).toBe(form.id);
+    expect(result.requiredForms?.[0]?.submitted).toBe(false);
+
+    const invite = await db.query.shiftInstanceInvites.findFirst({
+      where: { instanceId: instance.id, userId: user.id },
+    });
+    expect(invite).toBeUndefined();
+  });
+
+  it('joins the shift once the required form is submitted', async () => {
+    const { user, instance, form } = await setupJoinableShift();
+    await createFormSubmission(db, { formId: form.id, userId: user.id });
+
+    const result = await shiftService.requestJoinShiftInstance(
+      user.id,
+      instance.id,
+    );
+
+    expect(result.status).toBe(JoinStatus.JOINED);
+
+    const invite = await db.query.shiftInstanceInvites.findFirst({
+      where: { instanceId: instance.id, userId: user.id },
+    });
+    expect(invite?.status).toBe(ShiftInviteStatus.SELF_JOINED);
+  });
+
+  it('joins normally when the shift has no required forms', async () => {
+    const user = await createUser(db);
+    await addMembership(db, user.id, organizationUnitId);
+    const { id: shiftId } = await createShift(db, {
+      organizationUnitId,
+      visibility: ShiftVisibility.ALL_MEMBERS,
+    });
+    const instance = await db.query.shiftInstances.findFirst({
+      where: { masterId: shiftId },
+    });
+    if (!instance) throw new Error('Failed to create test shift instance');
+
+    const result = await shiftService.requestJoinShiftInstance(
+      user.id,
+      instance.id,
+    );
+
+    expect(result.status).toBe(JoinStatus.JOINED);
+  });
+
+  it('returns REQUIREMENTS_NEEDED for a non-member before the membership request is pending', async () => {
+    const user = await createUser(db);
+    const { id: shiftId } = await createShift(db, {
+      organizationUnitId,
+      visibility: ShiftVisibility.ALL_MEMBERS,
+    });
+    const instance = await db.query.shiftInstances.findFirst({
+      where: { masterId: shiftId },
+    });
+    if (!instance) throw new Error('Failed to create test shift instance');
+
+    const { form } = await createRequirementForm(db, {
+      organizationId,
+      organizationUnitId,
+      createdById: user.id,
+    });
+    await requiredFormService.setRequiredForms(
+      { targetType: RequiredFormTargetType.SHIFT, targetId: shiftId },
+      [form.id],
+    );
+
+    const result = await shiftService.requestJoinShiftInstance(
+      user.id,
+      instance.id,
+    );
+
+    expect(result.status).toBe(JoinStatus.REQUIREMENTS_NEEDED);
+    expect(result.requiredForms).toHaveLength(1);
+    expect(result.requiredForms?.[0]?.form.id).toBe(form.id);
+    expect(result.requiredForms?.[0]?.submitted).toBe(false);
+
+    const invite = await db.query.shiftInstanceInvites.findFirst({
+      where: { instanceId: instance.id, userId: user.id },
+    });
+    expect(invite).toBeUndefined();
+  });
+
+  it('does not auto-join an intended shift instance when required forms are missing', async () => {
+    const user = await createUser(db);
+    const { id: shiftId } = await createShift(db, {
+      organizationUnitId,
+      visibility: ShiftVisibility.ALL_MEMBERS,
+    });
+    const instance = await db.query.shiftInstances.findFirst({
+      where: { masterId: shiftId },
+    });
+    if (!instance) throw new Error('Failed to create test shift instance');
+
+    const { form } = await createRequirementForm(db, {
+      organizationId,
+      organizationUnitId,
+      createdById: user.id,
+    });
+    await requiredFormService.setRequiredForms(
+      { targetType: RequiredFormTargetType.SHIFT, targetId: shiftId },
+      [form.id],
+    );
+
+    const membershipRequest = await createMembershipRequest(db, {
+      userId: user.id,
+      organizationUnitId,
+      metadata: {
+        intendedShiftInstanceIds: [instance.id],
+      },
+    });
+
+    await graphqlRequestRequiringData<{
+      approveMembershipRequest: { id: string };
+    }>(
+      app,
+      {
+        query: `
+          mutation ApproveMembershipRequest($id: ID!, $organizationUnitId: ID!) {
+            approveMembershipRequest(
+              id: $id
+              organizationUnitId: $organizationUnitId
+            ) {
+              id
+            }
+          }
+        `,
+        variables: {
+          id: membershipRequest.id,
+          organizationUnitId,
+        },
+        headers: {
+          'x-organization-unit-id': organizationUnitId,
+        },
+      },
+      'approveMembershipRequest',
+    );
+
+    const invite = await db.query.shiftInstanceInvites.findFirst({
+      where: { instanceId: instance.id, userId: user.id },
+    });
+    expect(invite).toBeUndefined();
+  });
+
+  it('auto-joins an intended shift instance once the required form is submitted', async () => {
+    const user = await createUser(db);
+    const { id: shiftId } = await createShift(db, {
+      organizationUnitId,
+      visibility: ShiftVisibility.ALL_MEMBERS,
+    });
+    const instance = await db.query.shiftInstances.findFirst({
+      where: { masterId: shiftId },
+    });
+    if (!instance) throw new Error('Failed to create test shift instance');
+
+    const { form } = await createRequirementForm(db, {
+      organizationId,
+      organizationUnitId,
+      createdById: user.id,
+    });
+    await requiredFormService.setRequiredForms(
+      { targetType: RequiredFormTargetType.SHIFT, targetId: shiftId },
+      [form.id],
+    );
+    await createFormSubmission(db, { formId: form.id, userId: user.id });
+
+    const membershipRequest = await createMembershipRequest(db, {
+      userId: user.id,
+      organizationUnitId,
+      metadata: {
+        intendedShiftInstanceIds: [instance.id],
+      },
+    });
+
+    await graphqlRequestRequiringData<{
+      approveMembershipRequest: { id: string };
+    }>(
+      app,
+      {
+        query: `
+          mutation ApproveMembershipRequest($id: ID!, $organizationUnitId: ID!) {
+            approveMembershipRequest(
+              id: $id
+              organizationUnitId: $organizationUnitId
+            ) {
+              id
+            }
+          }
+        `,
+        variables: {
+          id: membershipRequest.id,
+          organizationUnitId,
+        },
+        headers: {
+          'x-organization-unit-id': organizationUnitId,
+        },
+      },
+      'approveMembershipRequest',
+    );
+
+    const invite = await db.query.shiftInstanceInvites.findFirst({
+      where: { instanceId: instance.id, userId: user.id },
+    });
+    expect(invite?.status).toBe(ShiftInviteStatus.ACCEPTED);
+  });
+});
+
+describe('ShiftService.updateShiftInstance applyToAllFuture', () => {
+  let app: INestApplication;
+  let db: Database;
+  let organizationUnitId: string;
+  let shiftService: ShiftService;
+
+  beforeAll(async () => {
+    const context = await getGraphqlTestContext();
+    app = context.app;
+    db = context.db;
+    organizationUnitId = context.organizationUnitId;
+    shiftService = app.get(ShiftService);
+  });
+
+  it('moves surviving instances in place when weekdays and time change together', async () => {
+    // Weekly Wed+Thu at 09:00, starting on a Wednesday well in the future so
+    // nothing is filtered out as past.
+    const seriesStart = new Date(2026, 8, 2, 9, 0, 0, 0); // Wed 2026-09-02
+    const shift = await createShift(db, {
+      organizationUnitId,
+      startsAt: seriesStart,
+      endsAt: new Date(2026, 8, 2, 11, 0, 0, 0),
+      rrule: 'FREQ=WEEKLY;BYDAY=WE,TH;UNTIL=20261001T000000Z',
+    });
+
+    const instancesBefore = await db.query.shiftInstances.findMany({
+      where: { masterId: shift.id },
+    });
+    const firstWednesday = instancesBefore
+      .slice()
+      .sort(
+        (a, b) => a.actualStartsAt.getTime() - b.actualStartsAt.getTime(),
+      )[0];
+    if (!firstWednesday) throw new Error('expected an expanded instance');
+
+    // A volunteer is signed up for a Wednesday that survives the edit.
+    const volunteer = await createUser(db);
+    await db.insert(schema.shiftInstanceInvites).values({
+      instanceId: firstWednesday.id,
+      userId: volunteer.id,
+      status: ShiftInviteStatus.ACCEPTED,
+    });
+
+    // Change BOTH: drop Thursday for Friday, and move 09:00 -> 14:00.
+    const newStart = new Date(2026, 8, 2, 14, 0, 0, 0);
+    const newEnd = new Date(2026, 8, 2, 16, 0, 0, 0);
+
+    const updated = await shiftService.updateShiftInstance(
+      firstWednesday.id,
+      {
+        title: shift.title,
+        startsAt: newStart,
+        endsAt: newEnd,
+        rrule: 'FREQ=WEEKLY;BYDAY=WE,FR;UNTIL=20261001T000000Z',
+      },
+      organizationUnitId,
+      { applyToAllFuture: true },
+    );
+
+    // The edited row is returned with the NEW times, not stale pre-edit data.
+    expect(updated.id).toBe(firstWednesday.id);
+    expect(updated.actualStartsAt).toEqual(newStart);
+    expect(updated.actualEndsAt).toEqual(newEnd);
+    expect(updated.isCancelled).toBe(false);
+
+    // The volunteer's invite is still attached to a live instance.
+    const [invite] = await db
+      .select()
+      .from(schema.shiftInstanceInvites)
+      .where(eq(schema.shiftInstanceInvites.userId, volunteer.id));
+    expect(invite?.instanceId).toBe(firstWednesday.id);
+
+    // No Thursdays survive; the Wednesdays kept their identity.
+    const instancesAfter = await db.query.shiftInstances.findMany({
+      where: { masterId: shift.id, isCancelled: false },
+    });
+    const survivingIds = new Set(instancesAfter.map((i) => i.id));
+    expect(survivingIds.has(firstWednesday.id)).toBe(true);
+    for (const instance of instancesAfter) {
+      expect(instance.actualStartsAt.getHours()).toBe(14);
+      expect(instance.actualStartsAt.getDay()).not.toBe(4); // no Thursdays
+    }
+    expect(instancesAfter.some((i) => i.actualStartsAt.getDay() === 5)).toBe(
+      true,
+    ); // new Fridays were actually inserted
   });
 });

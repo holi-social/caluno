@@ -27,6 +27,7 @@ export default async function UpdateShiftPage({
       description={t('editDescription')}
       orgUId={orgUId}
       mutate={updateShift.bind(null, orgUId, shift.id)}
+      initialRequiredFormIds={shift.requiredForms.map((ref) => ref.form.id)}
       initialValues={{
         name: shift.title,
         instructions: shift.instructions ?? undefined,

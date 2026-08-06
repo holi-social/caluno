@@ -169,6 +169,7 @@ export class MembershipService {
     return this.db.query.memberships.findMany({
       where: { userId },
       with: {
+        user: true,
         organizationUnit: true,
         roles: {
           with: {

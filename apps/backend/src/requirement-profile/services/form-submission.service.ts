@@ -416,12 +416,6 @@ export class FormSubmissionService {
             `"${label}": must be 20 characters or fewer`,
           );
         break;
-      case FieldType.IBAN:
-        if (rawValue.length > 34)
-          throw new BadRequestGraphQLError(
-            `"${label}": must be 34 characters or fewer`,
-          );
-        break;
       case FieldType.TEXTAREA:
         if (rawValue.length > 5000)
           throw new BadRequestGraphQLError(
@@ -545,6 +539,12 @@ export class FormSubmissionService {
               `You must be at least ${minAge} years old`,
             );
         }
+        break;
+      case 'iban':
+        if (value.length > 34)
+          throw new BadRequestGraphQLError(
+            `"${label}": must be 34 characters or fewer`,
+          );
         break;
     }
   }

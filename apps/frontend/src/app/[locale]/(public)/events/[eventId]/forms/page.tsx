@@ -1,9 +1,9 @@
 import { type DataClient, DataError, JoinStatus } from '@repo/data';
-import { notFound, redirect } from 'next/navigation';
+import { notFound } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
 import { EventFormsClient } from '@/app/[locale]/(public)/events/[eventId]/forms/event-forms-client';
 import type { RequiredFormItem } from '@/domain/requirement-form/components/required-form-renderer';
-import { redirect as redirectWithLocale } from '@/i18n/navigation';
+import { redirect } from '@/i18n/navigation';
 import { resolveLocale } from '@/i18n/routing';
 import { getSession } from '@/lib/auth-server';
 import { getDataClient } from '@/lib/data-client';
@@ -55,13 +55,16 @@ export default async function EventFormsPage({
     const searchParams = new URLSearchParams({
       redirectTo: redirectTo ?? `/events/${eventId}/forms`,
     });
-    redirectWithLocale({ href: `/api/invite?${searchParams}`, locale });
+    redirect({ href: `/api/invite?${searchParams}`, locale });
   }
 
   const joinResult = await data.publicEvent.join(eventId).catch(() => null);
 
   if (joinResult?.status === JoinStatus.Joined) {
-    redirect(getSafeRedirect(redirectTo) ?? `/events/${eventId}`);
+    redirect({
+      href: getSafeRedirect(redirectTo) ?? `/events/${eventId}`,
+      locale,
+    });
   }
 
   const requiredForms =

@@ -16,6 +16,7 @@ export default async function MyShiftsPage({ params }: MyShiftsPageProps) {
     from: startOfDay(new Date()),
     order: SortOrder.Asc,
     limit: 15,
+    includeIntended: true,
   });
 
   return <MyShiftsView initialFuturePage={myShiftInstancesPage} />;

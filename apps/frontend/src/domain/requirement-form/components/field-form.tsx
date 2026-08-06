@@ -77,6 +77,7 @@ export function FieldForm({
     { label: t('zipCode'), value: 'zip' },
     { label: t('city'), value: 'city' },
     { label: t('birthDate'), value: 'birth-date' },
+    { label: t('iban'), value: 'iban' },
   ];
 
   const [fieldType, setFieldType] = useState(initial?.type ?? '');

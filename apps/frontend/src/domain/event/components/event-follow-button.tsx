@@ -8,7 +8,7 @@ import { useSearchParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { useCallback, useEffect, useState } from 'react';
 import { toast } from 'sonner';
-import { useRouter } from '@/i18n/navigation';
+import { usePathname, useRouter } from '@/i18n/navigation';
 import { useSession } from '@/lib/auth';
 
 interface EventFollowButtonProps {
@@ -23,6 +23,7 @@ export function EventFollowButton({
   const t = useTranslations('EventDetail');
   const joinEvent = useJoinEvent();
   const router = useRouter();
+  const pathname = usePathname();
   const searchParams = useSearchParams();
   const autoFollow = searchParams.get('autoFollow') === 'true';
   const [status, setStatus] = useState(initialStatus);
@@ -34,9 +35,11 @@ export function EventFollowButton({
     status === JoinStatus.Rejected;
 
   const redirectToFormsPage = useCallback(() => {
-    const currentUrl = window.location.href;
-    window.location.href = `/events/${eventId}/forms?redirectTo=${encodeURIComponent(currentUrl)}`;
-  }, [eventId]);
+    const redirectTo = encodeURIComponent(
+      `${pathname}${window.location.search}`,
+    );
+    window.location.href = `/events/${eventId}/forms?redirectTo=${redirectTo}`;
+  }, [eventId, pathname]);
 
   const handleFollow = useCallback(async () => {
     if (!session.data?.user) {

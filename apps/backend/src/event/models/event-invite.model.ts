@@ -1,4 +1,5 @@
 import { Field, ID, ObjectType, registerEnumType } from '@nestjs/graphql';
+import { User } from '../../user/models/user.model';
 import { EventInviteStatus } from '../enums';
 
 registerEnumType(EventInviteStatus, {
@@ -15,6 +16,9 @@ export class EventInvite {
 
   @Field(() => String)
   userId!: string;
+
+  @Field(() => User)
+  user!: User;
 
   @Field(() => Date)
   createdAt!: Date;

@@ -9,7 +9,7 @@ import {
   DialogFooter,
   DialogHeader,
 } from '@repo/ui';
-import { Check, PlaneTakeoff, SkipForward } from 'lucide-react';
+import { Check, ScanQrCode, SkipForward } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useState, useTransition } from 'react';
 import { toast } from 'sonner';
@@ -97,7 +97,7 @@ export const CheckinForm = ({
             className="w-full"
             type="button"
           >
-            <PlaneTakeoff />{' '}
+            <ScanQrCode />{' '}
             {isPending ? t('checkIn.checkingIn') : t('checkIn.checkIn')}
           </Button>
         </div>
