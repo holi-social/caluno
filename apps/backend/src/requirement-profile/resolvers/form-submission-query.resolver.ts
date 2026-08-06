@@ -75,7 +75,7 @@ export class FormSubmissionQueryResolver {
     organizationUnitId: string,
     @Session() session: UserSession,
   ): Promise<MyOrgUnitForm[]> {
-    const items = await this.requiredFormService.formsForUser(
+    const items = await this.requiredFormService.requiredFormsForUser(
       session.user.id,
       organizationUnitId,
     );

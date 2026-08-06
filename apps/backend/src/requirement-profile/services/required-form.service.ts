@@ -4,6 +4,7 @@ import type { Database } from '../../database/database.module';
 import { DATABASE_CONNECTION } from '../../database/database-connection';
 import type { RequirementFormEntity } from '../../database/schema';
 import * as schema from '../../database/schema';
+import { EventInviteStatus } from '../../event/enums';
 import {
   ConflictGraphQLError,
   NotFoundGraphQLError,
@@ -120,93 +121,42 @@ export class RequiredFormService {
     });
   }
 
-  /**
-   * Computes the union of forms a user has been asked to fill in or has
-   * submitted within an organization unit's organization:
-   *   1. forms required at the org-unit level,
-   *   2. forms required by events the user is invited to in this org,
-   *   3. the user's SUBMITTED forms for this org.
-   * Deduped by formId; an entry is `completed` when a SUBMITTED submission
-   * exists for it. Not-completed entries sort first.
-   */
-  async formsForUser(
+  async requiredFormsForUser(
     userId: string,
     organizationUnitId: string,
   ): Promise<MyOrgUnitFormItem[]> {
-    // 1. resolve the org-unit's organization
-    const orgUnit = await this.db.query.organizationUnits.findFirst({
-      where: { id: organizationUnitId },
-      columns: { organizationId: true },
-    });
-    if (!orgUnit) return [];
-    const organizationId = orgUnit.organizationId;
-
-    // 2. requested: org-unit required forms
+    // 1. requested: org-unit required forms
     const orgUnitRequired = await this.getRequiredForms({
       targetType: RequiredFormTargetType.ORGANIZATION_UNIT,
       targetId: organizationUnitId,
     });
 
-    // 3. requested: event required forms for events the user is invited to
-    //    within this org-unit's organization.
-    const invites = await this.db.query.eventInvites.findMany({
-      where: { userId },
-      with: {
-        event: {
-          with: { organizationUnit: { columns: { organizationId: true } } },
+    // 2. requested: event required forms for events the user is invited
+    const pendingEventInvites = await this.db.query.eventInvites.findMany({
+      where: {
+        userId,
+        event: { organizationUnitId },
+        status: {
+          in: [EventInviteStatus.INVITED, EventInviteStatus.SELF_JOINED],
         },
       },
     });
-    const inOrgEventIds = invites
-      .filter(
-        (invite) =>
-          invite.event?.organizationUnit?.organizationId === organizationId,
-      )
-      .map((invite) => invite.eventId);
-    const eventRequired: Array<{ form: RequirementFormEntity; order: number }> =
-      [];
-    for (const eventId of new Set(inOrgEventIds)) {
-      const forms = await this.getRequiredForms({
-        targetType: RequiredFormTargetType.EVENT,
-        targetId: eventId,
-      });
-      eventRequired.push(...forms);
-    }
 
-    // 4. union of requested forms, deduped by formId
+    const eventIds = pendingEventInvites.map((e) => e.eventId);
+    const eventsRequiredForms = await this.getRequiredFormsByEventIds(eventIds);
+
+    // 3. union of requested forms, deduped by formId
     const byForm = new Map<string, MyOrgUnitFormItem>();
-    for (const { form } of [...orgUnitRequired, ...eventRequired]) {
-      if (!byForm.has(form.id)) {
-        byForm.set(form.id, {
-          form,
-          completed: false,
-          submissionId: null,
-          submittedAt: null,
-        });
-      }
-    }
-
-    // 5. completed: user's submitted forms for this org. Either upgrades an
-    //    existing required entry to completed, or adds a submitted-but-not-
-    //    currently-required entry.
-    const submissions = await this.db.query.formSubmissions.findMany({
-      where: { userId, status: FormSubmissionStatus.SUBMITTED },
-      with: { form: true },
-    });
-    for (const submission of submissions) {
-      const form = submission.form;
-      if (!form || form.organizationId !== organizationId) continue;
+    for (const { form } of [...orgUnitRequired, ...eventsRequiredForms]) {
       byForm.set(form.id, {
         form,
-        completed: true,
-        submissionId: submission.id,
-        submittedAt: submission.submittedAt,
+        completed: false,
+        submissionId: null,
+        submittedAt: null,
       });
     }
 
-    // 6. not-completed first, then completed
-    const items = [...byForm.values()];
-    return items.sort((a, b) => Number(a.completed) - Number(b.completed));
+    return [...byForm.values()];
   }
 
   async countRequiredFormsByEventIds(

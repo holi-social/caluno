@@ -1,3 +1,7 @@
+import type {
+  GetMyFormSubmissionsQuery,
+  MyOrgUnitFormsQuery,
+} from '@repo/data';
 import { notFound } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
 import { MembershipDetailHeader } from '@/domain/memberships/components/membership-detail-header';
@@ -5,6 +9,36 @@ import { MembershipFormCard } from '@/domain/memberships/components/membership-f
 import { MembershipStatusBadge } from '@/domain/memberships/components/membership-status-badge';
 import { getDataClient } from '@/lib/data-client';
 import { getFormatting } from '@/lib/formatting/formatting-server';
+
+type OrgUnitFormItem = MyOrgUnitFormsQuery['myOrgUnitForms'][number];
+type MyFormSubmissionItem =
+  GetMyFormSubmissionsQuery['myFormSubmissions'][number];
+
+const mergeOrgUnitFormsWithSubmissions = (
+  forms: OrgUnitFormItem[],
+  submissions: MyFormSubmissionItem[],
+): OrgUnitFormItem[] => {
+  const mergedByFormId = new Map<string, OrgUnitFormItem>();
+  for (const item of forms) {
+    mergedByFormId.set(item.form.id, {
+      form: item.form,
+      completed: false,
+    });
+  }
+
+  for (const submission of submissions) {
+    if (submission.form) {
+      mergedByFormId.set(submission.form.id, {
+        form: submission.form,
+        completed: true,
+        submissionId: submission.id,
+        submittedAt: submission.submittedAt,
+      });
+    }
+  }
+
+  return [...mergedByFormId.values()];
+};
 
 type Props = { params: Promise<{ membershipId: string }> };
 
@@ -15,9 +49,12 @@ export default async function MembershipDetailPage({ params }: Props) {
   const membership = await data.membership.findMineById(membershipId);
   if (!membership) notFound();
 
-  const forms = await data.requirementForm.findMyOrgUnitForms(
-    membership.organizationUnit.id,
-  );
+  const organizationUnitId = membership.organizationUnit.id;
+  const [requiredForms, submissions] = await Promise.all([
+    data.requirementForm.findMyOrgUnitForms(organizationUnitId),
+    data.requirementForm.findMyFormSubmissions(organizationUnitId),
+  ]);
+  const forms = mergeOrgUnitFormsWithSubmissions(requiredForms, submissions);
 
   const t = await getTranslations('MembershipDetail');
   const { formatDate } = await getFormatting();

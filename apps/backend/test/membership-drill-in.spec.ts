@@ -196,7 +196,7 @@ describe('RequiredFormService.formsForUser', () => {
   it('returns org-unit required form as not-completed', async () => {
     await seedWorld();
     try {
-      const forms = await service.formsForUser(userId, orgUnitId);
+      const forms = await service.requiredFormsForUser(userId, orgUnitId);
       const f = forms.find((x) => x.form.id === requiredFormId);
       expect(f).toBeDefined();
       expect(f?.completed).toBe(false);
@@ -209,7 +209,7 @@ describe('RequiredFormService.formsForUser', () => {
   it('returns event-required form (user invited) as not-completed', async () => {
     await seedWorld();
     try {
-      const forms = await service.formsForUser(userId, orgUnitId);
+      const forms = await service.requiredFormsForUser(userId, orgUnitId);
       const f = forms.find((x) => x.form.id === eventFormId);
       expect(f).toBeDefined();
       expect(f?.completed).toBe(false);
@@ -218,27 +218,26 @@ describe('RequiredFormService.formsForUser', () => {
     }
   });
 
-  it('marks a submitted org form as completed with submissionId + submittedAt', async () => {
+  it('excludes forms that are only submitted (not required)', async () => {
     await seedWorld();
     try {
-      const forms = await service.formsForUser(userId, orgUnitId);
+      const forms = await service.requiredFormsForUser(userId, orgUnitId);
       const f = forms.find((x) => x.form.id === submittedFormId);
-      expect(f).toBeDefined();
-      expect(f?.completed).toBe(true);
-      expect(f?.submissionId).toBeTruthy();
-      expect(f?.submittedAt).toBeTruthy();
+      expect(f).toBeUndefined();
     } finally {
       await cleanup();
     }
   });
 
-  it('dedupes a form that is both required and submitted into one completed card', async () => {
+  it('does not mark a required form as completed even when it has been submitted', async () => {
     await seedWorld({ alsoSubmitRequiredForm: true });
     try {
-      const forms = await service.formsForUser(userId, orgUnitId);
+      const forms = await service.requiredFormsForUser(userId, orgUnitId);
       const matches = forms.filter((x) => x.form.id === requiredFormId);
       expect(matches).toHaveLength(1);
-      expect(matches[0]?.completed).toBe(true);
+      expect(matches[0]?.completed).toBe(false);
+      expect(matches[0]?.submissionId).toBeNull();
+      expect(matches[0]?.submittedAt).toBeNull();
     } finally {
       await cleanup();
     }

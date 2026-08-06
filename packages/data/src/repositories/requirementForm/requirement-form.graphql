@@ -560,6 +560,8 @@ query GetMyFormSubmissions($organizationUnitId: ID!) {
     form {
       id
       name
+      description
+      shareToken
     }
   }
 }
