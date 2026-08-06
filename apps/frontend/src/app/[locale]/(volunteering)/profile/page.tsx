@@ -6,7 +6,6 @@ import { ProfileForm } from '@/domain/user/components/profile-form';
 import { ProfilePageHeader } from '@/domain/user/components/profile-page-header';
 import { resolveLocale } from '@/i18n/routing';
 import { getDataClient } from '@/lib/data-client';
-import { routes } from '@/lib/routes';
 
 type ProfilePageProps = {
   params: Promise<{ locale: string }>;
@@ -39,7 +38,6 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
       <div className="mx-auto w-full max-w-4xl space-y-8 px-4 py-6">
         <HeaderAvatar name={me.name} imageUrl={me.image} />
 
-        {/* Section slots — empty; headings inlined (later tickets add bodies) */}
         <section className="space-y-4">
           <h2 className="text-xl font-bold">{tProfile('organizations')}</h2>
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
@@ -47,11 +45,6 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
               <MembershipCard
                 key={`${entry.state}-${entry.id}`}
                 entry={entry}
-                detailHref={
-                  entry.state === 'accepted'
-                    ? routes.membershipDetail(entry.id)
-                    : undefined
-                }
               />
             ))}
           </div>

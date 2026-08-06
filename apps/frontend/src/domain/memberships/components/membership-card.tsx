@@ -1,4 +1,5 @@
 import { Card, CardAction, CardContent, CardHeader, CardTitle } from '@repo/ui';
+import { ChevronRight } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { Link } from '@/i18n/navigation';
 import { useFormatting } from '@/lib/formatting/use-formatting';
@@ -8,9 +9,9 @@ import { MembershipStatusBadge } from './membership-status-badge';
 import { OrgUnitAvatar } from './org-unit-avatar';
 import { WithdrawMembershipButton } from './withdraw-membership-button';
 
-type Props = { entry: MembershipEntry; detailHref?: string };
+type Props = { entry: MembershipEntry };
 
-export function MembershipCard({ entry, detailHref }: Props) {
+export function MembershipCard({ entry }: Props) {
   const t = useTranslations('MembershipRequest');
   const { formatDate } = useFormatting();
   const { organizationName, orgUnit, date } = entry;
@@ -19,38 +20,16 @@ export function MembershipCard({ entry, detailHref }: Props) {
     <Card>
       <CardHeader className="flex flex-row gap-3">
         <CardTitle className="flex min-w-0 flex-1 items-center gap-2">
-          {detailHref ? (
-            <Link
-              href={detailHref}
-              className="flex min-w-0 flex-1 items-center gap-2"
-            >
-              <OrgUnitAvatar
-                name={orgUnit.name}
-                logoUrl={orgUnit.logoUrl}
-                typeIcon={orgUnit.typeIcon}
-              />
-              <span className="min-w-0 truncate">{organizationName}</span>
-              {!orgUnit.isRoot && (
-                <>
-                  <span className="text-muted-foreground shrink-0">·</span>
-                  <span className="min-w-0 truncate">{orgUnit.name}</span>
-                </>
-              )}
-            </Link>
-          ) : (
+          <OrgUnitAvatar
+            name={orgUnit.name}
+            logoUrl={orgUnit.logoUrl}
+            typeIcon={orgUnit.typeIcon}
+          />
+          <span className="min-w-0 truncate">{organizationName}</span>
+          {!orgUnit.isRoot && (
             <>
-              <OrgUnitAvatar
-                name={orgUnit.name}
-                logoUrl={orgUnit.logoUrl}
-                typeIcon={orgUnit.typeIcon}
-              />
-              <span className="min-w-0 truncate">{organizationName}</span>
-              {!orgUnit.isRoot && (
-                <>
-                  <span className="text-muted-foreground shrink-0">·</span>
-                  <span className="min-w-0 truncate">{orgUnit.name}</span>
-                </>
-              )}
+              <span className="text-muted-foreground shrink-0">·</span>
+              <span className="min-w-0 truncate">{orgUnit.name}</span>
             </>
           )}
         </CardTitle>
@@ -59,14 +38,14 @@ export function MembershipCard({ entry, detailHref }: Props) {
         </CardAction>
       </CardHeader>
 
-      <CardContent className="flex flex-col gap-2">
+      <CardContent>
         {entry.state === 'accepted' && entry.roles.length > 0 && (
-          <span className="text-muted-foreground text-sm">
+          <p className="text-muted-foreground text-sm">
             {entry.roles.join(', ')}
-          </span>
+          </p>
         )}
 
-        <span className="text-muted-foreground text-sm">
+        <p className="text-muted-foreground text-sm mb-4">
           {t(
             entry.state === 'accepted'
               ? 'meta.joinedDate'
@@ -81,7 +60,7 @@ export function MembershipCard({ entry, detailHref }: Props) {
               }),
             },
           )}
-        </span>
+        </p>
 
         {entry.state === 'declined' && entry.rejectionReason && (
           <q className="text-muted-foreground text-sm">
@@ -90,11 +69,21 @@ export function MembershipCard({ entry, detailHref }: Props) {
         )}
 
         {entry.state === 'accepted' && (
-          <div className="flex justify-start">
-            <LeaveMembershipButton
-              membershipId={entry.id}
-              orgName={organizationName}
-            />
+          <div className="flex justify-between items-center">
+            <div className="">
+              <LeaveMembershipButton
+                membershipId={entry.id}
+                orgName={organizationName}
+              />
+            </div>
+            <div className="flex justify-end">
+              <Link
+                href={`/profile/memberships/${entry.id}`}
+                className="flex items-center gap-1"
+              >
+                Open <ChevronRight className="size-4" />
+              </Link>
+            </div>
           </div>
         )}
 
