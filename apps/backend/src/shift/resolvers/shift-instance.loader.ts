@@ -99,7 +99,7 @@ export class ShiftInstanceLoader {
 
   // Keyed by `${instanceId}::${userId}`; true when the instance is stored in the
   // user's pending membership request metadata as an intended shift instance.
-  public readonly isIntendedByKey = new DataLoader<string, boolean>(
+  public readonly isIntendingToJoinByKey = new DataLoader<string, boolean>(
     async (keys) => {
       const parsed = keys.map((key) => {
         const sep = key.lastIndexOf('::');

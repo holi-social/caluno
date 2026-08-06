@@ -159,7 +159,7 @@ export function VolunteerHomeContent({
 
   const conflictingShiftIds = useMemo(() => {
     const booked = myShiftList
-      .filter((shift) => !shift.isIntended)
+      .filter((shift) => !shift.isIntendingToJoin)
       .map((shift) => ({
         id: shift.id,
         start: new Date(shift.actualStartsAt),

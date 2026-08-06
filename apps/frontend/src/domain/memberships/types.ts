@@ -8,6 +8,14 @@ export type MembershipCardOrgUnit = {
 
 export type MembershipEntry =
   | {
+      state: 'accepted';
+      id: string;
+      organizationName: string;
+      orgUnit: MembershipCardOrgUnit;
+      roles: string[];
+      date: Date;
+    }
+  | {
       state: 'requested';
       id: string;
       organizationName: string;
@@ -22,4 +30,3 @@ export type MembershipEntry =
       date: Date;
       rejectionReason?: string | null;
     };
-// VOLI-942 will add: | { state: 'accepted'; id: string; organizationName: string; orgUnit: MembershipCardOrgUnit; role?: string; date: Date }

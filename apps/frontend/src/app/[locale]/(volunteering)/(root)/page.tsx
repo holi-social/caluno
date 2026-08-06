@@ -26,7 +26,7 @@ export default async function VolunteeringHomePage({
       limit: 10,
       statuses: [ShiftInviteStatus.Invited],
     }),
-    client.membership.findMyMemberships(),
+    client.membership.findMine(),
     client.membershipRequest.findMine({ limit: 10, offset: 0 }),
   ]);
 

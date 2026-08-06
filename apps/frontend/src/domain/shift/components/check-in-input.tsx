@@ -8,7 +8,7 @@ import {
   InputOTPSlot,
   REGEXP_ONLY_DIGITS_AND_CHARS,
 } from '@repo/ui/base/input-otp';
-import { PlaneTakeoff } from 'lucide-react';
+import { ScanQrCode } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useState } from 'react';
 import { useRouter } from '@/i18n/navigation';
@@ -58,7 +58,7 @@ export const CheckInInput = ({ organizationUnitId }: CheckInInputProps) => {
         </InputOTPGroup>
       </InputOTP>
       <Button onClick={handleCheckIn} disabled={value.length < 12}>
-        {t('checkIn.checkIn')} <PlaneTakeoff />
+        {t('checkIn.checkIn')} <ScanQrCode />
       </Button>
     </div>
   );

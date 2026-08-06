@@ -278,6 +278,7 @@ query GetShiftInstance($id: ID!) {
         name
         email
         image
+        checkInId
       }
     }
   }
@@ -321,7 +322,7 @@ fragment PublicShiftDetailInstanceFields on ShiftInstance {
   filledCount
   spotsLeft
   myInviteStatus
-  isIntended
+  isIntendingToJoin
 }
 
 query GetPublicShiftInstances($shiftId: ID!) {
@@ -337,7 +338,7 @@ fragment VolunteerHomeShiftInstance on ShiftInstance {
   isCheckedIn
   filledCount
   myInviteStatus
-  isIntended
+  isIntendingToJoin
   master {
     id
     title

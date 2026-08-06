@@ -352,6 +352,7 @@ enum JoinStatus {
 }
 
 type Membership {
+  createdAt: DateTime!
   id: ID!
   organizationUnit: OrganizationUnit!
   roles: [Role!]!
@@ -879,7 +880,7 @@ type ShiftInstance {
   isCancelled: Boolean!
   isCheckedIn: Boolean!
   isException: Boolean!
-  isIntended: Boolean!
+  isIntendingToJoin: Boolean!
   master: Shift!
   masterId: ID!
   myInviteStatus: ShiftInviteStatus

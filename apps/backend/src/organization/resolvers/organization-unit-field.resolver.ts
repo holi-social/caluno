@@ -65,6 +65,7 @@ export class OrganizationUnitFieldResolver {
     );
   }
 
+  @AllowAnonymous()
   @ResolveField(() => Organization)
   async organization(
     @Parent() organizationUnit: OrganizationUnitEntity,

@@ -1,8 +1,9 @@
 import { getTranslations, setRequestLocale } from 'next-intl/server';
 import { MembershipCard } from '@/domain/memberships/components/membership-card';
 import { buildMembershipEntries } from '@/domain/memberships/lib/entries';
+import { AccountSection } from '@/domain/user/components/account-section';
 import { HeaderAvatar } from '@/domain/user/components/header-avatar';
-import { ProfileForm } from '@/domain/user/components/profile-form';
+import { PersonalInformationSection } from '@/domain/user/components/personal-information-section';
 import { ProfilePageHeader } from '@/domain/user/components/profile-page-header';
 import { resolveLocale } from '@/i18n/routing';
 import { getDataClient } from '@/lib/data-client';
@@ -19,9 +20,16 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
   const tProfile = await getTranslations('Profile');
 
   const data = await getDataClient();
-  const me = await data.user.getMe();
-  const { items: membershipRequests } = await data.membershipRequest.findMine();
-  const membershipEntries = buildMembershipEntries(membershipRequests);
+  const [me, requestPage, memberships, profile] = await Promise.all([
+    data.user.getMe(),
+    data.membershipRequest.findMine(),
+    data.membership.findMine(),
+    data.requirementForm.getMyUserProfile(),
+  ]);
+  const membershipEntries = buildMembershipEntries(
+    requestPage.items,
+    memberships,
+  );
 
   return (
     <div>
@@ -33,8 +41,10 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
         <HeaderAvatar name={me.name} imageUrl={me.image} />
 
         {/* Section slots — empty; headings inlined (later tickets add bodies) */}
-        <section className="space-y-4">
-          <h2 className="text-xl font-bold">{tProfile('organizations')}</h2>
+        <section>
+          <h1 className="text-xl font-bold mb-4">
+            {tProfile('organizations')}
+          </h1>
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             {membershipEntries.map((entry) => (
               <MembershipCard
@@ -45,20 +55,15 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
           </div>
         </section>
         <section>
-          <h2 className="text-xl font-bold">
+          <h1 className="text-xl font-bold mb-4">
             {tProfile('personalInformation')}
-          </h2>
-        </section>
-        <section>
-          <h2 className="text-xl font-bold">{tProfile('accountSettings')}</h2>
+          </h1>
+          <PersonalInformationSection user={me} profile={profile ?? null} />
         </section>
 
-        <div>
-          <h2 className="text-xl font-bold">{tProfile('title')}</h2>
-          <div className="mt-4">
-            <ProfileForm />
-          </div>
-        </div>
+        <hr className="border-t border-border my-6" />
+
+        <AccountSection locale={me.locale ?? locale} />
       </div>
     </div>
   );
