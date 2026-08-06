@@ -42,6 +42,7 @@ export default async function EditEventShiftPage({
         endsAt: new Date(event.endsAt),
       }}
       imagePreviewUrl={shift.imageUrl}
+      initialRequiredFormIds={shift.requiredForms.map((ref) => ref.form.id)}
       initialValues={{
         name: shift.title,
         instructions: shift.instructions ?? undefined,

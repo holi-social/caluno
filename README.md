@@ -67,15 +67,16 @@ This monorepo includes the following packages/apps:
 
 ### Playground fixtures
 
-After `bun bootstrap`, the database contains a **Playground** organization with sample users, weekly shifts, and time entries. All fixture accounts use password `abcd1234`.
+After `bun bootstrap`, the database contains a **Playground** organization with sample users, weekly shifts, time entries, and a requirement form. All fixture accounts use password `abcd1234` (override with `FIXTURE_PASSWORD`).
 
 | Account | Role / status |
 |---|---|
-| `admin@clippy.social` | Owner |
-| `supervisor@clippy.social` | Supervisor |
-| `member01@` … `member10@clippy.social` | Member |
-| `pending01@`, `pending02@` | Pending membership request |
-| `rejected01@` | Rejected membership request |
+| `testing+admin@caluno.org` | Owner |
+| `testing+supervisor@caluno.org` | Supervisor |
+| `testing+demo@caluno.org` | Member (demo account) |
+| `testing+001@` … `testing+010@caluno.org` | Member |
+| `testing+pending01@`, `testing+pending02@caluno.org` | Pending membership request |
+| `testing+rejected01@caluno.org` | Rejected membership request |
 
 Weekly shifts (Europe/Berlin):
 
@@ -84,6 +85,8 @@ Weekly shifts (Europe/Berlin):
 | Community Support | Every Monday | 08:00–12:00 | All 12 approved members |
 | Food Distribution | Every Wednesday | 12:00–16:00 | Supervisor + member01–04 |
 | Event Assistance | Every Friday | 16:00–20:00 | None |
+
+**Requirement form:** Personal Information — block with required First name and Last name fields.
 
 `bun bootstrap` only runs against local databases (`DB_HOST` must be `localhost`, `127.0.0.1`, or `postgres`).
 

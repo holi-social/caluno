@@ -19,7 +19,7 @@ import * as schema from './schema';
 
 process.env.TZ = 'Europe/Berlin';
 
-const FIXTURE_PASSWORD = 'abcd1234';
+const FIXTURE_PASSWORD = process.env.FIXTURE_PASSWORD ?? 'abcd1234';
 const ORG_NAME = 'Playground';
 const FIXTURE_TIMEZONE = 'Europe/Berlin';
 const SHIFT_DURATION_MINUTES = 240;
@@ -39,7 +39,7 @@ const SHOWCASE_SHIFT_IMAGE_URL =
   'https://images.unsplash.com/photo-1593113598332-cd288d649433?auto=format&fit=crop&w=1200&q=80';
 const ORG_COVER_IMAGE_URL =
   'https://images.unsplash.com/photo-1593113646773-028c64a8f1b8?auto=format&fit=crop&w=1200&q=80';
-const DEMO_USER_EMAIL = 'demo@clippy.social';
+const DEMO_USER_EMAIL = 'testing+demo@caluno.org';
 
 const WEEKLY_RRULE = {
   MONDAY: 'FREQ=WEEKLY;BYDAY=MO;WKST=MO',
@@ -68,7 +68,7 @@ type FixtureUser = {
 };
 
 const memberEmail = (index: number): string =>
-  `member${String(index).padStart(2, '0')}@clippy.social`;
+  `testing+${String(index).padStart(3, '0')}@caluno.org`;
 
 type FixtureDateParts = {
   year: number;
@@ -192,6 +192,14 @@ const createAuthUser = async (
   hashedPassword: string,
   input: { email: string; name: string },
 ): Promise<FixtureUser> => {
+  const existing = await db.query.users.findFirst({
+    where: { email: input.email },
+  });
+
+  if (existing) {
+    return { id: existing.id, email: existing.email, name: existing.name };
+  }
+
   const id = crypto.randomUUID();
 
   await db.insert(schema.users).values({
@@ -254,7 +262,7 @@ const createPlaygroundOrganization = async (
       .values({
         name: ORG_NAME,
         slug: slugify(ORG_NAME),
-        contactEmail: 'admin@clippy.social',
+        contactEmail: 'testing@caluno.org',
         description: 'Local development playground organization',
       })
       .returning();
@@ -589,7 +597,7 @@ const createTimeEntries = async (
   for (const [index, member] of approvedMembers.entries()) {
     const memberNumber = index + 1;
 
-    if (member.email === 'supervisor@clippy.social') {
+    if (member.email === 'testing+supervisor@caluno.org') {
       entries.push({
         shiftInstanceId: shiftInstances.communitySupport.instanceId,
         volunteerId: member.id,
@@ -673,6 +681,71 @@ const createTimeEntries = async (
   }
 };
 
+const createPersonalInformationForm = async (
+  db: Database,
+  organizationId: string,
+  organizationUnitId: string,
+  createdById: string,
+): Promise<void> => {
+  const [form] = await db
+    .insert(schema.requirementForms)
+    .values({
+      organizationId,
+      organizationUnitId,
+      slug: 'personal-information',
+      name: 'Personal Information',
+      description: 'Basic personal details for volunteers.',
+      shareToken: crypto.randomUUID(),
+      createdBy: createdById,
+      updatedBy: createdById,
+    })
+    .returning();
+
+  if (!form) {
+    throw new Error('Failed to create Personal Information form');
+  }
+
+  const [block] = await db
+    .insert(schema.formBlocks)
+    .values({
+      organizationId,
+      title: 'Personal Information',
+      description: 'Required personal details.',
+      required: true,
+      createdBy: createdById,
+      updatedBy: createdById,
+    })
+    .returning();
+
+  if (!block) {
+    throw new Error('Failed to create Personal Information block');
+  }
+
+  await db.insert(schema.formBlockFields).values([
+    {
+      blockId: block.id,
+      type: 'TEXT',
+      label: 'First name',
+      required: true,
+      fieldOrder: 0,
+    },
+    {
+      blockId: block.id,
+      type: 'TEXT',
+      label: 'Last name',
+      required: true,
+      fieldOrder: 1,
+    },
+  ]);
+
+  await db.insert(schema.requirementFormBlockRefs).values({
+    formId: form.id,
+    blockId: block.id,
+    fieldOrder: 0,
+    required: true,
+  });
+};
+
 async function seedFixtures() {
   const pool = new Pool({
     host: process.env.DB_HOST,
@@ -684,17 +757,37 @@ async function seedFixtures() {
   });
 
   const db = drizzle({ client: pool, relations });
+
+  const existingOrg = await db.query.organizations.findFirst({
+    where: { slug: slugify(ORG_NAME) },
+  });
+
+  if (existingOrg) {
+    console.log(
+      `Organization ${ORG_NAME} (${existingOrg.id}) already exists; skipping fixtures.`,
+    );
+    await pool.end();
+    return;
+  }
+
   const hashedPassword = await hashPassword(FIXTURE_PASSWORD);
 
   const admin = await createAuthUser(db, hashedPassword, {
-    email: 'admin@clippy.social',
+    email: 'testing+admin@caluno.org',
     name: 'Playground Admin',
   });
 
   const org = await createPlaygroundOrganization(db, admin.id);
 
+  await createPersonalInformationForm(
+    db,
+    org.organizationId,
+    org.rootUnitId,
+    admin.id,
+  );
+
   const supervisor = await createAuthUser(db, hashedPassword, {
-    email: 'supervisor@clippy.social',
+    email: 'testing+supervisor@caluno.org',
     name: 'Playground Supervisor',
   });
 
@@ -740,16 +833,17 @@ async function seedFixtures() {
   }
 
   const pendingUsers = await Promise.all(
-    ['pending01@clippy.social', 'pending02@clippy.social'].map((email, index) =>
-      createAuthUser(db, hashedPassword, {
-        email,
-        name: `Pending Applicant ${String(index + 1).padStart(2, '0')}`,
-      }),
+    ['testing+pending01@caluno.org', 'testing+pending02@caluno.org'].map(
+      (email, index) =>
+        createAuthUser(db, hashedPassword, {
+          email,
+          name: `Pending Applicant ${String(index + 1).padStart(2, '0')}`,
+        }),
     ),
   );
 
   const rejectedUser = await createAuthUser(db, hashedPassword, {
-    email: 'rejected01@clippy.social',
+    email: 'testing+rejected01@caluno.org',
     name: 'Rejected Applicant',
   });
 
@@ -1382,8 +1476,11 @@ async function seedFixtures() {
 
   console.log(`Created Playground organization (${org.organizationId})`);
   console.log(`Root unit: ${org.rootUnitId}`);
-  console.log('Users: 16 accounts with password abcd1234');
+  console.log(
+    'Users: 16 accounts seeded (password from FIXTURE_PASSWORD, default: abcd1234)',
+  );
   console.log('Memberships: 13 approved, 2 pending, 1 rejected');
+  console.log('Requirement form: Personal Information (First name, Last name)');
   console.log(
     `Demo account: ${DEMO_USER_EMAIL} — member with invited shifts (Community Support, Food Distribution, Event Assistance), follows Volunteer Fair, and has Welcome Desk/Stage Setup/Cleanup Crew plus 4 more shifts across the next 3 weeks left to discover`,
   );

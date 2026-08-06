@@ -3,9 +3,9 @@ import { BASE_URL } from '../pages/AuthPage';
 import { LoginPage } from '../pages/LoginPage';
 
 // Depends on the local dev seed fixtures (apps/backend/src/database/fixtures.ts)
-// — run with E2E_BASE_URL=http://localhost:3000. admin@clippy.social is a
+// — run with E2E_BASE_URL=http://localhost:3000. testing+admin@caluno.org is a
 // member of the seeded "Playground" org.
-const ADMIN_EMAIL = 'admin@clippy.social';
+const ADMIN_EMAIL = 'testing+admin@caluno.org';
 const ADMIN_PASSWORD = 'abcd1234';
 
 const ORG_DASHBOARD = /\/admin\/[0-9a-f-]{36}$/;

@@ -9,12 +9,18 @@ import {
 import {
   Badge,
   Button,
+  Card,
+  CardContent,
   Empty,
   EmptyMedia,
   EmptyTitle,
   Skeleton,
 } from '@repo/ui';
-import { CalendarXIcon, ChevronRightIcon } from 'lucide-react';
+import {
+  CalendarSearchIcon,
+  CalendarXIcon,
+  ChevronRightIcon,
+} from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useMemo, useState } from 'react';
 import { Link } from '@/i18n/navigation';
@@ -31,21 +37,32 @@ import {
 import { useDelayedLoading } from '../lib/use-delayed-loading';
 import { DayStrip } from './day-strip';
 import { DayStripSkeleton } from './day-strip-skeleton';
+import { PendingMembershipBanner } from './pending-membership-banner';
 import { ShiftCardDiscovery } from './shift-card-discovery';
 import { ShiftCardMy } from './shift-card-my';
 import { ShiftCardMyInvited } from './shift-card-my-invited';
 import { ShiftCardMyShift } from './shift-card-my-shift';
 
+interface PendingRequest {
+  id: string;
+  organizationName: string;
+  contactName?: string | null;
+}
+
 interface VolunteerHomeContentProps {
   initialMyShiftInstances: MyShiftInstance[];
   initialAvailableShiftInstances: AvailableShiftInstance[];
   initialInvitations: MyShiftInstance[];
+  hasMemberships: boolean;
+  pendingRequest?: PendingRequest | null;
 }
 
 export function VolunteerHomeContent({
   initialMyShiftInstances,
   initialAvailableShiftInstances,
   initialInvitations,
+  hasMemberships,
+  pendingRequest,
 }: VolunteerHomeContentProps) {
   const t = useTranslations('VolunteerHome');
   const { formatDate } = useFormatting();
@@ -250,86 +267,131 @@ export function VolunteerHomeContent({
     </section>
   );
 
+  const showPendingBanner = !hasMemberships && pendingRequest != null;
+
   const discoverSection = (
     <section>
-      <div className="mb-3 flex items-start justify-between gap-3">
-        <div className="flex flex-col gap-1">
-          <h2 className="text-2xl font-semibold text-foreground">
-            {t('discoverHeading')}
-          </h2>
-          <p className="text-base text-muted-foreground">
-            {t('discoverThisWeek', { n: discoverThisWeekCount })}
-          </p>
-        </div>
-        {seeAllLink('/discover')}
-      </div>
-
-      {showLoadingAvailable ? (
-        <DayStripSkeleton />
-      ) : (
-        <DayStrip
-          days={discoverDayStrip}
-          activeDate={activeDiscoverDay}
-          activeDates={selectedGroup ? [selectedGroup.date] : []}
-          onSelect={setActiveDiscoverDay}
-          todayLabel={t('todayButton')}
-          paged
-          hasPrev={hasPrevDay}
-          hasNext={hasNextDay}
-          onPrev={() => goToDay(-1)}
-          onNext={() => goToDay(1)}
-          shiftCountLabel={(n) => t('yourShiftsCount', { n })}
-          className="mb-3"
-        />
-      )}
-
-      {showLoadingAvailable ? (
-        <div className="space-y-3">
-          <Skeleton className="h-24 w-full rounded-xl" />
-          <Skeleton className="h-24 w-full rounded-xl" />
-        </div>
-      ) : availableShiftList.length === 0 ? (
-        <Empty>
-          <EmptyMedia variant="icon">
-            <CalendarXIcon />
-          </EmptyMedia>
-          <EmptyTitle>{t('discoverEmptyHome')}</EmptyTitle>
-          <Button asChild variant="default" size="lg">
-            <Link href="/discover">{t('discoverCta')}</Link>
-          </Button>
-        </Empty>
-      ) : (
-        selectedGroup && (
-          <div>
-            <div className="mb-4 flex items-center justify-between gap-2">
-              <h3 className="text-lg font-semibold text-foreground">
-                {formatDate(selectedGroup.date, {
-                  weekday: 'long',
-                  day: 'numeric',
-                  month: 'long',
-                })}
-              </h3>
-              <span className="shrink-0 text-base text-muted-foreground">
-                {t('yourShiftsCount', { n: selectedGroup.items.length })}
-              </span>
-            </div>
-            <div className="grid gap-3 lg:grid-cols-2 lg:items-start">
-              {selectedGroup.items.map((shift) => (
-                <ShiftCardDiscovery
-                  key={shift.id}
-                  shiftInstance={shift}
-                  conflictsWithBooked={conflictingShiftIds.has(shift.id)}
-                />
-              ))}
-            </div>
+      {showPendingBanner &&
+      !showLoadingAvailable &&
+      availableShiftList.length === 0 ? (
+        <div className="flex flex-col gap-3">
+          <div className="flex flex-col gap-1">
+            <h2 className="text-2xl font-semibold text-foreground">
+              {t('discoverHeading')}
+            </h2>
+            <p className="text-base text-muted-foreground">
+              {t('discoverPendingSubtitle', {
+                orgName: pendingRequest.organizationName,
+              })}
+            </p>
           </div>
-        )
+          <Card className="gap-0 py-7">
+            <CardContent className="flex flex-col items-center gap-4 px-5 text-center">
+              <div className="flex size-12 items-center justify-center rounded-full bg-muted">
+                <CalendarSearchIcon className="size-6 text-muted-foreground" />
+              </div>
+              <div className="flex flex-col gap-1">
+                <h3 className="text-base font-semibold text-foreground">
+                  {t('discoverPendingEmptyTitle')}
+                </h3>
+                <p className="text-sm text-muted-foreground whitespace-pre-line">
+                  {t('discoverPendingEmptyBody', {
+                    orgName: pendingRequest.organizationName,
+                  })}
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      ) : (
+        <>
+          <div className="mb-3 flex items-start justify-between gap-3">
+            <div className="flex flex-col gap-1">
+              <h2 className="text-2xl font-semibold text-foreground">
+                {t('discoverHeading')}
+              </h2>
+              <p className="text-base text-muted-foreground">
+                {t('discoverThisWeek', { n: discoverThisWeekCount })}
+              </p>
+            </div>
+            {seeAllLink('/discover')}
+          </div>
+
+          {showLoadingAvailable ? (
+            <DayStripSkeleton />
+          ) : (
+            <DayStrip
+              days={discoverDayStrip}
+              activeDate={activeDiscoverDay}
+              activeDates={selectedGroup ? [selectedGroup.date] : []}
+              onSelect={setActiveDiscoverDay}
+              todayLabel={t('todayButton')}
+              paged
+              hasPrev={hasPrevDay}
+              hasNext={hasNextDay}
+              onPrev={() => goToDay(-1)}
+              onNext={() => goToDay(1)}
+              shiftCountLabel={(n) => t('yourShiftsCount', { n })}
+              className="mb-3"
+            />
+          )}
+
+          {showLoadingAvailable ? (
+            <div className="space-y-3">
+              <Skeleton className="h-24 w-full rounded-xl" />
+              <Skeleton className="h-24 w-full rounded-xl" />
+            </div>
+          ) : availableShiftList.length === 0 ? (
+            <Empty>
+              <EmptyMedia variant="icon">
+                <CalendarXIcon />
+              </EmptyMedia>
+              <EmptyTitle>{t('discoverEmptyHome')}</EmptyTitle>
+              <Button asChild variant="default" size="lg">
+                <Link href="/discover">{t('discoverCta')}</Link>
+              </Button>
+            </Empty>
+          ) : (
+            selectedGroup && (
+              <div>
+                <div className="mb-4 flex items-center justify-between gap-2">
+                  <h3 className="text-lg font-semibold text-foreground">
+                    {formatDate(selectedGroup.date, {
+                      weekday: 'long',
+                      day: 'numeric',
+                      month: 'long',
+                    })}
+                  </h3>
+                  <span className="shrink-0 text-base text-muted-foreground">
+                    {t('yourShiftsCount', { n: selectedGroup.items.length })}
+                  </span>
+                </div>
+                <div className="grid gap-3 lg:grid-cols-2 lg:items-start">
+                  {selectedGroup.items.map((shift) => (
+                    <ShiftCardDiscovery
+                      key={shift.id}
+                      shiftInstance={shift}
+                      conflictsWithBooked={conflictingShiftIds.has(shift.id)}
+                    />
+                  ))}
+                </div>
+              </div>
+            )
+          )}
+        </>
       )}
     </section>
   );
 
   return (
     <div className="flex flex-col gap-8">
+      {showPendingBanner && (
+        <PendingMembershipBanner
+          orgName={pendingRequest.organizationName}
+          contactName={pendingRequest.contactName}
+          requestsHref="/profile"
+        />
+      )}
       {(showLoadingMy || myShiftList.length > 0) && yourShiftsSection}
       {invitationList.length > 0 && invitationsSection}
       {discoverSection}

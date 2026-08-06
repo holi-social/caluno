@@ -129,6 +129,7 @@ input CreateShiftInput {
   location: String
   maxVolunteers: Int
   minVolunteers: Int
+  requiredFormIds: [String!]
   rrule: String
   startsAt: DateTime!
   title: String!
@@ -359,6 +360,7 @@ type Membership {
 }
 
 type MembershipRequest {
+  contact: User
   createdAt: DateTime!
   id: ID!
   organizationUnit: OrganizationUnit!
@@ -421,6 +423,7 @@ type Mutation {
   rejectMembershipRequest(id: ID!, organizationUnitId: ID!, rejectionReason: String!): MembershipRequest!
   setEventRequiredForms(eventId: ID!, formIds: [String!]!): [RequiredFormRef!]!
   setRequiredForms(formIds: [String!]!, organizationUnitId: String!): [RequiredFormRef!]!
+  setShiftRequiredForms(formIds: [String!]!, shiftId: ID!): [RequiredFormRef!]!
   submitForm(input: SubmitFormInput!, token: String!): FormSubmission!
   submitRequiredForm(formId: String!, input: SubmitFormInput!, targetId: String!, targetType: RequiredFormTargetType!): FormSubmission!
   updateEvent(id: ID!, input: UpdateEventInput!): Event!
@@ -637,6 +640,7 @@ type RequiredFormRef {
 enum RequiredFormTargetType {
   EVENT
   ORGANIZATION_UNIT
+  SHIFT
 }
 
 type RequiredFormWithStatus {
@@ -858,6 +862,8 @@ type Shift {
   organizationUnit: OrganizationUnit!
   organizationUnitId: ID!
   originalStartsAt: DateTime!
+  requiredForms: [RequiredFormRef!]!
+  requiredFormsCount: Int!
   rrule: String
   slug: String!
   title: String!
@@ -1051,6 +1057,7 @@ input UpdateShiftInput {
   location: String
   maxVolunteers: Int
   minVolunteers: Int
+  requiredFormIds: [String!]
   rrule: String
   startsAt: DateTime
   title: String

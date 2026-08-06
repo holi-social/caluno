@@ -1,8 +1,8 @@
 import { getTranslations, setRequestLocale } from 'next-intl/server';
 import { MembershipCard } from '@/domain/memberships/components/membership-card';
 import { buildMembershipEntries } from '@/domain/memberships/lib/entries';
+import { AccountSection } from '@/domain/user/components/account-section';
 import { HeaderAvatar } from '@/domain/user/components/header-avatar';
-import { ProfileForm } from '@/domain/user/components/profile-form';
 import { ProfilePageHeader } from '@/domain/user/components/profile-page-header';
 import { resolveLocale } from '@/i18n/routing';
 import { getDataClient } from '@/lib/data-client';
@@ -55,16 +55,10 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
             {tProfile('personalInformation')}
           </h2>
         </section>
-        <section>
-          <h2 className="text-xl font-bold">{tProfile('accountSettings')}</h2>
-        </section>
 
-        <div>
-          <h2 className="text-xl font-bold">{tProfile('title')}</h2>
-          <div className="mt-4">
-            <ProfileForm />
-          </div>
-        </div>
+        <hr className="border-t border-border my-6" />
+
+        <AccountSection locale={me.locale ?? locale} />
       </div>
     </div>
   );
