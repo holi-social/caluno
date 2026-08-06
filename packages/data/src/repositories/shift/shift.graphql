@@ -349,6 +349,7 @@ query GetPublicShiftInstances($shiftId: ID!) {
 
 fragment VolunteerHomeShiftInstance on ShiftInstance {
   id
+  overrideTitle
   actualStartsAt
   actualEndsAt
   isCheckedIn
