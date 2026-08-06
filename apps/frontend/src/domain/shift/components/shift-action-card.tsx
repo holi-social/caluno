@@ -67,6 +67,9 @@ export function ShiftActionCard({
   const [inviteStatusOverrides, setInviteStatusOverrides] = useState<
     Record<string, ShiftInviteStatus>
   >({});
+  const [pendingInstanceIds, setPendingInstanceIds] = useState<Set<string>>(
+    new Set(),
+  );
 
   const selected = useMemo(
     () => instances.find((i) => i.id === selectedId) ?? instances[0],
@@ -82,6 +85,8 @@ export function ShiftActionCard({
   const inviteStatus =
     inviteStatusOverrides[selected.id] ?? selected.myInviteStatus ?? null;
   const effectiveMembershipState = membershipStateOverride ?? membershipState;
+  const isPendingIntended =
+    selected.isIntendingToJoin || pendingInstanceIds.has(selected.id);
   const justJoined =
     isParticipatingInvite(inviteStatus) &&
     !isParticipatingInvite(selected.myInviteStatus);
@@ -196,7 +201,14 @@ export function ShiftActionCard({
           autoJoin={autoJoin}
           isFull={full}
           membershipState={effectiveMembershipState}
-          onMembershipStateChange={setMembershipStateOverride}
+          onMembershipStateChange={(nextStatus) => {
+            setMembershipStateOverride(nextStatus);
+            if (nextStatus === JoinStatus.Pending) {
+              setPendingInstanceIds((previous) =>
+                new Set(previous).add(selected.id),
+              );
+            }
+          }}
           inviteStatus={inviteStatus}
           onInviteStatusChange={(nextStatus) =>
             setInviteStatusOverrides((previous) => ({
@@ -204,6 +216,7 @@ export function ShiftActionCard({
               [selected.id]: nextStatus,
             }))
           }
+          isPendingIntended={isPendingIntended}
           startsAt={selected.actualStartsAt}
           className="w-full"
           label={t('signUpCta', {

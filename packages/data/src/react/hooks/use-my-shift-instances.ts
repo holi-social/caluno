@@ -14,6 +14,7 @@ export function useMyShiftInstances(
     offset?: number;
     order?: SortOrder;
     statuses?: ShiftInviteStatus[];
+    includeIntended?: boolean;
   } = {},
   queryOptions?: Omit<
     UseQueryOptions<

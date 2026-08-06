@@ -15,6 +15,7 @@ import {
   NotFoundGraphQLError,
 } from '../graphql/errors';
 import type { PaginationInput } from '../graphql/pagination.input';
+import { MembershipRequestStatus } from '../membership/enums';
 import { MembershipService } from '../membership/membership.service';
 import type { MembershipRequestEntity } from '../membership/schemas/membership-request.schema';
 import { NotificationService } from '../notification/notification.service';
@@ -340,13 +341,10 @@ export class ShiftService {
     offset: number,
     order: SortOrder,
     statuses: readonly ShiftInviteStatus[] = PARTICIPATING_SHIFT_INVITE_STATUSES,
+    includeIntended = false,
   ): Promise<{ instances: ShiftInstanceEntity[]; total: number }> {
     const organizationUnitIds =
       await this.getAccessibleOrganizationUnitIds(userId);
-
-    if (organizationUnitIds.length === 0) {
-      return EMPTY_SHIFT_INSTANCE_PAGE;
-    }
 
     const dateCondition = this.buildMyShiftDateCondition(
       includePast,
@@ -354,6 +352,72 @@ export class ShiftService {
       endsBefore,
     );
 
+    if (!includeIntended) {
+      if (organizationUnitIds.length === 0) {
+        return EMPTY_SHIFT_INSTANCE_PAGE;
+      }
+
+      const where = {
+        isCancelled: false,
+        ...dateCondition,
+        master: {
+          isDeleted: false,
+          organizationUnitId: { in: organizationUnitIds },
+        },
+        invites: {
+          userId,
+          status: { in: [...statuses] },
+        },
+      };
+
+      const orderBy = {
+        actualStartsAt: order.toLowerCase() as 'asc' | 'desc',
+      };
+
+      const [instances, totalResult] = await Promise.all([
+        this.db.query.shiftInstances.findMany({
+          where,
+          with: { master: true },
+          orderBy,
+          limit,
+          offset,
+        }),
+        this.db.query.shiftInstances.findMany({
+          where,
+          columns: {},
+          extras: { total: count() },
+        }),
+      ]);
+
+      return { instances, total: totalResult[0]?.total ?? 0 };
+    }
+
+    const [invitedPage, intendedPage] = await Promise.all([
+      organizationUnitIds.length > 0
+        ? this.findMyInvitedShiftInstances(
+            userId,
+            organizationUnitIds,
+            dateCondition,
+            statuses,
+          )
+        : EMPTY_SHIFT_INSTANCE_PAGE,
+      this.findMyIntendedShiftInstances(userId, dateCondition),
+    ]);
+
+    return this.mergeShiftInstancePages(
+      [invitedPage, intendedPage],
+      order,
+      limit,
+      offset,
+    );
+  }
+
+  private async findMyInvitedShiftInstances(
+    userId: string,
+    organizationUnitIds: string[],
+    dateCondition: Record<string, unknown>,
+    statuses: readonly ShiftInviteStatus[],
+  ): Promise<{ instances: ShiftInstanceEntity[]; total: number }> {
     const where = {
       isCancelled: false,
       ...dateCondition,
@@ -367,17 +431,10 @@ export class ShiftService {
       },
     };
 
-    const orderBy = {
-      actualStartsAt: order.toLowerCase() as 'asc' | 'desc',
-    };
-
     const [instances, totalResult] = await Promise.all([
       this.db.query.shiftInstances.findMany({
         where,
         with: { master: true },
-        orderBy,
-        limit,
-        offset,
       }),
       this.db.query.shiftInstances.findMany({
         where,
@@ -387,6 +444,109 @@ export class ShiftService {
     ]);
 
     return { instances, total: totalResult[0]?.total ?? 0 };
+  }
+
+  async findIntendedInstanceIdsForUsers(
+    userIdInstanceIdPairs: Array<{ userId: string; instanceId: string }>,
+  ): Promise<Set<string>> {
+    const userIds = Array.from(
+      new Set(userIdInstanceIdPairs.map((pair) => pair.userId)),
+    );
+
+    if (userIds.length === 0) {
+      return new Set();
+    }
+
+    const requests = await this.db.query.membershipRequests.findMany({
+      where: {
+        userId: { in: userIds },
+        status: MembershipRequestStatus.PENDING,
+      },
+      columns: { userId: true, metadata: true },
+    });
+
+    const intendedIdsByUser = new Map<string, Set<string>>();
+    for (const request of requests) {
+      if (!request.userId) continue;
+      const intendedIds =
+        (request.metadata as { intendedShiftInstanceIds?: string[] } | null)
+          ?.intendedShiftInstanceIds ?? [];
+      intendedIdsByUser.set(request.userId, new Set(intendedIds));
+    }
+
+    const result = new Set<string>();
+    for (const { userId, instanceId } of userIdInstanceIdPairs) {
+      if (intendedIdsByUser.get(userId)?.has(instanceId)) {
+        result.add(`${instanceId}::${userId}`);
+      }
+    }
+
+    return result;
+  }
+
+  private async findMyIntendedShiftInstances(
+    userId: string,
+    dateCondition: Record<string, unknown>,
+  ): Promise<{ instances: ShiftInstanceEntity[]; total: number }> {
+    const requests = await this.db.query.membershipRequests.findMany({
+      where: {
+        userId,
+        status: MembershipRequestStatus.PENDING,
+      },
+      columns: { metadata: true },
+    });
+
+    const intendedIds = requests.flatMap(
+      (request) =>
+        (request.metadata as { intendedShiftInstanceIds?: string[] } | null)
+          ?.intendedShiftInstanceIds ?? [],
+    );
+
+    if (intendedIds.length === 0) {
+      return EMPTY_SHIFT_INSTANCE_PAGE;
+    }
+
+    const instances = await this.db.query.shiftInstances.findMany({
+      where: {
+        id: { in: intendedIds },
+        isCancelled: false,
+        ...dateCondition,
+        master: { isDeleted: false },
+      },
+      with: { master: true },
+    });
+
+    return { instances, total: instances.length };
+  }
+
+  private mergeShiftInstancePages(
+    pages: Array<{ instances: ShiftInstanceEntity[]; total: number }>,
+    order: SortOrder,
+    limit: number,
+    offset: number,
+  ): { instances: ShiftInstanceEntity[]; total: number } {
+    const seen = new Set<string>();
+    const all: ShiftInstanceEntity[] = [];
+
+    for (const page of pages) {
+      for (const instance of page.instances) {
+        if (seen.has(instance.id)) continue;
+        seen.add(instance.id);
+        all.push(instance);
+      }
+    }
+
+    all.sort((a, b) => {
+      const diff =
+        new Date(a.actualStartsAt).getTime() -
+        new Date(b.actualStartsAt).getTime();
+      return order === SortOrder.DESC ? -diff : diff;
+    });
+
+    return {
+      instances: all.slice(offset, offset + limit),
+      total: all.length,
+    };
   }
 
   private buildMyShiftDateCondition(

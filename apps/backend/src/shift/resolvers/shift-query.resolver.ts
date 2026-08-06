@@ -174,6 +174,12 @@ export class ShiftQueryResolver {
     order: SortOrder,
     @Args('statuses', { type: () => [ShiftInviteStatus], nullable: true })
     statuses: ShiftInviteStatus[] | null | undefined,
+    @Args('includeIntended', {
+      type: () => Boolean,
+      defaultValue: false,
+      nullable: true,
+    })
+    includeIntended: boolean | undefined,
     @Session() session: UserSession,
   ): Promise<ShiftInstancePaginatedResponse> {
     const { instances, total } = await this.shiftService.findMyShiftInstances(
@@ -185,6 +191,7 @@ export class ShiftQueryResolver {
       pagination.offset,
       order,
       statuses ?? undefined,
+      includeIntended ?? false,
     );
     return new ShiftInstancePaginatedResponse({
       items: this.shiftInstanceMapper.toArray(instances),
