@@ -371,7 +371,8 @@
       "approved": "Genehmigt",
       "rejected": "Abgelehnt",
       "requested": "Angefragt",
-      "declined": "Abgelehnt"
+      "declined": "Abgelehnt",
+      "accepted": "Akzeptiert"
     },
     "meta": {
       "requestedDate": "Angefragt · {date}",
@@ -400,7 +401,7 @@
     "dialog": {
       "withdrawTitle": "Antrag auf Austritt aus der Mitgliedschaft",
       "withdrawDescription": "Möchten Sie Ihren Beitrittsantrag wirklich {orgName} zurückziehen?",
-      "leaveTitle": "Organisation verlassen?",
+      "leaveTitle": "Organisation verlassen",
       "leaveDescription": "Möchtest du {orgName} wirklich verlassen?"
     },
     "toast": {
