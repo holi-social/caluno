@@ -8,6 +8,7 @@ import {
   setDefaultTimeout,
 } from 'bun:test';
 import type { INestApplication } from '@nestjs/common';
+import { PERMISSIONS } from '../src/auth/constants';
 import type { Database } from '../src/database/database.module';
 import * as schema from '../src/database/schema';
 import { EventInviteStatus } from '../src/event/enums';
@@ -23,7 +24,16 @@ import {
   createUser,
   setEventRequiredForms,
 } from './factories';
-import { addMembership } from './factories/org.factory';
+import {
+  addMembership,
+  createOrganizationWithType,
+  createUnit,
+} from './factories/org.factory';
+import {
+  assignRoleToMembership,
+  createRole,
+  grantPermissionToRole,
+} from './factories/role.factory';
 import {
   applyBunAuthMocks,
   getAuthMockUserId,
@@ -578,5 +588,76 @@ describe('myEvents', () => {
     expect(defaultIds).not.toContain(invitedEvent.id);
 
     setAuthMockUserId(originalUserId);
+  });
+});
+
+describe('eventInvites', () => {
+  let app: INestApplication;
+  let db: Database;
+  let organizationUnitId: string;
+
+  beforeAll(async () => {
+    const context = await getGraphqlTestContext();
+    app = context.app;
+    db = context.db;
+    organizationUnitId = context.organizationUnitId;
+  });
+
+  it('does not leak invites when queried from another organization', async () => {
+    const testUserId = getAuthMockUserId();
+
+    const event = await createEvent(db, { organizationUnitId });
+    const invitedUser = await createUser(db);
+    await db.insert(schema.eventInvites).values({
+      eventId: event.id,
+      userId: invitedUser.id,
+      status: EventInviteStatus.INVITED,
+    });
+
+    const { organization: otherOrganization, type: otherType } =
+      await createOrganizationWithType(db, `Other Org ${crypto.randomUUID()}`);
+    const otherUnit = await createUnit(db, {
+      organizationId: otherOrganization.id,
+      typeId: otherType.id,
+      name: 'root',
+    });
+
+    const membership = await addMembership(db, testUserId, otherUnit.id);
+    const role = await createRole(db, {
+      organizationId: otherOrganization.id,
+    });
+    const shiftViewPermission = await db.query.permissions.findFirst({
+      where: { key: PERMISSIONS.SHIFT_VIEW },
+    });
+    if (!shiftViewPermission) {
+      throw new Error('SHIFT_VIEW permission not seeded in test database');
+    }
+    await grantPermissionToRole(db, {
+      roleId: role.id,
+      permissionId: shiftViewPermission.id,
+    });
+    await assignRoleToMembership(db, {
+      membershipId: membership.id,
+      roleId: role.id,
+    });
+
+    const query = `
+      query EventInvites($eventId: ID!) {
+        eventInvites(eventId: $eventId) {
+          id
+        }
+      }
+    `;
+
+    const response = await graphqlRequest<{
+      eventInvites: Array<{ id: string }>;
+    }>(app, {
+      query,
+      variables: { eventId: event.id },
+      headers: { 'x-organization-unit-id': otherUnit.id },
+    });
+
+    expect(response.data).toBeNull();
+    expect(response.errors?.[0]?.message).toContain('not found');
   });
 });
