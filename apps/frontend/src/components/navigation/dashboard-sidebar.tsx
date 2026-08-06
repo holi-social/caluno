@@ -23,7 +23,6 @@ import {
   LogOutIcon,
   NetworkIcon,
   ScanQrCode,
-  SettingsIcon,
   ShieldIcon,
   TicketIcon,
   UsersIcon,
@@ -107,11 +106,6 @@ export function DashboardSidebar({ permissions }: DashboardSidebarProps) {
 
     return [
       {
-        titleKey: 'settings',
-        href: `/admin/${orgUId}/settings`,
-        icon: SettingsIcon,
-      },
-      {
         titleKey: 'roles',
         href: `/admin/${orgUId}/settings/roles`,
         icon: ShieldIcon,
@@ -174,7 +168,7 @@ export function DashboardSidebar({ permissions }: DashboardSidebarProps) {
 
         {settingsItems.length > 0 && (
           <SidebarGroup>
-            <SidebarGroupLabel>{t('settings')}</SidebarGroupLabel>
+            <SidebarGroupLabel>{t('organizationSettings')}</SidebarGroupLabel>
             <SidebarGroupContent>
               <SidebarMenu>
                 {settingsItems.map((item) => (
