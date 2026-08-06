@@ -21,6 +21,16 @@ query GetOrganizationUnitMemberships {
   }
 }
 
+query GetMyMemberships {
+  myMemberships {
+    id
+    organizationUnit {
+      id
+      name
+    }
+  }
+}
+
 query GetMyMembershipStatus($organizationUnitId: ID!) {
   myMembershipStatus(organizationUnitId: $organizationUnitId)
 }
@@ -50,4 +60,29 @@ mutation UpdateMembershipRoles($membershipId: ID!, $roleIds: [ID!]!) {
 
 mutation LeaveMembership($id: ID!) {
   leaveMembership(id: $id)
+}
+
+query MyMemberships {
+  myMemberships {
+    id
+    createdAt
+    organizationUnit {
+      id
+      name
+      logoUrl
+      type {
+        icon
+      }
+      parent {
+        id
+      }
+      organization {
+        name
+      }
+    }
+    roles {
+      id
+      name
+    }
+  }
 }

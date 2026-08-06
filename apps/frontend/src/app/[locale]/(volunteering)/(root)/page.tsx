@@ -1,4 +1,4 @@
-import { ShiftInviteStatus } from '@repo/data';
+import { MembershipRequestStatus, ShiftInviteStatus } from '@repo/data';
 import { VolunteerHomeContent } from '@/domain/home/components/volunteer-home-content';
 import { getDiscoverWindow } from '@/domain/home/lib/date-helpers';
 import { getDataClient } from '@/lib/data-client';
@@ -13,21 +13,45 @@ export default async function VolunteeringHomePage({
   await params;
   const client = await getDataClient();
 
-  const [myShiftInstancesPage, availableShiftInstancesPage, invitationsPage] =
-    await Promise.all([
-      client.shift.findMyShiftInstances({ limit: 10 }),
-      client.shift.findAvailableShiftInstances(getDiscoverWindow()),
-      client.shift.findMyShiftInstances({
-        limit: 10,
-        statuses: [ShiftInviteStatus.Invited],
-      }),
-    ]);
+  const [
+    myShiftInstancesPage,
+    availableShiftInstancesPage,
+    invitationsPage,
+    myMemberships,
+    myMembershipRequests,
+  ] = await Promise.all([
+    client.shift.findMyShiftInstances({ limit: 10 }),
+    client.shift.findAvailableShiftInstances(getDiscoverWindow()),
+    client.shift.findMyShiftInstances({
+      limit: 10,
+      statuses: [ShiftInviteStatus.Invited],
+    }),
+    client.membership.findMine(),
+    client.membershipRequest.findMine({ limit: 10, offset: 0 }),
+  ]);
+
+  const hasMemberships = myMemberships.length > 0;
+
+  const pendingRequest = myMembershipRequests.items.find(
+    (request) => request.status === MembershipRequestStatus.Pending,
+  );
 
   return (
     <VolunteerHomeContent
       initialMyShiftInstances={myShiftInstancesPage.items}
       initialAvailableShiftInstances={availableShiftInstancesPage.items}
       initialInvitations={invitationsPage.items}
+      hasMemberships={hasMemberships}
+      pendingRequest={
+        pendingRequest
+          ? {
+              id: pendingRequest.id,
+              organizationName:
+                pendingRequest.organizationUnit.organization.name,
+              contactName: pendingRequest.contact?.name,
+            }
+          : null
+      }
     />
   );
 }

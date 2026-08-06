@@ -352,6 +352,7 @@ enum JoinStatus {
 }
 
 type Membership {
+  createdAt: DateTime!
   id: ID!
   organizationUnit: OrganizationUnit!
   roles: [Role!]!
@@ -359,6 +360,7 @@ type Membership {
 }
 
 type MembershipRequest {
+  contact: User
   createdAt: DateTime!
   id: ID!
   organizationUnit: OrganizationUnit!
@@ -583,6 +585,7 @@ type Query {
   myFormSubmissions(organizationUnitId: ID!): [FormSubmission!]!
   myMembershipRequests(limit: Int! = 10, offset: Int! = 0): MembershipRequestPaginatedResponse!
   myMembershipStatus(organizationUnitId: ID!): Boolean!
+  myMemberships: [Membership!]!
   myOrganizationUnits: [OrganizationUnit!]!
   myShiftInstances(endsBefore: DateTime = null, includePast: Boolean! = false, limit: Int! = 15, offset: Int! = 0, order: SortOrder! = ASC, startsAfter: DateTime = null, statuses: [ShiftInviteStatus!]): ShiftInstancePaginatedResponse!
   myTime(limit: Int! = 10, offset: Int! = 0): TimeEntryPaginatedResponse!

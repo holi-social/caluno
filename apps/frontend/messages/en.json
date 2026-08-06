@@ -141,6 +141,8 @@
       }
     },
     "accountSettings": "Account settings",
+    "language": "Language",
+    "languageDescription": "App display language",
     "edit": "Edit profile",
     "pictureLabel": "Profile picture",
     "saved": "Profile updated",
@@ -377,7 +379,8 @@
       "approved": "Approved",
       "rejected": "Rejected",
       "requested": "Requested",
-      "declined": "Declined"
+      "declined": "Declined",
+      "accepted": "Accepted"
     },
     "meta": {
       "requestedDate": "Requested · {date}",
@@ -406,7 +409,7 @@
     "dialog": {
       "withdrawTitle": "Withdraw membership request",
       "withdrawDescription": "Are you sure you want to withdraw your request to join {orgName}?",
-      "leaveTitle": "Leave organization?",
+      "leaveTitle": "Leave organization",
       "leaveDescription": "Are you sure you want to leave {orgName}?"
     },
     "toast": {
@@ -900,6 +903,10 @@
       "noFields": "No fields",
       "allBlocksInUse": "All blocks are already in use",
       "noPreview": "Add blocks to see a preview",
+      "emptyTitle": "You have no blocks yet",
+      "emptyDescription": "Add your first block to start building this form.",
+      "addAnotherBlockHint": "Add another block to continue building this form",
+      "saveDisabledHint": "Add a block to enable saving",
       "lockedTooltip": "Cannot edit, block in use in a submitted form",
       "viewBlock": "View block",
       "editBlock": "Edit block",
@@ -1423,7 +1430,14 @@
     "eventCoverImageAlt": "Cover image for {title}",
     "loadPast": "Load past",
     "loadMore": "Load more",
-    "invitedOn": "Invited · {date}"
+    "invitedOn": "Invited · {date}",
+    "pendingRequestTitle": "Waiting for {orgName}",
+    "pendingRequestBody": "An admin is reviewing your request. Usually a few days.",
+    "pendingRequestContact": "Questions? {name} can help.",
+    "pendingRequestCta": "View my requests",
+    "discoverPendingSubtitle": "Shifts for {orgName} will show up here after approval",
+    "discoverPendingEmptyTitle": "Nothing to browse yet",
+    "discoverPendingEmptyBody": "Org shifts appear here once {orgName} accepts you.\nCheck-in and My Time stay available anytime."
   },
   "OrgDetail": {
     "coverImageAlt": "Cover image for {title}",

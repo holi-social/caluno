@@ -1,9 +1,9 @@
 import { getTranslations, setRequestLocale } from 'next-intl/server';
 import { MembershipCard } from '@/domain/memberships/components/membership-card';
 import { buildMembershipEntries } from '@/domain/memberships/lib/entries';
+import { AccountSection } from '@/domain/user/components/account-section';
 import { HeaderAvatar } from '@/domain/user/components/header-avatar';
 import { PersonalInformationSection } from '@/domain/user/components/personal-information-section';
-import { ProfileForm } from '@/domain/user/components/profile-form';
 import { ProfilePageHeader } from '@/domain/user/components/profile-page-header';
 import { resolveLocale } from '@/i18n/routing';
 import { getDataClient } from '@/lib/data-client';
@@ -20,12 +20,16 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
   const tProfile = await getTranslations('Profile');
 
   const data = await getDataClient();
-  const [me, membershipRequests, profile] = await Promise.all([
+  const [me, requestPage, memberships, profile] = await Promise.all([
     data.user.getMe(),
     data.membershipRequest.findMine(),
+    data.membership.findMine(),
     data.requirementForm.getMyUserProfile(),
   ]);
-  const membershipEntries = buildMembershipEntries(membershipRequests.items);
+  const membershipEntries = buildMembershipEntries(
+    requestPage.items,
+    memberships,
+  );
 
   return (
     <div>
@@ -56,16 +60,10 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
           </h1>
           <PersonalInformationSection user={me} profile={profile ?? null} />
         </section>
-        <section>
-          <h1 className="text-xl font-bold">{tProfile('accountSettings')}</h1>
-        </section>
 
-        <div>
-          <h2 className="text-xl font-bold">{tProfile('title')}</h2>
-          <div className="mt-4">
-            <ProfileForm />
-          </div>
-        </div>
+        <hr className="border-t border-border my-6" />
+
+        <AccountSection locale={me.locale ?? locale} />
       </div>
     </div>
   );
