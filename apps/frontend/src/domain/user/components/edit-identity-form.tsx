@@ -102,13 +102,19 @@ const EditIdentityForm = ({ email, profile }: EditIdentityFormProps) => {
   });
 
   const onSave = async (values: Record<string, string>) => {
-    const res = await updateUserProfile({ data: values });
-    if (res?.serverError) {
-      toast.error(res.serverError);
-      return;
+    try {
+      const res = await updateUserProfile({ data: values });
+      if (res?.serverError) {
+        toast.error(res.serverError);
+        return;
+      }
+      toast.success(tProfile('saved'));
+      router.replace('/profile');
+    } catch (error) {
+      toast.error(
+        error instanceof Error ? error.message : tProfile('saveFailed'),
+      );
     }
-    toast.success(tProfile('saved'));
-    router.replace('/profile');
   };
 
   return (
@@ -118,12 +124,20 @@ const EditIdentityForm = ({ email, profile }: EditIdentityFormProps) => {
           if (f.key === 'email') {
             return (
               <Field key="email">
-                <FieldLabel>{tFields('email')}</FieldLabel>
+                <FieldLabel htmlFor="email-locked">
+                  {tFields('email')}
+                </FieldLabel>
                 <div className="flex items-center gap-2">
-                  <Input value={email} readOnly disabled className="flex-1" />
+                  <Input
+                    id="email-locked"
+                    value={email}
+                    readOnly
+                    disabled
+                    className="flex-1"
+                  />
                   <Lock
                     className="size-4 shrink-0 text-muted-foreground"
-                    aria-label={tProfile('emailLocked')}
+                    aria-hidden
                   />
                 </div>
                 <p className="text-xs text-muted-foreground">

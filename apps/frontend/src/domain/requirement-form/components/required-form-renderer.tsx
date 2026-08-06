@@ -26,6 +26,7 @@ import {
   buildFieldSchema,
   FieldRenderer,
   type RenderableField,
+  useValidationMessages,
 } from './field-renderer';
 
 export type RequiredFormItem = {
@@ -66,7 +67,6 @@ export function RequiredFormRenderer({
   const tCommon = useTranslations('Common');
   const tForm = useTranslations('RequirementForm.volunteerForm');
   const tActions = useTranslations('RequirementForm.actions');
-  const tValidation = useTranslations('RequirementForm.validation');
 
   const [submittedFormIds, setSubmittedFormIds] = useState<Set<string>>(
     initialSubmittedFormIds,
@@ -108,30 +108,7 @@ export function RequiredFormRenderer({
     return Array.from(blockMap.values()).sort((a, b) => a.order - b.order);
   }, [renderedForms]);
 
-  const validationMessages = useMemo(
-    () => ({
-      fieldRequired: (label: string) => tValidation('fieldRequired', { label }),
-      mustBeNumber: (label: string) => tValidation('mustBeNumber', { label }),
-      mustBeValidDate: (label: string) =>
-        tValidation('mustBeValidDate', { label }),
-      mustBeValidEmail: (label: string) =>
-        tValidation('mustBeValidEmail', { label }),
-      mustBeValidPhone: (label: string) =>
-        tValidation('mustBeValidPhone', { label }),
-      invalidOptions: (label: string) =>
-        tValidation('invalidOptions', { label }),
-      maxChars: (label: string, maxLen: number) =>
-        tValidation('maxChars', { label, maxLen }),
-      invalidCharacters: (label: string) =>
-        tValidation('invalidCharacters', { label }),
-      validPostalCode: (label: string) =>
-        tValidation('validPostalCode', { label }),
-      minAge: (minAge: number) => tValidation('minAge', { minAge }),
-      invalidIban: (label: string) => tValidation('invalidIban', { label }),
-      dateNotFuture: (label: string) => tValidation('dateNotFuture', { label }),
-    }),
-    [tValidation],
-  );
+  const validationMessages = useValidationMessages();
 
   const formSchema = useMemo(() => {
     const shape: Record<string, z.ZodTypeAny> = {};
