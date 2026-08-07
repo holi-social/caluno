@@ -118,7 +118,9 @@ export function LoginForm({ redirectTo = '/', orgUId }: LoginFormProps) {
       <p className="text-center text-sm text-muted-foreground">
         {t('noAccount')}{' '}
         <Link
-          href={orgUId ? `/signup?orgUId=${encodeURIComponent(orgUId)}` : '/signup'}
+          href={
+            orgUId ? `/signup?orgUId=${encodeURIComponent(orgUId)}` : '/signup'
+          }
           prefetch={false}
           className="font-medium text-primary hover:underline"
         >

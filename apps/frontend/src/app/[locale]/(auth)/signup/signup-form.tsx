@@ -132,7 +132,9 @@ export function SignupForm({ redirectTo = '/', orgUId }: SignupFormProps) {
       <p className="text-center text-sm text-muted-foreground">
         {t('hasAccount')}{' '}
         <Link
-          href={orgUId ? `/login?orgUId=${encodeURIComponent(orgUId)}` : '/login'}
+          href={
+            orgUId ? `/login?orgUId=${encodeURIComponent(orgUId)}` : '/login'
+          }
           prefetch={false}
           className="font-medium text-primary hover:underline"
         >
