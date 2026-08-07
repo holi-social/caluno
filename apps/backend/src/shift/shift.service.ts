@@ -579,43 +579,75 @@ export class ShiftService {
     limit: number,
     offset: number,
   ): Promise<{ instances: ShiftInstanceEntity[]; total: number }> {
-    const userOrganizationUnitIds =
-      await this.getAccessibleOrganizationUnitIds(userId);
+    const [acceptedOrganizationUnitIds, pendingOrganizationUnitIds] =
+      await Promise.all([
+        this.getAccessibleOrganizationUnitIds(userId),
+        this.membershipService.getPendingOrganizationUnitIds(userId),
+      ]);
 
-    if (userOrganizationUnitIds.length === 0) {
+    const accessibleOrganizationUnitIds = [
+      ...acceptedOrganizationUnitIds,
+      ...pendingOrganizationUnitIds,
+    ];
+
+    if (accessibleOrganizationUnitIds.length === 0) {
       return EMPTY_SHIFT_INSTANCE_PAGE;
     }
 
-    const effectiveOrgUnitIds = organizationUnitIds?.length
-      ? organizationUnitIds.filter((id) => userOrganizationUnitIds.includes(id))
-      : userOrganizationUnitIds;
+    const requestedOrgUnitIds = organizationUnitIds?.length
+      ? organizationUnitIds.filter((id) =>
+          accessibleOrganizationUnitIds.includes(id),
+        )
+      : accessibleOrganizationUnitIds;
 
-    if (effectiveOrgUnitIds.length === 0) {
+    if (requestedOrgUnitIds.length === 0) {
       return EMPTY_SHIFT_INSTANCE_PAGE;
     }
+
+    const acceptedIds = requestedOrgUnitIds.filter((id) =>
+      acceptedOrganizationUnitIds.includes(id),
+    );
+    const pendingIds = requestedOrgUnitIds.filter((id) =>
+      pendingOrganizationUnitIds.includes(id),
+    );
 
     const startOfToday = this.getStartOfToday();
     const effectiveStartsAfter = startsAfter ?? startOfToday;
     const effectiveEndsBefore =
       endsBefore ?? new Date('2099-12-31T23:59:59.999Z');
 
+    const visibilityBranches: Record<string, unknown>[] = [];
+
+    if (acceptedIds.length > 0) {
+      visibilityBranches.push({
+        master: { organizationUnitId: { in: acceptedIds } },
+        OR: [
+          { master: { visibility: ShiftVisibility.ALL_MEMBERS } },
+          { invites: { userId, status: ShiftInviteStatus.INVITED } },
+        ],
+      });
+    }
+
+    if (pendingIds.length > 0) {
+      visibilityBranches.push({
+        master: {
+          organizationUnitId: { in: pendingIds },
+          visibility: ShiftVisibility.ALL_MEMBERS,
+        },
+      });
+    }
+
     const where = {
       isCancelled: false,
       actualStartsAt: { gte: effectiveStartsAfter, lte: effectiveEndsBefore },
-      master: {
-        isDeleted: false,
-        organizationUnitId: { in: effectiveOrgUnitIds },
-      },
+      master: { isDeleted: false },
       NOT: {
         invites: {
           userId,
           status: { in: [...PARTICIPATING_SHIFT_INVITE_STATUSES] },
         },
       },
-      OR: [
-        { master: { visibility: ShiftVisibility.ALL_MEMBERS } },
-        { invites: { userId, status: ShiftInviteStatus.INVITED } },
-      ],
+      OR: visibilityBranches,
     };
 
     const [instances, totalResult] = await Promise.all([
