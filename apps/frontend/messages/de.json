@@ -130,6 +130,7 @@
   "Profile": {
     "title": "Profil bearbeiten",
     "pageTitle": "Profil",
+    "emailLocked": "Mit deinem Login verknüpft",
     "organizations": "Deine Organisationen",
     "personalInformation": "Persönliche Informationen",
     "identity": {
@@ -1140,7 +1141,9 @@
       "invalidOptions": "{label} enthält ungültige Optionen",
       "maxChars": "{label} darf maximal {maxLen} Zeichen lang sein",
       "invalidCharacters": "{label} enthält ungültige Zeichen",
-      "validPostalCode": "{label} muss eine gültige Postleitzahl sein"
+      "validPostalCode": "{label} muss eine gültige Postleitzahl sein",
+      "invalidIban": "{label} muss eine gültige IBAN sein",
+      "dateNotFuture": "{label} darf nicht in der Zukunft liegen"
     },
     "actions": {
       "formSaved": "Formular gespeichert",
