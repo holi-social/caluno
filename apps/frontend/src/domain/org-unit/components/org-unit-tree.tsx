@@ -2,7 +2,6 @@
 
 import type { OrgUnitTreeNode } from '@repo/data';
 import {
-  ActionTooltip,
   Button,
   TreeExpander,
   TreeIcon,
@@ -102,80 +101,75 @@ function OrgUnitNodeItem({
           </TreeLabel>
 
           <span className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-            <ActionTooltip label={t('visitAria')}>
-              <Button
-                size="icon-xs"
-                variant="outline"
-                aria-label={t('visitAria')}
-                asChild
+            <Button
+              size="icon-xs"
+              variant="outline"
+              tooltip={t('visitAria')}
+              aria-label={t('visitAria')}
+              asChild
+            >
+              <Link
+                href={orgUnitAdminHref(node.id)}
+                onClick={(e) => e.stopPropagation()}
               >
-                <Link
-                  href={orgUnitAdminHref(node.id)}
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  <EyeIcon />
-                </Link>
-              </Button>
-            </ActionTooltip>
+                <EyeIcon />
+              </Link>
+            </Button>
 
-            <ActionTooltip label={t('copyLinkAria')}>
-              <Button
-                size="icon-xs"
-                variant="outline"
-                aria-label={t('copyLinkAria')}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  copyToClipboard(organizationUnitUrl(node.id), t('copyToast'));
-                }}
-              >
-                <Share2Icon />
-              </Button>
-            </ActionTooltip>
+            <Button
+              size="icon-xs"
+              variant="outline"
+              tooltip={t('copyLinkAria')}
+              aria-label={t('copyLinkAria')}
+              onClick={(e) => {
+                e.stopPropagation();
+                copyToClipboard(organizationUnitUrl(node.id), t('copyToast'));
+              }}
+            >
+              <Share2Icon />
+            </Button>
 
             {canEdit && (
               <>
-                <ActionTooltip label={t('addChildAria')}>
-                  <Button
-                    size="icon-xs"
-                    variant="outline"
-                    aria-label={t('addChildAria')}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onCreate(node);
-                    }}
-                  >
-                    <PlusIcon />
-                  </Button>
-                </ActionTooltip>
+                <Button
+                  size="icon-xs"
+                  variant="outline"
+                  tooltip={t('addChildAria')}
+                  aria-label={t('addChildAria')}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onCreate(node);
+                  }}
+                >
+                  <PlusIcon />
+                </Button>
 
-                <ActionTooltip label={t('editAria')}>
-                  <Button
-                    size="icon-xs"
-                    variant="outline"
-                    aria-label={t('editAria')}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onEdit(node);
-                    }}
-                  >
-                    <PencilIcon />
-                  </Button>
-                </ActionTooltip>
+                <Button
+                  size="icon-xs"
+                  variant="outline"
+                  tooltip={t('editAria')}
+                  aria-label={t('editAria')}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onEdit(node);
+                  }}
+                >
+                  <PencilIcon />
+                </Button>
 
                 {!!node.parentId && (
-                  <ActionTooltip label={t('deleteAria')}>
-                    <Button
-                      size="icon-xs"
-                      variant="destructive"
-                      aria-label={t('deleteAria')}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onDelete(node);
-                      }}
-                    >
-                      <TrashIcon />
-                    </Button>
-                  </ActionTooltip>
+                  <Button
+                    size="icon-xs"
+                    variant="destructive"
+                    tooltip={t('deleteAria')}
+                    aria-label={t('deleteAria')}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onDelete(node);
+                    }}
+                  >
+                    <TrashIcon />
+                  </Button>
                 )}
               </>
             )}

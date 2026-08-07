@@ -3,7 +3,6 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import type { FormBlock, FormBlockField } from '@repo/data';
 import {
-  ActionTooltip,
   Button,
   Field,
   FieldError,
@@ -340,52 +339,26 @@ export function EditBlockForm({
                 )}
               </div>
               <div className="ml-4 flex shrink-0 items-center gap-1">
-                <ActionTooltip label={tCommon('moveUp')}>
-                  {idx === 0 || isPending ? (
-                    <span>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        disabled
-                        aria-label={tCommon('moveUp')}
-                      >
-                        <ArrowUp className="size-4" />
-                      </Button>
-                    </span>
-                  ) : (
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => handleMoveField(field.id, 'up')}
-                      aria-label={tCommon('moveUp')}
-                    >
-                      <ArrowUp className="size-4" />
-                    </Button>
-                  )}
-                </ActionTooltip>
-                <ActionTooltip label={tCommon('moveDown')}>
-                  {idx === fields.length - 1 || isPending ? (
-                    <span>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        disabled
-                        aria-label={tCommon('moveDown')}
-                      >
-                        <ArrowDown className="size-4" />
-                      </Button>
-                    </span>
-                  ) : (
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => handleMoveField(field.id, 'down')}
-                      aria-label={tCommon('moveDown')}
-                    >
-                      <ArrowDown className="size-4" />
-                    </Button>
-                  )}
-                </ActionTooltip>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  tooltip={tCommon('moveUp')}
+                  disabled={idx === 0 || isPending}
+                  onClick={() => handleMoveField(field.id, 'up')}
+                  aria-label={tCommon('moveUp')}
+                >
+                  <ArrowUp className="size-4" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  tooltip={tCommon('moveDown')}
+                  disabled={idx === fields.length - 1 || isPending}
+                  onClick={() => handleMoveField(field.id, 'down')}
+                  aria-label={tCommon('moveDown')}
+                >
+                  <ArrowDown className="size-4" />
+                </Button>
                 <Button
                   variant="ghost"
                   size="sm"
@@ -397,17 +370,16 @@ export function EditBlockForm({
                   <SquarePen />
                   {tCommon('edit')}
                 </Button>
-                <ActionTooltip label={tCommon('delete')}>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="text-muted-foreground hover:text-destructive size-8"
-                    onClick={() => setDeletingFieldId(field.id)}
-                    aria-label={tCommon('delete')}
-                  >
-                    <Trash2 className="size-4" />
-                  </Button>
-                </ActionTooltip>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="text-muted-foreground hover:text-destructive size-8"
+                  tooltip={tCommon('delete')}
+                  onClick={() => setDeletingFieldId(field.id)}
+                  aria-label={tCommon('delete')}
+                >
+                  <Trash2 className="size-4" />
+                </Button>
               </div>
             </div>
           ),

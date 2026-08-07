@@ -5,7 +5,6 @@ import {
   MembershipRequestStatus,
 } from '@repo/data';
 import {
-  ActionTooltip,
   Avatar,
   AvatarFallback,
   AvatarImage,
@@ -103,16 +102,15 @@ export default function MembershipRequestCard({ request }: Props) {
           ) : (
             <span />
           )}
-          <ActionTooltip label={t('card.viewAria')}>
-            <Button
-              variant="outline"
-              size="icon-xs"
-              onClick={handleViewVolunteer}
-              aria-label={t('card.viewAria')}
-            >
-              <UserRound />
-            </Button>
-          </ActionTooltip>
+          <Button
+            variant="outline"
+            size="icon-xs"
+            tooltip={t('card.viewAria')}
+            onClick={handleViewVolunteer}
+            aria-label={t('card.viewAria')}
+          >
+            <UserRound />
+          </Button>
         </CardContent>
       )}
     </Card>

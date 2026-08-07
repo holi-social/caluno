@@ -1,6 +1,6 @@
 'use client';
 
-import { ActionTooltip, Button, Input } from '@repo/ui';
+import { Button, Input } from '@repo/ui';
 import { Plus, Trash2 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useState } from 'react';
@@ -73,33 +73,18 @@ export function OptionsEditor({
             className="flex-1"
             disabled={disabled}
           />
-          <ActionTooltip label={tCommon('delete')}>
-            {disabled ? (
-              <span>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  className="text-muted-foreground hover:text-destructive shrink-0"
-                  disabled
-                  aria-label={tCommon('delete')}
-                >
-                  <Trash2 className="size-4" />
-                </Button>
-              </span>
-            ) : (
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                className="text-muted-foreground hover:text-destructive shrink-0"
-                onClick={() => remove(idx)}
-                aria-label={tCommon('delete')}
-              >
-                <Trash2 className="size-4" />
-              </Button>
-            )}
-          </ActionTooltip>
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            className="text-muted-foreground hover:text-destructive shrink-0"
+            tooltip={tCommon('delete')}
+            disabled={disabled}
+            onClick={() => remove(idx)}
+            aria-label={tCommon('delete')}
+          >
+            <Trash2 className="size-4" />
+          </Button>
         </div>
       ))}
       <Button

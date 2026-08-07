@@ -2,7 +2,6 @@
 
 import type { FormBlock, RequirementForm } from '@repo/data';
 import {
-  ActionTooltip,
   Badge,
   Button,
   Table,
@@ -38,31 +37,29 @@ function BlockActions({
 
   return (
     <aside className="flex items-center gap-1">
-      <ActionTooltip label={editLabel}>
-        <Button
-          size="icon-xs"
-          variant="outline"
-          aria-label={editLabel}
-          onClick={() => openSheet({ id: block.id })}
-        >
-          {block.isEditable ? <Pencil /> : <Eye />}
-        </Button>
-      </ActionTooltip>
+      <Button
+        size="icon-xs"
+        variant="outline"
+        tooltip={editLabel}
+        aria-label={editLabel}
+        onClick={() => openSheet({ id: block.id })}
+      >
+        {block.isEditable ? <Pencil /> : <Eye />}
+      </Button>
       <DeleteAlertDialog
         title={t('deleteBlockAria')}
         description={t('deleteBlockDescription', { name: block.title })}
         onDelete={handleDelete}
         trigger={
-          <ActionTooltip label={t('deleteBlockAria')}>
-            <Button
-              size="icon-xs"
-              variant="destructive"
-              aria-label={t('deleteBlockAria')}
-              disabled={isDeleting}
-            >
-              {isDeleting ? <Loader2 className="animate-spin" /> : <Trash2 />}
-            </Button>
-          </ActionTooltip>
+          <Button
+            size="icon-xs"
+            variant="destructive"
+            tooltip={t('deleteBlockAria')}
+            aria-label={t('deleteBlockAria')}
+            disabled={isDeleting}
+          >
+            {isDeleting ? <Loader2 className="animate-spin" /> : <Trash2 />}
+          </Button>
         }
       />
     </aside>

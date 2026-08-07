@@ -2,7 +2,6 @@
 
 import type { FormBlock, RequirementForm } from '@repo/data';
 import {
-  ActionTooltip,
   Badge,
   Button,
   Table,
@@ -44,71 +43,64 @@ function FormActions({
 
   return (
     <aside className="flex items-center gap-1">
-      <ActionTooltip label={t('copyShareLinkAria')}>
-        <Button
-          size="icon-xs"
-          variant="outline"
-          aria-label={t('copyShareLinkAria')}
-          onClick={handleShare}
+      <Button
+        size="icon-xs"
+        variant="outline"
+        tooltip={t('copyShareLinkAria')}
+        aria-label={t('copyShareLinkAria')}
+        onClick={handleShare}
+      >
+        <Share2 />
+      </Button>
+      <Button
+        size="icon-xs"
+        variant="outline"
+        tooltip={t('editFormAria')}
+        aria-label={t('editFormAria')}
+        asChild
+      >
+        <Link href={`/admin/${orgUId}/requirement-forms/${form.id}/builder`}>
+          <Pencil />
+        </Link>
+      </Button>
+      <Button
+        size="icon-xs"
+        variant="outline"
+        tooltip={t('submissionsAria')}
+        aria-label={t('submissionsAria')}
+        asChild
+      >
+        <Link
+          href={`/admin/${orgUId}/requirement-forms/${form.id}/submissions`}
         >
-          <Share2 />
-        </Button>
-      </ActionTooltip>
-      <ActionTooltip label={t('editFormAria')}>
-        <Button
-          size="icon-xs"
-          variant="outline"
-          aria-label={t('editFormAria')}
-          asChild
-        >
-          <Link href={`/admin/${orgUId}/requirement-forms/${form.id}/builder`}>
-            <Pencil />
-          </Link>
-        </Button>
-      </ActionTooltip>
-      <ActionTooltip label={t('submissionsAria')}>
-        <Button
-          size="icon-xs"
-          variant="outline"
-          aria-label={t('submissionsAria')}
-          asChild
-        >
-          <Link
-            href={`/admin/${orgUId}/requirement-forms/${form.id}/submissions`}
-          >
-            <Users />
-          </Link>
-        </Button>
-      </ActionTooltip>
+          <Users />
+        </Link>
+      </Button>
       {form.submissionCount > 0 ? (
-        <ActionTooltip label={t('cannotDeleteAria')}>
-          <span>
-            <Button
-              size="icon-xs"
-              variant="outline"
-              aria-label={t('cannotDeleteAria')}
-              disabled
-            >
-              <Lock />
-            </Button>
-          </span>
-        </ActionTooltip>
+        <Button
+          size="icon-xs"
+          variant="outline"
+          tooltip={t('cannotDeleteAria')}
+          aria-label={t('cannotDeleteAria')}
+          disabled
+        >
+          <Lock />
+        </Button>
       ) : (
         <DeleteAlertDialog
           title={t('deleteFormAria')}
           description={t('deleteFormDescription', { name: form.name })}
           onDelete={handleDelete}
           trigger={
-            <ActionTooltip label={t('deleteFormAria')}>
-              <Button
-                size="icon-xs"
-                variant="destructive"
-                aria-label={t('deleteFormAria')}
-                disabled={isDeleting}
-              >
-                {isDeleting ? <Loader2 className="animate-spin" /> : <Trash2 />}
-              </Button>
-            </ActionTooltip>
+            <Button
+              size="icon-xs"
+              variant="destructive"
+              tooltip={t('deleteFormAria')}
+              aria-label={t('deleteFormAria')}
+              disabled={isDeleting}
+            >
+              {isDeleting ? <Loader2 className="animate-spin" /> : <Trash2 />}
+            </Button>
           }
         />
       )}

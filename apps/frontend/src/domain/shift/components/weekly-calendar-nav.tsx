@@ -1,6 +1,6 @@
 'use client';
 
-import { ActionTooltip, Button } from '@repo/ui';
+import { Button } from '@repo/ui';
 import { addDays, addWeeks, format, getISOWeek, subWeeks } from 'date-fns';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { useSearchParams } from 'next/navigation';
@@ -36,16 +36,15 @@ export function WeeklyCalendarNav({
 
   return (
     <div className="flex items-center gap-2">
-      <ActionTooltip label={t('calendar.prevAria')}>
-        <Button
-          variant="outline"
-          size="icon-sm"
-          onClick={() => navigate('prev')}
-          aria-label={t('calendar.prevAria')}
-        >
-          <ChevronLeft className="size-4" />
-        </Button>
-      </ActionTooltip>
+      <Button
+        variant="outline"
+        size="icon-sm"
+        tooltip={t('calendar.prevAria')}
+        onClick={() => navigate('prev')}
+        aria-label={t('calendar.prevAria')}
+      >
+        <ChevronLeft className="size-4" />
+      </Button>
 
       <span className="text-sm font-medium">
         <span className="font-bold">
@@ -59,16 +58,15 @@ export function WeeklyCalendarNav({
         })}
       </span>
 
-      <ActionTooltip label={t('calendar.nextAria')}>
-        <Button
-          variant="outline"
-          size="icon-sm"
-          onClick={() => navigate('next')}
-          aria-label={t('calendar.nextAria')}
-        >
-          <ChevronRight className="size-4" />
-        </Button>
-      </ActionTooltip>
+      <Button
+        variant="outline"
+        size="icon-sm"
+        tooltip={t('calendar.nextAria')}
+        onClick={() => navigate('next')}
+        aria-label={t('calendar.nextAria')}
+      >
+        <ChevronRight className="size-4" />
+      </Button>
     </div>
   );
 }

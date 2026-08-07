@@ -217,3 +217,16 @@ export const Disabled: Story = {
     disabled: true,
   },
 };
+
+/**
+ * Pass `tooltip` for a hover label (wraps the button in ActionTooltip).
+ */
+export const WithTooltip: Story = {
+  args: {
+    variant: 'outline',
+    size: 'icon-sm',
+    tooltip: 'Edit',
+    'aria-label': 'Edit',
+    children: <Mail />,
+  },
+};

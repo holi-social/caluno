@@ -1,6 +1,6 @@
 'use client';
 
-import { ActionTooltip, Button } from '@repo/ui';
+import { Button } from '@repo/ui';
 import { Edit, Loader2, Trash } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useTransition } from 'react';
@@ -41,32 +41,30 @@ export const ActionBar = ({
 
   return (
     <aside className="space-x-2">
-      <ActionTooltip label={t('action.editAria')}>
-        <Link href={`/admin/${organizationUnitId}/timesheets/${id}/edit`}>
-          <Button
-            size={buttonSize}
-            variant="outline"
-            aria-label={t('action.editAria')}
-          >
-            <Edit />
-          </Button>
-        </Link>
-      </ActionTooltip>
+      <Link href={`/admin/${organizationUnitId}/timesheets/${id}/edit`}>
+        <Button
+          size={buttonSize}
+          variant="outline"
+          tooltip={t('action.editAria')}
+          aria-label={t('action.editAria')}
+        >
+          <Edit />
+        </Button>
+      </Link>
       <DeleteAlertDialog
         title={t('action.deleteTitle')}
         description={t('action.deleteDescription')}
         onDelete={handleDelete}
         trigger={
-          <ActionTooltip label={t('action.deleteTitle')}>
-            <Button
-              size={buttonSize}
-              variant="destructive"
-              aria-label={t('action.deleteTitle')}
-              disabled={isDeleting}
-            >
-              {isDeleting ? <Loader2 className="animate-spin" /> : <Trash />}
-            </Button>
-          </ActionTooltip>
+          <Button
+            size={buttonSize}
+            variant="destructive"
+            tooltip={t('action.deleteTitle')}
+            aria-label={t('action.deleteTitle')}
+            disabled={isDeleting}
+          >
+            {isDeleting ? <Loader2 className="animate-spin" /> : <Trash />}
+          </Button>
         }
       />
     </aside>

@@ -1,6 +1,6 @@
 'use client';
 
-import { ActionTooltip, Button } from '@repo/ui';
+import { Button } from '@repo/ui';
 import { Eye, Share2, SquarePen, Trash2, UserPlus } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useState, useTransition } from 'react';
@@ -49,56 +49,52 @@ export function EventActionBar({
 
   return (
     <aside className="flex items-center gap-1">
-      <ActionTooltip label={t('action.viewAria')}>
-        <Link href={eventDetailPath(orgUId, id)}>
-          <Button
-            size="icon-xs"
-            variant="outline"
-            aria-label={t('action.viewAria')}
-          >
-            <Eye />
-          </Button>
-        </Link>
-      </ActionTooltip>
-
-      {canEdit && (
-        <>
-          <ActionTooltip label={t('action.editAria')}>
-            <Link href={`/admin/${orgUId}/events/${id}/edit`}>
-              <Button
-                size="icon-xs"
-                variant="outline"
-                aria-label={t('action.editAria')}
-              >
-                <SquarePen />
-              </Button>
-            </Link>
-          </ActionTooltip>
-
-          <ActionTooltip label={t('action.inviteAria')}>
-            <Link href={`/admin/${orgUId}/events/${id}/invite`}>
-              <Button
-                size="icon-xs"
-                variant="outline"
-                aria-label={t('action.inviteAria')}
-              >
-                <UserPlus />
-              </Button>
-            </Link>
-          </ActionTooltip>
-        </>
-      )}
-
-      <ActionTooltip label={t('action.shareAria')}>
+      <Link href={eventDetailPath(orgUId, id)}>
         <Button
           size="icon-xs"
           variant="outline"
-          aria-label={t('action.shareAria')}
-          onClick={handleShare}
+          tooltip={t('action.viewAria')}
+          aria-label={t('action.viewAria')}
         >
-          <Share2 />
+          <Eye />
         </Button>
-      </ActionTooltip>
+      </Link>
+
+      {canEdit && (
+        <>
+          <Link href={`/admin/${orgUId}/events/${id}/edit`}>
+            <Button
+              size="icon-xs"
+              variant="outline"
+              tooltip={t('action.editAria')}
+              aria-label={t('action.editAria')}
+            >
+              <SquarePen />
+            </Button>
+          </Link>
+
+          <Link href={`/admin/${orgUId}/events/${id}/invite`}>
+            <Button
+              size="icon-xs"
+              variant="outline"
+              tooltip={t('action.inviteAria')}
+              aria-label={t('action.inviteAria')}
+            >
+              <UserPlus />
+            </Button>
+          </Link>
+        </>
+      )}
+
+      <Button
+        size="icon-xs"
+        variant="outline"
+        tooltip={t('action.shareAria')}
+        aria-label={t('action.shareAria')}
+        onClick={handleShare}
+      >
+        <Share2 />
+      </Button>
 
       {canEdit && (
         <ConfirmDialog
@@ -110,15 +106,14 @@ export function EventActionBar({
           pending={isDeleting}
           onConfirm={handleDelete}
           trigger={
-            <ActionTooltip label={t('action.deleteAria')}>
-              <Button
-                size="icon-xs"
-                variant="destructive"
-                aria-label={t('action.deleteAria')}
-              >
-                <Trash2 />
-              </Button>
-            </ActionTooltip>
+            <Button
+              size="icon-xs"
+              variant="destructive"
+              tooltip={t('action.deleteAria')}
+              aria-label={t('action.deleteAria')}
+            >
+              <Trash2 />
+            </Button>
           }
         />
       )}

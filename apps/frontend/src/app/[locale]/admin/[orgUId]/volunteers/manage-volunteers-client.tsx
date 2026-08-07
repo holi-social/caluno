@@ -7,7 +7,6 @@ import {
   useMemberships,
 } from '@repo/data/react';
 import {
-  ActionTooltip,
   Avatar,
   AvatarFallback,
   AvatarImage,
@@ -112,38 +111,36 @@ function ApprovedTab({ orgUId }: { orgUId: string }) {
               </TableCell>
               <TableCell>
                 <div className="flex items-center gap-1">
-                  <ActionTooltip label={t('action.viewProfileAria')}>
+                  <Button
+                    size="icon-xs"
+                    variant="outline"
+                    tooltip={t('action.viewProfileAria')}
+                    aria-label={t('action.viewProfileAria')}
+                    onClick={() =>
+                      openVolunteerSheet({
+                        userId: membership.user.id,
+                        volunteerName: membership.user.name,
+                        volunteerStatus: MembershipRequestStatus.Accepted,
+                        volunteerEmail: membership.user.email,
+                        volunteerCheckInId: membership.user.checkInId,
+                      })
+                    }
+                  >
+                    <UserRound />
+                  </Button>
+                  <Link
+                    href={`/admin/${orgUId}/check-in/${membership.user.checkInId}/check-in`}
+                    aria-label={t('action.checkInAria')}
+                  >
                     <Button
                       size="icon-xs"
                       variant="outline"
-                      aria-label={t('action.viewProfileAria')}
-                      onClick={() =>
-                        openVolunteerSheet({
-                          userId: membership.user.id,
-                          volunteerName: membership.user.name,
-                          volunteerStatus: MembershipRequestStatus.Accepted,
-                          volunteerEmail: membership.user.email,
-                          volunteerCheckInId: membership.user.checkInId,
-                        })
-                      }
+                      tooltip={t('action.checkInShiftAria')}
+                      aria-label={t('action.checkInShiftAria')}
                     >
-                      <UserRound />
+                      <LogIn />
                     </Button>
-                  </ActionTooltip>
-                  <ActionTooltip label={t('action.checkInShiftAria')}>
-                    <Link
-                      href={`/admin/${orgUId}/check-in/${membership.user.checkInId}/check-in`}
-                      aria-label={t('action.checkInAria')}
-                    >
-                      <Button
-                        size="icon-xs"
-                        variant="outline"
-                        aria-label={t('action.checkInShiftAria')}
-                      >
-                        <LogIn />
-                      </Button>
-                    </Link>
-                  </ActionTooltip>
+                  </Link>
                 </div>
               </TableCell>
             </TableRow>

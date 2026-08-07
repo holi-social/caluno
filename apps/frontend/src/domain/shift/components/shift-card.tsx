@@ -2,7 +2,6 @@
 
 import type { ShiftInviteStatus, WeeklyShiftInstance } from '@repo/data';
 import {
-  ActionTooltip,
   Badge,
   Button,
   Card,
@@ -146,19 +145,18 @@ export function ShiftCard({
           )}
 
           {showButton && (
-            <ActionTooltip label={t('card.inviteAria')}>
-              <Link
-                href={shiftInvitePath(orgUId, instance.master.id, instance.id)}
+            <Link
+              href={shiftInvitePath(orgUId, instance.master.id, instance.id)}
+            >
+              <Button
+                size="icon-sm"
+                variant={buttonVariant}
+                tooltip={t('card.inviteAria')}
+                aria-label={t('card.inviteAria')}
               >
-                <Button
-                  size="icon-sm"
-                  variant={buttonVariant}
-                  aria-label={t('card.inviteAria')}
-                >
-                  <UserPlus className="size-4" />
-                </Button>
-              </Link>
-            </ActionTooltip>
+                <UserPlus className="size-4" />
+              </Button>
+            </Link>
           )}
         </div>
       </div>

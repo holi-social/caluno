@@ -3,7 +3,6 @@
 import { EventInviteStatus, MembershipRequestStatus } from '@repo/data';
 import type { EventInviteItem } from '@repo/data/react';
 import {
-  ActionTooltip,
   Badge,
   Button,
   Card,
@@ -70,39 +69,37 @@ export function EventVolunteersSection({
                           : t('status.invited')
                       }
                     />
-                    <ActionTooltip label={tVolunteer('viewProfileAria')}>
-                      <Button
-                        size="icon-xs"
-                        variant="outline"
-                        aria-label={tVolunteer('viewProfileAria')}
-                        onClick={() =>
-                          openVolunteerSheet({
-                            userId: invite.user.id,
-                            volunteerName: invite.user.name,
-                            volunteerStatus: MembershipRequestStatus.Accepted,
-                            volunteerEmail: invite.user.email ?? '',
-                            volunteerCheckInId: invite.user.checkInId,
-                          })
-                        }
-                      >
-                        <UserRound />
-                      </Button>
-                    </ActionTooltip>
+                    <Button
+                      size="icon-xs"
+                      variant="outline"
+                      tooltip={tVolunteer('viewProfileAria')}
+                      aria-label={tVolunteer('viewProfileAria')}
+                      onClick={() =>
+                        openVolunteerSheet({
+                          userId: invite.user.id,
+                          volunteerName: invite.user.name,
+                          volunteerStatus: MembershipRequestStatus.Accepted,
+                          volunteerEmail: invite.user.email ?? '',
+                          volunteerCheckInId: invite.user.checkInId,
+                        })
+                      }
+                    >
+                      <UserRound />
+                    </Button>
                     {isParticipating && (
-                      <ActionTooltip label={t('checkInAria')}>
-                        <Link
-                          href={`/admin/${orgUId}/check-in/${invite.user.checkInId}/check-in`}
+                      <Link
+                        href={`/admin/${orgUId}/check-in/${invite.user.checkInId}/check-in`}
+                        aria-label={t('checkInAria')}
+                      >
+                        <Button
+                          size="icon-xs"
+                          variant="outline"
+                          tooltip={t('checkInAria')}
                           aria-label={t('checkInAria')}
                         >
-                          <Button
-                            size="icon-xs"
-                            variant="outline"
-                            aria-label={t('checkInAria')}
-                          >
-                            <LogIn />
-                          </Button>
-                        </Link>
-                      </ActionTooltip>
+                          <LogIn />
+                        </Button>
+                      </Link>
                     )}
                   </div>
                 </li>

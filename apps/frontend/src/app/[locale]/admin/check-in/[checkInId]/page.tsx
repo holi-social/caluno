@@ -1,5 +1,4 @@
 import {
-  ActionTooltip,
   Button,
   Card,
   CardContent,
@@ -55,11 +54,14 @@ export default async function CheckInPage({ params }: CheckInPageProps) {
               className="flex gap-4 items-center text-xl"
             >
               {o.name}
-              <ActionTooltip label={t('checkIn')}>
-                <Button type="button" size="icon-sm" aria-label={t('checkIn')}>
-                  <LogIn />
-                </Button>
-              </ActionTooltip>
+              <Button
+                type="button"
+                size="icon-sm"
+                tooltip={t('checkIn')}
+                aria-label={t('checkIn')}
+              >
+                <LogIn />
+              </Button>
             </Link>
           ))}
         </CardContent>

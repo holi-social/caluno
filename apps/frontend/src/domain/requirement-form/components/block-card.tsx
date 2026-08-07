@@ -1,7 +1,7 @@
 'use client';
 
 import type { FormBlock, RequirementForm } from '@repo/data';
-import { ActionTooltip, Badge, Button, Card, CardContent } from '@repo/ui';
+import { Badge, Button, Card, CardContent } from '@repo/ui';
 import type { LucideIcon } from 'lucide-react';
 import { Eye, FileCheck, MapPin, Pencil, Trash2, User } from 'lucide-react';
 import { useFormatter, useTranslations } from 'next-intl';
@@ -126,31 +126,17 @@ export function BlockCard({
             )}
           </Button>
           {onDelete && (
-            <ActionTooltip label={tTable('deleteBlockAria')}>
-              {locked ? (
-                <span>
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    className="text-muted-foreground hover:text-destructive size-10 shrink-0"
-                    aria-label={tTable('deleteBlockAria')}
-                    disabled
-                  >
-                    <Trash2 className="size-4" />
-                  </Button>
-                </span>
-              ) : (
-                <Button
-                  variant="outline"
-                  size="icon"
-                  className="text-muted-foreground hover:text-destructive size-10 shrink-0"
-                  onClick={() => setConfirmOpen(true)}
-                  aria-label={tTable('deleteBlockAria')}
-                >
-                  <Trash2 className="size-4" />
-                </Button>
-              )}
-            </ActionTooltip>
+            <Button
+              variant="outline"
+              size="icon"
+              className="text-muted-foreground hover:text-destructive size-10 shrink-0"
+              tooltip={tTable('deleteBlockAria')}
+              aria-label={tTable('deleteBlockAria')}
+              disabled={locked}
+              onClick={locked ? undefined : () => setConfirmOpen(true)}
+            >
+              <Trash2 className="size-4" />
+            </Button>
           )}
         </div>
       </CardContent>

@@ -1,7 +1,7 @@
 'use client';
 
 import { PermissionKey } from '@repo/data';
-import { ActionTooltip, Button } from '@repo/ui';
+import { Button } from '@repo/ui';
 import { Edit, Loader2, Trash } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useTransition } from 'react';
@@ -50,33 +50,31 @@ export const ActionBar = ({
     <aside className="flex items-center gap-2">
       {!isInternal && (
         <RequirePermission permission={PermissionKey.OrgEdit}>
-          <ActionTooltip label={t('editAria')}>
-            <Button variant="outline" size={buttonSize} asChild>
-              <Link href={editHref} aria-label={t('editAria')}>
-                <Edit />
-              </Link>
-            </Button>
-          </ActionTooltip>
+          <Button
+            variant="outline"
+            size={buttonSize}
+            tooltip={t('editAria')}
+            asChild
+          >
+            <Link href={editHref} aria-label={t('editAria')}>
+              <Edit />
+            </Link>
+          </Button>
 
           <DeleteAlertDialog
             title={t('deleteTitle')}
             description={t('deleteDescription')}
             onDelete={handleDelete}
             trigger={
-              <ActionTooltip label={t('deleteAria')}>
-                <Button
-                  size={buttonSize}
-                  variant="destructive"
-                  aria-label={t('deleteAria')}
-                  disabled={isDeleting}
-                >
-                  {isDeleting ? (
-                    <Loader2 className="animate-spin" />
-                  ) : (
-                    <Trash />
-                  )}
-                </Button>
-              </ActionTooltip>
+              <Button
+                size={buttonSize}
+                variant="destructive"
+                tooltip={t('deleteAria')}
+                aria-label={t('deleteAria')}
+                disabled={isDeleting}
+              >
+                {isDeleting ? <Loader2 className="animate-spin" /> : <Trash />}
+              </Button>
             }
           />
         </RequirePermission>

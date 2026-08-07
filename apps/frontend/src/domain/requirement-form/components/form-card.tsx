@@ -1,7 +1,7 @@
 'use client';
 
 import type { FormBlock, RequirementForm } from '@repo/data';
-import { ActionTooltip, Badge, Button, Card, CardContent } from '@repo/ui';
+import { Badge, Button, Card, CardContent } from '@repo/ui';
 import { Eye, Pencil, Share2, Trash2, Users } from 'lucide-react';
 import { useFormatter, useTranslations } from 'next-intl';
 import { useState } from 'react';
@@ -120,51 +120,34 @@ export function FormCard({
             </Button>
           </div>
           <div className="flex gap-2 sm:flex-col lg:flex-row">
-            <ActionTooltip label={t('submissions')}>
-              <Button
-                asChild
-                variant="outline"
-                className="h-10 flex-1 has-[>svg]:px-6 xl:size-10 xl:flex-none xl:shrink-0"
-                aria-label={t('submissions')}
+            <Button
+              asChild
+              variant="outline"
+              className="h-10 flex-1 has-[>svg]:px-6 xl:size-10 xl:flex-none xl:shrink-0"
+              tooltip={t('submissions')}
+              aria-label={t('submissions')}
+            >
+              <Link
+                href={`/admin/${orgUId}/requirement-forms/${form.id}/submissions`}
               >
-                <Link
-                  href={`/admin/${orgUId}/requirement-forms/${form.id}/submissions`}
-                >
-                  <Users className="size-4" />
-                  <span className="ml-1.5 xl:hidden">{t('submissions')}</span>
-                </Link>
-              </Button>
-            </ActionTooltip>
+                <Users className="size-4" />
+                <span className="ml-1.5 xl:hidden">{t('submissions')}</span>
+              </Link>
+            </Button>
             {onDelete && (
-              <ActionTooltip label={tTable('deleteFormAria')}>
-                {locked ? (
-                  <span>
-                    <Button
-                      variant="outline"
-                      className="text-muted-foreground hover:text-destructive h-10 flex-1 has-[>svg]:px-6 lg:size-10 lg:flex-none lg:shrink-0"
-                      aria-label={tTable('deleteFormAria')}
-                      disabled
-                    >
-                      <Trash2 className="size-4" />
-                      <span className="ml-1.5 hidden sm:block lg:hidden">
-                        {t('delete')}
-                      </span>
-                    </Button>
-                  </span>
-                ) : (
-                  <Button
-                    variant="outline"
-                    className="text-muted-foreground hover:text-destructive h-10 flex-1 has-[>svg]:px-6 lg:size-10 lg:flex-none lg:shrink-0"
-                    onClick={() => setConfirmOpen(true)}
-                    aria-label={tTable('deleteFormAria')}
-                  >
-                    <Trash2 className="size-4" />
-                    <span className="ml-1.5 hidden sm:block lg:hidden">
-                      {t('delete')}
-                    </span>
-                  </Button>
-                )}
-              </ActionTooltip>
+              <Button
+                variant="outline"
+                className="text-muted-foreground hover:text-destructive h-10 flex-1 has-[>svg]:px-6 lg:size-10 lg:flex-none lg:shrink-0"
+                tooltip={tTable('deleteFormAria')}
+                aria-label={tTable('deleteFormAria')}
+                disabled={locked}
+                onClick={locked ? undefined : () => setConfirmOpen(true)}
+              >
+                <Trash2 className="size-4" />
+                <span className="ml-1.5 hidden sm:block lg:hidden">
+                  {t('delete')}
+                </span>
+              </Button>
             )}
           </div>
         </div>

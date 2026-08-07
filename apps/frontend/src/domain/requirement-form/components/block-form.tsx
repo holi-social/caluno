@@ -3,7 +3,6 @@
 import { FieldType } from '@repo/data';
 import { useBlock } from '@repo/data/react';
 import {
-  ActionTooltip,
   Badge,
   Button,
   Field,
@@ -548,68 +547,39 @@ function FieldCard({
           )}
           {!readOnly && (
             <div className="flex items-center gap-1">
-              <ActionTooltip label={tCommon('moveUp')}>
-                {!canMoveUp ? (
-                  <span>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon"
-                      disabled
-                      aria-label={tCommon('moveUp')}
-                    >
-                      <ArrowUp className="size-4" />
-                    </Button>
-                  </span>
-                ) : (
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    onClick={onMoveUp}
-                    aria-label={tCommon('moveUp')}
-                  >
-                    <ArrowUp className="size-4" />
-                  </Button>
-                )}
-              </ActionTooltip>
-              <ActionTooltip label={tCommon('moveDown')}>
-                {!canMoveDown ? (
-                  <span>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon"
-                      disabled
-                      aria-label={tCommon('moveDown')}
-                    >
-                      <ArrowDown className="size-4" />
-                    </Button>
-                  </span>
-                ) : (
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    onClick={onMoveDown}
-                    aria-label={tCommon('moveDown')}
-                  >
-                    <ArrowDown className="size-4" />
-                  </Button>
-                )}
-              </ActionTooltip>
-              <ActionTooltip label={tCommon('delete')}>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  className="text-muted-foreground hover:text-destructive size-8"
-                  onClick={onRemove}
-                  aria-label={tCommon('delete')}
-                >
-                  <Trash2 className="size-4" />
-                </Button>
-              </ActionTooltip>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                tooltip={tCommon('moveUp')}
+                disabled={!canMoveUp}
+                onClick={onMoveUp}
+                aria-label={tCommon('moveUp')}
+              >
+                <ArrowUp className="size-4" />
+              </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                tooltip={tCommon('moveDown')}
+                disabled={!canMoveDown}
+                onClick={onMoveDown}
+                aria-label={tCommon('moveDown')}
+              >
+                <ArrowDown className="size-4" />
+              </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="text-muted-foreground hover:text-destructive size-8"
+                tooltip={tCommon('delete')}
+                onClick={onRemove}
+                aria-label={tCommon('delete')}
+              >
+                <Trash2 className="size-4" />
+              </Button>
             </div>
           )}
         </div>

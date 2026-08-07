@@ -1,6 +1,6 @@
 'use client';
 
-import { ActionTooltip, Button } from '@repo/ui';
+import { Button } from '@repo/ui';
 import { Edit, Loader2, Trash, UserPlus } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useTransition } from 'react';
@@ -55,31 +55,29 @@ export const ActionBar = ({
   return (
     <aside className="space-x-2">
       {!hideEdit && (
-        <ActionTooltip label={t('action.editAria')}>
-          <Link href={resolvedEditHref}>
-            <Button
-              size={buttonSize}
-              variant="outline"
-              aria-label={t('action.editAria')}
-            >
-              <Edit />
-            </Button>
-          </Link>
-        </ActionTooltip>
+        <Link href={resolvedEditHref}>
+          <Button
+            size={buttonSize}
+            variant="outline"
+            tooltip={t('action.editAria')}
+            aria-label={t('action.editAria')}
+          >
+            <Edit />
+          </Button>
+        </Link>
       )}
 
       {inviteHref && (
-        <ActionTooltip label={t('action.inviteAria')}>
-          <Link href={inviteHref}>
-            <Button
-              size={buttonSize}
-              variant="outline"
-              aria-label={t('action.inviteAria')}
-            >
-              <UserPlus />
-            </Button>
-          </Link>
-        </ActionTooltip>
+        <Link href={inviteHref}>
+          <Button
+            size={buttonSize}
+            variant="outline"
+            tooltip={t('action.inviteAria')}
+            aria-label={t('action.inviteAria')}
+          >
+            <UserPlus />
+          </Button>
+        </Link>
       )}
 
       <DeleteAlertDialog
@@ -87,16 +85,15 @@ export const ActionBar = ({
         description={t('action.deleteDescription')}
         onDelete={handleDelete}
         trigger={
-          <ActionTooltip label={t('action.deleteTitle')}>
-            <Button
-              size={buttonSize}
-              variant="destructive"
-              aria-label={t('action.deleteTitle')}
-              disabled={isDeleting}
-            >
-              {isDeleting ? <Loader2 className="animate-spin" /> : <Trash />}
-            </Button>
-          </ActionTooltip>
+          <Button
+            size={buttonSize}
+            variant="destructive"
+            tooltip={t('action.deleteTitle')}
+            aria-label={t('action.deleteTitle')}
+            disabled={isDeleting}
+          >
+            {isDeleting ? <Loader2 className="animate-spin" /> : <Trash />}
+          </Button>
         }
       />
     </aside>

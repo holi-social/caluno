@@ -2,7 +2,6 @@
 
 import { FieldType, type RequiredForm } from '@repo/data/react';
 import {
-  ActionTooltip,
   Button,
   Command,
   CommandEmpty,
@@ -79,30 +78,16 @@ export function RequiredFormsList({
               </p>
             </div>
           </div>
-          <ActionTooltip label={t('removeAria', { name: form.name })}>
-            {removeDisabled ? (
-              <span>
-                <Button
-                  variant="ghost"
-                  size="icon-xs"
-                  onClick={() => onRemove(form.id)}
-                  disabled
-                  aria-label={t('removeAria', { name: form.name })}
-                >
-                  <X className="h-4 w-4" />
-                </Button>
-              </span>
-            ) : (
-              <Button
-                variant="ghost"
-                size="icon-xs"
-                onClick={() => onRemove(form.id)}
-                aria-label={t('removeAria', { name: form.name })}
-              >
-                <X className="h-4 w-4" />
-              </Button>
-            )}
-          </ActionTooltip>
+          <Button
+            variant="ghost"
+            size="icon-xs"
+            tooltip={t('removeAria', { name: form.name })}
+            onClick={() => onRemove(form.id)}
+            disabled={removeDisabled}
+            aria-label={t('removeAria', { name: form.name })}
+          >
+            <X className="h-4 w-4" />
+          </Button>
         </div>
       ))}
     </div>

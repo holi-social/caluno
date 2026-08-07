@@ -1,7 +1,7 @@
 'use client';
 
 import type { FormBlock } from '@repo/data';
-import { ActionTooltip, Button } from '@repo/ui';
+import { Button } from '@repo/ui';
 import { ArrowDown, ArrowUp, Edit3, Eye, Plus, Trash2 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import type { BuilderBlockRef } from './form-builder-state';
@@ -46,92 +46,61 @@ export function FormBuilderBlockList({
               <div className="flex items-center gap-1">
                 {!hasSubmissions && (
                   <>
-                    <ActionTooltip label={tCommon('moveUp')}>
-                      {index === 0 ? (
-                        <span>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            disabled
-                            aria-label={tCommon('moveUp')}
-                          >
-                            <ArrowUp className="h-4 w-4" />
-                          </Button>
-                        </span>
-                      ) : (
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => onMove(index, 'up')}
-                          aria-label={tCommon('moveUp')}
-                        >
-                          <ArrowUp className="h-4 w-4" />
-                        </Button>
-                      )}
-                    </ActionTooltip>
-                    <ActionTooltip label={tCommon('moveDown')}>
-                      {index === blockRefs.length - 1 ? (
-                        <span>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            disabled
-                            aria-label={tCommon('moveDown')}
-                          >
-                            <ArrowDown className="h-4 w-4" />
-                          </Button>
-                        </span>
-                      ) : (
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => onMove(index, 'down')}
-                          aria-label={tCommon('moveDown')}
-                        >
-                          <ArrowDown className="h-4 w-4" />
-                        </Button>
-                      )}
-                    </ActionTooltip>
-                    <ActionTooltip label={tCommon('delete')}>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => onRemove(index)}
-                        aria-label={tCommon('delete')}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </ActionTooltip>
-                  </>
-                )}
-                {!block.isEditable && !hasSubmissions ? (
-                  <ActionTooltip label={t('lockedTooltip')}>
-                    <span>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        disabled
-                        aria-label={t('lockedTooltip')}
-                      >
-                        <Edit3 className="h-4 w-4" />
-                      </Button>
-                    </span>
-                  </ActionTooltip>
-                ) : (
-                  <ActionTooltip label={editLabel}>
                     <Button
                       variant="ghost"
                       size="icon"
-                      onClick={() => onEditBlock(block)}
-                      aria-label={editLabel}
+                      tooltip={tCommon('moveUp')}
+                      disabled={index === 0}
+                      onClick={() => onMove(index, 'up')}
+                      aria-label={tCommon('moveUp')}
                     >
-                      {hasSubmissions ? (
-                        <Eye className="h-4 w-4" />
-                      ) : (
-                        <Edit3 className="h-4 w-4" />
-                      )}
+                      <ArrowUp className="h-4 w-4" />
                     </Button>
-                  </ActionTooltip>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      tooltip={tCommon('moveDown')}
+                      disabled={index === blockRefs.length - 1}
+                      onClick={() => onMove(index, 'down')}
+                      aria-label={tCommon('moveDown')}
+                    >
+                      <ArrowDown className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      tooltip={tCommon('delete')}
+                      onClick={() => onRemove(index)}
+                      aria-label={tCommon('delete')}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </>
+                )}
+                {!block.isEditable && !hasSubmissions ? (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    tooltip={t('lockedTooltip')}
+                    disabled
+                    aria-label={t('lockedTooltip')}
+                  >
+                    <Edit3 className="h-4 w-4" />
+                  </Button>
+                ) : (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    tooltip={editLabel}
+                    onClick={() => onEditBlock(block)}
+                    aria-label={editLabel}
+                  >
+                    {hasSubmissions ? (
+                      <Eye className="h-4 w-4" />
+                    ) : (
+                      <Edit3 className="h-4 w-4" />
+                    )}
+                  </Button>
                 )}
               </div>
             </div>

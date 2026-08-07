@@ -1,7 +1,6 @@
 'use client';
 
 import {
-  ActionTooltip,
   Button,
   cn,
   Empty,
@@ -238,31 +237,17 @@ export function FileUpload({
                 {t('replace')}
               </Button>
               {onClear ? (
-                <ActionTooltip label={t('clear')}>
-                  {!isInteractive ? (
-                    <span>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon-sm"
-                        disabled
-                        aria-label={t('clear')}
-                      >
-                        <X />
-                      </Button>
-                    </span>
-                  ) : (
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon-sm"
-                      aria-label={t('clear')}
-                      onClick={handleClear}
-                    >
-                      <X />
-                    </Button>
-                  )}
-                </ActionTooltip>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon-sm"
+                  tooltip={t('clear')}
+                  disabled={!isInteractive}
+                  aria-label={t('clear')}
+                  onClick={handleClear}
+                >
+                  <X />
+                </Button>
               ) : null}
             </div>
           )}
