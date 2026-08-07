@@ -3,7 +3,6 @@ import { Empty, EmptyMedia, EmptyTitle } from '@repo/ui';
 import { MailIcon } from 'lucide-react';
 import { getTranslations } from 'next-intl/server';
 import { ShiftCardMyInvited } from '@/domain/home/components/shift-card-my-invited';
-import { requireAuth } from '@/lib/auth-server';
 import { getDataClient } from '@/lib/data-client';
 
 interface InvitationsPageProps {
@@ -13,8 +12,7 @@ interface InvitationsPageProps {
 export default async function InvitationsPage({
   params,
 }: InvitationsPageProps) {
-  const { locale } = await params;
-  await requireAuth(`/${locale}/auth/login`);
+  await params;
   const client = await getDataClient();
   const page = await client.shift.findMyShiftInstances({
     statuses: [ShiftInviteStatus.Invited],

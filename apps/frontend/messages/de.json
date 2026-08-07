@@ -35,8 +35,12 @@
     "avatarAlt": "Avatar von {name}"
   },
   "Auth": {
+    "brandName": "caluno",
+    "joinTitle": "Tritt {orgName} bei",
+    "poweredBy": "Powered by",
     "login": {
       "title": "Anmelden",
+      "description": "Willkommen zurück bei caluno. Melde dich an, um Schichten zu übernehmen und mit deiner Organisation mitzuhelfen.",
       "emailLabel": "E-Mail",
       "emailPlaceholder": "du@beispiel.de",
       "passwordLabel": "Passwort",
@@ -79,6 +83,7 @@
     },
     "signup": {
       "title": "Erstelle dein Konto",
+      "description": "Willkommen bei caluno. Registriere dich, um Schichten zu übernehmen und mit deiner Organisation mitzuhelfen.",
       "nameLabel": "Vollständiger Name",
       "namePlaceholder": "Max Mustermann",
       "emailLabel": "E-Mail",

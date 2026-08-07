@@ -29,7 +29,7 @@ export default async function PublicFormPage({ params }: Props) {
       });
     }
     redirectWithLocale({
-      href: `/login?redirectTo=${encodeURIComponent(`/f/${token}`)}`,
+      href: `/signup?redirectTo=${encodeURIComponent(`/f/${token}`)}`,
       locale,
     });
   }

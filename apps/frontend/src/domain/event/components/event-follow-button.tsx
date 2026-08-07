@@ -8,21 +8,22 @@ import { useSearchParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { useCallback, useEffect, useState } from 'react';
 import { toast } from 'sonner';
-import { usePathname, useRouter } from '@/i18n/navigation';
+import { usePathname } from '@/i18n/navigation';
 import { useSession } from '@/lib/auth';
 
 interface EventFollowButtonProps {
   eventId: string;
+  organizationUnitId?: string | null;
   initialStatus: JoinStatus;
 }
 
 export function EventFollowButton({
   eventId,
+  organizationUnitId,
   initialStatus,
 }: EventFollowButtonProps) {
   const t = useTranslations('EventDetail');
   const joinEvent = useJoinEvent();
-  const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const autoFollow = searchParams.get('autoFollow') === 'true';
@@ -44,7 +45,12 @@ export function EventFollowButton({
   const handleFollow = useCallback(async () => {
     if (!session.data?.user) {
       const redirectTo = `/events/${eventId}?autoFollow=true`;
-      router.push(`/login?redirectTo=${encodeURIComponent(redirectTo)}`);
+      const inviteParams = new URLSearchParams({ redirectTo });
+      if (organizationUnitId) {
+        inviteParams.set('orgUId', organizationUnitId);
+      }
+      // Full navigation so `/api/invite` can Set-Cookie `pending_invite`.
+      window.location.href = `/api/invite?${inviteParams}`;
       return;
     }
 
@@ -68,7 +74,14 @@ export function EventFollowButton({
     } catch (error) {
       toast.error(error instanceof Error ? error.message : undefined);
     }
-  }, [eventId, joinEvent, router, session.data?.user, redirectToFormsPage, t]);
+  }, [
+    eventId,
+    organizationUnitId,
+    joinEvent,
+    session.data?.user,
+    redirectToFormsPage,
+    t,
+  ]);
 
   useEffect(() => {
     if (

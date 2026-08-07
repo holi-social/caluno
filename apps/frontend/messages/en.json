@@ -35,8 +35,12 @@
     "avatarAlt": "Avatar of {name}"
   },
   "Auth": {
+    "brandName": "caluno",
+    "joinTitle": "Join {orgName}",
+    "poweredBy": "Powered by",
     "login": {
       "title": "Sign in",
+      "description": "Welcome back to caluno. Sign in to join shifts and volunteer with your organization.",
       "emailLabel": "Email",
       "emailPlaceholder": "you@example.com",
       "passwordLabel": "Password",
@@ -79,6 +83,7 @@
     },
     "signup": {
       "title": "Create your account",
+      "description": "Welcome to caluno. Sign up to join shifts and volunteer with your organization.",
       "nameLabel": "Full Name",
       "namePlaceholder": "John Doe",
       "emailLabel": "Email",
