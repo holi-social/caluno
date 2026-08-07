@@ -30,17 +30,6 @@ export function useEvent(id: string) {
   });
 }
 
-export function useEventAttendees(eventId: string) {
-  const sdk = useSdk();
-  const repository = new EventRepository(sdk);
-
-  return useQuery({
-    queryKey: ['eventAttendees', eventId],
-    queryFn: () => repository.findAttendees(eventId),
-    staleTime: 30 * 1000,
-  });
-}
-
 export function useCreateEvent() {
   const sdk = useSdk();
   const queryClient = useQueryClient();
@@ -96,7 +85,7 @@ export function useInviteMembersToEvent() {
       memberIds: string[];
     }) => repository.inviteMembers(eventId, memberIds),
     onSuccess: (_, { eventId }) => {
-      queryClient.invalidateQueries({ queryKey: ['eventAttendees', eventId] });
+      queryClient.invalidateQueries({ queryKey: ['eventInvites', eventId] });
     },
   });
 }
@@ -141,6 +130,7 @@ export function useJoinEvent() {
     mutationFn: (eventId: string) => repository.join(eventId),
     onSuccess: (_, eventId) => {
       queryClient.invalidateQueries({ queryKey: ['publicEvent', eventId] });
+      queryClient.invalidateQueries({ queryKey: ['myEvents'] });
     },
   });
 }

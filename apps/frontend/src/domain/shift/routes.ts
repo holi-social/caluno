@@ -43,8 +43,13 @@ export function shiftInvitePath(
   orgUId: string,
   shiftId: string,
   instanceId: string,
+  options?: { flow?: 'create' },
 ): string {
-  return `/admin/${orgUId}/shifts/${shiftId}/invite?instanceId=${encodeURIComponent(instanceId)}`;
+  const params = new URLSearchParams({ instanceId });
+  if (options?.flow) {
+    params.set('flow', options.flow);
+  }
+  return `/admin/${orgUId}/shifts/${shiftId}/invite?${params.toString()}`;
 }
 
 export function shiftInstanceDetailPath(
@@ -55,6 +60,14 @@ export function shiftInstanceDetailPath(
 ): string {
   const queryString = parseQuery(query);
   return `/admin/${orgUId}/shifts/${shiftId}/instances/${instanceId}${queryString ? `?${queryString}` : ''}`;
+}
+
+export function shiftInstanceEditPath(
+  orgUId: string,
+  shiftId: string,
+  instanceId: string,
+): string {
+  return `/admin/${orgUId}/shifts/${shiftId}/instances/${instanceId}/edit`;
 }
 
 export function parseShiftListQuery(

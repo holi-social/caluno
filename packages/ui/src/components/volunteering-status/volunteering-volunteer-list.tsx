@@ -18,6 +18,8 @@ export type VolunteeringVolunteerListItem = {
   statusLabel?: string;
   /** When set, overrides default actions from status presentation. */
   actions?: VolunteeringActionLabel[];
+  /** Far-right icon-only actions (e.g. View profile, Check in). */
+  iconActions?: VolunteeringActionLabel[];
 };
 
 export type VolunteeringVolunteerListProps = {
@@ -70,6 +72,7 @@ export function VolunteeringVolunteerList({
             completedDuration={volunteer.completedDuration}
             statusLabel={volunteer.statusLabel}
             actions={volunteer.actions}
+            iconActions={volunteer.iconActions}
             actionLabels={actionLabels}
             onAction={
               onAction ? (action) => onAction(volunteer.id, action) : undefined

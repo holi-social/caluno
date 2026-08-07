@@ -6,8 +6,10 @@ import {
 } from '@thallesp/nestjs-better-auth';
 import { plainToInstance } from 'class-transformer';
 import { Loader } from '../../graphql/decorators/loader.decorator';
+import { MembershipService } from '../../membership/membership.service';
 import { RequiredFormRef } from '../../organization/models/organization-unit-required-form.model';
 import { RequirementForm } from '../../requirement-profile/models/requirement-form.model';
+import { JoinStatus } from '../../shared/enums/join-status.enum';
 import { Shift } from '../../shift/models/shift.model';
 import { UserMapper } from '../../user/mappers/user.mapper';
 import { User } from '../../user/models/user.model';
@@ -23,7 +25,10 @@ import { EventShiftsLoader } from './loader';
 
 @Resolver(() => Event)
 export class EventFieldResolver {
-  constructor(private readonly userMapper: UserMapper) {}
+  constructor(
+    private readonly userMapper: UserMapper,
+    private readonly membershipService: MembershipService,
+  ) {}
 
   @AllowAnonymous()
   @ResolveField(() => User, { nullable: true })
@@ -62,22 +67,57 @@ export class EventFieldResolver {
     return loader.countByEventId.load(event.id);
   }
 
-  // Events are a lower-commitment "following" shortlist, not an invite flow —
-  // deliberately a boolean, kept separate from shift invite vocabulary. Org
-  // membership pending/rejected is surfaced elsewhere (OrganizationUnit).
+  /**
+   * Full membership-aware join state for the event. Replaces the older
+   * `isFollowing` boolean by also surfacing pending/rejected membership.
+   */
   @AllowAnonymous()
-  @ResolveField(() => Boolean)
-  async isFollowing(
+  @ResolveField(() => JoinStatus)
+  async myJoinStatus(
     @Parent() event: EventEntity,
     @Session() session: UserSession,
     @Loader(EventInviteLoader) loader: EventInviteLoader,
-  ): Promise<boolean> {
-    if (!session?.user) return false;
+  ): Promise<JoinStatus> {
+    if (!session?.user) {
+      return JoinStatus.NONE;
+    }
 
     const invite = await loader.inviteByEventIdAndUserId.load(
       `${event.id}:${session.user.id}`,
     );
-    return invite?.status === EventInviteStatus.ACCEPTED;
+    if (invite?.status === EventInviteStatus.ACCEPTED) {
+      return JoinStatus.JOINED;
+    }
+
+    const membershipState = await this.membershipService.getMembershipState(
+      session.user.id,
+      event.organizationUnitId,
+    );
+
+    if (membershipState === JoinStatus.REJECTED) {
+      return JoinStatus.REJECTED;
+    }
+
+    if (membershipState === JoinStatus.PENDING) {
+      const requests = await this.membershipService.getMyMembershipRequests(
+        session.user.id,
+      );
+      const request = requests.find(
+        (r) => r.organizationUnitId === event.organizationUnitId,
+      );
+      const intendedEventIds =
+        request?.metadata &&
+        typeof request.metadata === 'object' &&
+        'intendedEventIds' in request.metadata &&
+        Array.isArray(request.metadata.intendedEventIds)
+          ? request.metadata.intendedEventIds
+          : [];
+      if (intendedEventIds.includes(event.id)) {
+        return JoinStatus.PENDING;
+      }
+    }
+
+    return JoinStatus.NONE;
   }
 
   @AllowAnonymous()

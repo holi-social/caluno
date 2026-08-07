@@ -103,19 +103,61 @@ query GetEvents($limit: Int!, $offset: Int!) {
   }
 }
 
+fragment MyEventFields on Event {
+  id
+  title
+  startsAt
+  endsAt
+  location
+}
+
+query GetMyEvents(
+  $includePast: Boolean = false
+  $startsAfter: DateTime
+  $endsBefore: DateTime
+  $limit: Int = 15
+  $offset: Int = 0
+  $order: SortOrder = ASC
+  $statuses: [EventInviteStatus!]
+) {
+  myEvents(
+    includePast: $includePast
+    startsAfter: $startsAfter
+    endsBefore: $endsBefore
+    limit: $limit
+    offset: $offset
+    order: $order
+    statuses: $statuses
+  ) {
+    items {
+      ...MyEventFields
+    }
+    pagination {
+      total
+      limit
+      offset
+      hasMore
+    }
+  }
+}
+
 query GetEvent($id: ID!) {
   event(id: $id) {
     ...EventDetailFields
   }
 }
 
-query GetEventAttendees($eventId: ID!) {
-  eventAttendees(eventId: $eventId) {
+query GetEventInvites($eventId: ID!) {
+  eventInvites(eventId: $eventId) {
     id
-    name
-    email
-    image
-    checkInId
+    status
+    user {
+      id
+      name
+      email
+      image
+      checkInId
+    }
   }
 }
 
@@ -179,7 +221,7 @@ fragment PublicEventFields on Event {
   startsAt
   endsAt
   shiftsCount
-  isFollowing
+  myJoinStatus
   organizationUnit {
     ...PublicEventOrganizationUnitFields
   }

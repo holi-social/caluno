@@ -1,6 +1,11 @@
 'use client';
 
-import { JoinStatus, ShiftInviteStatus, ShiftVisibility } from '@repo/data';
+import {
+  JoinStatus,
+  RequiredFormTargetType,
+  ShiftInviteStatus,
+  ShiftVisibility,
+} from '@repo/data';
 import {
   useJoinShiftInstance,
   useUpdateShiftInstanceInviteStatus,
@@ -22,7 +27,7 @@ import { BanIcon } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useCallback, useEffect, useState } from 'react';
 import { toast } from 'sonner';
-import { useRouter } from '@/i18n/navigation';
+import { usePathname, useRouter } from '@/i18n/navigation';
 import { useFormatting } from '@/lib/formatting/use-formatting';
 
 interface JoinShiftButtonProps {
@@ -42,6 +47,8 @@ interface JoinShiftButtonProps {
   startsAt?: string;
   label?: string;
   className?: string;
+  /** True when the user already clicked join for this instance and the backend returned a pending membership request. */
+  isPendingIntended?: boolean;
 }
 
 export function JoinShiftButton({
@@ -59,8 +66,10 @@ export function JoinShiftButton({
   startsAt,
   label,
   className,
+  isPendingIntended = false,
 }: JoinShiftButtonProps) {
   const router = useRouter();
+  const pathname = usePathname();
   const joinShiftInstance = useJoinShiftInstance();
   const respondToInvite = useUpdateShiftInstanceInviteStatus();
   const t = useTranslations('Shift');
@@ -139,10 +148,14 @@ export function JoinShiftButton({
           (f) => !f.submitted,
         );
         if (missingForms.length > 0) {
-          const currentUrl = window.location.href;
-          router.push(
-            `/join/${organizationUnitId}/forms?redirectTo=${encodeURIComponent(currentUrl)}`,
+          const redirectTo = encodeURIComponent(
+            `${pathname}${window.location.search}`,
           );
+          if (missingForms[0]?.targetType === RequiredFormTargetType.Shift) {
+            window.location.href = `/shifts/${shiftId}/instances/${instanceId}/forms?redirectTo=${redirectTo}`;
+          } else {
+            window.location.href = `/join/${organizationUnitId}/forms?redirectTo=${redirectTo}`;
+          }
           return;
         }
 
@@ -178,6 +191,7 @@ export function JoinShiftButton({
     instanceId,
     joinShiftInstance,
     router,
+    pathname,
     t,
     organizationUnitId,
     onInviteStatusChange,
@@ -319,18 +333,18 @@ export function JoinShiftButton({
   }
 
   // No instance invite: fall back to the org-membership state.
-  if (membershipState === JoinStatus.Pending) {
-    return (
-      <Button disabled variant="secondary" size="xl" className={className}>
-        {t('join.pendingCta')}
-      </Button>
-    );
-  }
-
   if (membershipState === JoinStatus.Rejected) {
     return (
       <Button disabled variant="outline" size="xl" className={className}>
         {t('join.rejectedCta')}
+      </Button>
+    );
+  }
+
+  if (isPendingIntended) {
+    return (
+      <Button disabled variant="secondary" size="xl" className={className}>
+        {t('join.pendingCta')}
       </Button>
     );
   }

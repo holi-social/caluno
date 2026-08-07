@@ -132,7 +132,17 @@
     "pageTitle": "Profil",
     "organizations": "Deine Organisationen",
     "personalInformation": "Persönliche Informationen",
+    "identity": {
+      "subtitles": {
+        "preferredName": "Falls abweichend von deinem rechtlichen Namen",
+        "firstName": "Wie auf deinem Ausweis",
+        "lastName": "Wie auf deinem Ausweis",
+        "iban": "Für Auslagenerstattungen"
+      }
+    },
     "accountSettings": "Kontoeinstellungen",
+    "language": "Sprache",
+    "languageDescription": "Anzeigesprache der App",
     "edit": "Profil bearbeiten",
     "pictureLabel": "Profilbild",
     "saved": "Profil aktualisiert",
@@ -149,7 +159,7 @@
     "checkIn": "Einchecken",
     "myTime": "Meine Einsätze",
     "requirementForms": "Anforderungsformulare",
-    "settings": "Einstellungen",
+    "organizationSettings": "Organisationseinstellungen",
     "roles": "Rollen",
     "orgUnits": " Organisationseinheiten",
     "selectOrganization": "Organisation auswählen",
@@ -367,7 +377,15 @@
     "status": {
       "pending": "Ausstehend",
       "approved": "Genehmigt",
-      "rejected": "Abgelehnt"
+      "rejected": "Abgelehnt",
+      "requested": "Angefragt",
+      "declined": "Abgelehnt",
+      "accepted": "Akzeptiert"
+    },
+    "meta": {
+      "requestedDate": "Angefragt · {date}",
+      "declinedDate": "Abgelehnt · {date}",
+      "joinedDate": "Beigetreten · {date}"
     },
     "empty": "Noch keine Mitgliedschaftsanfragen.",
     "card": {
@@ -384,14 +402,26 @@
       "rejectionReasonLabel": "Ablehnungsgrund",
       "rejectionReasonPlaceholder": "Erkläre, warum die Anfrage abgelehnt wird...",
       "cancel": "Abbrechen",
-      "approveDisabledTitle": "Erforderliche Formulare sind unvollständig"
+      "approveDisabledTitle": "Erforderliche Formulare sind unvollständig",
+      "withdraw": "Zurückziehen",
+      "leave": "Verlassen"
+    },
+    "dialog": {
+      "withdrawTitle": "Antrag auf Austritt aus der Mitgliedschaft",
+      "withdrawDescription": "Möchten Sie Ihren Beitrittsantrag wirklich {orgName} zurückziehen?",
+      "leaveTitle": "Organisation verlassen",
+      "leaveDescription": "Möchtest du {orgName} wirklich verlassen?"
     },
     "toast": {
       "approved": "Mitgliedschaftsanfrage genehmigt",
       "approveFailed": "Mitgliedschaftsanfrage konnte nicht genehmigt werden",
       "rejected": "Mitgliedschaftsanfrage abgelehnt",
       "cancelled": "Mitgliedschaftsanfrage zurückgezogen",
-      "cancelFailed": "Mitgliedschaftsanfrage konnte nicht zurückgezogen werden"
+      "cancelFailed": "Mitgliedschaftsanfrage konnte nicht zurückgezogen werden",
+      "withdrawn": "Anfrage zurückgezogen",
+      "withdrawFailed": "Zurückziehen fehlgeschlagen",
+      "left": "Du hast {orgName} verlassen",
+      "leaveFailed": "Verlassen fehlgeschlagen"
     },
     "cancelButton": "Anfrage zurückziehen",
     "cancelButtonSubmitting": "Wird zurückgezogen...",
@@ -534,7 +564,8 @@
       "firstDate": "Erster Termin",
       "pattern": "Muster",
       "time": "Zeit",
-      "visibility": "Sichtbarkeit"
+      "visibility": "Sichtbarkeit",
+      "requiredForms": "Formulare"
     },
     "visibility": {
       "ALL_MEMBERS": "Offene Einsätze",
@@ -597,6 +628,32 @@
       "inviteAllLabel": "Zu allen zukünftigen Terminen dieses Einsatzes einladen",
       "inviteAllDescription": "Freiwillige werden zu allen Einsätzen ab dem {startDate}, jeden {days}, eingeladen."
     },
+    "editInstanceForm": {
+      "applyToAllLabel": "Auf alle zukünftigen Termine anwenden",
+      "applyToAllDescription": "Änderungen gelten auch für jeden zukünftigen Termin dieses Einsatzes und überschreiben frühere Änderungen an einzelnen Terminen. Vergangene Termine sind nicht betroffen."
+    },
+    "successDialog": {
+      "title": "Einsatz erstellt",
+      "bodyOpen": "Dein offener Einsatz ist jetzt aktiv! Alle Freiwilligen innerhalb deiner Organisation wurden benachrichtigt und können sich jetzt anmelden.",
+      "bodyInvited": "Dein Einsatz ist live! Eingeladene Freiwillige wurden benachrichtigt.",
+      "shareLabel": "Link zum Einsatz",
+      "copyInviteLink": "Einladungslink kopieren",
+      "recurrence": {
+        "oneTime": "Einmalig",
+        "daily": "Täglich",
+        "workingDays": "Werktags",
+        "weekend": "Wochenende"
+      },
+      "weekDayShort": {
+        "MONDAY": "Mo.",
+        "TUESDAY": "Di.",
+        "WEDNESDAY": "Mi.",
+        "THURSDAY": "Do.",
+        "FRIDAY": "Fr.",
+        "SATURDAY": "Sa.",
+        "SUNDAY": "So."
+      }
+    },
     "transferList": {
       "available": "Verfügbar",
       "invited": "Eingeladen",
@@ -657,9 +714,9 @@
       "full": "Einsatz voll",
       "joined": "Du bist dem Einsatz beigetreten",
       "pending": "Deine Mitgliedschaftsanfrage ist ausstehend. Du wirst dem Einsatz hinzugefügt, sobald er genehmigt wurde.",
-      "pendingCta": "Anfrage ausstehend",
+      "pendingCta": "Ausstehende Anfrage",
       "rejected": "Deine Mitgliedschaftsanfrage für diese Organisation wurde abgelehnt. Kontaktiere einen Administrator, wenn du denkst, dass das ein Fehler war.",
-      "rejectedCta": "Anfrage nicht genehmigt",
+      "rejectedCta": "Du kannst diesem Einsatz nicht beitreten",
       "requirementsNeeded": "Erforderliche Anforderungen: {missing}{hasCompleted, select, yes { (bereits erledigt: {completed})} other {}}",
       "requirementsFallback": "Anforderungsprofil-Oberfläche (noch zu implementieren)",
       "failed": "Einsatzbeitritt fehlgeschlagen",
@@ -697,6 +754,8 @@
       "createEventDescription": "Plane eine Einsatz für diese Veranstaltung.",
       "editTitle": "Einsatz bearbeiten",
       "editDescription": "Bearbeite diesen Einsatz.",
+      "editInstanceTitle": "Einsatztermin bearbeiten",
+      "editInstanceDescription": "Bearbeite diesen Termin des Einsatzes.",
       "inviteTitle": "Freiwillige einladen",
       "inviteDescription": "Eingeladene Freiwillige erhalten eine E-Mail mit Einsatzetails und einem Link zum System."
     },
@@ -710,7 +769,26 @@
       "statusLabel": "Status",
       "createdByLabel": "Erstellt von",
       "createdLabel": "Erstellt",
-      "imageAlt": "Bild für {title}"
+      "imageAlt": "Bild für {title}",
+      "requiredForms": {
+        "title": "Für Beitritt erforderliche Formulare",
+        "subtitle": "Werden vor dem Beitritt zu {shiftTitle} ausgefüllt",
+        "pill": {
+          "required": "{count, plural, one {1 Formular erforderlich} other {{count} Formulare erforderlich}}",
+          "none": "Keine Formulare erforderlich"
+        },
+        "questionCount": "{count, plural, one {1 Frage} other {{count} Fragen}}",
+        "addExisting": "+ Bestehendes hinzufügen",
+        "createNew": "Neues erstellen",
+        "searchForms": "Formulare suchen...",
+        "noFormsFound": "Keine Formulare gefunden",
+        "dedupHint": "Freiwillige werden nicht nach Informationen gefragt, die sie bereits angegeben haben.",
+        "fileUploadLabel": "Datei-Upload",
+        "removeAria": "{name} entfernen",
+        "addedToast": "Formular hinzugefügt",
+        "removedToast": "Formular entfernt",
+        "updateFailedToast": "Erforderliche Formulare konnten nicht aktualisiert werden"
+      }
     },
     "notFound": "Einsatz nicht gefunden.",
     "loading": "Wird geladen...",
@@ -721,7 +799,11 @@
       "organizationUnitRequired": "Organisationseinheit ist erforderlich",
       "shiftIdRequired": "Einsatz-ID ist erforderlich",
       "minMaxVolunteers": "Die Mindestanzahl an Freiwilligen darf die Höchstanzahl nicht überschreiten",
-      "windowViolation": "Muss innerhalb des Veranstaltungszeitraums liegen"
+      "windowViolation": "Muss innerhalb des Veranstaltungszeitraums liegen",
+      "instanceTimeConflict": "Ein anderer Termin dieses Einsatzes beginnt bereits zu dieser Zeit.",
+      "instanceDateMismatch": "Das Datum passt nicht zu diesem Termin. Bitte öffne das Bearbeitungsformular erneut und versuche es noch einmal.",
+      "instanceClearRecurrenceUnsupported": "Das Entfernen der Wiederholung wird in diesem Formular nicht unterstützt. Bearbeite die Wiederholung stattdessen auf der Seite „Einsatz bearbeiten“.",
+      "instanceRecurrenceConflict": "Das neue Wiederholungsmuster enthält den Wochentag dieses Termins nicht. Passe die Wiederholung an oder bearbeite einen anderen Termin."
     },
     "inviteStatus": {
       "invited": "Eingeladen",
@@ -746,6 +828,7 @@
       "title": "Einsatztermin",
       "subtitle": "Freiwillige und Einladungsstatus für diesen Termin",
       "inviteCta": "Einladungen verwalten",
+      "editCta": "Bearbeiten",
       "backToShift": "Zurück zum Einsatz"
     }
   },
@@ -831,6 +914,10 @@
       "noFields": "Keine Felder",
       "allBlocksInUse": "Alle Blöcke werden bereits verwendet",
       "noPreview": "Füge Blöcke hinzu, um eine Vorschau zu sehen",
+      "emptyTitle": "Du hast noch keine Blöcke",
+      "emptyDescription": "Füge deinen ersten Block hinzu, um dieses Formular zu erstellen.",
+      "addAnotherBlockHint": "Füge einen weiteren Block hinzu, um dieses Formular weiterzubauen",
+      "saveDisabledHint": "Füge einen Block hinzu, um das Speichern zu aktivieren",
       "lockedTooltip": "Bearbeiten nicht möglich, Block wird in einem eingereichten Formular verwendet",
       "viewBlock": "Block ansehen",
       "editBlock": "Block bearbeiten",
@@ -986,6 +1073,7 @@
       "zipCode": "Postleitzahl",
       "city": "Stadt",
       "birthDate": "Geburtsdatum",
+      "iban": "IBAN",
       "documentFileLabel": "Dokument",
       "documentFileDescription": "PDF oder Bild, max. 10 MB",
       "enterDocumentFileError": "Bitte lade ein Dokument hoch.",
@@ -1072,6 +1160,20 @@
       "linkCopied": "Link kopiert",
       "linkCopiedDescription": "{url}",
       "couldNotCopyLink": "Link konnte nicht kopiert werden"
+    },
+    "submissions": {
+      "title": "Einsendungen — {formName}",
+      "subtitle": "Freiwillige, die dieses Formular eingereicht haben. Klicke auf eine Person, um die Einsendung anzusehen.",
+      "tabSubmitted": "Eingereicht",
+      "tabRejected": "Abgelehnt",
+      "searchPlaceholder": "Freiwillige suchen…",
+      "volunteerColumn": "Freiwillige:r",
+      "emailColumn": "E-Mail",
+      "submissionsColumn": "Einsendungen",
+      "lastSubmittedColumn": "Zuletzt eingereicht",
+      "viewSubmission": "Ansehen →",
+      "empty": "Noch keine Einsendungen.",
+      "emptySearch": "Keine Freiwilligen gefunden."
     }
   },
   "RequiredFormRenderer": {
@@ -1100,8 +1202,8 @@
     "shiftsSummaryNoSpots": "{shifts} Einsätze",
     "followCta": "Jetzt mitmachen",
     "followingCta": "Du machst mit",
-    "pendingCta": "Anfrage ausstehend",
-    "rejectedCta": "Anfrage nicht genehmigt",
+    "pendingCta": "Ausstehende Anfrage",
+    "rejectedCta": "Du kannst diesem Event nicht beitreten",
     "followNote": "Erhalte Einladungen zu Einsätzen oder melde dich selbst für eine an.",
     "pendingNote": "Ein Koordinator bestätigt deine Anfrage.",
     "requestSentToast": "Anfrage gesendet — ein Koordinator bestätigt sie.",
@@ -1125,6 +1227,7 @@
       "noForms": "Es sind keine Formulare erforderlich.",
       "joinedToast": "Du machst jetzt bei {eventTitle} mit",
       "requestSentToast": "Anfrage gesendet — ein Koordinator bestätigt sie.",
+      "pendingRequestToast": "Ausstehende Anfrage — ein Koordinator bestätigt deine Mitgliedschaft.",
       "rejectedToast": "Anfrage nicht genehmigt",
       "requirementsNeededToast": "Bitte fülle zuerst alle erforderlichen Formulare aus",
       "requestFailed": "Anfrage konnte nicht gesendet werden"
@@ -1160,7 +1263,17 @@
     "locationDivider": "·",
     "errorHeading": "Dieser Einsatz existiert nicht mehr",
     "errorBody": "Sie wurde abgesagt oder der Link ist nicht mehr gültig.",
-    "errorOrgCta": "Zur Organisation"
+    "errorOrgCta": "Zur Organisation",
+    "forms": {
+      "title": "{shiftTitle} beitreten",
+      "description": "Bitte fülle die erforderlichen Formulare aus, bevor du dieser Schicht beitrittst.",
+      "noForms": "Es sind keine Formulare erforderlich.",
+      "joinedToast": "Du bist {shiftTitle} beigetreten",
+      "requestSentToast": "Anfrage gesendet — ein Koordinator bestätigt sie.",
+      "rejectedToast": "Anfrage nicht genehmigt",
+      "requirementsNeededToast": "Bitte fülle zuerst alle erforderlichen Formulare aus",
+      "requestFailed": "Anfrage konnte nicht gesendet werden"
+    }
   },
   "Event": {
     "list": {
@@ -1207,7 +1320,11 @@
         "inviteButton": "Einladen",
         "inviteAria": "Mitglieder einladen",
         "checkInAria": "Einchecken",
-        "empty": "Noch keine Freiwilligen eingeladen."
+        "empty": "Noch keine Freiwilligen eingeladen.",
+        "status": {
+          "invited": "Eingeladen",
+          "signedUp": "Angemeldet"
+        }
       },
       "shiftsCard": {
         "title": "Einsätze",
@@ -1328,7 +1445,17 @@
     "eventCoverImageAlt": "Titelbild für {title}",
     "loadPast": "Vergangene laden",
     "loadMore": "Mehr laden",
-    "invitedOn": "Eingeladen · {date}"
+    "invitedOn": "Eingeladen · {date}",
+    "inviteKindEvent": "Veranstaltung",
+    "inviteKindShift": "Einsatz",
+    "pendingBadge": "Ausstehend",
+    "pendingRequestTitle": "Warte auf {orgName}",
+    "pendingRequestBody": "Ein Admin prüft deine Anfrage. In der Regel dauert das ein paar Tage.",
+    "pendingRequestContact": "Fragen? {name} kann helfen.",
+    "pendingRequestCta": "Meine Anfragen anzeigen",
+    "discoverPendingSubtitle": "Einsätze für {orgName} erscheinen hier nach der Freigabe",
+    "discoverPendingEmptyTitle": "Noch nichts zum Durchstöbern",
+    "discoverPendingEmptyBody": "Einsätze der Organisation erscheinen hier, sobald {orgName} dich akzeptiert.\nCheck-in und Meine Zeit sind jederzeit verfügbar."
   },
   "OrgDetail": {
     "coverImageAlt": "Titelbild für {title}",

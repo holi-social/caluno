@@ -6,6 +6,11 @@ export class MembershipRepository extends BaseRepository {
     return data.memberships;
   }
 
+  async findMine() {
+    const data = await this.sdk.MyMemberships();
+    return data.myMemberships;
+  }
+
   async getMyMembershipStatus(organizationUnitId: string) {
     const data = await this.sdk.GetMyMembershipStatus({ organizationUnitId });
     return data.myMembershipStatus;
@@ -17,5 +22,10 @@ export class MembershipRepository extends BaseRepository {
       roleIds,
     });
     return data.updateMembershipRoles;
+  }
+
+  async leave(membershipId: string) {
+    const data = await this.sdk.LeaveMembership({ id: membershipId });
+    return data.leaveMembership;
   }
 }

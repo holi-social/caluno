@@ -58,11 +58,12 @@ describe('pickFirstShiftInstanceId', () => {
 });
 
 describe('resolveCreateShiftSuccessNavigation', () => {
-  it('opens the invite sheet when an instance id is present', () => {
+  it('opens the invite sheet when an instance id is present and the shift is not open', () => {
     expect(
       resolveCreateShiftSuccessNavigation({
         shiftId: 'shift-1',
         instanceId: 'instance-1',
+        openShift: false,
       }),
     ).toEqual({
       action: 'open-invite',
@@ -71,12 +72,36 @@ describe('resolveCreateShiftSuccessNavigation', () => {
     });
   });
 
-  it('closes the create sheet when no instance id is present', () => {
+  it('closes the create sheet when no instance id is present and the shift is not open', () => {
     expect(
       resolveCreateShiftSuccessNavigation({
         shiftId: 'shift-1',
+        openShift: false,
       }),
     ).toEqual({ action: 'close-create' });
+  });
+
+  it('goes straight to the success dialog for an open shift, even with an instance id', () => {
+    expect(
+      resolveCreateShiftSuccessNavigation({
+        shiftId: 'shift-1',
+        instanceId: 'instance-1',
+        openShift: true,
+      }),
+    ).toEqual({
+      action: 'success',
+      shiftId: 'shift-1',
+      instanceId: 'instance-1',
+    });
+  });
+
+  it('goes straight to the success dialog for an open shift with no instance id', () => {
+    expect(
+      resolveCreateShiftSuccessNavigation({
+        shiftId: 'shift-1',
+        openShift: true,
+      }),
+    ).toEqual({ action: 'success', shiftId: 'shift-1' });
   });
 });
 

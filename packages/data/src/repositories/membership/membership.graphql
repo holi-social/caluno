@@ -47,3 +47,32 @@ mutation UpdateMembershipRoles($membershipId: ID!, $roleIds: [ID!]!) {
     }
   }
 }
+
+mutation LeaveMembership($id: ID!) {
+  leaveMembership(id: $id)
+}
+
+query MyMemberships {
+  myMemberships {
+    id
+    createdAt
+    organizationUnit {
+      id
+      name
+      logoUrl
+      type {
+        icon
+      }
+      parent {
+        id
+      }
+      organization {
+        name
+      }
+    }
+    roles {
+      id
+      name
+    }
+  }
+}

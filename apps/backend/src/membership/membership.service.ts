@@ -165,6 +165,21 @@ export class MembershipService {
     });
   }
 
+  async getMyMemberships(userId: string): Promise<MembershipEntity[]> {
+    return this.db.query.memberships.findMany({
+      where: { userId },
+      with: {
+        user: true,
+        organizationUnit: true,
+        roles: {
+          with: {
+            role: true,
+          },
+        },
+      },
+    });
+  }
+
   async getMembershipUser(membershipId: string): Promise<UserEntity | null> {
     const membership = await this.db.query.memberships.findFirst({
       where: { id: membershipId },
@@ -526,6 +541,24 @@ export class MembershipService {
     );
   }
 
+  async leaveMembership(id: string, userId: string): Promise<boolean> {
+    const [deleted] = await this.db
+      .delete(schema.memberships)
+      .where(
+        and(
+          eq(schema.memberships.id, id),
+          eq(schema.memberships.userId, userId),
+        ),
+      )
+      .returning();
+
+    if (!deleted) {
+      throw new NotFoundGraphQLError('Membership not found');
+    }
+
+    return true;
+  }
+
   async getMembershipRequests(
     organizationUnitId: string,
     status?: MembershipRequestStatus,
@@ -559,10 +592,9 @@ export class MembershipService {
 
   async getMyMembershipRequests(
     userId: string,
-    status?: MembershipRequestStatus,
   ): Promise<MembershipRequestEntity[]> {
     return this.db.query.membershipRequests.findMany({
-      where: { userId, ...(status ? { status } : {}) },
+      where: { userId },
       with: {
         user: true,
         organizationUnit: true,

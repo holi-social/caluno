@@ -31,7 +31,7 @@ export function MyShiftsView({ initialFuturePage }: MyShiftsViewProps) {
   const today = startOfDay(new Date());
 
   const futureQuery = useMyShiftInstancesInfinite(
-    { from: today, order: SortOrder.Asc, limit: 15 },
+    { from: today, order: SortOrder.Asc, limit: 15, includeIntended: true },
     {
       initialData: initialFuturePage
         ? { pages: [initialFuturePage], pageParams: [0] }
@@ -41,7 +41,7 @@ export function MyShiftsView({ initialFuturePage }: MyShiftsViewProps) {
 
   const [pastEnabled, setPastEnabled] = useState(false);
   const pastQuery = useMyShiftInstancesInfinite(
-    { to: today, order: SortOrder.Desc, limit: 15 },
+    { to: today, order: SortOrder.Desc, limit: 15, includeIntended: true },
     { enabled: pastEnabled },
   );
 

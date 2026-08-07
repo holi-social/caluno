@@ -13,9 +13,11 @@ import {
   type GetShiftQuery,
   type GetWeeklyShiftsQuery,
   type JoinShiftInstanceMutation,
+  type SetShiftRequiredFormsMutation,
   type ShiftInviteStatus,
   SortOrder,
   type UpdateShiftInput,
+  type UpdateShiftInstanceInput,
 } from '../../generated/graphql';
 import {
   BaseRepository,
@@ -116,6 +118,14 @@ export class ShiftRepository extends BaseRepository {
     return { id: data.deleteShift.id };
   }
 
+  async setRequiredForms(
+    shiftId: string,
+    formIds: string[],
+  ): Promise<SetShiftRequiredFormsMutation['setShiftRequiredForms']> {
+    const data = await this.sdk.SetShiftRequiredForms({ shiftId, formIds });
+    return data.setShiftRequiredForms;
+  }
+
   async updateMembers(
     instanceId: string,
     memberIds: string[],
@@ -127,6 +137,19 @@ export class ShiftRepository extends BaseRepository {
       inviteToAllInstances: options?.inviteToAllInstances,
     });
     return { id: data.updateMembersForShiftInstance.id };
+  }
+
+  async updateInstance(
+    instanceId: string,
+    input: UpdateShiftInstanceInput,
+    applyToAllFuture?: boolean,
+  ): Promise<{ id: string }> {
+    const data = await this.sdk.UpdateShiftInstance({
+      instanceId,
+      input,
+      applyToAllFuture,
+    });
+    return { id: data.updateShiftInstance.id };
   }
 
   async joinInstance(
@@ -184,6 +207,7 @@ export class ShiftRepository extends BaseRepository {
       offset?: number;
       order?: SortOrder;
       statuses?: ShiftInviteStatus[];
+      includeIntended?: boolean;
     } = {},
   ): Promise<{
     items: MyShiftInstance[];
@@ -202,6 +226,7 @@ export class ShiftRepository extends BaseRepository {
       offset: options.offset ?? 0,
       order: options.order ?? SortOrder.Asc,
       statuses: options.statuses,
+      includeIntended: options.includeIntended,
     });
     return data.myShiftInstances;
   }

@@ -1,13 +1,21 @@
 'use server';
 
-import type { CreateShiftInput, UpdateShiftInput } from '@repo/data';
+import type {
+  CreateShiftInput,
+  UpdateShiftInput,
+  UpdateShiftInstanceInput,
+} from '@repo/data';
 import { ShiftInviteStatus, ShiftVisibility } from '@repo/data';
 import z from 'zod';
 import { getDataClient } from '@/lib/data-client';
 import { actionClient } from '@/lib/safe-action';
 import { pickFirstShiftInstanceId } from './create-shift-flow';
 import { generateRrule } from './rrule';
-import { serverShiftDeleteSchema, serverShiftFormSchema } from './schemas';
+import {
+  serverEditShiftInstanceFormSchema,
+  serverShiftDeleteSchema,
+  serverShiftFormSchema,
+} from './schemas';
 
 export async function getShift(id: string, organizationUnitId: string) {
   const data = await getDataClient({ orgUId: organizationUnitId });
@@ -40,6 +48,7 @@ export const createShift = actionClient
       imageFileId: parsedInput.imageFileId ?? null,
       minVolunteers: parsedInput.minVolunteers ?? null,
       maxVolunteers: parsedInput.maxVolunteers ?? null,
+      requiredFormIds: parsedInput.requiredFormIds,
     };
 
     const shift = await data.shift.create(input);
@@ -77,10 +86,57 @@ export const updateShift = actionClient
       imageFileId: parsedInput.imageFileId,
       minVolunteers: parsedInput.minVolunteers ?? null,
       maxVolunteers: parsedInput.maxVolunteers ?? null,
+      requiredFormIds: parsedInput.requiredFormIds,
     };
 
     return await data.shift.update(shiftId, input);
   });
+
+export const updateShiftInstance = actionClient
+  .inputSchema(serverEditShiftInstanceFormSchema)
+  .bindArgsSchemas([z.string(), z.string()])
+  .action(
+    async ({ parsedInput, bindArgsParsedInputs: [orgUId, instanceId] }) => {
+      const data = await getDataClient({ orgUId });
+      const applyToAllFuture = parsedInput.applyToAllFuture ?? false;
+
+      const rrule = applyToAllFuture
+        ? generateRrule(
+            parsedInput.startsAt,
+            parsedInput.recurrenceDays,
+            parsedInput.recurrenceEndsAt,
+          )
+        : undefined;
+
+      const input: UpdateShiftInstanceInput = {
+        title: parsedInput.name,
+        startsAt: parsedInput.startsAt.toISOString(),
+        endsAt: parsedInput.endsAt.toISOString(),
+        location: parsedInput.location,
+        instructions: parsedInput.instructions,
+        minVolunteers: parsedInput.minVolunteers ?? null,
+        maxVolunteers: parsedInput.maxVolunteers ?? null,
+        ...(applyToAllFuture
+          ? {
+              rrule,
+              visibility: parsedInput.openShift
+                ? ShiftVisibility.AllMembers
+                : ShiftVisibility.InvitedMembers,
+              ...(parsedInput.imageFileId !== undefined
+                ? { imageFileId: parsedInput.imageFileId }
+                : {}),
+              requiredFormIds: parsedInput.requiredFormIds,
+            }
+          : {}),
+      };
+
+      return await data.shift.updateInstance(
+        instanceId,
+        input,
+        applyToAllFuture,
+      );
+    },
+  );
 
 export const deleteShift = actionClient
   .inputSchema(serverShiftDeleteSchema)
