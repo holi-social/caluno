@@ -4,7 +4,7 @@ import { getDataClient } from './data-client';
 import { USER_LOCALE_COOKIE } from './locale-constants';
 
 /**
- * Resolve the locale to seed the `clippy.locale` preference cookie with, for an
+ * Resolve the locale to seed the `caluno.locale` preference cookie with, for an
  * authenticated user who does not have the cookie yet. Returns the stored
  * `me.locale` when the cookie is missing, otherwise `null`.
  *

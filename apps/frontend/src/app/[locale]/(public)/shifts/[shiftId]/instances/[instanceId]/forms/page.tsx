@@ -26,11 +26,11 @@ export async function generateMetadata({ params }: ShiftFormsPageProps) {
     if (error instanceof DataError && error.options?.code === 'NOT_FOUND') {
       notFound();
     }
-    return { title: 'Shift — Clippy' };
+    return { title: 'Shift — Caluno' };
   }
   const t = await getTranslations({ locale, namespace: 'ShiftDetail' });
   return {
-    title: `${t('forms.title', { shiftTitle: shift.title })} — Clippy`,
+    title: `${t('forms.title', { shiftTitle: shift.title })} — Caluno`,
   };
 }
 

@@ -32,16 +32,16 @@ describe('AppI18nService', () => {
   it('translates with a full key path', () => {
     expect(
       appI18n.translate('en', 'email.passwordReset.subject', {
-        brandName: 'Clippy',
+        brandName: 'Caluno',
       }),
-    ).toBe('Reset your Clippy password');
+    ).toBe('Reset your Caluno password');
   });
 
   it('scopes translators to a namespace', () => {
     const { t } = appI18n.createTranslator('de', 'email');
 
-    expect(t('passwordReset.subject', { brandName: 'Clippy' })).toBe(
-      'Setze dein Clippy-Passwort zurück',
+    expect(t('passwordReset.subject', { brandName: 'Caluno' })).toBe(
+      'Setze dein Caluno-Passwort zurück',
     );
   });
 });

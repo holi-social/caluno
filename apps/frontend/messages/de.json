@@ -30,7 +30,7 @@
     "toggleTheme": "Design wechseln",
     "menu": "Menü",
     "signOut": "Abmelden",
-    "brand": "Clippy",
+    "brand": "Caluno",
     "greeting": "Hallo {name}",
     "avatarAlt": "Avatar von {name}"
   },
@@ -115,9 +115,9 @@
     }
   },
   "Metadata": {
-    "title": "Clippy",
+    "title": "Caluno",
     "description": "Plattform zur Verwaltung von ehrenamtlich Engagierten",
-    "unauthorizedTitle": "Zugriff verweigert | Clippy"
+    "unauthorizedTitle": "Zugriff verweigert | Caluno"
   },
   "Unauthorized": {
     "title": "Zugriff verweigert",

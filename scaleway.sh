@@ -71,8 +71,8 @@ validate_env() {
   require_env "IMAGE_TAG"
 
   REGISTRY_NAMESPACE="$REGISTRY_URL/$SCW_CR_NAMESPACE"
-  FRONTEND_IMAGE="$REGISTRY_NAMESPACE/clippy-frontend:$IMAGE_TAG"
-  BACKEND_IMAGE="$REGISTRY_NAMESPACE/clippy-backend:$IMAGE_TAG"
+  FRONTEND_IMAGE="$REGISTRY_NAMESPACE/caluno-frontend:$IMAGE_TAG"
+  BACKEND_IMAGE="$REGISTRY_NAMESPACE/caluno-backend:$IMAGE_TAG"
 }
 
 check_docker() {
@@ -113,8 +113,8 @@ build_frontend() {
   docker buildx build --no-cache --load \
     --platform linux/amd64 \
     -f "$REPO_ROOT/apps/frontend/Dockerfile" \
-    --build-arg NEXT_PUBLIC_WEB_URL="https://staging.clippy.holi.social" \
-    --build-arg NEXT_PUBLIC_API_URL="https://staging.clippy.apis.holi.social" \
+    --build-arg NEXT_PUBLIC_WEB_URL="https://staging.app.caluno.org" \
+    --build-arg NEXT_PUBLIC_API_URL="https://staging.api.caluno.org" \
     -t "$FRONTEND_IMAGE" \
     "$REPO_ROOT"
 }

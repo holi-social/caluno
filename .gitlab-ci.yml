@@ -143,14 +143,14 @@ sast:
     - name: europe-north1-docker.pkg.dev/holi-shared/docker-hub-remote/postgres:17
       alias: postgres
   variables:
-    POSTGRES_DB: clippy_test
-    POSTGRES_USER: clippy
-    POSTGRES_PASSWORD: clippy
+    POSTGRES_DB: caluno_test
+    POSTGRES_USER: caluno
+    POSTGRES_PASSWORD: caluno
     DB_HOST: postgres
     DB_PORT: 5432
-    DB_USER: clippy
-    DB_PASSWORD: clippy
-    DB_NAME: clippy_test
+    DB_USER: caluno
+    DB_PASSWORD: caluno
+    DB_NAME: caluno_test
   before_script:
     - bun install --frozen-lockfile
     - bun run build
@@ -371,7 +371,7 @@ secret_detection:
   rules:
     - if: '$CI_COMMIT_BRANCH == "main"'
   variables:
-    TRIVY_IMAGE_REF: '$SCW_REGISTRY_HOST/$SCW_REGISTRY_NAMESPACE/clippy-backend:$CI_COMMIT_SHORT_SHA'
+    TRIVY_IMAGE_REF: '$SCW_REGISTRY_HOST/$SCW_REGISTRY_NAMESPACE/caluno-backend:$CI_COMMIT_SHORT_SHA'
     TRIVY_REPORT_PATH: gl-container-scanning-report-staging-backend.json
   allow_failure: true
 
@@ -381,7 +381,7 @@ secret_detection:
   rules:
     - if: '$CI_COMMIT_BRANCH == "main"'
   variables:
-    TRIVY_IMAGE_REF: '$SCW_REGISTRY_HOST/$SCW_REGISTRY_NAMESPACE/clippy-frontend:$CI_COMMIT_SHORT_SHA'
+    TRIVY_IMAGE_REF: '$SCW_REGISTRY_HOST/$SCW_REGISTRY_NAMESPACE/caluno-frontend:$CI_COMMIT_SHORT_SHA'
     TRIVY_REPORT_PATH: gl-container-scanning-report-staging-frontend.json
   allow_failure: true
 
@@ -391,7 +391,7 @@ secret_detection:
   rules:
     - if: '$CI_COMMIT_BRANCH == "production"'
   variables:
-    TRIVY_IMAGE_REF: '$SCW_REGISTRY_HOST/$SCW_REGISTRY_NAMESPACE/clippy-backend:$CI_COMMIT_SHORT_SHA'
+    TRIVY_IMAGE_REF: '$SCW_REGISTRY_HOST/$SCW_REGISTRY_NAMESPACE/caluno-backend:$CI_COMMIT_SHORT_SHA'
     TRIVY_REPORT_PATH: gl-container-scanning-report-production-backend.json
   allow_failure: true
 
@@ -401,7 +401,7 @@ secret_detection:
   rules:
     - if: '$CI_COMMIT_BRANCH == "production"'
   variables:
-    TRIVY_IMAGE_REF: '$SCW_REGISTRY_HOST/$SCW_REGISTRY_NAMESPACE/clippy-frontend:$CI_COMMIT_SHORT_SHA'
+    TRIVY_IMAGE_REF: '$SCW_REGISTRY_HOST/$SCW_REGISTRY_NAMESPACE/caluno-frontend:$CI_COMMIT_SHORT_SHA'
     TRIVY_REPORT_PATH: gl-container-scanning-report-production-frontend.json
   allow_failure: true
 
@@ -423,12 +423,12 @@ secret_detection:
     - |
       if [ "$CI_COMMIT_BRANCH" = "main" ]; then
         export STABLE_TAG="staging"
-        export NEXT_PUBLIC_API_URL="https://staging.clippy.apis.holi.social"
-        export NEXT_PUBLIC_WEB_URL="https://staging.clippy.holi.social"
+        export NEXT_PUBLIC_API_URL="https://staging.api.caluno.org"
+        export NEXT_PUBLIC_WEB_URL="https://staging.app.caluno.org"
       elif [ "$CI_COMMIT_BRANCH" = "production" ]; then
         export STABLE_TAG="latest"
-        export NEXT_PUBLIC_API_URL="https://clippy.apis.holi.social"
-        export NEXT_PUBLIC_WEB_URL="https://clippy.holi.social"
+        export NEXT_PUBLIC_API_URL="https://api.caluno.org"
+        export NEXT_PUBLIC_WEB_URL="https://app.caluno.org"
       else
         echo "Unsupported branch $CI_COMMIT_BRANCH"; exit 1
       fi
@@ -436,7 +436,7 @@ secret_detection:
 .build-images-backend:
   extends: .build-images-base
   script:
-    - export BACKEND_IMAGE_NAME="clippy-backend"
+    - export BACKEND_IMAGE_NAME="caluno-backend"
     - docker buildx build --load
       -t "$REGISTRY_NAMESPACE/$BACKEND_IMAGE_NAME:$IMAGE_TAG_SHA"
       -t "$REGISTRY_NAMESPACE/$BACKEND_IMAGE_NAME:$STABLE_TAG"
@@ -447,7 +447,7 @@ secret_detection:
 .build-images-frontend:
   extends: .build-images-base
   script:
-    - export FRONTEND_IMAGE_NAME="clippy-frontend"
+    - export FRONTEND_IMAGE_NAME="caluno-frontend"
     - docker buildx build --load
       --build-arg NEXT_PUBLIC_API_URL="$NEXT_PUBLIC_API_URL"
       --build-arg NEXT_PUBLIC_WEB_URL="$NEXT_PUBLIC_WEB_URL"
@@ -471,7 +471,7 @@ secret_detection:
 .build-images-backend-branch:
   extends: .build-images-base-branch
   script:
-    - export BACKEND_IMAGE_NAME="clippy-backend"
+    - export BACKEND_IMAGE_NAME="caluno-backend"
     - docker buildx build --load
       -t "$BACKEND_IMAGE_NAME:$IMAGE_TAG_SHA"
       -f apps/backend/Dockerfile .
@@ -491,7 +491,7 @@ secret_detection:
 .build-images-frontend-branch:
   extends: .build-images-base-branch
   script:
-    - export FRONTEND_IMAGE_NAME="clippy-frontend"
+    - export FRONTEND_IMAGE_NAME="caluno-frontend"
     - docker buildx build --load
       --build-arg NEXT_PUBLIC_API_URL="http://localhost"
       --build-arg NEXT_PUBLIC_WEB_URL="http://localhost"
