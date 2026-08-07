@@ -1,12 +1,11 @@
 'use client';
 
-import { Button } from '@repo/ui';
+import { ActionTooltip, Button } from '@repo/ui';
 import { addDays, addWeeks, format, getISOWeek, subWeeks } from 'date-fns';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { useSearchParams } from 'next/navigation';
 import { useFormatter, useTranslations } from 'next-intl';
 import { useCallback } from 'react';
-import { ActionTooltip } from '@/components/action-tooltip';
 import { useRouter } from '@/i18n/navigation';
 
 type WeeklyCalendarNavProps = {

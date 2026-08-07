@@ -3,6 +3,7 @@
 import { FieldType } from '@repo/data';
 import { useBlock } from '@repo/data/react';
 import {
+  ActionTooltip,
   Badge,
   Button,
   Field,
@@ -41,7 +42,6 @@ import {
   useWatch,
 } from 'react-hook-form';
 import { toast } from 'sonner';
-import { ActionTooltip } from '@/components/action-tooltip';
 import { FileUpload } from '@/components/storage/file-upload';
 import { saveBlock } from '../actions';
 import { SYSTEM_PROFILE_FIELDS } from '../system-profile-fields';

@@ -2,6 +2,7 @@
 
 import { FieldType, type RequiredForm } from '@repo/data/react';
 import {
+  ActionTooltip,
   Button,
   Command,
   CommandEmpty,
@@ -14,7 +15,6 @@ import {
   PopoverTrigger,
 } from '@repo/ui';
 import { FileCheck, FileText, Info, Plus, X } from 'lucide-react';
-import { ActionTooltip } from '@/components/action-tooltip';
 
 type FormsT = (
   key: string,

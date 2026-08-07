@@ -1,10 +1,9 @@
 'use client';
 
 import type { FormBlock } from '@repo/data';
-import { Button } from '@repo/ui';
+import { ActionTooltip, Button } from '@repo/ui';
 import { ArrowDown, ArrowUp, Edit3, Eye, Plus, Trash2 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import { ActionTooltip } from '@/components/action-tooltip';
 import type { BuilderBlockRef } from './form-builder-state';
 
 interface FormBuilderBlockListProps {

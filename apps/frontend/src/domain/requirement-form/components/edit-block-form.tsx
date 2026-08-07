@@ -3,6 +3,7 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import type { FormBlock, FormBlockField } from '@repo/data';
 import {
+  ActionTooltip,
   Button,
   Field,
   FieldError,
@@ -25,7 +26,6 @@ import { useMemo, useState, useTransition } from 'react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 import { z } from 'zod';
-import { ActionTooltip } from '@/components/action-tooltip';
 import { useRouter } from '@/i18n/navigation';
 import {
   createBlockField,

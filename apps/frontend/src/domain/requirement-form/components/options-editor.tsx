@@ -1,10 +1,9 @@
 'use client';
 
-import { Button, Input } from '@repo/ui';
+import { ActionTooltip, Button, Input } from '@repo/ui';
 import { Plus, Trash2 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useState } from 'react';
-import { ActionTooltip } from '@/components/action-tooltip';
 
 interface OptionItem {
   id: string;

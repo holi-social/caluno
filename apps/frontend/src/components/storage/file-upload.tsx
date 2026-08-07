@@ -1,6 +1,7 @@
 'use client';
 
 import {
+  ActionTooltip,
   Button,
   cn,
   Empty,
@@ -17,7 +18,6 @@ import {
 import { FileIcon, Loader2, Upload, X } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useId, useRef, useState } from 'react';
-import { ActionTooltip } from '@/components/action-tooltip';
 import {
   getAcceptForPurpose,
   isMimeTypeAllowedForPurpose,

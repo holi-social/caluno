@@ -1,4 +1,5 @@
 import {
+  ActionTooltip,
   Button,
   Card,
   CardContent,
@@ -9,7 +10,6 @@ import {
 import { LogIn } from 'lucide-react';
 import { redirect } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
-import { ActionTooltip } from '@/components/action-tooltip';
 import { Link } from '@/i18n/navigation';
 import {
   getLastVisitedOrgServer,

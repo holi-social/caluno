@@ -5,6 +5,7 @@ import {
   MembershipRequestStatus,
 } from '@repo/data';
 import {
+  ActionTooltip,
   Avatar,
   AvatarFallback,
   AvatarImage,
@@ -18,7 +19,6 @@ import {
 } from '@repo/ui';
 import { Eye, UserRound } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import { ActionTooltip } from '@/components/action-tooltip';
 import { MembershipRequestActions } from '@/domain/membership-requests/components/membership-request-actions';
 import { MembershipRequestRequiredForms } from '@/domain/membership-requests/components/membership-request-required-forms';
 import { useSheetTrigger } from '@/hooks/use-sheet';

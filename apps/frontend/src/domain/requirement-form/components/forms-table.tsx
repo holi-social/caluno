@@ -2,6 +2,7 @@
 
 import type { FormBlock, RequirementForm } from '@repo/data';
 import {
+  ActionTooltip,
   Badge,
   Button,
   Table,
@@ -14,7 +15,6 @@ import {
 import { Loader2, Lock, Pencil, Share2, Trash2, Users } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useTransition } from 'react';
-import { ActionTooltip } from '@/components/action-tooltip';
 import { DeleteAlertDialog } from '@/components/delete-alert-dialog';
 import { FormattedDate } from '@/components/formatted-date';
 import { Link } from '@/i18n/navigation';

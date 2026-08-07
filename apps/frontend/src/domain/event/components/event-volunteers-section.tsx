@@ -3,6 +3,7 @@
 import { EventInviteStatus, MembershipRequestStatus } from '@repo/data';
 import type { EventInviteItem } from '@repo/data/react';
 import {
+  ActionTooltip,
   Badge,
   Button,
   Card,
@@ -13,7 +14,6 @@ import {
 } from '@repo/ui';
 import { LogIn, UserRound } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import { ActionTooltip } from '@/components/action-tooltip';
 import { UserCard } from '@/components/user-card';
 import { useSheetTrigger } from '@/hooks/use-sheet';
 import { Link } from '@/i18n/navigation';

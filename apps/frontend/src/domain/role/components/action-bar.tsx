@@ -1,12 +1,11 @@
 'use client';
 
 import { PermissionKey } from '@repo/data';
-import { Button } from '@repo/ui';
+import { ActionTooltip, Button } from '@repo/ui';
 import { Edit, Loader2, Trash } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useTransition } from 'react';
 import { toast } from 'sonner';
-import { ActionTooltip } from '@/components/action-tooltip';
 import { DeleteAlertDialog } from '@/components/delete-alert-dialog';
 import { RequirePermission } from '@/components/require-permission';
 import { Link, usePathname, useRouter } from '@/i18n/navigation';

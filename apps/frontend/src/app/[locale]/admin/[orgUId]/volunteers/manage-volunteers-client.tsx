@@ -7,6 +7,7 @@ import {
   useMemberships,
 } from '@repo/data/react';
 import {
+  ActionTooltip,
   Avatar,
   AvatarFallback,
   AvatarImage,
@@ -26,7 +27,6 @@ import {
 import { LogIn, UserRound } from 'lucide-react';
 import { useSearchParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
-import { ActionTooltip } from '@/components/action-tooltip';
 import { ButtonClipboard } from '@/components/button-clipboard';
 import MembershipRequestCard from '@/domain/membership-requests/components/membership-request-card';
 import { organizationUnitUrl } from '@/domain/organization/share';

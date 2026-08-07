@@ -1,12 +1,11 @@
 'use client';
 
 import type { FormBlock, RequirementForm } from '@repo/data';
-import { Badge, Button, Card, CardContent } from '@repo/ui';
+import { ActionTooltip, Badge, Button, Card, CardContent } from '@repo/ui';
 import { Eye, Pencil, Share2, Trash2, Users } from 'lucide-react';
 import { useFormatter, useTranslations } from 'next-intl';
 import { useState } from 'react';
 import { toast } from 'sonner';
-import { ActionTooltip } from '@/components/action-tooltip';
 import { Link } from '@/i18n/navigation';
 import { ConfirmDialog } from './confirm-dialog';
 

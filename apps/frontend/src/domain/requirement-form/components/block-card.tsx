@@ -1,12 +1,11 @@
 'use client';
 
 import type { FormBlock, RequirementForm } from '@repo/data';
-import { Badge, Button, Card, CardContent } from '@repo/ui';
+import { ActionTooltip, Badge, Button, Card, CardContent } from '@repo/ui';
 import type { LucideIcon } from 'lucide-react';
 import { Eye, FileCheck, MapPin, Pencil, Trash2, User } from 'lucide-react';
 import { useFormatter, useTranslations } from 'next-intl';
 import { useState } from 'react';
-import { ActionTooltip } from '@/components/action-tooltip';
 import { useSheetTrigger } from '@/hooks/use-sheet';
 import { ConfirmDialog } from './confirm-dialog';
 

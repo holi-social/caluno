@@ -1,7 +1,12 @@
-import { Avatar, AvatarFallback, AvatarImage, Button } from '@repo/ui';
+import {
+  ActionTooltip,
+  Avatar,
+  AvatarFallback,
+  AvatarImage,
+  Button,
+} from '@repo/ui';
 import { Pencil } from 'lucide-react';
 import { getTranslations } from 'next-intl/server';
-import { ActionTooltip } from '@/components/action-tooltip';
 import { getInitials } from '@/lib/get-initials';
 import { Link } from '../../../i18n/navigation';
 

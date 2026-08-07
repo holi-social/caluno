@@ -2,6 +2,7 @@
 
 import type { OrgUnitTreeNode } from '@repo/data';
 import {
+  ActionTooltip,
   Button,
   TreeExpander,
   TreeIcon,
@@ -21,7 +22,6 @@ import {
   TrashIcon,
 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import { ActionTooltip } from '@/components/action-tooltip';
 import { Link } from '@/i18n/navigation';
 import { orgUnitAdminHref } from '@/lib/admin-routes';
 import { getDynamicIcon } from '@/lib/dynamic-icon';

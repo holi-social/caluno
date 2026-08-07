@@ -1,6 +1,7 @@
 'use client';
 
 import {
+  ActionTooltip,
   Badge,
   Button,
   cn,
@@ -11,7 +12,6 @@ import {
 import { ArrowLeftRight, CirclePlus, CircleX } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useState } from 'react';
-import { ActionTooltip } from '@/components/action-tooltip';
 import {
   type InviteStatus,
   toInviteDisplayState,

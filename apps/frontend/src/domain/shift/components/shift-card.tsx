@@ -2,6 +2,7 @@
 
 import type { ShiftInviteStatus, WeeklyShiftInstance } from '@repo/data';
 import {
+  ActionTooltip,
   Badge,
   Button,
   Card,
@@ -11,7 +12,6 @@ import {
 import { format } from 'date-fns';
 import { TriangleAlert, UserPlus, UsersRound } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import { ActionTooltip } from '@/components/action-tooltip';
 import { Link } from '@/i18n/navigation';
 import { toInviteDisplayState } from '../invite-status-display';
 import { shiftInstanceDetailPath, shiftInvitePath } from '../routes';

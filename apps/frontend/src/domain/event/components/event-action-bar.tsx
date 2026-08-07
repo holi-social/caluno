@@ -1,11 +1,10 @@
 'use client';
 
-import { Button } from '@repo/ui';
+import { ActionTooltip, Button } from '@repo/ui';
 import { Eye, Share2, SquarePen, Trash2, UserPlus } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useState, useTransition } from 'react';
 import { toast } from 'sonner';
-import { ActionTooltip } from '@/components/action-tooltip';
 import { ConfirmDialog } from '@/domain/requirement-form/components/confirm-dialog';
 import { Link, useRouter } from '@/i18n/navigation';
 import { copyToClipboard } from '@/lib/clipboard';

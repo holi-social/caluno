@@ -1,9 +1,9 @@
 'use client';
 
-import { Tooltip, TooltipContent, TooltipTrigger } from '@repo/ui';
 import type { ReactElement } from 'react';
+import { Tooltip, TooltipContent, TooltipTrigger } from './tooltip';
 
-/** Hover label for icon-only actions. Keeps aria-label on the trigger for a11y. */
+/** Hover label for icon-only actions. Keep aria-label on the trigger for a11y. */
 export function ActionTooltip({
   label,
   children,
