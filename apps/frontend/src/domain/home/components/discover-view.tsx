@@ -54,8 +54,11 @@ export function DiscoverView({
 
   const renderContent = (group: DayGroup<AvailableShiftInstance>) => (
     <div className="space-y-3">
-      {group.items.map((shift) => (
-        <ShiftCardDiscovery key={shift.id} shiftInstance={shift} />
+      {group.items.map((shiftInstance) => (
+        <ShiftCardDiscovery
+          key={shiftInstance.id}
+          shiftInstance={shiftInstance}
+        />
       ))}
       {group.date.getTime() === grouped[grouped.length - 1]?.date.getTime() &&
         (hasNextPage || isFetching) && (

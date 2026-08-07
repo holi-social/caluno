@@ -1,7 +1,7 @@
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
-import type { GetEventAttendeesQuery } from '@repo/data';
+import type { EventInviteStatus } from '@repo/data';
 import { Button } from '@repo/ui';
 import { Share2 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
@@ -12,10 +12,17 @@ import { FormSheet, useFormSheet } from '@/components/form-sheet';
 import { TransferList } from '@/domain/shift/components/transfer-list';
 import { useRouter } from '@/i18n/navigation';
 import { copyToClipboard } from '@/lib/clipboard';
+import { toEventInviteDisplayState } from '../invite-status-display';
 import { serverEventInviteFormSchema } from '../schemas';
 import { eventShareUrl } from '../share';
 
-type Member = GetEventAttendeesQuery['eventAttendees'][number];
+type Member = {
+  id: string;
+  name: string;
+  email: string;
+  image?: string | null;
+  inviteStatus?: EventInviteStatus | null;
+};
 
 interface EventInviteFormProps {
   title: string;
@@ -50,8 +57,36 @@ export const EventInviteForm = ({
     },
   });
 
+  const statusById = new Map(
+    invitedMembers.map((m) => [m.id, m.inviteStatus] as const),
+  );
+
   const watchedIds = watch('memberIds');
-  const invited = availableMembers.filter((m) => watchedIds.includes(m.id));
+  const invited: Member[] = watchedIds.map((id) => {
+    const fromAvailable = availableMembers.find((m) => m.id === id);
+    if (fromAvailable) {
+      return {
+        ...fromAvailable,
+        inviteStatus: statusById.get(id) ?? null,
+      };
+    }
+    const fromInvited = invitedMembers.find((m) => m.id === id);
+    return (
+      fromInvited ?? {
+        id,
+        name: id,
+        email: '',
+        inviteStatus: statusById.get(id) ?? null,
+      }
+    );
+  });
+
+  const invitedForList = invited.map((member) => ({
+    ...member,
+    displayState: member.inviteStatus
+      ? toEventInviteDisplayState(member.inviteStatus)
+      : ('invited' as const),
+  }));
 
   const onSubmit = async (formData: { memberIds: string[] }) => {
     setServerError(undefined);
@@ -82,7 +117,7 @@ export const EventInviteForm = ({
       <div className="flex min-h-full flex-col gap-4">
         <TransferList
           available={availableMembers}
-          invited={invited}
+          invited={invitedForList}
           onInvitedChange={(ids) => setValue('memberIds', ids)}
         />
         <p className="shrink-0 text-sm text-muted-foreground">

@@ -72,3 +72,8 @@ export const ACTIVE_SHIFT_INVITE_STATUSES = [
   ShiftInviteStatus.INVITED,
   ...PARTICIPATING_SHIFT_INVITE_STATUSES,
 ] as const;
+
+export const ACTIVE_EVENT_INVITE_STATUSES = [
+  EventInviteStatus.INVITED,
+  ...PARTICIPATING_EVENT_INVITE_STATUSES,
+] as const;

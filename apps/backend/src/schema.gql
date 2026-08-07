@@ -169,6 +169,7 @@ type EventInvite {
   id: ID!
   status: EventInviteStatus!
   updatedAt: DateTime!
+  user: User!
   userId: String!
 }
 
@@ -443,6 +444,7 @@ type Mutation {
   updateRequirementProfileSubmission(id: String!, input: UpdateRequirementProfileSubmissionInput!): RequirementProfileSubmission!
   updateRole(id: ID!, input: CreateRoleInput!): Role!
   updateShift(id: String!, input: UpdateShiftInput!): Shift!
+  updateShiftInstance(applyToAllFuture: Boolean, input: UpdateShiftInstanceInput!, instanceId: String!): ShiftInstance!
   updateShiftInstanceInviteStatus(instanceId: String!, status: ShiftInviteStatus!, userId: String): ShiftInstanceInvite!
   updateShiftInviteStatus(shiftId: String!, status: ShiftInviteStatus!): ShiftInvite!
   updateTimeEntry(id: ID!, input: UpdateTimeEntryInput!): TimeEntry!
@@ -564,7 +566,7 @@ type Query {
   adminVolunteerSubmission(id: String!): FormSubmission
   availableShiftInstances(endsBefore: DateTime = null, limit: Int! = 15, offset: Int! = 0, organizationUnitIds: [ID!], startsAfter: DateTime = null): ShiftInstancePaginatedResponse!
   event(id: ID!): Event!
-  eventAttendees(eventId: ID!): [User!]!
+  eventInvites(eventId: ID!): [EventInvite!]!
   eventShifts(eventId: ID!, limit: Int! = 10, offset: Int! = 0): ShiftPaginatedResponse!
   events(limit: Int! = 10, offset: Int! = 0): EventPaginatedResponse!
   formBlock(id: String!): FormBlock
@@ -581,6 +583,7 @@ type Query {
   membershipRequests(limit: Int! = 10, offset: Int! = 0, status: MembershipRequestStatus): MembershipRequestPaginatedResponse!
   memberships: [Membership!]!
   myAdminstableOrganizationUnits: [OrganizationUnit!]!
+  myEvents(endsBefore: DateTime = null, includePast: Boolean! = false, limit: Int! = 15, offset: Int! = 0, order: SortOrder! = ASC, startsAfter: DateTime = null, statuses: [EventInviteStatus!]): EventPaginatedResponse!
   myFormSubmissionByToken(token: String!): FormSubmission
   myFormSubmissions(organizationUnitId: ID!): [FormSubmission!]!
   myMembershipRequests(limit: Int! = 10, offset: Int! = 0): MembershipRequestPaginatedResponse!
@@ -888,6 +891,7 @@ type ShiftInstance {
   overrideInstructions: String
   overrideLocation: String
   overrideMaxVolunteers: Int
+  overrideMinVolunteers: Int
   overrideTitle: String
   spotsLeft: Int
   volunteers: [User!]
@@ -1062,6 +1066,20 @@ input UpdateShiftInput {
   rrule: String
   startsAt: DateTime
   title: String
+  visibility: ShiftVisibility
+}
+
+input UpdateShiftInstanceInput {
+  endsAt: DateTime!
+  imageFileId: String
+  instructions: String
+  location: String
+  maxVolunteers: Int
+  minVolunteers: Int
+  requiredFormIds: [String!]
+  rrule: String
+  startsAt: DateTime!
+  title: String!
   visibility: ShiftVisibility
 }
 

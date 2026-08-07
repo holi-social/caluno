@@ -164,7 +164,7 @@
     "checkIn": "Einchecken",
     "myTime": "Meine Einsätze",
     "requirementForms": "Anforderungsformulare",
-    "settings": "Einstellungen",
+    "organizationSettings": "Organisationseinstellungen",
     "roles": "Rollen",
     "orgUnits": " Organisationseinheiten",
     "selectOrganization": "Organisation auswählen",
@@ -633,6 +633,10 @@
       "inviteAllLabel": "Zu allen zukünftigen Terminen dieses Einsatzes einladen",
       "inviteAllDescription": "Freiwillige werden zu allen Einsätzen ab dem {startDate}, jeden {days}, eingeladen."
     },
+    "editInstanceForm": {
+      "applyToAllLabel": "Auf alle zukünftigen Termine anwenden",
+      "applyToAllDescription": "Änderungen gelten auch für jeden zukünftigen Termin dieses Einsatzes und überschreiben frühere Änderungen an einzelnen Terminen. Vergangene Termine sind nicht betroffen."
+    },
     "successDialog": {
       "title": "Einsatz erstellt",
       "bodyOpen": "Dein offener Einsatz ist jetzt aktiv! Alle Freiwilligen innerhalb deiner Organisation wurden benachrichtigt und können sich jetzt anmelden.",
@@ -755,6 +759,8 @@
       "createEventDescription": "Plane eine Einsatz für diese Veranstaltung.",
       "editTitle": "Einsatz bearbeiten",
       "editDescription": "Bearbeite diesen Einsatz.",
+      "editInstanceTitle": "Einsatztermin bearbeiten",
+      "editInstanceDescription": "Bearbeite diesen Termin des Einsatzes.",
       "inviteTitle": "Freiwillige einladen",
       "inviteDescription": "Eingeladene Freiwillige erhalten eine E-Mail mit Einsatzetails und einem Link zum System."
     },
@@ -798,7 +804,11 @@
       "organizationUnitRequired": "Organisationseinheit ist erforderlich",
       "shiftIdRequired": "Einsatz-ID ist erforderlich",
       "minMaxVolunteers": "Die Mindestanzahl an Freiwilligen darf die Höchstanzahl nicht überschreiten",
-      "windowViolation": "Muss innerhalb des Veranstaltungszeitraums liegen"
+      "windowViolation": "Muss innerhalb des Veranstaltungszeitraums liegen",
+      "instanceTimeConflict": "Ein anderer Termin dieses Einsatzes beginnt bereits zu dieser Zeit.",
+      "instanceDateMismatch": "Das Datum passt nicht zu diesem Termin. Bitte öffne das Bearbeitungsformular erneut und versuche es noch einmal.",
+      "instanceClearRecurrenceUnsupported": "Das Entfernen der Wiederholung wird in diesem Formular nicht unterstützt. Bearbeite die Wiederholung stattdessen auf der Seite „Einsatz bearbeiten“.",
+      "instanceRecurrenceConflict": "Das neue Wiederholungsmuster enthält den Wochentag dieses Termins nicht. Passe die Wiederholung an oder bearbeite einen anderen Termin."
     },
     "inviteStatus": {
       "invited": "Eingeladen",
@@ -823,6 +833,7 @@
       "title": "Einsatztermin",
       "subtitle": "Freiwillige und Einladungsstatus für diesen Termin",
       "inviteCta": "Einladungen verwalten",
+      "editCta": "Bearbeiten",
       "backToShift": "Zurück zum Einsatz"
     }
   },
@@ -1314,7 +1325,11 @@
         "inviteButton": "Einladen",
         "inviteAria": "Mitglieder einladen",
         "checkInAria": "Einchecken",
-        "empty": "Noch keine Freiwilligen eingeladen."
+        "empty": "Noch keine Freiwilligen eingeladen.",
+        "status": {
+          "invited": "Eingeladen",
+          "signedUp": "Angemeldet"
+        }
       },
       "shiftsCard": {
         "title": "Einsätze",
@@ -1436,6 +1451,8 @@
     "loadPast": "Vergangene laden",
     "loadMore": "Mehr laden",
     "invitedOn": "Eingeladen · {date}",
+    "inviteKindEvent": "Veranstaltung",
+    "inviteKindShift": "Einsatz",
     "pendingBadge": "Ausstehend",
     "pendingRequestTitle": "Warte auf {orgName}",
     "pendingRequestBody": "Ein Admin prüft deine Anfrage. In der Regel dauert das ein paar Tage.",
