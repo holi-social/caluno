@@ -30,13 +30,7 @@ export async function AuthJoinHeader({ org }: AuthJoinHeaderProps) {
   );
 }
 
-function OrgMark({
-  name,
-  logoUrl,
-}: {
-  name: string;
-  logoUrl?: string | null;
-}) {
+function OrgMark({ name, logoUrl }: { name: string; logoUrl?: string | null }) {
   if (logoUrl) {
     return (
       <Image
