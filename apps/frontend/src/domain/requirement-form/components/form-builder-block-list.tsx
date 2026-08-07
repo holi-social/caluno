@@ -33,7 +33,13 @@ export function FormBuilderBlockList({
       {blockRefs.map((ref, index) => {
         const block = availableBlocks.find((b) => b.id === ref.blockId);
         if (!block) return null;
-        const editLabel = hasSubmissions ? t('viewBlock') : t('editBlock');
+        const isLocked = !block.isEditable && !hasSubmissions;
+        let editLabel = t('editBlock');
+        if (isLocked) {
+          editLabel = t('lockedTooltip');
+        } else if (hasSubmissions) {
+          editLabel = t('viewBlock');
+        }
         return (
           <div key={ref.id} className="rounded-lg border bg-card p-4 space-y-3">
             <div className="flex items-center justify-between">
@@ -77,31 +83,20 @@ export function FormBuilderBlockList({
                     </Button>
                   </>
                 )}
-                {!block.isEditable && !hasSubmissions ? (
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    tooltip={t('lockedTooltip')}
-                    disabled
-                    aria-label={t('lockedTooltip')}
-                  >
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  tooltip={editLabel}
+                  disabled={isLocked}
+                  onClick={() => onEditBlock(block)}
+                  aria-label={editLabel}
+                >
+                  {hasSubmissions ? (
+                    <Eye className="h-4 w-4" />
+                  ) : (
                     <Edit3 className="h-4 w-4" />
-                  </Button>
-                ) : (
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    tooltip={editLabel}
-                    onClick={() => onEditBlock(block)}
-                    aria-label={editLabel}
-                  >
-                    {hasSubmissions ? (
-                      <Eye className="h-4 w-4" />
-                    ) : (
-                      <Edit3 className="h-4 w-4" />
-                    )}
-                  </Button>
-                )}
+                  )}
+                </Button>
               </div>
             </div>
             <div className="space-y-2">
