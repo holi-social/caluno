@@ -133,7 +133,7 @@ export function BlockCard({
               tooltip={tTable('deleteBlockAria')}
               aria-label={tTable('deleteBlockAria')}
               disabled={locked}
-              onClick={locked ? undefined : () => setConfirmOpen(true)}
+              onClick={() => setConfirmOpen(true)}
             >
               <Trash2 className="size-4" />
             </Button>

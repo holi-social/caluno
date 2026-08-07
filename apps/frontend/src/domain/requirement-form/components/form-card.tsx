@@ -141,7 +141,7 @@ export function FormCard({
                 tooltip={tTable('deleteFormAria')}
                 aria-label={tTable('deleteFormAria')}
                 disabled={locked}
-                onClick={locked ? undefined : () => setConfirmOpen(true)}
+                onClick={() => setConfirmOpen(true)}
               >
                 <Trash2 className="size-4" />
                 <span className="ml-1.5 hidden sm:block lg:hidden">
