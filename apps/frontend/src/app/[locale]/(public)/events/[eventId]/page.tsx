@@ -27,9 +27,9 @@ export async function generateMetadata({ params }: EventPageProps) {
     if (error instanceof DataError) {
       notFound();
     }
-    return { title: 'Event — Clippy' };
+    return { title: 'Event — Caluno' };
   }
-  return { title: `${event.title} — Clippy` };
+  return { title: `${event.title} — Caluno` };
 }
 
 export default async function EventPage({ params }: EventPageProps) {

@@ -4,7 +4,7 @@ import type { OrganizationUnitType } from '@repo/data';
 import { useTranslations } from 'next-intl';
 import { Suspense } from 'react';
 import { toast } from 'sonner';
-import { ClippySheet } from '@/components/sheets/clippy-sheet';
+import { CalunoSheet } from '@/components/sheets/caluno-sheet';
 import { useSheet } from '@/hooks/use-sheet';
 import { useRouter } from '@/i18n/navigation';
 import { CreateOrgUnitForm } from '../forms/create-form';
@@ -37,7 +37,7 @@ export function OrgUnitCreateEditSheet({ types }: Props) {
   };
 
   return (
-    <ClippySheet
+    <CalunoSheet
       {...sheetProps}
       title={isEdit ? t('sheet.editTitle') : t('sheet.createTitle')}
       description={
@@ -72,6 +72,6 @@ export function OrgUnitCreateEditSheet({ types }: Props) {
           />
         )
       )}
-    </ClippySheet>
+    </CalunoSheet>
   );
 }

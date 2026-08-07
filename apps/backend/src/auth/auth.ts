@@ -34,7 +34,7 @@ export interface SendResetPasswordOptions {
 export interface AuthConfigOptions {
   database: Database | object;
   trustedOrigins: string[];
-  /** Root domain for cross-subdomain cookies (e.g. "clippy.holi.social"). Set when frontend and API use different subdomains. */
+  /** Root domain for cross-subdomain cookies (e.g. "caluno.org"). Set when frontend and API use different subdomains. */
   cookieDomain?: string;
   emailVerificationEnabled?: boolean;
   sendVerificationOTP: (options: SendVerificationOtpOptions) => Promise<void>;

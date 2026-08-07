@@ -1,3 +1,3 @@
 # Volunteero
 
-A NestJS backend that powers Clippy, a volunteering time tracker.
+A NestJS backend that powers Caluno, a volunteering time tracker.

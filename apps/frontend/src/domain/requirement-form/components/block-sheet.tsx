@@ -3,7 +3,7 @@
 import { useCurrentOrg, useOrgUId } from '@repo/data/react';
 import { useTranslations } from 'next-intl';
 import { Suspense } from 'react';
-import { ClippySheet } from '@/components/sheets/clippy-sheet';
+import { CalunoSheet } from '@/components/sheets/caluno-sheet';
 import { useSheet } from '@/hooks/use-sheet';
 import { BlockForm } from './block-form';
 
@@ -33,7 +33,7 @@ export function BlockSheet() {
   };
 
   return (
-    <ClippySheet
+    <CalunoSheet
       {...sheetProps}
       title={
         readOnly ? t('viewTitle') : isEdit ? t('editTitle') : t('createTitle')
@@ -62,6 +62,6 @@ export function BlockSheet() {
           onSuccess={handleSuccess}
         />
       </Suspense>
-    </ClippySheet>
+    </CalunoSheet>
   );
 }

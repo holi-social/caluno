@@ -37,7 +37,7 @@ function readLocaleFromPathname(): Locale | undefined {
 
 /**
  * Resolve the locale for the `x-locale` header on client-side auth requests:
- * the `clippy.locale` preference cookie wins, then the URL locale prefix, then
+ * the `caluno.locale` preference cookie wins, then the URL locale prefix, then
  * the default locale.
  */
 export function readRequestLocale(): Locale {

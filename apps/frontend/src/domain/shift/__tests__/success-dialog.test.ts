@@ -60,17 +60,17 @@ describe('formatShiftOrgUnitLabel', () => {
     expect(
       formatShiftOrgUnitLabel({
         name: 'Health',
-        organization: { name: 'Clippy' },
+        organization: { name: 'Caluno' },
       }),
-    ).toBe('Clippy · Health');
+    ).toBe('Caluno · Health');
   });
 
   it('collapses to a single name when the unit is the organization root unit', () => {
     expect(
       formatShiftOrgUnitLabel({
-        name: 'Clippy',
-        organization: { name: 'Clippy' },
+        name: 'Caluno',
+        organization: { name: 'Caluno' },
       }),
-    ).toBe('Clippy');
+    ).toBe('Caluno');
   });
 });
