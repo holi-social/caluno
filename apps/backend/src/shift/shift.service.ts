@@ -1,5 +1,5 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
-import { and, count, eq, inArray, isNull } from 'drizzle-orm';
+import { and, count, eq, gte, inArray, isNull, ne, sql } from 'drizzle-orm';
 import { AuthService } from '../auth/auth.service';
 import { PERMISSIONS } from '../auth/constants';
 import type { Database } from '../database/database.module';
@@ -15,6 +15,7 @@ import {
   NotFoundGraphQLError,
 } from '../graphql/errors';
 import type { PaginationInput } from '../graphql/pagination.input';
+import { MembershipRequestStatus } from '../membership/enums';
 import { MembershipService } from '../membership/membership.service';
 import type { MembershipRequestEntity } from '../membership/schemas/membership-request.schema';
 import { NotificationService } from '../notification/notification.service';
@@ -40,14 +41,16 @@ import { slugify } from '../utils/slug.util';
 import { ShiftInviteStatus, ShiftVisibility, SortOrder } from './enums';
 import { CreateShiftInput } from './inputs/create-shift.input';
 import { UpdateShiftInput } from './inputs/update-shift.input';
+import { UpdateShiftInstanceInput } from './inputs/update-shift-instance.input';
 import type { ShiftEntity } from './schemas/shift.schema';
 import type { ShiftInstanceEntity } from './schemas/shift-instance.schema';
 import type { ShiftInviteEntity } from './schemas/shift-invite.schema';
 import { propagateShiftInviteStatusToFutureInstances } from './shift-invite-propagation';
 import { startOfTodayInAppTimeZone } from './utils/app-time';
 import { getDurationMinutes } from './utils/duration';
+import { parseRruleDays, parseRruleUntil } from './utils/parse-rrule';
 import { expandShift } from './utils/rrule-expander';
-import { syncShiftInstances } from './utils/shift-instance-sync';
+import { localDateKey, syncShiftInstances } from './utils/shift-instance-sync';
 
 export { getDurationMinutes } from './utils/duration';
 
@@ -340,13 +343,10 @@ export class ShiftService {
     offset: number,
     order: SortOrder,
     statuses: readonly ShiftInviteStatus[] = PARTICIPATING_SHIFT_INVITE_STATUSES,
+    includeIntended = false,
   ): Promise<{ instances: ShiftInstanceEntity[]; total: number }> {
     const organizationUnitIds =
       await this.getAccessibleOrganizationUnitIds(userId);
-
-    if (organizationUnitIds.length === 0) {
-      return EMPTY_SHIFT_INSTANCE_PAGE;
-    }
 
     const dateCondition = this.buildMyShiftDateCondition(
       includePast,
@@ -354,6 +354,72 @@ export class ShiftService {
       endsBefore,
     );
 
+    if (!includeIntended) {
+      if (organizationUnitIds.length === 0) {
+        return EMPTY_SHIFT_INSTANCE_PAGE;
+      }
+
+      const where = {
+        isCancelled: false,
+        ...dateCondition,
+        master: {
+          isDeleted: false,
+          organizationUnitId: { in: organizationUnitIds },
+        },
+        invites: {
+          userId,
+          status: { in: [...statuses] },
+        },
+      };
+
+      const orderBy = {
+        actualStartsAt: order.toLowerCase() as 'asc' | 'desc',
+      };
+
+      const [instances, totalResult] = await Promise.all([
+        this.db.query.shiftInstances.findMany({
+          where,
+          with: { master: true },
+          orderBy,
+          limit,
+          offset,
+        }),
+        this.db.query.shiftInstances.findMany({
+          where,
+          columns: {},
+          extras: { total: count() },
+        }),
+      ]);
+
+      return { instances, total: totalResult[0]?.total ?? 0 };
+    }
+
+    const [invitedPage, intendedPage] = await Promise.all([
+      organizationUnitIds.length > 0
+        ? this.findMyInvitedShiftInstances(
+            userId,
+            organizationUnitIds,
+            dateCondition,
+            statuses,
+          )
+        : EMPTY_SHIFT_INSTANCE_PAGE,
+      this.findMyIntendedShiftInstances(userId, dateCondition),
+    ]);
+
+    return this.mergeShiftInstancePages(
+      [invitedPage, intendedPage],
+      order,
+      limit,
+      offset,
+    );
+  }
+
+  private async findMyInvitedShiftInstances(
+    userId: string,
+    organizationUnitIds: string[],
+    dateCondition: Record<string, unknown>,
+    statuses: readonly ShiftInviteStatus[],
+  ): Promise<{ instances: ShiftInstanceEntity[]; total: number }> {
     const where = {
       isCancelled: false,
       ...dateCondition,
@@ -367,17 +433,10 @@ export class ShiftService {
       },
     };
 
-    const orderBy = {
-      actualStartsAt: order.toLowerCase() as 'asc' | 'desc',
-    };
-
     const [instances, totalResult] = await Promise.all([
       this.db.query.shiftInstances.findMany({
         where,
         with: { master: true },
-        orderBy,
-        limit,
-        offset,
       }),
       this.db.query.shiftInstances.findMany({
         where,
@@ -387,6 +446,109 @@ export class ShiftService {
     ]);
 
     return { instances, total: totalResult[0]?.total ?? 0 };
+  }
+
+  async findIntendedInstanceIdsForUsers(
+    userIdInstanceIdPairs: Array<{ userId: string; instanceId: string }>,
+  ): Promise<Set<string>> {
+    const userIds = Array.from(
+      new Set(userIdInstanceIdPairs.map((pair) => pair.userId)),
+    );
+
+    if (userIds.length === 0) {
+      return new Set();
+    }
+
+    const requests = await this.db.query.membershipRequests.findMany({
+      where: {
+        userId: { in: userIds },
+        status: MembershipRequestStatus.PENDING,
+      },
+      columns: { userId: true, metadata: true },
+    });
+
+    const intendedIdsByUser = new Map<string, Set<string>>();
+    for (const request of requests) {
+      if (!request.userId) continue;
+      const intendedIds =
+        (request.metadata as { intendedShiftInstanceIds?: string[] } | null)
+          ?.intendedShiftInstanceIds ?? [];
+      intendedIdsByUser.set(request.userId, new Set(intendedIds));
+    }
+
+    const result = new Set<string>();
+    for (const { userId, instanceId } of userIdInstanceIdPairs) {
+      if (intendedIdsByUser.get(userId)?.has(instanceId)) {
+        result.add(`${instanceId}::${userId}`);
+      }
+    }
+
+    return result;
+  }
+
+  private async findMyIntendedShiftInstances(
+    userId: string,
+    dateCondition: Record<string, unknown>,
+  ): Promise<{ instances: ShiftInstanceEntity[]; total: number }> {
+    const requests = await this.db.query.membershipRequests.findMany({
+      where: {
+        userId,
+        status: MembershipRequestStatus.PENDING,
+      },
+      columns: { metadata: true },
+    });
+
+    const intendedIds = requests.flatMap(
+      (request) =>
+        (request.metadata as { intendedShiftInstanceIds?: string[] } | null)
+          ?.intendedShiftInstanceIds ?? [],
+    );
+
+    if (intendedIds.length === 0) {
+      return EMPTY_SHIFT_INSTANCE_PAGE;
+    }
+
+    const instances = await this.db.query.shiftInstances.findMany({
+      where: {
+        id: { in: intendedIds },
+        isCancelled: false,
+        ...dateCondition,
+        master: { isDeleted: false },
+      },
+      with: { master: true },
+    });
+
+    return { instances, total: instances.length };
+  }
+
+  private mergeShiftInstancePages(
+    pages: Array<{ instances: ShiftInstanceEntity[]; total: number }>,
+    order: SortOrder,
+    limit: number,
+    offset: number,
+  ): { instances: ShiftInstanceEntity[]; total: number } {
+    const seen = new Set<string>();
+    const all: ShiftInstanceEntity[] = [];
+
+    for (const page of pages) {
+      for (const instance of page.instances) {
+        if (seen.has(instance.id)) continue;
+        seen.add(instance.id);
+        all.push(instance);
+      }
+    }
+
+    all.sort((a, b) => {
+      const diff =
+        new Date(a.actualStartsAt).getTime() -
+        new Date(b.actualStartsAt).getTime();
+      return order === SortOrder.DESC ? -diff : diff;
+    });
+
+    return {
+      instances: all.slice(offset, offset + limit),
+      total: all.length,
+    };
   }
 
   private buildMyShiftDateCondition(
@@ -1070,6 +1232,308 @@ export class ShiftService {
     }
 
     return currentShiftInstance;
+  }
+
+  async updateShiftInstance(
+    instanceId: string,
+    input: UpdateShiftInstanceInput,
+    organizationUnitId: string,
+    options: { applyToAllFuture?: boolean } = {},
+  ): Promise<ShiftInstanceEntity> {
+    return this.db.transaction(async (tx) => {
+      const instance = await tx.query.shiftInstances.findFirst({
+        where: { id: instanceId },
+        with: { master: true },
+      });
+
+      if (
+        !instance ||
+        instance.master.organizationUnitId !== organizationUnitId
+      ) {
+        throw new NotFoundGraphQLError(
+          `Shift instance with ID ${instanceId} not found`,
+        );
+      }
+
+      if (instance.actualEndsAt.getTime() < Date.now()) {
+        throw new ConflictGraphQLError(
+          'Cannot edit a past or completed shift instance',
+        );
+      }
+
+      if (!options.applyToAllFuture) {
+        return this.updateSingleShiftInstance(tx, instance, input);
+      }
+
+      return this.updateShiftInstanceSeries(
+        tx,
+        instance,
+        input,
+        organizationUnitId,
+      );
+    });
+  }
+
+  private async updateSingleShiftInstance(
+    tx: Database,
+    instance: ShiftInstanceEntity & { master: ShiftEntity },
+    input: UpdateShiftInstanceInput,
+  ): Promise<ShiftInstanceEntity> {
+    const startsAtChanged =
+      input.startsAt.getTime() !== instance.actualStartsAt.getTime();
+
+    if (startsAtChanged) {
+      const [collision] = await tx
+        .select({ id: schema.shiftInstances.id })
+        .from(schema.shiftInstances)
+        .where(
+          and(
+            eq(schema.shiftInstances.masterId, instance.masterId),
+            ne(schema.shiftInstances.id, instance.id),
+            eq(schema.shiftInstances.actualStartsAt, input.startsAt),
+            eq(schema.shiftInstances.isCancelled, false),
+          ),
+        )
+        .limit(1);
+
+      if (collision) {
+        throw new ConflictGraphQLError('shift_instance_time_conflict');
+      }
+    }
+
+    const [updated] = await tx
+      .update(schema.shiftInstances)
+      .set({
+        overrideTitle: input.title,
+        overrideLocation: input.location ?? null,
+        overrideInstructions: input.instructions ?? null,
+        overrideMinVolunteers: input.minVolunteers ?? null,
+        overrideMaxVolunteers: input.maxVolunteers ?? null,
+        actualStartsAt: input.startsAt,
+        actualEndsAt: input.endsAt,
+        isException: true,
+      })
+      .where(eq(schema.shiftInstances.id, instance.id))
+      .returning();
+
+    if (!updated) {
+      throw new NotFoundGraphQLError(
+        `Shift instance with ID ${instance.id} not found`,
+      );
+    }
+
+    return updated;
+  }
+
+  private async updateShiftInstanceSeries(
+    tx: Database,
+    instance: ShiftInstanceEntity & { master: ShiftEntity },
+    input: UpdateShiftInstanceInput,
+    organizationUnitId: string,
+  ): Promise<ShiftInstanceEntity> {
+    const shift = instance.master;
+    const fromDate = new Date(instance.actualStartsAt);
+    fromDate.setHours(0, 0, 0, 0);
+
+    if (
+      input.startsAt.getFullYear() !== instance.actualStartsAt.getFullYear() ||
+      input.startsAt.getMonth() !== instance.actualStartsAt.getMonth() ||
+      input.startsAt.getDate() !== instance.actualStartsAt.getDate()
+    ) {
+      throw new ConflictGraphQLError('shift_instance_date_mismatch');
+    }
+
+    const durationMinutes = getDurationMinutes(input.startsAt, input.endsAt);
+    const newOriginalStartsAt = this.applyTimeOfDay(
+      shift.originalStartsAt,
+      input.startsAt,
+    );
+
+    // `input.rrule` is `null` when the user explicitly cleared recurrence,
+    // `undefined` when recurrence wasn't touched by this edit — `??` would
+    // treat both the same, silently discarding an explicit clear.
+    if (input.rrule === null && shift.rrule !== null) {
+      throw new ConflictGraphQLError(
+        'shift_instance_clear_recurrence_unsupported',
+      );
+    }
+    const newRrule = input.rrule === undefined ? shift.rrule : input.rrule;
+
+    // Compare the recurrence PATTERN (weekdays + end date), not the raw
+    // rrule string. The frontend's generateRrule() bakes a DTSTART tied to
+    // the edited occurrence's own date, which essentially never matches the
+    // series' stored anchor — a raw string compare is a false positive on
+    // nearly every save, which silently strands the safe time-only path
+    // below and routes every edit through the heavier resync path instead.
+    const recurrenceChanged = !this.rrulePatternsEqual(shift.rrule, newRrule);
+
+    const imageUrl =
+      input.imageFileId === undefined
+        ? undefined
+        : input.imageFileId
+          ? await this.resolveImageUrl(input.imageFileId)
+          : null;
+
+    const [updatedShift] = await tx
+      .update(schema.shifts)
+      .set({
+        title: input.title,
+        slug: slugify(input.title),
+        location: input.location ?? null,
+        instructions: input.instructions ?? null,
+        minVolunteers: input.minVolunteers ?? null,
+        maxVolunteers: input.maxVolunteers ?? null,
+        ...(input.visibility ? { visibility: input.visibility } : {}),
+        ...(imageUrl !== undefined ? { imageUrl } : {}),
+        rrule: newRrule,
+        originalStartsAt: newOriginalStartsAt,
+        durationMinutes,
+      })
+      .where(
+        and(
+          eq(schema.shifts.id, shift.id),
+          eq(schema.shifts.organizationUnitId, organizationUnitId),
+        ),
+      )
+      .returning();
+
+    if (!updatedShift) {
+      throw new NotFoundGraphQLError(`Shift with ID ${shift.id} not found`);
+    }
+
+    if (input.requiredFormIds !== undefined) {
+      await this.setRequiredFormsInTx(
+        tx,
+        shift.id,
+        organizationUnitId,
+        input.requiredFormIds ?? [],
+      );
+    }
+
+    // Mirrors ShiftService.update()'s existing behavior: dropping visibility
+    // to invited-only clears standing invites, since "everyone" no longer
+    // applies. Scoped to fromDate onward, matching this method's contract.
+    if (
+      input.visibility &&
+      shift.visibility === ShiftVisibility.ALL_MEMBERS &&
+      input.visibility === ShiftVisibility.INVITED_MEMBERS
+    ) {
+      const futureInstances = await tx.query.shiftInstances.findMany({
+        where: { masterId: shift.id, actualStartsAt: { gte: fromDate } },
+        columns: { id: true },
+      });
+      const futureInstanceIds = futureInstances.map((i) => i.id);
+      if (futureInstanceIds.length > 0) {
+        await tx
+          .delete(schema.shiftInstanceInvites)
+          .where(
+            inArray(schema.shiftInstanceInvites.instanceId, futureInstanceIds),
+          );
+      }
+    }
+
+    if (recurrenceChanged) {
+      const target = expandShift(
+        updatedShift.rrule,
+        updatedShift.originalStartsAt,
+        updatedShift.durationMinutes,
+      );
+
+      const editedDateKey = localDateKey(instance.actualStartsAt);
+      const editedOccurrenceSurvives = target.some(
+        (t) => localDateKey(t.actualStartsAt) === editedDateKey,
+      );
+      if (!editedOccurrenceSurvives) {
+        throw new ConflictGraphQLError('shift_instance_recurrence_conflict');
+      }
+
+      await syncShiftInstances(tx, shift.id, target, { fromDate });
+
+      // syncShiftInstances only rewrites rows whose date/duration actually
+      // changed — rows that already matched the new pattern are left alone,
+      // so they'd otherwise keep stale per-occurrence overrides. Sweep them
+      // separately; the time-rewrite branch below does this as part of its
+      // own UPDATE instead.
+      await tx
+        .update(schema.shiftInstances)
+        .set({
+          overrideTitle: null,
+          overrideLocation: null,
+          overrideInstructions: null,
+          overrideMinVolunteers: null,
+          overrideMaxVolunteers: null,
+          isException: false,
+        })
+        .where(
+          and(
+            eq(schema.shiftInstances.masterId, shift.id),
+            gte(schema.shiftInstances.actualStartsAt, fromDate),
+            eq(schema.shiftInstances.isCancelled, false),
+          ),
+        );
+    } else {
+      const startTime = this.toTimeOfDayString(input.startsAt);
+      const endTime = this.toTimeOfDayString(input.endsAt);
+
+      await tx
+        .update(schema.shiftInstances)
+        .set({
+          overrideTitle: null,
+          overrideLocation: null,
+          overrideInstructions: null,
+          overrideMinVolunteers: null,
+          overrideMaxVolunteers: null,
+          isException: false,
+          actualStartsAt: sql`date_trunc('day', ${schema.shiftInstances.actualStartsAt}) + ${startTime}::interval`,
+          actualEndsAt: sql`date_trunc('day', ${schema.shiftInstances.actualStartsAt}) + ${endTime}::interval`,
+        })
+        .where(
+          and(
+            eq(schema.shiftInstances.masterId, shift.id),
+            gte(schema.shiftInstances.actualStartsAt, fromDate),
+            eq(schema.shiftInstances.isCancelled, false),
+          ),
+        );
+    }
+
+    const [refreshedInstance] = await tx
+      .select()
+      .from(schema.shiftInstances)
+      .where(eq(schema.shiftInstances.id, instance.id));
+
+    if (!refreshedInstance) {
+      throw new NotFoundGraphQLError(
+        `Shift instance with ID ${instance.id} not found`,
+      );
+    }
+
+    return refreshedInstance;
+  }
+
+  private rrulePatternsEqual(a: string | null, b: string | null): boolean {
+    const daysA = new Set(parseRruleDays(a));
+    const daysB = new Set(parseRruleDays(b));
+    if (daysA.size !== daysB.size) return false;
+    for (const day of daysA) {
+      if (!daysB.has(day)) return false;
+    }
+    const untilA = parseRruleUntil(a)?.getTime() ?? null;
+    const untilB = parseRruleUntil(b)?.getTime() ?? null;
+    return untilA === untilB;
+  }
+
+  /** Keeps `base`'s calendar date, adopts `time`'s hour/minute/second. */
+  private applyTimeOfDay(base: Date, time: Date): Date {
+    const result = new Date(base);
+    result.setHours(time.getHours(), time.getMinutes(), time.getSeconds(), 0);
+    return result;
+  }
+
+  private toTimeOfDayString(date: Date): string {
+    const hh = String(date.getHours()).padStart(2, '0');
+    const mm = String(date.getMinutes()).padStart(2, '0');
+    const ss = String(date.getSeconds()).padStart(2, '0');
+    return `${hh}:${mm}:${ss}`;
   }
 
   private getUserIdDifferences(currentUserIds: string[], newUserIds: string[]) {

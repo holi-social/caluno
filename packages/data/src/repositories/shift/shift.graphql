@@ -143,6 +143,20 @@ mutation UpdateMembersForShiftInstance(
   }
 }
 
+mutation UpdateShiftInstance(
+  $instanceId: String!
+  $input: UpdateShiftInstanceInput!
+  $applyToAllFuture: Boolean
+) {
+  updateShiftInstance(
+    instanceId: $instanceId
+    input: $input
+    applyToAllFuture: $applyToAllFuture
+  ) {
+    id
+  }
+}
+
 mutation UpdateShiftInstanceVolunteers(
   $instanceId: String!
   $memberIds: [String!]!
@@ -258,7 +272,10 @@ query GetShiftInstance($id: ID!) {
     actualStartsAt
     actualEndsAt
     overrideTitle
+    overrideLocation
+    overrideInstructions
     overrideMaxVolunteers
+    overrideMinVolunteers
     isCancelled
     filledCount
     spotsLeft
@@ -278,6 +295,7 @@ query GetShiftInstance($id: ID!) {
         name
         email
         image
+        checkInId
       }
     }
   }
@@ -286,6 +304,7 @@ query GetShiftInstance($id: ID!) {
 query GetWeeklyShifts($from: DateTime!, $to: DateTime!) {
   weeklyShifts(from: $from, to: $to) {
     id
+    overrideTitle
     actualStartsAt
     actualEndsAt
     isCancelled
@@ -321,6 +340,7 @@ fragment PublicShiftDetailInstanceFields on ShiftInstance {
   filledCount
   spotsLeft
   myInviteStatus
+  isIntendingToJoin
 }
 
 query GetPublicShiftInstances($shiftId: ID!) {
@@ -331,10 +351,13 @@ query GetPublicShiftInstances($shiftId: ID!) {
 
 fragment VolunteerHomeShiftInstance on ShiftInstance {
   id
+  overrideTitle
   actualStartsAt
   actualEndsAt
   isCheckedIn
   filledCount
+  myInviteStatus
+  isIntendingToJoin
   master {
     id
     title
@@ -361,6 +384,7 @@ query GetMyShiftInstances(
   $offset: Int = 0
   $order: SortOrder = ASC
   $statuses: [ShiftInviteStatus!]
+  $includeIntended: Boolean = false
 ) {
   myShiftInstances(
     includePast: $includePast
@@ -370,6 +394,7 @@ query GetMyShiftInstances(
     offset: $offset
     order: $order
     statuses: $statuses
+    includeIntended: $includeIntended
   ) {
     items {
       ...VolunteerHomeShiftInstance

@@ -1,12 +1,21 @@
 'use client';
 
-import type { ShiftInviteStatus } from '@repo/data';
-import { Badge, Button, cn, Input, VolunteeringMemberRow } from '@repo/ui';
+import {
+  Badge,
+  Button,
+  cn,
+  Input,
+  type ShiftVolunteeringDisplayState,
+  VolunteeringMemberRow,
+} from '@repo/ui';
 import { ArrowLeftRight, CirclePlus, CircleX } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useState } from 'react';
 import { ActionTooltip } from '@/components/action-tooltip';
-import { toInviteDisplayState } from '../invite-status-display';
+import {
+  type InviteStatus,
+  toInviteDisplayState,
+} from '../invite-status-display';
 
 /** Label + gap + search bar + minimum list area */
 const TRANSFER_LIST_MIN_HEIGHT = 222;
@@ -16,7 +25,9 @@ type Member = {
   name: string;
   email: string;
   image?: string | null;
-  inviteStatus?: import('@repo/data').ShiftInviteStatus | null;
+  inviteStatus?: InviteStatus | null;
+  /** When set, overrides inviteStatus → display mapping (e.g. events). */
+  displayState?: ShiftVolunteeringDisplayState;
 };
 
 type TransferListProps = {
@@ -146,11 +157,10 @@ export function TransferList({
                 name={member.name}
                 email={member.email}
                 state={
-                  member.inviteStatus
-                    ? toInviteDisplayState(
-                        member.inviteStatus as ShiftInviteStatus,
-                      )
-                    : 'invited'
+                  member.displayState ??
+                  (member.inviteStatus
+                    ? toInviteDisplayState(member.inviteStatus)
+                    : 'invited')
                 }
                 phase="before"
                 className="hover:bg-accent"

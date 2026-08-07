@@ -124,7 +124,7 @@ export function ShiftCard({
             {startTime} - {endTime}
           </p>
           <p className="line-clamp-2 text-lg text-card-foreground">
-            {instance.master.title}
+            {instance.overrideTitle ?? instance.master.title}
           </p>
         </Link>
 

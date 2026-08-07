@@ -1,7 +1,8 @@
 'use client';
 
 import { Card, cn } from '@repo/ui';
-import { MapPinIcon, RepeatIcon } from 'lucide-react';
+import { Clock4Icon, MapPinIcon, RepeatIcon } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import { Link } from '@/i18n/navigation';
 import { useFormatting } from '@/lib/formatting/use-formatting';
 import { useRecurrenceLabel } from '../lib/recurrence-label';
@@ -24,6 +25,8 @@ export interface ShiftCardMyShiftProps {
   past?: boolean;
   /** Show the inline time range. Off when an external time rail already shows it. */
   showTime?: boolean;
+  /** True when the user signed up but the org-unit membership request is still pending. */
+  isPending?: boolean;
 }
 
 export function ShiftCardMyShift({
@@ -31,7 +34,9 @@ export function ShiftCardMyShift({
   showDate = false,
   past = false,
   showTime = true,
+  isPending = false,
 }: ShiftCardMyShiftProps) {
+  const t = useTranslations('VolunteerHome');
   const { formatTimeRange, formatDate } = useFormatting();
   const getRecurrenceLabel = useRecurrenceLabel();
   const recurrence = getRecurrenceLabel(shiftInstance.master.rrule);
@@ -65,6 +70,12 @@ export function ShiftCardMyShift({
           <RepeatIcon className="size-3.5 shrink-0" />
           {recurrence}
         </span>
+      )}
+      {isPending && (
+        <p className="flex items-center gap-1 text-sm text-muted-foreground">
+          <Clock4Icon className="size-3.5 shrink-0" />
+          {t('pendingBadge')}
+        </p>
       )}
       <h3 className="line-clamp-2 font-semibold text-foreground">
         {shiftInstance.master.title}

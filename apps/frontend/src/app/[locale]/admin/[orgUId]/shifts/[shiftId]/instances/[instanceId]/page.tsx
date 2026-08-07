@@ -7,6 +7,7 @@ import { ShiftInstanceVolunteersPanel } from '@/domain/shift/components/shift-in
 import {
   parseShiftListQuery,
   shiftDetailPath,
+  shiftInstanceEditPath,
   shiftInvitePath,
 } from '@/domain/shift/routes';
 import { Link } from '@/i18n/navigation';
@@ -69,6 +70,13 @@ export default async function ShiftInstanceDetailPage({
               {t('instanceDetail.backToShift')}
             </Link>
           </Button>
+          {canManage && new Date(instance.actualEndsAt) >= new Date() ? (
+            <Button asChild variant="outline" size="sm">
+              <Link href={shiftInstanceEditPath(orgUId, shiftId, instanceId)}>
+                {t('instanceDetail.editCta')}
+              </Link>
+            </Button>
+          ) : null}
           {canManage ? (
             <Button asChild size="sm">
               <Link href={shiftInvitePath(orgUId, shiftId, instanceId)}>

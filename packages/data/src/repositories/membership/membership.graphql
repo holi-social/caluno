@@ -21,16 +21,6 @@ query GetOrganizationUnitMemberships {
   }
 }
 
-query GetMyMemberships {
-  myMemberships {
-    id
-    organizationUnit {
-      id
-      name
-    }
-  }
-}
-
 query GetMyMembershipStatus($organizationUnitId: ID!) {
   myMembershipStatus(organizationUnitId: $organizationUnitId)
 }

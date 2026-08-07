@@ -96,4 +96,20 @@ export class ShiftInstanceLoader {
 
     return keys.map((key) => statusByKey.get(key) ?? null);
   });
+
+  // Keyed by `${instanceId}::${userId}`; true when the instance is stored in the
+  // user's pending membership request metadata as an intended shift instance.
+  public readonly isIntendingToJoinByKey = new DataLoader<string, boolean>(
+    async (keys) => {
+      const parsed = keys.map((key) => {
+        const sep = key.lastIndexOf('::');
+        return { instanceId: key.slice(0, sep), userId: key.slice(sep + 2) };
+      });
+
+      const intendedKeys =
+        await this.shiftService.findIntendedInstanceIdsForUsers(parsed);
+
+      return keys.map((key) => intendedKeys.has(key));
+    },
+  );
 }

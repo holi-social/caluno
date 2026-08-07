@@ -8,8 +8,10 @@ import {
   setDefaultTimeout,
 } from 'bun:test';
 import type { INestApplication } from '@nestjs/common';
+import { PERMISSIONS } from '../src/auth/constants';
 import type { Database } from '../src/database/database.module';
 import * as schema from '../src/database/schema';
+import { EventInviteStatus } from '../src/event/enums';
 import { MembershipRequestStatus } from '../src/membership/enums';
 import { JoinStatus } from '../src/shared/enums/join-status.enum';
 import { ShiftInviteStatus, ShiftVisibility } from '../src/shift/enums';
@@ -22,7 +24,16 @@ import {
   createUser,
   setEventRequiredForms,
 } from './factories';
-import { addMembership } from './factories/org.factory';
+import {
+  addMembership,
+  createOrganizationWithType,
+  createUnit,
+} from './factories/org.factory';
+import {
+  assignRoleToMembership,
+  createRole,
+  grantPermissionToRole,
+} from './factories/role.factory';
 import {
   applyBunAuthMocks,
   getAuthMockUserId,
@@ -503,5 +514,258 @@ describe('publicEvent', () => {
     expect(data.joinEvent.status).toBe(JoinStatus.REJECTED);
 
     setAuthMockUserId(originalUserId);
+  });
+});
+
+describe('myEvents', () => {
+  let app: INestApplication;
+  let db: Database;
+  let organizationUnitId: string;
+
+  beforeAll(async () => {
+    const context = await getGraphqlTestContext();
+    app = context.app;
+    db = context.db;
+    organizationUnitId = context.organizationUnitId;
+  });
+
+  it('filters myEvents by invite status', async () => {
+    const originalUserId = getAuthMockUserId();
+    const user = await createUser(db);
+    await addMembership(db, user.id, organizationUnitId);
+    setAuthMockUserId(user.id);
+
+    const invitedEvent = await createEvent(db, { organizationUnitId });
+    const acceptedEvent = await createEvent(db, { organizationUnitId });
+
+    await db.insert(schema.eventInvites).values([
+      {
+        eventId: invitedEvent.id,
+        userId: user.id,
+        status: EventInviteStatus.INVITED,
+      },
+      {
+        eventId: acceptedEvent.id,
+        userId: user.id,
+        status: EventInviteStatus.ACCEPTED,
+      },
+    ]);
+
+    const query = `
+      query MyEvents($includePast: Boolean!, $statuses: [EventInviteStatus!]) {
+        myEvents(includePast: $includePast, statuses: $statuses) {
+          items { id }
+        }
+      }
+    `;
+
+    const invitedOnly = await graphqlRequestRequiringData<{
+      myEvents: { items: Array<{ id: string }> };
+    }>(
+      app,
+      {
+        query,
+        variables: { includePast: true, statuses: ['INVITED'] },
+      },
+      'myEvents',
+    );
+    const invitedIds = invitedOnly.myEvents.items.map((item) => item.id);
+    expect(invitedIds).toContain(invitedEvent.id);
+    expect(invitedIds).not.toContain(acceptedEvent.id);
+
+    const defaultStatuses = await graphqlRequestRequiringData<{
+      myEvents: { items: Array<{ id: string }> };
+    }>(
+      app,
+      {
+        query,
+        variables: { includePast: true, statuses: null },
+      },
+      'myEvents',
+    );
+    const defaultIds = defaultStatuses.myEvents.items.map((item) => item.id);
+    expect(defaultIds).toContain(acceptedEvent.id);
+    expect(defaultIds).not.toContain(invitedEvent.id);
+
+    setAuthMockUserId(originalUserId);
+  });
+
+  it("does not leak another user's invites", async () => {
+    const originalUserId = getAuthMockUserId();
+
+    const userA = await createUser(db);
+    const userB = await createUser(db);
+    await addMembership(db, userA.id, organizationUnitId);
+    await addMembership(db, userB.id, organizationUnitId);
+
+    const eventForA = await createEvent(db, { organizationUnitId });
+    const eventForB = await createEvent(db, { organizationUnitId });
+
+    await db.insert(schema.eventInvites).values([
+      {
+        eventId: eventForA.id,
+        userId: userA.id,
+        status: EventInviteStatus.INVITED,
+      },
+      {
+        eventId: eventForB.id,
+        userId: userB.id,
+        status: EventInviteStatus.INVITED,
+      },
+    ]);
+
+    const query = `
+      query MyEvents($includePast: Boolean!, $statuses: [EventInviteStatus!]) {
+        myEvents(includePast: $includePast, statuses: $statuses) {
+          items { id }
+        }
+      }
+    `;
+
+    setAuthMockUserId(userA.id);
+    const asUserA = await graphqlRequestRequiringData<{
+      myEvents: { items: Array<{ id: string }> };
+    }>(
+      app,
+      { query, variables: { includePast: true, statuses: ['INVITED'] } },
+      'myEvents',
+    );
+    const idsForA = asUserA.myEvents.items.map((item) => item.id);
+    expect(idsForA).toContain(eventForA.id);
+    expect(idsForA).not.toContain(eventForB.id);
+
+    setAuthMockUserId(userB.id);
+    const asUserB = await graphqlRequestRequiringData<{
+      myEvents: { items: Array<{ id: string }> };
+    }>(
+      app,
+      { query, variables: { includePast: true, statuses: ['INVITED'] } },
+      'myEvents',
+    );
+    const idsForB = asUserB.myEvents.items.map((item) => item.id);
+    expect(idsForB).toContain(eventForB.id);
+    expect(idsForB).not.toContain(eventForA.id);
+
+    setAuthMockUserId(originalUserId);
+  });
+});
+
+describe('eventInvites', () => {
+  let app: INestApplication;
+  let db: Database;
+  let organizationUnitId: string;
+
+  beforeAll(async () => {
+    const context = await getGraphqlTestContext();
+    app = context.app;
+    db = context.db;
+    organizationUnitId = context.organizationUnitId;
+  });
+
+  it('does not leak invites when queried from another organization', async () => {
+    const testUserId = getAuthMockUserId();
+
+    const event = await createEvent(db, { organizationUnitId });
+    const invitedUser = await createUser(db);
+    await db.insert(schema.eventInvites).values({
+      eventId: event.id,
+      userId: invitedUser.id,
+      status: EventInviteStatus.INVITED,
+    });
+
+    const { organization: otherOrganization, type: otherType } =
+      await createOrganizationWithType(db, `Other Org ${crypto.randomUUID()}`);
+    const otherUnit = await createUnit(db, {
+      organizationId: otherOrganization.id,
+      typeId: otherType.id,
+      name: 'root',
+    });
+
+    const membership = await addMembership(db, testUserId, otherUnit.id);
+    const role = await createRole(db, {
+      organizationId: otherOrganization.id,
+    });
+    const shiftViewPermission = await db.query.permissions.findFirst({
+      where: { key: PERMISSIONS.SHIFT_VIEW },
+    });
+    if (!shiftViewPermission) {
+      throw new Error('SHIFT_VIEW permission not seeded in test database');
+    }
+    await grantPermissionToRole(db, {
+      roleId: role.id,
+      permissionId: shiftViewPermission.id,
+    });
+    await assignRoleToMembership(db, {
+      membershipId: membership.id,
+      roleId: role.id,
+    });
+
+    const query = `
+      query EventInvites($eventId: ID!) {
+        eventInvites(eventId: $eventId) {
+          id
+        }
+      }
+    `;
+
+    const response = await graphqlRequest<{
+      eventInvites: Array<{ id: string }>;
+    }>(app, {
+      query,
+      variables: { eventId: event.id },
+      headers: { 'x-organization-unit-id': otherUnit.id },
+    });
+
+    expect(response.data).toBeNull();
+    expect(response.errors?.[0]?.message).toContain('not found');
+  });
+
+  it('resolves the invited user via the field resolver/loader', async () => {
+    const event = await createEvent(db, { organizationUnitId });
+    const invitedUser = await createUser(db);
+    const invite = await db
+      .insert(schema.eventInvites)
+      .values({
+        eventId: event.id,
+        userId: invitedUser.id,
+        status: EventInviteStatus.INVITED,
+      })
+      .returning();
+
+    const query = `
+      query EventInvites($eventId: ID!) {
+        eventInvites(eventId: $eventId) {
+          id
+          user {
+            id
+            name
+            email
+          }
+        }
+      }
+    `;
+
+    const data = await graphqlRequestRequiringData<{
+      eventInvites: Array<{
+        id: string;
+        user: { id: string; name: string; email: string };
+      }>;
+    }>(
+      app,
+      {
+        query,
+        variables: { eventId: event.id },
+        headers: { 'x-organization-unit-id': organizationUnitId },
+      },
+      'eventInvites',
+    );
+
+    expect(data.eventInvites).toHaveLength(1);
+    expect(data.eventInvites[0]?.id).toBe(invite[0]?.id);
+    expect(data.eventInvites[0]?.user).toEqual({
+      id: invitedUser.id,
+      name: invitedUser.name,
+      email: invitedUser.email,
+    });
   });
 });

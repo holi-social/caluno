@@ -1,7 +1,7 @@
 'use client';
 
-import { MembershipRequestStatus } from '@repo/data';
-import type { EventAttendee } from '@repo/data/react';
+import { EventInviteStatus, MembershipRequestStatus } from '@repo/data';
+import type { EventInviteItem } from '@repo/data/react';
 import {
   Badge,
   Button,
@@ -9,6 +9,7 @@ import {
   CardContent,
   CardHeader,
   CardTitle,
+  VolunteeringStatusBadge,
 } from '@repo/ui';
 import { LogIn, UserRound } from 'lucide-react';
 import { useTranslations } from 'next-intl';
@@ -16,15 +17,16 @@ import { ActionTooltip } from '@/components/action-tooltip';
 import { UserCard } from '@/components/user-card';
 import { useSheetTrigger } from '@/hooks/use-sheet';
 import { Link } from '@/i18n/navigation';
+import { toEventInviteDisplayState } from '../invite-status-display';
 
 interface EventVolunteersCardProps {
   orgUId: string;
-  attendees: EventAttendee[];
+  invites: EventInviteItem[];
 }
 
 export function EventVolunteersSection({
   orgUId,
-  attendees,
+  invites,
 }: EventVolunteersCardProps) {
   const t = useTranslations('Event.detail.volunteersCard');
   const tVolunteer = useTranslations('Volunteer.action');
@@ -35,57 +37,77 @@ export function EventVolunteersSection({
       <CardHeader className="border-b [.border-b]:pb-4">
         <CardTitle className="flex items-center gap-2">
           {t('title')}
-          <Badge variant="outline">{attendees.length}</Badge>
+          <Badge variant="outline">{invites.length}</Badge>
         </CardTitle>
       </CardHeader>
 
       <CardContent>
-        {attendees.length === 0 ? (
+        {invites.length === 0 ? (
           <p className="text-sm text-muted-foreground">{t('empty')}</p>
         ) : (
           <ul className="space-y-3">
-            {attendees.map((attendee) => (
-              <li
-                key={attendee.id}
-                className="flex items-center justify-between gap-2"
-              >
-                <UserCard user={attendee} size="sm" />
-                <div className="flex items-center gap-1 shrink-0">
-                  <ActionTooltip label={tVolunteer('viewProfileAria')}>
-                    <Button
-                      size="icon-xs"
-                      variant="outline"
-                      aria-label={tVolunteer('viewProfileAria')}
-                      onClick={() =>
-                        openVolunteerSheet({
-                          userId: attendee.id,
-                          volunteerName: attendee.name,
-                          volunteerStatus: MembershipRequestStatus.Accepted,
-                          volunteerEmail: attendee.email ?? '',
-                          volunteerCheckInId: attendee.checkInId,
-                        })
+            {invites.map((invite) => {
+              const isParticipating =
+                invite.status === EventInviteStatus.Accepted ||
+                invite.status === EventInviteStatus.SelfJoined;
+              const displayState = toEventInviteDisplayState(invite.status);
+
+              return (
+                <li
+                  key={invite.id}
+                  className="flex items-center gap-2 sm:gap-4"
+                >
+                  <div className="min-w-0 flex-1">
+                    <UserCard user={invite.user} size="sm" />
+                  </div>
+                  <div className="flex shrink-0 items-center gap-1 sm:gap-2">
+                    <VolunteeringStatusBadge
+                      state={displayState}
+                      phase="before"
+                      label={
+                        displayState === 'signed_up'
+                          ? t('status.signedUp')
+                          : t('status.invited')
                       }
-                    >
-                      <UserRound />
-                    </Button>
-                  </ActionTooltip>
-                  <ActionTooltip label={t('checkInAria')}>
-                    <Link
-                      href={`/admin/${orgUId}/check-in/${attendee.checkInId}/check-in`}
-                      aria-label={t('checkInAria')}
-                    >
+                    />
+                    <ActionTooltip label={tVolunteer('viewProfileAria')}>
                       <Button
                         size="icon-xs"
                         variant="outline"
-                        aria-label={t('checkInAria')}
+                        aria-label={tVolunteer('viewProfileAria')}
+                        onClick={() =>
+                          openVolunteerSheet({
+                            userId: invite.user.id,
+                            volunteerName: invite.user.name,
+                            volunteerStatus: MembershipRequestStatus.Accepted,
+                            volunteerEmail: invite.user.email ?? '',
+                            volunteerCheckInId: invite.user.checkInId,
+                          })
+                        }
                       >
-                        <LogIn />
+                        <UserRound />
                       </Button>
-                    </Link>
-                  </ActionTooltip>
-                </div>
-              </li>
-            ))}
+                    </ActionTooltip>
+                    {isParticipating && (
+                      <ActionTooltip label={t('checkInAria')}>
+                        <Link
+                          href={`/admin/${orgUId}/check-in/${invite.user.checkInId}/check-in`}
+                          aria-label={t('checkInAria')}
+                        >
+                          <Button
+                            size="icon-xs"
+                            variant="outline"
+                            aria-label={t('checkInAria')}
+                          >
+                            <LogIn />
+                          </Button>
+                        </Link>
+                      </ActionTooltip>
+                    )}
+                  </div>
+                </li>
+              );
+            })}
           </ul>
         )}
       </CardContent>
