@@ -11,7 +11,9 @@ import { useTranslations } from 'next-intl';
 import { useTransition } from 'react';
 import { toast } from 'sonner';
 import {
+  adminReinviteTargetStatus,
   adminUninviteTargetStatus,
+  canAdminReinvite,
   canAdminUninvite,
   toInviteDisplayState,
 } from '@/domain/shift/invite-status-display';
@@ -32,6 +34,7 @@ function manageActions(
 ): VolunteeringActionLabel[] {
   if (!canManage) return [];
   if (canAdminUninvite(status)) return ['Uninvite'];
+  if (canAdminReinvite(status)) return ['Invite'];
   return [];
 }
 
@@ -111,11 +114,16 @@ export function EventVolunteersSection({
       return;
     }
 
-    if (!canEdit || pending || action !== 'Uninvite') {
+    if (!canEdit || pending) {
       return;
     }
 
-    const targetStatus = adminUninviteTargetStatus(invite.status);
+    const targetStatus =
+      action === 'Uninvite'
+        ? adminUninviteTargetStatus(invite.status)
+        : action === 'Invite'
+          ? adminReinviteTargetStatus(invite.status)
+          : null;
     if (!targetStatus) {
       return;
     }
@@ -126,10 +134,14 @@ export function EventVolunteersSection({
         status: targetStatus,
       });
       if (result?.serverError) {
-        toast.error(t('uninviteError'));
+        toast.error(
+          action === 'Invite' ? t('inviteError') : t('uninviteError'),
+        );
         return;
       }
-      toast.success(t('uninviteSuccess'));
+      toast.success(
+        action === 'Invite' ? t('inviteSuccess') : t('uninviteSuccess'),
+      );
       router.refresh();
     });
   };
@@ -146,6 +158,7 @@ export function EventVolunteersSection({
       actionLabels={{
         View: tVolunteer('viewProfileAria'),
         'Check in': t('checkInAria'),
+        Invite: t('actionInvite'),
         Uninvite: t('actionUninvite'),
       }}
       onAction={onAction}

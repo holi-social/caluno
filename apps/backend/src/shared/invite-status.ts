@@ -83,3 +83,9 @@ export const ACTIVE_EVENT_INVITE_STATUSES = [
  * Identical for shift + event invite enums (shared string values).
  */
 export const ADMIN_UNINVITE_SOURCE_STATUSES = ACTIVE_SHIFT_INVITE_STATUSES;
+
+/** Statuses shown on the admin event volunteers list (active + uninvited). */
+export const ADMIN_LIST_EVENT_INVITE_STATUSES = [
+  ...ACTIVE_EVENT_INVITE_STATUSES,
+  EventInviteStatus.ADMIN_REJECTED,
+] as const;

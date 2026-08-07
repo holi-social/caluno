@@ -896,6 +896,74 @@ describe('updateEventInviteStatus (admin uninvite)', () => {
     expect(instanceInvite?.status).toBe(ShiftInviteStatus.ADMIN_REJECTED);
   });
 
+  it('sets ADMIN_REJECTED to INVITED for admin re-invite', async () => {
+    const event = await createEvent(db, { organizationUnitId });
+    const volunteer = await createUser(db);
+    await db.insert(schema.eventInvites).values({
+      eventId: event.id,
+      userId: volunteer.id,
+      status: EventInviteStatus.ADMIN_REJECTED,
+    });
+
+    const data = await graphqlRequestRequiringData<{
+      updateEventInviteStatus: { status: string; userId: string };
+    }>(
+      app,
+      {
+        query: updateInviteMutation,
+        variables: {
+          eventId: event.id,
+          userId: volunteer.id,
+          status: EventInviteStatus.INVITED,
+        },
+        headers: { 'x-organization-unit-id': organizationUnitId },
+      },
+      'updateEventInviteStatus',
+    );
+
+    expect(data.updateEventInviteStatus.status).toBe(EventInviteStatus.INVITED);
+    expect(data.updateEventInviteStatus.userId).toBe(volunteer.id);
+
+    const row = await db.query.eventInvites.findFirst({
+      where: { eventId: event.id, userId: volunteer.id },
+    });
+    expect(row?.status).toBe(EventInviteStatus.INVITED);
+  });
+
+  it('lists ADMIN_REJECTED invites for admin re-invite', async () => {
+    const event = await createEvent(db, { organizationUnitId });
+    const volunteer = await createUser(db);
+    await db.insert(schema.eventInvites).values({
+      eventId: event.id,
+      userId: volunteer.id,
+      status: EventInviteStatus.ADMIN_REJECTED,
+    });
+
+    const data = await graphqlRequestRequiringData<{
+      eventInvites: Array<{ id: string; status: string; userId: string }>;
+    }>(
+      app,
+      {
+        query: `
+          query EventInvites($eventId: ID!) {
+            eventInvites(eventId: $eventId) {
+              id
+              status
+              userId
+            }
+          }
+        `,
+        variables: { eventId: event.id },
+        headers: { 'x-organization-unit-id': organizationUnitId },
+      },
+      'eventInvites',
+    );
+
+    expect(data.eventInvites).toHaveLength(1);
+    expect(data.eventInvites[0]?.status).toBe(EventInviteStatus.ADMIN_REJECTED);
+    expect(data.eventInvites[0]?.userId).toBe(volunteer.id);
+  });
+
   it('does not cascade to shifts of a different event', async () => {
     const event = await createEvent(db, { organizationUnitId });
     const otherEvent = await createEvent(db, { organizationUnitId });

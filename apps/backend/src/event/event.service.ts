@@ -21,7 +21,7 @@ import {
 } from '../requirement-profile/services/required-form.service';
 import { JoinStatus } from '../shared/enums/join-status.enum';
 import {
-  ACTIVE_EVENT_INVITE_STATUSES,
+  ADMIN_LIST_EVENT_INVITE_STATUSES,
   canTransitionInviteStatus,
   PARTICIPATING_EVENT_INVITE_STATUSES,
 } from '../shared/invite-status';
@@ -682,7 +682,7 @@ export class EventService {
     return this.db.query.eventInvites.findMany({
       where: {
         eventId,
-        status: { in: [...ACTIVE_EVENT_INVITE_STATUSES] },
+        status: { in: [...ADMIN_LIST_EVENT_INVITE_STATUSES] },
       },
       orderBy: { createdAt: 'desc' },
     });
