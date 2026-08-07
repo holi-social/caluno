@@ -30,7 +30,7 @@
     "toggleTheme": "Toggle theme",
     "menu": "Menu",
     "signOut": "Sign Out",
-    "brand": "Clippy",
+    "brand": "Caluno",
     "greeting": "Hi {name}",
     "avatarAlt": "Avatar of {name}"
   },
@@ -115,9 +115,9 @@
     }
   },
   "Metadata": {
-    "title": "Clippy",
+    "title": "Caluno",
     "description": "Volunteer management platform",
-    "unauthorizedTitle": "Access Denied | Clippy"
+    "unauthorizedTitle": "Access Denied | Caluno"
   },
   "Unauthorized": {
     "title": "Access Denied",
@@ -159,7 +159,7 @@
     "checkIn": "Check in",
     "myTime": "My Time",
     "requirementForms": "Requirement Forms",
-    "settings": "Settings",
+    "organizationSettings": "Organization Settings",
     "roles": "Roles",
     "orgUnits": "Org Units",
     "selectOrganization": "Select organization",
@@ -628,6 +628,10 @@
       "inviteAllLabel": "Invite to all future instances of this shift",
       "inviteAllDescription": "Volunteers will get invited to all shifts starting from {startDate}, every {days}."
     },
+    "editInstanceForm": {
+      "applyToAllLabel": "Apply to all future instances",
+      "applyToAllDescription": "Changes will also apply to every future occurrence of this shift and override any earlier per-occurrence edits. Past occurrences are not affected."
+    },
     "successDialog": {
       "title": "Shift created",
       "bodyOpen": "Your open shift is live! All volunteers inside of your organisation have been notified and can now sign up.",
@@ -750,6 +754,8 @@
       "createEventDescription": "Schedule a shift for this event.",
       "editTitle": "Edit shift",
       "editDescription": "Edit shift.",
+      "editInstanceTitle": "Edit shift instance",
+      "editInstanceDescription": "Edit this occurrence of the shift.",
       "inviteTitle": "Invite volunteers",
       "inviteDescription": "Invited volunteers will receive an invitation email with shift details and a link to the system."
     },
@@ -793,7 +799,11 @@
       "organizationUnitRequired": "Organization unit is required",
       "shiftIdRequired": "Shift ID is required",
       "minMaxVolunteers": "Minimum volunteers cannot exceed maximum volunteers",
-      "windowViolation": "Must fall within the event window"
+      "windowViolation": "Must fall within the event window",
+      "instanceTimeConflict": "Another occurrence of this shift already starts at that time.",
+      "instanceDateMismatch": "The date doesn't match this occurrence. Reopen the edit form and try again.",
+      "instanceClearRecurrenceUnsupported": "Clearing recurrence isn't supported from this form. Edit the shift's recurrence from the main Edit Shift page instead.",
+      "instanceRecurrenceConflict": "The new recurrence pattern doesn't include this occurrence's day. Adjust the recurrence or edit a different occurrence."
     },
     "inviteStatus": {
       "invited": "Invited",
@@ -818,6 +828,7 @@
       "title": "Shift instance",
       "subtitle": "Volunteers and invite status for this occurrence",
       "inviteCta": "Manage invites",
+      "editCta": "Edit",
       "backToShift": "Back to shift"
     }
   },
@@ -1309,7 +1320,11 @@
         "inviteButton": "Invite",
         "inviteAria": "Invite members",
         "checkInAria": "Check in",
-        "empty": "No volunteers invited yet."
+        "empty": "No volunteers invited yet.",
+        "status": {
+          "invited": "Invited",
+          "signedUp": "Signed up"
+        }
       },
       "shiftsCard": {
         "title": "Shifts",
@@ -1431,6 +1446,8 @@
     "loadPast": "Load past",
     "loadMore": "Load more",
     "invitedOn": "Invited · {date}",
+    "inviteKindEvent": "Event",
+    "inviteKindShift": "Shift",
     "pendingBadge": "Pending",
     "pendingRequestTitle": "Waiting for {orgName}",
     "pendingRequestBody": "An admin is reviewing your request. Usually a few days.",

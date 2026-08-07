@@ -6,8 +6,8 @@ const PUBLIC_INBOX = 'https://www.mailinator.com/v4/public/inboxes.jsp';
 export class MailinatorPage {
   constructor(private readonly page: Page) {}
 
-  // A unique public inbox per run — e.g. clippy-e2e-123@mailinator.com.
-  static uniqueInbox(prefix = 'clippy-e2e'): {
+  // A unique public inbox per run — e.g. caluno-e2e-123@mailinator.com.
+  static uniqueInbox(prefix = 'caluno-e2e'): {
     inbox: string;
     emailAddress: string;
   } {

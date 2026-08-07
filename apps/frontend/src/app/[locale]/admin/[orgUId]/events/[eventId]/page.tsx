@@ -47,9 +47,9 @@ export default async function EventDetailPage({
     notFound();
   }
 
-  const [attendees, { items: shifts, pagination: shiftsPagination }] =
+  const [invites, { items: shifts, pagination: shiftsPagination }] =
     await Promise.all([
-      await data.event.findAttendees(eventId),
+      await data.event.findInvites(eventId),
       await data.shift.findAllForEvent(eventId, {
         limit: ITEMS_PER_PAGE,
         offset,
@@ -125,7 +125,7 @@ export default async function EventDetailPage({
         <EventVolunteersSection
           orgUId={orgUId}
           eventId={eventId}
-          attendees={attendees}
+          invites={invites}
           canEdit={canEdit}
         />
         <AdminEventShiftsSection

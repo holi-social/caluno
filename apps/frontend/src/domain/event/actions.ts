@@ -67,8 +67,14 @@ export const inviteMembersToEvent = actionClient
   .bindArgsSchemas([z.string(), z.string()])
   .action(async ({ parsedInput, bindArgsParsedInputs: [orgUId, eventId] }) => {
     const data = await getDataClient({ orgUId });
+    const result = await data.event.inviteMembers(
+      eventId,
+      parsedInput.memberIds,
+    );
 
-    return await data.event.inviteMembers(eventId, parsedInput.memberIds);
+    revalidatePath(`/admin/${orgUId}/events/${eventId}`);
+
+    return result;
   });
 
 export const deleteEvent = actionClient

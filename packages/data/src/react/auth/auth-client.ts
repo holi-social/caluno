@@ -8,13 +8,13 @@ import { clearLastVisitedOrg } from '../org-context';
 import { clearLocaleCookie } from './locale-cookie';
 import { readRequestLocale } from './read-request-locale';
 
-type ClippyAuthClientOptions = BetterAuthClientOptions & {
+type CalunoAuthClientOptions = BetterAuthClientOptions & {
   baseURL: string;
   plugins: [ReturnType<typeof emailOTPClient>];
 };
 
 type BaseReactAuthClient = ReturnType<
-  typeof createBetterAuthClient<ClippyAuthClientOptions>
+  typeof createBetterAuthClient<CalunoAuthClientOptions>
 >;
 
 export type AuthClient = Omit<BaseReactAuthClient, 'signOut'> & {

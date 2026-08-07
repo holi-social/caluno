@@ -1,8 +1,10 @@
-import { ShiftInviteStatus } from '@repo/data';
+import { EventInviteStatus, ShiftInviteStatus } from '@repo/data';
 import { Empty, EmptyMedia, EmptyTitle } from '@repo/ui';
 import { MailIcon } from 'lucide-react';
 import { getTranslations } from 'next-intl/server';
+import { EventCardMyInvited } from '@/domain/home/components/event-card-my-invited';
 import { ShiftCardMyInvited } from '@/domain/home/components/shift-card-my-invited';
+import { mergeInvitations } from '@/domain/home/lib/merge-invitations';
 import { requireAuth } from '@/lib/auth-server';
 import { getDataClient } from '@/lib/data-client';
 
@@ -16,10 +18,17 @@ export default async function InvitationsPage({
   const { locale } = await params;
   await requireAuth(`/${locale}/auth/login`);
   const client = await getDataClient();
-  const page = await client.shift.findMyShiftInstances({
-    statuses: [ShiftInviteStatus.Invited],
-    limit: 50,
-  });
+  const [shiftInvites, eventInvites] = await Promise.all([
+    client.shift.findMyShiftInstances({
+      statuses: [ShiftInviteStatus.Invited],
+      limit: 50,
+    }),
+    client.event.findMyEvents({
+      statuses: [EventInviteStatus.Invited],
+      limit: 50,
+    }),
+  ]);
+  const invitations = mergeInvitations(shiftInvites.items, eventInvites.items);
   const t = await getTranslations('VolunteerHome');
 
   return (
@@ -27,7 +36,7 @@ export default async function InvitationsPage({
       <h1 className="mb-4 text-2xl font-semibold text-foreground">
         {t('invitationsHeading')}
       </h1>
-      {page.items.length === 0 ? (
+      {invitations.length === 0 ? (
         <Empty>
           <EmptyMedia variant="icon">
             <MailIcon />
@@ -36,9 +45,19 @@ export default async function InvitationsPage({
         </Empty>
       ) : (
         <div className="flex flex-col gap-3">
-          {page.items.map((invite) => (
-            <ShiftCardMyInvited key={invite.id} shiftInstance={invite} />
-          ))}
+          {invitations.map((invite) =>
+            invite.kind === 'shift' ? (
+              <ShiftCardMyInvited
+                key={`shift-${invite.id}`}
+                shiftInstance={invite.shift}
+              />
+            ) : (
+              <EventCardMyInvited
+                key={`event-${invite.id}`}
+                event={invite.event}
+              />
+            ),
+          )}
         </div>
       )}
     </div>
