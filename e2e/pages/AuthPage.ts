@@ -2,7 +2,7 @@ import type { Page } from '@playwright/test';
 
 // Override with E2E_BASE_URL; the Playwright config sets no baseURL.
 export const BASE_URL =
-  process.env.E2E_BASE_URL ?? 'https://staging.clippy.holi.social';
+  process.env.E2E_BASE_URL ?? 'https://staging.app.caluno.org';
 
 // Shared base for the login/signup page objects.
 export abstract class AuthPage {

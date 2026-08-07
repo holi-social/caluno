@@ -1,4 +1,4 @@
-# Clippy Frontend Web App
+# Caluno Frontend Web App
 
 The frontend web app for securely managing volunteers and shifts in multi-tiered organizations. Includes the backoffice (`/admin/[orgUId]` routes) — there is no separate backoffice app.
 
@@ -78,7 +78,7 @@ error messages, or empty-state text in components. Add new keys to both locales 
 keep namespaces/key shapes in sync.
 
 ### Locale switching
-The `clippy.locale` cookie is the single frontend locale-preference source, and
+The `caluno.locale` cookie is the single frontend locale-preference source, and
 **for authenticated users the preference always wins over the URL** (a `/de/…`
 link is redirected to the user's locale — this is a private dashboard, shareable
 per-locale URLs are not a goal). **Logged-out users are exempt**: the proxy only
@@ -96,7 +96,7 @@ redirect.
 
 `src/proxy.ts` is the single place that performs locale redirects. It composes a
 pure `localePreferenceRedirect()` in front of next-intl via
-`withLocalePreference(intlMiddleware)`: when the supported `clippy.locale` cookie
+`withLocalePreference(intlMiddleware)`: when the supported `caluno.locale` cookie
 differs from the URL locale it returns a 307 to `/<cookie-locale>/<path>`
 (stacked prefixes normalised, so no `/en/en/…` loop); otherwise it falls through
 to next-intl, which is load-bearing (prefixes bare paths, Accept-Language
