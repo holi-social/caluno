@@ -90,7 +90,7 @@ export function getContractDocument(
   pauschale: PauschalenType,
 ): TemplateDocument {
   // Shared across both blocks so one coordinator-typed value drives both mentions.
-  const contractLifespan = manual('contract-lifespan', '', 'month-year');
+  const contractLifespan = manual('contract-lifespan', '', 'period');
 
   return {
     header: {
@@ -148,7 +148,7 @@ export function getContractDocument(
         lines: [
           line(
             'engagement-scope',
-            'Die ehrenamtlich tätige Person übt im {contractLifespan} (Monat/Jahr) für die Einrichtung {orgName} eine nebenberufliche Tätigkeit aus.',
+            'Die ehrenamtlich tätige Person übt im Zeitraum {contractLifespan} für die Einrichtung {orgName} eine nebenberufliche Tätigkeit aus.',
             [contractLifespan, bound('engagement-org-name', 'org_name')],
           ),
           line(
@@ -167,8 +167,12 @@ export function getContractDocument(
         lines: [
           line(
             'hours-scope',
-            'Zeitraum: {contractLifespan}  Stundenzahl pro Woche: ca. {hoursPerWeek}',
-            [contractLifespan, manual('hours-per-week', '', 'number')],
+            'Zeitraum: {contractLifespan}  Stundenzahl pro {hoursUnit}: ca. {hoursAmount}',
+            [
+              contractLifespan,
+              manual('hours-unit', 'Monat', 'unit-tabs'),
+              manual('hours-amount', '', 'number'),
+            ],
           ),
           line(
             'hours-confirmation',
@@ -293,8 +297,15 @@ export function getInvoiceDocument(
         id: 'stundennachweis',
         title: 'Stundennachweis',
         locked: true,
-        columns: ['Einsatz', 'Beginn', 'Ende', 'Stunden gesamt', 'Stundensatz'],
+        columns: [
+          'Tätigkeit',
+          'Beginn',
+          'Ende',
+          'Stunden gesamt',
+          'Stundensatz',
+        ],
         previewRowCount: 10,
+        firstColumnSource: 'shift_name',
       },
     ],
     footer: {

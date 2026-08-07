@@ -3,32 +3,46 @@
 import {
   Button,
   Input,
+  Label,
+  RadioGroup,
+  RadioGroupItem,
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
   Switch,
+  Tabs,
+  TabsList,
+  TabsTrigger,
   Textarea,
   Tooltip,
   TooltipContent,
   TooltipTrigger,
 } from '@repo/ui';
-import { CheckIcon, LockIcon, PencilIcon, TriangleAlertIcon } from 'lucide-react';
+import {
+  CheckIcon,
+  LockIcon,
+  PencilIcon,
+  TriangleAlertIcon,
+} from 'lucide-react';
 import { useTranslations } from 'next-intl';
+import type { ReactNode } from 'react';
 import { useId, useState } from 'react';
 import type { DocumentKind } from '../doc-type-header';
 import { InfoPanel } from '../info-panel';
-import { TemplateBuilderMonthYearPicker } from './builder-month-year-picker';
+import { TemplateBuilderPeriodPicker } from './builder-period-picker';
 import {
   type DataSourceKey,
   FIELD_ORIGIN,
   getFirstOccurrenceLineByFieldId,
   type InvoiceNumberFormat,
+  type TableFirstColumnSource,
   type TemplateBlock,
   type TemplateDocument,
   type TemplateField,
   type TemplateLine,
+  type TemplateTableBlock,
   type TemplateTextBlock,
   updateManualFieldValue,
 } from './builder-types';
@@ -48,11 +62,7 @@ const VOLUNTEER_SOURCES: DataSourceKey[] = [
   'volunteer_bic',
 ];
 const ENGAGEMENT_SOURCES: DataSourceKey[] = ['hourly_rate'];
-const ENGAGEMENT_MANUAL_FIELD_IDS = [
-  'contract-lifespan',
-  'tasks',
-  'hours-per-week',
-];
+const ENGAGEMENT_MANUAL_FIELD_IDS = ['contract-lifespan', 'tasks'];
 
 interface EditorFieldEntry {
   field: TemplateField;
@@ -60,10 +70,18 @@ interface EditorFieldEntry {
   blockId: string;
 }
 
+/** The hours-per-{unit} line's two manual fields, rendered together in one card by `HoursFieldCard` instead of as two separate generic field rows. */
+export interface HoursEditorEntry {
+  line: TemplateLine;
+  unitField: TemplateField;
+  amountField: TemplateField;
+}
+
 export interface ContractEditorGroups {
   org: EditorFieldEntry[];
   volunteer: EditorFieldEntry[];
   engagement: EditorFieldEntry[];
+  hours: HoursEditorEntry | undefined;
   extraBlock: TemplateTextBlock | undefined;
 }
 
@@ -76,6 +94,8 @@ export function collectContractEditorGroups(
   const seenSources = new Set<DataSourceKey>();
   const seenManualIds = new Set<string>();
   let extraBlock: TemplateTextBlock | undefined;
+  let hours: HoursEditorEntry | undefined;
+  let hoursUnitField: TemplateField | undefined;
 
   for (const block of doc.blocks) {
     if (block.kind !== 'text') continue;
@@ -85,6 +105,16 @@ export function collectContractEditorGroups(
     }
     for (const line of block.lines) {
       for (const field of line.fields) {
+        if (field.id === 'hours-unit') {
+          hoursUnitField = field;
+          continue;
+        }
+        if (field.id === 'hours-amount') {
+          if (hoursUnitField) {
+            hours = { line, unitField: hoursUnitField, amountField: field };
+          }
+          continue;
+        }
         const entry: EditorFieldEntry = { field, line, blockId: block.id };
         if (field.value.kind === 'bound') {
           const source = field.value.source;
@@ -110,7 +140,7 @@ export function collectContractEditorGroups(
     }
   }
 
-  return { org, volunteer, engagement, extraBlock };
+  return { org, volunteer, engagement, hours, extraBlock };
 }
 
 const INVOICE_NUMBER_FORMATS: InvoiceNumberFormat[] = [
@@ -212,7 +242,8 @@ function FieldRow({
     // exists is editable via a pencil; anything not yet known is a plain
     // placeholder — nothing to edit until a real volunteer/document exists.
     const hasValue = !!effectiveValue && !isGap;
-    const placeholderExample = PLACEHOLDER_EXAMPLES[field.value.source] ?? title;
+    const placeholderExample =
+      PLACEHOLDER_EXAMPLES[field.value.source] ?? title;
 
     function handleEdit() {
       setDraft(effectiveValue ?? '');
@@ -245,15 +276,16 @@ function FieldRow({
       ) : (
         <div className="space-y-0.5">
           <p className="text-base text-foreground">{effectiveValue}</p>
-          {(origin === 'rate_settings' || origin === 'organization_profile') && (
-            <p className="text-xs text-muted-foreground">
-              {t(
-                origin === 'rate_settings'
-                  ? 'fieldSource.rateSettings'
-                  : 'fieldSource.organizationProfile',
-              )}
-            </p>
-          )}
+          {(origin === 'rate_settings' ||
+            origin === 'organization_profile') && (
+              <p className="text-xs text-muted-foreground">
+                {t(
+                  origin === 'rate_settings'
+                    ? 'fieldSource.rateSettings'
+                    : 'fieldSource.organizationProfile',
+                )}
+              </p>
+            )}
         </div>
       )
     ) : isGap ? (
@@ -346,8 +378,8 @@ function FieldRow({
         aria-label={title}
         rows={4}
       />
-    ) : field.control === 'month-year' ? (
-      <TemplateBuilderMonthYearPicker
+    ) : field.control === 'period' ? (
+      <TemplateBuilderPeriodPicker
         value={field.value.value}
         placeholder={placeholder}
         onChange={(value) => onManualChange(field.id, value)}
@@ -456,6 +488,64 @@ function LineEditor({
   );
 }
 
+const TABLE_FIRST_COLUMN_SOURCES: TableFirstColumnSource[] = [
+  'shift_name',
+  'agreement_task_description',
+];
+
+/** The Stundennachweis table's one configurable choice — everything else about its shape is fixed. */
+function TableFirstColumnSourceCard({
+  block,
+  onChange,
+}: {
+  block: TemplateTableBlock;
+  onChange: (source: TableFirstColumnSource) => void;
+}) {
+  const t = useTranslations('Accounting.templates.builder');
+  const idBase = useId();
+
+  return (
+    <InfoPanel
+      variant="outline"
+      title={t('blockEditor.firstColumnSourceLabel')}
+    >
+      <RadioGroup
+        value={block.firstColumnSource}
+        onValueChange={(value) => onChange(value as TableFirstColumnSource)}
+        className="gap-3"
+      >
+        {TABLE_FIRST_COLUMN_SOURCES.map((source) => (
+          <div key={source} className="flex items-start gap-2">
+            <RadioGroupItem
+              value={source}
+              id={`${idBase}-${source}`}
+              className="mt-0.5"
+            />
+            <Label htmlFor={`${idBase}-${source}`} className="font-normal">
+              <div className="flex flex-col items-start gap-0.5 text-left">
+                <span className="text-base font-medium text-foreground">
+                  {t(
+                    `blockEditor.firstColumnSourceOptions.${source}.label` as Parameters<
+                      typeof t
+                    >[0],
+                  )}
+                </span>
+                <span className="text-sm text-muted-foreground">
+                  {t(
+                    `blockEditor.firstColumnSourceOptions.${source}.hint` as Parameters<
+                      typeof t
+                    >[0],
+                  )}
+                </span>
+              </div>
+            </Label>
+          </div>
+        ))}
+      </RadioGroup>
+    </InfoPanel>
+  );
+}
+
 interface BlockEditorRowProps {
   block: TemplateBlock;
   firstOccurrenceByFieldId: Map<string, string>;
@@ -464,6 +554,10 @@ interface BlockEditorRowProps {
   typeLabel: string;
   onLineToggle: (blockId: string, lineId: string, enabled: boolean) => void;
   onFieldChange: (fieldId: string, value: string) => void;
+  onTableFirstColumnSourceChange: (
+    blockId: string,
+    source: TableFirstColumnSource,
+  ) => void;
 }
 
 /**
@@ -479,6 +573,7 @@ function BlockEditorRow({
   typeLabel,
   onLineToggle,
   onFieldChange,
+  onTableFirstColumnSourceChange,
 }: BlockEditorRowProps) {
   const t = useTranslations('Accounting.templates.builder');
 
@@ -501,9 +596,17 @@ function BlockEditorRow({
       </div>
 
       {block.kind === 'table' ? (
-        <p className="text-sm text-muted-foreground">
-          {t('blockEditor.tableFixedHint')}
-        </p>
+        <div className="flex flex-col gap-3">
+          <p className="text-sm text-muted-foreground">
+            {t('blockEditor.tableFixedHint')}
+          </p>
+          <TableFirstColumnSourceCard
+            block={block}
+            onChange={(source) =>
+              onTableFirstColumnSourceChange(block.id, source)
+            }
+          />
+        </div>
       ) : (
         <div className="flex flex-col gap-3">
           {block.lines.map((line) => (
@@ -587,6 +690,63 @@ function ExtraClausesCard({
   );
 }
 
+/**
+ * The contract's hours-per-{unit} line has two manual fields (unit, amount) that belong in
+ * one card, not two — the unit is a Tabs choice above the number input, never a separate
+ * field row of its own.
+ */
+function HoursFieldCard({
+  unitField,
+  amountField,
+  onFieldChange,
+}: {
+  unitField: TemplateField;
+  amountField: TemplateField;
+  onFieldChange: (fieldId: string, value: string) => void;
+}) {
+  const t = useTranslations('Accounting.templates.builder');
+  const unitValue =
+    unitField.value.kind === 'manual-template'
+      ? unitField.value.value
+      : 'Monat';
+  const amountValue =
+    amountField.value.kind === 'manual-template' ? amountField.value.value : '';
+  const title = t('manualFieldLabels.hours-amount');
+  const amountPlaceholder = t(
+    unitValue === 'Woche'
+      ? 'manualFieldPlaceholders.hours-amount-week'
+      : 'manualFieldPlaceholders.hours-amount-month',
+  );
+
+  return (
+    <InfoPanel variant="outline" title={title}>
+      <div className="flex flex-col gap-2">
+        <Tabs
+          value={unitValue}
+          onValueChange={(v) => onFieldChange(unitField.id, v)}
+        >
+          <TabsList className="w-full">
+            <TabsTrigger value="Monat" className="flex-1">
+              {t('hoursUnit.month')}
+            </TabsTrigger>
+            <TabsTrigger value="Woche" className="flex-1">
+              {t('hoursUnit.week')}
+            </TabsTrigger>
+          </TabsList>
+        </Tabs>
+        <Input
+          type="number"
+          inputMode="numeric"
+          value={amountValue}
+          onChange={(e) => onFieldChange(amountField.id, e.target.value)}
+          placeholder={amountPlaceholder}
+          aria-label={title}
+        />
+      </div>
+    </InfoPanel>
+  );
+}
+
 interface ContractGroupSectionProps {
   title: string;
   entries: EditorFieldEntry[];
@@ -596,6 +756,8 @@ interface ContractGroupSectionProps {
   typeLabel: string;
   onLineToggle: (blockId: string, lineId: string, enabled: boolean) => void;
   onFieldChange: (fieldId: string, value: string) => void;
+  /** Trailing card that doesn't fit the generic field/line entry shape (e.g. the paired hours-unit/hours-amount card). */
+  extra?: ReactNode;
 }
 
 function ContractGroupSection({
@@ -607,8 +769,9 @@ function ContractGroupSection({
   typeLabel,
   onLineToggle,
   onFieldChange,
+  extra,
 }: ContractGroupSectionProps) {
-  if (entries.length === 0) return null;
+  if (entries.length === 0 && !extra) return null;
 
   return (
     <div className="flex flex-col gap-3">
@@ -641,6 +804,7 @@ function ContractGroupSection({
             />
           ),
         )}
+        {extra}
       </div>
     </div>
   );
@@ -704,6 +868,20 @@ export function TemplateBuilderBlockEditor({
     onChange(updateManualFieldValue(templateDoc, fieldId, value));
   }
 
+  function handleTableFirstColumnSourceChange(
+    blockId: string,
+    source: TableFirstColumnSource,
+  ) {
+    onChange({
+      ...templateDoc,
+      blocks: templateDoc.blocks.map((b) =>
+        b.id === blockId && b.kind === 'table'
+          ? { ...b, firstColumnSource: source }
+          : b,
+      ),
+    });
+  }
+
   const hasHeaderConfig =
     templateDoc.header.metaLines.length > 0 ||
     templateDoc.invoiceNumberFormat !== undefined;
@@ -742,6 +920,15 @@ export function TemplateBuilderBlockEditor({
           typeLabel={typeLabel}
           onLineToggle={handleLineToggle}
           onFieldChange={handleFieldChange}
+          extra={
+            groups.hours && (
+              <HoursFieldCard
+                unitField={groups.hours.unitField}
+                amountField={groups.hours.amountField}
+                onFieldChange={handleFieldChange}
+              />
+            )
+          }
         />
         {groups.extraBlock && (
           <ExtraClausesCard
@@ -823,6 +1010,7 @@ export function TemplateBuilderBlockEditor({
           typeLabel={typeLabel}
           onLineToggle={handleLineToggle}
           onFieldChange={handleFieldChange}
+          onTableFirstColumnSourceChange={handleTableFirstColumnSourceChange}
         />
       ))}
     </div>

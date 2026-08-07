@@ -77,7 +77,10 @@ function unresolvedGapProps(
   if (field.value.kind !== 'bound') return { variant: 'plain' };
   const label = unresolvedLabels[field.value.source];
   if (!label) return { variant: 'plain' };
-  return { variant: gapSources.has(field.value.source) ? 'gap' : 'source', label };
+  return {
+    variant: gapSources.has(field.value.source) ? 'gap' : 'source',
+    label,
+  };
 }
 
 function LineRow({
@@ -101,7 +104,11 @@ function LineRow({
     const value = resolveField(soleField, values, manualOverrides);
     return (
       <p className="whitespace-pre-wrap text-base leading-relaxed">
-        {value || <Gap {...unresolvedGapProps(soleField, unresolvedLabels, gapSources)} />}
+        {value || (
+          <Gap
+            {...unresolvedGapProps(soleField, unresolvedLabels, gapSources)}
+          />
+        )}
       </p>
     );
   }
@@ -123,7 +130,9 @@ function LineRow({
               (value ? (
                 value
               ) : (
-                <Gap {...unresolvedGapProps(field, unresolvedLabels, gapSources)} />
+                <Gap
+                  {...unresolvedGapProps(field, unresolvedLabels, gapSources)}
+                />
               ))}
           </span>
         );
@@ -277,11 +286,11 @@ export function GeneratedDocumentPreview({
                           </td>
                         </tr>
                       )}
-                      {rows.map((row) => (
-                        <tr key={row.join('|')}>
+                      {rows.map((row, i) => (
+                        <tr key={i}>
                           {row.map((cell, j) => (
                             <td
-                              key={block.columns[j] ?? cell}
+                              key={block.columns[j] ?? j}
                               className="border border-border px-2 py-1"
                             >
                               {cell}

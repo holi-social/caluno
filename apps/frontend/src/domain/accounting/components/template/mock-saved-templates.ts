@@ -5,7 +5,7 @@ import {
   getContractDocument,
   getInvoiceDocument,
 } from './builder-document-presets';
-import type { TemplateDocument } from './builder-types';
+import type { TableFirstColumnSource, TemplateDocument } from './builder-types';
 import { updateManualFieldValue } from './builder-types';
 import type {
   ContractCardSummary,
@@ -62,14 +62,39 @@ export const CONTRACT_DEFAULT_LIFESPAN: Record<PauschalenType, string> = {
   uebungleiter: '01/2026',
 };
 
-export const CONTRACT_DEFAULT_HOURS_PER_WEEK: Record<PauschalenType, string> = {
-  ehrenamt: '4',
+export const CONTRACT_DEFAULT_HOURS_AMOUNT: Record<PauschalenType, string> = {
+  ehrenamt: '16',
   uebungleiter: '6',
+};
+
+export const CONTRACT_DEFAULT_HOURS_UNIT: Record<PauschalenType, string> = {
+  ehrenamt: 'Monat',
+  uebungleiter: 'Woche',
 };
 
 const INVOICE_KOSTENSTELLE: Partial<Record<TemplateSlug, string>> = {
   'uebungsleiterpauschale-invoice': 'K-4200',
 };
+
+// Demonstrates the agreement-task-description setting end to end in the mock data — the other
+// three saved templates keep the default (the shift's own name).
+const INVOICE_FIRST_COLUMN_SOURCE: Partial<
+  Record<TemplateSlug, TableFirstColumnSource>
+> = {
+  'uebungsleiterpauschale-invoice': 'agreement_task_description',
+};
+
+function withFirstColumnSource(
+  doc: TemplateDocument,
+  source: TableFirstColumnSource,
+): TemplateDocument {
+  return {
+    ...doc,
+    blocks: doc.blocks.map((b) =>
+      b.kind === 'table' ? { ...b, firstColumnSource: source } : b,
+    ),
+  };
+}
 
 function buildContractTemplate(pauschale: PauschalenType): TemplateDocument {
   const withLines = enableLines(getContractDocument(pauschale), [
@@ -79,7 +104,8 @@ function buildContractTemplate(pauschale: PauschalenType): TemplateDocument {
   return withManualValues(withLines, {
     'contract-lifespan': CONTRACT_DEFAULT_LIFESPAN[pauschale],
     tasks: CONTRACT_TASKS[pauschale],
-    'hours-per-week': CONTRACT_DEFAULT_HOURS_PER_WEEK[pauschale],
+    'hours-unit': CONTRACT_DEFAULT_HOURS_UNIT[pauschale],
+    'hours-amount': CONTRACT_DEFAULT_HOURS_AMOUNT[pauschale],
   });
 }
 
@@ -87,7 +113,10 @@ function buildInvoiceTemplate(
   pauschale: PauschalenType,
   slug: TemplateSlug,
 ): TemplateDocument {
-  const base = getInvoiceDocument(pauschale);
+  const firstColumnSource = INVOICE_FIRST_COLUMN_SOURCE[slug];
+  const base = firstColumnSource
+    ? withFirstColumnSource(getInvoiceDocument(pauschale), firstColumnSource)
+    : getInvoiceDocument(pauschale);
   const kostenstelle = INVOICE_KOSTENSTELLE[slug];
   if (!kostenstelle) return base;
   const withLine = enableLines(base, ['meta-kostenstelle']);

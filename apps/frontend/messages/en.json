@@ -1211,6 +1211,9 @@
         "sentToast": "Contract sent to {name} for signing.",
         "loadErrorTitle": "Couldn't load profile data",
         "loadError": "{name}'s profile data couldn't be loaded. Please close this and try again.",
+        "hoursUnitMonth": "month",
+        "hoursUnitWeek": "week",
+        "hoursUnitHint": "per {unit}",
         "preview": {
           "disclaimerBadge": "Preview",
           "documentTitle": "Additional agreement",
@@ -1290,7 +1293,22 @@
           "headerTitle": "Header",
           "invoiceNumberFormatLabel": "Invoice number format",
           "lockedHint": "Mandatory — always included in the generated document.",
-          "tableFixedHint": "Filled from timesheets when an invoice is generated. Nothing to configure here.",
+          "tableFixedHint": "Rows are filled from timesheets when an invoice is generated.",
+          "firstColumnSourceLabel": "First column content",
+          "firstColumnSourceOptions": {
+            "shift_name": {
+              "label": "Shift name",
+              "hint": "Each row shows the shift name from the time entry."
+            },
+            "agreement_task_description": {
+              "label": "Task description from the agreement",
+              "hint": "Each row shows the task description stored in the agreement."
+            }
+          },
+          "firstColumnPlaceholders": {
+            "shiftName": "Shift name",
+            "agreementTaskDescription": "Task description"
+          },
           "incompleteCount": "{count} fields need a value",
           "notSetYet": "not set yet",
           "sameAsAbove": "same value as set above",
@@ -1302,10 +1320,24 @@
           "engagement": "Engagement details",
           "extra": "Extra clauses"
         },
+        "hoursUnit": {
+          "month": "Month",
+          "week": "Week"
+        },
+        "periodPicker": {
+          "tabYear": "Year",
+          "tabMonth": "Month",
+          "tabRange": "Period",
+          "previousYear": "Previous year",
+          "nextYear": "Next year",
+          "previousYearBlock": "Previous period",
+          "nextYearBlock": "Next period",
+          "apply": "Apply"
+        },
         "manualFieldLabels": {
-          "contract-lifespan": "Contract period (month/year)",
+          "contract-lifespan": "Contract period",
           "tasks": "Task description",
-          "hours-per-week": "Hours per week",
+          "hours-amount": "Hours",
           "freeform-text": "Freeform text",
           "kostenstelle": "Kostenstelle",
           "kostentraeger": "Kostenträger"
@@ -1313,7 +1345,8 @@
         "manualFieldPlaceholders": {
           "contract-lifespan": "Select period",
           "tasks": "Describe the main activities for {pauschale}",
-          "hours-per-week": "e.g. 5",
+          "hours-amount-month": "e.g. 20",
+          "hours-amount-week": "e.g. 5",
           "freeform-text": "Add other clauses here if you need to",
           "kostenstelle": "e.g. K-4200",
           "kostentraeger": "e.g. KT-100"

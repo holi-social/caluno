@@ -23,6 +23,7 @@ import type {
   DataSourceKey,
   InvoiceNumberFormat,
 } from './template/builder-types';
+import { getManualFieldValue } from './template/builder-types';
 import { GeneratedDocumentPreview } from './template/generated-document-preview';
 import {
   MOCK_SAVED_TEMPLATES,
@@ -294,10 +295,25 @@ export function InvoiceCreationModal({
     period_end: format(period.to ?? new Date(), 'dd.MM.yyyy'),
   };
 
+  const tableBlock = template.blocks.find((b) => b.kind === 'table');
+  const firstColumnSource =
+    tableBlock?.kind === 'table' ? tableBlock.firstColumnSource : 'shift_name';
+  // The agreement's task description is baked into the volunteer's contract template, not
+  // this invoice's own — read from the sibling contract template for this pauschale.
+  const agreementTaskDescription =
+    firstColumnSource === 'agreement_task_description'
+      ? getManualFieldValue(
+          MOCK_SAVED_TEMPLATES[templateSlugFor(pauschale, 'contract')].document,
+          'tasks',
+        )
+      : undefined;
+
   const tableRows = selectedLines.map((line) => {
     const { begin, end } = splitDateTimeRange(line.dateTime);
     return [
-      line.shiftName,
+      firstColumnSource === 'agreement_task_description'
+        ? (agreementTaskDescription ?? line.shiftName)
+        : line.shiftName,
       begin,
       end,
       `${line.hours}h`,

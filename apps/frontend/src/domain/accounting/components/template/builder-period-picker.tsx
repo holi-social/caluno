@@ -2,6 +2,7 @@
 
 import {
   Button,
+  Calendar,
   Popover,
   PopoverContent,
   PopoverTrigger,
@@ -9,8 +10,17 @@ import {
   TabsList,
   TabsTrigger,
 } from '@repo/ui';
+import { format } from 'date-fns';
 import { CalendarIcon, ChevronLeftIcon, ChevronRightIcon } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import { useState } from 'react';
+
+// Not imported from 'react-day-picker' — that package is a `@repo/ui`-only dependency, not a
+// direct frontend one. Same local shape `period-picker.tsx` uses for the same reason.
+interface PickerDateRange {
+  from: Date | undefined;
+  to?: Date | undefined;
+}
 
 const MONTH_NAMES_DE = [
   'Jan',
@@ -42,46 +52,86 @@ const MONTH_NAMES_FULL_DE = [
   'Dezember',
 ];
 
-type Granularity = 'month' | 'year';
+type Granularity = 'month' | 'year' | 'range';
 
-function parseValue(value: string): {
+interface ParsedValue {
   granularity: Granularity;
   year: number;
   month: number | null;
-} {
+  rangeFrom: Date | null;
+  rangeTo: Date | null;
+}
+
+function parseValue(value: string): ParsedValue {
+  const rangeMatch = value.match(
+    /^(\d{2})\.(\d{2})\.(\d{4})\s*–\s*(\d{2})\.(\d{2})\.(\d{4})$/,
+  );
+  if (rangeMatch) {
+    const [, fromDay, fromMonth, fromYear, toDay, toMonth, toYear] = rangeMatch;
+    return {
+      granularity: 'range',
+      year: new Date().getFullYear(),
+      month: null,
+      rangeFrom: new Date(
+        Number(fromYear),
+        Number(fromMonth) - 1,
+        Number(fromDay),
+      ),
+      rangeTo: new Date(Number(toYear), Number(toMonth) - 1, Number(toDay)),
+    };
+  }
   const monthMatch = value.match(/^(\d{2})\/(\d{4})$/);
   if (monthMatch) {
     return {
       granularity: 'month',
       year: Number(monthMatch[2]),
       month: Number(monthMatch[1]) - 1,
+      rangeFrom: null,
+      rangeTo: null,
     };
   }
   const yearMatch = value.match(/^(\d{4})$/);
   if (yearMatch) {
-    return { granularity: 'year', year: Number(yearMatch[1]), month: null };
+    return {
+      granularity: 'year',
+      year: Number(yearMatch[1]),
+      month: null,
+      rangeFrom: null,
+      rangeTo: null,
+    };
   }
-  return { granularity: 'year', year: new Date().getFullYear(), month: null };
+  return {
+    granularity: 'year',
+    year: new Date().getFullYear(),
+    month: null,
+    rangeFrom: null,
+    rangeTo: null,
+  };
 }
 
 function formatValue(value: string): string | null {
-  const { granularity, year, month } = parseValue(value);
-  if (granularity === 'year' && value) return String(year);
+  const { granularity, year, month, rangeFrom, rangeTo } = parseValue(value);
+  if (!value) return null;
+  if (granularity === 'range' && rangeFrom && rangeTo) {
+    return `${format(rangeFrom, 'dd.MM.yyyy')} – ${format(rangeTo, 'dd.MM.yyyy')}`;
+  }
+  if (granularity === 'year') return String(year);
   if (month !== null) return `${MONTH_NAMES_FULL_DE[month]} ${year}`;
   return null;
 }
 
-interface TemplateBuilderMonthYearPickerProps {
+interface TemplateBuilderPeriodPickerProps {
   value: string;
   placeholder: string;
   onChange: (value: string) => void;
 }
 
-export function TemplateBuilderMonthYearPicker({
+export function TemplateBuilderPeriodPicker({
   value,
   placeholder,
   onChange,
-}: TemplateBuilderMonthYearPickerProps) {
+}: TemplateBuilderPeriodPickerProps) {
+  const t = useTranslations('Accounting.templates.builder.periodPicker');
   const parsed = parseValue(value);
   const [open, setOpen] = useState(false);
   const [granularity, setGranularity] = useState<Granularity>(
@@ -91,6 +141,11 @@ export function TemplateBuilderMonthYearPicker({
   // First cell of the year grid — starts one year back from the selected/current year,
   // not an arbitrary floor(year/12) block.
   const [yearRangeStart, setYearRangeStart] = useState(parsed.year - 1);
+  const [rangeDraft, setRangeDraft] = useState<PickerDateRange | undefined>(
+    parsed.granularity === 'range' && parsed.rangeFrom
+      ? { from: parsed.rangeFrom, to: parsed.rangeTo ?? undefined }
+      : undefined,
+  );
 
   const displayValue = formatValue(value);
 
@@ -104,8 +159,28 @@ export function TemplateBuilderMonthYearPicker({
     setOpen(false);
   }
 
+  function applyRange() {
+    if (!rangeDraft?.from || !rangeDraft?.to) return;
+    onChange(
+      `${format(rangeDraft.from, 'dd.MM.yyyy')}–${format(rangeDraft.to, 'dd.MM.yyyy')}`,
+    );
+    setOpen(false);
+  }
+
   return (
-    <Popover open={open} onOpenChange={setOpen}>
+    <Popover
+      open={open}
+      onOpenChange={(next) => {
+        if (next) {
+          setRangeDraft(
+            parsed.granularity === 'range' && parsed.rangeFrom
+              ? { from: parsed.rangeFrom, to: parsed.rangeTo ?? undefined }
+              : undefined,
+          );
+        }
+        setOpen(next);
+      }}
+    >
       <PopoverTrigger asChild>
         <Button
           type="button"
@@ -122,17 +197,23 @@ export function TemplateBuilderMonthYearPicker({
           )}
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-64 p-3" align="start">
+      <PopoverContent
+        className={granularity === 'range' ? 'w-auto p-3' : 'w-64 p-3'}
+        align="start"
+      >
         <Tabs
           value={granularity}
           onValueChange={(v) => setGranularity(v as Granularity)}
         >
           <TabsList className="w-full">
             <TabsTrigger value="year" className="flex-1">
-              Jahr
+              {t('tabYear')}
             </TabsTrigger>
             <TabsTrigger value="month" className="flex-1">
-              Monat
+              {t('tabMonth')}
+            </TabsTrigger>
+            <TabsTrigger value="range" className="flex-1">
+              {t('tabRange')}
             </TabsTrigger>
           </TabsList>
         </Tabs>
@@ -145,7 +226,7 @@ export function TemplateBuilderMonthYearPicker({
                 variant="ghost"
                 size="sm"
                 onClick={() => setViewYear((y) => y - 1)}
-                aria-label="Vorheriges Jahr"
+                aria-label={t('previousYear')}
               >
                 <ChevronLeftIcon size={14} aria-hidden="true" />
               </Button>
@@ -155,7 +236,7 @@ export function TemplateBuilderMonthYearPicker({
                 variant="ghost"
                 size="sm"
                 onClick={() => setViewYear((y) => y + 1)}
-                aria-label="Nächstes Jahr"
+                aria-label={t('nextYear')}
               >
                 <ChevronRightIcon size={14} aria-hidden="true" />
               </Button>
@@ -180,7 +261,7 @@ export function TemplateBuilderMonthYearPicker({
               ))}
             </div>
           </div>
-        ) : (
+        ) : granularity === 'year' ? (
           <div className="mt-3 space-y-2">
             <div className="flex items-center justify-between">
               <Button
@@ -188,7 +269,7 @@ export function TemplateBuilderMonthYearPicker({
                 variant="ghost"
                 size="sm"
                 onClick={() => setYearRangeStart((y) => y - 12)}
-                aria-label="Vorheriger Zeitraum"
+                aria-label={t('previousYearBlock')}
               >
                 <ChevronLeftIcon size={14} aria-hidden="true" />
               </Button>
@@ -200,7 +281,7 @@ export function TemplateBuilderMonthYearPicker({
                 variant="ghost"
                 size="sm"
                 onClick={() => setYearRangeStart((y) => y + 12)}
-                aria-label="Nächster Zeitraum"
+                aria-label={t('nextYearBlock')}
               >
                 <ChevronRightIcon size={14} aria-hidden="true" />
               </Button>
@@ -224,6 +305,25 @@ export function TemplateBuilderMonthYearPicker({
                 ),
               )}
             </div>
+          </div>
+        ) : (
+          <div className="mt-3 space-y-3">
+            <Calendar
+              mode="range"
+              defaultMonth={rangeDraft?.from ?? undefined}
+              selected={rangeDraft}
+              onSelect={setRangeDraft}
+              numberOfMonths={2}
+            />
+            <Button
+              type="button"
+              size="sm"
+              className="w-full"
+              disabled={!rangeDraft?.from || !rangeDraft?.to}
+              onClick={applyRange}
+            >
+              {t('apply')}
+            </Button>
           </div>
         )}
       </PopoverContent>

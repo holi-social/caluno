@@ -35,16 +35,28 @@ const ALL_DATA_SOURCES: DataSourceKey[] = [
   ...PROFILE_REQUIRED_SOURCES,
 ];
 
-// Placeholder rows for the invoice's Stundennachweis table — no real timesheets
-// exist at template-configuration time, only the column shape (see
-// getInvoiceDocument's table block). Mirrors the `['', '', 'Summe', '—', '—']`
-// total-row convention InvoiceCreationModal uses for the real thing.
-const PLACEHOLDER_TABLE_ROWS: string[][] = [
-  ['', '', '', '', ''],
-  ['', '', '', '', ''],
-  ['', '', '', '', ''],
-];
 const PLACEHOLDER_TABLE_TOTAL_ROW = ['', '', 'Summe', '—', '—'];
+
+// Placeholder rows for the invoice's Stundennachweis table — no real timesheets exist at
+// template-configuration time, only the column shape and the chosen first-column source (see
+// getInvoiceDocument's table block). The first cell reflects that choice so toggling it in the
+// editor visibly changes the preview, per the live-preview acceptance criterion.
+function getPlaceholderTableRows(
+  templateDoc: TemplateDocument,
+  t: ReturnType<typeof useTranslations>,
+): string[][] {
+  const tableBlock = templateDoc.blocks.find((b) => b.kind === 'table');
+  const firstColumnPlaceholder =
+    tableBlock?.kind === 'table' &&
+    tableBlock.firstColumnSource === 'agreement_task_description'
+      ? t('blockEditor.firstColumnPlaceholders.agreementTaskDescription')
+      : t('blockEditor.firstColumnPlaceholders.shiftName');
+  return [
+    [firstColumnPlaceholder, '', '', '', ''],
+    [firstColumnPlaceholder, '', '', '', ''],
+    [firstColumnPlaceholder, '', '', '', ''],
+  ];
+}
 
 interface TemplateBuilderProps {
   pauschale: PauschalenType;
@@ -172,7 +184,11 @@ export function TemplateBuilder({
             values={knownValues}
             unresolvedLabels={unresolvedLabels}
             gapSources={MOCK_PROFILE_GAPS}
-            tableRows={kind === 'invoice' ? PLACEHOLDER_TABLE_ROWS : undefined}
+            tableRows={
+              kind === 'invoice'
+                ? getPlaceholderTableRows(templateDoc, t)
+                : undefined
+            }
             tableTotalRow={
               kind === 'invoice' ? PLACEHOLDER_TABLE_TOTAL_ROW : undefined
             }

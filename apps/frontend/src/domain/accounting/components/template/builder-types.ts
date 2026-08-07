@@ -87,7 +87,7 @@ export interface TemplateField {
   id: string;
   value: TemplateFieldValue;
   /** Manual-template fields only: which control to render. Plain text Input if omitted. */
-  control?: 'textarea' | 'number' | 'month-year';
+  control?: 'textarea' | 'number' | 'period' | 'unit-tabs';
 }
 
 /** One line of preset German legal text with inline fields; can be independently switched off within a locked block. */
@@ -113,6 +113,11 @@ export interface TemplateTextBlock {
   lines: TemplateLine[];
 }
 
+/** What populates the Stundennachweis table's first column — the shift's own name, or the task description written into the volunteer's agreement. */
+export type TableFirstColumnSource =
+  | 'shift_name'
+  | 'agreement_task_description';
+
 export interface TemplateTableBlock {
   kind: 'table';
   id: string;
@@ -121,6 +126,7 @@ export interface TemplateTableBlock {
   columns: string[];
   /** Placeholder rows shown in the builder preview; real rows come from timesheets at generation time. */
   previewRowCount: number;
+  firstColumnSource: TableFirstColumnSource;
 }
 
 export type TemplateBlock = TemplateTextBlock | TemplateTableBlock;
@@ -194,6 +200,21 @@ function mapLines(
     ...l,
     fields: mapFields(l.fields, fieldId, value),
   }));
+}
+
+/** Reads a manual-template field's stored value, e.g. the template's baked-in hours unit — undefined if the field doesn't exist or isn't manual. */
+export function getManualFieldValue(
+  doc: TemplateDocument,
+  fieldId: string,
+): string | undefined {
+  for (const line of allLines(doc)) {
+    for (const field of line.fields) {
+      if (field.id === fieldId && field.value.kind === 'manual-template') {
+        return field.value.value;
+      }
+    }
+  }
+  return undefined;
 }
 
 /**

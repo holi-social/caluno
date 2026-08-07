@@ -15,9 +15,10 @@ import { InfoPanel } from './info-panel';
 import { DEFAULT_PROFILE_DATA, MOCK_PROFILE_DATA } from './mock-profile-data';
 import { getKnownOrgValues } from './template/builder-document-presets';
 import type { DataSourceKey } from './template/builder-types';
+import { getManualFieldValue } from './template/builder-types';
 import { GeneratedDocumentPreview } from './template/generated-document-preview';
 import {
-  CONTRACT_DEFAULT_HOURS_PER_WEEK,
+  CONTRACT_DEFAULT_HOURS_AMOUNT,
   CONTRACT_DEFAULT_LIFESPAN,
   MOCK_SAVED_TEMPLATES,
   templateSlugFor,
@@ -69,7 +70,7 @@ export function ContractCreationModal({
     ProfileFieldState
   > | null>(null);
   const [lifespan, setLifespan] = useState('');
-  const [hoursPerWeek, setHoursPerWeek] = useState('');
+  const [hoursAmount, setHoursAmount] = useState('');
   const [isSending, setIsSending] = useState(false);
 
   useEffect(() => {
@@ -77,7 +78,7 @@ export function ContractCreationModal({
     setStatus('loading');
     setFields(null);
     setLifespan(CONTRACT_DEFAULT_LIFESPAN[pauschale]);
-    setHoursPerWeek(CONTRACT_DEFAULT_HOURS_PER_WEEK[pauschale]);
+    setHoursAmount(CONTRACT_DEFAULT_HOURS_AMOUNT[pauschale]);
 
     const timeout = setTimeout(() => {
       const data =
@@ -129,6 +130,10 @@ export function ContractCreationModal({
 
   const template =
     MOCK_SAVED_TEMPLATES[templateSlugFor(pauschale, 'contract')].document;
+  // Baked into the template, not chosen per document — shown as read-only context next to the amount input.
+  const hoursUnit = getManualFieldValue(template, 'hours-unit') ?? 'Monat';
+  const hoursUnitLabel =
+    hoursUnit === 'Woche' ? t('hoursUnitWeek') : t('hoursUnitMonth');
   const { first, last } = splitName(volunteerName);
 
   const values: Partial<Record<DataSourceKey, string>> = {
@@ -179,7 +184,7 @@ export function ContractCreationModal({
           values={values}
           manualOverrides={{
             'contract-lifespan': lifespan,
-            'hours-per-week': hoursPerWeek,
+            'hours-amount': hoursAmount,
           }}
         />
       }
@@ -194,14 +199,19 @@ export function ContractCreationModal({
                 placeholder="MM/JJJJ"
               />
             </InfoPanel>
-            <InfoPanel title={tManual('hours-per-week')}>
-              <Input
-                className="mt-2"
-                type="number"
-                min="0"
-                value={hoursPerWeek}
-                onChange={(e) => setHoursPerWeek(e.target.value)}
-              />
+            <InfoPanel title={tManual('hours-amount')}>
+              <div className="mt-2 flex items-center gap-2">
+                <Input
+                  type="number"
+                  min="0"
+                  value={hoursAmount}
+                  onChange={(e) => setHoursAmount(e.target.value)}
+                  className="flex-1"
+                />
+                <span className="text-sm text-muted-foreground">
+                  {t('hoursUnitHint', { unit: hoursUnitLabel })}
+                </span>
+              </div>
             </InfoPanel>
             <AccountingProfileFieldCard
               label={tFields('volunteer_address')}
