@@ -135,15 +135,15 @@
     "organizations": "Organisationen",
     "myMembershipRequests": "Meine Mitgliedschaftsanfragen",
     "overview": "Übersicht",
-    "shifts": "Schichten",
+    "shifts": "Einsätze",
     "timesheets": "Zeiterfassung",
     "volunteers": "Freiwillige",
     "checkInOut": "Check-in/out",
     "checkIn": "Einchecken",
     "myTime": "Meine Zeit",
     "requirementForms": "Anforderungsformulare",
-    "accounting": "Accounting",
-    "reimbursements": "Aufwandsentschädigung",
+    "accounting": "Buchhaltung",
+    "reimbursements": "Abrechnungen",
     "templates": "Templates",
     "accountingSettings": "Einstellungen",
     "settings": "Einstellungen",
@@ -153,7 +153,7 @@
     "editProfile": "Profil bearbeiten",
     "admin": "Admin",
     "qrIdTitle": "QR-ID",
-    "qrIdDescription": "Dies ist dein persönlicher QR-Code zum Einchecken in Schichten",
+    "qrIdDescription": "Dies ist dein persönlicher QR-Code zum Einchecken in Einsätze",
     "profile": "Profil"
   },
   "Pagination": {
@@ -216,7 +216,7 @@
       "subtitle": "Verwalte deine Organisationen und Freiwilligen an einem Ort.",
       "createCard": {
         "title": "Organisation erstellen",
-        "description": "Richte eine neue Organisation ein, um deine Freiwilligen und Schichten zu verwalten.",
+        "description": "Richte eine neue Organisation ein, um deine Freiwilligen und Einsätze zu verwalten.",
         "cta": "Loslegen"
       }
     },
@@ -458,7 +458,7 @@
     "action": {
       "viewProfileAria": "Freiwilligenprofil ansehen",
       "checkInAria": "Freiwilligen einchecken",
-      "checkInShiftAria": "Freiwilligen zu einer Schicht einchecken"
+      "checkInShiftAria": "Freiwilligen zu einem  Einsatz einchecken"
     },
     "requests": {
       "pendingEmpty": "Noch keine ausstehenden Anfragen.",
@@ -482,17 +482,17 @@
   },
   "Shift": {
     "page": {
-      "title": "Schichten",
-      "subtitle": "Schichtdetails",
-      "createButton": "Schicht erstellen"
+      "title": "Einsätze",
+      "subtitle": "Einsatzdetails",
+      "createButton": "Einsatz erstellen"
     },
     "empty": {
-      "title": "Noch keine Schichten",
-      "description": "Erstelle deine erste Schicht und lade Freiwillige ein, um loszulegen."
+      "title": "Noch keine Einsätze",
+      "description": "Erstelle deinen ersten Einsatz und lade Freiwillige ein, um loszulegen."
     },
     "tabs": {
       "weekplan": "Wochenplan",
-      "allShifts": "Alle Schichten"
+      "allShifts": "Alle Einsätze"
     },
     "calendar": {
       "week": "KW {week}"
@@ -505,7 +505,7 @@
       "visibility": "Sichtbarkeit"
     },
     "visibility": {
-      "ALL_MEMBERS": "Offene Schicht",
+      "ALL_MEMBERS": "Offener Einsatz",
       "INVITED_MEMBERS": "Nur mit Einladung"
     },
     "status": {
@@ -517,26 +517,26 @@
       "noVolunteers": "Noch keine Freiwilligen eingeladen",
       "inviteAria": "Freiwillige einladen",
       "shiftTypeTooltip": {
-        "nonPaid": "Diese Schicht wird nicht vergütet.",
+        "nonPaid": "Dieser Einsatz wird nicht vergütet.",
         "ehrenamt": "Vergütet über die Ehrenamtspauschale ({rate} €/Std.)",
         "uebungleiter": "Vergütet über die Übungsleiterpauschale ({rate} €/Std.)"
       }
     },
     "form": {
-      "shiftTypeLabel": "Schichtart",
+      "shiftTypeLabel": "Einsatzart",
       "shiftTypeNonPaid": "Ohne Pauschale",
-      "nameLabel": "Schichtname",
-      "namePlaceholder": "z. B. Morgendliche Kassaschicht",
+      "nameLabel": "Einsatzname",
+      "namePlaceholder": "z. B. Morgendliche Kassaeinsatz",
       "dateTimeLabel": "Datum und Uhrzeit",
       "locationLabel": "Ort",
       "locationPlaceholder": "Hauptsaal, Musterstraße 123",
       "instructionsLabel": "Anweisungen",
-      "instructionsPlaceholder": "Beschreibe Aufgaben und Anforderungen für diese Schicht",
-      "recurring": "Wiederkehrende Schicht",
+      "instructionsPlaceholder": "Beschreibe Aufgaben und Anforderungen für diesen Einsatz",
+      "recurring": "Wiederkehrende Einsatz",
       "noRecurrence": "Keine Wiederholung",
-      "chooseDays": "Wähle die Tage, an denen sich diese Schicht wiederholt",
-      "openShiftLabel": "Offene Schicht",
-      "openShiftDescription": "Jeder Freiwillige kann sich für diese Schicht anmelden"
+      "chooseDays": "Wähle die Tage, an denen sich dieser Einsatz wiederholt",
+      "openShiftLabel": "Offener Einsatz",
+      "openShiftDescription": "Jeder Freiwillige kann sich für diesen Einsatz anmelden"
     },
     "recurrence": {
       "preset": {
@@ -560,19 +560,19 @@
       "title": "Teilnehmer einladen und verwalten",
       "minVolunteersLabel": "Min. Freiwillige",
       "minVolunteersPlaceholder": "z. B. 2",
-      "minVolunteersDescription": "Mindestanzahl an Personen, die nötig ist, um die Schicht zu öffnen",
+      "minVolunteersDescription": "Mindestanzahl an Personen, die nötig ist, um den Einsatz zu öffnen",
       "maxVolunteersLabel": "Max. Freiwillige",
       "maxVolunteersPlaceholder": "z. B. 50",
-      "maxVolunteersDescription": "Maximale Anzahl an Personen, die sich für die Schicht anmelden dürfen",
+      "maxVolunteersDescription": "Maximale Anzahl an Personen, die sich für den Einsatz anmelden dürfen",
       "copyInviteLink": "Einladungslink kopieren",
       "managingLabel": "Du verwaltest Freiwillige für:",
-      "inviteAllLabel": "Zu allen Terminen dieser Schicht einladen",
-      "inviteAllDescription": "Freiwillige werden zu allen Schichten ab {startDate}, jeden {days}, eingeladen."
+      "inviteAllLabel": "Zu allen Terminen dieses Einsatzes einladen",
+      "inviteAllDescription": "Freiwillige werden zu allen Einsätze ab {startDate}, jeden {days}, eingeladen."
     },
     "selector": {
-      "noActiveShifts": "Keine aktiven Schichten",
-      "noActiveShiftsDescription": "Bitte <addShift>eine Schicht hinzufügen</addShift> oder den Zeitraum einer <existingShift>bestehenden Schicht</existingShift> anpassen.",
-      "chooseShift": "Wähle eine Schicht"
+      "noActiveShifts": "Keine aktiven Einsätze",
+      "noActiveShiftsDescription": "Bitte <addShift>einen Einsatz hinzufügen</addShift> oder den Zeitraum eines <existingShift>bestehenden Einsatzes</existingShift> anpassen.",
+      "chooseShift": "Wähle einen Einsatz"
     },
     "checkInSelector": {
       "placeholder": "Freiwilligen auswählen",
@@ -583,8 +583,8 @@
       "checkingIn": "Wird eingecheckt...",
       "requirements": "Anforderungen",
       "allMet": "Alle erfüllt",
-      "shift": "Schicht",
-      "noShiftSelected": "Keine Schicht ausgewählt",
+      "shift": "Einsatz",
+      "noShiftSelected": "Kein Einsatz ausgewählt",
       "volunteerCheckedIn": "Freiwilliger eingecheckt",
       "volunteerProfilePhoto": "Profilfoto des Freiwilligen",
       "checkOut": "Auschecken",
@@ -612,42 +612,42 @@
       "invalidToast": "Keine gültige Check-in-ID. Bitte versuche es erneut."
     },
     "join": {
-      "joinShift": "Schicht beitreten",
+      "joinShift": "Einsatz beitreten",
       "joining": "Wird beigetreten...",
       "inviteOnly": "Nur mit Einladung",
-      "joined": "Du bist der Schicht beigetreten",
-      "pending": "Deine Mitgliedschaftsanfrage ist ausstehend. Du wirst der Schicht hinzugefügt, sobald sie genehmigt wurde.",
+      "joined": "Du bist der Einsatz beigetreten",
+      "pending": "Deine Mitgliedschaftsanfrage ist ausstehend. Du wirst der Einsatz hinzugefügt, sobald er genehmigt wurde.",
       "rejected": "Deine Mitgliedschaftsanfrage für diese Organisation wurde abgelehnt. Kontaktiere einen Admin, wenn du denkst, dass das ein Fehler war.",
       "requirementsNeeded": "Erforderliche Anforderungen: {missing}{hasCompleted, select, yes { (bereits erledigt: {completed})} other {}}",
       "requirementsFallback": "Anforderungsprofil-Oberfläche (noch zu implementieren)",
-      "failed": "Schichtbeitritt fehlgeschlagen",
+      "failed": "Einsatzbeitritt fehlgeschlagen",
       "unexpected": "Unerwartete Antwort vom Server",
       "requestSent": "Anfrage gesendet",
-      "pendingMessage": "Deine Mitgliedschaftsanfrage für diese Organisation wird noch geprüft. Du kannst der Schicht beitreten, sobald sie genehmigt wurde."
+      "pendingMessage": "Deine Mitgliedschaftsanfrage für diese Organisation wird noch geprüft. Du kannst der Einsatz beitreten, sobald er genehmigt wurde."
     },
     "action": {
-      "viewAria": "Schicht ansehen",
-      "editAria": "Schicht bearbeiten",
+      "viewAria": "Einsatz ansehen",
+      "editAria": "Einsatz bearbeiten",
       "inviteAria": "Freiwillige einladen",
-      "copyLinkAria": "Schichtlink in Zwischenablage kopieren",
+      "copyLinkAria": "Einsatzlink in Zwischenablage kopieren",
       "recordTime": "Zeit erfassen",
-      "leaveShift": "Schicht verlassen",
-      "deleteTitle": "Schicht löschen",
-      "deleteDescription": "Bist du sicher, dass du diese Schicht und alle zugehörigen Stundenzettel löschen möchtest?",
-      "deleteSuccess": "Schicht erfolgreich gelöscht.",
-      "deleteError": "Schicht konnte nicht gelöscht werden. {error}"
+      "leaveShift": "Einsatz verlassen",
+      "deleteTitle": "Einsatz löschen",
+      "deleteDescription": "Bist du sicher, dass du diesen Einsatz und alle zugehörigen Stundenzettel löschen möchtest?",
+      "deleteSuccess": "Einsatz erfolgreich gelöscht.",
+      "deleteError": "Einsatz konnte nicht gelöscht werden. {error}"
     },
     "sheet": {
-      "createTitle": "Schicht erstellen",
-      "createDescription": "Erstelle eine neue Schicht.",
-      "editTitle": "Schicht bearbeiten",
-      "editDescription": "Bearbeite die Schicht.",
+      "createTitle": "Einsatz erstellen",
+      "createDescription": "Erstelle einen neuen Einsatz.",
+      "editTitle": "Einsatz bearbeiten",
+      "editDescription": "Bearbeite den Einsatz.",
       "inviteTitle": "Freiwillige einladen",
-      "inviteDescription": "Eingeladene Freiwillige erhalten eine E-Mail mit Schichtdetails und einem Link zum System."
+      "inviteDescription": "Eingeladene Freiwillige erhalten eine E-Mail mit Einsatzdetails und einem Link zum System."
     },
     "toast": {
-      "created": "Schicht erstellt",
-      "updated": "Schicht aktualisiert",
+      "created": "Einsatz erstellt",
+      "updated": "Einsatz aktualisiert",
       "inviteChanged": "Einladungen der Freiwilligen aktualisiert"
     },
     "detail": {
@@ -656,14 +656,14 @@
       "createdByLabel": "Erstellt von",
       "createdLabel": "Erstellt"
     },
-    "notFound": "Schicht nicht gefunden.",
+    "notFound": "Einsatz nicht gefunden.",
     "loading": "Wird geladen...",
     "validation": {
       "nameRequired": "Name ist erforderlich",
       "startTimeRequired": "Startzeit ist erforderlich",
       "endTimeRequired": "Endzeit ist erforderlich",
       "organizationUnitRequired": "Organisationseinheit ist erforderlich",
-      "shiftIdRequired": "Schicht-ID ist erforderlich",
+      "shiftIdRequired": "Einsatz-ID ist erforderlich",
       "minMaxVolunteers": "Die Mindestanzahl an Freiwilligen darf die Höchstanzahl nicht überschreiten"
     }
   },
@@ -674,19 +674,19 @@
     },
     "empty": {
       "title": "Keine Zeiteinträge",
-      "description": "Du kannst jemanden zu einer Schicht einchecken oder manuell einen Zeiteintrag hinzufügen."
+      "description": "Du kannst jemanden zu einem Einsatz einchecken oder manuell einen Zeiteintrag hinzufügen."
     },
     "table": {
-      "shift": "Schicht",
+      "shift": "Einsatz",
       "volunteer": "Freiwilliger",
       "time": "Zeit",
       "duration": "Dauer",
       "notAvailable": "k. A."
     },
     "form": {
-      "selectShiftLabel": "Schicht auswählen",
-      "selectShiftPlaceholder": "Schicht auswählen",
-      "selectShiftHint": "Wähle eine Schicht, um verfügbare Termine zu sehen",
+      "selectShiftLabel": "Einsatz auswählen",
+      "selectShiftPlaceholder": "Einsatz auswählen",
+      "selectShiftHint": "Wähle einen Einsatz, um verfügbare Termine zu sehen",
       "selectVolunteerLabel": "Freiwilligen auswählen",
       "selectVolunteerPlaceholder": "Freiwilligen auswählen",
       "startEndTimeLabel": "Start- und Endzeit",
@@ -700,14 +700,14 @@
     },
     "sheet": {
       "createTitle": "Zeiteintrag hinzufügen",
-      "createDescription": "Erfasse einen neuen Zeiteintrag für eine Schicht.",
+      "createDescription": "Erfasse einen neuen Zeiteintrag für einen Einsatz.",
       "editTitle": "Zeiteintrag bearbeiten",
       "editDescription": "Passe die Details dieses Zeiteintrags an."
     },
     "detail": {
       "title": "Zeiteintrag",
       "unknownVolunteer": "Unbekannter Freiwilliger",
-      "shiftLabel": "Schicht",
+      "shiftLabel": "Einsatz",
       "statusLabel": "Status",
       "createdLabel": "Erstellt",
       "openStatus": "Offen",
@@ -725,7 +725,7 @@
     },
     "validation": {
       "organizationUnitRequired": "Organisationseinheit ist erforderlich",
-      "shiftInstanceRequired": "Schichttermin ist erforderlich",
+      "shiftInstanceRequired": "Einsatztermin ist erforderlich",
       "volunteerRequired": "Freiwilliger ist erforderlich",
       "startedAtRequired": "Startzeit ist erforderlich",
       "endedAtRequired": "Endzeit ist erforderlich",
@@ -988,15 +988,15 @@
   },
   "Accounting": {
     "settings": {
-      "title": "Accounting Settings",
-      "subtitle": "Stundensätze und Dokumentvorlagen für bezahltes Ehrenamt konfigurieren.",
+      "title": "Buchhaltung Einstellungen",
+      "subtitle": "Vergütungssätze und Dokumentvorlagen einrichten.",
       "tabs": {
         "rates": "Stundensätze",
         "templates": "Vorlagen"
       },
       "rates": {
-        "sectionTitle": "Stundensatz",
-        "sectionSubtitle": "Organisationsweiter Stundensatz für vergütete Schichten, je Pauschalentyp. Einzelne Schichten können davon abweichen.",
+        "sectionTitle": "Vergütung pro Stunde",
+        "sectionSubtitle": "Gilt für alle Einsätze des Pauschalentyps.",
         "epLabel": "Ehrenamtspauschale",
         "epLegal": "§3 Nr. 26a EStG",
         "epYearlyLimit": "Bis zu 960 €/Jahr",
@@ -1009,7 +1009,7 @@
         },
         "rateUnit": "€/Std.",
         "provenance": {
-          "inherited": "Org-Standard"
+          "inherited": "Standard"
         }
       },
       "templates": {
@@ -1017,7 +1017,7 @@
         "sectionSubtitle": "Alle Vorlagen für Dokumente, die zur Auszahlung der jeweiligen Pauschale benötigt werden."
       },
       "lifecycle": {
-        "subtitle": "Dokumentvorlagen für vergütete Schichten und ihre Lifecycle-Abhängigkeiten.",
+        "subtitle": "Dokumentvorlagen für vergütete Einsätze und ihre Lifecycle-Abhängigkeiten.",
         "editTemplate": "Vorlage bearbeiten",
         "noDocuments": "Keine Vorlagen konfiguriert.",
         "noDocumentsHint": "Dokumentvorlagen erscheinen hier, sobald sie hinzugefügt wurden.",
@@ -1032,8 +1032,8 @@
       }
     },
     "reimbursements": {
-      "title": "Aufwandsentschädigung",
-      "subtitle": "Auszahlungsdokumente erstellen, unterzeichnen und bündeln.",
+      "title": "Abrechnungen",
+      "subtitle": "Auszahlungsdokumente erstellen, gegenzeichnen  und bündeln.",
       "periodLabel": "Zeitraum",
       "periodPicker": {
         "allTime": "Gesamter Zeitraum",
@@ -1045,7 +1045,7 @@
       "filters": {
         "docTypeLabel": "Dokumenttyp",
         "docTypeAll": "Alle Dokumente",
-        "docTypeContracts": "Nur Verträge",
+        "docTypeContracts": "Nur Vereinbarungen",
         "docTypeTimesheets": "Nur Stundennachweise",
         "pauschaletypeLabel": "Pauschale"
       },
@@ -1057,13 +1057,13 @@
         "action": "Aktion"
       },
       "tiles": {
-        "all": "Alle Prozessstufen",
+        "all": "Alle",
         "docCount": "{count} Dokumente",
         "waitingOnYou": "{count} warten auf dich",
-        "contractGenerate": "Verträge erstellen",
-        "contractSigning": "Verträge unterzeichnen",
-        "timesheetGenerate": "Nachweise erstellen",
-        "timesheetSigning": "Nachweise unterzeichnen",
+        "contractGenerate": "Vereinbarungen erstellen",
+        "contractSigning": "Vereinbarungen gegenzeichnen",
+        "timesheetGenerate": "Stundennachweise erstellen",
+        "timesheetSigning": "Stundennachweise gegenzeichnen",
         "readyToGo": "Bereit zur Abgabe"
       },
       "toolbar": {
@@ -1090,7 +1090,7 @@
       "batchBar": {
         "selected": "{count} ausgewählt",
         "createAll": "Alle erstellen und senden",
-        "countersignAll": "Alle unterzeichnen",
+        "countersignAll": "Alle gegenzeichnen",
         "remindAll": "Alle erinnern",
         "bundleAll": "Alle Pakete herunterladen",
         "mixed": "Gemischte Auswahl",
@@ -1102,10 +1102,10 @@
         "remind": "{count, plural, =1 {Erinnerung an {name} gesendet.} other {Erinnerungen an {count} Freiwillige gesendet.}}",
         "countersign": "{count, plural, =1 {Dokument von {name} gegengezeichnet.} other {{count} Dokumente gegengezeichnet.}}"
       },
-      "contractGeneratedToast": "Vertragserstellung für {name} gestartet.",
+      "contractGeneratedToast": "Vereinbarungserstellung für {name} gestartet.",
       "docs": {
         "kindLabel": {
-          "contract": "Vertrag",
+          "contract": "Vereinbarung",
           "timesheet": "Stundennachweis"
         },
         "sheet": {
@@ -1113,7 +1113,7 @@
           "pipelineLabel": "Prozessschritte",
           "pipeline": {
             "generate": "Erstellen",
-            "sign": "Unterzeichnen",
+            "sign": "Gegenzeichnen",
             "declined": "Abgelehnt",
             "volSign": "Freiwillige/r",
             "coordSign": "Koordinator",
@@ -1127,7 +1127,7 @@
           "timelineSection": "Verlauf",
           "timelineEmpty": "Noch keine Aktivität",
           "timelineCreated": "Erstellt",
-          "timelineSigned": "Unterzeichnet",
+          "timelineSigned": "Gegengezeichnet",
           "timelineCountersigned": "Gegengezeichnet",
           "timelineActivated": "Aktiviert",
           "timelineDeclined": "Abgelehnt",
@@ -1140,34 +1140,34 @@
           "timesheetHours": {
             "title": "Ehrenamtsstunden",
             "paidShifts": "Stunden mit Aufwandsentschädigung",
-            "shifts": "{count} Schichten",
+            "shifts": "{count} Einsätze",
             "grossAmount": "Bruttobetrag",
-            "rateTooltip": "Standardstundensatz für diese Pauschale. Schichten können einen eigenen Satz haben.",
+            "rateTooltip": "Standardstundensatz für diese Pauschale. Einsätze können einen eigenen Satz haben.",
             "viewBtn": "Stundennachweise anzeigen"
           }
         },
         "statusLabel": {
-          "contractGenerate": "Vertrag erstellen",
-          "contractSigningVol": "Wartet auf Unterzeichnung",
+          "contractGenerate": "Vereinbarung erstellen",
+          "contractSigningVol": "Wartet auf Gegenzeichnung",
           "contractSigningCoord": "Gegenzeichnung erforderlich",
-          "contractActive": "Aktiver Vertrag",
+          "contractActive": "Aktive Vereinbarung",
           "timesheetGenerate": "Stundennachweis erstellen",
-          "timesheetSigningVol": "Wartet auf Unterzeichnung",
+          "timesheetSigningVol": "Wartet auf Gegenzeichnung",
           "timesheetSigningSuper": "Supervisorunterschrift",
           "timesheetReady": "Bereit zur Abgabe",
-          "nonCompliant": "Kein aktiver Vertrag",
-          "nonCompliantHint": "Noch kein aktiver Vertrag für diese Pauschale — Vertrag erstellen oder aktivieren, damit dieser Stundennachweis compliant ist",
+          "nonCompliant": "Keine aktive Vereinbarung",
+          "nonCompliantHint": "Noch keine aktive Vereinbarung für diese Pauschale — Vereinbarung erstellen oder aktivieren, damit dieser Stundennachweis compliant ist",
           "notYetCreated": "Noch nicht erstellt",
           "overCap": "Jahreslimit wird überschritten",
           "overCapHint": "Der Betrag dieses Stundennachweises bringt die Person an oder über ihr Jahreslimit",
-          "contractMissing": "Kein Vertrag — manuell anlegen",
-          "timesheetMuted": "Erfasst ohne Vertrag",
+          "contractMissing": "Keine Vereinbarung — manuell anlegen",
+          "timesheetMuted": "Erfasst ohne Vereinbarung",
           "declined": "Abgelehnt"
         },
         "actions": {
           "create": "Überprüfen und erstellen",
           "remind": "Erinnerung senden",
-          "countersign": "Gegengezeichnen",
+          "countersign": "Gegenzeichnen",
           "decline": "Ablehnen",
           "seeDetails": "Details ansehen",
           "createNew": "Neues {docType} erstellen"
@@ -1176,14 +1176,14 @@
           "titleSingle": "Nicht-konformen Stundennachweis {action, select, create {erstellen} remind {anmahnen} countersign {gegenzeichnen} other {bearbeiten}}?",
           "titleBatchAll": "{count} nicht-konforme Stundennachweise {action, select, create {erstellen} remind {anmahnen} countersign {gegenzeichnen} other {bearbeiten}}?",
           "titleBatchMixed": "{count} von {total} Stundennachweisen sind nicht konform",
-          "descriptionSingle": "Für diese Pauschale liegt noch kein aktiver Vertrag vor. Der Stundennachweis kann trotzdem {action, select, create {erstellt} remind {angemahnt} countersign {gegengezeichnet} other {bearbeitet}} werden, bleibt aber als nicht konform markiert, bis ein Vertrag aktiv ist.",
-          "descriptionBatchAll": "Für keine der ausgewählten Personen liegt ein aktiver Vertrag für diese Pauschale vor. Diese Stundennachweise können trotzdem {action, select, create {erstellt} remind {angemahnt} countersign {gegengezeichnet} other {bearbeitet}} werden, bleiben aber als nicht konform markiert, bis ein Vertrag aktiv ist.",
-          "descriptionBatchMixed": "{count} der ausgewählten Stundennachweise gehören zu Personen ohne aktiven Vertrag für diese Pauschale.",
+          "descriptionSingle": "Für diese Pauschale liegt noch keine aktive Vereinbarung vor. Der Stundennachweis kann trotzdem {action, select, create {erstellt} remind {angemahnt} countersign {gegengezeichnet} other {bearbeitet}} werden, bleibt aber als nicht konform markiert, bis eine Vereinbarung aktiv ist.",
+          "descriptionBatchAll": "Für keine der ausgewählten Personen liegt eine aktive Vereinbarung für diese Pauschale vor. Diese Stundennachweise können trotzdem {action, select, create {erstellt} remind {angemahnt} countersign {gegengezeichnet} other {bearbeitet}} werden, bleiben aber als nicht konform markiert, bis eine Vereinbarung aktiv ist.",
+          "descriptionBatchMixed": "{count} der ausgewählten Stundennachweise gehören zu Personen ohne aktive Vereinbarung für diese Pauschale.",
           "actionAnyway": "{action, select, create {Trotzdem erstellen} remind {Trotzdem erinnern} countersign {Trotzdem gegenzeichnen} other {Trotzdem fortfahren}}",
           "actionAllAnyway": "{action, select, create {Alle trotzdem erstellen} remind {Alle trotzdem erinnern} countersign {Alle trotzdem gegenzeichnen} other {Trotzdem mit allen fortfahren}}",
           "onlyCompliantAction": "{action, select, create {Nur konforme erstellen} remind {Nur konforme erinnern} countersign {Nur konforme gegenzeichnen} other {Nur konforme bearbeiten}}",
-          "generateContractInstead": "Stattdessen Vertrag erstellen",
-          "viewContractInstead": "Stattdessen Vertrag ansehen"
+          "generateContractInstead": "Stattdessen Vereinbarung erstellen",
+          "viewContractInstead": "Stattdessen Vereinbarung ansehen"
         },
         "declineDialog": {
           "title": "{docType} ablehnen?",
@@ -1198,37 +1198,40 @@
         "editButtonLabel": "Bearbeiten",
         "saveButtonLabel": "Speichern",
         "fromProfileHint": "Aus dem Profil von {name}",
-        "editingHint": "Du bearbeitest dies nur für {docType, select, contract {diesen Vertrag} invoice {diese Abrechnung} other {dieses Dokument}} — die Angaben im Profil von {name} bleiben unverändert.",
-        "overrideHint": "Nur für {docType, select, contract {diesen Vertrag} invoice {diese Abrechnung} other {dieses Dokument}} geändert",
+        "editingHint": "Du bearbeitest dies nur für {docType, select, contract {diese Vereinbarung} invoice {dieser Nachweis} other {dieses Dokument}} — die Angaben im Profil von {name} bleiben unverändert.",
+        "overrideHint": "Nur für {docType, select, contract {diese Vereinbarung} invoice {dieser Nachweis} other {dieses Dokument}} geändert",
         "missingValue": "Nicht angegeben",
-        "gapHint": "Noch nicht im Profil von {name} — für {docType, select, contract {diesen Vertrag} invoice {diese Abrechnung} other {dieses Dokument}} ergänzen"
+        "gapHint": "Noch nicht im Profil von {name} — für {docType, select, contract {diese Vereinbarung} invoice {dieser Nachweis} other {dieses Dokument}} ergänzen"
       },
       "contractModal": {
-        "title": "Vertrag erstellen",
+        "title": "Vereinbarung erstellen",
         "cancel": "Abbrechen",
         "sendForSigning": "Speichern und zur Unterschrift senden",
         "sending": "Wird gesendet…",
-        "sentToast": "Vertrag an {name} zur Unterschrift gesendet.",
+        "sentToast": "Vereinbarung an {name} zur Unterschrift gesendet.",
         "loadErrorTitle": "Profildaten konnten nicht geladen werden",
         "loadError": "Die Profildaten von {name} konnten nicht geladen werden. Bitte schließen und erneut versuchen.",
+        "hoursUnitMonth": "Monat",
+        "hoursUnitWeek": "Woche",
+        "hoursUnitHint": "pro {unit}",
         "preview": {
           "disclaimerBadge": "Vorschau",
           "documentTitle": "Zusatzvereinbarung",
-          "signatureVolunteer": "Unterschrift Freiwillige:r",
+          "signatureVolunteer": "Unterschrift (Freiwillige:r)",
           "signatureCoordinator": "Unterschrift Koordination",
           "unsigned": "Noch nicht unterschrieben"
         }
       },
       "invoiceModal": {
-        "title": "Abrechnung erstellen",
+        "title": "Stundennachweis erstellen",
         "cancel": "Abbrechen",
         "sendForSigning": "Speichern und zur Unterschrift senden",
         "sending": "Wird gesendet…",
-        "sentToast": "Abrechnung an {name} zur Unterschrift gesendet.",
-        "loadErrorTitle": "Abrechnungsdaten konnten nicht geladen werden",
-        "loadError": "Die Abrechnungsdaten von {name} konnten nicht geladen werden. Bitte schließen und erneut versuchen.",
+        "sentToast": "Stundennachweis an {name} zur Unterschrift gesendet.",
+        "loadErrorTitle": "Stundennachweisdaten konnten nicht geladen werden",
+        "loadError": "Die Stundennachweisdaten von {name} konnten nicht geladen werden. Bitte schließen und erneut versuchen.",
         "nameFieldLabel": "Name",
-        "periodFieldLabel": "Abrechnungszeitraum",
+        "periodFieldLabel": "Stundennachweiszeitraum",
         "periodPicker": {
           "placeholder": "Zeitraum wählen",
           "thisMonth": "Dieser Monat",
@@ -1242,15 +1245,15 @@
         },
         "hoursCard": {
           "title": "Abrechenbare Stunden",
-          "rowCheckboxLabel": "{shiftName} in diese Abrechnung aufnehmen",
+          "rowCheckboxLabel": "{shiftName} in diesen Stundennachweis aufnehmen",
           "hoursValue": "{hours} Std.",
           "editHint": "Um Stunden oder Einsatzdetails zu ändern, gehe zu <link>Zeitnachweise</link>."
         },
         "preview": {
           "disclaimerBadge": "Vorschau",
-          "documentTitle": "Abrechnung",
-          "signatureVolunteer": "Unterschrift Freiwillige:r",
-          "signatureSupervisor": "Unterschrift Vorstand",
+          "documentTitle": "Stundennachweis",
+          "signatureVolunteer": "Unterschrift (Freiwillige:r)",
+          "signatureSupervisor": "Unterschrift (Organisation)",
           "unsigned": "Noch nicht unterschrieben"
         }
       }
@@ -1260,16 +1263,16 @@
       "sections": {
         "ep": "Ehrenamtspauschale",
         "ul": "Übungsleiterpauschale",
-        "unconfiguredWarning": "Schichten dieses Typs können nicht geplant werden, solange nicht beide Vorlagen konfiguriert sind."
+        "unconfiguredWarning": "Einsätze dieses Typs können nicht geplant werden, solange nicht beide Vorlagen konfiguriert sind."
       },
       "documentKind": {
-        "contract": "Vertrag",
-        "invoice": "Abrechnung"
+        "contract": "Vereinbarung",
+        "invoice": "Stundennachweis"
       },
       "loadError": "Vorlagen konnten nicht geladen werden. Bitte Seite neu laden.",
       "builder": {
         "breadcrumb": {
-          "accounting": "Accounting",
+          "accounting": "Buchhaltung",
           "templates": "Vorlagen"
         },
         "saveButton": "Vorlage speichern",
@@ -1279,18 +1282,33 @@
           "disclaimerBadge": "Vorschau",
           "documentTitle": {
             "contract": "Zusatzvereinbarung",
-            "invoice": "Abrechnung"
+            "invoice": "Stundennachweis"
           },
-          "signatureVolunteer": "Unterschrift Freiwillige:r",
+          "signatureVolunteer": "Unterschrift (Freiwillige:r)",
           "signatureCoordinator": "Unterschrift Koordination",
-          "signatureSupervisor": "Unterschrift Vorstand",
+          "signatureSupervisor": "Unterschrift (Organisation)",
           "unsigned": "Noch nicht unterschrieben"
         },
         "blockEditor": {
           "headerTitle": "Kopfbereich",
-          "invoiceNumberFormatLabel": "Format der Rechnungsnummer",
+          "invoiceNumberFormatLabel": "Format der Nachweisnummer",
           "lockedHint": "Pflichtblock — immer im generierten Dokument enthalten.",
-          "tableFixedHint": "Wird beim Erstellen einer Abrechnung aus den Zeiterfassungen befüllt. Hier nichts zu konfigurieren.",
+          "tableFixedHint": "Die Zeilen werden beim Erstellen eines Stundennachweises aus den Zeiterfassungen befüllt.",
+          "firstColumnSourceLabel": "Inhalt der ersten Spalte",
+          "firstColumnSourceOptions": {
+            "shift_name": {
+              "label": "Name des Einsatzes",
+              "hint": "Jede Zeile zeigt den Namen des Einsatzes aus der Zeiterfassung."
+            },
+            "agreement_task_description": {
+              "label": "Tätigkeitsbeschreibung aus der Vereinbarung",
+              "hint": "Jede Zeile zeigt die in der Vereinbarung hinterlegte Tätigkeitsbeschreibung."
+            }
+          },
+          "firstColumnPlaceholders": {
+            "shiftName": "Einsatzname",
+            "agreementTaskDescription": "Tätigkeitsbeschreibung"
+          },
           "incompleteCount": "{count, plural, one {Hier fehlt noch eine Angabe} other {Hier fehlen noch {count} Angaben}}",
           "notSetYet": "noch nicht festgelegt",
           "sameAsAbove": "gleicher Wert wie oben festgelegt",
@@ -1302,10 +1320,24 @@
           "engagement": "Einsatzdetails",
           "extra": "Weitere Vereinbarungen"
         },
+        "hoursUnit": {
+          "month": "Monat",
+          "week": "Woche"
+        },
+        "periodPicker": {
+          "tabYear": "Jahr",
+          "tabMonth": "Monat",
+          "tabRange": "Zeitraum",
+          "previousYear": "Vorheriges Jahr",
+          "nextYear": "Nächstes Jahr",
+          "previousYearBlock": "Vorheriger Zeitraum",
+          "nextYearBlock": "Nächster Zeitraum",
+          "apply": "Anwenden"
+        },
         "manualFieldLabels": {
-          "contract-lifespan": "Vertragslaufzeit (Monat/Jahr)",
+          "contract-lifespan": "Vereinbarungslaufzeit",
           "tasks": "Tätigkeitsbeschreibung",
-          "hours-per-week": "Wochenstunden",
+          "hours-amount": "Stundenzahl",
           "freeform-text": "Freitext",
           "kostenstelle": "Kostenstelle",
           "kostentraeger": "Kostenträger"
@@ -1313,7 +1345,8 @@
         "manualFieldPlaceholders": {
           "contract-lifespan": "Zeitraum wählen",
           "tasks": "Beschreibe die Haupttätigkeiten für {pauschale}",
-          "hours-per-week": "z. B. 5",
+          "hours-amount-month": "z. B. 20",
+          "hours-amount-week": "z. B. 5",
           "freeform-text": "Ergänze hier weitere Klauseln, falls nötig",
           "kostenstelle": "z. B. K-4200",
           "kostentraeger": "z. B. KT-100"
@@ -1379,8 +1412,8 @@
     },
     "empty": {
       "title": "Noch keine Stunden",
-      "description": "Sobald du dich zu einer Schicht eincheckst, erscheinen deine Stunden hier.",
-      "cta": "Schicht finden"
+      "description": "Sobald du dich zu einem Einsatz eincheckst, erscheinen deine Stunden hier.",
+      "cta": "Einsatz finden"
     }
   }
 }
