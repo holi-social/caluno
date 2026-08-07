@@ -81,8 +81,8 @@ export function JoinShiftButton({
   instanceRequiredForms = [],
   organizationUnitRequiredForms = [],
 }: JoinShiftButtonProps) {
-  const router = useRouter();
   const pathname = usePathname();
+  const router = useRouter();
   const joinShiftInstance = useJoinShiftInstance();
   const respondToInvite = useUpdateShiftInstanceInviteStatus();
   const t = useTranslations('Shift');
@@ -149,10 +149,11 @@ export function JoinShiftButton({
           ...(instanceId ? { instanceId } : {}),
         })}`;
         const searchParams = new URLSearchParams({
-          signup: '1',
+          orgUId: organizationUnitId,
           redirectTo: baseRedirectTo,
         });
-        router.push(`/api/invite?${searchParams}`);
+        // Full navigation so `/api/invite` can Set-Cookie `pending_invite`.
+        window.location.href = `/api/invite?${searchParams}`;
         return;
       }
 
