@@ -148,11 +148,6 @@ export class MembershipService {
     return JoinStatus.NONE;
   }
 
-  /**
-   * Org unit IDs where the user has a pending membership request.
-   * Used by discovery surfaces that should treat pending applicants as
-   * provisional viewers of open content only.
-   */
   async getPendingOrganizationUnitIds(userId: string): Promise<string[]> {
     const requests = await this.db.query.membershipRequests.findMany({
       where: {
