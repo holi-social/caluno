@@ -21,6 +21,7 @@ process.env.TZ = 'Europe/Berlin';
 
 const FIXTURE_PASSWORD = process.env.FIXTURE_PASSWORD ?? 'abcd1234';
 const ORG_NAME = 'Playground';
+const ORG_SLUG = 'playground';
 const FIXTURE_TIMEZONE = 'Europe/Berlin';
 const SHIFT_DURATION_MINUTES = 240;
 const RECURRENCE_WEEKS_BACK = 12;
@@ -221,28 +222,46 @@ const createAuthUser = async (
   return { id, email: input.email, name: input.name };
 };
 
-const createMembershipWithRole = async (
+const ensureMembershipWithRole = async (
   db: Database,
   userId: string,
   organizationUnitId: string,
   roleId: string,
 ): Promise<void> => {
-  const [membership] = await db
-    .insert(schema.memberships)
-    .values({ userId, organizationUnitId })
-    .returning();
+  const existingMembership = await db.query.memberships.findFirst({
+    where: { userId, organizationUnitId },
+  });
 
-  if (!membership) {
-    throw new Error('Failed to create membership');
+  let membershipId: string;
+
+  if (existingMembership) {
+    membershipId = existingMembership.id;
+  } else {
+    const [membership] = await db
+      .insert(schema.memberships)
+      .values({ userId, organizationUnitId })
+      .returning();
+
+    if (!membership) {
+      throw new Error('Failed to create membership');
+    }
+
+    membershipId = membership.id;
   }
 
-  await db.insert(schema.membershipRoles).values({
-    membershipId: membership.id,
-    roleId,
+  const existingRole = await db.query.membershipRoles.findFirst({
+    where: { membershipId, roleId },
   });
+
+  if (!existingRole) {
+    await db.insert(schema.membershipRoles).values({
+      membershipId,
+      roleId,
+    });
+  }
 };
 
-const createPlaygroundOrganization = async (
+const ensurePlaygroundOrganization = async (
   db: Database,
   adminUserId: string,
 ): Promise<{
@@ -256,12 +275,87 @@ const createPlaygroundOrganization = async (
     (permission) => !permission.startsWith('org-role:'),
   );
 
+  const existingOrg = await db.query.organizations.findFirst({
+    where: { slug: ORG_SLUG },
+  });
+
+  if (existingOrg) {
+    const rootUnit = await db.query.organizationUnits.findFirst({
+      where: { organizationId: existingOrg.id, slug: ORG_SLUG },
+    });
+
+    if (!rootUnit) {
+      throw new Error(
+        'Existing Playground organization is missing its root unit',
+      );
+    }
+
+    const roles = await db.query.roles.findMany({
+      where: { organizationId: existingOrg.id },
+    });
+
+    const ownerRole = roles.find(
+      (role) => role.name === DEFAULT_OWNER_ROLE_NAME,
+    );
+    const memberRole = roles.find(
+      (role) => role.name === DEFAULT_MEMBER_ROLE_NAME,
+    );
+    const supervisorRole = roles.find(
+      (role) => role.name === SUPERVISOR_ROLE_NAME,
+    );
+
+    if (!ownerRole || !memberRole || !supervisorRole) {
+      throw new Error(
+        'Existing Playground organization is missing expected roles',
+      );
+    }
+
+    const existingMembership = await db.query.memberships.findFirst({
+      where: { userId: adminUserId, organizationUnitId: rootUnit.id },
+    });
+
+    if (!existingMembership) {
+      const [membership] = await db
+        .insert(schema.memberships)
+        .values({ userId: adminUserId, organizationUnitId: rootUnit.id })
+        .returning();
+
+      if (!membership) {
+        throw new Error('Failed to create admin membership');
+      }
+
+      await db.insert(schema.membershipRoles).values({
+        membershipId: membership.id,
+        roleId: ownerRole.id,
+      });
+    } else {
+      const existingRole = await db.query.membershipRoles.findFirst({
+        where: { membershipId: existingMembership.id, roleId: ownerRole.id },
+      });
+
+      if (!existingRole) {
+        await db.insert(schema.membershipRoles).values({
+          membershipId: existingMembership.id,
+          roleId: ownerRole.id,
+        });
+      }
+    }
+
+    return {
+      organizationId: existingOrg.id,
+      rootUnitId: rootUnit.id,
+      ownerRoleId: ownerRole.id,
+      memberRoleId: memberRole.id,
+      supervisorRoleId: supervisorRole.id,
+    };
+  }
+
   return db.transaction(async (tx) => {
     const [organization] = await tx
       .insert(schema.organizations)
       .values({
         name: ORG_NAME,
-        slug: slugify(ORG_NAME),
+        slug: ORG_SLUG,
         contactEmail: 'testing@caluno.org',
         description: 'Local development playground organization',
       })
@@ -292,7 +386,7 @@ const createPlaygroundOrganization = async (
         parentId: null,
         typeId: rootType.id,
         name: organization.name,
-        slug: organization.slug,
+        slug: ORG_SLUG,
         contactEmail: organization.contactEmail,
         description: organization.description,
         coverUrl: ORG_COVER_IMAGE_URL,
@@ -452,13 +546,33 @@ const pickRecentPastInstance = (
   return instance;
 };
 
-const createShiftWithInvites = async (
+const ensureShiftWithInvites = async (
   db: Database,
   organizationUnitId: string,
   createdById: string,
   shift: ShiftFixture,
 ): Promise<{ shiftId: string; instanceId: string; instanceStartsAt: Date }> => {
   const durationMinutes = shift.durationMinutes ?? SHIFT_DURATION_MINUTES;
+
+  const existingShift = shift.id
+    ? await db.query.shifts.findFirst({ where: { id: shift.id } })
+    : await db.query.shifts.findFirst({
+        where: { title: shift.title, organizationUnitId },
+      });
+
+  if (existingShift) {
+    const instances = await db.query.shiftInstances.findMany({
+      where: { masterId: existingShift.id },
+    });
+
+    const recentInstance = pickRecentPastInstance(instances);
+
+    return {
+      shiftId: existingShift.id,
+      instanceId: recentInstance.id,
+      instanceStartsAt: recentInstance.actualStartsAt,
+    };
+  }
 
   const [createdShift] = await db
     .insert(schema.shifts)
@@ -545,7 +659,7 @@ const createShiftWithInvites = async (
   };
 };
 
-const createEvent = async (
+const ensureEvent = async (
   db: Database,
   organizationUnitId: string,
   createdById: string,
@@ -560,6 +674,14 @@ const createEvent = async (
     endsAt: Date;
   },
 ): Promise<typeof schema.events.$inferSelect> => {
+  const existingEvent = await db.query.events.findFirst({
+    where: { id: event.id },
+  });
+
+  if (existingEvent) {
+    return existingEvent;
+  }
+
   const [createdEvent] = await db
     .insert(schema.events)
     .values({
@@ -584,7 +706,7 @@ const createEvent = async (
   return createdEvent;
 };
 
-const createTimeEntries = async (
+const ensureTimeEntries = async (
   db: Database,
   approvedMembers: FixtureUser[],
   shiftInstances: {
@@ -592,6 +714,19 @@ const createTimeEntries = async (
     foodDistribution: { startsAt: Date; instanceId: string };
   },
 ): Promise<void> => {
+  const instanceIds = [
+    shiftInstances.communitySupport.instanceId,
+    shiftInstances.foodDistribution.instanceId,
+  ];
+
+  const existingEntries = await db.query.timeEntries.findMany({
+    where: { shiftInstanceId: { in: instanceIds } },
+  });
+
+  if (existingEntries.length > 0) {
+    return;
+  }
+
   const entries: Array<typeof schema.timeEntries.$inferInsert> = [];
 
   for (const [index, member] of approvedMembers.entries()) {
@@ -681,12 +816,20 @@ const createTimeEntries = async (
   }
 };
 
-const createPersonalInformationForm = async (
+const ensurePersonalInformationForm = async (
   db: Database,
   organizationId: string,
   organizationUnitId: string,
   createdById: string,
 ): Promise<void> => {
+  const existingForm = await db.query.requirementForms.findFirst({
+    where: { organizationId, slug: 'personal-information' },
+  });
+
+  if (existingForm) {
+    return;
+  }
+
   const [form] = await db
     .insert(schema.requirementForms)
     .values({
@@ -758,18 +901,6 @@ async function seedFixtures() {
 
   const db = drizzle({ client: pool, relations });
 
-  const existingOrg = await db.query.organizations.findFirst({
-    where: { slug: slugify(ORG_NAME) },
-  });
-
-  if (existingOrg) {
-    console.log(
-      `Organization ${ORG_NAME} (${existingOrg.id}) already exists; skipping fixtures.`,
-    );
-    await pool.end();
-    return;
-  }
-
   const hashedPassword = await hashPassword(FIXTURE_PASSWORD);
 
   const admin = await createAuthUser(db, hashedPassword, {
@@ -777,9 +908,9 @@ async function seedFixtures() {
     name: 'Playground Admin',
   });
 
-  const org = await createPlaygroundOrganization(db, admin.id);
+  const org = await ensurePlaygroundOrganization(db, admin.id);
 
-  await createPersonalInformationForm(
+  await ensurePersonalInformationForm(
     db,
     org.organizationId,
     org.rootUnitId,
@@ -809,14 +940,14 @@ async function seedFixtures() {
     name: 'Demo Volunteer',
   });
 
-  await createMembershipWithRole(
+  await ensureMembershipWithRole(
     db,
     supervisor.id,
     org.rootUnitId,
     org.supervisorRoleId,
   );
 
-  await createMembershipWithRole(
+  await ensureMembershipWithRole(
     db,
     demoUser.id,
     org.rootUnitId,
@@ -824,7 +955,7 @@ async function seedFixtures() {
   );
 
   for (const member of members) {
-    await createMembershipWithRole(
+    await ensureMembershipWithRole(
       db,
       member.id,
       org.rootUnitId,
@@ -847,21 +978,41 @@ async function seedFixtures() {
     name: 'Rejected Applicant',
   });
 
-  await db.insert(schema.membershipRequests).values([
-    ...pendingUsers.map((user) => ({
-      userId: user.id,
-      organizationUnitId: org.rootUnitId,
-      status: MembershipRequestStatus.PENDING,
-    })),
+  const ensureMembershipRequest = async (
+    userId: string,
+    status: MembershipRequestStatus,
+    extra: Partial<typeof schema.membershipRequests.$inferInsert> = {},
+  ): Promise<void> => {
+    const existing = await db.query.membershipRequests.findFirst({
+      where: {
+        userId,
+        organizationUnitId: org.rootUnitId,
+      },
+    });
+
+    if (!existing) {
+      await db.insert(schema.membershipRequests).values({
+        userId,
+        organizationUnitId: org.rootUnitId,
+        status,
+        ...extra,
+      });
+    }
+  };
+
+  for (const user of pendingUsers) {
+    await ensureMembershipRequest(user.id, MembershipRequestStatus.PENDING);
+  }
+
+  await ensureMembershipRequest(
+    rejectedUser.id,
+    MembershipRequestStatus.REJECTED,
     {
-      userId: rejectedUser.id,
-      organizationUnitId: org.rootUnitId,
-      status: MembershipRequestStatus.REJECTED,
       reviewedById: admin.id,
       reviewedAt: new Date(),
       rejectionReason: 'Fixture rejected applicant',
     },
-  ]);
+  );
 
   const approvedUserIds = [
     admin.id,
@@ -899,7 +1050,7 @@ async function seedFixtures() {
     16,
   );
 
-  const publicEvent = await createEvent(db, org.rootUnitId, admin.id, {
+  const publicEvent = await ensureEvent(db, org.rootUnitId, admin.id, {
     id: PUBLIC_EVENT_ID,
     title: 'Public Test Event',
     description:
@@ -910,7 +1061,7 @@ async function seedFixtures() {
     endsAt: addHours(eventAssistanceStart, SHIFT_DURATION_MINUTES / 60 + 4),
   });
 
-  const communitySupport = await createShiftWithInvites(
+  const communitySupport = await ensureShiftWithInvites(
     db,
     org.rootUnitId,
     admin.id,
@@ -928,7 +1079,7 @@ async function seedFixtures() {
     },
   );
 
-  const foodDistribution = await createShiftWithInvites(
+  const foodDistribution = await ensureShiftWithInvites(
     db,
     org.rootUnitId,
     admin.id,
@@ -946,7 +1097,7 @@ async function seedFixtures() {
     },
   );
 
-  await createShiftWithInvites(db, org.rootUnitId, admin.id, {
+  await ensureShiftWithInvites(db, org.rootUnitId, admin.id, {
     id: EVENT_ASSISTANCE_SHIFT_ID,
     title: 'Event Assistance',
     startsAt: eventAssistanceStart,
@@ -1002,7 +1153,7 @@ async function seedFixtures() {
     10,
   );
 
-  const showcaseEvent = await createEvent(db, org.rootUnitId, admin.id, {
+  const showcaseEvent = await ensureEvent(db, org.rootUnitId, admin.id, {
     id: SHOWCASE_EVENT_ID,
     title: 'Volunteer Fair',
     description:
@@ -1017,7 +1168,7 @@ async function seedFixtures() {
     supervisor.id,
     ...members.slice(0, 7).map((member) => member.id),
   ];
-  await createShiftWithInvites(db, org.rootUnitId, admin.id, {
+  await ensureShiftWithInvites(db, org.rootUnitId, admin.id, {
     id: SHOWCASE_OPEN_SHIFT_ID,
     title: 'Welcome Desk',
     startsAt: showcaseOpenStart,
@@ -1041,7 +1192,7 @@ async function seedFixtures() {
     supervisor.id,
     ...members.slice(0, 4).map((member) => member.id),
   ];
-  await createShiftWithInvites(db, org.rootUnitId, admin.id, {
+  await ensureShiftWithInvites(db, org.rootUnitId, admin.id, {
     id: SHOWCASE_FULL_SHIFT_ID,
     title: 'Stage Setup',
     startsAt: showcaseFullStart,
@@ -1057,7 +1208,7 @@ async function seedFixtures() {
     inviteUserIds: showcaseFullInviteIds,
   });
 
-  await createShiftWithInvites(db, org.rootUnitId, admin.id, {
+  await ensureShiftWithInvites(db, org.rootUnitId, admin.id, {
     id: SHOWCASE_UNLIMITED_SHIFT_ID,
     title: 'Cleanup Crew',
     startsAt: showcaseUnlimitedStart,
@@ -1077,11 +1228,17 @@ async function seedFixtures() {
   // Demo account follows the Volunteer Fair (so the event page shows the
   // "You're helping" state) but not the Public Test Event, so both the
   // followed and not-yet-followed states are there to demo.
-  await db.insert(schema.eventInvites).values({
-    eventId: showcaseEvent.id,
-    userId: demoUser.id,
-    status: EventInviteStatus.ACCEPTED,
+  const existingEventInvite = await db.query.eventInvites.findFirst({
+    where: { eventId: showcaseEvent.id, userId: demoUser.id },
   });
+
+  if (!existingEventInvite) {
+    await db.insert(schema.eventInvites).values({
+      eventId: showcaseEvent.id,
+      userId: demoUser.id,
+      status: EventInviteStatus.ACCEPTED,
+    });
+  }
 
   // Standalone ALL_MEMBERS shifts spread across the next few weeks, left
   // un-invited for the demo account so /discover has real content on
@@ -1099,7 +1256,7 @@ async function seedFixtures() {
   const tutoringDay = discoverDay(11);
   const gardenDay = discoverDay(18);
 
-  await createShiftWithInvites(db, org.rootUnitId, admin.id, {
+  await ensureShiftWithInvites(db, org.rootUnitId, admin.id, {
     title: 'Park Cleanup Day',
     startsAt: fixtureWallClockToUtc(
       parkCleanupDay.year,
@@ -1118,7 +1275,7 @@ async function seedFixtures() {
     inviteUserIds: members.slice(0, 2).map((member) => member.id),
   });
 
-  await createShiftWithInvites(db, org.rootUnitId, admin.id, {
+  await ensureShiftWithInvites(db, org.rootUnitId, admin.id, {
     title: 'Warehouse Sorting',
     startsAt: fixtureWallClockToUtc(
       warehouseSortingDay.year,
@@ -1137,7 +1294,7 @@ async function seedFixtures() {
     inviteUserIds: members.slice(2, 4).map((member) => member.id),
   });
 
-  await createShiftWithInvites(db, org.rootUnitId, admin.id, {
+  await ensureShiftWithInvites(db, org.rootUnitId, admin.id, {
     title: 'After-School Tutoring',
     startsAt: fixtureWallClockToUtc(
       tutoringDay.year,
@@ -1155,7 +1312,7 @@ async function seedFixtures() {
     inviteUserIds: members.slice(4, 5).map((member) => member.id),
   });
 
-  await createShiftWithInvites(db, org.rootUnitId, admin.id, {
+  await ensureShiftWithInvites(db, org.rootUnitId, admin.id, {
     title: 'Community Garden Planting',
     startsAt: fixtureWallClockToUtc(
       gardenDay.year,
@@ -1244,7 +1401,7 @@ async function seedFixtures() {
 
   for (const [index, entry] of pendingInviteShifts.entries()) {
     const day = discoverDay(2 + index);
-    await createShiftWithInvites(db, org.rootUnitId, admin.id, {
+    await ensureShiftWithInvites(db, org.rootUnitId, admin.id, {
       title: entry.title,
       startsAt: fixtureWallClockToUtc(day.year, day.month, day.day, entry.hour),
       rrule: ONE_TIME_RRULE,
@@ -1261,7 +1418,7 @@ async function seedFixtures() {
   // Recurring pending invite (weekly x3) — exercises the day picker on the
   // invite detail and brings the pending total to 12.
   const recurringPendingDay = discoverDay(4);
-  await createShiftWithInvites(db, org.rootUnitId, admin.id, {
+  await ensureShiftWithInvites(db, org.rootUnitId, admin.id, {
     title: 'Weekly Meal Prep',
     startsAt: fixtureWallClockToUtc(
       recurringPendingDay.year,
@@ -1284,7 +1441,7 @@ async function seedFixtures() {
   // reachable at their shift-detail URL (logged in the fixtures summary) to
   // demo the accepted/declined/cancelled detail states directly.
   const acceptedDay = discoverDay(5);
-  const acceptedInvite = await createShiftWithInvites(
+  const acceptedInvite = await ensureShiftWithInvites(
     db,
     org.rootUnitId,
     admin.id,
@@ -1306,7 +1463,7 @@ async function seedFixtures() {
   );
 
   const declinedDay = discoverDay(6);
-  const declinedInvite = await createShiftWithInvites(
+  const declinedInvite = await ensureShiftWithInvites(
     db,
     org.rootUnitId,
     admin.id,
@@ -1334,7 +1491,7 @@ async function seedFixtures() {
   );
 
   const cancelledDay = discoverDay(7);
-  const cancelledInvite = await createShiftWithInvites(
+  const cancelledInvite = await ensureShiftWithInvites(
     db,
     org.rootUnitId,
     admin.id,
@@ -1359,7 +1516,7 @@ async function seedFixtures() {
   );
 
   const selfJoinedDay = discoverDay(8);
-  const selfJoinedShift = await createShiftWithInvites(
+  const selfJoinedShift = await ensureShiftWithInvites(
     db,
     org.rootUnitId,
     admin.id,
@@ -1416,7 +1573,7 @@ async function seedFixtures() {
     9,
   );
 
-  await createShiftWithInvites(db, org.rootUnitId, admin.id, {
+  await ensureShiftWithInvites(db, org.rootUnitId, admin.id, {
     title: 'Overlap Test Pair A',
     startsAt: fixtureWallClockToUtc(
       pairDay.year,
@@ -1428,7 +1585,7 @@ async function seedFixtures() {
     durationMinutes: 240,
     inviteUserIds: [overlapMember.id],
   });
-  await createShiftWithInvites(db, org.rootUnitId, admin.id, {
+  await ensureShiftWithInvites(db, org.rootUnitId, admin.id, {
     title: 'Overlap Test Pair B',
     startsAt: fixtureWallClockToUtc(
       pairDay.year,
@@ -1448,7 +1605,7 @@ async function seedFixtures() {
   // so the sweep-line clusterer groups all 6 together.
   const PILE_LETTERS = ['A', 'B', 'C', 'D', 'E', 'F'] as const;
   for (const [index, letter] of PILE_LETTERS.entries()) {
-    await createShiftWithInvites(db, org.rootUnitId, admin.id, {
+    await ensureShiftWithInvites(db, org.rootUnitId, admin.id, {
       title: `Overlap Test Pile ${letter}`,
       startsAt: fixtureWallClockToUtc(
         pileDay.year,
@@ -1463,7 +1620,7 @@ async function seedFixtures() {
     });
   }
 
-  await createTimeEntries(db, [supervisor, ...members], {
+  await ensureTimeEntries(db, [supervisor, ...members], {
     communitySupport: {
       startsAt: communitySupport.instanceStartsAt,
       instanceId: communitySupport.instanceId,
