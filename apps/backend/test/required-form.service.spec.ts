@@ -1,11 +1,20 @@
 import 'reflect-metadata';
-import { beforeAll, describe, expect, it } from 'bun:test';
+import {
+  afterEach,
+  beforeAll,
+  beforeEach,
+  describe,
+  expect,
+  it,
+} from 'bun:test';
 import { ConfigModule } from '@nestjs/config';
 import { Test, type TestingModule } from '@nestjs/testing';
+import { eq } from 'drizzle-orm';
 import { AuthService } from '../src/auth/auth.service';
 import { type Database, DatabaseModule } from '../src/database/database.module';
 import { DATABASE_CONNECTION } from '../src/database/database-connection';
 import * as schema from '../src/database/schema';
+import { EventInviteStatus } from '../src/event/enums';
 import {
   ConflictGraphQLError,
   ForbiddenGraphQLError,
@@ -20,10 +29,13 @@ import { RequirementFormService } from '../src/requirement-profile/services/requ
 import { RequirementProfileService } from '../src/requirement-profile/services/requirement-profile.service';
 import { UserProfileService } from '../src/requirement-profile/services/user-profile.service';
 import { JoinStatus } from '../src/shared/enums/join-status.enum';
+import { ShiftInviteStatus } from '../src/shift/enums';
 import {
+  cancelShiftInstance,
   createFormSubmission,
   createMembershipRequest,
   createRequirementForm,
+  createShiftInstance,
   createUser,
   setEventRequiredForms,
   setRequiredForms,
@@ -853,6 +865,310 @@ describe('RequiredFormService', () => {
       await expect(
         requirementFormService.delete(form.id, unit.id),
       ).rejects.toBeInstanceOf(ConflictGraphQLError);
+    });
+  });
+
+  describe('RequiredFormService.formsForUser', () => {
+    let moduleRef: TestingModule;
+    let db: Database;
+    let service: RequiredFormService;
+
+    beforeAll(async () => {
+      await ensureTestDatabase();
+      moduleRef = await Test.createTestingModule({
+        imports: [ConfigModule.forRoot({ isGlobal: true }), DatabaseModule],
+      }).compile();
+      db = moduleRef.get<Database>(DATABASE_CONNECTION);
+      service = new RequiredFormService(db);
+
+      registerTestResourceCleanup(async () => {
+        await moduleRef.close();
+      });
+    });
+
+    // Per-test seeded ids, cleaned up in afterEach.
+    let orgId: string;
+    let orgUnitId: string;
+    let userId: string;
+    let requiredFormId: string;
+    let submittedFormId: string;
+    let eventId: string;
+    let eventFormId: string;
+    let seededEventInviteIds: string[] = [];
+    let seededSubmissionIds: string[] = [];
+    let shiftId: string;
+    let shiftInstanceId: string;
+    let shiftFormId: string;
+    let seededShiftInstanceInviteIds: string[] = [];
+
+    const seedWorld = async () => {
+      const user = await createUser(db);
+      userId = user.id;
+
+      const { organization, type } = await createOrganizationWithType(
+        db,
+        `Drill-in Org ${crypto.randomUUID()}`,
+      );
+      orgId = organization.id;
+
+      const unit = await createUnit(db, {
+        organizationId: orgId,
+        typeId: type.id,
+        name: 'drill-in-unit',
+      });
+      orgUnitId = unit.id;
+
+      const { form: requiredForm } = await createRequirementForm(db, {
+        organizationId: orgId,
+        organizationUnitId: orgUnitId,
+        createdById: userId,
+        name: 'Required Form',
+      });
+      requiredFormId = requiredForm.id;
+
+      const { form: submittedForm } = await createRequirementForm(db, {
+        organizationId: orgId,
+        organizationUnitId: orgUnitId,
+        createdById: userId,
+        name: 'Submitted Form',
+      });
+      submittedFormId = submittedForm.id;
+
+      const { form: eventForm } = await createRequirementForm(db, {
+        organizationId: orgId,
+        organizationUnitId: orgUnitId,
+        createdById: userId,
+        name: 'Event Form',
+      });
+      eventFormId = eventForm.id;
+
+      // org-unit required form
+      await setRequiredForms(db, {
+        organizationUnitId: orgUnitId,
+        formIds: [requiredFormId],
+      });
+
+      // event + event-required form + invite for the user
+      const event = await createEvent(db, {
+        organizationUnitId: orgUnitId,
+        createdById: userId,
+      });
+      eventId = event.id;
+      await setEventRequiredForms(db, {
+        eventId,
+        formIds: [eventFormId],
+      });
+      const [invite] = await db
+        .insert(schema.eventInvites)
+        .values({
+          eventId,
+          userId,
+          status: EventInviteStatus.INVITED,
+        })
+        .returning();
+      if (invite) seededEventInviteIds.push(invite.id);
+
+      // shift + shift-instance invite + shift-required form
+      const { form: shiftForm } = await createRequirementForm(db, {
+        organizationId: orgId,
+        organizationUnitId: orgUnitId,
+        createdById: userId,
+        name: 'Shift Form',
+      });
+      shiftFormId = shiftForm.id;
+
+      const shift = await createShift(db, {
+        organizationUnitId: orgUnitId,
+        createdById: userId,
+      });
+      shiftId = shift.id;
+
+      const instances = await db.query.shiftInstances.findMany({
+        where: { masterId: shift.id },
+      });
+      const shiftInstance = instances[0];
+      if (!shiftInstance) {
+        throw new Error('seed shift produced no instances');
+      }
+      shiftInstanceId = shiftInstance.id;
+
+      const [shiftInvite] = await db
+        .insert(schema.shiftInstanceInvites)
+        .values({
+          instanceId: shiftInstance.id,
+          userId,
+          status: ShiftInviteStatus.INVITED,
+        })
+        .returning();
+      if (shiftInvite) seededShiftInstanceInviteIds.push(shiftInvite.id);
+
+      await setShiftRequiredForms(db, {
+        shiftId: shift.id,
+        formIds: [shiftFormId],
+      });
+
+      // one submitted (non-required) form
+      const submission = await createFormSubmission(db, {
+        formId: submittedFormId,
+        userId,
+      });
+      seededSubmissionIds.push(submission.id);
+    };
+
+    const cleanup = async () => {
+      await db
+        .delete(schema.formSubmissions)
+        .where(eq(schema.formSubmissions.userId, userId));
+      for (const inviteId of seededEventInviteIds) {
+        await db
+          .delete(schema.eventInvites)
+          .where(eq(schema.eventInvites.id, inviteId));
+      }
+      seededEventInviteIds = [];
+      seededSubmissionIds = [];
+      if (eventId) {
+        await db
+          .delete(schema.eventRequiredForms)
+          .where(eq(schema.eventRequiredForms.eventId, eventId));
+        await db.delete(schema.events).where(eq(schema.events.id, eventId));
+      }
+      for (const inviteId of seededShiftInstanceInviteIds) {
+        await db
+          .delete(schema.shiftInstanceInvites)
+          .where(eq(schema.shiftInstanceInvites.id, inviteId));
+      }
+      seededShiftInstanceInviteIds = [];
+      if (shiftId) {
+        await db
+          .delete(schema.shiftRequiredForms)
+          .where(eq(schema.shiftRequiredForms.shiftId, shiftId));
+        // deleting the shift cascades to its instances and their invites
+        await db.delete(schema.shifts).where(eq(schema.shifts.id, shiftId));
+      }
+      if (orgUnitId) {
+        await db
+          .delete(schema.organizationUnitRequiredForms)
+          .where(
+            eq(
+              schema.organizationUnitRequiredForms.organizationUnitId,
+              orgUnitId,
+            ),
+          );
+      }
+      for (const formId of [
+        requiredFormId,
+        submittedFormId,
+        eventFormId,
+        shiftFormId,
+      ]) {
+        if (formId) {
+          await db
+            .delete(schema.requirementForms)
+            .where(eq(schema.requirementForms.id, formId));
+        }
+      }
+      if (orgUnitId) {
+        await db
+          .delete(schema.organizationUnits)
+          .where(eq(schema.organizationUnits.id, orgUnitId));
+      }
+      if (orgId) {
+        await db
+          .delete(schema.organizationUnitTypes)
+          .where(eq(schema.organizationUnitTypes.organizationId, orgId));
+        await db
+          .delete(schema.organizations)
+          .where(eq(schema.organizations.id, orgId));
+      }
+      if (userId) {
+        await db.delete(schema.users).where(eq(schema.users.id, userId));
+      }
+      orgId = '';
+      orgUnitId = '';
+      userId = '';
+      requiredFormId = '';
+      submittedFormId = '';
+      eventId = '';
+      eventFormId = '';
+      shiftId = '';
+      shiftInstanceId = '';
+      shiftFormId = '';
+    };
+
+    beforeEach(async () => {
+      await seedWorld();
+    });
+
+    afterEach(async () => {
+      await cleanup();
+    });
+
+    it('returns org-unit required form as not-completed', async () => {
+      const forms = await service.requiredFormsForUser(userId, orgUnitId);
+      const f = forms.find((x) => x.form.id === requiredFormId);
+      expect(f).toBeDefined();
+      expect(f?.completed).toBe(false);
+      expect(f?.submissionId).toBeNull();
+    });
+
+    it('returns event-required form (user invited) as not-completed', async () => {
+      const forms = await service.requiredFormsForUser(userId, orgUnitId);
+      const f = forms.find((x) => x.form.id === eventFormId);
+      expect(f).toBeDefined();
+      expect(f?.completed).toBe(false);
+    });
+
+    it('excludes forms that are only submitted (not required)', async () => {
+      const forms = await service.requiredFormsForUser(userId, orgUnitId);
+      const f = forms.find((x) => x.form.id === submittedFormId);
+      expect(f).toBeUndefined();
+    });
+
+    it('does not mark a required form as completed even when it has been submitted', async () => {
+      await createFormSubmission(db, { formId: requiredFormId, userId });
+      const forms = await service.requiredFormsForUser(userId, orgUnitId);
+      const matches = forms.filter((x) => x.form.id === requiredFormId);
+      expect(matches).toHaveLength(1);
+      expect(matches[0]?.completed).toBe(false);
+      expect(matches[0]?.submissionId).toBeNull();
+      expect(matches[0]?.submittedAt).toBeNull();
+    });
+
+    it('returns shift-required form (user invited to a shift instance) as not-completed', async () => {
+      const forms = await service.requiredFormsForUser(userId, orgUnitId);
+      const f = forms.find((x) => x.form.id === shiftFormId);
+      expect(f).toBeDefined();
+      expect(f?.completed).toBe(false);
+    });
+
+    it('returns the shift form once even when multiple instances invite the user', async () => {
+      // a second instance on the same shift, also inviting the user;
+      // afterEach drops the shift, cascading to both instances and invites
+      const secondInstance = await createShiftInstance(db, shiftId);
+      await db.insert(schema.shiftInstanceInvites).values({
+        instanceId: secondInstance.id,
+        userId,
+        status: ShiftInviteStatus.INVITED,
+      });
+
+      const forms = await service.requiredFormsForUser(userId, orgUnitId);
+      const matches = forms.filter((x) => x.form.id === shiftFormId);
+      expect(matches).toHaveLength(1);
+    });
+
+    it('excludes the shift form when the invited instance is cancelled', async () => {
+      await cancelShiftInstance(db, shiftInstanceId);
+      const forms = await service.requiredFormsForUser(userId, orgUnitId);
+      expect(forms.find((x) => x.form.id === shiftFormId)).toBeUndefined();
+    });
+
+    it('excludes the shift form when the instance invite is not pending', async () => {
+      await db
+        .update(schema.shiftInstanceInvites)
+        .set({ status: ShiftInviteStatus.ACCEPTED })
+        .where(eq(schema.shiftInstanceInvites.instanceId, shiftInstanceId));
+      const forms = await service.requiredFormsForUser(userId, orgUnitId);
+      expect(forms.find((x) => x.form.id === shiftFormId)).toBeUndefined();
     });
   });
 });
