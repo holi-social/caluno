@@ -23,7 +23,7 @@ import {
   Button,
   cn,
 } from '@repo/ui';
-import { BanIcon } from 'lucide-react';
+import { BanIcon, ClockIcon } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useCallback, useEffect, useState } from 'react';
 import { toast } from 'sonner';
@@ -344,6 +344,7 @@ export function JoinShiftButton({
   if (isPendingIntended) {
     return (
       <Button disabled variant="secondary" size="xl" className={className}>
+        <ClockIcon className="size-5" />
         {t('join.pendingCta')}
       </Button>
     );

@@ -155,14 +155,24 @@ export function VolunteerHomeContent({
   const myShiftList = myShiftInstancesPage?.items ?? [];
   const availableShiftList = availableShiftInstancesPage?.items ?? [];
 
+  const myShiftIds = useMemo(
+    () => new Set(myShiftList.map((shift) => shift.id)),
+    [myShiftList],
+  );
+
+  const filteredAvailableShiftList = useMemo(
+    () => availableShiftList.filter((shift) => !myShiftIds.has(shift.id)),
+    [availableShiftList, myShiftIds],
+  );
+
   const discoverDayStrip = useMemo(
-    () => getDayStripDays(availableShiftList, { minDays: 7 }),
-    [availableShiftList],
+    () => getDayStripDays(filteredAvailableShiftList, { minDays: 7 }),
+    [filteredAvailableShiftList],
   );
 
   const availableGrouped = useMemo(
-    () => groupByDay(availableShiftList),
-    [availableShiftList],
+    () => groupByDay(filteredAvailableShiftList),
+    [filteredAvailableShiftList],
   );
 
   const { myThisWeekCount, discoverThisWeekCount } = useMemo(() => {
@@ -175,25 +185,33 @@ export function VolunteerHomeContent({
       }).length;
     return {
       myThisWeekCount: countThisWeek(myShiftList),
-      discoverThisWeekCount: countThisWeek(availableShiftList),
+      discoverThisWeekCount: countThisWeek(filteredAvailableShiftList),
     };
-  }, [myShiftList, availableShiftList]);
+  }, [myShiftList, filteredAvailableShiftList]);
 
   const conflictingShiftIds = useMemo(() => {
-    const booked = myShiftList.map((shift) => ({
-      start: new Date(shift.actualStartsAt),
-      end: new Date(shift.actualEndsAt),
-    }));
+    const booked = myShiftList
+      .filter((shift) => !shift.isIntendingToJoin)
+      .map((shift) => ({
+        id: shift.id,
+        start: new Date(shift.actualStartsAt),
+        end: new Date(shift.actualEndsAt),
+      }));
     const conflicts = new Set<string>();
-    for (const shift of availableShiftList) {
+    for (const shift of filteredAvailableShiftList) {
       const start = new Date(shift.actualStartsAt);
       const end = new Date(shift.actualEndsAt);
-      if (booked.some((b) => intervalsOverlap(start, end, b.start, b.end))) {
+      if (
+        booked.some(
+          (b) =>
+            b.id !== shift.id && intervalsOverlap(start, end, b.start, b.end),
+        )
+      ) {
         conflicts.add(shift.id);
       }
     }
     return conflicts;
-  }, [myShiftList, availableShiftList]);
+  }, [myShiftList, filteredAvailableShiftList]);
 
   // Discover shows one day's shifts at a time, laid out in two columns on
   // desktop. The day strip highlights that day; its arrows step between the
@@ -324,7 +342,7 @@ export function VolunteerHomeContent({
     <section>
       {showPendingBanner &&
       !showLoadingAvailable &&
-      availableShiftList.length === 0 ? (
+      filteredAvailableShiftList.length === 0 ? (
         <div className="flex flex-col gap-3">
           <div className="flex flex-col gap-1">
             <h2 className="text-2xl font-semibold text-foreground">
@@ -392,7 +410,7 @@ export function VolunteerHomeContent({
               <Skeleton className="h-24 w-full rounded-xl" />
               <Skeleton className="h-24 w-full rounded-xl" />
             </div>
-          ) : availableShiftList.length === 0 ? (
+          ) : filteredAvailableShiftList.length === 0 ? (
             <Empty>
               <EmptyMedia variant="icon">
                 <CalendarXIcon />
