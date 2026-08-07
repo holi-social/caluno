@@ -29,9 +29,9 @@ export async function generateMetadata({ params }: OrgPageProps) {
     if (error instanceof DataError && error.options?.code === 'NOT_FOUND') {
       notFound();
     }
-    return { title: 'Organization — Clippy' };
+    return { title: 'Organization — Caluno' };
   }
-  return { title: `${org.name} — Clippy` };
+  return { title: `${org.name} — Caluno` };
 }
 
 export default async function OrgPage({ params }: OrgPageProps) {

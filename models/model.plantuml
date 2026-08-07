@@ -1,4 +1,4 @@
-@startuml clippy
+@startuml caluno
 
 skinparam classAttributeIconSize 0
 skinparam linetype ortho

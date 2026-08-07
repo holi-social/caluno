@@ -3,7 +3,7 @@
   "configVersion": 1,
   "workspaces": {
     "": {
-      "name": "clippy-e2e",
+      "name": "caluno-e2e",
       "devDependencies": {
         "@playwright/test": "^1.61.1",
       },

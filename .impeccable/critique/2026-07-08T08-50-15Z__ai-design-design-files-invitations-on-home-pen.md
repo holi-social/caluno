@@ -34,7 +34,7 @@ slug: ai-design-design-files-invitations-on-home-pen
 
 ## Anti-Patterns Verdict
 
-**LLM assessment:** This does not read as generic AI slop. It extends existing Clippy volunteer-home patterns (section headers, shift cards, tab bar) with purposeful differentiation for pending invites. No gradient text, glassmorphism, hero metrics, or side-stripe borders. The main risk is **green-as-decoration**: the invitations block uses a tinted container, green card strokes, green banners, and a count badge simultaneously, which drifts toward "screen looks green" and weakens Field Green as a signal.
+**LLM assessment:** This does not read as generic AI slop. It extends existing Caluno volunteer-home patterns (section headers, shift cards, tab bar) with purposeful differentiation for pending invites. No gradient text, glassmorphism, hero metrics, or side-stripe borders. The main risk is **green-as-decoration**: the invitations block uses a tinted container, green card strokes, green banners, and a count badge simultaneously, which drifts toward "screen looks green" and weakens Field Green as a signal.
 
 **Deterministic scan:** CLI detector unavailable (`bundled detector not found`). Manual token review flagged hardcoded neutrals (`#09090b`, `#71717b`, `#ffffff`, `#f0fdf4`) alongside semantic variables, which will complicate dark-mode parity at implementation.
 

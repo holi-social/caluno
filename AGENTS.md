@@ -1,4 +1,4 @@
-# Clippy
+# Caluno
 
 A multi-tenant project for managing volunteers and shifts in organizations.
 
