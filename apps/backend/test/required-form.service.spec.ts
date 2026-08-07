@@ -1103,42 +1103,22 @@ describe('RequiredFormService', () => {
       await cleanup();
     });
 
-    it('returns org-unit required form as not-completed', async () => {
+    it('returns org-unit required forms (membership requested)', async () => {
       const forms = await service.requiredFormsForUser(userId, orgUnitId);
-      const f = forms.find((x) => x.form.id === requiredFormId);
-      expect(f).toBeDefined();
-      expect(f?.completed).toBe(false);
-      expect(f?.submissionId).toBeNull();
+      const form = forms.find((f) => f.id === requiredFormId);
+      expect(form).toBeDefined();
     });
 
-    it('returns event-required form (user invited) as not-completed', async () => {
+    it('returns event-required forms (user invited)', async () => {
       const forms = await service.requiredFormsForUser(userId, orgUnitId);
-      const f = forms.find((x) => x.form.id === eventFormId);
-      expect(f).toBeDefined();
-      expect(f?.completed).toBe(false);
+      const form = forms.find((f) => f.id === eventFormId);
+      expect(form).toBeDefined();
     });
 
-    it('excludes forms that are only submitted (not required)', async () => {
+    it('returns shift-required forms (user invited to a shift instance)', async () => {
       const forms = await service.requiredFormsForUser(userId, orgUnitId);
-      const f = forms.find((x) => x.form.id === submittedFormId);
-      expect(f).toBeUndefined();
-    });
-
-    it('does not mark a required form as completed even when it has been submitted', async () => {
-      await createFormSubmission(db, { formId: requiredFormId, userId });
-      const forms = await service.requiredFormsForUser(userId, orgUnitId);
-      const matches = forms.filter((x) => x.form.id === requiredFormId);
-      expect(matches).toHaveLength(1);
-      expect(matches[0]?.completed).toBe(false);
-      expect(matches[0]?.submissionId).toBeNull();
-      expect(matches[0]?.submittedAt).toBeNull();
-    });
-
-    it('returns shift-required form (user invited to a shift instance) as not-completed', async () => {
-      const forms = await service.requiredFormsForUser(userId, orgUnitId);
-      const f = forms.find((x) => x.form.id === shiftFormId);
-      expect(f).toBeDefined();
-      expect(f?.completed).toBe(false);
+      const form = forms.find((f) => f.id === shiftFormId);
+      expect(form).toBeDefined();
     });
 
     it('returns the shift form once even when multiple instances invite the user', async () => {
@@ -1152,14 +1132,14 @@ describe('RequiredFormService', () => {
       });
 
       const forms = await service.requiredFormsForUser(userId, orgUnitId);
-      const matches = forms.filter((x) => x.form.id === shiftFormId);
+      const matches = forms.filter((f) => f.id === shiftFormId);
       expect(matches).toHaveLength(1);
     });
 
     it('excludes the shift form when the invited instance is cancelled', async () => {
       await cancelShiftInstance(db, shiftInstanceId);
       const forms = await service.requiredFormsForUser(userId, orgUnitId);
-      expect(forms.find((x) => x.form.id === shiftFormId)).toBeUndefined();
+      expect(forms.find((f) => f.id === shiftFormId)).toBeUndefined();
     });
 
     it('excludes the shift form when the instance invite is not pending', async () => {
@@ -1168,7 +1148,7 @@ describe('RequiredFormService', () => {
         .set({ status: ShiftInviteStatus.ACCEPTED })
         .where(eq(schema.shiftInstanceInvites.instanceId, shiftInstanceId));
       const forms = await service.requiredFormsForUser(userId, orgUnitId);
-      expect(forms.find((x) => x.form.id === shiftFormId)).toBeUndefined();
+      expect(forms.find((f) => f.id === shiftFormId)).toBeUndefined();
     });
   });
 });

@@ -130,7 +130,7 @@
   "Profile": {
     "title": "Profil bearbeiten",
     "pageTitle": "Profil",
-    "organizations": "Deine Organisationen",
+    "organizations": "Mitgliedschaften",
     "personalInformation": "Persönliche Informationen",
     "identity": {
       "subtitles": {
@@ -1489,7 +1489,10 @@
     "forms": {
       "title": "Deine Formulare",
       "subtitle": "Formulare, die diese Organisation von dir anfordert.",
-      "status": { "completed": "Abgeschlossen", "notCompleted": "Nicht abgeschlossen" },
+      "status": {
+        "completed": "Abgeschlossen",
+        "notCompleted": "Nicht abgeschlossen"
+      },
       "fillIn": "Formular ausfüllen",
       "view": "Ansehen",
       "completedOn": "Du hast das Formular am {date} ausgefüllt.",

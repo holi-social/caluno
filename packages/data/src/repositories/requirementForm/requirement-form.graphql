@@ -672,17 +672,12 @@ query GetFormSubmissionsByForm($formId: String!, $limit: Int!, $offset: Int!) {
   }
 }
 
-query MyOrgUnitForms($organizationUnitId: ID!) {
-  myOrgUnitForms(organizationUnitId: $organizationUnitId) {
-    form {
-      id
-      name
-      description
-      shareToken
-    }
-    completed
-    submissionId
-    submittedAt
+query MyRequiredOrgUnitForms($organizationUnitId: ID!) {
+  myRequiredOrgUnitForms(organizationUnitId: $organizationUnitId) {
+    id
+    name
+    description
+    shareToken
   }
 }
 

@@ -1,4 +1,4 @@
-import type { MyOrgUnitFormsQuery } from '@repo/data';
+import type { MyRequiredOrgUnitFormsQuery } from '@repo/data';
 import {
   Badge,
   Button,
@@ -13,33 +13,41 @@ import { getTranslations } from 'next-intl/server';
 import { Link } from '@/i18n/navigation';
 import { getFormatting } from '@/lib/formatting/formatting-server';
 
-type MembershipFormCardProps = {
-  item: MyOrgUnitFormsQuery['myOrgUnitForms'][number];
+type OrgUnitForm =
+  MyRequiredOrgUnitFormsQuery['myRequiredOrgUnitForms'][number];
+
+export type FormSubmission = {
+  form: OrgUnitForm;
+  completed: boolean;
+  submissionId?: string;
+  submittedAt?: string;
 };
 
-export const MembershipFormCard = async ({ item }: MembershipFormCardProps) => {
+type MembershipFormCardProps = {
+  submission: FormSubmission;
+};
+
+export const MembershipFormCard = async ({
+  submission,
+}: MembershipFormCardProps) => {
   const t = await getTranslations('MembershipDetail.forms');
   const { formatDate } = await getFormatting();
 
-  const completed =
-    item.completed && Boolean(item.submissionId) && Boolean(item.submittedAt);
-  const submission = completed
-    ? {
-        submissionId: item.submissionId as string,
-        submittedAt: item.submittedAt as string,
-      }
-    : null;
-
-  const statusLabel = t(completed ? 'status.completed' : 'status.notCompleted');
-  const description = submission
+  const statusLabel = t(
+    submission.completed ? 'status.completed' : 'status.notCompleted',
+  );
+  const description = submission.completed
     ? t('completedOn', {
-        date: formatDate(new Date(submission.submittedAt)),
+        date: submission.submittedAt
+          ? formatDate(new Date(submission.submittedAt))
+          : '',
       })
     : t('notCompletedPrompt');
-  const actionLabel = t(completed ? 'view' : 'fillIn');
-  const actionHref = submission
+
+  const actionLabel = t(submission.completed ? 'view' : 'fillIn');
+  const actionHref = submission.completed
     ? `/profile/forms/submissions/${submission.submissionId}`
-    : `/f/${item.form.shareToken}`;
+    : `/f/${submission.form.shareToken}`;
 
   return (
     <Card>
@@ -48,10 +56,12 @@ export const MembershipFormCard = async ({ item }: MembershipFormCardProps) => {
           <div className="bg-muted p-2 border rounded-lg">
             <FileText className="text-muted-foreground size-4" />
           </div>
-          <span className="truncate">{item.form.name}</span>
+          <span className="truncate">{submission.form.name}</span>
         </CardTitle>
         <CardAction>
-          <Badge variant={completed ? 'success' : 'alert'}>{statusLabel}</Badge>
+          <Badge variant={submission.completed ? 'success' : 'alert'}>
+            {statusLabel}
+          </Badge>
         </CardAction>
       </CardHeader>
       <CardContent>
@@ -59,10 +69,10 @@ export const MembershipFormCard = async ({ item }: MembershipFormCardProps) => {
         <Button asChild className="w-full sm:w-auto">
           <Link
             href={actionHref}
-            target={item.completed ? '' : '_blank'}
+            target={submission.completed ? '' : '_blank'}
             rel="noopener noreferrer"
           >
-            {!item.completed && <SquareArrowOutUpRight />}
+            {!submission.completed && <SquareArrowOutUpRight />}
             {actionLabel}
           </Link>
         </Button>

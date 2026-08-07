@@ -11,6 +11,7 @@ import {
 } from '../../graphql/errors';
 import { ShiftInviteStatus } from '../../shift/enums';
 import { FormSubmissionStatus, RequiredFormTargetType } from '../enums';
+import { RequirementForm } from '../models/requirement-form.model';
 
 export type RequiredFormTarget = {
   targetType: RequiredFormTargetType;
@@ -24,13 +25,6 @@ export type RequiredFormStatus = {
   submissionId: string | null;
   targetType: RequiredFormTargetType;
   targetId: string;
-};
-
-export type MyOrgUnitFormItem = {
-  form: RequirementFormEntity;
-  completed: boolean;
-  submissionId: string | null;
-  submittedAt: Date | null;
 };
 
 @Injectable()
@@ -142,7 +136,7 @@ export class RequiredFormService {
   async requiredFormsForUser(
     userId: string,
     organizationUnitId: string,
-  ): Promise<MyOrgUnitFormItem[]> {
+  ): Promise<RequirementFormEntity[]> {
     // 1. requested: org-unit required forms
     const orgUnitRequired = await this.getRequiredForms({
       targetType: RequiredFormTargetType.ORGANIZATION_UNIT,
@@ -192,18 +186,13 @@ export class RequiredFormService {
     const shiftsRequiredForms = await this.getRequiredFormsByShiftIds(shiftIds);
 
     // 4. union of requested forms, deduped by formId
-    const byForm = new Map<string, MyOrgUnitFormItem>();
+    const byForm = new Map<string, RequirementFormEntity>();
     for (const { form } of [
       ...orgUnitRequired,
       ...eventsRequiredForms,
       ...shiftsRequiredForms,
     ]) {
-      byForm.set(form.id, {
-        form,
-        completed: false,
-        submissionId: null,
-        submittedAt: null,
-      });
+      byForm.set(form.id, form);
     }
 
     return [...byForm.values()];

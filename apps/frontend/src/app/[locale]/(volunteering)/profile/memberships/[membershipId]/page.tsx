@@ -1,27 +1,31 @@
 import type {
   GetMyFormSubmissionsQuery,
-  MyOrgUnitFormsQuery,
+  MyRequiredOrgUnitFormsQuery,
 } from '@repo/data';
 import { notFound } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
 import { MembershipDetailHeader } from '@/domain/memberships/components/membership-detail-header';
-import { MembershipFormCard } from '@/domain/memberships/components/membership-form-card';
+import {
+  type FormSubmission,
+  MembershipFormCard,
+} from '@/domain/memberships/components/membership-form-card';
 import { MembershipStatusBadge } from '@/domain/memberships/components/membership-status-badge';
 import { getDataClient } from '@/lib/data-client';
 import { getFormatting } from '@/lib/formatting/formatting-server';
 
-type OrgUnitFormItem = MyOrgUnitFormsQuery['myOrgUnitForms'][number];
+type OrgUnitForm =
+  MyRequiredOrgUnitFormsQuery['myRequiredOrgUnitForms'][number];
 type MyFormSubmissionItem =
   GetMyFormSubmissionsQuery['myFormSubmissions'][number];
 
 const mergeOrgUnitFormsWithSubmissions = (
-  forms: OrgUnitFormItem[],
+  forms: OrgUnitForm[],
   submissions: MyFormSubmissionItem[],
-): OrgUnitFormItem[] => {
-  const mergedByFormId = new Map<string, OrgUnitFormItem>();
-  for (const item of forms) {
-    mergedByFormId.set(item.form.id, {
-      form: item.form,
+): FormSubmission[] => {
+  const mergedByFormId = new Map<string, FormSubmission>();
+  for (const form of forms) {
+    mergedByFormId.set(form.id, {
+      form,
       completed: false,
     });
   }
@@ -51,7 +55,7 @@ export default async function MembershipDetailPage({ params }: Props) {
 
   const organizationUnitId = membership.organizationUnit.id;
   const [requiredForms, submissions] = await Promise.all([
-    data.requirementForm.findMyOrgUnitForms(organizationUnitId),
+    data.requirementForm.findMyRequiredOrgUnitForms(organizationUnitId),
     data.requirementForm.findMyFormSubmissions(organizationUnitId),
   ]);
   const forms = mergeOrgUnitFormsWithSubmissions(requiredForms, submissions);
@@ -91,8 +95,11 @@ export default async function MembershipDetailPage({ params }: Props) {
             </p>
           </div>
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-            {forms.map((item) => (
-              <MembershipFormCard key={item.form.id} item={item} />
+            {forms.map((submission) => (
+              <MembershipFormCard
+                key={submission.form.id}
+                submission={submission}
+              />
             ))}
           </div>
         </section>

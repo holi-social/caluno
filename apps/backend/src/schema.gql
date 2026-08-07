@@ -450,13 +450,6 @@ type Mutation {
   updateTimeEntry(id: ID!, input: UpdateTimeEntryInput!): TimeEntry!
 }
 
-type MyOrgUnitForm {
-  completed: Boolean!
-  form: RequirementForm!
-  submissionId: ID
-  submittedAt: DateTime
-}
-
 type Organization {
   address: String
   contactEmail: String
@@ -590,16 +583,16 @@ type Query {
   membershipRequests(limit: Int! = 10, offset: Int! = 0, status: MembershipRequestStatus): MembershipRequestPaginatedResponse!
   memberships: [Membership!]!
   myAdminstableOrganizationUnits: [OrganizationUnit!]!
-  myFormSubmission(id: ID!): FormSubmission
   myEvents(endsBefore: DateTime = null, includePast: Boolean! = false, limit: Int! = 15, offset: Int! = 0, order: SortOrder! = ASC, startsAfter: DateTime = null, statuses: [EventInviteStatus!]): EventPaginatedResponse!
+  myFormSubmission(id: ID!): FormSubmission
   myFormSubmissionByToken(token: String!): FormSubmission
   myFormSubmissions(organizationUnitId: ID!): [FormSubmission!]!
   myMembership(id: ID!): Membership
   myMembershipRequests(limit: Int! = 10, offset: Int! = 0): MembershipRequestPaginatedResponse!
   myMembershipStatus(organizationUnitId: ID!): Boolean!
   myMemberships: [Membership!]!
-  myOrgUnitForms(organizationUnitId: ID!): [MyOrgUnitForm!]!
   myOrganizationUnits: [OrganizationUnit!]!
+  myRequiredOrgUnitForms(organizationUnitId: ID!): [RequirementForm!]!
   myShiftInstances(endsBefore: DateTime = null, includeIntended: Boolean = false, includePast: Boolean! = false, limit: Int! = 15, offset: Int! = 0, order: SortOrder! = ASC, startsAfter: DateTime = null, statuses: [ShiftInviteStatus!]): ShiftInstancePaginatedResponse!
   myTime(limit: Int! = 10, offset: Int! = 0): TimeEntryPaginatedResponse!
   myUserProfile: UserProfile
