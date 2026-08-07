@@ -130,6 +130,7 @@
   "Profile": {
     "title": "Edit Profile",
     "pageTitle": "Profile",
+    "emailLocked": "Linked to your login",
     "organizations": "Your organizations",
     "personalInformation": "Personal information",
     "identity": {
@@ -1140,7 +1141,9 @@
       "invalidOptions": "{label} contains invalid options",
       "maxChars": "{label} must be {maxLen} characters or fewer",
       "invalidCharacters": "{label} contains invalid characters",
-      "validPostalCode": "{label} must be a valid postal code"
+      "validPostalCode": "{label} must be a valid postal code",
+      "invalidIban": "{label} must be a valid IBAN",
+      "dateNotFuture": "{label} cannot be in the future"
     },
     "actions": {
       "formSaved": "Form saved",
