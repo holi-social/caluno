@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'bun:test';
-import { ShiftInviteStatus } from '@repo/data';
+import { EventInviteStatus, ShiftInviteStatus } from '@repo/data';
 import {
   adminReinviteTargetStatus,
   adminUninviteTargetStatus,
@@ -18,6 +18,13 @@ describe('canAdminUninvite', () => {
     expect(canAdminUninvite(ShiftInviteStatus.VolunteerRejected)).toBe(false);
     expect(canAdminUninvite(ShiftInviteStatus.Cancelled)).toBe(false);
     expect(canAdminUninvite(ShiftInviteStatus.AdminRejected)).toBe(false);
+  });
+
+  it('works for event invite statuses the same way', () => {
+    expect(canAdminUninvite(EventInviteStatus.Invited)).toBe(true);
+    expect(canAdminUninvite(EventInviteStatus.Accepted)).toBe(true);
+    expect(canAdminUninvite(EventInviteStatus.SelfJoined)).toBe(true);
+    expect(canAdminUninvite(EventInviteStatus.AdminRejected)).toBe(false);
   });
 });
 

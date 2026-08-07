@@ -5,7 +5,7 @@ import type {
   CreateShiftInput,
   UpdateEventInput,
 } from '@repo/data';
-import { ShiftVisibility } from '@repo/data';
+import { EventInviteStatus, ShiftVisibility } from '@repo/data';
 import { revalidatePath } from 'next/cache';
 import z from 'zod';
 import { getDataClient } from '@/lib/data-client';
@@ -70,6 +70,27 @@ export const inviteMembersToEvent = actionClient
     const result = await data.event.inviteMembers(
       eventId,
       parsedInput.memberIds,
+    );
+
+    revalidatePath(`/admin/${orgUId}/events/${eventId}`);
+
+    return result;
+  });
+
+const updateEventInviteStatusSchema = z.object({
+  userId: z.string().min(1),
+  status: z.enum(EventInviteStatus),
+});
+
+export const updateEventInviteStatus = actionClient
+  .inputSchema(updateEventInviteStatusSchema)
+  .bindArgsSchemas([z.string(), z.string()])
+  .action(async ({ parsedInput, bindArgsParsedInputs: [orgUId, eventId] }) => {
+    const data = await getDataClient({ orgUId });
+    const result = await data.event.updateEventInviteStatus(
+      eventId,
+      parsedInput.status,
+      parsedInput.userId,
     );
 
     revalidatePath(`/admin/${orgUId}/events/${eventId}`);

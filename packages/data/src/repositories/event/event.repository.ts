@@ -8,6 +8,7 @@ import {
   type SetEventRequiredFormsMutation,
   SortOrder,
   type UpdateEventInput,
+  type UpdateEventInviteStatusMutation,
 } from '../../generated/graphql';
 import {
   BaseRepository,
@@ -90,6 +91,19 @@ export class EventRepository extends BaseRepository {
   ): Promise<{ id: string }> {
     const data = await this.sdk.InviteMembersToEvent({ eventId, memberIds });
     return { id: data.inviteMembersToEvent.id };
+  }
+
+  async updateEventInviteStatus(
+    eventId: string,
+    status: EventInviteStatus,
+    userId?: string,
+  ): Promise<UpdateEventInviteStatusMutation['updateEventInviteStatus']> {
+    const data = await this.sdk.UpdateEventInviteStatus({
+      eventId,
+      status,
+      userId,
+    });
+    return data.updateEventInviteStatus;
   }
 
   async setRequiredForms(

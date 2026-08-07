@@ -77,3 +77,9 @@ export const ACTIVE_EVENT_INVITE_STATUSES = [
   EventInviteStatus.INVITED,
   ...PARTICIPATING_EVENT_INVITE_STATUSES,
 ] as const;
+
+/**
+ * Statuses from which an admin can uninvite (→ ADMIN_REJECTED).
+ * Identical for shift + event invite enums (shared string values).
+ */
+export const ADMIN_UNINVITE_SOURCE_STATUSES = ACTIVE_SHIFT_INVITE_STATUSES;

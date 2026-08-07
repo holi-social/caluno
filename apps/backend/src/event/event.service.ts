@@ -26,6 +26,7 @@ import {
   PARTICIPATING_EVENT_INVITE_STATUSES,
 } from '../shared/invite-status';
 import { SortOrder } from '../shift/enums';
+import { ShiftService } from '../shift/shift.service';
 import { FilePurpose } from '../storage/enums';
 import { FileService } from '../storage/services/file.service';
 import { slugify } from '../utils/slug.util';
@@ -49,6 +50,7 @@ export class EventService {
     private readonly organizationService: OrganizationService,
     private readonly fileService: FileService,
     private readonly requiredFormService: RequiredFormService,
+    private readonly shiftService: ShiftService,
   ) {}
 
   async findById(id: string, organizationUnitId: string): Promise<EventEntity> {
@@ -624,13 +626,23 @@ export class EventService {
       );
     }
 
-    const [updated] = await this.db
-      .update(schema.eventInvites)
-      .set({ status })
-      .where(eq(schema.eventInvites.id, invite.id))
-      .returning();
+    return this.db.transaction(async (tx) => {
+      const [updated] = await tx
+        .update(schema.eventInvites)
+        .set({ status })
+        .where(eq(schema.eventInvites.id, invite.id))
+        .returning();
 
-    return updated;
+      if (status === EventInviteStatus.ADMIN_REJECTED) {
+        await this.shiftService.adminRejectInvitesForEventUser(
+          eventId,
+          userId,
+          tx,
+        );
+      }
+
+      return updated;
+    });
   }
 
   async findInvite(
