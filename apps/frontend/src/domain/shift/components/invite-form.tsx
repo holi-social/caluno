@@ -2,14 +2,7 @@
 
 import { zodResolver } from '@hookform/resolvers/zod';
 import { ShiftVisibility } from '@repo/data';
-import {
-  Button,
-  Checkbox,
-  FieldDescription,
-  FieldLabel,
-  Separator,
-} from '@repo/ui';
-import { Share2 } from 'lucide-react';
+import { Checkbox, FieldDescription, FieldLabel, Separator } from '@repo/ui';
 import { useLocale, useTranslations } from 'next-intl';
 import { useId, useState, useTransition } from 'react';
 import { useForm } from 'react-hook-form';
@@ -17,11 +10,10 @@ import { toast } from 'sonner';
 import { FormSheet, useFormSheet } from '@/components/form-sheet';
 import { useRouter } from '@/i18n/navigation';
 import { useSession } from '@/lib/auth';
-import { copyToClipboard } from '@/lib/clipboard';
 import type { RecurrenceDayValue } from '../constants';
 import { type InviteShiftFormValues, inviteShiftFormSchema } from '../schemas';
-import { shiftShareUrl } from '../share';
 import { setSuccessDialogCreatedShift } from '../success-dialog';
+import ShareLinkButton from './share-link-button';
 import { ShiftInstanceSummaryCard } from './shift-instance-summary-card';
 import { TransferList } from './transfer-list';
 
@@ -75,7 +67,6 @@ export function InviteShiftForm({
   const [pending, startTransition] = useTransition();
   const [serverError, setServerError] = useState<string>();
   const t = useTranslations('Shift');
-  const tCommon = useTranslations('Common');
   const locale = useLocale();
   const formatWithOptions = (date: Date, options: Intl.DateTimeFormatOptions) =>
     new Intl.DateTimeFormat(locale, options).format(date);
@@ -221,20 +212,11 @@ export function InviteShiftForm({
             onInvitedChange={(ids) => form.setValue('invitedMemberIds', ids)}
           />
           {isOpenShift && (
-            <Button
-              type="button"
-              variant="outline"
+            <ShareLinkButton
+              shiftId={shiftId}
+              instanceId={instanceId}
               className="w-full shrink-0"
-              onClick={() =>
-                copyToClipboard(
-                  shiftShareUrl(shiftId, instanceId),
-                  tCommon('linkCopied'),
-                )
-              }
-            >
-              <Share2 className="size-4 mr-2" />
-              {t('inviteForm.copyInviteLink')}
-            </Button>
+            />
           )}
         </div>
       </div>

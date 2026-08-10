@@ -1,4 +1,4 @@
-import { PermissionKey } from '@repo/data';
+import { PermissionKey, ShiftVisibility } from '@repo/data';
 import { Button } from '@repo/ui';
 import { notFound } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
@@ -14,6 +14,7 @@ import { getDataClient } from '@/lib/data-client';
 import { getFormatting } from '@/lib/formatting/formatting-server';
 import { requireOrgAccess } from '@/lib/org-context-server';
 import { checkPermission } from '@/lib/permissions-server';
+import ShareLinkButton from '../../../../../../../../domain/shift/components/share-link-button';
 
 interface ShiftInstanceDetailPageProps {
   params: Promise<{ orgUId: string; shiftId: string; instanceId: string }>;
@@ -42,6 +43,8 @@ export default async function ShiftInstanceDetailPage({
   const instance = await data.shift.findInstance(instanceId);
   const isInstanceInThePast =
     new Date(instance?.actualEndsAt ?? 0) < new Date();
+  const isOpenShift =
+    instance?.master.visibility === ShiftVisibility.AllMembers;
 
   if (!instance || instance.isCancelled) {
     notFound();
@@ -70,6 +73,15 @@ export default async function ShiftInstanceDetailPage({
               {t('instanceDetail.backToShift')}
             </Link>
           </Button>
+
+          {isOpenShift && (
+            <ShareLinkButton
+              size="sm"
+              shiftId={shiftId}
+              instanceId={instanceId}
+            />
+          )}
+
           {canManage ? (
             isInstanceInThePast ? (
               <Button variant="outline" size="sm" disabled>
@@ -83,6 +95,7 @@ export default async function ShiftInstanceDetailPage({
               </Button>
             )
           ) : null}
+
           {canManage ? (
             <Button asChild size="sm">
               <Link href={shiftInvitePath(orgUId, shiftId, instanceId)}>
