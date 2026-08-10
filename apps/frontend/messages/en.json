@@ -523,8 +523,8 @@
       }
     },
     "form": {
-      "shiftTypeLabel": "Shift type",
-      "shiftTypeNonPaid": "Non-paid",
+      "shiftTypeLabel": "Reimbursement type",
+      "shiftTypeNonPaid": "No reimbursement",
       "nameLabel": "Shift name",
       "namePlaceholder": "e.g. Morning cashier shift",
       "dateTimeLabel": "Date and time",
@@ -643,7 +643,7 @@
       "editTitle": "Edit shift",
       "editDescription": "Edit shift.",
       "inviteTitle": "Invite volunteers",
-      "inviteDescription": "Invited volunteers will receive an invitation email with shift details and a link to the system."
+      "inviteDescription": "Invited volunteers will receive an invitation email with shift details and a link to sign up."
     },
     "toast": {
       "created": "Shift created",
@@ -989,14 +989,14 @@
   "Accounting": {
     "settings": {
       "title": "Accounting Settings",
-      "subtitle": "Configure rates and document templates for paid volunteering.",
+      "subtitle": "Configure rates and document templates for volunteering reimbursements.",
       "tabs": {
         "rates": "Rates",
         "templates": "Templates"
       },
       "rates": {
         "sectionTitle": "Hourly rate",
-        "sectionSubtitle": "Org-wide hourly rate for paid shifts, by Pauschale type. Individual shifts can override this rate.",
+        "sectionSubtitle": "Org-wide rate for volunteering reimbursements, by allowance type.",
         "epLabel": "Ehrenamtspauschale",
         "epLegal": "§3 Nr. 26a EStG",
         "epYearlyLimit": "Up to 960 €/year",
@@ -1033,7 +1033,7 @@
     },
     "reimbursements": {
       "title": "Reimbursements",
-      "subtitle": "Create, sign, and bundle payout documents.",
+      "subtitle": "Create, sign, and download documents.",
       "periodLabel": "Period",
       "periodPicker": {
         "allTime": "All time",
@@ -1110,7 +1110,7 @@
         },
         "sheet": {
           "period": "Period",
-          "pipelineLabel": "Process steps",
+          "pipelineLabel": "Process",
           "pipeline": {
             "generate": "Create",
             "sign": "Sign",
@@ -1173,12 +1173,12 @@
           "createNew": "Create new {docType}"
         },
         "nonCompliantDialog": {
-          "titleSingle": "{action, select, create {Create} remind {Send a reminder for} countersign {Countersign} other {Proceed with}} a non-compliant timesheet?",
-          "titleBatchAll": "{action, select, create {Create} remind {Send reminders for} countersign {Countersign} other {Proceed with}} {count} non-compliant timesheets?",
-          "titleBatchMixed": "{count} of {total} timesheets are non-compliant",
+          "titleSingle": "{action, select, create {Create} remind {Send a reminder for} countersign {Countersign} other {Proceed with}} a timesheet without an active contract?",
+          "titleBatchAll": "{action, select, create {Create} remind {Send reminders for} countersign {Countersign} other {Proceed with}} {count} timesheets without an active contract?",
+          "titleBatchMixed": "{count} of {total} timesheets have no active contract",
           "descriptionSingle": "This volunteer has no active contract for this allowance type yet. You can still {action, select, create {create} remind {send a reminder for} countersign {countersign} other {proceed with}} this timesheet, but it stays flagged as non-compliant until a contract is active.",
           "descriptionBatchAll": "None of the selected volunteers have an active contract for this allowance type yet. You can still {action, select, create {create} remind {send reminders for} countersign {countersign} other {proceed with}} these timesheets, but they stay flagged as non-compliant until a contract is active.",
-          "descriptionBatchMixed": "{count} of the selected timesheets belong to volunteers without an active contract for this allowance type.",
+          "descriptionBatchMixed": "{count} of the selected timesheets have no active contract for this allowance type.",
           "actionAnyway": "{action, select, create {Create anyway} remind {Remind anyway} countersign {Sign anyway} other {Proceed anyway}}",
           "actionAllAnyway": "{action, select, create {Create all anyway} remind {Remind all anyway} countersign {Sign all anyway} other {Proceed with all anyway}}",
           "onlyCompliantAction": "{action, select, create {Only create compliant} remind {Only remind compliant} countersign {Only sign compliant} other {Only proceed with compliant}}",
