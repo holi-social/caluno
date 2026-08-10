@@ -6,7 +6,7 @@ import { Button } from '@repo/ui';
 import { BellRingIcon } from 'lucide-react';
 import { useSearchParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import { usePathname, useRouter } from '@/i18n/navigation';
 import { useSession } from '@/lib/auth';
@@ -26,6 +26,7 @@ export function EventFollowButton({
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const autoFollow = searchParams.get('autoFollow') === 'true';
+  const autoFollowExecuted = useRef(false);
   const [status, setStatus] = useState(initialStatus);
   const session = useSession();
 
@@ -41,61 +42,63 @@ export function EventFollowButton({
     router.push(`/events/${eventId}/forms?redirectTo=${redirectTo}`);
   }, [eventId, pathname, router.push]);
 
-  const handleFollow = useCallback(async () => {
-    if (!session.data?.user) {
-      const redirectTo = `/events/${eventId}?autoFollow=true`;
-      router.push(`/login?redirectTo=${encodeURIComponent(redirectTo)}`);
-      return;
-    }
-
-    try {
-      const result = await joinEvent.mutateAsync(eventId);
-
-      if (result.status === JoinStatus.Joined) {
-        setStatus(JoinStatus.Joined);
-      } else if (result.status === JoinStatus.Pending) {
-        setStatus(JoinStatus.Pending);
-        toast.success(t('requestSentToast'));
-      } else if (result.status === JoinStatus.Rejected) {
-        setStatus(JoinStatus.Rejected);
-        toast.error(t('rejectedToast'));
-      } else if (result.status === JoinStatus.RequirementsNeeded) {
-        const missingForms = result.requiredForms?.filter((f) => !f.submitted);
-        if (missingForms && missingForms.length > 0) {
-          redirectToFormsPage();
-        }
+  const handleFollow = useCallback(
+    async (isAuto = false) => {
+      if (!session.data?.user) {
+        const redirectTo = `/events/${eventId}?autoFollow=true`;
+        router.push(`/login?redirectTo=${encodeURIComponent(redirectTo)}`);
+        return;
       }
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : undefined);
-    }
-  }, [
-    eventId,
-    joinEvent,
-    router.push,
-    session.data?.user,
-    redirectToFormsPage,
-    t,
-  ]);
+
+      try {
+        const result = await joinEvent.mutateAsync(eventId);
+
+        if (result.status === JoinStatus.Joined) {
+          setStatus(JoinStatus.Joined);
+          if (isAuto) router.push('/');
+        } else if (result.status === JoinStatus.Pending) {
+          setStatus(JoinStatus.Pending);
+          toast.success(t('requestSentToast'));
+          if (isAuto) router.push('/');
+        } else if (result.status === JoinStatus.Rejected) {
+          setStatus(JoinStatus.Rejected);
+          toast.error(t('rejectedToast'));
+        } else if (result.status === JoinStatus.RequirementsNeeded) {
+          const missingForms = result.requiredForms?.filter(
+            (f) => !f.submitted,
+          );
+          if (missingForms && missingForms.length > 0) {
+            redirectToFormsPage();
+          }
+        }
+      } catch (error) {
+        toast.error(error instanceof Error ? error.message : undefined);
+      }
+    },
+    [
+      eventId,
+      joinEvent,
+      router.push,
+      session.data?.user,
+      redirectToFormsPage,
+      t,
+    ],
+  );
 
   useEffect(() => {
     if (
       autoFollow &&
       session.data?.user &&
       !isFinalStatus &&
-      !joinEvent.isPending
+      !autoFollowExecuted.current
     ) {
+      autoFollowExecuted.current = true;
       const url = new URL(window.location.href);
       url.searchParams.delete('autoFollow');
       window.history.replaceState({}, '', url.toString());
-      handleFollow();
+      handleFollow(true);
     }
-  }, [
-    autoFollow,
-    handleFollow,
-    isFinalStatus,
-    joinEvent.isPending,
-    session.data?.user,
-  ]);
+  }, [autoFollow, handleFollow, isFinalStatus, session.data?.user]);
 
   if (status === JoinStatus.Joined) {
     return (
@@ -144,7 +147,7 @@ export function EventFollowButton({
       <Button
         size="lg"
         variant="outline"
-        onClick={handleFollow}
+        onClick={() => handleFollow()}
         disabled={joinEvent.isPending}
         className="h-11 w-full font-semibold"
       >
