@@ -409,7 +409,7 @@
     "dialog": {
       "withdrawTitle": "Withdraw membership request",
       "withdrawDescription": "Are you sure you want to withdraw your request to join {orgName}?",
-      "leaveTitle": "Leave organization",
+      "leaveTitle": "Revoke membership",
       "leaveDescription": "Are you sure you want to leave {orgName}?"
     },
     "toast": {
