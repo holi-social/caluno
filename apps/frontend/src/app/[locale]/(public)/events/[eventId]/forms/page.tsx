@@ -26,10 +26,10 @@ export async function generateMetadata({ params }: EventFormsPageProps) {
     if (error instanceof DataError && error.options?.code === 'NOT_FOUND') {
       notFound();
     }
-    return { title: 'Event — Clippy' };
+    return { title: 'Event — Caluno' };
   }
   const t = await getTranslations({ locale, namespace: 'EventDetail' });
-  return { title: `${t('forms.title', { eventTitle: event.title })} — Clippy` };
+  return { title: `${t('forms.title', { eventTitle: event.title })} — Caluno` };
 }
 
 export default async function EventFormsPage({

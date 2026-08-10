@@ -1690,6 +1690,165 @@ describe('Volunteer home fields and check-in', () => {
     );
   });
 
+  it('includes open shifts for pending membership requests', async () => {
+    const pendingUser = await createUser(db);
+    await createMembershipRequest(db, {
+      userId: pendingUser.id,
+      organizationUnitId,
+    });
+
+    const { id: shiftId } = await createShift(db, {
+      organizationUnitId,
+      visibility: ShiftVisibility.ALL_MEMBERS,
+    });
+    const instances = await db.query.shiftInstances.findMany({
+      where: { masterId: shiftId },
+    });
+    const instanceId = instances[0]?.id;
+    expect(instanceId).toBeDefined();
+
+    setAuthMockUserId(pendingUser.id);
+
+    const data = await graphqlRequestRequiringData<{
+      availableShiftInstances: {
+        items: Array<{ id: string }>;
+        pagination: { total: number };
+      };
+    }>(
+      app,
+      {
+        query: `
+          query AvailableShiftInstances($startsAfter: DateTime, $endsBefore: DateTime) {
+            availableShiftInstances(startsAfter: $startsAfter, endsBefore: $endsBefore) {
+              items { id }
+              pagination { total }
+            }
+          }
+        `,
+        variables: {
+          startsAfter: new Date('2026-06-01T00:00:00.000Z').toISOString(),
+          endsBefore: new Date('2026-12-31T23:59:59.000Z').toISOString(),
+        },
+        headers: {
+          'x-organization-unit-id': organizationUnitId,
+        },
+      },
+      'availableShiftInstances',
+    );
+
+    expect(data.availableShiftInstances.items.map((i) => i.id)).toContain(
+      instanceId,
+    );
+
+    setAuthMockUserId(testUserId);
+  });
+
+  it('excludes invite-only shifts for pending membership requests', async () => {
+    const pendingUser = await createUser(db);
+    await createMembershipRequest(db, {
+      userId: pendingUser.id,
+      organizationUnitId,
+    });
+
+    const { id: shiftId } = await createShift(db, {
+      organizationUnitId,
+      visibility: ShiftVisibility.INVITED_MEMBERS,
+    });
+    const instances = await db.query.shiftInstances.findMany({
+      where: { masterId: shiftId },
+    });
+    const instanceId = instances[0]?.id;
+    expect(instanceId).toBeDefined();
+
+    setAuthMockUserId(pendingUser.id);
+
+    const data = await graphqlRequestRequiringData<{
+      availableShiftInstances: {
+        items: Array<{ id: string }>;
+        pagination: { total: number };
+      };
+    }>(
+      app,
+      {
+        query: `
+          query AvailableShiftInstances($startsAfter: DateTime, $endsBefore: DateTime) {
+            availableShiftInstances(startsAfter: $startsAfter, endsBefore: $endsBefore) {
+              items { id }
+              pagination { total }
+            }
+          }
+        `,
+        variables: {
+          startsAfter: new Date('2026-06-01T00:00:00.000Z').toISOString(),
+          endsBefore: new Date('2026-12-31T23:59:59.000Z').toISOString(),
+        },
+        headers: {
+          'x-organization-unit-id': organizationUnitId,
+        },
+      },
+      'availableShiftInstances',
+    );
+
+    expect(data.availableShiftInstances.items.map((i) => i.id)).not.toContain(
+      instanceId,
+    );
+
+    setAuthMockUserId(testUserId);
+  });
+
+  it('excludes invite-only shifts from available instances for a pending member even when open shifts also exist', async () => {
+    const pendingUser = await createUser(db);
+    await createMembershipRequest(db, {
+      userId: pendingUser.id,
+      organizationUnitId,
+    });
+
+    const { id: inviteOnlyShiftId } = await createShift(db, {
+      organizationUnitId,
+      visibility: ShiftVisibility.INVITED_MEMBERS,
+    });
+    const inviteOnlyInstances = await db.query.shiftInstances.findMany({
+      where: { masterId: inviteOnlyShiftId },
+    });
+    const inviteOnlyInstanceId = inviteOnlyInstances[0]?.id;
+    expect(inviteOnlyInstanceId).toBeDefined();
+
+    setAuthMockUserId(pendingUser.id);
+
+    const data = await graphqlRequestRequiringData<{
+      availableShiftInstances: {
+        items: Array<{ id: string }>;
+        pagination: { total: number };
+      };
+    }>(
+      app,
+      {
+        query: `
+          query AvailableShiftInstances($startsAfter: DateTime, $endsBefore: DateTime) {
+            availableShiftInstances(startsAfter: $startsAfter, endsBefore: $endsBefore) {
+              items { id }
+              pagination { total }
+            }
+          }
+        `,
+        variables: {
+          startsAfter: new Date('2026-06-01T00:00:00.000Z').toISOString(),
+          endsBefore: new Date('2026-12-31T23:59:59.000Z').toISOString(),
+        },
+        headers: {
+          'x-organization-unit-id': organizationUnitId,
+        },
+      },
+      'availableShiftInstances',
+    );
+
+    expect(data.availableShiftInstances.items.map((i) => i.id)).not.toContain(
+      inviteOnlyInstanceId,
+    );
+
+    setAuthMockUserId(testUserId);
+  });
+
   it('lists available shift instances in descendant units for parent-unit members', async () => {
     const parentMember = await createUser(db);
 
@@ -2642,6 +2801,132 @@ describe('ShiftInstance.invites (VOLI-842)', () => {
         ?.invites.map((invite) => invite.user.id) ?? [];
 
     expect(orderAfter).toEqual(orderBefore);
+  });
+
+  it('cancelling an ACCEPTED invite-only instance frees the spot and allows re-accept', async () => {
+    const volunteer = await createUser(db);
+    const other = await createUser(db);
+    const { id: shiftId } = await createShift(db, {
+      organizationUnitId,
+      visibility: ShiftVisibility.INVITED_MEMBERS,
+      maxVolunteers: 2,
+    });
+    const instances = await db.query.shiftInstances.findMany({
+      where: { masterId: shiftId },
+    });
+    const instanceId = instances[0]?.id;
+    expect(instanceId).toBeDefined();
+    if (!instanceId) {
+      throw new Error('Expected shift instance');
+    }
+
+    await db.insert(schema.shiftInstanceInvites).values([
+      {
+        instanceId,
+        userId: volunteer.id,
+        status: ShiftInviteStatus.ACCEPTED,
+      },
+      {
+        instanceId,
+        userId: other.id,
+        status: ShiftInviteStatus.ACCEPTED,
+      },
+    ]);
+
+    const queryCapacity = () =>
+      graphqlRequestRequiringData<{
+        publicShiftInstances: Array<{
+          id: string;
+          filledCount: number;
+          spotsLeft: number | null;
+          myInviteStatus: string | null;
+        }>;
+      }>(
+        app,
+        {
+          query: `
+            query Capacity($shiftId: ID!) {
+              publicShiftInstances(shiftId: $shiftId) {
+                id
+                filledCount
+                spotsLeft
+                myInviteStatus
+              }
+            }
+          `,
+          variables: { shiftId },
+          headers: { 'x-organization-unit-id': organizationUnitId },
+        },
+        'publicShiftInstances',
+      );
+
+    setAuthMockUserId(volunteer.id);
+
+    const before = await queryCapacity();
+    const beforeInstance = before.publicShiftInstances.find(
+      (row) => row.id === instanceId,
+    );
+    expect(beforeInstance?.filledCount).toBe(2);
+    expect(beforeInstance?.spotsLeft).toBe(0);
+    expect(beforeInstance?.myInviteStatus).toBe(ShiftInviteStatus.ACCEPTED);
+
+    await graphqlRequestRequiringData<{
+      updateShiftInstanceInviteStatus: { status: string };
+    }>(
+      app,
+      {
+        query: `
+          mutation Cancel($instanceId: String!) {
+            updateShiftInstanceInviteStatus(
+              instanceId: $instanceId
+              status: CANCELLED
+            ) {
+              status
+            }
+          }
+        `,
+        variables: { instanceId },
+        headers: { 'x-organization-unit-id': organizationUnitId },
+      },
+      'updateShiftInstanceInviteStatus',
+    );
+
+    const afterCancel = await queryCapacity();
+    const cancelledInstance = afterCancel.publicShiftInstances.find(
+      (row) => row.id === instanceId,
+    );
+    expect(cancelledInstance?.filledCount).toBe(1);
+    expect(cancelledInstance?.spotsLeft).toBe(1);
+    expect(cancelledInstance?.myInviteStatus).toBe(ShiftInviteStatus.CANCELLED);
+
+    await graphqlRequestRequiringData<{
+      updateShiftInstanceInviteStatus: { status: string };
+    }>(
+      app,
+      {
+        query: `
+          mutation Reaccept($instanceId: String!) {
+            updateShiftInstanceInviteStatus(
+              instanceId: $instanceId
+              status: ACCEPTED
+            ) {
+              status
+            }
+          }
+        `,
+        variables: { instanceId },
+        headers: { 'x-organization-unit-id': organizationUnitId },
+      },
+      'updateShiftInstanceInviteStatus',
+    );
+
+    const afterReaccept = await queryCapacity();
+    const reacceptedInstance = afterReaccept.publicShiftInstances.find(
+      (row) => row.id === instanceId,
+    );
+    expect(reacceptedInstance?.filledCount).toBe(2);
+    expect(reacceptedInstance?.spotsLeft).toBe(0);
+    expect(reacceptedInstance?.myInviteStatus).toBe(ShiftInviteStatus.ACCEPTED);
   });
 
   it('does not leak invites across organizations', async () => {

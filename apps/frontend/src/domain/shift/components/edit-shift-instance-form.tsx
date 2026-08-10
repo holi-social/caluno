@@ -111,6 +111,7 @@ export const EditShiftInstanceForm = ({
     },
   });
 
+  const isOneTimeShift = !shift.isRecurring;
   const startsAt = watch('startsAt');
   const endsAt = watch('endsAt');
   const applyToAllFuture = watch('applyToAllFuture');
@@ -267,7 +268,7 @@ export const EditShiftInstanceForm = ({
         )}
       </Field>
 
-      {applyToAllFuture && (
+      {(isOneTimeShift || applyToAllFuture) && (
         <FileUpload
           purpose="shift_image"
           organizationUnitId={orgUId}
@@ -285,7 +286,7 @@ export const EditShiftInstanceForm = ({
         />
       )}
 
-      {applyToAllFuture && (
+      {(isOneTimeShift || applyToAllFuture) && (
         <Card className="rounded-md p-4 space-y-3">
           <Field orientation="horizontal">
             <FieldContent>
@@ -346,7 +347,7 @@ export const EditShiftInstanceForm = ({
         </Field>
       </div>
 
-      {applyToAllFuture && (
+      {(isOneTimeShift || applyToAllFuture) && (
         <div className="rounded-xl border p-5 space-y-5">
           <div className="space-y-1">
             <h3 className="text-base font-semibold">{tForms('title')}</h3>

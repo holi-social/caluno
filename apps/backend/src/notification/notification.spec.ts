@@ -204,7 +204,7 @@ describe('NotificationModule', () => {
       createFixtureTranslator('en'),
     );
 
-    expect(email.subject).toBe('Reset your Clippy password');
+    expect(email.subject).toBe('Reset your Caluno password');
     expect(email.html).toContain(resetUrl);
     expect(email.html).toContain('This link expires in 60 minutes.');
   });

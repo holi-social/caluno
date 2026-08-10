@@ -14,7 +14,6 @@ import {
 import { LogIn, UserRound } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { UserCard } from '@/components/user-card';
-import { useSheetTrigger } from '@/hooks/use-sheet';
 import { Link } from '@/i18n/navigation';
 import { toEventInviteDisplayState } from '../invite-status-display';
 
@@ -28,8 +27,6 @@ export function EventVolunteersSection({
   invites,
 }: EventVolunteersCardProps) {
   const t = useTranslations('Event.detail.volunteersCard');
-  const tVolunteer = useTranslations('Volunteer.action');
-  const { open: openVolunteerSheet } = useSheetTrigger('volunteer-profile');
 
   return (
     <Card className="py-4">

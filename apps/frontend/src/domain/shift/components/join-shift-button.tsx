@@ -1,6 +1,7 @@
 'use client';
 
 import {
+  fromGraphQLError,
   JoinStatus,
   RequiredFormTargetType,
   ShiftInviteStatus,
@@ -23,12 +24,16 @@ import {
   Button,
   cn,
 } from '@repo/ui';
-import { BanIcon } from 'lucide-react';
+import { BanIcon, ClockIcon } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useCallback, useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import { usePathname, useRouter } from '@/i18n/navigation';
 import { useFormatting } from '@/lib/formatting/use-formatting';
+
+function getErrorMessage(error: unknown): string {
+  return fromGraphQLError(error).message;
+}
 
 interface JoinShiftButtonProps {
   shiftId: string;
@@ -90,11 +95,12 @@ export function JoinShiftButton({
         });
         toast.success(successMessage);
         onInviteStatusChange?.(nextInviteStatus);
+        router.refresh();
       } catch (error) {
-        toast.error(error instanceof Error ? error.message : t('join.failed'));
+        toast.error(getErrorMessage(error) ?? t('join.failed'));
       }
     },
-    [instanceId, respondToInvite, t, onInviteStatusChange],
+    [instanceId, respondToInvite, router, t, onInviteStatusChange],
   );
 
   const handleCancel = useCallback(async () => {
@@ -109,10 +115,11 @@ export function JoinShiftButton({
       });
       toast.success(t('join.cancelled'));
       onInviteStatusChange?.(ShiftInviteStatus.Cancelled);
+      router.refresh();
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : t('join.failed'));
+      toast.error(getErrorMessage(error) ?? t('join.failed'));
     }
-  }, [instanceId, respondToInvite, t, onInviteStatusChange]);
+  }, [instanceId, respondToInvite, router, t, onInviteStatusChange]);
 
   const handleJoin = useCallback(async () => {
     if (!isAuthenticated) {
@@ -152,9 +159,13 @@ export function JoinShiftButton({
             `${pathname}${window.location.search}`,
           );
           if (missingForms[0]?.targetType === RequiredFormTargetType.Shift) {
-            window.location.href = `/shifts/${shiftId}/instances/${instanceId}/forms?redirectTo=${redirectTo}`;
+            router.push(
+              `/shifts/${shiftId}/instances/${instanceId}/forms?redirectTo=${redirectTo}`,
+            );
           } else {
-            window.location.href = `/join/${organizationUnitId}/forms?redirectTo=${redirectTo}`;
+            router.push(
+              `/join/${organizationUnitId}/forms?redirectTo=${redirectTo}`,
+            );
           }
           return;
         }
@@ -182,8 +193,10 @@ export function JoinShiftButton({
       } else {
         toast.error(t('join.unexpected'));
       }
+
+      router.refresh();
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : t('join.failed'));
+      toast.error(getErrorMessage(error) ?? t('join.failed'));
     }
   }, [
     isAuthenticated,
@@ -344,6 +357,7 @@ export function JoinShiftButton({
   if (isPendingIntended) {
     return (
       <Button disabled variant="secondary" size="xl" className={className}>
+        <ClockIcon className="size-5" />
         {t('join.pendingCta')}
       </Button>
     );
