@@ -59,7 +59,9 @@ mutation CancelMembershipRequest($id: ID!, $organizationUnitId: ID!) {
 }
 
 mutation RemoveMembershipRequest($id: ID!) {
-  removeMembershipRequest(id: $id)
+  removeMembershipRequest(id: $id) {
+    id
+  }
 }
 
 query GetMembershipRequests(
