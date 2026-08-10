@@ -27,7 +27,7 @@ import { BanIcon, ClockIcon } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useCallback, useEffect, useState } from 'react';
 import { toast } from 'sonner';
-import { usePathname, useRouter } from '@/i18n/navigation';
+import { usePathname } from '@/i18n/navigation';
 import { useFormatting } from '@/lib/formatting/use-formatting';
 
 interface JoinShiftButtonProps {
@@ -68,7 +68,6 @@ export function JoinShiftButton({
   className,
   isPendingIntended = false,
 }: JoinShiftButtonProps) {
-  const router = useRouter();
   const pathname = usePathname();
   const joinShiftInstance = useJoinShiftInstance();
   const respondToInvite = useUpdateShiftInstanceInviteStatus();
@@ -117,12 +116,14 @@ export function JoinShiftButton({
   const handleJoin = useCallback(async () => {
     if (!isAuthenticated) {
       const searchParams = new URLSearchParams({
+        orgUId: organizationUnitId,
         redirectTo: `/shifts/${shiftId}?${new URLSearchParams({
           autoJoin: 'true',
           ...(instanceId ? { instanceId } : {}),
         })}`,
       });
-      router.push(`/api/invite?${searchParams}`);
+      // Full navigation so `/api/invite` can Set-Cookie `pending_invite`.
+      window.location.href = `/api/invite?${searchParams}`;
       return;
     }
 
@@ -190,7 +191,6 @@ export function JoinShiftButton({
     shiftId,
     instanceId,
     joinShiftInstance,
-    router,
     pathname,
     t,
     organizationUnitId,

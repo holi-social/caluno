@@ -11,9 +11,10 @@ import { getVerifyEmailPath } from '@/lib/verify-email-url';
 
 interface SignupFormProps {
   redirectTo?: string;
+  orgUId?: string;
 }
 
-export function SignupForm({ redirectTo = '/' }: SignupFormProps) {
+export function SignupForm({ redirectTo = '/', orgUId }: SignupFormProps) {
   const t = useTranslations('Auth.signup');
   const router = useRouter();
   const currentLocale = useLocale();
@@ -66,7 +67,7 @@ export function SignupForm({ redirectTo = '/' }: SignupFormProps) {
   }
 
   return (
-    <form onSubmit={handleSignupSubmit} className="mt-8 space-y-6">
+    <form onSubmit={handleSignupSubmit} className="space-y-6">
       {error && (
         <div className="rounded-md bg-destructive/10 p-4 text-sm text-destructive">
           {error}
@@ -131,7 +132,10 @@ export function SignupForm({ redirectTo = '/' }: SignupFormProps) {
       <p className="text-center text-sm text-muted-foreground">
         {t('hasAccount')}{' '}
         <Link
-          href="/login"
+          href={
+            orgUId ? `/login?orgUId=${encodeURIComponent(orgUId)}` : '/login'
+          }
+          prefetch={false}
           className="font-medium text-primary hover:underline"
         >
           {t('signInLink')}

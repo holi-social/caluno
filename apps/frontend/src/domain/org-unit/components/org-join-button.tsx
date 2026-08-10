@@ -27,8 +27,11 @@ export function OrgJoinButton({
 
   const handleClick = useCallback(async () => {
     if (!session.data?.user) {
-      const redirectTo = `/orgs/${organizationUnitId}`;
-      window.location.href = `/api/invite?redirectTo=${encodeURIComponent(redirectTo)}`;
+      const searchParams = new URLSearchParams({
+        orgUId: organizationUnitId,
+        redirectTo: `/orgs/${organizationUnitId}`,
+      });
+      window.location.href = `/api/invite?${searchParams}`;
       return;
     }
 

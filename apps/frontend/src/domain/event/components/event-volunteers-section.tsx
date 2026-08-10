@@ -1,6 +1,6 @@
 'use client';
 
-import { EventInviteStatus } from '@repo/data';
+import { EventInviteStatus, MembershipRequestStatus } from '@repo/data';
 import type { EventInviteItem } from '@repo/data/react';
 import {
   Badge,
@@ -12,7 +12,7 @@ import {
   CardTitle,
   VolunteeringStatusBadge,
 } from '@repo/ui';
-import { LogIn, UserPlus } from 'lucide-react';
+import { LogIn, UserPlus, UserRound } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { UserCard } from '@/components/user-card';
 import { Link } from '@/i18n/navigation';
@@ -82,6 +82,22 @@ export function EventVolunteersSection({
                           : t('status.invited')
                       }
                     />
+                    <Button
+                      size="icon-xs"
+                      variant="outline"
+                      aria-label={tVolunteer('viewProfileAria')}
+                      onClick={() =>
+                        openVolunteerSheet({
+                          userId: invite.user.id,
+                          volunteerName: invite.user.name,
+                          volunteerStatus: MembershipRequestStatus.Accepted,
+                          volunteerEmail: invite.user.email ?? '',
+                          volunteerCheckInId: invite.user.checkInId,
+                        })
+                      }
+                    >
+                      <UserRound />
+                    </Button>
                     {isParticipating && (
                       <Link
                         href={`/admin/${orgUId}/check-in/${invite.user.checkInId}/check-in`}

@@ -5,7 +5,6 @@ import { getTranslations } from 'next-intl/server';
 import { EventCardMyInvited } from '@/domain/home/components/event-card-my-invited';
 import { ShiftCardMyInvited } from '@/domain/home/components/shift-card-my-invited';
 import { mergeInvitations } from '@/domain/home/lib/merge-invitations';
-import { requireAuth } from '@/lib/auth-server';
 import { getDataClient } from '@/lib/data-client';
 
 interface InvitationsPageProps {
@@ -15,8 +14,7 @@ interface InvitationsPageProps {
 export default async function InvitationsPage({
   params,
 }: InvitationsPageProps) {
-  const { locale } = await params;
-  await requireAuth(`/${locale}/auth/login`);
+  await params;
   const client = await getDataClient();
   const [shiftInvites, eventInvites] = await Promise.all([
     client.shift.findMyShiftInstances({
