@@ -443,7 +443,7 @@
     "requirementForms": "Requirement forms",
     "roles": "Roles",
     "selectOrganization": "Select organization",
-    "shifts": "Overview",
+    "shifts": "Shifts",
     "timesheets": "Timesheets",
     "volunteering": "Volunteering",
     "volunteers": "Volunteers"
@@ -1113,7 +1113,7 @@
       "cancelled": "You've canceled your shift.",
       "cancelShift": "Cancel shift",
       "cancelTitle": "Cancel shift?",
-      "confirmCancel": "Yes, cancel",
+      "confirmCancel": "Cancel shift",
       "decline": "Decline",
       "declined": "You've declined the invitation.",
       "failed": "Failed to join shift",
