@@ -50,11 +50,7 @@ export function EventActionBar({
   return (
     <aside className="flex items-center gap-1">
       <Link href={eventDetailPath(orgUId, id)}>
-        <Button
-          size="icon-xs"
-          variant="outline"
-          tooltip={t('action.viewAria')}
-        >
+        <Button size="icon-xs" variant="outline" tooltip={t('action.viewAria')}>
           <Eye />
         </Button>
       </Link>

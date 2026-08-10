@@ -54,11 +54,7 @@ export default async function CheckInPage({ params }: CheckInPageProps) {
               className="flex gap-4 items-center text-xl"
             >
               {o.name}
-              <Button
-                type="button"
-                size="icon-sm"
-                tooltip={t('checkIn')}
-              >
+              <Button type="button" size="icon-sm" tooltip={t('checkIn')}>
                 <LogIn />
               </Button>
             </Link>
