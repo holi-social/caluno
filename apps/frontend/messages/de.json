@@ -443,7 +443,7 @@
     "requirementForms": "Anforderungsformulare",
     "roles": "Rollen",
     "selectOrganization": "Organisation auswählen",
-    "shifts": "Überblick",
+    "shifts": "Einsätze",
     "timesheets": "Zeiterfassung",
     "volunteering": "Freiwilligenarbeit",
     "volunteers": "Freiwillige"
@@ -1113,7 +1113,7 @@
       "cancelled": "Du hast deinen Einsatz abgesagt.",
       "cancelShift": "Einsatz absagen",
       "cancelTitle": "Einsatz absagen?",
-      "confirmCancel": "Ja, absagen",
+      "confirmCancel": "Einsatz absagen",
       "decline": "Ablehnen",
       "declined": "Du hast die Einladung abgelehnt.",
       "failed": "Einsatzbeitritt fehlgeschlagen",
