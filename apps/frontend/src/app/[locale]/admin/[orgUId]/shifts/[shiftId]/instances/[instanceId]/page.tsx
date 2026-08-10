@@ -40,6 +40,8 @@ export default async function ShiftInstanceDetailPage({
   const { formatRange } = await getFormatting();
   const data = await getDataClient({ orgUId });
   const instance = await data.shift.findInstance(instanceId);
+  const isInstanceInThePast =
+    new Date(instance?.actualEndsAt ?? 0) < new Date();
 
   if (!instance || instance.isCancelled) {
     notFound();
@@ -68,12 +70,18 @@ export default async function ShiftInstanceDetailPage({
               {t('instanceDetail.backToShift')}
             </Link>
           </Button>
-          {canManage && new Date(instance.actualEndsAt) >= new Date() ? (
-            <Button asChild variant="outline" size="sm">
-              <Link href={shiftInstanceEditPath(orgUId, shiftId, instanceId)}>
+          {canManage ? (
+            isInstanceInThePast ? (
+              <Button variant="outline" size="sm" disabled>
                 {t('instanceDetail.editCta')}
-              </Link>
-            </Button>
+              </Button>
+            ) : (
+              <Button asChild variant="outline" size="sm">
+                <Link href={shiftInstanceEditPath(orgUId, shiftId, instanceId)}>
+                  {t('instanceDetail.editCta')}
+                </Link>
+              </Button>
+            )
           ) : null}
           {canManage ? (
             <Button asChild size="sm">
