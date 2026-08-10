@@ -404,10 +404,7 @@ export class EventService {
           and(
             eq(schema.eventInvites.eventId, eventId),
             inArray(schema.eventInvites.userId, reinviteMemberIds),
-            eq(
-              schema.eventInvites.status,
-              EventInviteStatus.ADMIN_REJECTED,
-            ),
+            eq(schema.eventInvites.status, EventInviteStatus.ADMIN_REJECTED),
           ),
         );
     }
