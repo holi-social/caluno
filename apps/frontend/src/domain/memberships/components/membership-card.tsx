@@ -4,6 +4,7 @@ import { useTranslations } from 'next-intl';
 import { Link } from '@/i18n/navigation';
 import { useFormatting } from '@/lib/formatting/use-formatting';
 import type { MembershipEntry } from '../types';
+import { DismissMembershipButton } from './dismiss-membership-button';
 import { LeaveMembershipButton } from './leave-membership-button';
 import { MembershipStatusBadge } from './membership-status-badge';
 import { OrgUnitAvatar } from './org-unit-avatar';
@@ -63,9 +64,15 @@ export function MembershipCard({ entry }: Props) {
         </p>
 
         {entry.state === 'declined' && entry.rejectionReason && (
-          <q className="text-muted-foreground text-sm">
+          <q className="text-muted-foreground text-sm mb-4 block">
             {entry.rejectionReason}
           </q>
+        )}
+
+        {entry.state === 'declined' && (
+          <div className="flex justify-start">
+            <DismissMembershipButton id={entry.id} />
+          </div>
         )}
 
         {entry.state === 'accepted' && (

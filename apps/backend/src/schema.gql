@@ -419,9 +419,10 @@ type Mutation {
   joinEvent(eventId: ID!): JoinEventResult!
   joinOrganization(organizationUnitId: ID!): JoinOrganizationResult!
   joinShiftInstance(instanceId: String!): JoinShiftInstanceResult!
-  leaveMembership(id: ID!): Boolean!
+  leaveMembership(id: ID!): Membership!
   regenerateFormShareToken(id: String!): RequirementForm!
   rejectMembershipRequest(id: ID!, organizationUnitId: ID!, rejectionReason: String!): MembershipRequest!
+  removeMembershipRequest(id: ID!): MembershipRequest!
   setEventRequiredForms(eventId: ID!, formIds: [String!]!): [RequiredFormRef!]!
   setRequiredForms(formIds: [String!]!, organizationUnitId: String!): [RequiredFormRef!]!
   setShiftRequiredForms(formIds: [String!]!, shiftId: ID!): [RequiredFormRef!]!

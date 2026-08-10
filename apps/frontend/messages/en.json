@@ -404,7 +404,8 @@
       "cancel": "Cancel",
       "approveDisabledTitle": "Required forms are incomplete",
       "withdraw": "Withdraw",
-      "leave": "Leave"
+      "leave": "Leave",
+      "dismiss": "Dismiss"
     },
     "dialog": {
       "withdrawTitle": "Withdraw membership request",
@@ -421,7 +422,9 @@
       "withdrawn": "Membership request withdrawn",
       "withdrawFailed": "Failed to withdraw request",
       "left": "You have left {orgName}",
-      "leaveFailed": "Failed to leave organization"
+      "leaveFailed": "Failed to leave organization",
+      "dismissed": "Membership request dismissed",
+      "dismissFailed": "Failed to dismiss membership request"
     },
     "cancelButton": "Cancel Request",
     "cancelButtonSubmitting": "Cancelling...",

@@ -556,7 +556,7 @@ export class MembershipService {
     );
   }
 
-  async leaveMembership(id: string, userId: string): Promise<boolean> {
+  async leaveMembership(id: string, userId: string): Promise<MembershipEntity> {
     const [deleted] = await this.db
       .delete(schema.memberships)
       .where(
@@ -571,7 +571,28 @@ export class MembershipService {
       throw new NotFoundGraphQLError('Membership not found');
     }
 
-    return true;
+    return deleted;
+  }
+
+  async removeMembershipRequest(
+    id: string,
+    userId: string,
+  ): Promise<MembershipRequestEntity> {
+    const [deleted] = await this.db
+      .delete(schema.membershipRequests)
+      .where(
+        and(
+          eq(schema.membershipRequests.id, id),
+          eq(schema.membershipRequests.userId, userId),
+        ),
+      )
+      .returning();
+
+    if (!deleted) {
+      throw new NotFoundGraphQLError('Membership request not found');
+    }
+
+    return deleted;
   }
 
   async getMembershipRequests(

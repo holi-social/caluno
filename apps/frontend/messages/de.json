@@ -404,7 +404,8 @@
       "cancel": "Abbrechen",
       "approveDisabledTitle": "Erforderliche Formulare sind unvollständig",
       "withdraw": "Zurückziehen",
-      "leave": "Verlassen"
+      "leave": "Verlassen",
+      "dismiss": "Verwerfen"
     },
     "dialog": {
       "withdrawTitle": "Antrag auf Austritt aus der Mitgliedschaft",
@@ -421,7 +422,9 @@
       "withdrawn": "Anfrage zurückgezogen",
       "withdrawFailed": "Zurückziehen fehlgeschlagen",
       "left": "Du hast {orgName} verlassen",
-      "leaveFailed": "Verlassen fehlgeschlagen"
+      "leaveFailed": "Verlassen fehlgeschlagen",
+      "dismissed": "Mitgliedschaftsanfrage verworfen",
+      "dismissFailed": "Mitgliedschaftsanfrage konnte nicht verworfen werden"
     },
     "cancelButton": "Anfrage zurückziehen",
     "cancelButtonSubmitting": "Wird zurückgezogen...",
