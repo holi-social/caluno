@@ -102,10 +102,6 @@ export function ShiftActionCard({
       : Math.max(0, selected.spotsLeft - (justJoined ? 1 : 0));
   const full = spotsLeft === 0;
   const unlimited = spotsLeft == null;
-
-  // If the backend somehow returns spotsLeft without a max, fall back to the
-  // sum so the label never divides by nothing. In practice the master capacity
-  // is always provided above.
   const resolvedMax = max ?? (spotsLeft != null ? filled + spotsLeft : filled);
 
   const longDate = formatDate(new Date(selected.actualStartsAt), {

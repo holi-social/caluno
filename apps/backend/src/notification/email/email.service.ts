@@ -33,8 +33,8 @@ export class EmailService {
       secretKey,
       projectId: this.configService.getOrThrow<string>('PROJECT_ID'),
       region: this.configService.getOrThrow<string>('TEM_REGION'),
-      fromEmail: 'noreply@holi.social', // TODO: Change this to the actual email address
-      fromName: 'Clippy', // TODO: Change this to the actual name
+      fromEmail: 'noreply@caluno.org',
+      fromName: 'Caluno',
     };
   }
 

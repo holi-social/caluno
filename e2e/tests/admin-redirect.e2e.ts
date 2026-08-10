@@ -20,7 +20,7 @@ test('visiting /admin without a last-visited-org cookie goes to the first access
   // doesn't exist on the real volunteer home page, just the redirect off /login.
   await page.waitForURL(/\/en\/?$/, { timeout: 15000 });
 
-  // A fresh login has no `clippy.last_org_slug` cookie yet — this is exactly
+  // A fresh login has no `caluno.last_org_slug` cookie yet — this is exactly
   // the reported bug's precondition, so no need to clear cookies manually.
   await page.goto(`${BASE_URL}/en/admin`, { waitUntil: 'load' });
 

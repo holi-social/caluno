@@ -28,7 +28,7 @@ interface Props extends React.PropsWithChildren {
   formId?: string;
 }
 
-export function ClippySheet({
+export function CalunoSheet({
   open,
   close,
   isOpen,

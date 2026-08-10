@@ -24,7 +24,7 @@ import {
   Button,
   cn,
 } from '@repo/ui';
-import { BanIcon } from 'lucide-react';
+import { BanIcon, ClockIcon } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useCallback, useEffect, useState } from 'react';
 import { toast } from 'sonner';
@@ -159,9 +159,13 @@ export function JoinShiftButton({
             `${pathname}${window.location.search}`,
           );
           if (missingForms[0]?.targetType === RequiredFormTargetType.Shift) {
-            window.location.href = `/shifts/${shiftId}/instances/${instanceId}/forms?redirectTo=${redirectTo}`;
+            router.push(
+              `/shifts/${shiftId}/instances/${instanceId}/forms?redirectTo=${redirectTo}`,
+            );
           } else {
-            window.location.href = `/join/${organizationUnitId}/forms?redirectTo=${redirectTo}`;
+            router.push(
+              `/join/${organizationUnitId}/forms?redirectTo=${redirectTo}`,
+            );
           }
           return;
         }
@@ -353,6 +357,7 @@ export function JoinShiftButton({
   if (isPendingIntended) {
     return (
       <Button disabled variant="secondary" size="xl" className={className}>
+        <ClockIcon className="size-5" />
         {t('join.pendingCta')}
       </Button>
     );

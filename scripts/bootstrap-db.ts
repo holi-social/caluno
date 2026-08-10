@@ -51,7 +51,7 @@ const applyDatabaseEnvironment = (): void => {
   process.env.DB_PORT ??= process.env.POSTGRES_PORT ?? '5432';
   process.env.DB_USER ??= process.env.POSTGRES_USER ?? 'postgres';
   process.env.DB_PASSWORD ??= process.env.POSTGRES_PASSWORD ?? 'postgres';
-  process.env.DB_NAME ??= process.env.POSTGRES_DB ?? 'clippy';
+  process.env.DB_NAME ??= process.env.POSTGRES_DB ?? 'caluno';
 };
 
 const assertLocalDbHost = (): void => {

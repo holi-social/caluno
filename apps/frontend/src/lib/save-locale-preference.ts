@@ -9,7 +9,7 @@ interface SaveLocalePreferenceDeps {
 }
 
 /**
- * Persist an explicit locale choice: backend (`users.locale`) → `clippy.locale`
+ * Persist an explicit locale choice: backend (`users.locale`) → `caluno.locale`
  * preference cookie → URL. Writing the cookie before navigating means the
  * proxy sees a cookie that already matches the target URL, so it does not
  * redirect. No-op when the choice equals the active locale.

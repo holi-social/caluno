@@ -5,7 +5,7 @@ export const routing = defineRouting({
   locales: ['en', 'de'],
   defaultLocale: 'de',
   // localePrefix defaults to 'always' → every path is prefixed (/en/…, /de/…).
-  // We manage the preference cookie ourselves (`clippy.locale`) so next-intl
+  // We manage the preference cookie ourselves (`caluno.locale`) so next-intl
   // does not rewrite it on every navigation.
   localeCookie: false,
 });
