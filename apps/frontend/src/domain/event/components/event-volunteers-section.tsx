@@ -1,6 +1,6 @@
 'use client';
 
-import { EventInviteStatus } from '@repo/data';
+import { MembershipRequestStatus } from '@repo/data';
 import type { EventInviteItem } from '@repo/data/react';
 import {
   Badge,
@@ -12,9 +12,10 @@ import {
   CardTitle,
   VolunteeringStatusBadge,
 } from '@repo/ui';
-import { LogIn, UserPlus } from 'lucide-react';
+import { ScanQrCode, UserPlus, UserRound } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { UserCard } from '@/components/user-card';
+import { useSheetTrigger } from '@/hooks/use-sheet';
 import { Link } from '@/i18n/navigation';
 import { toEventInviteDisplayState } from '../invite-status-display';
 
@@ -32,6 +33,8 @@ export function EventVolunteersSection({
   canEdit,
 }: EventVolunteersCardProps) {
   const t = useTranslations('Event.detail.volunteersCard');
+  const tVolunteer = useTranslations('Volunteer.action');
+  const { open: openVolunteerSheet } = useSheetTrigger('volunteer-profile');
 
   return (
     <Card className="py-4">
@@ -59,9 +62,6 @@ export function EventVolunteersSection({
         ) : (
           <ul className="space-y-3">
             {invites.map((invite) => {
-              const isParticipating =
-                invite.status === EventInviteStatus.Accepted ||
-                invite.status === EventInviteStatus.SelfJoined;
               const displayState = toEventInviteDisplayState(invite.status);
 
               return (
@@ -82,20 +82,34 @@ export function EventVolunteersSection({
                           : t('status.invited')
                       }
                     />
-                    {isParticipating && (
-                      <Link
-                        href={`/admin/${orgUId}/check-in/${invite.user.checkInId}/check-in`}
+                    <Button
+                      size="icon-xs"
+                      variant="outline"
+                      aria-label={tVolunteer('viewProfileAria')}
+                      onClick={() =>
+                        openVolunteerSheet({
+                          userId: invite.user.id,
+                          volunteerName: invite.user.name,
+                          volunteerStatus: MembershipRequestStatus.Accepted,
+                          volunteerEmail: invite.user.email ?? '',
+                          volunteerCheckInId: invite.user.checkInId,
+                        })
+                      }
+                    >
+                      <UserRound />
+                    </Button>
+                    <Link
+                      href={`/admin/${orgUId}/check-in/${invite.user.checkInId}/check-in`}
+                      aria-label={t('checkInAria')}
+                    >
+                      <Button
+                        size="icon-xs"
+                        variant="outline"
                         aria-label={t('checkInAria')}
                       >
-                        <Button
-                          size="icon-xs"
-                          variant="outline"
-                          aria-label={t('checkInAria')}
-                        >
-                          <LogIn />
-                        </Button>
-                      </Link>
-                    )}
+                        <ScanQrCode />
+                      </Button>
+                    </Link>
                   </div>
                 </li>
               );
