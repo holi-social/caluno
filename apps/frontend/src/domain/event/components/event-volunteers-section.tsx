@@ -6,27 +6,35 @@ import {
   Badge,
   Button,
   Card,
+  CardAction,
   CardContent,
   CardHeader,
   CardTitle,
   VolunteeringStatusBadge,
 } from '@repo/ui';
-import { LogIn, UserRound } from 'lucide-react';
+import { LogIn, UserPlus, UserRound } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { UserCard } from '@/components/user-card';
+import { useSheetTrigger } from '@/hooks/use-sheet';
 import { Link } from '@/i18n/navigation';
 import { toEventInviteDisplayState } from '../invite-status-display';
 
 interface EventVolunteersCardProps {
   orgUId: string;
+  eventId: string;
   invites: EventInviteItem[];
+  canEdit: boolean;
 }
 
 export function EventVolunteersSection({
   orgUId,
+  eventId,
   invites,
+  canEdit,
 }: EventVolunteersCardProps) {
   const t = useTranslations('Event.detail.volunteersCard');
+  const tVolunteer = useTranslations('Volunteer.action');
+  const { open: openVolunteerSheet } = useSheetTrigger('volunteer-profile');
 
   return (
     <Card className="py-4">
@@ -35,6 +43,17 @@ export function EventVolunteersSection({
           {t('title')}
           <Badge variant="outline">{invites.length}</Badge>
         </CardTitle>
+
+        {canEdit && (
+          <CardAction>
+            <Link href={`/admin/${orgUId}/events/${eventId}/invite`}>
+              <Button>
+                <UserPlus />
+                {t('inviteButton')}
+              </Button>
+            </Link>
+          </CardAction>
+        )}
       </CardHeader>
 
       <CardContent>

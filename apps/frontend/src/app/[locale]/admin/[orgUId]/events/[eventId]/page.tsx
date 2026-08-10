@@ -122,7 +122,12 @@ export default async function EventDetailPage({
       </div>
 
       <div className="grid grid-cols-1 gap-6">
-        <EventVolunteersSection orgUId={orgUId} invites={invites} />
+        <EventVolunteersSection
+          orgUId={orgUId}
+          eventId={eventId}
+          invites={invites}
+          canEdit={canEdit}
+        />
         <AdminEventShiftsSection
           orgUId={orgUId}
           eventId={eventId}
