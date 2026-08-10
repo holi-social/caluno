@@ -2803,6 +2803,132 @@ describe('ShiftInstance.invites (VOLI-842)', () => {
     expect(orderAfter).toEqual(orderBefore);
   });
 
+  it('cancelling an ACCEPTED invite-only instance frees the spot and allows re-accept', async () => {
+    const volunteer = await createUser(db);
+    const other = await createUser(db);
+    const { id: shiftId } = await createShift(db, {
+      organizationUnitId,
+      visibility: ShiftVisibility.INVITED_MEMBERS,
+      maxVolunteers: 2,
+    });
+    const instances = await db.query.shiftInstances.findMany({
+      where: { masterId: shiftId },
+    });
+    const instanceId = instances[0]?.id;
+    expect(instanceId).toBeDefined();
+    if (!instanceId) {
+      throw new Error('Expected shift instance');
+    }
+
+    await db.insert(schema.shiftInstanceInvites).values([
+      {
+        instanceId,
+        userId: volunteer.id,
+        status: ShiftInviteStatus.ACCEPTED,
+      },
+      {
+        instanceId,
+        userId: other.id,
+        status: ShiftInviteStatus.ACCEPTED,
+      },
+    ]);
+
+    const queryCapacity = () =>
+      graphqlRequestRequiringData<{
+        publicShiftInstances: Array<{
+          id: string;
+          filledCount: number;
+          spotsLeft: number | null;
+          myInviteStatus: string | null;
+        }>;
+      }>(
+        app,
+        {
+          query: `
+            query Capacity($shiftId: ID!) {
+              publicShiftInstances(shiftId: $shiftId) {
+                id
+                filledCount
+                spotsLeft
+                myInviteStatus
+              }
+            }
+          `,
+          variables: { shiftId },
+          headers: { 'x-organization-unit-id': organizationUnitId },
+        },
+        'publicShiftInstances',
+      );
+
+    setAuthMockUserId(volunteer.id);
+
+    const before = await queryCapacity();
+    const beforeInstance = before.publicShiftInstances.find(
+      (row) => row.id === instanceId,
+    );
+    expect(beforeInstance?.filledCount).toBe(2);
+    expect(beforeInstance?.spotsLeft).toBe(0);
+    expect(beforeInstance?.myInviteStatus).toBe(ShiftInviteStatus.ACCEPTED);
+
+    await graphqlRequestRequiringData<{
+      updateShiftInstanceInviteStatus: { status: string };
+    }>(
+      app,
+      {
+        query: `
+          mutation Cancel($instanceId: String!) {
+            updateShiftInstanceInviteStatus(
+              instanceId: $instanceId
+              status: CANCELLED
+            ) {
+              status
+            }
+          }
+        `,
+        variables: { instanceId },
+        headers: { 'x-organization-unit-id': organizationUnitId },
+      },
+      'updateShiftInstanceInviteStatus',
+    );
+
+    const afterCancel = await queryCapacity();
+    const cancelledInstance = afterCancel.publicShiftInstances.find(
+      (row) => row.id === instanceId,
+    );
+    expect(cancelledInstance?.filledCount).toBe(1);
+    expect(cancelledInstance?.spotsLeft).toBe(1);
+    expect(cancelledInstance?.myInviteStatus).toBe(ShiftInviteStatus.CANCELLED);
+
+    await graphqlRequestRequiringData<{
+      updateShiftInstanceInviteStatus: { status: string };
+    }>(
+      app,
+      {
+        query: `
+          mutation Reaccept($instanceId: String!) {
+            updateShiftInstanceInviteStatus(
+              instanceId: $instanceId
+              status: ACCEPTED
+            ) {
+              status
+            }
+          }
+        `,
+        variables: { instanceId },
+        headers: { 'x-organization-unit-id': organizationUnitId },
+      },
+      'updateShiftInstanceInviteStatus',
+    );
+
+    const afterReaccept = await queryCapacity();
+    const reacceptedInstance = afterReaccept.publicShiftInstances.find(
+      (row) => row.id === instanceId,
+    );
+    expect(reacceptedInstance?.filledCount).toBe(2);
+    expect(reacceptedInstance?.spotsLeft).toBe(0);
+    expect(reacceptedInstance?.myInviteStatus).toBe(ShiftInviteStatus.ACCEPTED);
+  });
+
   it('does not leak invites across organizations', async () => {
     const { organization, type } = await createOrganizationWithType(
       db,

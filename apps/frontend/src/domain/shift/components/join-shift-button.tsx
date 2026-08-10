@@ -1,6 +1,7 @@
 'use client';
 
 import {
+  fromGraphQLError,
   JoinStatus,
   RequiredFormTargetType,
   ShiftInviteStatus,
@@ -29,6 +30,10 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import { usePathname, useRouter } from '@/i18n/navigation';
 import { useFormatting } from '@/lib/formatting/use-formatting';
+
+function getErrorMessage(error: unknown): string {
+  return fromGraphQLError(error).message;
+}
 
 interface JoinShiftButtonProps {
   shiftId: string;
@@ -91,11 +96,12 @@ export function JoinShiftButton({
         });
         toast.success(successMessage);
         onInviteStatusChange?.(nextInviteStatus);
+        router.refresh();
       } catch (error) {
-        toast.error(error instanceof Error ? error.message : t('join.failed'));
+        toast.error(getErrorMessage(error) ?? t('join.failed'));
       }
     },
-    [instanceId, respondToInvite, t, onInviteStatusChange],
+    [instanceId, respondToInvite, router, t, onInviteStatusChange],
   );
 
   const handleCancel = useCallback(async () => {
@@ -110,10 +116,11 @@ export function JoinShiftButton({
       });
       toast.success(t('join.cancelled'));
       onInviteStatusChange?.(ShiftInviteStatus.Cancelled);
+      router.refresh();
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : t('join.failed'));
+      toast.error(getErrorMessage(error) ?? t('join.failed'));
     }
-  }, [instanceId, respondToInvite, t, onInviteStatusChange]);
+  }, [instanceId, respondToInvite, router, t, onInviteStatusChange]);
 
   const handleJoin = useCallback(
     async (isAuto = false) => {
@@ -174,39 +181,39 @@ export function JoinShiftButton({
             (s) => s.status === 'APPROVED',
           );
 
-          if (missing && missing.length > 0) {
-            const missingNames = missing.map((s) => s.name).join(', ');
-            const approvedNames = approved?.map((s) => s.name).join(', ');
-            toast.info(
-              t('join.requirementsNeeded', {
-                missing: missingNames,
-                hasCompleted: approved && approved.length > 0 ? 'yes' : 'no',
-                completed: approvedNames ?? '',
-              }),
-            );
-          } else {
-            toast.info(t('join.requirementsFallback'));
-          }
+        if (missing && missing.length > 0) {
+          const missingNames = missing.map((s) => s.name).join(', ');
+          const approvedNames = approved?.map((s) => s.name).join(', ');
+          toast.info(
+            t('join.requirementsNeeded', {
+              missing: missingNames,
+              hasCompleted: approved && approved.length > 0 ? 'yes' : 'no',
+              completed: approvedNames ?? '',
+            }),
+          );
         } else {
-          toast.error(t('join.unexpected'));
+          toast.info(t('join.requirementsFallback'));
         }
-      } catch (error) {
-        toast.error(error instanceof Error ? error.message : t('join.failed'));
+      } else {
+        toast.error(t('join.unexpected'));
       }
-    },
-    [
-      isAuthenticated,
-      shiftId,
-      instanceId,
-      joinShiftInstance,
-      router,
-      pathname,
-      t,
-      organizationUnitId,
-      onInviteStatusChange,
-      onMembershipStateChange,
-    ],
-  );
+
+      router.refresh();
+    } catch (error) {
+      toast.error(getErrorMessage(error) ?? t('join.failed'));
+    }
+  }, [
+    isAuthenticated,
+    shiftId,
+    instanceId,
+    joinShiftInstance,
+    router,
+    pathname,
+    t,
+    organizationUnitId,
+    onInviteStatusChange,
+    onMembershipStateChange,
+  ]);
 
   const handleReenter = useCallback(async () => {
     if (visibility === ShiftVisibility.AllMembers) {
