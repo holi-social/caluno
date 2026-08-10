@@ -518,12 +518,12 @@
       "inviteAria": "Freiwillige einladen",
       "shiftTypeTooltip": {
         "nonPaid": "Dieser Einsatz wird nicht vergütet.",
-        "ehrenamt": "Vergütet über die Ehrenamtspauschale ({rate} €/Std.)",
-        "uebungleiter": "Vergütet über die Übungsleiterpauschale ({rate} €/Std.)"
+        "ehrenamt": "Vergütet mit Ehrenamtspauschale ({rate} €/Std.)",
+        "uebungleiter": "Vergütet mit Übungsleiterpauschale ({rate} €/Std.)"
       }
     },
     "form": {
-      "shiftTypeLabel": "Einsatzart",
+      "shiftTypeLabel": "Pauschalentyp",
       "shiftTypeNonPaid": "Ohne Pauschale",
       "nameLabel": "Einsatzname",
       "namePlaceholder": "z. B. Morgendliche Kassaeinsatz",
@@ -643,7 +643,7 @@
       "editTitle": "Einsatz bearbeiten",
       "editDescription": "Bearbeite den Einsatz.",
       "inviteTitle": "Freiwillige einladen",
-      "inviteDescription": "Eingeladene Freiwillige erhalten eine E-Mail mit Einsatzdetails und einem Link zum System."
+      "inviteDescription": "Eingeladene Freiwillige erhalten eine E-Mail mit Einsatzdetails und einem Link zum Anmelden."
     },
     "toast": {
       "created": "Einsatz erstellt",
@@ -989,7 +989,7 @@
   "Accounting": {
     "settings": {
       "title": "Buchhaltung Einstellungen",
-      "subtitle": "Vergütungssätze und Dokumentvorlagen einrichten.",
+      "subtitle": "Aufwandsentschädigung und Dokumentvorlagen einrichten.",
       "tabs": {
         "rates": "Stundensätze",
         "templates": "Vorlagen"
@@ -1033,7 +1033,7 @@
     },
     "reimbursements": {
       "title": "Abrechnungen",
-      "subtitle": "Auszahlungsdokumente erstellen, gegenzeichnen  und bündeln.",
+      "subtitle": "Dokumente erstellen, gegenzeichnen, herunterladen.",
       "periodLabel": "Zeitraum",
       "periodPicker": {
         "allTime": "Gesamter Zeitraum",
@@ -1110,7 +1110,7 @@
         },
         "sheet": {
           "period": "Zeitraum",
-          "pipelineLabel": "Prozessschritte",
+          "pipelineLabel": "Ablauf",
           "pipeline": {
             "generate": "Erstellen",
             "sign": "Gegenzeichnen",
@@ -1173,15 +1173,15 @@
           "createNew": "Neues {docType} erstellen"
         },
         "nonCompliantDialog": {
-          "titleSingle": "Nicht-konformen Stundennachweis {action, select, create {erstellen} remind {anmahnen} countersign {gegenzeichnen} other {bearbeiten}}?",
-          "titleBatchAll": "{count} nicht-konforme Stundennachweise {action, select, create {erstellen} remind {anmahnen} countersign {gegenzeichnen} other {bearbeiten}}?",
-          "titleBatchMixed": "{count} von {total} Stundennachweisen sind nicht konform",
-          "descriptionSingle": "Für diese Pauschale liegt noch keine aktive Vereinbarung vor. Der Stundennachweis kann trotzdem {action, select, create {erstellt} remind {angemahnt} countersign {gegengezeichnet} other {bearbeitet}} werden, bleibt aber als nicht konform markiert, bis eine Vereinbarung aktiv ist.",
-          "descriptionBatchAll": "Für keine der ausgewählten Personen liegt eine aktive Vereinbarung für diese Pauschale vor. Diese Stundennachweise können trotzdem {action, select, create {erstellt} remind {angemahnt} countersign {gegengezeichnet} other {bearbeitet}} werden, bleiben aber als nicht konform markiert, bis eine Vereinbarung aktiv ist.",
+          "titleSingle": "Ohne aktive Vereinbarung {action, select, create {erstellen} remind {errinern} countersign {gegenzeichnen} other {bearbeiten}}?",
+          "titleBatchAll": "{count} Stundennachweise ohne aktive Vereinbarung {action, select, create {erstellen} remind {errinern} countersign {gegenzeichnen} other {bearbeiten}}?",
+          "titleBatchMixed": "{count} von {total} Stundennachweisen haben keine aktive Vereinbarung",
+          "descriptionSingle": "Für diese Pauschale gibt es noch keine aktive Vereinbarung. Du kannst den Stundennachweis trotzdem {action, select, create {erstellen} remind {errinern} countersign {gegenzeichnen} other {bearbeiten}}, er bleibt dann als nicht konform markiert, bis eine Vereinbarung aktiv ist.",
+          "descriptionBatchAll": "Für einige der ausgewählten Personen gibt es noch keine aktive Vereinbarung. Du kannst den Stundennachweis trotzdem {action, select, create {erstellt} remind {errinert} countersign {gegengezeichnet} other {bearbeitet}}, sie bleiben dann als nicht konform markiert, bis die Vereinbarungen aktiv sind.",
           "descriptionBatchMixed": "{count} der ausgewählten Stundennachweise gehören zu Personen ohne aktive Vereinbarung für diese Pauschale.",
-          "actionAnyway": "{action, select, create {Trotzdem erstellen} remind {Trotzdem erinnern} countersign {Trotzdem gegenzeichnen} other {Trotzdem fortfahren}}",
-          "actionAllAnyway": "{action, select, create {Alle trotzdem erstellen} remind {Alle trotzdem erinnern} countersign {Alle trotzdem gegenzeichnen} other {Trotzdem mit allen fortfahren}}",
-          "onlyCompliantAction": "{action, select, create {Nur konforme erstellen} remind {Nur konforme erinnern} countersign {Nur konforme gegenzeichnen} other {Nur konforme bearbeiten}}",
+          "actionAnyway": "{action, select, create {Trotzdem erstellen} remind {Trotzdem errinern} countersign {Trotzdem gegenzeichnen} other {Trotzdem fortfahren}}",
+          "actionAllAnyway": "{action, select, create {Alle trotzdem erstellen} remind {Alle trotzdem errinern} countersign {Alle trotzdem gegenzeichnen} other {Trotzdem mit allen fortfahren}}",
+          "onlyCompliantAction": "{action, select, create {Nur konforme erstellen} remind {Nur konforme errinern} countersign {Nur konforme gegenzeichnen} other {Nur konforme bearbeiten}}",
           "generateContractInstead": "Stattdessen Vereinbarung erstellen",
           "viewContractInstead": "Stattdessen Vereinbarung ansehen"
         },
