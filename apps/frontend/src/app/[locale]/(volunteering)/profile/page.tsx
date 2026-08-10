@@ -1,3 +1,5 @@
+import { Button } from '@repo/ui';
+import { Pencil } from 'lucide-react';
 import { getTranslations, setRequestLocale } from 'next-intl/server';
 import { MembershipCard } from '@/domain/memberships/components/membership-card';
 import { buildMembershipEntries } from '@/domain/memberships/lib/entries';
@@ -5,6 +7,7 @@ import { AccountSection } from '@/domain/user/components/account-section';
 import { HeaderAvatar } from '@/domain/user/components/header-avatar';
 import { PersonalInformationSection } from '@/domain/user/components/personal-information-section';
 import { ProfilePageHeader } from '@/domain/user/components/profile-page-header';
+import { Link } from '@/i18n/navigation';
 import { resolveLocale } from '@/i18n/routing';
 import { getDataClient } from '@/lib/data-client';
 
@@ -18,6 +21,7 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
   setRequestLocale(locale);
 
   const tProfile = await getTranslations('Profile');
+  const tCommon = await getTranslations('Common');
 
   const data = await getDataClient();
   const [me, requestPage, memberships, profile] = await Promise.all([
@@ -54,9 +58,17 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
           </div>
         </section>
         <section>
-          <h1 className="text-xl font-bold mb-4">
-            {tProfile('personalInformation')}
-          </h1>
+          <div className="mb-4 flex items-center justify-between">
+            <h1 className="text-xl font-bold">
+              {tProfile('personalInformation')}
+            </h1>
+            <Button asChild variant="outline" size="sm">
+              <Link href="/profile/edit">
+                <Pencil className="size-4" />
+                {tCommon('edit')}
+              </Link>
+            </Button>
+          </div>
           <PersonalInformationSection user={me} profile={profile ?? null} />
         </section>
 

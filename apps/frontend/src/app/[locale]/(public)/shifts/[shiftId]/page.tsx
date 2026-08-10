@@ -20,9 +20,9 @@ export async function generateMetadata({ params }: ShiftPageProps) {
   try {
     shift = await data.shift.findById(shiftId);
   } catch {
-    return { title: 'Shift — Clippy' };
+    return { title: 'Shift — Caluno' };
   }
-  return { title: `${shift.title} — Clippy` };
+  return { title: `${shift.title} — Caluno` };
 }
 
 export default async function ShiftPage({

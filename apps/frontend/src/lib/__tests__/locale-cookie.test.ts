@@ -34,7 +34,7 @@ describe('locale-cookie', () => {
     mock.restore();
   });
 
-  it('reads the clippy.locale cookie', () => {
+  it('reads the caluno.locale cookie', () => {
     cookieStore.set(USER_LOCALE_COOKIE, 'de');
 
     expect(getLocaleCookie()).toBe('de');
@@ -44,13 +44,13 @@ describe('locale-cookie', () => {
     expect(getLocaleCookie()).toBeUndefined();
   });
 
-  it('sets the clippy.locale cookie', () => {
+  it('sets the caluno.locale cookie', () => {
     setLocaleCookie('de');
 
     expect(cookieStore.get(USER_LOCALE_COOKIE)).toBe('de');
   });
 
-  it('deletes the clippy.locale cookie', () => {
+  it('deletes the caluno.locale cookie', () => {
     cookieStore.set(USER_LOCALE_COOKIE, 'de');
 
     deleteLocaleCookie();

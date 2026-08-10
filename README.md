@@ -1,6 +1,6 @@
-# Clippy Monorepo
+# Caluno Monorepo
 
-A Turborepo-based monorepo for the Clippy platform.
+A Turborepo-based monorepo for the Caluno platform.
 
 ## What's inside?
 
@@ -175,7 +175,7 @@ The root `scaleway.sh` script helps you build and push Docker images for:
 It uses the Scaleway Container Registry configuration from the root `.env` (or your shell environment):
 
 - `REGISTRY_URL` - Scaleway registry URL (e.g. `rg.nl-ams.scw.cloud`)
-- `SCW_CR_NAMESPACE` - Scaleway Container Registry namespace (e.g. `clippy`)
+- `SCW_CR_NAMESPACE` - Scaleway Container Registry namespace (e.g. `caluno`)
 - `IMAGE_TAG` - Image tag to use (e.g. `staging` or a commit SHA)
 
 You must be logged in to the Scaleway registry first:
@@ -202,7 +202,7 @@ This script requires Docker with Buildx enabled (see the **Prerequisites** secti
 ## Project Structure
 
 ```
-clippy/
+caluno/
 ├── apps/
 │   ├── frontend/  # Next.js frontend
 │   └── backend/              # NestJS GraphQL API
@@ -227,7 +227,7 @@ Environment variables are scoped per project:
 ### Root `.env` (Docker configuration)
 - `POSTGRES_USER` - PostgreSQL username (default: postgres)
 - `POSTGRES_PASSWORD` - PostgreSQL password (default: postgres)
-- `POSTGRES_DB` - PostgreSQL database name (default: clippy)
+- `POSTGRES_DB` - PostgreSQL database name (default: caluno)
 - `POSTGRES_PORT` - PostgreSQL port (default: 5432)
 
 ### `apps/backend/.env` (Backend configuration)
@@ -236,7 +236,7 @@ Environment variables are scoped per project:
 - `BETTER_AUTH_SECRET` - Secret key for authentication
 - `BETTER_AUTH_URL` - Backend URL for auth
 - `WEB_URL` - Frontend URL
-- `COOKIE_DOMAIN` - (Optional) Root domain for cross-subdomain cookies when frontend and API use different subdomains (e.g. `clippy.holi.social` for `staging.clippy.holi.social` + `api.clippy.holi.social`)
+- `COOKIE_DOMAIN` - (Optional) Root domain for cross-subdomain cookies when frontend and API use different subdomains (e.g. `caluno.org` for `app.caluno.org` + `api.caluno.org`)
 
 ## Troubleshooting
 

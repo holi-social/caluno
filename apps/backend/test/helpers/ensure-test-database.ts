@@ -25,7 +25,7 @@ export const getTestDatabaseName = (): string => {
     return cachedTestDatabaseName;
   }
 
-  const baseName = process.env.POSTGRES_DB ?? 'clippy';
+  const baseName = process.env.POSTGRES_DB ?? 'caluno';
   const normalizedBase = baseName.replace(/_test.*$/, '');
   cachedTestDatabaseName = `${normalizedBase}_test_${process.pid}_${Date.now().toString(36)}`;
   return cachedTestDatabaseName;

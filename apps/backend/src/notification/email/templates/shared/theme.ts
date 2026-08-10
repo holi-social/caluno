@@ -1,7 +1,7 @@
 // TODO: Change this to the actual brand name and support email address
 export const emailTheme = {
-  brandName: 'Clippy',
-  supportEmail: 'support@holi.social',
+  brandName: 'Caluno',
+  supportEmail: 'support@caluno.org',
   fontStack:
     "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
   colors: {
@@ -16,4 +16,4 @@ export const emailTheme = {
   },
 } as const;
 
-export const DEFAULT_APP_URL = 'https://clippy.holi.social'; // TODO: Change this to the actual URL
+export const DEFAULT_APP_URL = 'https://app.caluno.org';
