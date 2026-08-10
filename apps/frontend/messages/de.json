@@ -178,8 +178,18 @@
         "inviteButton": "Einladen",
         "status": {
           "invited": "Eingeladen",
-          "signedUp": "Angemeldet"
+          "signedUp": "Angemeldet",
+          "accepted": "Angenommen",
+          "declined": "Abgelehnt",
+          "cancelled": "Storniert",
+          "rejected": "Zurückgezogen"
         },
+        "actionUninvite": "Einladung zurückziehen",
+        "uninviteSuccess": "Freiwillige:r von der Veranstaltung entfernt",
+        "uninviteError": "Freiwillige:r konnte nicht entfernt werden",
+        "actionInvite": "Einladen",
+        "inviteSuccess": "Freiwillige:r erneut eingeladen",
+        "inviteError": "Einladung konnte nicht erneut gesendet werden",
         "title": "Freiwillige"
       }
     },

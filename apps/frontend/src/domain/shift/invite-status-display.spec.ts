@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'bun:test';
-import { ShiftInviteStatus } from '@repo/data';
+import { EventInviteStatus, ShiftInviteStatus } from '@repo/data';
 import {
   adminReinviteTargetStatus,
   adminUninviteTargetStatus,
@@ -7,6 +7,7 @@ import {
   canAdminUninvite,
   countInviteDisplayStates,
   formatInviteStatusSummary,
+  preselectedInviteMemberIds,
   toInviteDisplayState,
 } from './invite-status-display';
 
@@ -18,6 +19,13 @@ describe('canAdminUninvite', () => {
     expect(canAdminUninvite(ShiftInviteStatus.VolunteerRejected)).toBe(false);
     expect(canAdminUninvite(ShiftInviteStatus.Cancelled)).toBe(false);
     expect(canAdminUninvite(ShiftInviteStatus.AdminRejected)).toBe(false);
+  });
+
+  it('works for event invite statuses the same way', () => {
+    expect(canAdminUninvite(EventInviteStatus.Invited)).toBe(true);
+    expect(canAdminUninvite(EventInviteStatus.Accepted)).toBe(true);
+    expect(canAdminUninvite(EventInviteStatus.SelfJoined)).toBe(true);
+    expect(canAdminUninvite(EventInviteStatus.AdminRejected)).toBe(false);
   });
 });
 
@@ -63,6 +71,19 @@ describe('adminReinviteTargetStatus', () => {
   it('returns null for other statuses', () => {
     expect(adminReinviteTargetStatus(ShiftInviteStatus.Invited)).toBeNull();
     expect(adminReinviteTargetStatus(ShiftInviteStatus.Accepted)).toBeNull();
+  });
+});
+
+describe('preselectedInviteMemberIds', () => {
+  it('excludes ADMIN_REJECTED so invite sheets do not silently re-invite', () => {
+    expect(
+      preselectedInviteMemberIds([
+        { id: 'a', inviteStatus: EventInviteStatus.Invited },
+        { id: 'b', inviteStatus: EventInviteStatus.Accepted },
+        { id: 'c', inviteStatus: EventInviteStatus.AdminRejected },
+        { id: 'd', inviteStatus: null },
+      ]),
+    ).toEqual(['a', 'b', 'd']);
   });
 });
 

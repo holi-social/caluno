@@ -178,8 +178,18 @@
         "inviteButton": "Invite",
         "status": {
           "invited": "Invited",
-          "signedUp": "Signed up"
+          "signedUp": "Signed up",
+          "accepted": "Accepted",
+          "declined": "Declined",
+          "cancelled": "Canceled",
+          "rejected": "Rejected"
         },
+        "actionUninvite": "Uninvite",
+        "uninviteSuccess": "Volunteer removed from event",
+        "uninviteError": "Could not remove volunteer",
+        "actionInvite": "Invite",
+        "inviteSuccess": "Volunteer invited again",
+        "inviteError": "Could not invite volunteer",
         "title": "Volunteers"
       }
     },

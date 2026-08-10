@@ -428,7 +428,7 @@ type Mutation {
   submitForm(input: SubmitFormInput!, token: String!): FormSubmission!
   submitRequiredForm(formId: String!, input: SubmitFormInput!, targetId: String!, targetType: RequiredFormTargetType!): FormSubmission!
   updateEvent(id: ID!, input: UpdateEventInput!): Event!
-  updateEventInviteStatus(eventId: ID!, status: EventInviteStatus!): EventInvite!
+  updateEventInviteStatus(eventId: ID!, status: EventInviteStatus!, userId: String): EventInvite!
   updateFormBlock(id: String!, input: UpdateFormBlockInput!): FormBlock!
   updateFormBlockField(fieldId: String!, input: UpdateFormBlockFieldInput!): FormBlock!
   updateMembersForShiftInstance(instanceId: String!, inviteToAllInstances: Boolean, memberIds: [String!]!): ShiftInstance!

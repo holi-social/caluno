@@ -30,6 +30,7 @@ import {
 import { JoinStatus } from '../shared/enums/join-status.enum';
 import {
   ACTIVE_SHIFT_INVITE_STATUSES,
+  ADMIN_UNINVITE_SOURCE_STATUSES,
   canTransitionInviteStatus,
   isParticipatingShiftInviteStatus,
   PARTICIPATING_SHIFT_INVITE_STATUSES,
@@ -2483,6 +2484,59 @@ export class ShiftService {
 
       return updated;
     });
+  }
+
+  async adminRejectInvitesForEventUser(
+    eventId: string,
+    userId: string,
+    db: Database = this.db,
+  ): Promise<void> {
+    const shifts = await db.query.shifts.findMany({
+      where: { eventId, isDeleted: false },
+      columns: { id: true },
+    });
+    if (shifts.length === 0) {
+      return;
+    }
+
+    const shiftIds = shifts.map((shift) => shift.id);
+    const uninviteStatuses: ShiftInviteStatus[] = [
+      ...ADMIN_UNINVITE_SOURCE_STATUSES,
+    ];
+
+    await db
+      .update(schema.shiftInvites)
+      .set({ status: ShiftInviteStatus.ADMIN_REJECTED })
+      .where(
+        and(
+          eq(schema.shiftInvites.userId, userId),
+          inArray(schema.shiftInvites.shiftId, shiftIds),
+          inArray(schema.shiftInvites.status, uninviteStatuses),
+        ),
+      );
+
+    const instances = await db.query.shiftInstances.findMany({
+      where: {
+        masterId: { in: shiftIds },
+        isCancelled: false,
+      },
+      columns: { id: true },
+    });
+    if (instances.length === 0) {
+      return;
+    }
+
+    const instanceIds = instances.map((instance) => instance.id);
+    await db
+      .update(schema.shiftInstanceInvites)
+      .set({ status: ShiftInviteStatus.ADMIN_REJECTED })
+      .where(
+        and(
+          eq(schema.shiftInstanceInvites.userId, userId),
+          inArray(schema.shiftInstanceInvites.instanceId, instanceIds),
+          inArray(schema.shiftInstanceInvites.status, uninviteStatuses),
+        ),
+      );
   }
 
   async updateShiftInstanceInviteStatus(

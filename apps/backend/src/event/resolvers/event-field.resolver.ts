@@ -88,6 +88,9 @@ export class EventFieldResolver {
     if (invite?.status === EventInviteStatus.ACCEPTED) {
       return JoinStatus.JOINED;
     }
+    if (invite?.status === EventInviteStatus.ADMIN_REJECTED) {
+      return JoinStatus.REJECTED;
+    }
 
     const membershipState = await this.membershipService.getMembershipState(
       session.user.id,
