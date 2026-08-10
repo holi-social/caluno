@@ -152,9 +152,13 @@ export function JoinShiftButton({
             `${pathname}${window.location.search}`,
           );
           if (missingForms[0]?.targetType === RequiredFormTargetType.Shift) {
-            window.location.href = `/shifts/${shiftId}/instances/${instanceId}/forms?redirectTo=${redirectTo}`;
+            router.push(
+              `/shifts/${shiftId}/instances/${instanceId}/forms?redirectTo=${redirectTo}`,
+            );
           } else {
-            window.location.href = `/join/${organizationUnitId}/forms?redirectTo=${redirectTo}`;
+            router.push(
+              `/join/${organizationUnitId}/forms?redirectTo=${redirectTo}`,
+            );
           }
           return;
         }
