@@ -37,8 +37,14 @@ export class EventMutationResolver {
     targetUserId: string,
     eventId: string,
     organizationUnitId: string,
+    status: EventInviteStatus,
   ): Promise<void> {
-    if (actorUserId === targetUserId) {
+    const isSelf = actorUserId === targetUserId;
+    const isAdminOnlyTarget =
+      status === EventInviteStatus.ADMIN_REJECTED ||
+      status === EventInviteStatus.INVITED;
+
+    if (isSelf && !isAdminOnlyTarget) {
       return;
     }
 
@@ -186,6 +192,7 @@ export class EventMutationResolver {
       targetUserId,
       eventId,
       context.organizationUnitId,
+      status,
     );
 
     const invite = await this.eventService.updateEventInviteStatus(

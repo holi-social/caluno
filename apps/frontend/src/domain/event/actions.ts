@@ -73,6 +73,8 @@ export const inviteMembersToEvent = actionClient
     );
 
     revalidatePath(`/admin/${orgUId}/events/${eventId}`);
+    revalidatePath(`/events/${eventId}`);
+    revalidatePath('/');
 
     return result;
   });
@@ -94,6 +96,8 @@ export const updateEventInviteStatus = actionClient
     );
 
     revalidatePath(`/admin/${orgUId}/events/${eventId}`);
+    revalidatePath(`/events/${eventId}`);
+    revalidatePath('/');
 
     return result;
   });

@@ -359,7 +359,10 @@ export class EventService {
     }
 
     const existing = await this.db
-      .select({ userId: schema.eventInvites.userId })
+      .select({
+        userId: schema.eventInvites.userId,
+        status: schema.eventInvites.status,
+      })
       .from(schema.eventInvites)
       .where(
         and(
@@ -368,23 +371,46 @@ export class EventService {
         ),
       );
 
-    const alreadyInvited = new Set(existing.map((row) => row.userId));
-    const newMemberIds = memberIds.filter((id) => !alreadyInvited.has(id));
+    const existingByUserId = new Map(
+      existing.map((row) => [row.userId, row.status]),
+    );
+    const newMemberIds = memberIds.filter((id) => !existingByUserId.has(id));
+    const reinviteMemberIds = memberIds.filter(
+      (id) => existingByUserId.get(id) === EventInviteStatus.ADMIN_REJECTED,
+    );
 
-    if (newMemberIds.length === 0) {
+    if (newMemberIds.length === 0 && reinviteMemberIds.length === 0) {
       return event;
     }
 
-    await this.db
-      .insert(schema.eventInvites)
-      .values(
-        newMemberIds.map((userId) => ({
-          eventId,
-          userId,
-          status: EventInviteStatus.INVITED,
-        })),
-      )
-      .onConflictDoNothing();
+    if (newMemberIds.length > 0) {
+      await this.db
+        .insert(schema.eventInvites)
+        .values(
+          newMemberIds.map((userId) => ({
+            eventId,
+            userId,
+            status: EventInviteStatus.INVITED,
+          })),
+        )
+        .onConflictDoNothing();
+    }
+
+    if (reinviteMemberIds.length > 0) {
+      await this.db
+        .update(schema.eventInvites)
+        .set({ status: EventInviteStatus.INVITED })
+        .where(
+          and(
+            eq(schema.eventInvites.eventId, eventId),
+            inArray(schema.eventInvites.userId, reinviteMemberIds),
+            eq(
+              schema.eventInvites.status,
+              EventInviteStatus.ADMIN_REJECTED,
+            ),
+          ),
+        );
+    }
 
     return event;
   }
@@ -513,6 +539,14 @@ export class EventService {
 
     if (!event) {
       throw new NotFoundGraphQLError('Event not found');
+    }
+
+    const existingInvite = await this.findInvite(eventId, userId);
+    if (existingInvite?.status === EventInviteStatus.ADMIN_REJECTED) {
+      return {
+        status: JoinStatus.REJECTED,
+        event,
+      };
     }
 
     const orgUnit = await this.db.query.organizationUnits.findFirst({

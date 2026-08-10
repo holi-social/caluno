@@ -378,6 +378,38 @@ describe('publicEvent', () => {
     setAuthMockUserId(originalUserId);
   });
 
+  it('returns myJoinStatus REJECTED after admin uninvite (ADMIN_REJECTED invite)', async () => {
+    const originalUserId = getAuthMockUserId();
+    const user = await createUser(db);
+    setAuthMockUserId(user.id);
+
+    const event = await createEvent(db, { organizationUnitId });
+    await db.insert(schema.eventInvites).values({
+      eventId: event.id,
+      userId: user.id,
+      status: EventInviteStatus.ADMIN_REJECTED,
+    });
+
+    const data = await graphqlRequestRequiringData<{
+      publicEvent: { myJoinStatus: JoinStatus };
+    }>(
+      app,
+      {
+        query: `
+          query PublicEvent($id: ID!) {
+            publicEvent(id: $id) { myJoinStatus }
+          }
+        `,
+        variables: { id: event.id },
+      },
+      'publicEvent',
+    );
+
+    expect(data.publicEvent.myJoinStatus).toBe(JoinStatus.REJECTED);
+
+    setAuthMockUserId(originalUserId);
+  });
+
   it('joinEvent returns REQUIREMENTS_NEEDED for pending members with missing event forms', async () => {
     const originalUserId = getAuthMockUserId();
     const user = await createUser(db);
@@ -930,6 +962,83 @@ describe('updateEventInviteStatus (admin uninvite)', () => {
     expect(row?.status).toBe(EventInviteStatus.INVITED);
   });
 
+  it('re-invites ADMIN_REJECTED when explicitly included in inviteMembersToEvent', async () => {
+    const event = await createEvent(db, { organizationUnitId });
+    const volunteer = await createUser(db);
+    await db.insert(schema.eventInvites).values({
+      eventId: event.id,
+      userId: volunteer.id,
+      status: EventInviteStatus.ADMIN_REJECTED,
+    });
+
+    await graphqlRequestRequiringData<{
+      inviteMembersToEvent: { id: string };
+    }>(
+      app,
+      {
+        query: `
+          mutation InviteMembers($eventId: ID!, $memberIds: [String!]!) {
+            inviteMembersToEvent(eventId: $eventId, memberIds: $memberIds) {
+              id
+            }
+          }
+        `,
+        variables: {
+          eventId: event.id,
+          memberIds: [volunteer.id],
+        },
+        headers: { 'x-organization-unit-id': organizationUnitId },
+      },
+      'inviteMembersToEvent',
+    );
+
+    const row = await db.query.eventInvites.findFirst({
+      where: { eventId: event.id, userId: volunteer.id },
+    });
+    expect(row?.status).toBe(EventInviteStatus.INVITED);
+  });
+
+  it('does not re-invite ADMIN_REJECTED omitted from inviteMembersToEvent memberIds', async () => {
+    const event = await createEvent(db, { organizationUnitId });
+    const rejected = await createUser(db);
+    const fresh = await createUser(db);
+    await db.insert(schema.eventInvites).values({
+      eventId: event.id,
+      userId: rejected.id,
+      status: EventInviteStatus.ADMIN_REJECTED,
+    });
+
+    await graphqlRequestRequiringData<{
+      inviteMembersToEvent: { id: string };
+    }>(
+      app,
+      {
+        query: `
+          mutation InviteMembers($eventId: ID!, $memberIds: [String!]!) {
+            inviteMembersToEvent(eventId: $eventId, memberIds: $memberIds) {
+              id
+            }
+          }
+        `,
+        variables: {
+          eventId: event.id,
+          memberIds: [fresh.id],
+        },
+        headers: { 'x-organization-unit-id': organizationUnitId },
+      },
+      'inviteMembersToEvent',
+    );
+
+    const rejectedRow = await db.query.eventInvites.findFirst({
+      where: { eventId: event.id, userId: rejected.id },
+    });
+    const freshRow = await db.query.eventInvites.findFirst({
+      where: { eventId: event.id, userId: fresh.id },
+    });
+    expect(rejectedRow?.status).toBe(EventInviteStatus.ADMIN_REJECTED);
+    expect(freshRow?.status).toBe(EventInviteStatus.INVITED);
+  });
+
   it('lists ADMIN_REJECTED invites for admin re-invite', async () => {
     const event = await createEvent(db, { organizationUnitId });
     const volunteer = await createUser(db);
@@ -1010,5 +1119,76 @@ describe('updateEventInviteStatus (admin uninvite)', () => {
       where: { instanceId: otherInstanceId, userId: volunteer.id },
     });
     expect(otherInstanceInvite?.status).toBe(ShiftInviteStatus.ACCEPTED);
+  });
+
+  it('forbids volunteer from self-setting ADMIN_REJECTED', async () => {
+    const originalUserId = getAuthMockUserId();
+    const event = await createEvent(db, { organizationUnitId });
+    const volunteer = await createUser(db);
+    await db.insert(schema.eventInvites).values({
+      eventId: event.id,
+      userId: volunteer.id,
+      status: EventInviteStatus.ACCEPTED,
+    });
+
+    setAuthMockUserId(volunteer.id);
+    try {
+      const response = await graphqlRequest<{
+        updateEventInviteStatus: { status: string };
+      }>(app, {
+        query: updateInviteMutation,
+        variables: {
+          eventId: event.id,
+          userId: volunteer.id,
+          status: EventInviteStatus.ADMIN_REJECTED,
+        },
+        headers: { 'x-organization-unit-id': organizationUnitId },
+      });
+
+      expect(response.errors?.[0]?.message).toMatch(/permission|Forbidden/i);
+
+      const row = await db.query.eventInvites.findFirst({
+        where: { eventId: event.id, userId: volunteer.id },
+      });
+      expect(row?.status).toBe(EventInviteStatus.ACCEPTED);
+    } finally {
+      setAuthMockUserId(originalUserId);
+    }
+  });
+
+  it('joinEvent returns REJECTED when invite is ADMIN_REJECTED', async () => {
+    const originalUserId = getAuthMockUserId();
+    const event = await createEvent(db, { organizationUnitId });
+    const volunteer = await createUser(db);
+    await addMembership(db, volunteer.id, organizationUnitId);
+    await db.insert(schema.eventInvites).values({
+      eventId: event.id,
+      userId: volunteer.id,
+      status: EventInviteStatus.ADMIN_REJECTED,
+    });
+
+    setAuthMockUserId(volunteer.id);
+    try {
+      const data = await graphqlRequestRequiringData<{
+        joinEvent: { status: JoinStatus };
+      }>(
+        app,
+        {
+          query: `
+            mutation JoinEvent($eventId: ID!) {
+              joinEvent(eventId: $eventId) {
+                status
+              }
+            }
+          `,
+          variables: { eventId: event.id },
+        },
+        'joinEvent',
+      );
+
+      expect(data.joinEvent.status).toBe(JoinStatus.REJECTED);
+    } finally {
+      setAuthMockUserId(originalUserId);
+    }
   });
 });

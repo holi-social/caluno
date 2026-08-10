@@ -2486,10 +2486,6 @@ export class ShiftService {
     });
   }
 
-  /**
-   * Admin-uninvite cascade: set ADMIN_REJECTED on active shift + instance
-   * invites for a user across every non-deleted shift linked to an event.
-   */
   async adminRejectInvitesForEventUser(
     eventId: string,
     userId: string,

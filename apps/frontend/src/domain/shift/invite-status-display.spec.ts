@@ -7,6 +7,7 @@ import {
   canAdminUninvite,
   countInviteDisplayStates,
   formatInviteStatusSummary,
+  preselectedInviteMemberIds,
   toInviteDisplayState,
 } from './invite-status-display';
 
@@ -70,6 +71,19 @@ describe('adminReinviteTargetStatus', () => {
   it('returns null for other statuses', () => {
     expect(adminReinviteTargetStatus(ShiftInviteStatus.Invited)).toBeNull();
     expect(adminReinviteTargetStatus(ShiftInviteStatus.Accepted)).toBeNull();
+  });
+});
+
+describe('preselectedInviteMemberIds', () => {
+  it('excludes ADMIN_REJECTED so invite sheets do not silently re-invite', () => {
+    expect(
+      preselectedInviteMemberIds([
+        { id: 'a', inviteStatus: EventInviteStatus.Invited },
+        { id: 'b', inviteStatus: EventInviteStatus.Accepted },
+        { id: 'c', inviteStatus: EventInviteStatus.AdminRejected },
+        { id: 'd', inviteStatus: null },
+      ]),
+    ).toEqual(['a', 'b', 'd']);
   });
 });
 

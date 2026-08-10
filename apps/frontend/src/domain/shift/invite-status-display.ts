@@ -28,7 +28,6 @@ export function adminUninviteTargetStatus(
   if (!canAdminUninvite(status)) {
     return null;
   }
-  // Mirrored enums share the ADMIN_REJECTED string value.
   return ShiftInviteStatus.AdminRejected;
 }
 
@@ -53,8 +52,23 @@ export function adminReinviteTargetStatus(
   if (!canAdminReinvite(status)) {
     return null;
   }
-  // Mirrored enums share the INVITED string value.
   return ShiftInviteStatus.Invited;
+}
+
+/**
+ * Invite-sheet defaults: keep ADMIN_REJECTED off the Invited column so saving
+ * the sheet (e.g. to add someone else) does not silently re-invite them.
+ * Admins re-add them explicitly from Available.
+ */
+export function preselectedInviteMemberIds(
+  members: ReadonlyArray<{ id: string; inviteStatus?: InviteStatus | null }>,
+): string[] {
+  return members
+    .filter(
+      (member) =>
+        member.inviteStatus == null || !canAdminReinvite(member.inviteStatus),
+    )
+    .map((member) => member.id);
 }
 
 /** Domain invite status → backoffice display state (VOLI-842). */
