@@ -18,6 +18,7 @@ interface Shift {
   rrule?: string | null;
   originalStartsAt: string;
   durationMinutes: number;
+  maxVolunteers?: number | null;
   visibility: ShiftVisibility;
   organizationUnit?: { myMembershipState: JoinStatus } | null;
 }
@@ -63,6 +64,7 @@ export function ShiftDetailContent({
             isAuthenticated={isAuthenticated}
             autoJoin={autoJoin}
             preselectedInstanceId={preselectedInstanceId}
+            masterMaxVolunteers={shift.maxVolunteers}
             membershipState={
               shift.organizationUnit?.myMembershipState ?? JoinStatus.None
             }
