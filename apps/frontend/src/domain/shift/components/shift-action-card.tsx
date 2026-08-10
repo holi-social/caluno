@@ -30,6 +30,8 @@ interface ShiftActionCardProps {
   preselectedInstanceId?: string;
   /** The viewer's org-membership state for this shift's org. */
   membershipState: JoinStatus;
+  /** Master capacity, used when the instance has no override. */
+  masterMaxVolunteers?: number | null;
 }
 
 const isParticipatingInvite = (
@@ -47,6 +49,7 @@ export function ShiftActionCard({
   autoJoin,
   preselectedInstanceId,
   membershipState,
+  masterMaxVolunteers,
 }: ShiftActionCardProps) {
   const t = useTranslations('ShiftDetail');
   const { formatTimeRange, formatDate } = useFormatting();
@@ -81,7 +84,8 @@ export function ShiftActionCard({
   }
 
   const isRecurring = instances.length > 1;
-  const max = selected.overrideMaxVolunteers ?? undefined;
+  const max =
+    selected.overrideMaxVolunteers ?? masterMaxVolunteers ?? undefined;
   const inviteStatus =
     inviteStatusOverrides[selected.id] ?? selected.myInviteStatus ?? null;
   const effectiveMembershipState = membershipStateOverride ?? membershipState;
@@ -98,8 +102,7 @@ export function ShiftActionCard({
       : Math.max(0, selected.spotsLeft - (justJoined ? 1 : 0));
   const full = spotsLeft === 0;
   const unlimited = spotsLeft == null;
-
-  const resolvedMax = max ?? filled + (spotsLeft ?? 0);
+  const resolvedMax = max ?? (spotsLeft != null ? filled + spotsLeft : filled);
 
   const longDate = formatDate(new Date(selected.actualStartsAt), {
     weekday: 'short',
