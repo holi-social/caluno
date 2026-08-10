@@ -41,7 +41,6 @@ function BlockActions({
         size="icon-xs"
         variant="outline"
         tooltip={editLabel}
-        aria-label={editLabel}
         onClick={() => openSheet({ id: block.id })}
       >
         {block.isEditable ? <Pencil /> : <Eye />}
@@ -55,7 +54,6 @@ function BlockActions({
             size="icon-xs"
             variant="destructive"
             tooltip={t('deleteBlockAria')}
-            aria-label={t('deleteBlockAria')}
             disabled={isDeleting}
           >
             {isDeleting ? <Loader2 className="animate-spin" /> : <Trash2 />}

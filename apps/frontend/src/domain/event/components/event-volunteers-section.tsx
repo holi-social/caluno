@@ -73,7 +73,6 @@ export function EventVolunteersSection({
                       size="icon-xs"
                       variant="outline"
                       tooltip={tVolunteer('viewProfileAria')}
-                      aria-label={tVolunteer('viewProfileAria')}
                       onClick={() =>
                         openVolunteerSheet({
                           userId: invite.user.id,
@@ -95,7 +94,6 @@ export function EventVolunteersSection({
                           size="icon-xs"
                           variant="outline"
                           tooltip={t('checkInAria')}
-                          aria-label={t('checkInAria')}
                         >
                           <LogIn />
                         </Button>

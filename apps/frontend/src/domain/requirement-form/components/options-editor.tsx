@@ -81,7 +81,6 @@ export function OptionsEditor({
             tooltip={tCommon('delete')}
             disabled={disabled}
             onClick={() => remove(idx)}
-            aria-label={tCommon('delete')}
           >
             <Trash2 className="size-4" />
           </Button>

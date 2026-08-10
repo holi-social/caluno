@@ -58,7 +58,6 @@ export function FormBuilderBlockList({
                       tooltip={tCommon('moveUp')}
                       disabled={index === 0}
                       onClick={() => onMove(index, 'up')}
-                      aria-label={tCommon('moveUp')}
                     >
                       <ArrowUp className="h-4 w-4" />
                     </Button>
@@ -68,7 +67,6 @@ export function FormBuilderBlockList({
                       tooltip={tCommon('moveDown')}
                       disabled={index === blockRefs.length - 1}
                       onClick={() => onMove(index, 'down')}
-                      aria-label={tCommon('moveDown')}
                     >
                       <ArrowDown className="h-4 w-4" />
                     </Button>
@@ -77,7 +75,6 @@ export function FormBuilderBlockList({
                       size="icon"
                       tooltip={tCommon('delete')}
                       onClick={() => onRemove(index)}
-                      aria-label={tCommon('delete')}
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>
@@ -89,7 +86,6 @@ export function FormBuilderBlockList({
                   tooltip={editLabel}
                   disabled={isLocked}
                   onClick={() => onEditBlock(block)}
-                  aria-label={editLabel}
                 >
                   {hasSubmissions ? (
                     <Eye className="h-4 w-4" />

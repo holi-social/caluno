@@ -84,7 +84,6 @@ export function RequiredFormsList({
             tooltip={t('removeAria', { name: form.name })}
             onClick={() => onRemove(form.id)}
             disabled={removeDisabled}
-            aria-label={t('removeAria', { name: form.name })}
           >
             <X className="h-4 w-4" />
           </Button>

@@ -28,7 +28,6 @@ export const HeaderAvatar = async ({ name, imageUrl }: HeaderAvatarProps) => {
           variant="outline"
           size="icon-sm"
           tooltip={tProfile('edit')}
-          aria-label={tProfile('edit')}
           className="absolute -bottom-1 -right-1 rounded-full"
           asChild
         >

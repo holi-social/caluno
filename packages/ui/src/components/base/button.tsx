@@ -47,6 +47,7 @@ function Button({
   asChild = false,
   tooltip,
   disabled,
+  'aria-label': ariaLabel,
   ...props
 }: React.ComponentProps<'button'> &
   VariantProps<typeof buttonVariants> & {
@@ -54,6 +55,7 @@ function Button({
     tooltip?: string;
   }) {
   const Comp = asChild ? Slot : 'button';
+  const resolvedAriaLabel = ariaLabel ?? tooltip;
 
   const button = (
     <Comp
@@ -63,22 +65,18 @@ function Button({
       className={cn(buttonVariants({ variant, size, className }))}
       disabled={disabled}
       {...props}
+      {...(resolvedAriaLabel != null
+        ? { 'aria-label': resolvedAriaLabel }
+        : {})}
     />
   );
 
-  if (!tooltip) {
+  // No tooltip on disabled buttons: wrapping them in a span breaks flex sizing.
+  if (!tooltip || disabled) {
     return button;
   }
 
-  // Disabled buttons ignore pointer events; wrap so the tooltip still shows.
-  const trigger =
-    disabled && !asChild ? (
-      <span className="inline-flex">{button}</span>
-    ) : (
-      button
-    );
-
-  return <ActionTooltip label={tooltip}>{trigger}</ActionTooltip>;
+  return <ActionTooltip label={tooltip}>{button}</ActionTooltip>;
 }
 
 export { Button, buttonVariants };

@@ -56,7 +56,7 @@ export const ActionBar = ({
             tooltip={t('editAria')}
             asChild
           >
-            <Link href={editHref} aria-label={t('editAria')}>
+            <Link href={editHref}>
               <Edit />
             </Link>
           </Button>
@@ -70,7 +70,6 @@ export const ActionBar = ({
                 size={buttonSize}
                 variant="destructive"
                 tooltip={t('deleteAria')}
-                aria-label={t('deleteAria')}
                 disabled={isDeleting}
               >
                 {isDeleting ? <Loader2 className="animate-spin" /> : <Trash />}

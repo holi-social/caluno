@@ -107,7 +107,6 @@ export default function MembershipRequestCard({ request }: Props) {
             size="icon-xs"
             tooltip={t('card.viewAria')}
             onClick={handleViewVolunteer}
-            aria-label={t('card.viewAria')}
           >
             <UserRound />
           </Button>

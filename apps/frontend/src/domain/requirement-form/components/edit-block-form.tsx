@@ -345,7 +345,6 @@ export function EditBlockForm({
                   tooltip={tCommon('moveUp')}
                   disabled={idx === 0 || isPending}
                   onClick={() => handleMoveField(field.id, 'up')}
-                  aria-label={tCommon('moveUp')}
                 >
                   <ArrowUp className="size-4" />
                 </Button>
@@ -355,7 +354,6 @@ export function EditBlockForm({
                   tooltip={tCommon('moveDown')}
                   disabled={idx === fields.length - 1 || isPending}
                   onClick={() => handleMoveField(field.id, 'down')}
-                  aria-label={tCommon('moveDown')}
                 >
                   <ArrowDown className="size-4" />
                 </Button>
@@ -376,7 +374,6 @@ export function EditBlockForm({
                   className="text-muted-foreground hover:text-destructive size-8"
                   tooltip={tCommon('delete')}
                   onClick={() => setDeletingFieldId(field.id)}
-                  aria-label={tCommon('delete')}
                 >
                   <Trash2 className="size-4" />
                 </Button>

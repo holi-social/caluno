@@ -115,7 +115,6 @@ function ApprovedTab({ orgUId }: { orgUId: string }) {
                     size="icon-xs"
                     variant="outline"
                     tooltip={t('action.viewProfileAria')}
-                    aria-label={t('action.viewProfileAria')}
                     onClick={() =>
                       openVolunteerSheet({
                         userId: membership.user.id,
@@ -136,7 +135,6 @@ function ApprovedTab({ orgUId }: { orgUId: string }) {
                       size="icon-xs"
                       variant="outline"
                       tooltip={t('action.checkInShiftAria')}
-                      aria-label={t('action.checkInShiftAria')}
                     >
                       <LogIn />
                     </Button>

@@ -58,7 +58,6 @@ export default async function CheckInPage({ params }: CheckInPageProps) {
                 type="button"
                 size="icon-sm"
                 tooltip={t('checkIn')}
-                aria-label={t('checkIn')}
               >
                 <LogIn />
               </Button>

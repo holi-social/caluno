@@ -115,9 +115,6 @@ export function TransferList({
                   size="icon-xs"
                   tooltip={t('transferList.addAria', { name: member.name })}
                   onClick={() => addMember(member)}
-                  aria-label={t('transferList.addAria', {
-                    name: member.name,
-                  })}
                 >
                   <CirclePlus className="size-4" />
                 </Button>
@@ -169,9 +166,6 @@ export function TransferList({
                       name: member.name,
                     })}
                     onClick={() => removeMember(member.id)}
-                    aria-label={t('transferList.removeAria', {
-                      name: member.name,
-                    })}
                   >
                     <CircleX className="size-4" />
                   </Button>

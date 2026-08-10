@@ -60,7 +60,6 @@ export const ActionBar = ({
             size={buttonSize}
             variant="outline"
             tooltip={t('action.editAria')}
-            aria-label={t('action.editAria')}
           >
             <Edit />
           </Button>
@@ -73,7 +72,6 @@ export const ActionBar = ({
             size={buttonSize}
             variant="outline"
             tooltip={t('action.inviteAria')}
-            aria-label={t('action.inviteAria')}
           >
             <UserPlus />
           </Button>
@@ -89,7 +87,6 @@ export const ActionBar = ({
             size={buttonSize}
             variant="destructive"
             tooltip={t('action.deleteTitle')}
-            aria-label={t('action.deleteTitle')}
             disabled={isDeleting}
           >
             {isDeleting ? <Loader2 className="animate-spin" /> : <Trash />}

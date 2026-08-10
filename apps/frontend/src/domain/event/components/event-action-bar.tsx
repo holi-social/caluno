@@ -54,7 +54,6 @@ export function EventActionBar({
           size="icon-xs"
           variant="outline"
           tooltip={t('action.viewAria')}
-          aria-label={t('action.viewAria')}
         >
           <Eye />
         </Button>
@@ -67,7 +66,6 @@ export function EventActionBar({
               size="icon-xs"
               variant="outline"
               tooltip={t('action.editAria')}
-              aria-label={t('action.editAria')}
             >
               <SquarePen />
             </Button>
@@ -78,7 +76,6 @@ export function EventActionBar({
               size="icon-xs"
               variant="outline"
               tooltip={t('action.inviteAria')}
-              aria-label={t('action.inviteAria')}
             >
               <UserPlus />
             </Button>
@@ -90,7 +87,6 @@ export function EventActionBar({
         size="icon-xs"
         variant="outline"
         tooltip={t('action.shareAria')}
-        aria-label={t('action.shareAria')}
         onClick={handleShare}
       >
         <Share2 />
@@ -110,7 +106,6 @@ export function EventActionBar({
               size="icon-xs"
               variant="destructive"
               tooltip={t('action.deleteAria')}
-              aria-label={t('action.deleteAria')}
             >
               <Trash2 />
             </Button>

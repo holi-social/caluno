@@ -105,7 +105,6 @@ function OrgUnitNodeItem({
               size="icon-xs"
               variant="outline"
               tooltip={t('visitAria')}
-              aria-label={t('visitAria')}
               asChild
             >
               <Link
@@ -120,7 +119,6 @@ function OrgUnitNodeItem({
               size="icon-xs"
               variant="outline"
               tooltip={t('copyLinkAria')}
-              aria-label={t('copyLinkAria')}
               onClick={(e) => {
                 e.stopPropagation();
                 copyToClipboard(organizationUnitUrl(node.id), t('copyToast'));
@@ -135,7 +133,6 @@ function OrgUnitNodeItem({
                   size="icon-xs"
                   variant="outline"
                   tooltip={t('addChildAria')}
-                  aria-label={t('addChildAria')}
                   onClick={(e) => {
                     e.stopPropagation();
                     onCreate(node);
@@ -148,7 +145,6 @@ function OrgUnitNodeItem({
                   size="icon-xs"
                   variant="outline"
                   tooltip={t('editAria')}
-                  aria-label={t('editAria')}
                   onClick={(e) => {
                     e.stopPropagation();
                     onEdit(node);
@@ -162,7 +158,6 @@ function OrgUnitNodeItem({
                     size="icon-xs"
                     variant="destructive"
                     tooltip={t('deleteAria')}
-                    aria-label={t('deleteAria')}
                     onClick={(e) => {
                       e.stopPropagation();
                       onDelete(node);

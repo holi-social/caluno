@@ -131,7 +131,6 @@ export function BlockCard({
               size="icon"
               className="text-muted-foreground hover:text-destructive size-10 shrink-0"
               tooltip={tTable('deleteBlockAria')}
-              aria-label={tTable('deleteBlockAria')}
               disabled={locked}
               onClick={() => setConfirmOpen(true)}
             >

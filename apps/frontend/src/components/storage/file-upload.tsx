@@ -243,7 +243,6 @@ export function FileUpload({
                   size="icon-sm"
                   tooltip={t('clear')}
                   disabled={!isInteractive}
-                  aria-label={t('clear')}
                   onClick={handleClear}
                 >
                   <X />

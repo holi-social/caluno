@@ -554,7 +554,6 @@ function FieldCard({
                 tooltip={tCommon('moveUp')}
                 disabled={!canMoveUp}
                 onClick={onMoveUp}
-                aria-label={tCommon('moveUp')}
               >
                 <ArrowUp className="size-4" />
               </Button>
@@ -565,7 +564,6 @@ function FieldCard({
                 tooltip={tCommon('moveDown')}
                 disabled={!canMoveDown}
                 onClick={onMoveDown}
-                aria-label={tCommon('moveDown')}
               >
                 <ArrowDown className="size-4" />
               </Button>
@@ -576,7 +574,6 @@ function FieldCard({
                 className="text-muted-foreground hover:text-destructive size-8"
                 tooltip={tCommon('delete')}
                 onClick={onRemove}
-                aria-label={tCommon('delete')}
               >
                 <Trash2 className="size-4" />
               </Button>

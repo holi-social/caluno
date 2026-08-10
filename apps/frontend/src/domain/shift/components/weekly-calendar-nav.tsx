@@ -41,7 +41,6 @@ export function WeeklyCalendarNav({
         size="icon-sm"
         tooltip={t('calendar.prevAria')}
         onClick={() => navigate('prev')}
-        aria-label={t('calendar.prevAria')}
       >
         <ChevronLeft className="size-4" />
       </Button>
@@ -63,7 +62,6 @@ export function WeeklyCalendarNav({
         size="icon-sm"
         tooltip={t('calendar.nextAria')}
         onClick={() => navigate('next')}
-        aria-label={t('calendar.nextAria')}
       >
         <ChevronRight className="size-4" />
       </Button>
