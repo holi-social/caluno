@@ -38,8 +38,8 @@ export function EventFollowButton({
     const redirectTo = encodeURIComponent(
       `${pathname}${window.location.search}`,
     );
-    window.location.href = `/events/${eventId}/forms?redirectTo=${redirectTo}`;
-  }, [eventId, pathname]);
+    router.push(`/events/${eventId}/forms?redirectTo=${redirectTo}`);
+  }, [eventId, pathname, router.push]);
 
   const handleFollow = useCallback(async () => {
     if (!session.data?.user) {
@@ -68,7 +68,14 @@ export function EventFollowButton({
     } catch (error) {
       toast.error(error instanceof Error ? error.message : undefined);
     }
-  }, [eventId, joinEvent, router, session.data?.user, redirectToFormsPage, t]);
+  }, [
+    eventId,
+    joinEvent,
+    router.push,
+    session.data?.user,
+    redirectToFormsPage,
+    t,
+  ]);
 
   useEffect(() => {
     if (

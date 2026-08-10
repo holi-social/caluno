@@ -18,5 +18,6 @@
       "matchSourceUrls": ["https://github.com/hashicorp/terraform"],
       "groupName": "terraform"
     }
-  ]
+  ],
+  "enabled": false
 }

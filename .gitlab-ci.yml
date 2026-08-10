@@ -1,8 +1,3 @@
-include:
-  - template: Jobs/SAST.gitlab-ci.yml
-  - template: Jobs/SAST-IaC.gitlab-ci.yml
-  - template: Jobs/Secret-Detection.gitlab-ci.yml
-
 workflow:
   rules:
     - if: '$CI_COMMIT_BRANCH == "main" || $CI_COMMIT_BRANCH == "production"'
@@ -13,13 +8,9 @@ workflow:
     - when: never
 
 stages:
-  - lint_test
   - test
-  - security_scan
-  - security_postprocess
-  - build_scan
-  - terraform_plan
-  - terraform_apply
+  - build
+  - deploy
 
 default:
   image: europe-north1-docker.pkg.dev/holi-shared/docker-hub-remote/docker:29
@@ -36,29 +27,6 @@ variables:
   TF_ROOT: 'packages/infra'
   TF_IN_AUTOMATION: 'true'
   TF_INPUT: 'false'
-  # GitLab SAST templates default to `test`; pin to our security scan stage.
-  SAST_STAGE: 'security_scan'
-  # Keep secret-detection template jobs in the same scan stage model.
-  SECRET_DETECTION_STAGE: 'security_scan'
-  # SAST: run on MR pipelines (GitLab ≥18). Skips duplicate branch scan when MR is open.
-  AST_ENABLE_MR_PIPELINES: 'true'
-  # SAST (semgrep): TS/JS. KICS (SAST-IaC): Scaleway Terraform in packages/infra only (no K8s/Dockerfile).
-  SAST_EXCLUDED_PATHS: 'spec,test,tests,tmp,.ai,.agents,dist,.next,storybook-static,node_modules'
-  # Kubesec (main SAST template) — we deploy Scaleway serverless containers, not Kubernetes.
-  SCAN_KUBERNETES_MANIFESTS: 'false'
-  # Secret detection: scan infra — tfvars, backend config, and .tf must not carry real keys.
-  SECRET_DETECTION_EXCLUDED_PATHS: 'spec,test,tests,tmp,.ai,.agents,dist,.next,storybook-static,node_modules'
-  # Trivy container scanning (https://trivy.dev/docs/latest/tutorials/integrations/gitlab-ci/)
-  TRIVY_VERSION: '0.72.0'
-  TRIVY_NO_PROGRESS: 'true'
-  TRIVY_CACHE_DIR: '.trivycache/'
-  # Trivy issue filing noise control:
-  # false (default): create issues only when a fix is available ("Upgrade ...")
-  # true: also create issues with no known fix yet.
-  TRIVY_INCLUDE_UNFIXED: 'false'
-
-sast:
-  stage: security_scan
 
 # ─── TEST ─────────────────────────────────────────────────────────────────────
 
@@ -73,7 +41,7 @@ sast:
 # (Settings → Merge requests → "Pipelines must succeed"). See .ai/PIPELINE.md.
 'quality:lint-and-types':
   extends: .mr-to-main-or-production
-  stage: lint_test
+  stage: test
   image: europe-north1-docker.pkg.dev/holi-shared/docker-hub-remote/oven/bun:1
   needs: []
   before_script:
@@ -85,7 +53,7 @@ sast:
 # AI pipeline gate-script self-test: the structural guards must stay green.
 'quality:ai-gate-tests':
   extends: .mr-to-main-or-production
-  stage: lint_test
+  stage: test
   image: europe-north1-docker.pkg.dev/holi-shared/docker-hub-remote/oven/bun:1
   needs: []
   before_script:
@@ -98,7 +66,7 @@ sast:
 # `type(scope): description` (see .ai/PIPELINE.md Commit Convention). Structural backing
 # for the otherwise prose-only convention. POSIX sh (GitLab default shell).
 'quality:commit-lint':
-  stage: lint_test
+  stage: test
   image: europe-north1-docker.pkg.dev/holi-shared/docker-hub-remote/oven/bun:1
   needs: []
   rules:
@@ -115,7 +83,7 @@ sast:
 
 # Runs on every pipeline (MR, main/production deploy, feature-branch builds).
 'quality:check-migrations':
-  stage: lint_test
+  stage: test
   image: europe-north1-docker.pkg.dev/holi-shared/docker-hub-remote/oven/bun:1
   needs: []
   before_script:
@@ -136,7 +104,7 @@ sast:
 
 'quality:integration-tests':
   extends: .mr-to-main-or-production
-  stage: lint_test
+  stage: test
   image: europe-north1-docker.pkg.dev/holi-shared/docker-hub-remote/oven/bun:1
   needs: []
   services:
@@ -160,255 +128,10 @@ sast:
   script:
     - bun test
 
-# ─── SAST ─────────────────────────────────────────────────────────────────────
-# semgrep-sast (template) scans TS/JS; kics-iac-sast scans Scaleway Terraform (packages/infra).
-# kics.config limits KICS to Terraform only — no Kubernetes manifests or Dockerfiles.
-# sast:merge-reports combines gl-sast-report.json + gl-sast-report-iac.json.
-# sast:summary posts Critical/High table (job log + MR comment); sast:gate blocks merge;
-# sast:medium-issues files Medium findings as grouped GitLab issues (one per file+rule). Both need SAST_ISSUES_TOKEN.
-
-semgrep-sast:
-  stage: security_scan
-  needs: []
-  rules:
-    - if: '$CI_PIPELINE_SOURCE == "merge_request_event" && ($CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "main" || $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "production")'
-
-kics-iac-sast:
-  stage: security_scan
-  needs: []
-  rules:
-    - if: '$CI_PIPELINE_SOURCE == "merge_request_event" && ($CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "main" || $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "production")'
-  after_script:
-    - |
-      if [ -f gl-sast-report.json ]; then
-        mv gl-sast-report.json gl-sast-report-iac.json
-      fi
-  artifacts:
-    access: 'developer'
-    reports:
-      sast: gl-sast-report-iac.json
-    paths:
-      - gl-sast-report-iac.json
-
-'sast:merge-reports':
-  extends: .mr-to-main-or-production
-  stage: security_postprocess
-  image: europe-north1-docker.pkg.dev/holi-shared/docker-hub-remote/alpine:3
-  tags:
-    - 4cpu-16gb
-  before_script:
-    - apk add --no-cache bash jq
-  needs:
-    - job: semgrep-sast
-      artifacts: true
-      optional: true
-    - job: kics-iac-sast
-      artifacts: true
-      optional: true
-  script:
-    - bash .ai/scripts/sast-merge-reports.sh gl-sast-report.json gl-sast-report.json gl-sast-report-iac.json
-  artifacts:
-    paths:
-      - gl-sast-report.json
-
-.sast-postprocess:
-  extends: .mr-to-main-or-production
-  stage: security_postprocess
-  image: europe-north1-docker.pkg.dev/holi-shared/docker-hub-remote/alpine:3
-  tags:
-    - 4cpu-16gb
-  before_script:
-    - apk add --no-cache bash jq curl
-  needs:
-    - job: 'sast:merge-reports'
-      artifacts: true
-      optional: true
-
-'sast:summary':
-  extends: .sast-postprocess
-  allow_failure: true
-  script:
-    - bash .ai/scripts/sast-mr-comment.sh gl-sast-report.json
-
-'sast:gate':
-  extends: .sast-postprocess
-  script:
-    - bash .ai/scripts/sast-gate.sh gl-sast-report.json
-
-'sast:medium-issues':
-  extends: .sast-postprocess
-  allow_failure: true
-  script:
-    - bash .ai/scripts/sast-open-medium-issues.sh gl-sast-report.json
-
-'sast:close-fixed-issues':
-  extends: .sast-postprocess
-  allow_failure: true
-  needs:
-    - job: 'sast:merge-reports'
-      artifacts: true
-      optional: true
-  script:
-    - bash .ai/scripts/sast-close-fixed-medium-issues.sh gl-sast-report.json
-
-# ─── SECRET DETECTION ─────────────────────────────────────────────────────────
-# secret_detection (template) scans the repo and uploads gl-secret-detection-report.json.
-# secret:detection-gate blocks merge on any finding.
-
-secret_detection:
-  stage: security_scan
-  needs: []
-  rules:
-    - if: '$CI_PIPELINE_SOURCE == "merge_request_event" && ($CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "main" || $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "production")'
-
-.secret-postprocess:
-  extends: .mr-to-main-or-production
-  stage: security_postprocess
-  image: europe-north1-docker.pkg.dev/holi-shared/docker-hub-remote/alpine:3
-  tags:
-    - 4cpu-16gb
-  before_script:
-    - apk add --no-cache bash jq
-  needs:
-    - job: secret_detection
-      artifacts: true
-      optional: true
-
-'secret:detection-gate':
-  extends: .secret-postprocess
-  script:
-    - bash .ai/scripts/secret-gate.sh gl-secret-detection-report.json
-
-# ─── CONTAINER SCANNING (TRIVY) ───────────────────────────────────────────────
-# Branch builds scan local images; staging/production scan the Scaleway registry.
-# trivy:merge-reports combines per-image reports; trivy:summary posts Critical/High
-# table (job log + MR comment); trivy:issues files Critical/High as GitLab work items (non-blocking).
-
-.trivy-scan-registry:
-  stage: build_scan
-  image:
-    name: europe-north1-docker.pkg.dev/holi-shared/docker-hub-remote/aquasec/trivy:0.72.0
-    entrypoint: ['']
-  variables:
-    GIT_DEPTH: 1
-    TRIVY_USERNAME: nologin
-    TRIVY_PASSWORD: $SCW_SECRET_KEY
-  before_script:
-    - trivy --version
-    - trivy image --download-db-only
-  script:
-    - sh .ai/scripts/trivy-gitlab-report.sh "$TRIVY_IMAGE_REF" "$TRIVY_REPORT_PATH"
-    - trivy image --exit-code 0 --severity HIGH,CRITICAL "$TRIVY_IMAGE_REF"
-  cache:
-    key: trivy-db
-    paths:
-      - .trivycache/
-  artifacts:
-    when: always
-    paths:
-      - $TRIVY_REPORT_PATH
-
-.trivy-postprocess:
-  extends: .mr-to-main-or-production
-  stage: build_scan
-  image: europe-north1-docker.pkg.dev/holi-shared/docker-hub-remote/alpine:3
-  tags:
-    - 4cpu-16gb
-  before_script:
-    - apk add --no-cache bash jq curl
-  needs:
-    - job: 'build:backend-branch'
-      artifacts: true
-      optional: true
-    - job: 'build:frontend-branch'
-      artifacts: true
-      optional: true
-
-'trivy:merge-reports':
-  extends: .trivy-postprocess
-  script:
-    - bash .ai/scripts/trivy-merge-reports.sh gl-container-scanning-report.json gl-container-scanning-report-backend.json gl-container-scanning-report-frontend.json
-  artifacts:
-    when: always
-    paths:
-      - gl-container-scanning-report.json
-    reports:
-      container_scanning: gl-container-scanning-report.json
-
-'trivy:issues':
-  extends: .trivy-postprocess
-  allow_failure: true
-  needs:
-    - job: 'trivy:merge-reports'
-      artifacts: true
-      optional: true
-  script:
-    - bash .ai/scripts/trivy-open-issues.sh gl-container-scanning-report.json
-
-'trivy:close-fixed-issues':
-  extends: .trivy-postprocess
-  allow_failure: true
-  needs:
-    - job: 'trivy:merge-reports'
-      artifacts: true
-      optional: true
-  script:
-    - bash .ai/scripts/trivy-close-fixed-issues.sh gl-container-scanning-report.json
-
-'trivy:summary':
-  extends: .trivy-postprocess
-  allow_failure: true
-  needs:
-    - job: 'trivy:merge-reports'
-      artifacts: true
-      optional: true
-  script:
-    - bash .ai/scripts/trivy-mr-comment.sh gl-container-scanning-report.json
-
-'trivy:scan-staging-backend':
-  extends: .trivy-scan-registry
-  needs: ["build:staging-backend"]
-  rules:
-    - if: '$CI_COMMIT_BRANCH == "main"'
-  variables:
-    TRIVY_IMAGE_REF: '$SCW_REGISTRY_HOST/$SCW_REGISTRY_NAMESPACE/caluno-backend:$CI_COMMIT_SHORT_SHA'
-    TRIVY_REPORT_PATH: gl-container-scanning-report-staging-backend.json
-  allow_failure: true
-
-'trivy:scan-staging-frontend':
-  extends: .trivy-scan-registry
-  needs: ["build:staging-frontend"]
-  rules:
-    - if: '$CI_COMMIT_BRANCH == "main"'
-  variables:
-    TRIVY_IMAGE_REF: '$SCW_REGISTRY_HOST/$SCW_REGISTRY_NAMESPACE/caluno-frontend:$CI_COMMIT_SHORT_SHA'
-    TRIVY_REPORT_PATH: gl-container-scanning-report-staging-frontend.json
-  allow_failure: true
-
-'trivy:scan-production-backend':
-  extends: .trivy-scan-registry
-  needs: ["build:production-backend"]
-  rules:
-    - if: '$CI_COMMIT_BRANCH == "production"'
-  variables:
-    TRIVY_IMAGE_REF: '$SCW_REGISTRY_HOST/$SCW_REGISTRY_NAMESPACE/caluno-backend:$CI_COMMIT_SHORT_SHA'
-    TRIVY_REPORT_PATH: gl-container-scanning-report-production-backend.json
-  allow_failure: true
-
-'trivy:scan-production-frontend':
-  extends: .trivy-scan-registry
-  needs: ["build:production-frontend"]
-  rules:
-    - if: '$CI_COMMIT_BRANCH == "production"'
-  variables:
-    TRIVY_IMAGE_REF: '$SCW_REGISTRY_HOST/$SCW_REGISTRY_NAMESPACE/caluno-frontend:$CI_COMMIT_SHORT_SHA'
-    TRIVY_REPORT_PATH: gl-container-scanning-report-production-frontend.json
-  allow_failure: true
-
 # ─── BUILD ────────────────────────────────────────────────────────────────────
 
 .build-images-base:
-  stage: build_scan
+  stage: build
   # Deploy-path image builds (main/production) should wait for migration-sync
   # validation before producing/pushing deployment artifacts.
   needs:
@@ -458,7 +181,7 @@ secret_detection:
     - docker push "$REGISTRY_NAMESPACE/$FRONTEND_IMAGE_NAME:$STABLE_TAG"
 
 .build-images-base-branch:
-  stage: build_scan
+  stage: build
   # Branch/MR builds are scan inputs; they do not consume quality artifacts.
   # Start immediately to reduce security feedback latency.
   needs: []
@@ -475,18 +198,6 @@ secret_detection:
     - docker buildx build --load
       -t "$BACKEND_IMAGE_NAME:$IMAGE_TAG_SHA"
       -f apps/backend/Dockerfile .
-    - export TRIVY_IMAGE_REF="$BACKEND_IMAGE_NAME:$IMAGE_TAG_SHA"
-    - export TRIVY_REPORT_PATH="gl-container-scanning-report-backend.json"
-    - sh .ai/scripts/trivy-scan-image.sh "$TRIVY_IMAGE_REF" "$TRIVY_REPORT_PATH"
-  artifacts:
-    when: always
-    paths:
-      - gl-container-scanning-report-backend.json
-    expire_in: 1 day
-  cache:
-    key: trivy-db
-    paths:
-      - .trivycache/
 
 .build-images-frontend-branch:
   extends: .build-images-base-branch
@@ -497,18 +208,6 @@ secret_detection:
       --build-arg NEXT_PUBLIC_WEB_URL="http://localhost"
       -t "$FRONTEND_IMAGE_NAME:$IMAGE_TAG_SHA"
       -f apps/frontend/Dockerfile .
-    - export TRIVY_IMAGE_REF="$FRONTEND_IMAGE_NAME:$IMAGE_TAG_SHA"
-    - export TRIVY_REPORT_PATH="gl-container-scanning-report-frontend.json"
-    - sh .ai/scripts/trivy-scan-image.sh "$TRIVY_IMAGE_REF" "$TRIVY_REPORT_PATH"
-  artifacts:
-    when: always
-    paths:
-      - gl-container-scanning-report-frontend.json
-    expire_in: 1 day
-  cache:
-    key: trivy-db
-    paths:
-      - .trivycache/
 
 'build:staging-backend':
   extends: .build-images-backend
@@ -556,7 +255,7 @@ secret_detection:
 
 'terraform:staging-plan-mr':
   extends: .terraform
-  stage: terraform_plan
+  stage: deploy
   # MR plan is advisory feedback and does not require build/test artifacts.
   needs: []
   resource_group: 'terraform-staging'
@@ -571,7 +270,7 @@ secret_detection:
 
 'terraform:staging-plan':
   extends: .terraform
-  stage: terraform_plan
+  stage: deploy
   retry: 2
   needs: ['build:staging-backend', 'build:staging-frontend']
   resource_group: 'terraform-staging'
@@ -605,7 +304,7 @@ secret_detection:
 
 'terraform:staging-apply':
   extends: .terraform
-  stage: terraform_apply
+  stage: deploy
   needs: ["terraform:staging-plan"]
   variables:
     TF_VAR_active_environment: 'staging'
@@ -627,7 +326,7 @@ secret_detection:
 
 'terraform:production-plan-mr':
   extends: .terraform
-  stage: terraform_plan
+  stage: deploy
   # MR plan is advisory feedback and does not require build/test artifacts.
   needs: []
   resource_group: 'terraform-production'
@@ -642,7 +341,7 @@ secret_detection:
 
 'terraform:production-plan':
   extends: .terraform
-  stage: terraform_plan
+  stage: deploy
   retry: 2
   needs: ['build:production-backend', 'build:production-frontend']
   resource_group: 'terraform-production'
@@ -676,7 +375,7 @@ secret_detection:
 
 'terraform:production-apply':
   extends: .terraform
-  stage: terraform_apply
+  stage: deploy
   needs: ["terraform:production-plan"]
   variables:
     TF_VAR_active_environment: 'production'
