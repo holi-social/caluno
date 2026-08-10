@@ -308,6 +308,8 @@ query GetWeeklyShifts($from: DateTime!, $to: DateTime!) {
     actualStartsAt
     actualEndsAt
     isCancelled
+    overrideMinVolunteers
+    overrideMaxVolunteers
     master {
       id
       title

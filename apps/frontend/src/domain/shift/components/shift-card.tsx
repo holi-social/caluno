@@ -86,8 +86,8 @@ export function ShiftCard({
 
   const participatingCount = instance.volunteers?.length ?? 0;
   const invites = instance.invites ?? [];
-  const min = instance.master.minVolunteers;
-  const max = instance.master.maxVolunteers;
+  const min = instance.overrideMinVolunteers ?? instance.master.minVolunteers;
+  const max = instance.overrideMaxVolunteers ?? instance.master.maxVolunteers;
   const state = getStaffingState(participatingCount, min, max);
 
   const isAtCapacity = max != null && participatingCount >= max;
