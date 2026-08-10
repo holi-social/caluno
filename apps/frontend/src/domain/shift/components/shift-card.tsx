@@ -151,7 +151,7 @@ export function ShiftCard({
               <Button
                 size="icon-sm"
                 variant={buttonVariant}
-                aria-label={t('card.inviteAria')}
+                tooltip={t('card.inviteAria')}
               >
                 <UserPlus className="size-4" />
               </Button>

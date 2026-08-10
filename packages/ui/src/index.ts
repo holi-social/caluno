@@ -1,5 +1,6 @@
 // Components
 
+export * from './components/action-tooltip';
 export * from './components/base/accordion';
 export * from './components/base/alert';
 export * from './components/base/alert-dialog';

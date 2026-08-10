@@ -15,6 +15,7 @@ import {
   FieldLabel,
   Input,
 } from '@repo/ui';
+import { Trash2, X } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useState, useTransition } from 'react';
 import { deleteOrgUnit } from '@/domain/org-unit/actions';
@@ -100,6 +101,7 @@ export function DeleteOrgUnitDialog({
 
         <AlertDialogFooter>
           <AlertDialogCancel disabled={isPending}>
+            <X />
             {tCommon('cancel')}
           </AlertDialogCancel>
 
@@ -108,6 +110,7 @@ export function DeleteOrgUnitDialog({
             onClick={handleDelete}
             disabled={isPending || !confirmed}
           >
+            <Trash2 />
             {isPending ? tCommon('deleting') : tCommon('delete')}
           </Button>
         </AlertDialogFooter>
