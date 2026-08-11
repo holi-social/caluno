@@ -984,5 +984,69 @@ describe('ShiftService', () => {
       );
       expect(result.isCancelled).toBe(true);
     });
+
+    it('cancels active invites and leaves rejected invites untouched', async () => {
+      const { startsAt, endsAt } = futureWindow();
+      const shift = await createShift(db, {
+        organizationUnitId,
+        createdById: userId,
+        startsAt,
+        endsAt,
+        rrule: null,
+      });
+      const instances = await getInstances(shift.id);
+      const invitedUser = await createUser(db);
+      const acceptedUser = await createUser(db);
+      const selfJoinedUser = await createUser(db);
+      const rejectedUser = await createUser(db);
+
+      await db.insert(schema.shiftInstanceInvites).values([
+        {
+          instanceId: instances[0].id,
+          userId: invitedUser.id,
+          status: ShiftInviteStatus.INVITED,
+        },
+        {
+          instanceId: instances[0].id,
+          userId: acceptedUser.id,
+          status: ShiftInviteStatus.ACCEPTED,
+        },
+        {
+          instanceId: instances[0].id,
+          userId: selfJoinedUser.id,
+          status: ShiftInviteStatus.SELF_JOINED,
+        },
+        {
+          instanceId: instances[0].id,
+          userId: rejectedUser.id,
+          status: ShiftInviteStatus.VOLUNTEER_REJECTED,
+        },
+      ]);
+
+      await shiftService.deleteShiftInstance(
+        instances[0].id,
+        organizationUnitId,
+      );
+
+      const invites = await db.query.shiftInstanceInvites.findMany({
+        where: { instanceId: instances[0].id },
+      });
+      const statusByUserId = new Map(
+        invites.map((invite) => [invite.userId, invite.status]),
+      );
+
+      expect(statusByUserId.get(invitedUser.id)).toBe(
+        ShiftInviteStatus.CANCELLED,
+      );
+      expect(statusByUserId.get(acceptedUser.id)).toBe(
+        ShiftInviteStatus.CANCELLED,
+      );
+      expect(statusByUserId.get(selfJoinedUser.id)).toBe(
+        ShiftInviteStatus.CANCELLED,
+      );
+      expect(statusByUserId.get(rejectedUser.id)).toBe(
+        ShiftInviteStatus.VOLUNTEER_REJECTED,
+      );
+    });
   });
 });

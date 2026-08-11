@@ -1602,15 +1602,48 @@ export class ShiftService {
       );
     }
 
-    const [cancelledInstance] = await this.db
-      .update(schema.shiftInstances)
-      .set({ isCancelled: true })
-      .where(eq(schema.shiftInstances.id, id))
-      .returning();
+    const { cancelledInstance, recipientUserIds } = await this.db.transaction(
+      async (tx) => {
+        const [cancelledInstance] = await tx
+          .update(schema.shiftInstances)
+          .set({ isCancelled: true })
+          .where(eq(schema.shiftInstances.id, id))
+          .returning();
 
-    if (!cancelledInstance) {
-      throw new NotFoundGraphQLError(`Shift instance with ID ${id} not found`);
-    }
+        if (!cancelledInstance) {
+          throw new NotFoundGraphQLError(
+            `Shift instance with ID ${id} not found`,
+          );
+        }
+
+        const activeInvites = await tx.query.shiftInstanceInvites.findMany({
+          where: {
+            instanceId: id,
+            status: { in: [...ACTIVE_SHIFT_INVITE_STATUSES] },
+          },
+          columns: { userId: true },
+        });
+
+        if (activeInvites.length > 0) {
+          await tx
+            .update(schema.shiftInstanceInvites)
+            .set({ status: ShiftInviteStatus.CANCELLED })
+            .where(
+              and(
+                eq(schema.shiftInstanceInvites.instanceId, id),
+                inArray(schema.shiftInstanceInvites.status, [
+                  ...ACTIVE_SHIFT_INVITE_STATUSES,
+                ]),
+              ),
+            );
+        }
+
+        return {
+          cancelledInstance,
+          recipientUserIds: activeInvites.map((invite) => invite.userId),
+        };
+      },
+    );
 
     return cancelledInstance;
   }
