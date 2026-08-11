@@ -13,6 +13,7 @@ import { SYSTEM_PROFILE_KEYS } from '../constants';
 import { FieldType, FormSubmissionStatus } from '../enums';
 import { SubmitFormInput } from '../inputs/submit-form.input';
 import type { FormSubmissionEntity } from '../schemas/form-submission.schema';
+import { parseMultiChoiceValue } from './multi-choice-value';
 import {
   RequiredFormService,
   type RequiredFormTarget,
@@ -268,7 +269,11 @@ export class FormSubmissionService {
       const isCheckboxType =
         fieldInfo?.type === FieldType.CHECKBOX ||
         fieldInfo?.type === FieldType.DOCUMENT_ACKNOWLEDGEMENT;
-      const missing = isCheckboxType ? value !== 'true' : !value;
+      const missing = isCheckboxType
+        ? value !== 'true'
+        : fieldInfo?.type === FieldType.MULTI_CHOICE
+          ? parseMultiChoiceValue(value ?? '').length === 0
+          : !value;
       if (missing) {
         throw new BadRequestGraphQLError(`Field "${label}" is required`);
       }
@@ -436,9 +441,9 @@ export class FormSubmissionService {
       }
       case FieldType.MULTI_CHOICE: {
         const valid = new Set((options ?? []).map((o) => o.value));
-        const invalid = rawValue
-          .split(',')
-          .filter((v) => valid.size > 0 && !valid.has(v));
+        const invalid = parseMultiChoiceValue(rawValue).filter(
+          (v) => valid.size > 0 && !valid.has(v),
+        );
         if (invalid.length > 0)
           throw new BadRequestGraphQLError(`"${label}": invalid option(s)`);
         break;
@@ -540,7 +545,7 @@ export class FormSubmissionService {
       return rawValue === 'true';
     }
     if (fieldType === FieldType.MULTI_CHOICE) {
-      return rawValue ? rawValue.split(',') : [];
+      return parseMultiChoiceValue(rawValue);
     }
     if (fieldType === FieldType.NUMBERS) {
       const num = Number(rawValue);
