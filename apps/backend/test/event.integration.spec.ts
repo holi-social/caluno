@@ -281,6 +281,41 @@ describe('publicEvent', () => {
     expect(data.publicEvent.title).toBe('Slug Lookup Event');
   });
 
+  it('keeps the existing slug when the event title is updated', async () => {
+    const event = await createEvent(db, {
+      organizationUnitId,
+      title: 'Original Event Title',
+      slug: 'original-event-title',
+    });
+
+    const data = await graphqlRequestRequiringData<{
+      updateEvent: { id: string; slug: string; title: string };
+    }>(
+      app,
+      {
+        query: `
+          mutation UpdateEvent($id: ID!, $input: UpdateEventInput!) {
+            updateEvent(id: $id, input: $input) {
+              id
+              slug
+              title
+            }
+          }
+        `,
+        variables: {
+          id: event.id,
+          input: { title: 'Updated Event Title' },
+        },
+        headers: { 'x-organization-unit-id': organizationUnitId },
+      },
+      'updateEvent',
+    );
+
+    expect(data.updateEvent.id).toBe(event.id);
+    expect(data.updateEvent.slug).toBe(event.slug);
+    expect(data.updateEvent.title).toBe('Updated Event Title');
+  });
+
   it('returns myJoinStatus NONE for a pending membership that has not started joining this event', async () => {
     const originalUserId = getAuthMockUserId();
     const user = await createUser(db);

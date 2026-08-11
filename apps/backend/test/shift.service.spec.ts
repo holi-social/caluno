@@ -225,6 +225,24 @@ describe('ShiftService', () => {
         exceptionInstance.actualEndsAt.toISOString(),
       );
     });
+
+    it('keeps the existing slug when the title changes', async () => {
+      const shift = await createShift(db, {
+        organizationUnitId,
+        createdById: userId,
+      });
+      const originalSlug = shift.slug;
+
+      await shiftService.update(userId, shift.id, organizationUnitId, {
+        title: `Renamed shift ${crypto.randomUUID()}`,
+      });
+
+      const updated = await db.query.shifts.findFirst({
+        where: { id: shift.id },
+      });
+
+      expect(updated?.slug).toBe(originalSlug);
+    });
   });
 
   describe('findAllForEvent', () => {

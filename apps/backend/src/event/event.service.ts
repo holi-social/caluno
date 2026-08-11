@@ -293,7 +293,6 @@ export class EventService {
         .update(schema.events)
         .set({
           title: resolved.title,
-          slug: resolved.title ? slugify(resolved.title) : undefined,
           description: resolved.description,
           location: resolved.location,
           logoUrl: resolved.logoUrl,
