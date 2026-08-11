@@ -1582,37 +1582,48 @@ export class ShiftService {
     id: string,
     organizationUnitId: string,
   ): Promise<ShiftInstanceEntity> {
-    const instance = await this.findInstanceById(id, organizationUnitId);
+    const { shift, cancelledInstance, recipientUserIds } =
+      await this.db.transaction(async (tx) => {
+        const instance = await tx.query.shiftInstances.findFirst({
+          where: { id },
+          with: { master: true },
+        });
 
-    if (instance.isCancelled) {
-      throw new ConflictGraphQLError(
-        `Shift instance with ID ${id} is already cancelled`,
-      );
-    }
+        if (
+          !instance ||
+          instance.master.organizationUnitId !== organizationUnitId
+        ) {
+          throw new NotFoundGraphQLError(
+            `Shift instance with ID ${id} not found`,
+          );
+        }
 
-    if (instance.actualEndsAt.getTime() < Date.now()) {
-      throw new ConflictGraphQLError(
-        'Cannot delete a past or completed shift instance',
-      );
-    }
+        if (instance.actualEndsAt.getTime() < Date.now()) {
+          throw new ConflictGraphQLError(
+            'Cannot delete a past or completed shift instance',
+          );
+        }
 
-    if (await this.hasOpenTimeEntryForInstance(id)) {
-      throw new ConflictGraphQLError(
-        'Cannot delete a shift instance with an open time entry',
-      );
-    }
+        if (await this.hasOpenTimeEntryForInstance(id, tx)) {
+          throw new ConflictGraphQLError(
+            'Cannot delete a shift instance with an open time entry',
+          );
+        }
 
-    const { cancelledInstance, recipientUserIds } = await this.db.transaction(
-      async (tx) => {
         const [cancelledInstance] = await tx
           .update(schema.shiftInstances)
           .set({ isCancelled: true })
-          .where(eq(schema.shiftInstances.id, id))
+          .where(
+            and(
+              eq(schema.shiftInstances.id, id),
+              eq(schema.shiftInstances.isCancelled, false),
+            ),
+          )
           .returning();
 
         if (!cancelledInstance) {
-          throw new NotFoundGraphQLError(
-            `Shift instance with ID ${id} not found`,
+          throw new ConflictGraphQLError(
+            `Shift instance with ID ${id} is already cancelled`,
           );
         }
 
@@ -1639,14 +1650,14 @@ export class ShiftService {
         }
 
         return {
+          shift: instance.master,
           cancelledInstance,
           recipientUserIds: activeInvites.map((invite) => invite.userId),
         };
-      },
-    );
+      });
 
     void this.loadAndEmitShiftInstanceCancelledNotification(
-      instance.master,
+      shift,
       cancelledInstance,
       recipientUserIds,
     );
@@ -1656,8 +1667,9 @@ export class ShiftService {
 
   private async hasOpenTimeEntryForInstance(
     instanceId: string,
+    executor: Database = this.db,
   ): Promise<boolean> {
-    const [entry] = await this.db
+    const [entry] = await executor
       .select({ id: schema.timeEntries.id })
       .from(schema.timeEntries)
       .where(

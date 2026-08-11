@@ -877,10 +877,7 @@ describe('ShiftService', () => {
       const instances = await getInstances(shift.id);
 
       await expect(
-        shiftService.deleteShiftInstance(
-          instances[0].id,
-          crypto.randomUUID(),
-        ),
+        shiftService.deleteShiftInstance(instances[0].id, crypto.randomUUID()),
       ).rejects.toThrow(NotFoundGraphQLError);
     });
 
@@ -1048,6 +1045,56 @@ describe('ShiftService', () => {
       expect(statusByUserId.get(rejectedUser.id)).toBe(
         ShiftInviteStatus.VOLUNTEER_REJECTED,
       );
+    });
+
+    it('leaves the rest of the recurring series untouched', async () => {
+      const { startsAt, endsAt } = futureWindow();
+      const shift = await createShift(db, {
+        organizationUnitId,
+        createdById: userId,
+        startsAt,
+        endsAt,
+        rrule: null,
+      });
+      const [targetInstance] = await getInstances(shift.id);
+
+      const siblingInstance = await createShiftInstance(db, shift.id, {
+        actualStartsAt: new Date(startsAt.getTime() + 86_400_000),
+        actualEndsAt: new Date(endsAt.getTime() + 86_400_000),
+        occurrenceIndex: 1,
+      });
+
+      const sharedVolunteer = await createUser(db);
+      await db.insert(schema.shiftInstanceInvites).values([
+        {
+          instanceId: targetInstance.id,
+          userId: sharedVolunteer.id,
+          status: ShiftInviteStatus.ACCEPTED,
+        },
+        {
+          instanceId: siblingInstance.id,
+          userId: sharedVolunteer.id,
+          status: ShiftInviteStatus.ACCEPTED,
+        },
+      ]);
+
+      await shiftService.deleteShiftInstance(
+        targetInstance.id,
+        organizationUnitId,
+      );
+
+      const [reloadedSibling] = await db
+        .select()
+        .from(schema.shiftInstances)
+        .where(eq(schema.shiftInstances.id, siblingInstance.id));
+      expect(reloadedSibling.isCancelled).toBe(false);
+
+      const siblingInvites = await db
+        .select()
+        .from(schema.shiftInstanceInvites)
+        .where(eq(schema.shiftInstanceInvites.instanceId, siblingInstance.id));
+      expect(siblingInvites).toHaveLength(1);
+      expect(siblingInvites[0]?.status).toBe(ShiftInviteStatus.ACCEPTED);
     });
 
     it('emits a cancellation notification for volunteers with an active invite', async () => {
