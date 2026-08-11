@@ -3,6 +3,7 @@
 import {
   OTPInput,
   OTPInputContext,
+  REGEXP_ONLY_DIGITS,
   REGEXP_ONLY_DIGITS_AND_CHARS,
 } from 'input-otp';
 import * as React from 'react';
@@ -69,7 +70,10 @@ function InputOTPSlot({
   );
 }
 
-function InputOTPSeparator({ ...props }: React.ComponentProps<'div'>) {
+function InputOTPSeparator({
+  children = '-',
+  ...props
+}: React.ComponentProps<'div'>) {
   return (
     <div
       tabIndex={-1}
@@ -77,7 +81,7 @@ function InputOTPSeparator({ ...props }: React.ComponentProps<'div'>) {
       aria-hidden="true"
       {...props}
     >
-      -
+      {children}
     </div>
   );
 }
@@ -87,5 +91,6 @@ export {
   InputOTPGroup,
   InputOTPSeparator,
   InputOTPSlot,
+  REGEXP_ONLY_DIGITS,
   REGEXP_ONLY_DIGITS_AND_CHARS,
 };

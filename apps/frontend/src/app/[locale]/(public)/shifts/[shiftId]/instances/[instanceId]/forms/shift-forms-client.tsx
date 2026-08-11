@@ -8,6 +8,7 @@ import {
   type RequiredFormItem,
   RequiredFormRenderer,
 } from '@/domain/requirement-form/components/required-form-renderer';
+import { shiftPublicPath } from '@/domain/shift/share';
 import { useRouter } from '@/i18n/navigation';
 import { getSafeRedirect } from '@/lib/safe-redirect';
 
@@ -35,20 +36,21 @@ export function ShiftFormsClient({
   const joinShiftInstance = useJoinShiftInstance();
 
   const handleComplete = async () => {
+    const detailPath = shiftPublicPath(shiftId, instanceId);
     try {
       const result = await joinShiftInstance.mutateAsync(instanceId);
 
       if (result.status === JoinStatus.Joined) {
         toast.success(t('joinedToast', { shiftTitle }));
-        router.push(getSafeRedirect(redirectTo) ?? `/shifts/${shiftId}`);
+        router.push(getSafeRedirect(redirectTo) ?? detailPath);
         router.refresh();
       } else if (result.status === JoinStatus.Pending) {
         toast.success(t('requestSentToast'));
-        router.push(`/shifts/${shiftId}`);
+        router.push(detailPath);
         router.refresh();
       } else if (result.status === JoinStatus.Rejected) {
         toast.error(t('rejectedToast'));
-        router.push(`/shifts/${shiftId}`);
+        router.push(detailPath);
         router.refresh();
       } else if (result.status === JoinStatus.RequirementsNeeded) {
         toast.error(t('requirementsNeededToast'));
