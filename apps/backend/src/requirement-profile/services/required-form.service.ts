@@ -11,7 +11,6 @@ import {
 } from '../../graphql/errors';
 import { ShiftInviteStatus } from '../../shift/enums';
 import { FormSubmissionStatus, RequiredFormTargetType } from '../enums';
-import { RequirementForm } from '../models/requirement-form.model';
 
 export type RequiredFormTarget = {
   targetType: RequiredFormTargetType;
@@ -148,9 +147,7 @@ export class RequiredFormService {
       where: {
         userId,
         event: { organizationUnitId },
-        status: {
-          in: [EventInviteStatus.INVITED, EventInviteStatus.VOLUNTEER_REJECTED],
-        },
+        status: EventInviteStatus.INVITED,
       },
     });
 
@@ -172,10 +169,7 @@ export class RequiredFormService {
       .where(
         and(
           eq(schema.shiftInstanceInvites.userId, userId),
-          inArray(schema.shiftInstanceInvites.status, [
-            ShiftInviteStatus.INVITED,
-            ShiftInviteStatus.VOLUNTEER_REJECTED,
-          ]),
+          eq(schema.shiftInstanceInvites.status, ShiftInviteStatus.INVITED),
           eq(schema.shiftInstances.isCancelled, false),
           eq(schema.shifts.organizationUnitId, organizationUnitId),
           eq(schema.shifts.isDeleted, false),
