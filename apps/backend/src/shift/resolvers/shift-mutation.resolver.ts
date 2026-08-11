@@ -168,6 +168,32 @@ export class ShiftMutationResolver {
     }));
   }
 
+  @Permissions(PERMISSIONS.SHIFT_EDIT)
+  @Mutation(() => [RequiredFormRef])
+  async setShiftInstanceRequiredForms(
+    @Args('instanceId', { type: () => ID }) instanceId: string,
+    @Args('formIds', { type: () => [String] }) formIds: string[],
+    @Context() context: AuthenticatedGraphQLContext,
+  ): Promise<RequiredFormRef[]> {
+    await this.shiftService.findInstanceById(
+      instanceId,
+      context.organizationUnitId,
+    );
+
+    const requiredForms = await this.requiredFormService.setRequiredForms(
+      {
+        targetType: RequiredFormTargetType.SHIFT_INSTANCE,
+        targetId: instanceId,
+      },
+      formIds,
+    );
+
+    return requiredForms.map(({ form, order }) => ({
+      form: plainToInstance(RequirementForm, form),
+      order,
+    }));
+  }
+
   @Mutation(() => JoinShiftInstanceResult)
   async joinShiftInstance(
     @Args('instanceId', { type: () => String }) instanceId: string,
