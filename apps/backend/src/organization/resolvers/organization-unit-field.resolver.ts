@@ -124,6 +124,7 @@ export class OrganizationUnitFieldResolver {
     return profile ? plainToInstance(RequirementProfile, profile) : null;
   }
 
+  @AllowAnonymous()
   @ResolveField(() => [RequiredFormRef])
   async requiredForms(
     @Parent() organizationUnit: OrganizationUnitEntity,

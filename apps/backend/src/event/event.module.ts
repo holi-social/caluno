@@ -17,6 +17,7 @@ import { EventInviteFieldResolver } from './resolvers/event-invite-field.resolve
 import { EventInviteUsersLoader } from './resolvers/event-invite-users.loader';
 import { EventMutationResolver } from './resolvers/event-mutation.resolver';
 import { EventOrganizationUnitLoader } from './resolvers/event-organization-unit.loader';
+import { EventOrganizationUnitFieldResolver } from './resolvers/event-organization-unit-field.resolver';
 import { EventOrganizerLoader } from './resolvers/event-organizer.loader';
 import { EventQueryResolver } from './resolvers/event-query.resolver';
 import { EventRequiredFormsLoader } from './resolvers/event-required-forms.loader';
@@ -48,6 +49,7 @@ import { ShiftEventFieldResolver } from './resolvers/shift-event-field.resolver'
     ShiftEventLoader,
     ShiftEventFieldResolver,
     EventOrganizationUnitLoader,
+    EventOrganizationUnitFieldResolver,
     EventOrganizerLoader,
     EventInviteLoader,
     EventInviteFieldResolver,
