@@ -1,6 +1,7 @@
 'use client';
 
 import { JoinStatus } from '@repo/data';
+import type { RequiredForm } from '@repo/data/react';
 import { useJoinEvent } from '@repo/data/react';
 import { Button } from '@repo/ui';
 import { BellRingIcon } from 'lucide-react';
@@ -14,11 +15,15 @@ import { useSession } from '@/lib/auth';
 interface EventFollowButtonProps {
   eventId: string;
   initialStatus: JoinStatus;
+  eventRequiredForms?: RequiredForm[];
+  organizationUnitRequiredForms?: RequiredForm[];
 }
 
 export function EventFollowButton({
   eventId,
   initialStatus,
+  eventRequiredForms = [],
+  organizationUnitRequiredForms = [],
 }: EventFollowButtonProps) {
   const t = useTranslations('EventDetail');
   const joinEvent = useJoinEvent();
@@ -35,18 +40,33 @@ export function EventFollowButton({
     status === JoinStatus.Pending ||
     status === JoinStatus.Rejected;
 
-  const redirectToFormsPage = useCallback(() => {
-    const redirectTo = encodeURIComponent(
-      `${pathname}${window.location.search}`,
-    );
-    router.push(`/events/${eventId}/forms?redirectTo=${redirectTo}`);
-  }, [eventId, pathname, router.push]);
+  const needsCombinedForms =
+    status === JoinStatus.None &&
+    eventRequiredForms.length > 0 &&
+    organizationUnitRequiredForms.length > 0;
+
+  const redirectToCombinedFormsPage = useCallback(() => {
+    router.push(`/events/${eventId}/join-forms?redirectTo=/`);
+  }, [eventId, router]);
 
   const handleFollow = useCallback(
     async (isAuto = false) => {
       if (!session.data?.user) {
-        const redirectTo = `/events/${eventId}?autoFollow=true`;
-        router.push(`/login?redirectTo=${encodeURIComponent(redirectTo)}`);
+        const baseRedirectTo = `/events/${eventId}?${new URLSearchParams({
+          ...(needsCombinedForms
+            ? { showJoinForms: 'true' }
+            : { autoFollow: 'true' }),
+        })}`;
+        const searchParams = new URLSearchParams({
+          signup: '1',
+          redirectTo: baseRedirectTo,
+        });
+        router.push(`/api/invite?${searchParams}`);
+        return;
+      }
+
+      if (needsCombinedForms) {
+        redirectToCombinedFormsPage();
         return;
       }
 
@@ -68,7 +88,10 @@ export function EventFollowButton({
             (f) => !f.submitted,
           );
           if (missingForms && missingForms.length > 0) {
-            redirectToFormsPage();
+            const redirectTo = encodeURIComponent(
+              isAuto ? '/' : `${pathname}${window.location.search}`,
+            );
+            router.push(`/events/${eventId}/forms?redirectTo=${redirectTo}`);
           }
         }
       } catch (error) {
@@ -78,10 +101,12 @@ export function EventFollowButton({
     [
       eventId,
       joinEvent,
-      router.push,
+      router,
       session.data?.user,
-      redirectToFormsPage,
+      pathname,
+      redirectToCombinedFormsPage,
       t,
+      needsCombinedForms,
     ],
   );
 
