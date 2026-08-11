@@ -1,13 +1,11 @@
 import { Badge, Card, CardContent } from '@repo/ui';
-import { CalendarFold, Clock, User, Users } from 'lucide-react';
+import { CalendarFold, Clock, User } from 'lucide-react';
 import { getTranslations } from 'next-intl/server';
 import { UserCard } from '@/components/user-card';
 import { getFormatting } from '@/lib/formatting/formatting-server';
 
 type ShiftInstanceMetaCardProps = {
   actualEndsAt: string;
-  filledCount: number;
-  maxVolunteers: number | null | undefined;
   createdAt: string;
   createdBy: {
     id: string;
@@ -18,8 +16,6 @@ type ShiftInstanceMetaCardProps = {
 
 export async function ShiftInstanceMetaCard({
   actualEndsAt,
-  filledCount,
-  maxVolunteers,
   createdAt,
   createdBy,
 }: ShiftInstanceMetaCardProps) {
@@ -28,7 +24,7 @@ export async function ShiftInstanceMetaCard({
   const isFinished = new Date() > new Date(actualEndsAt);
 
   return (
-    <Card>
+    <Card className="h-full">
       <CardContent>
         <dl className="space-y-4">
           <div>
@@ -42,18 +38,6 @@ export async function ShiftInstanceMetaCard({
               ) : (
                 <Badge variant="success">{t('status.active')}</Badge>
               )}
-            </dd>
-          </div>
-
-          <div>
-            <dt className="text-muted-foreground mb-2 flex gap-2 items-center">
-              <Users className="size-4 shrink-0" />{' '}
-              {t('instanceDetail.volunteersLabel')}
-            </dt>
-            <dd className="ml-6">
-              {maxVolunteers != null
-                ? `${filledCount}/${maxVolunteers}`
-                : filledCount}
             </dd>
           </div>
 

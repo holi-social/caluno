@@ -1076,13 +1076,12 @@
       "timeRangeConstraint": "Einsätze müssen innerhalb von ({window}) beginnen und enden."
     },
     "instanceDetail": {
-      "backToShift": "Zurück zum Einsatz",
       "editCta": "Bearbeiten",
+      "imagePlaceholder": "Bild hinzufügen",
       "informationTitle": "Einsatzinformationen",
       "inviteCta": "Einladen",
-      "subtitle": "Freiwillige und Einladungsstatus für diesen Termin",
-      "title": "Einsatztermin",
-      "volunteersLabel": "Freiwillige"
+      "inviteLink": "Einladungslink",
+      "title": "Einsatztermin"
     },
     "inviteForm": {
       "copyInviteLink": "Einladungslink kopieren",
@@ -1180,7 +1179,7 @@
       "createTitle": "Einsatz erstellen",
       "editDescription": "Bearbeite diesen Einsatz.",
       "editInstanceDescription": "Bearbeite diesen Termin des Einsatzes.",
-      "editInstanceTitle": "Einsatztermin bearbeiten",
+      "editInstanceTitle": "Einsatz bearbeiten",
       "editTitle": "Einsatz bearbeiten",
       "inviteDescription": "Eingeladene Freiwillige erhalten eine E-Mail mit Einsatzdetails und einem Link zum System.",
       "inviteTitle": "Freiwillige einladen"

@@ -16,6 +16,7 @@ import {
   LockKeyholeOpen,
   MapPin,
   SquarePen,
+  Users,
 } from 'lucide-react';
 import { getTranslations } from 'next-intl/server';
 import { Link } from '@/i18n/navigation';
@@ -33,6 +34,8 @@ type ShiftInstanceInformationCardProps = {
   instructions: string | null | undefined;
   rrule: string | null | undefined;
   visibility: ShiftVisibility;
+  filledCount: number;
+  maxVolunteers: number | null | undefined;
   canManage: boolean;
   isInstanceInThePast: boolean;
 };
@@ -47,6 +50,8 @@ export async function ShiftInstanceInformationCard({
   instructions,
   rrule,
   visibility,
+  filledCount,
+  maxVolunteers,
   canManage,
   isInstanceInThePast,
 }: ShiftInstanceInformationCardProps) {
@@ -57,11 +62,13 @@ export async function ShiftInstanceInformationCard({
   const endsAt = new Date(actualEndsAt);
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>{t('instanceDetail.informationTitle')}</CardTitle>
+    <Card className="h-full">
+      <CardHeader className="items-center">
+        <CardTitle className="text-lg">
+          {t('instanceDetail.informationTitle')}
+        </CardTitle>
         {canManage ? (
-          <CardAction>
+          <CardAction className="self-center">
             {isInstanceInThePast ? (
               <Button variant="outline" size="sm" disabled>
                 <SquarePen />
@@ -97,6 +104,14 @@ export async function ShiftInstanceInformationCard({
             <Badge variant={visibilityConfig[visibility].variant}>
               {visibilityConfig[visibility].label}
             </Badge>
+          </li>
+          <li className="flex gap-2">
+            <Users className="text-muted-foreground shrink-0" />
+            <span>
+              {maxVolunteers != null
+                ? `${filledCount}/${maxVolunteers}`
+                : filledCount}
+            </span>
           </li>
           {location ? (
             <li className="flex gap-2">
