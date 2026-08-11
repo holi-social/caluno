@@ -154,3 +154,15 @@ describe('formatInviteStatusSummary', () => {
     ).toBe('4 invited · 2 accepted · 1 signed up · 12 spots');
   });
 });
+
+describe('ShiftInviteStatus / EventInviteStatus parity', () => {
+  it('share the same set of string values', () => {
+    // adminUninviteTargetStatus/adminReinviteTargetStatus hardcode a
+    // ShiftInviteStatus return value regardless of whether the input was a
+    // ShiftInviteStatus or EventInviteStatus. That's only safe if the two
+    // enums share the same string values — this test guards the invariant.
+    const shiftValues = Object.values(ShiftInviteStatus).sort();
+    const eventValues = Object.values(EventInviteStatus).sort();
+    expect(eventValues).toEqual(shiftValues);
+  });
+});
