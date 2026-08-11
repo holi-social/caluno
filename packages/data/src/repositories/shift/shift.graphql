@@ -288,6 +288,12 @@ query GetShiftInstance($id: ID!) {
       maxVolunteers
       visibility
       rrule
+      createdAt
+      createdBy {
+        id
+        name
+        image
+      }
     }
     invites {
       status

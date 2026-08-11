@@ -4,6 +4,7 @@ import { ArrowLeft, UserPlus } from 'lucide-react';
 import { notFound } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
 import { ShiftInstanceInformationCard } from '@/domain/shift/components/shift-instance-information-card';
+import { ShiftInstanceMetaCard } from '@/domain/shift/components/shift-instance-meta-card';
 import { ShiftInstanceVolunteersPanel } from '@/domain/shift/components/shift-instance-volunteers-panel';
 import {
   parseShiftListQuery,
@@ -105,6 +106,17 @@ export default async function ShiftInstanceDetailPage({
             isInstanceInThePast={isInstanceInThePast}
           />
         </div>
+        <aside>
+          <ShiftInstanceMetaCard
+            actualEndsAt={instance.actualEndsAt}
+            filledCount={instance.filledCount}
+            maxVolunteers={
+              instance.overrideMaxVolunteers ?? instance.master.maxVolunteers
+            }
+            createdAt={instance.master.createdAt}
+            createdBy={instance.master.createdBy ?? null}
+          />
+        </aside>
       </div>
 
       <ShiftInstanceVolunteersPanel
