@@ -1293,16 +1293,16 @@ export class ShiftService {
         );
       }
 
-      if (!options.applyToAllFuture) {
+      if (options.applyToAllFuture || instance.master.rrule === null) {
+        return this.updateShiftInstanceSeries(
+          tx,
+          instance,
+          input,
+          organizationUnitId,
+        );
+      } else {
         return this.updateSingleShiftInstance(tx, instance, input);
       }
-
-      return this.updateShiftInstanceSeries(
-        tx,
-        instance,
-        input,
-        organizationUnitId,
-      );
     });
   }
 
@@ -1352,25 +1352,6 @@ export class ShiftService {
       throw new NotFoundGraphQLError(
         `Shift instance with ID ${instance.id} not found`,
       );
-    }
-
-    // A one-off shift (no recurrence) has a single instance that IS the shift,
-    // so keep its master in sync
-    if (!instance.master.rrule) {
-      const durationMinutes = getDurationMinutes(input.startsAt, input.endsAt);
-
-      await tx
-        .update(schema.shifts)
-        .set({
-          title: input.title,
-          location: input.location ?? null,
-          instructions: input.instructions ?? null,
-          minVolunteers: input.minVolunteers ?? null,
-          maxVolunteers: input.maxVolunteers ?? null,
-          originalStartsAt: input.startsAt,
-          durationMinutes,
-        })
-        .where(eq(schema.shifts.id, instance.masterId));
     }
 
     return updated;

@@ -3343,7 +3343,7 @@ describe('ShiftService.updateShiftInstance applyToAllFuture', () => {
   });
 });
 
-describe('ShiftService.updateShiftInstance — one-off syncs master min/max volunteers', () => {
+describe('ShiftService.updateShiftInstance — one-off syncs to master', () => {
   let app: INestApplication;
   let db: Database;
   let organizationUnitId: string;
@@ -3357,7 +3357,7 @@ describe('ShiftService.updateShiftInstance — one-off syncs master min/max volu
     shiftService = app.get(ShiftService);
   });
 
-  it('writes min/max volunteers to the master when editing a one-off instance', async () => {
+  it('Updates master when updating a one-off instance', async () => {
     // One-off shift (no rrule) has a single instance that IS the shift, so
     // editing it must keep the series-level master in sync.
     const startsAt = new Date(Date.now() + 1000 * 60 * 60 * 24 * 7);
@@ -3369,6 +3369,9 @@ describe('ShiftService.updateShiftInstance — one-off syncs master min/max volu
       rrule: null,
       minVolunteers: 2,
       maxVolunteers: 5,
+      title: 'Litre pack',
+      instructions: 'Do this',
+      location: 'London',
     });
 
     const [instance] = await db.query.shiftInstances.findMany({
@@ -3380,7 +3383,9 @@ describe('ShiftService.updateShiftInstance — one-off syncs master min/max volu
     await shiftService.updateShiftInstance(
       instance.id,
       {
-        title: shift.title,
+        title: 'Litter pick',
+        instructions: 'Do that',
+        location: 'Berlin',
         startsAt,
         endsAt,
         minVolunteers: 3,
@@ -3393,6 +3398,10 @@ describe('ShiftService.updateShiftInstance — one-off syncs master min/max volu
       .select()
       .from(schema.shifts)
       .where(eq(schema.shifts.id, shift.id));
+
+    expect(master.title).toBe('Litter pick');
+    expect(master.instructions).toBe('Do that');
+    expect(master.location).toBe('Berlin');
     expect(master.minVolunteers).toBe(3);
     expect(master.maxVolunteers).toBe(10);
   });
@@ -3407,6 +3416,9 @@ describe('ShiftService.updateShiftInstance — one-off syncs master min/max volu
       rrule: 'FREQ=WEEKLY;BYDAY=WE,TH;UNTIL=20261001T000000Z',
       minVolunteers: 2,
       maxVolunteers: 5,
+      title: 'Litre pack',
+      instructions: 'Do this',
+      location: 'London',
     });
 
     const instances = await db.query.shiftInstances.findMany({
@@ -3418,11 +3430,13 @@ describe('ShiftService.updateShiftInstance — one-off syncs master min/max volu
     await shiftService.updateShiftInstance(
       target.id,
       {
-        title: shift.title,
         startsAt: target.actualStartsAt,
         endsAt: target.actualEndsAt,
         minVolunteers: 9,
         maxVolunteers: 12,
+        title: 'Litter pick',
+        instructions: 'Do that',
+        location: 'Berlin',
       },
       organizationUnitId,
     );
@@ -3432,6 +3446,9 @@ describe('ShiftService.updateShiftInstance — one-off syncs master min/max volu
       .from(schema.shifts)
       .where(eq(schema.shifts.id, shift.id));
     // Only the per-instance override changes; the master stays as authored.
+    expect(master.title).toBe('Litre pack');
+    expect(master.instructions).toBe('Do this');
+    expect(master.location).toBe('London');
     expect(master.minVolunteers).toBe(2);
     expect(master.maxVolunteers).toBe(5);
   });
