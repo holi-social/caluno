@@ -3,6 +3,7 @@
 import { Badge, Card } from '@repo/ui';
 import { CalendarIcon, MailIcon, MapPinIcon, RepeatIcon } from 'lucide-react';
 import { useTranslations } from 'next-intl';
+import { shiftPublicPath } from '@/domain/shift/share';
 import { Link } from '@/i18n/navigation';
 import { useFormatting } from '@/lib/formatting/use-formatting';
 import { useRecurrenceLabel } from '../lib/recurrence-label';
@@ -35,7 +36,7 @@ export function ShiftCardMyInvited({
   return (
     <Card className="relative flex flex-col gap-0 overflow-hidden rounded-xl border border-border bg-card p-0">
       <Link
-        href={`/shifts/${shiftInstance.master.id}?instanceId=${shiftInstance.id}`}
+        href={shiftPublicPath(shiftInstance.master.id, shiftInstance.id)}
         aria-label={shiftInstance.master.title}
         className="absolute inset-0 rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60 focus-visible:ring-offset-1"
       />
