@@ -1578,6 +1578,60 @@ export class ShiftService {
     return { userIdsToAdd, userIdsToRemove };
   }
 
+  async deleteShiftInstance(
+    id: string,
+    organizationUnitId: string,
+  ): Promise<ShiftInstanceEntity> {
+    const instance = await this.findInstanceById(id, organizationUnitId);
+
+    if (instance.isCancelled) {
+      throw new ConflictGraphQLError(
+        `Shift instance with ID ${id} is already cancelled`,
+      );
+    }
+
+    if (instance.actualEndsAt.getTime() < Date.now()) {
+      throw new ConflictGraphQLError(
+        'Cannot delete a past or completed shift instance',
+      );
+    }
+
+    if (await this.hasOpenTimeEntryForInstance(id)) {
+      throw new ConflictGraphQLError(
+        'Cannot delete a shift instance with an open time entry',
+      );
+    }
+
+    const [cancelledInstance] = await this.db
+      .update(schema.shiftInstances)
+      .set({ isCancelled: true })
+      .where(eq(schema.shiftInstances.id, id))
+      .returning();
+
+    if (!cancelledInstance) {
+      throw new NotFoundGraphQLError(`Shift instance with ID ${id} not found`);
+    }
+
+    return cancelledInstance;
+  }
+
+  private async hasOpenTimeEntryForInstance(
+    instanceId: string,
+  ): Promise<boolean> {
+    const [entry] = await this.db
+      .select({ id: schema.timeEntries.id })
+      .from(schema.timeEntries)
+      .where(
+        and(
+          eq(schema.timeEntries.shiftInstanceId, instanceId),
+          isNull(schema.timeEntries.endedAt),
+        ),
+      )
+      .limit(1);
+
+    return entry !== undefined;
+  }
+
   async findVolunteers(
     instanceId: string,
     organizationUnitId: string,
