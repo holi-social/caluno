@@ -44,8 +44,14 @@ export class ShiftMutationResolver {
     targetUserId: string,
     instanceId: string,
     organizationUnitId: string,
+    status: ShiftInviteStatus,
   ): Promise<void> {
-    if (actorUserId === targetUserId) {
+    const isSelf = actorUserId === targetUserId;
+    const isAdminOnlyTarget =
+      status === ShiftInviteStatus.ADMIN_REJECTED ||
+      status === ShiftInviteStatus.INVITED;
+
+    if (isSelf && !isAdminOnlyTarget) {
       return;
     }
 
@@ -235,6 +241,7 @@ export class ShiftMutationResolver {
       targetUserId,
       instanceId,
       context.organizationUnitId,
+      status,
     );
 
     const invite = await this.shiftService.updateShiftInstanceInviteStatus(

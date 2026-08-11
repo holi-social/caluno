@@ -9,6 +9,7 @@ import {
 } from 'bun:test';
 import type { INestApplication } from '@nestjs/common';
 import { eq } from 'drizzle-orm';
+import { PERMISSIONS } from '../src/auth/constants';
 import type { Database } from '../src/database/database.module';
 import * as schema from '../src/database/schema';
 import { NotFoundGraphQLError } from '../src/graphql/errors';
@@ -31,7 +32,16 @@ import {
   createOrganizationWithType,
   createUnit,
 } from './factories/org.factory';
-import { applyBunAuthMocks, setAuthMockUserId } from './helpers/auth-mocks';
+import {
+  assignRoleToMembership,
+  createRole,
+  grantPermissionToRole,
+} from './factories/role.factory';
+import {
+  applyBunAuthMocks,
+  getAuthMockUserId,
+  setAuthMockUserId,
+} from './helpers/auth-mocks';
 import {
   graphqlRequest,
   graphqlRequestRequiringData,
@@ -2410,12 +2420,14 @@ describe('ShiftInstance.invites (VOLI-842)', () => {
   let app: INestApplication;
   let db: Database;
   let organizationUnitId: string;
+  let organizationId: string;
 
   beforeAll(async () => {
     const context = await getGraphqlTestContext();
     app = context.app;
     db = context.db;
     organizationUnitId = context.organizationUnitId;
+    organizationId = context.organizationId;
   });
 
   it('returns invitees with status including SELF_JOINED distinct from ACCEPTED', async () => {
@@ -2692,6 +2704,140 @@ describe('ShiftInstance.invites (VOLI-842)', () => {
       where: { instanceId, userId: volunteer.id },
     });
     expect(row?.status).toBe(ShiftInviteStatus.ADMIN_REJECTED);
+  });
+
+  it('forbids volunteer from self-setting ADMIN_REJECTED without SHIFT_EDIT', async () => {
+    const { id: shiftId } = await createShift(db, { organizationUnitId });
+    const instances = await db.query.shiftInstances.findMany({
+      where: { masterId: shiftId },
+    });
+    const instanceId = instances[0]?.id;
+    expect(instanceId).toBeDefined();
+    if (!instanceId) {
+      throw new Error('Expected shift instance');
+    }
+
+    const volunteer = await createUser(db);
+    await db.insert(schema.shiftInstanceInvites).values({
+      instanceId,
+      userId: volunteer.id,
+      status: ShiftInviteStatus.ACCEPTED,
+    });
+
+    const originalUserId = getAuthMockUserId();
+    setAuthMockUserId(volunteer.id);
+    try {
+      const response = await graphqlRequest<{
+        updateShiftInstanceInviteStatus: { status: string };
+      }>(app, {
+        query: `
+          mutation UpdateInviteStatus(
+            $instanceId: String!
+            $userId: String!
+            $status: ShiftInviteStatus!
+          ) {
+            updateShiftInstanceInviteStatus(
+              instanceId: $instanceId
+              userId: $userId
+              status: $status
+            ) {
+              status
+            }
+          }
+        `,
+        variables: {
+          instanceId,
+          userId: volunteer.id,
+          status: ShiftInviteStatus.ADMIN_REJECTED,
+        },
+        headers: { 'x-organization-unit-id': organizationUnitId },
+      });
+
+      expect(response.errors?.[0]?.message).toMatch(/permission|Forbidden/i);
+
+      const row = await db.query.shiftInstanceInvites.findFirst({
+        where: { instanceId, userId: volunteer.id },
+      });
+      expect(row?.status).toBe(ShiftInviteStatus.ACCEPTED);
+    } finally {
+      setAuthMockUserId(originalUserId);
+    }
+  });
+
+  it('forbids member without SHIFT_EDIT from uninviting another user', async () => {
+    const { id: shiftId } = await createShift(db, { organizationUnitId });
+    const instances = await db.query.shiftInstances.findMany({
+      where: { masterId: shiftId },
+    });
+    const instanceId = instances[0]?.id;
+    expect(instanceId).toBeDefined();
+    if (!instanceId) {
+      throw new Error('Expected shift instance');
+    }
+
+    const volunteer = await createUser(db);
+    await db.insert(schema.shiftInstanceInvites).values({
+      instanceId,
+      userId: volunteer.id,
+      status: ShiftInviteStatus.ACCEPTED,
+    });
+
+    const actor = await createUser(db);
+    const membership = await addMembership(db, actor.id, organizationUnitId);
+    const role = await createRole(db, { organizationId });
+    const shiftViewPermission = await db.query.permissions.findFirst({
+      where: { key: PERMISSIONS.SHIFT_VIEW },
+    });
+    if (!shiftViewPermission) {
+      throw new Error('SHIFT_VIEW permission not seeded in test database');
+    }
+    await grantPermissionToRole(db, {
+      roleId: role.id,
+      permissionId: shiftViewPermission.id,
+    });
+    await assignRoleToMembership(db, {
+      membershipId: membership.id,
+      roleId: role.id,
+    });
+
+    const originalUserId = getAuthMockUserId();
+    setAuthMockUserId(actor.id);
+    try {
+      const response = await graphqlRequest<{
+        updateShiftInstanceInviteStatus: { status: string };
+      }>(app, {
+        query: `
+          mutation UpdateInviteStatus(
+            $instanceId: String!
+            $userId: String!
+            $status: ShiftInviteStatus!
+          ) {
+            updateShiftInstanceInviteStatus(
+              instanceId: $instanceId
+              userId: $userId
+              status: $status
+            ) {
+              status
+            }
+          }
+        `,
+        variables: {
+          instanceId,
+          userId: volunteer.id,
+          status: ShiftInviteStatus.ADMIN_REJECTED,
+        },
+        headers: { 'x-organization-unit-id': organizationUnitId },
+      });
+
+      expect(response.errors?.[0]?.message).toMatch(/permission|Forbidden/i);
+
+      const row = await db.query.shiftInstanceInvites.findFirst({
+        where: { instanceId, userId: volunteer.id },
+      });
+      expect(row?.status).toBe(ShiftInviteStatus.ACCEPTED);
+    } finally {
+      setAuthMockUserId(originalUserId);
+    }
   });
 
   it('keeps invites order stable after admin uninvite', async () => {
