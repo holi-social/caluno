@@ -254,22 +254,10 @@ export class OrganizationUnitService {
       }
     }
 
-    let slug: string | undefined;
-    if (input.name) {
-      slug = slugify(input.name);
-      const existing = await this.findBySlug(slug);
-      if (existing && existing.id !== id) {
-        throw new ConflictGraphQLError(
-          `Organization unit slug "${slug}" already exists`,
-        );
-      }
-    }
-
     const [updated] = await this.db
       .update(schema.organizationUnits)
       .set({
         ...(await this.resolveUpdateInput(input)),
-        ...(slug ? { slug } : {}),
       })
       .where(
         and(

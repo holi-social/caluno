@@ -1794,7 +1794,6 @@ export class ShiftService {
           .update(schema.shifts)
           .set({
             ...shiftInput,
-            slug: shiftInput.title ? slugify(shiftInput.title) : undefined,
             originalStartsAt: input.startsAt,
             durationMinutes,
             ...(inputEventId !== undefined ? { eventId: inputEventId } : {}),
