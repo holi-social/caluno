@@ -1,6 +1,7 @@
 'use client';
 
 import { Button, Input } from '@repo/ui';
+import { Plus } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useActionState, useState } from 'react';
 import { FileUpload } from '@/components/storage/file-upload';
@@ -123,6 +124,7 @@ export function CreateOrganizationForm() {
       </div>
 
       <Button type="submit" disabled={isPending} className="w-full">
+        <Plus />
         {isPending ? t('submitting') : t('submit')}
       </Button>
     </form>

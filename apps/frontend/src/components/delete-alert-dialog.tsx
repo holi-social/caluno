@@ -11,6 +11,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@repo/ui';
+import { Trash2, X } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
 interface DeleteAlertDialogProps {
@@ -39,8 +40,12 @@ export function DeleteAlertDialog({
           <AlertDialogDescription>{description}</AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel>{t('cancel')}</AlertDialogCancel>
+          <AlertDialogCancel>
+            <X />
+            {t('cancel')}
+          </AlertDialogCancel>
           <AlertDialogAction onClick={onDelete} variant="destructive">
+            <Trash2 />
             {deleteLabel || t('delete')}
           </AlertDialogAction>
         </AlertDialogFooter>

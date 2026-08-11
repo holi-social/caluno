@@ -19,7 +19,16 @@ import {
   Switch,
   Textarea,
 } from '@repo/ui';
-import { FileText, Lock, Plus, Save, Trash2, UserCircle2 } from 'lucide-react';
+import {
+  ArrowDown,
+  ArrowUp,
+  FileText,
+  Lock,
+  Plus,
+  Save,
+  Trash2,
+  UserCircle2,
+} from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useEffect, useState } from 'react';
 import {
@@ -493,6 +502,7 @@ function FieldCard({
   const t = useTranslations('RequirementForm.block');
   const tField = useTranslations('RequirementForm.fieldForm');
   const tValidation = useTranslations('RequirementForm.validation');
+  const tCommon = useTranslations('Common');
   const showOptions =
     fieldType === FieldType.SingleChoice || fieldType === FieldType.MultiChoice;
   const isDocument = fieldType === FieldType.DocumentAcknowledgement;
@@ -540,26 +550,29 @@ function FieldCard({
               <Button
                 type="button"
                 variant="ghost"
-                size="sm"
+                size="icon"
+                tooltip={tCommon('moveUp')}
                 disabled={!canMoveUp}
                 onClick={onMoveUp}
               >
-                ↑
+                <ArrowUp className="size-4" />
               </Button>
               <Button
                 type="button"
                 variant="ghost"
-                size="sm"
+                size="icon"
+                tooltip={tCommon('moveDown')}
                 disabled={!canMoveDown}
                 onClick={onMoveDown}
               >
-                ↓
+                <ArrowDown className="size-4" />
               </Button>
               <Button
                 type="button"
                 variant="ghost"
                 size="icon"
                 className="text-muted-foreground hover:text-destructive size-8"
+                tooltip={tCommon('delete')}
                 onClick={onRemove}
               >
                 <Trash2 className="size-4" />

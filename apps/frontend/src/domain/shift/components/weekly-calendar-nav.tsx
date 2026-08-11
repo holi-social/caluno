@@ -36,7 +36,12 @@ export function WeeklyCalendarNav({
 
   return (
     <div className="flex items-center gap-2">
-      <Button variant="outline" size="icon-sm" onClick={() => navigate('prev')}>
+      <Button
+        variant="outline"
+        size="icon-sm"
+        tooltip={t('calendar.prevAria')}
+        onClick={() => navigate('prev')}
+      >
         <ChevronLeft className="size-4" />
       </Button>
 
@@ -52,7 +57,12 @@ export function WeeklyCalendarNav({
         })}
       </span>
 
-      <Button variant="outline" size="icon-sm" onClick={() => navigate('next')}>
+      <Button
+        variant="outline"
+        size="icon-sm"
+        tooltip={t('calendar.nextAria')}
+        onClick={() => navigate('next')}
+      >
         <ChevronRight className="size-4" />
       </Button>
     </div>
