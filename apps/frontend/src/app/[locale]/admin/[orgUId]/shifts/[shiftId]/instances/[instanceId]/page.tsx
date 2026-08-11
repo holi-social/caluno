@@ -3,6 +3,7 @@ import { Button } from '@repo/ui';
 import { ArrowLeft, UserPlus } from 'lucide-react';
 import { notFound } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
+import { ShiftInstanceRequiredFormsPopover } from '@/domain/shift/components/shift-instance-required-forms-popover';
 import { ShiftInstanceVolunteersPanel } from '@/domain/shift/components/shift-instance-volunteers-panel';
 import {
   parseShiftListQuery,
@@ -75,6 +76,11 @@ export default async function ShiftInstanceDetailPage({
               {t('instanceDetail.backToShift')}
             </Link>
           </Button>
+
+          <ShiftInstanceRequiredFormsPopover
+            orgUId={orgUId}
+            instanceId={instanceId}
+          />
 
           {isOpenShift && (
             <ShareLinkButton
