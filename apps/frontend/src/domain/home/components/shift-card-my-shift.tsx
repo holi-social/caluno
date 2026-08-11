@@ -3,6 +3,7 @@
 import { Card, cn } from '@repo/ui';
 import { Clock4Icon, MapPinIcon, RepeatIcon } from 'lucide-react';
 import { useTranslations } from 'next-intl';
+import { shiftPublicPath } from '@/domain/shift/share';
 import { Link } from '@/i18n/navigation';
 import { useFormatting } from '@/lib/formatting/use-formatting';
 import { useRecurrenceLabel } from '../lib/recurrence-label';
@@ -94,7 +95,7 @@ export function ShiftCardMyShift({
 
   return (
     <Link
-      href={`/shifts/${shiftInstance.master.id}`}
+      href={shiftPublicPath(shiftInstance.master.id, shiftInstance.id)}
       className="block h-full rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60 focus-visible:ring-offset-1"
     >
       {card}
