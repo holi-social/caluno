@@ -190,6 +190,10 @@ fragment PublicEventOrganizationUnitFields on EventOrganizationUnit {
   name
   slug
   logoUrl
+  myMembershipState
+  requiredForms {
+    ...RequiredFormRefFields
+  }
 }
 
 fragment PublicShiftInstanceFields on ShiftInstance {
