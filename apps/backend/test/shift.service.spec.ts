@@ -46,6 +46,7 @@ describe('ShiftService', () => {
     notificationService = {
       notifyShiftInstanceInvited: mock(() => {}),
       notifyShiftInvited: mock(() => {}),
+      notifyShiftInstanceCancelled: mock(() => {}),
     } as unknown as NotificationService;
 
     shiftService = new ShiftService(
@@ -1047,6 +1048,76 @@ describe('ShiftService', () => {
       expect(statusByUserId.get(rejectedUser.id)).toBe(
         ShiftInviteStatus.VOLUNTEER_REJECTED,
       );
+    });
+
+    it('emits a cancellation notification for volunteers with an active invite', async () => {
+      const { startsAt, endsAt } = futureWindow();
+      const shift = await createShift(db, {
+        organizationUnitId,
+        createdById: userId,
+        startsAt,
+        endsAt,
+        rrule: null,
+      });
+      const instances = await getInstances(shift.id);
+      const invitedUser = await createUser(db);
+
+      await db.insert(schema.shiftInstanceInvites).values({
+        instanceId: instances[0].id,
+        userId: invitedUser.id,
+        status: ShiftInviteStatus.INVITED,
+      });
+
+      (
+        notificationService.notifyShiftInstanceCancelled as ReturnType<
+          typeof mock
+        >
+      ).mockClear();
+
+      await shiftService.deleteShiftInstance(
+        instances[0].id,
+        organizationUnitId,
+      );
+
+      await new Promise((resolve) => setTimeout(resolve, 50));
+
+      expect(
+        notificationService.notifyShiftInstanceCancelled,
+      ).toHaveBeenCalledWith(
+        expect.objectContaining({
+          instanceId: instances[0].id,
+          recipientUserIds: [invitedUser.id],
+        }),
+      );
+    });
+
+    it('does not emit a cancellation notification when there are no active invites', async () => {
+      const { startsAt, endsAt } = futureWindow();
+      const shift = await createShift(db, {
+        organizationUnitId,
+        createdById: userId,
+        startsAt,
+        endsAt,
+        rrule: null,
+      });
+      const instances = await getInstances(shift.id);
+
+      (
+        notificationService.notifyShiftInstanceCancelled as ReturnType<
+          typeof mock
+        >
+      ).mockClear();
+
+      await shiftService.deleteShiftInstance(
+        instances[0].id,
+        organizationUnitId,
+      );
+
+      await new Promise((resolve) => setTimeout(resolve, 50));
+
+      expect(
+        notificationService.notifyShiftInstanceCancelled,
+      ).not.toHaveBeenCalled();
     });
   });
 });

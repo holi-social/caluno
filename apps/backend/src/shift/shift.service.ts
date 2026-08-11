@@ -115,7 +115,7 @@ export class ShiftService {
   async findInstanceById(
     id: string,
     organizationUnitId: string,
-  ): Promise<ShiftInstanceEntity> {
+  ): Promise<ShiftInstanceEntity & { master: ShiftEntity }> {
     const instance = await this.db.query.shiftInstances.findFirst({
       where: { id },
       with: { master: true },
@@ -1645,6 +1645,12 @@ export class ShiftService {
       },
     );
 
+    void this.loadAndEmitShiftInstanceCancelledNotification(
+      instance.master,
+      cancelledInstance,
+      recipientUserIds,
+    );
+
     return cancelledInstance;
   }
 
@@ -2091,6 +2097,42 @@ export class ShiftService {
     } catch (error) {
       this.logger.error(
         `Failed to emit shift instance invited notification: ${error instanceof Error ? error.message : String(error)}`,
+      );
+    }
+  }
+
+  private async loadAndEmitShiftInstanceCancelledNotification(
+    shift: ShiftEntity,
+    instance: ShiftInstanceEntity,
+    recipientUserIds: string[],
+  ): Promise<void> {
+    if (recipientUserIds.length === 0) {
+      return;
+    }
+    try {
+      const organizationUnit = await this.db.query.organizationUnits.findFirst({
+        where: { id: shift.organizationUnitId },
+        columns: { id: true, name: true },
+      });
+
+      if (!organizationUnit) {
+        return;
+      }
+
+      this.notificationService.notifyShiftInstanceCancelled({
+        organizationUnitId: organizationUnit.id,
+        organizationUnitName: organizationUnit.name,
+        shiftId: shift.id,
+        shiftTitle: shift.title,
+        shiftLocation: shift.location,
+        recipientUserIds,
+        startsAt: instance.actualStartsAt,
+        endsAt: instance.actualEndsAt,
+        instanceId: instance.id,
+      });
+    } catch (error) {
+      this.logger.error(
+        `Failed to emit shift instance cancelled notification: ${error instanceof Error ? error.message : String(error)}`,
       );
     }
   }
