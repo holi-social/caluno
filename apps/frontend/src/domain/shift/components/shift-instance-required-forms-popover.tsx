@@ -87,6 +87,7 @@ export function ShiftInstanceRequiredFormsPopover({
         shiftTitle: instance?.master.title ?? '',
       })}
       onOpenChange={handleOpenChange}
+      size="sm"
     />
   );
 }
