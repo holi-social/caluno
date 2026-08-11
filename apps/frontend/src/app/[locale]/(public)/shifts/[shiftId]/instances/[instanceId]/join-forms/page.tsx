@@ -6,7 +6,7 @@ import {
 } from '@repo/data';
 import { notFound } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
-import { ShiftFormsClient } from '@/app/[locale]/(public)/shifts/[shiftId]/instances/[instanceId]/forms/shift-forms-client';
+import { ShiftJoinFormsClient } from '@/app/[locale]/(public)/shifts/[shiftId]/instances/[instanceId]/join-forms/shift-join-forms-client';
 import type { RequiredFormItem } from '@/domain/requirement-form/components/required-form-renderer';
 import { redirect } from '@/i18n/navigation';
 import { resolveLocale } from '@/i18n/routing';
@@ -14,14 +14,14 @@ import { getSession } from '@/lib/auth-server';
 import { getDataClient } from '@/lib/data-client';
 import { getSafeRedirect } from '@/lib/safe-redirect';
 
-interface ShiftFormsPageProps {
+interface ShiftJoinFormsPageProps {
   params: Promise<{ locale: string; shiftId: string; instanceId: string }>;
   searchParams: Promise<{ redirectTo?: string }>;
 }
 
 type PublicShift = Awaited<ReturnType<DataClient['shift']['findById']>>;
 
-export async function generateMetadata({ params }: ShiftFormsPageProps) {
+export async function generateMetadata({ params }: ShiftJoinFormsPageProps) {
   const { shiftId, locale } = await params;
   const data = await getDataClient({ locale: resolveLocale(locale) });
   let shift: PublicShift;
@@ -39,10 +39,10 @@ export async function generateMetadata({ params }: ShiftFormsPageProps) {
   };
 }
 
-export default async function ShiftFormsPage({
+export default async function ShiftJoinFormsPage({
   params,
   searchParams,
-}: ShiftFormsPageProps) {
+}: ShiftJoinFormsPageProps) {
   const { locale, shiftId, instanceId } = await params;
   const { redirectTo } = await searchParams;
 
@@ -68,49 +68,57 @@ export default async function ShiftFormsPage({
 
   const session = await getSession();
   if (!session) {
-    const params = new URLSearchParams({
+    const searchParams = new URLSearchParams({
+      signup: '1',
       redirectTo:
-        redirectTo ?? `/shifts/${shiftId}/instances/${instanceId}/forms`,
+        redirectTo ?? `/shifts/${shiftId}/instances/${instanceId}/join-forms`,
     });
-    redirect({ href: `/api/invite?${params}`, locale });
+    redirect({ href: `/api/invite?${searchParams}`, locale });
   }
 
-  const joinResult = await data.shift
-    .joinInstance(instanceId)
-    .catch(() => null);
-
-  if (joinResult?.status === JoinStatus.Joined) {
+  const membershipState =
+    shift.organizationUnit?.myMembershipState ?? JoinStatus.None;
+  if (membershipState === JoinStatus.Joined) {
     redirect({
       href: getSafeRedirect(redirectTo) ?? `/shifts/${shiftId}`,
       locale,
     });
   }
 
-  const requiredForms: RequiredFormItem[] =
-    joinResult?.requiredForms ??
-    [
-      ...(instance.requiredForms?.map((ref) => ({
-        form: ref.form,
-        order: ref.order,
-        submitted: false,
-        targetType: RequiredFormTargetType.ShiftInstance,
-        targetId: instanceId,
-      })) ?? []),
-      ...(shift.requiredForms?.map((ref) => ({
-        form: ref.form,
-        order: ref.order,
-        submitted: false,
-        targetType: RequiredFormTargetType.Shift,
-        targetId: shiftId,
-      })) ?? []),
-    ].sort((a, b) => a.order - b.order);
+  const submissionsResult = await data.requirementForm
+    .findMyFormSubmissions(shift.organizationUnitId)
+    .catch(() => []);
 
   const submittedFormIds = new Set<string>(
-    requiredForms
-      .filter((ref) => ref.submitted)
-      .map((ref) => ref.form.id)
+    submissionsResult
+      .filter((s) => s.status === 'SUBMITTED')
+      .map((s) => s.form?.id)
       .filter((id): id is string => Boolean(id)),
   );
+
+  const requiredForms: RequiredFormItem[] = [
+    ...(instance.requiredForms?.map((ref) => ({
+      form: ref.form,
+      order: ref.order,
+      submitted: submittedFormIds.has(ref.form.id),
+      targetType: RequiredFormTargetType.ShiftInstance,
+      targetId: instanceId,
+    })) ?? []),
+    ...(shift.requiredForms?.map((ref) => ({
+      form: ref.form,
+      order: ref.order,
+      submitted: submittedFormIds.has(ref.form.id),
+      targetType: RequiredFormTargetType.Shift,
+      targetId: shiftId,
+    })) ?? []),
+    ...(shift.organizationUnit?.requiredForms?.map((ref) => ({
+      form: ref.form,
+      order: ref.order,
+      submitted: submittedFormIds.has(ref.form.id),
+      targetType: RequiredFormTargetType.OrganizationUnit,
+      targetId: shift.organizationUnitId,
+    })) ?? []),
+  ].sort((a, b) => a.order - b.order);
 
   let profileData: Record<string, string> = {};
   try {
@@ -129,7 +137,7 @@ export default async function ShiftFormsPage({
   return (
     <div className="min-h-screen bg-muted/30 px-4 py-10">
       <div className="mx-auto max-w-2xl">
-        <ShiftFormsClient
+        <ShiftJoinFormsClient
           shiftId={shiftId}
           instanceId={instanceId}
           shiftTitle={shift.title}

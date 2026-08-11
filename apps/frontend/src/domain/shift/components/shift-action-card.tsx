@@ -6,6 +6,7 @@ import {
   ShiftInviteStatus,
   type ShiftVisibility,
 } from '@repo/data';
+import type { RequiredForm } from '@repo/data/react';
 import { Badge, Card } from '@repo/ui';
 import {
   CalendarIcon,
@@ -32,6 +33,10 @@ interface ShiftActionCardProps {
   membershipState: JoinStatus;
   /** Master capacity, used when the instance has no override. */
   masterMaxVolunteers?: number | null;
+  /** Required forms configured on the shift itself. */
+  shiftRequiredForms?: RequiredForm[];
+  /** Required forms configured on the shift's organization unit. */
+  organizationUnitRequiredForms?: RequiredForm[];
 }
 
 const isParticipatingInvite = (
@@ -50,6 +55,8 @@ export function ShiftActionCard({
   preselectedInstanceId,
   membershipState,
   masterMaxVolunteers,
+  shiftRequiredForms = [],
+  organizationUnitRequiredForms = [],
 }: ShiftActionCardProps) {
   const t = useTranslations('ShiftDetail');
   const { formatTimeRange, formatDate } = useFormatting();
@@ -221,6 +228,9 @@ export function ShiftActionCard({
           }
           isPendingIntended={isPendingIntended}
           startsAt={selected.actualStartsAt}
+          shiftRequiredForms={shiftRequiredForms}
+          instanceRequiredForms={selected.requiredForms?.map((ref) => ref.form)}
+          organizationUnitRequiredForms={organizationUnitRequiredForms}
           className="w-full"
           label={t('signUpCta', {
             date: formatDate(new Date(selected.actualStartsAt), {

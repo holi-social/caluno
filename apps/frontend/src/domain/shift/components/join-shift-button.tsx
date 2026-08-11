@@ -7,6 +7,7 @@ import {
   ShiftInviteStatus,
   ShiftVisibility,
 } from '@repo/data';
+import type { RequiredForm } from '@repo/data/react';
 import {
   useJoinShiftInstance,
   useUpdateShiftInstanceInviteStatus,
@@ -54,6 +55,12 @@ interface JoinShiftButtonProps {
   className?: string;
   /** True when the user already clicked join for this instance and the backend returned a pending membership request. */
   isPendingIntended?: boolean;
+  /** Required forms configured on the shift itself. */
+  shiftRequiredForms?: RequiredForm[];
+  /** Required forms configured on the selected shift instance. */
+  instanceRequiredForms?: RequiredForm[];
+  /** Required forms configured on the shift's organization unit. */
+  organizationUnitRequiredForms?: RequiredForm[];
 }
 
 export function JoinShiftButton({
@@ -72,6 +79,9 @@ export function JoinShiftButton({
   label,
   className,
   isPendingIntended = false,
+  shiftRequiredForms = [],
+  instanceRequiredForms = [],
+  organizationUnitRequiredForms = [],
 }: JoinShiftButtonProps) {
   const router = useRouter();
   const pathname = usePathname();
@@ -122,14 +132,35 @@ export function JoinShiftButton({
     }
   }, [instanceId, respondToInvite, router, t, onInviteStatusChange]);
 
+  const targetRequiredForms = [...shiftRequiredForms, ...instanceRequiredForms];
+
+  const needsCombinedForms =
+    membershipState === JoinStatus.None &&
+    targetRequiredForms.length > 0 &&
+    organizationUnitRequiredForms.length > 0;
+
+  const redirectToCombinedForms = useCallback(() => {
+    if (!instanceId) {
+      toast.error('This shift link is missing an instance.');
+      return;
+    }
+    router.push(
+      `/shifts/${shiftId}/instances/${instanceId}/join-forms?redirectTo=/`,
+    );
+  }, [instanceId, router, shiftId]);
+
   const handleJoin = useCallback(
     async (isAuto = false) => {
       if (!isAuthenticated) {
+        const baseRedirectTo = `/shifts/${shiftId}?${new URLSearchParams({
+          ...(needsCombinedForms
+            ? { showJoinForms: 'true' }
+            : { autoJoin: 'true' }),
+          ...(instanceId ? { instanceId } : {}),
+        })}`;
         const searchParams = new URLSearchParams({
-          redirectTo: `/shifts/${shiftId}?${new URLSearchParams({
-            autoJoin: 'true',
-            ...(instanceId ? { instanceId } : {}),
-          })}`,
+          signup: '1',
+          redirectTo: baseRedirectTo,
         });
         router.push(`/api/invite?${searchParams}`);
         return;
@@ -137,6 +168,11 @@ export function JoinShiftButton({
 
       if (!instanceId) {
         toast.error('This shift link is missing an instance.');
+        return;
+      }
+
+      if (needsCombinedForms) {
+        redirectToCombinedForms();
         return;
       }
 
@@ -160,9 +196,13 @@ export function JoinShiftButton({
           );
           if (missingForms.length > 0) {
             const redirectTo = encodeURIComponent(
-              `${pathname}${window.location.search}`,
+              isAuto ? '/' : `${pathname}${window.location.search}`,
             );
-            if (missingForms[0]?.targetType === RequiredFormTargetType.Shift) {
+            if (
+              missingForms[0]?.targetType === RequiredFormTargetType.Shift ||
+              missingForms[0]?.targetType ===
+                RequiredFormTargetType.ShiftInstance
+            ) {
               router.push(
                 `/shifts/${shiftId}/instances/${instanceId}/forms?redirectTo=${redirectTo}`,
               );
@@ -181,39 +221,43 @@ export function JoinShiftButton({
             (s) => s.status === 'APPROVED',
           );
 
-        if (missing && missing.length > 0) {
-          const missingNames = missing.map((s) => s.name).join(', ');
-          const approvedNames = approved?.map((s) => s.name).join(', ');
-          toast.info(
-            t('join.requirementsNeeded', {
-              missing: missingNames,
-              hasCompleted: approved && approved.length > 0 ? 'yes' : 'no',
-              completed: approvedNames ?? '',
-            }),
-          );
+          if (missing && missing.length > 0) {
+            const missingNames = missing.map((s) => s.name).join(', ');
+            const approvedNames = approved?.map((s) => s.name).join(', ');
+            toast.info(
+              t('join.requirementsNeeded', {
+                missing: missingNames,
+                hasCompleted: approved && approved.length > 0 ? 'yes' : 'no',
+                completed: approvedNames ?? '',
+              }),
+            );
+          } else {
+            toast.info(t('join.requirementsFallback'));
+          }
         } else {
-          toast.info(t('join.requirementsFallback'));
+          toast.error(t('join.unexpected'));
         }
-      } else {
-        toast.error(t('join.unexpected'));
-      }
 
-      router.refresh();
-    } catch (error) {
-      toast.error(getErrorMessage(error) ?? t('join.failed'));
-    }
-  }, [
-    isAuthenticated,
-    shiftId,
-    instanceId,
-    joinShiftInstance,
-    router,
-    pathname,
-    t,
-    organizationUnitId,
-    onInviteStatusChange,
-    onMembershipStateChange,
-  ]);
+        router.refresh();
+      } catch (error) {
+        toast.error(getErrorMessage(error) ?? t('join.failed'));
+      }
+    },
+    [
+      isAuthenticated,
+      shiftId,
+      instanceId,
+      joinShiftInstance,
+      router,
+      pathname,
+      t,
+      organizationUnitId,
+      onInviteStatusChange,
+      onMembershipStateChange,
+      needsCombinedForms,
+      redirectToCombinedForms,
+    ],
+  );
 
   const handleReenter = useCallback(async () => {
     if (visibility === ShiftVisibility.AllMembers) {
