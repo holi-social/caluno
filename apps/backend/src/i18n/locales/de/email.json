@@ -61,6 +61,19 @@
     "previewText": "Setze dein {brandName}-Passwort zurück.",
     "subject": "Setze dein {brandName}-Passwort zurück"
   },
+  "shiftInstanceCancelled": {
+    "detailLocation": "Ort",
+    "detailOrganization": "Organisation",
+    "detailShift": "Einsatz",
+    "detailWhen": "Wann",
+    "footerNote": "Du erhältst diese E-Mail, weil ein Einsatz, zu dem du eingeladen warst, auf {brandName} abgesagt wurde.",
+    "greeting": "Hallo {firstName}, ein Einsatz, zu dem du eingeladen warst, wurde abgesagt.",
+    "heading": "Einsatz abgesagt",
+    "note": "Für diesen Einsatz werden keine Freiwilligen mehr benötigt. Du musst nichts weiter tun.",
+    "previewText": "{shiftTitle} bei {organizationName} wurde abgesagt.",
+    "subject": "{shiftTitle} wurde abgesagt",
+    "whenRange": "{date} · {timeRange}"
+  },
   "shiftInstanceInvited": {
     "buttonLabel": "Einsatz ansehen",
     "detailInstructions": "Beschreibung",
