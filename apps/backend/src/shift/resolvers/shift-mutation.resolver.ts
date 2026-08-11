@@ -215,7 +215,26 @@ export class ShiftMutationResolver {
     @Args('shiftId', { type: () => String }) shiftId: string,
     @Args('status', { type: () => ShiftInviteStatus })
     status: ShiftInviteStatus,
+    @Context() context: AuthenticatedGraphQLContext,
   ): Promise<ShiftInvite> {
+    const isAdminOnlyTarget =
+      status === ShiftInviteStatus.ADMIN_REJECTED ||
+      status === ShiftInviteStatus.INVITED;
+
+    if (isAdminOnlyTarget) {
+      const hasPermission = await this.authService.hasRequiredPermissions(
+        session.user.id,
+        context.organizationUnitId,
+        [PERMISSIONS.SHIFT_EDIT],
+      );
+
+      if (!hasPermission) {
+        throw new ForbiddenGraphQLError(
+          'You do not have permission to manage invites for other users',
+        );
+      }
+    }
+
     const invite = await this.shiftService.updateShiftInviteStatus(
       session.user.id,
       shiftId,

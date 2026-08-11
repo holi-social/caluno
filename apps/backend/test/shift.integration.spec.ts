@@ -2840,6 +2840,87 @@ describe('ShiftInstance.invites (VOLI-842)', () => {
     }
   });
 
+  it('forbids self-setting shift-level invite to INVITED without SHIFT_EDIT', async () => {
+    const { id: shiftId } = await createShift(db, { organizationUnitId });
+    const volunteer = await createUser(db);
+    await db.insert(schema.shiftInvites).values({
+      shiftId,
+      userId: volunteer.id,
+      status: ShiftInviteStatus.ADMIN_REJECTED,
+    });
+
+    const originalUserId = getAuthMockUserId();
+    setAuthMockUserId(volunteer.id);
+    try {
+      const response = await graphqlRequest<{
+        updateShiftInviteStatus: { status: string };
+      }>(app, {
+        query: `
+          mutation UpdateShiftInviteStatus(
+            $shiftId: String!
+            $status: ShiftInviteStatus!
+          ) {
+            updateShiftInviteStatus(shiftId: $shiftId, status: $status) {
+              status
+            }
+          }
+        `,
+        variables: { shiftId, status: ShiftInviteStatus.INVITED },
+        headers: { 'x-organization-unit-id': organizationUnitId },
+      });
+
+      expect(response.errors?.[0]?.message).toMatch(/permission|Forbidden/i);
+
+      const row = await db.query.shiftInvites.findFirst({
+        where: { shiftId, userId: volunteer.id },
+      });
+      expect(row?.status).toBe(ShiftInviteStatus.ADMIN_REJECTED);
+    } finally {
+      setAuthMockUserId(originalUserId);
+    }
+  });
+
+  it('allows self-setting shift-level invite to ACCEPTED without SHIFT_EDIT', async () => {
+    const { id: shiftId } = await createShift(db, { organizationUnitId });
+    const volunteer = await createUser(db);
+    await db.insert(schema.shiftInvites).values({
+      shiftId,
+      userId: volunteer.id,
+      status: ShiftInviteStatus.INVITED,
+    });
+
+    const originalUserId = getAuthMockUserId();
+    setAuthMockUserId(volunteer.id);
+    try {
+      const data = await graphqlRequestRequiringData<{
+        updateShiftInviteStatus: { status: string };
+      }>(
+        app,
+        {
+          query: `
+            mutation UpdateShiftInviteStatus(
+              $shiftId: String!
+              $status: ShiftInviteStatus!
+            ) {
+              updateShiftInviteStatus(shiftId: $shiftId, status: $status) {
+                status
+              }
+            }
+          `,
+          variables: { shiftId, status: ShiftInviteStatus.ACCEPTED },
+          headers: { 'x-organization-unit-id': organizationUnitId },
+        },
+        'updateShiftInviteStatus',
+      );
+
+      expect(data.updateShiftInviteStatus.status).toBe(
+        ShiftInviteStatus.ACCEPTED,
+      );
+    } finally {
+      setAuthMockUserId(originalUserId);
+    }
+  });
+
   it('keeps invites order stable after admin uninvite', async () => {
     const { id: shiftId } = await createShift(db, { organizationUnitId });
     const instances = await db.query.shiftInstances.findMany({
