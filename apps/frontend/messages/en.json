@@ -327,7 +327,8 @@
       "rejecting": "Rejecting...",
       "rejectionReasonLabel": "Rejection reason",
       "rejectionReasonPlaceholder": "Explain why the request is being rejected...",
-      "withdraw": "Withdraw"
+      "withdraw": "Withdraw",
+      "open": "Open"
     },
     "cancelButton": "Cancel request",
     "cancelButtonSubmitting": "Canceling...",

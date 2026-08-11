@@ -327,7 +327,8 @@
       "rejecting": "Wird abgelehnt...",
       "rejectionReasonLabel": "Ablehnungsgrund",
       "rejectionReasonPlaceholder": "Erkläre, warum die Anfrage abgelehnt wird...",
-      "withdraw": "Zurückziehen"
+      "withdraw": "Zurückziehen",
+      "open": "Öffnen"
     },
     "cancelButton": "Anfrage zurückziehen",
     "cancelButtonSubmitting": "Wird zurückgezogen...",

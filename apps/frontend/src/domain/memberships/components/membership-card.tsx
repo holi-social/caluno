@@ -88,7 +88,7 @@ export function MembershipCard({ entry }: Props) {
                 href={`/profile/memberships/${entry.id}`}
                 className="flex items-center gap-1"
               >
-                Open <ChevronRight className="size-4" />
+                {t('actions.open')} <ChevronRight className="size-4" />
               </Link>
             </div>
           </div>
