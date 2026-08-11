@@ -9,10 +9,12 @@ import {
   type GetAvailableShiftInstancesQuery,
   type GetMyShiftInstancesQuery,
   type GetPublicShiftInstancesQuery,
+  type GetShiftInstanceQuery,
   type GetShiftInstancesQuery,
   type GetShiftQuery,
   type GetWeeklyShiftsQuery,
   type JoinShiftInstanceMutation,
+  type SetShiftInstanceRequiredFormsMutation,
   type SetShiftRequiredFormsMutation,
   type ShiftInviteStatus,
   SortOrder,
@@ -44,6 +46,8 @@ export interface ShiftDetail extends RawShift {
   recurrenceDays: RecurrenceDayValue[];
   recurrenceEndsAt: Date | undefined;
 }
+
+export type ShiftInstanceDetail = GetShiftInstanceQuery['shiftInstance'];
 
 function enrichShift(shift: RawShift): ShiftDetail {
   const startDate = new Date(shift.originalStartsAt);
@@ -124,6 +128,19 @@ export class ShiftRepository extends BaseRepository {
   ): Promise<SetShiftRequiredFormsMutation['setShiftRequiredForms']> {
     const data = await this.sdk.SetShiftRequiredForms({ shiftId, formIds });
     return data.setShiftRequiredForms;
+  }
+
+  async setInstanceRequiredForms(
+    instanceId: string,
+    formIds: string[],
+  ): Promise<
+    SetShiftInstanceRequiredFormsMutation['setShiftInstanceRequiredForms']
+  > {
+    const data = await this.sdk.SetShiftInstanceRequiredForms({
+      instanceId,
+      formIds,
+    });
+    return data.setShiftInstanceRequiredForms;
   }
 
   async updateMembers(

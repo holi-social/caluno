@@ -66,5 +66,6 @@ export type {
   MyShiftInstance,
   RawShift,
   ShiftDetail,
+  ShiftInstanceDetail,
   WeeklyShiftInstance,
 } from './repositories/shift/shift.repository';

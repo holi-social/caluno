@@ -132,6 +132,12 @@ mutation SetShiftRequiredForms($shiftId: ID!, $formIds: [String!]!) {
   }
 }
 
+mutation SetShiftInstanceRequiredForms($instanceId: ID!, $formIds: [String!]!) {
+  setShiftInstanceRequiredForms(instanceId: $instanceId, formIds: $formIds) {
+    ...RequiredFormRefFields
+  }
+}
+
 mutation UpdateMembersForShiftInstance(
   $instanceId: String!
   $memberIds: [String!]!
