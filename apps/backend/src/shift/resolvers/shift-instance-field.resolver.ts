@@ -11,10 +11,13 @@ import {
   Session,
   type UserSession,
 } from '@thallesp/nestjs-better-auth';
+import { plainToInstance } from 'class-transformer';
 import { PERMISSIONS } from '../../auth/constants';
 import { Permissions } from '../../auth/decorators/permissions.decorator';
 import { Loader } from '../../graphql/decorators';
 import type { AuthenticatedGraphQLContext } from '../../graphql/graphql.context';
+import { RequiredFormRef } from '../../organization/models/organization-unit-required-form.model';
+import { RequirementForm } from '../../requirement-profile/models/requirement-form.model';
 import { UserMapper } from '../../user/mappers/user.mapper';
 import { User } from '../../user/models/user.model';
 import { ShiftInviteStatus } from '../enums';
@@ -29,6 +32,7 @@ import { ShiftService } from '../shift.service';
 import { ShiftInstanceInvitesLoader } from './loader';
 import { ShiftLoader } from './shift.loader';
 import { ShiftInstanceLoader } from './shift-instance.loader';
+import { ShiftInstanceRequiredFormsLoader } from './shift-instance-required-forms.loader';
 
 @Resolver(() => ShiftInstance)
 export class ShiftInstanceFieldResolver {
@@ -171,5 +175,32 @@ export class ShiftInstanceFieldResolver {
     return loader.isIntendingToJoinByKey.load(
       `${instance.id}::${session.user.id}`,
     );
+  }
+
+  @AllowAnonymous()
+  @ResolveField(() => Int)
+  async requiredFormsCount(
+    @Parent() instance: ShiftInstanceEntity,
+    @Loader(ShiftInstanceRequiredFormsLoader)
+    loader: ShiftInstanceRequiredFormsLoader,
+  ): Promise<number> {
+    return loader.countByShiftInstanceId.load(instance.id);
+  }
+
+  @AllowAnonymous()
+  @ResolveField(() => [RequiredFormRef])
+  async requiredForms(
+    @Parent() instance: ShiftInstanceEntity,
+    @Loader(ShiftInstanceRequiredFormsLoader)
+    loader: ShiftInstanceRequiredFormsLoader,
+  ): Promise<RequiredFormRef[]> {
+    const requiredForms = await loader.requiredFormsByShiftInstanceId.load(
+      instance.id,
+    );
+
+    return requiredForms.map(({ form, order }) => ({
+      form: plainToInstance(RequirementForm, form),
+      order,
+    }));
   }
 }

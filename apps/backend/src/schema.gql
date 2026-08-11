@@ -185,7 +185,9 @@ enum EventInviteStatus {
 type EventOrganizationUnit {
   id: ID!
   logoUrl: String
+  myMembershipState: JoinStatus!
   name: String!
+  requiredForms: [RequiredFormRef!]!
   slug: String!
 }
 
@@ -644,6 +646,7 @@ enum RequiredFormTargetType {
   EVENT
   ORGANIZATION_UNIT
   SHIFT
+  SHIFT_INSTANCE
 }
 
 type RequiredFormWithStatus {
@@ -893,6 +896,8 @@ type ShiftInstance {
   overrideMaxVolunteers: Int
   overrideMinVolunteers: Int
   overrideTitle: String
+  requiredForms: [RequiredFormRef!]!
+  requiredFormsCount: Int!
   spotsLeft: Int
   volunteers: [User!]
 }
