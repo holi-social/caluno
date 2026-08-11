@@ -88,6 +88,23 @@ export class RequiredFormService {
               Boolean(row.form),
           );
       }
+      case RequiredFormTargetType.SHIFT_INSTANCE: {
+        const rows = await this.db.query.shiftInstanceRequiredForms.findMany({
+          where: { shiftInstanceId: target.targetId },
+          orderBy: { order: 'asc' },
+          with: { form: true },
+        });
+
+        return rows
+          .map((row) => ({
+            form: row.form,
+            order: row.order,
+          }))
+          .filter(
+            (row): row is { form: RequirementFormEntity; order: number } =>
+              Boolean(row.form),
+          );
+      }
       default:
         throw new ConflictGraphQLError(
           `Unsupported required-form target: ${target.targetType}`,
@@ -218,6 +235,8 @@ export class RequiredFormService {
         return this.setRequiredFormsForEvent(target.targetId, formIds);
       case RequiredFormTargetType.SHIFT:
         return this.setRequiredFormsForShift(target.targetId, formIds);
+      case RequiredFormTargetType.SHIFT_INSTANCE:
+        return this.setRequiredFormsForShiftInstance(target.targetId, formIds);
       default:
         throw new ConflictGraphQLError(
           `Unsupported required-form target: ${target.targetType}`,
@@ -339,6 +358,87 @@ export class RequiredFormService {
       targetType: RequiredFormTargetType.SHIFT,
       targetId: shiftId,
     });
+  }
+
+  private async setRequiredFormsForShiftInstance(
+    shiftInstanceId: string,
+    formIds: string[],
+  ): Promise<Array<{ form: RequirementFormEntity; order: number }>> {
+    const instance = await this.db.query.shiftInstances.findFirst({
+      where: { id: shiftInstanceId, isCancelled: false },
+      with: { master: { with: { organizationUnit: true } } },
+    });
+
+    if (!instance) {
+      throw new NotFoundGraphQLError('Shift instance not found');
+    }
+
+    const organizationId = instance.master.organizationUnit?.organizationId;
+    if (!organizationId) {
+      throw new ConflictGraphQLError(
+        'Shift instance is not linked to an organization',
+      );
+    }
+
+    await this.applyShiftInstanceRequiredForms(
+      shiftInstanceId,
+      organizationId,
+      formIds,
+    );
+
+    return this.getRequiredForms({
+      targetType: RequiredFormTargetType.SHIFT_INSTANCE,
+      targetId: shiftInstanceId,
+    });
+  }
+
+  // Shared by ShiftService.updateShiftInstance (single instance edits).
+  async applyShiftInstanceRequiredForms(
+    shiftInstanceId: string,
+    organizationId: string,
+    formIds: string[],
+    tx?: Database,
+  ): Promise<void> {
+    const runner = tx ?? this.db;
+
+    if (formIds.length > 0) {
+      const forms = await runner.query.requirementForms.findMany({
+        where: { id: { in: formIds }, organizationId },
+      });
+
+      if (forms.length !== formIds.length) {
+        throw new ConflictGraphQLError(
+          'One or more forms do not belong to this organization',
+        );
+      }
+    }
+
+    const write = async (writer: Database) => {
+      await writer
+        .delete(schema.shiftInstanceRequiredForms)
+        .where(
+          eq(
+            schema.shiftInstanceRequiredForms.shiftInstanceId,
+            shiftInstanceId,
+          ),
+        );
+
+      if (formIds.length > 0) {
+        await writer.insert(schema.shiftInstanceRequiredForms).values(
+          formIds.map((formId, index) => ({
+            shiftInstanceId,
+            formId,
+            order: index,
+          })),
+        );
+      }
+    };
+
+    if (tx) {
+      await write(tx);
+    } else {
+      await this.db.transaction((innerTx) => write(innerTx));
+    }
   }
 
   // Shared by the standalone setShiftRequiredForms mutation (no tx: opens
@@ -489,6 +589,67 @@ export class RequiredFormService {
     }
   }
 
+  async countRequiredFormsByShiftInstanceIds(
+    shiftInstanceIds: string[],
+  ): Promise<Array<{ shiftInstanceId: string; count: number }>> {
+    if (shiftInstanceIds.length === 0) {
+      return [];
+    }
+
+    const rows = await this.db
+      .select({
+        shiftInstanceId: schema.shiftInstanceRequiredForms.shiftInstanceId,
+        count: count(),
+      })
+      .from(schema.shiftInstanceRequiredForms)
+      .where(
+        inArray(
+          schema.shiftInstanceRequiredForms.shiftInstanceId,
+          shiftInstanceIds,
+        ),
+      )
+      .groupBy(schema.shiftInstanceRequiredForms.shiftInstanceId);
+
+    return rows.map((row) => ({
+      shiftInstanceId: row.shiftInstanceId,
+      count: Number(row.count),
+    }));
+  }
+
+  async getRequiredFormsByShiftInstanceIds(shiftInstanceIds: string[]): Promise<
+    Array<{
+      shiftInstanceId: string;
+      form: RequirementFormEntity;
+      order: number;
+    }>
+  > {
+    if (shiftInstanceIds.length === 0) {
+      return [];
+    }
+
+    const rows = await this.db.query.shiftInstanceRequiredForms.findMany({
+      where: { shiftInstanceId: { in: shiftInstanceIds } },
+      orderBy: { order: 'asc' },
+      with: { form: true },
+    });
+
+    return rows
+      .map((row) => ({
+        shiftInstanceId: row.shiftInstanceId,
+        form: row.form,
+        order: row.order,
+      }))
+      .filter(
+        (
+          row,
+        ): row is {
+          shiftInstanceId: string;
+          form: RequirementFormEntity;
+          order: number;
+        } => Boolean(row.form),
+      );
+  }
+
   async isFormRequiredByAnyTarget(formId: string): Promise<boolean> {
     const [orgUnitRow] = await this.db
       .select({ count: sql<number>`count(*)` })
@@ -513,6 +674,15 @@ export class RequiredFormService {
       .from(schema.shiftRequiredForms)
       .where(eq(schema.shiftRequiredForms.formId, formId));
 
-    return (shiftRow?.count ?? 0) > 0;
+    if ((shiftRow?.count ?? 0) > 0) {
+      return true;
+    }
+
+    const [shiftInstanceRow] = await this.db
+      .select({ count: sql<number>`count(*)` })
+      .from(schema.shiftInstanceRequiredForms)
+      .where(eq(schema.shiftInstanceRequiredForms.formId, formId));
+
+    return (shiftInstanceRow?.count ?? 0) > 0;
   }
 }

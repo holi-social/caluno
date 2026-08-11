@@ -1354,6 +1354,21 @@ export class ShiftService {
       );
     }
 
+    if (input.requiredFormIds !== undefined) {
+      const orgUnit = await tx.query.organizationUnits.findFirst({
+        where: { id: instance.master.organizationUnitId },
+      });
+
+      if (orgUnit) {
+        await this.requiredFormService.applyShiftInstanceRequiredForms(
+          instance.id,
+          orgUnit.organizationId,
+          input.requiredFormIds ?? [],
+          tx,
+        );
+      }
+    }
+
     return updated;
   }
 
@@ -2142,12 +2157,12 @@ export class ShiftService {
     }
 
     if (!formsAlreadySatisfied) {
-      const requiredFormStatuses = await this.getShiftRequiredFormStatuses(
+      const formsCheck = await this.checkShiftAndInstanceRequiredForms(
         userId,
         shift.id,
+        instanceId,
       );
-      const missingForms = requiredFormStatuses.filter((s) => !s.submitted);
-      if (missingForms.length > 0) {
+      if (!formsCheck.satisfied) {
         throw new ConflictGraphQLError(
           'You must complete the required forms before joining this shift.',
         );
@@ -2361,12 +2376,20 @@ export class ShiftService {
       );
 
       if (result.status === 'REQUIREMENTS_NEEDED') {
+        const targetFormsCheck = await this.checkShiftAndInstanceRequiredForms(
+          userId,
+          shift.id,
+          instanceId,
+        );
         return {
           status: JoinStatus.REQUIREMENTS_NEEDED,
           shiftInstance: instance,
           requirementProfile: result.requirementProfile,
           requirementStatuses: result.requirementStatuses,
-          requiredForms: result.requiredForms,
+          requiredForms: [
+            ...(result.requiredForms ?? []),
+            ...targetFormsCheck.requiredForms,
+          ],
         };
       }
 
@@ -2378,15 +2401,16 @@ export class ShiftService {
         };
       }
 
-      const shiftFormsCheck = await this.checkShiftRequiredForms(
+      const targetFormsCheck = await this.checkShiftAndInstanceRequiredForms(
         userId,
         shift.id,
+        instanceId,
       );
-      if (!shiftFormsCheck.satisfied) {
+      if (!targetFormsCheck.satisfied) {
         return {
           status: JoinStatus.REQUIREMENTS_NEEDED,
           shiftInstance: instance,
-          requiredForms: shiftFormsCheck.requiredForms,
+          requiredForms: targetFormsCheck.requiredForms,
         };
       }
 
@@ -2411,15 +2435,16 @@ export class ShiftService {
       };
     }
 
-    const shiftFormsCheck = await this.checkShiftRequiredForms(
+    const targetFormsCheck = await this.checkShiftAndInstanceRequiredForms(
       userId,
       shift.id,
+      instanceId,
     );
-    if (!shiftFormsCheck.satisfied) {
+    if (!targetFormsCheck.satisfied) {
       return {
         status: JoinStatus.REQUIREMENTS_NEEDED,
         shiftInstance: instance,
-        requiredForms: shiftFormsCheck.requiredForms,
+        requiredForms: targetFormsCheck.requiredForms,
       };
     }
 
@@ -2647,17 +2672,29 @@ export class ShiftService {
     });
   }
 
-  private async checkShiftRequiredForms(
+  private async getShiftInstanceRequiredFormStatuses(
+    userId: string,
+    shiftInstanceId: string,
+  ): Promise<RequiredFormStatus[]> {
+    return this.requiredFormService.getRequiredFormStatuses(userId, {
+      targetType: RequiredFormTargetType.SHIFT_INSTANCE,
+      targetId: shiftInstanceId,
+    });
+  }
+
+  private async checkShiftAndInstanceRequiredForms(
     userId: string,
     shiftId: string,
+    shiftInstanceId: string,
   ): Promise<{
     satisfied: boolean;
     requiredForms: RequiredFormStatus[];
   }> {
-    const requiredForms = await this.getShiftRequiredFormStatuses(
-      userId,
-      shiftId,
-    );
+    const [shiftForms, instanceForms] = await Promise.all([
+      this.getShiftRequiredFormStatuses(userId, shiftId),
+      this.getShiftInstanceRequiredFormStatuses(userId, shiftInstanceId),
+    ]);
+    const requiredForms = [...shiftForms, ...instanceForms];
     const missingForms = requiredForms.filter((s) => !s.submitted);
     return { satisfied: missingForms.length === 0, requiredForms };
   }
