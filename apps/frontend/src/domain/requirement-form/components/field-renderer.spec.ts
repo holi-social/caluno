@@ -135,3 +135,46 @@ describe('buildFieldSchema birth-date', () => {
     ).toBe(true);
   });
 });
+
+describe('buildFieldSchema MULTI_CHOICE', () => {
+  const field = makeField({
+    id: 'times',
+    type: FieldType.MultiChoice,
+    label: 'Times',
+    options: [
+      { label: '10:30', value: '10:30' },
+      { label: 'Morning, afternoon', value: 'Morning, afternoon' },
+    ],
+  });
+
+  it('accepts a JSON-array selection', () => {
+    const schema = buildFieldSchema(field, true, msgs);
+    expect(schema.safeParse('["10:30"]').success).toBe(true);
+  });
+
+  it('accepts values containing commas', () => {
+    const schema = buildFieldSchema(field, true, msgs);
+    expect(schema.safeParse('["Morning, afternoon"]').success).toBe(true);
+  });
+
+  it('rejects unknown options', () => {
+    const schema = buildFieldSchema(field, true, msgs);
+    expect(schema.safeParse('["nope"]').success).toBe(false);
+  });
+
+  it('rejects an empty selection when required', () => {
+    const schema = buildFieldSchema(field, true, msgs);
+    expect(schema.safeParse('').success).toBe(false);
+    expect(schema.safeParse('[]').success).toBe(false);
+  });
+
+  it('accepts an empty selection when optional', () => {
+    const schema = buildFieldSchema(field, false, msgs);
+    expect(schema.safeParse('').success).toBe(true);
+  });
+
+  it('reads the legacy comma-joined format', () => {
+    const schema = buildFieldSchema(field, true, msgs);
+    expect(schema.safeParse('10:30').success).toBe(true);
+  });
+});

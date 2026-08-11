@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'bun:test';
-import { choiceOptionSchema, deriveOptionValue } from './option-values';
+import {
+  choiceOptionSchema,
+  deriveOptionValue,
+  parseMultiChoiceValue,
+  serializeMultiChoiceValue,
+} from './option-values';
 
 describe('choiceOptionSchema', () => {
   it('accepts a valid option', () => {
@@ -51,5 +56,41 @@ describe('deriveOptionValue', () => {
 
   it('keeps an explicitly set value', () => {
     expect(deriveOptionValue('10:30', 'morning')).toBe('morning');
+  });
+});
+
+describe('multi-choice value codec', () => {
+  it('round-trips a selection', () => {
+    const values = ['10:30', '13:00'];
+    expect(parseMultiChoiceValue(serializeMultiChoiceValue(values))).toEqual(
+      values,
+    );
+  });
+
+  it('preserves values containing commas', () => {
+    const values = ['Morning, afternoon', 'Evening'];
+    expect(parseMultiChoiceValue(serializeMultiChoiceValue(values))).toEqual(
+      values,
+    );
+  });
+
+  it('parses an empty string as no selection', () => {
+    expect(parseMultiChoiceValue('')).toEqual([]);
+  });
+
+  it('parses an empty array as no selection', () => {
+    expect(parseMultiChoiceValue('[]')).toEqual([]);
+  });
+
+  it('reads the legacy comma-joined format', () => {
+    expect(parseMultiChoiceValue('10:30,13:00')).toEqual(['10:30', '13:00']);
+  });
+
+  it('falls back to comma-split for non-array JSON', () => {
+    expect(parseMultiChoiceValue('123')).toEqual(['123']);
+  });
+
+  it('drops non-string members', () => {
+    expect(parseMultiChoiceValue('["a",1,"b"]')).toEqual(['a', 'b']);
   });
 });

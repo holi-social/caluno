@@ -25,6 +25,10 @@ import { CalendarIcon, Link } from 'lucide-react';
 import { useFormatter, useTranslations } from 'next-intl';
 import { useMemo } from 'react';
 import { z } from 'zod';
+import {
+  parseMultiChoiceValue,
+  serializeMultiChoiceValue,
+} from '../option-values';
 import { BirthDateInput } from './birth-date-input';
 
 const PHONE_RE = /^\+?[\d\s\-().]{7,20}$/;
@@ -190,11 +194,16 @@ export function buildFieldSchema(
     const s = z
       .string()
       .refine(
-        (v) => !v || vals.size === 0 || v.split(',').every((t) => vals.has(t)),
+        (v) =>
+          !v ||
+          vals.size === 0 ||
+          parseMultiChoiceValue(v).every((t) => vals.has(t)),
         { message: messages.invalidOptions(label) },
       );
     return isRequired
-      ? s.refine((v) => !!v, { message: messages.fieldRequired(label) })
+      ? s.refine((v) => parseMultiChoiceValue(v).length > 0, {
+          message: messages.fieldRequired(label),
+        })
       : s;
   }
 
@@ -377,7 +386,7 @@ export function FieldRenderer({
   }
 
   if (field.type === 'MULTI_CHOICE') {
-    const selected = value ? value.split(',') : [];
+    const selected = parseMultiChoiceValue(value);
     return (
       <Field>
         <FieldLabel>
@@ -398,11 +407,10 @@ export function FieldRenderer({
                 id={`${field.id}-${opt.value}`}
                 checked={selected.includes(opt.value)}
                 onCheckedChange={(checked) => {
-                  if (checked) {
-                    onChange([...selected, opt.value].join(','));
-                  } else {
-                    onChange(selected.filter((v) => v !== opt.value).join(','));
-                  }
+                  const next = checked
+                    ? [...selected, opt.value]
+                    : selected.filter((v) => v !== opt.value);
+                  onChange(serializeMultiChoiceValue(next));
                 }}
               />
               {opt.label}
