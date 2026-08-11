@@ -34,6 +34,9 @@ type ShiftInstanceJoinedInput =
 type ShiftInstanceInvitedInput =
   NotificationEventPayloadMap[typeof NotificationEvent.SHIFT_INSTANCE_INVITED];
 
+type ShiftInstanceCancelledInput =
+  NotificationEventPayloadMap[typeof NotificationEvent.SHIFT_INSTANCE_CANCELLED];
+
 type ShiftInvitedInput =
   NotificationEventPayloadMap[typeof NotificationEvent.SHIFT_INVITED];
 
@@ -135,6 +138,10 @@ export class NotificationService {
 
   notifyShiftInstanceInvited(input: ShiftInstanceInvitedInput): void {
     this.emitter.emit(NotificationEvent.SHIFT_INSTANCE_INVITED, input);
+  }
+
+  notifyShiftInstanceCancelled(input: ShiftInstanceCancelledInput): void {
+    this.emitter.emit(NotificationEvent.SHIFT_INSTANCE_CANCELLED, input);
   }
 
   notifyShiftInvited(input: ShiftInvitedInput): void {

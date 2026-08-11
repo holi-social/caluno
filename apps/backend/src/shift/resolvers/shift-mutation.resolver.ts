@@ -146,6 +146,19 @@ export class ShiftMutationResolver {
   }
 
   @Permissions(PERMISSIONS.SHIFT_EDIT)
+  @Mutation(() => ShiftInstance)
+  async deleteShiftInstance(
+    @Args('id', { type: () => String }) id: string,
+    @Context() context: AuthenticatedGraphQLContext,
+  ): Promise<ShiftInstance> {
+    const instance = await this.shiftService.deleteShiftInstance(
+      id,
+      context.organizationUnitId,
+    );
+    return this.shiftInstanceMapper.toModelOrThrow(instance);
+  }
+
+  @Permissions(PERMISSIONS.SHIFT_EDIT)
   @Mutation(() => [RequiredFormRef])
   async setShiftRequiredForms(
     @Args('shiftId', { type: () => ID }) shiftId: string,

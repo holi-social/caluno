@@ -115,7 +115,7 @@ export class ShiftService {
   async findInstanceById(
     id: string,
     organizationUnitId: string,
-  ): Promise<ShiftInstanceEntity> {
+  ): Promise<ShiftInstanceEntity & { master: ShiftEntity }> {
     const instance = await this.db.query.shiftInstances.findFirst({
       where: { id },
       with: { master: true },
@@ -1578,6 +1578,111 @@ export class ShiftService {
     return { userIdsToAdd, userIdsToRemove };
   }
 
+  async deleteShiftInstance(
+    id: string,
+    organizationUnitId: string,
+  ): Promise<ShiftInstanceEntity> {
+    const { shift, cancelledInstance, recipientUserIds } =
+      await this.db.transaction(async (tx) => {
+        const instance = await tx.query.shiftInstances.findFirst({
+          where: { id },
+          with: { master: true },
+        });
+
+        if (
+          !instance ||
+          instance.master.organizationUnitId !== organizationUnitId
+        ) {
+          throw new NotFoundGraphQLError(
+            `Shift instance with ID ${id} not found`,
+          );
+        }
+
+        if (instance.actualEndsAt.getTime() < Date.now()) {
+          throw new ConflictGraphQLError(
+            'Cannot delete a past or completed shift instance',
+          );
+        }
+
+        if (await this.hasOpenTimeEntryForInstance(id, tx)) {
+          throw new ConflictGraphQLError(
+            'Cannot delete a shift instance with an open time entry',
+          );
+        }
+
+        const [cancelledInstance] = await tx
+          .update(schema.shiftInstances)
+          .set({ isCancelled: true })
+          .where(
+            and(
+              eq(schema.shiftInstances.id, id),
+              eq(schema.shiftInstances.isCancelled, false),
+            ),
+          )
+          .returning();
+
+        if (!cancelledInstance) {
+          throw new ConflictGraphQLError(
+            `Shift instance with ID ${id} is already cancelled`,
+          );
+        }
+
+        const activeInvites = await tx.query.shiftInstanceInvites.findMany({
+          where: {
+            instanceId: id,
+            status: { in: [...ACTIVE_SHIFT_INVITE_STATUSES] },
+          },
+          columns: { userId: true },
+        });
+
+        if (activeInvites.length > 0) {
+          await tx
+            .update(schema.shiftInstanceInvites)
+            .set({ status: ShiftInviteStatus.CANCELLED })
+            .where(
+              and(
+                eq(schema.shiftInstanceInvites.instanceId, id),
+                inArray(schema.shiftInstanceInvites.status, [
+                  ...ACTIVE_SHIFT_INVITE_STATUSES,
+                ]),
+              ),
+            );
+        }
+
+        return {
+          shift: instance.master,
+          cancelledInstance,
+          recipientUserIds: activeInvites.map((invite) => invite.userId),
+        };
+      });
+
+    void this.loadAndEmitShiftInstanceCancelledNotification(
+      shift,
+      cancelledInstance,
+      recipientUserIds,
+    );
+
+    return cancelledInstance;
+  }
+
+  private async hasOpenTimeEntryForInstance(
+    instanceId: string,
+    executor: Database = this.db,
+  ): Promise<boolean> {
+    const [entry] = await executor
+      .select({ id: schema.timeEntries.id })
+      .from(schema.timeEntries)
+      .where(
+        and(
+          eq(schema.timeEntries.shiftInstanceId, instanceId),
+          isNull(schema.timeEntries.endedAt),
+        ),
+      )
+      .limit(1);
+
+    return entry !== undefined;
+  }
+
   async findVolunteers(
     instanceId: string,
     organizationUnitId: string,
@@ -2003,6 +2108,42 @@ export class ShiftService {
     } catch (error) {
       this.logger.error(
         `Failed to emit shift instance invited notification: ${error instanceof Error ? error.message : String(error)}`,
+      );
+    }
+  }
+
+  private async loadAndEmitShiftInstanceCancelledNotification(
+    shift: ShiftEntity,
+    instance: ShiftInstanceEntity,
+    recipientUserIds: string[],
+  ): Promise<void> {
+    if (recipientUserIds.length === 0) {
+      return;
+    }
+    try {
+      const organizationUnit = await this.db.query.organizationUnits.findFirst({
+        where: { id: shift.organizationUnitId },
+        columns: { id: true, name: true },
+      });
+
+      if (!organizationUnit) {
+        return;
+      }
+
+      this.notificationService.notifyShiftInstanceCancelled({
+        organizationUnitId: organizationUnit.id,
+        organizationUnitName: organizationUnit.name,
+        shiftId: shift.id,
+        shiftTitle: shift.title,
+        shiftLocation: shift.location,
+        recipientUserIds,
+        startsAt: instance.actualStartsAt,
+        endsAt: instance.actualEndsAt,
+        instanceId: instance.id,
+      });
+    } catch (error) {
+      this.logger.error(
+        `Failed to emit shift instance cancelled notification: ${error instanceof Error ? error.message : String(error)}`,
       );
     }
   }

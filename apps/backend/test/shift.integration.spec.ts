@@ -3342,3 +3342,93 @@ describe('ShiftService.updateShiftInstance applyToAllFuture', () => {
     ); // new Fridays were actually inserted
   });
 });
+
+describe('deleteShiftInstance mutation', () => {
+  let app: INestApplication;
+  let db: Database;
+  let organizationUnitId: string;
+
+  beforeAll(async () => {
+    const context = await getGraphqlTestContext();
+    app = context.app;
+    db = context.db;
+    organizationUnitId = context.organizationUnitId;
+  });
+
+  const DELETE_SHIFT_INSTANCE_MUTATION = `
+    mutation DeleteShiftInstance($id: String!) {
+      deleteShiftInstance(id: $id) {
+        id
+        isCancelled
+      }
+    }
+  `;
+
+  const futureWindow = () => ({
+    startsAt: new Date(Date.now() + 3600_000),
+    endsAt: new Date(Date.now() + 7200_000),
+  });
+
+  it('cancels a future shift instance', async () => {
+    const { startsAt, endsAt } = futureWindow();
+    const shift = await createShift(db, {
+      organizationUnitId,
+      startsAt,
+      endsAt,
+      rrule: null,
+    });
+    const instances = await db.query.shiftInstances.findMany({
+      where: { masterId: shift.id },
+    });
+    const instanceId = instances[0]?.id;
+    expect(instanceId).toBeDefined();
+
+    const data = await graphqlRequestRequiringData<{
+      deleteShiftInstance: { id: string; isCancelled: boolean };
+    }>(
+      app,
+      {
+        query: DELETE_SHIFT_INSTANCE_MUTATION,
+        variables: { id: instanceId },
+        headers: { 'x-organization-unit-id': organizationUnitId },
+      },
+      'deleteShiftInstance',
+    );
+
+    expect(data.deleteShiftInstance).toEqual({
+      id: instanceId,
+      isCancelled: true,
+    });
+
+    const [reloaded] = await db
+      .select()
+      .from(schema.shiftInstances)
+      .where(eq(schema.shiftInstances.id, instanceId));
+    expect(reloaded.isCancelled).toBe(true);
+  });
+
+  it('returns a conflict error when the instance is already cancelled', async () => {
+    const { startsAt, endsAt } = futureWindow();
+    const shift = await createShift(db, {
+      organizationUnitId,
+      startsAt,
+      endsAt,
+      rrule: null,
+    });
+    const instances = await db.query.shiftInstances.findMany({
+      where: { masterId: shift.id },
+    });
+    const instanceId = instances[0]?.id;
+    expect(instanceId).toBeDefined();
+    await cancelShiftInstance(db, instanceId);
+
+    const response = await graphqlRequest(app, {
+      query: DELETE_SHIFT_INSTANCE_MUTATION,
+      variables: { id: instanceId },
+      headers: { 'x-organization-unit-id': organizationUnitId },
+    });
+
+    expect(response.errors).toBeDefined();
+    expect(response.errors?.[0]?.message).toMatch(/already cancelled/);
+  });
+});
