@@ -129,11 +129,11 @@
   },
   "Event": {
     "action": {
-      "deleteAria": "Delete event",
-      "editAria": "Edit event",
-      "inviteAria": "Invite members",
-      "shareAria": "Copy invite link",
-      "viewAria": "View event"
+      "deleteAria": "Delete",
+      "editAria": "Edit",
+      "inviteAria": "Invite",
+      "shareAria": "Copy link",
+      "viewAria": "View"
     },
     "deleteDialog": {
       "confirm": "Delete",
@@ -144,7 +144,7 @@
       "backLink": "Back to events",
       "coverImageAlt": "Cover image for {title}",
       "editButton": "Edit",
-      "inviteButton": "Invite members",
+      "inviteButton": "Invite",
       "requiredForms": {
         "addExisting": "+ Add existing",
         "addedToast": "Form attached",
@@ -157,7 +157,7 @@
           "required": "{count, plural, one {1 form required} other {{count} forms required}}"
         },
         "questionCount": "{count, plural, one {1 question} other {{count} questions}}",
-        "removeAria": "Remove {name}",
+        "removeAria": "Remove",
         "removedToast": "Form removed",
         "searchForms": "Search forms...",
         "subtitle": "Completed before joining {eventTitle}",
@@ -165,9 +165,9 @@
         "updateFailedToast": "Failed to update required forms"
       },
       "shiftsCard": {
-        "addAria": "Add shift",
-        "addButton": "Add shift",
-        "emptyDescription": "Add a shift to this event to get started.",
+        "addAria": "Create shift",
+        "addButton": "Create shift",
+        "emptyDescription": "Create a shift for this event to get started.",
         "emptyTitle": "No shifts yet",
         "title": "Shifts"
       },
@@ -334,7 +334,7 @@
     "cancelButtonSubmitting": "Canceling...",
     "card": {
       "rejectionReasonLabel": "Rejection reason:",
-      "viewAria": "View volunteer",
+      "viewAria": "View",
       "viewButton": "View volunteer"
     },
     "dialog": {
@@ -549,13 +549,13 @@
       "updated": "Organization unit updated"
     },
     "tree": {
-      "addChildAria": "Add child",
-      "copyLinkAria": "Copy organization unit link to clipboard",
+      "addChildAria": "Add",
+      "copyLinkAria": "Copy link",
       "copyToast": "Organization unit link copied to clipboard",
       "deleteAria": "Delete",
       "editAria": "Edit",
       "empty": "No organization unit hierarchy found. Contact your administrator.",
-      "visitAria": "Visit organization unit"
+      "visitAria": "Visit"
     },
     "validation": {
       "nameMin": "Name must be at least 2 characters",
@@ -598,7 +598,7 @@
   },
   "Profile": {
     "accountSettings": "Account settings",
-    "edit": "Edit profile",
+    "edit": "Edit",
     "emailLocked": "Linked to your login",
     "identity": {
       "subtitles": {
@@ -730,11 +730,11 @@
       "copyShareLink": "Copy share link",
       "createNewBlock": "Create new block",
       "descriptionFallback": "Build your form by adding blocks",
-      "editBlock": "Edit block",
+      "editBlock": "Edit",
       "emptyDescription": "Add your first block to start building this form.",
       "emptyTitle": "No blocks yet",
       "fieldsCount": "{count} fields",
-      "lockedTooltip": "Cannot edit, block in use in a submitted form",
+      "lockedTooltip": "Locked",
       "noFields": "No fields",
       "noPreview": "Add blocks to see a preview",
       "previewTitle": "Preview",
@@ -744,7 +744,7 @@
       "shareLinkCopied": "Share link copied to clipboard",
       "submissionsWarning": "This form has submissions",
       "submissionsWarningDescription": "Editing is disabled because volunteers have already submitted responses. Create a copy if you need a new version.",
-      "viewBlock": "View block"
+      "viewBlock": "View"
     },
     "card": {
       "content": "Content",
@@ -864,11 +864,11 @@
     },
     "table": {
       "blocks": "Blocks",
-      "cannotDeleteAria": "Cannot delete — form has submissions",
-      "copyShareLinkAria": "Copy share link",
-      "deleteBlockAria": "Delete block",
+      "cannotDeleteAria": "Locked",
+      "copyShareLinkAria": "Copy link",
+      "deleteBlockAria": "Delete",
       "deleteBlockDescription": "{name} will be permanently removed.",
-      "deleteFormAria": "Delete form",
+      "deleteFormAria": "Delete",
       "deleteFormDescription": "{name} will be permanently removed.",
       "description": "Description",
       "editBlockAria": "Edit block",
@@ -881,7 +881,7 @@
       "title": "Title",
       "updated": "Updated",
       "usedIn": "Used in",
-      "viewBlockAria": "View block",
+      "viewBlockAria": "View",
       "yes": "Yes"
     },
     "validation": {
@@ -924,12 +924,12 @@
   },
   "Role": {
     "action": {
-      "deleteAria": "Delete role",
+      "deleteAria": "Delete",
       "deleteDescription": "Are you sure you want to delete this role?",
       "deleteError": "Failed to delete role. {error}",
       "deleteSuccess": "Role deleted",
-      "deleteTitle": "Delete role",
-      "editAria": "Edit role"
+      "deleteTitle": "Delete",
+      "editAria": "Edit"
     },
     "detail": {
       "custom": "Custom",
@@ -987,25 +987,27 @@
   },
   "Shift": {
     "action": {
-      "copyLinkAria": "Copy shift link to clipboard",
+      "copyLinkAria": "Copy link",
       "deleteDescription": "Are you sure you want to delete this shift and all its timesheets?",
       "deleteError": "Failed to delete shift. {error}",
       "deleteSuccess": "Successfully deleted shift.",
-      "deleteTitle": "Delete shift",
-      "editAria": "Edit shift",
-      "inviteAria": "Invite volunteers",
+      "deleteTitle": "Delete",
+      "editAria": "Edit",
+      "inviteAria": "Invite",
       "leaveShift": "Leave shift",
       "recordTime": "Record time",
-      "viewAria": "View shift"
+      "viewAria": "View"
     },
     "calendar": {
+      "nextAria": "Next",
+      "prevAria": "Previous",
       "week": "Week {week}"
     },
     "card": {
-      "inviteAria": "Invite volunteers",
+      "inviteAria": "Invite",
       "invited": "Invited",
       "noVolunteers": "No volunteers invited",
-      "openInstanceAria": "Open shift instance details"
+      "openInstanceAria": "Open"
     },
     "checkIn": {
       "checkIn": "Check in",
@@ -1059,7 +1061,7 @@
           "required": "{count, plural, one {1 form required} other {{count} forms required}}"
         },
         "questionCount": "{count, plural, one {1 question} other {{count} questions}}",
-        "removeAria": "Remove {name}",
+        "removeAria": "Remove",
         "removedToast": "Form removed",
         "searchForms": "Search forms...",
         "subtitle": "Completed before joining {shiftTitle}",
@@ -1194,12 +1196,12 @@
     "selector": {
       "chooseShift": "Choose a shift",
       "noActiveShifts": "No active shifts",
-      "noActiveShiftsDescription": "Please <addShift>add a shift</addShift> or adjust the time-range of an <existingShift>existing shift</existingShift>."
+      "noActiveShiftsDescription": "Please <addShift>create a shift</addShift> or adjust the time-range of an <existingShift>existing shift</existingShift>."
     },
     "sheet": {
       "createDescription": "Create a new shift.",
       "createEventDescription": "Schedule a shift for this event.",
-      "createEventTitle": "Add shift",
+      "createEventTitle": "Create shift",
       "createTitle": "Create shift",
       "editDescription": "Edit shift.",
       "editInstanceDescription": "Edit this occurrence of the shift.",
@@ -1252,10 +1254,10 @@
       "updated": "Shift updated"
     },
     "transferList": {
-      "addAria": "Add {name}",
+      "addAria": "Add",
       "available": "Available",
       "invited": "Invited",
-      "removeAria": "Remove {name}",
+      "removeAria": "Remove",
       "searchPlaceholder": "Name or email"
     },
     "validation": {
@@ -1313,7 +1315,6 @@
     "spotsFree": "· {n} free",
     "spotsFull": "· full",
     "spotsTaken": "{filled} of {max} spots taken",
-    "spotsUnlimited": "Open spots",
     "timeLabel": "Time",
     "whatYouDoHeading": "What you'll do",
     "whenWhereHeading": "When & where"
@@ -1339,8 +1340,8 @@
       "deleteDescription": "Are you sure you want to delete this time entry?",
       "deleteError": "Failed to delete time entry. {error}",
       "deleteSuccess": "Time entry deleted",
-      "deleteTitle": "Delete time entry",
-      "editAria": "Edit time entry"
+      "deleteTitle": "Delete",
+      "editAria": "Edit"
     },
     "detail": {
       "closedStatus": "Closed",
@@ -1406,9 +1407,9 @@
   },
   "Volunteer": {
     "action": {
-      "checkInAria": "Check-in volunteer",
-      "checkInShiftAria": "Check-in the volunteer to a shift",
-      "viewProfileAria": "View volunteer profile"
+      "checkInAria": "Check in",
+      "checkInShiftAria": "Check in",
+      "viewProfileAria": "View"
     },
     "empty": {
       "description": "Share the invite link to get volunteers to sign up.",
@@ -1436,7 +1437,7 @@
         "required": "{count, plural, one {1 form required} other {{count} forms required}}"
       },
       "questionCount": "{count, plural, one {1 question} other {{count} questions}}",
-      "removeAria": "Remove {name}",
+      "removeAria": "Remove",
       "removedToast": "Form removed",
       "searchForms": "Search forms...",
       "subtitle": "Completed before approval into {brand} › {unitName}",

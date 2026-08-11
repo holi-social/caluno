@@ -1,5 +1,6 @@
-import { PermissionKey } from '@repo/data';
+import { PermissionKey, ShiftVisibility } from '@repo/data';
 import { Button } from '@repo/ui';
+import { ArrowLeft, UserPlus } from 'lucide-react';
 import { notFound } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
 import { ShiftInstanceVolunteersPanel } from '@/domain/shift/components/shift-instance-volunteers-panel';
@@ -14,6 +15,7 @@ import { getDataClient } from '@/lib/data-client';
 import { getFormatting } from '@/lib/formatting/formatting-server';
 import { requireOrgAccess } from '@/lib/org-context-server';
 import { checkPermission } from '@/lib/permissions-server';
+import ShareLinkButton from '../../../../../../../../domain/shift/components/share-link-button';
 
 interface ShiftInstanceDetailPageProps {
   params: Promise<{ orgUId: string; shiftId: string; instanceId: string }>;
@@ -40,6 +42,10 @@ export default async function ShiftInstanceDetailPage({
   const { formatRange } = await getFormatting();
   const data = await getDataClient({ orgUId });
   const instance = await data.shift.findInstance(instanceId);
+  const isInstanceInThePast =
+    new Date(instance?.actualEndsAt ?? 0) < new Date();
+  const isOpenShift =
+    instance?.master.visibility === ShiftVisibility.AllMembers;
 
   if (!instance || instance.isCancelled) {
     notFound();
@@ -65,19 +71,37 @@ export default async function ShiftInstanceDetailPage({
         <div className="flex shrink-0 flex-wrap gap-2">
           <Button asChild variant="outline" size="sm">
             <Link href={shiftDetailPath(orgUId, shiftId, returnQuery)}>
+              <ArrowLeft />
               {t('instanceDetail.backToShift')}
             </Link>
           </Button>
-          {canManage && new Date(instance.actualEndsAt) >= new Date() ? (
-            <Button asChild variant="outline" size="sm">
-              <Link href={shiftInstanceEditPath(orgUId, shiftId, instanceId)}>
+
+          {isOpenShift && (
+            <ShareLinkButton
+              size="sm"
+              shiftId={shiftId}
+              instanceId={instanceId}
+            />
+          )}
+
+          {canManage ? (
+            isInstanceInThePast ? (
+              <Button variant="outline" size="sm" disabled>
                 {t('instanceDetail.editCta')}
-              </Link>
-            </Button>
+              </Button>
+            ) : (
+              <Button asChild variant="outline" size="sm">
+                <Link href={shiftInstanceEditPath(orgUId, shiftId, instanceId)}>
+                  {t('instanceDetail.editCta')}
+                </Link>
+              </Button>
+            )
           ) : null}
+
           {canManage ? (
             <Button asChild size="sm">
               <Link href={shiftInvitePath(orgUId, shiftId, instanceId)}>
+                <UserPlus />
                 {t('instanceDetail.inviteCta')}
               </Link>
             </Button>

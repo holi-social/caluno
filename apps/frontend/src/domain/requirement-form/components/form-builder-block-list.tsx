@@ -1,13 +1,7 @@
 'use client';
 
 import type { FormBlock } from '@repo/data';
-import {
-  Button,
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from '@repo/ui';
+import { Button } from '@repo/ui';
 import { ArrowDown, ArrowUp, Edit3, Eye, Plus, Trash2 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import type { BuilderBlockRef } from './form-builder-state';
@@ -32,12 +26,20 @@ export function FormBuilderBlockList({
   onAddBlock,
 }: FormBuilderBlockListProps) {
   const t = useTranslations('RequirementForm.builder');
+  const tCommon = useTranslations('Common');
 
   return (
     <>
       {blockRefs.map((ref, index) => {
         const block = availableBlocks.find((b) => b.id === ref.blockId);
         if (!block) return null;
+        const isLocked = !block.isEditable && !hasSubmissions;
+        let editLabel = t('editBlock');
+        if (isLocked) {
+          editLabel = t('lockedTooltip');
+        } else if (hasSubmissions) {
+          editLabel = t('viewBlock');
+        }
         return (
           <div key={ref.id} className="rounded-lg border bg-card p-4 space-y-3">
             <div className="flex items-center justify-between">
@@ -53,6 +55,7 @@ export function FormBuilderBlockList({
                     <Button
                       variant="ghost"
                       size="icon"
+                      tooltip={tCommon('moveUp')}
                       disabled={index === 0}
                       onClick={() => onMove(index, 'up')}
                     >
@@ -61,6 +64,7 @@ export function FormBuilderBlockList({
                     <Button
                       variant="ghost"
                       size="icon"
+                      tooltip={tCommon('moveDown')}
                       disabled={index === blockRefs.length - 1}
                       onClick={() => onMove(index, 'down')}
                     >
@@ -69,39 +73,26 @@ export function FormBuilderBlockList({
                     <Button
                       variant="ghost"
                       size="icon"
+                      tooltip={tCommon('delete')}
                       onClick={() => onRemove(index)}
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>
                   </>
                 )}
-                {!block.isEditable && !hasSubmissions ? (
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <span>
-                          <Button variant="ghost" size="icon" disabled>
-                            <Edit3 className="h-4 w-4" />
-                          </Button>
-                        </span>
-                      </TooltipTrigger>
-                      <TooltipContent>{t('lockedTooltip')}</TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
-                ) : (
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => onEditBlock(block)}
-                    title={hasSubmissions ? t('viewBlock') : t('editBlock')}
-                  >
-                    {hasSubmissions ? (
-                      <Eye className="h-4 w-4" />
-                    ) : (
-                      <Edit3 className="h-4 w-4" />
-                    )}
-                  </Button>
-                )}
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  tooltip={editLabel}
+                  disabled={isLocked}
+                  onClick={() => onEditBlock(block)}
+                >
+                  {hasSubmissions ? (
+                    <Eye className="h-4 w-4" />
+                  ) : (
+                    <Edit3 className="h-4 w-4" />
+                  )}
+                </Button>
               </div>
             </div>
             <div className="space-y-2">

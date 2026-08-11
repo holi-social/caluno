@@ -129,11 +129,11 @@
   },
   "Event": {
     "action": {
-      "deleteAria": "Veranstaltung löschen",
-      "editAria": "Veranstaltung bearbeiten",
-      "inviteAria": "Mitglieder einladen",
-      "shareAria": "Einladungslink kopieren",
-      "viewAria": "Veranstaltung ansehen"
+      "deleteAria": "Löschen",
+      "editAria": "Bearbeiten",
+      "inviteAria": "Einladen",
+      "shareAria": "Link kopieren",
+      "viewAria": "Ansehen"
     },
     "deleteDialog": {
       "confirm": "Löschen",
@@ -144,7 +144,7 @@
       "backLink": "Zurück zu Veranstaltungen",
       "coverImageAlt": "Titelbild für {title}",
       "editButton": "Bearbeiten",
-      "inviteButton": "Mitglieder einladen",
+      "inviteButton": "Einladen",
       "requiredForms": {
         "addExisting": "+ Bestehendes hinzufügen",
         "addedToast": "Formular hinzugefügt",
@@ -157,7 +157,7 @@
           "required": "{count, plural, one {1 Formular erforderlich} other {{count} Formulare erforderlich}}"
         },
         "questionCount": "{count, plural, one {1 Frage} other {{count} Fragen}}",
-        "removeAria": "{name} entfernen",
+        "removeAria": "Entfernen",
         "removedToast": "Formular entfernt",
         "searchForms": "Formulare suchen...",
         "subtitle": "Werden vor dem Beitritt zu {eventTitle} ausgefüllt",
@@ -165,9 +165,9 @@
         "updateFailedToast": "Erforderliche Formulare konnten nicht aktualisiert werden"
       },
       "shiftsCard": {
-        "addAria": "Einsatz hinzufügen",
-        "addButton": "Einsatz hinzufügen",
-        "emptyDescription": "Füge dieser Veranstaltung einen Einsatz hinzu, um loszulegen.",
+        "addAria": "Einsatz erstellen",
+        "addButton": "Einsatz erstellen",
+        "emptyDescription": "Erstelle einen Einsatz für diese Veranstaltung, um loszulegen.",
         "emptyTitle": "Noch keine Einsätze",
         "title": "Einsätze"
       },
@@ -334,7 +334,7 @@
     "cancelButtonSubmitting": "Wird zurückgezogen...",
     "card": {
       "rejectionReasonLabel": "Ablehnungsgrund:",
-      "viewAria": "Freiwillige:n ansehen",
+      "viewAria": "Ansehen",
       "viewButton": "Freiwillige:n ansehen"
     },
     "dialog": {
@@ -549,13 +549,13 @@
       "updated": "Organisationseinheit aktualisiert"
     },
     "tree": {
-      "addChildAria": "Untergeordnete hinzufügen",
-      "copyLinkAria": "Link zur Organisationseinheit kopieren",
+      "addChildAria": "Hinzufügen",
+      "copyLinkAria": "Link kopieren",
       "copyToast": "Link zur Organisationseinheit kopiert",
       "deleteAria": "Löschen",
       "editAria": "Bearbeiten",
       "empty": "Keine Organisationseinheit-Hierarchie gefunden. Kontaktiere deinen Administrator.",
-      "visitAria": "Organisationseinheit besuchen"
+      "visitAria": "Besuchen"
     },
     "validation": {
       "nameMin": "Name muss mindestens 2 Zeichen lang sein",
@@ -598,7 +598,7 @@
   },
   "Profile": {
     "accountSettings": "Kontoeinstellungen",
-    "edit": "Profil bearbeiten",
+    "edit": "Bearbeiten",
     "emailLocked": "Mit deiner Anmeldung verknüpft",
     "identity": {
       "subtitles": {
@@ -730,11 +730,11 @@
       "copyShareLink": "Freigabelink kopieren",
       "createNewBlock": "Neuen Block erstellen",
       "descriptionFallback": "Erstelle dein Formular, indem du Blöcke hinzufügst",
-      "editBlock": "Block bearbeiten",
+      "editBlock": "Bearbeiten",
       "emptyDescription": "Füge deinen ersten Block hinzu, um dieses Formular aufzubauen.",
       "emptyTitle": "Noch keine Blöcke",
       "fieldsCount": "{count} Felder",
-      "lockedTooltip": "Bearbeiten nicht möglich, Block wird in einem eingereichten Formular verwendet",
+      "lockedTooltip": "Gesperrt",
       "noFields": "Keine Felder",
       "noPreview": "Füge Blöcke hinzu, um eine Vorschau zu sehen",
       "previewTitle": "Vorschau",
@@ -744,7 +744,7 @@
       "shareLinkCopied": "Freigabelink in Zwischenablage kopiert",
       "submissionsWarning": "Dieses Formular hat Einsendungen",
       "submissionsWarningDescription": "Die Bearbeitung ist deaktiviert, weil Freiwillige bereits Antworten eingereicht haben. Erstelle eine Kopie, wenn du eine neue Version brauchst.",
-      "viewBlock": "Block ansehen"
+      "viewBlock": "Ansehen"
     },
     "card": {
       "content": "Inhalt",
@@ -864,24 +864,24 @@
     },
     "table": {
       "blocks": "Blöcke",
-      "cannotDeleteAria": "Löschen nicht möglich — Formular hat Einsendungen",
-      "copyShareLinkAria": "Freigabelink kopieren",
-      "deleteBlockAria": "Block löschen",
+      "cannotDeleteAria": "Gesperrt",
+      "copyShareLinkAria": "Link kopieren",
+      "deleteBlockAria": "Löschen",
       "deleteBlockDescription": "{name} wird dauerhaft entfernt.",
-      "deleteFormAria": "Formular löschen",
+      "deleteFormAria": "Löschen",
       "deleteFormDescription": "{name} wird dauerhaft entfernt.",
       "description": "Beschreibung",
-      "editBlockAria": "Block bearbeiten",
-      "editFormAria": "Formular bearbeiten",
+      "editBlockAria": "Bearbeiten",
+      "editFormAria": "Bearbeiten",
       "editable": "Bearbeitbar",
       "fieldCount": "{count, plural, one {# Feld} other {# Felder}}",
       "fields": "Felder",
       "name": "Name",
-      "submissionsAria": "Einsendungen",
+      "submissionsAria": "Einreichungen",
       "title": "Titel",
       "updated": "Aktualisiert",
       "usedIn": "Verwendet in",
-      "viewBlockAria": "Block ansehen",
+      "viewBlockAria": "Ansehen",
       "yes": "Ja"
     },
     "validation": {
@@ -924,12 +924,12 @@
   },
   "Role": {
     "action": {
-      "deleteAria": "Rolle löschen",
+      "deleteAria": "Löschen",
       "deleteDescription": "Bist du sicher, dass du diese Rolle löschen möchtest?",
       "deleteError": "Rolle konnte nicht gelöscht werden. {error}",
       "deleteSuccess": "Rolle gelöscht",
-      "deleteTitle": "Rolle löschen",
-      "editAria": "Rolle bearbeiten"
+      "deleteTitle": "Löschen",
+      "editAria": "Bearbeiten"
     },
     "detail": {
       "custom": "Benutzerdefiniert",
@@ -987,25 +987,27 @@
   },
   "Shift": {
     "action": {
-      "copyLinkAria": "Link zum Einsatz in Zwischenablage kopieren",
+      "copyLinkAria": "Link kopieren",
       "deleteDescription": "Bist du sicher, dass du diesen Einsatz und alle zugehörigen Stundenzettel löschen möchtest?",
       "deleteError": "Einsatz konnte nicht gelöscht werden. {error}",
       "deleteSuccess": "Einsatz erfolgreich gelöscht.",
-      "deleteTitle": "Einsatz löschen",
-      "editAria": "Einsatz bearbeiten",
-      "inviteAria": "Freiwillige einladen",
+      "deleteTitle": "Löschen",
+      "editAria": "Bearbeiten",
+      "inviteAria": "Einladen",
       "leaveShift": "Einsatz verlassen",
       "recordTime": "Zeit erfassen",
-      "viewAria": "Einsatz ansehen"
+      "viewAria": "Ansehen"
     },
     "calendar": {
+      "nextAria": "Weiter",
+      "prevAria": "Zurück",
       "week": "KW {week}"
     },
     "card": {
-      "inviteAria": "Freiwillige einladen",
+      "inviteAria": "Einladen",
       "invited": "Eingeladen",
       "noVolunteers": "Noch keine Freiwilligen eingeladen",
-      "openInstanceAria": "Einsatztermin öffnen"
+      "openInstanceAria": "Öffnen"
     },
     "checkIn": {
       "checkIn": "Einchecken",
@@ -1059,7 +1061,7 @@
           "required": "{count, plural, one {1 Formular erforderlich} other {{count} Formulare erforderlich}}"
         },
         "questionCount": "{count, plural, one {1 Frage} other {{count} Fragen}}",
-        "removeAria": "{name} entfernen",
+        "removeAria": "Entfernen",
         "removedToast": "Formular entfernt",
         "searchForms": "Formulare suchen...",
         "subtitle": "Werden vor dem Beitritt zu {shiftTitle} ausgefüllt",
@@ -1194,12 +1196,12 @@
     "selector": {
       "chooseShift": "Wähle einen Einsatz",
       "noActiveShifts": "Keine aktiven Einsätze",
-      "noActiveShiftsDescription": "Bitte <addShift>einen Einsatz hinzufügen</addShift> oder den Zeitraum eines <existingShift>bestehenden Einsatzes</existingShift> anpassen."
+      "noActiveShiftsDescription": "Bitte <addShift>einen Einsatz erstellen</addShift> oder den Zeitraum eines <existingShift>bestehenden Einsatzes</existingShift> anpassen."
     },
     "sheet": {
       "createDescription": "Erstelle einen neuen Einsatz.",
       "createEventDescription": "Plane einen Einsatz für diese Veranstaltung.",
-      "createEventTitle": "Einsatz hinzufügen",
+      "createEventTitle": "Einsatz erstellen",
       "createTitle": "Einsatz erstellen",
       "editDescription": "Bearbeite diesen Einsatz.",
       "editInstanceDescription": "Bearbeite diesen Termin des Einsatzes.",
@@ -1252,10 +1254,10 @@
       "updated": "Einsatz aktualisiert"
     },
     "transferList": {
-      "addAria": "{name} hinzufügen",
+      "addAria": "Hinzufügen",
       "available": "Verfügbar",
       "invited": "Eingeladen",
-      "removeAria": "{name} entfernen",
+      "removeAria": "Entfernen",
       "searchPlaceholder": "Name oder E-Mail"
     },
     "validation": {
@@ -1313,7 +1315,6 @@
     "spotsFree": "· {n} frei",
     "spotsFull": "· ausgebucht",
     "spotsTaken": "{filled} von {max} belegt",
-    "spotsUnlimited": "Offene Plätze",
     "timeLabel": "Zeit",
     "whatYouDoHeading": "Was du tun wirst",
     "whenWhereHeading": "Wann & Wo"
@@ -1339,8 +1340,8 @@
       "deleteDescription": "Bist du sicher, dass du diesen Zeiteintrag löschen möchtest?",
       "deleteError": "Zeiteintrag konnte nicht gelöscht werden. {error}",
       "deleteSuccess": "Zeiteintrag gelöscht",
-      "deleteTitle": "Zeiteintrag löschen",
-      "editAria": "Zeiteintrag bearbeiten"
+      "deleteTitle": "Löschen",
+      "editAria": "Bearbeiten"
     },
     "detail": {
       "closedStatus": "Abgeschlossen",
@@ -1406,9 +1407,9 @@
   },
   "Volunteer": {
     "action": {
-      "checkInAria": "Freiwillige:n einchecken",
-      "checkInShiftAria": "Freiwillige:n zu einem Einsatz einchecken",
-      "viewProfileAria": "Freiwilligenprofil ansehen"
+      "checkInAria": "Einchecken",
+      "checkInShiftAria": "Einchecken",
+      "viewProfileAria": "Ansehen"
     },
     "empty": {
       "description": "Teile den Einladungslink, damit sich Freiwillige anmelden.",
@@ -1436,7 +1437,7 @@
         "required": "{count, plural, one {1 Formular erforderlich} other {{count} Formulare erforderlich}}"
       },
       "questionCount": "{count, plural, one {1 Frage} other {{count} Fragen}}",
-      "removeAria": "{name} entfernen",
+      "removeAria": "Entfernen",
       "removedToast": "Formular entfernt",
       "searchForms": "Formulare suchen...",
       "subtitle": "Vor der Freigabe in {brand} › {unitName} ausgefüllt",

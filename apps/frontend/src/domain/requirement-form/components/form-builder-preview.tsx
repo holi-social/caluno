@@ -16,7 +16,7 @@ export function FormBuilderPreview({
   const t = useTranslations('RequirementForm.builder');
 
   return (
-    <div className="rounded-lg border bg-muted/30 p-4">
+    <div className="rounded-lg border bg-muted/30 p-4 lg:min-h-0 lg:overflow-y-auto">
       <h3 className="font-semibold mb-4">{t('previewTitle')}</h3>
       <div className="space-y-4">
         {blockRefs.map((ref) => {

@@ -3,6 +3,7 @@ import { UsersIcon } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { PublicListCard } from '@/components/public-list-card';
 import { useRecurrenceLabel } from '@/domain/home/lib/recurrence-label';
+import { shiftPublicPath } from '@/domain/shift/share';
 import { useFormatting } from '@/lib/formatting/use-formatting';
 
 interface OrgShiftsListProps {
@@ -39,7 +40,7 @@ export function OrgShiftsList({ shifts }: OrgShiftsListProps) {
           return (
             <PublicListCard
               key={shift.id}
-              href={`/shifts/${shift.id}`}
+              href={shiftPublicPath(shift.id, nextInstance?.id)}
               eyebrow={
                 nextInstance
                   ? [

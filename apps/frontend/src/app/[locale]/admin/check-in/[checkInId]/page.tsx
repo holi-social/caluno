@@ -6,7 +6,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@repo/ui';
-import { ScanQrCode } from 'lucide-react';
+import { LogIn } from 'lucide-react';
 import { redirect } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
 import { Link } from '@/i18n/navigation';
@@ -54,8 +54,8 @@ export default async function CheckInPage({ params }: CheckInPageProps) {
               className="flex gap-4 items-center text-xl"
             >
               {o.name}
-              <Button type="button" size="icon-sm">
-                <ScanQrCode />
+              <Button type="button" size="icon-sm" tooltip={t('checkIn')}>
+                <LogIn />
               </Button>
             </Link>
           ))}

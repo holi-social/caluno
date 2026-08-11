@@ -2,7 +2,7 @@
 
 import type { FormBlock, RequirementForm } from '@repo/data';
 import { Button } from '@repo/ui';
-import { AlertTriangle, Save } from 'lucide-react';
+import { AlertTriangle, Save, X } from 'lucide-react';
 import { useSearchParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { useEffect, useState } from 'react';
@@ -97,9 +97,9 @@ export function FormBuilder({
   }
 
   return (
-    <div className="space-y-6">
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-        <div className="lg:col-span-2 space-y-4">
+    <div className="space-y-6 lg:flex lg:min-h-0 lg:flex-1 lg:flex-col">
+      <div className="grid grid-cols-1 gap-6 lg:min-h-0 lg:flex-1 lg:grid-cols-3 lg:grid-rows-1">
+        <div className="space-y-4 lg:col-span-2 lg:min-h-0 lg:overflow-y-auto">
           {hasSubmissions && (
             <div className="flex items-start gap-3 rounded-lg border border-amber-200 bg-amber-50 p-4 text-amber-900">
               <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0" />
@@ -157,27 +157,30 @@ export function FormBuilder({
       </div>
 
       {!hasSubmissions && (
-        <div className="flex items-center justify-end gap-4">
+        <div className="flex flex-col items-end gap-2 lg:shrink-0">
           {!canSave(blockRefs, hasSubmissions) && (
             <p className="text-sm text-muted-foreground">
               {t('saveDisabledHint')}
             </p>
           )}
-          <Button
-            size="lg"
-            variant="outline"
-            onClick={() => router.push(`/admin/${orgUId}/requirement-forms`)}
-          >
-            {tCommon('cancel')}
-          </Button>
-          <Button
-            size="lg"
-            onClick={handleSave}
-            disabled={saving || !canSave(blockRefs, hasSubmissions)}
-          >
-            <Save className="mr-2 h-4 w-4" />
-            {saving ? t('saving') : t('saveForm')}
-          </Button>
+          <div className="flex items-center gap-4">
+            <Button
+              size="lg"
+              variant="outline"
+              onClick={() => router.push(`/admin/${orgUId}/requirement-forms`)}
+            >
+              <X />
+              {tCommon('cancel')}
+            </Button>
+            <Button
+              size="lg"
+              onClick={handleSave}
+              disabled={saving || !canSave(blockRefs, hasSubmissions)}
+            >
+              <Save className="mr-2 h-4 w-4" />
+              {saving ? t('saving') : t('saveForm')}
+            </Button>
+          </div>
         </div>
       )}
     </div>

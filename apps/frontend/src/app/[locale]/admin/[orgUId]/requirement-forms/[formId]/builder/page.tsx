@@ -32,8 +32,8 @@ export default async function BuilderPage({ params }: Props) {
   );
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-start justify-between gap-4">
+    <div className="space-y-6 lg:flex lg:min-h-0 lg:flex-1 lg:flex-col">
+      <div className="flex items-start justify-between gap-4 lg:shrink-0">
         <div>
           <h1 className="page-title">{form.name}</h1>
           <p className="text-muted-foreground mt-1">
