@@ -1,6 +1,6 @@
 import { PermissionKey, ShiftVisibility } from '@repo/data';
 import { Button } from '@repo/ui';
-import { ArrowLeft, UserPlus } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 import { notFound } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
 import { ShiftInstanceInformationCard } from '@/domain/shift/components/shift-instance-information-card';
@@ -9,7 +9,6 @@ import { ShiftInstanceVolunteersPanel } from '@/domain/shift/components/shift-in
 import {
   parseShiftListQuery,
   shiftDetailPath,
-  shiftInvitePath,
 } from '@/domain/shift/routes';
 import { Link } from '@/i18n/navigation';
 import { getDataClient } from '@/lib/data-client';
@@ -76,15 +75,6 @@ export default async function ShiftInstanceDetailPage({
               instanceId={instanceId}
             />
           )}
-
-          {canManage ? (
-            <Button asChild size="sm">
-              <Link href={shiftInvitePath(orgUId, shiftId, instanceId)}>
-                <UserPlus />
-                {t('instanceDetail.inviteCta')}
-              </Link>
-            </Button>
-          ) : null}
         </div>
       </div>
 
@@ -121,6 +111,7 @@ export default async function ShiftInstanceDetailPage({
 
       <ShiftInstanceVolunteersPanel
         orgUId={orgUId}
+        shiftId={shiftId}
         instanceId={instanceId}
         invites={instance.invites ?? []}
         spotsLeft={instance.spotsLeft}
