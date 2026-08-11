@@ -75,8 +75,8 @@
       "title": "Verify your email",
       "verificationDescription": "Enter the verification code for {email}.",
       "verifyCodeFailed": "Failed to verify code",
-      "verifying": "Verifying...",
-      "verifySubmit": "Verify email"
+      "verifySubmit": "Verify email",
+      "verifying": "Verifying..."
     }
   },
   "Common": {
@@ -129,11 +129,11 @@
   },
   "Event": {
     "action": {
-      "deleteAria": "Delete event",
-      "editAria": "Edit event",
-      "inviteAria": "Invite members",
-      "shareAria": "Copy invite link",
-      "viewAria": "View event"
+      "deleteAria": "Delete",
+      "editAria": "Edit",
+      "inviteAria": "Invite",
+      "shareAria": "Copy link",
+      "viewAria": "View"
     },
     "deleteDialog": {
       "confirm": "Delete",
@@ -144,10 +144,10 @@
       "backLink": "Back to events",
       "coverImageAlt": "Cover image for {title}",
       "editButton": "Edit",
-      "inviteButton": "Invite members",
+      "inviteButton": "Invite",
       "requiredForms": {
-        "addedToast": "Form attached",
         "addExisting": "+ Add existing",
+        "addedToast": "Form attached",
         "createNew": "Create new",
         "dedupHint": "Volunteers won't be asked for information they've already provided.",
         "fileUploadLabel": "File upload",
@@ -157,7 +157,7 @@
           "required": "{count, plural, one {1 form required} other {{count} forms required}}"
         },
         "questionCount": "{count, plural, one {1 question} other {{count} questions}}",
-        "removeAria": "Remove {name}",
+        "removeAria": "Remove",
         "removedToast": "Form removed",
         "searchForms": "Search forms...",
         "subtitle": "Completed before joining {eventTitle}",
@@ -165,9 +165,9 @@
         "updateFailedToast": "Failed to update required forms"
       },
       "shiftsCard": {
-        "addAria": "Add shift",
-        "addButton": "Add shift",
-        "emptyDescription": "Add a shift to this event to get started.",
+        "addAria": "Create shift",
+        "addButton": "Create shift",
+        "emptyDescription": "Create a shift for this event to get started.",
         "emptyTitle": "No shifts yet",
         "title": "Shifts"
       },
@@ -245,8 +245,8 @@
     "badge": "Event",
     "coverImageAlt": "Cover image for {title}",
     "followCta": "Step up to help",
-    "followingCta": "You're helping",
     "followNote": "Get invited to shifts, or sign up for one yourself.",
+    "followingCta": "You're helping",
     "forms": {
       "description": "Please complete the required forms before joining this event.",
       "joinedToast": "You're now helping with {eventTitle}",
@@ -309,7 +309,7 @@
     "cancelButtonSubmitting": "Canceling...",
     "card": {
       "rejectionReasonLabel": "Rejection reason:",
-      "viewAria": "View volunteer",
+      "viewAria": "View",
       "viewButton": "View volunteer"
     },
     "dialog": {
@@ -393,8 +393,8 @@
       "requested": "Requested"
     },
     "toast": {
-      "approved": "Membership request approved",
       "approveFailed": "Failed to approve membership request",
+      "approved": "Membership request approved",
       "cancelFailed": "Failed to cancel membership request",
       "cancelled": "Membership request cancelled",
       "leaveFailed": "Failed to leave organization",
@@ -433,9 +433,9 @@
     "events": "Events",
     "home": "Home",
     "myTime": "Your records",
-    "organizations": "Organizations",
-    "organizationSettings": "Organization settings",
     "orgUnits": "Org units",
+    "organizationSettings": "Organization settings",
+    "organizations": "Organizations",
     "overview": "Overview",
     "profile": "Profile",
     "qrIdDescription": "Show this QR code on-site to confirm your attendance.",
@@ -447,36 +447,6 @@
     "timesheets": "Timesheets",
     "volunteering": "Volunteering",
     "volunteers": "Volunteers"
-  },
-  "Organization": {
-    "create": {
-      "addressLabel": "Address",
-      "addressPlaceholder": "123 Main St, City, State 12345",
-      "descriptionLabel": "Description",
-      "descriptionPlaceholder": "What does your organization do?",
-      "emailLabel": "Email",
-      "emailPlaceholder": "contact@organization.org",
-      "errors": {
-        "generic": "Failed to create organization. Please try again.",
-        "nameRequired": "Organization name is required",
-        "rootNotResolved": "Organization created, but failed to resolve root organization unit."
-      },
-      "logoLabel": "Logo",
-      "nameLabel": "Organization name",
-      "namePlaceholder": "My Organization",
-      "phoneLabel": "Phone",
-      "phonePlaceholder": "+1 (555) 123-4567",
-      "submit": "Create organization",
-      "submitting": "Creating organization...",
-      "title": "Create an organization",
-      "websiteLabel": "Website",
-      "websitePlaceholder": "https://organization.org"
-    },
-    "home": {
-      "description": "You don't have any organizations to administer",
-      "title": "No organizations",
-      "toVolunteering": "Back to volunteering"
-    }
   },
   "OrgDetail": {
     "aboutHeading": "About us",
@@ -552,17 +522,47 @@
       "updated": "Organization unit updated"
     },
     "tree": {
-      "addChildAria": "Add child",
-      "copyLinkAria": "Copy organization unit link to clipboard",
+      "addChildAria": "Add",
+      "copyLinkAria": "Copy link",
       "copyToast": "Organization unit link copied to clipboard",
       "deleteAria": "Delete",
       "editAria": "Edit",
       "empty": "No organization unit hierarchy found. Contact your administrator.",
-      "visitAria": "Visit organization unit"
+      "visitAria": "Visit"
     },
     "validation": {
       "nameMin": "Name must be at least 2 characters",
       "typeRequired": "Organization unit type is required"
+    }
+  },
+  "Organization": {
+    "create": {
+      "addressLabel": "Address",
+      "addressPlaceholder": "123 Main St, City, State 12345",
+      "descriptionLabel": "Description",
+      "descriptionPlaceholder": "What does your organization do?",
+      "emailLabel": "Email",
+      "emailPlaceholder": "contact@organization.org",
+      "errors": {
+        "generic": "Failed to create organization. Please try again.",
+        "nameRequired": "Organization name is required",
+        "rootNotResolved": "Organization created, but failed to resolve root organization unit."
+      },
+      "logoLabel": "Logo",
+      "nameLabel": "Organization name",
+      "namePlaceholder": "My Organization",
+      "phoneLabel": "Phone",
+      "phonePlaceholder": "+1 (555) 123-4567",
+      "submit": "Create organization",
+      "submitting": "Creating organization...",
+      "title": "Create an organization",
+      "websiteLabel": "Website",
+      "websitePlaceholder": "https://organization.org"
+    },
+    "home": {
+      "description": "You don't have any organizations to administer",
+      "title": "No organizations",
+      "toVolunteering": "Back to volunteering"
     }
   },
   "Pagination": {
@@ -571,7 +571,7 @@
   },
   "Profile": {
     "accountSettings": "Account settings",
-    "edit": "Edit profile",
+    "edit": "Edit",
     "emailLocked": "Linked to your login",
     "identity": {
       "subtitles": {
@@ -587,8 +587,8 @@
     "pageTitle": "Profile",
     "personalInformation": "Personal information",
     "pictureLabel": "Profile picture",
-    "saved": "Profile updated",
     "saveFailed": "Failed to update profile",
+    "saved": "Profile updated",
     "title": "Edit profile"
   },
   "QRScanner": {
@@ -663,10 +663,10 @@
       "loading": "Loading…",
       "lockedNotice": "This block is locked because it's used in a form that has received submissions.",
       "noFields": "No fields yet. Add your first field to this block.",
-      "optional": "Optional",
       "optionLabelPlaceholder": "Label {n}",
-      "optionsLabel": "Options",
       "optionValuePlaceholder": "Value {n}",
+      "optional": "Optional",
+      "optionsLabel": "Options",
       "placeholderLabel": "Placeholder",
       "placeholderPlaceholder": "e.g. Enter your name",
       "profileFieldHint": "Volunteers fill these in once and they're reused across organizations.",
@@ -703,11 +703,11 @@
       "copyShareLink": "Copy share link",
       "createNewBlock": "Create new block",
       "descriptionFallback": "Build your form by adding blocks",
-      "editBlock": "Edit block",
+      "editBlock": "Edit",
       "emptyDescription": "Add your first block to start building this form.",
       "emptyTitle": "No blocks yet",
       "fieldsCount": "{count} fields",
-      "lockedTooltip": "Cannot edit, block in use in a submitted form",
+      "lockedTooltip": "Locked",
       "noFields": "No fields",
       "noPreview": "Add blocks to see a preview",
       "previewTitle": "Preview",
@@ -717,7 +717,7 @@
       "shareLinkCopied": "Share link copied to clipboard",
       "submissionsWarning": "This form has submissions",
       "submissionsWarningDescription": "Editing is disabled because volunteers have already submitted responses. Create a copy if you need a new version.",
-      "viewBlock": "View block"
+      "viewBlock": "View"
     },
     "card": {
       "content": "Content",
@@ -837,16 +837,16 @@
     },
     "table": {
       "blocks": "Blocks",
-      "cannotDeleteAria": "Cannot delete — form has submissions",
-      "copyShareLinkAria": "Copy share link",
-      "deleteBlockAria": "Delete block",
+      "cannotDeleteAria": "Locked",
+      "copyShareLinkAria": "Copy link",
+      "deleteBlockAria": "Delete",
       "deleteBlockDescription": "{name} will be permanently removed.",
-      "deleteFormAria": "Delete form",
+      "deleteFormAria": "Delete",
       "deleteFormDescription": "{name} will be permanently removed.",
       "description": "Description",
+      "editBlockAria": "Edit",
+      "editFormAria": "Edit",
       "editable": "Editable",
-      "editBlockAria": "Edit block",
-      "editFormAria": "Edit form",
       "fieldCount": "{count, plural, one {# field} other {# fields}}",
       "fields": "Fields",
       "name": "Name",
@@ -854,7 +854,7 @@
       "title": "Title",
       "updated": "Updated",
       "usedIn": "Used in",
-      "viewBlockAria": "View block",
+      "viewBlockAria": "View",
       "yes": "Yes"
     },
     "validation": {
@@ -897,12 +897,12 @@
   },
   "Role": {
     "action": {
-      "deleteAria": "Delete role",
+      "deleteAria": "Delete",
       "deleteDescription": "Are you sure you want to delete this role?",
       "deleteError": "Failed to delete role. {error}",
       "deleteSuccess": "Role deleted",
-      "deleteTitle": "Delete role",
-      "editAria": "Edit role"
+      "deleteTitle": "Delete",
+      "editAria": "Edit"
     },
     "detail": {
       "custom": "Custom",
@@ -960,35 +960,37 @@
   },
   "Shift": {
     "action": {
-      "copyLinkAria": "Copy shift link to clipboard",
+      "copyLinkAria": "Copy link",
       "deleteDescription": "Are you sure you want to delete this shift and all its timesheets?",
       "deleteError": "Failed to delete shift. {error}",
       "deleteSuccess": "Successfully deleted shift.",
-      "deleteTitle": "Delete shift",
-      "editAria": "Edit shift",
-      "inviteAria": "Invite volunteers",
+      "deleteTitle": "Delete",
+      "editAria": "Edit",
+      "inviteAria": "Invite",
       "leaveShift": "Leave shift",
       "recordTime": "Record time",
-      "viewAria": "View shift"
+      "viewAria": "View"
     },
     "calendar": {
+      "nextAria": "Next",
+      "prevAria": "Previous",
       "week": "Week {week}"
     },
     "card": {
-      "inviteAria": "Invite volunteers",
+      "inviteAria": "Invite",
       "invited": "Invited",
       "noVolunteers": "No volunteers invited",
-      "openInstanceAria": "Open shift instance details"
+      "openInstanceAria": "Open"
     },
     "checkIn": {
-      "checkedInAt": "Checked in: {time}",
       "checkIn": "Check in",
-      "checkingIn": "Checking in...",
-      "checkingOut": "Checking out...",
-      "checkingOutAt": "Checking out: {time}",
       "checkInTitle": "Check-in",
       "checkOut": "Check-out",
       "checkOutTitle": "Check-out",
+      "checkedInAt": "Checked in: {time}",
+      "checkingIn": "Checking in...",
+      "checkingOut": "Checking out...",
+      "checkingOutAt": "Checking out: {time}",
       "enterQrTitle": "Or enter their QR ID",
       "invalidCheckin": {
         "blocked": {
@@ -1021,8 +1023,8 @@
       "createdLabel": "Created",
       "imageAlt": "Image for {title}",
       "requiredForms": {
-        "addedToast": "Form attached",
         "addExisting": "+ Add existing",
+        "addedToast": "Form attached",
         "createNew": "Create new",
         "dedupHint": "Volunteers won't be asked for information they've already provided.",
         "fileUploadLabel": "File upload",
@@ -1032,7 +1034,7 @@
           "required": "{count, plural, one {1 form required} other {{count} forms required}}"
         },
         "questionCount": "{count, plural, one {1 question} other {{count} questions}}",
-        "removeAria": "Remove {name}",
+        "removeAria": "Remove",
         "removedToast": "Form removed",
         "searchForms": "Search forms...",
         "subtitle": "Completed before joining {shiftTitle}",
@@ -1093,9 +1095,9 @@
       "actionUninvite": "Uninvite",
       "cancelled": "Canceled",
       "declined": "Declined",
-      "invited": "Invited",
       "inviteError": "Could not invite volunteer",
       "inviteSuccess": "Volunteer invited again",
+      "invited": "Invited",
       "rejected": "Rejected",
       "signedUp": "Signed up",
       "summaryAccepted": "accepted",
@@ -1110,18 +1112,18 @@
       "accept": "Accept",
       "accepted": "You've accepted the invitation.",
       "cancelBody": "You'll give up your spot on {date}. The organization will be notified.",
-      "cancelled": "You've canceled your shift.",
       "cancelShift": "Cancel shift",
       "cancelTitle": "Cancel shift?",
+      "cancelled": "You've canceled your shift.",
       "confirmCancel": "Cancel shift",
       "decline": "Decline",
       "declined": "You've declined the invitation.",
       "failed": "Failed to join shift",
       "full": "Shift full",
       "inviteOnly": "Invite only",
+      "joinShift": "Join shift",
       "joined": "You have joined the shift",
       "joining": "Joining...",
-      "joinShift": "Join shift",
       "keepShift": "Keep shift",
       "pending": "Your membership request is pending. You will be added to this shift once approved.",
       "pendingCta": "Request pending",
@@ -1167,12 +1169,12 @@
     "selector": {
       "chooseShift": "Choose a shift",
       "noActiveShifts": "No active shifts",
-      "noActiveShiftsDescription": "Please <addShift>add a shift</addShift> or adjust the time-range of an <existingShift>existing shift</existingShift>."
+      "noActiveShiftsDescription": "Please <addShift>create a shift</addShift> or adjust the time-range of an <existingShift>existing shift</existingShift>."
     },
     "sheet": {
       "createDescription": "Create a new shift.",
       "createEventDescription": "Schedule a shift for this event.",
-      "createEventTitle": "Add shift",
+      "createEventTitle": "Create shift",
       "createTitle": "Create shift",
       "editDescription": "Edit shift.",
       "editInstanceDescription": "Edit this occurrence of the shift.",
@@ -1225,10 +1227,10 @@
       "updated": "Shift updated"
     },
     "transferList": {
-      "addAria": "Add {name}",
+      "addAria": "Add",
       "available": "Available",
       "invited": "Invited",
-      "removeAria": "Remove {name}",
+      "removeAria": "Remove",
       "searchPlaceholder": "Name or email"
     },
     "validation": {
@@ -1252,9 +1254,9 @@
   "ShiftDetail": {
     "acceptedBadge": "Accepted",
     "back": "Back",
+    "cancelUntilNote": "You can cancel until {date}.",
     "cancelledBadge": "Canceled",
     "cancelledNote": "You're no longer signed up for {date}.",
-    "cancelUntilNote": "You can cancel until {date}.",
     "coverImageAlt": "Cover image for {title}",
     "dateLabel": "Date",
     "declinedBadge": "Declined",
@@ -1312,8 +1314,8 @@
       "deleteDescription": "Are you sure you want to delete this time entry?",
       "deleteError": "Failed to delete time entry. {error}",
       "deleteSuccess": "Time entry deleted",
-      "deleteTitle": "Delete time entry",
-      "editAria": "Edit time entry"
+      "deleteTitle": "Delete",
+      "editAria": "Edit"
     },
     "detail": {
       "closedStatus": "Closed",
@@ -1379,9 +1381,9 @@
   },
   "Volunteer": {
     "action": {
-      "checkInAria": "Check-in volunteer",
-      "checkInShiftAria": "Check-in the volunteer to a shift",
-      "viewProfileAria": "View volunteer profile"
+      "checkInAria": "Check in",
+      "checkInShiftAria": "Check in",
+      "viewProfileAria": "View"
     },
     "empty": {
       "description": "Share the invite link to get volunteers to sign up.",
@@ -1398,8 +1400,8 @@
       "rejectedEmpty": "No rejected requests yet."
     },
     "requiredForms": {
-      "addedToast": "Form attached",
       "addExisting": "+ Add existing",
+      "addedToast": "Form attached",
       "createNew": "Create new",
       "dedupHint": "Volunteers won't be asked for information they've already provided.",
       "fileUploadLabel": "File upload",
@@ -1409,7 +1411,7 @@
         "required": "{count, plural, one {1 form required} other {{count} forms required}}"
       },
       "questionCount": "{count, plural, one {1 question} other {{count} questions}}",
-      "removeAria": "Remove {name}",
+      "removeAria": "Remove",
       "removedToast": "Form removed",
       "searchForms": "Search forms...",
       "subtitle": "Completed before approval into {brand} › {unitName}",
@@ -1462,9 +1464,9 @@
     "greetingFallback": "Welcome back!",
     "invitationsEmpty": "No pending invitations",
     "invitationsHeading": "Invitations",
-    "invitedOn": "Invited · {date}",
     "inviteKindEvent": "Event",
     "inviteKindShift": "Shift",
+    "invitedOn": "Invited · {date}",
     "loadMore": "Load more",
     "loadPast": "Load past",
     "overlapWarning": "You have overlapping shifts in your schedule",

@@ -25,6 +25,7 @@ export function OptionsEditor({
   disabled?: boolean;
 }) {
   const t = useTranslations('RequirementForm.block');
+  const tCommon = useTranslations('Common');
   const [items, setItems] = useState<OptionItem[]>(() => toItems(options));
 
   function update(
@@ -77,8 +78,9 @@ export function OptionsEditor({
             variant="ghost"
             size="icon"
             className="text-muted-foreground hover:text-destructive shrink-0"
-            onClick={() => remove(idx)}
+            tooltip={tCommon('delete')}
             disabled={disabled}
+            onClick={() => remove(idx)}
           >
             <Trash2 className="size-4" />
           </Button>

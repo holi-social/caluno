@@ -130,10 +130,9 @@ export function BlockCard({
               variant="outline"
               size="icon"
               className="text-muted-foreground hover:text-destructive size-10 shrink-0"
-              onClick={() => setConfirmOpen(true)}
-              aria-label={tTable('deleteBlockAria')}
-              title={tTable('deleteBlockAria')}
+              tooltip={tTable('deleteBlockAria')}
               disabled={locked}
+              onClick={() => setConfirmOpen(true)}
             >
               <Trash2 className="size-4" />
             </Button>

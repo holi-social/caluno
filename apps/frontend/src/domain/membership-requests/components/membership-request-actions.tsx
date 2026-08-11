@@ -19,7 +19,7 @@ import {
   FieldLabel,
   Textarea,
 } from '@repo/ui';
-import { CheckIcon, XIcon } from 'lucide-react';
+import { Ban, CheckIcon, XIcon } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useState, useTransition } from 'react';
 import { useForm } from 'react-hook-form';
@@ -167,9 +167,11 @@ export function MembershipRequestActions({
                 onClick={handleCancel}
                 disabled={isPending}
               >
+                <XIcon />
                 {tCommon('cancel')}
               </Button>
               <Button type="submit" variant="destructive" disabled={isPending}>
+                <Ban />
                 {isPending ? t('actions.rejecting') : t('actions.reject')}
               </Button>
             </DialogFooter>

@@ -233,6 +233,7 @@ export function FileUpload({
                 disabled={!isInteractive}
                 onClick={openFilePicker}
               >
+                <Upload />
                 {t('replace')}
               </Button>
               {onClear ? (
@@ -240,8 +241,8 @@ export function FileUpload({
                   type="button"
                   variant="ghost"
                   size="icon-sm"
+                  tooltip={t('clear')}
                   disabled={!isInteractive}
-                  aria-label={t('clear')}
                   onClick={handleClear}
                 >
                   <X />
