@@ -647,6 +647,11 @@ export class EventService {
       throw new NotFoundGraphQLError('Event invite not found');
     }
 
+    // Idempotent no-op — matching status skips the shift cascade re-run.
+    // Unreachable from the UI today: the invite sheet only offers uninvite
+    // from INVITED/SELF_JOINED/ACCEPTED, so an admin can't retrigger this on
+    // an already-ADMIN_REJECTED invite. If shift invites ever drift out of
+    // sync with the event status, a repeat call here will not re-sync them.
     if (invite.status === status) {
       return invite;
     }

@@ -806,12 +806,14 @@ describe('updateEventInviteStatus (admin uninvite)', () => {
   let app: INestApplication;
   let db: Database;
   let organizationUnitId: string;
+  let organizationId: string;
 
   beforeAll(async () => {
     const context = await getGraphqlTestContext();
     app = context.app;
     db = context.db;
     organizationUnitId = context.organizationUnitId;
+    organizationId = context.organizationId;
   });
 
   const updateInviteMutation = `
@@ -1132,6 +1134,59 @@ describe('updateEventInviteStatus (admin uninvite)', () => {
     });
 
     setAuthMockUserId(volunteer.id);
+    try {
+      const response = await graphqlRequest<{
+        updateEventInviteStatus: { status: string };
+      }>(app, {
+        query: updateInviteMutation,
+        variables: {
+          eventId: event.id,
+          userId: volunteer.id,
+          status: EventInviteStatus.ADMIN_REJECTED,
+        },
+        headers: { 'x-organization-unit-id': organizationUnitId },
+      });
+
+      expect(response.errors?.[0]?.message).toMatch(/permission|Forbidden/i);
+
+      const row = await db.query.eventInvites.findFirst({
+        where: { eventId: event.id, userId: volunteer.id },
+      });
+      expect(row?.status).toBe(EventInviteStatus.ACCEPTED);
+    } finally {
+      setAuthMockUserId(originalUserId);
+    }
+  });
+
+  it('forbids member without SHIFT_EDIT from uninviting another user', async () => {
+    const event = await createEvent(db, { organizationUnitId });
+    const volunteer = await createUser(db);
+    await db.insert(schema.eventInvites).values({
+      eventId: event.id,
+      userId: volunteer.id,
+      status: EventInviteStatus.ACCEPTED,
+    });
+
+    const actor = await createUser(db);
+    const membership = await addMembership(db, actor.id, organizationUnitId);
+    const role = await createRole(db, { organizationId });
+    const shiftViewPermission = await db.query.permissions.findFirst({
+      where: { key: PERMISSIONS.SHIFT_VIEW },
+    });
+    if (!shiftViewPermission) {
+      throw new Error('SHIFT_VIEW permission not seeded in test database');
+    }
+    await grantPermissionToRole(db, {
+      roleId: role.id,
+      permissionId: shiftViewPermission.id,
+    });
+    await assignRoleToMembership(db, {
+      membershipId: membership.id,
+      roleId: role.id,
+    });
+
+    const originalUserId = getAuthMockUserId();
+    setAuthMockUserId(actor.id);
     try {
       const response = await graphqlRequest<{
         updateEventInviteStatus: { status: string };
