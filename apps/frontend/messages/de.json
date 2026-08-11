@@ -75,8 +75,8 @@
       "title": "E-Mail bestätigen",
       "verificationDescription": "Gib den Bestätigungscode für {email} ein.",
       "verifyCodeFailed": "Code konnte nicht bestätigt werden",
-      "verifying": "Wird bestätigt...",
-      "verifySubmit": "E-Mail bestätigen"
+      "verifySubmit": "E-Mail bestätigen",
+      "verifying": "Wird bestätigt..."
     }
   },
   "Common": {
@@ -129,11 +129,11 @@
   },
   "Event": {
     "action": {
-      "deleteAria": "Veranstaltung löschen",
-      "editAria": "Veranstaltung bearbeiten",
-      "inviteAria": "Mitglieder einladen",
-      "shareAria": "Einladungslink kopieren",
-      "viewAria": "Veranstaltung ansehen"
+      "deleteAria": "Löschen",
+      "editAria": "Bearbeiten",
+      "inviteAria": "Einladen",
+      "shareAria": "Link kopieren",
+      "viewAria": "Ansehen"
     },
     "deleteDialog": {
       "confirm": "Löschen",
@@ -144,10 +144,10 @@
       "backLink": "Zurück zu Veranstaltungen",
       "coverImageAlt": "Titelbild für {title}",
       "editButton": "Bearbeiten",
-      "inviteButton": "Mitglieder einladen",
+      "inviteButton": "Einladen",
       "requiredForms": {
-        "addedToast": "Formular hinzugefügt",
         "addExisting": "+ Bestehendes hinzufügen",
+        "addedToast": "Formular hinzugefügt",
         "createNew": "Neues erstellen",
         "dedupHint": "Freiwillige werden nicht nach Informationen gefragt, die sie bereits angegeben haben.",
         "fileUploadLabel": "Datei-Upload",
@@ -157,7 +157,7 @@
           "required": "{count, plural, one {1 Formular erforderlich} other {{count} Formulare erforderlich}}"
         },
         "questionCount": "{count, plural, one {1 Frage} other {{count} Fragen}}",
-        "removeAria": "{name} entfernen",
+        "removeAria": "Entfernen",
         "removedToast": "Formular entfernt",
         "searchForms": "Formulare suchen...",
         "subtitle": "Werden vor dem Beitritt zu {eventTitle} ausgefüllt",
@@ -165,9 +165,9 @@
         "updateFailedToast": "Erforderliche Formulare konnten nicht aktualisiert werden"
       },
       "shiftsCard": {
-        "addAria": "Einsatz hinzufügen",
-        "addButton": "Einsatz hinzufügen",
-        "emptyDescription": "Füge dieser Veranstaltung einen Einsatz hinzu, um loszulegen.",
+        "addAria": "Einsatz erstellen",
+        "addButton": "Einsatz erstellen",
+        "emptyDescription": "Erstelle einen Einsatz für diese Veranstaltung, um loszulegen.",
         "emptyTitle": "Noch keine Einsätze",
         "title": "Einsätze"
       },
@@ -245,8 +245,8 @@
     "badge": "Veranstaltung",
     "coverImageAlt": "Titelbild für {title}",
     "followCta": "Jetzt mitmachen",
-    "followingCta": "Du machst mit",
     "followNote": "Erhalte Einladungen zu Einsätzen oder melde dich selbst für einen an.",
+    "followingCta": "Du machst mit",
     "forms": {
       "description": "Bitte fülle die erforderlichen Formulare aus, bevor du der Veranstaltung beitrittst.",
       "joinedToast": "Du machst jetzt bei {eventTitle} mit",
@@ -309,7 +309,7 @@
     "cancelButtonSubmitting": "Wird zurückgezogen...",
     "card": {
       "rejectionReasonLabel": "Ablehnungsgrund:",
-      "viewAria": "Freiwillige:n ansehen",
+      "viewAria": "Ansehen",
       "viewButton": "Freiwillige:n ansehen"
     },
     "dialog": {
@@ -393,8 +393,8 @@
       "requested": "Angefragt"
     },
     "toast": {
-      "approved": "Mitgliedschaftsanfrage genehmigt",
       "approveFailed": "Mitgliedschaftsanfrage konnte nicht genehmigt werden",
+      "approved": "Mitgliedschaftsanfrage genehmigt",
       "cancelFailed": "Mitgliedschaftsanfrage konnte nicht zurückgezogen werden",
       "cancelled": "Mitgliedschaftsanfrage zurückgezogen",
       "leaveFailed": "Organisation konnte nicht verlassen werden",
@@ -433,9 +433,9 @@
     "events": "Veranstaltungen",
     "home": "Startseite",
     "myTime": "Deine Nachweise",
-    "organizations": "Organisationen",
-    "organizationSettings": "Organisationseinstellungen",
     "orgUnits": "Organisationseinheiten",
+    "organizationSettings": "Organisationseinstellungen",
+    "organizations": "Organisationen",
     "overview": "Übersicht",
     "profile": "Profil",
     "qrIdDescription": "Zeig diesen QR-Code vor Ort, um deine Anwesenheit zu bestätigen.",
@@ -447,36 +447,6 @@
     "timesheets": "Zeiterfassung",
     "volunteering": "Freiwilligenarbeit",
     "volunteers": "Freiwillige"
-  },
-  "Organization": {
-    "create": {
-      "addressLabel": "Adresse",
-      "addressPlaceholder": "Musterstraße 1, 12345 Berlin",
-      "descriptionLabel": "Beschreibung",
-      "descriptionPlaceholder": "Wofür steht deine Organisation?",
-      "emailLabel": "E-Mail",
-      "emailPlaceholder": "kontakt@organisation.org",
-      "errors": {
-        "generic": "Organisation konnte nicht erstellt werden. Bitte versuche es erneut.",
-        "nameRequired": "Name der Organisation ist erforderlich",
-        "rootNotResolved": "Organisation erstellt, aber die Stammeinheit konnte nicht ermittelt werden."
-      },
-      "logoLabel": "Logo",
-      "nameLabel": "Name der Organisation",
-      "namePlaceholder": "Meine Organisation",
-      "phoneLabel": "Telefon",
-      "phonePlaceholder": "+49 30 12345678",
-      "submit": "Organisation erstellen",
-      "submitting": "Organisation wird erstellt...",
-      "title": "Organisation erstellen",
-      "websiteLabel": "Website",
-      "websitePlaceholder": "https://organisation.org"
-    },
-    "home": {
-      "description": "Du hast keine Organisationen zu verwalten",
-      "title": "Keine Organisationen",
-      "toVolunteering": "Zurück zur Freiwilligenarbeit"
-    }
   },
   "OrgDetail": {
     "aboutHeading": "Über uns",
@@ -552,17 +522,47 @@
       "updated": "Organisationseinheit aktualisiert"
     },
     "tree": {
-      "addChildAria": "Untergeordnete hinzufügen",
-      "copyLinkAria": "Link zur Organisationseinheit kopieren",
+      "addChildAria": "Hinzufügen",
+      "copyLinkAria": "Link kopieren",
       "copyToast": "Link zur Organisationseinheit kopiert",
       "deleteAria": "Löschen",
       "editAria": "Bearbeiten",
       "empty": "Keine Organisationseinheit-Hierarchie gefunden. Kontaktiere deinen Administrator.",
-      "visitAria": "Organisationseinheit besuchen"
+      "visitAria": "Besuchen"
     },
     "validation": {
       "nameMin": "Name muss mindestens 2 Zeichen lang sein",
       "typeRequired": "Ein Typ für die Organisationseinheit ist erforderlich"
+    }
+  },
+  "Organization": {
+    "create": {
+      "addressLabel": "Adresse",
+      "addressPlaceholder": "Musterstraße 1, 12345 Berlin",
+      "descriptionLabel": "Beschreibung",
+      "descriptionPlaceholder": "Wofür steht deine Organisation?",
+      "emailLabel": "E-Mail",
+      "emailPlaceholder": "kontakt@organisation.org",
+      "errors": {
+        "generic": "Organisation konnte nicht erstellt werden. Bitte versuche es erneut.",
+        "nameRequired": "Name der Organisation ist erforderlich",
+        "rootNotResolved": "Organisation erstellt, aber die Stammeinheit konnte nicht ermittelt werden."
+      },
+      "logoLabel": "Logo",
+      "nameLabel": "Name der Organisation",
+      "namePlaceholder": "Meine Organisation",
+      "phoneLabel": "Telefon",
+      "phonePlaceholder": "+49 30 12345678",
+      "submit": "Organisation erstellen",
+      "submitting": "Organisation wird erstellt...",
+      "title": "Organisation erstellen",
+      "websiteLabel": "Website",
+      "websitePlaceholder": "https://organisation.org"
+    },
+    "home": {
+      "description": "Du hast keine Organisationen zu verwalten",
+      "title": "Keine Organisationen",
+      "toVolunteering": "Zurück zur Freiwilligenarbeit"
     }
   },
   "Pagination": {
@@ -571,7 +571,7 @@
   },
   "Profile": {
     "accountSettings": "Kontoeinstellungen",
-    "edit": "Profil bearbeiten",
+    "edit": "Bearbeiten",
     "emailLocked": "Mit deiner Anmeldung verknüpft",
     "identity": {
       "subtitles": {
@@ -587,8 +587,8 @@
     "pageTitle": "Profil",
     "personalInformation": "Persönliche Informationen",
     "pictureLabel": "Profilbild",
-    "saved": "Profil aktualisiert",
     "saveFailed": "Profil konnte nicht aktualisiert werden",
+    "saved": "Profil aktualisiert",
     "title": "Profil bearbeiten"
   },
   "QRScanner": {
@@ -663,10 +663,10 @@
       "loading": "Wird geladen…",
       "lockedNotice": "Dieser Block ist gesperrt, weil er in einem Formular mit Einsendungen verwendet wird.",
       "noFields": "Noch keine Felder. Füge das erste Feld zu diesem Block hinzu.",
-      "optional": "Optional",
       "optionLabelPlaceholder": "Bezeichnung {n}",
-      "optionsLabel": "Optionen",
       "optionValuePlaceholder": "Wert {n}",
+      "optional": "Optional",
+      "optionsLabel": "Optionen",
       "placeholderLabel": "Platzhalter",
       "placeholderPlaceholder": "z. B. Gib deinen Namen ein",
       "profileFieldHint": "Freiwillige füllen diese einmal aus und sie werden über Organisationen hinweg wiederverwendet.",
@@ -703,11 +703,11 @@
       "copyShareLink": "Freigabelink kopieren",
       "createNewBlock": "Neuen Block erstellen",
       "descriptionFallback": "Erstelle dein Formular, indem du Blöcke hinzufügst",
-      "editBlock": "Block bearbeiten",
+      "editBlock": "Bearbeiten",
       "emptyDescription": "Füge deinen ersten Block hinzu, um dieses Formular aufzubauen.",
       "emptyTitle": "Noch keine Blöcke",
       "fieldsCount": "{count} Felder",
-      "lockedTooltip": "Bearbeiten nicht möglich, Block wird in einem eingereichten Formular verwendet",
+      "lockedTooltip": "Gesperrt",
       "noFields": "Keine Felder",
       "noPreview": "Füge Blöcke hinzu, um eine Vorschau zu sehen",
       "previewTitle": "Vorschau",
@@ -717,7 +717,7 @@
       "shareLinkCopied": "Freigabelink in Zwischenablage kopiert",
       "submissionsWarning": "Dieses Formular hat Einsendungen",
       "submissionsWarningDescription": "Die Bearbeitung ist deaktiviert, weil Freiwillige bereits Antworten eingereicht haben. Erstelle eine Kopie, wenn du eine neue Version brauchst.",
-      "viewBlock": "Block ansehen"
+      "viewBlock": "Ansehen"
     },
     "card": {
       "content": "Inhalt",
@@ -837,24 +837,24 @@
     },
     "table": {
       "blocks": "Blöcke",
-      "cannotDeleteAria": "Löschen nicht möglich — Formular hat Einsendungen",
-      "copyShareLinkAria": "Freigabelink kopieren",
-      "deleteBlockAria": "Block löschen",
+      "cannotDeleteAria": "Gesperrt",
+      "copyShareLinkAria": "Link kopieren",
+      "deleteBlockAria": "Löschen",
       "deleteBlockDescription": "{name} wird dauerhaft entfernt.",
-      "deleteFormAria": "Formular löschen",
+      "deleteFormAria": "Löschen",
       "deleteFormDescription": "{name} wird dauerhaft entfernt.",
       "description": "Beschreibung",
+      "editBlockAria": "Bearbeiten",
+      "editFormAria": "Bearbeiten",
       "editable": "Bearbeitbar",
-      "editBlockAria": "Block bearbeiten",
-      "editFormAria": "Formular bearbeiten",
       "fieldCount": "{count, plural, one {# Feld} other {# Felder}}",
       "fields": "Felder",
       "name": "Name",
-      "submissionsAria": "Einsendungen",
+      "submissionsAria": "Einreichungen",
       "title": "Titel",
       "updated": "Aktualisiert",
       "usedIn": "Verwendet in",
-      "viewBlockAria": "Block ansehen",
+      "viewBlockAria": "Ansehen",
       "yes": "Ja"
     },
     "validation": {
@@ -897,12 +897,12 @@
   },
   "Role": {
     "action": {
-      "deleteAria": "Rolle löschen",
+      "deleteAria": "Löschen",
       "deleteDescription": "Bist du sicher, dass du diese Rolle löschen möchtest?",
       "deleteError": "Rolle konnte nicht gelöscht werden. {error}",
       "deleteSuccess": "Rolle gelöscht",
-      "deleteTitle": "Rolle löschen",
-      "editAria": "Rolle bearbeiten"
+      "deleteTitle": "Löschen",
+      "editAria": "Bearbeiten"
     },
     "detail": {
       "custom": "Benutzerdefiniert",
@@ -960,35 +960,37 @@
   },
   "Shift": {
     "action": {
-      "copyLinkAria": "Link zum Einsatz in Zwischenablage kopieren",
+      "copyLinkAria": "Link kopieren",
       "deleteDescription": "Bist du sicher, dass du diesen Einsatz und alle zugehörigen Stundenzettel löschen möchtest?",
       "deleteError": "Einsatz konnte nicht gelöscht werden. {error}",
       "deleteSuccess": "Einsatz erfolgreich gelöscht.",
-      "deleteTitle": "Einsatz löschen",
-      "editAria": "Einsatz bearbeiten",
-      "inviteAria": "Freiwillige einladen",
+      "deleteTitle": "Löschen",
+      "editAria": "Bearbeiten",
+      "inviteAria": "Einladen",
       "leaveShift": "Einsatz verlassen",
       "recordTime": "Zeit erfassen",
-      "viewAria": "Einsatz ansehen"
+      "viewAria": "Ansehen"
     },
     "calendar": {
+      "nextAria": "Weiter",
+      "prevAria": "Zurück",
       "week": "KW {week}"
     },
     "card": {
-      "inviteAria": "Freiwillige einladen",
+      "inviteAria": "Einladen",
       "invited": "Eingeladen",
       "noVolunteers": "Noch keine Freiwilligen eingeladen",
-      "openInstanceAria": "Einsatztermin öffnen"
+      "openInstanceAria": "Öffnen"
     },
     "checkIn": {
-      "checkedInAt": "Eingecheckt: {time}",
       "checkIn": "Einchecken",
-      "checkingIn": "Wird eingecheckt...",
-      "checkingOut": "Wird ausgecheckt...",
-      "checkingOutAt": "Wird ausgecheckt: {time}",
       "checkInTitle": "Einchecken",
       "checkOut": "Auschecken",
       "checkOutTitle": "Auschecken",
+      "checkedInAt": "Eingecheckt: {time}",
+      "checkingIn": "Wird eingecheckt...",
+      "checkingOut": "Wird ausgecheckt...",
+      "checkingOutAt": "Wird ausgecheckt: {time}",
       "enterQrTitle": "Oder gib die QR-ID manuell ein, um die Anwesenheit zu bestätigen",
       "invalidCheckin": {
         "blocked": {
@@ -1021,8 +1023,8 @@
       "createdLabel": "Erstellt",
       "imageAlt": "Bild für {title}",
       "requiredForms": {
-        "addedToast": "Formular hinzugefügt",
         "addExisting": "+ Bestehendes hinzufügen",
+        "addedToast": "Formular hinzugefügt",
         "createNew": "Neues erstellen",
         "dedupHint": "Freiwillige werden nicht nach Informationen gefragt, die sie bereits angegeben haben.",
         "fileUploadLabel": "Datei-Upload",
@@ -1032,7 +1034,7 @@
           "required": "{count, plural, one {1 Formular erforderlich} other {{count} Formulare erforderlich}}"
         },
         "questionCount": "{count, plural, one {1 Frage} other {{count} Fragen}}",
-        "removeAria": "{name} entfernen",
+        "removeAria": "Entfernen",
         "removedToast": "Formular entfernt",
         "searchForms": "Formulare suchen...",
         "subtitle": "Werden vor dem Beitritt zu {shiftTitle} ausgefüllt",
@@ -1093,9 +1095,9 @@
       "actionUninvite": "Zurückweisen",
       "cancelled": "Zurückgezogen",
       "declined": "Abgelehnt",
-      "invited": "Eingeladen",
       "inviteError": "Einladen fehlgeschlagen",
       "inviteSuccess": "Freiwillige:r erneut eingeladen",
+      "invited": "Eingeladen",
       "rejected": "Zurückgewiesen",
       "signedUp": "Selbst angemeldet",
       "summaryAccepted": "angenommen",
@@ -1110,18 +1112,18 @@
       "accept": "Annehmen",
       "accepted": "Du hast die Einladung angenommen.",
       "cancelBody": "Du gibst deinen Platz am {date} auf. Die Organisation wird benachrichtigt.",
-      "cancelled": "Du hast deinen Einsatz abgesagt.",
       "cancelShift": "Einsatz absagen",
       "cancelTitle": "Einsatz absagen?",
+      "cancelled": "Du hast deinen Einsatz abgesagt.",
       "confirmCancel": "Einsatz absagen",
       "decline": "Ablehnen",
       "declined": "Du hast die Einladung abgelehnt.",
       "failed": "Einsatzbeitritt fehlgeschlagen",
       "full": "Einsatz voll",
       "inviteOnly": "Nur mit Einladung",
+      "joinShift": "Einsatz beitreten",
       "joined": "Du bist dem Einsatz beigetreten",
       "joining": "Wird beigetreten...",
-      "joinShift": "Einsatz beitreten",
       "keepShift": "Einsatz behalten",
       "pending": "Deine Mitgliedschaftsanfrage ist ausstehend. Du wirst dem Einsatz hinzugefügt, sobald er genehmigt wurde.",
       "pendingCta": "Anfrage ausstehend",
@@ -1167,12 +1169,12 @@
     "selector": {
       "chooseShift": "Wähle einen Einsatz",
       "noActiveShifts": "Keine aktiven Einsätze",
-      "noActiveShiftsDescription": "Bitte <addShift>einen Einsatz hinzufügen</addShift> oder den Zeitraum eines <existingShift>bestehenden Einsatzes</existingShift> anpassen."
+      "noActiveShiftsDescription": "Bitte <addShift>einen Einsatz erstellen</addShift> oder den Zeitraum eines <existingShift>bestehenden Einsatzes</existingShift> anpassen."
     },
     "sheet": {
       "createDescription": "Erstelle einen neuen Einsatz.",
       "createEventDescription": "Plane einen Einsatz für diese Veranstaltung.",
-      "createEventTitle": "Einsatz hinzufügen",
+      "createEventTitle": "Einsatz erstellen",
       "createTitle": "Einsatz erstellen",
       "editDescription": "Bearbeite diesen Einsatz.",
       "editInstanceDescription": "Bearbeite diesen Termin des Einsatzes.",
@@ -1225,10 +1227,10 @@
       "updated": "Einsatz aktualisiert"
     },
     "transferList": {
-      "addAria": "{name} hinzufügen",
+      "addAria": "Hinzufügen",
       "available": "Verfügbar",
       "invited": "Eingeladen",
-      "removeAria": "{name} entfernen",
+      "removeAria": "Entfernen",
       "searchPlaceholder": "Name oder E-Mail"
     },
     "validation": {
@@ -1252,9 +1254,9 @@
   "ShiftDetail": {
     "acceptedBadge": "Angenommen",
     "back": "Zurück",
+    "cancelUntilNote": "Du kannst bis {date} absagen.",
     "cancelledBadge": "Abgesagt",
     "cancelledNote": "Du bist nicht mehr für {date} angemeldet.",
-    "cancelUntilNote": "Du kannst bis {date} absagen.",
     "coverImageAlt": "Titelbild für {title}",
     "dateLabel": "Datum",
     "declinedBadge": "Abgelehnt",
@@ -1312,8 +1314,8 @@
       "deleteDescription": "Bist du sicher, dass du diesen Zeiteintrag löschen möchtest?",
       "deleteError": "Zeiteintrag konnte nicht gelöscht werden. {error}",
       "deleteSuccess": "Zeiteintrag gelöscht",
-      "deleteTitle": "Zeiteintrag löschen",
-      "editAria": "Zeiteintrag bearbeiten"
+      "deleteTitle": "Löschen",
+      "editAria": "Bearbeiten"
     },
     "detail": {
       "closedStatus": "Abgeschlossen",
@@ -1379,9 +1381,9 @@
   },
   "Volunteer": {
     "action": {
-      "checkInAria": "Freiwillige:n einchecken",
-      "checkInShiftAria": "Freiwillige:n zu einem Einsatz einchecken",
-      "viewProfileAria": "Freiwilligenprofil ansehen"
+      "checkInAria": "Einchecken",
+      "checkInShiftAria": "Einchecken",
+      "viewProfileAria": "Ansehen"
     },
     "empty": {
       "description": "Teile den Einladungslink, damit sich Freiwillige anmelden.",
@@ -1398,8 +1400,8 @@
       "rejectedEmpty": "Noch keine abgelehnten Anfragen."
     },
     "requiredForms": {
-      "addedToast": "Formular angehängt",
       "addExisting": "+ Bestehendes hinzufügen",
+      "addedToast": "Formular angehängt",
       "createNew": "Neues erstellen",
       "dedupHint": "Freiwillige müssen Informationen, die sie bereits angegeben haben, nicht erneut eingeben.",
       "fileUploadLabel": "Datei-Upload",
@@ -1409,7 +1411,7 @@
         "required": "{count, plural, one {1 Formular erforderlich} other {{count} Formulare erforderlich}}"
       },
       "questionCount": "{count, plural, one {1 Frage} other {{count} Fragen}}",
-      "removeAria": "{name} entfernen",
+      "removeAria": "Entfernen",
       "removedToast": "Formular entfernt",
       "searchForms": "Formulare suchen...",
       "subtitle": "Vor der Freigabe in {brand} › {unitName} ausgefüllt",
@@ -1462,9 +1464,9 @@
     "greetingFallback": "Willkommen zurück!",
     "invitationsEmpty": "Keine offenen Einladungen",
     "invitationsHeading": "Einladungen",
-    "invitedOn": "Eingeladen · {date}",
     "inviteKindEvent": "Veranstaltung",
     "inviteKindShift": "Einsatz",
+    "invitedOn": "Eingeladen · {date}",
     "loadMore": "Mehr laden",
     "loadPast": "Vergangene laden",
     "overlapWarning": "Du hast überschneidende Einsätze in deinem Plan",

@@ -1,6 +1,7 @@
 'use client';
 
 import { Button } from '@repo/ui';
+import { Home, RotateCcw } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useEffect } from 'react';
 import { Link } from '@/i18n/navigation';
@@ -30,9 +31,15 @@ export default function DashboardError({ error, reset }: ErrorProps) {
           )}
         </div>
         <div className="flex justify-center gap-2">
-          <Button onClick={reset}>{t('tryAgain')}</Button>
+          <Button onClick={reset}>
+            <RotateCcw />
+            {t('tryAgain')}
+          </Button>
           <Button asChild variant="outline">
-            <Link href="/">{t('goHome')}</Link>
+            <Link href="/">
+              <Home />
+              {t('goHome')}
+            </Link>
           </Button>
         </div>
       </div>

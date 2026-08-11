@@ -104,7 +104,7 @@ function OrgUnitNodeItem({
             <Button
               size="icon-xs"
               variant="outline"
-              aria-label={t('visitAria')}
+              tooltip={t('visitAria')}
               asChild
             >
               <Link
@@ -118,7 +118,7 @@ function OrgUnitNodeItem({
             <Button
               size="icon-xs"
               variant="outline"
-              aria-label={t('copyLinkAria')}
+              tooltip={t('copyLinkAria')}
               onClick={(e) => {
                 e.stopPropagation();
                 copyToClipboard(organizationUnitUrl(node.id), t('copyToast'));
@@ -132,7 +132,7 @@ function OrgUnitNodeItem({
                 <Button
                   size="icon-xs"
                   variant="outline"
-                  aria-label={t('addChildAria')}
+                  tooltip={t('addChildAria')}
                   onClick={(e) => {
                     e.stopPropagation();
                     onCreate(node);
@@ -144,7 +144,7 @@ function OrgUnitNodeItem({
                 <Button
                   size="icon-xs"
                   variant="outline"
-                  aria-label={t('editAria')}
+                  tooltip={t('editAria')}
                   onClick={(e) => {
                     e.stopPropagation();
                     onEdit(node);
@@ -157,7 +157,7 @@ function OrgUnitNodeItem({
                   <Button
                     size="icon-xs"
                     variant="destructive"
-                    aria-label={t('deleteAria')}
+                    tooltip={t('deleteAria')}
                     onClick={(e) => {
                       e.stopPropagation();
                       onDelete(node);

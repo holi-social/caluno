@@ -23,7 +23,7 @@ import {
   TabsList,
   TabsTrigger,
 } from '@repo/ui';
-import { ScanQrCode, UserRound } from 'lucide-react';
+import { LogIn, UserRound } from 'lucide-react';
 import { useSearchParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { ButtonClipboard } from '@/components/button-clipboard';
@@ -114,7 +114,7 @@ function ApprovedTab({ orgUId }: { orgUId: string }) {
                   <Button
                     size="icon-xs"
                     variant="outline"
-                    aria-label={t('action.viewProfileAria')}
+                    tooltip={t('action.viewProfileAria')}
                     onClick={() =>
                       openVolunteerSheet({
                         userId: membership.user.id,
@@ -134,9 +134,9 @@ function ApprovedTab({ orgUId }: { orgUId: string }) {
                     <Button
                       size="icon-xs"
                       variant="outline"
-                      aria-label={t('action.checkInShiftAria')}
+                      tooltip={t('action.checkInShiftAria')}
                     >
-                      <ScanQrCode />
+                      <LogIn />
                     </Button>
                   </Link>
                 </div>

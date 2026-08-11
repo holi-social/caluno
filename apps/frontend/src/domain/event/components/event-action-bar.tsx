@@ -50,11 +50,7 @@ export function EventActionBar({
   return (
     <aside className="flex items-center gap-1">
       <Link href={eventDetailPath(orgUId, id)}>
-        <Button
-          size="icon-xs"
-          variant="outline"
-          aria-label={t('action.viewAria')}
-        >
+        <Button size="icon-xs" variant="outline" tooltip={t('action.viewAria')}>
           <Eye />
         </Button>
       </Link>
@@ -65,7 +61,7 @@ export function EventActionBar({
             <Button
               size="icon-xs"
               variant="outline"
-              aria-label={t('action.editAria')}
+              tooltip={t('action.editAria')}
             >
               <SquarePen />
             </Button>
@@ -75,7 +71,7 @@ export function EventActionBar({
             <Button
               size="icon-xs"
               variant="outline"
-              aria-label={t('action.inviteAria')}
+              tooltip={t('action.inviteAria')}
             >
               <UserPlus />
             </Button>
@@ -86,7 +82,7 @@ export function EventActionBar({
       <Button
         size="icon-xs"
         variant="outline"
-        aria-label={t('action.shareAria')}
+        tooltip={t('action.shareAria')}
         onClick={handleShare}
       >
         <Share2 />
@@ -105,7 +101,7 @@ export function EventActionBar({
             <Button
               size="icon-xs"
               variant="destructive"
-              aria-label={t('action.deleteAria')}
+              tooltip={t('action.deleteAria')}
             >
               <Trash2 />
             </Button>

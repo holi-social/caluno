@@ -75,7 +75,9 @@ export class EmailService {
         return;
       } catch (error) {
         const message = error instanceof Error ? error.message : String(error);
-        this.logger.error(`Failed to send email to ${maskedTo} via SMTP: ${message}`);
+        this.logger.error(
+          `Failed to send email to ${maskedTo} via SMTP: ${message}`,
+        );
         throw new Error('Failed to send email');
       }
     }

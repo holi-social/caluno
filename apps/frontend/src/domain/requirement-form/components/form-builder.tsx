@@ -2,7 +2,7 @@
 
 import type { FormBlock, RequirementForm } from '@repo/data';
 import { Button } from '@repo/ui';
-import { AlertTriangle, Save } from 'lucide-react';
+import { AlertTriangle, Save, X } from 'lucide-react';
 import { useSearchParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { useEffect, useState } from 'react';
@@ -168,6 +168,7 @@ export function FormBuilder({
             variant="outline"
             onClick={() => router.push(`/admin/${orgUId}/requirement-forms`)}
           >
+            <X />
             {tCommon('cancel')}
           </Button>
           <Button

@@ -17,6 +17,7 @@ const config: CodegenConfig = {
         },
         rawRequest: false,
         gqlImport: 'graphql-request#gql',
+        dedupeFragments: true,
       },
     },
   },
