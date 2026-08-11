@@ -175,12 +175,10 @@ export function ShiftActionCard({
         </Badge>
       )}
 
-      <div className="space-y-2">
-        <div className="flex items-center gap-1.5 text-sm">
-          <UsersIcon className="size-5 text-foreground" />
-          {unlimited ? (
-            <span className="text-muted-foreground">{t('spotsUnlimited')}</span>
-          ) : (
+      {!unlimited && (
+        <div className="space-y-2">
+          <div className="flex items-center gap-1.5 text-sm">
+            <UsersIcon className="size-5 text-foreground" />
             <span>
               <span className="font-semibold text-foreground">
                 {t('spotsTaken', { filled, max: resolvedMax })}
@@ -189,9 +187,9 @@ export function ShiftActionCard({
                 {full ? t('spotsFull') : t('spotsFree', { n: spotsLeft })}
               </span>
             </span>
-          )}
+          </div>
         </div>
-      </div>
+      )}
 
       <div className="space-y-2">
         <JoinShiftButton
