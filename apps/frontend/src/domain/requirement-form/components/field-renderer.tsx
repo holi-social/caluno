@@ -25,6 +25,7 @@ import { CalendarIcon, Link } from 'lucide-react';
 import { useFormatter, useTranslations } from 'next-intl';
 import { useMemo } from 'react';
 import { z } from 'zod';
+import { BirthDateInput } from './birth-date-input';
 
 const PHONE_RE = /^\+?[\d\s\-().]{7,20}$/;
 const NAME_RE = /^[\p{L}\p{M}'\- ]+$/u;
@@ -415,37 +416,49 @@ export function FieldRenderer({
 
   if (field.type === 'DATE') {
     const dateValue = value ? new Date(value) : undefined;
+    const labelId = `${field.id}-label`;
+    const isBirthDate = field.systemKey === 'birth-date';
     return (
       <Field>
-        <FieldLabel htmlFor={field.id}>
+        <FieldLabel id={isBirthDate ? labelId : undefined} htmlFor={field.id}>
           {field.label}
           {field.required && <span className="text-destructive">*</span>}
         </FieldLabel>
         {field.description && (
           <FieldDescription>{field.description}</FieldDescription>
         )}
-        <Popover>
-          <PopoverTrigger asChild>
-            <Button
-              type="button"
-              variant="outline"
-              className="w-full justify-start text-left font-normal"
-            >
-              <CalendarIcon className="mr-2 size-4" />
-              {dateValue
-                ? formatter.dateTime(dateValue, { dateStyle: 'long' })
-                : t('pickDate')}
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent className="w-auto p-0" align="start">
-            <Calendar
-              mode="single"
-              selected={dateValue}
-              onSelect={(date) => onChange(date ? date.toISOString() : '')}
-              weekStartsOn={1}
-            />
-          </PopoverContent>
-        </Popover>
+        {isBirthDate ? (
+          <BirthDateInput
+            id={field.id}
+            value={value}
+            onChange={onChange}
+            aria-invalid={!!error}
+            aria-labelledby={labelId}
+          />
+        ) : (
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                type="button"
+                variant="outline"
+                className="w-full justify-start text-left font-normal"
+              >
+                <CalendarIcon className="mr-2 size-4" />
+                {dateValue
+                  ? formatter.dateTime(dateValue, { dateStyle: 'long' })
+                  : t('pickDate')}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="start">
+              <Calendar
+                mode="single"
+                selected={dateValue}
+                onSelect={(date) => onChange(date ? date.toISOString() : '')}
+                weekStartsOn={1}
+              />
+            </PopoverContent>
+          </Popover>
+        )}
         {error && <FieldError>{error}</FieldError>}
       </Field>
     );
