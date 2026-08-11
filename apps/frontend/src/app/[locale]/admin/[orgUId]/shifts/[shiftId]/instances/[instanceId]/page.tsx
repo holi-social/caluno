@@ -1,5 +1,6 @@
 import { PermissionKey, ShiftVisibility } from '@repo/data';
 import { Button } from '@repo/ui';
+import { ArrowLeft, UserPlus } from 'lucide-react';
 import { notFound } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
 import { ShiftInstanceVolunteersPanel } from '@/domain/shift/components/shift-instance-volunteers-panel';
@@ -70,6 +71,7 @@ export default async function ShiftInstanceDetailPage({
         <div className="flex shrink-0 flex-wrap gap-2">
           <Button asChild variant="outline" size="sm">
             <Link href={shiftDetailPath(orgUId, shiftId, returnQuery)}>
+              <ArrowLeft />
               {t('instanceDetail.backToShift')}
             </Link>
           </Button>
@@ -99,6 +101,7 @@ export default async function ShiftInstanceDetailPage({
           {canManage ? (
             <Button asChild size="sm">
               <Link href={shiftInvitePath(orgUId, shiftId, instanceId)}>
+                <UserPlus />
                 {t('instanceDetail.inviteCta')}
               </Link>
             </Button>

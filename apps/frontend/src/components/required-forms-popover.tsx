@@ -71,7 +71,7 @@ export function RequiredFormsPopover({
 
   if (disabled) {
     return (
-      <Button variant="outline" size="sm" disabled>
+      <Button variant="outline" disabled>
         {effectiveEnabled
           ? t('pill.required', { count: requiredForms.length })
           : t('pill.none')}
@@ -87,9 +87,9 @@ export function RequiredFormsPopover({
   return (
     <Popover open={open} onOpenChange={handleOpenChange}>
       <PopoverTrigger asChild>
-        <Button variant="outline" size="sm">
+        <Button variant="outline">
           <span
-            className={`mr-2 inline-flex h-2 w-2 rounded-full ${effectiveEnabled ? 'bg-green-500' : 'bg-muted-foreground'}`}
+            className={`inline-flex h-2 w-2 shrink-0 rounded-full ${effectiveEnabled ? 'bg-green-500' : 'bg-muted-foreground'}`}
           />
           {effectiveEnabled
             ? t('pill.required', { count: requiredForms.length })

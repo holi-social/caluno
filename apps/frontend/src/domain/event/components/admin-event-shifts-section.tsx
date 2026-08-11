@@ -13,7 +13,7 @@ import {
   EmptyMedia,
   EmptyTitle,
 } from '@repo/ui';
-import { CalendarRange } from 'lucide-react';
+import { CalendarRange, Plus } from 'lucide-react';
 import { getTranslations } from 'next-intl/server';
 import { Pagination } from '@/components/pagination';
 import { eventShiftNewPath } from '@/domain/event/routes';
@@ -53,7 +53,10 @@ export async function AdminEventShiftsSection({
         {canEdit && (
           <CardAction>
             <Link href={addShiftHref}>
-              <Button>{t('addButton')}</Button>
+              <Button>
+                <Plus />
+                {t('addButton')}
+              </Button>
             </Link>
           </CardAction>
         )}
@@ -73,7 +76,10 @@ export async function AdminEventShiftsSection({
             {canEdit && (
               <EmptyContent>
                 <Link href={addShiftHref}>
-                  <Button>{t('addButton')}</Button>
+                  <Button>
+                    <Plus />
+                    {t('addButton')}
+                  </Button>
                 </Link>
               </EmptyContent>
             )}
