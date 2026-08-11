@@ -60,10 +60,15 @@ export default async function ShiftPage({
   const t = await getTranslations('ShiftDetail');
   const authenticated = await isAuthenticated();
 
+  const selectedInstance = instanceId
+    ? instances.find((instance) => instance.id === instanceId)
+    : undefined;
+
   const showJoinForms = search.showJoinForms === 'true';
   const membershipState =
     shift.organizationUnit?.myMembershipState ?? JoinStatus.None;
   const hasShiftForms = (shift.requiredForms?.length ?? 0) > 0;
+  const hasInstanceForms = (selectedInstance?.requiredForms?.length ?? 0) > 0;
   const hasOrgUnitForms =
     (shift.organizationUnit?.requiredForms?.length ?? 0) > 0;
 
@@ -71,7 +76,7 @@ export default async function ShiftPage({
     showJoinForms &&
     authenticated &&
     membershipState === JoinStatus.None &&
-    hasShiftForms &&
+    (hasShiftForms || hasInstanceForms) &&
     hasOrgUnitForms &&
     instanceId
   ) {
