@@ -3,16 +3,15 @@ import { Button } from '@repo/ui';
 import { ArrowLeft, UserPlus } from 'lucide-react';
 import { notFound } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
+import { ShiftInstanceInformationCard } from '@/domain/shift/components/shift-instance-information-card';
 import { ShiftInstanceVolunteersPanel } from '@/domain/shift/components/shift-instance-volunteers-panel';
 import {
   parseShiftListQuery,
   shiftDetailPath,
-  shiftInstanceEditPath,
   shiftInvitePath,
 } from '@/domain/shift/routes';
 import { Link } from '@/i18n/navigation';
 import { getDataClient } from '@/lib/data-client';
-import { getFormatting } from '@/lib/formatting/formatting-server';
 import { requireOrgAccess } from '@/lib/org-context-server';
 import { checkPermission } from '@/lib/permissions-server';
 import ShareLinkButton from '../../../../../../../../domain/shift/components/share-link-button';
@@ -39,7 +38,6 @@ export default async function ShiftInstanceDetailPage({
   );
 
   const t = await getTranslations('Shift');
-  const { formatRange } = await getFormatting();
   const data = await getDataClient({ orgUId });
   const instance = await data.shift.findInstance(instanceId);
   const isInstanceInThePast =
@@ -61,12 +59,6 @@ export default async function ShiftInstanceDetailPage({
           <p className="mt-1 text-muted-foreground">
             {t('instanceDetail.subtitle')}
           </p>
-          <p className="mt-2 text-sm text-muted-foreground">
-            {formatRange(
-              new Date(instance.actualStartsAt),
-              new Date(instance.actualEndsAt),
-            )}
-          </p>
         </div>
         <div className="flex shrink-0 flex-wrap gap-2">
           <Button asChild variant="outline" size="sm">
@@ -85,20 +77,6 @@ export default async function ShiftInstanceDetailPage({
           )}
 
           {canManage ? (
-            isInstanceInThePast ? (
-              <Button variant="outline" size="sm" disabled>
-                {t('instanceDetail.editCta')}
-              </Button>
-            ) : (
-              <Button asChild variant="outline" size="sm">
-                <Link href={shiftInstanceEditPath(orgUId, shiftId, instanceId)}>
-                  {t('instanceDetail.editCta')}
-                </Link>
-              </Button>
-            )
-          ) : null}
-
-          {canManage ? (
             <Button asChild size="sm">
               <Link href={shiftInvitePath(orgUId, shiftId, instanceId)}>
                 <UserPlus />
@@ -106,6 +84,26 @@ export default async function ShiftInstanceDetailPage({
               </Link>
             </Button>
           ) : null}
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="md:col-span-2 space-y-6">
+          <ShiftInstanceInformationCard
+            orgUId={orgUId}
+            shiftId={shiftId}
+            instanceId={instanceId}
+            actualStartsAt={instance.actualStartsAt}
+            actualEndsAt={instance.actualEndsAt}
+            location={instance.overrideLocation ?? instance.master.location}
+            instructions={
+              instance.overrideInstructions ?? instance.master.instructions
+            }
+            rrule={instance.master.rrule}
+            visibility={instance.master.visibility}
+            canManage={canManage}
+            isInstanceInThePast={isInstanceInThePast}
+          />
         </div>
       </div>
 

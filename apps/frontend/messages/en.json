@@ -1078,9 +1078,11 @@
     "instanceDetail": {
       "backToShift": "Back to shift",
       "editCta": "Edit",
+      "informationTitle": "Shift information",
       "inviteCta": "Manage invites",
       "subtitle": "Volunteers and invite status for this occurrence",
-      "title": "Shift instance"
+      "title": "Shift instance",
+      "volunteersLabel": "Volunteers"
     },
     "inviteForm": {
       "copyInviteLink": "Copy invite link",

@@ -1078,9 +1078,11 @@
     "instanceDetail": {
       "backToShift": "Zurück zum Einsatz",
       "editCta": "Bearbeiten",
+      "informationTitle": "Einsatzinformationen",
       "inviteCta": "Einladungen verwalten",
       "subtitle": "Freiwillige und Einladungsstatus für diesen Termin",
-      "title": "Einsatztermin"
+      "title": "Einsatztermin",
+      "volunteersLabel": "Freiwillige"
     },
     "inviteForm": {
       "copyInviteLink": "Einladungslink kopieren",
