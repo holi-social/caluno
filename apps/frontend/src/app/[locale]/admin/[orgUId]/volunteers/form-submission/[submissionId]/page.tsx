@@ -8,6 +8,7 @@ import {
 } from '@repo/ui';
 import { notFound } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
+import { parseMultiChoiceValue } from '@/domain/requirement-form/option-values';
 import { getDataClient } from '@/lib/data-client';
 import { getFormatting } from '@/lib/formatting/formatting-server';
 
@@ -46,8 +47,7 @@ function resolveFieldAnswer(
   }
   if (field.type === 'MULTI_CHOICE') {
     const options = field.options ?? [];
-    return raw
-      .split(',')
+    return parseMultiChoiceValue(raw)
       .map((v) => options.find((o) => o.value === v)?.label ?? v)
       .join(', ');
   }
