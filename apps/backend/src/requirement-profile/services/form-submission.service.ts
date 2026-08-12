@@ -76,6 +76,23 @@ export class FormSubmissionService {
     });
   }
 
+  async findMySubmission(
+    userId: string,
+    id: string,
+  ): Promise<FormSubmissionEntity | null> {
+    const submission = await this.db.query.formSubmissions.findFirst({
+      where: { id, userId },
+      with: {
+        form: {
+          with: { blockRefs: { with: { block: { with: { fields: true } } } } },
+        },
+        values: true,
+      },
+    });
+
+    return submission ?? null;
+  }
+
   async findValuesBySubmissionId(submissionId: string) {
     return this.db.query.formSubmissionValues.findMany({
       where: { submissionId },
