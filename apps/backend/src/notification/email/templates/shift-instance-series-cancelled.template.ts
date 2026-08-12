@@ -74,7 +74,7 @@ export async function shiftInstanceSeriesCancelledTemplate(
     })}
     ${paragraph(
       t('shiftInstanceSeriesCancelled.bodyMessage', {
-        shiftTitle: data.shiftTitle,
+        shiftTitle: escapeHtml(data.shiftTitle),
         fromDate: formatDate(data.fromDate),
       }),
       { padding: '0 0 16px' },

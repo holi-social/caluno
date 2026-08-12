@@ -1644,11 +1644,13 @@ export class ShiftService {
 
         const fromDate = new Date(instance.actualStartsAt);
         fromDate.setHours(0, 0, 0, 0);
+        const now = new Date();
 
         const targets = await tx.query.shiftInstances.findMany({
           where: {
             masterId: instance.masterId,
             actualStartsAt: { gte: fromDate },
+            actualEndsAt: { gte: now },
             isCancelled: false,
           },
           columns: { id: true },

@@ -1230,6 +1230,38 @@ describe('ShiftService', () => {
         expect(reloadedPast.isCancelled).toBe(false);
       });
 
+      it('leaves an already-ended same-day sibling instance untouched', async () => {
+        const { startsAt, endsAt } = futureWindow();
+        const shift = await createShift(db, {
+          organizationUnitId,
+          createdById: userId,
+          startsAt,
+          endsAt,
+          rrule: null,
+        });
+        const [anchor] = await getInstances(shift.id);
+        const endedSibling = await createShiftInstance(db, shift.id, {
+          actualStartsAt: new Date(Date.now() - 3 * 3600_000),
+          actualEndsAt: new Date(Date.now() - 1 * 3600_000),
+          occurrenceIndex: 1,
+        });
+
+        await shiftService.deleteShiftInstance(anchor.id, organizationUnitId, {
+          applyToAllFuture: true,
+        });
+
+        const [reloadedAnchor] = await db
+          .select()
+          .from(schema.shiftInstances)
+          .where(eq(schema.shiftInstances.id, anchor.id));
+        const [reloadedSibling] = await db
+          .select()
+          .from(schema.shiftInstances)
+          .where(eq(schema.shiftInstances.id, endedSibling.id));
+        expect(reloadedAnchor.isCancelled).toBe(true);
+        expect(reloadedSibling.isCancelled).toBe(false);
+      });
+
       it('skips an already-cancelled future instance without throwing', async () => {
         const { startsAt, endsAt } = futureWindow();
         const shift = await createShift(db, {
