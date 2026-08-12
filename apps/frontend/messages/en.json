@@ -1077,6 +1077,17 @@
     },
     "instanceDetail": {
       "backToShift": "Back to shift",
+      "deleteAria": "Delete",
+      "deleteDialog": {
+        "description": "Are you sure you want to delete the shift on {date}?",
+        "error": "Failed to delete shift instance. {error}",
+        "futureDescription": "Deletes this shift and every upcoming occurrence in the series. Past occurrences are kept.",
+        "futureTitle": "This and all future shifts",
+        "onlyThisDescription": "Deletes the shift on {date}. Other occurrences stay untouched.",
+        "onlyThisTitle": "Only this shift",
+        "success": "Shift instance deleted.",
+        "title": "Delete shift instance"
+      },
       "editCta": "Edit",
       "inviteCta": "Manage invites",
       "subtitle": "Volunteers and invite status for this occurrence",

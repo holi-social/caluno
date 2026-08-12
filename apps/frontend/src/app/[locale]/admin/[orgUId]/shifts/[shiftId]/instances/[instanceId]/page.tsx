@@ -1,8 +1,9 @@
 import { PermissionKey, ShiftVisibility } from '@repo/data';
 import { Button } from '@repo/ui';
-import { ArrowLeft, UserPlus } from 'lucide-react';
+import { ArrowLeft, Trash2, UserPlus } from 'lucide-react';
 import { notFound } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
+import { DeleteShiftInstanceDialog } from '@/domain/shift/components/delete-shift-instance-dialog';
 import { ShiftInstanceVolunteersPanel } from '@/domain/shift/components/shift-instance-volunteers-panel';
 import {
   parseShiftListQuery,
@@ -39,13 +40,14 @@ export default async function ShiftInstanceDetailPage({
   );
 
   const t = await getTranslations('Shift');
-  const { formatRange } = await getFormatting();
+  const { formatRange, formatDate } = await getFormatting();
   const data = await getDataClient({ orgUId });
   const instance = await data.shift.findInstance(instanceId);
   const isInstanceInThePast =
     new Date(instance?.actualEndsAt ?? 0) < new Date();
   const isOpenShift =
     instance?.master.visibility === ShiftVisibility.AllMembers;
+  const isRecurring = Boolean(instance?.master.rrule);
 
   if (!instance || instance.isCancelled) {
     notFound();
@@ -105,6 +107,25 @@ export default async function ShiftInstanceDetailPage({
                 {t('instanceDetail.inviteCta')}
               </Link>
             </Button>
+          ) : null}
+
+          {canManage ? (
+            <DeleteShiftInstanceDialog
+              orgUId={orgUId}
+              instanceId={instanceId}
+              isRecurring={isRecurring}
+              instanceDate={formatDate(new Date(instance.actualStartsAt))}
+              trigger={
+                <Button
+                  variant="destructive"
+                  size="icon-sm"
+                  tooltip={t('instanceDetail.deleteAria')}
+                  disabled={isInstanceInThePast}
+                >
+                  <Trash2 />
+                </Button>
+              }
+            />
           ) : null}
         </div>
       </div>

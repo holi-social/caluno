@@ -1077,6 +1077,17 @@
     },
     "instanceDetail": {
       "backToShift": "Zurück zum Einsatz",
+      "deleteAria": "Löschen",
+      "deleteDialog": {
+        "description": "Möchtest du den Einsatztermin am {date} wirklich löschen?",
+        "error": "Einsatztermin konnte nicht gelöscht werden. {error}",
+        "futureDescription": "Löscht diesen Termin und alle kommenden Termine der Serie. Vergangene Termine bleiben erhalten.",
+        "futureTitle": "Diesen und alle zukünftigen Termine",
+        "onlyThisDescription": "Löscht den Termin am {date}. Andere Termine bleiben unberührt.",
+        "onlyThisTitle": "Nur diesen Termin",
+        "success": "Einsatztermin gelöscht.",
+        "title": "Einsatztermin löschen"
+      },
       "editCta": "Bearbeiten",
       "inviteCta": "Einladungen verwalten",
       "subtitle": "Freiwillige und Einladungsstatus für diesen Termin",
