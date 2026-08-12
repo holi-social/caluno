@@ -98,8 +98,15 @@ export function DeleteShiftInstanceDialog({
           onValueChange={(value) => setChoice(value as DeleteChoice)}
           className="gap-2"
         >
-          <label className="flex cursor-pointer items-start gap-3 rounded-md border p-3 has-[button[data-state=checked]]:border-primary has-[button[data-state=checked]]:bg-muted">
-            <RadioGroupItem value="only-this" className="mt-0.5" />
+          <label
+            htmlFor="only-this"
+            className="flex cursor-pointer items-start gap-3 rounded-md border p-3 has-[button[data-state=checked]]:border-primary has-[button[data-state=checked]]:bg-muted"
+          >
+            <RadioGroupItem
+              id="only-this"
+              value="only-this"
+              className="mt-0.5"
+            />
             <span className="flex flex-col gap-0.5">
               <span className="font-medium text-sm">
                 {t('instanceDetail.deleteDialog.onlyThisTitle')}
@@ -112,8 +119,11 @@ export function DeleteShiftInstanceDialog({
             </span>
           </label>
 
-          <label className="flex cursor-pointer items-start gap-3 rounded-md border p-3 has-[button[data-state=checked]]:border-primary has-[button[data-state=checked]]:bg-muted">
-            <RadioGroupItem value="future" className="mt-0.5" />
+          <label
+            htmlFor="future"
+            className="flex cursor-pointer items-start gap-3 rounded-md border p-3 has-[button[data-state=checked]]:border-primary has-[button[data-state=checked]]:bg-muted"
+          >
+            <RadioGroupItem id="future" value="future" className="mt-0.5" />
             <span className="flex flex-col gap-0.5">
               <span className="font-medium text-sm">
                 {t('instanceDetail.deleteDialog.futureTitle')}
