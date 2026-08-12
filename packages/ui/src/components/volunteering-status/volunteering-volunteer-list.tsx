@@ -1,6 +1,13 @@
+import type { ReactNode } from 'react';
 import { cn } from '../../lib/utils';
 import { Badge } from '../base/badge';
-import { Card, CardContent, CardHeader, CardTitle } from '../base/card';
+import {
+  Card,
+  CardAction,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from '../base/card';
 import type {
   ShiftVolunteeringDisplayState,
   ShiftVolunteeringPhase,
@@ -29,6 +36,8 @@ export type VolunteeringVolunteerListProps = {
   title?: string;
   /** Header summary, e.g. "5 invited · 12 spots". */
   summary?: string;
+  /** Optional action rendered in the card header (e.g. Invite button). */
+  headerAction?: ReactNode;
   /** Localized button labels keyed by action id. */
   actionLabels?: VolunteeringActionLabels;
   onAction?: (
@@ -43,6 +52,7 @@ export function VolunteeringVolunteerList({
   phase,
   title = 'Volunteers',
   summary,
+  headerAction,
   actionLabels,
   onAction,
   className,
@@ -60,6 +70,7 @@ export function VolunteeringVolunteerList({
             <Badge variant="outline">{volunteers.length}</Badge>
           )}
         </CardTitle>
+        {headerAction ? <CardAction>{headerAction}</CardAction> : null}
       </CardHeader>
       <CardContent className="px-6 py-0">
         {volunteers.map((volunteer) => (

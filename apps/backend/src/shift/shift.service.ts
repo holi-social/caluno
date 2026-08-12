@@ -1946,9 +1946,14 @@ export class ShiftService {
     organizationUnitId: string,
     from: Date,
     to: Date,
+    eventId?: string | null,
   ): Promise<ShiftInstanceEntity[]> {
     const shifts = await this.db.query.shifts.findMany({
-      where: { organizationUnitId, isDeleted: false },
+      where: {
+        organizationUnitId,
+        isDeleted: false,
+        ...(eventId ? { eventId } : {}),
+      },
       columns: { id: true },
     });
     const shiftIds = shifts.map((s) => s.id);

@@ -143,8 +143,23 @@
     "detail": {
       "backLink": "Back to events",
       "coverImageAlt": "Cover image for {title}",
+      "createdByLabel": "Created by",
+      "createdLabel": "Created",
       "editButton": "Edit",
+      "emptyLocation": "No location",
+      "imagePlaceholder": "Add cover image",
+      "informationTitle": "Event information",
       "inviteButton": "Invite",
+      "shiftsCount": "{count, plural, one {# shift} other {# shifts}}",
+      "status": {
+        "active": "Active",
+        "finished": "Finished"
+      },
+      "statusLabel": "Status",
+      "tabs": {
+        "shifts": "Shifts",
+        "volunteers": "Volunteers"
+      },
       "requiredForms": {
         "addExisting": "+ Add existing",
         "addedToast": "Form attached",

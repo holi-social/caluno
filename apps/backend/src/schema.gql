@@ -632,7 +632,7 @@ type Query {
   timeEntry(id: String!): TimeEntry!
   user(id: String!): User
   userByCheckInId(checkInId: String!): User
-  weeklyShifts(from: DateTime!, to: DateTime!): [ShiftInstance!]!
+  weeklyShifts(eventId: ID, from: DateTime!, to: DateTime!): [ShiftInstance!]!
 }
 
 type RequiredFormRef {

@@ -155,12 +155,15 @@ export class ShiftQueryResolver {
   async weeklyShifts(
     @Args('from', { type: () => Date }) from: Date,
     @Args('to', { type: () => Date }) to: Date,
+    @Args('eventId', { type: () => ID, nullable: true })
+    eventId: string | null | undefined,
     @Context() context: AuthenticatedGraphQLContext,
   ): Promise<ShiftInstance[]> {
     const instances = await this.shiftService.findShiftsForWeek(
       context.organizationUnitId,
       from,
       to,
+      eventId,
     );
     return this.shiftInstanceMapper.toArray(instances);
   }
