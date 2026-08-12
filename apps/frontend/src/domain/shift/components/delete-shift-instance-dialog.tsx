@@ -19,6 +19,7 @@ import { useState, useTransition } from 'react';
 import { toast } from 'sonner';
 import { DeleteAlertDialog } from '@/components/delete-alert-dialog';
 import { useRouter } from '@/i18n/navigation';
+import { useFormatting } from '@/lib/formatting/use-formatting';
 import { deleteShiftInstance } from '../actions';
 import { shiftsListPath } from '../routes';
 
@@ -28,7 +29,7 @@ interface DeleteShiftInstanceDialogProps {
   orgUId: string;
   instanceId: string;
   isRecurring: boolean;
-  instanceDate: string;
+  instanceDate: Date;
   trigger: ReactNode;
 }
 
@@ -45,6 +46,11 @@ export function DeleteShiftInstanceDialog({
   const [isDeleting, startDeleteTransition] = useTransition();
   const [open, setOpen] = useState(false);
   const [choice, setChoice] = useState<DeleteChoice>('only-this');
+  const { formatDate } = useFormatting();
+
+  const instanceDateFormatted = formatDate(instanceDate);
+  const isInstanceInThePast =
+   (instanceDate ?? 0) < new Date();
 
   const runDelete = (applyToAllFuture: boolean) => {
     startDeleteTransition(async () => {
@@ -72,7 +78,7 @@ export function DeleteShiftInstanceDialog({
       <DeleteAlertDialog
         title={t('instanceDetail.deleteDialog.title')}
         description={t('instanceDetail.deleteDialog.description', {
-          date: instanceDate,
+          date: instanceDateFormatted,
         })}
         onDelete={() => runDelete(false)}
         trigger={trigger}
@@ -82,13 +88,16 @@ export function DeleteShiftInstanceDialog({
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>{trigger}</DialogTrigger>
+      <DialogTrigger disabled={isInstanceInThePast}>
+        {trigger}
+      </DialogTrigger>
+
       <DialogContent>
         <DialogHeader>
           <DialogTitle>{t('instanceDetail.deleteDialog.title')}</DialogTitle>
           <DialogDescription>
             {t('instanceDetail.deleteDialog.description', {
-              date: instanceDate,
+              date: instanceDateFormatted,
             })}
           </DialogDescription>
         </DialogHeader>
@@ -113,7 +122,7 @@ export function DeleteShiftInstanceDialog({
               </span>
               <span className="text-muted-foreground text-xs">
                 {t('instanceDetail.deleteDialog.onlyThisDescription', {
-                  date: instanceDate,
+                  date: instanceDateFormatted,
                 })}
               </span>
             </span>
