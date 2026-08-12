@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'bun:test';
-import { editShiftInstanceFormSchema, shiftFormSchema } from './schemas';
+import { editShiftInstanceFormSchema, shiftFormSchema, shiftInstanceDeleteSchema } from './schemas';
 
 const messages = {
   nameRequired: 'Name is required',
@@ -143,5 +143,37 @@ describe('editShiftInstanceFormSchema', () => {
       }),
     );
     expect(result.success).toBe(true);
+  });
+});
+
+describe('shiftInstanceDeleteSchema', () => {
+  const messages = {
+    instanceIdRequired: 'Shift instance ID is required',
+    organizationUnitIdRequired: 'Organization unit ID is required',
+  };
+
+  it('accepts a valid payload without applyToAllFuture', () => {
+    const result = shiftInstanceDeleteSchema(messages).safeParse({
+      instanceId: 'instance-1',
+      organizationUnitId: 'org-1',
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it('accepts applyToAllFuture set to true', () => {
+    const result = shiftInstanceDeleteSchema(messages).safeParse({
+      instanceId: 'instance-1',
+      organizationUnitId: 'org-1',
+      applyToAllFuture: true,
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it('rejects a missing instanceId', () => {
+    const result = shiftInstanceDeleteSchema(messages).safeParse({
+      instanceId: '',
+      organizationUnitId: 'org-1',
+    });
+    expect(result.success).toBe(false);
   });
 });
