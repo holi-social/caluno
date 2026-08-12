@@ -26,6 +26,7 @@ import { passwordResetTemplate } from './email/templates/password-reset.template
 import { shiftInstanceCancelledTemplate } from './email/templates/shift-instance-cancelled.template';
 import { shiftInstanceInvitedTemplate } from './email/templates/shift-instance-invited.template';
 import { shiftInstanceJoinedTemplate } from './email/templates/shift-instance-joined.template';
+import { shiftInstanceSeriesCancelledTemplate } from './email/templates/shift-instance-series-cancelled.template';
 import { shiftInvitedTemplate } from './email/templates/shift-invited.template';
 import { MembershipListener } from './listeners/membership.listener';
 import { OrganizationListener } from './listeners/organization.listener';
@@ -489,6 +490,49 @@ describe('NotificationModule', () => {
     );
 
     notificationService.notifyShiftInstanceCancelled(payload);
+
+    await new Promise((resolve) => setTimeout(resolve, 50));
+
+    expect(userService.findById).toHaveBeenCalledWith('volunteer-1');
+    expect(emailService.send).toHaveBeenCalledWith({
+      to: 'sam@example.com',
+      subject: expected.subject,
+      html: expected.html,
+    });
+  });
+
+  it('sends shift instance series cancelled emails to affected volunteers', async () => {
+    const fromDate = new Date('2026-07-10T00:00:00.000Z');
+
+    userService.findById.mockImplementation((id: string) =>
+      Promise.resolve({
+        id,
+        name: id === 'volunteer-1' ? 'Sam Volunteer' : 'Other User',
+        email: id === 'volunteer-1' ? 'sam@example.com' : 'other@example.com',
+      }),
+    );
+
+    const payload = {
+      organizationUnitId: 'unit-root-1',
+      organizationUnitName: 'Acme Volunteers',
+      shiftId: 'shift-1',
+      shiftTitle: 'Morning Kitchen',
+      shiftLocation: 'Main hall',
+      recipientUserIds: ['volunteer-1'],
+      fromDate,
+    };
+    const expected = await shiftInstanceSeriesCancelledTemplate(
+      {
+        organizationUnitName: payload.organizationUnitName,
+        shiftTitle: payload.shiftTitle,
+        shiftLocation: payload.shiftLocation,
+        recipientFirstName: 'Sam',
+        fromDate,
+      },
+      createFixtureTranslator('en'),
+    );
+
+    notificationService.notifyShiftInstanceSeriesCancelled(payload);
 
     await new Promise((resolve) => setTimeout(resolve, 50));
 

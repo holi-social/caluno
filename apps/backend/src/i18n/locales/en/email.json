@@ -102,6 +102,19 @@
     "previewText": "{volunteerName} joined {shiftTitle} in {organizationName} on {startsAt}.",
     "subject": "{shiftTitle}: {volunteerName} joined"
   },
+  "shiftInstanceSeriesCancelled": {
+    "bodyMessage": "All shifts in the '{shiftTitle}' series from {fromDate} onward have been cancelled.",
+    "detailFrom": "From",
+    "detailLocation": "Location",
+    "detailOrganization": "Organization",
+    "detailShift": "Shift",
+    "footerNote": "You're receiving this because a shift series you were invited to on {brandName} was cancelled.",
+    "greeting": "Hi {firstName}, a shift series you were invited to has been partly cancelled.",
+    "heading": "Upcoming shifts cancelled",
+    "note": "These shifts no longer require volunteers. No action is needed on your part.",
+    "previewText": "{shiftTitle} at {organizationName} — upcoming shifts cancelled from {fromDate}.",
+    "subject": "{shiftTitle}: upcoming shifts cancelled"
+  },
   "shiftInvited": {
     "buttonLabel": "View shift",
     "detailInstructions": "Instructions",

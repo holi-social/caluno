@@ -102,6 +102,19 @@
     "previewText": "{volunteerName} hat sich für {shiftTitle} bei {organizationName} am {startsAt} angemeldet.",
     "subject": "{shiftTitle}: {volunteerName} hat sich angemeldet"
   },
+  "shiftInstanceSeriesCancelled": {
+    "bodyMessage": "Alle Einsätze der Serie \"{shiftTitle}\" ab {fromDate} wurden abgesagt.",
+    "detailFrom": "Ab",
+    "detailLocation": "Ort",
+    "detailOrganization": "Organisation",
+    "detailShift": "Einsatz",
+    "footerNote": "Du erhältst diese Nachricht, weil eine Einsatzserie, zu der du eingeladen warst, auf {brandName} abgesagt wurde.",
+    "greeting": "Hallo {firstName}, eine Einsatzserie, zu der du eingeladen warst, wurde teilweise abgesagt.",
+    "heading": "Kommende Einsätze abgesagt",
+    "note": "Für diese Einsätze werden keine Freiwilligen mehr benötigt. Du musst nichts weiter tun.",
+    "previewText": "{shiftTitle} bei {organizationName} — kommende Einsätze ab {fromDate} abgesagt.",
+    "subject": "{shiftTitle}: kommende Einsätze abgesagt"
+  },
   "shiftInvited": {
     "buttonLabel": "Einsatz ansehen",
     "detailInstructions": "Beschreibung",
