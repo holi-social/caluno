@@ -49,8 +49,7 @@ export function DeleteShiftInstanceDialog({
   const { formatDate } = useFormatting();
 
   const instanceDateFormatted = formatDate(instanceDate);
-  const isInstanceInThePast =
-   (instanceDate ?? 0) < new Date();
+  const isInstanceInThePast = (instanceDate ?? 0) < new Date();
 
   const runDelete = (applyToAllFuture: boolean) => {
     startDeleteTransition(async () => {
@@ -88,9 +87,7 @@ export function DeleteShiftInstanceDialog({
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger disabled={isInstanceInThePast}>
-        {trigger}
-      </DialogTrigger>
+      <DialogTrigger disabled={isInstanceInThePast}>{trigger}</DialogTrigger>
 
       <DialogContent>
         <DialogHeader>
