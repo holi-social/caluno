@@ -1077,10 +1077,11 @@
       "timeRangeConstraint": "Shifts must start and end within ({window})."
     },
     "instanceDetail": {
-      "backToShift": "Back to shift",
       "editCta": "Edit",
-      "inviteCta": "Manage invites",
-      "subtitle": "Volunteers and invite status for this occurrence",
+      "imagePlaceholder": "Add an image",
+      "informationTitle": "Shift information",
+      "inviteCta": "Invite",
+      "inviteLink": "Invite link",
       "title": "Shift instance"
     },
     "inviteForm": {
@@ -1179,7 +1180,7 @@
       "createTitle": "Create shift",
       "editDescription": "Edit shift.",
       "editInstanceDescription": "Edit this occurrence of the shift.",
-      "editInstanceTitle": "Edit shift instance",
+      "editInstanceTitle": "Edit shift",
       "editTitle": "Edit shift",
       "inviteDescription": "Invited volunteers will receive an invite email with shift details and a link to the system.",
       "inviteTitle": "Invite volunteers"
