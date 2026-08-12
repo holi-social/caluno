@@ -2,7 +2,7 @@ import 'reflect-metadata';
 import { beforeAll, describe, expect, it, mock } from 'bun:test';
 import { ConfigModule } from '@nestjs/config';
 import { Test, type TestingModule } from '@nestjs/testing';
-import { asc, eq } from 'drizzle-orm';
+import { asc, eq, inArray } from 'drizzle-orm';
 import { AuthService } from '../src/auth/auth.service';
 import { type Database, DatabaseModule } from '../src/database/database.module';
 import { DATABASE_CONNECTION } from '../src/database/database-connection';
@@ -47,6 +47,7 @@ describe('ShiftService', () => {
       notifyShiftInstanceInvited: mock(() => {}),
       notifyShiftInvited: mock(() => {}),
       notifyShiftInstanceCancelled: mock(() => {}),
+      notifyShiftInstanceSeriesCancelled: mock(() => {}),
     } as unknown as NotificationService;
 
     shiftService = new ShiftService(
@@ -1165,6 +1166,244 @@ describe('ShiftService', () => {
       expect(
         notificationService.notifyShiftInstanceCancelled,
       ).not.toHaveBeenCalled();
+    });
+
+    describe('applyToAllFuture', () => {
+      it('cancels the anchor and every future non-cancelled instance in the series', async () => {
+        const { startsAt, endsAt } = futureWindow();
+        const shift = await createShift(db, {
+          organizationUnitId,
+          createdById: userId,
+          startsAt,
+          endsAt,
+          rrule: null,
+        });
+        const [anchor] = await getInstances(shift.id);
+        const nextDay = await createShiftInstance(db, shift.id, {
+          actualStartsAt: new Date(startsAt.getTime() + 86_400_000),
+          actualEndsAt: new Date(endsAt.getTime() + 86_400_000),
+          occurrenceIndex: 1,
+        });
+        const twoDaysOut = await createShiftInstance(db, shift.id, {
+          actualStartsAt: new Date(startsAt.getTime() + 2 * 86_400_000),
+          actualEndsAt: new Date(endsAt.getTime() + 2 * 86_400_000),
+          occurrenceIndex: 2,
+        });
+
+        await shiftService.deleteShiftInstance(anchor.id, organizationUnitId, {
+          applyToAllFuture: true,
+        });
+
+        const instances = await getInstances(shift.id);
+        const byId = new Map(
+          instances.map((instance) => [instance.id, instance]),
+        );
+        expect(byId.get(anchor.id)?.isCancelled).toBe(true);
+        expect(byId.get(nextDay.id)?.isCancelled).toBe(true);
+        expect(byId.get(twoDaysOut.id)?.isCancelled).toBe(true);
+      });
+
+      it('leaves past instances of the series untouched', async () => {
+        const { startsAt, endsAt } = futureWindow();
+        const shift = await createShift(db, {
+          organizationUnitId,
+          createdById: userId,
+          startsAt,
+          endsAt,
+          rrule: null,
+        });
+        const [anchor] = await getInstances(shift.id);
+        const pastInstance = await createShiftInstance(db, shift.id, {
+          actualStartsAt: daysAgo(2, 9),
+          actualEndsAt: daysAgo(2, 11),
+          occurrenceIndex: 1,
+        });
+
+        await shiftService.deleteShiftInstance(anchor.id, organizationUnitId, {
+          applyToAllFuture: true,
+        });
+
+        const [reloadedPast] = await db
+          .select()
+          .from(schema.shiftInstances)
+          .where(eq(schema.shiftInstances.id, pastInstance.id));
+        expect(reloadedPast.isCancelled).toBe(false);
+      });
+
+      it('skips an already-cancelled future instance without throwing', async () => {
+        const { startsAt, endsAt } = futureWindow();
+        const shift = await createShift(db, {
+          organizationUnitId,
+          createdById: userId,
+          startsAt,
+          endsAt,
+          rrule: null,
+        });
+        const [anchor] = await getInstances(shift.id);
+        const alreadyCancelled = await createShiftInstance(db, shift.id, {
+          actualStartsAt: new Date(startsAt.getTime() + 86_400_000),
+          actualEndsAt: new Date(endsAt.getTime() + 86_400_000),
+          occurrenceIndex: 1,
+          isCancelled: true,
+        });
+
+        const result = await shiftService.deleteShiftInstance(
+          anchor.id,
+          organizationUnitId,
+          { applyToAllFuture: true },
+        );
+
+        expect(result.isCancelled).toBe(true);
+        const [reloaded] = await db
+          .select()
+          .from(schema.shiftInstances)
+          .where(eq(schema.shiftInstances.id, alreadyCancelled.id));
+        expect(reloaded.isCancelled).toBe(true);
+      });
+
+      it('throws ConflictGraphQLError and cancels nothing when a future instance has an open time entry', async () => {
+        const { startsAt, endsAt } = futureWindow();
+        const shift = await createShift(db, {
+          organizationUnitId,
+          createdById: userId,
+          startsAt,
+          endsAt,
+          rrule: null,
+        });
+        const [anchor] = await getInstances(shift.id);
+        const blockedInstance = await createShiftInstance(db, shift.id, {
+          actualStartsAt: new Date(startsAt.getTime() + 86_400_000),
+          actualEndsAt: new Date(endsAt.getTime() + 86_400_000),
+          occurrenceIndex: 1,
+        });
+        const volunteer = await createUser(db);
+        await db.insert(schema.timeEntries).values({
+          shiftInstanceId: blockedInstance.id,
+          volunteerId: volunteer.id,
+          startedAt: new Date(),
+          endedAt: null,
+        });
+
+        await expect(
+          shiftService.deleteShiftInstance(anchor.id, organizationUnitId, {
+            applyToAllFuture: true,
+          }),
+        ).rejects.toThrow(ConflictGraphQLError);
+
+        const instances = await getInstances(shift.id);
+        expect(instances.every((instance) => !instance.isCancelled)).toBe(true);
+      });
+
+      it('cancels active invites across the batch and dedupes recipients invited to multiple instances', async () => {
+        const { startsAt, endsAt } = futureWindow();
+        const shift = await createShift(db, {
+          organizationUnitId,
+          createdById: userId,
+          startsAt,
+          endsAt,
+          rrule: null,
+        });
+        const [anchor] = await getInstances(shift.id);
+        const sibling = await createShiftInstance(db, shift.id, {
+          actualStartsAt: new Date(startsAt.getTime() + 86_400_000),
+          actualEndsAt: new Date(endsAt.getTime() + 86_400_000),
+          occurrenceIndex: 1,
+        });
+        const bothVolunteer = await createUser(db);
+        const anchorOnlyVolunteer = await createUser(db);
+        await db.insert(schema.shiftInstanceInvites).values([
+          {
+            instanceId: anchor.id,
+            userId: bothVolunteer.id,
+            status: ShiftInviteStatus.ACCEPTED,
+          },
+          {
+            instanceId: sibling.id,
+            userId: bothVolunteer.id,
+            status: ShiftInviteStatus.INVITED,
+          },
+          {
+            instanceId: anchor.id,
+            userId: anchorOnlyVolunteer.id,
+            status: ShiftInviteStatus.INVITED,
+          },
+        ]);
+
+        (
+          notificationService.notifyShiftInstanceCancelled as ReturnType<
+            typeof mock
+          >
+        ).mockClear();
+        (
+          notificationService.notifyShiftInstanceSeriesCancelled as ReturnType<
+            typeof mock
+          >
+        ).mockClear();
+
+        await shiftService.deleteShiftInstance(anchor.id, organizationUnitId, {
+          applyToAllFuture: true,
+        });
+
+        const invites = await db
+          .select()
+          .from(schema.shiftInstanceInvites)
+          .where(
+            inArray(schema.shiftInstanceInvites.instanceId, [
+              anchor.id,
+              sibling.id,
+            ]),
+          );
+        expect(
+          invites.every(
+            (invite) => invite.status === ShiftInviteStatus.CANCELLED,
+          ),
+        ).toBe(true);
+
+        await new Promise((resolve) => setTimeout(resolve, 50));
+
+        expect(
+          notificationService.notifyShiftInstanceCancelled,
+        ).not.toHaveBeenCalled();
+        expect(
+          notificationService.notifyShiftInstanceSeriesCancelled,
+        ).toHaveBeenCalledTimes(1);
+        const call = (
+          notificationService.notifyShiftInstanceSeriesCancelled as ReturnType<
+            typeof mock
+          >
+        ).mock.calls[0][0];
+        expect(new Set(call.recipientUserIds)).toEqual(
+          new Set([bothVolunteer.id, anchorOnlyVolunteer.id]),
+        );
+      });
+
+      it('does not emit a series cancellation notification when there are no active invites', async () => {
+        const { startsAt, endsAt } = futureWindow();
+        const shift = await createShift(db, {
+          organizationUnitId,
+          createdById: userId,
+          startsAt,
+          endsAt,
+          rrule: null,
+        });
+        const [anchor] = await getInstances(shift.id);
+
+        (
+          notificationService.notifyShiftInstanceSeriesCancelled as ReturnType<
+            typeof mock
+          >
+        ).mockClear();
+
+        await shiftService.deleteShiftInstance(anchor.id, organizationUnitId, {
+          applyToAllFuture: true,
+        });
+
+        await new Promise((resolve) => setTimeout(resolve, 50));
+
+        expect(
+          notificationService.notifyShiftInstanceSeriesCancelled,
+        ).not.toHaveBeenCalled();
+      });
     });
   });
 });
