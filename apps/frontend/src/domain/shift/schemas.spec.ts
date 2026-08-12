@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'bun:test';
-import { editShiftInstanceFormSchema, shiftFormSchema, shiftInstanceDeleteSchema } from './schemas';
+import {
+  editShiftInstanceFormSchema,
+  shiftFormSchema,
+  shiftInstanceDeleteSchema,
+} from './schemas';
 
 const messages = {
   nameRequired: 'Name is required',

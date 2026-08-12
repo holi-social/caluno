@@ -14,8 +14,8 @@ import { generateRrule } from './rrule';
 import {
   serverEditShiftInstanceFormSchema,
   serverShiftDeleteSchema,
-  serverShiftInstanceDeleteSchema,
   serverShiftFormSchema,
+  serverShiftInstanceDeleteSchema,
 } from './schemas';
 
 export async function getShift(id: string, organizationUnitId: string) {
