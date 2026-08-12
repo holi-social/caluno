@@ -291,11 +291,35 @@
     "noResults": "No members found",
     "searchPlaceholder": "Search name or email..."
   },
+  "MembershipDetail": {
+    "forms": {
+      "completedOn": "You filled in the form on {date}",
+      "fillIn": "Fill in form",
+      "notCompletedPrompt": "This organisation has asked you to fill in this form.",
+      "status": {
+        "completed": "Completed",
+        "notCompleted": "Not completed"
+      },
+      "subtitle": "Forms this organisation has asked you to fill in.",
+      "title": "Your forms",
+      "view": "View"
+    },
+    "joinedDate": "Joined · {date}",
+    "role": "Role",
+    "submission": {
+      "accepted": "Accepted",
+      "answerColumn": "Answer",
+      "fieldColumn": "Field",
+      "noFields": "This form has no fields.",
+      "submittedOn": "Submitted on {date}"
+    }
+  },
   "MembershipRequest": {
     "actions": {
       "approve": "Approve",
       "approveDisabledTitle": "Required forms are incomplete",
       "cancel": "Cancel",
+      "dismiss": "Dismiss",
       "leave": "Leave",
       "reject": "Reject",
       "rejectDialogDescription": "Are you sure you want to reject this membership request? Please provide a reason so the volunteer understands why their request was declined.",
@@ -303,7 +327,8 @@
       "rejecting": "Rejecting...",
       "rejectionReasonLabel": "Rejection reason",
       "rejectionReasonPlaceholder": "Explain why the request is being rejected...",
-      "withdraw": "Withdraw"
+      "withdraw": "Withdraw",
+      "open": "Open"
     },
     "cancelButton": "Cancel request",
     "cancelButtonSubmitting": "Canceling...",
@@ -314,7 +339,7 @@
     },
     "dialog": {
       "leaveDescription": "Are you sure you want to leave {orgName}?",
-      "leaveTitle": "Leave organization",
+      "leaveTitle": "Revoke membership",
       "withdrawDescription": "Are you sure you want to withdraw your request to join {orgName}?",
       "withdrawTitle": "Withdraw request"
     },
@@ -397,6 +422,8 @@
       "approved": "Membership request approved",
       "cancelFailed": "Failed to cancel membership request",
       "cancelled": "Membership request cancelled",
+      "dismissFailed": "Failed to dismiss membership request",
+      "dismissed": "Membership request dismissed",
       "leaveFailed": "Failed to leave organization",
       "left": "You have left {orgName}",
       "rejected": "Membership request rejected",
@@ -845,8 +872,8 @@
       "deleteFormAria": "Delete",
       "deleteFormDescription": "{name} will be permanently removed.",
       "description": "Description",
-      "editBlockAria": "Edit",
-      "editFormAria": "Edit",
+      "editBlockAria": "Edit block",
+      "editFormAria": "Edit form",
       "editable": "Editable",
       "fieldCount": "{count, plural, one {# field} other {# fields}}",
       "fields": "Fields",
