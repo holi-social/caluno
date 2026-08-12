@@ -414,7 +414,7 @@ type Mutation {
   deleteRequirementProfileSubmission(id: String!): RequirementProfileSubmission!
   deleteRole(id: ID!): Role!
   deleteShift(id: String!): Shift!
-  deleteShiftInstance(id: String!): ShiftInstance!
+  deleteShiftInstance(applyToAllFuture: Boolean, id: String!): ShiftInstance!
   deleteTimeEntry(id: ID!): TimeEntry!
   inviteMembersToEvent(eventId: ID!, memberIds: [String!]!): Event!
   joinEvent(eventId: ID!): JoinEventResult!

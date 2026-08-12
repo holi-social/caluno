@@ -149,11 +149,14 @@ export class ShiftMutationResolver {
   @Mutation(() => ShiftInstance)
   async deleteShiftInstance(
     @Args('id', { type: () => String }) id: string,
+    @Args('applyToAllFuture', { type: () => Boolean, nullable: true })
+    applyToAllFuture: boolean | null | undefined,
     @Context() context: AuthenticatedGraphQLContext,
   ): Promise<ShiftInstance> {
     const instance = await this.shiftService.deleteShiftInstance(
       id,
       context.organizationUnitId,
+      { applyToAllFuture: applyToAllFuture ?? false },
     );
     return this.shiftInstanceMapper.toModelOrThrow(instance);
   }
