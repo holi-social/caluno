@@ -1293,16 +1293,16 @@ export class ShiftService {
         );
       }
 
-      if (!options.applyToAllFuture) {
+      if (options.applyToAllFuture || instance.master.rrule === null) {
+        return this.updateShiftInstanceSeries(
+          tx,
+          instance,
+          input,
+          organizationUnitId,
+        );
+      } else {
         return this.updateSingleShiftInstance(tx, instance, input);
       }
-
-      return this.updateShiftInstanceSeries(
-        tx,
-        instance,
-        input,
-        organizationUnitId,
-      );
     });
   }
 

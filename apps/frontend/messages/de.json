@@ -598,6 +598,7 @@
     },
     "language": "Sprache",
     "languageDescription": "Anzeigesprache der App",
+    "moreSettingsPrompt": "Weitere Einstellungen findest du in deinem <link>Freiwilligenprofil</link>",
     "organizations": "Deine Organisationen",
     "pageTitle": "Profil",
     "personalInformation": "Persönliche Informationen",
