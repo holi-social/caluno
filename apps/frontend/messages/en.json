@@ -1079,7 +1079,7 @@
       "backToShift": "Back to shift",
       "deleteAria": "Delete",
       "deleteDialog": {
-        "description": "Are you sure you want to delete the shift on {date}?",
+        "description": "This shift is part of a series. Choose whether to delete just this shift or every upcoming shift.",
         "error": "Failed to delete shift instance. {error}",
         "futureDescription": "Deletes this shift and every upcoming occurrence in the series. Past occurrences are kept.",
         "futureTitle": "This and all future shifts",

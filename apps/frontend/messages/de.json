@@ -1079,7 +1079,7 @@
       "backToShift": "Zurück zum Einsatz",
       "deleteAria": "Löschen",
       "deleteDialog": {
-        "description": "Möchtest du den Einsatztermin am {date} wirklich löschen?",
+        "description": "Dieser Einsatztermin ist Teil einer Serie. Wähle aus, ob nur diesen Termin oder alle kommenden Termine gelöscht werden sollen.",
         "error": "Einsatztermin konnte nicht gelöscht werden. {error}",
         "futureDescription": "Löscht diesen Termin und alle kommenden Termine der Serie. Vergangene Termine bleiben erhalten.",
         "futureTitle": "Diesen und alle zukünftigen Termine",
