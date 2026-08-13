@@ -62,7 +62,7 @@ export default async function EventFormsPage({
 
   if (joinResult?.status === JoinStatus.Joined) {
     redirect({
-      href: getSafeRedirect(redirectTo) ?? `/events/${eventId}`,
+      href: getSafeRedirect(redirectTo, `/events/${eventId}`),
       locale,
     });
   }

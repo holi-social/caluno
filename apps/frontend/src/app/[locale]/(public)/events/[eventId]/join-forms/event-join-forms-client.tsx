@@ -45,7 +45,7 @@ export function EventJoinFormsClient({
             ? t('joinedToast', { eventTitle })
             : t('pendingRequestToast'),
         );
-        router.push(getSafeRedirect(redirectTo) ?? '/');
+        router.push(getSafeRedirect(redirectTo));
       } else if (result.status === JoinStatus.Rejected) {
         toast.error(t('rejectedToast'));
         router.push(`/events/${eventId}`);

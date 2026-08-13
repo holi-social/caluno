@@ -85,7 +85,7 @@ export default async function ShiftJoinFormsPage({
     shift.organizationUnit?.myMembershipState ?? JoinStatus.None;
   if (membershipState === JoinStatus.Joined) {
     redirect({
-      href: getSafeRedirect(redirectTo) ?? `/shifts/${shiftId}`,
+      href: getSafeRedirect(redirectTo, `/shifts/${shiftId}`),
       locale,
     });
   }

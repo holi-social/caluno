@@ -73,7 +73,7 @@ export default async function EventJoinFormsPage({
     event.organizationUnit?.myMembershipState ?? JoinStatus.None;
   if (membershipState === JoinStatus.Joined) {
     redirect({
-      href: getSafeRedirect(redirectTo) ?? `/events/${eventId}`,
+      href: getSafeRedirect(redirectTo, `/events/${eventId}`),
       locale,
     });
   }

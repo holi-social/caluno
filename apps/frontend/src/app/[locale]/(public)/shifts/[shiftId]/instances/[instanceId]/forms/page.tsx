@@ -84,7 +84,7 @@ export default async function ShiftFormsPage({
 
   if (joinResult?.status === JoinStatus.Joined) {
     redirect({
-      href: getSafeRedirect(redirectTo) ?? shiftPublicPath(shiftId, instanceId),
+      href: getSafeRedirect(redirectTo, shiftPublicPath(shiftId, instanceId)),
       locale,
     });
   }

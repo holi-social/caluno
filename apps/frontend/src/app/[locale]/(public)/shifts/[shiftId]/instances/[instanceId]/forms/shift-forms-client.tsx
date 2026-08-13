@@ -42,7 +42,7 @@ export function ShiftFormsClient({
 
       if (result.status === JoinStatus.Joined) {
         toast.success(t('joinedToast', { shiftTitle }));
-        router.push(getSafeRedirect(redirectTo) ?? detailPath);
+        router.push(getSafeRedirect(redirectTo, detailPath));
       } else if (result.status === JoinStatus.Pending) {
         toast.success(t('requestSentToast'));
         router.push(detailPath);
