@@ -56,11 +56,8 @@ interface JoinShiftButtonProps {
   className?: string;
   /** True when the user already clicked join for this instance and the backend returned a pending membership request. */
   isPendingIntended?: boolean;
-  /** Required forms configured on the shift itself. */
   shiftRequiredForms?: RequiredForm[];
-  /** Required forms configured on the selected shift instance. */
   instanceRequiredForms?: RequiredForm[];
-  /** Required forms configured on the shift's organization unit. */
   organizationUnitRequiredForms?: RequiredForm[];
 }
 
