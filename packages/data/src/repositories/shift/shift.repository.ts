@@ -75,6 +75,11 @@ export class ShiftRepository extends BaseRepository {
     return data.publicShiftInstances;
   }
 
+  async findPublicInstance(id: string): Promise<PublicShiftInstance> {
+    const data = await this.sdk.GetPublicShiftInstance({ id });
+    return data.publicShiftInstance;
+  }
+
   async findByIdDetailed(id: string): Promise<ShiftDetail> {
     const shift = await this.findById(id);
     return enrichShift(shift);

@@ -609,6 +609,7 @@ type Query {
   publicEvent(id: ID!): Event!
   publicEventsByOrganizationUnit(organizationUnitId: ID!): [Event!]!
   publicOrganizationUnit(id: ID!): OrganizationUnit!
+  publicShiftInstance(id: ID!): ShiftInstance!
   publicShiftInstances(shiftId: ID!): [ShiftInstance!]!
   publicShiftsByOrganizationUnit(organizationUnitId: ID!): [Shift!]!
   requirement(id: String!): Requirement

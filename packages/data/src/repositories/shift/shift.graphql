@@ -368,6 +368,12 @@ query GetPublicShiftInstances($shiftId: ID!) {
   }
 }
 
+query GetPublicShiftInstance($id: ID!) {
+  publicShiftInstance(id: $id) {
+    ...PublicShiftDetailInstanceFields
+  }
+}
+
 fragment VolunteerHomeShiftInstance on ShiftInstance {
   id
   overrideTitle

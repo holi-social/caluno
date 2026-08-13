@@ -186,6 +186,26 @@ export class ShiftService {
     return this.findPublicInstancesByShiftIds([shiftId]);
   }
 
+  /** A single public (non-cancelled) upcoming instance by id, without fetching its shift's whole schedule. */
+  async findPublicInstance(instanceId: string): Promise<ShiftInstanceEntity> {
+    const instance = await this.db.query.shiftInstances.findFirst({
+      where: {
+        id: instanceId,
+        isCancelled: false,
+        actualStartsAt: { gte: startOfTodayInAppTimeZone() },
+      },
+      with: { master: true },
+    });
+
+    if (!instance) {
+      throw new NotFoundGraphQLError(
+        `Shift instance with ID ${instanceId} not found`,
+      );
+    }
+
+    return instance;
+  }
+
   /** Public (non-cancelled) upcoming instances for many shifts in one query (DataLoader batch). */
   async findPublicInstancesByShiftIds(
     shiftIds: string[],
