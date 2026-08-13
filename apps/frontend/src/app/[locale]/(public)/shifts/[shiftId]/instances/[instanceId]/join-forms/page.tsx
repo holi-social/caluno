@@ -7,7 +7,10 @@ import {
 import { notFound } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
 import { ShiftJoinFormsClient } from '@/app/[locale]/(public)/shifts/[shiftId]/instances/[instanceId]/join-forms/shift-join-forms-client';
-import type { RequiredFormItem } from '@/domain/requirement-form/components/required-form-renderer';
+import {
+  buildSubmittedFormIds,
+  resolveRequiredForms,
+} from '@/domain/requirement-form/resolve-required-forms';
 import { redirect } from '@/i18n/navigation';
 import { resolveLocale } from '@/i18n/routing';
 import { getSession } from '@/lib/auth-server';
@@ -91,47 +94,33 @@ export default async function ShiftJoinFormsPage({
     .findMyFormSubmissions(shift.organizationUnitId)
     .catch(() => []);
 
-  const submittedFormIds = new Set<string>(
-    submissionsResult
-      .filter((s) => s.status === 'SUBMITTED')
-      .map((s) => s.form?.id)
-      .filter((id): id is string => Boolean(id)),
-  );
+  const submittedFormIds = buildSubmittedFormIds(submissionsResult);
 
-  const requiredForms: RequiredFormItem[] = [
-    ...(instance.requiredForms?.map((ref) => ({
-      form: ref.form,
-      order: ref.order,
-      submitted: submittedFormIds.has(ref.form.id),
-      targetType: RequiredFormTargetType.ShiftInstance,
-      targetId: instanceId,
-    })) ?? []),
-    ...(shift.requiredForms?.map((ref) => ({
-      form: ref.form,
-      order: ref.order,
-      submitted: submittedFormIds.has(ref.form.id),
-      targetType: RequiredFormTargetType.Shift,
-      targetId: shiftId,
-    })) ?? []),
-    ...(shift.organizationUnit?.requiredForms?.map((ref) => ({
-      form: ref.form,
-      order: ref.order,
-      submitted: submittedFormIds.has(ref.form.id),
-      targetType: RequiredFormTargetType.OrganizationUnit,
-      targetId: shift.organizationUnitId,
-    })) ?? []),
-  ].sort((a, b) => a.order - b.order);
+  const requiredForms = resolveRequiredForms(
+    [
+      {
+        targetType: RequiredFormTargetType.ShiftInstance,
+        targetId: instanceId,
+        refs: instance.requiredForms,
+      },
+      {
+        targetType: RequiredFormTargetType.Shift,
+        targetId: shiftId,
+        refs: shift.requiredForms,
+      },
+      {
+        targetType: RequiredFormTargetType.OrganizationUnit,
+        targetId: shift.organizationUnitId,
+        refs: shift.organizationUnit?.requiredForms,
+      },
+    ],
+    submittedFormIds,
+  );
 
   let profileData: Record<string, string> = {};
   try {
     const userProfile = await data.requirementForm.getMyUserProfile();
-    if (
-      userProfile?.data &&
-      typeof userProfile.data === 'object' &&
-      !Array.isArray(userProfile.data)
-    ) {
-      profileData = userProfile.data as Record<string, string>;
-    }
+    profileData = (userProfile?.data ?? {}) as Record<string, string>;
   } catch {
     // Ignore profile fetch errors; form will render without prefilled values.
   }

@@ -9,6 +9,7 @@ import { useSearchParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
+import { useRequiredFormsGate } from '@/domain/requirement-form/use-required-forms-gate';
 import { usePathname, useRouter } from '@/i18n/navigation';
 import { useSession } from '@/lib/auth';
 
@@ -40,14 +41,12 @@ export function EventFollowButton({
     status === JoinStatus.Pending ||
     status === JoinStatus.Rejected;
 
-  const needsCombinedForms =
-    status === JoinStatus.None &&
-    eventRequiredForms.length > 0 &&
-    organizationUnitRequiredForms.length > 0;
-
-  const redirectToCombinedFormsPage = useCallback(() => {
-    router.push(`/events/${eventId}/join-forms?redirectTo=/`);
-  }, [eventId, router]);
+  const { needsCombinedForms, goToCombinedForms } = useRequiredFormsGate(
+    status,
+    eventRequiredForms,
+    organizationUnitRequiredForms,
+    `/events/${eventId}/join-forms`,
+  );
 
   const handleFollow = useCallback(
     async (isAuto = false) => {
@@ -66,7 +65,7 @@ export function EventFollowButton({
       }
 
       if (needsCombinedForms) {
-        redirectToCombinedFormsPage();
+        goToCombinedForms();
         return;
       }
 
@@ -104,7 +103,7 @@ export function EventFollowButton({
       router,
       session.data?.user,
       pathname,
-      redirectToCombinedFormsPage,
+      goToCombinedForms,
       t,
       needsCombinedForms,
     ],

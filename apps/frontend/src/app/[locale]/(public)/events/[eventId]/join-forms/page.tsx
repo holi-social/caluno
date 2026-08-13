@@ -7,7 +7,10 @@ import {
 import { notFound } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
 import { EventJoinFormsClient } from '@/app/[locale]/(public)/events/[eventId]/join-forms/event-join-forms-client';
-import type { RequiredFormItem } from '@/domain/requirement-form/components/required-form-renderer';
+import {
+  buildSubmittedFormIds,
+  resolveRequiredForms,
+} from '@/domain/requirement-form/resolve-required-forms';
 import { redirect } from '@/i18n/navigation';
 import { resolveLocale } from '@/i18n/routing';
 import { getSession } from '@/lib/auth-server';
@@ -80,40 +83,28 @@ export default async function EventJoinFormsPage({
     .findMyFormSubmissions(organizationUnitId)
     .catch(() => []);
 
-  const submittedFormIds = new Set<string>(
-    submissionsResult
-      .filter((s) => s.status === 'SUBMITTED')
-      .map((s) => s.form?.id)
-      .filter((id): id is string => Boolean(id)),
-  );
+  const submittedFormIds = buildSubmittedFormIds(submissionsResult);
 
-  const requiredForms: RequiredFormItem[] = [
-    ...(event.requiredForms?.map((ref) => ({
-      form: ref.form,
-      order: ref.order,
-      submitted: submittedFormIds.has(ref.form.id),
-      targetType: RequiredFormTargetType.Event,
-      targetId: eventId,
-    })) ?? []),
-    ...(event.organizationUnit?.requiredForms?.map((ref) => ({
-      form: ref.form,
-      order: ref.order,
-      submitted: submittedFormIds.has(ref.form.id),
-      targetType: RequiredFormTargetType.OrganizationUnit,
-      targetId: organizationUnitId,
-    })) ?? []),
-  ].sort((a, b) => a.order - b.order);
+  const requiredForms = resolveRequiredForms(
+    [
+      {
+        targetType: RequiredFormTargetType.Event,
+        targetId: eventId,
+        refs: event.requiredForms,
+      },
+      {
+        targetType: RequiredFormTargetType.OrganizationUnit,
+        targetId: organizationUnitId,
+        refs: event.organizationUnit?.requiredForms,
+      },
+    ],
+    submittedFormIds,
+  );
 
   let profileData: Record<string, string> = {};
   try {
     const userProfile = await data.requirementForm.getMyUserProfile();
-    if (
-      userProfile?.data &&
-      typeof userProfile.data === 'object' &&
-      !Array.isArray(userProfile.data)
-    ) {
-      profileData = userProfile.data as Record<string, string>;
-    }
+    profileData = (userProfile?.data ?? {}) as Record<string, string>;
   } catch {
     // Ignore profile fetch errors; form will render without prefilled values.
   }

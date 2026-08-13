@@ -29,6 +29,7 @@ import { BanIcon, ClockIcon } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
+import { useRequiredFormsGate } from '@/domain/requirement-form/use-required-forms-gate';
 import { usePathname, useRouter } from '@/i18n/navigation';
 import { useFormatting } from '@/lib/formatting/use-formatting';
 
@@ -134,20 +135,12 @@ export function JoinShiftButton({
 
   const targetRequiredForms = [...shiftRequiredForms, ...instanceRequiredForms];
 
-  const needsCombinedForms =
-    membershipState === JoinStatus.None &&
-    targetRequiredForms.length > 0 &&
-    organizationUnitRequiredForms.length > 0;
-
-  const redirectToCombinedForms = useCallback(() => {
-    if (!instanceId) {
-      toast.error('This shift link is missing an instance.');
-      return;
-    }
-    router.push(
-      `/shifts/${shiftId}/instances/${instanceId}/join-forms?redirectTo=/`,
-    );
-  }, [instanceId, router, shiftId]);
+  const { needsCombinedForms, goToCombinedForms } = useRequiredFormsGate(
+    membershipState,
+    targetRequiredForms,
+    organizationUnitRequiredForms,
+    instanceId ? `/shifts/${shiftId}/instances/${instanceId}/join-forms` : null,
+  );
 
   const handleJoin = useCallback(
     async (isAuto = false) => {
@@ -172,7 +165,7 @@ export function JoinShiftButton({
       }
 
       if (needsCombinedForms) {
-        redirectToCombinedForms();
+        goToCombinedForms();
         return;
       }
 
@@ -255,7 +248,7 @@ export function JoinShiftButton({
       onInviteStatusChange,
       onMembershipStateChange,
       needsCombinedForms,
-      redirectToCombinedForms,
+      goToCombinedForms,
     ],
   );
 
