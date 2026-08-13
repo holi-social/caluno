@@ -22,14 +22,12 @@ export default async function PublicFormPage({ params }: Props) {
   const session = await getSession();
   if (!session) {
     const orgUId = form.organizationUnitId;
-    if (orgUId) {
-      redirectWithLocale({
-        href: `/api/invite?orgUId=${orgUId}&redirectTo=${encodeURIComponent(`/f/${token}`)}`,
-        locale,
-      });
-    }
+    const params = new URLSearchParams({
+      redirectTo: `/f/${token}`,
+      ...(orgUId ? { orgUId } : {}),
+    });
     redirectWithLocale({
-      href: `/login?redirectTo=${encodeURIComponent(`/f/${token}`)}`,
+      href: `/api/invite?${params}`,
       locale,
     });
   }
