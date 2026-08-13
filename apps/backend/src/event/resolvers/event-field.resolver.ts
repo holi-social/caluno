@@ -4,11 +4,10 @@ import {
   Session,
   type UserSession,
 } from '@thallesp/nestjs-better-auth';
-import { plainToInstance } from 'class-transformer';
 import { Loader } from '../../graphql/decorators/loader.decorator';
 import { MembershipService } from '../../membership/membership.service';
 import { RequiredFormRef } from '../../organization/models/organization-unit-required-form.model';
-import { RequirementForm } from '../../requirement-profile/models/requirement-form.model';
+import { RequiredFormRefMapper } from '../../requirement-profile/mappers/required-form-ref.mapper';
 import { JoinStatus } from '../../shared/enums/join-status.enum';
 import { Shift } from '../../shift/models/shift.model';
 import { UserMapper } from '../../user/mappers/user.mapper';
@@ -28,6 +27,7 @@ export class EventFieldResolver {
   constructor(
     private readonly userMapper: UserMapper,
     private readonly membershipService: MembershipService,
+    private readonly requiredFormRefMapper: RequiredFormRefMapper,
   ) {}
 
   @AllowAnonymous()
@@ -156,9 +156,6 @@ export class EventFieldResolver {
   ): Promise<RequiredFormRef[]> {
     const requiredForms = await loader.requiredFormsByEventId.load(event.id);
 
-    return requiredForms.map(({ form, order }) => ({
-      form: plainToInstance(RequirementForm, form),
-      order,
-    }));
+    return this.requiredFormRefMapper.toArray(requiredForms);
   }
 }

@@ -4,11 +4,10 @@ import {
   Session,
   type UserSession,
 } from '@thallesp/nestjs-better-auth';
-import { plainToInstance } from 'class-transformer';
 import { MembershipService } from '../../membership/membership.service';
 import { RequiredFormRef } from '../../organization/models/organization-unit-required-form.model';
 import { RequiredFormTargetType } from '../../requirement-profile/enums';
-import { RequirementForm } from '../../requirement-profile/models/requirement-form.model';
+import { RequiredFormRefMapper } from '../../requirement-profile/mappers/required-form-ref.mapper';
 import { RequiredFormService } from '../../requirement-profile/services/required-form.service';
 import { JoinStatus } from '../../shared/enums/join-status.enum';
 import { EventOrganizationUnit } from '../models/event-organization-unit.model';
@@ -18,6 +17,7 @@ export class EventOrganizationUnitFieldResolver {
   constructor(
     private readonly requiredFormService: RequiredFormService,
     private readonly membershipService: MembershipService,
+    private readonly requiredFormRefMapper: RequiredFormRefMapper,
   ) {}
 
   @AllowAnonymous()
@@ -30,10 +30,7 @@ export class EventOrganizationUnitFieldResolver {
       targetId: organizationUnit.id,
     });
 
-    return requiredForms.map(({ form, order }) => ({
-      form: plainToInstance(RequirementForm, form),
-      order,
-    }));
+    return this.requiredFormRefMapper.toArray(requiredForms);
   }
 
   @AllowAnonymous()

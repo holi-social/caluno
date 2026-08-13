@@ -4,12 +4,11 @@ import {
   Session,
   type UserSession,
 } from '@thallesp/nestjs-better-auth';
-import { plainToInstance } from 'class-transformer';
 import { Loader } from '../../graphql/decorators/loader.decorator';
 import { Organization } from '../../organization/models/organization.model';
 import { OrganizationUnit } from '../../organization/models/organization-unit.model';
 import { RequiredFormRef } from '../../organization/models/organization-unit-required-form.model';
-import { RequirementForm } from '../../requirement-profile/models/requirement-form.model';
+import { RequiredFormRefMapper } from '../../requirement-profile/mappers/required-form-ref.mapper';
 import { UserMapper } from '../../user/mappers/user.mapper';
 import { User } from '../../user/models/user.model';
 import { ShiftInstanceMapper } from '../mappers/shift-instance.mapper';
@@ -27,6 +26,7 @@ export class ShiftFieldResolver {
     private readonly shiftService: ShiftService,
     private readonly userMapper: UserMapper,
     private readonly shiftInstanceMapper: ShiftInstanceMapper,
+    private readonly requiredFormRefMapper: RequiredFormRefMapper,
   ) {}
 
   @AllowAnonymous()
@@ -88,9 +88,6 @@ export class ShiftFieldResolver {
   ): Promise<RequiredFormRef[]> {
     const requiredForms = await loader.requiredFormsByShiftId.load(shift.id);
 
-    return requiredForms.map(({ form, order }) => ({
-      form: plainToInstance(RequirementForm, form),
-      order,
-    }));
+    return this.requiredFormRefMapper.toArray(requiredForms);
   }
 }

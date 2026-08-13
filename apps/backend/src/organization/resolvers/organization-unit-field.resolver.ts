@@ -7,7 +7,7 @@ import {
 import { plainToInstance } from 'class-transformer';
 import { MembershipService } from '../../membership/membership.service';
 import { RequiredFormTargetType } from '../../requirement-profile/enums';
-import { RequirementForm } from '../../requirement-profile/models/requirement-form.model';
+import { RequiredFormRefMapper } from '../../requirement-profile/mappers/required-form-ref.mapper';
 import { RequirementProfile } from '../../requirement-profile/models/requirement-profile.model';
 import { RequirementProfileService } from '../../requirement-profile/services';
 import { RequiredFormService } from '../../requirement-profile/services/required-form.service';
@@ -32,6 +32,7 @@ export class OrganizationUnitFieldResolver {
     private readonly requirementProfileService: RequirementProfileService,
     private readonly requiredFormService: RequiredFormService,
     private readonly membershipService: MembershipService,
+    private readonly requiredFormRefMapper: RequiredFormRefMapper,
   ) {}
 
   @AllowAnonymous()
@@ -134,9 +135,6 @@ export class OrganizationUnitFieldResolver {
       targetId: organizationUnit.id,
     });
 
-    return requiredForms.map(({ form, order }) => ({
-      form: plainToInstance(RequirementForm, form),
-      order,
-    }));
+    return this.requiredFormRefMapper.toArray(requiredForms);
   }
 }

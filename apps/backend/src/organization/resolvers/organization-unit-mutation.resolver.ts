@@ -1,13 +1,12 @@
 import { Args, Mutation, Resolver } from '@nestjs/graphql';
 import type { UserSession } from '@thallesp/nestjs-better-auth';
 import { Session } from '@thallesp/nestjs-better-auth';
-import { plainToInstance } from 'class-transformer';
 import { AuthService } from '../../auth/auth.service';
 import { PERMISSIONS } from '../../auth/constants';
 import { Permissions } from '../../auth/decorators/permissions.decorator';
 import { ForbiddenGraphQLError } from '../../graphql/errors';
 import { RequiredFormTargetType } from '../../requirement-profile/enums';
-import { RequirementForm } from '../../requirement-profile/models/requirement-form.model';
+import { RequiredFormRefMapper } from '../../requirement-profile/mappers/required-form-ref.mapper';
 import { RequiredFormService } from '../../requirement-profile/services/required-form.service';
 import { CreateOrganizationUnitInput } from '../inputs/create-organization-unit.input';
 import { UpdateOrganizationUnitInput } from '../inputs/update-organization-unit.input';
@@ -23,6 +22,7 @@ export class OrganizationUnitMutationResolver {
     private readonly organizationUnitMapper: OrganizationUnitMapper,
     private readonly authService: AuthService,
     private readonly requiredFormService: RequiredFormService,
+    private readonly requiredFormRefMapper: RequiredFormRefMapper,
   ) {}
 
   private async assertCanConfigureRequiredForms(
@@ -97,9 +97,6 @@ export class OrganizationUnitMutationResolver {
       formIds,
     );
 
-    return requiredForms.map(({ form, order }) => ({
-      form: plainToInstance(RequirementForm, form),
-      order,
-    }));
+    return this.requiredFormRefMapper.toArray(requiredForms);
   }
 }
