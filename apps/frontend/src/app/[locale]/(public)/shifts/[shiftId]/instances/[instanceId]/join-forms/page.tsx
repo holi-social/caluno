@@ -58,12 +58,14 @@ export default async function ShiftJoinFormsPage({
     throw error;
   }
 
-  const publicInstances =
-    await data.shift.findPublicInstancesByShiftId(shiftId);
-  const instance = publicInstances.find((i) => i.id === instanceId);
-
-  if (!instance) {
-    notFound();
+  let instance: Awaited<ReturnType<DataClient['shift']['findPublicInstance']>>;
+  try {
+    instance = await data.shift.findPublicInstance(instanceId);
+  } catch (error) {
+    if (error instanceof DataError && error.options?.code === 'NOT_FOUND') {
+      notFound();
+    }
+    throw error;
   }
 
   const session = await getSession();
