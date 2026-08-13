@@ -12,6 +12,7 @@ import { EventRequiredFormsPopover } from '@/domain/event/components/event-requi
 import { EventVolunteersSection } from '@/domain/event/components/event-volunteers-section';
 
 import { eventsListPath } from '@/domain/event/routes';
+import { ShiftCreatedDialog } from '@/domain/shift/components/shift-created-dialog';
 import { Link } from '@/i18n/navigation';
 import { getDataClient } from '@/lib/data-client';
 import { getFormatting } from '@/lib/formatting/formatting-server';
@@ -69,6 +70,8 @@ export default async function EventDetailPage({
 
   return (
     <div className="flex flex-col gap-6">
+      <ShiftCreatedDialog />
+
       <Link
         href={eventsListPath(orgUId)}
         className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground w-fit"
