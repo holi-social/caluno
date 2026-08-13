@@ -48,11 +48,9 @@ export function ShiftJoinFormsClient({
             : t('requestSentToast'),
         );
         router.push(getSafeRedirect(redirectTo) ?? '/');
-        router.refresh();
       } else if (result.status === JoinStatus.Rejected) {
         toast.error(t('rejectedToast'));
         router.push(`/shifts/${shiftId}`);
-        router.refresh();
       } else if (result.status === JoinStatus.RequirementsNeeded) {
         toast.error(t('requirementsNeededToast'));
       }
