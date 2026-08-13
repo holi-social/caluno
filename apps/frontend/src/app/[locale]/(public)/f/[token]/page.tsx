@@ -46,11 +46,7 @@ export default async function PublicFormPage({ params }: Props) {
       data.requirementForm.getMyFormSubmissionByToken(token),
     ]);
 
-  let profileData: Record<string, string> = {};
-  const raw = userProfile?.data;
-  if (raw && typeof raw === 'object' && !Array.isArray(raw)) {
-    profileData = raw as Record<string, string>;
-  }
+  const profileData = (userProfile?.data ?? {}) as Record<string, string>;
 
   const t = await getTranslations('RequirementForm.volunteerForm');
 

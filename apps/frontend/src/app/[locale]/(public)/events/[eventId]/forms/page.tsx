@@ -82,13 +82,7 @@ export default async function EventFormsPage({
   let profileData: Record<string, string> = {};
   try {
     const userProfile = await data.requirementForm.getMyUserProfile();
-    if (
-      userProfile?.data &&
-      typeof userProfile.data === 'object' &&
-      !Array.isArray(userProfile.data)
-    ) {
-      profileData = userProfile.data as Record<string, string>;
-    }
+    profileData = (userProfile?.data ?? {}) as Record<string, string>;
   } catch {
     // Ignore profile fetch errors; form will render without prefilled values.
   }
