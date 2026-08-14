@@ -137,7 +137,7 @@ jobs:
           if [ "$code" -eq 0 ]; then echo "has_changes=0" >> "$GITHUB_OUTPUT"
           elif [ "$code" -eq 2 ]; then echo "has_changes=1" >> "$GITHUB_OUTPUT"
           else exit "$code"; fi
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: plan-staging
           path: packages/infra/plan-staging.tfplan
@@ -171,7 +171,7 @@ jobs:
         with:
           submodules: recursive
           token: ${{ secrets.ORG_REPO_PAT }}
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with:
           name: plan-staging
           path: ${{ env.TF_ROOT }}
