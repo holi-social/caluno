@@ -96,10 +96,12 @@ export default async function EventDetailPage({
             {formatRange(event.startsAt, event.endsAt)}
           </p>
 
-          <p className="text-muted-foreground text-lg flex items-center gap-1 mt-1">
-            <MapPin className="shrink-0" />
-            {event.location ?? '—'}
-          </p>
+          {event.location ? (
+            <p className="text-muted-foreground text-lg flex items-center gap-1 mt-1">
+              <MapPin className="shrink-0" />
+              {event.location}
+            </p>
+          ) : null}
         </div>
 
         {canEdit && (
