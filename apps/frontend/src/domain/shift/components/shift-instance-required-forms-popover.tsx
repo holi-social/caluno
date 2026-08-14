@@ -5,37 +5,37 @@ import {
   useHasPermission,
   useOrganizationUnitWithSuspense,
   useRequirementForms,
-  useSetShiftRequiredForms,
-  useShift,
+  useSetShiftInstanceRequiredForms,
+  useShiftInstance,
 } from '@repo/data/react';
 import { useTranslations } from 'next-intl';
 import { useMemo } from 'react';
 import { toast } from 'sonner';
 import { RequiredFormsPopover } from '@/components/required-forms-popover';
 
-interface ShiftRequiredFormsPopoverProps {
+interface ShiftInstanceRequiredFormsPopoverProps {
   orgUId: string;
-  shiftId: string;
+  instanceId: string;
 }
 
-export function ShiftRequiredFormsPopover({
+export function ShiftInstanceRequiredFormsPopover({
   orgUId,
-  shiftId,
-}: ShiftRequiredFormsPopoverProps) {
+  instanceId,
+}: ShiftInstanceRequiredFormsPopoverProps) {
   const t = useTranslations('Shift.detail.requiredForms');
   const commonT = useTranslations('Common');
 
   const canConfigure = useHasPermission([PermissionKey.ShiftEdit]);
 
   const { data: orgUnit } = useOrganizationUnitWithSuspense(orgUId);
-  const { data: shift } = useShift(shiftId);
+  const { data: instance } = useShiftInstance(instanceId);
   const { data: formsData, refetch } = useRequirementForms(
     orgUnit?.organizationId ?? '',
   );
 
-  const setShiftRequiredForms = useSetShiftRequiredForms();
+  const setShiftInstanceRequiredForms = useSetShiftInstanceRequiredForms();
 
-  const requiredForms = shift?.requiredForms ?? [];
+  const requiredForms = instance?.requiredForms ?? [];
 
   const attachedFormIds = useMemo(
     () => new Set(requiredForms.map((ref) => ref.form.id)),
@@ -51,8 +51,8 @@ export function ShiftRequiredFormsPopover({
   const handleChange = async (formIds: string[]) => {
     try {
       const previousCount = requiredForms.length;
-      await setShiftRequiredForms.mutateAsync({
-        shiftId,
+      await setShiftInstanceRequiredForms.mutateAsync({
+        instanceId,
         formIds,
       });
       toast.success(
@@ -78,13 +78,13 @@ export function ShiftRequiredFormsPopover({
       requiredForms={requiredForms}
       availableForms={availableForms}
       onChange={handleChange}
-      isPending={setShiftRequiredForms.isPending}
+      isPending={setShiftInstanceRequiredForms.isPending}
       disabled={!canConfigure}
       createNewHref={`/admin/${orgUId}/requirement-forms/new`}
       t={t}
       subtitle={t('subtitle', {
         brand: commonT('brand'),
-        shiftTitle: shift?.title ?? '',
+        shiftTitle: instance?.master.title ?? '',
       })}
       onOpenChange={handleOpenChange}
       size="sm"

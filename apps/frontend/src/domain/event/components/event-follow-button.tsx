@@ -1,24 +1,30 @@
 'use client';
 
 import { JoinStatus } from '@repo/data';
+import type { RequiredForm } from '@repo/data/react';
 import { useJoinEvent } from '@repo/data/react';
 import { Button } from '@repo/ui';
 import { BellRingIcon } from 'lucide-react';
 import { useSearchParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
+import { useRequiredFormsGate } from '@/domain/requirement-form/use-required-forms-gate';
 import { usePathname, useRouter } from '@/i18n/navigation';
 import { useSession } from '@/lib/auth';
 
 interface EventFollowButtonProps {
   eventId: string;
   initialStatus: JoinStatus;
+  eventRequiredForms?: RequiredForm[];
+  organizationUnitRequiredForms?: RequiredForm[];
 }
 
 export function EventFollowButton({
   eventId,
   initialStatus,
+  eventRequiredForms = [],
+  organizationUnitRequiredForms = [],
 }: EventFollowButtonProps) {
   const t = useTranslations('EventDetail');
   const joinEvent = useJoinEvent();
@@ -26,6 +32,7 @@ export function EventFollowButton({
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const autoFollow = searchParams.get('autoFollow') === 'true';
+  const autoFollowExecuted = useRef(false);
   const [status, setStatus] = useState(initialStatus);
   const session = useSession();
 
@@ -34,68 +41,88 @@ export function EventFollowButton({
     status === JoinStatus.Pending ||
     status === JoinStatus.Rejected;
 
-  const redirectToFormsPage = useCallback(() => {
-    const redirectTo = encodeURIComponent(
-      `${pathname}${window.location.search}`,
-    );
-    router.push(`/events/${eventId}/forms?redirectTo=${redirectTo}`);
-  }, [eventId, pathname, router.push]);
+  const { needsCombinedForms, goToCombinedForms } = useRequiredFormsGate(
+    status,
+    eventRequiredForms,
+    organizationUnitRequiredForms,
+    `/events/${eventId}/join-forms`,
+  );
 
-  const handleFollow = useCallback(async () => {
-    if (!session.data?.user) {
-      const redirectTo = `/events/${eventId}?autoFollow=true`;
-      router.push(`/login?redirectTo=${encodeURIComponent(redirectTo)}`);
-      return;
-    }
-
-    try {
-      const result = await joinEvent.mutateAsync(eventId);
-
-      if (result.status === JoinStatus.Joined) {
-        setStatus(JoinStatus.Joined);
-      } else if (result.status === JoinStatus.Pending) {
-        setStatus(JoinStatus.Pending);
-        toast.success(t('requestSentToast'));
-      } else if (result.status === JoinStatus.Rejected) {
-        setStatus(JoinStatus.Rejected);
-        toast.error(t('rejectedToast'));
-      } else if (result.status === JoinStatus.RequirementsNeeded) {
-        const missingForms = result.requiredForms?.filter((f) => !f.submitted);
-        if (missingForms && missingForms.length > 0) {
-          redirectToFormsPage();
-        }
+  const handleFollow = useCallback(
+    async (isAuto = false) => {
+      if (!session.data?.user) {
+        const baseRedirectTo = `/events/${eventId}?${new URLSearchParams({
+          ...(needsCombinedForms
+            ? { showJoinForms: 'true' }
+            : { autoFollow: 'true' }),
+        })}`;
+        const searchParams = new URLSearchParams({
+          signup: '1',
+          redirectTo: baseRedirectTo,
+        });
+        router.push(`/api/invite?${searchParams}`);
+        return;
       }
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : undefined);
-    }
-  }, [
-    eventId,
-    joinEvent,
-    router.push,
-    session.data?.user,
-    redirectToFormsPage,
-    t,
-  ]);
+
+      if (needsCombinedForms) {
+        goToCombinedForms();
+        return;
+      }
+
+      try {
+        const result = await joinEvent.mutateAsync(eventId);
+
+        if (result.status === JoinStatus.Joined) {
+          setStatus(JoinStatus.Joined);
+          if (isAuto) router.push('/');
+        } else if (result.status === JoinStatus.Pending) {
+          setStatus(JoinStatus.Pending);
+          toast.success(t('requestSentToast'));
+          if (isAuto) router.push('/');
+        } else if (result.status === JoinStatus.Rejected) {
+          setStatus(JoinStatus.Rejected);
+          toast.error(t('rejectedToast'));
+        } else if (result.status === JoinStatus.RequirementsNeeded) {
+          const missingForms = result.requiredForms?.filter(
+            (f) => !f.submitted,
+          );
+          if (missingForms && missingForms.length > 0) {
+            const redirectTo = encodeURIComponent(
+              isAuto ? '/' : `${pathname}${window.location.search}`,
+            );
+            router.push(`/events/${eventId}/forms?redirectTo=${redirectTo}`);
+          }
+        }
+      } catch (error) {
+        toast.error(error instanceof Error ? error.message : undefined);
+      }
+    },
+    [
+      eventId,
+      joinEvent,
+      router,
+      session.data?.user,
+      pathname,
+      goToCombinedForms,
+      t,
+      needsCombinedForms,
+    ],
+  );
 
   useEffect(() => {
     if (
       autoFollow &&
       session.data?.user &&
       !isFinalStatus &&
-      !joinEvent.isPending
+      !autoFollowExecuted.current
     ) {
+      autoFollowExecuted.current = true;
       const url = new URL(window.location.href);
       url.searchParams.delete('autoFollow');
       window.history.replaceState({}, '', url.toString());
-      handleFollow();
+      handleFollow(true);
     }
-  }, [
-    autoFollow,
-    handleFollow,
-    isFinalStatus,
-    joinEvent.isPending,
-    session.data?.user,
-  ]);
+  }, [autoFollow, handleFollow, isFinalStatus, session.data?.user]);
 
   if (status === JoinStatus.Joined) {
     return (
@@ -144,7 +171,7 @@ export function EventFollowButton({
       <Button
         size="lg"
         variant="outline"
-        onClick={handleFollow}
+        onClick={() => handleFollow()}
         disabled={joinEvent.isPending}
         className="h-11 w-full font-semibold"
       >

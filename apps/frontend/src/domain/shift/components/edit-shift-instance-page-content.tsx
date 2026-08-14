@@ -49,7 +49,7 @@ export async function EditShiftInstancePageContent({
         recurrenceEndsAt: shift.recurrenceEndsAt,
         imageFileId: undefined,
       }}
-      initialRequiredFormIds={shift.requiredForms.map((ref) => ref.form.id)}
+      initialRequiredFormIds={instance.requiredForms.map((ref) => ref.form.id)}
       imagePreviewUrl={shift.imageUrl}
       mutate={updateShiftInstance.bind(null, orgUId, instanceId)}
     />

@@ -8,11 +8,10 @@ import {
   type RequiredFormItem,
   RequiredFormRenderer,
 } from '@/domain/requirement-form/components/required-form-renderer';
-import { shiftPublicPath } from '@/domain/shift/share';
 import { useRouter } from '@/i18n/navigation';
 import { getSafeRedirect } from '@/lib/safe-redirect';
 
-interface ShiftFormsClientProps {
+interface ShiftJoinFormsClientProps {
   shiftId: string;
   instanceId: string;
   shiftTitle: string;
@@ -22,7 +21,7 @@ interface ShiftFormsClientProps {
   redirectTo?: string;
 }
 
-export function ShiftFormsClient({
+export function ShiftJoinFormsClient({
   shiftId,
   instanceId,
   shiftTitle,
@@ -30,25 +29,28 @@ export function ShiftFormsClient({
   profileData,
   initialSubmittedFormIds,
   redirectTo,
-}: ShiftFormsClientProps) {
+}: ShiftJoinFormsClientProps) {
   const t = useTranslations('ShiftDetail.forms');
   const router = useRouter();
   const joinShiftInstance = useJoinShiftInstance();
 
   const handleComplete = async () => {
-    const detailPath = shiftPublicPath(shiftId, instanceId);
     try {
       const result = await joinShiftInstance.mutateAsync(instanceId);
 
-      if (result.status === JoinStatus.Joined) {
-        toast.success(t('joinedToast', { shiftTitle }));
-        router.push(getSafeRedirect(redirectTo, detailPath));
-      } else if (result.status === JoinStatus.Pending) {
-        toast.success(t('requestSentToast'));
-        router.push(detailPath);
+      if (
+        result.status === JoinStatus.Joined ||
+        result.status === JoinStatus.Pending
+      ) {
+        toast.success(
+          result.status === JoinStatus.Joined
+            ? t('joinedToast', { shiftTitle })
+            : t('requestSentToast'),
+        );
+        router.push(getSafeRedirect(redirectTo));
       } else if (result.status === JoinStatus.Rejected) {
         toast.error(t('rejectedToast'));
-        router.push(detailPath);
+        router.push(`/shifts/${shiftId}`);
       } else if (result.status === JoinStatus.RequirementsNeeded) {
         toast.error(t('requirementsNeededToast'));
       }

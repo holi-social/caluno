@@ -1,22 +1,30 @@
-import { type DataClient, DataError, JoinStatus } from '@repo/data';
+import {
+  type DataClient,
+  DataError,
+  JoinStatus,
+  RequiredFormTargetType,
+} from '@repo/data';
 import { notFound } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
-import { EventFormsClient } from '@/app/[locale]/(public)/events/[eventId]/forms/event-forms-client';
-import type { RequiredFormItem } from '@/domain/requirement-form/components/required-form-renderer';
+import { EventJoinFormsClient } from '@/app/[locale]/(public)/events/[eventId]/join-forms/event-join-forms-client';
+import {
+  buildSubmittedFormIds,
+  resolveRequiredForms,
+} from '@/domain/requirement-form/resolve-required-forms';
 import { redirect } from '@/i18n/navigation';
 import { resolveLocale } from '@/i18n/routing';
 import { getSession } from '@/lib/auth-server';
 import { getDataClient } from '@/lib/data-client';
 import { getSafeRedirect } from '@/lib/safe-redirect';
 
-interface EventFormsPageProps {
+interface EventJoinFormsPageProps {
   params: Promise<{ locale: string; eventId: string }>;
   searchParams: Promise<{ redirectTo?: string }>;
 }
 
 type PublicEvent = Awaited<ReturnType<DataClient['publicEvent']['findById']>>;
 
-export async function generateMetadata({ params }: EventFormsPageProps) {
+export async function generateMetadata({ params }: EventJoinFormsPageProps) {
   const { eventId, locale } = await params;
   const data = await getDataClient({ locale: resolveLocale(locale) });
   let event: PublicEvent;
@@ -29,13 +37,15 @@ export async function generateMetadata({ params }: EventFormsPageProps) {
     return { title: 'Event — Caluno' };
   }
   const t = await getTranslations({ locale, namespace: 'EventDetail' });
-  return { title: `${t('forms.title', { eventTitle: event.title })} — Caluno` };
+  return {
+    title: `${t('forms.title', { eventTitle: event.title })} — Caluno`,
+  };
 }
 
-export default async function EventFormsPage({
+export default async function EventJoinFormsPage({
   params,
   searchParams,
-}: EventFormsPageProps) {
+}: EventJoinFormsPageProps) {
   const { locale, eventId } = await params;
   const { redirectTo } = await searchParams;
   const data = await getDataClient({ locale: resolveLocale(locale) });
@@ -53,30 +63,42 @@ export default async function EventFormsPage({
   const session = await getSession();
   if (!session) {
     const searchParams = new URLSearchParams({
-      redirectTo: redirectTo ?? `/events/${eventId}/forms`,
+      signup: '1',
+      redirectTo: redirectTo ?? `/events/${eventId}/join-forms`,
     });
     redirect({ href: `/api/invite?${searchParams}`, locale });
   }
 
-  const joinResult = await data.publicEvent.join(eventId).catch(() => null);
-
-  if (joinResult?.status === JoinStatus.Joined) {
+  const membershipState =
+    event.organizationUnit?.myMembershipState ?? JoinStatus.None;
+  if (membershipState === JoinStatus.Joined) {
     redirect({
       href: getSafeRedirect(redirectTo, `/events/${eventId}`),
       locale,
     });
   }
 
-  const requiredForms =
-    joinResult?.requiredForms ??
-    event.requiredForms?.map((ref) => ({ ...ref, submitted: false })) ??
-    [];
+  const organizationUnitId = event.organizationUnit?.id ?? '';
+  const submissionsResult = await data.requirementForm
+    .findMyFormSubmissions(organizationUnitId)
+    .catch(() => []);
 
-  const submittedFormIds = new Set<string>(
-    requiredForms
-      .filter((ref) => ref.submitted)
-      .map((ref) => ref.form.id)
-      .filter((id): id is string => Boolean(id)),
+  const submittedFormIds = buildSubmittedFormIds(submissionsResult);
+
+  const requiredForms = resolveRequiredForms(
+    [
+      {
+        targetType: RequiredFormTargetType.Event,
+        targetId: eventId,
+        refs: event.requiredForms,
+      },
+      {
+        targetType: RequiredFormTargetType.OrganizationUnit,
+        targetId: organizationUnitId,
+        refs: event.organizationUnit?.requiredForms,
+      },
+    ],
+    submittedFormIds,
   );
 
   let profileData: Record<string, string> = {};
@@ -90,10 +112,10 @@ export default async function EventFormsPage({
   return (
     <div className="min-h-screen bg-muted/30 px-4 py-10">
       <div className="mx-auto max-w-2xl">
-        <EventFormsClient
+        <EventJoinFormsClient
           eventId={eventId}
           eventTitle={event.title}
-          requiredForms={requiredForms as RequiredFormItem[]}
+          requiredForms={requiredForms}
           profileData={profileData}
           initialSubmittedFormIds={submittedFormIds}
           redirectTo={redirectTo}

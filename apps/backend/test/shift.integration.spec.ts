@@ -3255,6 +3255,266 @@ describe('ShiftService.requestJoinShiftInstance — required forms', () => {
   });
 });
 
+describe('ShiftService.requestJoinShiftInstance — shift-instance required forms', () => {
+  let app: INestApplication;
+  let db: Database;
+  let organizationId: string;
+  let organizationUnitId: string;
+  let shiftService: ShiftService;
+  let requiredFormService: RequiredFormService;
+
+  beforeAll(async () => {
+    const context = await getGraphqlTestContext();
+    app = context.app;
+    db = context.db;
+    organizationId = context.organizationId;
+    organizationUnitId = context.organizationUnitId;
+    shiftService = app.get(ShiftService);
+    requiredFormService = app.get(RequiredFormService);
+  });
+
+  it('returns REQUIREMENTS_NEEDED when the instance has an unsubmitted required form', async () => {
+    const user = await createUser(db);
+    await addMembership(db, user.id, organizationUnitId);
+
+    const { id: shiftId } = await createShift(db, {
+      organizationUnitId,
+      visibility: ShiftVisibility.ALL_MEMBERS,
+    });
+    const instance = await db.query.shiftInstances.findFirst({
+      where: { masterId: shiftId },
+    });
+    if (!instance) throw new Error('Failed to create test shift instance');
+
+    const { form } = await createRequirementForm(db, {
+      organizationId,
+      organizationUnitId,
+      createdById: user.id,
+    });
+    await requiredFormService.setRequiredForms(
+      {
+        targetType: RequiredFormTargetType.SHIFT_INSTANCE,
+        targetId: instance.id,
+      },
+      [form.id],
+    );
+
+    const result = await shiftService.requestJoinShiftInstance(
+      user.id,
+      instance.id,
+    );
+
+    expect(result.status).toBe(JoinStatus.REQUIREMENTS_NEEDED);
+    expect(result.requiredForms).toHaveLength(1);
+    expect(result.requiredForms?.[0]?.form.id).toBe(form.id);
+    expect(result.requiredForms?.[0]?.targetType).toBe(
+      RequiredFormTargetType.SHIFT_INSTANCE,
+    );
+    expect(result.requiredForms?.[0]?.submitted).toBe(false);
+
+    const invite = await db.query.shiftInstanceInvites.findFirst({
+      where: { instanceId: instance.id, userId: user.id },
+    });
+    expect(invite).toBeUndefined();
+  });
+
+  it('joins the instance once the instance-specific required form is submitted', async () => {
+    const user = await createUser(db);
+    await addMembership(db, user.id, organizationUnitId);
+
+    const { id: shiftId } = await createShift(db, {
+      organizationUnitId,
+      visibility: ShiftVisibility.ALL_MEMBERS,
+    });
+    const instance = await db.query.shiftInstances.findFirst({
+      where: { masterId: shiftId },
+    });
+    if (!instance) throw new Error('Failed to create test shift instance');
+
+    const { form } = await createRequirementForm(db, {
+      organizationId,
+      organizationUnitId,
+      createdById: user.id,
+    });
+    await requiredFormService.setRequiredForms(
+      {
+        targetType: RequiredFormTargetType.SHIFT_INSTANCE,
+        targetId: instance.id,
+      },
+      [form.id],
+    );
+    await createFormSubmission(db, { formId: form.id, userId: user.id });
+
+    const result = await shiftService.requestJoinShiftInstance(
+      user.id,
+      instance.id,
+    );
+
+    expect(result.status).toBe(JoinStatus.JOINED);
+
+    const invite = await db.query.shiftInstanceInvites.findFirst({
+      where: { instanceId: instance.id, userId: user.id },
+    });
+    expect(invite?.status).toBe(ShiftInviteStatus.SELF_JOINED);
+  });
+
+  it('returns REQUIREMENTS_NEEDED for a non-member when instance required forms are missing', async () => {
+    const user = await createUser(db);
+    const { id: shiftId } = await createShift(db, {
+      organizationUnitId,
+      visibility: ShiftVisibility.ALL_MEMBERS,
+    });
+    const instance = await db.query.shiftInstances.findFirst({
+      where: { masterId: shiftId },
+    });
+    if (!instance) throw new Error('Failed to create test shift instance');
+
+    const { form } = await createRequirementForm(db, {
+      organizationId,
+      organizationUnitId,
+      createdById: user.id,
+    });
+    await requiredFormService.setRequiredForms(
+      {
+        targetType: RequiredFormTargetType.SHIFT_INSTANCE,
+        targetId: instance.id,
+      },
+      [form.id],
+    );
+
+    const result = await shiftService.requestJoinShiftInstance(
+      user.id,
+      instance.id,
+    );
+
+    expect(result.status).toBe(JoinStatus.REQUIREMENTS_NEEDED);
+    expect(
+      result.requiredForms?.some(
+        (item) =>
+          item.form.id === form.id &&
+          item.targetType === RequiredFormTargetType.SHIFT_INSTANCE,
+      ),
+    ).toBe(true);
+  });
+
+  it('returns combined shift and instance required forms', async () => {
+    const user = await createUser(db);
+    await addMembership(db, user.id, organizationUnitId);
+
+    const { id: shiftId } = await createShift(db, {
+      organizationUnitId,
+      visibility: ShiftVisibility.ALL_MEMBERS,
+    });
+    const instance = await db.query.shiftInstances.findFirst({
+      where: { masterId: shiftId },
+    });
+    if (!instance) throw new Error('Failed to create test shift instance');
+
+    const { form: shiftForm } = await createRequirementForm(db, {
+      organizationId,
+      organizationUnitId,
+      createdById: user.id,
+    });
+    const { form: instanceForm } = await createRequirementForm(db, {
+      organizationId,
+      organizationUnitId,
+      createdById: user.id,
+    });
+
+    await requiredFormService.setRequiredForms(
+      { targetType: RequiredFormTargetType.SHIFT, targetId: shiftId },
+      [shiftForm.id],
+    );
+    await requiredFormService.setRequiredForms(
+      {
+        targetType: RequiredFormTargetType.SHIFT_INSTANCE,
+        targetId: instance.id,
+      },
+      [instanceForm.id],
+    );
+
+    const result = await shiftService.requestJoinShiftInstance(
+      user.id,
+      instance.id,
+    );
+
+    expect(result.status).toBe(JoinStatus.REQUIREMENTS_NEEDED);
+    expect(result.requiredForms).toHaveLength(2);
+    expect(
+      result.requiredForms?.some(
+        (item) =>
+          item.form.id === shiftForm.id &&
+          item.targetType === RequiredFormTargetType.SHIFT,
+      ),
+    ).toBe(true);
+    expect(
+      result.requiredForms?.some(
+        (item) =>
+          item.form.id === instanceForm.id &&
+          item.targetType === RequiredFormTargetType.SHIFT_INSTANCE,
+      ),
+    ).toBe(true);
+  });
+});
+
+describe('ShiftService.updateShiftInstance — single instance required forms', () => {
+  let app: INestApplication;
+  let db: Database;
+  let organizationId: string;
+  let organizationUnitId: string;
+  let shiftService: ShiftService;
+  let requiredFormService: RequiredFormService;
+
+  beforeAll(async () => {
+    const context = await getGraphqlTestContext();
+    app = context.app;
+    db = context.db;
+    organizationId = context.organizationId;
+    organizationUnitId = context.organizationUnitId;
+    shiftService = app.get(ShiftService);
+    requiredFormService = app.get(RequiredFormService);
+  });
+
+  it('attaches required forms to a single shift instance', async () => {
+    const user = await createUser(db);
+    await addMembership(db, user.id, organizationUnitId);
+
+    const { id: shiftId } = await createShift(db, {
+      organizationUnitId,
+      visibility: ShiftVisibility.ALL_MEMBERS,
+    });
+    const instance = await db.query.shiftInstances.findFirst({
+      where: { masterId: shiftId },
+    });
+    if (!instance) throw new Error('Failed to create test shift instance');
+
+    const { form } = await createRequirementForm(db, {
+      organizationId,
+      organizationUnitId,
+      createdById: user.id,
+    });
+
+    await shiftService.updateShiftInstance(
+      instance.id,
+      {
+        title: instance.overrideTitle ?? 'Updated',
+        startsAt: instance.actualStartsAt,
+        endsAt: instance.actualEndsAt,
+        requiredFormIds: [form.id],
+      },
+      organizationUnitId,
+    );
+
+    const requiredForms = await requiredFormService.getRequiredForms({
+      targetType: RequiredFormTargetType.SHIFT_INSTANCE,
+      targetId: instance.id,
+    });
+
+    expect(requiredForms).toHaveLength(1);
+    expect(requiredForms[0]?.form.id).toBe(form.id);
+  });
+});
+
 describe('ShiftService.updateShiftInstance applyToAllFuture', () => {
   let app: INestApplication;
   let db: Database;

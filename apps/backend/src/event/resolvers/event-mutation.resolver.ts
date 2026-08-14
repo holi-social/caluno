@@ -6,6 +6,7 @@ import { Permissions } from '../../auth/decorators/permissions.decorator';
 import type { AuthenticatedGraphQLContext } from '../../graphql/graphql.context';
 import { RequiredFormRef } from '../../organization/models/organization-unit-required-form.model';
 import { RequiredFormTargetType } from '../../requirement-profile/enums';
+import { RequiredFormRefMapper } from '../../requirement-profile/mappers/required-form-ref.mapper';
 import { RequirementForm } from '../../requirement-profile/models/requirement-form.model';
 import { RequirementProfile } from '../../requirement-profile/models/requirement-profile.model';
 import { UserRequirementStatus } from '../../requirement-profile/models/user-requirement-status.model';
@@ -27,6 +28,7 @@ export class EventMutationResolver {
     private readonly eventMapper: EventMapper,
     private readonly eventInviteMapper: EventInviteMapper,
     private readonly requiredFormService: RequiredFormService,
+    private readonly requiredFormRefMapper: RequiredFormRefMapper,
   ) {}
 
   @Permissions(PERMISSIONS.SHIFT_EDIT)
@@ -102,10 +104,7 @@ export class EventMutationResolver {
       formIds,
     );
 
-    return requiredForms.map(({ form, order }) => ({
-      form: plainToInstance(RequirementForm, form),
-      order,
-    }));
+    return this.requiredFormRefMapper.toArray(requiredForms);
   }
 
   @Mutation(() => JoinEventResult)

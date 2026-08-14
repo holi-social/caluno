@@ -26,6 +26,7 @@ interface RequiredFormsPopoverProps {
   t: (key: string, values?: Record<string, string | number | Date>) => string;
   subtitle?: string;
   onOpenChange?: (open: boolean) => void;
+  size?: React.ComponentProps<typeof Button>['size'];
 }
 
 export function RequiredFormsPopover({
@@ -38,6 +39,7 @@ export function RequiredFormsPopover({
   t,
   subtitle,
   onOpenChange,
+  size,
 }: RequiredFormsPopoverProps) {
   const [open, setOpen] = useState(false);
   const [commandOpen, setCommandOpen] = useState(false);
@@ -71,7 +73,7 @@ export function RequiredFormsPopover({
 
   if (disabled) {
     return (
-      <Button variant="outline" disabled>
+      <Button variant="outline" size={size} disabled>
         {effectiveEnabled
           ? t('pill.required', { count: requiredForms.length })
           : t('pill.none')}
@@ -87,7 +89,7 @@ export function RequiredFormsPopover({
   return (
     <Popover open={open} onOpenChange={handleOpenChange}>
       <PopoverTrigger asChild>
-        <Button variant="outline">
+        <Button variant="outline" size={size}>
           <span
             className={`inline-flex h-2 w-2 shrink-0 rounded-full ${effectiveEnabled ? 'bg-green-500' : 'bg-muted-foreground'}`}
           />

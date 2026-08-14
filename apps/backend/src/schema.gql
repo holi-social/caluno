@@ -185,7 +185,9 @@ enum EventInviteStatus {
 type EventOrganizationUnit {
   id: ID!
   logoUrl: String
+  myMembershipState: JoinStatus!
   name: String!
+  requiredForms: [RequiredFormRef!]!
   slug: String!
 }
 
@@ -425,6 +427,7 @@ type Mutation {
   removeMembershipRequest(id: ID!): MembershipRequest!
   setEventRequiredForms(eventId: ID!, formIds: [String!]!): [RequiredFormRef!]!
   setRequiredForms(formIds: [String!]!, organizationUnitId: String!): [RequiredFormRef!]!
+  setShiftInstanceRequiredForms(formIds: [String!]!, instanceId: ID!): [RequiredFormRef!]!
   setShiftRequiredForms(formIds: [String!]!, shiftId: ID!): [RequiredFormRef!]!
   submitForm(input: SubmitFormInput!, token: String!): FormSubmission!
   submitRequiredForm(formId: String!, input: SubmitFormInput!, targetId: String!, targetType: RequiredFormTargetType!): FormSubmission!
@@ -610,6 +613,7 @@ type Query {
   publicEvent(id: ID!): Event!
   publicEventsByOrganizationUnit(organizationUnitId: ID!): [Event!]!
   publicOrganizationUnit(id: ID!): OrganizationUnit!
+  publicShiftInstance(id: ID!): ShiftInstance!
   publicShiftInstances(shiftId: ID!): [ShiftInstance!]!
   publicShiftsByOrganizationUnit(organizationUnitId: ID!): [Shift!]!
   requirement(id: String!): Requirement
@@ -648,6 +652,7 @@ enum RequiredFormTargetType {
   EVENT
   ORGANIZATION_UNIT
   SHIFT
+  SHIFT_INSTANCE
 }
 
 type RequiredFormWithStatus {
@@ -897,6 +902,8 @@ type ShiftInstance {
   overrideMaxVolunteers: Int
   overrideMinVolunteers: Int
   overrideTitle: String
+  requiredForms: [RequiredFormRef!]!
+  requiredFormsCount: Int!
   spotsLeft: Int
   volunteers: [User!]
 }

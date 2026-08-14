@@ -14,6 +14,7 @@ const config: CodegenConfig = {
         skipTypename: false,
         scalars: {
           DateTime: 'string',
+          JSON: 'Record<string, unknown>',
         },
         rawRequest: false,
         gqlImport: 'graphql-request#gql',

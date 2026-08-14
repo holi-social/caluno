@@ -8,6 +8,7 @@ import { ForbiddenGraphQLError } from '../../graphql/errors';
 import type { AuthenticatedGraphQLContext } from '../../graphql/graphql.context';
 import { RequiredFormRef } from '../../organization/models/organization-unit-required-form.model';
 import { RequiredFormTargetType } from '../../requirement-profile/enums';
+import { RequiredFormRefMapper } from '../../requirement-profile/mappers/required-form-ref.mapper';
 import { RequirementForm } from '../../requirement-profile/models/requirement-form.model';
 import { RequirementProfile } from '../../requirement-profile/models/requirement-profile.model';
 import { UserRequirementStatus } from '../../requirement-profile/models/user-requirement-status.model';
@@ -37,6 +38,7 @@ export class ShiftMutationResolver {
     private readonly shiftInstanceInviteMapper: ShiftInstanceInviteMapper,
     private readonly authService: AuthService,
     private readonly requiredFormService: RequiredFormService,
+    private readonly requiredFormRefMapper: RequiredFormRefMapper,
   ) {}
 
   private async assertCanManageInviteForUser(
@@ -162,10 +164,30 @@ export class ShiftMutationResolver {
       formIds,
     );
 
-    return requiredForms.map(({ form, order }) => ({
-      form: plainToInstance(RequirementForm, form),
-      order,
-    }));
+    return this.requiredFormRefMapper.toArray(requiredForms);
+  }
+
+  @Permissions(PERMISSIONS.SHIFT_EDIT)
+  @Mutation(() => [RequiredFormRef])
+  async setShiftInstanceRequiredForms(
+    @Args('instanceId', { type: () => ID }) instanceId: string,
+    @Args('formIds', { type: () => [String] }) formIds: string[],
+    @Context() context: AuthenticatedGraphQLContext,
+  ): Promise<RequiredFormRef[]> {
+    await this.shiftService.findInstanceById(
+      instanceId,
+      context.organizationUnitId,
+    );
+
+    const requiredForms = await this.requiredFormService.setRequiredForms(
+      {
+        targetType: RequiredFormTargetType.SHIFT_INSTANCE,
+        targetId: instanceId,
+      },
+      formIds,
+    );
+
+    return this.requiredFormRefMapper.toArray(requiredForms);
   }
 
   @Mutation(() => JoinShiftInstanceResult)

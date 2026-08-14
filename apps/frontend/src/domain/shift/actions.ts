@@ -116,6 +116,7 @@ export const updateShiftInstance = actionClient
         instructions: parsedInput.instructions,
         minVolunteers: parsedInput.minVolunteers ?? null,
         maxVolunteers: parsedInput.maxVolunteers ?? null,
+        requiredFormIds: parsedInput.requiredFormIds,
         ...(applyToAllFuture
           ? {
               rrule,
@@ -125,7 +126,6 @@ export const updateShiftInstance = actionClient
               ...(parsedInput.imageFileId !== undefined
                 ? { imageFileId: parsedInput.imageFileId }
                 : {}),
-              requiredFormIds: parsedInput.requiredFormIds,
             }
           : {}),
       };

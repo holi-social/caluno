@@ -6,7 +6,13 @@ import { useState } from 'react';
 import { Link } from '@/i18n/navigation';
 import { requestPasswordReset } from '@/lib/auth';
 
-export function ForgotPasswordForm() {
+interface ForgotPasswordFormProps {
+  redirectTo?: string;
+}
+
+export function ForgotPasswordForm({
+  redirectTo = '/',
+}: ForgotPasswordFormProps) {
   const t = useTranslations('Auth.forgotPassword');
   const [error, setError] = useState<string | null>(null);
   const [isSent, setIsSent] = useState(false);
@@ -22,9 +28,17 @@ export function ForgotPasswordForm() {
     const email = String(formData.get('email') ?? '').trim();
 
     try {
+      const resetRedirectUrl = new URL(
+        '/reset-password',
+        window.location.origin,
+      );
+      if (redirectTo && redirectTo !== '/') {
+        resetRedirectUrl.searchParams.set('redirectTo', redirectTo);
+      }
+
       const result = await requestPasswordReset({
         email,
-        redirectTo: `${window.location.origin}/reset-password`,
+        redirectTo: resetRedirectUrl.toString(),
       });
 
       if (result.error) {
@@ -83,7 +97,11 @@ export function ForgotPasswordForm() {
       <p className="text-center text-sm text-muted-foreground">
         {t('remembered')}{' '}
         <Link
-          href="/login"
+          href={
+            redirectTo && redirectTo !== '/'
+              ? `/login?redirectTo=${encodeURIComponent(redirectTo)}`
+              : '/login'
+          }
           className="font-medium text-primary hover:underline"
         >
           {t('signInLink')}

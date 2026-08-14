@@ -1,54 +1,54 @@
 'use client';
 
 import { JoinStatus, RequiredFormTargetType } from '@repo/data';
-import { useJoinShiftInstance } from '@repo/data/react';
+import { useJoinEvent } from '@repo/data/react';
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 import {
   type RequiredFormItem,
   RequiredFormRenderer,
 } from '@/domain/requirement-form/components/required-form-renderer';
-import { shiftPublicPath } from '@/domain/shift/share';
 import { useRouter } from '@/i18n/navigation';
 import { getSafeRedirect } from '@/lib/safe-redirect';
 
-interface ShiftFormsClientProps {
-  shiftId: string;
-  instanceId: string;
-  shiftTitle: string;
+interface EventJoinFormsClientProps {
+  eventId: string;
+  eventTitle: string;
   requiredForms: RequiredFormItem[];
   profileData: Record<string, string>;
   initialSubmittedFormIds: Set<string>;
   redirectTo?: string;
 }
 
-export function ShiftFormsClient({
-  shiftId,
-  instanceId,
-  shiftTitle,
+export function EventJoinFormsClient({
+  eventId,
+  eventTitle,
   requiredForms,
   profileData,
   initialSubmittedFormIds,
   redirectTo,
-}: ShiftFormsClientProps) {
-  const t = useTranslations('ShiftDetail.forms');
+}: EventJoinFormsClientProps) {
+  const t = useTranslations('EventDetail.forms');
   const router = useRouter();
-  const joinShiftInstance = useJoinShiftInstance();
+  const joinEvent = useJoinEvent();
 
   const handleComplete = async () => {
-    const detailPath = shiftPublicPath(shiftId, instanceId);
     try {
-      const result = await joinShiftInstance.mutateAsync(instanceId);
+      const result = await joinEvent.mutateAsync(eventId);
 
-      if (result.status === JoinStatus.Joined) {
-        toast.success(t('joinedToast', { shiftTitle }));
-        router.push(getSafeRedirect(redirectTo, detailPath));
-      } else if (result.status === JoinStatus.Pending) {
-        toast.success(t('requestSentToast'));
-        router.push(detailPath);
+      if (
+        result.status === JoinStatus.Joined ||
+        result.status === JoinStatus.Pending
+      ) {
+        toast.success(
+          result.status === JoinStatus.Joined
+            ? t('joinedToast', { eventTitle })
+            : t('pendingRequestToast'),
+        );
+        router.push(getSafeRedirect(redirectTo));
       } else if (result.status === JoinStatus.Rejected) {
         toast.error(t('rejectedToast'));
-        router.push(detailPath);
+        router.push(`/events/${eventId}`);
       } else if (result.status === JoinStatus.RequirementsNeeded) {
         toast.error(t('requirementsNeededToast'));
       }
@@ -59,11 +59,11 @@ export function ShiftFormsClient({
 
   return (
     <RequiredFormRenderer
-      title={t('title', { shiftTitle })}
+      title={t('title', { eventTitle })}
       description={t('description')}
       emptyMessage={t('noForms')}
-      targetType={RequiredFormTargetType.Shift}
-      targetId={shiftId}
+      targetType={RequiredFormTargetType.Event}
+      targetId={eventId}
       forms={requiredForms}
       profileData={profileData}
       initialSubmittedFormIds={initialSubmittedFormIds}

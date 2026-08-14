@@ -32,6 +32,14 @@ test.describe('public event detail page', () => {
     expect(url.searchParams.get('redirectTo')).toContain(
       `/events/${PUBLIC_EVENT_ID}?autoFollow=true`,
     );
+
+    // Ensure the sign up link also retains the redirectTo param
+    await page.getByRole('link', { name: /sign up/i }).click();
+    await expect(page).toHaveURL(/\/en\/signup.*/);
+    const signupUrl = new URL(page.url());
+    expect(signupUrl.searchParams.get('redirectTo')).toContain(
+      `/events/${PUBLIC_EVENT_ID}?autoFollow=true`,
+    );
   });
 
   test('shows event badge on shift detail when part of event', async ({
