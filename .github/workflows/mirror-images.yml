@@ -28,7 +28,7 @@ jobs:
     steps:
       - name: Install skopeo
         run: sudo apt-get update && sudo apt-get install -y skopeo
-      - uses: docker/login-action@v3
+      - uses: docker/login-action@v4
         with:
           registry: ghcr.io
           username: ${{ github.actor }}

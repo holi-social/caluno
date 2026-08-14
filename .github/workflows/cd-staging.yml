@@ -46,7 +46,7 @@ jobs:
           token: ${{ secrets.ORG_REPO_PAT }}
       - name: Log into Scaleway registry
         run: echo "${{ secrets.SCW_SECRET_KEY }}" | docker login "${{ vars.SCW_REGISTRY_HOST }}/${{ vars.SCW_REGISTRY_NAMESPACE }}" -u nologin --password-stdin
-      - uses: docker/login-action@v3
+      - uses: docker/login-action@v4
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
@@ -76,7 +76,7 @@ jobs:
           token: ${{ secrets.ORG_REPO_PAT }}
       - name: Log into Scaleway registry
         run: echo "${{ secrets.SCW_SECRET_KEY }}" | docker login "${{ vars.SCW_REGISTRY_HOST }}/${{ vars.SCW_REGISTRY_NAMESPACE }}" -u nologin --password-stdin
-      - uses: docker/login-action@v3
+      - uses: docker/login-action@v4
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
