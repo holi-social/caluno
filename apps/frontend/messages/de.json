@@ -306,11 +306,35 @@
     "noResults": "Keine Mitglieder gefunden",
     "searchPlaceholder": "Name oder E-Mail suchen..."
   },
+  "MembershipDetail": {
+    "forms": {
+      "completedOn": "Du hast das Formular am {date} ausgefüllt.",
+      "fillIn": "Formular ausfüllen",
+      "notCompletedPrompt": "Diese Organisation hat dich gebeten, dieses Formular auszufüllen.",
+      "status": {
+        "completed": "Abgeschlossen",
+        "notCompleted": "Nicht abgeschlossen"
+      },
+      "subtitle": "Formulare, die diese Organisation von dir anfordert.",
+      "title": "Deine Formulare",
+      "view": "Ansehen"
+    },
+    "joinedDate": "Beigetreten · {date}",
+    "role": "Rolle",
+    "submission": {
+      "accepted": "Akzeptiert",
+      "answerColumn": "Antwort",
+      "fieldColumn": "Feld",
+      "noFields": "Dieses Formular hat keine Felder.",
+      "submittedOn": "Eingereicht am {date}"
+    }
+  },
   "MembershipRequest": {
     "actions": {
       "approve": "Genehmigen",
       "approveDisabledTitle": "Erforderliche Formulare sind unvollständig",
       "cancel": "Abbrechen",
+      "dismiss": "Verwerfen",
       "leave": "Verlassen",
       "reject": "Ablehnen",
       "rejectDialogDescription": "Bist du sicher, dass du diese Mitgliedschaftsanfrage ablehnen möchtest? Bitte gib einen Grund an, damit die betroffene Person versteht, warum ihre Anfrage abgelehnt wurde.",
@@ -318,7 +342,8 @@
       "rejecting": "Wird abgelehnt...",
       "rejectionReasonLabel": "Ablehnungsgrund",
       "rejectionReasonPlaceholder": "Erkläre, warum die Anfrage abgelehnt wird...",
-      "withdraw": "Zurückziehen"
+      "withdraw": "Zurückziehen",
+      "open": "Öffnen"
     },
     "cancelButton": "Anfrage zurückziehen",
     "cancelButtonSubmitting": "Wird zurückgezogen...",
@@ -329,7 +354,7 @@
     },
     "dialog": {
       "leaveDescription": "Möchtest du {orgName} wirklich verlassen?",
-      "leaveTitle": "Organisation verlassen",
+      "leaveTitle": "Mitgliedschaft widerrufen",
       "withdrawDescription": "Möchtest du deine Anfrage an {orgName} wirklich zurückziehen?",
       "withdrawTitle": "Anfrage zurückziehen"
     },
@@ -412,6 +437,8 @@
       "approved": "Mitgliedschaftsanfrage genehmigt",
       "cancelFailed": "Mitgliedschaftsanfrage konnte nicht zurückgezogen werden",
       "cancelled": "Mitgliedschaftsanfrage zurückgezogen",
+      "dismissFailed": "Mitgliedschaftsanfrage konnte nicht verworfen werden",
+      "dismissed": "Mitgliedschaftsanfrage verworfen",
       "leaveFailed": "Organisation konnte nicht verlassen werden",
       "left": "Du hast {orgName} verlassen",
       "rejected": "Mitgliedschaftsanfrage abgelehnt",
@@ -1092,10 +1119,11 @@
       "timeRangeConstraint": "Einsätze müssen innerhalb von ({window}) beginnen und enden."
     },
     "instanceDetail": {
-      "backToShift": "Zurück zum Einsatz",
       "editCta": "Bearbeiten",
-      "inviteCta": "Einladungen verwalten",
-      "subtitle": "Freiwillige und Einladungsstatus für diesen Termin",
+      "imagePlaceholder": "Bild hinzufügen",
+      "informationTitle": "Einsatzinformationen",
+      "inviteCta": "Einladen",
+      "inviteLink": "Einladungslink",
       "title": "Einsatztermin"
     },
     "inviteForm": {
@@ -1194,7 +1222,7 @@
       "createTitle": "Einsatz erstellen",
       "editDescription": "Bearbeite diesen Einsatz.",
       "editInstanceDescription": "Bearbeite diesen Termin des Einsatzes.",
-      "editInstanceTitle": "Einsatztermin bearbeiten",
+      "editInstanceTitle": "Einsatz bearbeiten",
       "editTitle": "Einsatz bearbeiten",
       "inviteDescription": "Eingeladene Freiwillige erhalten eine E-Mail mit Einsatzdetails und einem Link zum System.",
       "inviteTitle": "Freiwillige einladen"

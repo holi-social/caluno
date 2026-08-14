@@ -6,6 +6,7 @@ export {
   ALL_RECURRENCE_DAYS,
   DAY_VALUE_TO_RRULE,
   formatRrulePattern,
+  isSingleOccurrenceRrule,
   parseRruleDays,
   parseRruleEndDate,
   RECURRENCE_DAYS,

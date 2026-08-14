@@ -1651,6 +1651,11 @@ describe('Volunteer home fields and check-in', () => {
     const { id: shiftId } = await createShift(db, {
       organizationUnitId,
       visibility: ShiftVisibility.ALL_MEMBERS,
+      // Explicit, well-separated start time so this instance can't be
+      // crowded out of the default 15-item page by the many other shifts
+      // other tests in this file create around "now".
+      startsAt: new Date('2027-03-01T09:00:00.000Z'),
+      endsAt: new Date('2027-03-01T10:00:00.000Z'),
     });
     const instances = await db.query.shiftInstances.findMany({
       where: { masterId: shiftId },
@@ -1658,8 +1663,8 @@ describe('Volunteer home fields and check-in', () => {
     const instanceId = instances[0]?.id;
     expect(instanceId).toBeDefined();
 
-    const startsAfter = new Date('2026-06-01T00:00:00.000Z').toISOString();
-    const endsBefore = new Date('2026-12-31T23:59:59.000Z').toISOString();
+    const startsAfter = new Date('2027-03-01T08:00:00.000Z').toISOString();
+    const endsBefore = new Date('2027-03-01T11:00:00.000Z').toISOString();
 
     const data = await graphqlRequestRequiringData<{
       availableShiftInstances: {
@@ -1764,12 +1769,21 @@ describe('Volunteer home fields and check-in', () => {
     const { id: shiftId } = await createShift(db, {
       organizationUnitId,
       visibility: ShiftVisibility.ALL_MEMBERS,
+      // Explicit, well-separated start time so this instance can't be
+      // crowded out of the default 15-item page by the many other shifts
+      // other tests in this file create around "now" — the narrow query
+      // window below isn't enough on its own since every default-timed
+      // shift in this file lands within seconds of every other one.
+      startsAt: new Date('2027-03-02T09:00:00.000Z'),
+      endsAt: new Date('2027-03-02T10:00:00.000Z'),
     });
     const instances = await db.query.shiftInstances.findMany({
       where: { masterId: shiftId },
     });
-    const instanceId = instances[0]?.id;
-    expect(instanceId).toBeDefined();
+    const instance = instances[0];
+    if (!instance) {
+      throw new Error('Expected shift instance');
+    }
 
     setAuthMockUserId(pendingUser.id);
 
@@ -1790,8 +1804,15 @@ describe('Volunteer home fields and check-in', () => {
           }
         `,
         variables: {
-          startsAfter: new Date('2026-06-01T00:00:00.000Z').toISOString(),
-          endsBefore: new Date('2026-12-31T23:59:59.000Z').toISOString(),
+          // Scoped tightly around this instance's own start time — not a wide
+          // fixed range — so it isn't crowded out of the default 15-item page
+          // by unrelated shifts other tests in this file create around "now".
+          startsAfter: new Date(
+            instance.actualStartsAt.getTime() - 60000,
+          ).toISOString(),
+          endsBefore: new Date(
+            instance.actualStartsAt.getTime() + 60000,
+          ).toISOString(),
         },
         headers: {
           'x-organization-unit-id': organizationUnitId,
@@ -1801,7 +1822,7 @@ describe('Volunteer home fields and check-in', () => {
     );
 
     expect(data.availableShiftInstances.items.map((i) => i.id)).toContain(
-      instanceId,
+      instance.id,
     );
 
     setAuthMockUserId(testUserId);

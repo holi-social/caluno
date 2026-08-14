@@ -1,13 +1,15 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { count, eq, inArray, sql } from 'drizzle-orm';
+import { and, count, eq, inArray, sql } from 'drizzle-orm';
 import type { Database } from '../../database/database.module';
 import { DATABASE_CONNECTION } from '../../database/database-connection';
 import type { RequirementFormEntity } from '../../database/schema';
 import * as schema from '../../database/schema';
+import { EventInviteStatus } from '../../event/enums';
 import {
   ConflictGraphQLError,
   NotFoundGraphQLError,
 } from '../../graphql/errors';
+import { ShiftInviteStatus } from '../../shift/enums';
 import { FormSubmissionStatus, RequiredFormTargetType } from '../enums';
 
 export type RequiredFormTarget = {
@@ -128,6 +130,66 @@ export class RequiredFormService {
         targetId: target.targetId,
       };
     });
+  }
+
+  async requiredFormsForUser(
+    userId: string,
+    organizationUnitId: string,
+  ): Promise<RequirementFormEntity[]> {
+    // 1. requested: org-unit required forms
+    const orgUnitRequired = await this.getRequiredForms({
+      targetType: RequiredFormTargetType.ORGANIZATION_UNIT,
+      targetId: organizationUnitId,
+    });
+
+    // 2. requested: event required forms for events the user is invited
+    const pendingEventInvites = await this.db.query.eventInvites.findMany({
+      where: {
+        userId,
+        event: { organizationUnitId },
+        status: EventInviteStatus.INVITED,
+      },
+    });
+
+    const eventIds = pendingEventInvites.map((e) => e.eventId);
+    const eventsRequiredForms = await this.getRequiredFormsByEventIds(eventIds);
+
+    // 3. requested: shift required forms for any shift intance the user is invited
+    const shiftIdRows = await this.db
+      .select({ masterId: schema.shiftInstances.masterId })
+      .from(schema.shiftInstanceInvites)
+      .innerJoin(
+        schema.shiftInstances,
+        eq(schema.shiftInstances.id, schema.shiftInstanceInvites.instanceId),
+      )
+      .innerJoin(
+        schema.shifts,
+        eq(schema.shifts.id, schema.shiftInstances.masterId),
+      )
+      .where(
+        and(
+          eq(schema.shiftInstanceInvites.userId, userId),
+          eq(schema.shiftInstanceInvites.status, ShiftInviteStatus.INVITED),
+          eq(schema.shiftInstances.isCancelled, false),
+          eq(schema.shifts.organizationUnitId, organizationUnitId),
+          eq(schema.shifts.isDeleted, false),
+        ),
+      )
+      .groupBy(schema.shiftInstances.masterId);
+    const shiftIds = shiftIdRows.map((row) => row.masterId);
+    const shiftsRequiredForms = await this.getRequiredFormsByShiftIds(shiftIds);
+
+    // 4. union of requested forms, deduped by formId
+    const byForm = new Map<string, RequirementFormEntity>();
+    for (const { form } of [
+      ...orgUnitRequired,
+      ...eventsRequiredForms,
+      ...shiftsRequiredForms,
+    ]) {
+      byForm.set(form.id, form);
+    }
+
+    return [...byForm.values()];
   }
 
   async countRequiredFormsByEventIds(

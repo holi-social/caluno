@@ -654,7 +654,9 @@ export class ShiftService {
       this.db.query.shiftInstances.findMany({
         where,
         with: { master: true },
-        orderBy: { actualStartsAt: 'asc' },
+        // Tie-break on id so instances sharing the same actualStartsAt keep a
+        // stable order across pages instead of an arbitrary DB-chosen order.
+        orderBy: { actualStartsAt: 'asc', id: 'asc' },
         limit,
         offset,
       }),
@@ -1900,14 +1902,14 @@ export class ShiftService {
     organizationUnitId: string,
   ): Promise<ShiftInstanceEntity[]> {
     const now = new Date();
-    const threeHours = 3 * 60 * 60 * 1000;
-    const threeHoursAgo = new Date(now.getTime() - threeHours);
-    const threeHoursFromNow = new Date(now.getTime() + threeHours);
+    const windowMs = 12 * 60 * 60 * 1000;
+    const windowStart = new Date(now.getTime() - windowMs);
+    const windowEnd = new Date(now.getTime() + windowMs);
 
     const instances = await this.db.query.shiftInstances.findMany({
       where: {
-        actualStartsAt: { lt: threeHoursFromNow },
-        actualEndsAt: { gt: threeHoursAgo },
+        actualStartsAt: { lt: windowEnd },
+        actualEndsAt: { gt: windowStart },
         isCancelled: false,
         master: { organizationUnitId, isDeleted: false },
       },

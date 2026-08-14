@@ -9,20 +9,26 @@ import {
   EmptyTitle,
 } from '@repo/ui';
 import { addDays, format, startOfWeek } from 'date-fns';
-import { CalendarRange, Plus, UserPlus } from 'lucide-react';
+import { ArrowLeft, CalendarRange, Plus, UserPlus } from 'lucide-react';
 import { notFound } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
 import {
   DetailCoverImage,
   DetailCoverImagePlaceholder,
+  DetailLogoImage,
 } from '@/components/detail-entity-image';
 import { EventDetailTabSwitcher } from '@/domain/event/components/event-detail-tab-switcher';
 import { EventInformationCard } from '@/domain/event/components/event-information-card';
 import { EventMetaCard } from '@/domain/event/components/event-meta-card';
 import { EventRequiredFormsPopover } from '@/domain/event/components/event-required-forms-popover';
 import { EventVolunteersSection } from '@/domain/event/components/event-volunteers-section';
-import { eventDetailPath, eventShiftNewPath } from '@/domain/event/routes';
+import {
+  eventDetailPath,
+  eventShiftNewPath,
+  eventsListPath,
+} from '@/domain/event/routes';
 import { CreateShiftButton } from '@/domain/shift/components/create-shift-button';
+import { ShiftCreatedDialog } from '@/domain/shift/components/shift-created-dialog';
 import { WeeklyCalendar } from '@/domain/shift/components/weekly-calendar';
 import { WeeklyCalendarNav } from '@/domain/shift/components/weekly-calendar-nav';
 import { Link } from '@/i18n/navigation';
@@ -84,8 +90,21 @@ export default async function EventDetailPage({
 
   return (
     <div className="space-y-6">
+      <ShiftCreatedDialog />
+
+      <Link
+        href={eventsListPath(orgUId)}
+        className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground w-fit"
+      >
+        <ArrowLeft className="size-4" />
+        {t('backLink')}
+      </Link>
+
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div className="min-w-0">
+        <div className="flex min-w-0 items-center gap-3">
+          {event.logoUrl ? (
+            <DetailLogoImage src={event.logoUrl} alt={event.title} />
+          ) : null}
           <h1 className="page-title line-clamp-2">{event.title}</h1>
         </div>
         {canEdit ? (
