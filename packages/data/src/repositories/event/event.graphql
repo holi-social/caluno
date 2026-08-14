@@ -186,6 +186,18 @@ mutation InviteMembersToEvent($eventId: ID!, $memberIds: [String!]!) {
   }
 }
 
+mutation UpdateEventInviteStatus(
+  $eventId: ID!
+  $status: EventInviteStatus!
+  $userId: String
+) {
+  updateEventInviteStatus(eventId: $eventId, status: $status, userId: $userId) {
+    id
+    status
+    userId
+  }
+}
+
 fragment PublicEventOrganizationUnitFields on EventOrganizationUnit {
   id
   name

@@ -29,6 +29,10 @@ export function EventFollowButton({
   const [status, setStatus] = useState(initialStatus);
   const session = useSession();
 
+  useEffect(() => {
+    setStatus(initialStatus);
+  }, [initialStatus]);
+
   const isFinalStatus =
     status === JoinStatus.Joined ||
     status === JoinStatus.Pending ||

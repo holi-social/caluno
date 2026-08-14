@@ -157,6 +157,13 @@ mutation UpdateShiftInstance(
   }
 }
 
+mutation DeleteShiftInstance($id: String!, $applyToAllFuture: Boolean) {
+  deleteShiftInstance(id: $id, applyToAllFuture: $applyToAllFuture) {
+    id
+    isCancelled
+  }
+}
+
 mutation UpdateShiftInstanceVolunteers(
   $instanceId: String!
   $memberIds: [String!]!

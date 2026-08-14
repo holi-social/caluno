@@ -15,6 +15,7 @@ import {
   serverEditShiftInstanceFormSchema,
   serverShiftDeleteSchema,
   serverShiftFormSchema,
+  serverShiftInstanceDeleteSchema,
 } from './schemas';
 
 export async function getShift(id: string, organizationUnitId: string) {
@@ -146,6 +147,19 @@ export const deleteShift = actionClient
     });
 
     return await data.shift.delete(parsedInput.id);
+  });
+
+export const deleteShiftInstance = actionClient
+  .inputSchema(serverShiftInstanceDeleteSchema)
+  .action(async ({ parsedInput }) => {
+    const data = await getDataClient({
+      orgUId: parsedInput.organizationUnitId,
+    });
+
+    return await data.shift.deleteInstance(
+      parsedInput.instanceId,
+      parsedInput.applyToAllFuture,
+    );
   });
 
 const updateShiftVolunteersSchema = z.object({

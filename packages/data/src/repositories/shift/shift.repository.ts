@@ -152,6 +152,17 @@ export class ShiftRepository extends BaseRepository {
     return { id: data.updateShiftInstance.id };
   }
 
+  async deleteInstance(
+    instanceId: string,
+    applyToAllFuture?: boolean,
+  ): Promise<{ id: string }> {
+    const data = await this.sdk.DeleteShiftInstance({
+      id: instanceId,
+      applyToAllFuture,
+    });
+    return { id: data.deleteShiftInstance.id };
+  }
+
   async joinInstance(
     instanceId: string,
   ): Promise<JoinShiftInstanceMutation['joinShiftInstance']> {

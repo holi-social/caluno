@@ -1,6 +1,6 @@
 'use client';
 
-import { MembershipRequestStatus } from '@repo/data';
+import { EventInviteStatus, MembershipRequestStatus } from '@repo/data';
 import type { EventInviteItem } from '@repo/data/react';
 import {
   Button,
@@ -10,13 +10,20 @@ import {
 } from '@repo/ui';
 import { UserPlus } from 'lucide-react';
 import { useTranslations } from 'next-intl';
+import { useTransition } from 'react';
+import { toast } from 'sonner';
 import {
+  adminReinviteTargetStatus,
+  adminUninviteTargetStatus,
+  canAdminReinvite,
+  canAdminUninvite,
   countInviteDisplayStates,
   formatInviteStatusSummary,
   toInviteDisplayState,
 } from '@/domain/shift/invite-status-display';
 import { useSheetTrigger } from '@/hooks/use-sheet';
 import { Link, useRouter } from '@/i18n/navigation';
+import { updateEventInviteStatus } from '../actions';
 import { inviteEventPath } from '../routes';
 
 interface EventVolunteersSectionProps {
@@ -24,6 +31,16 @@ interface EventVolunteersSectionProps {
   eventId: string;
   invites: EventInviteItem[];
   canEdit: boolean;
+}
+
+function manageActions(
+  status: EventInviteStatus,
+  canManage: boolean,
+): VolunteeringActionLabel[] {
+  if (!canManage) return [];
+  if (canAdminUninvite(status)) return ['Uninvite'];
+  if (canAdminReinvite(status)) return ['Invite'];
+  return [];
 }
 
 export function EventVolunteersSection({
@@ -37,8 +54,9 @@ export function EventVolunteersSection({
   const tVolunteer = useTranslations('Volunteer.action');
   const router = useRouter();
   const { open: openVolunteerSheet } = useSheetTrigger('volunteer-profile');
+  const [pending, startTransition] = useTransition();
 
-  const statusLabel = (status: EventInviteItem['status']) => {
+  const statusLabel = (status: EventInviteStatus) => {
     const state = toInviteDisplayState(status);
     switch (state) {
       case 'invited':
@@ -58,15 +76,21 @@ export function EventVolunteersSection({
     }
   };
 
-  const volunteers: VolunteeringVolunteerListItem[] = invites.map((invite) => ({
-    id: invite.user.id,
-    name: invite.user.name,
-    image: invite.user.image,
-    state: toInviteDisplayState(invite.status),
-    statusLabel: statusLabel(invite.status),
-    actions: [],
-    iconActions: ['View', 'Check in'],
-  }));
+  const volunteers: VolunteeringVolunteerListItem[] = invites.map((invite) => {
+    const isParticipating =
+      invite.status === EventInviteStatus.Accepted ||
+      invite.status === EventInviteStatus.SelfJoined;
+
+    return {
+      id: invite.user.id,
+      name: invite.user.name,
+      image: invite.user.image,
+      state: toInviteDisplayState(invite.status),
+      statusLabel: statusLabel(invite.status),
+      actions: manageActions(invite.status, canEdit),
+      iconActions: isParticipating ? ['View', 'Check in'] : ['View'],
+    };
+  });
 
   const counts = countInviteDisplayStates(invites.map((i) => i.status));
   const summary = formatInviteStatusSummary(counts, null, {
@@ -101,8 +125,44 @@ export function EventVolunteersSection({
       router.push(
         `/admin/${orgUId}/check-in/${invite.user.checkInId}/check-in`,
       );
+      return;
     }
+
+    if (!canEdit || pending) {
+      return;
+    }
+
+    const targetStatus =
+      action === 'Uninvite'
+        ? adminUninviteTargetStatus(invite.status)
+        : action === 'Invite'
+          ? adminReinviteTargetStatus(invite.status)
+          : null;
+    if (!targetStatus) {
+      return;
+    }
+
+    startTransition(async () => {
+      const result = await updateEventInviteStatus(orgUId, eventId, {
+        userId: volunteerId,
+        status: targetStatus,
+      });
+      if (result?.serverError) {
+        toast.error(
+          action === 'Invite' ? t('inviteError') : t('uninviteError'),
+        );
+        return;
+      }
+      toast.success(
+        action === 'Invite' ? t('inviteSuccess') : t('uninviteSuccess'),
+      );
+      router.refresh();
+    });
   };
+
+  if (invites.length === 0) {
+    return <p className="text-sm text-muted-foreground">{t('empty')}</p>;
+  }
 
   return (
     <VolunteeringVolunteerList

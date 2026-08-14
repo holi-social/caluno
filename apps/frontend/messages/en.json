@@ -193,8 +193,18 @@
         "inviteButton": "Invite",
         "status": {
           "invited": "Invited",
-          "signedUp": "Signed up"
+          "signedUp": "Signed up",
+          "accepted": "Accepted",
+          "declined": "Declined",
+          "cancelled": "Canceled",
+          "rejected": "Rejected"
         },
+        "actionUninvite": "Uninvite",
+        "uninviteSuccess": "Volunteer removed from event",
+        "uninviteError": "Could not remove volunteer",
+        "actionInvite": "Invite",
+        "inviteSuccess": "Volunteer invited again",
+        "inviteError": "Could not invite volunteer",
         "title": "Volunteers"
       }
     },
@@ -1119,6 +1129,17 @@
       "timeRangeConstraint": "Shifts must start and end within ({window})."
     },
     "instanceDetail": {
+      "deleteAria": "Delete",
+      "deleteDialog": {
+        "description": "This shift is part of a series. Choose whether to delete just this shift or every upcoming shift.",
+        "error": "Failed to delete shift instance. {error}",
+        "futureDescription": "Deletes this shift and every upcoming occurrence in the series. Past occurrences are kept.",
+        "futureTitle": "This and all future shifts",
+        "onlyThisDescription": "Deletes the shift on {date}. Other occurrences stay untouched.",
+        "onlyThisTitle": "Only this shift",
+        "success": "Shift instance deleted.",
+        "title": "Delete shift instance"
+      },
       "editCta": "Edit",
       "imagePlaceholder": "Add an image",
       "informationTitle": "Shift information",

@@ -1,10 +1,14 @@
 import { PermissionKey, ShiftVisibility } from '@repo/data';
+import { Button } from '@repo/ui';
+import { Trash2 } from 'lucide-react';
 import { notFound } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
 import {
   DetailCoverImage,
   DetailCoverImagePlaceholder,
 } from '@/components/detail-entity-image';
+import { DeleteShiftInstanceDialog } from '@/domain/shift/components/delete-shift-instance-dialog';
+import ShareLinkButton from '@/domain/shift/components/share-link-button';
 import { ShiftInstanceInformationCard } from '@/domain/shift/components/shift-instance-information-card';
 import { ShiftInstanceMetaCard } from '@/domain/shift/components/shift-instance-meta-card';
 import { ShiftInstanceVolunteersPanel } from '@/domain/shift/components/shift-instance-volunteers-panel';
@@ -13,7 +17,6 @@ import { Link } from '@/i18n/navigation';
 import { getDataClient } from '@/lib/data-client';
 import { requireOrgAccess } from '@/lib/org-context-server';
 import { checkPermission } from '@/lib/permissions-server';
-import ShareLinkButton from '../../../../../../../../domain/shift/components/share-link-button';
 
 interface ShiftInstanceDetailPageProps {
   params: Promise<{ orgUId: string; shiftId: string; instanceId: string }>;
@@ -36,6 +39,7 @@ export default async function ShiftInstanceDetailPage({
     new Date(instance?.actualEndsAt ?? 0) < new Date();
   const isOpenShift =
     instance?.master.visibility === ShiftVisibility.AllMembers;
+  const isRecurring = Boolean(instance?.master.rrule);
 
   if (!instance || instance.isCancelled) {
     notFound();
@@ -51,16 +55,37 @@ export default async function ShiftInstanceDetailPage({
         <div className="min-w-0">
           <h1 className="page-title line-clamp-2">{title}</h1>
         </div>
-        {isOpenShift ? (
-          <div className="flex shrink-0 flex-wrap gap-2">
-            <ShareLinkButton
-              size="sm"
-              shiftId={shiftId}
+        <div className="flex shrink-0 flex-wrap gap-2">
+          {isOpenShift ? (
+            <div className="flex shrink-0 flex-wrap gap-2">
+              <ShareLinkButton
+                size="sm"
+                shiftId={shiftId}
+                instanceId={instanceId}
+                label={t('instanceDetail.inviteLink')}
+              />
+            </div>
+          ) : null}
+
+          {canManage ? (
+            <DeleteShiftInstanceDialog
+              orgUId={orgUId}
               instanceId={instanceId}
-              label={t('instanceDetail.inviteLink')}
+              isRecurring={isRecurring}
+              instanceDate={new Date(instance.actualStartsAt)}
+              trigger={
+                <Button
+                  variant="destructive"
+                  size="icon-sm"
+                  tooltip={t('instanceDetail.deleteAria')}
+                  disabled={isInstanceInThePast}
+                >
+                  <Trash2 />
+                </Button>
+              }
             />
-          </div>
-        ) : null}
+          ) : null}
+        </div>
       </div>
 
       {imageUrl ? (

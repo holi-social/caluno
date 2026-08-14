@@ -30,6 +30,7 @@ import {
 import { JoinStatus } from '../shared/enums/join-status.enum';
 import {
   ACTIVE_SHIFT_INVITE_STATUSES,
+  ADMIN_UNINVITE_SOURCE_STATUSES,
   canTransitionInviteStatus,
   isParticipatingShiftInviteStatus,
   PARTICIPATING_SHIFT_INVITE_STATUSES,
@@ -115,7 +116,7 @@ export class ShiftService {
   async findInstanceById(
     id: string,
     organizationUnitId: string,
-  ): Promise<ShiftInstanceEntity> {
+  ): Promise<ShiftInstanceEntity & { master: ShiftEntity }> {
     const instance = await this.db.query.shiftInstances.findFirst({
       where: { id },
       with: { master: true },
@@ -1580,6 +1581,209 @@ export class ShiftService {
     return { userIdsToAdd, userIdsToRemove };
   }
 
+  async deleteShiftInstance(
+    id: string,
+    organizationUnitId: string,
+    options: { applyToAllFuture?: boolean } = {},
+  ): Promise<ShiftInstanceEntity> {
+    const { shift, cancelledInstance, recipientUserIds, fromDate } =
+      await this.db.transaction(async (tx) => {
+        const instance = await tx.query.shiftInstances.findFirst({
+          where: { id },
+          with: { master: true },
+        });
+
+        if (
+          !instance ||
+          instance.master.organizationUnitId !== organizationUnitId
+        ) {
+          throw new NotFoundGraphQLError(
+            `Shift instance with ID ${id} not found`,
+          );
+        }
+
+        if (instance.actualEndsAt.getTime() < Date.now()) {
+          throw new ConflictGraphQLError(
+            'Cannot delete a past or completed shift instance',
+          );
+        }
+
+        if (!options.applyToAllFuture) {
+          if (await this.hasOpenTimeEntryForInstances([id], tx)) {
+            throw new ConflictGraphQLError(
+              'Cannot delete a shift instance with an open time entry',
+            );
+          }
+
+          const [cancelledInstance] = await tx
+            .update(schema.shiftInstances)
+            .set({ isCancelled: true })
+            .where(
+              and(
+                eq(schema.shiftInstances.id, id),
+                eq(schema.shiftInstances.isCancelled, false),
+              ),
+            )
+            .returning();
+
+          if (!cancelledInstance) {
+            throw new ConflictGraphQLError(
+              `Shift instance with ID ${id} is already cancelled`,
+            );
+          }
+
+          const recipientUserIds = await this.cancelActiveInvitesForInstances(
+            tx,
+            [id],
+          );
+
+          return {
+            shift: instance.master,
+            cancelledInstance,
+            recipientUserIds,
+            fromDate: null as Date | null,
+          };
+        }
+
+        const fromDate = new Date(instance.actualStartsAt);
+        fromDate.setHours(0, 0, 0, 0);
+        const now = new Date();
+
+        const targets = await tx.query.shiftInstances.findMany({
+          where: {
+            masterId: instance.masterId,
+            actualStartsAt: { gte: fromDate },
+            actualEndsAt: { gte: now },
+            isCancelled: false,
+          },
+          columns: { id: true },
+        });
+        const targetIds = targets.map((target) => target.id);
+
+        if (await this.hasOpenTimeEntryForInstances(targetIds, tx)) {
+          throw new ConflictGraphQLError(
+            'Cannot delete a shift instance with an open time entry',
+          );
+        }
+
+        const [cancelledInstance] = await tx
+          .update(schema.shiftInstances)
+          .set({ isCancelled: true })
+          .where(
+            and(
+              eq(schema.shiftInstances.id, id),
+              eq(schema.shiftInstances.isCancelled, false),
+            ),
+          )
+          .returning();
+
+        if (!cancelledInstance) {
+          throw new ConflictGraphQLError(
+            `Shift instance with ID ${id} is already cancelled`,
+          );
+        }
+
+        const restIds = targetIds.filter((targetId) => targetId !== id);
+        let updatedRestIds: string[] = [];
+        if (restIds.length > 0) {
+          const updatedRest = await tx
+            .update(schema.shiftInstances)
+            .set({ isCancelled: true })
+            .where(
+              and(
+                inArray(schema.shiftInstances.id, restIds),
+                eq(schema.shiftInstances.isCancelled, false),
+              ),
+            )
+            .returning({ id: schema.shiftInstances.id });
+          updatedRestIds = updatedRest.map((row) => row.id);
+        }
+
+        const recipientUserIds = await this.cancelActiveInvitesForInstances(
+          tx,
+          [id, ...updatedRestIds],
+        );
+
+        return {
+          shift: instance.master,
+          cancelledInstance,
+          recipientUserIds,
+          fromDate,
+        };
+      });
+
+    if (options.applyToAllFuture) {
+      void this.loadAndEmitShiftInstanceSeriesCancelledNotification(
+        shift,
+        fromDate as Date,
+        recipientUserIds,
+      );
+    } else {
+      void this.loadAndEmitShiftInstanceCancelledNotification(
+        shift,
+        cancelledInstance,
+        recipientUserIds,
+      );
+    }
+
+    return cancelledInstance;
+  }
+
+  private async cancelActiveInvitesForInstances(
+    tx: Database,
+    instanceIds: string[],
+  ): Promise<string[]> {
+    if (instanceIds.length === 0) {
+      return [];
+    }
+
+    const activeInvites = await tx.query.shiftInstanceInvites.findMany({
+      where: {
+        instanceId: { in: instanceIds },
+        status: { in: [...ACTIVE_SHIFT_INVITE_STATUSES] },
+      },
+      columns: { userId: true },
+    });
+
+    if (activeInvites.length > 0) {
+      await tx
+        .update(schema.shiftInstanceInvites)
+        .set({ status: ShiftInviteStatus.CANCELLED })
+        .where(
+          and(
+            inArray(schema.shiftInstanceInvites.instanceId, instanceIds),
+            inArray(schema.shiftInstanceInvites.status, [
+              ...ACTIVE_SHIFT_INVITE_STATUSES,
+            ]),
+          ),
+        );
+    }
+
+    return [...new Set(activeInvites.map((invite) => invite.userId))];
+  }
+
+  private async hasOpenTimeEntryForInstances(
+    instanceIds: string[],
+    executor: Database = this.db,
+  ): Promise<boolean> {
+    if (instanceIds.length === 0) {
+      return false;
+    }
+
+    const [entry] = await executor
+      .select({ id: schema.timeEntries.id })
+      .from(schema.timeEntries)
+      .where(
+        and(
+          inArray(schema.timeEntries.shiftInstanceId, instanceIds),
+          isNull(schema.timeEntries.endedAt),
+        ),
+      )
+      .limit(1);
+
+    return entry !== undefined;
+  }
+
   async findVolunteers(
     instanceId: string,
     organizationUnitId: string,
@@ -2010,6 +2214,76 @@ export class ShiftService {
     } catch (error) {
       this.logger.error(
         `Failed to emit shift instance invited notification: ${error instanceof Error ? error.message : String(error)}`,
+      );
+    }
+  }
+
+  private async loadAndEmitShiftInstanceCancelledNotification(
+    shift: ShiftEntity,
+    instance: ShiftInstanceEntity,
+    recipientUserIds: string[],
+  ): Promise<void> {
+    if (recipientUserIds.length === 0) {
+      return;
+    }
+    try {
+      const organizationUnit = await this.db.query.organizationUnits.findFirst({
+        where: { id: shift.organizationUnitId },
+        columns: { id: true, name: true },
+      });
+
+      if (!organizationUnit) {
+        return;
+      }
+
+      this.notificationService.notifyShiftInstanceCancelled({
+        organizationUnitId: organizationUnit.id,
+        organizationUnitName: organizationUnit.name,
+        shiftId: shift.id,
+        shiftTitle: shift.title,
+        shiftLocation: shift.location,
+        recipientUserIds,
+        startsAt: instance.actualStartsAt,
+        endsAt: instance.actualEndsAt,
+        instanceId: instance.id,
+      });
+    } catch (error) {
+      this.logger.error(
+        `Failed to emit shift instance cancelled notification: ${error instanceof Error ? error.message : String(error)}`,
+      );
+    }
+  }
+
+  private async loadAndEmitShiftInstanceSeriesCancelledNotification(
+    shift: ShiftEntity,
+    fromDate: Date,
+    recipientUserIds: string[],
+  ): Promise<void> {
+    if (recipientUserIds.length === 0) {
+      return;
+    }
+    try {
+      const organizationUnit = await this.db.query.organizationUnits.findFirst({
+        where: { id: shift.organizationUnitId },
+        columns: { id: true, name: true },
+      });
+
+      if (!organizationUnit) {
+        return;
+      }
+
+      this.notificationService.notifyShiftInstanceSeriesCancelled({
+        organizationUnitId: organizationUnit.id,
+        organizationUnitName: organizationUnit.name,
+        shiftId: shift.id,
+        shiftTitle: shift.title,
+        shiftLocation: shift.location,
+        recipientUserIds,
+        fromDate,
+      });
+    } catch (error) {
+      this.logger.error(
+        `Failed to emit shift instance series cancelled notification: ${error instanceof Error ? error.message : String(error)}`,
       );
     }
   }
@@ -2489,6 +2763,117 @@ export class ShiftService {
 
       return updated;
     });
+  }
+
+  async adminRejectInvitesForEventUser(
+    eventId: string,
+    userId: string,
+    db: Database = this.db,
+  ): Promise<void> {
+    const shifts = await db.query.shifts.findMany({
+      where: { eventId, isDeleted: false },
+      columns: { id: true },
+    });
+    if (shifts.length === 0) {
+      return;
+    }
+
+    const shiftIds = shifts.map((shift) => shift.id);
+    const uninviteStatuses: ShiftInviteStatus[] = [
+      ...ADMIN_UNINVITE_SOURCE_STATUSES,
+    ];
+
+    await db
+      .update(schema.shiftInvites)
+      .set({ status: ShiftInviteStatus.ADMIN_REJECTED })
+      .where(
+        and(
+          eq(schema.shiftInvites.userId, userId),
+          inArray(schema.shiftInvites.shiftId, shiftIds),
+          inArray(schema.shiftInvites.status, uninviteStatuses),
+        ),
+      );
+
+    const instances = await db.query.shiftInstances.findMany({
+      where: {
+        masterId: { in: shiftIds },
+        isCancelled: false,
+      },
+      columns: { id: true },
+    });
+    if (instances.length === 0) {
+      return;
+    }
+
+    const instanceIds = instances.map((instance) => instance.id);
+    await db
+      .update(schema.shiftInstanceInvites)
+      .set({ status: ShiftInviteStatus.ADMIN_REJECTED })
+      .where(
+        and(
+          eq(schema.shiftInstanceInvites.userId, userId),
+          inArray(schema.shiftInstanceInvites.instanceId, instanceIds),
+          inArray(schema.shiftInstanceInvites.status, uninviteStatuses),
+        ),
+      );
+  }
+
+  /**
+   * Reverses adminRejectInvitesForEventUser: restores this user's
+   * ADMIN_REJECTED invites on the event's shifts (and shift instances) back
+   * to INVITED when an admin re-invites them to the event.
+   */
+  async adminReinviteInvitesForEventUser(
+    eventId: string,
+    userId: string,
+    db: Database = this.db,
+  ): Promise<void> {
+    const shifts = await db.query.shifts.findMany({
+      where: { eventId, isDeleted: false },
+      columns: { id: true },
+    });
+    if (shifts.length === 0) {
+      return;
+    }
+
+    const shiftIds = shifts.map((shift) => shift.id);
+
+    await db
+      .update(schema.shiftInvites)
+      .set({ status: ShiftInviteStatus.INVITED })
+      .where(
+        and(
+          eq(schema.shiftInvites.userId, userId),
+          inArray(schema.shiftInvites.shiftId, shiftIds),
+          eq(schema.shiftInvites.status, ShiftInviteStatus.ADMIN_REJECTED),
+        ),
+      );
+
+    const instances = await db.query.shiftInstances.findMany({
+      where: {
+        masterId: { in: shiftIds },
+        isCancelled: false,
+      },
+      columns: { id: true },
+    });
+    if (instances.length === 0) {
+      return;
+    }
+
+    const instanceIds = instances.map((instance) => instance.id);
+    await db
+      .update(schema.shiftInstanceInvites)
+      .set({ status: ShiftInviteStatus.INVITED })
+      .where(
+        and(
+          eq(schema.shiftInstanceInvites.userId, userId),
+          inArray(schema.shiftInstanceInvites.instanceId, instanceIds),
+          eq(
+            schema.shiftInstanceInvites.status,
+            ShiftInviteStatus.ADMIN_REJECTED,
+          ),
+        ),
+      );
   }
 
   async updateShiftInstanceInviteStatus(
