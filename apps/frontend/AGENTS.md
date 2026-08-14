@@ -43,6 +43,7 @@ Route groups: `(auth)` unauthenticated, `(dashboard)/[orgUId]` protected + org-s
 - Server Actions for a domain in `actions.ts`; zod schemas in `schemas.ts` (e.g. `src/domain/shift/schemas.ts`).
 - Do not write GraphQL in this project — use `@repo/data` for data access.
 - Sheets use the `@sheet` parallel-route slot (`app/[locale]/admin/[orgUId]/@sheet/**`) with `FormSheet`/`useFormSheet`.
+- Internal volunteer pages render the internal page header (`DetailPageHeader` from `@repo/ui`) via a small client wrapper (`ProfilePageHeader`, `EventPageHeader`, …) with `onBack={router.back()}`; the body does not repeat the title when the header shows it. Exception: the `(root)` pages (home, `/qr-id`, `/timesheets`) keep the custom `HomeHeader` greeting header.
 - The requirement-form builder (`domain/requirement-form/components/form-builder.tsx`) is a container composing `form-builder-{empty-state,block-list,add-block-dialog,preview}.tsx`; pure state logic lives in `form-builder-state.ts`. Blocks created through the block sheet (`forForm=true`) come back via the `?addBlock=<id>` search-param handshake and persist only on Save Form.
 
 ## Testing — `bun:test` only

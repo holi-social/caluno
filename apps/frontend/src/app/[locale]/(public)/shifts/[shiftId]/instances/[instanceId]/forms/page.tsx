@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
 import { ShiftFormsClient } from '@/app/[locale]/(public)/shifts/[shiftId]/instances/[instanceId]/forms/shift-forms-client';
 import type { RequiredFormItem } from '@/domain/requirement-form/components/required-form-renderer';
+import { ShiftPageHeader } from '@/domain/shift/components/shift-page-header';
 import { shiftPublicPath } from '@/domain/shift/share';
 import { redirect } from '@/i18n/navigation';
 import { resolveLocale } from '@/i18n/routing';
@@ -101,8 +102,9 @@ export default async function ShiftFormsPage({
   }
 
   return (
-    <div className="min-h-screen bg-muted/30 px-4 py-10">
-      <div className="mx-auto max-w-2xl">
+    <div className="min-h-screen bg-muted/30">
+      <ShiftPageHeader logoUrl={shift.organizationUnit?.logoUrl} />
+      <div className="mx-auto max-w-2xl px-4 py-10">
         <ShiftFormsClient
           shiftId={shiftId}
           instanceId={instanceId}
