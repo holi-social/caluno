@@ -159,6 +159,7 @@ type Event {
   requiredFormsCount: Int!
   shifts: [Shift!]!
   shiftsCount: Int!
+  signedUpCount: Int!
   slug: String!
   startsAt: DateTime!
   title: String!

@@ -17,6 +17,7 @@ import { Event } from '../models/event.model';
 import { EventOrganizationUnit } from '../models/event-organization-unit.model';
 import type { EventEntity } from '../schemas/event.schema';
 import { EventInviteLoader } from './event-invite.loader';
+import { EventInviteCountLoader } from './event-invite-count.loader';
 import { EventOrganizationUnitLoader } from './event-organization-unit.loader';
 import { EventOrganizerLoader } from './event-organizer.loader';
 import { EventRequiredFormsLoader } from './event-required-forms.loader';
@@ -63,6 +64,15 @@ export class EventFieldResolver {
   async requiredFormsCount(
     @Parent() event: EventEntity,
     @Loader(EventRequiredFormsLoader) loader: EventRequiredFormsLoader,
+  ): Promise<number> {
+    return loader.countByEventId.load(event.id);
+  }
+
+  @AllowAnonymous()
+  @ResolveField(() => Int)
+  async signedUpCount(
+    @Parent() event: EventEntity,
+    @Loader(EventInviteCountLoader) loader: EventInviteCountLoader,
   ): Promise<number> {
     return loader.countByEventId.load(event.id);
   }

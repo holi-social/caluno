@@ -4,9 +4,10 @@ fragment EventListFields on Event {
   slug
   startsAt
   endsAt
-  location
   shiftsCount
   requiredFormsCount
+  coverUrl
+  signedUpCount
 }
 
 fragment RequiredFormFields on RequirementForm {
@@ -77,6 +78,7 @@ fragment RequiredFormWithStatusFields on RequiredFormWithStatus {
 
 fragment EventDetailFields on Event {
   ...EventListFields
+  location
   organizer {
     id
     name

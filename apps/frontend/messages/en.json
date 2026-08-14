@@ -132,8 +132,12 @@
       "deleteAria": "Delete",
       "editAria": "Edit",
       "inviteAria": "Invite",
-      "shareAria": "Copy link",
-      "viewAria": "View"
+      "shareAria": "Copy link"
+    },
+    "card": {
+      "pill": "{shiftsCount, plural, =0 {No shifts} one {1 shift} other {# shifts}}{formsCount, plural, =0 {} one { · 1 form} other { · # forms}}",
+      "viewButton": "View event",
+      "volunteers": "{count, plural, one {1 volunteer signed up} other {# volunteers signed up}}"
     },
     "deleteDialog": {
       "confirm": "Delete",
@@ -234,13 +238,6 @@
       "createTitle": "Create event",
       "editDescription": "Update the event details below.",
       "editTitle": "Edit event"
-    },
-    "table": {
-      "dates": "Dates",
-      "event": "Event",
-      "location": "Location",
-      "requiredForms": "Forms",
-      "shifts": "Shifts"
     },
     "toast": {
       "created": "Event created",
