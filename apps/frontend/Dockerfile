@@ -1,4 +1,4 @@
-FROM europe-north1-docker.pkg.dev/holi-shared/docker-hub-remote/oven/bun:1 AS dependencies
+FROM ghcr.io/holi-social/mirror/oven-bun:1 AS dependencies
 
 WORKDIR /app
 
@@ -9,7 +9,7 @@ COPY packages ./packages
 RUN --mount=type=cache,target=/root/.bun/install/cache \
     bun install --no-save --frozen-lockfile
 
-FROM europe-north1-docker.pkg.dev/holi-shared/docker-hub-remote/oven/bun:1 AS builder
+FROM ghcr.io/holi-social/mirror/oven-bun:1 AS builder
 
 WORKDIR /app
 
@@ -25,7 +25,7 @@ ENV NEXT_PUBLIC_WEB_URL=${NEXT_PUBLIC_WEB_URL}
 WORKDIR /app/apps/frontend
 RUN bun run build
 
-FROM europe-north1-docker.pkg.dev/holi-shared/docker-hub-remote/oven/bun:1 AS runner
+FROM ghcr.io/holi-social/mirror/oven-bun:1 AS runner
 
 WORKDIR /app
 
