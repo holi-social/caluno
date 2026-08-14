@@ -178,8 +178,18 @@
         "inviteButton": "Einladen",
         "status": {
           "invited": "Eingeladen",
-          "signedUp": "Angemeldet"
+          "signedUp": "Angemeldet",
+          "accepted": "Angenommen",
+          "declined": "Abgelehnt",
+          "cancelled": "Storniert",
+          "rejected": "Zurückgezogen"
         },
+        "actionUninvite": "Einladung zurückziehen",
+        "uninviteSuccess": "Freiwillige:r von der Veranstaltung entfernt",
+        "uninviteError": "Freiwillige:r konnte nicht entfernt werden",
+        "actionInvite": "Einladen",
+        "inviteSuccess": "Freiwillige:r erneut eingeladen",
+        "inviteError": "Einladung konnte nicht erneut gesendet werden",
         "title": "Freiwillige"
       }
     },
@@ -1104,10 +1114,22 @@
       "timeRangeConstraint": "Einsätze müssen innerhalb von ({window}) beginnen und enden."
     },
     "instanceDetail": {
-      "backToShift": "Zurück zum Einsatz",
+      "deleteAria": "Löschen",
+      "deleteDialog": {
+        "description": "Dieser Einsatztermin ist Teil einer Serie. Wähle aus, ob nur diesen Termin oder alle kommenden Termine gelöscht werden sollen.",
+        "error": "Einsatztermin konnte nicht gelöscht werden. {error}",
+        "futureDescription": "Löscht diesen Termin und alle kommenden Termine der Serie. Vergangene Termine bleiben erhalten.",
+        "futureTitle": "Diesen und alle zukünftigen Termine",
+        "onlyThisDescription": "Löscht den Termin am {date}. Andere Termine bleiben unberührt.",
+        "onlyThisTitle": "Nur diesen Termin",
+        "success": "Einsatztermin gelöscht.",
+        "title": "Einsatztermin löschen"
+      },
       "editCta": "Bearbeiten",
-      "inviteCta": "Einladungen verwalten",
-      "subtitle": "Freiwillige und Einladungsstatus für diesen Termin",
+      "imagePlaceholder": "Bild hinzufügen",
+      "informationTitle": "Einsatzinformationen",
+      "inviteCta": "Einladen",
+      "inviteLink": "Einladungslink",
       "title": "Einsatztermin"
     },
     "inviteForm": {
@@ -1206,7 +1228,7 @@
       "createTitle": "Einsatz erstellen",
       "editDescription": "Bearbeite diesen Einsatz.",
       "editInstanceDescription": "Bearbeite diesen Termin des Einsatzes.",
-      "editInstanceTitle": "Einsatztermin bearbeiten",
+      "editInstanceTitle": "Einsatz bearbeiten",
       "editTitle": "Einsatz bearbeiten",
       "inviteDescription": "Eingeladene Freiwillige erhalten eine E-Mail mit Einsatzdetails und einem Link zum System.",
       "inviteTitle": "Freiwillige einladen"

@@ -3,27 +3,41 @@
 import { EventInviteStatus, MembershipRequestStatus } from '@repo/data';
 import type { EventInviteItem } from '@repo/data/react';
 import {
-  Badge,
   Button,
-  Card,
-  CardAction,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  VolunteeringStatusBadge,
+  type VolunteeringActionLabel,
+  VolunteeringVolunteerList,
+  type VolunteeringVolunteerListItem,
 } from '@repo/ui';
-import { LogIn, UserPlus, UserRound } from 'lucide-react';
+import { UserPlus } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import { UserCard } from '@/components/user-card';
+import { useTransition } from 'react';
+import { toast } from 'sonner';
+import {
+  adminReinviteTargetStatus,
+  adminUninviteTargetStatus,
+  canAdminReinvite,
+  canAdminUninvite,
+  toInviteDisplayState,
+} from '@/domain/shift/invite-status-display';
 import { useSheetTrigger } from '@/hooks/use-sheet';
-import { Link } from '@/i18n/navigation';
-import { toEventInviteDisplayState } from '../invite-status-display';
+import { Link, useRouter } from '@/i18n/navigation';
+import { updateEventInviteStatus } from '../actions';
 
 interface EventVolunteersCardProps {
   orgUId: string;
   eventId: string;
   invites: EventInviteItem[];
   canEdit: boolean;
+}
+
+function manageActions(
+  status: EventInviteStatus,
+  canManage: boolean,
+): VolunteeringActionLabel[] {
+  if (!canManage) return [];
+  if (canAdminUninvite(status)) return ['Uninvite'];
+  if (canAdminReinvite(status)) return ['Invite'];
+  return [];
 }
 
 export function EventVolunteersSection({
@@ -34,94 +48,132 @@ export function EventVolunteersSection({
 }: EventVolunteersCardProps) {
   const t = useTranslations('Event.detail.volunteersCard');
   const tVolunteer = useTranslations('Volunteer.action');
+  const router = useRouter();
   const { open: openVolunteerSheet } = useSheetTrigger('volunteer-profile');
+  const [pending, startTransition] = useTransition();
+
+  const statusLabel = (status: EventInviteStatus) => {
+    const state = toInviteDisplayState(status);
+    switch (state) {
+      case 'invited':
+        return t('status.invited');
+      case 'accepted':
+        return t('status.accepted');
+      case 'signed_up':
+        return t('status.signedUp');
+      case 'declined':
+        return t('status.declined');
+      case 'cancelled':
+        return t('status.cancelled');
+      case 'rejected':
+        return t('status.rejected');
+      default:
+        return state;
+    }
+  };
+
+  const volunteers: VolunteeringVolunteerListItem[] = invites.map((invite) => {
+    const isParticipating =
+      invite.status === EventInviteStatus.Accepted ||
+      invite.status === EventInviteStatus.SelfJoined;
+
+    return {
+      id: invite.user.id,
+      name: invite.user.name,
+      image: invite.user.image,
+      state: toInviteDisplayState(invite.status),
+      statusLabel: statusLabel(invite.status),
+      actions: manageActions(invite.status, canEdit),
+      iconActions: isParticipating ? ['View', 'Check in'] : ['View'],
+    };
+  });
+
+  const openProfile = (invite: EventInviteItem) => {
+    openVolunteerSheet({
+      userId: invite.user.id,
+      volunteerName: invite.user.name,
+      volunteerStatus: MembershipRequestStatus.Accepted,
+      volunteerEmail: invite.user.email ?? '',
+      volunteerCheckInId: invite.user.checkInId,
+    });
+  };
+
+  const onAction = (volunteerId: string, action: VolunteeringActionLabel) => {
+    const invite = invites.find((item) => item.user.id === volunteerId);
+    if (!invite) {
+      return;
+    }
+
+    if (action === 'View') {
+      openProfile(invite);
+      return;
+    }
+
+    if (action === 'Check in') {
+      router.push(
+        `/admin/${orgUId}/check-in/${invite.user.checkInId}/check-in`,
+      );
+      return;
+    }
+
+    if (!canEdit || pending) {
+      return;
+    }
+
+    const targetStatus =
+      action === 'Uninvite'
+        ? adminUninviteTargetStatus(invite.status)
+        : action === 'Invite'
+          ? adminReinviteTargetStatus(invite.status)
+          : null;
+    if (!targetStatus) {
+      return;
+    }
+
+    startTransition(async () => {
+      const result = await updateEventInviteStatus(orgUId, eventId, {
+        userId: volunteerId,
+        status: targetStatus,
+      });
+      if (result?.serverError) {
+        toast.error(
+          action === 'Invite' ? t('inviteError') : t('uninviteError'),
+        );
+        return;
+      }
+      toast.success(
+        action === 'Invite' ? t('inviteSuccess') : t('uninviteSuccess'),
+      );
+      router.refresh();
+    });
+  };
+
+  if (invites.length === 0) {
+    return <p className="text-sm text-muted-foreground">{t('empty')}</p>;
+  }
 
   return (
-    <Card className="py-4">
-      <CardHeader className="border-b [.border-b]:pb-4">
-        <CardTitle className="flex items-center gap-2">
-          {t('title')}
-          <Badge variant="outline">{invites.length}</Badge>
-        </CardTitle>
-
-        {canEdit && (
-          <CardAction>
+    <VolunteeringVolunteerList
+      volunteers={volunteers}
+      phase="before"
+      title={t('title')}
+      headerAction={
+        canEdit ? (
+          <Button asChild size="sm">
             <Link href={`/admin/${orgUId}/events/${eventId}/invite`}>
-              <Button>
-                <UserPlus />
-                {t('inviteButton')}
-              </Button>
+              <UserPlus />
+              {t('inviteButton')}
             </Link>
-          </CardAction>
-        )}
-      </CardHeader>
-
-      <CardContent>
-        {invites.length === 0 ? (
-          <p className="text-sm text-muted-foreground">{t('empty')}</p>
-        ) : (
-          <ul className="space-y-3">
-            {invites.map((invite) => {
-              const isParticipating =
-                invite.status === EventInviteStatus.Accepted ||
-                invite.status === EventInviteStatus.SelfJoined;
-              const displayState = toEventInviteDisplayState(invite.status);
-
-              return (
-                <li
-                  key={invite.id}
-                  className="flex items-center gap-2 sm:gap-4"
-                >
-                  <div className="min-w-0 flex-1">
-                    <UserCard user={invite.user} size="sm" />
-                  </div>
-                  <div className="flex shrink-0 items-center gap-1 sm:gap-2">
-                    <VolunteeringStatusBadge
-                      state={displayState}
-                      phase="before"
-                      label={
-                        displayState === 'signed_up'
-                          ? t('status.signedUp')
-                          : t('status.invited')
-                      }
-                    />
-                    <Button
-                      size="icon-xs"
-                      variant="outline"
-                      tooltip={tVolunteer('viewProfileAria')}
-                      onClick={() =>
-                        openVolunteerSheet({
-                          userId: invite.user.id,
-                          volunteerName: invite.user.name,
-                          volunteerStatus: MembershipRequestStatus.Accepted,
-                          volunteerEmail: invite.user.email ?? '',
-                          volunteerCheckInId: invite.user.checkInId,
-                        })
-                      }
-                    >
-                      <UserRound />
-                    </Button>
-                    {isParticipating && (
-                      <Link
-                        href={`/admin/${orgUId}/check-in/${invite.user.checkInId}/check-in`}
-                        aria-label={t('checkInAria')}
-                      >
-                        <Button
-                          size="icon-xs"
-                          variant="outline"
-                          tooltip={t('checkInAria')}
-                        >
-                          <LogIn />
-                        </Button>
-                      </Link>
-                    )}
-                  </div>
-                </li>
-              );
-            })}
-          </ul>
-        )}
-      </CardContent>
-    </Card>
+          </Button>
+        ) : undefined
+      }
+      actionLabels={{
+        View: tVolunteer('viewProfileAria'),
+        'Check in': t('checkInAria'),
+        Invite: t('actionInvite'),
+        Uninvite: t('actionUninvite'),
+      }}
+      onAction={onAction}
+    />
   );
 }

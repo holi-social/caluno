@@ -10,7 +10,7 @@ export const buildPageUrl = (url: string, page: number) => {
   const params = new URLSearchParams(search);
   params.set('page', String(page));
   return `${path}?${params.toString()}`;
-}
+};
 
 type PaginationControlsProps = {
   pagination: PaginationInfo;

@@ -22,14 +22,12 @@ export default async function PublicFormPage({ params }: Props) {
   const session = await getSession();
   if (!session) {
     const orgUId = form.organizationUnitId;
-    if (orgUId) {
-      redirectWithLocale({
-        href: `/api/invite?orgUId=${orgUId}&redirectTo=${encodeURIComponent(`/f/${token}`)}`,
-        locale,
-      });
-    }
+    const params = new URLSearchParams({
+      redirectTo: `/f/${token}`,
+      ...(orgUId ? { orgUId } : {}),
+    });
     redirectWithLocale({
-      href: `/login?redirectTo=${encodeURIComponent(`/f/${token}`)}`,
+      href: `/api/invite?${params}`,
       locale,
     });
   }
@@ -46,11 +44,7 @@ export default async function PublicFormPage({ params }: Props) {
       data.requirementForm.getMyFormSubmissionByToken(token),
     ]);
 
-  let profileData: Record<string, string> = {};
-  const raw = userProfile?.data;
-  if (raw && typeof raw === 'object' && !Array.isArray(raw)) {
-    profileData = raw as Record<string, string>;
-  }
+  const profileData = (userProfile?.data ?? {}) as Record<string, string>;
 
   const t = await getTranslations('RequirementForm.volunteerForm');
 

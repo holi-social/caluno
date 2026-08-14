@@ -15,6 +15,7 @@ import {
   serverEditShiftInstanceFormSchema,
   serverShiftDeleteSchema,
   serverShiftFormSchema,
+  serverShiftInstanceDeleteSchema,
 } from './schemas';
 
 export async function getShift(id: string, organizationUnitId: string) {
@@ -116,6 +117,7 @@ export const updateShiftInstance = actionClient
         instructions: parsedInput.instructions,
         minVolunteers: parsedInput.minVolunteers ?? null,
         maxVolunteers: parsedInput.maxVolunteers ?? null,
+        requiredFormIds: parsedInput.requiredFormIds,
         ...(applyToAllFuture
           ? {
               rrule,
@@ -125,7 +127,6 @@ export const updateShiftInstance = actionClient
               ...(parsedInput.imageFileId !== undefined
                 ? { imageFileId: parsedInput.imageFileId }
                 : {}),
-              requiredFormIds: parsedInput.requiredFormIds,
             }
           : {}),
       };
@@ -146,6 +147,19 @@ export const deleteShift = actionClient
     });
 
     return await data.shift.delete(parsedInput.id);
+  });
+
+export const deleteShiftInstance = actionClient
+  .inputSchema(serverShiftInstanceDeleteSchema)
+  .action(async ({ parsedInput }) => {
+    const data = await getDataClient({
+      orgUId: parsedInput.organizationUnitId,
+    });
+
+    return await data.shift.deleteInstance(
+      parsedInput.instanceId,
+      parsedInput.applyToAllFuture,
+    );
   });
 
 const updateShiftVolunteersSchema = z.object({
