@@ -654,7 +654,9 @@ export class ShiftService {
       this.db.query.shiftInstances.findMany({
         where,
         with: { master: true },
-        orderBy: { actualStartsAt: 'asc' },
+        // Tie-break on id so instances sharing the same actualStartsAt keep a
+        // stable order across pages instead of an arbitrary DB-chosen order.
+        orderBy: { actualStartsAt: 'asc', id: 'asc' },
         limit,
         offset,
       }),
