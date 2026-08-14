@@ -1,5 +1,6 @@
 import { JoinStatus } from '@repo/data';
 import { getTranslations } from 'next-intl/server';
+import { OrgPageHeader } from '@/domain/org-unit/components/org-page-header';
 import type { RequiredFormItem } from '@/domain/requirement-form/components/required-form-renderer';
 import { redirect } from '@/i18n/navigation';
 import { getSession } from '@/lib/auth-server';
@@ -66,8 +67,9 @@ export default async function JoinFormsPage({
   );
 
   return (
-    <div className="min-h-screen bg-muted/30 py-10 px-4">
-      <div className="mx-auto max-w-2xl">
+    <div className="min-h-screen bg-muted/30">
+      <OrgPageHeader logoUrl={orgUnit.logoUrl} />
+      <div className="mx-auto max-w-2xl px-4 py-10">
         <JoinFormsClient
           orgUId={orgUId}
           orgName={orgUnit.name}
