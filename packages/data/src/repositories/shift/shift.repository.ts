@@ -190,10 +190,15 @@ export class ShiftRepository extends BaseRepository {
     return data.shiftInstances;
   }
 
-  async findForWeek(from: Date, to: Date): Promise<WeeklyShiftInstance[]> {
+  async findForWeek(
+    from: Date,
+    to: Date,
+    eventId?: string | null,
+  ): Promise<WeeklyShiftInstance[]> {
     const data = await this.sdk.GetWeeklyShifts({
       from: from.toISOString(),
       to: to.toISOString(),
+      eventId: eventId ?? undefined,
     });
     return data.weeklyShifts;
   }
