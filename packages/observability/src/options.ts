@@ -40,6 +40,6 @@ export function buildBaseOptions(input: BaseOptionsInput): SharedSentryOptions {
       override: input.tracesSampleRateOverride,
     }),
     beforeSend: (event: ErrorEvent) => scrubEvent(event),
-    beforeSendTransaction: (event: TransactionEvent) => event,
+    beforeSendTransaction: (event: TransactionEvent) => scrubEvent(event),
   };
 }

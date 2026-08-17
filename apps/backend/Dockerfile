@@ -1,3 +1,4 @@
+# syntax=docker/dockerfile:1
 FROM ghcr.io/holi-social/mirror/oven-bun:1 AS builder
 
 WORKDIR /app
@@ -10,9 +11,13 @@ COPY apps/backend ./apps/backend
 COPY apps/frontend/package.json ./apps/frontend/package.json
 COPY packages/data ./packages/data
 COPY packages/ui ./packages/ui
+COPY packages/observability ./packages/observability
 COPY packages/typescript-config ./packages/typescript-config
 
 RUN bun install --frozen-lockfile
+
+# Build @repo/observability (dist/ is dockerignored, so it must be built in-image)
+RUN bun run --cwd packages/observability build
 
 # Build the NestJS backend
 WORKDIR /app/apps/backend
@@ -44,9 +49,15 @@ COPY apps/backend ./apps/backend
 COPY apps/frontend/package.json ./apps/frontend/package.json
 COPY packages/data ./packages/data
 COPY packages/ui ./packages/ui
+COPY packages/observability ./packages/observability
 COPY packages/typescript-config ./packages/typescript-config
+# Compiled @repo/observability output (dist/ is dockerignored — built in the builder stage)
+COPY --from=builder /app/packages/observability/dist ./packages/observability/dist
 
 RUN bun install --frozen-lockfile --production --ignore-scripts
+
+ARG SENTRY_RELEASE
+ENV SENTRY_RELEASE=${SENTRY_RELEASE}
 
 WORKDIR /app/apps/backend
 

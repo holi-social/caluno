@@ -32,4 +32,22 @@ describe('createTracesSampler', () => {
     expect(sampler({ name: 'POST /graphql' } as never)).toBe(0.9);
     expect(sampler({ name: 'GET /api/health' } as never)).toBe(0);
   });
+  it('keeps continued traces at the env rate when the parent was sampled', () => {
+    const sampler = createTracesSampler({ environment: 'production' });
+    expect(
+      sampler({ name: 'POST /graphql', parentSampled: true } as never),
+    ).toBe(0.1);
+  });
+  it('drops continued traces when the parent was not sampled', () => {
+    const sampler = createTracesSampler({ environment: 'production' });
+    expect(
+      sampler({ name: 'POST /graphql', parentSampled: false } as never),
+    ).toBe(0);
+  });
+  it('drops ignored routes even when the parent was sampled', () => {
+    const sampler = createTracesSampler({ environment: 'production' });
+    expect(
+      sampler({ name: 'GET /api/health', parentSampled: true } as never),
+    ).toBe(0);
+  });
 });
