@@ -11,7 +11,8 @@ export function validateSentryEnv(
     try {
       new URL(dsn);
     } catch {
-      throw new Error(`SENTRY_DSN is not a valid URL: ${dsn}`);
+      // Do not echo the malformed value — it may contain credentials.
+      throw new Error('SENTRY_DSN is not a valid URL');
     }
   }
   const rate = config.SENTRY_TRACES_SAMPLE_RATE;

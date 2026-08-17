@@ -18,6 +18,14 @@ describe('validateSentryEnv', () => {
       'SENTRY_DSN',
     );
   });
+  it('does not echo the malformed DSN value in the error', () => {
+    expect(() => validateSentryEnv({ SENTRY_DSN: 'not-a-url' })).toThrow(
+      'SENTRY_DSN is not a valid URL',
+    );
+    expect(() => validateSentryEnv({ SENTRY_DSN: 'not-a-url' })).not.toThrow(
+      'not-a-url',
+    );
+  });
   it('rejects an out-of-range sample rate', () => {
     expect(() => validateSentryEnv({ SENTRY_TRACES_SAMPLE_RATE: '2' })).toThrow(
       'SENTRY_TRACES_SAMPLE_RATE',

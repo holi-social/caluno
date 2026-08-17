@@ -95,5 +95,7 @@ function stripLocalePrefix(pathname: string): string {
 }
 
 export const config = {
+  // The `sentry-tunnel` exclusion is prefix-based: no app route may ever use
+  // the `sentry-tunnel` prefix, or it would silently bypass this middleware.
   matcher: ['/((?!api|_next|_vercel|sentry-tunnel|.*\\..*).*)'],
 };

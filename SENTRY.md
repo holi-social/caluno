@@ -42,18 +42,18 @@ To test end-to-end:
 - After deploy, the `sentry:finalize-staging` / `sentry:finalize-production` CI
   jobs run `sentry-cli releases set-commits --auto` (associates commits, enables
   suspect commits) and `sentry-cli releases finalize`.
-- `SENTRY_RELEASE` must **also be set at runtime** (deployment environment) so
-  events carry the release tag. Wiring it via Terraform in `packages/infra` is a
-  paired follow-up — until then events may lack release tags.
+- `SENTRY_RELEASE` is **baked into the runner images** (`ENV SENTRY_RELEASE`
+  from the CI build arg), so runtime events carry the release tag matching the
+  image SHA — no extra deployment wiring needed.
 
 ## Environment variables
 
 | Variable | Where set | Public vs secret |
 |---|---|---|
-| `NEXT_PUBLIC_SENTRY_DSN` | GitLab CI/CD variable (build arg); local `.env` for testing | **Public by design** — ships in the client bundle |
+| `NEXT_PUBLIC_SENTRY_DSN` | GitLab CI/CD variable (build arg); local `.env.local` for testing | **Public by design** — ships in the client bundle |
 | `NEXT_PUBLIC_SENTRY_ENVIRONMENT` | GitLab CI (staging/production) | Public |
-| `NEXT_PUBLIC_SENTRY_TRACES_SAMPLE_RATE` | Optional, local `.env` / CI | Public |
-| `NEXT_PUBLIC_SENTRY_REPLAY_ENABLED` | Optional, local `.env` / runtime env | Public |
+| `NEXT_PUBLIC_SENTRY_TRACES_SAMPLE_RATE` | Optional, local `.env.local` / CI | Public |
+| `NEXT_PUBLIC_SENTRY_REPLAY_ENABLED` | Optional, local `.env.local` / runtime env | Public |
 | `SENTRY_DSN` | Runtime env (backend; frontend server runtime, falls back to `NEXT_PUBLIC_SENTRY_DSN`) | Server-side only (not secret, but never exposed to the client) |
 | `SENTRY_ENVIRONMENT` | Runtime env | Server-side only |
 | `SENTRY_RELEASE` | CI build arg + runtime env | Not secret |
@@ -61,7 +61,7 @@ To test end-to-end:
 | `SENTRY_ORG` | GitLab CI/CD variable | Not secret |
 | `SENTRY_PROJECT_FRONTEND` | GitLab CI/CD variable | Not secret |
 | `SENTRY_PROJECT_BACKEND` | GitLab CI/CD variable | Not secret |
-| `SENTRY_AUTH_TOKEN` | GitLab CI/CD variable (**masked**) — the only place it exists | **Secret** — never commit, never set locally |
+| `SENTRY_AUTH_TOKEN` | GitLab CI/CD variable (**Masked AND Protected**) — the only place it exists | **Secret** — never commit, never set locally |
 
 ## Sampling knobs
 
@@ -113,9 +113,9 @@ Not config-as-code — done once in the Sentry UI:
 - [ ] Issue ownership rules (path-based code owners).
 - [ ] Link the **GitLab repository integration** — required for
       `set-commits --auto` to resolve commits.
-- [ ] Create GitLab CI/CD variables: `SENTRY_AUTH_TOKEN` (**masked**),
-      `SENTRY_ORG`, `SENTRY_PROJECT_FRONTEND`, `SENTRY_PROJECT_BACKEND`,
-      `NEXT_PUBLIC_SENTRY_DSN`.
+- [ ] Create GitLab CI/CD variables: `SENTRY_AUTH_TOKEN` (**Masked AND
+      Protected**), `SENTRY_ORG`, `SENTRY_PROJECT_FRONTEND`,
+      `SENTRY_PROJECT_BACKEND`, `NEXT_PUBLIC_SENTRY_DSN`.
 
 ## Session Replay
 

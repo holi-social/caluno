@@ -29,9 +29,18 @@ export function createTracesSampler(options: {
   const overrideRate = parseSampleRate(options.override);
   return (samplingContext) => {
     const name = samplingContext.name ?? '';
+    // Health-check/noise drops win over everything, including an upstream
+    // sampling decision.
     if (IGNORED_TRANSACTION_PATTERNS.some((pattern) => pattern.test(name))) {
       return 0;
     }
-    return overrideRate ?? DEFAULT_TRACES_SAMPLE_RATES[options.environment];
+    const rate =
+      overrideRate ?? DEFAULT_TRACES_SAMPLE_RATES[options.environment];
+    // Respect the upstream (distributed trace) sampling decision so continued
+    // traces stay complete instead of being re-sampled at the local rate.
+    if (typeof samplingContext.parentSampled === 'boolean') {
+      return samplingContext.parentSampled ? rate : 0;
+    }
+    return rate;
   };
 }

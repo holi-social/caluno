@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'bun:test';
-import type { ErrorEvent } from '@sentry/core';
+import type { ErrorEvent, TransactionEvent } from '@sentry/core';
 import { scrubEvent } from './scrub';
 
 describe('scrubEvent', () => {
@@ -30,5 +30,24 @@ describe('scrubEvent', () => {
       },
     } as unknown as ErrorEvent;
     expect(scrubEvent(event).user).toEqual({ id: 'u1' });
+  });
+  it('scrubs transaction events the same way', () => {
+    const event = {
+      type: 'transaction',
+      transaction: 'POST /graphql',
+      request: {
+        headers: {
+          authorization: 'Bearer secret',
+          'content-type': 'application/json',
+        },
+        cookies: { session: 'abc' },
+      },
+      user: { id: 'u1', email: 'a@b.c' },
+    } as unknown as TransactionEvent;
+    const result = scrubEvent(event);
+    expect(result.request?.headers?.authorization).toBe('[Filtered]');
+    expect(result.request?.headers?.['content-type']).toBe('application/json');
+    expect(result.request?.cookies).toBeUndefined();
+    expect(result.user).toEqual({ id: 'u1' });
   });
 });

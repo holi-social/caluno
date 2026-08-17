@@ -9,16 +9,22 @@ import {
   CardTitle,
 } from '@repo/ui';
 import { useTranslations } from 'next-intl';
-import { useEffect } from 'react';
+import { type ReactNode, useEffect } from 'react';
 import { reportError } from '@/lib/report-error';
 
 interface ErrorFallbackProps {
   error: Error & { digest?: string };
   reset: () => void;
+  /** Optional extra action rendered next to the try-again button. */
+  secondaryAction?: ReactNode;
 }
 
 /** Reusable route/segment-level error boundary UI. Generic copy; never shows stack traces. */
-export function ErrorFallback({ error, reset }: ErrorFallbackProps) {
+export function ErrorFallback({
+  error,
+  reset,
+  secondaryAction,
+}: ErrorFallbackProps) {
   const t = useTranslations('Error');
 
   useEffect(() => {
@@ -39,8 +45,9 @@ export function ErrorFallback({ error, reset }: ErrorFallbackProps) {
             </p>
           )}
         </CardContent>
-        <CardFooter className="justify-center">
+        <CardFooter className="justify-center gap-2">
           <Button onClick={reset}>{t('tryAgain')}</Button>
+          {secondaryAction}
         </CardFooter>
       </Card>
     </div>

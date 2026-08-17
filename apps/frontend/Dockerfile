@@ -1,3 +1,4 @@
+# syntax=docker/dockerfile:1
 FROM ghcr.io/holi-social/mirror/oven-bun:1 AS dependencies
 
 WORKDIR /app
@@ -8,6 +9,9 @@ COPY packages ./packages
 
 RUN --mount=type=cache,target=/root/.bun/install/cache \
     bun install --no-save --frozen-lockfile
+
+# Build @repo/observability (dist/ is dockerignored; next build imports its exports)
+RUN bun run --cwd packages/observability build
 
 FROM ghcr.io/holi-social/mirror/oven-bun:1 AS builder
 
@@ -45,6 +49,9 @@ WORKDIR /app
 ENV NODE_ENV=production
 ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
+
+ARG SENTRY_RELEASE
+ENV SENTRY_RELEASE=${SENTRY_RELEASE}
 
 COPY --from=builder --chown=bun:bun /app/apps/frontend/public ./apps/frontend/public
 

@@ -27,4 +27,15 @@ describe('SentryExceptionFilter', () => {
     expect(report).toHaveBeenCalledWith(error, expect.anything());
     report.mockRestore();
   });
+
+  it('defers unexpected errors to SentryGlobalFilter in http context', () => {
+    const filter = new SentryExceptionFilter();
+    const report = jest
+      .spyOn(Object.getPrototypeOf(Object.getPrototypeOf(filter)), 'catch')
+      .mockImplementation(() => undefined);
+    const error = new Error('boom');
+    filter.catch(error, makeHost('http'));
+    expect(report).toHaveBeenCalledWith(error, expect.anything());
+    report.mockRestore();
+  });
 });
