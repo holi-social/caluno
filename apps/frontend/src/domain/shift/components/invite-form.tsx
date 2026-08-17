@@ -26,10 +26,6 @@ import { useEffect, useId, useTransition } from 'react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 import { MemberSelect } from '@/components/member-select';
-import {
-  getMockPauschaleEligibility,
-  getMockPauschaleUsage,
-} from '@/domain/accounting/mock-rates';
 import { useSession } from '@/lib/auth';
 import { copyToClipboard } from '@/lib/clipboard';
 import {
@@ -39,7 +35,6 @@ import {
 } from '../actions';
 import { type InviteShiftFormValues, inviteShiftFormSchema } from '../schemas';
 import { shiftShareUrl } from '../share';
-import { getMockShiftType } from '../shift-type';
 
 interface InviteShiftFormProps {
   formId?: string;
@@ -116,32 +111,10 @@ export function InviteShiftForm({
   const instanceEndDate = selectedInstance
     ? new Date(selectedInstance.actualEndsAt)
     : null;
-  const shiftHours =
-    instanceStartDate &&
-    instanceEndDate &&
-    Number.isFinite(instanceStartDate.getTime()) &&
-    Number.isFinite(instanceEndDate.getTime())
-      ? (instanceEndDate.getTime() - instanceStartDate.getTime()) /
-        (1000 * 60 * 60)
-      : 0;
-
-  const shiftType = getMockShiftType(shiftId);
-  const pauschaleType = shiftType === 'non-paid' ? null : shiftType;
 
   const allMembers = (memberships ?? [])
     .map((m) => m.user)
-    .filter((u) => u.id !== currentUserId)
-    .map((user) => ({
-      ...user,
-      pauschale:
-        pauschaleType && getMockPauschaleEligibility(user.id)
-          ? {
-              type: pauschaleType,
-              ...getMockPauschaleUsage(user.id, pauschaleType, shiftHours),
-            }
-          : null,
-    }))
-    .sort((a, b) => (a.pauschale ? 0 : 1) - (b.pauschale ? 0 : 1));
+    .filter((u) => u.id !== currentUserId);
 
   const watchedIds = form.watch('invitedMemberIds');
 

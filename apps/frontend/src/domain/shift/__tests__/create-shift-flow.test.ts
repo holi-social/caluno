@@ -28,7 +28,6 @@ const { pickFirstShiftInstanceId, resolveCreateShiftSuccessNavigation } =
 const validCreateInput = {
   organizationUnitId: 'org-unit-1',
   name: 'Morning shift',
-  shiftType: 'non-paid' as const,
   startsAt: new Date('2026-06-24T08:00:00.000Z'),
   endsAt: new Date('2026-06-24T12:00:00.000Z'),
   invitedMemberIds: [] as string[],

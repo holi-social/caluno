@@ -182,11 +182,6 @@
     "inviteByLink": "Per Link einladen",
     "copyToast": "Teile diesen Link mit der Freiwilligen"
   },
-  "UserCard": {
-    "entitled": "Berechtigt",
-    "amountLeft": "{amount}€ übrig",
-    "amountProjected": "{amount}€ prognostiziert"
-  },
   "QRScanner": {
     "error": {
       "noPermission": {
@@ -515,16 +510,9 @@
     "card": {
       "invited": "Eingeladen",
       "noVolunteers": "Noch keine Freiwilligen eingeladen",
-      "inviteAria": "Freiwillige einladen",
-      "shiftTypeTooltip": {
-        "nonPaid": "Dieser Einsatz wird nicht vergütet.",
-        "ehrenamt": "Vergütet mit Ehrenamtspauschale ({rate} €/Std.)",
-        "uebungleiter": "Vergütet mit Übungsleiterpauschale ({rate} €/Std.)"
-      }
+      "inviteAria": "Freiwillige einladen"
     },
     "form": {
-      "shiftTypeLabel": "Pauschalentyp",
-      "shiftTypeNonPaid": "Ohne Pauschale",
       "nameLabel": "Einsatzname",
       "namePlaceholder": "z. B. Morgendliche Kassaeinsatz",
       "dateTimeLabel": "Datum und Uhrzeit",
