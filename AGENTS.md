@@ -11,6 +11,7 @@ Mono-repo powered by TurboRepo.
 └── packages                # Shared code imported by the apps and services
     ├── data                # Shared data library - graphQL queries and mutations
     ├── infra               # Terraform config for deploying the services and apps
+    ├── observability       # Shared Sentry config builders (@repo/observability) consumed by both apps
     ├── typescript-config   # Shared typescript config
     └── ui                  # Shared react components and styles - shadcn, tailwind, storybook
 ```
