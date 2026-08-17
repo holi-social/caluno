@@ -1114,6 +1114,7 @@
       "deleteAria": "Delete",
       "deleteDialog": {
         "description": "This shift is part of a series. Choose whether to delete just this shift or every upcoming shift.",
+        "oneTimeDescription": "This is a one-time shift instance. Are you sure you want to delete it?",
         "error": "Failed to delete shift instance. {error}",
         "futureDescription": "Deletes this shift and every upcoming occurrence in the series. Past occurrences are kept.",
         "futureTitle": "This and all future shifts",
