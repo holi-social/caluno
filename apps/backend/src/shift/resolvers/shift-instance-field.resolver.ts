@@ -15,6 +15,8 @@ import { PERMISSIONS } from '../../auth/constants';
 import { Permissions } from '../../auth/decorators/permissions.decorator';
 import { Loader } from '../../graphql/decorators';
 import type { AuthenticatedGraphQLContext } from '../../graphql/graphql.context';
+import { RequiredFormRef } from '../../organization/models/organization-unit-required-form.model';
+import { RequiredFormRefMapper } from '../../requirement-profile/mappers/required-form-ref.mapper';
 import { UserMapper } from '../../user/mappers/user.mapper';
 import { User } from '../../user/models/user.model';
 import { ShiftInviteStatus } from '../enums';
@@ -29,6 +31,7 @@ import { ShiftService } from '../shift.service';
 import { ShiftInstanceInvitesLoader } from './loader';
 import { ShiftLoader } from './shift.loader';
 import { ShiftInstanceLoader } from './shift-instance.loader';
+import { ShiftInstanceRequiredFormsLoader } from './shift-instance-required-forms.loader';
 
 @Resolver(() => ShiftInstance)
 export class ShiftInstanceFieldResolver {
@@ -37,6 +40,7 @@ export class ShiftInstanceFieldResolver {
     private readonly shiftMapper: ShiftMapper,
     private readonly userMapper: UserMapper,
     private readonly shiftInstanceInviteMapper: ShiftInstanceInviteMapper,
+    private readonly requiredFormRefMapper: RequiredFormRefMapper,
   ) {}
 
   @AllowAnonymous()
@@ -171,5 +175,29 @@ export class ShiftInstanceFieldResolver {
     return loader.isIntendingToJoinByKey.load(
       `${instance.id}::${session.user.id}`,
     );
+  }
+
+  @AllowAnonymous()
+  @ResolveField(() => Int)
+  async requiredFormsCount(
+    @Parent() instance: ShiftInstanceEntity,
+    @Loader(ShiftInstanceRequiredFormsLoader)
+    loader: ShiftInstanceRequiredFormsLoader,
+  ): Promise<number> {
+    return loader.countByShiftInstanceId.load(instance.id);
+  }
+
+  @AllowAnonymous()
+  @ResolveField(() => [RequiredFormRef])
+  async requiredForms(
+    @Parent() instance: ShiftInstanceEntity,
+    @Loader(ShiftInstanceRequiredFormsLoader)
+    loader: ShiftInstanceRequiredFormsLoader,
+  ): Promise<RequiredFormRef[]> {
+    const requiredForms = await loader.requiredFormsByShiftInstanceId.load(
+      instance.id,
+    );
+
+    return this.requiredFormRefMapper.toArray(requiredForms);
   }
 }

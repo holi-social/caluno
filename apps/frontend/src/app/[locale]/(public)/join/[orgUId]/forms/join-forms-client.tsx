@@ -38,7 +38,7 @@ export function JoinFormsClient({
 
       if (result.status === JoinStatus.Joined) {
         toast.success(t('joined'));
-        router.push(getSafeRedirect(redirectTo) ?? `/admin/${orgUId}`);
+        router.push(getSafeRedirect(redirectTo, `/admin/${orgUId}`));
       } else if (result.status === JoinStatus.Pending) {
         toast.success(t('requestPending'));
         router.push(`/invite/${orgUId}`);

@@ -837,6 +837,86 @@ describe('eventInvites', () => {
   });
 });
 
+describe('events (admin list)', () => {
+  let app: INestApplication;
+  let db: Database;
+  let organizationUnitId: string;
+
+  beforeAll(async () => {
+    const context = await getGraphqlTestContext();
+    app = context.app;
+    db = context.db;
+    organizationUnitId = context.organizationUnitId;
+  });
+
+  const eventsQuery = `
+    query Events($limit: Int!, $offset: Int!) {
+      events(limit: $limit, offset: $offset) {
+        items {
+          id
+          signedUpCount
+        }
+      }
+    }
+  `;
+
+  it('counts only active invites toward signedUpCount', async () => {
+    const event = await createEvent(db, { organizationUnitId });
+    const statuses = [
+      EventInviteStatus.INVITED,
+      EventInviteStatus.ACCEPTED,
+      EventInviteStatus.SELF_JOINED,
+      EventInviteStatus.VOLUNTEER_REJECTED,
+      EventInviteStatus.ADMIN_REJECTED,
+      EventInviteStatus.CANCELLED,
+    ];
+    for (const status of statuses) {
+      const user = await createUser(db);
+      await db.insert(schema.eventInvites).values({
+        eventId: event.id,
+        userId: user.id,
+        status,
+      });
+    }
+
+    const data = await graphqlRequestRequiringData<{
+      events: { items: Array<{ id: string; signedUpCount: number }> };
+    }>(
+      app,
+      {
+        query: eventsQuery,
+        // Large limit: this org unit accumulates events from other describe
+        // blocks in this file, so we can't rely on the default page size.
+        variables: { limit: 500, offset: 0 },
+        headers: { 'x-organization-unit-id': organizationUnitId },
+      },
+      'events',
+    );
+
+    const found = data.events.items.find((item) => item.id === event.id);
+    expect(found?.signedUpCount).toBe(3);
+  });
+
+  it('returns zero when an event has no invites', async () => {
+    const event = await createEvent(db, { organizationUnitId });
+
+    const data = await graphqlRequestRequiringData<{
+      events: { items: Array<{ id: string; signedUpCount: number }> };
+    }>(
+      app,
+      {
+        query: eventsQuery,
+        variables: { limit: 500, offset: 0 },
+        headers: { 'x-organization-unit-id': organizationUnitId },
+      },
+      'events',
+    );
+
+    const found = data.events.items.find((item) => item.id === event.id);
+    expect(found?.signedUpCount).toBe(0);
+  });
+});
+
 describe('updateEventInviteStatus (admin uninvite)', () => {
   let app: INestApplication;
   let db: Database;

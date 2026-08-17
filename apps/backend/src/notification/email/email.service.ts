@@ -1,5 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import * as nodemailer from 'nodemailer';
 
 export interface EmailSendOptions {
   to: string;
@@ -16,30 +17,70 @@ interface ScalewayConfig {
   fromName?: string;
 }
 
+interface SmtpConfig {
+  host: string;
+  port: number;
+  fromEmail: string;
+  fromName?: string;
+}
+
 @Injectable()
 export class EmailService {
   private readonly logger = new Logger(EmailService.name);
-  private readonly scaleway: ScalewayConfig | null;
+  private readonly scaleway: ScalewayConfig | null = null;
+  private readonly smtp: SmtpConfig | null = null;
+  private transporter: nodemailer.Transporter | null = null;
 
   constructor(private readonly configService: ConfigService) {
     const secretKey = this.configService.get<string>('TEM_SECRET_KEY');
+    const smtpHost = this.configService.get<string>('SMTP_HOST');
+    const smtpPort = this.configService.get<string>('SMTP_PORT');
 
-    if (!secretKey) {
-      this.scaleway = null;
-      return;
+    if (secretKey) {
+      this.scaleway = {
+        secretKey,
+        projectId: this.configService.getOrThrow<string>('PROJECT_ID'),
+        region: this.configService.getOrThrow<string>('TEM_REGION'),
+        fromEmail: 'noreply@caluno.org',
+        fromName: 'Caluno',
+      };
+    } else if (smtpHost && smtpPort) {
+      this.smtp = {
+        host: smtpHost,
+        port: parseInt(smtpPort, 10),
+        fromEmail: 'noreply@caluno.org',
+        fromName: 'Caluno',
+      };
+      this.transporter = nodemailer.createTransport({
+        host: this.smtp.host,
+        port: this.smtp.port,
+        ignoreTLS: true,
+      });
     }
-
-    this.scaleway = {
-      secretKey,
-      projectId: this.configService.getOrThrow<string>('PROJECT_ID'),
-      region: this.configService.getOrThrow<string>('TEM_REGION'),
-      fromEmail: 'noreply@caluno.org',
-      fromName: 'Caluno',
-    };
   }
 
   async send(options: EmailSendOptions): Promise<void> {
     const maskedTo = this.maskEmail(options.to);
+
+    if (this.transporter && this.smtp) {
+      try {
+        await this.transporter.sendMail({
+          from: `"${this.smtp.fromName}" <${this.smtp.fromEmail}>`,
+          to: options.to,
+          subject: options.subject,
+          html: options.html,
+          text: options.text ?? this.htmlToText(options.html),
+        });
+        this.logger.debug(`Email sent to ${maskedTo} via SMTP`);
+        return;
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        this.logger.error(
+          `Failed to send email to ${maskedTo} via SMTP: ${message}`,
+        );
+        throw new Error('Failed to send email');
+      }
+    }
 
     if (!this.scaleway) {
       this.logger.log(

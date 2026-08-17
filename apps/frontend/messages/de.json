@@ -132,8 +132,12 @@
       "deleteAria": "Löschen",
       "editAria": "Bearbeiten",
       "inviteAria": "Einladen",
-      "shareAria": "Link kopieren",
-      "viewAria": "Ansehen"
+      "shareAria": "Link kopieren"
+    },
+    "card": {
+      "pill": "{shiftsCount, plural, =0 {Keine Einsätze} one {1 Einsatz} other {# Einsätze}}{formsCount, plural, =0 {} one { · 1 Formular} other { · # Formulare}}",
+      "viewButton": "Veranstaltung ansehen",
+      "volunteers": "{count, plural, one {1 Freiwillige/r angemeldet} other {# Freiwillige angemeldet}}"
     },
     "deleteDialog": {
       "confirm": "Löschen",
@@ -249,13 +253,6 @@
       "createTitle": "Veranstaltung erstellen",
       "editDescription": "Aktualisiere die Details der Veranstaltung.",
       "editTitle": "Veranstaltung bearbeiten"
-    },
-    "table": {
-      "dates": "Datum",
-      "event": "Veranstaltung",
-      "location": "Ort",
-      "requiredForms": "Formulare",
-      "shifts": "Einsätze"
     },
     "toast": {
       "created": "Veranstaltung erstellt",

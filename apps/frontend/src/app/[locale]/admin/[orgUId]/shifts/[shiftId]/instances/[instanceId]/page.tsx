@@ -1,6 +1,6 @@
 import { PermissionKey, ShiftVisibility } from '@repo/data';
 import { Button } from '@repo/ui';
-import { Trash2 } from 'lucide-react';
+import { ArrowLeft, Trash2 } from 'lucide-react';
 import { notFound } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
 import {
@@ -11,8 +11,13 @@ import { DeleteShiftInstanceDialog } from '@/domain/shift/components/delete-shif
 import ShareLinkButton from '@/domain/shift/components/share-link-button';
 import { ShiftInstanceInformationCard } from '@/domain/shift/components/shift-instance-information-card';
 import { ShiftInstanceMetaCard } from '@/domain/shift/components/shift-instance-meta-card';
+import { ShiftInstanceRequiredFormsPopover } from '@/domain/shift/components/shift-instance-required-forms-popover';
 import { ShiftInstanceVolunteersPanel } from '@/domain/shift/components/shift-instance-volunteers-panel';
-import { shiftInstanceEditPath } from '@/domain/shift/routes';
+import {
+  parseShiftListQuery,
+  shiftDetailPath,
+  shiftInstanceEditPath,
+} from '@/domain/shift/routes';
 import { Link } from '@/i18n/navigation';
 import { getDataClient } from '@/lib/data-client';
 import { requireOrgAccess } from '@/lib/org-context-server';
@@ -20,12 +25,19 @@ import { checkPermission } from '@/lib/permissions-server';
 
 interface ShiftInstanceDetailPageProps {
   params: Promise<{ orgUId: string; shiftId: string; instanceId: string }>;
+  searchParams: Promise<{
+    view?: string;
+    week?: string;
+    page?: string;
+  }>;
 }
 
 export default async function ShiftInstanceDetailPage({
   params,
+  searchParams,
 }: ShiftInstanceDetailPageProps) {
   const { orgUId, shiftId, instanceId } = await params;
+  const returnQuery = parseShiftListQuery(await searchParams);
   await requireOrgAccess(orgUId);
   const [canManage = false] = await checkPermission(
     orgUId,
@@ -56,16 +68,25 @@ export default async function ShiftInstanceDetailPage({
           <h1 className="page-title line-clamp-2">{title}</h1>
         </div>
         <div className="flex shrink-0 flex-wrap gap-2">
-          {isOpenShift ? (
-            <div className="flex shrink-0 flex-wrap gap-2">
-              <ShareLinkButton
-                size="sm"
-                shiftId={shiftId}
-                instanceId={instanceId}
-                label={t('instanceDetail.inviteLink')}
-              />
-            </div>
-          ) : null}
+          <Button asChild variant="outline" size="sm">
+            <Link href={shiftDetailPath(orgUId, shiftId, returnQuery)}>
+              <ArrowLeft />
+              {t('instanceDetail.backToShift')}
+            </Link>
+          </Button>
+
+          <ShiftInstanceRequiredFormsPopover
+            orgUId={orgUId}
+            instanceId={instanceId}
+          />
+          {isOpenShift && (
+            <ShareLinkButton
+              size="sm"
+              shiftId={shiftId}
+              instanceId={instanceId}
+              label={t('instanceDetail.inviteLink')}
+            />
+          )}
 
           {canManage ? (
             <DeleteShiftInstanceDialog

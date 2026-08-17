@@ -2,6 +2,7 @@ import { JoinStatus } from '@repo/data';
 import { getTranslations } from 'next-intl/server';
 import { OrgPageHeader } from '@/domain/org-unit/components/org-page-header';
 import type { RequiredFormItem } from '@/domain/requirement-form/components/required-form-renderer';
+import { buildSubmittedFormIds } from '@/domain/requirement-form/resolve-required-forms';
 import { redirect } from '@/i18n/navigation';
 import { getSession } from '@/lib/auth-server';
 import { getDataClient } from '@/lib/data-client';
@@ -47,24 +48,14 @@ export default async function JoinFormsPage({
 
   if (joinResult?.status === JoinStatus.Joined) {
     redirect({
-      href: getSafeRedirect(redirectTo) ?? `/admin/${orgUId}`,
+      href: getSafeRedirect(redirectTo, `/admin/${orgUId}`),
       locale,
     });
   }
 
-  const profileData =
-    userProfile?.data &&
-    typeof userProfile.data === 'object' &&
-    !Array.isArray(userProfile.data)
-      ? (userProfile.data as Record<string, string>)
-      : {};
+  const profileData = (userProfile?.data ?? {}) as Record<string, string>;
 
-  const submittedFormIds = new Set<string>(
-    submissionsResult
-      .filter((s) => s.status === 'SUBMITTED')
-      .map((s) => s.form?.id)
-      .filter((id): id is string => Boolean(id)),
-  );
+  const submittedFormIds = buildSubmittedFormIds(submissionsResult);
 
   return (
     <div className="min-h-screen bg-muted/30">

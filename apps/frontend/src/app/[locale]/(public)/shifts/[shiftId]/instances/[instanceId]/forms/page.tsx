@@ -1,4 +1,9 @@
-import { type DataClient, DataError, JoinStatus } from '@repo/data';
+import {
+  type DataClient,
+  DataError,
+  JoinStatus,
+  RequiredFormTargetType,
+} from '@repo/data';
 import { notFound } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
 import { ShiftFormsClient } from '@/app/[locale]/(public)/shifts/[shiftId]/instances/[instanceId]/forms/shift-forms-client';
@@ -55,6 +60,16 @@ export default async function ShiftFormsPage({
     throw error;
   }
 
+  let instance: Awaited<ReturnType<DataClient['shift']['findPublicInstance']>>;
+  try {
+    instance = await data.shift.findPublicInstance(instanceId);
+  } catch (error) {
+    if (error instanceof DataError && error.options?.code === 'NOT_FOUND') {
+      notFound();
+    }
+    throw error;
+  }
+
   const session = await getSession();
   if (!session) {
     const params = new URLSearchParams({
@@ -70,15 +85,29 @@ export default async function ShiftFormsPage({
 
   if (joinResult?.status === JoinStatus.Joined) {
     redirect({
-      href: getSafeRedirect(redirectTo) ?? shiftPublicPath(shiftId, instanceId),
+      href: getSafeRedirect(redirectTo, shiftPublicPath(shiftId, instanceId)),
       locale,
     });
   }
 
-  const requiredForms =
+  const requiredForms: RequiredFormItem[] =
     joinResult?.requiredForms ??
-    shift.requiredForms?.map((ref) => ({ ...ref, submitted: false })) ??
-    [];
+    [
+      ...(instance.requiredForms?.map((ref) => ({
+        form: ref.form,
+        order: ref.order,
+        submitted: false,
+        targetType: RequiredFormTargetType.ShiftInstance,
+        targetId: instanceId,
+      })) ?? []),
+      ...(shift.requiredForms?.map((ref) => ({
+        form: ref.form,
+        order: ref.order,
+        submitted: false,
+        targetType: RequiredFormTargetType.Shift,
+        targetId: shiftId,
+      })) ?? []),
+    ].sort((a, b) => a.order - b.order);
 
   const submittedFormIds = new Set<string>(
     requiredForms
@@ -90,13 +119,7 @@ export default async function ShiftFormsPage({
   let profileData: Record<string, string> = {};
   try {
     const userProfile = await data.requirementForm.getMyUserProfile();
-    if (
-      userProfile?.data &&
-      typeof userProfile.data === 'object' &&
-      !Array.isArray(userProfile.data)
-    ) {
-      profileData = userProfile.data as Record<string, string>;
-    }
+    profileData = (userProfile?.data ?? {}) as Record<string, string>;
   } catch {
     // Ignore profile fetch errors; form will render without prefilled values.
   }
@@ -109,7 +132,7 @@ export default async function ShiftFormsPage({
           shiftId={shiftId}
           instanceId={instanceId}
           shiftTitle={shift.title}
-          requiredForms={requiredForms as RequiredFormItem[]}
+          requiredForms={requiredForms}
           profileData={profileData}
           initialSubmittedFormIds={submittedFormIds}
           redirectTo={redirectTo}

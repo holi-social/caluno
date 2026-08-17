@@ -21,6 +21,7 @@ import {
 } from '../requirement-profile/services/required-form.service';
 import { JoinStatus } from '../shared/enums/join-status.enum';
 import {
+  ACTIVE_EVENT_INVITE_STATUSES,
   ADMIN_LIST_EVENT_INVITE_STATUSES,
   canTransitionInviteStatus,
   PARTICIPATING_EVENT_INVITE_STATUSES,
@@ -728,6 +729,35 @@ export class EventService {
       },
       orderBy: { createdAt: 'desc' },
     });
+  }
+
+  async countInvitesByEventIds(
+    eventIds: string[],
+  ): Promise<Array<{ eventId: string; count: number }>> {
+    if (eventIds.length === 0) {
+      return [];
+    }
+
+    const rows = await this.db
+      .select({
+        eventId: schema.eventInvites.eventId,
+        count: count(),
+      })
+      .from(schema.eventInvites)
+      .where(
+        and(
+          inArray(schema.eventInvites.eventId, eventIds),
+          inArray(schema.eventInvites.status, [
+            ...ACTIVE_EVENT_INVITE_STATUSES,
+          ]),
+        ),
+      )
+      .groupBy(schema.eventInvites.eventId);
+
+    return rows.map((row) => ({
+      eventId: row.eventId,
+      count: Number(row.count),
+    }));
   }
 
   private async setRequiredFormsInTx(

@@ -64,6 +64,15 @@ export class ShiftQueryResolver {
   }
 
   @AllowAnonymous()
+  @Query(() => ShiftInstance)
+  async publicShiftInstance(
+    @Args('id', { type: () => ID }) id: string,
+  ): Promise<ShiftInstance> {
+    const instance = await this.shiftService.findPublicInstance(id);
+    return this.shiftInstanceMapper.toModelOrThrow(instance);
+  }
+
+  @AllowAnonymous()
   @Query(() => [Shift])
   async publicShiftsByOrganizationUnit(
     @Args('organizationUnitId', { type: () => ID }) organizationUnitId: string,

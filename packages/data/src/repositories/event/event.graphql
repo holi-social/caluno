@@ -4,9 +4,10 @@ fragment EventListFields on Event {
   slug
   startsAt
   endsAt
-  location
   shiftsCount
   requiredFormsCount
+  coverUrl
+  signedUpCount
 }
 
 fragment RequiredFormFields on RequirementForm {
@@ -78,6 +79,7 @@ fragment RequiredFormWithStatusFields on RequiredFormWithStatus {
 fragment EventDetailFields on Event {
   ...EventListFields
   createdAt
+  location
   organizer {
     id
     name
@@ -203,6 +205,10 @@ fragment PublicEventOrganizationUnitFields on EventOrganizationUnit {
   name
   slug
   logoUrl
+  myMembershipState
+  requiredForms {
+    ...RequiredFormRefFields
+  }
 }
 
 fragment PublicShiftInstanceFields on ShiftInstance {
