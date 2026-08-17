@@ -103,8 +103,8 @@ describe('ShiftService.findShiftsForWeek', () => {
     const instanceId = instances[0]?.id;
     expect(instanceId).toBeDefined();
 
-    const from = new Date('2026-06-15T00:00:00.000Z');
-    const to = new Date('2026-06-22T00:00:00.000Z');
+    const startsAfter = new Date('2026-06-15T00:00:00.000Z');
+    const endsBefore = new Date('2026-06-22T00:00:00.000Z');
 
     const weekData = await graphqlRequestRequiringData<{
       weeklyShifts: Array<{ id: string }>;
@@ -112,15 +112,15 @@ describe('ShiftService.findShiftsForWeek', () => {
       app,
       {
         query: `
-          query WeeklyShifts($from: DateTime!, $to: DateTime!) {
-            weeklyShifts(from: $from, to: $to) {
+          query WeeklyShifts($startsAfter: DateTime!, $endsBefore: DateTime!) {
+            weeklyShifts(startsAfter: $startsAfter, endsBefore: $endsBefore) {
               id
             }
           }
         `,
         variables: {
-          from: from.toISOString(),
-          to: to.toISOString(),
+          startsAfter: startsAfter.toISOString(),
+          endsBefore: endsBefore.toISOString(),
         },
         headers: {
           'x-organization-unit-id': organizationUnitId,
@@ -141,15 +141,15 @@ describe('ShiftService.findShiftsForWeek', () => {
       app,
       {
         query: `
-          query WeeklyShifts($from: DateTime!, $to: DateTime!) {
-            weeklyShifts(from: $from, to: $to) {
+          query WeeklyShifts($startsAfter: DateTime!, $endsBefore: DateTime!) {
+            weeklyShifts(startsAfter: $startsAfter, endsBefore: $endsBefore) {
               id
             }
           }
         `,
         variables: {
-          from: from.toISOString(),
-          to: to.toISOString(),
+          startsAfter: startsAfter.toISOString(),
+          endsBefore: endsBefore.toISOString(),
         },
         headers: {
           'x-organization-unit-id': organizationUnitId,

@@ -370,9 +370,9 @@ export class ShiftService {
       await this.getAccessibleOrganizationUnitIds(userId);
 
     const dateCondition = this.buildMyShiftDateCondition(
-      includePast,
       startsAfter,
       endsBefore,
+      includePast,
     );
 
     if (!includeIntended) {
@@ -573,9 +573,9 @@ export class ShiftService {
   }
 
   private buildMyShiftDateCondition(
-    includePast: boolean,
     startsAfter: Date | null,
     endsBefore: Date | null,
+    includePast: boolean = true,
   ): Record<string, unknown> {
     if (endsBefore) {
       return { actualEndsAt: { lt: endsBefore } };
@@ -2205,8 +2205,10 @@ export class ShiftService {
 
   async findShiftsForWeek(
     organizationUnitId: string,
-    from: Date,
-    to: Date,
+    startsAfter: Date | null,
+    endsBefore: Date | null,
+    limit: number,
+    offset: number,
   ): Promise<ShiftInstanceEntity[]> {
     const shifts = await this.db.query.shifts.findMany({
       where: { organizationUnitId, isDeleted: false },
@@ -2215,13 +2217,20 @@ export class ShiftService {
     const shiftIds = shifts.map((s) => s.id);
     if (shiftIds.length === 0) return [];
 
+    const dateCondition = this.buildMyShiftDateCondition(
+      startsAfter,
+      endsBefore,
+    );
+
     return this.db.query.shiftInstances.findMany({
       where: {
         masterId: { in: shiftIds },
-        actualStartsAt: { gte: from, lt: to },
+        ...dateCondition,
         isCancelled: false,
       },
       with: { master: true },
+      limit,
+      offset,
       orderBy: { actualStartsAt: 'asc' },
     });
   }
