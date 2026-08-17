@@ -76,22 +76,34 @@ const INVOICE_KOSTENSTELLE: Partial<Record<TemplateSlug, string>> = {
   'uebungsleiterpauschale-invoice': 'K-4200',
 };
 
-// Demonstrates the agreement-task-description setting end to end in the mock data — the other
-// three saved templates keep the default (the shift's own name).
+// Demonstrates the Custom first-column setting end to end in the mock data — the other three
+// saved templates keep the default (the task description from the agreement).
 const INVOICE_FIRST_COLUMN_SOURCE: Partial<
   Record<TemplateSlug, TableFirstColumnSource>
 > = {
-  'uebungsleiterpauschale-invoice': 'agreement_task_description',
+  'uebungsleiterpauschale-invoice': 'custom',
 };
+
+const INVOICE_FIRST_COLUMN_CUSTOM_LABEL: Partial<Record<TemplateSlug, string>> =
+  {
+    'uebungsleiterpauschale-invoice': 'Vereinsarbeit',
+  };
 
 function withFirstColumnSource(
   doc: TemplateDocument,
   source: TableFirstColumnSource,
+  customLabel?: string,
 ): TemplateDocument {
   return {
     ...doc,
     blocks: doc.blocks.map((b) =>
-      b.kind === 'table' ? { ...b, firstColumnSource: source } : b,
+      b.kind === 'table'
+        ? {
+            ...b,
+            firstColumnSource: source,
+            firstColumnCustomLabel: customLabel ?? b.firstColumnCustomLabel,
+          }
+        : b,
     ),
   };
 }
@@ -115,7 +127,11 @@ function buildInvoiceTemplate(
 ): TemplateDocument {
   const firstColumnSource = INVOICE_FIRST_COLUMN_SOURCE[slug];
   const base = firstColumnSource
-    ? withFirstColumnSource(getInvoiceDocument(pauschale), firstColumnSource)
+    ? withFirstColumnSource(
+        getInvoiceDocument(pauschale),
+        firstColumnSource,
+        INVOICE_FIRST_COLUMN_CUSTOM_LABEL[slug],
+      )
     : getInvoiceDocument(pauschale);
   const kostenstelle = INVOICE_KOSTENSTELLE[slug];
   if (!kostenstelle) return base;

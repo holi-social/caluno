@@ -158,6 +158,8 @@ interface GeneratedDocumentPreviewProps {
   /** Real timesheet rows for the invoice table, replacing the builder's blank preview rows. */
   tableRows?: string[][];
   tableTotalRow?: string[];
+  /** A fixed statement row shown under the total row — e.g. the 0% VAT notice, never bold like the total. */
+  tableNoteRow?: string[];
   /**
    * Label for a bound source with no value yet (e.g. "IBAN (Volunteer)") — used by the
    * template builder, where most sources have no volunteer/period to resolve against.
@@ -190,6 +192,7 @@ export function GeneratedDocumentPreview({
   manualOverrides = {},
   tableRows,
   tableTotalRow,
+  tableNoteRow,
   unresolvedLabels = {},
   gapSources = new Set(),
   className,
@@ -310,8 +313,34 @@ export function GeneratedDocumentPreview({
                           ))}
                         </tr>
                       )}
+                      {tableNoteRow && (
+                        <tr className="text-muted-foreground">
+                          {tableNoteRow.map((cell, i) => (
+                            <td
+                              key={block.columns[i] ?? cell}
+                              className="border border-border px-2 py-1"
+                            >
+                              {cell}
+                            </td>
+                          ))}
+                        </tr>
+                      )}
                     </tbody>
                   </table>
+                </div>
+              );
+            }
+
+            if (block.kind === 'note') {
+              return (
+                <div key={block.id} className="rounded-md border p-2">
+                  <LineRow
+                    line={block.line}
+                    values={values}
+                    manualOverrides={manualOverrides}
+                    unresolvedLabels={unresolvedLabels}
+                    gapSources={gapSources}
+                  />
                 </div>
               );
             }

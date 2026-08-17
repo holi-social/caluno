@@ -46,6 +46,8 @@ export interface InvoiceCardSummary {
   kostenstelle?: string;
   /** Only shown when the template's Kostenträger line is enabled. */
   kostentraeger?: string;
+  /** Only shown when the template's Rechtsträger line is enabled. */
+  rechtstraeger?: string;
   invoiceNumberFormat: InvoiceNumberFormat;
 }
 

@@ -17,7 +17,10 @@ export type DataSourceKey =
   | 'volunteer_bic'
   | 'volunteer_address'
   | 'volunteer_dob'
-  | 'volunteer_tax_id';
+  | 'volunteer_tax_id'
+  | 'contract_period'
+  | 'already_received_amount'
+  | 'yearly_limit_amount';
 
 export const ALWAYS_AVAILABLE_SOURCES: DataSourceKey[] = [
   'volunteer_first_name',
@@ -34,6 +37,9 @@ export const ALWAYS_AVAILABLE_SOURCES: DataSourceKey[] = [
   'total_amount',
   'generated_date',
   'document_number',
+  'contract_period',
+  'already_received_amount',
+  'yearly_limit_amount',
 ];
 
 export const PROFILE_REQUIRED_SOURCES: DataSourceKey[] = [
@@ -47,15 +53,16 @@ export const PROFILE_REQUIRED_SOURCES: DataSourceKey[] = [
 /**
  * Where a bound source's value comes from. Mostly drives the "filled from ..." line shown
  * under the field title when there's no concrete value yet to display — except
- * 'rate_settings' and 'organization_profile', which annotate a value that IS already known
- * (the hourly rate, the org's own identity fields) with where it came from, since unlike
- * volunteer/generation-time fields it's not self-evident.
+ * 'rate_settings', 'organization_profile', and 'yearly_limit', which annotate a value that IS
+ * already known (the hourly rate, the org's own identity fields, the statutory yearly cap)
+ * with where it came from, since unlike volunteer/generation-time fields it's not self-evident.
  */
 export type FieldOrigin =
   | 'volunteer_profile'
   | 'generation_time'
   | 'rate_settings'
-  | 'organization_profile';
+  | 'organization_profile'
+  | 'yearly_limit';
 
 export const FIELD_ORIGIN: Partial<Record<DataSourceKey, FieldOrigin>> = {
   volunteer_first_name: 'volunteer_profile',
@@ -71,11 +78,14 @@ export const FIELD_ORIGIN: Partial<Record<DataSourceKey, FieldOrigin>> = {
   period_end: 'generation_time',
   total_hours: 'generation_time',
   total_amount: 'generation_time',
+  contract_period: 'generation_time',
+  already_received_amount: 'generation_time',
   hourly_rate: 'rate_settings',
   org_name: 'organization_profile',
   org_address: 'organization_profile',
   org_city: 'organization_profile',
   org_legal_rep: 'organization_profile',
+  yearly_limit_amount: 'yearly_limit',
 };
 
 /** Coordinator-typed once, in the builder — reused verbatim on every document generated from this template. */
@@ -113,10 +123,8 @@ export interface TemplateTextBlock {
   lines: TemplateLine[];
 }
 
-/** What populates the Stundennachweis table's first column — the shift's own name, or the task description written into the volunteer's agreement. */
-export type TableFirstColumnSource =
-  | 'shift_name'
-  | 'agreement_task_description';
+/** What populates the Stundennachweis table's first column — the task description written into the volunteer's agreement, or a coordinator-typed custom label. */
+export type TableFirstColumnSource = 'agreement_task_description' | 'custom';
 
 export interface TemplateTableBlock {
   kind: 'table';
@@ -127,9 +135,23 @@ export interface TemplateTableBlock {
   /** Placeholder rows shown in the builder preview; real rows come from timesheets at generation time. */
   previewRowCount: number;
   firstColumnSource: TableFirstColumnSource;
+  /** Coordinator-typed label shown in the first column when firstColumnSource is 'custom'; ignored otherwise. */
+  firstColumnCustomLabel: string;
 }
 
-export type TemplateBlock = TemplateTextBlock | TemplateTableBlock;
+/** A single locked line of plain text with inline bound-field chips — no toggle, no nested card. */
+export interface TemplateNoteBlock {
+  kind: 'note';
+  id: string;
+  title: string;
+  locked: true;
+  line: TemplateLine;
+}
+
+export type TemplateBlock =
+  | TemplateTextBlock
+  | TemplateTableBlock
+  | TemplateNoteBlock;
 
 export type InvoiceNumberFormat =
   | 'date-number'
@@ -286,6 +308,17 @@ export function countIncompleteManualFields(doc: TemplateDocument): number {
       if (seen.has(field.id)) continue;
       seen.add(field.id);
       if (!field.value.value.trim()) count++;
+    }
+  }
+  // The table's first-column label is only a manual value the coordinator must fill in
+  // when they've chosen 'custom' — the other source needs nothing typed in.
+  for (const block of doc.blocks) {
+    if (
+      block.kind === 'table' &&
+      block.firstColumnSource === 'custom' &&
+      !block.firstColumnCustomLabel.trim()
+    ) {
+      count++;
     }
   }
   return count;

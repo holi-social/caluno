@@ -37,6 +37,10 @@ const ALL_DATA_SOURCES: DataSourceKey[] = [
 
 const PLACEHOLDER_TABLE_TOTAL_ROW = ['', '', 'Summe', '—', '—'];
 
+// The Pauschale reimbursement itself isn't a VAT-liable supply, but the rate is always 0% —
+// stated on every invoice regardless, never computed from the total.
+const TABLE_VAT_ROW = ['', '', 'zzgl. 0 % USt.', '', '0,00 €'];
+
 // Placeholder rows for the invoice's Stundennachweis table — no real timesheets exist at
 // template-configuration time, only the column shape and the chosen first-column source (see
 // getInvoiceDocument's table block). The first cell reflects that choice so toggling it in the
@@ -47,10 +51,10 @@ function getPlaceholderTableRows(
 ): string[][] {
   const tableBlock = templateDoc.blocks.find((b) => b.kind === 'table');
   const firstColumnPlaceholder =
-    tableBlock?.kind === 'table' &&
-    tableBlock.firstColumnSource === 'agreement_task_description'
-      ? t('blockEditor.firstColumnPlaceholders.agreementTaskDescription')
-      : t('blockEditor.firstColumnPlaceholders.shiftName');
+    tableBlock?.kind === 'table' && tableBlock.firstColumnSource === 'custom'
+      ? tableBlock.firstColumnCustomLabel ||
+        t('blockEditor.firstColumnPlaceholders.custom')
+      : t('blockEditor.firstColumnPlaceholders.agreementTaskDescription');
   return [
     [firstColumnPlaceholder, '', '', '', ''],
     [firstColumnPlaceholder, '', '', '', ''],
@@ -192,6 +196,7 @@ export function TemplateBuilder({
             tableTotalRow={
               kind === 'invoice' ? PLACEHOLDER_TABLE_TOTAL_ROW : undefined
             }
+            tableNoteRow={kind === 'invoice' ? TABLE_VAT_ROW : undefined}
           />
         </section>
         <section

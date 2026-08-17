@@ -300,7 +300,11 @@ export function InvoiceCreationModal({
 
   const tableBlock = template.blocks.find((b) => b.kind === 'table');
   const firstColumnSource =
-    tableBlock?.kind === 'table' ? tableBlock.firstColumnSource : 'shift_name';
+    tableBlock?.kind === 'table'
+      ? tableBlock.firstColumnSource
+      : 'agreement_task_description';
+  const firstColumnCustomLabel =
+    tableBlock?.kind === 'table' ? tableBlock.firstColumnCustomLabel : '';
   // The agreement's task description is baked into the volunteer's contract template, not
   // this invoice's own — read from the sibling contract template for this pauschale.
   const agreementTaskDescription =
@@ -316,7 +320,7 @@ export function InvoiceCreationModal({
     return [
       firstColumnSource === 'agreement_task_description'
         ? (agreementTaskDescription ?? line.shiftName)
-        : line.shiftName,
+        : firstColumnCustomLabel,
       begin,
       end,
       `${line.hours}h`,
@@ -330,6 +334,9 @@ export function InvoiceCreationModal({
     `${selectedHours}h`,
     formatEuro(selectedAmount),
   ];
+  // The Pauschale reimbursement itself isn't a VAT-liable supply, but the rate is always 0% —
+  // stated on every invoice regardless, never computed from the total.
+  const tableVatRow = ['', '', 'zzgl. 0 % USt.', '', '0,00 €'];
 
   return (
     <DocumentCreationDialog
@@ -362,6 +369,7 @@ export function InvoiceCreationModal({
           values={values}
           tableRows={tableRows}
           tableTotalRow={tableTotalRow}
+          tableNoteRow={tableVatRow}
         />
       }
       fields={

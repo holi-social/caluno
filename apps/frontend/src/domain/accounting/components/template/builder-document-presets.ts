@@ -1,4 +1,4 @@
-import { getEffectivePauschaleRate } from '../../mock-rates';
+import { getEffectivePauschaleRate, getYearlyLimit } from '../../mock-rates';
 import type { PauschalenType } from '../doc-type-header';
 import type {
   DataSourceKey,
@@ -31,6 +31,12 @@ function knownHourlyRate(pauschale: PauschalenType): string {
   return formatRateComma(getEffectivePauschaleRate(pauschale));
 }
 
+// The statutory yearly cap, formatted with German thousands separators (e.g. "3.000 €") —
+// same source of truth as the reimbursements dashboard's Jahresdeckel card (mock-rates.ts).
+function knownYearlyLimit(pauschale: PauschalenType): string {
+  return `${getYearlyLimit(pauschale).toLocaleString('de-DE')} €`;
+}
+
 const KNOWN_PAUSCHALE_LABEL: Record<PauschalenType, string> = {
   ehrenamt: 'Ehrenamtspauschale',
   uebungleiter: 'Übungsleiterpauschale',
@@ -56,6 +62,7 @@ export function getKnownOrgValues(
     ...KNOWN_ORG,
     hourly_rate: knownHourlyRate(pauschale),
     pauschalen_type: KNOWN_PAUSCHALE_LABEL[pauschale],
+    yearly_limit_amount: knownYearlyLimit(pauschale),
   };
 }
 
@@ -270,6 +277,14 @@ export function getInvoiceDocument(
             optional: true,
           },
         ),
+        line(
+          'meta-rechtstraeger',
+          'Rechtsträger: {rechtstraeger}',
+          [manual('rechtstraeger')],
+          {
+            optional: true,
+          },
+        ),
       ],
     },
     blocks: [
@@ -305,7 +320,25 @@ export function getInvoiceDocument(
           'Stundensatz',
         ],
         previewRowCount: 10,
-        firstColumnSource: 'shift_name',
+        firstColumnSource: 'agreement_task_description',
+        firstColumnCustomLabel: '',
+      },
+      {
+        kind: 'note',
+        id: 'jahresdeckel-hinweis',
+        title: 'Bereits erhaltene Zahlungen',
+        locked: true,
+        line: line(
+          'jahresdeckel-hinweis-line',
+          '{volunteerFirstName} {volunteerLastName} hat im Zeitraum {contractPeriod} bereits {alreadyReceivedAmount} vom Jahresdeckel in Höhe von {yearlyLimitAmount} erhalten.',
+          [
+            bound('jahresdeckel-volunteer-first', 'volunteer_first_name'),
+            bound('jahresdeckel-volunteer-last', 'volunteer_last_name'),
+            bound('jahresdeckel-period', 'contract_period'),
+            bound('jahresdeckel-received', 'already_received_amount'),
+            bound('jahresdeckel-limit', 'yearly_limit_amount'),
+          ],
+        ),
       },
     ],
     footer: {

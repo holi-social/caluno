@@ -33,6 +33,14 @@ export function TemplateCardBadges({ summary }: TemplateCardBadgesProps) {
                 },
               ]
             : []),
+          ...(summary.rechtstraeger
+            ? [
+                {
+                  key: 'rechtstraeger',
+                  value: summary.rechtstraeger,
+                },
+              ]
+            : []),
           {
             key: 'invoiceNumberFormat',
             value: tFormat(summary.invoiceNumberFormat),

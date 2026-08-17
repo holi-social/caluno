@@ -18,3 +18,15 @@ export const MOCK_SAVED_OVERRIDES: Record<PauschalenType, number | undefined> =
 export function getEffectivePauschaleRate(type: PauschalenType): number {
   return MOCK_SAVED_OVERRIDES[type] ?? MOCK_HQ_DEFAULTS[type];
 }
+
+// Statutory annual limit per Pauschale type (§3 Nr. 26/26a EStG) — fixed by law, not
+// org-configurable, unlike the hourly rate above. Mirrors `PauschalenType.yearlyLimitCents`
+// in data-model.md.
+export const YEARLY_LIMIT_EUR: Record<PauschalenType, number> = {
+  ehrenamt: 840,
+  uebungleiter: 3000,
+};
+
+export function getYearlyLimit(type: PauschalenType): number {
+  return YEARLY_LIMIT_EUR[type];
+}

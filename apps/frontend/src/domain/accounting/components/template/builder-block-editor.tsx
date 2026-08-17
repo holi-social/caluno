@@ -278,14 +278,14 @@ function FieldRow({
           <p className="text-base text-foreground">{effectiveValue}</p>
           {(origin === 'rate_settings' ||
             origin === 'organization_profile') && (
-              <p className="text-xs text-muted-foreground">
-                {t(
-                  origin === 'rate_settings'
-                    ? 'fieldSource.rateSettings'
-                    : 'fieldSource.organizationProfile',
-                )}
-              </p>
-            )}
+            <p className="text-xs text-muted-foreground">
+              {t(
+                origin === 'rate_settings'
+                  ? 'fieldSource.rateSettings'
+                  : 'fieldSource.organizationProfile',
+              )}
+            </p>
+          )}
         </div>
       )
     ) : isGap ? (
@@ -489,17 +489,19 @@ function LineEditor({
 }
 
 const TABLE_FIRST_COLUMN_SOURCES: TableFirstColumnSource[] = [
-  'shift_name',
   'agreement_task_description',
+  'custom',
 ];
 
 /** The Stundennachweis table's one configurable choice — everything else about its shape is fixed. */
 function TableFirstColumnSourceCard({
   block,
-  onChange,
+  onSourceChange,
+  onCustomLabelChange,
 }: {
   block: TemplateTableBlock;
-  onChange: (source: TableFirstColumnSource) => void;
+  onSourceChange: (source: TableFirstColumnSource) => void;
+  onCustomLabelChange: (value: string) => void;
 }) {
   const t = useTranslations('Accounting.templates.builder');
   const idBase = useId();
@@ -511,7 +513,9 @@ function TableFirstColumnSourceCard({
     >
       <RadioGroup
         value={block.firstColumnSource}
-        onValueChange={(value) => onChange(value as TableFirstColumnSource)}
+        onValueChange={(value) =>
+          onSourceChange(value as TableFirstColumnSource)
+        }
         className="gap-3"
       >
         {TABLE_FIRST_COLUMN_SOURCES.map((source) => (
@@ -542,6 +546,15 @@ function TableFirstColumnSourceCard({
           </div>
         ))}
       </RadioGroup>
+      {block.firstColumnSource === 'custom' && (
+        <Input
+          className="mt-3"
+          value={block.firstColumnCustomLabel}
+          onChange={(e) => onCustomLabelChange(e.target.value)}
+          placeholder={t('blockEditor.firstColumnPlaceholders.custom')}
+          aria-label={t('blockEditor.firstColumnSourceOptions.custom.label')}
+        />
+      )}
     </InfoPanel>
   );
 }
@@ -558,6 +571,7 @@ interface BlockEditorRowProps {
     blockId: string,
     source: TableFirstColumnSource,
   ) => void;
+  onTableFirstColumnCustomLabelChange: (blockId: string, value: string) => void;
 }
 
 /**
@@ -574,6 +588,7 @@ function BlockEditorRow({
   onLineToggle,
   onFieldChange,
   onTableFirstColumnSourceChange,
+  onTableFirstColumnCustomLabelChange,
 }: BlockEditorRowProps) {
   const t = useTranslations('Accounting.templates.builder');
 
@@ -602,11 +617,18 @@ function BlockEditorRow({
           </p>
           <TableFirstColumnSourceCard
             block={block}
-            onChange={(source) =>
+            onSourceChange={(source) =>
               onTableFirstColumnSourceChange(block.id, source)
+            }
+            onCustomLabelChange={(value) =>
+              onTableFirstColumnCustomLabelChange(block.id, value)
             }
           />
         </div>
+      ) : block.kind === 'note' ? (
+        <p className="text-sm text-muted-foreground">
+          {t('blockEditor.alreadyReceivedHint')}
+        </p>
       ) : (
         <div className="flex flex-col gap-3">
           {block.lines.map((line) => (
@@ -882,6 +904,20 @@ export function TemplateBuilderBlockEditor({
     });
   }
 
+  function handleTableFirstColumnCustomLabelChange(
+    blockId: string,
+    value: string,
+  ) {
+    onChange({
+      ...templateDoc,
+      blocks: templateDoc.blocks.map((b) =>
+        b.id === blockId && b.kind === 'table'
+          ? { ...b, firstColumnCustomLabel: value }
+          : b,
+      ),
+    });
+  }
+
   const hasHeaderConfig =
     templateDoc.header.metaLines.length > 0 ||
     templateDoc.invoiceNumberFormat !== undefined;
@@ -1011,6 +1047,9 @@ export function TemplateBuilderBlockEditor({
           onLineToggle={handleLineToggle}
           onFieldChange={handleFieldChange}
           onTableFirstColumnSourceChange={handleTableFirstColumnSourceChange}
+          onTableFirstColumnCustomLabelChange={
+            handleTableFirstColumnCustomLabelChange
+          }
         />
       ))}
     </div>
