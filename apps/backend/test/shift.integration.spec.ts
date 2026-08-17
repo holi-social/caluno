@@ -1646,6 +1646,72 @@ describe('Volunteer home fields and check-in', () => {
     );
   });
 
+  it('applies startsAfter and endsBefore together on availableShiftInstances', async () => {
+    const user = await createUser(db);
+    await db.insert(schema.memberships).values({
+      userId: user.id,
+      organizationUnitId,
+    });
+    setAuthMockUserId(user.id);
+
+    const outsideShift = await createShift(db, {
+      organizationUnitId,
+      visibility: ShiftVisibility.ALL_MEMBERS,
+      startsAt: new Date('2027-04-01T09:00:00.000Z'),
+      endsAt: new Date('2027-04-01T10:00:00.000Z'),
+    });
+    const insideShift = await createShift(db, {
+      organizationUnitId,
+      visibility: ShiftVisibility.ALL_MEMBERS,
+      startsAt: new Date('2027-04-10T09:00:00.000Z'),
+      endsAt: new Date('2027-04-10T10:00:00.000Z'),
+    });
+
+    const [outsideInstances, insideInstances] = await Promise.all([
+      db.query.shiftInstances.findMany({
+        where: { masterId: outsideShift.id },
+      }),
+      db.query.shiftInstances.findMany({
+        where: { masterId: insideShift.id },
+      }),
+    ]);
+    const outsideId = outsideInstances[0]?.id;
+    const insideId = insideInstances[0]?.id;
+    expect(outsideId).toBeDefined();
+    expect(insideId).toBeDefined();
+
+    const data = await graphqlRequestRequiringData<{
+      availableShiftInstances: {
+        items: Array<{ id: string }>;
+      };
+    }>(
+      app,
+      {
+        query: `
+          query AvailableShiftInstances($startsAfter: DateTime, $endsBefore: DateTime) {
+            availableShiftInstances(startsAfter: $startsAfter, endsBefore: $endsBefore) {
+              items { id }
+            }
+          }
+        `,
+        variables: {
+          startsAfter: new Date('2027-04-08T00:00:00.000Z').toISOString(),
+          endsBefore: new Date('2027-04-12T00:00:00.000Z').toISOString(),
+        },
+        headers: {
+          'x-organization-unit-id': organizationUnitId,
+        },
+      },
+      'availableShiftInstances',
+    );
+
+    const ids = data.availableShiftInstances.items.map((item) => item.id);
+    expect(ids).toContain(insideId);
+    expect(ids).not.toContain(outsideId);
+
+    setAuthMockUserId(testUserId);
+  });
+
   it('excludes signed-up shifts from available instances', async () => {
     await db.insert(schema.memberships).values({
       userId: testUserId,
@@ -1757,7 +1823,7 @@ describe('Volunteer home fields and check-in', () => {
             instance.actualStartsAt.getTime() - 60000,
           ).toISOString(),
           endsBefore: new Date(
-            instance.actualStartsAt.getTime() + 60000,
+            instance.actualEndsAt.getTime() + 60000,
           ).toISOString(),
         },
         headers: {

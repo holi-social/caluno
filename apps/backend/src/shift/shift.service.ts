@@ -577,19 +577,17 @@ export class ShiftService {
     endsBefore: Date | null,
     includePast: boolean = true,
   ): Record<string, unknown> {
-    if (endsBefore) {
-      return { actualEndsAt: { lt: endsBefore } };
-    }
-
+    const condition: Record<string, unknown> = {};
     if (startsAfter) {
-      return { actualStartsAt: { gte: startsAfter } };
+      condition.actualStartsAt = { gte: startsAfter };
+    }
+    if (endsBefore) {
+      condition.actualEndsAt = { lt: endsBefore };
+    } else if (!includePast) {
+      condition.actualEndsAt = { gte: new Date() };
     }
 
-    if (!includePast) {
-      return { actualEndsAt: { gte: new Date() } };
-    }
-
-    return {};
+    return condition;
   }
 
   async findAvailableShiftInstances(
@@ -2207,8 +2205,6 @@ export class ShiftService {
     organizationUnitId: string,
     startsAfter: Date | null,
     endsBefore: Date | null,
-    limit: number,
-    offset: number,
   ): Promise<ShiftInstanceEntity[]> {
     const shifts = await this.db.query.shifts.findMany({
       where: { organizationUnitId, isDeleted: false },
@@ -2229,8 +2225,6 @@ export class ShiftService {
         isCancelled: false,
       },
       with: { master: true },
-      limit,
-      offset,
       orderBy: { actualStartsAt: 'asc' },
     });
   }

@@ -169,8 +169,6 @@ export class ShiftQueryResolver {
       context.organizationUnitId,
       pagination.startsAfter,
       pagination.endsBefore,
-      pagination.limit,
-      pagination.offset,
     );
     return this.shiftInstanceMapper.toArray(instances);
   }
