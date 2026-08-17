@@ -15,8 +15,8 @@ export type AvailableShiftInstancesInfiniteResult = Awaited<
 
 export function useAvailableShiftInstancesInfinite(
   options: {
-    from?: Date;
-    to?: Date;
+    startsAfter?: Date;
+    endsBefore?: Date;
     organizationUnitIds?: string[];
     limit?: number;
   } = {},
