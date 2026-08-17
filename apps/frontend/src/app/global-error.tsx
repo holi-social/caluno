@@ -3,6 +3,7 @@
 import { Button } from '@repo/ui';
 import { useTranslations } from 'next-intl';
 import { useEffect } from 'react';
+import { reportError } from '@/lib/report-error';
 
 interface GlobalErrorProps {
   error: Error & { digest?: string };
@@ -13,7 +14,7 @@ export default function GlobalError({ error, reset }: GlobalErrorProps) {
   const t = useTranslations('Error');
 
   useEffect(() => {
-    console.error(error);
+    reportError(error);
   }, [error]);
 
   return (

@@ -5,6 +5,7 @@ import { Home, RotateCcw } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useEffect } from 'react';
 import { Link } from '@/i18n/navigation';
+import { reportError } from '@/lib/report-error';
 
 interface ErrorProps {
   error: Error & { digest?: string };
@@ -15,7 +16,7 @@ export default function DashboardError({ error, reset }: ErrorProps) {
   const t = useTranslations('Error');
 
   useEffect(() => {
-    console.error(error);
+    reportError(error);
   }, [error]);
 
   return (

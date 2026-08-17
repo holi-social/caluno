@@ -95,5 +95,5 @@ function stripLocalePrefix(pathname: string): string {
 }
 
 export const config = {
-  matcher: ['/((?!api|_next|_vercel|.*\\..*).*)'],
+  matcher: ['/((?!api|_next|_vercel|sentry-tunnel|.*\\..*).*)'],
 };
