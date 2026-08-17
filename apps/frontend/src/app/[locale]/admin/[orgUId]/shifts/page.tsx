@@ -3,7 +3,7 @@ import {
   type GetWeeklyShiftsQuery,
   PermissionKey,
 } from '@repo/data';
-import { addDays, startOfWeek } from 'date-fns';
+import { addDays } from 'date-fns';
 import { getTranslations } from 'next-intl/server';
 import { Pagination } from '@/components/pagination';
 import { CreateShiftButton } from '@/domain/shift/components/create-shift-button';
@@ -14,6 +14,7 @@ import { ShiftsTable } from '@/domain/shift/components/shifts-table';
 import { WeeklyCalendar } from '@/domain/shift/components/weekly-calendar';
 import { WeeklyCalendarNav } from '@/domain/shift/components/weekly-calendar-nav';
 import { getDataClient } from '@/lib/data-client';
+import { parseWeekStart } from '@/lib/date-utils';
 import { requireOrgAccess } from '@/lib/org-context-server';
 import { checkPermission } from '@/lib/permissions-server';
 
@@ -26,12 +27,6 @@ interface ShiftsPageProps {
     page?: string;
     week?: string;
   }>;
-}
-
-function parseWeekStart(param: string | null | undefined): Date {
-  const base = param ? new Date(param) : new Date();
-  const d = Number.isNaN(base.getTime()) ? new Date() : base;
-  return startOfWeek(d, { weekStartsOn: 1 });
 }
 
 export default async function ShiftsPage({

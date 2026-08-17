@@ -8,7 +8,7 @@ import {
   EmptyMedia,
   EmptyTitle,
 } from '@repo/ui';
-import { addDays, format, startOfWeek } from 'date-fns';
+import { addDays, format } from 'date-fns';
 import { ArrowLeft, CalendarRange, Plus, UserPlus } from 'lucide-react';
 import { notFound } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
@@ -23,6 +23,10 @@ import { EventMetaCard } from '@/domain/event/components/event-meta-card';
 import { EventRequiredFormsPopover } from '@/domain/event/components/event-required-forms-popover';
 import { EventVolunteersSection } from '@/domain/event/components/event-volunteers-section';
 import {
+  EventDetailTab,
+  parseEventDetailTab,
+} from '@/domain/event/event-detail-tabs';
+import {
   eventDetailPath,
   eventShiftNewPath,
   eventsListPath,
@@ -33,26 +37,12 @@ import { WeeklyCalendar } from '@/domain/shift/components/weekly-calendar';
 import { WeeklyCalendarNav } from '@/domain/shift/components/weekly-calendar-nav';
 import { Link } from '@/i18n/navigation';
 import { getDataClient } from '@/lib/data-client';
+import { parseWeekStart } from '@/lib/date-utils';
 import { checkPermission } from '@/lib/permissions-server';
-
-type EventDetailTab = 'shifts' | 'volunteers';
 
 interface EventDetailPageProps {
   params: Promise<{ orgUId: string; eventId: string }>;
   searchParams: Promise<{ tab?: string; week?: string }>;
-}
-
-function parseWeekStart(
-  param: string | null | undefined,
-  fallback: Date,
-): Date {
-  const base = param ? new Date(param) : fallback;
-  const d = Number.isNaN(base.getTime()) ? fallback : base;
-  return startOfWeek(d, { weekStartsOn: 1 });
-}
-
-function parseTab(param: string | null | undefined): EventDetailTab {
-  return param === 'volunteers' ? 'volunteers' : 'shifts';
 }
 
 export default async function EventDetailPage({
@@ -74,17 +64,19 @@ export default async function EventDetailPage({
     notFound();
   }
 
-  const activeTab = parseTab(tabParam);
+  const activeTab = parseEventDetailTab(tabParam);
   const weekStart = parseWeekStart(week, new Date(event.startsAt));
   const weekIso = format(weekStart, 'yyyy-MM-dd');
   const createShiftHref = eventShiftNewPath(orgUId, eventId);
   const editHref = `/admin/${orgUId}/events/${eventId}/edit`;
 
   const invites =
-    activeTab === 'volunteers' ? await data.event.findInvites(eventId) : null;
+    activeTab === EventDetailTab.volunteers
+      ? await data.event.findInvites(eventId)
+      : null;
 
   const instances =
-    activeTab === 'shifts'
+    activeTab === EventDetailTab.shifts
       ? await data.shift.findForWeek(weekStart, addDays(weekStart, 7), eventId)
       : null;
 
@@ -171,17 +163,17 @@ export default async function EventDetailPage({
         </div>
 
         <div className="justify-self-center">
-          {activeTab === 'shifts' ? (
+          {activeTab === EventDetailTab.shifts ? (
             <WeeklyCalendarNav
               weekStart={weekStart}
               pathname={eventDetailPath(orgUId, eventId)}
-              query={{ tab: 'shifts' }}
+              query={{ tab: EventDetailTab.shifts }}
             />
           ) : null}
         </div>
 
         <div className="justify-self-end">
-          {activeTab === 'shifts' && canEdit ? (
+          {activeTab === EventDetailTab.shifts && canEdit ? (
             <CreateShiftButton
               orgUId={orgUId}
               href={createShiftHref}
@@ -191,7 +183,7 @@ export default async function EventDetailPage({
         </div>
       </div>
 
-      {activeTab === 'shifts' ? (
+      {activeTab === EventDetailTab.shifts ? (
         instances && instances.length > 0 ? (
           <WeeklyCalendar
             instances={instances}
