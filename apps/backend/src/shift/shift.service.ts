@@ -632,10 +632,10 @@ export class ShiftService {
       pendingOrganizationUnitIds.includes(id),
     );
 
-    const startOfToday = this.getStartOfToday();
-    const effectiveStartsAfter = startsAfter ?? startOfToday;
-    const effectiveEndsBefore =
-      endsBefore ?? new Date('2099-12-31T23:59:59.999Z');
+    const dateCondition = this.buildMyShiftDateCondition(
+      startsAfter ?? this.getStartOfToday(),
+      endsBefore,
+    );
 
     const visibilityBranches: Record<string, unknown>[] = [];
 
@@ -660,7 +660,7 @@ export class ShiftService {
 
     const where = {
       isCancelled: false,
-      actualStartsAt: { gte: effectiveStartsAfter, lte: effectiveEndsBefore },
+      ...dateCondition,
       master: { isDeleted: false },
       NOT: {
         invites: {
