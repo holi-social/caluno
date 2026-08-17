@@ -35,13 +35,16 @@ To test end-to-end:
 
 ## How releases work
 
-- The release name is the git SHA: `$CI_COMMIT_SHA`.
+- The release name is the git SHA: `${{ github.sha }}`.
 - The release is **created during the Docker build**: `sentry-cli` uploads source
-  maps inside the image build (BuildKit secret `sentry_auth_token`), and the source
-  maps are deleted from the image afterwards — they never ship to production.
-- After deploy, the `sentry:finalize-staging` / `sentry:finalize-production` CI
-  jobs run `sentry-cli releases set-commits --auto` (associates commits, enables
-  suspect commits) and `sentry-cli releases finalize`.
+  maps inside the image build (BuildKit secret `sentry_auth_token`, mounted from
+  the `SENTRY_AUTH_TOKEN` Actions secret), and the source maps are deleted from
+  the image afterwards — they never ship to production.
+- After the images are built, the `sentry-finalize-release` job in
+  `cd-staging.yml` / `cd-production.yml` runs `sentry-cli releases set-commits
+  --auto` (associates commits, enables suspect commits) and `sentry-cli releases
+  finalize`. The job is `continue-on-error: true` — release bookkeeping must not
+  fail the deploy pipeline.
 - `SENTRY_RELEASE` is **baked into the runner images** (`ENV SENTRY_RELEASE`
   from the CI build arg), so runtime events carry the release tag matching the
   image SHA — no extra deployment wiring needed.
@@ -50,18 +53,18 @@ To test end-to-end:
 
 | Variable | Where set | Public vs secret |
 |---|---|---|
-| `NEXT_PUBLIC_SENTRY_DSN` | GitLab CI/CD variable (build arg); local `.env.local` for testing | **Public by design** — ships in the client bundle |
-| `NEXT_PUBLIC_SENTRY_ENVIRONMENT` | GitLab CI (staging/production) | Public |
+| `NEXT_PUBLIC_SENTRY_DSN` | GitHub Actions variable (build arg); local `.env.local` for testing | **Public by design** — ships in the client bundle |
+| `NEXT_PUBLIC_SENTRY_ENVIRONMENT` | GitHub Actions build arg (staging/production) | Public |
 | `NEXT_PUBLIC_SENTRY_TRACES_SAMPLE_RATE` | Optional, local `.env.local` / CI | Public |
 | `NEXT_PUBLIC_SENTRY_REPLAY_ENABLED` | Optional, local `.env.local` / runtime env | Public |
 | `SENTRY_DSN` | Runtime env (backend; frontend server runtime, falls back to `NEXT_PUBLIC_SENTRY_DSN`) | Server-side only (not secret, but never exposed to the client) |
 | `SENTRY_ENVIRONMENT` | Runtime env | Server-side only |
 | `SENTRY_RELEASE` | CI build arg + runtime env | Not secret |
 | `SENTRY_TRACES_SAMPLE_RATE` | Optional, runtime env | Server-side only |
-| `SENTRY_ORG` | GitLab CI/CD variable | Not secret |
-| `SENTRY_PROJECT_FRONTEND` | GitLab CI/CD variable | Not secret |
-| `SENTRY_PROJECT_BACKEND` | GitLab CI/CD variable | Not secret |
-| `SENTRY_AUTH_TOKEN` | GitLab CI/CD variable (**Masked AND Protected**) — the only place it exists | **Secret** — never commit, never set locally |
+| `SENTRY_ORG` | GitHub Actions variable | Not secret |
+| `SENTRY_PROJECT_FRONTEND` | GitHub Actions variable | Not secret |
+| `SENTRY_PROJECT_BACKEND` | GitHub Actions variable | Not secret |
+| `SENTRY_AUTH_TOKEN` | GitHub Actions **secret** — the only place it exists | **Secret** — never commit, never set locally |
 
 ## Sampling knobs
 
@@ -111,11 +114,15 @@ Not config-as-code — done once in the Sentry UI:
 - [ ] Per-app dashboards: error rate, p95, throughput, crash-free rate; plus a
       shared release-health view.
 - [ ] Issue ownership rules (path-based code owners).
-- [ ] Link the **GitLab repository integration** — required for
+- [ ] Link the **GitHub repository integration** — required for
       `set-commits --auto` to resolve commits.
-- [ ] Create GitLab CI/CD variables: `SENTRY_AUTH_TOKEN` (**Masked AND
-      Protected**), `SENTRY_ORG`, `SENTRY_PROJECT_FRONTEND`,
-      `SENTRY_PROJECT_BACKEND`, `NEXT_PUBLIC_SENTRY_DSN`.
+- [ ] Create the GitHub Actions **secret** `SENTRY_AUTH_TOKEN` (GitHub masks
+      secrets automatically in logs; if the org uses environment protection,
+      also create it as an environment secret scoped to the `staging` and
+      `production` environments).
+- [ ] Create the GitHub Actions **variables** `SENTRY_ORG`,
+      `SENTRY_PROJECT_FRONTEND`, `SENTRY_PROJECT_BACKEND`,
+      `NEXT_PUBLIC_SENTRY_DSN`.
 
 ## Session Replay
 
