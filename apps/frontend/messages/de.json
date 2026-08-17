@@ -1034,6 +1034,7 @@
     "reimbursements": {
       "title": "Abrechnungen",
       "subtitle": "Dokumente erstellen, gegenzeichnen, herunterladen.",
+      "createDocument": "Dokument erstellen",
       "periodLabel": "Zeitraum",
       "periodPicker": {
         "allTime": "Gesamter Zeitraum",
@@ -1081,6 +1082,19 @@
       },
       "resetPrototype": "Prototyp zurücksetzen",
       "resetPrototypeToast": "Prototyp-Daten zurückgesetzt.",
+      "createDocumentModal": {
+        "stepIndicator": "Schritt {step} von {total}",
+        "step1Title": "Freiwillige und Dokument",
+        "step2Title": "Prüfen und senden",
+        "volunteerPlaceholder": "Freiwillige suchen …",
+        "noVolunteersFound": "Keine Freiwilligen gefunden.",
+        "selectDocumentTitle": "Dokument auswählen",
+        "noDocumentYet": "Noch nicht erstellt",
+        "documentCount": "{count, plural, =1 {1 Dokument} other {# Dokumente}}",
+        "viewVolunteer": "Freiwillige/n ansehen",
+        "createButton": "{kind} erstellen",
+        "createButtonEmpty": "Neues Dokument erstellen"
+      },
       "bundle": {
         "actionLabel": "Paket herunterladen",
         "readyCount": "{count} bereit",
@@ -1089,7 +1103,6 @@
       },
       "batchBar": {
         "selected": "{count} ausgewählt",
-        "createAll": "Alle erstellen und senden",
         "countersignAll": "Alle gegenzeichnen",
         "remindAll": "Alle erinnern",
         "bundleAll": "Alle Pakete herunterladen",
@@ -1201,7 +1214,7 @@
         "editingHint": "Du bearbeitest dies nur für {docType, select, contract {diese Vereinbarung} invoice {dieser Nachweis} other {dieses Dokument}} — die Angaben im Profil von {name} bleiben unverändert.",
         "overrideHint": "Nur für {docType, select, contract {diese Vereinbarung} invoice {dieser Nachweis} other {dieses Dokument}} geändert",
         "missingValue": "Nicht angegeben",
-        "gapHint": "Noch nicht im Profil von {name} — für {docType, select, contract {diese Vereinbarung} invoice {dieser Nachweis} other {dieses Dokument}} ergänzen"
+        "gapHint": "Diese Angabe wurde von {name} nicht im Profil hinterlegt — für {docType, select, contract {diese Vereinbarung} invoice {dieser Nachweis} other {dieses Dokument}} ergänzen"
       },
       "contractModal": {
         "title": "Vereinbarung erstellen",

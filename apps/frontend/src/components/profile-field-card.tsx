@@ -49,7 +49,13 @@ export function ProfileFieldCard({
   };
 
   return (
-    <div className={cn('rounded-xl bg-muted p-4', className)}>
+    <div
+      className={cn(
+        'rounded-xl bg-muted p-4',
+        isEmptyValue && 'border border-alert bg-alert/5',
+        className,
+      )}
+    >
       <div className="flex items-start justify-between gap-2">
         <p className="text-sm font-semibold">{label}</p>
         {!isEditing && (
