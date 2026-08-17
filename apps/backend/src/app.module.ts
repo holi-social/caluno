@@ -5,6 +5,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { GraphQLModule } from '@nestjs/graphql';
+import { SentryModule } from '@sentry/nestjs/setup';
 import {
   AuthGuard,
   AuthModule as BetterAuthModule,
@@ -31,6 +32,8 @@ import { passwordResetTemplate } from './notification/email/templates/password-r
 import { NotificationModule } from './notification/notification.module';
 import { OrganizationModule } from './organization/organization.module';
 import { RequirementProfileModule } from './requirement-profile/requirement-profile.module';
+import { ObservabilityModule } from './shared/observability/observability.module';
+import { validateSentryEnv } from './shared/observability/validate-sentry-env';
 import { ShiftModule } from './shift/shift.module';
 import { StorageModule } from './storage/storage.module';
 import { TimeTrackingModule } from './time-tracking/time-tracking.module';
@@ -44,8 +47,11 @@ const autoSchemaFile =
 
 @Module({
   imports: [
+    SentryModule.forRoot(),
+    ObservabilityModule,
     ConfigModule.forRoot({
       isGlobal: true,
+      validate: validateSentryEnv,
     }),
     EventEmitterModule.forRoot({
       wildcard: true,
