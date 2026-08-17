@@ -1292,24 +1292,25 @@
         },
         "blockEditor": {
           "headerTitle": "Kopfbereich",
-          "invoiceNumberFormatLabel": "Format der Nachweisnummer",
+          "invoiceNumberFormatLabel": "Format der Rechnungsnummer",
           "lockedHint": "Pflichtblock — immer im generierten Dokument enthalten.",
           "tableFixedHint": "Die Zeilen werden beim Erstellen eines Stundennachweises aus den Zeiterfassungen befüllt.",
           "firstColumnSourceLabel": "Inhalt der ersten Spalte",
           "firstColumnSourceOptions": {
-            "shift_name": {
-              "label": "Name des Einsatzes",
-              "hint": "Jede Zeile zeigt den Namen des Einsatzes aus der Zeiterfassung."
-            },
             "agreement_task_description": {
               "label": "Tätigkeitsbeschreibung aus der Vereinbarung",
               "hint": "Jede Zeile zeigt die in der Vereinbarung hinterlegte Tätigkeitsbeschreibung."
+            },
+            "custom": {
+              "label": "Benutzerdefiniert",
+              "hint": "Jede Zeile zeigt den hier eingegebenen Text."
             }
           },
           "firstColumnPlaceholders": {
-            "shiftName": "Einsatzname",
-            "agreementTaskDescription": "Tätigkeitsbeschreibung"
+            "agreementTaskDescription": "Tätigkeitsbeschreibung",
+            "custom": "z. B. Sonstige Tätigkeit"
           },
+          "alreadyReceivedHint": "Wird beim Erstellen eines Stundennachweises automatisch aus dem verknüpften Vereinbarungszeitraum berechnet.",
           "incompleteCount": "{count, plural, one {Hier fehlt noch eine Angabe} other {Hier fehlen noch {count} Angaben}}",
           "notSetYet": "noch nicht festgelegt",
           "sameAsAbove": "gleicher Wert wie oben festgelegt",
@@ -1341,7 +1342,8 @@
           "hours-amount": "Stundenzahl",
           "freeform-text": "Freitext",
           "kostenstelle": "Kostenstelle",
-          "kostentraeger": "Kostenträger"
+          "kostentraeger": "Kostenträger",
+          "rechtstraeger": "Rechtsträger"
         },
         "manualFieldPlaceholders": {
           "contract-lifespan": "Zeitraum wählen",
@@ -1350,13 +1352,15 @@
           "hours-amount-week": "z. B. 5",
           "freeform-text": "Ergänze hier weitere Klauseln, falls nötig",
           "kostenstelle": "z. B. K-4200",
-          "kostentraeger": "z. B. KT-100"
+          "kostentraeger": "z. B. KT-100",
+          "rechtstraeger": "z. B. Diakonisches Werk e.V."
         },
         "fieldSource": {
           "volunteerProfile": "Wird aus dem Profil der ehrenamtlich tätigen Person übernommen.",
           "generationTime": "Wird beim Erstellen des Dokuments automatisch eingetragen.",
           "organizationProfile": "Wird aus den Daten deiner Organisation übernommen.",
-          "rateSettings": "Wird aus dem in den Buchhaltungseinstellungen hinterlegten Satz übernommen."
+          "rateSettings": "Wird aus dem in den Buchhaltungseinstellungen hinterlegten Satz übernommen.",
+          "yearlyLimit": "Wird aus dem gesetzlich festgelegten Jahresdeckel übernommen."
         },
         "invoiceNumberFormats": {
           "date-number": "TT-MM-JJJJ-Nummer",
@@ -1384,12 +1388,15 @@
           "total_hours": "Gesamtstunden",
           "total_amount": "Gesamtbetrag",
           "generated_date": "Erstellungsdatum",
-          "document_number": "Dokumentennummer",
+          "document_number": "Rechnungsnummer",
           "volunteer_iban": "IBAN (Ehrenamtliche:r)",
           "volunteer_bic": "BIC (Ehrenamtliche:r)",
           "volunteer_address": "Adresse (Ehrenamtliche:r)",
           "volunteer_dob": "Geburtsdatum (Ehrenamtliche:r)",
-          "volunteer_tax_id": "Steueridentifikationsnummer"
+          "volunteer_tax_id": "Steueridentifikationsnummer",
+          "contract_period": "Vereinbarungszeitraum",
+          "already_received_amount": "Bereits erhaltener Betrag",
+          "yearly_limit_amount": "Jahresdeckel"
         }
       },
       "card": {
