@@ -182,11 +182,6 @@
     "inviteByLink": "Invite by link",
     "copyToast": "Share this link with the volunteer"
   },
-  "UserCard": {
-    "entitled": "Entitled",
-    "amountLeft": "{amount}€ left",
-    "amountProjected": "{amount}€ projected"
-  },
   "QRScanner": {
     "error": {
       "noPermission": {
@@ -515,16 +510,9 @@
     "card": {
       "invited": "Invited",
       "noVolunteers": "No volunteers invited",
-      "inviteAria": "Invite volunteers",
-      "shiftTypeTooltip": {
-        "nonPaid": "This shift is not paid.",
-        "ehrenamt": "Paid via the Ehrenamtspauschale ({rate} €/hr)",
-        "uebungleiter": "Paid via the Übungsleiterpauschale ({rate} €/hr)"
-      }
+      "inviteAria": "Invite volunteers"
     },
     "form": {
-      "shiftTypeLabel": "Reimbursement type",
-      "shiftTypeNonPaid": "No reimbursement",
       "nameLabel": "Shift name",
       "namePlaceholder": "e.g. Morning cashier shift",
       "dateTimeLabel": "Date and time",

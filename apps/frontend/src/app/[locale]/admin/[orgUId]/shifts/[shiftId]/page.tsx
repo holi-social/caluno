@@ -15,12 +15,6 @@ import { getTranslations } from 'next-intl/server';
 import { UserCard } from '@/components/user-card';
 import { getVisibilityConfig } from '@/domain/shift/components/shifts-table';
 import { parseShiftListQuery } from '@/domain/shift/routes';
-import {
-  getMockShiftType,
-  getShiftTypeLabel,
-  getShiftTypeRate,
-  ShiftTypeIcon,
-} from '@/domain/shift/shift-type';
 import { getDataClient } from '@/lib/data-client';
 import { getFormatting } from '@/lib/formatting/formatting-server';
 import { ShiftViewActionBar } from './shift-view-action-bar';
@@ -42,7 +36,6 @@ export default async function ShiftViewPage({
   const returnQuery = parseShiftListQuery(await searchParams);
 
   const t = await getTranslations('Shift');
-  const tRates = await getTranslations('Accounting.settings.rates');
   const data = await getDataClient({ orgUId });
   const { formatDateTime, formatRange } = await getFormatting();
   const visibilityConfig = getVisibilityConfig(t);
@@ -55,14 +48,6 @@ export default async function ShiftViewPage({
   const startsAt = new Date(shift.originalStartsAt);
   const endsAt = new Date(startsAt.getTime() + shift.durationMinutes * 60000);
   const isFinished = new Date() > endsAt;
-
-  const shiftType = getMockShiftType(shift.id);
-  const shiftTypeLabel = getShiftTypeLabel(shiftType, {
-    nonPaid: t('form.shiftTypeNonPaid'),
-    epLabel: tRates('epLabel'),
-    ulLabel: tRates('ulLabel'),
-  });
-  const shiftTypeRate = getShiftTypeRate(shiftType);
 
   return (
     <div className="space-y-6">
@@ -86,18 +71,6 @@ export default async function ShiftViewPage({
           <Card>
             <CardContent>
               <ul className="space-y-4">
-                <li className="flex gap-2">
-                  <ShiftTypeIcon type={shiftType} className="shrink-0" />
-                  <span>
-                    {shiftTypeLabel}
-                    {shiftTypeRate !== undefined && (
-                      <span className="text-muted-foreground">
-                        {' '}
-                        · {shiftTypeRate.toFixed(2)} {tRates('rateUnit')}
-                      </span>
-                    )}
-                  </span>
-                </li>
                 <li className="flex gap-2">
                   <Calendar className="text-muted-foreground shrink-0" />
                   <span>{formatRange(startsAt, endsAt)}</span>

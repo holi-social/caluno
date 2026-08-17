@@ -20,12 +20,9 @@ interface ShiftSchemaMessages {
   minMaxVolunteers: string;
 }
 
-const shiftTypeEnum = z.enum(['non-paid', 'ehrenamt', 'uebungleiter']);
-
 export function shiftFormSchema(t: ShiftSchemaMessages) {
   return z.object({
     name: z.string().trim().min(1, t.nameRequired),
-    shiftType: shiftTypeEnum,
     startsAt: z.date(t.startTimeRequired),
     endsAt: z.date(t.endTimeRequired),
     location: z.string().trim().optional(),
