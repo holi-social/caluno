@@ -76,7 +76,7 @@ export function DeleteShiftInstanceDialog({
     return (
       <DeleteAlertDialog
         title={t('instanceDetail.deleteDialog.title')}
-        description={t('instanceDetail.deleteDialog.description', {
+        description={t('instanceDetail.deleteDialog.oneTimeDescription', {
           date: instanceDateFormatted,
         })}
         onDelete={() => runDelete(false)}
