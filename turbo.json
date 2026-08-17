@@ -19,7 +19,7 @@
       "outputs": [".next/**", "!.next/cache/**", "dist/**"]
     },
     "check-types": {
-      "dependsOn": ["^check-types", "codegen"]
+      "dependsOn": ["^build", "^check-types", "codegen"]
     },
     "all-checks": {
       "dependsOn": [
@@ -41,7 +41,7 @@
     "dev": {
       "cache": false,
       "persistent": true,
-      "dependsOn": ["db:up", "codegen"]
+      "dependsOn": ["^build", "db:up", "codegen"]
     },
     "db:up": {
       "cache": false
