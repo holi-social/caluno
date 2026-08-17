@@ -50,7 +50,7 @@ interface StatusMeta {
   isYourAction: boolean;
 }
 
-const STATUS_META: Record<DocStatus, StatusMeta> = {
+export const STATUS_META: Record<DocStatus, StatusMeta> = {
   'contract-generate': {
     labelKey: 'contractGenerate',
     actionKey: 'create',
@@ -168,7 +168,7 @@ interface VolunteerTableGroupProps {
   vol: BoardVolunteer;
   selectedDocIds: Set<string>;
   onToggleDoc: (docId: string) => void;
-  onToggleVolDocs: (vol: BoardVolunteer) => void;
+  onToggleVolDocs: (docIds: string[]) => void;
   onDocumentClick: (doc: BoardDocument, vol: BoardVolunteer) => void;
   onRequestAction: (items: DocVolPair[], action: NonCompliantAction) => void;
   docTypeFilter: DocTypeFilter;
@@ -213,6 +213,13 @@ function VolunteerTableGroup({
 
   if (sortedDocs.length === 0) return null;
 
+  // Mirrors the per-row checkbox condition below — mass creation is deprecated.
+  const selectableDocs = sortedDocs.filter(
+    (d) =>
+      d.status !== 'contract-active' &&
+      STATUS_META[d.status].actionKey !== 'create',
+  );
+
   // Ready timesheets bundle separately per pauschale type — never combined
   // into one download, since each type is its own reimbursement batch.
   const readyByType: Partial<Record<PauschalenType, number>> = {};
@@ -228,13 +235,13 @@ function VolunteerTableGroup({
   };
 
   // Checkbox state for vol header
-  const selectedCount = sortedDocs.filter((d) =>
+  const selectedCount = selectableDocs.filter((d) =>
     selectedDocIds.has(d.id),
   ).length;
   const isVolChecked =
-    selectedCount === sortedDocs.length && sortedDocs.length > 0;
+    selectedCount === selectableDocs.length && selectableDocs.length > 0;
   const isVolIndeterminate =
-    selectedCount > 0 && selectedCount < sortedDocs.length;
+    selectedCount > 0 && selectedCount < selectableDocs.length;
 
   return (
     <>
@@ -252,7 +259,9 @@ function VolunteerTableGroup({
         >
           <Checkbox
             checked={isVolIndeterminate ? 'indeterminate' : isVolChecked}
-            onCheckedChange={() => onToggleVolDocs(vol)}
+            onCheckedChange={() =>
+              onToggleVolDocs(selectableDocs.map((d) => d.id))
+            }
             aria-label={`${vol.name} auswählen`}
           />
         </TableCell>
@@ -402,7 +411,7 @@ function VolunteerTableGroup({
                 className="py-3 align-top"
                 onClick={(e) => e.stopPropagation()}
               >
-                {!isActive && !isGenerate && !isDeclined && (
+                {!isActive && meta.actionKey !== 'create' && !isDeclined && (
                   <Checkbox
                     checked={isDocSelected}
                     onCheckedChange={() => onToggleDoc(doc.id)}
@@ -555,7 +564,7 @@ interface ReimbursementsTableProps {
   vols: BoardVolunteer[];
   selectedDocIds: Set<string>;
   onToggleDoc: (docId: string) => void;
-  onToggleVolDocs: (vol: BoardVolunteer) => void;
+  onToggleVolDocs: (docIds: string[]) => void;
   onToggleAll: (docIds: string[], select: boolean) => void;
   onDocumentClick: (doc: BoardDocument, vol: BoardVolunteer) => void;
   onRequestAction: (items: DocVolPair[], action: NonCompliantAction) => void;
@@ -589,7 +598,11 @@ export function ReimbursementsTable({
             )
             .filter((d) => docVisibleInRange(d, dateRange));
     return visible
-      .filter((d) => d.status !== 'contract-active')
+      .filter(
+        (d) =>
+          d.status !== 'contract-active' &&
+          STATUS_META[d.status].actionKey !== 'create',
+      )
       .map((d) => d.id);
   });
 

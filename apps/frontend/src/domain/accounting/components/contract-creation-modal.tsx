@@ -24,7 +24,7 @@ import {
   templateSlugFor,
 } from './template/mock-saved-templates';
 
-type ProfileFieldKey = 'address' | 'iban' | 'bic' | 'dob' | 'taxId';
+type ProfileFieldKey = 'address' | 'iban' | 'bic' | 'dob';
 
 interface ProfileFieldState {
   value: string | null;
@@ -47,6 +47,8 @@ interface ContractCreationModalProps {
   volunteerName: string | null;
   pauschale: PauschalenType | null;
   onSent: () => void;
+  /** See DocumentCreationDialog's embedded mode. */
+  embedded?: boolean;
 }
 
 export function ContractCreationModal({
@@ -56,6 +58,7 @@ export function ContractCreationModal({
   volunteerName,
   pauschale,
   onSent,
+  embedded,
 }: ContractCreationModalProps) {
   const t = useTranslations('Accounting.reimbursements.contractModal');
   const tFields = useTranslations('Accounting.templates.builder.dataSources');
@@ -91,10 +94,6 @@ export function ContractCreationModal({
         iban: { value: data.iban, provenance: data.iban ? 'profile' : 'gap' },
         bic: { value: data.bic, provenance: data.bic ? 'profile' : 'gap' },
         dob: { value: data.dob, provenance: data.dob ? 'profile' : 'gap' },
-        taxId: {
-          value: data.taxId,
-          provenance: data.taxId ? 'profile' : 'gap',
-        },
       });
       setStatus('loaded');
     }, 350);
@@ -144,7 +143,6 @@ export function ContractCreationModal({
     volunteer_dob: fields?.dob.value ?? undefined,
     volunteer_iban: fields?.iban.value ?? undefined,
     volunteer_bic: fields?.bic.value ?? undefined,
-    volunteer_tax_id: fields?.taxId.value ?? undefined,
     generated_date: new Date().toLocaleDateString('de-DE'),
   };
 
@@ -152,18 +150,12 @@ export function ContractCreationModal({
     <DocumentCreationDialog
       open={open}
       onOpenChange={onOpenChange}
+      embedded={embedded}
       title={t('title')}
       status={status}
       errorTitle={t('loadErrorTitle')}
       errorDescription={t('loadError', { name: volunteerName })}
-      fieldsSkeletonKeys={[
-        'address',
-        'iban',
-        'dob',
-        'taxId',
-        'lifespan',
-        'hours',
-      ]}
+      fieldsSkeletonKeys={['address', 'iban', 'dob', 'lifespan', 'hours']}
       cancelLabel={t('cancel')}
       sendLabel={t('sendForSigning')}
       sendingLabel={t('sending')}
@@ -244,14 +236,6 @@ export function ContractCreationModal({
               volunteerName={volunteerName}
               docType="contract"
               onSave={handleFieldSave('dob')}
-            />
-            <AccountingProfileFieldCard
-              label={tFields('volunteer_tax_id')}
-              value={fields.taxId.value}
-              provenance={fields.taxId.provenance}
-              volunteerName={volunteerName}
-              docType="contract"
-              onSave={handleFieldSave('taxId')}
             />
           </>
         )

@@ -27,6 +27,7 @@ import { useTranslations } from 'next-intl';
 import { Fragment, useEffect, useMemo, useState } from 'react';
 import { toast } from 'sonner';
 import { ContractCreationModal } from './contract-creation-modal';
+import { CreateDocumentModal } from './create-document-modal';
 import type { PauschalenType } from './doc-type-header';
 import { InvoiceCreationModal } from './invoice-creation-modal';
 import type {
@@ -35,6 +36,7 @@ import type {
 } from './non-compliant-timesheet-dialog';
 import { NonCompliantTimesheetDialog } from './non-compliant-timesheet-dialog';
 import type { DateRange } from './period-picker';
+import { lastMonthRange, PeriodPicker, thisMonthRange } from './period-picker';
 import { BatchBar } from './reimbursements-batch-bar';
 import {
   DocumentSheet,
@@ -489,6 +491,24 @@ const MOCK_DOCUMENTLESS_VOLUNTEERS: BoardVolunteer[] = [
     totalCap: 3000,
     documents: [],
   },
+  {
+    id: 'v56',
+    name: 'Layla Hoffmann',
+    initials: 'LH',
+    pauschale: 'ehrenamt',
+    usedAmount: 0,
+    totalCap: 840,
+    documents: [],
+  },
+  {
+    id: 'v57',
+    name: 'Jonas Reiter',
+    initials: 'JR',
+    pauschale: 'uebungleiter',
+    usedAmount: 0,
+    totalCap: 3000,
+    documents: [],
+  },
 ];
 
 /**
@@ -508,7 +528,7 @@ function buildContractMissingDocs(vol: BoardVolunteer): BoardDocument[] {
 }
 // ─── Date helpers ─────────────────────────────────────────────────────────────
 
-function parseDocDate(s: string): Date | null {
+export function parseDocDate(s: string): Date | null {
   const parts = s.split('.');
   if (parts.length !== 3) return null;
   const [d, m, y] = parts.map(Number);
@@ -731,16 +751,22 @@ function FilterTile({
 
 interface ReimbursementsBoardProps {
   orgUId: string;
-  /** Owned by the page header now (same row as the title) — see reimbursements-page-header.tsx. */
+  /** Owned by the page header — see reimbursements-page-header.tsx. */
   dateRange: DateRange | undefined;
+  onDateRangeChange: (range: DateRange | undefined) => void;
   /** Fired when the "Ready to go" tile is selected — the page header narrows its own range to this month. */
   onReadyToGoSelected: () => void;
+  createDocOpen: boolean;
+  onCreateDocOpenChange: (open: boolean) => void;
 }
 
 export function ReimbursementsBoard({
   orgUId,
   dateRange,
+  onDateRangeChange,
   onReadyToGoSelected,
+  createDocOpen,
+  onCreateDocOpenChange,
 }: ReimbursementsBoardProps) {
   const t = useTranslations('Accounting.reimbursements');
 
@@ -781,6 +807,10 @@ export function ReimbursementsBoard({
   const volunteers = useMemo(
     () => applyDocStatusOverrides(MOCK_VOLUNTEERS, docOverrides),
     [docOverrides],
+  );
+  const allVolunteers = useMemo(
+    () => [...volunteers, ...MOCK_DOCUMENTLESS_VOLUNTEERS],
+    [volunteers],
   );
 
   // Fake success feedback — no mutation is actually wired yet, but every
@@ -906,13 +936,13 @@ export function ReimbursementsBoard({
     });
   }
 
-  function toggleVolDocs(vol: BoardVolunteer) {
+  function toggleVolDocs(docIds: string[]) {
     setSelectedDocIds((prev) => {
       const next = new Set(prev);
-      const allSelected = vol.documents.every((d) => next.has(d.id));
-      for (const d of vol.documents) {
-        if (allSelected) next.delete(d.id);
-        else next.add(d.id);
+      const allSelected = docIds.every((id) => next.has(id));
+      for (const id of docIds) {
+        if (allSelected) next.delete(id);
+        else next.add(id);
       }
       return next;
     });
@@ -1137,6 +1167,38 @@ export function ReimbursementsBoard({
 
   return (
     <div className="space-y-6 pb-24">
+      {/* Calendar only — nothing else belongs in this row */}
+      <div className="flex justify-start">
+        <PeriodPicker
+          value={dateRange}
+          onChange={onDateRangeChange}
+          presets={[
+            {
+              key: 'all-time',
+              label: t('periodPicker.allTime'),
+              range: undefined,
+            },
+            {
+              key: 'this-month',
+              label: t('periodPicker.thisMonth'),
+              range: thisMonthRange(),
+            },
+            {
+              key: 'last-month',
+              label: t('periodPicker.lastMonth'),
+              range: lastMonthRange(),
+            },
+          ]}
+          placeholderLabel={t('periodPicker.allTime')}
+          applyLabel={t('periodPicker.apply')}
+          customRangeLabel={t('periodPicker.customPeriod')}
+          autoApplyPresets
+          requireEndDate={false}
+          align="start"
+          className="h-10 gap-2 shrink-0"
+        />
+      </div>
+
       {/* Pipeline steps (connected filter tiles) */}
       <div className="flex items-stretch gap-0 overflow-x-auto pb-1">
         <FilterTile
@@ -1369,6 +1431,15 @@ export function ReimbursementsBoard({
           if (invoiceCreationTarget)
             handleInvoiceSent(invoiceCreationTarget.doc.id);
         }}
+      />
+
+      <CreateDocumentModal
+        open={createDocOpen}
+        onOpenChange={onCreateDocOpenChange}
+        orgUId={orgUId}
+        volunteers={allVolunteers}
+        onContractSent={handleContractSent}
+        onInvoiceSent={handleInvoiceSent}
       />
     </div>
   );

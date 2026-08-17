@@ -8,12 +8,10 @@ import type { NonCompliantAction } from './non-compliant-timesheet-dialog';
 import type { DocStatus, DocVolPair } from './reimbursements-board';
 import { isTimesheetNonCompliant } from './reimbursements-board';
 
-type BatchAction = 'create' | 'countersign' | 'bundle' | 'remind';
+// Mass creation is deprecated — no `create` entry (see reimbursements-volunteer-group.tsx).
+type BatchAction = 'countersign' | 'bundle' | 'remind';
 
 const DOC_ACTION: Partial<Record<DocStatus, BatchAction>> = {
-  'contract-generate': 'create',
-  'contract-missing': 'create',
-  'timesheet-generate': 'create',
   'contract-signing-coord': 'countersign',
   'timesheet-signing-super': 'countersign',
   'timesheet-ready': 'bundle',
@@ -22,7 +20,6 @@ const DOC_ACTION: Partial<Record<DocStatus, BatchAction>> = {
 };
 
 const ACTION_VARIANT: Record<BatchAction, 'default' | 'outline'> = {
-  create: 'default',
   countersign: 'default',
   bundle: 'default',
   remind: 'outline',
@@ -57,7 +54,6 @@ export function BatchBar({
   const groupEntries = [...groups.entries()];
 
   const ACTION_LABEL: Record<BatchAction, string> = {
-    create: t('createAll'),
     countersign: t('countersignAll'),
     remind: t('remindAll'),
     bundle: t('bundleAll'),

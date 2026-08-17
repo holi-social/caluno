@@ -35,6 +35,8 @@ interface DocumentCreationDialogProps {
   isSending: boolean;
   onSend: () => void;
   sendDisabled?: boolean;
+  /** Skip the outer Dialog/header — for a caller that owns its own shell. */
+  embedded?: boolean;
 }
 
 /**
@@ -60,52 +62,60 @@ export function DocumentCreationDialog({
   isSending,
   onSend,
   sendDisabled = false,
+  embedded = false,
 }: DocumentCreationDialogProps) {
+  const body = (
+    <>
+      <div className="flex-1 overflow-y-auto p-6">
+        {status === 'error' ? (
+          <Alert variant="destructive">
+            <AlertTitle>{errorTitle}</AlertTitle>
+            <AlertDescription>{errorDescription}</AlertDescription>
+          </Alert>
+        ) : (
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-[3fr_2fr]">
+            <div>
+              {status === 'loading' ? (
+                <Skeleton className="h-96 w-full rounded-xl" />
+              ) : (
+                preview
+              )}
+            </div>
+
+            <div className="space-y-4">
+              {status === 'loading' &&
+                fieldsSkeletonKeys.map((key) => (
+                  <Skeleton key={key} className="h-24 w-full rounded-xl" />
+                ))}
+              {status === 'loaded' && fields}
+            </div>
+          </div>
+        )}
+      </div>
+
+      <DialogFooter className="shrink-0 border-t p-6">
+        <Button variant="outline" onClick={() => onOpenChange(false)}>
+          {cancelLabel}
+        </Button>
+        <Button
+          onClick={onSend}
+          disabled={status !== 'loaded' || isSending || sendDisabled}
+        >
+          {isSending ? sendingLabel : sendLabel}
+        </Button>
+      </DialogFooter>
+    </>
+  );
+
+  if (embedded) return body;
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent size="lg">
         <DialogHeader className="shrink-0 border-b p-6">
           <DialogTitle>{title}</DialogTitle>
         </DialogHeader>
-
-        <div className="flex-1 overflow-y-auto p-6">
-          {status === 'error' ? (
-            <Alert variant="destructive">
-              <AlertTitle>{errorTitle}</AlertTitle>
-              <AlertDescription>{errorDescription}</AlertDescription>
-            </Alert>
-          ) : (
-            <div className="grid grid-cols-1 gap-6 md:grid-cols-[3fr_2fr]">
-              <div>
-                {status === 'loading' ? (
-                  <Skeleton className="h-96 w-full rounded-xl" />
-                ) : (
-                  preview
-                )}
-              </div>
-
-              <div className="space-y-4">
-                {status === 'loading' &&
-                  fieldsSkeletonKeys.map((key) => (
-                    <Skeleton key={key} className="h-24 w-full rounded-xl" />
-                  ))}
-                {status === 'loaded' && fields}
-              </div>
-            </div>
-          )}
-        </div>
-
-        <DialogFooter className="shrink-0 border-t p-6">
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
-            {cancelLabel}
-          </Button>
-          <Button
-            onClick={onSend}
-            disabled={status !== 'loaded' || isSending || sendDisabled}
-          >
-            {isSending ? sendingLabel : sendLabel}
-          </Button>
-        </DialogFooter>
+        {body}
       </DialogContent>
     </Dialog>
   );

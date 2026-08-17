@@ -1,9 +1,11 @@
 'use client';
 
+import { Button } from '@repo/ui';
+import { PlusIcon } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useState } from 'react';
 import type { DateRange } from './period-picker';
-import { lastMonthRange, PeriodPicker, thisMonthRange } from './period-picker';
+import { thisMonthRange } from './period-picker';
 import { ReimbursementsBoard } from './reimbursements-board';
 
 interface ReimbursementsPageHeaderProps {
@@ -21,6 +23,7 @@ export function ReimbursementsPageHeader({
 
   // Period filter — defaults to "all time" (no range = any document at any time)
   const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
+  const [createDocOpen, setCreateDocOpen] = useState(false);
 
   return (
     <div className="space-y-6">
@@ -30,40 +33,22 @@ export function ReimbursementsPageHeader({
           <p className="text-muted-foreground mt-1">{subtitle}</p>
         </div>
 
-        <PeriodPicker
-          value={dateRange}
-          onChange={setDateRange}
-          presets={[
-            {
-              key: 'all-time',
-              label: t('periodPicker.allTime'),
-              range: undefined,
-            },
-            {
-              key: 'this-month',
-              label: t('periodPicker.thisMonth'),
-              range: thisMonthRange(),
-            },
-            {
-              key: 'last-month',
-              label: t('periodPicker.lastMonth'),
-              range: lastMonthRange(),
-            },
-          ]}
-          placeholderLabel={t('periodPicker.allTime')}
-          applyLabel={t('periodPicker.apply')}
-          customRangeLabel={t('periodPicker.customPeriod')}
-          autoApplyPresets
-          requireEndDate={false}
-          align="end"
-          className="h-10 gap-2 shrink-0"
-        />
+        <Button
+          className="h-10 shrink-0"
+          onClick={() => setCreateDocOpen(true)}
+        >
+          <PlusIcon />
+          {t('createDocument')}
+        </Button>
       </div>
 
       <ReimbursementsBoard
         orgUId={orgUId}
         dateRange={dateRange}
+        onDateRangeChange={setDateRange}
         onReadyToGoSelected={() => setDateRange(thisMonthRange())}
+        createDocOpen={createDocOpen}
+        onCreateDocOpenChange={setCreateDocOpen}
       />
     </div>
   );

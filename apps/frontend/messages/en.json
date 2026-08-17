@@ -1034,6 +1034,7 @@
     "reimbursements": {
       "title": "Reimbursements",
       "subtitle": "Create, sign, and download documents.",
+      "createDocument": "Create document",
       "periodLabel": "Period",
       "periodPicker": {
         "allTime": "All time",
@@ -1081,6 +1082,19 @@
       },
       "resetPrototype": "Reset prototype",
       "resetPrototypeToast": "Prototype data reset.",
+      "createDocumentModal": {
+        "stepIndicator": "Step {step} of {total}",
+        "step1Title": "Volunteer & document",
+        "step2Title": "Review & send",
+        "volunteerPlaceholder": "Search for a volunteer …",
+        "noVolunteersFound": "No volunteers found.",
+        "selectDocumentTitle": "Select a document",
+        "noDocumentYet": "Not created yet",
+        "documentCount": "{count, plural, =1 {1 document} other {# documents}}",
+        "viewVolunteer": "View volunteer",
+        "createButton": "Create {kind}",
+        "createButtonEmpty": "Create new document"
+      },
       "bundle": {
         "actionLabel": "Download bundle",
         "readyCount": "{count} ready",
@@ -1089,7 +1103,6 @@
       },
       "batchBar": {
         "selected": "{count} selected",
-        "createAll": "Create and sendall",
         "countersignAll": "Sign all",
         "remindAll": "Remind all",
         "bundleAll": "Download all bundles",
@@ -1201,7 +1214,7 @@
         "editingHint": "You're only editing this for {docType, select, contract {this contract} invoice {this invoice} other {this document}} — the data on {name}'s profile stays unchanged.",
         "overrideHint": "Edited for {docType, select, contract {this contract} invoice {this invoice} other {this document}} only",
         "missingValue": "Not provided",
-        "gapHint": "Not in {name}'s profile yet — add it for {docType, select, contract {this contract} invoice {this invoice} other {this document}}"
+        "gapHint": "{name} did not share this data in their profile — add it for {docType, select, contract {this contract} invoice {this invoice} other {this document}}"
       },
       "contractModal": {
         "title": "Create contract",

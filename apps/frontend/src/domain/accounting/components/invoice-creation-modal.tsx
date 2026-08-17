@@ -151,6 +151,8 @@ interface InvoiceCreationModalProps {
   usedBeforeAmount: number | null;
   totalCapAmount: number | null;
   onSent: () => void;
+  /** See DocumentCreationDialog's embedded mode. */
+  embedded?: boolean;
 }
 
 export function InvoiceCreationModal({
@@ -164,6 +166,7 @@ export function InvoiceCreationModal({
   usedBeforeAmount,
   totalCapAmount,
   onSent,
+  embedded,
 }: InvoiceCreationModalProps) {
   const t = useTranslations('Accounting.reimbursements.invoiceModal');
   const tFields = useTranslations('Accounting.templates.builder.dataSources');
@@ -332,6 +335,7 @@ export function InvoiceCreationModal({
     <DocumentCreationDialog
       open={open}
       onOpenChange={onOpenChange}
+      embedded={embedded}
       title={t('title')}
       status={status}
       errorTitle={t('loadErrorTitle')}
