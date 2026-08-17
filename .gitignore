@@ -62,6 +62,7 @@ AGENTS.local.md
 .ai/SESSION
 .ai/metrics.jsonl
 .ai/specs/
+.ai/plans/
 .ai/handoff/
 
 gitleaks-report.json
