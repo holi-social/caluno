@@ -21,8 +21,13 @@ import { EventInformationCard } from '@/domain/event/components/event-informatio
 import { EventMetaCard } from '@/domain/event/components/event-meta-card';
 import { EventRequiredFormsPopover } from '@/domain/event/components/event-required-forms-popover';
 import { EventVolunteersSection } from '@/domain/event/components/event-volunteers-section';
-import { eventDetailPath, eventShiftNewPath } from '@/domain/event/routes';
+import {
+  eventDetailPath,
+  eventShiftNewPath,
+  inviteEventPath,
+} from '@/domain/event/routes';
 import { CreateShiftButton } from '@/domain/shift/components/create-shift-button';
+import { ShiftCreatedDialog } from '@/domain/shift/components/shift-created-dialog';
 import { WeeklyCalendar } from '@/domain/shift/components/weekly-calendar';
 import { WeeklyCalendarNav } from '@/domain/shift/components/weekly-calendar-nav';
 import { Link } from '@/i18n/navigation';
@@ -84,6 +89,8 @@ export default async function EventDetailPage({
 
   return (
     <div className="space-y-6">
+      <ShiftCreatedDialog />
+
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="min-w-0">
           <h1 className="page-title line-clamp-2">{event.title}</h1>
@@ -92,7 +99,7 @@ export default async function EventDetailPage({
           <div className="flex shrink-0 flex-wrap gap-2">
             <EventRequiredFormsPopover orgUId={orgUId} eventId={eventId} />
             <Button asChild variant="outline" size="sm">
-              <Link href={`/admin/${orgUId}/events/${eventId}/invite`}>
+              <Link href={inviteEventPath(orgUId, eventId)}>
                 <UserPlus />
                 {t('inviteButton')}
               </Link>

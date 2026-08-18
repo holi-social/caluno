@@ -22,10 +22,12 @@ import {
 import { JoinStatus } from '../shared/enums/join-status.enum';
 import {
   ACTIVE_EVENT_INVITE_STATUSES,
+  ADMIN_LIST_EVENT_INVITE_STATUSES,
   canTransitionInviteStatus,
   PARTICIPATING_EVENT_INVITE_STATUSES,
 } from '../shared/invite-status';
 import { SortOrder } from '../shift/enums';
+import { ShiftService } from '../shift/shift.service';
 import { FilePurpose } from '../storage/enums';
 import { FileService } from '../storage/services/file.service';
 import { slugify } from '../utils/slug.util';
@@ -49,6 +51,7 @@ export class EventService {
     private readonly organizationService: OrganizationService,
     private readonly fileService: FileService,
     private readonly requiredFormService: RequiredFormService,
+    private readonly shiftService: ShiftService,
   ) {}
 
   async findById(id: string, organizationUnitId: string): Promise<EventEntity> {
@@ -356,7 +359,10 @@ export class EventService {
     }
 
     const existing = await this.db
-      .select({ userId: schema.eventInvites.userId })
+      .select({
+        userId: schema.eventInvites.userId,
+        status: schema.eventInvites.status,
+      })
       .from(schema.eventInvites)
       .where(
         and(
@@ -365,23 +371,43 @@ export class EventService {
         ),
       );
 
-    const alreadyInvited = new Set(existing.map((row) => row.userId));
-    const newMemberIds = memberIds.filter((id) => !alreadyInvited.has(id));
+    const existingByUserId = new Map(
+      existing.map((row) => [row.userId, row.status]),
+    );
+    const newMemberIds = memberIds.filter((id) => !existingByUserId.has(id));
+    const reinviteMemberIds = memberIds.filter(
+      (id) => existingByUserId.get(id) === EventInviteStatus.ADMIN_REJECTED,
+    );
 
-    if (newMemberIds.length === 0) {
+    if (newMemberIds.length === 0 && reinviteMemberIds.length === 0) {
       return event;
     }
 
-    await this.db
-      .insert(schema.eventInvites)
-      .values(
-        newMemberIds.map((userId) => ({
-          eventId,
-          userId,
-          status: EventInviteStatus.INVITED,
-        })),
-      )
-      .onConflictDoNothing();
+    if (newMemberIds.length > 0) {
+      await this.db
+        .insert(schema.eventInvites)
+        .values(
+          newMemberIds.map((userId) => ({
+            eventId,
+            userId,
+            status: EventInviteStatus.INVITED,
+          })),
+        )
+        .onConflictDoNothing();
+    }
+
+    if (reinviteMemberIds.length > 0) {
+      await this.db
+        .update(schema.eventInvites)
+        .set({ status: EventInviteStatus.INVITED })
+        .where(
+          and(
+            eq(schema.eventInvites.eventId, eventId),
+            inArray(schema.eventInvites.userId, reinviteMemberIds),
+            eq(schema.eventInvites.status, EventInviteStatus.ADMIN_REJECTED),
+          ),
+        );
+    }
 
     return event;
   }
@@ -512,6 +538,14 @@ export class EventService {
       throw new NotFoundGraphQLError('Event not found');
     }
 
+    const existingInvite = await this.findInvite(eventId, userId);
+    if (existingInvite?.status === EventInviteStatus.ADMIN_REJECTED) {
+      return {
+        status: JoinStatus.REJECTED,
+        event,
+      };
+    }
+
     const orgUnit = await this.db.query.organizationUnits.findFirst({
       where: { id: event.organizationUnitId },
     });
@@ -613,6 +647,12 @@ export class EventService {
       throw new NotFoundGraphQLError('Event invite not found');
     }
 
+    // Idempotent no-op — matching status skips the shift cascade re-run.
+    // Unreachable from the UI today: the admin volunteers list only offers
+    // uninvite from INVITED/SELF_JOINED/ACCEPTED, so an admin can't retrigger
+    // this on an already-ADMIN_REJECTED invite. If shift invites ever drift
+    // out of sync with the event status, a repeat call here will not re-sync
+    // them.
     if (invite.status === status) {
       return invite;
     }
@@ -623,13 +663,29 @@ export class EventService {
       );
     }
 
-    const [updated] = await this.db
-      .update(schema.eventInvites)
-      .set({ status })
-      .where(eq(schema.eventInvites.id, invite.id))
-      .returning();
+    return this.db.transaction(async (tx) => {
+      const [updated] = await tx
+        .update(schema.eventInvites)
+        .set({ status })
+        .where(eq(schema.eventInvites.id, invite.id))
+        .returning();
 
-    return updated;
+      if (status === EventInviteStatus.ADMIN_REJECTED) {
+        await this.shiftService.adminRejectInvitesForEventUser(
+          eventId,
+          userId,
+          tx,
+        );
+      } else if (status === EventInviteStatus.INVITED) {
+        await this.shiftService.adminReinviteInvitesForEventUser(
+          eventId,
+          userId,
+          tx,
+        );
+      }
+
+      return updated;
+    });
   }
 
   async findInvite(
@@ -669,10 +725,39 @@ export class EventService {
     return this.db.query.eventInvites.findMany({
       where: {
         eventId,
-        status: { in: [...ACTIVE_EVENT_INVITE_STATUSES] },
+        status: { in: [...ADMIN_LIST_EVENT_INVITE_STATUSES] },
       },
       orderBy: { createdAt: 'desc' },
     });
+  }
+
+  async countInvitesByEventIds(
+    eventIds: string[],
+  ): Promise<Array<{ eventId: string; count: number }>> {
+    if (eventIds.length === 0) {
+      return [];
+    }
+
+    const rows = await this.db
+      .select({
+        eventId: schema.eventInvites.eventId,
+        count: count(),
+      })
+      .from(schema.eventInvites)
+      .where(
+        and(
+          inArray(schema.eventInvites.eventId, eventIds),
+          inArray(schema.eventInvites.status, [
+            ...ACTIVE_EVENT_INVITE_STATUSES,
+          ]),
+        ),
+      )
+      .groupBy(schema.eventInvites.eventId);
+
+    return rows.map((row) => ({
+      eventId: row.eventId,
+      count: Number(row.count),
+    }));
   }
 
   private async setRequiredFormsInTx(

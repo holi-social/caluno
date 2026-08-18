@@ -58,6 +58,12 @@ mutation CancelMembershipRequest($id: ID!, $organizationUnitId: ID!) {
   }
 }
 
+mutation RemoveMembershipRequest($id: ID!) {
+  removeMembershipRequest(id: $id) {
+    id
+  }
+}
+
 query GetMembershipRequests(
   $status: MembershipRequestStatus
   $limit: Int!

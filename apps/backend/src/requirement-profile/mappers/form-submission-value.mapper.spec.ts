@@ -19,11 +19,16 @@ describe('FormSubmissionValueMapper', () => {
     expect(model?.value).toBe('hello');
   });
 
-  it('joins multi-select array values into a comma-separated string', () => {
+  it('serializes multi-select array values as JSON', () => {
     // MULTI_CHOICE values are stored as a jsonb array (see parseValue in
     // FormSubmissionService) while the GraphQL model declares value: String.
     const model = mapper.toModel({ ...base, value: ['a', 'b'] });
-    expect(model?.value).toBe('a,b');
+    expect(model?.value).toBe('["a","b"]');
+  });
+
+  it('preserves array members containing commas', () => {
+    const model = mapper.toModel({ ...base, value: ['a, b', 'c'] });
+    expect(JSON.parse(model?.value ?? '')).toEqual(['a, b', 'c']);
   });
 
   it('returns null for missing entities', () => {

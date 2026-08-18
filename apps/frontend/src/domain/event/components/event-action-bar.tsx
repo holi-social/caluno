@@ -1,11 +1,18 @@
 'use client';
 
 import { Button } from '@repo/ui';
-import { Eye, Share2, SquarePen, Trash2, UserPlus } from 'lucide-react';
+import {
+  Eye,
+  Loader2,
+  Share2,
+  SquarePen,
+  Trash2,
+  UserPlus,
+} from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import { useState, useTransition } from 'react';
+import { useTransition } from 'react';
 import { toast } from 'sonner';
-import { ConfirmDialog } from '@/domain/requirement-form/components/confirm-dialog';
+import { DeleteAlertDialog } from '@/components/delete-alert-dialog';
 import { Link, useRouter } from '@/i18n/navigation';
 import { copyToClipboard } from '@/lib/clipboard';
 import { deleteEvent } from '../actions';
@@ -27,7 +34,6 @@ export function EventActionBar({
 }: EventActionBarProps) {
   const t = useTranslations('Event');
   const router = useRouter();
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isDeleting, startDeleteTransition] = useTransition();
 
   const handleShare = () => {
@@ -43,45 +49,50 @@ export function EventActionBar({
         toast.success(t('toast.deleted'));
         router.push(eventsListPath(orgUId));
       }
-      setIsDeleteDialogOpen(false);
     });
   };
 
   return (
-    <aside className="flex items-center gap-1">
-      <Link href={eventDetailPath(orgUId, id)}>
-        <Button size="icon-xs" variant="outline" tooltip={t('action.viewAria')}>
-          <Eye />
-        </Button>
-      </Link>
+    <div className="flex items-center gap-1.5 border-t border-border px-4 pt-4 pb-4">
+      <Button asChild size="sm" className="w-full text-sm">
+        <Link href={eventDetailPath(orgUId, id)} className="flex-1 min-w-0">
+          <Eye className="shrink-0" />
+          <span className="min-w-0 truncate">{t('card.viewButton')}</span>
+        </Link>
+      </Button>
 
       {canEdit && (
         <>
-          <Link href={`/admin/${orgUId}/events/${id}/edit`}>
-            <Button
-              size="icon-xs"
-              variant="outline"
-              tooltip={t('action.editAria')}
-            >
+          <Button
+            asChild
+            size="icon-sm"
+            variant="outline"
+            className="rounded-full"
+            tooltip={t('action.editAria')}
+          >
+            <Link href={`/admin/${orgUId}/events/${id}/edit`}>
               <SquarePen />
-            </Button>
-          </Link>
+            </Link>
+          </Button>
 
-          <Link href={`/admin/${orgUId}/events/${id}/invite`}>
-            <Button
-              size="icon-xs"
-              variant="outline"
-              tooltip={t('action.inviteAria')}
-            >
+          <Button
+            asChild
+            size="icon-sm"
+            variant="outline"
+            className="rounded-full"
+            tooltip={t('action.inviteAria')}
+          >
+            <Link href={`/admin/${orgUId}/events/${id}/invite`}>
               <UserPlus />
-            </Button>
-          </Link>
+            </Link>
+          </Button>
         </>
       )}
 
       <Button
-        size="icon-xs"
+        size="icon-sm"
         variant="outline"
+        className="rounded-full"
         tooltip={t('action.shareAria')}
         onClick={handleShare}
       >
@@ -89,25 +100,24 @@ export function EventActionBar({
       </Button>
 
       {canEdit && (
-        <ConfirmDialog
-          open={isDeleteDialogOpen}
-          onOpenChange={setIsDeleteDialogOpen}
+        <DeleteAlertDialog
           title={t('deleteDialog.title')}
           description={t('deleteDialog.description')}
-          confirmLabel={t('deleteDialog.confirm')}
-          pending={isDeleting}
-          onConfirm={handleDelete}
+          deleteLabel={t('deleteDialog.confirm')}
+          onDelete={handleDelete}
           trigger={
             <Button
-              size="icon-xs"
+              size="icon-sm"
               variant="destructive"
+              className="rounded-full"
               tooltip={t('action.deleteAria')}
+              disabled={isDeleting}
             >
-              <Trash2 />
+              {isDeleting ? <Loader2 className="animate-spin" /> : <Trash2 />}
             </Button>
           }
         />
       )}
-    </aside>
+    </div>
   );
 }

@@ -131,7 +131,11 @@ export function SignupForm({ redirectTo = '/' }: SignupFormProps) {
       <p className="text-center text-sm text-muted-foreground">
         {t('hasAccount')}{' '}
         <Link
-          href="/login"
+          href={
+            redirectTo && redirectTo !== '/'
+              ? `/login?redirectTo=${encodeURIComponent(redirectTo)}`
+              : '/login'
+          }
           className="font-medium text-primary hover:underline"
         >
           {t('signInLink')}

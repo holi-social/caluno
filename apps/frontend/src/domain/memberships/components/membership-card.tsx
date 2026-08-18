@@ -1,7 +1,10 @@
 import { Card, CardAction, CardContent, CardHeader, CardTitle } from '@repo/ui';
+import { ChevronRight } from 'lucide-react';
 import { useTranslations } from 'next-intl';
+import { Link } from '@/i18n/navigation';
 import { useFormatting } from '@/lib/formatting/use-formatting';
 import type { MembershipEntry } from '../types';
+import { DismissMembershipButton } from './dismiss-membership-button';
 import { LeaveMembershipButton } from './leave-membership-button';
 import { MembershipStatusBadge } from './membership-status-badge';
 import { OrgUnitAvatar } from './org-unit-avatar';
@@ -36,14 +39,14 @@ export function MembershipCard({ entry }: Props) {
         </CardAction>
       </CardHeader>
 
-      <CardContent className="flex flex-col gap-2">
+      <CardContent>
         {entry.state === 'accepted' && entry.roles.length > 0 && (
-          <span className="text-muted-foreground text-sm">
+          <p className="text-muted-foreground text-sm">
             {entry.roles.join(', ')}
-          </span>
+          </p>
         )}
 
-        <span className="text-muted-foreground text-sm">
+        <p className="text-muted-foreground text-sm mb-4">
           {t(
             entry.state === 'accepted'
               ? 'meta.joinedDate'
@@ -58,20 +61,36 @@ export function MembershipCard({ entry }: Props) {
               }),
             },
           )}
-        </span>
+        </p>
 
         {entry.state === 'declined' && entry.rejectionReason && (
-          <q className="text-muted-foreground text-sm">
+          <q className="text-muted-foreground text-sm mb-4 block">
             {entry.rejectionReason}
           </q>
         )}
 
-        {entry.state === 'accepted' && (
+        {entry.state === 'declined' && (
           <div className="flex justify-start">
-            <LeaveMembershipButton
-              membershipId={entry.id}
-              orgName={organizationName}
-            />
+            <DismissMembershipButton id={entry.id} />
+          </div>
+        )}
+
+        {entry.state === 'accepted' && (
+          <div className="flex justify-between items-center">
+            <div>
+              <LeaveMembershipButton
+                membershipId={entry.id}
+                orgName={organizationName}
+              />
+            </div>
+            <div className="flex justify-end">
+              <Link
+                href={`/profile/memberships/${entry.id}`}
+                className="flex items-center gap-1"
+              >
+                {t('actions.open')} <ChevronRight className="size-4" />
+              </Link>
+            </div>
           </div>
         )}
 

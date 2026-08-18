@@ -10,6 +10,7 @@ import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 import { FormSheet, useFormSheet } from '@/components/form-sheet';
 import { TransferList } from '@/domain/shift/components/transfer-list';
+import { preselectedInviteMemberIds } from '@/domain/shift/invite-status-display';
 import { useRouter } from '@/i18n/navigation';
 import { copyToClipboard } from '@/lib/clipboard';
 import { toEventInviteDisplayState } from '../invite-status-display';
@@ -53,7 +54,7 @@ export const EventInviteForm = ({
   const { handleSubmit, watch, setValue } = useForm<{ memberIds: string[] }>({
     resolver: zodResolver(serverEventInviteFormSchema),
     defaultValues: {
-      memberIds: invitedMembers.map((m) => m.id),
+      memberIds: preselectedInviteMemberIds(invitedMembers),
     },
   });
 

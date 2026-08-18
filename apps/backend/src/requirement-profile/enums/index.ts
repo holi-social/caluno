@@ -53,4 +53,5 @@ export enum RequiredFormTargetType {
   ORGANIZATION_UNIT = 'ORGANIZATION_UNIT',
   EVENT = 'EVENT',
   SHIFT = 'SHIFT',
+  SHIFT_INSTANCE = 'SHIFT_INSTANCE',
 }

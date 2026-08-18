@@ -11,6 +11,7 @@ import {
 import { permissions } from '../auth/schemas/permission.schema';
 import { EventInviteStatus } from '../event/enums';
 import { MembershipRequestStatus } from '../membership/enums';
+import { FieldType } from '../requirement-profile/enums';
 import { ShiftInviteStatus, ShiftVisibility } from '../shift/enums';
 import { expandShift } from '../shift/utils/rrule-expander';
 import { slugify } from '../utils/slug.util';
@@ -821,72 +822,258 @@ const ensurePersonalInformationForm = async (
   organizationId: string,
   organizationUnitId: string,
   createdById: string,
-): Promise<void> => {
-  const existingForm = await db.query.requirementForms.findFirst({
+): Promise<typeof schema.requirementForms.$inferSelect> => {
+  let form = await db.query.requirementForms.findFirst({
     where: { organizationId, slug: 'personal-information' },
   });
 
-  if (existingForm) {
-    return;
+  if (!form) {
+    const [createdForm] = await db
+      .insert(schema.requirementForms)
+      .values({
+        organizationId,
+        organizationUnitId,
+        slug: 'personal-information',
+        name: 'Personal Information',
+        description: 'Basic personal details for volunteers.',
+        shareToken: crypto.randomUUID(),
+        createdBy: createdById,
+        updatedBy: createdById,
+      })
+      .returning();
+
+    if (!createdForm) {
+      throw new Error('Failed to create Personal Information form');
+    }
+
+    form = createdForm;
+
+    const [block] = await db
+      .insert(schema.formBlocks)
+      .values({
+        organizationId,
+        title: 'Personal Information',
+        description: 'Required personal details.',
+        required: true,
+        createdBy: createdById,
+        updatedBy: createdById,
+      })
+      .returning();
+
+    if (!block) {
+      throw new Error('Failed to create Personal Information block');
+    }
+
+    await db.insert(schema.formBlockFields).values([
+      {
+        blockId: block.id,
+        type: FieldType.TEXT,
+        label: 'First name',
+        required: true,
+        fieldOrder: 0,
+      },
+      {
+        blockId: block.id,
+        type: FieldType.TEXT,
+        label: 'Last name',
+        required: true,
+        fieldOrder: 1,
+      },
+    ]);
+
+    await db.insert(schema.requirementFormBlockRefs).values({
+      formId: form.id,
+      blockId: block.id,
+      fieldOrder: 0,
+      required: true,
+    });
   }
 
-  const [form] = await db
-    .insert(schema.requirementForms)
-    .values({
-      organizationId,
+  const existingUnitRequiredForm =
+    await db.query.organizationUnitRequiredForms.findFirst({
+      where: { organizationUnitId, formId: form.id },
+    });
+
+  if (!existingUnitRequiredForm) {
+    await db.insert(schema.organizationUnitRequiredForms).values({
       organizationUnitId,
-      slug: 'personal-information',
-      name: 'Personal Information',
-      description: 'Basic personal details for volunteers.',
-      shareToken: crypto.randomUUID(),
-      createdBy: createdById,
-      updatedBy: createdById,
-    })
-    .returning();
+      formId: form.id,
+      order: 0,
+    });
+  }
+
+  return form;
+};
+
+const ensureBankingInformationForm = async (
+  db: Database,
+  organizationId: string,
+  organizationUnitId: string,
+  createdById: string,
+  shiftId: string,
+): Promise<typeof schema.requirementForms.$inferSelect> => {
+  let form = await db.query.requirementForms.findFirst({
+    where: { organizationId, slug: 'banking-information' },
+  });
 
   if (!form) {
-    throw new Error('Failed to create Personal Information form');
-  }
+    const [createdForm] = await db
+      .insert(schema.requirementForms)
+      .values({
+        organizationId,
+        organizationUnitId,
+        slug: 'banking-information',
+        name: 'Banking Information',
+        description: 'Bank account details for reimbursements.',
+        shareToken: crypto.randomUUID(),
+        createdBy: createdById,
+        updatedBy: createdById,
+      })
+      .returning();
 
-  const [block] = await db
-    .insert(schema.formBlocks)
-    .values({
-      organizationId,
-      title: 'Personal Information',
-      description: 'Required personal details.',
-      required: true,
-      createdBy: createdById,
-      updatedBy: createdById,
-    })
-    .returning();
+    if (!createdForm) {
+      throw new Error('Failed to create Banking Information form');
+    }
 
-  if (!block) {
-    throw new Error('Failed to create Personal Information block');
-  }
+    form = createdForm;
 
-  await db.insert(schema.formBlockFields).values([
-    {
+    const [block] = await db
+      .insert(schema.formBlocks)
+      .values({
+        organizationId,
+        title: 'Banking Information',
+        description: 'Bank account details.',
+        required: true,
+        createdBy: createdById,
+        updatedBy: createdById,
+      })
+      .returning();
+
+    if (!block) {
+      throw new Error('Failed to create Banking Information block');
+    }
+
+    await db.insert(schema.formBlockFields).values([
+      {
+        blockId: block.id,
+        type: FieldType.IBAN,
+        label: 'IBAN',
+        required: true,
+        fieldOrder: 0,
+      },
+      {
+        blockId: block.id,
+        type: FieldType.TEXT,
+        label: 'BIC',
+        required: true,
+        fieldOrder: 1,
+      },
+    ]);
+
+    await db.insert(schema.requirementFormBlockRefs).values({
+      formId: form.id,
       blockId: block.id,
-      type: 'TEXT',
-      label: 'First name',
+      fieldOrder: 0,
+      required: true,
+    });
+  }
+
+  const existingShiftRequiredForm = await db.query.shiftRequiredForms.findFirst(
+    {
+      where: { shiftId, formId: form.id },
+    },
+  );
+
+  if (!existingShiftRequiredForm) {
+    await db.insert(schema.shiftRequiredForms).values({
+      shiftId,
+      formId: form.id,
+      order: 0,
+    });
+  }
+
+  return form;
+};
+
+const ensureCodeOfConductForm = async (
+  db: Database,
+  organizationId: string,
+  organizationUnitId: string,
+  createdById: string,
+  eventId: string,
+): Promise<typeof schema.requirementForms.$inferSelect> => {
+  let form = await db.query.requirementForms.findFirst({
+    where: { organizationId, slug: 'code-of-conduct' },
+  });
+
+  if (!form) {
+    const [createdForm] = await db
+      .insert(schema.requirementForms)
+      .values({
+        organizationId,
+        organizationUnitId,
+        slug: 'code-of-conduct',
+        name: 'Code of Conduct',
+        description: 'Acknowledge the volunteer code of conduct.',
+        shareToken: crypto.randomUUID(),
+        createdBy: createdById,
+        updatedBy: createdById,
+      })
+      .returning();
+
+    if (!createdForm) {
+      throw new Error('Failed to create Code of Conduct form');
+    }
+
+    form = createdForm;
+
+    const [block] = await db
+      .insert(schema.formBlocks)
+      .values({
+        organizationId,
+        title: 'Code of Conduct',
+        description: 'Please acknowledge our code of conduct.',
+        required: true,
+        createdBy: createdById,
+        updatedBy: createdById,
+      })
+      .returning();
+
+    if (!block) {
+      throw new Error('Failed to create Code of Conduct block');
+    }
+
+    await db.insert(schema.formBlockFields).values({
+      blockId: block.id,
+      type: FieldType.CHECKBOX,
+      label: 'I agree to follow the Code of Conduct',
       required: true,
       fieldOrder: 0,
-    },
-    {
-      blockId: block.id,
-      type: 'TEXT',
-      label: 'Last name',
-      required: true,
-      fieldOrder: 1,
-    },
-  ]);
+    });
 
-  await db.insert(schema.requirementFormBlockRefs).values({
-    formId: form.id,
-    blockId: block.id,
-    fieldOrder: 0,
-    required: true,
-  });
+    await db.insert(schema.requirementFormBlockRefs).values({
+      formId: form.id,
+      blockId: block.id,
+      fieldOrder: 0,
+      required: true,
+    });
+  }
+
+  const existingEventRequiredForm = await db.query.eventRequiredForms.findFirst(
+    {
+      where: { eventId, formId: form.id },
+    },
+  );
+
+  if (!existingEventRequiredForm) {
+    await db.insert(schema.eventRequiredForms).values({
+      eventId,
+      formId: form.id,
+      order: 0,
+    });
+  }
+
+  return form;
 };
 
 async function seedFixtures() {
@@ -1164,6 +1351,14 @@ async function seedFixtures() {
     endsAt: addHours(showcaseFullStart, SHIFT_DURATION_MINUTES / 60),
   });
 
+  await ensureCodeOfConductForm(
+    db,
+    org.organizationId,
+    org.rootUnitId,
+    admin.id,
+    showcaseEvent.id,
+  );
+
   const showcaseOpenInviteIds = [
     supervisor.id,
     ...members.slice(0, 7).map((member) => member.id),
@@ -1186,6 +1381,14 @@ async function seedFixtures() {
       Boolean(id),
     ),
   });
+
+  await ensureBankingInformationForm(
+    db,
+    org.organizationId,
+    org.rootUnitId,
+    admin.id,
+    SHOWCASE_OPEN_SHIFT_ID,
+  );
 
   const showcaseFullInviteIds = [
     admin.id,
@@ -1637,7 +1840,9 @@ async function seedFixtures() {
     'Users: 16 accounts seeded (password from FIXTURE_PASSWORD, default: abcd1234)',
   );
   console.log('Memberships: 13 approved, 2 pending, 1 rejected');
-  console.log('Requirement form: Personal Information (First name, Last name)');
+  console.log(
+    'Requirement forms: Personal Information (org unit), Banking Information (Welcome Desk shift), Code of Conduct (Volunteer Fair event)',
+  );
   console.log(
     `Demo account: ${DEMO_USER_EMAIL} — member with invited shifts (Community Support, Food Distribution, Event Assistance), follows Volunteer Fair, and has Welcome Desk/Stage Setup/Cleanup Crew plus 4 more shifts across the next 3 weeks left to discover`,
   );

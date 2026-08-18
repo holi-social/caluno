@@ -109,11 +109,6 @@ export function VolunteeringVolunteerRow({
       </div>
 
       <div className="flex min-w-0 flex-wrap items-center gap-2 pl-11 sm:shrink-0 sm:gap-3 sm:pl-0">
-        <VolunteeringActionButtons
-          actions={actions}
-          labels={actionLabels}
-          onAction={onAction}
-        />
         {passiveHint ? (
           <Tooltip>
             <TooltipTrigger asChild>
@@ -126,6 +121,11 @@ export function VolunteeringVolunteerRow({
         ) : (
           statusBadge
         )}
+        <VolunteeringActionButtons
+          actions={actions}
+          labels={actionLabels}
+          onAction={onAction}
+        />
       </div>
 
       {iconActions.length > 0 ? (

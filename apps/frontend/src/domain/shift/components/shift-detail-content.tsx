@@ -3,6 +3,7 @@ import {
   type PublicShiftInstance,
   type ShiftVisibility,
 } from '@repo/data';
+import type { RequiredForm } from '@repo/data/react';
 import { CalendarIcon, ClockIcon, MapPinIcon } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useRecurrenceLabel } from '@/domain/home/lib/recurrence-label';
@@ -20,7 +21,11 @@ interface Shift {
   durationMinutes: number;
   maxVolunteers?: number | null;
   visibility: ShiftVisibility;
-  organizationUnit?: { myMembershipState: JoinStatus } | null;
+  requiredForms?: Array<{ form: RequiredForm; order: number }> | null;
+  organizationUnit?: {
+    myMembershipState: JoinStatus;
+    requiredForms?: Array<{ form: RequiredForm; order: number }> | null;
+  } | null;
 }
 
 interface ShiftDetailContentProps {
@@ -68,6 +73,10 @@ export function ShiftDetailContent({
             membershipState={
               shift.organizationUnit?.myMembershipState ?? JoinStatus.None
             }
+            shiftRequiredForms={shift.requiredForms?.map((ref) => ref.form)}
+            organizationUnitRequiredForms={shift.organizationUnit?.requiredForms?.map(
+              (ref) => ref.form,
+            )}
           />
         </aside>
 

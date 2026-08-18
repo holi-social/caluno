@@ -44,7 +44,6 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
       <div className="mx-auto w-full max-w-4xl space-y-8 px-4 py-6">
         <HeaderAvatar name={me.name} imageUrl={me.image} />
 
-        {/* Section slots — empty; headings inlined (later tickets add bodies) */}
         <section>
           <h1 className="text-xl font-bold mb-4">
             {tProfile('organizations')}

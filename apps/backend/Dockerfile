@@ -1,4 +1,5 @@
-FROM europe-north1-docker.pkg.dev/holi-shared/docker-hub-remote/oven/bun:1 AS builder
+# syntax=docker/dockerfile:1
+FROM ghcr.io/holi-social/mirror/oven-bun:1 AS builder
 
 WORKDIR /app
 
@@ -10,16 +11,35 @@ COPY apps/backend ./apps/backend
 COPY apps/frontend/package.json ./apps/frontend/package.json
 COPY packages/data ./packages/data
 COPY packages/ui ./packages/ui
+COPY packages/observability ./packages/observability
 COPY packages/typescript-config ./packages/typescript-config
 
 RUN bun install --frozen-lockfile
 
+# Build @repo/observability (dist/ is dockerignored, so it must be built in-image)
+RUN bun run --cwd packages/observability build
+
 # Build the NestJS backend
 WORKDIR /app/apps/backend
-RUN bun run build
+
+ARG SENTRY_RELEASE
+ARG SENTRY_ORG
+ARG SENTRY_PROJECT_BACKEND
+ENV SENTRY_RELEASE=${SENTRY_RELEASE}
+ENV SENTRY_ORG=${SENTRY_ORG}
+ENV SENTRY_PROJECT=${SENTRY_PROJECT_BACKEND}
+
+RUN --mount=type=secret,id=sentry_auth_token,env=SENTRY_AUTH_TOKEN \
+    bun run build && \
+    if [ -n "$SENTRY_RELEASE" ]; then \
+      apt-get update && apt-get install -y --no-install-recommends ca-certificates && \
+      bunx sentry-cli sourcemaps inject ./dist && \
+      bunx sentry-cli sourcemaps upload --release "$SENTRY_RELEASE" ./dist && \
+      find ./dist -name '*.map' -delete; \
+    fi
 
 
-FROM europe-north1-docker.pkg.dev/holi-shared/docker-hub-remote/oven/bun:1 AS runner
+FROM ghcr.io/holi-social/mirror/oven-bun:1 AS runner
 
 WORKDIR /app
 
@@ -30,9 +50,15 @@ COPY apps/backend ./apps/backend
 COPY apps/frontend/package.json ./apps/frontend/package.json
 COPY packages/data ./packages/data
 COPY packages/ui ./packages/ui
+COPY packages/observability ./packages/observability
 COPY packages/typescript-config ./packages/typescript-config
+# Compiled @repo/observability output (dist/ is dockerignored — built in the builder stage)
+COPY --from=builder /app/packages/observability/dist ./packages/observability/dist
 
 RUN bun install --frozen-lockfile --production --ignore-scripts
+
+ARG SENTRY_RELEASE
+ENV SENTRY_RELEASE=${SENTRY_RELEASE}
 
 WORKDIR /app/apps/backend
 

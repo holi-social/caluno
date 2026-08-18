@@ -47,7 +47,7 @@ describe('MembershipService', () => {
   });
 
   describe('leaveMembership', () => {
-    it('deletes the current user membership and returns true', async () => {
+    it('deletes the current user membership', async () => {
       const user = await createUser(db);
       const { organization, type } = await createOrganizationWithType(
         db,
@@ -61,9 +61,8 @@ describe('MembershipService', () => {
       const membership = await addMembership(db, user.id, unit.id);
       expect(membership).toBeTruthy();
 
-      const result = await service.leaveMembership(membership.id, user.id);
+      await service.leaveMembership(membership.id, user.id);
 
-      expect(result).toBe(true);
       const after = await db
         .select({ id: schema.memberships.id })
         .from(schema.memberships)
@@ -93,6 +92,76 @@ describe('MembershipService', () => {
         .select({ id: schema.memberships.id })
         .from(schema.memberships)
         .where(eq(schema.memberships.id, membership.id));
+      expect(stillThere.length).toBe(1);
+    });
+  });
+
+  describe('removeMembershipRequest', () => {
+    it('deletes the current user request', async () => {
+      const user = await createUser(db);
+      const { organization, type } = await createOrganizationWithType(
+        db,
+        `Dismiss Org ${crypto.randomUUID()}`,
+      );
+      const unit = await createUnit(db, {
+        organizationId: organization.id,
+        typeId: type.id,
+        name: 'unit',
+      });
+      const [request] = await db
+        .insert(schema.membershipRequests)
+        .values([
+          {
+            userId: user.id,
+            organizationUnitId: unit.id,
+            status: MembershipRequestStatus.REJECTED,
+            metadata: {},
+          },
+        ])
+        .returning();
+      expect(request).toBeTruthy();
+
+      await service.removeMembershipRequest(request.id, user.id);
+
+      const after = await db
+        .select({ id: schema.membershipRequests.id })
+        .from(schema.membershipRequests)
+        .where(eq(schema.membershipRequests.id, request.id));
+      expect(after).toEqual([]);
+    });
+
+    it('is self-scoped: another user cannot delete it and throws NotFound', async () => {
+      const owner = await createUser(db);
+      const other = await createUser(db);
+      const { organization, type } = await createOrganizationWithType(
+        db,
+        `Dismiss Scope Org ${crypto.randomUUID()}`,
+      );
+      const unit = await createUnit(db, {
+        organizationId: organization.id,
+        typeId: type.id,
+        name: 'unit',
+      });
+      const [request] = await db
+        .insert(schema.membershipRequests)
+        .values([
+          {
+            userId: owner.id,
+            organizationUnitId: unit.id,
+            status: MembershipRequestStatus.REJECTED,
+            metadata: {},
+          },
+        ])
+        .returning();
+
+      await expect(
+        service.removeMembershipRequest(request.id, other.id),
+      ).rejects.toBeInstanceOf(NotFoundGraphQLError);
+
+      const stillThere = await db
+        .select({ id: schema.membershipRequests.id })
+        .from(schema.membershipRequests)
+        .where(eq(schema.membershipRequests.id, request.id));
       expect(stillThere.length).toBe(1);
     });
   });

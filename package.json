@@ -11,7 +11,7 @@
     "format-and-lint": "biome check .",
     "format-and-lint:fix": "biome check . --write",
     "format-and-lint:staged": "biome check --staged --write",
-    "db:up": "docker compose up -d postgres minio minio-init && bun run db:wait",
+    "db:up": "docker compose up -d postgres minio minio-init mailpit && bun run db:wait",
     "db:down": "docker compose down",
     "db:bootstrap": "bun run scripts/bootstrap-db.ts",
     "bootstrap": "bun run db:bootstrap && turbo run dev",

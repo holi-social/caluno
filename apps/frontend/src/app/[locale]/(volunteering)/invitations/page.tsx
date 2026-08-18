@@ -3,6 +3,7 @@ import { Empty, EmptyMedia, EmptyTitle } from '@repo/ui';
 import { MailIcon } from 'lucide-react';
 import { getTranslations } from 'next-intl/server';
 import { EventCardMyInvited } from '@/domain/home/components/event-card-my-invited';
+import { InvitationsPageHeader } from '@/domain/home/components/invitations-page-header';
 import { ShiftCardMyInvited } from '@/domain/home/components/shift-card-my-invited';
 import { mergeInvitations } from '@/domain/home/lib/merge-invitations';
 import { requireAuth } from '@/lib/auth-server';
@@ -32,34 +33,34 @@ export default async function InvitationsPage({
   const t = await getTranslations('VolunteerHome');
 
   return (
-    <div className="mx-auto w-full max-w-4xl px-6 pt-6 pb-4">
-      <h1 className="mb-4 text-2xl font-semibold text-foreground">
-        {t('invitationsHeading')}
-      </h1>
-      {invitations.length === 0 ? (
-        <Empty>
-          <EmptyMedia variant="icon">
-            <MailIcon />
-          </EmptyMedia>
-          <EmptyTitle>{t('invitationsEmpty')}</EmptyTitle>
-        </Empty>
-      ) : (
-        <div className="flex flex-col gap-3">
-          {invitations.map((invite) =>
-            invite.kind === 'shift' ? (
-              <ShiftCardMyInvited
-                key={`shift-${invite.id}`}
-                shiftInstance={invite.shift}
-              />
-            ) : (
-              <EventCardMyInvited
-                key={`event-${invite.id}`}
-                event={invite.event}
-              />
-            ),
-          )}
-        </div>
-      )}
-    </div>
+    <>
+      <InvitationsPageHeader />
+      <div className="mx-auto w-full max-w-4xl px-6 pt-6 pb-4">
+        {invitations.length === 0 ? (
+          <Empty>
+            <EmptyMedia variant="icon">
+              <MailIcon />
+            </EmptyMedia>
+            <EmptyTitle>{t('invitationsEmpty')}</EmptyTitle>
+          </Empty>
+        ) : (
+          <div className="flex flex-col gap-3">
+            {invitations.map((invite) =>
+              invite.kind === 'shift' ? (
+                <ShiftCardMyInvited
+                  key={`shift-${invite.id}`}
+                  shiftInstance={invite.shift}
+                />
+              ) : (
+                <EventCardMyInvited
+                  key={`event-${invite.id}`}
+                  event={invite.event}
+                />
+              ),
+            )}
+          </div>
+        )}
+      </div>
+    </>
   );
 }

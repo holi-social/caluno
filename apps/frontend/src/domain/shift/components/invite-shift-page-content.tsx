@@ -1,3 +1,4 @@
+import { isSingleOccurrenceRrule } from '@repo/data';
 import { notFound } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
 import { getDataClient } from '@/lib/data-client';
@@ -57,7 +58,8 @@ export async function InviteShiftPageContent({
       isCreationFlow={isCreationFlow}
       shift={{
         title: shift.title,
-        isRecurring: !!shift.rrule && shift.recurrenceDays.length > 0,
+        isRecurring:
+          Boolean(shift.rrule) && !isSingleOccurrenceRrule(shift.rrule),
         recurrenceDays: shift.recurrenceDays,
         visibility: shift.visibility,
       }}
