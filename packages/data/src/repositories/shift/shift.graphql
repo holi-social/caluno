@@ -398,6 +398,7 @@ fragment VolunteerHomeShiftInstance on ShiftInstance {
   isCheckedIn
   filledCount
   myInviteStatus
+  myInvitedAt
   isIntendingToJoin
   master {
     id
@@ -408,6 +409,7 @@ fragment VolunteerHomeShiftInstance on ShiftInstance {
     organizationUnit {
       id
       name
+      logoUrl
     }
     event {
       id
