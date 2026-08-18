@@ -5,6 +5,12 @@ WORKDIR /app
 
 ENV NODE_ENV=production
 
+# sentry-cli verifies TLS via OpenSSL against the system CA store, which the
+# base image does not ship (bun itself bundles its own roots, so nothing else needs this).
+RUN apt-get update -qq \
+    && apt-get install -qq --no-install-recommends ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+
 # Install only the workspace packages needed to build the backend.
 COPY package.json bun.lock turbo.json ./
 COPY apps/backend ./apps/backend
