@@ -46,6 +46,7 @@
     "@nestjs/platform-express": "^11.0.1",
     "@repo/observability": "*",
     "@sentry/nestjs": "^10.70.0",
+    "@sentry/profiling-node": "^10.70.0",
     "@thallesp/nestjs-better-auth": "^2.2.2",
     "better-auth": "^1.6.11",
     "class-transformer": "^0.5.1",
