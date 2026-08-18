@@ -43,11 +43,10 @@ import { mergeInvitations } from '../lib/merge-invitations';
 import { useDelayedLoading } from '../lib/use-delayed-loading';
 import { DayStrip } from './day-strip';
 import { DayStripSkeleton } from './day-strip-skeleton';
-import { EventCardMyInvited } from './event-card-my-invited';
+import { InviteCardMyInvited } from './invite-card-my-invited';
 import { PendingMembershipBanner } from './pending-membership-banner';
 import { ShiftCardDiscovery } from './shift-card-discovery';
 import { ShiftCardMy } from './shift-card-my';
-import { ShiftCardMyInvited } from './shift-card-my-invited';
 import { ShiftCardMyShift } from './shift-card-my-shift';
 
 interface PendingRequest {
@@ -319,19 +318,12 @@ export function VolunteerHomeContent({
         {seeAllLink('/invitations')}
       </div>
       <div className="flex flex-col gap-3">
-        {invitationList.map((invite) =>
-          invite.kind === 'shift' ? (
-            <ShiftCardMyInvited
-              key={`shift-${invite.id}`}
-              shiftInstance={invite.shift}
-            />
-          ) : (
-            <EventCardMyInvited
-              key={`event-${invite.id}`}
-              event={invite.event}
-            />
-          ),
-        )}
+        {invitationList.map((invite) => (
+          <InviteCardMyInvited
+            key={`${invite.kind}-${invite.id}`}
+            invite={invite}
+          />
+        ))}
       </div>
     </section>
   );
