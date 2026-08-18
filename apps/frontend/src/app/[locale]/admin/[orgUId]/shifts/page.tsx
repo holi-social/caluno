@@ -79,10 +79,9 @@ export default async function ShiftsPage({
             activeTab={isWeekplan ? 'weekplan' : 'shifts'}
             week={week}
           />
-          {isWeekplan &&
-            (instances?.length ? (
-              <WeeklyCalendarNav weekStart={weekStart} orgUId={orgUId} />
-            ) : null)}
+          {isWeekplan && (
+            <WeeklyCalendarNav weekStart={weekStart} orgUId={orgUId} />
+          )}
 
           <CreateShiftButton orgUId={orgUId} />
         </div>
@@ -90,18 +89,12 @@ export default async function ShiftsPage({
 
       {/* Content */}
       {isWeekplan ? (
-        instances?.length ? (
-          <WeeklyCalendar
-            instances={instances ?? []}
-            canManage={canManage}
-            weekStart={weekStart}
-            orgUId={orgUId}
-          />
-        ) : (
-          <EmptyShifts>
-            <CreateShiftButton orgUId={orgUId} />
-          </EmptyShifts>
-        )
+        <WeeklyCalendar
+          instances={instances ?? []}
+          canManage={canManage}
+          weekStart={weekStart}
+          orgUId={orgUId}
+        />
       ) : tableContent?.pagination.total ? (
         <>
           <ShiftsTable
