@@ -1474,30 +1474,16 @@ export class ShiftService {
     }
 
     if (input.requiredFormIds !== undefined) {
-      if (applyToAllFuture) {
-        await this.setRequiredFormsInTx(
-          tx,
-          shift.id,
-          organizationUnitId,
-          input.requiredFormIds ?? [],
-        );
-      } else {
-        // No series to fork from (rrule === null): this call is scoped to
-        // the single instance, so required forms must land on the
-        // instance, not the shift — matching updateSingleShiftInstance.
-        const orgUnit = await tx.query.organizationUnits.findFirst({
-          where: { id: organizationUnitId },
-        });
-
-        if (orgUnit) {
-          await this.requiredFormService.applyShiftInstanceRequiredForms(
-            instance.id,
-            orgUnit.organizationId,
-            input.requiredFormIds ?? [],
-            tx,
-          );
-        }
-      }
+      // This method is only reached with applyToAllFuture === false when
+      // there's no series to fork from (rrule === null): the instance IS
+      // the shift, so required forms must land on the master here too —
+      // matching how image/title/location etc. already sync in that case.
+      await this.setRequiredFormsInTx(
+        tx,
+        shift.id,
+        organizationUnitId,
+        input.requiredFormIds ?? [],
+      );
     }
 
     // Mirrors ShiftService.update()'s existing behavior: dropping visibility

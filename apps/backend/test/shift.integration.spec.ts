@@ -3723,7 +3723,11 @@ describe('ShiftService.updateShiftInstance — single instance required forms', 
     requiredFormService = app.get(RequiredFormService);
   });
 
-  it('attaches required forms to a single shift instance', async () => {
+  it('attaches required forms to the shift master for a one-off instance', async () => {
+    // One-off shift (no rrule) has a single instance that IS the shift, so
+    // required forms edited here must land on the master, matching how
+    // image/title/location etc. already sync — not on the instance, which
+    // nothing else reads for a one-off shift.
     const user = await createUser(db);
     await addMembership(db, user.id, organizationUnitId);
 
@@ -3753,13 +3757,18 @@ describe('ShiftService.updateShiftInstance — single instance required forms', 
       organizationUnitId,
     );
 
-    const requiredForms = await requiredFormService.getRequiredForms({
+    const shiftForms = await requiredFormService.getRequiredForms({
+      targetType: RequiredFormTargetType.SHIFT,
+      targetId: shiftId,
+    });
+    const instanceForms = await requiredFormService.getRequiredForms({
       targetType: RequiredFormTargetType.SHIFT_INSTANCE,
       targetId: instance.id,
     });
 
-    expect(requiredForms).toHaveLength(1);
-    expect(requiredForms[0]?.form.id).toBe(form.id);
+    expect(shiftForms).toHaveLength(1);
+    expect(shiftForms[0]?.form.id).toBe(form.id);
+    expect(instanceForms).toHaveLength(0);
   });
 });
 
