@@ -1422,6 +1422,96 @@ describe('Volunteer home fields and check-in', () => {
     );
   });
 
+  it('applies endsBefore and includePast together on myShiftInstances', async () => {
+    await db.insert(schema.memberships).values({
+      userId: testUserId,
+      organizationUnitId,
+    });
+
+    const now = Date.now();
+    const pastShift = await createShift(db, {
+      organizationUnitId,
+      startsAt: new Date(now - 5 * 60 * 60 * 1000),
+      endsAt: new Date(now - 3 * 60 * 60 * 1000),
+    });
+    const insideShift = await createShift(db, {
+      organizationUnitId,
+      startsAt: new Date(now + 24 * 60 * 60 * 1000),
+      endsAt: new Date(now + 26 * 60 * 60 * 1000),
+    });
+    const afterShift = await createShift(db, {
+      organizationUnitId,
+      startsAt: new Date(now + 14 * 24 * 60 * 60 * 1000),
+      endsAt: new Date(now + 14 * 24 * 60 * 60 * 1000 + 2 * 60 * 60 * 1000),
+    });
+
+    const [pastInstances, insideInstances, afterInstances] = await Promise.all([
+      db.query.shiftInstances.findMany({
+        where: { masterId: pastShift.id },
+      }),
+      db.query.shiftInstances.findMany({
+        where: { masterId: insideShift.id },
+      }),
+      db.query.shiftInstances.findMany({
+        where: { masterId: afterShift.id },
+      }),
+    ]);
+    const pastId = pastInstances[0]?.id;
+    const insideId = insideInstances[0]?.id;
+    const afterId = afterInstances[0]?.id;
+    expect(pastId).toBeDefined();
+    expect(insideId).toBeDefined();
+    expect(afterId).toBeDefined();
+
+    await db.insert(schema.shiftInstanceInvites).values([
+      {
+        instanceId: pastId ?? '',
+        userId: testUserId,
+        status: ShiftInviteStatus.ACCEPTED,
+      },
+      {
+        instanceId: insideId ?? '',
+        userId: testUserId,
+        status: ShiftInviteStatus.ACCEPTED,
+      },
+      {
+        instanceId: afterId ?? '',
+        userId: testUserId,
+        status: ShiftInviteStatus.ACCEPTED,
+      },
+    ]);
+
+    const data = await graphqlRequestRequiringData<{
+      myShiftInstances: {
+        items: Array<{ id: string }>;
+      };
+    }>(
+      app,
+      {
+        query: `
+          query MyShiftInstances($includePast: Boolean!, $endsBefore: DateTime!) {
+            myShiftInstances(includePast: $includePast, endsBefore: $endsBefore) {
+              items { id }
+            }
+          }
+        `,
+        variables: {
+          includePast: false,
+          endsBefore: new Date(now + 7 * 24 * 60 * 60 * 1000).toISOString(),
+        },
+        headers: {
+          'x-organization-unit-id': organizationUnitId,
+        },
+      },
+      'myShiftInstances',
+    );
+
+    const ids = data.myShiftInstances.items.map((item) => item.id);
+    expect(ids).toContain(insideId);
+    expect(ids).not.toContain(pastId);
+    expect(ids).not.toContain(afterId);
+  });
+
   it('filters myShiftInstances by invite status', async () => {
     await db.insert(schema.memberships).values({
       userId: testUserId,
@@ -2318,14 +2408,18 @@ describe('Volunteer shifts pagination', () => {
       app,
       {
         query: `
-          query MyShiftInstances($endsBefore: DateTime!, $order: SortOrder!) {
-            myShiftInstances(endsBefore: $endsBefore, order: $order) {
+          query MyShiftInstances($includePast: Boolean!, $endsBefore: DateTime!, $order: SortOrder!) {
+            myShiftInstances(includePast: $includePast, endsBefore: $endsBefore, order: $order) {
               items { id actualStartsAt actualEndsAt }
               pagination { total hasMore }
             }
           }
         `,
-        variables: { endsBefore: endsBefore.toISOString(), order: 'DESC' },
+        variables: {
+          includePast: true,
+          endsBefore: endsBefore.toISOString(),
+          order: 'DESC',
+        },
         headers: {
           'x-organization-unit-id': organizationUnitId,
         },
