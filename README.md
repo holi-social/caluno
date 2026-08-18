@@ -30,6 +30,9 @@ This monorepo includes the following packages/apps:
 
    # Copy backend environment file
    cp apps/backend/.env.example apps/backend/.env
+
+   # Copy frontend environment file
+   cp apps/frontend/.env.example apps/frontend/.env
    ```
 
    Update the `.env` files with your configuration. The defaults should work for local development.

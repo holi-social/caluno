@@ -1,7 +1,7 @@
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
-import type { RequiredFormTargetType } from '@repo/data';
+import { RequiredFormTargetType } from '@repo/data';
 import type {
   RequiredForm,
   RequiredFormBlock,
@@ -33,11 +33,16 @@ export type RequiredFormItem = {
   form: RequiredForm;
   order: number;
   submitted?: boolean;
+  /** When provided, submissions for this form are sent to this target instead of the component-level targetType/targetId. */
+  targetType?: RequiredFormTargetType;
+  targetId?: string;
 };
 
 type UnifiedBlock = RequiredFormBlock & {
   effectiveRequired: boolean;
   order: number;
+  /** Position of the first form that contributed this block, used to keep org-unit forms above shift/event forms. */
+  formOrder: number;
 };
 
 interface RequiredFormRendererProps {
@@ -74,8 +79,19 @@ export function RequiredFormRenderer({
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const sortedForms = useMemo(
-    () => [...forms].sort((a, b) => a.order - b.order),
-    [forms],
+    () =>
+      [...forms].sort((a, b) => {
+        const aTarget = a.targetType ?? targetType;
+        const bTarget = b.targetType ?? targetType;
+        const aPriority =
+          aTarget === RequiredFormTargetType.OrganizationUnit ? 0 : 1;
+        const bPriority =
+          bTarget === RequiredFormTargetType.OrganizationUnit ? 0 : 1;
+        const priorityDiff = aPriority - bPriority;
+        if (priorityDiff !== 0) return priorityDiff;
+        return a.order - b.order;
+      }),
+    [forms, targetType],
   );
 
   const pendingForms = useMemo(
@@ -87,7 +103,7 @@ export function RequiredFormRenderer({
 
   const unifiedBlocks = useMemo(() => {
     const blockMap = new Map<string, UnifiedBlock>();
-    for (const item of renderedForms) {
+    for (const [formIndex, item] of renderedForms.entries()) {
       for (const ref of item.form.blockRefs ?? []) {
         const block = ref.block;
         if (!block) continue;
@@ -100,12 +116,20 @@ export function RequiredFormRenderer({
           existing.effectiveRequired =
             existing.effectiveRequired || effectiveRequired;
           existing.order = Math.min(existing.order, order);
+          existing.formOrder = Math.min(existing.formOrder, formIndex);
         } else {
-          blockMap.set(block.id, { ...block, effectiveRequired, order });
+          blockMap.set(block.id, {
+            ...block,
+            effectiveRequired,
+            order,
+            formOrder: formIndex,
+          });
         }
       }
     }
-    return Array.from(blockMap.values()).sort((a, b) => a.order - b.order);
+    return Array.from(blockMap.values()).sort(
+      (a, b) => a.formOrder - b.formOrder || a.order - b.order,
+    );
   }, [renderedForms]);
 
   const validationMessages = useValidationMessages();
@@ -207,8 +231,8 @@ export function RequiredFormRenderer({
         }
 
         const result = await submitRequiredForm({
-          targetType,
-          targetId,
+          targetType: item.targetType ?? targetType,
+          targetId: item.targetId ?? targetId,
           formId: item.form.id,
           values: submissionValues,
         });

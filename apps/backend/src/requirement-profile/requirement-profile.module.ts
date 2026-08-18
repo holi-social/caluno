@@ -11,6 +11,7 @@ import { FormBlockFieldMapper } from './mappers/form-block-field.mapper';
 import { FormSubmissionMapper } from './mappers/form-submission.mapper';
 import { FormSubmissionValueMapper } from './mappers/form-submission-value.mapper';
 import { OrganizationUserProfileMapper } from './mappers/organization-user-profile.mapper';
+import { RequiredFormRefMapper } from './mappers/required-form-ref.mapper';
 import { RequirementMapper } from './mappers/requirement.mapper';
 import { RequirementFormMapper } from './mappers/requirement-form.mapper';
 import { RequirementFormBlockRefMapper } from './mappers/requirement-form-block-ref.mapper';
@@ -77,6 +78,7 @@ import {
     FormBlockFieldMapper,
     RequirementFormMapper,
     RequirementFormBlockRefMapper,
+    RequiredFormRefMapper,
     FormSubmissionMapper,
     FormSubmissionValueMapper,
     UserProfileMapper,
@@ -114,6 +116,7 @@ import {
     FormSubmissionService,
     RequiredFormService,
     UserProfileService,
+    RequiredFormRefMapper,
   ],
 })
 export class RequirementProfileModule {}

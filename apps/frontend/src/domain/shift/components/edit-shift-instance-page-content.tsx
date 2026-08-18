@@ -1,4 +1,4 @@
-import { ShiftVisibility } from '@repo/data';
+import { isSingleOccurrenceRrule, ShiftVisibility } from '@repo/data';
 import { notFound } from 'next/navigation';
 import { getDataClient } from '@/lib/data-client';
 import { updateShiftInstance } from '../actions';
@@ -32,7 +32,8 @@ export async function EditShiftInstancePageContent({
       shift={{
         id: shift.id,
         title: shift.title,
-        isRecurring: !!shift.rrule && shift.recurrenceDays.length > 0,
+        isRecurring:
+          Boolean(shift.rrule) && !isSingleOccurrenceRrule(shift.rrule),
       }}
       initialValues={{
         name: instance.overrideTitle ?? shift.title,

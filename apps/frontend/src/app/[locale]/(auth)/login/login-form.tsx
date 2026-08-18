@@ -91,7 +91,11 @@ export function LoginForm({ redirectTo = '/' }: LoginFormProps) {
               {t('passwordLabel')}
             </label>
             <Link
-              href="/forgot-password"
+              href={
+                redirectTo && redirectTo !== '/'
+                  ? `/forgot-password?redirectTo=${encodeURIComponent(redirectTo)}`
+                  : '/forgot-password'
+              }
               className="text-sm font-medium text-primary hover:underline"
             >
               {t('forgotPasswordLink')}
@@ -117,7 +121,11 @@ export function LoginForm({ redirectTo = '/' }: LoginFormProps) {
       <p className="text-center text-sm text-muted-foreground">
         {t('noAccount')}{' '}
         <Link
-          href="/signup"
+          href={
+            redirectTo && redirectTo !== '/'
+              ? `/signup?redirectTo=${encodeURIComponent(redirectTo)}`
+              : '/signup'
+          }
           className="font-medium text-primary hover:underline"
         >
           {t('signUpLink')}

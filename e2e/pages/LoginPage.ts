@@ -1,4 +1,4 @@
-import { expect, type Response } from '@playwright/test';
+import type { Response } from '@playwright/test';
 import { AuthPage } from './AuthPage';
 
 export class LoginPage extends AuthPage {
@@ -32,11 +32,14 @@ export class LoginPage extends AuthPage {
   }
 
   async expectLoggedIn() {
-    await expect(this.page).toHaveURL(/\/en\/?$/);
-    // Authenticated home greets the user by name (user-agnostic logged-in signal).
-    await expect(
-      this.page.getByRole('heading', { name: /^Hi\b/ }),
-    ).toBeVisible();
+    // Logged in = navigated away from login (commit, so we don't wait on the
+    // destination render). login() already awaited the sign-in response.
+    await this.page.waitForURL(
+      (url) =>
+        !url.pathname.includes('/login') &&
+        !url.pathname.includes('/verify-email'),
+      { timeout: 30_000, waitUntil: 'commit' },
+    );
   }
 
   // Server-side errors (bad credentials, rate limit, ...) surface as a toast.

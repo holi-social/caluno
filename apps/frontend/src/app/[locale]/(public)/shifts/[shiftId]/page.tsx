@@ -1,9 +1,14 @@
-import type { PublicShiftInstance, RawShift } from '@repo/data';
+import {
+  JoinStatus,
+  type PublicShiftInstance,
+  type RawShift,
+} from '@repo/data';
 import { notFound } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
 import { DetailHero } from '@/components/detail-hero';
 import { ShiftDetailContent } from '@/domain/shift/components/shift-detail-content';
 import { ShiftPageHeader } from '@/domain/shift/components/shift-page-header';
+import { redirect } from '@/i18n/navigation';
 import { resolveLocale } from '@/i18n/routing';
 import { isAuthenticated } from '@/lib/auth-server';
 import { getDataClient } from '@/lib/data-client';
@@ -54,6 +59,33 @@ export default async function ShiftPage({
 
   const t = await getTranslations('ShiftDetail');
   const authenticated = await isAuthenticated();
+
+  const selectedInstance = instanceId
+    ? instances.find((instance) => instance.id === instanceId)
+    : undefined;
+
+  const showJoinForms = search.showJoinForms === 'true';
+  const membershipState =
+    shift.organizationUnit?.myMembershipState ?? JoinStatus.None;
+  const hasShiftForms = (shift.requiredForms?.length ?? 0) > 0;
+  const hasInstanceForms = (selectedInstance?.requiredForms?.length ?? 0) > 0;
+  const hasOrgUnitForms =
+    (shift.organizationUnit?.requiredForms?.length ?? 0) > 0;
+
+  if (
+    showJoinForms &&
+    authenticated &&
+    membershipState === JoinStatus.None &&
+    (hasShiftForms || hasInstanceForms) &&
+    hasOrgUnitForms &&
+    instanceId
+  ) {
+    redirect({
+      href: `/shifts/${shiftId}/instances/${instanceId}/join-forms?redirectTo=/`,
+      locale,
+    });
+  }
+
   const coverImageUrl = shift.imageUrl ?? shift.event?.coverImageUrl ?? null;
 
   return (

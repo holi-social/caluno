@@ -56,6 +56,14 @@ services:
       MINIO_ROOT_PASSWORD: ${STORAGE_SECRET_KEY:-minioadmin}
       STORAGE_BUCKET: ${STORAGE_BUCKET:-caluno}
 
+  mailpit:
+    image: axllent/mailpit:latest
+    container_name: mailpit
+    restart: unless-stopped
+    ports:
+      - "8025:8025" # UI
+      - "1025:1025" # SMTP
+
 volumes:
   postgres_data:
     driver: local

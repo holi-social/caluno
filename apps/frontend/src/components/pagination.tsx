@@ -5,6 +5,13 @@ import { useTranslations } from 'next-intl';
 import type React from 'react';
 import { Link } from '@/i18n/navigation';
 
+export const buildPageUrl = (url: string, page: number) => {
+  const [path, search = ''] = url.split('?');
+  const params = new URLSearchParams(search);
+  params.set('page', String(page));
+  return `${path}?${params.toString()}`;
+};
+
 type PaginationControlsProps = {
   pagination: PaginationInfo;
   url: string;
@@ -66,14 +73,14 @@ export const Pagination = ({
         </div>
         <div className="flex items-center gap-2">
           <PaginationButton
-            href={`${url}?page=${currentPage - 1}`}
+            href={buildPageUrl(url, currentPage - 1)}
             canPage={currentPage > 1}
           >
             <ChevronLeftIcon className="h-4 w-4 mr-1" />
             {tCommon('previous')}
           </PaginationButton>
           <PaginationButton
-            href={`${url}?page=${currentPage + 1}`}
+            href={buildPageUrl(url, currentPage + 1)}
             canPage={pagination.hasMore}
           >
             {tCommon('next')}

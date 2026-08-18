@@ -1,0 +1,37 @@
+# Mirrors pinned base images into ghcr.io/holi-social so CI pulls from GHCR
+# instead of hitting Docker Hub directly on every run. Only refreshes on the
+# schedule/dispatch below — bump a tag here and re-run manually for a newer
+# upstream image.
+name: Mirror base images to GHCR
+
+on:
+  workflow_dispatch: {}
+  schedule:
+    - cron: '17 3 * * 1' # Mondays 03:17 UTC
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  mirror:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - src: docker.io/library/postgres:17
+            dest: ghcr.io/holi-social/mirror/postgres:17
+          - src: docker.io/hashicorp/terraform:1.15
+            dest: ghcr.io/holi-social/mirror/terraform:1.15
+          - src: docker.io/oven/bun:1
+            dest: ghcr.io/holi-social/mirror/oven-bun:1
+    steps:
+      - name: Install skopeo
+        run: sudo apt-get update && sudo apt-get install -y skopeo
+      - uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Copy ${{ matrix.src }} -> ${{ matrix.dest }}
+        run: skopeo copy --all "docker://${{ matrix.src }}" "docker://${{ matrix.dest }}"

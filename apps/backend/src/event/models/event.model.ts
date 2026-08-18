@@ -51,6 +51,9 @@ export class Event {
   @Field(() => Int)
   requiredFormsCount!: number;
 
+  @Field(() => Int)
+  signedUpCount!: number;
+
   @Field(() => JoinStatus)
   myJoinStatus!: JoinStatus;
 

@@ -1,4 +1,4 @@
-import { type DataClient, DataError } from '@repo/data';
+import { type DataClient, DataError, JoinStatus } from '@repo/data';
 import { LayersIcon, MapPinIcon } from 'lucide-react';
 import { notFound } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
@@ -7,12 +7,15 @@ import { EventFollowButton } from '@/domain/event/components/event-follow-button
 import { EventPageHeader } from '@/domain/event/components/event-page-header';
 import { EventShiftsSection } from '@/domain/event/components/event-shifts-section';
 import { getEventSpotsSummary } from '@/domain/event/lib/event-spots';
+import { redirect } from '@/i18n/navigation';
 import { resolveLocale } from '@/i18n/routing';
+import { isAuthenticated } from '@/lib/auth-server';
 import { getDataClient } from '@/lib/data-client';
 import { getFormatting } from '@/lib/formatting/formatting-server';
 
 interface EventPageProps {
   params: Promise<{ eventId: string; locale: string }>;
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }
 
 type PublicEvent = Awaited<ReturnType<DataClient['publicEvent']['findById']>>;
@@ -32,8 +35,12 @@ export async function generateMetadata({ params }: EventPageProps) {
   return { title: `${event.title} — Caluno` };
 }
 
-export default async function EventPage({ params }: EventPageProps) {
+export default async function EventPage({
+  params,
+  searchParams,
+}: EventPageProps) {
   const { eventId, locale } = await params;
+  const search = await searchParams;
   const data = await getDataClient({ locale: resolveLocale(locale) });
   const { formatDateRange } = await getFormatting();
   const t = await getTranslations('EventDetail');
@@ -46,6 +53,27 @@ export default async function EventPage({ params }: EventPageProps) {
       notFound();
     }
     throw error;
+  }
+
+  const authenticated = await isAuthenticated();
+  const showJoinForms = search.showJoinForms === 'true';
+  const membershipState =
+    event.organizationUnit?.myMembershipState ?? JoinStatus.None;
+  const hasEventForms = (event.requiredForms?.length ?? 0) > 0;
+  const hasOrgUnitForms =
+    (event.organizationUnit?.requiredForms?.length ?? 0) > 0;
+
+  if (
+    showJoinForms &&
+    authenticated &&
+    membershipState === JoinStatus.None &&
+    hasEventForms &&
+    hasOrgUnitForms
+  ) {
+    redirect({
+      href: `/events/${eventId}/join-forms?redirectTo=/`,
+      locale,
+    });
   }
 
   const spotsSummary = getEventSpotsSummary(event.shifts);
@@ -109,6 +137,10 @@ export default async function EventPage({ params }: EventPageProps) {
               <EventFollowButton
                 eventId={event.id}
                 initialStatus={event.myJoinStatus}
+                eventRequiredForms={event.requiredForms?.map((ref) => ref.form)}
+                organizationUnitRequiredForms={event.organizationUnit?.requiredForms?.map(
+                  (ref) => ref.form,
+                )}
               />
             </div>
 

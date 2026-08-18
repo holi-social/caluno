@@ -4,11 +4,10 @@ import {
   Session,
   type UserSession,
 } from '@thallesp/nestjs-better-auth';
-import { plainToInstance } from 'class-transformer';
 import { Loader } from '../../graphql/decorators/loader.decorator';
 import { MembershipService } from '../../membership/membership.service';
 import { RequiredFormRef } from '../../organization/models/organization-unit-required-form.model';
-import { RequirementForm } from '../../requirement-profile/models/requirement-form.model';
+import { RequiredFormRefMapper } from '../../requirement-profile/mappers/required-form-ref.mapper';
 import { JoinStatus } from '../../shared/enums/join-status.enum';
 import { Shift } from '../../shift/models/shift.model';
 import { UserMapper } from '../../user/mappers/user.mapper';
@@ -18,6 +17,7 @@ import { Event } from '../models/event.model';
 import { EventOrganizationUnit } from '../models/event-organization-unit.model';
 import type { EventEntity } from '../schemas/event.schema';
 import { EventInviteLoader } from './event-invite.loader';
+import { EventInviteCountLoader } from './event-invite-count.loader';
 import { EventOrganizationUnitLoader } from './event-organization-unit.loader';
 import { EventOrganizerLoader } from './event-organizer.loader';
 import { EventRequiredFormsLoader } from './event-required-forms.loader';
@@ -28,6 +28,7 @@ export class EventFieldResolver {
   constructor(
     private readonly userMapper: UserMapper,
     private readonly membershipService: MembershipService,
+    private readonly requiredFormRefMapper: RequiredFormRefMapper,
   ) {}
 
   @AllowAnonymous()
@@ -67,6 +68,15 @@ export class EventFieldResolver {
     return loader.countByEventId.load(event.id);
   }
 
+  @AllowAnonymous()
+  @ResolveField(() => Int)
+  async signedUpCount(
+    @Parent() event: EventEntity,
+    @Loader(EventInviteCountLoader) loader: EventInviteCountLoader,
+  ): Promise<number> {
+    return loader.countByEventId.load(event.id);
+  }
+
   /**
    * Full membership-aware join state for the event. Replaces the older
    * `isFollowing` boolean by also surfacing pending/rejected membership.
@@ -87,6 +97,9 @@ export class EventFieldResolver {
     );
     if (invite?.status === EventInviteStatus.ACCEPTED) {
       return JoinStatus.JOINED;
+    }
+    if (invite?.status === EventInviteStatus.ADMIN_REJECTED) {
+      return JoinStatus.REJECTED;
     }
 
     const membershipState = await this.membershipService.getMembershipState(
@@ -156,9 +169,6 @@ export class EventFieldResolver {
   ): Promise<RequiredFormRef[]> {
     const requiredForms = await loader.requiredFormsByEventId.load(event.id);
 
-    return requiredForms.map(({ form, order }) => ({
-      form: plainToInstance(RequirementForm, form),
-      order,
-    }));
+    return this.requiredFormRefMapper.toArray(requiredForms);
   }
 }
