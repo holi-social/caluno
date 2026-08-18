@@ -32,6 +32,7 @@ ENV SENTRY_PROJECT=${SENTRY_PROJECT_BACKEND}
 RUN --mount=type=secret,id=sentry_auth_token,env=SENTRY_AUTH_TOKEN \
     bun run build && \
     if [ -n "$SENTRY_RELEASE" ]; then \
+      apt-get update && apt-get install -y --no-install-recommends ca-certificates && \
       bunx sentry-cli sourcemaps inject ./dist && \
       bunx sentry-cli sourcemaps upload --release "$SENTRY_RELEASE" ./dist && \
       find ./dist -name '*.map' -delete; \

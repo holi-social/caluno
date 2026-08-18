@@ -37,6 +37,8 @@ ENV SENTRY_RELEASE=${SENTRY_RELEASE}
 ENV SENTRY_ORG=${SENTRY_ORG}
 ENV SENTRY_PROJECT=${SENTRY_PROJECT_FRONTEND}
 
+RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates
+
 WORKDIR /app/apps/frontend
 # SENTRY_AUTH_TOKEN is mounted as a BuildKit secret — never persisted in a layer.
 RUN --mount=type=secret,id=sentry_auth_token,env=SENTRY_AUTH_TOKEN \
