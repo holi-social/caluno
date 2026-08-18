@@ -59,19 +59,33 @@ export const DAY_VALUE_TO_RRULE: Record<RecurrenceDayValue, RRuleDayCode> = {
   SUNDAY: 'SU',
 };
 
+export function isSingleOccurrenceRrule(
+  rrule: string | null | undefined,
+): boolean {
+  if (!rrule) return true;
+  return /(?:^|;)COUNT=1(?:;|$)/.test(rrule);
+}
+
 export function parseRruleDays(
   rrule: string | null | undefined,
 ): RecurrenceDayValue[] {
-  if (!rrule) return [];
+  if (!rrule || isSingleOccurrenceRrule(rrule)) return [];
 
   const bydayMatch = rrule.match(/BYDAY=([^;]+)/);
-  if (!bydayMatch?.[1]) return [];
+  if (bydayMatch?.[1]) {
+    const dayCodes = bydayMatch[1].split(',');
 
-  const dayCodes = bydayMatch[1].split(',');
+    return dayCodes
+      .map((code) => RRULE_DAY_CODES[code.trim() as RRuleDayCode])
+      .filter((day): day is RecurrenceDayValue => day !== undefined);
+  }
 
-  return dayCodes
-    .map((code) => RRULE_DAY_CODES[code as RRuleDayCode])
-    .filter((day): day is RecurrenceDayValue => day !== undefined);
+  // FREQ=DAILY with no BYDAY — treat as every day of the week for form/UI.
+  if (/(?:^|;)FREQ=DAILY(?:;|$)/.test(rrule)) {
+    return [...ALL_RECURRENCE_DAYS];
+  }
+
+  return [];
 }
 
 export function parseRruleEndDate(
@@ -99,7 +113,7 @@ for (const day of RECURRENCE_DAYS) {
 }
 
 export function formatRrulePattern(rrule: string | null | undefined): string {
-  if (!rrule) return 'One-time';
+  if (!rrule || isSingleOccurrenceRrule(rrule)) return 'One-time';
 
   const days = parseRruleDays(rrule);
 

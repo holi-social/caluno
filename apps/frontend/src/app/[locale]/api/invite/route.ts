@@ -6,9 +6,15 @@ export async function GET(request: Request) {
   const orgUId = searchParams.get('orgUId');
   const rawRedirectTo = searchParams.get('redirectTo') ?? undefined;
   const redirectTo = isSafeRedirect(rawRedirectTo) ? rawRedirectTo : undefined;
+  const useSignup = searchParams.get('signup') === '1';
 
   const baseUrl = process.env.NEXT_PUBLIC_WEB_URL ?? request.url;
-  const response = NextResponse.redirect(new URL('/login', baseUrl));
+  const authPath = useSignup ? '/signup' : '/login';
+  const authUrl = new URL(authPath, baseUrl);
+  if (redirectTo) {
+    authUrl.searchParams.set('redirectTo', redirectTo);
+  }
+  const response = NextResponse.redirect(authUrl);
 
   if (orgUId) {
     response.cookies.set('pending_invite', orgUId, {

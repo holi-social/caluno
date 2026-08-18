@@ -5,6 +5,7 @@ import { revalidatePath } from 'next/cache';
 import z from 'zod';
 import { getDataClient } from '@/lib/data-client';
 import { actionClient } from '@/lib/safe-action';
+import { choiceOptionSchema } from './option-values';
 import { serverCreateBlockSchema, serverCreateFormSchema } from './schemas';
 
 export const createForm = actionClient
@@ -333,14 +334,7 @@ const saveBlockSchema = z.object({
       required: z.boolean().optional(),
       systemKey: z.string().optional(),
       lockType: z.boolean().optional(),
-      options: z
-        .array(
-          z.object({
-            label: z.string(),
-            value: z.string(),
-          }),
-        )
-        .optional(),
+      options: z.array(choiceOptionSchema).optional(),
       documentFileId: z.string().nullish(),
       documentLabel: z.string().optional(),
     }),

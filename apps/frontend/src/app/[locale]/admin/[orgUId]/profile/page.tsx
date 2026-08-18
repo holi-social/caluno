@@ -1,5 +1,6 @@
 import { getTranslations, setRequestLocale } from 'next-intl/server';
 import { ProfileForm } from '@/domain/user/components/profile-form';
+import { Link } from '@/i18n/navigation';
 import { resolveLocale } from '@/i18n/routing';
 
 interface ProfilePageProps {
@@ -17,6 +18,13 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
     <div className="space-y-6">
       <h1 className="page-title">{t('title')}</h1>
       <ProfileForm />
+      {t.rich('moreSettingsPrompt', {
+        link: (chunk) => (
+          <Link href="/profile" className="underline">
+            {chunk}
+          </Link>
+        ),
+      })}
     </div>
   );
 }

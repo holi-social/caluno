@@ -16,10 +16,23 @@
     "build": {
       "dependsOn": ["^build", "codegen"],
       "inputs": ["$TURBO_DEFAULT$", ".env*"],
-      "outputs": [".next/**", "!.next/cache/**", "dist/**"]
+      "outputs": [".next/**", "!.next/cache/**", "dist/**"],
+      "env": [
+        "NEXT_PUBLIC_SENTRY_DSN",
+        "NEXT_PUBLIC_SENTRY_ENVIRONMENT",
+        "NEXT_PUBLIC_SENTRY_TRACES_SAMPLE_RATE",
+        "NEXT_PUBLIC_SENTRY_REPLAY_ENABLED",
+        "SENTRY_DSN",
+        "SENTRY_ENVIRONMENT",
+        "SENTRY_RELEASE",
+        "SENTRY_ORG",
+        "SENTRY_PROJECT_FRONTEND",
+        "SENTRY_PROJECT_BACKEND"
+      ],
+      "passThroughEnv": ["SENTRY_AUTH_TOKEN"]
     },
     "check-types": {
-      "dependsOn": ["^check-types", "codegen"]
+      "dependsOn": ["^build", "^check-types", "codegen"]
     },
     "all-checks": {
       "dependsOn": [
@@ -41,7 +54,7 @@
     "dev": {
       "cache": false,
       "persistent": true,
-      "dependsOn": ["db:up", "codegen"]
+      "dependsOn": ["^build", "db:up", "codegen"]
     },
     "db:up": {
       "cache": false

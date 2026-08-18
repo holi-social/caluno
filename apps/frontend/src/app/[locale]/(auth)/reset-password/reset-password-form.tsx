@@ -9,11 +9,13 @@ import { resetPassword } from '@/lib/auth';
 interface ResetPasswordFormProps {
   token?: string;
   tokenError?: string;
+  redirectTo?: string;
 }
 
 export function ResetPasswordForm({
   token,
   tokenError,
+  redirectTo = '/',
 }: ResetPasswordFormProps) {
   const t = useTranslations('Auth.resetPassword');
   const router = useRouter();
@@ -55,7 +57,11 @@ export function ResetPasswordForm({
         return;
       }
 
-      router.push('/login');
+      router.push(
+        redirectTo && redirectTo !== '/'
+          ? `/login?redirectTo=${encodeURIComponent(redirectTo)}`
+          : '/login',
+      );
       router.refresh();
     } catch {
       setError(t('resetFailed'));
@@ -117,7 +123,11 @@ export function ResetPasswordForm({
 
       <p className="text-center text-sm text-muted-foreground">
         <Link
-          href="/login"
+          href={
+            redirectTo && redirectTo !== '/'
+              ? `/login?redirectTo=${encodeURIComponent(redirectTo)}`
+              : '/login'
+          }
           className="font-medium text-primary hover:underline"
         >
           {t('signInLink')}

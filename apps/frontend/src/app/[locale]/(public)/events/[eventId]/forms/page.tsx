@@ -2,6 +2,7 @@ import { type DataClient, DataError, JoinStatus } from '@repo/data';
 import { notFound } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
 import { EventFormsClient } from '@/app/[locale]/(public)/events/[eventId]/forms/event-forms-client';
+import { EventPageHeader } from '@/domain/event/components/event-page-header';
 import type { RequiredFormItem } from '@/domain/requirement-form/components/required-form-renderer';
 import { redirect } from '@/i18n/navigation';
 import { resolveLocale } from '@/i18n/routing';
@@ -62,7 +63,7 @@ export default async function EventFormsPage({
 
   if (joinResult?.status === JoinStatus.Joined) {
     redirect({
-      href: getSafeRedirect(redirectTo) ?? `/events/${eventId}`,
+      href: getSafeRedirect(redirectTo, `/events/${eventId}`),
       locale,
     });
   }
@@ -82,20 +83,15 @@ export default async function EventFormsPage({
   let profileData: Record<string, string> = {};
   try {
     const userProfile = await data.requirementForm.getMyUserProfile();
-    if (
-      userProfile?.data &&
-      typeof userProfile.data === 'object' &&
-      !Array.isArray(userProfile.data)
-    ) {
-      profileData = userProfile.data as Record<string, string>;
-    }
+    profileData = (userProfile?.data ?? {}) as Record<string, string>;
   } catch {
     // Ignore profile fetch errors; form will render without prefilled values.
   }
 
   return (
-    <div className="min-h-screen bg-muted/30 px-4 py-10">
-      <div className="mx-auto max-w-2xl">
+    <div className="min-h-screen bg-muted/30">
+      <EventPageHeader logoUrl={event.organizationUnit?.logoUrl} />
+      <div className="mx-auto max-w-2xl px-4 py-10">
         <EventFormsClient
           eventId={eventId}
           eventTitle={event.title}

@@ -11,6 +11,7 @@ Mono-repo powered by TurboRepo.
 └── packages                # Shared code imported by the apps and services
     ├── data                # Shared data library - graphQL queries and mutations
     ├── infra               # Terraform config for deploying the services and apps
+    ├── observability       # Shared Sentry config builders + `metrics` facade (@repo/observability) consumed by both apps
     ├── typescript-config   # Shared typescript config
     └── ui                  # Shared react components and styles - shadcn, tailwind, storybook
 ```
@@ -26,12 +27,142 @@ Use `bun` - never npm or yarn.
 - `bun run db:up` / `bun run db:down` - Start/stop local Postgres
 - `bun run codegen` - Regenerate GraphQL types (schema + *.graphql)
 
-## AI pipeline (mandatory for agent sessions)
-The development pipeline lives in `.ai/`. **Humans start at [`.ai/README.md`](.ai/README.md)** (operator's guide: flow, commands, how to drive it). Agents read `.ai/PIPELINE.md` at the start of every session — it defines the phases (plan/write/read-only), the `>>` commands, the gates, and the verification agents. Bootstrap a session with `.ai/scripts/bootstrap.sh` (phase, current task, skills index).
+<!-- rtk-instructions v2 -->
+# RTK (Rust Token Killer) - Token-Optimized Commands
 
-**Any request that creates or changes files outside `.ai/` is pipeline work — including a casual, plainly-worded one-off ("create this file", "just add X") with no `>>` command.** A bare request is not approval to enter `write`: check the phase first, and get explicit write-phase approval before editing. Never self-promote to `write` because the user asked for output.
+## Golden Rule
 
-- **Code context**: this file plus the nested `AGENTS.md` in the package you're editing (`apps/frontend`, `apps/backend`, `packages/data`, `packages/ui`) — loaded by proximity. One fact lives in exactly one AGENTS.md, the deepest that contains it; parents never restate children.
-- **Domain language**: `.ai/GLOSSARY.md` — grep it for ticket nouns. Precedence: GLOSSARY wins on domain meaning, AGENTS.md wins on architecture, code wins on facts.
-- **Enforcement**: CI on a protected `main` (required checks + human MR approval) is the only wall — see `.ai/HUMAN_GUIDE.md`. The sole local guard is an optional write-phase hook (`.claude/settings.json` for Claude Code, `.ai/adapters/kimi.config.toml` for Kimi); nothing to install locally.
-- **Decisions**: every decision gets a `Decision:` commit trailer; architectural invariants also update the owning `AGENTS.md`, domain meanings also update `.ai/GLOSSARY.md`.
+**Always prefix commands with `rtk`**. If RTK has a dedicated filter, it uses it. If not, it passes through unchanged. This means RTK is always safe to use.
+
+**Important**: Even in command chains with `&&`, use `rtk`:
+```bash
+# ❌ Wrong
+git add . && git commit -m "msg" && git push
+
+# ✅ Correct
+rtk git add . && rtk git commit -m "msg" && rtk git push
+```
+
+## RTK Commands by Workflow
+
+### Build & Compile (80-90% savings)
+```bash
+rtk cargo build         # Cargo build output
+rtk cargo check         # Cargo check output
+rtk cargo clippy        # Clippy warnings grouped by file (80%)
+rtk tsc                 # TypeScript errors grouped by file/code (83%)
+rtk lint                # ESLint/Biome violations grouped (84%)
+rtk prettier --check    # Files needing format only (70%)
+rtk next build          # Next.js build with route metrics (87%)
+```
+
+### Test (60-99% savings)
+```bash
+rtk cargo test          # Cargo test failures only (90%)
+rtk go test             # Go test failures only (90%)
+rtk jest                # Jest failures only (99.5%)
+rtk vitest              # Vitest failures only (99.5%)
+rtk playwright test     # Playwright failures only (94%)
+rtk pytest              # Python test failures only (90%)
+rtk rake test           # Ruby test failures only (90%)
+rtk rspec               # RSpec test failures only (60%)
+rtk test <cmd>          # Generic test wrapper - failures only
+```
+
+### Git (59-80% savings)
+```bash
+rtk git status          # Compact status
+rtk git log             # Compact log (works with all git flags)
+rtk git diff            # Compact diff (80%)
+rtk git show            # Compact show (80%)
+rtk git add             # Ultra-compact confirmations (59%)
+rtk git commit          # Ultra-compact confirmations (59%)
+rtk git push            # Ultra-compact confirmations
+rtk git pull            # Ultra-compact confirmations
+rtk git branch          # Compact branch list
+rtk git fetch           # Compact fetch
+rtk git stash           # Compact stash
+rtk git worktree        # Compact worktree
+```
+
+Note: Git passthrough works for ALL subcommands, even those not explicitly listed.
+
+### GitHub (26-87% savings)
+```bash
+rtk gh pr view <num>    # Compact PR view (87%)
+rtk gh pr checks        # Compact PR checks (79%)
+rtk gh run list         # Compact workflow runs (82%)
+rtk gh issue list       # Compact issue list (80%)
+rtk gh api              # Compact API responses (26%)
+```
+
+### JavaScript/TypeScript Tooling (70-90% savings)
+```bash
+rtk pnpm list           # Compact dependency tree (70%)
+rtk pnpm outdated       # Compact outdated packages (80%)
+rtk pnpm install        # Compact install output (90%)
+rtk npm run <script>    # Compact npm script output
+rtk npx <cmd>           # Compact npx command output
+rtk prisma              # Prisma without ASCII art (88%)
+rtk uv run <cmd>        # Compact uv project command output
+```
+
+### Files & Search (60-75% savings)
+```bash
+rtk ls <path>           # Tree format, compact (65%)
+rtk read <file>         # Code reading with filtering (60%)
+rtk grep <pattern>      # Search grouped by file (75%). Format flags (-c, -l, -L, -o, -Z) run raw.
+rtk find <pattern>      # Find grouped by directory (70%)
+```
+
+### Analysis & Debug (70-90% savings)
+```bash
+rtk err <cmd>           # Filter errors only from any command
+rtk log <file>          # Deduplicated logs with counts
+rtk json <file>         # JSON structure without values
+rtk deps                # Dependency overview
+rtk env                 # Environment variables compact
+rtk summary <cmd>       # Smart summary of command output
+rtk diff                # Ultra-compact diffs
+```
+
+### Infrastructure (85% savings)
+```bash
+rtk docker ps           # Compact container list
+rtk docker images       # Compact image list
+rtk docker logs <c>     # Deduplicated logs
+rtk kubectl get         # Compact resource list
+rtk kubectl logs        # Deduplicated pod logs
+```
+
+### Network (65-70% savings)
+```bash
+rtk curl <url>          # Compact HTTP responses (70%)
+rtk wget <url>          # Compact download output (65%)
+```
+
+### Meta Commands
+```bash
+rtk gain                # View token savings statistics
+rtk gain --history      # View command history with savings
+rtk discover            # Analyze Claude Code sessions for missed RTK usage
+rtk proxy <cmd>         # Run command without filtering (for debugging)
+rtk init                # Add RTK instructions to CLAUDE.md
+rtk init --global       # Add RTK to ~/.claude/CLAUDE.md
+```
+
+## Token Savings Overview
+
+| Category | Commands | Typical Savings |
+|----------|----------|-----------------|
+| Tests | vitest, playwright, cargo test | 90-99% |
+| Build | next, tsc, lint, prettier | 70-87% |
+| Git | status, log, diff, add, commit | 59-80% |
+| GitHub | gh pr, gh run, gh issue | 26-87% |
+| Package Managers | pnpm, npm, npx | 70-90% |
+| Files | ls, read, grep, find | 60-75% |
+| Infrastructure | docker, kubectl | 85% |
+| Network | curl, wget | 65-70% |
+
+Overall average: **60-90% token reduction** on common development operations.
+<!-- /rtk-instructions -->

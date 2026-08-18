@@ -560,6 +560,8 @@ query GetMyFormSubmissions($organizationUnitId: ID!) {
     form {
       id
       name
+      description
+      shareToken
     }
   }
 }
@@ -666,6 +668,47 @@ query GetFormSubmissionsByForm($formId: String!, $limit: Int!, $offset: Int!) {
       limit
       offset
       hasMore
+    }
+  }
+}
+
+query MyRequiredOrgUnitForms($organizationUnitId: ID!) {
+  myRequiredOrgUnitForms(organizationUnitId: $organizationUnitId) {
+    id
+    name
+    description
+    shareToken
+  }
+}
+
+query MyFormSubmission($id: ID!) {
+  myFormSubmission(id: $id) {
+    id
+    status
+    submittedAt
+    form {
+      id
+      name
+      blockRefs {
+        fieldOrder
+        block {
+          id
+          fields {
+            id
+            label
+            type
+            systemKey
+            options {
+              label
+              value
+            }
+          }
+        }
+      }
+    }
+    values {
+      fieldId
+      value
     }
   }
 }

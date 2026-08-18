@@ -61,4 +61,96 @@ export class OrgPage {
     await expect(this.page).toHaveURL(ORG_DASHBOARD);
     await expect(this.page.getByRole('heading', { name })).toBeVisible();
   }
+
+  // --- create-organization form: additional fields + validation helpers ---
+  get contactEmailInput() {
+    return this.page.locator('#contactEmail');
+  }
+
+  get phoneInput() {
+    return this.page.locator('#phone');
+  }
+
+  get websiteUrlInput() {
+    return this.page.locator('#websiteUrl');
+  }
+
+  get addressInput() {
+    return this.page.locator('#address');
+  }
+
+  async submit() {
+    await this.createButton.click();
+  }
+
+  // Fills only the provided fields; leaves the rest untouched.
+  async fillForm(values: {
+    name?: string;
+    description?: string;
+    contactEmail?: string;
+    phone?: string;
+    websiteUrl?: string;
+    address?: string;
+  }) {
+    if (values.name !== undefined) await this.nameInput.fill(values.name);
+    if (values.description !== undefined) {
+      await this.descriptionInput.fill(values.description);
+    }
+    if (values.contactEmail !== undefined) {
+      await this.contactEmailInput.fill(values.contactEmail);
+    }
+    if (values.phone !== undefined) await this.phoneInput.fill(values.phone);
+    if (values.websiteUrl !== undefined) {
+      await this.websiteUrlInput.fill(values.websiteUrl);
+    }
+    if (values.address !== undefined) {
+      await this.addressInput.fill(values.address);
+    }
+  }
+
+  private fieldLocator(
+    field: 'name' | 'contactEmail' | 'phone' | 'websiteUrl',
+  ) {
+    switch (field) {
+      case 'contactEmail':
+        return this.contactEmailInput;
+      case 'phone':
+        return this.phoneInput;
+      case 'websiteUrl':
+        return this.websiteUrlInput;
+      default:
+        return this.nameInput;
+    }
+  }
+
+  // Native HTML5 constraint-validation state for a field.
+  fieldValidity(field: 'name' | 'contactEmail' | 'phone' | 'websiteUrl') {
+    return this.fieldLocator(field).evaluate((el) => {
+      const input = el as HTMLInputElement;
+      return {
+        valid: input.validity.valid,
+        valueMissing: input.validity.valueMissing,
+        typeMismatch: input.validity.typeMismatch,
+        tooShort: input.validity.tooShort,
+      };
+    });
+  }
+
+  // --- logo upload ---
+  get logoInput() {
+    return this.page.locator('input[type=file]');
+  }
+
+  get browseFilesButton() {
+    return this.page.getByRole('button', { name: 'Browse files' });
+  }
+
+  // Shown when a non-image file is selected for the logo.
+  get logoTypeError() {
+    return this.page.getByText(/This file type is not allowed/i);
+  }
+
+  async uploadLogo(file: { name: string; mimeType: string; buffer: Buffer }) {
+    await this.logoInput.setInputFiles(file);
+  }
 }

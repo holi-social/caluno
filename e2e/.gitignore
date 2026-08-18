@@ -3,3 +3,5 @@
 /playwright-report/
 /blob-report/
 /.last-run.json
+# Saved auth session for auth-gated feature suites
+/.auth/

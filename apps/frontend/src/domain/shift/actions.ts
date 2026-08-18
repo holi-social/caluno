@@ -15,6 +15,7 @@ import {
   serverEditShiftInstanceFormSchema,
   serverShiftDeleteSchema,
   serverShiftFormSchema,
+  serverShiftInstanceDeleteSchema,
 } from './schemas';
 
 export async function getShift(id: string, organizationUnitId: string) {
@@ -116,16 +117,20 @@ export const updateShiftInstance = actionClient
         instructions: parsedInput.instructions,
         minVolunteers: parsedInput.minVolunteers ?? null,
         maxVolunteers: parsedInput.maxVolunteers ?? null,
+        requiredFormIds: parsedInput.requiredFormIds,
+        // Image always lands on the shift master (backend keeps a one-off
+        // instance's master in sync even without applyToAllFuture), so it
+        // must be sent regardless of that flag — unlike rrule/visibility,
+        // which are only meaningful for a recurring series.
+        ...(parsedInput.imageFileId !== undefined
+          ? { imageFileId: parsedInput.imageFileId }
+          : {}),
         ...(applyToAllFuture
           ? {
               rrule,
               visibility: parsedInput.openShift
                 ? ShiftVisibility.AllMembers
                 : ShiftVisibility.InvitedMembers,
-              ...(parsedInput.imageFileId !== undefined
-                ? { imageFileId: parsedInput.imageFileId }
-                : {}),
-              requiredFormIds: parsedInput.requiredFormIds,
             }
           : {}),
       };
@@ -146,6 +151,19 @@ export const deleteShift = actionClient
     });
 
     return await data.shift.delete(parsedInput.id);
+  });
+
+export const deleteShiftInstance = actionClient
+  .inputSchema(serverShiftInstanceDeleteSchema)
+  .action(async ({ parsedInput }) => {
+    const data = await getDataClient({
+      orgUId: parsedInput.organizationUnitId,
+    });
+
+    return await data.shift.deleteInstance(
+      parsedInput.instanceId,
+      parsedInput.applyToAllFuture,
+    );
   });
 
 const updateShiftVolunteersSchema = z.object({

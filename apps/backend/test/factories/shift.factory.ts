@@ -24,9 +24,6 @@ export type CreateShiftOptions = {
   eventId?: string | null;
 };
 
-const defaultStartsAt = new Date(Date.now() + 100000);
-const defaultEndsAt = new Date(Date.now() + 200000);
-
 /**
  * Inserts a shift (template) plus its expanded instances directly into the
  * database, mirroring what `ShiftService.create` persists — without going
@@ -38,8 +35,11 @@ export const createShift = async (
   options: CreateShiftOptions,
 ): Promise<Shift> => {
   const title = options.title ?? `Test Shift ${crypto.randomUUID()}`;
-  const startsAt = options.startsAt ?? defaultStartsAt;
-  const endsAt = options.endsAt ?? defaultEndsAt;
+  // Computed per call (not module-level) so shifts created across many tests
+  // in the same file don't collide on an identical actualStartsAt, which
+  // made pagination-limited queries order-dependent and flaky.
+  const startsAt = options.startsAt ?? new Date(Date.now() + 100000);
+  const endsAt = options.endsAt ?? new Date(Date.now() + 200000);
   const durationMinutes = getDurationMinutes(startsAt, endsAt);
   const rrule = options.rrule ?? null;
   const createdById = options.createdById ?? (await createUser(db)).id;

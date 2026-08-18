@@ -2,15 +2,17 @@
 
 import { MembershipRequestStatus, type ShiftInviteStatus } from '@repo/data';
 import {
+  Button,
   type VolunteeringActionLabel,
   VolunteeringVolunteerList,
   type VolunteeringVolunteerListItem,
 } from '@repo/ui';
+import { UserPlus } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useTransition } from 'react';
 import { toast } from 'sonner';
 import { useSheetTrigger } from '@/hooks/use-sheet';
-import { useRouter } from '@/i18n/navigation';
+import { Link, useRouter } from '@/i18n/navigation';
 import { updateShiftInstanceInviteStatus } from '../actions';
 import {
   adminReinviteTargetStatus,
@@ -21,6 +23,7 @@ import {
   formatInviteStatusSummary,
   toInviteDisplayState,
 } from '../invite-status-display';
+import { shiftInvitePath } from '../routes';
 
 type InstanceInvite = {
   status: ShiftInviteStatus;
@@ -35,6 +38,7 @@ type InstanceInvite = {
 
 type ShiftInstanceVolunteersPanelProps = {
   orgUId: string;
+  shiftId: string;
   instanceId: string;
   invites: InstanceInvite[];
   spotsLeft: number | null | undefined;
@@ -53,6 +57,7 @@ function manageActions(
 
 export function ShiftInstanceVolunteersPanel({
   orgUId,
+  shiftId,
   instanceId,
   invites,
   spotsLeft,
@@ -172,6 +177,16 @@ export function ShiftInstanceVolunteersPanel({
       phase="before"
       title={t('inviteStatus.volunteersTitle')}
       summary={summary}
+      headerAction={
+        canManage ? (
+          <Button asChild size="sm">
+            <Link href={shiftInvitePath(orgUId, shiftId, instanceId)}>
+              <UserPlus />
+              {t('instanceDetail.inviteCta')}
+            </Link>
+          </Button>
+        ) : undefined
+      }
       actionLabels={{
         View: tVolunteer('viewProfileAria'),
         'Check in': tVolunteer('checkInAria'),

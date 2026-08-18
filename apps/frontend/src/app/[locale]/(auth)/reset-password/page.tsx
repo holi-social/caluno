@@ -1,4 +1,5 @@
 import { getTranslations, setRequestLocale } from 'next-intl/server';
+import { resolveAuthPageRedirects } from '@/lib/auth-page-redirect';
 import { AuthPageShell } from '../auth-page-shell';
 import { ResetPasswordForm } from './reset-password-form';
 
@@ -7,6 +8,7 @@ interface ResetPasswordPageProps {
   searchParams: Promise<{
     error?: string;
     token?: string;
+    redirectTo?: string;
   }>;
 }
 
@@ -19,11 +21,15 @@ export default async function ResetPasswordPage({
   const t = await getTranslations('Auth.resetPassword');
   const resolvedSearchParams = await searchParams;
 
+  const { formRedirectTo } =
+    await resolveAuthPageRedirects(resolvedSearchParams);
+
   return (
     <AuthPageShell title={t('title')}>
       <ResetPasswordForm
         token={resolvedSearchParams.token}
         tokenError={resolvedSearchParams.error}
+        redirectTo={formRedirectTo}
       />
     </AuthPageShell>
   );

@@ -1,5 +1,9 @@
-import { Args, Context, Query, Resolver } from '@nestjs/graphql';
-import { AllowAnonymous } from '@thallesp/nestjs-better-auth';
+import { Args, Context, ID, Query, Resolver } from '@nestjs/graphql';
+import {
+  AllowAnonymous,
+  Session,
+  type UserSession,
+} from '@thallesp/nestjs-better-auth';
 import { PERMISSIONS } from '../../auth/constants';
 import { Permissions } from '../../auth/decorators/permissions.decorator';
 import type { AuthenticatedGraphQLContext } from '../../graphql/graphql.context';
@@ -10,11 +14,12 @@ import {
   RequirementForm,
   RequirementFormPaginatedResponse,
 } from '../models/requirement-form.model';
-import { RequirementFormService } from '../services';
+import { RequiredFormService, RequirementFormService } from '../services';
 
 @Resolver(() => RequirementForm)
 export class RequirementFormQueryResolver {
   constructor(
+    private readonly requiredFormService: RequiredFormService,
     private readonly requirementFormService: RequirementFormService,
     private readonly requirementFormMapper: RequirementFormMapper,
     private readonly orgAccessService: OrgAccessService,
@@ -66,5 +71,18 @@ export class RequirementFormQueryResolver {
       limit: pagination.limit,
       offset: pagination.offset,
     });
+  }
+
+  @Query(() => [RequirementForm])
+  async myRequiredOrgUnitForms(
+    @Args('organizationUnitId', { type: () => ID })
+    organizationUnitId: string,
+    @Session() session: UserSession,
+  ): Promise<RequirementForm[]> {
+    const items = await this.requiredFormService.requiredFormsForUser(
+      session.user.id,
+      organizationUnitId,
+    );
+    return this.requirementFormMapper.toArray(items);
   }
 }
