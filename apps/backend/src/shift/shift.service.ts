@@ -260,13 +260,16 @@ export class ShiftService {
   async findInviteStatusesForUser(
     userId: string,
     instanceIds: string[],
-  ): Promise<{ shiftInstanceId: string; status: ShiftInviteStatus }[]> {
+  ): Promise<
+    { shiftInstanceId: string; status: ShiftInviteStatus; createdAt: Date }[]
+  > {
     if (instanceIds.length === 0) return [];
 
     const rows = await this.db
       .select({
         shiftInstanceId: schema.shiftInstanceInvites.instanceId,
         status: schema.shiftInstanceInvites.status,
+        createdAt: schema.shiftInstanceInvites.createdAt,
       })
       .from(schema.shiftInstanceInvites)
       .where(
@@ -279,6 +282,7 @@ export class ShiftService {
     return rows.map((row) => ({
       shiftInstanceId: row.shiftInstanceId,
       status: row.status as ShiftInviteStatus,
+      createdAt: row.createdAt,
     }));
   }
 
