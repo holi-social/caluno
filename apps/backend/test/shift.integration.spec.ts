@@ -4172,7 +4172,9 @@ describe('ShiftService.updateShiftInstance applyToAllFuture — non-UTC host tim
       { applyToAllFuture: true },
     );
 
-    expect(updated.actualStartsAt.getTime()).toBe(target.actualStartsAt.getTime());
+    expect(updated.actualStartsAt.getTime()).toBe(
+      target.actualStartsAt.getTime(),
+    );
     expect(updated.actualEndsAt.getTime()).toBe(target.actualEndsAt.getTime());
   });
 });
