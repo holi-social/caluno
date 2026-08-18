@@ -1598,17 +1598,31 @@ export class ShiftService {
     return untilA === untilB;
   }
 
-  /** Keeps `base`'s calendar date, adopts `time`'s hour/minute/second. */
+  /**
+   * Keeps `base`'s calendar date, adopts `time`'s hour/minute/second.
+   *
+   * Uses UTC getters/setters, not local ones: Drizzle stores/reads these
+   * naive `timestamp` columns via `Date.toISOString()` (UTC digits — Postgres
+   * ignores any offset on a tz-less column), so `base`/`time`'s UTC digits
+   * are what the DB actually holds. Local getters/setters would read/write
+   * the host process's OS timezone instead, drifting by that offset.
+   */
   private applyTimeOfDay(base: Date, time: Date): Date {
     const result = new Date(base);
-    result.setHours(time.getHours(), time.getMinutes(), time.getSeconds(), 0);
+    result.setUTCHours(
+      time.getUTCHours(),
+      time.getUTCMinutes(),
+      time.getUTCSeconds(),
+      0,
+    );
     return result;
   }
 
+  /** See `applyTimeOfDay` for why this uses UTC getters. */
   private toTimeOfDayString(date: Date): string {
-    const hh = String(date.getHours()).padStart(2, '0');
-    const mm = String(date.getMinutes()).padStart(2, '0');
-    const ss = String(date.getSeconds()).padStart(2, '0');
+    const hh = String(date.getUTCHours()).padStart(2, '0');
+    const mm = String(date.getUTCMinutes()).padStart(2, '0');
+    const ss = String(date.getUTCSeconds()).padStart(2, '0');
     return `${hh}:${mm}:${ss}`;
   }
 

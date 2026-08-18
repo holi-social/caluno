@@ -1,5 +1,6 @@
 import 'reflect-metadata';
 import {
+  afterAll,
   beforeAll,
   describe,
   expect,
@@ -4108,5 +4109,70 @@ describe('ShiftService.updateShiftInstance — one-off syncs to master', () => {
     expect(master.location).toBe('London');
     expect(master.minVolunteers).toBe(2);
     expect(master.maxVolunteers).toBe(5);
+  });
+});
+
+describe('ShiftService.updateShiftInstance applyToAllFuture — non-UTC host timezone', () => {
+  // Drizzle stores these naive `timestamp` columns via `Date.toISOString()`
+  // (UTC digits — Postgres ignores any offset on a tz-less column) and reads
+  // them back the same way. `toTimeOfDayString`/`applyTimeOfDay` must use
+  // UTC getters/setters to match that convention. Using local getters/setters
+  // instead is invisible when the host process's local timezone happens to
+  // be UTC (e.g. most CI runners with TZ unset), so this test pins a
+  // non-UTC host timezone to actually exercise the mismatch.
+  let app: INestApplication;
+  let db: Database;
+  let organizationUnitId: string;
+  let shiftService: ShiftService;
+  let originalTz: string | undefined;
+
+  beforeAll(async () => {
+    originalTz = process.env.TZ;
+    process.env.TZ = 'Europe/Berlin';
+
+    const context = await getGraphqlTestContext();
+    app = context.app;
+    db = context.db;
+    organizationUnitId = context.organizationUnitId;
+    shiftService = app.get(ShiftService);
+  });
+
+  afterAll(() => {
+    process.env.TZ = originalTz;
+  });
+
+  it('does not shift startsAt/endsAt when resubmitted unchanged with applyToAllFuture', async () => {
+    // Exactly what a real Berlin browser sends for "2:00-4:00 AM local, Wed
+    // Oct 7 2026" (CEST, UTC+2): the true UTC instant.
+    const startsAt = new Date('2026-10-07T00:00:00.000Z');
+    const endsAt = new Date('2026-10-07T02:00:00.000Z');
+
+    const shift = await createShift(db, {
+      organizationUnitId,
+      startsAt,
+      endsAt,
+      rrule: 'FREQ=WEEKLY;BYDAY=WE;UNTIL=20261101T000000Z',
+    });
+
+    const instances = await db.query.shiftInstances.findMany({
+      where: { masterId: shift.id },
+      orderBy: { actualStartsAt: 'asc' },
+    });
+    const target = instances[0];
+    if (!target) throw new Error('expected an instance');
+
+    const updated = await shiftService.updateShiftInstance(
+      target.id,
+      {
+        title: shift.title,
+        startsAt: target.actualStartsAt,
+        endsAt: target.actualEndsAt,
+      },
+      organizationUnitId,
+      { applyToAllFuture: true },
+    );
+
+    expect(updated.actualStartsAt.getTime()).toBe(target.actualStartsAt.getTime());
+    expect(updated.actualEndsAt.getTime()).toBe(target.actualEndsAt.getTime());
   });
 });
