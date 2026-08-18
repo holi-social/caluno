@@ -9,12 +9,13 @@ jest.mock('@thallesp/nestjs-better-auth', () => ({
 
 import type { UserSession } from '@thallesp/nestjs-better-auth';
 import type { ShiftInstanceEntity } from '../schemas/shift-instance.schema';
-import { ShiftInstanceFieldResolver } from './shift-instance-field.resolver';
 import type { ShiftInstanceLoader } from './shift-instance.loader';
+import { ShiftInstanceFieldResolver } from './shift-instance-field.resolver';
 
 const instance = (
   overrides: Partial<ShiftInstanceEntity> = {},
-): ShiftInstanceEntity => ({ id: 'instance-1', ...overrides }) as ShiftInstanceEntity;
+): ShiftInstanceEntity =>
+  ({ id: 'instance-1', ...overrides }) as ShiftInstanceEntity;
 
 const newResolver = () =>
   new ShiftInstanceFieldResolver(

@@ -2,16 +2,18 @@ jest.mock('nanoid', () => ({
   customAlphabet: () => () => 'abcdefghijkl',
 }));
 
-import { ShiftInstanceLoader } from './shift-instance.loader';
 import type { ShiftService } from '../shift.service';
+import { ShiftInstanceLoader } from './shift-instance.loader';
 
 describe('ShiftInstanceLoader', () => {
   describe('myInvitedAtByKey', () => {
     it('returns the createdAt for a matching instance and user', async () => {
       const createdAt = new Date('2026-08-12T10:00:00Z');
-      const findInviteStatusesForUser = jest.fn().mockResolvedValue([
-        { shiftInstanceId: 'instance-1', status: 'INVITED', createdAt },
-      ]);
+      const findInviteStatusesForUser = jest
+        .fn()
+        .mockResolvedValue([
+          { shiftInstanceId: 'instance-1', status: 'INVITED', createdAt },
+        ]);
       const loader = new ShiftInstanceLoader({
         findInviteStatusesForUser,
       } as unknown as ShiftService);
