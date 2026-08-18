@@ -1654,11 +1654,11 @@ describe('Volunteer home fields and check-in', () => {
     });
     setAuthMockUserId(user.id);
 
-    const outsideShift = await createShift(db, {
+    const beforeShift = await createShift(db, {
       organizationUnitId,
       visibility: ShiftVisibility.ALL_MEMBERS,
-      startsAt: new Date('2027-04-01T09:00:00.000Z'),
-      endsAt: new Date('2027-04-01T10:00:00.000Z'),
+      startsAt: new Date('2027-04-08T09:00:00.000Z'),
+      endsAt: new Date('2027-04-08T12:00:00.000Z'),
     });
     const insideShift = await createShift(db, {
       organizationUnitId,
@@ -1666,19 +1666,30 @@ describe('Volunteer home fields and check-in', () => {
       startsAt: new Date('2027-04-10T09:00:00.000Z'),
       endsAt: new Date('2027-04-10T10:00:00.000Z'),
     });
+    const afterShift = await createShift(db, {
+      organizationUnitId,
+      visibility: ShiftVisibility.ALL_MEMBERS,
+      startsAt: new Date('2027-04-12T09:00:00.000Z'),
+      endsAt: new Date('2027-04-12T16:00:00.000Z'),
+    });
 
-    const [outsideInstances, insideInstances] = await Promise.all([
+    const [beforeInstance, insideInstance, afterInstance] = await Promise.all([
       db.query.shiftInstances.findMany({
-        where: { masterId: outsideShift.id },
+        where: { masterId: beforeShift.id },
       }),
       db.query.shiftInstances.findMany({
         where: { masterId: insideShift.id },
       }),
+      db.query.shiftInstances.findMany({
+        where: { masterId: afterShift.id },
+      }),
     ]);
-    const outsideId = outsideInstances[0]?.id;
-    const insideId = insideInstances[0]?.id;
-    expect(outsideId).toBeDefined();
+    const beforeId = beforeInstance[0]?.id;
+    const insideId = insideInstance[0]?.id;
+    const afterId = afterInstance[0]?.id;
+    expect(beforeId).toBeDefined();
     expect(insideId).toBeDefined();
+    expect(afterId).toBeDefined();
 
     const data = await graphqlRequestRequiringData<{
       availableShiftInstances: {
@@ -1695,8 +1706,8 @@ describe('Volunteer home fields and check-in', () => {
           }
         `,
         variables: {
-          startsAfter: new Date('2027-04-08T00:00:00.000Z').toISOString(),
-          endsBefore: new Date('2027-04-12T00:00:00.000Z').toISOString(),
+          startsAfter: new Date('2027-04-08T10:00:00.000Z').toISOString(),
+          endsBefore: new Date('2027-04-12T14:00:00.000Z').toISOString(),
         },
         headers: {
           'x-organization-unit-id': organizationUnitId,
@@ -1707,7 +1718,8 @@ describe('Volunteer home fields and check-in', () => {
 
     const ids = data.availableShiftInstances.items.map((item) => item.id);
     expect(ids).toContain(insideId);
-    expect(ids).not.toContain(outsideId);
+    expect(ids).not.toContain(beforeId);
+    expect(ids).not.toContain(afterId);
 
     setAuthMockUserId(testUserId);
   });
