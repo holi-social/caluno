@@ -93,6 +93,48 @@ describe('normalizeInvitation', () => {
     expect(result.isMultiDay).toBe(true);
   });
 
+  it('uses overrideTitle over master.title when set', () => {
+    const result = normalizeInvitation(
+      shiftInvite({
+        shift: {
+          id: 'instance-1',
+          actualStartsAt: '2026-08-19T12:00:00.000Z',
+          actualEndsAt: '2026-08-19T16:00:00.000Z',
+          myInvitedAt: '2026-08-12T09:00:00.000Z',
+          overrideTitle: 'Special Food Distribution',
+          master: {
+            id: 'shift-1',
+            title: 'Food Distribution',
+            location: 'Playground Community Center',
+            rrule: 'FREQ=WEEKLY',
+            organizationUnit: { name: 'Helping Hands', logoUrl: null },
+          },
+        },
+      } as never),
+    );
+
+    expect(result.title).toBe('Special Food Distribution');
+  });
+
+  it('falls back to a safe default when organizationUnit is null on an event invite', () => {
+    const result = normalizeInvitation(
+      eventInvite({
+        event: {
+          id: 'event-1',
+          title: 'Community Fair',
+          location: 'Main Square',
+          startsAt: '2026-08-19T09:00:00.000Z',
+          endsAt: '2026-08-19T17:00:00.000Z',
+          myInvitedAt: '2026-08-15T10:00:00.000Z',
+          organizationUnit: null,
+        },
+      } as never),
+    );
+
+    expect(result.orgName).toBe('');
+    expect(result.orgLogoUrl).toBeNull();
+  });
+
   it('passes through a null location and null invitedAt', () => {
     const result = normalizeInvitation(
       shiftInvite({
