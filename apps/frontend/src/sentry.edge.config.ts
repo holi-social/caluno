@@ -10,4 +10,6 @@ Sentry.init({
     release: process.env.SENTRY_RELEASE,
     tracesSampleRateOverride: process.env.SENTRY_TRACES_SAMPLE_RATE,
   }),
+  // Metrics are backend-only — never emit them from the frontend.
+  enableMetrics: false,
 });
