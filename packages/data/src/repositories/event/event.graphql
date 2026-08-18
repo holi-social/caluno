@@ -111,6 +111,12 @@ fragment MyEventFields on Event {
   startsAt
   endsAt
   location
+  myInvitedAt
+  organizationUnit {
+    id
+    name
+    logoUrl
+  }
 }
 
 query GetMyEvents(
