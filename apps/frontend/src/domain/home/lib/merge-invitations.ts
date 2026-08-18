@@ -1,3 +1,5 @@
+import type { MyEvent, MyShiftInstance } from '@repo/data/react';
+
 /** Merge shift + event invites into one list sorted by start time. */
 export function mergeInvitations<
   S extends { id: string; actualStartsAt: string },
@@ -20,3 +22,7 @@ export function mergeInvitations<
     (a, b) => new Date(a.startsAt).getTime() - new Date(b.startsAt).getTime(),
   );
 }
+
+export type MergedInvitation = ReturnType<
+  typeof mergeInvitations<MyShiftInstance, MyEvent>
+>[number];
