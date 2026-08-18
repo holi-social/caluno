@@ -647,7 +647,10 @@
     "empty": "No items yet."
   },
   "RequiredFormRenderer": {
-    "noForms": "No forms are required."
+    "noForms": "No forms are required.",
+    "step": "Form {current} of {total}",
+    "submitAll": "Submit all forms",
+    "submittingAll": "Submitting all forms..."
   },
   "RequirementForm": {
     "actions": {
