@@ -1114,6 +1114,7 @@
       "deleteAria": "Löschen",
       "deleteDialog": {
         "description": "Dieser Einsatztermin ist Teil einer Serie. Wähle aus, ob nur diesen Termin oder alle kommenden Termine gelöscht werden sollen.",
+        "oneTimeDescription": "Das ist ein einmaliger Einsatztermin. Bist du sicher, dass du ihn löschen möchtest?",
         "error": "Einsatztermin konnte nicht gelöscht werden. {error}",
         "futureDescription": "Löscht diesen Termin und alle kommenden Termine der Serie. Vergangene Termine bleiben erhalten.",
         "futureTitle": "Diesen und alle zukünftigen Termine",
