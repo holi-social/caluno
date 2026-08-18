@@ -344,6 +344,7 @@ query GetWeeklyShifts($from: DateTime!, $to: DateTime!) {
       minVolunteers
       maxVolunteers
       visibility
+      rrule
     }
     volunteers {
       id
