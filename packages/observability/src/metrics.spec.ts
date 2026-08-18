@@ -5,7 +5,8 @@ const calls: Array<{ fn: string; args: unknown[] }> = [];
 mock.module('@sentry/core', () => ({
   metrics: {
     count: (...args: unknown[]) => calls.push({ fn: 'count', args }),
-    distribution: (...args: unknown[]) => calls.push({ fn: 'distribution', args }),
+    distribution: (...args: unknown[]) =>
+      calls.push({ fn: 'distribution', args }),
     gauge: (...args: unknown[]) => calls.push({ fn: 'gauge', args }),
   },
 }));
@@ -23,7 +24,11 @@ describe('metrics facade', () => {
     metrics.distribution('api_response_time', 150, { endpoint: '/graphql' });
     expect(calls.at(-1)).toEqual({
       fn: 'distribution',
-      args: ['api_response_time', 150, { attributes: { endpoint: '/graphql' } }],
+      args: [
+        'api_response_time',
+        150,
+        { attributes: { endpoint: '/graphql' } },
+      ],
     });
   });
 
