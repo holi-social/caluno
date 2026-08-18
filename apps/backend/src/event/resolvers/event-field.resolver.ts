@@ -134,6 +134,22 @@ export class EventFieldResolver {
   }
 
   @AllowAnonymous()
+  @ResolveField(() => Date, { nullable: true })
+  async myInvitedAt(
+    @Parent() event: EventEntity,
+    @Session() session: UserSession,
+    @Loader(EventInviteLoader) loader: EventInviteLoader,
+  ): Promise<Date | null> {
+    if (!session?.user) {
+      return null;
+    }
+    const invite = await loader.inviteByEventIdAndUserId.load(
+      `${event.id}:${session.user.id}`,
+    );
+    return invite?.createdAt ?? null;
+  }
+
+  @AllowAnonymous()
   @ResolveField(() => [Shift])
   async shifts(
     @Parent() event: EventEntity,
