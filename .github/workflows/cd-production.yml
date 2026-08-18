@@ -97,6 +97,7 @@ jobs:
             --build-arg NEXT_PUBLIC_WEB_URL="https://app.caluno.org" \
             --build-arg NEXT_PUBLIC_SENTRY_DSN="${{ vars.NEXT_PUBLIC_SENTRY_DSN }}" \
             --build-arg NEXT_PUBLIC_SENTRY_ENVIRONMENT="production" \
+            --build-arg NEXT_PUBLIC_SENTRY_PROFILES_SAMPLE_RATE="${{ vars.NEXT_PUBLIC_SENTRY_PROFILES_SAMPLE_RATE }}" \
             --build-arg SENTRY_RELEASE="${{ github.sha }}" \
             --build-arg SENTRY_ORG="${{ vars.SENTRY_ORG }}" \
             --build-arg SENTRY_PROJECT_FRONTEND="${{ vars.SENTRY_PROJECT_FRONTEND }}" \
