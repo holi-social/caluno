@@ -115,6 +115,22 @@ describe('resolveFieldAnswer', () => {
     expect(result).toBe('Red, Blue');
   });
 
+  it('maps JSON-encoded MULTI_CHOICE values to their option labels', () => {
+    const result = resolveFieldAnswer(
+      field({
+        type: 'MULTI_CHOICE',
+        options: [
+          { label: 'Red', value: 'red' },
+          { label: 'Blue', value: 'blue' },
+        ],
+      }),
+      [{ fieldId: 'f1', value: '["red","blue"]' }],
+      {},
+      opts,
+    );
+    expect(result).toBe('Red, Blue');
+  });
+
   it('passes unknown MULTI_CHOICE values through unchanged', () => {
     const result = resolveFieldAnswer(
       field({ type: 'MULTI_CHOICE', options: [] }),
