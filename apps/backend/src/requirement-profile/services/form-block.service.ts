@@ -13,6 +13,7 @@ import { patch } from '../../shared/patch';
 import { FilePurpose } from '../../storage/enums';
 import { FileService } from '../../storage/services/file.service';
 import { SYSTEM_PROFILE_KEYS } from '../constants';
+import { FieldType } from '../enums';
 import { CreateFormBlockInput } from '../inputs/create-form-block.input';
 import { CreateFormBlockFieldInput } from '../inputs/create-form-block-field.input';
 import { UpdateFormBlockInput } from '../inputs/update-form-block.input';
@@ -23,6 +24,7 @@ import type {
 } from '../schemas/form-block.schema';
 import type { FormBlockFieldInsert } from '../schemas/form-block-field.schema';
 import { isUnitInOrg } from './is-unit-in-org';
+import { assertValidFieldOptions } from './validate-field-options';
 
 @Injectable()
 export class FormBlockService {
@@ -121,6 +123,9 @@ export class FormBlockService {
         .returning();
 
       if (input.fields && input.fields.length > 0) {
+        for (const field of input.fields) {
+          assertValidFieldOptions(field.type, field.options);
+        }
         await tx
           .insert(schema.formBlockFields)
           .values(
@@ -236,6 +241,7 @@ export class FormBlockService {
         `Invalid systemKey: "${input.systemKey}". Must be one of: ${[...SYSTEM_PROFILE_KEYS].join(', ')}`,
       );
     }
+    assertValidFieldOptions(input.type, input.options);
     await this.validateDocumentFile(input.documentFileId);
 
     const block = await this.findById(blockId);
@@ -286,6 +292,13 @@ export class FormBlockService {
 
     if (!field?.block) {
       throw new NotFoundGraphQLError('Field not found');
+    }
+
+    if (input.options) {
+      assertValidFieldOptions(
+        input.type ?? (field.type as FieldType),
+        input.options,
+      );
     }
 
     await isUnitInOrg(this.db, organizationUnitId, field.block.organizationId);
