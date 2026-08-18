@@ -898,6 +898,7 @@ type ShiftInstance {
   master: Shift!
   masterId: ID!
   myInviteStatus: ShiftInviteStatus
+  myInvitedAt: DateTime
   occurrenceIndex: Int!
   overrideInstructions: String
   overrideLocation: String
