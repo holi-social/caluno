@@ -10,6 +10,7 @@ type Props = {
   shiftId: string;
   instanceId: string;
   size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl';
+  label?: string;
 } & Pick<React.ComponentProps<'button'>, 'className'>;
 
 export default function ShareLinkButton({
@@ -17,6 +18,7 @@ export default function ShareLinkButton({
   instanceId,
   className,
   size,
+  label,
 }: Props) {
   const t = useTranslations('Shift');
   const tCommon = useTranslations('Common');
@@ -35,7 +37,7 @@ export default function ShareLinkButton({
       }
     >
       <Share2 className="size-4 mr-2" />
-      {t('inviteForm.copyInviteLink')}
+      {label ?? t('inviteForm.copyInviteLink')}
     </Button>
   );
 }

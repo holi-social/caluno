@@ -18,9 +18,9 @@ export class FormSubmissionValueMapper extends BaseMapper<
 
     // MULTI_CHOICE values are stored as a jsonb array (see parseValue in
     // FormSubmissionService) while the GraphQL model declares value: String —
-    // serialize back to the comma-separated form the rest of the pipeline uses.
+    // serialize as JSON so values containing commas survive the round trip.
     const value = Array.isArray(entity.value)
-      ? entity.value.join(',')
+      ? JSON.stringify(entity.value)
       : entity.value;
 
     return plainToInstance(

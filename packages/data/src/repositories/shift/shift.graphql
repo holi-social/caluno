@@ -23,6 +23,9 @@ query GetShift($id: String!) {
       name
       logoUrl
       myMembershipState
+      requiredForms {
+        ...RequiredFormRefFields
+      }
       organization {
         id
         name
@@ -129,6 +132,12 @@ mutation SetShiftRequiredForms($shiftId: ID!, $formIds: [String!]!) {
   }
 }
 
+mutation SetShiftInstanceRequiredForms($instanceId: ID!, $formIds: [String!]!) {
+  setShiftInstanceRequiredForms(instanceId: $instanceId, formIds: $formIds) {
+    ...RequiredFormRefFields
+  }
+}
+
 mutation UpdateMembersForShiftInstance(
   $instanceId: String!
   $memberIds: [String!]!
@@ -154,6 +163,13 @@ mutation UpdateShiftInstance(
     applyToAllFuture: $applyToAllFuture
   ) {
     id
+  }
+}
+
+mutation DeleteShiftInstance($id: String!, $applyToAllFuture: Boolean) {
+  deleteShiftInstance(id: $id, applyToAllFuture: $applyToAllFuture) {
+    id
+    isCancelled
   }
 }
 
@@ -279,6 +295,10 @@ query GetShiftInstance($id: ID!) {
     isCancelled
     filledCount
     spotsLeft
+    requiredFormsCount
+    requiredForms {
+      ...RequiredFormRefFields
+    }
     master {
       id
       title
@@ -287,6 +307,14 @@ query GetShiftInstance($id: ID!) {
       minVolunteers
       maxVolunteers
       visibility
+      rrule
+      createdAt
+      imageUrl
+      createdBy {
+        id
+        name
+        image
+      }
     }
     invites {
       status
@@ -316,6 +344,7 @@ query GetWeeklyShifts($from: DateTime!, $to: DateTime!, $eventId: ID) {
       minVolunteers
       maxVolunteers
       visibility
+      rrule
     }
     volunteers {
       id
@@ -343,10 +372,20 @@ fragment PublicShiftDetailInstanceFields on ShiftInstance {
   spotsLeft
   myInviteStatus
   isIntendingToJoin
+  requiredFormsCount
+  requiredForms {
+    ...RequiredFormRefFields
+  }
 }
 
 query GetPublicShiftInstances($shiftId: ID!) {
   publicShiftInstances(shiftId: $shiftId) {
+    ...PublicShiftDetailInstanceFields
+  }
+}
+
+query GetPublicShiftInstance($id: ID!) {
+  publicShiftInstance(id: $id) {
     ...PublicShiftDetailInstanceFields
   }
 }

@@ -87,6 +87,7 @@ export function ShiftRequiredFormsPopover({
         shiftTitle: shift?.title ?? '',
       })}
       onOpenChange={handleOpenChange}
+      size="sm"
     />
   );
 }

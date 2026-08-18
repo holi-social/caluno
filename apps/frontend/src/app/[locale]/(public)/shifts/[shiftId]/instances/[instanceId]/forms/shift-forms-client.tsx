@@ -42,16 +42,13 @@ export function ShiftFormsClient({
 
       if (result.status === JoinStatus.Joined) {
         toast.success(t('joinedToast', { shiftTitle }));
-        router.push(getSafeRedirect(redirectTo) ?? detailPath);
-        router.refresh();
+        router.push(getSafeRedirect(redirectTo, detailPath));
       } else if (result.status === JoinStatus.Pending) {
         toast.success(t('requestSentToast'));
         router.push(detailPath);
-        router.refresh();
       } else if (result.status === JoinStatus.Rejected) {
         toast.error(t('rejectedToast'));
         router.push(detailPath);
-        router.refresh();
       } else if (result.status === JoinStatus.RequirementsNeeded) {
         toast.error(t('requirementsNeededToast'));
       }

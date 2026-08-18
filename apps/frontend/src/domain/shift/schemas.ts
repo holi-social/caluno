@@ -108,6 +108,30 @@ export const serverShiftDeleteSchema = shiftDeleteSchema({
 
 export type ShiftDeleteValues = z.infer<typeof serverShiftDeleteSchema>;
 
+interface ShiftInstanceDeleteSchemaMessages {
+  instanceIdRequired: string;
+  organizationUnitIdRequired: string;
+}
+
+export function shiftInstanceDeleteSchema(
+  t: ShiftInstanceDeleteSchemaMessages,
+) {
+  return z.object({
+    instanceId: z.string().min(1, t.instanceIdRequired),
+    organizationUnitId: z.string().min(1, t.organizationUnitIdRequired),
+    applyToAllFuture: z.boolean().optional(),
+  });
+}
+
+export const serverShiftInstanceDeleteSchema = shiftInstanceDeleteSchema({
+  instanceIdRequired: 'Shift instance ID is required',
+  organizationUnitIdRequired: 'Organization unit ID is required',
+});
+
+export type ShiftInstanceDeleteValues = z.infer<
+  typeof serverShiftInstanceDeleteSchema
+>;
+
 export function inviteShiftFormSchema() {
   return z.object({
     invitedMemberIds: z.array(z.string()),

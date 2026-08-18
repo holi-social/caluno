@@ -1,11 +1,14 @@
 import { Args, Context, ID, Mutation, Resolver } from '@nestjs/graphql';
 import { Session, type UserSession } from '@thallesp/nestjs-better-auth';
 import { plainToInstance } from 'class-transformer';
+import { AuthService } from '../../auth/auth.service';
 import { PERMISSIONS } from '../../auth/constants';
 import { Permissions } from '../../auth/decorators/permissions.decorator';
+import { ForbiddenGraphQLError } from '../../graphql/errors';
 import type { AuthenticatedGraphQLContext } from '../../graphql/graphql.context';
 import { RequiredFormRef } from '../../organization/models/organization-unit-required-form.model';
 import { RequiredFormTargetType } from '../../requirement-profile/enums';
+import { RequiredFormRefMapper } from '../../requirement-profile/mappers/required-form-ref.mapper';
 import { RequirementForm } from '../../requirement-profile/models/requirement-form.model';
 import { RequirementProfile } from '../../requirement-profile/models/requirement-profile.model';
 import { UserRequirementStatus } from '../../requirement-profile/models/user-requirement-status.model';
@@ -27,7 +30,40 @@ export class EventMutationResolver {
     private readonly eventMapper: EventMapper,
     private readonly eventInviteMapper: EventInviteMapper,
     private readonly requiredFormService: RequiredFormService,
+    private readonly requiredFormRefMapper: RequiredFormRefMapper,
+    private readonly authService: AuthService,
   ) {}
+
+  private async assertCanManageInviteForUser(
+    actorUserId: string,
+    targetUserId: string,
+    eventId: string,
+    organizationUnitId: string,
+    status: EventInviteStatus,
+  ): Promise<void> {
+    const isSelf = actorUserId === targetUserId;
+    const isAdminOnlyTarget =
+      status === EventInviteStatus.ADMIN_REJECTED ||
+      status === EventInviteStatus.INVITED;
+
+    if (isSelf && !isAdminOnlyTarget) {
+      return;
+    }
+
+    const hasPermission = await this.authService.hasRequiredPermissions(
+      actorUserId,
+      organizationUnitId,
+      [PERMISSIONS.SHIFT_EDIT],
+    );
+
+    if (!hasPermission) {
+      throw new ForbiddenGraphQLError(
+        'You do not have permission to manage invites for other users',
+      );
+    }
+
+    await this.eventService.findById(eventId, organizationUnitId);
+  }
 
   @Permissions(PERMISSIONS.SHIFT_EDIT)
   @Mutation(() => Event)
@@ -102,10 +138,7 @@ export class EventMutationResolver {
       formIds,
     );
 
-    return requiredForms.map(({ form, order }) => ({
-      form: plainToInstance(RequirementForm, form),
-      order,
-    }));
+    return this.requiredFormRefMapper.toArray(requiredForms);
   }
 
   @Mutation(() => JoinEventResult)
@@ -147,9 +180,22 @@ export class EventMutationResolver {
     @Args('eventId', { type: () => ID }) eventId: string,
     @Args('status', { type: () => EventInviteStatus })
     status: EventInviteStatus,
+    @Args('userId', { type: () => String, nullable: true })
+    userId: string | null | undefined,
+    @Context() context: AuthenticatedGraphQLContext,
   ): Promise<EventInvite> {
-    const invite = await this.eventService.updateEventInviteStatus(
+    const targetUserId = userId ?? session.user.id;
+
+    await this.assertCanManageInviteForUser(
       session.user.id,
+      targetUserId,
+      eventId,
+      context.organizationUnitId,
+      status,
+    );
+
+    const invite = await this.eventService.updateEventInviteStatus(
+      targetUserId,
       eventId,
       status,
     );

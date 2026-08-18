@@ -159,6 +159,7 @@ type Event {
   requiredFormsCount: Int!
   shifts: [Shift!]!
   shiftsCount: Int!
+  signedUpCount: Int!
   slug: String!
   startsAt: DateTime!
   title: String!
@@ -185,7 +186,9 @@ enum EventInviteStatus {
 type EventOrganizationUnit {
   id: ID!
   logoUrl: String
+  myMembershipState: JoinStatus!
   name: String!
+  requiredForms: [RequiredFormRef!]!
   slug: String!
 }
 
@@ -414,21 +417,24 @@ type Mutation {
   deleteRequirementProfileSubmission(id: String!): RequirementProfileSubmission!
   deleteRole(id: ID!): Role!
   deleteShift(id: String!): Shift!
+  deleteShiftInstance(applyToAllFuture: Boolean, id: String!): ShiftInstance!
   deleteTimeEntry(id: ID!): TimeEntry!
   inviteMembersToEvent(eventId: ID!, memberIds: [String!]!): Event!
   joinEvent(eventId: ID!): JoinEventResult!
   joinOrganization(organizationUnitId: ID!): JoinOrganizationResult!
   joinShiftInstance(instanceId: String!): JoinShiftInstanceResult!
-  leaveMembership(id: ID!): Boolean!
+  leaveMembership(id: ID!): Membership!
   regenerateFormShareToken(id: String!): RequirementForm!
   rejectMembershipRequest(id: ID!, organizationUnitId: ID!, rejectionReason: String!): MembershipRequest!
+  removeMembershipRequest(id: ID!): MembershipRequest!
   setEventRequiredForms(eventId: ID!, formIds: [String!]!): [RequiredFormRef!]!
   setRequiredForms(formIds: [String!]!, organizationUnitId: String!): [RequiredFormRef!]!
+  setShiftInstanceRequiredForms(formIds: [String!]!, instanceId: ID!): [RequiredFormRef!]!
   setShiftRequiredForms(formIds: [String!]!, shiftId: ID!): [RequiredFormRef!]!
   submitForm(input: SubmitFormInput!, token: String!): FormSubmission!
   submitRequiredForm(formId: String!, input: SubmitFormInput!, targetId: String!, targetType: RequiredFormTargetType!): FormSubmission!
   updateEvent(id: ID!, input: UpdateEventInput!): Event!
-  updateEventInviteStatus(eventId: ID!, status: EventInviteStatus!): EventInvite!
+  updateEventInviteStatus(eventId: ID!, status: EventInviteStatus!, userId: String): EventInvite!
   updateFormBlock(id: String!, input: UpdateFormBlockInput!): FormBlock!
   updateFormBlockField(fieldId: String!, input: UpdateFormBlockFieldInput!): FormBlock!
   updateMembersForShiftInstance(instanceId: String!, inviteToAllInstances: Boolean, memberIds: [String!]!): ShiftInstance!
@@ -584,12 +590,15 @@ type Query {
   memberships: [Membership!]!
   myAdminstableOrganizationUnits: [OrganizationUnit!]!
   myEvents(endsBefore: DateTime = null, includePast: Boolean! = false, limit: Int! = 15, offset: Int! = 0, order: SortOrder! = ASC, startsAfter: DateTime = null, statuses: [EventInviteStatus!]): EventPaginatedResponse!
+  myFormSubmission(id: ID!): FormSubmission
   myFormSubmissionByToken(token: String!): FormSubmission
   myFormSubmissions(organizationUnitId: ID!): [FormSubmission!]!
+  myMembership(id: ID!): Membership
   myMembershipRequests(limit: Int! = 10, offset: Int! = 0): MembershipRequestPaginatedResponse!
   myMembershipStatus(organizationUnitId: ID!): Boolean!
   myMemberships: [Membership!]!
   myOrganizationUnits: [OrganizationUnit!]!
+  myRequiredOrgUnitForms(organizationUnitId: ID!): [RequirementForm!]!
   myShiftInstances(endsBefore: DateTime = null, includeIntended: Boolean = false, includePast: Boolean! = false, limit: Int! = 15, offset: Int! = 0, order: SortOrder! = ASC, startsAfter: DateTime = null, statuses: [ShiftInviteStatus!]): ShiftInstancePaginatedResponse!
   myTime(limit: Int! = 10, offset: Int! = 0): TimeEntryPaginatedResponse!
   myUserProfile: UserProfile
@@ -606,6 +615,7 @@ type Query {
   publicEvent(id: ID!): Event!
   publicEventsByOrganizationUnit(organizationUnitId: ID!): [Event!]!
   publicOrganizationUnit(id: ID!): OrganizationUnit!
+  publicShiftInstance(id: ID!): ShiftInstance!
   publicShiftInstances(shiftId: ID!): [ShiftInstance!]!
   publicShiftsByOrganizationUnit(organizationUnitId: ID!): [Shift!]!
   requirement(id: String!): Requirement
@@ -644,6 +654,7 @@ enum RequiredFormTargetType {
   EVENT
   ORGANIZATION_UNIT
   SHIFT
+  SHIFT_INSTANCE
 }
 
 type RequiredFormWithStatus {
@@ -893,6 +904,8 @@ type ShiftInstance {
   overrideMaxVolunteers: Int
   overrideMinVolunteers: Int
   overrideTitle: String
+  requiredForms: [RequiredFormRef!]!
+  requiredFormsCount: Int!
   spotsLeft: Int
   volunteers: [User!]
 }

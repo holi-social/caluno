@@ -132,8 +132,12 @@
       "deleteAria": "Delete",
       "editAria": "Edit",
       "inviteAria": "Invite",
-      "shareAria": "Copy link",
-      "viewAria": "View"
+      "shareAria": "Copy link"
+    },
+    "card": {
+      "pill": "{shiftsCount, plural, =0 {No shifts} one {1 shift} other {# shifts}}{formsCount, plural, =0 {} one { · 1 form} other { · # forms}}",
+      "viewButton": "View event",
+      "volunteers": "{count, plural, one {1 volunteer signed up} other {# volunteers signed up}}"
     },
     "deleteDialog": {
       "confirm": "Delete",
@@ -193,8 +197,18 @@
         "inviteButton": "Invite",
         "status": {
           "invited": "Invited",
-          "signedUp": "Signed up"
+          "signedUp": "Signed up",
+          "accepted": "Accepted",
+          "declined": "Declined",
+          "cancelled": "Canceled",
+          "rejected": "Rejected"
         },
+        "actionUninvite": "Uninvite",
+        "uninviteSuccess": "Volunteer removed from event",
+        "uninviteError": "Could not remove volunteer",
+        "actionInvite": "Invite",
+        "inviteSuccess": "Volunteer invited again",
+        "inviteError": "Could not invite volunteer",
         "title": "Volunteers"
       }
     },
@@ -239,13 +253,6 @@
       "createTitle": "Create event",
       "editDescription": "Update the event details below.",
       "editTitle": "Edit event"
-    },
-    "table": {
-      "dates": "Dates",
-      "event": "Event",
-      "location": "Location",
-      "requiredForms": "Forms",
-      "shifts": "Shifts"
     },
     "toast": {
       "created": "Event created",
@@ -306,11 +313,35 @@
     "noResults": "No members found",
     "searchPlaceholder": "Search name or email..."
   },
+  "MembershipDetail": {
+    "forms": {
+      "completedOn": "You filled in the form on {date}",
+      "fillIn": "Fill in form",
+      "notCompletedPrompt": "This organisation has asked you to fill in this form.",
+      "status": {
+        "completed": "Completed",
+        "notCompleted": "Not completed"
+      },
+      "subtitle": "Forms this organisation has asked you to fill in.",
+      "title": "Your forms",
+      "view": "View"
+    },
+    "joinedDate": "Joined · {date}",
+    "role": "Role",
+    "submission": {
+      "accepted": "Accepted",
+      "answerColumn": "Answer",
+      "fieldColumn": "Field",
+      "noFields": "This form has no fields.",
+      "submittedOn": "Submitted on {date}"
+    }
+  },
   "MembershipRequest": {
     "actions": {
       "approve": "Approve",
       "approveDisabledTitle": "Required forms are incomplete",
       "cancel": "Cancel",
+      "dismiss": "Dismiss",
       "leave": "Leave",
       "reject": "Reject",
       "rejectDialogDescription": "Are you sure you want to reject this membership request? Please provide a reason so the volunteer understands why their request was declined.",
@@ -318,7 +349,8 @@
       "rejecting": "Rejecting...",
       "rejectionReasonLabel": "Rejection reason",
       "rejectionReasonPlaceholder": "Explain why the request is being rejected...",
-      "withdraw": "Withdraw"
+      "withdraw": "Withdraw",
+      "open": "Open"
     },
     "cancelButton": "Cancel request",
     "cancelButtonSubmitting": "Canceling...",
@@ -329,7 +361,7 @@
     },
     "dialog": {
       "leaveDescription": "Are you sure you want to leave {orgName}?",
-      "leaveTitle": "Leave organization",
+      "leaveTitle": "Revoke membership",
       "withdrawDescription": "Are you sure you want to withdraw your request to join {orgName}?",
       "withdrawTitle": "Withdraw request"
     },
@@ -412,6 +444,8 @@
       "approved": "Membership request approved",
       "cancelFailed": "Failed to cancel membership request",
       "cancelled": "Membership request cancelled",
+      "dismissFailed": "Failed to dismiss membership request",
+      "dismissed": "Membership request dismissed",
       "leaveFailed": "Failed to leave organization",
       "left": "You have left {orgName}",
       "rejected": "Membership request rejected",
@@ -860,8 +894,8 @@
       "deleteFormAria": "Delete",
       "deleteFormDescription": "{name} will be permanently removed.",
       "description": "Description",
-      "editBlockAria": "Edit",
-      "editFormAria": "Edit",
+      "editBlockAria": "Edit block",
+      "editFormAria": "Edit form",
       "editable": "Editable",
       "fieldCount": "{count, plural, one {# field} other {# fields}}",
       "fields": "Fields",
@@ -1092,10 +1126,23 @@
       "timeRangeConstraint": "Shifts must start and end within ({window})."
     },
     "instanceDetail": {
-      "backToShift": "Back to shift",
+      "deleteAria": "Delete",
+      "deleteDialog": {
+        "description": "This shift is part of a series. Choose whether to delete just this shift or every upcoming shift.",
+        "oneTimeDescription": "This is a one-time shift instance. Are you sure you want to delete it?",
+        "error": "Failed to delete shift instance. {error}",
+        "futureDescription": "Deletes this shift and every upcoming occurrence in the series. Past occurrences are kept.",
+        "futureTitle": "This and all future shifts",
+        "onlyThisDescription": "Deletes the shift on {date}. Other occurrences stay untouched.",
+        "onlyThisTitle": "Only this shift",
+        "success": "Shift instance deleted.",
+        "title": "Delete shift instance"
+      },
       "editCta": "Edit",
-      "inviteCta": "Manage invites",
-      "subtitle": "Volunteers and invite status for this occurrence",
+      "imagePlaceholder": "Add an image",
+      "informationTitle": "Shift information",
+      "inviteCta": "Invite",
+      "inviteLink": "Invite link",
       "title": "Shift instance"
     },
     "inviteForm": {
@@ -1194,7 +1241,7 @@
       "createTitle": "Create shift",
       "editDescription": "Edit shift.",
       "editInstanceDescription": "Edit this occurrence of the shift.",
-      "editInstanceTitle": "Edit shift instance",
+      "editInstanceTitle": "Edit shift",
       "editTitle": "Edit shift",
       "inviteDescription": "Invited volunteers will receive an invite email with shift details and a link to the system.",
       "inviteTitle": "Invite volunteers"

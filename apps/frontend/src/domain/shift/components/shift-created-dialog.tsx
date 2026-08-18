@@ -13,7 +13,15 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@repo/ui';
-import { Check, Copy, Landmark, Link, Repeat2 } from 'lucide-react';
+import {
+  CalendarIcon,
+  Check,
+  ClockIcon,
+  Copy,
+  Landmark,
+  Link,
+  Repeat2,
+} from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useState } from 'react';
 import { copyToClipboard } from '@/lib/clipboard';
@@ -31,7 +39,7 @@ export function ShiftCreatedDialog() {
   const tCommon = useTranslations('Common');
   const { shiftId, instanceId } = getSuccessDialogCreatedShift() ?? {};
   const { data: shift, isLoading } = useShift(shiftId);
-  const { formatTimeRange } = useFormatting();
+  const { formatDate, formatTimeRange } = useFormatting();
 
   const [isDialogOpen, setIsDialogOpen] = useState(true);
 
@@ -78,15 +86,22 @@ export function ShiftCreatedDialog() {
         <Card className="shadow-none bg-muted">
           <CardContent className="space-y-2">
             <div className="flex items-center justify-between gap-2">
-              <span className="font-bold text-sm">
-                {formatTimeRange(startsAt, endsAt)}
-              </span>
+              <p className="font-bold">{shift.title}</p>
               <Badge variant="outline" className="gap-1.5 text-primary">
                 <Repeat2 className="size-3.5" />
                 {recurrenceLabel}
               </Badge>
             </div>
-            <p className="font-bold">{shift.title}</p>
+
+            <p className="flex text-sm gap-1">
+              <CalendarIcon className="shrink-0" />
+              {formatDate(startsAt)}
+            </p>
+            <p className="flex text-sm gap-1">
+              <ClockIcon className="shrink-0" />
+
+              {formatTimeRange(startsAt, endsAt)}
+            </p>
             <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
               <Landmark className="size-3.5 shrink-0" />
               {orgUnitLabel}

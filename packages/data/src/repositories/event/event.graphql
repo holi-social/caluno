@@ -4,9 +4,10 @@ fragment EventListFields on Event {
   slug
   startsAt
   endsAt
-  location
   shiftsCount
   requiredFormsCount
+  coverUrl
+  signedUpCount
 }
 
 fragment RequiredFormFields on RequirementForm {
@@ -78,6 +79,7 @@ fragment RequiredFormWithStatusFields on RequiredFormWithStatus {
 fragment EventDetailFields on Event {
   ...EventListFields
   createdAt
+  location
   organizer {
     id
     name
@@ -186,11 +188,27 @@ mutation InviteMembersToEvent($eventId: ID!, $memberIds: [String!]!) {
   }
 }
 
+mutation UpdateEventInviteStatus(
+  $eventId: ID!
+  $status: EventInviteStatus!
+  $userId: String
+) {
+  updateEventInviteStatus(eventId: $eventId, status: $status, userId: $userId) {
+    id
+    status
+    userId
+  }
+}
+
 fragment PublicEventOrganizationUnitFields on EventOrganizationUnit {
   id
   name
   slug
   logoUrl
+  myMembershipState
+  requiredForms {
+    ...RequiredFormRefFields
+  }
 }
 
 fragment PublicShiftInstanceFields on ShiftInstance {

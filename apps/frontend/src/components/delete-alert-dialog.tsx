@@ -33,7 +33,7 @@ export function DeleteAlertDialog({
 
   return (
     <AlertDialog>
-      <AlertDialogTrigger asChild>{trigger}</AlertDialogTrigger>
+      <AlertDialogTrigger>{trigger}</AlertDialogTrigger>
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle>{title}</AlertDialogTitle>

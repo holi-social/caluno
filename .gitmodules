@@ -1,6 +1,6 @@
 [submodule "packages/infra"]
 	path = packages/infra
-	url = git@gitlab.holi.team:clippy/clippy-infra.git
+	url = git@github.com:holi-social/caluno-infra.git
 [submodule ".ai"]
 	path = .ai
-	url = git@gitlab.holi.team:clippy/clippy-ai.git
+	url = git@github.com:holi-social/caluno-ai.git
