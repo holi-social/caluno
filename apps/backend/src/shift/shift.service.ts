@@ -581,10 +581,16 @@ export class ShiftService {
     if (startsAfter) {
       condition.actualStartsAt = { gte: startsAfter };
     }
+
+    const actualEndsAt: { gte?: Date; lt?: Date } = {};
+    if (!includePast) {
+      actualEndsAt.gte = new Date();
+    }
     if (endsBefore) {
-      condition.actualEndsAt = { lt: endsBefore };
-    } else if (!includePast) {
-      condition.actualEndsAt = { gte: new Date() };
+      actualEndsAt.lt = endsBefore;
+    }
+    if (actualEndsAt.gte || actualEndsAt.lt) {
+      condition.actualEndsAt = actualEndsAt;
     }
 
     return condition;
