@@ -647,7 +647,10 @@
     "empty": "Noch keine Einträge."
   },
   "RequiredFormRenderer": {
-    "noForms": "Es sind keine Formulare erforderlich."
+    "noForms": "Es sind keine Formulare erforderlich.",
+    "step": "Formular {current} von {total}",
+    "submitAll": "Alle Formulare absenden",
+    "submittingAll": "Alle Formulare werden abgesendet..."
   },
   "RequirementForm": {
     "actions": {
