@@ -97,6 +97,36 @@ export class ShiftInstanceLoader {
     return keys.map((key) => statusByKey.get(key) ?? null);
   });
 
+  // Keyed by `${instanceId}::${userId}`; null when the user has no direct invite.
+  public readonly myInvitedAtByKey = new DataLoader<string, Date | null>(
+    async (keys) => {
+      const parsed = keys.map((key) => {
+        const sep = key.lastIndexOf('::');
+        return { instanceId: key.slice(0, sep), userId: key.slice(sep + 2) };
+      });
+
+      const instancesByUser = new Map<string, string[]>();
+      for (const { instanceId, userId } of parsed) {
+        const list = instancesByUser.get(userId) ?? [];
+        list.push(instanceId);
+        instancesByUser.set(userId, list);
+      }
+
+      const createdAtByKey = new Map<string, Date>();
+      for (const [userId, instanceIds] of instancesByUser) {
+        const rows = await this.shiftService.findInviteStatusesForUser(
+          userId,
+          instanceIds,
+        );
+        for (const row of rows) {
+          createdAtByKey.set(`${row.shiftInstanceId}::${userId}`, row.createdAt);
+        }
+      }
+
+      return keys.map((key) => createdAtByKey.get(key) ?? null);
+    },
+  );
+
   // Keyed by `${instanceId}::${userId}`; true when the instance is stored in the
   // user's pending membership request metadata as an intended shift instance.
   public readonly isIntendingToJoinByKey = new DataLoader<string, boolean>(

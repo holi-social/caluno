@@ -160,6 +160,20 @@ export class ShiftInstanceFieldResolver {
     );
   }
 
+  // Raw invite-sent timestamp for this instance, or null when there is no direct invite.
+  @AllowAnonymous()
+  @ResolveField(() => Date, { nullable: true })
+  async myInvitedAt(
+    @Parent() instance: ShiftInstanceEntity,
+    @Session() session: UserSession,
+    @Loader(ShiftInstanceLoader) loader: ShiftInstanceLoader,
+  ): Promise<Date | null> {
+    if (!session?.user) {
+      return null;
+    }
+    return loader.myInvitedAtByKey.load(`${instance.id}::${session.user.id}`);
+  }
+
   // True when the current user has this instance in their pending membership
   // request's intendedShiftInstanceIds metadata.
   @AllowAnonymous()
