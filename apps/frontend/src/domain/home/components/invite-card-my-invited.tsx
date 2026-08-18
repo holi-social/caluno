@@ -21,7 +21,7 @@ import {
 import Image from 'next/image';
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
-import { Link } from '@/i18n/navigation';
+import { Link, useRouter } from '@/i18n/navigation';
 import { useFormatting } from '@/lib/formatting/use-formatting';
 import { getInitials } from '@/lib/get-initials';
 import type { MergedInvitation } from '../lib/merge-invitations';
@@ -30,6 +30,7 @@ import { useRecurrenceLabel } from '../lib/recurrence-label';
 
 export function InviteCardMyInvited({ invite }: { invite: MergedInvitation }) {
   const t = useTranslations('VolunteerHome');
+  const router = useRouter();
   const { formatDate, formatTimeRange, formatDateRange } = useFormatting();
   const getRecurrenceLabel = useRecurrenceLabel();
   const respondToShiftInvite = useUpdateShiftInstanceInviteStatus();
@@ -58,6 +59,7 @@ export function InviteCardMyInvited({ invite }: { invite: MergedInvitation }) {
         });
       }
       toast.success(accept ? t('inviteAccepted') : t('inviteDeclined'));
+      router.refresh();
     } catch (error) {
       toast.error(fromGraphQLError(error).message ?? t('inviteActionFailed'));
     }
