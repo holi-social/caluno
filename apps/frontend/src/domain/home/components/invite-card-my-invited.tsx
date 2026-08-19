@@ -78,50 +78,53 @@ export function InviteCardMyInvited({ invite }: { invite: MergedInvitation }) {
     n.kind === 'shift' ? t('inviteKindShift') : t('inviteKindEvent');
 
   return (
-    <Card className="flex flex-col gap-3 rounded-xl border border-border bg-card p-3">
+    <div className="flex flex-col gap-2">
       <Link
         href={n.detailHref}
-        aria-label={n.title}
-        className="flex flex-col gap-3 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60 focus-visible:ring-offset-1"
+        aria-hidden="true"
+        tabIndex={-1}
+        className="flex items-center gap-2"
       >
-        <div className="flex items-center gap-2">
-          <div className="relative flex size-7 shrink-0 items-center justify-center overflow-hidden rounded-full bg-primary text-primary-foreground">
-            {n.orgLogoUrl ? (
-              <Image
-                src={n.orgLogoUrl}
-                alt=""
-                fill
-                unoptimized
-                sizes="28px"
-                className="object-cover"
-              />
-            ) : (
-              <span className="text-sm font-bold">
-                {getInitials(n.orgName)}
-              </span>
-            )}
-          </div>
-          <div className="flex flex-col">
-            <span className="text-xs text-muted-foreground">
-              {t('invitedOn', {
-                date: formatDate(
-                  n.invitedAt ? new Date(n.invitedAt) : new Date(n.startsAt),
-                  { day: 'numeric', month: 'short' },
-                ),
-              })}
-            </span>
-            <span className="text-sm font-semibold text-foreground">
-              {n.orgName}
-            </span>
-          </div>
+        <div className="relative flex size-7 shrink-0 items-center justify-center overflow-hidden rounded-full bg-primary text-primary-foreground">
+          {n.orgLogoUrl ? (
+            <Image
+              src={n.orgLogoUrl}
+              alt=""
+              fill
+              unoptimized
+              sizes="28px"
+              className="object-cover"
+            />
+          ) : (
+            <span className="text-sm font-bold">{getInitials(n.orgName)}</span>
+          )}
         </div>
+        <div className="flex flex-col">
+          <span className="text-xs text-muted-foreground">
+            {t('invitedOn', {
+              date: formatDate(
+                n.invitedAt ? new Date(n.invitedAt) : new Date(n.startsAt),
+                { day: 'numeric', month: 'short' },
+              ),
+            })}
+          </span>
+          <span className="text-sm font-semibold text-foreground">
+            {n.orgName}
+          </span>
+        </div>
+      </Link>
 
-        <div className="flex gap-3 rounded-xl border border-border bg-card p-3">
+      <Card className="flex flex-col gap-2.5 rounded-xl border border-border bg-card p-3 shadow-none">
+        <Link
+          href={n.detailHref}
+          aria-label={n.title}
+          className="flex gap-3 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60 focus-visible:ring-offset-1"
+        >
           <div className="flex w-16 shrink-0 flex-col items-center gap-0.5 rounded-[10px] bg-muted py-2">
-            <span className="text-[11px] font-bold tracking-wide text-primary">
+            <span className="text-[11px] font-bold tracking-[1px] text-primary">
               {weekday.toUpperCase()}
             </span>
-            <span className="text-[22px] font-bold leading-tight text-foreground">
+            <span className="text-[22px] font-bold leading-[1.15] text-foreground">
               {day}
             </span>
             <span className="text-[11px] font-medium text-muted-foreground">
@@ -141,13 +144,16 @@ export function InviteCardMyInvited({ invite }: { invite: MergedInvitation }) {
                     {recurrenceLabel}
                   </span>
                 )}
-                <Badge variant="outline" className="gap-1">
+                <Badge
+                  variant="outline"
+                  className="gap-1 rounded-[10px] font-semibold text-muted-foreground"
+                >
                   <TypeIcon className="size-3" />
                   {typeLabel}
                 </Badge>
               </div>
             </div>
-            <h3 className="truncate text-base font-semibold text-foreground">
+            <h3 className="truncate text-base font-semibold leading-[1.3] text-foreground">
               {n.title}
             </h3>
             {n.location && (
@@ -157,30 +163,30 @@ export function InviteCardMyInvited({ invite }: { invite: MergedInvitation }) {
               </p>
             )}
           </div>
-        </div>
-      </Link>
+        </Link>
 
-      <div className="flex gap-2">
-        <Button
-          variant="outline"
-          size="lg"
-          className="flex-1"
-          disabled={isPending}
-          onClick={() => respond(false)}
-        >
-          <XIcon />
-          {t('inviteDecline')}
-        </Button>
-        <Button
-          size="lg"
-          className="flex-1"
-          disabled={isPending}
-          onClick={() => respond(true)}
-        >
-          <CheckIcon />
-          {t('inviteAccept')}
-        </Button>
-      </div>
-    </Card>
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            size="lg"
+            className="flex-1 text-lg"
+            disabled={isPending}
+            onClick={() => respond(false)}
+          >
+            <XIcon />
+            {t('inviteDecline')}
+          </Button>
+          <Button
+            size="lg"
+            className="flex-1 text-lg"
+            disabled={isPending}
+            onClick={() => respond(true)}
+          >
+            <CheckIcon />
+            {t('inviteAccept')}
+          </Button>
+        </div>
+      </Card>
+    </div>
   );
 }

@@ -317,7 +317,7 @@ export function VolunteerHomeContent({
         </div>
         {seeAllLink('/invitations')}
       </div>
-      <div className="flex flex-col gap-3">
+      <div className="flex flex-col gap-3 lg:grid lg:grid-cols-2">
         {invitationList.map((invite) => (
           <InviteCardMyInvited
             key={`${invite.kind}-${invite.id}`}
