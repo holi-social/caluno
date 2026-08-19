@@ -408,6 +408,7 @@ fragment VolunteerHomeShiftInstance on ShiftInstance {
     organizationUnit {
       id
       name
+      logoUrl
     }
     event {
       id
