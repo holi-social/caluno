@@ -3,21 +3,23 @@
 import { Button } from '@repo/ui';
 import { addDays, addWeeks, format, getISOWeek, subWeeks } from 'date-fns';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { useSearchParams } from 'next/navigation';
 import { useFormatter, useTranslations } from 'next-intl';
 import { useCallback } from 'react';
 import { useRouter } from '@/i18n/navigation';
 
 type WeeklyCalendarNavProps = {
   weekStart: Date;
-  orgUId: string;
+  /** Path without query string, e.g. `/admin/{org}/shifts`. */
+  pathname: string;
+  /** Static query params preserved on week change (`week` is always set). */
+  query?: Record<string, string>;
 };
 
 export function WeeklyCalendarNav({
   weekStart,
-  orgUId,
+  pathname,
+  query,
 }: WeeklyCalendarNavProps) {
-  const searchParams = useSearchParams();
   const router = useRouter();
   const t = useTranslations('Shift');
   const formatter = useFormatter();
@@ -26,12 +28,11 @@ export function WeeklyCalendarNav({
     (direction: 'prev' | 'next') => {
       const newStart =
         direction === 'prev' ? subWeeks(weekStart, 1) : addWeeks(weekStart, 1);
-      const params = new URLSearchParams(searchParams.toString());
+      const params = new URLSearchParams(query ?? {});
       params.set('week', format(newStart, 'yyyy-MM-dd'));
-      params.set('view', 'weekplan');
-      router.push(`/admin/${orgUId}/shifts?${params.toString()}`);
+      router.push(`${pathname}?${params.toString()}`);
     },
-    [weekStart, searchParams, router, orgUId],
+    [weekStart, router, pathname, query],
   );
 
   return (

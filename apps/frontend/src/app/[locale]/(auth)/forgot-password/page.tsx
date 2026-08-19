@@ -26,7 +26,7 @@ export default async function ForgotPasswordPage({
   }
 
   return (
-    <AuthPageShell title={t('title')}>
+    <AuthPageShell title={t('title')} description={t('description')}>
       <ForgotPasswordForm redirectTo={formRedirectTo} />
     </AuthPageShell>
   );

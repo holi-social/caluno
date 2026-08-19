@@ -17,13 +17,16 @@ import {
   adminUninviteTargetStatus,
   canAdminReinvite,
   canAdminUninvite,
+  countInviteDisplayStates,
+  formatInviteStatusSummary,
   toInviteDisplayState,
 } from '@/domain/shift/invite-status-display';
 import { useSheetTrigger } from '@/hooks/use-sheet';
 import { Link, useRouter } from '@/i18n/navigation';
 import { updateEventInviteStatus } from '../actions';
+import { inviteEventPath } from '../routes';
 
-interface EventVolunteersCardProps {
+interface EventVolunteersSectionProps {
   orgUId: string;
   eventId: string;
   invites: EventInviteItem[];
@@ -45,8 +48,9 @@ export function EventVolunteersSection({
   eventId,
   invites,
   canEdit,
-}: EventVolunteersCardProps) {
+}: EventVolunteersSectionProps) {
   const t = useTranslations('Event.detail.volunteersCard');
+  const tShift = useTranslations('Shift');
   const tVolunteer = useTranslations('Volunteer.action');
   const router = useRouter();
   const { open: openVolunteerSheet } = useSheetTrigger('volunteer-profile');
@@ -86,6 +90,14 @@ export function EventVolunteersSection({
       actions: manageActions(invite.status, canEdit),
       iconActions: isParticipating ? ['View', 'Check in'] : ['View'],
     };
+  });
+
+  const counts = countInviteDisplayStates(invites.map((i) => i.status));
+  const summary = formatInviteStatusSummary(counts, null, {
+    invited: tShift('inviteStatus.summaryInvited'),
+    accepted: tShift('inviteStatus.summaryAccepted'),
+    signedUp: tShift('inviteStatus.summarySignedUp'),
+    spots: tShift('inviteStatus.summarySpots'),
   });
 
   const openProfile = (invite: EventInviteItem) => {
@@ -148,19 +160,16 @@ export function EventVolunteersSection({
     });
   };
 
-  if (invites.length === 0) {
-    return <p className="text-sm text-muted-foreground">{t('empty')}</p>;
-  }
-
   return (
     <VolunteeringVolunteerList
       volunteers={volunteers}
       phase="before"
       title={t('title')}
+      summary={summary}
       headerAction={
         canEdit ? (
           <Button asChild size="sm">
-            <Link href={`/admin/${orgUId}/events/${eventId}/invite`}>
+            <Link href={inviteEventPath(orgUId, eventId)}>
               <UserPlus />
               {t('inviteButton')}
             </Link>
@@ -169,7 +178,7 @@ export function EventVolunteersSection({
       }
       actionLabels={{
         View: tVolunteer('viewProfileAria'),
-        'Check in': t('checkInAria'),
+        'Check in': tVolunteer('checkInAria'),
         Invite: t('actionInvite'),
         Uninvite: t('actionUninvite'),
       }}

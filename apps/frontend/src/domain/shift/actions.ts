@@ -118,15 +118,19 @@ export const updateShiftInstance = actionClient
         minVolunteers: parsedInput.minVolunteers ?? null,
         maxVolunteers: parsedInput.maxVolunteers ?? null,
         requiredFormIds: parsedInput.requiredFormIds,
+        // Image always lands on the shift master (backend keeps a one-off
+        // instance's master in sync even without applyToAllFuture), so it
+        // must be sent regardless of that flag — unlike rrule/visibility,
+        // which are only meaningful for a recurring series.
+        ...(parsedInput.imageFileId !== undefined
+          ? { imageFileId: parsedInput.imageFileId }
+          : {}),
         ...(applyToAllFuture
           ? {
               rrule,
               visibility: parsedInput.openShift
                 ? ShiftVisibility.AllMembers
                 : ShiftVisibility.InvitedMembers,
-              ...(parsedInput.imageFileId !== undefined
-                ? { imageFileId: parsedInput.imageFileId }
-                : {}),
             }
           : {}),
       };
