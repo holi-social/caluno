@@ -42,4 +42,9 @@ export const PERMISSION_GROUPS: readonly PermissionGroupDefinition[] = [
       { key: PermissionKey.REQUIREMENT_PROFILE_EDIT, label: 'Edit' },
     ],
   },
+  {
+    key: 'accounting',
+    label: 'Managing accounting',
+    permissions: [{ key: PermissionKey.ACCOUNTING_MANAGE, label: 'Manage' }],
+  },
 ] as const;
