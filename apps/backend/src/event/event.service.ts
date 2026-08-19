@@ -349,6 +349,7 @@ export class EventService {
         and(
           eq(schema.events.id, id),
           eq(schema.events.organizationUnitId, organizationUnitId),
+          eq(schema.events.isDeleted, false),
         ),
       )
       .returning();
