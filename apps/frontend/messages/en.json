@@ -170,7 +170,7 @@
         "volunteers": "Volunteers"
       },
       "requiredForms": {
-        "addExisting": "+ Add existing",
+        "addExisting": "Add existing",
         "addedToast": "Form attached",
         "createNew": "Create new",
         "dedupHint": "Volunteers won't be asked for information they've already provided.",
@@ -1082,7 +1082,7 @@
       "createdLabel": "Created",
       "imageAlt": "Image for {title}",
       "requiredForms": {
-        "addExisting": "+ Add existing",
+        "addExisting": "Add existing",
         "addedToast": "Form attached",
         "createNew": "Create new",
         "dedupHint": "Volunteers won't be asked for information they've already provided.",
@@ -1471,7 +1471,7 @@
       "rejectedEmpty": "No rejected requests yet."
     },
     "requiredForms": {
-      "addExisting": "+ Add existing",
+      "addExisting": "Add existing",
       "addedToast": "Form attached",
       "createNew": "Create new",
       "dedupHint": "Volunteers won't be asked for information they've already provided.",
