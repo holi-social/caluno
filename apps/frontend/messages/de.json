@@ -1,5 +1,8 @@
 {
   "Auth": {
+    "brandName": "caluno",
+    "joinTitle": "Tritt {orgName} bei",
+    "poweredBy": "Powered by",
     "forgotPassword": {
       "checkSpam": "Wenn du ihn nicht siehst, prüfe deinen Spam-Ordner.",
       "description": "Gib deine E-Mail-Adresse ein, und wir senden dir einen Link zum Zurücksetzen deines Passworts.",
@@ -26,7 +29,8 @@
       "signUpLink": "Registrieren",
       "submit": "Anmelden",
       "submitting": "Wird angemeldet...",
-      "title": "Anmelden"
+      "title": "Anmelden",
+      "description": "Willkommen zurück bei caluno. Melde dich an, um Schichten zu übernehmen und mit deiner Organisation mitzuhelfen."
     },
     "resetPassword": {
       "confirmPasswordLabel": "Passwort bestätigen",
@@ -56,7 +60,8 @@
       "signInLink": "Anmelden",
       "submit": "Konto erstellen",
       "submitting": "Konto wird erstellt...",
-      "title": "Erstelle dein Konto"
+      "title": "Erstelle dein Konto",
+      "description": "Willkommen bei caluno. Registriere dich, um Schichten zu übernehmen und mit deiner Organisation mitzuhelfen."
     },
     "verifyEmail": {
       "codeRequested": "Wenn der E-Mail-Versand verfügbar ist, erhältst du in Kürze einen Bestätigungscode an {email}.",
