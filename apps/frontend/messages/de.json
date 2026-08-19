@@ -152,8 +152,23 @@
     "detail": {
       "backLink": "Zurück zu Veranstaltungen",
       "coverImageAlt": "Titelbild für {title}",
+      "createdByLabel": "Erstellt von",
+      "createdLabel": "Erstellt",
       "editButton": "Bearbeiten",
+      "emptyLocation": "Kein Ort",
+      "imagePlaceholder": "Titelbild hinzufügen",
+      "informationTitle": "Veranstaltungsinformationen",
       "inviteButton": "Einladen",
+      "shiftsCount": "{count, plural, one {# Einsatz} other {# Einsätze}}",
+      "status": {
+        "active": "Aktiv",
+        "finished": "Beendet"
+      },
+      "statusLabel": "Status",
+      "tabs": {
+        "shifts": "Einsätze",
+        "volunteers": "Freiwillige"
+      },
       "requiredForms": {
         "addExisting": "+ Bestehendes hinzufügen",
         "addedToast": "Formular hinzugefügt",
