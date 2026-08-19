@@ -43,7 +43,7 @@ export default async function InvitationsPage({
             <EmptyTitle>{t('invitationsEmpty')}</EmptyTitle>
           </Empty>
         ) : (
-          <div className="flex flex-col gap-3">
+          <div className="flex flex-col gap-3 lg:grid lg:grid-cols-2">
             {invitations.map((invite) => (
               <InviteCardMyInvited
                 key={`${invite.kind}-${invite.id}`}
