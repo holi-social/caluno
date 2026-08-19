@@ -46,6 +46,9 @@ type ShiftInvitedInput =
 type EventInvitedInput =
   NotificationEventPayloadMap[typeof NotificationEvent.EVENT_INVITED];
 
+type EventJoinedInput =
+  NotificationEventPayloadMap[typeof NotificationEvent.EVENT_JOINED];
+
 @Injectable()
 export class NotificationService {
   private readonly logger = new Logger(NotificationService.name);
@@ -162,5 +165,9 @@ export class NotificationService {
 
   notifyEventInvited(input: EventInvitedInput): void {
     this.emitter.emit(NotificationEvent.EVENT_INVITED, input);
+  }
+
+  notifyEventJoined(input: EventJoinedInput): void {
+    this.emitter.emit(NotificationEvent.EVENT_JOINED, input);
   }
 }

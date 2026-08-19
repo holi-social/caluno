@@ -20,6 +20,7 @@ import { RecurrenceDay } from '../shift/enums';
 import { UserService } from '../user/user.service';
 import { EmailService } from './email/email.service';
 import { eventInvitedTemplate } from './email/templates/event-invited.template';
+import { eventJoinedTemplate } from './email/templates/event-joined.template';
 import { membershipApprovedTemplate } from './email/templates/membership-approved.template';
 import { membershipRequestedTemplate } from './email/templates/membership-requested.template';
 import { organizationCreatedTemplate } from './email/templates/organization-created.template';
@@ -649,6 +650,88 @@ describe('NotificationModule', () => {
       to: 'sam@example.com',
       subject: expected.subject,
       html: expected.html,
+    });
+  });
+
+  it('sends event joined email to each event manager', async () => {
+    const startsAt = new Date('2026-09-01T09:00:00.000Z');
+    const users = new Map([
+      [
+        'volunteer-1',
+        {
+          id: 'volunteer-1',
+          name: 'Sam Volunteer',
+          email: 'volunteer@example.com',
+        },
+      ],
+      [
+        'manager-1',
+        {
+          id: 'manager-1',
+          name: 'Alice Manager',
+          email: 'alice@example.com',
+        },
+      ],
+      [
+        'manager-2',
+        {
+          id: 'manager-2',
+          name: 'Bob Manager',
+          email: 'bob@example.com',
+        },
+      ],
+    ]);
+    userService.findById.mockImplementation((id: string) =>
+      Promise.resolve(users.get(id)),
+    );
+
+    const payload = {
+      organizationUnitId: 'unit-root-1',
+      organizationUnitName: 'Acme Volunteers',
+      eventTitle: 'Community Fair',
+      joinedUserId: 'volunteer-1',
+      recipientUserIds: ['manager-1', 'manager-2'],
+      startsAt,
+    };
+    const expectedAlice = await eventJoinedTemplate(
+      {
+        organizationUnitId: payload.organizationUnitId,
+        organizationUnitName: payload.organizationUnitName,
+        eventTitle: payload.eventTitle,
+        volunteerName: 'Sam Volunteer',
+        recipientFirstName: 'Alice',
+        startsAt,
+      },
+      createFixtureTranslator('en'),
+    );
+    const expectedBob = await eventJoinedTemplate(
+      {
+        organizationUnitId: payload.organizationUnitId,
+        organizationUnitName: payload.organizationUnitName,
+        eventTitle: payload.eventTitle,
+        volunteerName: 'Sam Volunteer',
+        recipientFirstName: 'Bob',
+        startsAt,
+      },
+      createFixtureTranslator('en'),
+    );
+
+    notificationService.notifyEventJoined(payload);
+
+    await new Promise((resolve) => setTimeout(resolve, 50));
+
+    expect(userService.findById).toHaveBeenCalledWith('volunteer-1');
+    expect(userService.findById).toHaveBeenCalledWith('manager-1');
+    expect(userService.findById).toHaveBeenCalledWith('manager-2');
+    expect(emailService.send).toHaveBeenCalledWith({
+      to: 'alice@example.com',
+      subject: expectedAlice.subject,
+      html: expectedAlice.html,
+    });
+    expect(emailService.send).toHaveBeenCalledWith({
+      to: 'bob@example.com',
+      subject: expectedBob.subject,
+      html: expectedBob.html,
     });
   });
 });

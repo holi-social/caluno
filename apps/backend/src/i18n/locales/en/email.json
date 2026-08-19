@@ -22,6 +22,19 @@
     "subject": "You're invited to {eventTitle}",
     "whenRange": "{date} · {timeRange}"
   },
+  "eventJoined": {
+    "buttonLabel": "View events",
+    "detailEvent": "Event",
+    "detailOrganization": "Organization",
+    "detailStarts": "Starts",
+    "detailVolunteer": "Volunteer",
+    "footerNote": "You're receiving this because you can manage events on {brandName}.",
+    "greeting": "Hi {firstName}, a volunteer joined an event you manage.",
+    "heading": "Someone joined an event",
+    "note": "The participant list is already updated.",
+    "previewText": "{volunteerName} joined {eventTitle} in {organizationName} on {startsAt}.",
+    "subject": "{eventTitle}: {volunteerName} joined"
+  },
   "membershipApproved": {
     "buttonLabel": "Open {organizationName}",
     "footerNote": "You're receiving this because your membership request for {organizationName} was approved on {brandName}.",
