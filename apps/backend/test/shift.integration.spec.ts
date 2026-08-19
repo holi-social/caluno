@@ -21,6 +21,7 @@ import { ShiftInviteStatus, ShiftVisibility } from '../src/shift/enums';
 import { ShiftService } from '../src/shift/shift.service';
 import {
   cancelShiftInstance,
+  createEvent,
   createFormSubmission,
   createMembershipRequest,
   createRequirementForm,
@@ -162,6 +163,69 @@ describe('ShiftService.findShiftsForWeek', () => {
     expect(
       weekDataAfterCancel.weeklyShifts.map((instance) => instance.id),
     ).not.toContain(instanceId);
+  });
+
+  it('filters weeklyShifts by eventId when provided', async () => {
+    const event = await createEvent(db, {
+      organizationUnitId,
+      startsAt: new Date('2026-06-15T00:00:00.000Z'),
+      endsAt: new Date('2026-06-22T00:00:00.000Z'),
+    });
+
+    const { id: eventShiftId } = await createShift(db, {
+      organizationUnitId,
+      eventId: event.id,
+      startsAt: new Date('2026-06-16T08:00:00.000Z'),
+      endsAt: new Date('2026-06-16T10:00:00.000Z'),
+    });
+    const { id: otherShiftId } = await createShift(db, {
+      organizationUnitId,
+      startsAt: new Date('2026-06-17T08:00:00.000Z'),
+      endsAt: new Date('2026-06-17T10:00:00.000Z'),
+    });
+
+    const [eventInstance] = await db.query.shiftInstances.findMany({
+      where: { masterId: eventShiftId },
+    });
+    const [otherInstance] = await db.query.shiftInstances.findMany({
+      where: { masterId: otherShiftId },
+    });
+    expect(eventInstance).toBeDefined();
+    expect(otherInstance).toBeDefined();
+    if (!eventInstance || !otherInstance) {
+      throw new Error('Expected shift instances to exist');
+    }
+
+    const from = new Date('2026-06-15T00:00:00.000Z');
+    const to = new Date('2026-06-22T00:00:00.000Z');
+
+    const weekData = await graphqlRequestRequiringData<{
+      weeklyShifts: Array<{ id: string }>;
+    }>(
+      app,
+      {
+        query: `
+          query WeeklyShifts($from: DateTime!, $to: DateTime!, $eventId: ID) {
+            weeklyShifts(from: $from, to: $to, eventId: $eventId) {
+              id
+            }
+          }
+        `,
+        variables: {
+          from: from.toISOString(),
+          to: to.toISOString(),
+          eventId: event.id,
+        },
+        headers: {
+          'x-organization-unit-id': organizationUnitId,
+        },
+      },
+      'weeklyShifts',
+    );
+
+    const ids = weekData.weeklyShifts.map((instance) => instance.id);
+    expect(ids).toContain(eventInstance.id);
+    expect(ids).not.toContain(otherInstance.id);
   });
 
   it('invites members to all non-cancelled instances of a shift', async () => {

@@ -31,12 +31,12 @@ export async function WeeklyCalendar({
   });
 
   return (
-    <div className="bg-muted border border-border rounded-xl px-3 py-4 overflow-x-auto flex-1 snap-x snap-mandatory scroll-pl-3">
-      <div className="flex gap-3 items-start min-w-full">
+    <div className="bg-muted border border-border rounded-xl overflow-x-auto flex-1 min-h-80 snap-x snap-mandatory">
+      <div className="flex items-stretch min-h-80 min-w-full h-full divide-x divide-border">
         {days.map(({ date, label, dateLabel, instances: dayInstances }) => (
           <div
             key={date.toISOString()}
-            className="flex flex-col gap-2 w-[calc(50%_-_var(--spacing)_*_1.5)] shrink-0 snap-start md:flex-1 md:w-auto md:min-w-0"
+            className="flex flex-col gap-2 px-3 py-4 w-1/2 shrink-0 snap-start md:flex-1 md:w-auto md:min-w-0"
           >
             <div className="flex items-baseline justify-between px-1">
               <span className="text-sm font-bold text-muted-foreground">
