@@ -56,7 +56,7 @@ export function ForgotPasswordForm({
   }
 
   return (
-    <form onSubmit={handleSubmit} className="mt-8 space-y-6">
+    <form onSubmit={handleSubmit} className="space-y-6">
       {error && (
         <div className="rounded-md bg-destructive/10 p-4 text-sm text-destructive">
           {error}
@@ -72,8 +72,6 @@ export function ForgotPasswordForm({
           <p>{t('checkSpam')}</p>
         </output>
       )}
-
-      <p className="text-sm text-muted-foreground">{t('description')}</p>
 
       <div>
         <label htmlFor="email" className="block text-sm font-medium">

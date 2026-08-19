@@ -3,7 +3,6 @@
 
 import { buildBaseOptions } from '@repo/observability';
 import * as Sentry from '@sentry/nestjs';
-import { nodeProfilingIntegration } from '@sentry/profiling-node';
 
 Sentry.init({
   ...buildBaseOptions({
@@ -12,7 +11,4 @@ Sentry.init({
     release: process.env.SENTRY_RELEASE,
     tracesSampleRateOverride: process.env.SENTRY_TRACES_SAMPLE_RATE,
   }),
-  integrations: (defaults) => [...defaults, nodeProfilingIntegration()],
-  // Relative to transactions already sampled by tracesSampler — not absolute.
-  profilesSampleRate: Number(process.env.SENTRY_PROFILES_SAMPLE_RATE ?? 1),
 });

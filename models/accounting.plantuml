@@ -1,0 +1,144 @@
+@startuml accounting
+
+skinparam classAttributeIconSize 0
+skinparam linetype ortho
+
+package "Accounting" {
+    class ReimbursementType {
+        key {EHRENAMT, UEBUNGSLEITER}
+        legalReference
+        yearlyLimitCents
+        platformDefaultRateCents
+    }
+    note right: Seeded legal types.\nYearly limit is fixed by law;\nonly the hourly rate is org-editable.
+
+    class ReimbursementRate {
+        hourlyRateCents
+    }
+    note right: Org override per reimbursement type.\nFalls back to platformDefaultRateCents.
+
+    class DocumentTemplate {
+        kind {CONTRACT, INVOICE}
+        renewalCadence {YEARLY, MONTHLY}
+        invoiceNumberFormat
+        body: JSON
+        lastEditedAt
+        isDeleted
+    }
+    note left: Anchored on organizationId.\nSoft-delete only; generated documents derive\ntenancy transitively via this FK.
+
+    class TemplateSignee {
+        order
+        signeeType {VOLUNTEER, PERMISSION_HOLDER}
+    }
+    note right: One seat in a template's signing chain.\nrequiredPermissionId is mandatory when\nsigneeType = PERMISSION_HOLDER.
+
+    class Contract {
+        contractStatus {AWAITING_VOLUNTEER_SIGNATURE, AWAITING_NGO_SIGNATURE, ACTIVE, EXPIRED, DECLINED}
+        periodStart
+        periodEnd
+        renewDate
+        isNonCompliant
+        resolvedBody: JSON
+        declineReason
+        declinedAt
+        declinedAtSigneeType
+    }
+    note right: Permanent legal/audit record.\nNever deleted.
+
+    class Invoice {
+        invoiceStatus {AWAITING_VOLUNTEER_SIGNATURE, AWAITING_SUPERVISOR_SIGNATURE, READY, DECLINED}
+        periodStart
+        periodEnd
+        totalAmountCents
+        totalHours
+        isNonCompliant
+        resolvedBody: JSON
+        declineReason
+        declinedAt
+        declinedAtSigneeType
+    }
+    note right: Permanent legal/audit record.\nNever deleted.
+
+    class ContractSignature {
+        order
+        signeeType {VOLUNTEER, PERMISSION_HOLDER}
+        signedAt
+    }
+    note left: Frozen snapshot of a TemplateSignee\ninstantiated per contract.
+
+    class InvoiceSignature {
+        order
+        signeeType {VOLUNTEER, PERMISSION_HOLDER}
+        signedAt
+    }
+    note left: Frozen snapshot of a TemplateSignee\ninstantiated per invoice.
+
+    class ContractEvent {
+        type {CREATED, SIGNED, COUNTERSIGNED, ACTIVATED, DECLINED, EXPIRED}
+        occurredAt
+    }
+    note right: Append-only audit log.\nactorUserId is null for system events\n(e.g. expiry job).
+
+    class InvoiceEvent {
+        type {CREATED, SIGNED, COUNTERSIGNED, ACTIVATED, DECLINED, EXPIRED}
+        occurredAt
+    }
+    note right: Append-only audit log.\nactorUserId is null for system events.
+
+    class InvoiceTimeEntry {
+    }
+    note left: Bridge preventing double-billing.\nEach time entry aggregates into at most\none invoice, ever.
+}
+
+' --- Existing touch points ---
+class Organization {
+    accountingEnabled
+}
+
+class User {
+}
+
+class Permission {
+    key
+}
+
+class TimeEntry {
+    isPaid
+}
+
+' --- Relationships ---
+Organization "1" -- "*" ReimbursementRate : "configures >"
+Organization "1" -- "*" DocumentTemplate : "owns >"
+
+ReimbursementType "1" -- "*" ReimbursementRate : "rated by >"
+ReimbursementType "1" -- "*" DocumentTemplate : "typed by >"
+ReimbursementType "1" -- "*" Contract : "typed by >"
+ReimbursementType "1" -- "*" Invoice : "typed by >"
+ReimbursementType "1" -- "0..*" TimeEntry : "tags >"
+
+DocumentTemplate "1" -- "*" TemplateSignee : "signing chain >"
+DocumentTemplate "1" -- "*" Contract : "generates >"
+DocumentTemplate "1" -- "*" Invoice : "generates >"
+
+Contract "1" -- "*" ContractSignature : "requires >"
+Contract "1" -- "*" ContractEvent : "logs >"
+Invoice "1" -- "*" InvoiceSignature : "requires >"
+Invoice "1" -- "*" InvoiceEvent : "logs >"
+Invoice "1" -- "*" InvoiceTimeEntry : "billed as >"
+Contract "*" -- "1" User : "for volunteer >"
+Invoice "*" -- "1" User : "for volunteer >"
+
+TemplateSignee "*" -- "0..1" Permission : "requires >"
+ContractSignature "*" -- "0..1" Permission : "required >"
+InvoiceSignature "*" -- "0..1" Permission : "required >"
+ContractSignature "*" -- "0..1" User : "signed by >"
+InvoiceSignature "*" -- "0..1" User : "signed by >"
+ContractEvent "*" -- "0..1" User : "actor >"
+InvoiceEvent "*" -- "0..1" User : "actor >"
+Contract "*" -- "0..1" User : "declined by >"
+Invoice "*" -- "0..1" User : "declined by >"
+
+TimeEntry "1" -- "0..1" InvoiceTimeEntry : "aggregated into >"
+
+@enduml

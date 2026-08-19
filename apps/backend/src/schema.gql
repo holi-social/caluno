@@ -457,6 +457,7 @@ type Mutation {
 }
 
 type Organization {
+  accountingEnabled: Boolean!
   address: String
   contactEmail: String
   createdAt: DateTime!
@@ -556,6 +557,7 @@ type PermissionGroupItem {
 }
 
 enum PermissionKey {
+  ACCOUNTING_MANAGE
   ORG_EDIT
   ORG_VIEW
   REQUIREMENT_PROFILE_EDIT
@@ -642,7 +644,22 @@ type Query {
   timeEntry(id: String!): TimeEntry!
   user(id: String!): User
   userByCheckInId(checkInId: String!): User
-  weeklyShifts(from: DateTime!, to: DateTime!): [ShiftInstance!]!
+  weeklyShifts(endsBefore: DateTime = null, eventId: ID, limit: Int! = 15, offset: Int! = 0, startsAfter: DateTime = null): [ShiftInstance!]!
+}
+
+type ReimbursementType {
+  createdAt: DateTime!
+  id: ID!
+  key: ReimbursementTypeKey!
+  legalReference: String!
+  platformDefaultRateCents: Int!
+  updatedAt: DateTime
+  yearlyLimitCents: Int!
+}
+
+enum ReimbursementTypeKey {
+  EHRENAMT
+  UEBUNGSLEITER
 }
 
 type RequiredFormRef {
@@ -969,7 +986,9 @@ type TimeEntry {
   createdAt: DateTime!
   endedAt: DateTime
   id: ID!
+  isPaid: Boolean!
   notes: String
+  reimbursementType: ReimbursementType
   shiftInstance: ShiftInstance!
   startedAt: DateTime!
   volunteer: User!

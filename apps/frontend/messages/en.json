@@ -1,5 +1,8 @@
 {
   "Auth": {
+    "brandName": "caluno",
+    "joinTitle": "Join {orgName}",
+    "poweredBy": "Powered by",
     "forgotPassword": {
       "checkSpam": "If you don't see it, check your spam folder.",
       "description": "Enter your email address and we'll send you a link to reset your password.",
@@ -26,7 +29,8 @@
       "signUpLink": "Sign up",
       "submit": "Sign in",
       "submitting": "Signing in...",
-      "title": "Sign in"
+      "title": "Sign in",
+      "description": "Welcome back to caluno. Sign in to join shifts and volunteer with your organization."
     },
     "resetPassword": {
       "confirmPasswordLabel": "Confirm password",
@@ -56,7 +60,8 @@
       "signInLink": "Sign in",
       "submit": "Create account",
       "submitting": "Creating account...",
-      "title": "Create your account"
+      "title": "Create your account",
+      "description": "Welcome to caluno. Sign up to join shifts and volunteer with your organization."
     },
     "verifyEmail": {
       "codeRequested": "If email delivery is available, a verification code will arrive at {email} shortly.",
@@ -147,10 +152,25 @@
     "detail": {
       "backLink": "Back to events",
       "coverImageAlt": "Cover image for {title}",
+      "createdByLabel": "Created by",
+      "createdLabel": "Created",
       "editButton": "Edit",
+      "emptyLocation": "No location",
+      "imagePlaceholder": "Add cover image",
+      "informationTitle": "Event information",
       "inviteButton": "Invite",
+      "shiftsCount": "{count, plural, one {# shift} other {# shifts}}",
+      "status": {
+        "active": "Active",
+        "finished": "Finished"
+      },
+      "statusLabel": "Status",
+      "tabs": {
+        "shifts": "Shifts",
+        "volunteers": "Volunteers"
+      },
       "requiredForms": {
-        "addExisting": "+ Add existing",
+        "addExisting": "Add existing",
         "addedToast": "Form attached",
         "createNew": "Create new",
         "dedupHint": "Volunteers won't be asked for information they've already provided.",
@@ -647,7 +667,11 @@
     "empty": "No items yet."
   },
   "RequiredFormRenderer": {
-    "noForms": "No forms are required."
+    "formProgress": "Form progress",
+    "noForms": "No forms are required.",
+    "step": "Form {current} of {total}",
+    "submitAll": "Submit all forms",
+    "submittingAll": "Submitting all forms..."
   },
   "RequirementForm": {
     "actions": {
@@ -1058,7 +1082,7 @@
       "createdLabel": "Created",
       "imageAlt": "Image for {title}",
       "requiredForms": {
-        "addExisting": "+ Add existing",
+        "addExisting": "Add existing",
         "addedToast": "Form attached",
         "createNew": "Create new",
         "dedupHint": "Volunteers won't be asked for information they've already provided.",
@@ -1447,7 +1471,7 @@
       "rejectedEmpty": "No rejected requests yet."
     },
     "requiredForms": {
-      "addExisting": "+ Add existing",
+      "addExisting": "Add existing",
       "addedToast": "Form attached",
       "createNew": "Create new",
       "dedupHint": "Volunteers won't be asked for information they've already provided.",

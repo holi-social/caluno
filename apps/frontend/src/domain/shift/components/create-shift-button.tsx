@@ -8,16 +8,23 @@ import { shiftNewPath } from '../routes';
 
 interface CreateShiftButtonProps {
   orgUId: string;
+  /** Override create href (e.g. event-scoped shift create). */
+  href?: string;
+  label?: string;
 }
 
-export function CreateShiftButton({ orgUId }: CreateShiftButtonProps) {
+export function CreateShiftButton({
+  orgUId,
+  href,
+  label,
+}: CreateShiftButtonProps) {
   const t = useTranslations('Shift');
 
   return (
-    <Link href={shiftNewPath(orgUId)}>
+    <Link href={href ?? shiftNewPath(orgUId)}>
       <Button>
         <PlusIcon />
-        {t('page.createButton')}
+        {label ?? t('page.createButton')}
       </Button>
     </Link>
   );

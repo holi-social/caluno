@@ -5,11 +5,6 @@ import {
 import * as Sentry from '@sentry/nextjs';
 
 const replayEnabled = process.env.NEXT_PUBLIC_SENTRY_REPLAY_ENABLED === 'true';
-// Share of browser sessions to profile (0..1). Default off; UI profiling only
-// runs while a sampled trace is active (`profileLifecycle: 'trace'`).
-const profileSessionSampleRate = Number(
-  process.env.NEXT_PUBLIC_SENTRY_PROFILES_SAMPLE_RATE ?? 0,
-);
 
 Sentry.init({
   ...buildBaseOptions({
@@ -18,14 +13,7 @@ Sentry.init({
     tracesSampleRateOverride: process.env.NEXT_PUBLIC_SENTRY_TRACES_SAMPLE_RATE,
   }),
   tracePropagationTargets: TRACE_PROPAGATION_TARGETS,
-  // Metrics are backend-only — never emit them from the browser.
-  enableMetrics: false,
-  profileSessionSampleRate,
-  profileLifecycle: 'trace',
   integrations: [
-    ...(profileSessionSampleRate > 0
-      ? [Sentry.browserProfilingIntegration()]
-      : []),
     ...(replayEnabled
       ? [
           Sentry.replayIntegration({

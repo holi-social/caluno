@@ -17,6 +17,7 @@ const PERMISSION_NAMES: Record<
   [PERMISSIONS.SHIFT_EDIT]: 'Edit shift',
   [PERMISSIONS.REQUIREMENT_PROFILE_VIEW]: 'View requirement profile',
   [PERMISSIONS.REQUIREMENT_PROFILE_EDIT]: 'Edit requirement profile',
+  [PERMISSIONS.ACCOUNTING_MANAGE]: 'Manage accounting',
 };
 
 async function seed() {
