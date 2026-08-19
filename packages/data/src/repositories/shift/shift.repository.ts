@@ -226,10 +226,12 @@ export class ShiftRepository extends BaseRepository {
   async findForWeek(
     startsAfter: Date,
     endsBefore: Date,
+    eventId?: string | null,
   ): Promise<WeeklyShiftInstance[]> {
     const data = await this.sdk.GetWeeklyShifts({
       startsAfter: startsAfter.toISOString(),
       endsBefore: endsBefore.toISOString(),
+      eventId: eventId ?? undefined,
     });
     return data.weeklyShifts;
   }

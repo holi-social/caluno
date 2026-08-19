@@ -1,9 +1,9 @@
 'use client';
 
 import { Button } from '@repo/ui';
-import { Home, RotateCcw } from 'lucide-react';
+import { Home } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import { useEffect } from 'react';
+import { ErrorFallback } from '@/components/error-fallback';
 import { Link } from '@/i18n/navigation';
 
 interface ErrorProps {
@@ -14,35 +14,18 @@ interface ErrorProps {
 export default function DashboardError({ error, reset }: ErrorProps) {
   const t = useTranslations('Error');
 
-  useEffect(() => {
-    console.error(error);
-  }, [error]);
-
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center p-4">
-      <div className="max-w-md w-full text-center space-y-6">
-        <h1 className="text-2xl font-bold">{t('title')}</h1>
-        <div className="rounded-lg bg-destructive/10 p-4 text-sm text-destructive">
-          <p className="font-medium">{error.message}</p>
-          {error.digest && (
-            <p className="text-xs mt-1 opacity-70">
-              {t('digestLabel', { digest: error.digest })}
-            </p>
-          )}
-        </div>
-        <div className="flex justify-center gap-2">
-          <Button onClick={reset}>
-            <RotateCcw />
-            {t('tryAgain')}
-          </Button>
-          <Button asChild variant="outline">
-            <Link href="/">
-              <Home />
-              {t('goHome')}
-            </Link>
-          </Button>
-        </div>
-      </div>
-    </div>
+    <ErrorFallback
+      error={error}
+      reset={reset}
+      secondaryAction={
+        <Button asChild variant="outline">
+          <Link href="/">
+            <Home />
+            {t('goHome')}
+          </Link>
+        </Button>
+      }
+    />
   );
 }

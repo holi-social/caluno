@@ -1,5 +1,8 @@
 {
   "Auth": {
+    "brandName": "caluno",
+    "joinTitle": "Join {orgName}",
+    "poweredBy": "Powered by",
     "forgotPassword": {
       "checkSpam": "If you don't see it, check your spam folder.",
       "description": "Enter your email address and we'll send you a link to reset your password.",
@@ -26,7 +29,8 @@
       "signUpLink": "Sign up",
       "submit": "Sign in",
       "submitting": "Signing in...",
-      "title": "Sign in"
+      "title": "Sign in",
+      "description": "Welcome back to caluno. Sign in to join shifts and volunteer with your organization."
     },
     "resetPassword": {
       "confirmPasswordLabel": "Confirm password",
@@ -56,7 +60,8 @@
       "signInLink": "Sign in",
       "submit": "Create account",
       "submitting": "Creating account...",
-      "title": "Create your account"
+      "title": "Create your account",
+      "description": "Welcome to caluno. Sign up to join shifts and volunteer with your organization."
     },
     "verifyEmail": {
       "codeRequested": "If email delivery is available, a verification code will arrive at {email} shortly.",
@@ -147,8 +152,23 @@
     "detail": {
       "backLink": "Back to events",
       "coverImageAlt": "Cover image for {title}",
+      "createdByLabel": "Created by",
+      "createdLabel": "Created",
       "editButton": "Edit",
+      "emptyLocation": "No location",
+      "imagePlaceholder": "Add cover image",
+      "informationTitle": "Event information",
       "inviteButton": "Invite",
+      "shiftsCount": "{count, plural, one {# shift} other {# shifts}}",
+      "status": {
+        "active": "Active",
+        "finished": "Finished"
+      },
+      "statusLabel": "Status",
+      "tabs": {
+        "shifts": "Shifts",
+        "volunteers": "Volunteers"
+      },
       "requiredForms": {
         "addExisting": "+ Add existing",
         "addedToast": "Form attached",
@@ -1114,6 +1134,7 @@
       "deleteAria": "Delete",
       "deleteDialog": {
         "description": "This shift is part of a series. Choose whether to delete just this shift or every upcoming shift.",
+        "oneTimeDescription": "This is a one-time shift instance. Are you sure you want to delete it?",
         "error": "Failed to delete shift instance. {error}",
         "futureDescription": "Deletes this shift and every upcoming occurrence in the series. Past occurrences are kept.",
         "futureTitle": "This and all future shifts",

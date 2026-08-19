@@ -1,3 +1,5 @@
+import { parseMultiChoiceValue } from '../option-values';
+
 export type SubmissionField = {
   id: string;
   label: string;
@@ -38,8 +40,7 @@ export function resolveFieldAnswer(
   }
   if (field.type === 'MULTI_CHOICE') {
     const options = field.options ?? [];
-    return raw
-      .split(',')
+    return parseMultiChoiceValue(raw)
       .map((v) => options.find((o) => o.value === v)?.label ?? v)
       .join(', ');
   }

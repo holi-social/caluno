@@ -1,5 +1,6 @@
 import 'reflect-metadata';
 import {
+  afterAll,
   beforeAll,
   describe,
   expect,
@@ -20,6 +21,7 @@ import { ShiftInviteStatus, ShiftVisibility } from '../src/shift/enums';
 import { ShiftService } from '../src/shift/shift.service';
 import {
   cancelShiftInstance,
+  createEvent,
   createFormSubmission,
   createMembershipRequest,
   createRequirementForm,
@@ -161,6 +163,69 @@ describe('ShiftService.findShiftsForWeek', () => {
     expect(
       weekDataAfterCancel.weeklyShifts.map((instance) => instance.id),
     ).not.toContain(instanceId);
+  });
+
+  it('filters weeklyShifts by eventId when provided', async () => {
+    const event = await createEvent(db, {
+      organizationUnitId,
+      startsAt: new Date('2026-06-15T00:00:00.000Z'),
+      endsAt: new Date('2026-06-22T00:00:00.000Z'),
+    });
+
+    const { id: eventShiftId } = await createShift(db, {
+      organizationUnitId,
+      eventId: event.id,
+      startsAt: new Date('2026-06-16T08:00:00.000Z'),
+      endsAt: new Date('2026-06-16T10:00:00.000Z'),
+    });
+    const { id: otherShiftId } = await createShift(db, {
+      organizationUnitId,
+      startsAt: new Date('2026-06-17T08:00:00.000Z'),
+      endsAt: new Date('2026-06-17T10:00:00.000Z'),
+    });
+
+    const [eventInstance] = await db.query.shiftInstances.findMany({
+      where: { masterId: eventShiftId },
+    });
+    const [otherInstance] = await db.query.shiftInstances.findMany({
+      where: { masterId: otherShiftId },
+    });
+    expect(eventInstance).toBeDefined();
+    expect(otherInstance).toBeDefined();
+    if (!eventInstance || !otherInstance) {
+      throw new Error('Expected shift instances to exist');
+    }
+
+    const from = new Date('2026-06-15T00:00:00.000Z');
+    const to = new Date('2026-06-22T00:00:00.000Z');
+
+    const weekData = await graphqlRequestRequiringData<{
+      weeklyShifts: Array<{ id: string }>;
+    }>(
+      app,
+      {
+        query: `
+          query WeeklyShifts($from: DateTime!, $to: DateTime!, $eventId: ID) {
+            weeklyShifts(from: $from, to: $to, eventId: $eventId) {
+              id
+            }
+          }
+        `,
+        variables: {
+          from: from.toISOString(),
+          to: to.toISOString(),
+          eventId: event.id,
+        },
+        headers: {
+          'x-organization-unit-id': organizationUnitId,
+        },
+      },
+      'weeklyShifts',
+    );
+
+    const ids = weekData.weeklyShifts.map((instance) => instance.id);
+    expect(ids).toContain(eventInstance.id);
+    expect(ids).not.toContain(otherInstance.id);
   });
 
   it('invites members to all non-cancelled instances of a shift', async () => {
@@ -3895,7 +3960,11 @@ describe('ShiftService.updateShiftInstance — single instance required forms', 
     requiredFormService = app.get(RequiredFormService);
   });
 
-  it('attaches required forms to a single shift instance', async () => {
+  it('attaches required forms to the shift master for a one-off instance', async () => {
+    // One-off shift (no rrule) has a single instance that IS the shift, so
+    // required forms edited here must land on the master, matching how
+    // image/title/location etc. already sync — not on the instance, which
+    // nothing else reads for a one-off shift.
     const user = await createUser(db);
     await addMembership(db, user.id, organizationUnitId);
 
@@ -3925,13 +3994,18 @@ describe('ShiftService.updateShiftInstance — single instance required forms', 
       organizationUnitId,
     );
 
-    const requiredForms = await requiredFormService.getRequiredForms({
+    const shiftForms = await requiredFormService.getRequiredForms({
+      targetType: RequiredFormTargetType.SHIFT,
+      targetId: shiftId,
+    });
+    const instanceForms = await requiredFormService.getRequiredForms({
       targetType: RequiredFormTargetType.SHIFT_INSTANCE,
       targetId: instance.id,
     });
 
-    expect(requiredForms).toHaveLength(1);
-    expect(requiredForms[0]?.form.id).toBe(form.id);
+    expect(shiftForms).toHaveLength(1);
+    expect(shiftForms[0]?.form.id).toBe(form.id);
+    expect(instanceForms).toHaveLength(0);
   });
 });
 
@@ -4271,5 +4345,72 @@ describe('ShiftService.updateShiftInstance — one-off syncs to master', () => {
     expect(master.location).toBe('London');
     expect(master.minVolunteers).toBe(2);
     expect(master.maxVolunteers).toBe(5);
+  });
+});
+
+describe('ShiftService.updateShiftInstance applyToAllFuture — non-UTC host timezone', () => {
+  // Drizzle stores these naive `timestamp` columns via `Date.toISOString()`
+  // (UTC digits — Postgres ignores any offset on a tz-less column) and reads
+  // them back the same way. `toTimeOfDayString`/`applyTimeOfDay` must use
+  // UTC getters/setters to match that convention. Using local getters/setters
+  // instead is invisible when the host process's local timezone happens to
+  // be UTC (e.g. most CI runners with TZ unset), so this test pins a
+  // non-UTC host timezone to actually exercise the mismatch.
+  let app: INestApplication;
+  let db: Database;
+  let organizationUnitId: string;
+  let shiftService: ShiftService;
+  let originalTz: string | undefined;
+
+  beforeAll(async () => {
+    originalTz = process.env.TZ;
+    process.env.TZ = 'Europe/Berlin';
+
+    const context = await getGraphqlTestContext();
+    app = context.app;
+    db = context.db;
+    organizationUnitId = context.organizationUnitId;
+    shiftService = app.get(ShiftService);
+  });
+
+  afterAll(() => {
+    process.env.TZ = originalTz;
+  });
+
+  it('does not shift startsAt/endsAt when resubmitted unchanged with applyToAllFuture', async () => {
+    // Exactly what a real Berlin browser sends for "2:00-4:00 AM local, Wed
+    // Oct 7 2026" (CEST, UTC+2): the true UTC instant.
+    const startsAt = new Date('2026-10-07T00:00:00.000Z');
+    const endsAt = new Date('2026-10-07T02:00:00.000Z');
+
+    const shift = await createShift(db, {
+      organizationUnitId,
+      startsAt,
+      endsAt,
+      rrule: 'FREQ=WEEKLY;BYDAY=WE;UNTIL=20261101T000000Z',
+    });
+
+    const instances = await db.query.shiftInstances.findMany({
+      where: { masterId: shift.id },
+      orderBy: { actualStartsAt: 'asc' },
+    });
+    const target = instances[0];
+    if (!target) throw new Error('expected an instance');
+
+    const updated = await shiftService.updateShiftInstance(
+      target.id,
+      {
+        title: shift.title,
+        startsAt: target.actualStartsAt,
+        endsAt: target.actualEndsAt,
+      },
+      organizationUnitId,
+      { applyToAllFuture: true },
+    );
+
+    expect(updated.actualStartsAt.getTime()).toBe(
+      target.actualStartsAt.getTime(),
+    );
+    expect(updated.actualEndsAt.getTime()).toBe(target.actualEndsAt.getTime());
   });
 });
