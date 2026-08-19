@@ -8,6 +8,20 @@
     "previewText": "Your {brandName} verification code is {otp}.",
     "subject": "Your {brandName} verification code"
   },
+  "eventInvited": {
+    "buttonLabel": "View event",
+    "detailEvent": "Event",
+    "detailLocation": "Location",
+    "detailOrganization": "Organization",
+    "detailWhen": "When",
+    "footerNote": "You're receiving this because you were invited to an event on {brandName}.",
+    "greeting": "Hi {firstName}, you're invited to an event.",
+    "heading": "You're invited to an event",
+    "note": "Open the event to see the details.",
+    "previewText": "You're invited to {eventTitle} at {organizationName}.",
+    "subject": "You're invited to {eventTitle}",
+    "whenRange": "{date} · {timeRange}"
+  },
   "membershipApproved": {
     "buttonLabel": "Open {organizationName}",
     "footerNote": "You're receiving this because your membership request for {organizationName} was approved on {brandName}.",
