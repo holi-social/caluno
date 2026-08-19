@@ -78,6 +78,7 @@ fragment RequiredFormWithStatusFields on RequiredFormWithStatus {
 
 fragment EventDetailFields on Event {
   ...EventListFields
+  createdAt
   location
   organizer {
     id
