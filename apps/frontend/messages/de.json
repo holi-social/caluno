@@ -647,6 +647,7 @@
     "empty": "Noch keine Einträge."
   },
   "RequiredFormRenderer": {
+    "formProgress": "Formularfortschritt",
     "noForms": "Es sind keine Formulare erforderlich.",
     "step": "Formular {current} von {total}",
     "submitAll": "Alle Formulare absenden",

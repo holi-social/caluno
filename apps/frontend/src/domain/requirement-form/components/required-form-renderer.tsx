@@ -64,28 +64,22 @@ interface RequiredFormRendererProps {
 function getFormBlocks(form: RequiredForm): FormBlockWithEffectiveRequired[] {
   return (
     form.blockRefs
-      ?.map((ref) => {
+      ?.slice()
+      .sort((a, b) => (a.fieldOrder ?? 0) - (b.fieldOrder ?? 0))
+      .map((ref): FormBlockWithEffectiveRequired | null => {
         const block = ref.block;
         if (!block) return null;
+        const { fields, ...rest } = block;
         return {
-          ...block,
+          ...rest,
           effectiveRequired: ref.required ?? block.required ?? false,
+          fields: fields
+            ? fields.slice().sort((a, b) => a.fieldOrder - b.fieldOrder)
+            : fields,
         };
       })
       .filter((b): b is FormBlockWithEffectiveRequired => !!b) ?? []
   );
-}
-
-function getAllFieldIds(forms: RequiredFormItem[]): string[] {
-  const ids = new Set<string>();
-  for (const item of forms) {
-    for (const block of getFormBlocks(item.form)) {
-      for (const field of block.fields ?? []) {
-        ids.add(field.id);
-      }
-    }
-  }
-  return [...ids];
 }
 
 function getFormFieldIds(form: RequiredForm): string[] {
@@ -156,27 +150,49 @@ export function RequiredFormRenderer({
 
   const validationMessages = useValidationMessages();
 
+  const formBlocksById = useMemo(() => {
+    const map = new Map<string, FormBlockWithEffectiveRequired[]>();
+    for (const item of pendingForms) {
+      map.set(item.form.id, getFormBlocks(item.form));
+    }
+    return map;
+  }, [pendingForms]);
+
   const formSchema = useMemo(() => {
     const shape: Record<string, z.ZodTypeAny> = {};
-    for (const item of pendingForms) {
-      for (const block of getFormBlocks(item.form)) {
+    const mergedFields = new Map<
+      string,
+      { field: RequiredFormField; isRequired: boolean }
+    >();
+
+    for (const blocks of formBlocksById.values()) {
+      for (const block of blocks) {
         for (const field of block.fields ?? []) {
+          const existing = mergedFields.get(field.id);
           const isRequired = block.effectiveRequired && field.required;
-          shape[field.id] = buildFieldSchema(
-            field as unknown as RenderableField,
-            isRequired,
-            validationMessages,
-          );
+          if (existing) {
+            existing.isRequired = existing.isRequired || isRequired;
+          } else {
+            mergedFields.set(field.id, { field, isRequired });
+          }
         }
       }
     }
+
+    for (const { field, isRequired } of mergedFields.values()) {
+      shape[field.id] = buildFieldSchema(
+        field as unknown as RenderableField,
+        isRequired,
+        validationMessages,
+      );
+    }
     return z.object(shape);
-  }, [pendingForms, validationMessages]);
+  }, [formBlocksById, validationMessages]);
 
   const defaultValues = useMemo(() => {
     const vals: Record<string, string> = {};
-    for (const item of pendingForms) {
-      for (const block of getFormBlocks(item.form)) {
+    for (const blocks of formBlocksById.values()) {
+      for (const block of blocks) {
         for (const field of block.fields ?? []) {
           if (field.systemKey && profileData[field.systemKey]) {
             vals[field.id] = profileData[field.systemKey] ?? '';
@@ -185,7 +201,7 @@ export function RequiredFormRenderer({
       }
     }
     return vals;
-  }, [pendingForms, profileData]);
+  }, [formBlocksById, profileData]);
 
   const {
     control,
@@ -238,13 +254,27 @@ export function RequiredFormRenderer({
   };
 
   const handleSubmitAll = async () => {
-    const allFieldIds = getAllFieldIds(pendingForms);
-    if (allFieldIds.length > 0) {
-      const valid = await trigger(allFieldIds);
-      if (!valid) return;
+    const values = getValues();
+    const parsed = formSchema.safeParse(values);
+    if (!parsed.success) {
+      const errorFieldIds = new Set(
+        Object.keys(parsed.error.flatten().fieldErrors),
+      );
+      const firstErrorStep = pendingForms.findIndex((item) =>
+        getFormFieldIds(item.form).some((id) => errorFieldIds.has(id)),
+      );
+      if (firstErrorStep !== -1) {
+        const errorForm = pendingForms[firstErrorStep];
+        if (!errorForm) return;
+        setCurrentStep(firstErrorStep);
+        const fieldIds = getFormFieldIds(errorForm.form);
+        if (fieldIds.length > 0) {
+          await trigger(fieldIds);
+        }
+      }
+      return;
     }
 
-    const values = getValues();
     submittedBatchRef.current = pendingForms;
     setIsSubmitting(true);
 
@@ -277,12 +307,14 @@ export function RequiredFormRenderer({
 
         if (result?.serverError) {
           toast.error(result.serverError);
+          submittedBatchRef.current = null;
           setIsSubmitting(false);
           return;
         }
 
         if (!result?.data) {
           toast.error(tActions('failedToSubmitForm'));
+          submittedBatchRef.current = null;
           setIsSubmitting(false);
           return;
         }
@@ -295,6 +327,7 @@ export function RequiredFormRenderer({
       toast.error(
         error instanceof Error ? error.message : tActions('failedToSubmitForm'),
       );
+      submittedBatchRef.current = null;
       setIsSubmitting(false);
     }
   };
@@ -403,8 +436,9 @@ function RequiredFormStepper({
   forms: RequiredFormItem[];
   currentStep: number;
 }) {
+  const t = useTranslations('RequiredFormRenderer');
   return (
-    <nav aria-label="Form progress">
+    <nav aria-label={t('formProgress')}>
       <ol className="flex w-full items-start">
         {forms.map((item, index) => {
           const isCompleted = index < currentStep;
@@ -496,25 +530,22 @@ function FormBlocks({
           )}
 
           <div className="space-y-4">
-            {block.fields
-              ?.slice()
-              .sort((a, b) => a.fieldOrder - b.fieldOrder)
-              .map((field: RequiredFormField) => (
-                <Controller
-                  key={field.id}
-                  name={field.id}
-                  control={control}
-                  defaultValue=""
-                  render={({ field: ctrlField }) => (
-                    <FieldRenderer
-                      field={field as unknown as RenderableField}
-                      value={ctrlField.value ?? ''}
-                      onChange={ctrlField.onChange}
-                      error={errors[field.id]?.message}
-                    />
-                  )}
-                />
-              ))}
+            {block.fields?.map((field: RequiredFormField) => (
+              <Controller
+                key={field.id}
+                name={field.id}
+                control={control}
+                defaultValue=""
+                render={({ field: ctrlField }) => (
+                  <FieldRenderer
+                    field={field as unknown as RenderableField}
+                    value={ctrlField.value ?? ''}
+                    onChange={ctrlField.onChange}
+                    error={errors[field.id]?.message}
+                  />
+                )}
+              />
+            ))}
           </div>
         </div>
       ))}
