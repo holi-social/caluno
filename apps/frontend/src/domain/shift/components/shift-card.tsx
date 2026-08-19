@@ -124,21 +124,22 @@ export function ShiftCard({
   );
 
   return (
-    <Card className="rounded-xl gap-1 shadow-sm pt-4 pb-2 px-2 overflow-hidden">
+    <Card className="min-w-0 rounded-xl gap-1 shadow-sm pt-4 pb-2 px-2 overflow-hidden">
       <div className="flex flex-col gap-2 items-end">
         <Link
           href={instanceHref}
-          className="flex w-full flex-col gap-1 rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          className="flex w-full min-w-0 flex-col gap-1 rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           aria-label={t('card.openInstanceAria')}
         >
-          <p className="flex items-center gap-1 text-lg font-bold leading-none text-muted-foreground">
-            {startTime} - {endTime}
+          <p className="flex w-full min-w-0 items-center justify-between gap-1 text-base font-bold leading-none text-muted-foreground">
+            <span className="min-w-0 tabular-nums">
+              {startTime} - {endTime}
+            </span>
             {instance.master.rrule && (
               <ActionTooltip label={formatRrulePattern(instance.master.rrule)}>
-                <RepeatIcon
-                  className="size-4 rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                  tabIndex={0}
-                />
+                <span className="inline-flex shrink-0 text-muted-foreground">
+                  <RepeatIcon className="size-3.5" />
+                </span>
               </ActionTooltip>
             )}
           </p>
@@ -191,7 +192,6 @@ export function ShiftCard({
         volunteers={cardVolunteers}
         phase="before"
         sectionLabel={t('card.invited')}
-        emptyMessage={t('card.noVolunteers')}
       />
     </Card>
   );
