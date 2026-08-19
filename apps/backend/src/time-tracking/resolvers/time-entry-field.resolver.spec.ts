@@ -62,6 +62,8 @@ const timeEntry = {
   startedAt: now,
   endedAt: null,
   notes: null,
+  reimbursementTypeId: null,
+  isPaid: false,
   createdAt: now,
   updatedAt: now,
 } satisfies TimeEntryEntity;

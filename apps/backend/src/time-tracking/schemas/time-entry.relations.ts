@@ -11,5 +11,13 @@ export const timeEntryRelations = defineRelationsPart(schema, (r) => ({
       from: r.timeEntries.shiftInstanceId,
       to: r.shiftInstances.id,
     }),
+    reimbursementType: r.one.reimbursementTypes({
+      from: r.timeEntries.reimbursementTypeId,
+      to: r.reimbursementTypes.id,
+    }),
+    invoiceTimeEntry: r.one.invoiceTimeEntries({
+      from: r.timeEntries.id,
+      to: r.invoiceTimeEntries.timeEntryId,
+    }),
   },
 }));
