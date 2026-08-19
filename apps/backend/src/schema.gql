@@ -644,7 +644,7 @@ type Query {
   timeEntry(id: String!): TimeEntry!
   user(id: String!): User
   userByCheckInId(checkInId: String!): User
-  weeklyShifts(eventId: ID, from: DateTime!, to: DateTime!): [ShiftInstance!]!
+  weeklyShifts(endsBefore: DateTime = null, eventId: ID, limit: Int! = 15, offset: Int! = 0, startsAfter: DateTime = null): [ShiftInstance!]!
 }
 
 type ReimbursementType {

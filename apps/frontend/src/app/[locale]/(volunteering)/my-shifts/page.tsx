@@ -11,7 +11,7 @@ export default async function MyShiftsPage({ params }: MyShiftsPageProps) {
   await params;
   const client = await getDataClient();
   const myShiftInstancesPage = await client.shift.findMyShiftInstances({
-    from: startOfDay(new Date()),
+    startsAfter: startOfDay(new Date()),
     order: SortOrder.Asc,
     limit: 15,
     includeIntended: true,
