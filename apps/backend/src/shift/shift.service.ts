@@ -1478,30 +1478,16 @@ export class ShiftService {
     }
 
     if (input.requiredFormIds !== undefined) {
-      if (applyToAllFuture) {
-        await this.setRequiredFormsInTx(
-          tx,
-          shift.id,
-          organizationUnitId,
-          input.requiredFormIds ?? [],
-        );
-      } else {
-        // No series to fork from (rrule === null): this call is scoped to
-        // the single instance, so required forms must land on the
-        // instance, not the shift — matching updateSingleShiftInstance.
-        const orgUnit = await tx.query.organizationUnits.findFirst({
-          where: { id: organizationUnitId },
-        });
-
-        if (orgUnit) {
-          await this.requiredFormService.applyShiftInstanceRequiredForms(
-            instance.id,
-            orgUnit.organizationId,
-            input.requiredFormIds ?? [],
-            tx,
-          );
-        }
-      }
+      // This method is only reached with applyToAllFuture === false when
+      // there's no series to fork from (rrule === null): the instance IS
+      // the shift, so required forms must land on the master here too —
+      // matching how image/title/location etc. already sync in that case.
+      await this.setRequiredFormsInTx(
+        tx,
+        shift.id,
+        organizationUnitId,
+        input.requiredFormIds ?? [],
+      );
     }
 
     // Mirrors ShiftService.update()'s existing behavior: dropping visibility
@@ -1616,17 +1602,31 @@ export class ShiftService {
     return untilA === untilB;
   }
 
-  /** Keeps `base`'s calendar date, adopts `time`'s hour/minute/second. */
+  /**
+   * Keeps `base`'s calendar date, adopts `time`'s hour/minute/second.
+   *
+   * Uses UTC getters/setters, not local ones: Drizzle stores/reads these
+   * naive `timestamp` columns via `Date.toISOString()` (UTC digits — Postgres
+   * ignores any offset on a tz-less column), so `base`/`time`'s UTC digits
+   * are what the DB actually holds. Local getters/setters would read/write
+   * the host process's OS timezone instead, drifting by that offset.
+   */
   private applyTimeOfDay(base: Date, time: Date): Date {
     const result = new Date(base);
-    result.setHours(time.getHours(), time.getMinutes(), time.getSeconds(), 0);
+    result.setUTCHours(
+      time.getUTCHours(),
+      time.getUTCMinutes(),
+      time.getUTCSeconds(),
+      0,
+    );
     return result;
   }
 
+  /** See `applyTimeOfDay` for why this uses UTC getters. */
   private toTimeOfDayString(date: Date): string {
-    const hh = String(date.getHours()).padStart(2, '0');
-    const mm = String(date.getMinutes()).padStart(2, '0');
-    const ss = String(date.getSeconds()).padStart(2, '0');
+    const hh = String(date.getUTCHours()).padStart(2, '0');
+    const mm = String(date.getUTCMinutes()).padStart(2, '0');
+    const ss = String(date.getUTCSeconds()).padStart(2, '0');
     return `${hh}:${mm}:${ss}`;
   }
 
@@ -2211,9 +2211,14 @@ export class ShiftService {
     organizationUnitId: string,
     startsAfter: Date | null,
     endsBefore: Date | null,
+    eventId?: string | null,
   ): Promise<ShiftInstanceEntity[]> {
     const shifts = await this.db.query.shifts.findMany({
-      where: { organizationUnitId, isDeleted: false },
+      where: {
+        organizationUnitId,
+        isDeleted: false,
+        ...(eventId ? { eventId } : {}),
+      },
       columns: { id: true },
     });
     const shiftIds = shifts.map((s) => s.id);

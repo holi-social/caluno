@@ -16,6 +16,7 @@ import { DATABASE_CONNECTION } from '../src/database/database-connection';
 import * as schema from '../src/database/schema';
 import { EventInviteStatus } from '../src/event/enums';
 import {
+  BadRequestGraphQLError,
   ConflictGraphQLError,
   ForbiddenGraphQLError,
   NotFoundGraphQLError,
@@ -715,6 +716,80 @@ describe('RequiredFormService', () => {
           user.id,
         ),
       ).rejects.toBeInstanceOf(ForbiddenGraphQLError);
+    });
+
+    it('rejects an empty JSON-array selection for a required MULTI_CHOICE field', async () => {
+      const { user, unit } = await setupOrg();
+      const { form, block, field } = await createRequirementForm(db, {
+        organizationId: unit.organizationId,
+        organizationUnitId: unit.id,
+        createdById: user.id,
+        required: true,
+      });
+      await db
+        .update(schema.formBlockFields)
+        .set({
+          type: 'MULTI_CHOICE',
+          options: [{ label: 'A', value: 'A' }],
+        })
+        .where(eq(schema.formBlockFields.id, field.id));
+      await setRequiredForms(db, {
+        organizationUnitId: unit.id,
+        formIds: [form.id],
+      });
+
+      await expect(
+        formSubmissionService.submitRequiredForm(
+          {
+            targetType: RequiredFormTargetType.ORGANIZATION_UNIT,
+            targetId: unit.id,
+          },
+          form.id,
+          {
+            values: [{ fieldId: field.id, blockId: block.id, value: '[]' }],
+          },
+          user.id,
+        ),
+      ).rejects.toBeInstanceOf(BadRequestGraphQLError);
+    });
+
+    it('accepts a JSON-array selection for a required MULTI_CHOICE field', async () => {
+      const { user, unit } = await setupOrg();
+      const { form, block, field } = await createRequirementForm(db, {
+        organizationId: unit.organizationId,
+        organizationUnitId: unit.id,
+        createdById: user.id,
+        required: true,
+      });
+      await db
+        .update(schema.formBlockFields)
+        .set({
+          type: 'MULTI_CHOICE',
+          options: [{ label: 'A, B', value: 'A, B' }],
+        })
+        .where(eq(schema.formBlockFields.id, field.id));
+      await setRequiredForms(db, {
+        organizationUnitId: unit.id,
+        formIds: [form.id],
+      });
+
+      const submission = await formSubmissionService.submitRequiredForm(
+        {
+          targetType: RequiredFormTargetType.ORGANIZATION_UNIT,
+          targetId: unit.id,
+        },
+        form.id,
+        {
+          values: [{ fieldId: field.id, blockId: block.id, value: '["A, B"]' }],
+        },
+        user.id,
+      );
+
+      expect(submission.formId).toBe(form.id);
+      const stored = await db.query.formSubmissionValues.findFirst({
+        where: { submissionId: submission.id, fieldId: field.id },
+      });
+      expect(stored?.value).toEqual(['A, B']);
     });
   });
 

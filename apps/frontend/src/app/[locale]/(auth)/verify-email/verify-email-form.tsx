@@ -117,7 +117,7 @@ export function VerifyEmailForm({
 
   if (!hasCode) {
     return (
-      <form onSubmit={handleSendCode} className="mt-8 space-y-6">
+      <form onSubmit={handleSendCode} className="space-y-6">
         {error && (
           <div className="rounded-md bg-destructive/10 p-4 text-sm text-destructive">
             {error}
@@ -152,7 +152,7 @@ export function VerifyEmailForm({
   }
 
   return (
-    <form onSubmit={handleVerify} className="mt-8 space-y-6">
+    <form onSubmit={handleVerify} className="space-y-6">
       {error && (
         <div className="rounded-md bg-destructive/10 p-4 text-sm text-destructive">
           {error}

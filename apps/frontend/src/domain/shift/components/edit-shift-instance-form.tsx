@@ -1,7 +1,11 @@
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useOrganizationUnit, useRequirementForms } from '@repo/data/react';
+import {
+  useOrganizationUnit,
+  useQueryClient,
+  useRequirementForms,
+} from '@repo/data/react';
 import {
   Button,
   Card,
@@ -65,6 +69,7 @@ export const EditShiftInstanceForm = ({
   );
   const [commandOpen, setCommandOpen] = useState(false);
   const applyAllCheckboxId = useId();
+  const queryClient = useQueryClient();
 
   const { data: orgUnit } = useOrganizationUnit(orgUId);
   const { data: formsData, isPending: isLoadingForms } = useRequirementForms(
@@ -143,6 +148,10 @@ export const EditShiftInstanceForm = ({
 
       await setOpen(false);
       router.refresh();
+      // Invalidate shift for ShiftRequiredFormsPopover on ShiftInstanceDetailPage
+      queryClient.invalidateQueries({
+        queryKey: ['shift', shift.id],
+      });
     });
   };
 
