@@ -1,5 +1,8 @@
 {
   "Auth": {
+    "brandName": "caluno",
+    "joinTitle": "Tritt {orgName} bei",
+    "poweredBy": "Powered by",
     "forgotPassword": {
       "checkSpam": "Wenn du ihn nicht siehst, prüfe deinen Spam-Ordner.",
       "description": "Gib deine E-Mail-Adresse ein, und wir senden dir einen Link zum Zurücksetzen deines Passworts.",
@@ -26,7 +29,8 @@
       "signUpLink": "Registrieren",
       "submit": "Anmelden",
       "submitting": "Wird angemeldet...",
-      "title": "Anmelden"
+      "title": "Anmelden",
+      "description": "Willkommen zurück bei caluno. Melde dich an, um Schichten zu übernehmen und mit deiner Organisation mitzuhelfen."
     },
     "resetPassword": {
       "confirmPasswordLabel": "Passwort bestätigen",
@@ -56,7 +60,8 @@
       "signInLink": "Anmelden",
       "submit": "Konto erstellen",
       "submitting": "Konto wird erstellt...",
-      "title": "Erstelle dein Konto"
+      "title": "Erstelle dein Konto",
+      "description": "Willkommen bei caluno. Registriere dich, um Schichten zu übernehmen und mit deiner Organisation mitzuhelfen."
     },
     "verifyEmail": {
       "codeRequested": "Wenn der E-Mail-Versand verfügbar ist, erhältst du in Kürze einen Bestätigungscode an {email}.",
@@ -147,10 +152,25 @@
     "detail": {
       "backLink": "Zurück zu Veranstaltungen",
       "coverImageAlt": "Titelbild für {title}",
+      "createdByLabel": "Erstellt von",
+      "createdLabel": "Erstellt",
       "editButton": "Bearbeiten",
+      "emptyLocation": "Kein Ort",
+      "imagePlaceholder": "Titelbild hinzufügen",
+      "informationTitle": "Veranstaltungsinformationen",
       "inviteButton": "Einladen",
+      "shiftsCount": "{count, plural, one {# Einsatz} other {# Einsätze}}",
+      "status": {
+        "active": "Aktiv",
+        "finished": "Beendet"
+      },
+      "statusLabel": "Status",
+      "tabs": {
+        "shifts": "Einsätze",
+        "volunteers": "Freiwillige"
+      },
       "requiredForms": {
-        "addExisting": "+ Bestehendes hinzufügen",
+        "addExisting": "Bestehendes hinzufügen",
         "addedToast": "Formular hinzugefügt",
         "createNew": "Neues erstellen",
         "dedupHint": "Freiwillige werden nicht nach Informationen gefragt, die sie bereits angegeben haben.",
@@ -647,7 +667,11 @@
     "empty": "Noch keine Einträge."
   },
   "RequiredFormRenderer": {
-    "noForms": "Es sind keine Formulare erforderlich."
+    "formProgress": "Formularfortschritt",
+    "noForms": "Es sind keine Formulare erforderlich.",
+    "step": "Formular {current} von {total}",
+    "submitAll": "Alle Formulare absenden",
+    "submittingAll": "Alle Formulare werden abgesendet..."
   },
   "RequirementForm": {
     "actions": {
@@ -1058,7 +1082,7 @@
       "createdLabel": "Erstellt",
       "imageAlt": "Bild für {title}",
       "requiredForms": {
-        "addExisting": "+ Bestehendes hinzufügen",
+        "addExisting": "Bestehendes hinzufügen",
         "addedToast": "Formular hinzugefügt",
         "createNew": "Neues erstellen",
         "dedupHint": "Freiwillige werden nicht nach Informationen gefragt, die sie bereits angegeben haben.",
@@ -1447,7 +1471,7 @@
       "rejectedEmpty": "Noch keine abgelehnten Anfragen."
     },
     "requiredForms": {
-      "addExisting": "+ Bestehendes hinzufügen",
+      "addExisting": "Bestehendes hinzufügen",
       "addedToast": "Formular angehängt",
       "createNew": "Neues erstellen",
       "dedupHint": "Freiwillige müssen Informationen, die sie bereits angegeben haben, nicht erneut eingeben.",

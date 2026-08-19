@@ -28,9 +28,12 @@ export function addDays(date: Date, days: number): Date {
 }
 
 /** The discover query window: today → today + DISCOVER_HORIZON_DAYS (app tz). */
-export function getDiscoverWindow(): { from: Date; to: Date } {
-  const from = startOfDay(new Date());
-  return { from, to: addDays(from, DISCOVER_HORIZON_DAYS) };
+export function getDiscoverWindow(): { startsAfter: Date; endsBefore: Date } {
+  const startsAfter = startOfDay(new Date());
+  return {
+    startsAfter,
+    endsBefore: addDays(startsAfter, DISCOVER_HORIZON_DAYS),
+  };
 }
 
 export function groupByDay<T extends { actualStartsAt: string }>(

@@ -71,14 +71,12 @@ export function ResetPasswordForm({
   }
 
   return (
-    <form onSubmit={handleSubmit} className="mt-8 space-y-6">
+    <form onSubmit={handleSubmit} className="space-y-6">
       {error && (
         <div className="rounded-md bg-destructive/10 p-4 text-sm text-destructive">
           {error}
         </div>
       )}
-
-      <p className="text-sm text-muted-foreground">{t('description')}</p>
 
       <div className="space-y-4">
         <div>
