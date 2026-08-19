@@ -329,8 +329,8 @@ query GetShiftInstance($id: ID!) {
   }
 }
 
-query GetWeeklyShifts($from: DateTime!, $to: DateTime!) {
-  weeklyShifts(from: $from, to: $to) {
+query GetWeeklyShifts($from: DateTime!, $to: DateTime!, $eventId: ID) {
+  weeklyShifts(from: $from, to: $to, eventId: $eventId) {
     id
     overrideTitle
     actualStartsAt

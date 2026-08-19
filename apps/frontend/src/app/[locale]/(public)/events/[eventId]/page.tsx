@@ -136,6 +136,7 @@ export default async function EventPage({
               <hr className="border-border" />
               <EventFollowButton
                 eventId={event.id}
+                organizationUnitId={event.organizationUnit?.id}
                 initialStatus={event.myJoinStatus}
                 eventRequiredForms={event.requiredForms?.map((ref) => ref.form)}
                 organizationUnitRequiredForms={event.organizationUnit?.requiredForms?.map(

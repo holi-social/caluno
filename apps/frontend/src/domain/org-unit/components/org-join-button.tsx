@@ -27,8 +27,12 @@ export function OrgJoinButton({
 
   const handleClick = useCallback(async () => {
     if (!session.data?.user) {
-      const redirectTo = `/orgs/${organizationUnitId}`;
-      router.push(`/api/invite?redirectTo=${encodeURIComponent(redirectTo)}`);
+      const searchParams = new URLSearchParams({
+        orgUId: organizationUnitId,
+        redirectTo: `/orgs/${organizationUnitId}`,
+      });
+      // Full navigation so `/api/invite` can Set-Cookie `pending_invite`.
+      window.location.href = `/api/invite?${searchParams}`;
       return;
     }
 
