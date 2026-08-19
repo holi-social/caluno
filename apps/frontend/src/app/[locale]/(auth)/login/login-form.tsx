@@ -9,11 +9,24 @@ import { signIn } from '@/lib/auth';
 import { setLocaleCookieIfSupported } from '@/lib/locale-cookie';
 import { getVerifyEmailPath } from '@/lib/verify-email-url';
 
-interface LoginFormProps {
-  redirectTo?: string;
+function switchAuthHref(
+  path: '/signup' | '/login',
+  orgUId?: string,
+  redirectTo?: string,
+) {
+  const params = new URLSearchParams();
+  if (orgUId) params.set('orgUId', orgUId);
+  if (redirectTo && redirectTo !== '/') params.set('redirectTo', redirectTo);
+  const query = params.toString();
+  return query ? `${path}?${query}` : path;
 }
 
-export function LoginForm({ redirectTo = '/' }: LoginFormProps) {
+interface LoginFormProps {
+  redirectTo?: string;
+  orgUId?: string;
+}
+
+export function LoginForm({ redirectTo = '/', orgUId }: LoginFormProps) {
   const t = useTranslations('Auth.login');
   const router = useRouter();
   const currentLocale = useLocale();
@@ -62,7 +75,7 @@ export function LoginForm({ redirectTo = '/' }: LoginFormProps) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="mt-8 space-y-6">
+    <form onSubmit={handleSubmit} className="space-y-6">
       {error && (
         <div className="rounded-md bg-destructive/10 p-4 text-sm text-destructive">
           {error}
@@ -121,11 +134,8 @@ export function LoginForm({ redirectTo = '/' }: LoginFormProps) {
       <p className="text-center text-sm text-muted-foreground">
         {t('noAccount')}{' '}
         <Link
-          href={
-            redirectTo && redirectTo !== '/'
-              ? `/signup?redirectTo=${encodeURIComponent(redirectTo)}`
-              : '/signup'
-          }
+          href={switchAuthHref('/signup', orgUId, redirectTo)}
+          prefetch={false}
           className="font-medium text-primary hover:underline"
         >
           {t('signUpLink')}

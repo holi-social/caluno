@@ -15,6 +15,7 @@ import { useSession } from '@/lib/auth';
 
 interface EventFollowButtonProps {
   eventId: string;
+  organizationUnitId?: string | null;
   initialStatus: JoinStatus;
   eventRequiredForms?: RequiredForm[];
   organizationUnitRequiredForms?: RequiredForm[];
@@ -22,14 +23,15 @@ interface EventFollowButtonProps {
 
 export function EventFollowButton({
   eventId,
+  organizationUnitId,
   initialStatus,
   eventRequiredForms = [],
   organizationUnitRequiredForms = [],
 }: EventFollowButtonProps) {
   const t = useTranslations('EventDetail');
   const joinEvent = useJoinEvent();
-  const router = useRouter();
   const pathname = usePathname();
+  const router = useRouter();
   const searchParams = useSearchParams();
   const autoFollow = searchParams.get('autoFollow') === 'true';
   const autoFollowExecuted = useRef(false);
@@ -60,11 +62,14 @@ export function EventFollowButton({
             ? { showJoinForms: 'true' }
             : { autoFollow: 'true' }),
         })}`;
-        const searchParams = new URLSearchParams({
-          signup: '1',
+        const inviteParams = new URLSearchParams({
           redirectTo: baseRedirectTo,
         });
-        router.push(`/api/invite?${searchParams}`);
+        if (organizationUnitId) {
+          inviteParams.set('orgUId', organizationUnitId);
+        }
+        // Full navigation so `/api/invite` can Set-Cookie `pending_invite`.
+        window.location.href = `/api/invite?${inviteParams}`;
         return;
       }
 
@@ -103,6 +108,7 @@ export function EventFollowButton({
     },
     [
       eventId,
+      organizationUnitId,
       joinEvent,
       router,
       session.data?.user,
