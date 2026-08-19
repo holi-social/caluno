@@ -4,7 +4,7 @@ import { User } from '../../user/models/user.model';
 import { SigneeType } from '../enums';
 
 @ObjectType()
-export class DocumentSignature {
+export class InvoiceSignature {
   @Field(() => ID)
   id!: string;
 

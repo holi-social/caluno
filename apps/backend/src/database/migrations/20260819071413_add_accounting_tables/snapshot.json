@@ -1,7 +1,7 @@
 {
   "version": "8",
   "dialect": "postgres",
-  "id": "53f8fc31-0490-4ec8-a821-51fb8d6d6b6d",
+  "id": "6705b000-5d1b-436e-8733-75437845974f",
   "prevIds": [
     "341fcfab-7c64-4063-83e0-bf70ded310e9",
     "4957d7cf-0075-44a1-a442-9a77ace684ac"
@@ -16,17 +16,6 @@
         "DECLINED"
       ],
       "name": "contract_status",
-      "entityType": "enums",
-      "schema": "public"
-    },
-    {
-      "values": [
-        "AWAITING_VOLUNTEER_SIGNATURE",
-        "AWAITING_SUPERVISOR_SIGNATURE",
-        "READY",
-        "DECLINED"
-      ],
-      "name": "invoice_status",
       "entityType": "enums",
       "schema": "public"
     },
@@ -52,6 +41,17 @@
     {
       "values": ["YEARLY", "MONTHLY"],
       "name": "renewal_cadence",
+      "entityType": "enums",
+      "schema": "public"
+    },
+    {
+      "values": [
+        "AWAITING_VOLUNTEER_SIGNATURE",
+        "AWAITING_SUPERVISOR_SIGNATURE",
+        "READY",
+        "DECLINED"
+      ],
+      "name": "invoice_status",
       "entityType": "enums",
       "schema": "public"
     },
@@ -163,25 +163,43 @@
     },
     {
       "isRlsEnabled": false,
-      "name": "created_documents",
+      "name": "contracts",
       "entityType": "tables",
       "schema": "public"
     },
     {
       "isRlsEnabled": false,
-      "name": "document_events",
+      "name": "contract_events",
       "entityType": "tables",
       "schema": "public"
     },
     {
       "isRlsEnabled": false,
-      "name": "document_signatures",
+      "name": "contract_signatures",
       "entityType": "tables",
       "schema": "public"
     },
     {
       "isRlsEnabled": false,
       "name": "document_templates",
+      "entityType": "tables",
+      "schema": "public"
+    },
+    {
+      "isRlsEnabled": false,
+      "name": "invoices",
+      "entityType": "tables",
+      "schema": "public"
+    },
+    {
+      "isRlsEnabled": false,
+      "name": "invoice_events",
+      "entityType": "tables",
+      "schema": "public"
+    },
+    {
+      "isRlsEnabled": false,
+      "name": "invoice_signatures",
       "entityType": "tables",
       "schema": "public"
     },
@@ -454,7 +472,7 @@
       "name": "id",
       "entityType": "columns",
       "schema": "public",
-      "table": "created_documents"
+      "table": "contracts"
     },
     {
       "type": "uuid",
@@ -467,7 +485,7 @@
       "name": "document_template_id",
       "entityType": "columns",
       "schema": "public",
-      "table": "created_documents"
+      "table": "contracts"
     },
     {
       "type": "text",
@@ -480,7 +498,7 @@
       "name": "volunteer_id",
       "entityType": "columns",
       "schema": "public",
-      "table": "created_documents"
+      "table": "contracts"
     },
     {
       "type": "uuid",
@@ -493,25 +511,12 @@
       "name": "reimbursement_type_id",
       "entityType": "columns",
       "schema": "public",
-      "table": "created_documents"
-    },
-    {
-      "type": "document_kind",
-      "typeSchema": "public",
-      "notNull": true,
-      "dimensions": 0,
-      "default": null,
-      "generated": null,
-      "identity": null,
-      "name": "kind",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "created_documents"
+      "table": "contracts"
     },
     {
       "type": "contract_status",
       "typeSchema": "public",
-      "notNull": false,
+      "notNull": true,
       "dimensions": 0,
       "default": null,
       "generated": null,
@@ -519,20 +524,7 @@
       "name": "contract_status",
       "entityType": "columns",
       "schema": "public",
-      "table": "created_documents"
-    },
-    {
-      "type": "invoice_status",
-      "typeSchema": "public",
-      "notNull": false,
-      "dimensions": 0,
-      "default": null,
-      "generated": null,
-      "identity": null,
-      "name": "invoice_status",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "created_documents"
+      "table": "contracts"
     },
     {
       "type": "timestamp",
@@ -545,7 +537,7 @@
       "name": "period_start",
       "entityType": "columns",
       "schema": "public",
-      "table": "created_documents"
+      "table": "contracts"
     },
     {
       "type": "timestamp",
@@ -558,7 +550,7 @@
       "name": "period_end",
       "entityType": "columns",
       "schema": "public",
-      "table": "created_documents"
+      "table": "contracts"
     },
     {
       "type": "timestamp",
@@ -571,33 +563,7 @@
       "name": "renew_date",
       "entityType": "columns",
       "schema": "public",
-      "table": "created_documents"
-    },
-    {
-      "type": "integer",
-      "typeSchema": null,
-      "notNull": false,
-      "dimensions": 0,
-      "default": null,
-      "generated": null,
-      "identity": null,
-      "name": "total_amount_cents",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "created_documents"
-    },
-    {
-      "type": "numeric(10,2)",
-      "typeSchema": null,
-      "notNull": false,
-      "dimensions": 0,
-      "default": null,
-      "generated": null,
-      "identity": null,
-      "name": "total_hours",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "created_documents"
+      "table": "contracts"
     },
     {
       "type": "boolean",
@@ -610,7 +576,7 @@
       "name": "is_non_compliant",
       "entityType": "columns",
       "schema": "public",
-      "table": "created_documents"
+      "table": "contracts"
     },
     {
       "type": "jsonb",
@@ -623,7 +589,7 @@
       "name": "resolved_body",
       "entityType": "columns",
       "schema": "public",
-      "table": "created_documents"
+      "table": "contracts"
     },
     {
       "type": "text",
@@ -636,7 +602,7 @@
       "name": "decline_reason",
       "entityType": "columns",
       "schema": "public",
-      "table": "created_documents"
+      "table": "contracts"
     },
     {
       "type": "text",
@@ -649,7 +615,7 @@
       "name": "declined_by_user_id",
       "entityType": "columns",
       "schema": "public",
-      "table": "created_documents"
+      "table": "contracts"
     },
     {
       "type": "timestamp",
@@ -662,7 +628,7 @@
       "name": "declined_at",
       "entityType": "columns",
       "schema": "public",
-      "table": "created_documents"
+      "table": "contracts"
     },
     {
       "type": "signee_type",
@@ -675,7 +641,7 @@
       "name": "declined_at_signee_type",
       "entityType": "columns",
       "schema": "public",
-      "table": "created_documents"
+      "table": "contracts"
     },
     {
       "type": "timestamp",
@@ -688,7 +654,7 @@
       "name": "created_at",
       "entityType": "columns",
       "schema": "public",
-      "table": "created_documents"
+      "table": "contracts"
     },
     {
       "type": "timestamp",
@@ -701,7 +667,7 @@
       "name": "updated_at",
       "entityType": "columns",
       "schema": "public",
-      "table": "created_documents"
+      "table": "contracts"
     },
     {
       "type": "uuid",
@@ -714,7 +680,7 @@
       "name": "id",
       "entityType": "columns",
       "schema": "public",
-      "table": "document_events"
+      "table": "contract_events"
     },
     {
       "type": "uuid",
@@ -724,10 +690,10 @@
       "default": null,
       "generated": null,
       "identity": null,
-      "name": "created_document_id",
+      "name": "contract_id",
       "entityType": "columns",
       "schema": "public",
-      "table": "document_events"
+      "table": "contract_events"
     },
     {
       "type": "document_event_type",
@@ -740,7 +706,7 @@
       "name": "type",
       "entityType": "columns",
       "schema": "public",
-      "table": "document_events"
+      "table": "contract_events"
     },
     {
       "type": "text",
@@ -753,7 +719,7 @@
       "name": "actor_user_id",
       "entityType": "columns",
       "schema": "public",
-      "table": "document_events"
+      "table": "contract_events"
     },
     {
       "type": "timestamp",
@@ -766,7 +732,7 @@
       "name": "occurred_at",
       "entityType": "columns",
       "schema": "public",
-      "table": "document_events"
+      "table": "contract_events"
     },
     {
       "type": "uuid",
@@ -779,7 +745,7 @@
       "name": "id",
       "entityType": "columns",
       "schema": "public",
-      "table": "document_signatures"
+      "table": "contract_signatures"
     },
     {
       "type": "uuid",
@@ -789,10 +755,10 @@
       "default": null,
       "generated": null,
       "identity": null,
-      "name": "created_document_id",
+      "name": "contract_id",
       "entityType": "columns",
       "schema": "public",
-      "table": "document_signatures"
+      "table": "contract_signatures"
     },
     {
       "type": "integer",
@@ -805,7 +771,7 @@
       "name": "order",
       "entityType": "columns",
       "schema": "public",
-      "table": "document_signatures"
+      "table": "contract_signatures"
     },
     {
       "type": "signee_type",
@@ -818,7 +784,7 @@
       "name": "signee_type",
       "entityType": "columns",
       "schema": "public",
-      "table": "document_signatures"
+      "table": "contract_signatures"
     },
     {
       "type": "uuid",
@@ -831,7 +797,7 @@
       "name": "required_permission_id",
       "entityType": "columns",
       "schema": "public",
-      "table": "document_signatures"
+      "table": "contract_signatures"
     },
     {
       "type": "text",
@@ -844,7 +810,7 @@
       "name": "signed_by_user_id",
       "entityType": "columns",
       "schema": "public",
-      "table": "document_signatures"
+      "table": "contract_signatures"
     },
     {
       "type": "timestamp",
@@ -857,7 +823,7 @@
       "name": "signed_at",
       "entityType": "columns",
       "schema": "public",
-      "table": "document_signatures"
+      "table": "contract_signatures"
     },
     {
       "type": "timestamp",
@@ -870,7 +836,7 @@
       "name": "created_at",
       "entityType": "columns",
       "schema": "public",
-      "table": "document_signatures"
+      "table": "contract_signatures"
     },
     {
       "type": "timestamp",
@@ -883,7 +849,7 @@
       "name": "updated_at",
       "entityType": "columns",
       "schema": "public",
-      "table": "document_signatures"
+      "table": "contract_signatures"
     },
     {
       "type": "uuid",
@@ -1052,6 +1018,409 @@
       "name": "id",
       "entityType": "columns",
       "schema": "public",
+      "table": "invoices"
+    },
+    {
+      "type": "uuid",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "document_template_id",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "invoices"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "volunteer_id",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "invoices"
+    },
+    {
+      "type": "uuid",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "reimbursement_type_id",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "invoices"
+    },
+    {
+      "type": "invoice_status",
+      "typeSchema": "public",
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "invoice_status",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "invoices"
+    },
+    {
+      "type": "timestamp",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "period_start",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "invoices"
+    },
+    {
+      "type": "timestamp",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "period_end",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "invoices"
+    },
+    {
+      "type": "integer",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "total_amount_cents",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "invoices"
+    },
+    {
+      "type": "numeric(10,2)",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "total_hours",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "invoices"
+    },
+    {
+      "type": "boolean",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "false",
+      "generated": null,
+      "identity": null,
+      "name": "is_non_compliant",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "invoices"
+    },
+    {
+      "type": "jsonb",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "resolved_body",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "invoices"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "decline_reason",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "invoices"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "declined_by_user_id",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "invoices"
+    },
+    {
+      "type": "timestamp",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "declined_at",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "invoices"
+    },
+    {
+      "type": "signee_type",
+      "typeSchema": "public",
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "declined_at_signee_type",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "invoices"
+    },
+    {
+      "type": "timestamp",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "now()",
+      "generated": null,
+      "identity": null,
+      "name": "created_at",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "invoices"
+    },
+    {
+      "type": "timestamp",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "now()",
+      "generated": null,
+      "identity": null,
+      "name": "updated_at",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "invoices"
+    },
+    {
+      "type": "uuid",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "gen_random_uuid()",
+      "generated": null,
+      "identity": null,
+      "name": "id",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "invoice_events"
+    },
+    {
+      "type": "uuid",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "invoice_id",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "invoice_events"
+    },
+    {
+      "type": "document_event_type",
+      "typeSchema": "public",
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "type",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "invoice_events"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "actor_user_id",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "invoice_events"
+    },
+    {
+      "type": "timestamp",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "now()",
+      "generated": null,
+      "identity": null,
+      "name": "occurred_at",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "invoice_events"
+    },
+    {
+      "type": "uuid",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "gen_random_uuid()",
+      "generated": null,
+      "identity": null,
+      "name": "id",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "invoice_signatures"
+    },
+    {
+      "type": "uuid",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "invoice_id",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "invoice_signatures"
+    },
+    {
+      "type": "integer",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "order",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "invoice_signatures"
+    },
+    {
+      "type": "signee_type",
+      "typeSchema": "public",
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "signee_type",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "invoice_signatures"
+    },
+    {
+      "type": "uuid",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "required_permission_id",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "invoice_signatures"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "signed_by_user_id",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "invoice_signatures"
+    },
+    {
+      "type": "timestamp",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "signed_at",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "invoice_signatures"
+    },
+    {
+      "type": "timestamp",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "now()",
+      "generated": null,
+      "identity": null,
+      "name": "created_at",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "invoice_signatures"
+    },
+    {
+      "type": "timestamp",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "now()",
+      "generated": null,
+      "identity": null,
+      "name": "updated_at",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "invoice_signatures"
+    },
+    {
+      "type": "uuid",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "gen_random_uuid()",
+      "generated": null,
+      "identity": null,
+      "name": "id",
+      "entityType": "columns",
+      "schema": "public",
       "table": "invoice_time_entries"
     },
     {
@@ -1062,7 +1431,7 @@
       "default": null,
       "generated": null,
       "identity": null,
-      "name": "created_document_id",
+      "name": "invoice_id",
       "entityType": "columns",
       "schema": "public",
       "table": "invoice_time_entries"
@@ -5751,7 +6120,7 @@
       "nameExplicit": true,
       "columns": [
         {
-          "value": "created_document_id",
+          "value": "contract_id",
           "isExpression": false,
           "asc": true,
           "nullsFirst": false,
@@ -5763,10 +6132,10 @@
       "with": "",
       "method": "btree",
       "concurrently": false,
-      "name": "idx_document_events_created_document_id",
+      "name": "idx_contract_events_contract_id",
       "entityType": "indexes",
       "schema": "public",
-      "table": "document_events"
+      "table": "contract_events"
     },
     {
       "nameExplicit": true,
@@ -5802,6 +6171,27 @@
       "entityType": "indexes",
       "schema": "public",
       "table": "document_templates"
+    },
+    {
+      "nameExplicit": true,
+      "columns": [
+        {
+          "value": "invoice_id",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "with": "",
+      "method": "btree",
+      "concurrently": false,
+      "name": "idx_invoice_events_invoice_id",
+      "entityType": "indexes",
+      "schema": "public",
+      "table": "invoice_events"
     },
     {
       "nameExplicit": true,
@@ -7505,10 +7895,10 @@
       "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "RESTRICT",
-      "name": "created_documents_gs0YacWabMXq_fkey",
+      "name": "contracts_document_template_id_document_templates_id_fkey",
       "entityType": "fks",
       "schema": "public",
-      "table": "created_documents"
+      "table": "contracts"
     },
     {
       "nameExplicit": false,
@@ -7518,10 +7908,10 @@
       "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "RESTRICT",
-      "name": "created_documents_volunteer_id_users_id_fkey",
+      "name": "contracts_volunteer_id_users_id_fkey",
       "entityType": "fks",
       "schema": "public",
-      "table": "created_documents"
+      "table": "contracts"
     },
     {
       "nameExplicit": false,
@@ -7531,10 +7921,10 @@
       "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "RESTRICT",
-      "name": "created_documents_C9DzEOwaRIci_fkey",
+      "name": "contracts_reimbursement_type_id_reimbursement_types_id_fkey",
       "entityType": "fks",
       "schema": "public",
-      "table": "created_documents"
+      "table": "contracts"
     },
     {
       "nameExplicit": false,
@@ -7544,23 +7934,23 @@
       "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "RESTRICT",
-      "name": "created_documents_declined_by_user_id_users_id_fkey",
+      "name": "contracts_declined_by_user_id_users_id_fkey",
       "entityType": "fks",
       "schema": "public",
-      "table": "created_documents"
+      "table": "contracts"
     },
     {
       "nameExplicit": false,
-      "columns": ["created_document_id"],
+      "columns": ["contract_id"],
       "schemaTo": "public",
-      "tableTo": "created_documents",
+      "tableTo": "contracts",
       "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "CASCADE",
-      "name": "document_events_created_document_id_created_documents_id_fkey",
+      "name": "contract_events_contract_id_contracts_id_fkey",
       "entityType": "fks",
       "schema": "public",
-      "table": "document_events"
+      "table": "contract_events"
     },
     {
       "nameExplicit": false,
@@ -7570,23 +7960,23 @@
       "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "RESTRICT",
-      "name": "document_events_actor_user_id_users_id_fkey",
+      "name": "contract_events_actor_user_id_users_id_fkey",
       "entityType": "fks",
       "schema": "public",
-      "table": "document_events"
+      "table": "contract_events"
     },
     {
       "nameExplicit": false,
-      "columns": ["created_document_id"],
+      "columns": ["contract_id"],
       "schemaTo": "public",
-      "tableTo": "created_documents",
+      "tableTo": "contracts",
       "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "CASCADE",
-      "name": "document_signatures_k78HNFeYfdcS_fkey",
+      "name": "contract_signatures_contract_id_contracts_id_fkey",
       "entityType": "fks",
       "schema": "public",
-      "table": "document_signatures"
+      "table": "contract_signatures"
     },
     {
       "nameExplicit": false,
@@ -7596,10 +7986,10 @@
       "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "RESTRICT",
-      "name": "document_signatures_required_permission_id_permissions_id_fkey",
+      "name": "contract_signatures_required_permission_id_permissions_id_fkey",
       "entityType": "fks",
       "schema": "public",
-      "table": "document_signatures"
+      "table": "contract_signatures"
     },
     {
       "nameExplicit": false,
@@ -7609,10 +7999,10 @@
       "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "RESTRICT",
-      "name": "document_signatures_signed_by_user_id_users_id_fkey",
+      "name": "contract_signatures_signed_by_user_id_users_id_fkey",
       "entityType": "fks",
       "schema": "public",
-      "table": "document_signatures"
+      "table": "contract_signatures"
     },
     {
       "nameExplicit": false,
@@ -7655,13 +8045,130 @@
     },
     {
       "nameExplicit": false,
-      "columns": ["created_document_id"],
+      "columns": ["document_template_id"],
       "schemaTo": "public",
-      "tableTo": "created_documents",
+      "tableTo": "document_templates",
+      "columnsTo": ["id"],
+      "onUpdate": "NO ACTION",
+      "onDelete": "RESTRICT",
+      "name": "invoices_document_template_id_document_templates_id_fkey",
+      "entityType": "fks",
+      "schema": "public",
+      "table": "invoices"
+    },
+    {
+      "nameExplicit": false,
+      "columns": ["volunteer_id"],
+      "schemaTo": "public",
+      "tableTo": "users",
+      "columnsTo": ["id"],
+      "onUpdate": "NO ACTION",
+      "onDelete": "RESTRICT",
+      "name": "invoices_volunteer_id_users_id_fkey",
+      "entityType": "fks",
+      "schema": "public",
+      "table": "invoices"
+    },
+    {
+      "nameExplicit": false,
+      "columns": ["reimbursement_type_id"],
+      "schemaTo": "public",
+      "tableTo": "reimbursement_types",
+      "columnsTo": ["id"],
+      "onUpdate": "NO ACTION",
+      "onDelete": "RESTRICT",
+      "name": "invoices_reimbursement_type_id_reimbursement_types_id_fkey",
+      "entityType": "fks",
+      "schema": "public",
+      "table": "invoices"
+    },
+    {
+      "nameExplicit": false,
+      "columns": ["declined_by_user_id"],
+      "schemaTo": "public",
+      "tableTo": "users",
+      "columnsTo": ["id"],
+      "onUpdate": "NO ACTION",
+      "onDelete": "RESTRICT",
+      "name": "invoices_declined_by_user_id_users_id_fkey",
+      "entityType": "fks",
+      "schema": "public",
+      "table": "invoices"
+    },
+    {
+      "nameExplicit": false,
+      "columns": ["invoice_id"],
+      "schemaTo": "public",
+      "tableTo": "invoices",
       "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "CASCADE",
-      "name": "invoice_time_entries_YLr2BquT4p8X_fkey",
+      "name": "invoice_events_invoice_id_invoices_id_fkey",
+      "entityType": "fks",
+      "schema": "public",
+      "table": "invoice_events"
+    },
+    {
+      "nameExplicit": false,
+      "columns": ["actor_user_id"],
+      "schemaTo": "public",
+      "tableTo": "users",
+      "columnsTo": ["id"],
+      "onUpdate": "NO ACTION",
+      "onDelete": "RESTRICT",
+      "name": "invoice_events_actor_user_id_users_id_fkey",
+      "entityType": "fks",
+      "schema": "public",
+      "table": "invoice_events"
+    },
+    {
+      "nameExplicit": false,
+      "columns": ["invoice_id"],
+      "schemaTo": "public",
+      "tableTo": "invoices",
+      "columnsTo": ["id"],
+      "onUpdate": "NO ACTION",
+      "onDelete": "CASCADE",
+      "name": "invoice_signatures_invoice_id_invoices_id_fkey",
+      "entityType": "fks",
+      "schema": "public",
+      "table": "invoice_signatures"
+    },
+    {
+      "nameExplicit": false,
+      "columns": ["required_permission_id"],
+      "schemaTo": "public",
+      "tableTo": "permissions",
+      "columnsTo": ["id"],
+      "onUpdate": "NO ACTION",
+      "onDelete": "RESTRICT",
+      "name": "invoice_signatures_required_permission_id_permissions_id_fkey",
+      "entityType": "fks",
+      "schema": "public",
+      "table": "invoice_signatures"
+    },
+    {
+      "nameExplicit": false,
+      "columns": ["signed_by_user_id"],
+      "schemaTo": "public",
+      "tableTo": "users",
+      "columnsTo": ["id"],
+      "onUpdate": "NO ACTION",
+      "onDelete": "RESTRICT",
+      "name": "invoice_signatures_signed_by_user_id_users_id_fkey",
+      "entityType": "fks",
+      "schema": "public",
+      "table": "invoice_signatures"
+    },
+    {
+      "nameExplicit": false,
+      "columns": ["invoice_id"],
+      "schemaTo": "public",
+      "tableTo": "invoices",
+      "columnsTo": ["id"],
+      "onUpdate": "NO ACTION",
+      "onDelete": "CASCADE",
+      "name": "invoice_time_entries_invoice_id_invoices_id_fkey",
       "entityType": "fks",
       "schema": "public",
       "table": "invoice_time_entries"
@@ -8754,25 +9261,25 @@
     {
       "columns": ["id"],
       "nameExplicit": false,
-      "name": "created_documents_pkey",
+      "name": "contracts_pkey",
       "schema": "public",
-      "table": "created_documents",
+      "table": "contracts",
       "entityType": "pks"
     },
     {
       "columns": ["id"],
       "nameExplicit": false,
-      "name": "document_events_pkey",
+      "name": "contract_events_pkey",
       "schema": "public",
-      "table": "document_events",
+      "table": "contract_events",
       "entityType": "pks"
     },
     {
       "columns": ["id"],
       "nameExplicit": false,
-      "name": "document_signatures_pkey",
+      "name": "contract_signatures_pkey",
       "schema": "public",
-      "table": "document_signatures",
+      "table": "contract_signatures",
       "entityType": "pks"
     },
     {
@@ -8781,6 +9288,30 @@
       "name": "document_templates_pkey",
       "schema": "public",
       "table": "document_templates",
+      "entityType": "pks"
+    },
+    {
+      "columns": ["id"],
+      "nameExplicit": false,
+      "name": "invoices_pkey",
+      "schema": "public",
+      "table": "invoices",
+      "entityType": "pks"
+    },
+    {
+      "columns": ["id"],
+      "nameExplicit": false,
+      "name": "invoice_events_pkey",
+      "schema": "public",
+      "table": "invoice_events",
+      "entityType": "pks"
+    },
+    {
+      "columns": ["id"],
+      "nameExplicit": false,
+      "name": "invoice_signatures_pkey",
+      "schema": "public",
+      "table": "invoice_signatures",
       "entityType": "pks"
     },
     {
@@ -9348,18 +9879,18 @@
       "entityType": "uniques"
     },
     {
-      "value": "(\"kind\" = 'CONTRACT' AND \"contract_status\" IS NOT NULL AND \"invoice_status\" IS NULL) OR (\"kind\" = 'INVOICE' AND \"invoice_status\" IS NOT NULL AND \"contract_status\" IS NULL)",
-      "name": "chk_created_documents_status_matches_kind",
+      "value": "(\"signee_type\" = 'PERMISSION_HOLDER' AND \"required_permission_id\" IS NOT NULL) OR (\"signee_type\" = 'VOLUNTEER' AND \"required_permission_id\" IS NULL)",
+      "name": "chk_contract_signatures_required_permission_matches_signee_type",
       "entityType": "checks",
       "schema": "public",
-      "table": "created_documents"
+      "table": "contract_signatures"
     },
     {
       "value": "(\"signee_type\" = 'PERMISSION_HOLDER' AND \"required_permission_id\" IS NOT NULL) OR (\"signee_type\" = 'VOLUNTEER' AND \"required_permission_id\" IS NULL)",
-      "name": "chk_document_signatures_required_permission_matches_signee_type",
+      "name": "chk_invoice_signatures_required_permission_matches_signee_type",
       "entityType": "checks",
       "schema": "public",
-      "table": "document_signatures"
+      "table": "invoice_signatures"
     },
     {
       "value": "(\"signee_type\" = 'PERMISSION_HOLDER' AND \"required_permission_id\" IS NOT NULL) OR (\"signee_type\" = 'VOLUNTEER' AND \"required_permission_id\" IS NULL)",

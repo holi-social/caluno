@@ -11,9 +11,13 @@ export const accountingRelations = defineRelationsPart(schema, (r) => ({
       from: r.reimbursementTypes.id,
       to: r.documentTemplates.reimbursementTypeId,
     }),
-    createdDocuments: r.many.createdDocuments({
+    contracts: r.many.contracts({
       from: r.reimbursementTypes.id,
-      to: r.createdDocuments.reimbursementTypeId,
+      to: r.contracts.reimbursementTypeId,
+    }),
+    invoices: r.many.invoices({
+      from: r.reimbursementTypes.id,
+      to: r.invoices.reimbursementTypeId,
     }),
   },
   reimbursementRates: {
@@ -43,9 +47,13 @@ export const accountingRelations = defineRelationsPart(schema, (r) => ({
       from: r.documentTemplates.id,
       to: r.templateSignees.documentTemplateId,
     }),
-    createdDocuments: r.many.createdDocuments({
+    contracts: r.many.contracts({
       from: r.documentTemplates.id,
-      to: r.createdDocuments.documentTemplateId,
+      to: r.contracts.documentTemplateId,
+    }),
+    invoices: r.many.invoices({
+      from: r.documentTemplates.id,
+      to: r.invoices.documentTemplateId,
     }),
   },
   templateSignees: {
@@ -58,64 +66,114 @@ export const accountingRelations = defineRelationsPart(schema, (r) => ({
       to: r.permissions.id,
     }),
   },
-  createdDocuments: {
+  contracts: {
     documentTemplate: r.one.documentTemplates({
-      from: r.createdDocuments.documentTemplateId,
+      from: r.contracts.documentTemplateId,
       to: r.documentTemplates.id,
     }),
     volunteer: r.one.users({
-      from: r.createdDocuments.volunteerId,
+      from: r.contracts.volunteerId,
       to: r.users.id,
     }),
     reimbursementType: r.one.reimbursementTypes({
-      from: r.createdDocuments.reimbursementTypeId,
+      from: r.contracts.reimbursementTypeId,
       to: r.reimbursementTypes.id,
     }),
     declinedByUser: r.one.users({
-      from: r.createdDocuments.declinedByUserId,
+      from: r.contracts.declinedByUserId,
       to: r.users.id,
     }),
-    signatures: r.many.documentSignatures({
-      from: r.createdDocuments.id,
-      to: r.documentSignatures.createdDocumentId,
+    signatures: r.many.contractSignatures({
+      from: r.contracts.id,
+      to: r.contractSignatures.contractId,
     }),
-    events: r.many.documentEvents({
-      from: r.createdDocuments.id,
-      to: r.documentEvents.createdDocumentId,
-    }),
-    invoiceTimeEntries: r.many.invoiceTimeEntries({
-      from: r.createdDocuments.id,
-      to: r.invoiceTimeEntries.createdDocumentId,
+    events: r.many.contractEvents({
+      from: r.contracts.id,
+      to: r.contractEvents.contractId,
     }),
   },
-  documentSignatures: {
-    createdDocument: r.one.createdDocuments({
-      from: r.documentSignatures.createdDocumentId,
-      to: r.createdDocuments.id,
+  invoices: {
+    documentTemplate: r.one.documentTemplates({
+      from: r.invoices.documentTemplateId,
+      to: r.documentTemplates.id,
+    }),
+    volunteer: r.one.users({
+      from: r.invoices.volunteerId,
+      to: r.users.id,
+    }),
+    reimbursementType: r.one.reimbursementTypes({
+      from: r.invoices.reimbursementTypeId,
+      to: r.reimbursementTypes.id,
+    }),
+    declinedByUser: r.one.users({
+      from: r.invoices.declinedByUserId,
+      to: r.users.id,
+    }),
+    signatures: r.many.invoiceSignatures({
+      from: r.invoices.id,
+      to: r.invoiceSignatures.invoiceId,
+    }),
+    events: r.many.invoiceEvents({
+      from: r.invoices.id,
+      to: r.invoiceEvents.invoiceId,
+    }),
+    invoiceTimeEntries: r.many.invoiceTimeEntries({
+      from: r.invoices.id,
+      to: r.invoiceTimeEntries.invoiceId,
+    }),
+  },
+  contractSignatures: {
+    contract: r.one.contracts({
+      from: r.contractSignatures.contractId,
+      to: r.contracts.id,
     }),
     requiredPermission: r.one.permissions({
-      from: r.documentSignatures.requiredPermissionId,
+      from: r.contractSignatures.requiredPermissionId,
       to: r.permissions.id,
     }),
     signedByUser: r.one.users({
-      from: r.documentSignatures.signedByUserId,
+      from: r.contractSignatures.signedByUserId,
       to: r.users.id,
     }),
   },
-  documentEvents: {
-    createdDocument: r.one.createdDocuments({
-      from: r.documentEvents.createdDocumentId,
-      to: r.createdDocuments.id,
+  invoiceSignatures: {
+    invoice: r.one.invoices({
+      from: r.invoiceSignatures.invoiceId,
+      to: r.invoices.id,
+    }),
+    requiredPermission: r.one.permissions({
+      from: r.invoiceSignatures.requiredPermissionId,
+      to: r.permissions.id,
+    }),
+    signedByUser: r.one.users({
+      from: r.invoiceSignatures.signedByUserId,
+      to: r.users.id,
+    }),
+  },
+  contractEvents: {
+    contract: r.one.contracts({
+      from: r.contractEvents.contractId,
+      to: r.contracts.id,
     }),
     actorUser: r.one.users({
-      from: r.documentEvents.actorUserId,
+      from: r.contractEvents.actorUserId,
+      to: r.users.id,
+    }),
+  },
+  invoiceEvents: {
+    invoice: r.one.invoices({
+      from: r.invoiceEvents.invoiceId,
+      to: r.invoices.id,
+    }),
+    actorUser: r.one.users({
+      from: r.invoiceEvents.actorUserId,
       to: r.users.id,
     }),
   },
   invoiceTimeEntries: {
-    createdDocument: r.one.createdDocuments({
-      from: r.invoiceTimeEntries.createdDocumentId,
-      to: r.createdDocuments.id,
+    invoice: r.one.invoices({
+      from: r.invoiceTimeEntries.invoiceId,
+      to: r.invoices.id,
     }),
     timeEntry: r.one.timeEntries({
       from: r.invoiceTimeEntries.timeEntryId,

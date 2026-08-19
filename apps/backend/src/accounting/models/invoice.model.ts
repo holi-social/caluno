@@ -1,19 +1,15 @@
 import { Field, Float, ID, Int, ObjectType } from '@nestjs/graphql';
 import { GraphQLJSON } from 'graphql-scalars';
 import { User } from '../../user/models/user.model';
-import {
-  ContractStatus,
-  DocumentKind,
-  InvoiceStatus,
-  SigneeType,
-} from '../enums';
-import { DocumentEvent } from './document-event.model';
-import { DocumentSignature } from './document-signature.model';
+import { InvoiceStatus, SigneeType } from '../enums';
 import { DocumentTemplate } from './document-template.model';
+import { InvoiceEvent } from './invoice-event.model';
+import { InvoiceSignature } from './invoice-signature.model';
+import { InvoiceTimeEntry } from './invoice-time-entry.model';
 import { ReimbursementType } from './reimbursement-type.model';
 
 @ObjectType()
-export class CreatedDocument {
+export class Invoice {
   @Field(() => ID)
   id!: string;
 
@@ -26,14 +22,8 @@ export class CreatedDocument {
   @Field(() => ReimbursementType)
   reimbursementType!: ReimbursementType;
 
-  @Field(() => DocumentKind)
-  kind!: DocumentKind;
-
-  @Field(() => ContractStatus, { nullable: true })
-  contractStatus?: ContractStatus | null;
-
-  @Field(() => InvoiceStatus, { nullable: true })
-  invoiceStatus?: InvoiceStatus | null;
+  @Field(() => InvoiceStatus)
+  invoiceStatus!: InvoiceStatus;
 
   @Field(() => Date)
   periodStart!: Date;
@@ -41,14 +31,11 @@ export class CreatedDocument {
   @Field(() => Date)
   periodEnd!: Date;
 
-  @Field(() => Date, { nullable: true })
-  renewDate?: Date | null;
+  @Field(() => Int)
+  totalAmountCents!: number;
 
-  @Field(() => Int, { nullable: true })
-  totalAmountCents?: number | null;
-
-  @Field(() => Float, { nullable: true })
-  totalHours?: number | null;
+  @Field(() => Float)
+  totalHours!: number;
 
   @Field(() => Boolean)
   isNonCompliant!: boolean;
@@ -68,11 +55,14 @@ export class CreatedDocument {
   @Field(() => SigneeType, { nullable: true })
   declinedAtSigneeType?: SigneeType | null;
 
-  @Field(() => [DocumentSignature])
-  signatures!: DocumentSignature[];
+  @Field(() => [InvoiceSignature])
+  signatures!: InvoiceSignature[];
 
-  @Field(() => [DocumentEvent])
-  events!: DocumentEvent[];
+  @Field(() => [InvoiceEvent])
+  events!: InvoiceEvent[];
+
+  @Field(() => [InvoiceTimeEntry])
+  invoiceTimeEntries!: InvoiceTimeEntry[];
 
   @Field(() => Date)
   createdAt!: Date;

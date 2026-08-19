@@ -3,7 +3,7 @@ import { User } from '../../user/models/user.model';
 import { DocumentEventType } from '../enums';
 
 @ObjectType()
-export class DocumentEvent {
+export class InvoiceEvent {
   @Field(() => ID)
   id!: string;
 
