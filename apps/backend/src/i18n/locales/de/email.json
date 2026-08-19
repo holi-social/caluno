@@ -8,6 +8,20 @@
     "previewText": "Dein {brandName}-Bestätigungscode ist {otp}.",
     "subject": "Dein {brandName}-Bestätigungscode"
   },
+  "eventInvited": {
+    "buttonLabel": "Event ansehen",
+    "detailEvent": "Event",
+    "detailLocation": "Ort",
+    "detailOrganization": "Organisation",
+    "detailWhen": "Wann",
+    "footerNote": "Du erhältst diese E-Mail, weil du zu einem Event auf {brandName} eingeladen wurdest.",
+    "greeting": "Hallo {firstName}, du bist zu einem Event eingeladen.",
+    "heading": "Du bist zu einem Event eingeladen",
+    "note": "Öffne das Event, um die Details zu sehen.",
+    "previewText": "Du bist zu {eventTitle} bei {organizationName} eingeladen.",
+    "subject": "Du bist zu {eventTitle} eingeladen",
+    "whenRange": "{date} · {timeRange}"
+  },
   "membershipApproved": {
     "buttonLabel": "{organizationName} öffnen",
     "footerNote": "Du erhältst diese E-Mail, weil deine Mitgliedschaftsanfrage für {organizationName} auf {brandName} genehmigt wurde.",
