@@ -35,6 +35,7 @@ import { NotificationModule } from './notification/notification.module';
 import { OrganizationModule } from './organization/organization.module';
 import { RequirementProfileModule } from './requirement-profile/requirement-profile.module';
 import { ObservabilityModule } from './shared/observability/observability.module';
+import { validatePostHogEnv } from './shared/observability/validate-posthog-env';
 import { validateSentryEnv } from './shared/observability/validate-sentry-env';
 import { ShiftModule } from './shift/shift.module';
 import { StorageModule } from './storage/storage.module';
@@ -53,7 +54,7 @@ const autoSchemaFile =
     ObservabilityModule,
     ConfigModule.forRoot({
       isGlobal: true,
-      validate: validateSentryEnv,
+      validate: (config) => validatePostHogEnv(validateSentryEnv(config)),
     }),
     EventEmitterModule.forRoot({
       wildcard: true,
