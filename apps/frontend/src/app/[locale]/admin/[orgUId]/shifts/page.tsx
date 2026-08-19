@@ -80,7 +80,11 @@ export default async function ShiftsPage({
             week={week}
           />
           {isWeekplan && (
-            <WeeklyCalendarNav weekStart={weekStart} orgUId={orgUId} />
+            <WeeklyCalendarNav
+              weekStart={weekStart}
+              pathname={`/admin/${orgUId}/shifts`}
+              query={{ view: 'weekplan' }}
+            />
           )}
 
           <CreateShiftButton orgUId={orgUId} />
