@@ -12,7 +12,8 @@ export default defineConfig({
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
   use: {
-    headless: false,
+    // Headed locally for debugging; headless in CI or with HEADLESS=1.
+    headless: !!process.env.CI || process.env.HEADLESS === '1',
     // Staging's `load` event can be slow; absorb spikes without failing.
     navigationTimeout: 60_000,
     actionTimeout: 20_000,

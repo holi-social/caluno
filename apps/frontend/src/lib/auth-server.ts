@@ -29,7 +29,7 @@ export async function getSession() {
   }
 }
 
-export async function requireAuth(redirectTo: string = '/login') {
+export async function requireAuth(redirectTo: string = '/signup') {
   const session = await getSession();
 
   if (!session?.user) {

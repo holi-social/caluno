@@ -1,7 +1,13 @@
 'use client';
 
-import type { ShiftInviteStatus, WeeklyShiftInstance } from '@repo/data';
 import {
+  formatRrulePattern,
+  type ShiftInviteStatus,
+  ShiftVisibility,
+  type WeeklyShiftInstance,
+} from '@repo/data';
+import {
+  ActionTooltip,
   Badge,
   Button,
   Card,
@@ -9,7 +15,13 @@ import {
   VolunteeringShiftCardVolunteers,
 } from '@repo/ui';
 import { format } from 'date-fns';
-import { TriangleAlert, UserPlus, UsersRound } from 'lucide-react';
+import {
+  LockKeyhole,
+  RepeatIcon,
+  TriangleAlert,
+  UserPlus,
+  UsersRound,
+} from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { Link } from '@/i18n/navigation';
 import { toInviteDisplayState } from '../invite-status-display';
@@ -119,8 +131,16 @@ export function ShiftCard({
           className="flex w-full flex-col gap-1 rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           aria-label={t('card.openInstanceAria')}
         >
-          <p className="text-lg font-bold leading-none text-muted-foreground">
+          <p className="flex items-center gap-1 text-lg font-bold leading-none text-muted-foreground">
             {startTime} - {endTime}
+            {instance.master.rrule && (
+              <ActionTooltip label={formatRrulePattern(instance.master.rrule)}>
+                <RepeatIcon
+                  className="size-4 rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  tabIndex={0}
+                />
+              </ActionTooltip>
+            )}
           </p>
           <p className="line-clamp-2 text-lg text-card-foreground">
             {instance.overrideTitle ?? instance.master.title}
@@ -158,6 +178,13 @@ export function ShiftCard({
             </Link>
           )}
         </div>
+
+        {instance.master.visibility === ShiftVisibility.InvitedMembers && (
+          <span className="flex w-full items-center gap-1 text-sm text-muted-foreground">
+            <LockKeyhole className="size-3" />
+            {t('visibility.INVITED_MEMBERS')}
+          </span>
+        )}
       </div>
 
       <VolunteeringShiftCardVolunteers

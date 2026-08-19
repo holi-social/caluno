@@ -53,10 +53,13 @@ export default async function EventFormsPage({
 
   const session = await getSession();
   if (!session) {
-    const searchParams = new URLSearchParams({
+    const inviteParams = new URLSearchParams({
       redirectTo: redirectTo ?? `/events/${eventId}/forms`,
     });
-    redirect({ href: `/api/invite?${searchParams}`, locale });
+    if (event.organizationUnit?.id) {
+      inviteParams.set('orgUId', event.organizationUnit.id);
+    }
+    redirect({ href: `/api/invite?${inviteParams}`, locale });
   }
 
   const joinResult = await data.publicEvent.join(eventId).catch(() => null);
