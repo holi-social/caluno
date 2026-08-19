@@ -32,7 +32,7 @@ export async function WeeklyCalendar({
 
   return (
     <div className="bg-muted border border-border rounded-xl overflow-x-auto flex-1 min-h-80 snap-x snap-mandatory">
-      <div className="flex items-stretch min-h-80 min-w-full h-full divide-x divide-border">
+      <div className="flex items-stretch min-h-80 min-w-full h-full divide-x divide-border dark:divide-foreground/15">
         {days.map(({ date, label, dateLabel, instances: dayInstances }) => (
           <div
             key={date.toISOString()}
