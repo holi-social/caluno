@@ -17,6 +17,8 @@ interface EventFollowButtonProps {
   eventId: string;
   organizationUnitId?: string | null;
   initialStatus: JoinStatus;
+  /** Org-membership state — drives the required-forms gate, distinct from the per-event follow status. */
+  membershipState?: JoinStatus;
   eventRequiredForms?: RequiredForm[];
   organizationUnitRequiredForms?: RequiredForm[];
 }
@@ -25,6 +27,7 @@ export function EventFollowButton({
   eventId,
   organizationUnitId,
   initialStatus,
+  membershipState = JoinStatus.None,
   eventRequiredForms = [],
   organizationUnitRequiredForms = [],
 }: EventFollowButtonProps) {
@@ -48,7 +51,7 @@ export function EventFollowButton({
     status === JoinStatus.Rejected;
 
   const { needsCombinedForms, goToCombinedForms } = useRequiredFormsGate(
-    status,
+    membershipState,
     eventRequiredForms,
     organizationUnitRequiredForms,
     `/events/${eventId}/join-forms`,
