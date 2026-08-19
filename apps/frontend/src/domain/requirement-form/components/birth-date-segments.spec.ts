@@ -3,6 +3,7 @@ import {
   formValueFromOtpDigits,
   INCOMPLETE_BIRTH_DATE_VALUE,
   otpDigitsFromStoredDate,
+  partsFromDateFormat,
 } from './birth-date-segments';
 
 describe('birth-date-segments', () => {
@@ -21,5 +22,16 @@ describe('birth-date-segments', () => {
     );
     expect(formValueFromOtpDigits('29022024')).toBe('2024-02-29');
     expect(Number.isNaN(Date.parse(INCOMPLETE_BIRTH_DATE_VALUE))).toBe(true);
+  });
+
+  it('partsFromDateFormat splits letters and separator from the mask', () => {
+    expect(partsFromDateFormat('DD/MM/YYYY')).toEqual({
+      placeholders: ['D', 'D', 'M', 'M', 'Y', 'Y', 'Y', 'Y'],
+      separator: '/',
+    });
+    expect(partsFromDateFormat('TT.MM.JJJJ')).toEqual({
+      placeholders: ['T', 'T', 'M', 'M', 'J', 'J', 'J', 'J'],
+      separator: '.',
+    });
   });
 });
