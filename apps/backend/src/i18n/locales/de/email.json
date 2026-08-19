@@ -22,6 +22,19 @@
     "subject": "Du bist zu {eventTitle} eingeladen",
     "whenRange": "{date} · {timeRange}"
   },
+  "eventJoined": {
+    "buttonLabel": "Events ansehen",
+    "detailEvent": "Event",
+    "detailOrganization": "Organisation",
+    "detailStarts": "Beginn",
+    "detailVolunteer": "Freiwillige:r",
+    "footerNote": "Du erhältst diese E-Mail, weil du Events auf {brandName} verwalten kannst.",
+    "greeting": "Hallo {firstName}, eine freiwillige Person ist einem Event beigetreten, das du verwaltest.",
+    "heading": "Jemand ist einem Event beigetreten",
+    "note": "Die Teilnehmerliste ist bereits aktualisiert.",
+    "previewText": "{volunteerName} ist {eventTitle} bei {organizationName} am {startsAt} beigetreten.",
+    "subject": "{eventTitle}: {volunteerName} ist beigetreten"
+  },
   "membershipApproved": {
     "buttonLabel": "{organizationName} öffnen",
     "footerNote": "Du erhältst diese E-Mail, weil deine Mitgliedschaftsanfrage für {organizationName} auf {brandName} genehmigt wurde.",
