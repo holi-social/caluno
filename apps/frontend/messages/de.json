@@ -170,7 +170,7 @@
         "volunteers": "Freiwillige"
       },
       "requiredForms": {
-        "addExisting": "+ Bestehendes hinzufügen",
+        "addExisting": "Bestehendes hinzufügen",
         "addedToast": "Formular hinzugefügt",
         "createNew": "Neues erstellen",
         "dedupHint": "Freiwillige werden nicht nach Informationen gefragt, die sie bereits angegeben haben.",
@@ -1082,7 +1082,7 @@
       "createdLabel": "Erstellt",
       "imageAlt": "Bild für {title}",
       "requiredForms": {
-        "addExisting": "+ Bestehendes hinzufügen",
+        "addExisting": "Bestehendes hinzufügen",
         "addedToast": "Formular hinzugefügt",
         "createNew": "Neues erstellen",
         "dedupHint": "Freiwillige werden nicht nach Informationen gefragt, die sie bereits angegeben haben.",
@@ -1471,7 +1471,7 @@
       "rejectedEmpty": "Noch keine abgelehnten Anfragen."
     },
     "requiredForms": {
-      "addExisting": "+ Bestehendes hinzufügen",
+      "addExisting": "Bestehendes hinzufügen",
       "addedToast": "Formular angehängt",
       "createNew": "Neues erstellen",
       "dedupHint": "Freiwillige müssen Informationen, die sie bereits angegeben haben, nicht erneut eingeben.",
