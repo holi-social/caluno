@@ -19,6 +19,7 @@ import { UserLocaleService } from '../i18n/user-locale.service';
 import { RecurrenceDay } from '../shift/enums';
 import { UserService } from '../user/user.service';
 import { EmailService } from './email/email.service';
+import { eventCancelledTemplate } from './email/templates/event-cancelled.template';
 import { eventInvitedTemplate } from './email/templates/event-invited.template';
 import { eventJoinedTemplate } from './email/templates/event-joined.template';
 import { membershipApprovedTemplate } from './email/templates/membership-approved.template';
@@ -732,6 +733,51 @@ describe('NotificationModule', () => {
       to: 'bob@example.com',
       subject: expectedBob.subject,
       html: expectedBob.html,
+    });
+  });
+
+  it('sends event cancelled emails to affected participants', async () => {
+    const startsAt = new Date('2026-09-01T09:00:00.000Z');
+    const endsAt = new Date('2026-09-01T17:00:00.000Z');
+
+    userService.findById.mockImplementation((id: string) =>
+      Promise.resolve({
+        id,
+        name: id === 'volunteer-1' ? 'Sam Volunteer' : 'Other User',
+        email: id === 'volunteer-1' ? 'sam@example.com' : 'other@example.com',
+      }),
+    );
+
+    const payload = {
+      organizationUnitId: 'unit-root-1',
+      organizationUnitName: 'Acme Volunteers',
+      eventTitle: 'Community Fair',
+      eventLocation: 'Main hall',
+      recipientUserIds: ['volunteer-1'],
+      startsAt,
+      endsAt,
+    };
+    const expected = await eventCancelledTemplate(
+      {
+        organizationUnitName: payload.organizationUnitName,
+        eventTitle: payload.eventTitle,
+        eventLocation: payload.eventLocation,
+        recipientFirstName: 'Sam',
+        startsAt,
+        endsAt,
+      },
+      createFixtureTranslator('en'),
+    );
+
+    notificationService.notifyEventCancelled(payload);
+
+    await new Promise((resolve) => setTimeout(resolve, 50));
+
+    expect(userService.findById).toHaveBeenCalledWith('volunteer-1');
+    expect(emailService.send).toHaveBeenCalledWith({
+      to: 'sam@example.com',
+      subject: expected.subject,
+      html: expected.html,
     });
   });
 });

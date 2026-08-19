@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
 import { AppI18nService } from '../../i18n/app-i18n.service';
 import { createEmailTemplateContext } from '../email/email-template-context';
+import { eventCancelledTemplate } from '../email/templates/event-cancelled.template';
 import { eventInvitedTemplate } from '../email/templates/event-invited.template';
 import { eventJoinedTemplate } from '../email/templates/event-joined.template';
 import { NotificationService } from '../notification.service';
@@ -78,6 +79,35 @@ export class EventListener {
             volunteerName: volunteer.name,
             recipientFirstName: recipient.firstName,
             startsAt: payload.startsAt,
+          },
+          templateContext,
+        );
+      },
+    );
+  }
+
+  @OnEvent(NotificationEvent.EVENT_CANCELLED)
+  async handleEventCancelled(
+    payload: NotificationEventPayloadMap[typeof NotificationEvent.EVENT_CANCELLED],
+  ): Promise<void> {
+    await this.notificationService.sendNotification(
+      payload.recipientUserIds,
+      {
+        event: NotificationEvent.EVENT_CANCELLED,
+      },
+      async (recipient) => {
+        const templateContext = createEmailTemplateContext(
+          this.appI18n,
+          recipient.locale,
+        );
+        return eventCancelledTemplate(
+          {
+            organizationUnitName: payload.organizationUnitName,
+            eventTitle: payload.eventTitle,
+            eventLocation: payload.eventLocation,
+            recipientFirstName: recipient.firstName,
+            startsAt: payload.startsAt,
+            endsAt: payload.endsAt,
           },
           templateContext,
         );

@@ -1,4 +1,5 @@
 import { NotificationEvent } from './notification-events';
+import type { EventCancelledPayload } from './payloads/event-cancelled.payload';
 import type { EventInvitedPayload } from './payloads/event-invited.payload';
 import type { EventJoinedPayload } from './payloads/event-joined.payload';
 import type { MembershipApprovedPayload } from './payloads/membership-approved.payload';
@@ -21,4 +22,5 @@ export interface NotificationEventPayloadMap {
   [NotificationEvent.SHIFT_INVITED]: ShiftInvitedPayload;
   [NotificationEvent.EVENT_INVITED]: EventInvitedPayload;
   [NotificationEvent.EVENT_JOINED]: EventJoinedPayload;
+  [NotificationEvent.EVENT_CANCELLED]: EventCancelledPayload;
 }
