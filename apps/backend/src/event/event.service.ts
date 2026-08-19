@@ -1,6 +1,8 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable, Logger } from '@nestjs/common';
 import { isUUID } from 'class-validator';
 import { and, count, eq, inArray } from 'drizzle-orm';
+import { AuthService } from '../auth/auth.service';
+import { PERMISSIONS } from '../auth/constants';
 import type { Database } from '../database/database.module';
 import { DATABASE_CONNECTION } from '../database/database-connection';
 import * as schema from '../database/schema';
@@ -12,6 +14,7 @@ import {
 import type { PaginationInput } from '../graphql/pagination.input';
 import { MembershipService } from '../membership/membership.service';
 import type { MembershipRequestEntity } from '../membership/schemas/membership-request.schema';
+import { NotificationService } from '../notification/notification.service';
 import { OrganizationService } from '../organization/organization.service';
 import { RequiredFormTargetType } from '../requirement-profile/enums';
 import type { RequirementProfileEntity } from '../requirement-profile/schemas/requirement-profile.schema';
@@ -44,6 +47,8 @@ const EMPTY_EVENT_PAGE: { events: EventEntity[]; total: number } = {
 
 @Injectable()
 export class EventService {
+  private readonly logger = new Logger(EventService.name);
+
   constructor(
     @Inject(DATABASE_CONNECTION)
     private readonly db: Database,
@@ -52,6 +57,8 @@ export class EventService {
     private readonly fileService: FileService,
     private readonly requiredFormService: RequiredFormService,
     private readonly shiftService: ShiftService,
+    private readonly authService: AuthService,
+    private readonly notificationService: NotificationService,
   ) {}
 
   async findById(id: string, organizationUnitId: string): Promise<EventEntity> {
@@ -229,7 +236,7 @@ export class EventService {
       ? await this.resolveImageUrl(coverFileId, FilePurpose.EVENT_IMAGE)
       : null;
 
-    return this.db.transaction(async (tx) => {
+    const event = await this.db.transaction(async (tx) => {
       const [event] = await tx
         .insert(schema.events)
         .values({
@@ -274,6 +281,12 @@ export class EventService {
 
       return event;
     });
+
+    if (invitedMemberIds && invitedMemberIds.length > 0) {
+      void this.loadAndEmitEventInvitedNotification(event, invitedMemberIds);
+    }
+
+    return event;
   }
 
   async update(
@@ -344,6 +357,8 @@ export class EventService {
       throw new NotFoundGraphQLError(`Event with ID ${id} not found`);
     }
 
+    void this.loadAndEmitEventCancelledNotification(event);
+
     return event;
   }
 
@@ -408,6 +423,11 @@ export class EventService {
           ),
         );
     }
+
+    void this.loadAndEmitEventInvitedNotification(event, [
+      ...newMemberIds,
+      ...reinviteMemberIds,
+    ]);
 
     return event;
   }
@@ -502,6 +522,8 @@ export class EventService {
         .set({ status: EventInviteStatus.ACCEPTED })
         .where(eq(schema.eventInvites.id, existingInvite.id));
 
+      void this.loadAndEmitEventJoinedNotification(userId, event);
+
       return event;
     }
 
@@ -513,6 +535,8 @@ export class EventService {
         status: EventInviteStatus.ACCEPTED,
       })
       .onConflictDoNothing();
+
+    void this.loadAndEmitEventJoinedNotification(userId, event);
 
     return event;
   }
@@ -663,7 +687,7 @@ export class EventService {
       );
     }
 
-    return this.db.transaction(async (tx) => {
+    const updated = await this.db.transaction(async (tx) => {
       const [updated] = await tx
         .update(schema.eventInvites)
         .set({ status })
@@ -686,6 +710,12 @@ export class EventService {
 
       return updated;
     });
+
+    if (status === EventInviteStatus.INVITED) {
+      void this.loadAndEmitEventInvitedNotification(event, [userId]);
+    }
+
+    return updated;
   }
 
   async findInvite(
@@ -826,5 +856,124 @@ export class EventService {
       ...(logoUrl !== undefined ? { logoUrl } : {}),
       ...(coverUrl !== undefined ? { coverUrl } : {}),
     };
+  }
+
+  private async loadAndEmitEventInvitedNotification(
+    event: EventEntity,
+    invitedUserIds: string[],
+  ): Promise<void> {
+    if (invitedUserIds.length === 0) {
+      return;
+    }
+
+    try {
+      const organizationUnit = await this.db.query.organizationUnits.findFirst({
+        where: { id: event.organizationUnitId },
+        columns: { id: true, name: true },
+      });
+
+      if (!organizationUnit) {
+        return;
+      }
+
+      this.notificationService.notifyEventInvited({
+        organizationUnitId: organizationUnit.id,
+        organizationUnitName: organizationUnit.name,
+        eventId: event.id,
+        eventTitle: event.title,
+        eventLocation: event.location,
+        recipientUserIds: invitedUserIds,
+        startsAt: event.startsAt,
+        endsAt: event.endsAt,
+      });
+    } catch (error) {
+      this.logger.error(
+        `Failed to emit event invited notification: ${error instanceof Error ? error.message : String(error)}`,
+      );
+    }
+  }
+
+  private async loadAndEmitEventJoinedNotification(
+    userId: string,
+    event: EventEntity,
+  ): Promise<void> {
+    try {
+      const organizationUnit = await this.db.query.organizationUnits.findFirst({
+        where: { id: event.organizationUnitId },
+        columns: { id: true, name: true },
+      });
+
+      if (!organizationUnit) {
+        return;
+      }
+
+      const eventManagers = await this.authService.findUsersWithPermission(
+        event.organizationUnitId,
+        PERMISSIONS.SHIFT_EDIT,
+      );
+      const recipientUserIds = eventManagers
+        .filter((manager) => manager.id !== userId)
+        .map((manager) => manager.id);
+
+      if (recipientUserIds.length === 0) {
+        return;
+      }
+
+      this.notificationService.notifyEventJoined({
+        organizationUnitId: event.organizationUnitId,
+        organizationUnitName: organizationUnit.name,
+        eventTitle: event.title,
+        joinedUserId: userId,
+        recipientUserIds,
+        startsAt: event.startsAt,
+      });
+    } catch (error) {
+      this.logger.error(
+        `Failed to emit event joined notification: ${error instanceof Error ? error.message : String(error)}`,
+      );
+    }
+  }
+
+  private async loadAndEmitEventCancelledNotification(
+    event: EventEntity,
+  ): Promise<void> {
+    try {
+      const [organizationUnit, activeInvites] = await Promise.all([
+        this.db.query.organizationUnits.findFirst({
+          where: { id: event.organizationUnitId },
+          columns: { id: true, name: true },
+        }),
+        this.db.query.eventInvites.findMany({
+          where: {
+            eventId: event.id,
+            status: { in: [...ACTIVE_EVENT_INVITE_STATUSES] },
+          },
+          columns: { userId: true },
+        }),
+      ]);
+
+      if (!organizationUnit) {
+        return;
+      }
+
+      const recipientUserIds = activeInvites.map((invite) => invite.userId);
+      if (recipientUserIds.length === 0) {
+        return;
+      }
+
+      this.notificationService.notifyEventCancelled({
+        organizationUnitId: organizationUnit.id,
+        organizationUnitName: organizationUnit.name,
+        eventTitle: event.title,
+        eventLocation: event.location,
+        recipientUserIds,
+        startsAt: event.startsAt,
+        endsAt: event.endsAt,
+      });
+    } catch (error) {
+      this.logger.error(
+        `Failed to emit event cancelled notification: ${error instanceof Error ? error.message : String(error)}`,
+      );
+    }
   }
 }
