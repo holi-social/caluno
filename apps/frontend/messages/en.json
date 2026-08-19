@@ -938,6 +938,7 @@
       "alreadySubmittedMessage": "Your form has been submitted correctly.",
       "alreadySubmittedTitle": "Form submitted",
       "back": "Back",
+      "birthDateFormat": "DD/MM/YYYY",
       "checkboxYes": "Yes",
       "documentAcknowledgement": "I acknowledge and accept",
       "failedToSubmit": "Failed to submit form",

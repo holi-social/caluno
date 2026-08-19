@@ -426,6 +426,9 @@ export function FieldRenderer({
     const dateValue = value ? new Date(value) : undefined;
     const labelId = `${field.id}-label`;
     const isBirthDate = field.systemKey === 'birth-date';
+    const descriptionId = field.description
+      ? `${field.id}-description`
+      : undefined;
     return (
       <Field>
         <FieldLabel id={isBirthDate ? labelId : undefined} htmlFor={field.id}>
@@ -433,7 +436,9 @@ export function FieldRenderer({
           {field.required && <span className="text-destructive">*</span>}
         </FieldLabel>
         {field.description && (
-          <FieldDescription>{field.description}</FieldDescription>
+          <FieldDescription id={descriptionId}>
+            {field.description}
+          </FieldDescription>
         )}
         {isBirthDate ? (
           <BirthDateInput
@@ -442,6 +447,7 @@ export function FieldRenderer({
             onChange={onChange}
             aria-invalid={!!error}
             aria-labelledby={labelId}
+            aria-describedby={descriptionId}
           />
         ) : (
           <Popover>
