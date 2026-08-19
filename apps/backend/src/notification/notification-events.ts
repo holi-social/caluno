@@ -10,6 +10,7 @@ export const NotificationEvent = {
   SHIFT_INVITED: 'notification.shift.invited',
   EVENT_INVITED: 'notification.event.invited',
   EVENT_JOINED: 'notification.event.joined',
+  EVENT_CANCELLED: 'notification.event.cancelled',
 } as const;
 
 export type NotificationEvent =

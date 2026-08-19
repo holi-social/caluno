@@ -8,6 +8,19 @@
     "previewText": "Dein {brandName}-Bestätigungscode ist {otp}.",
     "subject": "Dein {brandName}-Bestätigungscode"
   },
+  "eventCancelled": {
+    "detailEvent": "Event",
+    "detailLocation": "Ort",
+    "detailOrganization": "Organisation",
+    "detailWhen": "Wann",
+    "footerNote": "Du erhältst diese E-Mail, weil ein Event, zu dem du eingeladen warst, auf {brandName} abgesagt wurde.",
+    "greeting": "Hallo {firstName}, ein Event, zu dem du eingeladen warst, wurde abgesagt.",
+    "heading": "Event abgesagt",
+    "note": "Für dieses Event werden keine Freiwilligen mehr benötigt. Du musst nichts weiter tun.",
+    "previewText": "{eventTitle} bei {organizationName} wurde abgesagt.",
+    "subject": "{eventTitle} wurde abgesagt",
+    "whenRange": "{date} · {timeRange}"
+  },
   "eventInvited": {
     "buttonLabel": "Event ansehen",
     "detailEvent": "Event",

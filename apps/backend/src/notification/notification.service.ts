@@ -49,6 +49,9 @@ type EventInvitedInput =
 type EventJoinedInput =
   NotificationEventPayloadMap[typeof NotificationEvent.EVENT_JOINED];
 
+type EventCancelledInput =
+  NotificationEventPayloadMap[typeof NotificationEvent.EVENT_CANCELLED];
+
 @Injectable()
 export class NotificationService {
   private readonly logger = new Logger(NotificationService.name);
@@ -169,5 +172,9 @@ export class NotificationService {
 
   notifyEventJoined(input: EventJoinedInput): void {
     this.emitter.emit(NotificationEvent.EVENT_JOINED, input);
+  }
+
+  notifyEventCancelled(input: EventCancelledInput): void {
+    this.emitter.emit(NotificationEvent.EVENT_CANCELLED, input);
   }
 }
