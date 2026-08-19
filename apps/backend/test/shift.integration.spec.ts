@@ -205,15 +205,15 @@ describe('ShiftService.findShiftsForWeek', () => {
       app,
       {
         query: `
-          query WeeklyShifts($from: DateTime!, $to: DateTime!, $eventId: ID) {
-            weeklyShifts(from: $from, to: $to, eventId: $eventId) {
+          query WeeklyShifts($startsAfter: DateTime!, $endsBefore: DateTime!, $eventId: ID) {
+            weeklyShifts(startsAfter: $startsAfter, endsBefore: $endsBefore, eventId: $eventId) {
               id
             }
           }
         `,
         variables: {
-          from: from.toISOString(),
-          to: to.toISOString(),
+          startsAfter: from.toISOString(),
+          endsBefore: to.toISOString(),
           eventId: event.id,
         },
         headers: {
