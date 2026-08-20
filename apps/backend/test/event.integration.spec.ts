@@ -1256,6 +1256,109 @@ describe('updateEventInviteStatus (admin uninvite)', () => {
     expect(freshRow?.status).toBe(EventInviteStatus.INVITED);
   });
 
+  it('writes ACCEPTED directly when the inviter adds themselves via inviteMembersToEvent', async () => {
+    const event = await createEvent(db, { organizationUnitId });
+    const selfUserId = getAuthMockUserId();
+
+    await graphqlRequestRequiringData<{
+      inviteMembersToEvent: { id: string };
+    }>(
+      app,
+      {
+        query: `
+          mutation InviteMembers($eventId: ID!, $memberIds: [String!]!) {
+            inviteMembersToEvent(eventId: $eventId, memberIds: $memberIds) {
+              id
+            }
+          }
+        `,
+        variables: {
+          eventId: event.id,
+          memberIds: [selfUserId],
+        },
+        headers: { 'x-organization-unit-id': organizationUnitId },
+      },
+      'inviteMembersToEvent',
+    );
+
+    const row = await db.query.eventInvites.findFirst({
+      where: { eventId: event.id, userId: selfUserId },
+    });
+    expect(row?.status).toBe(EventInviteStatus.ACCEPTED);
+  });
+
+  it('writes ACCEPTED for the self-adding inviter but INVITED for others in the same batch', async () => {
+    const event = await createEvent(db, { organizationUnitId });
+    const selfUserId = getAuthMockUserId();
+    const otherUser = await createUser(db);
+
+    await graphqlRequestRequiringData<{
+      inviteMembersToEvent: { id: string };
+    }>(
+      app,
+      {
+        query: `
+          mutation InviteMembers($eventId: ID!, $memberIds: [String!]!) {
+            inviteMembersToEvent(eventId: $eventId, memberIds: $memberIds) {
+              id
+            }
+          }
+        `,
+        variables: {
+          eventId: event.id,
+          memberIds: [selfUserId, otherUser.id],
+        },
+        headers: { 'x-organization-unit-id': organizationUnitId },
+      },
+      'inviteMembersToEvent',
+    );
+
+    const selfRow = await db.query.eventInvites.findFirst({
+      where: { eventId: event.id, userId: selfUserId },
+    });
+    const otherRow = await db.query.eventInvites.findFirst({
+      where: { eventId: event.id, userId: otherUser.id },
+    });
+    expect(selfRow?.status).toBe(EventInviteStatus.ACCEPTED);
+    expect(otherRow?.status).toBe(EventInviteStatus.INVITED);
+  });
+
+  it('resurrects a self-invite from ADMIN_REJECTED straight to ACCEPTED', async () => {
+    const event = await createEvent(db, { organizationUnitId });
+    const selfUserId = getAuthMockUserId();
+    await db.insert(schema.eventInvites).values({
+      eventId: event.id,
+      userId: selfUserId,
+      status: EventInviteStatus.ADMIN_REJECTED,
+    });
+
+    await graphqlRequestRequiringData<{
+      inviteMembersToEvent: { id: string };
+    }>(
+      app,
+      {
+        query: `
+          mutation InviteMembers($eventId: ID!, $memberIds: [String!]!) {
+            inviteMembersToEvent(eventId: $eventId, memberIds: $memberIds) {
+              id
+            }
+          }
+        `,
+        variables: {
+          eventId: event.id,
+          memberIds: [selfUserId],
+        },
+        headers: { 'x-organization-unit-id': organizationUnitId },
+      },
+      'inviteMembersToEvent',
+    );
+
+    const row = await db.query.eventInvites.findFirst({
+      where: { eventId: event.id, userId: selfUserId },
+    });
+    expect(row?.status).toBe(EventInviteStatus.ACCEPTED);
+  });
+
   it('lists ADMIN_REJECTED invites for admin re-invite', async () => {
     const event = await createEvent(db, { organizationUnitId });
     const volunteer = await createUser(db);

@@ -9,7 +9,6 @@ import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 import { FormSheet, useFormSheet } from '@/components/form-sheet';
 import { useRouter } from '@/i18n/navigation';
-import { useSession } from '@/lib/auth';
 import type { RecurrenceDayValue } from '../constants';
 import { type InviteShiftFormValues, inviteShiftFormSchema } from '../schemas';
 import { setSuccessDialogCreatedShift } from '../success-dialog';
@@ -63,7 +62,6 @@ export function InviteShiftForm({
   mutateVolunteers,
 }: InviteShiftFormProps) {
   const router = useRouter();
-  const session = useSession();
   const [pending, startTransition] = useTransition();
   const [serverError, setServerError] = useState<string>();
   const t = useTranslations('Shift');
@@ -84,15 +82,13 @@ export function InviteShiftForm({
   });
 
   const isOpenShift = shift.visibility === ShiftVisibility.AllMembers;
-  const currentUserId = session.data?.user?.id;
-  const allMembers = availableMembers.filter((m) => m.id !== currentUserId);
   const statusById = new Map(
     invitedMembers.map((m) => [m.id, m.inviteStatus] as const),
   );
 
   const watchedIds = form.watch('invitedMemberIds');
   const invitedForList: Member[] = watchedIds.map((id) => {
-    const fromAll = allMembers.find((m) => m.id === id);
+    const fromAll = availableMembers.find((m) => m.id === id);
     if (fromAll) {
       return { ...fromAll, inviteStatus: statusById.get(id) ?? null };
     }
@@ -207,7 +203,7 @@ export function InviteShiftForm({
         <div className="flex min-h-0 flex-1 flex-col gap-4">
           <p className="shrink-0 text-xl font-bold">{t('inviteForm.title')}</p>
           <TransferList
-            available={allMembers}
+            available={availableMembers}
             invited={invitedForList}
             onInvitedChange={(ids) => form.setValue('invitedMemberIds', ids)}
           />

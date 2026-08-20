@@ -367,6 +367,7 @@ export class EventService {
     eventId: string,
     memberIds: string[],
     organizationUnitId: string,
+    actorUserId?: string,
   ): Promise<EventEntity> {
     const event = await this.findById(eventId, organizationUnitId);
 
@@ -399,6 +400,10 @@ export class EventService {
       return event;
     }
 
+    // Inviting yourself happens silently: written straight to ACCEPTED with
+    // no pending state, since there's nothing for the actor to accept.
+    const isSelf = (id: string) => actorUserId != null && id === actorUserId;
+
     if (newMemberIds.length > 0) {
       await this.db
         .insert(schema.eventInvites)
@@ -406,29 +411,48 @@ export class EventService {
           newMemberIds.map((userId) => ({
             eventId,
             userId,
-            status: EventInviteStatus.INVITED,
+            status: isSelf(userId)
+              ? EventInviteStatus.ACCEPTED
+              : EventInviteStatus.INVITED,
           })),
         )
         .onConflictDoNothing();
     }
 
     if (reinviteMemberIds.length > 0) {
-      await this.db
-        .update(schema.eventInvites)
-        .set({ status: EventInviteStatus.INVITED })
-        .where(
-          and(
-            eq(schema.eventInvites.eventId, eventId),
-            inArray(schema.eventInvites.userId, reinviteMemberIds),
-            eq(schema.eventInvites.status, EventInviteStatus.ADMIN_REJECTED),
-          ),
-        );
+      const otherReinviteIds = reinviteMemberIds.filter((id) => !isSelf(id));
+      const selfReinviteIds = reinviteMemberIds.filter(isSelf);
+
+      if (otherReinviteIds.length > 0) {
+        await this.db
+          .update(schema.eventInvites)
+          .set({ status: EventInviteStatus.INVITED })
+          .where(
+            and(
+              eq(schema.eventInvites.eventId, eventId),
+              inArray(schema.eventInvites.userId, otherReinviteIds),
+              eq(schema.eventInvites.status, EventInviteStatus.ADMIN_REJECTED),
+            ),
+          );
+      }
+      if (selfReinviteIds.length > 0) {
+        await this.db
+          .update(schema.eventInvites)
+          .set({ status: EventInviteStatus.ACCEPTED })
+          .where(
+            and(
+              eq(schema.eventInvites.eventId, eventId),
+              inArray(schema.eventInvites.userId, selfReinviteIds),
+              eq(schema.eventInvites.status, EventInviteStatus.ADMIN_REJECTED),
+            ),
+          );
+      }
     }
 
-    void this.loadAndEmitEventInvitedNotification(event, [
-      ...newMemberIds,
-      ...reinviteMemberIds,
-    ]);
+    const notifyMemberIds = [...newMemberIds, ...reinviteMemberIds].filter(
+      (id) => !isSelf(id),
+    );
+    void this.loadAndEmitEventInvitedNotification(event, notifyMemberIds);
 
     return event;
   }
