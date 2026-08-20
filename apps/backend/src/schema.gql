@@ -590,7 +590,7 @@ type Query {
   membership(organizationUnitId: ID!): Membership
   membershipRequestCount(status: MembershipRequestStatus): Int!
   membershipRequests(limit: Int! = 10, offset: Int! = 0, status: MembershipRequestStatus): MembershipRequestPaginatedResponse!
-  memberships: [Membership!]!
+  memberships(includeAncestors: Boolean): [Membership!]!
   myAdminstableOrganizationUnits: [OrganizationUnit!]!
   myEvents(endsBefore: DateTime = null, includePast: Boolean! = false, limit: Int! = 15, offset: Int! = 0, order: SortOrder! = ASC, startsAfter: DateTime = null, statuses: [EventInviteStatus!]): EventPaginatedResponse!
   myFormSubmission(id: ID!): FormSubmission

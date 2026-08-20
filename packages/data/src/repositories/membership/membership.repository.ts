@@ -1,8 +1,10 @@
 import { BaseRepository } from '../base/base.repository';
 
 export class MembershipRepository extends BaseRepository {
-  async findAllByOrganizationUnitId() {
-    const data = await this.sdk.GetOrganizationUnitMemberships();
+  async findAllByOrganizationUnitId(options?: { includeAncestors?: boolean }) {
+    const data = await this.sdk.GetOrganizationUnitMemberships({
+      includeAncestors: options?.includeAncestors,
+    });
     return data.memberships;
   }
 
