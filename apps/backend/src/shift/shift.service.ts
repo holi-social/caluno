@@ -1031,6 +1031,7 @@ export class ShiftService {
     >,
     memberIds: string[],
     inviteStatus: ShiftInviteStatus = ShiftInviteStatus.INVITED,
+    actorUserId?: string,
   ): Promise<void> {
     if (memberIds.length === 0) {
       return;
@@ -1047,16 +1048,18 @@ export class ShiftService {
       );
     }
 
-    await this.createInvitesForInstances(
-      tx,
-      [shiftInstance.id],
-      this.toInviteMembers(memberIds, inviteStatus),
-    );
-    void this.loadAndEmitShiftInstanceInvitedNotification(
-      shiftInstance.master,
-      shiftInstance,
-      memberIds,
-    );
+    // Inviting yourself happens silently: written straight to ACCEPTED with
+    // no pending state, since there's nothing for the actor to accept.
+    // Notifications for this batch are emitted by the caller after commit.
+    const members = memberIds.map((userId) => ({
+      userId,
+      status:
+        actorUserId != null && userId === actorUserId
+          ? ShiftInviteStatus.ACCEPTED
+          : inviteStatus,
+    }));
+
+    await this.createInvitesForInstances(tx, [shiftInstance.id], members);
   }
 
   async uninviteMembersFromShiftInstance(
@@ -1084,6 +1087,7 @@ export class ShiftService {
       inviteToAllInstances?: boolean | null;
       inviteStatus?: ShiftInviteStatus;
     } = {},
+    actorUserId?: string,
   ): Promise<ShiftInstanceEntity> {
     const inviteStatus = options.inviteStatus ?? ShiftInviteStatus.INVITED;
     const currentShiftInstance = await this.db.query.shiftInstances.findFirst({
@@ -1131,18 +1135,39 @@ export class ShiftService {
             currentShiftInstance,
             userIdsToAdd,
             inviteStatus,
+            actorUserId,
           );
           // Resurrect pre-existing inactive (REJECTED/CANCELLED) invite rows —
-          // the insert above no-ops on conflict for those.
-          await tx
-            .update(schema.shiftInstanceInvites)
-            .set({ status: inviteStatus })
-            .where(
-              and(
-                eq(schema.shiftInstanceInvites.instanceId, shiftInstanceId),
-                inArray(schema.shiftInstanceInvites.userId, userIdsToAdd),
-              ),
-            );
+          // the insert above no-ops on conflict for those. The actor adding
+          // themselves resurrects straight to ACCEPTED, same as a fresh insert.
+          const selfIdsToAdd = actorUserId
+            ? userIdsToAdd.filter((id) => id === actorUserId)
+            : [];
+          const otherIdsToAdd = actorUserId
+            ? userIdsToAdd.filter((id) => id !== actorUserId)
+            : userIdsToAdd;
+          if (otherIdsToAdd.length > 0) {
+            await tx
+              .update(schema.shiftInstanceInvites)
+              .set({ status: inviteStatus })
+              .where(
+                and(
+                  eq(schema.shiftInstanceInvites.instanceId, shiftInstanceId),
+                  inArray(schema.shiftInstanceInvites.userId, otherIdsToAdd),
+                ),
+              );
+          }
+          if (selfIdsToAdd.length > 0) {
+            await tx
+              .update(schema.shiftInstanceInvites)
+              .set({ status: ShiftInviteStatus.ACCEPTED })
+              .where(
+                and(
+                  eq(schema.shiftInstanceInvites.instanceId, shiftInstanceId),
+                  inArray(schema.shiftInstanceInvites.userId, selfIdsToAdd),
+                ),
+              );
+          }
         }
         if (userIdsToRemove.length > 0) {
           await this.uninviteMembersFromShiftInstance(
@@ -1281,10 +1306,13 @@ export class ShiftService {
     // Emit notifications after successful commit
     if (userIdsToAdd.length > 0) {
       if (!options.inviteToAllInstances) {
+        const notifyUserIds = actorUserId
+          ? userIdsToAdd.filter((id) => id !== actorUserId)
+          : userIdsToAdd;
         void this.loadAndEmitShiftInstanceInvitedNotification(
           currentShiftInstance.master,
           currentShiftInstance,
-          userIdsToAdd,
+          notifyUserIds,
         );
       } else {
         void this.loadAndEmitShiftInvitedNotification(
