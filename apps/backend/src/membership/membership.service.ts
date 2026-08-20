@@ -15,6 +15,7 @@ import type { RequiredFormStatus } from '../requirement-profile/services/require
 import { RequiredFormService } from '../requirement-profile/services/required-form.service';
 import { RequirementProfileService } from '../requirement-profile/services/requirement-profile.service';
 import { JoinStatus } from '../shared/enums/join-status.enum';
+import { PostHogService } from '../shared/observability/posthog.service';
 import { MembershipRequestStatus } from './enums';
 import { UpdateMembershipRequestInput } from './inputs/update-membership-request.input';
 import type { MembershipEntity } from './schemas/membership.schema';
@@ -34,6 +35,7 @@ export class MembershipService {
     private readonly authService: AuthService,
     private readonly notificationService: NotificationService,
     private readonly requiredFormService: RequiredFormService,
+    private readonly postHogService: PostHogService,
   ) {}
 
   private appendIntendedIdsToMetadata(
@@ -88,6 +90,27 @@ export class MembershipService {
     }
 
     return Object.keys(metadata).length > 0 ? metadata : undefined;
+  }
+
+  private async countUserMembershipsInOrganization(
+    userId: string,
+    organizationId: string,
+  ): Promise<number> {
+    const [row] = await this.db
+      .select({ count: sql<number>`count(*)::int` })
+      .from(schema.memberships)
+      .innerJoin(
+        schema.organizationUnits,
+        eq(schema.memberships.organizationUnitId, schema.organizationUnits.id),
+      )
+      .where(
+        and(
+          eq(schema.memberships.userId, userId),
+          eq(schema.organizationUnits.organizationId, organizationId),
+        ),
+      );
+
+    return Number(row?.count ?? 0);
   }
 
   async getMembers(organizationUnitId: string): Promise<UserEntity[]> {
@@ -534,6 +557,20 @@ export class MembershipService {
         organizationName: organizationUnit.name,
         userId: membershipRequest.userId,
       });
+
+      if (organizationUnit.organizationId) {
+        const membershipCount = await this.countUserMembershipsInOrganization(
+          membershipRequest.userId,
+          organizationUnit.organizationId,
+        );
+        if (membershipCount === 1) {
+          this.postHogService.captureUserJoinedOrg(membershipRequest.userId, {
+            organizationId: organizationUnit.organizationId,
+            organizationUnitId,
+            source: 'membership_approved',
+          });
+        }
+      }
     }
 
     return membershipRequest;
