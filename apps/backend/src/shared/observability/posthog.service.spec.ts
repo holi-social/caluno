@@ -1,5 +1,5 @@
 import { Logger } from '@nestjs/common';
-import { PostHogService } from './posthog.service';
+import { createDailyDistinctId, PostHogService } from './posthog.service';
 
 describe('PostHogService', () => {
   const capture = jest.fn();
@@ -8,6 +8,7 @@ describe('PostHogService', () => {
 
   beforeEach(() => {
     capture.mockReset();
+    process.env.POSTHOG_DISTINCT_SECRET = 'test-secret';
     shutdown.mockReset().mockResolvedValue(undefined);
   });
 
@@ -15,13 +16,13 @@ describe('PostHogService', () => {
     const service = new PostHogService(client);
     service.capture({
       event: 'shift instance cancelled',
-      distinctId: 'user-1',
+      userId: 'user-1',
       properties: { shiftInstanceId: 'si-1' },
       groups: { organization: 'org-1' },
     });
     expect(capture).toHaveBeenCalledWith({
       event: 'shift instance cancelled',
-      distinctId: 'user-1',
+      distinctId: createDailyDistinctId('user-1'),
       properties: { shiftInstanceId: 'si-1' },
       groups: { organization: 'org-1' },
     });
@@ -30,7 +31,7 @@ describe('PostHogService', () => {
   it('does not throw or call the client when no client is configured', () => {
     const service = new PostHogService(null);
     expect(() =>
-      service.capture({ event: 'anything', distinctId: 'user-1' }),
+      service.capture({ event: 'anything', userId: 'user-1' }),
     ).not.toThrow();
     expect(capture).not.toHaveBeenCalled();
   });
@@ -42,7 +43,7 @@ describe('PostHogService', () => {
     const error = jest.spyOn(Logger.prototype, 'error').mockImplementation();
     const service = new PostHogService(client);
     expect(() =>
-      service.capture({ event: 'anything', distinctId: 'user-1' }),
+      service.capture({ event: 'anything', userId: 'user-1' }),
     ).not.toThrow();
     expect(error).toHaveBeenCalled();
     error.mockRestore();
@@ -52,5 +53,33 @@ describe('PostHogService', () => {
     const service = new PostHogService(client);
     await service.onApplicationShutdown();
     expect(shutdown).toHaveBeenCalled();
+  });
+
+  it('captures user_logged_in with the user id as distinctId', () => {
+    const service = new PostHogService(client);
+    service.captureUserLoggedIn('user-1');
+    expect(capture).toHaveBeenCalledWith({
+      event: 'user_logged_in',
+      distinctId: createDailyDistinctId('user-1'),
+    });
+  });
+
+  it('captures user_joined_org with org properties and group', () => {
+    const service = new PostHogService(client);
+    service.captureUserJoinedOrg('user-1', {
+      organizationId: 'org-1',
+      organizationUnitId: 'ou-1',
+      source: 'membership_approved',
+    });
+    expect(capture).toHaveBeenCalledWith({
+      event: 'user_joined_org',
+      distinctId: createDailyDistinctId('user-1'),
+      properties: {
+        organizationId: 'org-1',
+        organizationUnitId: 'ou-1',
+        source: 'membership_approved',
+      },
+      groups: { organization: 'org-1' },
+    });
   });
 });
