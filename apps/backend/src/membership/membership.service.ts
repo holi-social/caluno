@@ -625,6 +625,27 @@ export class MembershipService {
     return deleted;
   }
 
+  async removeMembership(
+    id: string,
+    organizationUnitId: string,
+  ): Promise<MembershipEntity> {
+    const [deleted] = await this.db
+      .delete(schema.memberships)
+      .where(
+        and(
+          eq(schema.memberships.id, id),
+          eq(schema.memberships.organizationUnitId, organizationUnitId),
+        ),
+      )
+      .returning();
+
+    if (!deleted) {
+      throw new NotFoundGraphQLError('Membership not found');
+    }
+
+    return deleted;
+  }
+
   async removeMembershipRequest(
     id: string,
     userId: string,
