@@ -98,6 +98,89 @@ describe('MembershipService', () => {
     });
   });
 
+  describe('removeMembership', () => {
+    it('deletes a membership in the given organization unit', async () => {
+      const user = await createUser(db);
+      const { organization, type } = await createOrganizationWithType(
+        db,
+        `Admin Remove Org ${crypto.randomUUID()}`,
+      );
+      const unit = await createUnit(db, {
+        organizationId: organization.id,
+        typeId: type.id,
+        name: 'unit',
+      });
+      const membership = await addMembership(db, user.id, unit.id);
+
+      await service.removeMembership(membership.id, unit.id);
+
+      const after = await db
+        .select({ id: schema.memberships.id })
+        .from(schema.memberships)
+        .where(eq(schema.memberships.id, membership.id));
+      expect(after).toEqual([]);
+    });
+
+    it('leaves other org-unit memberships of the same user untouched', async () => {
+      const user = await createUser(db);
+      const { organization, type } = await createOrganizationWithType(
+        db,
+        `Keep Other Org ${crypto.randomUUID()}`,
+      );
+      const root = await createUnit(db, {
+        organizationId: organization.id,
+        typeId: type.id,
+        name: 'root',
+      });
+      const child = await createUnit(db, {
+        organizationId: organization.id,
+        typeId: type.id,
+        name: 'child',
+        parentId: root.id,
+      });
+      const rootMembership = await addMembership(db, user.id, root.id);
+      const childMembership = await addMembership(db, user.id, child.id);
+
+      await service.removeMembership(childMembership.id, child.id);
+
+      const remaining = await db
+        .select({ id: schema.memberships.id })
+        .from(schema.memberships)
+        .where(eq(schema.memberships.userId, user.id));
+      expect(remaining.map((row) => row.id)).toEqual([rootMembership.id]);
+    });
+
+    it('is org-unit-scoped: a membership in another unit throws NotFound', async () => {
+      const user = await createUser(db);
+      const { organization, type } = await createOrganizationWithType(
+        db,
+        `Scope Remove Org ${crypto.randomUUID()}`,
+      );
+      const root = await createUnit(db, {
+        organizationId: organization.id,
+        typeId: type.id,
+        name: 'root',
+      });
+      const child = await createUnit(db, {
+        organizationId: organization.id,
+        typeId: type.id,
+        name: 'child',
+        parentId: root.id,
+      });
+      const membership = await addMembership(db, user.id, child.id);
+
+      await expect(
+        service.removeMembership(membership.id, root.id),
+      ).rejects.toBeInstanceOf(NotFoundGraphQLError);
+
+      const stillThere = await db
+        .select({ id: schema.memberships.id })
+        .from(schema.memberships)
+        .where(eq(schema.memberships.id, membership.id));
+      expect(stillThere.length).toBe(1);
+    });
+  });
+
   describe('removeMembershipRequest', () => {
     it('deletes the current user request', async () => {
       const user = await createUser(db);

@@ -1455,6 +1455,12 @@
     "action": {
       "checkInAria": "Einchecken",
       "checkInShiftAria": "Einchecken",
+      "remove": "Aus Organisationseinheit entfernen",
+      "removeAria": "Aus Organisationseinheit entfernen",
+      "removeDescription": "{name} aus dieser Organisationseinheit entfernen? Profil und Mitgliedschaften in anderen Einheiten bleiben bestehen.",
+      "removeFailedToast": "Freiwillige:r konnte nicht entfernt werden",
+      "removeTitle": "Aus Organisationseinheit entfernen",
+      "removedToast": "{name} wurde aus dieser Organisationseinheit entfernt",
       "viewProfileAria": "Ansehen"
     },
     "empty": {

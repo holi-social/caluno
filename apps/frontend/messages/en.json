@@ -1455,6 +1455,12 @@
     "action": {
       "checkInAria": "Check in",
       "checkInShiftAria": "Check in",
+      "remove": "Remove from org unit",
+      "removeAria": "Remove from org unit",
+      "removeDescription": "Remove {name} from this organization unit? Their profile and memberships in other units stay unchanged.",
+      "removeFailedToast": "Could not remove volunteer",
+      "removeTitle": "Remove from organization unit",
+      "removedToast": "{name} was removed from this organization unit",
       "viewProfileAria": "View"
     },
     "empty": {
