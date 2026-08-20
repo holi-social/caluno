@@ -1,4 +1,5 @@
 import { Logger } from '@nestjs/common';
+import { POSTHOG_EVENT } from './posthog.events';
 import { createDailyDistinctId, PostHogService } from './posthog.service';
 
 describe('PostHogService', () => {
@@ -15,13 +16,13 @@ describe('PostHogService', () => {
   it('delegates capture to the client with event, distinctId, properties, and groups', () => {
     const service = new PostHogService(client);
     service.capture({
-      event: 'shift instance cancelled',
+      event: POSTHOG_EVENT.USER_LOGGED_IN,
       userId: 'user-1',
       properties: { shiftInstanceId: 'si-1' },
       groups: { organization: 'org-1' },
     });
     expect(capture).toHaveBeenCalledWith({
-      event: 'shift instance cancelled',
+      event: POSTHOG_EVENT.USER_LOGGED_IN,
       distinctId: createDailyDistinctId('user-1'),
       properties: { shiftInstanceId: 'si-1' },
       groups: { organization: 'org-1' },
@@ -31,7 +32,10 @@ describe('PostHogService', () => {
   it('does not throw or call the client when no client is configured', () => {
     const service = new PostHogService(null);
     expect(() =>
-      service.capture({ event: 'anything', userId: 'user-1' }),
+      service.capture({
+        event: POSTHOG_EVENT.USER_LOGGED_IN,
+        userId: 'user-1',
+      }),
     ).not.toThrow();
     expect(capture).not.toHaveBeenCalled();
   });
@@ -43,7 +47,10 @@ describe('PostHogService', () => {
     const error = jest.spyOn(Logger.prototype, 'error').mockImplementation();
     const service = new PostHogService(client);
     expect(() =>
-      service.capture({ event: 'anything', userId: 'user-1' }),
+      service.capture({
+        event: POSTHOG_EVENT.USER_LOGGED_IN,
+        userId: 'user-1',
+      }),
     ).not.toThrow();
     expect(error).toHaveBeenCalled();
     error.mockRestore();
@@ -59,7 +66,7 @@ describe('PostHogService', () => {
     const service = new PostHogService(client);
     service.captureUserLoggedIn('user-1');
     expect(capture).toHaveBeenCalledWith({
-      event: 'user_logged_in',
+      event: POSTHOG_EVENT.USER_LOGGED_IN,
       distinctId: createDailyDistinctId('user-1'),
     });
   });
@@ -72,7 +79,7 @@ describe('PostHogService', () => {
       source: 'membership_approved',
     });
     expect(capture).toHaveBeenCalledWith({
-      event: 'user_joined_org',
+      event: POSTHOG_EVENT.USER_JOINED_ORG,
       distinctId: createDailyDistinctId('user-1'),
       properties: {
         organizationId: 'org-1',
