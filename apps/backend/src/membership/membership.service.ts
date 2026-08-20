@@ -359,6 +359,79 @@ export class MembershipService {
     }
   }
 
+  private async notifyMembershipLeft(
+    userId: string | null,
+    organizationUnitId: string | null,
+  ): Promise<void> {
+    if (!userId || !organizationUnitId) {
+      return;
+    }
+
+    try {
+      const organizationUnit = await this.db.query.organizationUnits.findFirst({
+        where: { id: organizationUnitId },
+        columns: { id: true, name: true },
+      });
+
+      if (!organizationUnit) {
+        return;
+      }
+
+      const reviewers = await this.authService.findUsersWithPermission(
+        organizationUnitId,
+        PERMISSIONS.VOLUNTEER_EDIT,
+      );
+      const recipientUserIds = reviewers
+        .filter((reviewer) => reviewer.id !== userId)
+        .map((reviewer) => reviewer.id);
+
+      if (recipientUserIds.length === 0) {
+        return;
+      }
+
+      this.notificationService.notifyMembershipLeft({
+        organizationUnitId,
+        organizationUnitName: organizationUnit.name,
+        leaverUserId: userId,
+        recipientUserIds,
+      });
+    } catch (error) {
+      this.logger.error(
+        `Failed to emit membership left notification: ${error instanceof Error ? error.message : String(error)}`,
+      );
+    }
+  }
+
+  private async notifyMembershipRemoved(
+    userId: string | null,
+    organizationUnitId: string | null,
+  ): Promise<void> {
+    if (!userId || !organizationUnitId) {
+      return;
+    }
+
+    try {
+      const organizationUnit = await this.db.query.organizationUnits.findFirst({
+        where: { id: organizationUnitId },
+        columns: { id: true, name: true },
+      });
+
+      if (!organizationUnit) {
+        return;
+      }
+
+      this.notificationService.notifyMembershipRemoved({
+        organizationUnitId,
+        organizationName: organizationUnit.name,
+        userId,
+      });
+    } catch (error) {
+      this.logger.error(
+        `Failed to emit membership removed notification: ${error instanceof Error ? error.message : String(error)}`,
+      );
+    }
+  }
+
   // Membership requests
   async createMembershipRequest(
     userId: string,
@@ -622,6 +695,8 @@ export class MembershipService {
       throw new NotFoundGraphQLError('Membership not found');
     }
 
+    void this.notifyMembershipLeft(deleted.userId, deleted.organizationUnitId);
+
     return deleted;
   }
 
@@ -642,6 +717,11 @@ export class MembershipService {
     if (!deleted) {
       throw new NotFoundGraphQLError('Membership not found');
     }
+
+    void this.notifyMembershipRemoved(
+      deleted.userId,
+      deleted.organizationUnitId,
+    );
 
     return deleted;
   }

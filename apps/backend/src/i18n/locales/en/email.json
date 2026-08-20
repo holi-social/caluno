@@ -64,6 +64,26 @@
     "step3Title": "Sign up",
     "subject": "Welcome to {organizationName}"
   },
+  "membershipLeft": {
+    "buttonLabel": "View volunteers",
+    "detailOrganization": "Organization",
+    "detailVolunteer": "Volunteer",
+    "footerNote": "You're receiving this because you can manage volunteers on {brandName}.",
+    "greeting": "Hi {firstName}, a volunteer left an organization unit you manage.",
+    "heading": "A volunteer left",
+    "note": "They no longer appear on the Approved list for this organization unit.",
+    "previewText": "{volunteerName} left {organizationName}.",
+    "subject": "{volunteerName} left {organizationName}"
+  },
+  "membershipRemoved": {
+    "footerNote": "You're receiving this because an admin ended your membership in {organizationName} on {brandName}.",
+    "greetingAfter": "has ended. Your profile and any other organization memberships are unchanged.",
+    "greetingBefore": "Hi {firstName}, your membership in",
+    "heading": "Your membership has ended",
+    "note": "You can still use Caluno with any other organizations you belong to.",
+    "previewText": "Your membership in {organizationName} has ended.",
+    "subject": "Your membership in {organizationName} has ended"
+  },
   "membershipRequested": {
     "buttonLabel": "Review request",
     "footerNote": "You're receiving this because you can review membership requests on {brandName}.",
