@@ -938,6 +938,7 @@
       "alreadySubmittedMessage": "Dein Formular wurde erfolgreich abgesendet.",
       "alreadySubmittedTitle": "Formular abgesendet",
       "back": "Zurück",
+      "birthDateFormat": "TT.MM.JJJJ",
       "checkboxYes": "Ja",
       "documentAcknowledgement": "Ich bestätige und akzeptiere",
       "failedToSubmit": "Formular konnte nicht abgesendet werden",
