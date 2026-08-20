@@ -43,6 +43,15 @@ type ShiftInstanceSeriesCancelledInput =
 type ShiftInvitedInput =
   NotificationEventPayloadMap[typeof NotificationEvent.SHIFT_INVITED];
 
+type EventInvitedInput =
+  NotificationEventPayloadMap[typeof NotificationEvent.EVENT_INVITED];
+
+type EventJoinedInput =
+  NotificationEventPayloadMap[typeof NotificationEvent.EVENT_JOINED];
+
+type EventCancelledInput =
+  NotificationEventPayloadMap[typeof NotificationEvent.EVENT_CANCELLED];
+
 @Injectable()
 export class NotificationService {
   private readonly logger = new Logger(NotificationService.name);
@@ -155,5 +164,17 @@ export class NotificationService {
 
   notifyShiftInvited(input: ShiftInvitedInput): void {
     this.emitter.emit(NotificationEvent.SHIFT_INVITED, input);
+  }
+
+  notifyEventInvited(input: EventInvitedInput): void {
+    this.emitter.emit(NotificationEvent.EVENT_INVITED, input);
+  }
+
+  notifyEventJoined(input: EventJoinedInput): void {
+    this.emitter.emit(NotificationEvent.EVENT_JOINED, input);
+  }
+
+  notifyEventCancelled(input: EventCancelledInput): void {
+    this.emitter.emit(NotificationEvent.EVENT_CANCELLED, input);
   }
 }
