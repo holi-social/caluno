@@ -1,5 +1,11 @@
+import { createHmac } from 'node:crypto';
 import type { OnApplicationShutdown } from '@nestjs/common';
 import { Inject, Injectable, Logger, Optional } from '@nestjs/common';
+import { numericCalendarDate } from '../../i18n/format-date-time';
+import {
+  POSTHOG_EVENT,
+  type UserJoinedOrgCaptureInput,
+} from './posthog.events';
 
 export const POSTHOG_CLIENT = Symbol('POSTHOG_CLIENT');
 
@@ -15,7 +21,7 @@ export type PostHogCaptureClient = {
 
 export type PostHogCaptureInput = {
   event: string;
-  distinctId: string;
+  userId: string;
   properties?: Record<string, unknown>;
   groups?: Record<string, string | number>;
 };
@@ -35,13 +41,14 @@ export class PostHogService implements OnApplicationShutdown {
   ) {}
 
   capture(input: PostHogCaptureInput): void {
+    console.log('PostHog capture', input);
     if (this.client) {
       try {
         this.client.capture({
           event: input.event,
-          distinctId: input.distinctId,
-          properties: input.properties,
-          groups: input.groups,
+          distinctId: createDailyDistinctId(input.userId),
+          ...(input.properties ? { properties: input.properties } : {}),
+          ...(input.groups ? { groups: input.groups } : {}),
         });
       } catch (error) {
         this.logger.error(
@@ -52,9 +59,47 @@ export class PostHogService implements OnApplicationShutdown {
     }
   }
 
+  captureUserLoggedIn(userId: string): void {
+    this.capture({
+      event: POSTHOG_EVENT.USER_LOGGED_IN,
+      userId,
+    });
+  }
+
+  captureUserJoinedOrg(userId: string, input: UserJoinedOrgCaptureInput): void {
+    this.capture({
+      event: POSTHOG_EVENT.USER_JOINED_ORG,
+      userId,
+      properties: {
+        organizationId: input.organizationId,
+        organizationUnitId: input.organizationUnitId,
+        source: input.source,
+      },
+      groups: { organization: input.organizationId },
+    });
+  }
+
   async onApplicationShutdown(): Promise<void> {
     if (this.client) {
       await this.client.shutdown();
     }
   }
+}
+
+/**
+ * Daily PostHog distinctId: HMAC-SHA256 of `${userId}:YYYY-MM-DD` in
+ * Europe/Berlin, keyed by POSTHOG_DISTINCT_SECRET.
+ */
+export function createDailyDistinctId(
+  userId: string,
+  env: NodeJS.Dict<string> = process.env,
+  date: Date = new Date(),
+): string {
+  const secret = env.POSTHOG_DISTINCT_SECRET;
+  if (!secret) {
+    throw new Error('POSTHOG_DISTINCT_SECRET is not set');
+  }
+  return createHmac('sha256', secret)
+    .update(`${userId}:${numericCalendarDate(date)}`)
+    .digest('hex');
 }
