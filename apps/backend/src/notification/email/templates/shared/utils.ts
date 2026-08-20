@@ -50,3 +50,13 @@ export function shiftPublicUrl(shiftId: string, instanceId?: string): string {
 
   return `${resolveAppUrl()}${path}?instanceId=${encodeURIComponent(instanceId)}`;
 }
+
+/** Public deep link to an event. */
+export function eventPublicUrl(eventId: string): string {
+  return `${resolveAppUrl()}/events/${encodeURIComponent(eventId)}`;
+}
+
+/** Deep link to the events admin page for managing an org unit's events. */
+export function eventsAdminUrl(organizationUnitId: string): string {
+  return `${resolveAppUrl()}/admin/${encodeURIComponent(organizationUnitId)}/events`;
+}
