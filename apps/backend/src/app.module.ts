@@ -34,6 +34,7 @@ import { NotificationModule } from './notification/notification.module';
 import { OrganizationModule } from './organization/organization.module';
 import { RequirementProfileModule } from './requirement-profile/requirement-profile.module';
 import { ObservabilityModule } from './shared/observability/observability.module';
+import { PostHogService } from './shared/observability/posthog.service';
 import { validatePostHogEnv } from './shared/observability/validate-posthog-env';
 import { validateSentryEnv } from './shared/observability/validate-sentry-env';
 import { ShiftModule } from './shift/shift.module';
@@ -92,6 +93,7 @@ const autoSchemaFile =
         ConfigModule,
         NotificationModule,
         AppI18nModule,
+        ObservabilityModule,
       ],
       useFactory: (
         database: Database,
@@ -99,6 +101,7 @@ const autoSchemaFile =
         emailService: EmailService,
         userLocaleService: UserLocaleService,
         appI18n: AppI18nService,
+        postHogService: PostHogService,
       ) => {
         const webUrl = configService.getOrThrow<string>('WEB_URL');
         const shouldVerifyEmail = process.env.NODE_ENV === 'production';
@@ -110,6 +113,9 @@ const autoSchemaFile =
               trustedOrigins: [webUrl],
               cookieDomain: configService.get('COOKIE_DOMAIN'),
               emailVerificationEnabled: shouldVerifyEmail,
+              onSessionCreated: (userId) => {
+                postHogService.captureUserLoggedIn(userId);
+              },
               sendResetPassword: async ({ email, token, userId, headers }) => {
                 const locale = await userLocaleService.resolveForUser(
                   userId,
@@ -171,6 +177,7 @@ const autoSchemaFile =
         EmailService,
         UserLocaleService,
         AppI18nService,
+        PostHogService,
       ],
     }),
     UserModule,
