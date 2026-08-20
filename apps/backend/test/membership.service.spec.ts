@@ -1,4 +1,4 @@
-import { beforeAll, describe, expect, it } from 'bun:test';
+import { beforeAll, describe, expect, it, mock } from 'bun:test';
 import { ConfigModule } from '@nestjs/config';
 import { Test, type TestingModule } from '@nestjs/testing';
 import { eq } from 'drizzle-orm';
@@ -38,8 +38,13 @@ describe('MembershipService', () => {
     service = new MembershipService(
       db,
       {} as RequirementProfileService,
-      {} as AuthService,
-      {} as NotificationService,
+      {
+        findUsersWithPermission: mock(async () => []),
+      } as unknown as AuthService,
+      {
+        notifyMembershipLeft: mock(() => undefined),
+        notifyMembershipRemoved: mock(() => undefined),
+      } as unknown as NotificationService,
       {} as RequiredFormService,
       { captureUserJoinedOrg: () => {} } as unknown as PostHogService,
     );
