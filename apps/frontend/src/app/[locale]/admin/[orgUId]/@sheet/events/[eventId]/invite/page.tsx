@@ -22,7 +22,7 @@ export default async function InviteEventPage({
   }
 
   const [memberships, invites] = await Promise.all([
-    data.membership.findAllByOrganizationUnitId({ includeAncestors: true }),
+    data.membership.findAllByOrganizationUnitId(),
     data.event.findInvites(eventId),
   ]);
 

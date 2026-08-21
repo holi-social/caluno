@@ -179,63 +179,6 @@ export class MembershipService {
     });
   }
 
-  /**
-   * Like `getMemberships`, but also includes memberships held on any
-   * ancestor of `organizationUnitId` (same "access inherits downward" model
-   * as `isMemberOfUnitOrAncestor`) — e.g. an org Owner whose membership was
-   * created on the root unit. A user with memberships on more than one
-   * ancestor level is only included once.
-   */
-  async getInvitableMemberships(
-    organizationUnitId: string,
-  ): Promise<MembershipEntity[]> {
-    const requestedUnit = await this.db.query.organizationUnits.findFirst({
-      where: { id: organizationUnitId },
-      columns: { id: true, organizationId: true },
-    });
-
-    if (!requestedUnit?.organizationId) return [];
-
-    const units = await this.db.query.organizationUnits.findMany({
-      where: { organizationId: requestedUnit.organizationId },
-      columns: { id: true, parentId: true },
-    });
-
-    const parentByUnitId = new Map<string, string | null>();
-    for (const unit of units) {
-      parentByUnitId.set(unit.id, unit.parentId);
-    }
-
-    const ancestorUnitIds: string[] = [];
-    let currentUnitId: string | null = organizationUnitId;
-    while (currentUnitId) {
-      ancestorUnitIds.push(currentUnitId);
-      currentUnitId = parentByUnitId.get(currentUnitId) ?? null;
-    }
-
-    const memberships = await this.db.query.memberships.findMany({
-      where: { organizationUnitId: { in: ancestorUnitIds } },
-      with: {
-        user: true,
-        organizationUnit: true,
-        roles: {
-          with: {
-            role: true,
-          },
-        },
-      },
-    });
-
-    const membershipByUserId = new Map<string, MembershipEntity>();
-    for (const membership of memberships) {
-      if (membership.userId && !membershipByUserId.has(membership.userId)) {
-        membershipByUserId.set(membership.userId, membership);
-      }
-    }
-
-    return Array.from(membershipByUserId.values());
-  }
-
   async getMyMemberships(userId: string): Promise<MembershipEntity[]> {
     return this.db.query.memberships.findMany({
       where: { userId },

@@ -29,7 +29,7 @@ export async function InviteShiftPageContent({
     eventId ? data.event.findById(eventId) : Promise.resolve(null),
     data.shift.findByIdDetailed(shiftId),
     data.shift.findInstance(instanceId),
-    data.membership.findAllByOrganizationUnitId({ includeAncestors: true }),
+    data.membership.findAllByOrganizationUnitId(),
   ]);
 
   if ((eventId && !event) || !shift) {

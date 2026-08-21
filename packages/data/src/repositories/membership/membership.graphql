@@ -1,5 +1,5 @@
-query GetOrganizationUnitMemberships($includeAncestors: Boolean) {
-  memberships(includeAncestors: $includeAncestors) {
+query GetOrganizationUnitMemberships {
+  memberships {
     id
     user {
       id
