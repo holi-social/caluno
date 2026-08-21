@@ -119,10 +119,7 @@ export class ShiftInstanceLoader {
           instanceIds,
         );
         for (const row of rows) {
-          createdAtByKey.set(
-            `${row.shiftInstanceId}:${userId}`,
-            row.createdAt,
-          );
+          createdAtByKey.set(`${row.shiftInstanceId}:${userId}`, row.createdAt);
         }
       }
 
