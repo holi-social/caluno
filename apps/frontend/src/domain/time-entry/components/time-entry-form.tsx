@@ -145,8 +145,12 @@ export const TimeEntryForm = ({
       formError={serverError}
     >
       <Field>
-        <label className="flex items-center gap-2 text-sm">
+        <label
+          className="flex items-center gap-2 text-sm"
+          htmlFor="not-tied-to-shift"
+        >
           <Checkbox
+            id="not-tied-to-shift"
             checked={!watch('hasShift')}
             onCheckedChange={(checked) => {
               setValue('hasShift', !checked);
