@@ -11,6 +11,7 @@ import {
 import { reimbursementTypes } from '../../accounting/schemas/reimbursement-type.schema';
 import { users } from '../../auth/schemas/auth.schema';
 import { idColumn, timestampColumns } from '../../database/database-columns';
+import { organizationUnits } from '../../organization/schemas/organization-unit.schema';
 import type { ShiftInstanceEntity } from '../../shift/schemas/shift-instance.schema';
 import { shiftInstances } from '../../shift/schemas/shift-instance.schema';
 
@@ -21,6 +22,10 @@ export const timeEntries = snakeCase.table(
     shiftInstanceId: uuid('shift_instance_id')
       .references(() => shiftInstances.id, { onDelete: 'restrict' })
       .notNull(),
+    organizationUnitId: uuid('organization_unit_id').references(
+      () => organizationUnits.id,
+      { onDelete: 'restrict' },
+    ),
     volunteerId: text('volunteer_id')
       .references(() => users.id, { onDelete: 'restrict' })
       .notNull(),
