@@ -1,4 +1,4 @@
-import { Parent, ResolveField, Resolver, Context } from '@nestjs/graphql';
+import { Context, Parent, ResolveField, Resolver } from '@nestjs/graphql';
 import type { AuthenticatedGraphQLContext } from '../../graphql/graphql.context';
 import { OrganizationUnitMapper } from '../../organization/mappers/organization-unit.mapper';
 import { OrganizationUnit } from '../../organization/models/organization-unit.model';
