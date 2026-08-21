@@ -18,7 +18,7 @@ describe('ShiftInstanceLoader', () => {
         findInviteStatusesForUser,
       } as unknown as ShiftService);
 
-      const result = await loader.myInvitedAtByKey.load('instance-1::user-1');
+      const result = await loader.myInvitedAtByKey.load('instance-1:user-1');
 
       expect(result).toEqual(createdAt);
       expect(findInviteStatusesForUser).toHaveBeenCalledWith('user-1', [
@@ -32,7 +32,7 @@ describe('ShiftInstanceLoader', () => {
         findInviteStatusesForUser,
       } as unknown as ShiftService);
 
-      const result = await loader.myInvitedAtByKey.load('instance-1::user-1');
+      const result = await loader.myInvitedAtByKey.load('instance-1:user-1');
 
       expect(result).toBeNull();
     });
@@ -57,8 +57,8 @@ describe('ShiftInstanceLoader', () => {
       } as unknown as ShiftService);
 
       const [result1, result2] = await Promise.all([
-        loader.myInvitedAtByKey.load('instance-1::user-1'),
-        loader.myInvitedAtByKey.load('instance-2::user-1'),
+        loader.myInvitedAtByKey.load('instance-1:user-1'),
+        loader.myInvitedAtByKey.load('instance-2:user-1'),
       ]);
 
       expect(result1).toEqual(createdAt1);

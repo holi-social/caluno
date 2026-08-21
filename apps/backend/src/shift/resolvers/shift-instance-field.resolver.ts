@@ -115,7 +115,7 @@ export class ShiftInstanceFieldResolver {
       return false;
     }
 
-    return loader.isCheckedInByKey.load(`${instance.id}::${session.user.id}`);
+    return loader.isCheckedInByKey.load(`${instance.id}:${session.user.id}`);
   }
 
   @AllowAnonymous()
@@ -156,7 +156,7 @@ export class ShiftInstanceFieldResolver {
       return null;
     }
     return loader.myInviteStatusByKey.load(
-      `${instance.id}::${session.user.id}`,
+      `${instance.id}:${session.user.id}`,
     );
   }
 
@@ -171,7 +171,7 @@ export class ShiftInstanceFieldResolver {
     if (!session?.user) {
       return null;
     }
-    return loader.myInvitedAtByKey.load(`${instance.id}::${session.user.id}`);
+    return loader.myInvitedAtByKey.load(`${instance.id}:${session.user.id}`);
   }
 
   // True when the current user has this instance in their pending membership
@@ -187,7 +187,7 @@ export class ShiftInstanceFieldResolver {
       return false;
     }
     return loader.isIntendingToJoinByKey.load(
-      `${instance.id}::${session.user.id}`,
+      `${instance.id}:${session.user.id}`,
     );
   }
 
