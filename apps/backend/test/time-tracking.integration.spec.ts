@@ -12,11 +12,12 @@ import type { INestApplication } from '@nestjs/common';
 import { eq } from 'drizzle-orm';
 import type { Database } from '../src/database/database.module';
 import * as schema from '../src/database/schema';
-import { ConflictGraphQLError } from '../src/graphql/errors';
+import { ConflictGraphQLError, NotFoundGraphQLError } from '../src/graphql/errors';
 import { ShiftInviteStatus } from '../src/shift/enums';
 import { AddTimeEntryInput } from '../src/time-tracking/inputs/add-time-entry.input';
 import { TimeTrackingService } from '../src/time-tracking/time-tracking.service';
 import { createShift, createUser } from './factories';
+import { createOrganizationWithType, createUnit } from './factories/org.factory';
 import { applyBunAuthMocks, setAuthMockUserId } from './helpers/auth-mocks';
 import { getGraphqlTestContext } from './helpers/graphql-test-context';
 
@@ -180,5 +181,52 @@ describe('TimeTrackingService', () => {
     await expect(
       service.addTimeEntry(organizationUnitId, second),
     ).rejects.toThrow(ConflictGraphQLError);
+  });
+
+  it('closeTimeEntry closes a shift-less entry scoped by organizationUnitId', async () => {
+    const user = await createUser(db);
+
+    const openInput = new AddTimeEntryInput();
+    openInput.volunteerId = user.id;
+    openInput.startedAt = new Date();
+    openInput.endedAt = null;
+    openInput.notes = null;
+    const opened = await service.addTimeEntry(organizationUnitId, openInput);
+
+    const closeInput = { endedAt: new Date(), notes: 'done' };
+    const closed = await service.closeTimeEntry(
+      opened.id,
+      organizationUnitId,
+      closeInput,
+    );
+
+    expect(closed.endedAt).toEqual(closeInput.endedAt);
+  });
+
+  it('closeTimeEntry throws NotFoundGraphQLError for a different org unit', async () => {
+    const user = await createUser(db);
+    const { organization, type } = await createOrganizationWithType(
+      db,
+      `Other Org ${crypto.randomUUID()}`,
+    );
+    const otherUnit = await createUnit(db, {
+      organizationId: organization.id,
+      typeId: type.id,
+      name: 'Other Unit',
+    });
+
+    const openInput = new AddTimeEntryInput();
+    openInput.volunteerId = user.id;
+    openInput.startedAt = new Date();
+    openInput.endedAt = null;
+    openInput.notes = null;
+    const opened = await service.addTimeEntry(organizationUnitId, openInput);
+
+    await expect(
+      service.closeTimeEntry(opened.id, otherUnit.id, {
+        endedAt: new Date(),
+        notes: null,
+      }),
+    ).rejects.toThrow(NotFoundGraphQLError);
   });
 });
