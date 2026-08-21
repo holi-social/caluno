@@ -128,4 +128,57 @@ describe('TimeTrackingService', () => {
     });
     expect(entries).toHaveLength(1);
   });
+
+  it('addTimeEntry creates a shift-less entry with the given org unit and no shift instance', async () => {
+    const user = await createUser(db);
+
+    const input = new AddTimeEntryInput();
+    input.volunteerId = user.id;
+    input.startedAt = new Date();
+    input.endedAt = null;
+    input.notes = 'Checked in without a shift';
+
+    const entry = await service.addTimeEntry(organizationUnitId, input);
+
+    expect(entry.shiftInstanceId).toBeNull();
+    expect(entry.organizationUnitId).toBe(organizationUnitId);
+    expect(entry.notes).toBe('Checked in without a shift');
+  });
+
+  it('addTimeEntry persists endedAt when provided (manual complete entry)', async () => {
+    const user = await createUser(db);
+    const startedAt = new Date(Date.now() - 60 * 60 * 1000);
+    const endedAt = new Date();
+
+    const input = new AddTimeEntryInput();
+    input.volunteerId = user.id;
+    input.startedAt = startedAt;
+    input.endedAt = endedAt;
+    input.notes = null;
+
+    const entry = await service.addTimeEntry(organizationUnitId, input);
+
+    expect(entry.endedAt).toEqual(endedAt);
+  });
+
+  it('addTimeEntry rejects a second open shift-less entry for the same volunteer and org unit', async () => {
+    const user = await createUser(db);
+
+    const first = new AddTimeEntryInput();
+    first.volunteerId = user.id;
+    first.startedAt = new Date();
+    first.endedAt = null;
+    first.notes = null;
+    await service.addTimeEntry(organizationUnitId, first);
+
+    const second = new AddTimeEntryInput();
+    second.volunteerId = user.id;
+    second.startedAt = new Date();
+    second.endedAt = null;
+    second.notes = null;
+
+    await expect(
+      service.addTimeEntry(organizationUnitId, second),
+    ).rejects.toThrow(ConflictGraphQLError);
+  });
 });
