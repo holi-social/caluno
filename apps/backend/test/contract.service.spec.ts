@@ -129,11 +129,13 @@ describe('ContractService', () => {
 
       const contract = await service.createContract(
         organization.id,
-        null,
-        volunteer.id,
-        reimbursementType.id,
-        new Date('2026-01-01T00:00:00.000Z'),
-        new Date('2026-12-31T00:00:00.000Z'),
+        {
+          organizationUnitId: null,
+          volunteerId: volunteer.id,
+          reimbursementTypeId: reimbursementType.id,
+          periodStart: new Date('2026-01-01T00:00:00.000Z'),
+          periodEnd: new Date('2026-12-31T00:00:00.000Z'),
+        },
         signer.id,
       );
 
@@ -154,11 +156,13 @@ describe('ContractService', () => {
 
       const contract = await service.createContract(
         organization.id,
-        null,
-        volunteer.id,
-        reimbursementType.id,
-        new Date(),
-        new Date(),
+        {
+          organizationUnitId: null,
+          volunteerId: volunteer.id,
+          reimbursementTypeId: reimbursementType.id,
+          periodStart: new Date(),
+          periodEnd: new Date(),
+        },
         signer.id,
       );
 
@@ -176,11 +180,13 @@ describe('ContractService', () => {
         await setup();
       const contract = await service.createContract(
         organization.id,
-        null,
-        volunteer.id,
-        reimbursementType.id,
-        new Date(),
-        new Date(),
+        {
+          organizationUnitId: null,
+          volunteerId: volunteer.id,
+          reimbursementTypeId: reimbursementType.id,
+          periodStart: new Date(),
+          periodEnd: new Date(),
+        },
         signer.id,
       );
 
@@ -214,11 +220,13 @@ describe('ContractService', () => {
         await setup();
       const contract = await service.createContract(
         organization.id,
-        null,
-        volunteer.id,
-        reimbursementType.id,
-        new Date(),
-        new Date(),
+        {
+          organizationUnitId: null,
+          volunteerId: volunteer.id,
+          reimbursementTypeId: reimbursementType.id,
+          periodStart: new Date(),
+          periodEnd: new Date(),
+        },
         signer.id,
       );
 
@@ -232,11 +240,13 @@ describe('ContractService', () => {
         await setup();
       const contract = await service.createContract(
         organization.id,
-        null,
-        volunteer.id,
-        reimbursementType.id,
-        new Date(),
-        new Date(),
+        {
+          organizationUnitId: null,
+          volunteerId: volunteer.id,
+          reimbursementTypeId: reimbursementType.id,
+          periodStart: new Date(),
+          periodEnd: new Date(),
+        },
         signer.id,
       );
       await service.signContract(contract.id, volunteer.id);
@@ -254,11 +264,13 @@ describe('ContractService', () => {
         await setup();
       const contract = await service.createContract(
         organization.id,
-        null,
-        volunteer.id,
-        reimbursementType.id,
-        new Date(),
-        new Date(),
+        {
+          organizationUnitId: null,
+          volunteerId: volunteer.id,
+          reimbursementTypeId: reimbursementType.id,
+          periodStart: new Date(),
+          periodEnd: new Date(),
+        },
         signer.id,
       );
 
@@ -272,11 +284,13 @@ describe('ContractService', () => {
         await setup();
       const contract = await service.createContract(
         organization.id,
-        null,
-        volunteer.id,
-        reimbursementType.id,
-        new Date(),
-        new Date(),
+        {
+          organizationUnitId: null,
+          volunteerId: volunteer.id,
+          reimbursementTypeId: reimbursementType.id,
+          periodStart: new Date(),
+          periodEnd: new Date(),
+        },
         signer.id,
       );
 
@@ -304,11 +318,13 @@ describe('ContractService', () => {
         await setup();
       const contract = await service.createContract(
         organization.id,
-        null,
-        volunteer.id,
-        reimbursementType.id,
-        new Date('2020-01-01T00:00:00.000Z'),
-        new Date('2020-12-31T00:00:00.000Z'),
+        {
+          organizationUnitId: null,
+          volunteerId: volunteer.id,
+          reimbursementTypeId: reimbursementType.id,
+          periodStart: new Date('2020-01-01T00:00:00.000Z'),
+          periodEnd: new Date('2020-12-31T00:00:00.000Z'),
+        },
         signer.id,
       );
       await service.signContract(contract.id, volunteer.id);
@@ -326,11 +342,13 @@ describe('ContractService', () => {
         await setup();
       const contract = await service.createContract(
         organization.id,
-        null,
-        volunteer.id,
-        reimbursementType.id,
-        new Date(Date.now() - 86_400_000),
-        new Date(Date.now() + 86_400_000),
+        {
+          organizationUnitId: null,
+          volunteerId: volunteer.id,
+          reimbursementTypeId: reimbursementType.id,
+          periodStart: new Date(Date.now() - 86_400_000),
+          periodEnd: new Date(Date.now() + 86_400_000),
+        },
         signer.id,
       );
       await service.signContract(contract.id, volunteer.id);
@@ -351,20 +369,24 @@ describe('ContractService', () => {
 
       const firstContract = await service.createContract(
         first.organization.id,
-        null,
-        first.volunteer.id,
-        first.reimbursementType.id,
-        new Date(),
-        new Date(),
+        {
+          organizationUnitId: null,
+          volunteerId: first.volunteer.id,
+          reimbursementTypeId: first.reimbursementType.id,
+          periodStart: new Date(),
+          periodEnd: new Date(),
+        },
         first.signer.id,
       );
       await service.createContract(
         second.organization.id,
-        null,
-        second.volunteer.id,
-        second.reimbursementType.id,
-        new Date(),
-        new Date(),
+        {
+          organizationUnitId: null,
+          volunteerId: second.volunteer.id,
+          reimbursementTypeId: second.reimbursementType.id,
+          periodStart: new Date(),
+          periodEnd: new Date(),
+        },
         second.signer.id,
       );
 
