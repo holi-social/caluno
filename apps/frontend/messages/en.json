@@ -1406,6 +1406,7 @@
       "loadInstancesError": "Failed to load instances.",
       "notesLabel": "Notes",
       "notesPlaceholder": "Add any notes about this time entry...",
+      "notTiedToShiftLabel": "Not tied to a shift",
       "selectShiftHint": "Select a shift to view available dates",
       "selectShiftLabel": "Select shift",
       "selectShiftPlaceholder": "Select a shift",

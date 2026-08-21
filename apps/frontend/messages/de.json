@@ -1406,6 +1406,7 @@
       "loadInstancesError": "Termine konnten nicht geladen werden.",
       "notesLabel": "Notizen",
       "notesPlaceholder": "Notizen zu diesem Zeiteintrag hinzufügen...",
+      "notTiedToShiftLabel": "Keiner Schicht zugeordnet",
       "selectShiftHint": "Wähle einen Einsatz, um verfügbare Termine zu sehen",
       "selectShiftLabel": "Einsatz auswählen",
       "selectShiftPlaceholder": "Einsatz auswählen",
