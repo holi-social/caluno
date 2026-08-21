@@ -58,6 +58,8 @@ jobs:
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
         run: |
           docker buildx build --load \
+            --cache-from "type=registry,ref=$REGISTRY_NAMESPACE/caluno-backend:buildcache" \
+            --cache-to "type=registry,ref=$REGISTRY_NAMESPACE/caluno-backend:buildcache,mode=max" \
             --build-arg SENTRY_RELEASE="${{ github.sha }}" \
             --build-arg SENTRY_ORG="${{ vars.SENTRY_ORG }}" \
             --build-arg SENTRY_PROJECT_BACKEND="${{ vars.SENTRY_PROJECT_BACKEND }}" \
@@ -93,6 +95,8 @@ jobs:
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
         run: |
           docker buildx build --load \
+            --cache-from "type=registry,ref=$REGISTRY_NAMESPACE/caluno-frontend:buildcache" \
+            --cache-to "type=registry,ref=$REGISTRY_NAMESPACE/caluno-frontend:buildcache,mode=max" \
             --build-arg NEXT_PUBLIC_API_URL="https://staging.api.caluno.org" \
             --build-arg NEXT_PUBLIC_WEB_URL="https://staging.app.caluno.org" \
             --build-arg NEXT_PUBLIC_SENTRY_DSN="${{ vars.NEXT_PUBLIC_SENTRY_DSN }}" \
