@@ -8,7 +8,7 @@ on:
 
 jobs:
   check-pr:
-    runs-on: self-hosted
+    runs-on: light-runners
     permissions:
       pull-requests: read
     outputs:
@@ -32,7 +32,7 @@ jobs:
   check-migrations:
     needs: check-pr
     if: needs.check-pr.outputs.has_pr == 'false'
-    runs-on: self-hosted
+    runs-on: light-runners
     steps:
       - uses: actions/checkout@v5
         with:
@@ -55,7 +55,7 @@ jobs:
   build-backend-branch:
     needs: check-pr
     if: needs.check-pr.outputs.has_pr == 'false'
-    runs-on: self-hosted
+    runs-on: build-runners
     permissions:
       contents: read
       packages: read
@@ -71,21 +71,19 @@ jobs:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-      - name: Build backend image (no push)
+      - name: Build backend image (no push, no local image kept)
         env:
           REGISTRY_NAMESPACE: ${{ vars.SCW_REGISTRY_HOST }}/${{ vars.SCW_REGISTRY_NAMESPACE }}
-          IMAGE_TAG_SHA: ${{ github.sha }}
         run: |
-          docker buildx build --load \
+          docker buildx build --output type=cacheonly \
             --cache-from "type=registry,ref=$REGISTRY_NAMESPACE/caluno-backend:buildcache" \
             --cache-to "type=registry,ref=$REGISTRY_NAMESPACE/caluno-backend:buildcache,mode=max" \
-            -t "caluno-backend:$IMAGE_TAG_SHA" \
             -f apps/backend/Dockerfile .
 
   build-frontend-branch:
     needs: check-pr
     if: needs.check-pr.outputs.has_pr == 'false'
-    runs-on: self-hosted
+    runs-on: build-runners
     permissions:
       contents: read
       packages: read
@@ -101,15 +99,13 @@ jobs:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-      - name: Build frontend image (no push)
+      - name: Build frontend image (no push, no local image kept)
         env:
           REGISTRY_NAMESPACE: ${{ vars.SCW_REGISTRY_HOST }}/${{ vars.SCW_REGISTRY_NAMESPACE }}
-          IMAGE_TAG_SHA: ${{ github.sha }}
         run: |
-          docker buildx build --load \
+          docker buildx build --output type=cacheonly \
             --cache-from "type=registry,ref=$REGISTRY_NAMESPACE/caluno-frontend:buildcache" \
             --cache-to "type=registry,ref=$REGISTRY_NAMESPACE/caluno-frontend:buildcache,mode=max" \
             --build-arg NEXT_PUBLIC_API_URL="http://localhost" \
             --build-arg NEXT_PUBLIC_WEB_URL="http://localhost" \
-            -t "caluno-frontend:$IMAGE_TAG_SHA" \
             -f apps/frontend/Dockerfile .
