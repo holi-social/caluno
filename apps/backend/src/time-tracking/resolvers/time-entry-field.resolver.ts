@@ -1,5 +1,8 @@
-import { Context, Parent, ResolveField, Resolver } from '@nestjs/graphql';
+import { Parent, ResolveField, Resolver, Context } from '@nestjs/graphql';
 import type { AuthenticatedGraphQLContext } from '../../graphql/graphql.context';
+import { OrganizationUnitMapper } from '../../organization/mappers/organization-unit.mapper';
+import { OrganizationUnit } from '../../organization/models/organization-unit.model';
+import { OrganizationUnitService } from '../../organization/organization-unit.service';
 import { ShiftInstanceMapper } from '../../shift/mappers/shift-instance.mapper';
 import { ShiftInstance } from '../../shift/models/shift-instance.model';
 import { ShiftService } from '../../shift/shift.service';
@@ -19,6 +22,8 @@ export class TimeEntryFieldResolver {
     private readonly userService: UserService,
     private readonly userMapper: UserMapper,
     private readonly shiftInstanceMapper: ShiftInstanceMapper,
+    private readonly organizationUnitService: OrganizationUnitService,
+    private readonly organizationUnitMapper: OrganizationUnitMapper,
   ) {}
 
   @ResolveField(() => User)
@@ -27,11 +32,15 @@ export class TimeEntryFieldResolver {
     return this.userMapper.toModelOrThrow(creator);
   }
 
-  @ResolveField(() => ShiftInstance)
+  @ResolveField(() => ShiftInstance, { nullable: true })
   async shiftInstance(
     @Parent() timeEntry: TimeEntryEntityWithRelations,
     @Context() context: AuthenticatedGraphQLContext,
-  ): Promise<ShiftInstance> {
+  ): Promise<ShiftInstance | null> {
+    if (!timeEntry.shiftInstanceId) {
+      return null;
+    }
+
     if (timeEntry.shiftInstance) {
       return this.shiftInstanceMapper.toModelOrThrow(timeEntry.shiftInstance);
     }
@@ -41,5 +50,15 @@ export class TimeEntryFieldResolver {
       context.organizationUnitId,
     );
     return this.shiftInstanceMapper.toModelOrThrow(instance);
+  }
+
+  @ResolveField(() => OrganizationUnit)
+  async organizationUnit(
+    @Parent() timeEntry: TimeEntryEntity,
+  ): Promise<OrganizationUnit> {
+    const unit = await this.organizationUnitService.findById(
+      timeEntry.organizationUnitId,
+    );
+    return this.organizationUnitMapper.toModelOrThrow(unit);
   }
 }

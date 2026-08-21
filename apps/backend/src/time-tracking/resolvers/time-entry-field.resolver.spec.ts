@@ -3,6 +3,9 @@ jest.mock('nanoid', () => ({
 }));
 
 import type { AuthenticatedGraphQLContext } from '../../graphql/graphql.context';
+import { OrganizationUnitMapper } from '../../organization/mappers/organization-unit.mapper';
+import { OrganizationUnitService } from '../../organization/organization-unit.service';
+import type { OrganizationUnitEntity } from '../../organization/schemas/organization-unit.schema';
 import { ShiftVisibility } from '../../shift/enums';
 import { ShiftInstanceMapper } from '../../shift/mappers/shift-instance.mapper';
 import type { ShiftEntity } from '../../shift/schemas/shift.schema';
@@ -58,6 +61,7 @@ const shiftInstance = {
 const timeEntry = {
   id: 'time-entry-1',
   shiftInstanceId: shiftInstance.id,
+  organizationUnitId: 'unit-1',
   volunteerId: 'user-volunteer',
   startedAt: now,
   endedAt: null,
@@ -70,17 +74,23 @@ const timeEntry = {
 
 describe('TimeEntryFieldResolver', () => {
   let shiftService: { findInstanceById: jest.Mock };
+  let organizationUnitService: { findById: jest.Mock };
   let resolver: TimeEntryFieldResolver;
 
   beforeEach(() => {
     shiftService = {
       findInstanceById: jest.fn(),
     };
+    organizationUnitService = {
+      findById: jest.fn(),
+    };
     resolver = new TimeEntryFieldResolver(
       shiftService as unknown as ShiftService,
       {} as unknown as UserService,
       {} as unknown as UserMapper,
       new ShiftInstanceMapper(),
+      organizationUnitService as unknown as OrganizationUnitService,
+      new OrganizationUnitMapper(),
     );
   });
 
@@ -107,5 +117,25 @@ describe('TimeEntryFieldResolver', () => {
       shiftInstance.id,
       'unit-1',
     );
+  });
+
+  it('returns null for shiftInstance when the entry has no shift instance', async () => {
+    const result = await resolver.shiftInstance(
+      { ...timeEntry, shiftInstanceId: null, shiftInstance: null },
+      {} as AuthenticatedGraphQLContext,
+    );
+
+    expect(result).toBeNull();
+    expect(shiftService.findInstanceById).not.toHaveBeenCalled();
+  });
+
+  it('resolves organizationUnit by organizationUnitId', async () => {
+    const unit = { id: 'unit-1', name: 'Kitchen Crew' } as OrganizationUnitEntity;
+    organizationUnitService.findById.mockResolvedValue(unit);
+
+    const result = await resolver.organizationUnit(timeEntry);
+
+    expect(result.id).toBe('unit-1');
+    expect(organizationUnitService.findById).toHaveBeenCalledWith('unit-1');
   });
 });
