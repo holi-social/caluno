@@ -60,14 +60,21 @@ The workflows in `.github/workflows/` (`ci-branch.yml`, `ci-pull-request.yml`, `
    enforced before merge.
 
 7. **Release environment (one-time)** — before the first push to `release`
-   can apply:
-   - Create and push git branch `release` (typically from `main`).
+   can apply end to end:
    - Create Scaleway Secret Manager secret `caluno-release-posthog-api-key`
-     (same shape as `caluno-staging-posthog-api-key`). Terraform reads it;
-     it does not create it.
-   - After the first successful apply, add DNS:
-     - `release.app.caluno.org` → frontend container domain
-     - `release.api.caluno.org` → backend container domain
-     - `release.mailbox.caluno.org` A record → Terraform output `mailpit_ip`
+     (same shape as `caluno-staging-posthog-api-key`). Terraform reads it at
+     plan time; it does not create it. Do this **before** pushing the `release`
+     branch — the first CD run will fail if the secret is missing.
+   - Create and push git branch `release` (typically from `main`). This
+     triggers the first CD run (containers are created; custom hostnames and
+     Mailpit ACME may not succeed yet).
+   - DNS (two passes): custom hostnames (`scaleway_container_domain`) and
+     Mailpit ACME need DNS before domain attachment can succeed.
+     1. After containers exist from the first apply, add DNS:
+        - `release.app.caluno.org` → frontend container endpoint
+        - `release.api.caluno.org` → backend container endpoint
+        - `release.mailbox.caluno.org` A record → Terraform output `mailpit_ip`
+     2. Re-run CD (or `terraform apply`) so domain attachment / ACME can
+        succeed.
    - Confirm GitHub Environment `release` exists (created on first workflow
      use) with no required reviewers.
