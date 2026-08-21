@@ -3,8 +3,8 @@ import { ConfigModule } from '@nestjs/config';
 import { Test, type TestingModule } from '@nestjs/testing';
 import {
   ContractStatus,
-  DocumentEventType,
   DocumentKind,
+  DocumentStatusChange,
   SigneeType,
 } from '../src/accounting/enums';
 import { ContractService } from '../src/accounting/services/contract.service';
@@ -129,6 +129,7 @@ describe('ContractService', () => {
 
       const contract = await service.createContract(
         organization.id,
+        null,
         volunteer.id,
         reimbursementType.id,
         new Date('2026-01-01T00:00:00.000Z'),
@@ -140,9 +141,11 @@ describe('ContractService', () => {
         ContractStatus.AWAITING_VOLUNTEER_SIGNATURE,
       );
 
-      const events = await service.findContractEvents(contract.id);
-      expect(events).toHaveLength(1);
-      expect(events[0].type).toBe(DocumentEventType.CREATED);
+      const statusChanges = await service.findContractStatusChanges(
+        contract.id,
+      );
+      expect(statusChanges).toHaveLength(1);
+      expect(statusChanges[0].type).toBe(DocumentStatusChange.CREATED);
     });
 
     it('snapshots the template body onto the contract', async () => {
@@ -151,6 +154,7 @@ describe('ContractService', () => {
 
       const contract = await service.createContract(
         organization.id,
+        null,
         volunteer.id,
         reimbursementType.id,
         new Date(),
@@ -172,6 +176,7 @@ describe('ContractService', () => {
         await setup();
       const contract = await service.createContract(
         organization.id,
+        null,
         volunteer.id,
         reimbursementType.id,
         new Date(),
@@ -193,12 +198,14 @@ describe('ContractService', () => {
       );
       expect(afterCountersign.contractStatus).toBe(ContractStatus.ACTIVE);
 
-      const events = await service.findContractEvents(contract.id);
-      expect(events.map((e) => e.type)).toEqual([
-        DocumentEventType.CREATED,
-        DocumentEventType.SIGNED,
-        DocumentEventType.COUNTERSIGNED,
-        DocumentEventType.ACTIVATED,
+      const statusChanges = await service.findContractStatusChanges(
+        contract.id,
+      );
+      expect(statusChanges.map((e) => e.type)).toEqual([
+        DocumentStatusChange.CREATED,
+        DocumentStatusChange.SIGNED,
+        DocumentStatusChange.COUNTERSIGNED,
+        DocumentStatusChange.ACTIVATED,
       ]);
     });
 
@@ -207,6 +214,7 @@ describe('ContractService', () => {
         await setup();
       const contract = await service.createContract(
         organization.id,
+        null,
         volunteer.id,
         reimbursementType.id,
         new Date(),
@@ -224,6 +232,7 @@ describe('ContractService', () => {
         await setup();
       const contract = await service.createContract(
         organization.id,
+        null,
         volunteer.id,
         reimbursementType.id,
         new Date(),
@@ -245,6 +254,7 @@ describe('ContractService', () => {
         await setup();
       const contract = await service.createContract(
         organization.id,
+        null,
         volunteer.id,
         reimbursementType.id,
         new Date(),
@@ -262,6 +272,7 @@ describe('ContractService', () => {
         await setup();
       const contract = await service.createContract(
         organization.id,
+        null,
         volunteer.id,
         reimbursementType.id,
         new Date(),
@@ -280,8 +291,10 @@ describe('ContractService', () => {
       expect(declined.declinedByUserId).toBe(volunteer.id);
       expect(declined.declinedAtSigneeType).toBe(SigneeType.VOLUNTEER);
 
-      const events = await service.findContractEvents(contract.id);
-      expect(events.at(-1)?.type).toBe(DocumentEventType.DECLINED);
+      const statusChanges = await service.findContractStatusChanges(
+        contract.id,
+      );
+      expect(statusChanges.at(-1)?.type).toBe(DocumentStatusChange.DECLINED);
     });
   });
 
@@ -291,6 +304,7 @@ describe('ContractService', () => {
         await setup();
       const contract = await service.createContract(
         organization.id,
+        null,
         volunteer.id,
         reimbursementType.id,
         new Date('2020-01-01T00:00:00.000Z'),
@@ -312,6 +326,7 @@ describe('ContractService', () => {
         await setup();
       const contract = await service.createContract(
         organization.id,
+        null,
         volunteer.id,
         reimbursementType.id,
         new Date(Date.now() - 86_400_000),
@@ -336,6 +351,7 @@ describe('ContractService', () => {
 
       const firstContract = await service.createContract(
         first.organization.id,
+        null,
         first.volunteer.id,
         first.reimbursementType.id,
         new Date(),
@@ -344,6 +360,7 @@ describe('ContractService', () => {
       );
       await service.createContract(
         second.organization.id,
+        null,
         second.volunteer.id,
         second.reimbursementType.id,
         new Date(),

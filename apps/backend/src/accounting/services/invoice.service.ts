@@ -15,13 +15,13 @@ import type {
   PendingSignee,
 } from '../accounting.types';
 import {
-  DocumentEventType,
   DocumentKind,
+  DocumentStatusChange,
   InvoiceStatus,
   SigneeType,
 } from '../enums';
 import type { InvoiceEntity } from '../schemas/invoice.schema';
-import type { InvoiceEventEntity } from '../schemas/invoice-event.schema';
+import type { InvoiceStatusChangeEntity } from '../schemas/invoice-status-change.schema';
 import { ContractService } from './contract.service';
 import { DocumentSigningService } from './document-signing.service';
 import { DocumentTemplateService } from './document-template.service';
@@ -45,7 +45,7 @@ export class InvoiceService {
         documentTemplate: true,
         reimbursementType: true,
         signatures: true,
-        events: true,
+        statusChanges: true,
         invoiceTimeEntries: true,
       },
     });
@@ -121,6 +121,7 @@ export class InvoiceService {
 
   async createInvoice(
     organizationId: string,
+    organizationUnitId: string | null,
     volunteerId: string,
     reimbursementTypeId: string,
     timeEntryIds: string[],
@@ -166,6 +167,7 @@ export class InvoiceService {
       organizationId,
       reimbursementTypeId,
       DocumentKind.INVOICE,
+      organizationUnitId,
     );
     const orderedSignees =
       await this.documentTemplateService.findOrderedTemplateSignees(
@@ -211,9 +213,9 @@ export class InvoiceService {
         })),
       );
 
-      await tx.insert(schema.invoiceEvents).values({
+      await tx.insert(schema.invoiceStatusChanges).values({
         invoiceId: invoice.id,
-        type: DocumentEventType.CREATED,
+        type: DocumentStatusChange.CREATED,
         actorUserId,
       });
 
@@ -265,19 +267,19 @@ export class InvoiceService {
         .where(eq(schema.invoices.id, invoiceId))
         .returning();
 
-      await tx.insert(schema.invoiceEvents).values({
+      await tx.insert(schema.invoiceStatusChanges).values({
         invoiceId,
         type:
           pendingIndex === 0
-            ? DocumentEventType.SIGNED
-            : DocumentEventType.COUNTERSIGNED,
+            ? DocumentStatusChange.SIGNED
+            : DocumentStatusChange.COUNTERSIGNED,
         actorUserId: userId,
       });
 
       if (isFinal) {
-        await tx.insert(schema.invoiceEvents).values({
+        await tx.insert(schema.invoiceStatusChanges).values({
           invoiceId,
-          type: DocumentEventType.ACTIVATED,
+          type: DocumentStatusChange.ACTIVATED,
           actorUserId: userId,
         });
 
@@ -338,9 +340,9 @@ export class InvoiceService {
         .where(eq(schema.invoices.id, invoiceId))
         .returning();
 
-      await tx.insert(schema.invoiceEvents).values({
+      await tx.insert(schema.invoiceStatusChanges).values({
         invoiceId,
-        type: DocumentEventType.DECLINED,
+        type: DocumentStatusChange.DECLINED,
         actorUserId: userId,
       });
 
@@ -348,11 +350,13 @@ export class InvoiceService {
     });
   }
 
-  async findInvoiceEvents(invoiceId: string): Promise<InvoiceEventEntity[]> {
-    const events = await this.db.query.invoiceEvents.findMany({
+  async findInvoiceStatusChanges(
+    invoiceId: string,
+  ): Promise<InvoiceStatusChangeEntity[]> {
+    const statusChanges = await this.db.query.invoiceStatusChanges.findMany({
       where: { invoiceId },
     });
-    return events.sort(
+    return statusChanges.sort(
       (a, b) => a.occurredAt.getTime() - b.occurredAt.getTime(),
     );
   }

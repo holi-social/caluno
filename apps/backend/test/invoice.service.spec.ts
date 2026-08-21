@@ -3,8 +3,8 @@ import { ConfigModule } from '@nestjs/config';
 import { Test, type TestingModule } from '@nestjs/testing';
 import {
   ContractStatus,
-  DocumentEventType,
   DocumentKind,
+  DocumentStatusChange,
   InvoiceStatus,
   SigneeType,
 } from '../src/accounting/enums';
@@ -192,6 +192,7 @@ describe('InvoiceService', () => {
 
       const invoice = await service.createInvoice(
         organization.id,
+        null,
         volunteer.id,
         reimbursementType.id,
         [timeEntry.id],
@@ -217,6 +218,7 @@ describe('InvoiceService', () => {
       await expect(
         service.createInvoice(
           organization.id,
+          null,
           volunteer.id,
           reimbursementType.id,
           [],
@@ -234,6 +236,7 @@ describe('InvoiceService', () => {
       await expect(
         service.createInvoice(
           organization.id,
+          null,
           volunteer.id,
           reimbursementType.id,
           [crypto.randomUUID()],
@@ -255,6 +258,7 @@ describe('InvoiceService', () => {
 
       const invoice = await service.createInvoice(
         organization.id,
+        null,
         volunteer.id,
         reimbursementType.id,
         [timeEntry.id],
@@ -284,6 +288,7 @@ describe('InvoiceService', () => {
 
       const invoice = await service.createInvoice(
         organization.id,
+        null,
         volunteer.id,
         reimbursementType.id,
         [timeEntry.id],
@@ -306,6 +311,7 @@ describe('InvoiceService', () => {
 
       const invoice = await service.createInvoice(
         organization.id,
+        null,
         volunteer.id,
         reimbursementType.id,
         [timeEntry.id],
@@ -343,6 +349,7 @@ describe('InvoiceService', () => {
 
       const invoice = await service.createInvoice(
         organization.id,
+        null,
         volunteer.id,
         reimbursementType.id,
         [timeEntry.id],
@@ -365,6 +372,7 @@ describe('InvoiceService', () => {
 
       await service.createInvoice(
         organization.id,
+        null,
         volunteer.id,
         reimbursementType.id,
         [timeEntry.id],
@@ -376,6 +384,7 @@ describe('InvoiceService', () => {
       await expect(
         service.createInvoice(
           organization.id,
+          null,
           volunteer.id,
           reimbursementType.id,
           [timeEntry.id],
@@ -398,6 +407,7 @@ describe('InvoiceService', () => {
       } = await setup();
       const invoice = await service.createInvoice(
         organization.id,
+        null,
         volunteer.id,
         reimbursementType.id,
         [timeEntry.id],
@@ -430,12 +440,12 @@ describe('InvoiceService', () => {
       });
       expect(afterReady?.isPaid).toBe(true);
 
-      const events = await service.findInvoiceEvents(invoice.id);
-      expect(events.map((e) => e.type)).toEqual([
-        DocumentEventType.CREATED,
-        DocumentEventType.SIGNED,
-        DocumentEventType.COUNTERSIGNED,
-        DocumentEventType.ACTIVATED,
+      const statusChanges = await service.findInvoiceStatusChanges(invoice.id);
+      expect(statusChanges.map((e) => e.type)).toEqual([
+        DocumentStatusChange.CREATED,
+        DocumentStatusChange.SIGNED,
+        DocumentStatusChange.COUNTERSIGNED,
+        DocumentStatusChange.ACTIVATED,
       ]);
     });
   });
@@ -451,6 +461,7 @@ describe('InvoiceService', () => {
       } = await setup();
       const invoice = await service.createInvoice(
         organization.id,
+        null,
         volunteer.id,
         reimbursementType.id,
         [timeEntry.id],
@@ -482,6 +493,7 @@ describe('InvoiceService', () => {
       } = await setup();
       const invoice = await service.createInvoice(
         organization.id,
+        null,
         volunteer.id,
         reimbursementType.id,
         [timeEntry.id],
@@ -507,6 +519,7 @@ describe('InvoiceService', () => {
       } = await setup();
       const invoice = await service.createInvoice(
         organization.id,
+        null,
         volunteer.id,
         reimbursementType.id,
         [timeEntry.id],

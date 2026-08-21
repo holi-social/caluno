@@ -14,12 +14,12 @@ import type {
 } from '../accounting.types';
 import {
   ContractStatus,
-  DocumentEventType,
   DocumentKind,
+  DocumentStatusChange,
   SigneeType,
 } from '../enums';
 import type { ContractEntity } from '../schemas/contract.schema';
-import type { ContractEventEntity } from '../schemas/contract-event.schema';
+import type { ContractStatusChangeEntity } from '../schemas/contract-status-change.schema';
 import { DocumentSigningService } from './document-signing.service';
 import { DocumentTemplateService } from './document-template.service';
 
@@ -39,7 +39,7 @@ export class ContractService {
         documentTemplate: true,
         reimbursementType: true,
         signatures: true,
-        events: true,
+        statusChanges: true,
       },
     });
     if (!contract) {
@@ -98,6 +98,7 @@ export class ContractService {
 
   async createContract(
     organizationId: string,
+    organizationUnitId: string | null,
     volunteerId: string,
     reimbursementTypeId: string,
     periodStart: Date,
@@ -108,6 +109,7 @@ export class ContractService {
       organizationId,
       reimbursementTypeId,
       DocumentKind.CONTRACT,
+      organizationUnitId,
     );
     const orderedSignees =
       await this.documentTemplateService.findOrderedTemplateSignees(
@@ -137,9 +139,9 @@ export class ContractService {
         })),
       );
 
-      await tx.insert(schema.contractEvents).values({
+      await tx.insert(schema.contractStatusChanges).values({
         contractId: contract.id,
-        type: DocumentEventType.CREATED,
+        type: DocumentStatusChange.CREATED,
         actorUserId,
       });
 
@@ -197,18 +199,18 @@ export class ContractService {
         .where(eq(schema.contracts.id, contractId))
         .returning();
 
-      await tx.insert(schema.contractEvents).values({
+      await tx.insert(schema.contractStatusChanges).values({
         contractId,
         type:
           pendingIndex === 0
-            ? DocumentEventType.SIGNED
-            : DocumentEventType.COUNTERSIGNED,
+            ? DocumentStatusChange.SIGNED
+            : DocumentStatusChange.COUNTERSIGNED,
         actorUserId: userId,
       });
       if (isFinal) {
-        await tx.insert(schema.contractEvents).values({
+        await tx.insert(schema.contractStatusChanges).values({
           contractId,
-          type: DocumentEventType.ACTIVATED,
+          type: DocumentStatusChange.ACTIVATED,
           actorUserId: userId,
         });
       }
@@ -262,9 +264,9 @@ export class ContractService {
         .where(eq(schema.contracts.id, contractId))
         .returning();
 
-      await tx.insert(schema.contractEvents).values({
+      await tx.insert(schema.contractStatusChanges).values({
         contractId,
-        type: DocumentEventType.DECLINED,
+        type: DocumentStatusChange.DECLINED,
         actorUserId: userId,
       });
 
@@ -272,11 +274,13 @@ export class ContractService {
     });
   }
 
-  async findContractEvents(contractId: string): Promise<ContractEventEntity[]> {
-    const events = await this.db.query.contractEvents.findMany({
+  async findContractStatusChanges(
+    contractId: string,
+  ): Promise<ContractStatusChangeEntity[]> {
+    const statusChanges = await this.db.query.contractStatusChanges.findMany({
       where: { contractId },
     });
-    return events.sort(
+    return statusChanges.sort(
       (a, b) => a.occurredAt.getTime() - b.occurredAt.getTime(),
     );
   }

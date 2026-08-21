@@ -56,9 +56,22 @@ export class DocumentTemplateService {
   ): Promise<DocumentTemplateEntity> {
     this.assertValidSignees(input.signees);
 
+    if (input.organizationUnitId) {
+      const unit = await this.db.query.organizationUnits.findFirst({
+        where: { id: input.organizationUnitId, organizationId },
+        columns: { id: true },
+      });
+      if (!unit) {
+        throw new NotFoundGraphQLError('Organization unit not found');
+      }
+    }
+
     const existing = await this.db.query.documentTemplates.findFirst({
       where: {
         organizationId,
+        organizationUnitId: input.organizationUnitId
+          ? input.organizationUnitId
+          : { isNull: true },
         reimbursementTypeId: input.reimbursementTypeId,
         kind: input.kind,
         isDeleted: false,
@@ -75,6 +88,7 @@ export class DocumentTemplateService {
         .insert(schema.documentTemplates)
         .values({
           organizationId,
+          organizationUnitId: input.organizationUnitId ?? null,
           reimbursementTypeId: input.reimbursementTypeId,
           kind: input.kind,
           renewalCadence: input.renewalCadence ?? null,
@@ -157,13 +171,40 @@ export class DocumentTemplateService {
       .where(eq(schema.documentTemplates.id, templateId));
   }
 
+  /**
+   * Resolves the template a unit actually uses: its own override if one
+   * exists, else the organization-wide default. Pass `organizationUnitId:
+   * null` (or omit it) to resolve the org-wide default directly.
+   */
   async findActiveTemplate(
     organizationId: string,
     reimbursementTypeId: string,
     kind: DocumentKind,
+    organizationUnitId?: string | null,
   ): Promise<DocumentTemplateEntity> {
+    if (organizationUnitId) {
+      const override = await this.db.query.documentTemplates.findFirst({
+        where: {
+          organizationId,
+          organizationUnitId,
+          reimbursementTypeId,
+          kind,
+          isDeleted: false,
+        },
+      });
+      if (override) {
+        return override;
+      }
+    }
+
     const template = await this.db.query.documentTemplates.findFirst({
-      where: { organizationId, reimbursementTypeId, kind, isDeleted: false },
+      where: {
+        organizationId,
+        organizationUnitId: { isNull: true },
+        reimbursementTypeId,
+        kind,
+        isDeleted: false,
+      },
     });
     if (!template) {
       throw new NotFoundGraphQLError(

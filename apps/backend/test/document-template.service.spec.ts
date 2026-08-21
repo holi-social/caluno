@@ -16,7 +16,10 @@ import {
   NotFoundGraphQLError,
 } from '../src/graphql/errors';
 import { createReimbursementType } from './factories/accounting.factory';
-import { createOrganizationWithType } from './factories/org.factory';
+import {
+  createOrganizationWithType,
+  createUnit,
+} from './factories/org.factory';
 import { createUser } from './factories/user.factory';
 import {
   ensureTestDatabase,
@@ -129,6 +132,100 @@ describe('DocumentTemplateService', () => {
       await expect(
         service.createDocumentTemplate(organization.id, input, editor.id),
       ).rejects.toBeInstanceOf(ConflictGraphQLError);
+    });
+
+    it('allows a unit-level override alongside the org-wide default for the same slot', async () => {
+      const reimbursementType = await createReimbursementType(db);
+      const { organization, type } = await createOrganizationWithType(
+        db,
+        `Override Coexist Org ${crypto.randomUUID()}`,
+      );
+      const unit = await createUnit(db, {
+        organizationId: organization.id,
+        typeId: type.id,
+        name: 'unit',
+      });
+      const editor = await createUser(db);
+      const input = {
+        reimbursementTypeId: reimbursementType.id,
+        kind: DocumentKind.CONTRACT,
+        body: { header: {}, blocks: [], footer: {} },
+        signees: [{ order: 0, signeeType: SigneeType.VOLUNTEER }],
+      };
+
+      const orgDefault = await service.createDocumentTemplate(
+        organization.id,
+        input,
+        editor.id,
+      );
+      const unitOverride = await service.createDocumentTemplate(
+        organization.id,
+        { ...input, organizationUnitId: unit.id },
+        editor.id,
+      );
+
+      expect(unitOverride.id).not.toBe(orgDefault.id);
+      expect(unitOverride.organizationUnitId).toBe(unit.id);
+    });
+
+    it('rejects a duplicate override for the same unit, type and kind', async () => {
+      const reimbursementType = await createReimbursementType(db);
+      const { organization, type } = await createOrganizationWithType(
+        db,
+        `Duplicate Override Org ${crypto.randomUUID()}`,
+      );
+      const unit = await createUnit(db, {
+        organizationId: organization.id,
+        typeId: type.id,
+        name: 'unit',
+      });
+      const editor = await createUser(db);
+      const input = {
+        organizationUnitId: unit.id,
+        reimbursementTypeId: reimbursementType.id,
+        kind: DocumentKind.CONTRACT,
+        body: { header: {}, blocks: [], footer: {} },
+        signees: [{ order: 0, signeeType: SigneeType.VOLUNTEER }],
+      };
+
+      await service.createDocumentTemplate(organization.id, input, editor.id);
+
+      await expect(
+        service.createDocumentTemplate(organization.id, input, editor.id),
+      ).rejects.toBeInstanceOf(ConflictGraphQLError);
+    });
+
+    it('rejects an organization unit that belongs to a different organization', async () => {
+      const reimbursementType = await createReimbursementType(db);
+      const { organization } = await createOrganizationWithType(
+        db,
+        `Owner Org ${crypto.randomUUID()}`,
+      );
+      const { organization: otherOrganization, type: otherType } =
+        await createOrganizationWithType(
+          db,
+          `Other Org ${crypto.randomUUID()}`,
+        );
+      const foreignUnit = await createUnit(db, {
+        organizationId: otherOrganization.id,
+        typeId: otherType.id,
+        name: 'foreign unit',
+      });
+      const editor = await createUser(db);
+
+      await expect(
+        service.createDocumentTemplate(
+          organization.id,
+          {
+            organizationUnitId: foreignUnit.id,
+            reimbursementTypeId: reimbursementType.id,
+            kind: DocumentKind.CONTRACT,
+            body: { header: {}, blocks: [], footer: {} },
+            signees: [{ order: 0, signeeType: SigneeType.VOLUNTEER }],
+          },
+          editor.id,
+        ),
+      ).rejects.toBeInstanceOf(NotFoundGraphQLError);
     });
   });
 
@@ -264,6 +361,139 @@ describe('DocumentTemplateService', () => {
           DocumentKind.CONTRACT,
         ),
       ).rejects.toBeInstanceOf(NotFoundGraphQLError);
+    });
+
+    it('falls back to the org-wide default when the unit has no override', async () => {
+      const reimbursementType = await createReimbursementType(db);
+      const { organization, type } = await createOrganizationWithType(
+        db,
+        `Fallback Org ${crypto.randomUUID()}`,
+      );
+      const unit = await createUnit(db, {
+        organizationId: organization.id,
+        typeId: type.id,
+        name: 'unit',
+      });
+      const editor = await createUser(db);
+      const orgDefault = await service.createDocumentTemplate(
+        organization.id,
+        {
+          reimbursementTypeId: reimbursementType.id,
+          kind: DocumentKind.CONTRACT,
+          body: { header: {}, blocks: [], footer: {} },
+          signees: [{ order: 0, signeeType: SigneeType.VOLUNTEER }],
+        },
+        editor.id,
+      );
+
+      const resolved = await service.findActiveTemplate(
+        organization.id,
+        reimbursementType.id,
+        DocumentKind.CONTRACT,
+        unit.id,
+      );
+
+      expect(resolved.id).toBe(orgDefault.id);
+    });
+
+    it('prefers the unit override over the org-wide default', async () => {
+      const reimbursementType = await createReimbursementType(db);
+      const { organization, type } = await createOrganizationWithType(
+        db,
+        `Override Preferred Org ${crypto.randomUUID()}`,
+      );
+      const unit = await createUnit(db, {
+        organizationId: organization.id,
+        typeId: type.id,
+        name: 'unit',
+      });
+      const editor = await createUser(db);
+      await service.createDocumentTemplate(
+        organization.id,
+        {
+          reimbursementTypeId: reimbursementType.id,
+          kind: DocumentKind.CONTRACT,
+          body: { header: {}, blocks: [], footer: {} },
+          signees: [{ order: 0, signeeType: SigneeType.VOLUNTEER }],
+        },
+        editor.id,
+      );
+      const unitOverride = await service.createDocumentTemplate(
+        organization.id,
+        {
+          organizationUnitId: unit.id,
+          reimbursementTypeId: reimbursementType.id,
+          kind: DocumentKind.CONTRACT,
+          body: { header: {}, blocks: [], footer: {} },
+          signees: [{ order: 0, signeeType: SigneeType.VOLUNTEER }],
+        },
+        editor.id,
+      );
+
+      const resolved = await service.findActiveTemplate(
+        organization.id,
+        reimbursementType.id,
+        DocumentKind.CONTRACT,
+        unit.id,
+      );
+
+      expect(resolved.id).toBe(unitOverride.id);
+    });
+
+    it("does not leak another unit's override", async () => {
+      const reimbursementType = await createReimbursementType(db);
+      const { organization, type } = await createOrganizationWithType(
+        db,
+        `Sibling Units Org ${crypto.randomUUID()}`,
+      );
+      const root = await createUnit(db, {
+        organizationId: organization.id,
+        typeId: type.id,
+        name: 'root',
+      });
+      const unitA = await createUnit(db, {
+        organizationId: organization.id,
+        typeId: type.id,
+        name: 'unit-a',
+        parentId: root.id,
+      });
+      const unitB = await createUnit(db, {
+        organizationId: organization.id,
+        typeId: type.id,
+        name: 'unit-b',
+        parentId: root.id,
+      });
+      const editor = await createUser(db);
+      const orgDefault = await service.createDocumentTemplate(
+        organization.id,
+        {
+          reimbursementTypeId: reimbursementType.id,
+          kind: DocumentKind.CONTRACT,
+          body: { header: {}, blocks: [], footer: {} },
+          signees: [{ order: 0, signeeType: SigneeType.VOLUNTEER }],
+        },
+        editor.id,
+      );
+      await service.createDocumentTemplate(
+        organization.id,
+        {
+          organizationUnitId: unitA.id,
+          reimbursementTypeId: reimbursementType.id,
+          kind: DocumentKind.CONTRACT,
+          body: { header: {}, blocks: [], footer: {} },
+          signees: [{ order: 0, signeeType: SigneeType.VOLUNTEER }],
+        },
+        editor.id,
+      );
+
+      const resolved = await service.findActiveTemplate(
+        organization.id,
+        reimbursementType.id,
+        DocumentKind.CONTRACT,
+        unitB.id,
+      );
+
+      expect(resolved.id).toBe(orgDefault.id);
     });
   });
 

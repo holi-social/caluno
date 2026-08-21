@@ -53,6 +53,7 @@ export const createDocumentTemplate = async (
   db: Database,
   args: {
     organizationId: string;
+    organizationUnitId?: string | null;
     reimbursementTypeId: string;
     kind: DocumentKind;
     signees: Array<{
@@ -67,6 +68,7 @@ export const createDocumentTemplate = async (
     .insert(schema.documentTemplates)
     .values({
       organizationId: args.organizationId,
+      organizationUnitId: args.organizationUnitId ?? null,
       reimbursementTypeId: args.reimbursementTypeId,
       kind: args.kind,
       body: args.body ?? EMPTY_BODY,

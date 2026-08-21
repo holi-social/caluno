@@ -16,6 +16,9 @@ export type CreateTemplateSigneeInput = {
 };
 
 export type CreateDocumentTemplateInput = {
+  // Omit for the organization-wide default template; set to an organization
+  // unit ID to create an override for that unit only.
+  organizationUnitId?: string | null;
   reimbursementTypeId: string;
   kind: DocumentKind;
   renewalCadence?: RenewalCadence | null;
@@ -69,7 +72,7 @@ export type ContractWithRelations = InferResultType<
     documentTemplate: true;
     reimbursementType: true;
     signatures: true;
-    events: true;
+    statusChanges: true;
   }
 >;
 
@@ -79,7 +82,7 @@ export type InvoiceWithRelations = InferResultType<
     documentTemplate: true;
     reimbursementType: true;
     signatures: true;
-    events: true;
+    statusChanges: true;
     invoiceTimeEntries: true;
   }
 >;
