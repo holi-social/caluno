@@ -19,13 +19,13 @@ export const timeEntries = snakeCase.table(
   'time_entries',
   {
     ...idColumn,
-    shiftInstanceId: uuid('shift_instance_id')
-      .references(() => shiftInstances.id, { onDelete: 'restrict' })
-      .notNull(),
-    organizationUnitId: uuid('organization_unit_id').references(
-      () => organizationUnits.id,
+    shiftInstanceId: uuid('shift_instance_id').references(
+      () => shiftInstances.id,
       { onDelete: 'restrict' },
     ),
+    organizationUnitId: uuid('organization_unit_id')
+      .references(() => organizationUnits.id, { onDelete: 'restrict' })
+      .notNull(),
     volunteerId: text('volunteer_id')
       .references(() => users.id, { onDelete: 'restrict' })
       .notNull(),
@@ -43,6 +43,9 @@ export const timeEntries = snakeCase.table(
     uniqueIndex('uq_time_entries_open_per_instance_volunteer')
       .on(table.shiftInstanceId, table.volunteerId)
       .where(sql`${table.endedAt} IS NULL`),
+    uniqueIndex('uq_time_entries_open_shiftless_per_org_volunteer')
+      .on(table.organizationUnitId, table.volunteerId)
+      .where(sql`${table.shiftInstanceId} IS NULL AND ${table.endedAt} IS NULL`),
     check(
       'chk_time_entries_paid_requires_reimbursement_type',
       sql`${table.isPaid} = false OR ${table.reimbursementTypeId} IS NOT NULL`,
