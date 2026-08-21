@@ -1,6 +1,6 @@
 # CI/CD setup
 
-The workflows in `.github/workflows/` (`ci-branch.yml`, `ci-pull-request.yml`, `cd-staging.yml`, `cd-production.yml`) need some one-time setup before they run end to end.
+The workflows in `.github/workflows/` (`ci-branch.yml`, `ci-pull-request.yml`, `cd-staging.yml`, `cd-release.yml`, `cd-production.yml`) need some one-time setup before they run end to end.
 
 1. **`ORG_REPO_PAT` secret** — the pipeline checks out `.ai` and `packages/infra`
    as submodules living in sibling repos (`caluno-ai`, `caluno-infra`). The
@@ -35,7 +35,9 @@ The workflows in `.github/workflows/` (`ci-branch.yml`, `ci-pull-request.yml`, `
    require human approval before running. Configure a required-reviewers
    rule on the `production` environment (Settings → Environments →
    production). Until that's set up, `terraform-production-apply` runs
-   automatically on every push to `production`.
+   automatically on every push to `production`. The `staging` and `release`
+   environments have no required reviewers: applies run automatically on
+   push to `main` and `release` respectively.
 
 5. **Image mirror (`mirror-images.yml`)** — mirrors pinned base images
    (`postgres:17`, `hashicorp/terraform:1.15`, `oven/bun:1`) into
@@ -53,5 +55,19 @@ The workflows in `.github/workflows/` (`ci-branch.yml`, `ci-pull-request.yml`, `
      public visibility (Settings → Packages) — they're just cached copies of
      public images, nothing proprietary.
 
-6. **Branch protection** — configure required status checks on `main` and
-   `production` in all three repos so the jobs above are enforced before merge.
+6. **Branch protection** — configure required status checks on `main`,
+   `release`, and `production` in all three repos so the jobs above are
+   enforced before merge.
+
+7. **Release environment (one-time)** — before the first push to `release`
+   can apply:
+   - Create and push git branch `release` (typically from `main`).
+   - Create Scaleway Secret Manager secret `caluno-release-posthog-api-key`
+     (same shape as `caluno-staging-posthog-api-key`). Terraform reads it;
+     it does not create it.
+   - After the first successful apply, add DNS:
+     - `release.app.caluno.org` → frontend container domain
+     - `release.api.caluno.org` → backend container domain
+     - `release.mailbox.caluno.org` A record → Terraform output `mailpit_ip`
+   - Confirm GitHub Environment `release` exists (created on first workflow
+     use) with no required reviewers.
