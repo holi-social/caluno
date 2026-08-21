@@ -39,3 +39,14 @@ export function formValueFromOtpDigits(digits: string): string {
 
   return `${year.toString().padStart(4, '0')}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
 }
+
+/** Letters and separator from a locale format mask, e.g. DD/MM/YYYY. */
+export function partsFromDateFormat(format: string): {
+  placeholders: string[];
+  separator: string;
+} {
+  return {
+    placeholders: [...format.replace(/[^A-Za-z]/g, '')],
+    separator: /[^A-Za-z]/.exec(format)?.[0] ?? '/',
+  };
+}

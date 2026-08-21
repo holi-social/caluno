@@ -1,8 +1,8 @@
 import { registerEnumType } from '@nestjs/graphql';
 import {
   ContractStatus,
-  DocumentEventType,
   DocumentKind,
+  DocumentStatusChange,
   InvoiceStatus,
   ReimbursementTypeKey,
   RenewalCadence,
@@ -33,6 +33,6 @@ registerEnumType(InvoiceStatus, {
   name: 'InvoiceStatus',
 });
 
-registerEnumType(DocumentEventType, {
-  name: 'DocumentEventType',
+registerEnumType(DocumentStatusChange, {
+  name: 'DocumentStatusChange',
 });

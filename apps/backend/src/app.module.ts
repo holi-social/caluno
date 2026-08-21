@@ -12,7 +12,6 @@ import {
 } from '@thallesp/nestjs-better-auth';
 import { betterAuth } from 'better-auth';
 import { AccountingModule } from './accounting/accounting.module';
-import { AccountingService } from './accounting/accounting.service';
 import { createAuthConfig } from './auth/auth';
 import { AuthModule } from './auth/auth.module';
 import { PermissionGuard } from './auth/guards/permission.guard';
@@ -210,7 +209,6 @@ const autoSchemaFile =
       provide: APP_GUARD,
       useClass: PermissionGuard,
     },
-    AccountingService,
   ],
 })
 export class AppModule {}
