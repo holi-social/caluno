@@ -61,7 +61,7 @@ describe('ShiftInstanceFieldResolver', () => {
       );
 
       expect(result).toEqual(createdAt);
-      expect(load).toHaveBeenCalledWith('instance-1::user-1');
+      expect(load).toHaveBeenCalledWith('instance-1:user-1');
     });
   });
 });
