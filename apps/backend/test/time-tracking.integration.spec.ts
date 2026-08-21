@@ -12,12 +12,18 @@ import type { INestApplication } from '@nestjs/common';
 import { eq } from 'drizzle-orm';
 import type { Database } from '../src/database/database.module';
 import * as schema from '../src/database/schema';
-import { ConflictGraphQLError, NotFoundGraphQLError } from '../src/graphql/errors';
+import {
+  ConflictGraphQLError,
+  NotFoundGraphQLError,
+} from '../src/graphql/errors';
 import { ShiftInviteStatus } from '../src/shift/enums';
 import { AddTimeEntryInput } from '../src/time-tracking/inputs/add-time-entry.input';
 import { TimeTrackingService } from '../src/time-tracking/time-tracking.service';
 import { createShift, createUser } from './factories';
-import { createOrganizationWithType, createUnit } from './factories/org.factory';
+import {
+  createOrganizationWithType,
+  createUnit,
+} from './factories/org.factory';
 import { applyBunAuthMocks, setAuthMockUserId } from './helpers/auth-mocks';
 import { getGraphqlTestContext } from './helpers/graphql-test-context';
 
@@ -256,11 +262,10 @@ describe('TimeTrackingService', () => {
     input.notes = null;
     const created = await service.addTimeEntry(organizationUnitId, input);
 
-    const { entries } = await service.findByUser(
-      organizationUnitId,
-      user.id,
-      { limit: 50, offset: 0 },
-    );
+    const { entries } = await service.findByUser(organizationUnitId, user.id, {
+      limit: 50,
+      offset: 0,
+    });
 
     expect(entries.map((e) => e.id)).toContain(created.id);
   });
