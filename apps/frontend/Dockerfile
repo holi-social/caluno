@@ -41,7 +41,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates
 
 WORKDIR /app/apps/frontend
 # SENTRY_AUTH_TOKEN is mounted as a BuildKit secret — never persisted in a layer.
+# The .next/cache mount persists Next.js's incremental compiler cache across
+# builds on the same runner, which is what actually cuts CPU-bound compile time.
 RUN --mount=type=secret,id=sentry_auth_token,env=SENTRY_AUTH_TOKEN \
+    --mount=type=cache,target=/app/apps/frontend/.next/cache \
     bun run build
 
 FROM ghcr.io/holi-social/mirror/oven-bun:1 AS runner
