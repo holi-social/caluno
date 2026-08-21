@@ -70,14 +70,10 @@ export class MembershipQueryResolver {
   @Query(() => [Membership])
   async memberships(
     @Context() context: AuthenticatedGraphQLContext,
-    @Args('includeAncestors', { type: () => Boolean, nullable: true })
-    includeAncestors?: boolean,
   ): Promise<Membership[]> {
-    const memberships = includeAncestors
-      ? await this.membershipService.getInvitableMemberships(
-          context.organizationUnitId,
-        )
-      : await this.membershipService.getMemberships(context.organizationUnitId);
+    const memberships = await this.membershipService.getMemberships(
+      context.organizationUnitId,
+    );
     return this.membershipMapper.toArray(memberships);
   }
 
