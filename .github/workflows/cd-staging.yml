@@ -13,7 +13,7 @@ env:
 
 jobs:
   check-migrations:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     steps:
       - uses: actions/checkout@v5
         with:
@@ -35,7 +35,7 @@ jobs:
 
   build-staging-backend:
     needs: [check-migrations]
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     permissions:
       contents: read
       packages: read
@@ -70,7 +70,7 @@ jobs:
 
   build-staging-frontend:
     needs: [check-migrations]
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     permissions:
       contents: read
       packages: read
@@ -109,7 +109,7 @@ jobs:
 
   terraform-staging-plan:
     needs: [build-staging-backend, build-staging-frontend]
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     permissions:
       contents: read
       packages: read
@@ -157,7 +157,7 @@ jobs:
 
   terraform-staging-apply:
     needs: [terraform-staging-plan]
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     permissions:
       contents: read
       packages: read
@@ -198,7 +198,7 @@ jobs:
 
   sentry-finalize-release:
     needs: [build-staging-backend, build-staging-frontend]
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     # Release bookkeeping must not fail the deploy pipeline.
     continue-on-error: true
     steps:

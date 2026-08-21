@@ -8,7 +8,7 @@ on:
 
 jobs:
   check-migrations:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     steps:
       - uses: actions/checkout@v5
         with:
@@ -29,7 +29,7 @@ jobs:
           fi
 
   build-backend-branch:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     permissions:
       contents: read
       packages: read
@@ -52,7 +52,7 @@ jobs:
             -f apps/backend/Dockerfile .
 
   build-frontend-branch:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     permissions:
       contents: read
       packages: read
