@@ -155,9 +155,7 @@ export class ShiftInstanceFieldResolver {
     if (!session?.user) {
       return null;
     }
-    return loader.myInviteStatusByKey.load(
-      `${instance.id}:${session.user.id}`,
-    );
+    return loader.myInviteStatusByKey.load(`${instance.id}:${session.user.id}`);
   }
 
   // Raw invite-sent timestamp for this instance, or null when there is no direct invite.
