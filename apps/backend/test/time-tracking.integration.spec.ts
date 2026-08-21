@@ -264,4 +264,103 @@ describe('TimeTrackingService', () => {
 
     expect(entries.map((e) => e.id)).toContain(created.id);
   });
+
+  it('updateTimeEntry clears shiftInstanceId when set to null (unlink)', async () => {
+    const user = await createUser(db);
+    const { id: shiftId } = await createShift(db, { organizationUnitId });
+    const instances = await db.query.shiftInstances.findMany({
+      where: { masterId: shiftId },
+    });
+    const instanceId = instances[0]?.id;
+    expect(instanceId).toBeDefined();
+
+    const input = new AddTimeEntryInput();
+    input.shiftInstanceId = instanceId ?? '';
+    input.volunteerId = user.id;
+    input.startedAt = new Date('2026-08-01T08:00:00Z');
+    input.endedAt = new Date('2026-08-01T10:00:00Z');
+    input.notes = null;
+    const entry = await service.addTimeEntry(organizationUnitId, input);
+
+    const updated = await service.updateTimeEntry(
+      entry.id,
+      organizationUnitId,
+      {
+        shiftInstanceId: null,
+        startedAt: input.startedAt,
+        endedAt: input.endedAt,
+        notes: null,
+      },
+    );
+
+    expect(updated.shiftInstanceId).toBeNull();
+  });
+
+  it('updateTimeEntry links a shift-less entry to a shift in the same org unit', async () => {
+    const user = await createUser(db);
+    const { id: shiftId } = await createShift(db, { organizationUnitId });
+    const instances = await db.query.shiftInstances.findMany({
+      where: { masterId: shiftId },
+    });
+    const instanceId = instances[0]?.id;
+    expect(instanceId).toBeDefined();
+
+    const input = new AddTimeEntryInput();
+    input.volunteerId = user.id;
+    input.startedAt = new Date('2026-08-02T08:00:00Z');
+    input.endedAt = new Date('2026-08-02T10:00:00Z');
+    input.notes = null;
+    const entry = await service.addTimeEntry(organizationUnitId, input);
+    expect(entry.shiftInstanceId).toBeNull();
+
+    const updated = await service.updateTimeEntry(
+      entry.id,
+      organizationUnitId,
+      {
+        shiftInstanceId: instanceId ?? '',
+        startedAt: input.startedAt,
+        endedAt: input.endedAt,
+        notes: null,
+      },
+    );
+
+    expect(updated.shiftInstanceId).toBe(instanceId);
+  });
+
+  it('updateTimeEntry rejects a shift instance from a different org unit', async () => {
+    const user = await createUser(db);
+    const { organization, type } = await createOrganizationWithType(
+      db,
+      `Other Org ${crypto.randomUUID()}`,
+    );
+    const otherUnit = await createUnit(db, {
+      organizationId: organization.id,
+      typeId: type.id,
+      name: 'Other Unit',
+    });
+    const { id: otherShiftId } = await createShift(db, {
+      organizationUnitId: otherUnit.id,
+    });
+    const otherInstances = await db.query.shiftInstances.findMany({
+      where: { masterId: otherShiftId },
+    });
+    const otherInstanceId = otherInstances[0]?.id;
+    expect(otherInstanceId).toBeDefined();
+
+    const input = new AddTimeEntryInput();
+    input.volunteerId = user.id;
+    input.startedAt = new Date('2026-08-03T08:00:00Z');
+    input.endedAt = new Date('2026-08-03T10:00:00Z');
+    input.notes = null;
+    const entry = await service.addTimeEntry(organizationUnitId, input);
+
+    await expect(
+      service.updateTimeEntry(entry.id, organizationUnitId, {
+        shiftInstanceId: otherInstanceId ?? '',
+        startedAt: input.startedAt,
+        endedAt: input.endedAt,
+        notes: null,
+      }),
+    ).rejects.toThrow(NotFoundGraphQLError);
+  });
 });
