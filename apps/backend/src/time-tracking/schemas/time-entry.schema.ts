@@ -50,7 +50,9 @@ export const timeEntries = snakeCase.table(
       .where(sql`${table.endedAt} IS NULL`),
     uniqueIndex('uq_time_entries_open_shiftless_per_org_volunteer')
       .on(table.organizationUnitId, table.volunteerId)
-      .where(sql`${table.shiftInstanceId} IS NULL AND ${table.endedAt} IS NULL`),
+      .where(
+        sql`${table.shiftInstanceId} IS NULL AND ${table.endedAt} IS NULL`,
+      ),
     check(
       'chk_time_entries_paid_requires_reimbursement_type',
       sql`${table.isPaid} = false OR ${table.reimbursementTypeId} IS NOT NULL`,
