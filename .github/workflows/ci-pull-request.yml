@@ -13,7 +13,7 @@ env:
 
 jobs:
   lint-and-types:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     steps:
       - uses: actions/checkout@v5
         with:
@@ -27,7 +27,7 @@ jobs:
       - run: bun run check-types
 
   ai-gate-tests:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     steps:
       - uses: actions/checkout@v5
         with:
@@ -36,7 +36,7 @@ jobs:
       - run: bash .ai/scripts/__tests__/gates.test.sh
 
   commit-lint:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     steps:
       - uses: actions/checkout@v5
         with:
@@ -46,7 +46,7 @@ jobs:
       - run: bash .ai/scripts/commit-lint.sh range "${{ github.event.pull_request.base.sha }}..${{ github.sha }}"
 
   check-migrations:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     steps:
       - uses: actions/checkout@v5
         with:
@@ -67,7 +67,7 @@ jobs:
           fi
 
   integration-tests:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     permissions:
       contents: read
       packages: read
@@ -109,7 +109,7 @@ jobs:
       - run: bun test
 
   build-backend-branch:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     permissions:
       contents: read
       packages: read
@@ -132,7 +132,7 @@ jobs:
             -f apps/backend/Dockerfile .
 
   build-frontend-branch:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     permissions:
       contents: read
       packages: read
@@ -158,7 +158,7 @@ jobs:
 
   terraform-staging-plan-mr:
     if: github.base_ref == 'main'
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     permissions:
       contents: read
       packages: read
@@ -192,7 +192,7 @@ jobs:
 
   terraform-production-plan-mr:
     if: github.base_ref == 'production'
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     permissions:
       contents: read
       packages: read
