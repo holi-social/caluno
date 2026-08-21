@@ -1045,6 +1045,8 @@
     "checkIn": {
       "checkIn": "Einchecken",
       "checkInTitle": "Einchecken",
+      "checkInWithShift": "Stattdessen eine Schicht wählen",
+      "checkInWithoutShift": "Ohne Schicht einchecken",
       "checkOut": "Auschecken",
       "checkOutTitle": "Auschecken",
       "checkedInAt": "Eingecheckt: {time}",
@@ -1052,6 +1054,7 @@
       "checkingOut": "Wird ausgecheckt...",
       "checkingOutAt": "Wird ausgecheckt: {time}",
       "enterQrTitle": "Oder gib die QR-ID manuell ein, um die Anwesenheit zu bestätigen",
+      "generalCheckIn": "Allgemeines Check-in",
       "invalidCheckin": {
         "blocked": {
           "description": "Freiwillige:r darf nicht einchecken. Bitte ihn oder Sie, sich für Hilfe an die Zentrale zu wenden.",
