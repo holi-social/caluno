@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { DatabaseModule } from '../database/database.module';
 import { MembershipModule } from '../membership/membership.module';
 import { OrganizationModule } from '../organization/organization.module';
+import { OrganizationUnitDataModule } from '../organization/organization-unit-data.module';
 import { ShiftModule } from '../shift/shift.module';
 import { UserModule } from '../user/user.module';
 import { TimeEntryMapper } from './mappers/time-entry.mapper';
@@ -10,6 +11,7 @@ import {
   TimeTrackingMutationResolver,
   TimeTrackingQueryResolver,
 } from './resolvers';
+import { TimeEntryLoader } from './resolvers/time-entry.loader';
 import { TimeTrackingService } from './time-tracking.service';
 
 @Module({
@@ -17,6 +19,7 @@ import { TimeTrackingService } from './time-tracking.service';
     DatabaseModule,
     MembershipModule,
     OrganizationModule,
+    OrganizationUnitDataModule,
     ShiftModule,
     UserModule,
   ],
@@ -24,6 +27,7 @@ import { TimeTrackingService } from './time-tracking.service';
     TimeTrackingService,
     TimeEntryMapper,
     TimeEntryFieldResolver,
+    TimeEntryLoader,
     TimeTrackingMutationResolver,
     TimeTrackingQueryResolver,
   ],
