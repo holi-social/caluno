@@ -3,6 +3,7 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import type { GetShiftsQuery, ShiftInstanceItem } from '@repo/data';
 import {
+  Checkbox,
   DatePickerWithTimeRange,
   Field,
   FieldError,
@@ -19,7 +20,7 @@ import { useCallback, useEffect, useState, useTransition } from 'react';
 import { useForm } from 'react-hook-form';
 import { FormSheet, useFormSheet } from '@/components/form-sheet';
 import { useRouter } from '@/i18n/navigation';
-import { type TimeEntryFormValues, timeEntrySchema } from '../schemas';
+import { clientTimeEntrySchema, type TimeEntryFormValues } from '../schemas';
 
 import {
   type PickerValue,
@@ -56,7 +57,7 @@ export const TimeEntryForm = ({
 
   const { open, setOpen } = useFormSheet();
 
-  const schema = timeEntrySchema({
+  const schema = clientTimeEntrySchema({
     organizationUnitRequired: tValidation('organizationUnitRequired'),
     shiftInstanceRequired: tValidation('shiftInstanceRequired'),
     volunteerRequired: tValidation('volunteerRequired'),
@@ -78,6 +79,7 @@ export const TimeEntryForm = ({
       shiftId: '',
       shiftInstanceId: '',
       volunteerId: '',
+      hasShift: initialValues?.hasShift ?? true,
       ...initialValues,
     },
   });
@@ -117,8 +119,12 @@ export const TimeEntryForm = ({
   const onSubmit = async (formData: TimeEntryFormValues) => {
     setServerError(undefined);
 
+    const payload = formData.hasShift
+      ? formData
+      : { ...formData, shiftId: undefined, shiftInstanceId: undefined };
+
     startTransition(async () => {
-      const result = await mutate(formData);
+      const result = await mutate(payload);
       if (result.serverError) {
         setServerError(result.serverError);
       } else {
@@ -138,14 +144,36 @@ export const TimeEntryForm = ({
       onOpenChange={setOpen}
       formError={serverError}
     >
-      <ShiftPicker
-        shifts={shifts}
-        value={{ shiftId, shiftInstanceId }}
-        onChange={handleInstanceSelect}
-        disabled={pending}
-      />
-      {errors.shiftInstanceId && (
-        <FieldError>{errors.shiftInstanceId.message}</FieldError>
+      <Field>
+        <label className="flex items-center gap-2 text-sm">
+          <Checkbox
+            checked={!watch('hasShift')}
+            onCheckedChange={(checked) => {
+              setValue('hasShift', !checked);
+              if (checked) {
+                setValue('shiftId', '');
+                setValue('shiftInstanceId', '');
+                setSelectedInstance(undefined);
+              }
+            }}
+            disabled={pending}
+          />
+          {t('notTiedToShiftLabel')}
+        </label>
+      </Field>
+
+      {watch('hasShift') && (
+        <>
+          <ShiftPicker
+            shifts={shifts}
+            value={{ shiftId, shiftInstanceId }}
+            onChange={handleInstanceSelect}
+            disabled={pending}
+          />
+          {errors.shiftInstanceId && (
+            <FieldError>{errors.shiftInstanceId.message}</FieldError>
+          )}
+        </>
       )}
 
       <Field>
