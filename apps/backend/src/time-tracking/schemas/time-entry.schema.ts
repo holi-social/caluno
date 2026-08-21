@@ -2,6 +2,7 @@ import { sql } from 'drizzle-orm';
 import {
   boolean,
   check,
+  index,
   snakeCase,
   text,
   timestamp,
@@ -40,6 +41,10 @@ export const timeEntries = snakeCase.table(
     ...timestampColumns,
   },
   (table) => [
+    index('idx_time_entries_org_unit_started_at').on(
+      table.organizationUnitId,
+      table.startedAt,
+    ),
     uniqueIndex('uq_time_entries_open_per_instance_volunteer')
       .on(table.shiftInstanceId, table.volunteerId)
       .where(sql`${table.endedAt} IS NULL`),
