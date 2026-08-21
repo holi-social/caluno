@@ -472,6 +472,7 @@
       "description": "Once you check in to a shift, your volunteering hours will appear here.",
       "title": "No hours yet"
     },
+    "generalTime": "General time",
     "state": {
       "completed": "Completed",
       "inProgress": "In progress"
