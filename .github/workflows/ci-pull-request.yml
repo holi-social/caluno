@@ -4,7 +4,7 @@ name: CI - Pull Request
 
 on:
   pull_request:
-    branches: [main, production]
+    branches: [main, production, release]
 
 env:
   TF_ROOT: packages/infra
@@ -221,5 +221,39 @@ jobs:
       - working-directory: ${{ env.TF_ROOT }}
         run: |
           terraform init -backend-config="key=production/terraform.tfstate"
+          terraform validate
+          terraform plan -var-file="terraform.tfvars"
+
+  terraform-release-plan-mr:
+    if: github.base_ref == 'release'
+    runs-on: self-hosted
+    permissions:
+      contents: read
+      packages: read
+    concurrency: terraform-release
+    container:
+      image: ghcr.io/holi-social/mirror/terraform:1.15
+      credentials:
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+    env:
+      TF_VAR_image_tag: ${{ github.sha }}
+      TF_VAR_active_environment: release
+      SCW_ACCESS_KEY: ${{ secrets.SCW_ACCESS_KEY }}
+      SCW_SECRET_KEY: ${{ secrets.SCW_SECRET_KEY }}
+      SCW_DEFAULT_PROJECT_ID: ${{ vars.SCW_DEFAULT_PROJECT_ID }}
+      SCW_DEFAULT_REGION: ${{ vars.SCW_DEFAULT_REGION }}
+      SCW_DEFAULT_ZONE: ${{ vars.SCW_DEFAULT_ZONE }}
+      AWS_ACCESS_KEY_ID: ${{ secrets.SCW_ACCESS_KEY }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.SCW_SECRET_KEY }}
+      AWS_DEFAULT_REGION: ${{ vars.AWS_DEFAULT_REGION }}
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          submodules: recursive
+          token: ${{ secrets.ORG_REPO_PAT }}
+      - working-directory: ${{ env.TF_ROOT }}
+        run: |
+          terraform init -backend-config="key=release/terraform.tfstate"
           terraform validate
           terraform plan -var-file="terraform.tfvars"
