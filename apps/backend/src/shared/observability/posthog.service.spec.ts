@@ -89,4 +89,12 @@ describe('PostHogService', () => {
       groups: { organization: 'org-1' },
     });
   });
+
+  it('does not throw or call the client, when no POSTHOG_DISTINCT_SECRET is set', () => {
+    delete process.env.POSTHOG_DISTINCT_SECRET;
+
+    const service = new PostHogService(client);
+    service.captureUserLoggedIn('user-1');
+    expect(capture).not.toHaveBeenCalled();
+  });
 });

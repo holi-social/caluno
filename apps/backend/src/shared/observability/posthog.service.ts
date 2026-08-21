@@ -33,10 +33,9 @@ type PostHogCaptureInput = {
  */
 export function createDailyDistinctId(
   userId: string,
-  env: NodeJS.Dict<string> = process.env,
   date: Date = new Date(),
 ): string {
-  const secret = env.POSTHOG_DISTINCT_SECRET;
+  const secret = process.env.POSTHOG_DISTINCT_SECRET;
   if (!secret) {
     throw new Error('POSTHOG_DISTINCT_SECRET is not set');
   }
@@ -57,7 +56,13 @@ export class PostHogService implements OnApplicationShutdown {
     @Optional()
     @Inject(POSTHOG_CLIENT)
     private readonly client: PostHogCaptureClient | null,
-  ) {}
+  ) {
+    if (!this.client || !process.env.POSTHOG_DISTINCT_SECRET) {
+      this.logger.warn(
+        'PostHog capture disabled: missing POSTHOG_API_KEY or POSTHOG_DISTINCT_SECRET or client could not be created for another reason',
+      );
+    }
+  }
 
   async onApplicationShutdown(): Promise<void> {
     if (this.client) {
@@ -66,7 +71,7 @@ export class PostHogService implements OnApplicationShutdown {
   }
 
   capture(input: PostHogCaptureInput): void {
-    if (this.client) {
+    if (this.client && process.env.POSTHOG_DISTINCT_SECRET) {
       try {
         this.client.capture({
           event: input.event,
