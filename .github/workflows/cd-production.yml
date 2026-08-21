@@ -13,7 +13,7 @@ env:
 
 jobs:
   check-migrations:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     steps:
       - uses: actions/checkout@v5
         with:
@@ -35,7 +35,7 @@ jobs:
 
   build-production-backend:
     needs: [check-migrations]
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     permissions:
       contents: read
       packages: read
@@ -70,7 +70,7 @@ jobs:
 
   build-production-frontend:
     needs: [check-migrations]
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     permissions:
       contents: read
       packages: read
@@ -109,7 +109,7 @@ jobs:
 
   terraform-production-plan:
     needs: [build-production-backend, build-production-frontend]
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     permissions:
       contents: read
       packages: read
@@ -161,7 +161,7 @@ jobs:
   # this job runs automatically on every push to `production`.
   terraform-production-apply:
     needs: [terraform-production-plan]
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     permissions:
       contents: read
       packages: read
@@ -202,7 +202,7 @@ jobs:
 
   sentry-finalize-release:
     needs: [build-production-backend, build-production-frontend]
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     # Release bookkeeping must not fail the deploy pipeline.
     continue-on-error: true
     steps:
