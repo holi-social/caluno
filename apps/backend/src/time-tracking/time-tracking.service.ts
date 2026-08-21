@@ -32,33 +32,40 @@ export class TimeTrackingService {
     organizationUnitId: string,
     input: AddTimeEntryInput,
   ): Promise<TimeEntryEntity> {
-    const instance = await this.db.query.shiftInstances.findFirst({
-      where: { id: input.shiftInstanceId },
-      with: { master: true },
-    });
+    if (input.shiftInstanceId) {
+      const instance = await this.db.query.shiftInstances.findFirst({
+        where: { id: input.shiftInstanceId },
+        with: { master: true },
+      });
 
-    if (
-      !instance ||
-      instance.master.organizationUnitId !== organizationUnitId
-    ) {
-      throw new NotFoundGraphQLError(
-        'Shift instance does not exist in this organization',
-      );
+      if (
+        !instance ||
+        instance.master.organizationUnitId !== organizationUnitId
+      ) {
+        throw new NotFoundGraphQLError(
+          'Shift instance does not exist in this organization',
+        );
+      }
     }
 
     try {
       const [timeEntry] = await this.db
         .insert(schema.timeEntries)
         .values({
-          shiftInstanceId: input.shiftInstanceId,
+          shiftInstanceId: input.shiftInstanceId ?? null,
+          organizationUnitId,
           volunteerId: input.volunteerId,
           startedAt: input.startedAt,
+          endedAt: input.endedAt ?? null,
           notes: input.notes,
         })
         .returning();
       return timeEntry;
     } catch (error) {
-      if (isConstraintViolation(error, UNIQUE_OPEN_ENTRY_CONSTRAINT)) {
+      if (
+        isConstraintViolation(error, UNIQUE_OPEN_ENTRY_CONSTRAINT) ||
+        isConstraintViolation(error, UNIQUE_OPEN_SHIFTLESS_ENTRY_CONSTRAINT)
+      ) {
         throw new ConflictGraphQLError('Already checked in');
       }
       throw error;
@@ -332,6 +339,9 @@ const CHECK_IN_CLOSES_AFTER_MS = 60 * 60 * 1000; // 1h after end
 
 const UNIQUE_OPEN_ENTRY_CONSTRAINT =
   'uq_time_entries_open_per_instance_volunteer';
+
+const UNIQUE_OPEN_SHIFTLESS_ENTRY_CONSTRAINT =
+  'uq_time_entries_open_shiftless_per_org_volunteer';
 
 // Drizzle wraps postgres errors, so the driver error lives on `error.cause`.
 // '23505' is the Postgres unique-violation SQLSTATE.
