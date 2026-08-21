@@ -472,6 +472,7 @@
       "description": "Sobald du dich zu einem Einsatz eincheckst, erscheinen hier deine geleisteten Stunden.",
       "title": "Noch keine Stunden"
     },
+    "generalTime": "Allgemeine Zeit",
     "state": {
       "completed": "Abgeschlossen",
       "inProgress": "Läuft"
