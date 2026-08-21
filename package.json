@@ -7,7 +7,7 @@
     "lint": "turbo run format-and-lint",
     "format": "turbo run format-and-lint:fix",
     "check-types": "turbo run check-types",
-    "check": "turbo run all-checks; bun test",
+    "check": "turbo run all-checks && bun test",
     "format-and-lint": "biome check .",
     "format-and-lint:fix": "biome check . --write",
     "format-and-lint:staged": "biome check --staged --write",
