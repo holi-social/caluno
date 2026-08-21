@@ -12,6 +12,24 @@ env:
   TF_INPUT: 'false'
 
 jobs:
+  lint-and-types:
+    runs-on: light-runners
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          submodules: recursive
+          token: ${{ secrets.ORG_REPO_PAT }}
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: '1'
+      - uses: actions/cache@v4
+        with:
+          path: ~/.bun/install/cache
+          key: bun-${{ runner.os }}-${{ hashFiles('bun.lock') }}
+      - run: bun install --frozen-lockfile
+      - run: bun run lint
+      - run: bun run check-types
+
   check-migrations:
     runs-on: light-runners
     steps:
@@ -37,8 +55,54 @@ jobs:
             exit 1
           fi
 
+  integration-tests:
+    runs-on: light-runners
+    permissions:
+      contents: read
+      packages: read
+    services:
+      postgres:
+        image: ghcr.io/holi-social/mirror/postgres:17
+        credentials:
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+        env:
+          POSTGRES_DB: caluno_test
+          POSTGRES_USER: caluno
+          POSTGRES_PASSWORD: caluno
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      DB_HOST: localhost
+      DB_PORT: 5432
+      DB_USER: caluno
+      DB_PASSWORD: caluno
+      DB_NAME: caluno_test
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          submodules: recursive
+          token: ${{ secrets.ORG_REPO_PAT }}
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: '1'
+      - uses: actions/cache@v4
+        with:
+          path: ~/.bun/install/cache
+          key: bun-${{ runner.os }}-${{ hashFiles('bun.lock') }}
+      - run: bun install --frozen-lockfile
+      - run: bun run build
+      - run: bun run --cwd apps/backend db:migrate
+      - run: bun run --cwd apps/backend db:seed
+      - run: bun test
+
   build-production-backend:
-    needs: [check-migrations]
+    needs: [lint-and-types, check-migrations, integration-tests]
     runs-on: build-runners
     permissions:
       contents: read
@@ -75,7 +139,7 @@ jobs:
           docker push "$REGISTRY_NAMESPACE/caluno-backend:latest"
 
   build-production-frontend:
-    needs: [check-migrations]
+    needs: [lint-and-types, check-migrations, integration-tests]
     runs-on: build-runners
     permissions:
       contents: read
