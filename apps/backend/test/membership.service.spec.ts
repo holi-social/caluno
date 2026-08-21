@@ -6,6 +6,7 @@ import { AuthService } from '../src/auth/auth.service';
 import { type Database, DatabaseModule } from '../src/database/database.module';
 import { DATABASE_CONNECTION } from '../src/database/database-connection';
 import * as schema from '../src/database/schema';
+import { EventInviteStatus } from '../src/event/enums';
 import { NotFoundGraphQLError } from '../src/graphql/errors';
 import { MembershipRequestStatus } from '../src/membership/enums';
 import { MembershipService } from '../src/membership/membership.service';
@@ -13,7 +14,8 @@ import { NotificationService } from '../src/notification';
 import { RequiredFormService } from '../src/requirement-profile/services/required-form.service';
 import { RequirementProfileService } from '../src/requirement-profile/services/requirement-profile.service';
 import { PostHogService } from '../src/shared/observability/posthog.service';
-import { createUser } from './factories';
+import { ShiftInviteStatus } from '../src/shift/enums';
+import { createEvent, createShift, createUser } from './factories';
 import {
   addMembership,
   createOrganizationWithType,
@@ -183,6 +185,154 @@ describe('MembershipService', () => {
         .from(schema.memberships)
         .where(eq(schema.memberships.id, membership.id));
       expect(stillThere.length).toBe(1);
+    });
+  });
+
+  describe('invite purge on membership end', () => {
+    const seedInvites = async () => {
+      const user = await createUser(db);
+      const otherUser = await createUser(db);
+      const { organization, type } = await createOrganizationWithType(
+        db,
+        `Invite Purge Org ${crypto.randomUUID()}`,
+      );
+      const root = await createUnit(db, {
+        organizationId: organization.id,
+        typeId: type.id,
+        name: 'root',
+      });
+      const child = await createUnit(db, {
+        organizationId: organization.id,
+        typeId: type.id,
+        name: 'child',
+        parentId: root.id,
+      });
+      const membership = await addMembership(db, user.id, root.id);
+
+      const event = await createEvent(db, { organizationUnitId: root.id });
+      const childEvent = await createEvent(db, {
+        organizationUnitId: child.id,
+      });
+      const shift = await createShift(db, { organizationUnitId: root.id });
+      const childShift = await createShift(db, {
+        organizationUnitId: child.id,
+      });
+      const instance = await db.query.shiftInstances.findFirst({
+        where: { masterId: shift.id },
+      });
+      if (!instance) {
+        throw new Error('Expected expanded shift instance');
+      }
+
+      const { organization: otherOrg, type: otherType } =
+        await createOrganizationWithType(
+          db,
+          `Other Invite Org ${crypto.randomUUID()}`,
+        );
+      const otherUnit = await createUnit(db, {
+        organizationId: otherOrg.id,
+        typeId: otherType.id,
+        name: 'other-root',
+      });
+      const otherEvent = await createEvent(db, {
+        organizationUnitId: otherUnit.id,
+      });
+
+      await db.insert(schema.eventInvites).values([
+        {
+          eventId: event.id,
+          userId: user.id,
+          status: EventInviteStatus.ACCEPTED,
+        },
+        {
+          eventId: childEvent.id,
+          userId: user.id,
+          status: EventInviteStatus.INVITED,
+        },
+        {
+          eventId: event.id,
+          userId: otherUser.id,
+          status: EventInviteStatus.INVITED,
+        },
+        {
+          eventId: otherEvent.id,
+          userId: user.id,
+          status: EventInviteStatus.INVITED,
+        },
+      ]);
+      await db.insert(schema.shiftInvites).values([
+        {
+          shiftId: shift.id,
+          userId: user.id,
+          status: ShiftInviteStatus.ADMIN_REJECTED,
+        },
+        {
+          shiftId: childShift.id,
+          userId: user.id,
+          status: ShiftInviteStatus.INVITED,
+        },
+      ]);
+      await db.insert(schema.shiftInstanceInvites).values({
+        instanceId: instance.id,
+        userId: user.id,
+        status: ShiftInviteStatus.SELF_JOINED,
+      });
+
+      return {
+        user,
+        otherUser,
+        root,
+        membership,
+        event,
+        childEvent,
+        shift,
+        childShift,
+        instance,
+        otherEvent,
+      };
+    };
+
+    const remainingInviteIds = async (userId: string) => {
+      const [eventRows, shiftRows, instanceRows] = await Promise.all([
+        db.query.eventInvites.findMany({ where: { userId } }),
+        db.query.shiftInvites.findMany({ where: { userId } }),
+        db.query.shiftInstanceInvites.findMany({ where: { userId } }),
+      ]);
+      return {
+        eventIds: eventRows.map((row) => row.eventId).sort(),
+        shiftIds: shiftRows.map((row) => row.shiftId).sort(),
+        instanceIds: instanceRows.map((row) => row.instanceId).sort(),
+      };
+    };
+
+    it('leaveMembership hard-deletes this user org invites including child units', async () => {
+      const seeded = await seedInvites();
+
+      await service.leaveMembership(seeded.membership.id, seeded.user.id);
+
+      const remaining = await remainingInviteIds(seeded.user.id);
+      expect(remaining.eventIds).toEqual([seeded.otherEvent.id]);
+      expect(remaining.shiftIds).toEqual([]);
+      expect(remaining.instanceIds).toEqual([]);
+
+      const otherUserEvent = await db.query.eventInvites.findFirst({
+        where: {
+          eventId: seeded.event.id,
+          userId: seeded.otherUser.id,
+        },
+      });
+      expect(otherUserEvent).toBeTruthy();
+    });
+
+    it('removeMembership hard-deletes this user org invites the same way', async () => {
+      const seeded = await seedInvites();
+
+      await service.removeMembership(seeded.membership.id, seeded.root.id);
+
+      const remaining = await remainingInviteIds(seeded.user.id);
+      expect(remaining.eventIds).toEqual([seeded.otherEvent.id]);
+      expect(remaining.shiftIds).toEqual([]);
+      expect(remaining.instanceIds).toEqual([]);
     });
   });
 
