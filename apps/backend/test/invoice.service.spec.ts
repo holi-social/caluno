@@ -27,6 +27,7 @@ import { OrganizationMapper } from '../src/organization/mappers/organization.map
 import { OrganizationService } from '../src/organization/organization.service';
 import { OrganizationUnitService } from '../src/organization/organization-unit.service';
 import { OrganizationUnitDataService } from '../src/organization/organization-unit-data.service';
+import { PostHogService } from '../src/shared/observability/posthog.service';
 import { FileService } from '../src/storage/services/file.service';
 import {
   createCompletedTimeEntry,
@@ -74,6 +75,7 @@ describe('InvoiceService', () => {
       {} as OrganizationUnitService,
       {} as NotificationService,
       {} as FileService,
+      {} as PostHogService,
     );
     const documentTemplateService = new DocumentTemplateService(db);
     const documentSigningService = new DocumentSigningService(
