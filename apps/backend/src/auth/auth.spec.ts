@@ -106,12 +106,14 @@ describe('createAuthConfig', () => {
 
   it('calls onSessionCreated with the session user id after session create', async () => {
     const onSessionCreated = jest.fn();
+    const onUserCreated = jest.fn();
     const config = createAuthConfig({
       database: {},
       trustedOrigins: [],
       sendVerificationOTP: jest.fn(),
       sendResetPassword: jest.fn(),
       onSessionCreated,
+      onUserCreated,
     });
 
     const afterCreate = config.databaseHooks?.session?.create?.after;
@@ -130,5 +132,63 @@ describe('createAuthConfig', () => {
     );
 
     expect(onSessionCreated).toHaveBeenCalledWith('user-1');
+    expect(onUserCreated).not.toHaveBeenCalled();
+  });
+
+  it('calls onUserCreated with the user id after user create', async () => {
+    const onUserCreated = jest.fn();
+    const onSessionCreated = jest.fn();
+    const config = createAuthConfig({
+      database: {},
+      trustedOrigins: [],
+      sendVerificationOTP: jest.fn(),
+      sendResetPassword: jest.fn(),
+      onUserCreated,
+      onSessionCreated,
+    });
+
+    const afterCreate = config.databaseHooks?.user?.create?.after;
+    expect(afterCreate).toBeDefined();
+
+    await afterCreate?.(
+      {
+        id: 'user-1',
+        email: 'volunteer@example.com',
+        name: 'Volunteer',
+        emailVerified: false,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
+      null,
+    );
+
+    expect(onUserCreated).toHaveBeenCalledWith('user-1');
+    expect(onSessionCreated).not.toHaveBeenCalled();
+  });
+
+  it('does not throw after user create when onUserCreated is omitted', async () => {
+    const config = createAuthConfig({
+      database: {},
+      trustedOrigins: [],
+      sendVerificationOTP: jest.fn(),
+      sendResetPassword: jest.fn(),
+    });
+
+    const afterCreate = config.databaseHooks?.user?.create?.after;
+    expect(afterCreate).toBeDefined();
+
+    await expect(
+      afterCreate?.(
+        {
+          id: 'user-1',
+          email: 'volunteer@example.com',
+          name: 'Volunteer',
+          emailVerified: false,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        null,
+      ),
+    ).resolves.toBeUndefined();
   });
 });
