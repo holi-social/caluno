@@ -13,7 +13,7 @@ env:
 
 jobs:
   check-migrations:
-    runs-on: self-hosted
+    runs-on: light-runners
     steps:
       - uses: actions/checkout@v5
         with:
@@ -35,7 +35,7 @@ jobs:
 
   build-production-backend:
     needs: [check-migrations]
-    runs-on: self-hosted
+    runs-on: build-runners
     permissions:
       contents: read
       packages: read
@@ -58,6 +58,8 @@ jobs:
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
         run: |
           docker buildx build --load \
+            --cache-from "type=registry,ref=$REGISTRY_NAMESPACE/caluno-backend:buildcache" \
+            --cache-to "type=registry,ref=$REGISTRY_NAMESPACE/caluno-backend:buildcache,mode=max" \
             --build-arg SENTRY_RELEASE="${{ github.sha }}" \
             --build-arg SENTRY_ORG="${{ vars.SENTRY_ORG }}" \
             --build-arg SENTRY_PROJECT_BACKEND="${{ vars.SENTRY_PROJECT_BACKEND }}" \
@@ -70,7 +72,7 @@ jobs:
 
   build-production-frontend:
     needs: [check-migrations]
-    runs-on: self-hosted
+    runs-on: build-runners
     permissions:
       contents: read
       packages: read
@@ -93,6 +95,8 @@ jobs:
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
         run: |
           docker buildx build --load \
+            --cache-from "type=registry,ref=$REGISTRY_NAMESPACE/caluno-frontend:buildcache" \
+            --cache-to "type=registry,ref=$REGISTRY_NAMESPACE/caluno-frontend:buildcache,mode=max" \
             --build-arg NEXT_PUBLIC_API_URL="https://api.caluno.org" \
             --build-arg NEXT_PUBLIC_WEB_URL="https://app.caluno.org" \
             --build-arg NEXT_PUBLIC_SENTRY_DSN="${{ vars.NEXT_PUBLIC_SENTRY_DSN }}" \
@@ -109,7 +113,7 @@ jobs:
 
   terraform-production-plan:
     needs: [build-production-backend, build-production-frontend]
-    runs-on: self-hosted
+    runs-on: light-runners
     permissions:
       contents: read
       packages: read
@@ -161,7 +165,7 @@ jobs:
   # this job runs automatically on every push to `production`.
   terraform-production-apply:
     needs: [terraform-production-plan]
-    runs-on: self-hosted
+    runs-on: light-runners
     permissions:
       contents: read
       packages: read
@@ -202,7 +206,7 @@ jobs:
 
   sentry-finalize-release:
     needs: [build-production-backend, build-production-frontend]
-    runs-on: self-hosted
+    runs-on: light-runners
     # Release bookkeeping must not fail the deploy pipeline.
     continue-on-error: true
     steps:
