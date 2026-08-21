@@ -1,8 +1,7 @@
 import { Context, Parent, ResolveField, Resolver } from '@nestjs/graphql';
+import { Loader } from '../../graphql/decorators/loader.decorator';
 import type { AuthenticatedGraphQLContext } from '../../graphql/graphql.context';
-import { OrganizationUnitMapper } from '../../organization/mappers/organization-unit.mapper';
 import { OrganizationUnit } from '../../organization/models/organization-unit.model';
-import { OrganizationUnitService } from '../../organization/organization-unit.service';
 import { ShiftInstanceMapper } from '../../shift/mappers/shift-instance.mapper';
 import { ShiftInstance } from '../../shift/models/shift-instance.model';
 import { ShiftService } from '../../shift/shift.service';
@@ -14,6 +13,7 @@ import type {
   TimeEntryEntity,
   TimeEntryEntityWithRelations,
 } from '../schemas/time-entry.schema';
+import { TimeEntryLoader } from './time-entry.loader';
 
 @Resolver(() => TimeEntry)
 export class TimeEntryFieldResolver {
@@ -22,8 +22,6 @@ export class TimeEntryFieldResolver {
     private readonly userService: UserService,
     private readonly userMapper: UserMapper,
     private readonly shiftInstanceMapper: ShiftInstanceMapper,
-    private readonly organizationUnitService: OrganizationUnitService,
-    private readonly organizationUnitMapper: OrganizationUnitMapper,
   ) {}
 
   @ResolveField(() => User)
@@ -55,10 +53,8 @@ export class TimeEntryFieldResolver {
   @ResolveField(() => OrganizationUnit)
   async organizationUnit(
     @Parent() timeEntry: TimeEntryEntity,
+    @Loader(TimeEntryLoader) loader: TimeEntryLoader,
   ): Promise<OrganizationUnit> {
-    const unit = await this.organizationUnitService.findById(
-      timeEntry.organizationUnitId,
-    );
-    return this.organizationUnitMapper.toModelOrThrow(unit);
+    return loader.organizationUnitById.load(timeEntry.organizationUnitId);
   }
 }
