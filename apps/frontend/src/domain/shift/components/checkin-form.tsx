@@ -84,17 +84,19 @@ export const CheckinForm = ({
           </div>
         )}
 
-        <button
-          type="button"
-          className="text-sm underline text-muted-foreground"
-          onClick={() =>
-            setCheckInMode((mode) => (mode === 'shift' ? 'none' : 'shift'))
-          }
-        >
-          {checkInMode === 'shift'
-            ? t('checkIn.checkInWithoutShift')
-            : t('checkIn.checkInWithShift')}
-        </button>
+        {shifts.length > 0 && (
+          <button
+            type="button"
+            className="text-sm underline text-muted-foreground"
+            onClick={() =>
+              setCheckInMode((mode) => (mode === 'shift' ? 'none' : 'shift'))
+            }
+          >
+            {checkInMode === 'shift'
+              ? t('checkIn.checkInWithoutShift')
+              : t('checkIn.checkInWithShift')}
+          </button>
+        )}
 
         {checkInMode === 'shift' && (
           <ShiftSelector
