@@ -9,7 +9,6 @@ import { CreateDocumentTemplateInput } from '../inputs/create-document-template.
 import { UpdateDocumentTemplateInput } from '../inputs/update-document-template.input';
 import { DocumentTemplateMapper } from '../mappers';
 import { DocumentTemplate } from '../models/document-template.model';
-import type { DocumentTemplateBody } from '../schemas/document-template.schema';
 import { DocumentTemplateService } from '../services';
 
 @Resolver(() => DocumentTemplate)
@@ -30,15 +29,7 @@ export class DocumentTemplateMutationResolver {
     const organizationId = await this.resolveOrganizationId(context);
     const template = await this.documentTemplateService.createDocumentTemplate(
       organizationId,
-      {
-        organizationUnitId: input.organizationUnitId,
-        reimbursementTypeId: input.reimbursementTypeId,
-        kind: input.kind,
-        renewalCadence: input.renewalCadence,
-        invoiceNumberFormat: input.invoiceNumberFormat,
-        body: input.body as DocumentTemplateBody,
-        signees: input.signees,
-      },
+      input,
       session.user.id,
     );
     return this.documentTemplateMapper.toModelOrThrow(template);
@@ -56,12 +47,7 @@ export class DocumentTemplateMutationResolver {
     const template = await this.documentTemplateService.updateDocumentTemplate(
       organizationId,
       id,
-      {
-        renewalCadence: input.renewalCadence,
-        invoiceNumberFormat: input.invoiceNumberFormat,
-        body: input.body as DocumentTemplateBody | undefined,
-        signees: input.signees,
-      },
+      input,
       session.user.id,
     );
     return this.documentTemplateMapper.toModelOrThrow(template);

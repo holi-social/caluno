@@ -35,12 +35,11 @@ export class InvoiceMutationResolver {
 
     const invoice = await this.invoiceService.createInvoice(
       organizationId,
-      input.organizationUnitId ?? context.organizationUnitId,
-      input.volunteerId,
-      input.reimbursementTypeId,
-      input.timeEntryIds,
-      input.periodStart,
-      input.periodEnd,
+      {
+        ...input,
+        organizationUnitId:
+          input.organizationUnitId ?? context.organizationUnitId,
+      },
       session.user.id,
     );
     return this.invoiceMapper.toModelOrThrow(invoice);

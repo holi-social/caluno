@@ -35,11 +35,11 @@ export class ContractMutationResolver {
 
     const contract = await this.contractService.createContract(
       organizationId,
-      input.organizationUnitId ?? context.organizationUnitId,
-      input.volunteerId,
-      input.reimbursementTypeId,
-      input.periodStart,
-      input.periodEnd,
+      {
+        ...input,
+        organizationUnitId:
+          input.organizationUnitId ?? context.organizationUnitId,
+      },
       session.user.id,
     );
     return this.contractMapper.toModelOrThrow(contract);
