@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { count, eq } from 'drizzle-orm';
+import { and, count, eq } from 'drizzle-orm';
 import type { Database } from '../database/database.module';
 import { DATABASE_CONNECTION } from '../database/database-connection';
 import * as schema from '../database/schema';
@@ -154,25 +154,19 @@ export class TimeTrackingService {
     organizationUnitId: string,
     pagination: PaginationInput,
   ): Promise<{ entries: TimeEntryEntity[]; total: number }> {
-    const timeEntries = await this.db.query.timeEntries.findMany({
-      with: { shiftInstance: { with: { master: true } } },
+    const entries = await this.db.query.timeEntries.findMany({
+      where: { organizationUnitId },
       orderBy: { startedAt: 'desc' },
+      limit: pagination.limit,
+      offset: pagination.offset,
     });
 
-    const filteredTimeEntries = timeEntries.filter(
-      (entry) =>
-        entry.shiftInstance?.master?.organizationUnitId === organizationUnitId,
-    );
+    const [{ total }] = await this.db
+      .select({ total: count() })
+      .from(schema.timeEntries)
+      .where(eq(schema.timeEntries.organizationUnitId, organizationUnitId));
 
-    const paginated = filteredTimeEntries.slice(
-      pagination.offset,
-      pagination.offset + pagination.limit,
-    );
-
-    return {
-      entries: paginated as TimeEntryEntity[],
-      total: filteredTimeEntries.length,
-    };
+    return { entries: entries as TimeEntryEntity[], total };
   }
 
   async findByUser(
@@ -180,22 +174,24 @@ export class TimeTrackingService {
     userId: string,
     pagination: PaginationInput,
   ): Promise<{ entries: TimeEntryEntity[]; total: number }> {
-    const allEntries = await this.db.query.timeEntries.findMany({
-      where: { volunteerId: userId },
-      with: { shiftInstance: { with: { master: true } } },
+    const entries = await this.db.query.timeEntries.findMany({
+      where: { organizationUnitId, volunteerId: userId },
       orderBy: { startedAt: 'desc' },
+      limit: pagination.limit,
+      offset: pagination.offset,
     });
 
-    const filtered = allEntries.filter(
-      (e) => e.shiftInstance?.master?.organizationUnitId === organizationUnitId,
-    );
+    const [{ total }] = await this.db
+      .select({ total: count() })
+      .from(schema.timeEntries)
+      .where(
+        and(
+          eq(schema.timeEntries.organizationUnitId, organizationUnitId),
+          eq(schema.timeEntries.volunteerId, userId),
+        ),
+      );
 
-    const paginated = filtered.slice(
-      pagination.offset,
-      pagination.offset + pagination.limit,
-    );
-
-    return { entries: paginated as TimeEntryEntity[], total: filtered.length };
+    return { entries: entries as TimeEntryEntity[], total };
   }
 
   async findMyTime(

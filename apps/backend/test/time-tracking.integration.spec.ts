@@ -229,4 +229,39 @@ describe('TimeTrackingService', () => {
       }),
     ).rejects.toThrow(NotFoundGraphQLError);
   });
+
+  it('findAll includes shift-less entries for the org unit', async () => {
+    const user = await createUser(db);
+    const input = new AddTimeEntryInput();
+    input.volunteerId = user.id;
+    input.startedAt = new Date();
+    input.endedAt = new Date();
+    input.notes = null;
+    const created = await service.addTimeEntry(organizationUnitId, input);
+
+    const { entries } = await service.findAll(organizationUnitId, {
+      limit: 50,
+      offset: 0,
+    });
+
+    expect(entries.some((e) => e.id === created.id)).toBe(true);
+  });
+
+  it('findByUser includes shift-less entries for that volunteer and org unit', async () => {
+    const user = await createUser(db);
+    const input = new AddTimeEntryInput();
+    input.volunteerId = user.id;
+    input.startedAt = new Date();
+    input.endedAt = new Date();
+    input.notes = null;
+    const created = await service.addTimeEntry(organizationUnitId, input);
+
+    const { entries } = await service.findByUser(
+      organizationUnitId,
+      user.id,
+      { limit: 50, offset: 0 },
+    );
+
+    expect(entries.map((e) => e.id)).toContain(created.id);
+  });
 });
