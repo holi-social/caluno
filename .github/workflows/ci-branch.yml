@@ -4,7 +4,7 @@ name: CI - Branch
 
 on:
   push:
-    branches-ignore: [main, production]
+    branches-ignore: [main, production, release]
 
 jobs:
   check-migrations:
