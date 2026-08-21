@@ -79,10 +79,9 @@ export class TimeTrackingService {
   ): Promise<TimeEntryEntity> {
     const entry = await this.db.query.timeEntries.findFirst({
       where: { id },
-      with: { shiftInstance: { with: { master: true } } },
     });
 
-    if (!existsInOrgUnit(organizationUnitId, entry)) {
+    if (!entry || entry.organizationUnitId !== organizationUnitId) {
       throw new NotFoundGraphQLError('Time entry not found');
     }
 
@@ -102,10 +101,9 @@ export class TimeTrackingService {
   ): Promise<TimeEntryEntity> {
     const entry = await this.db.query.timeEntries.findFirst({
       where: { id },
-      with: { shiftInstance: { with: { master: true } } },
     });
 
-    if (!existsInOrgUnit(organizationUnitId, entry)) {
+    if (!entry || entry.organizationUnitId !== organizationUnitId) {
       throw new NotFoundGraphQLError('Time entry not found');
     }
 
@@ -124,10 +122,9 @@ export class TimeTrackingService {
   ): Promise<TimeEntryEntity> {
     const entry = await this.db.query.timeEntries.findFirst({
       where: { id },
-      with: { shiftInstance: { with: { master: true } } },
     });
 
-    if (!existsInOrgUnit(organizationUnitId, entry)) {
+    if (!entry || entry.organizationUnitId !== organizationUnitId) {
       throw new NotFoundGraphQLError('Time entry not found');
     }
 
@@ -144,10 +141,9 @@ export class TimeTrackingService {
   ): Promise<TimeEntryEntity> {
     const entry = await this.db.query.timeEntries.findFirst({
       where: { id },
-      with: { shiftInstance: { with: { master: true } }, volunteer: true },
     });
 
-    if (!existsInOrgUnit(organizationUnitId, entry)) {
+    if (!entry || entry.organizationUnitId !== organizationUnitId) {
       throw new NotFoundGraphQLError('Time entry not found');
     }
 
@@ -361,18 +357,5 @@ const isConstraintViolation = (
     driverError.code === '23505' &&
     'constraint' in driverError &&
     driverError.constraint === constraintName
-  );
-};
-
-const existsInOrgUnit = (
-  organizationUnitId: string,
-  entry?: {
-    shiftInstance: { master: { organizationUnitId: string } | null } | null;
-  },
-): entry is {
-  shiftInstance: { master: { organizationUnitId: string } };
-} => {
-  return !!(
-    entry?.shiftInstance?.master?.organizationUnitId === organizationUnitId
   );
 };
