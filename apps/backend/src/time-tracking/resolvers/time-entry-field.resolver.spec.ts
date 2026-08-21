@@ -100,8 +100,9 @@ describe('TimeEntryFieldResolver', () => {
       {} as AuthenticatedGraphQLContext,
     );
 
-    expect(result.id).toBe(shiftInstance.id);
-    expect(result.master.id).toBe(shift.id);
+    expect(result).not.toBeNull();
+    expect(result!.id).toBe(shiftInstance.id);
+    expect(result!.master.id).toBe(shift.id);
     expect(shiftService.findInstanceById).not.toHaveBeenCalled();
   });
 
@@ -112,7 +113,8 @@ describe('TimeEntryFieldResolver', () => {
       organizationUnitId: 'unit-1',
     } as AuthenticatedGraphQLContext);
 
-    expect(result.id).toBe(shiftInstance.id);
+    expect(result).not.toBeNull();
+    expect(result!.id).toBe(shiftInstance.id);
     expect(shiftService.findInstanceById).toHaveBeenCalledWith(
       shiftInstance.id,
       'unit-1',
