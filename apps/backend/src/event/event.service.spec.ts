@@ -119,4 +119,15 @@ describe('EventService.findAvailableEvents', () => {
       status: { in: ['ACCEPTED', 'SELF_JOINED'] },
     });
   });
+
+  it('orders by startsAt with an id tie-break for stable pagination', async () => {
+    findUnits.mockResolvedValue([{ id: 'accepted-unit' }]);
+    getPendingOrganizationUnitIds.mockResolvedValue([]);
+    findMany.mockResolvedValueOnce([]).mockResolvedValueOnce([{ total: 0 }]);
+
+    await service.findAvailableEvents('user-1', null, null, null, 15, 0);
+
+    const rowsCallOrderBy = findMany.mock.calls[0]?.[0]?.orderBy;
+    expect(rowsCallOrderBy).toEqual({ startsAt: 'asc', id: 'asc' });
+  });
 });
