@@ -33,19 +33,10 @@ export class TimeTrackingService {
     input: AddTimeEntryInput,
   ): Promise<TimeEntryEntity> {
     if (input.shiftInstanceId) {
-      const instance = await this.db.query.shiftInstances.findFirst({
-        where: { id: input.shiftInstanceId },
-        with: { master: true },
-      });
-
-      if (
-        !instance ||
-        instance.master.organizationUnitId !== organizationUnitId
-      ) {
-        throw new NotFoundGraphQLError(
-          'Shift instance does not exist in this organization',
-        );
-      }
+      await this.assertShiftInstanceInOrgUnit(
+        input.shiftInstanceId,
+        organizationUnitId,
+      );
     }
 
     try {
@@ -69,6 +60,25 @@ export class TimeTrackingService {
         throw new ConflictGraphQLError('Already checked in');
       }
       throw error;
+    }
+  }
+
+  private async assertShiftInstanceInOrgUnit(
+    shiftInstanceId: string,
+    organizationUnitId: string,
+  ): Promise<void> {
+    const instance = await this.db.query.shiftInstances.findFirst({
+      where: { id: shiftInstanceId },
+      with: { master: true },
+    });
+
+    if (
+      !instance ||
+      instance.master.organizationUnitId !== organizationUnitId
+    ) {
+      throw new NotFoundGraphQLError(
+        'Shift instance does not exist in this organization',
+      );
     }
   }
 
@@ -105,6 +115,13 @@ export class TimeTrackingService {
 
     if (!entry || entry.organizationUnitId !== organizationUnitId) {
       throw new NotFoundGraphQLError('Time entry not found');
+    }
+
+    if (input.shiftInstanceId) {
+      await this.assertShiftInstanceInOrgUnit(
+        input.shiftInstanceId,
+        organizationUnitId,
+      );
     }
 
     const [timeEntry] = await this.db
