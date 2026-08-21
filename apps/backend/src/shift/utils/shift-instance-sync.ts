@@ -228,10 +228,16 @@ export async function syncShiftInstances(
     .from(schema.shiftInstanceInvites)
     .where(inArray(schema.shiftInstanceInvites.instanceId, removeIds));
 
-  const timeEntries = await tx
+  const timeEntriesRaw = await tx
     .select({ instanceId: schema.timeEntries.shiftInstanceId })
     .from(schema.timeEntries)
     .where(inArray(schema.timeEntries.shiftInstanceId, removeIds));
+
+  // The inArray() WHERE clause above guarantees instanceId is non-null
+  // for every matched row; narrow the type accordingly.
+  const timeEntries = timeEntriesRaw.filter(
+    (e): e is { instanceId: string } => e.instanceId !== null,
+  );
 
   // We protect instances that are already cancelled, have invites,
   // or have time entries from being deleted. They will be marked

@@ -244,7 +244,7 @@ export class ShiftService {
   ): Promise<{ shiftInstanceId: string }[]> {
     if (instanceIds.length === 0) return [];
 
-    return this.db
+    const rows = await this.db
       .select({ shiftInstanceId: schema.timeEntries.shiftInstanceId })
       .from(schema.timeEntries)
       .where(
@@ -254,6 +254,12 @@ export class ShiftService {
           isNull(schema.timeEntries.endedAt),
         ),
       );
+
+    // The inArray() WHERE clause above guarantees shiftInstanceId is
+    // non-null for every matched row; narrow the type accordingly.
+    return rows.filter(
+      (row): row is { shiftInstanceId: string } => row.shiftInstanceId !== null,
+    );
   }
 
   /** A user's shift-instance invite statuses across many instances in one query (DataLoader batch). */
