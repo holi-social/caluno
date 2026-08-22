@@ -115,7 +115,7 @@ export class ShiftInstanceFieldResolver {
       return false;
     }
 
-    return loader.isCheckedInByKey.load(`${instance.id}::${session.user.id}`);
+    return loader.isCheckedInByKey.load(`${instance.id}:${session.user.id}`);
   }
 
   @AllowAnonymous()
@@ -155,9 +155,21 @@ export class ShiftInstanceFieldResolver {
     if (!session?.user) {
       return null;
     }
-    return loader.myInviteStatusByKey.load(
-      `${instance.id}::${session.user.id}`,
-    );
+    return loader.myInviteStatusByKey.load(`${instance.id}:${session.user.id}`);
+  }
+
+  // Raw invite-sent timestamp for this instance, or null when there is no direct invite.
+  @AllowAnonymous()
+  @ResolveField(() => Date, { nullable: true })
+  async myInvitedAt(
+    @Parent() instance: ShiftInstanceEntity,
+    @Session() session: UserSession,
+    @Loader(ShiftInstanceLoader) loader: ShiftInstanceLoader,
+  ): Promise<Date | null> {
+    if (!session?.user) {
+      return null;
+    }
+    return loader.myInvitedAtByKey.load(`${instance.id}:${session.user.id}`);
   }
 
   // True when the current user has this instance in their pending membership
@@ -173,7 +185,7 @@ export class ShiftInstanceFieldResolver {
       return false;
     }
     return loader.isIntendingToJoinByKey.load(
-      `${instance.id}::${session.user.id}`,
+      `${instance.id}:${session.user.id}`,
     );
   }
 

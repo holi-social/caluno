@@ -138,6 +138,7 @@ export default async function EventPage({
                 eventId={event.id}
                 organizationUnitId={event.organizationUnit?.id}
                 initialStatus={event.myJoinStatus}
+                membershipState={membershipState}
                 eventRequiredForms={event.requiredForms?.map((ref) => ref.form)}
                 organizationUnitRequiredForms={event.organizationUnit?.requiredForms?.map(
                   (ref) => ref.form,

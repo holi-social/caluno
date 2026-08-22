@@ -224,13 +224,13 @@ export class ShiftRepository extends BaseRepository {
   }
 
   async findForWeek(
-    from: Date,
-    to: Date,
+    startsAfter: Date,
+    endsBefore: Date,
     eventId?: string | null,
   ): Promise<WeeklyShiftInstance[]> {
     const data = await this.sdk.GetWeeklyShifts({
-      from: from.toISOString(),
-      to: to.toISOString(),
+      startsAfter: startsAfter.toISOString(),
+      endsBefore: endsBefore.toISOString(),
       eventId: eventId ?? undefined,
     });
     return data.weeklyShifts;
@@ -239,8 +239,8 @@ export class ShiftRepository extends BaseRepository {
   async findMyShiftInstances(
     options: {
       includePast?: boolean;
-      from?: Date;
-      to?: Date;
+      startsAfter?: Date;
+      endsBefore?: Date;
       limit?: number;
       offset?: number;
       order?: SortOrder;
@@ -258,8 +258,8 @@ export class ShiftRepository extends BaseRepository {
   }> {
     const data = await this.sdk.GetMyShiftInstances({
       includePast: options.includePast ?? false,
-      startsAfter: options.from?.toISOString(),
-      endsBefore: options.to?.toISOString(),
+      startsAfter: options.startsAfter?.toISOString(),
+      endsBefore: options.endsBefore?.toISOString(),
       limit: options.limit ?? 15,
       offset: options.offset ?? 0,
       order: options.order ?? SortOrder.Asc,
@@ -271,8 +271,8 @@ export class ShiftRepository extends BaseRepository {
 
   async findAvailableShiftInstances(
     options: {
-      from?: Date;
-      to?: Date;
+      startsAfter?: Date;
+      endsBefore?: Date;
       organizationUnitIds?: string[];
       limit?: number;
       offset?: number;
@@ -287,8 +287,8 @@ export class ShiftRepository extends BaseRepository {
     };
   }> {
     const data = await this.sdk.GetAvailableShiftInstances({
-      startsAfter: options.from?.toISOString(),
-      endsBefore: options.to?.toISOString(),
+      startsAfter: options.startsAfter?.toISOString(),
+      endsBefore: options.endsBefore?.toISOString(),
       organizationUnitIds: options.organizationUnitIds,
       limit: options.limit ?? 15,
       offset: options.offset ?? 0,

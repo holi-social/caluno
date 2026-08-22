@@ -1,3 +1,7 @@
+jest.mock('nanoid', () => ({
+  customAlphabet: () => () => 'abcdefghijkl',
+}));
+
 jest.mock('@better-auth/drizzle-adapter', () => ({
   drizzleAdapter: jest.fn(() => ({ id: 'drizzle-adapter' })),
 }));
@@ -98,5 +102,33 @@ describe('createAuthConfig', () => {
         'x-locale': 'de',
       },
     });
+  });
+
+  it('calls onSessionCreated with the session user id after session create', async () => {
+    const onSessionCreated = jest.fn();
+    const config = createAuthConfig({
+      database: {},
+      trustedOrigins: [],
+      sendVerificationOTP: jest.fn(),
+      sendResetPassword: jest.fn(),
+      onSessionCreated,
+    });
+
+    const afterCreate = config.databaseHooks?.session?.create?.after;
+    expect(afterCreate).toBeDefined();
+
+    await afterCreate?.(
+      {
+        id: 'session-1',
+        userId: 'user-1',
+        token: 'token-1',
+        expiresAt: new Date(),
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
+      null,
+    );
+
+    expect(onSessionCreated).toHaveBeenCalledWith('user-1');
   });
 });
