@@ -1,6 +1,7 @@
 import { Field, ID, ObjectType } from '@nestjs/graphql';
 import { GraphQLJSON } from 'graphql-scalars';
 import { Organization } from '../../organization/models/organization.model';
+import { OrganizationUnit } from '../../organization/models/organization-unit.model';
 import { User } from '../../user/models/user.model';
 import { DocumentKind, RenewalCadence } from '../enums';
 import { ReimbursementType } from './reimbursement-type.model';
@@ -13,6 +14,11 @@ export class DocumentTemplate {
 
   @Field(() => Organization)
   organization!: Organization;
+
+  // Null means this is the organization-wide default template; set means
+  // it's an override scoped to just this unit.
+  @Field(() => OrganizationUnit, { nullable: true })
+  organizationUnit?: OrganizationUnit | null;
 
   @Field(() => ReimbursementType)
   reimbursementType!: ReimbursementType;

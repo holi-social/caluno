@@ -20,6 +20,6 @@ import { TimeTrackingService } from './time-tracking.service';
     TimeTrackingMutationResolver,
     TimeTrackingQueryResolver,
   ],
-  exports: [TimeTrackingService],
+  exports: [TimeTrackingService, TimeEntryMapper],
 })
 export class TimeTrackingModule {}
