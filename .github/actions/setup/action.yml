@@ -2,6 +2,7 @@ name: Setup workspace
 description: >-
   Install the Bun version pinned in package.json, restore the Bun and Turborepo
   caches, and install workspace dependencies. Run actions/checkout first.
+  Pair `turbo-cache: true` with the save-turbo-cache action at the end of the job.
 
 inputs:
   install:
@@ -9,13 +10,9 @@ inputs:
     required: false
     default: 'true'
   turbo-cache:
-    description: Restore and save the Turborepo filesystem cache (.turbo/cache).
+    description: Restore the Turborepo filesystem cache (.turbo/cache).
     required: false
     default: 'false'
-  cache-key:
-    description: Turborepo cache key scope, so unrelated jobs keep separate entries.
-    required: false
-    default: default
 
 runs:
   using: composite
@@ -32,15 +29,15 @@ runs:
         restore-keys: |
           bun-${{ runner.os }}-
 
+    # Restore only; save-turbo-cache handles the other half.
     - name: Restore Turborepo cache
       if: inputs.turbo-cache == 'true'
-      uses: actions/cache@v4
+      uses: actions/cache/restore@v4
       with:
         path: .turbo/cache
-        # The sha never hits, so the cache saves every run; restore-keys warm it.
-        key: turbo-${{ runner.os }}-${{ inputs.cache-key }}-${{ github.sha }}
+        # One scope for every job — entries are content-addressed by task hash.
+        key: turbo-${{ runner.os }}-${{ github.sha }}
         restore-keys: |
-          turbo-${{ runner.os }}-${{ inputs.cache-key }}-
           turbo-${{ runner.os }}-
 
     - name: Install dependencies

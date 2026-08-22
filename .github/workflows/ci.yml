@@ -1,5 +1,5 @@
 # Full gate for pull requests into the protected branches. The CD workflows run
-# a slimmer subset post-merge. See SETUP.md for the one-time setup.
+# the same verify suite post-merge. See SETUP.md for the one-time setup.
 name: CI
 
 on:
@@ -27,6 +27,7 @@ jobs:
     outputs:
       code: ${{ steps.filter.outputs.code }}
       backend: ${{ steps.filter.outputs.backend }}
+      frontend: ${{ steps.filter.outputs.frontend }}
       infra: ${{ steps.filter.outputs.infra }}
     steps:
       - uses: actions/checkout@v5
@@ -44,7 +45,7 @@ jobs:
           merge_base="$(git merge-base "$BASE_SHA" "$HEAD_SHA")"
           files="$(git diff --name-only "$merge_base" "$HEAD_SHA")"
           echo "Changed files:"
-          echo "$files" | sed 's/^/  /'
+          echo "  ${files//$'\n'/$'\n'  }"
 
           matches() { echo "$files" | grep -qE "$1"; }
 
@@ -62,6 +63,7 @@ jobs:
           {
             echo "code=$code"
             echo "backend=$backend"
+            echo "frontend=$frontend"
             echo "infra=$infra"
           } | tee -a "$GITHUB_OUTPUT"
 
@@ -108,6 +110,8 @@ jobs:
 
   build-backend:
     name: Build backend image
+    needs: [changes]
+    if: needs.changes.outputs.backend == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 30
     permissions:
@@ -132,11 +136,15 @@ jobs:
           platforms: linux/amd64
           provenance: false
           outputs: type=cacheonly
-          # Read-only: only the deploys write the cache.
-          cache-from: type=registry,ref=${{ vars.SCW_REGISTRY_HOST }}/${{ vars.SCW_REGISTRY_NAMESPACE }}/caluno-backend:buildcache
+          # Read-only; deploys write it. Either environment may be freshest.
+          cache-from: |
+            type=registry,ref=${{ vars.SCW_REGISTRY_HOST }}/${{ vars.SCW_REGISTRY_NAMESPACE }}/caluno-backend:buildcache-staging
+            type=registry,ref=${{ vars.SCW_REGISTRY_HOST }}/${{ vars.SCW_REGISTRY_NAMESPACE }}/caluno-backend:buildcache-production
 
   build-frontend:
     name: Build frontend image
+    needs: [changes]
+    if: needs.changes.outputs.frontend == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 30
     permissions:
@@ -164,7 +172,9 @@ jobs:
           build-args: |
             NEXT_PUBLIC_API_URL=http://localhost
             NEXT_PUBLIC_WEB_URL=http://localhost
-          cache-from: type=registry,ref=${{ vars.SCW_REGISTRY_HOST }}/${{ vars.SCW_REGISTRY_NAMESPACE }}/caluno-frontend:buildcache
+          cache-from: |
+            type=registry,ref=${{ vars.SCW_REGISTRY_HOST }}/${{ vars.SCW_REGISTRY_NAMESPACE }}/caluno-frontend:buildcache-staging
+            type=registry,ref=${{ vars.SCW_REGISTRY_HOST }}/${{ vars.SCW_REGISTRY_NAMESPACE }}/caluno-frontend:buildcache-production
 
   terraform-plan:
     name: Terraform plan
@@ -179,6 +189,7 @@ jobs:
       DEPLOY_ENV: ${{ github.base_ref == 'production' && 'production' || 'staging' }}
       TF_VAR_active_environment: ${{ github.base_ref == 'production' && 'production' || 'staging' }}
       TF_VAR_image_tag: ${{ github.sha }}
+      TF_PLUGIN_CACHE_DIR: ${{ github.workspace }}/.terraform.d/plugin-cache
       SCW_ACCESS_KEY: ${{ secrets.SCW_ACCESS_KEY }}
       SCW_SECRET_KEY: ${{ secrets.SCW_SECRET_KEY }}
       SCW_DEFAULT_PROJECT_ID: ${{ vars.SCW_DEFAULT_PROJECT_ID }}
@@ -197,6 +208,14 @@ jobs:
         with:
           terraform_version: ${{ env.TF_VERSION }}
           terraform_wrapper: false # the wrapper rewrites stdout
+      # Providers are ~100 MB and pinned by the lock file.
+      - run: mkdir -p "$TF_PLUGIN_CACHE_DIR"
+      - uses: actions/cache@v4
+        with:
+          path: ${{ env.TF_PLUGIN_CACHE_DIR }}
+          key: tf-plugins-${{ runner.os }}-${{ hashFiles('packages/infra/.terraform.lock.hcl') }}
+          restore-keys: |
+            tf-plugins-${{ runner.os }}-
       - name: Init & validate
         working-directory: ${{ env.TF_ROOT }}
         run: |

@@ -1,6 +1,8 @@
-# Build and push both images, plan Terraform, apply behind a GitHub Environment.
-# Staging and production differ only by the inputs below. Callers serialize
-# deploys with a workflow-level concurrency group.
+# Verify, build and push both images, plan Terraform, apply behind a GitHub
+# Environment. Staging and production differ only by the inputs below. Callers
+# serialize deploys with a workflow-level concurrency group.
+#
+# Gate, builds and plan all start at once; only `apply` waits on the gate.
 name: Deploy
 
 on:
@@ -34,6 +36,16 @@ env:
   TF_INPUT: 'false'
 
 jobs:
+  gate:
+    name: Pre-deploy gate
+    # Full suite. Runs alongside the image builds, and is what warms the
+    # Turborepo cache on this branch for every pull request to read.
+    permissions:
+      contents: read
+      packages: read
+    uses: ./.github/workflows/reusable-verify.yml
+    secrets: inherit
+
   build-backend:
     name: Build & push backend image
     runs-on: ubuntu-latest
@@ -70,9 +82,9 @@ jobs:
             SENTRY_PROJECT_BACKEND=${{ vars.SENTRY_PROJECT_BACKEND }}
           secrets: |
             sentry_auth_token=${{ secrets.SENTRY_AUTH_TOKEN }}
-          # The only layer cache in the pipeline; pull requests read it.
-          cache-from: type=registry,ref=${{ vars.SCW_REGISTRY_HOST }}/${{ vars.SCW_REGISTRY_NAMESPACE }}/caluno-backend:buildcache
-          cache-to: type=registry,ref=${{ vars.SCW_REGISTRY_HOST }}/${{ vars.SCW_REGISTRY_NAMESPACE }}/caluno-backend:buildcache,mode=max
+          # Per environment; pull requests read both.
+          cache-from: type=registry,ref=${{ vars.SCW_REGISTRY_HOST }}/${{ vars.SCW_REGISTRY_NAMESPACE }}/caluno-backend:buildcache-${{ inputs.environment }}
+          cache-to: type=registry,ref=${{ vars.SCW_REGISTRY_HOST }}/${{ vars.SCW_REGISTRY_NAMESPACE }}/caluno-backend:buildcache-${{ inputs.environment }},mode=max
 
   build-frontend:
     name: Build & push frontend image
@@ -112,17 +124,18 @@ jobs:
             SENTRY_PROJECT_FRONTEND=${{ vars.SENTRY_PROJECT_FRONTEND }}
           secrets: |
             sentry_auth_token=${{ secrets.SENTRY_AUTH_TOKEN }}
-          cache-from: type=registry,ref=${{ vars.SCW_REGISTRY_HOST }}/${{ vars.SCW_REGISTRY_NAMESPACE }}/caluno-frontend:buildcache
-          cache-to: type=registry,ref=${{ vars.SCW_REGISTRY_HOST }}/${{ vars.SCW_REGISTRY_NAMESPACE }}/caluno-frontend:buildcache,mode=max
+          cache-from: type=registry,ref=${{ vars.SCW_REGISTRY_HOST }}/${{ vars.SCW_REGISTRY_NAMESPACE }}/caluno-frontend:buildcache-${{ inputs.environment }}
+          cache-to: type=registry,ref=${{ vars.SCW_REGISTRY_HOST }}/${{ vars.SCW_REGISTRY_NAMESPACE }}/caluno-frontend:buildcache-${{ inputs.environment }},mode=max
 
   plan:
     name: Terraform plan
-    needs: [build-backend, build-frontend]
+    # No `needs`: `apply` is what waits on the gate and the images.
     runs-on: ubuntu-latest
     timeout-minutes: 20
     env:
       TF_VAR_image_tag: ${{ github.sha }}
       TF_VAR_active_environment: ${{ inputs.environment }}
+      TF_PLUGIN_CACHE_DIR: ${{ github.workspace }}/.terraform.d/plugin-cache
       SCW_ACCESS_KEY: ${{ secrets.SCW_ACCESS_KEY }}
       SCW_SECRET_KEY: ${{ secrets.SCW_SECRET_KEY }}
       SCW_DEFAULT_PROJECT_ID: ${{ vars.SCW_DEFAULT_PROJECT_ID }}
@@ -143,6 +156,14 @@ jobs:
         with:
           terraform_version: ${{ env.TF_VERSION }}
           terraform_wrapper: false
+      # Providers are ~100 MB and pinned by the lock file.
+      - run: mkdir -p "$TF_PLUGIN_CACHE_DIR"
+      - uses: actions/cache@v4
+        with:
+          path: ${{ env.TF_PLUGIN_CACHE_DIR }}
+          key: tf-plugins-${{ runner.os }}-${{ hashFiles('packages/infra/.terraform.lock.hcl') }}
+          restore-keys: |
+            tf-plugins-${{ runner.os }}-
       - name: Init & validate
         working-directory: ${{ env.TF_ROOT }}
         run: |
@@ -185,7 +206,9 @@ jobs:
 
   apply:
     name: Terraform apply
-    needs: [plan]
+    # Nothing reaches the environment unless the gate passed and both images
+    # are in the registry.
+    needs: [gate, plan, build-backend, build-frontend]
     # Skip on an empty plan, so no approval is requested for a no-op.
     if: needs.plan.outputs.has-changes == 'true'
     runs-on: ubuntu-latest
@@ -196,6 +219,7 @@ jobs:
       url: ${{ inputs.web-url }}
     env:
       TF_VAR_active_environment: ${{ inputs.environment }}
+      TF_PLUGIN_CACHE_DIR: ${{ github.workspace }}/.terraform.d/plugin-cache
       SCW_ACCESS_KEY: ${{ secrets.SCW_ACCESS_KEY }}
       SCW_SECRET_KEY: ${{ secrets.SCW_SECRET_KEY }}
       SCW_DEFAULT_PROJECT_ID: ${{ vars.SCW_DEFAULT_PROJECT_ID }}
@@ -214,6 +238,13 @@ jobs:
         with:
           terraform_version: ${{ env.TF_VERSION }}
           terraform_wrapper: false
+      - run: mkdir -p "$TF_PLUGIN_CACHE_DIR"
+      - uses: actions/cache@v4
+        with:
+          path: ${{ env.TF_PLUGIN_CACHE_DIR }}
+          key: tf-plugins-${{ runner.os }}-${{ hashFiles('packages/infra/.terraform.lock.hcl') }}
+          restore-keys: |
+            tf-plugins-${{ runner.os }}-
       - uses: actions/download-artifact@v8
         with:
           name: plan-${{ inputs.environment }}
