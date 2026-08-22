@@ -124,13 +124,23 @@ export class TimeTrackingService {
       );
     }
 
-    const [timeEntry] = await this.db
-      .update(schema.timeEntries)
-      .set(input)
-      .where(eq(schema.timeEntries.id, id))
-      .returning();
+    try {
+      const [timeEntry] = await this.db
+        .update(schema.timeEntries)
+        .set(input)
+        .where(eq(schema.timeEntries.id, id))
+        .returning();
 
-    return timeEntry;
+      return timeEntry;
+    } catch (error) {
+      if (
+        isConstraintViolation(error, UNIQUE_OPEN_ENTRY_CONSTRAINT) ||
+        isConstraintViolation(error, UNIQUE_OPEN_SHIFTLESS_ENTRY_CONSTRAINT)
+      ) {
+        throw new ConflictGraphQLError('Already checked in');
+      }
+      throw error;
+    }
   }
 
   async deleteTimeEntry(
