@@ -813,8 +813,8 @@ export class EventService {
   }
 
   async findInvitesByEventIdsForUser(
-    eventIds: string[],
     userId: string,
+    eventIds: string[],
   ): Promise<EventInviteEntity[]> {
     if (eventIds.length === 0) {
       return [];
@@ -822,8 +822,8 @@ export class EventService {
 
     return this.db.query.eventInvites.findMany({
       where: {
-        eventId: { in: eventIds },
         userId,
+        eventId: { in: eventIds },
       },
     });
   }
