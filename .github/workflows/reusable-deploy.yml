@@ -1,0 +1,277 @@
+# Reusable deploy pipeline: build and push both images, plan Terraform, then
+# apply behind a GitHub Environment. Staging and production differ only by the
+# inputs below, so there is exactly one copy of this logic.
+#
+# Serialization is the caller's job: cd-staging.yml / cd-production.yml each set
+# a workflow-level concurrency group with cancel-in-progress: false, which means
+# a whole deploy run never interleaves with another for the same environment.
+# Deliberately no job-level concurrency here — plan and apply sharing one group
+# lets a newer run's plan evict an older run's *pending* apply.
+#
+# Not triggered directly: `workflow_call` only.
+name: Deploy
+
+on:
+  workflow_call:
+    inputs:
+      environment:
+        description: GitHub Environment to deploy through, and the Terraform state prefix.
+        type: string
+        required: true
+      moving-tag:
+        description: Rolling image tag for this environment (`staging` / `latest`). The immutable tag is always the commit sha.
+        type: string
+        required: true
+      api-url:
+        description: Public API origin baked into the frontend bundle.
+        type: string
+        required: true
+      web-url:
+        description: Public web origin baked into the frontend bundle.
+        type: string
+        required: true
+
+permissions:
+  contents: read
+
+env:
+  # Keep in sync with ci.yml.
+  TF_VERSION: 1.15.9
+  TF_ROOT: packages/infra
+  TF_IN_AUTOMATION: 'true'
+  TF_INPUT: 'false'
+
+jobs:
+  build-backend:
+    name: Build & push backend image
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    permissions:
+      contents: read
+      packages: read # base images come from the ghcr.io/holi-social mirror
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          submodules: recursive
+          persist-credentials: false
+          token: ${{ secrets.ORG_REPO_PAT }}
+      - uses: ./.github/actions/docker-auth
+        with:
+          scw-registry-host: ${{ vars.SCW_REGISTRY_HOST }}
+          scw-secret-key: ${{ secrets.SCW_SECRET_KEY }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: apps/backend/Dockerfile
+          platforms: linux/amd64
+          push: true
+          # Scaleway Serverless Containers wants a plain single-platform
+          # manifest. build-push-action attaches a provenance attestation by
+          # default, which can turn the pushed artifact into an OCI index — the
+          # raw `docker push` this replaced never did that.
+          provenance: false
+          tags: |
+            ${{ vars.SCW_REGISTRY_HOST }}/${{ vars.SCW_REGISTRY_NAMESPACE }}/caluno-backend:${{ github.sha }}
+            ${{ vars.SCW_REGISTRY_HOST }}/${{ vars.SCW_REGISTRY_NAMESPACE }}/caluno-backend:${{ inputs.moving-tag }}
+          build-args: |
+            SENTRY_RELEASE=${{ github.sha }}
+            SENTRY_ORG=${{ vars.SENTRY_ORG }}
+            SENTRY_PROJECT_BACKEND=${{ vars.SENTRY_PROJECT_BACKEND }}
+          secrets: |
+            sentry_auth_token=${{ secrets.SENTRY_AUTH_TOKEN }}
+          # Only the protected branches write the shared registry cache, so a
+          # pull request can never poison what the next deploy builds from. And
+          # no type=gha on this side: pull requests write the Actions cache under
+          # their own branch scope, which a protected-branch run cannot read.
+          cache-from: type=registry,ref=${{ vars.SCW_REGISTRY_HOST }}/${{ vars.SCW_REGISTRY_NAMESPACE }}/caluno-backend:buildcache
+          cache-to: type=registry,ref=${{ vars.SCW_REGISTRY_HOST }}/${{ vars.SCW_REGISTRY_NAMESPACE }}/caluno-backend:buildcache,mode=max
+
+  build-frontend:
+    name: Build & push frontend image
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    permissions:
+      contents: read
+      packages: read
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          submodules: recursive
+          persist-credentials: false
+          token: ${{ secrets.ORG_REPO_PAT }}
+      - uses: ./.github/actions/docker-auth
+        with:
+          scw-registry-host: ${{ vars.SCW_REGISTRY_HOST }}
+          scw-secret-key: ${{ secrets.SCW_SECRET_KEY }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: apps/frontend/Dockerfile
+          platforms: linux/amd64
+          push: true
+          # Scaleway Serverless Containers wants a plain single-platform
+          # manifest. build-push-action attaches a provenance attestation by
+          # default, which can turn the pushed artifact into an OCI index — the
+          # raw `docker push` this replaced never did that.
+          provenance: false
+          tags: |
+            ${{ vars.SCW_REGISTRY_HOST }}/${{ vars.SCW_REGISTRY_NAMESPACE }}/caluno-frontend:${{ github.sha }}
+            ${{ vars.SCW_REGISTRY_HOST }}/${{ vars.SCW_REGISTRY_NAMESPACE }}/caluno-frontend:${{ inputs.moving-tag }}
+          build-args: |
+            NEXT_PUBLIC_API_URL=${{ inputs.api-url }}
+            NEXT_PUBLIC_WEB_URL=${{ inputs.web-url }}
+            NEXT_PUBLIC_SENTRY_DSN=${{ vars.NEXT_PUBLIC_SENTRY_DSN }}
+            NEXT_PUBLIC_SENTRY_ENVIRONMENT=${{ inputs.environment }}
+            SENTRY_RELEASE=${{ github.sha }}
+            SENTRY_ORG=${{ vars.SENTRY_ORG }}
+            SENTRY_PROJECT_FRONTEND=${{ vars.SENTRY_PROJECT_FRONTEND }}
+          secrets: |
+            sentry_auth_token=${{ secrets.SENTRY_AUTH_TOKEN }}
+          # Same as the backend: registry cache only, written only from here.
+          cache-from: type=registry,ref=${{ vars.SCW_REGISTRY_HOST }}/${{ vars.SCW_REGISTRY_NAMESPACE }}/caluno-frontend:buildcache
+          cache-to: type=registry,ref=${{ vars.SCW_REGISTRY_HOST }}/${{ vars.SCW_REGISTRY_NAMESPACE }}/caluno-frontend:buildcache,mode=max
+
+  plan:
+    name: Terraform plan
+    needs: [build-backend, build-frontend]
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      TF_VAR_image_tag: ${{ github.sha }}
+      TF_VAR_active_environment: ${{ inputs.environment }}
+      SCW_ACCESS_KEY: ${{ secrets.SCW_ACCESS_KEY }}
+      SCW_SECRET_KEY: ${{ secrets.SCW_SECRET_KEY }}
+      SCW_DEFAULT_PROJECT_ID: ${{ vars.SCW_DEFAULT_PROJECT_ID }}
+      SCW_DEFAULT_REGION: ${{ vars.SCW_DEFAULT_REGION }}
+      SCW_DEFAULT_ZONE: ${{ vars.SCW_DEFAULT_ZONE }}
+      AWS_ACCESS_KEY_ID: ${{ secrets.SCW_ACCESS_KEY }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.SCW_SECRET_KEY }}
+      AWS_DEFAULT_REGION: ${{ vars.AWS_DEFAULT_REGION }}
+    outputs:
+      has-changes: ${{ steps.plan.outputs.has-changes }}
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          submodules: recursive
+          persist-credentials: false
+          token: ${{ secrets.ORG_REPO_PAT }}
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.TF_VERSION }}
+          terraform_wrapper: false
+      - name: Init & validate
+        working-directory: ${{ env.TF_ROOT }}
+        run: |
+          terraform init -backend-config="key=${{ inputs.environment }}/terraform.tfstate"
+          terraform validate
+      - name: Plan
+        id: plan
+        working-directory: ${{ env.TF_ROOT }}
+        run: |
+          set -o pipefail
+          # -detailed-exitcode: 0 = no changes, 2 = changes, anything else is an
+          # actual failure. `set +e` only around the plan so a real error still
+          # fails the job.
+          set +e
+          terraform plan -detailed-exitcode -no-color \
+            -var-file="terraform.tfvars" -out=plan.tfplan | tee plan.txt
+          code=$?
+          set -e
+          case "$code" in
+            0) echo "has-changes=false" >> "$GITHUB_OUTPUT" ;;
+            2) echo "has-changes=true" >> "$GITHUB_OUTPUT" ;;
+            *) exit "$code" ;;
+          esac
+      - name: Publish plan summary
+        if: always() && steps.plan.outcome != 'skipped'
+        working-directory: ${{ env.TF_ROOT }}
+        run: |
+          # The plan may have died before writing anything; a missing file is
+          # not worth a second, misleading failure on top of the real one.
+          [ -f plan.txt ] || { echo "No plan output to summarize."; exit 0; }
+          {
+            echo "### Terraform plan — \`${{ inputs.environment }}\`"
+            echo
+            echo '```terraform'
+            # Step summaries cap at 1 MiB; the tail holds the resource changes.
+            tail -c 900000 plan.txt
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v7
+        with:
+          name: plan-${{ inputs.environment }}
+          path: ${{ env.TF_ROOT }}/plan.tfplan
+          retention-days: 1
+          if-no-files-found: error
+
+  apply:
+    name: Terraform apply
+    needs: [plan]
+    # Nothing to do when the plan is empty — and skipping keeps the environment's
+    # approval prompt from firing for a no-op deploy.
+    if: needs.plan.outputs.has-changes == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    # Approval gates, environment secrets and the deployment record all hang off
+    # this. Required reviewers on `production` are what make prod applies manual.
+    environment:
+      name: ${{ inputs.environment }}
+      url: ${{ inputs.web-url }}
+    env:
+      TF_VAR_active_environment: ${{ inputs.environment }}
+      SCW_ACCESS_KEY: ${{ secrets.SCW_ACCESS_KEY }}
+      SCW_SECRET_KEY: ${{ secrets.SCW_SECRET_KEY }}
+      SCW_DEFAULT_PROJECT_ID: ${{ vars.SCW_DEFAULT_PROJECT_ID }}
+      SCW_DEFAULT_REGION: ${{ vars.SCW_DEFAULT_REGION }}
+      SCW_DEFAULT_ZONE: ${{ vars.SCW_DEFAULT_ZONE }}
+      AWS_ACCESS_KEY_ID: ${{ secrets.SCW_ACCESS_KEY }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.SCW_SECRET_KEY }}
+      AWS_DEFAULT_REGION: ${{ vars.AWS_DEFAULT_REGION }}
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          submodules: recursive
+          persist-credentials: false
+          token: ${{ secrets.ORG_REPO_PAT }}
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.TF_VERSION }}
+          terraform_wrapper: false
+      - uses: actions/download-artifact@v8
+        with:
+          name: plan-${{ inputs.environment }}
+          path: ${{ env.TF_ROOT }}
+      - name: Apply the reviewed plan
+        working-directory: ${{ env.TF_ROOT }}
+        # Applying the saved plan file, not a fresh one: what a reviewer approved
+        # is exactly what gets applied.
+        run: |
+          terraform init -backend-config="key=${{ inputs.environment }}/terraform.tfstate"
+          terraform apply -auto-approve plan.tfplan
+
+  sentry-release:
+    name: Finalize Sentry release
+    needs: [build-backend, build-frontend]
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    # Release bookkeeping must never fail a deploy.
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0 # set-commits --auto needs full history
+          filter: blob:none
+          persist-credentials: false
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version-file: package.json
+      - name: Associate commits and finalize the release
+        env:
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+          SENTRY_ORG: ${{ vars.SENTRY_ORG }}
+          RELEASE: ${{ github.sha }}
+        run: |
+          bunx @sentry/cli@2 releases --org "$SENTRY_ORG" set-commits "$RELEASE" --auto
+          bunx @sentry/cli@2 releases --org "$SENTRY_ORG" finalize "$RELEASE"
