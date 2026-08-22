@@ -1,4 +1,5 @@
-# Deploys `main` to staging. See SETUP.md for the one-time setup.
+# Deploys `main` to staging. The pre-deploy gate lives in reusable-deploy.yml,
+# alongside the image builds. See SETUP.md for the one-time setup.
 name: CD · Staging
 
 on:
@@ -14,20 +15,8 @@ permissions:
   contents: read
 
 jobs:
-  gate:
-    name: Pre-deploy gate
-    # A called workflow gets at most what the calling job grants.
-    permissions:
-      contents: read
-      packages: read
-    uses: ./.github/workflows/reusable-verify.yml
-    with:
-      static-checks: false # already required on the pull request
-    secrets: inherit
-
   deploy:
     name: Deploy
-    needs: [gate]
     permissions:
       contents: read
       packages: read

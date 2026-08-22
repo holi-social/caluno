@@ -5,51 +5,81 @@ Everything runs on GitHub-hosted runners (`ubuntu-latest`).
 | File                  | Trigger                      | What it does                                               |
 | --------------------- | ---------------------------- | ---------------------------------------------------------- |
 | `ci.yml`              | `pull_request` → main/prod   | Full gate, plus the pre-merge-only checks.                  |
-| `cd-staging.yml`      | `push` → `main`              | Slim gate, then build/push/deploy to staging.               |
+| `cd-staging.yml`      | `push` → `main`              | Gate alongside build/push, then deploy to staging.          |
 | `cd-production.yml`   | `push` → `production`        | Same, to production, with approval on the apply.            |
 | `mirror-images.yml`   | weekly + `workflow_dispatch` | Refreshes the GHCR base-image mirror.                       |
 | `reusable-verify.yml` | `workflow_call`              | Lint, type-check, migration drift, tests.                   |
 | `reusable-deploy.yml` | `workflow_call`              | Build + push images, Terraform plan/apply, Sentry release.  |
 
 Shared steps live in composite actions: `.github/actions/setup` (Bun + caches +
-install) and `.github/actions/docker-auth` (buildx + registry logins).
+install), `.github/actions/save-turbo-cache` (prune + upload) and
+`.github/actions/docker-auth` (buildx + registry logins).
 
 ## Who runs what
 
-`main` and `production` are protected, so every commit on them already passed
-`ci.yml` on a pull request. The CD workflows therefore skip the checks the PR
-already covered.
-
 | Check                    | PR                               | push to main / production |
 | ------------------------ | -------------------------------- | ------------------------- |
-| Biome lint/format        | ✅                               | ⛔                        |
-| TypeScript               | ✅                               | ⛔                        |
+| Biome lint/format        | ✅                               | ✅                        |
+| TypeScript               | ✅                               | ✅                        |
 | Commit lint, AI gates    | ✅                               | ⛔                        |
 | Migration drift          | ✅                               | ✅                        |
 | Tests (Postgres service) | ✅                               | ✅                        |
-| Image build              | ✅ validate only                 | ✅ pushed                 |
+| Image build              | ✅ validate only, path-filtered  | ✅ pushed                 |
 | Terraform plan           | ✅ when `packages/infra` changed | ✅                        |
 | Terraform apply          | ⛔                               | ✅ behind the environment |
 
+The CD gate runs the full suite, including the static checks the pull request
+already covered. It runs concurrently with the image builds, which take longer,
+so it costs no deploy wall clock — and a branch push is the only place that can
+write an Actions cache every pull request can read (see below).
+
 `ci.yml`'s `changes` job classifies the diff against the merge base and skips the
-jobs that need a database or Terraform when nothing relevant changed. Image
-builds are intentionally unfiltered — the two apps share a build context, so
-per-app filtering there is more trouble than it saves.
+jobs that need a database, an image build, or Terraform when nothing relevant
+changed. The `CI` aggregate job treats a skip as a pass, so a filtered-out job
+never blocks a merge.
+
+Nothing reaches an environment unless the gate passed: `apply` waits on it, on
+the plan, and on both images. Images are pushed even when the gate fails — they
+are inert until a plan is applied, and the moving tag (`staging` / `latest`)
+tracks the branch head.
 
 ## Caching
 
 The repo has a single 10 GB Actions cache quota shared across branches, and
-GitHub evicts least-recently-used entries once it is full. Two things use it:
+GitHub evicts least-recently-used entries once it is full. Three things use it:
 
 - Bun's install cache (~400 MB, one entry per lockfile).
-- Turborepo's `.turbo/cache` (~70 MB per entry) on the jobs that run `turbo`
-  tasks. The key ends in the commit sha, so each run saves a fresh entry and
-  `restore-keys` supply the warm start.
+- Terraform's provider plugin cache, keyed on `.terraform.lock.hcl`.
+- Turborepo's `.turbo/cache`, on the jobs that run `turbo` tasks.
 
-Docker layers use a `:buildcache` tag per image in the Scaleway registry, not the
-Actions cache — `type=gha,mode=max` filled the whole quota with layers only
-readable from the branch that wrote them. Deploys write the registry cache; pull
-requests read it.
+**Cache scope is the thing to remember.** An Actions cache written on a
+`refs/pull/N/merge` ref is readable *only by that pull request*; only caches
+written on a long-lived branch warm everybody. So the Turborepo cache is restored
+everywhere but saved only on `push` events, and `prune-turbo-cache.sh` trims it
+to a 512 MB budget first — Turborepo never garbage-collects its own filesystem
+cache, so restore-then-save would grow it until it evicted the Bun cache. All
+`turbo` jobs share one cache scope, since entries are content-addressed by task
+hash and separate scopes only stop jobs reusing each other's work.
+
+Docker layers use a `:buildcache-<environment>` tag per image in the Scaleway
+registry rather than the Actions cache — `type=gha,mode=max` fills the whole
+quota with layers only readable from the branch that wrote them. The tag is per
+environment because the frontend bakes `NEXT_PUBLIC_*` in at build time, so the
+staging and production images diverge and a shared tag would have each deploy
+clobber the other. Deploys write the registry cache; pull requests read both.
+
+Production builds its own images rather than promoting the digest staging
+validated — a deliberate trade, since the frontend bakes `NEXT_PUBLIC_API_URL`
+and `NEXT_PUBLIC_WEB_URL` into the bundle and one image therefore cannot serve
+both environments without moving those to runtime config. A production deploy
+pays ~3 minutes to rebuild, and what it ships differs from what staging
+exercised only by those baked origins.
+
+Both Dockerfiles copy `package.json` files, install, and *then* copy source, so a
+source-only commit reuses the install layer. Keep that order — a `COPY` of source
+above the install costs ~2.5 minutes per image build. The `--mount=type=cache`
+mounts only help repeat local builds: cache mounts are builder-local, are not
+exported by `cache-to`, and CI runners are ephemeral.
 
 ## One-time setup
 
