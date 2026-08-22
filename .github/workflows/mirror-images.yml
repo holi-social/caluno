@@ -1,7 +1,7 @@
 # Mirrors pinned base images into ghcr.io/holi-social so CI pulls from GHCR
-# instead of hitting Docker Hub directly on every run. Only refreshes on the
-# schedule/dispatch below — bump a tag here and re-run manually for a newer
-# upstream image.
+# instead of hitting Docker Hub (and its anonymous pull limits) on every run.
+# Only refreshes on the schedule/dispatch below — bump a tag here and re-run
+# manually for a newer upstream image.
 name: Mirror base images to GHCR
 
 on:
@@ -11,27 +11,38 @@ on:
 
 permissions:
   contents: read
-  packages: write
+
+concurrency:
+  group: mirror-images
+  cancel-in-progress: false
 
 jobs:
   mirror:
+    name: Mirror ${{ matrix.image }}
     runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      packages: write
     strategy:
+      fail-fast: false
       matrix:
         include:
-          - src: docker.io/library/postgres:17
+          - image: postgres:17
+            src: docker.io/library/postgres:17
             dest: ghcr.io/holi-social/mirror/postgres:17
-          - src: docker.io/hashicorp/terraform:1.15
-            dest: ghcr.io/holi-social/mirror/terraform:1.15
-          - src: docker.io/oven/bun:1
+          - image: oven/bun:1
+            src: docker.io/oven/bun:1
             dest: ghcr.io/holi-social/mirror/oven-bun:1
     steps:
-      - name: Install skopeo
-        run: sudo apt-get update && sudo apt-get install -y skopeo
       - uses: docker/login-action@v4
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-      - name: Copy ${{ matrix.src }} -> ${{ matrix.dest }}
-        run: skopeo copy --all "docker://${{ matrix.src }}" "docker://${{ matrix.dest }}"
+      - name: Copy ${{ matrix.src }} → ${{ matrix.dest }}
+        # imagetools copies the manifest list registry-to-registry — all
+        # platforms, no local pull, and buildx ships with the runner image.
+        run: docker buildx imagetools create --tag "${{ matrix.dest }}" "${{ matrix.src }}"
+      - name: Verify the mirrored manifest
+        run: docker buildx imagetools inspect "${{ matrix.dest }}"
