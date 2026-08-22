@@ -38,10 +38,14 @@ pull request that passed `ci.yml`. So the post-merge workflows deliberately do
 
 Path filtering: `ci.yml`'s `changes` job classifies the diff against the merge
 base and skips the expensive jobs that cannot be affected — a docs-only PR still
-lints and type-checks but does not spin up Postgres or build images. Because
-skipped jobs would otherwise leave a required check pending forever, branch
-protection should require the single aggregate job named **`CI`**, which fails if
-any upstream job failed and tolerates skips.
+lints and type-checks, but does not spin up Postgres or plan Terraform. Both
+image builds are deliberately *not* filtered: the two apps share a build context
+(the frontend Dockerfile `COPY`s `apps/` wholesale, and `packages/data` runs
+codegen off the backend's `schema.gql` on postinstall), so per-app filtering
+there buys little and is easy to get subtly wrong. Because skipped jobs would
+otherwise leave a required check pending forever, branch protection should
+require the single aggregate job named **`CI`**, which fails if any upstream job
+failed and tolerates skips.
 
 Caching: Bun's install cache and Turborepo's `.turbo/cache` are restored per job
 (with `restore-keys`, so a lockfile bump degrades to a warm start rather than a
