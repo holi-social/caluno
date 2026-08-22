@@ -18,6 +18,7 @@ import {
   DocumentStatusChange,
   SigneeType,
 } from '../enums';
+import type { CreateContractInput } from '../inputs/create-contract.input';
 import type { ContractEntity } from '../schemas/contract.schema';
 import type { ContractStatusChangeEntity } from '../schemas/contract-status-change.schema';
 import { DocumentSigningService } from './document-signing.service';
@@ -98,18 +99,14 @@ export class ContractService {
 
   async createContract(
     organizationId: string,
-    organizationUnitId: string | null,
-    volunteerId: string,
-    reimbursementTypeId: string,
-    periodStart: Date,
-    periodEnd: Date,
+    input: CreateContractInput,
     actorUserId: string,
   ): Promise<ContractEntity> {
     const template = await this.documentTemplateService.findActiveTemplate(
       organizationId,
-      reimbursementTypeId,
+      input.reimbursementTypeId,
       DocumentKind.CONTRACT,
-      organizationUnitId,
+      input.organizationUnitId,
     );
     const orderedSignees =
       await this.documentTemplateService.findOrderedTemplateSignees(
@@ -121,11 +118,11 @@ export class ContractService {
         .insert(schema.contracts)
         .values({
           documentTemplateId: template.id,
-          volunteerId,
-          reimbursementTypeId,
+          volunteerId: input.volunteerId,
+          reimbursementTypeId: input.reimbursementTypeId,
           contractStatus: this.nextContractStatus(orderedSignees[0].signeeType),
-          periodStart,
-          periodEnd,
+          periodStart: input.periodStart,
+          periodEnd: input.periodEnd,
           resolvedBody: structuredClone(template.body),
         })
         .returning();
