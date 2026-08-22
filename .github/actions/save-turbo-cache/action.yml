@@ -1,0 +1,21 @@
+name: Save Turborepo cache
+description: >-
+  Prune .turbo/cache to a size budget and upload it, but only on pushes to a
+  long-lived branch. Pairs with the `turbo-cache: true` restore in ./setup.
+
+runs:
+  using: composite
+  steps:
+    # A cache saved on a PR ref is readable only by that PR, so only branch
+    # pushes are worth the upload.
+    - name: Prune the Turborepo cache
+      if: github.event_name == 'push'
+      shell: bash
+      run: bash .github/scripts/prune-turbo-cache.sh
+
+    - name: Save the Turborepo cache
+      if: github.event_name == 'push'
+      uses: actions/cache/save@v4
+      with:
+        path: .turbo/cache
+        key: turbo-${{ runner.os }}-${{ github.sha }}
