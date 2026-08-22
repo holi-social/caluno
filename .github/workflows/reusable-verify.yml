@@ -1,0 +1,132 @@
+# Reusable verification suite. Single definition of "is this commit sound?",
+# called from ci.yml (pull requests, everything on) and from the CD workflows
+# (post-merge, static checks off — see the `static-checks` input).
+#
+# Not triggered directly: `workflow_call` only.
+name: Verify
+
+on:
+  workflow_call:
+    inputs:
+      static-checks:
+        description: >-
+          Run Biome and TypeScript. On by default for pull requests; the CD
+          workflows turn it off because branch protection already required these
+          checks to pass on the exact tree being merged.
+        type: boolean
+        default: true
+      migration-check:
+        description: Assert the Drizzle schema matches the committed migrations.
+        type: boolean
+        default: true
+      tests:
+        description: Run the test suite against a throwaway Postgres.
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+
+jobs:
+  lint:
+    name: Lint & format
+    if: inputs.static-checks
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          submodules: recursive
+          persist-credentials: false
+          token: ${{ secrets.ORG_REPO_PAT }}
+      - uses: ./.github/actions/setup
+      - run: bun run lint
+
+  types:
+    name: Type check
+    if: inputs.static-checks
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          submodules: recursive
+          persist-credentials: false
+          token: ${{ secrets.ORG_REPO_PAT }}
+      - uses: ./.github/actions/setup
+        with:
+          # check-types depends on ^build + codegen, so the Turborepo cache is
+          # the difference between seconds and minutes here.
+          turbo-cache: 'true'
+          cache-key: types
+      - run: bun run check-types
+
+  migrations:
+    name: Migrations up to date
+    if: inputs.migration-check
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          submodules: recursive
+          persist-credentials: false
+          token: ${{ secrets.ORG_REPO_PAT }}
+      - uses: ./.github/actions/setup
+      - name: Check migrations are up to date
+        run: |
+          set -o pipefail
+          # drizzle-kit generate is interactive when it detects a rename, hence
+          # the closed stdin — it must never block waiting for an answer in CI.
+          OUTPUT="$(bun run --cwd apps/backend db:generate < /dev/null 2>&1 | tee /dev/stderr)"
+          if ! echo "$OUTPUT" | grep -q "No schema changes, nothing to migrate"; then
+            echo "::error::Schema changes are not reflected in committed migrations. Run 'bun run --cwd apps/backend db:generate' locally and commit the result."
+            exit 1
+          fi
+
+  tests:
+    name: Tests
+    if: inputs.tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      packages: read # Postgres is pulled from the ghcr.io/holi-social mirror
+    services:
+      postgres:
+        image: ghcr.io/holi-social/mirror/postgres:17
+        credentials:
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+        env:
+          POSTGRES_DB: caluno_test
+          POSTGRES_USER: caluno
+          POSTGRES_PASSWORD: caluno
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      DB_HOST: localhost
+      DB_PORT: 5432
+      DB_USER: caluno
+      DB_PASSWORD: caluno
+      DB_NAME: caluno_test
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          submodules: recursive
+          persist-credentials: false
+          token: ${{ secrets.ORG_REPO_PAT }}
+      - uses: ./.github/actions/setup
+        with:
+          turbo-cache: 'true'
+          cache-key: build
+      # db:seed runs the compiled seed script, so the build has to come first.
+      - run: bun run build
+      - run: bun run --cwd apps/backend db:migrate
+      - run: bun run --cwd apps/backend db:seed
+      - run: bun test
