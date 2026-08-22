@@ -13,6 +13,7 @@ import { users } from '../../auth/schemas/auth.schema';
 import { idColumn, timestampColumns } from '../../database/database-columns';
 import { enumValues } from '../../database/typeutil';
 import { organizations } from '../../organization/schemas/organization.schema';
+import { organizationUnits } from '../../organization/schemas/organization-unit.schema';
 import { DocumentKind, RenewalCadence } from '../enums';
 import { reimbursementTypes } from './reimbursement-type.schema';
 
@@ -38,6 +39,12 @@ export const documentTemplates = snakeCase.table(
     organizationId: uuid('organization_id')
       .references(() => organizations.id, { onDelete: 'cascade' })
       .notNull(),
+    // Null means this row is the organization-wide default template; set
+    // means it's a unit-level override. Never both for the same slot.
+    organizationUnitId: uuid('organization_unit_id').references(
+      () => organizationUnits.id,
+      { onDelete: 'cascade' },
+    ),
     reimbursementTypeId: uuid('reimbursement_type_id')
       .references(() => reimbursementTypes.id, { onDelete: 'restrict' })
       .notNull(),
@@ -54,11 +61,16 @@ export const documentTemplates = snakeCase.table(
     ...timestampColumns,
   },
   (table) => [
-    uniqueIndex(
-      'uq_document_templates_organization_id_reimbursement_type_id_kind',
-    )
+    uniqueIndex('uq_document_templates_org_default')
       .on(table.organizationId, table.reimbursementTypeId, table.kind)
-      .where(sql`${table.isDeleted} = false`),
+      .where(
+        sql`${table.organizationUnitId} IS NULL AND ${table.isDeleted} = false`,
+      ),
+    uniqueIndex('uq_document_templates_unit_override')
+      .on(table.organizationUnitId, table.reimbursementTypeId, table.kind)
+      .where(
+        sql`${table.organizationUnitId} IS NOT NULL AND ${table.isDeleted} = false`,
+      ),
   ],
 );
 

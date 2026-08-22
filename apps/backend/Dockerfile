@@ -14,7 +14,8 @@ COPY packages/ui ./packages/ui
 COPY packages/observability ./packages/observability
 COPY packages/typescript-config ./packages/typescript-config
 
-RUN bun install --frozen-lockfile
+RUN --mount=type=cache,target=/root/.bun/install/cache \
+    bun install --frozen-lockfile
 
 # Build @repo/observability (dist/ is dockerignored, so it must be built in-image)
 RUN bun run --cwd packages/observability build
@@ -55,7 +56,8 @@ COPY packages/typescript-config ./packages/typescript-config
 # Compiled @repo/observability output (dist/ is dockerignored — built in the builder stage)
 COPY --from=builder /app/packages/observability/dist ./packages/observability/dist
 
-RUN bun install --frozen-lockfile --production --ignore-scripts
+RUN --mount=type=cache,target=/root/.bun/install/cache \
+    bun install --frozen-lockfile --production --ignore-scripts
 
 ARG SENTRY_RELEASE
 ENV SENTRY_RELEASE=${SENTRY_RELEASE}
