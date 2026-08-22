@@ -368,4 +368,39 @@ describe('TimeTrackingService', () => {
       }),
     ).rejects.toThrow(NotFoundGraphQLError);
   });
+
+  it('updateTimeEntry rejects re-opening a second shift-less entry for the same volunteer and org unit', async () => {
+    const user = await createUser(db);
+
+    const first = new AddTimeEntryInput();
+    first.volunteerId = user.id;
+    first.startedAt = new Date();
+    first.endedAt = null;
+    first.notes = null;
+    await service.addTimeEntry(organizationUnitId, first);
+
+    const second = new AddTimeEntryInput();
+    second.volunteerId = user.id;
+    second.startedAt = new Date('2026-08-04T08:00:00Z');
+    second.endedAt = new Date('2026-08-04T10:00:00Z');
+    second.notes = null;
+    const closed = await service.addTimeEntry(organizationUnitId, second);
+
+    await expect(
+      service.updateTimeEntry(closed.id, organizationUnitId, {
+        shiftInstanceId: null,
+        startedAt: second.startedAt,
+        endedAt: null,
+        notes: null,
+      }),
+    ).rejects.toThrow(ConflictGraphQLError);
+
+    const entries = await db.query.timeEntries.findMany({
+      where: {
+        volunteerId: user.id,
+        endedAt: { isNull: true },
+      },
+    });
+    expect(entries).toHaveLength(1);
+  });
 });
