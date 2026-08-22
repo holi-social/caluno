@@ -1,8 +1,7 @@
 name: Setup workspace
 description: >-
-  Install the Bun version pinned in package.json, restore the Bun install and
-  Turborepo caches, and install workspace dependencies. Assumes actions/checkout
-  has already run (local actions are only resolvable after checkout).
+  Install the Bun version pinned in package.json, restore the Bun and Turborepo
+  caches, and install workspace dependencies. Run actions/checkout first.
 
 inputs:
   install:
@@ -10,16 +9,11 @@ inputs:
     required: false
     default: 'true'
   turbo-cache:
-    description: >-
-      Restore and save the Turborepo filesystem cache (.turbo/cache). Only worth
-      enabling for jobs that run `turbo` tasks with real outputs (build,
-      check-types) — not for a bare Biome pass.
+    description: Restore and save the Turborepo filesystem cache (.turbo/cache).
     required: false
     default: 'false'
   cache-key:
-    description: >-
-      Extra Turborepo cache key component so unrelated jobs do not overwrite each
-      other's entry.
+    description: Turborepo cache key scope, so unrelated jobs keep separate entries.
     required: false
     default: default
 
@@ -28,15 +22,13 @@ runs:
   steps:
     - uses: oven-sh/setup-bun@v2
       with:
-        # Single source of truth: the `packageManager` field in package.json.
-        bun-version-file: package.json
+        bun-version-file: package.json # the `packageManager` field
 
     - name: Restore Bun install cache
       uses: actions/cache@v4
       with:
         path: ~/.bun/install/cache
         key: bun-${{ runner.os }}-${{ hashFiles('bun.lock') }}
-        # Without restore-keys, any lockfile change means a cold install.
         restore-keys: |
           bun-${{ runner.os }}-
 
@@ -45,8 +37,7 @@ runs:
       uses: actions/cache@v4
       with:
         path: .turbo/cache
-        # The sha in the primary key never hits, which is what makes the cache
-        # save on every run; restore-keys supply the actual warm start.
+        # The sha never hits, so the cache saves every run; restore-keys warm it.
         key: turbo-${{ runner.os }}-${{ inputs.cache-key }}-${{ github.sha }}
         restore-keys: |
           turbo-${{ runner.os }}-${{ inputs.cache-key }}-

@@ -1,134 +1,104 @@
 # CI/CD setup
 
-## Layout
+Everything runs on GitHub-hosted runners (`ubuntu-latest`).
 
-Everything runs on GitHub-hosted runners (`ubuntu-latest`). There are four
-entrypoint workflows and two reusable ones:
+| File                  | Trigger                      | What it does                                               |
+| --------------------- | ---------------------------- | ---------------------------------------------------------- |
+| `ci.yml`              | `pull_request` → main/prod   | Full gate, plus the pre-merge-only checks.                  |
+| `cd-staging.yml`      | `push` → `main`              | Slim gate, then build/push/deploy to staging.               |
+| `cd-production.yml`   | `push` → `production`        | Same, to production, with approval on the apply.            |
+| `mirror-images.yml`   | weekly + `workflow_dispatch` | Refreshes the GHCR base-image mirror.                       |
+| `reusable-verify.yml` | `workflow_call`              | Lint, type-check, migration drift, tests.                   |
+| `reusable-deploy.yml` | `workflow_call`              | Build + push images, Terraform plan/apply, Sentry release.  |
 
-| File                    | Trigger                       | What it does                                                              |
-| ----------------------- | ----------------------------- | ------------------------------------------------------------------------- |
-| `ci.yml`                | `pull_request` → main/prod    | The full gate. Everything that only makes sense pre-merge lives here.     |
-| `cd-staging.yml`        | `push` → `main`               | Slim pre-deploy gate, then build/push/deploy to staging.                  |
-| `cd-production.yml`     | `push` → `production`         | Same, to production, with a human approval on the apply.                  |
-| `mirror-images.yml`     | weekly + `workflow_dispatch`  | Refreshes the GHCR base-image mirror.                                     |
-| `reusable-verify.yml`   | `workflow_call`               | Lint, type-check, migration drift, tests. One definition, three callers.  |
-| `reusable-deploy.yml`   | `workflow_call`               | Build + push both images, Terraform plan, gated apply, Sentry release.    |
+Shared steps live in composite actions: `.github/actions/setup` (Bun + caches +
+install) and `.github/actions/docker-auth` (buildx + registry logins).
 
-Shared step sequences live in composite actions: `.github/actions/setup` (Bun +
-Bun/Turborepo caches + install) and `.github/actions/docker-auth` (buildx +
-Scaleway and GHCR logins).
+## Who runs what
 
-### Who runs what
+`main` and `production` are protected, so every commit on them already passed
+`ci.yml` on a pull request. The CD workflows therefore skip the checks the PR
+already covered.
 
-`main` and `production` are protected: nothing reaches them except through a
-pull request that passed `ci.yml`. So the post-merge workflows deliberately do
-**not** repeat the whole suite.
+| Check                    | PR                               | push to main / production |
+| ------------------------ | -------------------------------- | ------------------------- |
+| Biome lint/format        | ✅                               | ⛔                        |
+| TypeScript               | ✅                               | ⛔                        |
+| Commit lint, AI gates    | ✅                               | ⛔                        |
+| Migration drift          | ✅                               | ✅                        |
+| Tests (Postgres service) | ✅                               | ✅                        |
+| Image build              | ✅ validate only                 | ✅ pushed                 |
+| Terraform plan           | ✅ when `packages/infra` changed | ✅                        |
+| Terraform apply          | ⛔                               | ✅ behind the environment |
 
-| Check                        | PR  | push to main / production |
-| ---------------------------- | --- | ------------------------- |
-| Biome lint/format            | ✅  | ⛔ already required on PR  |
-| TypeScript                   | ✅  | ⛔ already required on PR  |
-| Commit lint                  | ✅  | ⛔ pre-merge only          |
-| AI gate tests                | ✅  | ⛔ pre-merge only          |
-| Migration drift              | ✅  | ✅ pre-deploy gate         |
-| Tests (Postgres service)     | ✅  | ✅ pre-deploy gate         |
-| Image build                  | ✅ validate only, never pushed | ✅ built, tagged, pushed |
-| Terraform plan               | ✅ when `packages/infra` changed | ✅ always     |
-| Terraform apply              | ⛔  | ✅ behind the environment  |
+`ci.yml`'s `changes` job classifies the diff against the merge base and skips the
+jobs that need a database or Terraform when nothing relevant changed. Image
+builds are intentionally unfiltered — the two apps share a build context, so
+per-app filtering there is more trouble than it saves.
 
-Path filtering: `ci.yml`'s `changes` job classifies the diff against the merge
-base and skips the expensive jobs that cannot be affected — a docs-only PR still
-lints and type-checks, but does not spin up Postgres or plan Terraform. Both
-image builds are deliberately *not* filtered: the two apps share a build context
-(the frontend Dockerfile `COPY`s `apps/` wholesale, and `packages/data` runs
-codegen off the backend's `schema.gql` on postinstall), so per-app filtering
-there buys little and is easy to get subtly wrong. Because skipped jobs would
-otherwise leave a required check pending forever, branch protection should
-require the single aggregate job named **`CI`**, which fails if any upstream job
-failed and tolerates skips.
+## Caching
 
-Caching: Bun's install cache and Turborepo's `.turbo/cache` are restored per job
-(with `restore-keys`, so a lockfile bump degrades to a warm start rather than a
-cold one). Image layers use two caches — GitHub's Actions cache (`type=gha`,
-per-image scope) for fast PR iteration, and a `:buildcache` tag in the Scaleway
-registry as the durable cross-branch cache. Only the protected branches *write*
-the registry cache; pull requests read it. That way a PR can never poison what
-the next real deploy builds from.
+The repo has a single 10 GB Actions cache quota shared across branches, and
+GitHub evicts least-recently-used entries once it is full. Two things use it:
+
+- Bun's install cache (~400 MB, one entry per lockfile).
+- Turborepo's `.turbo/cache` (~70 MB per entry) on the jobs that run `turbo`
+  tasks. The key ends in the commit sha, so each run saves a fresh entry and
+  `restore-keys` supply the warm start.
+
+Docker layers use a `:buildcache` tag per image in the Scaleway registry, not the
+Actions cache — `type=gha,mode=max` filled the whole quota with layers only
+readable from the branch that wrote them. Deploys write the registry cache; pull
+requests read it.
 
 ## One-time setup
 
 1. **`ORG_REPO_PAT` secret** — the pipeline checks out `.ai` and `packages/infra`
    as submodules living in sibling repos (`caluno-ai`, `caluno-infra`). The
    default `GITHUB_TOKEN` only has access to the repo that triggered the
-   workflow, so submodule checkout needs a token with read access to all
-   three repos. Create a fine-grained PAT (or an org machine-user token) with
-   read access to `caluno`, `caluno-ai`, and `caluno-infra`, and add it as a
-   secret named `ORG_REPO_PAT` in each of the three repos.
+   workflow, so submodule checkout needs a token with read access to all three.
+   Create a fine-grained PAT (or an org machine-user token) with read access to
+   `caluno`, `caluno-ai`, and `caluno-infra`, and add it as a secret named
+   `ORG_REPO_PAT` in each of the three repos.
 
-2. **Deploy/registry secrets and variables** — add these in `caluno` before
-   the build and Terraform jobs can run:
-   - Secrets (Settings → Secrets and variables → Actions → Secrets):
-     `SCW_ACCESS_KEY`, `SCW_SECRET_KEY` — used both for the Scaleway
-     provider/registry and, reused as `AWS_ACCESS_KEY_ID`/
-     `AWS_SECRET_ACCESS_KEY`, for the S3-compatible Terraform state backend
-     (Scaleway Object Storage authenticates via the AWS SDK's credential
-     chain, so these must be real process env vars, not just Actions
-     context values). Also `SENTRY_AUTH_TOKEN`.
-   - Variables (Settings → Secrets and variables → Actions → Variables):
-     `SCW_REGISTRY_HOST`, `SCW_REGISTRY_NAMESPACE`, `SCW_DEFAULT_PROJECT_ID`,
-     `SCW_DEFAULT_REGION`, `SCW_DEFAULT_ZONE`, `AWS_DEFAULT_REGION`,
-     `SENTRY_ORG`, `SENTRY_PROJECT_BACKEND`, `SENTRY_PROJECT_FRONTEND`,
-     `NEXT_PUBLIC_SENTRY_DSN` — none of these are sensitive, but the workflow
-     must read them via `vars.*` (not `secrets.*`), since GitHub Actions keeps
-     the two stores separate.
-   - Any `TF_VAR_*` values not already set in `packages/infra/terraform.tfvars`.
+2. **Deploy/registry secrets and variables** — add these in `caluno`:
+   - Secrets: `SCW_ACCESS_KEY`, `SCW_SECRET_KEY`, `SENTRY_AUTH_TOKEN`. The
+     Scaleway keys are reused as `AWS_ACCESS_KEY_ID`/`AWS_SECRET_ACCESS_KEY` for
+     the S3-compatible Terraform state backend, which authenticates through the
+     AWS SDK credential chain and so needs real process env vars.
+   - Variables: `SCW_REGISTRY_HOST`, `SCW_REGISTRY_NAMESPACE`,
+     `SCW_DEFAULT_PROJECT_ID`, `SCW_DEFAULT_REGION`, `SCW_DEFAULT_ZONE`,
+     `AWS_DEFAULT_REGION`, `SENTRY_ORG`, `SENTRY_PROJECT_BACKEND`,
+     `SENTRY_PROJECT_FRONTEND`, `NEXT_PUBLIC_SENTRY_DSN`. These must be read via
+     `vars.*`, not `secrets.*`.
+   - Any `TF_VAR_*` values not already in `packages/infra/terraform.tfvars`.
 
-   The CD workflows pass `secrets: inherit` to the reusable workflows, so
-   repo-level secrets are enough — nothing needs duplicating per environment.
+   The CD workflows pass `secrets: inherit`, so repo-level secrets are enough.
 
-3. **Runners** — all jobs use `runs-on: ubuntu-latest`. The `holi-social` org is
-   on the GitHub Free plan, which only provides the standard 2-vCPU/7 GB hosted
-   Linux runners; "larger runners" (4/8-core) need Team or Enterprise. If the
-   plan changes, the image-build and test jobs are the two worth moving to a
-   4-core label first.
+3. **Runners** — `ubuntu-latest` everywhere. `holi-social` is on the Free plan,
+   which only provides standard 2-vCPU/7 GB Linux runners; larger runners need
+   Team or Enterprise.
 
 4. **Environments** — create `staging` and `production` (Settings →
-   Environments). The Terraform apply job runs inside the matching environment,
-   which is what produces the deployment record and the environment URL on the
-   repo home page. Add a **required reviewers** rule to `production`: that
-   approval gate is the only thing standing between a merge into `production`
-   and a real `terraform apply`. Without it, prod applies run unattended.
+   Environments), and add a **required reviewers** rule to `production`: that
+   approval is what holds the production `terraform apply` until a human accepts
+   it. Deploys are serialized per environment by a workflow-level concurrency
+   group with `cancel-in-progress: false`.
 
-   Deploys are serialized per environment by a workflow-level concurrency group
-   (`cd-staging` / `cd-production`) with `cancel-in-progress: false`, so a
-   running deploy is never cut in half; a newer push only supersedes a *queued*
-   one. Note there is intentionally no job-level concurrency on plan/apply —
-   sharing one group between them lets a newer run's plan evict an older run's
-   pending apply.
-
-5. **Image mirror (`mirror-images.yml`)** — mirrors pinned base images
-   (`postgres:17`, `oven/bun:1`) into `ghcr.io/holi-social/mirror/*` on a weekly
-   schedule (or on demand via `workflow_dispatch`), so CI's Docker pulls aren't
-   subject to Docker Hub's availability or anonymous rate limits. The copy is
-   registry-to-registry via `docker buildx imagetools create` — no local pull,
-   all platforms preserved.
+5. **Image mirror (`mirror-images.yml`)** — mirrors `postgres:17` and
+   `oven/bun:1` into `ghcr.io/holi-social/mirror/*` weekly, so CI's pulls aren't
+   subject to Docker Hub rate limits.
    - **Run it once via `workflow_dispatch` before the first CI/CD build** — the
-     build jobs and the Dockerfiles' `FROM` lines pull from the mirror, so it has
-     to exist first.
-   - It only refreshes on schedule/dispatch, not on every pull. Bump the tag
-     in the matrix and re-run manually if you need a newer upstream version
-     sooner.
-   - GHCR packages default to private, scoped to the pushing repo, which is
-     why the workflows log into `ghcr.io` before pulling. For friction-free
-     local `docker build`, consider setting the mirror packages to public
-     visibility (Settings → Packages) — they're just cached copies of public
-     images, nothing proprietary.
-   - Terraform is no longer mirrored: the workflows install it with
-     `hashicorp/setup-terraform` instead of running jobs inside a container. The
-     pinned version lives in the `TF_VERSION` env var in `ci.yml` and
-     `reusable-deploy.yml`; keep the two in sync.
+     Dockerfiles' `FROM` lines pull from the mirror.
+   - Bump a tag in the matrix and re-run manually for a newer upstream image.
+   - GHCR packages default to private, which is why the workflows log into
+     `ghcr.io` first. Making the mirror packages public would remove that step
+     for local builds.
+   - Terraform is installed with `hashicorp/setup-terraform`, so it is not
+     mirrored. The pinned version lives in `TF_VERSION` in `ci.yml` and
+     `reusable-deploy.yml` — keep the two in sync.
 
 6. **Branch protection** — on `main` and `production`, require pull requests and
-   require the status check named **`CI`** (only that one — see the note on
-   skipped jobs above). Do the same in the two submodule repos for their own
-   checks.
+   require the status check named **`CI`**. That job aggregates the rest, so
+   path-filtered skips don't leave a merge blocked. Do the same in the submodule
+   repos for their own checks.
