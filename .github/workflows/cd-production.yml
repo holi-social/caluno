@@ -1,221 +1,47 @@
-# See SETUP.md at the repo root for the one-time setup this workflow
-# depends on (secrets, runners, environment protection rules).
-name: CD - Production
+# See SETUP.md at the repo root for the one-time setup this workflow depends on
+# (secrets, variables, environments, branch protection).
+#
+# `production` is protected: it only ever advances through a main → production
+# pull request, which ran the full CI suite. Same slim gate as staging; the extra
+# safety here comes from the `production` GitHub Environment, whose required
+# reviewers hold the Terraform apply until a human approves it.
+name: CD · Production
 
 on:
   push:
     branches: [production]
 
-env:
-  TF_ROOT: packages/infra
-  TF_IN_AUTOMATION: 'true'
-  TF_INPUT: 'false'
+concurrency:
+  group: cd-production
+  cancel-in-progress: false
+
+permissions:
+  contents: read
 
 jobs:
-  check-migrations:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v5
-        with:
-          submodules: recursive
-          token: ${{ secrets.ORG_REPO_PAT }}
-      - uses: oven-sh/setup-bun@v2
-        with:
-          bun-version: '1'
-      - run: bun install --frozen-lockfile
-      - name: Check migrations are up to date
-        run: |
-          set -o pipefail
-          OUTPUT="$(bun run --cwd apps/backend db:generate < /dev/null 2>&1 | tee /dev/stderr)"
-          if ! echo "$OUTPUT" | grep -q "No schema changes, nothing to migrate"; then
-            echo "✖ Schema changes are not reflected in committed migrations."
-            echo "  Run 'bun run --cwd apps/backend db:generate' locally and commit the result."
-            exit 1
-          fi
-
-  build-production-backend:
-    needs: [check-migrations]
-    runs-on: ubuntu-latest
+  gate:
+    name: Pre-deploy gate
+    # A called workflow can never hold more than the calling job grants; the
+    # test job pulls Postgres from the GHCR mirror.
     permissions:
       contents: read
       packages: read
-    steps:
-      - uses: actions/checkout@v5
-        with:
-          submodules: recursive
-          token: ${{ secrets.ORG_REPO_PAT }}
-      - name: Log into Scaleway registry
-        run: echo "${{ secrets.SCW_SECRET_KEY }}" | docker login "${{ vars.SCW_REGISTRY_HOST }}/${{ vars.SCW_REGISTRY_NAMESPACE }}" -u nologin --password-stdin
-      - uses: docker/login-action@v4
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-      - name: Build and push backend image
-        env:
-          REGISTRY_NAMESPACE: ${{ vars.SCW_REGISTRY_HOST }}/${{ vars.SCW_REGISTRY_NAMESPACE }}
-          IMAGE_TAG_SHA: ${{ github.sha }}
-          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
-        run: |
-          docker buildx build --load \
-            --build-arg SENTRY_RELEASE="${{ github.sha }}" \
-            --build-arg SENTRY_ORG="${{ vars.SENTRY_ORG }}" \
-            --build-arg SENTRY_PROJECT_BACKEND="${{ vars.SENTRY_PROJECT_BACKEND }}" \
-            --secret id=sentry_auth_token,env=SENTRY_AUTH_TOKEN \
-            -t "$REGISTRY_NAMESPACE/caluno-backend:$IMAGE_TAG_SHA" \
-            -t "$REGISTRY_NAMESPACE/caluno-backend:latest" \
-            -f apps/backend/Dockerfile .
-          docker push "$REGISTRY_NAMESPACE/caluno-backend:$IMAGE_TAG_SHA"
-          docker push "$REGISTRY_NAMESPACE/caluno-backend:latest"
+    uses: ./.github/workflows/reusable-verify.yml
+    with:
+      static-checks: false # already required on the pull request
+    secrets: inherit
 
-  build-production-frontend:
-    needs: [check-migrations]
-    runs-on: ubuntu-latest
+  deploy:
+    name: Deploy
+    needs: [gate]
+    # Base images come from the GHCR mirror.
     permissions:
       contents: read
       packages: read
-    steps:
-      - uses: actions/checkout@v5
-        with:
-          submodules: recursive
-          token: ${{ secrets.ORG_REPO_PAT }}
-      - name: Log into Scaleway registry
-        run: echo "${{ secrets.SCW_SECRET_KEY }}" | docker login "${{ vars.SCW_REGISTRY_HOST }}/${{ vars.SCW_REGISTRY_NAMESPACE }}" -u nologin --password-stdin
-      - uses: docker/login-action@v4
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-      - name: Build and push frontend image
-        env:
-          REGISTRY_NAMESPACE: ${{ vars.SCW_REGISTRY_HOST }}/${{ vars.SCW_REGISTRY_NAMESPACE }}
-          IMAGE_TAG_SHA: ${{ github.sha }}
-          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
-        run: |
-          docker buildx build --load \
-            --build-arg NEXT_PUBLIC_API_URL="https://api.caluno.org" \
-            --build-arg NEXT_PUBLIC_WEB_URL="https://app.caluno.org" \
-            --build-arg NEXT_PUBLIC_SENTRY_DSN="${{ vars.NEXT_PUBLIC_SENTRY_DSN }}" \
-            --build-arg NEXT_PUBLIC_SENTRY_ENVIRONMENT="production" \
-            --build-arg SENTRY_RELEASE="${{ github.sha }}" \
-            --build-arg SENTRY_ORG="${{ vars.SENTRY_ORG }}" \
-            --build-arg SENTRY_PROJECT_FRONTEND="${{ vars.SENTRY_PROJECT_FRONTEND }}" \
-            --secret id=sentry_auth_token,env=SENTRY_AUTH_TOKEN \
-            -t "$REGISTRY_NAMESPACE/caluno-frontend:$IMAGE_TAG_SHA" \
-            -t "$REGISTRY_NAMESPACE/caluno-frontend:latest" \
-            -f apps/frontend/Dockerfile .
-          docker push "$REGISTRY_NAMESPACE/caluno-frontend:$IMAGE_TAG_SHA"
-          docker push "$REGISTRY_NAMESPACE/caluno-frontend:latest"
-
-  terraform-production-plan:
-    needs: [build-production-backend, build-production-frontend]
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      packages: read
-    concurrency: terraform-production
-    container:
-      image: ghcr.io/holi-social/mirror/terraform:1.15
-      credentials:
-        username: ${{ github.actor }}
-        password: ${{ secrets.GITHUB_TOKEN }}
-    env:
-      TF_VAR_image_tag: ${{ github.sha }}
-      TF_VAR_active_environment: production
-      SCW_ACCESS_KEY: ${{ secrets.SCW_ACCESS_KEY }}
-      SCW_SECRET_KEY: ${{ secrets.SCW_SECRET_KEY }}
-      SCW_DEFAULT_PROJECT_ID: ${{ vars.SCW_DEFAULT_PROJECT_ID }}
-      SCW_DEFAULT_REGION: ${{ vars.SCW_DEFAULT_REGION }}
-      SCW_DEFAULT_ZONE: ${{ vars.SCW_DEFAULT_ZONE }}
-      AWS_ACCESS_KEY_ID: ${{ secrets.SCW_ACCESS_KEY }}
-      AWS_SECRET_ACCESS_KEY: ${{ secrets.SCW_SECRET_KEY }}
-      AWS_DEFAULT_REGION: ${{ vars.AWS_DEFAULT_REGION }}
-    outputs:
-      has_changes: ${{ steps.plan.outputs.has_changes }}
-    steps:
-      - uses: actions/checkout@v5
-        with:
-          submodules: recursive
-          token: ${{ secrets.ORG_REPO_PAT }}
-      - id: plan
-        working-directory: ${{ env.TF_ROOT }}
-        run: |
-          terraform init -backend-config="key=production/terraform.tfstate"
-          terraform validate
-          set +e
-          terraform plan -detailed-exitcode -var-file="terraform.tfvars" -out=plan-production.tfplan
-          code=$?
-          set -e
-          if [ "$code" -eq 0 ]; then echo "has_changes=0" >> "$GITHUB_OUTPUT"
-          elif [ "$code" -eq 2 ]; then echo "has_changes=1" >> "$GITHUB_OUTPUT"
-          else exit "$code"; fi
-      - uses: actions/upload-artifact@v7
-        with:
-          name: plan-production
-          path: packages/infra/plan-production.tfplan
-          retention-days: 1
-
-  # Production applies should require human approval: configure a
-  # "required reviewers" protection rule on the `production` environment
-  # (repo Settings → Environments → production). Until that's configured,
-  # this job runs automatically on every push to `production`.
-  terraform-production-apply:
-    needs: [terraform-production-plan]
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      packages: read
-    concurrency: terraform-production
-    environment: production
-    container:
-      image: ghcr.io/holi-social/mirror/terraform:1.15
-      credentials:
-        username: ${{ github.actor }}
-        password: ${{ secrets.GITHUB_TOKEN }}
-    env:
-      TF_VAR_active_environment: production
-      SCW_ACCESS_KEY: ${{ secrets.SCW_ACCESS_KEY }}
-      SCW_SECRET_KEY: ${{ secrets.SCW_SECRET_KEY }}
-      SCW_DEFAULT_PROJECT_ID: ${{ vars.SCW_DEFAULT_PROJECT_ID }}
-      SCW_DEFAULT_REGION: ${{ vars.SCW_DEFAULT_REGION }}
-      SCW_DEFAULT_ZONE: ${{ vars.SCW_DEFAULT_ZONE }}
-      AWS_ACCESS_KEY_ID: ${{ secrets.SCW_ACCESS_KEY }}
-      AWS_SECRET_ACCESS_KEY: ${{ secrets.SCW_SECRET_KEY }}
-      AWS_DEFAULT_REGION: ${{ vars.AWS_DEFAULT_REGION }}
-    steps:
-      - uses: actions/checkout@v5
-        with:
-          submodules: recursive
-          token: ${{ secrets.ORG_REPO_PAT }}
-      - uses: actions/download-artifact@v8
-        with:
-          name: plan-production
-          path: ${{ env.TF_ROOT }}
-      - working-directory: ${{ env.TF_ROOT }}
-        run: |
-          if [ "${{ needs.terraform-production-plan.outputs.has_changes }}" != "1" ]; then
-            echo "No Terraform changes detected for production, skipping apply."
-            exit 0
-          fi
-          terraform init -backend-config="key=production/terraform.tfstate"
-          terraform apply -auto-approve "plan-production.tfplan"
-
-  sentry-finalize-release:
-    needs: [build-production-backend, build-production-frontend]
-    runs-on: ubuntu-latest
-    # Release bookkeeping must not fail the deploy pipeline.
-    continue-on-error: true
-    steps:
-      - uses: actions/checkout@v5
-        with:
-          fetch-depth: 0 # set-commits --auto needs full history
-      - uses: oven-sh/setup-bun@v2
-        with:
-          bun-version: '1'
-      - name: Associate commits and finalize Sentry release
-        env:
-          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
-          SENTRY_ORG: ${{ vars.SENTRY_ORG }}
-        run: |
-          bunx @sentry/cli@2 releases --org "$SENTRY_ORG" set-commits "${{ github.sha }}" --auto
-          bunx @sentry/cli@2 releases --org "$SENTRY_ORG" finalize "${{ github.sha }}"
+    uses: ./.github/workflows/reusable-deploy.yml
+    with:
+      environment: production
+      moving-tag: latest
+      api-url: https://api.caluno.org
+      web-url: https://app.caluno.org
+    secrets: inherit

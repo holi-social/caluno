@@ -26,7 +26,7 @@ export interface DiscoveryShiftInstance {
     title: string;
     maxVolunteers?: number | null;
     rrule?: string | null;
-    organizationUnit: { name: string };
+    organizationUnit: { name: string; logoUrl?: string | null };
     event?: { id: string; title: string; coverImageUrl?: string | null } | null;
   };
 }
@@ -71,7 +71,18 @@ export function ShiftCardDiscovery({
         {shiftInstance.overrideTitle ?? shiftInstance.master.title}
       </h3>
       <p className="flex items-center gap-1.5 text-sm font-medium text-muted-foreground">
-        <CircleDot className="size-3 shrink-0" />
+        {shiftInstance.master.organizationUnit.logoUrl ? (
+          <Image
+            src={shiftInstance.master.organizationUnit.logoUrl}
+            alt=""
+            width={16}
+            height={16}
+            unoptimized
+            className="size-4 shrink-0 rounded-sm object-cover"
+          />
+        ) : (
+          <CircleDot className="size-3 shrink-0" />
+        )}
         {shiftInstance.master.organizationUnit.name}
       </p>
       {spotsLeft !== null && (
