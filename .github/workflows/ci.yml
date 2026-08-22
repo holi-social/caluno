@@ -1,21 +1,11 @@
-# See SETUP.md at the repo root for the one-time setup this workflow depends on
-# (secrets, variables, environments, branch protection).
-#
-# `main` and `production` are protected branches: nothing lands on them except
-# through a pull request, so this workflow is the real gate. It runs the full
-# suite — including the checks that only make sense pre-merge (commit lint, AI
-# gates, throwaway image builds, Terraform plan). The CD workflows deliberately
-# do NOT repeat those.
-#
-# Branch protection should require exactly one check: `CI`. That job aggregates
-# everything below, so path-filtered jobs can skip without blocking a merge.
+# Full gate for pull requests into the protected branches. The CD workflows run
+# a slimmer subset post-merge. See SETUP.md for the one-time setup.
 name: CI
 
 on:
   pull_request:
     branches: [main, production]
 
-# One in-flight run per pull request; pushing a new commit cancels the old run.
 concurrency:
   group: ci-${{ github.event.pull_request.number }}
   cancel-in-progress: true
@@ -37,14 +27,11 @@ jobs:
     outputs:
       code: ${{ steps.filter.outputs.code }}
       backend: ${{ steps.filter.outputs.backend }}
-      frontend: ${{ steps.filter.outputs.frontend }}
       infra: ${{ steps.filter.outputs.infra }}
     steps:
       - uses: actions/checkout@v5
         with:
           fetch-depth: 0
-          # Treeless: full history for the merge-base, without every historical
-          # blob. Only the checked-out tree's blobs are fetched.
           filter: blob:none
           persist-credentials: false
       - id: filter
@@ -54,8 +41,6 @@ jobs:
           HEAD_SHA: ${{ github.event.pull_request.head.sha }}
         run: |
           set -euo pipefail
-          # Diff against the merge base, not the base tip: the base branch may
-          # have moved on since this PR branched.
           merge_base="$(git merge-base "$BASE_SHA" "$HEAD_SHA")"
           files="$(git diff --name-only "$merge_base" "$HEAD_SHA")"
           echo "Changed files:"
@@ -63,7 +48,7 @@ jobs:
 
           matches() { echo "$files" | grep -qE "$1"; }
 
-          # Anything that can change what either app compiles to.
+          # Paths that affect what either app compiles to.
           shared='^(package\.json|bun\.lock|turbo\.json|tsconfig\.json|biome\.json|bunfig\.toml)$|^packages/(data|ui|observability|typescript-config)/|^\.github/'
 
           backend=false; frontend=false; infra=false
@@ -77,23 +62,18 @@ jobs:
           {
             echo "code=$code"
             echo "backend=$backend"
-            echo "frontend=$frontend"
             echo "infra=$infra"
           } | tee -a "$GITHUB_OUTPUT"
 
   verify:
     name: Verify
     needs: [changes]
-    # A called workflow can never hold more than the calling job grants, so the
-    # GHCR read the test job's Postgres service needs has to be granted here.
+    # A called workflow gets at most what the calling job grants.
     permissions:
       contents: read
       packages: read
     uses: ./.github/workflows/reusable-verify.yml
     with:
-      # Biome and tsc always run: they cover the whole repo (including config
-      # and JSON), and both are cache-warm in seconds. Only the jobs that need a
-      # database or a full build are path-gated.
       static-checks: true
       migration-check: ${{ fromJSON(needs.changes.outputs.backend) }}
       tests: ${{ fromJSON(needs.changes.outputs.code) }}
@@ -110,9 +90,8 @@ jobs:
           persist-credentials: false
           token: ${{ secrets.ORG_REPO_PAT }}
           fetch-depth: 0
-          filter: blob:none # commit messages only; no historical blobs needed
-      # head.sha, not github.sha: on pull_request the latter is the synthetic
-      # merge commit, which is not a commit anyone authored.
+          filter: blob:none
+      # head.sha, since github.sha is the synthetic merge commit.
       - run: bash .ai/scripts/commit-lint.sh range "${{ github.event.pull_request.base.sha }}..${{ github.event.pull_request.head.sha }}"
 
   ai-gates:
@@ -129,8 +108,6 @@ jobs:
 
   build-backend:
     name: Build backend image
-    needs: [changes]
-    if: needs.changes.outputs.backend == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 30
     permissions:
@@ -153,20 +130,13 @@ jobs:
           context: .
           file: apps/backend/Dockerfile
           platforms: linux/amd64
-          # Match the deploy builds exactly — see the note there.
           provenance: false
-          # Prove the image builds; keep nothing. Layers land in the Actions
-          # cache so the next push on this PR is incremental.
           outputs: type=cacheonly
-          cache-from: |
-            type=gha,scope=backend
-            type=registry,ref=${{ vars.SCW_REGISTRY_HOST }}/${{ vars.SCW_REGISTRY_NAMESPACE }}/caluno-backend:buildcache
-          cache-to: type=gha,scope=backend,mode=max
+          # Read-only: only the deploys write the cache.
+          cache-from: type=registry,ref=${{ vars.SCW_REGISTRY_HOST }}/${{ vars.SCW_REGISTRY_NAMESPACE }}/caluno-backend:buildcache
 
   build-frontend:
     name: Build frontend image
-    needs: [changes]
-    if: needs.changes.outputs.frontend == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 30
     permissions:
@@ -189,23 +159,16 @@ jobs:
           context: .
           file: apps/frontend/Dockerfile
           platforms: linux/amd64
-          # Match the deploy builds exactly — see the note there.
           provenance: false
           outputs: type=cacheonly
           build-args: |
             NEXT_PUBLIC_API_URL=http://localhost
             NEXT_PUBLIC_WEB_URL=http://localhost
-          cache-from: |
-            type=gha,scope=frontend
-            type=registry,ref=${{ vars.SCW_REGISTRY_HOST }}/${{ vars.SCW_REGISTRY_NAMESPACE }}/caluno-frontend:buildcache
-          cache-to: type=gha,scope=frontend,mode=max
+          cache-from: type=registry,ref=${{ vars.SCW_REGISTRY_HOST }}/${{ vars.SCW_REGISTRY_NAMESPACE }}/caluno-frontend:buildcache
 
   terraform-plan:
     name: Terraform plan
     needs: [changes]
-    # Only when infra actually changed: on a pull request the plan's image_tag
-    # is this PR's sha, which will never be deployed, so an unconditional plan
-    # is pure noise.
     if: needs.changes.outputs.infra == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 20
@@ -213,7 +176,6 @@ jobs:
       contents: read
     env:
       # A PR into `production` is a promotion; anything else targets staging.
-      # (Job-level env entries cannot reference each other, hence the repeat.)
       DEPLOY_ENV: ${{ github.base_ref == 'production' && 'production' || 'staging' }}
       TF_VAR_active_environment: ${{ github.base_ref == 'production' && 'production' || 'staging' }}
       TF_VAR_image_tag: ${{ github.sha }}
@@ -234,8 +196,7 @@ jobs:
       - uses: hashicorp/setup-terraform@v3
         with:
           terraform_version: ${{ env.TF_VERSION }}
-          # The wrapper rewrites stdout, which breaks the plan summary below.
-          terraform_wrapper: false
+          terraform_wrapper: false # the wrapper rewrites stdout
       - name: Init & validate
         working-directory: ${{ env.TF_ROOT }}
         run: |
@@ -251,23 +212,19 @@ jobs:
         if: always() && steps.plan.outcome != 'skipped'
         working-directory: ${{ env.TF_ROOT }}
         run: |
-          # The plan may have died before writing anything; a missing file is
-          # not worth a second, misleading failure on top of the real one.
           [ -f plan.txt ] || { echo "No plan output to summarize."; exit 0; }
           {
             echo "### Terraform plan — \`${DEPLOY_ENV}\`"
             echo
             echo '```terraform'
-            # Step summaries cap at 1 MiB; keep the tail, which holds the
-            # resource changes and the plan totals.
-            tail -c 900000 plan.txt
+            tail -c 900000 plan.txt # step summaries cap at 1 MiB
             echo '```'
           } >> "$GITHUB_STEP_SUMMARY"
 
   ci:
     name: CI
-    # The single required status check. `always()` so it still reports when an
-    # upstream job was skipped by a path filter.
+    # The one check branch protection should require: it aggregates every job
+    # above, so path-filtered skips don't leave a merge blocked.
     if: always()
     needs:
       [
