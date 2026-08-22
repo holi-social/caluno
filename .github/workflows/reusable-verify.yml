@@ -1,5 +1,4 @@
-# Verification suite shared by ci.yml (everything on) and the CD workflows
-# (static checks off, since the PR already required them).
+# Verification suite shared by ci.yml and the CD workflows.
 name: Verify
 
 on:
@@ -50,8 +49,9 @@ jobs:
       - uses: ./.github/actions/setup
         with:
           turbo-cache: 'true' # check-types depends on ^build + codegen
-          cache-key: types
       - run: bun run check-types
+      - uses: ./.github/actions/save-turbo-cache
+        if: success()
 
   migrations:
     name: Migrations up to date
@@ -115,8 +115,9 @@ jobs:
       - uses: ./.github/actions/setup
         with:
           turbo-cache: 'true'
-          cache-key: build
       - run: bun run build # db:seed runs the compiled seed script
       - run: bun run --cwd apps/backend db:migrate
       - run: bun run --cwd apps/backend db:seed
       - run: bun test
+      - uses: ./.github/actions/save-turbo-cache
+        if: success()
