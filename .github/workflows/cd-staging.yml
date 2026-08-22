@@ -1,18 +1,11 @@
-# See SETUP.md at the repo root for the one-time setup this workflow depends on
-# (secrets, variables, environments, branch protection).
-#
-# `main` is protected: every commit here already passed the full CI suite as a
-# required check on its pull request. So this workflow runs the *slim* gate only
-# — migrations + tests, enough to catch a merge that broke against a base that
-# moved — and skips lint/type-check, commit lint and the AI gates entirely.
+# Deploys `main` to staging. See SETUP.md for the one-time setup.
 name: CD · Staging
 
 on:
   push:
     branches: [main]
 
-# One staging deploy at a time, and never cancel one mid-flight: a half-applied
-# Terraform run is much worse than a slightly stale queue.
+# One deploy at a time, never cancelled mid-apply.
 concurrency:
   group: cd-staging
   cancel-in-progress: false
@@ -23,8 +16,7 @@ permissions:
 jobs:
   gate:
     name: Pre-deploy gate
-    # A called workflow can never hold more than the calling job grants; the
-    # test job pulls Postgres from the GHCR mirror.
+    # A called workflow gets at most what the calling job grants.
     permissions:
       contents: read
       packages: read
@@ -36,7 +28,6 @@ jobs:
   deploy:
     name: Deploy
     needs: [gate]
-    # Base images come from the GHCR mirror.
     permissions:
       contents: read
       packages: read
