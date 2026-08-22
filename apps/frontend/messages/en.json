@@ -170,7 +170,7 @@
         "volunteers": "Volunteers"
       },
       "requiredForms": {
-        "addExisting": "+ Add existing",
+        "addExisting": "Add existing",
         "addedToast": "Form attached",
         "createNew": "Create new",
         "dedupHint": "Volunteers won't be asked for information they've already provided.",
@@ -667,7 +667,11 @@
     "empty": "No items yet."
   },
   "RequiredFormRenderer": {
-    "noForms": "No forms are required."
+    "formProgress": "Form progress",
+    "noForms": "No forms are required.",
+    "step": "Form {current} of {total}",
+    "submitAll": "Submit all forms",
+    "submittingAll": "Submitting all forms..."
   },
   "RequirementForm": {
     "actions": {
@@ -934,6 +938,7 @@
       "alreadySubmittedMessage": "Your form has been submitted correctly.",
       "alreadySubmittedTitle": "Form submitted",
       "back": "Back",
+      "birthDateFormat": "DD/MM/YYYY",
       "checkboxYes": "Yes",
       "documentAcknowledgement": "I acknowledge and accept",
       "failedToSubmit": "Failed to submit form",
@@ -1078,7 +1083,7 @@
       "createdLabel": "Created",
       "imageAlt": "Image for {title}",
       "requiredForms": {
-        "addExisting": "+ Add existing",
+        "addExisting": "Add existing",
         "addedToast": "Form attached",
         "createNew": "Create new",
         "dedupHint": "Volunteers won't be asked for information they've already provided.",
@@ -1467,7 +1472,7 @@
       "rejectedEmpty": "No rejected requests yet."
     },
     "requiredForms": {
-      "addExisting": "+ Add existing",
+      "addExisting": "Add existing",
       "addedToast": "Form attached",
       "createNew": "Create new",
       "dedupHint": "Volunteers won't be asked for information they've already provided.",
@@ -1531,9 +1536,14 @@
     "greetingFallback": "Welcome back!",
     "invitationsEmpty": "No pending invitations",
     "invitationsHeading": "Invitations",
+    "inviteAccept": "Accept",
+    "inviteAccepted": "Invitation accepted",
+    "inviteActionFailed": "Something went wrong. Please try again.",
+    "inviteDecline": "Decline",
+    "inviteDeclined": "Invitation declined",
     "inviteKindEvent": "Event",
     "inviteKindShift": "Shift",
-    "invitedOn": "Invited · {date}",
+    "invitedOn": "invited you · sent {date}",
     "loadMore": "Load more",
     "loadPast": "Load past",
     "overlapWarning": "You have overlapping shifts in your schedule",

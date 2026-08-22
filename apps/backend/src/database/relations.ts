@@ -1,3 +1,4 @@
+import { accountingRelations } from '../accounting/schemas/accounting.relations';
 import { authRelations } from '../auth/schemas/auth.relations';
 import { eventsRelations } from '../event/schemas/event.relations';
 import { eventInvitesRelations } from '../event/schemas/event-invite.relations';
@@ -13,6 +14,7 @@ import { filesRelations } from '../storage/schemas/file.relations';
 import { timeEntryRelations } from '../time-tracking/schemas/time-entry.relations';
 
 export const relations = {
+  ...accountingRelations,
   ...authRelations,
   ...eventsRelations,
   ...eventInvitesRelations,

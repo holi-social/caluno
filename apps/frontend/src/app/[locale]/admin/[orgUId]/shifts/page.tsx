@@ -13,6 +13,7 @@ import { ShiftTabSwitcher } from '@/domain/shift/components/shift-tab-switcher';
 import { ShiftsTable } from '@/domain/shift/components/shifts-table';
 import { WeeklyCalendar } from '@/domain/shift/components/weekly-calendar';
 import { WeeklyCalendarNav } from '@/domain/shift/components/weekly-calendar-nav';
+import { orgHasShifts } from '@/domain/shift/weekplan';
 import { getDataClient } from '@/lib/data-client';
 import { requireOrgAccess } from '@/lib/org-context-server';
 import { checkPermission } from '@/lib/permissions-server';
@@ -56,14 +57,23 @@ export default async function ShiftsPage({
   const data = await getDataClient({ orgUId });
   let tableContent: GetShiftsQuery['shifts'] | null = null;
   let instances: GetWeeklyShiftsQuery['weeklyShifts'] | null = null;
+  let orgShiftTotal = 0;
 
   if (isWeekplan) {
     const weekEnd = addDays(weekStart, 7);
     instances = await data.shift.findForWeek(weekStart, weekEnd);
+    if (instances.length > 0) {
+      orgShiftTotal = instances.length;
+    } else {
+      const shiftList = await data.shift.findAll({ limit: 1, offset: 0 });
+      orgShiftTotal = shiftList.pagination.total;
+    }
   } else {
     const result = await data.shift.findAll({ limit: ITEMS_PER_PAGE, offset });
     tableContent = { items: result.items, pagination: result.pagination };
   }
+
+  const showWeekplanCalendar = orgHasShifts(orgShiftTotal);
 
   return (
     <div className="flex flex-col h-full gap-4">
@@ -79,14 +89,13 @@ export default async function ShiftsPage({
             activeTab={isWeekplan ? 'weekplan' : 'shifts'}
             week={week}
           />
-          {isWeekplan &&
-            (instances?.length ? (
-              <WeeklyCalendarNav
-                weekStart={weekStart}
-                pathname={`/admin/${orgUId}/shifts`}
-                query={{ view: 'weekplan' }}
-              />
-            ) : null)}
+          {isWeekplan && showWeekplanCalendar && (
+            <WeeklyCalendarNav
+              weekStart={weekStart}
+              pathname={`/admin/${orgUId}/shifts`}
+              query={{ view: 'weekplan' }}
+            />
+          )}
 
           <CreateShiftButton orgUId={orgUId} />
         </div>
@@ -94,7 +103,7 @@ export default async function ShiftsPage({
 
       {/* Content */}
       {isWeekplan ? (
-        instances?.length ? (
+        showWeekplanCalendar ? (
           <WeeklyCalendar
             instances={instances ?? []}
             canManage={canManage}

@@ -175,13 +175,13 @@ export function DayTimelineView<T>({
       <div ref={headerRef} className="sticky top-0 z-30 bg-muted">
         <div className="mx-auto w-full max-w-4xl">
           <DetailPageHeader
-            className="bg-transparent px-6"
+            className="bg-transparent"
             title={title}
             onBack={router.back}
             backLabel={ct('back')}
           />
           {(isLoading || hasContent) && (
-            <div className="px-6 pb-3">
+            <div className="px-4 pb-3">
               {isLoading ? (
                 <DayStripSkeleton />
               ) : (
@@ -203,7 +203,7 @@ export function DayTimelineView<T>({
         </div>
       </div>
 
-      <div className="mx-auto w-full max-w-4xl px-6 py-4">
+      <div className="mx-auto w-full max-w-4xl px-4 py-4">
         {isLoading ? (
           loading
         ) : !hasContent ? (
