@@ -297,3 +297,77 @@ mutation DeclineInvoice($invoiceId: ID!, $reason: String!) {
     ...InvoiceSummaryFields
   }
 }
+
+fragment DocumentTemplateSummaryFields on DocumentTemplate {
+  id
+  kind
+  invoiceNumberFormat
+  renewalCadence
+  isDeleted
+  lastEditedAt
+  lastEditedByUser {
+    id
+    name
+  }
+  reimbursementType {
+    id
+    key
+  }
+  organizationUnit {
+    id
+    name
+  }
+  signees {
+    id
+    order
+    signeeType
+    requiredPermission {
+      id
+      key
+    }
+  }
+}
+
+query GetDocumentTemplates {
+  documentTemplates {
+    ...DocumentTemplateSummaryFields
+  }
+}
+
+query GetDocumentTemplate($id: ID!) {
+  documentTemplate(id: $id) {
+    ...DocumentTemplateSummaryFields
+    body
+  }
+}
+
+query GetActiveDocumentTemplate(
+  $kind: DocumentKind!
+  $reimbursementTypeId: ID!
+  $organizationUnitId: ID
+) {
+  activeDocumentTemplate(
+    kind: $kind
+    reimbursementTypeId: $reimbursementTypeId
+    organizationUnitId: $organizationUnitId
+  ) {
+    ...DocumentTemplateSummaryFields
+    body
+  }
+}
+
+mutation CreateDocumentTemplate($input: CreateDocumentTemplateInput!) {
+  createDocumentTemplate(input: $input) {
+    ...DocumentTemplateSummaryFields
+  }
+}
+
+mutation UpdateDocumentTemplate($id: ID!, $input: UpdateDocumentTemplateInput!) {
+  updateDocumentTemplate(id: $id, input: $input) {
+    ...DocumentTemplateSummaryFields
+  }
+}
+
+mutation DeleteDocumentTemplate($id: ID!) {
+  deleteDocumentTemplate(id: $id)
+}

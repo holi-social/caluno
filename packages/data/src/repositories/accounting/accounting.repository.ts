@@ -1,9 +1,13 @@
 import type {
   ContractFilterInput,
   CreateContractInput,
+  CreateDocumentTemplateInput,
   CreateInvoiceInput,
+  DocumentKind,
   GetContractQuery,
   GetContractsQuery,
+  GetDocumentTemplateQuery,
+  GetDocumentTemplatesQuery,
   GetEffectiveRatesQuery,
   GetEligibleTimeEntriesForInvoiceQuery,
   GetInvoiceQuery,
@@ -13,6 +17,7 @@ import type {
   GetRosterYearlyUsageQuery,
   GetYearlyUsageQuery,
   InvoiceFilterInput,
+  UpdateDocumentTemplateInput,
 } from '../../generated/graphql';
 import { BaseRepository } from '../base/base.repository';
 
@@ -37,6 +42,10 @@ export type InvoiceSummary = GetInvoicesQuery['invoices'][number];
 export type InvoiceDetail = GetInvoiceQuery['invoice'];
 export type EligibleTimeEntry =
   GetEligibleTimeEntriesForInvoiceQuery['eligibleTimeEntriesForInvoice'][number];
+
+export type DocumentTemplateSummary =
+  GetDocumentTemplatesQuery['documentTemplates'][number];
+export type DocumentTemplateDetail = GetDocumentTemplateQuery['documentTemplate'];
 
 export class AccountingRepository extends BaseRepository {
   async findReimbursementTypes(): Promise<RawReimbursementType[]> {
@@ -169,6 +178,45 @@ export class AccountingRepository extends BaseRepository {
   ): Promise<InvoiceSummary> {
     const data = await this.sdk.DeclineInvoice({ invoiceId, reason });
     return data.declineInvoice;
+  }
+
+  async findDocumentTemplates(): Promise<DocumentTemplateSummary[]> {
+    const data = await this.sdk.GetDocumentTemplates();
+    return data.documentTemplates;
+  }
+
+  async findDocumentTemplateById(id: string): Promise<DocumentTemplateDetail> {
+    const data = await this.sdk.GetDocumentTemplate({ id });
+    return data.documentTemplate;
+  }
+
+  async findActiveDocumentTemplate(input: {
+    kind: DocumentKind;
+    reimbursementTypeId: string;
+    organizationUnitId?: string;
+  }): Promise<DocumentTemplateDetail> {
+    const data = await this.sdk.GetActiveDocumentTemplate(input);
+    return data.activeDocumentTemplate;
+  }
+
+  async createDocumentTemplate(
+    input: CreateDocumentTemplateInput,
+  ): Promise<DocumentTemplateSummary> {
+    const data = await this.sdk.CreateDocumentTemplate({ input });
+    return data.createDocumentTemplate;
+  }
+
+  async updateDocumentTemplate(
+    id: string,
+    input: UpdateDocumentTemplateInput,
+  ): Promise<DocumentTemplateSummary> {
+    const data = await this.sdk.UpdateDocumentTemplate({ id, input });
+    return data.updateDocumentTemplate;
+  }
+
+  async deleteDocumentTemplate(id: string): Promise<boolean> {
+    const data = await this.sdk.DeleteDocumentTemplate({ id });
+    return data.deleteDocumentTemplate;
   }
 }
 
