@@ -116,6 +116,9 @@ const autoSchemaFile =
               onSessionCreated: (userId) => {
                 postHogService.captureUserLoggedIn(userId);
               },
+              onUserCreated: (userId) => {
+                postHogService.captureUserSignedUp(userId);
+              },
               sendResetPassword: async ({ email, token, userId, headers }) => {
                 const locale = await userLocaleService.resolveForUser(
                   userId,
