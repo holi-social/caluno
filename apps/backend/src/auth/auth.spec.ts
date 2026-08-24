@@ -8,13 +8,24 @@ jest.mock('@better-auth/drizzle-adapter', () => ({
 
 jest.mock('better-auth', () => ({
   betterAuth: jest.fn((config) => config),
+  APIError: class APIError extends Error {
+    constructor(
+      public status: string,
+      public body: { message: string },
+    ) {
+      super(body.message);
+      this.name = 'APIError';
+    }
+  },
 }));
 
 jest.mock('better-auth/plugins', () => ({
   emailOTP: jest.fn(() => ({ id: 'email-otp' })),
 }));
 
+import { APIError } from 'better-auth';
 import { createAuthConfig } from './auth';
+import { CURRENT_PRIVACY_POLICY_VERSION } from './privacy-policy';
 
 describe('createAuthConfig', () => {
   it('sets user locale from x-locale on sign up', async () => {
@@ -45,6 +56,7 @@ describe('createAuthConfig', () => {
         emailVerified: false,
         createdAt: new Date(),
         updatedAt: new Date(),
+        privacyPolicyVersion: CURRENT_PRIVACY_POLICY_VERSION,
       },
       { request } as never,
     );
@@ -52,7 +64,68 @@ describe('createAuthConfig', () => {
     expect(result).toEqual({
       data: expect.objectContaining({
         locale: 'de',
+        privacyPolicyVersion: CURRENT_PRIVACY_POLICY_VERSION,
+        privacyPolicyAcceptedAt: expect.any(Date),
       }),
+    });
+  });
+
+  it('rejects sign up without the current privacy policy version', async () => {
+    const config = createAuthConfig({
+      database: {},
+      trustedOrigins: [],
+      sendVerificationOTP: jest.fn(),
+      sendResetPassword: jest.fn(),
+    });
+
+    const beforeCreate = config.databaseHooks?.user?.create?.before;
+    expect(beforeCreate).toBeDefined();
+
+    await expect(
+      beforeCreate?.(
+        {
+          id: 'user-1',
+          email: 'volunteer@example.com',
+          name: 'Volunteer',
+          emailVerified: false,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        {
+          request: new Request('http://localhost:8080/api/auth/sign-up/email'),
+        } as never,
+      ),
+    ).rejects.toBeInstanceOf(APIError);
+  });
+
+  it('rejects sign up with a stale privacy policy version', async () => {
+    const config = createAuthConfig({
+      database: {},
+      trustedOrigins: [],
+      sendVerificationOTP: jest.fn(),
+      sendResetPassword: jest.fn(),
+    });
+
+    const beforeCreate = config.databaseHooks?.user?.create?.before;
+    expect(beforeCreate).toBeDefined();
+
+    await expect(
+      beforeCreate?.(
+        {
+          id: 'user-1',
+          email: 'volunteer@example.com',
+          name: 'Volunteer',
+          emailVerified: false,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+          privacyPolicyVersion: '1999-01-01',
+        },
+        {
+          request: new Request('http://localhost:8080/api/auth/sign-up/email'),
+        } as never,
+      ),
+    ).rejects.toMatchObject({
+      message: 'Privacy policy must be accepted',
     });
   });
 

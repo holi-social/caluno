@@ -57,6 +57,8 @@
       "passwordHint": "Es werden mindestens 6 Zeichen benötigt",
       "passwordLabel": "Passwort",
       "passwordPlaceholder": "••••••••",
+      "privacyAcknowledge": "Ich habe die <privacyLink>Datenschutzhinweise</privacyLink> gelesen und akzeptiere sie.",
+      "privacyRequired": "Bitte akzeptiere die Datenschutzhinweise, um ein Konto zu erstellen.",
       "signInLink": "Anmelden",
       "submit": "Konto erstellen",
       "submitting": "Konto wird erstellt...",
