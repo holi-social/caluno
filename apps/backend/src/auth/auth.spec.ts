@@ -166,6 +166,34 @@ describe('createAuthConfig', () => {
     expect(onSessionCreated).not.toHaveBeenCalled();
   });
 
+  it('calls onSessionDeleted with the session user id after session delete', async () => {
+    const onSessionDeleted = jest.fn();
+    const config = createAuthConfig({
+      database: {},
+      trustedOrigins: [],
+      sendVerificationOTP: jest.fn(),
+      sendResetPassword: jest.fn(),
+      onSessionDeleted,
+    });
+
+    const afterDelete = config.databaseHooks?.session?.delete?.after;
+    expect(afterDelete).toBeDefined();
+
+    await afterDelete?.(
+      {
+        id: 'session-1',
+        userId: 'user-1',
+        token: 'token-1',
+        expiresAt: new Date(),
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
+      null,
+    );
+
+    expect(onSessionDeleted).toHaveBeenCalledWith('user-1');
+  });
+
   it('does not throw after user create when onUserCreated is omitted', async () => {
     const config = createAuthConfig({
       database: {},

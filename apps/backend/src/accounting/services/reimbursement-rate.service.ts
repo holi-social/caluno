@@ -6,6 +6,11 @@ import {
   BadRequestGraphQLError,
   NotFoundGraphQLError,
 } from '../../graphql/errors';
+import {
+  POSTHOG_EVENT,
+  POSTHOG_SURFACE,
+} from '../../shared/observability/posthog.events';
+import { PostHogService } from '../../shared/observability/posthog.service';
 import type { EffectiveRate, YearlyUsage } from '../accounting.types';
 import { InvoiceStatus } from '../enums';
 import type { ReimbursementRateEntity } from '../schemas/reimbursement-rate.schema';
@@ -16,6 +21,7 @@ export class ReimbursementRateService {
   constructor(
     @Inject(DATABASE_CONNECTION)
     private readonly db: Database,
+    private readonly postHogService: PostHogService,
   ) {}
 
   async findReimbursementTypes(): Promise<ReimbursementTypeEntity[]> {
@@ -47,6 +53,7 @@ export class ReimbursementRateService {
     organizationId: string,
     reimbursementTypeId: string,
     hourlyRateCents: number,
+    userId: string,
   ): Promise<ReimbursementRateEntity> {
     if (hourlyRateCents <= 0) {
       throw new BadRequestGraphQLError('Hourly rate must be greater than zero');
@@ -64,6 +71,15 @@ export class ReimbursementRateService {
         set: { hourlyRateCents },
       })
       .returning();
+
+    this.postHogService.capture({
+      event: POSTHOG_EVENT.REIMBURSEMENT_RATE_UPDATE,
+      userId,
+      properties: {
+        surface: POSTHOG_SURFACE.BACKOFFICE,
+        organization_id: organizationId,
+      },
+    });
 
     return rate;
   }

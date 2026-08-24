@@ -67,7 +67,9 @@ describe('InvoiceService', () => {
     db = moduleRef.get<Database>(DATABASE_CONNECTION);
 
     const organizationUnitDataService = new OrganizationUnitDataService(db);
-    const authService = new AuthService(db, organizationUnitDataService);
+    const authService = new AuthService(db, organizationUnitDataService, {
+      capture: () => {},
+    } as unknown as PostHogService);
     const organizationService = new OrganizationService(
       db,
       {} as OrganizationMapper,
@@ -77,17 +79,22 @@ describe('InvoiceService', () => {
       {} as FileService,
       {} as PostHogService,
     );
-    const documentTemplateService = new DocumentTemplateService(db);
+    const documentTemplateService = new DocumentTemplateService(db, {
+      capture: () => {},
+    } as unknown as PostHogService);
     const documentSigningService = new DocumentSigningService(
       db,
       authService,
       organizationService,
     );
-    const reimbursementRateService = new ReimbursementRateService(db);
+    const reimbursementRateService = new ReimbursementRateService(db, {
+      capture: () => {},
+    } as unknown as PostHogService);
     const contractService = new ContractService(
       db,
       documentTemplateService,
       documentSigningService,
+      { capture: () => {} } as unknown as PostHogService,
     );
     service = new InvoiceService(
       db,
@@ -95,6 +102,7 @@ describe('InvoiceService', () => {
       documentSigningService,
       reimbursementRateService,
       contractService,
+      { capture: () => {} } as unknown as PostHogService,
     );
 
     registerTestResourceCleanup(async () => {
@@ -289,11 +297,14 @@ describe('InvoiceService', () => {
         supervisor,
         timeEntry,
       } = await setup({ rateCents: 1_500 });
-      const reimbursementRateService = new ReimbursementRateService(db);
+      const reimbursementRateService = new ReimbursementRateService(db, {
+        capture: () => {},
+      } as unknown as PostHogService);
       await reimbursementRateService.setReimbursementRate(
         organization.id,
         reimbursementType.id,
         2_000,
+        supervisor.id,
       );
 
       const invoice = await service.createInvoice(

@@ -7,6 +7,7 @@ import { DATABASE_CONNECTION } from '../src/database/database-connection';
 import { BadRequestGraphQLError } from '../src/graphql/errors';
 import { RequiredFormService } from '../src/requirement-profile/services/required-form.service';
 import { RequirementFormService } from '../src/requirement-profile/services/requirement-form.service';
+import { PostHogService } from '../src/shared/observability/posthog.service';
 import { createUser } from './factories';
 import {
   createOrganizationWithType,
@@ -32,7 +33,10 @@ describe('RequirementFormService block org scoping', () => {
 
     requirementFormService = new RequirementFormService(
       db,
-      new RequiredFormService(db),
+      new RequiredFormService(db, {
+        capture: () => {},
+      } as unknown as PostHogService),
+      { capture: () => {} } as unknown as PostHogService,
     );
 
     registerTestResourceCleanup(async () => {

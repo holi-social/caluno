@@ -36,6 +36,7 @@ export class ReimbursementMutationResolver {
       organizationId,
       reimbursementTypeId,
       hourlyRateCents,
+      context.user.id,
     );
     return this.reimbursementRateMapper.toModelOrThrow(rate);
   }

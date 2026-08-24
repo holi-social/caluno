@@ -59,7 +59,9 @@ describe('ContractService', () => {
     db = moduleRef.get<Database>(DATABASE_CONNECTION);
 
     const organizationUnitDataService = new OrganizationUnitDataService(db);
-    const authService = new AuthService(db, organizationUnitDataService);
+    const authService = new AuthService(db, organizationUnitDataService, {
+      capture: () => {},
+    } as unknown as PostHogService);
     const organizationService = new OrganizationService(
       db,
       {} as OrganizationMapper,
@@ -69,7 +71,9 @@ describe('ContractService', () => {
       {} as FileService,
       {} as PostHogService,
     );
-    const documentTemplateService = new DocumentTemplateService(db);
+    const documentTemplateService = new DocumentTemplateService(db, {
+      capture: () => {},
+    } as unknown as PostHogService);
     const documentSigningService = new DocumentSigningService(
       db,
       authService,
@@ -79,6 +83,7 @@ describe('ContractService', () => {
       db,
       documentTemplateService,
       documentSigningService,
+      { capture: () => {} } as unknown as PostHogService,
     );
 
     registerTestResourceCleanup(async () => {

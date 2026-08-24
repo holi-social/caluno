@@ -7,6 +7,11 @@ import {
   ConflictGraphQLError,
   NotFoundGraphQLError,
 } from '../../graphql/errors';
+import {
+  POSTHOG_EVENT,
+  POSTHOG_SURFACE,
+} from '../../shared/observability/posthog.events';
+import { PostHogService } from '../../shared/observability/posthog.service';
 import type {
   ContractFilter,
   ContractWithRelations,
@@ -31,6 +36,7 @@ export class ContractService {
     private readonly db: Database,
     private readonly documentTemplateService: DocumentTemplateService,
     private readonly documentSigningService: DocumentSigningService,
+    private readonly postHogService: PostHogService,
   ) {}
 
   async findContract(id: string): Promise<ContractWithRelations> {
@@ -113,8 +119,8 @@ export class ContractService {
         template.id,
       );
 
-    return this.db.transaction(async (tx) => {
-      const [contract] = await tx
+    const contract = await this.db.transaction(async (tx) => {
+      const [created] = await tx
         .insert(schema.contracts)
         .values({
           documentTemplateId: template.id,
@@ -129,7 +135,7 @@ export class ContractService {
 
       await tx.insert(schema.contractSignatures).values(
         orderedSignees.map((signee) => ({
-          contractId: contract.id,
+          contractId: created.id,
           order: signee.order,
           signeeType: signee.signeeType,
           requiredPermissionId: signee.requiredPermissionId,
@@ -137,13 +143,25 @@ export class ContractService {
       );
 
       await tx.insert(schema.contractStatusChanges).values({
-        contractId: contract.id,
+        contractId: created.id,
         type: DocumentStatusChange.CREATED,
         actorUserId,
       });
 
-      return contract;
+      return created;
     });
+
+    this.postHogService.capture({
+      event: POSTHOG_EVENT.CONTRACT_CREATE,
+      userId: contract.volunteerId || actorUserId,
+      properties: {
+        surface: POSTHOG_SURFACE.BACKOFFICE,
+        organization_id: organizationId,
+        organization_unit_id: input.organizationUnitId ?? undefined,
+      },
+    });
+
+    return contract;
   }
 
   async signContract(
@@ -178,13 +196,13 @@ export class ContractService {
 
     const isFinal = pendingIndex === orderedSignatures.length - 1;
 
-    return this.db.transaction(async (tx) => {
+    const updated = await this.db.transaction(async (tx) => {
       await tx
         .update(schema.contractSignatures)
         .set({ signedByUserId: userId, signedAt: new Date() })
         .where(eq(schema.contractSignatures.id, pending.id));
 
-      const [updated] = await tx
+      const [signed] = await tx
         .update(schema.contracts)
         .set({
           contractStatus: isFinal
@@ -212,8 +230,21 @@ export class ContractService {
         });
       }
 
-      return updated;
+      return signed;
     });
+
+    this.postHogService.capture({
+      event: POSTHOG_EVENT.CONTRACT_SIGN,
+      userId: contract.volunteerId || userId,
+      properties: {
+        surface: POSTHOG_SURFACE.BACKOFFICE,
+        organization_id: this.documentSigningService.organizationIdOf(
+          contract.documentTemplate,
+        ),
+      },
+    });
+
+    return updated;
   }
 
   async declineContract(
@@ -248,8 +279,8 @@ export class ContractService {
       this.documentSigningService.organizationIdOf(contract.documentTemplate),
     );
 
-    return this.db.transaction(async (tx) => {
-      const [updated] = await tx
+    const updated = await this.db.transaction(async (tx) => {
+      const [declined] = await tx
         .update(schema.contracts)
         .set({
           contractStatus: ContractStatus.DECLINED,
@@ -267,8 +298,21 @@ export class ContractService {
         actorUserId: userId,
       });
 
-      return updated;
+      return declined;
     });
+
+    this.postHogService.capture({
+      event: POSTHOG_EVENT.CONTRACT_DECLINE,
+      userId: contract.volunteerId || userId,
+      properties: {
+        surface: POSTHOG_SURFACE.BACKOFFICE,
+        organization_id: this.documentSigningService.organizationIdOf(
+          contract.documentTemplate,
+        ),
+      },
+    });
+
+    return updated;
   }
 
   async findContractStatusChanges(

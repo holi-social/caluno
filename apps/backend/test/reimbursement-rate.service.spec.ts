@@ -15,6 +15,7 @@ import {
   BadRequestGraphQLError,
   NotFoundGraphQLError,
 } from '../src/graphql/errors';
+import { PostHogService } from '../src/shared/observability/posthog.service';
 import {
   createDocumentTemplate,
   createReimbursementType,
@@ -37,7 +38,9 @@ describe('ReimbursementRateService', () => {
       imports: [ConfigModule.forRoot({ isGlobal: true }), DatabaseModule],
     }).compile();
     db = moduleRef.get<Database>(DATABASE_CONNECTION);
-    service = new ReimbursementRateService(db);
+    service = new ReimbursementRateService(db, {
+      capture: () => {},
+    } as unknown as PostHogService);
     registerTestResourceCleanup(async () => {
       await moduleRef.close();
     });
@@ -77,6 +80,7 @@ describe('ReimbursementRateService', () => {
         organization.id,
         reimbursementType.id,
         2_000,
+        crypto.randomUUID(),
       );
 
       const rates = await service.getEffectiveRates(organization.id);
@@ -97,7 +101,12 @@ describe('ReimbursementRateService', () => {
       );
 
       await expect(
-        service.setReimbursementRate(organization.id, reimbursementType.id, 0),
+        service.setReimbursementRate(
+          organization.id,
+          reimbursementType.id,
+          0,
+          crypto.randomUUID(),
+        ),
       ).rejects.toBeInstanceOf(BadRequestGraphQLError);
     });
 
@@ -112,6 +121,7 @@ describe('ReimbursementRateService', () => {
           organization.id,
           crypto.randomUUID(),
           1_000,
+          crypto.randomUUID(),
         ),
       ).rejects.toBeInstanceOf(NotFoundGraphQLError);
     });
@@ -127,11 +137,13 @@ describe('ReimbursementRateService', () => {
         organization.id,
         reimbursementType.id,
         1_800,
+        crypto.randomUUID(),
       );
       await service.setReimbursementRate(
         organization.id,
         reimbursementType.id,
         2_200,
+        crypto.randomUUID(),
       );
 
       const rows = await db
