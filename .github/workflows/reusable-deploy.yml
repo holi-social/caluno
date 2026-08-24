@@ -1,14 +1,8 @@
-# Reusable deploy pipeline: build and push both images, plan Terraform, then
-# apply behind a GitHub Environment. Staging and production differ only by the
-# inputs below, so there is exactly one copy of this logic.
+# Verify, build and push both images, plan Terraform, apply behind a GitHub
+# Environment. Staging and production differ only by the inputs below. Callers
+# serialize deploys with a workflow-level concurrency group.
 #
-# Serialization is the caller's job: cd-staging.yml / cd-production.yml each set
-# a workflow-level concurrency group with cancel-in-progress: false, which means
-# a whole deploy run never interleaves with another for the same environment.
-# Deliberately no job-level concurrency here — plan and apply sharing one group
-# lets a newer run's plan evict an older run's *pending* apply.
-#
-# Not triggered directly: `workflow_call` only.
+# Gate, builds and plan all start at once; only `apply` waits on the gate.
 name: Deploy
 
 on:
@@ -19,7 +13,7 @@ on:
         type: string
         required: true
       moving-tag:
-        description: Rolling image tag for this environment (`staging` / `latest`). The immutable tag is always the commit sha.
+        description: Rolling image tag (`staging` / `latest`); the immutable tag is always the commit sha.
         type: string
         required: true
       api-url:
@@ -42,6 +36,16 @@ env:
   TF_INPUT: 'false'
 
 jobs:
+  gate:
+    name: Pre-deploy gate
+    # Full suite. Runs alongside the image builds, and is what warms the
+    # Turborepo cache on this branch for every pull request to read.
+    permissions:
+      contents: read
+      packages: read
+    uses: ./.github/workflows/reusable-verify.yml
+    secrets: inherit
+
   build-backend:
     name: Build & push backend image
     runs-on: ubuntu-latest
@@ -67,9 +71,7 @@ jobs:
           platforms: linux/amd64
           push: true
           # Scaleway Serverless Containers wants a plain single-platform
-          # manifest. build-push-action attaches a provenance attestation by
-          # default, which can turn the pushed artifact into an OCI index — the
-          # raw `docker push` this replaced never did that.
+          # manifest, not an OCI index with an attestation.
           provenance: false
           tags: |
             ${{ vars.SCW_REGISTRY_HOST }}/${{ vars.SCW_REGISTRY_NAMESPACE }}/caluno-backend:${{ github.sha }}
@@ -80,12 +82,9 @@ jobs:
             SENTRY_PROJECT_BACKEND=${{ vars.SENTRY_PROJECT_BACKEND }}
           secrets: |
             sentry_auth_token=${{ secrets.SENTRY_AUTH_TOKEN }}
-          # Only the protected branches write the shared registry cache, so a
-          # pull request can never poison what the next deploy builds from. And
-          # no type=gha on this side: pull requests write the Actions cache under
-          # their own branch scope, which a protected-branch run cannot read.
-          cache-from: type=registry,ref=${{ vars.SCW_REGISTRY_HOST }}/${{ vars.SCW_REGISTRY_NAMESPACE }}/caluno-backend:buildcache
-          cache-to: type=registry,ref=${{ vars.SCW_REGISTRY_HOST }}/${{ vars.SCW_REGISTRY_NAMESPACE }}/caluno-backend:buildcache,mode=max
+          # Per environment; pull requests read both.
+          cache-from: type=registry,ref=${{ vars.SCW_REGISTRY_HOST }}/${{ vars.SCW_REGISTRY_NAMESPACE }}/caluno-backend:buildcache-${{ inputs.environment }}
+          cache-to: type=registry,ref=${{ vars.SCW_REGISTRY_HOST }}/${{ vars.SCW_REGISTRY_NAMESPACE }}/caluno-backend:buildcache-${{ inputs.environment }},mode=max
 
   build-frontend:
     name: Build & push frontend image
@@ -111,11 +110,7 @@ jobs:
           file: apps/frontend/Dockerfile
           platforms: linux/amd64
           push: true
-          # Scaleway Serverless Containers wants a plain single-platform
-          # manifest. build-push-action attaches a provenance attestation by
-          # default, which can turn the pushed artifact into an OCI index — the
-          # raw `docker push` this replaced never did that.
-          provenance: false
+          provenance: false # as above
           tags: |
             ${{ vars.SCW_REGISTRY_HOST }}/${{ vars.SCW_REGISTRY_NAMESPACE }}/caluno-frontend:${{ github.sha }}
             ${{ vars.SCW_REGISTRY_HOST }}/${{ vars.SCW_REGISTRY_NAMESPACE }}/caluno-frontend:${{ inputs.moving-tag }}
@@ -129,18 +124,18 @@ jobs:
             SENTRY_PROJECT_FRONTEND=${{ vars.SENTRY_PROJECT_FRONTEND }}
           secrets: |
             sentry_auth_token=${{ secrets.SENTRY_AUTH_TOKEN }}
-          # Same as the backend: registry cache only, written only from here.
-          cache-from: type=registry,ref=${{ vars.SCW_REGISTRY_HOST }}/${{ vars.SCW_REGISTRY_NAMESPACE }}/caluno-frontend:buildcache
-          cache-to: type=registry,ref=${{ vars.SCW_REGISTRY_HOST }}/${{ vars.SCW_REGISTRY_NAMESPACE }}/caluno-frontend:buildcache,mode=max
+          cache-from: type=registry,ref=${{ vars.SCW_REGISTRY_HOST }}/${{ vars.SCW_REGISTRY_NAMESPACE }}/caluno-frontend:buildcache-${{ inputs.environment }}
+          cache-to: type=registry,ref=${{ vars.SCW_REGISTRY_HOST }}/${{ vars.SCW_REGISTRY_NAMESPACE }}/caluno-frontend:buildcache-${{ inputs.environment }},mode=max
 
   plan:
     name: Terraform plan
-    needs: [build-backend, build-frontend]
+    # No `needs`: `apply` is what waits on the gate and the images.
     runs-on: ubuntu-latest
     timeout-minutes: 20
     env:
       TF_VAR_image_tag: ${{ github.sha }}
       TF_VAR_active_environment: ${{ inputs.environment }}
+      TF_PLUGIN_CACHE_DIR: ${{ github.workspace }}/.terraform.d/plugin-cache
       SCW_ACCESS_KEY: ${{ secrets.SCW_ACCESS_KEY }}
       SCW_SECRET_KEY: ${{ secrets.SCW_SECRET_KEY }}
       SCW_DEFAULT_PROJECT_ID: ${{ vars.SCW_DEFAULT_PROJECT_ID }}
@@ -161,6 +156,14 @@ jobs:
         with:
           terraform_version: ${{ env.TF_VERSION }}
           terraform_wrapper: false
+      # Providers are ~100 MB and pinned by the lock file.
+      - run: mkdir -p "$TF_PLUGIN_CACHE_DIR"
+      - uses: actions/cache@v4
+        with:
+          path: ${{ env.TF_PLUGIN_CACHE_DIR }}
+          key: tf-plugins-${{ runner.os }}-${{ hashFiles('packages/infra/.terraform.lock.hcl') }}
+          restore-keys: |
+            tf-plugins-${{ runner.os }}-
       - name: Init & validate
         working-directory: ${{ env.TF_ROOT }}
         run: |
@@ -171,9 +174,7 @@ jobs:
         working-directory: ${{ env.TF_ROOT }}
         run: |
           set -o pipefail
-          # -detailed-exitcode: 0 = no changes, 2 = changes, anything else is an
-          # actual failure. `set +e` only around the plan so a real error still
-          # fails the job.
+          # -detailed-exitcode: 0 = no changes, 2 = changes, anything else fails.
           set +e
           terraform plan -detailed-exitcode -no-color \
             -var-file="terraform.tfvars" -out=plan.tfplan | tee plan.txt
@@ -188,15 +189,12 @@ jobs:
         if: always() && steps.plan.outcome != 'skipped'
         working-directory: ${{ env.TF_ROOT }}
         run: |
-          # The plan may have died before writing anything; a missing file is
-          # not worth a second, misleading failure on top of the real one.
           [ -f plan.txt ] || { echo "No plan output to summarize."; exit 0; }
           {
             echo "### Terraform plan — \`${{ inputs.environment }}\`"
             echo
             echo '```terraform'
-            # Step summaries cap at 1 MiB; the tail holds the resource changes.
-            tail -c 900000 plan.txt
+            tail -c 900000 plan.txt # step summaries cap at 1 MiB
             echo '```'
           } >> "$GITHUB_STEP_SUMMARY"
       - uses: actions/upload-artifact@v7
@@ -208,19 +206,20 @@ jobs:
 
   apply:
     name: Terraform apply
-    needs: [plan]
-    # Nothing to do when the plan is empty — and skipping keeps the environment's
-    # approval prompt from firing for a no-op deploy.
+    # Nothing reaches the environment unless the gate passed and both images
+    # are in the registry.
+    needs: [gate, plan, build-backend, build-frontend]
+    # Skip on an empty plan, so no approval is requested for a no-op.
     if: needs.plan.outputs.has-changes == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 30
-    # Approval gates, environment secrets and the deployment record all hang off
-    # this. Required reviewers on `production` are what make prod applies manual.
+    # Required reviewers on this environment are what make prod applies manual.
     environment:
       name: ${{ inputs.environment }}
       url: ${{ inputs.web-url }}
     env:
       TF_VAR_active_environment: ${{ inputs.environment }}
+      TF_PLUGIN_CACHE_DIR: ${{ github.workspace }}/.terraform.d/plugin-cache
       SCW_ACCESS_KEY: ${{ secrets.SCW_ACCESS_KEY }}
       SCW_SECRET_KEY: ${{ secrets.SCW_SECRET_KEY }}
       SCW_DEFAULT_PROJECT_ID: ${{ vars.SCW_DEFAULT_PROJECT_ID }}
@@ -239,14 +238,20 @@ jobs:
         with:
           terraform_version: ${{ env.TF_VERSION }}
           terraform_wrapper: false
+      - run: mkdir -p "$TF_PLUGIN_CACHE_DIR"
+      - uses: actions/cache@v4
+        with:
+          path: ${{ env.TF_PLUGIN_CACHE_DIR }}
+          key: tf-plugins-${{ runner.os }}-${{ hashFiles('packages/infra/.terraform.lock.hcl') }}
+          restore-keys: |
+            tf-plugins-${{ runner.os }}-
       - uses: actions/download-artifact@v8
         with:
           name: plan-${{ inputs.environment }}
           path: ${{ env.TF_ROOT }}
+      # The saved plan file, so what was reviewed is what gets applied.
       - name: Apply the reviewed plan
         working-directory: ${{ env.TF_ROOT }}
-        # Applying the saved plan file, not a fresh one: what a reviewer approved
-        # is exactly what gets applied.
         run: |
           terraform init -backend-config="key=${{ inputs.environment }}/terraform.tfstate"
           terraform apply -auto-approve plan.tfplan
@@ -256,8 +261,7 @@ jobs:
     needs: [build-backend, build-frontend]
     runs-on: ubuntu-latest
     timeout-minutes: 10
-    # Release bookkeeping must never fail a deploy.
-    continue-on-error: true
+    continue-on-error: true # bookkeeping must never fail a deploy
     steps:
       - uses: actions/checkout@v5
         with:

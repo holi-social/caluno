@@ -15,6 +15,77 @@ input CloseTimeEntryInput {
   notes: String
 }
 
+type Contract {
+  contractStatus: ContractStatus!
+  createdAt: DateTime!
+  declineReason: String
+  declinedAt: DateTime
+  declinedAtSigneeType: SigneeType
+  declinedByUser: User
+  documentTemplate: DocumentTemplate!
+  id: ID!
+  isNonCompliant: Boolean!
+  periodEnd: DateTime!
+  periodStart: DateTime!
+  reimbursementType: ReimbursementType!
+  renewDate: DateTime
+  resolvedBody: JSON!
+  signatures: [ContractSignature!]!
+  statusChanges: [ContractStatusChange!]!
+  updatedAt: DateTime
+  volunteer: User!
+}
+
+input ContractFilterInput {
+  reimbursementTypeId: ID
+  status: ContractStatus
+  volunteerId: ID
+}
+
+type ContractSignature {
+  createdAt: DateTime!
+  id: ID!
+  order: Int!
+  requiredPermission: Permission
+  signedAt: DateTime
+  signedByUser: User
+  signeeType: SigneeType!
+  updatedAt: DateTime
+}
+
+enum ContractStatus {
+  ACTIVE
+  AWAITING_NGO_SIGNATURE
+  AWAITING_VOLUNTEER_SIGNATURE
+  DECLINED
+  EXPIRED
+}
+
+type ContractStatusChange {
+  actorUser: User
+  id: ID!
+  occurredAt: DateTime!
+  type: DocumentStatusChange!
+}
+
+input CreateContractInput {
+  organizationUnitId: ID
+  periodEnd: DateTime!
+  periodStart: DateTime!
+  reimbursementTypeId: ID!
+  volunteerId: ID!
+}
+
+input CreateDocumentTemplateInput {
+  body: JSON!
+  invoiceNumberFormat: String
+  kind: DocumentKind!
+  organizationUnitId: ID
+  reimbursementTypeId: ID!
+  renewalCadence: RenewalCadence
+  signees: [CreateTemplateSigneeInput!]!
+}
+
 input CreateEventInput {
   coverFileId: String
   description: String
@@ -49,6 +120,15 @@ input CreateFormBlockInput {
   organizationId: String!
   required: Boolean
   title: String!
+}
+
+input CreateInvoiceInput {
+  organizationUnitId: ID
+  periodEnd: DateTime!
+  periodStart: DateTime!
+  reimbursementTypeId: ID!
+  timeEntryIds: [ID!]!
+  volunteerId: ID!
 }
 
 input CreateOrganizationInput {
@@ -136,10 +216,53 @@ input CreateShiftInput {
   visibility: ShiftVisibility!
 }
 
+input CreateTemplateSigneeInput {
+  order: Int!
+  requiredPermissionId: ID
+  signeeType: SigneeType!
+}
+
 """
 A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date-time format.
 """
 scalar DateTime
+
+enum DocumentKind {
+  CONTRACT
+  INVOICE
+}
+
+enum DocumentStatusChange {
+  ACTIVATED
+  COUNTERSIGNED
+  CREATED
+  DECLINED
+  EXPIRED
+  SIGNED
+}
+
+type DocumentTemplate {
+  body: JSON!
+  createdAt: DateTime!
+  id: ID!
+  invoiceNumberFormat: String
+  isDeleted: Boolean!
+  kind: DocumentKind!
+  lastEditedAt: DateTime
+  lastEditedByUser: User
+  organization: Organization!
+  organizationUnit: OrganizationUnit
+  reimbursementType: ReimbursementType!
+  renewalCadence: RenewalCadence
+  signees: [TemplateSignee!]!
+  updatedAt: DateTime
+}
+
+type EffectiveRate {
+  hourlyRateCents: Int!
+  isOverride: Boolean!
+  reimbursementType: ReimbursementType!
+}
 
 type Event {
   coverImageUrl: String
@@ -317,6 +440,67 @@ type FormSubmissionValue {
   value: String!
 }
 
+type Invoice {
+  createdAt: DateTime!
+  declineReason: String
+  declinedAt: DateTime
+  declinedAtSigneeType: SigneeType
+  declinedByUser: User
+  documentTemplate: DocumentTemplate!
+  id: ID!
+  invoiceStatus: InvoiceStatus!
+  invoiceTimeEntries: [InvoiceTimeEntry!]!
+  isNonCompliant: Boolean!
+  periodEnd: DateTime!
+  periodStart: DateTime!
+  reimbursementType: ReimbursementType!
+  resolvedBody: JSON!
+  signatures: [InvoiceSignature!]!
+  statusChanges: [InvoiceStatusChange!]!
+  totalAmountCents: Int!
+  totalHours: Float!
+  updatedAt: DateTime
+  volunteer: User!
+}
+
+input InvoiceFilterInput {
+  reimbursementTypeId: ID
+  status: InvoiceStatus
+  volunteerId: ID
+}
+
+type InvoiceSignature {
+  createdAt: DateTime!
+  id: ID!
+  order: Int!
+  requiredPermission: Permission
+  signedAt: DateTime
+  signedByUser: User
+  signeeType: SigneeType!
+  updatedAt: DateTime
+}
+
+enum InvoiceStatus {
+  AWAITING_SUPERVISOR_SIGNATURE
+  AWAITING_VOLUNTEER_SIGNATURE
+  DECLINED
+  READY
+}
+
+type InvoiceStatusChange {
+  actorUser: User
+  id: ID!
+  occurredAt: DateTime!
+  type: DocumentStatusChange!
+}
+
+type InvoiceTimeEntry {
+  createdAt: DateTime!
+  id: ID!
+  timeEntry: TimeEntry!
+  updatedAt: DateTime
+}
+
 """
 The `JSON` scalar type represents JSON values as specified by [ECMA-404](http://www.ecma-international.org/publications/files/ECMA-ST/ECMA-404.pdf).
 """
@@ -396,9 +580,12 @@ type Mutation {
   checkIn(shiftInstanceId: ID!): TimeEntry!
   checkOut(shiftInstanceId: ID!): TimeEntry!
   closeTimeEntry(id: ID!, input: CloseTimeEntryInput!): TimeEntry!
+  createContract(input: CreateContractInput!): Contract!
+  createDocumentTemplate(input: CreateDocumentTemplateInput!): DocumentTemplate!
   createEvent(input: CreateEventInput!): Event!
   createFormBlock(input: CreateFormBlockInput!): FormBlock!
   createFormBlockField(blockId: String!, input: CreateFormBlockFieldInput!): FormBlock!
+  createInvoice(input: CreateInvoiceInput!): Invoice!
   createOrganization(input: CreateOrganizationInput!): Organization!
   createOrganizationUnit(input: CreateOrganizationUnitInput!): OrganizationUnit!
   createRequirement(input: CreateRequirementInput!): Requirement!
@@ -407,6 +594,9 @@ type Mutation {
   createRequirementProfileSubmission(input: CreateRequirementProfileSubmissionInput!): RequirementProfileSubmission!
   createRole(input: CreateRoleInput!): Role!
   createShift(input: CreateShiftInput!): Shift!
+  declineContract(contractId: ID!, reason: String!): Contract!
+  declineInvoice(invoiceId: ID!, reason: String!): Invoice!
+  deleteDocumentTemplate(id: ID!): Boolean!
   deleteEvent(id: ID!): Event!
   deleteFormBlock(id: String!): FormBlock!
   deleteFormBlockField(fieldId: String!): FormBlock!
@@ -429,11 +619,15 @@ type Mutation {
   rejectMembershipRequest(id: ID!, organizationUnitId: ID!, rejectionReason: String!): MembershipRequest!
   removeMembershipRequest(id: ID!): MembershipRequest!
   setEventRequiredForms(eventId: ID!, formIds: [String!]!): [RequiredFormRef!]!
+  setReimbursementRate(hourlyRateCents: Int!, reimbursementTypeId: ID!): ReimbursementRate!
   setRequiredForms(formIds: [String!]!, organizationUnitId: String!): [RequiredFormRef!]!
   setShiftInstanceRequiredForms(formIds: [String!]!, instanceId: ID!): [RequiredFormRef!]!
   setShiftRequiredForms(formIds: [String!]!, shiftId: ID!): [RequiredFormRef!]!
+  signContract(contractId: ID!): Contract!
+  signInvoice(invoiceId: ID!): Invoice!
   submitForm(input: SubmitFormInput!, token: String!): FormSubmission!
   submitRequiredForm(formId: String!, input: SubmitFormInput!, targetId: String!, targetType: RequiredFormTargetType!): FormSubmission!
+  updateDocumentTemplate(id: ID!, input: UpdateDocumentTemplateInput!): DocumentTemplate!
   updateEvent(id: ID!, input: UpdateEventInput!): Event!
   updateEventInviteStatus(eventId: ID!, status: EventInviteStatus!, userId: String): EventInvite!
   updateFormBlock(id: String!, input: UpdateFormBlockInput!): FormBlock!
@@ -540,6 +734,13 @@ type PaginationInfo {
   total: Int!
 }
 
+type PendingSignee {
+  eligibleUserIds: [String!]
+  permissionKey: String
+  signeeType: SigneeType!
+  userId: String
+}
+
 type Permission {
   description: String
   id: ID!
@@ -570,10 +771,17 @@ enum PermissionKey {
 }
 
 type Query {
+  activeDocumentTemplate(kind: DocumentKind!, organizationUnitId: ID, reimbursementTypeId: ID!): DocumentTemplate!
   activeShiftInstances: [ShiftInstance!]!
   adminUserProfile(userId: String!): UserProfile
   adminVolunteerSubmission(id: String!): FormSubmission
   availableShiftInstances(endsBefore: DateTime = null, limit: Int! = 15, offset: Int! = 0, organizationUnitIds: [ID!], startsAfter: DateTime = null): ShiftInstancePaginatedResponse!
+  contract(id: ID!): Contract!
+  contracts(filter: ContractFilterInput): [Contract!]!
+  documentTemplate(id: ID!): DocumentTemplate!
+  documentTemplates: [DocumentTemplate!]!
+  effectiveRates: [EffectiveRate!]!
+  eligibleTimeEntriesForInvoice(periodEnd: DateTime, periodStart: DateTime, reimbursementTypeId: ID!, volunteerId: ID!): [TimeEntry!]!
   event(id: ID!): Event!
   eventInvites(eventId: ID!): [EventInvite!]!
   eventShifts(eventId: ID!, limit: Int! = 10, offset: Int! = 0): ShiftPaginatedResponse!
@@ -584,6 +792,8 @@ type Query {
   formSubmissionsByForm(formId: String!, limit: Int! = 10, offset: Int! = 0): FormSubmissionPaginatedResponse!
   formSubmissionsByMembershipRequest(membershipRequestId: String!): [FormSubmission!]!
   formSubmissionsForVolunteer(userId: String!): [FormSubmission!]!
+  invoice(id: ID!): Invoice!
+  invoices(filter: InvoiceFilterInput): [Invoice!]!
   isMemberOfUnitOrAncestor(organizationUnitId: ID!, userId: String!): Boolean!
   me: User!
   members(organizationUnitId: ID!): [User!]!
@@ -592,10 +802,12 @@ type Query {
   membershipRequests(limit: Int! = 10, offset: Int! = 0, status: MembershipRequestStatus): MembershipRequestPaginatedResponse!
   memberships: [Membership!]!
   myAdminstableOrganizationUnits: [OrganizationUnit!]!
+  myContracts(filter: ContractFilterInput): [Contract!]!
   myEvents(endsBefore: DateTime = null, includePast: Boolean! = false, limit: Int! = 15, offset: Int! = 0, order: SortOrder! = ASC, startsAfter: DateTime = null, statuses: [EventInviteStatus!]): EventPaginatedResponse!
   myFormSubmission(id: ID!): FormSubmission
   myFormSubmissionByToken(token: String!): FormSubmission
   myFormSubmissions(organizationUnitId: ID!): [FormSubmission!]!
+  myInvoices(filter: InvoiceFilterInput): [Invoice!]!
   myMembership(id: ID!): Membership
   myMembershipRequests(limit: Int! = 10, offset: Int! = 0): MembershipRequestPaginatedResponse!
   myMembershipStatus(organizationUnitId: ID!): Boolean!
@@ -613,6 +825,8 @@ type Query {
   organizationUnitTypes: [OrganizationUnitType!]!
   organizationUnits(limit: Int! = 10, offset: Int! = 0, organizationId: String!): OrganizationUnitPaginatedResponse!
   organizations(limit: Int! = 10, offset: Int! = 0): OrganizationPaginatedResponse!
+  pendingContractSignee(contractId: ID!): PendingSignee
+  pendingInvoiceSignee(invoiceId: ID!): PendingSignee
   permissionGroups: [PermissionGroup!]!
   permissions: [Permission!]!
   publicEvent(id: ID!): Event!
@@ -621,6 +835,7 @@ type Query {
   publicShiftInstance(id: ID!): ShiftInstance!
   publicShiftInstances(shiftId: ID!): [ShiftInstance!]!
   publicShiftsByOrganizationUnit(organizationUnitId: ID!): [Shift!]!
+  reimbursementTypes: [ReimbursementType!]!
   requirement(id: String!): Requirement
   requirementForm(id: String!): RequirementForm
   requirementFormByShareToken(token: String!): RequirementForm
@@ -646,6 +861,16 @@ type Query {
   user(id: String!): User
   userByCheckInId(checkInId: String!): User
   weeklyShifts(endsBefore: DateTime = null, eventId: ID, limit: Int! = 15, offset: Int! = 0, startsAfter: DateTime = null): [ShiftInstance!]!
+  yearlyUsage(reimbursementTypeId: ID!, year: Int!): YearlyUsage!
+}
+
+type ReimbursementRate {
+  createdAt: DateTime!
+  hourlyRateCents: Int!
+  id: ID!
+  organization: Organization!
+  reimbursementType: ReimbursementType!
+  updatedAt: DateTime
 }
 
 type ReimbursementType {
@@ -661,6 +886,11 @@ type ReimbursementType {
 enum ReimbursementTypeKey {
   EHRENAMT
   UEBUNGSLEITER
+}
+
+enum RenewalCadence {
+  MONTHLY
+  YEARLY
 }
 
 type RequiredFormRef {
@@ -975,6 +1205,11 @@ enum ShiftVisibility {
   INVITED_MEMBERS
 }
 
+enum SigneeType {
+  PERMISSION_HOLDER
+  VOLUNTEER
+}
+
 enum SortOrder {
   ASC
   DESC
@@ -982,6 +1217,13 @@ enum SortOrder {
 
 input SubmitFormInput {
   values: [FormFieldValueInput!]!
+}
+
+type TemplateSignee {
+  id: ID!
+  order: Int!
+  requiredPermission: Permission
+  signeeType: SigneeType!
 }
 
 type TimeEntry {
@@ -1000,6 +1242,13 @@ type TimeEntry {
 type TimeEntryPaginatedResponse {
   items: [TimeEntry!]!
   pagination: PaginationInfo!
+}
+
+input UpdateDocumentTemplateInput {
+  body: JSON
+  invoiceNumberFormat: String
+  renewalCadence: RenewalCadence
+  signees: [CreateTemplateSigneeInput!]
 }
 
 input UpdateEventInput {
@@ -1151,4 +1400,10 @@ type UserRequirementStatus {
   name: String!
   requirementId: ID!
   status: RequirementFulfillmentStatus!
+}
+
+type YearlyUsage {
+  limitCents: Int!
+  remainingCents: Int!
+  usedCents: Int!
 }
