@@ -61,9 +61,7 @@ export default async function InvitePage({ params }: InvitePageProps) {
       (f) => !f.submitted,
     );
     if (hasMissingForms) {
-      redirect(
-        `/join/${organizationUnitId}/forms?redirectTo=${encodeURIComponent(`/invite/${organizationUnitId}`)}`,
-      );
+      redirect(`/join/${organizationUnitId}/forms`);
     }
 
     return (

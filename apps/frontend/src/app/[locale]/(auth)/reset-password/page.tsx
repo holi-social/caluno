@@ -25,7 +25,7 @@ export default async function ResetPasswordPage({
     await resolveAuthPageRedirects(resolvedSearchParams);
 
   return (
-    <AuthPageShell title={t('title')}>
+    <AuthPageShell title={t('title')} description={t('description')}>
       <ResetPasswordForm
         token={resolvedSearchParams.token}
         tokenError={resolvedSearchParams.error}

@@ -24,7 +24,7 @@ export class EventInviteLoader {
     const eventIds = parsed.map(({ eventId }) => eventId);
 
     const invites = userId
-      ? await this.eventService.findInvitesByEventIdsForUser(eventIds, userId)
+      ? await this.eventService.findInvitesByEventIdsForUser(userId, eventIds)
       : [];
 
     const inviteByEventId = new Map(

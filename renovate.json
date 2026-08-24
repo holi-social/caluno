@@ -17,7 +17,12 @@
     {
       "matchSourceUrls": ["https://github.com/hashicorp/terraform"],
       "groupName": "terraform"
+    },
+    {
+      "description": "Action version bumps are noisy individually; one PR a week.",
+      "matchManagers": ["github-actions"],
+      "groupName": "github actions",
+      "schedule": ["before 6am on monday"]
     }
-  ],
-  "enabled": false
+  ]
 }

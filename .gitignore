@@ -69,6 +69,7 @@ gitleaks-report.json
 
 # Subagent-driven-development scratch workspaces
 .superpowers/
+docs/superpowers/
 
 # Personal mise config
 mise.toml

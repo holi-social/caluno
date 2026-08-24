@@ -329,8 +329,16 @@ query GetShiftInstance($id: ID!) {
   }
 }
 
-query GetWeeklyShifts($from: DateTime!, $to: DateTime!) {
-  weeklyShifts(from: $from, to: $to) {
+query GetWeeklyShifts(
+  $startsAfter: DateTime!
+  $endsBefore: DateTime!
+  $eventId: ID
+) {
+  weeklyShifts(
+    startsAfter: $startsAfter
+    endsBefore: $endsBefore
+    eventId: $eventId
+  ) {
     id
     overrideTitle
     actualStartsAt
@@ -398,6 +406,7 @@ fragment VolunteerHomeShiftInstance on ShiftInstance {
   isCheckedIn
   filledCount
   myInviteStatus
+  myInvitedAt
   isIntendingToJoin
   master {
     id
@@ -408,6 +417,7 @@ fragment VolunteerHomeShiftInstance on ShiftInstance {
     organizationUnit {
       id
       name
+      logoUrl
     }
     event {
       id
