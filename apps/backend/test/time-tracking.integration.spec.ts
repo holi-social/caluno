@@ -113,10 +113,10 @@ describe('TimeTrackingService', () => {
     input.endedAt = null;
     input.notes = null;
 
-    await service.addTimeEntry(organizationUnitId, input);
+    await service.addTimeEntry(organizationUnitId, input, user.id);
 
     await expect(
-      service.addTimeEntry(organizationUnitId, input),
+      service.addTimeEntry(organizationUnitId, input, user.id),
     ).rejects.toThrow(ConflictGraphQLError);
 
     const entries = await db.query.timeEntries.findMany({

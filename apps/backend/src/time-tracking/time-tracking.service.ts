@@ -11,6 +11,11 @@ import {
 } from '../graphql/errors';
 import { PaginationInput } from '../graphql/pagination.input';
 import { MembershipService } from '../membership/membership.service';
+import {
+  POSTHOG_EVENT,
+  POSTHOG_SURFACE,
+} from '../shared/observability/posthog.events';
+import { PostHogService } from '../shared/observability/posthog.service';
 import { ShiftService } from '../shift/shift.service';
 import { AddTimeEntryInput } from './inputs/add-time-entry.input';
 import { CloseTimeEntryInput } from './inputs/close-time-enty-input';
@@ -27,10 +32,13 @@ export class TimeTrackingService {
     private readonly db: Database,
     readonly _membershipService: MembershipService,
     private readonly shiftService: ShiftService,
+    private readonly postHogService: PostHogService,
   ) {}
   async addTimeEntry(
     organizationUnitId: string,
     input: AddTimeEntryInput,
+    _actorUserId: string,
+    options?: { skipCapture?: boolean },
   ): Promise<TimeEntryEntity> {
     const instance = await this.db.query.shiftInstances.findFirst({
       where: { id: input.shiftInstanceId },
@@ -56,6 +64,17 @@ export class TimeTrackingService {
           notes: input.notes,
         })
         .returning();
+      if (!options?.skipCapture) {
+        this.postHogService.capture({
+          event: POSTHOG_EVENT.TIME_ENTRY_CREATE,
+          userId: timeEntry.volunteerId,
+          properties: {
+            surface: POSTHOG_SURFACE.BACKOFFICE,
+            organization_unit_id: organizationUnitId,
+            shift_instance_id: timeEntry.shiftInstanceId,
+          },
+        });
+      }
       return timeEntry;
     } catch (error) {
       if (isConstraintViolation(error, UNIQUE_OPEN_ENTRY_CONSTRAINT)) {
@@ -69,6 +88,8 @@ export class TimeTrackingService {
     id: string,
     organizationUnitId: string,
     input: CloseTimeEntryInput,
+    _actorUserId: string,
+    options?: { skipCapture?: boolean },
   ): Promise<TimeEntryEntity> {
     const entry = await this.db.query.timeEntries.findFirst({
       where: { id },
@@ -85,6 +106,18 @@ export class TimeTrackingService {
       .where(eq(schema.timeEntries.id, id))
       .returning();
 
+    if (!options?.skipCapture) {
+      this.postHogService.capture({
+        event: POSTHOG_EVENT.TIME_ENTRY_END,
+        userId: timeEntry.volunteerId,
+        properties: {
+          surface: POSTHOG_SURFACE.BACKOFFICE,
+          organization_unit_id: organizationUnitId,
+          shift_instance_id: timeEntry.shiftInstanceId,
+        },
+      });
+    }
+
     return timeEntry;
   }
 
@@ -92,6 +125,7 @@ export class TimeTrackingService {
     id: string,
     organizationUnitId: string,
     input: UpdateTimeEntryInput,
+    _actorUserId: string,
   ): Promise<TimeEntryEntity> {
     const entry = await this.db.query.timeEntries.findFirst({
       where: { id },
@@ -108,12 +142,23 @@ export class TimeTrackingService {
       .where(eq(schema.timeEntries.id, id))
       .returning();
 
+    this.postHogService.capture({
+      event: POSTHOG_EVENT.TIME_ENTRY_UPDATE,
+      userId: timeEntry.volunteerId,
+      properties: {
+        surface: POSTHOG_SURFACE.BACKOFFICE,
+        organization_unit_id: organizationUnitId,
+        shift_instance_id: timeEntry.shiftInstanceId,
+      },
+    });
+
     return timeEntry;
   }
 
   async deleteTimeEntry(
     organizationUnitId: string,
     id: string,
+    _actorUserId: string,
   ): Promise<TimeEntryEntity> {
     const entry = await this.db.query.timeEntries.findFirst({
       where: { id },
@@ -128,6 +173,17 @@ export class TimeTrackingService {
       .delete(schema.timeEntries)
       .where(eq(schema.timeEntries.id, id))
       .returning();
+
+    this.postHogService.capture({
+      event: POSTHOG_EVENT.TIME_ENTRY_DELETE,
+      userId: deletedTimeEntry.volunteerId,
+      properties: {
+        surface: POSTHOG_SURFACE.BACKOFFICE,
+        organization_unit_id: organizationUnitId,
+        shift_instance_id: deletedTimeEntry.shiftInstanceId,
+      },
+    });
+
     return deletedTimeEntry;
   }
 
@@ -294,7 +350,24 @@ export class TimeTrackingService {
     input.endedAt = null;
     input.notes = null;
 
-    return this.addTimeEntry(instance.master.organizationUnitId, input);
+    const timeEntry = await this.addTimeEntry(
+      instance.master.organizationUnitId,
+      input,
+      userId,
+      { skipCapture: true },
+    );
+
+    this.postHogService.capture({
+      event: POSTHOG_EVENT.SHIFT_INSTANCE_CHECK_IN,
+      userId,
+      properties: {
+        surface: POSTHOG_SURFACE.VOLUNTEERING,
+        organization_unit_id: instance.master.organizationUnitId,
+        shift_instance_id: shiftInstanceId,
+      },
+    });
+
+    return timeEntry;
   }
 
   async checkOut(
@@ -318,11 +391,25 @@ export class TimeTrackingService {
     closeInput.endedAt = new Date();
     closeInput.notes = null;
 
-    return this.closeTimeEntry(
+    const timeEntry = await this.closeTimeEntry(
       entry.id,
       instance.master.organizationUnitId,
       closeInput,
+      userId,
+      { skipCapture: true },
     );
+
+    this.postHogService.capture({
+      event: POSTHOG_EVENT.SHIFT_INSTANCE_CHECK_OUT,
+      userId,
+      properties: {
+        surface: POSTHOG_SURFACE.VOLUNTEERING,
+        organization_unit_id: instance.master.organizationUnitId,
+        shift_instance_id: shiftInstanceId,
+      },
+    });
+
+    return timeEntry;
   }
 }
 

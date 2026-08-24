@@ -2,12 +2,16 @@ jest.mock('nanoid', () => ({
   customAlphabet: () => () => 'abcdefghijkl',
 }));
 
+import {
+  POSTHOG_EVENT,
+  POSTHOG_SURFACE,
+} from '../shared/observability/posthog.events';
 import { PostHogService } from '../shared/observability/posthog.service';
 import { OrganizationService } from './organization.service';
 
 describe('OrganizationService.create PostHog', () => {
-  it('captures user_joined_org when an organization is created', async () => {
-    const captureUserJoinedOrg = jest.fn();
+  it('captures organization_create and organization_join when an organization is created', async () => {
+    const capture = jest.fn();
     const db = {
       transaction: jest
         .fn()
@@ -27,15 +31,30 @@ describe('OrganizationService.create PostHog', () => {
       {} as never,
       notificationService as never,
       {} as never,
-      { captureUserJoinedOrg } as unknown as PostHogService,
+      { capture } as unknown as PostHogService,
     );
 
     await service.create('user-1', { name: 'Org' } as never);
 
-    expect(captureUserJoinedOrg).toHaveBeenCalledWith('user-1', {
-      organizationId: 'org-1',
-      organizationUnitId: 'ou-1',
-      source: 'organization_created',
+    expect(capture).toHaveBeenCalledTimes(2);
+    expect(capture).toHaveBeenNthCalledWith(1, {
+      event: POSTHOG_EVENT.ORGANIZATION_CREATE,
+      userId: 'user-1',
+      properties: {
+        surface: POSTHOG_SURFACE.BACKOFFICE,
+        organization_id: 'org-1',
+        organization_unit_id: 'ou-1',
+      },
+    });
+    expect(capture).toHaveBeenNthCalledWith(2, {
+      event: POSTHOG_EVENT.ORGANIZATION_JOIN,
+      userId: 'user-1',
+      properties: {
+        surface: POSTHOG_SURFACE.BACKOFFICE,
+        organization_id: 'org-1',
+        organization_unit_id: 'ou-1',
+        source: 'organization_create',
+      },
     });
   });
 });

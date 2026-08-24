@@ -3,9 +3,10 @@ import type { OnApplicationShutdown } from '@nestjs/common';
 import { Inject, Injectable, Logger, Optional } from '@nestjs/common';
 import { numericCalendarDate } from '../../i18n/format-date-time';
 import {
-  POSTHOG_EVENT,
+  omitForbiddenPostHogProperties,
+  POSTHOG_EVENT_REGISTRY,
+  type PostHogCaptureProperties,
   type PostHogEventName,
-  type UserJoinedOrgCaptureInput,
 } from './posthog.events';
 
 export const POSTHOG_CLIENT = Symbol('POSTHOG_CLIENT');
@@ -20,11 +21,10 @@ type PostHogCaptureClient = {
   shutdown: (shutdownTimeoutMs?: number) => Promise<void>;
 };
 
-type PostHogCaptureInput = {
+export type PostHogCaptureInput = {
   event: PostHogEventName;
   userId: string;
-  properties?: Record<string, unknown>;
-  groups?: Record<string, string | number>;
+  properties: PostHogCaptureProperties;
 };
 
 /**
@@ -73,11 +73,24 @@ export class PostHogService implements OnApplicationShutdown {
   capture(input: PostHogCaptureInput): void {
     if (this.client && process.env.POSTHOG_DISTINCT_SECRET) {
       try {
+        const definition = POSTHOG_EVENT_REGISTRY[input.event];
+        const { properties, droppedKeys } = omitForbiddenPostHogProperties({
+          ...input.properties,
+          event_description: definition.description,
+        });
+        if (droppedKeys.length > 0) {
+          this.logger.warn(
+            `Dropped forbidden PostHog properties: ${droppedKeys.join(', ')}`,
+          );
+        }
+        const groups = properties.organization_id
+          ? { organization: properties.organization_id }
+          : undefined;
         this.client.capture({
           event: input.event,
           distinctId: createDailyDistinctId(input.userId),
-          ...(input.properties ? { properties: input.properties } : {}),
-          ...(input.groups ? { groups: input.groups } : {}),
+          properties,
+          ...(groups ? { groups } : {}),
         });
       } catch (error) {
         this.logger.error(
@@ -86,32 +99,5 @@ export class PostHogService implements OnApplicationShutdown {
         );
       }
     }
-  }
-
-  captureUserSignedUp(userId: string): void {
-    this.capture({
-      event: POSTHOG_EVENT.USER_SIGNED_UP,
-      userId,
-    });
-  }
-
-  captureUserLoggedIn(userId: string): void {
-    this.capture({
-      event: POSTHOG_EVENT.USER_LOGGED_IN,
-      userId,
-    });
-  }
-
-  captureUserJoinedOrg(userId: string, input: UserJoinedOrgCaptureInput): void {
-    this.capture({
-      event: POSTHOG_EVENT.USER_JOINED_ORG,
-      userId,
-      properties: {
-        organizationId: input.organizationId,
-        organizationUnitId: input.organizationUnitId,
-        source: input.source,
-      },
-      groups: { organization: input.organizationId },
-    });
   }
 }

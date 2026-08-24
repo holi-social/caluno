@@ -86,16 +86,22 @@ describe('RequiredFormService', () => {
     }).compile();
     db = moduleRef.get<Database>(DATABASE_CONNECTION);
 
-    requiredFormService = new RequiredFormService(db);
-    const userProfileService = new UserProfileService(db);
+    requiredFormService = new RequiredFormService(db, {
+      capture: () => {},
+    } as unknown as PostHogService);
+    const userProfileService = new UserProfileService(db, {
+      capture: () => {},
+    } as unknown as PostHogService);
     formSubmissionService = new FormSubmissionService(
       db,
       userProfileService,
       requiredFormService,
+      { capture: () => {} } as unknown as PostHogService,
     );
     requirementFormService = new RequirementFormService(
       db,
       requiredFormService,
+      { capture: () => {} } as unknown as PostHogService,
     );
 
     const authServiceMock = {
@@ -112,7 +118,7 @@ describe('RequiredFormService', () => {
       authServiceMock,
       notificationServiceMock,
       requiredFormService,
-      { captureUserJoinedOrg: () => {} } as unknown as PostHogService,
+      { capture: () => {} } as unknown as PostHogService,
     );
 
     registerTestResourceCleanup(async () => {
@@ -922,7 +928,7 @@ describe('RequiredFormService', () => {
       });
 
       await expect(
-        requirementFormService.delete(form.id, unit.id),
+        requirementFormService.delete(form.id, unit.id, user.id),
       ).rejects.toBeInstanceOf(ConflictGraphQLError);
     });
 
@@ -940,7 +946,7 @@ describe('RequiredFormService', () => {
       });
 
       await expect(
-        requirementFormService.delete(form.id, unit.id),
+        requirementFormService.delete(form.id, unit.id, user.id),
       ).rejects.toBeInstanceOf(ConflictGraphQLError);
     });
   });
@@ -956,7 +962,9 @@ describe('RequiredFormService', () => {
         imports: [ConfigModule.forRoot({ isGlobal: true }), DatabaseModule],
       }).compile();
       db = moduleRef.get<Database>(DATABASE_CONNECTION);
-      service = new RequiredFormService(db);
+      service = new RequiredFormService(db, {
+        capture: () => {},
+      } as unknown as PostHogService);
 
       registerTestResourceCleanup(async () => {
         await moduleRef.close();

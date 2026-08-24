@@ -24,6 +24,7 @@ export class RequirementProfileMutationResolver {
     const item = await this.requirementProfileService.create(
       input,
       context.organizationUnitId,
+      context.user.id,
     );
     return this.requirementProfileMapper.toModelOrThrow(item);
   }
@@ -39,6 +40,7 @@ export class RequirementProfileMutationResolver {
       id,
       context.organizationUnitId,
       input,
+      context.user.id,
     );
     return this.requirementProfileMapper.toModelOrThrow(item);
   }
@@ -52,6 +54,7 @@ export class RequirementProfileMutationResolver {
     const item = await this.requirementProfileService.delete(
       id,
       context.organizationUnitId,
+      context.user.id,
     );
     return this.requirementProfileMapper.toModelOrThrow(item);
   }

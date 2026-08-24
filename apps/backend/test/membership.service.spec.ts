@@ -41,7 +41,7 @@ describe('MembershipService', () => {
       {} as AuthService,
       {} as NotificationService,
       {} as RequiredFormService,
-      { captureUserJoinedOrg: () => {} } as unknown as PostHogService,
+      { capture: () => {} } as unknown as PostHogService,
     );
     registerTestResourceCleanup(async () => {
       await moduleRef.close();
