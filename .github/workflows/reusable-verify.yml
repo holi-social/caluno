@@ -1,18 +1,11 @@
-# Reusable verification suite. Single definition of "is this commit sound?",
-# called from ci.yml (pull requests, everything on) and from the CD workflows
-# (post-merge, static checks off — see the `static-checks` input).
-#
-# Not triggered directly: `workflow_call` only.
+# Verification suite shared by ci.yml and the CD workflows.
 name: Verify
 
 on:
   workflow_call:
     inputs:
       static-checks:
-        description: >-
-          Run Biome and TypeScript. On by default for pull requests; the CD
-          workflows turn it off because branch protection already required these
-          checks to pass on the exact tree being merged.
+        description: Run Biome and TypeScript.
         type: boolean
         default: true
       migration-check:
@@ -55,11 +48,10 @@ jobs:
           token: ${{ secrets.ORG_REPO_PAT }}
       - uses: ./.github/actions/setup
         with:
-          # check-types depends on ^build + codegen, so the Turborepo cache is
-          # the difference between seconds and minutes here.
-          turbo-cache: 'true'
-          cache-key: types
+          turbo-cache: 'true' # check-types depends on ^build + codegen
       - run: bun run check-types
+      - uses: ./.github/actions/save-turbo-cache
+        if: success()
 
   migrations:
     name: Migrations up to date
@@ -76,8 +68,7 @@ jobs:
       - name: Check migrations are up to date
         run: |
           set -o pipefail
-          # drizzle-kit generate is interactive when it detects a rename, hence
-          # the closed stdin — it must never block waiting for an answer in CI.
+          # Closed stdin: drizzle-kit prompts on a detected rename.
           OUTPUT="$(bun run --cwd apps/backend db:generate < /dev/null 2>&1 | tee /dev/stderr)"
           if ! echo "$OUTPUT" | grep -q "No schema changes, nothing to migrate"; then
             echo "::error::Schema changes are not reflected in committed migrations. Run 'bun run --cwd apps/backend db:generate' locally and commit the result."
@@ -91,7 +82,7 @@ jobs:
     timeout-minutes: 30
     permissions:
       contents: read
-      packages: read # Postgres is pulled from the ghcr.io/holi-social mirror
+      packages: read # Postgres comes from the ghcr.io/holi-social mirror
     services:
       postgres:
         image: ghcr.io/holi-social/mirror/postgres:17
@@ -124,9 +115,9 @@ jobs:
       - uses: ./.github/actions/setup
         with:
           turbo-cache: 'true'
-          cache-key: build
-      # db:seed runs the compiled seed script, so the build has to come first.
-      - run: bun run build
+      - run: bun run build # db:seed runs the compiled seed script
       - run: bun run --cwd apps/backend db:migrate
       - run: bun run --cwd apps/backend db:seed
       - run: bun test
+      - uses: ./.github/actions/save-turbo-cache
+        if: success()
