@@ -15,7 +15,12 @@ import { RequiredFormService } from '../src/requirement-profile/services/require
 import { RequirementProfileService } from '../src/requirement-profile/services/requirement-profile.service';
 import { PostHogService } from '../src/shared/observability/posthog.service';
 import { ShiftInviteStatus } from '../src/shift/enums';
-import { createEvent, createShift, createUser } from './factories';
+import {
+  createEvent,
+  createShift,
+  createShiftInstance,
+  createUser,
+} from './factories';
 import {
   addMembership,
   createOrganizationWithType,
@@ -208,6 +213,7 @@ describe('MembershipService', () => {
         parentId: root.id,
       });
       const membership = await addMembership(db, user.id, root.id);
+      const childMembership = await addMembership(db, user.id, child.id);
 
       const event = await createEvent(db, { organizationUnitId: root.id });
       const childEvent = await createEvent(db, {
@@ -220,7 +226,10 @@ describe('MembershipService', () => {
       const instance = await db.query.shiftInstances.findFirst({
         where: { masterId: shift.id },
       });
-      if (!instance) {
+      const childInstance = await db.query.shiftInstances.findFirst({
+        where: { masterId: childShift.id },
+      });
+      if (!instance || !childInstance) {
         throw new Error('Expected expanded shift instance');
       }
 
@@ -272,22 +281,32 @@ describe('MembershipService', () => {
           status: ShiftInviteStatus.INVITED,
         },
       ]);
-      await db.insert(schema.shiftInstanceInvites).values({
-        instanceId: instance.id,
-        userId: user.id,
-        status: ShiftInviteStatus.SELF_JOINED,
-      });
+      await db.insert(schema.shiftInstanceInvites).values([
+        {
+          instanceId: instance.id,
+          userId: user.id,
+          status: ShiftInviteStatus.SELF_JOINED,
+        },
+        {
+          instanceId: childInstance.id,
+          userId: user.id,
+          status: ShiftInviteStatus.ACCEPTED,
+        },
+      ]);
 
       return {
         user,
         otherUser,
         root,
+        child,
         membership,
+        childMembership,
         event,
         childEvent,
         shift,
         childShift,
         instance,
+        childInstance,
         otherEvent,
       };
     };
@@ -305,15 +324,17 @@ describe('MembershipService', () => {
       };
     };
 
-    it('leaveMembership hard-deletes this user org invites including child units', async () => {
+    it('leaveMembership hard-deletes this user invites on that org unit only', async () => {
       const seeded = await seedInvites();
 
       await service.leaveMembership(seeded.membership.id, seeded.user.id);
 
       const remaining = await remainingInviteIds(seeded.user.id);
-      expect(remaining.eventIds).toEqual([seeded.otherEvent.id]);
-      expect(remaining.shiftIds).toEqual([]);
-      expect(remaining.instanceIds).toEqual([]);
+      expect(remaining.eventIds).toEqual(
+        [seeded.childEvent.id, seeded.otherEvent.id].sort(),
+      );
+      expect(remaining.shiftIds).toEqual([seeded.childShift.id]);
+      expect(remaining.instanceIds).toEqual([seeded.childInstance.id]);
 
       const otherUserEvent = await db.query.eventInvites.findFirst({
         where: {
@@ -324,15 +345,166 @@ describe('MembershipService', () => {
       expect(otherUserEvent).toBeTruthy();
     });
 
-    it('removeMembership hard-deletes this user org invites the same way', async () => {
+    it('removeMembership hard-deletes this user invites on that org unit the same way', async () => {
       const seeded = await seedInvites();
 
       await service.removeMembership(seeded.membership.id, seeded.root.id);
 
       const remaining = await remainingInviteIds(seeded.user.id);
-      expect(remaining.eventIds).toEqual([seeded.otherEvent.id]);
-      expect(remaining.shiftIds).toEqual([]);
-      expect(remaining.instanceIds).toEqual([]);
+      expect(remaining.eventIds).toEqual(
+        [seeded.childEvent.id, seeded.otherEvent.id].sort(),
+      );
+      expect(remaining.shiftIds).toEqual([seeded.childShift.id]);
+      expect(remaining.instanceIds).toEqual([seeded.childInstance.id]);
+    });
+
+    it('removeMembership on a child unit leaves parent-unit invites untouched', async () => {
+      const seeded = await seedInvites();
+
+      await service.removeMembership(
+        seeded.childMembership.id,
+        seeded.child.id,
+      );
+
+      const remaining = await remainingInviteIds(seeded.user.id);
+      expect(remaining.eventIds).toEqual(
+        [seeded.event.id, seeded.otherEvent.id].sort(),
+      );
+      expect(remaining.shiftIds).toEqual([seeded.shift.id]);
+      expect(remaining.instanceIds).toEqual([seeded.instance.id]);
+    });
+
+    it('keeps past invites and purges current and future on that org unit', async () => {
+      const user = await createUser(db);
+      const { organization, type } = await createOrganizationWithType(
+        db,
+        `Past Invite Org ${crypto.randomUUID()}`,
+      );
+      const unit = await createUnit(db, {
+        organizationId: organization.id,
+        typeId: type.id,
+        name: 'unit',
+      });
+      const membership = await addMembership(db, user.id, unit.id);
+
+      const now = Date.now();
+      const pastEvent = await createEvent(db, {
+        organizationUnitId: unit.id,
+        startsAt: new Date(now - 200_000),
+        endsAt: new Date(now - 100_000),
+      });
+      const currentEvent = await createEvent(db, {
+        organizationUnitId: unit.id,
+        startsAt: new Date(now - 100_000),
+        endsAt: new Date(now + 100_000),
+      });
+      const futureEvent = await createEvent(db, {
+        organizationUnitId: unit.id,
+        startsAt: new Date(now + 100_000),
+        endsAt: new Date(now + 200_000),
+      });
+
+      const pastShift = await createShift(db, {
+        organizationUnitId: unit.id,
+        startsAt: new Date(now - 200_000),
+        endsAt: new Date(now - 100_000),
+      });
+      const currentShift = await createShift(db, {
+        organizationUnitId: unit.id,
+        startsAt: new Date(now - 100_000),
+        endsAt: new Date(now + 100_000),
+      });
+      const mixedShift = await createShift(db, {
+        organizationUnitId: unit.id,
+        startsAt: new Date(now - 200_000),
+        endsAt: new Date(now - 100_000),
+      });
+      const pastMixedInstance = await db.query.shiftInstances.findFirst({
+        where: { masterId: mixedShift.id },
+      });
+      if (!pastMixedInstance) {
+        throw new Error('Expected expanded mixed shift instance');
+      }
+      const futureMixedInstance = await createShiftInstance(db, mixedShift.id, {
+        actualStartsAt: new Date(now + 100_000),
+        actualEndsAt: new Date(now + 200_000),
+        occurrenceIndex: 1,
+      });
+      const pastInstance = await db.query.shiftInstances.findFirst({
+        where: { masterId: pastShift.id },
+      });
+      const currentInstance = await db.query.shiftInstances.findFirst({
+        where: { masterId: currentShift.id },
+      });
+      if (!pastInstance || !currentInstance) {
+        throw new Error('Expected expanded shift instances');
+      }
+
+      await db.insert(schema.eventInvites).values([
+        {
+          eventId: pastEvent.id,
+          userId: user.id,
+          status: EventInviteStatus.ACCEPTED,
+        },
+        {
+          eventId: currentEvent.id,
+          userId: user.id,
+          status: EventInviteStatus.SELF_JOINED,
+        },
+        {
+          eventId: futureEvent.id,
+          userId: user.id,
+          status: EventInviteStatus.INVITED,
+        },
+      ]);
+      await db.insert(schema.shiftInvites).values([
+        {
+          shiftId: pastShift.id,
+          userId: user.id,
+          status: ShiftInviteStatus.ACCEPTED,
+        },
+        {
+          shiftId: currentShift.id,
+          userId: user.id,
+          status: ShiftInviteStatus.INVITED,
+        },
+        {
+          shiftId: mixedShift.id,
+          userId: user.id,
+          status: ShiftInviteStatus.SELF_JOINED,
+        },
+      ]);
+      await db.insert(schema.shiftInstanceInvites).values([
+        {
+          instanceId: pastInstance.id,
+          userId: user.id,
+          status: ShiftInviteStatus.SELF_JOINED,
+        },
+        {
+          instanceId: currentInstance.id,
+          userId: user.id,
+          status: ShiftInviteStatus.ACCEPTED,
+        },
+        {
+          instanceId: pastMixedInstance.id,
+          userId: user.id,
+          status: ShiftInviteStatus.ACCEPTED,
+        },
+        {
+          instanceId: futureMixedInstance.id,
+          userId: user.id,
+          status: ShiftInviteStatus.INVITED,
+        },
+      ]);
+
+      await service.leaveMembership(membership.id, user.id);
+
+      const remaining = await remainingInviteIds(user.id);
+      expect(remaining.eventIds).toEqual([pastEvent.id]);
+      expect(remaining.shiftIds).toEqual([pastShift.id]);
+      expect(remaining.instanceIds).toEqual(
+        [pastInstance.id, pastMixedInstance.id].sort(),
+      );
     });
   });
 

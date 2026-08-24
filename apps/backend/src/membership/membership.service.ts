@@ -1,5 +1,5 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
-import { and, eq, inArray, sql } from 'drizzle-orm';
+import { and, eq, gte, inArray, sql } from 'drizzle-orm';
 import { AuthService } from '../auth/auth.service';
 import { DEFAULT_MEMBER_ROLE_NAME, PERMISSIONS } from '../auth/constants';
 import type { UserEntity } from '../auth/schemas/auth.schema';
@@ -696,7 +696,7 @@ export class MembershipService {
         throw new NotFoundGraphQLError('Membership not found');
       }
 
-      await this.purgeOrganizationInvites(
+      await this.purgeOrganizationUnitInvites(
         tx,
         row.userId,
         row.organizationUnitId,
@@ -728,7 +728,7 @@ export class MembershipService {
         throw new NotFoundGraphQLError('Membership not found');
       }
 
-      await this.purgeOrganizationInvites(
+      await this.purgeOrganizationUnitInvites(
         tx,
         row.userId,
         row.organizationUnitId,
@@ -745,34 +745,32 @@ export class MembershipService {
   }
 
   /**
-   * Hard-deletes this user's shift, shift-instance, and event invites in the
-   * organization of `organizationUnitId`. Other orgs and other users are left
-   * untouched. Leave and admin-remove share this path.
+   * Hard-deletes this user's current and future shift, shift-instance, and
+   * event invites on `organizationUnitId` only. Past events/instances on that
+   * unit, sibling/child units, other orgs, and other users are left untouched.
+   * Leave and admin-remove share this path.
    */
-  private async purgeOrganizationInvites(
+  private async purgeOrganizationUnitInvites(
     tx: Database,
-    userId: string,
-    organizationUnitId: string,
+    userId: string | null,
+    organizationUnitId: string | null,
   ): Promise<void> {
-    const unit = await tx.query.organizationUnits.findFirst({
-      where: { id: organizationUnitId },
-      columns: { organizationId: true },
-    });
-    if (!unit?.organizationId) {
+    if (!userId || !organizationUnitId) {
       return;
     }
 
-    const organizationId = unit.organizationId;
+    const now = new Date();
 
-    const orgEvents = await tx
+    const currentOrFutureEvents = await tx
       .select({ id: schema.events.id })
       .from(schema.events)
-      .innerJoin(
-        schema.organizationUnits,
-        eq(schema.events.organizationUnitId, schema.organizationUnits.id),
-      )
-      .where(eq(schema.organizationUnits.organizationId, organizationId));
-    const eventIds = orgEvents.map((row) => row.id);
+      .where(
+        and(
+          eq(schema.events.organizationUnitId, organizationUnitId),
+          gte(schema.events.endsAt, now),
+        ),
+      );
+    const eventIds = currentOrFutureEvents.map((row) => row.id);
     if (eventIds.length > 0) {
       await tx
         .delete(schema.eventInvites)
@@ -784,18 +782,30 @@ export class MembershipService {
         );
     }
 
-    const orgShifts = await tx
-      .select({ id: schema.shifts.id })
-      .from(schema.shifts)
+    const currentOrFutureInstances = await tx
+      .select({
+        id: schema.shiftInstances.id,
+        masterId: schema.shiftInstances.masterId,
+      })
+      .from(schema.shiftInstances)
       .innerJoin(
-        schema.organizationUnits,
-        eq(schema.shifts.organizationUnitId, schema.organizationUnits.id),
+        schema.shifts,
+        eq(schema.shiftInstances.masterId, schema.shifts.id),
       )
-      .where(eq(schema.organizationUnits.organizationId, organizationId));
-    const shiftIds = orgShifts.map((row) => row.id);
-    if (shiftIds.length === 0) {
+      .where(
+        and(
+          eq(schema.shifts.organizationUnitId, organizationUnitId),
+          gte(schema.shiftInstances.actualEndsAt, now),
+        ),
+      );
+    if (currentOrFutureInstances.length === 0) {
       return;
     }
+
+    const instanceIds = currentOrFutureInstances.map((row) => row.id);
+    const shiftIds = [
+      ...new Set(currentOrFutureInstances.map((row) => row.masterId)),
+    ];
 
     await tx
       .delete(schema.shiftInvites)
@@ -805,15 +815,6 @@ export class MembershipService {
           inArray(schema.shiftInvites.shiftId, shiftIds),
         ),
       );
-
-    const instances = await tx.query.shiftInstances.findMany({
-      where: { masterId: { in: shiftIds } },
-      columns: { id: true },
-    });
-    const instanceIds = instances.map((row) => row.id);
-    if (instanceIds.length === 0) {
-      return;
-    }
 
     await tx
       .delete(schema.shiftInstanceInvites)
