@@ -1,7 +1,5 @@
 # Mirrors pinned base images into ghcr.io/holi-social so CI pulls from GHCR
-# instead of hitting Docker Hub (and its anonymous pull limits) on every run.
-# Only refreshes on the schedule/dispatch below — bump a tag here and re-run
-# manually for a newer upstream image.
+# instead of Docker Hub. Bump a tag below and re-run manually for a newer image.
 name: Mirror base images to GHCR
 
 on:
@@ -40,9 +38,8 @@ jobs:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
+      # Registry-to-registry: all platforms, no local pull.
       - name: Copy ${{ matrix.src }} → ${{ matrix.dest }}
-        # imagetools copies the manifest list registry-to-registry — all
-        # platforms, no local pull, and buildx ships with the runner image.
         run: docker buildx imagetools create --tag "${{ matrix.dest }}" "${{ matrix.src }}"
       - name: Verify the mirrored manifest
         run: docker buildx imagetools inspect "${{ matrix.dest }}"

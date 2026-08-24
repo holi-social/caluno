@@ -1,16 +1,13 @@
-# See SETUP.md at the repo root for the one-time setup this workflow depends on
-# (secrets, variables, environments, branch protection).
-#
-# `production` is protected: it only ever advances through a main → production
-# pull request, which ran the full CI suite. Same slim gate as staging; the extra
-# safety here comes from the `production` GitHub Environment, whose required
-# reviewers hold the Terraform apply until a human approves it.
+# Deploys `production`. The apply waits on the `production` environment's
+# required reviewers. The pre-deploy gate lives in reusable-deploy.yml,
+# alongside the image builds. See SETUP.md for the one-time setup.
 name: CD · Production
 
 on:
   push:
     branches: [production]
 
+# One deploy at a time, never cancelled mid-apply.
 concurrency:
   group: cd-production
   cancel-in-progress: false
@@ -19,22 +16,8 @@ permissions:
   contents: read
 
 jobs:
-  gate:
-    name: Pre-deploy gate
-    # A called workflow can never hold more than the calling job grants; the
-    # test job pulls Postgres from the GHCR mirror.
-    permissions:
-      contents: read
-      packages: read
-    uses: ./.github/workflows/reusable-verify.yml
-    with:
-      static-checks: false # already required on the pull request
-    secrets: inherit
-
   deploy:
     name: Deploy
-    needs: [gate]
-    # Base images come from the GHCR mirror.
     permissions:
       contents: read
       packages: read
