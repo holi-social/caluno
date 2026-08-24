@@ -261,6 +261,7 @@ type DocumentTemplate {
 type EffectiveRate {
   hourlyRateCents: Int!
   isOverride: Boolean!
+  organizationUnitId: ID
   reimbursementType: ReimbursementType!
 }
 
@@ -619,7 +620,7 @@ type Mutation {
   rejectMembershipRequest(id: ID!, organizationUnitId: ID!, rejectionReason: String!): MembershipRequest!
   removeMembershipRequest(id: ID!): MembershipRequest!
   setEventRequiredForms(eventId: ID!, formIds: [String!]!): [RequiredFormRef!]!
-  setReimbursementRate(hourlyRateCents: Int!, reimbursementTypeId: ID!): ReimbursementRate!
+  setReimbursementRate(hourlyRateCents: Int!, organizationUnitId: ID, reimbursementTypeId: ID!): ReimbursementRate!
   setRequiredForms(formIds: [String!]!, organizationUnitId: String!): [RequiredFormRef!]!
   setShiftInstanceRequiredForms(formIds: [String!]!, instanceId: ID!): [RequiredFormRef!]!
   setShiftRequiredForms(formIds: [String!]!, shiftId: ID!): [RequiredFormRef!]!
@@ -780,7 +781,7 @@ type Query {
   contracts(filter: ContractFilterInput): [Contract!]!
   documentTemplate(id: ID!): DocumentTemplate!
   documentTemplates: [DocumentTemplate!]!
-  effectiveRates: [EffectiveRate!]!
+  effectiveRates(organizationUnitId: ID): [EffectiveRate!]!
   eligibleTimeEntriesForInvoice(periodEnd: DateTime, periodStart: DateTime, reimbursementTypeId: ID!, volunteerId: ID!): [TimeEntry!]!
   event(id: ID!): Event!
   eventInvites(eventId: ID!): [EventInvite!]!

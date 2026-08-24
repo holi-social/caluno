@@ -27,24 +27,30 @@ export class ReimbursementQueryResolver {
   @Permissions(PERMISSIONS.ACCOUNTING_MANAGE)
   @Query(() => [EffectiveRate])
   async effectiveRates(
+    @Args('organizationUnitId', { type: () => ID, nullable: true })
+    organizationUnitId: string | null | undefined,
     @Context() context: AuthenticatedGraphQLContext,
   ): Promise<EffectiveRate[]> {
+    const targetUnitId = organizationUnitId ?? context.organizationUnitId;
     const organizationId =
       await this.organizationUnitService.findOrganizationIdByUnitId(
-        context.organizationUnitId,
+        targetUnitId,
       );
     if (!organizationId) {
       return [];
     }
 
-    const rates =
-      await this.reimbursementRateService.getEffectiveRates(organizationId);
+    const rates = await this.reimbursementRateService.getEffectiveRates(
+      organizationId,
+      targetUnitId,
+    );
     return rates.map((rate) => ({
       reimbursementType: this.reimbursementTypeMapper.toModelOrThrow(
         rate.reimbursementType,
       ),
       hourlyRateCents: rate.hourlyRateCents,
       isOverride: rate.isOverride,
+      organizationUnitId: rate.organizationUnitId,
     }));
   }
 

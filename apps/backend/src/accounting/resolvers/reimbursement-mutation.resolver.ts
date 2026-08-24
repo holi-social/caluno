@@ -22,6 +22,8 @@ export class ReimbursementMutationResolver {
     @Args('reimbursementTypeId', { type: () => ID })
     reimbursementTypeId: string,
     @Args('hourlyRateCents', { type: () => Int }) hourlyRateCents: number,
+    @Args('organizationUnitId', { type: () => ID, nullable: true })
+    organizationUnitId: string | null | undefined,
     @Context() context: AuthenticatedGraphQLContext,
   ): Promise<ReimbursementRate> {
     const organizationId =
@@ -31,11 +33,21 @@ export class ReimbursementMutationResolver {
     if (!organizationId) {
       throw new NotFoundGraphQLError('Organization not found');
     }
+    if (organizationUnitId) {
+      const targetOrgId =
+        await this.organizationUnitService.findOrganizationIdByUnitId(
+          organizationUnitId,
+        );
+      if (targetOrgId !== organizationId) {
+        throw new NotFoundGraphQLError('Organization unit not found');
+      }
+    }
 
     const rate = await this.reimbursementRateService.setReimbursementRate(
       organizationId,
       reimbursementTypeId,
       hourlyRateCents,
+      organizationUnitId ?? undefined,
     );
     return this.reimbursementRateMapper.toModelOrThrow(rate);
   }
