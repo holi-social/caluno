@@ -850,6 +850,7 @@ type Query {
   requirements(limit: Int! = 10, offset: Int! = 0): RequirementPaginatedResponse!
   role(id: String!): Role!
   roles: [Role!]!
+  rosterYearlyUsage(organizationUnitId: ID!, year: Int!): [VolunteerYearlyUsage!]!
   shift(id: String!): Shift!
   shiftInstance(id: ID!): ShiftInstance!
   shiftInstances(shiftId: ID!): [ShiftInstance!]!
@@ -887,6 +888,13 @@ type ReimbursementType {
 enum ReimbursementTypeKey {
   EHRENAMT
   UEBUNGSLEITER
+}
+
+type ReimbursementTypeUsage {
+  limitCents: Int!
+  reimbursementType: ReimbursementType!
+  remainingCents: Int!
+  usedCents: Int!
 }
 
 enum RenewalCadence {
@@ -1400,6 +1408,11 @@ type UserRequirementStatus {
   name: String!
   requirementId: ID!
   status: RequirementFulfillmentStatus!
+}
+
+type VolunteerYearlyUsage {
+  usageByType: [ReimbursementTypeUsage!]!
+  volunteer: User!
 }
 
 type YearlyUsage {
