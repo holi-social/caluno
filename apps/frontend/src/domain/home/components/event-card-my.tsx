@@ -41,7 +41,7 @@ export function EventCardMy({ event }: EventCardMyProps) {
               className="absolute inset-0"
               style={{
                 background:
-                  'linear-gradient(to top, rgba(255,255,255,0.8) 0%, rgba(255,255,255,0.6) 65%, rgba(255,255,255,0.1) 100%)',
+                  'linear-gradient(to top, var(--background) 0%, color-mix(in oklch, var(--background) 60%, transparent) 65%, color-mix(in oklch, var(--background) 10%, transparent) 100%)',
               }}
             />
           </>
@@ -83,7 +83,7 @@ export function EventCardMy({ event }: EventCardMyProps) {
           </div>
         </div>
 
-        <div className="relative z-10 flex items-center justify-between gap-1.5 rounded-full bg-foreground/85 px-2.5 py-[5px] text-primary-foreground">
+        <div className="relative z-10 flex items-center justify-between gap-1.5 rounded-full border bg-secondary/30 px-2.5 py-[5px] text-foreground">
           <span className="flex items-center gap-1 text-sm font-medium">
             <CalendarDaysIcon className="size-3.5 shrink-0" />
             {t('yourShiftsCount', { n: event.shiftsCount })}
