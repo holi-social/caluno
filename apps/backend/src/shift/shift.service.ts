@@ -260,13 +260,16 @@ export class ShiftService {
   async findInviteStatusesForUser(
     userId: string,
     instanceIds: string[],
-  ): Promise<{ shiftInstanceId: string; status: ShiftInviteStatus }[]> {
+  ): Promise<
+    { shiftInstanceId: string; status: ShiftInviteStatus; createdAt: Date }[]
+  > {
     if (instanceIds.length === 0) return [];
 
     const rows = await this.db
       .select({
         shiftInstanceId: schema.shiftInstanceInvites.instanceId,
         status: schema.shiftInstanceInvites.status,
+        createdAt: schema.shiftInstanceInvites.createdAt,
       })
       .from(schema.shiftInstanceInvites)
       .where(
@@ -279,6 +282,7 @@ export class ShiftService {
     return rows.map((row) => ({
       shiftInstanceId: row.shiftInstanceId,
       status: row.status as ShiftInviteStatus,
+      createdAt: row.createdAt,
     }));
   }
 
@@ -370,9 +374,9 @@ export class ShiftService {
       await this.getAccessibleOrganizationUnitIds(userId);
 
     const dateCondition = this.buildMyShiftDateCondition(
-      includePast,
       startsAfter,
       endsBefore,
+      includePast,
     );
 
     if (!includeIntended) {
@@ -500,7 +504,7 @@ export class ShiftService {
     const result = new Set<string>();
     for (const { userId, instanceId } of userIdInstanceIdPairs) {
       if (intendedIdsByUser.get(userId)?.has(instanceId)) {
-        result.add(`${instanceId}::${userId}`);
+        result.add(`${instanceId}:${userId}`);
       }
     }
 
@@ -573,23 +577,27 @@ export class ShiftService {
   }
 
   private buildMyShiftDateCondition(
-    includePast: boolean,
     startsAfter: Date | null,
     endsBefore: Date | null,
+    includePast: boolean = true,
   ): Record<string, unknown> {
-    if (endsBefore) {
-      return { actualEndsAt: { lt: endsBefore } };
-    }
-
+    const condition: Record<string, unknown> = {};
     if (startsAfter) {
-      return { actualStartsAt: { gte: startsAfter } };
+      condition.actualStartsAt = { gte: startsAfter };
     }
 
+    const actualEndsAt: { gte?: Date; lt?: Date } = {};
     if (!includePast) {
-      return { actualEndsAt: { gte: new Date() } };
+      actualEndsAt.gte = new Date();
+    }
+    if (endsBefore) {
+      actualEndsAt.lt = endsBefore;
+    }
+    if (actualEndsAt.gte || actualEndsAt.lt) {
+      condition.actualEndsAt = actualEndsAt;
     }
 
-    return {};
+    return condition;
   }
 
   async findAvailableShiftInstances(
@@ -632,10 +640,10 @@ export class ShiftService {
       pendingOrganizationUnitIds.includes(id),
     );
 
-    const startOfToday = this.getStartOfToday();
-    const effectiveStartsAfter = startsAfter ?? startOfToday;
-    const effectiveEndsBefore =
-      endsBefore ?? new Date('2099-12-31T23:59:59.999Z');
+    const dateCondition = this.buildMyShiftDateCondition(
+      startsAfter ?? this.getStartOfToday(),
+      endsBefore,
+    );
 
     const visibilityBranches: Record<string, unknown>[] = [];
 
@@ -660,7 +668,7 @@ export class ShiftService {
 
     const where = {
       isCancelled: false,
-      actualStartsAt: { gte: effectiveStartsAfter, lte: effectiveEndsBefore },
+      ...dateCondition,
       master: { isDeleted: false },
       NOT: {
         invites: {
@@ -2205,20 +2213,30 @@ export class ShiftService {
 
   async findShiftsForWeek(
     organizationUnitId: string,
-    from: Date,
-    to: Date,
+    startsAfter: Date | null,
+    endsBefore: Date | null,
+    eventId?: string | null,
   ): Promise<ShiftInstanceEntity[]> {
     const shifts = await this.db.query.shifts.findMany({
-      where: { organizationUnitId, isDeleted: false },
+      where: {
+        organizationUnitId,
+        isDeleted: false,
+        ...(eventId ? { eventId } : {}),
+      },
       columns: { id: true },
     });
     const shiftIds = shifts.map((s) => s.id);
     if (shiftIds.length === 0) return [];
 
+    const dateCondition = this.buildMyShiftDateCondition(
+      startsAfter,
+      endsBefore,
+    );
+
     return this.db.query.shiftInstances.findMany({
       where: {
         masterId: { in: shiftIds },
-        actualStartsAt: { gte: from, lt: to },
+        ...dateCondition,
         isCancelled: false,
       },
       with: { master: true },

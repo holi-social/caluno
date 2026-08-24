@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { AuthModule } from '../auth/auth.module';
 import { DatabaseModule } from '../database/database.module';
 import { MembershipModule } from '../membership/membership.module';
+import { NotificationModule } from '../notification/notification.module';
 import { OrganizationModule } from '../organization/organization.module';
 import { OrganizationUnitDataModule } from '../organization/organization-unit-data.module';
 import { RequirementProfileModule } from '../requirement-profile/requirement-profile.module';
@@ -32,6 +33,7 @@ import { ShiftEventFieldResolver } from './resolvers/shift-event-field.resolver'
     AuthModule,
     UserModule,
     MembershipModule,
+    NotificationModule,
     OrganizationModule,
     ShiftModule,
     StorageModule,

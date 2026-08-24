@@ -1,0 +1,272 @@
+# Full gate for pull requests into the protected branches. The CD workflows run
+# the same verify suite post-merge. See SETUP.md for the one-time setup.
+name: CI
+
+on:
+  pull_request:
+    branches: [main, production]
+
+concurrency:
+  group: ci-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  TF_VERSION: 1.15.9
+  TF_ROOT: packages/infra
+  TF_IN_AUTOMATION: 'true'
+  TF_INPUT: 'false'
+
+jobs:
+  changes:
+    name: Detect changes
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      code: ${{ steps.filter.outputs.code }}
+      backend: ${{ steps.filter.outputs.backend }}
+      frontend: ${{ steps.filter.outputs.frontend }}
+      infra: ${{ steps.filter.outputs.infra }}
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+          filter: blob:none
+          persist-credentials: false
+      - id: filter
+        name: Classify changed paths
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          set -euo pipefail
+          merge_base="$(git merge-base "$BASE_SHA" "$HEAD_SHA")"
+          files="$(git diff --name-only "$merge_base" "$HEAD_SHA")"
+          echo "Changed files:"
+          echo "  ${files//$'\n'/$'\n'  }"
+
+          matches() { echo "$files" | grep -qE "$1"; }
+
+          # Paths that affect what either app compiles to.
+          shared='^(package\.json|bun\.lock|turbo\.json|tsconfig\.json|biome\.json|bunfig\.toml)$|^packages/(data|ui|observability|typescript-config)/|^\.github/'
+
+          backend=false; frontend=false; infra=false
+          matches "^apps/backend/|^scripts/|$shared" && backend=true
+          matches "^apps/frontend/|$shared" && frontend=true
+          matches '^packages/infra|^\.github/workflows/' && infra=true
+
+          code=false
+          if [ "$backend" = true ] || [ "$frontend" = true ]; then code=true; fi
+
+          {
+            echo "code=$code"
+            echo "backend=$backend"
+            echo "frontend=$frontend"
+            echo "infra=$infra"
+          } | tee -a "$GITHUB_OUTPUT"
+
+  verify:
+    name: Verify
+    needs: [changes]
+    # A called workflow gets at most what the calling job grants.
+    permissions:
+      contents: read
+      packages: read
+    uses: ./.github/workflows/reusable-verify.yml
+    with:
+      static-checks: true
+      migration-check: ${{ fromJSON(needs.changes.outputs.backend) }}
+      tests: ${{ fromJSON(needs.changes.outputs.code) }}
+    secrets: inherit
+
+  commit-lint:
+    name: Commit lint
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          submodules: recursive
+          persist-credentials: false
+          token: ${{ secrets.ORG_REPO_PAT }}
+          fetch-depth: 0
+          filter: blob:none
+      # head.sha, since github.sha is the synthetic merge commit.
+      - run: bash .ai/scripts/commit-lint.sh range "${{ github.event.pull_request.base.sha }}..${{ github.event.pull_request.head.sha }}"
+
+  ai-gates:
+    name: AI gate tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          submodules: recursive
+          persist-credentials: false
+          token: ${{ secrets.ORG_REPO_PAT }}
+      - run: bash .ai/scripts/__tests__/gates.test.sh
+
+  build-backend:
+    name: Build backend image
+    needs: [changes]
+    if: needs.changes.outputs.backend == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      packages: read # base images come from the ghcr.io/holi-social mirror
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          submodules: recursive
+          persist-credentials: false
+          token: ${{ secrets.ORG_REPO_PAT }}
+      - uses: ./.github/actions/docker-auth
+        with:
+          scw-registry-host: ${{ vars.SCW_REGISTRY_HOST }}
+          scw-secret-key: ${{ secrets.SCW_SECRET_KEY }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Build (validate only, never pushed)
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: apps/backend/Dockerfile
+          platforms: linux/amd64
+          provenance: false
+          outputs: type=cacheonly
+          # Read-only; deploys write it. Either environment may be freshest.
+          cache-from: |
+            type=registry,ref=${{ vars.SCW_REGISTRY_HOST }}/${{ vars.SCW_REGISTRY_NAMESPACE }}/caluno-backend:buildcache-staging
+            type=registry,ref=${{ vars.SCW_REGISTRY_HOST }}/${{ vars.SCW_REGISTRY_NAMESPACE }}/caluno-backend:buildcache-production
+
+  build-frontend:
+    name: Build frontend image
+    needs: [changes]
+    if: needs.changes.outputs.frontend == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      packages: read
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          submodules: recursive
+          persist-credentials: false
+          token: ${{ secrets.ORG_REPO_PAT }}
+      - uses: ./.github/actions/docker-auth
+        with:
+          scw-registry-host: ${{ vars.SCW_REGISTRY_HOST }}
+          scw-secret-key: ${{ secrets.SCW_SECRET_KEY }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Build (validate only, never pushed)
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: apps/frontend/Dockerfile
+          platforms: linux/amd64
+          provenance: false
+          outputs: type=cacheonly
+          build-args: |
+            NEXT_PUBLIC_API_URL=http://localhost
+            NEXT_PUBLIC_WEB_URL=http://localhost
+          cache-from: |
+            type=registry,ref=${{ vars.SCW_REGISTRY_HOST }}/${{ vars.SCW_REGISTRY_NAMESPACE }}/caluno-frontend:buildcache-staging
+            type=registry,ref=${{ vars.SCW_REGISTRY_HOST }}/${{ vars.SCW_REGISTRY_NAMESPACE }}/caluno-frontend:buildcache-production
+
+  terraform-plan:
+    name: Terraform plan
+    needs: [changes]
+    if: needs.changes.outputs.infra == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+    env:
+      # A PR into `production` is a promotion; anything else targets staging.
+      DEPLOY_ENV: ${{ github.base_ref == 'production' && 'production' || 'staging' }}
+      TF_VAR_active_environment: ${{ github.base_ref == 'production' && 'production' || 'staging' }}
+      TF_VAR_image_tag: ${{ github.sha }}
+      TF_PLUGIN_CACHE_DIR: ${{ github.workspace }}/.terraform.d/plugin-cache
+      SCW_ACCESS_KEY: ${{ secrets.SCW_ACCESS_KEY }}
+      SCW_SECRET_KEY: ${{ secrets.SCW_SECRET_KEY }}
+      SCW_DEFAULT_PROJECT_ID: ${{ vars.SCW_DEFAULT_PROJECT_ID }}
+      SCW_DEFAULT_REGION: ${{ vars.SCW_DEFAULT_REGION }}
+      SCW_DEFAULT_ZONE: ${{ vars.SCW_DEFAULT_ZONE }}
+      AWS_ACCESS_KEY_ID: ${{ secrets.SCW_ACCESS_KEY }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.SCW_SECRET_KEY }}
+      AWS_DEFAULT_REGION: ${{ vars.AWS_DEFAULT_REGION }}
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          submodules: recursive
+          persist-credentials: false
+          token: ${{ secrets.ORG_REPO_PAT }}
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.TF_VERSION }}
+          terraform_wrapper: false # the wrapper rewrites stdout
+      # Providers are ~100 MB and pinned by the lock file.
+      - run: mkdir -p "$TF_PLUGIN_CACHE_DIR"
+      - uses: actions/cache@v4
+        with:
+          path: ${{ env.TF_PLUGIN_CACHE_DIR }}
+          key: tf-plugins-${{ runner.os }}-${{ hashFiles('packages/infra/.terraform.lock.hcl') }}
+          restore-keys: |
+            tf-plugins-${{ runner.os }}-
+      - name: Init & validate
+        working-directory: ${{ env.TF_ROOT }}
+        run: |
+          terraform init -backend-config="key=${DEPLOY_ENV}/terraform.tfstate"
+          terraform validate
+      - name: Plan
+        id: plan
+        working-directory: ${{ env.TF_ROOT }}
+        run: |
+          set -o pipefail
+          terraform plan -no-color -var-file="terraform.tfvars" | tee plan.txt
+      - name: Publish plan summary
+        if: always() && steps.plan.outcome != 'skipped'
+        working-directory: ${{ env.TF_ROOT }}
+        run: |
+          [ -f plan.txt ] || { echo "No plan output to summarize."; exit 0; }
+          {
+            echo "### Terraform plan — \`${DEPLOY_ENV}\`"
+            echo
+            echo '```terraform'
+            tail -c 900000 plan.txt # step summaries cap at 1 MiB
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  ci:
+    name: CI
+    # The one check branch protection should require: it aggregates every job
+    # above, so path-filtered skips don't leave a merge blocked.
+    if: always()
+    needs:
+      [
+        changes,
+        verify,
+        commit-lint,
+        ai-gates,
+        build-backend,
+        build-frontend,
+        terraform-plan,
+      ]
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Check results
+        env:
+          RESULTS: ${{ join(needs.*.result, ' ') }}
+        run: |
+          echo "Upstream results: $RESULTS"
+          case "$RESULTS" in
+            *failure*|*cancelled*)
+              echo "::error::At least one CI job did not succeed."
+              exit 1
+              ;;
+          esac
+          echo "All CI jobs succeeded or were skipped."

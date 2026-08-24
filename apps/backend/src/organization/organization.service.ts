@@ -17,6 +17,7 @@ import {
 import type { PaginationInput } from '../graphql/pagination.input';
 import { MembershipService } from '../membership/membership.service';
 import { NotificationService } from '../notification';
+import { PostHogService } from '../shared/observability/posthog.service';
 import { FilePurpose } from '../storage/enums';
 import { FileService } from '../storage/services/file.service';
 import { slugify } from '../utils';
@@ -45,6 +46,7 @@ export class OrganizationService {
     private readonly organizationUnitService: OrganizationUnitService,
     private readonly notificationService: NotificationService,
     private readonly fileService: FileService,
+    private readonly postHogService: PostHogService,
   ) {}
 
   async findById(id: string): Promise<OrganizationEntity | undefined> {
@@ -468,6 +470,12 @@ export class OrganizationService {
       organizationUnitId: rootUnit.id,
       organizationName: organization.name,
       userId,
+    });
+
+    this.postHogService.captureUserJoinedOrg(userId, {
+      organizationId: organization.id,
+      organizationUnitId: rootUnit.id,
+      source: 'organization_created',
     });
 
     return this.mapper.toModelOrThrow(organization);

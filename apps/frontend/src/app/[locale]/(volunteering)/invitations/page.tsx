@@ -2,9 +2,8 @@ import { EventInviteStatus, ShiftInviteStatus } from '@repo/data';
 import { Empty, EmptyMedia, EmptyTitle } from '@repo/ui';
 import { MailIcon } from 'lucide-react';
 import { getTranslations } from 'next-intl/server';
-import { EventCardMyInvited } from '@/domain/home/components/event-card-my-invited';
 import { InvitationsPageHeader } from '@/domain/home/components/invitations-page-header';
-import { ShiftCardMyInvited } from '@/domain/home/components/shift-card-my-invited';
+import { InviteCardMyInvited } from '@/domain/home/components/invite-card-my-invited';
 import { mergeInvitations } from '@/domain/home/lib/merge-invitations';
 import { requireAuth } from '@/lib/auth-server';
 import { getDataClient } from '@/lib/data-client';
@@ -44,20 +43,13 @@ export default async function InvitationsPage({
             <EmptyTitle>{t('invitationsEmpty')}</EmptyTitle>
           </Empty>
         ) : (
-          <div className="flex flex-col gap-3">
-            {invitations.map((invite) =>
-              invite.kind === 'shift' ? (
-                <ShiftCardMyInvited
-                  key={`shift-${invite.id}`}
-                  shiftInstance={invite.shift}
-                />
-              ) : (
-                <EventCardMyInvited
-                  key={`event-${invite.id}`}
-                  event={invite.event}
-                />
-              ),
-            )}
+          <div className="flex flex-col gap-3 lg:grid lg:grid-cols-2">
+            {invitations.map((invite) => (
+              <InviteCardMyInvited
+                key={`${invite.kind}-${invite.id}`}
+                invite={invite}
+              />
+            ))}
           </div>
         )}
       </div>
