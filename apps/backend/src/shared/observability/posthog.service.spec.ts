@@ -71,6 +71,15 @@ describe('PostHogService', () => {
     });
   });
 
+  it('captures user_signed_up with the user id as distinctId', () => {
+    const service = new PostHogService(client);
+    service.captureUserSignedUp('user-1');
+    expect(capture).toHaveBeenCalledWith({
+      event: POSTHOG_EVENT.USER_SIGNED_UP,
+      distinctId: createDailyDistinctId('user-1'),
+    });
+  });
+
   it('captures user_joined_org with org properties and group', () => {
     const service = new PostHogService(client);
     service.captureUserJoinedOrg('user-1', {

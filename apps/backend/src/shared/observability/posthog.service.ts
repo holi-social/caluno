@@ -88,6 +88,13 @@ export class PostHogService implements OnApplicationShutdown {
     }
   }
 
+  captureUserSignedUp(userId: string): void {
+    this.capture({
+      event: POSTHOG_EVENT.USER_SIGNED_UP,
+      userId,
+    });
+  }
+
   captureUserLoggedIn(userId: string): void {
     this.capture({
       event: POSTHOG_EVENT.USER_LOGGED_IN,

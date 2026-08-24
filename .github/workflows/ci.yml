@@ -85,6 +85,8 @@ jobs:
     name: Commit lint
     runs-on: ubuntu-latest
     timeout-minutes: 5
+    # Sentry's auto-generated PRs don't follow our commit convention.
+    if: github.event.pull_request.user.login != 'sentry[bot]'
     steps:
       - uses: actions/checkout@v5
         with:
