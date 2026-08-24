@@ -6,12 +6,16 @@ export type ContractFilter = {
   volunteerId?: string;
   reimbursementTypeId?: string;
   status?: ContractStatus;
+  periodStart?: Date;
+  periodEnd?: Date;
 };
 
 export type InvoiceFilter = {
   volunteerId?: string;
   reimbursementTypeId?: string;
   status?: InvoiceStatus;
+  periodStart?: Date;
+  periodEnd?: Date;
 };
 
 export type EffectiveRate = {

@@ -37,6 +37,8 @@ type Contract {
 }
 
 input ContractFilterInput {
+  periodEnd: DateTime
+  periodStart: DateTime
   reimbursementTypeId: ID
   status: ContractStatus
   volunteerId: ID
@@ -465,6 +467,8 @@ type Invoice {
 }
 
 input InvoiceFilterInput {
+  periodEnd: DateTime
+  periodStart: DateTime
   reimbursementTypeId: ID
   status: InvoiceStatus
   volunteerId: ID
