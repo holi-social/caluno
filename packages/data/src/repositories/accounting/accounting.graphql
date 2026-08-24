@@ -64,3 +64,99 @@ query GetRosterYearlyUsage($organizationUnitId: ID!, $year: Int!) {
     }
   }
 }
+
+fragment ContractSummaryFields on Contract {
+  id
+  contractStatus
+  periodStart
+  periodEnd
+  isNonCompliant
+  declineReason
+  declinedAt
+  declinedAtSigneeType
+  renewDate
+  createdAt
+  updatedAt
+  volunteer {
+    id
+    name
+    image
+  }
+  reimbursementType {
+    id
+    key
+  }
+  documentTemplate {
+    id
+    kind
+  }
+  signatures {
+    id
+    order
+    signeeType
+    signedAt
+    signedByUser {
+      id
+      name
+    }
+    requiredPermission {
+      id
+      key
+    }
+  }
+  statusChanges {
+    id
+    type
+    occurredAt
+    actorUser {
+      id
+      name
+    }
+  }
+}
+
+query GetContracts($filter: ContractFilterInput) {
+  contracts(filter: $filter) {
+    ...ContractSummaryFields
+  }
+}
+
+query GetMyContracts($filter: ContractFilterInput) {
+  myContracts(filter: $filter) {
+    ...ContractSummaryFields
+  }
+}
+
+query GetContract($id: ID!) {
+  contract(id: $id) {
+    ...ContractSummaryFields
+    resolvedBody
+  }
+}
+
+query GetPendingContractSignee($contractId: ID!) {
+  pendingContractSignee(contractId: $contractId) {
+    signeeType
+    userId
+    permissionKey
+    eligibleUserIds
+  }
+}
+
+mutation CreateContract($input: CreateContractInput!) {
+  createContract(input: $input) {
+    ...ContractSummaryFields
+  }
+}
+
+mutation SignContract($contractId: ID!) {
+  signContract(contractId: $contractId) {
+    ...ContractSummaryFields
+  }
+}
+
+mutation DeclineContract($contractId: ID!, $reason: String!) {
+  declineContract(contractId: $contractId, reason: $reason) {
+    ...ContractSummaryFields
+  }
+}

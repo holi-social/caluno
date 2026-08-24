@@ -1,5 +1,10 @@
 import type {
+  ContractFilterInput,
+  CreateContractInput,
+  GetContractQuery,
+  GetContractsQuery,
   GetEffectiveRatesQuery,
+  GetPendingContractSigneeQuery,
   GetReimbursementTypesQuery,
   GetRosterYearlyUsageQuery,
   GetYearlyUsageQuery,
@@ -11,11 +16,17 @@ import { BaseRepository } from '../base/base.repository';
 // for the established convention).
 export type RawReimbursementType =
   GetReimbursementTypesQuery['reimbursementTypes'][number];
-export type RawEffectiveRate =
-  GetEffectiveRatesQuery['effectiveRates'][number];
+export type RawEffectiveRate = GetEffectiveRatesQuery['effectiveRates'][number];
 export type RawYearlyUsage = GetYearlyUsageQuery['yearlyUsage'];
 export type RawVolunteerYearlyUsage =
   GetRosterYearlyUsageQuery['rosterYearlyUsage'][number];
+
+export type ContractSummary = GetContractsQuery['contracts'][number];
+export type ContractDetail = GetContractQuery['contract'];
+// Prefixed with `Raw` because `PendingSignee` collides with the same-named
+// entity type exported from `generated/graphql.ts`.
+export type RawPendingSignee =
+  GetPendingContractSigneeQuery['pendingContractSignee'];
 
 export class AccountingRepository extends BaseRepository {
   async findReimbursementTypes(): Promise<RawReimbursementType[]> {
@@ -56,5 +67,49 @@ export class AccountingRepository extends BaseRepository {
       year,
     });
     return data.rosterYearlyUsage;
+  }
+
+  async findContracts(
+    filter?: ContractFilterInput,
+  ): Promise<ContractSummary[]> {
+    const data = await this.sdk.GetContracts({ filter });
+    return data.contracts;
+  }
+
+  async findMyContracts(
+    filter?: ContractFilterInput,
+  ): Promise<ContractSummary[]> {
+    const data = await this.sdk.GetMyContracts({ filter });
+    return data.myContracts;
+  }
+
+  async findContractById(id: string): Promise<ContractDetail> {
+    const data = await this.sdk.GetContract({ id });
+    return data.contract;
+  }
+
+  async findPendingContractSignee(
+    contractId: string,
+  ): Promise<RawPendingSignee> {
+    const data = await this.sdk.GetPendingContractSignee({ contractId });
+    return data.pendingContractSignee;
+  }
+
+  async createContract(input: CreateContractInput): Promise<ContractSummary> {
+    const data = await this.sdk.CreateContract({ input });
+    return data.createContract;
+  }
+
+  async signContract(contractId: string): Promise<ContractSummary> {
+    const data = await this.sdk.SignContract({ contractId });
+    return data.signContract;
+  }
+
+  async declineContract(
+    contractId: string,
+    reason: string,
+  ): Promise<ContractSummary> {
+    const data = await this.sdk.DeclineContract({ contractId, reason });
+    return data.declineContract;
   }
 }
