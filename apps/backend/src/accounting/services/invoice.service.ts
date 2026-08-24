@@ -20,6 +20,7 @@ import {
   InvoiceStatus,
   SigneeType,
 } from '../enums';
+import type { CreateInvoiceInput } from '../inputs/create-invoice.input';
 import type { InvoiceEntity } from '../schemas/invoice.schema';
 import type { InvoiceStatusChangeEntity } from '../schemas/invoice-status-change.schema';
 import { ContractService } from './contract.service';
@@ -121,28 +122,23 @@ export class InvoiceService {
 
   async createInvoice(
     organizationId: string,
-    organizationUnitId: string | null,
-    volunteerId: string,
-    reimbursementTypeId: string,
-    timeEntryIds: string[],
-    periodStart: Date,
-    periodEnd: Date,
+    input: CreateInvoiceInput,
     actorUserId: string,
   ): Promise<InvoiceEntity> {
-    if (timeEntryIds.length === 0) {
+    if (input.timeEntryIds.length === 0) {
       throw new BadRequestGraphQLError(
         'At least one time entry must be selected',
       );
     }
 
     const eligibleEntries = await this.findEligibleTimeEntries(
-      volunteerId,
-      reimbursementTypeId,
+      input.volunteerId,
+      input.reimbursementTypeId,
     );
     const eligibleById = new Map(
       eligibleEntries.map((entry) => [entry.id, entry]),
     );
-    const selected = timeEntryIds.map((id) => {
+    const selected = input.timeEntryIds.map((id) => {
       const entry = eligibleById.get(id);
       if (!entry) {
         throw new ConflictGraphQLError(
@@ -159,23 +155,23 @@ export class InvoiceService {
       ) / 100;
     const rateCents = await this.reimbursementRateService.getEffectiveRateCents(
       organizationId,
-      reimbursementTypeId,
+      input.reimbursementTypeId,
     );
     const totalAmountCents = Math.round(totalHours * rateCents);
 
     const template = await this.documentTemplateService.findActiveTemplate(
       organizationId,
-      reimbursementTypeId,
+      input.reimbursementTypeId,
       DocumentKind.INVOICE,
-      organizationUnitId,
+      input.organizationUnitId,
     );
     const orderedSignees =
       await this.documentTemplateService.findOrderedTemplateSignees(
         template.id,
       );
     const activeContract = await this.contractService.findActiveContract(
-      volunteerId,
-      reimbursementTypeId,
+      input.volunteerId,
+      input.reimbursementTypeId,
     );
 
     return this.db.transaction(async (tx) => {
@@ -183,11 +179,11 @@ export class InvoiceService {
         .insert(schema.invoices)
         .values({
           documentTemplateId: template.id,
-          volunteerId,
-          reimbursementTypeId,
+          volunteerId: input.volunteerId,
+          reimbursementTypeId: input.reimbursementTypeId,
           invoiceStatus: this.nextInvoiceStatus(orderedSignees[0].signeeType),
-          periodStart,
-          periodEnd,
+          periodStart: input.periodStart,
+          periodEnd: input.periodEnd,
           totalAmountCents,
           totalHours,
           isNonCompliant: !activeContract,

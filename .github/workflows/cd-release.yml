@@ -1,0 +1,31 @@
+# Deploys `release` to the release environment. The pre-deploy gate lives in
+# reusable-deploy.yml, alongside the image builds. The `release` environment has
+# no required reviewers, so the apply runs unattended.
+# See SETUP.md for the one-time setup.
+name: CD · Release
+
+on:
+  push:
+    branches: [release]
+
+# One deploy at a time, never cancelled mid-apply.
+concurrency:
+  group: cd-release
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    name: Deploy
+    permissions:
+      contents: read
+      packages: read
+    uses: ./.github/workflows/reusable-deploy.yml
+    with:
+      environment: release
+      moving-tag: release
+      api-url: https://release.api.caluno.org
+      web-url: https://release.app.caluno.org
+    secrets: inherit

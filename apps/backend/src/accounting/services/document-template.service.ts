@@ -8,13 +8,14 @@ import {
   ConflictGraphQLError,
   NotFoundGraphQLError,
 } from '../../graphql/errors';
-import type {
-  CreateDocumentTemplateInput,
-  CreateTemplateSigneeInput,
-  UpdateDocumentTemplateInput,
-} from '../accounting.types';
 import { DocumentKind, SigneeType } from '../enums';
-import type { DocumentTemplateEntity } from '../schemas/document-template.schema';
+import type { CreateDocumentTemplateInput } from '../inputs/create-document-template.input';
+import type { CreateTemplateSigneeInput } from '../inputs/create-template-signee.input';
+import type { UpdateDocumentTemplateInput } from '../inputs/update-document-template.input';
+import type {
+  DocumentTemplateBody,
+  DocumentTemplateEntity,
+} from '../schemas/document-template.schema';
 import type { TemplateSigneeEntity } from '../schemas/template-signee.schema';
 
 @Injectable()
@@ -93,7 +94,7 @@ export class DocumentTemplateService {
           kind: input.kind,
           renewalCadence: input.renewalCadence ?? null,
           invoiceNumberFormat: input.invoiceNumberFormat ?? null,
-          body: input.body,
+          body: input.body as DocumentTemplateBody,
           lastEditedAt: new Date(),
           lastEditedBy: editedByUserId,
         })
@@ -133,7 +134,9 @@ export class DocumentTemplateService {
           ...(input.invoiceNumberFormat !== undefined && {
             invoiceNumberFormat: input.invoiceNumberFormat,
           }),
-          ...(input.body !== undefined && { body: input.body }),
+          ...(input.body !== undefined && {
+            body: input.body as DocumentTemplateBody,
+          }),
           lastEditedAt: new Date(),
           lastEditedBy: editedByUserId,
         })
