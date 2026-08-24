@@ -69,9 +69,9 @@
     "detailOrganization": "Organization",
     "detailVolunteer": "Volunteer",
     "footerNote": "You're receiving this because you can manage volunteers on {brandName}.",
-    "greeting": "Hi {firstName}, a volunteer left an organization unit you manage.",
+    "greeting": "Hi {firstName}, a volunteer left an organisation you manage.",
     "heading": "A volunteer left",
-    "note": "They no longer appear on the Approved list for this organization unit.",
+    "note": "They no longer appear on the Approved list for this organisation.",
     "previewText": "{volunteerName} left {organizationName}.",
     "subject": "{volunteerName} left {organizationName}"
   },

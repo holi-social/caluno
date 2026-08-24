@@ -69,9 +69,9 @@
     "detailOrganization": "Organisation",
     "detailVolunteer": "Freiwillige:r",
     "footerNote": "Du erhältst diese E-Mail, weil du Freiwillige auf {brandName} verwalten kannst.",
-    "greeting": "Hallo {firstName}, eine:r Freiwillige:r hat eine Organisationseinheit verlassen, die du verwaltest.",
+    "greeting": "Hallo {firstName}, eine:r Freiwillige:r hat eine Organisation verlassen, die du verwaltest.",
     "heading": "Freiwillige:r hat verlassen",
-    "note": "Die Person erscheint nicht mehr in der Liste der Freigegebenen für diese Organisationseinheit.",
+    "note": "Die Person erscheint nicht mehr in der Liste der Freigegebenen für diese Organisation.",
     "previewText": "{volunteerName} hat {organizationName} verlassen.",
     "subject": "{volunteerName} hat {organizationName} verlassen"
   },
