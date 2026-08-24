@@ -171,3 +171,38 @@ export class AccountingRepository extends BaseRepository {
     return data.declineInvoice;
   }
 }
+
+export type DocumentDisplayStatus =
+  | 'awaiting-volunteer-signature'
+  | 'awaiting-ngo-signature'
+  | 'active'
+  | 'ready' // invoice-only: READY means both signatures are present and it's payable
+  | 'declined'
+  | 'expired';
+
+type SignatureLike = {
+  order: number;
+  signeeType: 'VOLUNTEER' | 'PERMISSION_HOLDER';
+  signedAt?: string | null;
+};
+
+type DocumentLike =
+  | { contractStatus: string; signatures: SignatureLike[] }
+  | { invoiceStatus: string; signatures: SignatureLike[] };
+
+export function deriveDocumentStatus(doc: DocumentLike): DocumentDisplayStatus {
+  const status = 'contractStatus' in doc ? doc.contractStatus : doc.invoiceStatus;
+
+  if (status === 'DECLINED') return 'declined';
+  if (status === 'EXPIRED') return 'expired';
+  if (status === 'ACTIVE') return 'active';
+
+  const nextSigner = [...doc.signatures]
+    .sort((a, b) => a.order - b.order)
+    .find((signature) => !signature.signedAt);
+
+  if (!nextSigner) return 'active';
+  return nextSigner.signeeType === 'VOLUNTEER'
+    ? 'awaiting-volunteer-signature'
+    : 'awaiting-ngo-signature';
+}
