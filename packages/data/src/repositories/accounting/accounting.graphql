@@ -1,0 +1,66 @@
+query GetReimbursementTypes {
+  reimbursementTypes {
+    id
+    key
+    legalReference
+    yearlyLimitCents
+    platformDefaultRateCents
+  }
+}
+
+query GetEffectiveRates($organizationUnitId: ID) {
+  effectiveRates(organizationUnitId: $organizationUnitId) {
+    reimbursementType {
+      id
+      key
+      legalReference
+      yearlyLimitCents
+      platformDefaultRateCents
+    }
+    hourlyRateCents
+    isOverride
+    organizationUnitId
+  }
+}
+
+mutation SetReimbursementRate(
+  $reimbursementTypeId: ID!
+  $hourlyRateCents: Int!
+  $organizationUnitId: ID
+) {
+  setReimbursementRate(
+    reimbursementTypeId: $reimbursementTypeId
+    hourlyRateCents: $hourlyRateCents
+    organizationUnitId: $organizationUnitId
+  ) {
+    id
+    hourlyRateCents
+  }
+}
+
+query GetYearlyUsage($reimbursementTypeId: ID!, $year: Int!) {
+  yearlyUsage(reimbursementTypeId: $reimbursementTypeId, year: $year) {
+    usedCents
+    limitCents
+    remainingCents
+  }
+}
+
+query GetRosterYearlyUsage($organizationUnitId: ID!, $year: Int!) {
+  rosterYearlyUsage(organizationUnitId: $organizationUnitId, year: $year) {
+    volunteer {
+      id
+      name
+      image
+    }
+    usageByType {
+      reimbursementType {
+        id
+        key
+      }
+      usedCents
+      limitCents
+      remainingCents
+    }
+  }
+}
