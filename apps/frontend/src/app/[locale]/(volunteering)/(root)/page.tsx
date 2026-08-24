@@ -21,6 +21,7 @@ export default async function VolunteeringHomePage({
   const [
     myShiftInstancesPage,
     availableShiftInstancesPage,
+    availableEventsPage,
     shiftInvitationsPage,
     eventInvitationsPage,
     myEventsPage,
@@ -29,6 +30,7 @@ export default async function VolunteeringHomePage({
   ] = await Promise.all([
     client.shift.findMyShiftInstances({ limit: 10, includeIntended: true }),
     client.shift.findAvailableShiftInstances(getDiscoverWindow()),
+    client.event.findAvailableEvents({ limit: 10 }),
     client.shift.findMyShiftInstances({
       limit: 10,
       statuses: [ShiftInviteStatus.Invited],
@@ -55,6 +57,7 @@ export default async function VolunteeringHomePage({
     <VolunteerHomeContent
       initialMyShiftInstances={myShiftInstancesPage.items}
       initialAvailableShiftInstances={availableShiftInstancesPage.items}
+      initialAvailableEvents={availableEventsPage.items}
       initialShiftInvitations={shiftInvitationsPage.items}
       initialEventInvitations={eventInvitationsPage.items}
       initialMyEvents={myEventsPage.items}
