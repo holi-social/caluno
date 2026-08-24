@@ -79,6 +79,6 @@ describe('deriveDocumentStatus', () => {
         signedAt: '2026-08-20T10:00:00Z',
       })),
     };
-    expect(deriveDocumentStatus(invoice)).toBe('active');
+    expect(deriveDocumentStatus(invoice)).toBe('ready');
   });
 });

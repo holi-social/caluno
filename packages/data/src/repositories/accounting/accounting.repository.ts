@@ -195,6 +195,7 @@ export function deriveDocumentStatus(doc: DocumentLike): DocumentDisplayStatus {
 
   if (status === 'DECLINED') return 'declined';
   if (status === 'EXPIRED') return 'expired';
+  if (status === 'READY') return 'ready';
   if (status === 'ACTIVE') return 'active';
 
   const nextSigner = [...doc.signatures]
