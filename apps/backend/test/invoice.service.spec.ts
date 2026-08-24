@@ -194,12 +194,14 @@ describe('InvoiceService', () => {
 
       const invoice = await service.createInvoice(
         organization.id,
-        null,
-        volunteer.id,
-        reimbursementType.id,
-        [timeEntry.id],
-        new Date('2026-07-01T00:00:00.000Z'),
-        new Date('2026-07-31T00:00:00.000Z'),
+        {
+          organizationUnitId: null,
+          volunteerId: volunteer.id,
+          reimbursementTypeId: reimbursementType.id,
+          timeEntryIds: [timeEntry.id],
+          periodStart: new Date('2026-07-01T00:00:00.000Z'),
+          periodEnd: new Date('2026-07-31T00:00:00.000Z'),
+        },
         supervisor.id,
       );
       await service.declineInvoice(invoice.id, volunteer.id, 'changed my mind');
@@ -220,12 +222,14 @@ describe('InvoiceService', () => {
       await expect(
         service.createInvoice(
           organization.id,
-          null,
-          volunteer.id,
-          reimbursementType.id,
-          [],
-          new Date(),
-          new Date(),
+          {
+            organizationUnitId: null,
+            volunteerId: volunteer.id,
+            reimbursementTypeId: reimbursementType.id,
+            timeEntryIds: [],
+            periodStart: new Date(),
+            periodEnd: new Date(),
+          },
           supervisor.id,
         ),
       ).rejects.toBeInstanceOf(BadRequestGraphQLError);
@@ -238,12 +242,14 @@ describe('InvoiceService', () => {
       await expect(
         service.createInvoice(
           organization.id,
-          null,
-          volunteer.id,
-          reimbursementType.id,
-          [crypto.randomUUID()],
-          new Date(),
-          new Date(),
+          {
+            organizationUnitId: null,
+            volunteerId: volunteer.id,
+            reimbursementTypeId: reimbursementType.id,
+            timeEntryIds: [crypto.randomUUID()],
+            periodStart: new Date(),
+            periodEnd: new Date(),
+          },
           supervisor.id,
         ),
       ).rejects.toBeInstanceOf(ConflictGraphQLError);
@@ -260,12 +266,14 @@ describe('InvoiceService', () => {
 
       const invoice = await service.createInvoice(
         organization.id,
-        null,
-        volunteer.id,
-        reimbursementType.id,
-        [timeEntry.id],
-        new Date('2026-07-01T00:00:00.000Z'),
-        new Date('2026-07-31T00:00:00.000Z'),
+        {
+          organizationUnitId: null,
+          volunteerId: volunteer.id,
+          reimbursementTypeId: reimbursementType.id,
+          timeEntryIds: [timeEntry.id],
+          periodStart: new Date('2026-07-01T00:00:00.000Z'),
+          periodEnd: new Date('2026-07-31T00:00:00.000Z'),
+        },
         supervisor.id,
       );
 
@@ -290,12 +298,14 @@ describe('InvoiceService', () => {
 
       const invoice = await service.createInvoice(
         organization.id,
-        null,
-        volunteer.id,
-        reimbursementType.id,
-        [timeEntry.id],
-        new Date('2026-07-01T00:00:00.000Z'),
-        new Date('2026-07-31T00:00:00.000Z'),
+        {
+          organizationUnitId: null,
+          volunteerId: volunteer.id,
+          reimbursementTypeId: reimbursementType.id,
+          timeEntryIds: [timeEntry.id],
+          periodStart: new Date('2026-07-01T00:00:00.000Z'),
+          periodEnd: new Date('2026-07-31T00:00:00.000Z'),
+        },
         supervisor.id,
       );
 
@@ -313,12 +323,14 @@ describe('InvoiceService', () => {
 
       const invoice = await service.createInvoice(
         organization.id,
-        null,
-        volunteer.id,
-        reimbursementType.id,
-        [timeEntry.id],
-        new Date('2026-07-01T00:00:00.000Z'),
-        new Date('2026-07-31T00:00:00.000Z'),
+        {
+          organizationUnitId: null,
+          volunteerId: volunteer.id,
+          reimbursementTypeId: reimbursementType.id,
+          timeEntryIds: [timeEntry.id],
+          periodStart: new Date('2026-07-01T00:00:00.000Z'),
+          periodEnd: new Date('2026-07-31T00:00:00.000Z'),
+        },
         supervisor.id,
       );
 
@@ -351,12 +363,14 @@ describe('InvoiceService', () => {
 
       const invoice = await service.createInvoice(
         organization.id,
-        null,
-        volunteer.id,
-        reimbursementType.id,
-        [timeEntry.id],
-        new Date('2026-07-01T00:00:00.000Z'),
-        new Date('2026-07-31T00:00:00.000Z'),
+        {
+          organizationUnitId: null,
+          volunteerId: volunteer.id,
+          reimbursementTypeId: reimbursementType.id,
+          timeEntryIds: [timeEntry.id],
+          periodStart: new Date('2026-07-01T00:00:00.000Z'),
+          periodEnd: new Date('2026-07-31T00:00:00.000Z'),
+        },
         supervisor.id,
       );
 
@@ -374,24 +388,28 @@ describe('InvoiceService', () => {
 
       await service.createInvoice(
         organization.id,
-        null,
-        volunteer.id,
-        reimbursementType.id,
-        [timeEntry.id],
-        new Date('2026-07-01T00:00:00.000Z'),
-        new Date('2026-07-31T00:00:00.000Z'),
+        {
+          organizationUnitId: null,
+          volunteerId: volunteer.id,
+          reimbursementTypeId: reimbursementType.id,
+          timeEntryIds: [timeEntry.id],
+          periodStart: new Date('2026-07-01T00:00:00.000Z'),
+          periodEnd: new Date('2026-07-31T00:00:00.000Z'),
+        },
         supervisor.id,
       );
 
       await expect(
         service.createInvoice(
           organization.id,
-          null,
-          volunteer.id,
-          reimbursementType.id,
-          [timeEntry.id],
-          new Date('2026-07-01T00:00:00.000Z'),
-          new Date('2026-07-31T00:00:00.000Z'),
+          {
+            organizationUnitId: null,
+            volunteerId: volunteer.id,
+            reimbursementTypeId: reimbursementType.id,
+            timeEntryIds: [timeEntry.id],
+            periodStart: new Date('2026-07-01T00:00:00.000Z'),
+            periodEnd: new Date('2026-07-31T00:00:00.000Z'),
+          },
           supervisor.id,
         ),
       ).rejects.toBeInstanceOf(ConflictGraphQLError);
@@ -409,12 +427,14 @@ describe('InvoiceService', () => {
       } = await setup();
       const invoice = await service.createInvoice(
         organization.id,
-        null,
-        volunteer.id,
-        reimbursementType.id,
-        [timeEntry.id],
-        new Date('2026-07-01T00:00:00.000Z'),
-        new Date('2026-07-31T00:00:00.000Z'),
+        {
+          organizationUnitId: null,
+          volunteerId: volunteer.id,
+          reimbursementTypeId: reimbursementType.id,
+          timeEntryIds: [timeEntry.id],
+          periodStart: new Date('2026-07-01T00:00:00.000Z'),
+          periodEnd: new Date('2026-07-31T00:00:00.000Z'),
+        },
         supervisor.id,
       );
 
@@ -463,12 +483,14 @@ describe('InvoiceService', () => {
       } = await setup();
       const invoice = await service.createInvoice(
         organization.id,
-        null,
-        volunteer.id,
-        reimbursementType.id,
-        [timeEntry.id],
-        new Date('2026-07-01T00:00:00.000Z'),
-        new Date('2026-07-31T00:00:00.000Z'),
+        {
+          organizationUnitId: null,
+          volunteerId: volunteer.id,
+          reimbursementTypeId: reimbursementType.id,
+          timeEntryIds: [timeEntry.id],
+          periodStart: new Date('2026-07-01T00:00:00.000Z'),
+          periodEnd: new Date('2026-07-31T00:00:00.000Z'),
+        },
         supervisor.id,
       );
 
@@ -495,12 +517,14 @@ describe('InvoiceService', () => {
       } = await setup();
       const invoice = await service.createInvoice(
         organization.id,
-        null,
-        volunteer.id,
-        reimbursementType.id,
-        [timeEntry.id],
-        new Date('2026-07-01T00:00:00.000Z'),
-        new Date('2026-07-31T00:00:00.000Z'),
+        {
+          organizationUnitId: null,
+          volunteerId: volunteer.id,
+          reimbursementTypeId: reimbursementType.id,
+          timeEntryIds: [timeEntry.id],
+          periodStart: new Date('2026-07-01T00:00:00.000Z'),
+          periodEnd: new Date('2026-07-31T00:00:00.000Z'),
+        },
         supervisor.id,
       );
 
@@ -521,12 +545,14 @@ describe('InvoiceService', () => {
       } = await setup();
       const invoice = await service.createInvoice(
         organization.id,
-        null,
-        volunteer.id,
-        reimbursementType.id,
-        [timeEntry.id],
-        new Date('2026-07-01T00:00:00.000Z'),
-        new Date('2026-07-31T00:00:00.000Z'),
+        {
+          organizationUnitId: null,
+          volunteerId: volunteer.id,
+          reimbursementTypeId: reimbursementType.id,
+          timeEntryIds: [timeEntry.id],
+          periodStart: new Date('2026-07-01T00:00:00.000Z'),
+          periodEnd: new Date('2026-07-31T00:00:00.000Z'),
+        },
         supervisor.id,
       );
       await service.signInvoice(invoice.id, volunteer.id);

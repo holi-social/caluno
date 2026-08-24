@@ -1,8 +1,7 @@
 name: Docker auth
 description: >-
-  Set up a buildx builder and authenticate against both registries the image
-  builds need: the Scaleway registry (image push + shared layer cache) and GHCR
-  (the ghcr.io/holi-social base-image mirror the Dockerfiles pull FROM).
+  Set up a buildx builder and log into both registries the image builds need:
+  Scaleway (push + layer cache) and GHCR (the base-image mirror).
 
 inputs:
   scw-registry-host:
@@ -18,8 +17,7 @@ inputs:
 runs:
   using: composite
   steps:
-    # GitHub-hosted runners default to the `docker` buildx driver, which cannot
-    # import or export registry/gha caches at all. The container driver can.
+    # The default `docker` driver cannot import/export registry caches.
     - uses: docker/setup-buildx-action@v3
 
     - name: Log in to the Scaleway registry
