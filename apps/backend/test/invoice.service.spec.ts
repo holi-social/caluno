@@ -86,6 +86,7 @@ describe('InvoiceService', () => {
     const reimbursementRateService = new ReimbursementRateService(
       db,
       organizationUnitDataService,
+      {} as MembershipService,
     );
     const contractService = new ContractService(
       db,
@@ -295,6 +296,7 @@ describe('InvoiceService', () => {
       const reimbursementRateService = new ReimbursementRateService(
         db,
         new OrganizationUnitDataService(db),
+        {} as MembershipService,
       );
       await reimbursementRateService.setReimbursementRate(
         organization.id,

@@ -4,9 +4,11 @@ import { PERMISSIONS } from '../../auth/constants';
 import { Permissions } from '../../auth/decorators/permissions.decorator';
 import type { AuthenticatedGraphQLContext } from '../../graphql/graphql.context';
 import { OrganizationUnitService } from '../../organization/organization-unit.service';
+import { UserMapper } from '../../user/mappers/user.mapper';
 import { ReimbursementTypeMapper } from '../mappers';
 import { EffectiveRate } from '../models/effective-rate.model';
 import { ReimbursementType } from '../models/reimbursement-type.model';
+import { VolunteerYearlyUsage } from '../models/volunteer-yearly-usage.model';
 import { YearlyUsage } from '../models/yearly-usage.model';
 import { ReimbursementRateService } from '../services';
 
@@ -16,6 +18,7 @@ export class ReimbursementQueryResolver {
     private readonly reimbursementRateService: ReimbursementRateService,
     private readonly reimbursementTypeMapper: ReimbursementTypeMapper,
     private readonly organizationUnitService: OrganizationUnitService,
+    private readonly userMapper: UserMapper,
   ) {}
 
   @Query(() => [ReimbursementType])
@@ -66,5 +69,28 @@ export class ReimbursementQueryResolver {
       reimbursementTypeId,
       year,
     );
+  }
+
+  @Permissions(PERMISSIONS.ACCOUNTING_MANAGE)
+  @Query(() => [VolunteerYearlyUsage])
+  async rosterYearlyUsage(
+    @Args('organizationUnitId', { type: () => ID }) organizationUnitId: string,
+    @Args('year', { type: () => Int }) year: number,
+  ): Promise<VolunteerYearlyUsage[]> {
+    const usage = await this.reimbursementRateService.getRosterYearlyUsage(
+      organizationUnitId,
+      year,
+    );
+    return usage.map((entry) => ({
+      volunteer: this.userMapper.toModelOrThrow(entry.volunteer),
+      usageByType: entry.usageByType.map((typeUsage) => ({
+        reimbursementType: this.reimbursementTypeMapper.toModelOrThrow(
+          typeUsage.reimbursementType,
+        ),
+        usedCents: typeUsage.usedCents,
+        limitCents: typeUsage.limitCents,
+        remainingCents: typeUsage.remainingCents,
+      })),
+    }));
   }
 }

@@ -1,5 +1,6 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { eq } from 'drizzle-orm';
+import type { UserEntity } from '../../auth/schemas/auth.schema';
 import type { Database } from '../../database/database.module';
 import { DATABASE_CONNECTION } from '../../database/database-connection';
 import * as schema from '../../database/schema';
@@ -7,11 +8,24 @@ import {
   BadRequestGraphQLError,
   NotFoundGraphQLError,
 } from '../../graphql/errors';
+import { MembershipService } from '../../membership/membership.service';
 import { OrganizationUnitDataService } from '../../organization/organization-unit-data.service';
 import type { EffectiveRate, YearlyUsage } from '../accounting.types';
 import { InvoiceStatus } from '../enums';
 import type { ReimbursementRateEntity } from '../schemas/reimbursement-rate.schema';
 import type { ReimbursementTypeEntity } from '../schemas/reimbursement-type.schema';
+
+export interface ReimbursementTypeUsageResult {
+  reimbursementType: ReimbursementTypeEntity;
+  usedCents: number;
+  limitCents: number;
+  remainingCents: number;
+}
+
+export interface VolunteerYearlyUsageResult {
+  volunteer: UserEntity;
+  usageByType: ReimbursementTypeUsageResult[];
+}
 
 /** Composite key for the unit-and-type override lookup map below. */
 const overrideKey = (
@@ -25,6 +39,7 @@ export class ReimbursementRateService {
     @Inject(DATABASE_CONNECTION)
     private readonly db: Database,
     private readonly organizationUnitDataService: OrganizationUnitDataService,
+    private readonly membershipService: MembershipService,
   ) {}
 
   async findReimbursementTypes(): Promise<ReimbursementTypeEntity[]> {
@@ -180,6 +195,67 @@ export class ReimbursementRateService {
     const limitCents = reimbursementType.yearlyLimitCents;
 
     return { usedCents, limitCents, remainingCents: limitCents - usedCents };
+  }
+
+  /**
+   * Roster-scale version of `getYearlyUsage`: one query per volunteer would
+   * be N+1 for a board view, so this fetches every member and every
+   * reimbursement type once, then aggregates invoices for the whole unit in
+   * a single query keyed by volunteer-and-type.
+   */
+  async getRosterYearlyUsage(
+    organizationUnitId: string,
+    year: number,
+  ): Promise<VolunteerYearlyUsageResult[]> {
+    const [members, types] = await Promise.all([
+      this.membershipService.getMembers(organizationUnitId),
+      this.db.query.reimbursementTypes.findMany(),
+    ]);
+    if (members.length === 0) return [];
+
+    const yearStart = new Date(Date.UTC(year, 0, 1));
+    const yearEnd = new Date(Date.UTC(year + 1, 0, 1));
+    const memberIds = members.map((member) => member.id);
+
+    const invoices = await this.db.query.invoices.findMany({
+      where: {
+        volunteerId: { in: memberIds },
+        periodStart: { gte: yearStart, lt: yearEnd },
+      },
+      columns: {
+        volunteerId: true,
+        reimbursementTypeId: true,
+        totalAmountCents: true,
+        invoiceStatus: true,
+      },
+    });
+
+    const usedByVolunteerAndType = new Map<string, number>();
+    for (const invoice of invoices) {
+      if (invoice.invoiceStatus === InvoiceStatus.DECLINED) continue;
+      const key = `${invoice.volunteerId}:${invoice.reimbursementTypeId}`;
+      usedByVolunteerAndType.set(
+        key,
+        (usedByVolunteerAndType.get(key) ?? 0) + invoice.totalAmountCents,
+      );
+    }
+
+    return members.map((volunteer) => ({
+      volunteer,
+      usageByType: types.map((reimbursementType) => {
+        const usedCents =
+          usedByVolunteerAndType.get(
+            `${volunteer.id}:${reimbursementType.id}`,
+          ) ?? 0;
+        const limitCents = reimbursementType.yearlyLimitCents;
+        return {
+          reimbursementType,
+          usedCents,
+          limitCents,
+          remainingCents: limitCents - usedCents,
+        };
+      }),
+    }));
   }
 
   async findReimbursementTypeById(

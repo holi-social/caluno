@@ -10,5 +10,7 @@ export { InvoiceTimeEntry } from './invoice-time-entry.model';
 export { PendingSignee } from './pending-signee.model';
 export { ReimbursementRate } from './reimbursement-rate.model';
 export { ReimbursementType } from './reimbursement-type.model';
+export { ReimbursementTypeUsage } from './reimbursement-type-usage.model';
 export { TemplateSignee } from './template-signee.model';
+export { VolunteerYearlyUsage } from './volunteer-yearly-usage.model';
 export { YearlyUsage } from './yearly-usage.model';
