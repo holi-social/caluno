@@ -51,9 +51,6 @@ export function useContract(id?: string) {
 function invalidateContractQueries(queryClient: QueryClient) {
   queryClient.invalidateQueries({ queryKey: ['accounting', 'contracts'] });
   queryClient.invalidateQueries({ queryKey: ['accounting', 'my-contracts'] });
-  queryClient.invalidateQueries({
-    queryKey: ['accounting', 'roster-usage'],
-  });
 }
 
 export function useCreateContract() {
