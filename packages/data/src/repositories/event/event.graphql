@@ -113,6 +113,8 @@ fragment MyEventFields on Event {
   endsAt
   location
   myInvitedAt
+  shiftsCount
+  coverUrl
   organizationUnit {
     id
     name
