@@ -4,7 +4,7 @@ name: CI
 
 on:
   pull_request:
-    branches: [main, production]
+    branches: [main, production, release]
 
 concurrency:
   group: ci-${{ github.event.pull_request.number }}
@@ -85,6 +85,8 @@ jobs:
     name: Commit lint
     runs-on: ubuntu-latest
     timeout-minutes: 5
+    # Sentry's auto-generated PRs don't follow our commit convention.
+    if: github.event.pull_request.user.login != 'sentry[bot]'
     steps:
       - uses: actions/checkout@v5
         with:
@@ -185,9 +187,10 @@ jobs:
     permissions:
       contents: read
     env:
-      # A PR into `production` is a promotion; anything else targets staging.
-      DEPLOY_ENV: ${{ github.base_ref == 'production' && 'production' || 'staging' }}
-      TF_VAR_active_environment: ${{ github.base_ref == 'production' && 'production' || 'staging' }}
+      # `main` targets staging; the other protected branches are named after the
+      # environment they deploy to.
+      DEPLOY_ENV: ${{ github.base_ref == 'main' && 'staging' || github.base_ref }}
+      TF_VAR_active_environment: ${{ github.base_ref == 'main' && 'staging' || github.base_ref }}
       TF_VAR_image_tag: ${{ github.sha }}
       TF_PLUGIN_CACHE_DIR: ${{ github.workspace }}/.terraform.d/plugin-cache
       SCW_ACCESS_KEY: ${{ secrets.SCW_ACCESS_KEY }}
