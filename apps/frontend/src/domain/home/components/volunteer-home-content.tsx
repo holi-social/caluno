@@ -16,6 +16,7 @@ import {
   Button,
   Card,
   CardContent,
+  cn,
   Empty,
   EmptyMedia,
   EmptyTitle,
@@ -40,9 +41,15 @@ import {
   startOfDay,
 } from '../lib/date-helpers';
 import { mergeInvitations } from '../lib/merge-invitations';
+import {
+  countEventsThisWeek,
+  getEventCardLayout,
+  PARTICIPATING_EVENT_STATUSES,
+} from '../lib/my-events';
 import { useDelayedLoading } from '../lib/use-delayed-loading';
 import { DayStrip } from './day-strip';
 import { DayStripSkeleton } from './day-strip-skeleton';
+import { EventCardMy } from './event-card-my';
 import { InviteCardMyInvited } from './invite-card-my-invited';
 import { PendingMembershipBanner } from './pending-membership-banner';
 import { ShiftCardDiscovery } from './shift-card-discovery';
@@ -60,6 +67,7 @@ interface VolunteerHomeContentProps {
   initialAvailableShiftInstances: AvailableShiftInstance[];
   initialShiftInvitations: MyShiftInstance[];
   initialEventInvitations: MyEvent[];
+  initialMyEvents: MyEvent[];
   hasMemberships: boolean;
   pendingRequest?: PendingRequest | null;
 }
@@ -69,6 +77,7 @@ export function VolunteerHomeContent({
   initialAvailableShiftInstances,
   initialShiftInvitations,
   initialEventInvitations,
+  initialMyEvents,
   hasMemberships,
   pendingRequest,
 }: VolunteerHomeContentProps) {
@@ -147,6 +156,22 @@ export function VolunteerHomeContent({
       ),
     [shiftInvitationsPage?.items, eventInvitationsPage?.items],
   );
+
+  const { data: myEventsPage } = useMyEvents(
+    { limit: 10, statuses: [...PARTICIPATING_EVENT_STATUSES] },
+    {
+      initialData: {
+        items: initialMyEvents,
+        pagination: {
+          total: initialMyEvents.length,
+          limit: 10,
+          offset: 0,
+          hasMore: false,
+        },
+      },
+    },
+  );
+  const joinedEvents = myEventsPage?.items ?? [];
 
   const showLoadingMy = useDelayedLoading(isLoadingMy);
   const showLoadingAvailable = useDelayedLoading(isLoadingAvailable);
@@ -328,6 +353,46 @@ export function VolunteerHomeContent({
     </section>
   );
 
+  const eventsThisWeekCount = useMemo(
+    () => countEventsThisWeek(joinedEvents, new Date()),
+    [joinedEvents],
+  );
+  const eventCardLayout = getEventCardLayout(joinedEvents.length);
+
+  const yourEventsSection = (
+    <section>
+      <div className="mb-3 flex items-start justify-between gap-3">
+        <div className="flex flex-col gap-1">
+          <h2 className="text-2xl font-semibold text-foreground">
+            {t('yourEventsHeading')}
+          </h2>
+          <p className="text-base text-muted-foreground">
+            {t('yourEventsThisWeek', { n: eventsThisWeekCount })}
+          </p>
+        </div>
+        {seeAllLink('/my-events')}
+      </div>
+      <div
+        className={cn(
+          'flex items-stretch gap-2 lg:grid lg:grid-cols-2 lg:overflow-visible',
+          eventCardLayout === 'scroller' && 'overflow-x-auto pb-2',
+        )}
+      >
+        {joinedEvents.map((event) => (
+          <div
+            key={event.id}
+            className={cn(
+              eventCardLayout === 'fill' ? 'flex-1' : 'w-[150px] shrink-0',
+              'lg:w-auto',
+            )}
+          >
+            <EventCardMy event={event} />
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+
   const showPendingBanner = !hasMemberships && pendingRequest != null;
 
   const discoverSection = (
@@ -455,6 +520,7 @@ export function VolunteerHomeContent({
       )}
       {(showLoadingMy || myShiftList.length > 0) && yourShiftsSection}
       {invitationList.length > 0 && invitationsSection}
+      {joinedEvents.length > 0 && yourEventsSection}
       {discoverSection}
     </div>
   );
