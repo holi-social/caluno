@@ -160,3 +160,140 @@ mutation DeclineContract($contractId: ID!, $reason: String!) {
     ...ContractSummaryFields
   }
 }
+
+fragment InvoiceSummaryFields on Invoice {
+  id
+  invoiceStatus
+  periodStart
+  periodEnd
+  totalAmountCents
+  totalHours
+  isNonCompliant
+  declineReason
+  declinedAt
+  declinedAtSigneeType
+  createdAt
+  updatedAt
+  volunteer {
+    id
+    name
+    image
+  }
+  reimbursementType {
+    id
+    key
+  }
+  documentTemplate {
+    id
+    kind
+  }
+  signatures {
+    id
+    order
+    signeeType
+    signedAt
+    signedByUser {
+      id
+      name
+    }
+    requiredPermission {
+      id
+      key
+    }
+  }
+  statusChanges {
+    id
+    type
+    occurredAt
+    actorUser {
+      id
+      name
+    }
+  }
+}
+
+query GetInvoices($filter: InvoiceFilterInput) {
+  invoices(filter: $filter) {
+    ...InvoiceSummaryFields
+  }
+}
+
+query GetMyInvoices($filter: InvoiceFilterInput) {
+  myInvoices(filter: $filter) {
+    ...InvoiceSummaryFields
+  }
+}
+
+query GetInvoice($id: ID!) {
+  invoice(id: $id) {
+    ...InvoiceSummaryFields
+    resolvedBody
+    invoiceTimeEntries {
+      id
+      timeEntry {
+        id
+        startedAt
+        endedAt
+        notes
+        shiftInstance {
+          id
+          master {
+            title
+          }
+        }
+      }
+    }
+  }
+}
+
+query GetPendingInvoiceSignee($invoiceId: ID!) {
+  pendingInvoiceSignee(invoiceId: $invoiceId) {
+    signeeType
+    userId
+    permissionKey
+    eligibleUserIds
+  }
+}
+
+query GetEligibleTimeEntriesForInvoice(
+  $volunteerId: ID!
+  $reimbursementTypeId: ID!
+  $periodStart: DateTime
+  $periodEnd: DateTime
+) {
+  eligibleTimeEntriesForInvoice(
+    volunteerId: $volunteerId
+    reimbursementTypeId: $reimbursementTypeId
+    periodStart: $periodStart
+    periodEnd: $periodEnd
+  ) {
+    id
+    startedAt
+    endedAt
+    notes
+    shiftInstance {
+      id
+      master {
+        title
+      }
+    }
+  }
+}
+
+mutation CreateInvoice($input: CreateInvoiceInput!) {
+  createInvoice(input: $input) {
+    ...InvoiceSummaryFields
+  }
+}
+
+mutation SignInvoice($invoiceId: ID!) {
+  signInvoice(invoiceId: $invoiceId) {
+    ...InvoiceSummaryFields
+  }
+}
+
+mutation DeclineInvoice($invoiceId: ID!, $reason: String!) {
+  declineInvoice(invoiceId: $invoiceId, reason: $reason) {
+    ...InvoiceSummaryFields
+  }
+}

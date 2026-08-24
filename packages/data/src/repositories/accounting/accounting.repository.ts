@@ -1,13 +1,18 @@
 import type {
   ContractFilterInput,
   CreateContractInput,
+  CreateInvoiceInput,
   GetContractQuery,
   GetContractsQuery,
   GetEffectiveRatesQuery,
+  GetEligibleTimeEntriesForInvoiceQuery,
+  GetInvoiceQuery,
+  GetInvoicesQuery,
   GetPendingContractSigneeQuery,
   GetReimbursementTypesQuery,
   GetRosterYearlyUsageQuery,
   GetYearlyUsageQuery,
+  InvoiceFilterInput,
 } from '../../generated/graphql';
 import { BaseRepository } from '../base/base.repository';
 
@@ -27,6 +32,11 @@ export type ContractDetail = GetContractQuery['contract'];
 // entity type exported from `generated/graphql.ts`.
 export type RawPendingSignee =
   GetPendingContractSigneeQuery['pendingContractSignee'];
+
+export type InvoiceSummary = GetInvoicesQuery['invoices'][number];
+export type InvoiceDetail = GetInvoiceQuery['invoice'];
+export type EligibleTimeEntry =
+  GetEligibleTimeEntriesForInvoiceQuery['eligibleTimeEntriesForInvoice'][number];
 
 export class AccountingRepository extends BaseRepository {
   async findReimbursementTypes(): Promise<RawReimbursementType[]> {
@@ -111,5 +121,53 @@ export class AccountingRepository extends BaseRepository {
   ): Promise<ContractSummary> {
     const data = await this.sdk.DeclineContract({ contractId, reason });
     return data.declineContract;
+  }
+
+  async findInvoices(filter?: InvoiceFilterInput): Promise<InvoiceSummary[]> {
+    const data = await this.sdk.GetInvoices({ filter });
+    return data.invoices;
+  }
+
+  async findMyInvoices(filter?: InvoiceFilterInput): Promise<InvoiceSummary[]> {
+    const data = await this.sdk.GetMyInvoices({ filter });
+    return data.myInvoices;
+  }
+
+  async findInvoiceById(id: string): Promise<InvoiceDetail> {
+    const data = await this.sdk.GetInvoice({ id });
+    return data.invoice;
+  }
+
+  async findPendingInvoiceSignee(invoiceId: string): Promise<RawPendingSignee> {
+    const data = await this.sdk.GetPendingInvoiceSignee({ invoiceId });
+    return data.pendingInvoiceSignee;
+  }
+
+  async findEligibleTimeEntriesForInvoice(input: {
+    volunteerId: string;
+    reimbursementTypeId: string;
+    periodStart?: string;
+    periodEnd?: string;
+  }): Promise<EligibleTimeEntry[]> {
+    const data = await this.sdk.GetEligibleTimeEntriesForInvoice(input);
+    return data.eligibleTimeEntriesForInvoice;
+  }
+
+  async createInvoice(input: CreateInvoiceInput): Promise<InvoiceSummary> {
+    const data = await this.sdk.CreateInvoice({ input });
+    return data.createInvoice;
+  }
+
+  async signInvoice(invoiceId: string): Promise<InvoiceSummary> {
+    const data = await this.sdk.SignInvoice({ invoiceId });
+    return data.signInvoice;
+  }
+
+  async declineInvoice(
+    invoiceId: string,
+    reason: string,
+  ): Promise<InvoiceSummary> {
+    const data = await this.sdk.DeclineInvoice({ invoiceId, reason });
+    return data.declineInvoice;
   }
 }
