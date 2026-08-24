@@ -83,7 +83,7 @@ export function EventCardMy({ event }: EventCardMyProps) {
           </div>
         </div>
 
-        <div className="relative z-10 flex items-center justify-between gap-1.5 rounded-full border bg-secondary/30 px-2.5 py-[5px] text-foreground">
+        <div className="relative z-10 flex items-center justify-between gap-1.5 rounded-full bg-muted-foreground px-2.5 py-[5px] text-muted">
           <span className="flex items-center gap-1 text-sm font-medium">
             <CalendarDaysIcon className="size-3.5 shrink-0" />
             {t('yourShiftsCount', { n: event.shiftsCount })}
