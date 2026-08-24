@@ -155,6 +155,7 @@ export class InvoiceService {
       ) / 100;
     const rateCents = await this.reimbursementRateService.getEffectiveRateCents(
       organizationId,
+      input.organizationUnitId,
       input.reimbursementTypeId,
     );
     const totalAmountCents = Math.round(totalHours * rateCents);

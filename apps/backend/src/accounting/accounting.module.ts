@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { AuthModule } from '../auth/auth.module';
 import { DatabaseModule } from '../database/database.module';
 import { OrganizationModule } from '../organization/organization.module';
+import { OrganizationUnitDataModule } from '../organization/organization-unit-data.module';
 import { TimeTrackingModule } from '../time-tracking/time-tracking.module';
 import { UserModule } from '../user/user.module';
 import './enums/register-graphql-enums';
@@ -57,6 +58,7 @@ import {
     DatabaseModule,
     AuthModule,
     OrganizationModule,
+    OrganizationUnitDataModule,
     UserModule,
     TimeTrackingModule,
   ],

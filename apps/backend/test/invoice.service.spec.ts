@@ -83,7 +83,10 @@ describe('InvoiceService', () => {
       authService,
       organizationService,
     );
-    const reimbursementRateService = new ReimbursementRateService(db);
+    const reimbursementRateService = new ReimbursementRateService(
+      db,
+      organizationUnitDataService,
+    );
     const contractService = new ContractService(
       db,
       documentTemplateService,
@@ -289,7 +292,10 @@ describe('InvoiceService', () => {
         supervisor,
         timeEntry,
       } = await setup({ rateCents: 1_500 });
-      const reimbursementRateService = new ReimbursementRateService(db);
+      const reimbursementRateService = new ReimbursementRateService(
+        db,
+        new OrganizationUnitDataService(db),
+      );
       await reimbursementRateService.setReimbursementRate(
         organization.id,
         reimbursementType.id,
