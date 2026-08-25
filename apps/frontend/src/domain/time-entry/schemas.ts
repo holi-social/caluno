@@ -13,12 +13,26 @@ export function timeEntrySchema(t: TimeEntrySchemaMessages) {
   return z.object({
     organizationUnitId: z.string().min(1, t.organizationUnitRequired),
     shiftId: z.string().optional(),
-    shiftInstanceId: z.string().min(1, t.shiftInstanceRequired),
+    shiftInstanceId: z.string().optional(),
     volunteerId: z.string().min(1, t.volunteerRequired),
     startedAt: z.date(t.startedAtRequired),
     endedAt: z.date().nullable().optional(),
     notes: z.string().trim().optional(),
   });
+}
+
+export function clientTimeEntrySchema(t: TimeEntrySchemaMessages) {
+  return timeEntrySchema(t)
+    .extend({ hasShift: z.boolean() })
+    .superRefine((data, ctx) => {
+      if (data.hasShift && !data.shiftInstanceId) {
+        ctx.addIssue({
+          code: 'custom',
+          path: ['shiftInstanceId'],
+          message: t.shiftInstanceRequired,
+        });
+      }
+    });
 }
 
 export const serverTimeEntrySchema = timeEntrySchema({
@@ -30,7 +44,9 @@ export const serverTimeEntrySchema = timeEntrySchema({
   timeEntryIdRequired: 'Time Entry ID is required',
 });
 
-export type TimeEntryFormValues = z.infer<typeof serverTimeEntrySchema>;
+export type TimeEntryFormValues = z.infer<
+  ReturnType<typeof clientTimeEntrySchema>
+>;
 
 export function closeTimeEntrySchema(t: TimeEntrySchemaMessages) {
   return z.object({

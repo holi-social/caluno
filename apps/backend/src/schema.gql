@@ -5,7 +5,7 @@
 input AddTimeEntryInput {
   endedAt: DateTime
   notes: String
-  shiftInstanceId: String!
+  shiftInstanceId: String
   startedAt: DateTime!
   volunteerId: String!
 }
@@ -1233,8 +1233,9 @@ type TimeEntry {
   id: ID!
   isPaid: Boolean!
   notes: String
+  organizationUnit: OrganizationUnit!
   reimbursementType: ReimbursementType
-  shiftInstance: ShiftInstance!
+  shiftInstance: ShiftInstance
   startedAt: DateTime!
   volunteer: User!
 }
@@ -1370,7 +1371,7 @@ input UpdateShiftInstanceInput {
 input UpdateTimeEntryInput {
   endedAt: DateTime
   notes: String
-  shiftInstanceId: String!
+  shiftInstanceId: String
   startedAt: DateTime!
 }
 

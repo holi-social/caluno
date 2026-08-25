@@ -27,6 +27,14 @@ const entry = (
       },
     },
   },
+  organizationUnit: {
+    id: 'unit-x',
+    name: 'Unit',
+    organization: {
+      id: 'org-x',
+      name: 'Org',
+    },
+  },
   ...over,
 });
 

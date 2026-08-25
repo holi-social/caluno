@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { count, eq } from 'drizzle-orm';
+import { and, count, eq } from 'drizzle-orm';
 import type { Database } from '../database/database.module';
 import { DATABASE_CONNECTION } from '../database/database-connection';
 import * as schema from '../database/schema';
@@ -32,8 +32,43 @@ export class TimeTrackingService {
     organizationUnitId: string,
     input: AddTimeEntryInput,
   ): Promise<TimeEntryEntity> {
+    if (input.shiftInstanceId) {
+      await this.assertShiftInstanceInOrgUnit(
+        input.shiftInstanceId,
+        organizationUnitId,
+      );
+    }
+
+    try {
+      const [timeEntry] = await this.db
+        .insert(schema.timeEntries)
+        .values({
+          shiftInstanceId: input.shiftInstanceId ?? null,
+          organizationUnitId,
+          volunteerId: input.volunteerId,
+          startedAt: input.startedAt,
+          endedAt: input.endedAt ?? null,
+          notes: input.notes,
+        })
+        .returning();
+      return timeEntry;
+    } catch (error) {
+      if (
+        isConstraintViolation(error, UNIQUE_OPEN_ENTRY_CONSTRAINT) ||
+        isConstraintViolation(error, UNIQUE_OPEN_SHIFTLESS_ENTRY_CONSTRAINT)
+      ) {
+        throw new ConflictGraphQLError('Already checked in');
+      }
+      throw error;
+    }
+  }
+
+  private async assertShiftInstanceInOrgUnit(
+    shiftInstanceId: string,
+    organizationUnitId: string,
+  ): Promise<void> {
     const instance = await this.db.query.shiftInstances.findFirst({
-      where: { id: input.shiftInstanceId },
+      where: { id: shiftInstanceId },
       with: { master: true },
     });
 
@@ -45,24 +80,6 @@ export class TimeTrackingService {
         'Shift instance does not exist in this organization',
       );
     }
-
-    try {
-      const [timeEntry] = await this.db
-        .insert(schema.timeEntries)
-        .values({
-          shiftInstanceId: input.shiftInstanceId,
-          volunteerId: input.volunteerId,
-          startedAt: input.startedAt,
-          notes: input.notes,
-        })
-        .returning();
-      return timeEntry;
-    } catch (error) {
-      if (isConstraintViolation(error, UNIQUE_OPEN_ENTRY_CONSTRAINT)) {
-        throw new ConflictGraphQLError('Already checked in');
-      }
-      throw error;
-    }
   }
 
   async closeTimeEntry(
@@ -72,10 +89,9 @@ export class TimeTrackingService {
   ): Promise<TimeEntryEntity> {
     const entry = await this.db.query.timeEntries.findFirst({
       where: { id },
-      with: { shiftInstance: { with: { master: true } } },
     });
 
-    if (!existsInOrgUnit(organizationUnitId, entry)) {
+    if (!entry || entry.organizationUnitId !== organizationUnitId) {
       throw new NotFoundGraphQLError('Time entry not found');
     }
 
@@ -95,20 +111,36 @@ export class TimeTrackingService {
   ): Promise<TimeEntryEntity> {
     const entry = await this.db.query.timeEntries.findFirst({
       where: { id },
-      with: { shiftInstance: { with: { master: true } } },
     });
 
-    if (!existsInOrgUnit(organizationUnitId, entry)) {
+    if (!entry || entry.organizationUnitId !== organizationUnitId) {
       throw new NotFoundGraphQLError('Time entry not found');
     }
 
-    const [timeEntry] = await this.db
-      .update(schema.timeEntries)
-      .set(input)
-      .where(eq(schema.timeEntries.id, id))
-      .returning();
+    if (input.shiftInstanceId) {
+      await this.assertShiftInstanceInOrgUnit(
+        input.shiftInstanceId,
+        organizationUnitId,
+      );
+    }
 
-    return timeEntry;
+    try {
+      const [timeEntry] = await this.db
+        .update(schema.timeEntries)
+        .set(input)
+        .where(eq(schema.timeEntries.id, id))
+        .returning();
+
+      return timeEntry;
+    } catch (error) {
+      if (
+        isConstraintViolation(error, UNIQUE_OPEN_ENTRY_CONSTRAINT) ||
+        isConstraintViolation(error, UNIQUE_OPEN_SHIFTLESS_ENTRY_CONSTRAINT)
+      ) {
+        throw new ConflictGraphQLError('Already checked in');
+      }
+      throw error;
+    }
   }
 
   async deleteTimeEntry(
@@ -117,10 +149,9 @@ export class TimeTrackingService {
   ): Promise<TimeEntryEntity> {
     const entry = await this.db.query.timeEntries.findFirst({
       where: { id },
-      with: { shiftInstance: { with: { master: true } } },
     });
 
-    if (!existsInOrgUnit(organizationUnitId, entry)) {
+    if (!entry || entry.organizationUnitId !== organizationUnitId) {
       throw new NotFoundGraphQLError('Time entry not found');
     }
 
@@ -137,10 +168,9 @@ export class TimeTrackingService {
   ): Promise<TimeEntryEntity> {
     const entry = await this.db.query.timeEntries.findFirst({
       where: { id },
-      with: { shiftInstance: { with: { master: true } }, volunteer: true },
     });
 
-    if (!existsInOrgUnit(organizationUnitId, entry)) {
+    if (!entry || entry.organizationUnitId !== organizationUnitId) {
       throw new NotFoundGraphQLError('Time entry not found');
     }
 
@@ -151,25 +181,19 @@ export class TimeTrackingService {
     organizationUnitId: string,
     pagination: PaginationInput,
   ): Promise<{ entries: TimeEntryEntity[]; total: number }> {
-    const timeEntries = await this.db.query.timeEntries.findMany({
-      with: { shiftInstance: { with: { master: true } } },
+    const entries = await this.db.query.timeEntries.findMany({
+      where: { organizationUnitId },
       orderBy: { startedAt: 'desc' },
+      limit: pagination.limit,
+      offset: pagination.offset,
     });
 
-    const filteredTimeEntries = timeEntries.filter(
-      (entry) =>
-        entry.shiftInstance?.master?.organizationUnitId === organizationUnitId,
-    );
+    const [{ total }] = await this.db
+      .select({ total: count() })
+      .from(schema.timeEntries)
+      .where(eq(schema.timeEntries.organizationUnitId, organizationUnitId));
 
-    const paginated = filteredTimeEntries.slice(
-      pagination.offset,
-      pagination.offset + pagination.limit,
-    );
-
-    return {
-      entries: paginated as TimeEntryEntity[],
-      total: filteredTimeEntries.length,
-    };
+    return { entries: entries as TimeEntryEntity[], total };
   }
 
   async findByUser(
@@ -177,22 +201,24 @@ export class TimeTrackingService {
     userId: string,
     pagination: PaginationInput,
   ): Promise<{ entries: TimeEntryEntity[]; total: number }> {
-    const allEntries = await this.db.query.timeEntries.findMany({
-      where: { volunteerId: userId },
-      with: { shiftInstance: { with: { master: true } } },
+    const entries = await this.db.query.timeEntries.findMany({
+      where: { organizationUnitId, volunteerId: userId },
       orderBy: { startedAt: 'desc' },
+      limit: pagination.limit,
+      offset: pagination.offset,
     });
 
-    const filtered = allEntries.filter(
-      (e) => e.shiftInstance?.master?.organizationUnitId === organizationUnitId,
-    );
+    const [{ total }] = await this.db
+      .select({ total: count() })
+      .from(schema.timeEntries)
+      .where(
+        and(
+          eq(schema.timeEntries.organizationUnitId, organizationUnitId),
+          eq(schema.timeEntries.volunteerId, userId),
+        ),
+      );
 
-    const paginated = filtered.slice(
-      pagination.offset,
-      pagination.offset + pagination.limit,
-    );
-
-    return { entries: paginated as TimeEntryEntity[], total: filtered.length };
+    return { entries: entries as TimeEntryEntity[], total };
   }
 
   async findMyTime(
@@ -333,6 +359,9 @@ const CHECK_IN_CLOSES_AFTER_MS = 60 * 60 * 1000; // 1h after end
 const UNIQUE_OPEN_ENTRY_CONSTRAINT =
   'uq_time_entries_open_per_instance_volunteer';
 
+const UNIQUE_OPEN_SHIFTLESS_ENTRY_CONSTRAINT =
+  'uq_time_entries_open_shiftless_per_org_volunteer';
+
 // Drizzle wraps postgres errors, so the driver error lives on `error.cause`.
 // '23505' is the Postgres unique-violation SQLSTATE.
 const isConstraintViolation = (
@@ -351,18 +380,5 @@ const isConstraintViolation = (
     driverError.code === '23505' &&
     'constraint' in driverError &&
     driverError.constraint === constraintName
-  );
-};
-
-const existsInOrgUnit = (
-  organizationUnitId: string,
-  entry?: {
-    shiftInstance: { master: { organizationUnitId: string } | null } | null;
-  },
-): entry is {
-  shiftInstance: { master: { organizationUnitId: string } };
-} => {
-  return !!(
-    entry?.shiftInstance?.master?.organizationUnitId === organizationUnitId
   );
 };

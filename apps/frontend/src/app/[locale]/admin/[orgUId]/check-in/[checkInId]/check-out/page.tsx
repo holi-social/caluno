@@ -46,8 +46,10 @@ export default async function CheckOutPage({ params }: CheckOutPageProps) {
               <ul className="space-y-3">
                 <li className="flex gap-2">
                   <Calendar className="text-muted-foreground" />
-                  {entry.shiftInstance.overrideTitle ??
-                    entry.shiftInstance.master.title}
+                  {entry.shiftInstance
+                    ? (entry.shiftInstance.overrideTitle ??
+                      entry.shiftInstance.master.title)
+                    : t('generalCheckIn')}
                 </li>
                 <li className="flex gap-2">
                   <ScanQrCode className="text-muted-foreground" />{' '}
