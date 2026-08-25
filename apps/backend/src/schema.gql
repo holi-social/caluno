@@ -181,7 +181,6 @@ input CreateRequirementProfileInput {
 
 input CreateRequirementProfileSubmissionInput {
   fulfillments: [CreateRequirementSubmissionFulfillmentInput!]
-  membershipId: String
   membershipRequestId: String
   profileId: String!
 }
@@ -411,7 +410,6 @@ type FormSubmission {
   form: RequirementForm
   formId: String!
   id: ID!
-  membershipId: String
   submittedAt: DateTime!
   updatedAt: DateTime!
   user: User
@@ -1325,7 +1323,6 @@ input UpdateRequirementProfileInput {
 
 input UpdateRequirementProfileSubmissionInput {
   fulfillments: [CreateRequirementSubmissionFulfillmentInput!]
-  membershipId: String
   membershipRequestId: String
   profileId: String
 }
