@@ -504,7 +504,7 @@ export class ShiftService {
     const result = new Set<string>();
     for (const { userId, instanceId } of userIdInstanceIdPairs) {
       if (intendedIdsByUser.get(userId)?.has(instanceId)) {
-        result.add(`${instanceId}::${userId}`);
+        result.add(`${instanceId}:${userId}`);
       }
     }
 

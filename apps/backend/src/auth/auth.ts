@@ -39,6 +39,8 @@ export interface AuthConfigOptions {
   emailVerificationEnabled?: boolean;
   sendVerificationOTP: (options: SendVerificationOtpOptions) => Promise<void>;
   sendResetPassword: (options: SendResetPasswordOptions) => Promise<void>;
+  onSessionCreated?: (userId: string) => void;
+  onUserCreated?: (userId: string) => void;
 }
 
 export const createAuthConfig = ({
@@ -48,6 +50,8 @@ export const createAuthConfig = ({
   emailVerificationEnabled = true,
   sendVerificationOTP,
   sendResetPassword,
+  onSessionCreated,
+  onUserCreated,
 }: AuthConfigOptions): BetterAuthOptions => ({
   database: drizzleAdapter(database, {
     schema: {
@@ -79,6 +83,20 @@ export const createAuthConfig = ({
               locale,
             },
           };
+        },
+        after: async (user) => {
+          if (typeof user.id === 'string') {
+            onUserCreated?.(user.id);
+          }
+        },
+      },
+    },
+    session: {
+      create: {
+        after: async (session) => {
+          if (typeof session.userId === 'string') {
+            onSessionCreated?.(session.userId);
+          }
         },
       },
     },
