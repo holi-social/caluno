@@ -90,6 +90,7 @@ interface CreateDocumentModalProps {
     docId: string,
     volunteerId: string,
     pauschale: PauschalenType,
+    originalUsedBeforeAmount: number,
     updatedUsedBeforeAmount: number,
   ) => void;
 }
@@ -320,6 +321,7 @@ export function CreateDocumentModal({
                   docId,
                   volunteer.id,
                   selectedLine.pauschale,
+                  originalUsedBeforeAmount,
                   updatedUsedBeforeAmount,
                 )
               }

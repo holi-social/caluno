@@ -171,6 +171,7 @@ interface VolunteerTableGroupProps {
   onToggleVolDocs: (docIds: string[]) => void;
   onDocumentClick: (doc: BoardDocument, vol: BoardVolunteer) => void;
   onRequestAction: (items: DocVolPair[], action: NonCompliantAction) => void;
+  onBundleDownload: (docIds: string[]) => void;
   docTypeFilter: DocTypeFilter;
   dateRange: DateRange | undefined;
   activeTile: TileFilter;
@@ -183,6 +184,7 @@ function VolunteerTableGroup({
   onToggleVolDocs,
   onDocumentClick,
   onRequestAction,
+  onBundleDownload,
   docTypeFilter,
   dateRange,
   activeTile,
@@ -223,10 +225,12 @@ function VolunteerTableGroup({
   // Ready timesheets bundle separately per pauschale type — never combined
   // into one download, since each type is its own reimbursement batch.
   const readyByType: Partial<Record<PauschalenType, number>> = {};
+  const readyDocIdsByType: Partial<Record<PauschalenType, string[]>> = {};
   for (const d of sortedDocs) {
     if (d.status !== 'timesheet-ready') continue;
     const type = d.pauschale ?? vol.pauschale;
     readyByType[type] = (readyByType[type] ?? 0) + 1;
+    readyDocIdsByType[type] = [...(readyDocIdsByType[type] ?? []), d.id];
   }
   const readyTypes = Object.keys(readyByType) as PauschalenType[];
   const TYPE_LABEL: Record<PauschalenType, string> = {
@@ -313,6 +317,7 @@ function VolunteerTableGroup({
                 {readyTypes.map((type) => {
                   const download = MOCK_LAST_BUNDLE_DOWNLOAD[vol.id]?.[type];
                   const readyCount = readyByType[type] ?? 0;
+                  const readyDocIds = readyDocIdsByType[type] ?? [];
                   return (
                     <div
                       key={type}
@@ -324,6 +329,7 @@ function VolunteerTableGroup({
                         className="gap-1.5 shrink-0"
                         onClick={(e) => {
                           e.stopPropagation();
+                          onBundleDownload(readyDocIds);
                           toast.success(
                             t('batchBar.bundleDownloadToast', {
                               count: readyCount,
@@ -568,6 +574,7 @@ interface ReimbursementsTableProps {
   onToggleAll: (docIds: string[], select: boolean) => void;
   onDocumentClick: (doc: BoardDocument, vol: BoardVolunteer) => void;
   onRequestAction: (items: DocVolPair[], action: NonCompliantAction) => void;
+  onBundleDownload: (docIds: string[]) => void;
   docTypeFilter: DocTypeFilter;
   dateRange: DateRange | undefined;
   activeTile: TileFilter;
@@ -581,6 +588,7 @@ export function ReimbursementsTable({
   onToggleAll,
   onDocumentClick,
   onRequestAction,
+  onBundleDownload,
   docTypeFilter,
   dateRange,
   activeTile,
@@ -650,6 +658,7 @@ export function ReimbursementsTable({
               onToggleVolDocs={onToggleVolDocs}
               onDocumentClick={onDocumentClick}
               onRequestAction={onRequestAction}
+              onBundleDownload={onBundleDownload}
               docTypeFilter={docTypeFilter}
               dateRange={dateRange}
               activeTile={activeTile}

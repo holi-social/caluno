@@ -20,6 +20,7 @@ import {
   CoinsIcon,
   DownloadIcon,
   EyeIcon,
+  PencilIcon,
   TriangleAlertIcon,
   XIcon,
 } from 'lucide-react';
@@ -56,7 +57,11 @@ interface PipelineStep {
 // Mock — no admin/staff profile page or backend record exists for these
 // people yet (dev dependency); stands in for "who actually performed this
 // step" in place of the generic role label previously shown here.
-export type StaffActorRole = 'admin' | 'coordinator' | 'supervisor' | 'hq_manager';
+export type StaffActorRole =
+  | 'admin'
+  | 'coordinator'
+  | 'supervisor'
+  | 'hq_manager';
 
 export const MOCK_STAFF_ACTORS: Record<StaffActorRole, string> = {
   admin: 'Julia Vorstand',
@@ -586,13 +591,24 @@ export function DocumentSheet({
                   d.amount !== undefined &&
                   (d.pauschale ?? vol.pauschale) === effectivePauschale,
               );
-              const paidOut = timesheetDocs.filter(
-                (d) => d.status === 'timesheet-ready',
+              // "Paid" is a trackability fact layered on top of status (see
+              // BoardDocument.paidAt) — set on first bundle download, not by
+              // reaching 'timesheet-ready'. A ready-but-not-yet-downloaded
+              // timesheet is still pending here.
+              const paidOut = timesheetDocs.filter((d) => d.paidAt);
+              const pending = timesheetDocs.filter((d) => !d.paidAt);
+              // A document can carry both a manual-edit record and be
+              // paid/pending — this is a third, orthogonal trackability
+              // list, not a status.
+              const manuallyEdited = timesheetDocs.filter(
+                (d) => d.manualBaselineEdit,
               );
-              const pending = timesheetDocs.filter(
-                (d) => d.status !== 'timesheet-ready',
-              );
-              if (paidOut.length === 0 && pending.length === 0) return null;
+              if (
+                paidOut.length === 0 &&
+                pending.length === 0 &&
+                manuallyEdited.length === 0
+              )
+                return null;
               return (
                 <div className="mt-4 space-y-4">
                   {paidOut.length > 0 && (
@@ -633,6 +649,47 @@ export function DocumentSheet({
                             </span>
                             <span className="tabular-nums text-muted-foreground">
                               {formatEuro(d.amount!)}
+                            </span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                  {manuallyEdited.length > 0 && (
+                    <div>
+                      <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground mb-2">
+                        {ts('invoicesManuallyEdited')}
+                      </p>
+                      <ul className="space-y-1.5">
+                        {manuallyEdited.map((d) => (
+                          <li
+                            key={d.id}
+                            className="flex items-center justify-between text-sm"
+                          >
+                            <span className="flex items-center gap-1.5 text-card-foreground">
+                              {d.periodLabel}
+                              <TooltipProvider>
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <button
+                                      type="button"
+                                      className="inline-flex shrink-0 cursor-default text-muted-foreground"
+                                      onClick={(e) => e.stopPropagation()}
+                                    >
+                                      <PencilIcon size={12} />
+                                    </button>
+                                  </TooltipTrigger>
+                                  <TooltipContent>
+                                    {ts('manuallyEditedHint', {
+                                      by: d.manualBaselineEdit!.by,
+                                      at: d.manualBaselineEdit!.at,
+                                    })}
+                                  </TooltipContent>
+                                </Tooltip>
+                              </TooltipProvider>
+                            </span>
+                            <span className="tabular-nums font-medium text-card-foreground">
+                              {formatEuro(d.manualBaselineEdit!.amount)}
                             </span>
                           </li>
                         ))}

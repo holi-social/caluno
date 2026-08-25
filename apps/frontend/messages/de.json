@@ -1125,6 +1125,8 @@
           "limitSection": "Jahresbudget",
           "invoicesPaidOut": "Ausgezahlt",
           "invoicesPending": "Ausstehende Zahlung",
+          "invoicesManuallyEdited": "Manuell bearbeitet",
+          "manuallyEditedHint": "Von {by} am {at} manuell korrigiert",
           "timelineSection": "Verlauf",
           "timelineEmpty": "Noch keine Aktivität",
           "timelineCreated": "Erstellt",

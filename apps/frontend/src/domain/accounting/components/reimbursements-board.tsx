@@ -147,6 +147,11 @@ export interface BoardDocument {
   declinedAt?: string;
   /** Which seat in the signing chain declined — determines where the pipeline/timeline gets cut off. */
   declinedAtRole?: SigneeRole;
+  /** Set once, on first bundle download — a timesheet is "paid" from that point on, distinct from (and layered on top of) its status, which stays 'timesheet-ready'/terminal. Downloading again never changes this. */
+  paidAt?: string;
+  paidBy?: string;
+  /** Set only when this invoice was created with a manually corrected "received before" baseline (see InvoiceCapCard) — an audit trail for that one correction, shown on this document's own sheet. */
+  manualBaselineEdit?: { amount: number; by: string; at: string };
 }
 
 /** Status + decline-detail override layered onto a mock document in-session (see docOverrides). */
@@ -231,6 +236,30 @@ function applyLimitOverrides(
       if (pauschale === v.pauschale) next.usedAmount = used;
     }
     return next;
+  });
+}
+
+/** Per-document trackability layered on top of a mock document in-session (see docTrackingOverrides). */
+export interface DocTrackingOverride {
+  paidAt?: string;
+  paidBy?: string;
+  manualBaselineEdit?: { amount: number; by: string; at: string };
+}
+
+function applyDocTrackingOverrides(
+  vols: BoardVolunteer[],
+  overrides: Record<string, DocTrackingOverride>,
+): BoardVolunteer[] {
+  if (Object.keys(overrides).length === 0) return vols;
+  return vols.map((v) => {
+    if (!v.documents.some((d) => d.id in overrides)) return v;
+    return {
+      ...v,
+      documents: v.documents.map((d) => {
+        const override = overrides[d.id];
+        return override ? { ...d, ...override } : d;
+      }),
+    };
   });
 }
 
@@ -863,13 +892,21 @@ export function ReimbursementsBoard({
   const [volunteerLimitOverrides, setVolunteerLimitOverrides] = useState<
     Record<string, Partial<Record<PauschalenType, number>>>
   >({});
+  // Per-document trackability (paid-on-first-download, the manual-edit audit
+  // trail), keyed by doc id — see applyDocTrackingOverrides.
+  const [docTrackingOverrides, setDocTrackingOverrides] = useState<
+    Record<string, DocTrackingOverride>
+  >({});
   const volunteers = useMemo(
     () =>
       applyLimitOverrides(
-        applyDocStatusOverrides(MOCK_VOLUNTEERS, docOverrides),
+        applyDocTrackingOverrides(
+          applyDocStatusOverrides(MOCK_VOLUNTEERS, docOverrides),
+          docTrackingOverrides,
+        ),
         volunteerLimitOverrides,
       ),
-    [docOverrides, volunteerLimitOverrides],
+    [docOverrides, docTrackingOverrides, volunteerLimitOverrides],
   );
   const allVolunteers = useMemo(
     () => [...volunteers, ...MOCK_DOCUMENTLESS_VOLUNTEERS],
@@ -1194,6 +1231,7 @@ export function ReimbursementsBoard({
     docId: string,
     volunteerId: string,
     pauschale: PauschalenType,
+    originalUsedBeforeAmount: number,
     updatedUsedBeforeAmount: number,
   ) {
     setDocOverrides((prev) => ({
@@ -1207,6 +1245,40 @@ export function ReimbursementsBoard({
         [pauschale]: updatedUsedBeforeAmount,
       },
     }));
+    // Only an actual correction is worth an audit trail — sending with the
+    // untouched baseline leaves no "manually edited" record on this document.
+    if (updatedUsedBeforeAmount !== originalUsedBeforeAmount) {
+      setDocTrackingOverrides((prev) => ({
+        ...prev,
+        [docId]: {
+          ...prev[docId],
+          manualBaselineEdit: {
+            amount: updatedUsedBeforeAmount,
+            by: MOCK_STAFF_ACTORS.admin,
+            at: new Date().toLocaleDateString('de-DE'),
+          },
+        },
+      }));
+    }
+  }
+
+  // A bundle download marks every included (still-unpaid) timesheet paid,
+  // first download only — downloading the same bundle again is a no-op for
+  // documents already marked paid.
+  function handleBundleDownload(docIds: string[]) {
+    const at = new Date().toLocaleDateString('de-DE');
+    setDocTrackingOverrides((prev) => {
+      const next = { ...prev };
+      for (const docId of docIds) {
+        if (next[docId]?.paidAt) continue;
+        next[docId] = {
+          ...next[docId],
+          paidAt: at,
+          paidBy: MOCK_STAFF_ACTORS.admin,
+        };
+      }
+      return next;
+    });
   }
 
   // Decline on a pending countersign — a contract at 'contract-signing-coord'
@@ -1237,6 +1309,7 @@ export function ReimbursementsBoard({
   function handleResetPrototype() {
     setDocOverrides({});
     setVolunteerLimitOverrides({});
+    setDocTrackingOverrides({});
     setSelectedDocIds(new Set());
     toast.success(t('resetPrototypeToast'));
   }
@@ -1412,6 +1485,7 @@ export function ReimbursementsBoard({
           onToggleAll={toggleAll}
           onDocumentClick={(doc, vol) => setSelectedDoc({ doc, vol })}
           onRequestAction={requestAction}
+          onBundleDownload={handleBundleDownload}
           docTypeFilter={docTypeFilter}
           dateRange={dateRange}
           activeTile={activeTile}
@@ -1451,6 +1525,7 @@ export function ReimbursementsBoard({
         selectedDocs={selectedDocs}
         onClear={() => setSelectedDocIds(new Set())}
         onRequestAction={requestAction}
+        onBundleDownload={handleBundleDownload}
       />
 
       <NonCompliantTimesheetDialog
@@ -1508,11 +1583,16 @@ export function ReimbursementsBoard({
             : null
         }
         onSent={(updatedUsedBeforeAmount) => {
-          if (invoiceCreationTarget && invoiceTargetPauschale)
+          if (
+            invoiceCreationTarget &&
+            invoiceTargetPauschale &&
+            invoiceTargetUsedBefore != null
+          )
             handleInvoiceSent(
               invoiceCreationTarget.doc.id,
               invoiceCreationTarget.vol.id,
               invoiceTargetPauschale,
+              invoiceTargetUsedBefore,
               updatedUsedBeforeAmount,
             );
         }}

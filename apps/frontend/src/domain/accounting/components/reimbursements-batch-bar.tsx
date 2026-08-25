@@ -29,6 +29,7 @@ interface BatchBarProps {
   selectedDocs: DocVolPair[];
   onClear: () => void;
   onRequestAction: (items: DocVolPair[], action: NonCompliantAction) => void;
+  onBundleDownload: (docIds: string[]) => void;
   className?: string;
 }
 
@@ -36,6 +37,7 @@ export function BatchBar({
   selectedDocs,
   onClear,
   onRequestAction,
+  onBundleDownload,
   className,
 }: BatchBarProps) {
   const t = useTranslations('Accounting.reimbursements.batchBar');
@@ -93,7 +95,7 @@ export function BatchBar({
                   onRequestAction(items, action);
                   return;
                 }
-                // bundle action — wired to mutations in production
+                onBundleDownload(items.map(({ doc }) => doc.id));
                 toast.success(
                   t('bundleDownloadToast', { count: items.length }),
                 );
