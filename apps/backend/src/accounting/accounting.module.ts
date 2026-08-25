@@ -4,6 +4,7 @@ import { DatabaseModule } from '../database/database.module';
 import { MembershipModule } from '../membership/membership.module';
 import { OrganizationModule } from '../organization/organization.module';
 import { OrganizationUnitDataModule } from '../organization/organization-unit-data.module';
+import { StorageModule } from '../storage/storage.module';
 import { TimeTrackingModule } from '../time-tracking/time-tracking.module';
 import { UserModule } from '../user/user.module';
 import './enums/register-graphql-enums';
@@ -63,6 +64,7 @@ import {
     UserModule,
     TimeTrackingModule,
     MembershipModule,
+    StorageModule,
   ],
   providers: [
     ReimbursementRateService,
