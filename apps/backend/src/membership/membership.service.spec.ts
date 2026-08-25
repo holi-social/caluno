@@ -2,12 +2,12 @@ jest.mock('nanoid', () => ({
   customAlphabet: () => () => 'abcdefghijkl',
 }));
 
-import { PostHogService } from '../shared/observability/posthog.service';
+import { PostHogCaptureService } from '../shared/observability/posthog.capture.service';
 import { MembershipService } from './membership.service';
 
 function createService(options: {
   membershipCount: number;
-  posthog: Pick<PostHogService, 'captureUserJoinedOrg'>;
+  posthog: Pick<PostHogCaptureService, 'captureUserJoinedOrg'>;
 }) {
   const db = {
     transaction: jest.fn().mockResolvedValue({
@@ -35,7 +35,7 @@ function createService(options: {
     {} as never,
     { notifyMembershipApproved: jest.fn() } as never,
     {} as never,
-    options.posthog as PostHogService,
+    options.posthog as PostHogCaptureService,
   );
 
   return service;

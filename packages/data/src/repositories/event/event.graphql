@@ -113,6 +113,8 @@ fragment MyEventFields on Event {
   endsAt
   location
   myInvitedAt
+  shiftsCount
+  coverUrl
   organizationUnit {
     id
     name
@@ -140,6 +142,46 @@ query GetMyEvents(
   ) {
     items {
       ...MyEventFields
+    }
+    pagination {
+      total
+      limit
+      offset
+      hasMore
+    }
+  }
+}
+
+fragment DiscoverEventFields on Event {
+  id
+  title
+  startsAt
+  endsAt
+  shiftsCount
+  coverUrl
+  organizationUnit {
+    id
+    name
+    logoUrl
+  }
+}
+
+query GetAvailableEvents(
+  $startsAfter: DateTime
+  $endsBefore: DateTime
+  $limit: Int = 15
+  $offset: Int = 0
+  $organizationUnitIds: [ID!]
+) {
+  availableEvents(
+    startsAfter: $startsAfter
+    endsBefore: $endsBefore
+    limit: $limit
+    offset: $offset
+    organizationUnitIds: $organizationUnitIds
+  ) {
+    items {
+      ...DiscoverEventFields
     }
     pagination {
       total

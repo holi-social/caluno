@@ -253,7 +253,7 @@ export class ShiftService {
           inArray(schema.timeEntries.shiftInstanceId, instanceIds),
           isNull(schema.timeEntries.endedAt),
         ),
-      );
+      ) as Promise<{ shiftInstanceId: string }[]>;
   }
 
   /** A user's shift-instance invite statuses across many instances in one query (DataLoader batch). */

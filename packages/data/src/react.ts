@@ -23,6 +23,8 @@ export * from './generated/graphql';
 export * from './react/auth/auth-client';
 // Data fetching hooks
 export * from './react/hooks/use-admin-user-profile';
+export * from './react/hooks/use-available-events';
+export * from './react/hooks/use-available-events-infinite';
 export * from './react/hooks/use-available-shift-instances';
 export * from './react/hooks/use-available-shift-instances-infinite';
 export * from './react/hooks/use-block';
@@ -84,6 +86,7 @@ export type {
 } from './repositories/accounting/accounting.repository';
 export { deriveDocumentStatus } from './repositories/accounting/accounting.repository';
 export type {
+  DiscoverEvent,
   EventInviteItem,
   EventListItem,
   MyEvent,
