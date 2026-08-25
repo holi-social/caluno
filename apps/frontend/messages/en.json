@@ -84,6 +84,12 @@
       "verifying": "Verifying..."
     }
   },
+  "CheckIn": {
+    "manualCheckin": "Manual checkin",
+    "myQrCodeTab": "My QR code",
+    "qrScannerTab": "QR Scanner",
+    "scanACode": "Scan a code"
+  },
   "Common": {
     "avatarAlt": "Avatar of {name}",
     "back": "Back",
