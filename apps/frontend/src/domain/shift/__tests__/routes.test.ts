@@ -8,10 +8,10 @@ describe('extractCheckInPath', () => {
     ).toBe('/admin/check-in/abc123def456');
   });
 
-  it('is case-insensitive on the id', () => {
+  it('lowercases an uppercase check-in id', () => {
     expect(
       extractCheckInPath('https://app.caluno.com/admin/check-in/ABC123DEF456'),
-    ).toBe('/admin/check-in/ABC123DEF456');
+    ).toBe('/admin/check-in/abc123def456');
   });
 
   it('returns null for a value that is not a check-in URL', () => {
