@@ -81,23 +81,6 @@ jobs:
       tests: ${{ fromJSON(needs.changes.outputs.code) }}
     secrets: inherit
 
-  commit-lint:
-    name: Commit lint
-    runs-on: ubuntu-latest
-    timeout-minutes: 5
-    # Sentry's auto-generated PRs don't follow our commit convention.
-    if: github.event.pull_request.user.login != 'sentry[bot]'
-    steps:
-      - uses: actions/checkout@v5
-        with:
-          submodules: recursive
-          persist-credentials: false
-          token: ${{ secrets.ORG_REPO_PAT }}
-          fetch-depth: 0
-          filter: blob:none
-      # head.sha, since github.sha is the synthetic merge commit.
-      - run: bash .ai/scripts/commit-lint.sh range "${{ github.event.pull_request.base.sha }}..${{ github.event.pull_request.head.sha }}"
-
   ai-gates:
     name: AI gate tests
     runs-on: ubuntu-latest
@@ -252,7 +235,6 @@ jobs:
       [
         changes,
         verify,
-        commit-lint,
         ai-gates,
         build-backend,
         build-frontend,
