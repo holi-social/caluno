@@ -17,6 +17,7 @@ import { OrganizationMapper } from '../src/organization/mappers/organization.map
 import { OrganizationService } from '../src/organization/organization.service';
 import { OrganizationUnitService } from '../src/organization/organization-unit.service';
 import { OrganizationUnitDataService } from '../src/organization/organization-unit-data.service';
+import { PostHogCaptureService } from '../src/shared/observability/posthog.capture.service';
 import { FileService } from '../src/storage/services/file.service';
 import { createUser } from './factories';
 import {
@@ -56,6 +57,7 @@ describe('DocumentSigningService', () => {
       {} as OrganizationUnitService,
       {} as NotificationService,
       {} as FileService,
+      {} as PostHogCaptureService,
     );
     service = new DocumentSigningService(db, authService, organizationService);
 

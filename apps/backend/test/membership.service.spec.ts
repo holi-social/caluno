@@ -12,6 +12,7 @@ import { MembershipService } from '../src/membership/membership.service';
 import { NotificationService } from '../src/notification';
 import { RequiredFormService } from '../src/requirement-profile/services/required-form.service';
 import { RequirementProfileService } from '../src/requirement-profile/services/requirement-profile.service';
+import { PostHogCaptureService } from '../src/shared/observability/posthog.capture.service';
 import { createUser } from './factories';
 import {
   addMembership,
@@ -40,6 +41,7 @@ describe('MembershipService', () => {
       {} as AuthService,
       {} as NotificationService,
       {} as RequiredFormService,
+      { captureUserJoinedOrg: () => {} } as unknown as PostHogCaptureService,
     );
     registerTestResourceCleanup(async () => {
       await moduleRef.close();
