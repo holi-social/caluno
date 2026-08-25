@@ -12,8 +12,7 @@ import { NotFoundGraphQLError } from '../src/graphql/errors/not-found.error';
 import { MembershipService } from '../src/membership/membership.service';
 import { NotificationService } from '../src/notification/notification.service';
 import { OrganizationService } from '../src/organization/organization.service';
-import { ACTIVE_SHIFT_INVITE_STATUSES } from '../src/shared/invite-status';
-import { ShiftInviteStatus } from '../src/shift/enums';
+import { ShiftInviteOrigin, ShiftInviteStatus } from '../src/shift/enums';
 import { ShiftService } from '../src/shift/shift.service';
 import { UserService } from '../src/user/user.service';
 import { slugify } from '../src/utils/slug.util';
@@ -546,7 +545,8 @@ describe('ShiftService', () => {
       await db.insert(schema.shiftInstanceInvites).values({
         instanceId: instanceId,
         userId: existingUser.id,
-        status: ShiftInviteStatus.INVITED,
+        origin: ShiftInviteOrigin.ADMIN_INVITED,
+        status: null,
       });
 
       await expect(
@@ -592,7 +592,7 @@ describe('ShiftService', () => {
         where: { instanceId, userId: user.id },
       });
       expect(invites).toHaveLength(1);
-      expect(invites[0]?.status).toBe(ShiftInviteStatus.INVITED);
+      expect(invites[0]?.status).toBe(null /* re-invite */);
     });
 
     it('resurrects a REJECTED invite when re-inviting the member', async () => {
@@ -610,6 +610,7 @@ describe('ShiftService', () => {
       await db.insert(schema.shiftInstanceInvites).values({
         instanceId,
         userId: user.id,
+        origin: null,
         status: ShiftInviteStatus.ADMIN_REJECTED,
       });
 
@@ -623,7 +624,7 @@ describe('ShiftService', () => {
         where: { instanceId, userId: user.id },
       });
       expect(invites).toHaveLength(1);
-      expect(invites[0]?.status).toBe(ShiftInviteStatus.INVITED);
+      expect(invites[0]?.status).toBe(null /* re-invite */);
     });
 
     it('returns pending invitees via findVolunteers when active statuses are requested', async () => {
@@ -641,15 +642,15 @@ describe('ShiftService', () => {
       await db.insert(schema.shiftInstanceInvites).values({
         instanceId,
         userId: user.id,
-        status: ShiftInviteStatus.INVITED,
+        origin: ShiftInviteOrigin.ADMIN_INVITED,
+        status: null,
       });
 
-      const withActiveStatuses = await shiftService.findVolunteers(
+      const allInvites = await shiftService.findInstanceInvites(
         instanceId,
         organizationUnitId,
-        ACTIVE_SHIFT_INVITE_STATUSES,
       );
-      expect(withActiveStatuses.map((u) => u.id)).toContain(user.id);
+      expect(allInvites.map((invite) => invite.userId)).toContain(user.id);
 
       const withDefaults = await shiftService.findVolunteers(
         instanceId,
@@ -734,7 +735,8 @@ describe('ShiftService', () => {
       await db.insert(schema.shiftInstanceInvites).values({
         instanceId: oldest.id,
         userId: volunteer.id,
-        status: ShiftInviteStatus.ACCEPTED,
+        origin: ShiftInviteOrigin.ADMIN_INVITED,
+        status: ShiftInviteStatus.VOLUNTEER_ACCEPTED,
       });
 
       const newStartsAt = daysAgo(7, 8);
@@ -800,12 +802,14 @@ describe('ShiftService', () => {
         {
           instanceId: syncTarget.id,
           userId: volunteer.id,
-          status: ShiftInviteStatus.ACCEPTED,
+          origin: ShiftInviteOrigin.ADMIN_INVITED,
+          status: ShiftInviteStatus.VOLUNTEER_ACCEPTED,
         },
         {
           instanceId: manualTarget.id,
           userId: volunteer2.id,
-          status: ShiftInviteStatus.ACCEPTED,
+          origin: ShiftInviteOrigin.ADMIN_INVITED,
+          status: ShiftInviteStatus.VOLUNTEER_ACCEPTED,
         },
       ]);
       await db
@@ -1002,7 +1006,7 @@ describe('ShiftService', () => {
       expect(result.isCancelled).toBe(true);
     });
 
-    it('cancels active invites and leaves rejected invites untouched', async () => {
+    it('does not stamp invite origin or status when cancelling an instance', async () => {
       const { startsAt, endsAt } = futureWindow();
       const shift = await createShift(db, {
         organizationUnitId,
@@ -1021,21 +1025,25 @@ describe('ShiftService', () => {
         {
           instanceId: instances[0].id,
           userId: invitedUser.id,
-          status: ShiftInviteStatus.INVITED,
+          origin: ShiftInviteOrigin.ADMIN_INVITED,
+          status: null,
         },
         {
           instanceId: instances[0].id,
           userId: acceptedUser.id,
-          status: ShiftInviteStatus.ACCEPTED,
+          origin: ShiftInviteOrigin.ADMIN_INVITED,
+          status: ShiftInviteStatus.VOLUNTEER_ACCEPTED,
         },
         {
           instanceId: instances[0].id,
           userId: selfJoinedUser.id,
-          status: ShiftInviteStatus.SELF_JOINED,
+          origin: ShiftInviteOrigin.VOLUNTEER_JOINED,
+          status: null,
         },
         {
           instanceId: instances[0].id,
           userId: rejectedUser.id,
+          origin: ShiftInviteOrigin.ADMIN_INVITED,
           status: ShiftInviteStatus.VOLUNTEER_REJECTED,
         },
       ]);
@@ -1052,14 +1060,26 @@ describe('ShiftService', () => {
         invites.map((invite) => [invite.userId, invite.status]),
       );
 
-      expect(statusByUserId.get(invitedUser.id)).toBe(
-        ShiftInviteStatus.CANCELLED,
+      const originByUserId = new Map(
+        invites.map((invite) => [invite.userId, invite.origin]),
+      );
+
+      expect(originByUserId.get(invitedUser.id)).toBe(
+        ShiftInviteOrigin.ADMIN_INVITED,
+      );
+      expect(statusByUserId.get(invitedUser.id)).toBeNull();
+      expect(originByUserId.get(acceptedUser.id)).toBe(
+        ShiftInviteOrigin.ADMIN_INVITED,
       );
       expect(statusByUserId.get(acceptedUser.id)).toBe(
-        ShiftInviteStatus.CANCELLED,
+        ShiftInviteStatus.VOLUNTEER_ACCEPTED,
       );
-      expect(statusByUserId.get(selfJoinedUser.id)).toBe(
-        ShiftInviteStatus.CANCELLED,
+      expect(originByUserId.get(selfJoinedUser.id)).toBe(
+        ShiftInviteOrigin.VOLUNTEER_JOINED,
+      );
+      expect(statusByUserId.get(selfJoinedUser.id)).toBeNull();
+      expect(originByUserId.get(rejectedUser.id)).toBe(
+        ShiftInviteOrigin.ADMIN_INVITED,
       );
       expect(statusByUserId.get(rejectedUser.id)).toBe(
         ShiftInviteStatus.VOLUNTEER_REJECTED,
@@ -1088,12 +1108,14 @@ describe('ShiftService', () => {
         {
           instanceId: targetInstance.id,
           userId: sharedVolunteer.id,
-          status: ShiftInviteStatus.ACCEPTED,
+          origin: ShiftInviteOrigin.ADMIN_INVITED,
+          status: ShiftInviteStatus.VOLUNTEER_ACCEPTED,
         },
         {
           instanceId: siblingInstance.id,
           userId: sharedVolunteer.id,
-          status: ShiftInviteStatus.ACCEPTED,
+          origin: ShiftInviteOrigin.ADMIN_INVITED,
+          status: ShiftInviteStatus.VOLUNTEER_ACCEPTED,
         },
       ]);
 
@@ -1113,7 +1135,9 @@ describe('ShiftService', () => {
         .from(schema.shiftInstanceInvites)
         .where(eq(schema.shiftInstanceInvites.instanceId, siblingInstance.id));
       expect(siblingInvites).toHaveLength(1);
-      expect(siblingInvites[0]?.status).toBe(ShiftInviteStatus.ACCEPTED);
+      expect(siblingInvites[0]?.status).toBe(
+        ShiftInviteStatus.VOLUNTEER_ACCEPTED,
+      );
     });
 
     it('emits a cancellation notification for volunteers with an active invite', async () => {
@@ -1131,7 +1155,8 @@ describe('ShiftService', () => {
       await db.insert(schema.shiftInstanceInvites).values({
         instanceId: instances[0].id,
         userId: invitedUser.id,
-        status: ShiftInviteStatus.INVITED,
+        origin: ShiftInviteOrigin.ADMIN_INVITED,
+        status: null,
       });
 
       (
@@ -1344,7 +1369,7 @@ describe('ShiftService', () => {
         expect(instances.every((instance) => !instance.isCancelled)).toBe(true);
       });
 
-      it('cancels active invites across the batch and dedupes recipients invited to multiple instances', async () => {
+      it('does not stamp invites when cancelling a series and dedupes notification recipients', async () => {
         const { startsAt, endsAt } = futureWindow();
         const shift = await createShift(db, {
           organizationUnitId,
@@ -1365,17 +1390,20 @@ describe('ShiftService', () => {
           {
             instanceId: anchor.id,
             userId: bothVolunteer.id,
-            status: ShiftInviteStatus.ACCEPTED,
+            origin: ShiftInviteOrigin.ADMIN_INVITED,
+            status: ShiftInviteStatus.VOLUNTEER_ACCEPTED,
           },
           {
             instanceId: sibling.id,
             userId: bothVolunteer.id,
-            status: ShiftInviteStatus.INVITED,
+            origin: ShiftInviteOrigin.ADMIN_INVITED,
+            status: null,
           },
           {
             instanceId: anchor.id,
             userId: anchorOnlyVolunteer.id,
-            status: ShiftInviteStatus.INVITED,
+            origin: ShiftInviteOrigin.ADMIN_INVITED,
+            status: null,
           },
         ]);
 
@@ -1403,11 +1431,36 @@ describe('ShiftService', () => {
               sibling.id,
             ]),
           );
+        expect(invites).toHaveLength(3);
         expect(
-          invites.every(
-            (invite) => invite.status === ShiftInviteStatus.CANCELLED,
-          ),
-        ).toBe(true);
+          invites.map((invite) => ({
+            instanceId: invite.instanceId,
+            userId: invite.userId,
+            origin: invite.origin,
+            status: invite.status,
+          })),
+        ).toEqual(
+          expect.arrayContaining([
+            {
+              instanceId: anchor.id,
+              userId: bothVolunteer.id,
+              origin: ShiftInviteOrigin.ADMIN_INVITED,
+              status: ShiftInviteStatus.VOLUNTEER_ACCEPTED,
+            },
+            {
+              instanceId: sibling.id,
+              userId: bothVolunteer.id,
+              origin: ShiftInviteOrigin.ADMIN_INVITED,
+              status: null,
+            },
+            {
+              instanceId: anchor.id,
+              userId: anchorOnlyVolunteer.id,
+              origin: ShiftInviteOrigin.ADMIN_INVITED,
+              status: null,
+            },
+          ]),
+        );
 
         await new Promise((resolve) => setTimeout(resolve, 50));
 

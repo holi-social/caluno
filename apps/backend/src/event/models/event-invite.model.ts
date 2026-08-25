@@ -1,6 +1,10 @@
 import { Field, ID, ObjectType, registerEnumType } from '@nestjs/graphql';
 import { User } from '../../user/models/user.model';
-import { EventInviteStatus } from '../enums';
+import { EventInviteOrigin, EventInviteStatus } from '../enums';
+
+registerEnumType(EventInviteOrigin, {
+  name: 'EventInviteOrigin',
+});
 
 registerEnumType(EventInviteStatus, {
   name: 'EventInviteStatus',
@@ -11,8 +15,11 @@ export class EventInvite {
   @Field(() => ID)
   id!: string;
 
-  @Field(() => EventInviteStatus)
-  status!: EventInviteStatus;
+  @Field(() => EventInviteOrigin, { nullable: true })
+  origin?: EventInviteOrigin | null;
+
+  @Field(() => EventInviteStatus, { nullable: true })
+  status?: EventInviteStatus | null;
 
   @Field(() => String)
   userId!: string;

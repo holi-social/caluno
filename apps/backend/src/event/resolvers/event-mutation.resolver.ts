@@ -13,6 +13,7 @@ import { RequirementForm } from '../../requirement-profile/models/requirement-fo
 import { RequirementProfile } from '../../requirement-profile/models/requirement-profile.model';
 import { UserRequirementStatus } from '../../requirement-profile/models/user-requirement-status.model';
 import { RequiredFormService } from '../../requirement-profile/services/required-form.service';
+import { isAdminOnlyInviteTarget } from '../../shared/invite-status';
 import { EventInviteStatus } from '../enums';
 import { EventService } from '../event.service';
 import { CreateEventInput } from '../inputs/create-event.input';
@@ -39,12 +40,10 @@ export class EventMutationResolver {
     targetUserId: string,
     eventId: string,
     organizationUnitId: string,
-    status: EventInviteStatus,
+    status: EventInviteStatus | null,
   ): Promise<void> {
     const isSelf = actorUserId === targetUserId;
-    const isAdminOnlyTarget =
-      status === EventInviteStatus.ADMIN_REJECTED ||
-      status === EventInviteStatus.INVITED;
+    const isAdminOnlyTarget = isAdminOnlyInviteTarget(status);
 
     if (isSelf && !isAdminOnlyTarget) {
       return;
@@ -178,8 +177,8 @@ export class EventMutationResolver {
   async updateEventInviteStatus(
     @Session() session: UserSession,
     @Args('eventId', { type: () => ID }) eventId: string,
-    @Args('status', { type: () => EventInviteStatus })
-    status: EventInviteStatus,
+    @Args('status', { type: () => EventInviteStatus, nullable: true })
+    status: EventInviteStatus | null,
     @Args('userId', { type: () => String, nullable: true })
     userId: string | null | undefined,
     @Context() context: AuthenticatedGraphQLContext,

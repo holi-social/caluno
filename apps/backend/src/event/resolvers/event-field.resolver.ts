@@ -9,6 +9,7 @@ import { MembershipService } from '../../membership/membership.service';
 import { RequiredFormRef } from '../../organization/models/organization-unit-required-form.model';
 import { RequiredFormRefMapper } from '../../requirement-profile/mappers/required-form-ref.mapper';
 import { JoinStatus } from '../../shared/enums/join-status.enum';
+import { isParticipatingInvite } from '../../shared/invite-status';
 import { Shift } from '../../shift/models/shift.model';
 import { UserMapper } from '../../user/mappers/user.mapper';
 import { User } from '../../user/models/user.model';
@@ -95,10 +96,13 @@ export class EventFieldResolver {
     const invite = await loader.inviteByEventIdAndUserId.load(
       `${event.id}:${session.user.id}`,
     );
-    if (invite?.status === EventInviteStatus.ACCEPTED) {
+    if (invite && isParticipatingInvite(invite.origin, invite.status)) {
       return JoinStatus.JOINED;
     }
-    if (invite?.status === EventInviteStatus.ADMIN_REJECTED) {
+    if (
+      invite?.status === EventInviteStatus.ADMIN_REJECTED ||
+      invite?.status === EventInviteStatus.ADMIN_CANCELLED
+    ) {
       return JoinStatus.REJECTED;
     }
 

@@ -9,10 +9,14 @@ import {
   PERMISSIONS,
 } from '../auth/constants';
 import { permissions } from '../auth/schemas/permission.schema';
-import { EventInviteStatus } from '../event/enums';
+import { EventInviteOrigin, EventInviteStatus } from '../event/enums';
 import { MembershipRequestStatus } from '../membership/enums';
 import { FieldType } from '../requirement-profile/enums';
-import { ShiftInviteStatus, ShiftVisibility } from '../shift/enums';
+import {
+  ShiftInviteOrigin,
+  ShiftInviteStatus,
+  ShiftVisibility,
+} from '../shift/enums';
 import { expandShift } from '../shift/utils/rrule-expander';
 import { slugify } from '../utils/slug.util';
 import { relations } from './relations';
@@ -525,7 +529,11 @@ type ShiftFixture = {
    * lifecycle beyond ACCEPTED/INVITED. Only participating statuses
    * (ACCEPTED/SELF_JOINED) count toward capacity.
    */
-  extraInvites?: Array<{ userIds: string[]; status: ShiftInviteStatus }>;
+  extraInvites?: Array<{
+    userIds: string[];
+    origin?: ShiftInviteOrigin | null;
+    status: ShiftInviteStatus | null;
+  }>;
 };
 
 const pickRecentPastInstance = (
@@ -618,7 +626,8 @@ const ensureShiftWithInvites = async (
         shift.inviteUserIds.map((userId) => ({
           instanceId: instance.id,
           userId,
-          status: ShiftInviteStatus.ACCEPTED,
+          origin: ShiftInviteOrigin.ADMIN_INVITED,
+          status: ShiftInviteStatus.VOLUNTEER_ACCEPTED,
         })),
       ),
     );
@@ -630,7 +639,8 @@ const ensureShiftWithInvites = async (
         (shift.pendingInviteUserIds ?? []).map((userId) => ({
           instanceId: instance.id,
           userId,
-          status: ShiftInviteStatus.INVITED,
+          origin: ShiftInviteOrigin.ADMIN_INVITED,
+          status: null,
         })),
       ),
     );
@@ -645,6 +655,7 @@ const ensureShiftWithInvites = async (
         group.userIds.map((userId) => ({
           instanceId: instance.id,
           userId,
+          origin: group.origin ?? null,
           status: group.status,
         })),
       ),
@@ -1439,7 +1450,8 @@ async function seedFixtures() {
     await db.insert(schema.eventInvites).values({
       eventId: showcaseEvent.id,
       userId: demoUser.id,
-      status: EventInviteStatus.ACCEPTED,
+      origin: EventInviteOrigin.ADMIN_INVITED,
+      status: EventInviteStatus.VOLUNTEER_ACCEPTED,
     });
   }
 
@@ -1687,6 +1699,7 @@ async function seedFixtures() {
       extraInvites: [
         {
           userIds: [demoUser.id],
+          origin: ShiftInviteOrigin.ADMIN_INVITED,
           status: ShiftInviteStatus.VOLUNTEER_REJECTED,
         },
       ],
@@ -1713,7 +1726,11 @@ async function seedFixtures() {
       location: 'Exhibition Hall B',
       inviteUserIds: [],
       extraInvites: [
-        { userIds: [demoUser.id], status: ShiftInviteStatus.CANCELLED },
+        {
+          userIds: [demoUser.id],
+          origin: null,
+          status: ShiftInviteStatus.VOLUNTEER_CANCELLED,
+        },
       ],
     },
   );
@@ -1738,7 +1755,11 @@ async function seedFixtures() {
       location: 'Community Garden',
       inviteUserIds: [],
       extraInvites: [
-        { userIds: [demoUser.id], status: ShiftInviteStatus.SELF_JOINED },
+        {
+          userIds: [demoUser.id],
+          origin: ShiftInviteOrigin.VOLUNTEER_JOINED,
+          status: null,
+        },
       ],
     },
   );
@@ -1864,8 +1885,8 @@ async function seedFixtures() {
       `Demo invites (${DEMO_USER_EMAIL}): 12 pending (9 one-time + Weekly Meal Prep x3) → home Invitations section (10 preview) + /invitations`,
       `  accepted → /shifts/${acceptedInvite.shiftId} (Accepted badge + Cancel)`,
       `  declined → /shifts/${declinedInvite.shiftId} (VOLUNTEER_REJECTED)`,
-      `  cancelled → /shifts/${cancelledInvite.shiftId} (CANCELLED, post-withdrawal)`,
-      `  self-joined → /shifts/${selfJoinedShift.shiftId} (SELF_JOINED, no Cancel)`,
+      `  cancelled → /shifts/${cancelledInvite.shiftId} (VOLUNTEER_CANCELLED, post-withdrawal)`,
+      `  self-joined → /shifts/${selfJoinedShift.shiftId} (VOLUNTEER_JOINED, no Cancel)`,
     ].join('\n'),
   );
 

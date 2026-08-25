@@ -292,18 +292,25 @@ type Event {
 type EventInvite {
   createdAt: DateTime!
   id: ID!
-  status: EventInviteStatus!
+  origin: EventInviteOrigin
+  status: EventInviteStatus
   updatedAt: DateTime!
   user: User!
   userId: String!
 }
 
+enum EventInviteOrigin {
+  ADMIN_INVITED
+  VOLUNTEER_APPLIED
+  VOLUNTEER_JOINED
+}
+
 enum EventInviteStatus {
-  ACCEPTED
+  ADMIN_ACCEPTED
+  ADMIN_CANCELLED
   ADMIN_REJECTED
-  CANCELLED
-  INVITED
-  SELF_JOINED
+  VOLUNTEER_ACCEPTED
+  VOLUNTEER_CANCELLED
   VOLUNTEER_REJECTED
 }
 
@@ -629,7 +636,7 @@ type Mutation {
   submitRequiredForm(formId: String!, input: SubmitFormInput!, targetId: String!, targetType: RequiredFormTargetType!): FormSubmission!
   updateDocumentTemplate(id: ID!, input: UpdateDocumentTemplateInput!): DocumentTemplate!
   updateEvent(id: ID!, input: UpdateEventInput!): Event!
-  updateEventInviteStatus(eventId: ID!, status: EventInviteStatus!, userId: String): EventInvite!
+  updateEventInviteStatus(eventId: ID!, status: EventInviteStatus, userId: String): EventInvite!
   updateFormBlock(id: String!, input: UpdateFormBlockInput!): FormBlock!
   updateFormBlockField(fieldId: String!, input: UpdateFormBlockFieldInput!): FormBlock!
   updateMembersForShiftInstance(instanceId: String!, inviteToAllInstances: Boolean, memberIds: [String!]!): ShiftInstance!
@@ -646,8 +653,8 @@ type Mutation {
   updateRole(id: ID!, input: CreateRoleInput!): Role!
   updateShift(id: String!, input: UpdateShiftInput!): Shift!
   updateShiftInstance(applyToAllFuture: Boolean, input: UpdateShiftInstanceInput!, instanceId: String!): ShiftInstance!
-  updateShiftInstanceInviteStatus(instanceId: String!, status: ShiftInviteStatus!, userId: String): ShiftInstanceInvite!
-  updateShiftInviteStatus(shiftId: String!, status: ShiftInviteStatus!): ShiftInvite!
+  updateShiftInstanceInviteStatus(instanceId: String!, status: ShiftInviteStatus, userId: String): ShiftInstanceInvite!
+  updateShiftInviteStatus(shiftId: String!, status: ShiftInviteStatus): ShiftInvite!
   updateTimeEntry(id: ID!, input: UpdateTimeEntryInput!): TimeEntry!
 }
 
@@ -804,7 +811,7 @@ type Query {
   memberships: [Membership!]!
   myAdminstableOrganizationUnits: [OrganizationUnit!]!
   myContracts(filter: ContractFilterInput): [Contract!]!
-  myEvents(endsBefore: DateTime = null, includePast: Boolean! = false, limit: Int! = 15, offset: Int! = 0, order: SortOrder! = ASC, startsAfter: DateTime = null, statuses: [EventInviteStatus!]): EventPaginatedResponse!
+  myEvents(endsBefore: DateTime = null, includePast: Boolean! = false, limit: Int! = 15, offset: Int! = 0, order: SortOrder! = ASC, startsAfter: DateTime = null, statuses: [EventInviteStatus!], waiting: Boolean): EventPaginatedResponse!
   myFormSubmission(id: ID!): FormSubmission
   myFormSubmissionByToken(token: String!): FormSubmission
   myFormSubmissions(organizationUnitId: ID!): [FormSubmission!]!
@@ -815,7 +822,7 @@ type Query {
   myMemberships: [Membership!]!
   myOrganizationUnits: [OrganizationUnit!]!
   myRequiredOrgUnitForms(organizationUnitId: ID!): [RequirementForm!]!
-  myShiftInstances(endsBefore: DateTime = null, includeIntended: Boolean = false, includePast: Boolean! = false, limit: Int! = 15, offset: Int! = 0, order: SortOrder! = ASC, startsAfter: DateTime = null, statuses: [ShiftInviteStatus!]): ShiftInstancePaginatedResponse!
+  myShiftInstances(endsBefore: DateTime = null, includeIntended: Boolean = false, includePast: Boolean! = false, limit: Int! = 15, offset: Int! = 0, order: SortOrder! = ASC, startsAfter: DateTime = null, statuses: [ShiftInviteStatus!], waiting: Boolean): ShiftInstancePaginatedResponse!
   myTime(limit: Int! = 10, offset: Int! = 0): TimeEntryPaginatedResponse!
   myUserProfile: UserProfile
   organization(id: String!): Organization
@@ -1146,6 +1153,7 @@ type ShiftInstance {
   isIntendingToJoin: Boolean!
   master: Shift!
   masterId: ID!
+  myInviteOrigin: ShiftInviteOrigin
   myInviteStatus: ShiftInviteStatus
   myInvitedAt: DateTime
   occurrenceIndex: Int!
@@ -1163,7 +1171,8 @@ type ShiftInstance {
 type ShiftInstanceInvite {
   createdAt: DateTime!
   id: ID!
-  status: ShiftInviteStatus!
+  origin: ShiftInviteOrigin
+  status: ShiftInviteStatus
   updatedAt: DateTime!
   user: User!
   userId: String!
@@ -1182,17 +1191,24 @@ type ShiftInstancesByMaster {
 type ShiftInvite {
   createdAt: DateTime!
   id: ID!
-  status: ShiftInviteStatus!
+  origin: ShiftInviteOrigin
+  status: ShiftInviteStatus
   updatedAt: DateTime!
   userId: String!
 }
 
+enum ShiftInviteOrigin {
+  ADMIN_INVITED
+  VOLUNTEER_APPLIED
+  VOLUNTEER_JOINED
+}
+
 enum ShiftInviteStatus {
-  ACCEPTED
+  ADMIN_ACCEPTED
+  ADMIN_CANCELLED
   ADMIN_REJECTED
-  CANCELLED
-  INVITED
-  SELF_JOINED
+  VOLUNTEER_ACCEPTED
+  VOLUNTEER_CANCELLED
   VOLUNTEER_REJECTED
 }
 

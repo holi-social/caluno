@@ -13,6 +13,7 @@ import { RequirementForm } from '../../requirement-profile/models/requirement-fo
 import { RequirementProfile } from '../../requirement-profile/models/requirement-profile.model';
 import { UserRequirementStatus } from '../../requirement-profile/models/user-requirement-status.model';
 import { RequiredFormService } from '../../requirement-profile/services/required-form.service';
+import { isAdminOnlyInviteTarget } from '../../shared/invite-status';
 import { ShiftInviteStatus } from '../enums';
 import { CreateShiftInput } from '../inputs/create-shift.input';
 import { UpdateShiftInput } from '../inputs/update-shift.input';
@@ -46,12 +47,10 @@ export class ShiftMutationResolver {
     targetUserId: string,
     instanceId: string,
     organizationUnitId: string,
-    status: ShiftInviteStatus,
+    status: ShiftInviteStatus | null,
   ): Promise<void> {
     const isSelf = actorUserId === targetUserId;
-    const isAdminOnlyTarget =
-      status === ShiftInviteStatus.ADMIN_REJECTED ||
-      status === ShiftInviteStatus.INVITED;
+    const isAdminOnlyTarget = isAdminOnlyInviteTarget(status);
 
     if (isSelf && !isAdminOnlyTarget) {
       return;
@@ -251,13 +250,11 @@ export class ShiftMutationResolver {
   async updateShiftInviteStatus(
     @Session() session: UserSession,
     @Args('shiftId', { type: () => String }) shiftId: string,
-    @Args('status', { type: () => ShiftInviteStatus })
-    status: ShiftInviteStatus,
+    @Args('status', { type: () => ShiftInviteStatus, nullable: true })
+    status: ShiftInviteStatus | null,
     @Context() context: AuthenticatedGraphQLContext,
   ): Promise<ShiftInvite> {
-    const isAdminOnlyTarget =
-      status === ShiftInviteStatus.ADMIN_REJECTED ||
-      status === ShiftInviteStatus.INVITED;
+    const isAdminOnlyTarget = isAdminOnlyInviteTarget(status);
 
     if (isAdminOnlyTarget) {
       const hasPermission = await this.authService.hasRequiredPermissions(
@@ -285,8 +282,8 @@ export class ShiftMutationResolver {
   async updateShiftInstanceInviteStatus(
     @Session() session: UserSession,
     @Args('instanceId', { type: () => String }) instanceId: string,
-    @Args('status', { type: () => ShiftInviteStatus })
-    status: ShiftInviteStatus,
+    @Args('status', { type: () => ShiftInviteStatus, nullable: true })
+    status: ShiftInviteStatus | null,
     @Args('userId', { type: () => String, nullable: true })
     userId: string | null | undefined,
     @Context() context: AuthenticatedGraphQLContext,

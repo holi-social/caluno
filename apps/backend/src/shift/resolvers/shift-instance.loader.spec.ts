@@ -9,11 +9,14 @@ describe('ShiftInstanceLoader', () => {
   describe('myInvitedAtByKey', () => {
     it('returns the createdAt for a matching instance and user', async () => {
       const createdAt = new Date('2026-08-12T10:00:00Z');
-      const findInviteStatusesForUser = jest
-        .fn()
-        .mockResolvedValue([
-          { shiftInstanceId: 'instance-1', status: 'INVITED', createdAt },
-        ]);
+      const findInviteStatusesForUser = jest.fn().mockResolvedValue([
+        {
+          shiftInstanceId: 'instance-1',
+          origin: 'ADMIN_INVITED',
+          status: null,
+          createdAt,
+        },
+      ]);
       const loader = new ShiftInstanceLoader({
         findInviteStatusesForUser,
       } as unknown as ShiftService);
@@ -43,12 +46,14 @@ describe('ShiftInstanceLoader', () => {
       const findInviteStatusesForUser = jest.fn().mockResolvedValue([
         {
           shiftInstanceId: 'instance-1',
-          status: 'INVITED',
+          origin: 'ADMIN_INVITED',
+          status: null,
           createdAt: createdAt1,
         },
         {
           shiftInstanceId: 'instance-2',
-          status: 'INVITED',
+          origin: 'ADMIN_INVITED',
+          status: null,
           createdAt: createdAt2,
         },
       ]);

@@ -14,7 +14,7 @@ import { AuthService } from '../src/auth/auth.service';
 import { type Database, DatabaseModule } from '../src/database/database.module';
 import { DATABASE_CONNECTION } from '../src/database/database-connection';
 import * as schema from '../src/database/schema';
-import { EventInviteStatus } from '../src/event/enums';
+import { EventInviteOrigin } from '../src/event/enums';
 import {
   BadRequestGraphQLError,
   ConflictGraphQLError,
@@ -31,7 +31,7 @@ import { RequirementProfileService } from '../src/requirement-profile/services/r
 import { UserProfileService } from '../src/requirement-profile/services/user-profile.service';
 import { JoinStatus } from '../src/shared/enums/join-status.enum';
 import { PostHogCaptureService } from '../src/shared/observability/posthog.capture.service';
-import { ShiftInviteStatus } from '../src/shift/enums';
+import { ShiftInviteOrigin, ShiftInviteStatus } from '../src/shift/enums';
 import {
   cancelShiftInstance,
   createFormSubmission,
@@ -1040,7 +1040,8 @@ describe('RequiredFormService', () => {
         .values({
           eventId,
           userId,
-          status: EventInviteStatus.INVITED,
+          origin: EventInviteOrigin.ADMIN_INVITED,
+          status: null,
         })
         .returning();
       if (invite) seededEventInviteIds.push(invite.id);
@@ -1074,7 +1075,8 @@ describe('RequiredFormService', () => {
         .values({
           instanceId: shiftInstance.id,
           userId,
-          status: ShiftInviteStatus.INVITED,
+          origin: ShiftInviteOrigin.ADMIN_INVITED,
+          status: null,
         })
         .returning();
       if (shiftInvite) seededShiftInstanceInviteIds.push(shiftInvite.id);
@@ -1205,7 +1207,8 @@ describe('RequiredFormService', () => {
       await db.insert(schema.shiftInstanceInvites).values({
         instanceId: secondInstance.id,
         userId,
-        status: ShiftInviteStatus.INVITED,
+        origin: ShiftInviteOrigin.ADMIN_INVITED,
+        status: null,
       });
 
       const forms = await service.requiredFormsForUser(userId, orgUnitId);
@@ -1222,7 +1225,10 @@ describe('RequiredFormService', () => {
     it('excludes the shift form when the instance invite is not pending', async () => {
       await db
         .update(schema.shiftInstanceInvites)
-        .set({ status: ShiftInviteStatus.ACCEPTED })
+        .set({
+          origin: ShiftInviteOrigin.ADMIN_INVITED,
+          status: ShiftInviteStatus.VOLUNTEER_ACCEPTED,
+        })
         .where(eq(schema.shiftInstanceInvites.instanceId, shiftInstanceId));
       const forms = await service.requiredFormsForUser(userId, orgUnitId);
       expect(forms.find((f) => f.id === shiftFormId)).toBeUndefined();

@@ -11,10 +11,14 @@ import type { INestApplication } from '@nestjs/common';
 import { PERMISSIONS } from '../src/auth/constants';
 import type { Database } from '../src/database/database.module';
 import * as schema from '../src/database/schema';
-import { EventInviteStatus } from '../src/event/enums';
+import { EventInviteOrigin, EventInviteStatus } from '../src/event/enums';
 import { MembershipRequestStatus } from '../src/membership/enums';
 import { JoinStatus } from '../src/shared/enums/join-status.enum';
-import { ShiftInviteStatus, ShiftVisibility } from '../src/shift/enums';
+import {
+  ShiftInviteOrigin,
+  ShiftInviteStatus,
+  ShiftVisibility,
+} from '../src/shift/enums';
 import {
   createEvent,
   createMembershipRequest,
@@ -134,7 +138,8 @@ describe('publicEvent', () => {
     await db.insert(schema.shiftInstanceInvites).values({
       instanceId: instance.id,
       userId: user.id,
-      status: ShiftInviteStatus.ACCEPTED,
+      origin: ShiftInviteOrigin.ADMIN_INVITED,
+      status: ShiftInviteStatus.VOLUNTEER_ACCEPTED,
     });
 
     const data = await graphqlRequestRequiringData<{
@@ -422,6 +427,7 @@ describe('publicEvent', () => {
     await db.insert(schema.eventInvites).values({
       eventId: event.id,
       userId: user.id,
+      origin: null,
       status: EventInviteStatus.ADMIN_REJECTED,
     });
 
@@ -609,18 +615,20 @@ describe('myEvents', () => {
       {
         eventId: invitedEvent.id,
         userId: user.id,
-        status: EventInviteStatus.INVITED,
+        origin: EventInviteOrigin.ADMIN_INVITED,
+        status: null,
       },
       {
         eventId: acceptedEvent.id,
         userId: user.id,
-        status: EventInviteStatus.ACCEPTED,
+        origin: EventInviteOrigin.ADMIN_INVITED,
+        status: EventInviteStatus.VOLUNTEER_ACCEPTED,
       },
     ]);
 
     const query = `
-      query MyEvents($includePast: Boolean!, $statuses: [EventInviteStatus!]) {
-        myEvents(includePast: $includePast, statuses: $statuses) {
+      query MyEvents($includePast: Boolean!, $waiting: Boolean) {
+        myEvents(includePast: $includePast, waiting: $waiting) {
           items { id }
         }
       }
@@ -632,7 +640,7 @@ describe('myEvents', () => {
       app,
       {
         query,
-        variables: { includePast: true, statuses: ['INVITED'] },
+        variables: { includePast: true, waiting: true },
       },
       'myEvents',
     );
@@ -672,18 +680,20 @@ describe('myEvents', () => {
       {
         eventId: eventForA.id,
         userId: userA.id,
-        status: EventInviteStatus.INVITED,
+        origin: EventInviteOrigin.ADMIN_INVITED,
+        status: null,
       },
       {
         eventId: eventForB.id,
         userId: userB.id,
-        status: EventInviteStatus.INVITED,
+        origin: EventInviteOrigin.ADMIN_INVITED,
+        status: null,
       },
     ]);
 
     const query = `
-      query MyEvents($includePast: Boolean!, $statuses: [EventInviteStatus!]) {
-        myEvents(includePast: $includePast, statuses: $statuses) {
+      query MyEvents($includePast: Boolean!, $waiting: Boolean) {
+        myEvents(includePast: $includePast, waiting: $waiting) {
           items { id }
         }
       }
@@ -694,7 +704,7 @@ describe('myEvents', () => {
       myEvents: { items: Array<{ id: string }> };
     }>(
       app,
-      { query, variables: { includePast: true, statuses: ['INVITED'] } },
+      { query, variables: { includePast: true, waiting: true } },
       'myEvents',
     );
     const idsForA = asUserA.myEvents.items.map((item) => item.id);
@@ -706,7 +716,7 @@ describe('myEvents', () => {
       myEvents: { items: Array<{ id: string }> };
     }>(
       app,
-      { query, variables: { includePast: true, statuses: ['INVITED'] } },
+      { query, variables: { includePast: true, waiting: true } },
       'myEvents',
     );
     const idsForB = asUserB.myEvents.items.map((item) => item.id);
@@ -838,12 +848,14 @@ describe('availableEvents', () => {
       {
         eventId: acceptedEvent.id,
         userId: testUserId,
-        status: EventInviteStatus.ACCEPTED,
+        origin: EventInviteOrigin.ADMIN_INVITED,
+        status: EventInviteStatus.VOLUNTEER_ACCEPTED,
       },
       {
         eventId: invitedEvent.id,
         userId: testUserId,
-        status: EventInviteStatus.INVITED,
+        origin: EventInviteOrigin.ADMIN_INVITED,
+        status: null,
       },
     ]);
 
@@ -1029,7 +1041,8 @@ describe('eventInvites', () => {
     await db.insert(schema.eventInvites).values({
       eventId: event.id,
       userId: invitedUser.id,
-      status: EventInviteStatus.INVITED,
+      origin: EventInviteOrigin.ADMIN_INVITED,
+      status: null,
     });
 
     const { organization: otherOrganization, type: otherType } =
@@ -1087,7 +1100,8 @@ describe('eventInvites', () => {
       .values({
         eventId: event.id,
         userId: invitedUser.id,
-        status: EventInviteStatus.INVITED,
+        origin: EventInviteOrigin.ADMIN_INVITED,
+        status: null,
       })
       .returning();
 
@@ -1154,20 +1168,30 @@ describe('events (admin list)', () => {
 
   it('counts only active invites toward signedUpCount', async () => {
     const event = await createEvent(db, { organizationUnitId });
-    const statuses = [
-      EventInviteStatus.INVITED,
-      EventInviteStatus.ACCEPTED,
-      EventInviteStatus.SELF_JOINED,
-      EventInviteStatus.VOLUNTEER_REJECTED,
-      EventInviteStatus.ADMIN_REJECTED,
-      EventInviteStatus.CANCELLED,
+    const statuses: Array<{
+      origin: EventInviteOrigin | null;
+      status: EventInviteStatus | null;
+    }> = [
+      { origin: EventInviteOrigin.ADMIN_INVITED, status: null },
+      {
+        origin: EventInviteOrigin.ADMIN_INVITED,
+        status: EventInviteStatus.VOLUNTEER_ACCEPTED,
+      },
+      { origin: EventInviteOrigin.VOLUNTEER_JOINED, status: null },
+      {
+        origin: EventInviteOrigin.ADMIN_INVITED,
+        status: EventInviteStatus.VOLUNTEER_REJECTED,
+      },
+      { origin: null, status: EventInviteStatus.ADMIN_REJECTED },
+      { origin: null, status: EventInviteStatus.VOLUNTEER_CANCELLED },
     ];
-    for (const status of statuses) {
+    for (const invite of statuses) {
       const user = await createUser(db);
       await db.insert(schema.eventInvites).values({
         eventId: event.id,
         userId: user.id,
-        status,
+        origin: invite.origin,
+        status: invite.status,
       });
     }
 
@@ -1227,7 +1251,7 @@ describe('updateEventInviteStatus (admin uninvite)', () => {
     mutation UpdateEventInviteStatus(
       $eventId: ID!
       $userId: String!
-      $status: EventInviteStatus!
+      $status: EventInviteStatus
     ) {
       updateEventInviteStatus(
         eventId: $eventId
@@ -1240,13 +1264,14 @@ describe('updateEventInviteStatus (admin uninvite)', () => {
     }
   `;
 
-  it('sets ACCEPTED to ADMIN_REJECTED for admin', async () => {
+  it('sets participating invite to ADMIN_CANCELLED for admin', async () => {
     const event = await createEvent(db, { organizationUnitId });
     const volunteer = await createUser(db);
     await db.insert(schema.eventInvites).values({
       eventId: event.id,
       userId: volunteer.id,
-      status: EventInviteStatus.ACCEPTED,
+      origin: EventInviteOrigin.ADMIN_INVITED,
+      status: EventInviteStatus.VOLUNTEER_ACCEPTED,
     });
 
     const data = await graphqlRequestRequiringData<{
@@ -1258,7 +1283,7 @@ describe('updateEventInviteStatus (admin uninvite)', () => {
         variables: {
           eventId: event.id,
           userId: volunteer.id,
-          status: EventInviteStatus.ADMIN_REJECTED,
+          status: EventInviteStatus.ADMIN_CANCELLED,
         },
         headers: { 'x-organization-unit-id': organizationUnitId },
       },
@@ -1266,14 +1291,14 @@ describe('updateEventInviteStatus (admin uninvite)', () => {
     );
 
     expect(data.updateEventInviteStatus.status).toBe(
-      EventInviteStatus.ADMIN_REJECTED,
+      EventInviteStatus.ADMIN_CANCELLED,
     );
     expect(data.updateEventInviteStatus.userId).toBe(volunteer.id);
 
     const row = await db.query.eventInvites.findFirst({
       where: { eventId: event.id, userId: volunteer.id },
     });
-    expect(row?.status).toBe(EventInviteStatus.ADMIN_REJECTED);
+    expect(row?.status).toBe(EventInviteStatus.ADMIN_CANCELLED);
   });
 
   it('cascades ADMIN_REJECTED to event-linked shift invites', async () => {
@@ -1295,17 +1320,20 @@ describe('updateEventInviteStatus (admin uninvite)', () => {
     await db.insert(schema.eventInvites).values({
       eventId: event.id,
       userId: volunteer.id,
-      status: EventInviteStatus.INVITED,
+      origin: EventInviteOrigin.ADMIN_INVITED,
+      status: null,
     });
     await db.insert(schema.shiftInvites).values({
       shiftId,
       userId: volunteer.id,
-      status: ShiftInviteStatus.INVITED,
+      origin: ShiftInviteOrigin.ADMIN_INVITED,
+      status: null,
     });
     await db.insert(schema.shiftInstanceInvites).values({
       instanceId,
       userId: volunteer.id,
-      status: ShiftInviteStatus.ACCEPTED,
+      origin: ShiftInviteOrigin.ADMIN_INVITED,
+      status: ShiftInviteStatus.VOLUNTEER_ACCEPTED,
     });
 
     await graphqlRequestRequiringData(
@@ -1315,6 +1343,7 @@ describe('updateEventInviteStatus (admin uninvite)', () => {
         variables: {
           eventId: event.id,
           userId: volunteer.id,
+          origin: null,
           status: EventInviteStatus.ADMIN_REJECTED,
         },
         headers: { 'x-organization-unit-id': organizationUnitId },
@@ -1334,7 +1363,7 @@ describe('updateEventInviteStatus (admin uninvite)', () => {
 
     expect(eventInvite?.status).toBe(EventInviteStatus.ADMIN_REJECTED);
     expect(shiftInvite?.status).toBe(ShiftInviteStatus.ADMIN_REJECTED);
-    expect(instanceInvite?.status).toBe(ShiftInviteStatus.ADMIN_REJECTED);
+    expect(instanceInvite?.status).toBe(ShiftInviteStatus.ADMIN_CANCELLED);
   });
 
   it('sets ADMIN_REJECTED to INVITED for admin re-invite', async () => {
@@ -1343,6 +1372,7 @@ describe('updateEventInviteStatus (admin uninvite)', () => {
     await db.insert(schema.eventInvites).values({
       eventId: event.id,
       userId: volunteer.id,
+      origin: null,
       status: EventInviteStatus.ADMIN_REJECTED,
     });
 
@@ -1355,20 +1385,21 @@ describe('updateEventInviteStatus (admin uninvite)', () => {
         variables: {
           eventId: event.id,
           userId: volunteer.id,
-          status: EventInviteStatus.INVITED,
+          origin: EventInviteOrigin.ADMIN_INVITED,
+          status: null,
         },
         headers: { 'x-organization-unit-id': organizationUnitId },
       },
       'updateEventInviteStatus',
     );
 
-    expect(data.updateEventInviteStatus.status).toBe(EventInviteStatus.INVITED);
+    expect(data.updateEventInviteStatus.status).toBe(null /* re-invite */);
     expect(data.updateEventInviteStatus.userId).toBe(volunteer.id);
 
     const row = await db.query.eventInvites.findFirst({
       where: { eventId: event.id, userId: volunteer.id },
     });
-    expect(row?.status).toBe(EventInviteStatus.INVITED);
+    expect(row?.status).toBe(null /* re-invite */);
   });
 
   it('cascades INVITED to event-linked shift invites left ADMIN_REJECTED by a prior uninvite', async () => {
@@ -1390,16 +1421,19 @@ describe('updateEventInviteStatus (admin uninvite)', () => {
     await db.insert(schema.eventInvites).values({
       eventId: event.id,
       userId: volunteer.id,
+      origin: null,
       status: EventInviteStatus.ADMIN_REJECTED,
     });
     await db.insert(schema.shiftInvites).values({
       shiftId,
       userId: volunteer.id,
+      origin: null,
       status: ShiftInviteStatus.ADMIN_REJECTED,
     });
     await db.insert(schema.shiftInstanceInvites).values({
       instanceId,
       userId: volunteer.id,
+      origin: null,
       status: ShiftInviteStatus.ADMIN_REJECTED,
     });
 
@@ -1410,7 +1444,8 @@ describe('updateEventInviteStatus (admin uninvite)', () => {
         variables: {
           eventId: event.id,
           userId: volunteer.id,
-          status: EventInviteStatus.INVITED,
+          origin: EventInviteOrigin.ADMIN_INVITED,
+          status: null,
         },
         headers: { 'x-organization-unit-id': organizationUnitId },
       },
@@ -1427,9 +1462,9 @@ describe('updateEventInviteStatus (admin uninvite)', () => {
       where: { instanceId, userId: volunteer.id },
     });
 
-    expect(eventInvite?.status).toBe(EventInviteStatus.INVITED);
-    expect(shiftInvite?.status).toBe(ShiftInviteStatus.INVITED);
-    expect(instanceInvite?.status).toBe(ShiftInviteStatus.INVITED);
+    expect(eventInvite?.status).toBe(null /* re-invite */);
+    expect(shiftInvite?.status).toBe(null /* re-invite */);
+    expect(instanceInvite?.status).toBe(null /* re-invite */);
   });
 
   it('does not restore shift invites that were not ADMIN_REJECTED by the event cascade', async () => {
@@ -1443,11 +1478,13 @@ describe('updateEventInviteStatus (admin uninvite)', () => {
     await db.insert(schema.eventInvites).values({
       eventId: event.id,
       userId: volunteer.id,
+      origin: null,
       status: EventInviteStatus.ADMIN_REJECTED,
     });
     await db.insert(schema.shiftInvites).values({
       shiftId,
       userId: volunteer.id,
+      origin: ShiftInviteOrigin.ADMIN_INVITED,
       status: ShiftInviteStatus.VOLUNTEER_REJECTED,
     });
 
@@ -1458,7 +1495,8 @@ describe('updateEventInviteStatus (admin uninvite)', () => {
         variables: {
           eventId: event.id,
           userId: volunteer.id,
-          status: EventInviteStatus.INVITED,
+          origin: EventInviteOrigin.ADMIN_INVITED,
+          status: null,
         },
         headers: { 'x-organization-unit-id': organizationUnitId },
       },
@@ -1477,6 +1515,7 @@ describe('updateEventInviteStatus (admin uninvite)', () => {
     await db.insert(schema.eventInvites).values({
       eventId: event.id,
       userId: volunteer.id,
+      origin: null,
       status: EventInviteStatus.ADMIN_REJECTED,
     });
 
@@ -1504,7 +1543,7 @@ describe('updateEventInviteStatus (admin uninvite)', () => {
     const row = await db.query.eventInvites.findFirst({
       where: { eventId: event.id, userId: volunteer.id },
     });
-    expect(row?.status).toBe(EventInviteStatus.INVITED);
+    expect(row?.status).toBe(null /* re-invite */);
   });
 
   it('does not re-invite ADMIN_REJECTED omitted from inviteMembersToEvent memberIds', async () => {
@@ -1514,6 +1553,7 @@ describe('updateEventInviteStatus (admin uninvite)', () => {
     await db.insert(schema.eventInvites).values({
       eventId: event.id,
       userId: rejected.id,
+      origin: null,
       status: EventInviteStatus.ADMIN_REJECTED,
     });
 
@@ -1545,7 +1585,7 @@ describe('updateEventInviteStatus (admin uninvite)', () => {
       where: { eventId: event.id, userId: fresh.id },
     });
     expect(rejectedRow?.status).toBe(EventInviteStatus.ADMIN_REJECTED);
-    expect(freshRow?.status).toBe(EventInviteStatus.INVITED);
+    expect(freshRow?.status).toBe(null /* re-invite */);
   });
 
   it('lists ADMIN_REJECTED invites for admin re-invite', async () => {
@@ -1554,6 +1594,7 @@ describe('updateEventInviteStatus (admin uninvite)', () => {
     await db.insert(schema.eventInvites).values({
       eventId: event.id,
       userId: volunteer.id,
+      origin: null,
       status: EventInviteStatus.ADMIN_REJECTED,
     });
 
@@ -1602,12 +1643,14 @@ describe('updateEventInviteStatus (admin uninvite)', () => {
     await db.insert(schema.eventInvites).values({
       eventId: event.id,
       userId: volunteer.id,
-      status: EventInviteStatus.INVITED,
+      origin: EventInviteOrigin.ADMIN_INVITED,
+      status: null,
     });
     await db.insert(schema.shiftInstanceInvites).values({
       instanceId: otherInstanceId,
       userId: volunteer.id,
-      status: ShiftInviteStatus.ACCEPTED,
+      origin: ShiftInviteOrigin.ADMIN_INVITED,
+      status: ShiftInviteStatus.VOLUNTEER_ACCEPTED,
     });
 
     await graphqlRequestRequiringData(
@@ -1617,6 +1660,7 @@ describe('updateEventInviteStatus (admin uninvite)', () => {
         variables: {
           eventId: event.id,
           userId: volunteer.id,
+          origin: null,
           status: EventInviteStatus.ADMIN_REJECTED,
         },
         headers: { 'x-organization-unit-id': organizationUnitId },
@@ -1627,7 +1671,9 @@ describe('updateEventInviteStatus (admin uninvite)', () => {
     const otherInstanceInvite = await db.query.shiftInstanceInvites.findFirst({
       where: { instanceId: otherInstanceId, userId: volunteer.id },
     });
-    expect(otherInstanceInvite?.status).toBe(ShiftInviteStatus.ACCEPTED);
+    expect(otherInstanceInvite?.status).toBe(
+      ShiftInviteStatus.VOLUNTEER_ACCEPTED,
+    );
   });
 
   it('forbids volunteer from self-setting ADMIN_REJECTED', async () => {
@@ -1637,7 +1683,8 @@ describe('updateEventInviteStatus (admin uninvite)', () => {
     await db.insert(schema.eventInvites).values({
       eventId: event.id,
       userId: volunteer.id,
-      status: EventInviteStatus.ACCEPTED,
+      origin: EventInviteOrigin.ADMIN_INVITED,
+      status: EventInviteStatus.VOLUNTEER_ACCEPTED,
     });
 
     setAuthMockUserId(volunteer.id);
@@ -1649,6 +1696,7 @@ describe('updateEventInviteStatus (admin uninvite)', () => {
         variables: {
           eventId: event.id,
           userId: volunteer.id,
+          origin: null,
           status: EventInviteStatus.ADMIN_REJECTED,
         },
         headers: { 'x-organization-unit-id': organizationUnitId },
@@ -1659,7 +1707,7 @@ describe('updateEventInviteStatus (admin uninvite)', () => {
       const row = await db.query.eventInvites.findFirst({
         where: { eventId: event.id, userId: volunteer.id },
       });
-      expect(row?.status).toBe(EventInviteStatus.ACCEPTED);
+      expect(row?.status).toBe(EventInviteStatus.VOLUNTEER_ACCEPTED);
     } finally {
       setAuthMockUserId(originalUserId);
     }
@@ -1671,7 +1719,8 @@ describe('updateEventInviteStatus (admin uninvite)', () => {
     await db.insert(schema.eventInvites).values({
       eventId: event.id,
       userId: volunteer.id,
-      status: EventInviteStatus.ACCEPTED,
+      origin: EventInviteOrigin.ADMIN_INVITED,
+      status: EventInviteStatus.VOLUNTEER_ACCEPTED,
     });
 
     const actor = await createUser(db);
@@ -1702,6 +1751,7 @@ describe('updateEventInviteStatus (admin uninvite)', () => {
         variables: {
           eventId: event.id,
           userId: volunteer.id,
+          origin: null,
           status: EventInviteStatus.ADMIN_REJECTED,
         },
         headers: { 'x-organization-unit-id': organizationUnitId },
@@ -1712,7 +1762,7 @@ describe('updateEventInviteStatus (admin uninvite)', () => {
       const row = await db.query.eventInvites.findFirst({
         where: { eventId: event.id, userId: volunteer.id },
       });
-      expect(row?.status).toBe(EventInviteStatus.ACCEPTED);
+      expect(row?.status).toBe(EventInviteStatus.VOLUNTEER_ACCEPTED);
     } finally {
       setAuthMockUserId(originalUserId);
     }
@@ -1726,6 +1776,7 @@ describe('updateEventInviteStatus (admin uninvite)', () => {
     await db.insert(schema.eventInvites).values({
       eventId: event.id,
       userId: volunteer.id,
+      origin: null,
       status: EventInviteStatus.ADMIN_REJECTED,
     });
 

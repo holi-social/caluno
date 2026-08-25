@@ -7,12 +7,14 @@ import type {
   RequirementFormEntity,
 } from '../../database/schema';
 import * as schema from '../../database/schema';
-import { EventInviteStatus } from '../../event/enums';
 import {
   ConflictGraphQLError,
   NotFoundGraphQLError,
 } from '../../graphql/errors';
-import { ShiftInviteStatus } from '../../shift/enums';
+import {
+  OUTSTANDING_INVITE_WHERE,
+  outstandingInviteSql,
+} from '../../shared/invite-status';
 import { FormSubmissionStatus, RequiredFormTargetType } from '../enums';
 
 export type RequiredFormTarget = {
@@ -148,7 +150,7 @@ export class RequiredFormService {
       where: {
         userId,
         event: { organizationUnitId },
-        status: EventInviteStatus.INVITED,
+        ...OUTSTANDING_INVITE_WHERE,
       },
     });
 
@@ -170,7 +172,10 @@ export class RequiredFormService {
       .where(
         and(
           eq(schema.shiftInstanceInvites.userId, userId),
-          eq(schema.shiftInstanceInvites.status, ShiftInviteStatus.INVITED),
+          outstandingInviteSql(
+            schema.shiftInstanceInvites.origin,
+            schema.shiftInstanceInvites.status,
+          ),
           eq(schema.shiftInstances.isCancelled, false),
           eq(schema.shifts.organizationUnitId, organizationUnitId),
           eq(schema.shifts.isDeleted, false),

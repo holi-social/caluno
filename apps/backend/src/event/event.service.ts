@@ -24,17 +24,22 @@ import {
 } from '../requirement-profile/services/required-form.service';
 import { JoinStatus } from '../shared/enums/join-status.enum';
 import {
-  ACTIVE_EVENT_INVITE_STATUSES,
-  ADMIN_LIST_EVENT_INVITE_STATUSES,
-  canTransitionInviteStatus,
-  PARTICIPATING_EVENT_INVITE_STATUSES,
+  ACTIVE_INVITE_WHERE,
+  ADMIN_LIST_INVITE_WHERE,
+  activeInviteSql,
+  canTransitionInvite,
+  isAdminEndedInvite,
+  isParticipatingInvite,
+  myInviteFilterWhere,
+  PARTICIPATING_INVITE_WHERE,
+  reinviteTarget,
 } from '../shared/invite-status';
 import { SortOrder } from '../shift/enums';
 import { ShiftService } from '../shift/shift.service';
 import { FilePurpose } from '../storage/enums';
 import { FileService } from '../storage/services/file.service';
 import { slugify } from '../utils/slug.util';
-import { EventInviteStatus } from './enums';
+import { EventInviteOrigin, EventInviteStatus } from './enums';
 import { CreateEventInput } from './inputs/create-event.input';
 import { UpdateEventInput } from './inputs/update-event.input';
 import type { EventEntity } from './schemas/event.schema';
@@ -134,7 +139,7 @@ export class EventService {
   /**
    * Events the session user has an invite for across accessible org units.
    * Same contract as `ShiftService.findMyShiftInstances` — default statuses are
-   * participating; pass `[INVITED]` for the volunteer Invitations list.
+   * participating; pass `waiting: true` for the volunteer Invitations list.
    */
   async findMyEvents(
     userId: string,
@@ -144,7 +149,8 @@ export class EventService {
     limit: number,
     offset: number,
     order: SortOrder,
-    statuses: readonly EventInviteStatus[] = PARTICIPATING_EVENT_INVITE_STATUSES,
+    statuses?: readonly EventInviteStatus[],
+    waiting = false,
   ): Promise<{ events: EventEntity[]; total: number }> {
     const organizationUnitIds =
       await this.getAccessibleOrganizationUnitIds(userId);
@@ -165,7 +171,7 @@ export class EventService {
       ...dateCondition,
       invites: {
         userId,
-        status: { in: [...statuses] },
+        ...myInviteFilterWhere(statuses, waiting),
       },
     };
 
@@ -245,7 +251,7 @@ export class EventService {
       NOT: {
         invites: {
           userId,
-          status: { in: [...PARTICIPATING_EVENT_INVITE_STATUSES] },
+          ...PARTICIPATING_INVITE_WHERE,
         },
       },
     };
@@ -345,7 +351,8 @@ export class EventService {
             invitedMemberIds.map((memberId) => ({
               eventId: event.id,
               userId: memberId,
-              status: EventInviteStatus.INVITED,
+              origin: EventInviteOrigin.ADMIN_INVITED,
+              status: null,
             })),
           )
           .onConflictDoNothing();
@@ -472,8 +479,8 @@ export class EventService {
       existing.map((row) => [row.userId, row.status]),
     );
     const newMemberIds = memberIds.filter((id) => !existingByUserId.has(id));
-    const reinviteMemberIds = memberIds.filter(
-      (id) => existingByUserId.get(id) === EventInviteStatus.ADMIN_REJECTED,
+    const reinviteMemberIds = memberIds.filter((id) =>
+      isAdminEndedInvite(existingByUserId.get(id)),
     );
 
     if (newMemberIds.length === 0 && reinviteMemberIds.length === 0) {
@@ -487,21 +494,22 @@ export class EventService {
           newMemberIds.map((userId) => ({
             eventId,
             userId,
-            status: EventInviteStatus.INVITED,
+            origin: EventInviteOrigin.ADMIN_INVITED,
+            status: null,
           })),
         )
         .onConflictDoNothing();
     }
 
     if (reinviteMemberIds.length > 0) {
+      const restored = reinviteTarget();
       await this.db
         .update(schema.eventInvites)
-        .set({ status: EventInviteStatus.INVITED })
+        .set({ origin: restored.origin, status: restored.status })
         .where(
           and(
             eq(schema.eventInvites.eventId, eventId),
             inArray(schema.eventInvites.userId, reinviteMemberIds),
-            eq(schema.eventInvites.status, EventInviteStatus.ADMIN_REJECTED),
           ),
         );
     }
@@ -584,24 +592,27 @@ export class EventService {
     });
 
     if (existingInvite) {
+      if (isParticipatingInvite(existingInvite.origin, existingInvite.status)) {
+        return event;
+      }
+
+      const joinOrigin = EventInviteOrigin.VOLUNTEER_JOINED;
       if (
-        !canTransitionInviteStatus(
+        !canTransitionInvite(
+          existingInvite.origin,
           existingInvite.status,
-          EventInviteStatus.ACCEPTED,
+          joinOrigin,
+          null,
         )
       ) {
         throw new BadRequestGraphQLError(
-          `Cannot transition invite status from ${existingInvite.status} to ${EventInviteStatus.ACCEPTED}`,
+          `Cannot transition invite from ${existingInvite.origin ?? 'null'}/${existingInvite.status ?? 'null'} to ${joinOrigin}/null`,
         );
-      }
-
-      if (existingInvite.status === EventInviteStatus.ACCEPTED) {
-        return event;
       }
 
       await db
         .update(schema.eventInvites)
-        .set({ status: EventInviteStatus.ACCEPTED })
+        .set({ origin: joinOrigin, status: null })
         .where(eq(schema.eventInvites.id, existingInvite.id));
 
       void this.loadAndEmitEventJoinedNotification(userId, event);
@@ -614,7 +625,8 @@ export class EventService {
       .values({
         eventId,
         userId,
-        status: EventInviteStatus.ACCEPTED,
+        origin: EventInviteOrigin.VOLUNTEER_JOINED,
+        status: null,
       })
       .onConflictDoNothing();
 
@@ -737,7 +749,7 @@ export class EventService {
   async updateEventInviteStatus(
     userId: string,
     eventId: string,
-    status: EventInviteStatus,
+    status: EventInviteStatus | null,
   ): Promise<EventInviteEntity> {
     const event = await this.db.query.events.findFirst({
       where: { id: eventId, isDeleted: false },
@@ -753,36 +765,36 @@ export class EventService {
       throw new NotFoundGraphQLError('Event invite not found');
     }
 
-    // Idempotent no-op — matching status skips the shift cascade re-run.
-    // Unreachable from the UI today: the admin volunteers list only offers
-    // uninvite from INVITED/SELF_JOINED/ACCEPTED, so an admin can't retrigger
-    // this on an already-ADMIN_REJECTED invite. If shift invites ever drift
-    // out of sync with the event status, a repeat call here will not re-sync
-    // them.
-    if (invite.status === status) {
-      return invite;
+    const nextOrigin =
+      status == null ? EventInviteOrigin.ADMIN_INVITED : invite.origin;
+    const nextStatus = status;
+
+    if (
+      !canTransitionInvite(invite.origin, invite.status, nextOrigin, nextStatus)
+    ) {
+      throw new BadRequestGraphQLError(
+        `Cannot transition invite from ${invite.origin ?? 'null'}/${invite.status ?? 'null'} to ${nextOrigin ?? 'null'}/${nextStatus ?? 'null'}`,
+      );
     }
 
-    if (!canTransitionInviteStatus(invite.status, status)) {
-      throw new BadRequestGraphQLError(
-        `Cannot transition invite status from ${invite.status} to ${status}`,
-      );
+    if (invite.origin === nextOrigin && invite.status === nextStatus) {
+      return invite;
     }
 
     const updated = await this.db.transaction(async (tx) => {
       const [updated] = await tx
         .update(schema.eventInvites)
-        .set({ status })
+        .set({ origin: nextOrigin, status: nextStatus })
         .where(eq(schema.eventInvites.id, invite.id))
         .returning();
 
-      if (status === EventInviteStatus.ADMIN_REJECTED) {
+      if (isAdminEndedInvite(status)) {
         await this.shiftService.adminRejectInvitesForEventUser(
           eventId,
           userId,
           tx,
         );
-      } else if (status === EventInviteStatus.INVITED) {
+      } else if (status == null) {
         await this.shiftService.adminReinviteInvitesForEventUser(
           eventId,
           userId,
@@ -793,7 +805,7 @@ export class EventService {
       return updated;
     });
 
-    if (status === EventInviteStatus.INVITED) {
+    if (status == null) {
       void this.loadAndEmitEventInvitedNotification(event, [userId]);
     }
 
@@ -837,7 +849,7 @@ export class EventService {
     return this.db.query.eventInvites.findMany({
       where: {
         eventId,
-        status: { in: [...ADMIN_LIST_EVENT_INVITE_STATUSES] },
+        ...ADMIN_LIST_INVITE_WHERE,
       },
       orderBy: { createdAt: 'desc' },
     });
@@ -859,9 +871,10 @@ export class EventService {
       .where(
         and(
           inArray(schema.eventInvites.eventId, eventIds),
-          inArray(schema.eventInvites.status, [
-            ...ACTIVE_EVENT_INVITE_STATUSES,
-          ]),
+          activeInviteSql(
+            schema.eventInvites.origin,
+            schema.eventInvites.status,
+          ),
         ),
       )
       .groupBy(schema.eventInvites.eventId);
@@ -1028,7 +1041,7 @@ export class EventService {
         this.db.query.eventInvites.findMany({
           where: {
             eventId: event.id,
-            status: { in: [...ACTIVE_EVENT_INVITE_STATUSES] },
+            ...ACTIVE_INVITE_WHERE,
           },
           columns: { userId: true },
         }),

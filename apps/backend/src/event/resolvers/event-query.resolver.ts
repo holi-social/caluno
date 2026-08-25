@@ -88,6 +88,8 @@ export class EventQueryResolver {
     order: SortOrder,
     @Args('statuses', { type: () => [EventInviteStatus], nullable: true })
     statuses: EventInviteStatus[] | null | undefined,
+    @Args('waiting', { type: () => Boolean, nullable: true })
+    waiting: boolean | null | undefined,
     @Session() session: UserSession,
   ): Promise<EventPaginatedResponse> {
     const { events, total } = await this.eventService.findMyEvents(
@@ -99,6 +101,7 @@ export class EventQueryResolver {
       pagination.offset,
       order,
       statuses ?? undefined,
+      waiting ?? false,
     );
     return new EventPaginatedResponse({
       items: this.eventMapper.toArray(events),

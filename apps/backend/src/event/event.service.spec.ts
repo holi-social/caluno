@@ -1,5 +1,6 @@
 import type { MembershipService } from '../membership/membership.service';
 import type { OrganizationService } from '../organization/organization.service';
+import { PARTICIPATING_INVITE_WHERE } from '../shared/invite-status';
 import { EventService } from './event.service';
 
 describe('EventService.findAvailableEvents', () => {
@@ -116,7 +117,7 @@ describe('EventService.findAvailableEvents', () => {
     const rowsCallWhere = findMany.mock.calls[0]?.[0]?.where;
     expect(rowsCallWhere.NOT.invites).toEqual({
       userId: 'user-1',
-      status: { in: ['ACCEPTED', 'SELF_JOINED'] },
+      ...PARTICIPATING_INVITE_WHERE,
     });
   });
 

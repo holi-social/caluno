@@ -2,7 +2,7 @@ jest.mock('nanoid', () => ({
   customAlphabet: () => () => 'abcdefghijkl',
 }));
 
-import { ShiftInviteStatus } from '../enums';
+import { ShiftInviteOrigin } from '../enums';
 import type { ShiftInstanceInviteEntity } from '../schemas/shift-instance-invite.schema';
 import type { ShiftService } from '../shift.service';
 import { ShiftInstanceInvitesLoader } from './loader';
@@ -16,7 +16,8 @@ const invite = (
   id: 'invite-1',
   instanceId: 'instance-1',
   userId: 'user-1',
-  status: ShiftInviteStatus.INVITED,
+  origin: ShiftInviteOrigin.ADMIN_INVITED,
+  status: null,
   createdAt: now,
   updatedAt: now,
   ...overrides,

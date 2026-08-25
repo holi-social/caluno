@@ -17,7 +17,11 @@ import { NotFoundGraphQLError } from '../src/graphql/errors';
 import { RequiredFormTargetType } from '../src/requirement-profile/enums';
 import { RequiredFormService } from '../src/requirement-profile/services/required-form.service';
 import { JoinStatus } from '../src/shared/enums/join-status.enum';
-import { ShiftInviteStatus, ShiftVisibility } from '../src/shift/enums';
+import {
+  ShiftInviteOrigin,
+  ShiftInviteStatus,
+  ShiftVisibility,
+} from '../src/shift/enums';
 import { ShiftService } from '../src/shift/shift.service';
 import {
   cancelShiftInstance,
@@ -299,7 +303,8 @@ describe('ShiftService.findShiftsForWeek', () => {
       where: {
         shiftId,
         userId: user.id,
-        status: ShiftInviteStatus.INVITED,
+        origin: ShiftInviteOrigin.ADMIN_INVITED,
+        status: { isNull: true },
       },
     });
     expect(shiftInvites).toHaveLength(1);
@@ -400,7 +405,11 @@ describe('ShiftService.findShiftsForWeek', () => {
     );
 
     const invites = await db.query.shiftInstanceInvites.findMany({
-      where: { userId, status: ShiftInviteStatus.INVITED },
+      where: {
+        userId,
+        origin: ShiftInviteOrigin.ADMIN_INVITED,
+        status: { isNull: true },
+      },
     });
 
     const invitedInstanceIds = invites
@@ -413,7 +422,8 @@ describe('ShiftService.findShiftsForWeek', () => {
       where: {
         shiftId,
         userId,
-        status: ShiftInviteStatus.INVITED,
+        origin: ShiftInviteOrigin.ADMIN_INVITED,
+        status: { isNull: true },
       },
     });
     expect(shiftInvites).toHaveLength(1);
@@ -544,7 +554,11 @@ describe('ShiftService.findShiftsForWeek', () => {
     );
 
     const instanceInvites = await db.query.shiftInstanceInvites.findMany({
-      where: { userId, status: ShiftInviteStatus.INVITED },
+      where: {
+        userId,
+        origin: ShiftInviteOrigin.ADMIN_INVITED,
+        status: { isNull: true },
+      },
     });
     const invitedInstanceIds = instanceInvites.map(
       (invite) => invite.instanceId,
@@ -609,7 +623,11 @@ describe('ShiftService.findShiftsForWeek', () => {
     );
 
     const invites = await db.query.shiftInstanceInvites.findMany({
-      where: { userId: user.id, status: ShiftInviteStatus.ACCEPTED },
+      where: {
+        userId: user.id,
+        origin: ShiftInviteOrigin.VOLUNTEER_JOINED,
+        status: { isNull: true },
+      },
     });
 
     expect(invites.map((invite) => invite.instanceId).sort()).toEqual([
@@ -679,7 +697,11 @@ describe('ShiftService.findShiftsForWeek', () => {
     );
 
     const invites = await db.query.shiftInstanceInvites.findMany({
-      where: { userId: user.id, status: ShiftInviteStatus.ACCEPTED },
+      where: {
+        userId: user.id,
+        origin: ShiftInviteOrigin.VOLUNTEER_JOINED,
+        status: { isNull: true },
+      },
     });
     const activeInstanceIds = instances
       .filter((instance) => !instance.isCancelled)
@@ -885,7 +907,8 @@ describe('Volunteer home fields and check-in', () => {
     await db.insert(schema.shiftInstanceInvites).values({
       instanceId: instanceId ?? '',
       userId: volunteer.id,
-      status: ShiftInviteStatus.ACCEPTED,
+      origin: ShiftInviteOrigin.ADMIN_INVITED,
+      status: ShiftInviteStatus.VOLUNTEER_ACCEPTED,
     });
 
     const data = await graphqlRequestRequiringData<{
@@ -972,7 +995,8 @@ describe('Volunteer home fields and check-in', () => {
       .values({
         instanceId: instanceId ?? '',
         userId: volunteer.id,
-        status: ShiftInviteStatus.INVITED,
+        origin: ShiftInviteOrigin.ADMIN_INVITED,
+        status: null,
       })
       .returning();
 
@@ -981,7 +1005,8 @@ describe('Volunteer home fields and check-in', () => {
         id: string;
         invite: {
           id: string;
-          status: ShiftInviteStatus;
+          origin: ShiftInviteOrigin | null;
+          status: ShiftInviteStatus | null;
           userId: string;
         } | null;
       }>;
@@ -994,6 +1019,7 @@ describe('Volunteer home fields and check-in', () => {
               id
               invite(userId: $userId) {
                 id
+                origin
                 status
                 userId
               }
@@ -1011,7 +1037,8 @@ describe('Volunteer home fields and check-in', () => {
     const instance = data.shiftInstances.find((i) => i.id === instanceId);
     expect(instance?.invite).toEqual({
       id: insertedInvite?.id,
-      status: ShiftInviteStatus.INVITED,
+      origin: ShiftInviteOrigin.ADMIN_INVITED,
+      status: null,
       userId: volunteer.id,
     });
   });
@@ -1032,7 +1059,8 @@ describe('Volunteer home fields and check-in', () => {
     await db.insert(schema.shiftInstanceInvites).values({
       instanceId: instanceId ?? '',
       userId: volunteer.id,
-      status: ShiftInviteStatus.ACCEPTED,
+      origin: ShiftInviteOrigin.ADMIN_INVITED,
+      status: ShiftInviteStatus.VOLUNTEER_ACCEPTED,
     });
 
     const data = await graphqlRequestRequiringData<{
@@ -1156,7 +1184,8 @@ describe('Volunteer home fields and check-in', () => {
     await db.insert(schema.shiftInstanceInvites).values({
       instanceId: instanceId ?? '',
       userId: testUserId,
-      status: ShiftInviteStatus.ACCEPTED,
+      origin: ShiftInviteOrigin.ADMIN_INVITED,
+      status: ShiftInviteStatus.VOLUNTEER_ACCEPTED,
     });
 
     await db.insert(schema.timeEntries).values({
@@ -1220,7 +1249,8 @@ describe('Volunteer home fields and check-in', () => {
     await db.insert(schema.shiftInstanceInvites).values({
       instanceId: instanceId ?? '',
       userId: volunteer.id,
-      status: ShiftInviteStatus.ACCEPTED,
+      origin: ShiftInviteOrigin.ADMIN_INVITED,
+      status: ShiftInviteStatus.VOLUNTEER_ACCEPTED,
     });
 
     const checkInData = await graphqlRequestRequiringData<{
@@ -1298,7 +1328,8 @@ describe('Volunteer home fields and check-in', () => {
     await db.insert(schema.shiftInstanceInvites).values({
       instanceId: instanceId ?? '',
       userId: volunteer.id,
-      status: ShiftInviteStatus.ACCEPTED,
+      origin: ShiftInviteOrigin.ADMIN_INVITED,
+      status: ShiftInviteStatus.VOLUNTEER_ACCEPTED,
     });
 
     const response = await graphqlRequest<{ checkIn: { id: string } }>(app, {
@@ -1338,7 +1369,8 @@ describe('Volunteer home fields and check-in', () => {
     await db.insert(schema.shiftInstanceInvites).values({
       instanceId: instanceId ?? '',
       userId: testUserId,
-      status: ShiftInviteStatus.ACCEPTED,
+      origin: ShiftInviteOrigin.ADMIN_INVITED,
+      status: ShiftInviteStatus.VOLUNTEER_ACCEPTED,
     });
 
     const data = await graphqlRequestRequiringData<{
@@ -1394,7 +1426,8 @@ describe('Volunteer home fields and check-in', () => {
     await db.insert(schema.shiftInstanceInvites).values({
       instanceId: instanceId ?? '',
       userId: testUserId,
-      status: ShiftInviteStatus.ACCEPTED,
+      origin: ShiftInviteOrigin.ADMIN_INVITED,
+      status: ShiftInviteStatus.VOLUNTEER_ACCEPTED,
     });
 
     const data = await graphqlRequestRequiringData<{
@@ -1450,7 +1483,8 @@ describe('Volunteer home fields and check-in', () => {
     await db.insert(schema.shiftInstanceInvites).values({
       instanceId: instanceId ?? '',
       userId: testUserId,
-      status: ShiftInviteStatus.ACCEPTED,
+      origin: ShiftInviteOrigin.ADMIN_INVITED,
+      status: ShiftInviteStatus.VOLUNTEER_ACCEPTED,
     });
 
     const data = await graphqlRequestRequiringData<{
@@ -1532,17 +1566,20 @@ describe('Volunteer home fields and check-in', () => {
       {
         instanceId: pastId ?? '',
         userId: testUserId,
-        status: ShiftInviteStatus.ACCEPTED,
+        origin: ShiftInviteOrigin.ADMIN_INVITED,
+        status: ShiftInviteStatus.VOLUNTEER_ACCEPTED,
       },
       {
         instanceId: insideId ?? '',
         userId: testUserId,
-        status: ShiftInviteStatus.ACCEPTED,
+        origin: ShiftInviteOrigin.ADMIN_INVITED,
+        status: ShiftInviteStatus.VOLUNTEER_ACCEPTED,
       },
       {
         instanceId: afterId ?? '',
         userId: testUserId,
-        status: ShiftInviteStatus.ACCEPTED,
+        origin: ShiftInviteOrigin.ADMIN_INVITED,
+        status: ShiftInviteStatus.VOLUNTEER_ACCEPTED,
       },
     ]);
 
@@ -1596,7 +1633,8 @@ describe('Volunteer home fields and check-in', () => {
     await db.insert(schema.shiftInstanceInvites).values({
       instanceId: invitedInstanceId ?? '',
       userId: testUserId,
-      status: ShiftInviteStatus.INVITED,
+      origin: ShiftInviteOrigin.ADMIN_INVITED,
+      status: null,
     });
 
     const { id: acceptedShiftId } = await createShift(db, {
@@ -1612,12 +1650,13 @@ describe('Volunteer home fields and check-in', () => {
     await db.insert(schema.shiftInstanceInvites).values({
       instanceId: acceptedInstanceId ?? '',
       userId: testUserId,
-      status: ShiftInviteStatus.ACCEPTED,
+      origin: ShiftInviteOrigin.ADMIN_INVITED,
+      status: ShiftInviteStatus.VOLUNTEER_ACCEPTED,
     });
 
     const query = `
-      query MyShiftInstances($includePast: Boolean!, $statuses: [ShiftInviteStatus!]) {
-        myShiftInstances(includePast: $includePast, statuses: $statuses) {
+      query MyShiftInstances($includePast: Boolean!, $waiting: Boolean) {
+        myShiftInstances(includePast: $includePast, waiting: $waiting) {
           items { id myInviteStatus }
           pagination { total limit offset hasMore }
         }
@@ -1635,7 +1674,7 @@ describe('Volunteer home fields and check-in', () => {
       app,
       {
         query,
-        variables: { includePast: true, statuses: ['INVITED'] },
+        variables: { includePast: true, waiting: true },
         headers: { 'x-organization-unit-id': organizationUnitId },
       },
       'myShiftInstances',
@@ -1650,7 +1689,7 @@ describe('Volunteer home fields and check-in', () => {
     const invitedItem = invitedOnly.myShiftInstances.items.find(
       (i) => i.id === invitedInstanceId,
     );
-    expect(invitedItem?.myInviteStatus).toBe('INVITED');
+    expect(invitedItem?.myInviteStatus).toBeNull();
 
     const defaultStatuses = await graphqlRequestRequiringData<{
       myShiftInstances: { items: MyInstanceItem[] };
@@ -1670,7 +1709,7 @@ describe('Volunteer home fields and check-in', () => {
     const acceptedItem = defaultStatuses.myShiftInstances.items.find(
       (i) => i.id === acceptedInstanceId,
     );
-    expect(acceptedItem?.myInviteStatus).toBe('ACCEPTED');
+    expect(acceptedItem?.myInviteStatus).toBe('VOLUNTEER_ACCEPTED');
   });
 
   it('includes intended shift instances when includeIntended is true', async () => {
@@ -1898,7 +1937,8 @@ describe('Volunteer home fields and check-in', () => {
     await db.insert(schema.shiftInstanceInvites).values({
       instanceId: instanceId ?? '',
       userId: testUserId,
-      status: ShiftInviteStatus.ACCEPTED,
+      origin: ShiftInviteOrigin.ADMIN_INVITED,
+      status: ShiftInviteStatus.VOLUNTEER_ACCEPTED,
     });
 
     const startsAfter = new Date('2026-06-01T00:00:00.000Z').toISOString();
@@ -2232,7 +2272,8 @@ describe('Volunteer home fields and check-in', () => {
     await db.insert(schema.shiftInstanceInvites).values({
       instanceId: instanceId ?? '',
       userId: parentMember.id,
-      status: ShiftInviteStatus.ACCEPTED,
+      origin: ShiftInviteOrigin.ADMIN_INVITED,
+      status: ShiftInviteStatus.VOLUNTEER_ACCEPTED,
     });
 
     setAuthMockUserId(parentMember.id);
@@ -2311,7 +2352,8 @@ describe('Volunteer shifts pagination', () => {
       await db.insert(schema.shiftInstanceInvites).values({
         instanceId: instance.id,
         userId: user.id,
-        status: ShiftInviteStatus.ACCEPTED,
+        origin: ShiftInviteOrigin.ADMIN_INVITED,
+        status: ShiftInviteStatus.VOLUNTEER_ACCEPTED,
       });
     }
 
@@ -2381,7 +2423,8 @@ describe('Volunteer shifts pagination', () => {
       await db.insert(schema.shiftInstanceInvites).values({
         instanceId: instance.id,
         userId: user.id,
-        status: ShiftInviteStatus.ACCEPTED,
+        origin: ShiftInviteOrigin.ADMIN_INVITED,
+        status: ShiftInviteStatus.VOLUNTEER_ACCEPTED,
       });
     }
 
@@ -2452,7 +2495,8 @@ describe('Volunteer shifts pagination', () => {
       await db.insert(schema.shiftInstanceInvites).values({
         instanceId: instance.id,
         userId: user.id,
-        status: ShiftInviteStatus.ACCEPTED,
+        origin: ShiftInviteOrigin.ADMIN_INVITED,
+        status: ShiftInviteStatus.VOLUNTEER_ACCEPTED,
       });
     }
 
@@ -2603,7 +2647,8 @@ describe('Shift invite status model', () => {
     await db.insert(schema.shiftInstanceInvites).values({
       instanceId: instanceId ?? '',
       userId: volunteer.id,
-      status: ShiftInviteStatus.INVITED,
+      origin: ShiftInviteOrigin.ADMIN_INVITED,
+      status: null,
     });
 
     const data = await graphqlRequestRequiringData<{
@@ -2649,18 +2694,20 @@ describe('Shift invite status model', () => {
     await db.insert(schema.shiftInvites).values({
       shiftId,
       userId: user.id,
-      status: ShiftInviteStatus.INVITED,
+      origin: ShiftInviteOrigin.ADMIN_INVITED,
+      status: null,
     });
     await db.insert(schema.shiftInstanceInvites).values({
       instanceId: futureInstance.id,
       userId: user.id,
-      status: ShiftInviteStatus.INVITED,
+      origin: ShiftInviteOrigin.ADMIN_INVITED,
+      status: null,
     });
 
     await shiftService.updateShiftInviteStatus(
       user.id,
       shiftId,
-      ShiftInviteStatus.ACCEPTED,
+      ShiftInviteStatus.VOLUNTEER_ACCEPTED,
     );
 
     const instanceInvite = await db.query.shiftInstanceInvites.findFirst({
@@ -2670,7 +2717,7 @@ describe('Shift invite status model', () => {
       },
     });
 
-    expect(instanceInvite?.status).toBe(ShiftInviteStatus.ACCEPTED);
+    expect(instanceInvite?.status).toBe(ShiftInviteStatus.VOLUNTEER_ACCEPTED);
   });
 });
 
@@ -2710,31 +2757,37 @@ describe('ShiftInstance.invites (VOLI-842)', () => {
       {
         instanceId,
         userId: invited.id,
-        status: ShiftInviteStatus.INVITED,
+        origin: ShiftInviteOrigin.ADMIN_INVITED,
+        status: null,
       },
       {
         instanceId,
         userId: accepted.id,
-        status: ShiftInviteStatus.ACCEPTED,
+        origin: ShiftInviteOrigin.ADMIN_INVITED,
+        status: ShiftInviteStatus.VOLUNTEER_ACCEPTED,
       },
       {
         instanceId,
         userId: signedUp.id,
-        status: ShiftInviteStatus.SELF_JOINED,
+        origin: ShiftInviteOrigin.VOLUNTEER_JOINED,
+        status: null,
       },
       {
         instanceId,
         userId: declined.id,
+        origin: ShiftInviteOrigin.ADMIN_INVITED,
         status: ShiftInviteStatus.VOLUNTEER_REJECTED,
       },
       {
         instanceId,
         userId: cancelled.id,
-        status: ShiftInviteStatus.CANCELLED,
+        origin: null,
+        status: ShiftInviteStatus.VOLUNTEER_CANCELLED,
       },
       {
         instanceId,
         userId: rejected.id,
+        origin: null,
         status: ShiftInviteStatus.ADMIN_REJECTED,
       },
     ]);
@@ -2775,11 +2828,13 @@ describe('ShiftInstance.invites (VOLI-842)', () => {
     const byUser = new Map(
       instance.invites.map((invite) => [invite.user.id, invite.status]),
     );
-    expect(byUser.get(invited.id)).toBe(ShiftInviteStatus.INVITED);
-    expect(byUser.get(accepted.id)).toBe(ShiftInviteStatus.ACCEPTED);
-    expect(byUser.get(signedUp.id)).toBe(ShiftInviteStatus.SELF_JOINED);
+    expect(byUser.get(invited.id)).toBe(null /* re-invite */);
+    expect(byUser.get(accepted.id)).toBe(ShiftInviteStatus.VOLUNTEER_ACCEPTED);
+    expect(byUser.get(signedUp.id)).toBe(null /* volunteer-joined */);
     expect(byUser.get(declined.id)).toBe(ShiftInviteStatus.VOLUNTEER_REJECTED);
-    expect(byUser.get(cancelled.id)).toBe(ShiftInviteStatus.CANCELLED);
+    expect(byUser.get(cancelled.id)).toBe(
+      ShiftInviteStatus.VOLUNTEER_CANCELLED,
+    );
     expect(byUser.get(rejected.id)).toBe(ShiftInviteStatus.ADMIN_REJECTED);
     expect(byUser.get(accepted.id)).not.toBe(byUser.get(signedUp.id));
   });
@@ -2799,6 +2854,7 @@ describe('ShiftInstance.invites (VOLI-842)', () => {
     await db.insert(schema.shiftInstanceInvites).values({
       instanceId,
       userId: volunteer.id,
+      origin: null,
       status: ShiftInviteStatus.ADMIN_REJECTED,
     });
 
@@ -2811,7 +2867,7 @@ describe('ShiftInstance.invites (VOLI-842)', () => {
           mutation UpdateInviteStatus(
             $instanceId: String!
             $userId: String!
-            $status: ShiftInviteStatus!
+            $status: ShiftInviteStatus
           ) {
             updateShiftInstanceInviteStatus(
               instanceId: $instanceId
@@ -2826,7 +2882,8 @@ describe('ShiftInstance.invites (VOLI-842)', () => {
         variables: {
           instanceId,
           userId: volunteer.id,
-          status: ShiftInviteStatus.INVITED,
+          origin: ShiftInviteOrigin.ADMIN_INVITED,
+          status: null,
         },
         headers: { 'x-organization-unit-id': organizationUnitId },
       },
@@ -2834,14 +2891,14 @@ describe('ShiftInstance.invites (VOLI-842)', () => {
     );
 
     expect(data.updateShiftInstanceInviteStatus.status).toBe(
-      ShiftInviteStatus.INVITED,
+      null /* re-invite */,
     );
     expect(data.updateShiftInstanceInviteStatus.userId).toBe(volunteer.id);
 
     const row = await db.query.shiftInstanceInvites.findFirst({
       where: { instanceId, userId: volunteer.id },
     });
-    expect(row?.status).toBe(ShiftInviteStatus.INVITED);
+    expect(row?.status).toBe(null /* re-invite */);
   });
 
   it('updateShiftInstanceInviteStatus sets ACCEPTED to ADMIN_REJECTED for admin', async () => {
@@ -2859,7 +2916,8 @@ describe('ShiftInstance.invites (VOLI-842)', () => {
     await db.insert(schema.shiftInstanceInvites).values({
       instanceId,
       userId: volunteer.id,
-      status: ShiftInviteStatus.ACCEPTED,
+      origin: ShiftInviteOrigin.ADMIN_INVITED,
+      status: ShiftInviteStatus.VOLUNTEER_ACCEPTED,
     });
 
     const data = await graphqlRequestRequiringData<{
@@ -2871,7 +2929,7 @@ describe('ShiftInstance.invites (VOLI-842)', () => {
           mutation UpdateInviteStatus(
             $instanceId: String!
             $userId: String!
-            $status: ShiftInviteStatus!
+            $status: ShiftInviteStatus
           ) {
             updateShiftInstanceInviteStatus(
               instanceId: $instanceId
@@ -2886,7 +2944,7 @@ describe('ShiftInstance.invites (VOLI-842)', () => {
         variables: {
           instanceId,
           userId: volunteer.id,
-          status: ShiftInviteStatus.ADMIN_REJECTED,
+          status: ShiftInviteStatus.ADMIN_CANCELLED,
         },
         headers: { 'x-organization-unit-id': organizationUnitId },
       },
@@ -2894,17 +2952,17 @@ describe('ShiftInstance.invites (VOLI-842)', () => {
     );
 
     expect(data.updateShiftInstanceInviteStatus.status).toBe(
-      ShiftInviteStatus.ADMIN_REJECTED,
+      ShiftInviteStatus.ADMIN_CANCELLED,
     );
     expect(data.updateShiftInstanceInviteStatus.userId).toBe(volunteer.id);
 
     const row = await db.query.shiftInstanceInvites.findFirst({
       where: { instanceId, userId: volunteer.id },
     });
-    expect(row?.status).toBe(ShiftInviteStatus.ADMIN_REJECTED);
+    expect(row?.status).toBe(ShiftInviteStatus.ADMIN_CANCELLED);
   });
 
-  it('updateShiftInstanceInviteStatus sets SELF_JOINED to ADMIN_REJECTED for admin', async () => {
+  it('updateShiftInstanceInviteStatus sets SELF_JOINED to ADMIN_CANCELLED for admin', async () => {
     const { id: shiftId } = await createShift(db, { organizationUnitId });
     const instances = await db.query.shiftInstances.findMany({
       where: { masterId: shiftId },
@@ -2919,7 +2977,8 @@ describe('ShiftInstance.invites (VOLI-842)', () => {
     await db.insert(schema.shiftInstanceInvites).values({
       instanceId,
       userId: volunteer.id,
-      status: ShiftInviteStatus.SELF_JOINED,
+      origin: ShiftInviteOrigin.VOLUNTEER_JOINED,
+      status: null,
     });
 
     const data = await graphqlRequestRequiringData<{
@@ -2931,7 +2990,7 @@ describe('ShiftInstance.invites (VOLI-842)', () => {
           mutation UpdateInviteStatus(
             $instanceId: String!
             $userId: String!
-            $status: ShiftInviteStatus!
+            $status: ShiftInviteStatus
           ) {
             updateShiftInstanceInviteStatus(
               instanceId: $instanceId
@@ -2946,7 +3005,7 @@ describe('ShiftInstance.invites (VOLI-842)', () => {
         variables: {
           instanceId,
           userId: volunteer.id,
-          status: ShiftInviteStatus.ADMIN_REJECTED,
+          status: ShiftInviteStatus.ADMIN_CANCELLED,
         },
         headers: { 'x-organization-unit-id': organizationUnitId },
       },
@@ -2954,17 +3013,17 @@ describe('ShiftInstance.invites (VOLI-842)', () => {
     );
 
     expect(data.updateShiftInstanceInviteStatus.status).toBe(
-      ShiftInviteStatus.ADMIN_REJECTED,
+      ShiftInviteStatus.ADMIN_CANCELLED,
     );
     expect(data.updateShiftInstanceInviteStatus.userId).toBe(volunteer.id);
 
     const row = await db.query.shiftInstanceInvites.findFirst({
       where: { instanceId, userId: volunteer.id },
     });
-    expect(row?.status).toBe(ShiftInviteStatus.ADMIN_REJECTED);
+    expect(row?.status).toBe(ShiftInviteStatus.ADMIN_CANCELLED);
   });
 
-  it('forbids volunteer from self-setting ADMIN_REJECTED without SHIFT_EDIT', async () => {
+  it('forbids volunteer from setting ADMIN_REJECTED without SHIFT_EDIT', async () => {
     const { id: shiftId } = await createShift(db, { organizationUnitId });
     const instances = await db.query.shiftInstances.findMany({
       where: { masterId: shiftId },
@@ -2979,7 +3038,8 @@ describe('ShiftInstance.invites (VOLI-842)', () => {
     await db.insert(schema.shiftInstanceInvites).values({
       instanceId,
       userId: volunteer.id,
-      status: ShiftInviteStatus.ACCEPTED,
+      origin: ShiftInviteOrigin.ADMIN_INVITED,
+      status: ShiftInviteStatus.VOLUNTEER_ACCEPTED,
     });
 
     const originalUserId = getAuthMockUserId();
@@ -2992,7 +3052,7 @@ describe('ShiftInstance.invites (VOLI-842)', () => {
           mutation UpdateInviteStatus(
             $instanceId: String!
             $userId: String!
-            $status: ShiftInviteStatus!
+            $status: ShiftInviteStatus
           ) {
             updateShiftInstanceInviteStatus(
               instanceId: $instanceId
@@ -3006,6 +3066,7 @@ describe('ShiftInstance.invites (VOLI-842)', () => {
         variables: {
           instanceId,
           userId: volunteer.id,
+          origin: null,
           status: ShiftInviteStatus.ADMIN_REJECTED,
         },
         headers: { 'x-organization-unit-id': organizationUnitId },
@@ -3016,7 +3077,7 @@ describe('ShiftInstance.invites (VOLI-842)', () => {
       const row = await db.query.shiftInstanceInvites.findFirst({
         where: { instanceId, userId: volunteer.id },
       });
-      expect(row?.status).toBe(ShiftInviteStatus.ACCEPTED);
+      expect(row?.status).toBe(ShiftInviteStatus.VOLUNTEER_ACCEPTED);
     } finally {
       setAuthMockUserId(originalUserId);
     }
@@ -3037,7 +3098,8 @@ describe('ShiftInstance.invites (VOLI-842)', () => {
     await db.insert(schema.shiftInstanceInvites).values({
       instanceId,
       userId: volunteer.id,
-      status: ShiftInviteStatus.ACCEPTED,
+      origin: ShiftInviteOrigin.ADMIN_INVITED,
+      status: ShiftInviteStatus.VOLUNTEER_ACCEPTED,
     });
 
     const actor = await createUser(db);
@@ -3068,7 +3130,7 @@ describe('ShiftInstance.invites (VOLI-842)', () => {
           mutation UpdateInviteStatus(
             $instanceId: String!
             $userId: String!
-            $status: ShiftInviteStatus!
+            $status: ShiftInviteStatus
           ) {
             updateShiftInstanceInviteStatus(
               instanceId: $instanceId
@@ -3082,6 +3144,7 @@ describe('ShiftInstance.invites (VOLI-842)', () => {
         variables: {
           instanceId,
           userId: volunteer.id,
+          origin: null,
           status: ShiftInviteStatus.ADMIN_REJECTED,
         },
         headers: { 'x-organization-unit-id': organizationUnitId },
@@ -3092,7 +3155,7 @@ describe('ShiftInstance.invites (VOLI-842)', () => {
       const row = await db.query.shiftInstanceInvites.findFirst({
         where: { instanceId, userId: volunteer.id },
       });
-      expect(row?.status).toBe(ShiftInviteStatus.ACCEPTED);
+      expect(row?.status).toBe(ShiftInviteStatus.VOLUNTEER_ACCEPTED);
     } finally {
       setAuthMockUserId(originalUserId);
     }
@@ -3104,6 +3167,7 @@ describe('ShiftInstance.invites (VOLI-842)', () => {
     await db.insert(schema.shiftInvites).values({
       shiftId,
       userId: volunteer.id,
+      origin: null,
       status: ShiftInviteStatus.ADMIN_REJECTED,
     });
 
@@ -3116,14 +3180,14 @@ describe('ShiftInstance.invites (VOLI-842)', () => {
         query: `
           mutation UpdateShiftInviteStatus(
             $shiftId: String!
-            $status: ShiftInviteStatus!
+            $status: ShiftInviteStatus
           ) {
             updateShiftInviteStatus(shiftId: $shiftId, status: $status) {
               status
             }
           }
         `,
-        variables: { shiftId, status: ShiftInviteStatus.INVITED },
+        variables: { shiftId, status: null },
         headers: { 'x-organization-unit-id': organizationUnitId },
       });
 
@@ -3144,7 +3208,8 @@ describe('ShiftInstance.invites (VOLI-842)', () => {
     await db.insert(schema.shiftInvites).values({
       shiftId,
       userId: volunteer.id,
-      status: ShiftInviteStatus.INVITED,
+      origin: ShiftInviteOrigin.ADMIN_INVITED,
+      status: null,
     });
 
     const originalUserId = getAuthMockUserId();
@@ -3158,21 +3223,21 @@ describe('ShiftInstance.invites (VOLI-842)', () => {
           query: `
             mutation UpdateShiftInviteStatus(
               $shiftId: String!
-              $status: ShiftInviteStatus!
+              $status: ShiftInviteStatus
             ) {
               updateShiftInviteStatus(shiftId: $shiftId, status: $status) {
                 status
               }
             }
           `,
-          variables: { shiftId, status: ShiftInviteStatus.ACCEPTED },
+          variables: { shiftId, status: ShiftInviteStatus.VOLUNTEER_ACCEPTED },
           headers: { 'x-organization-unit-id': organizationUnitId },
         },
         'updateShiftInviteStatus',
       );
 
       expect(data.updateShiftInviteStatus.status).toBe(
-        ShiftInviteStatus.ACCEPTED,
+        ShiftInviteStatus.VOLUNTEER_ACCEPTED,
       );
     } finally {
       setAuthMockUserId(originalUserId);
@@ -3199,21 +3264,24 @@ describe('ShiftInstance.invites (VOLI-842)', () => {
       {
         instanceId,
         userId: first.id,
-        status: ShiftInviteStatus.INVITED,
+        origin: ShiftInviteOrigin.ADMIN_INVITED,
+        status: null,
         createdAt: sharedCreatedAt,
         updatedAt: sharedCreatedAt,
       },
       {
         instanceId,
         userId: second.id,
-        status: ShiftInviteStatus.INVITED,
+        origin: ShiftInviteOrigin.ADMIN_INVITED,
+        status: null,
         createdAt: sharedCreatedAt,
         updatedAt: sharedCreatedAt,
       },
       {
         instanceId,
         userId: third.id,
-        status: ShiftInviteStatus.INVITED,
+        origin: ShiftInviteOrigin.ADMIN_INVITED,
+        status: null,
         createdAt: sharedCreatedAt,
         updatedAt: sharedCreatedAt,
       },
@@ -3258,7 +3326,7 @@ describe('ShiftInstance.invites (VOLI-842)', () => {
           mutation UpdateInviteStatus(
             $instanceId: String!
             $userId: String!
-            $status: ShiftInviteStatus!
+            $status: ShiftInviteStatus
           ) {
             updateShiftInstanceInviteStatus(
               instanceId: $instanceId
@@ -3272,6 +3340,7 @@ describe('ShiftInstance.invites (VOLI-842)', () => {
         variables: {
           instanceId,
           userId: second.id,
+          origin: null,
           status: ShiftInviteStatus.ADMIN_REJECTED,
         },
         headers: { 'x-organization-unit-id': organizationUnitId },
@@ -3288,12 +3357,13 @@ describe('ShiftInstance.invites (VOLI-842)', () => {
     expect(orderAfter).toEqual(orderBefore);
   });
 
-  it('cancelling an ACCEPTED invite-only instance frees the spot and allows re-accept', async () => {
+  it('cancelling a participating invite frees the spot and allows rejoin', async () => {
     const volunteer = await createUser(db);
     const other = await createUser(db);
+    await addMembership(db, volunteer.id, organizationUnitId);
     const { id: shiftId } = await createShift(db, {
       organizationUnitId,
-      visibility: ShiftVisibility.INVITED_MEMBERS,
+      visibility: ShiftVisibility.ALL_MEMBERS,
       maxVolunteers: 2,
     });
     const instances = await db.query.shiftInstances.findMany({
@@ -3309,12 +3379,14 @@ describe('ShiftInstance.invites (VOLI-842)', () => {
       {
         instanceId,
         userId: volunteer.id,
-        status: ShiftInviteStatus.ACCEPTED,
+        origin: ShiftInviteOrigin.ADMIN_INVITED,
+        status: ShiftInviteStatus.VOLUNTEER_ACCEPTED,
       },
       {
         instanceId,
         userId: other.id,
-        status: ShiftInviteStatus.ACCEPTED,
+        origin: ShiftInviteOrigin.ADMIN_INVITED,
+        status: ShiftInviteStatus.VOLUNTEER_ACCEPTED,
       },
     ]);
 
@@ -3353,7 +3425,9 @@ describe('ShiftInstance.invites (VOLI-842)', () => {
     );
     expect(beforeInstance?.filledCount).toBe(2);
     expect(beforeInstance?.spotsLeft).toBe(0);
-    expect(beforeInstance?.myInviteStatus).toBe(ShiftInviteStatus.ACCEPTED);
+    expect(beforeInstance?.myInviteStatus).toBe(
+      ShiftInviteStatus.VOLUNTEER_ACCEPTED,
+    );
 
     await graphqlRequestRequiringData<{
       updateShiftInstanceInviteStatus: { status: string };
@@ -3364,7 +3438,7 @@ describe('ShiftInstance.invites (VOLI-842)', () => {
           mutation Cancel($instanceId: String!) {
             updateShiftInstanceInviteStatus(
               instanceId: $instanceId
-              status: CANCELLED
+              status: VOLUNTEER_CANCELLED
             ) {
               status
             }
@@ -3382,19 +3456,18 @@ describe('ShiftInstance.invites (VOLI-842)', () => {
     );
     expect(cancelledInstance?.filledCount).toBe(1);
     expect(cancelledInstance?.spotsLeft).toBe(1);
-    expect(cancelledInstance?.myInviteStatus).toBe(ShiftInviteStatus.CANCELLED);
+    expect(cancelledInstance?.myInviteStatus).toBe(
+      ShiftInviteStatus.VOLUNTEER_CANCELLED,
+    );
 
     await graphqlRequestRequiringData<{
-      updateShiftInstanceInviteStatus: { status: string };
+      joinShiftInstance: { status: string };
     }>(
       app,
       {
         query: `
-          mutation Reaccept($instanceId: String!) {
-            updateShiftInstanceInviteStatus(
-              instanceId: $instanceId
-              status: ACCEPTED
-            ) {
+          mutation Rejoin($instanceId: String!) {
+            joinShiftInstance(instanceId: $instanceId) {
               status
             }
           }
@@ -3402,7 +3475,7 @@ describe('ShiftInstance.invites (VOLI-842)', () => {
         variables: { instanceId },
         headers: { 'x-organization-unit-id': organizationUnitId },
       },
-      'updateShiftInstanceInviteStatus',
+      'joinShiftInstance',
     );
 
     const afterReaccept = await queryCapacity();
@@ -3411,7 +3484,7 @@ describe('ShiftInstance.invites (VOLI-842)', () => {
     );
     expect(reacceptedInstance?.filledCount).toBe(2);
     expect(reacceptedInstance?.spotsLeft).toBe(0);
-    expect(reacceptedInstance?.myInviteStatus).toBe(ShiftInviteStatus.ACCEPTED);
+    expect(reacceptedInstance?.myInviteStatus).toBeNull();
   });
 
   it('does not leak invites across organizations', async () => {
@@ -3441,7 +3514,8 @@ describe('ShiftInstance.invites (VOLI-842)', () => {
     await db.insert(schema.shiftInstanceInvites).values({
       instanceId: foreignInstanceId,
       userId: foreignUser.id,
-      status: ShiftInviteStatus.INVITED,
+      origin: ShiftInviteOrigin.ADMIN_INVITED,
+      status: null,
     });
 
     const response = await graphqlRequest<{
@@ -3556,7 +3630,7 @@ describe('ShiftService.requestJoinShiftInstance — required forms', () => {
     const invite = await db.query.shiftInstanceInvites.findFirst({
       where: { instanceId: instance.id, userId: user.id },
     });
-    expect(invite?.status).toBe(ShiftInviteStatus.SELF_JOINED);
+    expect(invite?.status).toBe(null /* volunteer-joined */);
   });
 
   it('joins normally when the shift has no required forms', async () => {
@@ -3736,7 +3810,8 @@ describe('ShiftService.requestJoinShiftInstance — required forms', () => {
     const invite = await db.query.shiftInstanceInvites.findFirst({
       where: { instanceId: instance.id, userId: user.id },
     });
-    expect(invite?.status).toBe(ShiftInviteStatus.ACCEPTED);
+    expect(invite?.origin).toBe(ShiftInviteOrigin.VOLUNTEER_JOINED);
+    expect(invite?.status).toBeNull();
   });
 });
 
@@ -3840,7 +3915,7 @@ describe('ShiftService.requestJoinShiftInstance — shift-instance required form
     const invite = await db.query.shiftInstanceInvites.findFirst({
       where: { instanceId: instance.id, userId: user.id },
     });
-    expect(invite?.status).toBe(ShiftInviteStatus.SELF_JOINED);
+    expect(invite?.status).toBe(null /* volunteer-joined */);
   });
 
   it('returns REQUIREMENTS_NEEDED for a non-member when instance required forms are missing', async () => {
@@ -4049,7 +4124,8 @@ describe('ShiftService.updateShiftInstance applyToAllFuture', () => {
     await db.insert(schema.shiftInstanceInvites).values({
       instanceId: firstWednesday.id,
       userId: volunteer.id,
-      status: ShiftInviteStatus.ACCEPTED,
+      origin: ShiftInviteOrigin.ADMIN_INVITED,
+      status: ShiftInviteStatus.VOLUNTEER_ACCEPTED,
     });
 
     // Change BOTH: drop Thursday for Friday, and move 09:00 -> 14:00.

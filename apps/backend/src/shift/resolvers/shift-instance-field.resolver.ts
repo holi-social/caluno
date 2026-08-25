@@ -19,7 +19,7 @@ import { RequiredFormRef } from '../../organization/models/organization-unit-req
 import { RequiredFormRefMapper } from '../../requirement-profile/mappers/required-form-ref.mapper';
 import { UserMapper } from '../../user/mappers/user.mapper';
 import { User } from '../../user/models/user.model';
-import { ShiftInviteStatus } from '../enums';
+import { ShiftInviteOrigin, ShiftInviteStatus } from '../enums';
 import { ShiftMapper } from '../mappers/shift.mapper';
 import { ShiftInstanceInviteMapper } from '../mappers/shift-instance-invite.mapper';
 import { Shift as ShiftModel } from '../models/shift.model';
@@ -142,6 +142,19 @@ export class ShiftInstanceFieldResolver {
     if (max == null) return null;
     const filled = await loader.filledCountByInstanceId.load(instance.id);
     return Math.max(0, max - filled);
+  }
+
+  @AllowAnonymous()
+  @ResolveField(() => ShiftInviteOrigin, { nullable: true })
+  async myInviteOrigin(
+    @Parent() instance: ShiftInstanceEntity,
+    @Session() session: UserSession,
+    @Loader(ShiftInstanceLoader) loader: ShiftInstanceLoader,
+  ): Promise<ShiftInviteOrigin | null> {
+    if (!session?.user) {
+      return null;
+    }
+    return loader.myInviteOriginByKey.load(`${instance.id}:${session.user.id}`);
   }
 
   // Raw invite status for this instance, or null when there is no direct invite.

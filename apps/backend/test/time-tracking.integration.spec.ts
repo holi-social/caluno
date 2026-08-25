@@ -13,7 +13,7 @@ import { eq } from 'drizzle-orm';
 import type { Database } from '../src/database/database.module';
 import * as schema from '../src/database/schema';
 import { ConflictGraphQLError } from '../src/graphql/errors';
-import { ShiftInviteStatus } from '../src/shift/enums';
+import { ShiftInviteOrigin, ShiftInviteStatus } from '../src/shift/enums';
 import { AddTimeEntryInput } from '../src/time-tracking/inputs/add-time-entry.input';
 import { TimeTrackingService } from '../src/time-tracking/time-tracking.service';
 import { createShift, createUser } from './factories';
@@ -75,7 +75,8 @@ describe('TimeTrackingService', () => {
     await db.insert(schema.shiftInstanceInvites).values({
       instanceId: instanceId ?? '',
       userId: user.id,
-      status: ShiftInviteStatus.ACCEPTED,
+      origin: ShiftInviteOrigin.ADMIN_INVITED,
+      status: ShiftInviteStatus.VOLUNTEER_ACCEPTED,
     });
 
     await service.checkIn(instanceId ?? '', user.id);

@@ -1,14 +1,17 @@
 import { Field, ID, ObjectType } from '@nestjs/graphql';
 import { User } from '../../user/models/user.model';
-import { ShiftInviteStatus } from '../enums';
+import { ShiftInviteOrigin, ShiftInviteStatus } from '../enums';
 
 @ObjectType()
 export class ShiftInstanceInvite {
   @Field(() => ID)
   id!: string;
 
-  @Field(() => ShiftInviteStatus)
-  status!: ShiftInviteStatus;
+  @Field(() => ShiftInviteOrigin, { nullable: true })
+  origin?: ShiftInviteOrigin | null;
+
+  @Field(() => ShiftInviteStatus, { nullable: true })
+  status?: ShiftInviteStatus | null;
 
   @Field(() => String)
   userId!: string;

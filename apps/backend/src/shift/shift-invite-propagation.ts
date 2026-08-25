@@ -1,13 +1,14 @@
 import { and, eq, inArray } from 'drizzle-orm';
 import type { Database } from '../database/database.module';
 import * as schema from '../database/schema';
-import type { ShiftInviteStatus } from './enums';
+import type { ShiftInviteOrigin, ShiftInviteStatus } from './enums';
 
 export async function propagateShiftInviteStatusToFutureInstances(
   tx: Pick<Database, 'update' | 'query'>,
   shiftId: string,
   userId: string,
-  status: ShiftInviteStatus,
+  origin: ShiftInviteOrigin | null,
+  status: ShiftInviteStatus | null,
 ): Promise<void> {
   const now = new Date();
 
@@ -26,7 +27,7 @@ export async function propagateShiftInviteStatusToFutureInstances(
 
   await tx
     .update(schema.shiftInstanceInvites)
-    .set({ status })
+    .set({ origin, status })
     .where(
       and(
         eq(schema.shiftInstanceInvites.userId, userId),

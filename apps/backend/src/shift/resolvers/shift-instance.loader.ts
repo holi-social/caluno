@@ -1,7 +1,7 @@
 import { Injectable, Scope } from '@nestjs/common';
 import DataLoader from 'dataloader';
 import { RegisterLoader } from '../../graphql/interceptors';
-import { ShiftInviteStatus } from '../enums';
+import { ShiftInviteOrigin, ShiftInviteStatus } from '../enums';
 import type { ShiftInstanceEntity } from '../schemas/shift-instance.schema';
 import { ShiftService } from '../shift.service';
 
@@ -66,6 +66,36 @@ export class ShiftInstanceLoader {
     },
   );
 
+  public readonly myInviteOriginByKey = new DataLoader<
+    string,
+    ShiftInviteOrigin | null
+  >(async (keys) => {
+    const parsed = keys.map((key) => {
+      const [instanceId, userId] = key.split(':');
+      return { instanceId, userId };
+    });
+
+    const instancesByUser = new Map<string, string[]>();
+    for (const { instanceId, userId } of parsed) {
+      const list = instancesByUser.get(userId) ?? [];
+      list.push(instanceId);
+      instancesByUser.set(userId, list);
+    }
+
+    const originByKey = new Map<string, ShiftInviteOrigin | null>();
+    for (const [userId, instanceIds] of instancesByUser) {
+      const rows = await this.shiftService.findInviteStatusesForUser(
+        userId,
+        instanceIds,
+      );
+      for (const row of rows) {
+        originByKey.set(`${row.shiftInstanceId}:${userId}`, row.origin);
+      }
+    }
+
+    return keys.map((key) => originByKey.get(key) ?? null);
+  });
+
   // Keyed by `${instanceId}:${userId}`; null when the user has no direct invite.
   public readonly myInviteStatusByKey = new DataLoader<
     string,
@@ -83,7 +113,7 @@ export class ShiftInstanceLoader {
       instancesByUser.set(userId, list);
     }
 
-    const statusByKey = new Map<string, ShiftInviteStatus>();
+    const statusByKey = new Map<string, ShiftInviteStatus | null>();
     for (const [userId, instanceIds] of instancesByUser) {
       const rows = await this.shiftService.findInviteStatusesForUser(
         userId,
