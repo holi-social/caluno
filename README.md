@@ -158,7 +158,7 @@ Commits are scanned for leaked credentials before they reach CI.
 
    ```bash
    # Scan staged changes (same as pre-commit)
-   bash .ai/scripts/pre-commit-secrets.sh
+   bash .githooks/pre-commit-secrets.sh
 
    # Scan the whole repo
    gitleaks detect --source . --config .gitleaks.toml --redact
