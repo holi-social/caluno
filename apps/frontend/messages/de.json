@@ -472,6 +472,7 @@
       "description": "Sobald du dich zu einem Einsatz eincheckst, erscheinen hier deine geleisteten Stunden.",
       "title": "Noch keine Stunden"
     },
+    "generalTime": "Allgemeine Zeit",
     "state": {
       "completed": "Abgeschlossen",
       "inProgress": "Läuft"
@@ -1045,6 +1046,8 @@
     "checkIn": {
       "checkIn": "Einchecken",
       "checkInTitle": "Einchecken",
+      "checkInWithShift": "Stattdessen eine Schicht wählen",
+      "checkInWithoutShift": "Ohne Schicht einchecken",
       "checkOut": "Auschecken",
       "checkOutTitle": "Auschecken",
       "checkedInAt": "Eingecheckt: {time}",
@@ -1052,6 +1055,7 @@
       "checkingOut": "Wird ausgecheckt...",
       "checkingOutAt": "Wird ausgecheckt: {time}",
       "enterQrTitle": "Oder gib die QR-ID manuell ein, um die Anwesenheit zu bestätigen",
+      "generalCheckIn": "Allgemeines Check-in",
       "invalidCheckin": {
         "blocked": {
           "description": "Freiwillige:r darf nicht einchecken. Bitte ihn oder Sie, sich für Hilfe an die Zentrale zu wenden.",
@@ -1406,6 +1410,7 @@
       "loadInstancesError": "Termine konnten nicht geladen werden.",
       "notesLabel": "Notizen",
       "notesPlaceholder": "Notizen zu diesem Zeiteintrag hinzufügen...",
+      "notTiedToShiftLabel": "Keiner Schicht zugeordnet",
       "selectShiftHint": "Wähle einen Einsatz, um verfügbare Termine zu sehen",
       "selectShiftLabel": "Einsatz auswählen",
       "selectShiftPlaceholder": "Einsatz auswählen",
@@ -1521,10 +1526,13 @@
     "discoverEmpty": "Keine Einsätze für diese Filter",
     "discoverEmptyBody": "Passe deine Filter an oder schau später nochmal vorbei.",
     "discoverEmptyHome": "Zurzeit keine Einsätze zum Entdecken. Schau bald wieder vorbei.",
+    "discoverEventsEmptyHome": "Zurzeit keine Veranstaltungen zum Entdecken. Schau bald wieder vorbei.",
     "discoverHeading": "Entdecken",
     "discoverPendingEmptyBody": "Einsätze von {orgName} erscheinen hier, sobald deine Anfrage bestätigt ist.\nEinchecken und Deine Nachweise kannst du jederzeit nutzen.",
     "discoverPendingEmptyTitle": "Noch nichts zu entdecken",
     "discoverPendingSubtitle": "Einsätze von {orgName} erscheinen hier, sobald deine Anfrage bestätigt ist",
+    "discoverTabAssignments": "Einsätze",
+    "discoverTabEvents": "Veranstaltungen",
     "discoverThisWeek": "{n, plural, one {# Einsatz diese Woche} other {# Einsätze diese Woche}}",
     "eventCoverImageAlt": "Titelbild für {title}",
     "filterNextWeek": "Nächste Woche",
@@ -1559,6 +1567,9 @@
     "timerVolunteering": "Du hilfst seit {time}",
     "todayButton": "Heute",
     "weekly": "Wöchentlich",
+    "yourEventsEmpty": "Du hast keine bevorstehenden Veranstaltungen.",
+    "yourEventsHeading": "Deine Veranstaltungen",
+    "yourEventsThisWeek": "{n, plural, one {# Veranstaltung diese Woche} other {# Veranstaltungen diese Woche}}",
     "yourShiftsCount": "{n, plural, one {# Einsatz} other {# Einsätze}}",
     "yourShiftsEmpty": "Du hast keine bevorstehenden Einsätze.",
     "yourShiftsHeading": "Deine Einsätze",
