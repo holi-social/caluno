@@ -63,6 +63,7 @@ describe('ShiftService', () => {
           'https://example.com/image.png',
       } as never,
       {} as never,
+      { shareSatisfiedRequiredForms: async () => {} } as never,
     );
 
     userId = (await createUser(db)).id;

@@ -112,6 +112,7 @@ describe('RequiredFormService', () => {
       authServiceMock,
       notificationServiceMock,
       requiredFormService,
+      { shareSatisfiedRequiredForms: async () => {} } as never,
       { captureUserJoinedOrg: () => {} } as unknown as PostHogService,
     );
 

@@ -35,6 +35,7 @@ function createService(options: {
     {} as never,
     { notifyMembershipApproved: jest.fn() } as never,
     {} as never,
+    { shareSatisfiedRequiredForms: async () => {} } as never,
     options.posthog as PostHogService,
   );
 

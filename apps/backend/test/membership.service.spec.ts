@@ -41,6 +41,7 @@ describe('MembershipService', () => {
       {} as AuthService,
       {} as NotificationService,
       {} as RequiredFormService,
+      { shareSatisfiedRequiredForms: async () => {} } as never,
       { captureUserJoinedOrg: () => {} } as unknown as PostHogService,
     );
     registerTestResourceCleanup(async () => {

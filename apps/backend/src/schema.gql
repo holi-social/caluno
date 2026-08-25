@@ -181,6 +181,7 @@ input CreateRequirementProfileInput {
 
 input CreateRequirementProfileSubmissionInput {
   fulfillments: [CreateRequirementSubmissionFulfillmentInput!]
+  membershipId: String
   membershipRequestId: String
   profileId: String!
 }
@@ -1323,6 +1324,7 @@ input UpdateRequirementProfileInput {
 
 input UpdateRequirementProfileSubmissionInput {
   fulfillments: [CreateRequirementSubmissionFulfillmentInput!]
+  membershipId: String
   membershipRequestId: String
   profileId: String
 }
