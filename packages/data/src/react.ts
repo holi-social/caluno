@@ -41,6 +41,7 @@ export * from './react/hooks/use-my-form-submissions';
 export * from './react/hooks/use-my-permissions';
 export * from './react/hooks/use-my-shift-instances';
 export * from './react/hooks/use-my-shift-instances-infinite';
+export * from './react/hooks/use-organization-volunteers';
 export * from './react/hooks/use-organizations';
 export * from './react/hooks/use-required-forms';
 export * from './react/hooks/use-requirement-forms';
