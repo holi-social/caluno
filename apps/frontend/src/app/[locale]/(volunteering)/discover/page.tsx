@@ -10,12 +10,15 @@ export default async function DiscoverPage({ params }: DiscoverPageProps) {
   await params;
   const client = await getDataClient();
 
-  const availableShiftInstancesPage =
-    await client.shift.findAvailableShiftInstances(getDiscoverWindow());
+  const [availableShiftInstancesPage, availableEventsPage] = await Promise.all([
+    client.shift.findAvailableShiftInstances(getDiscoverWindow()),
+    client.event.findAvailableEvents({ limit: 15 }),
+  ]);
 
   return (
     <DiscoverView
       initialAvailableShiftInstancesPage={availableShiftInstancesPage}
+      initialAvailableEventsPage={availableEventsPage}
     />
   );
 }

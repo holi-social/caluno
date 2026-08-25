@@ -9,7 +9,7 @@ import { OrganizationMapper } from '../src/organization/mappers/organization.map
 import { OrganizationService } from '../src/organization/organization.service';
 import { OrganizationUnitService } from '../src/organization/organization-unit.service';
 import { OrganizationUnitDataService } from '../src/organization/organization-unit-data.service';
-import { PostHogService } from '../src/shared/observability/posthog.service';
+import { PostHogCaptureService } from '../src/shared/observability/posthog.capture.service';
 import { FileService } from '../src/storage/services';
 import { createUser } from './factories';
 import {
@@ -80,7 +80,7 @@ describe('OrganizationService', () => {
       {} as OrganizationUnitService,
       {} as NotificationService,
       {} as FileService,
-      { captureUserJoinedOrg: () => {} } as unknown as PostHogService,
+      { captureUserJoinedOrg: () => {} } as unknown as PostHogCaptureService,
     );
 
     registerTestResourceCleanup(async () => {
