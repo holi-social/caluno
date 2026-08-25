@@ -12,6 +12,7 @@ import { MembershipService } from '../../membership/membership.service';
 import { OrganizationUnitDataService } from '../../organization/organization-unit-data.service';
 import type { EffectiveRate, YearlyUsage } from '../accounting.types';
 import { InvoiceStatus } from '../enums';
+import type { ReimbursementBundleDownloadEntity } from '../schemas/reimbursement-bundle-download.schema';
 import type { ReimbursementRateEntity } from '../schemas/reimbursement-rate.schema';
 import type { ReimbursementTypeEntity } from '../schemas/reimbursement-type.schema';
 
@@ -290,5 +291,39 @@ export class ReimbursementRateService {
       );
     }
     return match.hourlyRateCents;
+  }
+
+  async getBundleDownloadStatus(
+    volunteerId: string,
+    reimbursementTypeId: string,
+  ): Promise<ReimbursementBundleDownloadEntity | undefined> {
+    return this.db.query.reimbursementBundleDownloads.findFirst({
+      where: { volunteerId, reimbursementTypeId },
+    });
+  }
+
+  async recordBundleDownload(
+    volunteerId: string,
+    reimbursementTypeId: string,
+    downloadedByUserId: string,
+  ): Promise<ReimbursementBundleDownloadEntity> {
+    const [row] = await this.db
+      .insert(schema.reimbursementBundleDownloads)
+      .values({
+        volunteerId,
+        reimbursementTypeId,
+        downloadedAt: new Date(),
+        downloadedByUserId,
+      })
+      .onConflictDoUpdate({
+        target: [
+          schema.reimbursementBundleDownloads.volunteerId,
+          schema.reimbursementBundleDownloads.reimbursementTypeId,
+        ],
+        set: { downloadedAt: new Date(), downloadedByUserId },
+      })
+      .returning();
+
+    return row;
   }
 }
