@@ -92,7 +92,11 @@ export default async function TimeEntryDetailPage({
                     <Calendar className="size-4 shrink-0" />{' '}
                     {t('detail.shiftLabel')}
                   </dt>
-                  <dd className="ml-6">{entry.shiftInstance?.master?.title}</dd>
+                  <dd className="ml-6">
+                    {entry.shiftInstance?.master?.title ??
+                      entry.organizationUnit?.name ??
+                      t('table.notAvailable')}
+                  </dd>
                 </div>
 
                 <div>

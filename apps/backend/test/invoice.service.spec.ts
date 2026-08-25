@@ -170,6 +170,7 @@ describe('InvoiceService', () => {
       const instance = await createShiftInstance(db, shift.id);
       await db.insert(schema.timeEntries).values({
         shiftInstanceId: instance.id,
+        organizationUnitId: root.id,
         volunteerId: volunteer.id,
         reimbursementTypeId: reimbursementType.id,
         startedAt: new Date(),

@@ -1161,6 +1161,7 @@ describe('Volunteer home fields and check-in', () => {
 
     await db.insert(schema.timeEntries).values({
       shiftInstanceId: instanceId ?? '',
+      organizationUnitId,
       volunteerId: testUserId,
       startedAt: new Date(),
     });
