@@ -36,10 +36,7 @@ export default async function CheckOutPage({
         <AlertDescription className="block">
           {t.rich('volunteerNotFoundDescription', {
             tryAgain: (chunks) => (
-              <Link
-                className="underline"
-                href={`/admin/${orgUId}/check-in/scan`}
-              >
+              <Link className="underline" href="/check-in">
                 {chunks}
               </Link>
             ),
