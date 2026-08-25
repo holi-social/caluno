@@ -26,7 +26,7 @@ import {
 } from './doc-type-header';
 import { InvoiceCreationModal } from './invoice-creation-modal';
 import type { BoardDocument, BoardVolunteer } from './reimbursements-board';
-import { parseDocDate } from './reimbursements-board';
+import { findActiveContractDate, parseDocDate } from './reimbursements-board';
 import { STATUS_META } from './reimbursements-volunteer-group';
 
 type DocKind = 'contract' | 'invoice';
@@ -86,7 +86,12 @@ interface CreateDocumentModalProps {
   orgUId: string;
   volunteers: BoardVolunteer[];
   onContractSent: (docId: string) => void;
-  onInvoiceSent: (docId: string) => void;
+  onInvoiceSent: (
+    docId: string,
+    volunteerId: string,
+    pauschale: PauschalenType,
+    updatedUsedBeforeAmount: number,
+  ) => void;
 }
 
 export function CreateDocumentModal({
@@ -125,6 +130,11 @@ export function CreateDocumentModal({
     volunteer && selectedLine
       ? (existingDoc?.id ?? syntheticDocId(volunteer, selectedLine))
       : null;
+  const originalUsedBeforeAmount =
+    volunteer && selectedLine
+      ? (volunteer.limits?.[selectedLine.pauschale]?.used ??
+        volunteer.usedAmount)
+      : 0;
 
   function kindLabel(line: DocLine): string {
     return tDocs(
@@ -296,15 +306,23 @@ export function CreateDocumentModal({
               volunteerId={volunteer.id}
               volunteerName={volunteer.name}
               pauschale={selectedLine.pauschale}
-              usedBeforeAmount={
-                volunteer.limits?.[selectedLine.pauschale]?.used ??
-                volunteer.usedAmount
-              }
+              usedBeforeAmount={originalUsedBeforeAmount}
               totalCapAmount={
                 volunteer.limits?.[selectedLine.pauschale]?.total ??
                 volunteer.totalCap
               }
-              onSent={() => onInvoiceSent(docId)}
+              contractSignedAt={findActiveContractDate(
+                volunteer,
+                selectedLine.pauschale,
+              )}
+              onSent={(updatedUsedBeforeAmount) =>
+                onInvoiceSent(
+                  docId,
+                  volunteer.id,
+                  selectedLine.pauschale,
+                  updatedUsedBeforeAmount,
+                )
+              }
             />
           ))}
 

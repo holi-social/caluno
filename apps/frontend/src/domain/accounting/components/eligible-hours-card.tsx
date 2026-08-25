@@ -1,6 +1,7 @@
 import { Checkbox, Separator } from '@repo/ui';
 import { useTranslations } from 'next-intl';
 import { Link } from '@/i18n/navigation';
+import { formatEuro } from '@/lib/formatting/formats';
 import { InfoPanel } from './info-panel';
 
 export interface EligibleHourLine {
@@ -15,6 +16,10 @@ interface EligibleHoursCardProps {
   selectedIds: Set<string>;
   onToggle: (id: string) => void;
   timesheetsHref: string;
+  /** What the volunteer's running total will be once this invoice's selected hours are paid out — the amount already received (InvoiceCapCard) plus this invoice. */
+  projectedAfterAmount: number;
+  /** The volunteer's yearly cap for this pauschale — gives the projection its "of what" context. */
+  capTotalAmount: number;
   className?: string;
 }
 
@@ -28,6 +33,8 @@ export function EligibleHoursCard({
   selectedIds,
   onToggle,
   timesheetsHref,
+  projectedAfterAmount,
+  capTotalAmount,
   className,
 }: EligibleHoursCardProps) {
   const t = useTranslations('Accounting.reimbursements.invoiceModal.hoursCard');
@@ -57,7 +64,15 @@ export function EligibleHoursCard({
 
       <Separator className="my-3" />
 
-      <p className="text-xs text-muted-foreground">
+      <p className="text-sm">
+        {t.rich('projectedAfter', {
+          after: formatEuro(projectedAfterAmount),
+          total: formatEuro(capTotalAmount),
+          amount: (chunks) => <span className="font-semibold">{chunks}</span>,
+        })}
+      </p>
+
+      <p className="mt-2 text-xs text-muted-foreground">
         {t.rich('editHint', {
           link: (chunks) => (
             <Link

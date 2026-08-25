@@ -199,6 +199,42 @@ function applyDocStatusOverrides(
 }
 
 /**
+ * A manual correction to a volunteer's running "used" total for one pauschale
+ * type (see InvoiceCapCard's editable field) — simulates what a real backend
+ * write would do: the corrected baseline sticks for the rest of the session,
+ * so it's what the next invoice for this volunteer/pauschale starts from, and
+ * feeds every cap display on the board, not just the modal that set it.
+ */
+function applyLimitOverrides(
+  vols: BoardVolunteer[],
+  overrides: Record<string, Partial<Record<PauschalenType, number>>>,
+): BoardVolunteer[] {
+  if (Object.keys(overrides).length === 0) return vols;
+  return vols.map((v) => {
+    const volOverride = overrides[v.id];
+    if (!volOverride) return v;
+    const next: BoardVolunteer = { ...v };
+    for (const [pauschale, used] of Object.entries(volOverride) as [
+      PauschalenType,
+      number,
+    ][]) {
+      if (v.limits) {
+        const existing = v.limits[pauschale] ?? {
+          used: v.usedAmount,
+          total: v.totalCap,
+        };
+        next.limits = {
+          ...(next.limits ?? v.limits),
+          [pauschale]: { ...existing, used },
+        };
+      }
+      if (pauschale === v.pauschale) next.usedAmount = used;
+    }
+    return next;
+  });
+}
+
+/**
  * A timesheet is non-compliant when no active contract exists for its pauschale type —
  * contracts must be active before a timesheet can be created. Derived, not stored, so it
  * always reflects the volunteer's current contract state.
@@ -228,6 +264,24 @@ function findContractDoc(
       d.status.startsWith('contract') &&
       (d.pauschale ?? vol.pauschale) === pauschale,
   );
+}
+
+/**
+ * The volunteer's active-contract signing date for one pauschale type —
+ * anchors the invoice cap card's Zeitraum range. `null` when no active
+ * contract exists yet (the non-compliant-guardrail path can still reach
+ * invoice creation without one).
+ */
+export function findActiveContractDate(
+  vol: BoardVolunteer,
+  pauschale: PauschalenType,
+): Date | null {
+  const doc = vol.documents.find(
+    (d) =>
+      d.status === 'contract-active' &&
+      (d.pauschale ?? vol.pauschale) === pauschale,
+  );
+  return doc?.lastActionDate ? parseDocDate(doc.lastActionDate) : null;
 }
 
 /**
@@ -804,9 +858,18 @@ export function ReimbursementsBoard({
   const [docOverrides, setDocOverrides] = useState<Record<string, DocOverride>>(
     {},
   );
+  // Manual "used before" corrections from InvoiceCapCard, keyed by volunteer
+  // id then pauschale — see applyLimitOverrides.
+  const [volunteerLimitOverrides, setVolunteerLimitOverrides] = useState<
+    Record<string, Partial<Record<PauschalenType, number>>>
+  >({});
   const volunteers = useMemo(
-    () => applyDocStatusOverrides(MOCK_VOLUNTEERS, docOverrides),
-    [docOverrides],
+    () =>
+      applyLimitOverrides(
+        applyDocStatusOverrides(MOCK_VOLUNTEERS, docOverrides),
+        volunteerLimitOverrides,
+      ),
+    [docOverrides, volunteerLimitOverrides],
   );
   const allVolunteers = useMemo(
     () => [...volunteers, ...MOCK_DOCUMENTLESS_VOLUNTEERS],
@@ -1127,10 +1190,22 @@ export function ReimbursementsBoard({
     }));
   }
 
-  function handleInvoiceSent(docId: string) {
+  function handleInvoiceSent(
+    docId: string,
+    volunteerId: string,
+    pauschale: PauschalenType,
+    updatedUsedBeforeAmount: number,
+  ) {
     setDocOverrides((prev) => ({
       ...prev,
       [docId]: { status: 'timesheet-signing-vol' },
+    }));
+    setVolunteerLimitOverrides((prev) => ({
+      ...prev,
+      [volunteerId]: {
+        ...prev[volunteerId],
+        [pauschale]: updatedUsedBeforeAmount,
+      },
     }));
   }
 
@@ -1161,9 +1236,20 @@ export function ReimbursementsBoard({
   // contracts/invoices) — a testing convenience, not a real reset endpoint.
   function handleResetPrototype() {
     setDocOverrides({});
+    setVolunteerLimitOverrides({});
     setSelectedDocIds(new Set());
     toast.success(t('resetPrototypeToast'));
   }
+
+  const invoiceTargetPauschale = invoiceCreationTarget
+    ? (invoiceCreationTarget.doc.pauschale ??
+      invoiceCreationTarget.vol.pauschale)
+    : null;
+  const invoiceTargetUsedBefore =
+    invoiceCreationTarget && invoiceTargetPauschale
+      ? (invoiceCreationTarget.vol.limits?.[invoiceTargetPauschale]?.used ??
+        invoiceCreationTarget.vol.usedAmount)
+      : null;
 
   return (
     <div className="space-y-6 pb-24">
@@ -1405,31 +1491,30 @@ export function ReimbursementsBoard({
         docId={invoiceCreationTarget?.doc.id ?? null}
         volunteerId={invoiceCreationTarget?.vol.id ?? null}
         volunteerName={invoiceCreationTarget?.vol.name ?? null}
-        pauschale={
-          invoiceCreationTarget
-            ? (invoiceCreationTarget.doc.pauschale ??
-              invoiceCreationTarget.vol.pauschale)
-            : null
-        }
-        usedBeforeAmount={
-          invoiceCreationTarget
-            ? (invoiceCreationTarget.vol.limits?.[
-                invoiceCreationTarget.doc.pauschale ??
-                  invoiceCreationTarget.vol.pauschale
-              ]?.used ?? invoiceCreationTarget.vol.usedAmount)
-            : null
-        }
+        pauschale={invoiceTargetPauschale}
+        usedBeforeAmount={invoiceTargetUsedBefore}
         totalCapAmount={
-          invoiceCreationTarget
-            ? (invoiceCreationTarget.vol.limits?.[
-                invoiceCreationTarget.doc.pauschale ??
-                  invoiceCreationTarget.vol.pauschale
-              ]?.total ?? invoiceCreationTarget.vol.totalCap)
+          invoiceCreationTarget && invoiceTargetPauschale
+            ? (invoiceCreationTarget.vol.limits?.[invoiceTargetPauschale]
+                ?.total ?? invoiceCreationTarget.vol.totalCap)
             : null
         }
-        onSent={() => {
-          if (invoiceCreationTarget)
-            handleInvoiceSent(invoiceCreationTarget.doc.id);
+        contractSignedAt={
+          invoiceCreationTarget && invoiceTargetPauschale
+            ? findActiveContractDate(
+                invoiceCreationTarget.vol,
+                invoiceTargetPauschale,
+              )
+            : null
+        }
+        onSent={(updatedUsedBeforeAmount) => {
+          if (invoiceCreationTarget && invoiceTargetPauschale)
+            handleInvoiceSent(
+              invoiceCreationTarget.doc.id,
+              invoiceCreationTarget.vol.id,
+              invoiceTargetPauschale,
+              updatedUsedBeforeAmount,
+            );
         }}
       />
 
@@ -1447,12 +1532,15 @@ export function ReimbursementsBoard({
 
 // ─── Board skeleton ───────────────────────────────────────────────────────────
 
+const SKELETON_TILE_KEYS = ['tile-1', 'tile-2', 'tile-3', 'tile-4', 'tile-5'];
+const SKELETON_ROW_KEYS = ['row-1', 'row-2', 'row-3'];
+
 export function ReimbursementsBoardSkeleton() {
   return (
     <div className="space-y-6 pb-24">
       <div className="flex gap-1 overflow-x-auto pb-1">
-        {Array.from({ length: 5 }).map((_, i) => (
-          <Fragment key={i}>
+        {SKELETON_TILE_KEYS.map((key, i) => (
+          <Fragment key={key}>
             {i > 0 && (
               <div className="flex items-center px-1">
                 <Skeleton className="h-3 w-3" />
@@ -1477,9 +1565,9 @@ export function ReimbursementsBoardSkeleton() {
       </div>
 
       <div className="rounded-xl border border-border overflow-hidden">
-        {Array.from({ length: 3 }).map((_, i) => (
+        {SKELETON_ROW_KEYS.map((key) => (
           <div
-            key={i}
+            key={key}
             className="flex items-center gap-3 border-b border-border px-4 py-3"
           >
             <Skeleton className="h-4 w-4 rounded" />

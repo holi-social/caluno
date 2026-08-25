@@ -330,7 +330,7 @@ export function getInvoiceDocument(
         locked: true,
         line: line(
           'jahresdeckel-hinweis-line',
-          '{volunteerFirstName} {volunteerLastName} hat im Zeitraum {contractPeriod} bereits {alreadyReceivedAmount} vom Jahresdeckel in Höhe von {yearlyLimitAmount} erhalten.',
+          '{volunteerFirstName} {volunteerLastName} hat vor diesem Stundennachweis im Zeitraum {contractPeriod} bereits {alreadyReceivedAmount} vom Jahresdeckel in Höhe von {yearlyLimitAmount} erhalten.',
           [
             bound('jahresdeckel-volunteer-first', 'volunteer_first_name'),
             bound('jahresdeckel-volunteer-last', 'volunteer_last_name'),

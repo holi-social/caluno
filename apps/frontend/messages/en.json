@@ -1241,14 +1241,21 @@
         },
         "capCard": {
           "title": "Yearly cap",
-          "value": "{before} → {after}",
-          "subline": "of {total} yearly cap"
+          "usedBeforeLabel": "Received before this invoice",
+          "subline": "of {total} yearly cap",
+          "zeitraum": "Period: {range}",
+          "contractStartPlaceholder": "Contract start",
+          "editButtonLabel": "Edit amount already received",
+          "usedBeforeEditLabel": "Amount already received",
+          "saveButtonLabel": "Save",
+          "editingHint": "Manual correction to the amount received before this invoice."
         },
         "hoursCard": {
           "title": "Eligible hours",
           "rowCheckboxLabel": "Include {shiftName} in this invoice",
           "hoursValue": "{hours}h",
-          "editHint": "To edit hours or shift details, go to <link>Timesheets</link>."
+          "editHint": "To edit hours or shift details, go to <link>Timesheets</link>.",
+          "projectedAfter": "After this payout: <amount>{after}</amount> of <amount>{total}</amount> yearly cap"
         },
         "preview": {
           "disclaimerBadge": "Preview",

@@ -1241,14 +1241,21 @@
         },
         "capCard": {
           "title": "Jahresdeckel",
-          "value": "{before} → {after}",
-          "subline": "von {total} Jahresdeckel"
+          "usedBeforeLabel": "Bereits erhalten vor diesem Stundennachweis",
+          "subline": "von {total} Jahresdeckel",
+          "zeitraum": "Zeitraum: {range}",
+          "contractStartPlaceholder": "Vertragsbeginn",
+          "editButtonLabel": "Bereits erhaltenen Betrag bearbeiten",
+          "usedBeforeEditLabel": "Bereits erhaltener Betrag",
+          "saveButtonLabel": "Speichern",
+          "editingHint": "Manuelle Korrektur des vor diesem Stundennachweis bereits erhaltenen Betrags."
         },
         "hoursCard": {
           "title": "Abrechenbare Stunden",
           "rowCheckboxLabel": "{shiftName} in diesen Stundennachweis aufnehmen",
           "hoursValue": "{hours} Std.",
-          "editHint": "Um Stunden oder Einsatzdetails zu ändern, gehe zu <link>Zeitnachweise</link>."
+          "editHint": "Um Stunden oder Einsatzdetails zu ändern, gehe zu <link>Zeitnachweise</link>.",
+          "projectedAfter": "Nach dieser Auszahlung: <amount>{after}</amount> von <amount>{total}</amount> Jahresdeckel"
         },
         "preview": {
           "disclaimerBadge": "Vorschau",

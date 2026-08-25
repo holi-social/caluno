@@ -1,6 +1,6 @@
 'use client';
 
-import { format } from 'date-fns';
+import { format, subDays } from 'date-fns';
 import { useTranslations } from 'next-intl';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
@@ -150,7 +150,9 @@ interface InvoiceCreationModalProps {
   pauschale: PauschalenType | null;
   usedBeforeAmount: number | null;
   totalCapAmount: number | null;
-  onSent: () => void;
+  /** The volunteer's active-contract signing date for this pauschale — anchors the Zeitraum range the cap card's "already received" figure covers. `null` when no active contract exists yet. */
+  contractSignedAt: Date | null;
+  onSent: (updatedUsedBeforeAmount: number) => void;
   /** See DocumentCreationDialog's embedded mode. */
   embedded?: boolean;
 }
@@ -165,6 +167,7 @@ export function InvoiceCreationModal({
   pauschale,
   usedBeforeAmount,
   totalCapAmount,
+  contractSignedAt,
   onSent,
   embedded,
 }: InvoiceCreationModalProps) {
@@ -173,6 +176,9 @@ export function InvoiceCreationModal({
   const tPauschale = useTranslations('Accounting.reimbursements.toolbar');
   const tPeriod = useTranslations(
     'Accounting.reimbursements.invoiceModal.periodPicker',
+  );
+  const tCapCard = useTranslations(
+    'Accounting.reimbursements.invoiceModal.capCard',
   );
 
   const [status, setStatus] = useState<DocumentCreationLoadStatus>('loading');
@@ -184,6 +190,7 @@ export function InvoiceCreationModal({
   const [checkedIds, setCheckedIds] = useState<Set<string>>(new Set());
   const [period, setPeriod] = useState<DateRange>(thisMonthRange);
   const [isSending, setIsSending] = useState(false);
+  const [usedBeforeOverride, setUsedBeforeOverride] = useState(0);
 
   useEffect(() => {
     if (!open) return;
@@ -194,6 +201,7 @@ export function InvoiceCreationModal({
     setLines([]);
     setCheckedIds(new Set());
     setPeriod(thisMonthRange());
+    setUsedBeforeOverride(usedBeforeAmount ?? 0);
 
     const timeout = setTimeout(() => {
       if (!volunteerName) {
@@ -220,7 +228,7 @@ export function InvoiceCreationModal({
     }, 350);
 
     return () => clearTimeout(timeout);
-  }, [open, volunteerId, docId, volunteerName]);
+  }, [open, volunteerId, docId, volunteerName, usedBeforeAmount]);
 
   // Rendered unconditionally (per the ContractCreationModal precedent) so the
   // Dialog can drive its own open/close animation; nothing below needs the
@@ -241,7 +249,23 @@ export function InvoiceCreationModal({
     0,
   );
   const selectedAmount = selectedHours * ratePerHour;
-  const projectedAfter = usedBeforeAmount + selectedAmount;
+  const projectedAfter = usedBeforeOverride + selectedAmount;
+  // The "already received" figure covers everything since the contract went
+  // active up to (but not including) this invoice's own period — the day it
+  // starts is this invoice's business, not the running total behind it. Feeds
+  // both the cap card and the generated document's "Bereits erhaltene
+  // Zahlungen" note (contract_period) so neither can drift from the other.
+  const zeitraumTo = subDays(period.from ?? new Date(), 1);
+  const zeitraumToLabel = format(zeitraumTo, 'dd.MM.yyyy');
+  // UI copy is locale-aware; the generated document is always German (per
+  // TemplateDocument's convention — see builder-document-presets.ts), so the
+  // fallback word is hardcoded there rather than routed through t().
+  const zeitraumLabel = contractSignedAt
+    ? `${format(contractSignedAt, 'dd.MM.yyyy')} – ${zeitraumToLabel}`
+    : `${tCapCard('contractStartPlaceholder')} – ${zeitraumToLabel}`;
+  const documentZeitraumLabel = contractSignedAt
+    ? `${format(contractSignedAt, 'dd.MM.yyyy')} – ${zeitraumToLabel}`
+    : `Vertragsbeginn – ${zeitraumToLabel}`;
 
   const toggleLine = (id: string) => {
     setCheckedIds((prev) => {
@@ -258,7 +282,7 @@ export function InvoiceCreationModal({
     setIsSending(false);
     onOpenChange(false);
     toast.success(t('sentToast', { name: volunteerName }));
-    onSent();
+    onSent(usedBeforeOverride);
   };
 
   const pauschaleLabel = tPauschale(
@@ -296,6 +320,9 @@ export function InvoiceCreationModal({
       : undefined,
     period_start: format(period.from ?? new Date(), 'dd.MM.yyyy'),
     period_end: format(period.to ?? new Date(), 'dd.MM.yyyy'),
+    contract_period: documentZeitraumLabel,
+    already_received_amount: formatEuro(usedBeforeOverride),
+    yearly_limit_amount: formatEuro(totalCapAmount),
   };
 
   const tableBlock = template.blocks.find((b) => b.kind === 'table');
@@ -431,15 +458,18 @@ export function InvoiceCreationModal({
               </div>
             </InfoPanel>
             <InvoiceCapCard
-              usedBefore={usedBeforeAmount}
-              projectedAfter={projectedAfter}
+              usedBefore={usedBeforeOverride}
               total={totalCapAmount}
+              onUsedBeforeChange={setUsedBeforeOverride}
+              zeitraumLabel={zeitraumLabel}
             />
             <EligibleHoursCard
               lines={lines}
               selectedIds={checkedIds}
               onToggle={toggleLine}
               timesheetsHref={timesheetsHref}
+              projectedAfterAmount={projectedAfter}
+              capTotalAmount={totalCapAmount}
             />
           </>
         )
