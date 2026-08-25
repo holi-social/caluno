@@ -10,18 +10,23 @@ import { ManualCheckInDialog } from './manual-check-in-dialog';
 
 interface CheckInViewProps {
   checkInId: string;
+  qrValue: string;
   name: string;
   canCheckIn: boolean;
 }
 
-export function CheckInView({ checkInId, name, canCheckIn }: CheckInViewProps) {
+export function CheckInView({
+  checkInId,
+  qrValue,
+  name,
+  canCheckIn,
+}: CheckInViewProps) {
   const [tab, setTab] = useState<'qr' | 'scanner'>('qr');
   const [manualCheckinOpen, setManualCheckinOpen] = useState(false);
   const t = useTranslations('Navigation');
   const tCheckIn = useTranslations('CheckIn');
 
   const easyReadCheckinId = checkInId.match(/.{1,4}/g)?.join('-') ?? checkInId;
-  const qrValue = `${process.env.NEXT_PUBLIC_BACKOFFICE_URL}/admin/check-in/${checkInId}`;
 
   const qrCard = (
     <div className="px-2 py-8">
