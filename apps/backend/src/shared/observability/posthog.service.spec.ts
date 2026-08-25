@@ -62,39 +62,14 @@ describe('PostHogService', () => {
     expect(shutdown).toHaveBeenCalled();
   });
 
-  it('captures user_logged_in with the user id as distinctId', () => {
-    const service = new PostHogService(client);
-    service.captureUserLoggedIn('user-1');
-    expect(capture).toHaveBeenCalledWith({
-      event: POSTHOG_EVENT.USER_LOGGED_IN,
-      distinctId: createDailyDistinctId('user-1'),
-    });
-  });
-
-  it('captures user_joined_org with org properties and group', () => {
-    const service = new PostHogService(client);
-    service.captureUserJoinedOrg('user-1', {
-      organizationId: 'org-1',
-      organizationUnitId: 'ou-1',
-      source: 'membership_approved',
-    });
-    expect(capture).toHaveBeenCalledWith({
-      event: POSTHOG_EVENT.USER_JOINED_ORG,
-      distinctId: createDailyDistinctId('user-1'),
-      properties: {
-        organizationId: 'org-1',
-        organizationUnitId: 'ou-1',
-        source: 'membership_approved',
-      },
-      groups: { organization: 'org-1' },
-    });
-  });
-
   it('does not throw or call the client, when no POSTHOG_DISTINCT_SECRET is set', () => {
     delete process.env.POSTHOG_DISTINCT_SECRET;
 
     const service = new PostHogService(client);
-    service.captureUserLoggedIn('user-1');
+    service.capture({
+      event: POSTHOG_EVENT.USER_LOGGED_IN,
+      userId: 'user-1',
+    });
     expect(capture).not.toHaveBeenCalled();
   });
 });
