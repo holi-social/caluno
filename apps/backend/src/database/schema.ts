@@ -37,6 +37,7 @@ export * from '../requirement-profile/schemas/requirement-profile.schema';
 export * from '../requirement-profile/schemas/requirement-profile-requirement.schema';
 export * from '../requirement-profile/schemas/requirement-profile-submission.schema';
 export * from '../requirement-profile/schemas/user-profile.schema';
+export * from '../shared/invite-schema';
 export * from '../shift/schemas/shift.schema';
 export * from '../shift/schemas/shift-instance.schema';
 export * from '../shift/schemas/shift-instance-invite.schema';

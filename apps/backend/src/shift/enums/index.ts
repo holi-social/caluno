@@ -5,13 +5,21 @@ export enum ShiftVisibility {
 
 export { SortOrder } from './sort-order.enum';
 
+/** GraphQL `ShiftInviteOrigin`. Values match `InviteOrigin`. */
+export enum ShiftInviteOrigin {
+  ADMIN_INVITED = 'ADMIN_INVITED',
+  VOLUNTEER_JOINED = 'VOLUNTEER_JOINED',
+  VOLUNTEER_APPLIED = 'VOLUNTEER_APPLIED',
+}
+
+/** GraphQL `ShiftInviteStatus` (the answer). Null on the row means waiting. */
 export enum ShiftInviteStatus {
-  INVITED = 'INVITED',
-  ACCEPTED = 'ACCEPTED',
+  VOLUNTEER_ACCEPTED = 'VOLUNTEER_ACCEPTED',
   VOLUNTEER_REJECTED = 'VOLUNTEER_REJECTED',
+  ADMIN_ACCEPTED = 'ADMIN_ACCEPTED',
   ADMIN_REJECTED = 'ADMIN_REJECTED',
-  CANCELLED = 'CANCELLED',
-  SELF_JOINED = 'SELF_JOINED',
+  VOLUNTEER_CANCELLED = 'VOLUNTEER_CANCELLED',
+  ADMIN_CANCELLED = 'ADMIN_CANCELLED',
 }
 
 export enum RecurrenceDay {

@@ -1,21 +1,15 @@
-import {
-  index,
-  pgEnum,
-  snakeCase,
-  text,
-  unique,
-  uuid,
-} from 'drizzle-orm/pg-core';
+import { index, snakeCase, text, unique, uuid } from 'drizzle-orm/pg-core';
 import { users } from '../../auth/schemas/auth.schema';
 import { idColumn, timestampColumns } from '../../database/database-columns';
-import { enumValues } from '../../database/typeutil';
-import { EventInviteStatus } from '../enums';
+import { InviteOrigin, InviteStatus } from '../../shared/invite-enums';
+import {
+  eventInviteStatusEnum,
+  inviteOriginEnum,
+} from '../../shared/invite-schema';
+import { EventInviteOrigin, EventInviteStatus } from '../enums';
 import { events } from './event.schema';
 
-export const eventInviteStatusEnum = pgEnum(
-  'event_invite_status',
-  enumValues(EventInviteStatus),
-);
+export { eventInviteStatusEnum };
 
 export const eventInvites = snakeCase.table(
   'event_invites',
@@ -27,16 +21,19 @@ export const eventInvites = snakeCase.table(
     userId: text('user_id')
       .references(() => users.id, { onDelete: 'restrict' })
       .notNull(),
-    status: eventInviteStatusEnum('status')
-      .$type<EventInviteStatus>()
-      .notNull()
-      .default(EventInviteStatus.INVITED),
+    origin: inviteOriginEnum('origin').$type<
+      InviteOrigin | EventInviteOrigin | null
+    >(),
+    status: eventInviteStatusEnum('status').$type<
+      InviteStatus | EventInviteStatus | null
+    >(),
     ...timestampColumns,
   },
   (table) => [
     index('idx_event_invites_event_id').on(table.eventId),
     index('idx_event_invites_user_id').on(table.userId),
     index('idx_event_invites_status').on(table.status),
+    index('idx_event_invites_origin').on(table.origin),
     unique('uq_event_invites_event_user').on(table.eventId, table.userId),
   ],
 );

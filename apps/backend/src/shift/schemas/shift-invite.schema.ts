@@ -1,9 +1,13 @@
 import { index, pgTable, text, unique, uuid } from 'drizzle-orm/pg-core';
 import { users } from '../../auth/schemas/auth.schema';
 import { idColumn, timestampColumns } from '../../database/database-columns';
-import { ShiftInviteStatus } from '../enums';
+import { InviteOrigin, InviteStatus } from '../../shared/invite-enums';
+import {
+  inviteOriginEnum,
+  shiftInviteStatusEnum,
+} from '../../shared/invite-schema';
+import { ShiftInviteOrigin, ShiftInviteStatus } from '../enums';
 import { shifts } from './shift.schema';
-import { shiftInviteStatusEnum } from './shift-instance-invite.schema';
 
 export const shiftInvites = pgTable(
   'shift_invites',
@@ -15,15 +19,19 @@ export const shiftInvites = pgTable(
     userId: text('user_id')
       .references(() => users.id, { onDelete: 'restrict' })
       .notNull(),
-    status: shiftInviteStatusEnum('status')
-      .notNull()
-      .default(ShiftInviteStatus.INVITED),
+    origin: inviteOriginEnum('origin').$type<
+      InviteOrigin | ShiftInviteOrigin | null
+    >(),
+    status: shiftInviteStatusEnum('status').$type<
+      InviteStatus | ShiftInviteStatus | null
+    >(),
     ...timestampColumns,
   },
   (table) => [
     index('idx_shift_invites_shift_id').on(table.shiftId),
     index('idx_shift_invites_user_id').on(table.userId),
     index('idx_shift_invites_status').on(table.status),
+    index('idx_shift_invites_origin').on(table.origin),
     unique('uq_shift_invites_shift_user').on(table.shiftId, table.userId),
   ],
 );
