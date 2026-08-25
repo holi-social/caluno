@@ -512,8 +512,16 @@ mutation RegenerateFormShareToken($id: String!) {
   }
 }
 
-mutation SubmitForm($token: String!, $input: SubmitFormInput!) {
-  submitForm(token: $token, input: $input) {
+mutation SubmitForm(
+  $token: String!
+  $organizationUnitId: ID!
+  $input: SubmitFormInput!
+) {
+  submitForm(
+    token: $token
+    organizationUnitId: $organizationUnitId
+    input: $input
+  ) {
     id
     formId
     userId

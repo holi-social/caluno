@@ -625,7 +625,7 @@ type Mutation {
   setShiftRequiredForms(formIds: [String!]!, shiftId: ID!): [RequiredFormRef!]!
   signContract(contractId: ID!): Contract!
   signInvoice(invoiceId: ID!): Invoice!
-  submitForm(input: SubmitFormInput!, token: String!): FormSubmission!
+  submitForm(input: SubmitFormInput!, organizationUnitId: ID!, token: String!): FormSubmission!
   submitRequiredForm(formId: String!, input: SubmitFormInput!, targetId: String!, targetType: RequiredFormTargetType!): FormSubmission!
   updateDocumentTemplate(id: ID!, input: UpdateDocumentTemplateInput!): DocumentTemplate!
   updateEvent(id: ID!, input: UpdateEventInput!): Event!

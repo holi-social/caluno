@@ -33,7 +33,7 @@ function FormActions({
   const [isDeleting, startDeleteTransition] = useTransition();
 
   function handleShare() {
-    const url = `${window.location.origin}/f/${form.shareToken}`;
+    const url = `${window.location.origin}/orgs/${orgUId}/forms/${form.shareToken}`;
     void copyToClipboard(url, tActions('linkCopied'));
   }
 

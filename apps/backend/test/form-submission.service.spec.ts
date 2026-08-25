@@ -5,6 +5,7 @@ import { Test, type TestingModule } from '@nestjs/testing';
 import { type Database, DatabaseModule } from '../src/database/database.module';
 import { DATABASE_CONNECTION } from '../src/database/database-connection';
 import * as schema from '../src/database/schema';
+import { ForbiddenGraphQLError } from '../src/graphql/errors';
 import { RequiredFormTargetType } from '../src/requirement-profile/enums';
 import { FormSubmissionService } from '../src/requirement-profile/services/form-submission.service';
 import { RequiredFormService } from '../src/requirement-profile/services/required-form.service';
@@ -342,4 +343,51 @@ describe('FormSubmissionService org-unit shares', () => {
     });
   });
 
+  describe('submit by share token', () => {
+    it('shares the submission with the unit from the link', async () => {
+      const { admin, rootUnit, unitA, volunteer } = await setupOrgWithUnits();
+      const { form } = await createRequirementForm(db, {
+        organizationId: rootUnit.organizationId,
+        organizationUnitId: rootUnit.id,
+        createdById: admin.id,
+      });
+
+      const submission = await formSubmissionService.submit(
+        form.shareToken,
+        { values: [] },
+        volunteer.id,
+        unitA.id,
+      );
+
+      expect(await sharesFor(submission.id, unitA.id)).toHaveLength(1);
+      expect(await sharesFor(submission.id, rootUnit.id)).toHaveLength(0);
+    });
+
+    it('rejects a link unit outside the form’s organization', async () => {
+      const { admin, rootUnit, volunteer } = await setupOrgWithUnits();
+      const { form } = await createRequirementForm(db, {
+        organizationId: rootUnit.organizationId,
+        organizationUnitId: rootUnit.id,
+        createdById: admin.id,
+      });
+      const otherOrg = await createOrganizationWithType(
+        db,
+        `Other Org ${crypto.randomUUID()}`,
+      );
+      const otherUnit = await createUnit(db, {
+        organizationId: otherOrg.organization.id,
+        typeId: otherOrg.type.id,
+        name: 'other-unit',
+      });
+
+      await expect(
+        formSubmissionService.submit(
+          form.shareToken,
+          { values: [] },
+          volunteer.id,
+          otherUnit.id,
+        ),
+      ).rejects.toBeInstanceOf(ForbiddenGraphQLError);
+    });
+  });
 });
