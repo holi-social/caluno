@@ -173,10 +173,6 @@ export const requirementProfilesRelations = defineRelationsPart(
         from: r.formSubmissions.userId,
         to: r.users.id,
       }),
-      membership: r.one.memberships({
-        from: r.formSubmissions.membershipId,
-        to: r.memberships.id,
-      }),
       values: r.many.formSubmissionValues({
         from: r.formSubmissions.id,
         to: r.formSubmissionValues.submissionId,

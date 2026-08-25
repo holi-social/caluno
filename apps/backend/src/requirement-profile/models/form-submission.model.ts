@@ -16,9 +16,6 @@ export class FormSubmission {
   @Field(() => String)
   userId!: string;
 
-  @Field(() => String, { nullable: true })
-  membershipId?: string | null;
-
   @Field(() => Date)
   submittedAt!: Date;
 
