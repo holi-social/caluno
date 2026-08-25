@@ -23,6 +23,7 @@ type Contract {
   declinedAtSigneeType: SigneeType
   declinedByUser: User
   documentTemplate: DocumentTemplate!
+  downloadUrl: String
   id: ID!
   isNonCompliant: Boolean!
   periodEnd: DateTime!
@@ -450,6 +451,7 @@ type Invoice {
   declinedAtSigneeType: SigneeType
   declinedByUser: User
   documentTemplate: DocumentTemplate!
+  downloadUrl: String
   id: ID!
   invoiceStatus: InvoiceStatus!
   invoiceTimeEntries: [InvoiceTimeEntry!]!
