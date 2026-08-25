@@ -84,6 +84,12 @@
       "verifying": "Wird bestätigt..."
     }
   },
+  "CheckIn": {
+    "manualCheckin": "Manuelles Einchecken",
+    "myQrCodeTab": "Mein QR-Code",
+    "qrScannerTab": "QR-Scanner",
+    "scanACode": "Code scannen"
+  },
   "Common": {
     "avatarAlt": "Avatar von {name}",
     "back": "Zurück",
