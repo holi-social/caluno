@@ -47,21 +47,12 @@ export class MembershipLifecycleOrchestrator {
     reviewerId: string,
     rejectionReason: string,
   ): Promise<MembershipRequestEntity> {
-    const request = await this.membershipService.rejectMembershipRequest(
+    return this.membershipService.rejectMembershipRequest(
       id,
       organizationUnitId,
       reviewerId,
       rejectionReason,
     );
-
-    if (request.userId && request.organizationUnitId) {
-      await this.formSubmissionService.rejectByUserAndOrgUnit(
-        request.userId,
-        request.organizationUnitId,
-      );
-    }
-
-    return request;
   }
 
   async submitForm(
