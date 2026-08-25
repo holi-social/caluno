@@ -1,6 +1,6 @@
 import { hashPassword } from 'better-auth/crypto';
 import { inArray } from 'drizzle-orm';
-import { drizzle } from 'drizzle-orm/node-postgres';
+import { drizzle, type NodePgDatabase } from 'drizzle-orm/node-postgres';
 import { Pool } from 'pg';
 import {
   DEFAULT_MEMBER_ROLE_NAME,
@@ -9,25 +9,49 @@ import {
   PERMISSIONS,
 } from '../auth/constants';
 import { permissions } from '../auth/schemas/permission.schema';
+import { EventInviteStatus } from '../event/enums';
 import { MembershipRequestStatus } from '../membership/enums';
+import { FieldType } from '../requirement-profile/enums';
 import { ShiftInviteStatus, ShiftVisibility } from '../shift/enums';
 import { expandShift } from '../shift/utils/rrule-expander';
 import { slugify } from '../utils/slug.util';
+import { relations } from './relations';
 import * as schema from './schema';
 
 process.env.TZ = 'Europe/Berlin';
 
-const FIXTURE_PASSWORD = 'abcd1234';
+const FIXTURE_PASSWORD = process.env.FIXTURE_PASSWORD ?? 'abcd1234';
 const ORG_NAME = 'Playground';
+const ORG_SLUG = 'playground';
 const FIXTURE_TIMEZONE = 'Europe/Berlin';
 const SHIFT_DURATION_MINUTES = 240;
 const RECURRENCE_WEEKS_BACK = 12;
+
+// Stable IDs so e2e specs can rely on fixture data without querying the DB.
+const PUBLIC_EVENT_ID = '213e6757-af0c-4ce3-ba29-fb3500309351';
+const EVENT_ASSISTANCE_SHIFT_ID = 'e2915169-290d-42b2-a2e2-6d9992bb8814';
+const SHOWCASE_EVENT_ID = 'a6f6f1a1-1f2a-4a2a-9c1a-2f6b8b2f9a11';
+const SHOWCASE_OPEN_SHIFT_ID = 'b1e2a3c4-5d6e-4f70-8a91-b2c3d4e5f601';
+const SHOWCASE_FULL_SHIFT_ID = 'c2f3b4d5-6e7f-4081-9a02-c3d4e5f60712';
+const SHOWCASE_UNLIMITED_SHIFT_ID = 'd3a4c5e6-7f80-4192-ab13-d4e5f6071823';
+
+const EVENT_COVER_IMAGE_URL =
+  'https://images.unsplash.com/photo-1593113646773-028c64a8f1b8?auto=format&fit=crop&w=1200&q=80';
+const SHOWCASE_SHIFT_IMAGE_URL =
+  'https://images.unsplash.com/photo-1593113598332-cd288d649433?auto=format&fit=crop&w=1200&q=80';
+const ORG_COVER_IMAGE_URL =
+  'https://images.unsplash.com/photo-1593113646773-028c64a8f1b8?auto=format&fit=crop&w=1200&q=80';
+const DEMO_USER_EMAIL = 'testing+demo@caluno.org';
 
 const WEEKLY_RRULE = {
   MONDAY: 'FREQ=WEEKLY;BYDAY=MO;WKST=MO',
   WEDNESDAY: 'FREQ=WEEKLY;BYDAY=WE;WKST=MO',
   FRIDAY: 'FREQ=WEEKLY;BYDAY=FR;WKST=MO',
 } as const;
+
+/** A single, non-recurring occurrence — used for the fixed overlap-test shifts below. */
+const ONE_TIME_RRULE = 'FREQ=DAILY;COUNT=1';
+const OVERLAP_MEMBER_INDEX = 2;
 
 const SUPERVISOR_ROLE_NAME = 'Supervisor';
 const SUPERVISOR_PERMISSIONS = [
@@ -37,7 +61,7 @@ const SUPERVISOR_PERMISSIONS = [
   PERMISSIONS.VOLUNTEER_VIEW,
 ] as const;
 
-type Database = ReturnType<typeof drizzle<typeof schema>>;
+type Database = NodePgDatabase<typeof relations>;
 
 type FixtureUser = {
   id: string;
@@ -46,7 +70,7 @@ type FixtureUser = {
 };
 
 const memberEmail = (index: number): string =>
-  `member${String(index).padStart(2, '0')}@clippy.social`;
+  `testing+${String(index).padStart(3, '0')}@caluno.org`;
 
 type FixtureDateParts = {
   year: number;
@@ -170,6 +194,14 @@ const createAuthUser = async (
   hashedPassword: string,
   input: { email: string; name: string },
 ): Promise<FixtureUser> => {
+  const existing = await db.query.users.findFirst({
+    where: { email: input.email },
+  });
+
+  if (existing) {
+    return { id: existing.id, email: existing.email, name: existing.name };
+  }
+
   const id = crypto.randomUUID();
 
   await db.insert(schema.users).values({
@@ -191,28 +223,46 @@ const createAuthUser = async (
   return { id, email: input.email, name: input.name };
 };
 
-const createMembershipWithRole = async (
+const ensureMembershipWithRole = async (
   db: Database,
   userId: string,
   organizationUnitId: string,
   roleId: string,
 ): Promise<void> => {
-  const [membership] = await db
-    .insert(schema.memberships)
-    .values({ userId, organizationUnitId })
-    .returning();
+  const existingMembership = await db.query.memberships.findFirst({
+    where: { userId, organizationUnitId },
+  });
 
-  if (!membership) {
-    throw new Error('Failed to create membership');
+  let membershipId: string;
+
+  if (existingMembership) {
+    membershipId = existingMembership.id;
+  } else {
+    const [membership] = await db
+      .insert(schema.memberships)
+      .values({ userId, organizationUnitId })
+      .returning();
+
+    if (!membership) {
+      throw new Error('Failed to create membership');
+    }
+
+    membershipId = membership.id;
   }
 
-  await db.insert(schema.membershipRoles).values({
-    membershipId: membership.id,
-    roleId,
+  const existingRole = await db.query.membershipRoles.findFirst({
+    where: { membershipId, roleId },
   });
+
+  if (!existingRole) {
+    await db.insert(schema.membershipRoles).values({
+      membershipId,
+      roleId,
+    });
+  }
 };
 
-const createPlaygroundOrganization = async (
+const ensurePlaygroundOrganization = async (
   db: Database,
   adminUserId: string,
 ): Promise<{
@@ -226,13 +276,88 @@ const createPlaygroundOrganization = async (
     (permission) => !permission.startsWith('org-role:'),
   );
 
+  const existingOrg = await db.query.organizations.findFirst({
+    where: { slug: ORG_SLUG },
+  });
+
+  if (existingOrg) {
+    const rootUnit = await db.query.organizationUnits.findFirst({
+      where: { organizationId: existingOrg.id, slug: ORG_SLUG },
+    });
+
+    if (!rootUnit) {
+      throw new Error(
+        'Existing Playground organization is missing its root unit',
+      );
+    }
+
+    const roles = await db.query.roles.findMany({
+      where: { organizationId: existingOrg.id },
+    });
+
+    const ownerRole = roles.find(
+      (role) => role.name === DEFAULT_OWNER_ROLE_NAME,
+    );
+    const memberRole = roles.find(
+      (role) => role.name === DEFAULT_MEMBER_ROLE_NAME,
+    );
+    const supervisorRole = roles.find(
+      (role) => role.name === SUPERVISOR_ROLE_NAME,
+    );
+
+    if (!ownerRole || !memberRole || !supervisorRole) {
+      throw new Error(
+        'Existing Playground organization is missing expected roles',
+      );
+    }
+
+    const existingMembership = await db.query.memberships.findFirst({
+      where: { userId: adminUserId, organizationUnitId: rootUnit.id },
+    });
+
+    if (!existingMembership) {
+      const [membership] = await db
+        .insert(schema.memberships)
+        .values({ userId: adminUserId, organizationUnitId: rootUnit.id })
+        .returning();
+
+      if (!membership) {
+        throw new Error('Failed to create admin membership');
+      }
+
+      await db.insert(schema.membershipRoles).values({
+        membershipId: membership.id,
+        roleId: ownerRole.id,
+      });
+    } else {
+      const existingRole = await db.query.membershipRoles.findFirst({
+        where: { membershipId: existingMembership.id, roleId: ownerRole.id },
+      });
+
+      if (!existingRole) {
+        await db.insert(schema.membershipRoles).values({
+          membershipId: existingMembership.id,
+          roleId: ownerRole.id,
+        });
+      }
+    }
+
+    return {
+      organizationId: existingOrg.id,
+      rootUnitId: rootUnit.id,
+      ownerRoleId: ownerRole.id,
+      memberRoleId: memberRole.id,
+      supervisorRoleId: supervisorRole.id,
+    };
+  }
+
   return db.transaction(async (tx) => {
     const [organization] = await tx
       .insert(schema.organizations)
       .values({
         name: ORG_NAME,
-        slug: slugify(ORG_NAME),
-        contactEmail: 'admin@clippy.social',
+        slug: ORG_SLUG,
+        contactEmail: 'testing@caluno.org',
         description: 'Local development playground organization',
       })
       .returning();
@@ -244,8 +369,9 @@ const createPlaygroundOrganization = async (
     const [rootType] = await tx
       .insert(schema.organizationUnitTypes)
       .values({
-        name: 'management',
-        description: `organization managment unit for ${organization.name}`,
+        organizationId: organization.id,
+        name: 'organisation unit',
+        description: `organization unit for ${organization.name}`,
         icon: 'building-2',
       })
       .returning();
@@ -261,9 +387,11 @@ const createPlaygroundOrganization = async (
         parentId: null,
         typeId: rootType.id,
         name: organization.name,
-        slug: organization.slug,
+        slug: ORG_SLUG,
         contactEmail: organization.contactEmail,
         description: organization.description,
+        coverUrl: ORG_COVER_IMAGE_URL,
+        address: 'Hauptstraße 1, 10115 Berlin',
       })
       .returning();
 
@@ -372,10 +500,32 @@ const createPlaygroundOrganization = async (
 };
 
 type ShiftFixture = {
+  /** Defaults to a random UUID. */
+  id?: string;
   title: string;
   startsAt: Date;
   rrule: string;
   inviteUserIds: string[];
+  /** Defaults to `SHIFT_DURATION_MINUTES`; override for fixed-length overlap-test shifts. */
+  durationMinutes?: number;
+  /** Associates the shift with an event. */
+  eventId?: string;
+  /** Defaults to `ShiftVisibility.INVITED_MEMBERS`. */
+  visibility?: ShiftVisibility;
+  /** Capacity cap; omit for unlimited spots. */
+  maxVolunteers?: number;
+  instructions?: string;
+  location?: string;
+  imageUrl?: string;
+  /** Invites inserted with this status instead of ACCEPTED (does not count toward capacity). */
+  pendingInviteUserIds?: string[];
+  /**
+   * Invites at explicit statuses (e.g. VOLUNTEER_REJECTED, CANCELLED,
+   * SELF_JOINED), seeded to every instance. Lets fixtures cover the full invite
+   * lifecycle beyond ACCEPTED/INVITED. Only participating statuses
+   * (ACCEPTED/SELF_JOINED) count toward capacity.
+   */
+  extraInvites?: Array<{ userIds: string[]; status: ShiftInviteStatus }>;
 };
 
 const pickRecentPastInstance = (
@@ -397,23 +547,51 @@ const pickRecentPastInstance = (
   return instance;
 };
 
-const createShiftWithInvites = async (
+const ensureShiftWithInvites = async (
   db: Database,
   organizationUnitId: string,
   createdById: string,
   shift: ShiftFixture,
 ): Promise<{ shiftId: string; instanceId: string; instanceStartsAt: Date }> => {
+  const durationMinutes = shift.durationMinutes ?? SHIFT_DURATION_MINUTES;
+
+  const existingShift = shift.id
+    ? await db.query.shifts.findFirst({ where: { id: shift.id } })
+    : await db.query.shifts.findFirst({
+        where: { title: shift.title, organizationUnitId },
+      });
+
+  if (existingShift) {
+    const instances = await db.query.shiftInstances.findMany({
+      where: { masterId: existingShift.id },
+    });
+
+    const recentInstance = pickRecentPastInstance(instances);
+
+    return {
+      shiftId: existingShift.id,
+      instanceId: recentInstance.id,
+      instanceStartsAt: recentInstance.actualStartsAt,
+    };
+  }
+
   const [createdShift] = await db
     .insert(schema.shifts)
     .values({
+      id: shift.id,
       title: shift.title,
       slug: slugify(shift.title),
+      instructions: shift.instructions ?? null,
+      location: shift.location ?? null,
+      imageUrl: shift.imageUrl ?? null,
       organizationUnitId,
       createdById,
-      visibility: ShiftVisibility.INVITED_MEMBERS,
+      visibility: shift.visibility ?? ShiftVisibility.INVITED_MEMBERS,
+      maxVolunteers: shift.maxVolunteers ?? null,
       originalStartsAt: shift.startsAt,
-      durationMinutes: SHIFT_DURATION_MINUTES,
+      durationMinutes,
       rrule: shift.rrule,
+      eventId: shift.eventId ?? null,
     })
     .returning();
 
@@ -421,11 +599,7 @@ const createShiftWithInvites = async (
     throw new Error(`Failed to create shift: ${shift.title}`);
   }
 
-  const instances = expandShift(
-    shift.rrule,
-    shift.startsAt,
-    SHIFT_DURATION_MINUTES,
-  );
+  const instances = expandShift(shift.rrule, shift.startsAt, durationMinutes);
   const insertedInstances = await db
     .insert(schema.shiftInstances)
     .values(
@@ -450,6 +624,33 @@ const createShiftWithInvites = async (
     );
   }
 
+  if (shift.pendingInviteUserIds && shift.pendingInviteUserIds.length > 0) {
+    await db.insert(schema.shiftInstanceInvites).values(
+      insertedInstances.flatMap((instance) =>
+        (shift.pendingInviteUserIds ?? []).map((userId) => ({
+          instanceId: instance.id,
+          userId,
+          status: ShiftInviteStatus.INVITED,
+        })),
+      ),
+    );
+  }
+
+  for (const group of shift.extraInvites ?? []) {
+    if (group.userIds.length === 0) {
+      continue;
+    }
+    await db.insert(schema.shiftInstanceInvites).values(
+      insertedInstances.flatMap((instance) =>
+        group.userIds.map((userId) => ({
+          instanceId: instance.id,
+          userId,
+          status: group.status,
+        })),
+      ),
+    );
+  }
+
   const recentInstance = pickRecentPastInstance(insertedInstances);
 
   return {
@@ -459,7 +660,54 @@ const createShiftWithInvites = async (
   };
 };
 
-const createTimeEntries = async (
+const ensureEvent = async (
+  db: Database,
+  organizationUnitId: string,
+  createdById: string,
+  event: {
+    id: string;
+    title: string;
+    description?: string | null;
+    location?: string | null;
+    coverUrl?: string | null;
+    logoUrl?: string | null;
+    startsAt: Date;
+    endsAt: Date;
+  },
+): Promise<typeof schema.events.$inferSelect> => {
+  const existingEvent = await db.query.events.findFirst({
+    where: { id: event.id },
+  });
+
+  if (existingEvent) {
+    return existingEvent;
+  }
+
+  const [createdEvent] = await db
+    .insert(schema.events)
+    .values({
+      id: event.id,
+      title: event.title,
+      slug: slugify(event.title),
+      description: event.description ?? null,
+      location: event.location ?? null,
+      logoUrl: event.logoUrl ?? null,
+      coverUrl: event.coverUrl ?? null,
+      startsAt: event.startsAt,
+      endsAt: event.endsAt,
+      organizationUnitId,
+      createdById,
+    })
+    .returning();
+
+  if (!createdEvent) {
+    throw new Error(`Failed to create event: ${event.title}`);
+  }
+
+  return createdEvent;
+};
+
+const ensureTimeEntries = async (
   db: Database,
   approvedMembers: FixtureUser[],
   shiftInstances: {
@@ -467,12 +715,25 @@ const createTimeEntries = async (
     foodDistribution: { startsAt: Date; instanceId: string };
   },
 ): Promise<void> => {
+  const instanceIds = [
+    shiftInstances.communitySupport.instanceId,
+    shiftInstances.foodDistribution.instanceId,
+  ];
+
+  const existingEntries = await db.query.timeEntries.findMany({
+    where: { shiftInstanceId: { in: instanceIds } },
+  });
+
+  if (existingEntries.length > 0) {
+    return;
+  }
+
   const entries: Array<typeof schema.timeEntries.$inferInsert> = [];
 
   for (const [index, member] of approvedMembers.entries()) {
     const memberNumber = index + 1;
 
-    if (member.email === 'supervisor@clippy.social') {
+    if (member.email === 'testing+supervisor@caluno.org') {
       entries.push({
         shiftInstanceId: shiftInstances.communitySupport.instanceId,
         volunteerId: member.id,
@@ -556,6 +817,265 @@ const createTimeEntries = async (
   }
 };
 
+const ensurePersonalInformationForm = async (
+  db: Database,
+  organizationId: string,
+  organizationUnitId: string,
+  createdById: string,
+): Promise<typeof schema.requirementForms.$inferSelect> => {
+  let form = await db.query.requirementForms.findFirst({
+    where: { organizationId, slug: 'personal-information' },
+  });
+
+  if (!form) {
+    const [createdForm] = await db
+      .insert(schema.requirementForms)
+      .values({
+        organizationId,
+        organizationUnitId,
+        slug: 'personal-information',
+        name: 'Personal Information',
+        description: 'Basic personal details for volunteers.',
+        shareToken: crypto.randomUUID(),
+        createdBy: createdById,
+        updatedBy: createdById,
+      })
+      .returning();
+
+    if (!createdForm) {
+      throw new Error('Failed to create Personal Information form');
+    }
+
+    form = createdForm;
+
+    const [block] = await db
+      .insert(schema.formBlocks)
+      .values({
+        organizationId,
+        title: 'Personal Information',
+        description: 'Required personal details.',
+        required: true,
+        createdBy: createdById,
+        updatedBy: createdById,
+      })
+      .returning();
+
+    if (!block) {
+      throw new Error('Failed to create Personal Information block');
+    }
+
+    await db.insert(schema.formBlockFields).values([
+      {
+        blockId: block.id,
+        type: FieldType.TEXT,
+        label: 'First name',
+        required: true,
+        fieldOrder: 0,
+      },
+      {
+        blockId: block.id,
+        type: FieldType.TEXT,
+        label: 'Last name',
+        required: true,
+        fieldOrder: 1,
+      },
+    ]);
+
+    await db.insert(schema.requirementFormBlockRefs).values({
+      formId: form.id,
+      blockId: block.id,
+      fieldOrder: 0,
+      required: true,
+    });
+  }
+
+  const existingUnitRequiredForm =
+    await db.query.organizationUnitRequiredForms.findFirst({
+      where: { organizationUnitId, formId: form.id },
+    });
+
+  if (!existingUnitRequiredForm) {
+    await db.insert(schema.organizationUnitRequiredForms).values({
+      organizationUnitId,
+      formId: form.id,
+      order: 0,
+    });
+  }
+
+  return form;
+};
+
+const ensureBankingInformationForm = async (
+  db: Database,
+  organizationId: string,
+  organizationUnitId: string,
+  createdById: string,
+  shiftId: string,
+): Promise<typeof schema.requirementForms.$inferSelect> => {
+  let form = await db.query.requirementForms.findFirst({
+    where: { organizationId, slug: 'banking-information' },
+  });
+
+  if (!form) {
+    const [createdForm] = await db
+      .insert(schema.requirementForms)
+      .values({
+        organizationId,
+        organizationUnitId,
+        slug: 'banking-information',
+        name: 'Banking Information',
+        description: 'Bank account details for reimbursements.',
+        shareToken: crypto.randomUUID(),
+        createdBy: createdById,
+        updatedBy: createdById,
+      })
+      .returning();
+
+    if (!createdForm) {
+      throw new Error('Failed to create Banking Information form');
+    }
+
+    form = createdForm;
+
+    const [block] = await db
+      .insert(schema.formBlocks)
+      .values({
+        organizationId,
+        title: 'Banking Information',
+        description: 'Bank account details.',
+        required: true,
+        createdBy: createdById,
+        updatedBy: createdById,
+      })
+      .returning();
+
+    if (!block) {
+      throw new Error('Failed to create Banking Information block');
+    }
+
+    await db.insert(schema.formBlockFields).values([
+      {
+        blockId: block.id,
+        type: FieldType.IBAN,
+        label: 'IBAN',
+        required: true,
+        fieldOrder: 0,
+      },
+      {
+        blockId: block.id,
+        type: FieldType.TEXT,
+        label: 'BIC',
+        required: true,
+        fieldOrder: 1,
+      },
+    ]);
+
+    await db.insert(schema.requirementFormBlockRefs).values({
+      formId: form.id,
+      blockId: block.id,
+      fieldOrder: 0,
+      required: true,
+    });
+  }
+
+  const existingShiftRequiredForm = await db.query.shiftRequiredForms.findFirst(
+    {
+      where: { shiftId, formId: form.id },
+    },
+  );
+
+  if (!existingShiftRequiredForm) {
+    await db.insert(schema.shiftRequiredForms).values({
+      shiftId,
+      formId: form.id,
+      order: 0,
+    });
+  }
+
+  return form;
+};
+
+const ensureCodeOfConductForm = async (
+  db: Database,
+  organizationId: string,
+  organizationUnitId: string,
+  createdById: string,
+  eventId: string,
+): Promise<typeof schema.requirementForms.$inferSelect> => {
+  let form = await db.query.requirementForms.findFirst({
+    where: { organizationId, slug: 'code-of-conduct' },
+  });
+
+  if (!form) {
+    const [createdForm] = await db
+      .insert(schema.requirementForms)
+      .values({
+        organizationId,
+        organizationUnitId,
+        slug: 'code-of-conduct',
+        name: 'Code of Conduct',
+        description: 'Acknowledge the volunteer code of conduct.',
+        shareToken: crypto.randomUUID(),
+        createdBy: createdById,
+        updatedBy: createdById,
+      })
+      .returning();
+
+    if (!createdForm) {
+      throw new Error('Failed to create Code of Conduct form');
+    }
+
+    form = createdForm;
+
+    const [block] = await db
+      .insert(schema.formBlocks)
+      .values({
+        organizationId,
+        title: 'Code of Conduct',
+        description: 'Please acknowledge our code of conduct.',
+        required: true,
+        createdBy: createdById,
+        updatedBy: createdById,
+      })
+      .returning();
+
+    if (!block) {
+      throw new Error('Failed to create Code of Conduct block');
+    }
+
+    await db.insert(schema.formBlockFields).values({
+      blockId: block.id,
+      type: FieldType.CHECKBOX,
+      label: 'I agree to follow the Code of Conduct',
+      required: true,
+      fieldOrder: 0,
+    });
+
+    await db.insert(schema.requirementFormBlockRefs).values({
+      formId: form.id,
+      blockId: block.id,
+      fieldOrder: 0,
+      required: true,
+    });
+  }
+
+  const existingEventRequiredForm = await db.query.eventRequiredForms.findFirst(
+    {
+      where: { eventId, formId: form.id },
+    },
+  );
+
+  if (!existingEventRequiredForm) {
+    await db.insert(schema.eventRequiredForms).values({
+      eventId,
+      formId: form.id,
+      order: 0,
+    });
+  }
+
+  return form;
+};
+
 async function seedFixtures() {
   const pool = new Pool({
     host: process.env.DB_HOST,
@@ -566,18 +1086,26 @@ async function seedFixtures() {
     ssl: false,
   });
 
-  const db = drizzle({ client: pool, schema, casing: 'snake_case' });
+  const db = drizzle({ client: pool, relations });
+
   const hashedPassword = await hashPassword(FIXTURE_PASSWORD);
 
   const admin = await createAuthUser(db, hashedPassword, {
-    email: 'admin@clippy.social',
+    email: 'testing+admin@caluno.org',
     name: 'Playground Admin',
   });
 
-  const org = await createPlaygroundOrganization(db, admin.id);
+  const org = await ensurePlaygroundOrganization(db, admin.id);
+
+  await ensurePersonalInformationForm(
+    db,
+    org.organizationId,
+    org.rootUnitId,
+    admin.id,
+  );
 
   const supervisor = await createAuthUser(db, hashedPassword, {
-    email: 'supervisor@clippy.social',
+    email: 'testing+supervisor@caluno.org',
     name: 'Playground Supervisor',
   });
 
@@ -591,15 +1119,30 @@ async function seedFixtures() {
     );
   }
 
-  await createMembershipWithRole(
+  // The account to log into for demos: a member with existing shift/event
+  // invites plus untouched ALL_MEMBERS shifts left to discover, so both the
+  // "my shifts" and "discover" flows have real content on first login.
+  const demoUser = await createAuthUser(db, hashedPassword, {
+    email: DEMO_USER_EMAIL,
+    name: 'Demo Volunteer',
+  });
+
+  await ensureMembershipWithRole(
     db,
     supervisor.id,
     org.rootUnitId,
     org.supervisorRoleId,
   );
 
+  await ensureMembershipWithRole(
+    db,
+    demoUser.id,
+    org.rootUnitId,
+    org.memberRoleId,
+  );
+
   for (const member of members) {
-    await createMembershipWithRole(
+    await ensureMembershipWithRole(
       db,
       member.id,
       org.rootUnitId,
@@ -608,43 +1151,66 @@ async function seedFixtures() {
   }
 
   const pendingUsers = await Promise.all(
-    ['pending01@clippy.social', 'pending02@clippy.social'].map((email, index) =>
-      createAuthUser(db, hashedPassword, {
-        email,
-        name: `Pending Applicant ${String(index + 1).padStart(2, '0')}`,
-      }),
+    ['testing+pending01@caluno.org', 'testing+pending02@caluno.org'].map(
+      (email, index) =>
+        createAuthUser(db, hashedPassword, {
+          email,
+          name: `Pending Applicant ${String(index + 1).padStart(2, '0')}`,
+        }),
     ),
   );
 
   const rejectedUser = await createAuthUser(db, hashedPassword, {
-    email: 'rejected01@clippy.social',
+    email: 'testing+rejected01@caluno.org',
     name: 'Rejected Applicant',
   });
 
-  await db.insert(schema.membershipRequests).values([
-    ...pendingUsers.map((user) => ({
-      userId: user.id,
-      organizationUnitId: org.rootUnitId,
-      status: MembershipRequestStatus.PENDING,
-    })),
+  const ensureMembershipRequest = async (
+    userId: string,
+    status: MembershipRequestStatus,
+    extra: Partial<typeof schema.membershipRequests.$inferInsert> = {},
+  ): Promise<void> => {
+    const existing = await db.query.membershipRequests.findFirst({
+      where: {
+        userId,
+        organizationUnitId: org.rootUnitId,
+      },
+    });
+
+    if (!existing) {
+      await db.insert(schema.membershipRequests).values({
+        userId,
+        organizationUnitId: org.rootUnitId,
+        status,
+        ...extra,
+      });
+    }
+  };
+
+  for (const user of pendingUsers) {
+    await ensureMembershipRequest(user.id, MembershipRequestStatus.PENDING);
+  }
+
+  await ensureMembershipRequest(
+    rejectedUser.id,
+    MembershipRequestStatus.REJECTED,
     {
-      userId: rejectedUser.id,
-      organizationUnitId: org.rootUnitId,
-      status: MembershipRequestStatus.REJECTED,
       reviewedById: admin.id,
       reviewedAt: new Date(),
       rejectionReason: 'Fixture rejected applicant',
     },
-  ]);
+  );
 
   const approvedUserIds = [
     admin.id,
     supervisor.id,
+    demoUser.id,
     ...members.map((member) => member.id),
   ];
 
   const partialInviteUserIds = [
     supervisor.id,
+    demoUser.id,
     ...members.slice(0, 4).map((member) => member.id),
   ];
 
@@ -671,7 +1237,18 @@ async function seedFixtures() {
     16,
   );
 
-  const communitySupport = await createShiftWithInvites(
+  const publicEvent = await ensureEvent(db, org.rootUnitId, admin.id, {
+    id: PUBLIC_EVENT_ID,
+    title: 'Public Test Event',
+    description:
+      'A recurring weekly program at the Playground Community Center: community support on Mondays, food distribution on Wednesdays, and general event assistance on Fridays.',
+    location: 'Playground Community Center, Hauptstraße 1, 10115 Berlin',
+    coverUrl: ORG_COVER_IMAGE_URL,
+    startsAt: communitySupportStart,
+    endsAt: addHours(eventAssistanceStart, SHIFT_DURATION_MINUTES / 60 + 4),
+  });
+
+  const communitySupport = await ensureShiftWithInvites(
     db,
     org.rootUnitId,
     admin.id,
@@ -679,11 +1256,17 @@ async function seedFixtures() {
       title: 'Community Support',
       startsAt: communitySupportStart,
       rrule: WEEKLY_RRULE.MONDAY,
+      visibility: ShiftVisibility.ALL_MEMBERS,
+      maxVolunteers: approvedUserIds.length + 3,
+      instructions:
+        'Staff the weekly community desk: check people in, hand out care packages, and point visitors to the right resource table. A short briefing runs 15 minutes before the desk opens.',
+      location: 'Playground Community Center, Front Desk',
+      imageUrl: SHOWCASE_SHIFT_IMAGE_URL,
       inviteUserIds: approvedUserIds,
     },
   );
 
-  const foodDistribution = await createShiftWithInvites(
+  const foodDistribution = await ensureShiftWithInvites(
     db,
     org.rootUnitId,
     admin.id,
@@ -691,18 +1274,556 @@ async function seedFixtures() {
       title: 'Food Distribution',
       startsAt: foodDistributionStart,
       rrule: WEEKLY_RRULE.WEDNESDAY,
+      visibility: ShiftVisibility.ALL_MEMBERS,
+      maxVolunteers: partialInviteUserIds.length + 5,
+      instructions:
+        'Sort donated groceries into family-sized boxes, then help load them into pickup vehicles at the loading dock. Closed-toe shoes required.',
+      location: 'Playground Community Center, Loading Dock B',
+      imageUrl: EVENT_COVER_IMAGE_URL,
       inviteUserIds: partialInviteUserIds,
     },
   );
 
-  await createShiftWithInvites(db, org.rootUnitId, admin.id, {
+  await ensureShiftWithInvites(db, org.rootUnitId, admin.id, {
+    id: EVENT_ASSISTANCE_SHIFT_ID,
     title: 'Event Assistance',
     startsAt: eventAssistanceStart,
     rrule: WEEKLY_RRULE.FRIDAY,
-    inviteUserIds: [],
+    visibility: ShiftVisibility.ALL_MEMBERS,
+    maxVolunteers: 8,
+    instructions:
+      'General support for whatever the Friday program needs that week — registration, signage, seating, or directing attendees. Great shift for new volunteers.',
+    location: 'Playground Community Center, Main Hall',
+    imageUrl: SHOWCASE_SHIFT_IMAGE_URL,
+    inviteUserIds: [
+      demoUser.id,
+      ...members.slice(4, 7).map((member) => member.id),
+    ],
+    eventId: publicEvent.id,
   });
 
-  await createTimeEntries(db, [supervisor, ...members], {
+  // Showcase fixtures for the public shift/event detail pages: a single
+  // event carrying three shifts that between them cover every capacity
+  // state the design calls for (open with a partial progress bar, fully
+  // booked with no CTA, and unlimited spots), plus a cover image, a pending
+  // (not-yet-accepted) invite, and instructions/location text on every shift.
+  const showcaseToday = getDateInFixtureTimezone(new Date());
+  const showcaseAnchor = addDaysInFixtureTimezone(
+    showcaseToday.year,
+    showcaseToday.month,
+    showcaseToday.day,
+    5,
+  );
+
+  const showcaseOpenStart = fixtureWallClockToUtc(
+    showcaseAnchor.year,
+    showcaseAnchor.month,
+    showcaseAnchor.day,
+    9,
+  );
+  const showcaseFullStart = fixtureWallClockToUtc(
+    showcaseAnchor.year,
+    showcaseAnchor.month,
+    showcaseAnchor.day,
+    14,
+  );
+  const showcaseUnlimitedDay = addDaysInFixtureTimezone(
+    showcaseAnchor.year,
+    showcaseAnchor.month,
+    showcaseAnchor.day,
+    2,
+  );
+  const showcaseUnlimitedStart = fixtureWallClockToUtc(
+    showcaseUnlimitedDay.year,
+    showcaseUnlimitedDay.month,
+    showcaseUnlimitedDay.day,
+    10,
+  );
+
+  const showcaseEvent = await ensureEvent(db, org.rootUnitId, admin.id, {
+    id: SHOWCASE_EVENT_ID,
+    title: 'Volunteer Fair',
+    description:
+      'A showcase event bringing together every shift capacity state: open with spots left, fully booked, and unlimited. Come see the whole program in one place.',
+    location: 'Playground Exhibition Hall, Hauptstraße 1, 10115 Berlin',
+    coverUrl: EVENT_COVER_IMAGE_URL,
+    startsAt: showcaseOpenStart,
+    endsAt: addHours(showcaseFullStart, SHIFT_DURATION_MINUTES / 60),
+  });
+
+  await ensureCodeOfConductForm(
+    db,
+    org.organizationId,
+    org.rootUnitId,
+    admin.id,
+    showcaseEvent.id,
+  );
+
+  const showcaseOpenInviteIds = [
+    supervisor.id,
+    ...members.slice(0, 7).map((member) => member.id),
+  ];
+  await ensureShiftWithInvites(db, org.rootUnitId, admin.id, {
+    id: SHOWCASE_OPEN_SHIFT_ID,
+    title: 'Welcome Desk',
+    startsAt: showcaseOpenStart,
+    rrule: ONE_TIME_RRULE,
+    durationMinutes: SHIFT_DURATION_MINUTES,
+    visibility: ShiftVisibility.ALL_MEMBERS,
+    maxVolunteers: 12,
+    instructions:
+      'Greet arriving volunteers, hand out name badges, and point them to their assigned stations. No experience needed — a quick briefing happens on site.',
+    location: 'Hauptstraße 1, 10115 Berlin · Main entrance',
+    imageUrl: SHOWCASE_SHIFT_IMAGE_URL,
+    eventId: showcaseEvent.id,
+    inviteUserIds: showcaseOpenInviteIds,
+    pendingInviteUserIds: [pendingUsers[0]?.id].filter((id): id is string =>
+      Boolean(id),
+    ),
+  });
+
+  await ensureBankingInformationForm(
+    db,
+    org.organizationId,
+    org.rootUnitId,
+    admin.id,
+    SHOWCASE_OPEN_SHIFT_ID,
+  );
+
+  const showcaseFullInviteIds = [
+    admin.id,
+    supervisor.id,
+    ...members.slice(0, 4).map((member) => member.id),
+  ];
+  await ensureShiftWithInvites(db, org.rootUnitId, admin.id, {
+    id: SHOWCASE_FULL_SHIFT_ID,
+    title: 'Stage Setup',
+    startsAt: showcaseFullStart,
+    rrule: ONE_TIME_RRULE,
+    durationMinutes: SHIFT_DURATION_MINUTES,
+    visibility: ShiftVisibility.ALL_MEMBERS,
+    maxVolunteers: showcaseFullInviteIds.length,
+    instructions:
+      'Build the stage, run sound checks, and set up seating for the afternoon program.',
+    location: 'Hauptstraße 1, 10115 Berlin · Exhibition Hall B',
+    imageUrl: EVENT_COVER_IMAGE_URL,
+    eventId: showcaseEvent.id,
+    inviteUserIds: showcaseFullInviteIds,
+  });
+
+  await ensureShiftWithInvites(db, org.rootUnitId, admin.id, {
+    id: SHOWCASE_UNLIMITED_SHIFT_ID,
+    title: 'Cleanup Crew',
+    startsAt: showcaseUnlimitedStart,
+    rrule: ONE_TIME_RRULE,
+    durationMinutes: SHIFT_DURATION_MINUTES,
+    visibility: ShiftVisibility.ALL_MEMBERS,
+    instructions:
+      'Help break down the exhibition hall after the fair: fold tables, bag trash, and load the van. As many hands as show up — no cap.',
+    location: 'Hauptstraße 1, 10115 Berlin · Exhibition Hall B',
+    imageUrl: SHOWCASE_SHIFT_IMAGE_URL,
+    eventId: showcaseEvent.id,
+    inviteUserIds: [members[8]?.id, members[9]?.id].filter((id): id is string =>
+      Boolean(id),
+    ),
+  });
+
+  // Demo account follows the Volunteer Fair (so the event page shows the
+  // "You're helping" state) but not the Public Test Event, so both the
+  // followed and not-yet-followed states are there to demo.
+  const existingEventInvite = await db.query.eventInvites.findFirst({
+    where: { eventId: showcaseEvent.id, userId: demoUser.id },
+  });
+
+  if (!existingEventInvite) {
+    await db.insert(schema.eventInvites).values({
+      eventId: showcaseEvent.id,
+      userId: demoUser.id,
+      status: EventInviteStatus.ACCEPTED,
+    });
+  }
+
+  // Standalone ALL_MEMBERS shifts spread across the next few weeks, left
+  // un-invited for the demo account so /discover has real content on
+  // several different upcoming days, not just the showcase event's two.
+  const discoverDay = (daysOut: number) =>
+    addDaysInFixtureTimezone(
+      showcaseToday.year,
+      showcaseToday.month,
+      showcaseToday.day,
+      daysOut,
+    );
+
+  const parkCleanupDay = discoverDay(1);
+  const warehouseSortingDay = discoverDay(3);
+  const tutoringDay = discoverDay(11);
+  const gardenDay = discoverDay(18);
+
+  await ensureShiftWithInvites(db, org.rootUnitId, admin.id, {
+    title: 'Park Cleanup Day',
+    startsAt: fixtureWallClockToUtc(
+      parkCleanupDay.year,
+      parkCleanupDay.month,
+      parkCleanupDay.day,
+      9,
+    ),
+    rrule: ONE_TIME_RRULE,
+    durationMinutes: 180,
+    visibility: ShiftVisibility.ALL_MEMBERS,
+    maxVolunteers: 15,
+    instructions:
+      'Pick up litter, clear brush from the walking paths, and help repaint the playground fence. Gloves and bags provided — wear clothes you don’t mind getting dirty.',
+    location: 'Tiergarten Park, Berlin · Main gate',
+    imageUrl: SHOWCASE_SHIFT_IMAGE_URL,
+    inviteUserIds: members.slice(0, 2).map((member) => member.id),
+  });
+
+  await ensureShiftWithInvites(db, org.rootUnitId, admin.id, {
+    title: 'Warehouse Sorting',
+    startsAt: fixtureWallClockToUtc(
+      warehouseSortingDay.year,
+      warehouseSortingDay.month,
+      warehouseSortingDay.day,
+      13,
+    ),
+    rrule: ONE_TIME_RRULE,
+    durationMinutes: 210,
+    visibility: ShiftVisibility.ALL_MEMBERS,
+    maxVolunteers: 8,
+    instructions:
+      'Sort incoming donation pallets by category, check items for damage, and restock the shelves ready for next week’s distribution.',
+    location: 'Playground Warehouse, Hauptstraße 1, 10115 Berlin',
+    imageUrl: EVENT_COVER_IMAGE_URL,
+    inviteUserIds: members.slice(2, 4).map((member) => member.id),
+  });
+
+  await ensureShiftWithInvites(db, org.rootUnitId, admin.id, {
+    title: 'After-School Tutoring',
+    startsAt: fixtureWallClockToUtc(
+      tutoringDay.year,
+      tutoringDay.month,
+      tutoringDay.day,
+      15,
+    ),
+    rrule: ONE_TIME_RRULE,
+    durationMinutes: 90,
+    visibility: ShiftVisibility.ALL_MEMBERS,
+    instructions:
+      'Help kids aged 8–12 with homework and reading practice. No teaching experience needed, just patience and a friendly face — materials are provided.',
+    location: 'Playground Community Center, Room 2',
+    imageUrl: SHOWCASE_SHIFT_IMAGE_URL,
+    inviteUserIds: members.slice(4, 5).map((member) => member.id),
+  });
+
+  await ensureShiftWithInvites(db, org.rootUnitId, admin.id, {
+    title: 'Community Garden Planting',
+    startsAt: fixtureWallClockToUtc(
+      gardenDay.year,
+      gardenDay.month,
+      gardenDay.day,
+      10,
+    ),
+    rrule: ONE_TIME_RRULE,
+    durationMinutes: 150,
+    visibility: ShiftVisibility.ALL_MEMBERS,
+    maxVolunteers: 10,
+    instructions:
+      'Plant the spring vegetable beds, turn compost, and set up the new watering system. Great outdoor shift for beginners.',
+    location: 'Playground Community Garden, Hauptstraße 1, 10115 Berlin',
+    imageUrl: EVENT_COVER_IMAGE_URL,
+    inviteUserIds: members.slice(5, 7).map((member) => member.id),
+  });
+
+  // --- Invite-response scenarios for the demo volunteer (VOLI-839) ---
+  // Give the demo account a full spread of shift invites so the volunteer
+  // invitation flows have real content on first login: a paginating set of
+  // pending invites (the home preview caps at 10, "See all" reveals the rest),
+  // a recurring pending invite (day picker on the detail), plus one shift in
+  // each terminal invite state.
+  const pendingInviteShifts: Array<{
+    title: string;
+    location: string;
+    hour: number;
+    maxVolunteers?: number;
+  }> = [
+    {
+      title: 'Soup Kitchen Service',
+      location: 'Community Center · Kitchen',
+      hour: 11,
+      maxVolunteers: 6,
+    },
+    {
+      title: 'Clothing Bank Sorting',
+      location: 'Hauptstraße 1 · Storeroom',
+      hour: 14,
+      maxVolunteers: 8,
+    },
+    {
+      title: 'Senior Home Visit',
+      location: 'Lindenhof Residence',
+      hour: 10,
+      maxVolunteers: 4,
+    },
+    {
+      title: 'Bike Repair Workshop',
+      location: 'Community Garage',
+      hour: 15,
+      maxVolunteers: 5,
+    },
+    {
+      title: 'Library Reading Hour',
+      location: 'Public Library · Room 3',
+      hour: 16,
+      maxVolunteers: 3,
+    },
+    {
+      title: 'Food Bank Packing',
+      location: 'Playground Warehouse',
+      hour: 9,
+      maxVolunteers: 10,
+    },
+    {
+      title: 'Beach Cleanup',
+      location: 'Wannsee Shore',
+      hour: 8,
+      maxVolunteers: 20,
+    },
+    {
+      title: 'Homework Helpers',
+      location: 'Community Center · Room 2',
+      hour: 15,
+      maxVolunteers: 6,
+    },
+    {
+      title: 'Blood Drive Support',
+      location: 'Town Hall Foyer',
+      hour: 12,
+      maxVolunteers: 8,
+    },
+  ];
+
+  for (const [index, entry] of pendingInviteShifts.entries()) {
+    const day = discoverDay(2 + index);
+    await ensureShiftWithInvites(db, org.rootUnitId, admin.id, {
+      title: entry.title,
+      startsAt: fixtureWallClockToUtc(day.year, day.month, day.day, entry.hour),
+      rrule: ONE_TIME_RRULE,
+      durationMinutes: SHIFT_DURATION_MINUTES,
+      visibility: ShiftVisibility.INVITED_MEMBERS,
+      maxVolunteers: entry.maxVolunteers,
+      location: entry.location,
+      imageUrl: SHOWCASE_SHIFT_IMAGE_URL,
+      inviteUserIds: [],
+      pendingInviteUserIds: [demoUser.id],
+    });
+  }
+
+  // Recurring pending invite (weekly x3) — exercises the day picker on the
+  // invite detail and brings the pending total to 12.
+  const recurringPendingDay = discoverDay(4);
+  await ensureShiftWithInvites(db, org.rootUnitId, admin.id, {
+    title: 'Weekly Meal Prep',
+    startsAt: fixtureWallClockToUtc(
+      recurringPendingDay.year,
+      recurringPendingDay.month,
+      recurringPendingDay.day,
+      17,
+    ),
+    rrule: 'FREQ=WEEKLY;COUNT=3',
+    durationMinutes: SHIFT_DURATION_MINUTES,
+    visibility: ShiftVisibility.INVITED_MEMBERS,
+    maxVolunteers: 6,
+    location: 'Community Center · Kitchen',
+    imageUrl: EVENT_COVER_IMAGE_URL,
+    inviteUserIds: [],
+    pendingInviteUserIds: [demoUser.id],
+  });
+
+  // Terminal invite states. ACCEPTED and SELF_JOINED surface under "Your
+  // shifts"; VOLUNTEER_REJECTED and CANCELLED are filtered off home but remain
+  // reachable at their shift-detail URL (logged in the fixtures summary) to
+  // demo the accepted/declined/cancelled detail states directly.
+  const acceptedDay = discoverDay(5);
+  const acceptedInvite = await ensureShiftWithInvites(
+    db,
+    org.rootUnitId,
+    admin.id,
+    {
+      title: 'Welcome Desk',
+      startsAt: fixtureWallClockToUtc(
+        acceptedDay.year,
+        acceptedDay.month,
+        acceptedDay.day,
+        9,
+      ),
+      rrule: ONE_TIME_RRULE,
+      durationMinutes: SHIFT_DURATION_MINUTES,
+      visibility: ShiftVisibility.INVITED_MEMBERS,
+      maxVolunteers: 5,
+      location: 'Town Hall Foyer',
+      inviteUserIds: [demoUser.id],
+    },
+  );
+
+  const declinedDay = discoverDay(6);
+  const declinedInvite = await ensureShiftWithInvites(
+    db,
+    org.rootUnitId,
+    admin.id,
+    {
+      title: 'Night Shelter Shift',
+      startsAt: fixtureWallClockToUtc(
+        declinedDay.year,
+        declinedDay.month,
+        declinedDay.day,
+        20,
+      ),
+      rrule: ONE_TIME_RRULE,
+      durationMinutes: SHIFT_DURATION_MINUTES,
+      visibility: ShiftVisibility.INVITED_MEMBERS,
+      maxVolunteers: 4,
+      location: 'City Shelter',
+      inviteUserIds: [],
+      extraInvites: [
+        {
+          userIds: [demoUser.id],
+          status: ShiftInviteStatus.VOLUNTEER_REJECTED,
+        },
+      ],
+    },
+  );
+
+  const cancelledDay = discoverDay(7);
+  const cancelledInvite = await ensureShiftWithInvites(
+    db,
+    org.rootUnitId,
+    admin.id,
+    {
+      title: 'Fundraiser Setup',
+      startsAt: fixtureWallClockToUtc(
+        cancelledDay.year,
+        cancelledDay.month,
+        cancelledDay.day,
+        13,
+      ),
+      rrule: ONE_TIME_RRULE,
+      durationMinutes: SHIFT_DURATION_MINUTES,
+      visibility: ShiftVisibility.INVITED_MEMBERS,
+      maxVolunteers: 6,
+      location: 'Exhibition Hall B',
+      inviteUserIds: [],
+      extraInvites: [
+        { userIds: [demoUser.id], status: ShiftInviteStatus.CANCELLED },
+      ],
+    },
+  );
+
+  const selfJoinedDay = discoverDay(8);
+  const selfJoinedShift = await ensureShiftWithInvites(
+    db,
+    org.rootUnitId,
+    admin.id,
+    {
+      title: 'Open Garden Day',
+      startsAt: fixtureWallClockToUtc(
+        selfJoinedDay.year,
+        selfJoinedDay.month,
+        selfJoinedDay.day,
+        10,
+      ),
+      rrule: ONE_TIME_RRULE,
+      durationMinutes: SHIFT_DURATION_MINUTES,
+      visibility: ShiftVisibility.ALL_MEMBERS,
+      maxVolunteers: 12,
+      location: 'Community Garden',
+      inviteUserIds: [],
+      extraInvites: [
+        { userIds: [demoUser.id], status: ShiftInviteStatus.SELF_JOINED },
+      ],
+    },
+  );
+
+  // Fixed, one-time overlap-test shifts for the my-shifts conflict-clustering
+  // UI (a 2-shift "pair" and a 3-shift "pile"), invited to a single member
+  // (not member01, which other tests use as the "no conflicts" baseline).
+  // Anchored `today + N days` rather than a weekday, so they land a stable
+  // number of days out regardless of which day fixtures happen to run on.
+  const overlapMember = members[OVERLAP_MEMBER_INDEX - 1];
+  if (!overlapMember) {
+    throw new Error(
+      `No member at index ${OVERLAP_MEMBER_INDEX} for overlap fixtures`,
+    );
+  }
+
+  // +2/+9 days are chosen so that, as of when this comment was written, they
+  // land on days with no other recurring shift invited to this member
+  // (Community Support is Monday, Food Distribution is Wednesday) — keeping
+  // the pair/pile clusters below exactly 2 and 3 shifts. If fixtures are
+  // reseeded on a date where +2/+9 happens to fall on Mon/Wed, the affected
+  // cluster picks up that recurring shift too — still a valid (larger)
+  // conflict cluster, just not the minimal pair/pile example.
+  const today = getDateInFixtureTimezone(new Date());
+  const pairDay = addDaysInFixtureTimezone(
+    today.year,
+    today.month,
+    today.day,
+    2,
+  );
+  const pileDay = addDaysInFixtureTimezone(
+    today.year,
+    today.month,
+    today.day,
+    9,
+  );
+
+  await ensureShiftWithInvites(db, org.rootUnitId, admin.id, {
+    title: 'Overlap Test Pair A',
+    startsAt: fixtureWallClockToUtc(
+      pairDay.year,
+      pairDay.month,
+      pairDay.day,
+      10,
+    ),
+    rrule: ONE_TIME_RRULE,
+    durationMinutes: 240,
+    inviteUserIds: [overlapMember.id],
+  });
+  await ensureShiftWithInvites(db, org.rootUnitId, admin.id, {
+    title: 'Overlap Test Pair B',
+    startsAt: fixtureWallClockToUtc(
+      pairDay.year,
+      pairDay.month,
+      pairDay.day,
+      10,
+      30,
+    ),
+    rrule: ONE_TIME_RRULE,
+    durationMinutes: 210,
+    inviteUserIds: [overlapMember.id],
+  });
+
+  // 6 shifts (> the 5-visible-before-collapsing threshold in
+  // my-shifts-day-rows.tsx), each starting 30min after the previous with a
+  // 2h duration — a chained overlap where every shift overlaps its neighbor,
+  // so the sweep-line clusterer groups all 6 together.
+  const PILE_LETTERS = ['A', 'B', 'C', 'D', 'E', 'F'] as const;
+  for (const [index, letter] of PILE_LETTERS.entries()) {
+    await ensureShiftWithInvites(db, org.rootUnitId, admin.id, {
+      title: `Overlap Test Pile ${letter}`,
+      startsAt: fixtureWallClockToUtc(
+        pileDay.year,
+        pileDay.month,
+        pileDay.day,
+        8 + Math.floor(index / 2),
+        (index % 2) * 30,
+      ),
+      rrule: ONE_TIME_RRULE,
+      durationMinutes: 120,
+      inviteUserIds: [overlapMember.id],
+    });
+  }
+
+  await ensureTimeEntries(db, [supervisor, ...members], {
     communitySupport: {
       startsAt: communitySupport.instanceStartsAt,
       instanceId: communitySupport.instanceId,
@@ -715,13 +1836,37 @@ async function seedFixtures() {
 
   console.log(`Created Playground organization (${org.organizationId})`);
   console.log(`Root unit: ${org.rootUnitId}`);
-  console.log('Users: 15 accounts with password abcd1234');
-  console.log('Memberships: 12 approved, 2 pending, 1 rejected');
+  console.log(
+    'Users: 16 accounts seeded (password from FIXTURE_PASSWORD, default: abcd1234)',
+  );
+  console.log('Memberships: 13 approved, 2 pending, 1 rejected');
+  console.log(
+    'Requirement forms: Personal Information (org unit), Banking Information (Welcome Desk shift), Code of Conduct (Volunteer Fair event)',
+  );
+  console.log(
+    `Demo account: ${DEMO_USER_EMAIL} — member with invited shifts (Community Support, Food Distribution, Event Assistance), follows Volunteer Fair, and has Welcome Desk/Stage Setup/Cleanup Crew plus 4 more shifts across the next 3 weeks left to discover`,
+  );
   console.log(
     'Shifts: Community Support (Mon), Food Distribution (Wed), Event Assistance (Fri)',
   );
+  console.log(`Event: Public Test Event (${publicEvent.id})`);
+  console.log(
+    `Event: Volunteer Fair (${showcaseEvent.id}) — Welcome Desk (open, ${showcaseOpenInviteIds.length}/12), Stage Setup (full, ${showcaseFullInviteIds.length}/${showcaseFullInviteIds.length}), Cleanup Crew (unlimited)`,
+  );
+  console.log(
+    'Discover: Park Cleanup Day, Warehouse Sorting, After-School Tutoring, Community Garden Planting',
+  );
   console.log(
     'Time entries: created across Community Support and Food Distribution',
+  );
+  console.log(
+    [
+      `Demo invites (${DEMO_USER_EMAIL}): 12 pending (9 one-time + Weekly Meal Prep x3) → home Invitations section (10 preview) + /invitations`,
+      `  accepted → /shifts/${acceptedInvite.shiftId} (Accepted badge + Cancel)`,
+      `  declined → /shifts/${declinedInvite.shiftId} (VOLUNTEER_REJECTED)`,
+      `  cancelled → /shifts/${cancelledInvite.shiftId} (CANCELLED, post-withdrawal)`,
+      `  self-joined → /shifts/${selfJoinedShift.shiftId} (SELF_JOINED, no Cancel)`,
+    ].join('\n'),
   );
 
   await pool.end();

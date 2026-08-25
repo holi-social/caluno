@@ -9,11 +9,13 @@ import { resetPassword } from '@/lib/auth';
 interface ResetPasswordFormProps {
   token?: string;
   tokenError?: string;
+  redirectTo?: string;
 }
 
 export function ResetPasswordForm({
   token,
   tokenError,
+  redirectTo = '/',
 }: ResetPasswordFormProps) {
   const t = useTranslations('Auth.resetPassword');
   const router = useRouter();
@@ -55,7 +57,11 @@ export function ResetPasswordForm({
         return;
       }
 
-      router.push('/login');
+      router.push(
+        redirectTo && redirectTo !== '/'
+          ? `/login?redirectTo=${encodeURIComponent(redirectTo)}`
+          : '/login',
+      );
       router.refresh();
     } catch {
       setError(t('resetFailed'));
@@ -65,14 +71,12 @@ export function ResetPasswordForm({
   }
 
   return (
-    <form onSubmit={handleSubmit} className="mt-8 space-y-6">
+    <form onSubmit={handleSubmit} className="space-y-6">
       {error && (
         <div className="rounded-md bg-destructive/10 p-4 text-sm text-destructive">
           {error}
         </div>
       )}
-
-      <p className="text-sm text-muted-foreground">{t('description')}</p>
 
       <div className="space-y-4">
         <div>
@@ -117,7 +121,11 @@ export function ResetPasswordForm({
 
       <p className="text-center text-sm text-muted-foreground">
         <Link
-          href="/login"
+          href={
+            redirectTo && redirectTo !== '/'
+              ? `/login?redirectTo=${encodeURIComponent(redirectTo)}`
+              : '/login'
+          }
           className="font-medium text-primary hover:underline"
         >
           {t('signInLink')}

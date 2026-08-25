@@ -10,7 +10,7 @@ type GraphqlRequestOptions = {
 
 export type GraphqlResponse<TData> = {
   data?: TData;
-  errors?: Array<{ message: string }>;
+  errors?: Array<{ message: string; extensions?: Record<string, unknown> }>;
 };
 
 export const requireGraphqlData = <TData>(

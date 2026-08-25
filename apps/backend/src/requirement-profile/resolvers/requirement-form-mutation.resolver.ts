@@ -3,17 +3,24 @@ import { Session, type UserSession } from '@thallesp/nestjs-better-auth';
 import { PERMISSIONS } from '../../auth/constants';
 import { Permissions } from '../../auth/decorators/permissions.decorator';
 import type { AuthenticatedGraphQLContext } from '../../graphql/graphql.context';
+import { RequiredFormTargetType } from '../enums';
 import { CreateRequirementFormInput } from '../inputs/create-requirement-form.input';
+import { SubmitFormInput } from '../inputs/submit-form.input';
 import { UpdateRequirementFormInput } from '../inputs/update-requirement-form.input';
+import { FormSubmissionMapper } from '../mappers/form-submission.mapper';
 import { RequirementFormMapper } from '../mappers/requirement-form.mapper';
+import { FormSubmission } from '../models/form-submission.model';
 import { RequirementForm } from '../models/requirement-form.model';
 import { RequirementFormService } from '../services';
+import { FormSubmissionService } from '../services/form-submission.service';
 
 @Resolver(() => RequirementForm)
 export class RequirementFormMutationResolver {
   constructor(
     private readonly requirementFormService: RequirementFormService,
     private readonly requirementFormMapper: RequirementFormMapper,
+    private readonly formSubmissionService: FormSubmissionService,
+    private readonly formSubmissionMapper: FormSubmissionMapper,
   ) {}
 
   @Permissions(PERMISSIONS.REQUIREMENT_PROFILE_EDIT)
@@ -74,5 +81,23 @@ export class RequirementFormMutationResolver {
       session.user.id,
     );
     return this.requirementFormMapper.toModelOrThrow(item);
+  }
+
+  @Mutation(() => FormSubmission)
+  async submitRequiredForm(
+    @Args('targetType', { type: () => RequiredFormTargetType })
+    targetType: RequiredFormTargetType,
+    @Args('targetId') targetId: string,
+    @Args('formId') formId: string,
+    @Args('input') input: SubmitFormInput,
+    @Session() session: UserSession,
+  ): Promise<FormSubmission> {
+    const submission = await this.formSubmissionService.submitRequiredForm(
+      { targetType, targetId },
+      formId,
+      input,
+      session.user.id,
+    );
+    return this.formSubmissionMapper.toModelOrThrow(submission);
   }
 }

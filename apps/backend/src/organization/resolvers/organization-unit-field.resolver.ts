@@ -1,12 +1,23 @@
-import { Parent, ResolveField, Resolver } from '@nestjs/graphql';
+import { Int, Parent, ResolveField, Resolver } from '@nestjs/graphql';
+import {
+  AllowAnonymous,
+  Session,
+  type UserSession,
+} from '@thallesp/nestjs-better-auth';
 import { plainToInstance } from 'class-transformer';
+import { MembershipService } from '../../membership/membership.service';
+import { RequiredFormTargetType } from '../../requirement-profile/enums';
+import { RequiredFormRefMapper } from '../../requirement-profile/mappers/required-form-ref.mapper';
 import { RequirementProfile } from '../../requirement-profile/models/requirement-profile.model';
 import { RequirementProfileService } from '../../requirement-profile/services';
+import { RequiredFormService } from '../../requirement-profile/services/required-form.service';
+import { JoinStatus } from '../../shared/enums/join-status.enum';
 import { OrganizationMapper } from '../mappers/organization.mapper';
 import { OrganizationUnitMapper } from '../mappers/organization-unit.mapper';
 import { OrganizationUnitTypeMapper } from '../mappers/organization-unit-type.mapper';
 import { Organization } from '../models/organization.model';
 import { OrganizationUnit } from '../models/organization-unit.model';
+import { RequiredFormRef } from '../models/organization-unit-required-form.model';
 import { OrganizationUnitType } from '../models/organization-unit-type.model';
 import { OrganizationUnitService } from '../organization-unit.service';
 import type { OrganizationUnitEntity } from '../schemas/organization-unit.schema';
@@ -19,7 +30,43 @@ export class OrganizationUnitFieldResolver {
     private readonly organizationUnitMapper: OrganizationUnitMapper,
     private readonly organizationUnitTypeMapper: OrganizationUnitTypeMapper,
     private readonly requirementProfileService: RequirementProfileService,
+    private readonly requiredFormService: RequiredFormService,
+    private readonly membershipService: MembershipService,
+    private readonly requiredFormRefMapper: RequiredFormRefMapper,
   ) {}
+
+  @AllowAnonymous()
+  @ResolveField(() => Int)
+  async memberCount(
+    @Parent() organizationUnit: OrganizationUnitEntity,
+  ): Promise<number> {
+    return this.organizationUnitService.countMembers(organizationUnit.id);
+  }
+
+  @AllowAnonymous()
+  @ResolveField(() => Int)
+  async openShiftsCount(
+    @Parent() organizationUnit: OrganizationUnitEntity,
+  ): Promise<number> {
+    return this.organizationUnitService.countOpenShifts(organizationUnit.id);
+  }
+
+  @AllowAnonymous()
+  @ResolveField(() => JoinStatus)
+  async myMembershipState(
+    @Parent() organizationUnit: OrganizationUnitEntity,
+    @Session() session: UserSession,
+  ): Promise<JoinStatus> {
+    if (!session?.user) {
+      return JoinStatus.NONE;
+    }
+    return this.membershipService.getMembershipState(
+      session.user.id,
+      organizationUnit.id,
+    );
+  }
+
+  @AllowAnonymous()
   @ResolveField(() => Organization)
   async organization(
     @Parent() organizationUnit: OrganizationUnitEntity,
@@ -76,5 +123,18 @@ export class OrganizationUnitFieldResolver {
       organizationUnit.requiredMembershipRequirementProfileId,
     );
     return profile ? plainToInstance(RequirementProfile, profile) : null;
+  }
+
+  @AllowAnonymous()
+  @ResolveField(() => [RequiredFormRef])
+  async requiredForms(
+    @Parent() organizationUnit: OrganizationUnitEntity,
+  ): Promise<RequiredFormRef[]> {
+    const requiredForms = await this.requiredFormService.getRequiredForms({
+      targetType: RequiredFormTargetType.ORGANIZATION_UNIT,
+      targetId: organizationUnit.id,
+    });
+
+    return this.requiredFormRefMapper.toArray(requiredForms);
   }
 }

@@ -5,6 +5,7 @@ import type { Database } from '../../database/database.module';
 import { DATABASE_CONNECTION } from '../../database/database-connection';
 import * as schema from '../../database/schema';
 import {
+  BadRequestGraphQLError,
   ConflictGraphQLError,
   NotFoundGraphQLError,
 } from '../../graphql/errors';
@@ -17,12 +18,14 @@ import type {
   RequirementFormInsert,
 } from '../schemas/requirement-form.schema';
 import { isUnitInOrg } from './is-unit-in-org';
+import { RequiredFormService } from './required-form.service';
 
 @Injectable()
 export class RequirementFormService {
   constructor(
     @Inject(DATABASE_CONNECTION)
     private readonly db: Database,
+    private readonly requiredFormService: RequiredFormService,
   ) {}
 
   async findById(id: string): Promise<RequirementFormEntity | undefined> {
@@ -61,6 +64,31 @@ export class RequirementFormService {
     });
   }
 
+  /**
+   * Multi-tenancy guard: block refs may only point at blocks owned by the
+   * form's organization — the ids are client-supplied.
+   */
+  private async verifyBlocksInOrg(
+    blockIds: string[],
+    organizationId: string,
+  ): Promise<void> {
+    if (blockIds.length === 0) {
+      return;
+    }
+    const blocks = await this.db.query.formBlocks.findMany({
+      where: { id: { in: blockIds } },
+      columns: { id: true, organizationId: true },
+    });
+    if (
+      blocks.length !== new Set(blockIds).size ||
+      blocks.some((block) => block.organizationId !== organizationId)
+    ) {
+      throw new BadRequestGraphQLError(
+        'One or more blocks do not belong to this organization',
+      );
+    }
+  }
+
   async findAll(
     organizationId: string,
     pagination: PaginationInput,
@@ -84,6 +112,13 @@ export class RequirementFormService {
     userId: string,
   ): Promise<RequirementFormEntity> {
     await isUnitInOrg(this.db, organizationUnitId, input.organizationId);
+
+    if (input.blockRefs?.length) {
+      await this.verifyBlocksInOrg(
+        input.blockRefs.map((ref) => ref.blockId),
+        input.organizationId,
+      );
+    }
 
     if (organizationUnitId) {
       const duplicate = await this.db.query.requirementForms.findFirst({
@@ -145,6 +180,13 @@ export class RequirementFormService {
 
     await isUnitInOrg(this.db, organizationUnitId, existing.organizationId);
 
+    if (input.blockRefs) {
+      await this.verifyBlocksInOrg(
+        input.blockRefs.map((ref) => ref.blockId),
+        existing.organizationId,
+      );
+    }
+
     if (
       input.name &&
       input.name !== existing.name &&
@@ -180,7 +222,7 @@ export class RequirementFormService {
       const [updated] = await tx
         .update(schema.requirementForms)
         .set({
-          ...patch(rest),
+          ...patch(rest, { ignoreNull: ['name'] }),
           ...(settings !== undefined && {
             settings: this.normalizeSettings(settings),
           }),
@@ -225,6 +267,15 @@ export class RequirementFormService {
     }
 
     await isUnitInOrg(this.db, organizationUnitId, existing.organizationId);
+
+    const isRequired =
+      await this.requiredFormService.isFormRequiredByAnyTarget(id);
+
+    if (isRequired) {
+      throw new ConflictGraphQLError(
+        'Cannot delete form because it is required by an organization unit',
+      );
+    }
 
     return this.db.transaction(async (tx) => {
       const hasSubmissions = await tx.query.formSubmissions.findFirst({

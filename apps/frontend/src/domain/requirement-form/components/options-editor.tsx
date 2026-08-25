@@ -4,6 +4,7 @@ import { Button, Input } from '@repo/ui';
 import { Plus, Trash2 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useState } from 'react';
+import { deriveOptionValue } from '../option-values';
 
 interface OptionItem {
   id: string;
@@ -25,6 +26,7 @@ export function OptionsEditor({
   disabled?: boolean;
 }) {
   const t = useTranslations('RequirementForm.block');
+  const tCommon = useTranslations('Common');
   const [items, setItems] = useState<OptionItem[]>(() => toItems(options));
 
   function update(
@@ -32,9 +34,13 @@ export function OptionsEditor({
     key: keyof Omit<OptionItem, 'id'>,
     next: string,
   ) {
-    const updated = items.map((item, i) =>
-      i === index ? { ...item, [key]: next } : item,
-    );
+    const updated = items.map((item, i) => {
+      if (i !== index) return item;
+      const merged = { ...item, [key]: next };
+      // Keep the value selectable: mirror the label while no value is set.
+      if (key === 'label') merged.value = deriveOptionValue(next, item.value);
+      return merged;
+    });
     setItems(updated);
     onChange(updated.map(({ label, value }) => ({ label, value })));
   }
@@ -77,8 +83,9 @@ export function OptionsEditor({
             variant="ghost"
             size="icon"
             className="text-muted-foreground hover:text-destructive shrink-0"
-            onClick={() => remove(idx)}
+            tooltip={tCommon('delete')}
             disabled={disabled}
+            onClick={() => remove(idx)}
           >
             <Trash2 className="size-4" />
           </Button>

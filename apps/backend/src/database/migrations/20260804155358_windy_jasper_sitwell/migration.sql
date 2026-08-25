@@ -1,0 +1,1 @@
+ALTER TABLE "shift_instances" ADD COLUMN "override_min_volunteers" integer;

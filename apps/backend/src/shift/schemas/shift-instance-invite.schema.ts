@@ -1,22 +1,23 @@
 import {
   index,
   pgEnum,
-  pgTable,
+  snakeCase,
   text,
   unique,
   uuid,
 } from 'drizzle-orm/pg-core';
 import { users } from '../../auth/schemas/auth.schema';
 import { idColumn, timestampColumns } from '../../database/database-columns';
+import { enumValues } from '../../database/typeutil';
 import { ShiftInviteStatus } from '../enums';
 import { shiftInstances } from './shift-instance.schema';
 
-export const shiftInstanceInviteStatusEnum = pgEnum(
+export const shiftInviteStatusEnum = pgEnum(
   'shift_invite_status',
-  ShiftInviteStatus as Record<string, string>,
+  enumValues(ShiftInviteStatus),
 );
 
-export const shiftInstanceInvites = pgTable(
+export const shiftInstanceInvites = snakeCase.table(
   'shift_instance_invites',
   {
     ...idColumn,
@@ -26,9 +27,10 @@ export const shiftInstanceInvites = pgTable(
     userId: text('user_id')
       .references(() => users.id, { onDelete: 'restrict' })
       .notNull(),
-    status: shiftInstanceInviteStatusEnum('status')
+    status: shiftInviteStatusEnum('status')
+      .$type<ShiftInviteStatus>()
       .notNull()
-      .default(ShiftInviteStatus.PENDING),
+      .default(ShiftInviteStatus.INVITED),
     ...timestampColumns,
   },
   (table) => [

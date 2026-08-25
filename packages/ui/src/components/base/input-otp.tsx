@@ -3,6 +3,7 @@
 import {
   OTPInput,
   OTPInputContext,
+  REGEXP_ONLY_DIGITS,
   REGEXP_ONLY_DIGITS_AND_CHARS,
 } from 'input-otp';
 import * as React from 'react';
@@ -42,9 +43,11 @@ function InputOTPGroup({ className, ...props }: React.ComponentProps<'div'>) {
 function InputOTPSlot({
   index,
   className,
+  placeholder,
   ...props
 }: React.ComponentProps<'div'> & {
   index: number;
+  placeholder?: string;
 }) {
   const inputOTPContext = React.useContext(OTPInputContext);
   const { char, hasFakeCaret, isActive } = inputOTPContext?.slots[index] ?? {};
@@ -59,7 +62,12 @@ function InputOTPSlot({
       )}
       {...props}
     >
-      {char}
+      {char ??
+        (placeholder ? (
+          <span className="text-muted-foreground" aria-hidden="true">
+            {placeholder}
+          </span>
+        ) : null)}
       {hasFakeCaret && (
         <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
           <div className="h-4 w-px animate-caret-blink bg-foreground duration-1000" />
@@ -69,7 +77,10 @@ function InputOTPSlot({
   );
 }
 
-function InputOTPSeparator({ ...props }: React.ComponentProps<'div'>) {
+function InputOTPSeparator({
+  children = '-',
+  ...props
+}: React.ComponentProps<'div'>) {
   return (
     <div
       tabIndex={-1}
@@ -77,7 +88,7 @@ function InputOTPSeparator({ ...props }: React.ComponentProps<'div'>) {
       aria-hidden="true"
       {...props}
     >
-      -
+      {children}
     </div>
   );
 }
@@ -87,5 +98,6 @@ export {
   InputOTPGroup,
   InputOTPSeparator,
   InputOTPSlot,
+  REGEXP_ONLY_DIGITS,
   REGEXP_ONLY_DIGITS_AND_CHARS,
 };

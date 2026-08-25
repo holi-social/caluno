@@ -6,6 +6,8 @@ import { MembershipRepository } from '../repositories/membership/membership.repo
 import { MembershipRequestRepository } from '../repositories/membershipRequest/membershipRequest.repository';
 import { OrganizationRepository } from '../repositories/organization/organization.repository';
 import { OrganizationUnitRepository } from '../repositories/organization/organization-unit.repository';
+import { PublicEventRepository } from '../repositories/public-event/public-event.repository';
+import { PublicOrganizationUnitRepository } from '../repositories/public-organization-unit/public-organization-unit.repository';
 import { RequirementFormRepository } from '../repositories/requirementForm/requirement-form.repository';
 import { RequirementProfileRepository } from '../repositories/requirementProfile/requirement-profile.repository';
 import { RoleRepository } from '../repositories/role/role.repository';
@@ -38,6 +40,8 @@ export class DataClient {
   public readonly requirementForm: RequirementFormRepository;
   public readonly requirementProfile: RequirementProfileRepository;
   public readonly role: RoleRepository;
+  public readonly publicEvent: PublicEventRepository;
+  public readonly publicOrganizationUnit: PublicOrganizationUnitRepository;
 
   public readonly organizationContext?: OrganizationContext;
 
@@ -71,6 +75,8 @@ export class DataClient {
     this.requirementForm = new RequirementFormRepository(sdk);
     this.requirementProfile = new RequirementProfileRepository(sdk);
     this.role = new RoleRepository(sdk);
+    this.publicEvent = new PublicEventRepository(sdk);
+    this.publicOrganizationUnit = new PublicOrganizationUnitRepository(sdk);
   }
 
   async getCurrentOrganizationId(): Promise<string | null> {

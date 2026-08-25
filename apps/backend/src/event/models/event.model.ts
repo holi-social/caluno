@@ -1,5 +1,6 @@
 import { Field, ID, Int, ObjectType } from '@nestjs/graphql';
 import { createPaginatedResponseType } from '../../graphql/paginated-response.model';
+import { JoinStatus } from '../../shared/enums/join-status.enum';
 import { Shift } from '../../shift/models/shift.model';
 import { User } from '../../user/models/user.model';
 
@@ -11,23 +12,29 @@ export class Event {
   @Field(() => String)
   title!: string;
 
+  @Field(() => String, { nullable: true })
+  description!: string | null;
+
   @Field(() => String)
   slug!: string;
 
   @Field(() => String, { nullable: true })
-  location!: string | null;
+  location?: string | null;
 
   @Field(() => String, { nullable: true })
-  logoUrl!: string | null;
+  logoUrl?: string | null;
 
   @Field(() => String, { nullable: true })
-  coverUrl!: string | null;
+  coverUrl?: string | null;
+
+  @Field(() => String, { nullable: true })
+  coverImageUrl?: string | null;
 
   @Field(() => ID)
   organizationUnitId!: string;
 
   @Field(() => User, { nullable: true })
-  organizer!: User | null;
+  organizer?: User | null;
 
   @Field(() => Date)
   startsAt!: Date;
@@ -40,6 +47,15 @@ export class Event {
 
   @Field(() => Int)
   shiftsCount!: number;
+
+  @Field(() => Int)
+  requiredFormsCount!: number;
+
+  @Field(() => Int)
+  signedUpCount!: number;
+
+  @Field(() => JoinStatus)
+  myJoinStatus!: JoinStatus;
 
   @Field(() => [Shift])
   shifts!: Shift[];

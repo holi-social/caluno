@@ -9,6 +9,7 @@ import {
   Input,
   Textarea,
 } from '@repo/ui';
+import { Plus, X } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useTransition } from 'react';
 import { useForm } from 'react-hook-form';
@@ -95,19 +96,6 @@ export function CreateBlock({ orgUId, organizationId }: CreateBlockProps) {
         )}
       </Field>
 
-      <Field>
-        <FieldLabel htmlFor="icon">{t('iconLabel')}</FieldLabel>
-        <Input
-          id="icon"
-          type="text"
-          placeholder={t('iconPlaceholder')}
-          disabled={isPending}
-          aria-invalid={!!errors.icon}
-          {...register('icon')}
-        />
-        {errors.icon && <FieldError>{errors.icon.message}</FieldError>}
-      </Field>
-
       <div className="flex gap-3 pt-2">
         <Button
           type="button"
@@ -117,9 +105,11 @@ export function CreateBlock({ orgUId, organizationId }: CreateBlockProps) {
             router.push(`/admin/${orgUId}/requirement-forms/blocks`)
           }
         >
+          <X />
           {t('cancel')}
         </Button>
         <Button type="submit" disabled={isPending}>
+          <Plus />
           {isPending ? t('creating') : t('createBlock')}
         </Button>
       </div>

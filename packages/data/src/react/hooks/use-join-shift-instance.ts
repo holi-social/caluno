@@ -18,6 +18,12 @@ export function useJoinShiftInstance() {
       queryClient.invalidateQueries({
         queryKey: ['activeShifts'],
       });
+      queryClient.invalidateQueries({
+        queryKey: ['myShiftInstances'],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ['myShiftInstancesInfinite'],
+      });
     },
   });
 }

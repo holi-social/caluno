@@ -9,9 +9,13 @@ import { DATABASE_CONNECTION } from '../database/database-connection';
 import * as schema from '../database/schema';
 import { ConflictGraphQLError, NotFoundGraphQLError } from '../graphql/errors';
 import { NotificationService } from '../notification';
+import { RequiredFormTargetType } from '../requirement-profile/enums';
 import type { RequirementProfileEntity } from '../requirement-profile/schemas/requirement-profile.schema';
+import type { RequiredFormStatus } from '../requirement-profile/services/required-form.service';
+import { RequiredFormService } from '../requirement-profile/services/required-form.service';
 import { RequirementProfileService } from '../requirement-profile/services/requirement-profile.service';
 import { JoinStatus } from '../shared/enums/join-status.enum';
+import { PostHogService } from '../shared/observability/posthog.service';
 import { MembershipRequestStatus } from './enums';
 import { UpdateMembershipRequestInput } from './inputs/update-membership-request.input';
 import type { MembershipEntity } from './schemas/membership.schema';
@@ -30,6 +34,8 @@ export class MembershipService {
     private readonly requirementProfileService: RequirementProfileService,
     private readonly authService: AuthService,
     private readonly notificationService: NotificationService,
+    private readonly requiredFormService: RequiredFormService,
+    private readonly postHogService: PostHogService,
   ) {}
 
   private appendIntendedIdsToMetadata(
@@ -86,6 +92,27 @@ export class MembershipService {
     return Object.keys(metadata).length > 0 ? metadata : undefined;
   }
 
+  private async countUserMembershipsInOrganization(
+    userId: string,
+    organizationId: string,
+  ): Promise<number> {
+    const [row] = await this.db
+      .select({ count: sql<number>`count(*)::int` })
+      .from(schema.memberships)
+      .innerJoin(
+        schema.organizationUnits,
+        eq(schema.memberships.organizationUnitId, schema.organizationUnits.id),
+      )
+      .where(
+        and(
+          eq(schema.memberships.userId, userId),
+          eq(schema.organizationUnits.organizationId, organizationId),
+        ),
+      );
+
+    return Number(row?.count ?? 0);
+  }
+
   async getMembers(organizationUnitId: string): Promise<UserEntity[]> {
     const members = await this.db.query.users.findMany({
       where: {
@@ -111,6 +138,53 @@ export class MembershipService {
     return membership ?? null;
   }
 
+  /**
+   * Read-only membership state for a user against an org unit — the same
+   * lookups `requestOrgJoin` does before it would create anything, exposed
+   * separately so a page can show the right button state before the user
+   * clicks "join".
+   */
+  async getMembershipState(
+    userId: string,
+    organizationUnitId: string,
+  ): Promise<JoinStatus> {
+    const membership = await this.getMembership(userId, organizationUnitId);
+    if (membership) {
+      return JoinStatus.JOINED;
+    }
+
+    const existing = await this.db.query.membershipRequests.findFirst({
+      where: { userId, organizationUnitId },
+    });
+
+    if (existing?.status === MembershipRequestStatus.PENDING) {
+      return JoinStatus.PENDING;
+    }
+
+    if (
+      existing?.status === MembershipRequestStatus.REJECTED ||
+      existing?.status === MembershipRequestStatus.CANCELLED
+    ) {
+      return JoinStatus.REJECTED;
+    }
+
+    return JoinStatus.NONE;
+  }
+
+  async getPendingOrganizationUnitIds(userId: string): Promise<string[]> {
+    const requests = await this.db.query.membershipRequests.findMany({
+      where: {
+        userId,
+        status: MembershipRequestStatus.PENDING,
+      },
+      columns: { organizationUnitId: true },
+    });
+
+    return requests
+      .map((request) => request.organizationUnitId)
+      .filter((id): id is string => id !== null);
+  }
+
   async getMemberships(
     organizationUnitId: string,
   ): Promise<MembershipEntity[]> {
@@ -126,6 +200,36 @@ export class MembershipService {
         },
       },
     });
+  }
+
+  async getMyMemberships(userId: string): Promise<MembershipEntity[]> {
+    return this.db.query.memberships.findMany({
+      where: { userId },
+      with: {
+        user: true,
+        organizationUnit: true,
+        roles: {
+          with: {
+            role: true,
+          },
+        },
+      },
+    });
+  }
+
+  async getMyMembership(
+    userId: string,
+    id: string,
+  ): Promise<MembershipEntity | null> {
+    const membership = await this.db.query.memberships.findFirst({
+      where: { id, userId },
+      with: {
+        organizationUnit: true,
+        roles: { with: { role: true } },
+      },
+    });
+
+    return membership ?? null;
   }
 
   async getMembershipUser(membershipId: string): Promise<UserEntity | null> {
@@ -453,6 +557,20 @@ export class MembershipService {
         organizationName: organizationUnit.name,
         userId: membershipRequest.userId,
       });
+
+      if (organizationUnit.organizationId) {
+        const membershipCount = await this.countUserMembershipsInOrganization(
+          membershipRequest.userId,
+          organizationUnit.organizationId,
+        );
+        if (membershipCount === 1) {
+          this.postHogService.captureUserJoinedOrg(membershipRequest.userId, {
+            organizationId: organizationUnit.organizationId,
+            organizationUnitId,
+            source: 'membership_approved',
+          });
+        }
+      }
     }
 
     return membershipRequest;
@@ -489,6 +607,45 @@ export class MembershipService {
     );
   }
 
+  async leaveMembership(id: string, userId: string): Promise<MembershipEntity> {
+    const [deleted] = await this.db
+      .delete(schema.memberships)
+      .where(
+        and(
+          eq(schema.memberships.id, id),
+          eq(schema.memberships.userId, userId),
+        ),
+      )
+      .returning();
+
+    if (!deleted) {
+      throw new NotFoundGraphQLError('Membership not found');
+    }
+
+    return deleted;
+  }
+
+  async removeMembershipRequest(
+    id: string,
+    userId: string,
+  ): Promise<MembershipRequestEntity> {
+    const [deleted] = await this.db
+      .delete(schema.membershipRequests)
+      .where(
+        and(
+          eq(schema.membershipRequests.id, id),
+          eq(schema.membershipRequests.userId, userId),
+        ),
+      )
+      .returning();
+
+    if (!deleted) {
+      throw new NotFoundGraphQLError('Membership request not found');
+    }
+
+    return deleted;
+  }
+
   async getMembershipRequests(
     organizationUnitId: string,
     status?: MembershipRequestStatus,
@@ -522,10 +679,9 @@ export class MembershipService {
 
   async getMyMembershipRequests(
     userId: string,
-    status?: MembershipRequestStatus,
   ): Promise<MembershipRequestEntity[]> {
     return this.db.query.membershipRequests.findMany({
-      where: { userId, ...(status ? { status } : {}) },
+      where: { userId },
       with: {
         user: true,
         organizationUnit: true,
@@ -553,12 +709,13 @@ export class MembershipService {
       }
     | {
         status: 'REQUIREMENTS_NEEDED';
-        requirementProfile: RequirementProfileEntity;
-        requirementStatuses: Array<{
+        requirementProfile?: RequirementProfileEntity;
+        requirementStatuses?: Array<{
           requirementId: string;
           name: string;
           status: string;
         }>;
+        requiredForms?: RequiredFormStatus[];
       }
   > {
     const membership = await this.getMembership(userId, organizationUnitId);
@@ -572,6 +729,11 @@ export class MembershipService {
     if (!orgUnit) {
       throw new NotFoundGraphQLError('Organization unit not found');
     }
+
+    let requirementProfile: RequirementProfileEntity | undefined;
+    let requirementStatuses:
+      | Array<{ requirementId: string; name: string; status: string }>
+      | undefined;
 
     if (orgUnit.requiredMembershipRequirementProfileId) {
       const statuses =
@@ -587,12 +749,27 @@ export class MembershipService {
         if (!profile) {
           throw new NotFoundGraphQLError('Requirement profile not found');
         }
-        return {
-          status: 'REQUIREMENTS_NEEDED',
-          requirementProfile: profile,
-          requirementStatuses: statuses,
-        };
+        requirementProfile = profile;
+        requirementStatuses = statuses;
       }
+    }
+
+    const requiredFormStatuses =
+      await this.requiredFormService.getRequiredFormStatuses(userId, {
+        targetType: RequiredFormTargetType.ORGANIZATION_UNIT,
+        targetId: organizationUnitId,
+      });
+    const missingForms = requiredFormStatuses.filter((s) => !s.submitted);
+
+    if (requirementProfile || missingForms.length > 0) {
+      return {
+        status: 'REQUIREMENTS_NEEDED',
+        ...(requirementProfile && {
+          requirementProfile,
+          requirementStatuses,
+        }),
+        requiredForms: requiredFormStatuses,
+      };
     }
 
     const existing = await this.db.query.membershipRequests.findFirst({

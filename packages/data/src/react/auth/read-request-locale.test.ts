@@ -24,19 +24,19 @@ afterEach(() => {
 });
 
 describe('readRequestLocale', () => {
-  it('reads the clippy.locale cookie for the x-locale header', () => {
+  it('reads the caluno.locale cookie for the x-locale header', () => {
     setCookie(`${LOCALE_COOKIE}=de`);
-    expect(LOCALE_COOKIE).toBe('clippy.locale');
+    expect(LOCALE_COOKIE).toBe('caluno.locale');
     expect(readRequestLocale()).toBe('de');
   });
 
   it('ignores an unsupported cookie value', () => {
     setCookie(`${LOCALE_COOKIE}=fr`);
-    expect(readRequestLocale()).toBe('en');
+    expect(readRequestLocale()).toBe('de');
   });
 
   it('reads the cookie alongside other cookies', () => {
-    setCookie(`clippy.last_org_slug=acme; ${LOCALE_COOKIE}=de`);
+    setCookie(`caluno.last_org_slug=acme; ${LOCALE_COOKIE}=de`);
     expect(readRequestLocale()).toBe('de');
   });
 
@@ -46,6 +46,6 @@ describe('readRequestLocale', () => {
       value: undefined,
       configurable: true,
     });
-    expect(readRequestLocale()).toBe('en');
+    expect(readRequestLocale()).toBe('de');
   });
 });

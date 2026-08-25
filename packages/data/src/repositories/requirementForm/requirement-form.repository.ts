@@ -2,6 +2,7 @@ import type {
   CreateFormBlockFieldInput,
   CreateFormBlockInput,
   CreateRequirementFormInput,
+  RequiredFormTargetType,
   SubmitFormInput,
   UpdateFormBlockFieldInput,
   UpdateFormBlockInput,
@@ -102,6 +103,21 @@ export class RequirementFormRepository extends BaseRepository {
     return data.submitForm;
   }
 
+  async submitRequiredForm(
+    targetType: RequiredFormTargetType,
+    targetId: string,
+    formId: string,
+    input: SubmitFormInput,
+  ) {
+    const data = await this.sdk.SubmitRequiredForm({
+      targetType,
+      targetId,
+      formId,
+      input,
+    });
+    return data.submitRequiredForm;
+  }
+
   async getMyFormSubmissionByToken(token: string) {
     const data = await this.sdk.GetMyFormSubmissionByToken({ token });
     return data.myFormSubmissionByToken;
@@ -117,14 +133,6 @@ export class RequirementFormRepository extends BaseRepository {
     return data.updateMyUserProfile;
   }
 
-  async generateDocumentUploadUrl(filename: string, mimeType: string) {
-    const data = await this.sdk.GenerateDocumentUploadUrl({
-      filename,
-      mimeType,
-    });
-    return data.generateDocumentUploadUrl;
-  }
-
   async findSubmissionsByMembershipRequestId(membershipRequestId: string) {
     const data = await this.sdk.GetFormSubmissionsByMembershipRequest({
       membershipRequestId,
@@ -137,8 +145,32 @@ export class RequirementFormRepository extends BaseRepository {
     return data.formSubmissionsForVolunteer;
   }
 
+  async findMyFormSubmissions(organizationUnitId: string) {
+    const data = await this.sdk.GetMyFormSubmissions({ organizationUnitId });
+    return data.myFormSubmissions;
+  }
+
+  async findMyRequiredOrgUnitForms(organizationUnitId: string) {
+    const data = await this.sdk.MyRequiredOrgUnitForms({ organizationUnitId });
+    return data.myRequiredOrgUnitForms;
+  }
+
+  async findMySubmission(id: string) {
+    const data = await this.sdk.MyFormSubmission({ id });
+    return data.myFormSubmission;
+  }
+
   async findAdminSubmission(id: string) {
     const data = await this.sdk.GetAdminFormSubmission({ id });
     return data.adminVolunteerSubmission;
+  }
+
+  async findSubmissionsByForm(formId: string, options: PaginationOptions = {}) {
+    const data = await this.sdk.GetFormSubmissionsByForm({
+      formId,
+      limit: options.limit ?? 100,
+      offset: options.offset ?? 0,
+    });
+    return data.formSubmissionsByForm;
   }
 }

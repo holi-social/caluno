@@ -1,6 +1,7 @@
 import type { Database } from '../../src/database/database.module';
 import * as schema from '../../src/database/schema';
 import { ShiftVisibility } from '../../src/shift/enums';
+import { getDurationMinutes } from '../../src/shift/utils/duration';
 import { expandShift } from '../../src/shift/utils/rrule-expander';
 import { slugify } from '../../src/utils/slug.util';
 import { createUser } from './user.factory';
@@ -20,10 +21,8 @@ export type CreateShiftOptions = {
   instructions?: string | null;
   maxVolunteers?: number | null;
   minVolunteers?: number | null;
+  eventId?: string | null;
 };
-
-const defaultStartsAt = new Date('2026-06-18T08:00:00.000Z');
-const defaultEndsAt = new Date('2026-06-18T10:00:00.000Z');
 
 /**
  * Inserts a shift (template) plus its expanded instances directly into the
@@ -36,9 +35,12 @@ export const createShift = async (
   options: CreateShiftOptions,
 ): Promise<Shift> => {
   const title = options.title ?? `Test Shift ${crypto.randomUUID()}`;
-  const startsAt = options.startsAt ?? defaultStartsAt;
-  const endsAt = options.endsAt ?? defaultEndsAt;
-  const durationMinutes = (endsAt.getTime() - startsAt.getTime()) / 60000;
+  // Computed per call (not module-level) so shifts created across many tests
+  // in the same file don't collide on an identical actualStartsAt, which
+  // made pagination-limited queries order-dependent and flaky.
+  const startsAt = options.startsAt ?? new Date(Date.now() + 100000);
+  const endsAt = options.endsAt ?? new Date(Date.now() + 200000);
+  const durationMinutes = getDurationMinutes(startsAt, endsAt);
   const rrule = options.rrule ?? null;
   const createdById = options.createdById ?? (await createUser(db)).id;
 
@@ -54,6 +56,7 @@ export const createShift = async (
       visibility: options.visibility ?? ShiftVisibility.ALL_MEMBERS,
       maxVolunteers: options.maxVolunteers ?? null,
       minVolunteers: options.minVolunteers ?? null,
+      eventId: options.eventId ?? null,
       rrule,
       originalStartsAt: startsAt,
       durationMinutes,

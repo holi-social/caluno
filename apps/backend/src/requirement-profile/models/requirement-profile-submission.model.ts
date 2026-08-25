@@ -1,9 +1,14 @@
-import { Field, ID, ObjectType } from '@nestjs/graphql';
+import { Field, ID, ObjectType, registerEnumType } from '@nestjs/graphql';
 import { createPaginatedResponseType } from '../../graphql/paginated-response.model';
 import { Membership } from '../../membership/models/membership.model';
 import { MembershipRequest } from '../../membership/models/membership-request.model';
 import { User } from '../../user/models/user.model';
 import { RequirementProfileSubmissionStatus } from '../enums';
+
+registerEnumType(RequirementProfileSubmissionStatus, {
+  name: 'RequirementProfileSubmissionStatus',
+});
+
 import { RequirementFulfillment } from './requirement-fulfillment.model';
 import { RequirementProfile } from './requirement-profile.model';
 
@@ -13,28 +18,28 @@ export class RequirementProfileSubmission {
   id!: string;
 
   @Field(() => Membership, { nullable: true })
-  membership!: Membership | null;
+  membership?: Membership | null;
 
   @Field(() => MembershipRequest, { nullable: true })
-  membershipRequest!: MembershipRequest | null;
+  membershipRequest?: MembershipRequest | null;
 
   @Field(() => RequirementProfileSubmissionStatus)
   status!: RequirementProfileSubmissionStatus;
 
   @Field(() => Date, { nullable: true })
-  submittedAt!: Date | null;
+  submittedAt?: Date | null;
 
   @Field(() => Date, { nullable: true })
-  reviewedAt!: Date | null;
+  reviewedAt?: Date | null;
 
   @Field(() => RequirementProfile)
   requirementProfile!: RequirementProfile;
 
   @Field(() => [RequirementFulfillment], { nullable: true })
-  fulfillments!: RequirementFulfillment[];
+  fulfillments?: RequirementFulfillment[] | null;
 
   @Field(() => User, { nullable: true })
-  reviewedBy!: User | null;
+  reviewedBy?: User | null;
 }
 
 export const RequirementProfileSubmissionPaginatedResponse =

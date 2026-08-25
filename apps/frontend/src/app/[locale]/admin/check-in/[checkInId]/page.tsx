@@ -12,7 +12,7 @@ import { getTranslations } from 'next-intl/server';
 import { Link } from '@/i18n/navigation';
 import {
   getLastVisitedOrgServer,
-  getMyAccessibleOrganizationUnits,
+  getMyAdministrableOrgUnits,
 } from '@/lib/org-context-server';
 
 type CheckInPageProps = {
@@ -31,7 +31,7 @@ export default async function CheckInPage({ params }: CheckInPageProps) {
     );
   }
 
-  const organizations = await getMyAccessibleOrganizationUnits();
+  const organizations = await getMyAdministrableOrgUnits();
 
   if (organizations.length === 1) {
     return redirect(
@@ -54,7 +54,7 @@ export default async function CheckInPage({ params }: CheckInPageProps) {
               className="flex gap-4 items-center text-xl"
             >
               {o.name}
-              <Button type="button" size="icon-sm">
+              <Button type="button" size="icon-sm" tooltip={t('checkIn')}>
                 <LogIn />
               </Button>
             </Link>

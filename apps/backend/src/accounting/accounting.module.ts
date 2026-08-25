@@ -1,0 +1,121 @@
+import { Module } from '@nestjs/common';
+import { AuthModule } from '../auth/auth.module';
+import { DatabaseModule } from '../database/database.module';
+import { MembershipModule } from '../membership/membership.module';
+import { OrganizationModule } from '../organization/organization.module';
+import { OrganizationUnitDataModule } from '../organization/organization-unit-data.module';
+import { StorageModule } from '../storage/storage.module';
+import { TimeTrackingModule } from '../time-tracking/time-tracking.module';
+import { UserModule } from '../user/user.module';
+import './enums/register-graphql-enums';
+import {
+  ContractMapper,
+  ContractSignatureMapper,
+  ContractStatusChangeMapper,
+  DocumentTemplateMapper,
+  InvoiceMapper,
+  InvoiceSignatureMapper,
+  InvoiceStatusChangeMapper,
+  InvoiceTimeEntryMapper,
+  ReimbursementRateMapper,
+  ReimbursementTypeMapper,
+  TemplateSigneeMapper,
+} from './mappers';
+import {
+  AccountingOrganizationLoader,
+  AccountingReferenceLoader,
+  AccountingUserLoader,
+  ContractFieldResolver,
+  ContractLoader,
+  ContractMutationResolver,
+  ContractQueryResolver,
+  ContractSignatureFieldResolver,
+  ContractStatusChangeFieldResolver,
+  DocumentTemplateFieldResolver,
+  DocumentTemplateMutationResolver,
+  DocumentTemplateQueryResolver,
+  DocumentTemplateSigneesLoader,
+  InvoiceFieldResolver,
+  InvoiceLoader,
+  InvoiceMutationResolver,
+  InvoiceQueryResolver,
+  InvoiceSignatureFieldResolver,
+  InvoiceStatusChangeFieldResolver,
+  InvoiceTimeEntryFieldResolver,
+  ReimbursementMutationResolver,
+  ReimbursementQueryResolver,
+  ReimbursementRateFieldResolver,
+  TemplateSigneeFieldResolver,
+} from './resolvers';
+import {
+  ContractService,
+  DocumentRenderingService,
+  DocumentSigningService,
+  DocumentTemplateService,
+  InvoiceService,
+  ReimbursementRateService,
+} from './services';
+
+@Module({
+  imports: [
+    DatabaseModule,
+    AuthModule,
+    OrganizationModule,
+    OrganizationUnitDataModule,
+    UserModule,
+    TimeTrackingModule,
+    MembershipModule,
+    StorageModule,
+  ],
+  providers: [
+    ReimbursementRateService,
+    DocumentTemplateService,
+    DocumentRenderingService,
+    DocumentSigningService,
+    ContractService,
+    InvoiceService,
+    ContractMapper,
+    ContractSignatureMapper,
+    ContractStatusChangeMapper,
+    DocumentTemplateMapper,
+    InvoiceMapper,
+    InvoiceSignatureMapper,
+    InvoiceStatusChangeMapper,
+    InvoiceTimeEntryMapper,
+    ReimbursementRateMapper,
+    ReimbursementTypeMapper,
+    TemplateSigneeMapper,
+    ReimbursementQueryResolver,
+    ReimbursementMutationResolver,
+    ReimbursementRateFieldResolver,
+    DocumentTemplateQueryResolver,
+    DocumentTemplateMutationResolver,
+    DocumentTemplateFieldResolver,
+    TemplateSigneeFieldResolver,
+    ContractQueryResolver,
+    ContractMutationResolver,
+    ContractFieldResolver,
+    ContractSignatureFieldResolver,
+    ContractStatusChangeFieldResolver,
+    InvoiceQueryResolver,
+    InvoiceMutationResolver,
+    InvoiceFieldResolver,
+    InvoiceSignatureFieldResolver,
+    InvoiceStatusChangeFieldResolver,
+    InvoiceTimeEntryFieldResolver,
+    AccountingUserLoader,
+    AccountingOrganizationLoader,
+    AccountingReferenceLoader,
+    DocumentTemplateSigneesLoader,
+    ContractLoader,
+    InvoiceLoader,
+  ],
+  exports: [
+    ReimbursementRateService,
+    DocumentTemplateService,
+    DocumentSigningService,
+    ContractService,
+    InvoiceService,
+  ],
+})
+export class AccountingModule {}

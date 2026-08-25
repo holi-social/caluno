@@ -1,21 +1,22 @@
 'use client';
 
 import { Button } from '@repo/ui';
-import { Edit, Loader2, Trash } from 'lucide-react';
+import { Edit, Loader2, Trash, UserPlus } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useTransition } from 'react';
 import { toast } from 'sonner';
 import { DeleteAlertDialog } from '@/components/delete-alert-dialog';
-import { FORM_ID } from '@/components/sheets/shift-sheet';
-import { useSheet } from '@/hooks/use-sheet';
-import { useRouter } from '@/i18n/navigation';
+import { Link, useRouter } from '@/i18n/navigation';
 import { deleteShift } from '../actions';
+import { shiftEditPath } from '../routes';
 
 type ActionBarProps = {
   id: string;
   organizationUnitId: string;
   size?: 'xs' | 'sm' | 'md';
   hideEdit?: boolean;
+  editHref?: string;
+  inviteHref?: string;
   onDeleteSuccess?: () => void;
 };
 
@@ -24,14 +25,16 @@ export const ActionBar = ({
   organizationUnitId,
   size = 'xs',
   hideEdit = false,
+  editHref,
+  inviteHref,
   onDeleteSuccess,
 }: ActionBarProps) => {
   const router = useRouter();
   const [isDeleting, startDeleteTransition] = useTransition();
-  const editSheet = useSheet(FORM_ID, 'id');
   const t = useTranslations('Shift');
 
   const buttonSize = `icon-${size}` as const;
+  const resolvedEditHref = editHref ?? shiftEditPath(organizationUnitId, id);
 
   const handleDelete = () => {
     startDeleteTransition(async () => {
@@ -52,14 +55,27 @@ export const ActionBar = ({
   return (
     <aside className="space-x-2">
       {!hideEdit && (
-        <Button
-          size={buttonSize}
-          variant="outline"
-          aria-label={t('action.editAria')}
-          onClick={() => editSheet.open({ id })}
-        >
-          <Edit />
-        </Button>
+        <Link href={resolvedEditHref}>
+          <Button
+            size={buttonSize}
+            variant="outline"
+            tooltip={t('action.editAria')}
+          >
+            <Edit />
+          </Button>
+        </Link>
+      )}
+
+      {inviteHref && (
+        <Link href={inviteHref}>
+          <Button
+            size={buttonSize}
+            variant="outline"
+            tooltip={t('action.inviteAria')}
+          >
+            <UserPlus />
+          </Button>
+        </Link>
       )}
 
       <DeleteAlertDialog
@@ -70,7 +86,7 @@ export const ActionBar = ({
           <Button
             size={buttonSize}
             variant="destructive"
-            aria-label={t('action.deleteTitle')}
+            tooltip={t('action.deleteTitle')}
             disabled={isDeleting}
           >
             {isDeleting ? <Loader2 className="animate-spin" /> : <Trash />}

@@ -14,13 +14,14 @@ export function useOrganizationUnitWithSuspense(id: string) {
   });
 }
 
-export function useIsMemberOfOrgUnitOrAncestor(organizationUnitId: string) {
+export function useOrganizationUnit(id: string) {
   const sdk = useSdk();
   const repository = new OrganizationUnitRepository(sdk);
 
   return useQuery({
-    queryKey: ['organization-unit', 'is-member', organizationUnitId],
-    queryFn: () => repository.isMemberOfOrgUnitOrAncestor(organizationUnitId),
-    enabled: !!organizationUnitId,
+    queryKey: ['organization-unit', id],
+    queryFn: () => repository.findById(id),
+    enabled: !!id,
+    staleTime: 5 * 60 * 1000,
   });
 }

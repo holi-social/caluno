@@ -1,5 +1,6 @@
 // Components
 
+export * from './components/action-tooltip';
 export * from './components/base/accordion';
 export * from './components/base/alert';
 export * from './components/base/alert-dialog';
@@ -31,11 +32,14 @@ export * from './components/detail-page-header';
 export * from './components/input';
 export * from './components/kibo-ui/tree';
 export * from './components/logo';
+export * from './components/segmented-control';
 export * from './components/sheet';
 export * from './components/sidebar';
 export * from './components/skeleton';
 export * from './components/tab-bar';
 export * from './components/tooltip';
+
+export * from './components/volunteering-status';
 
 // Hooks
 export { useIsMobile } from './hooks/use-mobile';

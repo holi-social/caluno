@@ -1,6 +1,6 @@
 'use client';
 
-import { EventRepository } from '@repo/data';
+import { EventRepository, PublicEventRepository } from '@repo/data';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type {
   CreateEventInput,
@@ -26,17 +26,6 @@ export function useEvent(id: string) {
   return useQuery({
     queryKey: ['event', id],
     queryFn: () => repository.findById(id),
-    staleTime: 30 * 1000,
-  });
-}
-
-export function useEventAttendees(eventId: string) {
-  const sdk = useSdk();
-  const repository = new EventRepository(sdk);
-
-  return useQuery({
-    queryKey: ['eventAttendees', eventId],
-    queryFn: () => repository.findAttendees(eventId),
     staleTime: 30 * 1000,
   });
 }
@@ -96,7 +85,52 @@ export function useInviteMembersToEvent() {
       memberIds: string[];
     }) => repository.inviteMembers(eventId, memberIds),
     onSuccess: (_, { eventId }) => {
-      queryClient.invalidateQueries({ queryKey: ['eventAttendees', eventId] });
+      queryClient.invalidateQueries({ queryKey: ['eventInvites', eventId] });
+    },
+  });
+}
+
+export function useSetEventRequiredForms() {
+  const sdk = useSdk();
+  const queryClient = useQueryClient();
+  const repository = new EventRepository(sdk);
+
+  return useMutation({
+    mutationFn: ({
+      eventId,
+      formIds,
+    }: {
+      eventId: string;
+      formIds: string[];
+    }) => repository.setRequiredForms(eventId, formIds),
+    onSuccess: (_, { eventId }) => {
+      queryClient.invalidateQueries({ queryKey: ['event', eventId] });
+      queryClient.invalidateQueries({ queryKey: ['publicEvent', eventId] });
+    },
+  });
+}
+
+export function usePublicEvent(id: string) {
+  const sdk = useSdk();
+  const repository = new PublicEventRepository(sdk);
+
+  return useQuery({
+    queryKey: ['publicEvent', id],
+    queryFn: () => repository.findById(id),
+    staleTime: 30 * 1000,
+  });
+}
+
+export function useJoinEvent() {
+  const sdk = useSdk();
+  const queryClient = useQueryClient();
+  const repository = new PublicEventRepository(sdk);
+
+  return useMutation({
+    mutationFn: (eventId: string) => repository.join(eventId),
+    onSuccess: (_, eventId) => {
+      queryClient.invalidateQueries({ queryKey: ['publicEvent', eventId] });
+      queryClient.invalidateQueries({ queryKey: ['myEvents'] });
     },
   });
 }

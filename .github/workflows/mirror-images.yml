@@ -1,0 +1,45 @@
+# Mirrors pinned base images into ghcr.io/holi-social so CI pulls from GHCR
+# instead of Docker Hub. Bump a tag below and re-run manually for a newer image.
+name: Mirror base images to GHCR
+
+on:
+  workflow_dispatch: {}
+  schedule:
+    - cron: '17 3 * * 1' # Mondays 03:17 UTC
+
+permissions:
+  contents: read
+
+concurrency:
+  group: mirror-images
+  cancel-in-progress: false
+
+jobs:
+  mirror:
+    name: Mirror ${{ matrix.image }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      packages: write
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - image: postgres:17
+            src: docker.io/library/postgres:17
+            dest: ghcr.io/holi-social/mirror/postgres:17
+          - image: oven/bun:1
+            src: docker.io/oven/bun:1
+            dest: ghcr.io/holi-social/mirror/oven-bun:1
+    steps:
+      - uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      # Registry-to-registry: all platforms, no local pull.
+      - name: Copy ${{ matrix.src }} → ${{ matrix.dest }}
+        run: docker buildx imagetools create --tag "${{ matrix.dest }}" "${{ matrix.src }}"
+      - name: Verify the mirrored manifest
+        run: docker buildx imagetools inspect "${{ matrix.dest }}"

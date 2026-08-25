@@ -1,5 +1,9 @@
-import { Field, ID, ObjectType } from '@nestjs/graphql';
+import { Field, ID, ObjectType, registerEnumType } from '@nestjs/graphql';
 import { OrganizationUserProfileStatus } from '../enums';
+
+registerEnumType(OrganizationUserProfileStatus, {
+  name: 'OrganizationUserProfileStatus',
+});
 
 @ObjectType()
 export class OrganizationUserProfile {
@@ -13,5 +17,5 @@ export class OrganizationUserProfile {
   userProfileAccessApproved!: boolean;
 
   @Field(() => String, { nullable: true })
-  note!: string | null;
+  note?: string | null;
 }

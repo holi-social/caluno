@@ -30,14 +30,26 @@ export class MembershipQueryResolver {
     return this.membershipMapper.toModel(entity);
   }
 
-  @Permissions(PERMISSIONS.VOLUNTEER_VIEW)
   @Query(() => Boolean)
-  async isMemberOfUnitOrAncestor(
-    @Args('organizationUnitId', { type: () => ID }) organizationUnitId: string,
+  async myMembershipStatus(
+    @Args('organizationUnitId', { type: () => ID })
+    organizationUnitId: string,
     @Session() session: UserSession,
   ): Promise<boolean> {
     return this.membershipService.isMemberOfUnitOrAncestor(
       session.user.id,
+      organizationUnitId,
+    );
+  }
+
+  @Permissions(PERMISSIONS.VOLUNTEER_VIEW)
+  @Query(() => Boolean)
+  async isMemberOfUnitOrAncestor(
+    @Args('organizationUnitId', { type: () => ID }) organizationUnitId: string,
+    @Args('userId') userId: string,
+  ): Promise<boolean> {
+    return this.membershipService.isMemberOfUnitOrAncestor(
+      userId,
       organizationUnitId,
     );
   }
@@ -63,5 +75,25 @@ export class MembershipQueryResolver {
       context.organizationUnitId,
     );
     return this.membershipMapper.toArray(memberships);
+  }
+
+  @Query(() => [Membership])
+  async myMemberships(@Session() session: UserSession): Promise<Membership[]> {
+    const memberships = await this.membershipService.getMyMemberships(
+      session.user.id,
+    );
+    return this.membershipMapper.toArray(memberships);
+  }
+
+  @Query(() => Membership, { nullable: true })
+  async myMembership(
+    @Args('id', { type: () => ID }) id: string,
+    @Session() session: UserSession,
+  ): Promise<Membership | null> {
+    const membership = await this.membershipService.getMyMembership(
+      session.user.id,
+      id,
+    );
+    return this.membershipMapper.toModel(membership);
   }
 }

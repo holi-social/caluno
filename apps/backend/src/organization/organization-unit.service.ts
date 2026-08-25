@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { and, count, eq, isNull } from 'drizzle-orm';
+import { and, count, countDistinct, eq, gte, isNull } from 'drizzle-orm';
 import { DEFAULT_OWNER_ROLE_NAME } from '../auth/constants';
 import type { Database } from '../database/database.module';
 import { DATABASE_CONNECTION } from '../database/database-connection';
@@ -10,9 +10,13 @@ import {
   NotFoundGraphQLError,
 } from '../graphql/errors';
 import type { PaginationInput } from '../graphql/pagination.input';
+import { startOfTodayInAppTimeZone } from '../shift/utils/app-time';
+import { FilePurpose } from '../storage/enums';
+import { FileService } from '../storage/services/file.service';
 import { slugify } from '../utils';
 import type { CreateOrganizationUnitInput } from './inputs/create-organization-unit.input';
 import type { UpdateOrganizationUnitInput } from './inputs/update-organization-unit.input';
+import { OrganizationUnitDataService } from './organization-unit-data.service';
 import type { OrganizationEntity } from './schemas/organization.schema';
 import type { OrganizationUnitEntity } from './schemas/organization-unit.schema';
 import type { OrganizationUnitTypeEntity } from './schemas/organization-unit-type.schema';
@@ -22,12 +26,12 @@ export class OrganizationUnitService {
   constructor(
     @Inject(DATABASE_CONNECTION)
     private readonly db: Database,
+    private readonly fileService: FileService,
+    private readonly organizationUnitDataService: OrganizationUnitDataService,
   ) {}
 
   async findById(id: string): Promise<OrganizationUnitEntity | undefined> {
-    return this.db.query.organizationUnits.findFirst({
-      where: { id },
-    });
+    return this.organizationUnitDataService.findById(id);
   }
 
   async findBySlug(slug: string): Promise<OrganizationUnitEntity | undefined> {
@@ -67,11 +71,41 @@ export class OrganizationUnitService {
     });
   }
 
+  async findOrganizationByUnitId(
+    organizationUnitId: string,
+  ): Promise<OrganizationEntity | undefined> {
+    return this.organizationUnitDataService.findOrganizationByUnitId(
+      organizationUnitId,
+    );
+  }
+
   async findType(
     typeId: string,
+    organizationId?: string,
   ): Promise<OrganizationUnitTypeEntity | undefined> {
     return this.db.query.organizationUnitTypes.findFirst({
-      where: { id: typeId },
+      where: {
+        id: typeId,
+        ...(organizationId ? { organizationId } : {}),
+      },
+    });
+  }
+
+  async findOrganizationIdByUnitId(
+    organizationUnitId: string,
+  ): Promise<string | undefined> {
+    const unit = await this.db.query.organizationUnits.findFirst({
+      where: { id: organizationUnitId },
+      columns: { organizationId: true },
+    });
+    return unit?.organizationId;
+  }
+
+  async findAllTypes(
+    organizationId: string,
+  ): Promise<OrganizationUnitTypeEntity[]> {
+    return this.db.query.organizationUnitTypes.findMany({
+      where: { organizationId },
     });
   }
 
@@ -95,40 +129,19 @@ export class OrganizationUnitService {
       );
   }
 
-  async findOrganizationByUnitId(
-    organizationUnitId: string,
-  ): Promise<OrganizationEntity | undefined> {
-    const organizationUnit = await this.findById(organizationUnitId);
-    if (!organizationUnit) {
-      throw new NotFoundGraphQLError('Organization unit not found');
-    }
-    return this.findOrganization(organizationUnit.organizationId);
-  }
-
   async listInclusiveAncestorUnitIds(
     organizationUnitId: string,
   ): Promise<string[]> {
-    const chain: string[] = [];
-    let currentId: string | null = organizationUnitId;
-
-    while (currentId) {
-      const unit = await this.db.query.organizationUnits.findFirst({
-        where: { id: currentId },
-        columns: { id: true, parentId: true },
-      });
-      if (!unit) break;
-      chain.push(unit.id);
-      currentId = unit.parentId;
-    }
-
-    return chain;
+    return this.organizationUnitDataService.listInclusiveAncestorUnitIds(
+      organizationUnitId,
+    );
   }
 
   async create(
     userId: string,
     input: CreateOrganizationUnitInput,
   ): Promise<OrganizationUnitEntity> {
-    const type = await this.findType(input.typeId);
+    const type = await this.findType(input.typeId, input.organizationId);
     if (!type) {
       throw new NotFoundGraphQLError('Organization unit type not found');
     }
@@ -147,11 +160,15 @@ export class OrganizationUnitService {
       );
     }
 
+    const { logoFileId, ...unitInput } = input;
+    const logoUrl = logoFileId ? await this.resolveLogoUrl(logoFileId) : null;
+
     const [organizationUnit] = await this.db.transaction(async (tx) => {
       const [unit] = await tx
         .insert(schema.organizationUnits)
         .values({
-          ...input,
+          ...unitInput,
+          logoUrl,
           organizationId: input.organizationId,
           slug,
         })
@@ -231,28 +248,16 @@ export class OrganizationUnitService {
     }
 
     if (input.typeId) {
-      const type = await this.findType(input.typeId);
+      const type = await this.findType(input.typeId, unit.organizationId);
       if (!type) {
         throw new NotFoundGraphQLError('Organization unit type not found');
-      }
-    }
-
-    let slug: string | undefined;
-    if (input.name) {
-      slug = slugify(input.name);
-      const existing = await this.findBySlug(slug);
-      if (existing && existing.id !== id) {
-        throw new ConflictGraphQLError(
-          `Organization unit slug "${slug}" already exists`,
-        );
       }
     }
 
     const [updated] = await this.db
       .update(schema.organizationUnits)
       .set({
-        ...input,
-        ...(slug ? { slug } : {}),
+        ...(await this.resolveUpdateInput(input)),
       })
       .where(
         and(
@@ -269,8 +274,66 @@ export class OrganizationUnitService {
     return updated;
   }
 
-  async findAllTypes(): Promise<OrganizationUnitTypeEntity[]> {
-    return this.db.query.organizationUnitTypes.findMany();
+  private async resolveLogoUrl(logoFileId: string): Promise<string> {
+    await this.fileService.assertUploadedFileForPurpose(
+      logoFileId,
+      FilePurpose.ORG_LOGO,
+    );
+    return this.fileService.resolvePublicUrlForUploadedFile(logoFileId);
+  }
+
+  private async resolveUpdateInput(input: UpdateOrganizationUnitInput): Promise<
+    Omit<UpdateOrganizationUnitInput, 'logoFileId'> & {
+      logoUrl?: string | null;
+    }
+  > {
+    const { logoFileId, ...rest } = input;
+
+    if (logoFileId === undefined) {
+      return rest;
+    }
+
+    return {
+      ...rest,
+      logoUrl: logoFileId ? await this.resolveLogoUrl(logoFileId) : null,
+    };
+  }
+
+  async countMembers(organizationUnitId: string): Promise<number> {
+    const [row] = await this.db
+      .select({ total: count() })
+      .from(schema.memberships)
+      .where(eq(schema.memberships.organizationUnitId, organizationUnitId));
+
+    return row?.total ?? 0;
+  }
+
+  /**
+   * Count of shifts under an org unit with at least one upcoming,
+   * non-cancelled instance — a simple "still has capacity to sign up"
+   * signal. Doesn't account for per-instance capacity being full.
+   */
+  async countOpenShifts(organizationUnitId: string): Promise<number> {
+    const [row] = await this.db
+      .select({ total: countDistinct(schema.shifts.id) })
+      .from(schema.shifts)
+      .innerJoin(
+        schema.shiftInstances,
+        eq(schema.shiftInstances.masterId, schema.shifts.id),
+      )
+      .where(
+        and(
+          eq(schema.shifts.organizationUnitId, organizationUnitId),
+          eq(schema.shifts.isDeleted, false),
+          eq(schema.shiftInstances.isCancelled, false),
+          gte(
+            schema.shiftInstances.actualStartsAt,
+            startOfTodayInAppTimeZone(),
+          ),
+        ),
+      );
+
+    return row?.total ?? 0;
   }
 
   async delete(id: string): Promise<OrganizationUnitEntity> {

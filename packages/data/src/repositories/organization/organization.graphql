@@ -50,6 +50,56 @@ query GetOrganizationUnit($id: String!) {
     phone
     address
     organizationId
+    requiredForms {
+      form {
+        id
+        name
+        description
+        settings {
+          submitButtonLabel
+          successTitle
+          successMessage
+        }
+        blockRefs {
+          id
+          formId
+          blockId
+          fieldOrder
+          required
+          block {
+            id
+            organizationId
+            title
+            description
+            icon
+            required
+            isEditable
+            fields {
+              id
+              blockId
+              type
+              label
+              placeholder
+              description
+              required
+              lockType
+              systemKey
+              options {
+                label
+                value
+              }
+              documentFileId
+              documentDownloadUrl
+              documentFilename
+              documentLabel
+              minAge
+              fieldOrder
+            }
+          }
+        }
+      }
+      order
+    }
     parent {
       id
       name
@@ -113,8 +163,28 @@ query GetOrganizationsWithRoot($limit: Int!, $offset: Int!) {
   }
 }
 
-query GetMyAccessibleOrganizationUnits {
-  myAccessibleOrganizationUnits {
+query GetMyOrganizationUnits {
+  myOrganizationUnits {
+    id
+    slug
+    name
+    description
+    logoUrl
+    address
+    parent {
+      id
+    }
+    organization {
+      id
+      name
+      description
+      logoUrl
+    }
+  }
+}
+
+query GetMyAdminstableOrganizationUnits {
+  myAdminstableOrganizationUnits {
     id
     slug
     name
@@ -227,6 +297,19 @@ mutation DeleteOrganizationUnit($id: String!) {
   }
 }
 
-query IsMemberOfOrgUnitOrAncestor($organizationUnitId: ID!) {
-  isMemberOfUnitOrAncestor(organizationUnitId: $organizationUnitId)
+query IsMemberOfOrgUnitOrAncestor($organizationUnitId: ID!, $userId: String!) {
+  isMemberOfUnitOrAncestor(
+    organizationUnitId: $organizationUnitId
+    userId: $userId
+  )
+}
+mutation SetRequiredForms($organizationUnitId: String!, $formIds: [String!]!) {
+  setRequiredForms(organizationUnitId: $organizationUnitId, formIds: $formIds) {
+    form {
+      id
+      name
+      description
+    }
+    order
+  }
 }

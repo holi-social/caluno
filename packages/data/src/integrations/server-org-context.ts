@@ -18,51 +18,6 @@ export interface ServerOrgContextDeps {
 
 export function createServerOrgContext(deps: ServerOrgContextDeps) {
   const { getCookie, notFound, redirect, getDataClient } = deps;
-  async function resolveOrgFromId(orgUId: string): Promise<OrgContextData> {
-    try {
-      const data = await getDataClient(orgUId);
-      const org = await data.organization.findById(orgUId);
-
-      if (!org) {
-        return notFound();
-      }
-
-      return org;
-    } catch (error) {
-      console.error('Failed to resolve org from ID:', error);
-      return notFound();
-    }
-  }
-  async function resolveOrgFromSlug(orgSlug: string): Promise<OrgContextData> {
-    try {
-      const data = await getDataClient();
-      const org = await data.organization.findBySlug(orgSlug);
-
-      if (!org) {
-        return notFound();
-      }
-
-      return org;
-    } catch (error) {
-      console.error('Failed to resolve org from slug:', error);
-      return notFound();
-    }
-  }
-
-  async function validateUserOrgAccess(orgUId: string): Promise<boolean> {
-    try {
-      const data = await getDataClient();
-      const myOrgs = await data.user.getMyOrganizations({
-        limit: 100,
-        offset: 0,
-      });
-
-      return myOrgs.items.some((org) => org.id === orgUId);
-    } catch (error) {
-      console.error('Failed to validate org access:', error);
-      return false;
-    }
-  }
 
   async function requireOrgAccess(
     orgUId: string,
@@ -94,9 +49,6 @@ export function createServerOrgContext(deps: ServerOrgContextDeps) {
   }
 
   return {
-    resolveOrgFromId,
-    resolveOrgFromSlug,
-    validateUserOrgAccess,
     requireOrgAccess,
     getLastVisitedOrgServer,
   };

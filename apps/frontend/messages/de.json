@@ -1,200 +1,669 @@
 {
-  "Common": {
-    "save": "Speichern",
-    "saving": "Wird gespeichert...",
-    "saveChanges": "Änderungen speichern",
-    "cancel": "Abbrechen",
-    "delete": "Löschen",
-    "deleting": "Wird gelöscht...",
-    "loading": "Wird geladen...",
-    "create": "Erstellen",
-    "creating": "Wird erstellt...",
-    "submit": "Absenden",
-    "submitting": "Wird abgesendet...",
-    "copyToClipboard": "In Zwischenablage kopieren",
-    "linkCopied": "Link in Zwischenablage kopiert",
-    "previous": "Zurück",
-    "next": "Weiter",
-    "back": "Zurück",
-    "done": "Fertig",
-    "searchPlaceholder": "Suchen...",
-    "yes": "Ja",
-    "no": "Nein",
-    "view": "Ansehen",
-    "edit": "Bearbeiten",
-    "required": "Erforderlich",
-    "optional": "Optional",
-    "none": "Keine",
-    "moveUp": "Nach oben",
-    "moveDown": "Nach unten",
-    "dash": "—",
-    "toggleTheme": "Design wechseln",
-    "menu": "Menü",
-    "signOut": "Abmelden",
-    "brand": "Clippy",
-    "greeting": "Hallo {name}"
-  },
   "Auth": {
-    "login": {
-      "title": "Anmelden",
-      "emailLabel": "E-Mail",
-      "emailPlaceholder": "du@beispiel.de",
-      "passwordLabel": "Passwort",
-      "passwordPlaceholder": "••••••••",
-      "submit": "Anmelden",
-      "submitting": "Wird angemeldet...",
-      "noAccount": "Noch kein Konto?",
-      "signUpLink": "Registrieren",
-      "forgotPasswordLink": "Passwort vergessen?",
-      "invalidCredentials": "Ungültige Anmeldedaten",
-      "sendVerificationFailed": "Die E-Mail ist nicht bestätigt, und wir konnten keinen neuen Bestätigungscode senden.",
-      "genericError": "Anmeldung fehlgeschlagen. Bitte versuche es erneut."
-    },
+    "brandName": "caluno",
+    "joinTitle": "Tritt {orgName} bei",
+    "poweredBy": "Powered by",
     "forgotPassword": {
-      "title": "Passwort zurücksetzen",
+      "checkSpam": "Wenn du ihn nicht siehst, prüfe deinen Spam-Ordner.",
       "description": "Gib deine E-Mail-Adresse ein, und wir senden dir einen Link zum Zurücksetzen deines Passworts.",
       "emailLabel": "E-Mail",
       "emailPlaceholder": "du@beispiel.de",
-      "submit": "Reset-Link senden",
-      "sending": "Reset-Link wird gesendet...",
       "emailSent": "Wenn ein Konto für diese E-Mail existiert, erhältst du in Kürze einen Link zum Zurücksetzen des Passworts.",
-      "checkSpam": "Wenn du ihn nicht siehst, prüfe deinen Spam-Ordner.",
-      "sendFailed": "Reset-Link konnte nicht gesendet werden. Bitte versuche es erneut.",
       "remembered": "Passwort wieder eingefallen?",
-      "signInLink": "Anmelden"
+      "sendFailed": "Link zum Zurücksetzen konnte nicht gesendet werden. Bitte versuche es erneut.",
+      "sending": "Link zum Zurücksetzen wird gesendet...",
+      "signInLink": "Anmelden",
+      "submit": "Link zum Zurücksetzen senden",
+      "title": "Passwort zurücksetzen"
     },
-    "resetPassword": {
-      "title": "Neues Passwort wählen",
-      "description": "Gib ein neues Passwort für dein Konto ein.",
-      "newPasswordLabel": "Neues Passwort",
-      "confirmPasswordLabel": "Passwort bestätigen",
-      "passwordPlaceholder": "••••••••",
-      "submit": "Passwort zurücksetzen",
-      "submitting": "Passwort wird zurückgesetzt...",
-      "passwordMismatch": "Die Passwörter stimmen nicht überein",
-      "missingToken": "In diesem Link zum Zurücksetzen fehlt ein Token.",
-      "invalidToken": "Dieser Link zum Zurücksetzen ist ungültig oder abgelaufen.",
-      "resetFailed": "Passwort konnte nicht zurückgesetzt werden. Bitte fordere einen neuen Link an.",
-      "signInLink": "Zurück zur Anmeldung"
-    },
-    "signup": {
-      "title": "Erstelle dein Konto",
-      "nameLabel": "Vollständiger Name",
-      "namePlaceholder": "Max Mustermann",
+    "login": {
       "emailLabel": "E-Mail",
       "emailPlaceholder": "du@beispiel.de",
+      "forgotPasswordLink": "Passwort vergessen?",
+      "genericError": "Anmeldung fehlgeschlagen. Bitte versuche es erneut.",
+      "invalidCredentials": "Ungültige Anmeldedaten",
+      "noAccount": "Noch kein Konto?",
       "passwordLabel": "Passwort",
       "passwordPlaceholder": "••••••••",
-      "passwordHint": "Mindestens 6 Zeichen",
-      "submit": "Konto erstellen",
-      "submitting": "Konto wird erstellt...",
-      "hasAccount": "Bereits ein Konto?",
-      "signInLink": "Anmelden",
-      "createAccountFailed": "Konto konnte nicht erstellt werden",
-      "genericError": "Konto konnte nicht erstellt werden. Bitte versuche es erneut."
+      "sendVerificationFailed": "Die E-Mail ist nicht bestätigt, und wir konnten keinen neuen Bestätigungscode senden.",
+      "signUpLink": "Registrieren",
+      "submit": "Anmelden",
+      "submitting": "Wird angemeldet...",
+      "title": "Anmelden",
+      "description": "Willkommen zurück bei caluno. Melde dich an, um Schichten zu übernehmen und mit deiner Organisation mitzuhelfen."
     },
-    "verifyEmail": {
-      "title": "E-Mail bestätigen",
-      "requestDescription": "Gib deine E-Mail-Adresse ein, und wir senden dir einen Bestätigungscode.",
+    "resetPassword": {
+      "confirmPasswordLabel": "Passwort bestätigen",
+      "description": "Gib ein neues Passwort für dein Konto ein.",
+      "invalidToken": "Dieser Link zum Zurücksetzen ist ungültig oder abgelaufen.",
+      "missingToken": "In diesem Link zum Zurücksetzen fehlt ein Token.",
+      "newPasswordLabel": "Neues Passwort",
+      "passwordMismatch": "Die Passwörter stimmen nicht überein",
+      "passwordPlaceholder": "••••••••",
+      "resetFailed": "Passwort konnte nicht zurückgesetzt werden. Bitte fordere einen neuen Link an.",
+      "signInLink": "Zurück zur Anmeldung",
+      "submit": "Passwort zurücksetzen",
+      "submitting": "Passwort wird zurückgesetzt...",
+      "title": "Neues Passwort wählen"
+    },
+    "signup": {
+      "createAccountFailed": "Konto konnte nicht erstellt werden",
       "emailLabel": "E-Mail",
       "emailPlaceholder": "du@beispiel.de",
-      "sendCode": "Bestätigungscode senden",
-      "sending": "Code wird gesendet...",
-      "codeSent": "Prüfe {email} auf deinen Bestätigungscode.",
+      "genericError": "Konto konnte nicht erstellt werden. Bitte versuche es erneut.",
+      "hasAccount": "Hast du bereits ein Konto?",
+      "nameLabel": "Vollständiger Name",
+      "namePlaceholder": "Max Mustermann",
+      "passwordHint": "Es werden mindestens 6 Zeichen benötigt",
+      "passwordLabel": "Passwort",
+      "passwordPlaceholder": "••••••••",
+      "signInLink": "Anmelden",
+      "submit": "Konto erstellen",
+      "submitting": "Konto wird erstellt...",
+      "title": "Erstelle dein Konto",
+      "description": "Willkommen bei caluno. Registriere dich, um Schichten zu übernehmen und mit deiner Organisation mitzuhelfen."
+    },
+    "verifyEmail": {
       "codeRequested": "Wenn der E-Mail-Versand verfügbar ist, erhältst du in Kürze einen Bestätigungscode an {email}.",
-      "verificationDescription": "Gib den Bestätigungscode für {email} ein.",
+      "codeSent": "Prüfe {email} auf deinen Bestätigungscode.",
+      "emailLabel": "E-Mail",
+      "emailPlaceholder": "du@beispiel.de",
       "otpLabel": "Bestätigungscode",
       "otpPlaceholder": "123456",
-      "verifySubmit": "E-Mail bestätigen",
-      "verifying": "Wird bestätigt...",
-      "resendCode": "Code erneut senden",
-      "sendCodeFailed": "Bestätigungscode konnte nicht gesendet werden",
-      "verifyCodeFailed": "Code konnte nicht bestätigt werden",
       "remembered": "Bereits bestätigt?",
-      "signInLink": "Anmelden"
+      "requestDescription": "Gib deine E-Mail-Adresse ein, und wir senden dir einen Bestätigungscode.",
+      "resendCode": "Code erneut senden",
+      "sendCode": "Bestätigungscode senden",
+      "sendCodeFailed": "Bestätigungscode konnte nicht gesendet werden",
+      "sending": "Code wird gesendet...",
+      "signInLink": "Anmelden",
+      "title": "E-Mail bestätigen",
+      "verificationDescription": "Gib den Bestätigungscode für {email} ein.",
+      "verifyCodeFailed": "Code konnte nicht bestätigt werden",
+      "verifySubmit": "E-Mail bestätigen",
+      "verifying": "Wird bestätigt..."
     }
   },
-  "Metadata": {
-    "title": "Clippy",
-    "description": "Plattform zur Verwaltung von Freiwilligen",
-    "unauthorizedTitle": "Zugriff verweigert | Clippy"
+  "Common": {
+    "avatarAlt": "Avatar von {name}",
+    "back": "Zurück",
+    "brand": "Caluno",
+    "cancel": "Abbrechen",
+    "copyToClipboard": "In Zwischenablage kopieren",
+    "create": "Erstellen",
+    "creating": "Wird erstellt...",
+    "dash": "—",
+    "delete": "Löschen",
+    "deleting": "Wird gelöscht...",
+    "edit": "Bearbeiten",
+    "greeting": "Hallo {name}",
+    "linkCopied": "Link in Zwischenablage kopiert",
+    "loading": "Wird geladen...",
+    "menu": "Menü",
+    "moveDown": "Nach unten",
+    "moveUp": "Nach oben",
+    "next": "Weiter",
+    "no": "Nein",
+    "none": "Keine",
+    "optional": "Optional",
+    "previous": "Zurück",
+    "required": "Erforderlich",
+    "save": "Speichern",
+    "saveChanges": "Änderungen speichern",
+    "saving": "Wird gespeichert...",
+    "searchPlaceholder": "Suchen...",
+    "signOut": "Abmelden",
+    "submit": "Absenden",
+    "submitting": "Wird abgesendet...",
+    "toggleTheme": "Design wechseln",
+    "view": "Ansehen",
+    "yes": "Ja",
+    "done": "Fertig"
   },
-  "Unauthorized": {
-    "title": "Zugriff verweigert",
-    "message": "Du hast keine Berechtigung, auf diese Ressource zuzugreifen.",
-    "homeLink": "Zu deinen Organisationen"
+  "Error": {
+    "digestLabel": "ID: {digest}",
+    "generic": "Etwas ist schiefgelaufen",
+    "goHome": "Zur Startseite",
+    "orgNotFound": {
+      "description": "Die gesuchte Organisation existiert nicht.",
+      "homeLink": "Zu deinen Organisationen",
+      "title": "Organisation nicht gefunden"
+    },
+    "reloadPage": "Seite neu laden",
+    "title": "Etwas ist schiefgelaufen",
+    "tryAgain": "Erneut versuchen"
+  },
+  "Event": {
+    "action": {
+      "deleteAria": "Löschen",
+      "editAria": "Bearbeiten",
+      "inviteAria": "Einladen",
+      "shareAria": "Link kopieren"
+    },
+    "card": {
+      "pill": "{shiftsCount, plural, =0 {Keine Einsätze} one {1 Einsatz} other {# Einsätze}}{formsCount, plural, =0 {} one { · 1 Formular} other { · # Formulare}}",
+      "viewButton": "Veranstaltung ansehen",
+      "volunteers": "{count, plural, one {1 Freiwillige/r angemeldet} other {# Freiwillige angemeldet}}"
+    },
+    "deleteDialog": {
+      "confirm": "Löschen",
+      "description": "Bist du sicher, dass du diese Veranstaltung löschen möchtest? Diese Aktion kann nicht rückgängig gemacht werden.",
+      "title": "Veranstaltung löschen"
+    },
+    "detail": {
+      "backLink": "Zurück zu Veranstaltungen",
+      "coverImageAlt": "Titelbild für {title}",
+      "createdByLabel": "Erstellt von",
+      "createdLabel": "Erstellt",
+      "editButton": "Bearbeiten",
+      "emptyLocation": "Kein Ort",
+      "imagePlaceholder": "Titelbild hinzufügen",
+      "informationTitle": "Veranstaltungsinformationen",
+      "inviteButton": "Einladen",
+      "shiftsCount": "{count, plural, one {# Einsatz} other {# Einsätze}}",
+      "status": {
+        "active": "Aktiv",
+        "finished": "Beendet"
+      },
+      "statusLabel": "Status",
+      "tabs": {
+        "shifts": "Einsätze",
+        "volunteers": "Freiwillige"
+      },
+      "requiredForms": {
+        "addExisting": "Bestehendes hinzufügen",
+        "addedToast": "Formular hinzugefügt",
+        "createNew": "Neues erstellen",
+        "dedupHint": "Freiwillige werden nicht nach Informationen gefragt, die sie bereits angegeben haben.",
+        "fileUploadLabel": "Datei-Upload",
+        "noFormsFound": "Keine Formulare gefunden",
+        "pill": {
+          "none": "Keine Formulare erforderlich",
+          "required": "{count, plural, one {1 Formular erforderlich} other {{count} Formulare erforderlich}}"
+        },
+        "questionCount": "{count, plural, one {1 Frage} other {{count} Fragen}}",
+        "removeAria": "Entfernen",
+        "removedToast": "Formular entfernt",
+        "searchForms": "Formulare suchen...",
+        "subtitle": "Werden vor dem Beitritt zu {eventTitle} ausgefüllt",
+        "title": "Für Beitritt erforderliche Formulare",
+        "updateFailedToast": "Erforderliche Formulare konnten nicht aktualisiert werden"
+      },
+      "shiftsCard": {
+        "addAria": "Einsatz erstellen",
+        "addButton": "Einsatz erstellen",
+        "emptyDescription": "Erstelle einen Einsatz für diese Veranstaltung, um loszulegen.",
+        "emptyTitle": "Noch keine Einsätze",
+        "title": "Einsätze"
+      },
+      "volunteersCard": {
+        "checkInAria": "Einchecken",
+        "empty": "Noch keine Freiwilligen eingeladen.",
+        "inviteAria": "Mitglieder einladen",
+        "inviteButton": "Einladen",
+        "status": {
+          "invited": "Eingeladen",
+          "signedUp": "Angemeldet",
+          "accepted": "Angenommen",
+          "declined": "Abgelehnt",
+          "cancelled": "Storniert",
+          "rejected": "Zurückgezogen"
+        },
+        "actionUninvite": "Einladung zurückziehen",
+        "uninviteSuccess": "Freiwillige:r von der Veranstaltung entfernt",
+        "uninviteError": "Freiwillige:r konnte nicht entfernt werden",
+        "actionInvite": "Einladen",
+        "inviteSuccess": "Freiwillige:r erneut eingeladen",
+        "inviteError": "Einladung konnte nicht erneut gesendet werden",
+        "title": "Freiwillige"
+      }
+    },
+    "empty": {
+      "description": "Erstelle deine erste Veranstaltung.",
+      "title": "Noch keine Veranstaltungen"
+    },
+    "error": {
+      "title": "Veranstaltungen konnten nicht geladen werden",
+      "tryAgain": "Erneut versuchen"
+    },
+    "form": {
+      "coverUrlLabel": "Cover-URL",
+      "endsAtLabel": "Ende",
+      "locationLabel": "Ort",
+      "locationPlaceholder": "z. B. Fönix Park",
+      "logoUrlLabel": "Logo-URL",
+      "startsAtLabel": "Beginn",
+      "titleLabel": "Titel",
+      "titlePlaceholder": "z. B. Sommer Festival",
+      "validation": {
+        "endAfterStart": "Enddatum muss nach dem Startdatum liegen",
+        "endRequired": "Enddatum ist erforderlich",
+        "invalidUrl": "Muss eine gültige URL sein",
+        "startRequired": "Startdatum ist erforderlich",
+        "titleRequired": "Titel ist erforderlich"
+      }
+    },
+    "invite": {
+      "copyInviteLink": "Einladungslink kopieren",
+      "description": "Lade Mitglieder zu {eventTitle} ein. Sie werden über die Veranstaltung benachrichtigt – dies weist sie keinem Einsatz zu.",
+      "helperText": "Lieber einen Link? Teile ihn mit allen, die du zur Veranstaltung einladen möchtest.",
+      "title": "Mitglieder einladen"
+    },
+    "list": {
+      "createButton": "Veranstaltung erstellen",
+      "subtitle": "Verwalte die Veranstaltungen deiner Organisation",
+      "title": "Veranstaltungen"
+    },
+    "sheet": {
+      "createDescription": "Erstelle eine neue Veranstaltung, um zusammengehörige Einsätze zu gruppieren.",
+      "createTitle": "Veranstaltung erstellen",
+      "editDescription": "Aktualisiere die Details der Veranstaltung.",
+      "editTitle": "Veranstaltung bearbeiten"
+    },
+    "toast": {
+      "created": "Veranstaltung erstellt",
+      "deleted": "Veranstaltung gelöscht",
+      "invited": "Mitglieder eingeladen",
+      "linkCopied": "Einladungslink in die Zwischenablage kopiert",
+      "updated": "Veranstaltung aktualisiert"
+    }
+  },
+  "EventDetail": {
+    "aboutHeading": "Über die Veranstaltung",
+    "badge": "Veranstaltung",
+    "coverImageAlt": "Titelbild für {title}",
+    "followCta": "Jetzt mitmachen",
+    "followNote": "Erhalte Einladungen zu Einsätzen oder melde dich selbst für einen an.",
+    "followingCta": "Du machst mit",
+    "forms": {
+      "description": "Bitte fülle die erforderlichen Formulare aus, bevor du der Veranstaltung beitrittst.",
+      "joinedToast": "Du machst jetzt bei {eventTitle} mit",
+      "noForms": "Es sind keine Formulare erforderlich.",
+      "pendingRequestToast": "Ausstehende Anfrage — ein:e Koordinator:in bestätigt deine Mitgliedschaft.",
+      "rejectedToast": "Anfrage nicht genehmigt",
+      "requestFailed": "Anfrage konnte nicht gesendet werden",
+      "requestSentToast": "Anfrage gesendet — ein:e Koordinator:in bestätigt sie.",
+      "requirementsNeededToast": "Bitte fülle zuerst alle erforderlichen Formulare aus",
+      "title": "{eventTitle} beitreten"
+    },
+    "fullyBooked": "Ausgebucht",
+    "noShifts": "Noch keine Einsätze geplant.",
+    "noShiftsOnDay": "Keine Einsätze an diesem Tag.",
+    "pendingCta": "Ausstehende Anfrage",
+    "pendingNote": "Ein:e Koordinator:in bestätigt deine Anfrage.",
+    "rejectedCta": "Du kannst dieser Veranstaltung nicht beitreten",
+    "requestSentToast": "Anfrage gesendet — ein:e Koordinator:in bestätigt sie.",
+    "requiredFormsTitle": "Erforderliche Formulare",
+    "shiftsCount": "{n, plural, one {# Einsatz} other {# Einsätze}}",
+    "shiftsHeading": "Einsätze",
+    "shiftsMeta": "{days} Tage · {occurrences} Termine",
+    "shiftsSummary": "{shifts} Einsätze · {spotsLeft} Plätze frei",
+    "shiftsSummaryFull": "{shifts} Einsätze · Ausgebucht",
+    "shiftsSummaryNoSpots": "{shifts} Einsätze",
+    "shiftsToggleCalendar": "Kalender",
+    "shiftsToggleList": "Liste",
+    "showAllShifts": "Alle Einsätze anzeigen",
+    "spotsLeft": "{n, plural, one {# Platz frei} other {# Plätze frei}}",
+    "today": "Heute",
+    "unlimitedSpots": "Offen"
   },
   "LocaleSwitcher": {
     "label": "Sprache"
   },
-  "Profile": {
-    "title": "Profil bearbeiten"
+  "MemberSelect": {
+    "allSelected": "Alle Mitglieder wurden ausgewählt",
+    "availableLabel": "Verfügbar",
+    "copyToast": "Teile diesen Link mit der/dem Freiwilligen",
+    "inviteByLink": "Per Link einladen",
+    "invitedLabel": "Eingeladen",
+    "noResults": "Keine Mitglieder gefunden",
+    "searchPlaceholder": "Name oder E-Mail suchen..."
+  },
+  "MembershipDetail": {
+    "forms": {
+      "completedOn": "Du hast das Formular am {date} ausgefüllt.",
+      "fillIn": "Formular ausfüllen",
+      "notCompletedPrompt": "Diese Organisation hat dich gebeten, dieses Formular auszufüllen.",
+      "status": {
+        "completed": "Abgeschlossen",
+        "notCompleted": "Nicht abgeschlossen"
+      },
+      "subtitle": "Formulare, die diese Organisation von dir anfordert.",
+      "title": "Deine Formulare",
+      "view": "Ansehen"
+    },
+    "joinedDate": "Beigetreten · {date}",
+    "role": "Rolle",
+    "submission": {
+      "accepted": "Akzeptiert",
+      "answerColumn": "Antwort",
+      "fieldColumn": "Feld",
+      "noFields": "Dieses Formular hat keine Felder.",
+      "submittedOn": "Eingereicht am {date}"
+    }
+  },
+  "MembershipRequest": {
+    "actions": {
+      "approve": "Genehmigen",
+      "approveDisabledTitle": "Erforderliche Formulare sind unvollständig",
+      "cancel": "Abbrechen",
+      "dismiss": "Verwerfen",
+      "leave": "Verlassen",
+      "reject": "Ablehnen",
+      "rejectDialogDescription": "Bist du sicher, dass du diese Mitgliedschaftsanfrage ablehnen möchtest? Bitte gib einen Grund an, damit die betroffene Person versteht, warum ihre Anfrage abgelehnt wurde.",
+      "rejectDialogTitle": "Mitgliedschaftsanfrage ablehnen",
+      "rejecting": "Wird abgelehnt...",
+      "rejectionReasonLabel": "Ablehnungsgrund",
+      "rejectionReasonPlaceholder": "Erkläre, warum die Anfrage abgelehnt wird...",
+      "withdraw": "Zurückziehen",
+      "open": "Öffnen"
+    },
+    "cancelButton": "Anfrage zurückziehen",
+    "cancelButtonSubmitting": "Wird zurückgezogen...",
+    "card": {
+      "rejectionReasonLabel": "Ablehnungsgrund:",
+      "viewAria": "Ansehen",
+      "viewButton": "Freiwillige:n ansehen"
+    },
+    "dialog": {
+      "leaveDescription": "Möchtest du {orgName} wirklich verlassen?",
+      "leaveTitle": "Mitgliedschaft widerrufen",
+      "withdrawDescription": "Möchtest du deine Anfrage an {orgName} wirklich zurückziehen?",
+      "withdrawTitle": "Anfrage zurückziehen"
+    },
+    "empty": "Noch keine Mitgliedschaftsanfragen.",
+    "invite": {
+      "accepted": {
+        "cta": "Zu {orgName} gehen",
+        "message": "Du bist bereits Mitglied von {orgName}.",
+        "title": "Alles erledigt"
+      },
+      "error": {
+        "homeButton": "Zur Startseite",
+        "requestsButton": "Deine Anfragen",
+        "title": "Etwas ist schiefgelaufen"
+      },
+      "joinErrorFallback": "Organisation konnte nicht beigetreten werden",
+      "pending": {
+        "message": "Deine Mitgliedschaftsanfrage für {orgName} wird noch geprüft. Ein Admin wird sie in Kürze bearbeiten.",
+        "title": "Anfrage ausstehend",
+        "viewRequests": "Deine Anfragen ansehen"
+      },
+      "rejected": {
+        "homeButton": "Zur Startseite",
+        "message": "Deine Mitgliedschaftsanfrage für {orgName} wurde abgelehnt. Kontaktiere einen Admin, wenn du denkst, dass das ein Fehler war.",
+        "requestsButton": "Deine Anfragen",
+        "title": "Anfrage abgelehnt"
+      },
+      "requirements": {
+        "description": "Bevor du dieser Organisation beitreten kannst, musst du die folgenden Anforderungen erfüllen.",
+        "documentsDescription": "Lade alle erforderlichen Dokumente hoch und reiche sie zur Prüfung ein.",
+        "documentsTitle": "Erforderliche Dokumente hochladen",
+        "missingDocuments": "Lade alle erforderlichen Dokumente hoch, bevor du sie einreichst.",
+        "requiredBadge": "Erforderlich",
+        "statusLabel": "Status: {status, select, approved {genehmigt} rejected {abgelehnt} pending {ausstehend} other {ausstehend}}",
+        "submitDocuments": "Dokumente einreichen",
+        "submitFailed": "Dokumente konnten nicht eingereicht werden",
+        "submitSuccess": "Dokumente eingereicht",
+        "submitting": "Wird eingereicht...",
+        "title": "{orgName} beitreten"
+      },
+      "sent": {
+        "message": "Deine Mitgliedschaftsanfrage für {orgName} wurde erfolgreich gesendet. Ein Admin wird sie in Kürze bearbeiten.",
+        "title": "Anfrage gesendet",
+        "viewRequests": "Deine Anfragen ansehen"
+      },
+      "unexpectedError": "Unerwartete Antwort vom Server"
+    },
+    "joinForms": {
+      "description": "Bitte fülle die erforderlichen Formulare aus, bevor du eine Beitrittsanfrage stellst.",
+      "joined": "Du bist der Organisation beigetreten",
+      "noForms": "Es sind keine Formulare erforderlich.",
+      "rejected": "Deine Anfrage wurde abgelehnt",
+      "requestFailed": "Anfrage konnte nicht gesendet werden",
+      "requestPending": "Deine Anfrage wird geprüft",
+      "requirementsNeeded": "Bitte fülle zuerst alle erforderlichen Formulare aus",
+      "title": "{orgName} beitreten"
+    },
+    "meta": {
+      "declinedDate": "Abgelehnt · {date}",
+      "joinedDate": "Beigetreten · {date}",
+      "requestedDate": "Angefragt · {date}"
+    },
+    "page": {
+      "subtitle": "Deine Anfragen, Organisationen beizutreten",
+      "title": "Mitgliedschaften"
+    },
+    "requiredForms": {
+      "title": "Erforderliche Formulare"
+    },
+    "status": {
+      "accepted": "Akzeptiert",
+      "approved": "Genehmigt",
+      "declined": "Abgelehnt",
+      "pending": "Ausstehend",
+      "rejected": "Abgelehnt",
+      "requested": "Angefragt"
+    },
+    "toast": {
+      "approveFailed": "Mitgliedschaftsanfrage konnte nicht genehmigt werden",
+      "approved": "Mitgliedschaftsanfrage genehmigt",
+      "cancelFailed": "Mitgliedschaftsanfrage konnte nicht zurückgezogen werden",
+      "cancelled": "Mitgliedschaftsanfrage zurückgezogen",
+      "dismissFailed": "Mitgliedschaftsanfrage konnte nicht verworfen werden",
+      "dismissed": "Mitgliedschaftsanfrage verworfen",
+      "leaveFailed": "Organisation konnte nicht verlassen werden",
+      "left": "Du hast {orgName} verlassen",
+      "rejected": "Mitgliedschaftsanfrage abgelehnt",
+      "withdrawFailed": "Anfrage konnte nicht zurückgezogen werden",
+      "withdrawn": "Anfrage zurückgezogen"
+    },
+    "validation": {
+      "rejectionReasonRequired": "Ein Ablehnungsgrund ist erforderlich"
+    }
+  },
+  "Metadata": {
+    "description": "Plattform zur Verwaltung von ehrenamtlich Engagierten",
+    "title": "Caluno",
+    "unauthorizedTitle": "Zugriff verweigert | Caluno"
+  },
+  "MyTime": {
+    "empty": {
+      "cta": "Einsätze finden",
+      "description": "Sobald du dich zu einem Einsatz eincheckst, erscheinen hier deine geleisteten Stunden.",
+      "title": "Noch keine Stunden"
+    },
+    "state": {
+      "completed": "Abgeschlossen",
+      "inProgress": "Läuft"
+    },
+    "summary": {
+      "total": "Insgesamt geleistet"
+    },
+    "title": "Deine Nachweise"
   },
   "Navigation": {
+    "admin": "Admin",
+    "checkIn": "Einchecken",
+    "events": "Veranstaltungen",
     "home": "Startseite",
+    "myTime": "Deine Nachweise",
+    "orgUnits": "Organisationseinheiten",
+    "organizationSettings": "Organisationseinstellungen",
     "organizations": "Organisationen",
-    "myMembershipRequests": "Meine Mitgliedschaftsanfragen",
     "overview": "Übersicht",
+    "profile": "Profil",
+    "qrIdDescription": "Zeig diesen QR-Code vor Ort, um deine Anwesenheit zu bestätigen.",
+    "qrIdTitle": "QR-ID",
+    "requirementForms": "Anforderungsformulare",
+    "roles": "Rollen",
+    "selectOrganization": "Organisation auswählen",
     "shifts": "Einsätze",
     "timesheets": "Zeiterfassung",
+    "volunteering": "Freiwilligenarbeit",
     "volunteers": "Freiwillige",
-    "checkInOut": "Check-in/out",
-    "checkIn": "Einchecken",
-    "myTime": "Meine Zeit",
-    "requirementForms": "Anforderungsformulare",
     "accounting": "Buchhaltung",
     "reimbursements": "Abrechnungen",
     "templates": "Templates",
-    "accountingSettings": "Einstellungen",
-    "settings": "Einstellungen",
-    "roles": "Rollen",
-    "orgUnits": " Organisationseinheiten",
-    "selectOrganization": "Organisation auswählen",
-    "editProfile": "Profil bearbeiten",
-    "admin": "Admin",
-    "qrIdTitle": "QR-ID",
-    "qrIdDescription": "Dies ist dein persönlicher QR-Code zum Einchecken in Einsätze",
-    "profile": "Profil"
+    "accountingSettings": "Einstellungen"
   },
-  "Pagination": {
-    "showing": "{start}-{end} von {total} {name} werden angezeigt",
-    "pageOf": "Seite {current} von {total}"
+  "OrgDetail": {
+    "aboutHeading": "Über uns",
+    "coverImageAlt": "Titelbild für {title}",
+    "errorBody": "Sie wurde entfernt oder der Link ist ungültig.",
+    "errorHeading": "Diese Organisation existiert nicht mehr",
+    "eventMeta": "{shifts, plural, one {# Einsatz} other {# Einsätze}} · {spots, plural, one {# Platz frei} other {# Plätze frei}}",
+    "eventMetaFull": "{shifts, plural, one {# Einsatz} other {# Einsätze}} · Ausgebucht",
+    "eventMetaUnlimited": "{shifts, plural, one {# Einsatz} other {# Einsätze}} · Offen",
+    "eventsCount": "{n, plural, one {# Veranstaltung} other {# Veranstaltungen}}",
+    "eventsHeading": "Veranstaltungen",
+    "fullyBooked": "Ausgebucht",
+    "memberCount": "{n, plural, one {# Mitglied} other {# Mitglieder}}",
+    "noEvents": "Noch keine Veranstaltungen.",
+    "noShifts": "Noch keine einzelnen Einsätze.",
+    "openShiftsCount": "{n, plural, one {# offener Einsatz} other {# offene Einsätze}}",
+    "requestMembership": "Mitgliedschaft anfragen",
+    "requestMembershipNote": "Ein:e Koordinator:in bestätigt deine Anfrage.",
+    "requestPending": "Anfrage ausstehend",
+    "requestRejected": "Anfrage nicht bestätigt",
+    "requestSentToast": "Anfrage gesendet — ein:e Koordinator:in bestätigt sie.",
+    "shiftsCount": "{n, plural, one {# Einsatz} other {# Einsätze}}",
+    "shiftsHeading": "Einzelne Einsätze",
+    "shiftsSubheading": "Nicht Teil einer Veranstaltung",
+    "spotsLeft": "{n, plural, one {# Platz frei} other {# Plätze frei}}",
+    "unlimitedSpots": "Offen"
   },
-  "Error": {
-    "title": "Etwas ist schiefgelaufen",
-    "tryAgain": "Erneut versuchen",
-    "reloadPage": "Seite neu laden",
-    "goHome": "Zur Startseite",
-    "generic": "Etwas ist schiefgelaufen",
-    "digestLabel": "ID: {digest}",
-    "orgNotFound": {
-      "title": "Organisation nicht gefunden",
-      "description": "Die gesuchte Organisation existiert nicht.",
-      "homeLink": "Zu deinen Organisationen"
+  "OrgUnit": {
+    "delete": {
+      "childrenWarning": "Warnung: Diese Einheit hat untergeordnete Einheiten. Das Löschen wirkt sich auf die Hierarchie aus.",
+      "confirmLabel": "Gib LÖSCHEN zur Bestätigung ein",
+      "confirmPlaceholder": "LÖSCHEN",
+      "description": "Diese Aktion kann nicht rückgängig gemacht werden. Die Einheit wird dauerhaft gelöscht.",
+      "title": "\"{name}\" löschen"
+    },
+    "detail": {
+      "aboutTitle": "Über",
+      "contactTitle": "Kontakt",
+      "editButton": "Bearbeiten",
+      "hierarchyTitle": "Hierarchie",
+      "partOf": "Teil von "
+    },
+    "form": {
+      "addressLabel": "Adresse",
+      "addressPlaceholder": "z. B. Musterstraße 1, Berlin",
+      "descriptionLabel": "Beschreibung",
+      "descriptionPlaceholder": "Beschreibe diese Organisationseinheit...",
+      "emailLabel": "E-Mail",
+      "emailPlaceholder": "z. B. kontakt@beispiel.de",
+      "logoLabel": "Logo",
+      "logoPlaceholder": "z. B. https://beispiel.de/logo.png",
+      "nameLabel": "Name",
+      "namePlaceholder": "z. B. Marketing",
+      "phoneLabel": "Telefon",
+      "phonePlaceholder": "z. B. +49 30 00000000",
+      "typeLabel": "Typ",
+      "typePlaceholder": "Typ auswählen",
+      "websiteLabel": "Website-URL",
+      "websitePlaceholder": "z. B. https://beispiel.de"
+    },
+    "page": {
+      "subtitle": "Verwalte die Hierarchie der Organisationseinheiten für {orgName}",
+      "title": "Organisationseinheiten"
+    },
+    "sheet": {
+      "createDescription": "Erstelle eine neue Organisationseinheit.",
+      "createTitle": "Organisationseinheit erstellen",
+      "editDescription": "Bearbeite die Organisationseinheit.",
+      "editTitle": "Organisationseinheit bearbeiten"
+    },
+    "toast": {
+      "created": "Organisationseinheit erstellt",
+      "updated": "Organisationseinheit aktualisiert"
+    },
+    "tree": {
+      "addChildAria": "Hinzufügen",
+      "copyLinkAria": "Link kopieren",
+      "copyToast": "Link zur Organisationseinheit kopiert",
+      "deleteAria": "Löschen",
+      "editAria": "Bearbeiten",
+      "empty": "Keine Organisationseinheit-Hierarchie gefunden. Kontaktiere deinen Administrator.",
+      "visitAria": "Besuchen"
+    },
+    "validation": {
+      "nameMin": "Name muss mindestens 2 Zeichen lang sein",
+      "typeRequired": "Ein Typ für die Organisationseinheit ist erforderlich"
     }
   },
-  "MemberSelect": {
-    "availableLabel": "Verfügbar",
-    "invitedLabel": "Eingeladen",
-    "searchPlaceholder": "Name oder E-Mail suchen...",
-    "noResults": "Keine Mitglieder gefunden",
-    "allSelected": "Alle Mitglieder wurden ausgewählt",
-    "inviteByLink": "Per Link einladen",
-    "copyToast": "Teile diesen Link mit der Freiwilligen"
+  "Organization": {
+    "create": {
+      "addressLabel": "Adresse",
+      "addressPlaceholder": "Musterstraße 1, 12345 Berlin",
+      "descriptionLabel": "Beschreibung",
+      "descriptionPlaceholder": "Wofür steht deine Organisation?",
+      "emailLabel": "E-Mail",
+      "emailPlaceholder": "kontakt@organisation.org",
+      "errors": {
+        "generic": "Organisation konnte nicht erstellt werden. Bitte versuche es erneut.",
+        "nameRequired": "Name der Organisation ist erforderlich",
+        "rootNotResolved": "Organisation erstellt, aber die Stammeinheit konnte nicht ermittelt werden."
+      },
+      "logoLabel": "Logo",
+      "nameLabel": "Name der Organisation",
+      "namePlaceholder": "Meine Organisation",
+      "phoneLabel": "Telefon",
+      "phonePlaceholder": "+49 30 12345678",
+      "submit": "Organisation erstellen",
+      "submitting": "Organisation wird erstellt...",
+      "title": "Organisation erstellen",
+      "websiteLabel": "Website",
+      "websitePlaceholder": "https://organisation.org"
+    },
+    "home": {
+      "description": "Du hast keine Organisationen zu verwalten",
+      "title": "Keine Organisationen",
+      "toVolunteering": "Zurück zur Freiwilligenarbeit"
+    }
+  },
+  "Pagination": {
+    "pageOf": "Seite {current} von {total}",
+    "showing": "{start}-{end} von {total} {name} werden angezeigt"
+  },
+  "Profile": {
+    "accountSettings": "Kontoeinstellungen",
+    "edit": "Bearbeiten",
+    "emailLocked": "Mit deiner Anmeldung verknüpft",
+    "identity": {
+      "subtitles": {
+        "firstName": "Wie auf deinem Ausweis",
+        "iban": "Für Aufwandsentschädigungen",
+        "lastName": "Wie auf deinem Ausweis",
+        "preferredName": "Falls du anders angesprochen werden möchtest"
+      }
+    },
+    "language": "Sprache",
+    "languageDescription": "Anzeigesprache der App",
+    "moreSettingsPrompt": "Weitere Einstellungen findest du in deinem <link>Freiwilligenprofil</link>",
+    "organizations": "Deine Organisationen",
+    "pageTitle": "Profil",
+    "personalInformation": "Persönliche Informationen",
+    "pictureLabel": "Profilbild",
+    "saveFailed": "Profil konnte nicht aktualisiert werden",
+    "saved": "Profil aktualisiert",
+    "title": "Profil bearbeiten"
   },
   "QRScanner": {
     "error": {
-      "noPermission": {
-        "title": "Kamerazugriff erforderlich",
-        "description": "Bitte erlaube den Kamerazugriff in den Browsereinstellungen, um QR-Codes zu scannen."
+      "generic": {
+        "description": "Wir konnten nicht auf deine Kamera zugreifen. Probiere es bitte noch einmal.",
+        "title": "Kamerafehler"
       },
       "noCamera": {
-        "title": "Keine Kamera gefunden",
-        "description": "Auf diesem Gerät wurde keine Kamera erkannt. Bitte schließe eine Kamera an oder verwende ein Gerät mit eingebauter Kamera."
+        "description": "Auf diesem Gerät konnten wir keine Kamera erkennen. Bitte schließe eine Kamera an oder verwende ein Gerät mit eingebauter Kamera.",
+        "title": "Keine Kamera gefunden"
       },
-      "generic": {
-        "title": "Kamerafehler",
-        "description": "Auf die Kamera konnte nicht zugegriffen werden. Bitte versuche es erneut."
+      "noPermission": {
+        "description": "Bitte erlaube den Kamerazugriff in den Browsereinstellungen, um QR-Codes zu scannen.",
+        "title": "Kamerazugriff erforderlich"
       }
     },
     "rescan": "Erneut scannen"
@@ -202,777 +671,901 @@
   "QueryParamTabs": {
     "empty": "Noch keine Einträge."
   },
-  "Settings": {
-    "title": "Einstellungen"
+  "RequiredFormRenderer": {
+    "formProgress": "Formularfortschritt",
+    "noForms": "Es sind keine Formulare erforderlich.",
+    "step": "Formular {current} von {total}",
+    "submitAll": "Alle Formulare absenden",
+    "submittingAll": "Alle Formulare werden abgesendet..."
   },
-  "Organization": {
-    "home": {
-      "welcomeBack": "Willkommen zurück",
-      "subtitle": "Verwalte deine Organisationen und Freiwilligen an einem Ort.",
-      "createCard": {
-        "title": "Organisation erstellen",
-        "description": "Richte eine neue Organisation ein, um deine Freiwilligen und Einsätze zu verwalten.",
-        "cta": "Loslegen"
-      }
+  "RequirementForm": {
+    "actions": {
+      "blockCreated": "Block erstellt",
+      "blockSaved": "Block gespeichert",
+      "couldNotCopyLink": "Link konnte nicht kopiert werden",
+      "failedToAddField": "Feld konnte nicht hinzugefügt werden",
+      "failedToCreateForm": "Formular konnte nicht erstellt werden",
+      "failedToDeleteField": "Feld konnte nicht gelöscht werden",
+      "failedToLoadBlock": "Block konnte nicht geladen werden",
+      "failedToSaveBlock": "Block konnte nicht gespeichert werden",
+      "failedToSaveForm": "Formular konnte nicht gespeichert werden",
+      "failedToSubmitForm": "Formular konnte nicht abgesendet werden",
+      "failedToUpdateField": "Feld konnte nicht aktualisiert werden",
+      "fieldAdded": "Feld hinzugefügt",
+      "fieldDeleted": "Feld gelöscht",
+      "fieldUpdated": "Feld aktualisiert",
+      "formSaved": "Formular gespeichert",
+      "linkCopied": "Link kopiert",
+      "linkCopiedDescription": "{url}"
     },
-    "list": {
-      "title": "Deine Organisationen",
-      "subtitle": "Wähle eine Organisation aus, um fortzufahren"
-    },
-    "create": {
-      "title": "Organisation erstellen",
-      "nameLabel": "Name der Organisation",
-      "namePlaceholder": "Meine Organisation",
+    "block": {
+      "addDocument": "Dokument hinzufügen",
+      "addField": "Feld hinzufügen",
+      "addOption": "Option hinzufügen",
+      "addProfileField": "Profilfeld hinzufügen",
+      "back": "Zurück",
+      "blockTitleLabel": "Blocktitel",
+      "cancel": "Abbrechen",
+      "createBlock": "Block erstellen",
+      "createDescriptionPlaceholder": "Was erfasst dieser Block?",
+      "createTitle": "Block erstellen",
+      "creating": "Wird erstellt...",
       "descriptionLabel": "Beschreibung",
-      "descriptionPlaceholder": "Wofür steht deine Organisation?",
-      "emailLabel": "E-Mail",
-      "emailPlaceholder": "kontakt@organisation.org",
-      "phoneLabel": "Telefon",
-      "phonePlaceholder": "+49 30 12345678",
-      "websiteLabel": "Website",
-      "websitePlaceholder": "https://organisation.org",
-      "addressLabel": "Adresse",
-      "addressPlaceholder": "Musterstraße 1, 12345 Berlin",
-      "submit": "Organisation erstellen",
-      "submitting": "Organisation wird erstellt...",
-      "errors": {
-        "nameRequired": "Name der Organisation ist erforderlich",
-        "generic": "Organisation konnte nicht erstellt werden. Bitte versuche es erneut.",
-        "rootNotResolved": "Organisation erstellt, aber die Stammeinheit konnte nicht ermittelt werden."
-      }
-    }
-  },
-  "OrgUnit": {
-    "page": {
-      "title": "Organisationseinheiten",
-      "subtitle": "Verwalte die Hierarchie der Organisationseinheiten für {orgName}"
+      "descriptionPlaceholder": "Hilfetext für dieses Feld",
+      "documentFileDescription": "PDF oder Bild, max. 10 MB",
+      "documentFileLabel": "Dokument",
+      "documentLabelLabel": "Dokumentenbezeichnung",
+      "documentLabelPlaceholder": "z. B. Nutzungsbedingungen",
+      "editTitle": "Block bearbeiten",
+      "enterDocumentFileError": "Bitte lade ein Dokument hoch.",
+      "fieldN": "Feld {n}",
+      "fieldsTitle": "Felder ({count})",
+      "iconLabel": "Icon",
+      "iconPlaceholder": "z. B. user",
+      "labelLabel": "Bezeichnung",
+      "labelPlaceholder": "Feldbezeichnung",
+      "loading": "Wird geladen…",
+      "lockedNotice": "Dieser Block ist gesperrt, weil er in einem Formular mit Einsendungen verwendet wird.",
+      "noFields": "Noch keine Felder. Füge das erste Feld zu diesem Block hinzu.",
+      "optionLabelPlaceholder": "Bezeichnung {n}",
+      "optionValuePlaceholder": "Wert {n}",
+      "optional": "Optional",
+      "optionsLabel": "Optionen",
+      "placeholderLabel": "Platzhalter",
+      "placeholderPlaceholder": "z. B. Gib deinen Namen ein",
+      "profileFieldHint": "Freiwillige füllen diese einmal aus und sie werden über Organisationen hinweg wiederverwendet.",
+      "required": "Erforderlich",
+      "saveBlock": "Block speichern",
+      "saveChanges": "Änderungen speichern",
+      "saving": "Wird gespeichert...",
+      "systemField": "Systemfeld",
+      "titlePlaceholder": "z. B. Persönliche Informationen",
+      "typeLabel": "Typ",
+      "typePlaceholder": "Typ auswählen"
+    },
+    "blockLibrary": {
+      "noBlocksDescription": "Erstelle wiederverwendbare Blöcke, die in mehreren Formularen verwendet werden können.",
+      "noBlocksTitle": "Noch keine Blöcke",
+      "subtitle": "Wiederverwendbare Blöcke für deine Formulare",
+      "title": "Block-Bibliothek"
+    },
+    "blockSheet": {
+      "createDescription": "Erstelle einen neuen wiederverwendbaren Block mit Feldern.",
+      "createTitle": "Block erstellen",
+      "editDescription": "Bearbeite diesen Block und seine Felder.",
+      "editTitle": "Block bearbeiten",
+      "loading": "Wird geladen…",
+      "viewDescription": "Dieser Block ist gesperrt — er wird in einem Formular mit Einsendungen verwendet.",
+      "viewTitle": "Block ansehen"
+    },
+    "builder": {
+      "addAnotherBlockHint": "Füge einen weiteren Block hinzu, um dieses Formular zu erweitern",
+      "addBlock": "Block hinzufügen",
+      "addBlockDescription": "Wähle einen vorhandenen Block oder erstelle einen neuen",
+      "addBlockTitle": "Block hinzufügen",
+      "allBlocksInUse": "Alle Blöcke werden bereits verwendet",
+      "copyShareLink": "Freigabelink kopieren",
+      "createNewBlock": "Neuen Block erstellen",
+      "descriptionFallback": "Erstelle dein Formular, indem du Blöcke hinzufügst",
+      "editBlock": "Bearbeiten",
+      "emptyDescription": "Füge deinen ersten Block hinzu, um dieses Formular aufzubauen.",
+      "emptyTitle": "Noch keine Blöcke",
+      "fieldsCount": "{count} Felder",
+      "lockedTooltip": "Gesperrt",
+      "noFields": "Keine Felder",
+      "noPreview": "Füge Blöcke hinzu, um eine Vorschau zu sehen",
+      "previewTitle": "Vorschau",
+      "saveDisabledHint": "Füge einen Block hinzu, damit du speichern kannst",
+      "saveForm": "Formular speichern",
+      "saving": "Wird gespeichert...",
+      "shareLinkCopied": "Freigabelink in Zwischenablage kopiert",
+      "submissionsWarning": "Dieses Formular hat Einsendungen",
+      "submissionsWarningDescription": "Die Bearbeitung ist deaktiviert, weil Freiwillige bereits Antworten eingereicht haben. Erstelle eine Kopie, wenn du eine neue Version brauchst.",
+      "viewBlock": "Ansehen"
+    },
+    "card": {
+      "content": "Inhalt",
+      "delete": "Löschen",
+      "deleteBlockDescription": "wird dauerhaft entfernt.",
+      "deleteBlockTitle": "Block löschen?",
+      "deleteFormDescription": "wird dauerhaft entfernt.",
+      "deleteFormTitle": "Formular löschen?",
+      "deleting": "Wird gelöscht...",
+      "edit": "Bearbeiten",
+      "fields": "Felder",
+      "noFieldsYet": "Noch keine Felder.",
+      "share": "Teilen",
+      "submissions": "Einsendungen",
+      "updated": "Aktualisiert {date}",
+      "usedIn": "Verwendet in",
+      "usedInForms": "Verwendet in den folgenden Formularen:",
+      "view": "Ansehen"
+    },
+    "dashboard": {
+      "blocksTab": "Blöcke",
+      "createBlock": "Block erstellen",
+      "createForm": "Formular erstellen",
+      "formsTab": "Formulare",
+      "noBlocks": "Noch keine Blöcke. Erstelle deinen ersten Block.",
+      "noBlocksMatch": "Keine Blöcke entsprechen den aktuellen Filtern.",
+      "noForms": "Noch keine Formulare. Erstelle dein erstes Formular.",
+      "noFormsMatch": "Keine Formulare entsprechen den aktuellen Filtern.",
+      "searchBlocks": "Blöcke suchen...",
+      "searchForms": "Formulare suchen..."
+    },
+    "fieldForm": {
+      "add": "Hinzufügen",
+      "address": "Adresse",
+      "birthDate": "Geburtsdatum",
+      "cancel": "Abbrechen",
+      "checkbox": "Checkbox",
+      "city": "Stadt",
+      "date": "Datum",
+      "descriptionLabel": "Beschreibung",
+      "descriptionPlaceholder": "Optionaler Hilfetext",
+      "document": "Dokument",
+      "documentFileDescription": "PDF oder Bild, max. 10 MB",
+      "documentFileLabel": "Dokument",
+      "documentLabelLabel": "Dokumentenbezeichnung",
+      "documentLabelPlaceholder": "z. B. Datenschutzerklärung",
+      "dropdown": "Dropdown",
+      "email": "E-Mail",
+      "enterDocumentFileError": "Bitte lade ein Dokument hoch.",
+      "enterDocumentLabelError": "Bitte gib eine Dokumentenbezeichnung ein.",
+      "enterLabelError": "Bitte gib eine Bezeichnung ein.",
+      "enterOptionError": "Bitte gib mindestens eine Option ein.",
+      "enterTextError": "Bitte gib einen Text ein.",
+      "fieldTypeLabel": "Feldtyp",
+      "fieldTypePlaceholder": "Typ auswählen...",
+      "firstName": "Vorname",
+      "gender": "Geschlecht",
+      "iban": "IBAN",
+      "infoText": "Infotext",
+      "labelLabel": "Bezeichnung",
+      "labelPlaceholder": "z. B. Lieblingsfarbe",
+      "lastName": "Nachname",
+      "longText": "Langer Text",
+      "multiSelect": "Mehrfachauswahl",
+      "number": "Zahl",
+      "optionsLabel": "Optionen",
+      "phone": "Telefon",
+      "placeholderLabel": "Platzhalter",
+      "placeholderPlaceholder": "z. B. Gib deine Antwort ein",
+      "preferredName": "Bevorzugter Name",
+      "profileField": "Profilfeld: {key} — der Wert wird im Profil der Nutzenden gespeichert und bei zukünftigen Formularen vorausgefüllt.",
+      "profileFieldNone": "Keines",
+      "profileFieldOptional": "Profilfeld (optional)",
+      "required": "Erforderlich",
+      "save": "Speichern",
+      "selectTypeError": "Bitte wähle einen Feldtyp aus.",
+      "shortText": "Kurzer Text",
+      "textLabel": "Text",
+      "textPlaceholder": "z. B. Bitte lies die folgenden Informationen",
+      "zipCode": "Postleitzahl"
     },
     "form": {
-      "nameLabel": "Name",
-      "namePlaceholder": "z. B. Marketing",
-      "typeLabel": "Typ",
-      "typePlaceholder": "Typ auswählen",
-      "emailLabel": "E-Mail",
-      "emailPlaceholder": "z. B. kontakt@beispiel.de",
-      "phoneLabel": "Telefon",
-      "phonePlaceholder": "z. B. +49 30 00000000",
-      "websiteLabel": "Website-URL",
-      "websitePlaceholder": "z. B. https://beispiel.de",
-      "logoLabel": "Logo-URL",
-      "logoPlaceholder": "z. B. https://beispiel.de/logo.png",
-      "addressLabel": "Adresse",
-      "addressPlaceholder": "z. B. Musterstraße 1, Berlin",
+      "cancel": "Abbrechen",
+      "create": "Erstellen",
+      "createButton": "Formular erstellen",
+      "createDialogTitle": "Formular erstellen",
+      "createSubtitle": "Erstelle ein neues Formular, um Informationen von Freiwilligen zu sammeln.",
+      "createTitle": "Anforderungsformular erstellen",
+      "creating": "Wird erstellt...",
       "descriptionLabel": "Beschreibung",
-      "descriptionPlaceholder": "Beschreibe diese Organisationseinheit..."
+      "descriptionOptional": "Beschreibung (optional)",
+      "descriptionPlaceholder": "Wofür ist dieses Formular?",
+      "nameLabel": "Name",
+      "namePlaceholder": "z. B. Onboarding-Formular"
     },
-    "detail": {
-      "editButton": "Bearbeiten",
-      "aboutTitle": "Über",
-      "contactTitle": "Kontakt",
-      "hierarchyTitle": "Hierarchie",
-      "partOf": "Teil von "
+    "submission": {
+      "accepted": "Akzeptiert",
+      "answerColumn": "Antwort",
+      "fallbackForm": "Formular",
+      "fallbackVolunteer": "Freiwillige:r",
+      "fieldColumn": "Feld",
+      "noFields": "Für dieses Formular sind keine Felder definiert."
     },
-    "tree": {
-      "visitAria": "Organisationseinheit besuchen",
-      "copyLinkAria": "Link zur Organisationseinheit kopieren",
-      "copyToast": "Link zur Organisationseinheit kopiert",
-      "addChildAria": "Untergeordnete hinzufügen",
-      "editAria": "Bearbeiten",
-      "deleteAria": "Löschen",
-      "empty": "Keine Organisationseinheit-Hierarchie gefunden. Kontaktiere deinen Administrator."
+    "submissions": {
+      "emailColumn": "E-Mail",
+      "empty": "Noch keine Einsendungen.",
+      "emptySearch": "Keine Freiwilligen gefunden.",
+      "lastSubmittedColumn": "Zuletzt eingereicht",
+      "searchPlaceholder": "Freiwillige suchen…",
+      "submissionsColumn": "Einsendungen",
+      "subtitle": "Freiwillige, die dieses Formular eingereicht haben. Klicke auf eine Person, um die Einsendung anzusehen.",
+      "tabRejected": "Abgelehnt",
+      "tabSubmitted": "Eingereicht",
+      "title": "Einsendungen — {formName}",
+      "viewSubmission": "Ansehen →",
+      "volunteerColumn": "Freiwillige:r"
     },
-    "toast": {
-      "updated": "Organisationseinheit aktualisiert",
-      "created": "Organisationseinheit erstellt"
-    },
-    "sheet": {
-      "editTitle": "Organisationseinheit bearbeiten",
-      "createTitle": "Organisationseinheit erstellen",
-      "editDescription": "Bearbeite die Organisationseinheit.",
-      "createDescription": "Erstelle eine neue Organisationseinheit."
-    },
-    "delete": {
-      "title": "\"{name}\" löschen",
-      "description": "Diese Aktion kann nicht rückgängig gemacht werden. Die Einheit wird dauerhaft gelöscht.",
-      "childrenWarning": "Warnung: Diese Einheit hat untergeordnete Einheiten. Das Löschen wirkt sich auf die Hierarchie aus.",
-      "confirmLabel": "Gib DELETE zur Bestätigung ein",
-      "confirmPlaceholder": "DELETE"
+    "table": {
+      "blocks": "Blöcke",
+      "cannotDeleteAria": "Gesperrt",
+      "copyShareLinkAria": "Link kopieren",
+      "deleteBlockAria": "Löschen",
+      "deleteBlockDescription": "{name} wird dauerhaft entfernt.",
+      "deleteFormAria": "Löschen",
+      "deleteFormDescription": "{name} wird dauerhaft entfernt.",
+      "description": "Beschreibung",
+      "editBlockAria": "Bearbeiten",
+      "editFormAria": "Bearbeiten",
+      "editable": "Bearbeitbar",
+      "fieldCount": "{count, plural, one {# Feld} other {# Felder}}",
+      "fields": "Felder",
+      "name": "Name",
+      "submissionsAria": "Einreichungen",
+      "title": "Titel",
+      "updated": "Aktualisiert",
+      "usedIn": "Verwendet in",
+      "viewBlockAria": "Ansehen",
+      "yes": "Ja"
     },
     "validation": {
-      "nameMin": "Name muss mindestens 2 Zeichen lang sein",
-      "typeRequired": "Ein Typ für die Organisationseinheit ist erforderlich"
+      "dateNotFuture": "{label} darf nicht in der Zukunft liegen",
+      "fieldLabelRequired": "Feldbezeichnung ist erforderlich",
+      "fieldRequired": "{label} ist erforderlich",
+      "invalidCharacters": "{label} enthält ungültige Zeichen",
+      "invalidIban": "{label} muss eine gültige IBAN sein",
+      "invalidOptions": "{label} enthält ungültige Optionen",
+      "labelRequired": "Bezeichnung ist erforderlich",
+      "maxChars": "{label} darf maximal {maxLen} Zeichen lang sein",
+      "minAge": "Du musst mindestens {minAge} Jahre alt sein",
+      "mustBeNumber": "{label} muss eine Zahl sein",
+      "mustBeValidDate": "{label} muss ein gültiges Datum sein",
+      "mustBeValidEmail": "{label} muss eine gültige E-Mail-Adresse sein",
+      "mustBeValidPhone": "{label} muss eine gültige Telefonnummer sein",
+      "nameRequired": "Name ist erforderlich",
+      "titleRequired": "Titel ist erforderlich",
+      "validPostalCode": "{label} muss eine gültige Postleitzahl sein"
+    },
+    "volunteerForm": {
+      "alreadySubmittedMessage": "Dein Formular wurde erfolgreich abgesendet.",
+      "alreadySubmittedTitle": "Formular abgesendet",
+      "back": "Zurück",
+      "birthDateFormat": "TT.MM.JJJJ",
+      "checkboxYes": "Ja",
+      "documentAcknowledgement": "Ich bestätige und akzeptiere",
+      "failedToSubmit": "Formular konnte nicht abgesendet werden",
+      "membershipRequestNotice": "Mit dem Absenden dieses Formulars sendest du eine Mitgliedschaftsanfrage an {orgName}. Ein:e Administrator:in prüft und genehmigt deine Anfrage.",
+      "next": "Weiter",
+      "noBlocks": "Dieses Formular hat keine Blöcke.",
+      "noFields": "Dieser Block hat noch keine konfigurierten Felder.",
+      "pickDate": "Datum auswählen",
+      "selectOption": "Option auswählen",
+      "step": "Schritt {current} von {total}",
+      "submit": "Absenden",
+      "submitting": "Wird abgesendet...",
+      "successMessage": "Deine Anfrage wird geprüft. Ein:e Administrator:in meldet sich in Kürze bei dir.",
+      "successTitle": "Anfrage eingegangen!"
     }
   },
   "Role": {
-    "page": {
-      "title": "Rollen",
-      "subtitle": "Verwalte Rollen und Berechtigungen für {orgName}",
-      "createButton": "Rolle erstellen",
-      "empty": "Noch keine Rollen. Erstelle deine erste Rolle, um loszulegen."
+    "action": {
+      "deleteAria": "Löschen",
+      "deleteDescription": "Bist du sicher, dass du diese Rolle löschen möchtest?",
+      "deleteError": "Rolle konnte nicht gelöscht werden. {error}",
+      "deleteSuccess": "Rolle gelöscht",
+      "deleteTitle": "Löschen",
+      "editAria": "Bearbeiten"
     },
     "detail": {
-      "noPermissions": "Dieser Rolle sind keine Berechtigungen zugewiesen.",
-      "typeLabel": "Typ",
-      "system": "System",
       "custom": "Benutzerdefiniert",
-      "totalPermissionsLabel": "Berechtigungen insgesamt"
+      "noPermissions": "Dieser Rolle sind keine Berechtigungen zugewiesen.",
+      "system": "System",
+      "totalPermissionsLabel": "Berechtigungen insgesamt",
+      "typeLabel": "Typ"
     },
     "form": {
-      "nameLabel": "Name",
-      "namePlaceholder": "z. B. Projektmanager",
       "descriptionLabel": "Beschreibung",
       "descriptionPlaceholder": "Wofür ist diese Rolle gedacht?",
-      "permissionsLabel": "Berechtigungen",
-      "permissionsHint": "Wähle aus, was Benutzer mit dieser Rolle tun dürfen."
+      "nameLabel": "Name",
+      "namePlaceholder": "z. B. Projektmanager",
+      "permissionsHint": "Wähle aus, was Benutzer mit dieser Rolle tun dürfen.",
+      "permissionsLabel": "Berechtigungen"
     },
-    "table": {
-      "name": "Name",
-      "description": "Beschreibung",
-      "permissions": "Berechtigungen",
-      "systemBadge": "System",
-      "permissionsCount": "{n} Berechtigungen"
+    "noRole": "Keine Rolle",
+    "owner": "Eigentümer",
+    "page": {
+      "createButton": "Rolle erstellen",
+      "empty": "Noch keine Rollen. Erstelle deine erste Rolle, um loszulegen.",
+      "subtitle": "Verwalte Rollen und Berechtigungen für {orgName}",
+      "title": "Rollen"
     },
     "permissions": {
       "all": "Alle",
-      "partial": "Teilweise",
-      "none": "Keine"
+      "none": "Keine",
+      "partial": "Teilweise"
     },
-    "action": {
-      "editAria": "Rolle bearbeiten",
-      "deleteTitle": "Rolle löschen",
-      "deleteDescription": "Bist du sicher, dass du diese Rolle löschen möchtest?",
-      "deleteAria": "Rolle löschen",
-      "deleteError": "Rolle konnte nicht gelöscht werden. {error}",
-      "deleteSuccess": "Rolle gelöscht"
-    },
-    "owner": "Eigentümer",
-    "noRole": "Keine Rolle",
     "select": {
-      "searchPlaceholder": "Rollen suchen...",
+      "addCustom": "Benutzerdefiniert hinzufügen",
       "empty": "Keine Rollen gefunden.",
-      "addCustom": "Benutzerdefiniert hinzufügen"
+      "searchPlaceholder": "Rollen suchen..."
     },
     "sheet": {
-      "createTitle": "Rolle erstellen",
       "createDescription": "Definiere eine neue Rolle mit spezifischen Berechtigungen.",
-      "editTitle": "Rolle bearbeiten",
-      "editDescription": "Berechtigungen für die Rolle aktualisieren"
+      "createTitle": "Rolle erstellen",
+      "editDescription": "Berechtigungen für die Rolle aktualisieren",
+      "editTitle": "Rolle bearbeiten"
+    },
+    "table": {
+      "description": "Beschreibung",
+      "name": "Name",
+      "permissions": "Berechtigungen",
+      "permissionsCount": "{n} Berechtigungen",
+      "systemBadge": "System"
     },
     "validation": {
       "nameMin": "Name muss mindestens 2 Zeichen lang sein",
       "permissionsRequired": "Mindestens eine Berechtigung ist erforderlich"
     }
   },
-  "MembershipRequest": {
-    "page": {
-      "title": "Meine Mitgliedschaftsanfragen",
-      "subtitle": "Deine Anfragen, Organisationen beizutreten"
-    },
-    "status": {
-      "pending": "Ausstehend",
-      "approved": "Genehmigt",
-      "rejected": "Abgelehnt"
-    },
-    "empty": "Noch keine Mitgliedschaftsanfragen.",
-    "card": {
-      "viewButton": "Freiwilligen ansehen",
-      "viewAria": "Freiwilligen ansehen",
-      "rejectionReasonLabel": "Ablehnungsgrund:"
-    },
-    "actions": {
-      "approve": "Genehmigen",
-      "reject": "Ablehnen",
-      "rejecting": "Wird abgelehnt...",
-      "rejectDialogTitle": "Mitgliedschaftsanfrage ablehnen",
-      "rejectDialogDescription": "Bist du sicher, dass du diese Mitgliedschaftsanfrage ablehnen möchtest? Bitte gib einen Grund an, damit der Freiwillige versteht, warum seine Anfrage abgelehnt wurde.",
-      "rejectionReasonLabel": "Ablehnungsgrund",
-      "rejectionReasonPlaceholder": "Erkläre, warum die Anfrage abgelehnt wird...",
-      "cancel": "Abbrechen"
-    },
-    "toast": {
-      "approved": "Mitgliedschaftsanfrage genehmigt",
-      "approveFailed": "Mitgliedschaftsanfrage konnte nicht genehmigt werden",
-      "rejected": "Mitgliedschaftsanfrage abgelehnt",
-      "cancelled": "Mitgliedschaftsanfrage zurückgezogen",
-      "cancelFailed": "Mitgliedschaftsanfrage konnte nicht zurückgezogen werden"
-    },
-    "cancelButton": "Anfrage zurückziehen",
-    "cancelButtonSubmitting": "Wird zurückgezogen...",
-    "validation": {
-      "rejectionReasonRequired": "Ein Ablehnungsgrund ist erforderlich"
-    },
-    "invite": {
-      "accepted": {
-        "title": "Alles erledigt",
-        "message": "Du bist bereits Mitglied von {orgName}.",
-        "cta": "Zu {orgName} gehen"
-      },
-      "pending": {
-        "title": "Anfrage ausstehend",
-        "message": "Deine Mitgliedschaftsanfrage für {orgName} wird noch geprüft. Ein Admin wird sie in Kürze bearbeiten.",
-        "viewRequests": "Meine Anfragen ansehen"
-      },
-      "rejected": {
-        "title": "Anfrage abgelehnt",
-        "message": "Deine Mitgliedschaftsanfrage für {orgName} wurde abgelehnt. Kontaktiere einen Admin, wenn du denkst, dass das ein Fehler war.",
-        "homeButton": "Zur Startseite",
-        "requestsButton": "Meine Anfragen"
-      },
-      "sent": {
-        "title": "Anfrage gesendet",
-        "message": "Deine Mitgliedschaftsanfrage für {orgName} wurde erfolgreich gesendet. Ein Admin wird sie in Kürze bearbeiten.",
-        "viewRequests": "Meine Anfragen ansehen"
-      },
-      "requirements": {
-        "title": "{orgName} beitreten",
-        "description": "Bevor du dieser Organisation beitreten kannst, musst du die folgenden Anforderungen erfüllen.",
-        "requiredBadge": "Erforderlich",
-        "statusLabel": "Status: {status, select, approved {genehmigt} rejected {abgelehnt} pending {ausstehend} other {ausstehend}}"
-      },
-      "error": {
-        "title": "Etwas ist schiefgelaufen",
-        "homeButton": "Zur Startseite",
-        "requestsButton": "Meine Anfragen"
-      },
-      "joinErrorFallback": "Organisation konnte nicht beigetreten werden",
-      "unexpectedError": "Unerwartete Antwort vom Server"
-    }
-  },
-  "Volunteer": {
-    "page": {
-      "title": "Freiwillige",
-      "subtitle": "Verwalte Freiwillige in deiner Organisation",
-      "copyInviteLink": "Einladungslink kopieren",
-      "inviteLinkCopied": "Einladungslink in Zwischenablage kopiert"
-    },
-    "table": {
-      "name": "Name",
-      "email": "E-Mail",
-      "roles": "Rollen"
-    },
-    "action": {
-      "viewProfileAria": "Freiwilligenprofil ansehen",
-      "checkInAria": "Freiwilligen einchecken",
-      "checkInShiftAria": "Freiwilligen zu einem  Einsatz einchecken"
-    },
-    "requests": {
-      "pendingEmpty": "Noch keine ausstehenden Anfragen.",
-      "rejectedEmpty": "Noch keine abgelehnten Anfragen."
-    },
-    "empty": {
-      "title": "Noch keine Freiwilligen",
-      "description": "Teile den Einladungslink, damit sich Freiwillige anmelden."
-    },
-    "sheet": {
-      "userInfo": "Benutzerinfo",
-      "emailLabel": "E-Mail",
-      "addressLabel": "Adresse",
-      "birthdayLabel": "Geburtstag",
-      "qrIdLabel": "QR-ID",
-      "submittedForms": "Eingereichte Formulare",
-      "noSubmissions": "Noch keine eingereichten Formulare.",
-      "formFallback": "Formular",
-      "titleFallback": "Freiwilliger"
-    }
+  "Settings": {
+    "title": "Einstellungen"
   },
   "Shift": {
-    "page": {
-      "title": "Einsätze",
-      "subtitle": "Einsatzdetails",
-      "createButton": "Einsatz erstellen"
-    },
-    "empty": {
-      "title": "Noch keine Einsätze",
-      "description": "Erstelle deinen ersten Einsatz und lade Freiwillige ein, um loszulegen."
-    },
-    "tabs": {
-      "weekplan": "Wochenplan",
-      "allShifts": "Alle Einsätze"
+    "action": {
+      "copyLinkAria": "Link kopieren",
+      "deleteDescription": "Bist du sicher, dass du diesen Einsatz und alle zugehörigen Stundenzettel löschen möchtest?",
+      "deleteError": "Einsatz konnte nicht gelöscht werden. {error}",
+      "deleteSuccess": "Einsatz erfolgreich gelöscht.",
+      "deleteTitle": "Löschen",
+      "editAria": "Bearbeiten",
+      "inviteAria": "Einladen",
+      "leaveShift": "Einsatz verlassen",
+      "recordTime": "Zeit erfassen",
+      "viewAria": "Ansehen"
     },
     "calendar": {
+      "nextAria": "Weiter",
+      "prevAria": "Zurück",
       "week": "KW {week}"
     },
-    "table": {
-      "name": "Name",
-      "firstDate": "Erster Termin",
-      "pattern": "Muster",
-      "time": "Zeit",
-      "visibility": "Sichtbarkeit"
-    },
-    "visibility": {
-      "ALL_MEMBERS": "Offener Einsatz",
-      "INVITED_MEMBERS": "Nur mit Einladung"
-    },
-    "status": {
-      "finished": "Beendet",
-      "active": "Aktiv"
-    },
     "card": {
+      "inviteAria": "Einladen",
       "invited": "Eingeladen",
       "noVolunteers": "Noch keine Freiwilligen eingeladen",
-      "inviteAria": "Freiwillige einladen"
-    },
-    "form": {
-      "nameLabel": "Einsatzname",
-      "namePlaceholder": "z. B. Morgendliche Kassaeinsatz",
-      "dateTimeLabel": "Datum und Uhrzeit",
-      "locationLabel": "Ort",
-      "locationPlaceholder": "Hauptsaal, Musterstraße 123",
-      "instructionsLabel": "Anweisungen",
-      "instructionsPlaceholder": "Beschreibe Aufgaben und Anforderungen für diesen Einsatz",
-      "recurring": "Wiederkehrende Einsatz",
-      "noRecurrence": "Keine Wiederholung",
-      "chooseDays": "Wähle die Tage, an denen sich dieser Einsatz wiederholt",
-      "openShiftLabel": "Offener Einsatz",
-      "openShiftDescription": "Jeder Freiwillige kann sich für diesen Einsatz anmelden"
-    },
-    "recurrence": {
-      "preset": {
-        "none": "Wiederholt sich nicht",
-        "daily": "Täglich",
-        "workingDays": "An Werktagen",
-        "weekend": "Am Wochenende",
-        "custom": "Benutzerdefinierte Wiederholung"
-      },
-      "weekDay": {
-        "MONDAY": "Mo",
-        "TUESDAY": "Di",
-        "WEDNESDAY": "Mi",
-        "THURSDAY": "Do",
-        "FRIDAY": "Fr",
-        "SATURDAY": "Sa",
-        "SUNDAY": "So"
-      }
-    },
-    "inviteForm": {
-      "title": "Teilnehmer einladen und verwalten",
-      "minVolunteersLabel": "Min. Freiwillige",
-      "minVolunteersPlaceholder": "z. B. 2",
-      "minVolunteersDescription": "Mindestanzahl an Personen, die nötig ist, um den Einsatz zu öffnen",
-      "maxVolunteersLabel": "Max. Freiwillige",
-      "maxVolunteersPlaceholder": "z. B. 50",
-      "maxVolunteersDescription": "Maximale Anzahl an Personen, die sich für den Einsatz anmelden dürfen",
-      "copyInviteLink": "Einladungslink kopieren",
-      "managingLabel": "Du verwaltest Freiwillige für:",
-      "inviteAllLabel": "Zu allen Terminen dieses Einsatzes einladen",
-      "inviteAllDescription": "Freiwillige werden zu allen Einsätze ab {startDate}, jeden {days}, eingeladen."
-    },
-    "selector": {
-      "noActiveShifts": "Keine aktiven Einsätze",
-      "noActiveShiftsDescription": "Bitte <addShift>einen Einsatz hinzufügen</addShift> oder den Zeitraum eines <existingShift>bestehenden Einsatzes</existingShift> anpassen.",
-      "chooseShift": "Wähle einen Einsatz"
-    },
-    "checkInSelector": {
-      "placeholder": "Freiwilligen auswählen",
-      "empty": "Kein Freiwilliger gefunden"
+      "openInstanceAria": "Öffnen"
     },
     "checkIn": {
       "checkIn": "Einchecken",
-      "checkingIn": "Wird eingecheckt...",
-      "requirements": "Anforderungen",
-      "allMet": "Alle erfüllt",
-      "shift": "Einsatz",
-      "noShiftSelected": "Kein Einsatz ausgewählt",
-      "volunteerCheckedIn": "Freiwilliger eingecheckt",
-      "volunteerProfilePhoto": "Profilfoto des Freiwilligen",
-      "checkOut": "Auschecken",
-      "checkingOut": "Wird ausgecheckt...",
-      "volunteerCheckedOut": "Freiwilliger ausgecheckt",
-      "scanTitle": "Check-in/out",
-      "scanDescription": "Scanne die QR-ID der Freiwilligen, um sie ein- oder auszuchecken",
-      "enterQrTitle": "Oder gib ihre QR-ID ein",
-      "searchVolunteerTitle": "Oder suche nach einer Freiwilligen",
       "checkInTitle": "Einchecken",
+      "checkOut": "Auschecken",
       "checkOutTitle": "Auschecken",
-      "selectOrgTitle": "Einchecken",
-      "selectOrgDescription": "Wähle die Organisation aus, in die der Freiwillige eingecheckt werden soll.",
-      "blockedTitle": "Check-in verweigert",
-      "blockedDescription": "Der Freiwillige darf nicht einchecken. Er muss sich an die Zentrale wenden, um Hilfe zu erhalten.",
       "checkedInAt": "Eingecheckt: {time}",
+      "checkingIn": "Wird eingecheckt...",
+      "checkingOut": "Wird ausgecheckt...",
       "checkingOutAt": "Wird ausgecheckt: {time}",
-      "volunteerNotFoundTitle": "Freiwilliger nicht gefunden",
-      "volunteerNotFoundDescription": "Es gibt keinen Freiwilligen, der zu dieser QR-ID passt. Die QR-ID wurde möglicherweise neu generiert und ist daher nicht mehr gültig. <tryAgain>Versuche es erneut</tryAgain>, indem du die QR-ID manuell eingibst oder nach der Freiwilligen suchst, um sie einzuchecken.",
-      "tryAgain": "Versuche es erneut"
+      "enterQrTitle": "Oder gib die QR-ID manuell ein, um die Anwesenheit zu bestätigen",
+      "invalidCheckin": {
+        "blocked": {
+          "description": "Freiwillige:r darf nicht einchecken. Bitte ihn oder Sie, sich für Hilfe an die Zentrale zu wenden.",
+          "title": "Check-in verweigert"
+        },
+        "notMember": {
+          "description": "Freiwillige:r gehört nicht zu dieser Organisationseinheit.",
+          "title": "Check-in verweigert"
+        }
+      },
+      "noShiftSelected": "Kein Einsatz ausgewählt",
+      "scanDescription": "Scanne die QR-ID mit der Kamera. Damit checkst du Freiwillige ein- oder aus.",
+      "searchVolunteerTitle": "Oder wähle die Person zur Anmeldung aus der Liste aus",
+      "selectOrgDescription": "Wähle die Organisation aus, in die die Person eingecheckt werden soll.",
+      "selectOrgTitle": "Einchecken",
+      "successNext": "Weiter",
+      "tryAgain": "Versuche es erneut",
+      "volunteerCheckedIn": "Freiwillige:r eingecheckt",
+      "volunteerCheckedOut": "Freiwillige:r ausgecheckt",
+      "volunteerNotFoundDescription": "Es gibt niemanden, der zu dieser QR-ID passt. Die QR-ID wurde möglicherweise neu generiert und ist daher nicht mehr gültig. <tryAgain>Versuche es erneut</tryAgain>, indem du die QR-ID manuell eingibst oder nach der Person suchst, um sie einzuchecken.",
+      "volunteerNotFoundTitle": "Freiwillige:r nicht gefunden"
     },
-    "scanner": {
-      "title": "Ungültige Check-in-ID",
-      "description": "Bitte versuche es erneut zu scannen oder scanne eine andere Kopie der QR-ID.",
-      "invalidToast": "Keine gültige Check-in-ID. Bitte versuche es erneut."
+    "checkInSelector": {
+      "empty": "Keine Freiwilligen gefunden",
+      "placeholder": "Freiwillige:n auswählen"
+    },
+    "detail": {
+      "createdByLabel": "Erstellt von",
+      "createdLabel": "Erstellt",
+      "imageAlt": "Bild für {title}",
+      "requiredForms": {
+        "addExisting": "Bestehendes hinzufügen",
+        "addedToast": "Formular hinzugefügt",
+        "createNew": "Neues erstellen",
+        "dedupHint": "Freiwillige werden nicht nach Informationen gefragt, die sie bereits angegeben haben.",
+        "fileUploadLabel": "Datei-Upload",
+        "noFormsFound": "Keine Formulare gefunden",
+        "pill": {
+          "none": "Keine Formulare erforderlich",
+          "required": "{count, plural, one {1 Formular erforderlich} other {{count} Formulare erforderlich}}"
+        },
+        "questionCount": "{count, plural, one {1 Frage} other {{count} Fragen}}",
+        "removeAria": "Entfernen",
+        "removedToast": "Formular entfernt",
+        "searchForms": "Formulare suchen...",
+        "subtitle": "Werden vor dem Beitritt zu {shiftTitle} ausgefüllt",
+        "title": "Für Beitritt erforderliche Formulare",
+        "updateFailedToast": "Erforderliche Formulare konnten nicht aktualisiert werden"
+      },
+      "statusLabel": "Status",
+      "visibilityLabel": "Sichtbarkeit"
+    },
+    "editInstanceForm": {
+      "applyToAllDescription": "Die Änderungen gelten auch für alle zukünftigen Termine dieses Einsatzes. Frühere Änderungen an einzelnen Terminen werden dabei überschrieben. Vergangene Termine bleiben unverändert.",
+      "applyToAllLabel": "Auf alle zukünftigen Termine anwenden"
+    },
+    "empty": {
+      "description": "Erstelle deinen ersten Einsatz und lade Freiwillige ein, um loszulegen.",
+      "title": "Noch keine Einsätze"
+    },
+    "eventBadge": "Veranstaltung",
+    "form": {
+      "chooseDays": "Wähle die Tage, an denen sich dieser Einsatz wiederholt",
+      "dateTimeLabel": "Datum und Uhrzeit",
+      "imageLabel": "Bild",
+      "instructionsLabel": "Beschreibung",
+      "instructionsPlaceholder": "Beschreibe Aufgaben und Anforderungen für diesen Einsatz",
+      "locationLabel": "Ort",
+      "locationPlaceholder": "Hauptsaal, Musterstraße 123",
+      "maxVolunteersDescription": "Maximale Anzahl an Personen, die sich für diesen Einsatz anmelden dürfen",
+      "maxVolunteersLabel": "Max. Freiwillige",
+      "maxVolunteersPlaceholder": "z. B. 50",
+      "minVolunteersDescription": "Mindestanzahl an Personen, die nötig ist, um diesen Einsatz zu öffnen",
+      "minVolunteersLabel": "Min. Freiwillige",
+      "minVolunteersPlaceholder": "z. B. 2",
+      "nameLabel": "Titel des Einsatzes",
+      "namePlaceholder": "z. B. Morgendliche Essensausgabe",
+      "noRecurrence": "Einmalig",
+      "openShiftDescription": "Der Einsatz ist für deine Freiwilligen auf der Plattform sichtbar. Jeder deiner Freiwilligen kann sich für diesen Einsatz anmelden.",
+      "openShiftLabel": "Offener Einsatz",
+      "recurring": "Wiederholung festlegen",
+      "timeRangeConstraint": "Einsätze müssen innerhalb von ({window}) beginnen und enden."
+    },
+    "instanceDetail": {
+      "deleteAria": "Löschen",
+      "deleteDialog": {
+        "description": "Dieser Einsatztermin ist Teil einer Serie. Wähle aus, ob nur diesen Termin oder alle kommenden Termine gelöscht werden sollen.",
+        "oneTimeDescription": "Das ist ein einmaliger Einsatztermin. Bist du sicher, dass du ihn löschen möchtest?",
+        "error": "Einsatztermin konnte nicht gelöscht werden. {error}",
+        "futureDescription": "Löscht diesen Termin und alle kommenden Termine der Serie. Vergangene Termine bleiben erhalten.",
+        "futureTitle": "Diesen und alle zukünftigen Termine",
+        "onlyThisDescription": "Löscht den Termin am {date}. Andere Termine bleiben unberührt.",
+        "onlyThisTitle": "Nur diesen Termin",
+        "success": "Einsatztermin gelöscht.",
+        "title": "Einsatztermin löschen"
+      },
+      "editCta": "Bearbeiten",
+      "imagePlaceholder": "Bild hinzufügen",
+      "informationTitle": "Einsatzinformationen",
+      "inviteCta": "Einladen",
+      "inviteLink": "Einladungslink",
+      "title": "Einsatztermin"
+    },
+    "inviteForm": {
+      "copyInviteLink": "Einladungslink kopieren",
+      "inviteAllDescription": "Freiwillige werden zu allen Einsätzen ab dem {startDate}, jeden {days}, eingeladen.",
+      "inviteAllLabel": "Zu allen zukünftigen Terminen dieses Einsatzes einladen",
+      "managingLabel": "Du verwaltest Freiwillige für:",
+      "title": "Teilnehmende einladen und verwalten"
+    },
+    "inviteStatus": {
+      "accepted": "Angenommen",
+      "actionInvite": "Einladen",
+      "actionUninvite": "Zurückweisen",
+      "cancelled": "Zurückgezogen",
+      "declined": "Abgelehnt",
+      "inviteError": "Einladen fehlgeschlagen",
+      "inviteSuccess": "Freiwillige:r erneut eingeladen",
+      "invited": "Eingeladen",
+      "rejected": "Zurückgewiesen",
+      "signedUp": "Selbst angemeldet",
+      "summaryAccepted": "angenommen",
+      "summaryInvited": "eingeladen",
+      "summarySignedUp": "selbst angemeldet",
+      "summarySpots": "Plätze",
+      "uninviteError": "Entfernen fehlgeschlagen",
+      "uninviteSuccess": "Freiwillige:r von dem Einsatz entfernt",
+      "volunteersTitle": "Freiwillige"
     },
     "join": {
-      "joinShift": "Einsatz beitreten",
-      "joining": "Wird beigetreten...",
-      "inviteOnly": "Nur mit Einladung",
-      "joined": "Du bist der Einsatz beigetreten",
-      "pending": "Deine Mitgliedschaftsanfrage ist ausstehend. Du wirst der Einsatz hinzugefügt, sobald er genehmigt wurde.",
-      "rejected": "Deine Mitgliedschaftsanfrage für diese Organisation wurde abgelehnt. Kontaktiere einen Admin, wenn du denkst, dass das ein Fehler war.",
-      "requirementsNeeded": "Erforderliche Anforderungen: {missing}{hasCompleted, select, yes { (bereits erledigt: {completed})} other {}}",
-      "requirementsFallback": "Anforderungsprofil-Oberfläche (noch zu implementieren)",
+      "accept": "Annehmen",
+      "accepted": "Du hast die Einladung angenommen.",
+      "cancelBody": "Du gibst deinen Platz am {date} auf. Die Organisation wird benachrichtigt.",
+      "cancelShift": "Einsatz absagen",
+      "cancelTitle": "Einsatz absagen?",
+      "cancelled": "Du hast deinen Einsatz abgesagt.",
+      "confirmCancel": "Einsatz absagen",
+      "decline": "Ablehnen",
+      "declined": "Du hast die Einladung abgelehnt.",
       "failed": "Einsatzbeitritt fehlgeschlagen",
-      "unexpected": "Unerwartete Antwort vom Server",
+      "full": "Einsatz voll",
+      "inviteOnly": "Nur mit Einladung",
+      "joinShift": "Einsatz beitreten",
+      "joined": "Du bist dem Einsatz beigetreten",
+      "joining": "Wird beigetreten...",
+      "keepShift": "Einsatz behalten",
+      "pending": "Deine Mitgliedschaftsanfrage ist ausstehend. Du wirst dem Einsatz hinzugefügt, sobald er genehmigt wurde.",
+      "pendingCta": "Anfrage ausstehend",
+      "pendingMessage": "Deine Mitgliedschaftsanfrage für diese Organisation wird noch geprüft. Du kannst dich für den Einsatz anmelden, sobald sie genehmigt wurde.",
+      "reenter": "Erneut beitreten",
+      "rejected": "Deine Mitgliedschaftsanfrage für diese Organisation wurde abgelehnt. Kontaktiere einen Administrator, wenn du denkst, dass das ein Fehler war.",
+      "rejectedCta": "Anfrage nicht genehmigt",
       "requestSent": "Anfrage gesendet",
-      "pendingMessage": "Deine Mitgliedschaftsanfrage für diese Organisation wird noch geprüft. Du kannst der Einsatz beitreten, sobald er genehmigt wurde."
+      "requirementsFallback": "Anforderungsprofil-Oberfläche (noch zu implementieren)",
+      "requirementsNeeded": "Noch zu erledigen: {missing}{hasCompleted, select, yes { (bereits erledigt: {completed})} other {}}",
+      "unexpected": "Unerwartete Antwort vom Server"
     },
-    "action": {
-      "viewAria": "Einsatz ansehen",
-      "editAria": "Einsatz bearbeiten",
-      "inviteAria": "Freiwillige einladen",
-      "copyLinkAria": "Einsatzlink in Zwischenablage kopieren",
-      "recordTime": "Zeit erfassen",
-      "leaveShift": "Einsatz verlassen",
-      "deleteTitle": "Einsatz löschen",
-      "deleteDescription": "Bist du sicher, dass du diesen Einsatz und alle zugehörigen Stundenzettel löschen möchtest?",
-      "deleteSuccess": "Einsatz erfolgreich gelöscht.",
-      "deleteError": "Einsatz konnte nicht gelöscht werden. {error}"
+    "loading": "Wird geladen...",
+    "notFound": "Einsatz nicht gefunden.",
+    "page": {
+      "createButton": "Einsatz erstellen",
+      "subtitle": "Einsatzdetails und Freiwillige",
+      "title": "Einsätze"
+    },
+    "recurrence": {
+      "preset": {
+        "custom": "Benutzerdefinierte Wiederholung",
+        "daily": "Täglich",
+        "none": "Wiederholt sich nicht",
+        "weekend": "Am Wochenende",
+        "workingDays": "An Werktagen"
+      },
+      "weekDay": {
+        "FRIDAY": "Fr",
+        "MONDAY": "Mo",
+        "SATURDAY": "Sa",
+        "SUNDAY": "So",
+        "THURSDAY": "Do",
+        "TUESDAY": "Di",
+        "WEDNESDAY": "Mi"
+      }
+    },
+    "scanner": {
+      "description": "Bitte versuche es erneut oder scanne eine andere Kopie der QR-ID.",
+      "invalidToast": "Keine gültige Check-in-ID. Bitte versuche es erneut.",
+      "title": "Ungültige Check-in-ID"
+    },
+    "selector": {
+      "chooseShift": "Wähle einen Einsatz",
+      "noActiveShifts": "Keine aktiven Einsätze",
+      "noActiveShiftsDescription": "Bitte <addShift>einen Einsatz erstellen</addShift> oder den Zeitraum eines <existingShift>bestehenden Einsatzes</existingShift> anpassen."
     },
     "sheet": {
-      "createTitle": "Einsatz erstellen",
       "createDescription": "Erstelle einen neuen Einsatz.",
+      "createEventDescription": "Plane einen Einsatz für diese Veranstaltung.",
+      "createEventTitle": "Einsatz erstellen",
+      "createTitle": "Einsatz erstellen",
+      "editDescription": "Bearbeite diesen Einsatz.",
+      "editInstanceDescription": "Bearbeite diesen Termin des Einsatzes.",
+      "editInstanceTitle": "Einsatz bearbeiten",
       "editTitle": "Einsatz bearbeiten",
-      "editDescription": "Bearbeite den Einsatz.",
-      "inviteTitle": "Freiwillige einladen",
-      "inviteDescription": "Eingeladene Freiwillige erhalten eine E-Mail mit Einsatzdetails und einem Link zum Anmelden."
+      "inviteDescription": "Eingeladene Freiwillige erhalten eine E-Mail mit Einsatzdetails und einem Link zum System.",
+      "inviteTitle": "Freiwillige einladen"
+    },
+    "status": {
+      "active": "Aktiv",
+      "finished": "Beendet"
+    },
+    "successDialog": {
+      "bodyInvited": "Dein Einsatz ist aktiv. Die eingeladenen Freiwilligen sind benachrichtigt.",
+      "bodyOpen": "Dein offener Einsatz ist aktiv. Alle Freiwilligen in deiner Organisation sind benachrichtigt und können sich jetzt anmelden.",
+      "copyInviteLink": "Einladungslink kopieren",
+      "recurrence": {
+        "daily": "Täglich",
+        "oneTime": "Einmalig",
+        "weekend": "Wochenende",
+        "workingDays": "Werktags"
+      },
+      "shareLabel": "Link zum Einsatz",
+      "title": "Einsatz erstellt",
+      "weekDayShort": {
+        "FRIDAY": "Fr.",
+        "MONDAY": "Mo.",
+        "SATURDAY": "Sa.",
+        "SUNDAY": "So.",
+        "THURSDAY": "Do.",
+        "TUESDAY": "Di.",
+        "WEDNESDAY": "Mi."
+      }
+    },
+    "table": {
+      "firstDate": "Erster Termin",
+      "name": "Name",
+      "pattern": "Muster",
+      "requiredForms": "Formulare",
+      "time": "Zeit",
+      "visibility": "Sichtbarkeit"
+    },
+    "tabs": {
+      "allShifts": "Alle Einsätze",
+      "weekplan": "Wochenplan"
     },
     "toast": {
       "created": "Einsatz erstellt",
-      "updated": "Einsatz aktualisiert",
-      "inviteChanged": "Einladungen der Freiwilligen aktualisiert"
+      "inviteChanged": "Einladungen der Freiwilligen aktualisiert",
+      "updated": "Einsatz aktualisiert"
     },
-    "detail": {
-      "visibilityLabel": "Sichtbarkeit",
-      "statusLabel": "Status",
-      "createdByLabel": "Erstellt von",
-      "createdLabel": "Erstellt"
+    "transferList": {
+      "addAria": "Hinzufügen",
+      "removeAria": "Entfernen"
     },
-    "notFound": "Einsatz nicht gefunden.",
-    "loading": "Wird geladen...",
     "validation": {
-      "nameRequired": "Name ist erforderlich",
-      "startTimeRequired": "Startzeit ist erforderlich",
       "endTimeRequired": "Endzeit ist erforderlich",
+      "instanceClearRecurrenceUnsupported": "Die Wiederholung kannst du hier nicht entfernen. Bearbeite sie auf der Seite „Einsatz bearbeiten“.",
+      "instanceDateMismatch": "Das Datum passt nicht zu diesem Termin. Öffne das Bearbeitungsformular bitte noch einmal.",
+      "instanceRecurrenceConflict": "Die neue Wiederholung enthält den Wochentag dieses Termins nicht. Passe die Wiederholung an oder bearbeite einen anderen Termin.",
+      "instanceTimeConflict": "Ein anderer Termin dieses Einsatzes beginnt bereits zu dieser Zeit.",
+      "minMaxVolunteers": "Die Mindestanzahl an Freiwilligen darf die Höchstanzahl nicht überschreiten",
+      "nameRequired": "Name ist erforderlich",
       "organizationUnitRequired": "Organisationseinheit ist erforderlich",
       "shiftIdRequired": "Einsatz-ID ist erforderlich",
-      "minMaxVolunteers": "Die Mindestanzahl an Freiwilligen darf die Höchstanzahl nicht überschreiten"
+      "startTimeRequired": "Startzeit ist erforderlich",
+      "windowViolation": "Muss innerhalb des Veranstaltungszeitraums liegen"
+    },
+    "visibility": {
+      "ALL_MEMBERS": "Offene Einsätze",
+      "INVITED_MEMBERS": "Nur mit Einladung"
+    }
+  },
+  "ShiftDetail": {
+    "acceptedBadge": "Angenommen",
+    "back": "Zurück",
+    "cancelUntilNote": "Du kannst bis {date} absagen.",
+    "cancelledBadge": "Abgesagt",
+    "cancelledNote": "Du bist nicht mehr für {date} angemeldet.",
+    "coverImageAlt": "Titelbild für {title}",
+    "dateLabel": "Datum",
+    "declinedBadge": "Abgelehnt",
+    "declinedNote": "Du hast die Einladung zu diesem Einsatz abgelehnt.",
+    "earlier": "Früher",
+    "errorBody": "Sie wurde abgesagt oder der Link ist nicht mehr gültig.",
+    "errorHeading": "Dieser Einsatz existiert nicht mehr",
+    "errorOrgCta": "Zur Organisation",
+    "eventBadge": "Teil von {eventTitle}",
+    "forms": {
+      "description": "Bitte fülle die erforderlichen Formulare aus, bevor du diesem Einsatz beitrittst.",
+      "joinedToast": "Du bist für {shiftTitle} angemeldet",
+      "noForms": "Es sind keine Formulare erforderlich.",
+      "rejectedToast": "Anfrage nicht genehmigt",
+      "requestFailed": "Anfrage konnte nicht gesendet werden",
+      "requestSentToast": "Anfrage gesendet — sie wird noch bestätigt.",
+      "requirementsNeededToast": "Bitte fülle zuerst alle erforderlichen Formulare aus",
+      "title": "{shiftTitle} beitreten"
+    },
+    "fullNote": "Dieser Einsatz ist bereits ausgebucht.",
+    "joinedNote": "Du bist für diesen Einsatz angemeldet.",
+    "later": "Später",
+    "locationDivider": "·",
+    "pendingNote": "Deine Mitgliedschaftsanfrage ist ausstehend. Du wirst diesem Einsatz hinzugefügt, sobald sie genehmigt wurde.",
+    "pickDayLabel": "Wähle einen Tag",
+    "respondBeforeNote": "Antworte bis {date}. Du kannst es dir bis zum Einsatzbeginn anders überlegen.",
+    "signUpCta": "Anmelden für {date}",
+    "signUpNote": "Du kannst jederzeit absagen.",
+    "spotsFree": "· {n} frei",
+    "spotsFull": "· ausgebucht",
+    "spotsTaken": "{filled} von {max} belegt",
+    "timeLabel": "Zeit",
+    "whatYouDoHeading": "Was du tun wirst",
+    "whenWhereHeading": "Wann & Wo"
+  },
+  "Storage": {
+    "upload": {
+      "browse": "Dateien durchsuchen",
+      "chooseFile": "Datei auswählen",
+      "clear": "Entfernen",
+      "dropHint": "Datei hierher ziehen oder zum Durchsuchen klicken",
+      "failed": "Hochladen fehlgeschlagen",
+      "imageHint": "Empfohlen: JPEG oder PNG, bis zu 2 MB",
+      "invalidFileType": "Dieser Dateityp ist nicht erlaubt. Verwende JPEG, PNG oder HEIC.",
+      "label": "Datei hochladen",
+      "previewAlt": "Vorschau der hochgeladenen Datei",
+      "replace": "Ersetzen",
+      "uploaded": "Datei hochgeladen",
+      "uploading": "Wird hochgeladen..."
     }
   },
   "TimeEntry": {
-    "page": {
-      "title": "Stundenzettel",
-      "createButton": "Zeiteintrag hinzufügen"
+    "action": {
+      "deleteDescription": "Bist du sicher, dass du diesen Zeiteintrag löschen möchtest?",
+      "deleteError": "Zeiteintrag konnte nicht gelöscht werden. {error}",
+      "deleteSuccess": "Zeiteintrag gelöscht",
+      "deleteTitle": "Löschen",
+      "editAria": "Bearbeiten"
+    },
+    "detail": {
+      "closedStatus": "Abgeschlossen",
+      "createdLabel": "Erstellt",
+      "openStatus": "Offen",
+      "shiftLabel": "Einsatz",
+      "statusLabel": "Status",
+      "title": "Zeiteintrag",
+      "unknownVolunteer": "Unbekannte:r Freiwillige:r"
     },
     "empty": {
-      "title": "Keine Zeiteinträge",
-      "description": "Du kannst jemanden zu einem Einsatz einchecken oder manuell einen Zeiteintrag hinzufügen."
-    },
-    "table": {
-      "shift": "Einsatz",
-      "volunteer": "Freiwilliger",
-      "time": "Zeit",
-      "duration": "Dauer",
-      "notAvailable": "k. A."
+      "description": "Du kannst jemanden zu einem Einsatz einchecken oder manuell einen Zeiteintrag hinzufügen.",
+      "title": "Keine Zeiteinträge"
     },
     "form": {
-      "selectShiftLabel": "Einsatz auswählen",
-      "selectShiftPlaceholder": "Einsatz auswählen",
-      "selectShiftHint": "Wähle einen Einsatz, um verfügbare Termine zu sehen",
-      "selectVolunteerLabel": "Freiwilligen auswählen",
-      "selectVolunteerPlaceholder": "Freiwilligen auswählen",
-      "startEndTimeLabel": "Start- und Endzeit",
+      "loadInstancesError": "Termine konnten nicht geladen werden.",
       "notesLabel": "Notizen",
       "notesPlaceholder": "Notizen zu diesem Zeiteintrag hinzufügen...",
-      "loadInstancesError": "Termine konnten nicht geladen werden."
+      "selectShiftHint": "Wähle einen Einsatz, um verfügbare Termine zu sehen",
+      "selectShiftLabel": "Einsatz auswählen",
+      "selectShiftPlaceholder": "Einsatz auswählen",
+      "selectVolunteerLabel": "Freiwillige:n auswählen",
+      "selectVolunteerPlaceholder": "Freiwillige:n auswählen",
+      "startEndTimeLabel": "Start- und Endzeit"
+    },
+    "format": {
+      "open": "offen"
+    },
+    "page": {
+      "createButton": "Zeiteintrag hinzufügen",
+      "title": "Stundenzettel"
     },
     "picker": {
       "shiftInstanceLabel": "{title} · {date} {startTime}–{endTime}",
       "shiftLabel": "{title} · {pattern} {startTime}–{endTime}"
     },
     "sheet": {
-      "createTitle": "Zeiteintrag hinzufügen",
       "createDescription": "Erfasse einen neuen Zeiteintrag für einen Einsatz.",
-      "editTitle": "Zeiteintrag bearbeiten",
-      "editDescription": "Passe die Details dieses Zeiteintrags an."
-    },
-    "detail": {
-      "title": "Zeiteintrag",
-      "unknownVolunteer": "Unbekannter Freiwilliger",
-      "shiftLabel": "Einsatz",
-      "statusLabel": "Status",
-      "createdLabel": "Erstellt",
-      "openStatus": "Offen",
-      "closedStatus": "Abgeschlossen"
-    },
-    "action": {
-      "editAria": "Zeiteintrag bearbeiten",
-      "deleteTitle": "Zeiteintrag löschen",
-      "deleteDescription": "Bist du sicher, dass du diesen Zeiteintrag löschen möchtest?",
-      "deleteSuccess": "Zeiteintrag gelöscht",
-      "deleteError": "Zeiteintrag konnte nicht gelöscht werden. {error}"
-    },
-    "format": {
-      "open": "offen"
-    },
-    "validation": {
-      "organizationUnitRequired": "Organisationseinheit ist erforderlich",
-      "shiftInstanceRequired": "Einsatztermin ist erforderlich",
-      "volunteerRequired": "Freiwilliger ist erforderlich",
-      "startedAtRequired": "Startzeit ist erforderlich",
-      "endedAtRequired": "Endzeit ist erforderlich",
-      "timeEntryIdRequired": "Zeiteintrags-ID ist erforderlich"
-    }
-  },
-  "RequirementForm": {
-    "builder": {
-      "previewTitle": "Vorschau",
-      "descriptionFallback": "Erstelle dein Formular, indem du Blöcke hinzufügst",
-      "addBlock": "Block hinzufügen",
-      "saveForm": "Formular speichern",
-      "saving": "Wird gespeichert...",
-      "copyShareLink": "Freigabelink kopieren",
-      "shareLinkCopied": "Freigabelink in Zwischenablage kopiert",
-      "submissionsWarning": "Dieses Formular hat Einsendungen",
-      "submissionsWarningDescription": "Die Bearbeitung ist deaktiviert, weil Freiwillige bereits Antworten eingereicht haben. Erstelle eine Kopie, wenn du eine neue Version brauchst.",
-      "addBlockTitle": "Block hinzufügen",
-      "addBlockDescription": "Wähle einen vorhandenen Block oder erstelle einen neuen",
-      "createNewBlock": "Neuen Block erstellen",
-      "noFields": "Keine Felder",
-      "allBlocksInUse": "Alle Blöcke werden bereits verwendet",
-      "noPreview": "Füge Blöcke hinzu, um eine Vorschau zu sehen",
-      "lockedTooltip": "Bearbeiten nicht möglich, Block wird in einem eingereichten Formular verwendet",
-      "viewBlock": "Block ansehen",
-      "editBlock": "Block bearbeiten",
-      "fieldsCount": "{count} Felder"
-    },
-    "block": {
-      "editTitle": "Block bearbeiten",
-      "createTitle": "Block erstellen",
-      "blockTitleLabel": "Blocktitel",
-      "titlePlaceholder": "z. B. Persönliche Informationen",
-      "createDescriptionPlaceholder": "Was erfasst dieser Block?",
-      "descriptionLabel": "Beschreibung",
-      "iconLabel": "Icon",
-      "iconPlaceholder": "z. B. user",
-      "saveBlock": "Block speichern",
-      "saving": "Wird gespeichert...",
-      "fieldsTitle": "Felder ({count})",
-      "noFields": "Noch keine Felder. Füge das erste Feld zu diesem Block hinzu.",
-      "addField": "Feld hinzufügen",
-      "addProfileField": "Profilfeld hinzufügen",
-      "profileFieldHint": "Freiwillige füllen diese einmal aus und sie werden über Organisationen hinweg wiederverwendet.",
-      "addDocument": "Dokument hinzufügen",
-      "lockedNotice": "Dieser Block ist gesperrt, weil er in einem Formular mit Einsendungen verwendet wird.",
-      "createBlock": "Block erstellen",
-      "cancel": "Abbrechen",
-      "back": "Zurück",
-      "fieldN": "Feld {n}",
-      "systemField": "Systemfeld",
-      "typeLabel": "Typ",
-      "typePlaceholder": "Typ auswählen",
-      "labelLabel": "Bezeichnung",
-      "labelPlaceholder": "Feldbezeichnung",
-      "descriptionPlaceholder": "Hilfetext für dieses Feld",
-      "placeholderLabel": "Platzhalter",
-      "placeholderPlaceholder": "z. B. Gib deinen Namen ein",
-      "documentUrlLabel": "Dokument-URL",
-      "documentUrlPlaceholder": "https://example.com/dokument.pdf",
-      "documentLabelLabel": "Dokumentenbezeichnung",
-      "documentLabelPlaceholder": "z. B. Nutzungsbedingungen",
-      "optionsLabel": "Optionen",
-      "addOption": "Option hinzufügen",
-      "optionLabelPlaceholder": "Bezeichnung {n}",
-      "optionValuePlaceholder": "Wert {n}",
-      "required": "Erforderlich",
-      "optional": "Optional",
-      "saveChanges": "Änderungen speichern",
-      "creating": "Wird erstellt...",
-      "loading": "Wird geladen…"
-    },
-    "form": {
-      "createTitle": "Anforderungsformular erstellen",
-      "createSubtitle": "Erstelle ein neues Formular, um Informationen von Freiwilligen zu sammeln.",
-      "createButton": "Formular erstellen",
-      "createDialogTitle": "Formular erstellen",
-      "nameLabel": "Name",
-      "namePlaceholder": "z. B. Onboarding-Formular",
-      "descriptionLabel": "Beschreibung",
-      "descriptionOptional": "Beschreibung (optional)",
-      "descriptionPlaceholder": "Wofür ist dieses Formular?",
-      "cancel": "Abbrechen",
-      "creating": "Wird erstellt...",
-      "create": "Erstellen"
-    },
-    "card": {
-      "share": "Teilen",
-      "view": "Ansehen",
-      "edit": "Bearbeiten",
-      "submissions": "Einsendungen",
-      "deleteFormTitle": "Formular löschen?",
-      "deleteFormDescription": "wird dauerhaft entfernt.",
-      "deleteBlockTitle": "Block löschen?",
-      "deleteBlockDescription": "wird dauerhaft entfernt.",
-      "deleting": "Wird gelöscht...",
-      "content": "Inhalt",
-      "updated": "Aktualisiert {date}",
-      "fields": "Felder",
-      "usedIn": "Verwendet in",
-      "noFieldsYet": "Noch keine Felder.",
-      "usedInForms": "Verwendet in den folgenden Formularen:"
+      "createTitle": "Zeiteintrag hinzufügen",
+      "editDescription": "Passe die Details dieses Zeiteintrags an.",
+      "editTitle": "Zeiteintrag bearbeiten"
     },
     "table": {
-      "name": "Name",
-      "description": "Beschreibung",
-      "blocks": "Blöcke",
-      "updated": "Aktualisiert",
-      "title": "Titel",
-      "fields": "Felder",
-      "usedIn": "Verwendet in",
-      "editable": "Bearbeitbar",
-      "fieldCount": "{count, plural, one {# Feld} other {# Felder}}",
-      "deleteFormDescription": "{name} wird dauerhaft entfernt.",
-      "deleteBlockDescription": "{name} wird dauerhaft entfernt.",
-      "yes": "Ja",
-      "copyShareLinkAria": "Freigabelink kopieren",
-      "editFormAria": "Formular bearbeiten",
-      "submissionsAria": "Einsendungen",
-      "cannotDeleteAria": "Löschen nicht möglich — Formular hat Einsendungen",
-      "deleteFormAria": "Formular löschen",
-      "editBlockAria": "Block bearbeiten",
-      "viewBlockAria": "Block ansehen",
-      "deleteBlockAria": "Block löschen"
-    },
-    "dashboard": {
-      "formsTab": "Formulare",
-      "blocksTab": "Blöcke",
-      "createForm": "Formular erstellen",
-      "createBlock": "Block erstellen",
-      "noForms": "Noch keine Formulare. Erstelle dein erstes Formular.",
-      "noBlocks": "Noch keine Blöcke. Erstelle deinen ersten Block.",
-      "noFormsMatch": "Keine Formulare entsprechen den aktuellen Filtern.",
-      "noBlocksMatch": "Keine Blöcke entsprechen den aktuellen Filtern.",
-      "searchForms": "Formulare suchen...",
-      "searchBlocks": "Blöcke suchen..."
-    },
-    "blockLibrary": {
-      "title": "Block-Bibliothek",
-      "subtitle": "Wiederverwendbare Blöcke für deine Formulare",
-      "noBlocksTitle": "Noch keine Blöcke",
-      "noBlocksDescription": "Erstelle wiederverwendbare Blöcke, die in mehreren Formularen verwendet werden können."
-    },
-    "fieldForm": {
-      "shortText": "Kurzer Text",
-      "longText": "Langer Text",
-      "number": "Zahl",
-      "date": "Datum",
-      "email": "E-Mail",
-      "phone": "Telefon",
-      "dropdown": "Dropdown",
-      "multiSelect": "Mehrfachauswahl",
-      "checkbox": "Checkbox",
-      "document": "Dokument",
-      "infoText": "Infotext",
-      "fieldTypeLabel": "Feldtyp",
-      "fieldTypePlaceholder": "Typ auswählen...",
-      "textLabel": "Text",
-      "labelLabel": "Bezeichnung",
-      "textPlaceholder": "z. B. Bitte lies die folgenden Informationen",
-      "labelPlaceholder": "z. B. Lieblingsfarbe",
-      "descriptionLabel": "Beschreibung",
-      "descriptionPlaceholder": "Optionaler Hilfetext",
-      "placeholderLabel": "Platzhalter",
-      "placeholderPlaceholder": "z. B. Gib deine Antwort ein",
-      "profileField": "Profilfeld: {key} — der Wert wird im Profil des Nutzers gespeichert und bei zukünftigen Formularen vorausgefüllt.",
-      "profileFieldOptional": "Profilfeld (optional)",
-      "profileFieldNone": "Keines",
-      "firstName": "Vorname",
-      "lastName": "Nachname",
-      "preferredName": "Bevorzugter Name",
-      "gender": "Geschlecht",
-      "address": "Adresse",
-      "zipCode": "Postleitzahl",
-      "city": "Stadt",
-      "birthDate": "Geburtsdatum",
-      "documentUrlLabel": "Dokument-URL",
-      "documentUrlPlaceholder": "https://example.com/dokument.pdf",
-      "required": "Erforderlich",
-      "selectTypeError": "Bitte wähle einen Feldtyp aus.",
-      "enterTextError": "Bitte gib einen Text ein.",
-      "enterLabelError": "Bitte gib eine Bezeichnung ein.",
-      "enterDocumentUrlError": "Bitte gib eine Dokument-URL ein.",
-      "enterOptionError": "Bitte gib mindestens eine Option ein.",
-      "cancel": "Abbrechen",
-      "save": "Speichern",
-      "add": "Hinzufügen"
-    },
-    "blockSheet": {
-      "viewTitle": "Block ansehen",
-      "editTitle": "Block bearbeiten",
-      "createTitle": "Block erstellen",
-      "viewDescription": "Dieser Block ist gesperrt — er wird in einem Formular mit Einsendungen verwendet.",
-      "editDescription": "Bearbeite diesen Block und seine Felder.",
-      "createDescription": "Erstelle einen neuen wiederverwendbaren Block mit Feldern.",
-      "loading": "Wird geladen…"
-    },
-    "volunteerForm": {
-      "successTitle": "Bewerbung eingegangen!",
-      "successMessage": "Deine Bewerbung wird geprüft. Ein Admin meldet sich in Kürze bei dir.",
-      "noBlocks": "Dieses Formular hat keine Blöcke.",
-      "membershipRequestNotice": "Mit dem Absenden dieses Formulars sendest du eine Mitgliedschaftsanfrage an {orgName}. Ein Admin prüft und genehmigt deine Anfrage.",
-      "step": "Schritt {current} von {total}",
-      "noFields": "Dieser Block hat noch keine konfigurierten Felder.",
-      "back": "Zurück",
-      "submit": "Absenden",
-      "submitting": "Wird abgesendet...",
-      "next": "Weiter",
-      "failedToSubmit": "Formular konnte nicht abgesendet werden",
-      "documentAcknowledgement": "Ich bestätige und akzeptiere",
-      "checkboxYes": "Ja",
-      "selectOption": "Option auswählen",
-      "pickDate": "Datum auswählen",
-      "alreadySubmittedTitle": "Formular abgesendet",
-      "alreadySubmittedMessage": "Dein Formular wurde erfolgreich abgesendet."
-    },
-    "submission": {
-      "fallbackVolunteer": "Freiwilliger",
-      "fallbackForm": "Formular",
-      "fieldColumn": "Feld",
-      "answerColumn": "Antwort",
-      "noFields": "Für dieses Formular sind keine Felder definiert.",
-      "accepted": "Akzeptiert"
+      "duration": "Dauer",
+      "notAvailable": "k. A.",
+      "shift": "Einsatz",
+      "time": "Zeit",
+      "volunteer": "Freiwillige:r"
     },
     "validation": {
-      "nameRequired": "Name ist erforderlich",
-      "titleRequired": "Titel ist erforderlich",
-      "fieldLabelRequired": "Feldbezeichnung ist erforderlich",
-      "labelRequired": "Bezeichnung ist erforderlich",
-      "minAge": "Du musst mindestens {minAge} Jahre alt sein",
-      "fieldRequired": "{label} ist erforderlich",
-      "mustBeNumber": "{label} muss eine Zahl sein",
-      "mustBeValidDate": "{label} muss ein gültiges Datum sein",
-      "mustBeValidEmail": "{label} muss eine gültige E-Mail-Adresse sein",
-      "mustBeValidPhone": "{label} muss eine gültige Telefonnummer sein",
-      "invalidOptions": "{label} enthält ungültige Optionen",
-      "maxChars": "{label} darf maximal {maxLen} Zeichen lang sein",
-      "invalidCharacters": "{label} enthält ungültige Zeichen",
-      "validPostalCode": "{label} muss eine gültige Postleitzahl sein"
-    },
-    "actions": {
-      "formSaved": "Formular gespeichert",
-      "blockSaved": "Block gespeichert",
-      "fieldAdded": "Feld hinzugefügt",
-      "fieldUpdated": "Feld aktualisiert",
-      "fieldDeleted": "Feld gelöscht",
-      "blockCreated": "Block erstellt",
-      "failedToCreateForm": "Formular konnte nicht erstellt werden",
-      "failedToSaveBlock": "Block konnte nicht gespeichert werden",
-      "failedToAddField": "Feld konnte nicht hinzugefügt werden",
-      "failedToUpdateField": "Feld konnte nicht aktualisiert werden",
-      "failedToDeleteField": "Feld konnte nicht gelöscht werden",
-      "failedToLoadBlock": "Block konnte nicht geladen werden",
-      "failedToSubmitForm": "Formular konnte nicht abgesendet werden",
-      "failedToSaveForm": "Formular konnte nicht gespeichert werden",
-      "linkCopied": "Link kopiert",
-      "linkCopiedDescription": "{url}",
-      "couldNotCopyLink": "Link konnte nicht kopiert werden"
+      "endedAtRequired": "Endzeit ist erforderlich",
+      "organizationUnitRequired": "Organisationseinheit ist erforderlich",
+      "shiftInstanceRequired": "Einsatztermin ist erforderlich",
+      "startedAtRequired": "Startzeit ist erforderlich",
+      "timeEntryIdRequired": "Zeiteintrags-ID ist erforderlich",
+      "volunteerRequired": "Freiwillige:r ist erforderlich"
     }
+  },
+  "Unauthorized": {
+    "homeLink": "Zu deinen Organisationen",
+    "message": "Du hast keine Berechtigung, auf diese Ressource zuzugreifen.",
+    "title": "Zugriff verweigert"
+  },
+  "Volunteer": {
+    "action": {
+      "checkInAria": "Einchecken",
+      "checkInShiftAria": "Einchecken",
+      "viewProfileAria": "Ansehen"
+    },
+    "empty": {
+      "description": "Teile den Einladungslink, damit sich Freiwillige anmelden.",
+      "title": "Noch keine Freiwilligen"
+    },
+    "page": {
+      "copyInviteLink": "Einladungslink kopieren",
+      "inviteLinkCopied": "Einladungslink in Zwischenablage kopiert",
+      "subtitle": "Verwalte Freiwillige in deiner Organisation",
+      "title": "Freiwillige"
+    },
+    "requests": {
+      "pendingEmpty": "Noch keine ausstehenden Anfragen.",
+      "rejectedEmpty": "Noch keine abgelehnten Anfragen."
+    },
+    "requiredForms": {
+      "addExisting": "Bestehendes hinzufügen",
+      "addedToast": "Formular angehängt",
+      "createNew": "Neues erstellen",
+      "dedupHint": "Freiwillige müssen Informationen, die sie bereits angegeben haben, nicht erneut eingeben.",
+      "fileUploadLabel": "Datei-Upload",
+      "noFormsFound": "Keine Formulare gefunden",
+      "pill": {
+        "none": "Keine Formulare erforderlich",
+        "required": "{count, plural, one {1 Formular erforderlich} other {{count} Formulare erforderlich}}"
+      },
+      "questionCount": "{count, plural, one {1 Frage} other {{count} Fragen}}",
+      "removeAria": "Entfernen",
+      "removedToast": "Formular entfernt",
+      "searchForms": "Formulare suchen...",
+      "subtitle": "Vor der Freigabe in {brand} › {unitName} ausgefüllt",
+      "title": "Formulare, die zum Beitritt benötigt werden",
+      "updateFailedToast": "Erforderliche Formulare konnten nicht aktualisiert werden"
+    },
+    "sheet": {
+      "addressLabel": "Adresse",
+      "birthdayLabel": "Geburtstag",
+      "emailLabel": "E-Mail",
+      "formFallback": "Formular",
+      "noSubmissions": "Noch keine eingereichten Formulare.",
+      "qrIdLabel": "QR-ID",
+      "submittedForms": "Eingereichte Formulare",
+      "titleFallback": "Freiwillige:r",
+      "userInfo": "Persönliche Informationen"
+    },
+    "table": {
+      "email": "E-Mail",
+      "name": "Name",
+      "roles": "Rollen"
+    }
+  },
+  "VolunteerHome": {
+    "checkIn": "Einchecken",
+    "checkOut": "Auschecken",
+    "conflictCollapse": "Weniger anzeigen",
+    "conflictExpand": "Alle {n} überschneidenden Einsätze anzeigen",
+    "conflictMore": "+{n} weitere",
+    "dayStripLabel": "Tagauswahl",
+    "dayStripNext": "Nächste Tage",
+    "dayStripPrevious": "Vorherige Tage",
+    "discoverConflict": "Überschneidet sich mit einem Einsatz, für den du dich angemeldet hast",
+    "discoverCta": "Einsätze entdecken",
+    "discoverEmpty": "Keine Einsätze für diese Filter",
+    "discoverEmptyBody": "Passe deine Filter an oder schau später nochmal vorbei.",
+    "discoverEmptyHome": "Zurzeit keine Einsätze zum Entdecken. Schau bald wieder vorbei.",
+    "discoverHeading": "Entdecken",
+    "discoverPendingEmptyBody": "Einsätze von {orgName} erscheinen hier, sobald deine Anfrage bestätigt ist.\nEinchecken und Deine Nachweise kannst du jederzeit nutzen.",
+    "discoverPendingEmptyTitle": "Noch nichts zu entdecken",
+    "discoverPendingSubtitle": "Einsätze von {orgName} erscheinen hier, sobald deine Anfrage bestätigt ist",
+    "discoverThisWeek": "{n, plural, one {# Einsatz diese Woche} other {# Einsätze diese Woche}}",
+    "eventCoverImageAlt": "Titelbild für {title}",
+    "filterNextWeek": "Nächste Woche",
+    "filterThisWeekend": "Dieses Wochenende",
+    "fullyBooked": "Ausgebucht",
+    "goToToday": "Zu heute",
+    "goToTop": "Nach oben",
+    "greeting": "Hallo, {firstName}!",
+    "greetingFallback": "Willkommen zurück!",
+    "invitationsEmpty": "Keine offenen Einladungen",
+    "invitationsHeading": "Einladungen",
+    "inviteAccept": "Annehmen",
+    "inviteAccepted": "Einladung angenommen",
+    "inviteActionFailed": "Etwas ist schiefgelaufen. Bitte versuche es erneut.",
+    "inviteDecline": "Ablehnen",
+    "inviteDeclined": "Einladung abgelehnt",
+    "inviteKindEvent": "Veranstaltung",
+    "inviteKindShift": "Einsatz",
+    "invitedOn": "hat dich eingeladen · gesendet {date}",
+    "loadMore": "Mehr laden",
+    "loadPast": "Vergangene laden",
+    "overlapWarning": "Du hast überschneidende Einsätze in deinem Plan",
+    "partOfEvent": "Teil von {event}",
+    "pendingBadge": "Ausstehend",
+    "pendingRequestBody": "Ein Admin schaut sich deine Anfrage an. Meistens dauert das ein paar Tage.",
+    "pendingRequestContact": "Fragen? {name} kann helfen.",
+    "pendingRequestCta": "Deine Anfragen ansehen",
+    "pendingRequestTitle": "{orgName} prüft deine Anfrage",
+    "spotsLeft": "{n, plural, one {# Platz frei} other {# Plätze frei}}",
+    "timerStartedAgo": "Gestartet vor {time}",
+    "timerStartsIn": "beginnt in {time}",
+    "timerVolunteering": "Du hilfst seit {time}",
+    "todayButton": "Heute",
+    "weekly": "Wöchentlich",
+    "yourShiftsCount": "{n, plural, one {# Einsatz} other {# Einsätze}}",
+    "yourShiftsEmpty": "Du hast keine bevorstehenden Einsätze.",
+    "yourShiftsHeading": "Deine Einsätze",
+    "yourShiftsSeeAll": "Alle anzeigen",
+    "yourShiftsThisWeek": "{n, plural, one {# Einsatz diese Woche} other {# Einsätze diese Woche}}"
   },
   "Accounting": {
     "settings": {
@@ -1407,21 +2000,6 @@
         "editButton": "Vorlage bearbeiten",
         "lastEdited": "Zuletzt bearbeitet am {date} von {name}"
       }
-    }
-  },
-  "MyTime": {
-    "title": "Meine Zeit",
-    "summary": {
-      "total": "Insgesamt geleistet"
-    },
-    "state": {
-      "inProgress": "Läuft",
-      "completed": "Abgeschlossen"
-    },
-    "empty": {
-      "title": "Noch keine Stunden",
-      "description": "Sobald du dich zu einem Einsatz eincheckst, erscheinen deine Stunden hier.",
-      "cta": "Einsatz finden"
     }
   }
 }

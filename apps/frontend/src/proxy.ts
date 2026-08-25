@@ -18,7 +18,7 @@ function isSupportedLocale(value: string): value is Locale {
 
 /**
  * Pure locale-preference decision. Returns a 307 redirect to the
- * `clippy.locale` preference when it is supported and differs from the URL
+ * `caluno.locale` preference when it is supported and differs from the URL
  * locale, otherwise `null` (let the next middleware handle the request).
  *
  * Kept free of next-intl so it can be unit-tested in isolation.
@@ -95,5 +95,7 @@ function stripLocalePrefix(pathname: string): string {
 }
 
 export const config = {
-  matcher: ['/((?!api|_next|_vercel|.*\\..*).*)'],
+  // The `sentry-tunnel` exclusion is prefix-based: no app route may ever use
+  // the `sentry-tunnel` prefix, or it would silently bypass this middleware.
+  matcher: ['/((?!api|_next|_vercel|sentry-tunnel|.*\\..*).*)'],
 };

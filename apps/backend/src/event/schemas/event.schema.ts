@@ -1,7 +1,7 @@
 import {
   boolean,
   index,
-  pgTable,
+  snakeCase,
   text,
   timestamp,
   uuid,
@@ -10,12 +10,13 @@ import { users } from '../../auth/schemas/auth.schema';
 import { idColumn, timestampColumns } from '../../database/database-columns';
 import { organizationUnits } from '../../organization/schemas/organization-unit.schema';
 
-export const events = pgTable(
+export const events = snakeCase.table(
   'events',
   {
     ...idColumn,
     title: text('title').notNull(),
     slug: text('slug').notNull().unique(),
+    description: text('description'),
     location: text('location'),
     logoUrl: text('logo_url'),
     coverUrl: text('cover_url'),

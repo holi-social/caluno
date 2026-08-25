@@ -19,7 +19,16 @@ import {
   Switch,
   Textarea,
 } from '@repo/ui';
-import { FileText, Lock, Plus, Save, Trash2, UserCircle2 } from 'lucide-react';
+import {
+  ArrowDown,
+  ArrowUp,
+  FileText,
+  Lock,
+  Plus,
+  Save,
+  Trash2,
+  UserCircle2,
+} from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useEffect, useState } from 'react';
 import {
@@ -29,9 +38,12 @@ import {
   type UseFormRegister,
   useFieldArray,
   useForm,
+  useWatch,
 } from 'react-hook-form';
 import { toast } from 'sonner';
+import { FileUpload } from '@/components/storage/file-upload';
 import { saveBlock } from '../actions';
+import { SYSTEM_PROFILE_FIELDS } from '../system-profile-fields';
 import { OptionsEditor } from './options-editor';
 
 interface BlockFormFieldInput {
@@ -44,7 +56,9 @@ interface BlockFormFieldInput {
   systemKey?: string;
   lockType?: boolean;
   options?: { label: string; value: string }[];
-  documentUrl?: string;
+  documentFileId?: string | null;
+  documentDownloadUrl?: string;
+  documentFilename?: string;
   documentLabel?: string;
 }
 
@@ -61,14 +75,14 @@ export function BlockForm({
   organizationId,
   readOnly,
   onPendingChange,
-  onCreated,
+  onSuccess,
 }: {
   blockId?: string;
   orgUId: string;
   organizationId: string;
   readOnly?: boolean;
   onPendingChange?: (isPending: boolean) => void;
-  onCreated?: (id: string) => void;
+  onSuccess: (id: string) => void;
 }) {
   const t = useTranslations('RequirementForm.block');
   const tField = useTranslations('RequirementForm.fieldForm');
@@ -80,68 +94,10 @@ export function BlockForm({
   const [fieldPickerOpen, setFieldPickerOpen] = useState(false);
   const [profilePickerOpen, setProfilePickerOpen] = useState(false);
 
-  const systemPresets = [
-    {
-      key: 'name',
-      label: tField('firstName'),
-      type: FieldType.Name,
-      required: true,
-    },
-    {
-      key: 'lastname',
-      label: tField('lastName'),
-      type: FieldType.Lastname,
-      required: true,
-    },
-    {
-      key: 'preferred-name',
-      label: tField('preferredName'),
-      type: FieldType.Text,
-      required: false,
-    },
-    {
-      key: 'email',
-      label: tField('email'),
-      type: FieldType.Email,
-      required: true,
-    },
-    {
-      key: 'phone',
-      label: tField('phone'),
-      type: FieldType.Phone,
-      required: false,
-    },
-    {
-      key: 'address',
-      label: tField('address'),
-      type: FieldType.Text,
-      required: false,
-    },
-    {
-      key: 'zip',
-      label: tField('zipCode'),
-      type: FieldType.Zip,
-      required: false,
-    },
-    {
-      key: 'city',
-      label: tField('city'),
-      type: FieldType.Text,
-      required: false,
-    },
-    {
-      key: 'birth-date',
-      label: tField('birthDate'),
-      type: FieldType.Date,
-      required: false,
-    },
-    {
-      key: 'gender',
-      label: tField('gender'),
-      type: FieldType.Text,
-      required: false,
-    },
-  ] as const;
+  const systemPresets = SYSTEM_PROFILE_FIELDS.map((field) => ({
+    ...field,
+    label: tField(field.labelKey),
+  }));
 
   const customFieldTypes = [
     { value: FieldType.Text, label: tField('shortText') },
@@ -171,7 +127,7 @@ export function BlockForm({
     [FieldType.Name]: tField('firstName'),
     [FieldType.Lastname]: tField('lastName'),
     [FieldType.Zip]: tField('zipCode'),
-    [FieldType.Iban]: 'IBAN',
+    [FieldType.Iban]: tField('iban'),
   };
 
   const {
@@ -214,7 +170,9 @@ export function BlockForm({
             systemKey: f.systemKey ?? '',
             lockType: f.lockType ?? false,
             options: f.options ?? [],
-            documentUrl: f.documentUrl ?? '',
+            documentFileId: f.documentFileId ?? null,
+            documentDownloadUrl: f.documentDownloadUrl ?? '',
+            documentFilename: f.documentFilename ?? '',
             documentLabel: f.documentLabel ?? '',
           })) ?? [],
       });
@@ -251,7 +209,7 @@ export function BlockForm({
         systemKey: f.systemKey || undefined,
         lockType: f.lockType ?? false,
         options: f.options,
-        documentUrl: f.documentUrl || undefined,
+        documentFileId: f.documentFileId,
         documentLabel: f.documentLabel || undefined,
       })),
     });
@@ -261,9 +219,7 @@ export function BlockForm({
     } else if (result?.data) {
       toast.success(isEdit ? tActions('blockSaved') : tActions('blockCreated'));
       reset(data);
-      if (!isEdit && result.data.blockId) {
-        onCreated?.(result.data.blockId);
-      }
+      onSuccess(result.data.blockId);
     } else {
       toast.error(tActions('failedToSaveBlock'));
     }
@@ -279,6 +235,9 @@ export function BlockForm({
       systemKey: '',
       lockType: false,
       options: [],
+      ...(type === FieldType.DocumentAcknowledgement
+        ? { documentFileId: null, documentLabel: '' }
+        : {}),
     });
   }
 
@@ -345,15 +304,6 @@ export function BlockForm({
             disabled={readOnly}
           />
         </Field>
-
-        <Field>
-          <FieldLabel>{t('iconLabel')}</FieldLabel>
-          <Input
-            {...register('icon')}
-            placeholder={t('iconPlaceholder')}
-            disabled={readOnly}
-          />
-        </Field>
       </div>
 
       {/* Fields */}
@@ -372,6 +322,7 @@ export function BlockForm({
           <FieldCard
             key={field.id}
             index={index}
+            orgUId={orgUId}
             control={control}
             register={register}
             errors={errors.fields?.[index]}
@@ -428,6 +379,7 @@ export function BlockForm({
 
               {/* Profile field picker */}
               <Popover
+                modal
                 open={profilePickerOpen}
                 onOpenChange={setProfilePickerOpen}
               >
@@ -510,6 +462,7 @@ export function BlockForm({
 
 function FieldCard({
   index,
+  orgUId,
   control,
   register,
   errors,
@@ -528,6 +481,7 @@ function FieldCard({
   fieldTypeLabels,
 }: {
   index: number;
+  orgUId: string;
   control: Control<BlockFormData>;
   register: UseFormRegister<BlockFormData>;
   errors?: FieldErrors<BlockFormFieldInput>;
@@ -548,9 +502,18 @@ function FieldCard({
   const t = useTranslations('RequirementForm.block');
   const tField = useTranslations('RequirementForm.fieldForm');
   const tValidation = useTranslations('RequirementForm.validation');
+  const tCommon = useTranslations('Common');
   const showOptions =
     fieldType === FieldType.SingleChoice || fieldType === FieldType.MultiChoice;
   const isDocument = fieldType === FieldType.DocumentAcknowledgement;
+  const documentPreviewUrl = useWatch({
+    control,
+    name: `fields.${index}.documentDownloadUrl`,
+  });
+  const documentFilename = useWatch({
+    control,
+    name: `fields.${index}.documentFilename`,
+  });
 
   return (
     <div className="rounded-lg border p-4 space-y-3">
@@ -587,26 +550,29 @@ function FieldCard({
               <Button
                 type="button"
                 variant="ghost"
-                size="sm"
+                size="icon"
+                tooltip={tCommon('moveUp')}
                 disabled={!canMoveUp}
                 onClick={onMoveUp}
               >
-                ↑
+                <ArrowUp className="size-4" />
               </Button>
               <Button
                 type="button"
                 variant="ghost"
-                size="sm"
+                size="icon"
+                tooltip={tCommon('moveDown')}
                 disabled={!canMoveDown}
                 onClick={onMoveDown}
               >
-                ↓
+                <ArrowDown className="size-4" />
               </Button>
               <Button
                 type="button"
                 variant="ghost"
                 size="icon"
                 className="text-muted-foreground hover:text-destructive size-8"
+                tooltip={tCommon('delete')}
                 onClick={onRemove}
               >
                 <Trash2 className="size-4" />
@@ -619,7 +585,8 @@ function FieldCard({
       <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
         <Field>
           <FieldLabel>
-            {tField('typeLabel')} <span className="text-destructive">*</span>
+            {tField('fieldTypeLabel')}{' '}
+            <span className="text-destructive">*</span>
           </FieldLabel>
           {lockType && fieldType ? (
             <div className="border-input bg-muted/50 text-muted-foreground flex h-9 w-full items-center rounded-md border px-3 text-sm">
@@ -636,7 +603,7 @@ function FieldCard({
                   disabled={readOnly}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder={tField('typePlaceholder')} />
+                    <SelectValue placeholder={tField('fieldTypePlaceholder')} />
                   </SelectTrigger>
                   <SelectContent>
                     {customFieldTypes.map((t) => (
@@ -691,20 +658,43 @@ function FieldCard({
         {isDocument && (
           <>
             <Field className="md:col-span-2">
-              <FieldLabel>{tField('documentUrlLabel')}</FieldLabel>
-              <Input
-                {...register(`fields.${index}.documentUrl`)}
-                placeholder={tField('documentUrlPlaceholder')}
-                disabled={readOnly}
+              <Controller
+                control={control}
+                name={`fields.${index}.documentFileId`}
+                rules={{ required: tField('enterDocumentFileError') }}
+                render={({ field, fieldState }) => (
+                  <FileUpload
+                    purpose="form_document"
+                    organizationUnitId={orgUId}
+                    label={tField('documentFileLabel')}
+                    value={field.value || null}
+                    initialPreviewUrl={documentPreviewUrl || null}
+                    initialFilename={documentFilename || null}
+                    disabled={readOnly}
+                    error={fieldState.error?.message}
+                    onUploaded={(result) => field.onChange(result.fileId)}
+                    onClear={() => field.onChange(null)}
+                  />
+                )}
               />
             </Field>
             <Field className="md:col-span-2">
-              <FieldLabel>{tField('documentLabelLabel')}</FieldLabel>
+              <FieldLabel>
+                {tField('documentLabelLabel')}{' '}
+                <span className="text-destructive">*</span>
+              </FieldLabel>
               <Input
-                {...register(`fields.${index}.documentLabel`)}
+                {...register(`fields.${index}.documentLabel`, {
+                  required: tField('enterDocumentLabelError'),
+                })}
                 placeholder={tField('documentLabelPlaceholder')}
                 disabled={readOnly}
               />
+              {errors?.documentLabel && (
+                <p className="text-destructive text-sm">
+                  {errors.documentLabel.message}
+                </p>
+              )}
             </Field>
           </>
         )}

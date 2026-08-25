@@ -13,6 +13,11 @@ import { SYSTEM_PROFILE_KEYS } from '../constants';
 import { FieldType, FormSubmissionStatus } from '../enums';
 import { SubmitFormInput } from '../inputs/submit-form.input';
 import type { FormSubmissionEntity } from '../schemas/form-submission.schema';
+import { parseMultiChoiceValue } from './multi-choice-value';
+import {
+  RequiredFormService,
+  type RequiredFormTarget,
+} from './required-form.service';
 import { UserProfileService } from './user-profile.service';
 
 @Injectable()
@@ -21,6 +26,7 @@ export class FormSubmissionService {
     @Inject(DATABASE_CONNECTION)
     private readonly db: Database,
     private readonly userProfileService: UserProfileService,
+    private readonly requiredFormService: RequiredFormService,
   ) {}
 
   async findOrganizationUnitIdByFormId(
@@ -71,6 +77,23 @@ export class FormSubmissionService {
     });
   }
 
+  async findMySubmission(
+    userId: string,
+    id: string,
+  ): Promise<FormSubmissionEntity | null> {
+    const submission = await this.db.query.formSubmissions.findFirst({
+      where: { id, userId },
+      with: {
+        form: {
+          with: { blockRefs: { with: { block: { with: { fields: true } } } } },
+        },
+        values: true,
+      },
+    });
+
+    return submission ?? null;
+  }
+
   async findValuesBySubmissionId(submissionId: string) {
     return this.db.query.formSubmissionValues.findMany({
       where: { submissionId },
@@ -102,7 +125,7 @@ export class FormSubmissionService {
     return this.findByUserAndOrgUnit(userId, orgUnitId);
   }
 
-  private async findByUserAndOrgUnit(
+  async findByUserAndOrgUnit(
     userId: string,
     orgUnitId: string,
   ): Promise<FormSubmissionEntity[]> {
@@ -136,6 +159,41 @@ export class FormSubmissionService {
       throw new NotFoundGraphQLError('Form not found');
     }
 
+    return this.submitToForm(form, input, userId);
+  }
+
+  async submitRequiredForm(
+    target: RequiredFormTarget,
+    formId: string,
+    input: SubmitFormInput,
+    userId: string,
+  ): Promise<FormSubmissionEntity> {
+    const requiredForms =
+      await this.requiredFormService.getRequiredForms(target);
+    const isRequired = requiredForms.some((item) => item.form.id === formId);
+
+    if (!isRequired) {
+      throw new ForbiddenGraphQLError(
+        'This form is not required for the target',
+      );
+    }
+
+    const form = await this.db.query.requirementForms.findFirst({
+      where: { id: formId },
+    });
+
+    if (!form) {
+      throw new NotFoundGraphQLError('Form not found');
+    }
+
+    return this.submitToForm(form, input, userId);
+  }
+
+  private async submitToForm(
+    form: schema.RequirementFormEntity,
+    input: SubmitFormInput,
+    userId: string,
+  ): Promise<FormSubmissionEntity> {
     const existing = await this.findByUserAndForm(userId, form.id);
     if (existing) {
       if (existing.status !== FormSubmissionStatus.REJECTED) {
@@ -228,7 +286,11 @@ export class FormSubmissionService {
       const isCheckboxType =
         fieldInfo?.type === FieldType.CHECKBOX ||
         fieldInfo?.type === FieldType.DOCUMENT_ACKNOWLEDGEMENT;
-      const missing = isCheckboxType ? value !== 'true' : !value;
+      const missing = isCheckboxType
+        ? value !== 'true'
+        : fieldInfo?.type === FieldType.MULTI_CHOICE
+          ? parseMultiChoiceValue(value ?? '').length === 0
+          : !value;
       if (missing) {
         throw new BadRequestGraphQLError(`Field "${label}" is required`);
       }
@@ -359,12 +421,6 @@ export class FormSubmissionService {
             `"${label}": must be 20 characters or fewer`,
           );
         break;
-      case FieldType.IBAN:
-        if (rawValue.length > 34)
-          throw new BadRequestGraphQLError(
-            `"${label}": must be 34 characters or fewer`,
-          );
-        break;
       case FieldType.TEXTAREA:
         if (rawValue.length > 5000)
           throw new BadRequestGraphQLError(
@@ -402,9 +458,9 @@ export class FormSubmissionService {
       }
       case FieldType.MULTI_CHOICE: {
         const valid = new Set((options ?? []).map((o) => o.value));
-        const invalid = rawValue
-          .split(',')
-          .filter((v) => valid.size > 0 && !valid.has(v));
+        const invalid = parseMultiChoiceValue(rawValue).filter(
+          (v) => valid.size > 0 && !valid.has(v),
+        );
         if (invalid.length > 0)
           throw new BadRequestGraphQLError(`"${label}": invalid option(s)`);
         break;
@@ -489,6 +545,12 @@ export class FormSubmissionService {
             );
         }
         break;
+      case 'iban':
+        if (value.length > 34)
+          throw new BadRequestGraphQLError(
+            `"${label}": must be 34 characters or fewer`,
+          );
+        break;
     }
   }
 
@@ -500,7 +562,7 @@ export class FormSubmissionService {
       return rawValue === 'true';
     }
     if (fieldType === FieldType.MULTI_CHOICE) {
-      return rawValue ? rawValue.split(',') : [];
+      return parseMultiChoiceValue(rawValue);
     }
     if (fieldType === FieldType.NUMBERS) {
       const num = Number(rawValue);

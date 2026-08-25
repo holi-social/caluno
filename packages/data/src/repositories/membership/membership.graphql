@@ -21,6 +21,10 @@ query GetOrganizationUnitMemberships {
   }
 }
 
+query GetMyMembershipStatus($organizationUnitId: ID!) {
+  myMembershipStatus(organizationUnitId: $organizationUnitId)
+}
+
 mutation UpdateMembershipRoles($membershipId: ID!, $roleIds: [ID!]!) {
   updateMembershipRoles(membershipId: $membershipId, roleIds: $roleIds) {
     id
@@ -40,6 +44,62 @@ mutation UpdateMembershipRoles($membershipId: ID!, $roleIds: [ID!]!) {
       name
       description
       isInternal
+    }
+  }
+}
+
+mutation LeaveMembership($id: ID!) {
+  leaveMembership(id: $id) {
+    id
+  }
+}
+
+query MyMemberships {
+  myMemberships {
+    id
+    createdAt
+    organizationUnit {
+      id
+      name
+      logoUrl
+      type {
+        icon
+      }
+      parent {
+        id
+      }
+      organization {
+        name
+      }
+    }
+    roles {
+      id
+      name
+    }
+  }
+}
+
+query MyMembership($id: ID!) {
+  myMembership(id: $id) {
+    id
+    createdAt
+    organizationUnit {
+      id
+      name
+      logoUrl
+      type {
+        icon
+      }
+      parent {
+        id
+      }
+      organization {
+        name
+      }
+    }
+    roles {
+      id
+      name
     }
   }
 }

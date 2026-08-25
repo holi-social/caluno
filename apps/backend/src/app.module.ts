@@ -5,11 +5,13 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { GraphQLModule } from '@nestjs/graphql';
+import { SentryModule } from '@sentry/nestjs/setup';
 import {
   AuthGuard,
   AuthModule as BetterAuthModule,
 } from '@thallesp/nestjs-better-auth';
 import { betterAuth } from 'better-auth';
+import { AccountingModule } from './accounting/accounting.module';
 import { createAuthConfig } from './auth/auth';
 import { AuthModule } from './auth/auth.module';
 import { PermissionGuard } from './auth/guards/permission.guard';
@@ -31,7 +33,12 @@ import { passwordResetTemplate } from './notification/email/templates/password-r
 import { NotificationModule } from './notification/notification.module';
 import { OrganizationModule } from './organization/organization.module';
 import { RequirementProfileModule } from './requirement-profile/requirement-profile.module';
+import { ObservabilityModule } from './shared/observability/observability.module';
+import { PostHogService } from './shared/observability/posthog.service';
+import { validatePostHogEnv } from './shared/observability/validate-posthog-env';
+import { validateSentryEnv } from './shared/observability/validate-sentry-env';
 import { ShiftModule } from './shift/shift.module';
+import { StorageModule } from './storage/storage.module';
 import { TimeTrackingModule } from './time-tracking/time-tracking.module';
 import { UserModule } from './user/user.module';
 import { UserService } from './user/user.service';
@@ -43,8 +50,11 @@ const autoSchemaFile =
 
 @Module({
   imports: [
+    SentryModule.forRoot(),
+    ObservabilityModule,
     ConfigModule.forRoot({
       isGlobal: true,
+      validate: (config) => validatePostHogEnv(validateSentryEnv(config)),
     }),
     EventEmitterModule.forRoot({
       wildcard: true,
@@ -83,6 +93,7 @@ const autoSchemaFile =
         ConfigModule,
         NotificationModule,
         AppI18nModule,
+        ObservabilityModule,
       ],
       useFactory: (
         database: Database,
@@ -90,6 +101,7 @@ const autoSchemaFile =
         emailService: EmailService,
         userLocaleService: UserLocaleService,
         appI18n: AppI18nService,
+        postHogService: PostHogService,
       ) => {
         const webUrl = configService.getOrThrow<string>('WEB_URL');
         const shouldVerifyEmail = process.env.NODE_ENV === 'production';
@@ -101,6 +113,12 @@ const autoSchemaFile =
               trustedOrigins: [webUrl],
               cookieDomain: configService.get('COOKIE_DOMAIN'),
               emailVerificationEnabled: shouldVerifyEmail,
+              onSessionCreated: (userId) => {
+                postHogService.captureUserLoggedIn(userId);
+              },
+              onUserCreated: (userId) => {
+                postHogService.captureUserSignedUp(userId);
+              },
               sendResetPassword: async ({ email, token, userId, headers }) => {
                 const locale = await userLocaleService.resolveForUser(
                   userId,
@@ -162,6 +180,7 @@ const autoSchemaFile =
         EmailService,
         UserLocaleService,
         AppI18nService,
+        PostHogService,
       ],
     }),
     UserModule,
@@ -174,8 +193,10 @@ const autoSchemaFile =
     GraphqlModule,
     ShiftModule,
     EventModule,
+    StorageModule,
     BetterAuthModule,
     AuthModule,
+    AccountingModule,
   ],
   controllers: [],
   providers: [

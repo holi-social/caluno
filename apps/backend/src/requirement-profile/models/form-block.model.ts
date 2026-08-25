@@ -14,10 +14,10 @@ export class FormBlock {
   title!: string;
 
   @Field(() => String, { nullable: true })
-  description!: string | null;
+  description?: string | null;
 
   @Field(() => String, { nullable: true })
-  icon!: string | null;
+  icon?: string | null;
 
   @Field(() => Boolean)
   required!: boolean;
@@ -35,7 +35,7 @@ export class FormBlock {
   updatedAt!: Date;
 
   @Field(() => [FormBlockField], { nullable: true })
-  fields!: FormBlockField[];
+  fields?: FormBlockField[] | null;
 
   @Field(() => Boolean)
   isEditable!: boolean;

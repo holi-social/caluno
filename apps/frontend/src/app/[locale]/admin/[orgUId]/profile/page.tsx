@@ -1,9 +1,10 @@
 import { getTranslations, setRequestLocale } from 'next-intl/server';
-import { LocaleSwitcher } from '@/components/locale-switcher';
+import { ProfileForm } from '@/domain/user/components/profile-form';
+import { Link } from '@/i18n/navigation';
 import { resolveLocale } from '@/i18n/routing';
 
 interface ProfilePageProps {
-  params: Promise<{ locale: string; orgUId: string }>;
+  params: Promise<{ locale: string }>;
 }
 
 export default async function ProfilePage({ params }: ProfilePageProps) {
@@ -16,7 +17,14 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
   return (
     <div className="space-y-6">
       <h1 className="page-title">{t('title')}</h1>
-      <LocaleSwitcher />
+      <ProfileForm />
+      {t.rich('moreSettingsPrompt', {
+        link: (chunk) => (
+          <Link href="/profile" className="underline">
+            {chunk}
+          </Link>
+        ),
+      })}
     </div>
   );
 }

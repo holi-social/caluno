@@ -20,12 +20,13 @@ import {
   ClipboardListIcon,
   ClockIcon,
   CoinsIcon,
+  HandHeart,
   LayoutListIcon,
   LogOutIcon,
   NetworkIcon,
   ScanQrCode,
-  SettingsIcon,
   ShieldIcon,
+  TicketIcon,
   UsersIcon,
 } from 'lucide-react';
 import { useParams } from 'next/navigation';
@@ -45,10 +46,13 @@ export function DashboardSidebar({ permissions }: DashboardSidebarProps) {
   const orgUId = params.orgUId as string | undefined;
   const t = useTranslations('Navigation');
   const tCommon = useTranslations('Common');
+  const permissionSet = useMemo(() => new Set(permissions), [permissions]);
+  const canViewVolunteers = permissionSet.has(PermissionKey.VolunteerView);
 
   const { data: pendingCount } = useMembershipRequestCount(
     orgUId ?? '',
     MembershipRequestStatus.Pending,
+    canViewVolunteers,
   );
 
   const menuItems = useMemo(() => {
@@ -59,6 +63,11 @@ export function DashboardSidebar({ permissions }: DashboardSidebarProps) {
         titleKey: 'overview',
         href: `/admin/${orgUId}`,
         icon: BuildingIcon,
+      },
+      {
+        titleKey: 'events',
+        href: `/admin/${orgUId}/events`,
+        icon: TicketIcon,
       },
       {
         titleKey: 'shifts',
@@ -77,7 +86,7 @@ export function DashboardSidebar({ permissions }: DashboardSidebarProps) {
         count: pendingCount,
       },
       {
-        titleKey: 'checkInOut',
+        titleKey: 'checkIn',
         href: `/admin/${orgUId}/check-in/scan`,
         icon: ScanQrCode,
       },
@@ -85,6 +94,11 @@ export function DashboardSidebar({ permissions }: DashboardSidebarProps) {
         titleKey: 'requirementForms',
         href: `/admin/${orgUId}/requirement-forms`,
         icon: ClipboardListIcon,
+      },
+      {
+        titleKey: 'volunteering',
+        href: `/`,
+        icon: HandHeart,
       },
     ];
   }, [orgUId, pendingCount]);
@@ -106,17 +120,10 @@ export function DashboardSidebar({ permissions }: DashboardSidebarProps) {
     ];
   }, [orgUId]);
 
-  const permissionSet = useMemo(() => new Set(permissions), [permissions]);
-
   const settingsItems = useMemo(() => {
     if (!orgUId) return [];
 
     return [
-      {
-        titleKey: 'settings',
-        href: `/admin/${orgUId}/settings`,
-        icon: SettingsIcon,
-      },
       {
         titleKey: 'roles',
         href: `/admin/${orgUId}/settings/roles`,
@@ -202,7 +209,7 @@ export function DashboardSidebar({ permissions }: DashboardSidebarProps) {
 
         {settingsItems.length > 0 && (
           <SidebarGroup>
-            <SidebarGroupLabel>{t('settings')}</SidebarGroupLabel>
+            <SidebarGroupLabel>{t('organizationSettings')}</SidebarGroupLabel>
             <SidebarGroupContent>
               <SidebarMenu>
                 {settingsItems.map((item) => (

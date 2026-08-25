@@ -1,5 +1,7 @@
+import { ShiftInviteStatus } from '@repo/data';
 import { Alert, AlertDescription, AlertTitle } from '@repo/ui';
 import { AlertCircle } from 'lucide-react';
+import { notFound } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
 import { CheckinForm } from '@/domain/shift/components/checkin-form';
 import { getDataClient } from '@/lib/data-client';
@@ -12,31 +14,46 @@ interface CheckinPageProps {
 //  TODO: what's the true different states
 export type CheckInStatus =
   | 'valid'
+  | 'notMember'
   | 'blocked'
-  | 'information-required'
-  | 'id-check'
-  | 'already-checked-in';
+  | 'informationRequired'
+  | 'idCheckRequired'
+  | 'alreadyCheckedIn';
 
 export default async function CheckinPage({ params }: CheckinPageProps) {
   const { orgUId, checkInId } = await params;
+  const t = await getTranslations('Shift.checkIn');
 
   await requireOrgAccess(orgUId);
   const data = await getDataClient({ orgUId });
   const user = await data.user.findByCheckInId(checkInId);
 
-  const activeShiftsResult = await data.shift.activeShifts({
-    limit: 100,
-    offset: 0,
-  });
-
-  const t = await getTranslations('Shift.checkIn');
-
   if (!user) {
-    return;
+    notFound();
   }
 
-  //  TODO: temporary status checking, until blocking & dossier features land
-  const status: CheckInStatus = 'valid' as CheckInStatus;
+  const isMember = await data.organizationUnit.isMemberOfOrgUnitOrAncestor(
+    orgUId,
+    user.id,
+  );
+
+  const shiftsInstances = await data.shift.activeShiftInstances(user.id);
+  const acceptedShiftsFirst = shiftsInstances.sort((a, b) => {
+    const participatingInA =
+      a.invite?.status === ShiftInviteStatus.Accepted ||
+      a.invite?.status === ShiftInviteStatus.SelfJoined;
+    const participatingInB =
+      b.invite?.status === ShiftInviteStatus.Accepted ||
+      b.invite?.status === ShiftInviteStatus.SelfJoined;
+    return (
+      Number(participatingInB) - Number(participatingInA) ||
+      new Date(a.actualStartsAt).getTime() -
+        new Date(b.actualStartsAt).getTime()
+    );
+  });
+
+  //  TODO: temporary status checking, until blocking & requirement profile checks land
+  const status: CheckInStatus = isMember ? 'valid' : 'notMember';
 
   return (
     <div className="max-w-2xl">
@@ -45,17 +62,19 @@ export default async function CheckinPage({ params }: CheckinPageProps) {
           <h1 className="page-title">{t('checkInTitle')}</h1>
         </div>
         <div className="lg:px-2 lg:py-8 py-4 space-y-4">
-          {status === 'blocked' && (
+          {status !== 'valid' && (
             <Alert variant="destructive">
               <AlertCircle />
-              <AlertTitle>{t('blockedTitle')}</AlertTitle>
-              <AlertDescription>{t('blockedDescription')}</AlertDescription>
+              <AlertTitle>{t(`invalidCheckin.${status}.title`)}</AlertTitle>
+              <AlertDescription>
+                {t(`invalidCheckin.${status}.description`)}
+              </AlertDescription>
             </Alert>
           )}
 
           <CheckinForm
             volunteer={user}
-            shifts={activeShiftsResult.items}
+            shifts={acceptedShiftsFirst}
             organizationUnitId={orgUId}
             status={status}
           />

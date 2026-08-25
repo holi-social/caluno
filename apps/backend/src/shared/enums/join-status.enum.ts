@@ -1,6 +1,7 @@
 import { registerEnumType } from '@nestjs/graphql';
 
 export enum JoinStatus {
+  NONE = 'NONE',
   JOINED = 'JOINED',
   PENDING = 'PENDING',
   REJECTED = 'REJECTED',

@@ -1,12 +1,34 @@
 import { spawnSync } from 'node:child_process';
 import { Client } from 'pg';
 
+let cachedTestDatabaseName: string | undefined;
+let ensurePromise: Promise<string> | null = null;
+const resourceCleanups: Array<() => Promise<void>> = [];
+
+const getBackendRoot = () => {
+  const cwd = process.cwd();
+  return cwd.endsWith('apps/backend') ? cwd : `${cwd}/apps/backend`;
+};
+
+const createAdminClient = () =>
+  new Client({
+    host: process.env.DB_HOST,
+    port: parseInt(process.env.DB_PORT ?? '5432', 10),
+    user: process.env.DB_USER,
+    password: process.env.DB_PASSWORD,
+    database: 'postgres',
+    ssl: false,
+  });
+
 export const getTestDatabaseName = (): string => {
-  const baseName = process.env.POSTGRES_DB ?? 'clippy';
-  if (baseName.endsWith('_test')) {
-    return baseName;
+  if (cachedTestDatabaseName) {
+    return cachedTestDatabaseName;
   }
-  return `${baseName}_test`;
+
+  const baseName = process.env.POSTGRES_DB ?? 'caluno';
+  const normalizedBase = baseName.replace(/_test.*$/, '');
+  cachedTestDatabaseName = `${normalizedBase}_test_${process.pid}_${Date.now().toString(36)}`;
+  return cachedTestDatabaseName;
 };
 
 export const applyTestDatabaseEnvironment = (): string => {
@@ -21,9 +43,43 @@ export const applyTestDatabaseEnvironment = (): string => {
   return testDbName;
 };
 
-const getBackendRoot = () => {
-  const cwd = process.cwd();
-  return cwd.endsWith('apps/backend') ? cwd : `${cwd}/apps/backend`;
+export const registerTestResourceCleanup = (
+  cleanup: () => Promise<void>,
+): void => {
+  resourceCleanups.push(cleanup);
+};
+
+export const createFreshTestDatabase = async (
+  testDbName: string,
+): Promise<void> => {
+  const adminClient = createAdminClient();
+  await adminClient.connect();
+
+  try {
+    await adminClient.query(`DROP DATABASE IF EXISTS "${testDbName}";`);
+    await adminClient.query(`CREATE DATABASE "${testDbName}";`);
+    console.log(`Created fresh test database ${testDbName}.`);
+  } finally {
+    await adminClient.end();
+  }
+};
+
+export const dropTestDatabase = async (testDbName: string): Promise<void> => {
+  const adminClient = createAdminClient();
+  await adminClient.connect();
+
+  try {
+    await adminClient.query(
+      `SELECT pg_terminate_backend(pid)
+       FROM pg_stat_activity
+       WHERE datname = $1 AND pid <> pg_backend_pid();`,
+      [testDbName],
+    );
+    await adminClient.query(`DROP DATABASE IF EXISTS "${testDbName}";`);
+    console.log(`Dropped test database ${testDbName}.`);
+  } finally {
+    await adminClient.end();
+  }
 };
 
 export const runMigrationsAndSeed = (testDbName: string): void => {
@@ -56,37 +112,30 @@ export const runMigrationsAndSeed = (testDbName: string): void => {
   }
 };
 
+export const teardownTestDatabase = async (): Promise<void> => {
+  const testDbName = cachedTestDatabaseName;
+
+  for (const cleanup of [...resourceCleanups].reverse()) {
+    await cleanup();
+  }
+  resourceCleanups.length = 0;
+
+  if (testDbName) {
+    await dropTestDatabase(testDbName);
+    cachedTestDatabaseName = undefined;
+    ensurePromise = null;
+  }
+};
+
 export const ensureTestDatabase = async (): Promise<string> => {
-  const testDbName = applyTestDatabaseEnvironment();
-
-  const port = parseInt(process.env.DB_PORT ?? '5432', 10);
-
-  const adminClient = new Client({
-    host: process.env.DB_HOST,
-    port,
-    user: process.env.DB_USER,
-    password: process.env.DB_PASSWORD,
-    database: 'postgres',
-    ssl: false,
-  });
-
-  await adminClient.connect();
-
-  try {
-    const result = await adminClient.query<{ exists: boolean }>(
-      'SELECT EXISTS(SELECT 1 FROM pg_database WHERE datname = $1) AS exists;',
-      [testDbName],
-    );
-
-    if (!result.rows[0]?.exists) {
-      await adminClient.query(`CREATE DATABASE "${testDbName}";`);
-      console.log(`Created test database ${testDbName}.`);
-    }
-  } finally {
-    await adminClient.end();
+  if (!ensurePromise) {
+    ensurePromise = (async () => {
+      const testDbName = applyTestDatabaseEnvironment();
+      await createFreshTestDatabase(testDbName);
+      runMigrationsAndSeed(testDbName);
+      return testDbName;
+    })();
   }
 
-  runMigrationsAndSeed(testDbName);
-
-  return testDbName;
+  return ensurePromise;
 };

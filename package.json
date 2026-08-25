@@ -1,5 +1,5 @@
 {
-  "name": "clippy",
+  "name": "caluno",
   "private": true,
   "scripts": {
     "build": "turbo run build",
@@ -7,15 +7,17 @@
     "lint": "turbo run format-and-lint",
     "format": "turbo run format-and-lint:fix",
     "check-types": "turbo run check-types",
+    "check": "turbo run all-checks && bun test",
     "format-and-lint": "biome check .",
     "format-and-lint:fix": "biome check . --write",
     "format-and-lint:staged": "biome check --staged --write",
-    "db:up": "docker compose up -d postgres && bun run db:wait",
+    "db:up": "docker compose up -d postgres minio minio-init mailpit && bun run db:wait",
     "db:down": "docker compose down",
     "db:bootstrap": "bun run scripts/bootstrap-db.ts",
     "bootstrap": "bun run db:bootstrap && turbo run dev",
     "db:wait": "docker compose exec postgres sh -c 'until pg_isready -U ${POSTGRES_USER:-postgres}; do sleep 1; done'",
     "db:migrate": "bun run --cwd apps/backend db:migrate",
+    "db:generate": "bun run --cwd apps/backend db:generate",
     "db:seed": "bun run --cwd apps/backend db:seed",
     "codegen": "turbo run codegen",
     "setup:hooks": "bash .ai/scripts/install-hooks.sh"

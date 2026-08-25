@@ -1,19 +1,35 @@
 'use client';
 
+import type { Locale } from '@repo/data';
 import { Button, Input } from '@repo/ui';
-import { useTranslations } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 import { useState } from 'react';
 import { Link, useRouter } from '@/i18n/navigation';
 import { signIn, signUp } from '@/lib/auth';
+import { setLocaleCookieIfSupported } from '@/lib/locale-cookie';
 import { getVerifyEmailPath } from '@/lib/verify-email-url';
+
+function switchAuthHref(
+  path: '/signup' | '/login',
+  orgUId?: string,
+  redirectTo?: string,
+) {
+  const params = new URLSearchParams();
+  if (orgUId) params.set('orgUId', orgUId);
+  if (redirectTo && redirectTo !== '/') params.set('redirectTo', redirectTo);
+  const query = params.toString();
+  return query ? `${path}?${query}` : path;
+}
 
 interface SignupFormProps {
   redirectTo?: string;
+  orgUId?: string;
 }
 
-export function SignupForm({ redirectTo = '/' }: SignupFormProps) {
+export function SignupForm({ redirectTo = '/', orgUId }: SignupFormProps) {
   const t = useTranslations('Auth.signup');
   const router = useRouter();
+  const currentLocale = useLocale();
   const [error, setError] = useState<string | null>(null);
   const [isPending, setIsPending] = useState(false);
 
@@ -45,7 +61,12 @@ export function SignupForm({ redirectTo = '/' }: SignupFormProps) {
           return;
         }
 
-        router.push(redirectTo);
+        const userLocale = setLocaleCookieIfSupported(
+          (signInResult.data.user as { locale?: unknown }).locale,
+        );
+        router.push(redirectTo, {
+          locale: userLocale ?? (currentLocale as Locale),
+        });
         router.refresh();
         return;
       }
@@ -58,7 +79,7 @@ export function SignupForm({ redirectTo = '/' }: SignupFormProps) {
   }
 
   return (
-    <form onSubmit={handleSignupSubmit} className="mt-8 space-y-6">
+    <form onSubmit={handleSignupSubmit} className="space-y-6">
       {error && (
         <div className="rounded-md bg-destructive/10 p-4 text-sm text-destructive">
           {error}
@@ -123,7 +144,8 @@ export function SignupForm({ redirectTo = '/' }: SignupFormProps) {
       <p className="text-center text-sm text-muted-foreground">
         {t('hasAccount')}{' '}
         <Link
-          href="/login"
+          href={switchAuthHref('/login', orgUId, redirectTo)}
+          prefetch={false}
           className="font-medium text-primary hover:underline"
         >
           {t('signInLink')}

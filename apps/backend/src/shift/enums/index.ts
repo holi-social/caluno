@@ -3,10 +3,15 @@ export enum ShiftVisibility {
   ALL_MEMBERS = 'ALL_MEMBERS',
 }
 
+export { SortOrder } from './sort-order.enum';
+
 export enum ShiftInviteStatus {
-  PENDING = 'PENDING',
+  INVITED = 'INVITED',
   ACCEPTED = 'ACCEPTED',
-  REJECTED = 'REJECTED',
+  VOLUNTEER_REJECTED = 'VOLUNTEER_REJECTED',
+  ADMIN_REJECTED = 'ADMIN_REJECTED',
+  CANCELLED = 'CANCELLED',
+  SELF_JOINED = 'SELF_JOINED',
 }
 
 export enum RecurrenceDay {

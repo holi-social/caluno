@@ -1,4 +1,4 @@
-import { Inject, Injectable, NotFoundException } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { and, eq, inArray } from 'drizzle-orm';
 import type { Database } from '../database/database.module';
 import { DATABASE_CONNECTION } from '../database/database-connection';
@@ -9,8 +9,8 @@ import {
   RoleEntity,
   UserEntity,
 } from '../database/schema';
-import { NotFoundGraphQLError } from '../graphql/errors';
-import { OrganizationUnitService } from '../organization/organization-unit.service';
+import { ForbiddenGraphQLError, NotFoundGraphQLError } from '../graphql/errors';
+import { OrganizationUnitDataService } from '../organization/organization-unit-data.service';
 import { PERMISSION_GROUPS } from './constants/permission-groups';
 import { CreateRoleInput } from './inputs/create-role.input';
 import { UpdateRoleInput } from './inputs/update-role.input';
@@ -20,7 +20,7 @@ export class AuthService {
   constructor(
     @Inject(DATABASE_CONNECTION)
     private readonly db: Database,
-    private readonly organizationUnitService: OrganizationUnitService,
+    private readonly organizationUnitDataService: OrganizationUnitDataService,
   ) {}
 
   async createRole(
@@ -59,7 +59,7 @@ export class AuthService {
     organizationUnitId: string,
   ): Promise<PermissionEntity[]> {
     const ancestorUnitIds =
-      await this.organizationUnitService.listInclusiveAncestorUnitIds(
+      await this.organizationUnitDataService.listInclusiveAncestorUnitIds(
         organizationUnitId,
       );
 
@@ -101,7 +101,7 @@ export class AuthService {
     organizationUnitId: string,
   ): Promise<Set<string>> {
     const ancestorUnitIds =
-      await this.organizationUnitService.listInclusiveAncestorUnitIds(
+      await this.organizationUnitDataService.listInclusiveAncestorUnitIds(
         organizationUnitId,
       );
 
@@ -139,7 +139,7 @@ export class AuthService {
     permissionKey: string,
   ): Promise<Array<Pick<UserEntity, 'id' | 'email' | 'name'>>> {
     const ancestorUnitIds =
-      await this.organizationUnitService.listInclusiveAncestorUnitIds(
+      await this.organizationUnitDataService.listInclusiveAncestorUnitIds(
         organizationUnitId,
       );
 
@@ -284,6 +284,18 @@ export class AuthService {
     const [updatedRole] = await this.db.transaction(async (tx) => {
       const updateData: Partial<typeof schema.roles.$inferInsert> = {};
 
+      const roleToUpdate = await tx.query.roles.findFirst({
+        where: { id: roleId },
+      });
+
+      if (!roleToUpdate) {
+        throw new NotFoundGraphQLError('Role not found');
+      }
+
+      if (roleToUpdate.isInternal) {
+        throw new ForbiddenGraphQLError('Cannot modify internal roles');
+      }
+
       if (input.name !== undefined) {
         updateData.name = input.name;
       }
@@ -299,7 +311,7 @@ export class AuthService {
         .returning();
 
       if (!role) {
-        throw new NotFoundException('Role not found');
+        throw new NotFoundGraphQLError('Role not found');
       }
 
       if (input.permissionIds !== undefined) {
@@ -325,13 +337,25 @@ export class AuthService {
 
   async deleteRole(roleId: string): Promise<RoleEntity> {
     const [deletedRole] = await this.db.transaction(async (tx) => {
+      const roleToDelete = await tx.query.roles.findFirst({
+        where: { id: roleId },
+      });
+
+      if (!roleToDelete) {
+        throw new NotFoundGraphQLError('Role not found');
+      }
+
+      if (roleToDelete.isInternal) {
+        throw new ForbiddenGraphQLError('Cannot delete internal roles');
+      }
+
       const [role] = await tx
         .delete(schema.roles)
         .where(eq(schema.roles.id, roleId))
         .returning();
 
       if (!role) {
-        throw new NotFoundException('Role not found');
+        throw new NotFoundGraphQLError('Role not found');
       }
 
       return [role];
@@ -344,12 +368,12 @@ export class AuthService {
     organizationUnitId: string,
   ): Promise<OrganizationEntity> {
     const organization =
-      await this.organizationUnitService.findOrganizationByUnitId(
+      await this.organizationUnitDataService.findOrganizationByUnitId(
         organizationUnitId,
       );
 
     if (!organization) {
-      throw new NotFoundException('Organization not found');
+      throw new NotFoundGraphQLError('Organization not found');
     }
 
     return organization;

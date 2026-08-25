@@ -4,6 +4,12 @@ import { emailOTP } from 'better-auth/plugins';
 import { Database } from '../database/database.module';
 import { resolveRequestLocale } from '../graphql/locale';
 import { headersFromRequest } from './auth-headers';
+import {
+  accounts,
+  sessions,
+  users,
+  verifications,
+} from './schemas/auth.schema';
 
 type EmailOtpType =
   | 'sign-in'
@@ -28,11 +34,13 @@ export interface SendResetPasswordOptions {
 export interface AuthConfigOptions {
   database: Database | object;
   trustedOrigins: string[];
-  /** Root domain for cross-subdomain cookies (e.g. "clippy.holi.social"). Set when frontend and API use different subdomains. */
+  /** Root domain for cross-subdomain cookies (e.g. "caluno.org"). Set when frontend and API use different subdomains. */
   cookieDomain?: string;
   emailVerificationEnabled?: boolean;
   sendVerificationOTP: (options: SendVerificationOtpOptions) => Promise<void>;
   sendResetPassword: (options: SendResetPasswordOptions) => Promise<void>;
+  onSessionCreated?: (userId: string) => void;
+  onUserCreated?: (userId: string) => void;
 }
 
 export const createAuthConfig = ({
@@ -42,8 +50,16 @@ export const createAuthConfig = ({
   emailVerificationEnabled = true,
   sendVerificationOTP,
   sendResetPassword,
+  onSessionCreated,
+  onUserCreated,
 }: AuthConfigOptions): BetterAuthOptions => ({
   database: drizzleAdapter(database, {
+    schema: {
+      users,
+      sessions,
+      accounts,
+      verifications,
+    },
     usePlural: true,
     provider: 'pg',
   }),
@@ -67,6 +83,20 @@ export const createAuthConfig = ({
               locale,
             },
           };
+        },
+        after: async (user) => {
+          if (typeof user.id === 'string') {
+            onUserCreated?.(user.id);
+          }
+        },
+      },
+    },
+    session: {
+      create: {
+        after: async (session) => {
+          if (typeof session.userId === 'string') {
+            onSessionCreated?.(session.userId);
+          }
         },
       },
     },
