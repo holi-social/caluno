@@ -2,6 +2,7 @@ import { Args, Context, ID, Int, Query, Resolver } from '@nestjs/graphql';
 import { Session, type UserSession } from '@thallesp/nestjs-better-auth';
 import { PERMISSIONS } from '../../auth/constants';
 import { Permissions } from '../../auth/decorators/permissions.decorator';
+import { NotFoundGraphQLError } from '../../graphql/errors';
 import type { AuthenticatedGraphQLContext } from '../../graphql/graphql.context';
 import { OrganizationUnitService } from '../../organization/organization-unit.service';
 import { UserMapper } from '../../user/mappers/user.mapper';
@@ -34,14 +35,20 @@ export class ReimbursementQueryResolver {
     organizationUnitId: string | null | undefined,
     @Context() context: AuthenticatedGraphQLContext,
   ): Promise<EffectiveRate[]> {
-    const targetUnitId = organizationUnitId ?? context.organizationUnitId;
     const organizationId =
       await this.organizationUnitService.findOrganizationIdByUnitId(
-        targetUnitId,
+        context.organizationUnitId,
       );
     if (!organizationId) {
       return [];
     }
+    if (
+      organizationUnitId &&
+      organizationUnitId !== context.organizationUnitId
+    ) {
+      await this.assertUnitInScope(context, organizationUnitId);
+    }
+    const targetUnitId = organizationUnitId ?? context.organizationUnitId;
 
     const rates = await this.reimbursementRateService.getEffectiveRates(
       organizationId,
@@ -76,7 +83,19 @@ export class ReimbursementQueryResolver {
   async rosterYearlyUsage(
     @Args('organizationUnitId', { type: () => ID }) organizationUnitId: string,
     @Args('year', { type: () => Int }) year: number,
+    @Context() context: AuthenticatedGraphQLContext,
   ): Promise<VolunteerYearlyUsage[]> {
+    const organizationId =
+      await this.organizationUnitService.findOrganizationIdByUnitId(
+        context.organizationUnitId,
+      );
+    if (!organizationId) {
+      throw new NotFoundGraphQLError('Organization not found');
+    }
+    if (organizationUnitId !== context.organizationUnitId) {
+      await this.assertUnitInScope(context, organizationUnitId);
+    }
+
     const usage = await this.reimbursementRateService.getRosterYearlyUsage(
       organizationUnitId,
       year,
@@ -92,5 +111,24 @@ export class ReimbursementQueryResolver {
         remainingCents: typeUsage.remainingCents,
       })),
     }));
+  }
+
+  /**
+   * Ensures the caller's own unit (from context) is the target unit itself
+   * or one of its ancestors — i.e. the target is within the caller's
+   * subtree. Rejects siblings, unrelated branches, and units above the
+   * caller's own scope.
+   */
+  private async assertUnitInScope(
+    context: AuthenticatedGraphQLContext,
+    targetUnitId: string,
+  ): Promise<void> {
+    const ancestorIds =
+      await this.organizationUnitService.listInclusiveAncestorUnitIds(
+        targetUnitId,
+      );
+    if (!ancestorIds.includes(context.organizationUnitId)) {
+      throw new NotFoundGraphQLError('Organization unit not found');
+    }
   }
 }

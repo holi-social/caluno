@@ -33,12 +33,15 @@ export class ReimbursementMutationResolver {
     if (!organizationId) {
       throw new NotFoundGraphQLError('Organization not found');
     }
-    if (organizationUnitId) {
-      const targetOrgId =
-        await this.organizationUnitService.findOrganizationIdByUnitId(
+    if (
+      organizationUnitId &&
+      organizationUnitId !== context.organizationUnitId
+    ) {
+      const ancestorIds =
+        await this.organizationUnitService.listInclusiveAncestorUnitIds(
           organizationUnitId,
         );
-      if (targetOrgId !== organizationId) {
+      if (!ancestorIds.includes(context.organizationUnitId)) {
         throw new NotFoundGraphQLError('Organization unit not found');
       }
     }
