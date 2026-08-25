@@ -181,6 +181,20 @@ export const requirementProfilesRelations = defineRelationsPart(
         from: r.formSubmissions.id,
         to: r.formSubmissionValues.submissionId,
       }),
+      shares: r.many.formSubmissionShares({
+        from: r.formSubmissions.id,
+        to: r.formSubmissionShares.submissionId,
+      }),
+    },
+    formSubmissionShares: {
+      submission: r.one.formSubmissions({
+        from: r.formSubmissionShares.submissionId,
+        to: r.formSubmissions.id,
+      }),
+      organizationUnit: r.one.organizationUnits({
+        from: r.formSubmissionShares.organizationUnitId,
+        to: r.organizationUnits.id,
+      }),
     },
     formSubmissionValues: {
       submission: r.one.formSubmissions({

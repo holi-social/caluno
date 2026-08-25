@@ -5,12 +5,17 @@ import { DATABASE_CONNECTION } from '../../database/database-connection';
 import * as schema from '../../database/schema';
 import {
   BadRequestGraphQLError,
+  ConflictGraphQLError,
   ForbiddenGraphQLError,
   NotFoundGraphQLError,
 } from '../../graphql/errors';
 import type { PaginationInput } from '../../graphql/pagination.input';
 import { SYSTEM_PROFILE_KEYS } from '../constants';
-import { FieldType, FormSubmissionStatus } from '../enums';
+import {
+  FieldType,
+  FormSubmissionStatus,
+  RequiredFormTargetType,
+} from '../enums';
 import { SubmitFormInput } from '../inputs/submit-form.input';
 import type { FormSubmissionEntity } from '../schemas/form-submission.schema';
 import { parseMultiChoiceValue } from './multi-choice-value';
@@ -133,17 +138,20 @@ export class FormSubmissionService {
       .select({ submission: schema.formSubmissions })
       .from(schema.formSubmissions)
       .innerJoin(
-        schema.requirementForms,
-        eq(schema.formSubmissions.formId, schema.requirementForms.id),
+        schema.formSubmissionShares,
+        eq(
+          schema.formSubmissionShares.submissionId,
+          schema.formSubmissions.id,
+        ),
       )
       .where(
         and(
           eq(schema.formSubmissions.userId, userId),
-          eq(schema.requirementForms.organizationUnitId, orgUnitId),
+          eq(schema.formSubmissionShares.organizationUnitId, orgUnitId),
         ),
       )
       .orderBy(asc(schema.formSubmissions.submittedAt));
-    return rows.map((r) => r.submission);
+    return rows.map((row) => row.submission);
   }
 
   async submit(
@@ -159,7 +167,7 @@ export class FormSubmissionService {
       throw new NotFoundGraphQLError('Form not found');
     }
 
-    return this.submitToForm(form, input, userId);
+    return this.submitToForm(form, input, userId, null);
   }
 
   async submitRequiredForm(
@@ -186,21 +194,75 @@ export class FormSubmissionService {
       throw new NotFoundGraphQLError('Form not found');
     }
 
-    return this.submitToForm(form, input, userId);
+    const organizationUnitId =
+      await this.resolveTargetOrganizationUnitId(target);
+    return this.submitToForm(form, input, userId, organizationUnitId);
+  }
+
+  private async resolveTargetOrganizationUnitId(
+    target: RequiredFormTarget,
+  ): Promise<string> {
+    switch (target.targetType) {
+      case RequiredFormTargetType.ORGANIZATION_UNIT:
+        return target.targetId;
+      case RequiredFormTargetType.EVENT: {
+        const event = await this.db.query.events.findFirst({
+          where: { id: target.targetId },
+          columns: { organizationUnitId: true },
+        });
+        if (!event) throw new NotFoundGraphQLError('Event not found');
+        return event.organizationUnitId;
+      }
+      case RequiredFormTargetType.SHIFT: {
+        const shift = await this.db.query.shifts.findFirst({
+          where: { id: target.targetId },
+          columns: { organizationUnitId: true },
+        });
+        if (!shift) throw new NotFoundGraphQLError('Shift not found');
+        return shift.organizationUnitId;
+      }
+      case RequiredFormTargetType.SHIFT_INSTANCE: {
+        const instance = await this.db.query.shiftInstances.findFirst({
+          where: { id: target.targetId },
+          columns: { masterId: true },
+        });
+        if (!instance) {
+          throw new NotFoundGraphQLError('Shift instance not found');
+        }
+        const shift = await this.db.query.shifts.findFirst({
+          where: { id: instance.masterId },
+          columns: { organizationUnitId: true },
+        });
+        if (!shift) throw new NotFoundGraphQLError('Shift not found');
+        return shift.organizationUnitId;
+      }
+      default:
+        throw new ConflictGraphQLError(
+          `Unsupported required-form target: ${target.targetType}`,
+        );
+    }
   }
 
   private async submitToForm(
     form: schema.RequirementFormEntity,
     input: SubmitFormInput,
     userId: string,
+    organizationUnitId: string | null,
   ): Promise<FormSubmissionEntity> {
+    const existingSubmitted = await this.db.query.formSubmissions.findFirst({
+      where: {
+        userId,
+        formId: form.id,
+        status: FormSubmissionStatus.SUBMITTED,
+      },
+    });
+    if (existingSubmitted) {
+      await this.shareWithOrgUnit(existingSubmitted.id, organizationUnitId);
+      return existingSubmitted;
+    }
+
     const existing = await this.findByUserAndForm(userId, form.id);
     if (existing) {
-      if (existing.status !== FormSubmissionStatus.REJECTED) {
-        throw new BadRequestGraphQLError(
-          'You have already submitted this form',
-        );
-      }
       // Previous submission was rejected — delete it so the user can re-submit
       await this.db
         .delete(schema.formSubmissions)
@@ -357,10 +419,25 @@ export class FormSubmissionService {
         );
       }
 
+      await this.shareWithOrgUnit(created.id, organizationUnitId, tx);
+
       return created;
     });
 
     return submission;
+  }
+
+  private async shareWithOrgUnit(
+    submissionId: string,
+    organizationUnitId: string | null,
+    tx: Database = this.db,
+  ): Promise<void> {
+    if (!organizationUnitId) return;
+
+    await tx
+      .insert(schema.formSubmissionShares)
+      .values({ submissionId, organizationUnitId })
+      .onConflictDoNothing();
   }
 
   async rejectByUserAndOrgUnit(
