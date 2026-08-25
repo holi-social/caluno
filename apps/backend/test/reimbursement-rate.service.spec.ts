@@ -630,4 +630,71 @@ describe('ReimbursementRateService', () => {
       expect(byVolunteerId.has(outsideVolunteer.id)).toBe(false);
     });
   });
+
+  describe('bundle download tracking', () => {
+    it('returns undefined when a pair has never been downloaded', async () => {
+      const type = await createReimbursementType(db);
+      const status = await service.getBundleDownloadStatus(
+        'nonexistent-user',
+        type.id,
+      );
+      expect(status).toBeUndefined();
+    });
+
+    it('records a download and returns the tracking row', async () => {
+      const volunteer = await createUser(db);
+      const downloader = await createUser(db);
+      const type = await createReimbursementType(db);
+
+      const result = await service.recordBundleDownload(
+        volunteer.id,
+        type.id,
+        downloader.id,
+      );
+
+      expect(result.volunteerId).toBe(volunteer.id);
+      expect(result.reimbursementTypeId).toBe(type.id);
+      expect(result.downloadedByUserId).toBe(downloader.id);
+      expect(result.downloadedAt).toBeInstanceOf(Date);
+    });
+
+    it('upserts on a second download for the same pair rather than duplicating', async () => {
+      const volunteer = await createUser(db);
+      const firstDownloader = await createUser(db);
+      const secondDownloader = await createUser(db);
+      const type = await createReimbursementType(db);
+
+      await service.recordBundleDownload(
+        volunteer.id,
+        type.id,
+        firstDownloader.id,
+      );
+      const second = await service.recordBundleDownload(
+        volunteer.id,
+        type.id,
+        secondDownloader.id,
+      );
+
+      expect(second.downloadedByUserId).toBe(secondDownloader.id);
+      const status = await service.getBundleDownloadStatus(
+        volunteer.id,
+        type.id,
+      );
+      expect(status?.downloadedByUserId).toBe(secondDownloader.id);
+
+      const rows = await db
+        .select()
+        .from(schema.reimbursementBundleDownloads)
+        .where(
+          and(
+            eq(schema.reimbursementBundleDownloads.volunteerId, volunteer.id),
+            eq(
+              schema.reimbursementBundleDownloads.reimbursementTypeId,
+              type.id,
+            ),
+          ),
+        );
+      expect(rows).toHaveLength(1);
+    });
+  });
 });

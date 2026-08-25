@@ -1,3 +1,4 @@
+export { BundleDownloadStatus } from './bundle-download-status.model';
 export { Contract } from './contract.model';
 export { ContractSignature } from './contract-signature.model';
 export { ContractStatusChange } from './contract-status-change.model';

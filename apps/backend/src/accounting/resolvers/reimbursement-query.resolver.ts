@@ -4,9 +4,12 @@ import { PERMISSIONS } from '../../auth/constants';
 import { Permissions } from '../../auth/decorators/permissions.decorator';
 import { NotFoundGraphQLError } from '../../graphql/errors';
 import type { AuthenticatedGraphQLContext } from '../../graphql/graphql.context';
+import { MembershipService } from '../../membership/membership.service';
 import { OrganizationUnitService } from '../../organization/organization-unit.service';
 import { UserMapper } from '../../user/mappers/user.mapper';
+import { UserService } from '../../user/user.service';
 import { ReimbursementTypeMapper } from '../mappers';
+import { BundleDownloadStatus } from '../models/bundle-download-status.model';
 import { EffectiveRate } from '../models/effective-rate.model';
 import { ReimbursementType } from '../models/reimbursement-type.model';
 import { VolunteerYearlyUsage } from '../models/volunteer-yearly-usage.model';
@@ -20,6 +23,8 @@ export class ReimbursementQueryResolver {
     private readonly reimbursementTypeMapper: ReimbursementTypeMapper,
     private readonly organizationUnitService: OrganizationUnitService,
     private readonly userMapper: UserMapper,
+    private readonly membershipService: MembershipService,
+    private readonly userService: UserService,
   ) {}
 
   @Query(() => [ReimbursementType])
@@ -113,6 +118,25 @@ export class ReimbursementQueryResolver {
     }));
   }
 
+  @Permissions(PERMISSIONS.ACCOUNTING_MANAGE)
+  @Query(() => BundleDownloadStatus, { nullable: true })
+  async bundleDownloadStatus(
+    @Args('volunteerId', { type: () => ID }) volunteerId: string,
+    @Args('reimbursementTypeId', { type: () => ID })
+    reimbursementTypeId: string,
+    @Context() context: AuthenticatedGraphQLContext,
+  ): Promise<BundleDownloadStatus | null> {
+    await this.assertVolunteerInScope(context, volunteerId);
+
+    const status = await this.reimbursementRateService.getBundleDownloadStatus(
+      volunteerId,
+      reimbursementTypeId,
+    );
+    if (!status) return null;
+
+    return this.toBundleDownloadStatusModel(status);
+  }
+
   /**
    * Ensures the caller's own unit (from context) is the target unit itself
    * or one of its ancestors — i.e. the target is within the caller's
@@ -130,5 +154,55 @@ export class ReimbursementQueryResolver {
     if (!ancestorIds.includes(context.organizationUnitId)) {
       throw new NotFoundGraphQLError('Organization unit not found');
     }
+  }
+
+  /**
+   * Ensures the volunteer has a membership whose org unit is the caller's
+   * own unit (from context) or a descendant of it — i.e. the volunteer is
+   * within the caller's subtree. Rejects volunteers in sibling/unrelated
+   * branches and volunteers with no qualifying membership at all.
+   */
+  private async assertVolunteerInScope(
+    context: AuthenticatedGraphQLContext,
+    volunteerId: string,
+  ): Promise<void> {
+    const memberships =
+      await this.membershipService.getMyMemberships(volunteerId);
+    for (const membership of memberships) {
+      if (!membership.organizationUnitId) continue;
+      const ancestorIds =
+        await this.organizationUnitService.listInclusiveAncestorUnitIds(
+          membership.organizationUnitId,
+        );
+      if (ancestorIds.includes(context.organizationUnitId)) {
+        return;
+      }
+    }
+    throw new NotFoundGraphQLError('Volunteer not found');
+  }
+
+  private async toBundleDownloadStatusModel(status: {
+    volunteerId: string;
+    reimbursementTypeId: string;
+    downloadedAt: Date;
+    downloadedByUserId: string | null;
+  }): Promise<BundleDownloadStatus> {
+    const [volunteer, reimbursementType, downloadedByUser] = await Promise.all([
+      this.userService.findByIdOrThrow(status.volunteerId),
+      this.reimbursementRateService.findReimbursementTypeById(
+        status.reimbursementTypeId,
+      ),
+      status.downloadedByUserId
+        ? this.userService.findById(status.downloadedByUserId)
+        : Promise.resolve(undefined),
+    ]);
+
+    return {
+      volunteer: this.userMapper.toModelOrThrow(volunteer),
+      reimbursementType:
+        this.reimbursementTypeMapper.toModelOrThrow(reimbursementType),
+      downloadedAt: status.downloadedAt,
+      downloadedByUser: this.userMapper.toModel(downloadedByUser),
+    };
   }
 }

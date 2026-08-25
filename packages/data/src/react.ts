@@ -26,6 +26,7 @@ export * from './react/hooks/use-admin-user-profile';
 export * from './react/hooks/use-available-shift-instances';
 export * from './react/hooks/use-available-shift-instances-infinite';
 export * from './react/hooks/use-block';
+export * from './react/hooks/use-bundle-download';
 export * from './react/hooks/use-check-in';
 export * from './react/hooks/use-check-out';
 export * from './react/hooks/use-contracts';
@@ -73,11 +74,13 @@ export type {
   EligibleTimeEntry,
   InvoiceDetail,
   InvoiceSummary,
+  RawBundleDownloadStatus,
   RawEffectiveRate,
   RawPendingSignee,
   RawReimbursementType,
   RawVolunteerYearlyUsage,
   RawYearlyUsage,
+  RecordedBundleDownload,
 } from './repositories/accounting/accounting.repository';
 export { deriveDocumentStatus } from './repositories/accounting/accounting.repository';
 export type {
