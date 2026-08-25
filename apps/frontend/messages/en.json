@@ -1060,7 +1060,6 @@
       "checkingIn": "Checking in...",
       "checkingOut": "Checking out...",
       "checkingOutAt": "Checking out: {time}",
-      "enterQrTitle": "Or enter their QR ID",
       "generalCheckIn": "General check-in",
       "invalidCheckin": {
         "blocked": {
@@ -1073,8 +1072,6 @@
         }
       },
       "noShiftSelected": "No shift selected",
-      "scanDescription": "Scan the volunteer's QR ID to check them in or out",
-      "searchVolunteerTitle": "Or search for a volunteer",
       "selectOrgDescription": "Choose the organization you want to check the volunteer into.",
       "selectOrgTitle": "Check-in",
       "successNext": "Next",

@@ -153,9 +153,9 @@ test.describe('my-shifts conflict clustering + day strip', () => {
       'No shift currently in the "starts soon" check-in window for this fixture data',
     );
 
-    await expect(checkInLink).toHaveAttribute('href', /\/qr-id$/);
+    await expect(checkInLink).toHaveAttribute('href', /\/check-in$/);
 
     await checkInLink.click();
-    await page.waitForURL(/\/qr-id$/, { timeout: 10000 });
+    await page.waitForURL(/\/check-in$/, { timeout: 10000 });
   });
 });
