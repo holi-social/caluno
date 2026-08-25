@@ -1,6 +1,7 @@
 import { Global, Module } from '@nestjs/common';
 import { APP_FILTER, APP_INTERCEPTOR } from '@nestjs/core';
 import { ObservabilityService } from './observability.service';
+import { PostHogCaptureService } from './posthog.capture.service';
 import {
   createPostHogClient,
   createPostHogRequestInterceptor,
@@ -17,6 +18,7 @@ import { SentryExceptionFilter } from './sentry-exception.filter';
       useFactory: () => createPostHogClient(),
     },
     PostHogService,
+    PostHogCaptureService,
     {
       provide: APP_INTERCEPTOR,
       useFactory: createPostHogRequestInterceptor,
@@ -24,6 +26,6 @@ import { SentryExceptionFilter } from './sentry-exception.filter';
     },
     { provide: APP_FILTER, useClass: SentryExceptionFilter },
   ],
-  exports: [ObservabilityService, PostHogService],
+  exports: [ObservabilityService, PostHogService, PostHogCaptureService],
 })
 export class ObservabilityModule {}
