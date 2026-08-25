@@ -2,13 +2,14 @@ import {
   index,
   jsonb,
   pgEnum,
-  pgTable,
+  snakeCase,
   text,
   timestamp,
   uuid,
 } from 'drizzle-orm/pg-core';
 import { users } from '../../auth/schemas/auth.schema';
 import { idColumn, timestampColumns } from '../../database/database-columns';
+import { enumValues } from '../../database/typeutil';
 import { RequirementFulfillmentStatus } from '../enums';
 import { organizationUserProfiles } from './organization-user-profile.schema';
 import { requirements, requirementTypeEnum } from './requirement.schema';
@@ -16,10 +17,10 @@ import { requirementProfileSubmissions } from './requirement-profile-submission.
 
 export const requirementFulfillmentStatusEnum = pgEnum(
   'requirement_fulfillment_status',
-  RequirementFulfillmentStatus as Record<string, string>,
+  enumValues(RequirementFulfillmentStatus),
 );
 
-export const requirementFulfillments = pgTable(
+export const requirementFulfillments = snakeCase.table(
   'requirement_fulfillments',
   {
     ...idColumn,
@@ -42,6 +43,7 @@ export const requirementFulfillments = pgTable(
     type: requirementTypeEnum('type').notNull(),
     value: jsonb('value'),
     status: requirementFulfillmentStatusEnum('status')
+      .$type<RequirementFulfillmentStatus>()
       .notNull()
       .default(RequirementFulfillmentStatus.DRAFT),
     submittedAt: timestamp('submitted_at').defaultNow().notNull(),

@@ -19,6 +19,7 @@ export class FormBlockFieldResolver {
     return this.formBlockFieldMapper.toArray(entities);
   }
 
+  @AllowAnonymous()
   @ResolveField(() => Boolean)
   async isEditable(@Parent() block: FormBlock): Promise<boolean> {
     return this.formBlockService.isEditable(block.id);

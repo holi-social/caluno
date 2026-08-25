@@ -4,12 +4,82 @@ fragment EventListFields on Event {
   slug
   startsAt
   endsAt
-  location
   shiftsCount
+  requiredFormsCount
+  coverUrl
+  signedUpCount
+}
+
+fragment RequiredFormFields on RequirementForm {
+  id
+  name
+  description
+  settings {
+    submitButtonLabel
+    successTitle
+    successMessage
+  }
+  blockRefs {
+    id
+    formId
+    blockId
+    fieldOrder
+    required
+    block {
+      id
+      organizationId
+      title
+      description
+      icon
+      required
+      isEditable
+      fields {
+        id
+        blockId
+        type
+        label
+        placeholder
+        description
+        required
+        lockType
+        systemKey
+        options {
+          label
+          value
+        }
+        documentFileId
+        documentDownloadUrl
+        documentFilename
+        documentLabel
+        minAge
+        fieldOrder
+      }
+    }
+  }
+}
+
+fragment RequiredFormRefFields on RequiredFormRef {
+  form {
+    ...RequiredFormFields
+  }
+  order
+}
+
+fragment RequiredFormWithStatusFields on RequiredFormWithStatus {
+  form {
+    ...RequiredFormFields
+  }
+  order
+  submitted
+  submissionId
+  targetType
+  targetId
 }
 
 fragment EventDetailFields on Event {
   ...EventListFields
+  createdAt
+  location
   organizer {
     id
     name
@@ -17,13 +87,8 @@ fragment EventDetailFields on Event {
   }
   coverUrl
   logoUrl
-  shifts {
-    id
-    title
-    originalStartsAt
-    durationMinutes
-    minVolunteers
-    maxVolunteers
+  requiredForms {
+    ...RequiredFormRefFields
   }
 }
 
@@ -41,18 +106,67 @@ query GetEvents($limit: Int!, $offset: Int!) {
   }
 }
 
+fragment MyEventFields on Event {
+  id
+  title
+  startsAt
+  endsAt
+  location
+  myInvitedAt
+  organizationUnit {
+    id
+    name
+    logoUrl
+  }
+}
+
+query GetMyEvents(
+  $includePast: Boolean = false
+  $startsAfter: DateTime
+  $endsBefore: DateTime
+  $limit: Int = 15
+  $offset: Int = 0
+  $order: SortOrder = ASC
+  $statuses: [EventInviteStatus!]
+) {
+  myEvents(
+    includePast: $includePast
+    startsAfter: $startsAfter
+    endsBefore: $endsBefore
+    limit: $limit
+    offset: $offset
+    order: $order
+    statuses: $statuses
+  ) {
+    items {
+      ...MyEventFields
+    }
+    pagination {
+      total
+      limit
+      offset
+      hasMore
+    }
+  }
+}
+
 query GetEvent($id: ID!) {
   event(id: $id) {
     ...EventDetailFields
   }
 }
 
-query GetEventAttendees($eventId: ID!) {
-  eventAttendees(eventId: $eventId) {
+query GetEventInvites($eventId: ID!) {
+  eventInvites(eventId: $eventId) {
     id
-    name
-    email
-    image
+    status
+    user {
+      id
+      name
+      email
+      image
+      checkInId
+    }
   }
 }
 
@@ -77,5 +191,93 @@ mutation DeleteEvent($id: ID!) {
 mutation InviteMembersToEvent($eventId: ID!, $memberIds: [String!]!) {
   inviteMembersToEvent(eventId: $eventId, memberIds: $memberIds) {
     id
+  }
+}
+
+mutation UpdateEventInviteStatus(
+  $eventId: ID!
+  $status: EventInviteStatus!
+  $userId: String
+) {
+  updateEventInviteStatus(eventId: $eventId, status: $status, userId: $userId) {
+    id
+    status
+    userId
+  }
+}
+
+fragment PublicEventOrganizationUnitFields on EventOrganizationUnit {
+  id
+  name
+  slug
+  logoUrl
+  myMembershipState
+  requiredForms {
+    ...RequiredFormRefFields
+  }
+}
+
+fragment PublicShiftInstanceFields on ShiftInstance {
+  id
+  actualStartsAt
+  actualEndsAt
+  overrideTitle
+  overrideMaxVolunteers
+  filledCount
+  spotsLeft
+}
+
+fragment PublicShiftFields on Shift {
+  id
+  title
+  maxVolunteers
+  instances {
+    ...PublicShiftInstanceFields
+  }
+}
+
+fragment PublicEventFields on Event {
+  id
+  title
+  slug
+  description
+  location
+  coverImageUrl
+  startsAt
+  endsAt
+  shiftsCount
+  myJoinStatus
+  organizationUnit {
+    ...PublicEventOrganizationUnitFields
+  }
+  shifts {
+    ...PublicShiftFields
+  }
+  requiredForms {
+    ...RequiredFormRefFields
+  }
+}
+
+query GetPublicEvent($id: ID!) {
+  publicEvent(id: $id) {
+    ...PublicEventFields
+  }
+}
+
+mutation JoinEvent($eventId: ID!) {
+  joinEvent(eventId: $eventId) {
+    status
+    event {
+      id
+    }
+    requiredForms {
+      ...RequiredFormWithStatusFields
+    }
+  }
+}
+
+mutation SetEventRequiredForms($eventId: ID!, $formIds: [String!]!) {
+  setEventRequiredForms(eventId: $eventId, formIds: $formIds) {
+    ...RequiredFormRefFields
   }
 }

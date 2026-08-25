@@ -1,19 +1,35 @@
 'use client';
 
+import type { Locale } from '@repo/data';
 import { Button, Input } from '@repo/ui';
-import { useTranslations } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 import { useState } from 'react';
 import { Link, useRouter } from '@/i18n/navigation';
 import { signIn } from '@/lib/auth';
+import { setLocaleCookieIfSupported } from '@/lib/locale-cookie';
 import { getVerifyEmailPath } from '@/lib/verify-email-url';
+
+function switchAuthHref(
+  path: '/signup' | '/login',
+  orgUId?: string,
+  redirectTo?: string,
+) {
+  const params = new URLSearchParams();
+  if (orgUId) params.set('orgUId', orgUId);
+  if (redirectTo && redirectTo !== '/') params.set('redirectTo', redirectTo);
+  const query = params.toString();
+  return query ? `${path}?${query}` : path;
+}
 
 interface LoginFormProps {
   redirectTo?: string;
+  orgUId?: string;
 }
 
-export function LoginForm({ redirectTo = '/' }: LoginFormProps) {
+export function LoginForm({ redirectTo = '/', orgUId }: LoginFormProps) {
   const t = useTranslations('Auth.login');
   const router = useRouter();
+  const currentLocale = useLocale();
   const [error, setError] = useState<string | null>(null);
   const [isPending, setIsPending] = useState(false);
 
@@ -41,7 +57,12 @@ export function LoginForm({ redirectTo = '/' }: LoginFormProps) {
       }
 
       if (result.data?.user) {
-        router.push(redirectTo);
+        const userLocale = setLocaleCookieIfSupported(
+          (result.data.user as { locale?: unknown }).locale,
+        );
+        router.push(redirectTo, {
+          locale: userLocale ?? (currentLocale as Locale),
+        });
         router.refresh();
       } else {
         setError(t('genericError'));
@@ -54,7 +75,7 @@ export function LoginForm({ redirectTo = '/' }: LoginFormProps) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="mt-8 space-y-6">
+    <form onSubmit={handleSubmit} className="space-y-6">
       {error && (
         <div className="rounded-md bg-destructive/10 p-4 text-sm text-destructive">
           {error}
@@ -83,7 +104,11 @@ export function LoginForm({ redirectTo = '/' }: LoginFormProps) {
               {t('passwordLabel')}
             </label>
             <Link
-              href="/forgot-password"
+              href={
+                redirectTo && redirectTo !== '/'
+                  ? `/forgot-password?redirectTo=${encodeURIComponent(redirectTo)}`
+                  : '/forgot-password'
+              }
               className="text-sm font-medium text-primary hover:underline"
             >
               {t('forgotPasswordLink')}
@@ -109,7 +134,8 @@ export function LoginForm({ redirectTo = '/' }: LoginFormProps) {
       <p className="text-center text-sm text-muted-foreground">
         {t('noAccount')}{' '}
         <Link
-          href="/signup"
+          href={switchAuthHref('/signup', orgUId, redirectTo)}
+          prefetch={false}
           className="font-medium text-primary hover:underline"
         >
           {t('signUpLink')}

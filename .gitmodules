@@ -1,3 +1,6 @@
+[submodule "packages/infra"]
+	path = packages/infra
+	url = git@github.com:holi-social/caluno-infra.git
 [submodule ".ai"]
 	path = .ai
-	url = https://github.com/holi-social/caluno-ai.git
+	url = git@github.com:holi-social/caluno-ai.git

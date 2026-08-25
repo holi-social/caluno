@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { EventModule } from '../event/event.module';
+import { MembershipMapper } from '../membership/mappers/membership.mepper';
 import { MembershipRequestMapper } from '../membership/mappers/membership-request.mepper';
 import { MembershipModule } from '../membership/membership.module';
 import { FormSubmissionMapper } from '../requirement-profile/mappers/form-submission.mapper';
@@ -19,6 +20,7 @@ import { MembershipLifecycleMutationResolver } from './membership-lifecycle-muta
     MembershipLifecycleOrchestrator,
     MembershipLifecycleMutationResolver,
     MembershipRequestMapper,
+    MembershipMapper,
     FormSubmissionMapper,
   ],
 })

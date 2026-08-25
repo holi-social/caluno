@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
 import { DatabaseModule } from '../database/database.module';
-import { OrganizationUnitService } from '../organization/organization-unit.service';
+import { OrganizationUnitDataModule } from '../organization/organization-unit-data.module';
 import { AuthService } from './auth.service';
 import { PermissionMapper } from './mappers/permission.mapper';
 import { RoleMapper } from './mappers/role.mapper';
@@ -10,7 +10,7 @@ import { RoleMutationResolver } from './resolvers/role-mutation.resolver';
 import { RoleQueryResolver } from './resolvers/role-query.resolver';
 
 @Module({
-  imports: [DatabaseModule],
+  imports: [DatabaseModule, OrganizationUnitDataModule],
   providers: [
     AuthService,
     RoleFieldResolver,
@@ -19,7 +19,6 @@ import { RoleQueryResolver } from './resolvers/role-query.resolver';
     RoleQueryResolver,
     RoleMutationResolver,
     PermissionQueryResolver,
-    OrganizationUnitService,
   ],
   exports: [AuthService, PermissionMapper, RoleMapper],
 })

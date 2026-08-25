@@ -1,4 +1,4 @@
-# Clippy Frontend Web App
+# Caluno Frontend Web App
 
 The frontend web app for securely managing volunteers and shifts in multi-tiered organizations. Includes the backoffice (`/admin/[orgUId]` routes) — there is no separate backoffice app.
 
@@ -31,7 +31,7 @@ Route groups: `(auth)` unauthenticated, `(dashboard)/[orgUId]` protected + org-s
 
 ## Server-side auth & org context — use these, never roll your own
 - `lib/auth-server.ts`: `getSession()`, `requireAuth(redirectTo?)`, `getCurrentUser()`, `isAuthenticated()` — server components, layouts, and server actions only
-- `lib/org-context-server.ts`: `requireOrgAccess(orgUId)`, `getMyAccessibleOrganizationUnits()` (cached), `resolveOrgFromId(orgUId)`
+- `lib/org-context-server.ts`: `requireOrgAccess(orgUId)`, `getMyAdministrableOrgUnits()` (cached), `getMyAccessibleOrganizationUnits()`, `resolveOrgFromId(orgUId)`
 - Data access: `const data = await getDataClient(orgUId)` (`lib/data-client.ts`) — auto-adds the `x-organization-unit-id` header and auth cookies; a 403 throws `ForbiddenDataError` → server-side `redirect('/unauthorized')` in `data-client.ts` / server components. This is the org-safety mechanism: never construct GraphQL calls that bypass it.
 
 ## Patterns
@@ -42,6 +42,10 @@ Route groups: `(auth)` unauthenticated, `(dashboard)/[orgUId]` protected + org-s
 - Use `@/*` to import from `src/*` (e.g., `@/domain/shift/actions.ts`).
 - Server Actions for a domain in `actions.ts`; zod schemas in `schemas.ts` (e.g. `src/domain/shift/schemas.ts`).
 - Do not write GraphQL in this project — use `@repo/data` for data access.
+- Sheets use the `@sheet` parallel-route slot (`app/[locale]/admin/[orgUId]/@sheet/**`) with `FormSheet`/`useFormSheet`.
+- Internal volunteer pages render the internal page header (`DetailPageHeader` from `@repo/ui`) via a small client wrapper (`ProfilePageHeader`, `EventPageHeader`, …) with `onBack={router.back()}`; the body does not repeat the title when the header shows it. Exception: the `(root)` pages (home, `/qr-id`, `/timesheets`) keep the custom `HomeHeader` greeting header.
+- The requirement-form builder (`domain/requirement-form/components/form-builder.tsx`) is a container composing `form-builder-{empty-state,block-list,add-block-dialog,preview}.tsx`; pure state logic lives in `form-builder-state.ts`. Blocks created through the block sheet (`forForm=true`) come back via the `?addBlock=<id>` search-param handshake and persist only on Save Form.
+- **Observability (Sentry)**: SDK init lives in `src/instrumentation-client.ts`, `src/sentry.server.config.ts`, `src/sentry.edge.config.ts` (shared options from `@repo/observability`) — never add another init. Route/segment error boundaries render `ErrorFallback` (`@/components/error-fallback`) which reports via `reportError` (`@/lib/report-error`); `global-error.tsx` reports via `reportError` too. New client-reachable Sentry env vars must use the `NEXT_PUBLIC_` prefix; only `NEXT_PUBLIC_SENTRY_DSN` is public-by-design. The `/sentry-tunnel` route is reserved for the Sentry tunnel — never create an app route with that prefix.
 
 ## Testing — `bun:test` only
 - The test runner is **`bun:test`** (`import { describe, it, expect, mock } from 'bun:test'`). **Do NOT add Jest, Vitest, `@testing-library`, jsdom, or happy-dom** — they are intentionally absent. Run with `bun test <path>`.
@@ -76,7 +80,7 @@ error messages, or empty-state text in components. Add new keys to both locales 
 keep namespaces/key shapes in sync.
 
 ### Locale switching
-The `clippy.locale` cookie is the single frontend locale-preference source, and
+The `caluno.locale` cookie is the single frontend locale-preference source, and
 **for authenticated users the preference always wins over the URL** (a `/de/…`
 link is redirected to the user's locale — this is a private dashboard, shareable
 per-locale URLs are not a goal). **Logged-out users are exempt**: the proxy only
@@ -94,7 +98,7 @@ redirect.
 
 `src/proxy.ts` is the single place that performs locale redirects. It composes a
 pure `localePreferenceRedirect()` in front of next-intl via
-`withLocalePreference(intlMiddleware)`: when the supported `clippy.locale` cookie
+`withLocalePreference(intlMiddleware)`: when the supported `caluno.locale` cookie
 differs from the URL locale it returns a 307 to `/<cookie-locale>/<path>`
 (stacked prefixes normalised, so no `/en/en/…` loop); otherwise it falls through
 to next-intl, which is load-bearing (prefixes bare paths, Accept-Language
@@ -111,8 +115,9 @@ performs the actual cookie write. Server Component renders may read cookies but
 not set them, so seeding must not happen in a layout/page render directly. No
 page-level locale redirects.
 
-## New features
+## New Admin features
 Always study UI/UX patterns in existing similar features before starting a new one — consistent experience across features.
-- List pages: follow `src/app/(dashboard)/[orgUId]/shifts/page.tsx`
-- Detail pages: follow `src/app/(dashboard)/[orgUId]/shifts/[shiftId]/page.tsx`
-- Create/edit pages: use `clippy-sheet`, follow `src/components/sheets/shift-sheet.tsx`
+- List pages: follow `src/app/[locale]/admin/[orgUId]/timesheets/page.tsx`
+- Detail pages: follow `src/app/[locale]/admin/[orgUId]/timesheets/[timeEntryId]/page.tsx`
+- Create pages: use `<FormSheet />`, follow `src/app/[locale]/admin/[orgUId]/@sheet/timesheets/new/page.tsx`
+- Edit pages: use `<FormSheet />`, follow `src/app/[locale]/admin/[orgUId]/@sheet/timesheets/[timeEntryId]/edit/page.tsx`

@@ -1,10 +1,10 @@
-import { index, jsonb, pgTable, uuid } from 'drizzle-orm/pg-core';
+import { index, jsonb, snakeCase, uuid } from 'drizzle-orm/pg-core';
 import { idColumn, timestampColumns } from '../../database/database-columns';
 import { formBlocks } from './form-block.schema';
 import { formBlockFields } from './form-block-field.schema';
 import { formSubmissions } from './form-submission.schema';
 
-export const formSubmissionValues = pgTable(
+export const formSubmissionValues = snakeCase.table(
   'form_submission_values',
   {
     ...idColumn,

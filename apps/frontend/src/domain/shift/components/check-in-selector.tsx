@@ -9,7 +9,7 @@ import {
   ComboboxList,
   InputGroupAddon,
 } from '@repo/ui';
-import { LogIn, User } from 'lucide-react';
+import { ScanQrCode, User } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useRouter } from '@/i18n/navigation';
 
@@ -50,7 +50,7 @@ export const CheckInSelector = ({
         <ComboboxList>
           {(volunteer: Volunteer) => (
             <ComboboxItem key={volunteer.checkInId} value={volunteer.checkInId}>
-              {volunteer.name} <LogIn />
+              {volunteer.name} <ScanQrCode />
             </ComboboxItem>
           )}
         </ComboboxList>

@@ -5,9 +5,11 @@ import type {
   MembershipRequestEntity,
   MembershipRequestMetadata,
 } from '../membership/schemas/membership-request.schema';
+import { RequiredFormTargetType } from '../requirement-profile/enums';
 import { SubmitFormInput } from '../requirement-profile/inputs/submit-form.input';
 import type { FormSubmissionEntity } from '../requirement-profile/schemas/form-submission.schema';
 import { FormSubmissionService } from '../requirement-profile/services/form-submission.service';
+import { RequiredFormService } from '../requirement-profile/services/required-form.service';
 import { ShiftService } from '../shift/shift.service';
 
 @Injectable()
@@ -19,6 +21,7 @@ export class MembershipLifecycleOrchestrator {
     private readonly shiftService: ShiftService,
     private readonly eventService: EventService,
     private readonly formSubmissionService: FormSubmissionService,
+    private readonly requiredFormService: RequiredFormService,
   ) {}
 
   async approveMembershipRequest(
@@ -82,17 +85,24 @@ export class MembershipLifecycleOrchestrator {
         organizationUnitId,
       );
       if (!isMember) {
-        try {
-          await this.membershipService.createMembershipRequest(
-            userId,
-            organizationUnitId,
-          );
-        } catch (e) {
-          // Pending request already exists or transient error — submission is still valid
-          this.logger.warn(
-            '[FormSubmission] createMembershipRequest skipped',
-            e,
-          );
+        const requiredFormsSatisfied =
+          await this.requiredFormService.areRequiredFormsSatisfied(userId, {
+            targetType: RequiredFormTargetType.ORGANIZATION_UNIT,
+            targetId: organizationUnitId,
+          });
+        if (requiredFormsSatisfied) {
+          try {
+            await this.membershipService.createMembershipRequest(
+              userId,
+              organizationUnitId,
+            );
+          } catch (e) {
+            // Pending request already exists or transient error — submission is still valid
+            this.logger.warn(
+              '[FormSubmission] createMembershipRequest skipped',
+              e,
+            );
+          }
         }
       }
     }

@@ -6,7 +6,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "AI_HOST=claude-code .ai/scripts/guard-write.sh"
+            "command": "if [ \"${AI_PIPELINE_ENABLED:-0}\" = \"1\" ]; then AI_HOST=claude-code .ai/scripts/guard-write.sh; else exit 0; fi"
           }
         ]
       }

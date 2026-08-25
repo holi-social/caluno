@@ -50,8 +50,13 @@ export const ActionBar = ({
     <aside className="flex items-center gap-2">
       {!isInternal && (
         <RequirePermission permission={PermissionKey.OrgEdit}>
-          <Button variant="outline" size={buttonSize} asChild>
-            <Link href={editHref} aria-label={t('editAria')}>
+          <Button
+            variant="outline"
+            size={buttonSize}
+            tooltip={t('editAria')}
+            asChild
+          >
+            <Link href={editHref}>
               <Edit />
             </Link>
           </Button>
@@ -64,7 +69,7 @@ export const ActionBar = ({
               <Button
                 size={buttonSize}
                 variant="destructive"
-                aria-label={t('deleteAria')}
+                tooltip={t('deleteAria')}
                 disabled={isDeleting}
               >
                 {isDeleting ? <Loader2 className="animate-spin" /> : <Trash />}

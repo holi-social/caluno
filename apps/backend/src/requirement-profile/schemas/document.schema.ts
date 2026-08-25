@@ -1,8 +1,8 @@
-import { index, pgTable, text, timestamp } from 'drizzle-orm/pg-core';
+import { index, snakeCase, text, timestamp } from 'drizzle-orm/pg-core';
 import { users } from '../../auth/schemas/auth.schema';
 import { idColumn, timestampColumns } from '../../database/database-columns';
 
-export const documents = pgTable(
+export const documents = snakeCase.table(
   'documents',
   {
     ...idColumn,

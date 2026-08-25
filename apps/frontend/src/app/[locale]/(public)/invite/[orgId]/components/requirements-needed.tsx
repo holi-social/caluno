@@ -9,6 +9,7 @@ interface Requirement {
   id: string;
   name: string;
   description?: string | null;
+  type?: string;
   mandatory: boolean;
 }
 
@@ -24,6 +25,7 @@ interface OrgRequirementsProps {
   profileDescription?: string | null;
   requirements: Requirement[];
   requirementStatuses: RequirementStatus[];
+  documentSubmission?: React.ReactNode;
 }
 
 function getStatusIcon(status: string) {
@@ -42,6 +44,7 @@ export function OrgRequirementsNeeded({
   profileDescription,
   requirements,
   requirementStatuses,
+  documentSubmission,
 }: OrgRequirementsProps) {
   const t = useTranslations('MembershipRequest');
   const statusMap = new Map(
@@ -104,6 +107,8 @@ export function OrgRequirementsNeeded({
               );
             })}
           </div>
+
+          {documentSubmission}
 
           <div className="flex justify-center">
             <Button asChild variant="outline">

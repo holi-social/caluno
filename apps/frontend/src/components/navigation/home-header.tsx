@@ -1,5 +1,6 @@
 'use client';
 
+import { Button } from '@repo/ui';
 import { Avatar, AvatarFallback, AvatarImage } from '@repo/ui/base/avatar';
 import { Logo } from '@repo/ui/logo';
 import { cn } from '@repo/ui/utils';
@@ -8,12 +9,14 @@ import { AnimatePresence, motion } from 'motion/react';
 import { useTranslations } from 'next-intl';
 import { useEffect, useState } from 'react';
 import { Link } from '@/i18n/navigation';
+import { ProfileDropdown } from './ProfileDropdown';
 
 export type HomeHeaderVariant = 'open' | 'on-scroll';
 
 export interface HomeHeaderProps {
   variant?: HomeHeaderVariant;
   avatarUrl?: string;
+  avatarName?: string;
   avatarHref?: string;
   title?: string;
   notificationCount?: number;
@@ -27,7 +30,7 @@ const GREETING_EXIT = {
   opacity: 0,
 };
 
-function BellButton({
+function _BellButton({
   count,
   onClick,
 }: {
@@ -80,15 +83,18 @@ function NotificationBadge({ count }: { count: number }) {
 
 function AvatarTrigger({
   avatarUrl,
+  avatarName,
   isOpen,
 }: {
   avatarUrl?: string;
+  avatarName?: string;
   isOpen: boolean;
 }) {
   const avatarSize = isOpen ? 56 : 32;
   const iconSize = isOpen ? 24 : 16;
   const buttonSize = isOpen ? 56 : 44;
   const t = useTranslations('Navigation');
+  const tCommon = useTranslations('Common');
 
   const avatar = (
     <motion.div
@@ -98,7 +104,14 @@ function AvatarTrigger({
       className="shrink-0"
     >
       <Avatar className="size-full border border-border shadow-sm">
-        <AvatarImage src={avatarUrl} alt="" />
+        <AvatarImage
+          src={avatarUrl}
+          alt={
+            avatarName
+              ? tCommon('avatarAlt', { name: avatarName })
+              : t('profile')
+          }
+        />
         <AvatarFallback>
           <motion.div
             initial={{ width: iconSize, height: iconSize }}
@@ -113,30 +126,30 @@ function AvatarTrigger({
   );
 
   return (
-    <Link
-      href="/profile"
-      aria-label={t('profile')}
-      className={cn(
-        'flex shrink-0 items-center justify-center rounded-full transition-colors',
-        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60 focus-visible:ring-offset-1',
-        'hover:bg-accent',
-      )}
-    >
-      <motion.span
-        initial={{ width: buttonSize, height: buttonSize }}
-        animate={{ width: buttonSize, height: buttonSize }}
-        transition={{ duration: 0.2 }}
-        className="flex items-center justify-center"
+    <ProfileDropdown>
+      <Button
+        size="icon"
+        variant="ghost"
+        aria-label={t('profile')}
+        className="size-auto"
       >
-        {avatar}
-      </motion.span>
-    </Link>
+        <motion.span
+          initial={{ width: buttonSize, height: buttonSize }}
+          animate={{ width: buttonSize, height: buttonSize }}
+          transition={{ duration: 0.2 }}
+          className="flex items-center justify-center"
+        >
+          {avatar}
+        </motion.span>
+      </Button>
+    </ProfileDropdown>
   );
 }
 
 export function HomeHeader({
   variant,
   avatarUrl,
+  avatarName,
   title,
   className,
 }: HomeHeaderProps) {
@@ -159,7 +172,11 @@ export function HomeHeader({
     >
       <div className="container mx-auto max-w-4xl px-6">
         <div className="flex w-full items-center justify-between gap-3">
-          <AvatarTrigger avatarUrl={avatarUrl} isOpen={isOpen} />
+          <AvatarTrigger
+            avatarUrl={avatarUrl}
+            avatarName={avatarName}
+            isOpen={isOpen}
+          />
 
           <div className="flex shrink-0 items-center gap-3">
             <Link href="/" aria-label={t('home')}>

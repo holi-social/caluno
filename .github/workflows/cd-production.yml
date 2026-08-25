@@ -1,0 +1,30 @@
+# Deploys `production`. The apply waits on the `production` environment's
+# required reviewers. The pre-deploy gate lives in reusable-deploy.yml,
+# alongside the image builds. See SETUP.md for the one-time setup.
+name: CD · Production
+
+on:
+  push:
+    branches: [production]
+
+# One deploy at a time, never cancelled mid-apply.
+concurrency:
+  group: cd-production
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    name: Deploy
+    permissions:
+      contents: read
+      packages: read
+    uses: ./.github/workflows/reusable-deploy.yml
+    with:
+      environment: production
+      moving-tag: latest
+      api-url: https://api.caluno.org
+      web-url: https://app.caluno.org
+    secrets: inherit

@@ -26,7 +26,6 @@ const { pickFirstShiftInstanceId, resolveCreateShiftSuccessNavigation } =
   await import('../create-shift-flow');
 
 const validCreateInput = {
-  organizationUnitId: 'org-unit-1',
   name: 'Morning shift',
   startsAt: new Date('2026-06-24T08:00:00.000Z'),
   endsAt: new Date('2026-06-24T12:00:00.000Z'),
@@ -59,11 +58,12 @@ describe('pickFirstShiftInstanceId', () => {
 });
 
 describe('resolveCreateShiftSuccessNavigation', () => {
-  it('opens the invite sheet when an instance id is present', () => {
+  it('opens the invite sheet when an instance id is present and the shift is not open', () => {
     expect(
       resolveCreateShiftSuccessNavigation({
         shiftId: 'shift-1',
         instanceId: 'instance-1',
+        openShift: false,
       }),
     ).toEqual({
       action: 'open-invite',
@@ -72,12 +72,36 @@ describe('resolveCreateShiftSuccessNavigation', () => {
     });
   });
 
-  it('closes the create sheet when no instance id is present', () => {
+  it('closes the create sheet when no instance id is present and the shift is not open', () => {
     expect(
       resolveCreateShiftSuccessNavigation({
         shiftId: 'shift-1',
+        openShift: false,
       }),
     ).toEqual({ action: 'close-create' });
+  });
+
+  it('goes straight to the success dialog for an open shift, even with an instance id', () => {
+    expect(
+      resolveCreateShiftSuccessNavigation({
+        shiftId: 'shift-1',
+        instanceId: 'instance-1',
+        openShift: true,
+      }),
+    ).toEqual({
+      action: 'success',
+      shiftId: 'shift-1',
+      instanceId: 'instance-1',
+    });
+  });
+
+  it('goes straight to the success dialog for an open shift with no instance id', () => {
+    expect(
+      resolveCreateShiftSuccessNavigation({
+        shiftId: 'shift-1',
+        openShift: true,
+      }),
+    ).toEqual({ action: 'success', shiftId: 'shift-1' });
   });
 });
 
@@ -101,7 +125,7 @@ describe('createShift action', () => {
       },
     ]);
 
-    const result = await createShift(validCreateInput);
+    const result = await createShift('org-unit-1', validCreateInput);
 
     expect(createMock).toHaveBeenCalledTimes(1);
     expect(findInstancesMock).toHaveBeenCalledWith('shift-1');
@@ -112,7 +136,7 @@ describe('createShift action', () => {
   });
 
   it('returns only the shift id when no instances exist', async () => {
-    const result = await createShift(validCreateInput);
+    const result = await createShift('org-unit-1', validCreateInput);
 
     expect(result?.data).toEqual({
       id: 'shift-1',
@@ -121,7 +145,7 @@ describe('createShift action', () => {
   });
 
   it('does not call onSuccess data when validation fails', async () => {
-    const result = await createShift({
+    const result = await createShift('org-unit-1', {
       ...validCreateInput,
       name: '   ',
     });

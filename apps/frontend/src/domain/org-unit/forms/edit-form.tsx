@@ -58,7 +58,6 @@ export function EditOrgUnitForm({
       organizationId,
       name: organizationUnit?.name,
       typeId: organizationUnit?.type.id,
-      logoUrl: organizationUnit?.logoUrl ?? undefined,
       websiteUrl: organizationUnit?.websiteUrl ?? undefined,
       contactEmail: organizationUnit?.contactEmail ?? undefined,
       phone: organizationUnit?.phone ?? undefined,
@@ -74,7 +73,7 @@ export function EditOrgUnitForm({
         organizationId,
         name: formData.name,
         typeId: formData.typeId,
-        logoUrl: formData.logoUrl,
+        logoFileId: formData.logoFileId,
         websiteUrl: formData.websiteUrl,
         contactEmail: formData.contactEmail,
         phone: formData.phone,
@@ -99,6 +98,7 @@ export function EditOrgUnitForm({
         <OrgUnitFormContent
           types={types}
           isPending={isPending}
+          logoPreviewUrl={organizationUnit?.logoUrl}
           formReturnValues={form}
         />
       </FieldGroup>

@@ -1,14 +1,19 @@
 import { Field, ID, Int, ObjectType } from '@nestjs/graphql';
 import { createPaginatedResponseType } from '../../graphql/paginated-response.model';
 import { User } from '../../user/models/user.model';
-import { Shift } from './shift.model';
-
+import { ShiftInviteStatus } from '../enums';
+import type { Shift } from './shift.model';
+import { Shift as ShiftModel } from './shift.model';
+import { ShiftInstanceInvite } from './shift-instance-invite.model';
 @ObjectType()
 export class ShiftInstance {
   @Field(() => ID)
   id!: string;
 
-  @Field(() => Shift)
+  @Field(() => ID)
+  masterId!: string;
+
+  @Field(() => ShiftModel)
   master!: Shift;
 
   @Field(() => Date)
@@ -18,16 +23,19 @@ export class ShiftInstance {
   actualEndsAt!: Date;
 
   @Field(() => String, { nullable: true })
-  overrideTitle!: string | null;
+  overrideTitle?: string | null;
 
   @Field(() => String, { nullable: true })
-  overrideInstructions!: string | null;
+  overrideInstructions?: string | null;
 
   @Field(() => String, { nullable: true })
-  overrideLocation!: string | null;
+  overrideLocation?: string | null;
 
   @Field(() => Int, { nullable: true })
-  overrideMaxVolunteers!: number | null;
+  overrideMaxVolunteers?: number | null;
+
+  @Field(() => Int, { nullable: true })
+  overrideMinVolunteers?: number | null;
 
   @Field(() => Boolean)
   isException!: boolean;
@@ -38,8 +46,23 @@ export class ShiftInstance {
   @Field(() => Int)
   occurrenceIndex!: number;
 
+  @Field(() => Boolean)
+  isCheckedIn!: boolean;
+
+  @Field(() => Int)
+  filledCount!: number;
+
   @Field(() => [User], { nullable: true })
-  volunteers!: User[];
+  volunteers?: User[] | null;
+
+  @Field(() => [ShiftInstanceInvite], { nullable: true })
+  invites?: ShiftInstanceInvite[] | null;
+
+  @Field(() => ShiftInviteStatus, { nullable: true })
+  myInviteStatus?: ShiftInviteStatus | null;
+
+  @Field(() => Boolean)
+  isIntendingToJoin!: boolean;
 }
 
 export const ShiftInstancePaginatedResponse =

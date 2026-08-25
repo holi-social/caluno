@@ -6,4 +6,7 @@ export type EmailTranslate = (
 export interface EmailTemplateContext {
   t: EmailTranslate;
   formatDateTime: (date: Date) => string;
+  formatDate: (date: Date) => string;
+  formatTime: (date: Date) => string;
+  formatList: (items: string[]) => string;
 }

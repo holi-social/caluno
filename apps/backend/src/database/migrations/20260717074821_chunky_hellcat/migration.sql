@@ -1,0 +1,1 @@
+CREATE UNIQUE INDEX "uq_time_entries_open_per_instance_volunteer" ON "time_entries" ("shift_instance_id","volunteer_id") WHERE "ended_at" IS NULL;

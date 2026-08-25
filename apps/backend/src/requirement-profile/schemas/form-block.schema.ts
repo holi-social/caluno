@@ -1,7 +1,7 @@
 import {
   boolean,
   index,
-  pgTable,
+  snakeCase,
   text,
   unique,
   uuid,
@@ -10,7 +10,7 @@ import { users } from '../../auth/schemas/auth.schema';
 import { idColumn, timestampColumns } from '../../database/database-columns';
 import { organizations } from '../../organization/schemas/organization.schema';
 
-export const formBlocks = pgTable(
+export const formBlocks = snakeCase.table(
   'form_blocks',
   {
     ...idColumn,

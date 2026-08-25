@@ -11,6 +11,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@repo/ui';
+import { Trash2, X } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import type { ReactNode } from 'react';
 
@@ -58,6 +59,7 @@ export function ConfirmDialog({
         {children}
         <AlertDialogFooter>
           <AlertDialogCancel disabled={pending} className="h-10">
+            <X />
             {cancelLabel}
           </AlertDialogCancel>
           <AlertDialogAction
@@ -65,6 +67,7 @@ export function ConfirmDialog({
             disabled={pending}
             className="bg-destructive text-destructive-foreground hover:bg-destructive/90 h-10"
           >
+            <Trash2 />
             {pending ? (pendingLabel ?? `${confirmLabel}...`) : confirmLabel}
           </AlertDialogAction>
         </AlertDialogFooter>

@@ -28,7 +28,7 @@ export function RequestPending({ orgName }: RequestPendingProps) {
         </CardHeader>
         <CardContent className="flex justify-center">
           <Button asChild variant="outline">
-            <Link href="/my-membership-requests">
+            <Link href="/profile#memberships">
               {t('invite.pending.viewRequests')}
             </Link>
           </Button>

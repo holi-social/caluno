@@ -7,6 +7,9 @@ import {
   useMemberships,
 } from '@repo/data/react';
 import {
+  Avatar,
+  AvatarFallback,
+  AvatarImage,
   Button,
   Skeleton,
   Table,
@@ -29,6 +32,7 @@ import { organizationUnitUrl } from '@/domain/organization/share';
 import { EmptyVolunteers } from '@/domain/volunteer/empty-volunteers';
 import { useSheetTrigger } from '@/hooks/use-sheet';
 import { Link, usePathname, useRouter } from '@/i18n/navigation';
+import { VolunteerRequiredFormsPopover } from './required-forms-popover';
 import { RoleSelectCell } from './role-select-cell';
 
 const TAB_APPROVED = 'APPROVED';
@@ -41,6 +45,7 @@ interface Props {
 
 function ApprovedTab({ orgUId }: { orgUId: string }) {
   const t = useTranslations('Volunteer');
+  const tCommon = useTranslations('Common');
   const { data, isPending } = useMemberships(orgUId);
   const { open: openVolunteerSheet } = useSheetTrigger('volunteer-profile');
 
@@ -82,7 +87,20 @@ function ApprovedTab({ orgUId }: { orgUId: string }) {
         <TableBody>
           {memberships.map((membership) => (
             <TableRow key={membership.id}>
-              <TableCell>{membership.user.name}</TableCell>
+              <TableCell>
+                <div className="flex items-center gap-2">
+                  <Avatar size="sm">
+                    <AvatarImage
+                      src={membership.user.image ?? undefined}
+                      alt={tCommon('avatarAlt', { name: membership.user.name })}
+                    />
+                    <AvatarFallback>
+                      <UserRound className="size-3" />
+                    </AvatarFallback>
+                  </Avatar>
+                  {membership.user.name}
+                </div>
+              </TableCell>
               <TableCell>{membership.user.email}</TableCell>
               <TableCell>
                 <RoleSelectCell
@@ -96,7 +114,7 @@ function ApprovedTab({ orgUId }: { orgUId: string }) {
                   <Button
                     size="icon-xs"
                     variant="outline"
-                    aria-label={t('action.viewProfileAria')}
+                    tooltip={t('action.viewProfileAria')}
                     onClick={() =>
                       openVolunteerSheet({
                         userId: membership.user.id,
@@ -116,7 +134,7 @@ function ApprovedTab({ orgUId }: { orgUId: string }) {
                     <Button
                       size="icon-xs"
                       variant="outline"
-                      aria-label={t('action.checkInShiftAria')}
+                      tooltip={t('action.checkInShiftAria')}
                     >
                       <LogIn />
                     </Button>
@@ -208,11 +226,14 @@ export default function ManageVolunteersClient({ orgUId }: Props) {
           <p className="text-muted-foreground mt-1">{t('page.subtitle')}</p>
         </div>
 
-        <ButtonClipboard
-          text={t('page.copyInviteLink')}
-          copyText={orgUnitUrl}
-          toastMessage={t('page.inviteLinkCopied')}
-        />
+        <div className="flex items-center gap-2">
+          <VolunteerRequiredFormsPopover orgUId={orgUId} />
+          <ButtonClipboard
+            text={t('page.copyInviteLink')}
+            copyText={orgUnitUrl}
+            toastMessage={t('page.inviteLinkCopied')}
+          />
+        </div>
       </div>
 
       <Tabs value={activeTab} onValueChange={handleTabChange}>

@@ -1,9 +1,9 @@
-import { boolean, index, integer, pgTable, uuid } from 'drizzle-orm/pg-core';
+import { boolean, index, integer, snakeCase, uuid } from 'drizzle-orm/pg-core';
 import { idColumn, timestampColumns } from '../../database/database-columns';
 import { formBlocks } from './form-block.schema';
 import { requirementForms } from './requirement-form.schema';
 
-export const requirementFormBlockRefs = pgTable(
+export const requirementFormBlockRefs = snakeCase.table(
   'requirement_form_block_refs',
   {
     ...idColumn,

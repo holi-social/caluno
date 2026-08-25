@@ -14,5 +14,5 @@ export class Permission {
   key!: PermissionKey;
 
   @Field(() => String, { nullable: true })
-  description!: string | null;
+  description?: string | null;
 }

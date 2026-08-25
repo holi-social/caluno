@@ -8,3 +8,15 @@ export class PaginationInput {
   @Field(() => Int)
   limit: number = 10;
 }
+
+@ArgsType()
+export class DateRangePaginationInput extends PaginationInput {
+  @Field(() => Int)
+  limit: number = 15;
+
+  @Field(() => Date, { nullable: true })
+  startsAfter: Date | null = null;
+
+  @Field(() => Date, { nullable: true })
+  endsBefore: Date | null = null;
+}

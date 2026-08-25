@@ -5,7 +5,10 @@ import { DATABASE_CONNECTION } from '../../database/database-connection';
 import * as schema from '../../database/schema';
 import { NotFoundGraphQLError } from '../../graphql/errors';
 import type { PaginationInput } from '../../graphql/pagination.input';
-import { RequirementFulfillmentStatus } from '../enums';
+import {
+  RequirementFulfillmentStatus,
+  RequirementProfileSubmissionStatus,
+} from '../enums';
 import { CreateRequirementProfileInput } from '../inputs/create-requirement-profile.input';
 import { UpdateRequirementProfileInput } from '../inputs/update-requirement-profile.input';
 export interface UserRequirementStatusDto {
@@ -191,7 +194,10 @@ export class RequirementProfileService {
       .where(
         and(
           eq(schema.requirementProfileSubmissions.profileId, profileId),
-          eq(schema.requirementProfileSubmissions.status, 'APPROVED'),
+          eq(
+            schema.requirementProfileSubmissions.status,
+            RequirementProfileSubmissionStatus.APPROVED,
+          ),
           eq(schema.organizationUserProfiles.userId, userId),
         ),
       )

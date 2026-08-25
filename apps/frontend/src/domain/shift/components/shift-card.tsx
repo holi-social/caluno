@@ -1,27 +1,36 @@
 'use client';
 
-import type { WeeklyShiftInstance } from '@repo/data';
-import { useOrgUId } from '@repo/data/react';
 import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
+  formatRrulePattern,
+  type ShiftInviteStatus,
+  ShiftVisibility,
+  type WeeklyShiftInstance,
+} from '@repo/data';
+import {
+  ActionTooltip,
   Badge,
   Button,
   Card,
+  type VolunteeringShiftCardVolunteer,
+  VolunteeringShiftCardVolunteers,
 } from '@repo/ui';
 import { format } from 'date-fns';
-import { TriangleAlert, UserPlus, UsersRound } from 'lucide-react';
+import {
+  LockKeyhole,
+  RepeatIcon,
+  TriangleAlert,
+  UserPlus,
+  UsersRound,
+} from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import { useSheet } from '@/hooks/use-sheet';
 import { Link } from '@/i18n/navigation';
-import { shiftDetailPath } from '../routes';
+import { toInviteDisplayState } from '../invite-status-display';
+import { shiftInstanceDetailPath, shiftInvitePath } from '../routes';
 
 type ShiftCardProps = {
   instance: WeeklyShiftInstance;
   canManage?: boolean;
-  weekStart: Date;
+  orgUId: string;
 };
 
 function getStaffingState(
@@ -42,12 +51,12 @@ function StaffingBadge({
   count,
   min,
   max,
-  onClick,
+  interactive,
 }: {
   count: number;
   min: number | null | undefined;
   max: number | null | undefined;
-  onClick?: () => void;
+  interactive?: boolean;
 }) {
   const state = getStaffingState(count, min, max);
 
@@ -72,8 +81,7 @@ function StaffingBadge({
   return (
     <Badge
       variant={variant}
-      className={`flex-1 justify-center self-stretch gap-1${onClick ? ' cursor-pointer' : ''}`}
-      onClick={onClick}
+      className={`flex-1 justify-center self-stretch gap-1${interactive ? ' cursor-pointer' : ''}`}
     >
       <Icon className="size-3" />
       {text}
@@ -84,104 +92,107 @@ function StaffingBadge({
 export function ShiftCard({
   instance,
   canManage = false,
-  weekStart,
+  orgUId,
 }: ShiftCardProps) {
-  const orgUId = useOrgUId();
-  const inviteSheet = useSheet('invite-shift', 'id', 'instanceId');
   const t = useTranslations('Shift');
 
-  const count = instance.volunteers?.length ?? 0;
-  const min = instance.master.minVolunteers;
-  const max = instance.master.maxVolunteers;
-  const state = getStaffingState(count, min, max);
+  const participatingCount = instance.volunteers?.length ?? 0;
+  const invites = instance.invites ?? [];
+  const min = instance.overrideMinVolunteers ?? instance.master.minVolunteers;
+  const max = instance.overrideMaxVolunteers ?? instance.master.maxVolunteers;
+  const state = getStaffingState(participatingCount, min, max);
 
-  const isAtCapacity = max != null && count >= max;
+  const isAtCapacity = max != null && participatingCount >= max;
   const showButton = canManage && !isAtCapacity;
   const buttonVariant = state === 'alert' ? 'default' : 'outline';
 
   const startTime = format(new Date(instance.actualStartsAt), 'HH:mm');
   const endTime = format(new Date(instance.actualEndsAt), 'HH:mm');
 
+  const cardVolunteers: VolunteeringShiftCardVolunteer[] = invites.map(
+    (invite) => ({
+      id: invite.user.id,
+      name: invite.user.name,
+      state: toInviteDisplayState(invite.status as ShiftInviteStatus),
+    }),
+  );
+
+  const instanceHref = shiftInstanceDetailPath(
+    orgUId,
+    instance.master.id,
+    instance.id,
+  );
+
   return (
-    <Card className="rounded-xl gap-1 shadow-sm pt-4 pb-2 px-2 overflow-hidden">
-      {/* Header */}
+    <Card className="min-w-0 rounded-xl gap-1 shadow-sm pt-4 pb-2 px-2 overflow-hidden">
       <div className="flex flex-col gap-2 items-end">
-        <div className="flex flex-col gap-1 w-full">
-          <p className="text-lg font-bold text-muted-foreground leading-none">
-            {startTime} - {endTime}
+        <Link
+          href={instanceHref}
+          className="flex w-full min-w-0 flex-col gap-1 rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          aria-label={t('card.openInstanceAria')}
+        >
+          <p className="flex w-full min-w-0 items-center justify-between gap-1 text-base font-bold leading-none text-muted-foreground">
+            <span className="min-w-0 tabular-nums">
+              {startTime} - {endTime}
+            </span>
+            {instance.master.rrule && (
+              <ActionTooltip label={formatRrulePattern(instance.master.rrule)}>
+                <span className="inline-flex shrink-0 text-muted-foreground">
+                  <RepeatIcon className="size-3.5" />
+                </span>
+              </ActionTooltip>
+            )}
           </p>
+          <p className="line-clamp-2 text-lg text-card-foreground">
+            {instance.overrideTitle ?? instance.master.title}
+          </p>
+        </Link>
 
-          <Link
-            className="hover:underline block"
-            href={shiftDetailPath(orgUId, instance.master.id, {
-              view: 'weekplan',
-              week: format(weekStart, 'yyyy-MM-dd'),
-            })}
-          >
-            <p className="text-lg text-card-foreground line-clamp-2">
-              {instance.master.title}
-            </p>
-          </Link>
-        </div>
-
-        <div className="flex gap-1 items-center w-full">
-          <StaffingBadge
-            count={count}
-            min={min}
-            max={max}
-            onClick={
-              showButton
-                ? () =>
-                    inviteSheet.open({
-                      id: instance.master.id,
-                      instanceId: instance.id,
-                    })
-                : undefined
-            }
-          />
+        <div className="flex w-full items-stretch gap-1">
+          {showButton ? (
+            <Link
+              href={shiftInvitePath(orgUId, instance.master.id, instance.id)}
+              className="flex flex-1"
+            >
+              <StaffingBadge
+                count={participatingCount}
+                min={min}
+                max={max}
+                interactive
+              />
+            </Link>
+          ) : (
+            <StaffingBadge count={participatingCount} min={min} max={max} />
+          )}
 
           {showButton && (
-            <Button
-              size="icon-sm"
-              variant={buttonVariant}
-              aria-label={t('card.inviteAria')}
-              onClick={() =>
-                inviteSheet.open({
-                  id: instance.master.id,
-                  instanceId: instance.id,
-                })
-              }
+            <Link
+              href={shiftInvitePath(orgUId, instance.master.id, instance.id)}
             >
-              <UserPlus className="size-4" />
-            </Button>
+              <Button
+                size="icon-sm"
+                variant={buttonVariant}
+                tooltip={t('card.inviteAria')}
+              >
+                <UserPlus className="size-4" />
+              </Button>
+            </Link>
           )}
         </div>
+
+        {instance.master.visibility === ShiftVisibility.InvitedMembers && (
+          <span className="flex w-full items-center gap-1 text-sm text-muted-foreground">
+            <LockKeyhole className="size-3" />
+            {t('visibility.INVITED_MEMBERS')}
+          </span>
+        )}
       </div>
 
-      {/* Accordion with volunteer list */}
-      {count > 0 ? (
-        <Accordion type="single" collapsible>
-          <AccordionItem value="volunteers" className="border-0">
-            <AccordionTrigger className="items-center py-1 text-base font-bold hover:no-underline flex-row-reverse justify-end gap-1">
-              {t('card.invited')}
-            </AccordionTrigger>
-
-            <AccordionContent className="pb-2">
-              <div className="flex flex-col gap-2">
-                {(instance.volunteers ?? []).map(({ id, name }) => (
-                  <p key={id} className="text-base truncate">
-                    {name}
-                  </p>
-                ))}
-              </div>
-            </AccordionContent>
-          </AccordionItem>
-        </Accordion>
-      ) : (
-        <p className="text-sm text-muted-foreground italic">
-          {t('card.noVolunteers')}
-        </p>
-      )}
+      <VolunteeringShiftCardVolunteers
+        volunteers={cardVolunteers}
+        phase="before"
+        sectionLabel={t('card.invited')}
+      />
     </Card>
   );
 }

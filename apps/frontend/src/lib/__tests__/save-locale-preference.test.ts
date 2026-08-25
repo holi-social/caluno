@@ -26,7 +26,7 @@ describe('saveLocalePreference', () => {
     mock.restore();
   });
 
-  it('sets the clippy.locale cookie after a successful save', async () => {
+  it('sets the caluno.locale cookie after a successful save', async () => {
     const navigate = mock(() => {});
 
     await saveLocalePreference({

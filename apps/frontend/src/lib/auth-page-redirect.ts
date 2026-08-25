@@ -1,5 +1,5 @@
 import { cookies } from 'next/headers';
-import { resolvePostAuthDestination } from './post-auth-routing';
+import { resolvePostAuthDestination } from './routing';
 import { isSafeRedirect } from './safe-redirect';
 
 export async function resolveAuthPageRedirects(searchParams: {

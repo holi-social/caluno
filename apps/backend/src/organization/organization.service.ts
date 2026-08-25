@@ -17,6 +17,9 @@ import {
 import type { PaginationInput } from '../graphql/pagination.input';
 import { MembershipService } from '../membership/membership.service';
 import { NotificationService } from '../notification';
+import { PostHogService } from '../shared/observability/posthog.service';
+import { FilePurpose } from '../storage/enums';
+import { FileService } from '../storage/services/file.service';
 import { slugify } from '../utils';
 import type { CreateOrganizationInput } from './inputs/create-organization.input';
 import { OrganizationMapper } from './mappers/organization.mapper';
@@ -29,6 +32,10 @@ type OrganizationUnitWithType = OrganizationUnitEntity & {
   type: OrganizationUnitTypeEntity;
 };
 
+type SeedMembership = {
+  organizationUnit: { id: string; organizationId: string | null } | null;
+};
+
 @Injectable()
 export class OrganizationService {
   constructor(
@@ -38,6 +45,8 @@ export class OrganizationService {
     private readonly membershipService: MembershipService,
     private readonly organizationUnitService: OrganizationUnitService,
     private readonly notificationService: NotificationService,
+    private readonly fileService: FileService,
+    private readonly postHogService: PostHogService,
   ) {}
 
   async findById(id: string): Promise<OrganizationEntity | undefined> {
@@ -130,7 +139,7 @@ export class OrganizationService {
     };
   }
 
-  async findAccessibleUnits(userId: string): Promise<OrganizationUnitEntity[]> {
+  async findUnits(userId: string): Promise<OrganizationUnitEntity[]> {
     const userMemberships = await this.db.query.memberships.findMany({
       where: { userId },
       with: {
@@ -140,8 +149,36 @@ export class OrganizationService {
       },
     });
 
+    return this.expandToChildOrgUnits(userMemberships);
+  }
+
+  async findAdministrableUnits(
+    userId: string,
+  ): Promise<OrganizationUnitEntity[]> {
+    const administrableMemberships = await this.db.query.memberships.findMany({
+      where: {
+        userId,
+        roles: {
+          role: {
+            permissions: {}, // select all memberships that have a role that has at least one permission
+          },
+        },
+      },
+      with: {
+        organizationUnit: {
+          columns: { id: true, organizationId: true },
+        },
+      },
+    });
+
+    return this.expandToChildOrgUnits(administrableMemberships);
+  }
+
+  private async expandToChildOrgUnits(
+    seedMemberships: SeedMembership[],
+  ): Promise<OrganizationUnitEntity[]> {
     const memberUnitIdsByOrgId = new Map<string, Set<string>>();
-    for (const membership of userMemberships) {
+    for (const membership of seedMemberships) {
       const unit = membership.organizationUnit;
       if (!unit?.organizationId) continue;
       const memberUnitIds =
@@ -312,6 +349,11 @@ export class OrganizationService {
     userId: string,
     input: CreateOrganizationInput,
   ): Promise<Organization> {
+    const { logoFileId, ...organizationInput } = input;
+    const logoUrl = logoFileId
+      ? await this.resolveLogoUrl(logoFileId)
+      : (organizationInput.logoUrl ?? null);
+
     const allPermissionKeys = Object.values(PERMISSIONS).filter(
       (permission) => !permission.startsWith('org-role:'),
     );
@@ -321,8 +363,9 @@ export class OrganizationService {
       const [createdOrganization] = await tx
         .insert(schema.organizations)
         .values({
-          ...input,
-          slug: slugify(input.name),
+          ...organizationInput,
+          logoUrl,
+          slug: slugify(organizationInput.name),
         })
         .returning();
 
@@ -330,8 +373,9 @@ export class OrganizationService {
       const [rootType] = await tx
         .insert(schema.organizationUnitTypes)
         .values({
-          name: 'management',
-          description: `organization managment unit for ${createdOrganization.name}`,
+          organizationId: createdOrganization.id,
+          name: 'organisation unit',
+          description: `organization unit for ${createdOrganization.name}`,
           icon: 'building-2',
         })
         .returning();
@@ -428,6 +472,20 @@ export class OrganizationService {
       userId,
     });
 
+    this.postHogService.captureUserJoinedOrg(userId, {
+      organizationId: organization.id,
+      organizationUnitId: rootUnit.id,
+      source: 'organization_created',
+    });
+
     return this.mapper.toModelOrThrow(organization);
+  }
+
+  private async resolveLogoUrl(logoFileId: string): Promise<string> {
+    await this.fileService.assertUploadedFileForPurpose(
+      logoFileId,
+      FilePurpose.ORGANIZATION_LOGO,
+    );
+    return this.fileService.resolvePublicUrlForUploadedFile(logoFileId);
   }
 }

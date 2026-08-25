@@ -7,6 +7,7 @@ import {
   HomeIcon,
   MenuIcon,
   QrCodeIcon,
+  ScanQrCode,
   UsersIcon,
 } from 'lucide-react';
 import { useState } from 'react';
@@ -21,7 +22,7 @@ const volunteerTabs: TabBarItem[] = [
 
 const backofficeTabs: TabBarItem[] = [
   { key: 'shiftplan', label: 'Shiftplan', icon: CalendarDaysIcon },
-  { key: 'check-in', label: 'Check in', icon: QrCodeIcon },
+  { key: 'check-in', label: 'Check in', icon: ScanQrCode },
   { key: 'timesheets', label: 'Timesheets', icon: ClockIcon },
   { key: 'volunteers', label: 'Volunteers', icon: UsersIcon },
 ];

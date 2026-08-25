@@ -10,14 +10,14 @@ export class CreateFormBlockInput {
   title!: string;
 
   @Field(() => String, { nullable: true })
-  description!: string | null;
+  description?: string | null;
 
   @Field(() => String, { nullable: true })
-  icon!: string | null;
+  icon?: string | null;
 
   @Field(() => Boolean, { nullable: true })
-  required!: boolean | null;
+  required?: boolean | null;
 
   @Field(() => [CreateFormBlockFieldInput], { nullable: true })
-  fields!: CreateFormBlockFieldInput[] | null;
+  fields?: CreateFormBlockFieldInput[] | null;
 }

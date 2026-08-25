@@ -1,9 +1,9 @@
-import { index, pgTable, unique, uuid } from 'drizzle-orm/pg-core';
+import { index, snakeCase, unique, uuid } from 'drizzle-orm/pg-core';
 import { idColumn, timestampColumns } from '../../database/database-columns';
 import { requirements } from './requirement.schema';
 import { requirementProfiles } from './requirement-profile.schema';
 
-export const requirementProfileRequirements = pgTable(
+export const requirementProfileRequirements = snakeCase.table(
   'requirement_profile_requirements',
   {
     ...idColumn,

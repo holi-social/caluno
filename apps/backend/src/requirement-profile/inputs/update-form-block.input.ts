@@ -3,7 +3,7 @@ import { Field, InputType } from '@nestjs/graphql';
 @InputType()
 export class UpdateFormBlockInput {
   @Field(() => String, { nullable: true })
-  title?: string;
+  title?: string | null;
 
   // Nullable in DB — null clears the value
   @Field(() => String, { nullable: true })
@@ -13,5 +13,5 @@ export class UpdateFormBlockInput {
   icon?: string | null;
 
   @Field(() => Boolean, { nullable: true })
-  required?: boolean;
+  required?: boolean | null;
 }

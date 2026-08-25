@@ -18,17 +18,16 @@ export default async function ForgotPasswordPage({
   setRequestLocale(locale);
   const t = await getTranslations('Auth.forgotPassword');
 
-  const { authenticatedRedirect } = await resolveAuthPageRedirects(
-    await searchParams,
-  );
+  const { formRedirectTo, authenticatedRedirect } =
+    await resolveAuthPageRedirects(await searchParams);
 
   if (await getSession()) {
     redirect({ href: await authenticatedRedirect(), locale });
   }
 
   return (
-    <AuthPageShell title={t('title')}>
-      <ForgotPasswordForm />
+    <AuthPageShell title={t('title')} description={t('description')}>
+      <ForgotPasswordForm redirectTo={formRedirectTo} />
     </AuthPageShell>
   );
 }

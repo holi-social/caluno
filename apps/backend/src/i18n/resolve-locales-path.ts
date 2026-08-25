@@ -1,11 +1,24 @@
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 
-const localePathCandidates = (moduleDir: string) => [
-  join(moduleDir, 'locales'),
-  join(moduleDir, '..', '..', 'i18n', 'locales'),
-  join(process.cwd(), 'src', 'i18n', 'locales'),
-];
+const getBackendRoot = (): string => {
+  const cwd = process.cwd();
+  const monorepoBackend = join(cwd, 'apps', 'backend');
+  if (existsSync(join(monorepoBackend, 'tsconfig.json'))) {
+    return monorepoBackend;
+  }
+  return cwd;
+};
+
+const localePathCandidates = (moduleDir: string) => {
+  const backendRoot = getBackendRoot();
+  return [
+    join(moduleDir, 'locales'),
+    join(moduleDir, '..', '..', 'i18n', 'locales'),
+    join(backendRoot, 'src', 'i18n', 'locales'),
+    join(process.cwd(), 'src', 'i18n', 'locales'),
+  ];
+};
 
 export function resolveI18nLocalesPath(moduleDir = __dirname): string {
   const found = localePathCandidates(moduleDir).find((path) =>

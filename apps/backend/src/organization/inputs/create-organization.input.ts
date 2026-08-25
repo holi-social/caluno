@@ -6,23 +6,26 @@ export class CreateOrganizationInput {
   name!: string;
 
   @Field(() => String, { nullable: true })
-  logoUrl!: string | null;
+  logoUrl?: string | null;
 
   @Field(() => String, { nullable: true })
-  websiteUrl!: string | null;
+  logoFileId?: string | null;
 
   @Field(() => String, { nullable: true })
-  contactEmail!: string | null;
+  websiteUrl?: string | null;
 
   @Field(() => String, { nullable: true })
-  phone!: string | null;
+  contactEmail?: string | null;
 
   @Field(() => String, { nullable: true })
-  description!: string | null;
+  phone?: string | null;
 
   @Field(() => String, { nullable: true })
-  address!: string | null;
+  description?: string | null;
 
   @Field(() => String, { nullable: true })
-  parentId!: string | null;
+  address?: string | null;
+
+  @Field(() => String, { nullable: true })
+  parentId?: string | null;
 }

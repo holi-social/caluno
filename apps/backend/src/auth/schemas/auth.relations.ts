@@ -19,6 +19,10 @@ export const authRelations = defineRelationsPart(schema, (r) => ({
       from: r.users.id,
       to: r.shiftInstanceInvites.userId,
     }),
+    shiftInvites: r.many.shiftInvites({
+      from: r.users.id,
+      to: r.shiftInvites.userId,
+    }),
     eventInvites: r.many.eventInvites({
       from: r.users.id,
       to: r.eventInvites.userId,

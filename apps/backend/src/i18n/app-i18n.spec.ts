@@ -32,16 +32,16 @@ describe('AppI18nService', () => {
   it('translates with a full key path', () => {
     expect(
       appI18n.translate('en', 'email.passwordReset.subject', {
-        brandName: 'Clippy',
+        brandName: 'Caluno',
       }),
-    ).toBe('Reset your Clippy password');
+    ).toBe('Reset your Caluno password');
   });
 
   it('scopes translators to a namespace', () => {
     const { t } = appI18n.createTranslator('de', 'email');
 
-    expect(t('passwordReset.subject', { brandName: 'Clippy' })).toBe(
-      'Setze dein Clippy-Passwort zurück',
+    expect(t('passwordReset.subject', { brandName: 'Caluno' })).toBe(
+      'Setze dein Caluno-Passwort zurück',
     );
   });
 });
@@ -54,6 +54,17 @@ describe('formatLocaleDateTime', () => {
     );
 
     expect(formatted).toMatch(/01[./]07[./]2026/);
+    expect(formatted).toMatch(/12:00/);
+  });
+
+  it('uses German regional date order for English copy', () => {
+    const formatted = formatLocaleDateTime(
+      new Date('2026-07-06T10:00:00.000Z'),
+      'en',
+    );
+
+    expect(formatted).toMatch(/06[./]07[./]2026/);
+    expect(formatted).not.toMatch(/^07[./]06/);
     expect(formatted).toMatch(/12:00/);
   });
 });

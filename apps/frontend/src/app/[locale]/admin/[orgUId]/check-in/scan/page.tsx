@@ -20,7 +20,7 @@ export default async function ScanPage({ params }: ScanPageProps) {
   return (
     <div className="max-w-2xl">
       <div>
-        <h1 className="page-title">{t('scanTitle')}</h1>
+        <h1 className="page-title">{t('checkInTitle')}</h1>
         <p className="text-muted-foreground">{t('scanDescription')}</p>
       </div>
       <div className="px-2 py-8">

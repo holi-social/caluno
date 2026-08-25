@@ -3,7 +3,7 @@ import {
   check,
   foreignKey,
   index,
-  pgTable,
+  snakeCase,
   text,
   timestamp,
   unique,
@@ -15,7 +15,7 @@ import { requirementProfiles } from '../../requirement-profile/schemas/requireme
 import { organizations } from './organization.schema';
 import { organizationUnitTypes } from './organization-unit-type.schema';
 
-export const organizationUnits = pgTable(
+export const organizationUnits = snakeCase.table(
   'organization_units',
   {
     ...idColumn,
@@ -35,6 +35,7 @@ export const organizationUnits = pgTable(
     name: text('name').notNull(),
     slug: text('slug').notNull().unique(),
     logoUrl: text('logo_url'),
+    coverUrl: text('cover_url'),
     websiteUrl: text('website_url'),
     contactEmail: text('contact_email'),
     phone: text('phone'),

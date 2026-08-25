@@ -11,7 +11,7 @@ export class RequirementProfileFieldResolver {
     private readonly requirementMapper: RequirementMapper,
   ) {}
 
-  @ResolveField(() => [Requirement], { nullable: true })
+  @ResolveField(() => [Requirement])
   async requirements(
     @Parent() profile: RequirementProfile,
   ): Promise<Requirement[]> {

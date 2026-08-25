@@ -31,6 +31,45 @@ export function shiftDetailPath(
   return `/admin/${orgUId}/shifts/${shiftId}${queryString ? `?${queryString}` : ''}`;
 }
 
+export function shiftNewPath(orgUId: string): string {
+  return `/admin/${orgUId}/shifts/new`;
+}
+
+export function shiftEditPath(orgUId: string, shiftId: string): string {
+  return `/admin/${orgUId}/shifts/${shiftId}/edit`;
+}
+
+export function shiftInvitePath(
+  orgUId: string,
+  shiftId: string,
+  instanceId: string,
+  options?: { flow?: 'create' },
+): string {
+  const params = new URLSearchParams({ instanceId });
+  if (options?.flow) {
+    params.set('flow', options.flow);
+  }
+  return `/admin/${orgUId}/shifts/${shiftId}/invite?${params.toString()}`;
+}
+
+export function shiftInstanceDetailPath(
+  orgUId: string,
+  shiftId: string,
+  instanceId: string,
+  query?: ShiftListQuery,
+): string {
+  const queryString = parseQuery(query);
+  return `/admin/${orgUId}/shifts/${shiftId}/instances/${instanceId}${queryString ? `?${queryString}` : ''}`;
+}
+
+export function shiftInstanceEditPath(
+  orgUId: string,
+  shiftId: string,
+  instanceId: string,
+): string {
+  return `/admin/${orgUId}/shifts/${shiftId}/instances/${instanceId}/edit`;
+}
+
 export function parseShiftListQuery(
   searchParams: Record<string, string | string[] | undefined>,
 ): ShiftListQuery {

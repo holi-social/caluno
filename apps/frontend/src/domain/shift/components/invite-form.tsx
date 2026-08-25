@@ -1,310 +1,225 @@
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
-import {
-  useMemberships,
-  useOrgUId,
-  useShift,
-  useShiftInstances,
-  useShiftVolunteers,
-} from '@repo/data/react';
-import {
-  Button,
-  Card,
-  CardContent,
-  Checkbox,
-  Field,
-  FieldDescription,
-  FieldError,
-  FieldLabel,
-  Input,
-  Separator,
-} from '@repo/ui';
-import { Share2 } from 'lucide-react';
+import { ShiftVisibility } from '@repo/data';
+import { Checkbox, FieldDescription, FieldLabel, Separator } from '@repo/ui';
 import { useLocale, useTranslations } from 'next-intl';
-import { useEffect, useId, useTransition } from 'react';
+import { useId, useState, useTransition } from 'react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
-import { MemberSelect } from '@/components/member-select';
+import { FormSheet, useFormSheet } from '@/components/form-sheet';
+import { useRouter } from '@/i18n/navigation';
 import { useSession } from '@/lib/auth';
-import { copyToClipboard } from '@/lib/clipboard';
-import {
-  inviteMembersToShift,
-  updateShiftStaffing,
-  updateShiftVolunteers,
-} from '../actions';
+import type { RecurrenceDayValue } from '../constants';
 import { type InviteShiftFormValues, inviteShiftFormSchema } from '../schemas';
-import { shiftShareUrl } from '../share';
+import { setSuccessDialogCreatedShift } from '../success-dialog';
+import ShareLinkButton from './share-link-button';
+import { ShiftInstanceSummaryCard } from './shift-instance-summary-card';
+import { TransferList } from './transfer-list';
+
+type Member = {
+  id: string;
+  name: string;
+  email: string;
+  image?: string | null;
+  inviteStatus?: import('@repo/data').ShiftInviteStatus | null;
+};
 
 interface InviteShiftFormProps {
-  formId?: string;
+  title: string;
+  description: string;
+  orgUId: string;
   shiftId: string;
   instanceId: string;
-  onSuccess?: () => void;
-  onPendingChange?: (isPending: boolean) => void;
+  isCreationFlow?: boolean;
+  shift: {
+    title: string;
+    isRecurring: boolean;
+    recurrenceDays: RecurrenceDayValue[];
+    visibility: ShiftVisibility;
+  };
+  selectedInstance: {
+    actualStartsAt: string | Date;
+    actualEndsAt: string | Date;
+  };
+  availableMembers: Member[];
+  invitedMembers: Member[];
+  mutateVolunteers: (data: {
+    memberIds: string[];
+    inviteToAllInstances?: boolean;
+  }) => Promise<{ serverError?: string }>;
 }
 
 export function InviteShiftForm({
-  formId,
+  title,
+  description,
   shiftId,
   instanceId,
-  onSuccess,
-  onPendingChange,
+  isCreationFlow = false,
+  shift,
+  selectedInstance,
+  availableMembers,
+  invitedMembers,
+  mutateVolunteers,
 }: InviteShiftFormProps) {
-  const orgUId = useOrgUId();
+  const router = useRouter();
   const session = useSession();
-  const [isPending, startTransition] = useTransition();
+  const [pending, startTransition] = useTransition();
+  const [serverError, setServerError] = useState<string>();
   const t = useTranslations('Shift');
-  const tCommon = useTranslations('Common');
   const locale = useLocale();
   const formatWithOptions = (date: Date, options: Intl.DateTimeFormatOptions) =>
     new Intl.DateTimeFormat(locale, options).format(date);
 
-  const { data: shift } = useShift(shiftId);
-  const { data: shiftVolunteers } = useShiftVolunteers(instanceId);
-  const { data: memberships } = useMemberships(orgUId);
-  const { data: shiftInstances } = useShiftInstances(shiftId);
+  const { open, setOpen } = useFormSheet();
 
-  const schema = inviteShiftFormSchema({
-    minMaxVolunteers: t('validation.minMaxVolunteers'),
-  });
+  const schema = inviteShiftFormSchema();
 
   const form = useForm<InviteShiftFormValues>({
     resolver: zodResolver(schema),
     defaultValues: {
-      minVolunteers: null,
-      maxVolunteers: null,
-      invitedMemberIds: [],
+      invitedMemberIds: invitedMembers.map((m) => m.id),
       inviteAllInstances: false,
     },
   });
 
-  useEffect(() => {
-    onPendingChange?.(isPending);
-  }, [isPending, onPendingChange]);
-
-  useEffect(() => {
-    if (shift?.id) {
-      form.setValue('minVolunteers', shift.minVolunteers ?? null);
-      form.setValue('maxVolunteers', shift.maxVolunteers ?? null);
-    }
-  }, [shift?.id, shift?.minVolunteers, shift?.maxVolunteers, form.setValue]);
-
-  useEffect(() => {
-    if (shiftVolunteers) {
-      form.setValue(
-        'invitedMemberIds',
-        shiftVolunteers.map((v) => v.id),
-      );
-    }
-  }, [shiftVolunteers, form.setValue]);
-
+  const isOpenShift = shift.visibility === ShiftVisibility.AllMembers;
   const currentUserId = session.data?.user?.id;
-
-  const selectedInstance = shiftInstances?.find((i) => i.id === instanceId);
-  const isRecurring = !!shift?.rrule && (shift.recurrenceDays.length ?? 0) > 0;
-  const inviteAllCheckboxId = useId();
-
-  const instanceStartDate = selectedInstance
-    ? new Date(selectedInstance.actualStartsAt)
-    : null;
-  const instanceEndDate = selectedInstance
-    ? new Date(selectedInstance.actualEndsAt)
-    : null;
-
-  const allMembers = (memberships ?? [])
-    .map((m) => m.user)
-    .filter((u) => u.id !== currentUserId);
+  const allMembers = availableMembers.filter((m) => m.id !== currentUserId);
+  const statusById = new Map(
+    invitedMembers.map((m) => [m.id, m.inviteStatus] as const),
+  );
 
   const watchedIds = form.watch('invitedMemberIds');
+  const invitedForList: Member[] = watchedIds.map((id) => {
+    const fromAll = allMembers.find((m) => m.id === id);
+    if (fromAll) {
+      return { ...fromAll, inviteStatus: statusById.get(id) ?? null };
+    }
+    const fromInvited = invitedMembers.find((m) => m.id === id);
+    return (
+      fromInvited ?? {
+        id,
+        name: id,
+        email: '',
+        inviteStatus: statusById.get(id) ?? null,
+      }
+    );
+  });
 
-  const dateOptions: Intl.DateTimeFormatOptions = {
-    weekday: 'short',
-    month: 'long',
-    day: 'numeric',
-  };
-  const timeOptions: Intl.DateTimeFormatOptions = {
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: false,
-  };
+  const inviteAllCheckboxId = useId();
 
-  const formattedDays = isRecurring
+  const instanceStartDate = new Date(selectedInstance.actualStartsAt);
+  const instanceEndDate = new Date(selectedInstance.actualEndsAt);
+
+  const formattedDays = shift.isRecurring
     ? new Intl.ListFormat(locale, { type: 'conjunction' }).format(
         shift.recurrenceDays.map((day) => t(`recurrence.weekDay.${day}`)),
       )
     : '';
 
   const onSubmit = (data: InviteShiftFormValues) => {
+    setServerError(undefined);
+
     startTransition(async () => {
-      const staffingResult = await updateShiftStaffing({
-        shiftId,
-        organizationUnitId: orgUId,
-        minVolunteers: data.minVolunteers ?? null,
-        maxVolunteers: data.maxVolunteers ?? null,
-      });
-      if (staffingResult?.serverError) {
-        toast.error(staffingResult.serverError);
-        return;
-      }
-
-      const updateResult = await updateShiftVolunteers({
-        instanceId,
-        organizationUnitId: orgUId,
+      const volunteersResult = await mutateVolunteers({
         memberIds: data.invitedMemberIds,
+        inviteToAllInstances: data.inviteAllInstances,
       });
-      if (updateResult?.serverError) {
-        toast.error(updateResult.serverError);
+      if (volunteersResult?.serverError) {
+        setServerError(volunteersResult.serverError);
         return;
       }
 
-      if (data.inviteAllInstances) {
-        const inviteAllResult = await inviteMembersToShift({
-          shiftId,
-          organizationUnitId: orgUId,
-          memberIds: data.invitedMemberIds,
-        });
-        if (inviteAllResult?.serverError) {
-          toast.error(inviteAllResult.serverError);
-          return;
-        }
+      if (isCreationFlow) {
+        setSuccessDialogCreatedShift({ shiftId, instanceId });
+        await setOpen(false);
+        router.refresh();
+        return;
       }
 
-      onSuccess?.();
+      await setOpen(false);
+      router.refresh();
+      toast.success(t('toast.inviteChanged'));
     });
   };
 
   return (
-    <form
-      id={formId}
+    <FormSheet
       onSubmit={form.handleSubmit(onSubmit)}
-      className="flex flex-col gap-6 h-full"
+      title={title}
+      description={description}
+      pending={pending}
+      open={open}
+      onOpenChange={setOpen}
+      formError={serverError}
+      fillContent
     >
-      {selectedInstance && instanceStartDate && instanceEndDate && shift && (
-        <div className="flex flex-col gap-2">
-          <p className="text-sm text-muted-foreground">
-            {t('inviteForm.managingLabel')}
-          </p>
-          <Card>
-            <CardContent className="flex justify-between items-start gap-4">
-              <div>
-                <p className="text-lg font-semibold">
-                  {formatWithOptions(instanceStartDate, dateOptions)}
-                </p>
-                <p className="text-muted-foreground">{shift.title}</p>
-              </div>
-              <p className="text-lg font-semibold whitespace-nowrap">
-                {formatWithOptions(instanceStartDate, timeOptions)} -{' '}
-                {formatWithOptions(instanceEndDate, timeOptions)}
-              </p>
-            </CardContent>
-            {isRecurring && (
-              <>
-                <Separator />
-                <CardContent>
-                  <div className="flex items-start gap-3">
-                    <Checkbox
-                      id={inviteAllCheckboxId}
-                      checked={form.watch('inviteAllInstances')}
-                      onCheckedChange={(checked) =>
-                        form.setValue('inviteAllInstances', checked === true, {
-                          shouldValidate: true,
-                        })
-                      }
-                      disabled={isPending}
-                    />
-                    <div className="grid gap-1">
-                      <FieldLabel
-                        htmlFor={inviteAllCheckboxId}
-                        className="font-normal"
-                      >
-                        {t('inviteForm.inviteAllLabel')}
-                      </FieldLabel>
-                      <FieldDescription>
-                        {t('inviteForm.inviteAllDescription', {
-                          startDate: formatWithOptions(shift.startDate, {
-                            day: '2-digit',
-                            month: '2-digit',
-                            year: 'numeric',
-                          }),
-                          days: formattedDays,
-                        })}
-                      </FieldDescription>
-                    </div>
+      <div className="flex min-h-full flex-col gap-6">
+        <div className="flex shrink-0 flex-col gap-6">
+          <div className="flex flex-col gap-2">
+            <p className="text-sm text-muted-foreground">
+              {t('inviteForm.managingLabel')}
+            </p>
+            <ShiftInstanceSummaryCard
+              title={shift.title}
+              startsAt={instanceStartDate}
+              endsAt={instanceEndDate}
+            >
+              {shift.isRecurring && (
+                <div className="flex items-start gap-3">
+                  <Checkbox
+                    id={inviteAllCheckboxId}
+                    checked={form.watch('inviteAllInstances')}
+                    onCheckedChange={(checked) =>
+                      form.setValue('inviteAllInstances', checked === true, {
+                        shouldValidate: true,
+                      })
+                    }
+                    disabled={pending}
+                  />
+                  <div className="grid gap-1">
+                    <FieldLabel
+                      htmlFor={inviteAllCheckboxId}
+                      className="font-normal"
+                    >
+                      {t('inviteForm.inviteAllLabel')}
+                    </FieldLabel>
+                    <FieldDescription>
+                      {t('inviteForm.inviteAllDescription', {
+                        startDate: formatWithOptions(instanceStartDate, {
+                          day: '2-digit',
+                          month: '2-digit',
+                          year: 'numeric',
+                        }),
+                        days: formattedDays,
+                      })}
+                    </FieldDescription>
                   </div>
-                </CardContent>
-              </>
-            )}
-          </Card>
+                </div>
+              )}
+            </ShiftInstanceSummaryCard>
+          </div>
+
+          <Separator />
         </div>
-      )}
 
-      {/* Min / Max row */}
-      <div className="flex gap-3">
-        <Field className="flex-1">
-          <FieldLabel htmlFor="minVolunteers">
-            {t('inviteForm.minVolunteersLabel')}
-          </FieldLabel>
-          <Input
-            id="minVolunteers"
-            type="number"
-            min={1}
-            placeholder={t('inviteForm.minVolunteersPlaceholder')}
-            disabled={isPending}
-            {...form.register('minVolunteers', {
-              setValueAs: (v) => (v === '' || v == null ? null : Number(v)),
-            })}
+        <div className="flex min-h-0 flex-1 flex-col gap-4">
+          <p className="shrink-0 text-xl font-bold">{t('inviteForm.title')}</p>
+          <TransferList
+            available={allMembers}
+            invited={invitedForList}
+            onInvitedChange={(ids) => form.setValue('invitedMemberIds', ids)}
           />
-          <FieldDescription>
-            {t('inviteForm.minVolunteersDescription')}
-          </FieldDescription>
-        </Field>
-        <Field className="flex-1">
-          <FieldLabel htmlFor="maxVolunteers">
-            {t('inviteForm.maxVolunteersLabel')}
-          </FieldLabel>
-          <Input
-            id="maxVolunteers"
-            type="number"
-            min={1}
-            placeholder={t('inviteForm.maxVolunteersPlaceholder')}
-            disabled={isPending}
-            {...form.register('maxVolunteers', {
-              setValueAs: (v) => (v === '' || v == null ? null : Number(v)),
-            })}
-          />
-          <FieldDescription>
-            {t('inviteForm.maxVolunteersDescription')}
-          </FieldDescription>
-          <FieldError errors={[form.formState.errors.maxVolunteers]} />
-        </Field>
+          {isOpenShift && (
+            <ShareLinkButton
+              shiftId={shiftId}
+              instanceId={instanceId}
+              className="w-full shrink-0"
+            />
+          )}
+        </div>
       </div>
-
-      <Separator />
-
-      {/* Invite section */}
-      <div className="flex flex-col gap-4 flex-1">
-        <p className="text-xl font-bold">{t('inviteForm.title')}</p>
-        <MemberSelect
-          members={allMembers}
-          value={watchedIds}
-          onChange={(ids) => form.setValue('invitedMemberIds', ids)}
-        />
-        <Button
-          type="button"
-          variant="outline"
-          className="w-full"
-          onClick={() =>
-            copyToClipboard(
-              shiftShareUrl(shiftId, instanceId),
-              tCommon('linkCopied'),
-            )
-          }
-        >
-          <Share2 className="size-4 mr-2" />
-          {t('inviteForm.copyInviteLink')}
-        </Button>
-      </div>
-    </form>
+    </FormSheet>
   );
 }

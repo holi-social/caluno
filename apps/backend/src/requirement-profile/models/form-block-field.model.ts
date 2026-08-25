@@ -1,5 +1,9 @@
-import { Field, ID, ObjectType } from '@nestjs/graphql';
+import { Field, ID, ObjectType, registerEnumType } from '@nestjs/graphql';
 import { FieldType } from '../enums';
+
+registerEnumType(FieldType, {
+  name: 'FieldType',
+});
 
 @ObjectType()
 export class SelectOption {
@@ -25,10 +29,10 @@ export class FormBlockField {
   label!: string;
 
   @Field(() => String, { nullable: true })
-  placeholder!: string | null;
+  placeholder?: string | null;
 
   @Field(() => String, { nullable: true })
-  description!: string | null;
+  description?: string | null;
 
   @Field(() => Boolean)
   required!: boolean;
@@ -37,19 +41,25 @@ export class FormBlockField {
   lockType!: boolean;
 
   @Field(() => String, { nullable: true })
-  systemKey!: string | null;
+  systemKey?: string | null;
 
   @Field(() => [SelectOption], { nullable: true })
-  options!: SelectOption[] | null;
+  options?: SelectOption[] | null;
 
   @Field(() => String, { nullable: true })
-  documentUrl!: string | null;
+  documentFileId?: string | null;
 
   @Field(() => String, { nullable: true })
-  documentLabel!: string | null;
+  documentLabel?: string | null;
+
+  @Field(() => String, { nullable: true })
+  documentDownloadUrl?: string | null;
+
+  @Field(() => String, { nullable: true })
+  documentFilename?: string | null;
 
   @Field(() => Number, { nullable: true })
-  minAge!: number | null;
+  minAge?: number | null;
 
   @Field(() => Number)
   fieldOrder!: number;

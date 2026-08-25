@@ -1,14 +1,46 @@
 {
   "$schema": "https://v2-9-9.turborepo.dev/schema.json",
   "ui": "tui",
+  "globalPassThroughEnv": [
+    "DB_HOST",
+    "DB_PORT",
+    "DB_USER",
+    "DB_PASSWORD",
+    "DB_NAME",
+    "POSTGRES_PORT",
+    "POSTGRES_USER",
+    "POSTGRES_PASSWORD",
+    "POSTGRES_DB"
+  ],
   "tasks": {
     "build": {
       "dependsOn": ["^build", "codegen"],
       "inputs": ["$TURBO_DEFAULT$", ".env*"],
-      "outputs": [".next/**", "!.next/cache/**", "dist/**"]
+      "outputs": [".next/**", "!.next/cache/**", "dist/**"],
+      "env": [
+        "NEXT_PUBLIC_SENTRY_DSN",
+        "NEXT_PUBLIC_SENTRY_ENVIRONMENT",
+        "NEXT_PUBLIC_SENTRY_TRACES_SAMPLE_RATE",
+        "NEXT_PUBLIC_SENTRY_REPLAY_ENABLED",
+        "SENTRY_DSN",
+        "SENTRY_ENVIRONMENT",
+        "SENTRY_RELEASE",
+        "SENTRY_ORG",
+        "SENTRY_PROJECT_FRONTEND",
+        "SENTRY_PROJECT_BACKEND"
+      ],
+      "passThroughEnv": ["SENTRY_AUTH_TOKEN"]
     },
     "check-types": {
-      "dependsOn": ["^check-types", "codegen"]
+      "dependsOn": ["^build", "^check-types", "codegen"]
+    },
+    "all-checks": {
+      "dependsOn": [
+        "^all-checks",
+        "//#format-and-lint:fix",
+        "check-types",
+        "codegen"
+      ]
     },
     "codegen": {
       "dependsOn": ["^codegen"],
@@ -22,7 +54,7 @@
     "dev": {
       "cache": false,
       "persistent": true,
-      "dependsOn": ["db:up", "codegen"]
+      "dependsOn": ["^build", "db:up", "codegen"]
     },
     "db:up": {
       "cache": false

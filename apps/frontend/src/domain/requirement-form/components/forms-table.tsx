@@ -46,7 +46,7 @@ function FormActions({
       <Button
         size="icon-xs"
         variant="outline"
-        aria-label={t('copyShareLinkAria')}
+        tooltip={t('copyShareLinkAria')}
         onClick={handleShare}
       >
         <Share2 />
@@ -54,7 +54,7 @@ function FormActions({
       <Button
         size="icon-xs"
         variant="outline"
-        aria-label={t('editFormAria')}
+        tooltip={t('editFormAria')}
         asChild
       >
         <Link href={`/admin/${orgUId}/requirement-forms/${form.id}/builder`}>
@@ -64,7 +64,7 @@ function FormActions({
       <Button
         size="icon-xs"
         variant="outline"
-        aria-label={t('submissionsAria')}
+        tooltip={t('submissionsAria')}
         asChild
       >
         <Link
@@ -77,8 +77,7 @@ function FormActions({
         <Button
           size="icon-xs"
           variant="outline"
-          aria-label={t('cannotDeleteAria')}
-          title={t('cannotDeleteAria')}
+          tooltip={t('cannotDeleteAria')}
           disabled
         >
           <Lock />
@@ -92,7 +91,7 @@ function FormActions({
             <Button
               size="icon-xs"
               variant="destructive"
-              aria-label={t('deleteFormAria')}
+              tooltip={t('deleteFormAria')}
               disabled={isDeleting}
             >
               {isDeleting ? <Loader2 className="animate-spin" /> : <Trash2 />}

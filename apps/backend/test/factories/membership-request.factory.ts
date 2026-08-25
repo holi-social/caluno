@@ -5,6 +5,7 @@ import { MembershipRequestStatus } from '../../src/membership/enums';
 export type MembershipRequest = typeof schema.membershipRequests.$inferSelect;
 
 type MembershipRequestMetadata = {
+  intendedEventIds?: string[];
   intendedShiftInstanceIds?: string[];
   intendedShiftIds?: string[];
 };

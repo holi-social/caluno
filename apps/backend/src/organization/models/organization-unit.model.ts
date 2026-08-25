@@ -1,9 +1,10 @@
-import { Field, ID, ObjectType } from '@nestjs/graphql';
+import { Field, ID, Int, ObjectType } from '@nestjs/graphql';
 
 import { createPaginatedResponseType } from '../../graphql/paginated-response.model';
 import { RequirementProfile } from '../../requirement-profile/models/requirement-profile.model';
 import type { Organization } from './organization.model';
 import { Organization as OrganizationModel } from './organization.model';
+import { RequiredFormRef } from './organization-unit-required-form.model';
 import { OrganizationUnitType } from './organization-unit-type.model';
 
 @ObjectType()
@@ -21,22 +22,25 @@ export class OrganizationUnit {
   organizationId!: string;
 
   @Field(() => String, { nullable: true })
-  logoUrl!: string | null;
+  logoUrl?: string | null;
 
   @Field(() => String, { nullable: true })
-  websiteUrl!: string | null;
+  coverUrl?: string | null;
 
   @Field(() => String, { nullable: true })
-  contactEmail!: string | null;
+  websiteUrl?: string | null;
 
   @Field(() => String, { nullable: true })
-  phone!: string | null;
+  contactEmail?: string | null;
 
   @Field(() => String, { nullable: true })
-  address!: string | null;
+  phone?: string | null;
 
   @Field(() => String, { nullable: true })
-  description!: string | null;
+  address?: string | null;
+
+  @Field(() => String, { nullable: true })
+  description?: string | null;
 
   @Field(() => OrganizationModel)
   organization!: Organization;
@@ -45,16 +49,25 @@ export class OrganizationUnit {
   type!: OrganizationUnitType;
 
   @Field(() => OrganizationUnit, { nullable: true })
-  parent!: OrganizationUnit | null;
+  parent?: OrganizationUnit | null;
 
   @Field(() => [OrganizationUnit])
   children!: OrganizationUnit[];
 
   @Field(() => RequirementProfile, { nullable: true })
-  requiredMembershipRequirementProfile!: RequirementProfile | null;
+  requiredMembershipRequirementProfile?: RequirementProfile | null;
+
+  @Field(() => [RequiredFormRef])
+  requiredForms!: RequiredFormRef[];
 
   @Field(() => Date, { nullable: true })
-  deletedAt!: Date;
+  deletedAt?: Date | null;
+
+  @Field(() => Int)
+  memberCount!: number;
+
+  @Field(() => Int)
+  openShiftsCount!: number;
 }
 
 export const OrganizationUnitPaginatedResponse =

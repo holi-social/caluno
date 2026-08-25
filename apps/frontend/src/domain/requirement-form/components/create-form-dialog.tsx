@@ -10,6 +10,7 @@ import {
   FieldLabel,
   Input,
 } from '@repo/ui';
+import { Plus, X } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
@@ -21,11 +22,13 @@ export function CreateFormDialog({
   onOpenChange,
   orgUId,
   organizationId,
+  onCreated,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   orgUId: string;
   organizationId: string;
+  onCreated?: (formId: string) => void;
 }) {
   const router = useRouter();
   const t = useTranslations('RequirementForm.form');
@@ -54,9 +57,13 @@ export function CreateFormDialog({
         toast.error(result.serverError);
       } else if (result?.data?.id) {
         onOpenChange(false);
-        router.push(
-          `/admin/${orgUId}/requirement-forms/${result.data.id}/builder`,
-        );
+        if (onCreated) {
+          onCreated(result.data.id);
+        } else {
+          router.push(
+            `/admin/${orgUId}/requirement-forms/${result.data.id}/builder`,
+          );
+        }
       }
     } finally {
       setCreating(false);
@@ -100,6 +107,7 @@ export function CreateFormDialog({
               variant="outline"
               onClick={() => onOpenChange(false)}
             >
+              <X />
               {t('cancel')}
             </Button>
             <Button
@@ -107,6 +115,7 @@ export function CreateFormDialog({
               onClick={handleCreate}
               disabled={!name.trim() || creating}
             >
+              <Plus />
               {creating ? t('creating') : t('create')}
             </Button>
           </div>

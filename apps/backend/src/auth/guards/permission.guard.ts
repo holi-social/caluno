@@ -1,6 +1,7 @@
 import {
   CanActivate,
   ExecutionContext,
+  ForbiddenException,
   Injectable,
   Scope,
 } from '@nestjs/common';
@@ -28,30 +29,71 @@ export class PermissionGuard implements CanActivate {
       return true;
     }
 
-    const ctx = GqlExecutionContext.create(context);
-    const gqlContext = ctx.getContext();
-    const {
-      req: { user },
-      organizationUnitId,
-    } = gqlContext;
+    const { user, organizationUnitId, isGraphql } =
+      this.resolveRequestContext(context);
 
     if (!user) {
-      throw new ForbiddenGraphQLError('You are not authenticated');
+      this.throwForbidden('You are not authenticated', isGraphql);
     }
 
     const hasRequiredPermissions =
       await this.authService.hasRequiredPermissions(
         user.id,
-        organizationUnitId,
+        organizationUnitId ?? '',
         requiredPermissions,
       );
 
     if (!hasRequiredPermissions) {
-      throw new ForbiddenGraphQLError(
+      this.throwForbidden(
         `You do not have the required permissions to access this resource. Required: ${requiredPermissions.join(', ')}`,
+        isGraphql,
       );
     }
 
     return true;
+  }
+
+  private resolveRequestContext(context: ExecutionContext): {
+    user?: { id: string };
+    organizationUnitId?: string;
+    isGraphql: boolean;
+  } {
+    if (context.getType() === 'http') {
+      const request = context.switchToHttp().getRequest<{
+        user?: { id: string };
+        headers: Record<string, string | string[] | undefined>;
+      }>();
+
+      return {
+        user: request.user,
+        organizationUnitId: this.readHeader(
+          request.headers['x-organization-unit-id'],
+        ),
+        isGraphql: false,
+      };
+    }
+
+    const gqlContext = GqlExecutionContext.create(context).getContext();
+    return {
+      user: gqlContext.req?.user,
+      organizationUnitId: gqlContext.organizationUnitId,
+      isGraphql: true,
+    };
+  }
+
+  private readHeader(value: string | string[] | undefined): string | undefined {
+    if (Array.isArray(value)) {
+      return value[0];
+    }
+
+    return value;
+  }
+
+  private throwForbidden(message: string, isGraphql: boolean): never {
+    if (isGraphql) {
+      throw new ForbiddenGraphQLError(message);
+    }
+
+    throw new ForbiddenException(message);
   }
 }

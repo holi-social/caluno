@@ -5,8 +5,12 @@ import {
   useAdminUserProfile,
   useFormSubmissionsForVolunteer,
   useOrgUId,
+  useUser,
 } from '@repo/data/react';
 import {
+  Avatar,
+  AvatarFallback,
+  AvatarImage,
   Badge,
   Separator,
   Sheet,
@@ -15,7 +19,7 @@ import {
   SheetTitle,
   Skeleton,
 } from '@repo/ui';
-import { ExternalLink } from 'lucide-react';
+import { ExternalLink, UserRound } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useSheet } from '@/hooks/use-sheet';
 import { Link } from '@/i18n/navigation';
@@ -55,6 +59,7 @@ function statusLabel(
 
 function VolunteerSheetContent({
   userId,
+  name,
   status,
   email,
   checkInId,
@@ -66,8 +71,10 @@ function VolunteerSheetContent({
   checkInId: string;
 }) {
   const t = useTranslations('Volunteer.sheet');
+  const tCommon = useTranslations('Common');
   const tStatus = useTranslations('MembershipRequest.status');
   const orgUId = useOrgUId();
+  const { data: user, isPending: userPending } = useUser(userId);
   const { data: userProfile, isPending: profilePending } =
     useAdminUserProfile(userId);
   const { data: submissions, isPending: submissionsPending } =
@@ -83,7 +90,20 @@ function VolunteerSheetContent({
 
   return (
     <div className="flex flex-col gap-6 mt-4">
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-4">
+        {userPending ? (
+          <Skeleton className="size-10 rounded-full" />
+        ) : (
+          <Avatar size="lg">
+            <AvatarImage
+              src={user?.image ?? undefined}
+              alt={tCommon('avatarAlt', { name: user?.name ?? name })}
+            />
+            <AvatarFallback>
+              <UserRound className="size-6" />
+            </AvatarFallback>
+          </Avatar>
+        )}
         <Badge variant={statusVariant(status)}>
           {statusLabel(tStatus, status)}
         </Badge>
@@ -105,7 +125,10 @@ function VolunteerSheetContent({
             {birthday && (
               <InfoRow label={t('birthdayLabel')} value={birthday} />
             )}
-            <InfoRow label={t('qrIdLabel')} value={checkInId} />
+            <InfoRow
+              label={t('qrIdLabel')}
+              value={user?.checkInId ?? checkInId}
+            />
           </div>
         )}
       </div>

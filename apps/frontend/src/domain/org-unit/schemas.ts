@@ -11,7 +11,7 @@ export function createOrgUnitSchema(t: OrgUnitSchemaMessages) {
     organizationUnitId: z.uuid(),
     name: z.string().min(2, t.nameMin),
     typeId: z.uuid(t.typeRequired),
-    logoUrl: z.union([z.url(), z.literal('')]).optional(),
+    logoFileId: z.uuid().nullish(),
     websiteUrl: z.union([z.url(), z.literal('')]).optional(),
     contactEmail: z.union([z.email(), z.literal('')]).optional(),
     phone: z.string().optional(),

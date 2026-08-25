@@ -1,10 +1,11 @@
 'use server';
 
-import { FieldType } from '@repo/data';
+import { FieldType, RequiredFormTargetType } from '@repo/data';
 import { revalidatePath } from 'next/cache';
 import z from 'zod';
 import { getDataClient } from '@/lib/data-client';
 import { actionClient } from '@/lib/safe-action';
+import { choiceOptionSchema } from './option-values';
 import { serverCreateBlockSchema, serverCreateFormSchema } from './schemas';
 
 export const createForm = actionClient
@@ -94,7 +95,32 @@ export const submitForm = actionClient
     const result = await data.requirementForm.submitForm(parsedInput.token, {
       values: parsedInput.values,
     });
-    revalidatePath('/admin/my-membership-requests');
+    return result;
+  });
+
+const submitRequiredFormSchema = z.object({
+  targetType: z.nativeEnum(RequiredFormTargetType),
+  targetId: z.string().min(1),
+  formId: z.string().min(1),
+  values: z.array(
+    z.object({
+      fieldId: z.string(),
+      blockId: z.string(),
+      value: z.string(),
+    }),
+  ),
+});
+
+export const submitRequiredForm = actionClient
+  .inputSchema(submitRequiredFormSchema)
+  .action(async ({ parsedInput }) => {
+    const data = await getDataClient();
+    const result = await data.requirementForm.submitRequiredForm(
+      parsedInput.targetType,
+      parsedInput.targetId,
+      parsedInput.formId,
+      { values: parsedInput.values },
+    );
     return result;
   });
 
@@ -177,7 +203,7 @@ const createBlockFieldSchema = z.object({
       }),
     )
     .optional(),
-  documentUrl: z.string().optional(),
+  documentFileId: z.string().nullish(),
   documentLabel: z.string().optional(),
   systemKey: z.string().optional(),
   lockType: z.boolean().optional(),
@@ -198,7 +224,7 @@ export const createBlockField = actionClient
         placeholder: parsedInput.placeholder,
         required: parsedInput.required,
         options: parsedInput.options,
-        documentUrl: parsedInput.documentUrl,
+        documentFileId: parsedInput.documentFileId,
         documentLabel: parsedInput.documentLabel,
         systemKey: parsedInput.systemKey,
         lockType: parsedInput.lockType,
@@ -225,7 +251,7 @@ const updateBlockFieldSchema = z.object({
       }),
     )
     .optional(),
-  documentUrl: z.string().optional(),
+  documentFileId: z.string().nullish(),
   documentLabel: z.string().optional(),
   fieldOrder: z.number().optional(),
   systemKey: z.string().nullable().optional(),
@@ -246,7 +272,7 @@ export const updateBlockField = actionClient
         placeholder: parsedInput.placeholder,
         required: parsedInput.required,
         options: parsedInput.options,
-        documentUrl: parsedInput.documentUrl,
+        documentFileId: parsedInput.documentFileId,
         documentLabel: parsedInput.documentLabel,
         fieldOrder: parsedInput.fieldOrder,
         systemKey: parsedInput.systemKey,
@@ -288,7 +314,6 @@ export const joinOrganization = actionClient
     const result = await data.membershipRequest.join(
       parsedInput.organizationUnitId,
     );
-    revalidatePath('/admin/my-membership-requests');
     return result;
   });
 
@@ -309,15 +334,8 @@ const saveBlockSchema = z.object({
       required: z.boolean().optional(),
       systemKey: z.string().optional(),
       lockType: z.boolean().optional(),
-      options: z
-        .array(
-          z.object({
-            label: z.string(),
-            value: z.string(),
-          }),
-        )
-        .optional(),
-      documentUrl: z.string().optional(),
+      options: z.array(choiceOptionSchema).optional(),
+      documentFileId: z.string().nullish(),
       documentLabel: z.string().optional(),
     }),
   ),
@@ -382,7 +400,7 @@ export const saveBlock = actionClient
             systemKey: field.systemKey ?? null,
             lockType: field.lockType,
             options: field.options,
-            documentUrl: field.documentUrl,
+            documentFileId: field.documentFileId,
             documentLabel: field.documentLabel,
             fieldOrder: i,
           });
@@ -396,7 +414,7 @@ export const saveBlock = actionClient
             systemKey: field.systemKey,
             lockType: field.lockType,
             options: field.options,
-            documentUrl: field.documentUrl,
+            documentFileId: field.documentFileId,
             documentLabel: field.documentLabel,
             fieldOrder: i,
           });
@@ -416,7 +434,7 @@ export const saveBlock = actionClient
           systemKey: field.systemKey,
           lockType: field.lockType,
           options: field.options,
-          documentUrl: field.documentUrl,
+          documentFileId: field.documentFileId,
           documentLabel: field.documentLabel,
           fieldOrder: i,
         });
@@ -424,7 +442,8 @@ export const saveBlock = actionClient
     }
 
     revalidatePath(
-      `/admin/${parsedInput.organizationUnitId}/requirement-forms/blocks`,
+      `/admin/${parsedInput.organizationUnitId}/requirement-forms`,
+      'layout',
     );
     return { blockId };
   });

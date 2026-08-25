@@ -5,7 +5,7 @@ export class CreateRequirementSubmissionFulfillmentInput {
   requirementId!: string;
 
   @Field(() => String, { nullable: true })
-  documentId?: string | null;
+  fileId?: string | null;
 
   @Field(() => Boolean, { nullable: true })
   checked?: boolean | null;
@@ -23,13 +23,13 @@ export class CreateRequirementProfileSubmissionInput {
   profileId!: string;
 
   @Field(() => String, { nullable: true })
-  membershipId!: string | null;
+  membershipId?: string | null;
 
   @Field(() => String, { nullable: true })
-  membershipRequestId!: string | null;
+  membershipRequestId?: string | null;
 
   @Field(() => [CreateRequirementSubmissionFulfillmentInput], {
     nullable: true,
   })
-  fulfillments?: CreateRequirementSubmissionFulfillmentInput[];
+  fulfillments?: CreateRequirementSubmissionFulfillmentInput[] | null;
 }

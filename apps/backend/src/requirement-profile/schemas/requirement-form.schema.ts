@@ -1,10 +1,17 @@
-import { index, jsonb, pgTable, text, unique, uuid } from 'drizzle-orm/pg-core';
+import {
+  index,
+  jsonb,
+  snakeCase,
+  text,
+  unique,
+  uuid,
+} from 'drizzle-orm/pg-core';
 import { users } from '../../auth/schemas/auth.schema';
 import { idColumn, timestampColumns } from '../../database/database-columns';
 import { organizations } from '../../organization/schemas/organization.schema';
 import { organizationUnits } from '../../organization/schemas/organization-unit.schema';
 
-export const requirementForms = pgTable(
+export const requirementForms = snakeCase.table(
   'requirement_forms',
   {
     ...idColumn,

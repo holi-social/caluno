@@ -1,6 +1,7 @@
 import type {
   GetMyOrganizationsQuery,
   GetMyPermissionsQuery,
+  UpdateMyImageInput,
   UpdateMyLocaleMutation,
   User,
 } from '../../generated/graphql';
@@ -42,5 +43,10 @@ export class UserRepository extends BaseRepository {
   ): Promise<UpdateMyLocaleMutation['updateMyLocale']> {
     const data = await this.sdk.UpdateMyLocale({ locale });
     return data.updateMyLocale;
+  }
+
+  async updateMyImage(input: UpdateMyImageInput) {
+    const data = await this.sdk.UpdateMyImage({ input });
+    return data.updateMyImage;
   }
 }

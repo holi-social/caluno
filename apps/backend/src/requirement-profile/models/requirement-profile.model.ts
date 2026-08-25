@@ -14,10 +14,10 @@ export class RequirementProfile {
   name!: string;
 
   @Field(() => String, { nullable: true })
-  description!: string | null;
+  description?: string | null;
 
   @Field(() => [Requirement], { nullable: true })
-  requirements!: Requirement[];
+  requirements?: Requirement[] | null;
 }
 
 export const RequirementProfilePaginatedResponse =

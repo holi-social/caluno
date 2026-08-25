@@ -2,7 +2,7 @@ import {
   index,
   jsonb,
   pgEnum,
-  pgTable,
+  snakeCase,
   text,
   timestamp,
   unique,
@@ -10,6 +10,7 @@ import {
 } from 'drizzle-orm/pg-core';
 import { users } from '../../auth/schemas/auth.schema';
 import { idColumn, timestampColumns } from '../../database/database-columns';
+import { enumValues } from '../../database/typeutil';
 import { organizationUnits } from '../../organization/schemas/organization-unit.schema';
 import { MembershipRequestStatus } from '../enums';
 
@@ -21,10 +22,10 @@ export type MembershipRequestMetadata = {
 
 export const membershipRequestStatusEnum = pgEnum(
   'membership_request_status',
-  MembershipRequestStatus as Record<string, string>,
+  enumValues(MembershipRequestStatus),
 );
 
-export const membershipRequests = pgTable(
+export const membershipRequests = snakeCase.table(
   'membership_requests',
   {
     ...idColumn,
@@ -43,6 +44,7 @@ export const membershipRequests = pgTable(
     reviewedAt: timestamp('reviewed_at'),
     rejectionReason: text('rejection_reason'),
     status: membershipRequestStatusEnum('status')
+      .$type<MembershipRequestStatus>()
       .notNull()
       .default(MembershipRequestStatus.PENDING),
     metadata: jsonb('metadata').$type<MembershipRequestMetadata>(),

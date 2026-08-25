@@ -217,3 +217,15 @@ export const Disabled: Story = {
     disabled: true,
   },
 };
+
+/**
+ * Pass `tooltip` for a hover label (also sets aria-label). No tooltip when disabled.
+ */
+export const WithTooltip: Story = {
+  args: {
+    variant: 'outline',
+    size: 'icon-sm',
+    tooltip: 'Edit',
+    children: <Mail />,
+  },
+};

@@ -19,5 +19,19 @@ export const eventsRelations = defineRelationsPart(schema, (r) => ({
       from: r.events.id,
       to: r.shifts.eventId,
     }),
+    requiredForms: r.many.eventRequiredForms({
+      from: r.events.id,
+      to: r.eventRequiredForms.eventId,
+    }),
+  },
+  eventRequiredForms: {
+    event: r.one.events({
+      from: r.eventRequiredForms.eventId,
+      to: r.events.id,
+    }),
+    form: r.one.requirementForms({
+      from: r.eventRequiredForms.formId,
+      to: r.requirementForms.id,
+    }),
   },
 }));

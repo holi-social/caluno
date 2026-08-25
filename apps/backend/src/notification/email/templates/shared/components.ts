@@ -74,6 +74,62 @@ export function detailItem(
   });
 }
 
+export type DetailTableRow =
+  | { kind: 'pair'; label: string; value: string }
+  | { kind: 'block'; label: string; value: string };
+
+const detailTableLabelStyle = [
+  'padding:8px 20px 8px 0',
+  'font-size:14px',
+  'font-weight:600',
+  `color:${colors.ink}`,
+  'vertical-align:top',
+  'width:108px',
+  'white-space:nowrap',
+].join(';');
+
+const detailTableValueStyle = [
+  'padding:8px 0',
+  'font-size:14px',
+  `color:${colors.muted}`,
+  'vertical-align:top',
+  'line-height:1.5',
+].join(';');
+
+/** Compact two-column table for transactional metadata. */
+export function detailTable(rows: DetailTableRow[]): string {
+  if (rows.length === 0) {
+    return '';
+  }
+
+  const tableRows = rows
+    .map((row, index) => {
+      const border =
+        index < rows.length - 1
+          ? `border-bottom:1px solid ${colors.border};`
+          : '';
+
+      if (row.kind === 'block') {
+        return `<tr style="${border}">
+          <td colspan="2" style="padding:12px 0 8px;font-size:14px;vertical-align:top;">
+            <div style="font-weight:600;color:${colors.ink};margin-bottom:6px;">${row.label}</div>
+            <div style="color:${colors.muted};line-height:1.55;">${row.value}</div>
+          </td>
+        </tr>`;
+      }
+
+      return `<tr style="${border}">
+        <td style="${detailTableLabelStyle}">${row.label}</td>
+        <td style="${detailTableValueStyle}">${row.value}</td>
+      </tr>`;
+    })
+    .join('');
+
+  return `<mj-table padding="0 0 20px" font-size="14px" color="${colors.muted}" cellpadding="0" cellspacing="0" width="100%">
+    ${tableRows}
+  </mj-table>`;
+}
+
 export interface HeadingOptions {
   size?: string;
   padding?: string;
@@ -105,7 +161,7 @@ export interface ButtonOptions {
 
 /** Primary call-to-action button. */
 export function button(options: ButtonOptions): string {
-  const { href, label, padding = '0 0 32px' } = options;
+  const { href, label, padding = '0 0 24px' } = options;
 
   return `<mj-button href="${href}" background-color="${colors.greenDark}" color="${colors.onBrand}" font-size="16px" font-weight="600" border-radius="8px" inner-padding="14px 28px" align="left" padding="${padding}">${label}</mj-button>`;
 }
@@ -132,7 +188,7 @@ export function orderedListItem(
  */
 export function card(content: string): string {
   return `
-    <mj-section background-color="${colors.surface}" border="1px solid ${colors.border}" border-radius="12px" padding="40px 32px 32px">
+    <mj-section background-color="${colors.surface}" border="1px solid ${colors.border}" border-radius="12px" padding="32px 28px 28px">
       <mj-column>
         ${content}
       </mj-column>

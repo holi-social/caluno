@@ -34,7 +34,7 @@ export class RequirementProfileSubmissionFieldResolver {
     return this.requirementProfileMapper.toModelOrThrow(entity);
   }
 
-  @ResolveField(() => [RequirementFulfillment], { nullable: true })
+  @ResolveField(() => [RequirementFulfillment])
   async fulfillments(
     @Parent() submission: RequirementProfileSubmissionEntity,
   ): Promise<RequirementFulfillment[]> {

@@ -1,6 +1,6 @@
-# Clippy Monorepo
+# Caluno Monorepo
 
-A Turborepo-based monorepo for the Clippy platform.
+A Turborepo-based monorepo for the Caluno platform.
 
 ## What's inside?
 
@@ -30,6 +30,9 @@ This monorepo includes the following packages/apps:
 
    # Copy backend environment file
    cp apps/backend/.env.example apps/backend/.env
+
+   # Copy frontend environment file
+   cp apps/frontend/.env.example apps/frontend/.env
    ```
 
    Update the `.env` files with your configuration. The defaults should work for local development.
@@ -67,15 +70,16 @@ This monorepo includes the following packages/apps:
 
 ### Playground fixtures
 
-After `bun bootstrap`, the database contains a **Playground** organization with sample users, weekly shifts, and time entries. All fixture accounts use password `abcd1234`.
+After `bun bootstrap`, the database contains a **Playground** organization with sample users, weekly shifts, time entries, and a requirement form. All fixture accounts use password `abcd1234` (override with `FIXTURE_PASSWORD`).
 
 | Account | Role / status |
 |---|---|
-| `admin@clippy.social` | Owner |
-| `supervisor@clippy.social` | Supervisor |
-| `member01@` … `member10@clippy.social` | Member |
-| `pending01@`, `pending02@` | Pending membership request |
-| `rejected01@` | Rejected membership request |
+| `testing+admin@caluno.org` | Owner |
+| `testing+supervisor@caluno.org` | Supervisor |
+| `testing+demo@caluno.org` | Member (demo account) |
+| `testing+001@` … `testing+010@caluno.org` | Member |
+| `testing+pending01@`, `testing+pending02@caluno.org` | Pending membership request |
+| `testing+rejected01@caluno.org` | Rejected membership request |
 
 Weekly shifts (Europe/Berlin):
 
@@ -84,6 +88,8 @@ Weekly shifts (Europe/Berlin):
 | Community Support | Every Monday | 08:00–12:00 | All 12 approved members |
 | Food Distribution | Every Wednesday | 12:00–16:00 | Supervisor + member01–04 |
 | Event Assistance | Every Friday | 16:00–20:00 | None |
+
+**Requirement form:** Personal Information — block with required First name and Last name fields.
 
 `bun bootstrap` only runs against local databases (`DB_HOST` must be `localhost`, `127.0.0.1`, or `postgres`).
 
@@ -172,7 +178,7 @@ The root `scaleway.sh` script helps you build and push Docker images for:
 It uses the Scaleway Container Registry configuration from the root `.env` (or your shell environment):
 
 - `REGISTRY_URL` - Scaleway registry URL (e.g. `rg.nl-ams.scw.cloud`)
-- `SCW_CR_NAMESPACE` - Scaleway Container Registry namespace (e.g. `clippy`)
+- `SCW_CR_NAMESPACE` - Scaleway Container Registry namespace (e.g. `caluno`)
 - `IMAGE_TAG` - Image tag to use (e.g. `staging` or a commit SHA)
 
 You must be logged in to the Scaleway registry first:
@@ -199,7 +205,7 @@ This script requires Docker with Buildx enabled (see the **Prerequisites** secti
 ## Project Structure
 
 ```
-clippy/
+caluno/
 ├── apps/
 │   ├── frontend/  # Next.js frontend
 │   └── backend/              # NestJS GraphQL API
@@ -224,7 +230,7 @@ Environment variables are scoped per project:
 ### Root `.env` (Docker configuration)
 - `POSTGRES_USER` - PostgreSQL username (default: postgres)
 - `POSTGRES_PASSWORD` - PostgreSQL password (default: postgres)
-- `POSTGRES_DB` - PostgreSQL database name (default: clippy)
+- `POSTGRES_DB` - PostgreSQL database name (default: caluno)
 - `POSTGRES_PORT` - PostgreSQL port (default: 5432)
 
 ### `apps/backend/.env` (Backend configuration)
@@ -233,7 +239,7 @@ Environment variables are scoped per project:
 - `BETTER_AUTH_SECRET` - Secret key for authentication
 - `BETTER_AUTH_URL` - Backend URL for auth
 - `WEB_URL` - Frontend URL
-- `COOKIE_DOMAIN` - (Optional) Root domain for cross-subdomain cookies when frontend and API use different subdomains (e.g. `clippy.holi.social` for `staging.clippy.holi.social` + `api.clippy.holi.social`)
+- `COOKIE_DOMAIN` - (Optional) Root domain for cross-subdomain cookies when frontend and API use different subdomains (e.g. `caluno.org` for `app.caluno.org` + `api.caluno.org`)
 
 ## Troubleshooting
 

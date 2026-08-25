@@ -33,12 +33,14 @@ function BlockActions({
     startDeleteTransition(() => onDelete(block.id));
   }
 
+  const editLabel = block.isEditable ? t('editBlockAria') : t('viewBlockAria');
+
   return (
     <aside className="flex items-center gap-1">
       <Button
         size="icon-xs"
         variant="outline"
-        aria-label={block.isEditable ? t('editBlockAria') : t('viewBlockAria')}
+        tooltip={editLabel}
         onClick={() => openSheet({ id: block.id })}
       >
         {block.isEditable ? <Pencil /> : <Eye />}
@@ -51,7 +53,7 @@ function BlockActions({
           <Button
             size="icon-xs"
             variant="destructive"
-            aria-label={t('deleteBlockAria')}
+            tooltip={t('deleteBlockAria')}
             disabled={isDeleting}
           >
             {isDeleting ? <Loader2 className="animate-spin" /> : <Trash2 />}

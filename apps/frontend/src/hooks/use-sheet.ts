@@ -47,18 +47,26 @@ export function useSheet(name: string, ...extraKeys: string[]) {
   const joinKey = ', ';
   const keysToDeleteJoined = extraKeys.join(joinKey);
 
-  const close = useCallback(() => {
-    const keysToDelete = keysToDeleteJoined.split(joinKey);
-    const next = new URLSearchParams(searchParams.toString());
+  const close = useCallback(
+    (paramsToSet?: Record<string, string>) => {
+      const keysToDelete = keysToDeleteJoined.split(joinKey);
+      const next = new URLSearchParams(searchParams.toString());
 
-    next.delete('sheet');
-    for (const key of keysToDelete) {
-      next.delete(key);
-    }
+      next.delete('sheet');
+      for (const key of keysToDelete) {
+        next.delete(key);
+      }
+      if (paramsToSet) {
+        for (const [k, v] of Object.entries(paramsToSet)) {
+          next.set(k, v);
+        }
+      }
 
-    const qs = next.toString();
-    router.push(qs ? `${pathname}?${qs}` : pathname);
-  }, [router, pathname, searchParams, keysToDeleteJoined]);
+      const qs = next.toString();
+      router.push(qs ? `${pathname}?${qs}` : pathname);
+    },
+    [router, pathname, searchParams, keysToDeleteJoined],
+  );
 
   return {
     isOpen,

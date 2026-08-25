@@ -5,16 +5,16 @@ import { RequirementFormBlockRef } from './requirement-form-block-ref.model';
 @ObjectType()
 export class FormSettings {
   @Field(() => String, { nullable: true })
-  submitButtonLabel!: string | null;
+  submitButtonLabel?: string | null;
 
   @Field(() => String, { nullable: true })
-  successTitle!: string | null;
+  successTitle?: string | null;
 
   @Field(() => String, { nullable: true })
-  successMessage!: string | null;
+  successMessage?: string | null;
 
   @Field(() => Boolean, { nullable: true })
-  allowEmbed!: boolean | null;
+  allowEmbed?: boolean | null;
 }
 
 @ObjectType()
@@ -26,7 +26,7 @@ export class RequirementForm {
   organizationId!: string;
 
   @Field(() => String, { nullable: true })
-  organizationUnitId!: string | null;
+  organizationUnitId?: string | null;
 
   @Field(() => String)
   slug!: string;
@@ -35,7 +35,7 @@ export class RequirementForm {
   name!: string;
 
   @Field(() => String, { nullable: true })
-  description!: string | null;
+  description?: string | null;
 
   @Field(() => FormSettings)
   settings!: FormSettings;
@@ -56,7 +56,7 @@ export class RequirementForm {
   updatedAt!: Date;
 
   @Field(() => [RequirementFormBlockRef], { nullable: true })
-  blockRefs!: RequirementFormBlockRef[];
+  blockRefs?: RequirementFormBlockRef[] | null;
 
   @Field(() => Number)
   submissionCount!: number;

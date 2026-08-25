@@ -6,5 +6,5 @@ export class CloseTimeEntryInput {
   endedAt!: Date;
 
   @Field(() => String, { nullable: true })
-  notes!: string | null;
+  notes?: string | null;
 }

@@ -26,7 +26,7 @@ export function RequestSent({ orgName }: RequestSentProps) {
         </CardHeader>
         <CardContent className="flex justify-center">
           <Button asChild variant="outline">
-            <Link href="/my-membership-requests">
+            <Link href="/profile#memberships">
               {t('invite.sent.viewRequests')}
             </Link>
           </Button>

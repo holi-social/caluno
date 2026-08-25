@@ -1,4 +1,5 @@
 import { Args, Context, ID, Mutation, Resolver } from '@nestjs/graphql';
+import { Session, type UserSession } from '@thallesp/nestjs-better-auth';
 import { PERMISSIONS } from '../../auth/constants';
 import { Permissions } from '../../auth/decorators/permissions.decorator';
 import { type AuthenticatedGraphQLContext } from '../../graphql/graphql.context';
@@ -68,6 +69,34 @@ export class TimeTrackingMutationResolver {
     const entity = await this.timeTrackingService.deleteTimeEntry(
       context.organizationUnitId,
       id,
+    );
+    return this.entryMapper.toModelOrThrow(entity);
+  }
+
+  // checkIn/checkOut are intentionally NOT @Permissions()-gated: they are
+  // volunteer self-service, authorized in the service by membership + an
+  // ACCEPTED invite for the current user (not an admin role). The admin path
+  // (addTimeEntry) remains permission-gated.
+  @Mutation(() => TimeEntry)
+  async checkIn(
+    @Args('shiftInstanceId', { type: () => ID }) shiftInstanceId: string,
+    @Session() session: UserSession,
+  ): Promise<TimeEntry> {
+    const entity = await this.timeTrackingService.checkIn(
+      shiftInstanceId,
+      session.user.id,
+    );
+    return this.entryMapper.toModelOrThrow(entity);
+  }
+
+  @Mutation(() => TimeEntry)
+  async checkOut(
+    @Args('shiftInstanceId', { type: () => ID }) shiftInstanceId: string,
+    @Session() session: UserSession,
+  ): Promise<TimeEntry> {
+    const entity = await this.timeTrackingService.checkOut(
+      shiftInstanceId,
+      session.user.id,
     );
     return this.entryMapper.toModelOrThrow(entity);
   }

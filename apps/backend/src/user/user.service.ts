@@ -33,6 +33,16 @@ export class UserService {
     });
   }
 
+  async findByIds(ids: string[]): Promise<UserEntity[]> {
+    if (ids.length === 0) {
+      return [];
+    }
+
+    return this.db.query.users.findMany({
+      where: { id: { in: ids } },
+    });
+  }
+
   async findByIdOrThrow(id: string): Promise<UserEntity> {
     const user = await this.db.query.users.findFirst({
       where: { id },
@@ -54,6 +64,23 @@ export class UserService {
       .set({ locale })
       .where(eq(schema.users.id, userId))
       .returning();
+    return user;
+  }
+
+  async updateImage(
+    userId: string,
+    imageUrl: string | null,
+  ): Promise<UserEntity> {
+    const [user] = await this.db
+      .update(schema.users)
+      .set({ image: imageUrl })
+      .where(eq(schema.users.id, userId))
+      .returning();
+
+    if (!user) {
+      throw new NotFoundGraphQLError('User not found');
+    }
+
     return user;
   }
 

@@ -34,7 +34,15 @@ export const formats = (locale: string) => {
       in: tz(DEFAULT_TIMEZONE),
     });
 
-  const formatDate = (date: Date) => format(date, 'P');
+  const formatDate = (date: Date, options?: Intl.DateTimeFormatOptions) => {
+    if (options) {
+      return new Intl.DateTimeFormat(locale, {
+        timeZone: DEFAULT_TIMEZONE,
+        ...options,
+      }).format(date);
+    }
+    return format(date, 'P');
+  };
   const formatDateTime = (date: Date) => format(date, 'Pp');
   const formatTime = (date: Date) => format(date, 'p');
 
@@ -58,6 +66,18 @@ export const formats = (locale: string) => {
     } else {
       return `${format(fromDate, fromFormat)} - ${noEndDateLabel}`;
     }
+  };
+
+  const formatDateRange = (from: string | Date, to: string | Date) => {
+    const fromDate = new Date(from);
+    const toDate = new Date(to);
+
+    return new Intl.DateTimeFormat(locale, {
+      timeZone: DEFAULT_TIMEZONE,
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric',
+    }).formatRange(fromDate, toDate);
   };
 
   const formatTimeRange = (from: string | Date, to: string | Date) => {
@@ -101,6 +121,7 @@ export const formats = (locale: string) => {
     formatDateTime,
     formatTime,
     formatRange,
+    formatDateRange,
     formatTimeRange,
     formatDuration,
     formatDurationByMinutes,

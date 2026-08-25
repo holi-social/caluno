@@ -6,19 +6,19 @@ import { SelectOptionInput } from './create-form-block-field.input';
 export class UpdateFormBlockFieldInput {
   // Non-nullable in DB — undefined means "don't update", no null allowed
   @Field(() => FieldType, { nullable: true })
-  type?: FieldType;
+  type?: FieldType | null;
 
   @Field(() => String, { nullable: true })
-  label?: string;
+  label?: string | null;
 
   @Field(() => Boolean, { nullable: true })
-  required?: boolean;
+  required?: boolean | null;
 
   @Field(() => Boolean, { nullable: true })
-  lockType?: boolean;
+  lockType?: boolean | null;
 
   @Field(() => Number, { nullable: true })
-  fieldOrder?: number;
+  fieldOrder?: number | null;
 
   // Nullable in DB — undefined means "don't update", null means "clear"
   @Field(() => String, { nullable: true })
@@ -34,7 +34,7 @@ export class UpdateFormBlockFieldInput {
   options?: SelectOptionInput[] | null;
 
   @Field(() => String, { nullable: true })
-  documentUrl?: string | null;
+  documentFileId?: string | null;
 
   @Field(() => String, { nullable: true })
   documentLabel?: string | null;
