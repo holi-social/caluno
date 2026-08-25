@@ -472,6 +472,7 @@
       "description": "Once you check in to a shift, your volunteering hours will appear here.",
       "title": "No hours yet"
     },
+    "generalTime": "General time",
     "state": {
       "completed": "Completed",
       "inProgress": "In progress"
@@ -1045,6 +1046,8 @@
     "checkIn": {
       "checkIn": "Check in",
       "checkInTitle": "Check-in",
+      "checkInWithShift": "Choose a shift instead",
+      "checkInWithoutShift": "Check in without a shift",
       "checkOut": "Check-out",
       "checkOutTitle": "Check-out",
       "checkedInAt": "Checked in: {time}",
@@ -1052,6 +1055,7 @@
       "checkingOut": "Checking out...",
       "checkingOutAt": "Checking out: {time}",
       "enterQrTitle": "Or enter their QR ID",
+      "generalCheckIn": "General check-in",
       "invalidCheckin": {
         "blocked": {
           "description": "The volunteer is not permitted to check-in. They must contact headquarters for assistance.",
@@ -1406,6 +1410,7 @@
       "loadInstancesError": "Failed to load instances.",
       "notesLabel": "Notes",
       "notesPlaceholder": "Add any notes about this time entry...",
+      "notTiedToShiftLabel": "Not tied to a shift",
       "selectShiftHint": "Select a shift to view available dates",
       "selectShiftLabel": "Select shift",
       "selectShiftPlaceholder": "Select a shift",

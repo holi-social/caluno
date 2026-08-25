@@ -857,6 +857,7 @@ describe('ShiftService', () => {
       const volunteer = await createUser(db);
       await db.insert(schema.timeEntries).values({
         shiftInstanceId: oldest.id,
+        organizationUnitId,
         volunteerId: volunteer.id,
         startedAt: oldest.actualStartsAt,
         endedAt: oldest.actualEndsAt,
@@ -1057,6 +1058,7 @@ describe('ShiftService', () => {
       const volunteer = await createUser(db);
       await db.insert(schema.timeEntries).values({
         shiftInstanceId: instances[0].id,
+        organizationUnitId,
         volunteerId: volunteer.id,
         startedAt: new Date(),
         endedAt: null,
@@ -1080,6 +1082,7 @@ describe('ShiftService', () => {
       const volunteer = await createUser(db);
       await db.insert(schema.timeEntries).values({
         shiftInstanceId: instances[0].id,
+        organizationUnitId,
         volunteerId: volunteer.id,
         startedAt: new Date(Date.now() - 3600_000),
         endedAt: new Date(),
@@ -1419,6 +1422,7 @@ describe('ShiftService', () => {
         const volunteer = await createUser(db);
         await db.insert(schema.timeEntries).values({
           shiftInstanceId: blockedInstance.id,
+          organizationUnitId,
           volunteerId: volunteer.id,
           startedAt: new Date(),
           endedAt: null,

@@ -1,0 +1,2 @@
+ALTER TABLE "time_entries" ADD COLUMN "organization_unit_id" uuid;--> statement-breakpoint
+ALTER TABLE "time_entries" ADD CONSTRAINT "time_entries_organization_unit_id_organization_units_id_fkey" FOREIGN KEY ("organization_unit_id") REFERENCES "organization_units"("id") ON DELETE RESTRICT;
