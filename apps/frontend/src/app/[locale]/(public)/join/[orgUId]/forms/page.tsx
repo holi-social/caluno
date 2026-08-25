@@ -33,13 +33,15 @@ export default async function JoinFormsPage({
 
   const data = await getDataClient();
 
-  const [orgUnit, userProfile, submissionsResult, joinResult] =
-    await Promise.all([
-      data.organizationUnit.findById(orgUId),
-      data.requirementForm.getMyUserProfile(),
-      data.requirementForm.findMyFormSubmissions(orgUId),
-      data.membershipRequest.join(orgUId).catch(() => null),
-    ]);
+  const joinResult = await data.membershipRequest
+    .join(orgUId)
+    .catch(() => null);
+
+  const [orgUnit, userProfile, submissionsResult] = await Promise.all([
+    data.organizationUnit.findById(orgUId),
+    data.requirementForm.getMyUserProfile(),
+    data.requirementForm.findMyFormSubmissions(orgUId),
+  ]);
 
   if (!orgUnit) {
     redirect({ href: '/', locale });

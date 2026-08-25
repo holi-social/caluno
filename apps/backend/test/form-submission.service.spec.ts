@@ -343,6 +343,88 @@ describe('FormSubmissionService org-unit shares', () => {
     });
   });
 
+  describe('shareSatisfiedRequiredForms', () => {
+    it('shares existing submissions for a target’s required forms with its unit', async () => {
+      const { admin, rootUnit, unitA, volunteer } = await setupOrgWithUnits();
+      const { form } = await createRequirementForm(db, {
+        organizationId: rootUnit.organizationId,
+        organizationUnitId: rootUnit.id,
+        createdById: admin.id,
+      });
+      const event = await createEvent(db, {
+        organizationUnitId: unitA.id,
+      });
+      await setEventRequiredForms(db, {
+        eventId: event.id,
+        formIds: [form.id],
+      });
+      const submission = await createFormSubmission(db, {
+        formId: form.id,
+        userId: volunteer.id,
+      });
+
+      await formSubmissionService.shareSatisfiedRequiredForms(volunteer.id, {
+        targetType: RequiredFormTargetType.EVENT,
+        targetId: event.id,
+      });
+
+      expect(await sharesFor(submission.id, unitA.id)).toHaveLength(1);
+      expect(
+        await formSubmissionService.findByUserAndOrgUnit(
+          volunteer.id,
+          unitA.id,
+        ),
+      ).toHaveLength(1);
+    });
+
+    it('shares for org-unit targets too', async () => {
+      const { admin, rootUnit, unitA, volunteer } = await setupOrgWithUnits();
+      const { form } = await createRequirementForm(db, {
+        organizationId: rootUnit.organizationId,
+        organizationUnitId: rootUnit.id,
+        createdById: admin.id,
+      });
+      await setRequiredForms(db, {
+        organizationUnitId: unitA.id,
+        formIds: [form.id],
+      });
+      const submission = await createFormSubmission(db, {
+        formId: form.id,
+        userId: volunteer.id,
+      });
+
+      await formSubmissionService.shareSatisfiedRequiredForms(volunteer.id, {
+        targetType: RequiredFormTargetType.ORGANIZATION_UNIT,
+        targetId: unitA.id,
+      });
+
+      expect(await sharesFor(submission.id, unitA.id)).toHaveLength(1);
+    });
+
+    it('does nothing when the user has no submissions', async () => {
+      const { admin, rootUnit, unitA, volunteer } = await setupOrgWithUnits();
+      const { form } = await createRequirementForm(db, {
+        organizationId: rootUnit.organizationId,
+        organizationUnitId: rootUnit.id,
+        createdById: admin.id,
+      });
+      await setRequiredForms(db, {
+        organizationUnitId: unitA.id,
+        formIds: [form.id],
+      });
+
+      await formSubmissionService.shareSatisfiedRequiredForms(volunteer.id, {
+        targetType: RequiredFormTargetType.ORGANIZATION_UNIT,
+        targetId: unitA.id,
+      });
+
+      const shares = await db.query.formSubmissionShares.findMany({
+        where: { organizationUnitId: unitA.id },
+      });
+      expect(shares).toEqual([]);
+    });
+  });
+
   describe('submit by share token', () => {
     it('shares the submission with the unit from the link', async () => {
       const { admin, rootUnit, unitA, volunteer } = await setupOrgWithUnits();
