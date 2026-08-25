@@ -10,6 +10,13 @@ input AddTimeEntryInput {
   volunteerId: String!
 }
 
+type BundleDownloadStatus {
+  downloadedAt: DateTime!
+  downloadedByUser: User
+  reimbursementType: ReimbursementType!
+  volunteer: User!
+}
+
 input CloseTimeEntryInput {
   endedAt: DateTime!
   notes: String
@@ -23,6 +30,7 @@ type Contract {
   declinedAtSigneeType: SigneeType
   declinedByUser: User
   documentTemplate: DocumentTemplate!
+  downloadUrl: String
   id: ID!
   isNonCompliant: Boolean!
   periodEnd: DateTime!
@@ -450,6 +458,7 @@ type Invoice {
   declinedAtSigneeType: SigneeType
   declinedByUser: User
   documentTemplate: DocumentTemplate!
+  downloadUrl: String
   id: ID!
   invoiceStatus: InvoiceStatus!
   invoiceTimeEntries: [InvoiceTimeEntry!]!
@@ -620,6 +629,7 @@ type Mutation {
   joinOrganization(organizationUnitId: ID!): JoinOrganizationResult!
   joinShiftInstance(instanceId: String!): JoinShiftInstanceResult!
   leaveMembership(id: ID!): Membership!
+  recordBundleDownload(reimbursementTypeId: ID!, volunteerId: ID!): BundleDownloadStatus!
   regenerateFormShareToken(id: String!): RequirementForm!
   rejectMembershipRequest(id: ID!, organizationUnitId: ID!, rejectionReason: String!): MembershipRequest!
   removeMembershipRequest(id: ID!): MembershipRequest!
@@ -781,6 +791,7 @@ type Query {
   adminUserProfile(userId: String!): UserProfile
   adminVolunteerSubmission(id: String!): FormSubmission
   availableShiftInstances(endsBefore: DateTime = null, limit: Int! = 15, offset: Int! = 0, organizationUnitIds: [ID!], startsAfter: DateTime = null): ShiftInstancePaginatedResponse!
+  bundleDownloadStatus(reimbursementTypeId: ID!, volunteerId: ID!): BundleDownloadStatus
   contract(id: ID!): Contract!
   contracts(filter: ContractFilterInput): [Contract!]!
   documentTemplate(id: ID!): DocumentTemplate!
