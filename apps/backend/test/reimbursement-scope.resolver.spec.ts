@@ -1,6 +1,7 @@
 import { beforeAll, describe, expect, it } from 'bun:test';
 import { ConfigModule } from '@nestjs/config';
 import { Test, type TestingModule } from '@nestjs/testing';
+import type { UserSession } from '@thallesp/nestjs-better-auth';
 import { ReimbursementTypeMapper } from '../src/accounting/mappers';
 import { ReimbursementRateMapper } from '../src/accounting/mappers/reimbursement-rate.mapper';
 import { ReimbursementMutationResolver } from '../src/accounting/resolvers/reimbursement-mutation.resolver';
@@ -21,11 +22,14 @@ import type { RequirementProfileService } from '../src/requirement-profile/servi
 import type { PostHogService } from '../src/shared/observability/posthog.service';
 import type { FileService } from '../src/storage/services/file.service';
 import { UserMapper } from '../src/user/mappers/user.mapper';
+import { UserService } from '../src/user/user.service';
 import { createReimbursementType } from './factories/accounting.factory';
 import {
+  addMembership,
   createOrganizationWithType,
   createUnit,
 } from './factories/org.factory';
+import { createUser } from './factories/user.factory';
 import {
   ensureTestDatabase,
   registerTestResourceCleanup,
@@ -75,16 +79,23 @@ describe('reimbursement-rate resolver unit scoping', () => {
       organizationUnitDataService,
       membershipService,
     );
+    const userService = new UserService(db);
     queryResolver = new ReimbursementQueryResolver(
       reimbursementRateService,
       new ReimbursementTypeMapper(),
       organizationUnitService,
       new UserMapper(),
+      membershipService,
+      userService,
     );
     mutationResolver = new ReimbursementMutationResolver(
       reimbursementRateService,
       new ReimbursementRateMapper(),
       organizationUnitService,
+      membershipService,
+      new UserMapper(),
+      new ReimbursementTypeMapper(),
+      userService,
     );
     registerTestResourceCleanup(async () => {
       await moduleRef.close();
@@ -248,6 +259,84 @@ describe('reimbursement-rate resolver unit scoping', () => {
           contextFor(branchA.id),
         ),
       ).resolves.toBeDefined();
+    });
+  });
+
+  describe('bundleDownloadStatus / recordBundleDownload — scope check', () => {
+    const sessionFor = (userId: string): UserSession =>
+      ({ user: { id: userId } }) as UserSession;
+
+    it("rejects recording a download for a volunteer outside the caller's org subtree", async () => {
+      const reimbursementType = await createReimbursementType(db, {
+        platformDefaultRateCents: 1_500,
+      });
+      const { branchA, branchB } = await setupOrgTree();
+      const volunteer = await createUser(db);
+      await addMembership(db, volunteer.id, branchB.id);
+      const caller = await createUser(db);
+
+      await expect(
+        mutationResolver.recordBundleDownload(
+          volunteer.id,
+          reimbursementType.id,
+          contextFor(branchA.id),
+          sessionFor(caller.id),
+        ),
+      ).rejects.toBeInstanceOf(NotFoundGraphQLError);
+    });
+
+    it("allows recording a download for a volunteer within the caller's org subtree", async () => {
+      const reimbursementType = await createReimbursementType(db, {
+        platformDefaultRateCents: 1_500,
+      });
+      const { branchA, branchASub } = await setupOrgTree();
+      const volunteer = await createUser(db);
+      await addMembership(db, volunteer.id, branchASub.id);
+      const caller = await createUser(db);
+
+      const result = await mutationResolver.recordBundleDownload(
+        volunteer.id,
+        reimbursementType.id,
+        contextFor(branchA.id),
+        sessionFor(caller.id),
+      );
+
+      expect(result.downloadedByUser?.id).toBe(caller.id);
+      expect(result.volunteer.id).toBe(volunteer.id);
+    });
+
+    it('returns null bundleDownloadStatus for a pair that has never been downloaded', async () => {
+      const reimbursementType = await createReimbursementType(db, {
+        platformDefaultRateCents: 1_500,
+      });
+      const { branchA } = await setupOrgTree();
+      const volunteer = await createUser(db);
+      await addMembership(db, volunteer.id, branchA.id);
+
+      const result = await queryResolver.bundleDownloadStatus(
+        volunteer.id,
+        reimbursementType.id,
+        contextFor(branchA.id),
+      );
+
+      expect(result).toBeNull();
+    });
+
+    it("rejects querying bundleDownloadStatus for a volunteer outside the caller's org subtree", async () => {
+      const reimbursementType = await createReimbursementType(db, {
+        platformDefaultRateCents: 1_500,
+      });
+      const { branchA, branchB } = await setupOrgTree();
+      const volunteer = await createUser(db);
+      await addMembership(db, volunteer.id, branchB.id);
+
+      await expect(
+        queryResolver.bundleDownloadStatus(
+          volunteer.id,
+          reimbursementType.id,
+          contextFor(branchA.id),
+        ),
+      ).rejects.toBeInstanceOf(NotFoundGraphQLError);
     });
   });
 });
