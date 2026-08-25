@@ -45,6 +45,7 @@ export async function InviteShiftPageContent({
     name: invite.user.name,
     email: invite.user.email ?? '',
     image: invite.user.image,
+    inviteOrigin: invite.origin,
     inviteStatus: invite.status,
   }));
 

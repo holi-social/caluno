@@ -1,11 +1,6 @@
-import {
-  EventInviteStatus,
-  MembershipRequestStatus,
-  ShiftInviteStatus,
-} from '@repo/data';
+import { MembershipRequestStatus } from '@repo/data';
 import { VolunteerHomeContent } from '@/domain/home/components/volunteer-home-content';
 import { getDiscoverWindow } from '@/domain/home/lib/date-helpers';
-import { PARTICIPATING_EVENT_STATUSES } from '@/domain/home/lib/my-events';
 import { getDataClient } from '@/lib/data-client';
 
 interface VolunteeringHomePageProps {
@@ -33,15 +28,14 @@ export default async function VolunteeringHomePage({
     client.event.findAvailableEvents({ limit: 10 }),
     client.shift.findMyShiftInstances({
       limit: 10,
-      statuses: [ShiftInviteStatus.Invited],
+      waiting: true,
     }),
     client.event.findMyEvents({
       limit: 10,
-      statuses: [EventInviteStatus.Invited],
+      waiting: true,
     }),
     client.event.findMyEvents({
       limit: 10,
-      statuses: [...PARTICIPATING_EVENT_STATUSES],
     }),
     client.membership.findMine(),
     client.membershipRequest.findMine({ limit: 10, offset: 0 }),

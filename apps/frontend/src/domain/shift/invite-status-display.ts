@@ -1,92 +1,140 @@
-import { EventInviteStatus, ShiftInviteStatus } from '@repo/data';
+import {
+  type EventInviteOrigin,
+  type EventInviteStatus,
+  ShiftInviteOrigin,
+  ShiftInviteStatus,
+} from '@repo/data';
 import type { ShiftVolunteeringDisplayState } from '@repo/ui';
 
-/** Shared invite-status values for shift + event (identical GraphQL enums). */
+/** Shared invite origin + answer for shift + event (identical GraphQL values). */
+export type InviteOrigin = ShiftInviteOrigin | EventInviteOrigin;
 export type InviteStatus = ShiftInviteStatus | EventInviteStatus;
 
-const ADMIN_UNINVITE_SOURCE_STATUS_VALUES = new Set<string>([
-  ShiftInviteStatus.Invited,
-  ShiftInviteStatus.SelfJoined,
-  ShiftInviteStatus.Accepted,
-]);
+export type InvitePair = {
+  origin?: InviteOrigin | null;
+  status?: InviteStatus | null;
+};
 
-/** Whether an admin can remove a volunteer (→ ADMIN_REJECTED). */
-export function canAdminUninvite(status: InviteStatus): boolean {
-  return ADMIN_UNINVITE_SOURCE_STATUS_VALUES.has(status);
+function originOf(invite: InvitePair): string | null {
+  return invite.origin ?? null;
 }
 
-/** Target status when an admin removes a volunteer. */
-export function adminUninviteTargetStatus<S extends InviteStatus>(
-  status: S,
-): S | null {
-  if (!canAdminUninvite(status)) {
-    return null;
-  }
-  return ShiftInviteStatus.AdminRejected as S;
+function statusOf(invite: InvitePair): string | null {
+  return invite.status ?? null;
 }
 
-/** Whether an admin can re-invite a previously rejected volunteer (→ INVITED). */
-export function canAdminReinvite(status: InviteStatus): boolean {
+export function isParticipatingInvite(invite: InvitePair): boolean {
+  const origin = originOf(invite);
+  const status = statusOf(invite);
   return (
-    status === ShiftInviteStatus.AdminRejected ||
-    status === EventInviteStatus.AdminRejected
+    (origin === ShiftInviteOrigin.VolunteerJoined && status == null) ||
+    (origin === ShiftInviteOrigin.AdminInvited &&
+      status === ShiftInviteStatus.VolunteerAccepted) ||
+    (origin === ShiftInviteOrigin.VolunteerApplied &&
+      status === ShiftInviteStatus.AdminAccepted) ||
+    (origin === ShiftInviteOrigin.AdminInvited &&
+      status === ShiftInviteStatus.AdminAccepted)
   );
 }
 
-/** Target status when an admin re-invites a rejected volunteer. */
-export function adminReinviteTargetStatus<S extends InviteStatus>(
-  status: S,
-): S | null {
-  if (!canAdminReinvite(status)) {
-    return null;
+export function isOutstandingInvite(invite: InvitePair): boolean {
+  return (
+    originOf(invite) === ShiftInviteOrigin.AdminInvited &&
+    statusOf(invite) == null
+  );
+}
+
+/** Whether an admin can remove a volunteer (outstanding invite or a seat). */
+export function canAdminUninvite(invite: InvitePair): boolean {
+  return isOutstandingInvite(invite) || isParticipatingInvite(invite);
+}
+
+/** Target answer when an admin removes a volunteer. */
+export function adminUninviteTargetStatus(
+  invite: InvitePair,
+): ShiftInviteStatus.AdminCancelled | ShiftInviteStatus.AdminRejected | null {
+  if (isParticipatingInvite(invite)) {
+    return ShiftInviteStatus.AdminCancelled;
   }
-  return ShiftInviteStatus.Invited as S;
+  if (isOutstandingInvite(invite)) {
+    return ShiftInviteStatus.AdminRejected;
+  }
+  return null;
+}
+
+/** Whether an admin can re-invite after an admin-ended row. */
+export function canAdminReinvite(invite: InvitePair): boolean {
+  const status = statusOf(invite);
+  return (
+    status === ShiftInviteStatus.AdminRejected ||
+    status === ShiftInviteStatus.AdminCancelled
+  );
 }
 
 /**
- * Invite-sheet defaults: keep ADMIN_REJECTED off the Invited column so saving
- * the sheet (e.g. to add someone else) does not silently re-invite them.
- * Admins re-add them explicitly from Available.
+ * GraphQL `status` payload for admin re-invite (`null` = waiting).
+ * Returns `undefined` when the row cannot be re-invited.
+ */
+export function adminReinviteTargetStatus(
+  invite: InvitePair,
+): null | undefined {
+  if (!canAdminReinvite(invite)) {
+    return undefined;
+  }
+  return null;
+}
+
+/**
+ * Invite-sheet defaults: keep ADMIN_REJECTED and ADMIN_CANCELLED off the
+ * Invited column so saving the sheet does not silently re-invite them.
  */
 export function preselectedInviteMemberIds(
-  members: ReadonlyArray<{ id: string; inviteStatus?: InviteStatus | null }>,
+  members: ReadonlyArray<{ id: string } & InvitePair>,
 ): string[] {
   return members
-    .filter(
-      (member) =>
-        member.inviteStatus == null || !canAdminReinvite(member.inviteStatus),
-    )
+    .filter((member) => !canAdminReinvite(member))
     .map((member) => member.id);
 }
 
-/** Domain invite status → backoffice display state (VOLI-842). */
+/** Domain origin + answer → backoffice display state (VOLI-842 / VOLI-1139). */
 export function toInviteDisplayState(
-  status: InviteStatus,
+  invite: InvitePair,
 ): ShiftVolunteeringDisplayState {
-  switch (status) {
-    case ShiftInviteStatus.Invited:
-    case EventInviteStatus.Invited:
-      return 'invited';
-    case ShiftInviteStatus.Accepted:
-    case EventInviteStatus.Accepted:
-      return 'accepted';
-    case ShiftInviteStatus.SelfJoined:
-    case EventInviteStatus.SelfJoined:
-      return 'signed_up';
-    case ShiftInviteStatus.VolunteerRejected:
-    case EventInviteStatus.VolunteerRejected:
-      return 'declined';
-    case ShiftInviteStatus.Cancelled:
-    case EventInviteStatus.Cancelled:
-      return 'cancelled';
-    case ShiftInviteStatus.AdminRejected:
-    case EventInviteStatus.AdminRejected:
-      return 'rejected';
-    default: {
-      const _exhaustive: never = status;
-      return _exhaustive;
-    }
+  const origin = originOf(invite);
+  const status = statusOf(invite);
+
+  if (status === ShiftInviteStatus.VolunteerRejected) {
+    return 'declined';
   }
+  if (status === ShiftInviteStatus.VolunteerCancelled) {
+    return 'cancelled';
+  }
+  if (
+    status === ShiftInviteStatus.AdminRejected ||
+    status === ShiftInviteStatus.AdminCancelled
+  ) {
+    return 'rejected';
+  }
+  if (
+    origin === ShiftInviteOrigin.AdminInvited &&
+    status === ShiftInviteStatus.VolunteerAccepted
+  ) {
+    return 'accepted';
+  }
+  if (origin === ShiftInviteOrigin.VolunteerJoined && status == null) {
+    return 'signed_up';
+  }
+  if (origin === ShiftInviteOrigin.AdminInvited && status == null) {
+    return 'invited';
+  }
+  // Unused this slice: application waiting / admin confirmed.
+  if (origin === ShiftInviteOrigin.VolunteerApplied && status == null) {
+    return 'invited';
+  }
+  if (status === ShiftInviteStatus.AdminAccepted) {
+    return 'accepted';
+  }
+  return 'invited';
 }
 
 export type InviteStatusCounts = {
@@ -99,7 +147,7 @@ export type InviteStatusCounts = {
 };
 
 export function countInviteDisplayStates(
-  statuses: readonly InviteStatus[],
+  invites: readonly InvitePair[],
 ): InviteStatusCounts {
   const counts: InviteStatusCounts = {
     invited: 0,
@@ -110,8 +158,8 @@ export function countInviteDisplayStates(
     rejected: 0,
   };
 
-  for (const status of statuses) {
-    switch (toInviteDisplayState(status)) {
+  for (const invite of invites) {
+    switch (toInviteDisplayState(invite)) {
       case 'invited':
         counts.invited += 1;
         break;

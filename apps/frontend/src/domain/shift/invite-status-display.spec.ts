@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'bun:test';
-import { EventInviteStatus, ShiftInviteStatus } from '@repo/data';
+import {
+  EventInviteOrigin,
+  EventInviteStatus,
+  ShiftInviteOrigin,
+  ShiftInviteStatus,
+} from '@repo/data';
 import {
   adminReinviteTargetStatus,
   adminUninviteTargetStatus,
@@ -7,130 +12,185 @@ import {
   canAdminUninvite,
   countInviteDisplayStates,
   formatInviteStatusSummary,
+  isOutstandingInvite,
+  isParticipatingInvite,
   preselectedInviteMemberIds,
   toInviteDisplayState,
 } from './invite-status-display';
 
+const outstanding = {
+  origin: ShiftInviteOrigin.AdminInvited,
+  status: null,
+};
+const accepted = {
+  origin: ShiftInviteOrigin.AdminInvited,
+  status: ShiftInviteStatus.VolunteerAccepted,
+};
+const signedUp = {
+  origin: ShiftInviteOrigin.VolunteerJoined,
+  status: null,
+};
+const volunteerRejected = {
+  origin: ShiftInviteOrigin.AdminInvited,
+  status: ShiftInviteStatus.VolunteerRejected,
+};
+const volunteerCancelled = {
+  origin: ShiftInviteOrigin.VolunteerJoined,
+  status: ShiftInviteStatus.VolunteerCancelled,
+};
+const adminRejected = {
+  origin: ShiftInviteOrigin.AdminInvited,
+  status: ShiftInviteStatus.AdminRejected,
+};
+const adminCancelled = {
+  origin: ShiftInviteOrigin.VolunteerJoined,
+  status: ShiftInviteStatus.AdminCancelled,
+};
+
+describe('isParticipatingInvite', () => {
+  it('is true for signed-up and accepted seats', () => {
+    expect(isParticipatingInvite(signedUp)).toBe(true);
+    expect(isParticipatingInvite(accepted)).toBe(true);
+    expect(isParticipatingInvite(outstanding)).toBe(false);
+    expect(isParticipatingInvite(adminRejected)).toBe(false);
+    expect(isParticipatingInvite(adminCancelled)).toBe(false);
+    expect(isParticipatingInvite(volunteerCancelled)).toBe(false);
+  });
+});
+
 describe('canAdminUninvite', () => {
-  it('returns true only for INVITED, SELF_JOINED, and ACCEPTED', () => {
-    expect(canAdminUninvite(ShiftInviteStatus.Invited)).toBe(true);
-    expect(canAdminUninvite(ShiftInviteStatus.SelfJoined)).toBe(true);
-    expect(canAdminUninvite(ShiftInviteStatus.Accepted)).toBe(true);
-    expect(canAdminUninvite(ShiftInviteStatus.VolunteerRejected)).toBe(false);
-    expect(canAdminUninvite(ShiftInviteStatus.Cancelled)).toBe(false);
-    expect(canAdminUninvite(ShiftInviteStatus.AdminRejected)).toBe(false);
+  it('returns true for outstanding invites and participating seats', () => {
+    expect(canAdminUninvite(outstanding)).toBe(true);
+    expect(canAdminUninvite(signedUp)).toBe(true);
+    expect(canAdminUninvite(accepted)).toBe(true);
+    expect(canAdminUninvite(volunteerRejected)).toBe(false);
+    expect(canAdminUninvite(volunteerCancelled)).toBe(false);
+    expect(canAdminUninvite(adminRejected)).toBe(false);
   });
 
-  it('works for event invite statuses the same way', () => {
-    expect(canAdminUninvite(EventInviteStatus.Invited)).toBe(true);
-    expect(canAdminUninvite(EventInviteStatus.Accepted)).toBe(true);
-    expect(canAdminUninvite(EventInviteStatus.SelfJoined)).toBe(true);
-    expect(canAdminUninvite(EventInviteStatus.AdminRejected)).toBe(false);
+  it('works for event invite origin + status the same way', () => {
+    expect(
+      canAdminUninvite({
+        origin: EventInviteOrigin.AdminInvited,
+        status: null,
+      }),
+    ).toBe(true);
+    expect(
+      canAdminUninvite({
+        origin: EventInviteOrigin.VolunteerJoined,
+        status: null,
+      }),
+    ).toBe(true);
+    expect(
+      canAdminUninvite({
+        origin: EventInviteOrigin.AdminInvited,
+        status: EventInviteStatus.AdminRejected,
+      }),
+    ).toBe(false);
   });
 });
 
 describe('adminUninviteTargetStatus', () => {
-  it('returns ADMIN_REJECTED for uninvitable statuses', () => {
-    expect(adminUninviteTargetStatus(ShiftInviteStatus.Invited)).toBe(
+  it('splits outstanding vs participating', () => {
+    expect(adminUninviteTargetStatus(outstanding)).toBe(
       ShiftInviteStatus.AdminRejected,
     );
-    expect(adminUninviteTargetStatus(ShiftInviteStatus.SelfJoined)).toBe(
-      ShiftInviteStatus.AdminRejected,
+    expect(adminUninviteTargetStatus(signedUp)).toBe(
+      ShiftInviteStatus.AdminCancelled,
     );
-    expect(adminUninviteTargetStatus(ShiftInviteStatus.Accepted)).toBe(
-      ShiftInviteStatus.AdminRejected,
+    expect(adminUninviteTargetStatus(accepted)).toBe(
+      ShiftInviteStatus.AdminCancelled,
     );
   });
 
   it('returns null for statuses that cannot be uninvited', () => {
-    expect(
-      adminUninviteTargetStatus(ShiftInviteStatus.VolunteerRejected),
-    ).toBeNull();
-    expect(adminUninviteTargetStatus(ShiftInviteStatus.Cancelled)).toBeNull();
-    expect(
-      adminUninviteTargetStatus(ShiftInviteStatus.AdminRejected),
-    ).toBeNull();
-  });
-
-  it('returns ADMIN_REJECTED for event invite statuses too', () => {
-    expect(adminUninviteTargetStatus(EventInviteStatus.Invited)).toBe(
-      EventInviteStatus.AdminRejected,
-    );
+    expect(adminUninviteTargetStatus(volunteerRejected)).toBeNull();
+    expect(adminUninviteTargetStatus(volunteerCancelled)).toBeNull();
+    expect(adminUninviteTargetStatus(adminRejected)).toBeNull();
   });
 });
 
 describe('canAdminReinvite', () => {
-  it('returns true only for ADMIN_REJECTED', () => {
-    expect(canAdminReinvite(ShiftInviteStatus.AdminRejected)).toBe(true);
-    expect(canAdminReinvite(ShiftInviteStatus.Invited)).toBe(false);
-    expect(canAdminReinvite(ShiftInviteStatus.Accepted)).toBe(false);
+  it('returns true for both admin-ended answers', () => {
+    expect(canAdminReinvite(adminRejected)).toBe(true);
+    expect(canAdminReinvite(adminCancelled)).toBe(true);
+    expect(canAdminReinvite(outstanding)).toBe(false);
+    expect(canAdminReinvite(accepted)).toBe(false);
   });
 });
 
 describe('adminReinviteTargetStatus', () => {
-  it('returns INVITED for ADMIN_REJECTED', () => {
-    expect(adminReinviteTargetStatus(ShiftInviteStatus.AdminRejected)).toBe(
-      ShiftInviteStatus.Invited,
-    );
+  it('returns null (waiting) for admin-ended rows', () => {
+    expect(adminReinviteTargetStatus(adminRejected)).toBeNull();
+    expect(adminReinviteTargetStatus(adminCancelled)).toBeNull();
   });
 
-  it('returns null for other statuses', () => {
-    expect(adminReinviteTargetStatus(ShiftInviteStatus.Invited)).toBeNull();
-    expect(adminReinviteTargetStatus(ShiftInviteStatus.Accepted)).toBeNull();
-  });
-
-  it('returns INVITED for event invite statuses too', () => {
-    expect(adminReinviteTargetStatus(EventInviteStatus.AdminRejected)).toBe(
-      EventInviteStatus.Invited,
-    );
+  it('returns undefined when the row cannot be re-invited', () => {
+    expect(adminReinviteTargetStatus(outstanding)).toBeUndefined();
+    expect(adminReinviteTargetStatus(accepted)).toBeUndefined();
   });
 });
 
 describe('preselectedInviteMemberIds', () => {
-  it('excludes ADMIN_REJECTED so invite sheets do not silently re-invite', () => {
+  it('excludes ADMIN_REJECTED and ADMIN_CANCELLED so invite sheets do not silently re-invite', () => {
     expect(
       preselectedInviteMemberIds([
-        { id: 'a', inviteStatus: EventInviteStatus.Invited },
-        { id: 'b', inviteStatus: EventInviteStatus.Accepted },
-        { id: 'c', inviteStatus: EventInviteStatus.AdminRejected },
-        { id: 'd', inviteStatus: null },
+        { id: 'a', origin: EventInviteOrigin.AdminInvited, status: null },
+        {
+          id: 'b',
+          origin: EventInviteOrigin.AdminInvited,
+          status: EventInviteStatus.VolunteerAccepted,
+        },
+        {
+          id: 'c',
+          origin: EventInviteOrigin.AdminInvited,
+          status: EventInviteStatus.AdminRejected,
+        },
+        {
+          id: 'e',
+          origin: EventInviteOrigin.VolunteerJoined,
+          status: EventInviteStatus.AdminCancelled,
+        },
+        { id: 'd', origin: null, status: null },
       ]),
     ).toEqual(['a', 'b', 'd']);
   });
 });
 
 describe('toInviteDisplayState', () => {
-  it('maps each domain status to a distinct display state', () => {
-    expect(toInviteDisplayState(ShiftInviteStatus.Invited)).toBe('invited');
-    expect(toInviteDisplayState(ShiftInviteStatus.Accepted)).toBe('accepted');
-    expect(toInviteDisplayState(ShiftInviteStatus.SelfJoined)).toBe(
-      'signed_up',
-    );
-    expect(toInviteDisplayState(ShiftInviteStatus.VolunteerRejected)).toBe(
-      'declined',
-    );
-    expect(toInviteDisplayState(ShiftInviteStatus.Cancelled)).toBe('cancelled');
-    expect(toInviteDisplayState(ShiftInviteStatus.AdminRejected)).toBe(
-      'rejected',
+  it('maps origin + status to distinct display states', () => {
+    expect(toInviteDisplayState(outstanding)).toBe('invited');
+    expect(toInviteDisplayState(accepted)).toBe('accepted');
+    expect(toInviteDisplayState(signedUp)).toBe('signed_up');
+    expect(toInviteDisplayState(volunteerRejected)).toBe('declined');
+    expect(toInviteDisplayState(volunteerCancelled)).toBe('cancelled');
+    expect(toInviteDisplayState(adminRejected)).toBe('rejected');
+    expect(toInviteDisplayState(adminCancelled)).toBe('rejected');
+  });
+
+  it('keeps accepted distinct from signed up', () => {
+    expect(toInviteDisplayState(accepted)).not.toBe(
+      toInviteDisplayState(signedUp),
     );
   });
 
-  it('keeps ACCEPTED distinct from SELF_JOINED', () => {
-    expect(toInviteDisplayState(ShiftInviteStatus.Accepted)).not.toBe(
-      toInviteDisplayState(ShiftInviteStatus.SelfJoined),
+  it('does not treat outstanding as signed up', () => {
+    expect(isOutstandingInvite(outstanding)).toBe(true);
+    expect(toInviteDisplayState(outstanding)).not.toBe(
+      toInviteDisplayState(signedUp),
     );
   });
 });
 
 describe('countInviteDisplayStates', () => {
-  it('counts invite statuses for the summary line', () => {
+  it('counts invite pairs for the summary line', () => {
     expect(
       countInviteDisplayStates([
-        ShiftInviteStatus.Invited,
-        ShiftInviteStatus.Invited,
-        ShiftInviteStatus.Accepted,
-        ShiftInviteStatus.SelfJoined,
-        ShiftInviteStatus.AdminRejected,
+        outstanding,
+        outstanding,
+        accepted,
+        signedUp,
+        adminRejected,
       ]),
     ).toEqual({
       invited: 2,

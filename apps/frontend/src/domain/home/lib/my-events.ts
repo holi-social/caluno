@@ -1,10 +1,4 @@
-import { EventInviteStatus } from '@repo/data';
 import { addDays, intervalsOverlap, startOfDay } from './date-helpers';
-
-export const PARTICIPATING_EVENT_STATUSES = [
-  EventInviteStatus.Accepted,
-  EventInviteStatus.SelfJoined,
-] as const;
 
 export type EventCardLayout = 'fill' | 'scroller';
 

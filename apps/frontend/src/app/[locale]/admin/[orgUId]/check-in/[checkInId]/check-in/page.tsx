@@ -1,9 +1,9 @@
-import { ShiftInviteStatus } from '@repo/data';
 import { Alert, AlertDescription, AlertTitle } from '@repo/ui';
 import { AlertCircle } from 'lucide-react';
 import { notFound } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
 import { CheckinForm } from '@/domain/shift/components/checkin-form';
+import { isParticipatingInvite } from '@/domain/shift/invite-status-display';
 import { getDataClient } from '@/lib/data-client';
 import { requireOrgAccess } from '@/lib/org-context-server';
 
@@ -39,12 +39,14 @@ export default async function CheckinPage({ params }: CheckinPageProps) {
 
   const shiftsInstances = await data.shift.activeShiftInstances(user.id);
   const acceptedShiftsFirst = shiftsInstances.sort((a, b) => {
-    const participatingInA =
-      a.invite?.status === ShiftInviteStatus.Accepted ||
-      a.invite?.status === ShiftInviteStatus.SelfJoined;
-    const participatingInB =
-      b.invite?.status === ShiftInviteStatus.Accepted ||
-      b.invite?.status === ShiftInviteStatus.SelfJoined;
+    const participatingInA = isParticipatingInvite({
+      origin: a.invite?.origin,
+      status: a.invite?.status,
+    });
+    const participatingInB = isParticipatingInvite({
+      origin: b.invite?.origin,
+      status: b.invite?.status,
+    });
     return (
       Number(participatingInB) - Number(participatingInA) ||
       new Date(a.actualStartsAt).getTime() -

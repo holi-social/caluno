@@ -2,7 +2,6 @@
 
 import {
   formatRrulePattern,
-  type ShiftInviteStatus,
   ShiftVisibility,
   type WeeklyShiftInstance,
 } from '@repo/data';
@@ -113,7 +112,7 @@ export function ShiftCard({
     (invite) => ({
       id: invite.user.id,
       name: invite.user.name,
-      state: toInviteDisplayState(invite.status as ShiftInviteStatus),
+      state: toInviteDisplayState(invite),
     }),
   );
 

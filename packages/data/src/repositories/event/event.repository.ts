@@ -41,6 +41,7 @@ export class EventRepository extends BaseRepository {
       offset?: number;
       order?: SortOrder;
       statuses?: EventInviteStatus[];
+      waiting?: boolean;
     } = {},
   ): Promise<{
     items: MyEvent[];
@@ -59,6 +60,7 @@ export class EventRepository extends BaseRepository {
       offset: options.offset ?? 0,
       order: options.order ?? SortOrder.Asc,
       statuses: options.statuses,
+      waiting: options.waiting,
     });
     return data.myEvents;
   }
@@ -125,7 +127,7 @@ export class EventRepository extends BaseRepository {
 
   async updateEventInviteStatus(
     eventId: string,
-    status: EventInviteStatus,
+    status: EventInviteStatus | null,
     userId?: string,
   ): Promise<UpdateEventInviteStatusMutation['updateEventInviteStatus']> {
     const data = await this.sdk.UpdateEventInviteStatus({

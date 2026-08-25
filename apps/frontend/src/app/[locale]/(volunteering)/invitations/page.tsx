@@ -1,4 +1,3 @@
-import { EventInviteStatus, ShiftInviteStatus } from '@repo/data';
 import { Empty, EmptyMedia, EmptyTitle } from '@repo/ui';
 import { MailIcon } from 'lucide-react';
 import { getTranslations } from 'next-intl/server';
@@ -20,11 +19,11 @@ export default async function InvitationsPage({
   const client = await getDataClient();
   const [shiftInvites, eventInvites] = await Promise.all([
     client.shift.findMyShiftInstances({
-      statuses: [ShiftInviteStatus.Invited],
+      waiting: true,
       limit: 50,
     }),
     client.event.findMyEvents({
-      statuses: [EventInviteStatus.Invited],
+      waiting: true,
       limit: 50,
     }),
   ]);

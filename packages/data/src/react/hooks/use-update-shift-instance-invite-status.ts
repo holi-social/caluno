@@ -13,7 +13,7 @@ export function useUpdateShiftInstanceInviteStatus() {
   return useMutation({
     mutationFn: (variables: {
       instanceId: string;
-      status: ShiftInviteStatus;
+      status: ShiftInviteStatus | null;
     }) =>
       repository.updateShiftInstanceInviteStatus(
         variables.instanceId,

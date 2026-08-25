@@ -1,6 +1,5 @@
 'use client';
 
-import { EventInviteStatus, ShiftInviteStatus } from '@repo/data';
 import type {
   AvailableShiftInstance,
   DiscoverEvent,
@@ -45,11 +44,7 @@ import {
 } from '../lib/date-helpers';
 import type { DiscoverTab } from '../lib/discover-tabs';
 import { mergeInvitations } from '../lib/merge-invitations';
-import {
-  countEventsThisWeek,
-  getEventCardLayout,
-  PARTICIPATING_EVENT_STATUSES,
-} from '../lib/my-events';
+import { countEventsThisWeek, getEventCardLayout } from '../lib/my-events';
 import { useDelayedLoading } from '../lib/use-delayed-loading';
 import { DayStrip } from './day-strip';
 import { DayStripSkeleton } from './day-strip-skeleton';
@@ -143,7 +138,7 @@ export function VolunteerHomeContent({
     );
 
   const { data: shiftInvitationsPage } = useMyShiftInstances(
-    { limit: 10, statuses: [ShiftInviteStatus.Invited] },
+    { limit: 10, waiting: true },
     {
       initialData: {
         items: initialShiftInvitations,
@@ -158,7 +153,7 @@ export function VolunteerHomeContent({
   );
 
   const { data: eventInvitationsPage } = useMyEvents(
-    { limit: 10, statuses: [EventInviteStatus.Invited] },
+    { limit: 10, waiting: true },
     {
       initialData: {
         items: initialEventInvitations,
@@ -182,7 +177,7 @@ export function VolunteerHomeContent({
   );
 
   const { data: myEventsPage } = useMyEvents(
-    { limit: 10, statuses: [...PARTICIPATING_EVENT_STATUSES] },
+    { limit: 10 },
     {
       initialData: {
         items: initialMyEvents,
@@ -338,7 +333,7 @@ export function VolunteerHomeContent({
           {nextShift && (
             <ShiftCardMy
               shiftInstance={nextShift}
-              isPending={!nextShift.myInviteStatus}
+              isPending={Boolean(nextShift.isIntendingToJoin)}
             />
           )}
           {futureShifts.length > 0 && (
@@ -348,7 +343,7 @@ export function VolunteerHomeContent({
                   <ShiftCardMyShift
                     shiftInstance={shift}
                     showDate
-                    isPending={!shift.myInviteStatus}
+                    isPending={Boolean(shift.isIntendingToJoin)}
                   />
                 </div>
               ))}

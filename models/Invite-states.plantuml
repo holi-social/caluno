@@ -1,18 +1,42 @@
-@startuml InviteStatusModel
+@startuml InviteOriginStatusModel
 
-[*] --> INVITED : admin
-' means the member self-joined without an invite
-[*] --> SELF_JOINED : volunteer
-INVITED --> ACCEPTED : volunteer
-INVITED --> VOLUNTEER_REJECTED : volunteer
-VOLUNTEER_REJECTED -left-> ACCEPTED : volunteer
-SELF_JOINED -down-> CANCELLED : volunteer
-ACCEPTED -down-> CANCELLED : volunteer
-CANCELLED -up-> SELF_JOINED : volunteer
-CANCELLED -up-> ACCEPTED : volunteer
+title Invite origin (how they arrived) vs status (latest answer)
 
-ACCEPTED --> ADMIN_REJECTED : admin
-INVITED -down-> ADMIN_REJECTED : admin
-ADMIN_REJECTED -up-> INVITED : admin
-SELF_JOINED --> ADMIN_REJECTED : admin
+state "origin" as Origin {
+  [*] --> ADMIN_INVITED : admin invite
+  [*] --> VOLUNTEER_JOINED : open join
+  [*] --> VOLUNTEER_APPLIED : later slice (enum only)
+}
+
+state "status (nullable = waiting)" as Status {
+  [*] --> waiting : insert / re-invite
+  waiting --> VOLUNTEER_ACCEPTED : volunteer says yes
+  waiting --> VOLUNTEER_REJECTED : volunteer declines offer
+  waiting --> ADMIN_REJECTED : admin withdraws outstanding
+  waiting --> ADMIN_ACCEPTED : later slice (enum only)
+  VOLUNTEER_ACCEPTED --> VOLUNTEER_CANCELLED : volunteer leaves seat
+  VOLUNTEER_JOINED_seat --> VOLUNTEER_CANCELLED : volunteer leaves seat
+  VOLUNTEER_ACCEPTED --> ADMIN_CANCELLED : admin kicks seat
+  VOLUNTEER_JOINED_seat --> ADMIN_CANCELLED : admin kicks seat
+  ADMIN_REJECTED --> waiting : admin re-invite\n(origin = ADMIN_INVITED)
+  ADMIN_CANCELLED --> waiting : admin re-invite\n(origin = ADMIN_INVITED)
+}
+
+note right of Origin
+  origin is set on insert.
+  Unchanged after, except re-invite
+  sets origin = ADMIN_INVITED.
+  Nullable only for legacy
+  ADMIN_REJECTED / CANCELLED rows.
+end note
+
+note right of Status
+  Participating this slice:
+  VOLUNTEER_JOINED + null
+  ADMIN_INVITED + VOLUNTEER_ACCEPTED
+  (later: VOLUNTEER_APPLIED + ADMIN_ACCEPTED,
+  ADMIN_INVITED + ADMIN_ACCEPTED)
+  Instance cancel does not stamp person-invites.
+end note
+
 @enduml

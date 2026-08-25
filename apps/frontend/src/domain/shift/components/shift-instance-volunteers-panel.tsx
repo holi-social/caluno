@@ -1,6 +1,10 @@
 'use client';
 
-import { MembershipRequestStatus, type ShiftInviteStatus } from '@repo/data';
+import {
+  MembershipRequestStatus,
+  type ShiftInviteOrigin,
+  type ShiftInviteStatus,
+} from '@repo/data';
 import {
   Button,
   type VolunteeringActionLabel,
@@ -15,7 +19,6 @@ import { useSheetTrigger } from '@/hooks/use-sheet';
 import { Link, useRouter } from '@/i18n/navigation';
 import { updateShiftInstanceInviteStatus } from '../actions';
 import {
-  adminReinviteTargetStatus,
   adminUninviteTargetStatus,
   canAdminReinvite,
   canAdminUninvite,
@@ -26,7 +29,8 @@ import {
 import { shiftInvitePath } from '../routes';
 
 type InstanceInvite = {
-  status: ShiftInviteStatus;
+  origin?: ShiftInviteOrigin | null;
+  status?: ShiftInviteStatus | null;
   user: {
     id: string;
     name: string;
@@ -46,12 +50,12 @@ type ShiftInstanceVolunteersPanelProps = {
 };
 
 function manageActions(
-  status: ShiftInviteStatus,
+  invite: InstanceInvite,
   canManage: boolean,
 ): VolunteeringActionLabel[] {
   if (!canManage) return [];
-  if (canAdminUninvite(status)) return ['Uninvite'];
-  if (canAdminReinvite(status)) return ['Invite'];
+  if (canAdminUninvite(invite)) return ['Uninvite'];
+  if (canAdminReinvite(invite)) return ['Invite'];
   return [];
 }
 
@@ -69,8 +73,8 @@ export function ShiftInstanceVolunteersPanel({
   const { open: openVolunteerSheet } = useSheetTrigger('volunteer-profile');
   const [pending, startTransition] = useTransition();
 
-  const statusLabel = (status: ShiftInviteStatus) => {
-    const state = toInviteDisplayState(status);
+  const statusLabel = (invite: InstanceInvite) => {
+    const state = toInviteDisplayState(invite);
     switch (state) {
       case 'invited':
         return t('inviteStatus.invited');
@@ -93,13 +97,13 @@ export function ShiftInstanceVolunteersPanel({
     id: invite.user.id,
     name: invite.user.name,
     image: invite.user.image,
-    state: toInviteDisplayState(invite.status),
-    statusLabel: statusLabel(invite.status),
-    actions: manageActions(invite.status, canManage),
+    state: toInviteDisplayState(invite),
+    statusLabel: statusLabel(invite),
+    actions: manageActions(invite, canManage),
     iconActions: ['View', 'Check in'],
   }));
 
-  const counts = countInviteDisplayStates(invites.map((i) => i.status));
+  const counts = countInviteDisplayStates(invites);
   const summary = formatInviteStatusSummary(counts, spotsLeft, {
     invited: t('inviteStatus.summaryInvited'),
     accepted: t('inviteStatus.summaryAccepted'),
@@ -139,36 +143,51 @@ export function ShiftInstanceVolunteersPanel({
       return;
     }
 
-    const targetStatus =
-      action === 'Uninvite'
-        ? adminUninviteTargetStatus(invite.status)
-        : action === 'Invite'
-          ? adminReinviteTargetStatus(invite.status)
-          : null;
-    if (!targetStatus) {
+    if (action === 'Uninvite') {
+      const targetStatus = adminUninviteTargetStatus(invite);
+      if (targetStatus == null) {
+        return;
+      }
+      startTransition(async () => {
+        const result = await updateShiftInstanceInviteStatus(
+          orgUId,
+          instanceId,
+          {
+            userId: volunteerId,
+            status: targetStatus,
+          },
+        );
+        if (result?.serverError) {
+          toast.error(t('inviteStatus.uninviteError'));
+          return;
+        }
+        toast.success(t('inviteStatus.uninviteSuccess'));
+        router.refresh();
+      });
       return;
     }
 
-    startTransition(async () => {
-      const result = await updateShiftInstanceInviteStatus(orgUId, instanceId, {
-        userId: volunteerId,
-        status: targetStatus,
-      });
-      if (result?.serverError) {
-        toast.error(
-          action === 'Invite'
-            ? t('inviteStatus.inviteError')
-            : t('inviteStatus.uninviteError'),
-        );
+    if (action === 'Invite') {
+      if (!canAdminReinvite(invite)) {
         return;
       }
-      toast.success(
-        action === 'Invite'
-          ? t('inviteStatus.inviteSuccess')
-          : t('inviteStatus.uninviteSuccess'),
-      );
-      router.refresh();
-    });
+      startTransition(async () => {
+        const result = await updateShiftInstanceInviteStatus(
+          orgUId,
+          instanceId,
+          {
+            userId: volunteerId,
+            status: null,
+          },
+        );
+        if (result?.serverError) {
+          toast.error(t('inviteStatus.inviteError'));
+          return;
+        }
+        toast.success(t('inviteStatus.inviteSuccess'));
+        router.refresh();
+      });
+    }
   };
 
   return (

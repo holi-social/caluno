@@ -3,7 +3,8 @@
 import {
   JoinStatus,
   type PublicShiftInstance,
-  ShiftInviteStatus,
+  type ShiftInviteOrigin,
+  type ShiftInviteStatus,
   type ShiftVisibility,
 } from '@repo/data';
 import type { RequiredForm } from '@repo/data/react';
@@ -18,6 +19,10 @@ import {
 import { useTranslations } from 'next-intl';
 import { useMemo, useState } from 'react';
 import { useFormatting } from '@/lib/formatting/use-formatting';
+import {
+  isParticipatingInvite,
+  toInviteDisplayState,
+} from '../invite-status-display';
 import { JoinShiftButton } from './join-shift-button';
 import { ShiftDayPicker } from './shift-day-picker';
 
@@ -39,11 +44,10 @@ interface ShiftActionCardProps {
   organizationUnitRequiredForms?: RequiredForm[];
 }
 
-const isParticipatingInvite = (
+const isParticipatingInviteStatus = (
+  origin: ShiftInviteOrigin | null | undefined,
   status: ShiftInviteStatus | null | undefined,
-): boolean =>
-  status === ShiftInviteStatus.Accepted ||
-  status === ShiftInviteStatus.SelfJoined;
+): boolean => isParticipatingInvite({ origin, status });
 
 export function ShiftActionCard({
   shiftId,
@@ -74,8 +78,14 @@ export function ShiftActionCard({
   // Optimistic overrides so capacity/CTA update without a reload.
   const [membershipStateOverride, setMembershipStateOverride] =
     useState<JoinStatus | null>(null);
-  const [inviteStatusOverrides, setInviteStatusOverrides] = useState<
-    Record<string, ShiftInviteStatus>
+  const [inviteOverrides, setInviteOverrides] = useState<
+    Record<
+      string,
+      {
+        origin: ShiftInviteOrigin | null;
+        status: ShiftInviteStatus | null;
+      }
+    >
   >({});
   const [pendingInstanceIds, setPendingInstanceIds] = useState<Set<string>>(
     new Set(),
@@ -93,14 +103,22 @@ export function ShiftActionCard({
   const isRecurring = instances.length > 1;
   const max =
     selected.overrideMaxVolunteers ?? masterMaxVolunteers ?? undefined;
-  const inviteStatus =
-    inviteStatusOverrides[selected.id] ?? selected.myInviteStatus ?? null;
+  const inviteOverride = inviteOverrides[selected.id];
+  const inviteOrigin =
+    inviteOverride?.origin ?? selected.myInviteOrigin ?? null;
+  const inviteStatus = inviteOverride
+    ? inviteOverride.status
+    : (selected.myInviteStatus ?? null);
+  const selectedInvite = { origin: inviteOrigin, status: inviteStatus };
   const effectiveMembershipState = membershipStateOverride ?? membershipState;
   const isPendingIntended =
     selected.isIntendingToJoin || pendingInstanceIds.has(selected.id);
   const justJoined =
-    isParticipatingInvite(inviteStatus) &&
-    !isParticipatingInvite(selected.myInviteStatus);
+    isParticipatingInviteStatus(inviteOrigin, inviteStatus) &&
+    !isParticipatingInviteStatus(
+      selected.myInviteOrigin,
+      selected.myInviteStatus,
+    );
 
   const filled = (selected.filledCount ?? 0) + (justJoined ? 1 : 0);
   const spotsLeft =
@@ -118,16 +136,22 @@ export function ShiftActionCard({
   });
 
   const getInviteStatusNote = () => {
-    switch (inviteStatus) {
-      case ShiftInviteStatus.Invited:
+    if (inviteOrigin == null && inviteStatus == null) {
+      if (effectiveMembershipState === JoinStatus.Pending) {
+        return t('pendingNote');
+      }
+      return full ? t('fullNote') : t('signUpNote');
+    }
+    switch (toInviteDisplayState(selectedInvite)) {
+      case 'invited':
         return t('respondBeforeNote', { date: longDate });
-      case ShiftInviteStatus.Accepted:
+      case 'accepted':
         return t('cancelUntilNote', { date: longDate });
-      case ShiftInviteStatus.Cancelled:
+      case 'cancelled':
         return t('cancelledNote', { date: longDate });
-      case ShiftInviteStatus.SelfJoined:
+      case 'signed_up':
         return t('joinedNote');
-      case ShiftInviteStatus.VolunteerRejected:
+      case 'declined':
         return t('declinedNote');
       default:
         if (effectiveMembershipState === JoinStatus.Pending) {
@@ -169,13 +193,13 @@ export function ShiftActionCard({
         />
       )}
 
-      {inviteStatus === ShiftInviteStatus.Accepted && (
+      {toInviteDisplayState(selectedInvite) === 'accepted' && (
         <Badge variant="secondary" className="gap-1">
           <CheckIcon className="size-3.5" />
           {t('acceptedBadge')}
         </Badge>
       )}
-      {inviteStatus === ShiftInviteStatus.Cancelled && (
+      {toInviteDisplayState(selectedInvite) === 'cancelled' && (
         <Badge variant="secondary" className="gap-1">
           <XIcon className="size-3.5" />
           {t('cancelledBadge')}
@@ -217,11 +241,12 @@ export function ShiftActionCard({
               );
             }
           }}
+          inviteOrigin={inviteOrigin}
           inviteStatus={inviteStatus}
-          onInviteStatusChange={(nextStatus) =>
-            setInviteStatusOverrides((previous) => ({
+          onInviteChange={(nextInvite) =>
+            setInviteOverrides((previous) => ({
               ...previous,
-              [selected.id]: nextStatus,
+              [selected.id]: nextInvite,
             }))
           }
           isPendingIntended={isPendingIntended}

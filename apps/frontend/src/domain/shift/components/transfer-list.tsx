@@ -12,6 +12,7 @@ import { ArrowLeftRight, CirclePlus, CircleX } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useState } from 'react';
 import {
+  type InviteOrigin,
   type InviteStatus,
   toInviteDisplayState,
 } from '../invite-status-display';
@@ -24,6 +25,7 @@ type Member = {
   name: string;
   email: string;
   image?: string | null;
+  inviteOrigin?: InviteOrigin | null;
   inviteStatus?: InviteStatus | null;
   /** When set, overrides inviteStatus → display mapping (e.g. events). */
   displayState?: ShiftVolunteeringDisplayState;
@@ -151,9 +153,10 @@ export function TransferList({
                 email={member.email}
                 state={
                   member.displayState ??
-                  (member.inviteStatus
-                    ? toInviteDisplayState(member.inviteStatus)
-                    : 'invited')
+                  toInviteDisplayState({
+                    origin: member.inviteOrigin,
+                    status: member.inviteStatus,
+                  })
                 }
                 phase="before"
                 className="hover:bg-accent"

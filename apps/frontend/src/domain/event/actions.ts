@@ -81,7 +81,7 @@ export const inviteMembersToEvent = actionClient
 
 const updateEventInviteStatusSchema = z.object({
   userId: z.string().min(1),
-  status: z.enum(EventInviteStatus),
+  status: z.enum(EventInviteStatus).nullable(),
 });
 
 export const updateEventInviteStatus = actionClient

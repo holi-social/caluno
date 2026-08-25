@@ -1,7 +1,11 @@
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
-import { ShiftVisibility } from '@repo/data';
+import {
+  type ShiftInviteOrigin,
+  type ShiftInviteStatus,
+  ShiftVisibility,
+} from '@repo/data';
 import { Checkbox, FieldDescription, FieldLabel, Separator } from '@repo/ui';
 import { useLocale, useTranslations } from 'next-intl';
 import { useId, useState, useTransition } from 'react';
@@ -11,6 +15,7 @@ import { FormSheet, useFormSheet } from '@/components/form-sheet';
 import { useRouter } from '@/i18n/navigation';
 import { useSession } from '@/lib/auth';
 import type { RecurrenceDayValue } from '../constants';
+import { preselectedInviteMemberIds } from '../invite-status-display';
 import { type InviteShiftFormValues, inviteShiftFormSchema } from '../schemas';
 import { setSuccessDialogCreatedShift } from '../success-dialog';
 import ShareLinkButton from './share-link-button';
@@ -22,7 +27,8 @@ type Member = {
   name: string;
   email: string;
   image?: string | null;
-  inviteStatus?: import('@repo/data').ShiftInviteStatus | null;
+  inviteOrigin?: ShiftInviteOrigin | null;
+  inviteStatus?: ShiftInviteStatus | null;
 };
 
 interface InviteShiftFormProps {
@@ -78,7 +84,7 @@ export function InviteShiftForm({
   const form = useForm<InviteShiftFormValues>({
     resolver: zodResolver(schema),
     defaultValues: {
-      invitedMemberIds: invitedMembers.map((m) => m.id),
+      invitedMemberIds: preselectedInviteMemberIds(invitedMembers),
       inviteAllInstances: false,
     },
   });
@@ -86,15 +92,18 @@ export function InviteShiftForm({
   const isOpenShift = shift.visibility === ShiftVisibility.AllMembers;
   const currentUserId = session.data?.user?.id;
   const allMembers = availableMembers.filter((m) => m.id !== currentUserId);
-  const statusById = new Map(
-    invitedMembers.map((m) => [m.id, m.inviteStatus] as const),
-  );
+  const statusById = new Map(invitedMembers.map((m) => [m.id, m] as const));
 
   const watchedIds = form.watch('invitedMemberIds');
   const invitedForList: Member[] = watchedIds.map((id) => {
     const fromAll = allMembers.find((m) => m.id === id);
+    const saved = statusById.get(id);
     if (fromAll) {
-      return { ...fromAll, inviteStatus: statusById.get(id) ?? null };
+      return {
+        ...fromAll,
+        inviteOrigin: saved?.inviteOrigin ?? null,
+        inviteStatus: saved?.inviteStatus ?? null,
+      };
     }
     const fromInvited = invitedMembers.find((m) => m.id === id);
     return (
@@ -102,7 +111,8 @@ export function InviteShiftForm({
         id,
         name: id,
         email: '',
-        inviteStatus: statusById.get(id) ?? null,
+        inviteOrigin: saved?.inviteOrigin ?? null,
+        inviteStatus: saved?.inviteStatus ?? null,
       }
     );
   });

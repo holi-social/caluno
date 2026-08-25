@@ -4,6 +4,7 @@ import {
   fromGraphQLError,
   JoinStatus,
   RequiredFormTargetType,
+  ShiftInviteOrigin,
   ShiftInviteStatus,
   ShiftVisibility,
 } from '@repo/data';
@@ -30,6 +31,10 @@ import { useTranslations } from 'next-intl';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import { useRequiredFormsGate } from '@/domain/requirement-form/use-required-forms-gate';
+import {
+  isOutstandingInvite,
+  isParticipatingInvite,
+} from '@/domain/shift/invite-status-display';
 import { usePathname, useRouter } from '@/i18n/navigation';
 import { useFormatting } from '@/lib/formatting/use-formatting';
 
@@ -48,8 +53,12 @@ interface JoinShiftButtonProps {
   /** Org-membership state — drives the pending/rejected CTA for non-invited users. */
   membershipState?: JoinStatus;
   onMembershipStateChange?: (status: JoinStatus) => void;
+  inviteOrigin?: ShiftInviteOrigin | null;
   inviteStatus?: ShiftInviteStatus | null;
-  onInviteStatusChange?: (status: ShiftInviteStatus) => void;
+  onInviteChange?: (invite: {
+    origin: ShiftInviteOrigin | null;
+    status: ShiftInviteStatus | null;
+  }) => void;
   /** Instance start, used for the cancel-confirm dialog copy. */
   startsAt?: string;
   label?: string;
@@ -71,8 +80,9 @@ export function JoinShiftButton({
   isFull = false,
   membershipState = JoinStatus.None,
   onMembershipStateChange,
+  inviteOrigin,
   inviteStatus,
-  onInviteStatusChange,
+  onInviteChange,
   startsAt,
   label,
   className,
@@ -103,13 +113,16 @@ export function JoinShiftButton({
           status: nextInviteStatus,
         });
         toast.success(successMessage);
-        onInviteStatusChange?.(nextInviteStatus);
+        onInviteChange?.({
+          origin: inviteOrigin ?? ShiftInviteOrigin.AdminInvited,
+          status: nextInviteStatus,
+        });
         router.refresh();
       } catch (error) {
         toast.error(getErrorMessage(error) ?? t('join.failed'));
       }
     },
-    [instanceId, respondToInvite, router, t, onInviteStatusChange],
+    [instanceId, inviteOrigin, respondToInvite, router, t, onInviteChange],
   );
 
   const handleCancel = useCallback(async () => {
@@ -120,15 +133,18 @@ export function JoinShiftButton({
     try {
       await respondToInvite.mutateAsync({
         instanceId,
-        status: ShiftInviteStatus.Cancelled,
+        status: ShiftInviteStatus.VolunteerCancelled,
       });
       toast.success(t('join.cancelled'));
-      onInviteStatusChange?.(ShiftInviteStatus.Cancelled);
+      onInviteChange?.({
+        origin: inviteOrigin ?? null,
+        status: ShiftInviteStatus.VolunteerCancelled,
+      });
       router.refresh();
     } catch (error) {
       toast.error(getErrorMessage(error) ?? t('join.failed'));
     }
-  }, [instanceId, respondToInvite, router, t, onInviteStatusChange]);
+  }, [instanceId, inviteOrigin, respondToInvite, router, t, onInviteChange]);
 
   const targetRequiredForms = [...shiftRequiredForms, ...instanceRequiredForms];
 
@@ -172,7 +188,10 @@ export function JoinShiftButton({
 
         if (result.status === JoinStatus.Joined) {
           toast.success(t('join.joined'));
-          onInviteStatusChange?.(ShiftInviteStatus.SelfJoined);
+          onInviteChange?.({
+            origin: ShiftInviteOrigin.VolunteerJoined,
+            status: null,
+          });
           if (isAuto) router.push('/');
         } else if (result.status === JoinStatus.Pending) {
           toast.success(t('join.pending'));
@@ -243,7 +262,7 @@ export function JoinShiftButton({
       pathname,
       t,
       organizationUnitId,
-      onInviteStatusChange,
+      onInviteChange,
       onMembershipStateChange,
       needsCombinedForms,
       goToCombinedForms,
@@ -254,7 +273,10 @@ export function JoinShiftButton({
     if (visibility === ShiftVisibility.AllMembers) {
       await handleJoin();
     } else {
-      await handleRespond(ShiftInviteStatus.Accepted, t('join.accepted'));
+      await handleRespond(
+        ShiftInviteStatus.VolunteerAccepted,
+        t('join.accepted'),
+      );
     }
   }, [visibility, handleJoin, handleRespond, t]);
 
@@ -275,12 +297,17 @@ export function JoinShiftButton({
     }
   }, [autoJoin, isAuthenticated, instanceId, visibility, handleJoin]);
 
-  if (inviteStatus === ShiftInviteStatus.Invited) {
+  const invite = { origin: inviteOrigin, status: inviteStatus };
+
+  if (isOutstandingInvite(invite)) {
     return (
       <div className={cn('flex flex-col gap-2', className)}>
         <Button
           onClick={() =>
-            handleRespond(ShiftInviteStatus.Accepted, t('join.accepted'))
+            handleRespond(
+              ShiftInviteStatus.VolunteerAccepted,
+              t('join.accepted'),
+            )
           }
           disabled={respondToInvite.isPending || !instanceId}
           size="xl"
@@ -305,7 +332,7 @@ export function JoinShiftButton({
   }
 
   if (
-    inviteStatus === ShiftInviteStatus.Cancelled ||
+    inviteStatus === ShiftInviteStatus.VolunteerCancelled ||
     inviteStatus === ShiftInviteStatus.VolunteerRejected
   ) {
     return (
@@ -324,10 +351,7 @@ export function JoinShiftButton({
     );
   }
 
-  if (
-    inviteStatus === ShiftInviteStatus.Accepted ||
-    inviteStatus === ShiftInviteStatus.SelfJoined
-  ) {
+  if (isParticipatingInvite(invite)) {
     return (
       <AlertDialog>
         <AlertDialogTrigger asChild>
@@ -369,7 +393,10 @@ export function JoinShiftButton({
     );
   }
 
-  if (inviteStatus === ShiftInviteStatus.AdminRejected) {
+  if (
+    inviteStatus === ShiftInviteStatus.AdminRejected ||
+    inviteStatus === ShiftInviteStatus.AdminCancelled
+  ) {
     return (
       <Button disabled variant="outline" size="xl" className={className}>
         {t('join.rejectedCta')}

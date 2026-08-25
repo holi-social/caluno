@@ -207,7 +207,7 @@ export class ShiftRepository extends BaseRepository {
 
   async updateShiftInstanceInviteStatus(
     instanceId: string,
-    status: ShiftInviteStatus,
+    status: ShiftInviteStatus | null,
     userId?: string,
   ) {
     const data = await this.sdk.UpdateShiftInstanceInviteStatus({
@@ -246,6 +246,7 @@ export class ShiftRepository extends BaseRepository {
       order?: SortOrder;
       statuses?: ShiftInviteStatus[];
       includeIntended?: boolean;
+      waiting?: boolean;
     } = {},
   ): Promise<{
     items: MyShiftInstance[];
@@ -265,6 +266,7 @@ export class ShiftRepository extends BaseRepository {
       order: options.order ?? SortOrder.Asc,
       statuses: options.statuses,
       includeIntended: options.includeIntended,
+      waiting: options.waiting,
     });
     return data.myShiftInstances;
   }

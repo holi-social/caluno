@@ -14,6 +14,7 @@ export function useMyEvents(
     offset?: number;
     order?: SortOrder;
     statuses?: EventInviteStatus[];
+    waiting?: boolean;
   } = {},
   queryOptions?: Omit<
     UseQueryOptions<Awaited<ReturnType<EventRepository['findMyEvents']>>>,

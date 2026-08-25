@@ -29,6 +29,7 @@ export default async function InviteEventPage({
   const availableMembers = memberships.map((m) => m.user);
   const invitedMembers = invites.map((invite) => ({
     ...invite.user,
+    inviteOrigin: invite.origin,
     inviteStatus: invite.status,
   }));
 

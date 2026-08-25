@@ -1,6 +1,6 @@
 'use client';
 
-import { EventInviteStatus, MembershipRequestStatus } from '@repo/data';
+import { type EventInviteStatus, MembershipRequestStatus } from '@repo/data';
 import type { EventInviteItem } from '@repo/data/react';
 import {
   Button,
@@ -13,12 +13,12 @@ import { useTranslations } from 'next-intl';
 import { useTransition } from 'react';
 import { toast } from 'sonner';
 import {
-  adminReinviteTargetStatus,
   adminUninviteTargetStatus,
   canAdminReinvite,
   canAdminUninvite,
   countInviteDisplayStates,
   formatInviteStatusSummary,
+  isParticipatingInvite,
   toInviteDisplayState,
 } from '@/domain/shift/invite-status-display';
 import { useSheetTrigger } from '@/hooks/use-sheet';
@@ -34,12 +34,12 @@ interface EventVolunteersSectionProps {
 }
 
 function manageActions(
-  status: EventInviteStatus,
+  invite: EventInviteItem,
   canManage: boolean,
 ): VolunteeringActionLabel[] {
   if (!canManage) return [];
-  if (canAdminUninvite(status)) return ['Uninvite'];
-  if (canAdminReinvite(status)) return ['Invite'];
+  if (canAdminUninvite(invite)) return ['Uninvite'];
+  if (canAdminReinvite(invite)) return ['Invite'];
   return [];
 }
 
@@ -56,8 +56,8 @@ export function EventVolunteersSection({
   const { open: openVolunteerSheet } = useSheetTrigger('volunteer-profile');
   const [pending, startTransition] = useTransition();
 
-  const statusLabel = (status: EventInviteStatus) => {
-    const state = toInviteDisplayState(status);
+  const statusLabel = (invite: EventInviteItem) => {
+    const state = toInviteDisplayState(invite);
     switch (state) {
       case 'invited':
         return t('status.invited');
@@ -77,22 +77,20 @@ export function EventVolunteersSection({
   };
 
   const volunteers: VolunteeringVolunteerListItem[] = invites.map((invite) => {
-    const isParticipating =
-      invite.status === EventInviteStatus.Accepted ||
-      invite.status === EventInviteStatus.SelfJoined;
+    const isParticipating = isParticipatingInvite(invite);
 
     return {
       id: invite.user.id,
       name: invite.user.name,
       image: invite.user.image,
-      state: toInviteDisplayState(invite.status),
-      statusLabel: statusLabel(invite.status),
-      actions: manageActions(invite.status, canEdit),
+      state: toInviteDisplayState(invite),
+      statusLabel: statusLabel(invite),
+      actions: manageActions(invite, canEdit),
       iconActions: isParticipating ? ['View', 'Check in'] : ['View'],
     };
   });
 
-  const counts = countInviteDisplayStates(invites.map((i) => i.status));
+  const counts = countInviteDisplayStates(invites);
   const summary = formatInviteStatusSummary(counts, null, {
     invited: tShift('inviteStatus.summaryInvited'),
     accepted: tShift('inviteStatus.summaryAccepted'),
@@ -132,32 +130,43 @@ export function EventVolunteersSection({
       return;
     }
 
-    const targetStatus =
-      action === 'Uninvite'
-        ? adminUninviteTargetStatus(invite.status)
-        : action === 'Invite'
-          ? adminReinviteTargetStatus(invite.status)
-          : null;
-    if (!targetStatus) {
+    if (action === 'Uninvite') {
+      const targetStatus = adminUninviteTargetStatus(invite);
+      if (targetStatus == null) {
+        return;
+      }
+      startTransition(async () => {
+        const result = await updateEventInviteStatus(orgUId, eventId, {
+          userId: volunteerId,
+          status: targetStatus as unknown as EventInviteStatus,
+        });
+        if (result?.serverError) {
+          toast.error(t('uninviteError'));
+          return;
+        }
+        toast.success(t('uninviteSuccess'));
+        router.refresh();
+      });
       return;
     }
 
-    startTransition(async () => {
-      const result = await updateEventInviteStatus(orgUId, eventId, {
-        userId: volunteerId,
-        status: targetStatus,
-      });
-      if (result?.serverError) {
-        toast.error(
-          action === 'Invite' ? t('inviteError') : t('uninviteError'),
-        );
+    if (action === 'Invite') {
+      if (!canAdminReinvite(invite)) {
         return;
       }
-      toast.success(
-        action === 'Invite' ? t('inviteSuccess') : t('uninviteSuccess'),
-      );
-      router.refresh();
-    });
+      startTransition(async () => {
+        const result = await updateEventInviteStatus(orgUId, eventId, {
+          userId: volunteerId,
+          status: null,
+        });
+        if (result?.serverError) {
+          toast.error(t('inviteError'));
+          return;
+        }
+        toast.success(t('inviteSuccess'));
+        router.refresh();
+      });
+    }
   };
 
   return (

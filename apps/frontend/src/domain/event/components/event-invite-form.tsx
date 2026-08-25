@@ -1,7 +1,7 @@
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
-import type { EventInviteStatus } from '@repo/data';
+import type { EventInviteOrigin, EventInviteStatus } from '@repo/data';
 import { Button } from '@repo/ui';
 import { Share2 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
@@ -22,6 +22,7 @@ type Member = {
   name: string;
   email: string;
   image?: string | null;
+  inviteOrigin?: EventInviteOrigin | null;
   inviteStatus?: EventInviteStatus | null;
 };
 
@@ -58,17 +59,17 @@ export const EventInviteForm = ({
     },
   });
 
-  const statusById = new Map(
-    invitedMembers.map((m) => [m.id, m.inviteStatus] as const),
-  );
+  const statusById = new Map(invitedMembers.map((m) => [m.id, m] as const));
 
   const watchedIds = watch('memberIds');
   const invited: Member[] = watchedIds.map((id) => {
     const fromAvailable = availableMembers.find((m) => m.id === id);
+    const saved = statusById.get(id);
     if (fromAvailable) {
       return {
         ...fromAvailable,
-        inviteStatus: statusById.get(id) ?? null,
+        inviteOrigin: saved?.inviteOrigin ?? null,
+        inviteStatus: saved?.inviteStatus ?? null,
       };
     }
     const fromInvited = invitedMembers.find((m) => m.id === id);
@@ -77,16 +78,18 @@ export const EventInviteForm = ({
         id,
         name: id,
         email: '',
-        inviteStatus: statusById.get(id) ?? null,
+        inviteOrigin: saved?.inviteOrigin ?? null,
+        inviteStatus: saved?.inviteStatus ?? null,
       }
     );
   });
 
   const invitedForList = invited.map((member) => ({
     ...member,
-    displayState: member.inviteStatus
-      ? toEventInviteDisplayState(member.inviteStatus)
-      : ('invited' as const),
+    displayState: toEventInviteDisplayState({
+      origin: member.inviteOrigin,
+      status: member.inviteStatus,
+    }),
   }));
 
   const onSubmit = async (formData: { memberIds: string[] }) => {

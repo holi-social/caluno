@@ -1,8 +1,4 @@
-import {
-  type ActiveShiftInstance,
-  ShiftInviteStatus,
-  ShiftVisibility,
-} from '@repo/data';
+import { type ActiveShiftInstance, ShiftVisibility } from '@repo/data';
 import {
   Alert,
   AlertDescription,
@@ -17,6 +13,7 @@ import { AlertCircle, CalendarCheck, Clock, LockKeyhole } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { Link } from '@/i18n/navigation';
 import { useFormatting } from '@/lib/formatting/use-formatting';
+import { isParticipatingInvite } from '../invite-status-display';
 
 type ShiftSelectorProps = {
   organizationUnitId: string;
@@ -38,8 +35,10 @@ export const ShiftSelectItem = ({ shift }: ShiftOptionProps) => {
         <span className="truncate">
           {shift.overrideTitle ?? shift.master.title}
         </span>
-        {shift.invite?.status === ShiftInviteStatus.Accepted ||
-        shift.invite?.status === ShiftInviteStatus.SelfJoined ? (
+        {isParticipatingInvite({
+          origin: shift.invite?.origin,
+          status: shift.invite?.status,
+        }) ? (
           <CalendarCheck className="size-4 text-primary" />
         ) : (
           shift.master.visibility === ShiftVisibility.InvitedMembers && (

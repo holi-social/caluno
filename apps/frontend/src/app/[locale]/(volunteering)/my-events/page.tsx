@@ -4,13 +4,11 @@ import { CalendarXIcon } from 'lucide-react';
 import { getTranslations } from 'next-intl/server';
 import { EventCardMy } from '@/domain/home/components/event-card-my';
 import { MyEventsPageHeader } from '@/domain/home/components/my-events-page-header';
-import { PARTICIPATING_EVENT_STATUSES } from '@/domain/home/lib/my-events';
 import { getDataClient } from '@/lib/data-client';
 
 export default async function MyEventsPage() {
   const client = await getDataClient();
   const myEvents = await client.event.findMyEvents({
-    statuses: [...PARTICIPATING_EVENT_STATUSES],
     order: SortOrder.Asc,
     limit: 50,
   });

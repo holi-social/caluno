@@ -187,7 +187,7 @@ mutation UpdateShiftInstanceVolunteers(
 
 mutation UpdateShiftInstanceInviteStatus(
   $instanceId: String!
-  $status: ShiftInviteStatus!
+  $status: ShiftInviteStatus
   $userId: String
 ) {
   updateShiftInstanceInviteStatus(
@@ -259,6 +259,7 @@ query GetActiveShiftInstances($userId: String!) {
     actualEndsAt
     overrideTitle
     invite(userId: $userId) {
+      origin
       status
     }
     master {
@@ -317,6 +318,7 @@ query GetShiftInstance($id: ID!) {
       }
     }
     invites {
+      origin
       status
       user {
         id
@@ -359,6 +361,7 @@ query GetWeeklyShifts(
       name
     }
     invites {
+      origin
       status
       user {
         id
@@ -378,6 +381,7 @@ fragment PublicShiftDetailInstanceFields on ShiftInstance {
   overrideMaxVolunteers
   filledCount
   spotsLeft
+  myInviteOrigin
   myInviteStatus
   isIntendingToJoin
   requiredFormsCount
@@ -405,6 +409,7 @@ fragment VolunteerHomeShiftInstance on ShiftInstance {
   actualEndsAt
   isCheckedIn
   filledCount
+  myInviteOrigin
   myInviteStatus
   myInvitedAt
   isIntendingToJoin
@@ -436,6 +441,7 @@ query GetMyShiftInstances(
   $order: SortOrder = ASC
   $statuses: [ShiftInviteStatus!]
   $includeIntended: Boolean = false
+  $waiting: Boolean
 ) {
   myShiftInstances(
     includePast: $includePast
@@ -446,6 +452,7 @@ query GetMyShiftInstances(
     order: $order
     statuses: $statuses
     includeIntended: $includeIntended
+    waiting: $waiting
   ) {
     items {
       ...VolunteerHomeShiftInstance

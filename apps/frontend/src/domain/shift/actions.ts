@@ -185,7 +185,7 @@ export const updateShiftVolunteers = actionClient
 
 const updateShiftInstanceInviteStatusSchema = z.object({
   userId: z.string().min(1),
-  status: z.enum(ShiftInviteStatus),
+  status: z.enum(ShiftInviteStatus).nullable(),
 });
 
 export const updateShiftInstanceInviteStatus = actionClient

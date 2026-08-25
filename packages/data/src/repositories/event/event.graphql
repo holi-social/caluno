@@ -130,6 +130,7 @@ query GetMyEvents(
   $offset: Int = 0
   $order: SortOrder = ASC
   $statuses: [EventInviteStatus!]
+  $waiting: Boolean
 ) {
   myEvents(
     includePast: $includePast
@@ -139,6 +140,7 @@ query GetMyEvents(
     offset: $offset
     order: $order
     statuses: $statuses
+    waiting: $waiting
   ) {
     items {
       ...MyEventFields
@@ -201,6 +203,7 @@ query GetEvent($id: ID!) {
 query GetEventInvites($eventId: ID!) {
   eventInvites(eventId: $eventId) {
     id
+    origin
     status
     user {
       id
@@ -238,11 +241,12 @@ mutation InviteMembersToEvent($eventId: ID!, $memberIds: [String!]!) {
 
 mutation UpdateEventInviteStatus(
   $eventId: ID!
-  $status: EventInviteStatus!
+  $status: EventInviteStatus
   $userId: String
 ) {
   updateEventInviteStatus(eventId: $eventId, status: $status, userId: $userId) {
     id
+    origin
     status
     userId
   }

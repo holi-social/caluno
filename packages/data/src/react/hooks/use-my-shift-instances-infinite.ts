@@ -23,6 +23,7 @@ export function useMyShiftInstancesInfinite(
     limit?: number;
     statuses?: ShiftInviteStatus[];
     includeIntended?: boolean;
+    waiting?: boolean;
   } = {},
   queryOptions?: Omit<
     UseInfiniteQueryOptions<

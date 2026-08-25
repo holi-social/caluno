@@ -11,7 +11,10 @@ export function useUpdateEventInviteStatus() {
   const repository = new EventRepository(sdk);
 
   return useMutation({
-    mutationFn: (variables: { eventId: string; status: EventInviteStatus }) =>
+    mutationFn: (variables: {
+      eventId: string;
+      status: EventInviteStatus | null;
+    }) =>
       repository.updateEventInviteStatus(variables.eventId, variables.status),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['myEvents'] });
