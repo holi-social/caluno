@@ -49,6 +49,7 @@ import {
 } from './resolvers';
 import {
   ContractService,
+  DocumentRenderingService,
   DocumentSigningService,
   DocumentTemplateService,
   InvoiceService,
@@ -69,6 +70,7 @@ import {
   providers: [
     ReimbursementRateService,
     DocumentTemplateService,
+    DocumentRenderingService,
     DocumentSigningService,
     ContractService,
     InvoiceService,
