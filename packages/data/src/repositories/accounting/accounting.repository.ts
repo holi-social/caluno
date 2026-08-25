@@ -4,6 +4,7 @@ import type {
   CreateDocumentTemplateInput,
   CreateInvoiceInput,
   DocumentKind,
+  GetBundleDownloadStatusQuery,
   GetContractQuery,
   GetContractsQuery,
   GetDocumentTemplateQuery,
@@ -17,6 +18,7 @@ import type {
   GetRosterYearlyUsageQuery,
   GetYearlyUsageQuery,
   InvoiceFilterInput,
+  RecordBundleDownloadMutation,
   UpdateDocumentTemplateInput,
 } from '../../generated/graphql';
 import { BaseRepository } from '../base/base.repository';
@@ -45,7 +47,15 @@ export type EligibleTimeEntry =
 
 export type DocumentTemplateSummary =
   GetDocumentTemplatesQuery['documentTemplates'][number];
-export type DocumentTemplateDetail = GetDocumentTemplateQuery['documentTemplate'];
+export type DocumentTemplateDetail =
+  GetDocumentTemplateQuery['documentTemplate'];
+
+// Prefixed with `Raw` because `BundleDownloadStatus` collides with the
+// same-named entity type exported from `generated/graphql.ts`.
+export type RawBundleDownloadStatus =
+  GetBundleDownloadStatusQuery['bundleDownloadStatus'];
+export type RecordedBundleDownload =
+  RecordBundleDownloadMutation['recordBundleDownload'];
 
 export class AccountingRepository extends BaseRepository {
   async findReimbursementTypes(): Promise<RawReimbursementType[]> {
@@ -218,6 +228,28 @@ export class AccountingRepository extends BaseRepository {
     const data = await this.sdk.DeleteDocumentTemplate({ id });
     return data.deleteDocumentTemplate;
   }
+
+  async findBundleDownloadStatus(
+    volunteerId: string,
+    reimbursementTypeId: string,
+  ): Promise<RawBundleDownloadStatus> {
+    const data = await this.sdk.GetBundleDownloadStatus({
+      volunteerId,
+      reimbursementTypeId,
+    });
+    return data.bundleDownloadStatus;
+  }
+
+  async recordBundleDownload(
+    volunteerId: string,
+    reimbursementTypeId: string,
+  ): Promise<RecordedBundleDownload> {
+    const data = await this.sdk.RecordBundleDownload({
+      volunteerId,
+      reimbursementTypeId,
+    });
+    return data.recordBundleDownload;
+  }
 }
 
 export type DocumentDisplayStatus =
@@ -239,7 +271,8 @@ type DocumentLike =
   | { invoiceStatus: string; signatures: SignatureLike[] };
 
 export function deriveDocumentStatus(doc: DocumentLike): DocumentDisplayStatus {
-  const status = 'contractStatus' in doc ? doc.contractStatus : doc.invoiceStatus;
+  const status =
+    'contractStatus' in doc ? doc.contractStatus : doc.invoiceStatus;
 
   if (status === 'DECLINED') return 'declined';
   if (status === 'EXPIRED') return 'expired';

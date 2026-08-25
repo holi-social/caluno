@@ -75,6 +75,7 @@ fragment ContractSummaryFields on Contract {
   declinedAt
   declinedAtSigneeType
   renewDate
+  downloadUrl
   createdAt
   updatedAt
   volunteer {
@@ -172,6 +173,7 @@ fragment InvoiceSummaryFields on Invoice {
   declineReason
   declinedAt
   declinedAtSigneeType
+  downloadUrl
   createdAt
   updatedAt
   volunteer {
@@ -362,7 +364,10 @@ mutation CreateDocumentTemplate($input: CreateDocumentTemplateInput!) {
   }
 }
 
-mutation UpdateDocumentTemplate($id: ID!, $input: UpdateDocumentTemplateInput!) {
+mutation UpdateDocumentTemplate(
+  $id: ID!
+  $input: UpdateDocumentTemplateInput!
+) {
   updateDocumentTemplate(id: $id, input: $input) {
     ...DocumentTemplateSummaryFields
   }
@@ -370,4 +375,46 @@ mutation UpdateDocumentTemplate($id: ID!, $input: UpdateDocumentTemplateInput!) 
 
 mutation DeleteDocumentTemplate($id: ID!) {
   deleteDocumentTemplate(id: $id)
+}
+
+query GetBundleDownloadStatus($volunteerId: ID!, $reimbursementTypeId: ID!) {
+  bundleDownloadStatus(
+    volunteerId: $volunteerId
+    reimbursementTypeId: $reimbursementTypeId
+  ) {
+    volunteer {
+      id
+      name
+    }
+    reimbursementType {
+      id
+      key
+    }
+    downloadedAt
+    downloadedByUser {
+      id
+      name
+    }
+  }
+}
+
+mutation RecordBundleDownload($volunteerId: ID!, $reimbursementTypeId: ID!) {
+  recordBundleDownload(
+    volunteerId: $volunteerId
+    reimbursementTypeId: $reimbursementTypeId
+  ) {
+    volunteer {
+      id
+      name
+    }
+    reimbursementType {
+      id
+      key
+    }
+    downloadedAt
+    downloadedByUser {
+      id
+      name
+    }
+  }
 }
