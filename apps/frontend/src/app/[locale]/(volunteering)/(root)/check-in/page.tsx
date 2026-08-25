@@ -10,9 +10,12 @@ export default async function CheckInPage() {
     getMyCheckInOrgUnits(),
   ]);
 
+  const qrValue = `${process.env.NEXT_PUBLIC_BACKOFFICE_URL}/admin/check-in/${checkInId}`;
+
   return (
     <CheckInView
       checkInId={checkInId}
+      qrValue={qrValue}
       name={name}
       canCheckIn={checkInOrgUnits.length > 0}
     />
