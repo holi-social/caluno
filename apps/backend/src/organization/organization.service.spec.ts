@@ -2,6 +2,7 @@ jest.mock('nanoid', () => ({
   customAlphabet: () => () => 'abcdefghijkl',
 }));
 
+import { PermissionKey } from '../auth/enums';
 import { PostHogCaptureService } from '../shared/observability/posthog.capture.service';
 import { OrganizationService } from './organization.service';
 
@@ -37,5 +38,72 @@ describe('OrganizationService.create PostHog', () => {
       organizationUnitId: 'ou-1',
       source: 'organization_created',
     });
+  });
+});
+
+describe('OrganizationService.findUnitsWithPermission', () => {
+  it('returns only units reachable from memberships with the given permission', async () => {
+    const membershipsFindMany = jest
+      .fn()
+      .mockResolvedValue([
+        { organizationUnit: { id: 'unit-1', organizationId: 'org-1' } },
+      ]);
+    const organizationUnitsFindMany = jest.fn().mockResolvedValue([
+      {
+        id: 'unit-1',
+        name: 'Unit One',
+        organizationId: 'org-1',
+        parentId: null,
+        deletedAt: null,
+      },
+      {
+        id: 'unit-2',
+        name: 'Unit Two',
+        organizationId: 'org-1',
+        parentId: 'unit-1',
+        deletedAt: null,
+      },
+    ]);
+    const db = {
+      query: {
+        memberships: { findMany: membershipsFindMany },
+        organizationUnits: { findMany: organizationUnitsFindMany },
+      },
+    };
+
+    const service = new OrganizationService(
+      db as never,
+      {} as never,
+      {} as never,
+      {} as never,
+      {} as never,
+      {} as never,
+      {} as never,
+    );
+
+    const result = await service.findUnitsWithPermission(
+      'user-1',
+      PermissionKey.CHECK_IN_MANAGE,
+    );
+
+    expect(membershipsFindMany).toHaveBeenCalledWith({
+      where: {
+        userId: 'user-1',
+        roles: {
+          role: {
+            permissions: {
+              permission: { key: PermissionKey.CHECK_IN_MANAGE },
+            },
+          },
+        },
+      },
+      with: {
+        organizationUnit: {
+          columns: { id: true, organizationId: true },
+        },
+      },
+    });
+    // unit-1 (direct membership) and unit-2 (its child) are both reachable.
+    expect(result.map((unit) => unit.id).sort()).toEqual(['unit-1', 'unit-2']);
   });
 });
