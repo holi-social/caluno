@@ -68,41 +68,37 @@ export class MembershipLifecycleOrchestrator {
     token: string,
     input: SubmitFormInput,
     userId: string,
+    organizationUnitId: string,
   ): Promise<FormSubmissionEntity> {
     const submission = await this.formSubmissionService.submit(
       token,
       input,
       userId,
+      organizationUnitId,
     );
 
-    const organizationUnitId =
-      await this.formSubmissionService.findOrganizationUnitIdByFormId(
-        submission.formId,
-      );
-    if (organizationUnitId) {
-      const isMember = await this.membershipService.isMemberOfUnitOrAncestor(
-        userId,
-        organizationUnitId,
-      );
-      if (!isMember) {
-        const requiredFormsSatisfied =
-          await this.requiredFormService.areRequiredFormsSatisfied(userId, {
-            targetType: RequiredFormTargetType.ORGANIZATION_UNIT,
-            targetId: organizationUnitId,
-          });
-        if (requiredFormsSatisfied) {
-          try {
-            await this.membershipService.createMembershipRequest(
-              userId,
-              organizationUnitId,
-            );
-          } catch (e) {
-            // Pending request already exists or transient error — submission is still valid
-            this.logger.warn(
-              '[FormSubmission] createMembershipRequest skipped',
-              e,
-            );
-          }
+    const isMember = await this.membershipService.isMemberOfUnitOrAncestor(
+      userId,
+      organizationUnitId,
+    );
+    if (!isMember) {
+      const requiredFormsSatisfied =
+        await this.requiredFormService.areRequiredFormsSatisfied(userId, {
+          targetType: RequiredFormTargetType.ORGANIZATION_UNIT,
+          targetId: organizationUnitId,
+        });
+      if (requiredFormsSatisfied) {
+        try {
+          await this.membershipService.createMembershipRequest(
+            userId,
+            organizationUnitId,
+          );
+        } catch (e) {
+          // Pending request already exists or transient error — submission is still valid
+          this.logger.warn(
+            '[FormSubmission] createMembershipRequest skipped',
+            e,
+          );
         }
       }
     }

@@ -18,6 +18,7 @@ import {
 } from '../enums';
 import { SubmitFormInput } from '../inputs/submit-form.input';
 import type { FormSubmissionEntity } from '../schemas/form-submission.schema';
+import { isUnitInOrg } from './is-unit-in-org';
 import { parseMultiChoiceValue } from './multi-choice-value';
 import {
   RequiredFormService,
@@ -33,16 +34,6 @@ export class FormSubmissionService {
     private readonly userProfileService: UserProfileService,
     private readonly requiredFormService: RequiredFormService,
   ) {}
-
-  async findOrganizationUnitIdByFormId(
-    formId: string,
-  ): Promise<string | undefined> {
-    const form = await this.db.query.requirementForms.findFirst({
-      where: { id: formId },
-      columns: { organizationUnitId: true },
-    });
-    return form?.organizationUnitId ?? undefined;
-  }
 
   async findById(id: string): Promise<FormSubmissionEntity | undefined> {
     return this.db.query.formSubmissions.findFirst({
@@ -158,6 +149,7 @@ export class FormSubmissionService {
     token: string,
     input: SubmitFormInput,
     userId: string,
+    organizationUnitId: string,
   ): Promise<FormSubmissionEntity> {
     const form = await this.db.query.requirementForms.findFirst({
       where: { shareToken: token },
@@ -167,7 +159,9 @@ export class FormSubmissionService {
       throw new NotFoundGraphQLError('Form not found');
     }
 
-    return this.submitToForm(form, input, userId, null);
+    await isUnitInOrg(this.db, organizationUnitId, form.organizationId);
+
+    return this.submitToForm(form, input, userId, organizationUnitId);
   }
 
   async submitRequiredForm(
@@ -247,7 +241,7 @@ export class FormSubmissionService {
     form: schema.RequirementFormEntity,
     input: SubmitFormInput,
     userId: string,
-    organizationUnitId: string | null,
+    organizationUnitId: string,
   ): Promise<FormSubmissionEntity> {
     const existingSubmitted = await this.db.query.formSubmissions.findFirst({
       where: {
@@ -429,11 +423,9 @@ export class FormSubmissionService {
 
   private async shareWithOrgUnit(
     submissionId: string,
-    organizationUnitId: string | null,
+    organizationUnitId: string,
     tx: Database = this.db,
   ): Promise<void> {
-    if (!organizationUnitId) return;
-
     await tx
       .insert(schema.formSubmissionShares)
       .values({ submissionId, organizationUnitId })

@@ -21,6 +21,7 @@ export function VolunteerFormWrapper({
   form,
   token,
   isMember,
+  orgUId,
   orgName,
   profileData,
 }: {
@@ -35,6 +36,7 @@ export function VolunteerFormWrapper({
     <VolunteerForm
       form={form}
       token={token}
+      organizationUnitId={orgUId}
       isMember={isMember}
       orgName={orgName}
       profileData={profileData}
