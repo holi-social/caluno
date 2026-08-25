@@ -58,6 +58,11 @@ export class OrganizationRepository extends BaseRepository {
     return data.myAdminstableOrganizationUnits;
   }
 
+  async findMyCheckInAdministrableOrganizationUnits() {
+    const data = await this.sdk.GetMyCheckInAdministrableOrganizationUnits();
+    return data.myCheckInAdministrableOrganizationUnits;
+  }
+
   async findAll(options: FindOrganizationsOptions = {}) {
     const { limit = 10, offset = 0 } = options;
     const data = await this.sdk.GetOrganizations({ limit, offset });

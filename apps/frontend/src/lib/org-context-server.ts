@@ -46,6 +46,14 @@ export async function getMyAdministrableOrgUnits(): Promise<OrgContextData[]> {
   return normalizeUnits(units);
 }
 
+export async function getMyCheckInOrgUnits(): Promise<OrgContextData[]> {
+  const data = await getDataClient();
+  const units =
+    await data.organization.findMyCheckInAdministrableOrganizationUnits();
+
+  return normalizeUnits(units);
+}
+
 export async function isAnAdminstrator() {
   return (await getMyAdministrableOrgUnits()).length > 0;
 }
