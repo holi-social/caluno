@@ -6,13 +6,13 @@ import type { PauschalenType } from './components/doc-type-header';
 // settings tab instead of drifting into its own placeholder numbers.
 export const MOCK_HQ_DEFAULTS: Record<PauschalenType, number> = {
   ehrenamt: 5.0,
-  uebungleiter: 8.0,
+  uebungsleiter: 8.0,
 };
 
 export const MOCK_SAVED_OVERRIDES: Record<PauschalenType, number | undefined> =
   {
     ehrenamt: 4.5,
-    uebungleiter: undefined,
+    uebungsleiter: undefined,
   };
 
 export function getEffectivePauschaleRate(type: PauschalenType): number {
@@ -24,7 +24,7 @@ export function getEffectivePauschaleRate(type: PauschalenType): number {
 // in data-model.md.
 export const YEARLY_LIMIT_EUR: Record<PauschalenType, number> = {
   ehrenamt: 840,
-  uebungleiter: 3000,
+  uebungsleiter: 3000,
 };
 
 export function getYearlyLimit(type: PauschalenType): number {

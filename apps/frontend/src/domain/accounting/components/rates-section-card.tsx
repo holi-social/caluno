@@ -11,7 +11,7 @@ import { RateProvenanceRow } from './rate-provenance-row';
 
 const RATE_CONFIG: Record<PauschalenType, { kind: DocumentKind }> = {
   ehrenamt: { kind: 'settings' },
-  uebungleiter: { kind: 'settings' },
+  uebungsleiter: { kind: 'settings' },
 };
 
 interface RateRowProps {
@@ -179,7 +179,7 @@ export function RatesSectionCard({ canEdit = true }: RatesSectionCardProps) {
       </div>
       <RateRow type="ehrenamt" canEdit={canEdit} />
       <Separator />
-      <RateRow type="uebungleiter" canEdit={canEdit} />
+      <RateRow type="uebungsleiter" canEdit={canEdit} />
     </div>
   );
 }

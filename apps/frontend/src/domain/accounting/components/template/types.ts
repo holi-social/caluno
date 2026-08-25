@@ -27,11 +27,11 @@ export const SLUG_TO_SLOT: Record<
   'ehrenamtspauschale-contract': { pauschale: 'ehrenamt', kind: 'contract' },
   'ehrenamtspauschale-invoice': { pauschale: 'ehrenamt', kind: 'invoice' },
   'uebungsleiterpauschale-contract': {
-    pauschale: 'uebungleiter',
+    pauschale: 'uebungsleiter',
     kind: 'contract',
   },
   'uebungsleiterpauschale-invoice': {
-    pauschale: 'uebungleiter',
+    pauschale: 'uebungsleiter',
     kind: 'invoice',
   },
 };

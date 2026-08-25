@@ -504,7 +504,6 @@
     "volunteers": "Volunteers",
     "accounting": "Accounting",
     "reimbursements": "Reimbursements",
-    "templates": "Templates",
     "accountingSettings": "Settings"
   },
   "OrgDetail": {
@@ -1596,20 +1595,6 @@
       "templates": {
         "sectionTitle": "Document templates",
         "sectionSubtitle": "All templates for documents needed to pay out a respective Pauschale."
-      },
-      "lifecycle": {
-        "subtitle": "Document templates for paid shifts and their lifecycle dependencies.",
-        "editTemplate": "Edit template",
-        "noDocuments": "No templates configured.",
-        "noDocumentsHint": "Document templates appear here once added.",
-        "relationship": {
-          "unrelated": "Independent",
-          "blocking": "Must be signed before the next document can be generated"
-        },
-        "pauschaleLabel": {
-          "ep": "Ehrenamtspauschale",
-          "ul": "Übungsleiterpauschale"
-        }
       }
     },
     "reimbursements": {

@@ -72,7 +72,7 @@ const MOCK_TEMPLATE_SIGNEES: Record<string, Signee[]> = {
     { id: 's-eh-i-1', role: 'volunteer', orgRole: MOCK_ORG_ROLES.volunteer },
     { id: 's-eh-i-2', role: 'supervisor', orgRole: MOCK_ORG_ROLES.supervisor },
   ],
-  'uebungleiter-contract': [
+  'uebungsleiter-contract': [
     { id: 's-ul-c-1', role: 'volunteer', orgRole: MOCK_ORG_ROLES.volunteer },
     {
       id: 's-ul-c-2',
@@ -80,7 +80,7 @@ const MOCK_TEMPLATE_SIGNEES: Record<string, Signee[]> = {
       orgRole: MOCK_ORG_ROLES.coordinator,
     },
   ],
-  'uebungleiter-invoice': [
+  'uebungsleiter-invoice': [
     { id: 's-ul-i-1', role: 'volunteer', orgRole: MOCK_ORG_ROLES.volunteer },
     { id: 's-ul-i-2', role: 'supervisor', orgRole: MOCK_ORG_ROLES.supervisor },
   ],
@@ -341,14 +341,14 @@ const MOCK_VOLUNTEERS: BoardVolunteer[] = [
       },
     ],
   },
-  // ── Clara Weber (uebungleiter): her first contract was declined by her
+  // ── Clara Weber (uebungsleiter): her first contract was declined by her
   // (wrong rate quoted) — a fresh one has since been drafted and is now
   // mid-signature.
   {
     id: 'v3',
     name: 'Clara Weber',
     initials: 'CW',
-    pauschale: 'uebungleiter',
+    pauschale: 'uebungsleiter',
     usedAmount: 0,
     totalCap: 3000,
     documents: [
@@ -411,7 +411,7 @@ const MOCK_VOLUNTEERS: BoardVolunteer[] = [
     totalCap: 840,
     limits: {
       ehrenamt: { used: 90, total: 840 },
-      uebungleiter: { used: 2700, total: 3000 },
+      uebungsleiter: { used: 2700, total: 3000 },
     },
     documents: [
       {
@@ -419,7 +419,7 @@ const MOCK_VOLUNTEERS: BoardVolunteer[] = [
         status: 'contract-active',
         lastActionDate: '01.01.2026',
         periodLabel: '2026',
-        pauschale: 'uebungleiter',
+        pauschale: 'uebungsleiter',
       },
       {
         id: 'd11',
@@ -443,7 +443,7 @@ const MOCK_VOLUNTEERS: BoardVolunteer[] = [
         hours: 24,
         lastActionDate: '07.07.2026',
         periodLabel: 'Juli 2026',
-        pauschale: 'uebungleiter',
+        pauschale: 'uebungsleiter',
         isOverCap: true,
       },
     ],
@@ -468,7 +468,7 @@ const MOCK_DOCUMENTLESS_VOLUNTEERS: BoardVolunteer[] = [
     id: 'v53',
     name: 'Milan Fuchs',
     initials: 'MF',
-    pauschale: 'uebungleiter',
+    pauschale: 'uebungsleiter',
     usedAmount: 0,
     totalCap: 3000,
     documents: [],
@@ -486,7 +486,7 @@ const MOCK_DOCUMENTLESS_VOLUNTEERS: BoardVolunteer[] = [
     id: 'v55',
     name: 'Theo Wiechert',
     initials: 'TW',
-    pauschale: 'uebungleiter',
+    pauschale: 'uebungsleiter',
     usedAmount: 0,
     totalCap: 3000,
     documents: [],
@@ -504,7 +504,7 @@ const MOCK_DOCUMENTLESS_VOLUNTEERS: BoardVolunteer[] = [
     id: 'v57',
     name: 'Jonas Reiter',
     initials: 'JR',
-    pauschale: 'uebungleiter',
+    pauschale: 'uebungsleiter',
     usedAmount: 0,
     totalCap: 3000,
     documents: [],
@@ -518,7 +518,7 @@ const MOCK_DOCUMENTLESS_VOLUNTEERS: BoardVolunteer[] = [
  * volunteer will actually need, so the supervisor picks.
  */
 function buildContractMissingDocs(vol: BoardVolunteer): BoardDocument[] {
-  const types: PauschalenType[] = ['ehrenamt', 'uebungleiter'];
+  const types: PauschalenType[] = ['ehrenamt', 'uebungsleiter'];
   return types.map((pauschale) => ({
     id: `${vol.id}-contract-missing-${pauschale}`,
     status: 'contract-missing',
@@ -1277,7 +1277,7 @@ export function ReimbursementsBoard({
           <SelectContent>
             <SelectItem value="all">{t('toolbar.typeAll')}</SelectItem>
             <SelectItem value="ehrenamt">{t('toolbar.typeEP')}</SelectItem>
-            <SelectItem value="uebungleiter">{t('toolbar.typeUL')}</SelectItem>
+            <SelectItem value="uebungsleiter">{t('toolbar.typeUL')}</SelectItem>
           </SelectContent>
         </Select>
 

@@ -34,7 +34,7 @@ const MOCK_SECTIONS: TemplateSectionData[] = [
     ],
   },
   {
-    pauschale: 'uebungleiter',
+    pauschale: 'uebungsleiter',
     slots: [
       slot('uebungsleiterpauschale-contract'),
       slot('uebungsleiterpauschale-invoice'),

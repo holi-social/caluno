@@ -159,7 +159,7 @@ const MOCK_LAST_BUNDLE_DOWNLOAD: Record<
   string,
   Partial<Record<PauschalenType, { by: string; at: string }>>
 > = {
-  v5: { uebungleiter: { by: 'Markus Kassier', at: '30.05.2026' } },
+  v5: { uebungsleiter: { by: 'Markus Kassier', at: '30.05.2026' } },
 };
 
 // ─── VolunteerTableGroup ──────────────────────────────────────────────────────
@@ -231,7 +231,7 @@ function VolunteerTableGroup({
   const readyTypes = Object.keys(readyByType) as PauschalenType[];
   const TYPE_LABEL: Record<PauschalenType, string> = {
     ehrenamt: t('toolbar.typeEP'),
-    uebungleiter: t('toolbar.typeUL'),
+    uebungsleiter: t('toolbar.typeUL'),
   };
 
   // Checkbox state for vol header

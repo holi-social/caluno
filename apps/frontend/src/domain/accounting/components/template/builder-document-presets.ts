@@ -39,7 +39,7 @@ function knownYearlyLimit(pauschale: PauschalenType): string {
 
 const KNOWN_PAUSCHALE_LABEL: Record<PauschalenType, string> = {
   ehrenamt: 'Ehrenamtspauschale',
-  uebungleiter: 'Übungsleiterpauschale',
+  uebungsleiter: 'Übungsleiterpauschale',
 };
 
 const KNOWN_ORG = {
@@ -84,13 +84,13 @@ function line(
 
 const PAUSCHALE_TITLE: Record<PauschalenType, string> = {
   ehrenamt: 'Aufwandsentschädigung gemäß § 3 Nr. 26a EStG (Ehrenamtspauschale)',
-  uebungleiter:
+  uebungsleiter:
     'Aufwandsentschädigung gemäß § 3 Nr. 26 EStG (Übungsleiterpauschale)',
 };
 
 const PAUSCHALE_INVOICE_TITLE: Record<PauschalenType, string> = {
   ehrenamt: 'Stundennachweis Ehrenamtspauschale',
-  uebungleiter: 'Stundennachweis Übungsleiterpauschale',
+  uebungsleiter: 'Stundennachweis Übungsleiterpauschale',
 };
 
 export function getContractDocument(

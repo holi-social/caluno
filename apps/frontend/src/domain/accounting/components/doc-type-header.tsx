@@ -7,7 +7,7 @@ import {
 } from 'lucide-react';
 
 export type DocumentKind = 'contract' | 'invoice' | 'custom' | 'settings';
-export type PauschalenType = 'ehrenamt' | 'uebungleiter';
+export type PauschalenType = 'ehrenamt' | 'uebungsleiter';
 
 /** Short i18n key for a Pauschale type, used to build translation keys like `sections.${key}`. */
 export function getPauschaleKey(pauschale: PauschalenType): 'ep' | 'ul' {
@@ -17,7 +17,7 @@ export function getPauschaleKey(pauschale: PauschalenType): 'ep' | 'ul' {
 // Intentional brand literals — legal type differentiation, exempt from token rule. Idk if this is the best way to do this, or if we need new tokens.
 export const TYPE_COLOR: Record<PauschalenType, string> = {
   ehrenamt: 'oklch(0.7 0.1 166)', // #17857c
-  uebungleiter: 'oklch(0.5405 0.2811 292.85)', // #7f22fe
+  uebungsleiter: 'oklch(0.5405 0.2811 292.85)', // #7f22fe
 };
 
 const KIND_ICON: Record<DocumentKind, React.ElementType> = {

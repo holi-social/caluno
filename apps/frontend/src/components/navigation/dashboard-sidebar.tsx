@@ -1,6 +1,6 @@
 'use client';
 import { MembershipRequestStatus, PermissionKey } from '@repo/data';
-import { useMembershipRequestCount } from '@repo/data/react';
+import { useCurrentOrg, useMembershipRequestCount } from '@repo/data/react';
 import {
   Button,
   Sidebar,
@@ -48,6 +48,7 @@ export function DashboardSidebar({ permissions }: DashboardSidebarProps) {
   const tCommon = useTranslations('Common');
   const permissionSet = useMemo(() => new Set(permissions), [permissions]);
   const canViewVolunteers = permissionSet.has(PermissionKey.VolunteerView);
+  const { accountingEnabled } = useCurrentOrg();
 
   const { data: pendingCount } = useMembershipRequestCount(
     orgUId ?? '',
@@ -102,9 +103,8 @@ export function DashboardSidebar({ permissions }: DashboardSidebarProps) {
       },
     ];
   }, [orgUId, pendingCount]);
-  //** Accounting items' visibility might need to be controlled by feature flag in the future **//
   const accountingItems = useMemo(() => {
-    if (!orgUId) return [];
+    if (!orgUId || !accountingEnabled) return [];
 
     return [
       {
@@ -118,7 +118,7 @@ export function DashboardSidebar({ permissions }: DashboardSidebarProps) {
         icon: CoinsIcon,
       },
     ];
-  }, [orgUId]);
+  }, [orgUId, accountingEnabled]);
 
   const settingsItems = useMemo(() => {
     if (!orgUId) return [];

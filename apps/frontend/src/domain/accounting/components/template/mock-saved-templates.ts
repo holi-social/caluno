@@ -53,23 +53,23 @@ function withManualValues(
 
 const CONTRACT_TASKS: Record<PauschalenType, string> = {
   ehrenamt: 'Betreuung von Kindern und Jugendlichen bei Freizeitaktivitäten',
-  uebungleiter: 'Leitung des wöchentlichen Übungsleitertrainings',
+  uebungsleiter: 'Leitung des wöchentlichen Übungsleitertrainings',
 };
 
 /** Default per-document values — the creation modal seeds its editable fields from these, then lets the admin adjust per volunteer. */
 export const CONTRACT_DEFAULT_LIFESPAN: Record<PauschalenType, string> = {
   ehrenamt: '01/2026',
-  uebungleiter: '01/2026',
+  uebungsleiter: '01/2026',
 };
 
 export const CONTRACT_DEFAULT_HOURS_AMOUNT: Record<PauschalenType, string> = {
   ehrenamt: '16',
-  uebungleiter: '6',
+  uebungsleiter: '6',
 };
 
 export const CONTRACT_DEFAULT_HOURS_UNIT: Record<PauschalenType, string> = {
   ehrenamt: 'Monat',
-  uebungleiter: 'Woche',
+  uebungsleiter: 'Woche',
 };
 
 const INVOICE_KOSTENSTELLE: Partial<Record<TemplateSlug, string>> = {
@@ -179,14 +179,14 @@ export const MOCK_SAVED_TEMPLATES: Record<TemplateSlug, SavedTemplate> = {
     lastEditedBy: 'Julia Bauer',
   },
   'uebungsleiterpauschale-contract': {
-    document: buildContractTemplate('uebungleiter'),
-    summary: contractSummary('uebungleiter'),
+    document: buildContractTemplate('uebungsleiter'),
+    summary: contractSummary('uebungsleiter'),
     lastEditedAt: '2026-05-11T16:45:00Z',
     lastEditedBy: 'Jonas Weber',
   },
   'uebungsleiterpauschale-invoice': {
     document: buildInvoiceTemplate(
-      'uebungleiter',
+      'uebungsleiter',
       'uebungsleiterpauschale-invoice',
     ),
     summary: {

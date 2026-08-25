@@ -24,7 +24,7 @@
     "editor.defaultFormatter": "hashicorp.terraform"
   },
   "[typescriptreact]": {
-    "editor.defaultFormatter": "vscode.typescript-language-features"
+    "editor.defaultFormatter": "biomejs.biome"
   },
   "[jsonc]": {
     "editor.defaultFormatter": "biomejs.biome"

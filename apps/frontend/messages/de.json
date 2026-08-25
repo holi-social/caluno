@@ -504,7 +504,6 @@
     "volunteers": "Freiwillige",
     "accounting": "Buchhaltung",
     "reimbursements": "Abrechnungen",
-    "templates": "Templates",
     "accountingSettings": "Einstellungen"
   },
   "OrgDetail": {
@@ -1596,20 +1595,6 @@
       "templates": {
         "sectionTitle": "Dokumentvorlagen",
         "sectionSubtitle": "Alle Vorlagen für Dokumente, die zur Auszahlung der jeweiligen Pauschale benötigt werden."
-      },
-      "lifecycle": {
-        "subtitle": "Dokumentvorlagen für vergütete Einsätze und ihre Lifecycle-Abhängigkeiten.",
-        "editTemplate": "Vorlage bearbeiten",
-        "noDocuments": "Keine Vorlagen konfiguriert.",
-        "noDocumentsHint": "Dokumentvorlagen erscheinen hier, sobald sie hinzugefügt wurden.",
-        "relationship": {
-          "unrelated": "Unabhängig",
-          "blocking": "Muss unterschrieben sein, bevor das nächste Dokument erstellt werden kann"
-        },
-        "pauschaleLabel": {
-          "ep": "Ehrenamtspauschale",
-          "ul": "Übungsleiterpauschale"
-        }
       }
     },
     "reimbursements": {
@@ -1767,15 +1752,15 @@
           "createNew": "Neues {docType} erstellen"
         },
         "nonCompliantDialog": {
-          "titleSingle": "Ohne aktive Vereinbarung {action, select, create {erstellen} remind {errinern} countersign {gegenzeichnen} other {bearbeiten}}?",
-          "titleBatchAll": "{count} Stundennachweise ohne aktive Vereinbarung {action, select, create {erstellen} remind {errinern} countersign {gegenzeichnen} other {bearbeiten}}?",
+          "titleSingle": "Ohne aktive Vereinbarung {action, select, create {erstellen} remind {erinnern} countersign {gegenzeichnen} other {bearbeiten}}?",
+          "titleBatchAll": "{count} Stundennachweise ohne aktive Vereinbarung {action, select, create {erstellen} remind {erinnern} countersign {gegenzeichnen} other {bearbeiten}}?",
           "titleBatchMixed": "{count} von {total} Stundennachweisen haben keine aktive Vereinbarung",
-          "descriptionSingle": "Für diese Pauschale gibt es noch keine aktive Vereinbarung. Du kannst den Stundennachweis trotzdem {action, select, create {erstellen} remind {errinern} countersign {gegenzeichnen} other {bearbeiten}}, er bleibt dann als nicht konform markiert, bis eine Vereinbarung aktiv ist.",
-          "descriptionBatchAll": "Für einige der ausgewählten Personen gibt es noch keine aktive Vereinbarung. Du kannst den Stundennachweis trotzdem {action, select, create {erstellt} remind {errinert} countersign {gegengezeichnet} other {bearbeitet}}, sie bleiben dann als nicht konform markiert, bis die Vereinbarungen aktiv sind.",
+          "descriptionSingle": "Für diese Pauschale gibt es noch keine aktive Vereinbarung. Du kannst den Stundennachweis trotzdem {action, select, create {erstellen} remind {erinnern} countersign {gegenzeichnen} other {bearbeiten}}, er bleibt dann als nicht konform markiert, bis eine Vereinbarung aktiv ist.",
+          "descriptionBatchAll": "Für einige der ausgewählten Personen gibt es noch keine aktive Vereinbarung. Du kannst den Stundennachweis trotzdem {action, select, create {erstellt} remind {erinnert} countersign {gegengezeichnet} other {bearbeitet}}, sie bleiben dann als nicht konform markiert, bis die Vereinbarungen aktiv sind.",
           "descriptionBatchMixed": "{count} der ausgewählten Stundennachweise gehören zu Personen ohne aktive Vereinbarung für diese Pauschale.",
-          "actionAnyway": "{action, select, create {Trotzdem erstellen} remind {Trotzdem errinern} countersign {Trotzdem gegenzeichnen} other {Trotzdem fortfahren}}",
-          "actionAllAnyway": "{action, select, create {Alle trotzdem erstellen} remind {Alle trotzdem errinern} countersign {Alle trotzdem gegenzeichnen} other {Trotzdem mit allen fortfahren}}",
-          "onlyCompliantAction": "{action, select, create {Nur konforme erstellen} remind {Nur konforme errinern} countersign {Nur konforme gegenzeichnen} other {Nur konforme bearbeiten}}",
+          "actionAnyway": "{action, select, create {Trotzdem erstellen} remind {Trotzdem erinnern} countersign {Trotzdem gegenzeichnen} other {Trotzdem fortfahren}}",
+          "actionAllAnyway": "{action, select, create {Alle trotzdem erstellen} remind {Alle trotzdem erinnern} countersign {Alle trotzdem gegenzeichnen} other {Trotzdem mit allen fortfahren}}",
+          "onlyCompliantAction": "{action, select, create {Nur konforme erstellen} remind {Nur konforme erinnern} countersign {Nur konforme gegenzeichnen} other {Nur konforme bearbeiten}}",
           "generateContractInstead": "Stattdessen Vereinbarung erstellen",
           "viewContractInstead": "Stattdessen Vereinbarung ansehen"
         },

@@ -40,8 +40,8 @@ interface DocLine {
 const LINES: DocLine[] = [
   { kind: 'contract', pauschale: 'ehrenamt' },
   { kind: 'invoice', pauschale: 'ehrenamt' },
-  { kind: 'contract', pauschale: 'uebungleiter' },
-  { kind: 'invoice', pauschale: 'uebungleiter' },
+  { kind: 'contract', pauschale: 'uebungsleiter' },
+  { kind: 'invoice', pauschale: 'uebungsleiter' },
 ];
 
 function lineKey(line: DocLine): string {

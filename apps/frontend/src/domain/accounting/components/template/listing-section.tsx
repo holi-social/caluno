@@ -6,7 +6,7 @@ import type { ReactNode } from 'react';
 
 const SECTION_I18N_KEY = {
   ehrenamt: 'ep',
-  uebungleiter: 'ul',
+  uebungsleiter: 'ul',
 } as const;
 
 type SectionPauschale = keyof typeof SECTION_I18N_KEY;
