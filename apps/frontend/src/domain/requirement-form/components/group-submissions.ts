@@ -1,6 +1,5 @@
 export interface SubmissionLike {
   id: string;
-  status: string;
   submittedAt: string;
   user?: {
     id: string;
@@ -18,17 +17,16 @@ export interface VolunteerSubmissions {
 }
 
 /**
- * One row per volunteer for a status tab: their submission count within
- * the status and their latest submission (row click opens it).
+ * One row per volunteer: their submission count and their latest
+ * submission (row click opens it).
  */
 export function groupSubmissionsByVolunteer(
   submissions: SubmissionLike[],
-  status: string,
 ): VolunteerSubmissions[] {
   const byVolunteer = new Map<string, VolunteerSubmissions>();
 
   for (const submission of submissions) {
-    if (submission.status !== status || !submission.user) continue;
+    if (!submission.user) continue;
     const { user } = submission;
     const existing = byVolunteer.get(user.id);
     if (

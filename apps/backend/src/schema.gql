@@ -412,7 +412,6 @@ type FormSubmission {
   formId: String!
   id: ID!
   membershipId: String
-  status: FormSubmissionStatus!
   submittedAt: DateTime!
   updatedAt: DateTime!
   user: User
@@ -423,11 +422,6 @@ type FormSubmission {
 type FormSubmissionPaginatedResponse {
   items: [FormSubmission!]!
   pagination: PaginationInfo!
-}
-
-enum FormSubmissionStatus {
-  REJECTED
-  SUBMITTED
 }
 
 type FormSubmissionValue {

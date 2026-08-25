@@ -11,11 +11,7 @@ import {
 } from '../../graphql/errors';
 import type { PaginationInput } from '../../graphql/pagination.input';
 import { SYSTEM_PROFILE_KEYS } from '../constants';
-import {
-  FieldType,
-  FormSubmissionStatus,
-  RequiredFormTargetType,
-} from '../enums';
+import { FieldType, RequiredFormTargetType } from '../enums';
 import { SubmitFormInput } from '../inputs/submit-form.input';
 import type { FormSubmissionEntity } from '../schemas/form-submission.schema';
 import { isUnitInOrg } from './is-unit-in-org';
@@ -130,10 +126,7 @@ export class FormSubmissionService {
       .from(schema.formSubmissions)
       .innerJoin(
         schema.formSubmissionShares,
-        eq(
-          schema.formSubmissionShares.submissionId,
-          schema.formSubmissions.id,
-        ),
+        eq(schema.formSubmissionShares.submissionId, schema.formSubmissions.id),
       )
       .where(
         and(
@@ -243,24 +236,10 @@ export class FormSubmissionService {
     userId: string,
     organizationUnitId: string,
   ): Promise<FormSubmissionEntity> {
-    const existingSubmitted = await this.db.query.formSubmissions.findFirst({
-      where: {
-        userId,
-        formId: form.id,
-        status: FormSubmissionStatus.SUBMITTED,
-      },
-    });
-    if (existingSubmitted) {
-      await this.shareWithOrgUnit(existingSubmitted.id, organizationUnitId);
-      return existingSubmitted;
-    }
-
     const existing = await this.findByUserAndForm(userId, form.id);
     if (existing) {
-      // Previous submission was rejected — delete it so the user can re-submit
-      await this.db
-        .delete(schema.formSubmissions)
-        .where(eq(schema.formSubmissions.id, existing.id));
+      await this.shareWithOrgUnit(existing.id, organizationUnitId);
+      return existing;
     }
 
     // Load block refs and fields
@@ -396,7 +375,6 @@ export class FormSubmissionService {
         .values({
           formId: form.id,
           userId,
-          status: FormSubmissionStatus.SUBMITTED,
           submittedAt: new Date(),
         })
         .returning();
@@ -430,29 +408,6 @@ export class FormSubmissionService {
       .insert(schema.formSubmissionShares)
       .values({ submissionId, organizationUnitId })
       .onConflictDoNothing();
-  }
-
-  async rejectByUserAndOrgUnit(
-    userId: string,
-    organizationUnitId: string,
-  ): Promise<void> {
-    const forms = await this.db.query.requirementForms.findMany({
-      where: { organizationUnitId },
-      columns: { id: true },
-    });
-    if (forms.length === 0) return;
-
-    const formIds = forms.map((f) => f.id);
-    await this.db
-      .update(schema.formSubmissions)
-      .set({ status: FormSubmissionStatus.REJECTED })
-      .where(
-        and(
-          eq(schema.formSubmissions.userId, userId),
-          eq(schema.formSubmissions.status, FormSubmissionStatus.SUBMITTED),
-          inArray(schema.formSubmissions.formId, formIds),
-        ),
-      );
   }
 
   private validateFieldValue(
