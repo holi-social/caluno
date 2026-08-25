@@ -760,6 +760,7 @@ type PermissionGroupItem {
 
 enum PermissionKey {
   ACCOUNTING_MANAGE
+  CHECK_IN_MANAGE
   ORG_EDIT
   ORG_VIEW
   REQUIREMENT_PROFILE_EDIT
@@ -803,6 +804,7 @@ type Query {
   membershipRequests(limit: Int! = 10, offset: Int! = 0, status: MembershipRequestStatus): MembershipRequestPaginatedResponse!
   memberships: [Membership!]!
   myAdminstableOrganizationUnits: [OrganizationUnit!]!
+  myCheckInAdministrableOrganizationUnits: [OrganizationUnit!]!
   myContracts(filter: ContractFilterInput): [Contract!]!
   myEvents(endsBefore: DateTime = null, includePast: Boolean! = false, limit: Int! = 15, offset: Int! = 0, order: SortOrder! = ASC, startsAfter: DateTime = null, statuses: [EventInviteStatus!]): EventPaginatedResponse!
   myFormSubmission(id: ID!): FormSubmission
