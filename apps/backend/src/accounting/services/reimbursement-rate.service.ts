@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { eq } from 'drizzle-orm';
+import { and, eq, inArray, isNull } from 'drizzle-orm';
 import type { UserEntity } from '../../auth/schemas/auth.schema';
 import type { Database } from '../../database/database.module';
 import { DATABASE_CONNECTION } from '../../database/database-connection';
@@ -329,25 +329,43 @@ export class ReimbursementRateService {
     volunteerId: string,
     reimbursementTypeId: string,
     downloadedByUserId: string,
+    invoiceIds: string[] = [],
   ): Promise<ReimbursementBundleDownloadEntity> {
-    const [row] = await this.db
-      .insert(schema.reimbursementBundleDownloads)
-      .values({
-        volunteerId,
-        reimbursementTypeId,
-        downloadedAt: new Date(),
-        downloadedByUserId,
-      })
-      .onConflictDoUpdate({
-        target: [
-          schema.reimbursementBundleDownloads.volunteerId,
-          schema.reimbursementBundleDownloads.reimbursementTypeId,
-        ],
-        set: { downloadedAt: new Date(), downloadedByUserId },
-      })
-      .returning();
+    return this.db.transaction(async (tx) => {
+      const [row] = await tx
+        .insert(schema.reimbursementBundleDownloads)
+        .values({
+          volunteerId,
+          reimbursementTypeId,
+          downloadedAt: new Date(),
+          downloadedByUserId,
+        })
+        .onConflictDoUpdate({
+          target: [
+            schema.reimbursementBundleDownloads.volunteerId,
+            schema.reimbursementBundleDownloads.reimbursementTypeId,
+          ],
+          set: { downloadedAt: new Date(), downloadedByUserId },
+        })
+        .returning();
 
-    return row;
+      if (invoiceIds.length > 0) {
+        await tx
+          .update(schema.invoices)
+          .set({ paidAt: new Date(), paidByUserId: downloadedByUserId })
+          .where(
+            and(
+              inArray(schema.invoices.id, invoiceIds),
+              eq(schema.invoices.volunteerId, volunteerId),
+              eq(schema.invoices.reimbursementTypeId, reimbursementTypeId),
+              eq(schema.invoices.invoiceStatus, InvoiceStatus.READY),
+              isNull(schema.invoices.paidAt),
+            ),
+          );
+      }
+
+      return row;
+    });
   }
 
   async getManualBaseline(

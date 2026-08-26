@@ -904,4 +904,154 @@ describe('ReimbursementRateService', () => {
       expect(rows).toHaveLength(1);
     });
   });
+
+  describe('recordBundleDownload — paid stamping', () => {
+    const insertReadyInvoice = async (
+      db: Database,
+      args: {
+        templateId: string;
+        volunteerId: string;
+        reimbursementTypeId: string;
+        totalAmountCents?: number;
+      },
+    ) => {
+      const [invoice] = await db
+        .insert(schema.invoices)
+        .values({
+          documentTemplateId: args.templateId,
+          volunteerId: args.volunteerId,
+          reimbursementTypeId: args.reimbursementTypeId,
+          periodStart: new Date('2026-03-01T00:00:00.000Z'),
+          periodEnd: new Date('2026-03-01T00:00:00.000Z'),
+          totalAmountCents: args.totalAmountCents ?? 10_000,
+          totalHours: 1,
+          resolvedBody: { header: {}, blocks: [], footer: {} },
+          invoiceStatus: InvoiceStatus.READY,
+        })
+        .returning();
+      return invoice;
+    };
+
+    it('stamps paidAt/paidByUserId on invoices included in the download', async () => {
+      const { organization } = await setupOrgWithRootUnit();
+      const reimbursementType = await createReimbursementType(db);
+      const volunteer = await createUser(db);
+      const downloader = await createUser(db);
+      const template = await createDocumentTemplate(db, {
+        organizationId: organization.id,
+        reimbursementTypeId: reimbursementType.id,
+        kind: DocumentKind.INVOICE,
+        signees: [{ order: 0, signeeType: SigneeType.VOLUNTEER }],
+      });
+      const invoice = await insertReadyInvoice(db, {
+        templateId: template.id,
+        volunteerId: volunteer.id,
+        reimbursementTypeId: reimbursementType.id,
+      });
+
+      await service.recordBundleDownload(
+        volunteer.id,
+        reimbursementType.id,
+        downloader.id,
+        [invoice.id],
+      );
+
+      const updated = await db.query.invoices.findFirst({
+        where: { id: invoice.id },
+      });
+      expect(updated?.paidAt).not.toBeNull();
+      expect(updated?.paidByUserId).toBe(downloader.id);
+    });
+
+    it('is idempotent — a second download never overwrites an already-paid invoice', async () => {
+      const { organization } = await setupOrgWithRootUnit();
+      const reimbursementType = await createReimbursementType(db);
+      const volunteer = await createUser(db);
+      const firstDownloader = await createUser(db);
+      const secondDownloader = await createUser(db);
+      const template = await createDocumentTemplate(db, {
+        organizationId: organization.id,
+        reimbursementTypeId: reimbursementType.id,
+        kind: DocumentKind.INVOICE,
+        signees: [{ order: 0, signeeType: SigneeType.VOLUNTEER }],
+      });
+      const invoice = await insertReadyInvoice(db, {
+        templateId: template.id,
+        volunteerId: volunteer.id,
+        reimbursementTypeId: reimbursementType.id,
+      });
+
+      await service.recordBundleDownload(
+        volunteer.id,
+        reimbursementType.id,
+        firstDownloader.id,
+        [invoice.id],
+      );
+      const firstPaidAt = (
+        await db.query.invoices.findFirst({ where: { id: invoice.id } })
+      )?.paidAt;
+
+      await service.recordBundleDownload(
+        volunteer.id,
+        reimbursementType.id,
+        secondDownloader.id,
+        [invoice.id],
+      );
+      const afterSecond = await db.query.invoices.findFirst({
+        where: { id: invoice.id },
+      });
+
+      expect(afterSecond?.paidAt?.getTime()).toBe(firstPaidAt?.getTime());
+      expect(afterSecond?.paidByUserId).toBe(firstDownloader.id);
+    });
+
+    it('only marks the specific ids passed, leaving other ready invoices of the same type untouched', async () => {
+      const { organization } = await setupOrgWithRootUnit();
+      const reimbursementType = await createReimbursementType(db);
+      const volunteer = await createUser(db);
+      const downloader = await createUser(db);
+      const template = await createDocumentTemplate(db, {
+        organizationId: organization.id,
+        reimbursementTypeId: reimbursementType.id,
+        kind: DocumentKind.INVOICE,
+        signees: [{ order: 0, signeeType: SigneeType.VOLUNTEER }],
+      });
+      const included = await insertReadyInvoice(db, {
+        templateId: template.id,
+        volunteerId: volunteer.id,
+        reimbursementTypeId: reimbursementType.id,
+      });
+      const excluded = await insertReadyInvoice(db, {
+        templateId: template.id,
+        volunteerId: volunteer.id,
+        reimbursementTypeId: reimbursementType.id,
+      });
+
+      await service.recordBundleDownload(
+        volunteer.id,
+        reimbursementType.id,
+        downloader.id,
+        [included.id],
+      );
+
+      const excludedRow = await db.query.invoices.findFirst({
+        where: { id: excluded.id },
+      });
+      expect(excludedRow?.paidAt).toBeNull();
+    });
+
+    it('defaults to marking nothing paid when invoiceIds is omitted', async () => {
+      const reimbursementType = await createReimbursementType(db);
+      const volunteer = await createUser(db);
+      const downloader = await createUser(db);
+
+      await expect(
+        service.recordBundleDownload(
+          volunteer.id,
+          reimbursementType.id,
+          downloader.id,
+        ),
+      ).resolves.toBeDefined();
+    });
+  });
 });
