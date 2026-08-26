@@ -354,6 +354,7 @@ export class ReimbursementRateService {
           .update(schema.invoices)
           .set({ paidAt: new Date(), paidByUserId: downloadedByUserId })
           .where(
+            // Only READY invoices — the terminal payable state — can be marked paid.
             and(
               inArray(schema.invoices.id, invoiceIds),
               eq(schema.invoices.volunteerId, volunteerId),

@@ -1040,6 +1040,37 @@ describe('ReimbursementRateService', () => {
       expect(excludedRow?.paidAt).toBeNull();
     });
 
+    it('never marks paid an invoice belonging to a different volunteer, even if its id is passed in', async () => {
+      const { organization } = await setupOrgWithRootUnit();
+      const reimbursementType = await createReimbursementType(db);
+      const volunteer = await createUser(db);
+      const otherVolunteer = await createUser(db);
+      const downloader = await createUser(db);
+      const template = await createDocumentTemplate(db, {
+        organizationId: organization.id,
+        reimbursementTypeId: reimbursementType.id,
+        kind: DocumentKind.INVOICE,
+        signees: [{ order: 0, signeeType: SigneeType.VOLUNTEER }],
+      });
+      const otherVolunteerInvoice = await insertReadyInvoice(db, {
+        templateId: template.id,
+        volunteerId: otherVolunteer.id,
+        reimbursementTypeId: reimbursementType.id,
+      });
+
+      await service.recordBundleDownload(
+        volunteer.id,
+        reimbursementType.id,
+        downloader.id,
+        [otherVolunteerInvoice.id],
+      );
+
+      const row = await db.query.invoices.findFirst({
+        where: { id: otherVolunteerInvoice.id },
+      });
+      expect(row?.paidAt).toBeNull();
+    });
+
     it('defaults to marking nothing paid when invoiceIds is omitted', async () => {
       const reimbursementType = await createReimbursementType(db);
       const volunteer = await createUser(db);
