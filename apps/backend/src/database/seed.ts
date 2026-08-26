@@ -1,10 +1,11 @@
-import { inArray, sql } from 'drizzle-orm';
+import { eq, inArray, sql } from 'drizzle-orm';
 import { drizzle } from 'drizzle-orm/node-postgres';
 import { Pool } from 'pg';
 import { ReimbursementTypeKey } from '../accounting/enums';
 import { reimbursementTypes } from '../accounting/schemas/reimbursement-type.schema';
-import { PERMISSIONS } from '../auth/constants';
+import { DEFAULT_OWNER_ROLE_NAME, PERMISSIONS } from '../auth/constants';
 import { permissions } from '../auth/schemas/permission.schema';
+import { roles } from '../auth/schemas/role.schema';
 import * as schema from './schema';
 
 const PERMISSION_NAMES: Record<
@@ -122,6 +123,41 @@ async function seed() {
     `Updated ${updatedDescriptionKeys.length} permission descriptions`,
   );
   console.log(`Synced ${values.length} permissions in total`);
+
+  // Owner roles get every permission at organization-creation time (see
+  // OrganizationService.createOrganization), but that only runs once — a
+  // permission added later (like accounting:manage) never reaches an
+  // Owner role created before it existed. Backfill it here too.
+  const [ownerRoleIds, allPermissionIds] = await Promise.all([
+    db
+      .select({ id: roles.id })
+      .from(roles)
+      .where(eq(roles.name, DEFAULT_OWNER_ROLE_NAME)),
+    db.select({ id: permissions.id }).from(permissions),
+  ]);
+  let grantedCount = 0;
+  if (ownerRoleIds.length > 0 && allPermissionIds.length > 0) {
+    const grants = ownerRoleIds.flatMap((role) =>
+      allPermissionIds.map((permission) => ({
+        roleId: role.id,
+        permissionId: permission.id,
+      })),
+    );
+    const inserted = await db
+      .insert(schema.rolePermissions)
+      .values(grants)
+      .onConflictDoNothing({
+        target: [
+          schema.rolePermissions.roleId,
+          schema.rolePermissions.permissionId,
+        ],
+      })
+      .returning({ id: schema.rolePermissions.id });
+    grantedCount = inserted.length;
+  }
+  console.log(
+    `Granted ${grantedCount} missing permission(s) across ${ownerRoleIds.length} owner role(s)`,
+  );
 
   await db
     .insert(reimbursementTypes)
