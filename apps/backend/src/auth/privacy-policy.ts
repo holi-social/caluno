@@ -1,4 +1,4 @@
-export const CURRENT_PRIVACY_POLICY_VERSION = '2026-08-17';
+export const CURRENT_PRIVACY_POLICY_VERSION = '2026-08-25';
 
 export class PrivacyPolicyAcceptanceError extends Error {
   constructor() {

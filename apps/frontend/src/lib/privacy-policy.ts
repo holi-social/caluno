@@ -1,5 +1,5 @@
 /** Must match `CURRENT_PRIVACY_POLICY_VERSION` in apps/backend/src/auth/privacy-policy.ts */
-export const PRIVACY_POLICY_VERSION = '2026-08-17';
+export const PRIVACY_POLICY_VERSION = '2026-08-25';
 
 export const PRIVACY_POLICY_PDF_PATH = `/legal/datenschutzhinweise-${PRIVACY_POLICY_VERSION}.pdf`;
 

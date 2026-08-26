@@ -18,7 +18,7 @@ describe('applyPrivacyPolicyAcceptance', () => {
       now,
     );
 
-    expect(result.privacyPolicyVersion).toBe('2026-08-17');
+    expect(result.privacyPolicyVersion).toBe('2026-08-25');
     expect(result.privacyPolicyAcceptedAt).toEqual(now);
   });
 
