@@ -13,6 +13,7 @@ import { OrganizationUnitDataService } from '../../organization/organization-uni
 import type { EffectiveRate, YearlyUsage } from '../accounting.types';
 import { InvoiceStatus } from '../enums';
 import type { ReimbursementBundleDownloadEntity } from '../schemas/reimbursement-bundle-download.schema';
+import type { ManualBaselineEntity } from '../schemas/reimbursement-manual-baseline.schema';
 import type { ReimbursementRateEntity } from '../schemas/reimbursement-rate.schema';
 import type { ReimbursementTypeEntity } from '../schemas/reimbursement-type.schema';
 
@@ -181,18 +182,23 @@ export class ReimbursementRateService {
     const reimbursementType =
       await this.findReimbursementTypeById(reimbursementTypeId);
 
-    const invoices = await this.db.query.invoices.findMany({
-      where: {
-        volunteerId,
-        reimbursementTypeId,
-        periodStart: { gte: yearStart, lt: yearEnd },
-      },
-      columns: { totalAmountCents: true, invoiceStatus: true },
-    });
+    const [invoices, baseline] = await Promise.all([
+      this.db.query.invoices.findMany({
+        where: {
+          volunteerId,
+          reimbursementTypeId,
+          periodStart: { gte: yearStart, lt: yearEnd },
+        },
+        columns: { totalAmountCents: true, invoiceStatus: true },
+      }),
+      this.getManualBaseline(volunteerId, reimbursementTypeId, year),
+    ]);
 
-    const usedCents = invoices
-      .filter((invoice) => invoice.invoiceStatus !== InvoiceStatus.DECLINED)
-      .reduce((sum, invoice) => sum + invoice.totalAmountCents, 0);
+    const usedCents =
+      invoices
+        .filter((invoice) => invoice.invoiceStatus !== InvoiceStatus.DECLINED)
+        .reduce((sum, invoice) => sum + invoice.totalAmountCents, 0) +
+      (baseline?.amountCents ?? 0);
     const limitCents = reimbursementType.yearlyLimitCents;
 
     return { usedCents, limitCents, remainingCents: limitCents - usedCents };
@@ -218,18 +224,28 @@ export class ReimbursementRateService {
     const yearEnd = new Date(Date.UTC(year + 1, 0, 1));
     const memberIds = members.map((member) => member.id);
 
-    const invoices = await this.db.query.invoices.findMany({
-      where: {
-        volunteerId: { in: memberIds },
-        periodStart: { gte: yearStart, lt: yearEnd },
-      },
-      columns: {
-        volunteerId: true,
-        reimbursementTypeId: true,
-        totalAmountCents: true,
-        invoiceStatus: true,
-      },
-    });
+    const [invoices, baselines] = await Promise.all([
+      this.db.query.invoices.findMany({
+        where: {
+          volunteerId: { in: memberIds },
+          periodStart: { gte: yearStart, lt: yearEnd },
+        },
+        columns: {
+          volunteerId: true,
+          reimbursementTypeId: true,
+          totalAmountCents: true,
+          invoiceStatus: true,
+        },
+      }),
+      this.db.query.reimbursementManualBaselines.findMany({
+        where: { volunteerId: { in: memberIds }, year },
+        columns: {
+          volunteerId: true,
+          reimbursementTypeId: true,
+          amountCents: true,
+        },
+      }),
+    ]);
 
     const usedByVolunteerAndType = new Map<string, number>();
     for (const invoice of invoices) {
@@ -238,6 +254,13 @@ export class ReimbursementRateService {
       usedByVolunteerAndType.set(
         key,
         (usedByVolunteerAndType.get(key) ?? 0) + invoice.totalAmountCents,
+      );
+    }
+    for (const baseline of baselines) {
+      const key = `${baseline.volunteerId}:${baseline.reimbursementTypeId}`;
+      usedByVolunteerAndType.set(
+        key,
+        (usedByVolunteerAndType.get(key) ?? 0) + baseline.amountCents,
       );
     }
 
@@ -321,6 +344,52 @@ export class ReimbursementRateService {
           schema.reimbursementBundleDownloads.reimbursementTypeId,
         ],
         set: { downloadedAt: new Date(), downloadedByUserId },
+      })
+      .returning();
+
+    return row;
+  }
+
+  async getManualBaseline(
+    volunteerId: string,
+    reimbursementTypeId: string,
+    year: number,
+  ): Promise<ManualBaselineEntity | undefined> {
+    return this.db.query.reimbursementManualBaselines.findFirst({
+      where: { volunteerId, reimbursementTypeId, year },
+    });
+  }
+
+  async setManualBaseline(
+    organizationId: string,
+    volunteerId: string,
+    reimbursementTypeId: string,
+    year: number,
+    amountCents: number,
+    updatedByUserId: string,
+  ): Promise<ManualBaselineEntity> {
+    if (amountCents < 0) {
+      throw new BadRequestGraphQLError('Amount must not be negative');
+    }
+    await this.findReimbursementTypeById(reimbursementTypeId);
+
+    const [row] = await this.db
+      .insert(schema.reimbursementManualBaselines)
+      .values({
+        organizationId,
+        volunteerId,
+        reimbursementTypeId,
+        year,
+        amountCents,
+        updatedByUserId,
+      })
+      .onConflictDoUpdate({
+        target: [
+          schema.reimbursementManualBaselines.volunteerId,
+          schema.reimbursementManualBaselines.reimbursementTypeId,
+          schema.reimbursementManualBaselines.year,
+        ],
+        set: { amountCents, updatedByUserId },
       })
       .returning();
 

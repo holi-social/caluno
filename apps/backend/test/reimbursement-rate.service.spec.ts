@@ -456,6 +456,52 @@ describe('ReimbursementRateService', () => {
         remainingCents: 74_000,
       });
     });
+
+    it('adds a manual baseline on top of tracked invoices for the same year', async () => {
+      const { organization } = await setupOrgWithRootUnit();
+      const reimbursementType = await createReimbursementType(db, {
+        yearlyLimitCents: 84_000,
+      });
+      const volunteer = await createUser(db);
+      const editor = await createUser(db);
+      const template = await createDocumentTemplate(db, {
+        organizationId: organization.id,
+        reimbursementTypeId: reimbursementType.id,
+        kind: DocumentKind.INVOICE,
+        signees: [{ order: 0, signeeType: SigneeType.VOLUNTEER }],
+      });
+      await db.insert(schema.invoices).values({
+        documentTemplateId: template.id,
+        volunteerId: volunteer.id,
+        reimbursementTypeId: reimbursementType.id,
+        periodStart: new Date('2026-03-01T00:00:00.000Z'),
+        periodEnd: new Date('2026-03-01T00:00:00.000Z'),
+        totalAmountCents: 10_000,
+        totalHours: 1,
+        resolvedBody: { header: {}, blocks: [], footer: {} },
+        invoiceStatus: InvoiceStatus.READY,
+      });
+      await service.setManualBaseline(
+        organization.id,
+        volunteer.id,
+        reimbursementType.id,
+        2026,
+        5_000,
+        editor.id,
+      );
+
+      const usage = await service.getYearlyUsage(
+        volunteer.id,
+        reimbursementType.id,
+        2026,
+      );
+
+      expect(usage).toEqual({
+        usedCents: 15_000,
+        limitCents: 84_000,
+        remainingCents: 69_000,
+      });
+    });
   });
 
   describe('getRosterYearlyUsage', () => {
@@ -628,6 +674,167 @@ describe('ReimbursementRateService', () => {
       expect(bEhrenamt?.remainingCents).toBe(84_000);
 
       expect(byVolunteerId.has(outsideVolunteer.id)).toBe(false);
+    });
+
+    it('adds each volunteer-and-type manual baseline into roster-scale usage', async () => {
+      const { organization, root: unit } = await setupOrgWithRootUnit();
+      const type = await createReimbursementType(db, {
+        yearlyLimitCents: 84_000,
+      });
+      const editor = await createUser(db);
+      const volunteer = await createUser(db);
+      await addMembership(db, volunteer.id, unit.id);
+      await service.setManualBaseline(
+        organization.id,
+        volunteer.id,
+        type.id,
+        2026,
+        7_500,
+        editor.id,
+      );
+
+      const usage = await service.getRosterYearlyUsage(unit.id, 2026);
+
+      const entry = usage.find((u) => u.volunteer.id === volunteer.id);
+      const typeUsage = entry?.usageByType.find(
+        (tu) => tu.reimbursementType.id === type.id,
+      );
+      expect(typeUsage?.usedCents).toBe(7_500);
+      expect(typeUsage?.remainingCents).toBe(76_500);
+    });
+  });
+
+  describe('setManualBaseline / getManualBaseline', () => {
+    it('returns undefined when no baseline has ever been set', async () => {
+      const reimbursementType = await createReimbursementType(db);
+      const volunteer = await createUser(db);
+
+      const result = await service.getManualBaseline(
+        volunteer.id,
+        reimbursementType.id,
+        2026,
+      );
+
+      expect(result).toBeUndefined();
+    });
+
+    it('creates a baseline row on first set', async () => {
+      const { organization } = await setupOrgWithRootUnit();
+      const reimbursementType = await createReimbursementType(db);
+      const volunteer = await createUser(db);
+      const editor = await createUser(db);
+
+      const result = await service.setManualBaseline(
+        organization.id,
+        volunteer.id,
+        reimbursementType.id,
+        2026,
+        15_000,
+        editor.id,
+      );
+
+      expect(result.amountCents).toBe(15_000);
+      expect(result.updatedByUserId).toBe(editor.id);
+      expect(result.year).toBe(2026);
+
+      const fetched = await service.getManualBaseline(
+        volunteer.id,
+        reimbursementType.id,
+        2026,
+      );
+      expect(fetched?.amountCents).toBe(15_000);
+    });
+
+    it('overwrites the existing baseline on a second set for the same year, tracking the new editor', async () => {
+      const { organization } = await setupOrgWithRootUnit();
+      const reimbursementType = await createReimbursementType(db);
+      const volunteer = await createUser(db);
+      const firstEditor = await createUser(db);
+      const secondEditor = await createUser(db);
+
+      await service.setManualBaseline(
+        organization.id,
+        volunteer.id,
+        reimbursementType.id,
+        2026,
+        15_000,
+        firstEditor.id,
+      );
+      const updated = await service.setManualBaseline(
+        organization.id,
+        volunteer.id,
+        reimbursementType.id,
+        2026,
+        20_000,
+        secondEditor.id,
+      );
+
+      expect(updated.amountCents).toBe(20_000);
+      expect(updated.updatedByUserId).toBe(secondEditor.id);
+
+      const rows = await db.query.reimbursementManualBaselines.findMany({
+        where: {
+          volunteerId: volunteer.id,
+          reimbursementTypeId: reimbursementType.id,
+          year: 2026,
+        },
+      });
+      expect(rows).toHaveLength(1);
+    });
+
+    it('rejects a negative amount', async () => {
+      const { organization } = await setupOrgWithRootUnit();
+      const reimbursementType = await createReimbursementType(db);
+      const volunteer = await createUser(db);
+      const editor = await createUser(db);
+
+      await expect(
+        service.setManualBaseline(
+          organization.id,
+          volunteer.id,
+          reimbursementType.id,
+          2026,
+          -1,
+          editor.id,
+        ),
+      ).rejects.toBeInstanceOf(BadRequestGraphQLError);
+    });
+
+    it('keeps baselines for different years independent', async () => {
+      const { organization } = await setupOrgWithRootUnit();
+      const reimbursementType = await createReimbursementType(db);
+      const volunteer = await createUser(db);
+      const editor = await createUser(db);
+
+      await service.setManualBaseline(
+        organization.id,
+        volunteer.id,
+        reimbursementType.id,
+        2025,
+        5_000,
+        editor.id,
+      );
+      await service.setManualBaseline(
+        organization.id,
+        volunteer.id,
+        reimbursementType.id,
+        2026,
+        15_000,
+        editor.id,
+      );
+
+      const y2025 = await service.getManualBaseline(
+        volunteer.id,
+        reimbursementType.id,
+        2025,
+      );
+      const y2026 = await service.getManualBaseline(
+        volunteer.id,
+        reimbursementType.id,
+        2026,
+      );
+      expect(y2025?.amountCents).toBe(5_000);
+      expect(y2026?.amountCents).toBe(15_000);
     });
   });
 
