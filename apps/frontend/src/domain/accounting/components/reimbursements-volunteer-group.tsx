@@ -1,6 +1,10 @@
 'use client';
 
 import {
+  useBundleDownloadStatus,
+  useRecordBundleDownload,
+} from '@repo/data/react';
+import {
   Button,
   cn,
   Table,
@@ -10,6 +14,7 @@ import {
   TableHeader,
   TableRow,
 } from '@repo/ui';
+import { format } from 'date-fns';
 import { ChevronDownIcon, FileTextIcon } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useState } from 'react';
@@ -145,14 +150,83 @@ const STATUS_SORT_ORDER: DocStatus[] = [
   'timesheet-declined',
 ];
 
-// ─── Mock: last bundle download per volunteer + pauschale type ───────────────
+// ─── BundleDownloadButton ──────────────────────────────────────────────────────
 
-const MOCK_LAST_BUNDLE_DOWNLOAD: Record<
-  string,
-  Partial<Record<PauschalenType, { by: string; at: string }>>
-> = {
-  v5: { uebungsleiter: { by: 'Markus Kassier', at: '30.05.2026' } },
-};
+interface BundleDownloadButtonProps {
+  volunteerId: string;
+  reimbursementTypeId: string | undefined;
+  typeLabel: string;
+  readyCount: number;
+}
+
+/**
+ * Own component (not inlined in the readyTypes.map()) because it calls
+ * hooks — useBundleDownloadStatus/useRecordBundleDownload can't live
+ * inside a .map() callback per rules-of-hooks.
+ */
+function BundleDownloadButton({
+  volunteerId,
+  reimbursementTypeId,
+  typeLabel,
+  readyCount,
+}: BundleDownloadButtonProps) {
+  const t = useTranslations('Accounting.reimbursements');
+  const { data: status, isLoading } = useBundleDownloadStatus(
+    volunteerId,
+    reimbursementTypeId,
+  );
+  const recordDownload = useRecordBundleDownload();
+
+  return (
+    <div className="flex flex-col items-end gap-1 max-w-[220px]">
+      <Button
+        size="sm"
+        variant="outline"
+        className="gap-1.5 shrink-0"
+        disabled={!reimbursementTypeId || recordDownload.isPending}
+        onClick={(e) => {
+          e.stopPropagation();
+          if (!reimbursementTypeId || recordDownload.isPending) return;
+          recordDownload.mutate(
+            { volunteerId, reimbursementTypeId },
+            {
+              onSuccess: () => {
+                toast.success(
+                  t('batchBar.bundleDownloadToast', { count: readyCount }),
+                );
+              },
+            },
+          );
+        }}
+      >
+        <FileTextIcon size={13} />
+        {t('bundle.actionLabel')} · {readyCount}
+      </Button>
+      <span className="text-xs text-muted-foreground text-right leading-snug">
+        <span className="font-medium text-card-foreground">{typeLabel}</span> ·{' '}
+        {isLoading
+          ? null
+          : status
+            ? t.rich('bundle.lastDownloaded', {
+                by: abbreviateName(status.downloadedByUser?.name ?? ''),
+                at: format(new Date(status.downloadedAt), 'dd.MM.yyyy'),
+                // Stubbed: no volunteer-profile route exists yet
+                // in this prototype — becomes a real link there.
+                name: (chunks) => (
+                  <button
+                    type="button"
+                    className="text-primary hover:underline"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    {chunks}
+                  </button>
+                ),
+              })
+            : t('bundle.neverDownloaded')}
+      </span>
+    </div>
+  );
+}
 
 // ─── VolunteerTableGroup ──────────────────────────────────────────────────────
 
@@ -269,56 +343,15 @@ function VolunteerTableGroup({
           <div className="flex items-center gap-3 justify-end">
             {readyTypes.length > 0 && (
               <div className="flex flex-col items-end gap-3">
-                {readyTypes.map((type) => {
-                  const download = MOCK_LAST_BUNDLE_DOWNLOAD[vol.id]?.[type];
-                  const readyCount = readyByType[type] ?? 0;
-                  return (
-                    <div
-                      key={type}
-                      className="flex flex-col items-end gap-1 max-w-[220px]"
-                    >
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="gap-1.5 shrink-0"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          toast.success(
-                            t('batchBar.bundleDownloadToast', {
-                              count: readyCount,
-                            }),
-                          );
-                        }}
-                      >
-                        <FileTextIcon size={13} />
-                        {t('bundle.actionLabel')} · {readyCount}
-                      </Button>
-                      <span className="text-xs text-muted-foreground text-right leading-snug">
-                        <span className="font-medium text-card-foreground">
-                          {TYPE_LABEL[type]}
-                        </span>{' '}
-                        ·{' '}
-                        {download
-                          ? t.rich('bundle.lastDownloaded', {
-                              by: abbreviateName(download.by),
-                              at: download.at,
-                              // Stubbed: no volunteer-profile route exists yet
-                              // in this prototype — becomes a real link there.
-                              name: (chunks) => (
-                                <button
-                                  type="button"
-                                  className="text-primary hover:underline"
-                                  onClick={(e) => e.stopPropagation()}
-                                >
-                                  {chunks}
-                                </button>
-                              ),
-                            })
-                          : t('bundle.neverDownloaded')}
-                      </span>
-                    </div>
-                  );
-                })}
+                {readyTypes.map((type) => (
+                  <BundleDownloadButton
+                    key={type}
+                    volunteerId={vol.id}
+                    reimbursementTypeId={vol.reimbursementTypeIds?.[type]}
+                    typeLabel={TYPE_LABEL[type]}
+                    readyCount={readyByType[type] ?? 0}
+                  />
+                ))}
               </div>
             )}
             <ChevronDownIcon
