@@ -10,7 +10,7 @@ import { ReimbursementRateService } from '../src/accounting/services/reimburseme
 import type { AuthService } from '../src/auth/auth.service';
 import { type Database, DatabaseModule } from '../src/database/database.module';
 import { DATABASE_CONNECTION } from '../src/database/database-connection';
-import { NotFoundGraphQLError } from '../src/graphql/errors';
+import { BadRequestGraphQLError, NotFoundGraphQLError } from '../src/graphql/errors';
 import type { AuthenticatedGraphQLContext } from '../src/graphql/graphql.context';
 import { MembershipService } from '../src/membership/membership.service';
 import type { NotificationService } from '../src/notification';
@@ -334,6 +334,102 @@ describe('reimbursement-rate resolver unit scoping', () => {
         queryResolver.bundleDownloadStatus(
           volunteer.id,
           reimbursementType.id,
+          contextFor(branchA.id),
+        ),
+      ).rejects.toBeInstanceOf(NotFoundGraphQLError);
+    });
+  });
+
+  describe('manualBaseline / setManualBaseline — scope check', () => {
+    const sessionFor = (userId: string): UserSession =>
+      ({ user: { id: userId } }) as UserSession;
+
+    it("rejects setting a baseline for a volunteer outside the caller's org subtree", async () => {
+      const reimbursementType = await createReimbursementType(db);
+      const { branchA, branchB } = await setupOrgTree();
+      const volunteer = await createUser(db);
+      await addMembership(db, volunteer.id, branchB.id);
+      const caller = await createUser(db);
+
+      await expect(
+        mutationResolver.setManualBaseline(
+          volunteer.id,
+          reimbursementType.id,
+          2026,
+          10_000,
+          contextFor(branchA.id),
+          sessionFor(caller.id),
+        ),
+      ).rejects.toBeInstanceOf(NotFoundGraphQLError);
+    });
+
+    it("allows setting a baseline for a volunteer within the caller's org subtree", async () => {
+      const reimbursementType = await createReimbursementType(db);
+      const { branchA, branchASub } = await setupOrgTree();
+      const volunteer = await createUser(db);
+      await addMembership(db, volunteer.id, branchASub.id);
+      const caller = await createUser(db);
+
+      const result = await mutationResolver.setManualBaseline(
+        volunteer.id,
+        reimbursementType.id,
+        2026,
+        10_000,
+        contextFor(branchA.id),
+        sessionFor(caller.id),
+      );
+
+      expect(result.amountCents).toBe(10_000);
+      expect(result.updatedByUser?.id).toBe(caller.id);
+      expect(result.volunteer.id).toBe(volunteer.id);
+    });
+
+    it('rejects a negative amount', async () => {
+      const reimbursementType = await createReimbursementType(db);
+      const { branchA, branchASub } = await setupOrgTree();
+      const volunteer = await createUser(db);
+      await addMembership(db, volunteer.id, branchASub.id);
+      const caller = await createUser(db);
+
+      await expect(
+        mutationResolver.setManualBaseline(
+          volunteer.id,
+          reimbursementType.id,
+          2026,
+          -500,
+          contextFor(branchA.id),
+          sessionFor(caller.id),
+        ),
+      ).rejects.toBeInstanceOf(BadRequestGraphQLError);
+    });
+
+    it('returns null manualBaseline for a pair with no baseline set yet', async () => {
+      const reimbursementType = await createReimbursementType(db);
+      const { branchA } = await setupOrgTree();
+      const volunteer = await createUser(db);
+      await addMembership(db, volunteer.id, branchA.id);
+
+      const result = await queryResolver.manualBaseline(
+        volunteer.id,
+        reimbursementType.id,
+        2026,
+        contextFor(branchA.id),
+      );
+
+      expect(result).toBeNull();
+    });
+
+    it("rejects querying manualBaseline for a volunteer outside the caller's org subtree", async () => {
+      const reimbursementType = await createReimbursementType(db);
+      const { branchA, branchB } = await setupOrgTree();
+      const volunteer = await createUser(db);
+      await addMembership(db, volunteer.id, branchB.id);
+
+      await expect(
+        queryResolver.manualBaseline(
+          volunteer.id,
+          reimbursementType.id,
+          2026,
           contextFor(branchA.id),
         ),
       ).rejects.toBeInstanceOf(NotFoundGraphQLError);

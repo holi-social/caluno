@@ -11,6 +11,7 @@ import { UserService } from '../../user/user.service';
 import { ReimbursementTypeMapper } from '../mappers';
 import { BundleDownloadStatus } from '../models/bundle-download-status.model';
 import { EffectiveRate } from '../models/effective-rate.model';
+import { ManualBaseline } from '../models/manual-baseline.model';
 import { ReimbursementType } from '../models/reimbursement-type.model';
 import { VolunteerYearlyUsage } from '../models/volunteer-yearly-usage.model';
 import { YearlyUsage } from '../models/yearly-usage.model';
@@ -137,6 +138,27 @@ export class ReimbursementQueryResolver {
     return this.toBundleDownloadStatusModel(status);
   }
 
+  @Permissions(PERMISSIONS.ACCOUNTING_MANAGE)
+  @Query(() => ManualBaseline, { nullable: true })
+  async manualBaseline(
+    @Args('volunteerId', { type: () => ID }) volunteerId: string,
+    @Args('reimbursementTypeId', { type: () => ID })
+    reimbursementTypeId: string,
+    @Args('year', { type: () => Int }) year: number,
+    @Context() context: AuthenticatedGraphQLContext,
+  ): Promise<ManualBaseline | null> {
+    await this.assertVolunteerInScope(context, volunteerId);
+
+    const baseline = await this.reimbursementRateService.getManualBaseline(
+      volunteerId,
+      reimbursementTypeId,
+      year,
+    );
+    if (!baseline) return null;
+
+    return this.toManualBaselineModel(baseline);
+  }
+
   /**
    * Ensures the caller's own unit (from context) is the target unit itself
    * or one of its ancestors — i.e. the target is within the caller's
@@ -203,6 +225,36 @@ export class ReimbursementQueryResolver {
         this.reimbursementTypeMapper.toModelOrThrow(reimbursementType),
       downloadedAt: status.downloadedAt,
       downloadedByUser: this.userMapper.toModel(downloadedByUser),
+    };
+  }
+
+  private async toManualBaselineModel(baseline: {
+    volunteerId: string;
+    reimbursementTypeId: string;
+    year: number;
+    amountCents: number;
+    updatedAt: Date | null;
+    createdAt: Date;
+    updatedByUserId: string | null;
+  }): Promise<ManualBaseline> {
+    const [volunteer, reimbursementType, updatedByUser] = await Promise.all([
+      this.userService.findByIdOrThrow(baseline.volunteerId),
+      this.reimbursementRateService.findReimbursementTypeById(
+        baseline.reimbursementTypeId,
+      ),
+      baseline.updatedByUserId
+        ? this.userService.findById(baseline.updatedByUserId)
+        : Promise.resolve(undefined),
+    ]);
+
+    return {
+      volunteer: this.userMapper.toModelOrThrow(volunteer),
+      reimbursementType:
+        this.reimbursementTypeMapper.toModelOrThrow(reimbursementType),
+      year: baseline.year,
+      amountCents: baseline.amountCents,
+      updatedAt: baseline.updatedAt ?? baseline.createdAt,
+      updatedByUser: this.userMapper.toModel(updatedByUser),
     };
   }
 }
