@@ -463,6 +463,8 @@ type Invoice {
   invoiceStatus: InvoiceStatus!
   invoiceTimeEntries: [InvoiceTimeEntry!]!
   isNonCompliant: Boolean!
+  paidAt: DateTime
+  paidByUser: User
   periodEnd: DateTime!
   periodStart: DateTime!
   reimbursementType: ReimbursementType!
@@ -638,7 +640,7 @@ type Mutation {
   joinOrganization(organizationUnitId: ID!): JoinOrganizationResult!
   joinShiftInstance(instanceId: String!): JoinShiftInstanceResult!
   leaveMembership(id: ID!): Membership!
-  recordBundleDownload(reimbursementTypeId: ID!, volunteerId: ID!): BundleDownloadStatus!
+  recordBundleDownload(invoiceIds: [ID!], reimbursementTypeId: ID!, volunteerId: ID!): BundleDownloadStatus!
   regenerateFormShareToken(id: String!): RequirementForm!
   rejectMembershipRequest(id: ID!, organizationUnitId: ID!, rejectionReason: String!): MembershipRequest!
   removeMembershipRequest(id: ID!): MembershipRequest!
