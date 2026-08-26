@@ -126,6 +126,15 @@ function RateRow({
                   setInputValue(e.target.value);
                   setInputError(null);
                 }}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    handleSave();
+                  } else if (e.key === 'Escape') {
+                    e.preventDefault();
+                    handleCancel();
+                  }
+                }}
                 className="w-28"
                 autoFocus
                 aria-invalid={!!inputError}
