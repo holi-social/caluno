@@ -2,6 +2,11 @@ import { beforeAll, describe, expect, it } from 'bun:test';
 import { ConfigModule } from '@nestjs/config';
 import { Test, type TestingModule } from '@nestjs/testing';
 import type { UserSession } from '@thallesp/nestjs-better-auth';
+import {
+  DocumentKind,
+  InvoiceStatus,
+  SigneeType,
+} from '../src/accounting/enums';
 import { ReimbursementTypeMapper } from '../src/accounting/mappers';
 import { ReimbursementRateMapper } from '../src/accounting/mappers/reimbursement-rate.mapper';
 import { ReimbursementMutationResolver } from '../src/accounting/resolvers/reimbursement-mutation.resolver';
@@ -10,6 +15,7 @@ import { ReimbursementRateService } from '../src/accounting/services/reimburseme
 import type { AuthService } from '../src/auth/auth.service';
 import { type Database, DatabaseModule } from '../src/database/database.module';
 import { DATABASE_CONNECTION } from '../src/database/database-connection';
+import * as schema from '../src/database/schema';
 import { BadRequestGraphQLError, NotFoundGraphQLError } from '../src/graphql/errors';
 import type { AuthenticatedGraphQLContext } from '../src/graphql/graphql.context';
 import { MembershipService } from '../src/membership/membership.service';
@@ -23,7 +29,10 @@ import type { PostHogCaptureService } from '../src/shared/observability/posthog.
 import type { FileService } from '../src/storage/services/file.service';
 import { UserMapper } from '../src/user/mappers/user.mapper';
 import { UserService } from '../src/user/user.service';
-import { createReimbursementType } from './factories/accounting.factory';
+import {
+  createDocumentTemplate,
+  createReimbursementType,
+} from './factories/accounting.factory';
 import {
   addMembership,
   createOrganizationWithType,
@@ -279,6 +288,7 @@ describe('reimbursement-rate resolver unit scoping', () => {
         mutationResolver.recordBundleDownload(
           volunteer.id,
           reimbursementType.id,
+          undefined,
           contextFor(branchA.id),
           sessionFor(caller.id),
         ),
@@ -297,6 +307,7 @@ describe('reimbursement-rate resolver unit scoping', () => {
       const result = await mutationResolver.recordBundleDownload(
         volunteer.id,
         reimbursementType.id,
+        undefined,
         contextFor(branchA.id),
         sessionFor(caller.id),
       );
@@ -337,6 +348,50 @@ describe('reimbursement-rate resolver unit scoping', () => {
           contextFor(branchA.id),
         ),
       ).rejects.toBeInstanceOf(NotFoundGraphQLError);
+    });
+
+    it('marks the passed invoiceIds paid when recording a download', async () => {
+      const reimbursementType = await createReimbursementType(db, {
+        platformDefaultRateCents: 1_500,
+      });
+      const { organization, branchA, branchASub } = await setupOrgTree();
+      const volunteer = await createUser(db);
+      await addMembership(db, volunteer.id, branchASub.id);
+      const caller = await createUser(db);
+      const template = await createDocumentTemplate(db, {
+        organizationId: organization.id,
+        reimbursementTypeId: reimbursementType.id,
+        kind: DocumentKind.INVOICE,
+        signees: [{ order: 0, signeeType: SigneeType.VOLUNTEER }],
+      });
+      const [invoice] = await db
+        .insert(schema.invoices)
+        .values({
+          documentTemplateId: template.id,
+          volunteerId: volunteer.id,
+          reimbursementTypeId: reimbursementType.id,
+          periodStart: new Date('2026-03-01T00:00:00.000Z'),
+          periodEnd: new Date('2026-03-01T00:00:00.000Z'),
+          totalAmountCents: 10_000,
+          totalHours: 1,
+          resolvedBody: { header: {}, blocks: [], footer: {} },
+          invoiceStatus: InvoiceStatus.READY,
+        })
+        .returning();
+
+      await mutationResolver.recordBundleDownload(
+        volunteer.id,
+        reimbursementType.id,
+        [invoice.id],
+        contextFor(branchA.id),
+        sessionFor(caller.id),
+      );
+
+      const updated = await db.query.invoices.findFirst({
+        where: { id: invoice.id },
+      });
+      expect(updated?.paidAt).not.toBeNull();
+      expect(updated?.paidByUserId).toBe(caller.id);
     });
   });
 

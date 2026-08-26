@@ -74,6 +74,8 @@ export class ReimbursementMutationResolver {
     @Args('volunteerId', { type: () => ID }) volunteerId: string,
     @Args('reimbursementTypeId', { type: () => ID })
     reimbursementTypeId: string,
+    @Args('invoiceIds', { type: () => [ID], nullable: true })
+    invoiceIds: string[] | null | undefined,
     @Context() context: AuthenticatedGraphQLContext,
     @Session() session: UserSession,
   ): Promise<BundleDownloadStatus> {
@@ -99,6 +101,7 @@ export class ReimbursementMutationResolver {
       volunteerId,
       reimbursementTypeId,
       session.user.id,
+      invoiceIds ?? [],
     );
 
     const [volunteer, reimbursementType, downloadedByUser] = await Promise.all([
