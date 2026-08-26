@@ -1,6 +1,8 @@
 import { inArray, sql } from 'drizzle-orm';
 import { drizzle } from 'drizzle-orm/node-postgres';
 import { Pool } from 'pg';
+import { ReimbursementTypeKey } from '../accounting/enums';
+import { reimbursementTypes } from '../accounting/schemas/reimbursement-type.schema';
 import { PERMISSIONS } from '../auth/constants';
 import { permissions } from '../auth/schemas/permission.schema';
 import * as schema from './schema';
@@ -19,6 +21,29 @@ const PERMISSION_NAMES: Record<
   [PERMISSIONS.REQUIREMENT_PROFILE_EDIT]: 'Edit requirement profile',
   [PERMISSIONS.ACCOUNTING_MANAGE]: 'Manage accounting',
 };
+
+// The two statutory Pauschale types this feature is built around — fixed by
+// law, not org-configurable, and there is no mutation to create them, so
+// they must exist as reference data in every environment.
+const REIMBURSEMENT_TYPES: Array<
+  Pick<
+    typeof reimbursementTypes.$inferInsert,
+    'key' | 'legalReference' | 'yearlyLimitCents' | 'platformDefaultRateCents'
+  >
+> = [
+  {
+    key: ReimbursementTypeKey.EHRENAMT,
+    legalReference: '§3 Nr. 26a EStG',
+    yearlyLimitCents: 84_000,
+    platformDefaultRateCents: 500,
+  },
+  {
+    key: ReimbursementTypeKey.UEBUNGSLEITER,
+    legalReference: '§3 Nr. 26 EStG',
+    yearlyLimitCents: 300_000,
+    platformDefaultRateCents: 800,
+  },
+];
 
 async function seed() {
   const pool = new Pool({
@@ -97,6 +122,20 @@ async function seed() {
     `Updated ${updatedDescriptionKeys.length} permission descriptions`,
   );
   console.log(`Synced ${values.length} permissions in total`);
+
+  await db
+    .insert(reimbursementTypes)
+    .values(REIMBURSEMENT_TYPES)
+    .onConflictDoUpdate({
+      target: reimbursementTypes.key,
+      set: {
+        legalReference: sql`excluded.legal_reference`,
+        yearlyLimitCents: sql`excluded.yearly_limit_cents`,
+        platformDefaultRateCents: sql`excluded.platform_default_rate_cents`,
+      },
+    });
+  console.log(`Synced ${REIMBURSEMENT_TYPES.length} reimbursement types`);
+
   await pool.end();
 }
 
