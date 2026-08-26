@@ -612,7 +612,7 @@ export class EventService {
         };
       }
 
-      await this.formSubmissionService.shareSatisfiedRequiredForms(userId, {
+      await this.formSubmissionService.shareSubmissionsWithOrgUnit(userId, {
         targetType: RequiredFormTargetType.EVENT,
         targetId: eventId,
       });
@@ -643,7 +643,7 @@ export class EventService {
       };
     }
 
-    await this.formSubmissionService.shareSatisfiedRequiredForms(userId, {
+    await this.formSubmissionService.shareSubmissionsWithOrgUnit(userId, {
       targetType: RequiredFormTargetType.EVENT,
       targetId: eventId,
     });

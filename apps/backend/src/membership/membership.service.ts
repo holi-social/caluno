@@ -732,7 +732,7 @@ export class MembershipService {
       throw new NotFoundGraphQLError('Organization unit not found');
     }
 
-    await this.formSubmissionService.shareSatisfiedRequiredForms(userId, {
+    await this.formSubmissionService.shareSubmissionsWithOrgUnit(userId, {
       targetType: RequiredFormTargetType.ORGANIZATION_UNIT,
       targetId: organizationUnitId,
     });

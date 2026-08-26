@@ -2492,11 +2492,7 @@ export class ShiftService {
     }
 
     if (!formsAlreadySatisfied) {
-      await this.formSubmissionService.shareSatisfiedRequiredForms(userId, {
-        targetType: RequiredFormTargetType.SHIFT,
-        targetId: shift.id,
-      });
-      await this.formSubmissionService.shareSatisfiedRequiredForms(userId, {
+      await this.formSubmissionService.shareSubmissionsWithOrgUnit(userId, {
         targetType: RequiredFormTargetType.SHIFT_INSTANCE,
         targetId: instanceId,
       });
@@ -2744,11 +2740,7 @@ export class ShiftService {
         };
       }
 
-      await this.formSubmissionService.shareSatisfiedRequiredForms(userId, {
-        targetType: RequiredFormTargetType.SHIFT,
-        targetId: shift.id,
-      });
-      await this.formSubmissionService.shareSatisfiedRequiredForms(userId, {
+      await this.formSubmissionService.shareSubmissionsWithOrgUnit(userId, {
         targetType: RequiredFormTargetType.SHIFT_INSTANCE,
         targetId: instanceId,
       });
@@ -2786,11 +2778,7 @@ export class ShiftService {
       };
     }
 
-    await this.formSubmissionService.shareSatisfiedRequiredForms(userId, {
-      targetType: RequiredFormTargetType.SHIFT,
-      targetId: shift.id,
-    });
-    await this.formSubmissionService.shareSatisfiedRequiredForms(userId, {
+    await this.formSubmissionService.shareSubmissionsWithOrgUnit(userId, {
       targetType: RequiredFormTargetType.SHIFT_INSTANCE,
       targetId: instanceId,
     });
