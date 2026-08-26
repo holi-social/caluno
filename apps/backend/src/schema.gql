@@ -463,6 +463,8 @@ type Invoice {
   invoiceStatus: InvoiceStatus!
   invoiceTimeEntries: [InvoiceTimeEntry!]!
   isNonCompliant: Boolean!
+  paidAt: DateTime
+  paidByUser: User
   periodEnd: DateTime!
   periodStart: DateTime!
   reimbursementType: ReimbursementType!
@@ -554,6 +556,15 @@ enum JoinStatus {
   REQUIREMENTS_NEEDED
 }
 
+type ManualBaseline {
+  amountCents: Int!
+  reimbursementType: ReimbursementType!
+  updatedAt: DateTime!
+  updatedByUser: User
+  volunteer: User!
+  year: Int!
+}
+
 type Membership {
   createdAt: DateTime!
   id: ID!
@@ -629,11 +640,12 @@ type Mutation {
   joinOrganization(organizationUnitId: ID!): JoinOrganizationResult!
   joinShiftInstance(instanceId: String!): JoinShiftInstanceResult!
   leaveMembership(id: ID!): Membership!
-  recordBundleDownload(reimbursementTypeId: ID!, volunteerId: ID!): BundleDownloadStatus!
+  recordBundleDownload(invoiceIds: [ID!], reimbursementTypeId: ID!, volunteerId: ID!): BundleDownloadStatus!
   regenerateFormShareToken(id: String!): RequirementForm!
   rejectMembershipRequest(id: ID!, organizationUnitId: ID!, rejectionReason: String!): MembershipRequest!
   removeMembershipRequest(id: ID!): MembershipRequest!
   setEventRequiredForms(eventId: ID!, formIds: [String!]!): [RequiredFormRef!]!
+  setManualBaseline(amountCents: Int!, reimbursementTypeId: ID!, volunteerId: ID!, year: Int!): ManualBaseline!
   setReimbursementRate(hourlyRateCents: Int!, organizationUnitId: ID, reimbursementTypeId: ID!): ReimbursementRate!
   setRequiredForms(formIds: [String!]!, organizationUnitId: String!): [RequiredFormRef!]!
   setShiftInstanceRequiredForms(formIds: [String!]!, instanceId: ID!): [RequiredFormRef!]!
@@ -812,6 +824,7 @@ type Query {
   invoice(id: ID!): Invoice!
   invoices(filter: InvoiceFilterInput): [Invoice!]!
   isMemberOfUnitOrAncestor(organizationUnitId: ID!, userId: String!): Boolean!
+  manualBaseline(reimbursementTypeId: ID!, volunteerId: ID!, year: Int!): ManualBaseline
   me: User!
   members(organizationUnitId: ID!): [User!]!
   membership(organizationUnitId: ID!): Membership
