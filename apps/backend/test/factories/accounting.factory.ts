@@ -144,6 +144,7 @@ export const createCompletedTimeEntry = async (
     .insert(schema.timeEntries)
     .values({
       shiftInstanceId: instance.id,
+      organizationUnitId: args.organizationUnitId,
       volunteerId: args.volunteerId,
       reimbursementTypeId: args.reimbursementTypeId,
       startedAt: args.startedAt,

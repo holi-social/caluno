@@ -38,6 +38,14 @@ query GetTimeEntry($id: String!) {
         title
       }
     }
+    organizationUnit {
+      id
+      name
+      organization {
+        id
+        name
+      }
+    }
   }
 }
 
@@ -68,6 +76,14 @@ query GetTimeEntries($limit: Int!, $offset: Int!) {
           title
         }
       }
+      organizationUnit {
+        id
+        name
+        organization {
+          id
+          name
+        }
+      }
     }
     pagination {
       total
@@ -92,6 +108,14 @@ query GetTimeEntriesByUser($userId: String!, $limit: Int!, $offset: Int!) {
         master {
           id
           title
+        }
+      }
+      organizationUnit {
+        id
+        name
+        organization {
+          id
+          name
         }
       }
     }
@@ -124,6 +148,14 @@ query GetMyTime($limit: Int!, $offset: Int!) {
               name
             }
           }
+        }
+      }
+      organizationUnit {
+        id
+        name
+        organization {
+          id
+          name
         }
       }
     }

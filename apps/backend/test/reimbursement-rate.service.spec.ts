@@ -23,7 +23,7 @@ import { OrganizationUnitDataModule } from '../src/organization/organization-uni
 import { OrganizationUnitDataService } from '../src/organization/organization-unit-data.service';
 import type { RequiredFormService } from '../src/requirement-profile/services/required-form.service';
 import type { RequirementProfileService } from '../src/requirement-profile/services/requirement-profile.service';
-import type { PostHogService } from '../src/shared/observability/posthog.service';
+import type { PostHogCaptureService } from '../src/shared/observability/posthog.capture.service';
 import {
   createDocumentTemplate,
   createReimbursementType,
@@ -60,7 +60,7 @@ describe('ReimbursementRateService', () => {
       {} as AuthService,
       {} as NotificationService,
       {} as RequiredFormService,
-      { captureUserJoinedOrg: () => {} } as unknown as PostHogService,
+      { captureUserJoinedOrg: () => {} } as unknown as PostHogCaptureService,
     );
     service = new ReimbursementRateService(
       db,

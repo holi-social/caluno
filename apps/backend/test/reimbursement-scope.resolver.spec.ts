@@ -19,7 +19,7 @@ import { OrganizationUnitDataModule } from '../src/organization/organization-uni
 import { OrganizationUnitDataService } from '../src/organization/organization-unit-data.service';
 import type { RequiredFormService } from '../src/requirement-profile/services/required-form.service';
 import type { RequirementProfileService } from '../src/requirement-profile/services/requirement-profile.service';
-import type { PostHogService } from '../src/shared/observability/posthog.service';
+import type { PostHogCaptureService } from '../src/shared/observability/posthog.capture.service';
 import type { FileService } from '../src/storage/services/file.service';
 import { UserMapper } from '../src/user/mappers/user.mapper';
 import { UserService } from '../src/user/user.service';
@@ -72,7 +72,7 @@ describe('reimbursement-rate resolver unit scoping', () => {
       {} as AuthService,
       {} as NotificationService,
       {} as RequiredFormService,
-      { captureUserJoinedOrg: () => {} } as unknown as PostHogService,
+      { captureUserJoinedOrg: () => {} } as unknown as PostHogCaptureService,
     );
     const reimbursementRateService = new ReimbursementRateService(
       db,

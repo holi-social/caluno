@@ -5,7 +5,7 @@
 input AddTimeEntryInput {
   endedAt: DateTime
   notes: String
-  shiftInstanceId: String!
+  shiftInstanceId: String
   startedAt: DateTime!
   volunteerId: String!
 }
@@ -790,6 +790,7 @@ type Query {
   activeShiftInstances: [ShiftInstance!]!
   adminUserProfile(userId: String!): UserProfile
   adminVolunteerSubmission(id: String!): FormSubmission
+  availableEvents(endsBefore: DateTime = null, limit: Int! = 15, offset: Int! = 0, organizationUnitIds: [ID!], startsAfter: DateTime = null): EventPaginatedResponse!
   availableShiftInstances(endsBefore: DateTime = null, limit: Int! = 15, offset: Int! = 0, organizationUnitIds: [ID!], startsAfter: DateTime = null): ShiftInstancePaginatedResponse!
   bundleDownloadStatus(reimbursementTypeId: ID!, volunteerId: ID!): BundleDownloadStatus
   contract(id: ID!): Contract!
@@ -1256,8 +1257,9 @@ type TimeEntry {
   id: ID!
   isPaid: Boolean!
   notes: String
+  organizationUnit: OrganizationUnit!
   reimbursementType: ReimbursementType
-  shiftInstance: ShiftInstance!
+  shiftInstance: ShiftInstance
   startedAt: DateTime!
   volunteer: User!
 }
@@ -1393,7 +1395,7 @@ input UpdateShiftInstanceInput {
 input UpdateTimeEntryInput {
   endedAt: DateTime
   notes: String
-  shiftInstanceId: String!
+  shiftInstanceId: String
   startedAt: DateTime!
 }
 

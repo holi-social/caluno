@@ -473,6 +473,7 @@
       "description": "Once you check in to a shift, your volunteering hours will appear here.",
       "title": "No hours yet"
     },
+    "generalTime": "General time",
     "state": {
       "completed": "Completed",
       "inProgress": "In progress"
@@ -1049,6 +1050,8 @@
     "checkIn": {
       "checkIn": "Check in",
       "checkInTitle": "Check-in",
+      "checkInWithShift": "Choose a shift instead",
+      "checkInWithoutShift": "Check in without a shift",
       "checkOut": "Check-out",
       "checkOutTitle": "Check-out",
       "checkedInAt": "Checked in: {time}",
@@ -1056,6 +1059,7 @@
       "checkingOut": "Checking out...",
       "checkingOutAt": "Checking out: {time}",
       "enterQrTitle": "Or enter their QR ID",
+      "generalCheckIn": "General check-in",
       "invalidCheckin": {
         "blocked": {
           "description": "The volunteer is not permitted to check-in. They must contact headquarters for assistance.",
@@ -1407,6 +1411,7 @@
       "loadInstancesError": "Failed to load instances.",
       "notesLabel": "Notes",
       "notesPlaceholder": "Add any notes about this time entry...",
+      "notTiedToShiftLabel": "Not tied to a shift",
       "selectShiftHint": "Select a shift to view available dates",
       "selectShiftLabel": "Select shift",
       "selectShiftPlaceholder": "Select a shift",
@@ -1522,10 +1527,13 @@
     "discoverEmpty": "No shifts match these filters",
     "discoverEmptyBody": "Try adjusting your filters, or check back later.",
     "discoverEmptyHome": "No shifts to discover right now. Check back soon.",
+    "discoverEventsEmptyHome": "No events to discover right now. Check back soon.",
     "discoverHeading": "Discover",
     "discoverPendingEmptyBody": "Shifts from {orgName} appear here once your request is confirmed.\nCheck in and Your records stay available anytime.",
     "discoverPendingEmptyTitle": "Nothing to discover yet",
     "discoverPendingSubtitle": "Shifts from {orgName} show up here once your request is confirmed",
+    "discoverTabAssignments": "Assignments",
+    "discoverTabEvents": "Events",
     "discoverThisWeek": "{n, plural, one {# shift this week} other {# shifts this week}}",
     "eventCoverImageAlt": "Cover image for {title}",
     "filterNextWeek": "Next week",
@@ -1560,6 +1568,9 @@
     "timerVolunteering": "You're volunteering for {time}",
     "todayButton": "Today",
     "weekly": "Weekly",
+    "yourEventsEmpty": "You have no upcoming events.",
+    "yourEventsHeading": "Your events",
+    "yourEventsThisWeek": "{n, plural, one {# event this week} other {# events this week}}",
     "yourShiftsCount": "{n, plural, one {# shift} other {# shifts}}",
     "yourShiftsEmpty": "You have no upcoming shifts.",
     "yourShiftsHeading": "Your shifts",
