@@ -16,7 +16,10 @@ import type { AuthService } from '../src/auth/auth.service';
 import { type Database, DatabaseModule } from '../src/database/database.module';
 import { DATABASE_CONNECTION } from '../src/database/database-connection';
 import * as schema from '../src/database/schema';
-import { BadRequestGraphQLError, NotFoundGraphQLError } from '../src/graphql/errors';
+import {
+  BadRequestGraphQLError,
+  NotFoundGraphQLError,
+} from '../src/graphql/errors';
 import type { AuthenticatedGraphQLContext } from '../src/graphql/graphql.context';
 import { MembershipService } from '../src/membership/membership.service';
 import type { NotificationService } from '../src/notification';

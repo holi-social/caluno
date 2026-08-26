@@ -1,11 +1,8 @@
 import { beforeAll, describe, expect, it } from 'bun:test';
 import { ConfigModule } from '@nestjs/config';
 import { Test, type TestingModule } from '@nestjs/testing';
-import { ReimbursementTypeKey } from '../enums';
 import { createReimbursementType } from '../../../test/factories/accounting.factory';
-import {
-  createOrganizationWithType,
-} from '../../../test/factories/org.factory';
+import { createOrganizationWithType } from '../../../test/factories/org.factory';
 import { createUser } from '../../../test/factories/user.factory';
 import {
   ensureTestDatabase,
@@ -14,6 +11,7 @@ import {
 import { type Database, DatabaseModule } from '../../database/database.module';
 import { DATABASE_CONNECTION } from '../../database/database-connection';
 import * as schema from '../../database/schema';
+import { ReimbursementTypeKey } from '../enums';
 
 describe('reimbursementManualBaselines schema', () => {
   let moduleRef: TestingModule;
@@ -40,22 +38,28 @@ describe('reimbursementManualBaselines schema', () => {
     });
     const volunteer = await createUser(db);
 
-    await db.insert(schema.reimbursementManualBaselines).values({
-      organizationId: organization.id,
-      volunteerId: volunteer.id,
-      reimbursementTypeId: reimbursementType.id,
-      year: 2026,
-      amountCents: 10_000,
-    }).execute();
-
-    await expect(
-      db.insert(schema.reimbursementManualBaselines).values({
+    await db
+      .insert(schema.reimbursementManualBaselines)
+      .values({
         organizationId: organization.id,
         volunteerId: volunteer.id,
         reimbursementTypeId: reimbursementType.id,
         year: 2026,
-        amountCents: 20_000,
-      }).execute(),
+        amountCents: 10_000,
+      })
+      .execute();
+
+    await expect(
+      db
+        .insert(schema.reimbursementManualBaselines)
+        .values({
+          organizationId: organization.id,
+          volunteerId: volunteer.id,
+          reimbursementTypeId: reimbursementType.id,
+          year: 2026,
+          amountCents: 20_000,
+        })
+        .execute(),
     ).rejects.toThrow();
   });
 
@@ -69,22 +73,28 @@ describe('reimbursementManualBaselines schema', () => {
     });
     const volunteer = await createUser(db);
 
-    await db.insert(schema.reimbursementManualBaselines).values({
-      organizationId: organization.id,
-      volunteerId: volunteer.id,
-      reimbursementTypeId: reimbursementType.id,
-      year: 2025,
-      amountCents: 5_000,
-    }).execute();
-
-    await expect(
-      db.insert(schema.reimbursementManualBaselines).values({
+    await db
+      .insert(schema.reimbursementManualBaselines)
+      .values({
         organizationId: organization.id,
         volunteerId: volunteer.id,
         reimbursementTypeId: reimbursementType.id,
-        year: 2026,
-        amountCents: 10_000,
-      }).execute(),
+        year: 2025,
+        amountCents: 5_000,
+      })
+      .execute();
+
+    await expect(
+      db
+        .insert(schema.reimbursementManualBaselines)
+        .values({
+          organizationId: organization.id,
+          volunteerId: volunteer.id,
+          reimbursementTypeId: reimbursementType.id,
+          year: 2026,
+          amountCents: 10_000,
+        })
+        .execute(),
     ).resolves.toBeDefined();
   });
 });
