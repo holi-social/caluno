@@ -23,6 +23,8 @@ function toContractFilter(
     volunteerId: filter?.volunteerId ?? undefined,
     reimbursementTypeId: filter?.reimbursementTypeId ?? undefined,
     status: filter?.status ?? undefined,
+    periodStart: filter?.periodStart ?? undefined,
+    periodEnd: filter?.periodEnd ?? undefined,
   };
 }
 
