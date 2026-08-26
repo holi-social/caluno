@@ -1675,7 +1675,8 @@
         "actionLabel": "Download bundle",
         "readyCount": "{count} ready",
         "lastDownloaded": "last downloaded by <name>{by}</name> on {at}",
-        "neverDownloaded": "not downloaded yet"
+        "neverDownloaded": "not downloaded yet",
+        "unknownUser": "unknown"
       },
       "batchBar": {
         "selected": "{count} selected",
