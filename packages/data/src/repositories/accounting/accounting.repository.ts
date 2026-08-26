@@ -13,12 +13,14 @@ import type {
   GetEligibleTimeEntriesForInvoiceQuery,
   GetInvoiceQuery,
   GetInvoicesQuery,
+  GetManualBaselineQuery,
   GetPendingContractSigneeQuery,
   GetReimbursementTypesQuery,
   GetRosterYearlyUsageQuery,
   GetYearlyUsageQuery,
   InvoiceFilterInput,
   RecordBundleDownloadMutation,
+  SetManualBaselineMutation,
   UpdateDocumentTemplateInput,
 } from '../../generated/graphql';
 import { BaseRepository } from '../base/base.repository';
@@ -56,6 +58,12 @@ export type RawBundleDownloadStatus =
   GetBundleDownloadStatusQuery['bundleDownloadStatus'];
 export type RecordedBundleDownload =
   RecordBundleDownloadMutation['recordBundleDownload'];
+
+// Prefixed with `Raw` because `ManualBaseline` collides with the same-named
+// entity type exported from `generated/graphql.ts`.
+export type RawManualBaseline = GetManualBaselineQuery['manualBaseline'];
+export type SetManualBaselineResult =
+  SetManualBaselineMutation['setManualBaseline'];
 
 export class AccountingRepository extends BaseRepository {
   async findReimbursementTypes(): Promise<RawReimbursementType[]> {
@@ -243,12 +251,37 @@ export class AccountingRepository extends BaseRepository {
   async recordBundleDownload(
     volunteerId: string,
     reimbursementTypeId: string,
+    invoiceIds?: string[],
   ): Promise<RecordedBundleDownload> {
     const data = await this.sdk.RecordBundleDownload({
       volunteerId,
       reimbursementTypeId,
+      invoiceIds,
     });
     return data.recordBundleDownload;
+  }
+
+  async findManualBaseline(
+    volunteerId: string,
+    reimbursementTypeId: string,
+    year: number,
+  ): Promise<RawManualBaseline> {
+    const data = await this.sdk.GetManualBaseline({
+      volunteerId,
+      reimbursementTypeId,
+      year,
+    });
+    return data.manualBaseline;
+  }
+
+  async setManualBaseline(input: {
+    volunteerId: string;
+    reimbursementTypeId: string;
+    year: number;
+    amountCents: number;
+  }): Promise<SetManualBaselineResult> {
+    const data = await this.sdk.SetManualBaseline(input);
+    return data.setManualBaseline;
   }
 }
 

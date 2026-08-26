@@ -456,6 +456,52 @@ describe('ReimbursementRateService', () => {
         remainingCents: 74_000,
       });
     });
+
+    it('adds a manual baseline on top of tracked invoices for the same year', async () => {
+      const { organization } = await setupOrgWithRootUnit();
+      const reimbursementType = await createReimbursementType(db, {
+        yearlyLimitCents: 84_000,
+      });
+      const volunteer = await createUser(db);
+      const editor = await createUser(db);
+      const template = await createDocumentTemplate(db, {
+        organizationId: organization.id,
+        reimbursementTypeId: reimbursementType.id,
+        kind: DocumentKind.INVOICE,
+        signees: [{ order: 0, signeeType: SigneeType.VOLUNTEER }],
+      });
+      await db.insert(schema.invoices).values({
+        documentTemplateId: template.id,
+        volunteerId: volunteer.id,
+        reimbursementTypeId: reimbursementType.id,
+        periodStart: new Date('2026-03-01T00:00:00.000Z'),
+        periodEnd: new Date('2026-03-01T00:00:00.000Z'),
+        totalAmountCents: 10_000,
+        totalHours: 1,
+        resolvedBody: { header: {}, blocks: [], footer: {} },
+        invoiceStatus: InvoiceStatus.READY,
+      });
+      await service.setManualBaseline(
+        organization.id,
+        volunteer.id,
+        reimbursementType.id,
+        2026,
+        5_000,
+        editor.id,
+      );
+
+      const usage = await service.getYearlyUsage(
+        volunteer.id,
+        reimbursementType.id,
+        2026,
+      );
+
+      expect(usage).toEqual({
+        usedCents: 15_000,
+        limitCents: 84_000,
+        remainingCents: 69_000,
+      });
+    });
   });
 
   describe('getRosterYearlyUsage', () => {
@@ -629,6 +675,167 @@ describe('ReimbursementRateService', () => {
 
       expect(byVolunteerId.has(outsideVolunteer.id)).toBe(false);
     });
+
+    it('adds each volunteer-and-type manual baseline into roster-scale usage', async () => {
+      const { organization, root: unit } = await setupOrgWithRootUnit();
+      const type = await createReimbursementType(db, {
+        yearlyLimitCents: 84_000,
+      });
+      const editor = await createUser(db);
+      const volunteer = await createUser(db);
+      await addMembership(db, volunteer.id, unit.id);
+      await service.setManualBaseline(
+        organization.id,
+        volunteer.id,
+        type.id,
+        2026,
+        7_500,
+        editor.id,
+      );
+
+      const usage = await service.getRosterYearlyUsage(unit.id, 2026);
+
+      const entry = usage.find((u) => u.volunteer.id === volunteer.id);
+      const typeUsage = entry?.usageByType.find(
+        (tu) => tu.reimbursementType.id === type.id,
+      );
+      expect(typeUsage?.usedCents).toBe(7_500);
+      expect(typeUsage?.remainingCents).toBe(76_500);
+    });
+  });
+
+  describe('setManualBaseline / getManualBaseline', () => {
+    it('returns undefined when no baseline has ever been set', async () => {
+      const reimbursementType = await createReimbursementType(db);
+      const volunteer = await createUser(db);
+
+      const result = await service.getManualBaseline(
+        volunteer.id,
+        reimbursementType.id,
+        2026,
+      );
+
+      expect(result).toBeUndefined();
+    });
+
+    it('creates a baseline row on first set', async () => {
+      const { organization } = await setupOrgWithRootUnit();
+      const reimbursementType = await createReimbursementType(db);
+      const volunteer = await createUser(db);
+      const editor = await createUser(db);
+
+      const result = await service.setManualBaseline(
+        organization.id,
+        volunteer.id,
+        reimbursementType.id,
+        2026,
+        15_000,
+        editor.id,
+      );
+
+      expect(result.amountCents).toBe(15_000);
+      expect(result.updatedByUserId).toBe(editor.id);
+      expect(result.year).toBe(2026);
+
+      const fetched = await service.getManualBaseline(
+        volunteer.id,
+        reimbursementType.id,
+        2026,
+      );
+      expect(fetched?.amountCents).toBe(15_000);
+    });
+
+    it('overwrites the existing baseline on a second set for the same year, tracking the new editor', async () => {
+      const { organization } = await setupOrgWithRootUnit();
+      const reimbursementType = await createReimbursementType(db);
+      const volunteer = await createUser(db);
+      const firstEditor = await createUser(db);
+      const secondEditor = await createUser(db);
+
+      await service.setManualBaseline(
+        organization.id,
+        volunteer.id,
+        reimbursementType.id,
+        2026,
+        15_000,
+        firstEditor.id,
+      );
+      const updated = await service.setManualBaseline(
+        organization.id,
+        volunteer.id,
+        reimbursementType.id,
+        2026,
+        20_000,
+        secondEditor.id,
+      );
+
+      expect(updated.amountCents).toBe(20_000);
+      expect(updated.updatedByUserId).toBe(secondEditor.id);
+
+      const rows = await db.query.reimbursementManualBaselines.findMany({
+        where: {
+          volunteerId: volunteer.id,
+          reimbursementTypeId: reimbursementType.id,
+          year: 2026,
+        },
+      });
+      expect(rows).toHaveLength(1);
+    });
+
+    it('rejects a negative amount', async () => {
+      const { organization } = await setupOrgWithRootUnit();
+      const reimbursementType = await createReimbursementType(db);
+      const volunteer = await createUser(db);
+      const editor = await createUser(db);
+
+      await expect(
+        service.setManualBaseline(
+          organization.id,
+          volunteer.id,
+          reimbursementType.id,
+          2026,
+          -1,
+          editor.id,
+        ),
+      ).rejects.toBeInstanceOf(BadRequestGraphQLError);
+    });
+
+    it('keeps baselines for different years independent', async () => {
+      const { organization } = await setupOrgWithRootUnit();
+      const reimbursementType = await createReimbursementType(db);
+      const volunteer = await createUser(db);
+      const editor = await createUser(db);
+
+      await service.setManualBaseline(
+        organization.id,
+        volunteer.id,
+        reimbursementType.id,
+        2025,
+        5_000,
+        editor.id,
+      );
+      await service.setManualBaseline(
+        organization.id,
+        volunteer.id,
+        reimbursementType.id,
+        2026,
+        15_000,
+        editor.id,
+      );
+
+      const y2025 = await service.getManualBaseline(
+        volunteer.id,
+        reimbursementType.id,
+        2025,
+      );
+      const y2026 = await service.getManualBaseline(
+        volunteer.id,
+        reimbursementType.id,
+        2026,
+      );
+      expect(y2025?.amountCents).toBe(5_000);
+      expect(y2026?.amountCents).toBe(15_000);
+    });
   });
 
   describe('bundle download tracking', () => {
@@ -695,6 +902,187 @@ describe('ReimbursementRateService', () => {
           ),
         );
       expect(rows).toHaveLength(1);
+    });
+  });
+
+  describe('recordBundleDownload — paid stamping', () => {
+    const insertReadyInvoice = async (
+      db: Database,
+      args: {
+        templateId: string;
+        volunteerId: string;
+        reimbursementTypeId: string;
+        totalAmountCents?: number;
+      },
+    ) => {
+      const [invoice] = await db
+        .insert(schema.invoices)
+        .values({
+          documentTemplateId: args.templateId,
+          volunteerId: args.volunteerId,
+          reimbursementTypeId: args.reimbursementTypeId,
+          periodStart: new Date('2026-03-01T00:00:00.000Z'),
+          periodEnd: new Date('2026-03-01T00:00:00.000Z'),
+          totalAmountCents: args.totalAmountCents ?? 10_000,
+          totalHours: 1,
+          resolvedBody: { header: {}, blocks: [], footer: {} },
+          invoiceStatus: InvoiceStatus.READY,
+        })
+        .returning();
+      return invoice;
+    };
+
+    it('stamps paidAt/paidByUserId on invoices included in the download', async () => {
+      const { organization } = await setupOrgWithRootUnit();
+      const reimbursementType = await createReimbursementType(db);
+      const volunteer = await createUser(db);
+      const downloader = await createUser(db);
+      const template = await createDocumentTemplate(db, {
+        organizationId: organization.id,
+        reimbursementTypeId: reimbursementType.id,
+        kind: DocumentKind.INVOICE,
+        signees: [{ order: 0, signeeType: SigneeType.VOLUNTEER }],
+      });
+      const invoice = await insertReadyInvoice(db, {
+        templateId: template.id,
+        volunteerId: volunteer.id,
+        reimbursementTypeId: reimbursementType.id,
+      });
+
+      await service.recordBundleDownload(
+        volunteer.id,
+        reimbursementType.id,
+        downloader.id,
+        [invoice.id],
+      );
+
+      const updated = await db.query.invoices.findFirst({
+        where: { id: invoice.id },
+      });
+      expect(updated?.paidAt).not.toBeNull();
+      expect(updated?.paidByUserId).toBe(downloader.id);
+    });
+
+    it('is idempotent — a second download never overwrites an already-paid invoice', async () => {
+      const { organization } = await setupOrgWithRootUnit();
+      const reimbursementType = await createReimbursementType(db);
+      const volunteer = await createUser(db);
+      const firstDownloader = await createUser(db);
+      const secondDownloader = await createUser(db);
+      const template = await createDocumentTemplate(db, {
+        organizationId: organization.id,
+        reimbursementTypeId: reimbursementType.id,
+        kind: DocumentKind.INVOICE,
+        signees: [{ order: 0, signeeType: SigneeType.VOLUNTEER }],
+      });
+      const invoice = await insertReadyInvoice(db, {
+        templateId: template.id,
+        volunteerId: volunteer.id,
+        reimbursementTypeId: reimbursementType.id,
+      });
+
+      await service.recordBundleDownload(
+        volunteer.id,
+        reimbursementType.id,
+        firstDownloader.id,
+        [invoice.id],
+      );
+      const firstPaidAt = (
+        await db.query.invoices.findFirst({ where: { id: invoice.id } })
+      )?.paidAt;
+
+      await service.recordBundleDownload(
+        volunteer.id,
+        reimbursementType.id,
+        secondDownloader.id,
+        [invoice.id],
+      );
+      const afterSecond = await db.query.invoices.findFirst({
+        where: { id: invoice.id },
+      });
+
+      expect(afterSecond?.paidAt?.getTime()).toBe(firstPaidAt?.getTime());
+      expect(afterSecond?.paidByUserId).toBe(firstDownloader.id);
+    });
+
+    it('only marks the specific ids passed, leaving other ready invoices of the same type untouched', async () => {
+      const { organization } = await setupOrgWithRootUnit();
+      const reimbursementType = await createReimbursementType(db);
+      const volunteer = await createUser(db);
+      const downloader = await createUser(db);
+      const template = await createDocumentTemplate(db, {
+        organizationId: organization.id,
+        reimbursementTypeId: reimbursementType.id,
+        kind: DocumentKind.INVOICE,
+        signees: [{ order: 0, signeeType: SigneeType.VOLUNTEER }],
+      });
+      const included = await insertReadyInvoice(db, {
+        templateId: template.id,
+        volunteerId: volunteer.id,
+        reimbursementTypeId: reimbursementType.id,
+      });
+      const excluded = await insertReadyInvoice(db, {
+        templateId: template.id,
+        volunteerId: volunteer.id,
+        reimbursementTypeId: reimbursementType.id,
+      });
+
+      await service.recordBundleDownload(
+        volunteer.id,
+        reimbursementType.id,
+        downloader.id,
+        [included.id],
+      );
+
+      const excludedRow = await db.query.invoices.findFirst({
+        where: { id: excluded.id },
+      });
+      expect(excludedRow?.paidAt).toBeNull();
+    });
+
+    it('never marks paid an invoice belonging to a different volunteer, even if its id is passed in', async () => {
+      const { organization } = await setupOrgWithRootUnit();
+      const reimbursementType = await createReimbursementType(db);
+      const volunteer = await createUser(db);
+      const otherVolunteer = await createUser(db);
+      const downloader = await createUser(db);
+      const template = await createDocumentTemplate(db, {
+        organizationId: organization.id,
+        reimbursementTypeId: reimbursementType.id,
+        kind: DocumentKind.INVOICE,
+        signees: [{ order: 0, signeeType: SigneeType.VOLUNTEER }],
+      });
+      const otherVolunteerInvoice = await insertReadyInvoice(db, {
+        templateId: template.id,
+        volunteerId: otherVolunteer.id,
+        reimbursementTypeId: reimbursementType.id,
+      });
+
+      await service.recordBundleDownload(
+        volunteer.id,
+        reimbursementType.id,
+        downloader.id,
+        [otherVolunteerInvoice.id],
+      );
+
+      const row = await db.query.invoices.findFirst({
+        where: { id: otherVolunteerInvoice.id },
+      });
+      expect(row?.paidAt).toBeNull();
+    });
+
+    it('defaults to marking nothing paid when invoiceIds is omitted', async () => {
+      const reimbursementType = await createReimbursementType(db);
+      const volunteer = await createUser(db);
+      const downloader = await createUser(db);
+
+      await expect(
+        service.recordBundleDownload(
+          volunteer.id,
+          reimbursementType.id,
+          downloader.id,
+        ),
+      ).resolves.toBeDefined();
     });
   });
 });

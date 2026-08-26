@@ -140,4 +140,15 @@ export class InvoiceFieldResolver {
     }
     return loader.userById.load(invoice.declinedByUserId);
   }
+
+  @ResolveField(() => User, { nullable: true })
+  async paidByUser(
+    @Parent() invoice: InvoiceEntity,
+    @Loader(AccountingUserLoader) loader: AccountingUserLoader,
+  ): Promise<User | null> {
+    if (!invoice.paidByUserId) {
+      return null;
+    }
+    return loader.userById.load(invoice.paidByUserId);
+  }
 }
