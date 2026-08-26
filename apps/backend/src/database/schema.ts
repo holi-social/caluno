@@ -6,6 +6,7 @@ export * from '../accounting/schemas/invoice.schema';
 export * from '../accounting/schemas/invoice-signature.schema';
 export * from '../accounting/schemas/invoice-status-change.schema';
 export * from '../accounting/schemas/invoice-time-entry.schema';
+export * from '../accounting/schemas/reimbursement-bundle-download.schema';
 export * from '../accounting/schemas/reimbursement-rate.schema';
 export * from '../accounting/schemas/reimbursement-type.schema';
 export * from '../accounting/schemas/template-signee.schema';
