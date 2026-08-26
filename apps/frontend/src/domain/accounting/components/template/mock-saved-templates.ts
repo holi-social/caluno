@@ -160,6 +160,7 @@ export interface SavedTemplate {
 
 function contractSummary(pauschale: PauschalenType): ContractCardSummary {
   return {
+    kind: 'contract',
     task: CONTRACT_TASKS[pauschale],
     hourlyRate: formatRateComma(getEffectivePauschaleRate(pauschale)),
   };
@@ -174,7 +175,7 @@ export const MOCK_SAVED_TEMPLATES: Record<TemplateSlug, SavedTemplate> = {
   },
   'ehrenamtspauschale-invoice': {
     document: buildInvoiceTemplate('ehrenamt', 'ehrenamtspauschale-invoice'),
-    summary: { invoiceNumberFormat: 'date-number' },
+    summary: { kind: 'invoice', invoiceNumberFormat: 'date-number' },
     lastEditedAt: '2026-06-20T09:00:00Z',
     lastEditedBy: 'Julia Bauer',
   },
@@ -190,6 +191,7 @@ export const MOCK_SAVED_TEMPLATES: Record<TemplateSlug, SavedTemplate> = {
       'uebungsleiterpauschale-invoice',
     ),
     summary: {
+      kind: 'invoice',
       kostenstelle: INVOICE_KOSTENSTELLE['uebungsleiterpauschale-invoice'],
       invoiceNumberFormat: 'kostenstelle-month-year-number',
     },

@@ -1,7 +1,8 @@
 export type RateProvenance = 'inherited' | 'override' | 'unset';
 
 interface RateProvenanceRowProps {
-  rate?: number;
+  /** Preformatted rate, e.g. "4,50 €". */
+  rate?: string;
   unit?: string;
   inheritedLabel: string;
   className?: string;
@@ -9,7 +10,7 @@ interface RateProvenanceRowProps {
 
 export function RateProvenanceRow({
   rate,
-  unit = '€/hr',
+  unit = '',
   inheritedLabel,
   className,
 }: RateProvenanceRowProps) {
@@ -17,7 +18,8 @@ export function RateProvenanceRow({
 
   return (
     <p className={className ?? 'text-sm text-muted-foreground'}>
-      {inheritedLabel}: {rate.toFixed(2)} {unit}
+      {inheritedLabel}: {rate}
+      {unit}
     </p>
   );
 }

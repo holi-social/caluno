@@ -290,6 +290,7 @@ export function GeneratedDocumentPreview({
                         </tr>
                       )}
                       {rows.map((row, i) => (
+                        // biome-ignore lint/suspicious/noArrayIndexKey: table rows are positional cell strings without identity — placeholder rows are identical by design.
                         <tr key={i}>
                           {row.map((cell, j) => (
                             <td

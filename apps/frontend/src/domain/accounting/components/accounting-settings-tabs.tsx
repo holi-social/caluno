@@ -4,43 +4,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@repo/ui';
 import { useTranslations } from 'next-intl';
 import { RatesSectionCard } from './rates-section-card';
 import { TemplateListingPage } from './template/listing-page';
-import { MOCK_SAVED_TEMPLATES } from './template/mock-saved-templates';
-import type { TemplateSectionData, TemplateSlot } from './template/types';
-import { SLUG_TO_SLOT } from './template/types';
-
-// Every slot reads the same saved-template store the creation modals render
-// from — the settings cards and the generated documents can never disagree,
-// since there's only one place either of them reads from.
-function slot(slug: TemplateSlot['slug']): TemplateSlot {
-  const { pauschale, kind } = SLUG_TO_SLOT[slug];
-  const saved = MOCK_SAVED_TEMPLATES[slug];
-  return {
-    slug,
-    pauschale,
-    kind,
-    configured: true,
-    summary: saved.summary,
-    lastEditedAt: saved.lastEditedAt,
-    lastEditedBy: saved.lastEditedBy,
-  };
-}
-
-const MOCK_SECTIONS: TemplateSectionData[] = [
-  {
-    pauschale: 'ehrenamt',
-    slots: [
-      slot('ehrenamtspauschale-contract'),
-      slot('ehrenamtspauschale-invoice'),
-    ],
-  },
-  {
-    pauschale: 'uebungsleiter',
-    slots: [
-      slot('uebungsleiterpauschale-contract'),
-      slot('uebungsleiterpauschale-invoice'),
-    ],
-  },
-];
 
 interface AccountingSettingsTabsProps {
   orgUId: string;
@@ -64,7 +27,7 @@ export function AccountingSettingsTabs({
       </TabsList>
 
       <TabsContent value="rates" className="mt-6">
-        <RatesSectionCard canEdit={canEditRates} />
+        <RatesSectionCard canEdit={canEditRates} organizationUnitId={orgUId} />
       </TabsContent>
 
       <TabsContent value="templates" className="mt-6">
@@ -76,7 +39,6 @@ export function AccountingSettingsTabs({
             </p>
           </div>
           <TemplateListingPage
-            sections={MOCK_SECTIONS}
             orgUId={orgUId}
             builderBasePath={builderBasePath}
           />

@@ -14,8 +14,8 @@ interface TemplateCardFilledProps {
   pauschale: PauschalenType;
   kind: DocumentKind;
   summary: TemplateCardSummary;
-  lastEditedAt: string;
-  lastEditedBy: string;
+  lastEditedAt: string | null;
+  lastEditedBy: string | null;
   builderHref: string;
 }
 
@@ -50,12 +50,14 @@ export function TemplateCardFilled({
     >
       <TemplateCardBadges summary={summary} />
 
-      <p className="text-sm text-muted-foreground">
-        {t('card.lastEdited', {
-          date: formatDate(new Date(lastEditedAt)),
-          name: lastEditedBy,
-        } as Parameters<typeof t>[1])}
-      </p>
+      {lastEditedAt && lastEditedBy && (
+        <p className="text-sm text-muted-foreground">
+          {t('card.lastEdited', {
+            date: formatDate(new Date(lastEditedAt)),
+            name: lastEditedBy,
+          } as Parameters<typeof t>[1])}
+        </p>
+      )}
     </TemplateCardShell>
   );
 }

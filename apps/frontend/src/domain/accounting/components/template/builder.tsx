@@ -1,12 +1,35 @@
 'use client';
 
-import { Button } from '@repo/ui';
+import {
+  type CreateTemplateSigneeInput,
+  PermissionKey,
+  parseTemplateBody,
+  SigneeType,
+  serializeTemplateBody,
+} from '@repo/data';
+import {
+  useCreateDocumentTemplate,
+  useCurrentOrg,
+  useDocumentTemplate,
+  useDocumentTemplates,
+  useEffectiveRates,
+  useOrgUId,
+  usePermissions,
+  useReimbursementTypes,
+  useUpdateDocumentTemplate,
+} from '@repo/data/react';
+import { Button, Skeleton } from '@repo/ui';
 import { ChevronRightIcon } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import { usePageBreadcrumb } from '@/components/navigation/page-header-context';
 import { Link, useRouter } from '@/i18n/navigation';
+import {
+  apiDocumentKindFor,
+  reimbursementTypeKeyFor,
+} from '../../lib/reimbursement-type-mapping';
+import { findSlotTemplate } from '../../lib/template-slots';
 import {
   type DocumentKind,
   getPauschaleKey,
@@ -26,6 +49,7 @@ import {
   type TemplateDocument,
 } from './builder-types';
 import { GeneratedDocumentPreview } from './generated-document-preview';
+import { TemplateListingPageError } from './listing-page';
 
 // Mock: profile-required sources this org hasn't collected yet.
 const MOCK_PROFILE_GAPS = new Set<DataSourceKey>(['volunteer_tax_id']);
@@ -62,6 +86,29 @@ function getPlaceholderTableRows(
   ];
 }
 
+/**
+ * Signee chain for a newly created template: the volunteer signs first, then a
+ * permission holder (ACCOUNTING_MANAGE) countersigns — the same ordering the
+ * prototype mocks used. Falls back to volunteer-only when the permission
+ * lookup hasn't loaded (the backend requires at least one signee).
+ */
+function defaultSignees(
+  accountingManagePermissionId: string | undefined,
+): CreateTemplateSigneeInput[] {
+  return [
+    { order: 0, signeeType: SigneeType.Volunteer },
+    ...(accountingManagePermissionId
+      ? [
+          {
+            order: 1,
+            signeeType: SigneeType.PermissionHolder,
+            requiredPermissionId: accountingManagePermissionId,
+          },
+        ]
+      : []),
+  ];
+}
+
 interface TemplateBuilderProps {
   pauschale: PauschalenType;
   kind: DocumentKind;
@@ -78,14 +125,67 @@ export function TemplateBuilder({
   const tCommon = useTranslations('Common');
   const router = useRouter();
 
-  const [templateDoc, setTemplateDoc] = useState<TemplateDocument>(() =>
-    kind === 'contract'
-      ? getContractDocument(pauschale)
-      : getInvoiceDocument(pauschale),
+  const orgUId = useOrgUId();
+  const org = useCurrentOrg();
+  const slotKind = kind === 'contract' ? 'contract' : 'invoice';
+
+  const templatesQuery = useDocumentTemplates();
+  const typesQuery = useReimbursementTypes();
+  const ratesQuery = useEffectiveRates(orgUId);
+  const permissionsQuery = usePermissions();
+
+  const existingTemplate = findSlotTemplate(templatesQuery.data, {
+    pauschale,
+    kind: slotKind,
+    organizationUnitId: orgUId,
+  });
+  const detailQuery = useDocumentTemplate(existingTemplate?.id);
+
+  const createTemplate = useCreateDocumentTemplate();
+  const updateTemplate = useUpdateDocumentTemplate();
+
+  // null until the source document is known: the stored template body for a
+  // configured slot, the German legal-text preset for an unconfigured one.
+  const [templateDoc, setTemplateDoc] = useState<TemplateDocument | null>(null);
+  const initialized = useRef(false);
+  useEffect(() => {
+    if (initialized.current) return;
+    if (detailQuery.data) {
+      initialized.current = true;
+      setTemplateDoc(parseTemplateBody(detailQuery.data.body));
+    } else if (templatesQuery.isSuccess && !existingTemplate) {
+      initialized.current = true;
+      setTemplateDoc(
+        slotKind === 'contract'
+          ? getContractDocument(pauschale)
+          : getInvoiceDocument(pauschale),
+      );
+    }
+  }, [
+    detailQuery.data,
+    templatesQuery.isSuccess,
+    existingTemplate,
+    slotKind,
+    pauschale,
+  ]);
+
+  const reimbursementTypeKey = reimbursementTypeKeyFor(pauschale);
+  const reimbursementType = typesQuery.data?.find(
+    (type) => type.key === reimbursementTypeKey,
+  );
+  const effectiveRate = ratesQuery.data?.find(
+    (rate) => rate.reimbursementType.key === reimbursementTypeKey,
   );
 
-  const incompleteCount = countIncompleteManualFields(templateDoc);
-  const knownValues = getKnownOrgValues(pauschale);
+  const knownValues = getKnownOrgValues({
+    pauschale,
+    orgName: org.name,
+    orgAddress: org.address,
+    hourlyRateCents: effectiveRate?.hourlyRateCents,
+    yearlyLimitCents:
+      effectiveRate?.reimbursementType.yearlyLimitCents ??
+      reimbursementType?.yearlyLimitCents,
+  });
 
   const kindLabel = tSections(
     `documentKind.${kind}` as Parameters<typeof tSections>[0],
@@ -115,10 +215,49 @@ export function TemplateBuilder({
       : 'preview.signatureSupervisor') as Parameters<typeof t>[0],
   );
 
-  function handleSave() {
-    // No backend yet — stub success toast, same convention as the reimbursements board.
-    toast.success(t('saveSuccessToast'));
-    if (backHref) router.push(backHref);
+  async function handleSave() {
+    if (!templateDoc) return;
+    const body = serializeTemplateBody(templateDoc);
+    const invoiceNumberFormat = templateDoc.invoiceNumberFormat ?? null;
+    try {
+      if (detailQuery.data) {
+        // Editing an existing template: keep its configured signee chain
+        // (the update replaces signees wholesale when provided).
+        await updateTemplate.mutateAsync({
+          id: detailQuery.data.id,
+          input: {
+            body,
+            invoiceNumberFormat,
+            signees: detailQuery.data.signees.map((signee) => ({
+              order: signee.order,
+              signeeType: signee.signeeType,
+              requiredPermissionId: signee.requiredPermission?.id ?? undefined,
+            })),
+          },
+        });
+      } else {
+        if (!reimbursementType) {
+          throw new Error(
+            `No reimbursement type found for key ${reimbursementTypeKey}`,
+          );
+        }
+        const accountingManagePermission = permissionsQuery.data?.find(
+          (permission) => permission.key === PermissionKey.AccountingManage,
+        );
+        await createTemplate.mutateAsync({
+          kind: apiDocumentKindFor(slotKind),
+          reimbursementTypeId: reimbursementType.id,
+          organizationUnitId: orgUId,
+          body,
+          invoiceNumberFormat,
+          signees: defaultSignees(accountingManagePermission?.id),
+        });
+      }
+      toast.success(t('saveSuccessToast'));
+      if (backHref) router.push(backHref);
+    } catch {
+      toast.error(t('saveErrorToast'));
+    }
   }
 
   const breadcrumb = useMemo(
@@ -164,6 +303,17 @@ export function TemplateBuilder({
       document.body.style.overflow = previousBodyOverflow;
     };
   }, []);
+
+  if (templatesQuery.isError || detailQuery.isError) {
+    return <TemplateListingPageError />;
+  }
+
+  if (!templateDoc) {
+    return <TemplateBuilderSkeleton />;
+  }
+
+  const incompleteCount = countIncompleteManualFields(templateDoc);
+  const saving = createTemplate.isPending || updateTemplate.isPending;
 
   return (
     <div className="flex h-[calc(100svh-6rem-1px)] flex-col gap-6">
@@ -233,11 +383,31 @@ export function TemplateBuilder({
           <Button
             type="button"
             onClick={handleSave}
-            disabled={incompleteCount > 0}
+            disabled={incompleteCount > 0 || saving}
           >
             {t('saveButton')}
           </Button>
         </div>
+      </div>
+    </div>
+  );
+}
+
+function TemplateBuilderSkeleton() {
+  return (
+    <div className="flex h-[calc(100svh-6rem-1px)] flex-col gap-6">
+      <div className="grid min-h-0 flex-1 grid-cols-[3fr_2fr] gap-6">
+        <Skeleton className="h-full w-full rounded-sm" />
+        <div className="space-y-3">
+          <Skeleton className="h-6 w-40" />
+          <Skeleton className="h-24 w-full rounded-xl" />
+          <Skeleton className="h-24 w-full rounded-xl" />
+          <Skeleton className="h-6 w-32" />
+          <Skeleton className="h-24 w-full rounded-xl" />
+        </div>
+      </div>
+      <div className="flex shrink-0 justify-end">
+        <Skeleton className="h-9 w-32 rounded-md" />
       </div>
     </div>
   );

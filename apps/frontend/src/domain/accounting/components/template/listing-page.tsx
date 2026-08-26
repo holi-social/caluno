@@ -1,13 +1,24 @@
 'use client';
 
+import { useDocumentTemplates, useEffectiveRates } from '@repo/data/react';
 import { Skeleton } from '@repo/ui';
 import { AlertCircleIcon } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { Link } from '@/i18n/navigation';
+import { centsToEuros, formatHourlyRate } from '../../lib/money';
+import { reimbursementTypeKeyFor } from '../../lib/reimbursement-type-mapping';
+import {
+  asInvoiceNumberFormat,
+  findSlotTemplate,
+} from '../../lib/template-slots';
+import type { PauschalenType } from '../doc-type-header';
 import { TemplateCardEmpty } from './card-empty';
 import { TemplateCardFilled } from './card-filled';
 import { TemplateListingSection } from './listing-section';
-import type { TemplateSectionData, TemplateSlot } from './types';
+import type { TemplateSectionData, TemplateSlot, TemplateSlug } from './types';
+import { SLUG_TO_SLOT } from './types';
+
+const PAUSCHALE_ORDER: PauschalenType[] = ['ehrenamt', 'uebungsleiter'];
 
 function TemplateSlotCard({
   slot,
@@ -45,16 +56,87 @@ function TemplateSlotCard({
 }
 
 interface TemplateListingPageProps {
-  sections: TemplateSectionData[];
   orgUId: string;
   builderBasePath?: string;
 }
 
 export function TemplateListingPage({
-  sections,
   orgUId,
   builderBasePath,
 }: TemplateListingPageProps) {
+  const templatesQuery = useDocumentTemplates();
+  const ratesQuery = useEffectiveRates(orgUId);
+
+  if (templatesQuery.isLoading || ratesQuery.isLoading) {
+    return <TemplateListingPageSkeleton />;
+  }
+
+  if (templatesQuery.isError || ratesQuery.isError) {
+    return <TemplateListingPageError />;
+  }
+
+  const buildSlot = (
+    slug: TemplateSlug,
+    pauschale: PauschalenType,
+    kind: 'contract' | 'invoice',
+  ): TemplateSlot => {
+    const template = findSlotTemplate(templatesQuery.data, {
+      pauschale,
+      kind,
+      organizationUnitId: orgUId,
+    });
+
+    if (!template) {
+      return { slug, pauschale, kind, configured: false };
+    }
+
+    const rateCents = ratesQuery.data?.find(
+      (rate) =>
+        rate.reimbursementType.key === reimbursementTypeKeyFor(pauschale),
+    )?.hourlyRateCents;
+
+    return {
+      slug,
+      pauschale,
+      kind,
+      configured: true,
+      templateId: template.id,
+      summary:
+        kind === 'contract'
+          ? {
+              kind,
+              hourlyRate:
+                rateCents !== undefined
+                  ? formatHourlyRate(centsToEuros(rateCents))
+                  : undefined,
+              renewalCadence: template.renewalCadence,
+              signeeCount: template.signees.length,
+            }
+          : {
+              kind,
+              invoiceNumberFormat: asInvoiceNumberFormat(
+                template.invoiceNumberFormat,
+              ),
+              renewalCadence: template.renewalCadence,
+              signeeCount: template.signees.length,
+            },
+      lastEditedAt: template.lastEditedAt ?? null,
+      lastEditedBy: template.lastEditedByUser?.name ?? null,
+    };
+  };
+
+  const sections: TemplateSectionData[] = PAUSCHALE_ORDER.map((pauschale) => {
+    const slots = (
+      Object.entries(SLUG_TO_SLOT) as [
+        TemplateSlug,
+        { pauschale: PauschalenType; kind: 'contract' | 'invoice' },
+      ][]
+    )
+      .filter(([, slotInfo]) => slotInfo.pauschale === pauschale)
+      .map(([slug, slotInfo]) => buildSlot(slug, pauschale, slotInfo.kind));
+    return { pauschale, slots } as TemplateSectionData;
+  });
+
   return (
     <div className="space-y-8">
       {sections.map((section) => (

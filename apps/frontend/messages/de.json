@@ -1578,16 +1578,15 @@
         "sectionTitle": "Vergütung pro Stunde",
         "sectionSubtitle": "Gilt für alle Einsätze des Pauschalentyps.",
         "epLabel": "Ehrenamtspauschale",
-        "epLegal": "§3 Nr. 26a EStG",
-        "epYearlyLimit": "Bis zu 960 €/Jahr",
         "ulLabel": "Übungsleiterpauschale",
-        "ulLegal": "§3 Nr. 26 EStG",
-        "ulYearlyLimit": "Bis zu 3.300 €/Jahr",
+        "yearlyLimit": "Bis zu {limit}/Jahr",
         "saveSuccess": "Satz aktualisiert",
+        "saveError": "Der Satz konnte nicht gespeichert werden. Bitte erneut versuchen.",
+        "loadError": "Sätze konnten nicht geladen werden. Bitte Seite neu laden.",
         "errors": {
           "invalidRate": "Bitte einen gültigen Satz größer als null eingeben"
         },
-        "rateUnit": "€/Std.",
+        "rateUnit": "/Std.",
         "provenance": {
           "inherited": "Standard"
         }
@@ -1856,6 +1855,7 @@
         },
         "saveButton": "Vorlage speichern",
         "saveSuccessToast": "Vorlage gespeichert",
+        "saveErrorToast": "Die Vorlage konnte nicht gespeichert werden. Bitte erneut versuchen.",
         "previewScrollRegionLabel": "Dokumentvorschau, scrollbar",
         "preview": {
           "disclaimerBadge": "Vorschau",
@@ -1983,7 +1983,14 @@
           "createButton": "Vorlage erstellen"
         },
         "editButton": "Vorlage bearbeiten",
-        "lastEdited": "Zuletzt bearbeitet am {date} von {name}"
+        "lastEdited": "Zuletzt bearbeitet am {date} von {name}",
+        "badges": {
+          "renewal": {
+            "monthly": "Monatliche Erneuerung",
+            "yearly": "Jährliche Erneuerung"
+          },
+          "signees": "{count, plural, =1 {1 Unterschrift} other {# Unterschriften}}"
+        }
       }
     }
   }

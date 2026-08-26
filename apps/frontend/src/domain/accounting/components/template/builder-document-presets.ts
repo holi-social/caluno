@@ -1,4 +1,4 @@
-import { getEffectivePauschaleRate, getYearlyLimit } from '../../mock-rates';
+import { centsToEuros } from '../../lib/money';
 import type { PauschalenType } from '../doc-type-header';
 import type {
   DataSourceKey,
@@ -24,46 +24,44 @@ export function formatRateComma(rate: number): string {
   return rate.toFixed(2).replace('.', ',');
 }
 
-// Effective hourly rate as configured on the Rates tab — reads the same
-// single source of truth as rates-section-card.tsx (mock-rates.ts) so the
-// two surfaces can never drift into disagreeing placeholder numbers.
-function knownHourlyRate(pauschale: PauschalenType): string {
-  return formatRateComma(getEffectivePauschaleRate(pauschale));
-}
-
-// The statutory yearly cap, formatted with German thousands separators (e.g. "3.000 €") —
-// same source of truth as the reimbursements dashboard's Jahresdeckel card (mock-rates.ts).
-function knownYearlyLimit(pauschale: PauschalenType): string {
-  return `${getYearlyLimit(pauschale).toLocaleString('de-DE')} €`;
-}
-
 const KNOWN_PAUSCHALE_LABEL: Record<PauschalenType, string> = {
   ehrenamt: 'Ehrenamtspauschale',
   uebungsleiter: 'Übungsleiterpauschale',
-};
-
-const KNOWN_ORG = {
-  org_name: 'Rotes Kreuz Berlin e.V.',
-  org_address: 'Musterstraße 12, 10115 Berlin',
-  org_city: 'Berlin',
-  org_legal_rep: 'Dr. Erika Musterfrau',
 };
 
 /**
  * Data sources already known at template-configuration time (the org itself, its
  * configured rate) — shown as real values in the preview instead of a generic
  * "will be filled in later" chip. Volunteer- and generation-time sources (name, IBAN,
- * dates, totals) aren't in this map — there's no specific volunteer yet.
+ * dates, totals) aren't in this map — there's no specific volunteer yet. Sources the
+ * org profile can't answer (city, legal representative) stay unresolved too.
  */
-export function getKnownOrgValues(
-  pauschale: PauschalenType,
-): Partial<Record<DataSourceKey, string>> {
-  return {
-    ...KNOWN_ORG,
-    hourly_rate: knownHourlyRate(pauschale),
-    pauschalen_type: KNOWN_PAUSCHALE_LABEL[pauschale],
-    yearly_limit_amount: knownYearlyLimit(pauschale),
+export function getKnownOrgValues(args: {
+  pauschale: PauschalenType;
+  orgName?: string | null;
+  orgAddress?: string | null;
+  /** Not part of the org profile API yet — only mock call sites pass this. */
+  orgCity?: string | null;
+  /** Not part of the org profile API yet — only mock call sites pass this. */
+  orgLegalRep?: string | null;
+  hourlyRateCents?: number;
+  yearlyLimitCents?: number;
+}): Partial<Record<DataSourceKey, string>> {
+  const values: Partial<Record<DataSourceKey, string>> = {
+    pauschalen_type: KNOWN_PAUSCHALE_LABEL[args.pauschale],
   };
+  if (args.orgName) values.org_name = args.orgName;
+  if (args.orgAddress) values.org_address = args.orgAddress;
+  if (args.orgCity) values.org_city = args.orgCity;
+  if (args.orgLegalRep) values.org_legal_rep = args.orgLegalRep;
+  if (args.hourlyRateCents !== undefined) {
+    // German document content, formatted like the German legal text around it.
+    values.hourly_rate = formatRateComma(centsToEuros(args.hourlyRateCents));
+  }
+  if (args.yearlyLimitCents !== undefined) {
+    values.yearly_limit_amount = `${centsToEuros(args.yearlyLimitCents).toLocaleString('de-DE')} €`;
+  }
+  return values;
 }
 
 function line(

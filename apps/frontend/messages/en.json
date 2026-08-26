@@ -1578,16 +1578,15 @@
         "sectionTitle": "Hourly rate",
         "sectionSubtitle": "Org-wide rate for volunteering reimbursements, by allowance type.",
         "epLabel": "Ehrenamtspauschale",
-        "epLegal": "§3 Nr. 26a EStG",
-        "epYearlyLimit": "Up to 960 €/year",
         "ulLabel": "Übungsleiterpauschale",
-        "ulLegal": "§3 Nr. 26 EStG",
-        "ulYearlyLimit": "Up to 3,300 €/year",
+        "yearlyLimit": "Up to {limit}/year",
         "saveSuccess": "Rate updated",
+        "saveError": "The rate could not be saved. Please try again.",
+        "loadError": "Rates could not be loaded. Please reload the page.",
         "errors": {
           "invalidRate": "Enter a valid rate greater than zero"
         },
-        "rateUnit": "€/hr",
+        "rateUnit": "/hr",
         "provenance": {
           "inherited": "Org default"
         }
@@ -1856,6 +1855,7 @@
         },
         "saveButton": "Save template",
         "saveSuccessToast": "Template saved",
+        "saveErrorToast": "The template could not be saved. Please try again.",
         "previewScrollRegionLabel": "Document preview, scrollable",
         "preview": {
           "disclaimerBadge": "Preview",
@@ -1983,7 +1983,14 @@
           "createButton": "Create template"
         },
         "editButton": "Edit template",
-        "lastEdited": "Last edited {date} by {name}"
+        "lastEdited": "Last edited {date} by {name}",
+        "badges": {
+          "renewal": {
+            "monthly": "Renews monthly",
+            "yearly": "Renews yearly"
+          },
+          "signees": "{count, plural, =1 {1 signature} other {# signatures}}"
+        }
       }
     }
   }

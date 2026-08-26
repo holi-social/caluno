@@ -1,35 +1,53 @@
 'use client';
 
+import {
+  type RawEffectiveRate,
+  type RawReimbursementType,
+  useEffectiveRates,
+  useReimbursementTypes,
+  useSetReimbursementRate,
+} from '@repo/data/react';
 import { Button, Input, Separator, Skeleton } from '@repo/ui';
+import { AlertCircleIcon } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useEffect, useId, useState } from 'react';
 import { toast } from 'sonner';
-import { MOCK_HQ_DEFAULTS, MOCK_SAVED_OVERRIDES } from '../mock-rates';
-import type { DocumentKind, PauschalenType } from './doc-type-header';
+import { formatEuro } from '@/lib/formatting/formats';
+import { centsToEuros, eurosToCents, formatHourlyRate } from '../lib/money';
+import { reimbursementTypeKeyFor } from '../lib/reimbursement-type-mapping';
+import type { PauschalenType } from './doc-type-header';
 import { DocTypeHeader, getPauschaleKey } from './doc-type-header';
 import { RateProvenanceRow } from './rate-provenance-row';
 
-const RATE_CONFIG: Record<PauschalenType, { kind: DocumentKind }> = {
-  ehrenamt: { kind: 'settings' },
-  uebungsleiter: { kind: 'settings' },
-};
+const PAUSCHALE_ORDER: PauschalenType[] = ['ehrenamt', 'uebungsleiter'];
 
 interface RateRowProps {
   type: PauschalenType;
+  reimbursementType: RawReimbursementType;
+  effectiveRate?: RawEffectiveRate;
   canEdit: boolean;
+  organizationUnitId: string;
 }
 
-function RateRow({ type, canEdit }: RateRowProps) {
+function RateRow({
+  type,
+  reimbursementType,
+  effectiveRate,
+  canEdit,
+  organizationUnitId,
+}: RateRowProps) {
   const t = useTranslations('Accounting.settings.rates');
   const tCommon = useTranslations('Common');
   const errorId = useId();
+  const setRate = useSetReimbursementRate();
+
+  const overrideCents = effectiveRate?.isOverride
+    ? effectiveRate.hourlyRateCents
+    : undefined;
 
   const [editing, setEditing] = useState(false);
-  const [savedOverride, setSavedOverride] = useState<number | undefined>(
-    MOCK_SAVED_OVERRIDES[type],
-  );
   const [inputValue, setInputValue] = useState(
-    MOCK_SAVED_OVERRIDES[type]?.toFixed(2) ?? '',
+    overrideCents !== undefined ? centsToEuros(overrideCents).toFixed(2) : '',
   );
   const [inputError, setInputError] = useState<string | null>(null);
 
@@ -42,39 +60,45 @@ function RateRow({ type, canEdit }: RateRowProps) {
     return () => window.removeEventListener('beforeunload', handleBeforeUnload);
   }, [editing]);
 
-  const effectiveRate = savedOverride ?? MOCK_HQ_DEFAULTS[type];
-  const { kind } = RATE_CONFIG[type];
-  const pauschaleKey = getPauschaleKey(type);
-  const typeLabel = t(`${pauschaleKey}Label` as Parameters<typeof t>[0]);
-  const legalRef = t(`${pauschaleKey}Legal` as Parameters<typeof t>[0]);
-  const yearlyLimit = t(
-    `${pauschaleKey}YearlyLimit` as Parameters<typeof t>[0],
+  const effectiveEuros = centsToEuros(
+    effectiveRate?.hourlyRateCents ??
+      reimbursementType.platformDefaultRateCents,
   );
+  const typeLabel = t(
+    `${getPauschaleKey(type)}Label` as Parameters<typeof t>[0],
+  );
+  const yearlyLimit = t('yearlyLimit', {
+    limit: formatEuro(centsToEuros(reimbursementType.yearlyLimitCents)),
+  } as Parameters<typeof t>[1]);
 
-  function handleSave() {
+  async function handleSave() {
     const trimmed = inputValue.trim();
-    if (trimmed === '') {
-      setSavedOverride(undefined);
-      setInputValue('');
-      setEditing(false);
-      setInputError(null);
-      toast.success(t('saveSuccess'));
-      return;
-    }
+    // The API only sets a rate — there is no delete-override mutation, so an
+    // empty input is not a "reset to default" gesture.
     const num = Number(trimmed);
-    if (Number.isNaN(num) || num <= 0) {
+    if (trimmed === '' || Number.isNaN(num) || num <= 0) {
       setInputError(t('errors.invalidRate'));
       return;
     }
-    setSavedOverride(num);
-    setInputValue(num.toFixed(2));
-    setEditing(false);
-    setInputError(null);
-    toast.success(t('saveSuccess'));
+    try {
+      await setRate.mutateAsync({
+        reimbursementTypeId: reimbursementType.id,
+        hourlyRateCents: eurosToCents(num),
+        organizationUnitId,
+      });
+      setInputValue(num.toFixed(2));
+      setInputError(null);
+      setEditing(false);
+      toast.success(t('saveSuccess'));
+    } catch {
+      toast.error(t('saveError'));
+    }
   }
 
   function handleCancel() {
-    setInputValue(savedOverride?.toFixed(2) ?? '');
+    setInputValue(
+      overrideCents !== undefined ? centsToEuros(overrideCents).toFixed(2) : '',
+    );
     setInputError(null);
     setEditing(false);
   }
@@ -82,9 +106,9 @@ function RateRow({ type, canEdit }: RateRowProps) {
   return (
     <div className="flex items-center justify-between gap-4">
       <DocTypeHeader
-        kind={kind}
+        kind="settings"
         pauschale={type}
-        topLine={legalRef}
+        topLine={reimbursementType.legalReference}
         name={typeLabel}
         subline={yearlyLimit}
       />
@@ -117,7 +141,12 @@ function RateRow({ type, canEdit }: RateRowProps) {
               </p>
             )}
           </div>
-          <Button size="sm" type="button" onClick={handleSave}>
+          <Button
+            size="sm"
+            type="button"
+            onClick={handleSave}
+            disabled={setRate.isPending}
+          >
             {tCommon('save')}
           </Button>
           <Button
@@ -134,14 +163,16 @@ function RateRow({ type, canEdit }: RateRowProps) {
           <div className="text-right space-y-0.5">
             <div className="flex items-baseline justify-end gap-1.5">
               <span className="text-2xl font-bold tabular-nums text-card-foreground">
-                {effectiveRate.toFixed(2)}
+                {formatHourlyRate(effectiveEuros)}
               </span>
               <span className="text-sm text-muted-foreground">
                 {t('rateUnit')}
               </span>
             </div>
             <RateProvenanceRow
-              rate={MOCK_HQ_DEFAULTS[type]}
+              rate={formatHourlyRate(
+                centsToEuros(reimbursementType.platformDefaultRateCents),
+              )}
               unit={t('rateUnit')}
               inheritedLabel={t('provenance.inherited')}
             />
@@ -164,10 +195,24 @@ function RateRow({ type, canEdit }: RateRowProps) {
 
 interface RatesSectionCardProps {
   canEdit?: boolean;
+  organizationUnitId: string;
 }
 
-export function RatesSectionCard({ canEdit = true }: RatesSectionCardProps) {
+export function RatesSectionCard({
+  canEdit = true,
+  organizationUnitId,
+}: RatesSectionCardProps) {
   const t = useTranslations('Accounting.settings.rates');
+  const typesQuery = useReimbursementTypes();
+  const ratesQuery = useEffectiveRates(organizationUnitId);
+
+  if (typesQuery.isLoading || ratesQuery.isLoading) {
+    return <RatesSectionCardSkeleton />;
+  }
+
+  if (typesQuery.isError || ratesQuery.isError) {
+    return <RatesSectionCardError />;
+  }
 
   return (
     <div className="space-y-6">
@@ -177,9 +222,39 @@ export function RatesSectionCard({ canEdit = true }: RatesSectionCardProps) {
           {t('sectionSubtitle')}
         </p>
       </div>
-      <RateRow type="ehrenamt" canEdit={canEdit} />
-      <Separator />
-      <RateRow type="uebungsleiter" canEdit={canEdit} />
+      {PAUSCHALE_ORDER.map((type, index) => {
+        const key = reimbursementTypeKeyFor(type);
+        const reimbursementType = typesQuery.data?.find((rt) => rt.key === key);
+        if (!reimbursementType) return null;
+        return (
+          <div key={type} className="contents">
+            {index > 0 && <Separator />}
+            <RateRow
+              type={type}
+              reimbursementType={reimbursementType}
+              effectiveRate={ratesQuery.data?.find(
+                (rate) => rate.reimbursementType.key === key,
+              )}
+              canEdit={canEdit}
+              organizationUnitId={organizationUnitId}
+            />
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+export function RatesSectionCardError() {
+  const t = useTranslations('Accounting.settings.rates');
+  return (
+    <div className="flex items-start gap-2 rounded-xl border border-border bg-muted p-4 text-sm text-muted-foreground">
+      <AlertCircleIcon
+        size={16}
+        className="mt-0.5 shrink-0"
+        aria-hidden="true"
+      />
+      <p>{t('loadError')}</p>
     </div>
   );
 }

@@ -4,6 +4,8 @@ import { Input } from '@repo/ui';
 import { useTranslations } from 'next-intl';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
+import { eurosToCents } from '../lib/money';
+import { getEffectivePauschaleRate, getYearlyLimit } from '../mock-rates';
 import type { ProfileFieldProvenance } from './accounting-profile-field-card';
 import { AccountingProfileFieldCard } from './accounting-profile-field-card';
 import { getPauschaleKey, type PauschalenType } from './doc-type-header';
@@ -136,7 +138,17 @@ export function ContractCreationModal({
   const { first, last } = splitName(volunteerName);
 
   const values: Partial<Record<DataSourceKey, string>> = {
-    ...getKnownOrgValues(pauschale),
+    // Mock org identity + rates — wired to real org/rate data in the
+    // creation-modals phase together with MOCK_SAVED_TEMPLATES.
+    ...getKnownOrgValues({
+      pauschale,
+      orgName: 'Rotes Kreuz Berlin e.V.',
+      orgAddress: 'Musterstraße 12, 10115 Berlin',
+      orgCity: 'Berlin',
+      orgLegalRep: 'Dr. Erika Musterfrau',
+      hourlyRateCents: eurosToCents(getEffectivePauschaleRate(pauschale)),
+      yearlyLimitCents: getYearlyLimit(pauschale) * 100,
+    }),
     volunteer_first_name: first,
     volunteer_last_name: last,
     volunteer_address: fields?.address.value ?? undefined,

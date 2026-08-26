@@ -1,26 +1,31 @@
-export type DataSourceKey =
-  | 'volunteer_first_name'
-  | 'volunteer_last_name'
-  | 'org_name'
-  | 'org_address'
-  | 'org_city'
-  | 'org_legal_rep'
-  | 'pauschalen_type'
-  | 'hourly_rate'
-  | 'period_start'
-  | 'period_end'
-  | 'total_hours'
-  | 'total_amount'
-  | 'generated_date'
-  | 'document_number'
-  | 'volunteer_iban'
-  | 'volunteer_bic'
-  | 'volunteer_address'
-  | 'volunteer_dob'
-  | 'volunteer_tax_id'
-  | 'contract_period'
-  | 'already_received_amount'
-  | 'yearly_limit_amount';
+// The document/block/field shapes are the shared frontend narrowing of the
+// backend's opaque `DocumentTemplate.body` JSON, owned by
+// `packages/data/src/repositories/accounting/template-body.types.ts` and
+// re-exported here so the builder's existing imports keep working. This file
+// adds only the builder-side constants and mutation helpers that operate on
+// those shapes (the shared package intentionally stays shape-only).
+import type {
+  DataSourceKey,
+  TemplateDocument,
+  TemplateField,
+  TemplateLine,
+} from '@repo/data';
+
+export type {
+  DataSourceKey,
+  InvoiceNumberFormat,
+  TableFirstColumnSource,
+  TemplateBlock,
+  TemplateDocument,
+  TemplateField,
+  TemplateFieldValue,
+  TemplateFooter,
+  TemplateHeader,
+  TemplateLine,
+  TemplateNoteBlock,
+  TemplateTableBlock,
+  TemplateTextBlock,
+} from '@repo/data';
 
 export const ALWAYS_AVAILABLE_SOURCES: DataSourceKey[] = [
   'volunteer_first_name',
@@ -87,101 +92,6 @@ export const FIELD_ORIGIN: Partial<Record<DataSourceKey, FieldOrigin>> = {
   org_legal_rep: 'organization_profile',
   yearly_limit_amount: 'yearly_limit',
 };
-
-/** Coordinator-typed once, in the builder — reused verbatim on every document generated from this template. */
-export type TemplateFieldValue =
-  | { kind: 'bound'; source: DataSourceKey }
-  | { kind: 'manual-template'; value: string };
-
-export interface TemplateField {
-  id: string;
-  value: TemplateFieldValue;
-  /** Manual-template fields only: which control to render. Plain text Input if omitted. */
-  control?: 'textarea' | 'number' | 'period' | 'unit-tabs';
-}
-
-/** One line of preset German legal text with inline fields; can be independently switched off within a locked block. */
-export interface TemplateLine {
-  id: string;
-  /** Literal German text; `{fieldId}` markers are resolved to inline chips at render time. */
-  text: string;
-  fields: TemplateField[];
-  /** Whether this specific line can be turned off even though its parent block is locked. */
-  optional: boolean;
-  enabled: boolean;
-}
-
-export interface TemplateTextBlock {
-  kind: 'text';
-  id: string;
-  /** Literal German heading — documents are always German, never i18n'd. */
-  title: string;
-  /** true = mandatory, no block-level toggle (lines may still have their own `optional` toggle). */
-  locked: boolean;
-  /** Meaningful only when locked is false. */
-  enabled: boolean;
-  lines: TemplateLine[];
-}
-
-/** What populates the Stundennachweis table's first column — the task description written into the volunteer's agreement, or a coordinator-typed custom label. */
-export type TableFirstColumnSource = 'agreement_task_description' | 'custom';
-
-export interface TemplateTableBlock {
-  kind: 'table';
-  id: string;
-  title: string;
-  locked: true;
-  columns: string[];
-  /** Placeholder rows shown in the builder preview; real rows come from timesheets at generation time. */
-  previewRowCount: number;
-  firstColumnSource: TableFirstColumnSource;
-  /** Coordinator-typed label shown in the first column when firstColumnSource is 'custom'; ignored otherwise. */
-  firstColumnCustomLabel: string;
-}
-
-/** A single locked line of plain text with inline bound-field chips — no toggle, no nested card. */
-export interface TemplateNoteBlock {
-  kind: 'note';
-  id: string;
-  title: string;
-  locked: true;
-  line: TemplateLine;
-}
-
-export type TemplateBlock =
-  | TemplateTextBlock
-  | TemplateTableBlock
-  | TemplateNoteBlock;
-
-export type InvoiceNumberFormat =
-  | 'date-number'
-  | 'date-kostenstelle-number'
-  | 'compact-date-number'
-  | 'kostenstelle-month-year-number';
-
-export interface TemplateHeader {
-  /** Title text, resolved per pauschale type by the caller (see builder-document-presets.ts). */
-  titleLines: string[];
-  /** Contract: org name + address, top-right. Invoice: org address, left. */
-  orgIdentityLine: TemplateLine;
-  /** Invoice-only: document number, generation date, optional Kostenstelle — each its own line. Empty for contracts. */
-  metaLines: TemplateLine[];
-}
-
-export interface TemplateFooter {
-  /** "{Place}, {Date}" — Place derived from org address, Date bound to document-creation date. */
-  closingLine: TemplateLine;
-  /** Whether signature slots are shown — always true today; kept explicit since signing display is still an open decision. */
-  showSignatures: boolean;
-}
-
-export interface TemplateDocument {
-  header: TemplateHeader;
-  blocks: TemplateBlock[];
-  footer: TemplateFooter;
-  /** Invoice-only: how the generated document number is formatted. Undefined for contracts. */
-  invoiceNumberFormat?: InvoiceNumberFormat;
-}
 
 /**
  * Every (line, field) pair actually live in the document right now, in reading order —
