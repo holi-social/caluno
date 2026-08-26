@@ -6,10 +6,10 @@ import {
 } from '../privacy-policy';
 
 describe('privacy policy signup payload', () => {
-  it('uses the 2026-08-17 document version in the public PDF path', () => {
-    expect(PRIVACY_POLICY_VERSION).toBe('2026-08-17');
+  it('uses the 2026-08-25 document version in the public PDF path', () => {
+    expect(PRIVACY_POLICY_VERSION).toBe('2026-08-25');
     expect(PRIVACY_POLICY_PDF_PATH).toBe(
-      '/legal/datenschutzhinweise-2026-08-17.pdf',
+      '/legal/datenschutzhinweise-2026-08-25.pdf',
     );
   });
 
@@ -25,7 +25,7 @@ describe('privacy policy signup payload', () => {
       name: 'Ada',
       email: 'ada@example.com',
       password: 'secret1',
-      privacyPolicyVersion: '2026-08-17',
+      privacyPolicyVersion: '2026-08-25',
     });
   });
 

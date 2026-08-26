@@ -3,8 +3,8 @@ import { API_URL, BASE_URL } from '../../../pages/AuthPage';
 import { SignupPage } from '../../../pages/SignupPage';
 import { TEST_PASSWORD, uniqueEmail } from '../../../utils/test-data';
 
-const PRIVACY_PDF_PATH = '/legal/datenschutzhinweise-2026-08-17.pdf';
-const CURRENT_VERSION = '2026-08-17';
+const PRIVACY_PDF_PATH = '/legal/datenschutzhinweise-2026-08-25.pdf';
+const CURRENT_VERSION = '2026-08-25';
 
 const signupHeaders = {
   Origin: BASE_URL,
@@ -12,7 +12,7 @@ const signupHeaders = {
 };
 
 test.describe('Signup privacy policy', () => {
-  test('privacy link opens the 2026-08-17 PDF in a new tab', async ({
+  test('privacy link opens the 2026-08-25 PDF in a new tab', async ({
     page,
     request,
   }) => {
