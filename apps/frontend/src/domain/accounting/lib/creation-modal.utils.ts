@@ -7,7 +7,7 @@ import type { EligibleHourLine } from '../components/eligible-hours-card';
  * (a coordinator-typed "MM/YYYY" string, e.g. "01/2026") and returns the full
  * calendar-year period the backend contract row covers — contracts always run
  * a whole calendar year, never just the entered month (see
- * board-data.utils.ts's `contractCoversRange`). Falls back to `now`'s year
+ * board-data.utils.ts's `contractPeriodOverlapsYear`). Falls back to `now`'s year
  * when the string doesn't parse, so a malformed manual entry never blocks
  * contract creation.
  */

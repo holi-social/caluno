@@ -120,7 +120,11 @@ export function ContractCreationModal({
   const profileLoaded = !!volunteerId && profileQuery.isSuccess;
   const reimbursementTypeMissing =
     typesQuery.isSuccess && !!pauschale && !reimbursementType;
-  const dataReady = !!templateDoc && profileLoaded && !!reimbursementType;
+  const dataReady =
+    !!templateDoc &&
+    profileLoaded &&
+    !!reimbursementType &&
+    ratesQuery.isSuccess;
   const hasError =
     typesQuery.isError ||
     ratesQuery.isError ||

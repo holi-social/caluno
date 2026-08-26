@@ -206,6 +206,7 @@ export function InvoiceCreationModal({
     !!reimbursementType &&
     !!template &&
     !!contractTemplate &&
+    ratesQuery.isSuccess &&
     eligibleQuery.isSuccess;
   const hasError =
     typesQuery.isError ||
