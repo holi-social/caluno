@@ -72,7 +72,7 @@ export function useEligibleTimeEntriesForInvoice(input: {
   });
 }
 
-function invalidateInvoiceQueries(queryClient: QueryClient) {
+export function invalidateInvoiceQueries(queryClient: QueryClient) {
   queryClient.invalidateQueries({ queryKey: ['accounting', 'invoices'] });
   queryClient.invalidateQueries({ queryKey: ['accounting', 'my-invoices'] });
   queryClient.invalidateQueries({ queryKey: ['accounting', 'roster-usage'] });

@@ -117,7 +117,8 @@
     "submitting": "Wird abgesendet...",
     "toggleTheme": "Design wechseln",
     "view": "Ansehen",
-    "yes": "Ja"
+    "yes": "Ja",
+    "done": "Fertig"
   },
   "Error": {
     "digestLabel": "ID: {digest}",
@@ -502,7 +503,10 @@
     "shifts": "Einsätze",
     "timesheets": "Zeiterfassung",
     "volunteering": "Freiwilligenarbeit",
-    "volunteers": "Freiwillige"
+    "volunteers": "Freiwillige",
+    "accounting": "Buchhaltung",
+    "reimbursements": "Abrechnungen",
+    "accountingSettings": "Einstellungen"
   },
   "OrgDetail": {
     "aboutHeading": "Über uns",
@@ -1311,10 +1315,7 @@
     },
     "transferList": {
       "addAria": "Hinzufügen",
-      "available": "Verfügbar",
-      "invited": "Eingeladen",
-      "removeAria": "Entfernen",
-      "searchPlaceholder": "Name oder E-Mail"
+      "removeAria": "Entfernen"
     },
     "validation": {
       "endTimeRequired": "Endzeit ist erforderlich",
@@ -1582,5 +1583,436 @@
     "yourShiftsHeading": "Deine Einsätze",
     "yourShiftsSeeAll": "Alle anzeigen",
     "yourShiftsThisWeek": "{n, plural, one {# Einsatz diese Woche} other {# Einsätze diese Woche}}"
+  },
+  "Accounting": {
+    "settings": {
+      "title": "Buchhaltung Einstellungen",
+      "subtitle": "Aufwandsentschädigung und Dokumentvorlagen einrichten.",
+      "tabs": {
+        "rates": "Stundensätze",
+        "templates": "Vorlagen"
+      },
+      "rates": {
+        "sectionTitle": "Vergütung pro Stunde",
+        "sectionSubtitle": "Gilt für alle Einsätze des Pauschalentyps.",
+        "epLabel": "Ehrenamtspauschale",
+        "ulLabel": "Übungsleiterpauschale",
+        "yearlyLimit": "Bis zu {limit}/Jahr",
+        "saveSuccess": "Satz aktualisiert",
+        "saveError": "Der Satz konnte nicht gespeichert werden. Bitte erneut versuchen.",
+        "loadError": "Sätze konnten nicht geladen werden. Bitte Seite neu laden.",
+        "errors": {
+          "invalidRate": "Bitte einen gültigen Satz größer als null eingeben"
+        },
+        "rateUnit": "/Std.",
+        "provenance": {
+          "inherited": "Standard"
+        }
+      },
+      "templates": {
+        "sectionTitle": "Dokumentvorlagen",
+        "sectionSubtitle": "Alle Vorlagen für Dokumente, die zur Auszahlung der jeweiligen Pauschale benötigt werden."
+      }
+    },
+    "reimbursements": {
+      "title": "Abrechnungen",
+      "subtitle": "Dokumente erstellen, gegenzeichnen, herunterladen.",
+      "createDocument": "Dokument erstellen",
+      "periodLabel": "Zeitraum",
+      "periodPicker": {
+        "allTime": "Gesamter Zeitraum",
+        "thisMonth": "Dieser Monat",
+        "lastMonth": "Letzter Monat",
+        "customPeriod": "Benutzerdefinierter Zeitraum",
+        "apply": "Anwenden"
+      },
+      "filters": {
+        "docTypeLabel": "Dokumenttyp",
+        "docTypeAll": "Alle Dokumente",
+        "docTypeContracts": "Nur Vereinbarungen",
+        "docTypeTimesheets": "Nur Stundennachweise",
+        "pauschaletypeLabel": "Pauschale"
+      },
+      "tableHead": {
+        "volunteer": "Mitarbeiter",
+        "status": "Status",
+        "hours": "Std.",
+        "amount": "Betrag",
+        "action": "Aktion"
+      },
+      "tiles": {
+        "all": "Alle",
+        "docCount": "{count} Dokumente",
+        "waitingOnYou": "{count} warten auf dich",
+        "contractGenerate": "Vereinbarungen erstellen",
+        "contractSigning": "Vereinbarungen gegenzeichnen",
+        "timesheetGenerate": "Stundennachweise erstellen",
+        "timesheetSigning": "Stundennachweise gegenzeichnen",
+        "readyToGo": "Bereit zur Abgabe"
+      },
+      "toolbar": {
+        "typeAll": "Alle Pauschalen",
+        "typeEP": "Ehrenamt",
+        "typeUL": "Übungsleiter",
+        "searchPlaceholder": "Freiwillige suchen …",
+        "sortActionNeeded": "Dringend zuerst",
+        "sortNewest": "Neueste zuerst"
+      },
+      "empty": {
+        "allDone": "Alles erledigt",
+        "allDoneHint": "Keine offenen Dokumente in diesem Zeitraum.",
+        "filtered": "Keine Einträge in dieser Kategorie."
+      },
+      "resetPrototype": "Prototyp zurücksetzen",
+      "resetPrototypeToast": "Prototyp-Daten zurückgesetzt.",
+      "createDocumentModal": {
+        "stepIndicator": "Schritt {step} von {total}",
+        "step1Title": "Freiwillige und Dokument",
+        "step2Title": "Prüfen und senden",
+        "volunteerPlaceholder": "Freiwillige suchen …",
+        "noVolunteersFound": "Keine Freiwilligen gefunden.",
+        "selectDocumentTitle": "Dokument auswählen",
+        "noDocumentYet": "Noch nicht erstellt",
+        "documentCount": "{count, plural, =1 {1 Dokument} other {# Dokumente}}",
+        "viewVolunteer": "Freiwillige/n ansehen",
+        "createButton": "{kind} erstellen",
+        "createButtonEmpty": "Neues Dokument erstellen"
+      },
+      "bundle": {
+        "actionLabel": "Paket herunterladen",
+        "readyCount": "{count} bereit",
+        "lastDownloaded": "zuletzt heruntergeladen von <name>{by}</name> am {at}",
+        "neverDownloaded": "noch nicht heruntergeladen",
+        "unknownUser": "unbekannt"
+      },
+      "batchBar": {
+        "selected": "{count} ausgewählt",
+        "countersignAll": "Alle gegenzeichnen",
+        "remindAll": "Alle erinnern",
+        "bundleAll": "Alle Pakete herunterladen",
+        "mixed": "Gemischte Auswahl",
+        "clearSelection": "Abbrechen",
+        "bundleDownloadToast": "{count, plural, =1 {Paket-Download gestartet.} other {{count} Paket-Downloads gestartet.}}"
+      },
+      "actionToasts": {
+        "create": "{count, plural, =1 {Für {name} erstellt.} other {{count} erstellt.}}",
+        "remind": "{count, plural, =1 {Erinnerung an {name} gesendet.} other {Erinnerungen an {count} Freiwillige gesendet.}}",
+        "countersign": "{count, plural, =1 {Dokument von {name} gegengezeichnet.} other {{count} Dokumente gegengezeichnet.}}"
+      },
+      "contractGeneratedToast": "Vereinbarungserstellung für {name} gestartet.",
+      "docs": {
+        "kindLabel": {
+          "contract": "Vereinbarung",
+          "timesheet": "Stundennachweis"
+        },
+        "sheet": {
+          "period": "Zeitraum",
+          "pipelineLabel": "Ablauf",
+          "pipeline": {
+            "generate": "Erstellen",
+            "sign": "Gegenzeichnen",
+            "declined": "Abgelehnt",
+            "volSign": "Freiwillige/r",
+            "coordSign": "Koordinator",
+            "superSign": "Supervisor",
+            "active": "Aktiv",
+            "ready": "Bereit"
+          },
+          "limitSection": "Jahresbudget",
+          "invoicesPaidOut": "Ausgezahlt",
+          "invoicesPending": "Ausstehende Zahlung",
+          "timelineSection": "Verlauf",
+          "timelineEmpty": "Noch keine Aktivität",
+          "timelineCreated": "Erstellt",
+          "timelineSigned": "Gegengezeichnet",
+          "timelineCountersigned": "Gegengezeichnet",
+          "timelineActivated": "Aktiviert",
+          "timelineDeclined": "Abgelehnt",
+          "declineReasonTitle": "Ablehnungsgrund",
+          "noAction": "Keine Aktion erforderlich",
+          "pdfView": "PDF anzeigen",
+          "pdfDownload": "Herunterladen",
+          "pdfViewToast": "Vorschau für {period} geöffnet.",
+          "pdfDownloadToast": "Download für {period} gestartet.",
+          "timesheetHours": {
+            "title": "Ehrenamtsstunden",
+            "paidShifts": "Stunden mit Aufwandsentschädigung",
+            "shifts": "{count} Einsätze",
+            "grossAmount": "Bruttobetrag",
+            "rateTooltip": "Standardstundensatz für diese Pauschale. Einsätze können einen eigenen Satz haben.",
+            "viewBtn": "Stundennachweise anzeigen"
+          }
+        },
+        "statusLabel": {
+          "contractGenerate": "Vereinbarung erstellen",
+          "contractSigningVol": "Wartet auf Gegenzeichnung",
+          "contractSigningCoord": "Gegenzeichnung erforderlich",
+          "contractActive": "Aktive Vereinbarung",
+          "timesheetGenerate": "Stundennachweis erstellen",
+          "timesheetSigningVol": "Wartet auf Gegenzeichnung",
+          "timesheetSigningSuper": "Supervisorunterschrift",
+          "timesheetReady": "Bereit zur Abgabe",
+          "nonCompliant": "Keine aktive Vereinbarung",
+          "nonCompliantHint": "Noch keine aktive Vereinbarung für diese Pauschale — Vereinbarung erstellen oder aktivieren, damit dieser Stundennachweis compliant ist",
+          "notYetCreated": "Noch nicht erstellt",
+          "overCap": "Jahreslimit wird überschritten",
+          "overCapHint": "Der Betrag dieses Stundennachweises bringt die Person an oder über ihr Jahreslimit",
+          "contractMissing": "Keine Vereinbarung — manuell anlegen",
+          "timesheetMuted": "Erfasst ohne Vereinbarung",
+          "declined": "Abgelehnt"
+        },
+        "actions": {
+          "create": "Überprüfen und erstellen",
+          "remind": "Erinnerung senden",
+          "countersign": "Gegenzeichnen",
+          "decline": "Ablehnen",
+          "seeDetails": "Details ansehen",
+          "createNew": "Neues {docType} erstellen"
+        },
+        "nonCompliantDialog": {
+          "titleSingle": "Ohne aktive Vereinbarung {action, select, create {erstellen} remind {erinnern} countersign {gegenzeichnen} other {bearbeiten}}?",
+          "titleBatchAll": "{count} Stundennachweise ohne aktive Vereinbarung {action, select, create {erstellen} remind {erinnern} countersign {gegenzeichnen} other {bearbeiten}}?",
+          "titleBatchMixed": "{count} von {total} Stundennachweisen haben keine aktive Vereinbarung",
+          "descriptionSingle": "Für diese Pauschale gibt es noch keine aktive Vereinbarung. Du kannst den Stundennachweis trotzdem {action, select, create {erstellen} remind {erinnern} countersign {gegenzeichnen} other {bearbeiten}}, er bleibt dann als nicht konform markiert, bis eine Vereinbarung aktiv ist.",
+          "descriptionBatchAll": "Für einige der ausgewählten Personen gibt es noch keine aktive Vereinbarung. Du kannst den Stundennachweis trotzdem {action, select, create {erstellt} remind {erinnert} countersign {gegengezeichnet} other {bearbeitet}}, sie bleiben dann als nicht konform markiert, bis die Vereinbarungen aktiv sind.",
+          "descriptionBatchMixed": "{count} der ausgewählten Stundennachweise gehören zu Personen ohne aktive Vereinbarung für diese Pauschale.",
+          "actionAnyway": "{action, select, create {Trotzdem erstellen} remind {Trotzdem erinnern} countersign {Trotzdem gegenzeichnen} other {Trotzdem fortfahren}}",
+          "actionAllAnyway": "{action, select, create {Alle trotzdem erstellen} remind {Alle trotzdem erinnern} countersign {Alle trotzdem gegenzeichnen} other {Trotzdem mit allen fortfahren}}",
+          "onlyCompliantAction": "{action, select, create {Nur konforme erstellen} remind {Nur konforme erinnern} countersign {Nur konforme gegenzeichnen} other {Nur konforme bearbeiten}}",
+          "generateContractInstead": "Stattdessen Vereinbarung erstellen",
+          "viewContractInstead": "Stattdessen Vereinbarung ansehen"
+        },
+        "declineDialog": {
+          "title": "{docType} ablehnen?",
+          "description": "Die freiwillige Person benötigt ein neu ausgestelltes Dokument — dieses kann nach der Ablehnung nicht fortgesetzt werden.",
+          "reasonLabel": "Ablehnungsgrund",
+          "reasonPlaceholder": "Erklären, was geändert werden muss …",
+          "submit": "Ablehnen",
+          "toast": "Das Dokument von {name} wurde abgelehnt."
+        }
+      },
+      "profileField": {
+        "editButtonLabel": "Bearbeiten",
+        "saveButtonLabel": "Speichern",
+        "fromProfileHint": "Aus dem Profil von {name}",
+        "editingHint": "Du bearbeitest dies nur für {docType, select, contract {diese Vereinbarung} invoice {dieser Nachweis} other {dieses Dokument}} — die Angaben im Profil von {name} bleiben unverändert.",
+        "overrideHint": "Nur für {docType, select, contract {diese Vereinbarung} invoice {dieser Nachweis} other {dieses Dokument}} geändert",
+        "missingValue": "Nicht angegeben",
+        "gapHint": "Diese Angabe wurde von {name} nicht im Profil hinterlegt — für {docType, select, contract {diese Vereinbarung} invoice {dieser Nachweis} other {dieses Dokument}} ergänzen"
+      },
+      "contractModal": {
+        "title": "Vereinbarung erstellen",
+        "cancel": "Abbrechen",
+        "sendForSigning": "Speichern und zur Unterschrift senden",
+        "sending": "Wird gesendet…",
+        "sentToast": "Vereinbarung an {name} zur Unterschrift gesendet.",
+        "sendErrorToast": "Die Vereinbarung konnte nicht an {name} gesendet werden. Bitte erneut versuchen.",
+        "loadErrorTitle": "Profildaten konnten nicht geladen werden",
+        "loadError": "Die Profildaten von {name} konnten nicht geladen werden. Bitte schließen und erneut versuchen.",
+        "hoursUnitMonth": "Monat",
+        "hoursUnitWeek": "Woche",
+        "hoursUnitHint": "pro {unit}",
+        "preview": {
+          "disclaimerBadge": "Vorschau",
+          "documentTitle": "Zusatzvereinbarung",
+          "signatureVolunteer": "Unterschrift (Freiwillige:r)",
+          "signatureCoordinator": "Unterschrift Koordination",
+          "unsigned": "Noch nicht unterschrieben"
+        }
+      },
+      "invoiceModal": {
+        "title": "Stundennachweis erstellen",
+        "cancel": "Abbrechen",
+        "sendForSigning": "Speichern und zur Unterschrift senden",
+        "sending": "Wird gesendet…",
+        "sentToast": "Stundennachweis an {name} zur Unterschrift gesendet.",
+        "sendErrorToast": "Der Stundennachweis konnte nicht an {name} gesendet werden. Bitte erneut versuchen.",
+        "loadErrorTitle": "Stundennachweisdaten konnten nicht geladen werden",
+        "loadError": "Die Stundennachweisdaten von {name} konnten nicht geladen werden. Bitte schließen und erneut versuchen.",
+        "nameFieldLabel": "Name",
+        "periodFieldLabel": "Stundennachweiszeitraum",
+        "periodPicker": {
+          "placeholder": "Zeitraum wählen",
+          "thisMonth": "Dieser Monat",
+          "lastMonth": "Letzter Monat",
+          "apply": "Anwenden"
+        },
+        "capCard": {
+          "title": "Jahresdeckel",
+          "value": "{before} → {after}",
+          "subline": "von {total} Jahresdeckel"
+        },
+        "hoursCard": {
+          "title": "Abrechenbare Stunden",
+          "rowCheckboxLabel": "{shiftName} in diesen Stundennachweis aufnehmen",
+          "hoursValue": "{hours} Std.",
+          "editHint": "Um Stunden oder Einsatzdetails zu ändern, gehe zu <link>Zeitnachweise</link>."
+        },
+        "preview": {
+          "disclaimerBadge": "Vorschau",
+          "documentTitle": "Stundennachweis",
+          "signatureVolunteer": "Unterschrift (Freiwillige:r)",
+          "signatureSupervisor": "Unterschrift (Organisation)",
+          "unsigned": "Noch nicht unterschrieben"
+        }
+      }
+    },
+    "templates": {
+      "title": "Templates",
+      "sections": {
+        "ep": "Ehrenamtspauschale",
+        "ul": "Übungsleiterpauschale",
+        "unconfiguredWarning": "Einsätze dieses Typs können nicht geplant werden, solange nicht beide Vorlagen konfiguriert sind."
+      },
+      "documentKind": {
+        "contract": "Vereinbarung",
+        "invoice": "Stundennachweis"
+      },
+      "loadError": "Vorlagen konnten nicht geladen werden. Bitte Seite neu laden.",
+      "builder": {
+        "breadcrumb": {
+          "accounting": "Buchhaltung",
+          "templates": "Vorlagen"
+        },
+        "saveButton": "Vorlage speichern",
+        "saveSuccessToast": "Vorlage gespeichert",
+        "saveErrorToast": "Die Vorlage konnte nicht gespeichert werden. Bitte erneut versuchen.",
+        "previewScrollRegionLabel": "Dokumentvorschau, scrollbar",
+        "preview": {
+          "disclaimerBadge": "Vorschau",
+          "documentTitle": {
+            "contract": "Zusatzvereinbarung",
+            "invoice": "Stundennachweis"
+          },
+          "signatureVolunteer": "Unterschrift (Freiwillige:r)",
+          "signatureCoordinator": "Unterschrift Koordination",
+          "signatureSupervisor": "Unterschrift (Organisation)",
+          "unsigned": "Noch nicht unterschrieben"
+        },
+        "blockEditor": {
+          "headerTitle": "Kopfbereich",
+          "invoiceNumberFormatLabel": "Format der Rechnungsnummer",
+          "lockedHint": "Pflichtblock — immer im generierten Dokument enthalten.",
+          "tableFixedHint": "Die Zeilen werden beim Erstellen eines Stundennachweises aus den Zeiterfassungen befüllt.",
+          "firstColumnSourceLabel": "Inhalt der ersten Spalte",
+          "firstColumnSourceOptions": {
+            "agreement_task_description": {
+              "label": "Tätigkeitsbeschreibung aus der Vereinbarung",
+              "hint": "Jede Zeile zeigt die in der Vereinbarung hinterlegte Tätigkeitsbeschreibung."
+            },
+            "custom": {
+              "label": "Benutzerdefiniert",
+              "hint": "Jede Zeile zeigt den hier eingegebenen Text."
+            }
+          },
+          "firstColumnPlaceholders": {
+            "agreementTaskDescription": "Tätigkeitsbeschreibung",
+            "custom": "z. B. Sonstige Tätigkeit"
+          },
+          "alreadyReceivedHint": "Wird beim Erstellen eines Stundennachweises automatisch aus dem verknüpften Vereinbarungszeitraum berechnet.",
+          "incompleteCount": "{count, plural, one {Hier fehlt noch eine Angabe} other {Hier fehlen noch {count} Angaben}}",
+          "notSetYet": "noch nicht festgelegt",
+          "sameAsAbove": "gleicher Wert wie oben festgelegt",
+          "scrollRegionLabel": "Vorlagen-Editor, scrollbar"
+        },
+        "editorGroups": {
+          "org": "Angaben der Organisation",
+          "volunteer": "Angaben der ehrenamtlich tätigen Person",
+          "engagement": "Einsatzdetails",
+          "extra": "Weitere Vereinbarungen"
+        },
+        "hoursUnit": {
+          "month": "Monat",
+          "week": "Woche"
+        },
+        "periodPicker": {
+          "tabYear": "Jahr",
+          "tabMonth": "Monat",
+          "tabRange": "Zeitraum",
+          "previousYear": "Vorheriges Jahr",
+          "nextYear": "Nächstes Jahr",
+          "previousYearBlock": "Vorheriger Zeitraum",
+          "nextYearBlock": "Nächster Zeitraum",
+          "apply": "Anwenden"
+        },
+        "manualFieldLabels": {
+          "contract-lifespan": "Vereinbarungslaufzeit",
+          "tasks": "Tätigkeitsbeschreibung",
+          "hours-amount": "Stundenzahl",
+          "freeform-text": "Freitext",
+          "kostenstelle": "Kostenstelle",
+          "kostentraeger": "Kostenträger",
+          "rechtstraeger": "Rechtsträger"
+        },
+        "manualFieldPlaceholders": {
+          "contract-lifespan": "Zeitraum wählen",
+          "tasks": "Beschreibe die Haupttätigkeiten für {pauschale}",
+          "hours-amount-month": "z. B. 20",
+          "hours-amount-week": "z. B. 5",
+          "freeform-text": "Ergänze hier weitere Klauseln, falls nötig",
+          "kostenstelle": "z. B. K-4200",
+          "kostentraeger": "z. B. KT-100",
+          "rechtstraeger": "z. B. Diakonisches Werk e.V."
+        },
+        "fieldSource": {
+          "volunteerProfile": "Wird aus dem Profil der ehrenamtlich tätigen Person übernommen.",
+          "generationTime": "Wird beim Erstellen des Dokuments automatisch eingetragen.",
+          "organizationProfile": "Wird aus den Daten deiner Organisation übernommen.",
+          "rateSettings": "Wird aus dem in den Buchhaltungseinstellungen hinterlegten Satz übernommen.",
+          "yearlyLimit": "Wird aus dem gesetzlich festgelegten Jahresdeckel übernommen."
+        },
+        "invoiceNumberFormats": {
+          "date-number": "TT-MM-JJJJ-Nummer",
+          "date-kostenstelle-number": "TT-MM-JJJJ-Kostenstelle-Nummer",
+          "compact-date-number": "TTMMJJJJ-Nummer",
+          "kostenstelle-month-year-number": "Kostenstelle-MMJJJJ-Nummer"
+        },
+        "fieldList": {
+          "requiresCollection": "Fehlende Daten",
+          "profileWarningBefore": "Ehrenamtliche werden noch nicht nach diesen Daten gefragt.",
+          "profileWarningAction": "Formular im Formular-Builder erstellen",
+          "profileWarningAfter": "um diese Daten abzufragen."
+        },
+        "dataSources": {
+          "volunteer_first_name": "Vorname (Ehrenamtliche:r)",
+          "volunteer_last_name": "Nachname (Ehrenamtliche:r)",
+          "org_name": "Organisationsname",
+          "org_address": "Organisationsadresse",
+          "org_city": "Stadt (Organisation)",
+          "org_legal_rep": "Gesetzliche Vertretung",
+          "pauschalen_type": "Pauschalentyp",
+          "hourly_rate": "Stundensatz",
+          "period_start": "Zeitraum Beginn",
+          "period_end": "Zeitraum Ende",
+          "total_hours": "Gesamtstunden",
+          "total_amount": "Gesamtbetrag",
+          "generated_date": "Erstellungsdatum",
+          "document_number": "Rechnungsnummer",
+          "volunteer_iban": "IBAN (Ehrenamtliche:r)",
+          "volunteer_bic": "BIC (Ehrenamtliche:r)",
+          "volunteer_address": "Adresse (Ehrenamtliche:r)",
+          "volunteer_dob": "Geburtsdatum (Ehrenamtliche:r)",
+          "volunteer_tax_id": "Steueridentifikationsnummer",
+          "contract_period": "Vereinbarungszeitraum",
+          "already_received_amount": "Bereits erhaltener Betrag",
+          "yearly_limit_amount": "Jahresdeckel"
+        }
+      },
+      "card": {
+        "empty": {
+          "alertText": "Noch nicht konfiguriert",
+          "createButton": "Vorlage erstellen"
+        },
+        "editButton": "Vorlage bearbeiten",
+        "lastEdited": "Zuletzt bearbeitet am {date} von {name}",
+        "badges": {
+          "renewal": {
+            "monthly": "Monatliche Erneuerung",
+            "yearly": "Jährliche Erneuerung"
+          },
+          "signees": "{count, plural, =1 {1 Unterschrift} other {# Unterschriften}}"
+        }
+      }
+    }
   }
 }

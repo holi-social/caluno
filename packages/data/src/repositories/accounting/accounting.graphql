@@ -398,10 +398,15 @@ query GetBundleDownloadStatus($volunteerId: ID!, $reimbursementTypeId: ID!) {
   }
 }
 
-mutation RecordBundleDownload($volunteerId: ID!, $reimbursementTypeId: ID!) {
+mutation RecordBundleDownload(
+  $volunteerId: ID!
+  $reimbursementTypeId: ID!
+  $invoiceIds: [ID!]
+) {
   recordBundleDownload(
     volunteerId: $volunteerId
     reimbursementTypeId: $reimbursementTypeId
+    invoiceIds: $invoiceIds
   ) {
     volunteer {
       id
@@ -413,6 +418,64 @@ mutation RecordBundleDownload($volunteerId: ID!, $reimbursementTypeId: ID!) {
     }
     downloadedAt
     downloadedByUser {
+      id
+      name
+    }
+  }
+}
+
+query GetManualBaseline(
+  $volunteerId: ID!
+  $reimbursementTypeId: ID!
+  $year: Int!
+) {
+  manualBaseline(
+    volunteerId: $volunteerId
+    reimbursementTypeId: $reimbursementTypeId
+    year: $year
+  ) {
+    volunteer {
+      id
+      name
+    }
+    reimbursementType {
+      id
+      key
+    }
+    year
+    amountCents
+    updatedAt
+    updatedByUser {
+      id
+      name
+    }
+  }
+}
+
+mutation SetManualBaseline(
+  $volunteerId: ID!
+  $reimbursementTypeId: ID!
+  $year: Int!
+  $amountCents: Int!
+) {
+  setManualBaseline(
+    volunteerId: $volunteerId
+    reimbursementTypeId: $reimbursementTypeId
+    year: $year
+    amountCents: $amountCents
+  ) {
+    volunteer {
+      id
+      name
+    }
+    reimbursementType {
+      id
+      key
+    }
+    year
+    amountCents
+    updatedAt
+    updatedByUser {
       id
       name
     }

@@ -2,6 +2,7 @@
 import { AccountingRepository, type RawBundleDownloadStatus } from '@repo/data';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useSdk } from './use-graphql-client';
+import { invalidateInvoiceQueries } from './use-invoices';
 
 export function useBundleDownloadStatus(
   volunteerId?: string,
@@ -36,11 +37,18 @@ export function useRecordBundleDownload() {
     mutationFn: ({
       volunteerId,
       reimbursementTypeId,
+      invoiceIds,
     }: {
       volunteerId: string;
       reimbursementTypeId: string;
-    }) => repository.recordBundleDownload(volunteerId, reimbursementTypeId),
-    onSuccess: (_, { volunteerId, reimbursementTypeId }) => {
+      invoiceIds?: string[];
+    }) =>
+      repository.recordBundleDownload(
+        volunteerId,
+        reimbursementTypeId,
+        invoiceIds,
+      ),
+    onSuccess: (_, { volunteerId, reimbursementTypeId, invoiceIds }) => {
       queryClient.invalidateQueries({
         queryKey: [
           'accounting',
@@ -49,6 +57,14 @@ export function useRecordBundleDownload() {
           reimbursementTypeId,
         ],
       });
+      if (invoiceIds?.length) {
+        invalidateInvoiceQueries(queryClient);
+        for (const id of invoiceIds) {
+          queryClient.invalidateQueries({
+            queryKey: ['accounting', 'invoice', id],
+          });
+        }
+      }
     },
   });
 }
