@@ -208,7 +208,9 @@ function BundleDownloadButton({
           ? null
           : status
             ? t.rich('bundle.lastDownloaded', {
-                by: abbreviateName(status.downloadedByUser?.name ?? ''),
+                by: status.downloadedByUser?.name
+                  ? abbreviateName(status.downloadedByUser.name)
+                  : t('bundle.unknownUser'),
                 at: format(new Date(status.downloadedAt), 'dd.MM.yyyy'),
                 // Stubbed: no volunteer-profile route exists yet
                 // in this prototype — becomes a real link there.

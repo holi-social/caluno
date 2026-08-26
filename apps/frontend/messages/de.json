@@ -1675,7 +1675,8 @@
         "actionLabel": "Paket herunterladen",
         "readyCount": "{count} bereit",
         "lastDownloaded": "zuletzt heruntergeladen von <name>{by}</name> am {at}",
-        "neverDownloaded": "noch nicht heruntergeladen"
+        "neverDownloaded": "noch nicht heruntergeladen",
+        "unknownUser": "unbekannt"
       },
       "batchBar": {
         "selected": "{count} ausgewählt",
