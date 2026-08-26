@@ -192,6 +192,87 @@ export class EventService {
     return { events, total: totalResult[0]?.total ?? 0 };
   }
 
+  /**
+   * Discoverable events across the volunteer's accepted **and** pending org
+   * units — the event-side analogue of `ShiftService.findAvailableShiftInstances`.
+   * `Event` has no `visibility` column (unlike `Shift`'s ALL_MEMBERS/INVITED_MEMBERS),
+   * so there is no accepted/pending visibility split to mirror: both sets are
+   * simply unioned into one accessible-org-unit list.
+   */
+  async findAvailableEvents(
+    userId: string,
+    startsAfter: Date | null,
+    endsBefore: Date | null,
+    organizationUnitIds: string[] | null,
+    limit: number,
+    offset: number,
+  ): Promise<{ events: EventEntity[]; total: number }> {
+    const [acceptedOrganizationUnitIds, pendingOrganizationUnitIds] =
+      await Promise.all([
+        this.getAccessibleOrganizationUnitIds(userId),
+        this.membershipService.getPendingOrganizationUnitIds(userId),
+      ]);
+
+    const accessibleOrganizationUnitIds = [
+      ...new Set([
+        ...acceptedOrganizationUnitIds,
+        ...pendingOrganizationUnitIds,
+      ]),
+    ];
+
+    if (accessibleOrganizationUnitIds.length === 0) {
+      return EMPTY_EVENT_PAGE;
+    }
+
+    const requestedOrgUnitIds = organizationUnitIds?.length
+      ? organizationUnitIds.filter((id) =>
+          accessibleOrganizationUnitIds.includes(id),
+        )
+      : accessibleOrganizationUnitIds;
+
+    if (requestedOrgUnitIds.length === 0) {
+      return EMPTY_EVENT_PAGE;
+    }
+
+    const dateCondition = this.buildMyEventDateCondition(
+      false,
+      startsAfter,
+      endsBefore,
+    );
+
+    const where = {
+      isDeleted: false,
+      organizationUnitId: { in: requestedOrgUnitIds },
+      ...dateCondition,
+      NOT: {
+        invites: {
+          userId,
+          status: { in: [...PARTICIPATING_EVENT_INVITE_STATUSES] },
+        },
+      },
+    };
+
+    // Tie-break on id so events sharing the same startsAt keep a stable
+    // order across pages, matching findAvailableShiftInstances.
+    const orderBy = { startsAt: 'asc' as const, id: 'asc' as const };
+
+    const [events, totalResult] = await Promise.all([
+      this.db.query.events.findMany({
+        where,
+        orderBy,
+        limit,
+        offset,
+      }),
+      this.db.query.events.findMany({
+        where,
+        columns: {},
+        extras: { total: count() },
+      }),
+    ]);
+
+    return { events, total: totalResult[0]?.total ?? 0 };
+  }
+
   private async getAccessibleOrganizationUnitIds(
     userId: string,
   ): Promise<string[]> {

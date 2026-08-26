@@ -34,8 +34,9 @@ export default async function TimeEntryUpdatePage({
       volunteers={allVolunteers}
       mutate={updateTimeEntry.bind(null, entry.id)}
       initialValues={{
-        shiftInstanceId: entry.shiftInstance.id,
-        shiftId: entry.shiftInstance.master.id,
+        hasShift: !!entry.shiftInstance,
+        shiftInstanceId: entry.shiftInstance?.id ?? '',
+        shiftId: entry.shiftInstance?.master.id ?? '',
         volunteerId: entry.volunteer.id,
         startedAt: new Date(entry.startedAt),
         endedAt: entry.endedAt ? new Date(entry.endedAt) : undefined,

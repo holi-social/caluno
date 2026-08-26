@@ -30,7 +30,7 @@ import { RequirementFormService } from '../src/requirement-profile/services/requ
 import { RequirementProfileService } from '../src/requirement-profile/services/requirement-profile.service';
 import { UserProfileService } from '../src/requirement-profile/services/user-profile.service';
 import { JoinStatus } from '../src/shared/enums/join-status.enum';
-import { PostHogService } from '../src/shared/observability/posthog.service';
+import { PostHogCaptureService } from '../src/shared/observability/posthog.capture.service';
 import { ShiftInviteStatus } from '../src/shift/enums';
 import {
   cancelShiftInstance,
@@ -113,7 +113,7 @@ describe('RequiredFormService', () => {
       notificationServiceMock,
       requiredFormService,
       { shareSubmissionsWithOrgUnit: async () => {} } as never,
-      { captureUserJoinedOrg: () => {} } as unknown as PostHogService,
+      { captureUserJoinedOrg: () => {} } as unknown as PostHogCaptureService,
     );
 
     registerTestResourceCleanup(async () => {

@@ -55,6 +55,9 @@ export class Invoice {
   @Field(() => SigneeType, { nullable: true })
   declinedAtSigneeType?: SigneeType | null;
 
+  @Field(() => String, { nullable: true })
+  downloadUrl?: string | null;
+
   @Field(() => [InvoiceSignature])
   signatures!: InvoiceSignature[];
 

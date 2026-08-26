@@ -1,6 +1,7 @@
 import {
   type CreateEventInput,
   type EventInviteStatus,
+  type GetAvailableEventsQuery,
   type GetEventInvitesQuery,
   type GetEventQuery,
   type GetEventsQuery,
@@ -19,6 +20,8 @@ export type RawEvent = GetEventQuery['event'];
 export type EventListItem = GetEventsQuery['events']['items'][number];
 export type EventInviteItem = GetEventInvitesQuery['eventInvites'][number];
 export type MyEvent = GetMyEventsQuery['myEvents']['items'][number];
+export type DiscoverEvent =
+  GetAvailableEventsQuery['availableEvents']['items'][number];
 
 export class EventRepository extends BaseRepository {
   async findAll(options: PaginationOptions = {}) {
@@ -58,6 +61,33 @@ export class EventRepository extends BaseRepository {
       statuses: options.statuses,
     });
     return data.myEvents;
+  }
+
+  async findAvailableEvents(
+    options: {
+      startsAfter?: Date;
+      endsBefore?: Date;
+      organizationUnitIds?: string[];
+      limit?: number;
+      offset?: number;
+    } = {},
+  ): Promise<{
+    items: DiscoverEvent[];
+    pagination: {
+      total: number;
+      limit: number;
+      offset: number;
+      hasMore: boolean;
+    };
+  }> {
+    const data = await this.sdk.GetAvailableEvents({
+      startsAfter: options.startsAfter?.toISOString(),
+      endsBefore: options.endsBefore?.toISOString(),
+      organizationUnitIds: options.organizationUnitIds,
+      limit: options.limit ?? 15,
+      offset: options.offset ?? 0,
+    });
+    return data.availableEvents;
   }
 
   async findById(id: string): Promise<RawEvent> {

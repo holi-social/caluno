@@ -1,0 +1,5 @@
+ALTER TABLE "reimbursement_rates" DROP CONSTRAINT "uq_reimbursement_rates_organization_id_reimbursement_type_id";--> statement-breakpoint
+ALTER TABLE "reimbursement_rates" ADD COLUMN "organization_unit_id" uuid;--> statement-breakpoint
+CREATE UNIQUE INDEX "uq_reimbursement_rates_org_default" ON "reimbursement_rates" ("organization_id","reimbursement_type_id") WHERE "organization_unit_id" IS NULL;--> statement-breakpoint
+CREATE UNIQUE INDEX "uq_reimbursement_rates_unit_override" ON "reimbursement_rates" ("organization_unit_id","reimbursement_type_id") WHERE "organization_unit_id" IS NOT NULL;--> statement-breakpoint
+ALTER TABLE "reimbursement_rates" ADD CONSTRAINT "reimbursement_rates_iwVFHWflZGEn_fkey" FOREIGN KEY ("organization_unit_id") REFERENCES "organization_units"("id") ON DELETE CASCADE;

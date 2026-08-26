@@ -16,7 +16,7 @@ import type { RequiredFormStatus } from '../requirement-profile/services/require
 import { RequiredFormService } from '../requirement-profile/services/required-form.service';
 import { RequirementProfileService } from '../requirement-profile/services/requirement-profile.service';
 import { JoinStatus } from '../shared/enums/join-status.enum';
-import { PostHogService } from '../shared/observability/posthog.service';
+import { PostHogCaptureService } from '../shared/observability/posthog.capture.service';
 import { MembershipRequestStatus } from './enums';
 import { UpdateMembershipRequestInput } from './inputs/update-membership-request.input';
 import type { MembershipEntity } from './schemas/membership.schema';
@@ -37,7 +37,7 @@ export class MembershipService {
     private readonly notificationService: NotificationService,
     private readonly requiredFormService: RequiredFormService,
     private readonly formSubmissionService: FormSubmissionService,
-    private readonly postHogService: PostHogService,
+    private readonly postHogCaptureService: PostHogCaptureService,
   ) {}
 
   private appendIntendedIdsToMetadata(
@@ -566,11 +566,14 @@ export class MembershipService {
           organizationUnit.organizationId,
         );
         if (membershipCount === 1) {
-          this.postHogService.captureUserJoinedOrg(membershipRequest.userId, {
-            organizationId: organizationUnit.organizationId,
-            organizationUnitId,
-            source: 'membership_approved',
-          });
+          this.postHogCaptureService.captureUserJoinedOrg(
+            membershipRequest.userId,
+            {
+              organizationId: organizationUnit.organizationId,
+              organizationUnitId,
+              source: 'membership_approved',
+            },
+          );
         }
       }
     }

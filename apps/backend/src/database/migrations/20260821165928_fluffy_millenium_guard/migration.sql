@@ -1,0 +1,1 @@
+CREATE INDEX "idx_time_entries_org_unit_started_at" ON "time_entries" ("organization_unit_id","started_at");
