@@ -2493,6 +2493,10 @@ export class ShiftService {
 
     if (!formsAlreadySatisfied) {
       await this.formSubmissionService.shareSubmissionsWithOrgUnit(userId, {
+        targetType: RequiredFormTargetType.SHIFT,
+        targetId: shift.id,
+      });
+      await this.formSubmissionService.shareSubmissionsWithOrgUnit(userId, {
         targetType: RequiredFormTargetType.SHIFT_INSTANCE,
         targetId: instanceId,
       });
@@ -2739,7 +2743,10 @@ export class ShiftService {
           membershipRequest: result.membershipRequest,
         };
       }
-
+      await this.formSubmissionService.shareSubmissionsWithOrgUnit(userId, {
+        targetType: RequiredFormTargetType.SHIFT,
+        targetId: shift.id,
+      });
       await this.formSubmissionService.shareSubmissionsWithOrgUnit(userId, {
         targetType: RequiredFormTargetType.SHIFT_INSTANCE,
         targetId: instanceId,
@@ -2777,7 +2784,10 @@ export class ShiftService {
         shiftInstance: instance,
       };
     }
-
+    await this.formSubmissionService.shareSubmissionsWithOrgUnit(userId, {
+      targetType: RequiredFormTargetType.SHIFT,
+      targetId: shift.id,
+    });
     await this.formSubmissionService.shareSubmissionsWithOrgUnit(userId, {
       targetType: RequiredFormTargetType.SHIFT_INSTANCE,
       targetId: instanceId,
