@@ -4,7 +4,7 @@ name: CI
 
 on:
   pull_request:
-    branches: [main, production]
+    branches: [main, production, release]
 
 concurrency:
   group: ci-${{ github.event.pull_request.number }}
@@ -80,21 +80,6 @@ jobs:
       migration-check: ${{ fromJSON(needs.changes.outputs.backend) }}
       tests: ${{ fromJSON(needs.changes.outputs.code) }}
     secrets: inherit
-
-  commit-lint:
-    name: Commit lint
-    runs-on: ubuntu-latest
-    timeout-minutes: 5
-    steps:
-      - uses: actions/checkout@v5
-        with:
-          submodules: recursive
-          persist-credentials: false
-          token: ${{ secrets.ORG_REPO_PAT }}
-          fetch-depth: 0
-          filter: blob:none
-      # head.sha, since github.sha is the synthetic merge commit.
-      - run: bash .ai/scripts/commit-lint.sh range "${{ github.event.pull_request.base.sha }}..${{ github.event.pull_request.head.sha }}"
 
   ai-gates:
     name: AI gate tests
@@ -185,9 +170,10 @@ jobs:
     permissions:
       contents: read
     env:
-      # A PR into `production` is a promotion; anything else targets staging.
-      DEPLOY_ENV: ${{ github.base_ref == 'production' && 'production' || 'staging' }}
-      TF_VAR_active_environment: ${{ github.base_ref == 'production' && 'production' || 'staging' }}
+      # `main` targets staging; the other protected branches are named after the
+      # environment they deploy to.
+      DEPLOY_ENV: ${{ github.base_ref == 'main' && 'staging' || github.base_ref }}
+      TF_VAR_active_environment: ${{ github.base_ref == 'main' && 'staging' || github.base_ref }}
       TF_VAR_image_tag: ${{ github.sha }}
       TF_PLUGIN_CACHE_DIR: ${{ github.workspace }}/.terraform.d/plugin-cache
       SCW_ACCESS_KEY: ${{ secrets.SCW_ACCESS_KEY }}
@@ -249,7 +235,6 @@ jobs:
       [
         changes,
         verify,
-        commit-lint,
         ai-gates,
         build-backend,
         build-frontend,

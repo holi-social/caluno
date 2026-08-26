@@ -2,8 +2,8 @@ import { Field, InputType } from '@nestjs/graphql';
 
 @InputType()
 export class AddTimeEntryInput {
-  @Field(() => String)
-  shiftInstanceId!: string;
+  @Field(() => String, { nullable: true })
+  shiftInstanceId?: string | null;
 
   @Field(() => String)
   volunteerId!: string;
