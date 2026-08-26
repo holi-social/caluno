@@ -343,7 +343,7 @@ describe('FormSubmissionService org-unit shares', () => {
     });
   });
 
-  describe('shareSatisfiedRequiredForms', () => {
+  describe('shareSubmissionsWithOrgUnit', () => {
     it('shares existing submissions for a target’s required forms with its unit', async () => {
       const { admin, rootUnit, unitA, volunteer } = await setupOrgWithUnits();
       const { form } = await createRequirementForm(db, {
@@ -363,7 +363,7 @@ describe('FormSubmissionService org-unit shares', () => {
         userId: volunteer.id,
       });
 
-      await formSubmissionService.shareSatisfiedRequiredForms(volunteer.id, {
+      await formSubmissionService.shareSubmissionsWithOrgUnit(volunteer.id, {
         targetType: RequiredFormTargetType.EVENT,
         targetId: event.id,
       });
@@ -393,7 +393,7 @@ describe('FormSubmissionService org-unit shares', () => {
         userId: volunteer.id,
       });
 
-      await formSubmissionService.shareSatisfiedRequiredForms(volunteer.id, {
+      await formSubmissionService.shareSubmissionsWithOrgUnit(volunteer.id, {
         targetType: RequiredFormTargetType.ORGANIZATION_UNIT,
         targetId: unitA.id,
       });
@@ -413,7 +413,7 @@ describe('FormSubmissionService org-unit shares', () => {
         formIds: [form.id],
       });
 
-      await formSubmissionService.shareSatisfiedRequiredForms(volunteer.id, {
+      await formSubmissionService.shareSubmissionsWithOrgUnit(volunteer.id, {
         targetType: RequiredFormTargetType.ORGANIZATION_UNIT,
         targetId: unitA.id,
       });

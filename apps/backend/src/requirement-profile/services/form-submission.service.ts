@@ -186,12 +186,7 @@ export class FormSubmissionService {
     return this.submitToForm(form, input, userId, organizationUnitId);
   }
 
-  /**
-   * When a target's required forms are already satisfied by submissions made
-   * elsewhere, make the asking unit's views reflect that: share each of those
-   * submissions with the target's org unit. Idempotent.
-   */
-  async shareSatisfiedRequiredForms(
+  async shareSubmissionsWithOrgUnit(
     userId: string,
     target: RequiredFormTarget,
   ): Promise<void> {
