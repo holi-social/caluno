@@ -1,4 +1,10 @@
-import { snakeCase, text, timestamp, uniqueIndex, uuid } from 'drizzle-orm/pg-core';
+import {
+  snakeCase,
+  text,
+  timestamp,
+  uniqueIndex,
+  uuid,
+} from 'drizzle-orm/pg-core';
 import { users } from '../../auth/schemas/auth.schema';
 import { idColumn, timestampColumns } from '../../database/database-columns';
 import { reimbursementTypes } from './reimbursement-type.schema';
@@ -14,9 +20,12 @@ export const reimbursementBundleDownloads = snakeCase.table(
       .references(() => reimbursementTypes.id, { onDelete: 'restrict' })
       .notNull(),
     downloadedAt: timestamp('downloaded_at').notNull(),
-    downloadedByUserId: text('downloaded_by_user_id').references(() => users.id, {
-      onDelete: 'set null',
-    }),
+    downloadedByUserId: text('downloaded_by_user_id').references(
+      () => users.id,
+      {
+        onDelete: 'set null',
+      },
+    ),
     ...timestampColumns,
   },
   (table) => [

@@ -1,5 +1,8 @@
 import { Injectable } from '@nestjs/common';
-import type { ContractWithRelations, InvoiceWithRelations } from '../accounting.types';
+import type {
+  ContractWithRelations,
+  InvoiceWithRelations,
+} from '../accounting.types';
 
 /**
  * Renders a fully-signed contract or invoice to PDF and stores it via FileService,
