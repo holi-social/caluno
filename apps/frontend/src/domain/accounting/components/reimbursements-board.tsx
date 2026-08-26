@@ -124,6 +124,8 @@ export interface BoardVolunteer {
   usedAmount: number;
   totalCap: number;
   limits?: Partial<Record<PauschalenType, PauschalenLimit>>;
+  /** Maps each pauschale type the volunteer is eligible for to its reimbursement type id. */
+  reimbursementTypeIds?: Partial<Record<PauschalenType, string>>;
   documents: BoardDocument[];
 }
 

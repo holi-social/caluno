@@ -227,6 +227,7 @@ export function buildBoardVolunteers({
     const limits: Partial<
       Record<PauschalenType, { used: number; total: number }>
     > = {};
+    const reimbursementTypeIds: Partial<Record<PauschalenType, string>> = {};
 
     for (const usage of entry.usageByType) {
       const type = pauschaleForReimbursementTypeKey(
@@ -236,6 +237,7 @@ export function buildBoardVolunteers({
         used: centsToEuros(usage.usedCents),
         total: centsToEuros(usage.limitCents),
       };
+      reimbursementTypeIds[type] = usage.reimbursementType.id;
 
       const contractsForType = contracts.filter(
         (c) =>
@@ -305,6 +307,7 @@ export function buildBoardVolunteers({
         entry.usageByType.reduce((sum, u) => sum + u.limitCents, 0),
       ),
       limits,
+      reimbursementTypeIds,
       documents,
     };
   });
