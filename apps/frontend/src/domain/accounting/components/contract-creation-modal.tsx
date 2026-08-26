@@ -1,11 +1,24 @@
 'use client';
 
+import { parseTemplateBody } from '@repo/data';
+import {
+  useActiveDocumentTemplate,
+  useAdminUserProfile,
+  useCreateContract,
+  useCurrentOrg,
+  useEffectiveRates,
+  useOrgUId,
+  useReimbursementTypes,
+} from '@repo/data/react';
 import { Input } from '@repo/ui';
 import { useTranslations } from 'next-intl';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
-import { eurosToCents } from '../lib/money';
-import { getEffectivePauschaleRate, getYearlyLimit } from '../mock-rates';
+import { contractPeriodForLifespan } from '../lib/creation-modal.utils';
+import {
+  apiDocumentKindFor,
+  reimbursementTypeKeyFor,
+} from '../lib/reimbursement-type-mapping';
 import type { ProfileFieldProvenance } from './accounting-profile-field-card';
 import { AccountingProfileFieldCard } from './accounting-profile-field-card';
 import { getPauschaleKey, type PauschalenType } from './doc-type-header';
@@ -14,17 +27,10 @@ import {
   type DocumentCreationLoadStatus,
 } from './document-creation-dialog';
 import { InfoPanel } from './info-panel';
-import { DEFAULT_PROFILE_DATA, MOCK_PROFILE_DATA } from './mock-profile-data';
 import { getKnownOrgValues } from './template/builder-document-presets';
 import type { DataSourceKey } from './template/builder-types';
 import { getManualFieldValue } from './template/builder-types';
 import { GeneratedDocumentPreview } from './template/generated-document-preview';
-import {
-  CONTRACT_DEFAULT_HOURS_AMOUNT,
-  CONTRACT_DEFAULT_LIFESPAN,
-  MOCK_SAVED_TEMPLATES,
-  templateSlugFor,
-} from './template/mock-saved-templates';
 
 type ProfileFieldKey = 'address' | 'iban' | 'bic' | 'dob';
 
@@ -32,9 +38,6 @@ interface ProfileFieldState {
   value: string | null;
   provenance: ProfileFieldProvenance;
 }
-
-// Mock — a real org display name doesn't exist in the data model yet (dev dependency).
-const MOCK_ORG_NAME = 'Musterverein e.V.';
 
 /** "Anna Müller" -> { first: "Anna", last: "Müller" } — matches the Vorname/Nachname fields the contract text binds separately. */
 function splitName(name: string): { first: string; last: string } {
@@ -69,7 +72,34 @@ export function ContractCreationModal({
   );
   const tPauschale = useTranslations('Accounting.reimbursements.toolbar');
 
-  const [status, setStatus] = useState<DocumentCreationLoadStatus>('loading');
+  const orgUId = useOrgUId();
+  const org = useCurrentOrg();
+
+  const typesQuery = useReimbursementTypes();
+  const ratesQuery = useEffectiveRates(orgUId);
+  const profileQuery = useAdminUserProfile(volunteerId ?? '');
+
+  const reimbursementTypeKey = pauschale
+    ? reimbursementTypeKeyFor(pauschale)
+    : undefined;
+  const reimbursementType = typesQuery.data?.find(
+    (type) => type.key === reimbursementTypeKey,
+  );
+  const effectiveRate = ratesQuery.data?.find(
+    (rate) => rate.reimbursementType.key === reimbursementTypeKey,
+  );
+
+  const templateQuery = useActiveDocumentTemplate(
+    apiDocumentKindFor('contract'),
+    reimbursementType?.id,
+    orgUId,
+  );
+  const templateDoc = templateQuery.data
+    ? parseTemplateBody(templateQuery.data.body)
+    : null;
+
+  const createContract = useCreateContract();
+
   const [fields, setFields] = useState<Record<
     ProfileFieldKey,
     ProfileFieldState
@@ -78,30 +108,59 @@ export function ContractCreationModal({
   const [hoursAmount, setHoursAmount] = useState('');
   const [isSending, setIsSending] = useState(false);
 
+  // Reset local edits whenever a different volunteer/pauschale is targeted —
+  // the fields get re-seeded from the freshly loaded profile/template below.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: intentional reset keyed on identity change, not a dependency read by the effect body
   useEffect(() => {
-    if (!open || !pauschale) return;
-    setStatus('loading');
     setFields(null);
-    setLifespan(CONTRACT_DEFAULT_LIFESPAN[pauschale]);
-    setHoursAmount(CONTRACT_DEFAULT_HOURS_AMOUNT[pauschale]);
+    setLifespan('');
+    setHoursAmount('');
+  }, [volunteerId, pauschale]);
 
-    const timeout = setTimeout(() => {
-      const data =
-        (volunteerId && MOCK_PROFILE_DATA[volunteerId]) || DEFAULT_PROFILE_DATA;
-      setFields({
-        address: {
-          value: data.address,
-          provenance: data.address ? 'profile' : 'gap',
-        },
-        iban: { value: data.iban, provenance: data.iban ? 'profile' : 'gap' },
-        bic: { value: data.bic, provenance: data.bic ? 'profile' : 'gap' },
-        dob: { value: data.dob, provenance: data.dob ? 'profile' : 'gap' },
-      });
-      setStatus('loaded');
-    }, 350);
+  const profileLoaded = !!volunteerId && profileQuery.isSuccess;
+  const reimbursementTypeMissing =
+    typesQuery.isSuccess && !!pauschale && !reimbursementType;
+  const dataReady = !!templateDoc && profileLoaded && !!reimbursementType;
+  const hasError =
+    typesQuery.isError ||
+    ratesQuery.isError ||
+    profileQuery.isError ||
+    templateQuery.isError ||
+    reimbursementTypeMissing;
 
-    return () => clearTimeout(timeout);
-  }, [open, volunteerId, pauschale]);
+  const status: DocumentCreationLoadStatus = hasError
+    ? 'error'
+    : dataReady
+      ? 'loaded'
+      : 'loading';
+
+  // Seed the editable fields once from the loaded profile/template, then
+  // leave them alone — further re-renders (e.g. rate data arriving late)
+  // shouldn't clobber anything the coordinator already edited.
+  useEffect(() => {
+    if (!dataReady || !templateDoc || fields) return;
+    const profileData = (profileQuery.data?.data ?? {}) as Record<
+      string,
+      unknown
+    >;
+    const address =
+      typeof profileData.address === 'string' ? profileData.address : null;
+    const iban = typeof profileData.iban === 'string' ? profileData.iban : null;
+    const dob =
+      typeof profileData['birth-date'] === 'string'
+        ? profileData['birth-date']
+        : null;
+    setFields({
+      address: { value: address, provenance: address ? 'profile' : 'gap' },
+      iban: { value: iban, provenance: iban ? 'profile' : 'gap' },
+      // No BIC field exists in the requirement-profile system yet (see
+      // system-profile-fields.ts) — always a gap until that's added.
+      bic: { value: null, provenance: 'gap' },
+      dob: { value: dob, provenance: dob ? 'profile' : 'gap' },
+    });
+    setLifespan(getManualFieldValue(templateDoc, 'contract-lifespan') ?? '');
+    setHoursAmount(getManualFieldValue(templateDoc, 'hours-amount') ?? '');
+  }, [dataReady, templateDoc, fields, profileQuery.data]);
 
   // Rendered unconditionally (per the DocumentSheet precedent) so the Dialog
   // can drive its own open/close animation; nothing below needs the nullable
@@ -115,12 +174,25 @@ export function ContractCreationModal({
   };
 
   const handleSend = async () => {
+    if (!reimbursementType) return;
     setIsSending(true);
-    await new Promise((resolve) => setTimeout(resolve, 500));
-    setIsSending(false);
-    onOpenChange(false);
-    toast.success(t('sentToast', { name: volunteerName }));
-    onSent();
+    const { periodStart, periodEnd } = contractPeriodForLifespan(lifespan);
+    try {
+      await createContract.mutateAsync({
+        organizationUnitId: orgUId,
+        reimbursementTypeId: reimbursementType.id,
+        volunteerId,
+        periodStart,
+        periodEnd,
+      });
+      onOpenChange(false);
+      toast.success(t('sentToast', { name: volunteerName }));
+      onSent();
+    } catch {
+      toast.error(t('sendErrorToast', { name: volunteerName }));
+    } finally {
+      setIsSending(false);
+    }
   };
 
   const pauschaleLabel = tPauschale(
@@ -129,25 +201,26 @@ export function ContractCreationModal({
     >[0],
   );
 
-  const template =
-    MOCK_SAVED_TEMPLATES[templateSlugFor(pauschale, 'contract')].document;
   // Baked into the template, not chosen per document — shown as read-only context next to the amount input.
-  const hoursUnit = getManualFieldValue(template, 'hours-unit') ?? 'Monat';
+  const hoursUnit = templateDoc
+    ? (getManualFieldValue(templateDoc, 'hours-unit') ?? 'Monat')
+    : 'Monat';
   const hoursUnitLabel =
     hoursUnit === 'Woche' ? t('hoursUnitWeek') : t('hoursUnitMonth');
   const { first, last } = splitName(volunteerName);
 
   const values: Partial<Record<DataSourceKey, string>> = {
-    // Mock org identity + rates — wired to real org/rate data in the
-    // creation-modals phase together with MOCK_SAVED_TEMPLATES.
     ...getKnownOrgValues({
       pauschale,
-      orgName: 'Rotes Kreuz Berlin e.V.',
-      orgAddress: 'Musterstraße 12, 10115 Berlin',
-      orgCity: 'Berlin',
-      orgLegalRep: 'Dr. Erika Musterfrau',
-      hourlyRateCents: eurosToCents(getEffectivePauschaleRate(pauschale)),
-      yearlyLimitCents: getYearlyLimit(pauschale) * 100,
+      orgName: org.name,
+      orgAddress: org.address,
+      // orgCity/orgLegalRep: no such field exists on the org profile yet
+      // (see OrganizationData) — a real gap, left unresolved rather than
+      // invented.
+      hourlyRateCents: effectiveRate?.hourlyRateCents,
+      yearlyLimitCents:
+        effectiveRate?.reimbursementType.yearlyLimitCents ??
+        reimbursementType?.yearlyLimitCents,
     }),
     volunteer_first_name: first,
     volunteer_last_name: last,
@@ -174,23 +247,25 @@ export function ContractCreationModal({
       isSending={isSending}
       onSend={handleSend}
       preview={
-        <GeneratedDocumentPreview
-          document={template}
-          kind="contract"
-          pauschale={pauschale}
-          pauschaleLabel={pauschaleLabel}
-          documentTitle={t('preview.documentTitle')}
-          orgName={MOCK_ORG_NAME}
-          disclaimerLabel={t('preview.disclaimerBadge')}
-          signerLeftLabel={t('preview.signatureVolunteer')}
-          signerRightLabel={t('preview.signatureCoordinator')}
-          unsignedLabel={t('preview.unsigned')}
-          values={values}
-          manualOverrides={{
-            'contract-lifespan': lifespan,
-            'hours-amount': hoursAmount,
-          }}
-        />
+        templateDoc && (
+          <GeneratedDocumentPreview
+            document={templateDoc}
+            kind="contract"
+            pauschale={pauschale}
+            pauschaleLabel={pauschaleLabel}
+            documentTitle={t('preview.documentTitle')}
+            orgName={org.name}
+            disclaimerLabel={t('preview.disclaimerBadge')}
+            signerLeftLabel={t('preview.signatureVolunteer')}
+            signerRightLabel={t('preview.signatureCoordinator')}
+            unsignedLabel={t('preview.unsigned')}
+            values={values}
+            manualOverrides={{
+              'contract-lifespan': lifespan,
+              'hours-amount': hoursAmount,
+            }}
+          />
+        )
       }
       fields={
         fields && (

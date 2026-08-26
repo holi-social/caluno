@@ -1,23 +1,35 @@
 'use client';
 
+import { parseTemplateBody } from '@repo/data';
+import {
+  useActiveDocumentTemplate,
+  useAdminUserProfile,
+  useCreateInvoice,
+  useCurrentOrg,
+  useEffectiveRates,
+  useEligibleTimeEntriesForInvoice,
+  useReimbursementTypes,
+} from '@repo/data/react';
 import { format } from 'date-fns';
 import { useTranslations } from 'next-intl';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { toast } from 'sonner';
 import { formatEuro } from '@/lib/formatting/formats';
-import { eurosToCents } from '../lib/money';
-import { getEffectivePauschaleRate, getYearlyLimit } from '../mock-rates';
+import { mapEligibleTimeEntry } from '../lib/creation-modal.utils';
+import { centsToEuros } from '../lib/money';
+import {
+  apiDocumentKindFor,
+  reimbursementTypeKeyFor,
+} from '../lib/reimbursement-type-mapping';
 import { AccountingProfileFieldCard } from './accounting-profile-field-card';
 import { getPauschaleKey, type PauschalenType } from './doc-type-header';
 import {
   DocumentCreationDialog,
   type DocumentCreationLoadStatus,
 } from './document-creation-dialog';
-import type { EligibleHourLine } from './eligible-hours-card';
 import { EligibleHoursCard } from './eligible-hours-card';
 import { InfoPanel } from './info-panel';
 import { InvoiceCapCard } from './invoice-cap-card';
-import { DEFAULT_PROFILE_DATA, MOCK_PROFILE_DATA } from './mock-profile-data';
 import type { DateRange } from './period-picker';
 import { lastMonthRange, PeriodPicker, thisMonthRange } from './period-picker';
 import { getKnownOrgValues } from './template/builder-document-presets';
@@ -27,71 +39,6 @@ import type {
 } from './template/builder-types';
 import { getManualFieldValue } from './template/builder-types';
 import { GeneratedDocumentPreview } from './template/generated-document-preview';
-import {
-  MOCK_SAVED_TEMPLATES,
-  templateSlugFor,
-} from './template/mock-saved-templates';
-
-interface EligibleHoursMockEntry {
-  ratePerHour: number;
-  lines: EligibleHourLine[];
-}
-
-const JONAS_BAUER_HOURS: EligibleHoursMockEntry = {
-  ratePerHour: 15,
-  lines: [
-    {
-      id: 'd17-1',
-      shiftName: 'Sonntagsdienst',
-      dateTime: '05.07.2026, 09:00–13:00',
-      hours: 4,
-    },
-    {
-      id: 'd17-2',
-      shiftName: 'Vereinstraining Betreuung',
-      dateTime: '09.07.2026, 17:00–21:00',
-      hours: 4,
-    },
-    {
-      id: 'd17-3',
-      shiftName: 'Sommerfest Aufbau',
-      dateTime: '12.07.2026, 10:00–14:00',
-      hours: 4,
-    },
-  ],
-};
-
-// Mock — real wiring needs actual time-entry data reconciled per invoice
-// period (dev dependency, see context file). Keyed to real timesheet-generate
-// rows in reimbursements-board.tsx: d17 (Jonas Bauer, full profile) and d20
-// (Lena Klein, IBAN gap — see mock-profile-data.ts). Any other doc id falls
-// back to DEFAULT_ELIGIBLE_HOURS — every "Create" action stays testable.
-const MOCK_ELIGIBLE_HOURS: Record<string, EligibleHoursMockEntry> = {
-  d17: JONAS_BAUER_HOURS,
-  d20: {
-    ratePerHour: 15,
-    lines: [
-      {
-        id: 'd20-1',
-        shiftName: 'Kinderbetreuung Nachmittag',
-        dateTime: '03.07.2026, 14:00–18:00',
-        hours: 4,
-      },
-      {
-        id: 'd20-2',
-        shiftName: 'Vereinstraining Assistenz',
-        dateTime: '10.07.2026, 16:00–20:00',
-        hours: 4,
-      },
-    ],
-  },
-};
-
-/** Fallback for any doc id not seeded above, so every Create action resolves. */
-const DEFAULT_ELIGIBLE_HOURS: EligibleHoursMockEntry = JONAS_BAUER_HOURS;
-
-// Mock — a real org display name doesn't exist in the data model yet (dev dependency).
-const MOCK_ORG_NAME = 'Musterverein e.V.';
 
 /** "Anna Müller" -> { first: "Anna", last: "Müller" } — matches the Vorname/Nachname fields the invoice text binds separately. */
 function splitName(name: string): { first: string; last: string } {
@@ -99,7 +46,7 @@ function splitName(name: string): { first: string; last: string } {
   return { first: first ?? name, last: rest.join(' ') };
 }
 
-/** "05.07.2026, 09:00–13:00" -> { begin: "05.07.2026, 09:00", end: "05.07.2026, 13:00" } — the table's Beginn/Ende columns need separate timestamps, the mock data stores one combined string. */
+/** "05.07.2026, 09:00–13:00" -> { begin: "05.07.2026, 09:00", end: "05.07.2026, 13:00" } — the table's Beginn/Ende columns need separate timestamps, `EligibleHourLine` stores one combined string. */
 function splitDateTimeRange(dateTime: string): { begin: string; end: string } {
   const [datePart, timePart] = dateTime.split(', ');
   const [start, end] = (timePart ?? '').split('–');
@@ -177,52 +124,122 @@ export function InvoiceCreationModal({
     'Accounting.reimbursements.invoiceModal.periodPicker',
   );
 
-  const [status, setStatus] = useState<DocumentCreationLoadStatus>('loading');
+  const org = useCurrentOrg();
+
+  const typesQuery = useReimbursementTypes();
+  const ratesQuery = useEffectiveRates(orgUId);
+  const profileQuery = useAdminUserProfile(volunteerId ?? '');
+
+  const reimbursementTypeKey = pauschale
+    ? reimbursementTypeKeyFor(pauschale)
+    : undefined;
+  const reimbursementType = typesQuery.data?.find(
+    (type) => type.key === reimbursementTypeKey,
+  );
+  const effectiveRate = ratesQuery.data?.find(
+    (rate) => rate.reimbursementType.key === reimbursementTypeKey,
+  );
+  const ratePerHour = effectiveRate
+    ? centsToEuros(effectiveRate.hourlyRateCents)
+    : 0;
+
+  const invoiceTemplateQuery = useActiveDocumentTemplate(
+    apiDocumentKindFor('invoice'),
+    reimbursementType?.id,
+    orgUId,
+  );
+  const contractTemplateQuery = useActiveDocumentTemplate(
+    apiDocumentKindFor('contract'),
+    reimbursementType?.id,
+    orgUId,
+  );
+  const template = invoiceTemplateQuery.data
+    ? parseTemplateBody(invoiceTemplateQuery.data.body)
+    : null;
+  const contractTemplate = contractTemplateQuery.data
+    ? parseTemplateBody(contractTemplateQuery.data.body)
+    : null;
+
   const [nameField, setNameField] = useState<NameFieldState | null>(null);
   const [addressField, setAddressField] = useState<IbanFieldState | null>(null);
   const [ibanField, setIbanField] = useState<IbanFieldState | null>(null);
-  const [ratePerHour, setRatePerHour] = useState(0);
-  const [lines, setLines] = useState<EligibleHourLine[]>([]);
   const [checkedIds, setCheckedIds] = useState<Set<string>>(new Set());
   const [period, setPeriod] = useState<DateRange>(thisMonthRange);
   const [isSending, setIsSending] = useState(false);
 
+  const eligibleQuery = useEligibleTimeEntriesForInvoice({
+    volunteerId: volunteerId ?? undefined,
+    reimbursementTypeId: reimbursementType?.id,
+    periodStart: period.from?.toISOString(),
+    periodEnd: (period.to ?? period.from)?.toISOString(),
+  });
+  const lines = useMemo(
+    () => (eligibleQuery.data ?? []).map(mapEligibleTimeEntry),
+    [eligibleQuery.data],
+  );
+
+  const createInvoice = useCreateInvoice();
+
+  // Reset local edits and the period whenever a different document/volunteer
+  // is targeted — everything gets re-seeded from the freshly loaded data below.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: intentional reset keyed on identity change, not a dependency read by the effect body
   useEffect(() => {
-    if (!open) return;
-    setStatus('loading');
     setNameField(null);
     setAddressField(null);
     setIbanField(null);
-    setLines([]);
-    setCheckedIds(new Set());
     setPeriod(thisMonthRange());
+  }, [volunteerId, docId]);
 
-    const timeout = setTimeout(() => {
-      if (!volunteerName) {
-        setStatus('error');
-        return;
-      }
-      const profile =
-        (volunteerId && MOCK_PROFILE_DATA[volunteerId]) || DEFAULT_PROFILE_DATA;
-      const hoursData =
-        (docId && MOCK_ELIGIBLE_HOURS[docId]) || DEFAULT_ELIGIBLE_HOURS;
-      setNameField({ value: volunteerName, provenance: 'profile' });
-      setAddressField({
-        value: profile.address,
-        provenance: profile.address ? 'profile' : 'gap',
-      });
-      setIbanField({
-        value: profile.iban,
-        provenance: profile.iban ? 'profile' : 'gap',
-      });
-      setRatePerHour(hoursData.ratePerHour);
-      setLines(hoursData.lines);
-      setCheckedIds(new Set(hoursData.lines.map((line) => line.id)));
-      setStatus('loaded');
-    }, 350);
+  // Every eligible entry starts checked — unchecking removes it from the
+  // invoice being created (see EligibleHoursCard). Re-syncs whenever the
+  // underlying entries change (a fresh period, a refetch), not on every render.
+  useEffect(() => {
+    setCheckedIds(new Set(lines.map((line) => line.id)));
+  }, [lines]);
 
-    return () => clearTimeout(timeout);
-  }, [open, volunteerId, docId, volunteerName]);
+  const profileLoaded = !!volunteerId && profileQuery.isSuccess;
+  const reimbursementTypeMissing =
+    typesQuery.isSuccess && !!pauschale && !reimbursementType;
+  const dataReady =
+    !!volunteerName &&
+    profileLoaded &&
+    !!reimbursementType &&
+    !!template &&
+    !!contractTemplate &&
+    eligibleQuery.isSuccess;
+  const hasError =
+    typesQuery.isError ||
+    ratesQuery.isError ||
+    profileQuery.isError ||
+    invoiceTemplateQuery.isError ||
+    contractTemplateQuery.isError ||
+    eligibleQuery.isError ||
+    reimbursementTypeMissing;
+
+  const status: DocumentCreationLoadStatus = hasError
+    ? 'error'
+    : dataReady
+      ? 'loaded'
+      : 'loading';
+
+  // Seed the editable fields once from the loaded profile, then leave them
+  // alone — later re-renders shouldn't clobber a coordinator's edits.
+  useEffect(() => {
+    if (!volunteerId || !volunteerName || nameField || !profileLoaded) return;
+    const profileData = (profileQuery.data?.data ?? {}) as Record<
+      string,
+      unknown
+    >;
+    const address =
+      typeof profileData.address === 'string' ? profileData.address : null;
+    const iban = typeof profileData.iban === 'string' ? profileData.iban : null;
+    setNameField({ value: volunteerName, provenance: 'profile' });
+    setAddressField({
+      value: address,
+      provenance: address ? 'profile' : 'gap',
+    });
+    setIbanField({ value: iban, provenance: iban ? 'profile' : 'gap' });
+  }, [volunteerId, volunteerName, nameField, profileLoaded, profileQuery.data]);
 
   // Rendered unconditionally (per the ContractCreationModal precedent) so the
   // Dialog can drive its own open/close animation; nothing below needs the
@@ -255,12 +272,25 @@ export function InvoiceCreationModal({
   };
 
   const handleSend = async () => {
+    if (!reimbursementType) return;
     setIsSending(true);
-    await new Promise((resolve) => setTimeout(resolve, 500));
-    setIsSending(false);
-    onOpenChange(false);
-    toast.success(t('sentToast', { name: volunteerName }));
-    onSent();
+    try {
+      await createInvoice.mutateAsync({
+        organizationUnitId: orgUId,
+        reimbursementTypeId: reimbursementType.id,
+        volunteerId,
+        periodStart: (period.from ?? new Date()).toISOString(),
+        periodEnd: (period.to ?? period.from ?? new Date()).toISOString(),
+        timeEntryIds: selectedLines.map((line) => line.id),
+      });
+      onOpenChange(false);
+      toast.success(t('sentToast', { name: volunteerName }));
+      onSent();
+    } catch {
+      toast.error(t('sendErrorToast', { name: volunteerName }));
+    } finally {
+      setIsSending(false);
+    }
   };
 
   const pauschaleLabel = tPauschale(
@@ -276,41 +306,43 @@ export function InvoiceCreationModal({
   const monthParam = `${periodStart.getFullYear()}-${String(periodStart.getMonth() + 1).padStart(2, '0')}`;
   const timesheetsHref = `/admin/${orgUId}/timesheets?month=${monthParam}&volunteer=${volunteerId}`;
 
-  const savedTemplate =
-    MOCK_SAVED_TEMPLATES[templateSlugFor(pauschale, 'invoice')];
-  const template = savedTemplate.document;
-  const kostenstelle =
-    'kostenstelle' in savedTemplate.summary
-      ? savedTemplate.summary.kostenstelle
-      : undefined;
+  const kostenstelle = template
+    ? getManualFieldValue(template, 'kostenstelle')
+    : undefined;
 
   const { first, last } = splitName(nameField?.value ?? volunteerName);
 
   const values: Partial<Record<DataSourceKey, string>> = {
-    // Mock org identity + rates — wired to real org/rate data in the
-    // creation-modals phase together with MOCK_SAVED_TEMPLATES.
     ...getKnownOrgValues({
       pauschale,
-      orgName: 'Rotes Kreuz Berlin e.V.',
-      orgAddress: 'Musterstraße 12, 10115 Berlin',
-      orgCity: 'Berlin',
-      orgLegalRep: 'Dr. Erika Musterfrau',
-      hourlyRateCents: eurosToCents(getEffectivePauschaleRate(pauschale)),
-      yearlyLimitCents: getYearlyLimit(pauschale) * 100,
+      orgName: org.name,
+      orgAddress: org.address,
+      // orgCity/orgLegalRep: no such field exists on the org profile yet
+      // (see OrganizationData) — a real gap, left unresolved rather than
+      // invented.
+      hourlyRateCents: effectiveRate?.hourlyRateCents,
+      yearlyLimitCents:
+        effectiveRate?.reimbursementType.yearlyLimitCents ??
+        reimbursementType?.yearlyLimitCents,
     }),
     volunteer_first_name: first,
     volunteer_last_name: last,
     volunteer_address: addressField?.value ?? undefined,
     volunteer_iban: ibanField?.value ?? undefined,
     generated_date: format(new Date(), 'dd.MM.yyyy'),
-    document_number: template.invoiceNumberFormat
-      ? formatDocumentNumber(template.invoiceNumberFormat, period, kostenstelle)
-      : undefined,
+    document_number:
+      template?.invoiceNumberFormat && template
+        ? formatDocumentNumber(
+            template.invoiceNumberFormat,
+            period,
+            kostenstelle,
+          )
+        : undefined,
     period_start: format(period.from ?? new Date(), 'dd.MM.yyyy'),
     period_end: format(period.to ?? new Date(), 'dd.MM.yyyy'),
   };
 
-  const tableBlock = template.blocks.find((b) => b.kind === 'table');
+  const tableBlock = template?.blocks.find((b) => b.kind === 'table');
   const firstColumnSource =
     tableBlock?.kind === 'table'
       ? tableBlock.firstColumnSource
@@ -320,11 +352,8 @@ export function InvoiceCreationModal({
   // The agreement's task description is baked into the volunteer's contract template, not
   // this invoice's own — read from the sibling contract template for this pauschale.
   const agreementTaskDescription =
-    firstColumnSource === 'agreement_task_description'
-      ? getManualFieldValue(
-          MOCK_SAVED_TEMPLATES[templateSlugFor(pauschale, 'contract')].document,
-          'tasks',
-        )
+    firstColumnSource === 'agreement_task_description' && contractTemplate
+      ? getManualFieldValue(contractTemplate, 'tasks')
       : undefined;
 
   const tableRows = selectedLines.map((line) => {
@@ -367,22 +396,24 @@ export function InvoiceCreationModal({
       onSend={handleSend}
       sendDisabled={selectedHours === 0}
       preview={
-        <GeneratedDocumentPreview
-          document={template}
-          kind="invoice"
-          pauschale={pauschale}
-          pauschaleLabel={pauschaleLabel}
-          documentTitle={t('preview.documentTitle')}
-          orgName={MOCK_ORG_NAME}
-          disclaimerLabel={t('preview.disclaimerBadge')}
-          signerLeftLabel={t('preview.signatureVolunteer')}
-          signerRightLabel={t('preview.signatureSupervisor')}
-          unsignedLabel={t('preview.unsigned')}
-          values={values}
-          tableRows={tableRows}
-          tableTotalRow={tableTotalRow}
-          tableNoteRow={tableVatRow}
-        />
+        template && (
+          <GeneratedDocumentPreview
+            document={template}
+            kind="invoice"
+            pauschale={pauschale}
+            pauschaleLabel={pauschaleLabel}
+            documentTitle={t('preview.documentTitle')}
+            orgName={org.name}
+            disclaimerLabel={t('preview.disclaimerBadge')}
+            signerLeftLabel={t('preview.signatureVolunteer')}
+            signerRightLabel={t('preview.signatureSupervisor')}
+            unsignedLabel={t('preview.unsigned')}
+            values={values}
+            tableRows={tableRows}
+            tableTotalRow={tableTotalRow}
+            tableNoteRow={tableVatRow}
+          />
+        )
       }
       fields={
         nameField &&
