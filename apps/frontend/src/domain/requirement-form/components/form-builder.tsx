@@ -1,11 +1,21 @@
 'use client';
 
 import type { FormBlock, RequirementForm } from '@repo/data';
-import { Button } from '@repo/ui';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  Button,
+} from '@repo/ui';
 import { AlertTriangle, Save, X } from 'lucide-react';
 import { useSearchParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { toast } from 'sonner';
 import { useSheetTrigger } from '@/hooks/use-sheet';
 import { usePathname, useRouter } from '@/i18n/navigation';
@@ -28,6 +38,29 @@ interface FormBuilderProps {
   orgUId: string;
 }
 
+function normalizeBlockRefs(
+  refs: readonly BuilderBlockRef[],
+): BuilderBlockRef[] {
+  return [...refs].sort((a, b) => (a.fieldOrder ?? 0) - (b.fieldOrder ?? 0));
+}
+
+function blockRefsEqual(
+  a: readonly BuilderBlockRef[],
+  b: readonly BuilderBlockRef[],
+): boolean {
+  const sortedA = normalizeBlockRefs(a);
+  const sortedB = normalizeBlockRefs(b);
+  if (sortedA.length !== sortedB.length) return false;
+  for (let i = 0; i < sortedA.length; i++) {
+    const refA = sortedA[i];
+    const refB = sortedB[i];
+    if (!refA || !refB) return false;
+    if (refA.blockId !== refB.blockId) return false;
+    if ((refA.fieldOrder ?? 0) !== (refB.fieldOrder ?? 0)) return false;
+  }
+  return true;
+}
+
 export function FormBuilder({
   form,
   availableBlocks,
@@ -44,12 +77,33 @@ export function FormBuilder({
   );
   const [saving, setSaving] = useState(false);
   const [addBlockOpen, setAddBlockOpen] = useState(false);
+  const [showLeaveDialog, setShowLeaveDialog] = useState(false);
   const { open: openBlockSheet } = useSheetTrigger('block-form');
   const searchParams = useSearchParams();
   const pathname = usePathname();
 
   const hasSubmissions = (form.submissionCount ?? 0) > 0;
-  const usedBlockIds = new Set(blockRefs.map((ref) => ref.blockId));
+  const usedBlockIds = useMemo(
+    () => new Set(blockRefs.map((ref) => ref.blockId)),
+    [blockRefs],
+  );
+  const isDirty = useMemo(
+    () => !blockRefsEqual(blockRefs, form.blockRefs ?? []),
+    [blockRefs, form.blockRefs],
+  );
+
+  // Warn when closing the tab or refreshing with unsaved changes.
+  useEffect(() => {
+    if (!isDirty) return;
+
+    const handleBeforeUnload = (event: BeforeUnloadEvent) => {
+      event.preventDefault();
+      event.returnValue = '';
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [isDirty]);
 
   // A block created via the block sheet (opened with forForm=true) comes
   // back as the addBlock search param — append it to the form.
@@ -67,6 +121,19 @@ export function FormBuilder({
   function handleAddExistingBlock(blockId: string) {
     setBlockRefs((refs) => appendBlockRef(refs, blockId, form.id));
     setAddBlockOpen(false);
+  }
+
+  function handleLeave() {
+    setShowLeaveDialog(false);
+    router.push(`/admin/${orgUId}/requirement-forms`);
+  }
+
+  function handleCancel() {
+    if (isDirty) {
+      setShowLeaveDialog(true);
+    } else {
+      router.push(`/admin/${orgUId}/requirement-forms`);
+    }
   }
 
   async function handleSave() {
@@ -164,11 +231,7 @@ export function FormBuilder({
             </p>
           )}
           <div className="flex items-center gap-4">
-            <Button
-              size="lg"
-              variant="outline"
-              onClick={() => router.push(`/admin/${orgUId}/requirement-forms`)}
-            >
+            <Button size="lg" variant="outline" onClick={handleCancel}>
               <X />
               {tCommon('cancel')}
             </Button>
@@ -183,6 +246,23 @@ export function FormBuilder({
           </div>
         </div>
       )}
+
+      <AlertDialog open={showLeaveDialog} onOpenChange={setShowLeaveDialog}>
+        <AlertDialogContent className="sm:max-w-md">
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t('unsavedChangesTitle')}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {t('unsavedChangesDescription')}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{t('unsavedChangesStay')}</AlertDialogCancel>
+            <AlertDialogAction onClick={handleLeave} variant="destructive">
+              {t('unsavedChangesLeave')}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
