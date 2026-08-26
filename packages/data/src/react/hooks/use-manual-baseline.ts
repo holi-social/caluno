@@ -1,60 +1,62 @@
 'use client';
-import { AccountingRepository, type RawBundleDownloadStatus } from '@repo/data';
+import { AccountingRepository, type RawManualBaseline } from '@repo/data';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useSdk } from './use-graphql-client';
 
-export function useBundleDownloadStatus(
+export function useManualBaseline(
   volunteerId?: string,
   reimbursementTypeId?: string,
+  year?: number,
 ) {
   const sdk = useSdk();
   const repository = new AccountingRepository(sdk);
 
-  return useQuery<RawBundleDownloadStatus>({
+  return useQuery<RawManualBaseline>({
     queryKey: [
       'accounting',
-      'bundle-download-status',
+      'manual-baseline',
       volunteerId,
       reimbursementTypeId,
+      year,
     ],
     queryFn: () =>
-      repository.findBundleDownloadStatus(
+      repository.findManualBaseline(
         volunteerId ?? '',
         reimbursementTypeId ?? '',
+        year ?? new Date().getFullYear(),
       ),
     staleTime: 30 * 1000,
-    enabled: !!volunteerId && !!reimbursementTypeId,
+    enabled: !!volunteerId && !!reimbursementTypeId && !!year,
   });
 }
 
-export function useRecordBundleDownload() {
+export function useSetManualBaseline() {
   const sdk = useSdk();
   const queryClient = useQueryClient();
   const repository = new AccountingRepository(sdk);
 
   return useMutation({
-    mutationFn: ({
-      volunteerId,
-      reimbursementTypeId,
-      invoiceIds,
-    }: {
+    mutationFn: (input: {
       volunteerId: string;
       reimbursementTypeId: string;
-      invoiceIds?: string[];
-    }) =>
-      repository.recordBundleDownload(
-        volunteerId,
-        reimbursementTypeId,
-        invoiceIds,
-      ),
-    onSuccess: (_, { volunteerId, reimbursementTypeId }) => {
+      year: number;
+      amountCents: number;
+    }) => repository.setManualBaseline(input),
+    onSuccess: (_, { volunteerId, reimbursementTypeId, year }) => {
       queryClient.invalidateQueries({
         queryKey: [
           'accounting',
-          'bundle-download-status',
+          'manual-baseline',
           volunteerId,
           reimbursementTypeId,
+          year,
         ],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ['accounting', 'yearly-usage'],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ['accounting', 'roster-usage'],
       });
     },
   });
