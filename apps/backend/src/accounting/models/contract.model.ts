@@ -51,6 +51,9 @@ export class Contract {
   @Field(() => SigneeType, { nullable: true })
   declinedAtSigneeType?: SigneeType | null;
 
+  @Field(() => String, { nullable: true })
+  downloadUrl?: string | null;
+
   @Field(() => [ContractSignature])
   signatures!: ContractSignature[];
 

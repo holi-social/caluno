@@ -1,7 +1,10 @@
 import { Module } from '@nestjs/common';
 import { AuthModule } from '../auth/auth.module';
 import { DatabaseModule } from '../database/database.module';
+import { MembershipModule } from '../membership/membership.module';
 import { OrganizationModule } from '../organization/organization.module';
+import { OrganizationUnitDataModule } from '../organization/organization-unit-data.module';
+import { StorageModule } from '../storage/storage.module';
 import { TimeTrackingModule } from '../time-tracking/time-tracking.module';
 import { UserModule } from '../user/user.module';
 import './enums/register-graphql-enums';
@@ -46,6 +49,7 @@ import {
 } from './resolvers';
 import {
   ContractService,
+  DocumentRenderingService,
   DocumentSigningService,
   DocumentTemplateService,
   InvoiceService,
@@ -57,12 +61,16 @@ import {
     DatabaseModule,
     AuthModule,
     OrganizationModule,
+    OrganizationUnitDataModule,
     UserModule,
     TimeTrackingModule,
+    MembershipModule,
+    StorageModule,
   ],
   providers: [
     ReimbursementRateService,
     DocumentTemplateService,
+    DocumentRenderingService,
     DocumentSigningService,
     ContractService,
     InvoiceService,
