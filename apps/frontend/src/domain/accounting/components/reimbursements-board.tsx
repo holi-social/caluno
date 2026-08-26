@@ -1,7 +1,12 @@
 'use client';
 
 import {
-  Button,
+  useDeclineContract,
+  useDeclineInvoice,
+  useSignContract,
+  useSignInvoice,
+} from '@repo/data/react';
+import {
   cn,
   Empty,
   EmptyDescription,
@@ -24,73 +29,22 @@ import {
   SearchIcon,
 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import { Fragment, useEffect, useMemo, useState } from 'react';
+import { Fragment, useMemo, useState } from 'react';
 import { toast } from 'sonner';
+import { useReimbursementBoardData } from '../hooks/use-reimbursement-board-data';
 import { ContractCreationModal } from './contract-creation-modal';
 import { CreateDocumentModal } from './create-document-modal';
 import type { PauschalenType } from './doc-type-header';
 import { InvoiceCreationModal } from './invoice-creation-modal';
-import type {
-  NonCompliantAction,
-  NonCompliantDialogState,
-} from './non-compliant-timesheet-dialog';
-import { NonCompliantTimesheetDialog } from './non-compliant-timesheet-dialog';
 import type { DateRange } from './period-picker';
 import { lastMonthRange, PeriodPicker, thisMonthRange } from './period-picker';
-import { BatchBar } from './reimbursements-batch-bar';
-import {
-  DocumentSheet,
-  MOCK_STAFF_ACTORS,
-} from './reimbursements-document-sheet';
+import { DocumentSheet } from './reimbursements-document-sheet';
 import {
   type DocTypeFilter,
   isYourActionStatus,
   ReimbursementsTable,
 } from './reimbursements-volunteer-group';
-import type { Signee, SigneeRole } from './template/types';
-
-// ─── Mock org roles ───────────────────────────────────────────────────────────
-
-const MOCK_ORG_ROLES = {
-  volunteer: { id: 'role-1', name: 'Vereinsmitglied' },
-  coordinator: { id: 'role-2', name: 'Übungsleitung' },
-  supervisor: { id: 'role-3', name: 'Vorstandsmitglied' },
-} as const;
-
-// ─── Mock template signing chains ─────────────────────────────────────────────
-
-const MOCK_TEMPLATE_SIGNEES: Record<string, Signee[]> = {
-  'ehrenamt-contract': [
-    { id: 's-eh-c-1', role: 'volunteer', orgRole: MOCK_ORG_ROLES.volunteer },
-    {
-      id: 's-eh-c-2',
-      role: 'coordinator',
-      orgRole: MOCK_ORG_ROLES.coordinator,
-    },
-  ],
-  'ehrenamt-invoice': [
-    { id: 's-eh-i-1', role: 'volunteer', orgRole: MOCK_ORG_ROLES.volunteer },
-    { id: 's-eh-i-2', role: 'supervisor', orgRole: MOCK_ORG_ROLES.supervisor },
-  ],
-  'uebungsleiter-contract': [
-    { id: 's-ul-c-1', role: 'volunteer', orgRole: MOCK_ORG_ROLES.volunteer },
-    {
-      id: 's-ul-c-2',
-      role: 'coordinator',
-      orgRole: MOCK_ORG_ROLES.coordinator,
-    },
-  ],
-  'uebungsleiter-invoice': [
-    { id: 's-ul-i-1', role: 'volunteer', orgRole: MOCK_ORG_ROLES.volunteer },
-    { id: 's-ul-i-2', role: 'supervisor', orgRole: MOCK_ORG_ROLES.supervisor },
-  ],
-};
-
-function getTemplateSignees(doc: BoardDocument, vol: BoardVolunteer): Signee[] {
-  const pauschale = doc.pauschale ?? vol.pauschale;
-  const kind = doc.status.startsWith('contract') ? 'contract' : 'invoice';
-  return MOCK_TEMPLATE_SIGNEES[`${pauschale}-${kind}`] ?? [];
-}
+import type { SigneeRole } from './template/types';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -131,12 +85,20 @@ type SortOption = 'action-needed' | 'newest';
 
 export type { DateRange };
 
+const TILE_IDS: Exclude<TileFilter, null>[] = [
+  'contract-generate',
+  'contract-signing',
+  'timesheet-generate',
+  'timesheet-signing',
+  'ready-to-go',
+];
+
 export interface BoardDocument {
   id: string;
   status: DocStatus;
   amount?: number;
   hours?: number;
-  lastActionDate?: string;
+  lastActionDate?: Date;
   periodLabel: string;
   /** Manually flagged: this timesheet's amount pushed the volunteer at/over their yearly cap. Unrelated to contract compliance. */
   isOverCap?: boolean;
@@ -144,17 +106,8 @@ export interface BoardDocument {
   /** Set together when a signer rejects the document (contract-declined/timesheet-declined only). */
   declineReason?: string;
   declinedBy?: string;
-  declinedAt?: string;
+  declinedAt?: Date;
   /** Which seat in the signing chain declined — determines where the pipeline/timeline gets cut off. */
-  declinedAtRole?: SigneeRole;
-}
-
-/** Status + decline-detail override layered onto a mock document in-session (see docOverrides). */
-export interface DocOverride {
-  status: DocStatus;
-  declineReason?: string;
-  declinedBy?: string;
-  declinedAt?: string;
   declinedAtRole?: SigneeRole;
 }
 
@@ -174,28 +127,10 @@ export interface BoardVolunteer {
   documents: BoardDocument[];
 }
 
-/** A document paired with the volunteer it belongs to — needed once actions act across volunteers (batch selection). */
+/** A document paired with the volunteer it belongs to — needed once actions act across volunteers. */
 export interface DocVolPair {
   doc: BoardDocument;
   vol: BoardVolunteer;
-}
-
-/** Applies in-session overrides (status flips after sending/declining a document) onto the mock volunteer list — the mock data itself stays static. */
-function applyDocStatusOverrides(
-  vols: BoardVolunteer[],
-  overrides: Record<string, DocOverride>,
-): BoardVolunteer[] {
-  if (Object.keys(overrides).length === 0) return vols;
-  return vols.map((v) => {
-    if (!v.documents.some((d) => d.id in overrides)) return v;
-    return {
-      ...v,
-      documents: v.documents.map((d) => {
-        const override = overrides[d.id];
-        return override ? { ...d, ...override } : d;
-      }),
-    };
-  });
 }
 
 /**
@@ -272,277 +207,13 @@ export function getReadyToGoDocs(
   return [...readyTimesheets, ...contractRows];
 }
 
-// ─── Mock data ────────────────────────────────────────────────────────────────
-const MOCK_VOLUNTEERS: BoardVolunteer[] = [
-  // ── Anna Müller (ehrenamt): compliant history — an active contract, one
-  // timesheet a supervisor declined a while back, and this month's
-  // timesheet still waiting on her own signature.
-  {
-    id: 'v1',
-    name: 'Anna Müller',
-    initials: 'AM',
-    pauschale: 'ehrenamt',
-    usedAmount: 240,
-    totalCap: 840,
-    documents: [
-      {
-        id: 'd1',
-        status: 'contract-active',
-        lastActionDate: '01.01.2026',
-        periodLabel: '2026',
-      },
-      {
-        id: 'd2',
-        status: 'timesheet-declined',
-        amount: 120,
-        hours: 8,
-        lastActionDate: '10.06.2026',
-        periodLabel: 'Juni 2026',
-        declineReason:
-          'Die angegebenen Stunden stimmen nicht mit dem Dienstplan überein — bitte mit den korrekten Schichten neu einreichen.',
-        declinedBy: 'Markus Kassier',
-        declinedAt: '10.06.2026',
-        declinedAtRole: 'supervisor',
-      },
-      {
-        id: 'd3',
-        status: 'timesheet-signing-vol',
-        amount: 120,
-        hours: 8,
-        lastActionDate: '03.07.2026',
-        periodLabel: 'Juli 2026',
-      },
-    ],
-  },
-  // ── Ben Schmidt (ehrenamt): brand new — contract still being drafted,
-  // but hours were already logged, so the timesheet is non-compliant
-  // until the contract goes active.
-  {
-    id: 'v2',
-    name: 'Ben Schmidt',
-    initials: 'BS',
-    pauschale: 'ehrenamt',
-    usedAmount: 0,
-    totalCap: 840,
-    documents: [
-      {
-        id: 'd4',
-        status: 'contract-generate',
-        lastActionDate: '01.07.2026',
-        periodLabel: '2026',
-      },
-      {
-        id: 'd5',
-        status: 'timesheet-generate',
-        amount: 60,
-        hours: 4,
-        lastActionDate: '07.07.2026',
-        periodLabel: 'Juli 2026',
-      },
-    ],
-  },
-  // ── Clara Weber (uebungsleiter): her first contract was declined by her
-  // (wrong rate quoted) — a fresh one has since been drafted and is now
-  // mid-signature.
-  {
-    id: 'v3',
-    name: 'Clara Weber',
-    initials: 'CW',
-    pauschale: 'uebungsleiter',
-    usedAmount: 0,
-    totalCap: 3000,
-    documents: [
-      {
-        id: 'd6',
-        status: 'contract-declined',
-        lastActionDate: '20.06.2026',
-        periodLabel: '2026',
-        declineReason:
-          'Der genannte Stundensatz entspricht nicht der Zusage — bitte mit korrektem Satz neu ausstellen.',
-        declinedBy: 'Clara Weber',
-        declinedAt: '20.06.2026',
-        declinedAtRole: 'volunteer',
-      },
-      {
-        id: 'd7',
-        status: 'contract-signing-vol',
-        lastActionDate: '01.07.2026',
-        periodLabel: '2026',
-      },
-    ],
-  },
-  // ── David Fischer (ehrenamt): one contract awaiting the coordinator's
-  // countersignature, and this month's timesheet awaiting the
-  // supervisor's — the live example for testing the new Decline action.
-  {
-    id: 'v4',
-    name: 'David Fischer',
-    initials: 'DF',
-    pauschale: 'ehrenamt',
-    usedAmount: 480,
-    totalCap: 840,
-    documents: [
-      {
-        id: 'd8',
-        status: 'contract-signing-coord',
-        lastActionDate: '06.07.2026',
-        periodLabel: '2026',
-      },
-      {
-        id: 'd9',
-        status: 'timesheet-signing-super',
-        amount: 180,
-        hours: 12,
-        lastActionDate: '02.07.2026',
-        periodLabel: 'Juli 2026',
-      },
-    ],
-  },
-  // ── Emma Wagner: long-tenured, both Pauschale types. An active
-  // Übungsleiter contract sits alongside an Ehrenamt side that never got a
-  // contract at all — hours were paid anyway (muted), and this month's
-  // Übungsleiter timesheet is about to push her over the yearly cap.
-  {
-    id: 'v5',
-    name: 'Emma Wagner',
-    initials: 'EW',
-    pauschale: 'ehrenamt',
-    usedAmount: 90,
-    totalCap: 840,
-    limits: {
-      ehrenamt: { used: 90, total: 840 },
-      uebungsleiter: { used: 2700, total: 3000 },
-    },
-    documents: [
-      {
-        id: 'd10',
-        status: 'contract-active',
-        lastActionDate: '01.01.2026',
-        periodLabel: '2026',
-        pauschale: 'uebungsleiter',
-      },
-      {
-        id: 'd11',
-        status: 'contract-missing',
-        periodLabel: '2026',
-        pauschale: 'ehrenamt',
-      },
-      {
-        id: 'd12',
-        status: 'timesheet-muted',
-        amount: 90,
-        hours: 6,
-        lastActionDate: '05.07.2026',
-        periodLabel: 'Juli 2026',
-        pauschale: 'ehrenamt',
-      },
-      {
-        id: 'd13',
-        status: 'timesheet-ready',
-        amount: 360,
-        hours: 24,
-        lastActionDate: '07.07.2026',
-        periodLabel: 'Juli 2026',
-        pauschale: 'uebungsleiter',
-        isOverCap: true,
-      },
-    ],
-  },
-];
-
-// ── Documentless volunteers: automation never fired for them (no shift
-// signup yet, or the trigger genuinely never ran). Excluded from every
-// default view — nothing pending — and surfaced only by an exact search
-// match, with a single manual "Create contract" escape hatch.
-const MOCK_DOCUMENTLESS_VOLUNTEERS: BoardVolunteer[] = [
-  {
-    id: 'v52',
-    name: 'Zeynep Aksoy',
-    initials: 'ZA',
-    pauschale: 'ehrenamt',
-    usedAmount: 0,
-    totalCap: 840,
-    documents: [],
-  },
-  {
-    id: 'v53',
-    name: 'Milan Fuchs',
-    initials: 'MF',
-    pauschale: 'uebungsleiter',
-    usedAmount: 0,
-    totalCap: 3000,
-    documents: [],
-  },
-  {
-    id: 'v54',
-    name: 'Sina Brandner',
-    initials: 'SB2',
-    pauschale: 'ehrenamt',
-    usedAmount: 0,
-    totalCap: 840,
-    documents: [],
-  },
-  {
-    id: 'v55',
-    name: 'Theo Wiechert',
-    initials: 'TW',
-    pauschale: 'uebungsleiter',
-    usedAmount: 0,
-    totalCap: 3000,
-    documents: [],
-  },
-  {
-    id: 'v56',
-    name: 'Layla Hoffmann',
-    initials: 'LH',
-    pauschale: 'ehrenamt',
-    usedAmount: 0,
-    totalCap: 840,
-    documents: [],
-  },
-  {
-    id: 'v57',
-    name: 'Jonas Reiter',
-    initials: 'JR',
-    pauschale: 'uebungsleiter',
-    usedAmount: 0,
-    totalCap: 3000,
-    documents: [],
-  },
-];
-
-/**
- * The rows a documentless volunteer gets once found by search: muted
- * placeholders whose only action is manually creating a contract. Both
- * pauschale types are shown — there's no signal yet for which one this
- * volunteer will actually need, so the supervisor picks.
- */
-function buildContractMissingDocs(vol: BoardVolunteer): BoardDocument[] {
-  const types: PauschalenType[] = ['ehrenamt', 'uebungsleiter'];
-  return types.map((pauschale) => ({
-    id: `${vol.id}-contract-missing-${pauschale}`,
-    status: 'contract-missing',
-    periodLabel: '2026',
-    pauschale,
-  }));
-}
 // ─── Date helpers ─────────────────────────────────────────────────────────────
-
-export function parseDocDate(s: string): Date | null {
-  const parts = s.split('.');
-  if (parts.length !== 3) return null;
-  const [d, m, y] = parts.map(Number);
-  if (!d || !m || !y) return null;
-  return new Date(y, m - 1, d);
-}
 
 function docInRange(doc: BoardDocument, range: DateRange | undefined): boolean {
   if (!range?.from) return true;
   if (!doc.lastActionDate) return true;
-  const date = parseDocDate(doc.lastActionDate);
-  if (!date) return true;
   const to = range.to ?? range.from;
-  return date >= range.from && date <= to;
+  return doc.lastActionDate >= range.from && doc.lastActionDate <= to;
 }
 
 /** A contract's `periodLabel` is its coverage year (e.g. "2026"); a timesheet's is "<Month> <year>" — either way the year is the last 4 digits. */
@@ -578,9 +249,7 @@ export function docVisibleInRange(
 
 function newestDocTimestamp(vol: BoardVolunteer): number {
   return vol.documents.reduce((max, d) => {
-    const t = d.lastActionDate
-      ? parseDocDate(d.lastActionDate)?.getTime()
-      : undefined;
+    const t = d.lastActionDate?.getTime();
     return t !== undefined && t > max ? t : max;
   }, -Infinity);
 }
@@ -770,6 +439,16 @@ export function ReimbursementsBoard({
 }: ReimbursementsBoardProps) {
   const t = useTranslations('Accounting.reimbursements');
 
+  const { volunteers, isLoading } = useReimbursementBoardData({
+    orgUId,
+    dateRange,
+  });
+
+  const signContract = useSignContract();
+  const signInvoice = useSignInvoice();
+  const declineContract = useDeclineContract();
+  const declineInvoice = useDeclineInvoice();
+
   // Filters
   const [activeTile, setActiveTile] = useState<TileFilter>(null);
   const [pauschale, setPauschale] = useState<PauschalenFilter>('all');
@@ -778,185 +457,77 @@ export function ReimbursementsBoard({
   const [sortOption, setSortOption] = useState<SortOption>('action-needed');
 
   // Sheet
-  const [selectedDoc, setSelectedDoc] = useState<{
-    doc: BoardDocument;
-    vol: BoardVolunteer;
-  } | null>(null);
+  const [selectedDoc, setSelectedDoc] = useState<DocVolPair | null>(null);
 
-  // Doc-level selection (derives vol-level for batch bar)
-  const [selectedDocIds, setSelectedDocIds] = useState<Set<string>>(new Set());
-
-  // Non-compliant timesheet confirmation
-  const [pendingItems, setPendingItems] = useState<DocVolPair[]>([]);
-  const [nonCompliantDialog, setNonCompliantDialog] =
-    useState<NonCompliantDialogState | null>(null);
-
-  // Contract creation modal (solo contract-generate rows only — batch stays BatchBar's territory)
+  // Contract creation modal (solo contract-generate / contract-declined rows)
   const [contractCreationTarget, setContractCreationTarget] =
     useState<DocVolPair | null>(null);
 
-  // Invoice creation modal (solo, compliant timesheet-generate rows only — batch stays BatchBar's territory)
+  // Invoice creation modal (solo timesheet-generate / timesheet-declined rows)
   const [invoiceCreationTarget, setInvoiceCreationTarget] =
     useState<DocVolPair | null>(null);
 
-  // In-session overrides (e.g. flipping a row to contract-signing-vol after
-  // send, or to declined with its reason) layered onto the static mock data
-  const [docOverrides, setDocOverrides] = useState<Record<string, DocOverride>>(
-    {},
-  );
-  const volunteers = useMemo(
-    () => applyDocStatusOverrides(MOCK_VOLUNTEERS, docOverrides),
-    [docOverrides],
-  );
-  const allVolunteers = useMemo(
-    () => [...volunteers, ...MOCK_DOCUMENTLESS_VOLUNTEERS],
-    [volunteers],
-  );
-
-  // Fake success feedback — no mutation is actually wired yet, but every
-  // action button should still tell the user something happened.
-  function showActionToast(
-    action: NonCompliantAction,
-    count: number,
-    name?: string,
-  ) {
-    toast.success(
-      t(`actionToasts.${action}` as Parameters<typeof t>[0], {
-        count,
-        name: name ?? '',
-      }),
-    );
+  function handleRequestCreate(pair: DocVolPair) {
+    if (
+      pair.doc.status === 'contract-generate' ||
+      pair.doc.status === 'contract-declined' ||
+      pair.doc.status === 'contract-missing'
+    ) {
+      setContractCreationTarget(pair);
+      return;
+    }
+    if (
+      pair.doc.status === 'timesheet-generate' ||
+      pair.doc.status === 'timesheet-declined'
+    ) {
+      setInvoiceCreationTarget(pair);
+    }
   }
 
-  function requestAction(items: DocVolPair[], action: NonCompliantAction) {
-    const single = items.length === 1 ? items[0] : undefined;
-    // Reissuing a declined document goes through the same creation modal as
-    // a fresh contract/timesheet — declined is a dead end, not a resumable state.
-    if (
-      action === 'create' &&
-      (single?.doc.status === 'contract-generate' ||
-        single?.doc.status === 'contract-declined')
-    ) {
-      setContractCreationTarget(single);
+  function handleSign(pair: DocVolPair) {
+    const { doc, vol } = pair;
+    if (doc.status === 'contract-signing-coord') {
+      signContract.mutate(doc.id, {
+        onSuccess: () =>
+          toast.success(t('signToasts.contract', { name: vol.name })),
+        onError: () =>
+          toast.error(t('signToasts.contractError', { name: vol.name })),
+      });
       return;
     }
-    if (
-      action === 'create' &&
-      (single?.doc.status === 'timesheet-generate' ||
-        single?.doc.status === 'timesheet-declined')
-    ) {
-      setInvoiceCreationTarget(single);
-      return;
+    if (doc.status === 'timesheet-signing-super') {
+      signInvoice.mutate(doc.id, {
+        onSuccess: () =>
+          toast.success(t('signToasts.invoice', { name: vol.name })),
+        onError: () =>
+          toast.error(t('signToasts.invoiceError', { name: vol.name })),
+      });
     }
+  }
 
-    const nonCompliant = items.filter(({ doc, vol }) =>
-      isTimesheetNonCompliant(vol, doc),
-    );
-
-    if (nonCompliant.length === 0) {
-      // action handler — wired to mutations in production
-      showActionToast(action, items.length, single?.vol.name);
-      return;
-    }
-
-    setPendingItems(items);
-
-    if (single) {
-      const contractDoc = findContractDoc(
-        single.vol,
-        single.doc.pauschale ?? single.vol.pauschale,
+  function handleDecline(pair: DocVolPair, reason: string) {
+    const { doc, vol } = pair;
+    if (doc.status.startsWith('contract')) {
+      declineContract.mutate(
+        { contractId: doc.id, reason },
+        {
+          onSuccess: () =>
+            toast.success(t('declineToasts.contract', { name: vol.name })),
+          onError: () =>
+            toast.error(t('declineToasts.contractError', { name: vol.name })),
+        },
       );
-      setNonCompliantDialog({
-        kind: 'single',
-        action,
-        contractStatus: contractDoc?.status ?? 'contract-generate',
-      });
       return;
     }
-
-    if (nonCompliant.length === items.length) {
-      setNonCompliantDialog({ kind: 'batch-all', action, count: items.length });
-    } else {
-      setNonCompliantDialog({
-        kind: 'batch-mixed',
-        action,
-        nonCompliantCount: nonCompliant.length,
-        totalCount: items.length,
-      });
-    }
-  }
-
-  function closeNonCompliantDialog() {
-    setNonCompliantDialog(null);
-    setPendingItems([]);
-  }
-
-  function handleProceedAnyway() {
-    // action handler — wired to mutations in production, applies to every item in pendingItems
-    const action = nonCompliantDialog?.action;
-    const count = pendingItems.length;
-    const single = count === 1 ? pendingItems[0] : undefined;
-    closeNonCompliantDialog();
-    if (!action) return;
-    showActionToast(action, count, single?.vol.name);
-  }
-
-  function handleOnlyCompliant() {
-    // action handler — wired to mutations in production, applies only to the compliant subset
-    const dialog = nonCompliantDialog;
-    closeNonCompliantDialog();
-    if (!dialog || dialog.kind !== 'batch-mixed') return;
-    showActionToast(
-      dialog.action,
-      dialog.totalCount - dialog.nonCompliantCount,
+    declineInvoice.mutate(
+      { invoiceId: doc.id, reason },
+      {
+        onSuccess: () =>
+          toast.success(t('declineToasts.invoice', { name: vol.name })),
+        onError: () =>
+          toast.error(t('declineToasts.invoiceError', { name: vol.name })),
+      },
     );
-  }
-
-  function handleGenerateContractInstead() {
-    const first = pendingItems[0];
-    closeNonCompliantDialog();
-    if (!first) return;
-    const { doc, vol } = first;
-    const contractDoc = findContractDoc(vol, doc.pauschale ?? vol.pauschale);
-    if (!contractDoc) return;
-    if (contractDoc.status === 'contract-generate') {
-      // create action — wired to mutations in production (generates the contract)
-      toast.success(t('contractGeneratedToast', { name: vol.name }));
-      return;
-    }
-    setSelectedDoc({ doc: contractDoc, vol });
-  }
-
-  function toggleDoc(docId: string) {
-    setSelectedDocIds((prev) => {
-      const next = new Set(prev);
-      if (next.has(docId)) next.delete(docId);
-      else next.add(docId);
-      return next;
-    });
-  }
-
-  function toggleVolDocs(docIds: string[]) {
-    setSelectedDocIds((prev) => {
-      const next = new Set(prev);
-      const allSelected = docIds.every((id) => next.has(id));
-      for (const id of docIds) {
-        if (allSelected) next.delete(id);
-        else next.add(id);
-      }
-      return next;
-    });
-  }
-
-  function toggleAll(docIds: string[], select: boolean) {
-    setSelectedDocIds((prev) => {
-      const next = new Set(prev);
-      for (const id of docIds) {
-        if (select) next.add(id);
-        else next.delete(id);
-      }
-      return next;
-    });
   }
 
   // Derived for DocumentSheet
@@ -969,14 +540,6 @@ export function ReimbursementsBoard({
     'timesheet-signing': t('tiles.timesheetSigning'),
     'ready-to-go': t('tiles.readyToGo'),
   };
-
-  const TILE_IDS: Exclude<TileFilter, null>[] = [
-    'contract-generate',
-    'contract-signing',
-    'timesheet-generate',
-    'timesheet-signing',
-    'ready-to-go',
-  ];
 
   // Pipeline-tile counts are pauschale-scoped only. docTypeFilter is not an
   // independent user choice here — selecting a tile sets it as a side
@@ -1001,7 +564,7 @@ export function ReimbursementsBoard({
       Object.fromEntries(
         TILE_IDS.map((id) => [id, countForTile(baseFilteredVols, id)]),
       ) as Record<Exclude<TileFilter, null>, number>,
-    [baseFilteredVols, TILE_IDS.map],
+    [baseFilteredVols],
   );
 
   const tileActionableCounts = useMemo(
@@ -1012,23 +575,12 @@ export function ReimbursementsBoard({
           countActionableForTile(baseFilteredVols, id),
         ]),
       ) as Record<Exclude<TileFilter, null>, number>,
-    [baseFilteredVols, TILE_IDS.map],
+    [baseFilteredVols],
   );
 
-  // Documentless volunteers bypass every other filter (tile/docType/pauschale/
-  // date) — search is the only thing that can surface them, and once it does
-  // they should stay visible regardless of which tile is active.
-  const documentlessMatches = useMemo(() => {
-    const q = search.trim().toLowerCase();
-    if (!q) return [];
-    return MOCK_DOCUMENTLESS_VOLUNTEERS.filter((v) =>
-      v.name.toLowerCase().includes(q),
-    ).map((v) => ({ ...v, documents: buildContractMissingDocs(v) }));
-  }, [search]);
-
   const filteredVols = useMemo(
-    () => [
-      ...applyFilters(
+    () =>
+      applyFilters(
         volunteers,
         activeTile,
         pauschale,
@@ -1036,17 +588,7 @@ export function ReimbursementsBoard({
         search,
         dateRange,
       ),
-      ...documentlessMatches,
-    ],
-    [
-      volunteers,
-      activeTile,
-      pauschale,
-      docTypeFilter,
-      search,
-      dateRange,
-      documentlessMatches,
-    ],
+    [volunteers, activeTile, pauschale, docTypeFilter, search, dateRange],
   );
 
   const sortedFilteredVols = useMemo(
@@ -1080,89 +622,8 @@ export function ReimbursementsBoard({
     setDocTypeFilter('all');
   }
 
-  // Deselect docs that scroll out of view when filters change — mirrors
-  // exactly what VolunteerTableGroup renders, so a doc scrolled out by
-  // date/doc-type/tile never lingers selected.
-  const visibleDocIds = useMemo(
-    () =>
-      new Set(
-        filteredVols.flatMap((v) =>
-          (activeTile === 'ready-to-go'
-            ? getReadyToGoDocs(v, dateRange)
-            : v.documents
-                .filter(
-                  (d) =>
-                    docTypeFilter === 'all' ||
-                    d.status.startsWith(docTypeFilter),
-                )
-                .filter((d) => docVisibleInRange(d, dateRange))
-          ).map((d) => d.id),
-        ),
-      ),
-    [filteredVols, docTypeFilter, dateRange, activeTile],
-  );
-
-  useEffect(() => {
-    setSelectedDocIds((prev) => {
-      const next = new Set([...prev].filter((id) => visibleDocIds.has(id)));
-      return next.size === prev.size ? prev : next;
-    });
-  }, [visibleDocIds]);
-
-  // Derive selected docs for BatchBar from doc-level selection. Includes
-  // documentlessMatches so a checked "Create contract" placeholder row
-  // (only reachable via search) still surfaces in the batch bar.
-  const selectedDocs = useMemo(
-    () =>
-      [...volunteers, ...documentlessMatches]
-        .flatMap((v) => v.documents.map((doc) => ({ doc, vol: v })))
-        .filter((entry) => selectedDocIds.has(entry.doc.id)),
-    [volunteers, selectedDocIds, documentlessMatches],
-  );
-
-  function handleContractSent(docId: string) {
-    setDocOverrides((prev) => ({
-      ...prev,
-      [docId]: { status: 'contract-signing-vol' },
-    }));
-  }
-
-  function handleInvoiceSent(docId: string) {
-    setDocOverrides((prev) => ({
-      ...prev,
-      [docId]: { status: 'timesheet-signing-vol' },
-    }));
-  }
-
-  // Decline on a pending countersign — a contract at 'contract-signing-coord'
-  // declines as the coordinator, a timesheet at 'timesheet-signing-super'
-  // declines as the supervisor (see decline-reason-dialog.tsx).
-  function handleDecline(
-    doc: BoardDocument,
-    vol: BoardVolunteer,
-    reason: string,
-  ) {
-    const isContract = doc.status.startsWith('contract');
-    const declinedAtRole = isContract ? 'coordinator' : 'supervisor';
-    setDocOverrides((prev) => ({
-      ...prev,
-      [doc.id]: {
-        status: isContract ? 'contract-declined' : 'timesheet-declined',
-        declineReason: reason,
-        declinedBy: MOCK_STAFF_ACTORS[declinedAtRole],
-        declinedAt: new Date().toLocaleDateString('de-DE'),
-        declinedAtRole,
-      },
-    }));
-    toast.success(t('docs.declineDialog.toast', { name: vol.name }));
-  }
-
-  // Undoes every in-session mock-data mutation (status overrides from sent
-  // contracts/invoices) — a testing convenience, not a real reset endpoint.
-  function handleResetPrototype() {
-    setDocOverrides({});
-    setSelectedDocIds(new Set());
-    toast.success(t('resetPrototypeToast'));
+  if (isLoading) {
+    return <ReimbursementsBoardSkeleton />;
   }
 
   return (
@@ -1320,61 +781,27 @@ export function ReimbursementsBoard({
       ) : (
         <ReimbursementsTable
           vols={sortedFilteredVols}
-          selectedDocIds={selectedDocIds}
-          onToggleDoc={toggleDoc}
-          onToggleVolDocs={toggleVolDocs}
-          onToggleAll={toggleAll}
           onDocumentClick={(doc, vol) => setSelectedDoc({ doc, vol })}
-          onRequestAction={requestAction}
+          onRequestCreate={handleRequestCreate}
+          onRequestSign={handleSign}
           docTypeFilter={docTypeFilter}
           dateRange={dateRange}
           activeTile={activeTile}
         />
       )}
 
-      <div className="flex justify-end">
-        <Button
-          variant="ghost"
-          size="sm"
-          className="h-auto px-2 py-1 text-xs text-muted-foreground/70 hover:text-muted-foreground"
-          onClick={handleResetPrototype}
-        >
-          {t('resetPrototype')}
-        </Button>
-      </div>
-
       <DocumentSheet
         doc={selectedDoc?.doc ?? null}
         vol={selectedDoc?.vol ?? null}
-        signees={
-          selectedDoc
-            ? getTemplateSignees(selectedDoc.doc, selectedDoc.vol)
-            : []
-        }
         open={selectedDoc !== null}
         onOpenChange={(open) => {
           if (!open) setSelectedDoc(null);
         }}
-        onRequestAction={requestAction}
+        onRequestCreate={handleRequestCreate}
+        onRequestSign={handleSign}
         onDecline={handleDecline}
         selectedDate={selectedDate}
         orgUId={orgUId}
-      />
-
-      <BatchBar
-        selectedDocs={selectedDocs}
-        onClear={() => setSelectedDocIds(new Set())}
-        onRequestAction={requestAction}
-      />
-
-      <NonCompliantTimesheetDialog
-        state={nonCompliantDialog}
-        onOpenChange={(open) => {
-          if (!open) closeNonCompliantDialog();
-        }}
-        onProceedAnyway={handleProceedAnyway}
-        onOnlyCompliant={handleOnlyCompliant}
-        onGenerateContractInstead={handleGenerateContractInstead}
       />
 
       <ContractCreationModal
@@ -1390,10 +817,7 @@ export function ReimbursementsBoard({
               contractCreationTarget.vol.pauschale)
             : null
         }
-        onSent={() => {
-          if (contractCreationTarget)
-            handleContractSent(contractCreationTarget.doc.id);
-        }}
+        onSent={() => setContractCreationTarget(null)}
       />
 
       <InvoiceCreationModal
@@ -1427,19 +851,16 @@ export function ReimbursementsBoard({
               ]?.total ?? invoiceCreationTarget.vol.totalCap)
             : null
         }
-        onSent={() => {
-          if (invoiceCreationTarget)
-            handleInvoiceSent(invoiceCreationTarget.doc.id);
-        }}
+        onSent={() => setInvoiceCreationTarget(null)}
       />
 
       <CreateDocumentModal
         open={createDocOpen}
         onOpenChange={onCreateDocOpenChange}
         orgUId={orgUId}
-        volunteers={allVolunteers}
-        onContractSent={handleContractSent}
-        onInvoiceSent={handleInvoiceSent}
+        volunteers={volunteers}
+        onContractSent={() => {}}
+        onInvoiceSent={() => {}}
       />
     </div>
   );
@@ -1447,12 +868,15 @@ export function ReimbursementsBoard({
 
 // ─── Board skeleton ───────────────────────────────────────────────────────────
 
+const TILE_SKELETON_KEYS = ['tile-1', 'tile-2', 'tile-3', 'tile-4', 'tile-5'];
+const ROW_SKELETON_KEYS = ['row-1', 'row-2', 'row-3'];
+
 export function ReimbursementsBoardSkeleton() {
   return (
     <div className="space-y-6 pb-24">
       <div className="flex gap-1 overflow-x-auto pb-1">
-        {Array.from({ length: 5 }).map((_, i) => (
-          <Fragment key={i}>
+        {TILE_SKELETON_KEYS.map((key, i) => (
+          <Fragment key={key}>
             {i > 0 && (
               <div className="flex items-center px-1">
                 <Skeleton className="h-3 w-3" />
@@ -1477,9 +901,9 @@ export function ReimbursementsBoardSkeleton() {
       </div>
 
       <div className="rounded-xl border border-border overflow-hidden">
-        {Array.from({ length: 3 }).map((_, i) => (
+        {ROW_SKELETON_KEYS.map((key) => (
           <div
-            key={i}
+            key={key}
             className="flex items-center gap-3 border-b border-border px-4 py-3"
           >
             <Skeleton className="h-4 w-4 rounded" />

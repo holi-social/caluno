@@ -2,7 +2,6 @@
 
 import {
   Button,
-  Checkbox,
   cn,
   Table,
   TableBody,
@@ -20,7 +19,6 @@ import { AlertIconTooltip } from './alert-icon-tooltip';
 import type { PauschalenType } from './doc-type-header';
 import { DocTypeHeader, getPauschaleKey } from './doc-type-header';
 import { LimitHeadroomBar } from './limit-headroom-bar';
-import type { NonCompliantAction } from './non-compliant-timesheet-dialog';
 import type {
   BoardDocument,
   BoardVolunteer,
@@ -42,7 +40,7 @@ export type DocTypeFilter = 'all' | 'contract' | 'timesheet';
 
 // ─── Status meta ──────────────────────────────────────────────────────────────
 
-type ActionKey = 'create' | 'remind' | 'countersign';
+type ActionKey = 'create' | 'countersign';
 
 interface StatusMeta {
   labelKey: string;
@@ -58,7 +56,7 @@ export const STATUS_META: Record<DocStatus, StatusMeta> = {
   },
   'contract-signing-vol': {
     labelKey: 'contractSigningVol',
-    actionKey: 'remind',
+    actionKey: null,
     isYourAction: false,
   },
   'contract-signing-coord': {
@@ -87,7 +85,7 @@ export const STATUS_META: Record<DocStatus, StatusMeta> = {
   },
   'timesheet-signing-vol': {
     labelKey: 'timesheetSigningVol',
-    actionKey: 'remind',
+    actionKey: null,
     isYourAction: false,
   },
   'timesheet-signing-super': {
@@ -107,21 +105,15 @@ export const STATUS_META: Record<DocStatus, StatusMeta> = {
   },
   'contract-declined': {
     labelKey: 'declined',
-    actionKey: null,
-    isYourAction: false,
+    actionKey: 'create',
+    isYourAction: true,
   },
   'timesheet-declined': {
     labelKey: 'declined',
-    actionKey: null,
-    isYourAction: false,
+    actionKey: 'create',
+    isYourAction: true,
   },
 };
-
-// ─── CTA variant ──────────────────────────────────────────────────────────────
-
-function getActionVariant(actionKey: ActionKey): 'default' | 'outline' {
-  return actionKey === 'remind' ? 'outline' : 'default';
-}
 
 /** Whether this status is actionable by the org (coordinator/supervisor) right now, as opposed to waiting on the volunteer or already resolved. */
 export function isYourActionStatus(status: DocStatus): boolean {
@@ -135,7 +127,7 @@ function abbreviateName(name: string): string {
   const parts = name.trim().split(/\s+/);
   if (parts.length < 2) return name;
   const [first, ...rest] = parts;
-  return `${first![0]}. ${rest.join(' ')}`;
+  return `${first?.[0] ?? ''}. ${rest.join(' ')}`;
 }
 
 const STATUS_SORT_ORDER: DocStatus[] = [
@@ -166,11 +158,9 @@ const MOCK_LAST_BUNDLE_DOWNLOAD: Record<
 
 interface VolunteerTableGroupProps {
   vol: BoardVolunteer;
-  selectedDocIds: Set<string>;
-  onToggleDoc: (docId: string) => void;
-  onToggleVolDocs: (docIds: string[]) => void;
   onDocumentClick: (doc: BoardDocument, vol: BoardVolunteer) => void;
-  onRequestAction: (items: DocVolPair[], action: NonCompliantAction) => void;
+  onRequestCreate: (pair: DocVolPair) => void;
+  onRequestSign: (pair: DocVolPair) => void;
   docTypeFilter: DocTypeFilter;
   dateRange: DateRange | undefined;
   activeTile: TileFilter;
@@ -178,11 +168,9 @@ interface VolunteerTableGroupProps {
 
 function VolunteerTableGroup({
   vol,
-  selectedDocIds,
-  onToggleDoc,
-  onToggleVolDocs,
   onDocumentClick,
-  onRequestAction,
+  onRequestCreate,
+  onRequestSign,
   docTypeFilter,
   dateRange,
   activeTile,
@@ -213,13 +201,6 @@ function VolunteerTableGroup({
 
   if (sortedDocs.length === 0) return null;
 
-  // Mirrors the per-row checkbox condition below — mass creation is deprecated.
-  const selectableDocs = sortedDocs.filter(
-    (d) =>
-      d.status !== 'contract-active' &&
-      STATUS_META[d.status].actionKey !== 'create',
-  );
-
   // Ready timesheets bundle separately per pauschale type — never combined
   // into one download, since each type is its own reimbursement batch.
   const readyByType: Partial<Record<PauschalenType, number>> = {};
@@ -234,38 +215,16 @@ function VolunteerTableGroup({
     uebungsleiter: t('toolbar.typeUL'),
   };
 
-  // Checkbox state for vol header
-  const selectedCount = selectableDocs.filter((d) =>
-    selectedDocIds.has(d.id),
-  ).length;
-  const isVolChecked =
-    selectedCount === selectableDocs.length && selectableDocs.length > 0;
-  const isVolIndeterminate =
-    selectedCount > 0 && selectedCount < selectableDocs.length;
-
   return (
     <>
       {/* Volunteer group header */}
       <TableRow
         className={cn(
           'cursor-pointer select-none border-t border-border/60 hover:bg-muted/40',
-          selectedCount > 0 ? 'bg-primary/5' : 'bg-muted/20',
+          'bg-muted/20',
         )}
         onClick={() => setIsOpen((o) => !o)}
       >
-        <TableCell
-          className="align-middle py-4"
-          onClick={(e) => e.stopPropagation()}
-        >
-          <Checkbox
-            checked={isVolIndeterminate ? 'indeterminate' : isVolChecked}
-            onCheckedChange={() =>
-              onToggleVolDocs(selectableDocs.map((d) => d.id))
-            }
-            aria-label={`${vol.name} auswählen`}
-          />
-        </TableCell>
-
         <TableCell className="align-middle overflow-hidden py-4">
           <div className="min-w-0 overflow-hidden">
             <div className="flex items-center gap-2 min-w-0">
@@ -387,7 +346,6 @@ function VolunteerTableGroup({
           // started); timesheet-generate already has computed hours/amount,
           // so it stays visually dimmed but is still openable.
           const canOpenSheet = doc.status !== 'contract-generate';
-          const isDocSelected = selectedDocIds.has(doc.id);
           const effectivePauschale = doc.pauschale ?? vol.pauschale;
           const docNonCompliant = isTimesheetNonCompliant(vol, doc);
           const isDeclined =
@@ -403,23 +361,9 @@ function VolunteerTableGroup({
                   ? 'cursor-pointer hover:bg-muted/30'
                   : 'cursor-default',
                 !isActive && !meta.isYourAction && !isGenerate && 'bg-muted/20',
-                isDocSelected && 'bg-primary/5',
               )}
               onClick={() => canOpenSheet && onDocumentClick(doc, vol)}
             >
-              <TableCell
-                className="py-3 align-top"
-                onClick={(e) => e.stopPropagation()}
-              >
-                {!isActive && meta.actionKey !== 'create' && !isDeclined && (
-                  <Checkbox
-                    checked={isDocSelected}
-                    onCheckedChange={() => onToggleDoc(doc.id)}
-                    aria-label={`${doc.periodLabel} auswählen`}
-                  />
-                )}
-              </TableCell>
-
               <TableCell
                 className={cn(
                   'pl-6 py-3 align-top overflow-hidden',
@@ -538,10 +482,14 @@ function VolunteerTableGroup({
                   {!isActive && !isDeclined && actionKey && (
                     <Button
                       size="sm"
-                      variant={getActionVariant(actionKey)}
+                      variant={actionKey === 'create' ? 'default' : 'outline'}
                       onClick={(e) => {
                         e.stopPropagation();
-                        onRequestAction([{ doc, vol }], actionKey);
+                        if (actionKey === 'create') {
+                          onRequestCreate({ doc, vol });
+                        } else {
+                          onRequestSign({ doc, vol });
+                        }
                       }}
                     >
                       {t(
@@ -562,12 +510,9 @@ function VolunteerTableGroup({
 
 interface ReimbursementsTableProps {
   vols: BoardVolunteer[];
-  selectedDocIds: Set<string>;
-  onToggleDoc: (docId: string) => void;
-  onToggleVolDocs: (docIds: string[]) => void;
-  onToggleAll: (docIds: string[], select: boolean) => void;
   onDocumentClick: (doc: BoardDocument, vol: BoardVolunteer) => void;
-  onRequestAction: (items: DocVolPair[], action: NonCompliantAction) => void;
+  onRequestCreate: (pair: DocVolPair) => void;
+  onRequestSign: (pair: DocVolPair) => void;
   docTypeFilter: DocTypeFilter;
   dateRange: DateRange | undefined;
   activeTile: TileFilter;
@@ -575,58 +520,20 @@ interface ReimbursementsTableProps {
 
 export function ReimbursementsTable({
   vols,
-  selectedDocIds,
-  onToggleDoc,
-  onToggleVolDocs,
-  onToggleAll,
   onDocumentClick,
-  onRequestAction,
+  onRequestCreate,
+  onRequestSign,
   docTypeFilter,
   dateRange,
   activeTile,
 }: ReimbursementsTableProps) {
   const t = useTranslations('Accounting.reimbursements');
 
-  const allVisibleDocIds = vols.flatMap((v) => {
-    const visible =
-      activeTile === 'ready-to-go'
-        ? getReadyToGoDocs(v, dateRange)
-        : v.documents
-            .filter(
-              (d) =>
-                docTypeFilter === 'all' || d.status.startsWith(docTypeFilter),
-            )
-            .filter((d) => docVisibleInRange(d, dateRange));
-    return visible
-      .filter(
-        (d) =>
-          d.status !== 'contract-active' &&
-          STATUS_META[d.status].actionKey !== 'create',
-      )
-      .map((d) => d.id);
-  });
-
-  const allSelected =
-    allVisibleDocIds.length > 0 &&
-    allVisibleDocIds.every((id) => selectedDocIds.has(id));
-  const someSelected = allVisibleDocIds.some((id) => selectedDocIds.has(id));
-
   return (
     <div className="rounded-xl border border-border overflow-x-auto">
       <Table className="table-fixed min-w-[860px]">
         <TableHeader>
           <TableRow className="hover:bg-transparent">
-            <TableHead className="w-10">
-              <Checkbox
-                checked={
-                  someSelected && !allSelected ? 'indeterminate' : allSelected
-                }
-                onCheckedChange={(checked) =>
-                  onToggleAll(allVisibleDocIds, checked === true)
-                }
-                aria-label="Alle auswählen"
-              />
-            </TableHead>
             <TableHead className="w-52">{t('tableHead.volunteer')}</TableHead>
             <TableHead className="w-36">{t('tableHead.status')}</TableHead>
             <TableHead className="w-14 text-right">
@@ -645,11 +552,9 @@ export function ReimbursementsTable({
             <VolunteerTableGroup
               key={vol.id}
               vol={vol}
-              selectedDocIds={selectedDocIds}
-              onToggleDoc={onToggleDoc}
-              onToggleVolDocs={onToggleVolDocs}
               onDocumentClick={onDocumentClick}
-              onRequestAction={onRequestAction}
+              onRequestCreate={onRequestCreate}
+              onRequestSign={onRequestSign}
               docTypeFilter={docTypeFilter}
               dateRange={dateRange}
               activeTile={activeTile}

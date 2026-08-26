@@ -26,7 +26,6 @@ import {
 } from './doc-type-header';
 import { InvoiceCreationModal } from './invoice-creation-modal';
 import type { BoardDocument, BoardVolunteer } from './reimbursements-board';
-import { parseDocDate } from './reimbursements-board';
 import { STATUS_META } from './reimbursements-volunteer-group';
 
 type DocKind = 'contract' | 'invoice';
@@ -62,12 +61,10 @@ function getDocLineSummary(vol: BoardVolunteer, line: DocLine): DocLineSummary {
   );
   const latest = matches.reduce<BoardDocument | undefined>((acc, d) => {
     if (!acc) return d;
-    const accDate = acc.lastActionDate
-      ? parseDocDate(acc.lastActionDate)
-      : null;
-    const dDate = d.lastActionDate ? parseDocDate(d.lastActionDate) : null;
-    if (!dDate) return acc;
-    if (!accDate) return d;
+    const accDate = acc.lastActionDate?.getTime();
+    const dDate = d.lastActionDate?.getTime();
+    if (dDate === undefined) return acc;
+    if (accDate === undefined) return d;
     return dDate > accDate ? d : acc;
   }, undefined);
   return { count: matches.length, latest };

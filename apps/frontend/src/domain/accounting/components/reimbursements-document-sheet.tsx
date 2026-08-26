@@ -1,6 +1,12 @@
 'use client';
 
 import {
+  useContract,
+  useInvoice,
+  usePendingContractSignee,
+  usePendingInvoiceSignee,
+} from '@repo/data/react';
+import {
   Button,
   cn,
   Separator,
@@ -25,22 +31,23 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { useTranslations } from 'next-intl';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { toast } from 'sonner';
+import { useSession } from '@/lib/auth';
 import { formatEuro } from '@/lib/formatting/formats';
+import { useFormatting } from '@/lib/formatting/use-formatting';
+import { mapSignatureToSignee } from '../lib/board-data.utils';
 import { AlertIconTooltip } from './alert-icon-tooltip';
 import { DeclineReasonDialog } from './decline-reason-dialog';
-import type { PauschalenType } from './doc-type-header';
 import { getPauschaleKey, TYPE_COLOR } from './doc-type-header';
 import { LimitHeadroomBar } from './limit-headroom-bar';
-import type { NonCompliantAction } from './non-compliant-timesheet-dialog';
 import type {
   BoardDocument,
   BoardVolunteer,
-  DocStatus,
   DocVolPair,
 } from './reimbursements-board';
 import { isTimesheetNonCompliant } from './reimbursements-board';
+import { isYourActionStatus } from './reimbursements-volunteer-group';
 import type { Signee, SigneeRole } from './template/types';
 
 // ─── Pipeline step definitions ────────────────────────────────────────────────
@@ -48,25 +55,26 @@ import type { Signee, SigneeRole } from './template/types';
 type StepState = 'done' | 'active' | 'pending' | 'declined';
 
 interface PipelineStep {
+  id: string;
   labelKey: string;
   actorName: string;
   state: StepState;
 }
 
-// Mock — no admin/staff profile page or backend record exists for these
-// people yet (dev dependency); stands in for "who actually performed this
-// step" in place of the generic role label previously shown here.
-export type StaffActorRole = 'admin' | 'coordinator' | 'supervisor' | 'hq_manager';
+function signeeActorName(signee: Signee, volunteerName: string): string {
+  if (signee.role === 'volunteer') return volunteerName;
+  // Coordinator / supervisor are org roles; the real actor name comes from
+  // the status-change timeline, not from the static role label.
+  return signee.orgRole.name;
+}
 
-export const MOCK_STAFF_ACTORS: Record<StaffActorRole, string> = {
-  admin: 'Julia Vorstand',
-  coordinator: 'Nina Übungsleitung',
-  supervisor: 'Markus Kassier',
-  hq_manager: 'Petra Geschäftsführung',
-};
-
-function getActiveStepIdx(status: DocStatus, signees: Signee[]): number {
-  if (status === 'contract-generate' || status === 'timesheet-generate')
+function getActiveStepIdx(status: string, signees: Signee[]): number {
+  if (
+    status === 'contract-generate' ||
+    status === 'timesheet-generate' ||
+    status === 'contract-declined' ||
+    status === 'timesheet-declined'
+  )
     return 0;
   if (status === 'contract-active' || status === 'timesheet-ready')
     return signees.length + 1;
@@ -81,11 +89,6 @@ function getActiveStepIdx(status: DocStatus, signees: Signee[]): number {
   if (!activeRole) return 0;
   const pos = signees.findIndex((s) => s.role === activeRole);
   return pos === -1 ? 1 : pos + 1;
-}
-
-function signeeActorName(signee: Signee, volunteerName: string): string {
-  if (signee.role === 'volunteer') return volunteerName;
-  return MOCK_STAFF_ACTORS[signee.role];
 }
 
 /** Which seat in the signing chain declined — everything after this point never rendered as a step. */
@@ -112,8 +115,9 @@ function buildDocSteps(
     const declinedIdx = getDeclinedStepIdx(signees, doc.declinedAtRole);
     const steps: PipelineStep[] = [
       {
+        id: 'generate',
         labelKey: t('pipeline.generate'),
-        actorName: MOCK_STAFF_ACTORS.admin,
+        actorName: t('pipeline.actorOrg'),
         state: 'done',
       },
     ];
@@ -121,12 +125,14 @@ function buildDocSteps(
       const idx = i + 1;
       if (idx < declinedIdx) {
         steps.push({
+          id: signee.id,
           labelKey: t('pipeline.sign'),
           actorName: signeeActorName(signee, volunteerName),
           state: 'done',
         });
       } else if (idx === declinedIdx) {
         steps.push({
+          id: `declined-${signee.id}`,
           labelKey: t('pipeline.declined'),
           actorName: signeeActorName(signee, volunteerName),
           state: 'declined',
@@ -143,14 +149,16 @@ function buildDocSteps(
   const steps: PipelineStep[] = [];
 
   steps.push({
+    id: 'generate',
     labelKey: t('pipeline.generate'),
-    actorName: MOCK_STAFF_ACTORS.admin,
+    actorName: t('pipeline.actorOrg'),
     state: 0 < activeIdx ? 'done' : 0 === activeIdx ? 'active' : 'pending',
   });
 
   signees.forEach((signee, i) => {
     const idx = i + 1;
     steps.push({
+      id: signee.id,
       labelKey: t('pipeline.sign'),
       actorName: signeeActorName(signee, volunteerName),
       state:
@@ -160,6 +168,7 @@ function buildDocSteps(
 
   const finalIdx = totalSteps - 1;
   steps.push({
+    id: 'final',
     labelKey: isContract ? t('pipeline.active') : t('pipeline.ready'),
     actorName: '',
     state:
@@ -179,7 +188,7 @@ function PipelineTracker({ steps }: { steps: PipelineStep[] }) {
   return (
     <div className="flex items-start gap-0">
       {steps.map((step, i) => (
-        <div key={step.labelKey} className="flex flex-1 flex-col items-center">
+        <div key={step.id} className="flex flex-1 flex-col items-center">
           <div className="flex w-full items-center">
             <div
               className={cn(
@@ -237,13 +246,9 @@ function PipelineTracker({ steps }: { steps: PipelineStep[] }) {
               {step.labelKey}
             </span>
             {step.actorName && (
-              <button
-                type="button"
-                className="text-center text-[10px] leading-tight text-muted-foreground hover:underline"
-                onClick={(e) => e.stopPropagation()}
-              >
+              <span className="text-center text-[10px] leading-tight text-muted-foreground">
                 {step.actorName}
-              </button>
+              </span>
             )}
           </div>
         </div>
@@ -252,84 +257,80 @@ function PipelineTracker({ steps }: { steps: PipelineStep[] }) {
   );
 }
 
-// ─── Mock timeline entries ────────────────────────────────────────────────────
+// ─── Timeline ─────────────────────────────────────────────────────────────────
+
+type TimelineEntry = { id: string; label: string; actor: string; date: Date };
 
 function buildTimeline(
   doc: BoardDocument,
-  signees: Signee[],
-  volunteerName: string,
+  detail:
+    | ReturnType<typeof useContract>['data']
+    | ReturnType<typeof useInvoice>['data'],
   t: ReturnType<typeof useTranslations<'Accounting.reimbursements.docs.sheet'>>,
-): Array<{ label: string; actor: string; date: string }> {
-  const adminActor = MOCK_STAFF_ACTORS.admin;
-  const signeeActors = signees.map((s) => signeeActorName(s, volunteerName));
+): TimelineEntry[] {
+  if (!detail) return [];
+  const entries: TimelineEntry[] = [];
 
-  const DATES = ['03.07.2026', '06.07.2026', '07.07.2026'];
-
-  const created = {
-    label: t('timelineCreated'),
-    actor: adminActor,
-    date: '01.07.2026',
-  };
-  const signedEntries = signees.map((_, i) => ({
-    label: i === 0 ? t('timelineSigned') : t('timelineCountersigned'),
-    actor: signeeActors[i] ?? '',
-    date: DATES[i] ?? '07.07.2026',
-  }));
-  const activated = {
-    label: t('timelineActivated'),
-    actor: adminActor,
-    date: '07.07.2026',
-  };
-
-  switch (doc.status) {
-    case 'contract-generate':
-    case 'timesheet-generate':
-      return [];
-    case 'contract-signing-coord':
-    case 'timesheet-signing-super':
-      return [created, signedEntries[0]!];
-    case 'contract-active':
-      return [created, ...signedEntries, activated];
-    case 'timesheet-ready':
-      return [created, ...signedEntries];
-    case 'contract-declined':
-    case 'timesheet-declined': {
-      const declinedIdx = getDeclinedStepIdx(signees, doc.declinedAtRole);
-      const declined = {
-        label: t('timelineDeclined'),
-        actor: doc.declinedBy ?? '',
-        date: doc.declinedAt ?? '',
-      };
-      return [created, ...signedEntries.slice(0, declinedIdx - 1), declined];
+  for (const change of detail.statusChanges) {
+    const actor = change.actorUser?.name ?? t('timeline.actorOrg');
+    const occurredAt = new Date(change.occurredAt);
+    switch (change.type) {
+      case 'CREATED':
+        entries.push({
+          id: change.id,
+          label: t('timelineCreated'),
+          actor,
+          date: occurredAt,
+        });
+        break;
+      case 'SIGNED':
+        entries.push({
+          id: change.id,
+          label: t('timelineSigned'),
+          actor,
+          date: occurredAt,
+        });
+        break;
+      case 'COUNTERSIGNED':
+        entries.push({
+          id: change.id,
+          label: t('timelineCountersigned'),
+          actor,
+          date: occurredAt,
+        });
+        break;
+      case 'ACTIVATED':
+        entries.push({
+          id: change.id,
+          label: t('timelineActivated'),
+          actor,
+          date: occurredAt,
+        });
+        break;
+      case 'DECLINED':
+        entries.push({
+          id: change.id,
+          label: t('timelineDeclined'),
+          actor: doc.declinedBy ?? actor,
+          date: doc.declinedAt ?? occurredAt,
+        });
+        break;
     }
-    default:
-      return [created];
   }
+
+  return entries;
 }
-
-// ─── Mock timesheet hours per volunteer ──────────────────────────────────────
-
-const MOCK_TIMESHEET_HOURS: Record<
-  string,
-  { totalHours: number; shiftCount: number }
-> = {
-  v1: { totalHours: 24, shiftCount: 6 },
-  v2: { totalHours: 40, shiftCount: 8 },
-  v3: { totalHours: 16, shiftCount: 4 },
-  v4: { totalHours: 8, shiftCount: 2 },
-  v5: { totalHours: 32, shiftCount: 7 },
-};
 
 // ─── DocumentSheet ────────────────────────────────────────────────────────────
 
 interface DocumentSheetProps {
   doc: BoardDocument | null;
   vol: BoardVolunteer | null;
-  signees: Signee[];
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onRequestAction: (items: DocVolPair[], action: NonCompliantAction) => void;
-  onDecline: (doc: BoardDocument, vol: BoardVolunteer, reason: string) => void;
+  onRequestCreate: (pair: DocVolPair) => void;
+  onRequestSign: (pair: DocVolPair) => void;
+  onDecline: (pair: DocVolPair, reason: string) => void;
   selectedDate: Date;
   orgUId: string;
 }
@@ -337,10 +338,10 @@ interface DocumentSheetProps {
 export function DocumentSheet({
   doc,
   vol,
-  signees,
   open,
   onOpenChange,
-  onRequestAction,
+  onRequestCreate,
+  onRequestSign,
   onDecline,
   selectedDate,
   orgUId,
@@ -348,11 +349,57 @@ export function DocumentSheet({
   const t = useTranslations('Accounting.reimbursements.docs');
   const ts = useTranslations('Accounting.reimbursements.docs.sheet');
   const tSections = useTranslations('Accounting.templates.sections');
+  const { formatDate } = useFormatting();
   const [declineDialogOpen, setDeclineDialogOpen] = useState(false);
+
+  const session = useSession();
+  const currentUserId = session.data?.user?.id;
+
+  const isContract = doc?.status.startsWith('contract') ?? false;
+  const contractQuery = useContract(isContract ? doc?.id : undefined);
+  const invoiceQuery = useInvoice(!isContract ? doc?.id : undefined);
+
+  const contractDetail = contractQuery.data;
+  const invoiceDetail = invoiceQuery.data;
+  const isDetailLoading = isContract
+    ? contractQuery.isLoading
+    : invoiceQuery.isLoading;
+
+  const pendingContractSignee = usePendingContractSignee(
+    isContract ? doc?.id : undefined,
+  );
+  const pendingInvoiceSignee = usePendingInvoiceSignee(
+    !isContract ? doc?.id : undefined,
+  );
+
+  const signees: Signee[] = useMemo(() => {
+    const detail = isContract ? contractDetail : invoiceDetail;
+    if (!detail) return [];
+    const kind = isContract ? 'contract' : 'invoice';
+    return detail.signatures.map((s) => mapSignatureToSignee(s, kind));
+  }, [contractDetail, invoiceDetail, isContract]);
+
+  const canUserSign = useMemo(() => {
+    if (!doc || !currentUserId) return false;
+    const pending = isContract
+      ? pendingContractSignee.data
+      : pendingInvoiceSignee.data;
+    if (!pending) return isYourActionStatus(doc.status);
+    if (pending.signeeType === 'VOLUNTEER') return false;
+    if (pending.eligibleUserIds) {
+      return pending.eligibleUserIds.includes(currentUserId);
+    }
+    return pending.userId === currentUserId;
+  }, [
+    doc,
+    currentUserId,
+    isContract,
+    pendingContractSignee.data,
+    pendingInvoiceSignee.data,
+  ]);
 
   if (!doc || !vol) return null;
 
-  const isContract = doc.status.startsWith('contract');
   const isDeclined =
     doc.status === 'contract-declined' || doc.status === 'timesheet-declined';
   const kindLabel = t(
@@ -360,23 +407,16 @@ export function DocumentSheet({
       typeof t
     >[0],
   );
+  const detail = isContract ? contractDetail : invoiceDetail;
   const steps = buildDocSteps(doc, signees, isContract, vol.name, ts);
-  const timeline = buildTimeline(doc, signees, vol.name, ts);
+  const timeline = buildTimeline(doc, detail, ts);
 
-  const periodLabel = selectedDate.toLocaleDateString('de-DE', {
+  const periodLabel = formatDate(selectedDate, {
     month: 'long',
     year: 'numeric',
   });
   const monthParam = `${selectedDate.getFullYear()}-${String(selectedDate.getMonth() + 1).padStart(2, '0')}`;
   const timesheetsUrl = `/admin/${orgUId}/timesheets?month=${monthParam}&volunteer=${vol.id}`;
-  const _timesheetMock = MOCK_TIMESHEET_HOURS[vol.id] ?? {
-    totalHours: 0,
-    shiftCount: 0,
-  };
-  const timesheetHours = {
-    totalHours: doc.hours ?? _timesheetMock.totalHours,
-    shiftCount: _timesheetMock.shiftCount,
-  };
 
   const effectivePauschale = doc.pauschale ?? vol.pauschale;
   const docLimit = vol.limits?.[effectivePauschale] ?? {
@@ -385,15 +425,49 @@ export function DocumentSheet({
   };
 
   const actionKey =
-    doc.status === 'contract-generate' || doc.status === 'timesheet-generate'
+    doc.status === 'contract-generate' ||
+    doc.status === 'timesheet-generate' ||
+    doc.status === 'contract-declined' ||
+    doc.status === 'timesheet-declined' ||
+    doc.status === 'contract-missing'
       ? 'create'
-      : doc.status === 'contract-signing-vol' ||
-          doc.status === 'timesheet-signing-vol'
-        ? 'remind'
-        : doc.status === 'contract-signing-coord' ||
-            doc.status === 'timesheet-signing-super'
-          ? 'countersign'
-          : null;
+      : doc.status === 'contract-signing-coord' ||
+          doc.status === 'timesheet-signing-super'
+        ? 'countersign'
+        : null;
+
+  // Real invoices already have totalHours; for generated rows the backend does
+  // not yet exist, so we show nothing.
+  const timesheetHours =
+    !isContract && invoiceDetail
+      ? {
+          totalHours: invoiceDetail.totalHours,
+          shiftCount: invoiceDetail.invoiceTimeEntries.length,
+        }
+      : null;
+
+  function handleViewPdf() {
+    if (!doc || !vol) return;
+    const url = detail?.downloadUrl;
+    if (!url) {
+      toast.error(ts('pdfUnavailable'));
+      return;
+    }
+    window.open(url, '_blank', 'noopener,noreferrer');
+  }
+
+  function handleDownloadPdf() {
+    if (!doc || !vol) return;
+    const url = detail?.downloadUrl;
+    if (!url) {
+      toast.error(ts('pdfUnavailable'));
+      return;
+    }
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${doc.periodLabel}-${vol.name}.pdf`;
+    a.click();
+  }
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -438,9 +512,8 @@ export function DocumentSheet({
               variant="outline"
               size="sm"
               className="flex-1 gap-1.5"
-              onClick={() =>
-                toast.success(ts('pdfViewToast', { period: doc.periodLabel }))
-              }
+              onClick={handleViewPdf}
+              disabled={!detail?.downloadUrl || isDetailLoading}
             >
               <EyeIcon size={13} />
               {ts('pdfView')}
@@ -449,11 +522,8 @@ export function DocumentSheet({
               variant="outline"
               size="sm"
               className="flex-1 gap-1.5"
-              onClick={() =>
-                toast.success(
-                  ts('pdfDownloadToast', { period: doc.periodLabel }),
-                )
-              }
+              onClick={handleDownloadPdf}
+              disabled={!detail?.downloadUrl || isDetailLoading}
             >
               <DownloadIcon size={13} />
               {ts('pdfDownload')}
@@ -486,7 +556,7 @@ export function DocumentSheet({
           <Separator />
 
           {/* Timesheet hours summary (timesheet only) */}
-          {!isContract && (
+          {!isContract && timesheetHours && (
             <>
               <section>
                 <p className="text-sm font-semibold text-muted-foreground mb-3">
@@ -610,7 +680,7 @@ export function DocumentSheet({
                               {d.periodLabel}
                             </span>
                             <span className="tabular-nums font-medium text-success">
-                              {formatEuro(d.amount!)}
+                              {formatEuro(d.amount ?? 0)}
                             </span>
                           </li>
                         ))}
@@ -632,7 +702,7 @@ export function DocumentSheet({
                               {d.periodLabel}
                             </span>
                             <span className="tabular-nums text-muted-foreground">
-                              {formatEuro(d.amount!)}
+                              {formatEuro(d.amount ?? 0)}
                             </span>
                           </li>
                         ))}
@@ -655,23 +725,19 @@ export function DocumentSheet({
               <ol className="space-y-3">
                 {timeline.map((entry) => (
                   <li
-                    key={entry.label}
+                    key={entry.id}
                     className="flex items-start justify-between gap-4"
                   >
                     <div>
                       <span className="text-sm text-card-foreground">
                         {entry.label}
                       </span>
-                      <button
-                        type="button"
-                        className="block text-xs text-muted-foreground hover:underline mt-0.5"
-                        onClick={(e) => e.stopPropagation()}
-                      >
+                      <span className="block text-xs text-muted-foreground mt-0.5">
                         {entry.actor}
-                      </button>
+                      </span>
                     </div>
                     <span className="text-sm tabular-nums text-muted-foreground shrink-0">
-                      {entry.date}
+                      {formatDate(entry.date)}
                     </span>
                   </li>
                 ))}
@@ -690,7 +756,7 @@ export function DocumentSheet({
             <Button
               className="w-full"
               onClick={() => {
-                onRequestAction([{ doc, vol }], 'create');
+                onRequestCreate({ doc, vol });
                 onOpenChange(false);
               }}
             >
@@ -707,8 +773,16 @@ export function DocumentSheet({
               <Button
                 className="flex-1"
                 variant={actionKey === 'create' ? 'default' : 'outline'}
+                disabled={
+                  actionKey === 'countersign' &&
+                  (!canUserSign || isDetailLoading)
+                }
                 onClick={() => {
-                  onRequestAction([{ doc, vol }], actionKey);
+                  if (actionKey === 'create') {
+                    onRequestCreate({ doc, vol });
+                  } else {
+                    onRequestSign({ doc, vol });
+                  }
                   onOpenChange(false);
                 }}
               >
@@ -719,6 +793,7 @@ export function DocumentSheet({
                 <Button
                   className="flex-1"
                   variant="outline"
+                  disabled={!canUserSign || isDetailLoading}
                   onClick={() => setDeclineDialogOpen(true)}
                 >
                   {t('actions.decline')}
@@ -737,7 +812,7 @@ export function DocumentSheet({
         docTypeLabel={kindLabel}
         onOpenChange={setDeclineDialogOpen}
         onConfirm={(reason) => {
-          onDecline(doc, vol, reason);
+          onDecline({ doc, vol }, reason);
           setDeclineDialogOpen(false);
           onOpenChange(false);
         }}
