@@ -45,6 +45,7 @@ export function VolunteerNav({ isAdmin }: VolunteerNavProps) {
       pathname === '/' ||
       pathname.startsWith('/discover') ||
       pathname.startsWith('/my-shifts') ||
+      pathname.startsWith('/my-events') ||
       pathname.startsWith('/shifts')
     ) {
       return '/';

@@ -11,4 +11,10 @@ export class InvoiceFilterInput {
 
   @Field(() => InvoiceStatus, { nullable: true })
   status?: InvoiceStatus | null;
+
+  @Field(() => Date, { nullable: true })
+  periodStart?: Date | null;
+
+  @Field(() => Date, { nullable: true })
+  periodEnd?: Date | null;
 }

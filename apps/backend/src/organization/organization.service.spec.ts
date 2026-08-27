@@ -2,7 +2,7 @@ jest.mock('nanoid', () => ({
   customAlphabet: () => () => 'abcdefghijkl',
 }));
 
-import { PostHogService } from '../shared/observability/posthog.service';
+import { PostHogCaptureService } from '../shared/observability/posthog.capture.service';
 import { OrganizationService } from './organization.service';
 
 describe('OrganizationService.create PostHog', () => {
@@ -27,7 +27,7 @@ describe('OrganizationService.create PostHog', () => {
       {} as never,
       notificationService as never,
       {} as never,
-      { captureUserJoinedOrg } as unknown as PostHogService,
+      { captureUserJoinedOrg } as unknown as PostHogCaptureService,
     );
 
     await service.create('user-1', { name: 'Org' } as never);
