@@ -24,7 +24,7 @@ export async function AuthJoinHeader({ org }: AuthJoinHeaderProps) {
       </h1>
       <div className="flex items-center justify-center gap-1.5">
         <span className="text-sm text-muted-foreground">{t('poweredBy')}</span>
-        <AuthBrand className="text-base" />
+        <AuthBrand width={52} />
       </div>
     </div>
   );

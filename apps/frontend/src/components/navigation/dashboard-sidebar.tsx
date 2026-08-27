@@ -3,6 +3,7 @@ import { MembershipRequestStatus, PermissionKey } from '@repo/data';
 import { useCurrentOrg, useMembershipRequestCount } from '@repo/data/react';
 import {
   Button,
+  Logo,
   Sidebar,
   SidebarContent,
   SidebarFooter,
@@ -148,7 +149,9 @@ export function DashboardSidebar({ permissions }: DashboardSidebarProps) {
   return (
     <Sidebar>
       <SidebarHeader className="border-b px-4 py-3 space-y-2">
-        <div className="text-lg font-bold px-2">{tCommon('brand')}</div>
+        <div className="px-2">
+          <Logo width={96} />
+        </div>
         <OrgSwitcher />
       </SidebarHeader>
 
