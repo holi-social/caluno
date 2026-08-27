@@ -8,6 +8,11 @@ import {
   ConflictGraphQLError,
   NotFoundGraphQLError,
 } from '../../graphql/errors';
+import {
+  POSTHOG_EVENT,
+  POSTHOG_SURFACE,
+} from '../../shared/observability/posthog.events';
+import { PostHogService } from '../../shared/observability/posthog.service';
 import type { TimeEntryEntity } from '../../time-tracking/schemas/time-entry.schema';
 import type {
   InvoiceFilter,
@@ -37,6 +42,7 @@ export class InvoiceService {
     private readonly documentSigningService: DocumentSigningService,
     private readonly reimbursementRateService: ReimbursementRateService,
     private readonly contractService: ContractService,
+    private readonly postHogService: PostHogService,
   ) {}
 
   async findInvoice(id: string): Promise<InvoiceWithRelations> {
@@ -181,8 +187,8 @@ export class InvoiceService {
       input.reimbursementTypeId,
     );
 
-    return this.db.transaction(async (tx) => {
-      const [invoice] = await tx
+    const invoice = await this.db.transaction(async (tx) => {
+      const [created] = await tx
         .insert(schema.invoices)
         .values({
           documentTemplateId: template.id,
@@ -200,7 +206,7 @@ export class InvoiceService {
 
       await tx.insert(schema.invoiceSignatures).values(
         orderedSignees.map((signee) => ({
-          invoiceId: invoice.id,
+          invoiceId: created.id,
           order: signee.order,
           signeeType: signee.signeeType,
           requiredPermissionId: signee.requiredPermissionId,
@@ -211,19 +217,31 @@ export class InvoiceService {
       // second invoice while this one is still pending signatures.
       await tx.insert(schema.invoiceTimeEntries).values(
         selected.map((entry) => ({
-          invoiceId: invoice.id,
+          invoiceId: created.id,
           timeEntryId: entry.id,
         })),
       );
 
       await tx.insert(schema.invoiceStatusChanges).values({
-        invoiceId: invoice.id,
+        invoiceId: created.id,
         type: DocumentStatusChange.CREATED,
         actorUserId,
       });
 
-      return invoice;
+      return created;
     });
+
+    this.postHogService.capture({
+      event: POSTHOG_EVENT.INVOICE_CREATE,
+      userId: invoice.volunteerId || actorUserId,
+      properties: {
+        surface: POSTHOG_SURFACE.BACKOFFICE,
+        organization_id: organizationId,
+        organization_unit_id: input.organizationUnitId ?? undefined,
+      },
+    });
+
+    return invoice;
   }
 
   async signInvoice(invoiceId: string, userId: string): Promise<InvoiceEntity> {
@@ -252,13 +270,13 @@ export class InvoiceService {
 
     const isFinal = pendingIndex === orderedSignatures.length - 1;
 
-    return this.db.transaction(async (tx) => {
+    const updated = await this.db.transaction(async (tx) => {
       await tx
         .update(schema.invoiceSignatures)
         .set({ signedByUserId: userId, signedAt: new Date() })
         .where(eq(schema.invoiceSignatures.id, pending.id));
 
-      const [updated] = await tx
+      const [signed] = await tx
         .update(schema.invoices)
         .set({
           invoiceStatus: isFinal
@@ -297,8 +315,21 @@ export class InvoiceService {
         }
       }
 
-      return updated;
+      return signed;
     });
+
+    this.postHogService.capture({
+      event: POSTHOG_EVENT.INVOICE_SIGN,
+      userId: invoice.volunteerId || userId,
+      properties: {
+        surface: POSTHOG_SURFACE.BACKOFFICE,
+        organization_id: this.documentSigningService.organizationIdOf(
+          invoice.documentTemplate,
+        ),
+      },
+    });
+
+    return updated;
   }
 
   async declineInvoice(
@@ -330,8 +361,8 @@ export class InvoiceService {
       this.documentSigningService.organizationIdOf(invoice.documentTemplate),
     );
 
-    return this.db.transaction(async (tx) => {
-      const [updated] = await tx
+    const updated = await this.db.transaction(async (tx) => {
+      const [declined] = await tx
         .update(schema.invoices)
         .set({
           invoiceStatus: InvoiceStatus.DECLINED,
@@ -349,8 +380,21 @@ export class InvoiceService {
         actorUserId: userId,
       });
 
-      return updated;
+      return declined;
     });
+
+    this.postHogService.capture({
+      event: POSTHOG_EVENT.INVOICE_DECLINE,
+      userId: invoice.volunteerId || userId,
+      properties: {
+        surface: POSTHOG_SURFACE.BACKOFFICE,
+        organization_id: this.documentSigningService.organizationIdOf(
+          invoice.documentTemplate,
+        ),
+      },
+    });
+
+    return updated;
   }
 
   async findInvoiceStatusChanges(
