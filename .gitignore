@@ -71,5 +71,8 @@ gitleaks-report.json
 .superpowers/
 docs/superpowers/
 
+# Claude Code isolated worktrees
+.claude/worktrees/
+
 # Personal mise config
 mise.toml
