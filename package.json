@@ -24,8 +24,10 @@
   },
   "devDependencies": {
     "@biomejs/biome": "^2.3.11",
+    "@svgr/webpack": "^8.1.0",
     "turbo": "^2.9.9",
-    "typescript": "6.0.3"
+    "typescript": "6.0.3",
+    "vite-plugin-svgr": "^5.2.0"
   },
   "engines": {
     "node": ">=18"
