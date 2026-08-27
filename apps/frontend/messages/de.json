@@ -1463,6 +1463,12 @@
     "action": {
       "checkInAria": "Einchecken",
       "checkInShiftAria": "Einchecken",
+      "remove": "Entfernen",
+      "removeAria": "Entfernen",
+      "removeDescription": "Bist du sicher, dass du {name} aus dieser Organisation entfernen möchtest? Das kann nicht rückgängig gemacht werden.",
+      "removeFailedToast": "Freiwillige:r konnte nicht entfernt werden",
+      "removeTitle": "Aus Organisation entfernen",
+      "removedToast": "{name} wurde aus dieser Organisation entfernt",
       "viewProfileAria": "Ansehen"
     },
     "empty": {

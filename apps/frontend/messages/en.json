@@ -1463,6 +1463,12 @@
     "action": {
       "checkInAria": "Check in",
       "checkInShiftAria": "Check in",
+      "remove": "Remove",
+      "removeAria": "Remove",
+      "removeDescription": "Are you sure you want to remove {name} from this organisation? This cannot be undone.",
+      "removeFailedToast": "Could not remove volunteer",
+      "removeTitle": "Remove from organisation",
+      "removedToast": "{name} was removed from this organisation",
       "viewProfileAria": "View"
     },
     "empty": {
