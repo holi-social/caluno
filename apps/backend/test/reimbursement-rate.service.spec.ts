@@ -291,11 +291,11 @@ describe('ReimbursementRateService', () => {
 
       await expect(
         service.setReimbursementRate(
-        organization.id,
-        reimbursementType.id,
-        0,
-        ACTOR_USER_ID,
-      ),
+          organization.id,
+          reimbursementType.id,
+          0,
+          ACTOR_USER_ID,
+        ),
       ).rejects.toBeInstanceOf(BadRequestGraphQLError);
     });
 
@@ -307,11 +307,11 @@ describe('ReimbursementRateService', () => {
 
       await expect(
         service.setReimbursementRate(
-        organization.id,
-        crypto.randomUUID(),
-        1_000,
-        ACTOR_USER_ID,
-      ),
+          organization.id,
+          crypto.randomUUID(),
+          1_000,
+          ACTOR_USER_ID,
+        ),
       ).rejects.toBeInstanceOf(NotFoundGraphQLError);
     });
 

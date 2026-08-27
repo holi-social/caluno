@@ -93,7 +93,9 @@ describe('reimbursement-rate resolver unit scoping', () => {
       membershipService,
       { capture: () => {} } as unknown as PostHogService,
     );
-    const userService = new UserService(db, { capture: () => {} } as unknown as PostHogService);
+    const userService = new UserService(db, {
+      capture: () => {},
+    } as unknown as PostHogService);
     queryResolver = new ReimbursementQueryResolver(
       reimbursementRateService,
       new ReimbursementTypeMapper(),

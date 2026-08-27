@@ -145,7 +145,11 @@ describe('TimeTrackingService', () => {
     input.endedAt = null;
     input.notes = 'Checked in without a shift';
 
-    const entry = await service.addTimeEntry(organizationUnitId, input, user.id);
+    const entry = await service.addTimeEntry(
+      organizationUnitId,
+      input,
+      user.id,
+    );
 
     expect(entry.shiftInstanceId).toBeNull();
     expect(entry.organizationUnitId).toBe(organizationUnitId);
@@ -163,7 +167,11 @@ describe('TimeTrackingService', () => {
     input.endedAt = endedAt;
     input.notes = null;
 
-    const entry = await service.addTimeEntry(organizationUnitId, input, user.id);
+    const entry = await service.addTimeEntry(
+      organizationUnitId,
+      input,
+      user.id,
+    );
 
     expect(entry.endedAt).toEqual(endedAt);
   });
@@ -197,7 +205,11 @@ describe('TimeTrackingService', () => {
     openInput.startedAt = new Date();
     openInput.endedAt = null;
     openInput.notes = null;
-    const opened = await service.addTimeEntry(organizationUnitId, openInput, user.id);
+    const opened = await service.addTimeEntry(
+      organizationUnitId,
+      openInput,
+      user.id,
+    );
 
     const closeInput = { endedAt: new Date(), notes: 'done' };
     const closed = await service.closeTimeEntry(
@@ -227,13 +239,22 @@ describe('TimeTrackingService', () => {
     openInput.startedAt = new Date();
     openInput.endedAt = null;
     openInput.notes = null;
-    const opened = await service.addTimeEntry(organizationUnitId, openInput, user.id);
+    const opened = await service.addTimeEntry(
+      organizationUnitId,
+      openInput,
+      user.id,
+    );
 
     await expect(
-      service.closeTimeEntry(opened.id, otherUnit.id, {
-        endedAt: new Date(),
-        notes: null,
-      }, user.id),
+      service.closeTimeEntry(
+        opened.id,
+        otherUnit.id,
+        {
+          endedAt: new Date(),
+          notes: null,
+        },
+        user.id,
+      ),
     ).rejects.toThrow(NotFoundGraphQLError);
   });
 
@@ -244,7 +265,11 @@ describe('TimeTrackingService', () => {
     input.startedAt = new Date();
     input.endedAt = new Date();
     input.notes = null;
-    const created = await service.addTimeEntry(organizationUnitId, input, user.id);
+    const created = await service.addTimeEntry(
+      organizationUnitId,
+      input,
+      user.id,
+    );
 
     const { entries } = await service.findAll(organizationUnitId, {
       limit: 50,
@@ -261,7 +286,11 @@ describe('TimeTrackingService', () => {
     input.startedAt = new Date();
     input.endedAt = new Date();
     input.notes = null;
-    const created = await service.addTimeEntry(organizationUnitId, input, user.id);
+    const created = await service.addTimeEntry(
+      organizationUnitId,
+      input,
+      user.id,
+    );
 
     const { entries } = await service.findByUser(organizationUnitId, user.id, {
       limit: 50,
@@ -286,14 +315,23 @@ describe('TimeTrackingService', () => {
     input.startedAt = new Date('2026-08-01T08:00:00Z');
     input.endedAt = new Date('2026-08-01T10:00:00Z');
     input.notes = null;
-    const entry = await service.addTimeEntry(organizationUnitId, input, user.id);
+    const entry = await service.addTimeEntry(
+      organizationUnitId,
+      input,
+      user.id,
+    );
 
-    const updated = await service.updateTimeEntry(entry.id, organizationUnitId, {
+    const updated = await service.updateTimeEntry(
+      entry.id,
+      organizationUnitId,
+      {
         shiftInstanceId: null,
         startedAt: input.startedAt,
         endedAt: input.endedAt,
         notes: null,
-      }, user.id);
+      },
+      user.id,
+    );
 
     expect(updated.shiftInstanceId).toBeNull();
   });
@@ -312,15 +350,24 @@ describe('TimeTrackingService', () => {
     input.startedAt = new Date('2026-08-02T08:00:00Z');
     input.endedAt = new Date('2026-08-02T10:00:00Z');
     input.notes = null;
-    const entry = await service.addTimeEntry(organizationUnitId, input, user.id);
+    const entry = await service.addTimeEntry(
+      organizationUnitId,
+      input,
+      user.id,
+    );
     expect(entry.shiftInstanceId).toBeNull();
 
-    const updated = await service.updateTimeEntry(entry.id, organizationUnitId, {
+    const updated = await service.updateTimeEntry(
+      entry.id,
+      organizationUnitId,
+      {
         shiftInstanceId: instanceId ?? '',
         startedAt: input.startedAt,
         endedAt: input.endedAt,
         notes: null,
-      }, user.id);
+      },
+      user.id,
+    );
 
     expect(updated.shiftInstanceId).toBe(instanceId);
   });
@@ -350,15 +397,24 @@ describe('TimeTrackingService', () => {
     input.startedAt = new Date('2026-08-03T08:00:00Z');
     input.endedAt = new Date('2026-08-03T10:00:00Z');
     input.notes = null;
-    const entry = await service.addTimeEntry(organizationUnitId, input, user.id);
+    const entry = await service.addTimeEntry(
+      organizationUnitId,
+      input,
+      user.id,
+    );
 
     await expect(
-      service.updateTimeEntry(entry.id, organizationUnitId, {
-        shiftInstanceId: otherInstanceId ?? '',
-        startedAt: input.startedAt,
-        endedAt: input.endedAt,
-        notes: null,
-      }, user.id),
+      service.updateTimeEntry(
+        entry.id,
+        organizationUnitId,
+        {
+          shiftInstanceId: otherInstanceId ?? '',
+          startedAt: input.startedAt,
+          endedAt: input.endedAt,
+          notes: null,
+        },
+        user.id,
+      ),
     ).rejects.toThrow(NotFoundGraphQLError);
   });
 
@@ -377,15 +433,24 @@ describe('TimeTrackingService', () => {
     second.startedAt = new Date('2026-08-04T08:00:00Z');
     second.endedAt = new Date('2026-08-04T10:00:00Z');
     second.notes = null;
-    const closed = await service.addTimeEntry(organizationUnitId, second, user.id);
+    const closed = await service.addTimeEntry(
+      organizationUnitId,
+      second,
+      user.id,
+    );
 
     await expect(
-      service.updateTimeEntry(closed.id, organizationUnitId, {
-        shiftInstanceId: null,
-        startedAt: second.startedAt,
-        endedAt: null,
-        notes: null,
-      }, user.id),
+      service.updateTimeEntry(
+        closed.id,
+        organizationUnitId,
+        {
+          shiftInstanceId: null,
+          startedAt: second.startedAt,
+          endedAt: null,
+          notes: null,
+        },
+        user.id,
+      ),
     ).rejects.toThrow(ConflictGraphQLError);
 
     const entries = await db.query.timeEntries.findMany({
