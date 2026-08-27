@@ -51,6 +51,7 @@ export const TimesheetsTable = ({
                   href={`/admin/${organizationUnitId}/timesheets/${entry.id}`}
                 >
                   {entry.shiftInstance?.master?.title ??
+                    entry.organizationUnit?.name ??
                     t('table.notAvailable')}
                 </Link>
               </TableCell>

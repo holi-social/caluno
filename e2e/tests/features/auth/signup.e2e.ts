@@ -5,13 +5,14 @@ import { SignupPage } from '../../../pages/SignupPage';
  * Signup validation suite — strictly frontend-only.
  *
  * The signup form validates via native HTML5 constraints (required,
- * type=email, password minLength=6); there is no custom inline messaging, no
- * confirm-password field, and no complexity rule.
+ * type=email, password minLength=6) plus a privacy-policy checkbox that
+ * disables submit until checked. Tests that click submit therefore accept
+ * the privacy policy first so native validation can run.
  *
  * No account is ever created here: native validation blocks submission, so no
  * signup request is sent — and every test asserts exactly that (via a passive
  * request listener, not interception). Successful signup belongs to the smoke
- * suite only.
+ * suite only. Privacy-policy behaviour is in privacy-policy.e2e.ts.
  */
 
 // Valid filler values for the fields NOT under test (never submitted).
@@ -43,7 +44,11 @@ test.describe('Signup validation', () => {
 
   test.describe('required fields', () => {
     test('name is required', async ({ page }) => {
-      await signup.fillForm({ email: VALID_EMAIL, password: VALID_PASSWORD });
+      await signup.fillForm({
+        email: VALID_EMAIL,
+        password: VALID_PASSWORD,
+        privacyAccepted: true,
+      });
       await signup.submit();
 
       expect(await signup.fieldValidity('name')).toMatchObject({
@@ -54,7 +59,11 @@ test.describe('Signup validation', () => {
     });
 
     test('email is required', async ({ page }) => {
-      await signup.fillForm({ name: 'E2E User', password: VALID_PASSWORD });
+      await signup.fillForm({
+        name: 'E2E User',
+        password: VALID_PASSWORD,
+        privacyAccepted: true,
+      });
       await signup.submit();
 
       expect(await signup.fieldValidity('email')).toMatchObject({
@@ -65,7 +74,11 @@ test.describe('Signup validation', () => {
     });
 
     test('password is required', async ({ page }) => {
-      await signup.fillForm({ name: 'E2E User', email: VALID_EMAIL });
+      await signup.fillForm({
+        name: 'E2E User',
+        email: VALID_EMAIL,
+        privacyAccepted: true,
+      });
       await signup.submit();
 
       expect(await signup.fieldValidity('password')).toMatchObject({
@@ -84,6 +97,7 @@ test.describe('Signup validation', () => {
           name: 'E2E User',
           email,
           password: VALID_PASSWORD,
+          privacyAccepted: true,
         });
         await signup.submit();
 
@@ -113,6 +127,7 @@ test.describe('Signup validation', () => {
           name: 'E2E User',
           email: VALID_EMAIL,
           password,
+          privacyAccepted: true,
         });
         await signup.submit();
 
