@@ -10,7 +10,7 @@ import {
 import { Button, Input, Separator, Skeleton } from '@repo/ui';
 import { AlertCircleIcon } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import { useEffect, useId, useState } from 'react';
+import { Fragment, useEffect, useId, useState } from 'react';
 import { toast } from 'sonner';
 import { formatEuro } from '@/lib/formatting/formats';
 import { centsToEuros, eurosToCents, formatHourlyRate } from '../lib/money';
@@ -126,6 +126,15 @@ function RateRow({
                   setInputValue(e.target.value);
                   setInputError(null);
                 }}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    handleSave();
+                  } else if (e.key === 'Escape') {
+                    e.preventDefault();
+                    handleCancel();
+                  }
+                }}
                 className="w-28"
                 autoFocus
                 aria-invalid={!!inputError}
@@ -227,7 +236,7 @@ export function RatesSectionCard({
         const reimbursementType = typesQuery.data?.find((rt) => rt.key === key);
         if (!reimbursementType) return null;
         return (
-          <div key={type} className="contents">
+          <Fragment key={type}>
             {index > 0 && <Separator />}
             <RateRow
               type={type}
@@ -238,7 +247,7 @@ export function RatesSectionCard({
               canEdit={canEdit}
               organizationUnitId={organizationUnitId}
             />
-          </div>
+          </Fragment>
         );
       })}
     </div>

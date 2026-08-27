@@ -112,12 +112,14 @@ export class ShiftMutationResolver {
     @Args('inviteToAllInstances', { type: () => Boolean, nullable: true })
     inviteToAllInstances: boolean | null | undefined,
     @Context() context: AuthenticatedGraphQLContext,
+    @Session() session: UserSession,
   ): Promise<ShiftInstance> {
     const instance = await this.shiftService.updateMembersForShiftInstance(
       instanceId,
       memberIds,
       context.organizationUnitId,
       { inviteToAllInstances },
+      session.user.id,
     );
     return this.shiftInstanceMapper.toModelOrThrow(instance);
   }
