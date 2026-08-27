@@ -57,6 +57,8 @@
       "passwordHint": "At least 6 characters",
       "passwordLabel": "Password",
       "passwordPlaceholder": "••••••••",
+      "privacyAcknowledge": "I have read and acknowledge the <privacyLink>Privacy Policy</privacyLink>.",
+      "privacyRequired": "Please acknowledge the Privacy Policy to create an account.",
       "signInLink": "Sign in",
       "submit": "Create account",
       "submitting": "Creating account...",
