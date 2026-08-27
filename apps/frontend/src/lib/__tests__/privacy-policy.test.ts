@@ -1,19 +1,13 @@
 import { describe, expect, it } from 'bun:test';
-import {
-  buildSignupPayload,
-  PRIVACY_POLICY_PDF_PATH,
-  PRIVACY_POLICY_VERSION,
-} from '../privacy-policy';
+import { API_URL } from '../constants';
+import { buildSignupPayload, PRIVACY_POLICY_PDF_URL } from '../privacy-policy';
 
 describe('privacy policy signup payload', () => {
-  it('uses the 2026-08-25 document version in the public PDF path', () => {
-    expect(PRIVACY_POLICY_VERSION).toBe('2026-08-25');
-    expect(PRIVACY_POLICY_PDF_PATH).toBe(
-      '/legal/datenschutzhinweise-2026-08-25.pdf',
-    );
+  it('links the stable backend privacy policy PDF', () => {
+    expect(PRIVACY_POLICY_PDF_URL).toBe(`${API_URL}/legal/privacy-policy.pdf`);
   });
 
-  it('includes the current version when the checkbox is accepted', () => {
+  it('includes the accepted flag when the checkbox is accepted', () => {
     expect(
       buildSignupPayload({
         name: 'Ada',
@@ -25,7 +19,7 @@ describe('privacy policy signup payload', () => {
       name: 'Ada',
       email: 'ada@example.com',
       password: 'secret1',
-      privacyPolicyVersion: '2026-08-25',
+      privacyPolicyAccepted: true,
     });
   });
 

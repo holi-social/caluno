@@ -3,8 +3,7 @@ import { API_URL, BASE_URL } from '../../../pages/AuthPage';
 import { SignupPage } from '../../../pages/SignupPage';
 import { TEST_PASSWORD, uniqueEmail } from '../../../utils/test-data';
 
-const PRIVACY_PDF_PATH = '/legal/datenschutzhinweise-2026-08-25.pdf';
-const CURRENT_VERSION = '2026-08-25';
+const PRIVACY_PDF_URL = `${API_URL}/legal/privacy-policy.pdf`;
 
 const signupHeaders = {
   Origin: BASE_URL,
@@ -12,17 +11,17 @@ const signupHeaders = {
 };
 
 test.describe('Signup privacy policy', () => {
-  test('privacy link opens the 2026-08-25 PDF in a new tab', async ({
+  test('privacy link opens the current PDF in a new tab', async ({
     page,
     request,
   }) => {
     const signup = new SignupPage(page);
     await signup.goto();
 
-    await expect(signup.privacyLink).toHaveAttribute('href', PRIVACY_PDF_PATH);
+    await expect(signup.privacyLink).toHaveAttribute('href', PRIVACY_PDF_URL);
     await expect(signup.privacyLink).toHaveAttribute('target', '_blank');
 
-    const pdf = await request.get(`${BASE_URL}${PRIVACY_PDF_PATH}`);
+    const pdf = await request.get(PRIVACY_PDF_URL);
     expect(pdf.ok()).toBe(true);
     expect(pdf.headers()['content-type'] ?? '').toMatch(/pdf/i);
 
@@ -67,21 +66,25 @@ test.describe('Signup privacy policy', () => {
     expect(response.ok()).toBe(true);
 
     const requestBody = response.request().postDataJSON() as {
+      privacyPolicyAccepted?: boolean;
       privacyPolicyVersion?: string;
     };
-    expect(requestBody.privacyPolicyVersion).toBe(CURRENT_VERSION);
+    expect(requestBody.privacyPolicyAccepted).toBe(true);
+    expect(requestBody.privacyPolicyVersion).toBeUndefined();
 
     const payload = (await response.json()) as {
       user?: {
+        privacyPolicyAccepted?: boolean;
         privacyPolicyVersion?: string;
         privacyPolicyAcceptedAt?: string | Date | null;
       };
     };
-    expect(payload.user?.privacyPolicyVersion).toBe(CURRENT_VERSION);
+    expect(payload.user?.privacyPolicyVersion).toMatch(/^\d{4}-\d{2}-\d{2}$/);
     expect(payload.user?.privacyPolicyAcceptedAt).toBeTruthy();
+    expect(payload.user).not.toHaveProperty('privacyPolicyAccepted');
   });
 
-  test('signup with a missing or stale version is rejected and creates no user', async ({
+  test('signup without acceptance is rejected and creates no user', async ({
     request,
   }) => {
     const missingEmail = uniqueEmail();

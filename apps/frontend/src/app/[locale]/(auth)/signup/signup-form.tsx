@@ -9,7 +9,7 @@ import { signIn, signUp } from '@/lib/auth';
 import { setLocaleCookieIfSupported } from '@/lib/locale-cookie';
 import {
   buildSignupPayload,
-  PRIVACY_POLICY_PDF_PATH,
+  PRIVACY_POLICY_PDF_URL,
 } from '@/lib/privacy-policy';
 import { getVerifyEmailPath } from '@/lib/verify-email-url';
 
@@ -169,7 +169,7 @@ export function SignupForm({ redirectTo = '/', orgUId }: SignupFormProps) {
             {t.rich('privacyAcknowledge', {
               privacyLink: (chunks) => (
                 <a
-                  href={PRIVACY_POLICY_PDF_PATH}
+                  href={PRIVACY_POLICY_PDF_URL}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="font-medium text-primary hover:underline"

@@ -1,7 +1,6 @@
-/** Must match `CURRENT_PRIVACY_POLICY_VERSION` in apps/backend/src/auth/privacy-policy.ts */
-export const PRIVACY_POLICY_VERSION = '2026-08-25';
+import { API_URL } from '@/lib/constants';
 
-export const PRIVACY_POLICY_PDF_PATH = `/legal/datenschutzhinweise-${PRIVACY_POLICY_VERSION}.pdf`;
+export const PRIVACY_POLICY_PDF_URL = `${API_URL}/legal/privacy-policy.pdf`;
 
 export function buildSignupPayload(input: {
   name: string;
@@ -12,7 +11,7 @@ export function buildSignupPayload(input: {
   name: string;
   email: string;
   password: string;
-  privacyPolicyVersion: string;
+  privacyPolicyAccepted: true;
 } | null {
   if (!input.privacyAccepted) {
     return null;
@@ -22,6 +21,6 @@ export function buildSignupPayload(input: {
     name: input.name,
     email: input.email,
     password: input.password,
-    privacyPolicyVersion: PRIVACY_POLICY_VERSION,
+    privacyPolicyAccepted: true,
   };
 }
