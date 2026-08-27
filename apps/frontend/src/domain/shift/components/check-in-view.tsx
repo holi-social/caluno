@@ -15,13 +15,15 @@ interface CheckInViewProps {
   canCheckIn: boolean;
 }
 
+type CheckInType = 'qr' | 'scanner';
+
 export function CheckInView({
   checkInId,
   qrValue,
   name,
   canCheckIn,
 }: CheckInViewProps) {
-  const [tab, setTab] = useState<'qr' | 'scanner'>('qr');
+  const [tab, setTab] = useState<CheckInType>('qr');
   const [manualCheckinOpen, setManualCheckinOpen] = useState(false);
   const t = useTranslations('Navigation');
   const tCheckIn = useTranslations('CheckIn');
@@ -59,7 +61,7 @@ export function CheckInView({
     <div className="max-w-2xl">
       <Tabs
         value={tab}
-        onValueChange={(value) => setTab(value as 'qr' | 'scanner')}
+        onValueChange={(value) => setTab(value as CheckInType)}
       >
         <TabsList>
           <TabsTrigger value="qr">{tCheckIn('myQrCodeTab')}</TabsTrigger>
