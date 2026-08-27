@@ -9,6 +9,7 @@ import type {
 import * as schema from '../../database/schema';
 import { EventInviteStatus } from '../../event/enums';
 import {
+  BadRequestGraphQLError,
   ConflictGraphQLError,
   NotFoundGraphQLError,
 } from '../../graphql/errors';
@@ -35,6 +36,28 @@ export class RequiredFormService {
     @Inject(DATABASE_CONNECTION)
     private readonly db: Database,
   ) {}
+
+  private async verifyFormsHaveBlocks(
+    formIds: string[],
+    runner: Database,
+  ): Promise<void> {
+    const uniqueFormIds = [...new Set(formIds)];
+    if (uniqueFormIds.length === 0) {
+      return;
+    }
+
+    const refs = await runner.query.requirementFormBlockRefs.findMany({
+      where: { formId: { in: uniqueFormIds } },
+      columns: { formId: true },
+    });
+
+    const formsWithBlocks = new Set(refs.map((ref) => ref.formId));
+    if (formsWithBlocks.size !== uniqueFormIds.length) {
+      throw new BadRequestGraphQLError(
+        'One or more forms do not contain any blocks',
+      );
+    }
+  }
 
   async getRequiredForms(
     target: RequiredFormTarget,
@@ -315,6 +338,8 @@ export class RequiredFormService {
           'One or more forms do not belong to this organization',
         );
       }
+
+      await this.verifyFormsHaveBlocks(formIds, this.db);
     }
 
     await this.db.transaction(async (tx) => {
@@ -442,6 +467,8 @@ export class RequiredFormService {
           'One or more forms do not belong to this organization',
         );
       }
+
+      await this.verifyFormsHaveBlocks(formIds, runner);
     }
 
     const write = async (writer: Database) => {
@@ -493,6 +520,8 @@ export class RequiredFormService {
           'One or more forms do not belong to this organization',
         );
       }
+
+      await this.verifyFormsHaveBlocks(formIds, runner);
     }
 
     const write = async (writer: Database) => {
@@ -595,6 +624,8 @@ export class RequiredFormService {
           'One or more forms do not belong to this organization',
         );
       }
+
+      await this.verifyFormsHaveBlocks(formIds, runner);
     }
 
     const write = async (writer: Database) => {
