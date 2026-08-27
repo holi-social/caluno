@@ -114,11 +114,13 @@ export class EventMutationResolver {
     @Args('eventId', { type: () => ID }) eventId: string,
     @Args('memberIds', { type: () => [String] }) memberIds: string[],
     @Context() context: AuthenticatedGraphQLContext,
+    @Session() session: UserSession,
   ): Promise<Event> {
     const event = await this.eventService.inviteMembersToEvent(
       eventId,
       memberIds,
       context.organizationUnitId,
+      session.user.id,
     );
     return this.eventMapper.toModelOrThrow(event);
   }
