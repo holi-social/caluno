@@ -1,12 +1,16 @@
 'use client';
 
 import type { Locale } from '@repo/data';
-import { Button, Input } from '@repo/ui';
+import { Button, Checkbox, Input } from '@repo/ui';
 import { useLocale, useTranslations } from 'next-intl';
-import { useState } from 'react';
+import { useId, useState } from 'react';
 import { Link, useRouter } from '@/i18n/navigation';
 import { signIn, signUp } from '@/lib/auth';
 import { setLocaleCookieIfSupported } from '@/lib/locale-cookie';
+import {
+  buildSignupPayload,
+  PRIVACY_POLICY_PDF_URL,
+} from '@/lib/privacy-policy';
 import { getVerifyEmailPath } from '@/lib/verify-email-url';
 
 function switchAuthHref(
@@ -30,8 +34,10 @@ export function SignupForm({ redirectTo = '/', orgUId }: SignupFormProps) {
   const t = useTranslations('Auth.signup');
   const router = useRouter();
   const currentLocale = useLocale();
+  const privacyCheckboxId = useId();
   const [error, setError] = useState<string | null>(null);
   const [isPending, setIsPending] = useState(false);
+  const [privacyAccepted, setPrivacyAccepted] = useState(false);
 
   async function handleSignupSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -42,9 +48,21 @@ export function SignupForm({ redirectTo = '/', orgUId }: SignupFormProps) {
     const name = formData.get('name') as string;
     const email = formData.get('email') as string;
     const password = formData.get('password') as string;
+    const payload = buildSignupPayload({
+      name,
+      email,
+      password,
+      privacyAccepted,
+    });
+
+    if (!payload) {
+      setError(t('privacyRequired'));
+      setIsPending(false);
+      return;
+    }
 
     try {
-      const result = await signUp.email({ name, email, password });
+      const result = await signUp.email(payload);
 
       if (result.error) {
         setError(result.error.message || t('createAccountFailed'));
@@ -135,9 +153,41 @@ export function SignupForm({ redirectTo = '/', orgUId }: SignupFormProps) {
             {t('passwordHint')}
           </p>
         </div>
+
+        <div className="flex items-start gap-3">
+          <Checkbox
+            id={privacyCheckboxId}
+            checked={privacyAccepted}
+            onCheckedChange={(checked) => setPrivacyAccepted(checked === true)}
+            disabled={isPending}
+            aria-required
+          />
+          <label
+            htmlFor={privacyCheckboxId}
+            className="text-sm leading-snug font-medium"
+          >
+            {t.rich('privacyAcknowledge', {
+              privacyLink: (chunks) => (
+                <a
+                  href={PRIVACY_POLICY_PDF_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="font-medium text-primary hover:underline"
+                  onClick={(event) => event.stopPropagation()}
+                >
+                  {chunks}
+                </a>
+              ),
+            })}
+          </label>
+        </div>
       </div>
 
-      <Button type="submit" disabled={isPending} className="w-full">
+      <Button
+        type="submit"
+        disabled={isPending || !privacyAccepted}
+        className="w-full"
+      >
         {isPending ? t('submitting') : t('submit')}
       </Button>
 

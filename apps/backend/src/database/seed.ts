@@ -1,8 +1,11 @@
-import { inArray, sql } from 'drizzle-orm';
+import { eq, inArray, sql } from 'drizzle-orm';
 import { drizzle } from 'drizzle-orm/node-postgres';
 import { Pool } from 'pg';
-import { PERMISSIONS } from '../auth/constants';
+import { ReimbursementTypeKey } from '../accounting/enums';
+import { reimbursementTypes } from '../accounting/schemas/reimbursement-type.schema';
+import { DEFAULT_OWNER_ROLE_NAME, PERMISSIONS } from '../auth/constants';
 import { permissions } from '../auth/schemas/permission.schema';
+import { roles } from '../auth/schemas/role.schema';
 import * as schema from './schema';
 
 const PERMISSION_NAMES: Record<
@@ -20,6 +23,29 @@ const PERMISSION_NAMES: Record<
   [PERMISSIONS.ACCOUNTING_MANAGE]: 'Manage accounting',
   [PERMISSIONS.CHECK_IN_MANAGE]: 'Manage check-in',
 };
+
+// The two statutory Pauschale types this feature is built around — fixed by
+// law, not org-configurable, and there is no mutation to create them, so
+// they must exist as reference data in every environment.
+const REIMBURSEMENT_TYPES: Array<
+  Pick<
+    typeof reimbursementTypes.$inferInsert,
+    'key' | 'legalReference' | 'yearlyLimitCents' | 'platformDefaultRateCents'
+  >
+> = [
+  {
+    key: ReimbursementTypeKey.EHRENAMT,
+    legalReference: '§3 Nr. 26a EStG',
+    yearlyLimitCents: 84_000,
+    platformDefaultRateCents: 500,
+  },
+  {
+    key: ReimbursementTypeKey.UEBUNGSLEITER,
+    legalReference: '§3 Nr. 26 EStG',
+    yearlyLimitCents: 300_000,
+    platformDefaultRateCents: 800,
+  },
+];
 
 async function seed() {
   const pool = new Pool({
@@ -98,6 +124,55 @@ async function seed() {
     `Updated ${updatedDescriptionKeys.length} permission descriptions`,
   );
   console.log(`Synced ${values.length} permissions in total`);
+
+  // Owner roles get every permission at organization-creation time (see
+  // OrganizationService.createOrganization), but that only runs once — a
+  // permission added later (like accounting:manage) never reaches an
+  // Owner role created before it existed. Backfill it here too.
+  const [ownerRoleIds, allPermissionIds] = await Promise.all([
+    db
+      .select({ id: roles.id })
+      .from(roles)
+      .where(eq(roles.name, DEFAULT_OWNER_ROLE_NAME)),
+    db.select({ id: permissions.id }).from(permissions),
+  ]);
+  let grantedCount = 0;
+  if (ownerRoleIds.length > 0 && allPermissionIds.length > 0) {
+    const grants = ownerRoleIds.flatMap((role) =>
+      allPermissionIds.map((permission) => ({
+        roleId: role.id,
+        permissionId: permission.id,
+      })),
+    );
+    const inserted = await db
+      .insert(schema.rolePermissions)
+      .values(grants)
+      .onConflictDoNothing({
+        target: [
+          schema.rolePermissions.roleId,
+          schema.rolePermissions.permissionId,
+        ],
+      })
+      .returning({ id: schema.rolePermissions.id });
+    grantedCount = inserted.length;
+  }
+  console.log(
+    `Granted ${grantedCount} missing permission(s) across ${ownerRoleIds.length} owner role(s)`,
+  );
+
+  await db
+    .insert(reimbursementTypes)
+    .values(REIMBURSEMENT_TYPES)
+    .onConflictDoUpdate({
+      target: reimbursementTypes.key,
+      set: {
+        legalReference: sql`excluded.legal_reference`,
+        yearlyLimitCents: sql`excluded.yearly_limit_cents`,
+        platformDefaultRateCents: sql`excluded.platform_default_rate_cents`,
+      },
+    });
+  console.log(`Synced ${REIMBURSEMENT_TYPES.length} reimbursement types`);
+
   await pool.end();
 }
 

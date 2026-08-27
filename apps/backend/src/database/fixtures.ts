@@ -1882,6 +1882,13 @@ async function seedFixtures() {
     ].join('\n'),
   );
 
+  // No admin UI to toggle accountingEnabled yet — this script never runs in production.
+  const enabledOrgs = await db
+    .update(schema.organizations)
+    .set({ accountingEnabled: true })
+    .returning({ id: schema.organizations.id });
+  console.log(`Accounting enabled on ${enabledOrgs.length} organization(s).`);
+
   await pool.end();
 }
 

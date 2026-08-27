@@ -184,4 +184,36 @@ export const accountingRelations = defineRelationsPart(schema, (r) => ({
       to: r.timeEntries.id,
     }),
   },
+  reimbursementBundleDownloads: {
+    volunteer: r.one.users({
+      from: r.reimbursementBundleDownloads.volunteerId,
+      to: r.users.id,
+    }),
+    reimbursementType: r.one.reimbursementTypes({
+      from: r.reimbursementBundleDownloads.reimbursementTypeId,
+      to: r.reimbursementTypes.id,
+    }),
+    downloadedByUser: r.one.users({
+      from: r.reimbursementBundleDownloads.downloadedByUserId,
+      to: r.users.id,
+    }),
+  },
+  reimbursementManualBaselines: {
+    organization: r.one.organizations({
+      from: r.reimbursementManualBaselines.organizationId,
+      to: r.organizations.id,
+    }),
+    volunteer: r.one.users({
+      from: r.reimbursementManualBaselines.volunteerId,
+      to: r.users.id,
+    }),
+    reimbursementType: r.one.reimbursementTypes({
+      from: r.reimbursementManualBaselines.reimbursementTypeId,
+      to: r.reimbursementTypes.id,
+    }),
+    updatedByUser: r.one.users({
+      from: r.reimbursementManualBaselines.updatedByUserId,
+      to: r.users.id,
+    }),
+  },
 }));
