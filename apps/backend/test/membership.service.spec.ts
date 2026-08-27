@@ -293,6 +293,18 @@ describe('MembershipService', () => {
           status: ShiftInviteStatus.ACCEPTED,
         },
       ]);
+      await db.insert(schema.membershipRequests).values([
+        {
+          userId: user.id,
+          organizationUnitId: root.id,
+          status: MembershipRequestStatus.ACCEPTED,
+        },
+        {
+          userId: user.id,
+          organizationUnitId: child.id,
+          status: MembershipRequestStatus.ACCEPTED,
+        },
+      ]);
 
       return {
         user,
@@ -343,6 +355,13 @@ describe('MembershipService', () => {
         },
       });
       expect(otherUserEvent).toBeTruthy();
+
+      const remainingRequests = await db.query.membershipRequests.findMany({
+        where: { userId: seeded.user.id },
+      });
+      expect(
+        remainingRequests.map((row) => row.organizationUnitId).sort(),
+      ).toEqual([seeded.child.id]);
     });
 
     it('removeMembership hard-deletes this user invites on that org unit the same way', async () => {
@@ -356,6 +375,13 @@ describe('MembershipService', () => {
       );
       expect(remaining.shiftIds).toEqual([seeded.childShift.id]);
       expect(remaining.instanceIds).toEqual([seeded.childInstance.id]);
+
+      const remainingRequests = await db.query.membershipRequests.findMany({
+        where: { userId: seeded.user.id },
+      });
+      expect(
+        remainingRequests.map((row) => row.organizationUnitId).sort(),
+      ).toEqual([seeded.child.id]);
     });
 
     it('removeMembership on a child unit leaves parent-unit invites untouched', async () => {
@@ -372,9 +398,16 @@ describe('MembershipService', () => {
       );
       expect(remaining.shiftIds).toEqual([seeded.shift.id]);
       expect(remaining.instanceIds).toEqual([seeded.instance.id]);
+
+      const remainingRequests = await db.query.membershipRequests.findMany({
+        where: { userId: seeded.user.id },
+      });
+      expect(
+        remainingRequests.map((row) => row.organizationUnitId).sort(),
+      ).toEqual([seeded.root.id]);
     });
 
-    it('keeps past invites and purges current and future on that org unit', async () => {
+    it('keeps past event and instance invites; deletes all shift invites on that org unit', async () => {
       const user = await createUser(db);
       const { organization, type } = await createOrganizationWithType(
         db,
@@ -501,10 +534,39 @@ describe('MembershipService', () => {
 
       const remaining = await remainingInviteIds(user.id);
       expect(remaining.eventIds).toEqual([pastEvent.id]);
-      expect(remaining.shiftIds).toEqual([pastShift.id]);
+      expect(remaining.shiftIds).toEqual([]);
       expect(remaining.instanceIds).toEqual(
         [pastInstance.id, pastMixedInstance.id].sort(),
       );
+    });
+
+    it('deletes the membership request so the user can re-apply', async () => {
+      const user = await createUser(db);
+      const { organization, type } = await createOrganizationWithType(
+        db,
+        `Reapply Org ${crypto.randomUUID()}`,
+      );
+      const unit = await createUnit(db, {
+        organizationId: organization.id,
+        typeId: type.id,
+        name: 'unit',
+      });
+      const membership = await addMembership(db, user.id, unit.id);
+      await db.insert(schema.membershipRequests).values({
+        userId: user.id,
+        organizationUnitId: unit.id,
+        status: MembershipRequestStatus.ACCEPTED,
+      });
+
+      await service.leaveMembership(membership.id, user.id);
+
+      const leftover = await db.query.membershipRequests.findFirst({
+        where: { userId: user.id, organizationUnitId: unit.id },
+      });
+      expect(leftover).toBeUndefined();
+
+      const reapplied = await service.createMembershipRequest(user.id, unit.id);
+      expect(reapplied.status).toBe(MembershipRequestStatus.PENDING);
     });
   });
 

@@ -360,13 +360,9 @@ export class MembershipService {
   }
 
   private async notifyMembershipLeft(
-    userId: string | null,
-    organizationUnitId: string | null,
+    userId: string,
+    organizationUnitId: string,
   ): Promise<void> {
-    if (!userId || !organizationUnitId) {
-      return;
-    }
-
     try {
       const organizationUnit = await this.db.query.organizationUnits.findFirst({
         where: { id: organizationUnitId },
@@ -403,13 +399,9 @@ export class MembershipService {
   }
 
   private async notifyMembershipRemoved(
-    userId: string | null,
-    organizationUnitId: string | null,
+    userId: string,
+    organizationUnitId: string,
   ): Promise<void> {
-    if (!userId || !organizationUnitId) {
-      return;
-    }
-
     try {
       const organizationUnit = await this.db.query.organizationUnits.findFirst({
         where: { id: organizationUnitId },
@@ -684,8 +676,8 @@ export class MembershipService {
   }
 
   async leaveMembership(id: string, userId: string): Promise<MembershipEntity> {
-    const deleted = await this.db.transaction(async (tx) => {
-      const [row] = await tx
+    const { row, identity } = await this.db.transaction(async (tx) => {
+      const [deleted] = await tx
         .delete(schema.memberships)
         .where(
           and(
@@ -695,29 +687,33 @@ export class MembershipService {
         )
         .returning();
 
-      if (!row) {
+      if (!deleted) {
         throw new NotFoundGraphQLError('Membership not found');
       }
 
+      const identity = this.membershipIdentity(deleted);
       await this.purgeOrganizationUnitInvites(
         tx,
-        row.userId,
-        row.organizationUnitId,
+        identity.userId,
+        identity.organizationUnitId,
       );
-      return row;
+      return { row: deleted, identity };
     });
 
-    void this.notifyMembershipLeft(deleted.userId, deleted.organizationUnitId);
+    void this.notifyMembershipLeft(
+      identity.userId,
+      identity.organizationUnitId,
+    );
 
-    return deleted;
+    return row;
   }
 
   async removeMembership(
     id: string,
     organizationUnitId: string,
   ): Promise<MembershipEntity> {
-    const deleted = await this.db.transaction(async (tx) => {
-      const [row] = await tx
+    const { row, identity } = await this.db.transaction(async (tx) => {
+      const [deleted] = await tx
         .delete(schema.memberships)
         .where(
           and(
@@ -727,104 +723,108 @@ export class MembershipService {
         )
         .returning();
 
-      if (!row) {
+      if (!deleted) {
         throw new NotFoundGraphQLError('Membership not found');
       }
 
+      const identity = this.membershipIdentity(deleted);
       await this.purgeOrganizationUnitInvites(
         tx,
-        row.userId,
-        row.organizationUnitId,
+        identity.userId,
+        identity.organizationUnitId,
       );
-      return row;
+      return { row: deleted, identity };
     });
 
     void this.notifyMembershipRemoved(
-      deleted.userId,
-      deleted.organizationUnitId,
+      identity.userId,
+      identity.organizationUnitId,
     );
 
-    return deleted;
+    return row;
   }
 
-  /**
-   * Hard-deletes this user's current and future shift, shift-instance, and
-   * event invites on `organizationUnitId` only. Past events/instances on that
-   * unit, sibling/child units, other orgs, and other users are left untouched.
-   * Leave and admin-remove share this path.
-   */
+  private membershipIdentity(row: MembershipEntity): {
+    userId: string;
+    organizationUnitId: string;
+  } {
+    if (!row.userId || !row.organizationUnitId) {
+      throw new NotFoundGraphQLError('Membership not found');
+    }
+    return {
+      userId: row.userId,
+      organizationUnitId: row.organizationUnitId,
+    };
+  }
+
   private async purgeOrganizationUnitInvites(
     tx: Database,
-    userId: string | null,
-    organizationUnitId: string | null,
+    userId: string,
+    organizationUnitId: string,
   ): Promise<void> {
-    if (!userId || !organizationUnitId) {
-      return;
-    }
-
     const now = new Date();
 
-    const currentOrFutureEvents = await tx
-      .select({ id: schema.events.id })
-      .from(schema.events)
-      .where(
-        and(
-          eq(schema.events.organizationUnitId, organizationUnitId),
-          gte(schema.events.endsAt, now),
+    await tx.delete(schema.eventInvites).where(
+      and(
+        eq(schema.eventInvites.userId, userId),
+        inArray(
+          schema.eventInvites.eventId,
+          tx
+            .select({ id: schema.events.id })
+            .from(schema.events)
+            .where(
+              and(
+                eq(schema.events.organizationUnitId, organizationUnitId),
+                gte(schema.events.endsAt, now),
+              ),
+            ),
         ),
-      );
-    const eventIds = currentOrFutureEvents.map((row) => row.id);
-    if (eventIds.length > 0) {
-      await tx
-        .delete(schema.eventInvites)
-        .where(
-          and(
-            eq(schema.eventInvites.userId, userId),
-            inArray(schema.eventInvites.eventId, eventIds),
-          ),
-        );
-    }
+      ),
+    );
 
-    const currentOrFutureInstances = await tx
-      .select({
-        id: schema.shiftInstances.id,
-        masterId: schema.shiftInstances.masterId,
-      })
-      .from(schema.shiftInstances)
-      .innerJoin(
-        schema.shifts,
-        eq(schema.shiftInstances.masterId, schema.shifts.id),
-      )
-      .where(
-        and(
-          eq(schema.shifts.organizationUnitId, organizationUnitId),
-          gte(schema.shiftInstances.actualEndsAt, now),
+    await tx.delete(schema.shiftInstanceInvites).where(
+      and(
+        eq(schema.shiftInstanceInvites.userId, userId),
+        inArray(
+          schema.shiftInstanceInvites.instanceId,
+          tx
+            .select({ id: schema.shiftInstances.id })
+            .from(schema.shiftInstances)
+            .innerJoin(
+              schema.shifts,
+              eq(schema.shiftInstances.masterId, schema.shifts.id),
+            )
+            .where(
+              and(
+                eq(schema.shifts.organizationUnitId, organizationUnitId),
+                gte(schema.shiftInstances.actualEndsAt, now),
+              ),
+            ),
         ),
-      );
-    if (currentOrFutureInstances.length === 0) {
-      return;
-    }
-
-    const instanceIds = currentOrFutureInstances.map((row) => row.id);
-    const shiftIds = [
-      ...new Set(currentOrFutureInstances.map((row) => row.masterId)),
-    ];
+      ),
+    );
 
     await tx
       .delete(schema.shiftInvites)
       .where(
         and(
           eq(schema.shiftInvites.userId, userId),
-          inArray(schema.shiftInvites.shiftId, shiftIds),
+          inArray(
+            schema.shiftInvites.shiftId,
+            tx
+              .select({ id: schema.shifts.id })
+              .from(schema.shifts)
+              .where(eq(schema.shifts.organizationUnitId, organizationUnitId)),
+          ),
         ),
       );
 
     await tx
-      .delete(schema.shiftInstanceInvites)
+      .delete(schema.membershipRequests)
       .where(
         and(
-          eq(schema.shiftInstanceInvites.userId, userId),
-          inArray(schema.shiftInstanceInvites.instanceId, instanceIds),
+          eq(schema.membershipRequests.userId, userId),
+          eq(schema.membershipRequests.organizationUnitId, organizationUnitId),
         ),
       );
   }
