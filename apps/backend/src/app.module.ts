@@ -21,6 +21,7 @@ import { resolveRequestLocale } from './graphql/locale';
 import { AppI18nService } from './i18n/app-i18n.service';
 import { AppI18nModule } from './i18n/i18n.module';
 import { UserLocaleService } from './i18n/user-locale.service';
+import { LegalModule } from './legal/legal.module';
 import { MembershipModule } from './membership/membership.module';
 import { MembershipLifecycleModule } from './membership-lifecycle/membership-lifecycle.module';
 import { EmailService } from './notification/email/email.service';
@@ -188,6 +189,7 @@ const autoSchemaFile =
     NotificationModule,
     TimeTrackingModule,
     GraphqlModule,
+    LegalModule,
     ShiftModule,
     EventModule,
     StorageModule,
