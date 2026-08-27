@@ -14,6 +14,7 @@ type SuccessDialogCreatedShift = {
 
 export const getSuccessDialogCreatedShift =
   (): SuccessDialogCreatedShift | null => {
+    if (typeof window === 'undefined') return null;
     const data = sessionStorage.getItem(SUCCESS_DIALOG_SHIFT_CREATED);
 
     if (!data) return null;
@@ -29,10 +30,12 @@ export const getSuccessDialogCreatedShift =
 export const setSuccessDialogCreatedShift = (
   shift: SuccessDialogCreatedShift,
 ) => {
+  if (typeof window === 'undefined') return;
   sessionStorage.setItem(SUCCESS_DIALOG_SHIFT_CREATED, JSON.stringify(shift));
 };
 
 export const clearSuccessDialogCreatedShift = () => {
+  if (typeof window === 'undefined') return;
   sessionStorage.removeItem(SUCCESS_DIALOG_SHIFT_CREATED);
 };
 

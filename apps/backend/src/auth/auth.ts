@@ -1,9 +1,18 @@
 import { drizzleAdapter } from '@better-auth/drizzle-adapter';
-import { type BetterAuthOptions, betterAuth } from 'better-auth';
+import { APIError, type BetterAuthOptions, betterAuth } from 'better-auth';
 import { emailOTP } from 'better-auth/plugins';
 import { Database } from '../database/database.module';
 import { resolveRequestLocale } from '../graphql/locale';
+import {
+  defaultPrivacyPolicyDirectory,
+  resolvePrivacyPolicyDocument,
+} from '../legal/privacy-policy-files';
 import { headersFromRequest } from './auth-headers';
+import {
+  applyPrivacyPolicyAcceptance,
+  PrivacyPolicyAcceptanceError,
+  privacyPolicyAcceptedFromBody,
+} from './privacy-policy';
 import {
   accounts,
   sessions,
@@ -41,6 +50,7 @@ export interface AuthConfigOptions {
   sendResetPassword: (options: SendResetPasswordOptions) => Promise<void>;
   onSessionCreated?: (userId: string) => void;
   onUserCreated?: (userId: string) => void;
+  privacyPolicyDirectory?: string;
 }
 
 export const createAuthConfig = ({
@@ -52,6 +62,7 @@ export const createAuthConfig = ({
   sendResetPassword,
   onSessionCreated,
   onUserCreated,
+  privacyPolicyDirectory = defaultPrivacyPolicyDirectory(),
 }: AuthConfigOptions): BetterAuthOptions => ({
   database: drizzleAdapter(database, {
     schema: {
@@ -69,6 +80,16 @@ export const createAuthConfig = ({
         type: 'string',
         required: false,
       },
+      privacyPolicyVersion: {
+        type: 'string',
+        required: false,
+        input: false,
+      },
+      privacyPolicyAcceptedAt: {
+        type: 'date',
+        required: false,
+        input: false,
+      },
     },
   },
   databaseHooks: {
@@ -77,12 +98,28 @@ export const createAuthConfig = ({
         before: async (user, ctx) => {
           const locale = resolveRequestLocale(headersFromRequest(ctx?.request));
 
-          return {
-            data: {
-              ...user,
-              locale,
-            },
-          };
+          try {
+            const { version } = resolvePrivacyPolicyDocument(
+              privacyPolicyDirectory,
+            );
+            return {
+              data: applyPrivacyPolicyAcceptance(
+                {
+                  ...user,
+                  locale,
+                  privacyPolicyAccepted: privacyPolicyAcceptedFromBody(
+                    ctx?.body,
+                  ),
+                },
+                version,
+              ),
+            };
+          } catch (error) {
+            if (error instanceof PrivacyPolicyAcceptanceError) {
+              throw new APIError('BAD_REQUEST', { message: error.message });
+            }
+            throw error;
+          }
         },
         after: async (user) => {
           if (typeof user.id === 'string') {

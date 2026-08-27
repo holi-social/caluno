@@ -13,7 +13,7 @@ import { MembershipService } from '../src/membership/membership.service';
 import { NotificationService } from '../src/notification';
 import { RequiredFormService } from '../src/requirement-profile/services/required-form.service';
 import { RequirementProfileService } from '../src/requirement-profile/services/requirement-profile.service';
-import { PostHogService } from '../src/shared/observability/posthog.service';
+import { PostHogCaptureService } from '../src/shared/observability/posthog.capture.service';
 import { ShiftInviteStatus } from '../src/shift/enums';
 import {
   createEvent,
@@ -53,7 +53,7 @@ describe('MembershipService', () => {
         notifyMembershipRemoved: mock(() => undefined),
       } as unknown as NotificationService,
       {} as RequiredFormService,
-      { captureUserJoinedOrg: () => {} } as unknown as PostHogService,
+      { captureUserJoinedOrg: () => {} } as unknown as PostHogCaptureService,
     );
     registerTestResourceCleanup(async () => {
       await moduleRef.close();
