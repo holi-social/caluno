@@ -83,12 +83,12 @@ export function TransferList({
           <Badge variant="outline">{filteredAvailable.length}</Badge>
         </div>
         <div className="flex flex-col border rounded-md overflow-hidden flex-1 min-h-0 shadow-xs">
-          <div className="flex items-center gap-2 px-3 py-2.5 border-b">
+          <div className="flex items-center gap-2 border-b">
             <Input
               placeholder={t('transferList.searchPlaceholder')}
               value={availableSearch}
               onChange={(e) => setAvailableSearch(e.target.value)}
-              className="border-0 shadow-none p-0 h-auto focus-visible:ring-0"
+              className="border-0 shadow-none p-0 h-auto focus-visible:ring-0 px-3 py-2.5 rounded-b-none"
             />
           </div>
           <div className="overflow-y-auto flex-1 p-1">
@@ -135,12 +135,12 @@ export function TransferList({
           <Badge variant="outline">{invited.length}</Badge>
         </div>
         <div className="flex flex-col border rounded-md overflow-hidden flex-1 min-h-0 shadow-xs">
-          <div className="flex items-center gap-2 px-3 py-2.5 border-b">
+          <div className="flex items-center gap-2 border-b">
             <Input
               placeholder={t('transferList.searchPlaceholder')}
               value={invitedSearch}
               onChange={(e) => setInvitedSearch(e.target.value)}
-              className="border-0 shadow-none p-0 h-auto focus-visible:ring-0"
+              className="border-0 shadow-none p-0 h-auto focus-visible:ring-0 px-3 py-2.5 rounded-b-none"
             />
           </div>
           <div className="overflow-y-auto flex-1 p-1">
