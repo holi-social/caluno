@@ -30,6 +30,8 @@ export interface DayGroup<T> {
 
 interface DayTimelineViewProps<T> {
   title: string;
+  /** Rendered once, right after the header title/back row and before the day strip. */
+  headerContent?: ReactNode;
   isLoading: boolean;
   days: DayStripDay[];
   groups: DayGroup<T>[];
@@ -52,6 +54,7 @@ interface DayTimelineViewProps<T> {
 
 export function DayTimelineView<T>({
   title,
+  headerContent,
   isLoading,
   days,
   groups,
@@ -180,8 +183,9 @@ export function DayTimelineView<T>({
             onBack={router.back}
             backLabel={ct('back')}
           />
+          {headerContent && <div className="px-4 pb-0">{headerContent}</div>}
           {(isLoading || hasContent) && (
-            <div className="px-4 pb-3">
+            <div className={cn('px-4 pb-3', headerContent && 'pt-2')}>
               {isLoading ? (
                 <DayStripSkeleton />
               ) : (

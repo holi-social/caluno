@@ -59,7 +59,7 @@ describe('DocumentSigningService', () => {
       {} as OrganizationUnitService,
       {} as NotificationService,
       {} as FileService,
-      {} as PostHogService,
+      { capture: () => {} } as unknown as PostHogService,
     );
     service = new DocumentSigningService(db, authService, organizationService);
 

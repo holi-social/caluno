@@ -17,23 +17,25 @@ export const UserCard = ({
   const t = useTranslations('Common');
 
   return (
-    <div className="flex gap-2 min-w-0">
-      <Avatar size={size} className="bg-muted">
-        <AvatarImage
-          src={user.image ?? ''}
-          alt={t('avatarAlt', { name: user.name })}
-        />
-        <AvatarFallback>{getInitials(user.name)}</AvatarFallback>
-      </Avatar>
-      <div className="overflow-hidden">
-        <div className="font-medium text-left text-sm truncate">
-          {user.name}
-        </div>
-        {!hideEmail && (
-          <div className="text-xs text-left text-muted-foreground truncate">
-            {user.email}
+    <div className="flex flex-col gap-1 min-w-0">
+      <div className="flex gap-2 min-w-0">
+        <Avatar size={size} className="bg-muted">
+          <AvatarImage
+            src={user.image ?? ''}
+            alt={t('avatarAlt', { name: user.name })}
+          />
+          <AvatarFallback>{getInitials(user.name)}</AvatarFallback>
+        </Avatar>
+        <div className="overflow-hidden">
+          <div className="font-medium text-left text-sm truncate">
+            {user.name}
           </div>
-        )}
+          {!hideEmail && (
+            <div className="text-xs text-left text-muted-foreground truncate">
+              {user.email}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
