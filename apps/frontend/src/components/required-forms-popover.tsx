@@ -22,6 +22,7 @@ interface RequiredFormsPopoverProps {
   onChange: (formIds: string[]) => Promise<boolean>;
   isPending: boolean;
   disabled?: boolean;
+  disabledFormIds?: Set<string>;
   createNewHref: string;
   t: (key: string, values?: Record<string, string | number | Date>) => string;
   subtitle?: string;
@@ -35,6 +36,7 @@ export function RequiredFormsPopover({
   onChange,
   isPending,
   disabled,
+  disabledFormIds,
   createNewHref,
   t,
   subtitle,
@@ -120,6 +122,7 @@ export function RequiredFormsPopover({
               onAdd={handleAddExisting}
               open={commandOpen}
               onOpenChange={setCommandOpen}
+              disabledFormIds={disabledFormIds}
               t={t}
             />
 

@@ -198,6 +198,10 @@ export class RequirementFormService {
 
     await isUnitInOrg(this.db, organizationUnitId, existing.organizationId);
 
+    if (input.blockRefs !== undefined && !input.blockRefs?.length) {
+      throw new BadRequestGraphQLError('Form must contain at least one block');
+    }
+
     if (input.blockRefs) {
       await this.verifyBlocksInOrg(
         input.blockRefs.map((ref) => ref.blockId),
