@@ -7,12 +7,18 @@ import * as schema from '../database/schema';
 import { NotFoundGraphQLError } from '../graphql/errors';
 import { type Locale, resolveRequestLocale } from '../graphql/locale';
 import type { OrganizationUserProfileEntity } from '../requirement-profile/schemas/organization-user-profile.schema';
+import {
+  POSTHOG_EVENT,
+  POSTHOG_SURFACE,
+} from '../shared/observability/posthog.events';
+import { PostHogService } from '../shared/observability/posthog.service';
 
 @Injectable()
 export class UserService {
   constructor(
     @Inject(DATABASE_CONNECTION)
     private readonly db: Database,
+    private readonly postHogService: PostHogService,
   ) {}
 
   async findById(id: string): Promise<UserEntity | undefined> {
@@ -64,6 +70,16 @@ export class UserService {
       .set({ locale })
       .where(eq(schema.users.id, userId))
       .returning();
+    if (user) {
+      this.postHogService.capture({
+        event: POSTHOG_EVENT.USER_UPDATE,
+        userId,
+        properties: {
+          surface: POSTHOG_SURFACE.VOLUNTEERING,
+          updated_field: 'locale',
+        },
+      });
+    }
     return user;
   }
 
@@ -80,6 +96,15 @@ export class UserService {
     if (!user) {
       throw new NotFoundGraphQLError('User not found');
     }
+
+    this.postHogService.capture({
+      event: POSTHOG_EVENT.USER_UPDATE,
+      userId,
+      properties: {
+        surface: POSTHOG_SURFACE.VOLUNTEERING,
+        updated_field: 'image',
+      },
+    });
 
     return user;
   }

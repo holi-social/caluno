@@ -34,9 +34,13 @@ export class RequirementFulfillmentMutationResolver {
   @Mutation(() => RequirementFulfillment)
   async deleteRequirementFulfillment(
     @Args('id') id: string,
+    @Session() session: UserSession,
   ): Promise<RequirementFulfillment> {
     const item =
-      await this.requirementProfileSubmissionService.deleteFulfillment(id);
+      await this.requirementProfileSubmissionService.deleteFulfillment(
+        id,
+        session.user.id,
+      );
     return this.requirementFulfillmentMapper.toModelOrThrow(item);
   }
 }

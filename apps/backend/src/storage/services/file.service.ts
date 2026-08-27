@@ -13,6 +13,11 @@ import type { Database } from '../../database/database.module';
 import { DATABASE_CONNECTION } from '../../database/database-connection';
 import * as schema from '../../database/schema';
 import {
+  POSTHOG_EVENT,
+  POSTHOG_SURFACE,
+} from '../../shared/observability/posthog.events';
+import { PostHogService } from '../../shared/observability/posthog.service';
+import {
   isMimeTypeAllowed,
   PURPOSE_VALIDATION_RULES,
   sanitizeFilename,
@@ -46,6 +51,7 @@ export class FileService {
     private readonly db: Database,
     private readonly s3StorageService: S3StorageService,
     private readonly authService: AuthService,
+    private readonly postHogService: PostHogService,
   ) {}
 
   async presignUpload(
@@ -122,6 +128,16 @@ export class FileService {
       })
       .returning();
 
+    this.postHogService.capture({
+      event: POSTHOG_EVENT.FILE_CREATE,
+      userId,
+      properties: {
+        surface: POSTHOG_SURFACE.BACKOFFICE,
+        organization_unit_id: file.organizationUnitId ?? undefined,
+        purpose: file.purpose,
+      },
+    });
+
     const uploadUrl = await this.s3StorageService.createPresignedUploadUrl({
       storageKey,
       mimeType: input.mimeType,
@@ -179,6 +195,16 @@ export class FileService {
       })
       .where(eq(schema.files.id, file.id))
       .returning();
+
+    this.postHogService.capture({
+      event: POSTHOG_EVENT.FILE_UPLOAD,
+      userId,
+      properties: {
+        surface: POSTHOG_SURFACE.BACKOFFICE,
+        organization_unit_id: updated.organizationUnitId ?? undefined,
+        purpose: updated.purpose,
+      },
+    });
 
     return updated;
   }
