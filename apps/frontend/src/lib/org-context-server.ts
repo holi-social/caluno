@@ -11,6 +11,7 @@ export interface OrgContextData {
   logoUrl?: string | null;
   address?: string | null;
   organizationId: string;
+  accountingEnabled: boolean;
 }
 
 function normalizeUnits(units: MyOrganizationUnit[]): OrgContextData[] {
@@ -27,6 +28,7 @@ function normalizeUnits(units: MyOrganizationUnit[]): OrgContextData[] {
         logoUrl: unit.logoUrl ?? unit.organization.logoUrl ?? null,
         address: unit.address,
         organizationId: unit.organization.id,
+        accountingEnabled: unit.organization.accountingEnabled,
       };
     })
     .sort((a, b) => a.name.localeCompare(b.name));
@@ -126,6 +128,7 @@ export async function requireOrgAccess(
       logoUrl: unit.logoUrl ?? null,
       address: unit.address ?? null,
       organizationId: unit.organizationId ?? '',
+      accountingEnabled: false,
     },
     organizations,
   };
