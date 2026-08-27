@@ -770,24 +770,24 @@ export class MembershipService {
         identity.organizationUnitId,
       );
 
-      const orgUnit = deleted.organizationUnitId
-        ? await this.db.query.organizationUnits.findFirst({
-            where: { id: deleted.organizationUnitId },
-          })
-        : undefined;
-      this.postHogService.capture({
-        event: POSTHOG_EVENT.ORGANIZATION_UNIT_LEAVE,
-        userId,
-        properties: {
-          surface: POSTHOG_SURFACE.VOLUNTEERING,
-          organization_id: orgUnit?.organizationId ?? undefined,
-          organization_unit_id: deleted.organizationUnitId ?? undefined,
-          membership_id: deleted.id,
-          source: 'self',
-        },
-      });
-
       return { row: deleted, identity };
+    });
+
+    const orgUnit = row.organizationUnitId
+      ? await this.db.query.organizationUnits.findFirst({
+          where: { id: row.organizationUnitId },
+        })
+      : undefined;
+    this.postHogService.capture({
+      event: POSTHOG_EVENT.ORGANIZATION_UNIT_LEAVE,
+      userId,
+      properties: {
+        surface: POSTHOG_SURFACE.VOLUNTEERING,
+        organization_id: orgUnit?.organizationId ?? undefined,
+        organization_unit_id: row.organizationUnitId ?? undefined,
+        membership_id: row.id,
+        source: 'self',
+      },
     });
 
     void this.notifyMembershipLeft(
