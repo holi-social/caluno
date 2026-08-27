@@ -1,4 +1,0 @@
-#!/usr/bin/env bash
-# Local commit-msg hook — same subject rules as CI job commit_lint.
-ROOT=$(git rev-parse --show-toplevel 2>/dev/null) || exit 0
-exec "$ROOT/.ai/scripts/commit-lint.sh" file "$1"

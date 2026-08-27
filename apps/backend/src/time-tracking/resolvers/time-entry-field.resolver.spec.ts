@@ -11,6 +11,7 @@ import { ShiftService } from '../../shift/shift.service';
 import { UserMapper } from '../../user/mappers/user.mapper';
 import { UserService } from '../../user/user.service';
 import type { TimeEntryEntity } from '../schemas/time-entry.schema';
+import type { TimeEntryLoader } from './time-entry.loader';
 import { TimeEntryFieldResolver } from './time-entry-field.resolver';
 
 const now = new Date('2026-06-24T09:00:00Z');
@@ -58,6 +59,7 @@ const shiftInstance = {
 const timeEntry = {
   id: 'time-entry-1',
   shiftInstanceId: shiftInstance.id,
+  organizationUnitId: 'unit-1',
   volunteerId: 'user-volunteer',
   startedAt: now,
   endedAt: null,
@@ -90,8 +92,9 @@ describe('TimeEntryFieldResolver', () => {
       {} as AuthenticatedGraphQLContext,
     );
 
-    expect(result.id).toBe(shiftInstance.id);
-    expect(result.master.id).toBe(shift.id);
+    expect(result).not.toBeNull();
+    expect(result?.id).toBe(shiftInstance.id);
+    expect(result?.master.id).toBe(shift.id);
     expect(shiftService.findInstanceById).not.toHaveBeenCalled();
   });
 
@@ -102,10 +105,34 @@ describe('TimeEntryFieldResolver', () => {
       organizationUnitId: 'unit-1',
     } as AuthenticatedGraphQLContext);
 
-    expect(result.id).toBe(shiftInstance.id);
+    expect(result).not.toBeNull();
+    expect(result?.id).toBe(shiftInstance.id);
     expect(shiftService.findInstanceById).toHaveBeenCalledWith(
       shiftInstance.id,
       'unit-1',
     );
+  });
+
+  it('returns null for shiftInstance when the entry has no shift instance', async () => {
+    const result = await resolver.shiftInstance(
+      { ...timeEntry, shiftInstanceId: null, shiftInstance: null },
+      {} as AuthenticatedGraphQLContext,
+    );
+
+    expect(result).toBeNull();
+    expect(shiftService.findInstanceById).not.toHaveBeenCalled();
+  });
+
+  it('resolves organizationUnit through the TimeEntryLoader', async () => {
+    const unit = { id: 'unit-1', name: 'Kitchen Crew' };
+    const load = jest.fn().mockResolvedValue(unit);
+    const loader = {
+      organizationUnitById: { load },
+    } as unknown as TimeEntryLoader;
+
+    const result = await resolver.organizationUnit(timeEntry, loader);
+
+    expect(result.id).toBe('unit-1');
+    expect(load).toHaveBeenCalledWith('unit-1');
   });
 });

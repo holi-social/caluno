@@ -13,7 +13,7 @@ import { MembershipService } from '../src/membership/membership.service';
 import { NotificationService } from '../src/notification/notification.service';
 import { OrganizationService } from '../src/organization/organization.service';
 import { ACTIVE_SHIFT_INVITE_STATUSES } from '../src/shared/invite-status';
-import { ShiftInviteStatus } from '../src/shift/enums';
+import { ShiftInviteStatus, ShiftVisibility } from '../src/shift/enums';
 import { ShiftService } from '../src/shift/shift.service';
 import { UserService } from '../src/user/user.service';
 import { slugify } from '../src/utils/slug.util';
@@ -476,6 +476,87 @@ describe('ShiftService', () => {
   });
 
   describe('updateMembersForShiftInstance', () => {
+    it('writes ACCEPTED directly and does not notify when the inviter adds themselves, even to an invite-only shift', async () => {
+      const shift = await createShift(db, {
+        organizationUnitId,
+        createdById: userId,
+        visibility: ShiftVisibility.INVITED_MEMBERS,
+      });
+      const instances = await db.query.shiftInstances.findMany({
+        where: { masterId: shift.id },
+      });
+      const instanceId = instances[0]?.id;
+      expect(instanceId).toBeDefined();
+
+      (
+        notificationService.notifyShiftInstanceInvited as ReturnType<
+          typeof mock
+        >
+      ).mockClear();
+
+      await shiftService.updateMembersForShiftInstance(
+        instanceId,
+        [userId],
+        organizationUnitId,
+        {},
+        userId,
+      );
+
+      const invite = await db.query.shiftInstanceInvites.findFirst({
+        where: { instanceId, userId },
+      });
+      expect(invite?.status).toBe(ShiftInviteStatus.ACCEPTED);
+      expect(
+        notificationService.notifyShiftInstanceInvited,
+      ).not.toHaveBeenCalled();
+    });
+
+    it('notifies invited others but not the self-adding inviter in the same batch', async () => {
+      const shift = await createShift(db, {
+        organizationUnitId,
+        createdById: userId,
+      });
+      const instances = await db.query.shiftInstances.findMany({
+        where: { masterId: shift.id },
+      });
+      const instanceId = instances[0]?.id;
+      expect(instanceId).toBeDefined();
+
+      const otherUser = await createUser(db);
+
+      (
+        notificationService.notifyShiftInstanceInvited as ReturnType<
+          typeof mock
+        >
+      ).mockClear();
+
+      await shiftService.updateMembersForShiftInstance(
+        instanceId,
+        [userId, otherUser.id],
+        organizationUnitId,
+        {},
+        userId,
+      );
+
+      const invites = await db.query.shiftInstanceInvites.findMany({
+        where: { instanceId },
+      });
+      const selfInvite = invites.find((i) => i.userId === userId);
+      const otherInvite = invites.find((i) => i.userId === otherUser.id);
+      expect(selfInvite?.status).toBe(ShiftInviteStatus.ACCEPTED);
+      expect(otherInvite?.status).toBe(ShiftInviteStatus.INVITED);
+
+      expect(
+        notificationService.notifyShiftInstanceInvited,
+      ).toHaveBeenCalledTimes(1);
+      const call = (
+        notificationService.notifyShiftInstanceInvited as ReturnType<
+          typeof mock
+        >
+      ).mock.calls[0][0];
+      expect(call.recipientUserIds).toEqual([otherUser.id]);
+    });
+
     it('does not double-count existing instance invites when inviting to all instances', async () => {
       const shift = await createShift(db, {
         organizationUnitId,
@@ -548,6 +629,15 @@ describe('ShiftService', () => {
         userId: existingUser.id,
         status: ShiftInviteStatus.INVITED,
       });
+
+      (
+        notificationService.notifyShiftInstanceInvited as ReturnType<
+          typeof mock
+        >
+      ).mockClear();
+      (
+        notificationService.notifyShiftInvited as ReturnType<typeof mock>
+      ).mockClear();
 
       await expect(
         shiftService.updateMembersForShiftInstance(
@@ -767,6 +857,7 @@ describe('ShiftService', () => {
       const volunteer = await createUser(db);
       await db.insert(schema.timeEntries).values({
         shiftInstanceId: oldest.id,
+        organizationUnitId,
         volunteerId: volunteer.id,
         startedAt: oldest.actualStartsAt,
         endedAt: oldest.actualEndsAt,
@@ -967,6 +1058,7 @@ describe('ShiftService', () => {
       const volunteer = await createUser(db);
       await db.insert(schema.timeEntries).values({
         shiftInstanceId: instances[0].id,
+        organizationUnitId,
         volunteerId: volunteer.id,
         startedAt: new Date(),
         endedAt: null,
@@ -990,6 +1082,7 @@ describe('ShiftService', () => {
       const volunteer = await createUser(db);
       await db.insert(schema.timeEntries).values({
         shiftInstanceId: instances[0].id,
+        organizationUnitId,
         volunteerId: volunteer.id,
         startedAt: new Date(Date.now() - 3600_000),
         endedAt: new Date(),
@@ -1329,6 +1422,7 @@ describe('ShiftService', () => {
         const volunteer = await createUser(db);
         await db.insert(schema.timeEntries).values({
           shiftInstanceId: blockedInstance.id,
+          organizationUnitId,
           volunteerId: volunteer.id,
           startedAt: new Date(),
           endedAt: null,

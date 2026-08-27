@@ -1,6 +1,6 @@
 'use client';
 import { MembershipRequestStatus, PermissionKey } from '@repo/data';
-import { useMembershipRequestCount } from '@repo/data/react';
+import { useCurrentOrg, useMembershipRequestCount } from '@repo/data/react';
 import {
   Button,
   Sidebar,
@@ -19,7 +19,9 @@ import {
   CalendarIcon,
   ClipboardListIcon,
   ClockIcon,
+  CoinsIcon,
   HandHeart,
+  LayoutListIcon,
   LogOutIcon,
   NetworkIcon,
   ScanQrCode,
@@ -46,6 +48,7 @@ export function DashboardSidebar({ permissions }: DashboardSidebarProps) {
   const tCommon = useTranslations('Common');
   const permissionSet = useMemo(() => new Set(permissions), [permissions]);
   const canViewVolunteers = permissionSet.has(PermissionKey.VolunteerView);
+  const { accountingEnabled } = useCurrentOrg();
 
   const { data: pendingCount } = useMembershipRequestCount(
     orgUId ?? '',
@@ -100,6 +103,22 @@ export function DashboardSidebar({ permissions }: DashboardSidebarProps) {
       },
     ];
   }, [orgUId, pendingCount]);
+  const accountingItems = useMemo(() => {
+    if (!orgUId || !accountingEnabled) return [];
+
+    return [
+      {
+        titleKey: 'reimbursements',
+        href: `/admin/${orgUId}/accounting/reimbursements`,
+        icon: LayoutListIcon,
+      },
+      {
+        titleKey: 'accountingSettings',
+        href: `/admin/${orgUId}/accounting/settings`,
+        icon: CoinsIcon,
+      },
+    ];
+  }, [orgUId, accountingEnabled]);
 
   const settingsItems = useMemo(() => {
     if (!orgUId) return [];
@@ -157,6 +176,28 @@ export function DashboardSidebar({ permissions }: DashboardSidebarProps) {
                             {item.count}
                           </span>
                         ) : null}
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                ))}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        )}
+
+        {accountingItems.length > 0 && (
+          <SidebarGroup>
+            <SidebarGroupLabel>{t('accounting')}</SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                {accountingItems.map((item) => (
+                  <SidebarMenuItem key={item.href}>
+                    <SidebarMenuButton asChild>
+                      <Link href={item.href}>
+                        <item.icon className="h-4 w-4" />
+                        <span>
+                          {t(item.titleKey as Parameters<typeof t>[0])}
+                        </span>
                       </Link>
                     </SidebarMenuButton>
                   </SidebarMenuItem>

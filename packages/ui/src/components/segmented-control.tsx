@@ -13,6 +13,9 @@ export interface SegmentedControlProps {
   value: string;
   onChange: (value: string) => void;
   className?: string;
+  size?: 'default' | 'lg';
+  variant?: 'default' | 'line';
+  triggerClassName?: string;
 }
 
 export function SegmentedControl({
@@ -20,6 +23,9 @@ export function SegmentedControl({
   value,
   onChange,
   className,
+  size = 'default',
+  variant = 'default',
+  triggerClassName,
 }: SegmentedControlProps) {
   return (
     <Tabs
@@ -27,9 +33,17 @@ export function SegmentedControl({
       onValueChange={onChange}
       className={cn('w-full', className)}
     >
-      <TabsList className="grid w-full grid-cols-2">
+      <TabsList
+        size={size}
+        variant={variant}
+        className="grid w-full grid-cols-2"
+      >
         {options.map((option) => (
-          <TabsTrigger key={option.value} value={option.value}>
+          <TabsTrigger
+            key={option.value}
+            value={option.value}
+            className={triggerClassName}
+          >
             {option.label}
           </TabsTrigger>
         ))}
