@@ -19,6 +19,10 @@ export function ManualCheckInDialog({
   onOpenChange,
 }: ManualCheckInDialogProps) {
   const [selectedOrgId, setSelectedOrgId] = useState<string | null>(null);
+  // fix for Combobox popup to be rendered inside the dialog content, so it is clickable
+  const [dialogContentEl, setDialogContentEl] = useState<HTMLDivElement | null>(
+    null,
+  );
   const tCheckIn = useTranslations('CheckIn');
 
   const { data: orgUnits } = useMyCheckInOrgUnits({ enabled: open });
@@ -29,7 +33,7 @@ export function ManualCheckInDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
+      <DialogContent ref={setDialogContentEl}>
         <DialogHeader>
           <DialogTitle>{tCheckIn('manualCheckin')}</DialogTitle>
         </DialogHeader>
@@ -53,6 +57,7 @@ export function ManualCheckInDialog({
           <CheckInSelector
             volunteers={volunteers ?? []}
             organizationUnitId={resolvedOrgId}
+            portalContainer={dialogContentEl}
           />
         )}
       </DialogContent>

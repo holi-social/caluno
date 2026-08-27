@@ -59,10 +59,7 @@ export function CheckInView({
 
   return (
     <div className="max-w-2xl">
-      <Tabs
-        value={tab}
-        onValueChange={(value) => setTab(value as CheckInType)}
-      >
+      <Tabs value={tab} onValueChange={(value) => setTab(value as CheckInType)}>
         <TabsList>
           <TabsTrigger value="qr">{tCheckIn('myQrCodeTab')}</TabsTrigger>
           <TabsTrigger value="scanner">{tCheckIn('qrScannerTab')}</TabsTrigger>
