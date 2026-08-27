@@ -1,5 +1,5 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
-import { and, eq, inArray, sql } from 'drizzle-orm';
+import { and, eq, gte, inArray, sql } from 'drizzle-orm';
 import { AuthService } from '../auth/auth.service';
 import { DEFAULT_MEMBER_ROLE_NAME, PERMISSIONS } from '../auth/constants';
 import type { UserEntity } from '../auth/schemas/auth.schema';
@@ -363,6 +363,71 @@ export class MembershipService {
     }
   }
 
+  private async notifyMembershipLeft(
+    userId: string,
+    organizationUnitId: string,
+  ): Promise<void> {
+    try {
+      const organizationUnit = await this.db.query.organizationUnits.findFirst({
+        where: { id: organizationUnitId },
+        columns: { id: true, name: true },
+      });
+
+      if (!organizationUnit) {
+        return;
+      }
+
+      const reviewers = await this.authService.findUsersWithPermission(
+        organizationUnitId,
+        PERMISSIONS.VOLUNTEER_EDIT,
+      );
+      const recipientUserIds = reviewers
+        .filter((reviewer) => reviewer.id !== userId)
+        .map((reviewer) => reviewer.id);
+
+      if (recipientUserIds.length === 0) {
+        return;
+      }
+
+      this.notificationService.notifyMembershipLeft({
+        organizationUnitId,
+        organizationUnitName: organizationUnit.name,
+        leaverUserId: userId,
+        recipientUserIds,
+      });
+    } catch (error) {
+      this.logger.error(
+        `Failed to emit membership left notification: ${error instanceof Error ? error.message : String(error)}`,
+      );
+    }
+  }
+
+  private async notifyMembershipRemoved(
+    userId: string,
+    organizationUnitId: string,
+  ): Promise<void> {
+    try {
+      const organizationUnit = await this.db.query.organizationUnits.findFirst({
+        where: { id: organizationUnitId },
+        columns: { id: true, name: true },
+      });
+
+      if (!organizationUnit) {
+        return;
+      }
+
+      this.notificationService.notifyMembershipRemoved({
+        organizationUnitId,
+        organizationName: organizationUnit.name,
+        userId,
+      });
+    } catch (error) {
+      this.logger.error(
+        `Failed to emit membership removed notification: ${error instanceof Error ? error.message : String(error)}`,
+      );
+    }
+  }
+
   // Membership requests
   async createMembershipRequest(
     userId: string,
@@ -683,38 +748,175 @@ export class MembershipService {
   }
 
   async leaveMembership(id: string, userId: string): Promise<MembershipEntity> {
-    const [deleted] = await this.db
-      .delete(schema.memberships)
-      .where(
-        and(
-          eq(schema.memberships.id, id),
-          eq(schema.memberships.userId, userId),
-        ),
-      )
-      .returning();
+    const { row, identity } = await this.db.transaction(async (tx) => {
+      const [deleted] = await tx
+        .delete(schema.memberships)
+        .where(
+          and(
+            eq(schema.memberships.id, id),
+            eq(schema.memberships.userId, userId),
+          ),
+        )
+        .returning();
 
-    if (!deleted) {
-      throw new NotFoundGraphQLError('Membership not found');
-    }
+      if (!deleted) {
+        throw new NotFoundGraphQLError('Membership not found');
+      }
 
-    const orgUnit = deleted.organizationUnitId
-      ? await this.db.query.organizationUnits.findFirst({
-          where: { id: deleted.organizationUnitId },
-        })
-      : undefined;
-    this.postHogService.capture({
-      event: POSTHOG_EVENT.ORGANIZATION_UNIT_LEAVE,
-      userId,
-      properties: {
-        surface: POSTHOG_SURFACE.VOLUNTEERING,
-        organization_id: orgUnit?.organizationId ?? undefined,
-        organization_unit_id: deleted.organizationUnitId ?? undefined,
-        membership_id: deleted.id,
-        source: 'self',
-      },
+      const identity = this.membershipIdentity(deleted);
+      await this.purgeOrganizationUnitInvites(
+        tx,
+        identity.userId,
+        identity.organizationUnitId,
+      );
+
+      const orgUnit = deleted.organizationUnitId
+        ? await this.db.query.organizationUnits.findFirst({
+            where: { id: deleted.organizationUnitId },
+          })
+        : undefined;
+      this.postHogService.capture({
+        event: POSTHOG_EVENT.ORGANIZATION_UNIT_LEAVE,
+        userId,
+        properties: {
+          surface: POSTHOG_SURFACE.VOLUNTEERING,
+          organization_id: orgUnit?.organizationId ?? undefined,
+          organization_unit_id: deleted.organizationUnitId ?? undefined,
+          membership_id: deleted.id,
+          source: 'self',
+        },
+      });
+
+      return { row: deleted, identity };
     });
 
-    return deleted;
+    void this.notifyMembershipLeft(
+      identity.userId,
+      identity.organizationUnitId,
+    );
+
+    return row;
+  }
+
+  async removeMembership(
+    id: string,
+    organizationUnitId: string,
+  ): Promise<MembershipEntity> {
+    const { row, identity } = await this.db.transaction(async (tx) => {
+      const [deleted] = await tx
+        .delete(schema.memberships)
+        .where(
+          and(
+            eq(schema.memberships.id, id),
+            eq(schema.memberships.organizationUnitId, organizationUnitId),
+          ),
+        )
+        .returning();
+
+      if (!deleted) {
+        throw new NotFoundGraphQLError('Membership not found');
+      }
+
+      const identity = this.membershipIdentity(deleted);
+      await this.purgeOrganizationUnitInvites(
+        tx,
+        identity.userId,
+        identity.organizationUnitId,
+      );
+      return { row: deleted, identity };
+    });
+
+    void this.notifyMembershipRemoved(
+      identity.userId,
+      identity.organizationUnitId,
+    );
+
+    return row;
+  }
+
+  private membershipIdentity(row: MembershipEntity): {
+    userId: string;
+    organizationUnitId: string;
+  } {
+    if (!row.userId || !row.organizationUnitId) {
+      throw new NotFoundGraphQLError('Membership not found');
+    }
+    return {
+      userId: row.userId,
+      organizationUnitId: row.organizationUnitId,
+    };
+  }
+
+  private async purgeOrganizationUnitInvites(
+    tx: Database,
+    userId: string,
+    organizationUnitId: string,
+  ): Promise<void> {
+    const now = new Date();
+
+    await tx.delete(schema.eventInvites).where(
+      and(
+        eq(schema.eventInvites.userId, userId),
+        inArray(
+          schema.eventInvites.eventId,
+          tx
+            .select({ id: schema.events.id })
+            .from(schema.events)
+            .where(
+              and(
+                eq(schema.events.organizationUnitId, organizationUnitId),
+                gte(schema.events.endsAt, now),
+              ),
+            ),
+        ),
+      ),
+    );
+
+    await tx.delete(schema.shiftInstanceInvites).where(
+      and(
+        eq(schema.shiftInstanceInvites.userId, userId),
+        inArray(
+          schema.shiftInstanceInvites.instanceId,
+          tx
+            .select({ id: schema.shiftInstances.id })
+            .from(schema.shiftInstances)
+            .innerJoin(
+              schema.shifts,
+              eq(schema.shiftInstances.masterId, schema.shifts.id),
+            )
+            .where(
+              and(
+                eq(schema.shifts.organizationUnitId, organizationUnitId),
+                gte(schema.shiftInstances.actualEndsAt, now),
+              ),
+            ),
+        ),
+      ),
+    );
+
+    await tx
+      .delete(schema.shiftInvites)
+      .where(
+        and(
+          eq(schema.shiftInvites.userId, userId),
+          inArray(
+            schema.shiftInvites.shiftId,
+            tx
+              .select({ id: schema.shifts.id })
+              .from(schema.shifts)
+              .where(eq(schema.shifts.organizationUnitId, organizationUnitId)),
+          ),
+        ),
+      );
+
+    await tx
+      .delete(schema.membershipRequests)
+      .where(
+        and(
+          eq(schema.membershipRequests.userId, userId),
+          eq(schema.membershipRequests.organizationUnitId, organizationUnitId),
+        ),
+      );
   }
 
   async removeMembershipRequest(

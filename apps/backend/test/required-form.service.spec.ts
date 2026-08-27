@@ -626,6 +626,54 @@ describe('RequiredFormService', () => {
         ),
       ).rejects.toBeInstanceOf(NotFoundGraphQLError);
     });
+
+    it('throws when an org-unit form has no blocks', async () => {
+      const { user, unit } = await setupOrg();
+      const [emptyForm] = await db
+        .insert(schema.requirementForms)
+        .values({
+          organizationId: unit.organizationId,
+          organizationUnitId: unit.id,
+          slug: 'empty-form',
+          name: 'Empty Form',
+          shareToken: crypto.randomUUID(),
+          createdBy: user.id,
+          updatedBy: user.id,
+        })
+        .returning();
+      if (!emptyForm) throw new Error('Failed to create empty form');
+
+      await expect(
+        requiredFormService.setRequiredForms(orgUnitTarget(unit.id), [
+          emptyForm.id,
+        ]),
+      ).rejects.toBeInstanceOf(BadRequestGraphQLError);
+    });
+
+    it('throws when a shift form has no blocks', async () => {
+      const { user, unit } = await setupOrg();
+      const shift = await createShift(db, { organizationUnitId: unit.id });
+      const [emptyForm] = await db
+        .insert(schema.requirementForms)
+        .values({
+          organizationId: unit.organizationId,
+          organizationUnitId: unit.id,
+          slug: 'empty-form',
+          name: 'Empty Form',
+          shareToken: crypto.randomUUID(),
+          createdBy: user.id,
+          updatedBy: user.id,
+        })
+        .returning();
+      if (!emptyForm) throw new Error('Failed to create empty form');
+
+      await expect(
+        requiredFormService.setRequiredForms(
+          { targetType: RequiredFormTargetType.SHIFT, targetId: shift.id },
+          [emptyForm.id],
+        ),
+      ).rejects.toBeInstanceOf(BadRequestGraphQLError);
+    });
   });
 
   describe('isFormRequiredByAnyTarget', () => {

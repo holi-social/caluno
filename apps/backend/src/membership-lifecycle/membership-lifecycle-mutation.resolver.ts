@@ -110,6 +110,19 @@ export class MembershipLifecycleMutationResolver {
     return this.membershipMapper.toModelOrThrow(membership);
   }
 
+  @Permissions(PERMISSIONS.VOLUNTEER_EDIT)
+  @Mutation(() => Membership)
+  async removeMembership(
+    @Args('id', { type: () => ID }) id: string,
+    @Context() context: AuthenticatedGraphQLContext,
+  ): Promise<Membership> {
+    const membership = await this.membershipService.removeMembership(
+      id,
+      context.organizationUnitId,
+    );
+    return this.membershipMapper.toModelOrThrow(membership);
+  }
+
   @Mutation(() => MembershipRequest)
   async removeMembershipRequest(
     @Args('id', { type: () => ID }) id: string,

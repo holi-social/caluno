@@ -64,6 +64,26 @@
     "step3Title": "Anmelden",
     "subject": "Willkommen bei {organizationName}"
   },
+  "membershipLeft": {
+    "buttonLabel": "Freiwillige ansehen",
+    "detailOrganization": "Organisation",
+    "detailVolunteer": "Freiwillige:r",
+    "footerNote": "Du erhältst diese E-Mail, weil du Freiwillige auf {brandName} verwalten kannst.",
+    "greeting": "Hallo {firstName}, eine:r Freiwillige:r hat eine Organisation verlassen, die du verwaltest.",
+    "heading": "Freiwillige:r hat verlassen",
+    "note": "Die Person erscheint nicht mehr in der Liste der Freigegebenen für diese Organisation.",
+    "previewText": "{volunteerName} hat {organizationName} verlassen.",
+    "subject": "{volunteerName} hat {organizationName} verlassen"
+  },
+  "membershipRemoved": {
+    "footerNote": "Du erhältst diese E-Mail, weil ein:e Admin deine Mitgliedschaft bei {organizationName} auf {brandName} beendet hat.",
+    "greetingAfter": "ist beendet. Dein Profil und Mitgliedschaften in anderen Organisationen bleiben bestehen.",
+    "greetingBefore": "Hallo {firstName}, deine Mitgliedschaft bei",
+    "heading": "Deine Mitgliedschaft ist beendet",
+    "note": "Du kannst Caluno weiter für andere Organisationen nutzen, denen du angehörst.",
+    "previewText": "Deine Mitgliedschaft bei {organizationName} ist beendet.",
+    "subject": "Deine Mitgliedschaft bei {organizationName} ist beendet"
+  },
   "membershipRequested": {
     "buttonLabel": "Anfrage prüfen",
     "footerNote": "Du erhältst diese E-Mail, weil du Mitgliedschaftsanfragen auf {brandName} prüfen kannst.",

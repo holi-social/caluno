@@ -176,4 +176,40 @@ describe('RequirementFormService block org scoping', () => {
       ),
     ).rejects.toBeInstanceOf(BadRequestGraphQLError);
   });
+
+  it('update rejects empty block refs', async () => {
+    const { user, organization, unit } = await setupOrg('Form Org');
+    const { form } = await createRequirementForm(db, {
+      organizationId: organization.id,
+      organizationUnitId: unit.id,
+      createdById: user.id,
+    });
+
+    await expect(
+      requirementFormService.update(
+        form.id,
+        unit.id,
+        { blockRefs: [] },
+        user.id,
+      ),
+    ).rejects.toBeInstanceOf(BadRequestGraphQLError);
+  });
+
+  it('update rejects null block refs', async () => {
+    const { user, organization, unit } = await setupOrg('Form Org');
+    const { form } = await createRequirementForm(db, {
+      organizationId: organization.id,
+      organizationUnitId: unit.id,
+      createdById: user.id,
+    });
+
+    await expect(
+      requirementFormService.update(
+        form.id,
+        unit.id,
+        { blockRefs: null },
+        user.id,
+      ),
+    ).rejects.toBeInstanceOf(BadRequestGraphQLError);
+  });
 });

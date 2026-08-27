@@ -178,6 +178,7 @@
         "createNew": "Neues erstellen",
         "dedupHint": "Freiwillige werden nicht nach Informationen gefragt, die sie bereits angegeben haben.",
         "fileUploadLabel": "Datei-Upload",
+        "noBlocks": "Keine Blöcke",
         "noFormsFound": "Keine Formulare gefunden",
         "pill": {
           "none": "Keine Formulare erforderlich",
@@ -783,6 +784,10 @@
       "shareLinkCopied": "Freigabelink in Zwischenablage kopiert",
       "submissionsWarning": "Dieses Formular hat Einsendungen",
       "submissionsWarningDescription": "Die Bearbeitung ist deaktiviert, weil Freiwillige bereits Antworten eingereicht haben. Erstelle eine Kopie, wenn du eine neue Version brauchst.",
+      "unsavedChangesDescription": "Du hast ungespeicherte Änderungen. Wenn du jetzt gehst, gehen sie verloren.",
+      "unsavedChangesLeave": "Ohne Speichern verlassen",
+      "unsavedChangesStay": "Weiter bearbeiten",
+      "unsavedChangesTitle": "Ungespeicherte Änderungen",
       "viewBlock": "Ansehen"
     },
     "card": {
@@ -1098,6 +1103,7 @@
         "createNew": "Neues erstellen",
         "dedupHint": "Freiwillige werden nicht nach Informationen gefragt, die sie bereits angegeben haben.",
         "fileUploadLabel": "Datei-Upload",
+        "noBlocks": "Keine Blöcke",
         "noFormsFound": "Keine Formulare gefunden",
         "pill": {
           "none": "Keine Formulare erforderlich",
@@ -1463,6 +1469,12 @@
     "action": {
       "checkInAria": "Einchecken",
       "checkInShiftAria": "Einchecken",
+      "remove": "Entfernen",
+      "removeAria": "Entfernen",
+      "removeDescription": "Bist du sicher, dass du {name} aus dieser Organisation entfernen möchtest? Das kann nicht rückgängig gemacht werden.",
+      "removeFailedToast": "Freiwillige:r konnte nicht entfernt werden",
+      "removeTitle": "Aus Organisation entfernen",
+      "removedToast": "{name} wurde aus dieser Organisation entfernt",
       "viewProfileAria": "Ansehen"
     },
     "empty": {
@@ -1485,6 +1497,7 @@
       "createNew": "Neues erstellen",
       "dedupHint": "Freiwillige müssen Informationen, die sie bereits angegeben haben, nicht erneut eingeben.",
       "fileUploadLabel": "Datei-Upload",
+      "noBlocks": "Keine Blöcke",
       "noFormsFound": "Keine Formulare gefunden",
       "pill": {
         "none": "Keine Formulare erforderlich",
