@@ -1,6 +1,7 @@
 import { Parent, ResolveField, Resolver } from '@nestjs/graphql';
 import { Loader } from '../../graphql/decorators/loader.decorator';
 import { NotFoundGraphQLError } from '../../graphql/errors';
+import { FileService } from '../../storage/services/file.service';
 import { User } from '../../user/models/user.model';
 import {
   ContractSignatureMapper,
@@ -35,6 +36,7 @@ export class ContractFieldResolver {
     private readonly reimbursementTypeMapper: ReimbursementTypeMapper,
     private readonly contractSignatureMapper: ContractSignatureMapper,
     private readonly contractStatusChangeMapper: ContractStatusChangeMapper,
+    private readonly fileService: FileService,
   ) {}
 
   @ResolveField(() => DocumentTemplate)
@@ -87,6 +89,14 @@ export class ContractFieldResolver {
     }
     const full = await loader.contractWithRelationsById.load(contract.id);
     return this.contractStatusChangeMapper.toArray(full.statusChanges);
+  }
+
+  @ResolveField(() => String, { nullable: true })
+  async downloadUrl(
+    @Parent() contract: MaybeWithRelations,
+  ): Promise<string | null> {
+    if (!contract.fileId) return null;
+    return this.fileService.resolvePublicUrlForUploadedFile(contract.fileId);
   }
 
   @ResolveField(() => User)

@@ -74,6 +74,12 @@ export class InvoiceService {
     if (filter.status) {
       conditions.push(eq(schema.invoices.invoiceStatus, filter.status));
     }
+    if (filter.periodStart) {
+      conditions.push(gte(schema.invoices.periodEnd, filter.periodStart));
+    }
+    if (filter.periodEnd) {
+      conditions.push(lt(schema.invoices.periodStart, filter.periodEnd));
+    }
 
     const rows = await this.db
       .select({ invoice: schema.invoices })
@@ -155,6 +161,7 @@ export class InvoiceService {
       ) / 100;
     const rateCents = await this.reimbursementRateService.getEffectiveRateCents(
       organizationId,
+      input.organizationUnitId,
       input.reimbursementTypeId,
     );
     const totalAmountCents = Math.round(totalHours * rateCents);

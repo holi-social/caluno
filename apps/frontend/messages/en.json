@@ -119,7 +119,8 @@
     "submitting": "Submitting...",
     "toggleTheme": "Toggle theme",
     "view": "View",
-    "yes": "Yes"
+    "yes": "Yes",
+    "done": "Done"
   },
   "Error": {
     "digestLabel": "ID: {digest}",
@@ -474,6 +475,7 @@
       "description": "Once you check in to a shift, your volunteering hours will appear here.",
       "title": "No hours yet"
     },
+    "generalTime": "General time",
     "state": {
       "completed": "Completed",
       "inProgress": "In progress"
@@ -502,7 +504,10 @@
     "shifts": "Shifts",
     "timesheets": "Timesheets",
     "volunteering": "Volunteering",
-    "volunteers": "Volunteers"
+    "volunteers": "Volunteers",
+    "accounting": "Accounting",
+    "reimbursements": "Reimbursements",
+    "accountingSettings": "Settings"
   },
   "OrgDetail": {
     "aboutHeading": "About us",
@@ -1047,6 +1052,8 @@
     "checkIn": {
       "checkIn": "Check in",
       "checkInTitle": "Check-in",
+      "checkInWithShift": "Choose a shift instead",
+      "checkInWithoutShift": "Check in without a shift",
       "checkOut": "Check-out",
       "checkOutTitle": "Check-out",
       "checkedInAt": "Checked in: {time}",
@@ -1054,6 +1061,7 @@
       "checkingOut": "Checking out...",
       "checkingOutAt": "Checking out: {time}",
       "enterQrTitle": "Or enter their QR ID",
+      "generalCheckIn": "General check-in",
       "invalidCheckin": {
         "blocked": {
           "description": "The volunteer is not permitted to check-in. They must contact headquarters for assistance.",
@@ -1303,10 +1311,7 @@
     },
     "transferList": {
       "addAria": "Add",
-      "available": "Available",
-      "invited": "Invited",
-      "removeAria": "Remove",
-      "searchPlaceholder": "Name or email"
+      "removeAria": "Remove"
     },
     "validation": {
       "endTimeRequired": "End time is required",
@@ -1408,6 +1413,7 @@
       "loadInstancesError": "Failed to load instances.",
       "notesLabel": "Notes",
       "notesPlaceholder": "Add any notes about this time entry...",
+      "notTiedToShiftLabel": "Not tied to a shift",
       "selectShiftHint": "Select a shift to view available dates",
       "selectShiftLabel": "Select shift",
       "selectShiftPlaceholder": "Select a shift",
@@ -1523,10 +1529,13 @@
     "discoverEmpty": "No shifts match these filters",
     "discoverEmptyBody": "Try adjusting your filters, or check back later.",
     "discoverEmptyHome": "No shifts to discover right now. Check back soon.",
+    "discoverEventsEmptyHome": "No events to discover right now. Check back soon.",
     "discoverHeading": "Discover",
     "discoverPendingEmptyBody": "Shifts from {orgName} appear here once your request is confirmed.\nCheck in and Your records stay available anytime.",
     "discoverPendingEmptyTitle": "Nothing to discover yet",
     "discoverPendingSubtitle": "Shifts from {orgName} show up here once your request is confirmed",
+    "discoverTabAssignments": "Assignments",
+    "discoverTabEvents": "Events",
     "discoverThisWeek": "{n, plural, one {# shift this week} other {# shifts this week}}",
     "eventCoverImageAlt": "Cover image for {title}",
     "filterNextWeek": "Next week",
@@ -1561,10 +1570,444 @@
     "timerVolunteering": "You're volunteering for {time}",
     "todayButton": "Today",
     "weekly": "Weekly",
+    "yourEventsEmpty": "You have no upcoming events.",
+    "yourEventsHeading": "Your events",
+    "yourEventsThisWeek": "{n, plural, one {# event this week} other {# events this week}}",
     "yourShiftsCount": "{n, plural, one {# shift} other {# shifts}}",
     "yourShiftsEmpty": "You have no upcoming shifts.",
     "yourShiftsHeading": "Your shifts",
     "yourShiftsSeeAll": "See all",
     "yourShiftsThisWeek": "{n, plural, one {# shift this week} other {# shifts this week}}"
+  },
+  "Accounting": {
+    "settings": {
+      "title": "Accounting Settings",
+      "subtitle": "Configure rates and document templates for volunteering reimbursements.",
+      "tabs": {
+        "rates": "Rates",
+        "templates": "Templates"
+      },
+      "rates": {
+        "sectionTitle": "Hourly rate",
+        "sectionSubtitle": "Org-wide rate for volunteering reimbursements, by allowance type.",
+        "epLabel": "Ehrenamtspauschale",
+        "ulLabel": "Übungsleiterpauschale",
+        "yearlyLimit": "Up to {limit}/year",
+        "saveSuccess": "Rate updated",
+        "saveError": "The rate could not be saved. Please try again.",
+        "loadError": "Rates could not be loaded. Please reload the page.",
+        "errors": {
+          "invalidRate": "Enter a valid rate greater than zero"
+        },
+        "rateUnit": "/hr",
+        "provenance": {
+          "inherited": "Org default"
+        }
+      },
+      "templates": {
+        "sectionTitle": "Document templates",
+        "sectionSubtitle": "All templates for documents needed to pay out a respective Pauschale."
+      }
+    },
+    "reimbursements": {
+      "title": "Reimbursements",
+      "subtitle": "Create, sign, and download documents.",
+      "createDocument": "Create document",
+      "periodLabel": "Period",
+      "periodPicker": {
+        "allTime": "All time",
+        "thisMonth": "This month",
+        "lastMonth": "Last month",
+        "customPeriod": "Custom period",
+        "apply": "Apply"
+      },
+      "filters": {
+        "docTypeLabel": "Document type",
+        "docTypeAll": "All documents",
+        "docTypeContracts": "Contracts only",
+        "docTypeTimesheets": "Timesheets only",
+        "pauschaletypeLabel": "Allowance type"
+      },
+      "tableHead": {
+        "volunteer": "Volunteer",
+        "status": "Status",
+        "hours": "Hrs.",
+        "amount": "Amount",
+        "action": "Action"
+      },
+      "tiles": {
+        "all": "All process stages",
+        "docCount": "{count} Documents",
+        "waitingOnYou": "{count} waiting on you",
+        "contractGenerate": "Create contracts",
+        "contractSigning": "Sign contracts",
+        "timesheetGenerate": "Create timesheets",
+        "timesheetSigning": "Sign timesheets",
+        "readyToGo": "Ready to go"
+      },
+      "toolbar": {
+        "typeAll": "All allowance types",
+        "typeEP": "Ehrenamt",
+        "typeUL": "Übungsleiter",
+        "searchPlaceholder": "Search volunteers …",
+        "sortActionNeeded": "Action needed first",
+        "sortNewest": "Newest first"
+      },
+      "empty": {
+        "allDone": "All done",
+        "allDoneHint": "No open documents in this period.",
+        "filtered": "No entries in this category."
+      },
+      "resetPrototype": "Reset prototype",
+      "resetPrototypeToast": "Prototype data reset.",
+      "createDocumentModal": {
+        "stepIndicator": "Step {step} of {total}",
+        "step1Title": "Volunteer & document",
+        "step2Title": "Review & send",
+        "volunteerPlaceholder": "Search for a volunteer …",
+        "noVolunteersFound": "No volunteers found.",
+        "selectDocumentTitle": "Select a document",
+        "noDocumentYet": "Not created yet",
+        "documentCount": "{count, plural, =1 {1 document} other {# documents}}",
+        "viewVolunteer": "View volunteer",
+        "createButton": "Create {kind}",
+        "createButtonEmpty": "Create new document"
+      },
+      "bundle": {
+        "actionLabel": "Download bundle",
+        "readyCount": "{count} ready",
+        "lastDownloaded": "last downloaded by <name>{by}</name> on {at}",
+        "neverDownloaded": "not downloaded yet",
+        "unknownUser": "unknown"
+      },
+      "batchBar": {
+        "selected": "{count} selected",
+        "countersignAll": "Sign all",
+        "remindAll": "Remind all",
+        "bundleAll": "Download all bundles",
+        "mixed": "Mixed selection",
+        "clearSelection": "Clear",
+        "bundleDownloadToast": "{count, plural, =1 {Bundle download started.} other {{count} bundle downloads started.}}"
+      },
+      "actionToasts": {
+        "create": "{count, plural, =1 {Created for {name}.} other {{count} created.}}",
+        "remind": "{count, plural, =1 {Reminder sent to {name}.} other {Reminders sent to {count} volunteers.}}",
+        "countersign": "{count, plural, =1 {{name}'s document countersigned.} other {{count} documents countersigned.}}"
+      },
+      "contractGeneratedToast": "Contract generation started for {name}.",
+      "docs": {
+        "kindLabel": {
+          "contract": "Contract",
+          "timesheet": "Timesheet"
+        },
+        "sheet": {
+          "period": "Period",
+          "pipelineLabel": "Process",
+          "pipeline": {
+            "generate": "Create",
+            "sign": "Sign",
+            "declined": "Declined",
+            "volSign": "Volunteer",
+            "coordSign": "Coordinator",
+            "superSign": "Supervisor",
+            "active": "Active",
+            "ready": "Ready"
+          },
+          "limitSection": "Annual budget",
+          "invoicesPaidOut": "Paid out",
+          "invoicesPending": "Pending payment",
+          "timelineSection": "Timeline",
+          "timelineEmpty": "No activity yet",
+          "timelineCreated": "Created",
+          "timelineSigned": "Signed",
+          "timelineCountersigned": "Countersigned",
+          "timelineActivated": "Activated",
+          "timelineDeclined": "Declined",
+          "declineReasonTitle": "Decline reason",
+          "noAction": "No action required",
+          "pdfView": "View PDF",
+          "pdfDownload": "Download",
+          "pdfViewToast": "Preview opened for {period}.",
+          "pdfDownloadToast": "Download started for {period}.",
+          "timesheetHours": {
+            "title": "Volunteering hours",
+            "paidShifts": "Hours with reimbursement",
+            "shifts": "{count} shifts",
+            "grossAmount": "Gross amount",
+            "rateTooltip": "Default hourly rate for this allowance type. Shifts can use a different rate.",
+            "viewBtn": "View timesheets"
+          }
+        },
+        "statusLabel": {
+          "contractGenerate": "Create contract",
+          "contractSigningVol": "Waiting for signature",
+          "contractSigningCoord": "Countersignature required",
+          "contractActive": "Active contract",
+          "timesheetGenerate": "Create timesheet",
+          "timesheetSigningVol": "Waiting for signature",
+          "timesheetSigningSuper": "Supervisor signature",
+          "timesheetReady": "Ready to go",
+          "nonCompliant": "No active contract",
+          "nonCompliantHint": "No active contract for this allowance type yet — create or activate one to make this timesheet compliant",
+          "notYetCreated": "Not yet created",
+          "overCap": "Annual cap will be exceeded",
+          "overCapHint": "This timesheet's amount pushes the volunteer at or over their yearly allowance cap",
+          "contractMissing": "No contract — create manually",
+          "timesheetMuted": "Recorded without a contract",
+          "declined": "Declined"
+        },
+        "actions": {
+          "create": "Preview and create",
+          "remind": "Send reminder",
+          "countersign": "Countersign",
+          "decline": "Decline",
+          "seeDetails": "See details",
+          "createNew": "Create new {docType}"
+        },
+        "nonCompliantDialog": {
+          "titleSingle": "{action, select, create {Create} remind {Send a reminder for} countersign {Countersign} other {Proceed with}} a timesheet without an active contract?",
+          "titleBatchAll": "{action, select, create {Create} remind {Send reminders for} countersign {Countersign} other {Proceed with}} {count} timesheets without an active contract?",
+          "titleBatchMixed": "{count} of {total} timesheets have no active contract",
+          "descriptionSingle": "This volunteer has no active contract for this allowance type yet. You can still {action, select, create {create} remind {send a reminder for} countersign {countersign} other {proceed with}} this timesheet, but it stays flagged as non-compliant until a contract is active.",
+          "descriptionBatchAll": "None of the selected volunteers have an active contract for this allowance type yet. You can still {action, select, create {create} remind {send reminders for} countersign {countersign} other {proceed with}} these timesheets, but they stay flagged as non-compliant until a contract is active.",
+          "descriptionBatchMixed": "{count} of the selected timesheets have no active contract for this allowance type.",
+          "actionAnyway": "{action, select, create {Create anyway} remind {Remind anyway} countersign {Sign anyway} other {Proceed anyway}}",
+          "actionAllAnyway": "{action, select, create {Create all anyway} remind {Remind all anyway} countersign {Sign all anyway} other {Proceed with all anyway}}",
+          "onlyCompliantAction": "{action, select, create {Only create compliant} remind {Only remind compliant} countersign {Only sign compliant} other {Only proceed with compliant}}",
+          "generateContractInstead": "Generate contract instead",
+          "viewContractInstead": "View contract instead"
+        },
+        "declineDialog": {
+          "title": "Decline this {docType}?",
+          "description": "The volunteer will need a newly issued document — this one can't be resumed once declined.",
+          "reasonLabel": "Reason for declining",
+          "reasonPlaceholder": "Explain what needs to change …",
+          "submit": "Decline",
+          "toast": "{name}'s document was declined."
+        }
+      },
+      "profileField": {
+        "editButtonLabel": "Edit",
+        "saveButtonLabel": "Save",
+        "fromProfileHint": "From {name}'s profile",
+        "editingHint": "You're only editing this for {docType, select, contract {this contract} invoice {this invoice} other {this document}} — the data on {name}'s profile stays unchanged.",
+        "overrideHint": "Edited for {docType, select, contract {this contract} invoice {this invoice} other {this document}} only",
+        "missingValue": "Not provided",
+        "gapHint": "{name} did not share this data in their profile — add it for {docType, select, contract {this contract} invoice {this invoice} other {this document}}"
+      },
+      "contractModal": {
+        "title": "Create contract",
+        "cancel": "Cancel",
+        "sendForSigning": "Save and send for signing",
+        "sending": "Sending…",
+        "sentToast": "Contract sent to {name} for signing.",
+        "sendErrorToast": "Couldn't send the contract to {name}. Please try again.",
+        "loadErrorTitle": "Couldn't load profile data",
+        "loadError": "{name}'s profile data couldn't be loaded. Please close this and try again.",
+        "hoursUnitMonth": "month",
+        "hoursUnitWeek": "week",
+        "hoursUnitHint": "per {unit}",
+        "preview": {
+          "disclaimerBadge": "Preview",
+          "documentTitle": "Additional agreement",
+          "signatureVolunteer": "Volunteer signature",
+          "signatureCoordinator": "Coordinator signature",
+          "unsigned": "Not yet signed"
+        }
+      },
+      "invoiceModal": {
+        "title": "Create invoice",
+        "cancel": "Cancel",
+        "sendForSigning": "Save and send for signing",
+        "sending": "Sending…",
+        "sentToast": "Invoice sent to {name} for signing.",
+        "sendErrorToast": "Couldn't send the invoice to {name}. Please try again.",
+        "loadErrorTitle": "Couldn't load invoice data",
+        "loadError": "{name}'s invoice data couldn't be loaded. Please close this and try again.",
+        "nameFieldLabel": "Name",
+        "periodFieldLabel": "Billing period",
+        "periodPicker": {
+          "placeholder": "Select a period",
+          "thisMonth": "This month",
+          "lastMonth": "Last month",
+          "apply": "Apply"
+        },
+        "capCard": {
+          "title": "Yearly cap",
+          "value": "{before} → {after}",
+          "subline": "of {total} yearly cap"
+        },
+        "hoursCard": {
+          "title": "Eligible hours",
+          "rowCheckboxLabel": "Include {shiftName} in this invoice",
+          "hoursValue": "{hours}h",
+          "editHint": "To edit hours or shift details, go to <link>Timesheets</link>."
+        },
+        "preview": {
+          "disclaimerBadge": "Preview",
+          "documentTitle": "Invoice",
+          "signatureVolunteer": "Volunteer signature",
+          "signatureSupervisor": "Supervisor signature",
+          "unsigned": "Not yet signed"
+        }
+      }
+    },
+    "templates": {
+      "title": "Templates",
+      "sections": {
+        "ep": "Ehrenamtspauschale",
+        "ul": "Übungsleiterpauschale",
+        "unconfiguredWarning": "Shifts of this Pauschalen type cannot be scheduled until both templates are configured."
+      },
+      "documentKind": {
+        "contract": "Contract",
+        "invoice": "Invoice"
+      },
+      "loadError": "Templates could not be loaded. Please reload the page.",
+      "builder": {
+        "breadcrumb": {
+          "accounting": "Accounting",
+          "templates": "Templates"
+        },
+        "saveButton": "Save template",
+        "saveSuccessToast": "Template saved",
+        "saveErrorToast": "The template could not be saved. Please try again.",
+        "previewScrollRegionLabel": "Document preview, scrollable",
+        "preview": {
+          "disclaimerBadge": "Preview",
+          "documentTitle": {
+            "contract": "Additional agreement",
+            "invoice": "Invoice"
+          },
+          "signatureVolunteer": "Volunteer signature",
+          "signatureCoordinator": "Coordinator signature",
+          "signatureSupervisor": "Supervisor signature",
+          "unsigned": "Not yet signed"
+        },
+        "blockEditor": {
+          "headerTitle": "Header",
+          "invoiceNumberFormatLabel": "Invoice number format",
+          "lockedHint": "Mandatory — always included in the generated document.",
+          "tableFixedHint": "Rows are filled from timesheets when an invoice is generated.",
+          "firstColumnSourceLabel": "First column content",
+          "firstColumnSourceOptions": {
+            "agreement_task_description": {
+              "label": "Task description from the agreement",
+              "hint": "Each row shows the task description stored in the agreement."
+            },
+            "custom": {
+              "label": "Custom",
+              "hint": "Each row shows the text entered here."
+            }
+          },
+          "firstColumnPlaceholders": {
+            "agreementTaskDescription": "Task description",
+            "custom": "e.g. Other task"
+          },
+          "alreadyReceivedHint": "Calculated automatically from the linked contract period when an invoice is generated.",
+          "incompleteCount": "{count} fields need a value",
+          "notSetYet": "not set yet",
+          "sameAsAbove": "same value as set above",
+          "scrollRegionLabel": "Template editor, scrollable"
+        },
+        "editorGroups": {
+          "org": "Organization details",
+          "volunteer": "Volunteer details",
+          "engagement": "Engagement details",
+          "extra": "Extra clauses"
+        },
+        "hoursUnit": {
+          "month": "Month",
+          "week": "Week"
+        },
+        "periodPicker": {
+          "tabYear": "Year",
+          "tabMonth": "Month",
+          "tabRange": "Period",
+          "previousYear": "Previous year",
+          "nextYear": "Next year",
+          "previousYearBlock": "Previous period",
+          "nextYearBlock": "Next period",
+          "apply": "Apply"
+        },
+        "manualFieldLabels": {
+          "contract-lifespan": "Contract period",
+          "tasks": "Task description",
+          "hours-amount": "Hours",
+          "freeform-text": "Freeform text",
+          "kostenstelle": "Kostenstelle",
+          "kostentraeger": "Kostenträger",
+          "rechtstraeger": "Rechtsträger"
+        },
+        "manualFieldPlaceholders": {
+          "contract-lifespan": "Select period",
+          "tasks": "Describe the main activities for {pauschale}",
+          "hours-amount-month": "e.g. 20",
+          "hours-amount-week": "e.g. 5",
+          "freeform-text": "Add other clauses here if you need to",
+          "kostenstelle": "e.g. K-4200",
+          "kostentraeger": "e.g. KT-100",
+          "rechtstraeger": "e.g. Diakonisches Werk e.V."
+        },
+        "fieldSource": {
+          "volunteerProfile": "Filled from the volunteer's profile.",
+          "generationTime": "Filled in automatically when the document is generated.",
+          "organizationProfile": "Filled from your organization's profile.",
+          "rateSettings": "Filled from the rate configured in Accounting settings.",
+          "yearlyLimit": "Filled from the legally fixed yearly cap."
+        },
+        "invoiceNumberFormats": {
+          "date-number": "DD-MM-YYYY-Number",
+          "date-kostenstelle-number": "DD-MM-YYYY-Kostenstelle-Number",
+          "compact-date-number": "DDMMYYYY-Number",
+          "kostenstelle-month-year-number": "Kostenstelle-MMYYYY-Number"
+        },
+        "fieldList": {
+          "requiresCollection": "Missing data",
+          "profileWarningBefore": "Volunteers aren't asked for this yet.",
+          "profileWarningAction": "Create a form in Form builder",
+          "profileWarningAfter": "to collect it."
+        },
+        "dataSources": {
+          "volunteer_first_name": "First name (Volunteer)",
+          "volunteer_last_name": "Last name (Volunteer)",
+          "org_name": "Organisation name",
+          "org_address": "Organisation address",
+          "org_city": "City (Organisation)",
+          "org_legal_rep": "Legal representative",
+          "pauschalen_type": "Pauschale type",
+          "hourly_rate": "Hourly rate",
+          "period_start": "Period start",
+          "period_end": "Period end",
+          "total_hours": "Total hours",
+          "total_amount": "Total amount",
+          "generated_date": "Generated date",
+          "document_number": "Invoice number",
+          "volunteer_iban": "IBAN (Volunteer)",
+          "volunteer_bic": "BIC (Volunteer)",
+          "volunteer_address": "Address (Volunteer)",
+          "volunteer_dob": "Date of birth (Volunteer)",
+          "volunteer_tax_id": "Tax ID (Volunteer)",
+          "contract_period": "Contract period",
+          "already_received_amount": "Amount already received",
+          "yearly_limit_amount": "Yearly cap"
+        }
+      },
+      "card": {
+        "empty": {
+          "alertText": "Not yet configured",
+          "createButton": "Create template"
+        },
+        "editButton": "Edit template",
+        "lastEdited": "Last edited {date} by {name}",
+        "badges": {
+          "renewal": {
+            "monthly": "Renews monthly",
+            "yearly": "Renews yearly"
+          },
+          "signees": "{count, plural, =1 {1 signature} other {# signatures}}"
+        }
+      }
+    }
   }
 }

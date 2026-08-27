@@ -2,11 +2,7 @@ import { createHmac } from 'node:crypto';
 import type { OnApplicationShutdown } from '@nestjs/common';
 import { Inject, Injectable, Logger, Optional } from '@nestjs/common';
 import { numericCalendarDate } from '../../i18n/format-date-time';
-import {
-  POSTHOG_EVENT,
-  type PostHogEventName,
-  type UserJoinedOrgCaptureInput,
-} from './posthog.events';
+import type { PostHogEventName } from './posthog.events';
 
 export const POSTHOG_CLIENT = Symbol('POSTHOG_CLIENT');
 
@@ -46,7 +42,8 @@ export function createDailyDistinctId(
 
 /**
  * Thin DI wrapper around posthog-node so domain services stay testable.
- * Import this service — never `posthog-node` — in domain code.
+ * Named product events go through PostHogCaptureService. Never import
+ * `posthog-node` in domain code.
  */
 @Injectable()
 export class PostHogService implements OnApplicationShutdown {
@@ -86,32 +83,5 @@ export class PostHogService implements OnApplicationShutdown {
         );
       }
     }
-  }
-
-  captureUserSignedUp(userId: string): void {
-    this.capture({
-      event: POSTHOG_EVENT.USER_SIGNED_UP,
-      userId,
-    });
-  }
-
-  captureUserLoggedIn(userId: string): void {
-    this.capture({
-      event: POSTHOG_EVENT.USER_LOGGED_IN,
-      userId,
-    });
-  }
-
-  captureUserJoinedOrg(userId: string, input: UserJoinedOrgCaptureInput): void {
-    this.capture({
-      event: POSTHOG_EVENT.USER_JOINED_ORG,
-      userId,
-      properties: {
-        organizationId: input.organizationId,
-        organizationUnitId: input.organizationUnitId,
-        source: input.source,
-      },
-      groups: { organization: input.organizationId },
-    });
   }
 }

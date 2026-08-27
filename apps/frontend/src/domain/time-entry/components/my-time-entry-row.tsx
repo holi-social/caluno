@@ -8,8 +8,8 @@ export const MyTimeEntryRow = ({ entry }: { entry: TimeEntry }) => {
   const { formatDuration } = useFormatting();
 
   const state = getEntryState(entry);
-  const shift = entry.shiftInstance.master;
-  const organizationUnit = shift.organizationUnit;
+  const shift = entry.shiftInstance?.master;
+  const organizationUnit = shift?.organizationUnit ?? entry.organizationUnit;
   const inProgress = state === 'in-progress';
   const duration = inProgress
     ? ''
@@ -19,7 +19,9 @@ export const MyTimeEntryRow = ({ entry }: { entry: TimeEntry }) => {
     <Card className="py-4">
       <CardContent className="">
         <h2 className="truncate">
-          {entry.shiftInstance.overrideTitle ?? shift.title}
+          {entry.shiftInstance
+            ? (entry.shiftInstance.overrideTitle ?? shift?.title)
+            : t('generalTime')}
         </h2>
         <h3 className="truncate text-sm text-muted-foreground">
           {organizationUnit.organization.name} · {organizationUnit.name}
