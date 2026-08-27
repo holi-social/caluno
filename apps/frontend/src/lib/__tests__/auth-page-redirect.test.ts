@@ -26,6 +26,7 @@ const lastOrg: OrgContextData = {
   slug: 'last-org',
   name: 'Last Org',
   organizationId: 'last-org',
+  accountingEnabled: false,
 };
 
 describe('resolveAuthPageRedirects', () => {

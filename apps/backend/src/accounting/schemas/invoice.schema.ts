@@ -12,6 +12,7 @@ import {
 import { users } from '../../auth/schemas/auth.schema';
 import { idColumn, timestampColumns } from '../../database/database-columns';
 import { enumValues } from '../../database/typeutil';
+import { files } from '../../storage/schemas/file.schema';
 import { InvoiceStatus } from '../enums';
 import { documentTemplates } from './document-template.schema';
 import { reimbursementTypes } from './reimbursement-type.schema';
@@ -39,6 +40,7 @@ export const invoices = snakeCase.table('invoices', {
   reimbursementTypeId: uuid('reimbursement_type_id')
     .references(() => reimbursementTypes.id, { onDelete: 'restrict' })
     .notNull(),
+  fileId: uuid('file_id').references(() => files.id, { onDelete: 'set null' }),
   invoiceStatus: invoiceStatusEnum('invoice_status')
     .$type<InvoiceStatus>()
     .notNull(),
@@ -55,6 +57,10 @@ export const invoices = snakeCase.table('invoices', {
   declineReason: text('decline_reason'),
   declinedByUserId: text('declined_by_user_id').references(() => users.id, {
     onDelete: 'restrict',
+  }),
+  paidAt: timestamp('paid_at'),
+  paidByUserId: text('paid_by_user_id').references(() => users.id, {
+    onDelete: 'set null',
   }),
   declinedAt: timestamp('declined_at'),
   declinedAtSigneeType: signeeTypeEnum('declined_at_signee_type'),
