@@ -17,9 +17,19 @@ const additionalFieldsClient = inferAdditionalFields({
       type: 'string',
       required: false,
     },
+    privacyPolicyAccepted: {
+      type: 'boolean',
+      required: false,
+      returned: false,
+    },
     privacyPolicyVersion: {
       type: 'string',
       required: false,
+    },
+    privacyPolicyAcceptedAt: {
+      type: 'date',
+      required: false,
+      input: false,
     },
   },
 });

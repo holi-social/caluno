@@ -1,8 +1,21 @@
 import {
   applyPrivacyPolicyAcceptance,
-  CURRENT_PRIVACY_POLICY_VERSION,
   PrivacyPolicyAcceptanceError,
+  privacyPolicyAcceptedFromBody,
 } from './privacy-policy';
+
+describe('privacyPolicyAcceptedFromBody', () => {
+  it('is true only when the request body flag is true', () => {
+    expect(privacyPolicyAcceptedFromBody({ privacyPolicyAccepted: true })).toBe(
+      true,
+    );
+    expect(
+      privacyPolicyAcceptedFromBody({ privacyPolicyAccepted: false }),
+    ).toBe(false);
+    expect(privacyPolicyAcceptedFromBody({ name: 'Volunteer' })).toBe(false);
+    expect(privacyPolicyAcceptedFromBody(undefined)).toBe(false);
+  });
+});
 
 describe('applyPrivacyPolicyAcceptance', () => {
   const user = {
@@ -10,44 +23,50 @@ describe('applyPrivacyPolicyAcceptance', () => {
     email: 'volunteer@example.com',
     name: 'Volunteer',
   };
+  const currentVersion = '2026-08-25';
 
   it('stamps the current version and acceptedAt', () => {
     const now = new Date('2026-08-24T12:00:00.000Z');
     const result = applyPrivacyPolicyAcceptance(
-      { ...user, privacyPolicyVersion: CURRENT_PRIVACY_POLICY_VERSION },
+      { ...user, privacyPolicyAccepted: true },
+      currentVersion,
       now,
     );
 
-    expect(result.privacyPolicyVersion).toBe('2026-08-25');
+    expect(result.privacyPolicyVersion).toBe(currentVersion);
     expect(result.privacyPolicyAcceptedAt).toEqual(now);
+    expect(result).not.toHaveProperty('privacyPolicyAccepted');
   });
 
-  it('overwrites a client-supplied acceptedAt', () => {
+  it('overwrites a client-supplied version and acceptedAt', () => {
     const now = new Date('2026-08-24T12:00:00.000Z');
     const result = applyPrivacyPolicyAcceptance(
       {
         ...user,
-        privacyPolicyVersion: CURRENT_PRIVACY_POLICY_VERSION,
+        privacyPolicyAccepted: true,
+        privacyPolicyVersion: '1999-01-01',
         privacyPolicyAcceptedAt: new Date('2000-01-01T00:00:00.000Z'),
       },
+      currentVersion,
       now,
     );
 
+    expect(result.privacyPolicyVersion).toBe(currentVersion);
     expect(result.privacyPolicyAcceptedAt).toEqual(now);
   });
 
-  it('rejects a missing version', () => {
-    expect(() => applyPrivacyPolicyAcceptance(user)).toThrow(
+  it('rejects a missing acceptance flag', () => {
+    expect(() => applyPrivacyPolicyAcceptance(user, currentVersion)).toThrow(
       PrivacyPolicyAcceptanceError,
     );
   });
 
-  it('rejects a stale version', () => {
+  it('rejects a false acceptance flag', () => {
     expect(() =>
-      applyPrivacyPolicyAcceptance({
-        ...user,
-        privacyPolicyVersion: '1999-01-01',
-      }),
+      applyPrivacyPolicyAcceptance(
+        { ...user, privacyPolicyAccepted: false },
+        currentVersion,
+      ),
     ).toThrow(PrivacyPolicyAcceptanceError);
   });
 });

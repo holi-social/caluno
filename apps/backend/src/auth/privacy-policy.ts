@@ -1,5 +1,3 @@
-export const CURRENT_PRIVACY_POLICY_VERSION = '2026-08-25';
-
 export class PrivacyPolicyAcceptanceError extends Error {
   constructor() {
     super('Privacy policy must be accepted');
@@ -7,23 +5,37 @@ export class PrivacyPolicyAcceptanceError extends Error {
   }
 }
 
+export function privacyPolicyAcceptedFromBody(body: unknown): boolean {
+  if (!body || typeof body !== 'object') {
+    return false;
+  }
+
+  return (
+    (body as { privacyPolicyAccepted?: unknown }).privacyPolicyAccepted === true
+  );
+}
+
 export function applyPrivacyPolicyAcceptance<T extends object>(
   user: T & {
+    privacyPolicyAccepted?: boolean | null;
     privacyPolicyVersion?: string | null;
     privacyPolicyAcceptedAt?: Date | null;
   },
+  currentVersion: string,
   acceptedAt = new Date(),
-): T & {
+): Omit<T, 'privacyPolicyAccepted'> & {
   privacyPolicyVersion: string;
   privacyPolicyAcceptedAt: Date;
 } {
-  if (user.privacyPolicyVersion !== CURRENT_PRIVACY_POLICY_VERSION) {
+  if (user.privacyPolicyAccepted !== true) {
     throw new PrivacyPolicyAcceptanceError();
   }
 
+  const { privacyPolicyAccepted: _accepted, ...rest } = user;
+
   return {
-    ...user,
-    privacyPolicyVersion: CURRENT_PRIVACY_POLICY_VERSION,
+    ...rest,
+    privacyPolicyVersion: currentVersion,
     privacyPolicyAcceptedAt: acceptedAt,
   };
 }

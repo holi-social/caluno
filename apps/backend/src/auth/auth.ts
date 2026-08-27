@@ -3,10 +3,15 @@ import { APIError, type BetterAuthOptions, betterAuth } from 'better-auth';
 import { emailOTP } from 'better-auth/plugins';
 import { Database } from '../database/database.module';
 import { resolveRequestLocale } from '../graphql/locale';
+import {
+  defaultPrivacyPolicyDirectory,
+  resolvePrivacyPolicyDocument,
+} from '../legal/privacy-policy-files';
 import { headersFromRequest } from './auth-headers';
 import {
   applyPrivacyPolicyAcceptance,
   PrivacyPolicyAcceptanceError,
+  privacyPolicyAcceptedFromBody,
 } from './privacy-policy';
 import {
   accounts,
@@ -45,6 +50,7 @@ export interface AuthConfigOptions {
   sendResetPassword: (options: SendResetPasswordOptions) => Promise<void>;
   onSessionCreated?: (userId: string) => void;
   onUserCreated?: (userId: string) => void;
+  privacyPolicyDirectory?: string;
 }
 
 export const createAuthConfig = ({
@@ -56,6 +62,7 @@ export const createAuthConfig = ({
   sendResetPassword,
   onSessionCreated,
   onUserCreated,
+  privacyPolicyDirectory = defaultPrivacyPolicyDirectory(),
 }: AuthConfigOptions): BetterAuthOptions => ({
   database: drizzleAdapter(database, {
     schema: {
@@ -76,6 +83,7 @@ export const createAuthConfig = ({
       privacyPolicyVersion: {
         type: 'string',
         required: false,
+        input: false,
       },
       privacyPolicyAcceptedAt: {
         type: 'date',
@@ -91,11 +99,20 @@ export const createAuthConfig = ({
           const locale = resolveRequestLocale(headersFromRequest(ctx?.request));
 
           try {
+            const { version } = resolvePrivacyPolicyDocument(
+              privacyPolicyDirectory,
+            );
             return {
-              data: applyPrivacyPolicyAcceptance({
-                ...user,
-                locale,
-              }),
+              data: applyPrivacyPolicyAcceptance(
+                {
+                  ...user,
+                  locale,
+                  privacyPolicyAccepted: privacyPolicyAcceptedFromBody(
+                    ctx?.body,
+                  ),
+                },
+                version,
+              ),
             };
           } catch (error) {
             if (error instanceof PrivacyPolicyAcceptanceError) {
