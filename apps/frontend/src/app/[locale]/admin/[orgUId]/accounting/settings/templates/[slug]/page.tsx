@@ -21,7 +21,7 @@ export default async function TemplateBuilderPage({
     <TemplateBuilder
       pauschale={slot.pauschale}
       kind={slot.kind}
-      backHref={`/admin/${orgUId}/accounting/settings`}
+      backHref={`/admin/${orgUId}/accounting/settings?tab=templates`}
     />
   );
 }
