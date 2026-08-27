@@ -54,6 +54,12 @@ mutation LeaveMembership($id: ID!) {
   }
 }
 
+mutation RemoveMembership($id: ID!) {
+  removeMembership(id: $id) {
+    id
+  }
+}
+
 query MyMemberships {
   myMemberships {
     id
