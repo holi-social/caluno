@@ -25,14 +25,15 @@ VOLUNTEER_REJECTED --> JOINED : volunteer re-joins \n approval disabled \n seat 
 
 AWAITING_ADMIN_APPROVAL --> ADMIN_REJECTED : admin rejected
 AWAITING_ADMIN_APPROVAL --> VOLUNTEER_CANCELLED : volunteer cancels
-AWAITING_ADMIN_APPROVAL --> WAITLIST_JOINED : admin approved \n shift full
+AWAITING_ADMIN_APPROVAL -right-> WAITLIST_JOINED : admin approved \n shift full
 AWAITING_ADMIN_APPROVAL --> JOINED : admin approved \n seat available
 
 WAITLIST_JOINED --> JOINED : seat becomes available
 WAITLIST_JOINED --> VOLUNTEER_CANCELLED : volunteer cancels
+WAITLIST_JOINED --> ADMIN_REJECTED : admin rejects
 
 JOINED --> VOLUNTEER_CANCELLED : volunteer cancels
-JOINED --> ADMIN_REJECTED : admin cancels
+JOINED --> ADMIN_REJECTED : admin rejects
 
 VOLUNTEER_CANCELLED -up-> JOINED : volunteer re-joins \n seat available
 VOLUNTEER_CANCELLED -up-> WAITLIST_JOINED : volunteer re-joins \n shift full
