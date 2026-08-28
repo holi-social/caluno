@@ -1,13 +1,7 @@
 @startuml InviteOriginStatusModel
 
-title Invite origin (how they arrived) vs status (latest answer)
+title Shift Invite State Model
 
-'state "origin" as Origin {
-'  [*] --> ORIGIN_ADMIN_INVITED : admin invite
-'  [*] --> ORIGIN_VOLUNTEER_JOINED : open join
-'}
-
-state "Join" as Join {
 [*] --> ADMIN_INVITED : admin invited
 [*] --> AWAITING_ADMIN_APPROVAL : volunteer joined \n approval enabled
 [*] --> WAITLIST_JOINED : volunteer joined \n approval disabled \n shift full
@@ -39,6 +33,5 @@ VOLUNTEER_CANCELLED -up-> JOINED : volunteer re-joins \n seat available
 VOLUNTEER_CANCELLED -up-> WAITLIST_JOINED : volunteer re-joins \n shift full
 
 ADMIN_REJECTED -up-> ADMIN_INVITED : admin re-invites
-}
 
 @enduml
