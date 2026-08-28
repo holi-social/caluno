@@ -1,18 +1,48 @@
-@startuml InviteStatusModel
+@startuml InviteOriginStatusModel
 
-[*] --> INVITED : admin
-' means the member self-joined without an invite
-[*] --> SELF_JOINED : volunteer
-INVITED --> ACCEPTED : volunteer
-INVITED --> VOLUNTEER_REJECTED : volunteer
-VOLUNTEER_REJECTED -left-> ACCEPTED : volunteer
-SELF_JOINED -down-> CANCELLED : volunteer
-ACCEPTED -down-> CANCELLED : volunteer
-CANCELLED -up-> SELF_JOINED : volunteer
-CANCELLED -up-> ACCEPTED : volunteer
+title Invite origin (how they arrived) vs status (latest answer)
 
-ACCEPTED --> ADMIN_REJECTED : admin
-INVITED -down-> ADMIN_REJECTED : admin
-ADMIN_REJECTED -up-> INVITED : admin
-SELF_JOINED --> ADMIN_REJECTED : admin
+'state "origin" as Origin {
+'  [*] --> ORIGIN_ADMIN_INVITED : admin invite
+'  [*] --> ORIGIN_VOLUNTEER_JOINED : open join
+'}
+
+state "Join" as Join {
+[*] --> ADMIN_INVITED : admin invited
+[*] --> AWAITING_ADMIN_APPROVAL : volunteer joined \n approval enabled
+[*] ---> JOINED : volunteer joined \n approval disabled
+AWAITING_ADMIN_APPROVAL --> JOINED : admin approved
+AWAITING_ADMIN_APPROVAL --> ADMIN_REJECTED : admin rejected
+AWAITING_ADMIN_APPROVAL --> VOLUNTEER_CANCELLED : volunteer cancels
+ADMIN_INVITED --> JOINED : volunteer accepted \n approval disabled
+ADMIN_INVITED --> AWAITING_ADMIN_APPROVAL : volunteer accepted \n approval
+ADMIN_INVITED --> VOLUNTEER_REJECTED : volunteer rejected
+VOLUNTEER_REJECTED --> AWAITING_ADMIN_APPROVAL : volunteer re-joins \n approval
+VOLUNTEER_REJECTED --> JOINED : volunteer re-joins \n no approval
+ADMIN_INVITED --> ADMIN_REJECTED : admin rejected
+JOINED --> VOLUNTEER_CANCELLED : volunteer cancelled
+JOINED --> ADMIN_CANCELLED : admin cancelled
+
+[*] --> WAITLIST_AWAITING_ADMIN_APPROVAL : volunteer joined \n approval enabled \n shift full
+WAITLIST_AWAITING_ADMIN_APPROVAL --> WAITLIST_JOINED : admin approved
+WAITLIST_AWAITING_ADMIN_APPROVAL --> AWAITING_ADMIN_APPROVAL : seat becomes available
+WAITLIST_JOINED --> JOINED : seat becomes available
+
+[*] --> WAITLIST_JOINED : volunteer joined \n approval disabled \n shift full
+
+ADMIN_INVITED --> WAITLIST_AWAITING_ADMIN_APPROVAL : volunteer accepted \n approval enabled \n shift full
+ADMIN_INVITED --> WAITLIST_JOINED : volunteer accepted \n approval disabled \n shift full
+
+WAITLIST_JOINED --> VOLUNTEER_CANCELLED : volunteer cancelled
+WAITLIST_AWAITING_ADMIN_APPROVAL --> VOLUNTEER_CANCELLED : volunteer cancelled
+
+VOLUNTEER_CANCELLED -up-> JOINED : volunteer re-joins \n approval disabled
+VOLUNTEER_CANCELLED -up-> AWAITING_ADMIN_APPROVAL : volunteer re-joins \n approval
+VOLUNTEER_CANCELLED -up-> WAITLIST_JOINED : volunteer re-joins \n approval disabled \n shift full
+VOLUNTEER_CANCELLED -up-> WAITLIST_AWAITING_ADMIN_APPROVAL : volunteer re-joins \n approval enabled \n shift full
+
+ADMIN_REJECTED -up-> ADMIN_INVITED : admin re-invite
+ADMIN_CANCELLED -up-> ADMIN_INVITED : admin re-invite
+}
+
 @enduml
