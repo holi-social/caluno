@@ -23,6 +23,8 @@ import { eventCancelledTemplate } from './email/templates/event-cancelled.templa
 import { eventInvitedTemplate } from './email/templates/event-invited.template';
 import { eventJoinedTemplate } from './email/templates/event-joined.template';
 import { membershipApprovedTemplate } from './email/templates/membership-approved.template';
+import { membershipLeftTemplate } from './email/templates/membership-left.template';
+import { membershipRemovedTemplate } from './email/templates/membership-removed.template';
 import { membershipRequestedTemplate } from './email/templates/membership-requested.template';
 import { organizationCreatedTemplate } from './email/templates/organization-created.template';
 import { passwordResetTemplate } from './email/templates/password-reset.template';
@@ -314,6 +316,114 @@ describe('NotificationModule', () => {
     );
 
     notificationService.notifyMembershipApproved(payload);
+
+    await new Promise((resolve) => setTimeout(resolve, 50));
+
+    expect(userService.findById).toHaveBeenCalledWith(user.id);
+    expect(emailService.send).toHaveBeenCalledWith({
+      to: user.email,
+      subject: expected.subject,
+      html: expected.html,
+    });
+  });
+
+  it('sends membership left email to each reviewer', async () => {
+    const users = new Map([
+      [
+        'leaver-1',
+        {
+          id: 'leaver-1',
+          name: 'Sam Volunteer',
+          email: 'volunteer@example.com',
+        },
+      ],
+      [
+        'reviewer-1',
+        {
+          id: 'reviewer-1',
+          name: 'Alice Reviewer',
+          email: 'alice@example.com',
+        },
+      ],
+      [
+        'reviewer-2',
+        {
+          id: 'reviewer-2',
+          name: 'Bob Reviewer',
+          email: 'bob@example.com',
+        },
+      ],
+    ]);
+    userService.findById.mockImplementation((id: string) =>
+      Promise.resolve(users.get(id)),
+    );
+
+    const payload = {
+      organizationUnitId: 'unit-root-1',
+      organizationUnitName: 'Acme Volunteers',
+      leaverUserId: 'leaver-1',
+      recipientUserIds: ['reviewer-1', 'reviewer-2'],
+    };
+    const expectedAlice = await membershipLeftTemplate(
+      {
+        organizationUnitId: payload.organizationUnitId,
+        organizationUnitName: payload.organizationUnitName,
+        volunteerName: 'Sam Volunteer',
+        recipientFirstName: 'Alice',
+      },
+      createFixtureTranslator('en'),
+    );
+    const expectedBob = await membershipLeftTemplate(
+      {
+        organizationUnitId: payload.organizationUnitId,
+        organizationUnitName: payload.organizationUnitName,
+        volunteerName: 'Sam Volunteer',
+        recipientFirstName: 'Bob',
+      },
+      createFixtureTranslator('en'),
+    );
+
+    notificationService.notifyMembershipLeft(payload);
+
+    await new Promise((resolve) => setTimeout(resolve, 50));
+
+    expect(userService.findById).toHaveBeenCalledWith('leaver-1');
+    expect(userService.findById).toHaveBeenCalledWith('reviewer-1');
+    expect(userService.findById).toHaveBeenCalledWith('reviewer-2');
+    expect(emailService.send).toHaveBeenCalledWith({
+      to: 'alice@example.com',
+      subject: expectedAlice.subject,
+      html: expectedAlice.html,
+    });
+    expect(emailService.send).toHaveBeenCalledWith({
+      to: 'bob@example.com',
+      subject: expectedBob.subject,
+      html: expectedBob.html,
+    });
+  });
+
+  it('sends membership removed email when event is emitted', async () => {
+    const user = {
+      id: 'user-member-1',
+      name: 'Sam Smith',
+      email: 'volunteer@example.com',
+    };
+    userService.findById.mockResolvedValue(user);
+
+    const payload = {
+      organizationUnitId: 'unit-root-1',
+      organizationName: 'Acme Volunteers',
+      userId: user.id,
+    };
+    const expected = await membershipRemovedTemplate(
+      {
+        organizationName: payload.organizationName,
+        recipientFirstName: 'Sam',
+      },
+      createFixtureTranslator('en'),
+    );
+
+    notificationService.notifyMembershipRemoved(payload);
 
     await new Promise((resolve) => setTimeout(resolve, 50));
 

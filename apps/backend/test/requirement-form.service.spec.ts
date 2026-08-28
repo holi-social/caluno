@@ -7,6 +7,7 @@ import { DATABASE_CONNECTION } from '../src/database/database-connection';
 import { BadRequestGraphQLError } from '../src/graphql/errors';
 import { RequiredFormService } from '../src/requirement-profile/services/required-form.service';
 import { RequirementFormService } from '../src/requirement-profile/services/requirement-form.service';
+import { PostHogService } from '../src/shared/observability/posthog.service';
 import { createUser } from './factories';
 import {
   createOrganizationWithType,
@@ -32,7 +33,10 @@ describe('RequirementFormService block org scoping', () => {
 
     requirementFormService = new RequirementFormService(
       db,
-      new RequiredFormService(db),
+      new RequiredFormService(db, {
+        capture: () => {},
+      } as unknown as PostHogService),
+      { capture: () => {} } as unknown as PostHogService,
     );
 
     registerTestResourceCleanup(async () => {
@@ -168,6 +172,42 @@ describe('RequirementFormService block org scoping', () => {
           blockRefs: [{ blockId: crypto.randomUUID(), order: 0 }],
         },
         unit.id,
+        user.id,
+      ),
+    ).rejects.toBeInstanceOf(BadRequestGraphQLError);
+  });
+
+  it('update rejects empty block refs', async () => {
+    const { user, organization, unit } = await setupOrg('Form Org');
+    const { form } = await createRequirementForm(db, {
+      organizationId: organization.id,
+      organizationUnitId: unit.id,
+      createdById: user.id,
+    });
+
+    await expect(
+      requirementFormService.update(
+        form.id,
+        unit.id,
+        { blockRefs: [] },
+        user.id,
+      ),
+    ).rejects.toBeInstanceOf(BadRequestGraphQLError);
+  });
+
+  it('update rejects null block refs', async () => {
+    const { user, organization, unit } = await setupOrg('Form Org');
+    const { form } = await createRequirementForm(db, {
+      organizationId: organization.id,
+      organizationUnitId: unit.id,
+      createdById: user.id,
+    });
+
+    await expect(
+      requirementFormService.update(
+        form.id,
+        unit.id,
+        { blockRefs: null },
         user.id,
       ),
     ).rejects.toBeInstanceOf(BadRequestGraphQLError);

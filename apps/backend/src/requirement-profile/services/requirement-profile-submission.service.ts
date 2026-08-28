@@ -9,6 +9,11 @@ import { BadRequestGraphQLError } from '../../graphql/errors/bad-request.error';
 import type { PaginationInput } from '../../graphql/pagination.input';
 import type { MembershipEntity } from '../../membership/schemas/membership.schema';
 import type { MembershipRequestEntity } from '../../membership/schemas/membership-request.schema';
+import {
+  POSTHOG_EVENT,
+  POSTHOG_SURFACE,
+} from '../../shared/observability/posthog.events';
+import { PostHogService } from '../../shared/observability/posthog.service';
 import { FilePurpose } from '../../storage/enums';
 import { FileService } from '../../storage/services/file.service';
 import { UserService } from '../../user/user.service';
@@ -36,6 +41,7 @@ export class RequirementProfileSubmissionService {
     private readonly requirementProfileService: RequirementProfileService,
     private readonly requirementService: RequirementService,
     private readonly fileService: FileService,
+    private readonly postHogService: PostHogService,
   ) {}
 
   async findById(
@@ -78,7 +84,7 @@ export class RequirementProfileSubmissionService {
       );
     }
 
-    return this.db.transaction(async (tx) => {
+    const submission = await this.db.transaction(async (tx) => {
       const { fulfillments, ...submissionInput } = input;
       const requirementProfile = await this.findProfile(
         submissionInput.profileId,
@@ -88,7 +94,7 @@ export class RequirementProfileSubmissionService {
           userId,
           requirementProfile.organizationId,
         );
-      const [submission] = await tx
+      const [created] = await tx
         .insert(schema.requirementProfileSubmissions)
         .values(submissionInput)
         .returning();
@@ -113,7 +119,7 @@ export class RequirementProfileSubmissionService {
             return {
               requirementId: fulfillment.requirementId,
               profileId: organizationUserProfile.id,
-              submissionId: submission.id,
+              submissionId: created.id,
               type: requirementType,
               value,
             };
@@ -121,8 +127,19 @@ export class RequirementProfileSubmissionService {
         );
       }
 
-      return submission;
+      return { created, organizationId: requirementProfile.organizationId };
     });
+
+    this.postHogService.capture({
+      event: POSTHOG_EVENT.REQUIREMENT_PROFILE_SUBMISSION_CREATE,
+      userId,
+      properties: {
+        surface: POSTHOG_SURFACE.VOLUNTEERING,
+        organization_id: submission.organizationId,
+      },
+    });
+
+    return submission.created;
   }
 
   private getFulfillmentValue(
@@ -186,10 +203,24 @@ export class RequirementProfileSubmissionService {
         'Requirement profile submission not found',
       );
     }
+
+    if (reviewedById) {
+      this.postHogService.capture({
+        event: POSTHOG_EVENT.REQUIREMENT_PROFILE_SUBMISSION_UPDATE,
+        userId: reviewedById,
+        properties: {
+          surface: POSTHOG_SURFACE.BACKOFFICE,
+        },
+      });
+    }
+
     return submission;
   }
 
-  async delete(id: string): Promise<RequirementProfileSubmissionEntity> {
+  async delete(
+    id: string,
+    userId: string,
+  ): Promise<RequirementProfileSubmissionEntity> {
     const [submission] = await this.db
       .delete(schema.requirementProfileSubmissions)
       .where(eq(schema.requirementProfileSubmissions.id, id))
@@ -199,6 +230,15 @@ export class RequirementProfileSubmissionService {
         'Requirement profile submission not found',
       );
     }
+
+    this.postHogService.capture({
+      event: POSTHOG_EVENT.REQUIREMENT_PROFILE_SUBMISSION_DELETE,
+      userId,
+      properties: {
+        surface: POSTHOG_SURFACE.BACKOFFICE,
+      },
+    });
+
     return submission;
   }
 
@@ -278,10 +318,23 @@ export class RequirementProfileSubmissionService {
       throw new NotFoundGraphQLError('Requirement fulfillment not found');
     }
 
+    if (reviewerId) {
+      this.postHogService.capture({
+        event: POSTHOG_EVENT.REQUIREMENT_FULFILLMENT_UPDATE,
+        userId: reviewerId,
+        properties: {
+          surface: POSTHOG_SURFACE.BACKOFFICE,
+        },
+      });
+    }
+
     return fulfillment;
   }
 
-  async deleteFulfillment(id: string): Promise<RequirementFulfillmentEntity> {
+  async deleteFulfillment(
+    id: string,
+    userId: string,
+  ): Promise<RequirementFulfillmentEntity> {
     const [fulfillment] = await this.db
       .delete(schema.requirementFulfillments)
       .where(eq(schema.requirementFulfillments.id, id))
@@ -289,6 +342,15 @@ export class RequirementProfileSubmissionService {
     if (!fulfillment) {
       throw new NotFoundGraphQLError('Requirement fulfillment not found');
     }
+
+    this.postHogService.capture({
+      event: POSTHOG_EVENT.REQUIREMENT_FULFILLMENT_DELETE,
+      userId,
+      properties: {
+        surface: POSTHOG_SURFACE.BACKOFFICE,
+      },
+    });
+
     return fulfillment;
   }
 

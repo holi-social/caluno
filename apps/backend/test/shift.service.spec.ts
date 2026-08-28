@@ -13,6 +13,8 @@ import { MembershipService } from '../src/membership/membership.service';
 import { NotificationService } from '../src/notification/notification.service';
 import { OrganizationService } from '../src/organization/organization.service';
 import { ACTIVE_SHIFT_INVITE_STATUSES } from '../src/shared/invite-status';
+import { POSTHOG_EVENT } from '../src/shared/observability/posthog.events';
+import { PostHogService } from '../src/shared/observability/posthog.service';
 import { ShiftInviteStatus, ShiftVisibility } from '../src/shift/enums';
 import { ShiftService } from '../src/shift/shift.service';
 import { UserService } from '../src/user/user.service';
@@ -36,6 +38,8 @@ describe('ShiftService', () => {
   let organizationUnitId: string;
   let notificationService: NotificationService;
 
+  let capture: ReturnType<typeof mock>;
+
   beforeAll(async () => {
     await ensureTestDatabase();
     moduleRef = await Test.createTestingModule({
@@ -50,6 +54,8 @@ describe('ShiftService', () => {
       notifyShiftInstanceSeriesCancelled: mock(() => {}),
     } as unknown as NotificationService;
 
+    capture = mock(() => {});
+
     shiftService = new ShiftService(
       db,
       {} as AuthService,
@@ -63,6 +69,7 @@ describe('ShiftService', () => {
           'https://example.com/image.png',
       } as never,
       {} as never,
+      { capture } as unknown as PostHogService,
     );
 
     userId = (await createUser(db)).id;
@@ -1005,9 +1012,21 @@ describe('ShiftService', () => {
       const result = await shiftService.deleteShiftInstance(
         instances[0].id,
         organizationUnitId,
+        { actorUserId: userId },
       );
 
       expect(result.isCancelled).toBe(true);
+      expect(capture).toHaveBeenCalledWith(
+        expect.objectContaining({
+          event: POSTHOG_EVENT.SHIFT_INSTANCE_CANCEL,
+          userId,
+          properties: expect.objectContaining({
+            organization_unit_id: organizationUnitId,
+            shift_instance_id: instances[0].id,
+            apply_to_all_future: false,
+          }),
+        }),
+      );
 
       const [reloaded] = await getInstances(shift.id);
       expect(reloaded.isCancelled).toBe(true);

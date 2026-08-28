@@ -9,6 +9,12 @@ import {
   NotFoundGraphQLError,
 } from '../../graphql/errors';
 import type { PaginationInput } from '../../graphql/pagination.input';
+import {
+  POSTHOG_EVENT,
+  POSTHOG_SURFACE,
+  type PostHogSurface,
+} from '../../shared/observability/posthog.events';
+import { PostHogService } from '../../shared/observability/posthog.service';
 import { SYSTEM_PROFILE_KEYS } from '../constants';
 import { FieldType, FormSubmissionStatus } from '../enums';
 import { SubmitFormInput } from '../inputs/submit-form.input';
@@ -27,6 +33,7 @@ export class FormSubmissionService {
     private readonly db: Database,
     private readonly userProfileService: UserProfileService,
     private readonly requiredFormService: RequiredFormService,
+    private readonly postHogService: PostHogService,
   ) {}
 
   async findOrganizationUnitIdByFormId(
@@ -159,7 +166,9 @@ export class FormSubmissionService {
       throw new NotFoundGraphQLError('Form not found');
     }
 
-    return this.submitToForm(form, input, userId);
+    return this.submitToForm(form, input, userId, {
+      surface: POSTHOG_SURFACE.PUBLIC,
+    });
   }
 
   async submitRequiredForm(
@@ -186,13 +195,17 @@ export class FormSubmissionService {
       throw new NotFoundGraphQLError('Form not found');
     }
 
-    return this.submitToForm(form, input, userId);
+    return this.submitToForm(form, input, userId, {
+      surface: POSTHOG_SURFACE.VOLUNTEERING,
+      targetType: target.targetType.toLowerCase(),
+    });
   }
 
   private async submitToForm(
     form: schema.RequirementFormEntity,
     input: SubmitFormInput,
     userId: string,
+    captureContext: { surface: PostHogSurface; targetType?: string },
   ): Promise<FormSubmissionEntity> {
     const existing = await this.findByUserAndForm(userId, form.id);
     if (existing) {
@@ -360,6 +373,17 @@ export class FormSubmissionService {
       return created;
     });
 
+    this.postHogService.capture({
+      event: POSTHOG_EVENT.FORM_SUBMISSION_SUBMIT,
+      userId,
+      properties: {
+        surface: captureContext.surface,
+        organization_id: form.organizationId,
+        organization_unit_id: form.organizationUnitId ?? undefined,
+        target_type: captureContext.targetType,
+      },
+    });
+
     return submission;
   }
 
@@ -374,7 +398,7 @@ export class FormSubmissionService {
     if (forms.length === 0) return;
 
     const formIds = forms.map((f) => f.id);
-    await this.db
+    const rejected = await this.db
       .update(schema.formSubmissions)
       .set({ status: FormSubmissionStatus.REJECTED })
       .where(
@@ -383,7 +407,28 @@ export class FormSubmissionService {
           eq(schema.formSubmissions.status, FormSubmissionStatus.SUBMITTED),
           inArray(schema.formSubmissions.formId, formIds),
         ),
-      );
+      )
+      .returning({ id: schema.formSubmissions.id });
+
+    if (rejected.length === 0) {
+      return;
+    }
+
+    const organizationUnit = await this.db.query.organizationUnits.findFirst({
+      where: { id: organizationUnitId },
+      columns: { organizationId: true },
+    });
+
+    this.postHogService.capture({
+      event: POSTHOG_EVENT.FORM_SUBMISSION_REJECT,
+      userId,
+      properties: {
+        surface: POSTHOG_SURFACE.BACKOFFICE,
+        organization_id: organizationUnit?.organizationId ?? undefined,
+        organization_unit_id: organizationUnitId,
+        target_type: 'organization_unit',
+      },
+    });
   }
 
   private validateFieldValue(

@@ -184,6 +184,7 @@
         "createNew": "Create new",
         "dedupHint": "Volunteers won't be asked for information they've already provided.",
         "fileUploadLabel": "File upload",
+        "noBlocks": "No blocks",
         "noFormsFound": "No forms found",
         "pill": {
           "none": "No forms required",
@@ -789,6 +790,10 @@
       "shareLinkCopied": "Share link copied to clipboard",
       "submissionsWarning": "This form has submissions",
       "submissionsWarningDescription": "Editing is disabled because volunteers have already submitted responses. Create a copy if you need a new version.",
+      "unsavedChangesDescription": "You have unsaved changes. If you leave now, your changes will be lost.",
+      "unsavedChangesLeave": "Leave without saving",
+      "unsavedChangesStay": "Keep editing",
+      "unsavedChangesTitle": "Unsaved changes",
       "viewBlock": "View"
     },
     "card": {
@@ -1101,6 +1106,7 @@
         "createNew": "Create new",
         "dedupHint": "Volunteers won't be asked for information they've already provided.",
         "fileUploadLabel": "File upload",
+        "noBlocks": "No blocks",
         "noFormsFound": "No forms found",
         "pill": {
           "none": "No forms required",
@@ -1466,6 +1472,12 @@
     "action": {
       "checkInAria": "Check in",
       "checkInShiftAria": "Check in",
+      "remove": "Remove",
+      "removeAria": "Remove",
+      "removeDescription": "Are you sure you want to remove {name} from this organisation? This cannot be undone.",
+      "removeFailedToast": "Could not remove volunteer",
+      "removeTitle": "Remove from organisation",
+      "removedToast": "{name} was removed from this organisation",
       "viewProfileAria": "View"
     },
     "empty": {
@@ -1488,6 +1500,7 @@
       "createNew": "Create new",
       "dedupHint": "Volunteers won't be asked for information they've already provided.",
       "fileUploadLabel": "File upload",
+      "noBlocks": "No blocks",
       "noFormsFound": "No forms found",
       "pill": {
         "none": "No forms required",

@@ -88,6 +88,16 @@ export const EventForm = ({
     return (formsData?.items ?? []).filter((form) => !attachedIds.has(form.id));
   }, [requiredFormIds, formsData]);
 
+  const disabledFormIds = useMemo(
+    () =>
+      new Set(
+        (formsData?.items ?? [])
+          .filter((form) => (form.blockRefs?.length ?? 0) === 0)
+          .map((form) => form.id),
+      ),
+    [formsData],
+  );
+
   const { open, setOpen } = useFormSheet();
 
   const schema = eventFormSchema({
@@ -258,6 +268,7 @@ export const EventForm = ({
             open={commandOpen}
             onOpenChange={setCommandOpen}
             disabled={pending || isLoadingForms || availableForms.length === 0}
+            disabledFormIds={disabledFormIds}
             t={tForms}
           />
 

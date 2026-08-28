@@ -9,7 +9,7 @@ import { OrganizationMapper } from '../src/organization/mappers/organization.map
 import { OrganizationService } from '../src/organization/organization.service';
 import { OrganizationUnitService } from '../src/organization/organization-unit.service';
 import { OrganizationUnitDataService } from '../src/organization/organization-unit-data.service';
-import { PostHogCaptureService } from '../src/shared/observability/posthog.capture.service';
+import { PostHogService } from '../src/shared/observability/posthog.service';
 import { FileService } from '../src/storage/services';
 import { createUser } from './factories';
 import {
@@ -80,7 +80,7 @@ describe('OrganizationService', () => {
       {} as OrganizationUnitService,
       {} as NotificationService,
       {} as FileService,
-      { captureUserJoinedOrg: () => {} } as unknown as PostHogCaptureService,
+      { capture: () => {} } as unknown as PostHogService,
     );
 
     registerTestResourceCleanup(async () => {
@@ -396,6 +396,7 @@ describe('OrganizationUnitService', () => {
           'https://example.com/logo.png',
       } as never,
       new OrganizationUnitDataService(db),
+      { capture: () => {} } as never,
     );
 
     registerTestResourceCleanup(async () => {
@@ -422,12 +423,16 @@ describe('OrganizationUnitService', () => {
       });
       const originalSlug = child.slug;
 
-      const updated = await organizationUnitService.update(child.id, {
-        organizationId: organization.id,
-        name: 'Renamed Child',
-        typeId: type.id,
-        parentId: root.id,
-      });
+      const updated = await organizationUnitService.update(
+        child.id,
+        {
+          organizationId: organization.id,
+          name: 'Renamed Child',
+          typeId: type.id,
+          parentId: root.id,
+        },
+        (await createUser(db)).id,
+      );
 
       expect(updated.slug).toBe(originalSlug);
       expect(updated.name).toBe('Renamed Child');
