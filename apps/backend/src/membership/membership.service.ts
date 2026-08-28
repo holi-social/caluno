@@ -1,5 +1,5 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
-import { and, eq, inArray, sql } from 'drizzle-orm';
+import { and, eq, gte, inArray, sql } from 'drizzle-orm';
 import { AuthService } from '../auth/auth.service';
 import { DEFAULT_MEMBER_ROLE_NAME, PERMISSIONS } from '../auth/constants';
 import type { UserEntity } from '../auth/schemas/auth.schema';
@@ -15,7 +15,11 @@ import type { RequiredFormStatus } from '../requirement-profile/services/require
 import { RequiredFormService } from '../requirement-profile/services/required-form.service';
 import { RequirementProfileService } from '../requirement-profile/services/requirement-profile.service';
 import { JoinStatus } from '../shared/enums/join-status.enum';
-import { PostHogCaptureService } from '../shared/observability/posthog.capture.service';
+import {
+  POSTHOG_EVENT,
+  POSTHOG_SURFACE,
+} from '../shared/observability/posthog.events';
+import { PostHogService } from '../shared/observability/posthog.service';
 import { MembershipRequestStatus } from './enums';
 import { UpdateMembershipRequestInput } from './inputs/update-membership-request.input';
 import type { MembershipEntity } from './schemas/membership.schema';
@@ -35,7 +39,7 @@ export class MembershipService {
     private readonly authService: AuthService,
     private readonly notificationService: NotificationService,
     private readonly requiredFormService: RequiredFormService,
-    private readonly postHogCaptureService: PostHogCaptureService,
+    private readonly postHogService: PostHogService,
   ) {}
 
   private appendIntendedIdsToMetadata(
@@ -359,6 +363,71 @@ export class MembershipService {
     }
   }
 
+  private async notifyMembershipLeft(
+    userId: string,
+    organizationUnitId: string,
+  ): Promise<void> {
+    try {
+      const organizationUnit = await this.db.query.organizationUnits.findFirst({
+        where: { id: organizationUnitId },
+        columns: { id: true, name: true },
+      });
+
+      if (!organizationUnit) {
+        return;
+      }
+
+      const reviewers = await this.authService.findUsersWithPermission(
+        organizationUnitId,
+        PERMISSIONS.VOLUNTEER_EDIT,
+      );
+      const recipientUserIds = reviewers
+        .filter((reviewer) => reviewer.id !== userId)
+        .map((reviewer) => reviewer.id);
+
+      if (recipientUserIds.length === 0) {
+        return;
+      }
+
+      this.notificationService.notifyMembershipLeft({
+        organizationUnitId,
+        organizationUnitName: organizationUnit.name,
+        leaverUserId: userId,
+        recipientUserIds,
+      });
+    } catch (error) {
+      this.logger.error(
+        `Failed to emit membership left notification: ${error instanceof Error ? error.message : String(error)}`,
+      );
+    }
+  }
+
+  private async notifyMembershipRemoved(
+    userId: string,
+    organizationUnitId: string,
+  ): Promise<void> {
+    try {
+      const organizationUnit = await this.db.query.organizationUnits.findFirst({
+        where: { id: organizationUnitId },
+        columns: { id: true, name: true },
+      });
+
+      if (!organizationUnit) {
+        return;
+      }
+
+      this.notificationService.notifyMembershipRemoved({
+        organizationUnitId,
+        organizationName: organizationUnit.name,
+        userId,
+      });
+    } catch (error) {
+      this.logger.error(
+        `Failed to emit membership removed notification: ${error instanceof Error ? error.message : String(error)}`,
+      );
+    }
+  }
+
   // Membership requests
   async createMembershipRequest(
     userId: string,
@@ -412,6 +481,20 @@ export class MembershipService {
       .returning();
 
     void this.notifyMembershipRequested(userId, organizationUnitId);
+
+    const orgUnit = await this.db.query.organizationUnits.findFirst({
+      where: { id: organizationUnitId },
+    });
+    this.postHogService.capture({
+      event: POSTHOG_EVENT.MEMBERSHIP_REQUEST_SUBMIT,
+      userId,
+      properties: {
+        surface: POSTHOG_SURFACE.VOLUNTEERING,
+        organization_id: orgUnit?.organizationId,
+        organization_unit_id: organizationUnitId,
+        membership_request_id: membershipRequest.id,
+      },
+    });
 
     return membershipRequest;
   }
@@ -559,19 +642,42 @@ export class MembershipService {
       });
 
       if (organizationUnit.organizationId) {
+        this.postHogService.capture({
+          event: POSTHOG_EVENT.MEMBERSHIP_REQUEST_APPROVE,
+          userId: membershipRequest.userId,
+          properties: {
+            surface: POSTHOG_SURFACE.BACKOFFICE,
+            organization_id: organizationUnit.organizationId,
+            organization_unit_id: organizationUnitId,
+            membership_request_id: membershipRequest.id,
+            source: 'membership_approve',
+          },
+        });
+        this.postHogService.capture({
+          event: POSTHOG_EVENT.ORGANIZATION_UNIT_JOIN,
+          userId: membershipRequest.userId,
+          properties: {
+            surface: POSTHOG_SURFACE.BACKOFFICE,
+            organization_id: organizationUnit.organizationId,
+            organization_unit_id: organizationUnitId,
+            source: 'membership_approve',
+          },
+        });
         const membershipCount = await this.countUserMembershipsInOrganization(
           membershipRequest.userId,
           organizationUnit.organizationId,
         );
         if (membershipCount === 1) {
-          this.postHogCaptureService.captureUserJoinedOrg(
-            membershipRequest.userId,
-            {
-              organizationId: organizationUnit.organizationId,
-              organizationUnitId,
-              source: 'membership_approved',
+          this.postHogService.capture({
+            event: POSTHOG_EVENT.ORGANIZATION_JOIN,
+            userId: membershipRequest.userId,
+            properties: {
+              surface: POSTHOG_SURFACE.BACKOFFICE,
+              organization_id: organizationUnit.organizationId,
+              organization_unit_id: organizationUnitId,
+              source: 'membership_approve',
             },
-          );
+          });
         }
       }
     }
@@ -592,6 +698,22 @@ export class MembershipService {
       rejectionReason,
     });
 
+    if (request.userId) {
+      const orgUnit = await this.db.query.organizationUnits.findFirst({
+        where: { id: organizationUnitId },
+      });
+      this.postHogService.capture({
+        event: POSTHOG_EVENT.MEMBERSHIP_REQUEST_REJECT,
+        userId: request.userId,
+        properties: {
+          surface: POSTHOG_SURFACE.BACKOFFICE,
+          organization_id: orgUnit?.organizationId,
+          organization_unit_id: organizationUnitId,
+          membership_request_id: request.id,
+        },
+      });
+    }
+
     return request;
   }
 
@@ -600,7 +722,7 @@ export class MembershipService {
     organizationUnitId: string,
     userId: string,
   ): Promise<MembershipRequestEntity> {
-    return this.updateMembershipRequest(
+    const request = await this.updateMembershipRequest(
       id,
       organizationUnitId,
       {
@@ -608,24 +730,193 @@ export class MembershipService {
       },
       userId,
     );
+    const orgUnit = await this.db.query.organizationUnits.findFirst({
+      where: { id: organizationUnitId },
+    });
+    this.postHogService.capture({
+      event: POSTHOG_EVENT.MEMBERSHIP_REQUEST_CANCEL,
+      userId,
+      properties: {
+        surface: POSTHOG_SURFACE.VOLUNTEERING,
+        organization_id: orgUnit?.organizationId,
+        organization_unit_id: organizationUnitId,
+        membership_request_id: request.id,
+        source: 'self',
+      },
+    });
+    return request;
   }
 
   async leaveMembership(id: string, userId: string): Promise<MembershipEntity> {
-    const [deleted] = await this.db
-      .delete(schema.memberships)
-      .where(
-        and(
-          eq(schema.memberships.id, id),
-          eq(schema.memberships.userId, userId),
-        ),
-      )
-      .returning();
+    const { row, identity } = await this.db.transaction(async (tx) => {
+      const [deleted] = await tx
+        .delete(schema.memberships)
+        .where(
+          and(
+            eq(schema.memberships.id, id),
+            eq(schema.memberships.userId, userId),
+          ),
+        )
+        .returning();
 
-    if (!deleted) {
+      if (!deleted) {
+        throw new NotFoundGraphQLError('Membership not found');
+      }
+
+      const identity = this.membershipIdentity(deleted);
+      await this.purgeOrganizationUnitInvites(
+        tx,
+        identity.userId,
+        identity.organizationUnitId,
+      );
+
+      return { row: deleted, identity };
+    });
+
+    const orgUnit = row.organizationUnitId
+      ? await this.db.query.organizationUnits.findFirst({
+          where: { id: row.organizationUnitId },
+        })
+      : undefined;
+    this.postHogService.capture({
+      event: POSTHOG_EVENT.ORGANIZATION_UNIT_LEAVE,
+      userId,
+      properties: {
+        surface: POSTHOG_SURFACE.VOLUNTEERING,
+        organization_id: orgUnit?.organizationId ?? undefined,
+        organization_unit_id: row.organizationUnitId ?? undefined,
+        membership_id: row.id,
+        source: 'self',
+      },
+    });
+
+    void this.notifyMembershipLeft(
+      identity.userId,
+      identity.organizationUnitId,
+    );
+
+    return row;
+  }
+
+  async removeMembership(
+    id: string,
+    organizationUnitId: string,
+  ): Promise<MembershipEntity> {
+    const { row, identity } = await this.db.transaction(async (tx) => {
+      const [deleted] = await tx
+        .delete(schema.memberships)
+        .where(
+          and(
+            eq(schema.memberships.id, id),
+            eq(schema.memberships.organizationUnitId, organizationUnitId),
+          ),
+        )
+        .returning();
+
+      if (!deleted) {
+        throw new NotFoundGraphQLError('Membership not found');
+      }
+
+      const identity = this.membershipIdentity(deleted);
+      await this.purgeOrganizationUnitInvites(
+        tx,
+        identity.userId,
+        identity.organizationUnitId,
+      );
+      return { row: deleted, identity };
+    });
+
+    void this.notifyMembershipRemoved(
+      identity.userId,
+      identity.organizationUnitId,
+    );
+
+    return row;
+  }
+
+  private membershipIdentity(row: MembershipEntity): {
+    userId: string;
+    organizationUnitId: string;
+  } {
+    if (!row.userId || !row.organizationUnitId) {
       throw new NotFoundGraphQLError('Membership not found');
     }
+    return {
+      userId: row.userId,
+      organizationUnitId: row.organizationUnitId,
+    };
+  }
 
-    return deleted;
+  private async purgeOrganizationUnitInvites(
+    tx: Database,
+    userId: string,
+    organizationUnitId: string,
+  ): Promise<void> {
+    const now = new Date();
+
+    await tx.delete(schema.eventInvites).where(
+      and(
+        eq(schema.eventInvites.userId, userId),
+        inArray(
+          schema.eventInvites.eventId,
+          tx
+            .select({ id: schema.events.id })
+            .from(schema.events)
+            .where(
+              and(
+                eq(schema.events.organizationUnitId, organizationUnitId),
+                gte(schema.events.endsAt, now),
+              ),
+            ),
+        ),
+      ),
+    );
+
+    await tx.delete(schema.shiftInstanceInvites).where(
+      and(
+        eq(schema.shiftInstanceInvites.userId, userId),
+        inArray(
+          schema.shiftInstanceInvites.instanceId,
+          tx
+            .select({ id: schema.shiftInstances.id })
+            .from(schema.shiftInstances)
+            .innerJoin(
+              schema.shifts,
+              eq(schema.shiftInstances.masterId, schema.shifts.id),
+            )
+            .where(
+              and(
+                eq(schema.shifts.organizationUnitId, organizationUnitId),
+                gte(schema.shiftInstances.actualEndsAt, now),
+              ),
+            ),
+        ),
+      ),
+    );
+
+    await tx
+      .delete(schema.shiftInvites)
+      .where(
+        and(
+          eq(schema.shiftInvites.userId, userId),
+          inArray(
+            schema.shiftInvites.shiftId,
+            tx
+              .select({ id: schema.shifts.id })
+              .from(schema.shifts)
+              .where(eq(schema.shifts.organizationUnitId, organizationUnitId)),
+          ),
+        ),
+      );
+
+    await tx
+      .delete(schema.membershipRequests)
+      .where(
+        and(
+          eq(schema.membershipRequests.userId, userId),
+          eq(schema.membershipRequests.organizationUnitId, organizationUnitId),
+        ),
+      );
   }
 
   async removeMembershipRequest(
@@ -645,6 +936,20 @@ export class MembershipService {
     if (!deleted) {
       throw new NotFoundGraphQLError('Membership request not found');
     }
+
+    const orgUnit = await this.db.query.organizationUnits.findFirst({
+      where: { id: deleted.organizationUnitId },
+    });
+    this.postHogService.capture({
+      event: POSTHOG_EVENT.MEMBERSHIP_REQUEST_DELETE,
+      userId,
+      properties: {
+        surface: POSTHOG_SURFACE.VOLUNTEERING,
+        organization_id: orgUnit?.organizationId,
+        organization_unit_id: deleted.organizationUnitId,
+        membership_request_id: deleted.id,
+      },
+    });
 
     return deleted;
   }
@@ -765,6 +1070,15 @@ export class MembershipService {
     const missingForms = requiredFormStatuses.filter((s) => !s.submitted);
 
     if (requirementProfile || missingForms.length > 0) {
+      this.postHogService.capture({
+        event: POSTHOG_EVENT.MEMBERSHIP_REQUEST_START,
+        userId,
+        properties: {
+          surface: POSTHOG_SURFACE.VOLUNTEERING,
+          organization_id: orgUnit.organizationId ?? undefined,
+          organization_unit_id: organizationUnitId,
+        },
+      });
       return {
         status: 'REQUIREMENTS_NEEDED',
         ...(requirementProfile && {
@@ -804,10 +1118,22 @@ export class MembershipService {
         return { status: JoinStatus.PENDING, membershipRequest: existing };
       }
 
-      if (
-        existing.status === MembershipRequestStatus.REJECTED ||
-        existing.status === MembershipRequestStatus.CANCELLED
-      ) {
+      if (existing.status === MembershipRequestStatus.REJECTED) {
+        this.postHogService.capture({
+          event: POSTHOG_EVENT.MEMBERSHIP_REQUEST_REJECT,
+          userId,
+          properties: {
+            surface: POSTHOG_SURFACE.VOLUNTEERING,
+            organization_id: orgUnit.organizationId ?? undefined,
+            organization_unit_id: organizationUnitId,
+            membership_request_id: existing.id,
+            source: 'self_join',
+          },
+        });
+        return { status: JoinStatus.REJECTED, membershipRequest: existing };
+      }
+
+      if (existing.status === MembershipRequestStatus.CANCELLED) {
         return { status: JoinStatus.REJECTED, membershipRequest: existing };
       }
 
@@ -969,6 +1295,20 @@ export class MembershipService {
 
     if (!updatedMembership) {
       throw new NotFoundGraphQLError('Membership not found after update');
+    }
+
+    if (updatedMembership.userId) {
+      this.postHogService.capture({
+        event: POSTHOG_EVENT.MEMBERSHIP_UPDATE,
+        userId: updatedMembership.userId,
+        properties: {
+          surface: POSTHOG_SURFACE.BACKOFFICE,
+          organization_id: organizationId,
+          organization_unit_id:
+            updatedMembership.organizationUnitId ?? undefined,
+          membership_id: updatedMembership.id,
+        },
+      });
     }
 
     return updatedMembership;

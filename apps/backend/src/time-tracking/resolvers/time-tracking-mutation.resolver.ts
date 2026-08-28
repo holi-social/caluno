@@ -26,6 +26,7 @@ export class TimeTrackingMutationResolver {
     const entity = await this.timeTrackingService.addTimeEntry(
       context.organizationUnitId,
       input,
+      context.user.id,
     );
     return this.entryMapper.toModelOrThrow(entity);
   }
@@ -41,6 +42,7 @@ export class TimeTrackingMutationResolver {
       id,
       context.organizationUnitId,
       input,
+      context.user.id,
     );
     return this.entryMapper.toModelOrThrow(entity);
   }
@@ -56,6 +58,7 @@ export class TimeTrackingMutationResolver {
       id,
       context.organizationUnitId,
       input,
+      context.user.id,
     );
     return this.entryMapper.toModelOrThrow(entity);
   }
@@ -69,6 +72,7 @@ export class TimeTrackingMutationResolver {
     const entity = await this.timeTrackingService.deleteTimeEntry(
       context.organizationUnitId,
       id,
+      context.user.id,
     );
     return this.entryMapper.toModelOrThrow(entity);
   }

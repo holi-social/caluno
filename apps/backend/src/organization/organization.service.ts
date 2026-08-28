@@ -18,7 +18,11 @@ import {
 import type { PaginationInput } from '../graphql/pagination.input';
 import { MembershipService } from '../membership/membership.service';
 import { NotificationService } from '../notification';
-import { PostHogCaptureService } from '../shared/observability/posthog.capture.service';
+import {
+  POSTHOG_EVENT,
+  POSTHOG_SURFACE,
+} from '../shared/observability/posthog.events';
+import { PostHogService } from '../shared/observability/posthog.service';
 import { FilePurpose } from '../storage/enums';
 import { FileService } from '../storage/services/file.service';
 import { slugify } from '../utils';
@@ -47,7 +51,7 @@ export class OrganizationService {
     private readonly organizationUnitService: OrganizationUnitService,
     private readonly notificationService: NotificationService,
     private readonly fileService: FileService,
-    private readonly postHogCaptureService: PostHogCaptureService,
+    private readonly postHogService: PostHogService,
   ) {}
 
   async findById(id: string): Promise<OrganizationEntity | undefined> {
@@ -500,10 +504,24 @@ export class OrganizationService {
       userId,
     });
 
-    this.postHogCaptureService.captureUserJoinedOrg(userId, {
-      organizationId: organization.id,
-      organizationUnitId: rootUnit.id,
-      source: 'organization_created',
+    this.postHogService.capture({
+      event: POSTHOG_EVENT.ORGANIZATION_CREATE,
+      userId,
+      properties: {
+        surface: POSTHOG_SURFACE.BACKOFFICE,
+        organization_id: organization.id,
+        organization_unit_id: rootUnit.id,
+      },
+    });
+    this.postHogService.capture({
+      event: POSTHOG_EVENT.ORGANIZATION_JOIN,
+      userId,
+      properties: {
+        surface: POSTHOG_SURFACE.BACKOFFICE,
+        organization_id: organization.id,
+        organization_unit_id: rootUnit.id,
+        source: 'organization_create',
+      },
     });
 
     return this.mapper.toModelOrThrow(organization);

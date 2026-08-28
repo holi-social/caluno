@@ -10,6 +10,11 @@ import {
   NotFoundGraphQLError,
 } from '../graphql/errors';
 import type { PaginationInput } from '../graphql/pagination.input';
+import {
+  POSTHOG_EVENT,
+  POSTHOG_SURFACE,
+} from '../shared/observability/posthog.events';
+import { PostHogService } from '../shared/observability/posthog.service';
 import { startOfTodayInAppTimeZone } from '../shift/utils/app-time';
 import { FilePurpose } from '../storage/enums';
 import { FileService } from '../storage/services/file.service';
@@ -28,6 +33,7 @@ export class OrganizationUnitService {
     private readonly db: Database,
     private readonly fileService: FileService,
     private readonly organizationUnitDataService: OrganizationUnitDataService,
+    private readonly postHogService: PostHogService,
   ) {}
 
   async findById(id: string): Promise<OrganizationUnitEntity | undefined> {
@@ -179,6 +185,16 @@ export class OrganizationUnitService {
       return [unit];
     });
 
+    this.postHogService.capture({
+      event: POSTHOG_EVENT.ORGANIZATION_UNIT_CREATE,
+      userId,
+      properties: {
+        surface: POSTHOG_SURFACE.BACKOFFICE,
+        organization_id: organizationUnit.organizationId ?? undefined,
+        organization_unit_id: organizationUnit.id,
+      },
+    });
+
     return organizationUnit;
   }
 
@@ -210,6 +226,7 @@ export class OrganizationUnitService {
   async update(
     id: string,
     input: UpdateOrganizationUnitInput,
+    userId: string,
   ): Promise<OrganizationUnitEntity> {
     const unit = await this.findById(id);
 
@@ -270,6 +287,16 @@ export class OrganizationUnitService {
     if (!updated) {
       throw new NotFoundGraphQLError('Organization unit not found');
     }
+
+    this.postHogService.capture({
+      event: POSTHOG_EVENT.ORGANIZATION_UNIT_UPDATE,
+      userId,
+      properties: {
+        surface: POSTHOG_SURFACE.BACKOFFICE,
+        organization_id: updated.organizationId ?? undefined,
+        organization_unit_id: updated.id,
+      },
+    });
 
     return updated;
   }
@@ -336,7 +363,7 @@ export class OrganizationUnitService {
     return row?.total ?? 0;
   }
 
-  async delete(id: string): Promise<OrganizationUnitEntity> {
+  async delete(id: string, userId: string): Promise<OrganizationUnitEntity> {
     const unit = await this.findById(id);
 
     if (!unit) {
@@ -358,6 +385,16 @@ export class OrganizationUnitService {
     if (!deleted) {
       throw new NotFoundGraphQLError('Organization unit not found');
     }
+
+    this.postHogService.capture({
+      event: POSTHOG_EVENT.ORGANIZATION_UNIT_DELETE,
+      userId,
+      properties: {
+        surface: POSTHOG_SURFACE.BACKOFFICE,
+        organization_id: deleted.organizationId ?? undefined,
+        organization_unit_id: deleted.id,
+      },
+    });
 
     return deleted;
   }

@@ -3,6 +3,11 @@ import { eq } from 'drizzle-orm';
 import type { Database } from '../../database/database.module';
 import { DATABASE_CONNECTION } from '../../database/database-connection';
 import * as schema from '../../database/schema';
+import {
+  POSTHOG_EVENT,
+  POSTHOG_SURFACE,
+} from '../../shared/observability/posthog.events';
+import { PostHogService } from '../../shared/observability/posthog.service';
 import type { UserProfileEntity } from '../schemas/user-profile.schema';
 
 @Injectable()
@@ -10,6 +15,7 @@ export class UserProfileService {
   constructor(
     @Inject(DATABASE_CONNECTION)
     private readonly db: Database,
+    private readonly postHogService: PostHogService,
   ) {}
 
   async findByUserId(userId: string): Promise<UserProfileEntity | undefined> {
@@ -61,6 +67,7 @@ export class UserProfileService {
         .set({ data: merged })
         .where(eq(schema.userProfiles.id, existing.id))
         .returning();
+      this.captureProfileUpdate(userId, tx);
       return updated;
     }
 
@@ -69,6 +76,20 @@ export class UserProfileService {
       .values({ userId, data })
       .returning();
 
+    this.captureProfileUpdate(userId, tx);
     return created;
+  }
+
+  private captureProfileUpdate(userId: string, tx?: Database): void {
+    if (tx) {
+      return;
+    }
+    this.postHogService.capture({
+      event: POSTHOG_EVENT.USER_PROFILE_UPDATE,
+      userId,
+      properties: {
+        surface: POSTHOG_SURFACE.VOLUNTEERING,
+      },
+    });
   }
 }

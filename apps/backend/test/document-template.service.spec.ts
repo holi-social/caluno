@@ -15,6 +15,7 @@ import {
   ConflictGraphQLError,
   NotFoundGraphQLError,
 } from '../src/graphql/errors';
+import { PostHogService } from '../src/shared/observability/posthog.service';
 import { createReimbursementType } from './factories/accounting.factory';
 import {
   createOrganizationWithType,
@@ -37,7 +38,9 @@ describe('DocumentTemplateService', () => {
       imports: [ConfigModule.forRoot({ isGlobal: true }), DatabaseModule],
     }).compile();
     db = moduleRef.get<Database>(DATABASE_CONNECTION);
-    service = new DocumentTemplateService(db);
+    service = new DocumentTemplateService(db, {
+      capture: () => {},
+    } as unknown as PostHogService);
     registerTestResourceCleanup(async () => {
       await moduleRef.close();
     });
@@ -331,7 +334,11 @@ describe('DocumentTemplateService', () => {
         editor.id,
       );
 
-      await service.deleteDocumentTemplate(organization.id, template.id);
+      await service.deleteDocumentTemplate(
+        organization.id,
+        template.id,
+        editor.id,
+      );
 
       await expect(
         service.findDocumentTemplate(organization.id, template.id),
