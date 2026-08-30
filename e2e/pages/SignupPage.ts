@@ -14,6 +14,11 @@ export class SignupPage extends AuthPage {
     return this.page.getByRole('link', { name: 'Sign in' });
   }
 
+  // Privacy-policy consent checkbox that gates submit.
+  get consentCheckbox() {
+    return this.page.getByRole('checkbox').first();
+  }
+
   async goto() {
     await this.page.goto(this.url('/signup'), { waitUntil: 'load' });
   }
@@ -26,6 +31,7 @@ export class SignupPage extends AuthPage {
     await this.nameInput.fill(name);
     await this.emailInput.fill(email);
     await this.passwordInput.fill(password);
+    await this.consentCheckbox.check();
     const [res] = await Promise.all([
       this.page.waitForResponse(
         (r) => r.url().includes('/api/auth/sign-up/email'),
