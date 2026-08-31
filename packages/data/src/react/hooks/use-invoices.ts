@@ -80,6 +80,11 @@ export function useEligibleTimeEntriesForInvoice(input: {
 export function invalidateInvoiceQueries(queryClient: QueryClient) {
   queryClient.invalidateQueries({ queryKey: ['accounting', 'invoices'] });
   queryClient.invalidateQueries({ queryKey: ['accounting', 'my-invoices'] });
+  // The cross-org "My documents" views derive from the same data.
+  queryClient.invalidateQueries({ queryKey: ['accounting', 'my-documents'] });
+  queryClient.invalidateQueries({
+    queryKey: ['accounting', 'my-document-summary'],
+  });
   queryClient.invalidateQueries({ queryKey: ['accounting', 'roster-usage'] });
   queryClient.invalidateQueries({ queryKey: ['accounting', 'yearly-usage'] });
 }

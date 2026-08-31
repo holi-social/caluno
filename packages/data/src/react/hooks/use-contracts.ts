@@ -56,6 +56,11 @@ export function useContract(id?: string) {
 function invalidateContractQueries(queryClient: QueryClient) {
   queryClient.invalidateQueries({ queryKey: ['accounting', 'contracts'] });
   queryClient.invalidateQueries({ queryKey: ['accounting', 'my-contracts'] });
+  // The cross-org "My documents" views derive from the same data.
+  queryClient.invalidateQueries({ queryKey: ['accounting', 'my-documents'] });
+  queryClient.invalidateQueries({
+    queryKey: ['accounting', 'my-document-summary'],
+  });
 }
 
 export function useCreateContract() {

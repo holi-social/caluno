@@ -493,3 +493,26 @@ mutation SetManualBaseline(
     }
   }
 }
+
+query MyDocuments {
+  myDocuments {
+    membershipId
+    organizationUnitId
+    organizationUnitName
+    organizationName
+    logoUrl
+    contracts {
+      ...ContractSummaryFields
+    }
+    invoices {
+      ...InvoiceSummaryFields
+    }
+  }
+}
+
+query MyDocumentSummary {
+  myDocumentSummary {
+    total
+    pending
+  }
+}
