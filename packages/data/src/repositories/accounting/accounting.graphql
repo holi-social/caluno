@@ -189,6 +189,10 @@ fragment InvoiceSummaryFields on Invoice {
     id
     kind
   }
+  # Shift count for a timesheet card ("3 Shifts · 10 hours · 234 €").
+  invoiceTimeEntries {
+    id
+  }
   signatures {
     id
     order
