@@ -10,8 +10,14 @@ async function bootstrap() {
     bodyParser: false,
     bufferLogs: true,
   });
-  app.useLogger(app.get(Logger));
+  const logger = app.get(Logger);
+  app.useLogger(logger);
   app.enableShutdownHooks();
+  const onSignal = (signal: NodeJS.Signals) => {
+    logger.log({ signal }, 'shutdown signal received');
+  };
+  process.once('SIGTERM', onSignal);
+  process.once('SIGINT', onSignal);
   await app.listen(process.env.PORT ?? 8080);
 }
 void bootstrap();
