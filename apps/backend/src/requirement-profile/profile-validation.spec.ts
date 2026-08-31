@@ -1,10 +1,12 @@
 import { describe, expect, it } from 'bun:test';
-import { validateSystemKeyValue } from './profile-validation';
 import { BadRequestGraphQLError } from '../graphql/errors';
+import { validateSystemKeyValue } from './profile-validation';
 
 describe('validateSystemKeyValue', () => {
   const expectOk = (value: string, key: string) => {
-    expect(() => validateSystemKeyValue(value, key, 'Label', null)).not.toThrow();
+    expect(() =>
+      validateSystemKeyValue(value, key, 'Label', null),
+    ).not.toThrow();
   };
   const expectBad = (value: string, key: string) => {
     expect(() => validateSystemKeyValue(value, key, 'Label', null)).toThrow(

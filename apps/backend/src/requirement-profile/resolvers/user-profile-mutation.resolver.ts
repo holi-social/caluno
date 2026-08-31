@@ -6,8 +6,11 @@ import { SYSTEM_PROFILE_KEYS } from '../constants';
 import { UpdateUserProfileInput } from '../inputs/update-user-profile.input';
 import { UserProfileMapper } from '../mappers/user-profile.mapper';
 import { UserProfile } from '../models/user-profile.model';
+import {
+  formatSystemKeyLabel,
+  validateSystemKeyValue,
+} from '../profile-validation';
 import { UserProfileService } from '../services';
-import { formatSystemKeyLabel, validateSystemKeyValue } from '../profile-validation';
 
 @Resolver(() => UserProfile)
 export class UserProfileMutationResolver {
