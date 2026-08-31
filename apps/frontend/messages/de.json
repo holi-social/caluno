@@ -375,6 +375,8 @@
         "sign": "Unterschreiben",
         "decline": "Ablehnen"
       },
+      "missingProfileWarning": "In deinem Profil fehlen Angaben, die dieses Dokument benötigt.",
+      "missingProfileCta": "Profil vervollständigen, um zu unterschreiben",
       "toasts": {
         "signed": "{name} unterschrieben.",
         "signedError": "{name} konnte nicht unterschrieben werden. Bitte erneut versuchen.",
@@ -697,7 +699,8 @@
         "firstName": "Wie auf deinem Ausweis",
         "iban": "Für Aufwandsentschädigungen",
         "lastName": "Wie auf deinem Ausweis",
-        "preferredName": "Falls du anders angesprochen werden möchtest"
+        "preferredName": "Falls du anders angesprochen werden möchtest",
+        "bic": "Bankleitzahl (BIC) deines Kontos"
       }
     },
     "language": "Sprache",
@@ -904,6 +907,7 @@
       "firstName": "Vorname",
       "gender": "Geschlecht",
       "iban": "IBAN",
+      "bic": "BIC",
       "infoText": "Infotext",
       "labelLabel": "Bezeichnung",
       "labelPlaceholder": "z. B. Lieblingsfarbe",
