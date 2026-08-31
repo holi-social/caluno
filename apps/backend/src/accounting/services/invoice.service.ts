@@ -30,6 +30,7 @@ import type { InvoiceEntity } from '../schemas/invoice.schema';
 import type { InvoiceStatusChangeEntity } from '../schemas/invoice-status-change.schema';
 import { ContractService } from './contract.service';
 import { DocumentNotificationService } from './document-notification.service';
+import { DocumentRenderingService } from './document-rendering.service';
 import { DocumentSigningService } from './document-signing.service';
 import { DocumentTemplateService } from './document-template.service';
 import { ReimbursementRateService } from './reimbursement-rate.service';
@@ -44,6 +45,7 @@ export class InvoiceService {
     private readonly reimbursementRateService: ReimbursementRateService,
     private readonly contractService: ContractService,
     private readonly documentNotificationService: DocumentNotificationService,
+    private readonly documentRenderingService: DocumentRenderingService,
     private readonly postHogService: PostHogService,
   ) {}
 
@@ -330,6 +332,13 @@ export class InvoiceService {
 
       return signed;
     });
+
+    // The timesheet is complete — render its PDF so it can be downloaded.
+    // Failures are logged, never thrown: signing still succeeds.
+    if (isFinal) {
+      const full = await this.findInvoice(invoiceId);
+      await this.documentRenderingService.renderAndAttachPdf(full, userId);
+    }
 
     this.postHogService.capture({
       event: POSTHOG_EVENT.INVOICE_SIGN,

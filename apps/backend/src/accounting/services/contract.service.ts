@@ -27,6 +27,7 @@ import type { CreateContractInput } from '../inputs/create-contract.input';
 import type { ContractEntity } from '../schemas/contract.schema';
 import type { ContractStatusChangeEntity } from '../schemas/contract-status-change.schema';
 import { DocumentNotificationService } from './document-notification.service';
+import { DocumentRenderingService } from './document-rendering.service';
 import { DocumentSigningService } from './document-signing.service';
 import { DocumentTemplateService } from './document-template.service';
 
@@ -38,6 +39,7 @@ export class ContractService {
     private readonly documentTemplateService: DocumentTemplateService,
     private readonly documentSigningService: DocumentSigningService,
     private readonly documentNotificationService: DocumentNotificationService,
+    private readonly documentRenderingService: DocumentRenderingService,
     private readonly postHogService: PostHogService,
   ) {}
 
@@ -253,6 +255,13 @@ export class ContractService {
 
       return signed;
     });
+
+    // The document is complete — render its PDF so it can be downloaded.
+    // Failures are logged, never thrown: signing still succeeds.
+    if (isFinal) {
+      const full = await this.findContract(contractId);
+      await this.documentRenderingService.renderAndAttachPdf(full, userId);
+    }
 
     this.postHogService.capture({
       event: POSTHOG_EVENT.CONTRACT_SIGN,

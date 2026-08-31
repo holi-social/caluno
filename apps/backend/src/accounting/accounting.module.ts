@@ -3,6 +3,7 @@ import { AuthModule } from '../auth/auth.module';
 import { DatabaseModule } from '../database/database.module';
 import { MembershipModule } from '../membership/membership.module';
 import { NotificationModule } from '../notification/notification.module';
+import { RequirementProfileModule } from '../requirement-profile/requirement-profile.module';
 import { OrganizationModule } from '../organization/organization.module';
 import { OrganizationUnitDataModule } from '../organization/organization-unit-data.module';
 import { StorageModule } from '../storage/storage.module';
@@ -72,6 +73,7 @@ import {
     MembershipModule,
     StorageModule,
     NotificationModule,
+    RequirementProfileModule,
   ],
   providers: [
     AccountingOrgAccessService,
@@ -125,6 +127,7 @@ import {
     DocumentTemplateService,
     DocumentSigningService,
     DocumentNotificationService,
+    DocumentRenderingService,
     ContractService,
     InvoiceService,
   ],
