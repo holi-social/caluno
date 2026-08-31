@@ -29,6 +29,7 @@ import type { CreateInvoiceInput } from '../inputs/create-invoice.input';
 import type { InvoiceEntity } from '../schemas/invoice.schema';
 import type { InvoiceStatusChangeEntity } from '../schemas/invoice-status-change.schema';
 import { ContractService } from './contract.service';
+import { DocumentNotificationService } from './document-notification.service';
 import { DocumentSigningService } from './document-signing.service';
 import { DocumentTemplateService } from './document-template.service';
 import { ReimbursementRateService } from './reimbursement-rate.service';
@@ -42,6 +43,7 @@ export class InvoiceService {
     private readonly documentSigningService: DocumentSigningService,
     private readonly reimbursementRateService: ReimbursementRateService,
     private readonly contractService: ContractService,
+    private readonly documentNotificationService: DocumentNotificationService,
     private readonly postHogService: PostHogService,
   ) {}
 
@@ -241,6 +243,17 @@ export class InvoiceService {
       },
     });
 
+    // The volunteer only hears about the document when it needs their
+    // signature — generation itself is not news (accounting-volunteer-documents).
+    if (invoice.invoiceStatus === InvoiceStatus.AWAITING_VOLUNTEER_SIGNATURE) {
+      await this.documentNotificationService.notifyAwaitingVolunteerSignature({
+        organizationId,
+        volunteerUserId: invoice.volunteerId,
+        documentId: invoice.id,
+        documentKind: DocumentKind.INVOICE,
+      });
+    }
+
     return invoice;
   }
 
@@ -393,6 +406,21 @@ export class InvoiceService {
         ),
       },
     });
+
+    // Only the org-side decline is news to the volunteer — they had signed
+    // and would otherwise never learn the document is dead. A decline by the
+    // volunteer themselves is their own doing, so no email.
+    if (updated.declinedAtSigneeType === SigneeType.PERMISSION_HOLDER) {
+      await this.documentNotificationService.notifyDeclinedByOrg({
+        organizationId: this.documentSigningService.organizationIdOf(
+          invoice.documentTemplate,
+        ),
+        volunteerUserId: invoice.volunteerId,
+        documentId: invoiceId,
+        documentKind: DocumentKind.INVOICE,
+        reason,
+      });
+    }
 
     return updated;
   }

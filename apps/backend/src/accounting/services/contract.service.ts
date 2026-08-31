@@ -26,6 +26,7 @@ import {
 import type { CreateContractInput } from '../inputs/create-contract.input';
 import type { ContractEntity } from '../schemas/contract.schema';
 import type { ContractStatusChangeEntity } from '../schemas/contract-status-change.schema';
+import { DocumentNotificationService } from './document-notification.service';
 import { DocumentSigningService } from './document-signing.service';
 import { DocumentTemplateService } from './document-template.service';
 
@@ -36,6 +37,7 @@ export class ContractService {
     private readonly db: Database,
     private readonly documentTemplateService: DocumentTemplateService,
     private readonly documentSigningService: DocumentSigningService,
+    private readonly documentNotificationService: DocumentNotificationService,
     private readonly postHogService: PostHogService,
   ) {}
 
@@ -166,6 +168,19 @@ export class ContractService {
         organization_unit_id: input.organizationUnitId ?? undefined,
       },
     });
+
+    // The volunteer only hears about the document when it needs their
+    // signature — generation itself is not news (accounting-volunteer-documents).
+    if (
+      contract.contractStatus === ContractStatus.AWAITING_VOLUNTEER_SIGNATURE
+    ) {
+      await this.documentNotificationService.notifyAwaitingVolunteerSignature({
+        organizationId,
+        volunteerUserId: contract.volunteerId,
+        documentId: contract.id,
+        documentKind: DocumentKind.CONTRACT,
+      });
+    }
 
     return contract;
   }
@@ -317,6 +332,21 @@ export class ContractService {
         ),
       },
     });
+
+    // Only the org-side decline is news to the volunteer — they had signed
+    // and would otherwise never learn the document is dead. A decline by the
+    // volunteer themselves is their own doing, so no email.
+    if (updated.declinedAtSigneeType === SigneeType.PERMISSION_HOLDER) {
+      await this.documentNotificationService.notifyDeclinedByOrg({
+        organizationId: this.documentSigningService.organizationIdOf(
+          contract.documentTemplate,
+        ),
+        volunteerUserId: contract.volunteerId,
+        documentId: contractId,
+        documentKind: DocumentKind.CONTRACT,
+        reason,
+      });
+    }
 
     return updated;
   }

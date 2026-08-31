@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { AuthModule } from '../auth/auth.module';
 import { DatabaseModule } from '../database/database.module';
 import { MembershipModule } from '../membership/membership.module';
+import { NotificationModule } from '../notification/notification.module';
 import { OrganizationModule } from '../organization/organization.module';
 import { OrganizationUnitDataModule } from '../organization/organization-unit-data.module';
 import { StorageModule } from '../storage/storage.module';
@@ -49,6 +50,7 @@ import {
 } from './resolvers';
 import {
   ContractService,
+  DocumentNotificationService,
   DocumentRenderingService,
   DocumentSigningService,
   DocumentTemplateService,
@@ -66,12 +68,14 @@ import {
     TimeTrackingModule,
     MembershipModule,
     StorageModule,
+    NotificationModule,
   ],
   providers: [
     ReimbursementRateService,
     DocumentTemplateService,
     DocumentRenderingService,
     DocumentSigningService,
+    DocumentNotificationService,
     ContractService,
     InvoiceService,
     ContractMapper,
@@ -114,6 +118,7 @@ import {
     ReimbursementRateService,
     DocumentTemplateService,
     DocumentSigningService,
+    DocumentNotificationService,
     ContractService,
     InvoiceService,
   ],
