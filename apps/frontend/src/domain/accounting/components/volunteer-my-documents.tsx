@@ -112,77 +112,80 @@ export function VolunteerMyDocuments() {
   const declineName = declineTarget ? tNames(declineTarget.nameKey) : '';
 
   return (
-    // Multiple, all open by default — landing on the page shows every org's
-    // documents right away; collapse the orgs you don't care about.
-    <Accordion
-      type="multiple"
-      defaultValue={groups.map((group) => group.organizationUnitId)}
-      className="w-full"
-    >
-      {groups.map((group) => {
-        const visible = visibleByOrg[group.organizationUnitId] ?? DOCS_PER_PAGE;
-        const pendingInOrg = group.docs.filter(
-          (doc) => doc.state === 'awaiting-signature',
-        ).length;
+    <>
+      {/* Multiple, all open by default — landing on the page shows every
+          org's documents right away; collapse the orgs you don't care about. */}
+      <Accordion
+        type="multiple"
+        defaultValue={groups.map((group) => group.organizationUnitId)}
+        className="w-full"
+      >
+        {groups.map((group) => {
+          const visible =
+            visibleByOrg[group.organizationUnitId] ?? DOCS_PER_PAGE;
+          const pendingInOrg = group.docs.filter(
+            (doc) => doc.state === 'awaiting-signature',
+          ).length;
 
-        return (
-          <AccordionItem
-            key={group.organizationUnitId}
-            value={group.organizationUnitId}
-            className="rounded-xl border border-border bg-card px-4"
-          >
-            <AccordionTrigger className="gap-3">
-              <span className="flex min-w-0 flex-1 items-center gap-2">
-                <span className="truncate text-base font-semibold">
-                  {group.organizationName}
+          return (
+            <AccordionItem
+              key={group.organizationUnitId}
+              value={group.organizationUnitId}
+              className="rounded-xl border border-border bg-card px-4"
+            >
+              <AccordionTrigger className="gap-3">
+                <span className="flex min-w-0 flex-1 items-center gap-2">
+                  <span className="truncate text-base font-semibold">
+                    {group.organizationName}
+                  </span>
+                  {group.organizationUnitName !== group.organizationName && (
+                    <span className="truncate text-sm text-muted-foreground">
+                      · {group.organizationUnitName}
+                    </span>
+                  )}
                 </span>
-                {group.organizationUnitName !== group.organizationName && (
-                  <span className="truncate text-sm text-muted-foreground">
-                    · {group.organizationUnitName}
+                {pendingInOrg > 0 && (
+                  <span className="rounded-full bg-destructive px-2 py-0.5 text-xs font-medium text-white tabular-nums">
+                    {pendingInOrg}
                   </span>
                 )}
-              </span>
-              {pendingInOrg > 0 && (
-                <span className="rounded-full bg-destructive px-2 py-0.5 text-xs font-medium text-white tabular-nums">
-                  {pendingInOrg}
-                </span>
-              )}
-            </AccordionTrigger>
-            <AccordionContent className="pb-4">
-              <div className="flex flex-col gap-3">
-                {group.docs.slice(0, visible).map((document) => (
-                  <VolunteerDocumentCard
-                    key={`${document.kind}-${document.id}`}
-                    document={document}
-                    onSign={sign}
-                    onDecline={setDeclineTarget}
-                    onDownload={download}
-                    onOpen={handleOpen(group.membershipId)}
-                  />
-                ))}
-                {visible < group.docs.length && (
-                  <Button
-                    variant="ghost"
-                    className="w-full"
-                    onClick={() =>
-                      setVisibleByOrg((prev) => ({
-                        ...prev,
-                        [group.organizationUnitId]:
-                          (prev[group.organizationUnitId] ?? DOCS_PER_PAGE) +
-                          DOCS_PER_PAGE,
-                      }))
-                    }
-                  >
-                    {t('loadMore', {
-                      remaining: group.docs.length - visible,
-                    })}
-                  </Button>
-                )}
-              </div>
-            </AccordionContent>
-          </AccordionItem>
-        );
-      })}
+              </AccordionTrigger>
+              <AccordionContent className="pb-4">
+                <div className="flex flex-col gap-3">
+                  {group.docs.slice(0, visible).map((document) => (
+                    <VolunteerDocumentCard
+                      key={`${document.kind}-${document.id}`}
+                      document={document}
+                      onSign={sign}
+                      onDecline={setDeclineTarget}
+                      onDownload={download}
+                      onOpen={handleOpen(group.membershipId)}
+                    />
+                  ))}
+                  {visible < group.docs.length && (
+                    <Button
+                      variant="ghost"
+                      className="w-full"
+                      onClick={() =>
+                        setVisibleByOrg((prev) => ({
+                          ...prev,
+                          [group.organizationUnitId]:
+                            (prev[group.organizationUnitId] ?? DOCS_PER_PAGE) +
+                            DOCS_PER_PAGE,
+                        }))
+                      }
+                    >
+                      {t('loadMore', {
+                        remaining: group.docs.length - visible,
+                      })}
+                    </Button>
+                  )}
+                </div>
+              </AccordionContent>
+            </AccordionItem>
+          );
+        })}
+      </Accordion>
 
       <VolunteerDocumentDeclineSheet
         open={declineTarget !== null}
@@ -195,6 +198,6 @@ export function VolunteerMyDocuments() {
           setDeclineTarget(null);
         }}
       />
-    </Accordion>
+    </>
   );
 }

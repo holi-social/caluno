@@ -267,7 +267,10 @@ export function CreateDocumentModal({
                           // breaks hydration). It's a stub for now anyway —
                           // needs a real userId to open the volunteer-profile
                           // sheet.
-                          <span className="shrink-0 inline-flex items-center justify-center gap-2 rounded-md border border-border bg-background px-3 text-sm font-medium whitespace-nowrap text-foreground shadow-xs h-8">
+                          <span
+                            onClick={(e) => e.stopPropagation()}
+                            className="shrink-0 inline-flex items-center justify-center gap-2 rounded-md border border-border bg-background px-3 text-sm font-medium whitespace-nowrap text-foreground shadow-xs h-8"
+                          >
                             {t('createDocumentModal.viewVolunteer')}
                           </span>
                         )}

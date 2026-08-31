@@ -2,14 +2,10 @@ import { describe, expect, it } from 'bun:test';
 import { DocumentProfileRequirementService } from './document-profile-requirement.service';
 
 describe('DocumentProfileRequirementService', () => {
-  const db = {} as never;
   const userProfileService = {
     findByUserId: () => Promise.resolve(undefined),
   } as never;
-  const service = new DocumentProfileRequirementService(
-    db,
-    userProfileService,
-  );
+  const service = new DocumentProfileRequirementService(userProfileService);
 
   it('collects profile-required sources from enabled lines only', () => {
     const body = {
@@ -78,15 +74,12 @@ describe('DocumentProfileRequirementService', () => {
   });
 
   it('reports a source as missing when the profile value is empty', async () => {
-    const serviceWithProfile = new DocumentProfileRequirementService(
-      db,
-      {
-        findByUserId: () =>
-          Promise.resolve({
-            data: { iban: 'DE00 0000 0000 0000 0000 00', bic: '' },
-          }),
-      } as never,
-    );
+    const serviceWithProfile = new DocumentProfileRequirementService({
+      findByUserId: () =>
+        Promise.resolve({
+          data: { iban: 'DE00 0000 0000 0000 0000 00', bic: '' },
+        }),
+    } as never);
     const body = {
       blocks: [
         {

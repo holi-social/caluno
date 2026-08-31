@@ -11,49 +11,16 @@ import type {
   ContractWithRelations,
   InvoiceWithRelations,
 } from '../accounting.types';
+import {
+  PROFILE_SOURCE_TO_PROFILE_KEY,
+  type TemplateBlockShape,
+  type TemplateBodyShape,
+  type TemplateFieldShape,
+  type TemplateLineShape,
+} from './document-template.types';
 import { ReimbursementRateService } from './reimbursement-rate.service';
 
 type RenderableDocument = ContractWithRelations | InvoiceWithRelations;
-
-/** Structural view of the template body the renderer understands. */
-interface TemplateFieldShape {
-  id: string;
-  value:
-    | { kind: 'bound'; source: string }
-    | { kind: 'manual-template'; value?: string };
-}
-
-interface TemplateLineShape {
-  id: string;
-  text: string;
-  fields: TemplateFieldShape[];
-  enabled?: boolean;
-}
-
-interface TemplateBlockShape {
-  id: string;
-  kind?: string;
-  title?: string;
-  enabled?: boolean;
-  lines?: TemplateLineShape[];
-  /** Note blocks carry a single line instead of an array. */
-  line?: TemplateLineShape;
-  /** Table blocks. */
-  columns?: string[];
-}
-
-interface TemplateBodyShape {
-  header?: {
-    titleLines?: string[];
-    metaLines?: TemplateLineShape[];
-    orgIdentityLine?: TemplateLineShape;
-  };
-  blocks?: TemplateBlockShape[];
-  footer?: {
-    closingLine?: TemplateLineShape;
-    showSignatures?: boolean;
-  };
-}
 
 const EUR = '€';
 
@@ -178,7 +145,10 @@ export class DocumentRenderingService {
         });
     }
     pdf.moveDown(1);
-    pdf.moveTo(48, pdf.y).lineTo(pdf.page.width - 48, pdf.y).stroke();
+    pdf
+      .moveTo(48, pdf.y)
+      .lineTo(pdf.page.width - 48, pdf.y)
+      .stroke();
     pdf.moveDown(0.75);
   }
 
@@ -247,7 +217,10 @@ export class DocumentRenderingService {
       }
       pdf.moveDown(maxHeight / 9 + 0.4);
       const lineY = pdf.y;
-      pdf.moveTo(48, lineY).lineTo(48 + pageWidth, lineY).stroke();
+      pdf
+        .moveTo(48, lineY)
+        .lineTo(48 + pageWidth, lineY)
+        .stroke();
     };
 
     drawRow(columns, true);
@@ -407,10 +380,18 @@ export class DocumentRenderingService {
       volunteer_name: volunteer?.name ?? '',
       volunteer_first_name: firstName,
       volunteer_last_name: lastName,
-      volunteer_address: str(profileData.address),
-      volunteer_dob: str(profileData['birth-date']),
-      volunteer_iban: str(profileData.iban),
-      volunteer_bic: str(profileData.bic),
+      volunteer_address: str(
+        profileData[PROFILE_SOURCE_TO_PROFILE_KEY.volunteer_address],
+      ),
+      volunteer_dob: str(
+        profileData[PROFILE_SOURCE_TO_PROFILE_KEY.volunteer_dob],
+      ),
+      volunteer_iban: str(
+        profileData[PROFILE_SOURCE_TO_PROFILE_KEY.volunteer_iban],
+      ),
+      volunteer_bic: str(
+        profileData[PROFILE_SOURCE_TO_PROFILE_KEY.volunteer_bic],
+      ),
       hourly_rate: rateCents !== undefined ? this.formatRate(rateCents) : '',
       total_hours: totalHours !== undefined ? `${totalHours}h` : '',
       total_amount:

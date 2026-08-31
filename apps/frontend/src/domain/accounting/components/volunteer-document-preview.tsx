@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useState } from 'react';
+import { Link } from '@/i18n/navigation';
 import { useFormatting } from '@/lib/formatting/use-formatting';
 import { useVolunteerDocumentActions } from '../hooks/use-volunteer-document-actions';
 import {
@@ -54,6 +55,7 @@ export function VolunteerDocumentPreview({
       : invoiceQuery.data?.invoiceStatus;
   const periodStart = detail?.periodStart;
   const downloadUrl = detail?.downloadUrl;
+  const missingProfileFields = detail?.missingProfileFields ?? [];
 
   const formatMonth = (date: Date) =>
     formatDate(date, { month: 'long', year: 'numeric' });
@@ -113,11 +115,25 @@ export function VolunteerDocumentPreview({
               <>
                 <Button
                   className="w-full"
+                  disabled={missingProfileFields.length > 0}
                   onClick={() => sign(currentDocument)}
                 >
                   <SignatureIcon />
                   {t('actions.sign')}
                 </Button>
+                {missingProfileFields.length > 0 && (
+                  <div className="flex flex-col gap-1 px-1">
+                    <p className="text-xs text-muted-foreground">
+                      {t('missingProfileWarning')}
+                    </p>
+                    <Link
+                      href="/profile"
+                      className="text-xs font-medium text-primary underline underline-offset-2"
+                    >
+                      {t('missingProfileCta')}
+                    </Link>
+                  </div>
+                )}
                 <Button
                   variant="destructive"
                   className="w-full"
