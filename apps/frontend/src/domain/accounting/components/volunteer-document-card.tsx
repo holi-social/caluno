@@ -90,7 +90,11 @@ export function VolunteerDocumentCard({
   const awaitingSignature = document.state === 'awaiting-signature';
 
   return (
-    <div className="flex w-full flex-col gap-3 rounded-xl border border-border bg-card p-4 text-left transition-colors hover:bg-accent/40">
+    <div
+      data-testid="volunteer-document-card"
+      data-state={document.state}
+      className="flex w-full flex-col gap-3 rounded-xl border border-border bg-card p-4 text-left transition-colors hover:bg-accent/40"
+    >
       {/* The card header opens the preview; action buttons below stop their own propagation. */}
       <button
         type="button"
