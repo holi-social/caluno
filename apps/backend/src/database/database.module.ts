@@ -20,6 +20,12 @@ export type Database = NodePgDatabase<typeof relations>;
           password: configService.getOrThrow('DB_PASSWORD'),
           database: configService.getOrThrow('DB_NAME'),
           ssl: false,
+          max: parseInt(configService.get('DB_POOL_MAX') ?? '25', 10),
+          idleTimeoutMillis: parseInt(
+            configService.get('DB_POOL_IDLE_TIMEOUT_MS') ?? '120000',
+            10,
+          ),
+          keepAlive: true,
         });
         const db = drizzle({
           client: pool,
