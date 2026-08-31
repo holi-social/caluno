@@ -261,18 +261,15 @@ export function CreateDocumentModal({
                         </div>
 
                         {count > 0 && (
-                          <Button
-                            type="button"
-                            size="sm"
-                            variant="outline"
-                            className="shrink-0"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              // Stub — needs a real userId to open the admin/volunteers 'volunteer-profile' sheet.
-                            }}
-                          >
+                          // Rendered as a span, not a Button: it sits inside
+                          // the selectable line's <button>, and nesting a
+                          // <button> inside a <button> is invalid HTML (and
+                          // breaks hydration). It's a stub for now anyway —
+                          // needs a real userId to open the volunteer-profile
+                          // sheet.
+                          <span className="shrink-0 inline-flex items-center justify-center gap-2 rounded-md border border-border bg-background px-3 text-sm font-medium whitespace-nowrap text-foreground shadow-xs h-8">
                             {t('createDocumentModal.viewVolunteer')}
-                          </Button>
+                          </span>
                         )}
                       </button>
                     );
