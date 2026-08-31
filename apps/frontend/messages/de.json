@@ -349,6 +349,54 @@
       "fieldColumn": "Feld",
       "noFields": "Dieses Formular hat keine Felder.",
       "submittedOn": "Eingereicht am {date}"
+    },
+    "documents": {
+      "title": "Deine Dokumente",
+      "subtitle": "Vereinbarungen und Stundennachweise für Aufwandsentschädigungen",
+      "names": {
+        "agreement": "Zusatzvereinbarung",
+        "timesheet": "Stundennachweis"
+      },
+      "status": {
+        "awaiting-signature": "Zu unterschreiben",
+        "awaiting-countersignature": "Zu gegenzeichnen",
+        "signed": "Aktiv",
+        "declined": "Abgelehnt"
+      },
+      "figures": "{shifts} Einsätze · {hours} Stunden · {amount}",
+      "lines": {
+        "generated": "Generiert am {date} von {name}",
+        "signedByMe": "Du hast am {date} unterschrieben",
+        "countersignedBy": "{name} hat am {date} gegensigniert",
+        "declinedBy": "{name} hat am {date} abgelehnt"
+      },
+      "actions": {
+        "download": "Herunterladen",
+        "sign": "Unterschreiben",
+        "decline": "Ablehnen"
+      },
+      "toasts": {
+        "signed": "{name} unterschrieben.",
+        "signedError": "{name} konnte nicht unterschrieben werden. Bitte erneut versuchen.",
+        "declined": "{name} abgelehnt.",
+        "declinedError": "{name} konnte nicht abgelehnt werden. Bitte erneut versuchen.",
+        "downloadUnavailable": "Das Dokument ist noch nicht zum Herunterladen verfügbar."
+      },
+      "empty": {
+        "title": "Noch keine Dokumente",
+        "description": "Vereinbarungen und Stundennachweise, die diese Organisation für dich erstellt, erscheinen hier."
+      },
+      "declineSheet": {
+        "title": "Dokument ablehnen",
+        "description": "Diese Organisation muss verstehen, warum du dieses {documentName} ablehnst.",
+        "reasonLabel": "Ablehnungsgrund",
+        "reasonPlaceholder": "Erkläre, warum du das Dokument ablehnst…",
+        "submit": "Ablehnen"
+      },
+      "preview": {
+        "title": "{name}",
+        "unavailable": "Das Dokument ist noch nicht zur Vorschau verfügbar."
+      }
     }
   },
   "MembershipRequest": {
