@@ -4,7 +4,10 @@ import { PERMISSIONS } from '../../auth/constants';
 import { Permissions } from '../../auth/decorators/permissions.decorator';
 import type { AuthenticatedGraphQLContext } from '../../graphql/graphql.context';
 import { PaginationInput } from '../../graphql/pagination.input';
+import { OrganizationUnitMapper } from '../../organization/mappers/organization-unit.mapper';
+import { UserMapper } from '../../user/mappers/user.mapper';
 import { TimeEntryMapper } from '../mappers/time-entry.mapper';
+import { CheckInContext } from '../models/check-in-context.model';
 import {
   TimeEntry,
   TimeEntryPaginatedResponse,
@@ -16,6 +19,8 @@ export class TimeTrackingQueryResolver {
   constructor(
     private readonly timeTrackingService: TimeTrackingService,
     private readonly timeEntryMapper: TimeEntryMapper,
+    private readonly userMapper: UserMapper,
+    private readonly organizationUnitMapper: OrganizationUnitMapper,
   ) {}
 
   @Permissions(PERMISSIONS.SHIFT_VIEW)
@@ -67,6 +72,31 @@ export class TimeTrackingQueryResolver {
       limit: pagination.limit,
       offset: pagination.offset,
     });
+  }
+
+  // Cross-org-unit check-in context: intentionally NOT @Permissions()-gated
+  // (like checkIn/checkOut); the service intersects the caller's
+  // check-in:manage units with the volunteer's memberships.
+  @Query(() => CheckInContext, { nullable: true })
+  async checkInContext(
+    @Args('checkInId') checkInId: string,
+    @Session() session: UserSession,
+  ): Promise<CheckInContext | null> {
+    const context = await this.timeTrackingService.getCheckInContext(
+      session.user.id,
+      checkInId,
+    );
+    if (!context) {
+      return null;
+    }
+
+    return {
+      volunteer: this.userMapper.toModelOrThrow(context.volunteer),
+      eligibleOrganizationUnits: this.organizationUnitMapper.toArray(
+        context.eligibleOrganizationUnits,
+      ),
+      openTimeEntries: this.timeEntryMapper.toArray(context.openTimeEntries),
+    };
   }
 
   @Query(() => TimeEntryPaginatedResponse)

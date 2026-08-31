@@ -25,6 +25,7 @@ import {
   grantPermissionToRole,
 } from './factories/role.factory';
 import { applyBunAuthMocks, setAuthMockUserId } from './helpers/auth-mocks';
+import { graphqlRequestRequiringData } from './helpers/graphql-request';
 import { getGraphqlTestContext } from './helpers/graphql-test-context';
 
 applyBunAuthMocks(mock.module);
@@ -163,5 +164,96 @@ describe('TimeTrackingService.getCheckInContext', () => {
     expect(result?.volunteer.id).toBe(volunteer.id);
     expect(result?.eligibleOrganizationUnits).toEqual([]);
     expect(result?.openTimeEntries).toEqual([]);
+  });
+});
+
+describe('checkInContext query', () => {
+  let app: INestApplication;
+  let db: Database;
+  let organizationUnitId: string;
+  let testUserId: string;
+
+  beforeAll(async () => {
+    const context = await getGraphqlTestContext();
+    app = context.app;
+    db = context.db;
+    organizationUnitId = context.organizationUnitId;
+    testUserId = context.testUserId;
+  });
+
+  afterEach(() => {
+    setAuthMockUserId(testUserId);
+  });
+
+  it('returns volunteer, eligible units and open entries', async () => {
+    const volunteer = await createUser(db);
+    await addMembership(db, volunteer.id, organizationUnitId);
+    await db.insert(schema.timeEntries).values({
+      volunteerId: volunteer.id,
+      organizationUnitId,
+      startedAt: new Date(),
+      endedAt: null,
+    });
+
+    const data = await graphqlRequestRequiringData<{
+      checkInContext: {
+        volunteer: { id: string; name: string };
+        eligibleOrganizationUnits: Array<{ id: string; name: string }>;
+        openTimeEntries: Array<{
+          id: string;
+          startedAt: string;
+          organizationUnit: { id: string; name: string };
+        }>;
+      };
+    }>(
+      app,
+      {
+        query: `
+          query CheckInContext($checkInId: String!) {
+            checkInContext(checkInId: $checkInId) {
+              volunteer { id name }
+              eligibleOrganizationUnits { id name }
+              openTimeEntries {
+                id
+                startedAt
+                organizationUnit { id name }
+              }
+            }
+          }
+        `,
+        variables: { checkInId: volunteer.checkInId },
+      },
+      'checkInContext',
+    );
+
+    expect(data.checkInContext.volunteer.id).toBe(volunteer.id);
+    expect(
+      data.checkInContext.eligibleOrganizationUnits.map((u) => u.id),
+    ).toContain(organizationUnitId);
+    expect(data.checkInContext.openTimeEntries).toHaveLength(1);
+    expect(data.checkInContext.openTimeEntries[0]?.organizationUnit.id).toBe(
+      organizationUnitId,
+    );
+  });
+
+  it('returns null for an unknown check-in id', async () => {
+    const data = await graphqlRequestRequiringData<{
+      checkInContext: null;
+    }>(
+      app,
+      {
+        query: `
+          query CheckInContext($checkInId: String!) {
+            checkInContext(checkInId: $checkInId) {
+              volunteer { id }
+            }
+          }
+        `,
+        variables: { checkInId: 'doesnotexist' },
+      },
+      'checkInContext',
+    );
+
+    expect(data.checkInContext).toBeNull();
   });
 });
