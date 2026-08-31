@@ -63,7 +63,7 @@ export function ManualCheckInDialog({
   const handleCheckIn = () => {
     if (resolvedOrgId && selectedCheckInId) {
       router.push(
-        `/admin/${resolvedOrgId}/check-in/${selectedCheckInId}/decide`,
+        `/check-in/${selectedCheckInId}/decide?orgUId=${resolvedOrgId}`,
       );
     }
   };
