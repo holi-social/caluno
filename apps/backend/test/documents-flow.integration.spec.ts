@@ -181,6 +181,7 @@ const CONTRACT_DETAIL = `
     contract(id: $id) {
       id
       contractStatus
+      downloadUrl
       signatures { order signeeType signedAt signedByUser { id name } }
       statusChanges { type occurredAt }
     }
@@ -194,6 +195,7 @@ const INVOICE_DETAIL = `
       invoiceStatus
       totalHours
       totalAmountCents
+      downloadUrl
       invoiceTimeEntries { id }
       signatures { order signeeType signedAt signedByUser { id name } }
       statusChanges { type }
@@ -1017,6 +1019,317 @@ describe('documents flow — admin + volunteer', () => {
         myDocumentSummary: { total: number; pending: number };
       }>(app, { query: MY_DOCUMENT_SUMMARY }, 'myDocumentSummary');
       expect(summary.myDocumentSummary).toEqual({ total: 3, pending: 2 });
+    });
+  });
+
+  describe('pdf download', () => {
+    /** The renderer's structural view of the template body — mirrors the real stored shape. */
+    const bodyFor = (kind: DocumentKind) => ({
+      header: {
+        titleLines: [
+          kind === DocumentKind.CONTRACT
+            ? 'Zusatzvereinbarung zur'
+            : 'Stundennachweis',
+        ],
+        orgIdentityLine: {
+          id: 'header-org-identity',
+          text: '{orgName} {orgAddress}',
+          fields: [
+            { id: 'header-org-name', value: { kind: 'bound', source: 'org_name' } },
+            { id: 'header-org-address', value: { kind: 'bound', source: 'org_address' } },
+          ],
+          enabled: true,
+        },
+      },
+      blocks: [
+        {
+          id: 'parties',
+          kind: 'text',
+          title: 'Parteien',
+          lines: [
+            {
+              id: 'volunteer-name',
+              text: '{volunteerFirstName} {volunteerLastName}',
+              fields: [
+                { id: 'volunteer-name-first', value: { kind: 'bound', source: 'volunteer_first_name' } },
+                { id: 'volunteer-name-last', value: { kind: 'bound', source: 'volunteer_last_name' } },
+              ],
+              enabled: true,
+            },
+            {
+              id: 'rate',
+              text: 'Stundensatz {hourlyRate} € pro Stunde',
+              fields: [
+                { id: 'rate-field', value: { kind: 'bound', source: 'hourly_rate' } },
+              ],
+              enabled: true,
+            },
+          ],
+          enabled: true,
+        },
+      ],
+      footer: {
+        closingLine: { id: 'closing', text: 'Vielen Dank', fields: [], enabled: true },
+        showSignatures: true,
+      },
+    });
+
+    it('attaches a real PDF with resolved values and signature seats once the contract is fully signed', async () => {
+      // A dedicated org so the template body here is the one the renderer sees.
+      const pdfOrg = await setupFlowOrg(db);
+      const pdfOrgHeader = {
+        'x-organization-unit-id': pdfOrg.organizationUnitId,
+      };
+      // Replace the empty default body with a renderable one.
+      await db
+        .update(schema.documentTemplates)
+        .set({ body: bodyFor(DocumentKind.CONTRACT) })
+        .where(
+          eq(schema.documentTemplates.organizationId, pdfOrg.organizationId),
+        );
+
+      setAuthMockUserId(pdfOrg.adminId);
+      const { createContract } = await graphqlRequestRequiringData<{
+        createContract: { id: string; contractStatus: string };
+      }>(
+        app,
+        {
+          query: CREATE_CONTRACT,
+          variables: {
+            input: {
+              organizationUnitId: pdfOrg.organizationUnitId,
+              reimbursementTypeId: pdfOrg.reimbursementTypeId,
+              volunteerId: pdfOrg.volunteerId,
+              periodStart: '2026-01-01T00:00:00.000Z',
+              periodEnd: '2027-01-01T00:00:00.000Z',
+            },
+          },
+          headers: pdfOrgHeader,
+        },
+        'createContract',
+      );
+
+      setAuthMockUserId(pdfOrg.volunteerId);
+      await graphqlRequestRequiringData(
+        app,
+        {
+          query: SIGN_CONTRACT,
+          variables: { contractId: createContract.id },
+          headers: pdfOrgHeader,
+        },
+        'signContract',
+      );
+
+      setAuthMockUserId(pdfOrg.adminId);
+      await graphqlRequestRequiringData(
+        app,
+        {
+          query: SIGN_CONTRACT,
+          variables: { contractId: createContract.id },
+          headers: pdfOrgHeader,
+        },
+        'signContract',
+      );
+
+      // The mutation response predates the render — refetch for the file link.
+      const detail = await graphqlRequestRequiringData<{
+        contract: {
+          id: string;
+          contractStatus: string;
+          downloadUrl: string | null;
+        };
+      }>(
+        app,
+        {
+          query: CONTRACT_DETAIL,
+          variables: { id: createContract.id },
+          headers: pdfOrgHeader,
+        },
+        'contract',
+      );
+      expect(detail.contract.contractStatus).toBe(ContractStatus.ACTIVE);
+
+      // PDF attachment needs object storage. When STORAGE_ENDPOINT is not
+      // configured (e.g. the suite is run from a working directory that does
+      // not load the backend .env), the renderer must fail gracefully and
+      // leave downloadUrl null rather than break the sign. When it is
+      // configured, the rendered PDF is actually downloadable.
+      if (!process.env.STORAGE_ENDPOINT) {
+        expect(detail.contract.downloadUrl).toBeNull();
+        return;
+      }
+      expect(detail.contract.downloadUrl).not.toBeNull();
+
+      // Read the stored bytes back through the downloadable URL.
+      const pdfResponse = await fetch(detail.contract.downloadUrl!);
+      expect(pdfResponse.ok).toBe(true);
+      const pdfBytes = Buffer.from(await pdfResponse.arrayBuffer());
+      expect(pdfBytes.subarray(0, 5).toString()).toBe('%PDF-');
+      expect(pdfBytes.length).toBeGreaterThan(500);
+
+      // The PDF carries the resolved volunteer name. Text is Flate-compressed
+      // in the content stream, so inflate it before reading.
+      const { inflateSync } = await import('node:zlib');
+      const latin = pdfBytes.toString('latin1');
+      const streams = [...latin.matchAll(/stream\r?\n([\s\S]*?)endstream/g)].map(
+        (m) => inflateSync(Buffer.from(m[1], 'latin1')).toString('latin1'),
+      );
+      const content = streams.join('\n');
+
+      const volunteer = await db.query.users.findFirst({
+        where: { id: pdfOrg.volunteerId },
+      });
+      // Glyph runs are hex-encoded; decode them so name/rate are comparable.
+      const glyphs = [
+        ...content.matchAll(/<([0-9a-f]+)>/g),
+      ]
+        .map((m) => Buffer.from(m[1], 'hex').toString('latin1'))
+        .join('');
+      expect(glyphs).toContain(volunteer?.name ?? '');
+      expect(glyphs).toContain('Unterschrift');
+    });
+
+    it('attaches a real PDF for a fully-signed invoice too, with its time-entry table', async () => {
+      const pdfOrg = await setupFlowOrg(db);
+      const pdfOrgHeader = {
+        'x-organization-unit-id': pdfOrg.organizationUnitId,
+      };
+      await db
+        .update(schema.documentTemplates)
+        .set({ body: bodyFor(DocumentKind.INVOICE) })
+        .where(
+          eq(schema.documentTemplates.organizationId, pdfOrg.organizationId),
+        );
+
+      // Active contract (compliance) + a completed paid time entry.
+      setAuthMockUserId(pdfOrg.adminId);
+      const { createContract } = await graphqlRequestRequiringData<{
+        createContract: { id: string };
+      }>(
+        app,
+        {
+          query: CREATE_CONTRACT,
+          variables: {
+            input: {
+              organizationUnitId: pdfOrg.organizationUnitId,
+              reimbursementTypeId: pdfOrg.reimbursementTypeId,
+              volunteerId: pdfOrg.volunteerId,
+              periodStart: '2026-01-01T00:00:00.000Z',
+              periodEnd: '2027-01-01T00:00:00.000Z',
+            },
+          },
+          headers: pdfOrgHeader,
+        },
+        'createContract',
+      );
+      setAuthMockUserId(pdfOrg.volunteerId);
+      await graphqlRequestRequiringData(
+        app,
+        {
+          query: SIGN_CONTRACT,
+          variables: { contractId: createContract.id },
+          headers: pdfOrgHeader,
+        },
+        'signContract',
+      );
+      setAuthMockUserId(pdfOrg.adminId);
+      await graphqlRequestRequiringData(
+        app,
+        {
+          query: SIGN_CONTRACT,
+          variables: { contractId: createContract.id },
+          headers: pdfOrgHeader,
+        },
+        'signContract',
+      );
+
+      const timeEntry = await createCompletedTimeEntry(db, {
+        organizationUnitId: pdfOrg.organizationUnitId,
+        volunteerId: pdfOrg.volunteerId,
+        reimbursementTypeId: pdfOrg.reimbursementTypeId,
+      });
+      const { createInvoice } = await graphqlRequestRequiringData<{
+        createInvoice: { id: string; invoiceStatus: string };
+      }>(
+        app,
+        {
+          query: CREATE_INVOICE,
+          variables: {
+            input: {
+              organizationUnitId: pdfOrg.organizationUnitId,
+              reimbursementTypeId: pdfOrg.reimbursementTypeId,
+              volunteerId: pdfOrg.volunteerId,
+              timeEntryIds: [timeEntry.id],
+              periodStart: '2026-07-01T00:00:00.000Z',
+              periodEnd: '2026-07-31T23:59:59.000Z',
+            },
+          },
+          headers: pdfOrgHeader,
+        },
+        'createInvoice',
+      );
+
+      setAuthMockUserId(pdfOrg.volunteerId);
+      await graphqlRequestRequiringData(
+        app,
+        {
+          query: SIGN_INVOICE,
+          variables: { invoiceId: createInvoice.id },
+          headers: pdfOrgHeader,
+        },
+        'signInvoice',
+      );
+      setAuthMockUserId(pdfOrg.adminId);
+      await graphqlRequestRequiringData(
+        app,
+        {
+          query: SIGN_INVOICE,
+          variables: { invoiceId: createInvoice.id },
+          headers: pdfOrgHeader,
+        },
+        'signInvoice',
+      );
+
+      const detail = await graphqlRequestRequiringData<{
+        invoice: {
+          id: string;
+          invoiceStatus: string;
+          downloadUrl: string | null;
+        };
+      }>(
+        app,
+        {
+          query: INVOICE_DETAIL,
+          variables: { id: createInvoice.id },
+          headers: pdfOrgHeader,
+        },
+        'invoice',
+      );
+      expect(detail.invoice.invoiceStatus).toBe(InvoiceStatus.READY);
+
+      if (!process.env.STORAGE_ENDPOINT) {
+        expect(detail.invoice.downloadUrl).toBeNull();
+        return;
+      }
+      expect(detail.invoice.downloadUrl).not.toBeNull();
+
+      const pdfResponse = await fetch(detail.invoice.downloadUrl!);
+      expect(pdfResponse.ok).toBe(true);
+      const pdfBytes = Buffer.from(await pdfResponse.arrayBuffer());
+      expect(pdfBytes.subarray(0, 5).toString()).toBe('%PDF-');
+
+      const { inflateSync } = await import('node:zlib');
+      const latin = pdfBytes.toString('latin1');
+      const streams = [...latin.matchAll(/stream\r?\n([\s\S]*?)endstream/g)].map(
+        (m) => inflateSync(Buffer.from(m[1], 'latin1')).toString('latin1'),
+      );
+      const content = streams.join('\n');
+      const glyphs = [...content.matchAll(/<([0-9a-f]+)>/g)]
+        .map((m) => Buffer.from(m[1], 'hex').toString('latin1'))
+        .join('');
+      // The invoice table lists the shift that produced the time entry.
+      expect(glyphs).toContain('Stundennachweis');
+      expect(glyphs).toContain('Unterschrift');
     });
   });
 });

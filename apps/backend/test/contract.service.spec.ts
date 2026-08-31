@@ -9,6 +9,7 @@ import {
 } from '../src/accounting/enums';
 import { ContractService } from '../src/accounting/services/contract.service';
 import { DocumentNotificationService } from '../src/accounting/services/document-notification.service';
+import { DocumentRenderingService } from '../src/accounting/services/document-rendering.service';
 import { DocumentSigningService } from '../src/accounting/services/document-signing.service';
 import { DocumentTemplateService } from '../src/accounting/services/document-template.service';
 import { AuthService } from '../src/auth/auth.service';
@@ -88,6 +89,9 @@ describe('ContractService', () => {
         notifyAwaitingVolunteerSignature: () => Promise.resolve(),
         notifyDeclinedByOrg: () => Promise.resolve(),
       } as unknown as DocumentNotificationService,
+      {
+        renderAndAttachPdf: () => Promise.resolve(null),
+      } as unknown as DocumentRenderingService,
       { capture: () => {} } as unknown as PostHogService,
     );
 
