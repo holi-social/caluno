@@ -21,6 +21,7 @@ const PERMISSION_NAMES: Record<
   [PERMISSIONS.REQUIREMENT_PROFILE_VIEW]: 'View requirement profile',
   [PERMISSIONS.REQUIREMENT_PROFILE_EDIT]: 'Edit requirement profile',
   [PERMISSIONS.ACCOUNTING_MANAGE]: 'Manage accounting',
+  [PERMISSIONS.CHECK_IN_MANAGE]: 'Manage check-in',
 };
 
 // The two statutory Pauschale types this feature is built around — fixed by

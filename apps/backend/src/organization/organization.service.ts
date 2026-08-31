@@ -5,6 +5,7 @@ import {
   DEFAULT_OWNER_ROLE_NAME,
   MEMBER_DEFAULT_PERMISSIONS,
   PERMISSIONS,
+  type Permission,
 } from '../auth/constants';
 import type { Database } from '../database/database.module';
 import { DATABASE_CONNECTION } from '../database/database-connection';
@@ -176,6 +177,33 @@ export class OrganizationService {
     });
 
     return this.expandToChildOrgUnits(administrableMemberships);
+  }
+
+  async findUnitsWithPermission(
+    userId: string,
+    permissionKey: Permission,
+  ): Promise<OrganizationUnitEntity[]> {
+    const membershipsWithPermission = await this.db.query.memberships.findMany({
+      where: {
+        userId,
+        roles: {
+          role: {
+            permissions: {
+              permission: {
+                key: permissionKey,
+              },
+            },
+          },
+        },
+      },
+      with: {
+        organizationUnit: {
+          columns: { id: true, organizationId: true },
+        },
+      },
+    });
+
+    return this.expandToChildOrgUnits(membershipsWithPermission);
   }
 
   private async expandToChildOrgUnits(
