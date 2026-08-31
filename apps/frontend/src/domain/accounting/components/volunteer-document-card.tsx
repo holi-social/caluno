@@ -13,6 +13,7 @@ import {
 import { useTranslations } from 'next-intl';
 import { formatEuro } from '@/lib/formatting/formats';
 import { useFormatting } from '@/lib/formatting/use-formatting';
+import { Link } from '@/i18n/navigation';
 import type {
   VolunteerDocument,
   VolunteerDocumentLine,
@@ -88,6 +89,7 @@ export function VolunteerDocumentCard({
   }
 
   const awaitingSignature = document.state === 'awaiting-signature';
+  const missingProfileFields = document.missingProfileFields.length > 0;
 
   return (
     <div
@@ -179,6 +181,7 @@ export function VolunteerDocumentCard({
           <>
             <Button
               className="w-full"
+              disabled={missingProfileFields}
               onClick={(e) => {
                 e.stopPropagation();
                 onSign(document);
@@ -187,6 +190,19 @@ export function VolunteerDocumentCard({
               <SignatureIcon />
               {t('actions.sign')}
             </Button>
+            {missingProfileFields && (
+              <div className="flex flex-col gap-1 px-1">
+                <p className="text-xs text-muted-foreground">
+                  {t('missingProfileWarning')}
+                </p>
+                <Link
+                  href="/profile"
+                  className="text-xs font-medium text-primary underline underline-offset-2"
+                >
+                  {t('missingProfileCta')}
+                </Link>
+              </div>
+            )}
             <Button
               variant="destructive"
               className="w-full"

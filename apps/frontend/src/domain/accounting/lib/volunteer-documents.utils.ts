@@ -60,6 +60,12 @@ export interface VolunteerDocument {
   lines: VolunteerDocumentLine[];
   declineReason?: string | null;
   downloadUrl?: string | null;
+  /**
+   * Profile-required data source keys (e.g. "volunteer_iban") this document's
+   * template uses that the volunteer has not yet filled in. Non-empty blocks
+   * signing and surfaces a "complete your profile" call to action.
+   */
+  missingProfileFields: string[];
   createdAt: Date;
 }
 
@@ -221,6 +227,7 @@ export function contractToVolunteerDocument(
     }),
     declineReason: contract.declineReason,
     downloadUrl: contract.downloadUrl,
+    missingProfileFields: contract.missingProfileFields,
     createdAt: new Date(contract.createdAt),
   };
 }
@@ -251,6 +258,7 @@ export function invoiceToVolunteerDocument(
     }),
     declineReason: invoice.declineReason,
     downloadUrl: invoice.downloadUrl,
+    missingProfileFields: invoice.missingProfileFields,
     createdAt: new Date(invoice.createdAt),
   };
 }
