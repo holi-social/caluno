@@ -48,6 +48,16 @@ export function EventRequiredFormsPopover({
     [formsData, attachedFormIds],
   );
 
+  const disabledFormIds = useMemo(
+    () =>
+      new Set(
+        (formsData?.items ?? [])
+          .filter((form) => (form.blockRefs?.length ?? 0) === 0)
+          .map((form) => form.id),
+      ),
+    [formsData],
+  );
+
   const handleChange = async (formIds: string[]) => {
     try {
       const previousCount = requiredForms.length;
@@ -80,6 +90,7 @@ export function EventRequiredFormsPopover({
       onChange={handleChange}
       isPending={setEventRequiredForms.isPending}
       disabled={!canConfigure}
+      disabledFormIds={disabledFormIds}
       createNewHref={`/admin/${orgUId}/requirement-forms/new`}
       t={t}
       subtitle={t('subtitle', {

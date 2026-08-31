@@ -23,7 +23,7 @@ export function VolunteerNav({ isAdmin }: VolunteerNavProps) {
   const volunteerTabs: TabBarItem[] = useMemo(
     () => [
       { label: t('shifts'), icon: CalendarIcon, key: '/' },
-      { label: t('checkIn'), icon: QrCodeIcon, key: '/qr-id' },
+      { label: t('checkIn'), icon: QrCodeIcon, key: '/check-in' },
       { label: t('myTime'), icon: FileClockIcon, key: '/timesheets' },
     ],
     [t],
@@ -45,6 +45,7 @@ export function VolunteerNav({ isAdmin }: VolunteerNavProps) {
       pathname === '/' ||
       pathname.startsWith('/discover') ||
       pathname.startsWith('/my-shifts') ||
+      pathname.startsWith('/my-events') ||
       pathname.startsWith('/shifts')
     ) {
       return '/';

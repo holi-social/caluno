@@ -73,6 +73,7 @@ export class MembershipLifecycleMutationResolver {
   @Mutation(() => FormSubmission)
   async submitForm(
     @Args('token') token: string,
+    @Args('organizationUnitId', { type: () => ID }) organizationUnitId: string,
     @Args('input') input: SubmitFormInput,
     @Session() session: UserSession,
   ): Promise<FormSubmission> {
@@ -80,6 +81,7 @@ export class MembershipLifecycleMutationResolver {
       token,
       input,
       session.user.id,
+      organizationUnitId,
     );
     return this.formSubmissionMapper.toModelOrThrow(item);
   }
@@ -106,6 +108,19 @@ export class MembershipLifecycleMutationResolver {
     const membership = await this.membershipService.leaveMembership(
       id,
       session.user.id,
+    );
+    return this.membershipMapper.toModelOrThrow(membership);
+  }
+
+  @Permissions(PERMISSIONS.VOLUNTEER_EDIT)
+  @Mutation(() => Membership)
+  async removeMembership(
+    @Args('id', { type: () => ID }) id: string,
+    @Context() context: AuthenticatedGraphQLContext,
+  ): Promise<Membership> {
+    const membership = await this.membershipService.removeMembership(
+      id,
+      context.organizationUnitId,
     );
     return this.membershipMapper.toModelOrThrow(membership);
   }

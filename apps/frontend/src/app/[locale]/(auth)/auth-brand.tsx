@@ -1,22 +1,12 @@
-import { cn } from '@repo/ui/utils';
-import { getTranslations } from 'next-intl/server';
+import { Logo } from '@repo/ui/logo';
 
 interface AuthBrandProps {
+  /** Width in pixels; height scales automatically to preserve the logo's aspect ratio. */
+  width?: number;
   className?: string;
 }
 
-/** Caluno wordmark for auth pages — Geologica + primary, no SVG lockup. */
-export async function AuthBrand({ className }: AuthBrandProps) {
-  const t = await getTranslations('Auth');
-
-  return (
-    <span
-      className={cn(
-        'font-sans text-4xl font-bold tracking-tight text-primary',
-        className,
-      )}
-    >
-      {t('brandName')}
-    </span>
-  );
+/** Caluno mark for auth pages. */
+export function AuthBrand({ width = 180, className }: AuthBrandProps) {
+  return <Logo width={width} className={className} />;
 }

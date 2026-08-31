@@ -80,7 +80,7 @@ describe('OrganizationService', () => {
       {} as OrganizationUnitService,
       {} as NotificationService,
       {} as FileService,
-      { captureUserJoinedOrg: () => {} } as unknown as PostHogService,
+      { capture: () => {} } as unknown as PostHogService,
     );
 
     registerTestResourceCleanup(async () => {
@@ -396,6 +396,7 @@ describe('OrganizationUnitService', () => {
           'https://example.com/logo.png',
       } as never,
       new OrganizationUnitDataService(db),
+      { capture: () => {} } as never,
     );
 
     registerTestResourceCleanup(async () => {
@@ -422,12 +423,16 @@ describe('OrganizationUnitService', () => {
       });
       const originalSlug = child.slug;
 
-      const updated = await organizationUnitService.update(child.id, {
-        organizationId: organization.id,
-        name: 'Renamed Child',
-        typeId: type.id,
-        parentId: root.id,
-      });
+      const updated = await organizationUnitService.update(
+        child.id,
+        {
+          organizationId: organization.id,
+          name: 'Renamed Child',
+          typeId: type.id,
+          parentId: root.id,
+        },
+        (await createUser(db)).id,
+      );
 
       expect(updated.slug).toBe(originalSlug);
       expect(updated.name).toBe('Renamed Child');

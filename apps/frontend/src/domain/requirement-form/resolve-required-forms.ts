@@ -3,7 +3,6 @@ import type { RequiredForm } from '@repo/data/react';
 import type { RequiredFormItem } from './components/required-form-renderer';
 
 type FormSubmission = {
-  status: string;
   form?: { id?: string | null } | null;
 };
 
@@ -13,7 +12,6 @@ export function buildSubmittedFormIds(
 ): Set<string> {
   return new Set(
     submissions
-      .filter((s) => s.status === 'SUBMITTED')
       .map((s) => s.form?.id)
       .filter((id): id is string => Boolean(id)),
   );

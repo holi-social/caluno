@@ -21,11 +21,18 @@ type Volunteer = {
 type VolunteerCheckinProps = {
   organizationUnitId: string;
   volunteers: Volunteer[];
+  /**
+   * Portal target for the combobox popup. Pass the dialog content element when
+   * rendered inside a Radix Dialog — otherwise the popup lands on `<body>`,
+   * outside the dialog's pointer-events/scroll-lock shard, and is unclickable.
+   */
+  portalContainer?: HTMLElement | null;
 };
 
 export const CheckInSelector = ({
   volunteers,
   organizationUnitId,
+  portalContainer,
 }: VolunteerCheckinProps) => {
   const router = useRouter();
   const t = useTranslations('Shift');
@@ -45,7 +52,7 @@ export const CheckInSelector = ({
           <User />
         </InputGroupAddon>
       </ComboboxInput>
-      <ComboboxContent>
+      <ComboboxContent container={portalContainer}>
         <ComboboxEmpty>{t('checkInSelector.empty')}</ComboboxEmpty>
         <ComboboxList>
           {(volunteer: Volunteer) => (

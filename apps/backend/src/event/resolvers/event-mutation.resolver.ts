@@ -91,6 +91,7 @@ export class EventMutationResolver {
       id,
       context.organizationUnitId,
       input,
+      context.user.id,
     );
     return this.eventMapper.toModelOrThrow(event);
   }
@@ -104,6 +105,7 @@ export class EventMutationResolver {
     const event = await this.eventService.delete(
       id,
       context.organizationUnitId,
+      context.user.id,
     );
     return this.eventMapper.toModelOrThrow(event);
   }
@@ -114,11 +116,13 @@ export class EventMutationResolver {
     @Args('eventId', { type: () => ID }) eventId: string,
     @Args('memberIds', { type: () => [String] }) memberIds: string[],
     @Context() context: AuthenticatedGraphQLContext,
+    @Session() session: UserSession,
   ): Promise<Event> {
     const event = await this.eventService.inviteMembersToEvent(
       eventId,
       memberIds,
       context.organizationUnitId,
+      session.user.id,
     );
     return this.eventMapper.toModelOrThrow(event);
   }
@@ -136,6 +140,7 @@ export class EventMutationResolver {
     const requiredForms = await this.requiredFormService.setRequiredForms(
       { targetType: RequiredFormTargetType.EVENT, targetId: eventId },
       formIds,
+      session.user.id,
     );
 
     return this.requiredFormRefMapper.toArray(requiredForms);
@@ -198,6 +203,7 @@ export class EventMutationResolver {
       targetUserId,
       eventId,
       status,
+      session.user.id,
     );
     return this.eventInviteMapper.toModelOrThrow(invite);
   }

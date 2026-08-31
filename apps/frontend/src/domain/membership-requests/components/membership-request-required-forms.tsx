@@ -26,10 +26,7 @@ export function MembershipRequestRequiredForms({
   const requiredForms = orgUnit?.requiredForms ?? [];
 
   const submittedFormIds = new Set(
-    (submissions ?? [])
-      .filter((s) => s.status === 'SUBMITTED')
-      .map((s) => s.form?.id)
-      .filter(Boolean),
+    (submissions ?? []).map((s) => s.form?.id).filter(Boolean),
   );
 
   if (requiredForms.length === 0) {

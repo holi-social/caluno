@@ -46,8 +46,12 @@ export class RequirementProfileSubmissionMutationResolver {
   @Mutation(() => RequirementProfileSubmission)
   async deleteRequirementProfileSubmission(
     @Args('id') id: string,
+    @Session() session: UserSession,
   ): Promise<RequirementProfileSubmission> {
-    const item = await this.requirementProfileSubmissionService.delete(id);
+    const item = await this.requirementProfileSubmissionService.delete(
+      id,
+      session.user.id,
+    );
     return this.requirementProfileSubmissionMapper.toModelOrThrow(item);
   }
 }

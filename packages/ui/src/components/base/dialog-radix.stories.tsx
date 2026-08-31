@@ -55,6 +55,33 @@ type Story = StoryObj<typeof meta>;
  */
 export const Default: Story = {};
 
+/**
+ * The `lg` size, for content that needs most of the viewport (e.g. a
+ * two-column layout with a preview pane).
+ */
+export const Large: Story = {
+  render: (args) => (
+    <Dialog {...args}>
+      <DialogTrigger>Open</DialogTrigger>
+      <DialogContent size="lg">
+        <DialogHeader className="p-6 pb-0">
+          <DialogTitle>Large dialog</DialogTitle>
+          <DialogDescription>
+            Sized to most of the viewport instead of a fixed max width.
+          </DialogDescription>
+        </DialogHeader>
+        <div className="flex-1 overflow-y-auto p-6">Content area.</div>
+        <DialogFooter className="gap-4 p-6 pt-0">
+          <DialogClose className="hover:underline">Cancel</DialogClose>
+          <DialogClose className="rounded bg-primary px-4 py-2 text-primary-foreground">
+            Continue
+          </DialogClose>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  ),
+};
+
 export const ShouldOpenCloseWithContinue: Story = {
   name: 'when clicking Continue button, should close the dialog',
   tags: ['!dev', '!autodocs'],

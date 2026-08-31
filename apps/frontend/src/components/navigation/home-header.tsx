@@ -180,7 +180,7 @@ export function HomeHeader({
 
           <div className="flex shrink-0 items-center gap-3">
             <Link href="/" aria-label={t('home')}>
-              <Logo width={isOpen ? 42 : 38} />
+              <Logo width={96} />
             </Link>
           </div>
         </div>

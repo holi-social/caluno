@@ -717,6 +717,298 @@ describe('myEvents', () => {
   });
 });
 
+describe('availableEvents', () => {
+  let app: INestApplication;
+  let db: Database;
+  let testUserId: string;
+  let organizationUnitId: string;
+
+  beforeAll(async () => {
+    const context = await getGraphqlTestContext();
+    app = context.app;
+    db = context.db;
+    testUserId = context.testUserId;
+    organizationUnitId = context.organizationUnitId;
+  });
+
+  const availableEventsQuery = `
+    query AvailableEvents(
+      $startsAfter: DateTime
+      $endsBefore: DateTime
+      $organizationUnitIds: [ID!]
+    ) {
+      availableEvents(
+        startsAfter: $startsAfter
+        endsBefore: $endsBefore
+        organizationUnitIds: $organizationUnitIds
+      ) {
+        items { id }
+        pagination { total limit offset hasMore }
+      }
+    }
+  `;
+
+  it('returns events from the accepted org unit, ordered by startsAt ascending', async () => {
+    const later = await createEvent(db, {
+      organizationUnitId,
+      startsAt: new Date('2027-04-02T09:00:00.000Z'),
+      endsAt: new Date('2027-04-02T11:00:00.000Z'),
+    });
+    const sooner = await createEvent(db, {
+      organizationUnitId,
+      startsAt: new Date('2027-04-01T09:00:00.000Z'),
+      endsAt: new Date('2027-04-01T11:00:00.000Z'),
+    });
+
+    const data = await graphqlRequestRequiringData<{
+      availableEvents: { items: Array<{ id: string }> };
+    }>(
+      app,
+      {
+        query: availableEventsQuery,
+        variables: {
+          // startsAfter only — buildMyEventDateCondition lets endsBefore win
+          // outright and drop the lower bound entirely, which would let in
+          // every near-"now" event this file's other tests create and crowd
+          // these 2027-dated ones off the default 15-item page.
+          startsAfter: new Date('2027-04-01T00:00:00.000Z').toISOString(),
+        },
+      },
+      'availableEvents',
+    );
+
+    const ids = data.availableEvents.items.map((item) => item.id);
+    expect(ids.indexOf(sooner.id)).toBeGreaterThanOrEqual(0);
+    expect(ids.indexOf(later.id)).toBeGreaterThan(ids.indexOf(sooner.id));
+  });
+
+  it('includes events from a pending membership request org unit', async () => {
+    const pendingUser = await createUser(db);
+    await createMembershipRequest(db, {
+      userId: pendingUser.id,
+      organizationUnitId,
+    });
+
+    const event = await createEvent(db, {
+      organizationUnitId,
+      startsAt: new Date('2027-04-05T09:00:00.000Z'),
+      endsAt: new Date('2027-04-05T11:00:00.000Z'),
+    });
+
+    const originalUserId = getAuthMockUserId();
+    setAuthMockUserId(pendingUser.id);
+    try {
+      const data = await graphqlRequestRequiringData<{
+        availableEvents: { items: Array<{ id: string }> };
+      }>(
+        app,
+        {
+          query: availableEventsQuery,
+          // startsAfter only — see the note in the "ordered by startsAt"
+          // test above on why endsBefore can't be combined with it here.
+          variables: {
+            startsAfter: new Date(
+              event.startsAt.getTime() - 60000,
+            ).toISOString(),
+          },
+        },
+        'availableEvents',
+      );
+
+      expect(data.availableEvents.items.map((item) => item.id)).toContain(
+        event.id,
+      );
+    } finally {
+      setAuthMockUserId(originalUserId);
+    }
+  });
+
+  it('excludes events with a participating invite but keeps merely-invited events', async () => {
+    const acceptedEvent = await createEvent(db, {
+      organizationUnitId,
+      startsAt: new Date('2027-04-06T09:00:00.000Z'),
+      endsAt: new Date('2027-04-06T11:00:00.000Z'),
+    });
+    const invitedEvent = await createEvent(db, {
+      organizationUnitId,
+      startsAt: new Date('2027-04-06T09:00:00.000Z'),
+      endsAt: new Date('2027-04-06T11:00:00.000Z'),
+    });
+    await db.insert(schema.eventInvites).values([
+      {
+        eventId: acceptedEvent.id,
+        userId: testUserId,
+        status: EventInviteStatus.ACCEPTED,
+      },
+      {
+        eventId: invitedEvent.id,
+        userId: testUserId,
+        status: EventInviteStatus.INVITED,
+      },
+    ]);
+
+    const data = await graphqlRequestRequiringData<{
+      availableEvents: { items: Array<{ id: string }> };
+    }>(
+      app,
+      {
+        query: availableEventsQuery,
+        // startsAfter only — see the note above on endsBefore's precedence quirk.
+        variables: {
+          startsAfter: new Date('2027-04-06T00:00:00.000Z').toISOString(),
+        },
+      },
+      'availableEvents',
+    );
+
+    const ids = data.availableEvents.items.map((item) => item.id);
+    expect(ids).not.toContain(acceptedEvent.id);
+    expect(ids).toContain(invitedEvent.id);
+  });
+
+  it('includes a currently-active event (started, not yet ended)', async () => {
+    const activeEvent = await createEvent(db, {
+      organizationUnitId,
+      startsAt: new Date(Date.now() - 60 * 60 * 1000),
+      endsAt: new Date(Date.now() + 60 * 60 * 1000),
+    });
+
+    const data = await graphqlRequestRequiringData<{
+      availableEvents: { items: Array<{ id: string }> };
+    }>(
+      app,
+      {
+        query: availableEventsQuery,
+        variables: {},
+      },
+      'availableEvents',
+    );
+
+    expect(data.availableEvents.items.map((item) => item.id)).toContain(
+      activeEvent.id,
+    );
+  });
+
+  it('excludes an event that has already ended', async () => {
+    const endedEvent = await createEvent(db, {
+      organizationUnitId,
+      startsAt: new Date(Date.now() - 2 * 60 * 60 * 1000),
+      endsAt: new Date(Date.now() - 60 * 60 * 1000),
+    });
+
+    const data = await graphqlRequestRequiringData<{
+      availableEvents: { items: Array<{ id: string }> };
+    }>(
+      app,
+      {
+        query: availableEventsQuery,
+        variables: {},
+      },
+      'availableEvents',
+    );
+
+    expect(data.availableEvents.items.map((item) => item.id)).not.toContain(
+      endedEvent.id,
+    );
+  });
+
+  it('returns an empty page for a user with no accessible org units', async () => {
+    const isolatedUser = await createUser(db);
+
+    const originalUserId = getAuthMockUserId();
+    setAuthMockUserId(isolatedUser.id);
+    try {
+      const data = await graphqlRequestRequiringData<{
+        availableEvents: {
+          items: Array<{ id: string }>;
+          pagination: { total: number };
+        };
+      }>(
+        app,
+        { query: availableEventsQuery, variables: {} },
+        'availableEvents',
+      );
+
+      expect(data.availableEvents.items).toEqual([]);
+      expect(data.availableEvents.pagination.total).toBe(0);
+    } finally {
+      setAuthMockUserId(originalUserId);
+    }
+  });
+
+  it('narrows results by organizationUnitIds, ignoring ids outside the accessible set', async () => {
+    const { organization: otherOrganization, type: otherType } =
+      await createOrganizationWithType(db, `Other Org ${crypto.randomUUID()}`);
+    const otherUnit = await createUnit(db, {
+      organizationId: otherOrganization.id,
+      typeId: otherType.id,
+      name: 'root',
+    });
+
+    const memberUser = await createUser(db);
+    await addMembership(db, memberUser.id, organizationUnitId);
+
+    const inUnitEvent = await createEvent(db, {
+      organizationUnitId,
+      startsAt: new Date('2027-04-08T09:00:00.000Z'),
+      endsAt: new Date('2027-04-08T11:00:00.000Z'),
+    });
+
+    const originalUserId = getAuthMockUserId();
+    setAuthMockUserId(memberUser.id);
+    try {
+      const outsideOnly = await graphqlRequestRequiringData<{
+        availableEvents: { items: Array<{ id: string }> };
+      }>(
+        app,
+        {
+          query: availableEventsQuery,
+          variables: { organizationUnitIds: [otherUnit.id] },
+        },
+        'availableEvents',
+      );
+      expect(outsideOnly.availableEvents.items).toEqual([]);
+
+      const withBoth = await graphqlRequestRequiringData<{
+        availableEvents: { items: Array<{ id: string }> };
+      }>(
+        app,
+        {
+          query: availableEventsQuery,
+          // startsAfter only — see the note above on endsBefore's precedence quirk.
+          variables: {
+            organizationUnitIds: [organizationUnitId, otherUnit.id],
+            startsAfter: new Date('2027-04-08T00:00:00.000Z').toISOString(),
+          },
+        },
+        'availableEvents',
+      );
+      expect(withBoth.availableEvents.items.map((item) => item.id)).toContain(
+        inUnitEvent.id,
+      );
+    } finally {
+      setAuthMockUserId(originalUserId);
+    }
+  });
+
+  it('requires only a session, no admin permission', async () => {
+    const plainMember = await createUser(db);
+    await addMembership(db, plainMember.id, organizationUnitId);
+
+    const originalUserId = getAuthMockUserId();
+    setAuthMockUserId(plainMember.id);
+    try {
+      const response = await graphqlRequest<{
+        availableEvents: { items: Array<{ id: string }> };
+      }>(app, { query: availableEventsQuery, variables: {} });
+
+      expect(response.errors).toBeUndefined();
+    } finally {
+      setAuthMockUserId(originalUserId);
+    }
+  });
+});
+
 describe('eventInvites', () => {
   let app: INestApplication;
   let db: Database;
@@ -1254,6 +1546,109 @@ describe('updateEventInviteStatus (admin uninvite)', () => {
     });
     expect(rejectedRow?.status).toBe(EventInviteStatus.ADMIN_REJECTED);
     expect(freshRow?.status).toBe(EventInviteStatus.INVITED);
+  });
+
+  it('writes ACCEPTED directly when the inviter adds themselves via inviteMembersToEvent', async () => {
+    const event = await createEvent(db, { organizationUnitId });
+    const selfUserId = getAuthMockUserId();
+
+    await graphqlRequestRequiringData<{
+      inviteMembersToEvent: { id: string };
+    }>(
+      app,
+      {
+        query: `
+          mutation InviteMembers($eventId: ID!, $memberIds: [String!]!) {
+            inviteMembersToEvent(eventId: $eventId, memberIds: $memberIds) {
+              id
+            }
+          }
+        `,
+        variables: {
+          eventId: event.id,
+          memberIds: [selfUserId],
+        },
+        headers: { 'x-organization-unit-id': organizationUnitId },
+      },
+      'inviteMembersToEvent',
+    );
+
+    const row = await db.query.eventInvites.findFirst({
+      where: { eventId: event.id, userId: selfUserId },
+    });
+    expect(row?.status).toBe(EventInviteStatus.ACCEPTED);
+  });
+
+  it('writes ACCEPTED for the self-adding inviter but INVITED for others in the same batch', async () => {
+    const event = await createEvent(db, { organizationUnitId });
+    const selfUserId = getAuthMockUserId();
+    const otherUser = await createUser(db);
+
+    await graphqlRequestRequiringData<{
+      inviteMembersToEvent: { id: string };
+    }>(
+      app,
+      {
+        query: `
+          mutation InviteMembers($eventId: ID!, $memberIds: [String!]!) {
+            inviteMembersToEvent(eventId: $eventId, memberIds: $memberIds) {
+              id
+            }
+          }
+        `,
+        variables: {
+          eventId: event.id,
+          memberIds: [selfUserId, otherUser.id],
+        },
+        headers: { 'x-organization-unit-id': organizationUnitId },
+      },
+      'inviteMembersToEvent',
+    );
+
+    const selfRow = await db.query.eventInvites.findFirst({
+      where: { eventId: event.id, userId: selfUserId },
+    });
+    const otherRow = await db.query.eventInvites.findFirst({
+      where: { eventId: event.id, userId: otherUser.id },
+    });
+    expect(selfRow?.status).toBe(EventInviteStatus.ACCEPTED);
+    expect(otherRow?.status).toBe(EventInviteStatus.INVITED);
+  });
+
+  it('resurrects a self-invite from ADMIN_REJECTED straight to ACCEPTED', async () => {
+    const event = await createEvent(db, { organizationUnitId });
+    const selfUserId = getAuthMockUserId();
+    await db.insert(schema.eventInvites).values({
+      eventId: event.id,
+      userId: selfUserId,
+      status: EventInviteStatus.ADMIN_REJECTED,
+    });
+
+    await graphqlRequestRequiringData<{
+      inviteMembersToEvent: { id: string };
+    }>(
+      app,
+      {
+        query: `
+          mutation InviteMembers($eventId: ID!, $memberIds: [String!]!) {
+            inviteMembersToEvent(eventId: $eventId, memberIds: $memberIds) {
+              id
+            }
+          }
+        `,
+        variables: {
+          eventId: event.id,
+          memberIds: [selfUserId],
+        },
+        headers: { 'x-organization-unit-id': organizationUnitId },
+      },
+      'inviteMembersToEvent',
+    );
+
+    const row = await db.query.eventInvites.findFirst({
+      where: { eventId: event.id, userId: selfUserId },
+    });
+    expect(row?.status).toBe(EventInviteStatus.ACCEPTED);
   });
 
   it('lists ADMIN_REJECTED invites for admin re-invite', async () => {
