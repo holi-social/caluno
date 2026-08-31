@@ -151,7 +151,7 @@ export function ShiftCardMy({
             asChild
             className="relative z-10 flex h-auto w-[100px] shrink-0 flex-col gap-1 self-stretch rounded-xl bg-primary text-primary-foreground"
           >
-            <Link href="/qr-id">
+            <Link href="/check-in">
               <QrCodeIcon className="size-5" />
               <span>{t('checkIn')}</span>
             </Link>
@@ -163,7 +163,7 @@ export function ShiftCardMy({
             variant="outline"
             className="relative z-10 flex h-auto w-[100px] shrink-0 flex-col gap-1 self-stretch rounded-xl"
           >
-            <Link href="/qr-id">
+            <Link href="/check-in">
               <DoorOpenIcon className="size-5" />
               <span>{t('checkOut')}</span>
             </Link>
