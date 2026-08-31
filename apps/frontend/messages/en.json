@@ -375,6 +375,8 @@
         "sign": "Sign",
         "decline": "Decline"
       },
+      "missingProfileWarning": "Your profile is missing details this document needs.",
+      "missingProfileCta": "Complete your profile to sign",
       "toasts": {
         "signed": "{name} signed.",
         "signedError": "{name} could not be signed. Please try again.",
@@ -697,7 +699,8 @@
         "firstName": "As on your ID",
         "iban": "For expense and allowance payments",
         "lastName": "As on your ID",
-        "preferredName": "If you'd like to be called something else"
+        "preferredName": "If you'd like to be called something else",
+        "bic": "Bank identifier code (BIC) for your account"
       }
     },
     "language": "Language",
@@ -904,6 +907,7 @@
       "firstName": "First name",
       "gender": "Gender",
       "iban": "IBAN",
+      "bic": "BIC",
       "infoText": "Info text",
       "labelLabel": "Label",
       "labelPlaceholder": "e.g. Favorite color",
