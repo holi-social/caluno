@@ -155,6 +155,67 @@ export class FileService {
     };
   }
 
+  /**
+   * Stores bytes generated server-side (e.g. rendered document PDFs): writes
+   * the object directly and records an UPLOADED file row in one step — the
+   * presigned path is for client uploads only.
+   */
+  async saveGeneratedFile(args: {
+    organizationUnitId: string;
+    filename: string;
+    mimeType: string;
+    bytes: Buffer;
+    uploadedByUserId: string;
+    purpose: FilePurpose;
+  }): Promise<FileEntity> {
+    const rule = PURPOSE_VALIDATION_RULES[args.purpose];
+    if (!rule) {
+      throw new BadRequestException('Unsupported file purpose');
+    }
+    if (!isMimeTypeAllowed(rule, args.mimeType)) {
+      throw new BadRequestException('MIME type is not allowed for this purpose');
+    }
+
+    const sanitizedFilename = sanitizeFilename(args.filename);
+    const storageKey = this.buildStorageKey({
+      visibility: rule.visibility,
+      organizationUnitId: args.organizationUnitId,
+      userId: args.uploadedByUserId,
+      purpose: args.purpose,
+      filename: sanitizedFilename,
+    });
+
+    await this.s3StorageService.putObject(
+      storageKey,
+      args.bytes,
+      args.mimeType,
+    );
+
+    const [file] = await this.db
+      .insert(schema.files)
+      .values({
+        storageKey,
+        bucket: this.s3StorageService.getBucket(),
+        visibility:
+          rule.visibility === 'public'
+            ? FileVisibility.PUBLIC
+            : FileVisibility.PRIVATE,
+        purpose: args.purpose,
+        mimeType: args.mimeType,
+        filename: sanitizedFilename,
+        byteSize: args.bytes.length,
+        status: FileStatus.UPLOADED,
+        uploadedByUserId: args.uploadedByUserId,
+        organizationUnitId: args.organizationUnitId,
+        uploadedAt: new Date(),
+      })
+      .returning();
+    if (!file) {
+      throw new Error('Failed to save generated file');
+    }
+    return file;
+  }
+
   async completeUpload(userId: string, fileId: string): Promise<FileEntity> {
     const file = await this.findByIdOrThrow(fileId);
 
