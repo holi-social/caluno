@@ -1,0 +1,831 @@
+import 'reflect-metadata';
+import {
+  beforeAll,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  mock,
+  setDefaultTimeout,
+} from 'bun:test';
+import type { INestApplication } from '@nestjs/common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
+import {
+  ContractStatus,
+  DocumentKind,
+  DocumentStatusChange,
+  InvoiceStatus,
+  SigneeType,
+} from '../src/accounting/enums';
+import type { Database } from '../src/database/database.module';
+import * as schema from '../src/database/schema';
+import { NotificationEvent } from '../src/notification/notification-events';
+import type { DocumentAwaitingSignaturePayload } from '../src/notification/payloads/document-awaiting-signature.payload';
+import type { DocumentDeclinedByOrgPayload } from '../src/notification/payloads/document-declined-by-org.payload';
+import {
+  createReimbursementType,
+  createTwoStepTemplate,
+} from './factories/accounting.factory';
+import {
+  addMembership,
+  createOrganizationWithType,
+  createUnit,
+} from './factories/org.factory';
+import {
+  assignRoleToMembership,
+  createPermission,
+  createRole,
+  grantPermissionToRole,
+} from './factories/role.factory';
+import { createShift } from './factories/shift.factory';
+import { createShiftInstance } from './factories/shift-instance.factory';
+import { createUser } from './factories/user.factory';
+import { applyBunAuthMocks, setAuthMockUserId } from './helpers/auth-mocks';
+import { graphqlRequestRequiringData } from './helpers/graphql-request';
+import { getGraphqlTestContext } from './helpers/graphql-test-context';
+
+applyBunAuthMocks(mock.module);
+setDefaultTimeout(30_000);
+
+// ─── GraphQL documents ────────────────────────────────────────────────────────
+
+const CREATE_CONTRACT = `
+  mutation CreateContract($input: CreateContractInput!) {
+    createContract(input: $input) {
+      id
+      contractStatus
+      volunteer { id }
+      statusChanges { type occurredAt actorUser { id name } }
+    }
+  }
+`;
+
+const CREATE_INVOICE = `
+  mutation CreateInvoice($input: CreateInvoiceInput!) {
+    createInvoice(input: $input) {
+      id
+      invoiceStatus
+      totalAmountCents
+      totalHours
+      volunteer { id }
+      statusChanges { type occurredAt actorUser { id name } }
+    }
+  }
+`;
+
+const SIGN_CONTRACT = `
+  mutation SignContract($contractId: ID!) {
+    signContract(contractId: $contractId) {
+      id
+      contractStatus
+      signatures { signeeType signedAt signedByUser { id name } }
+    }
+  }
+`;
+
+const DECLINE_CONTRACT = `
+  mutation DeclineContract($contractId: ID!, $reason: String!) {
+    declineContract(contractId: $contractId, reason: $reason) {
+      id
+      contractStatus
+      declineReason
+      declinedAt
+      declinedAtSigneeType
+      declinedByUser { id name }
+      statusChanges { type }
+    }
+  }
+`;
+
+const SIGN_INVOICE = `
+  mutation SignInvoice($invoiceId: ID!) {
+    signInvoice(invoiceId: $invoiceId) {
+      id
+      invoiceStatus
+      signatures { signeeType signedAt signedByUser { id name } }
+    }
+  }
+`;
+
+const DECLINE_INVOICE = `
+  mutation DeclineInvoice($invoiceId: ID!, $reason: String!) {
+    declineInvoice(invoiceId: $invoiceId, reason: $reason) {
+      id
+      invoiceStatus
+      declineReason
+      declinedAtSigneeType
+      declinedByUser { id }
+    }
+  }
+`;
+
+const MY_CONTRACTS = `
+  query MyContracts {
+    myContracts {
+      id
+      contractStatus
+      volunteer { id }
+    }
+  }
+`;
+
+const MY_INVOICES = `
+  query MyInvoices {
+    myInvoices {
+      id
+      invoiceStatus
+      volunteer { id }
+    }
+  }
+`;
+
+const CONTRACTS = `
+  query Contracts {
+    contracts {
+      id
+      contractStatus
+      declineReason
+      declinedByUser { id }
+      volunteer { id }
+    }
+  }
+`;
+
+const CONTRACT_DETAIL = `
+  query ContractDetail($id: ID!) {
+    contract(id: $id) {
+      id
+      contractStatus
+      signatures { order signeeType signedAt signedByUser { id name } }
+      statusChanges { type occurredAt }
+    }
+  }
+`;
+
+const INVOICE_DETAIL = `
+  query InvoiceDetail($id: ID!) {
+    invoice(id: $id) {
+      id
+      invoiceStatus
+      totalHours
+      totalAmountCents
+      invoiceTimeEntries { id }
+      signatures { order signeeType signedAt signedByUser { id name } }
+      statusChanges { type }
+    }
+  }
+`;
+
+// ─── Setup helpers ────────────────────────────────────────────────────────────
+
+type FlowOrg = Awaited<ReturnType<typeof setupFlowOrg>>;
+
+/** A complete org: admin with the signing permission, a volunteer member, and contract + invoice templates. */
+const setupFlowOrg = async (db: Database) => {
+  const reimbursementType = await createReimbursementType(db);
+  const { organization, type } = await createOrganizationWithType(
+    db,
+    `Docs Flow Org ${crypto.randomUUID()}`,
+  );
+  const root = await createUnit(db, {
+    organizationId: organization.id,
+    typeId: type.id,
+    name: 'root',
+  });
+
+  // The real seeded permission: resolvers check it by key (e.g. viewing a
+  // document as a non-volunteer) and templates reference it for the second
+  // signee, so the admin must hold exactly this one.
+  const permission =
+    (await db.query.permissions.findFirst({
+      where: { key: 'accounting:manage' },
+    })) ?? (await createPermission(db, { key: 'accounting:manage' }));
+  const role = await createRole(db, { organizationId: organization.id });
+  await grantPermissionToRole(db, {
+    roleId: role.id,
+    permissionId: permission.id,
+  });
+
+  const admin = await createUser(db);
+  const adminMembership = await addMembership(db, admin.id, root.id);
+  await assignRoleToMembership(db, {
+    membershipId: adminMembership.id,
+    roleId: role.id,
+  });
+
+  const volunteer = await createUser(db);
+  await addMembership(db, volunteer.id, root.id);
+
+  await createTwoStepTemplate(db, {
+    organizationId: organization.id,
+    reimbursementTypeId: reimbursementType.id,
+    kind: DocumentKind.CONTRACT,
+    requiredPermissionId: permission.id,
+    signeeTypes: [SigneeType.VOLUNTEER, SigneeType.PERMISSION_HOLDER],
+  });
+  await createTwoStepTemplate(db, {
+    organizationId: organization.id,
+    reimbursementTypeId: reimbursementType.id,
+    kind: DocumentKind.INVOICE,
+    requiredPermissionId: permission.id,
+    signeeTypes: [SigneeType.VOLUNTEER, SigneeType.PERMISSION_HOLDER],
+  });
+
+  return {
+    organizationId: organization.id,
+    organizationUnitId: root.id,
+    adminId: admin.id,
+    volunteerId: volunteer.id,
+    reimbursementTypeId: reimbursementType.id,
+  };
+};
+
+/** A completed, unclaimed, paid time entry — the raw material for an invoice. */
+const createCompletedTimeEntry = async (
+  db: Database,
+  args: {
+    organizationUnitId: string;
+    volunteerId: string;
+    reimbursementTypeId: string;
+  },
+) => {
+  const shift = await createShift(db, {
+    organizationUnitId: args.organizationUnitId,
+    title: `Paid shift ${crypto.randomUUID()}`,
+    startsAt: new Date('2026-07-01T09:00:00.000Z'),
+    endsAt: new Date('2026-07-01T10:00:00.000Z'),
+  });
+  const instance = await createShiftInstance(db, shift.id);
+  const [timeEntry] = await db
+    .insert(schema.timeEntries)
+    .values({
+      shiftInstanceId: instance.id,
+      organizationUnitId: args.organizationUnitId,
+      volunteerId: args.volunteerId,
+      reimbursementTypeId: args.reimbursementTypeId,
+      startedAt: new Date('2026-07-01T09:00:00.000Z'),
+      endedAt: new Date('2026-07-01T13:00:00.000Z'), // 4 hours
+      isPaid: true,
+    })
+    .returning();
+  if (!timeEntry) throw new Error('Failed to create time entry');
+  return timeEntry;
+};
+
+// ─── Spec ─────────────────────────────────────────────────────────────────────
+
+describe('documents flow — admin + volunteer', () => {
+  let app: INestApplication;
+  let db: Database;
+  let org: FlowOrg;
+  let orgHeader: Record<string, string>;
+
+  let emitter: EventEmitter2;
+  const awaitingSignatureEvents: DocumentAwaitingSignaturePayload[] = [];
+  const declinedByOrgEvents: DocumentDeclinedByOrgPayload[] = [];
+  const onAwaitingSignature = (payload: DocumentAwaitingSignaturePayload) => {
+    awaitingSignatureEvents.push(payload);
+  };
+  const onDeclinedByOrg = (payload: DocumentDeclinedByOrgPayload) => {
+    declinedByOrgEvents.push(payload);
+  };
+
+  beforeAll(async () => {
+    const context = await getGraphqlTestContext();
+    app = context.app;
+    db = context.db;
+
+    org = await setupFlowOrg(db);
+    orgHeader = { 'x-organization-unit-id': org.organizationUnitId };
+
+    emitter = app.get(EventEmitter2);
+    emitter.on(
+      NotificationEvent.DOCUMENT_AWAITING_SIGNATURE,
+      onAwaitingSignature,
+    );
+    emitter.on(NotificationEvent.DOCUMENT_DECLINED_BY_ORG, onDeclinedByOrg);
+  });
+
+  beforeEach(() => {
+    awaitingSignatureEvents.length = 0;
+    declinedByOrgEvents.length = 0;
+  });
+
+  const createContractAsAdmin = async () => {
+    setAuthMockUserId(org.adminId);
+    return graphqlRequestRequiringData<{
+      createContract: { id: string; contractStatus: string };
+    }>(
+      app,
+      {
+        query: CREATE_CONTRACT,
+        variables: {
+          input: {
+            organizationUnitId: org.organizationUnitId,
+            reimbursementTypeId: org.reimbursementTypeId,
+            volunteerId: org.volunteerId,
+            periodStart: '2026-01-01T00:00:00.000Z',
+            periodEnd: '2027-01-01T00:00:00.000Z',
+          },
+        },
+        headers: orgHeader,
+      },
+      'createContract',
+    );
+  };
+
+  describe('contract lifecycle', () => {
+    it('goes AWAITING_VOLUNTEER_SIGNATURE → AWAITING_NGO_SIGNATURE → ACTIVE with a full paper trail, and emails the volunteer once', async () => {
+      const { createContract } = await createContractAsAdmin();
+      expect(createContract.contractStatus).toBe(
+        ContractStatus.AWAITING_VOLUNTEER_SIGNATURE,
+      );
+
+      // The volunteer is told exactly once: when the document needs their signature.
+      expect(awaitingSignatureEvents).toHaveLength(1);
+      expect(awaitingSignatureEvents[0].volunteerUserId).toBe(org.volunteerId);
+      expect(awaitingSignatureEvents[0].documentKind).toBe(
+        DocumentKind.CONTRACT,
+      );
+
+      // The volunteer sees it on their membership page.
+      setAuthMockUserId(org.volunteerId);
+      const mine = await graphqlRequestRequiringData<{
+        myContracts: Array<{ id: string; contractStatus: string }>;
+      }>(app, { query: MY_CONTRACTS, headers: orgHeader }, 'myContracts');
+      expect(mine.myContracts).toHaveLength(1);
+      expect(mine.myContracts[0]).toMatchObject({
+        id: createContract.id,
+        contractStatus: ContractStatus.AWAITING_VOLUNTEER_SIGNATURE,
+      });
+
+      // Volunteer signs — one tap, no extra step.
+      const signed = await graphqlRequestRequiringData<{
+        signContract: { id: string; contractStatus: string };
+      }>(
+        app,
+        {
+          query: SIGN_CONTRACT,
+          variables: { contractId: createContract.id },
+          headers: orgHeader,
+        },
+        'signContract',
+      );
+      expect(signed.signContract.contractStatus).toBe(
+        ContractStatus.AWAITING_NGO_SIGNATURE,
+      );
+
+      // Admin countersigns — the document is fully signed.
+      setAuthMockUserId(org.adminId);
+      const countersigned = await graphqlRequestRequiringData<{
+        signContract: { id: string; contractStatus: string };
+      }>(
+        app,
+        {
+          query: SIGN_CONTRACT,
+          variables: { contractId: createContract.id },
+          headers: orgHeader,
+        },
+        'signContract',
+      );
+      expect(countersigned.signContract.contractStatus).toBe(
+        ContractStatus.ACTIVE,
+      );
+
+      // Full paper trail: both signatures and the four status changes.
+      const detail = await graphqlRequestRequiringData<{
+        contract: {
+          id: string;
+          contractStatus: string;
+          signatures: Array<{
+            order: number;
+            signeeType: string;
+            signedAt: string | null;
+            signedByUser: { id: string } | null;
+          }>;
+          statusChanges: Array<{ type: string }>;
+        };
+      }>(
+        app,
+        {
+          query: CONTRACT_DETAIL,
+          variables: { id: createContract.id },
+          headers: orgHeader,
+        },
+        'contract',
+      );
+      expect(detail.contract.contractStatus).toBe(ContractStatus.ACTIVE);
+      expect(detail.contract.signatures).toHaveLength(2);
+      expect(detail.contract.signatures.map((s) => s.signedByUser?.id)).toEqual(
+        [org.volunteerId, org.adminId],
+      );
+      expect(detail.contract.statusChanges.map((s) => s.type)).toEqual([
+        DocumentStatusChange.CREATED,
+        DocumentStatusChange.SIGNED,
+        DocumentStatusChange.COUNTERSIGNED,
+        DocumentStatusChange.ACTIVATED,
+      ]);
+    });
+
+    it('records a volunteer decline with the reason and attributes it to the volunteer, without emailing them', async () => {
+      const { createContract } = await createContractAsAdmin();
+
+      setAuthMockUserId(org.volunteerId);
+      const reason = 'Ich habe den Zeitraum übersehen';
+      const declined = await graphqlRequestRequiringData<{
+        declineContract: {
+          id: string;
+          contractStatus: string;
+          declineReason: string;
+          declinedAtSigneeType: string | null;
+          declinedByUser: { id: string } | null;
+        };
+      }>(
+        app,
+        {
+          query: DECLINE_CONTRACT,
+          variables: { contractId: createContract.id, reason },
+          headers: orgHeader,
+        },
+        'declineContract',
+      );
+      expect(declined.declineContract.contractStatus).toBe(
+        ContractStatus.DECLINED,
+      );
+      expect(declined.declineContract.declineReason).toBe(reason);
+      expect(declined.declineContract.declinedAtSigneeType).toBe(
+        SigneeType.VOLUNTEER,
+      );
+      expect(declined.declineContract.declinedByUser?.id).toBe(org.volunteerId);
+
+      // Their own decline is their doing — no email.
+      expect(declinedByOrgEvents).toHaveLength(0);
+
+      // The org's dashboard reads Declined, attributed to the volunteer, with the reason.
+      setAuthMockUserId(org.adminId);
+      const orgView = await graphqlRequestRequiringData<{
+        contracts: Array<{
+          id: string;
+          contractStatus: string;
+          declineReason: string | null;
+          declinedByUser: { id: string } | null;
+        }>;
+      }>(app, { query: CONTRACTS, headers: orgHeader }, 'contracts');
+      const declinedFromOrgView = orgView.contracts.find(
+        (c) => c.id === createContract.id,
+      );
+      expect(declinedFromOrgView).toMatchObject({
+        contractStatus: ContractStatus.DECLINED,
+        declineReason: reason,
+        declinedByUser: { id: org.volunteerId },
+      });
+    });
+
+    it('emails the volunteer when the org declines a document they already signed', async () => {
+      const { createContract } = await createContractAsAdmin();
+
+      setAuthMockUserId(org.volunteerId);
+      await graphqlRequestRequiringData(
+        app,
+        {
+          query: SIGN_CONTRACT,
+          variables: { contractId: createContract.id },
+          headers: orgHeader,
+        },
+        'signContract',
+      );
+
+      setAuthMockUserId(org.adminId);
+      const reason = 'Die Angaben sind unvollständig';
+      const declined = await graphqlRequestRequiringData<{
+        declineContract: {
+          id: string;
+          contractStatus: string;
+          declinedAtSigneeType: string | null;
+        };
+      }>(
+        app,
+        {
+          query: DECLINE_CONTRACT,
+          variables: { contractId: createContract.id, reason },
+          headers: orgHeader,
+        },
+        'declineContract',
+      );
+      expect(declined.declineContract.contractStatus).toBe(
+        ContractStatus.DECLINED,
+      );
+      expect(declined.declineContract.declinedAtSigneeType).toBe(
+        SigneeType.PERMISSION_HOLDER,
+      );
+
+      // It's dead and the volunteer has no other way to learn that — email them with the reason.
+      expect(declinedByOrgEvents).toHaveLength(1);
+      expect(declinedByOrgEvents[0]).toMatchObject({
+        volunteerUserId: org.volunteerId,
+        documentId: createContract.id,
+        documentKind: DocumentKind.CONTRACT,
+        reason,
+      });
+    });
+  });
+
+  describe('invoice lifecycle', () => {
+    it('goes AWAITING_VOLUNTEER_SIGNATURE → AWAITING_SUPERVISOR_SIGNATURE → READY with hours and amount', async () => {
+      // An active contract makes the timesheet compliant; the volunteer also
+      // needs completed paid time entries to invoice.
+      const { createContract } = await createContractAsAdmin();
+      setAuthMockUserId(org.volunteerId);
+      await graphqlRequestRequiringData(
+        app,
+        {
+          query: SIGN_CONTRACT,
+          variables: { contractId: createContract.id },
+          headers: orgHeader,
+        },
+        'signContract',
+      );
+      setAuthMockUserId(org.adminId);
+      await graphqlRequestRequiringData(
+        app,
+        {
+          query: SIGN_CONTRACT,
+          variables: { contractId: createContract.id },
+          headers: orgHeader,
+        },
+        'signContract',
+      );
+
+      const timeEntry = await createCompletedTimeEntry(db, {
+        organizationUnitId: org.organizationUnitId,
+        volunteerId: org.volunteerId,
+        reimbursementTypeId: org.reimbursementTypeId,
+      });
+
+      const { createInvoice } = await graphqlRequestRequiringData<{
+        createInvoice: {
+          id: string;
+          invoiceStatus: string;
+          totalHours: number;
+          totalAmountCents: number;
+        };
+      }>(
+        app,
+        {
+          query: CREATE_INVOICE,
+          variables: {
+            input: {
+              organizationUnitId: org.organizationUnitId,
+              reimbursementTypeId: org.reimbursementTypeId,
+              volunteerId: org.volunteerId,
+              timeEntryIds: [timeEntry.id],
+              periodStart: '2026-07-01T00:00:00.000Z',
+              periodEnd: '2026-07-31T23:59:59.000Z',
+            },
+          },
+          headers: orgHeader,
+        },
+        'createInvoice',
+      );
+      expect(createInvoice.invoiceStatus).toBe(
+        InvoiceStatus.AWAITING_VOLUNTEER_SIGNATURE,
+      );
+      expect(createInvoice.totalHours).toBe(4);
+      expect(createInvoice.totalAmountCents).toBe(6_000); // 4h × 1500ct
+
+      // The volunteer is told a timesheet needs their signature too — the
+      // setup contract above already emitted its own event, so filter for
+      // the invoice one.
+      const invoiceEvents = awaitingSignatureEvents.filter(
+        (event) => event.documentKind === DocumentKind.INVOICE,
+      );
+      expect(invoiceEvents).toHaveLength(1);
+      expect(invoiceEvents[0]).toMatchObject({
+        volunteerUserId: org.volunteerId,
+        documentKind: DocumentKind.INVOICE,
+      });
+
+      setAuthMockUserId(org.volunteerId);
+      const mine = await graphqlRequestRequiringData<{
+        myInvoices: Array<{ id: string; invoiceStatus: string }>;
+      }>(app, { query: MY_INVOICES, headers: orgHeader }, 'myInvoices');
+      expect(mine.myInvoices).toHaveLength(1);
+      expect(mine.myInvoices[0].invoiceStatus).toBe(
+        InvoiceStatus.AWAITING_VOLUNTEER_SIGNATURE,
+      );
+
+      const signed = await graphqlRequestRequiringData<{
+        signInvoice: { id: string; invoiceStatus: string };
+      }>(
+        app,
+        {
+          query: SIGN_INVOICE,
+          variables: { invoiceId: createInvoice.id },
+          headers: orgHeader,
+        },
+        'signInvoice',
+      );
+      expect(signed.signInvoice.invoiceStatus).toBe(
+        InvoiceStatus.AWAITING_SUPERVISOR_SIGNATURE,
+      );
+
+      setAuthMockUserId(org.adminId);
+      const countersigned = await graphqlRequestRequiringData<{
+        signInvoice: { id: string; invoiceStatus: string };
+      }>(
+        app,
+        {
+          query: SIGN_INVOICE,
+          variables: { invoiceId: createInvoice.id },
+          headers: orgHeader,
+        },
+        'signInvoice',
+      );
+      expect(countersigned.signInvoice.invoiceStatus).toBe(InvoiceStatus.READY);
+
+      const detail = await graphqlRequestRequiringData<{
+        invoice: {
+          id: string;
+          invoiceStatus: string;
+          totalHours: number;
+          totalAmountCents: number;
+          invoiceTimeEntries: Array<{ id: string }>;
+          signatures: Array<{ signedByUser: { id: string } | null }>;
+          statusChanges: Array<{ type: string }>;
+        };
+      }>(
+        app,
+        {
+          query: INVOICE_DETAIL,
+          variables: { id: createInvoice.id },
+          headers: orgHeader,
+        },
+        'invoice',
+      );
+      expect(detail.invoice).toMatchObject({
+        invoiceStatus: InvoiceStatus.READY,
+        totalHours: 4,
+        totalAmountCents: 6_000,
+      });
+      expect(detail.invoice.invoiceTimeEntries).toHaveLength(1);
+      expect(detail.invoice.signatures.map((s) => s.signedByUser?.id)).toEqual([
+        org.volunteerId,
+        org.adminId,
+      ]);
+    });
+
+    it('records an invoice decline with the reason', async () => {
+      const timeEntry = await createCompletedTimeEntry(db, {
+        organizationUnitId: org.organizationUnitId,
+        volunteerId: org.volunteerId,
+        reimbursementTypeId: org.reimbursementTypeId,
+      });
+
+      setAuthMockUserId(org.adminId);
+      const { createInvoice } = await graphqlRequestRequiringData<{
+        createInvoice: { id: string };
+      }>(
+        app,
+        {
+          query: CREATE_INVOICE,
+          variables: {
+            input: {
+              organizationUnitId: org.organizationUnitId,
+              reimbursementTypeId: org.reimbursementTypeId,
+              volunteerId: org.volunteerId,
+              timeEntryIds: [timeEntry.id],
+              periodStart: '2026-07-01T00:00:00.000Z',
+              periodEnd: '2026-07-31T23:59:59.000Z',
+            },
+          },
+          headers: orgHeader,
+        },
+        'createInvoice',
+      );
+
+      setAuthMockUserId(org.volunteerId);
+      const reason = 'Stunden stimmen nicht';
+      const declined = await graphqlRequestRequiringData<{
+        declineInvoice: {
+          id: string;
+          invoiceStatus: string;
+          declineReason: string;
+          declinedAtSigneeType: string | null;
+          declinedByUser: { id: string } | null;
+        };
+      }>(
+        app,
+        {
+          query: DECLINE_INVOICE,
+          variables: { invoiceId: createInvoice.id, reason },
+          headers: orgHeader,
+        },
+        'declineInvoice',
+      );
+      expect(declined.declineInvoice.invoiceStatus).toBe(
+        InvoiceStatus.DECLINED,
+      );
+      expect(declined.declineInvoice.declineReason).toBe(reason);
+      expect(declined.declineInvoice.declinedAtSigneeType).toBe(
+        SigneeType.VOLUNTEER,
+      );
+      expect(declined.declineInvoice.declinedByUser?.id).toBe(org.volunteerId);
+    });
+  });
+
+  describe('org scoping', () => {
+    it('a volunteer in two organisations only ever sees each org\u2019s own documents', async () => {
+      // Two fresh orgs, each with its own admin and template — the shared
+      // `org` already carries documents from the lifecycle tests above.
+      const orgA = await setupFlowOrg(db);
+      const orgB = await setupFlowOrg(db);
+      const orgAHeader = { 'x-organization-unit-id': orgA.organizationUnitId };
+      const orgBHeader = { 'x-organization-unit-id': orgB.organizationUnitId };
+
+      // The same volunteer is a member of both orgs.
+      const volunteerId = orgA.volunteerId;
+      const [membershipB] = await db
+        .insert(schema.memberships)
+        .values({
+          userId: volunteerId,
+          organizationUnitId: orgB.organizationUnitId,
+        })
+        .returning();
+      expect(membershipB).toBeDefined();
+
+      // Admin A creates a contract for the volunteer in org A; admin B in org B.
+      setAuthMockUserId(orgA.adminId);
+      const contractA = await graphqlRequestRequiringData<{
+        createContract: { id: string };
+      }>(
+        app,
+        {
+          query: CREATE_CONTRACT,
+          variables: {
+            input: {
+              organizationUnitId: orgA.organizationUnitId,
+              reimbursementTypeId: orgA.reimbursementTypeId,
+              volunteerId,
+              periodStart: '2026-01-01T00:00:00.000Z',
+              periodEnd: '2027-01-01T00:00:00.000Z',
+            },
+          },
+          headers: orgAHeader,
+        },
+        'createContract',
+      );
+      setAuthMockUserId(orgB.adminId);
+      const contractB = await graphqlRequestRequiringData<{
+        createContract: { id: string };
+      }>(
+        app,
+        {
+          query: CREATE_CONTRACT,
+          variables: {
+            input: {
+              organizationUnitId: orgB.organizationUnitId,
+              reimbursementTypeId: orgB.reimbursementTypeId,
+              volunteerId,
+              periodStart: '2026-01-01T00:00:00.000Z',
+              periodEnd: '2027-01-01T00:00:00.000Z',
+            },
+          },
+          headers: orgBHeader,
+        },
+        'createContract',
+      );
+
+      // The volunteer's view is scoped per organisation — org A's page lists
+      // only org A's document, org B's page only org B's.
+      setAuthMockUserId(volunteerId);
+      const mineA = await graphqlRequestRequiringData<{
+        myContracts: Array<{ id: string }>;
+      }>(app, { query: MY_CONTRACTS, headers: orgAHeader }, 'myContracts');
+      const mineB = await graphqlRequestRequiringData<{
+        myContracts: Array<{ id: string }>;
+      }>(app, { query: MY_CONTRACTS, headers: orgBHeader }, 'myContracts');
+      expect(mineA.myContracts.map((c) => c.id)).toEqual([
+        contractA.createContract.id,
+      ]);
+      expect(mineB.myContracts.map((c) => c.id)).toEqual([
+        contractB.createContract.id,
+      ]);
+
+      // Each admin's dashboard only lists their own org's documents.
+      setAuthMockUserId(orgA.adminId);
+      const adminA = await graphqlRequestRequiringData<{
+        contracts: Array<{ id: string }>;
+      }>(app, { query: CONTRACTS, headers: orgAHeader }, 'contracts');
+      setAuthMockUserId(orgB.adminId);
+      const adminB = await graphqlRequestRequiringData<{
+        contracts: Array<{ id: string }>;
+      }>(app, { query: CONTRACTS, headers: orgBHeader }, 'contracts');
+      expect(adminA.contracts.map((c) => c.id)).toEqual([
+        contractA.createContract.id,
+      ]);
+      expect(adminB.contracts.map((c) => c.id)).toEqual([
+        contractB.createContract.id,
+      ]);
+    });
+  });
+});
