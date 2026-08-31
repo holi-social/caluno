@@ -30,6 +30,7 @@ import type { InvoiceEntity } from '../schemas/invoice.schema';
 import type { InvoiceStatusChangeEntity } from '../schemas/invoice-status-change.schema';
 import { ContractService } from './contract.service';
 import { DocumentNotificationService } from './document-notification.service';
+import { DocumentProfileRequirementService } from './document-profile-requirement.service';
 import { DocumentRenderingService } from './document-rendering.service';
 import { DocumentSigningService } from './document-signing.service';
 import { DocumentTemplateService } from './document-template.service';
@@ -45,6 +46,7 @@ export class InvoiceService {
     private readonly reimbursementRateService: ReimbursementRateService,
     private readonly contractService: ContractService,
     private readonly documentNotificationService: DocumentNotificationService,
+    private readonly documentProfileRequirementService: DocumentProfileRequirementService,
     private readonly documentRenderingService: DocumentRenderingService,
     private readonly postHogService: PostHogService,
   ) {}
@@ -282,6 +284,23 @@ export class InvoiceService {
       pending.requiredPermissionId,
       this.documentSigningService.organizationIdOf(invoice.documentTemplate),
     );
+
+    // The volunteer's own signature is the first step of the chain. Require
+    // the profile fields the template reads before they can sign, so the
+    // signed document never comes out with "—" gaps in place of them.
+    if (pending.signeeType === SigneeType.VOLUNTEER) {
+      const missing = await this.documentProfileRequirementService.missingProfileSources(
+        invoice.volunteerId,
+        invoice.documentTemplate?.body,
+      );
+      if (missing.length > 0) {
+        throw new BadRequestGraphQLError(
+          'Your profile is missing details required for this document: ' +
+            missing.join(', ') +
+            '. Please complete your profile before signing.',
+        );
+      }
+    }
 
     const isFinal = pendingIndex === orderedSignatures.length - 1;
 

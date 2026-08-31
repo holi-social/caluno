@@ -20,6 +20,7 @@ import {
 } from '../src/accounting/enums';
 import type { Database } from '../src/database/database.module';
 import * as schema from '../src/database/schema';
+import { userProfiles } from '../src/requirement-profile/schemas/user-profile.schema';
 import { NotificationEvent } from '../src/notification/notification-events';
 import type { DocumentAwaitingSignaturePayload } from '../src/notification/payloads/document-awaiting-signature.payload';
 import type { DocumentDeclinedByOrgPayload } from '../src/notification/payloads/document-declined-by-org.payload';
@@ -182,6 +183,7 @@ const CONTRACT_DETAIL = `
       id
       contractStatus
       downloadUrl
+      missingProfileFields
       signatures { order signeeType signedAt signedByUser { id name } }
       statusChanges { type occurredAt }
     }
@@ -1330,6 +1332,118 @@ describe('documents flow — admin + volunteer', () => {
       // The invoice table lists the shift that produced the time entry.
       expect(glyphs).toContain('Stundennachweis');
       expect(glyphs).toContain('Unterschrift');
+    });
+  });
+
+  describe('profile gating', () => {
+    /** A template that binds IBAN + BIC (profile-required), mirroring the real payout block. */
+    const bodyRequiringBank = {
+      header: {
+        titleLines: ['Zusatzvereinbarung'],
+      },
+      blocks: [
+        {
+          id: 'payout',
+          kind: 'text',
+          title: 'Auszahlung',
+          lines: [
+            {
+              id: 'iban-line',
+              text: 'IBAN: {volunteerIban}',
+              fields: [
+                { id: 'iban-field', value: { kind: 'bound', source: 'volunteer_iban' } },
+              ],
+              enabled: true,
+            },
+            {
+              id: 'bic-line',
+              text: 'BIC: {volunteerBic}',
+              fields: [
+                { id: 'bic-field', value: { kind: 'bound', source: 'volunteer_bic' } },
+              ],
+              enabled: true,
+            },
+          ],
+          enabled: true,
+        },
+      ],
+      footer: { closingLine: { id: 'closing', text: 'Vielen Dank', fields: [], enabled: true } },
+    };
+
+    it('blocks the volunteer from signing a document whose template needs profile fields they have not filled in', async () => {
+      const gatedOrg = await setupFlowOrg(db);
+      const gatedHeader = {
+        'x-organization-unit-id': gatedOrg.organizationUnitId,
+      };
+      await db
+        .update(schema.documentTemplates)
+        .set({ body: bodyRequiringBank })
+        .where(
+          eq(schema.documentTemplates.organizationId, gatedOrg.organizationId),
+        );
+
+      setAuthMockUserId(gatedOrg.adminId);
+      const { createContract } = await graphqlRequestRequiringData<{
+        createContract: { id: string };
+      }>(
+        app,
+        {
+          query: CREATE_CONTRACT,
+          variables: {
+            input: {
+              organizationUnitId: gatedOrg.organizationUnitId,
+              reimbursementTypeId: gatedOrg.reimbursementTypeId,
+              volunteerId: gatedOrg.volunteerId,
+              periodStart: '2026-01-01T00:00:00.000Z',
+              periodEnd: '2027-01-01T00:00:00.000Z',
+            },
+          },
+          headers: gatedHeader,
+        },
+        'createContract',
+      );
+
+      // The volunteer has no IBAN/BIC in their profile → the sign is refused.
+      setAuthMockUserId(gatedOrg.volunteerId);
+      const refused = await graphqlRequest<{
+        signContract: { id: string };
+      }>(app, {
+        query: SIGN_CONTRACT,
+        variables: { contractId: createContract.id },
+        headers: gatedHeader,
+      });
+      expect(refused.errors?.[0]?.message ?? '').toMatch(/profile is missing/i);
+      expect(refused.data?.signContract).toBeUndefined();
+
+      // Filling in the required profile fields unblocks signing.
+      await db.insert(userProfiles).values({
+        userId: gatedOrg.volunteerId,
+        data: {
+          iban: 'DE89 3704 0044 0532 0130 00',
+          bic: 'COBADEFFXXX',
+        },
+      });
+      setAuthMockUserId(gatedOrg.volunteerId);
+      const signed = await graphqlRequestRequiringData<{
+        signContract: { id: string; contractStatus: string };
+      }>(app, {
+        query: SIGN_CONTRACT,
+        variables: { contractId: createContract.id },
+        headers: gatedHeader,
+      }, 'signContract');
+      expect(signed.signContract.contractStatus).toBe(
+        ContractStatus.AWAITING_NGO_SIGNATURE,
+      );
+
+      // The card can now report an empty missing-fields list.
+      const detail = await graphqlRequestRequiringData<{
+        contract: { id: string; missingProfileFields: string[] };
+      }>(app, {
+        query: CONTRACT_DETAIL,
+        variables: { id: createContract.id },
+        headers: gatedHeader,
+      }, 'contract');
+      expect(detail.contract.missingProfileFields).toEqual([]);
     });
   });
 });

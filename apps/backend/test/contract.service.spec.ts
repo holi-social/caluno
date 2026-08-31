@@ -10,6 +10,7 @@ import {
 import { ContractService } from '../src/accounting/services/contract.service';
 import { DocumentNotificationService } from '../src/accounting/services/document-notification.service';
 import { DocumentRenderingService } from '../src/accounting/services/document-rendering.service';
+import { DocumentProfileRequirementService } from '../src/accounting/services/document-profile-requirement.service';
 import { DocumentSigningService } from '../src/accounting/services/document-signing.service';
 import { DocumentTemplateService } from '../src/accounting/services/document-template.service';
 import { AuthService } from '../src/auth/auth.service';
@@ -89,6 +90,9 @@ describe('ContractService', () => {
         notifyAwaitingVolunteerSignature: () => Promise.resolve(),
         notifyDeclinedByOrg: () => Promise.resolve(),
       } as unknown as DocumentNotificationService,
+      {
+        missingProfileSources: () => Promise.resolve([]),
+      } as unknown as DocumentProfileRequirementService,
       {
         renderAndAttachPdf: () => Promise.resolve(null),
       } as unknown as DocumentRenderingService,

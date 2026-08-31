@@ -21,6 +21,7 @@ import type { DocumentTemplateEntity } from '../schemas/document-template.schema
 import type { ReimbursementTypeEntity } from '../schemas/reimbursement-type.schema';
 import { AccountingUserLoader } from './accounting-user.loader';
 import { ContractLoader } from './contract.loader';
+import { DocumentProfileRequirementService } from '../services/document-profile-requirement.service';
 
 type MaybeWithRelations = ContractEntity & {
   documentTemplate?: DocumentTemplateEntity;
@@ -37,6 +38,7 @@ export class ContractFieldResolver {
     private readonly contractSignatureMapper: ContractSignatureMapper,
     private readonly contractStatusChangeMapper: ContractStatusChangeMapper,
     private readonly fileService: FileService,
+    private readonly documentProfileRequirementService: DocumentProfileRequirementService,
   ) {}
 
   @ResolveField(() => DocumentTemplate)
@@ -97,6 +99,22 @@ export class ContractFieldResolver {
   ): Promise<string | null> {
     if (!contract.fileId) return null;
     return this.fileService.resolvePublicUrlForUploadedFile(contract.fileId);
+  }
+
+  @ResolveField(() => [String])
+  async missingProfileFields(
+    @Parent() contract: MaybeWithRelations,
+    @Loader(ContractLoader) loader: ContractLoader,
+  ): Promise<string[]> {
+    let templateBody: unknown = contract.documentTemplate?.body;
+    if (!templateBody) {
+      const full = await loader.contractWithRelationsById.load(contract.id);
+      templateBody = full.documentTemplate?.body;
+    }
+    return this.documentProfileRequirementService.missingProfileSources(
+      contract.volunteerId,
+      templateBody,
+    );
   }
 
   @ResolveField(() => User)

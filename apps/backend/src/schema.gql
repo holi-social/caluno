@@ -33,6 +33,7 @@ type Contract {
   downloadUrl: String
   id: ID!
   isNonCompliant: Boolean!
+  missingProfileFields: [String!]!
   periodEnd: DateTime!
   periodStart: DateTime!
   reimbursementType: ReimbursementType!
@@ -456,6 +457,7 @@ type Invoice {
   invoiceStatus: InvoiceStatus!
   invoiceTimeEntries: [InvoiceTimeEntry!]!
   isNonCompliant: Boolean!
+  missingProfileFields: [String!]!
   paidAt: DateTime
   paidByUser: User
   periodEnd: DateTime!

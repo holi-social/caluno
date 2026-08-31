@@ -73,6 +73,14 @@ export class Invoice {
   @Field(() => [InvoiceTimeEntry])
   invoiceTimeEntries!: InvoiceTimeEntry[];
 
+  /**
+   * The profile-required data sources this document's template reads that the
+   * volunteer has not yet supplied. Empty once the document is ready to be
+   * signed (the sign gate blocks the volunteer otherwise).
+   */
+  @Field(() => [String])
+  missingProfileFields!: string[];
+
   @Field(() => Date)
   createdAt!: Date;
 
