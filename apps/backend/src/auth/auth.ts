@@ -49,6 +49,7 @@ export interface AuthConfigOptions {
   sendVerificationOTP: (options: SendVerificationOtpOptions) => Promise<void>;
   sendResetPassword: (options: SendResetPasswordOptions) => Promise<void>;
   onSessionCreated?: (userId: string) => void;
+  onSessionDeleted?: (userId: string) => void;
   onUserCreated?: (userId: string) => void;
   privacyPolicyDirectory?: string;
 }
@@ -61,6 +62,7 @@ export const createAuthConfig = ({
   sendVerificationOTP,
   sendResetPassword,
   onSessionCreated,
+  onSessionDeleted,
   onUserCreated,
   privacyPolicyDirectory = defaultPrivacyPolicyDirectory(),
 }: AuthConfigOptions): BetterAuthOptions => ({
@@ -133,6 +135,13 @@ export const createAuthConfig = ({
         after: async (session) => {
           if (typeof session.userId === 'string') {
             onSessionCreated?.(session.userId);
+          }
+        },
+      },
+      delete: {
+        after: async (session) => {
+          if (typeof session.userId === 'string') {
+            onSessionDeleted?.(session.userId);
           }
         },
       },

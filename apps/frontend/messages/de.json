@@ -86,6 +86,12 @@
       "verifying": "Wird bestätigt..."
     }
   },
+  "CheckIn": {
+    "manualCheckin": "Manuelles Einchecken",
+    "myQrCodeTab": "Mein QR-Code",
+    "qrScannerTab": "QR-Scanner",
+    "scanACode": "Code scannen"
+  },
   "Common": {
     "avatarAlt": "Avatar von {name}",
     "back": "Zurück",
@@ -178,6 +184,7 @@
         "createNew": "Neues erstellen",
         "dedupHint": "Freiwillige werden nicht nach Informationen gefragt, die sie bereits angegeben haben.",
         "fileUploadLabel": "Datei-Upload",
+        "noBlocks": "Keine Blöcke",
         "noFormsFound": "Keine Formulare gefunden",
         "pill": {
           "none": "Keine Formulare erforderlich",
@@ -783,6 +790,10 @@
       "shareLinkCopied": "Freigabelink in Zwischenablage kopiert",
       "submissionsWarning": "Dieses Formular hat Einsendungen",
       "submissionsWarningDescription": "Die Bearbeitung ist deaktiviert, weil Freiwillige bereits Antworten eingereicht haben. Erstelle eine Kopie, wenn du eine neue Version brauchst.",
+      "unsavedChangesDescription": "Du hast ungespeicherte Änderungen. Wenn du jetzt gehst, gehen sie verloren.",
+      "unsavedChangesLeave": "Ohne Speichern verlassen",
+      "unsavedChangesStay": "Weiter bearbeiten",
+      "unsavedChangesTitle": "Ungespeicherte Änderungen",
       "viewBlock": "Ansehen"
     },
     "card": {
@@ -895,8 +906,6 @@
       "searchPlaceholder": "Freiwillige suchen…",
       "submissionsColumn": "Einsendungen",
       "subtitle": "Freiwillige, die dieses Formular eingereicht haben. Klicke auf eine Person, um die Einsendung anzusehen.",
-      "tabRejected": "Abgelehnt",
-      "tabSubmitted": "Eingereicht",
       "title": "Einsendungen — {formName}",
       "viewSubmission": "Ansehen →",
       "volunteerColumn": "Freiwillige:r"
@@ -1060,7 +1069,6 @@
       "checkingIn": "Wird eingecheckt...",
       "checkingOut": "Wird ausgecheckt...",
       "checkingOutAt": "Wird ausgecheckt: {time}",
-      "enterQrTitle": "Oder gib die QR-ID manuell ein, um die Anwesenheit zu bestätigen",
       "generalCheckIn": "Allgemeines Check-in",
       "invalidCheckin": {
         "blocked": {
@@ -1073,8 +1081,6 @@
         }
       },
       "noShiftSelected": "Kein Einsatz ausgewählt",
-      "scanDescription": "Scanne die QR-ID mit der Kamera. Damit checkst du Freiwillige ein- oder aus.",
-      "searchVolunteerTitle": "Oder wähle die Person zur Anmeldung aus der Liste aus",
       "selectOrgDescription": "Wähle die Organisation aus, in die die Person eingecheckt werden soll.",
       "selectOrgTitle": "Einchecken",
       "successNext": "Weiter",
@@ -1098,6 +1104,7 @@
         "createNew": "Neues erstellen",
         "dedupHint": "Freiwillige werden nicht nach Informationen gefragt, die sie bereits angegeben haben.",
         "fileUploadLabel": "Datei-Upload",
+        "noBlocks": "Keine Blöcke",
         "noFormsFound": "Keine Formulare gefunden",
         "pill": {
           "none": "Keine Formulare erforderlich",
@@ -1463,6 +1470,12 @@
     "action": {
       "checkInAria": "Einchecken",
       "checkInShiftAria": "Einchecken",
+      "remove": "Entfernen",
+      "removeAria": "Entfernen",
+      "removeDescription": "Bist du sicher, dass du {name} aus dieser Organisation entfernen möchtest? Das kann nicht rückgängig gemacht werden.",
+      "removeFailedToast": "Freiwillige:r konnte nicht entfernt werden",
+      "removeTitle": "Aus Organisation entfernen",
+      "removedToast": "{name} wurde aus dieser Organisation entfernt",
       "viewProfileAria": "Ansehen"
     },
     "empty": {
@@ -1485,6 +1498,7 @@
       "createNew": "Neues erstellen",
       "dedupHint": "Freiwillige müssen Informationen, die sie bereits angegeben haben, nicht erneut eingeben.",
       "fileUploadLabel": "Datei-Upload",
+      "noBlocks": "Keine Blöcke",
       "noFormsFound": "Keine Formulare gefunden",
       "pill": {
         "none": "Keine Formulare erforderlich",

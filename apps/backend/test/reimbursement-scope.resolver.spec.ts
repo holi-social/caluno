@@ -28,7 +28,7 @@ import { OrganizationUnitDataModule } from '../src/organization/organization-uni
 import { OrganizationUnitDataService } from '../src/organization/organization-unit-data.service';
 import type { RequiredFormService } from '../src/requirement-profile/services/required-form.service';
 import type { RequirementProfileService } from '../src/requirement-profile/services/requirement-profile.service';
-import type { PostHogCaptureService } from '../src/shared/observability/posthog.capture.service';
+import { PostHogService } from '../src/shared/observability/posthog.service';
 import type { FileService } from '../src/storage/services/file.service';
 import { UserMapper } from '../src/user/mappers/user.mapper';
 import { UserService } from '../src/user/user.service';
@@ -77,6 +77,7 @@ describe('reimbursement-rate resolver unit scoping', () => {
       db,
       {} as FileService,
       organizationUnitDataService,
+      { capture: () => {} } as unknown as PostHogService,
     );
     const membershipService = new MembershipService(
       db,
@@ -84,14 +85,18 @@ describe('reimbursement-rate resolver unit scoping', () => {
       {} as AuthService,
       {} as NotificationService,
       {} as RequiredFormService,
-      { captureUserJoinedOrg: () => {} } as unknown as PostHogCaptureService,
+      { shareSubmissionsWithOrgUnit: async () => {} } as never,
+      { capture: () => {} } as unknown as PostHogService,
     );
     const reimbursementRateService = new ReimbursementRateService(
       db,
       organizationUnitDataService,
       membershipService,
+      { capture: () => {} } as unknown as PostHogService,
     );
-    const userService = new UserService(db);
+    const userService = new UserService(db, {
+      capture: () => {},
+    } as unknown as PostHogService);
     queryResolver = new ReimbursementQueryResolver(
       reimbursementRateService,
       new ReimbursementTypeMapper(),

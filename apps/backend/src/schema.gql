@@ -422,8 +422,6 @@ type FormSubmission {
   form: RequirementForm
   formId: String!
   id: ID!
-  membershipId: String
-  status: FormSubmissionStatus!
   submittedAt: DateTime!
   updatedAt: DateTime!
   user: User
@@ -434,11 +432,6 @@ type FormSubmission {
 type FormSubmissionPaginatedResponse {
   items: [FormSubmission!]!
   pagination: PaginationInfo!
-}
-
-enum FormSubmissionStatus {
-  REJECTED
-  SUBMITTED
 }
 
 type FormSubmissionValue {
@@ -643,6 +636,7 @@ type Mutation {
   recordBundleDownload(invoiceIds: [ID!], reimbursementTypeId: ID!, volunteerId: ID!): BundleDownloadStatus!
   regenerateFormShareToken(id: String!): RequirementForm!
   rejectMembershipRequest(id: ID!, organizationUnitId: ID!, rejectionReason: String!): MembershipRequest!
+  removeMembership(id: ID!): Membership!
   removeMembershipRequest(id: ID!): MembershipRequest!
   setEventRequiredForms(eventId: ID!, formIds: [String!]!): [RequiredFormRef!]!
   setManualBaseline(amountCents: Int!, reimbursementTypeId: ID!, volunteerId: ID!, year: Int!): ManualBaseline!
@@ -652,7 +646,7 @@ type Mutation {
   setShiftRequiredForms(formIds: [String!]!, shiftId: ID!): [RequiredFormRef!]!
   signContract(contractId: ID!): Contract!
   signInvoice(invoiceId: ID!): Invoice!
-  submitForm(input: SubmitFormInput!, token: String!): FormSubmission!
+  submitForm(input: SubmitFormInput!, organizationUnitId: ID!, token: String!): FormSubmission!
   submitRequiredForm(formId: String!, input: SubmitFormInput!, targetId: String!, targetType: RequiredFormTargetType!): FormSubmission!
   updateDocumentTemplate(id: ID!, input: UpdateDocumentTemplateInput!): DocumentTemplate!
   updateEvent(id: ID!, input: UpdateEventInput!): Event!
@@ -787,6 +781,7 @@ type PermissionGroupItem {
 
 enum PermissionKey {
   ACCOUNTING_MANAGE
+  CHECK_IN_MANAGE
   ORG_EDIT
   ORG_VIEW
   REQUIREMENT_PROFILE_EDIT
@@ -832,6 +827,7 @@ type Query {
   membershipRequests(limit: Int! = 10, offset: Int! = 0, status: MembershipRequestStatus): MembershipRequestPaginatedResponse!
   memberships: [Membership!]!
   myAdminstableOrganizationUnits: [OrganizationUnit!]!
+  myCheckInAdministrableOrganizationUnits: [OrganizationUnit!]!
   myContracts(filter: ContractFilterInput): [Contract!]!
   myEvents(endsBefore: DateTime = null, includePast: Boolean! = false, limit: Int! = 15, offset: Int! = 0, order: SortOrder! = ASC, startsAfter: DateTime = null, statuses: [EventInviteStatus!]): EventPaginatedResponse!
   myFormSubmission(id: ID!): FormSubmission

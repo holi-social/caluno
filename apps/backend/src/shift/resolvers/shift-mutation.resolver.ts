@@ -137,7 +137,10 @@ export class ShiftMutationResolver {
       instanceId,
       input,
       context.organizationUnitId,
-      { applyToAllFuture: applyToAllFuture ?? false },
+      {
+        applyToAllFuture: applyToAllFuture ?? false,
+        actorUserId: context.user.id,
+      },
     );
     return this.shiftInstanceMapper.toModelOrThrow(instance);
   }
@@ -151,6 +154,7 @@ export class ShiftMutationResolver {
     const result = await this.shiftService.delete(
       id,
       context.organizationUnitId,
+      context.user.id,
     );
     return this.shiftMapper.toModelOrThrow(result);
   }
@@ -166,7 +170,10 @@ export class ShiftMutationResolver {
     const instance = await this.shiftService.deleteShiftInstance(
       id,
       context.organizationUnitId,
-      { applyToAllFuture: applyToAllFuture ?? false },
+      {
+        applyToAllFuture: applyToAllFuture ?? false,
+        actorUserId: context.user.id,
+      },
     );
     return this.shiftInstanceMapper.toModelOrThrow(instance);
   }
@@ -186,6 +193,7 @@ export class ShiftMutationResolver {
     const requiredForms = await this.requiredFormService.setRequiredForms(
       { targetType: RequiredFormTargetType.SHIFT, targetId: shiftId },
       formIds,
+      context.user.id,
     );
 
     return this.requiredFormRefMapper.toArray(requiredForms);
@@ -209,6 +217,7 @@ export class ShiftMutationResolver {
         targetId: instanceId,
       },
       formIds,
+      context.user.id,
     );
 
     return this.requiredFormRefMapper.toArray(requiredForms);
@@ -279,6 +288,7 @@ export class ShiftMutationResolver {
       session.user.id,
       shiftId,
       status,
+      session.user.id,
     );
     return this.shiftInviteMapper.toModelOrThrow(invite);
   }
@@ -307,6 +317,7 @@ export class ShiftMutationResolver {
       targetUserId,
       instanceId,
       status,
+      session.user.id,
     );
     return this.shiftInstanceInviteMapper.toModelOrThrow(invite);
   }

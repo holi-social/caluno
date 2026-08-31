@@ -1,38 +1,36 @@
 'use client';
 
-import { Alert, AlertDescription, AlertTitle } from '@repo/ui';
-import { AlertCircle } from 'lucide-react';
+import { Alert, AlertDescription, AlertTitle, Button } from '@repo/ui';
+import { AlertCircle, ClipboardList } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { QRScanner } from '@/components/qr-scanner';
+import { extractCheckInPath } from '@/domain/shift/routes';
 import { useRouter } from '@/i18n/navigation';
 
-const extractCheckInId = (url: string) => {
-  const match = url.match(/check-in\/([a-z0-9]{12})/i);
-  return match ? match[1] : null;
-};
+interface CheckInQrScannerProps {
+  onManualCheckin: () => void;
+}
 
-type CheckinScannerProps = {
-  organizationUnitId: string;
-};
-
-export const CheckInScanner = ({ organizationUnitId }: CheckinScannerProps) => {
+export function CheckInQrScanner({ onManualCheckin }: CheckInQrScannerProps) {
   const [error, setError] = useState(false);
   const router = useRouter();
   const t = useTranslations('Shift');
+  const tCheckIn = useTranslations('CheckIn');
 
   const handleScan = (data: string) => {
     setError(false);
-    const checkinId = extractCheckInId(data);
+    const path = extractCheckInPath(data);
 
-    if (checkinId) {
-      router.push(`/admin/${organizationUnitId}/check-in/${checkinId}/decide`);
+    if (path) {
+      router.push(path);
     } else {
       setError(true);
       toast.error(t('scanner.invalidToast'));
     }
   };
+
   return (
     <div>
       {error && (
@@ -44,6 +42,15 @@ export const CheckInScanner = ({ organizationUnitId }: CheckinScannerProps) => {
       )}
 
       <QRScanner onScan={handleScan} />
+
+      <Button
+        type="button"
+        variant="outline"
+        className="mt-4 w-full"
+        onClick={onManualCheckin}
+      >
+        <ClipboardList /> {tCheckIn('manualCheckin')}
+      </Button>
     </div>
   );
-};
+}

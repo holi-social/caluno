@@ -27,7 +27,7 @@ import { OrganizationMapper } from '../src/organization/mappers/organization.map
 import { OrganizationService } from '../src/organization/organization.service';
 import { OrganizationUnitService } from '../src/organization/organization-unit.service';
 import { OrganizationUnitDataService } from '../src/organization/organization-unit-data.service';
-import { PostHogCaptureService } from '../src/shared/observability/posthog.capture.service';
+import { PostHogService } from '../src/shared/observability/posthog.service';
 import { FileService } from '../src/storage/services/file.service';
 import {
   createCompletedTimeEntry,
@@ -67,7 +67,9 @@ describe('InvoiceService', () => {
     db = moduleRef.get<Database>(DATABASE_CONNECTION);
 
     const organizationUnitDataService = new OrganizationUnitDataService(db);
-    const authService = new AuthService(db, organizationUnitDataService);
+    const authService = new AuthService(db, organizationUnitDataService, {
+      capture: () => {},
+    } as unknown as PostHogService);
     const organizationService = new OrganizationService(
       db,
       {} as OrganizationMapper,
@@ -75,9 +77,11 @@ describe('InvoiceService', () => {
       {} as OrganizationUnitService,
       {} as NotificationService,
       {} as FileService,
-      {} as PostHogCaptureService,
+      { capture: () => {} } as unknown as PostHogService,
     );
-    const documentTemplateService = new DocumentTemplateService(db);
+    const documentTemplateService = new DocumentTemplateService(db, {
+      capture: () => {},
+    } as unknown as PostHogService);
     const documentSigningService = new DocumentSigningService(
       db,
       authService,
@@ -87,11 +91,13 @@ describe('InvoiceService', () => {
       db,
       organizationUnitDataService,
       {} as MembershipService,
+      { capture: () => {} } as unknown as PostHogService,
     );
     const contractService = new ContractService(
       db,
       documentTemplateService,
       documentSigningService,
+      { capture: () => {} } as unknown as PostHogService,
     );
     service = new InvoiceService(
       db,
@@ -99,6 +105,7 @@ describe('InvoiceService', () => {
       documentSigningService,
       reimbursementRateService,
       contractService,
+      { capture: () => {} } as unknown as PostHogService,
     );
 
     registerTestResourceCleanup(async () => {
@@ -355,11 +362,13 @@ describe('InvoiceService', () => {
         db,
         new OrganizationUnitDataService(db),
         {} as MembershipService,
+        { capture: () => {} } as unknown as PostHogService,
       );
       await reimbursementRateService.setReimbursementRate(
         organization.id,
         reimbursementType.id,
         2_000,
+        supervisor.id,
       );
 
       const invoice = await service.createInvoice(

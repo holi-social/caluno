@@ -13,23 +13,12 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
 } from '@repo/ui';
 import { Search, UserRound } from 'lucide-react';
-import { useSearchParams } from 'next/navigation';
 import { useFormatter, useTranslations } from 'next-intl';
 import { useState } from 'react';
-import { usePathname, useRouter } from '@/i18n/navigation';
-import {
-  groupSubmissionsByVolunteer,
-  type VolunteerSubmissions,
-} from './group-submissions';
-
-const TAB_SUBMITTED = 'SUBMITTED';
-const TAB_REJECTED = 'REJECTED';
+import { useRouter } from '@/i18n/navigation';
+import { groupSubmissionsByVolunteer } from './group-submissions';
 
 type Submission =
   GetFormSubmissionsByFormQuery['formSubmissionsByForm']['items'][number];
@@ -45,34 +34,18 @@ export function FormSubmissionsClient({
   const tCommon = useTranslations('Common');
   const formatter = useFormatter();
   const router = useRouter();
-  const pathname = usePathname();
-  const searchParams = useSearchParams();
   const [search, setSearch] = useState('');
-
-  const activeTab = searchParams.get('status') ?? TAB_SUBMITTED;
-
-  const handleTabChange = (value: string) => {
-    const params = new URLSearchParams(searchParams.toString());
-    params.set('status', value);
-    router.replace(`${pathname}?${params.toString()}`);
-  };
 
   const query = search.trim().toLowerCase();
 
-  const rowsForTab = (status: string): VolunteerSubmissions[] =>
-    groupSubmissionsByVolunteer(submissions, status).filter(
-      (entry) =>
-        !query ||
-        entry.user.name.toLowerCase().includes(query) ||
-        entry.user.email.toLowerCase().includes(query),
-    );
+  const rows = groupSubmissionsByVolunteer(submissions).filter(
+    (entry) =>
+      !query ||
+      entry.user.name.toLowerCase().includes(query) ||
+      entry.user.email.toLowerCase().includes(query),
+  );
 
-  const tabs = [
-    { value: TAB_SUBMITTED, label: t('tabSubmitted') },
-    { value: TAB_REJECTED, label: t('tabRejected') },
-  ];
-
-  const renderTable = (rows: VolunteerSubmissions[]) => (
+  return (
     <>
       <div className="relative max-w-sm">
         <Search className="text-muted-foreground absolute top-2.5 left-3 size-4" />
@@ -146,25 +119,5 @@ export function FormSubmissionsClient({
         </div>
       )}
     </>
-  );
-
-  return (
-    <Tabs value={activeTab} onValueChange={handleTabChange}>
-      <TabsList>
-        {tabs.map((tab) => (
-          <TabsTrigger key={tab.value} value={tab.value}>
-            {tab.label}
-            <span className="inline-flex h-5 min-w-[20px] items-center justify-center rounded-full bg-muted px-1.5 text-xs font-medium text-muted-foreground">
-              {rowsForTab(tab.value).length}
-            </span>
-          </TabsTrigger>
-        ))}
-      </TabsList>
-      {tabs.map((tab) => (
-        <TabsContent key={tab.value} value={tab.value} className="mt-4">
-          {renderTable(rowsForTab(tab.value))}
-        </TabsContent>
-      ))}
-    </Tabs>
   );
 }
