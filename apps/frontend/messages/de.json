@@ -562,7 +562,9 @@
     "volunteers": "Freiwillige",
     "accounting": "Buchhaltung",
     "reimbursements": "Abrechnungen",
-    "accountingSettings": "Einstellungen"
+    "accountingSettings": "Einstellungen",
+    "myDocuments": "Meine Dokumente",
+    "myDocumentsBadge": "{count} Dokumente warten auf deine Unterschrift"
   },
   "OrgDetail": {
     "aboutHeading": "Über uns",
@@ -2082,6 +2084,15 @@
           "signees": "{count, plural, =1 {1 Unterschrift} other {# Unterschriften}}"
         }
       }
+    }
+  },
+  "MyDocuments": {
+    "title": "Meine Dokumente",
+    "backLabel": "Zurück",
+    "loadMore": "Mehr laden ({remaining})",
+    "empty": {
+      "title": "Noch keine Dokumente",
+      "description": "Vereinbarungen und Stundennachweise deiner Organisationen erscheinen hier."
     }
   }
 }
