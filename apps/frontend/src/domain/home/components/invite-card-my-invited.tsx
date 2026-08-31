@@ -81,6 +81,7 @@ export function InviteCardMyInvited({ invite }: { invite: MergedInvitation }) {
     <div className="flex flex-col gap-2">
       <Link
         href={n.detailHref}
+        prefetch={false}
         aria-hidden="true"
         tabIndex={-1}
         className="flex items-center gap-2"
@@ -117,6 +118,7 @@ export function InviteCardMyInvited({ invite }: { invite: MergedInvitation }) {
       <Card className="flex flex-col gap-2.5 rounded-xl border border-border bg-card p-3 shadow-none">
         <Link
           href={n.detailHref}
+          prefetch={false}
           aria-label={n.title}
           className="flex gap-3 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60 focus-visible:ring-offset-1"
         >

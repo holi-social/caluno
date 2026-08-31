@@ -96,6 +96,7 @@ export function ShiftCardMyShift({
   return (
     <Link
       href={shiftPublicPath(shiftInstance.master.id, shiftInstance.id)}
+      prefetch={false}
       className="block h-full rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60 focus-visible:ring-offset-1"
     >
       {card}
