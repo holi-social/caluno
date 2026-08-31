@@ -1,5 +1,7 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { and, count, eq } from 'drizzle-orm';
+import { PERMISSIONS } from '../auth/constants';
+import type { UserEntity } from '../auth/schemas/auth.schema';
 import type { Database } from '../database/database.module';
 import { DATABASE_CONNECTION } from '../database/database-connection';
 import * as schema from '../database/schema';
@@ -11,12 +13,14 @@ import {
 } from '../graphql/errors';
 import { PaginationInput } from '../graphql/pagination.input';
 import { MembershipService } from '../membership/membership.service';
+import { OrganizationService } from '../organization/organization.service';
 import {
   POSTHOG_EVENT,
   POSTHOG_SURFACE,
 } from '../shared/observability/posthog.events';
 import { PostHogService } from '../shared/observability/posthog.service';
 import { ShiftService } from '../shift/shift.service';
+import { UserService } from '../user/user.service';
 import { AddTimeEntryInput } from './inputs/add-time-entry.input';
 import { CloseTimeEntryInput } from './inputs/close-time-enty-input';
 import { UpdateTimeEntryInput } from './inputs/update-time-entry.input';
@@ -33,6 +37,8 @@ export class TimeTrackingService {
     readonly _membershipService: MembershipService,
     private readonly shiftService: ShiftService,
     private readonly postHogService: PostHogService,
+    private readonly organizationService: OrganizationService,
+    private readonly userService: UserService,
   ) {}
   async addTimeEntry(
     organizationUnitId: string,
@@ -304,6 +310,62 @@ export class TimeTrackingService {
       .where(eq(schema.timeEntries.volunteerId, userId));
 
     return { entries: entries as TimeEntryEntity[], total };
+  }
+
+  /**
+   * Cross-org-unit check-in context for the volunteering-side decide page.
+   * Intentionally not scoped by ctx.organizationUnitId: eligibility is the
+   * intersection of the caller's check-in:manage units and the volunteer's
+   * memberships, enforced here (mirrors the ungated checkIn/checkOut mutations).
+   */
+  async getCheckInContext(
+    callerUserId: string,
+    checkInId: string,
+  ): Promise<{
+    volunteer: UserEntity;
+    eligibleOrganizationUnits: schema.OrganizationUnitEntity[];
+    openTimeEntries: TimeEntryEntity[];
+  } | null> {
+    const volunteer = await this.userService.findByCheckInId(checkInId);
+    if (!volunteer) {
+      return null;
+    }
+
+    const manageableUnits =
+      await this.organizationService.findUnitsWithPermission(
+        callerUserId,
+        PERMISSIONS.CHECK_IN_MANAGE,
+      );
+
+    const eligibleUnits: schema.OrganizationUnitEntity[] = [];
+    for (const unit of manageableUnits) {
+      const isMember = await this._membershipService.isMemberOfUnitOrAncestor(
+        volunteer.id,
+        unit.id,
+      );
+      if (isMember) {
+        eligibleUnits.push(unit);
+      }
+    }
+    eligibleUnits.sort((a, b) => a.name.localeCompare(b.name));
+
+    const openTimeEntries =
+      eligibleUnits.length === 0
+        ? []
+        : await this.db.query.timeEntries.findMany({
+            where: {
+              volunteerId: volunteer.id,
+              organizationUnitId: { in: eligibleUnits.map((unit) => unit.id) },
+              endedAt: { isNull: true },
+            },
+            orderBy: { startedAt: 'asc' },
+          });
+
+    return {
+      volunteer,
+      eligibleOrganizationUnits: eligibleUnits,
+      openTimeEntries,
+    };
   }
 
   /**

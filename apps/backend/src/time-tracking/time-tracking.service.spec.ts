@@ -39,6 +39,8 @@ describe('TimeTrackingService.addTimeEntry PostHog', () => {
       {} as never,
       {} as never,
       { capture } as unknown as PostHogService,
+      {} as never,
+      {} as never,
     );
     const input = Object.assign(new AddTimeEntryInput(), {
       shiftInstanceId: 'si-1',
