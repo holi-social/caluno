@@ -993,6 +993,7 @@
       "fieldRequired": "{label} ist erforderlich",
       "invalidCharacters": "{label} enthält ungültige Zeichen",
       "invalidIban": "{label} muss eine gültige IBAN sein",
+      "invalidBic": "{label} muss eine gültige BIC sein",
       "invalidOptions": "{label} enthält ungültige Optionen",
       "labelRequired": "Bezeichnung ist erforderlich",
       "maxChars": "{label} darf maximal {maxLen} Zeichen lang sein",
