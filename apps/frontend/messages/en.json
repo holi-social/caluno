@@ -1912,6 +1912,18 @@
           "signatureSupervisor": "Supervisor signature",
           "unsigned": "Not yet signed"
         }
+      },
+      "signToasts": {
+        "contract": "Contract countersigned for {name}.",
+        "contractError": "Contract could not be countersigned for {name}.",
+        "invoice": "Timesheet countersigned for {name}.",
+        "invoiceError": "Timesheet could not be countersigned for {name}."
+      },
+      "declineToasts": {
+        "contract": "Contract declined for {name}.",
+        "contractError": "Contract could not be declined for {name}.",
+        "invoice": "Timesheet declined for {name}.",
+        "invoiceError": "Timesheet could not be declined for {name}."
       }
     },
     "templates": {

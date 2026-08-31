@@ -1912,6 +1912,18 @@
           "signatureSupervisor": "Unterschrift (Organisation)",
           "unsigned": "Noch nicht unterschrieben"
         }
+      },
+      "signToasts": {
+        "contract": "Vereinbarung für {name} gegengezeichnet.",
+        "contractError": "Vereinbarung konnte für {name} nicht gegengezeichnet werden.",
+        "invoice": "Stundennachweis für {name} gegengezeichnet.",
+        "invoiceError": "Stundennachweis konnte für {name} nicht gegengezeichnet werden."
+      },
+      "declineToasts": {
+        "contract": "Vereinbarung für {name} abgelehnt.",
+        "contractError": "Vereinbarung konnte für {name} nicht abgelehnt werden.",
+        "invoice": "Stundennachweis für {name} abgelehnt.",
+        "invoiceError": "Stundennachweis konnte für {name} nicht abgelehnt werden."
       }
     },
     "templates": {
