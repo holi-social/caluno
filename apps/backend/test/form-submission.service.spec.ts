@@ -10,6 +10,7 @@ import { RequiredFormTargetType } from '../src/requirement-profile/enums';
 import { FormSubmissionService } from '../src/requirement-profile/services/form-submission.service';
 import { RequiredFormService } from '../src/requirement-profile/services/required-form.service';
 import { UserProfileService } from '../src/requirement-profile/services/user-profile.service';
+import { PostHogService } from '../src/shared/observability/posthog.service';
 import {
   createFormSubmission,
   createRequirementForm,
@@ -40,11 +41,13 @@ describe('FormSubmissionService org-unit shares', () => {
     }).compile();
     db = moduleRef.get<Database>(DATABASE_CONNECTION);
 
-    const requiredFormService = new RequiredFormService(db);
+    const postHogService = { capture: () => {} } as unknown as PostHogService;
+    const requiredFormService = new RequiredFormService(db, postHogService);
     formSubmissionService = new FormSubmissionService(
       db,
-      new UserProfileService(db),
+      new UserProfileService(db, postHogService),
       requiredFormService,
+      postHogService,
     );
 
     registerTestResourceCleanup(async () => {

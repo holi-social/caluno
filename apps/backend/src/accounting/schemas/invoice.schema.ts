@@ -58,6 +58,10 @@ export const invoices = snakeCase.table('invoices', {
   declinedByUserId: text('declined_by_user_id').references(() => users.id, {
     onDelete: 'restrict',
   }),
+  paidAt: timestamp('paid_at'),
+  paidByUserId: text('paid_by_user_id').references(() => users.id, {
+    onDelete: 'set null',
+  }),
   declinedAt: timestamp('declined_at'),
   declinedAtSigneeType: signeeTypeEnum('declined_at_signee_type'),
   ...timestampColumns,

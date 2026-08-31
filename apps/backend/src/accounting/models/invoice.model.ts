@@ -50,6 +50,12 @@ export class Invoice {
   declinedByUser?: User | null;
 
   @Field(() => Date, { nullable: true })
+  paidAt?: Date | null;
+
+  @Field(() => User, { nullable: true })
+  paidByUser?: User | null;
+
+  @Field(() => Date, { nullable: true })
   declinedAt?: Date | null;
 
   @Field(() => SigneeType, { nullable: true })

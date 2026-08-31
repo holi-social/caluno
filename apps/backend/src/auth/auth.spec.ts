@@ -8,22 +8,59 @@ jest.mock('@better-auth/drizzle-adapter', () => ({
 
 jest.mock('better-auth', () => ({
   betterAuth: jest.fn((config) => config),
+  APIError: class APIError extends Error {
+    constructor(
+      public status: string,
+      public body: { message: string },
+    ) {
+      super(body.message);
+      this.name = 'APIError';
+    }
+  },
 }));
 
 jest.mock('better-auth/plugins', () => ({
   emailOTP: jest.fn(() => ({ id: 'email-otp' })),
 }));
 
+import { mkdtempSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { APIError } from 'better-auth';
 import { createAuthConfig } from './auth';
 
+const privacyPolicyDirectory = mkdtempSync(
+  join(tmpdir(), 'auth-privacy-policy-'),
+);
+writeFileSync(
+  join(privacyPolicyDirectory, 'datenschutzhinweise-2026-08-17.pdf'),
+  'old',
+);
+writeFileSync(
+  join(privacyPolicyDirectory, 'datenschutzhinweise-2026-08-25.pdf'),
+  'new',
+);
+
+const authConfig = () =>
+  createAuthConfig({
+    database: {},
+    trustedOrigins: [],
+    sendVerificationOTP: jest.fn(),
+    sendResetPassword: jest.fn(),
+    privacyPolicyDirectory,
+  });
+
 describe('createAuthConfig', () => {
+  it('does not declare privacyPolicyAccepted as an additional user field', () => {
+    const config = authConfig();
+
+    expect(config.user?.additionalFields).not.toHaveProperty(
+      'privacyPolicyAccepted',
+    );
+  });
+
   it('sets user locale from x-locale on sign up', async () => {
-    const config = createAuthConfig({
-      database: {},
-      trustedOrigins: [],
-      sendVerificationOTP: jest.fn(),
-      sendResetPassword: jest.fn(),
-    });
+    const config = authConfig();
 
     const beforeCreate = config.databaseHooks?.user?.create?.before;
     expect(beforeCreate).toBeDefined();
@@ -46,13 +83,96 @@ describe('createAuthConfig', () => {
         createdAt: new Date(),
         updatedAt: new Date(),
       },
-      { request } as never,
+      {
+        request,
+        body: { privacyPolicyAccepted: true },
+      } as never,
     );
 
     expect(result).toEqual({
       data: expect.objectContaining({
         locale: 'de',
+        privacyPolicyVersion: '2026-08-25',
+        privacyPolicyAcceptedAt: expect.any(Date),
       }),
+    });
+    expect(result).toEqual({
+      data: expect.not.objectContaining({
+        privacyPolicyAccepted: expect.anything(),
+      }),
+    });
+  });
+
+  it('ignores privacyPolicyAccepted on the user payload', async () => {
+    const config = authConfig();
+
+    const beforeCreate = config.databaseHooks?.user?.create?.before;
+    expect(beforeCreate).toBeDefined();
+
+    await expect(
+      beforeCreate?.(
+        {
+          id: 'user-1',
+          email: 'volunteer@example.com',
+          name: 'Volunteer',
+          emailVerified: false,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+          privacyPolicyAccepted: true,
+        },
+        {
+          request: new Request('http://localhost:8080/api/auth/sign-up/email'),
+        } as never,
+      ),
+    ).rejects.toBeInstanceOf(APIError);
+  });
+
+  it('rejects sign up without privacy policy acceptance', async () => {
+    const config = authConfig();
+
+    const beforeCreate = config.databaseHooks?.user?.create?.before;
+    expect(beforeCreate).toBeDefined();
+
+    await expect(
+      beforeCreate?.(
+        {
+          id: 'user-1',
+          email: 'volunteer@example.com',
+          name: 'Volunteer',
+          emailVerified: false,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        {
+          request: new Request('http://localhost:8080/api/auth/sign-up/email'),
+        } as never,
+      ),
+    ).rejects.toBeInstanceOf(APIError);
+  });
+
+  it('rejects sign up that only sends a stale version', async () => {
+    const config = authConfig();
+
+    const beforeCreate = config.databaseHooks?.user?.create?.before;
+    expect(beforeCreate).toBeDefined();
+
+    await expect(
+      beforeCreate?.(
+        {
+          id: 'user-1',
+          email: 'volunteer@example.com',
+          name: 'Volunteer',
+          emailVerified: false,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+          privacyPolicyVersion: '1999-01-01',
+        },
+        {
+          request: new Request('http://localhost:8080/api/auth/sign-up/email'),
+        } as never,
+      ),
+    ).rejects.toMatchObject({
+      message: 'Privacy policy must be accepted',
     });
   });
 
@@ -164,6 +284,34 @@ describe('createAuthConfig', () => {
 
     expect(onUserCreated).toHaveBeenCalledWith('user-1');
     expect(onSessionCreated).not.toHaveBeenCalled();
+  });
+
+  it('calls onSessionDeleted with the session user id after session delete', async () => {
+    const onSessionDeleted = jest.fn();
+    const config = createAuthConfig({
+      database: {},
+      trustedOrigins: [],
+      sendVerificationOTP: jest.fn(),
+      sendResetPassword: jest.fn(),
+      onSessionDeleted,
+    });
+
+    const afterDelete = config.databaseHooks?.session?.delete?.after;
+    expect(afterDelete).toBeDefined();
+
+    await afterDelete?.(
+      {
+        id: 'session-1',
+        userId: 'user-1',
+        token: 'token-1',
+        expiresAt: new Date(),
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
+      null,
+    );
+
+    expect(onSessionDeleted).toHaveBeenCalledWith('user-1');
   });
 
   it('does not throw after user create when onUserCreated is omitted', async () => {

@@ -33,4 +33,9 @@ export class MembershipRepository extends BaseRepository {
     const data = await this.sdk.LeaveMembership({ id: membershipId });
     return data.leaveMembership;
   }
+
+  async remove(membershipId: string) {
+    const data = await this.sdk.RemoveMembership({ id: membershipId });
+    return data.removeMembership;
+  }
 }

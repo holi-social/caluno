@@ -63,6 +63,7 @@ export class DocumentTemplateMutationResolver {
     await this.documentTemplateService.deleteDocumentTemplate(
       organizationId,
       id,
+      context.user.id,
     );
     return true;
   }

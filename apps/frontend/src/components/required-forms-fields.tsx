@@ -99,6 +99,7 @@ interface RequiredFormsAddExistingProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   disabled?: boolean;
+  disabledFormIds?: Set<string>;
   t: FormsT;
 }
 
@@ -108,6 +109,7 @@ export function RequiredFormsAddExisting({
   open,
   onOpenChange,
   disabled,
+  disabledFormIds,
   t,
 }: RequiredFormsAddExistingProps) {
   return (
@@ -129,15 +131,28 @@ export function RequiredFormsAddExisting({
           <CommandList>
             <CommandEmpty>{t('noFormsFound')}</CommandEmpty>
             <CommandGroup>
-              {availableForms.map((form) => (
-                <CommandItem
-                  key={form.id}
-                  value={form.id}
-                  onSelect={() => onAdd(form.id)}
-                >
-                  {form.name}
-                </CommandItem>
-              ))}
+              {availableForms.map((form) => {
+                const isDisabled = disabledFormIds?.has(form.id) ?? false;
+                return (
+                  <CommandItem
+                    key={form.id}
+                    value={form.id}
+                    disabled={isDisabled}
+                    onSelect={() => {
+                      if (!isDisabled) {
+                        onAdd(form.id);
+                      }
+                    }}
+                  >
+                    <span className="truncate">{form.name}</span>
+                    {isDisabled && (
+                      <span className="ml-auto shrink-0 text-xs text-muted-foreground">
+                        {t('noBlocks')}
+                      </span>
+                    )}
+                  </CommandItem>
+                );
+              })}
             </CommandGroup>
           </CommandList>
         </Command>

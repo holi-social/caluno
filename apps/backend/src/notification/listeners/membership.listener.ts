@@ -3,6 +3,8 @@ import { OnEvent } from '@nestjs/event-emitter';
 import { AppI18nService } from '../../i18n/app-i18n.service';
 import { createEmailTemplateContext } from '../email/email-template-context';
 import { membershipApprovedTemplate } from '../email/templates/membership-approved.template';
+import { membershipLeftTemplate } from '../email/templates/membership-left.template';
+import { membershipRemovedTemplate } from '../email/templates/membership-removed.template';
 import { membershipRequestedTemplate } from '../email/templates/membership-requested.template';
 import { NotificationService } from '../notification.service';
 import type { NotificationEventPayloadMap } from '../notification-event-map';
@@ -70,6 +72,68 @@ export class MembershipListener {
         return membershipApprovedTemplate(
           {
             organizationUnitId: payload.organizationUnitId,
+            organizationName: payload.organizationName,
+            recipientFirstName: recipient.firstName,
+          },
+          templateContext,
+        );
+      },
+    );
+  }
+
+  @OnEvent(NotificationEvent.MEMBERSHIP_LEFT)
+  async handleMembershipLeft(
+    payload: NotificationEventPayloadMap[typeof NotificationEvent.MEMBERSHIP_LEFT],
+  ): Promise<void> {
+    const leaver = await this.notificationService.resolveUserNotificationData(
+      payload.leaverUserId,
+      {
+        event: NotificationEvent.MEMBERSHIP_LEFT,
+      },
+    );
+    if (!leaver) {
+      return;
+    }
+
+    await this.notificationService.sendNotification(
+      payload.recipientUserIds,
+      {
+        event: NotificationEvent.MEMBERSHIP_LEFT,
+      },
+      async (recipient) => {
+        const templateContext = createEmailTemplateContext(
+          this.appI18n,
+          recipient.locale,
+        );
+        return membershipLeftTemplate(
+          {
+            organizationUnitId: payload.organizationUnitId,
+            organizationUnitName: payload.organizationUnitName,
+            volunteerName: leaver.name,
+            recipientFirstName: recipient.firstName,
+          },
+          templateContext,
+        );
+      },
+    );
+  }
+
+  @OnEvent(NotificationEvent.MEMBERSHIP_REMOVED)
+  async handleMembershipRemoved(
+    payload: NotificationEventPayloadMap[typeof NotificationEvent.MEMBERSHIP_REMOVED],
+  ): Promise<void> {
+    await this.notificationService.sendNotification(
+      payload.userId,
+      {
+        event: NotificationEvent.MEMBERSHIP_REMOVED,
+      },
+      async (recipient) => {
+        const templateContext = createEmailTemplateContext(
+          this.appI18n,
+          recipient.locale,
+        );
+        return membershipRemovedTemplate(
+          {
             organizationName: payload.organizationName,
             recipientFirstName: recipient.firstName,
           },
