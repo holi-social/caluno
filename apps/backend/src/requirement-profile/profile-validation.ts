@@ -122,9 +122,7 @@ const isValidIban = (iban: string): boolean => {
     .join('');
   let remainder = '';
   for (const digit of numeric) {
-    remainder = `${remainder}${digit}`.replace(/^0+/, '');
-    const n = Number.parseInt(remainder, 10);
-    if (Number.isNaN(n)) return false;
+    const n = Number.parseInt(`${remainder}${digit}`, 10);
     remainder = (n % 97).toString();
   }
   return remainder === '1';

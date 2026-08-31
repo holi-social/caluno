@@ -173,7 +173,15 @@ export class FileService {
       throw new BadRequestException('Unsupported file purpose');
     }
     if (!isMimeTypeAllowed(rule, args.mimeType)) {
-      throw new BadRequestException('MIME type is not allowed for this purpose');
+      throw new BadRequestException(
+        'MIME type is not allowed for this purpose',
+      );
+    }
+
+    if (args.bytes.length <= 0 || args.bytes.length > rule.maxByteSize) {
+      throw new BadRequestException(
+        'File size is not allowed for this purpose',
+      );
     }
 
     const sanitizedFilename = sanitizeFilename(args.filename);
