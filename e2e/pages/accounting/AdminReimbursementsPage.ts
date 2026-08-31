@@ -93,19 +93,22 @@ export class AdminReimbursementsPage {
     await expect(this.contractRow().first()).toBeVisible();
   }
 
-  /** Countersigns the document now waiting on the coordinator. */
+  /**
+   * Countersigns one document now waiting on the coordinator. Robust to
+   * leftover coord docs from earlier runs: asserts the coord row count
+   * decreases by exactly one rather than reaching zero.
+   */
   async countersignContract(volunteerName: string) {
     await this.page.reload({ waitUntil: 'load' });
-    const row = this.countersignRow();
-    await expect(row.first()).toBeVisible();
-    await row.first().getByRole('button', { name: 'Countersign' }).click();
+    const rows = this.countersignRow();
+    const before = await rows.count();
+    expect(before).toBeGreaterThan(0);
+    await rows.first().getByRole('button', { name: 'Countersign' }).click();
     await expect(
       this.page.getByText(`Contract countersigned for ${volunteerName}.`),
     ).toBeVisible();
     await this.page.reload({ waitUntil: 'load' });
-    await expect(
-      this.page.getByRole('button', { name: 'Countersign' }),
-    ).toHaveCount(0);
+    await expect(this.countersignRow()).toHaveCount(before - 1);
   }
 
   /**

@@ -108,4 +108,49 @@ test.describe('accounting documents flow — admin + volunteer', () => {
     await adminContext.close();
     await volunteerContext.close();
   });
+
+  test('profile dropdown leads to the cross-org "My documents" page, whose badge matches the cards awaiting the signature', async ({
+    browser,
+  }) => {
+    const volunteerContext = await browser.newContext({
+      storageState: volunteerAuthFile,
+    });
+    const volunteerPage = await volunteerContext.newPage();
+
+    // Volunteer home → avatar dropdown → "My documents".
+    await volunteerPage.goto(`${BASE_URL}/en`, { waitUntil: 'load' });
+    await volunteerPage.getByRole('button', { name: 'Profile' }).click();
+    const dropdownDocuments = volunteerPage.getByRole('button', {
+      name: /My documents/,
+    });
+    await expect(dropdownDocuments).toBeVisible();
+
+    // The badge (red dot with a number) counts documents needing the
+    // volunteer's signature across all orgs.
+    const badgeText = await volunteerPage
+      .locator('span', { hasText: /^\d+$/ })
+      .first()
+      .textContent()
+      .catch(() => null);
+    const badgeCount = badgeText === null ? 0 : Number(badgeText);
+
+    await dropdownDocuments.click();
+    await volunteerPage.waitForURL(/\/en\/profile\/documents/, {
+      timeout: 15_000,
+    });
+    await expect(
+      volunteerPage.getByText('My documents', { exact: true }),
+    ).toBeVisible();
+
+    // The org accordions are open by default; count the cards awaiting the
+    // signature across all of them — the badge number must match.
+    const awaitingCards = volunteerPage.locator(
+      '[data-testid="volunteer-document-card"][data-state="awaiting-signature"]',
+    );
+    await expect(awaitingCards.first()).toBeVisible();
+    const awaitingCount = await awaitingCards.count();
+    expect(awaitingCount).toBe(badgeCount);
+
+    await volunteerContext.close();
+  });
 });
