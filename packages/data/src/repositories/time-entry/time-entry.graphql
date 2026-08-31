@@ -167,3 +167,38 @@ query GetMyTime($limit: Int!, $offset: Int!) {
     }
   }
 }
+
+query GetCheckInContext($checkInId: String!) {
+  checkInContext(checkInId: $checkInId) {
+    volunteer {
+      id
+      name
+      email
+      image
+    }
+    eligibleOrganizationUnits {
+      id
+      name
+    }
+    openTimeEntries {
+      id
+      startedAt
+      shiftInstance {
+        id
+        overrideTitle
+        master {
+          id
+          title
+        }
+      }
+      organizationUnit {
+        id
+        name
+        organization {
+          id
+          name
+        }
+      }
+    }
+  }
+}
