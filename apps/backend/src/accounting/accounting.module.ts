@@ -49,6 +49,7 @@ import {
   TemplateSigneeFieldResolver,
 } from './resolvers';
 import {
+  AccountingOrgAccessService,
   ContractService,
   DocumentNotificationService,
   DocumentRenderingService,
@@ -71,6 +72,7 @@ import {
     NotificationModule,
   ],
   providers: [
+    AccountingOrgAccessService,
     ReimbursementRateService,
     DocumentTemplateService,
     DocumentRenderingService,

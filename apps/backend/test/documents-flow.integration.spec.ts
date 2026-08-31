@@ -10,6 +10,7 @@ import {
 } from 'bun:test';
 import type { INestApplication } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
+import { eq } from 'drizzle-orm';
 import {
   ContractStatus,
   DocumentKind,
@@ -41,7 +42,10 @@ import { createShift } from './factories/shift.factory';
 import { createShiftInstance } from './factories/shift-instance.factory';
 import { createUser } from './factories/user.factory';
 import { applyBunAuthMocks, setAuthMockUserId } from './helpers/auth-mocks';
-import { graphqlRequestRequiringData } from './helpers/graphql-request';
+import {
+  graphqlRequest,
+  graphqlRequestRequiringData,
+} from './helpers/graphql-request';
 import { getGraphqlTestContext } from './helpers/graphql-test-context';
 
 applyBunAuthMocks(mock.module);
@@ -192,6 +196,11 @@ const setupFlowOrg = async (db: Database) => {
     typeId: type.id,
     name: 'root',
   });
+  // Accounting operations are gated on the org's accountingEnabled flag.
+  await db
+    .update(schema.organizations)
+    .set({ accountingEnabled: true })
+    .where(eq(schema.organizations.id, organization.id));
 
   // The real seeded permission: resolvers check it by key (e.g. viewing a
   // document as a non-volunteer) and templates reference it for the second
@@ -826,6 +835,50 @@ describe('documents flow — admin + volunteer', () => {
       expect(adminB.contracts.map((c) => c.id)).toEqual([
         contractB.createContract.id,
       ]);
+    });
+  });
+
+  describe('accounting gate', () => {
+    it('forbids backoffice accounting operations when the org has accounting disabled, while the volunteer view stays open', async () => {
+      const disabledOrg = await setupFlowOrg(db);
+      const disabledHeader = {
+        'x-organization-unit-id': disabledOrg.organizationUnitId,
+      };
+      await db
+        .update(schema.organizations)
+        .set({ accountingEnabled: false })
+        .where(eq(schema.organizations.id, disabledOrg.organizationId));
+
+      // The owner still holds ACCOUNTING_MANAGE, but the flag blocks access.
+      setAuthMockUserId(disabledOrg.adminId);
+      const contractsResponse = await graphqlRequest<{
+        contracts?: Array<{ id: string }>;
+      }>(app, { query: CONTRACTS, headers: disabledHeader });
+      expect(contractsResponse.errors?.[0]?.extensions?.code).toBe('FORBIDDEN');
+      const createResponse = await graphqlRequest<{
+        createContract?: { id: string };
+      }>(app, {
+        query: CREATE_CONTRACT,
+        variables: {
+          input: {
+            organizationUnitId: disabledOrg.organizationUnitId,
+            reimbursementTypeId: disabledOrg.reimbursementTypeId,
+            volunteerId: disabledOrg.volunteerId,
+            periodStart: '2026-01-01T00:00:00.000Z',
+            periodEnd: '2027-01-01T00:00:00.000Z',
+          },
+        },
+        headers: disabledHeader,
+      });
+      expect(createResponse.errors?.[0]?.extensions?.code).toBe('FORBIDDEN');
+
+      // The volunteer's own document list is not gated — a disabled org can
+      // never have documents, so it is simply empty.
+      setAuthMockUserId(disabledOrg.volunteerId);
+      const mine = await graphqlRequestRequiringData<{
+        myContracts: Array<{ id: string }>;
+      }>(app, { query: MY_CONTRACTS, headers: disabledHeader }, 'myContracts');
+      expect(mine.myContracts).toEqual([]);
     });
   });
 });

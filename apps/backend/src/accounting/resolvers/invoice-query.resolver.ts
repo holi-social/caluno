@@ -16,7 +16,7 @@ import { InvoiceFilterInput } from '../inputs/invoice-filter.input';
 import { InvoiceMapper } from '../mappers';
 import { Invoice } from '../models/invoice.model';
 import { PendingSignee } from '../models/pending-signee.model';
-import { InvoiceService } from '../services';
+import { AccountingOrgAccessService, InvoiceService } from '../services';
 
 function toInvoiceFilter(
   filter: InvoiceFilterInput | null | undefined,
@@ -38,6 +38,7 @@ export class InvoiceQueryResolver {
     private readonly timeEntryMapper: TimeEntryMapper,
     private readonly authService: AuthService,
     private readonly organizationUnitService: OrganizationUnitService,
+    private readonly accountingOrgAccessService: AccountingOrgAccessService,
   ) {}
 
   @Query(() => Invoice)
@@ -58,7 +59,10 @@ export class InvoiceQueryResolver {
     filter: InvoiceFilterInput | null | undefined,
     @Context() context: AuthenticatedGraphQLContext,
   ): Promise<Invoice[]> {
-    const organizationId = await this.resolveOrganizationId(context);
+    const organizationId =
+      await this.accountingOrgAccessService.resolveEnabledOrganizationId(
+        context.organizationUnitId,
+      );
     const invoices = await this.invoiceService.findInvoicesForOrganization(
       organizationId,
       toInvoiceFilter(filter),

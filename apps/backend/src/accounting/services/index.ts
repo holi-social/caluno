@@ -1,3 +1,4 @@
+export { AccountingOrgAccessService } from './accounting-org-access.service';
 export { ContractService } from './contract.service';
 export { DocumentNotificationService } from './document-notification.service';
 export { DocumentRenderingService } from './document-rendering.service';
