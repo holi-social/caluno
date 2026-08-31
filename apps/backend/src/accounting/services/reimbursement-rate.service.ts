@@ -10,6 +10,11 @@ import {
 } from '../../graphql/errors';
 import { MembershipService } from '../../membership/membership.service';
 import { OrganizationUnitDataService } from '../../organization/organization-unit-data.service';
+import {
+  POSTHOG_EVENT,
+  POSTHOG_SURFACE,
+} from '../../shared/observability/posthog.events';
+import { PostHogService } from '../../shared/observability/posthog.service';
 import type { EffectiveRate, YearlyUsage } from '../accounting.types';
 import { InvoiceStatus } from '../enums';
 import type { ReimbursementBundleDownloadEntity } from '../schemas/reimbursement-bundle-download.schema';
@@ -42,6 +47,7 @@ export class ReimbursementRateService {
     private readonly db: Database,
     private readonly organizationUnitDataService: OrganizationUnitDataService,
     private readonly membershipService: MembershipService,
+    private readonly postHogService: PostHogService,
   ) {}
 
   async findReimbursementTypes(): Promise<ReimbursementTypeEntity[]> {
@@ -130,6 +136,7 @@ export class ReimbursementRateService {
     organizationId: string,
     reimbursementTypeId: string,
     hourlyRateCents: number,
+    userId: string,
     organizationUnitId?: string,
   ): Promise<ReimbursementRateEntity> {
     if (hourlyRateCents <= 0) {
@@ -139,7 +146,7 @@ export class ReimbursementRateService {
 
     const target = organizationUnitId ?? null;
 
-    return this.db.transaction(async (tx) => {
+    const rate = await this.db.transaction(async (tx) => {
       const existing = await tx.query.reimbursementRates.findFirst({
         where: target
           ? { organizationUnitId: target, reimbursementTypeId }
@@ -170,6 +177,20 @@ export class ReimbursementRateService {
         .returning();
       return inserted;
     });
+
+    this.postHogService.capture({
+      event: POSTHOG_EVENT.REIMBURSEMENT_RATE_UPDATE,
+      userId,
+      properties: {
+        surface: POSTHOG_SURFACE.BACKOFFICE,
+        organization_id: organizationId,
+        ...(organizationUnitId
+          ? { organization_unit_id: organizationUnitId }
+          : {}),
+      },
+    });
+
+    return rate;
   }
 
   async getYearlyUsage(

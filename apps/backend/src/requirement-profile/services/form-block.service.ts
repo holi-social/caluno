@@ -9,6 +9,11 @@ import {
   NotFoundGraphQLError,
 } from '../../graphql/errors';
 import type { PaginationInput } from '../../graphql/pagination.input';
+import {
+  POSTHOG_EVENT,
+  POSTHOG_SURFACE,
+} from '../../shared/observability/posthog.events';
+import { PostHogService } from '../../shared/observability/posthog.service';
 import { patch } from '../../shared/patch';
 import { FilePurpose } from '../../storage/enums';
 import { FileService } from '../../storage/services/file.service';
@@ -32,6 +37,7 @@ export class FormBlockService {
     @Inject(DATABASE_CONNECTION)
     private readonly db: Database,
     private readonly fileService: FileService,
+    private readonly postHogService: PostHogService,
   ) {}
 
   async findById(id: string): Promise<FormBlockEntity | undefined> {
@@ -106,7 +112,7 @@ export class FormBlockService {
       );
     }
 
-    return this.db.transaction(async (tx) => {
+    const block = await this.db.transaction(async (tx) => {
       const blockInsert: FormBlockInsert = {
         organizationId: input.organizationId,
         title: input.title,
@@ -117,7 +123,7 @@ export class FormBlockService {
         updatedBy: userId,
       };
 
-      const [block] = await tx
+      const [created] = await tx
         .insert(schema.formBlocks)
         .values(blockInsert)
         .returning();
@@ -130,13 +136,25 @@ export class FormBlockService {
           .insert(schema.formBlockFields)
           .values(
             input.fields.map((field, index) =>
-              this.mapFieldInput(field, block.id, index),
+              this.mapFieldInput(field, created.id, index),
             ),
           );
       }
 
-      return block;
+      return created;
     });
+
+    this.postHogService.capture({
+      event: POSTHOG_EVENT.FORM_BLOCK_CREATE,
+      userId,
+      properties: {
+        surface: POSTHOG_SURFACE.BACKOFFICE,
+        organization_id: block.organizationId,
+        organization_unit_id: organizationUnitId,
+      },
+    });
+
+    return block;
   }
 
   async update(
@@ -184,12 +202,23 @@ export class FormBlockService {
       throw new NotFoundGraphQLError('Block not found');
     }
 
+    this.postHogService.capture({
+      event: POSTHOG_EVENT.FORM_BLOCK_UPDATE,
+      userId,
+      properties: {
+        surface: POSTHOG_SURFACE.BACKOFFICE,
+        organization_id: updated.organizationId,
+        organization_unit_id: organizationUnitId,
+      },
+    });
+
     return updated;
   }
 
   async delete(
     id: string,
     organizationUnitId: string,
+    userId: string,
   ): Promise<FormBlockEntity> {
     const existing = await this.findById(id);
     if (!existing) {
@@ -217,6 +246,16 @@ export class FormBlockService {
       throw new NotFoundGraphQLError('Block not found');
     }
 
+    this.postHogService.capture({
+      event: POSTHOG_EVENT.FORM_BLOCK_DELETE,
+      userId,
+      properties: {
+        surface: POSTHOG_SURFACE.BACKOFFICE,
+        organization_id: deleted.organizationId,
+        organization_unit_id: organizationUnitId,
+      },
+    });
+
     return deleted;
   }
 
@@ -235,6 +274,7 @@ export class FormBlockService {
     blockId: string,
     organizationUnitId: string,
     input: CreateFormBlockFieldInput,
+    userId: string,
   ): Promise<FormBlockEntity> {
     if (input.systemKey && !SYSTEM_PROFILE_KEYS.has(input.systemKey)) {
       throw new BadRequestGraphQLError(
@@ -270,6 +310,16 @@ export class FormBlockService {
       .insert(schema.formBlockFields)
       .values(this.mapFieldInput(input, blockId, order + 1));
 
+    this.postHogService.capture({
+      event: POSTHOG_EVENT.FORM_BLOCK_FIELD_CREATE,
+      userId,
+      properties: {
+        surface: POSTHOG_SURFACE.BACKOFFICE,
+        organization_id: block.organizationId,
+        organization_unit_id: organizationUnitId,
+      },
+    });
+
     return this.findById(blockId) as Promise<FormBlockEntity>;
   }
 
@@ -277,6 +327,7 @@ export class FormBlockService {
     fieldId: string,
     organizationUnitId: string,
     input: UpdateFormBlockFieldInput,
+    userId: string,
   ): Promise<FormBlockEntity> {
     if (input.systemKey && !SYSTEM_PROFILE_KEYS.has(input.systemKey)) {
       throw new BadRequestGraphQLError(
@@ -319,12 +370,23 @@ export class FormBlockService {
       })
       .where(eq(schema.formBlockFields.id, fieldId));
 
+    this.postHogService.capture({
+      event: POSTHOG_EVENT.FORM_BLOCK_FIELD_UPDATE,
+      userId,
+      properties: {
+        surface: POSTHOG_SURFACE.BACKOFFICE,
+        organization_id: field.block.organizationId,
+        organization_unit_id: organizationUnitId,
+      },
+    });
+
     return this.findById(field.block.id) as Promise<FormBlockEntity>;
   }
 
   async deleteField(
     fieldId: string,
     organizationUnitId: string,
+    userId: string,
   ): Promise<FormBlockEntity> {
     const field = await this.db.query.formBlockFields.findFirst({
       where: { id: fieldId },
@@ -346,6 +408,16 @@ export class FormBlockService {
     await this.db
       .delete(schema.formBlockFields)
       .where(eq(schema.formBlockFields.id, fieldId));
+
+    this.postHogService.capture({
+      event: POSTHOG_EVENT.FORM_BLOCK_FIELD_DELETE,
+      userId,
+      properties: {
+        surface: POSTHOG_SURFACE.BACKOFFICE,
+        organization_id: field.block.organizationId,
+        organization_unit_id: organizationUnitId,
+      },
+    });
 
     return this.findById(field.block.id) as Promise<FormBlockEntity>;
   }

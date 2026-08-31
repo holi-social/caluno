@@ -6,6 +6,11 @@ import * as schema from '../../database/schema';
 import { NotFoundGraphQLError } from '../../graphql/errors';
 import type { PaginationInput } from '../../graphql/pagination.input';
 import {
+  POSTHOG_EVENT,
+  POSTHOG_SURFACE,
+} from '../../shared/observability/posthog.events';
+import { PostHogService } from '../../shared/observability/posthog.service';
+import {
   RequirementFulfillmentStatus,
   RequirementProfileSubmissionStatus,
 } from '../enums';
@@ -26,6 +31,7 @@ export class RequirementProfileService {
   constructor(
     @Inject(DATABASE_CONNECTION)
     private readonly db: Database,
+    private readonly postHogService: PostHogService,
   ) {}
 
   async findById(id: string): Promise<RequirementProfileEntity | undefined> {
@@ -52,11 +58,12 @@ export class RequirementProfileService {
   async create(
     input: CreateRequirementProfileInput,
     organizationUnitId: string,
+    userId: string,
   ): Promise<RequirementProfileEntity> {
     await isUnitInOrg(this.db, organizationUnitId, input.organizationId);
 
-    return this.db.transaction(async (tx) => {
-      const [profile] = await tx
+    const profile = await this.db.transaction(async (tx) => {
+      const [created] = await tx
         .insert(schema.requirementProfiles)
         .values({
           organizationId: input.organizationId,
@@ -68,20 +75,33 @@ export class RequirementProfileService {
       if (input.requirementIds && input.requirementIds.length > 0) {
         await tx.insert(schema.requirementProfileRequirements).values(
           input.requirementIds.map((requirementId) => ({
-            profileId: profile.id,
+            profileId: created.id,
             requirementId,
           })),
         );
       }
 
-      return profile;
+      return created;
     });
+
+    this.postHogService.capture({
+      event: POSTHOG_EVENT.REQUIREMENT_PROFILE_CREATE,
+      userId,
+      properties: {
+        surface: POSTHOG_SURFACE.BACKOFFICE,
+        organization_id: profile.organizationId,
+        organization_unit_id: organizationUnitId,
+      },
+    });
+
+    return profile;
   }
 
   async update(
     id: string,
     organizationUnitId: string,
     input: UpdateRequirementProfileInput,
+    userId: string,
   ): Promise<RequirementProfileEntity> {
     const existingProfile = await this.findById(id);
     if (!existingProfile) {
@@ -94,15 +114,15 @@ export class RequirementProfileService {
       existingProfile.organizationId,
     );
 
-    return this.db.transaction(async (tx) => {
+    const profile = await this.db.transaction(async (tx) => {
       const { requirementIds, ...rest } = input;
-      const [profile] = await tx
+      const [updated] = await tx
         .update(schema.requirementProfiles)
         .set(rest)
         .where(eq(schema.requirementProfiles.id, id))
         .returning();
 
-      if (!profile) {
+      if (!updated) {
         throw new NotFoundGraphQLError('Requirement profile not found');
       }
 
@@ -121,13 +141,26 @@ export class RequirementProfileService {
         }
       }
 
-      return profile;
+      return updated;
     });
+
+    this.postHogService.capture({
+      event: POSTHOG_EVENT.REQUIREMENT_PROFILE_UPDATE,
+      userId,
+      properties: {
+        surface: POSTHOG_SURFACE.BACKOFFICE,
+        organization_id: profile.organizationId,
+        organization_unit_id: organizationUnitId,
+      },
+    });
+
+    return profile;
   }
 
   async delete(
     id: string,
     organizationUnitId: string,
+    userId: string,
   ): Promise<RequirementProfileEntity> {
     const existingProfile = await this.findById(id);
     if (!existingProfile) {
@@ -147,6 +180,17 @@ export class RequirementProfileService {
     if (!profile) {
       throw new NotFoundGraphQLError('Requirement profile not found');
     }
+
+    this.postHogService.capture({
+      event: POSTHOG_EVENT.REQUIREMENT_PROFILE_DELETE,
+      userId,
+      properties: {
+        surface: POSTHOG_SURFACE.BACKOFFICE,
+        organization_id: profile.organizationId,
+        organization_unit_id: organizationUnitId,
+      },
+    });
+
     return profile;
   }
 
