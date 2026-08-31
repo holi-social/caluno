@@ -8,8 +8,9 @@ import { GraphQLModule } from '@nestjs/graphql';
 import { SentryModule } from '@sentry/nestjs/setup';
 import { AuthModule as BetterAuthModule } from '@thallesp/nestjs-better-auth';
 import { betterAuth } from 'better-auth';
+import { Logger } from 'nestjs-pino';
 import { AccountingModule } from './accounting/accounting.module';
-import { createAuthConfig } from './auth/auth';
+import { type BetterAuthLogger, createAuthConfig } from './auth/auth';
 import { AuthModule } from './auth/auth.module';
 import { PermissionGuard } from './auth/guards/permission.guard';
 import { type Database, DatabaseModule } from './database/database.module';
@@ -104,9 +105,42 @@ const autoSchemaFile =
         userLocaleService: UserLocaleService,
         appI18n: AppI18nService,
         postHogService: PostHogService,
+        pinoLogger: Logger,
       ) => {
         const webUrl = configService.getOrThrow<string>('WEB_URL');
         const shouldVerifyEmail = process.env.NODE_ENV === 'production';
+
+        /**
+         * Route Better Auth's internal logging (rate-limit warnings, plugin
+         * messages, etc.) through the nestjs-pino Logger so it is emitted as
+         * structured JSON on stdout instead of a bare console.warn. pino's
+         * method names differ from Better Auth's level strings, so map them.
+         */
+        const betterAuthLogger: BetterAuthLogger = {
+          disabled: false,
+          // Better Auth writes log level + timestamp + colored labels itself
+          // when left to the default logger; we own both today.
+          disableColors: true,
+          log: (level, message, ...args) => {
+            // Bind `context` as a pino field by passing it as the first
+            // object argument; trailing args are pino interpolation values.
+            const ctx = { context: 'BetterAuth' };
+            switch (level) {
+              case 'debug':
+                pinoLogger.debug(ctx, message, ...args);
+                break;
+              case 'info':
+                pinoLogger.log(ctx, message, ...args);
+                break;
+              case 'warn':
+                pinoLogger.warn(ctx, message, ...args);
+                break;
+              case 'error':
+                pinoLogger.error(ctx, message, ...args);
+                break;
+            }
+          },
+        };
 
         return {
           auth: betterAuth(
@@ -114,6 +148,7 @@ const autoSchemaFile =
               database,
               trustedOrigins: [webUrl],
               cookieDomain: configService.get('COOKIE_DOMAIN'),
+              logger: betterAuthLogger,
               emailVerificationEnabled: shouldVerifyEmail,
               onSessionCreated: (userId) => {
                 postHogService.capture({
@@ -216,6 +251,7 @@ const autoSchemaFile =
         UserLocaleService,
         AppI18nService,
         PostHogService,
+        Logger,
       ],
     }),
     UserModule,

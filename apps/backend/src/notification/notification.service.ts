@@ -2,6 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import type { Locale } from '../graphql/locale';
 import { UserLocaleService } from '../i18n/user-locale.service';
 import { UserService } from '../user/user.service';
+import { maskEmail } from '../utils';
 import { EmailService } from './email/email.service';
 import type { NotificationEventPayloadMap } from './notification-event-map';
 import { NotificationEvent } from './notification-events';
@@ -137,7 +138,7 @@ export class NotificationService {
           });
         } catch (error) {
           this.logger.error(
-            `Failed to send email for ${recipient.email}: ${error instanceof Error ? error.message : String(error)}`,
+            `Failed to send email for ${maskEmail(recipient.email)}: ${error instanceof Error ? error.message : String(error)}`,
           );
         }
       }),
