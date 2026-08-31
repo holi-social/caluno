@@ -324,7 +324,7 @@ export class TimeTrackingService {
   ): Promise<{
     volunteer: UserEntity;
     eligibleOrganizationUnits: schema.OrganizationUnitEntity[];
-    openTimeEntries: TimeEntryEntity[];
+    openTimeEntries: TimeEntryEntityWithRelations[];
   } | null> {
     const volunteer = await this.userService.findByCheckInId(checkInId);
     if (!volunteer) {
@@ -358,6 +358,11 @@ export class TimeTrackingService {
               organizationUnitId: { in: eligibleUnits.map((unit) => unit.id) },
               endedAt: { isNull: true },
             },
+            // Eager-load shiftInstance: the TimeEntry.shiftInstance field
+            // resolver falls back to ShiftService.findInstanceById, which is
+            // scoped to ctx.organizationUnitId — unavailable/wrong for this
+            // cross-unit (and often headerless) query.
+            with: { shiftInstance: true },
             orderBy: { startedAt: 'asc' },
           });
 

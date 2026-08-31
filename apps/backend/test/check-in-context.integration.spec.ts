@@ -13,7 +13,7 @@ import { PERMISSIONS } from '../src/auth/constants';
 import type { Database } from '../src/database/database.module';
 import * as schema from '../src/database/schema';
 import { TimeTrackingService } from '../src/time-tracking/time-tracking.service';
-import { createUser } from './factories';
+import { createShift, createUser } from './factories';
 import {
   addMembership,
   createOrganizationWithType,
@@ -234,6 +234,66 @@ describe('checkInContext query', () => {
     expect(data.checkInContext.openTimeEntries[0]?.organizationUnit.id).toBe(
       organizationUnitId,
     );
+  });
+
+  it('resolves shiftInstance details without an org unit header', async () => {
+    const volunteer = await createUser(db);
+    await addMembership(db, volunteer.id, organizationUnitId);
+
+    const shift = await createShift(db, { organizationUnitId });
+    const instance = await db.query.shiftInstances.findFirst({
+      where: { masterId: shift.id },
+    });
+    expect(instance).toBeDefined();
+
+    await db.insert(schema.timeEntries).values({
+      volunteerId: volunteer.id,
+      organizationUnitId,
+      shiftInstanceId: instance?.id,
+      startedAt: new Date(),
+      endedAt: null,
+    });
+
+    const data = await graphqlRequestRequiringData<{
+      checkInContext: {
+        openTimeEntries: Array<{
+          id: string;
+          shiftInstance: {
+            id: string;
+            overrideTitle: string | null;
+            master: { id: string; title: string };
+          } | null;
+        }>;
+      };
+    }>(
+      app,
+      {
+        query: `
+          query CheckInContext($checkInId: String!) {
+            checkInContext(checkInId: $checkInId) {
+              openTimeEntries {
+                id
+                shiftInstance {
+                  id
+                  overrideTitle
+                  master { id title }
+                }
+              }
+            }
+          }
+        `,
+        variables: { checkInId: volunteer.checkInId },
+      },
+      'checkInContext',
+    );
+
+    expect(data.checkInContext.openTimeEntries).toHaveLength(1);
+    expect(data.checkInContext.openTimeEntries[0]?.shiftInstance?.id).toBe(
+      instance?.id,
+    );
+    expect(
+      data.checkInContext.openTimeEntries[0]?.shiftInstance?.master.title,
+    ).toBeTruthy();
   });
 
   it('returns null for an unknown check-in id', async () => {
