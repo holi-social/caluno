@@ -4,7 +4,7 @@ import {
   Injectable,
   NestInterceptor,
 } from '@nestjs/common';
-import { ModuleRef } from '@nestjs/core';
+import { ContextIdFactory, ModuleRef } from '@nestjs/core';
 import { GqlExecutionContext } from '@nestjs/graphql';
 import { Observable } from 'rxjs';
 
@@ -32,9 +32,12 @@ export class LoaderInterceptor implements NestInterceptor {
 
       for (const [loaderName, LoaderClass] of LOADER_REGISTRY.entries()) {
         try {
+          const contextId = ContextIdFactory.getByRequest(
+            graphqlContext.req ?? {},
+          );
           graphqlContext.loaders[loaderName] = await this.moduleRef.resolve(
             LoaderClass,
-            graphqlContext.req?.id,
+            contextId,
             { strict: false },
           );
         } catch (error) {
