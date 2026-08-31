@@ -1,6 +1,7 @@
 import type {
   AddTimeEntryInput,
   CloseTimeEntryInput,
+  GetCheckInContextQuery,
   GetTimeEntryQuery,
   UpdateTimeEntryInput,
 } from '../../generated/graphql';
@@ -60,5 +61,12 @@ export class TimeEntryRepository extends BaseRepository {
       offset: options.offset ?? 0,
     });
     return data.myTime;
+  }
+
+  async getCheckInContext(
+    checkInId: string,
+  ): Promise<GetCheckInContextQuery['checkInContext']> {
+    const data = await this.sdk.GetCheckInContext({ checkInId });
+    return data.checkInContext;
   }
 }
