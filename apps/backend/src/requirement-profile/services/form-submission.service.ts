@@ -19,6 +19,7 @@ import { PostHogService } from '../../shared/observability/posthog.service';
 import { SYSTEM_PROFILE_KEYS } from '../constants';
 import { FieldType, RequiredFormTargetType } from '../enums';
 import { SubmitFormInput } from '../inputs/submit-form.input';
+import { validateSystemKeyValue } from '../profile-validation';
 import type { FormSubmissionEntity } from '../schemas/form-submission.schema';
 import { isUnitInOrg } from './is-unit-in-org';
 import { parseMultiChoiceValue } from './multi-choice-value';
@@ -553,75 +554,7 @@ export class FormSubmissionService {
     label: string,
     minAge: number | null,
   ): void {
-    switch (systemKey) {
-      case 'name':
-      case 'lastname':
-      case 'preferred-name':
-      case 'city':
-        if (value.length > 100)
-          throw new BadRequestGraphQLError(
-            `"${label}": must be 100 characters or fewer`,
-          );
-        if (!/^[\p{L}\p{M}'\- ]+$/u.test(value))
-          throw new BadRequestGraphQLError(
-            `"${label}": contains invalid characters`,
-          );
-        break;
-      case 'email':
-        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value) || value.length > 254)
-          throw new BadRequestGraphQLError(
-            `"${label}": must be a valid email address`,
-          );
-        break;
-      case 'phone':
-        if (!/^\+?[\d\s\-().]{7,20}$/.test(value))
-          throw new BadRequestGraphQLError(
-            `"${label}": must be a valid phone number`,
-          );
-        break;
-      case 'address':
-        if (value.length > 200)
-          throw new BadRequestGraphQLError(
-            `"${label}": must be 200 characters or fewer`,
-          );
-        break;
-      case 'zip':
-        if (!/^[A-Z0-9\- ]{3,10}$/i.test(value))
-          throw new BadRequestGraphQLError(
-            `"${label}": must be a valid postal code`,
-          );
-        break;
-      case 'gender':
-        if (value.length > 50)
-          throw new BadRequestGraphQLError(
-            `"${label}": must be 50 characters or fewer`,
-          );
-        break;
-      case 'birth-date':
-        if (minAge !== null && minAge !== undefined) {
-          const birth = new Date(value);
-          const today = new Date();
-          let age = today.getFullYear() - birth.getFullYear();
-          if (
-            today.getMonth() < birth.getMonth() ||
-            (today.getMonth() === birth.getMonth() &&
-              today.getDate() < birth.getDate())
-          ) {
-            age--;
-          }
-          if (age < minAge)
-            throw new BadRequestGraphQLError(
-              `You must be at least ${minAge} years old`,
-            );
-        }
-        break;
-      case 'iban':
-        if (value.length > 34)
-          throw new BadRequestGraphQLError(
-            `"${label}": must be 34 characters or fewer`,
-          );
-        break;
-    }
+    validateSystemKeyValue(value, systemKey, label, minAge);
   }
 
   private parseValue(rawValue: string, fieldType: string): unknown {

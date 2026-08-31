@@ -349,6 +349,57 @@
       "fieldColumn": "Feld",
       "noFields": "Dieses Formular hat keine Felder.",
       "submittedOn": "Eingereicht am {date}"
+    },
+    "documents": {
+      "title": "Deine Dokumente",
+      "subtitle": "Vereinbarungen und Stundennachweise für Aufwandsentschädigungen",
+      "names": {
+        "agreement": "Zusatzvereinbarung",
+        "timesheet": "Stundennachweis"
+      },
+      "status": {
+        "awaiting-signature": "Zu unterschreiben",
+        "awaiting-countersignature": "Zu gegenzeichnen",
+        "signed": "Aktiv",
+        "declined": "Abgelehnt"
+      },
+      "figures": "{shifts} Einsätze · {hours} Stunden · {amount}",
+      "lines": {
+        "generated": "Generiert am {date} von {name}",
+        "signedByMe": "Du hast am {date} unterschrieben",
+        "countersignedBy": "{name} hat am {date} gegensigniert",
+        "declinedBy": "{name} hat am {date} abgelehnt"
+      },
+      "actions": {
+        "download": "Herunterladen",
+        "sign": "Unterschreiben",
+        "decline": "Ablehnen"
+      },
+      "missingProfileWarning": "In deinem Profil fehlen Angaben, die dieses Dokument benötigt.",
+      "missingProfileCta": "Profil vervollständigen, um zu unterschreiben",
+      "toasts": {
+        "signed": "{name} unterschrieben.",
+        "signedError": "{name} konnte nicht unterschrieben werden. Bitte erneut versuchen.",
+        "declined": "{name} abgelehnt.",
+        "declinedError": "{name} konnte nicht abgelehnt werden. Bitte erneut versuchen.",
+        "downloadUnavailable": "Das Dokument ist noch nicht zum Herunterladen verfügbar."
+      },
+      "empty": {
+        "title": "Noch keine Dokumente",
+        "description": "Vereinbarungen und Stundennachweise, die diese Organisation für dich erstellt, erscheinen hier."
+      },
+      "declineSheet": {
+        "title": "Dokument ablehnen",
+        "description": "Diese Organisation muss verstehen, warum du dieses {documentName} ablehnst.",
+        "reasonLabel": "Ablehnungsgrund",
+        "reasonPlaceholder": "Erkläre, warum du das Dokument ablehnst…",
+        "submit": "Ablehnen"
+      },
+      "preview": {
+        "title": "{name}",
+        "unavailable": "Das Dokument ist noch nicht zur Vorschau verfügbar."
+      },
+      "downloadUnavailableNote": "PDF noch nicht verfügbar."
     }
   },
   "MembershipRequest": {
@@ -514,7 +565,9 @@
     "volunteers": "Freiwillige",
     "accounting": "Buchhaltung",
     "reimbursements": "Abrechnungen",
-    "accountingSettings": "Einstellungen"
+    "accountingSettings": "Einstellungen",
+    "myDocuments": "Meine Dokumente",
+    "myDocumentsBadge": "{count} Dokumente warten auf deine Unterschrift"
   },
   "OrgDetail": {
     "aboutHeading": "Über uns",
@@ -646,7 +699,8 @@
         "firstName": "Wie auf deinem Ausweis",
         "iban": "Für Aufwandsentschädigungen",
         "lastName": "Wie auf deinem Ausweis",
-        "preferredName": "Falls du anders angesprochen werden möchtest"
+        "preferredName": "Falls du anders angesprochen werden möchtest",
+        "bic": "Bankleitzahl (BIC) deines Kontos"
       }
     },
     "language": "Sprache",
@@ -853,6 +907,7 @@
       "firstName": "Vorname",
       "gender": "Geschlecht",
       "iban": "IBAN",
+      "bic": "BIC",
       "infoText": "Infotext",
       "labelLabel": "Bezeichnung",
       "labelPlaceholder": "z. B. Lieblingsfarbe",
@@ -938,6 +993,7 @@
       "fieldRequired": "{label} ist erforderlich",
       "invalidCharacters": "{label} enthält ungültige Zeichen",
       "invalidIban": "{label} muss eine gültige IBAN sein",
+      "invalidBic": "{label} muss eine gültige BIC sein",
       "invalidOptions": "{label} enthält ungültige Optionen",
       "labelRequired": "Bezeichnung ist erforderlich",
       "maxChars": "{label} darf maximal {maxLen} Zeichen lang sein",
@@ -1725,7 +1781,8 @@
             "coordSign": "Koordinator",
             "superSign": "Supervisor",
             "active": "Aktiv",
-            "ready": "Bereit"
+            "ready": "Bereit",
+            "actorOrg": "Organisation"
           },
           "limitSection": "Jahresbudget",
           "invoicesPaidOut": "Ausgezahlt",
@@ -1750,7 +1807,8 @@
             "grossAmount": "Bruttobetrag",
             "rateTooltip": "Standardstundensatz für diese Pauschale. Einsätze können einen eigenen Satz haben.",
             "viewBtn": "Stundennachweise anzeigen"
-          }
+          },
+          "pdfUnavailableNote": "PDF noch nicht verfügbar."
         },
         "statusLabel": {
           "contractGenerate": "Vereinbarung erstellen",
@@ -1864,6 +1922,18 @@
           "signatureSupervisor": "Unterschrift (Organisation)",
           "unsigned": "Noch nicht unterschrieben"
         }
+      },
+      "signToasts": {
+        "contract": "Vereinbarung für {name} gegengezeichnet.",
+        "contractError": "Vereinbarung konnte für {name} nicht gegengezeichnet werden.",
+        "invoice": "Stundennachweis für {name} gegengezeichnet.",
+        "invoiceError": "Stundennachweis konnte für {name} nicht gegengezeichnet werden."
+      },
+      "declineToasts": {
+        "contract": "Vereinbarung für {name} abgelehnt.",
+        "contractError": "Vereinbarung konnte für {name} nicht abgelehnt werden.",
+        "invoice": "Stundennachweis für {name} abgelehnt.",
+        "invoiceError": "Stundennachweis konnte für {name} nicht abgelehnt werden."
       }
     },
     "templates": {
@@ -2022,6 +2092,15 @@
           "signees": "{count, plural, =1 {1 Unterschrift} other {# Unterschriften}}"
         }
       }
+    }
+  },
+  "MyDocuments": {
+    "title": "Meine Dokumente",
+    "backLabel": "Zurück",
+    "loadMore": "Mehr laden ({remaining})",
+    "empty": {
+      "title": "Noch keine Dokumente",
+      "description": "Vereinbarungen und Stundennachweise deiner Organisationen erscheinen hier."
     }
   }
 }
