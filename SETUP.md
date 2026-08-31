@@ -2,14 +2,20 @@
 
 Everything runs on GitHub-hosted runners (`ubuntu-latest`).
 
-| File                  | Trigger                      | What it does                                               |
-| --------------------- | ---------------------------- | ---------------------------------------------------------- |
-| `ci.yml`              | `pull_request` → main/prod   | Full gate, plus the pre-merge-only checks.                  |
-| `cd-staging.yml`      | `push` → `main`              | Gate alongside build/push, then deploy to staging.          |
-| `cd-production.yml`   | `push` → `production`        | Same, to production, with approval on the apply.            |
-| `mirror-images.yml`   | weekly + `workflow_dispatch` | Refreshes the GHCR base-image mirror.                       |
-| `reusable-verify.yml` | `workflow_call`              | Lint, type-check, migration drift, tests.                   |
-| `reusable-deploy.yml` | `workflow_call`              | Build + push images, Terraform plan/apply, Sentry release.  |
+| File                  | Trigger                          | What it does                                               |
+| --------------------- | -------------------------------- | ---------------------------------------------------------- |
+| `ci.yml`              | `pull_request` → main/release/prod | Full gate, plus the pre-merge-only checks.                |
+| `cd-staging.yml`      | `push` → `main`                  | Gate alongside build/push, then deploy to staging.          |
+| `cd-release.yml`      | `push` → `release`               | Same, to the release environment, applied unattended.       |
+| `cd-production.yml`   | `push` → `production`            | Same, to production, with approval on the apply.            |
+| `mirror-images.yml`   | weekly + `workflow_dispatch`     | Refreshes the GHCR base-image mirror.                       |
+| `reusable-verify.yml` | `workflow_call`                  | Lint, type-check, migration drift, tests.                   |
+| `reusable-deploy.yml` | `workflow_call`                  | Build + push images, Terraform plan/apply, Sentry release.  |
+
+The three CD workflows differ only in the inputs they pass to
+`reusable-deploy.yml`: the environment name (which is also the Terraform state
+prefix), the moving image tag, and the public origins baked into the frontend
+bundle.
 
 Shared steps live in composite actions: `.github/actions/setup` (Bun + caches +
 install), `.github/actions/save-turbo-cache` (prune + upload) and
@@ -17,16 +23,16 @@ install), `.github/actions/save-turbo-cache` (prune + upload) and
 
 ## Who runs what
 
-| Check                    | PR                               | push to main / production |
-| ------------------------ | -------------------------------- | ------------------------- |
-| Biome lint/format        | ✅                               | ✅                        |
-| TypeScript               | ✅                               | ✅                        |
-| Commit lint, AI gates    | ✅                               | ⛔                        |
-| Migration drift          | ✅                               | ✅                        |
-| Tests (Postgres service) | ✅                               | ✅                        |
-| Image build              | ✅ validate only, path-filtered  | ✅ pushed                 |
-| Terraform plan           | ✅ when `packages/infra` changed | ✅                        |
-| Terraform apply          | ⛔                               | ✅ behind the environment |
+| Check                    | PR                               | push to main / release / production |
+| ------------------------ | -------------------------------- | ----------------------------------- |
+| Biome lint/format        | ✅                               | ✅                                  |
+| TypeScript               | ✅                               | ✅                                  |
+| Commit lint, AI gates    | ✅                               | ⛔                                  |
+| Migration drift          | ✅                               | ✅                                  |
+| Tests (Postgres service) | ✅                               | ✅                                  |
+| Image build              | ✅ validate only, path-filtered  | ✅ pushed                           |
+| Terraform plan           | ✅ when `packages/infra` changed | ✅                                  |
+| Terraform apply          | ⛔                               | ✅ behind the environment           |
 
 The CD gate runs the full suite, including the static checks the pull request
 already covered. It runs concurrently with the image builds, which take longer,
@@ -36,12 +42,14 @@ write an Actions cache every pull request can read (see below).
 `ci.yml`'s `changes` job classifies the diff against the merge base and skips the
 jobs that need a database, an image build, or Terraform when nothing relevant
 changed. The `CI` aggregate job treats a skip as a pass, so a filtered-out job
-never blocks a merge.
+never blocks a merge. Its Terraform plan targets the environment the pull request
+is aimed at: `main` means staging, and `release` and `production` are named after
+their own environments.
 
 Nothing reaches an environment unless the gate passed: `apply` waits on it, on
 the plan, and on both images. Images are pushed even when the gate fails — they
-are inert until a plan is applied, and the moving tag (`staging` / `latest`)
-tracks the branch head.
+are inert until a plan is applied, and the moving tag (`staging` / `release` /
+`latest`) tracks the branch head.
 
 ## Caching
 
@@ -65,15 +73,16 @@ Docker layers use a `:buildcache-<environment>` tag per image in the Scaleway
 registry rather than the Actions cache — `type=gha,mode=max` fills the whole
 quota with layers only readable from the branch that wrote them. The tag is per
 environment because the frontend bakes `NEXT_PUBLIC_*` in at build time, so the
-staging and production images diverge and a shared tag would have each deploy
-clobber the other. Deploys write the registry cache; pull requests read both.
+staging, release and production images diverge and a shared tag would have each
+deploy clobber the others. Deploys write the registry cache; pull requests read
+staging's and production's copies.
 
-Production builds its own images rather than promoting the digest staging
-validated — a deliberate trade, since the frontend bakes `NEXT_PUBLIC_API_URL`
-and `NEXT_PUBLIC_WEB_URL` into the bundle and one image therefore cannot serve
-both environments without moving those to runtime config. A production deploy
-pays ~3 minutes to rebuild, and what it ships differs from what staging
-exercised only by those baked origins.
+Each environment builds its own images rather than promoting a digest another
+environment validated — a deliberate trade, since the frontend bakes
+`NEXT_PUBLIC_API_URL` and `NEXT_PUBLIC_WEB_URL` into the bundle and one image
+therefore cannot serve several environments without moving those to runtime
+config. A deploy pays ~3 minutes to rebuild, and what it ships differs from what
+the previous environment exercised only by those baked origins.
 
 Both Dockerfiles copy `package.json` files, install, and *then* copy source, so a
 source-only commit reuses the install layer. Keep that order — a `COPY` of source
@@ -109,11 +118,13 @@ exported by `cache-to`, and CI runners are ephemeral.
    which only provides standard 2-vCPU/7 GB Linux runners; larger runners need
    Team or Enterprise.
 
-4. **Environments** — create `staging` and `production` (Settings →
+4. **Environments** — create `staging`, `release` and `production` (Settings →
    Environments), and add a **required reviewers** rule to `production`: that
    approval is what holds the production `terraform apply` until a human accepts
-   it. Deploys are serialized per environment by a workflow-level concurrency
-   group with `cancel-in-progress: false`.
+   it. `staging` and `release` have no required reviewers, so their applies run
+   automatically on push to `main` and `release`. Deploys are serialized per
+   environment by a workflow-level concurrency group with
+   `cancel-in-progress: false`.
 
 5. **Image mirror (`mirror-images.yml`)** — mirrors `postgres:17` and
    `oven/bun:1` into `ghcr.io/holi-social/mirror/*` weekly, so CI's pulls aren't
@@ -128,7 +139,25 @@ exported by `cache-to`, and CI runners are ephemeral.
      mirrored. The pinned version lives in `TF_VERSION` in `ci.yml` and
      `reusable-deploy.yml` — keep the two in sync.
 
-6. **Branch protection** — on `main` and `production`, require pull requests and
-   require the status check named **`CI`**. That job aggregates the rest, so
-   path-filtered skips don't leave a merge blocked. Do the same in the submodule
-   repos for their own checks.
+6. **Release environment (one-time)** — before the first push to `release` can
+   apply end to end:
+   - Create Scaleway Secret Manager secret `caluno-release-posthog-api-key`
+     (same shape as `caluno-staging-posthog-api-key`). Terraform reads it at
+     plan time; it does not create it. Do this **before** pushing the `release`
+     branch — the first CD run will fail if the secret is missing.
+   - Create and push git branch `release` (typically from `main`). This
+     triggers the first CD run (containers are created; custom hostnames and
+     Mailpit ACME may not succeed yet).
+   - DNS (two passes): custom hostnames (`scaleway_container_domain`) and
+     Mailpit ACME need DNS before domain attachment can succeed.
+     1. After containers exist from the first apply, add DNS:
+        - `release.app.caluno.org` → frontend container endpoint
+        - `release.api.caluno.org` → backend container endpoint
+        - `release.mailbox.caluno.org` A record → Terraform output `mailpit_ip`
+     2. Re-run CD (or `terraform apply`) so domain attachment / ACME can
+        succeed.
+
+7. **Branch protection** — on `main`, `release` and `production`, require pull
+   requests and require the status check named **`CI`**. That job aggregates the
+   rest, so path-filtered skips don't leave a merge blocked. Do the same in the
+   submodule repos for their own checks.

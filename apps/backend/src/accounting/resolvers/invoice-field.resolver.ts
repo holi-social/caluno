@@ -1,6 +1,7 @@
 import { Parent, ResolveField, Resolver } from '@nestjs/graphql';
 import { Loader } from '../../graphql/decorators/loader.decorator';
 import { NotFoundGraphQLError } from '../../graphql/errors';
+import { FileService } from '../../storage/services/file.service';
 import { User } from '../../user/models/user.model';
 import {
   DocumentTemplateMapper,
@@ -40,6 +41,7 @@ export class InvoiceFieldResolver {
     private readonly invoiceSignatureMapper: InvoiceSignatureMapper,
     private readonly invoiceStatusChangeMapper: InvoiceStatusChangeMapper,
     private readonly invoiceTimeEntryMapper: InvoiceTimeEntryMapper,
+    private readonly fileService: FileService,
   ) {}
 
   @ResolveField(() => DocumentTemplate)
@@ -106,6 +108,14 @@ export class InvoiceFieldResolver {
     return this.invoiceTimeEntryMapper.toArray(full.invoiceTimeEntries);
   }
 
+  @ResolveField(() => String, { nullable: true })
+  async downloadUrl(
+    @Parent() invoice: MaybeWithRelations,
+  ): Promise<string | null> {
+    if (!invoice.fileId) return null;
+    return this.fileService.resolvePublicUrlForUploadedFile(invoice.fileId);
+  }
+
   @ResolveField(() => User)
   async volunteer(
     @Parent() invoice: InvoiceEntity,
@@ -129,5 +139,16 @@ export class InvoiceFieldResolver {
       return null;
     }
     return loader.userById.load(invoice.declinedByUserId);
+  }
+
+  @ResolveField(() => User, { nullable: true })
+  async paidByUser(
+    @Parent() invoice: InvoiceEntity,
+    @Loader(AccountingUserLoader) loader: AccountingUserLoader,
+  ): Promise<User | null> {
+    if (!invoice.paidByUserId) {
+      return null;
+    }
+    return loader.userById.load(invoice.paidByUserId);
   }
 }

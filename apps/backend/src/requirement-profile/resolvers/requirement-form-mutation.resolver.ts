@@ -64,6 +64,7 @@ export class RequirementFormMutationResolver {
     const item = await this.requirementFormService.delete(
       id,
       context.organizationUnitId,
+      context.user.id,
     );
     return this.requirementFormMapper.toModelOrThrow(item);
   }

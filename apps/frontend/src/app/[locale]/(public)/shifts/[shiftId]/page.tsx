@@ -3,8 +3,10 @@ import {
   type PublicShiftInstance,
   type RawShift,
 } from '@repo/data';
+import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
+import { cache } from 'react';
 import { DetailHero } from '@/components/detail-hero';
 import { ShiftDetailContent } from '@/domain/shift/components/shift-detail-content';
 import { ShiftPageHeader } from '@/domain/shift/components/shift-page-header';
@@ -13,17 +15,23 @@ import { resolveLocale } from '@/i18n/routing';
 import { isAuthenticated } from '@/lib/auth-server';
 import { getDataClient } from '@/lib/data-client';
 
+const findShift = cache(async (locale: string, shiftId: string) => {
+  const data = await getDataClient({ locale: resolveLocale(locale) });
+  return data.shift.findById(shiftId);
+});
+
 interface ShiftPageProps {
   params: Promise<{ shiftId: string; locale: string }>;
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }
 
-export async function generateMetadata({ params }: ShiftPageProps) {
+export async function generateMetadata({
+  params,
+}: ShiftPageProps): Promise<Metadata> {
   const { shiftId, locale } = await params;
-  const data = await getDataClient({ locale: resolveLocale(locale) });
   let shift: RawShift | undefined;
   try {
-    shift = await data.shift.findById(shiftId);
+    shift = await findShift(locale, shiftId);
   } catch {
     return { title: 'Shift — Caluno' };
   }
@@ -46,7 +54,7 @@ export default async function ShiftPage({
   let instances: PublicShiftInstance[];
   try {
     [shift, instances] = await Promise.all([
-      data.shift.findById(shiftId),
+      findShift(locale, shiftId),
       data.shift.findPublicInstancesByShiftId(shiftId),
     ]);
   } catch {

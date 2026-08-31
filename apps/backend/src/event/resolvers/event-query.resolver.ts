@@ -108,6 +108,29 @@ export class EventQueryResolver {
     });
   }
 
+  @Query(() => EventPaginatedResponse)
+  async availableEvents(
+    @Args() pagination: DateRangePaginationInput,
+    @Args('organizationUnitIds', { type: () => [ID], nullable: true })
+    organizationUnitIds: string[] | null,
+    @Session() session: UserSession,
+  ): Promise<EventPaginatedResponse> {
+    const { events, total } = await this.eventService.findAvailableEvents(
+      session.user.id,
+      pagination.startsAfter,
+      pagination.endsBefore,
+      organizationUnitIds,
+      pagination.limit,
+      pagination.offset,
+    );
+    return new EventPaginatedResponse({
+      items: this.eventMapper.toArray(events),
+      total,
+      limit: pagination.limit,
+      offset: pagination.offset,
+    });
+  }
+
   @Permissions(PERMISSIONS.SHIFT_VIEW)
   @Query(() => [EventInvite])
   async eventInvites(

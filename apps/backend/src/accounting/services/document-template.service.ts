@@ -8,6 +8,11 @@ import {
   ConflictGraphQLError,
   NotFoundGraphQLError,
 } from '../../graphql/errors';
+import {
+  POSTHOG_EVENT,
+  POSTHOG_SURFACE,
+} from '../../shared/observability/posthog.events';
+import { PostHogService } from '../../shared/observability/posthog.service';
 import { DocumentKind, SigneeType } from '../enums';
 import type { CreateDocumentTemplateInput } from '../inputs/create-document-template.input';
 import type { CreateTemplateSigneeInput } from '../inputs/create-template-signee.input';
@@ -23,6 +28,7 @@ export class DocumentTemplateService {
   constructor(
     @Inject(DATABASE_CONNECTION)
     private readonly db: Database,
+    private readonly postHogService: PostHogService,
   ) {}
 
   async findDocumentTemplates(
@@ -84,8 +90,8 @@ export class DocumentTemplateService {
       );
     }
 
-    return this.db.transaction(async (tx) => {
-      const [template] = await tx
+    const template = await this.db.transaction(async (tx) => {
+      const [created] = await tx
         .insert(schema.documentTemplates)
         .values({
           organizationId,
@@ -102,15 +108,27 @@ export class DocumentTemplateService {
 
       await tx.insert(schema.templateSignees).values(
         input.signees.map((signee) => ({
-          documentTemplateId: template.id,
+          documentTemplateId: created.id,
           order: signee.order,
           signeeType: signee.signeeType,
           requiredPermissionId: signee.requiredPermissionId ?? null,
         })),
       );
 
-      return template;
+      return created;
     });
+
+    this.postHogService.capture({
+      event: POSTHOG_EVENT.DOCUMENT_TEMPLATE_CREATE,
+      userId: editedByUserId,
+      properties: {
+        surface: POSTHOG_SURFACE.BACKOFFICE,
+        organization_id: organizationId,
+        organization_unit_id: input.organizationUnitId ?? undefined,
+      },
+    });
+
+    return template;
   }
 
   async updateDocumentTemplate(
@@ -124,8 +142,8 @@ export class DocumentTemplateService {
       this.assertValidSignees(input.signees);
     }
 
-    return this.db.transaction(async (tx) => {
-      const [template] = await tx
+    const template = await this.db.transaction(async (tx) => {
+      const [updated] = await tx
         .update(schema.documentTemplates)
         .set({
           ...(input.renewalCadence !== undefined && {
@@ -159,19 +177,41 @@ export class DocumentTemplateService {
         );
       }
 
-      return template;
+      return updated;
     });
+
+    this.postHogService.capture({
+      event: POSTHOG_EVENT.DOCUMENT_TEMPLATE_UPDATE,
+      userId: editedByUserId,
+      properties: {
+        surface: POSTHOG_SURFACE.BACKOFFICE,
+        organization_id: organizationId,
+        organization_unit_id: template.organizationUnitId ?? undefined,
+      },
+    });
+
+    return template;
   }
 
   async deleteDocumentTemplate(
     organizationId: string,
     templateId: string,
+    userId: string,
   ): Promise<void> {
     await this.findDocumentTemplate(organizationId, templateId);
     await this.db
       .update(schema.documentTemplates)
       .set({ isDeleted: true })
       .where(eq(schema.documentTemplates.id, templateId));
+
+    this.postHogService.capture({
+      event: POSTHOG_EVENT.DOCUMENT_TEMPLATE_DELETE,
+      userId,
+      properties: {
+        surface: POSTHOG_SURFACE.BACKOFFICE,
+        organization_id: organizationId,
+      },
+    });
   }
 
   /**

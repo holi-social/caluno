@@ -67,7 +67,9 @@ describe('InvoiceService', () => {
     db = moduleRef.get<Database>(DATABASE_CONNECTION);
 
     const organizationUnitDataService = new OrganizationUnitDataService(db);
-    const authService = new AuthService(db, organizationUnitDataService);
+    const authService = new AuthService(db, organizationUnitDataService, {
+      capture: () => {},
+    } as unknown as PostHogService);
     const organizationService = new OrganizationService(
       db,
       {} as OrganizationMapper,
@@ -75,19 +77,27 @@ describe('InvoiceService', () => {
       {} as OrganizationUnitService,
       {} as NotificationService,
       {} as FileService,
-      {} as PostHogService,
+      { capture: () => {} } as unknown as PostHogService,
     );
-    const documentTemplateService = new DocumentTemplateService(db);
+    const documentTemplateService = new DocumentTemplateService(db, {
+      capture: () => {},
+    } as unknown as PostHogService);
     const documentSigningService = new DocumentSigningService(
       db,
       authService,
       organizationService,
     );
-    const reimbursementRateService = new ReimbursementRateService(db);
+    const reimbursementRateService = new ReimbursementRateService(
+      db,
+      organizationUnitDataService,
+      {} as MembershipService,
+      { capture: () => {} } as unknown as PostHogService,
+    );
     const contractService = new ContractService(
       db,
       documentTemplateService,
       documentSigningService,
+      { capture: () => {} } as unknown as PostHogService,
     );
     service = new InvoiceService(
       db,
@@ -95,6 +105,7 @@ describe('InvoiceService', () => {
       documentSigningService,
       reimbursementRateService,
       contractService,
+      { capture: () => {} } as unknown as PostHogService,
     );
 
     registerTestResourceCleanup(async () => {
@@ -160,6 +171,63 @@ describe('InvoiceService', () => {
     };
   };
 
+  describe('findInvoicesForOrganization — period filter', () => {
+    it('excludes invoices whose period does not overlap the requested range', async () => {
+      const {
+        organization,
+        root,
+        reimbursementType,
+        volunteer,
+        supervisor,
+        timeEntry,
+      } = await setup();
+      const outOfRangeTimeEntry = await createCompletedTimeEntry(db, {
+        organizationUnitId: root.id,
+        volunteerId: volunteer.id,
+        reimbursementTypeId: reimbursementType.id,
+        startedAt: new Date('2026-06-01T09:00:00.000Z'),
+        endedAt: new Date('2026-06-01T13:00:00.000Z'),
+      });
+
+      const inRange = await service.createInvoice(
+        organization.id,
+        {
+          organizationUnitId: null,
+          volunteerId: volunteer.id,
+          reimbursementTypeId: reimbursementType.id,
+          timeEntryIds: [timeEntry.id],
+          periodStart: new Date('2026-03-01'),
+          periodEnd: new Date('2026-03-31'),
+        },
+        supervisor.id,
+      );
+      const outOfRange = await service.createInvoice(
+        organization.id,
+        {
+          organizationUnitId: null,
+          volunteerId: volunteer.id,
+          reimbursementTypeId: reimbursementType.id,
+          timeEntryIds: [outOfRangeTimeEntry.id],
+          periodStart: new Date('2026-06-01'),
+          periodEnd: new Date('2026-06-30'),
+        },
+        supervisor.id,
+      );
+
+      const results = await service.findInvoicesForOrganization(
+        organization.id,
+        {
+          periodStart: new Date('2026-01-01'),
+          periodEnd: new Date('2026-04-01'),
+        },
+      );
+
+      const ids = results.map((r) => r.id);
+      expect(ids).toContain(inRange.id);
+      expect(ids).not.toContain(outOfRange.id);
+    });
+  });
+
   describe('findEligibleTimeEntries', () => {
     it('excludes entries that have not been ended yet', async () => {
       const { root, reimbursementType, volunteer } = await setup();
@@ -170,6 +238,7 @@ describe('InvoiceService', () => {
       const instance = await createShiftInstance(db, shift.id);
       await db.insert(schema.timeEntries).values({
         shiftInstanceId: instance.id,
+        organizationUnitId: root.id,
         volunteerId: volunteer.id,
         reimbursementTypeId: reimbursementType.id,
         startedAt: new Date(),
@@ -289,11 +358,17 @@ describe('InvoiceService', () => {
         supervisor,
         timeEntry,
       } = await setup({ rateCents: 1_500 });
-      const reimbursementRateService = new ReimbursementRateService(db);
+      const reimbursementRateService = new ReimbursementRateService(
+        db,
+        new OrganizationUnitDataService(db),
+        {} as MembershipService,
+        { capture: () => {} } as unknown as PostHogService,
+      );
       await reimbursementRateService.setReimbursementRate(
         organization.id,
         reimbursementType.id,
         2_000,
+        supervisor.id,
       );
 
       const invoice = await service.createInvoice(

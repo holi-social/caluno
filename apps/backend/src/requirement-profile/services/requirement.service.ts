@@ -5,6 +5,11 @@ import { DATABASE_CONNECTION } from '../../database/database-connection';
 import * as schema from '../../database/schema';
 import { NotFoundGraphQLError } from '../../graphql/errors';
 import type { PaginationInput } from '../../graphql/pagination.input';
+import {
+  POSTHOG_EVENT,
+  POSTHOG_SURFACE,
+} from '../../shared/observability/posthog.events';
+import { PostHogService } from '../../shared/observability/posthog.service';
 import { CreateRequirementInput } from '../inputs/create-requirement.input';
 import { UpdateRequirementInput } from '../inputs/update-requirement.input';
 import type { RequirementEntity } from '../schemas/requirement.schema';
@@ -15,6 +20,7 @@ export class RequirementService {
   constructor(
     @Inject(DATABASE_CONNECTION)
     private readonly db: Database,
+    private readonly postHogService: PostHogService,
   ) {}
 
   async findById(id: string): Promise<RequirementEntity | undefined> {
@@ -39,6 +45,7 @@ export class RequirementService {
   async create(
     input: CreateRequirementInput,
     organizationUnitId: string,
+    userId: string,
   ): Promise<RequirementEntity> {
     await isUnitInOrg(this.db, organizationUnitId, input.organizationId);
 
@@ -46,6 +53,17 @@ export class RequirementService {
       .insert(schema.requirements)
       .values(input)
       .returning();
+
+    this.postHogService.capture({
+      event: POSTHOG_EVENT.REQUIREMENT_CREATE,
+      userId,
+      properties: {
+        surface: POSTHOG_SURFACE.BACKOFFICE,
+        organization_id: requirement.organizationId,
+        organization_unit_id: organizationUnitId,
+      },
+    });
+
     return requirement;
   }
 
@@ -53,6 +71,7 @@ export class RequirementService {
     id: string,
     organizationUnitId: string,
     input: UpdateRequirementInput,
+    userId: string,
   ): Promise<RequirementEntity> {
     const existingRequirement = await this.findById(id);
     if (!existingRequirement) {
@@ -75,12 +94,23 @@ export class RequirementService {
       throw new NotFoundGraphQLError('Requirement not found');
     }
 
+    this.postHogService.capture({
+      event: POSTHOG_EVENT.REQUIREMENT_UPDATE,
+      userId,
+      properties: {
+        surface: POSTHOG_SURFACE.BACKOFFICE,
+        organization_id: requirement.organizationId,
+        organization_unit_id: organizationUnitId,
+      },
+    });
+
     return requirement;
   }
 
   async delete(
     id: string,
     organizationUnitId: string,
+    userId: string,
   ): Promise<RequirementEntity> {
     const existingRequirement = await this.findById(id);
     if (!existingRequirement) {
@@ -100,6 +130,17 @@ export class RequirementService {
     if (!requirement) {
       throw new NotFoundGraphQLError('Requirement not found');
     }
+
+    this.postHogService.capture({
+      event: POSTHOG_EVENT.REQUIREMENT_DELETE,
+      userId,
+      properties: {
+        surface: POSTHOG_SURFACE.BACKOFFICE,
+        organization_id: requirement.organizationId,
+        organization_unit_id: organizationUnitId,
+      },
+    });
+
     return requirement;
   }
 }

@@ -59,7 +59,9 @@ describe('ContractService', () => {
     db = moduleRef.get<Database>(DATABASE_CONNECTION);
 
     const organizationUnitDataService = new OrganizationUnitDataService(db);
-    const authService = new AuthService(db, organizationUnitDataService);
+    const authService = new AuthService(db, organizationUnitDataService, {
+      capture: () => {},
+    } as unknown as PostHogService);
     const organizationService = new OrganizationService(
       db,
       {} as OrganizationMapper,
@@ -67,9 +69,11 @@ describe('ContractService', () => {
       {} as OrganizationUnitService,
       {} as NotificationService,
       {} as FileService,
-      {} as PostHogService,
+      { capture: () => {} } as unknown as PostHogService,
     );
-    const documentTemplateService = new DocumentTemplateService(db);
+    const documentTemplateService = new DocumentTemplateService(db, {
+      capture: () => {},
+    } as unknown as PostHogService);
     const documentSigningService = new DocumentSigningService(
       db,
       authService,
@@ -79,6 +83,7 @@ describe('ContractService', () => {
       db,
       documentTemplateService,
       documentSigningService,
+      { capture: () => {} } as unknown as PostHogService,
     );
 
     registerTestResourceCleanup(async () => {
@@ -396,6 +401,47 @@ describe('ContractService', () => {
         first.organization.id,
       );
       expect(results.map((c) => c.id)).toEqual([firstContract.id]);
+    });
+
+    it('excludes contracts whose period does not overlap the requested range', async () => {
+      const { organization, reimbursementType, volunteer, signer } =
+        await setup();
+      const secondVolunteer = await createUser(db);
+
+      const inRange = await service.createContract(
+        organization.id,
+        {
+          organizationUnitId: null,
+          volunteerId: volunteer.id,
+          reimbursementTypeId: reimbursementType.id,
+          periodStart: new Date('2026-03-01'),
+          periodEnd: new Date('2026-03-31'),
+        },
+        signer.id,
+      );
+      const outOfRange = await service.createContract(
+        organization.id,
+        {
+          organizationUnitId: null,
+          volunteerId: secondVolunteer.id,
+          reimbursementTypeId: reimbursementType.id,
+          periodStart: new Date('2026-06-01'),
+          periodEnd: new Date('2026-06-30'),
+        },
+        signer.id,
+      );
+
+      const results = await service.findContractsForOrganization(
+        organization.id,
+        {
+          periodStart: new Date('2026-01-01'),
+          periodEnd: new Date('2026-04-01'),
+        },
+      );
+
+      const ids = results.map((c) => c.id);
+      expect(ids).toContain(inRange.id);
+      expect(ids).not.toContain(outOfRange.id);
     });
   });
 });

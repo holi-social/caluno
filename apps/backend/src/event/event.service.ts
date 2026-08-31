@@ -18,6 +18,7 @@ import { NotificationService } from '../notification/notification.service';
 import { OrganizationService } from '../organization/organization.service';
 import { RequiredFormTargetType } from '../requirement-profile/enums';
 import type { RequirementProfileEntity } from '../requirement-profile/schemas/requirement-profile.schema';
+import { FormSubmissionService } from '../requirement-profile/services/form-submission.service';
 import {
   RequiredFormService,
   type RequiredFormStatus,
@@ -29,6 +30,13 @@ import {
   canTransitionInviteStatus,
   PARTICIPATING_EVENT_INVITE_STATUSES,
 } from '../shared/invite-status';
+import {
+  POSTHOG_EVENT,
+  POSTHOG_JOIN_SOURCE,
+  POSTHOG_SURFACE,
+  type PostHogJoinSource,
+} from '../shared/observability/posthog.events';
+import { PostHogService } from '../shared/observability/posthog.service';
 import { SortOrder } from '../shift/enums';
 import { ShiftService } from '../shift/shift.service';
 import { FilePurpose } from '../storage/enums';
@@ -56,9 +64,11 @@ export class EventService {
     private readonly organizationService: OrganizationService,
     private readonly fileService: FileService,
     private readonly requiredFormService: RequiredFormService,
+    private readonly formSubmissionService: FormSubmissionService,
     private readonly shiftService: ShiftService,
     private readonly authService: AuthService,
     private readonly notificationService: NotificationService,
+    private readonly postHogService: PostHogService,
   ) {}
 
   async findById(id: string, organizationUnitId: string): Promise<EventEntity> {
@@ -190,6 +200,87 @@ export class EventService {
     return { events, total: totalResult[0]?.total ?? 0 };
   }
 
+  /**
+   * Discoverable events across the volunteer's accepted **and** pending org
+   * units — the event-side analogue of `ShiftService.findAvailableShiftInstances`.
+   * `Event` has no `visibility` column (unlike `Shift`'s ALL_MEMBERS/INVITED_MEMBERS),
+   * so there is no accepted/pending visibility split to mirror: both sets are
+   * simply unioned into one accessible-org-unit list.
+   */
+  async findAvailableEvents(
+    userId: string,
+    startsAfter: Date | null,
+    endsBefore: Date | null,
+    organizationUnitIds: string[] | null,
+    limit: number,
+    offset: number,
+  ): Promise<{ events: EventEntity[]; total: number }> {
+    const [acceptedOrganizationUnitIds, pendingOrganizationUnitIds] =
+      await Promise.all([
+        this.getAccessibleOrganizationUnitIds(userId),
+        this.membershipService.getPendingOrganizationUnitIds(userId),
+      ]);
+
+    const accessibleOrganizationUnitIds = [
+      ...new Set([
+        ...acceptedOrganizationUnitIds,
+        ...pendingOrganizationUnitIds,
+      ]),
+    ];
+
+    if (accessibleOrganizationUnitIds.length === 0) {
+      return EMPTY_EVENT_PAGE;
+    }
+
+    const requestedOrgUnitIds = organizationUnitIds?.length
+      ? organizationUnitIds.filter((id) =>
+          accessibleOrganizationUnitIds.includes(id),
+        )
+      : accessibleOrganizationUnitIds;
+
+    if (requestedOrgUnitIds.length === 0) {
+      return EMPTY_EVENT_PAGE;
+    }
+
+    const dateCondition = this.buildMyEventDateCondition(
+      false,
+      startsAfter,
+      endsBefore,
+    );
+
+    const where = {
+      isDeleted: false,
+      organizationUnitId: { in: requestedOrgUnitIds },
+      ...dateCondition,
+      NOT: {
+        invites: {
+          userId,
+          status: { in: [...PARTICIPATING_EVENT_INVITE_STATUSES] },
+        },
+      },
+    };
+
+    // Tie-break on id so events sharing the same startsAt keep a stable
+    // order across pages, matching findAvailableShiftInstances.
+    const orderBy = { startsAt: 'asc' as const, id: 'asc' as const };
+
+    const [events, totalResult] = await Promise.all([
+      this.db.query.events.findMany({
+        where,
+        orderBy,
+        limit,
+        offset,
+      }),
+      this.db.query.events.findMany({
+        where,
+        columns: {},
+        extras: { total: count() },
+      }),
+    ]);
+
+    return { events, total: totalResult[0]?.total ?? 0 };
+  }
+
   private async getAccessibleOrganizationUnitIds(
     userId: string,
   ): Promise<string[]> {
@@ -286,6 +377,17 @@ export class EventService {
       void this.loadAndEmitEventInvitedNotification(event, invitedMemberIds);
     }
 
+    this.postHogService.capture({
+      event: POSTHOG_EVENT.EVENT_CREATE,
+      userId,
+      properties: {
+        surface: POSTHOG_SURFACE.BACKOFFICE,
+        organization_id: await this.resolveOrganizationId(organizationUnitId),
+        organization_unit_id: organizationUnitId,
+        event_id: event.id,
+      },
+    });
+
     return event;
   }
 
@@ -293,6 +395,7 @@ export class EventService {
     id: string,
     organizationUnitId: string,
     input: UpdateEventInput,
+    actorUserId?: string,
   ): Promise<EventEntity> {
     const existingEvent = await this.db.query.events.findFirst({
       where: { id, organizationUnitId, isDeleted: false },
@@ -304,7 +407,7 @@ export class EventService {
 
     const resolved = await this.resolveEventUpdateInput(input);
 
-    return this.db.transaction(async (tx) => {
+    const event = await this.db.transaction(async (tx) => {
       const [event] = await tx
         .update(schema.events)
         .set({
@@ -339,9 +442,28 @@ export class EventService {
 
       return event;
     });
+
+    if (actorUserId) {
+      this.postHogService.capture({
+        event: POSTHOG_EVENT.EVENT_UPDATE,
+        userId: actorUserId,
+        properties: {
+          surface: POSTHOG_SURFACE.BACKOFFICE,
+          organization_id: await this.resolveOrganizationId(organizationUnitId),
+          organization_unit_id: organizationUnitId,
+          event_id: event.id,
+        },
+      });
+    }
+
+    return event;
   }
 
-  async delete(id: string, organizationUnitId: string): Promise<EventEntity> {
+  async delete(
+    id: string,
+    organizationUnitId: string,
+    actorUserId?: string,
+  ): Promise<EventEntity> {
     const [event] = await this.db
       .update(schema.events)
       .set({ isDeleted: true })
@@ -360,6 +482,19 @@ export class EventService {
 
     void this.loadAndEmitEventCancelledNotification(event);
 
+    if (actorUserId) {
+      this.postHogService.capture({
+        event: POSTHOG_EVENT.EVENT_DELETE,
+        userId: actorUserId,
+        properties: {
+          surface: POSTHOG_SURFACE.BACKOFFICE,
+          organization_id: await this.resolveOrganizationId(organizationUnitId),
+          organization_unit_id: organizationUnitId,
+          event_id: event.id,
+        },
+      });
+    }
+
     return event;
   }
 
@@ -367,6 +502,7 @@ export class EventService {
     eventId: string,
     memberIds: string[],
     organizationUnitId: string,
+    actorUserId?: string,
   ): Promise<EventEntity> {
     const event = await this.findById(eventId, organizationUnitId);
 
@@ -399,6 +535,10 @@ export class EventService {
       return event;
     }
 
+    // Inviting yourself happens silently: written straight to ACCEPTED with
+    // no pending state, since there's nothing for the actor to accept.
+    const isSelf = (id: string) => actorUserId != null && id === actorUserId;
+
     if (newMemberIds.length > 0) {
       await this.db
         .insert(schema.eventInvites)
@@ -406,29 +546,63 @@ export class EventService {
           newMemberIds.map((userId) => ({
             eventId,
             userId,
-            status: EventInviteStatus.INVITED,
+            status: isSelf(userId)
+              ? EventInviteStatus.ACCEPTED
+              : EventInviteStatus.INVITED,
           })),
         )
         .onConflictDoNothing();
     }
 
     if (reinviteMemberIds.length > 0) {
-      await this.db
-        .update(schema.eventInvites)
-        .set({ status: EventInviteStatus.INVITED })
-        .where(
-          and(
-            eq(schema.eventInvites.eventId, eventId),
-            inArray(schema.eventInvites.userId, reinviteMemberIds),
-            eq(schema.eventInvites.status, EventInviteStatus.ADMIN_REJECTED),
-          ),
-        );
+      const otherReinviteIds = reinviteMemberIds.filter((id) => !isSelf(id));
+      const selfReinviteIds = reinviteMemberIds.filter(isSelf);
+
+      if (otherReinviteIds.length > 0) {
+        await this.db
+          .update(schema.eventInvites)
+          .set({ status: EventInviteStatus.INVITED })
+          .where(
+            and(
+              eq(schema.eventInvites.eventId, eventId),
+              inArray(schema.eventInvites.userId, otherReinviteIds),
+              eq(schema.eventInvites.status, EventInviteStatus.ADMIN_REJECTED),
+            ),
+          );
+      }
+      if (selfReinviteIds.length > 0) {
+        await this.db
+          .update(schema.eventInvites)
+          .set({ status: EventInviteStatus.ACCEPTED })
+          .where(
+            and(
+              eq(schema.eventInvites.eventId, eventId),
+              inArray(schema.eventInvites.userId, selfReinviteIds),
+              eq(schema.eventInvites.status, EventInviteStatus.ADMIN_REJECTED),
+            ),
+          );
+      }
     }
 
-    void this.loadAndEmitEventInvitedNotification(event, [
-      ...newMemberIds,
-      ...reinviteMemberIds,
-    ]);
+    const notifyMemberIds = [...newMemberIds, ...reinviteMemberIds].filter(
+      (id) => !isSelf(id),
+    );
+    void this.loadAndEmitEventInvitedNotification(event, notifyMemberIds);
+
+    const invitedUserIds = [...newMemberIds, ...reinviteMemberIds];
+    const organizationId = await this.resolveOrganizationId(organizationUnitId);
+    for (const invitedUserId of invitedUserIds) {
+      this.postHogService.capture({
+        event: POSTHOG_EVENT.EVENT_INVITE,
+        userId: invitedUserId,
+        properties: {
+          surface: POSTHOG_SURFACE.BACKOFFICE,
+          organization_id: organizationId,
+          organization_unit_id: organizationUnitId,
+          event_id: eventId,
+        },
+      });
+    }
 
     return event;
   }
@@ -461,9 +635,17 @@ export class EventService {
   async joinEvent(
     userId: string,
     eventId: string,
-    tx?: Database,
-    formsAlreadySatisfied?: boolean,
+    options: {
+      tx?: Database;
+      formsAlreadySatisfied?: boolean;
+      source?: PostHogJoinSource;
+    } = {},
   ): Promise<EventEntity> {
+    const {
+      tx,
+      formsAlreadySatisfied,
+      source = POSTHOG_JOIN_SOURCE.SELF_JOIN,
+    } = options;
     const db = tx ?? this.db;
 
     const event = await db.query.events.findFirst({
@@ -524,20 +706,33 @@ export class EventService {
         .where(eq(schema.eventInvites.id, existingInvite.id));
 
       void this.loadAndEmitEventJoinedNotification(userId, event);
+      await this.captureEventJoin({
+        userId,
+        event,
+        source,
+      });
 
       return event;
     }
 
-    await db
+    const [inserted] = await db
       .insert(schema.eventInvites)
       .values({
         eventId,
         userId,
         status: EventInviteStatus.ACCEPTED,
       })
-      .onConflictDoNothing();
+      .onConflictDoNothing()
+      .returning();
 
-    void this.loadAndEmitEventJoinedNotification(userId, event);
+    if (inserted) {
+      void this.loadAndEmitEventJoinedNotification(userId, event);
+      await this.captureEventJoin({
+        userId,
+        event,
+        source,
+      });
+    }
 
     return event;
   }
@@ -610,6 +805,10 @@ export class EventService {
         };
       }
 
+      await this.formSubmissionService.shareSubmissionsWithOrgUnit(userId, {
+        targetType: RequiredFormTargetType.EVENT,
+        targetId: eventId,
+      });
       const eventFormsCheck = await this.checkEventRequiredForms(
         userId,
         eventId,
@@ -623,7 +822,7 @@ export class EventService {
       }
 
       if (result.status === 'JOINED') {
-        await this.joinEvent(userId, eventId, undefined, true);
+        await this.joinEvent(userId, eventId, { formsAlreadySatisfied: true });
         return {
           status: JoinStatus.JOINED,
           event,
@@ -637,6 +836,10 @@ export class EventService {
       };
     }
 
+    await this.formSubmissionService.shareSubmissionsWithOrgUnit(userId, {
+      targetType: RequiredFormTargetType.EVENT,
+      targetId: eventId,
+    });
     const eventFormsCheck = await this.checkEventRequiredForms(userId, eventId);
     if (!eventFormsCheck.satisfied) {
       return {
@@ -646,7 +849,7 @@ export class EventService {
       };
     }
 
-    await this.joinEvent(userId, eventId, undefined, true);
+    await this.joinEvent(userId, eventId, { formsAlreadySatisfied: true });
     return {
       status: JoinStatus.JOINED,
       event,
@@ -657,6 +860,7 @@ export class EventService {
     userId: string,
     eventId: string,
     status: EventInviteStatus,
+    actorUserId: string = userId,
   ): Promise<EventInviteEntity> {
     const event = await this.db.query.events.findFirst({
       where: { id: eventId, isDeleted: false },
@@ -714,6 +918,45 @@ export class EventService {
 
     if (status === EventInviteStatus.INVITED) {
       void this.loadAndEmitEventInvitedNotification(event, [userId]);
+    }
+
+    const source = actorUserId === userId ? 'self' : 'admin';
+    const organizationId = await this.resolveOrganizationId(
+      event.organizationUnitId,
+    );
+    this.postHogService.capture({
+      event: POSTHOG_EVENT.EVENT_INVITE_UPDATE,
+      userId,
+      properties: {
+        surface:
+          source === 'admin'
+            ? POSTHOG_SURFACE.BACKOFFICE
+            : POSTHOG_SURFACE.VOLUNTEERING,
+        organization_id: organizationId,
+        organization_unit_id: event.organizationUnitId,
+        source,
+        event_id: eventId,
+        invite_status: status,
+      },
+    });
+    if (
+      status === EventInviteStatus.ACCEPTED ||
+      status === EventInviteStatus.SELF_JOINED
+    ) {
+      this.postHogService.capture({
+        event: POSTHOG_EVENT.EVENT_JOIN,
+        userId,
+        properties: {
+          surface:
+            source === 'admin'
+              ? POSTHOG_SURFACE.BACKOFFICE
+              : POSTHOG_SURFACE.VOLUNTEERING,
+          organization_id: organizationId,
+          organization_unit_id: event.organizationUnitId,
+          source: POSTHOG_JOIN_SOURCE.INVITE_ACCEPT,
+          event_id: eventId,
+        },
+      });
     }
 
     return updated;
@@ -976,5 +1219,38 @@ export class EventService {
         `Failed to emit event cancelled notification: ${error instanceof Error ? error.message : String(error)}`,
       );
     }
+  }
+
+  private async resolveOrganizationId(
+    organizationUnitId: string,
+  ): Promise<string | undefined> {
+    const unit = await this.db.query.organizationUnits.findFirst({
+      where: { id: organizationUnitId },
+      columns: { organizationId: true },
+    });
+    return unit?.organizationId ?? undefined;
+  }
+
+  private async captureEventJoin(input: {
+    userId: string;
+    event: EventEntity;
+    source: PostHogJoinSource;
+  }): Promise<void> {
+    this.postHogService.capture({
+      event: POSTHOG_EVENT.EVENT_JOIN,
+      userId: input.userId,
+      properties: {
+        surface:
+          input.source === POSTHOG_JOIN_SOURCE.MEMBERSHIP_APPROVE
+            ? POSTHOG_SURFACE.BACKOFFICE
+            : POSTHOG_SURFACE.VOLUNTEERING,
+        organization_id: await this.resolveOrganizationId(
+          input.event.organizationUnitId,
+        ),
+        organization_unit_id: input.event.organizationUnitId,
+        source: input.source,
+        event_id: input.event.id,
+      },
+    });
   }
 }

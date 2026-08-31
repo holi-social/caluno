@@ -59,6 +59,7 @@ export class FormBlockMutationResolver {
     const item = await this.formBlockService.delete(
       id,
       context.organizationUnitId,
+      context.user.id,
     );
     return this.formBlockMapper.toModelOrThrow(item);
   }
@@ -74,6 +75,7 @@ export class FormBlockMutationResolver {
       blockId,
       context.organizationUnitId,
       input,
+      context.user.id,
     );
     return this.formBlockMapper.toModelOrThrow(item);
   }
@@ -89,6 +91,7 @@ export class FormBlockMutationResolver {
       fieldId,
       context.organizationUnitId,
       input,
+      context.user.id,
     );
     return this.formBlockMapper.toModelOrThrow(item);
   }
@@ -102,6 +105,7 @@ export class FormBlockMutationResolver {
     const item = await this.formBlockService.deleteField(
       fieldId,
       context.organizationUnitId,
+      context.user.id,
     );
     return this.formBlockMapper.toModelOrThrow(item);
   }

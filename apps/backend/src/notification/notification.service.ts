@@ -28,6 +28,12 @@ type MembershipRequestedInput =
 type MembershipApprovedInput =
   NotificationEventPayloadMap[typeof NotificationEvent.MEMBERSHIP_APPROVED];
 
+type MembershipLeftInput =
+  NotificationEventPayloadMap[typeof NotificationEvent.MEMBERSHIP_LEFT];
+
+type MembershipRemovedInput =
+  NotificationEventPayloadMap[typeof NotificationEvent.MEMBERSHIP_REMOVED];
+
 type ShiftInstanceJoinedInput =
   NotificationEventPayloadMap[typeof NotificationEvent.SHIFT_INSTANCE_JOINED];
 
@@ -142,6 +148,14 @@ export class NotificationService {
 
   notifyMembershipApproved(input: MembershipApprovedInput): void {
     this.emitter.emit(NotificationEvent.MEMBERSHIP_APPROVED, input);
+  }
+
+  notifyMembershipLeft(input: MembershipLeftInput): void {
+    this.emitter.emit(NotificationEvent.MEMBERSHIP_LEFT, input);
+  }
+
+  notifyMembershipRemoved(input: MembershipRemovedInput): void {
+    this.emitter.emit(NotificationEvent.MEMBERSHIP_REMOVED, input);
   }
 
   notifyShiftInstanceJoined(input: ShiftInstanceJoinedInput): void {

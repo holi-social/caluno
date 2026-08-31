@@ -49,7 +49,9 @@ describe('DocumentSigningService', () => {
     db = moduleRef.get<Database>(DATABASE_CONNECTION);
 
     const organizationUnitDataService = new OrganizationUnitDataService(db);
-    const authService = new AuthService(db, organizationUnitDataService);
+    const authService = new AuthService(db, organizationUnitDataService, {
+      capture: () => {},
+    } as unknown as PostHogService);
     const organizationService = new OrganizationService(
       db,
       {} as OrganizationMapper,
@@ -57,7 +59,7 @@ describe('DocumentSigningService', () => {
       {} as OrganizationUnitService,
       {} as NotificationService,
       {} as FileService,
-      {} as PostHogService,
+      { capture: () => {} } as unknown as PostHogService,
     );
     service = new DocumentSigningService(db, authService, organizationService);
 
