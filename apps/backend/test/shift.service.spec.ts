@@ -13,7 +13,9 @@ import { MembershipService } from '../src/membership/membership.service';
 import { NotificationService } from '../src/notification/notification.service';
 import { OrganizationService } from '../src/organization/organization.service';
 import { ACTIVE_SHIFT_INVITE_STATUSES } from '../src/shared/invite-status';
-import { ShiftInviteStatus } from '../src/shift/enums';
+import { POSTHOG_EVENT } from '../src/shared/observability/posthog.events';
+import { PostHogService } from '../src/shared/observability/posthog.service';
+import { ShiftInviteStatus, ShiftVisibility } from '../src/shift/enums';
 import { ShiftService } from '../src/shift/shift.service';
 import { UserService } from '../src/user/user.service';
 import { slugify } from '../src/utils/slug.util';
@@ -36,6 +38,8 @@ describe('ShiftService', () => {
   let organizationUnitId: string;
   let notificationService: NotificationService;
 
+  let capture: ReturnType<typeof mock>;
+
   beforeAll(async () => {
     await ensureTestDatabase();
     moduleRef = await Test.createTestingModule({
@@ -49,6 +53,8 @@ describe('ShiftService', () => {
       notifyShiftInstanceCancelled: mock(() => {}),
       notifyShiftInstanceSeriesCancelled: mock(() => {}),
     } as unknown as NotificationService;
+
+    capture = mock(() => {});
 
     shiftService = new ShiftService(
       db,
@@ -64,6 +70,7 @@ describe('ShiftService', () => {
       } as never,
       {} as never,
       { shareSubmissionsWithOrgUnit: async () => {} } as never,
+      { capture } as unknown as PostHogService,
     );
 
     userId = (await createUser(db)).id;
@@ -477,6 +484,87 @@ describe('ShiftService', () => {
   });
 
   describe('updateMembersForShiftInstance', () => {
+    it('writes ACCEPTED directly and does not notify when the inviter adds themselves, even to an invite-only shift', async () => {
+      const shift = await createShift(db, {
+        organizationUnitId,
+        createdById: userId,
+        visibility: ShiftVisibility.INVITED_MEMBERS,
+      });
+      const instances = await db.query.shiftInstances.findMany({
+        where: { masterId: shift.id },
+      });
+      const instanceId = instances[0]?.id;
+      expect(instanceId).toBeDefined();
+
+      (
+        notificationService.notifyShiftInstanceInvited as ReturnType<
+          typeof mock
+        >
+      ).mockClear();
+
+      await shiftService.updateMembersForShiftInstance(
+        instanceId,
+        [userId],
+        organizationUnitId,
+        {},
+        userId,
+      );
+
+      const invite = await db.query.shiftInstanceInvites.findFirst({
+        where: { instanceId, userId },
+      });
+      expect(invite?.status).toBe(ShiftInviteStatus.ACCEPTED);
+      expect(
+        notificationService.notifyShiftInstanceInvited,
+      ).not.toHaveBeenCalled();
+    });
+
+    it('notifies invited others but not the self-adding inviter in the same batch', async () => {
+      const shift = await createShift(db, {
+        organizationUnitId,
+        createdById: userId,
+      });
+      const instances = await db.query.shiftInstances.findMany({
+        where: { masterId: shift.id },
+      });
+      const instanceId = instances[0]?.id;
+      expect(instanceId).toBeDefined();
+
+      const otherUser = await createUser(db);
+
+      (
+        notificationService.notifyShiftInstanceInvited as ReturnType<
+          typeof mock
+        >
+      ).mockClear();
+
+      await shiftService.updateMembersForShiftInstance(
+        instanceId,
+        [userId, otherUser.id],
+        organizationUnitId,
+        {},
+        userId,
+      );
+
+      const invites = await db.query.shiftInstanceInvites.findMany({
+        where: { instanceId },
+      });
+      const selfInvite = invites.find((i) => i.userId === userId);
+      const otherInvite = invites.find((i) => i.userId === otherUser.id);
+      expect(selfInvite?.status).toBe(ShiftInviteStatus.ACCEPTED);
+      expect(otherInvite?.status).toBe(ShiftInviteStatus.INVITED);
+
+      expect(
+        notificationService.notifyShiftInstanceInvited,
+      ).toHaveBeenCalledTimes(1);
+      const call = (
+        notificationService.notifyShiftInstanceInvited as ReturnType<
+          typeof mock
+        >
+      ).mock.calls[0][0];
+      expect(call.recipientUserIds).toEqual([otherUser.id]);
+    });
+
     it('does not double-count existing instance invites when inviting to all instances', async () => {
       const shift = await createShift(db, {
         organizationUnitId,
@@ -549,6 +637,15 @@ describe('ShiftService', () => {
         userId: existingUser.id,
         status: ShiftInviteStatus.INVITED,
       });
+
+      (
+        notificationService.notifyShiftInstanceInvited as ReturnType<
+          typeof mock
+        >
+      ).mockClear();
+      (
+        notificationService.notifyShiftInvited as ReturnType<typeof mock>
+      ).mockClear();
 
       await expect(
         shiftService.updateMembersForShiftInstance(
@@ -916,9 +1013,21 @@ describe('ShiftService', () => {
       const result = await shiftService.deleteShiftInstance(
         instances[0].id,
         organizationUnitId,
+        { actorUserId: userId },
       );
 
       expect(result.isCancelled).toBe(true);
+      expect(capture).toHaveBeenCalledWith(
+        expect.objectContaining({
+          event: POSTHOG_EVENT.SHIFT_INSTANCE_CANCEL,
+          userId,
+          properties: expect.objectContaining({
+            organization_unit_id: organizationUnitId,
+            shift_instance_id: instances[0].id,
+            apply_to_all_future: false,
+          }),
+        }),
+      );
 
       const [reloaded] = await getInstances(shift.id);
       expect(reloaded.isCancelled).toBe(true);

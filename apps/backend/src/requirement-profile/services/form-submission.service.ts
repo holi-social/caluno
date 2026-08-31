@@ -10,6 +10,12 @@ import {
   NotFoundGraphQLError,
 } from '../../graphql/errors';
 import type { PaginationInput } from '../../graphql/pagination.input';
+import {
+  POSTHOG_EVENT,
+  POSTHOG_SURFACE,
+  type PostHogSurface,
+} from '../../shared/observability/posthog.events';
+import { PostHogService } from '../../shared/observability/posthog.service';
 import { SYSTEM_PROFILE_KEYS } from '../constants';
 import { FieldType, RequiredFormTargetType } from '../enums';
 import { SubmitFormInput } from '../inputs/submit-form.input';
@@ -29,6 +35,7 @@ export class FormSubmissionService {
     private readonly db: Database,
     private readonly userProfileService: UserProfileService,
     private readonly requiredFormService: RequiredFormService,
+    private readonly postHogService: PostHogService,
   ) {}
 
   async findById(id: string): Promise<FormSubmissionEntity | undefined> {
@@ -154,7 +161,9 @@ export class FormSubmissionService {
 
     await isUnitInOrg(this.db, organizationUnitId, form.organizationId);
 
-    return this.submitToForm(form, input, userId, organizationUnitId);
+    return this.submitToForm(form, input, userId, organizationUnitId, {
+      surface: POSTHOG_SURFACE.PUBLIC,
+    });
   }
 
   async submitRequiredForm(
@@ -183,7 +192,10 @@ export class FormSubmissionService {
 
     const organizationUnitId =
       await this.resolveTargetOrganizationUnitId(target);
-    return this.submitToForm(form, input, userId, organizationUnitId);
+    return this.submitToForm(form, input, userId, organizationUnitId, {
+      surface: POSTHOG_SURFACE.VOLUNTEERING,
+      targetType: target.targetType.toLowerCase(),
+    });
   }
 
   async shareSubmissionsWithOrgUnit(
@@ -257,6 +269,7 @@ export class FormSubmissionService {
     input: SubmitFormInput,
     userId: string,
     organizationUnitId: string,
+    captureContext: { surface: PostHogSurface; targetType?: string },
   ): Promise<FormSubmissionEntity> {
     const existing = await this.findByUserAndForm(userId, form.id);
     if (existing) {
@@ -416,6 +429,17 @@ export class FormSubmissionService {
       await this.shareWithOrgUnit(created.id, organizationUnitId, tx);
 
       return created;
+    });
+
+    this.postHogService.capture({
+      event: POSTHOG_EVENT.FORM_SUBMISSION_SUBMIT,
+      userId,
+      properties: {
+        surface: captureContext.surface,
+        organization_id: form.organizationId,
+        organization_unit_id: form.organizationUnitId ?? undefined,
+        target_type: captureContext.targetType,
+      },
     });
 
     return submission;

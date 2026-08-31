@@ -10,6 +10,7 @@ import { SubmitFormInput } from '../requirement-profile/inputs/submit-form.input
 import type { FormSubmissionEntity } from '../requirement-profile/schemas/form-submission.schema';
 import { FormSubmissionService } from '../requirement-profile/services/form-submission.service';
 import { RequiredFormService } from '../requirement-profile/services/required-form.service';
+import { POSTHOG_JOIN_SOURCE } from '../shared/observability/posthog.events';
 import { ShiftService } from '../shift/shift.service';
 
 @Injectable()
@@ -117,6 +118,7 @@ export class MembershipLifecycleOrchestrator {
           await this.shiftService.joinShiftInstance(
             membershipRequest.userId,
             instanceId,
+            { source: POSTHOG_JOIN_SOURCE.MEMBERSHIP_APPROVE },
           );
         } catch (e) {
           this.logger.warn(
@@ -129,7 +131,11 @@ export class MembershipLifecycleOrchestrator {
     if (metadata.intendedShiftIds?.length) {
       for (const shiftId of metadata.intendedShiftIds) {
         try {
-          await this.shiftService.joinShift(membershipRequest.userId, shiftId);
+          await this.shiftService.joinShift(
+            membershipRequest.userId,
+            shiftId,
+            POSTHOG_JOIN_SOURCE.MEMBERSHIP_APPROVE,
+          );
         } catch (e) {
           this.logger.warn(`Failed to auto-join shift ${shiftId}: ${e}`);
         }
@@ -144,6 +150,9 @@ export class MembershipLifecycleOrchestrator {
             await this.eventService.joinEvent(
               membershipRequest.userId,
               eventId,
+              {
+                source: POSTHOG_JOIN_SOURCE.MEMBERSHIP_APPROVE,
+              },
             );
           }
         } catch (e) {

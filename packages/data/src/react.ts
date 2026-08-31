@@ -39,6 +39,7 @@ export * from './react/hooks/use-events';
 export * from './react/hooks/use-graphql-client';
 export * from './react/hooks/use-invoices';
 export * from './react/hooks/use-join-shift-instance';
+export * from './react/hooks/use-manual-baseline';
 export * from './react/hooks/use-membership-request';
 export * from './react/hooks/use-memberships';
 export * from './react/hooks/use-my-events';
@@ -78,11 +79,13 @@ export type {
   InvoiceSummary,
   RawBundleDownloadStatus,
   RawEffectiveRate,
+  RawManualBaseline,
   RawPendingSignee,
   RawReimbursementType,
   RawVolunteerYearlyUsage,
   RawYearlyUsage,
   RecordedBundleDownload,
+  SetManualBaselineResult,
 } from './repositories/accounting/accounting.repository';
 export { deriveDocumentStatus } from './repositories/accounting/accounting.repository';
 export type {

@@ -9,6 +9,10 @@ import { Loader2 } from 'lucide-react';
 import { type ReactNode, Suspense } from 'react';
 import { LocaleCookieSeeder } from '@/components/locale-cookie-seeder';
 import { DashboardSidebar } from '@/components/navigation/dashboard-sidebar';
+import {
+  PageHeaderProvider,
+  PageHeaderSlot,
+} from '@/components/navigation/page-header-context';
 import { ProfileNavIcon } from '@/components/navigation/profile-nav-icon';
 import { VolunteerSheet } from '@/components/sheets/volunteer-sheet';
 import { ThemeToggle } from '@/components/theme-toggle';
@@ -57,24 +61,29 @@ export default async function OrgLayout({
           <SidebarProvider>
             <DashboardSidebar permissions={permissionKeys} />
             <SidebarInset>
-              <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4">
-                <SidebarTrigger className="-ml-1" />
-                <Separator orientation="vertical" className="mr-2 h-4" />
-                <div className="ml-auto flex items-center gap-2">
-                  <Suspense
-                    fallback={<Loader2 className="animate-spin size-4" />}
-                  >
-                    {sheet}
-                  </Suspense>
-                  <ThemeToggle />
-                  <ProfileNavIcon
-                    orgUId={orgUId}
-                    imageUrl={me.image}
-                    name={me.name}
-                  />
-                </div>
-              </header>
-              <div className="flex flex-1 flex-col gap-4 p-4">{children}</div>
+              <PageHeaderProvider>
+                <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4">
+                  <SidebarTrigger className="-ml-1" />
+                  <Separator orientation="vertical" className="mr-2 h-4" />
+                  <div className="flex justify-between gap-2 flex-1">
+                    <PageHeaderSlot />
+                    <div className="flex gap-2 items-center ml-auto sm:ml-0">
+                      <Suspense
+                        fallback={<Loader2 className="animate-spin size-4" />}
+                      >
+                        {sheet}
+                      </Suspense>
+                      <ThemeToggle />
+                      <ProfileNavIcon
+                        orgUId={orgUId}
+                        imageUrl={me.image}
+                        name={me.name}
+                      />
+                    </div>
+                  </div>
+                </header>
+                <div className="flex flex-1 flex-col gap-4 p-4">{children}</div>
+              </PageHeaderProvider>
             </SidebarInset>
           </SidebarProvider>
           <BlockSheet />
