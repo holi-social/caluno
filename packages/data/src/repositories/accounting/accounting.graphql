@@ -74,6 +74,10 @@ fragment ContractSummaryFields on Contract {
   declineReason
   declinedAt
   declinedAtSigneeType
+  declinedByUser {
+    id
+    name
+  }
   renewDate
   downloadUrl
   createdAt
@@ -173,6 +177,10 @@ fragment InvoiceSummaryFields on Invoice {
   declineReason
   declinedAt
   declinedAtSigneeType
+  declinedByUser {
+    id
+    name
+  }
   downloadUrl
   createdAt
   updatedAt
