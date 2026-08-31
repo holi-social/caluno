@@ -1,6 +1,8 @@
 import { Global, Module } from '@nestjs/common';
 import { APP_FILTER, APP_INTERCEPTOR } from '@nestjs/core';
+import { LoggerModule } from 'nestjs-pino';
 import { ObservabilityService } from './observability.service';
+import { buildPinoHttpOptions } from './pino-options';
 import {
   createPostHogClient,
   createPostHogRequestInterceptor,
@@ -10,6 +12,16 @@ import { SentryExceptionFilter } from './sentry-exception.filter';
 
 @Global()
 @Module({
+  imports: [
+    LoggerModule.forRootAsync({
+      useFactory: () => ({
+        pinoHttp: buildPinoHttpOptions({
+          nodeEnv: process.env.NODE_ENV,
+          logLevel: process.env.LOG_LEVEL,
+        }),
+      }),
+    }),
+  ],
   providers: [
     ObservabilityService,
     {
@@ -24,6 +36,6 @@ import { SentryExceptionFilter } from './sentry-exception.filter';
     },
     { provide: APP_FILTER, useClass: SentryExceptionFilter },
   ],
-  exports: [ObservabilityService, PostHogService],
+  exports: [ObservabilityService, PostHogService, LoggerModule],
 })
 export class ObservabilityModule {}
