@@ -17,6 +17,12 @@ type BundleDownloadStatus {
   volunteer: User!
 }
 
+type CheckInContext {
+  eligibleOrganizationUnits: [OrganizationUnit!]!
+  openTimeEntries: [TimeEntry!]!
+  volunteer: User!
+}
+
 input CloseTimeEntryInput {
   endedAt: DateTime!
   notes: String
@@ -800,6 +806,7 @@ type Query {
   availableEvents(endsBefore: DateTime = null, limit: Int! = 15, offset: Int! = 0, organizationUnitIds: [ID!], startsAfter: DateTime = null): EventPaginatedResponse!
   availableShiftInstances(endsBefore: DateTime = null, limit: Int! = 15, offset: Int! = 0, organizationUnitIds: [ID!], startsAfter: DateTime = null): ShiftInstancePaginatedResponse!
   bundleDownloadStatus(reimbursementTypeId: ID!, volunteerId: ID!): BundleDownloadStatus
+  checkInContext(checkInId: String!): CheckInContext
   contract(id: ID!): Contract!
   contracts(filter: ContractFilterInput): [Contract!]!
   documentTemplate(id: ID!): DocumentTemplate!
