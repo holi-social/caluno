@@ -40,11 +40,30 @@ export interface SendResetPasswordOptions {
   headers: Record<string, unknown>;
 }
 
+/**
+ * Shape accepted by Better Auth's top-level `logger` option. Matches the
+ * `Logger` type exported by @better-auth/core: a custom `log(level, message,
+ * ...args)` hook lets us route Better Auth's console output through pino so
+ * it lands on stdout as structured JSON instead of a bare `console.warn`.
+ */
+export interface BetterAuthLogger {
+  disabled?: boolean;
+  disableColors?: boolean;
+  level?: 'debug' | 'info' | 'warn' | 'error';
+  log?: (
+    level: 'debug' | 'info' | 'warn' | 'error',
+    message: string,
+    ...args: unknown[]
+  ) => void;
+}
+
 export interface AuthConfigOptions {
   database: Database | object;
   trustedOrigins: string[];
   /** Root domain for cross-subdomain cookies (e.g. "caluno.org"). Set when frontend and API use different subdomains. */
   cookieDomain?: string;
+  /** Optional logger hooked into Better Auth so its output flows through pino (structured JSON). */
+  logger?: BetterAuthLogger;
   emailVerificationEnabled?: boolean;
   sendVerificationOTP: (options: SendVerificationOtpOptions) => Promise<void>;
   sendResetPassword: (options: SendResetPasswordOptions) => Promise<void>;
@@ -58,6 +77,7 @@ export const createAuthConfig = ({
   database,
   trustedOrigins,
   cookieDomain,
+  logger,
   emailVerificationEnabled = true,
   sendVerificationOTP,
   sendResetPassword,
@@ -66,6 +86,7 @@ export const createAuthConfig = ({
   onUserCreated,
   privacyPolicyDirectory = defaultPrivacyPolicyDirectory(),
 }: AuthConfigOptions): BetterAuthOptions => ({
+  ...(logger && { logger }),
   database: drizzleAdapter(database, {
     schema: {
       users,
