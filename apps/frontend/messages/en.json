@@ -562,7 +562,9 @@
     "volunteers": "Volunteers",
     "accounting": "Accounting",
     "reimbursements": "Reimbursements",
-    "accountingSettings": "Settings"
+    "accountingSettings": "Settings",
+    "myDocuments": "My documents",
+    "myDocumentsBadge": "{count} documents need your signature"
   },
   "OrgDetail": {
     "aboutHeading": "About us",
@@ -2082,6 +2084,15 @@
           "signees": "{count, plural, =1 {1 signature} other {# signatures}}"
         }
       }
+    }
+  },
+  "MyDocuments": {
+    "title": "My documents",
+    "backLabel": "Back",
+    "loadMore": "Load more ({remaining})",
+    "empty": {
+      "title": "No documents yet",
+      "description": "Agreements and timesheets from your organizations will appear here."
     }
   }
 }
