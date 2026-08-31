@@ -396,7 +396,8 @@
       "preview": {
         "title": "{name}",
         "unavailable": "The document is not available for preview yet."
-      }
+      },
+      "downloadUnavailableNote": "PDF not available yet."
     }
   },
   "MembershipRequest": {
@@ -1775,7 +1776,8 @@
             "coordSign": "Coordinator",
             "superSign": "Supervisor",
             "active": "Active",
-            "ready": "Ready"
+            "ready": "Ready",
+            "actorOrg": "Organization"
           },
           "limitSection": "Annual budget",
           "invoicesPaidOut": "Paid out",
@@ -1800,7 +1802,8 @@
             "grossAmount": "Gross amount",
             "rateTooltip": "Default hourly rate for this allowance type. Shifts can use a different rate.",
             "viewBtn": "View timesheets"
-          }
+          },
+          "pdfUnavailableNote": "PDF not available yet."
         },
         "statusLabel": {
           "contractGenerate": "Create contract",

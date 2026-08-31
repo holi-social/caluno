@@ -396,7 +396,8 @@
       "preview": {
         "title": "{name}",
         "unavailable": "Das Dokument ist noch nicht zur Vorschau verfügbar."
-      }
+      },
+      "downloadUnavailableNote": "PDF noch nicht verfügbar."
     }
   },
   "MembershipRequest": {
@@ -1775,7 +1776,8 @@
             "coordSign": "Koordinator",
             "superSign": "Supervisor",
             "active": "Aktiv",
-            "ready": "Bereit"
+            "ready": "Bereit",
+            "actorOrg": "Organisation"
           },
           "limitSection": "Jahresbudget",
           "invoicesPaidOut": "Ausgezahlt",
@@ -1800,7 +1802,8 @@
             "grossAmount": "Bruttobetrag",
             "rateTooltip": "Standardstundensatz für diese Pauschale. Einsätze können einen eigenen Satz haben.",
             "viewBtn": "Stundennachweise anzeigen"
-          }
+          },
+          "pdfUnavailableNote": "PDF noch nicht verfügbar."
         },
         "statusLabel": {
           "contractGenerate": "Vereinbarung erstellen",

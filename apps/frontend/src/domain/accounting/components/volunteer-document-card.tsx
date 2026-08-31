@@ -161,6 +161,7 @@ export function VolunteerDocumentCard({
         <Button
           variant="outline"
           className="w-full"
+          disabled={!document.downloadUrl}
           onClick={(e) => {
             e.stopPropagation();
             onDownload(document);
@@ -169,6 +170,11 @@ export function VolunteerDocumentCard({
           <DownloadIcon />
           {t('actions.download')}
         </Button>
+        {!document.downloadUrl && (
+          <p className="px-1 text-xs text-muted-foreground">
+            {t('downloadUnavailableNote')}
+          </p>
+        )}
         {awaitingSignature && (
           <>
             <Button
