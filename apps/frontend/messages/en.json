@@ -87,10 +87,14 @@
     }
   },
   "CheckIn": {
+    "checkInButton": "Check in",
     "manualCheckin": "Manual checkin",
     "myQrCodeTab": "My QR code",
+    "noVolunteersFound": "No volunteer found",
     "qrScannerTab": "QR Scanner",
-    "scanACode": "Scan a code"
+    "scanACode": "Scan a code",
+    "searchVolunteerPlaceholder": "Search for a volunteer",
+    "selectOrgUnit": "Select org unit"
   },
   "Common": {
     "avatarAlt": "Avatar of {name}",
@@ -1089,10 +1093,6 @@
       "volunteerCheckedOut": "Volunteer checked out",
       "volunteerNotFoundDescription": "There is no volunteer that matches this QR ID. The QR ID may have been re-generated and so this QR ID is no longer valid. <tryAgain>Try again</tryAgain> by entering the QR ID manually or search for the volunteer to check them in.",
       "volunteerNotFoundTitle": "Volunteer does not exist"
-    },
-    "checkInSelector": {
-      "empty": "No volunteer found",
-      "placeholder": "Select a volunteer"
     },
     "detail": {
       "createdByLabel": "Created by",

@@ -87,10 +87,14 @@
     }
   },
   "CheckIn": {
+    "checkInButton": "Einchecken",
     "manualCheckin": "Manuelles Einchecken",
     "myQrCodeTab": "Mein QR-Code",
+    "noVolunteersFound": "Keine Freiwilligen gefunden",
     "qrScannerTab": "QR-Scanner",
-    "scanACode": "Code scannen"
+    "scanACode": "Code scannen",
+    "searchVolunteerPlaceholder": "Freiwillige:n suchen",
+    "selectOrgUnit": "Organisationseinheit auswählen"
   },
   "Common": {
     "avatarAlt": "Avatar von {name}",
@@ -1089,10 +1093,6 @@
       "volunteerCheckedOut": "Freiwillige:r ausgecheckt",
       "volunteerNotFoundDescription": "Es gibt niemanden, der zu dieser QR-ID passt. Die QR-ID wurde möglicherweise neu generiert und ist daher nicht mehr gültig. <tryAgain>Versuche es erneut</tryAgain>, indem du die QR-ID manuell eingibst oder nach der Person suchst, um sie einzuchecken.",
       "volunteerNotFoundTitle": "Freiwillige:r nicht gefunden"
-    },
-    "checkInSelector": {
-      "empty": "Keine Freiwilligen gefunden",
-      "placeholder": "Freiwillige:n auswählen"
     },
     "detail": {
       "createdByLabel": "Erstellt von",
