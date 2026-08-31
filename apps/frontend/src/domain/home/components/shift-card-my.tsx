@@ -102,6 +102,7 @@ export function ShiftCardMy({
     <Card className="relative flex flex-col gap-0 overflow-hidden rounded-xl border border-border bg-card p-0">
       <Link
         href={shiftPublicPath(shiftInstance.master.id, shiftInstance.id)}
+        prefetch={false}
         aria-label={shiftInstance.master.title}
         className="absolute inset-0 rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60 focus-visible:ring-offset-1"
       />

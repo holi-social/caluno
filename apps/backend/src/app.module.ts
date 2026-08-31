@@ -6,10 +6,7 @@ import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { GraphQLModule } from '@nestjs/graphql';
 import { SentryModule } from '@sentry/nestjs/setup';
-import {
-  AuthGuard,
-  AuthModule as BetterAuthModule,
-} from '@thallesp/nestjs-better-auth';
+import { AuthModule as BetterAuthModule } from '@thallesp/nestjs-better-auth';
 import { betterAuth } from 'better-auth';
 import { AccountingModule } from './accounting/accounting.module';
 import { createAuthConfig } from './auth/auth';
@@ -242,10 +239,6 @@ const autoSchemaFile =
     {
       provide: APP_INTERCEPTOR,
       useClass: LoaderInterceptor,
-    },
-    {
-      provide: APP_GUARD,
-      useClass: AuthGuard,
     },
     {
       provide: APP_GUARD,
