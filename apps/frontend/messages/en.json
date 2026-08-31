@@ -906,8 +906,6 @@
       "searchPlaceholder": "Search volunteers…",
       "submissionsColumn": "Submissions",
       "subtitle": "Volunteers who submitted this form. Click a volunteer to view their submission.",
-      "tabRejected": "Rejected",
-      "tabSubmitted": "Submitted",
       "title": "Submissions — {formName}",
       "viewSubmission": "View →",
       "volunteerColumn": "Volunteer"

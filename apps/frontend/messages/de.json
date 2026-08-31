@@ -906,8 +906,6 @@
       "searchPlaceholder": "Freiwillige suchen…",
       "submissionsColumn": "Einsendungen",
       "subtitle": "Freiwillige, die dieses Formular eingereicht haben. Klicke auf eine Person, um die Einsendung anzusehen.",
-      "tabRejected": "Abgelehnt",
-      "tabSubmitted": "Eingereicht",
       "title": "Einsendungen — {formName}",
       "viewSubmission": "Ansehen →",
       "volunteerColumn": "Freiwillige:r"

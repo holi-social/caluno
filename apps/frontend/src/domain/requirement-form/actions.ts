@@ -79,6 +79,7 @@ export const createBlock = actionClient
 
 const submitFormSchema = z.object({
   token: z.string().min(1),
+  organizationUnitId: z.string().min(1),
   values: z.array(
     z.object({
       fieldId: z.string(),
@@ -92,9 +93,13 @@ export const submitForm = actionClient
   .inputSchema(submitFormSchema)
   .action(async ({ parsedInput }) => {
     const data = await getDataClient();
-    const result = await data.requirementForm.submitForm(parsedInput.token, {
-      values: parsedInput.values,
-    });
+    const result = await data.requirementForm.submitForm(
+      parsedInput.token,
+      parsedInput.organizationUnitId,
+      {
+        values: parsedInput.values,
+      },
+    );
     return result;
   });
 

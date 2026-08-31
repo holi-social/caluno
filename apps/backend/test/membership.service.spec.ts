@@ -53,6 +53,7 @@ describe('MembershipService', () => {
         notifyMembershipRemoved: mock(() => undefined),
       } as unknown as NotificationService,
       {} as RequiredFormService,
+      { shareSubmissionsWithOrgUnit: async () => {} } as never,
       { capture: () => {} } as unknown as PostHogService,
     );
     registerTestResourceCleanup(async () => {

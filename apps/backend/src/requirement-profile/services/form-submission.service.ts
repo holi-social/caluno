@@ -5,6 +5,7 @@ import { DATABASE_CONNECTION } from '../../database/database-connection';
 import * as schema from '../../database/schema';
 import {
   BadRequestGraphQLError,
+  ConflictGraphQLError,
   ForbiddenGraphQLError,
   NotFoundGraphQLError,
 } from '../../graphql/errors';
@@ -16,9 +17,10 @@ import {
 } from '../../shared/observability/posthog.events';
 import { PostHogService } from '../../shared/observability/posthog.service';
 import { SYSTEM_PROFILE_KEYS } from '../constants';
-import { FieldType, FormSubmissionStatus } from '../enums';
+import { FieldType, RequiredFormTargetType } from '../enums';
 import { SubmitFormInput } from '../inputs/submit-form.input';
 import type { FormSubmissionEntity } from '../schemas/form-submission.schema';
+import { isUnitInOrg } from './is-unit-in-org';
 import { parseMultiChoiceValue } from './multi-choice-value';
 import {
   RequiredFormService,
@@ -35,16 +37,6 @@ export class FormSubmissionService {
     private readonly requiredFormService: RequiredFormService,
     private readonly postHogService: PostHogService,
   ) {}
-
-  async findOrganizationUnitIdByFormId(
-    formId: string,
-  ): Promise<string | undefined> {
-    const form = await this.db.query.requirementForms.findFirst({
-      where: { id: formId },
-      columns: { organizationUnitId: true },
-    });
-    return form?.organizationUnitId ?? undefined;
-  }
 
   async findById(id: string): Promise<FormSubmissionEntity | undefined> {
     return this.db.query.formSubmissions.findFirst({
@@ -140,23 +132,24 @@ export class FormSubmissionService {
       .select({ submission: schema.formSubmissions })
       .from(schema.formSubmissions)
       .innerJoin(
-        schema.requirementForms,
-        eq(schema.formSubmissions.formId, schema.requirementForms.id),
+        schema.formSubmissionShares,
+        eq(schema.formSubmissionShares.submissionId, schema.formSubmissions.id),
       )
       .where(
         and(
           eq(schema.formSubmissions.userId, userId),
-          eq(schema.requirementForms.organizationUnitId, orgUnitId),
+          eq(schema.formSubmissionShares.organizationUnitId, orgUnitId),
         ),
       )
       .orderBy(asc(schema.formSubmissions.submittedAt));
-    return rows.map((r) => r.submission);
+    return rows.map((row) => row.submission);
   }
 
   async submit(
     token: string,
     input: SubmitFormInput,
     userId: string,
+    organizationUnitId: string,
   ): Promise<FormSubmissionEntity> {
     const form = await this.db.query.requirementForms.findFirst({
       where: { shareToken: token },
@@ -166,7 +159,9 @@ export class FormSubmissionService {
       throw new NotFoundGraphQLError('Form not found');
     }
 
-    return this.submitToForm(form, input, userId, {
+    await isUnitInOrg(this.db, organizationUnitId, form.organizationId);
+
+    return this.submitToForm(form, input, userId, organizationUnitId, {
       surface: POSTHOG_SURFACE.PUBLIC,
     });
   }
@@ -195,29 +190,91 @@ export class FormSubmissionService {
       throw new NotFoundGraphQLError('Form not found');
     }
 
-    return this.submitToForm(form, input, userId, {
+    const organizationUnitId =
+      await this.resolveTargetOrganizationUnitId(target);
+    return this.submitToForm(form, input, userId, organizationUnitId, {
       surface: POSTHOG_SURFACE.VOLUNTEERING,
       targetType: target.targetType.toLowerCase(),
     });
+  }
+
+  async shareSubmissionsWithOrgUnit(
+    userId: string,
+    target: RequiredFormTarget,
+  ): Promise<void> {
+    const requiredForms =
+      await this.requiredFormService.getRequiredForms(target);
+    if (requiredForms.length === 0) return;
+
+    const formIds = requiredForms.map((item) => item.form.id);
+    const submissions = await this.db.query.formSubmissions.findMany({
+      where: { userId, formId: { in: formIds } },
+      columns: { id: true },
+    });
+    if (submissions.length === 0) return;
+
+    const organizationUnitId =
+      await this.resolveTargetOrganizationUnitId(target);
+    for (const submission of submissions) {
+      await this.shareWithOrgUnit(submission.id, organizationUnitId);
+    }
+  }
+
+  private async resolveTargetOrganizationUnitId(
+    target: RequiredFormTarget,
+  ): Promise<string> {
+    switch (target.targetType) {
+      case RequiredFormTargetType.ORGANIZATION_UNIT:
+        return target.targetId;
+      case RequiredFormTargetType.EVENT: {
+        const event = await this.db.query.events.findFirst({
+          where: { id: target.targetId },
+          columns: { organizationUnitId: true },
+        });
+        if (!event) throw new NotFoundGraphQLError('Event not found');
+        return event.organizationUnitId;
+      }
+      case RequiredFormTargetType.SHIFT: {
+        const shift = await this.db.query.shifts.findFirst({
+          where: { id: target.targetId },
+          columns: { organizationUnitId: true },
+        });
+        if (!shift) throw new NotFoundGraphQLError('Shift not found');
+        return shift.organizationUnitId;
+      }
+      case RequiredFormTargetType.SHIFT_INSTANCE: {
+        const instance = await this.db.query.shiftInstances.findFirst({
+          where: { id: target.targetId },
+          columns: { masterId: true },
+        });
+        if (!instance) {
+          throw new NotFoundGraphQLError('Shift instance not found');
+        }
+        const shift = await this.db.query.shifts.findFirst({
+          where: { id: instance.masterId },
+          columns: { organizationUnitId: true },
+        });
+        if (!shift) throw new NotFoundGraphQLError('Shift not found');
+        return shift.organizationUnitId;
+      }
+      default:
+        throw new ConflictGraphQLError(
+          `Unsupported required-form target: ${target.targetType}`,
+        );
+    }
   }
 
   private async submitToForm(
     form: schema.RequirementFormEntity,
     input: SubmitFormInput,
     userId: string,
+    organizationUnitId: string,
     captureContext: { surface: PostHogSurface; targetType?: string },
   ): Promise<FormSubmissionEntity> {
     const existing = await this.findByUserAndForm(userId, form.id);
     if (existing) {
-      if (existing.status !== FormSubmissionStatus.REJECTED) {
-        throw new BadRequestGraphQLError(
-          'You have already submitted this form',
-        );
-      }
-      // Previous submission was rejected — delete it so the user can re-submit
-      await this.db
-        .delete(schema.formSubmissions)
-        .where(eq(schema.formSubmissions.id, existing.id));
+      await this.shareWithOrgUnit(existing.id, organizationUnitId);
+      return existing;
     }
 
     // Load block refs and fields
@@ -353,7 +410,6 @@ export class FormSubmissionService {
         .values({
           formId: form.id,
           userId,
-          status: FormSubmissionStatus.SUBMITTED,
           submittedAt: new Date(),
         })
         .returning();
@@ -369,6 +425,8 @@ export class FormSubmissionService {
           })),
         );
       }
+
+      await this.shareWithOrgUnit(created.id, organizationUnitId, tx);
 
       return created;
     });
@@ -387,48 +445,15 @@ export class FormSubmissionService {
     return submission;
   }
 
-  async rejectByUserAndOrgUnit(
-    userId: string,
+  private async shareWithOrgUnit(
+    submissionId: string,
     organizationUnitId: string,
+    tx: Database = this.db,
   ): Promise<void> {
-    const forms = await this.db.query.requirementForms.findMany({
-      where: { organizationUnitId },
-      columns: { id: true },
-    });
-    if (forms.length === 0) return;
-
-    const formIds = forms.map((f) => f.id);
-    const rejected = await this.db
-      .update(schema.formSubmissions)
-      .set({ status: FormSubmissionStatus.REJECTED })
-      .where(
-        and(
-          eq(schema.formSubmissions.userId, userId),
-          eq(schema.formSubmissions.status, FormSubmissionStatus.SUBMITTED),
-          inArray(schema.formSubmissions.formId, formIds),
-        ),
-      )
-      .returning({ id: schema.formSubmissions.id });
-
-    if (rejected.length === 0) {
-      return;
-    }
-
-    const organizationUnit = await this.db.query.organizationUnits.findFirst({
-      where: { id: organizationUnitId },
-      columns: { organizationId: true },
-    });
-
-    this.postHogService.capture({
-      event: POSTHOG_EVENT.FORM_SUBMISSION_REJECT,
-      userId,
-      properties: {
-        surface: POSTHOG_SURFACE.BACKOFFICE,
-        organization_id: organizationUnit?.organizationId ?? undefined,
-        organization_unit_id: organizationUnitId,
-        target_type: 'organization_unit',
-      },
-    });
+    await tx
+      .insert(schema.formSubmissionShares)
+      .values({ submissionId, organizationUnitId })
+      .onConflictDoNothing();
   }
 
   private validateFieldValue(
