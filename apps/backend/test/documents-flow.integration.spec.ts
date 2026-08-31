@@ -143,6 +143,27 @@ const MY_INVOICES = `
   }
 `;
 
+const MY_DOCUMENTS = `
+  query MyDocuments {
+    myDocuments {
+      membershipId
+      organizationUnitId
+      organizationName
+      contracts { id contractStatus }
+      invoices { id invoiceStatus }
+    }
+  }
+`;
+
+const MY_DOCUMENT_SUMMARY = `
+  query MyDocumentSummary {
+    myDocumentSummary {
+      total
+      pending
+    }
+  }
+`;
+
 const CONTRACTS = `
   query Contracts {
     contracts {
@@ -879,6 +900,123 @@ describe('documents flow — admin + volunteer', () => {
         myContracts: Array<{ id: string }>;
       }>(app, { query: MY_CONTRACTS, headers: disabledHeader }, 'myContracts');
       expect(mine.myContracts).toEqual([]);
+    });
+  });
+
+  describe('cross-org "My documents"', () => {
+    it('groups the volunteer\u2019s documents by org and counts the ones needing their signature', async () => {
+      const orgA = await setupFlowOrg(db);
+      const orgB = await setupFlowOrg(db);
+      // The same volunteer is a member of both orgs.
+      await db.insert(schema.memberships).values({
+        userId: orgA.volunteerId,
+        organizationUnitId: orgB.organizationUnitId,
+      });
+
+      // One awaiting contract per org, and a second active contract in org A.
+      setAuthMockUserId(orgA.adminId);
+      const contractA = await graphqlRequestRequiringData<{
+        createContract: { id: string };
+      }>(
+        app,
+        {
+          query: CREATE_CONTRACT,
+          variables: {
+            input: {
+              organizationUnitId: orgA.organizationUnitId,
+              reimbursementTypeId: orgA.reimbursementTypeId,
+              volunteerId: orgA.volunteerId,
+              periodStart: '2026-01-01T00:00:00.000Z',
+              periodEnd: '2027-01-01T00:00:00.000Z',
+            },
+          },
+          headers: { 'x-organization-unit-id': orgA.organizationUnitId },
+        },
+        'createContract',
+      );
+      const contractA2 = await graphqlRequestRequiringData<{
+        createContract: { id: string };
+      }>(
+        app,
+        {
+          query: CREATE_CONTRACT,
+          variables: {
+            input: {
+              organizationUnitId: orgA.organizationUnitId,
+              reimbursementTypeId: orgA.reimbursementTypeId,
+              volunteerId: orgA.volunteerId,
+              periodStart: '2026-01-01T00:00:00.000Z',
+              periodEnd: '2027-01-01T00:00:00.000Z',
+            },
+          },
+          headers: { 'x-organization-unit-id': orgA.organizationUnitId },
+        },
+        'createContract',
+      );
+      // Sign the second one so org A has one pending + one active.
+      setAuthMockUserId(orgA.volunteerId);
+      await graphqlRequestRequiringData(
+        app,
+        {
+          query: SIGN_CONTRACT,
+          variables: { contractId: contractA2.createContract.id },
+          headers: { 'x-organization-unit-id': orgA.organizationUnitId },
+        },
+        'signContract',
+      );
+
+      setAuthMockUserId(orgB.adminId);
+      const contractB = await graphqlRequestRequiringData<{
+        createContract: { id: string };
+      }>(
+        app,
+        {
+          query: CREATE_CONTRACT,
+          variables: {
+            input: {
+              organizationUnitId: orgB.organizationUnitId,
+              reimbursementTypeId: orgB.reimbursementTypeId,
+              volunteerId: orgA.volunteerId,
+              periodStart: '2026-01-01T00:00:00.000Z',
+              periodEnd: '2027-01-01T00:00:00.000Z',
+            },
+          },
+          headers: { 'x-organization-unit-id': orgB.organizationUnitId },
+        },
+        'createContract',
+      );
+
+      // The volunteer sees both orgs, each with only its own documents.
+      setAuthMockUserId(orgA.volunteerId);
+      const documents = await graphqlRequestRequiringData<{
+        myDocuments: Array<{
+          organizationUnitId: string;
+          organizationName: string;
+          contracts: Array<{ id: string; contractStatus: string }>;
+          invoices: Array<{ id: string }>;
+        }>;
+      }>(app, { query: MY_DOCUMENTS }, 'myDocuments');
+      expect(documents.myDocuments).toHaveLength(2);
+
+      const groupA = documents.myDocuments.find(
+        (g) => g.organizationUnitId === orgA.organizationUnitId,
+      );
+      const groupB = documents.myDocuments.find(
+        (g) => g.organizationUnitId === orgB.organizationUnitId,
+      );
+      expect(groupA?.contracts.map((c) => c.id).sort()).toEqual(
+        [contractA.createContract.id, contractA2.createContract.id].sort(),
+      );
+      expect(groupB?.contracts.map((c) => c.id)).toEqual([
+        contractB.createContract.id,
+      ]);
+
+      // Summary: total documents across orgs, pending = awaiting the
+      // volunteer's signature only.
+      const summary = await graphqlRequestRequiringData<{
+        myDocumentSummary: { total: number; pending: number };
+      }>(app, { query: MY_DOCUMENT_SUMMARY }, 'myDocumentSummary');
+      expect(summary.myDocumentSummary).toEqual({ total: 3, pending: 2 });
     });
   });
 });

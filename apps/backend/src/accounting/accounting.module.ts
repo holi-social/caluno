@@ -43,6 +43,7 @@ import {
   InvoiceSignatureFieldResolver,
   InvoiceStatusChangeFieldResolver,
   InvoiceTimeEntryFieldResolver,
+  MyDocumentsQueryResolver,
   ReimbursementMutationResolver,
   ReimbursementQueryResolver,
   ReimbursementRateFieldResolver,
@@ -57,6 +58,7 @@ import {
   DocumentTemplateService,
   InvoiceService,
   ReimbursementRateService,
+  VolunteerDocumentsService,
 } from './services';
 
 @Module({
@@ -73,6 +75,7 @@ import {
   ],
   providers: [
     AccountingOrgAccessService,
+    VolunteerDocumentsService,
     ReimbursementRateService,
     DocumentTemplateService,
     DocumentRenderingService,
@@ -115,6 +118,7 @@ import {
     DocumentTemplateSigneesLoader,
     ContractLoader,
     InvoiceLoader,
+    MyDocumentsQueryResolver,
   ],
   exports: [
     ReimbursementRateService,

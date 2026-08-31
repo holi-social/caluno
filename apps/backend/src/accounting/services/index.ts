@@ -6,3 +6,4 @@ export { DocumentSigningService } from './document-signing.service';
 export { DocumentTemplateService } from './document-template.service';
 export { InvoiceService } from './invoice.service';
 export { ReimbursementRateService } from './reimbursement-rate.service';
+export { VolunteerDocumentsService } from './volunteer-documents.service';

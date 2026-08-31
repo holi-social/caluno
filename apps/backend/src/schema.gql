@@ -672,6 +672,21 @@ type Mutation {
   updateTimeEntry(id: ID!, input: UpdateTimeEntryInput!): TimeEntry!
 }
 
+type MyDocumentSummary {
+  pending: Int!
+  total: Int!
+}
+
+type MyDocumentsGroup {
+  contracts: [Contract!]!
+  invoices: [Invoice!]!
+  logoUrl: String
+  membershipId: ID!
+  organizationName: String!
+  organizationUnitId: ID!
+  organizationUnitName: String!
+}
+
 type Organization {
   accountingEnabled: Boolean!
   address: String
@@ -829,6 +844,8 @@ type Query {
   myAdminstableOrganizationUnits: [OrganizationUnit!]!
   myCheckInAdministrableOrganizationUnits: [OrganizationUnit!]!
   myContracts(filter: ContractFilterInput): [Contract!]!
+  myDocumentSummary: MyDocumentSummary!
+  myDocuments: [MyDocumentsGroup!]!
   myEvents(endsBefore: DateTime = null, includePast: Boolean! = false, limit: Int! = 15, offset: Int! = 0, order: SortOrder! = ASC, startsAfter: DateTime = null, statuses: [EventInviteStatus!]): EventPaginatedResponse!
   myFormSubmission(id: ID!): FormSubmission
   myFormSubmissionByToken(token: String!): FormSubmission
