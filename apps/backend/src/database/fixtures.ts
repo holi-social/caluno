@@ -1187,7 +1187,9 @@ async function seedFixtures() {
       await db.insert(schema.userProfiles).values({
         userId: member.id,
         data: {
-          iban: `DE${String(index + 1).padStart(2, '0')} 3704 0044 0532 0130 00`,
+          // A valid German IBAN (mod-97 checksum). Same account for the
+          // fixture members so it round-trips the validator.
+          iban: 'DE89 3704 0044 0532 0130 00',
           bic: 'COBADEFFXXX',
           address: `Musterstraße ${index + 1}`,
           'birth-date': '1990-08-02',
