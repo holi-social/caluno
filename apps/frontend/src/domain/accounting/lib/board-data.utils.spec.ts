@@ -98,6 +98,7 @@ function makeInvoice(
       kind: DocumentKind.Invoice,
       reimbursementType: ehrenamtType,
     },
+    invoiceTimeEntries: [],
     signatures: [],
     statusChanges: [],
     ...overrides,

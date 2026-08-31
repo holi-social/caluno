@@ -26,12 +26,17 @@ export function useInvoices(filter?: InvoiceFilterInput) {
   });
 }
 
-export function useMyInvoices(filter?: InvoiceFilterInput) {
+export function useMyInvoices(
+  filter?: InvoiceFilterInput,
+  organizationUnitId?: string,
+) {
   const sdk = useSdk();
   const repository = new AccountingRepository(sdk);
 
   return useQuery<InvoiceSummary[]>({
-    queryKey: ['accounting', 'my-invoices', filter],
+    // Keyed by organization unit: the same user's docs differ per org, and
+    // the volunteer side renders one membership at a time.
+    queryKey: ['accounting', 'my-invoices', filter, organizationUnitId],
     queryFn: () => repository.findMyInvoices(filter),
     staleTime: 30 * 1000,
   });

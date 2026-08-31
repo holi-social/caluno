@@ -349,6 +349,54 @@
       "fieldColumn": "Field",
       "noFields": "This form has no fields.",
       "submittedOn": "Submitted on {date}"
+    },
+    "documents": {
+      "title": "Your documents",
+      "subtitle": "Agreements and timesheets for reimbursements",
+      "names": {
+        "agreement": "Supplementary agreement",
+        "timesheet": "Timesheet"
+      },
+      "status": {
+        "awaiting-signature": "To sign",
+        "awaiting-countersignature": "To countersign",
+        "signed": "Active",
+        "declined": "Declined"
+      },
+      "figures": "{shifts} Shifts · {hours} hours · {amount}",
+      "lines": {
+        "generated": "Generated on {date} by {name}",
+        "signedByMe": "You signed on {date}",
+        "countersignedBy": "{name} countersigned on {date}",
+        "declinedBy": "{name} declined on {date}"
+      },
+      "actions": {
+        "download": "Download",
+        "sign": "Sign",
+        "decline": "Decline"
+      },
+      "toasts": {
+        "signed": "{name} signed.",
+        "signedError": "{name} could not be signed. Please try again.",
+        "declined": "{name} declined.",
+        "declinedError": "{name} could not be declined. Please try again.",
+        "downloadUnavailable": "The document is not available for download yet."
+      },
+      "empty": {
+        "title": "No documents yet",
+        "description": "Agreements and timesheets this organisation generates for you will appear here."
+      },
+      "declineSheet": {
+        "title": "Decline document",
+        "description": "This organisation needs to understand why you are declining this {documentName}.",
+        "reasonLabel": "Reason for declining",
+        "reasonPlaceholder": "Explain why you are declining the document…",
+        "submit": "Decline"
+      },
+      "preview": {
+        "title": "{name}",
+        "unavailable": "The document is not available for preview yet."
+      }
     }
   },
   "MembershipRequest": {

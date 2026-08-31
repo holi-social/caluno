@@ -25,12 +25,17 @@ export function useContracts(filter?: ContractFilterInput) {
   });
 }
 
-export function useMyContracts(filter?: ContractFilterInput) {
+export function useMyContracts(
+  filter?: ContractFilterInput,
+  organizationUnitId?: string,
+) {
   const sdk = useSdk();
   const repository = new AccountingRepository(sdk);
 
   return useQuery<ContractSummary[]>({
-    queryKey: ['accounting', 'my-contracts', filter],
+    // Keyed by organization unit: the same user's docs differ per org, and
+    // the volunteer side renders one membership at a time.
+    queryKey: ['accounting', 'my-contracts', filter, organizationUnitId],
     queryFn: () => repository.findMyContracts(filter),
     staleTime: 30 * 1000,
   });
