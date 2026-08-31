@@ -1,28 +1,12 @@
-import { redirect } from 'next/navigation';
-import { getDataClient } from '@/lib/data-client';
-import { requireOrgAccess } from '@/lib/org-context-server';
+import { redirect } from '@/i18n/navigation';
 
 interface CheckinPageProps {
-  params: Promise<{ orgUId: string; checkInId: string }>;
+  params: Promise<{ locale: string; orgUId: string; checkInId: string }>;
 }
 
+// TEMP-CHECKIN-MIGRATION: keeps old per-org decide URLs working; the orgUId
+// is forwarded so it stays the preferred check-in target.
 export default async function DecidePage({ params }: CheckinPageProps) {
-  const { orgUId, checkInId } = await params;
-
-  await requireOrgAccess(orgUId);
-  const data = await getDataClient({ orgUId });
-  const user = await data.user.findByCheckInId(checkInId);
-
-  if (!user) {
-    return;
-  }
-
-  const timeEntries = await data.timeEntry.findByUser(user.id);
-  const hasOpenTimeEntries = timeEntries.items.some((entry) => !entry.endedAt);
-
-  if (hasOpenTimeEntries) {
-    redirect(`/admin/${orgUId}/check-in/${checkInId}/check-out`);
-  } else {
-    redirect(`/admin/${orgUId}/check-in/${checkInId}/check-in`);
-  }
+  const { locale, orgUId, checkInId } = await params;
+  redirect({ href: `/check-in/${checkInId}/decide?orgUId=${orgUId}`, locale });
 }
