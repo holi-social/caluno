@@ -11,6 +11,7 @@ import { ConflictGraphQLError, NotFoundGraphQLError } from '../graphql/errors';
 import { NotificationService } from '../notification';
 import { RequiredFormTargetType } from '../requirement-profile/enums';
 import type { RequirementProfileEntity } from '../requirement-profile/schemas/requirement-profile.schema';
+import { FormSubmissionService } from '../requirement-profile/services/form-submission.service';
 import type { RequiredFormStatus } from '../requirement-profile/services/required-form.service';
 import { RequiredFormService } from '../requirement-profile/services/required-form.service';
 import { RequirementProfileService } from '../requirement-profile/services/requirement-profile.service';
@@ -39,6 +40,7 @@ export class MembershipService {
     private readonly authService: AuthService,
     private readonly notificationService: NotificationService,
     private readonly requiredFormService: RequiredFormService,
+    private readonly formSubmissionService: FormSubmissionService,
     private readonly postHogService: PostHogService,
   ) {}
 
@@ -1037,6 +1039,11 @@ export class MembershipService {
     if (!orgUnit) {
       throw new NotFoundGraphQLError('Organization unit not found');
     }
+
+    await this.formSubmissionService.shareSubmissionsWithOrgUnit(userId, {
+      targetType: RequiredFormTargetType.ORGANIZATION_UNIT,
+      targetId: organizationUnitId,
+    });
 
     let requirementProfile: RequirementProfileEntity | undefined;
     let requirementStatuses:

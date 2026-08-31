@@ -69,6 +69,7 @@ describe('ShiftService', () => {
           'https://example.com/image.png',
       } as never,
       {} as never,
+      { shareSubmissionsWithOrgUnit: async () => {} } as never,
       { capture } as unknown as PostHogService,
     );
 

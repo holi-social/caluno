@@ -61,6 +61,7 @@ describe('ReimbursementRateService', () => {
       {} as AuthService,
       {} as NotificationService,
       {} as RequiredFormService,
+      { shareSubmissionsWithOrgUnit: async () => {} } as never,
       { capture: () => {} } as unknown as PostHogService,
     );
     service = new ReimbursementRateService(

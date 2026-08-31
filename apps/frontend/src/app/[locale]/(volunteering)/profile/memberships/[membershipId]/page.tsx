@@ -21,11 +21,13 @@ type MyFormSubmissionItem =
 const mergeOrgUnitFormsWithSubmissions = (
   forms: OrgUnitForm[],
   submissions: MyFormSubmissionItem[],
+  organizationUnitId: string,
 ): FormSubmission[] => {
   const mergedByFormId = new Map<string, FormSubmission>();
   for (const form of forms) {
     mergedByFormId.set(form.id, {
       form,
+      organizationUnitId,
       completed: false,
     });
   }
@@ -34,6 +36,7 @@ const mergeOrgUnitFormsWithSubmissions = (
     if (submission.form) {
       mergedByFormId.set(submission.form.id, {
         form: submission.form,
+        organizationUnitId,
         completed: true,
         submissionId: submission.id,
         submittedAt: submission.submittedAt,
@@ -58,7 +61,11 @@ export default async function MembershipDetailPage({ params }: Props) {
     data.requirementForm.findMyRequiredOrgUnitForms(organizationUnitId),
     data.requirementForm.findMyFormSubmissions(organizationUnitId),
   ]);
-  const forms = mergeOrgUnitFormsWithSubmissions(requiredForms, submissions);
+  const forms = mergeOrgUnitFormsWithSubmissions(
+    requiredForms,
+    submissions,
+    organizationUnitId,
+  );
 
   const t = await getTranslations('MembershipDetail');
   const { formatDate } = await getFormatting();

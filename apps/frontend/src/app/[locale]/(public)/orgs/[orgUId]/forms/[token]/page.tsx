@@ -7,11 +7,11 @@ import { getDataClient } from '@/lib/data-client';
 import { isMember as isMemberOfOrgUnit } from '@/lib/org-context-server';
 
 interface Props {
-  params: Promise<{ locale: string; token: string }>;
+  params: Promise<{ locale: string; orgUId: string; token: string }>;
 }
 
 export default async function PublicFormPage({ params }: Props) {
-  const { locale, token } = await params;
+  const { locale, orgUId, token } = await params;
   const data = await getDataClient();
 
   const form = await data.requirementForm.findFormByShareToken(token);
@@ -21,26 +21,21 @@ export default async function PublicFormPage({ params }: Props) {
 
   const session = await getSession();
   if (!session) {
-    const orgUId = form.organizationUnitId;
-    const params = new URLSearchParams({
-      redirectTo: `/f/${token}`,
-      ...(orgUId ? { orgUId } : {}),
+    const inviteParams = new URLSearchParams({
+      redirectTo: `/orgs/${orgUId}/forms/${token}`,
+      orgUId,
     });
     redirectWithLocale({
-      href: `/api/invite?${params}`,
+      href: `/api/invite?${inviteParams}`,
       locale,
     });
   }
 
   const [isMember, userProfile, orgUnit, existingSubmission] =
     await Promise.all([
-      form.organizationUnitId
-        ? isMemberOfOrgUnit(form.organizationUnitId)
-        : Promise.resolve(false),
+      isMemberOfOrgUnit(orgUId),
       data.requirementForm.getMyUserProfile(),
-      form.organizationUnitId
-        ? data.organizationUnit.findById(form.organizationUnitId)
-        : Promise.resolve(null),
+      data.organizationUnit.findById(orgUId),
       data.requirementForm.getMyFormSubmissionByToken(token),
     ]);
 
@@ -48,7 +43,7 @@ export default async function PublicFormPage({ params }: Props) {
 
   const t = await getTranslations('RequirementForm.volunteerForm');
 
-  if (existingSubmission && existingSubmission.status !== 'REJECTED') {
+  if (existingSubmission) {
     return (
       <div className="min-h-screen bg-muted/30 py-10 px-4">
         <div className="mx-auto max-w-xl rounded-lg border bg-card p-8 text-center">
@@ -70,7 +65,7 @@ export default async function PublicFormPage({ params }: Props) {
           form={form}
           token={token}
           isMember={isMember}
-          orgUId={form.organizationUnitId ?? ''}
+          orgUId={orgUId}
           orgName={orgUnit?.name}
           profileData={profileData}
         />

@@ -19,7 +19,7 @@ import {
 } from '../../shared/observability/posthog.events';
 import { PostHogService } from '../../shared/observability/posthog.service';
 import { ShiftInviteStatus } from '../../shift/enums';
-import { FormSubmissionStatus, RequiredFormTargetType } from '../enums';
+import { RequiredFormTargetType } from '../enums';
 
 export type RequiredFormTarget = {
   targetType: RequiredFormTargetType;
@@ -142,7 +142,6 @@ export class RequiredFormService {
     const submissions = await this.db.query.formSubmissions.findMany({
       where: {
         userId,
-        status: FormSubmissionStatus.SUBMITTED,
         formId: { in: formIds },
       },
     });

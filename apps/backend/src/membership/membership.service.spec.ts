@@ -39,6 +39,7 @@ function createService(options: {
     {} as never,
     { notifyMembershipApproved: jest.fn() } as never,
     {} as never,
+    { shareSatisfiedRequiredForms: async () => {} } as never,
     options.posthog as PostHogService,
   );
 
@@ -113,6 +114,7 @@ function createRequestOrgJoinService(existingStatus: string) {
     {} as never,
     {} as never,
     { getRequiredFormStatuses: jest.fn().mockResolvedValue([]) } as never,
+    { shareSubmissionsWithOrgUnit: async () => {} } as never,
     { capture } as unknown as PostHogService,
   );
   return { service, capture };

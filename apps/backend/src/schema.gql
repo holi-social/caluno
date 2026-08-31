@@ -422,8 +422,6 @@ type FormSubmission {
   form: RequirementForm
   formId: String!
   id: ID!
-  membershipId: String
-  status: FormSubmissionStatus!
   submittedAt: DateTime!
   updatedAt: DateTime!
   user: User
@@ -434,11 +432,6 @@ type FormSubmission {
 type FormSubmissionPaginatedResponse {
   items: [FormSubmission!]!
   pagination: PaginationInfo!
-}
-
-enum FormSubmissionStatus {
-  REJECTED
-  SUBMITTED
 }
 
 type FormSubmissionValue {
@@ -653,7 +646,7 @@ type Mutation {
   setShiftRequiredForms(formIds: [String!]!, shiftId: ID!): [RequiredFormRef!]!
   signContract(contractId: ID!): Contract!
   signInvoice(invoiceId: ID!): Invoice!
-  submitForm(input: SubmitFormInput!, token: String!): FormSubmission!
+  submitForm(input: SubmitFormInput!, organizationUnitId: ID!, token: String!): FormSubmission!
   submitRequiredForm(formId: String!, input: SubmitFormInput!, targetId: String!, targetType: RequiredFormTargetType!): FormSubmission!
   updateDocumentTemplate(id: ID!, input: UpdateDocumentTemplateInput!): DocumentTemplate!
   updateEvent(id: ID!, input: UpdateEventInput!): Event!

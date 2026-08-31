@@ -12,7 +12,7 @@ import { getDataClient } from '@/lib/data-client';
 import { getInitials } from '@/lib/get-initials';
 
 interface OrgPageProps {
-  params: Promise<{ orgId: string; locale: string }>;
+  params: Promise<{ orgUId: string; locale: string }>;
 }
 
 type PublicOrganizationUnit = Awaited<
@@ -20,11 +20,11 @@ type PublicOrganizationUnit = Awaited<
 >;
 
 export async function generateMetadata({ params }: OrgPageProps) {
-  const { orgId, locale } = await params;
+  const { orgUId, locale } = await params;
   const data = await getDataClient({ locale: resolveLocale(locale) });
   let org: PublicOrganizationUnit;
   try {
-    org = await data.publicOrganizationUnit.findById(orgId);
+    org = await data.publicOrganizationUnit.findById(orgUId);
   } catch (error) {
     if (error instanceof DataError && error.options?.code === 'NOT_FOUND') {
       notFound();
@@ -35,13 +35,13 @@ export async function generateMetadata({ params }: OrgPageProps) {
 }
 
 export default async function OrgPage({ params }: OrgPageProps) {
-  const { orgId, locale } = await params;
+  const { orgUId, locale } = await params;
   const data = await getDataClient({ locale: resolveLocale(locale) });
   const t = await getTranslations('OrgDetail');
 
   let org: PublicOrganizationUnit;
   try {
-    org = await data.publicOrganizationUnit.findById(orgId);
+    org = await data.publicOrganizationUnit.findById(orgUId);
   } catch (error) {
     if (error instanceof DataError && error.options?.code === 'NOT_FOUND') {
       notFound();
@@ -50,8 +50,8 @@ export default async function OrgPage({ params }: OrgPageProps) {
   }
 
   const [events, shifts] = await Promise.all([
-    data.publicOrganizationUnit.findEvents(orgId),
-    data.publicOrganizationUnit.findIndividualShifts(orgId),
+    data.publicOrganizationUnit.findEvents(orgUId),
+    data.publicOrganizationUnit.findIndividualShifts(orgUId),
   ]);
 
   return (
