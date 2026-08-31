@@ -132,6 +132,15 @@ export function ContractCreationModal({
     templateQuery.isError ||
     reimbursementTypeMissing;
 
+  // The first query that failed carries the actual reason (e.g. "No contract
+  // template configured for reimbursement type …") — shown in the dialog so
+  // the coordinator can see what's really wrong, not just the generic copy.
+  const loadError =
+    typesQuery.error ??
+    ratesQuery.error ??
+    profileQuery.error ??
+    templateQuery.error;
+
   const status: DocumentCreationLoadStatus = hasError
     ? 'error'
     : dataReady
@@ -244,6 +253,9 @@ export function ContractCreationModal({
       status={status}
       errorTitle={t('loadErrorTitle')}
       errorDescription={t('loadError', { name: volunteerName })}
+      errorMessage={
+        loadError instanceof Error ? loadError.message : undefined
+      }
       fieldsSkeletonKeys={['address', 'iban', 'dob', 'lifespan', 'hours']}
       cancelLabel={t('cancel')}
       sendLabel={t('sendForSigning')}
