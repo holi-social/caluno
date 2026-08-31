@@ -1,20 +1,19 @@
 import { cn } from '../lib/utils';
+import LogoMark from './logo.svg';
 
 export interface LogoProps {
-  /** Kept for API compatibility; the wordmark size is fixed. */
+  /** Width in pixels; height scales automatically to preserve the logo's aspect ratio. */
   width?: number;
   className?: string;
 }
 
-export function Logo({ className }: LogoProps) {
+export function Logo({ width = 120, className }: LogoProps) {
   return (
-    <span
-      className={cn(
-        'font-bold tracking-tight text-[#00C950] dark:text-[#BBF451]',
-        className,
-      )}
-    >
-      Caluno
-    </span>
+    <LogoMark
+      width={width}
+      className={cn('text-foreground', className)}
+      role="img"
+      aria-label="Caluno"
+    />
   );
 }
