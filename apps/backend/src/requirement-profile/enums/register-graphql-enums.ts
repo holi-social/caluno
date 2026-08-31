@@ -1,7 +1,6 @@
 import { registerEnumType } from '@nestjs/graphql';
 import {
   FieldType,
-  FormSubmissionStatus,
   OrganizationUserProfileStatus,
   RequiredFormTargetType,
   RequirementFulfillmentStatus,
@@ -27,10 +26,6 @@ registerEnumType(RequirementFulfillmentStatus, {
 
 registerEnumType(FieldType, {
   name: 'FieldType',
-});
-
-registerEnumType(FormSubmissionStatus, {
-  name: 'FormSubmissionStatus',
 });
 
 registerEnumType(RequiredFormTargetType, {

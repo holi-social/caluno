@@ -29,6 +29,7 @@ export * from '../requirement-profile/schemas/document.schema';
 export * from '../requirement-profile/schemas/form-block.schema';
 export * from '../requirement-profile/schemas/form-block-field.schema';
 export * from '../requirement-profile/schemas/form-submission.schema';
+export * from '../requirement-profile/schemas/form-submission-share.schema';
 export * from '../requirement-profile/schemas/form-submission-value.schema';
 export * from '../requirement-profile/schemas/organization-user-profile.schema';
 export * from '../requirement-profile/schemas/requirement.schema';

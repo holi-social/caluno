@@ -28,6 +28,7 @@ import { useSearchParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { ButtonClipboard } from '@/components/button-clipboard';
 import MembershipRequestCard from '@/domain/membership-requests/components/membership-request-card';
+import { RemoveMembershipButton } from '@/domain/memberships/components/remove-membership-button';
 import { organizationUnitUrl } from '@/domain/organization/share';
 import { EmptyVolunteers } from '@/domain/volunteer/empty-volunteers';
 import { useSheetTrigger } from '@/hooks/use-sheet';
@@ -139,6 +140,10 @@ function ApprovedTab({ orgUId }: { orgUId: string }) {
                       <LogIn />
                     </Button>
                   </Link>
+                  <RemoveMembershipButton
+                    membershipId={membership.id}
+                    volunteerName={membership.user.name}
+                  />
                 </div>
               </TableCell>
             </TableRow>

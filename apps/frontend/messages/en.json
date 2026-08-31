@@ -86,6 +86,12 @@
       "verifying": "Verifying..."
     }
   },
+  "CheckIn": {
+    "manualCheckin": "Manual checkin",
+    "myQrCodeTab": "My QR code",
+    "qrScannerTab": "QR Scanner",
+    "scanACode": "Scan a code"
+  },
   "Common": {
     "avatarAlt": "Avatar of {name}",
     "back": "Back",
@@ -178,6 +184,7 @@
         "createNew": "Create new",
         "dedupHint": "Volunteers won't be asked for information they've already provided.",
         "fileUploadLabel": "File upload",
+        "noBlocks": "No blocks",
         "noFormsFound": "No forms found",
         "pill": {
           "none": "No forms required",
@@ -783,6 +790,10 @@
       "shareLinkCopied": "Share link copied to clipboard",
       "submissionsWarning": "This form has submissions",
       "submissionsWarningDescription": "Editing is disabled because volunteers have already submitted responses. Create a copy if you need a new version.",
+      "unsavedChangesDescription": "You have unsaved changes. If you leave now, your changes will be lost.",
+      "unsavedChangesLeave": "Leave without saving",
+      "unsavedChangesStay": "Keep editing",
+      "unsavedChangesTitle": "Unsaved changes",
       "viewBlock": "View"
     },
     "card": {
@@ -895,8 +906,6 @@
       "searchPlaceholder": "Search volunteers…",
       "submissionsColumn": "Submissions",
       "subtitle": "Volunteers who submitted this form. Click a volunteer to view their submission.",
-      "tabRejected": "Rejected",
-      "tabSubmitted": "Submitted",
       "title": "Submissions — {formName}",
       "viewSubmission": "View →",
       "volunteerColumn": "Volunteer"
@@ -1060,7 +1069,6 @@
       "checkingIn": "Checking in...",
       "checkingOut": "Checking out...",
       "checkingOutAt": "Checking out: {time}",
-      "enterQrTitle": "Or enter their QR ID",
       "generalCheckIn": "General check-in",
       "invalidCheckin": {
         "blocked": {
@@ -1073,8 +1081,6 @@
         }
       },
       "noShiftSelected": "No shift selected",
-      "scanDescription": "Scan the volunteer's QR ID to check them in or out",
-      "searchVolunteerTitle": "Or search for a volunteer",
       "selectOrgDescription": "Choose the organization you want to check the volunteer into.",
       "selectOrgTitle": "Check-in",
       "successNext": "Next",
@@ -1098,6 +1104,7 @@
         "createNew": "Create new",
         "dedupHint": "Volunteers won't be asked for information they've already provided.",
         "fileUploadLabel": "File upload",
+        "noBlocks": "No blocks",
         "noFormsFound": "No forms found",
         "pill": {
           "none": "No forms required",
@@ -1463,6 +1470,12 @@
     "action": {
       "checkInAria": "Check in",
       "checkInShiftAria": "Check in",
+      "remove": "Remove",
+      "removeAria": "Remove",
+      "removeDescription": "Are you sure you want to remove {name} from this organisation? This cannot be undone.",
+      "removeFailedToast": "Could not remove volunteer",
+      "removeTitle": "Remove from organisation",
+      "removedToast": "{name} was removed from this organisation",
       "viewProfileAria": "View"
     },
     "empty": {
@@ -1485,6 +1498,7 @@
       "createNew": "Create new",
       "dedupHint": "Volunteers won't be asked for information they've already provided.",
       "fileUploadLabel": "File upload",
+      "noBlocks": "No blocks",
       "noFormsFound": "No forms found",
       "pill": {
         "none": "No forms required",

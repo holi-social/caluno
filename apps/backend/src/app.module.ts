@@ -6,10 +6,7 @@ import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { GraphQLModule } from '@nestjs/graphql';
 import { SentryModule } from '@sentry/nestjs/setup';
-import {
-  AuthGuard,
-  AuthModule as BetterAuthModule,
-} from '@thallesp/nestjs-better-auth';
+import { AuthModule as BetterAuthModule } from '@thallesp/nestjs-better-auth';
 import { betterAuth } from 'better-auth';
 import { AccountingModule } from './accounting/accounting.module';
 import { createAuthConfig } from './auth/auth';
@@ -35,7 +32,11 @@ import { NotificationModule } from './notification/notification.module';
 import { OrganizationModule } from './organization/organization.module';
 import { RequirementProfileModule } from './requirement-profile/requirement-profile.module';
 import { ObservabilityModule } from './shared/observability/observability.module';
-import { PostHogCaptureService } from './shared/observability/posthog.capture.service';
+import {
+  POSTHOG_EVENT,
+  POSTHOG_SURFACE,
+} from './shared/observability/posthog.events';
+import { PostHogService } from './shared/observability/posthog.service';
 import { validatePostHogEnv } from './shared/observability/validate-posthog-env';
 import { validateSentryEnv } from './shared/observability/validate-sentry-env';
 import { ShiftModule } from './shift/shift.module';
@@ -102,7 +103,7 @@ const autoSchemaFile =
         emailService: EmailService,
         userLocaleService: UserLocaleService,
         appI18n: AppI18nService,
-        postHogCaptureService: PostHogCaptureService,
+        postHogService: PostHogService,
       ) => {
         const webUrl = configService.getOrThrow<string>('WEB_URL');
         const shouldVerifyEmail = process.env.NODE_ENV === 'production';
@@ -115,10 +116,25 @@ const autoSchemaFile =
               cookieDomain: configService.get('COOKIE_DOMAIN'),
               emailVerificationEnabled: shouldVerifyEmail,
               onSessionCreated: (userId) => {
-                postHogCaptureService.captureUserLoggedIn(userId);
+                postHogService.capture({
+                  event: POSTHOG_EVENT.USER_LOG_IN,
+                  userId,
+                  properties: { surface: POSTHOG_SURFACE.AUTH },
+                });
+              },
+              onSessionDeleted: (userId) => {
+                postHogService.capture({
+                  event: POSTHOG_EVENT.USER_LOG_OUT,
+                  userId,
+                  properties: { surface: POSTHOG_SURFACE.AUTH },
+                });
               },
               onUserCreated: (userId) => {
-                postHogCaptureService.captureUserSignedUp(userId);
+                postHogService.capture({
+                  event: POSTHOG_EVENT.USER_SIGN_UP,
+                  userId,
+                  properties: { surface: POSTHOG_SURFACE.AUTH },
+                });
               },
               sendResetPassword: async ({ email, token, userId, headers }) => {
                 const locale = await userLocaleService.resolveForUser(
@@ -141,6 +157,11 @@ const autoSchemaFile =
                 await emailService.send({
                   to: email,
                   ...emailContent,
+                });
+                postHogService.capture({
+                  event: POSTHOG_EVENT.PASSWORD_RESET_SEND,
+                  userId,
+                  properties: { surface: POSTHOG_SURFACE.AUTH },
                 });
               },
               sendVerificationOTP: async ({ email, otp, type, headers }) => {
@@ -170,6 +191,19 @@ const autoSchemaFile =
                   to: email,
                   ...emailContent,
                 });
+                const user = await database.query.users.findFirst({
+                  where: { email },
+                });
+                if (user) {
+                  postHogService.capture({
+                    event: POSTHOG_EVENT.OTP_SEND,
+                    userId: user.id,
+                    properties: {
+                      surface: POSTHOG_SURFACE.AUTH,
+                      source: type,
+                    },
+                  });
+                }
               },
             }),
           ),
@@ -181,7 +215,7 @@ const autoSchemaFile =
         EmailService,
         UserLocaleService,
         AppI18nService,
-        PostHogCaptureService,
+        PostHogService,
       ],
     }),
     UserModule,
@@ -205,10 +239,6 @@ const autoSchemaFile =
     {
       provide: APP_INTERCEPTOR,
       useClass: LoaderInterceptor,
-    },
-    {
-      provide: APP_GUARD,
-      useClass: AuthGuard,
     },
     {
       provide: APP_GUARD,

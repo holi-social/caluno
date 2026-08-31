@@ -44,11 +44,6 @@ export enum FieldType {
   IBAN = 'IBAN',
 }
 
-export enum FormSubmissionStatus {
-  SUBMITTED = 'SUBMITTED',
-  REJECTED = 'REJECTED',
-}
-
 export enum RequiredFormTargetType {
   ORGANIZATION_UNIT = 'ORGANIZATION_UNIT',
   EVENT = 'EVENT',

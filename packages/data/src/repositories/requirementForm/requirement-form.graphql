@@ -512,12 +512,19 @@ mutation RegenerateFormShareToken($id: String!) {
   }
 }
 
-mutation SubmitForm($token: String!, $input: SubmitFormInput!) {
-  submitForm(token: $token, input: $input) {
+mutation SubmitForm(
+  $token: String!
+  $organizationUnitId: ID!
+  $input: SubmitFormInput!
+) {
+  submitForm(
+    token: $token
+    organizationUnitId: $organizationUnitId
+    input: $input
+  ) {
     id
     formId
     userId
-    status
     submittedAt
   }
 }
@@ -537,7 +544,6 @@ mutation SubmitRequiredForm(
     id
     formId
     userId
-    status
     submittedAt
   }
 }
@@ -547,7 +553,6 @@ query GetMyFormSubmissionByToken($token: String!) {
     id
     formId
     userId
-    status
     submittedAt
   }
 }
@@ -555,7 +560,6 @@ query GetMyFormSubmissionByToken($token: String!) {
 query GetMyFormSubmissions($organizationUnitId: ID!) {
   myFormSubmissions(organizationUnitId: $organizationUnitId) {
     id
-    status
     submittedAt
     form {
       id
@@ -590,7 +594,6 @@ query GetFormSubmissionsByMembershipRequest($membershipRequestId: String!) {
     membershipRequestId: $membershipRequestId
   ) {
     id
-    status
     submittedAt
     form {
       id
@@ -602,7 +605,6 @@ query GetFormSubmissionsByMembershipRequest($membershipRequestId: String!) {
 query GetFormSubmissionsForVolunteer($userId: String!) {
   formSubmissionsForVolunteer(userId: $userId) {
     id
-    status
     submittedAt
     form {
       id
@@ -614,7 +616,6 @@ query GetFormSubmissionsForVolunteer($userId: String!) {
 query GetAdminFormSubmission($id: String!) {
   adminVolunteerSubmission(id: $id) {
     id
-    status
     submittedAt
     user {
       id
@@ -653,7 +654,6 @@ query GetFormSubmissionsByForm($formId: String!, $limit: Int!, $offset: Int!) {
   formSubmissionsByForm(formId: $formId, limit: $limit, offset: $offset) {
     items {
       id
-      status
       submittedAt
       user {
         id
@@ -684,7 +684,6 @@ query MyRequiredOrgUnitForms($organizationUnitId: ID!) {
 query MyFormSubmission($id: ID!) {
   myFormSubmission(id: $id) {
     id
-    status
     submittedAt
     form {
       id
