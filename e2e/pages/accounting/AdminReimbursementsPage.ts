@@ -50,6 +50,38 @@ export class AdminReimbursementsPage {
       .filter({ hasText: 'Declined' });
   }
 
+  /** The open document detail sheet. */
+  documentSheet(): Locator {
+    return this.page.getByRole('dialog');
+  }
+
+  /**
+   * Opens the detail sheet of the first real contract row whose PDF is
+   * downloadable. Leftover documents from earlier runs can predate PDF
+   * rendering (no downloadUrl → disabled Download), so this skips rows whose
+   * sheet has a disabled Download button instead of assuming the first row.
+   */
+  async openFirstContractSheet() {
+    const rows = this.contractRow();
+    const count = await rows.count();
+    for (let i = 0; i < count; i++) {
+      await rows.nth(i).click();
+      const sheet = this.page.getByRole('dialog');
+      await expect(sheet).toBeVisible();
+      const download = sheet.getByRole('button', { name: 'Download' });
+      // The detail sheet resolves fast; a disabled button after load means
+      // this row predates PDF rendering — move on quickly.
+      try {
+        await expect(download).toBeEnabled({ timeout: 2_000 });
+        return;
+      } catch {
+        await this.page.keyboard.press('Escape');
+        await expect(sheet).toBeHidden({ timeout: 5_000 });
+      }
+    }
+    throw new Error('No contract row has an enabled Download button');
+  }
+
   /**
    * Full create flow: volunteer (search combobox) → contract line → review &
    * send. The volunteer's name is asserted in the combobox, which is the

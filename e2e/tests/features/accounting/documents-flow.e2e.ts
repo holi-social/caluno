@@ -92,9 +92,32 @@ test.describe('accounting documents flow — admin + volunteer', () => {
     await expect(signedCard).toContainText('Active');
     await expect(signedCard).toContainText('You signed on');
     await expect(signedCard).toContainText('countersigned on');
-    await expect(
-      signedCard.getByRole('button', { name: 'Download' }),
-    ).toBeVisible();
+    const downloadButton = signedCard.getByRole('button', {
+      name: 'Download',
+    });
+    await expect(downloadButton).toBeVisible();
+    await expect(downloadButton).toBeEnabled();
+
+    // The signed PDF actually downloads (real render + stored file).
+    const [volunteerDownload] = await Promise.all([
+      volunteerPage.waitForEvent('download', { timeout: 15_000 }),
+      downloadButton.click(),
+    ]);
+    expect(volunteerDownload.suggestedFilename()).toMatch(/\.pdf$/);
+
+    // ── Admin side: the countersigned document's PDF downloads too ─────────
+    await board.openFirstContractSheet();
+    const adminSheet = board.documentSheet();
+    const sheetDownload = adminSheet.getByRole('button', {
+      name: 'Download',
+    });
+    await expect(sheetDownload).toBeEnabled();
+    const [adminDownload] = await Promise.all([
+      adminPage.waitForEvent('download', { timeout: 15_000 }),
+      sheetDownload.click(),
+    ]);
+    expect(adminDownload.suggestedFilename()).toMatch(/\.pdf$/);
+    await adminPage.keyboard.press('Escape');
 
     // ── Second document: the volunteer declines it with a reason ───────────
     await board.createContractFor(VOLUNTEER_NAME);
