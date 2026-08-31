@@ -18,6 +18,12 @@ type Volunteer = {
   name: string;
 };
 
+/** Base UI combobox item shape — the input shows `label` (the name), `value` keeps the check-in id. */
+type VolunteerOption = {
+  value: string;
+  label: string;
+};
+
 type VolunteerCheckinProps = {
   organizationUnitId: string;
   volunteers: Volunteer[];
@@ -37,13 +43,18 @@ export const CheckInSelector = ({
   const router = useRouter();
   const t = useTranslations('Shift');
 
-  const handleCheckin = (checkInId: string | null) => {
-    if (checkInId)
-      router.push(`/admin/${organizationUnitId}/check-in/${checkInId}/decide`);
+  const handleCheckin = (option: VolunteerOption | null) => {
+    if (option?.value)
+      router.push(
+        `/admin/${organizationUnitId}/check-in/${option.value}/decide`,
+      );
   };
 
   return (
-    <Combobox items={volunteers} onValueChange={handleCheckin}>
+    <Combobox
+      items={volunteers.map((v) => ({ value: v.checkInId, label: v.name }))}
+      onValueChange={handleCheckin}
+    >
       <ComboboxInput
         placeholder={t('checkInSelector.placeholder')}
         className="w-full max-w-72"
@@ -55,9 +66,9 @@ export const CheckInSelector = ({
       <ComboboxContent container={portalContainer}>
         <ComboboxEmpty>{t('checkInSelector.empty')}</ComboboxEmpty>
         <ComboboxList>
-          {(volunteer: Volunteer) => (
-            <ComboboxItem key={volunteer.checkInId} value={volunteer.checkInId}>
-              {volunteer.name} <ScanQrCode />
+          {(option: VolunteerOption) => (
+            <ComboboxItem key={option.value} value={option}>
+              {option.label} <ScanQrCode />
             </ComboboxItem>
           )}
         </ComboboxList>

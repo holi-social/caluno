@@ -17,7 +17,7 @@ import {
 } from '@repo/ui';
 import { UserIcon } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { ContractCreationModal } from './contract-creation-modal';
 import {
   DocTypeHeader,
@@ -33,6 +33,16 @@ type DocKind = 'contract' | 'invoice';
 interface DocLine {
   kind: DocKind;
   pauschale: PauschalenType;
+}
+
+/**
+ * Base UI combobox item shape. The input shows the selected item's `label`
+ * (the volunteer's name) while `value` keeps the volunteer id — without the
+ * label, the input would display the raw uuid after selection.
+ */
+interface VolunteerOption {
+  value: string;
+  label: string;
 }
 
 // Grouped by Pauschale type, not by kind.
@@ -114,6 +124,10 @@ export function CreateDocumentModal({
   }, [open]);
 
   const volunteer = volunteers.find((v) => v.id === volunteerId) ?? null;
+  const volunteerOptions = useMemo(
+    () => volunteers.map((v) => ({ value: v.id, label: v.name })),
+    [volunteers],
+  );
   const existingDoc =
     volunteer && selectedLine
       ? getDocLineSummary(volunteer, selectedLine).latest
@@ -157,9 +171,9 @@ export function CreateDocumentModal({
             className="flex-1 space-y-6 overflow-y-auto p-6"
           >
             <Combobox
-              items={volunteers}
-              onValueChange={(id: string | null) => {
-                setVolunteerId(id);
+              items={volunteerOptions}
+              onValueChange={(option: VolunteerOption | null) => {
+                setVolunteerId(option?.value ?? null);
                 setSelectedLine(null);
               }}
             >
@@ -176,9 +190,9 @@ export function CreateDocumentModal({
                   {t('createDocumentModal.noVolunteersFound')}
                 </ComboboxEmpty>
                 <ComboboxList>
-                  {(vol: BoardVolunteer) => (
-                    <ComboboxItem key={vol.id} value={vol.id}>
-                      {vol.name}
+                  {(option: VolunteerOption) => (
+                    <ComboboxItem key={option.value} value={option}>
+                      {option.label}
                     </ComboboxItem>
                   )}
                 </ComboboxList>
