@@ -37,7 +37,7 @@ export const CheckOutButton = ({
         setServerError(result.serverError);
       } else {
         toast.success(t('checkIn.volunteerCheckedOut'));
-        router.push(`/admin/${organizationUnitId}/check-in/scan`);
+        router.push('/check-in');
       }
     });
   };
