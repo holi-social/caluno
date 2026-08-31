@@ -60,3 +60,8 @@ export function eventPublicUrl(eventId: string): string {
 export function eventsAdminUrl(organizationUnitId: string): string {
   return `${resolveAppUrl()}/admin/${encodeURIComponent(organizationUnitId)}/events`;
 }
+
+/** Deep link to the volunteer's profile memberships list ("Your organizations"). */
+export function volunteerProfileUrl(): string {
+  return `${resolveAppUrl()}/profile/memberships`;
+}
