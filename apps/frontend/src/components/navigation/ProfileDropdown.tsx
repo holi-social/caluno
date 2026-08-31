@@ -32,8 +32,12 @@ export function ProfileDropdown({ children }: ProfileDropdownProps) {
     router.push('/login');
   };
 
-  const hasDocuments = (summary.data?.total ?? 0) > 0;
-  const pendingCount = summary.data?.pending ?? 0;
+  // Fail-open: a summary-query error (e.g. a backend that doesn't have the
+  // new query yet, or a transient failure) must never hide the entry — the
+  // documents may still exist via the older org-scoped queries. Only a
+  // confirmed zero total hides it.
+  const hasDocuments = summary.isError || (summary.data?.total ?? 0) > 0;
+  const pendingCount = summary.isError ? 0 : (summary.data?.pending ?? 0);
 
   return (
     <Popover open={popoverOpen} onOpenChange={setPopoverOpen}>
