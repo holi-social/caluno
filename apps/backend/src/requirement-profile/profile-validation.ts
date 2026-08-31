@@ -97,17 +97,13 @@ export const validateSystemKeyValue = (
     case 'iban': {
       const iban = value.replace(/\s+/g, '').toUpperCase();
       if (iban.length > 34 || !isValidIban(iban))
-        throw new BadRequestGraphQLError(
-          `"${label}": must be a valid IBAN`,
-        );
+        throw new BadRequestGraphQLError(`"${label}": must be a valid IBAN`);
       break;
     }
     case 'bic': {
       const bic = value.replace(/\s+/g, '').toUpperCase();
       if (!/^[A-Z]{4}[A-Z]{2}[A-Z0-9]{2}([A-Z0-9]{3})?$/.test(bic))
-        throw new BadRequestGraphQLError(
-          `"${label}": must be a valid BIC`,
-        );
+        throw new BadRequestGraphQLError(`"${label}": must be a valid BIC`);
       break;
     }
   }

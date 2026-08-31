@@ -259,12 +259,12 @@ export class DocumentRenderingService {
     const seats = [
       {
         label: 'Unterschrift (Freiwillige:r)',
-        name: resolved['volunteer_name'] || '—',
+        name: resolved.volunteer_name || '—',
         signedAt: this.signatureDateFor(document, 'VOLUNTEER'),
       },
       {
         label: 'Unterschrift Koordination',
-        name: resolved['org_name'] || '—',
+        name: resolved.org_name || '—',
         signedAt: this.signatureDateFor(document, 'PERMISSION_HOLDER'),
       },
     ];

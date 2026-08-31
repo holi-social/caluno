@@ -224,10 +224,11 @@ export class ContractService {
     // the profile fields the template reads before they can sign, so the
     // signed document never comes out with "—" gaps in place of them.
     if (pending.signeeType === SigneeType.VOLUNTEER) {
-      const missing = await this.documentProfileRequirementService.missingProfileSources(
-        contract.volunteerId,
-        contract.documentTemplate?.body,
-      );
+      const missing =
+        await this.documentProfileRequirementService.missingProfileSources(
+          contract.volunteerId,
+          contract.documentTemplate?.body,
+        );
       if (missing.length > 0) {
         throw new BadRequestGraphQLError(
           'Your profile is missing details required for this document: ' +

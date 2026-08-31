@@ -19,9 +19,9 @@ import type { ContractSignatureEntity } from '../schemas/contract-signature.sche
 import type { ContractStatusChangeEntity } from '../schemas/contract-status-change.schema';
 import type { DocumentTemplateEntity } from '../schemas/document-template.schema';
 import type { ReimbursementTypeEntity } from '../schemas/reimbursement-type.schema';
+import { DocumentProfileRequirementService } from '../services/document-profile-requirement.service';
 import { AccountingUserLoader } from './accounting-user.loader';
 import { ContractLoader } from './contract.loader';
-import { DocumentProfileRequirementService } from '../services/document-profile-requirement.service';
 
 type MaybeWithRelations = ContractEntity & {
   documentTemplate?: DocumentTemplateEntity;

@@ -213,68 +213,70 @@ export function CreateDocumentModal({
                     const selected =
                       selectedLine && lineKey(selectedLine) === lineKey(line);
                     return (
-                      <button
-                        key={lineKey(line)}
-                        type="button"
-                        onClick={() => setSelectedLine(line)}
-                        className={cn(
-                          'flex w-full items-center gap-4 rounded-xl border p-3 text-left transition-colors',
-                          selected
-                            ? 'border-primary bg-primary/5 ring-1 ring-primary/20'
-                            : 'border-border bg-card hover:bg-muted',
-                        )}
-                      >
-                        <DocTypeHeader
-                          kind={line.kind}
-                          pauschale={line.pauschale}
-                          topLine=""
-                          name={lineName(line)}
-                          className="min-w-0 flex-1"
-                        />
-
-                        <div className="min-w-0 flex-1 text-sm">
-                          {count > 0 ? (
-                            <>
-                              <p className="text-card-foreground">
-                                {t('createDocumentModal.documentCount', {
-                                  count,
-                                })}
-                              </p>
-                              {latest && (
-                                <p className="text-xs text-muted-foreground">
-                                  {t(
-                                    `docs.statusLabel.${STATUS_META[latest.status].labelKey}` as Parameters<
-                                      typeof t
-                                    >[0],
-                                  )}
-                                  {latest.lastActionDate
-                                    ? ` · ${latest.lastActionDate}`
-                                    : ''}
-                                </p>
-                              )}
-                            </>
-                          ) : (
-                            <p className="text-muted-foreground">
-                              {t('createDocumentModal.noDocumentYet')}
-                            </p>
+                      // The "view volunteer" stub button below sits as a
+                      // sibling overlay, not a descendant: nesting a
+                      // <button> inside this row's <button> would be
+                      // invalid HTML (and breaks hydration).
+                      <div key={lineKey(line)} className="relative">
+                        <button
+                          type="button"
+                          onClick={() => setSelectedLine(line)}
+                          className={cn(
+                            'flex w-full items-center gap-4 rounded-xl border p-3 text-left transition-colors',
+                            count > 0 && 'pr-28',
+                            selected
+                              ? 'border-primary bg-primary/5 ring-1 ring-primary/20'
+                              : 'border-border bg-card hover:bg-muted',
                           )}
-                        </div>
+                        >
+                          <DocTypeHeader
+                            kind={line.kind}
+                            pauschale={line.pauschale}
+                            topLine=""
+                            name={lineName(line)}
+                            className="min-w-0 flex-1"
+                          />
+
+                          <div className="min-w-0 flex-1 text-sm">
+                            {count > 0 ? (
+                              <>
+                                <p className="text-card-foreground">
+                                  {t('createDocumentModal.documentCount', {
+                                    count,
+                                  })}
+                                </p>
+                                {latest && (
+                                  <p className="text-xs text-muted-foreground">
+                                    {t(
+                                      `docs.statusLabel.${STATUS_META[latest.status].labelKey}` as Parameters<
+                                        typeof t
+                                      >[0],
+                                    )}
+                                    {latest.lastActionDate
+                                      ? ` · ${latest.lastActionDate}`
+                                      : ''}
+                                  </p>
+                                )}
+                              </>
+                            ) : (
+                              <p className="text-muted-foreground">
+                                {t('createDocumentModal.noDocumentYet')}
+                              </p>
+                            )}
+                          </div>
+                        </button>
 
                         {count > 0 && (
-                          // Rendered as a span, not a Button: it sits inside
-                          // the selectable line's <button>, and nesting a
-                          // <button> inside a <button> is invalid HTML (and
-                          // breaks hydration). It's a stub for now anyway —
-                          // needs a real userId to open the volunteer-profile
-                          // sheet.
-                          <span
-                            onClick={(e) => e.stopPropagation()}
-                            className="shrink-0 inline-flex items-center justify-center gap-2 rounded-md border border-border bg-background px-3 text-sm font-medium whitespace-nowrap text-foreground shadow-xs h-8"
+                          // A stub for now — needs a real userId to open
+                          // the volunteer-profile sheet.
+                          <button
+                            type="button"
+                            className="absolute inset-y-0 right-3 my-auto inline-flex h-8 shrink-0 items-center justify-center gap-2 rounded-md border border-border bg-background px-3 text-sm font-medium whitespace-nowrap text-foreground shadow-xs"
                           >
                             {t('createDocumentModal.viewVolunteer')}
-                          </span>
+                          </button>
                         )}
-                      </button>
+                      </div>
                     );
                   })}
                 </div>

@@ -400,9 +400,7 @@ export function InvoiceCreationModal({
       status={status}
       errorTitle={t('loadErrorTitle')}
       errorDescription={t('loadError', { name: volunteerName })}
-      errorMessage={
-        loadError instanceof Error ? loadError.message : undefined
-      }
+      errorMessage={loadError instanceof Error ? loadError.message : undefined}
       fieldsSkeletonKeys={['name', 'iban', 'period', 'cap', 'hours']}
       cancelLabel={t('cancel')}
       sendLabel={t('sendForSigning')}

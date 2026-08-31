@@ -22,9 +22,9 @@ import type { InvoiceSignatureEntity } from '../schemas/invoice-signature.schema
 import type { InvoiceStatusChangeEntity } from '../schemas/invoice-status-change.schema';
 import type { InvoiceTimeEntryEntity } from '../schemas/invoice-time-entry.schema';
 import type { ReimbursementTypeEntity } from '../schemas/reimbursement-type.schema';
+import { DocumentProfileRequirementService } from '../services/document-profile-requirement.service';
 import { AccountingUserLoader } from './accounting-user.loader';
 import { InvoiceLoader } from './invoice.loader';
-import { DocumentProfileRequirementService } from '../services/document-profile-requirement.service';
 
 type MaybeWithRelations = InvoiceEntity & {
   documentTemplate?: DocumentTemplateEntity;

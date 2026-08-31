@@ -11,9 +11,9 @@ import {
   SignatureIcon,
 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
+import { Link } from '@/i18n/navigation';
 import { formatEuro } from '@/lib/formatting/formats';
 import { useFormatting } from '@/lib/formatting/use-formatting';
-import { Link } from '@/i18n/navigation';
 import type {
   VolunteerDocument,
   VolunteerDocumentLine,

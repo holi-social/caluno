@@ -20,10 +20,10 @@ import {
 } from '../src/accounting/enums';
 import type { Database } from '../src/database/database.module';
 import * as schema from '../src/database/schema';
-import { userProfiles } from '../src/requirement-profile/schemas/user-profile.schema';
 import { NotificationEvent } from '../src/notification/notification-events';
 import type { DocumentAwaitingSignaturePayload } from '../src/notification/payloads/document-awaiting-signature.payload';
 import type { DocumentDeclinedByOrgPayload } from '../src/notification/payloads/document-declined-by-org.payload';
+import { userProfiles } from '../src/requirement-profile/schemas/user-profile.schema';
 import {
   createReimbursementType,
   createTwoStepTemplate,
@@ -1037,8 +1037,14 @@ describe('documents flow — admin + volunteer', () => {
           id: 'header-org-identity',
           text: '{orgName} {orgAddress}',
           fields: [
-            { id: 'header-org-name', value: { kind: 'bound', source: 'org_name' } },
-            { id: 'header-org-address', value: { kind: 'bound', source: 'org_address' } },
+            {
+              id: 'header-org-name',
+              value: { kind: 'bound', source: 'org_name' },
+            },
+            {
+              id: 'header-org-address',
+              value: { kind: 'bound', source: 'org_address' },
+            },
           ],
           enabled: true,
         },
@@ -1053,8 +1059,14 @@ describe('documents flow — admin + volunteer', () => {
               id: 'volunteer-name',
               text: '{volunteerFirstName} {volunteerLastName}',
               fields: [
-                { id: 'volunteer-name-first', value: { kind: 'bound', source: 'volunteer_first_name' } },
-                { id: 'volunteer-name-last', value: { kind: 'bound', source: 'volunteer_last_name' } },
+                {
+                  id: 'volunteer-name-first',
+                  value: { kind: 'bound', source: 'volunteer_first_name' },
+                },
+                {
+                  id: 'volunteer-name-last',
+                  value: { kind: 'bound', source: 'volunteer_last_name' },
+                },
               ],
               enabled: true,
             },
@@ -1062,7 +1074,10 @@ describe('documents flow — admin + volunteer', () => {
               id: 'rate',
               text: 'Stundensatz {hourlyRate} € pro Stunde',
               fields: [
-                { id: 'rate-field', value: { kind: 'bound', source: 'hourly_rate' } },
+                {
+                  id: 'rate-field',
+                  value: { kind: 'bound', source: 'hourly_rate' },
+                },
               ],
               enabled: true,
             },
@@ -1071,7 +1086,12 @@ describe('documents flow — admin + volunteer', () => {
         },
       ],
       footer: {
-        closingLine: { id: 'closing', text: 'Vielen Dank', fields: [], enabled: true },
+        closingLine: {
+          id: 'closing',
+          text: 'Vielen Dank',
+          fields: [],
+          enabled: true,
+        },
         showSignatures: true,
       },
     });
@@ -1161,9 +1181,10 @@ describe('documents flow — admin + volunteer', () => {
         return;
       }
       expect(detail.contract.downloadUrl).not.toBeNull();
+      if (!detail.contract.downloadUrl) throw new Error('unreachable');
 
       // Read the stored bytes back through the downloadable URL.
-      const pdfResponse = await fetch(detail.contract.downloadUrl!);
+      const pdfResponse = await fetch(detail.contract.downloadUrl);
       expect(pdfResponse.ok).toBe(true);
       const pdfBytes = Buffer.from(await pdfResponse.arrayBuffer());
       expect(pdfBytes.subarray(0, 5).toString()).toBe('%PDF-');
@@ -1173,18 +1194,16 @@ describe('documents flow — admin + volunteer', () => {
       // in the content stream, so inflate it before reading.
       const { inflateSync } = await import('node:zlib');
       const latin = pdfBytes.toString('latin1');
-      const streams = [...latin.matchAll(/stream\r?\n([\s\S]*?)endstream/g)].map(
-        (m) => inflateSync(Buffer.from(m[1], 'latin1')).toString('latin1'),
-      );
+      const streams = [
+        ...latin.matchAll(/stream\r?\n([\s\S]*?)endstream/g),
+      ].map((m) => inflateSync(Buffer.from(m[1], 'latin1')).toString('latin1'));
       const content = streams.join('\n');
 
       const volunteer = await db.query.users.findFirst({
         where: { id: pdfOrg.volunteerId },
       });
       // Glyph runs are hex-encoded; decode them so name/rate are comparable.
-      const glyphs = [
-        ...content.matchAll(/<([0-9a-f]+)>/g),
-      ]
+      const glyphs = [...content.matchAll(/<([0-9a-f]+)>/g)]
         .map((m) => Buffer.from(m[1], 'hex').toString('latin1'))
         .join('');
       expect(glyphs).toContain(volunteer?.name ?? '');
@@ -1314,17 +1333,18 @@ describe('documents flow — admin + volunteer', () => {
         return;
       }
       expect(detail.invoice.downloadUrl).not.toBeNull();
+      if (!detail.invoice.downloadUrl) throw new Error('unreachable');
 
-      const pdfResponse = await fetch(detail.invoice.downloadUrl!);
+      const pdfResponse = await fetch(detail.invoice.downloadUrl);
       expect(pdfResponse.ok).toBe(true);
       const pdfBytes = Buffer.from(await pdfResponse.arrayBuffer());
       expect(pdfBytes.subarray(0, 5).toString()).toBe('%PDF-');
 
       const { inflateSync } = await import('node:zlib');
       const latin = pdfBytes.toString('latin1');
-      const streams = [...latin.matchAll(/stream\r?\n([\s\S]*?)endstream/g)].map(
-        (m) => inflateSync(Buffer.from(m[1], 'latin1')).toString('latin1'),
-      );
+      const streams = [
+        ...latin.matchAll(/stream\r?\n([\s\S]*?)endstream/g),
+      ].map((m) => inflateSync(Buffer.from(m[1], 'latin1')).toString('latin1'));
       const content = streams.join('\n');
       const glyphs = [...content.matchAll(/<([0-9a-f]+)>/g)]
         .map((m) => Buffer.from(m[1], 'hex').toString('latin1'))
@@ -1351,7 +1371,10 @@ describe('documents flow — admin + volunteer', () => {
               id: 'iban-line',
               text: 'IBAN: {volunteerIban}',
               fields: [
-                { id: 'iban-field', value: { kind: 'bound', source: 'volunteer_iban' } },
+                {
+                  id: 'iban-field',
+                  value: { kind: 'bound', source: 'volunteer_iban' },
+                },
               ],
               enabled: true,
             },
@@ -1359,7 +1382,10 @@ describe('documents flow — admin + volunteer', () => {
               id: 'bic-line',
               text: 'BIC: {volunteerBic}',
               fields: [
-                { id: 'bic-field', value: { kind: 'bound', source: 'volunteer_bic' } },
+                {
+                  id: 'bic-field',
+                  value: { kind: 'bound', source: 'volunteer_bic' },
+                },
               ],
               enabled: true,
             },
@@ -1367,7 +1393,14 @@ describe('documents flow — admin + volunteer', () => {
           enabled: true,
         },
       ],
-      footer: { closingLine: { id: 'closing', text: 'Vielen Dank', fields: [], enabled: true } },
+      footer: {
+        closingLine: {
+          id: 'closing',
+          text: 'Vielen Dank',
+          fields: [],
+          enabled: true,
+        },
+      },
     };
 
     it('blocks the volunteer from signing a document whose template needs profile fields they have not filled in', async () => {
@@ -1426,11 +1459,15 @@ describe('documents flow — admin + volunteer', () => {
       setAuthMockUserId(gatedOrg.volunteerId);
       const signed = await graphqlRequestRequiringData<{
         signContract: { id: string; contractStatus: string };
-      }>(app, {
-        query: SIGN_CONTRACT,
-        variables: { contractId: createContract.id },
-        headers: gatedHeader,
-      }, 'signContract');
+      }>(
+        app,
+        {
+          query: SIGN_CONTRACT,
+          variables: { contractId: createContract.id },
+          headers: gatedHeader,
+        },
+        'signContract',
+      );
       expect(signed.signContract.contractStatus).toBe(
         ContractStatus.AWAITING_NGO_SIGNATURE,
       );
@@ -1438,11 +1475,15 @@ describe('documents flow — admin + volunteer', () => {
       // The card can now report an empty missing-fields list.
       const detail = await graphqlRequestRequiringData<{
         contract: { id: string; missingProfileFields: string[] };
-      }>(app, {
-        query: CONTRACT_DETAIL,
-        variables: { id: createContract.id },
-        headers: gatedHeader,
-      }, 'contract');
+      }>(
+        app,
+        {
+          query: CONTRACT_DETAIL,
+          variables: { id: createContract.id },
+          headers: gatedHeader,
+        },
+        'contract',
+      );
       expect(detail.contract.missingProfileFields).toEqual([]);
     });
   });

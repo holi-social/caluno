@@ -18,8 +18,8 @@ import {
 import { PostHogService } from '../../shared/observability/posthog.service';
 import { SYSTEM_PROFILE_KEYS } from '../constants';
 import { FieldType, RequiredFormTargetType } from '../enums';
-import { validateSystemKeyValue } from '../profile-validation';
 import { SubmitFormInput } from '../inputs/submit-form.input';
+import { validateSystemKeyValue } from '../profile-validation';
 import type { FormSubmissionEntity } from '../schemas/form-submission.schema';
 import { isUnitInOrg } from './is-unit-in-org';
 import { parseMultiChoiceValue } from './multi-choice-value';

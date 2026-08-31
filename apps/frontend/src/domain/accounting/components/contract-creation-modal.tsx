@@ -253,9 +253,7 @@ export function ContractCreationModal({
       status={status}
       errorTitle={t('loadErrorTitle')}
       errorDescription={t('loadError', { name: volunteerName })}
-      errorMessage={
-        loadError instanceof Error ? loadError.message : undefined
-      }
+      errorMessage={loadError instanceof Error ? loadError.message : undefined}
       fieldsSkeletonKeys={['address', 'iban', 'dob', 'lifespan', 'hours']}
       cancelLabel={t('cancel')}
       sendLabel={t('sendForSigning')}
