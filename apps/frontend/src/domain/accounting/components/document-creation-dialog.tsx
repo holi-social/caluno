@@ -35,6 +35,12 @@ interface DocumentCreationDialogProps {
   isSending: boolean;
   onSend: () => void;
   sendDisabled?: boolean;
+  /**
+   * The underlying query error message (e.g. "No contract template
+   * configured …"), shown below `errorDescription` so the coordinator can
+   * actually see what went wrong instead of only the generic copy.
+   */
+  errorMessage?: string;
   /** Skip the outer Dialog/header — for a caller that owns its own shell. */
   embedded?: boolean;
 }
@@ -62,6 +68,7 @@ export function DocumentCreationDialog({
   isSending,
   onSend,
   sendDisabled = false,
+  errorMessage,
   embedded = false,
 }: DocumentCreationDialogProps) {
   const body = (
@@ -70,7 +77,14 @@ export function DocumentCreationDialog({
         {status === 'error' ? (
           <Alert variant="destructive">
             <AlertTitle>{errorTitle}</AlertTitle>
-            <AlertDescription>{errorDescription}</AlertDescription>
+            <AlertDescription>
+              {errorDescription}
+              {errorMessage && (
+                <p className="mt-2 font-mono text-xs break-words opacity-90">
+                  {errorMessage}
+                </p>
+              )}
+            </AlertDescription>
           </Alert>
         ) : (
           <div className="grid grid-cols-1 gap-6 md:grid-cols-[3fr_2fr]">

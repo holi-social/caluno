@@ -217,6 +217,17 @@ export function InvoiceCreationModal({
     eligibleQuery.isError ||
     reimbursementTypeMissing;
 
+  // The first query that failed carries the actual reason (e.g. "No invoice
+  // template configured for reimbursement type …") — shown in the dialog so
+  // the coordinator can see what's really wrong, not just the generic copy.
+  const loadError =
+    typesQuery.error ??
+    ratesQuery.error ??
+    profileQuery.error ??
+    invoiceTemplateQuery.error ??
+    contractTemplateQuery.error ??
+    eligibleQuery.error;
+
   const status: DocumentCreationLoadStatus = hasError
     ? 'error'
     : dataReady
@@ -389,6 +400,7 @@ export function InvoiceCreationModal({
       status={status}
       errorTitle={t('loadErrorTitle')}
       errorDescription={t('loadError', { name: volunteerName })}
+      errorMessage={loadError instanceof Error ? loadError.message : undefined}
       fieldsSkeletonKeys={['name', 'iban', 'period', 'cap', 'hours']}
       cancelLabel={t('cancel')}
       sendLabel={t('sendForSigning')}

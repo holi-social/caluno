@@ -9,6 +9,9 @@ import {
   SigneeType,
 } from '../src/accounting/enums';
 import { ContractService } from '../src/accounting/services/contract.service';
+import { DocumentNotificationService } from '../src/accounting/services/document-notification.service';
+import { DocumentProfileRequirementService } from '../src/accounting/services/document-profile-requirement.service';
+import { DocumentRenderingService } from '../src/accounting/services/document-rendering.service';
 import { DocumentSigningService } from '../src/accounting/services/document-signing.service';
 import { DocumentTemplateService } from '../src/accounting/services/document-template.service';
 import { InvoiceService } from '../src/accounting/services/invoice.service';
@@ -97,6 +100,16 @@ describe('InvoiceService', () => {
       db,
       documentTemplateService,
       documentSigningService,
+      {
+        notifyAwaitingVolunteerSignature: () => Promise.resolve(),
+        notifyDeclinedByOrg: () => Promise.resolve(),
+      } as unknown as DocumentNotificationService,
+      {
+        missingProfileSources: () => Promise.resolve([]),
+      } as unknown as DocumentProfileRequirementService,
+      {
+        renderAndAttachPdf: () => Promise.resolve(null),
+      } as unknown as DocumentRenderingService,
       { capture: () => {} } as unknown as PostHogService,
     );
     service = new InvoiceService(
@@ -105,6 +118,16 @@ describe('InvoiceService', () => {
       documentSigningService,
       reimbursementRateService,
       contractService,
+      {
+        notifyAwaitingVolunteerSignature: () => Promise.resolve(),
+        notifyDeclinedByOrg: () => Promise.resolve(),
+      } as unknown as DocumentNotificationService,
+      {
+        missingProfileSources: () => Promise.resolve([]),
+      } as unknown as DocumentProfileRequirementService,
+      {
+        renderAndAttachPdf: () => Promise.resolve(null),
+      } as unknown as DocumentRenderingService,
       { capture: () => {} } as unknown as PostHogService,
     );
 

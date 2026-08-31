@@ -59,6 +59,12 @@ type EventJoinedInput =
 type EventCancelledInput =
   NotificationEventPayloadMap[typeof NotificationEvent.EVENT_CANCELLED];
 
+type DocumentAwaitingSignatureInput =
+  NotificationEventPayloadMap[typeof NotificationEvent.DOCUMENT_AWAITING_SIGNATURE];
+
+type DocumentDeclinedByOrgInput =
+  NotificationEventPayloadMap[typeof NotificationEvent.DOCUMENT_DECLINED_BY_ORG];
+
 @Injectable()
 export class NotificationService {
   private readonly logger = new Logger(NotificationService.name);
@@ -191,5 +197,13 @@ export class NotificationService {
 
   notifyEventCancelled(input: EventCancelledInput): void {
     this.emitter.emit(NotificationEvent.EVENT_CANCELLED, input);
+  }
+
+  notifyDocumentAwaitingSignature(input: DocumentAwaitingSignatureInput): void {
+    this.emitter.emit(NotificationEvent.DOCUMENT_AWAITING_SIGNATURE, input);
+  }
+
+  notifyDocumentDeclinedByOrg(input: DocumentDeclinedByOrgInput): void {
+    this.emitter.emit(NotificationEvent.DOCUMENT_DECLINED_BY_ORG, input);
   }
 }

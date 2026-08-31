@@ -19,6 +19,8 @@ import type {
   GetRosterYearlyUsageQuery,
   GetYearlyUsageQuery,
   InvoiceFilterInput,
+  MyDocumentSummaryQuery,
+  MyDocumentsQuery,
   RecordBundleDownloadMutation,
   SetManualBaselineMutation,
   UpdateDocumentTemplateInput,
@@ -49,6 +51,12 @@ export type EligibleTimeEntry =
 
 export type DocumentTemplateSummary =
   GetDocumentTemplatesQuery['documentTemplates'][number];
+
+/** Cross-org "My documents" — one group per organization. */
+export type MyDocumentsGroupData = MyDocumentsQuery['myDocuments'][number];
+
+/** Dropdown summary — total documents and how many need the signature. */
+export type MyDocumentSummaryData = MyDocumentSummaryQuery['myDocumentSummary'];
 export type DocumentTemplateDetail =
   GetDocumentTemplateQuery['documentTemplate'];
 
@@ -158,6 +166,16 @@ export class AccountingRepository extends BaseRepository {
   async findMyInvoices(filter?: InvoiceFilterInput): Promise<InvoiceSummary[]> {
     const data = await this.sdk.GetMyInvoices({ filter });
     return data.myInvoices;
+  }
+
+  async findMyDocuments(): Promise<MyDocumentsGroupData[]> {
+    const data = await this.sdk.MyDocuments();
+    return data.myDocuments;
+  }
+
+  async findMyDocumentSummary(): Promise<MyDocumentSummaryData> {
+    const data = await this.sdk.MyDocumentSummary();
+    return data.myDocumentSummary;
   }
 
   async findInvoiceById(id: string): Promise<InvoiceDetail> {

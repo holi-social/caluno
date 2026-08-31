@@ -349,6 +349,57 @@
       "fieldColumn": "Field",
       "noFields": "This form has no fields.",
       "submittedOn": "Submitted on {date}"
+    },
+    "documents": {
+      "title": "Your documents",
+      "subtitle": "Agreements and timesheets for reimbursements",
+      "names": {
+        "agreement": "Supplementary agreement",
+        "timesheet": "Timesheet"
+      },
+      "status": {
+        "awaiting-signature": "To sign",
+        "awaiting-countersignature": "To countersign",
+        "signed": "Active",
+        "declined": "Declined"
+      },
+      "figures": "{shifts} Shifts · {hours} hours · {amount}",
+      "lines": {
+        "generated": "Generated on {date} by {name}",
+        "signedByMe": "You signed on {date}",
+        "countersignedBy": "{name} countersigned on {date}",
+        "declinedBy": "{name} declined on {date}"
+      },
+      "actions": {
+        "download": "Download",
+        "sign": "Sign",
+        "decline": "Decline"
+      },
+      "missingProfileWarning": "Your profile is missing details this document needs.",
+      "missingProfileCta": "Complete your profile to sign",
+      "toasts": {
+        "signed": "{name} signed.",
+        "signedError": "{name} could not be signed. Please try again.",
+        "declined": "{name} declined.",
+        "declinedError": "{name} could not be declined. Please try again.",
+        "downloadUnavailable": "The document is not available for download yet."
+      },
+      "empty": {
+        "title": "No documents yet",
+        "description": "Agreements and timesheets this organisation generates for you will appear here."
+      },
+      "declineSheet": {
+        "title": "Decline document",
+        "description": "This organisation needs to understand why you are declining this {documentName}.",
+        "reasonLabel": "Reason for declining",
+        "reasonPlaceholder": "Explain why you are declining the document…",
+        "submit": "Decline"
+      },
+      "preview": {
+        "title": "{name}",
+        "unavailable": "The document is not available for preview yet."
+      },
+      "downloadUnavailableNote": "PDF not available yet."
     }
   },
   "MembershipRequest": {
@@ -514,7 +565,9 @@
     "volunteers": "Volunteers",
     "accounting": "Accounting",
     "reimbursements": "Reimbursements",
-    "accountingSettings": "Settings"
+    "accountingSettings": "Settings",
+    "myDocuments": "My documents",
+    "myDocumentsBadge": "{count} documents need your signature"
   },
   "OrgDetail": {
     "aboutHeading": "About us",
@@ -646,7 +699,8 @@
         "firstName": "As on your ID",
         "iban": "For expense and allowance payments",
         "lastName": "As on your ID",
-        "preferredName": "If you'd like to be called something else"
+        "preferredName": "If you'd like to be called something else",
+        "bic": "Bank identifier code (BIC) for your account"
       }
     },
     "language": "Language",
@@ -853,6 +907,7 @@
       "firstName": "First name",
       "gender": "Gender",
       "iban": "IBAN",
+      "bic": "BIC",
       "infoText": "Info text",
       "labelLabel": "Label",
       "labelPlaceholder": "e.g. Favorite color",
@@ -938,6 +993,7 @@
       "fieldRequired": "{label} is required",
       "invalidCharacters": "{label} contains invalid characters",
       "invalidIban": "{label} must be a valid IBAN",
+      "invalidBic": "{label} must be a valid BIC",
       "invalidOptions": "{label} contains invalid options",
       "labelRequired": "Label is required",
       "maxChars": "{label} must be {maxLen} characters or fewer",
@@ -1725,7 +1781,8 @@
             "coordSign": "Coordinator",
             "superSign": "Supervisor",
             "active": "Active",
-            "ready": "Ready"
+            "ready": "Ready",
+            "actorOrg": "Organization"
           },
           "limitSection": "Annual budget",
           "invoicesPaidOut": "Paid out",
@@ -1750,7 +1807,8 @@
             "grossAmount": "Gross amount",
             "rateTooltip": "Default hourly rate for this allowance type. Shifts can use a different rate.",
             "viewBtn": "View timesheets"
-          }
+          },
+          "pdfUnavailableNote": "PDF not available yet."
         },
         "statusLabel": {
           "contractGenerate": "Create contract",
@@ -1864,6 +1922,18 @@
           "signatureSupervisor": "Supervisor signature",
           "unsigned": "Not yet signed"
         }
+      },
+      "signToasts": {
+        "contract": "Contract countersigned for {name}.",
+        "contractError": "Contract could not be countersigned for {name}.",
+        "invoice": "Timesheet countersigned for {name}.",
+        "invoiceError": "Timesheet could not be countersigned for {name}."
+      },
+      "declineToasts": {
+        "contract": "Contract declined for {name}.",
+        "contractError": "Contract could not be declined for {name}.",
+        "invoice": "Timesheet declined for {name}.",
+        "invoiceError": "Timesheet could not be declined for {name}."
       }
     },
     "templates": {
@@ -2022,6 +2092,15 @@
           "signees": "{count, plural, =1 {1 signature} other {# signatures}}"
         }
       }
+    }
+  },
+  "MyDocuments": {
+    "title": "My documents",
+    "backLabel": "Back",
+    "loadMore": "Load more ({remaining})",
+    "empty": {
+      "title": "No documents yet",
+      "description": "Agreements and timesheets from your organizations will appear here."
     }
   }
 }

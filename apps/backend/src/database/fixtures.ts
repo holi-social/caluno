@@ -966,6 +966,7 @@ const ensureBankingInformationForm = async (
         blockId: block.id,
         type: FieldType.IBAN,
         label: 'IBAN',
+        systemKey: 'iban',
         required: true,
         fieldOrder: 0,
       },
@@ -973,6 +974,7 @@ const ensureBankingInformationForm = async (
         blockId: block.id,
         type: FieldType.TEXT,
         label: 'BIC',
+        systemKey: 'bic',
         required: true,
         fieldOrder: 1,
       },
@@ -1172,6 +1174,29 @@ async function seedFixtures() {
     email: 'testing+rejected01@caluno.org',
     name: 'Rejected Applicant',
   });
+
+  // The document signing chain requires the volunteer's bank/personal profile
+  // fields before a contract/invoice can be signed (otherwise the rendered
+  // PDF comes out with gaps). Seed a complete profile for the members so the
+  // fixture accounts can sign documents out of the box.
+  for (const [index, member] of members.entries()) {
+    const existing = await db.query.userProfiles.findFirst({
+      where: { userId: member.id },
+    });
+    if (!existing) {
+      await db.insert(schema.userProfiles).values({
+        userId: member.id,
+        data: {
+          // A valid German IBAN (mod-97 checksum). Same account for the
+          // fixture members so it round-trips the validator.
+          iban: 'DE89 3704 0044 0532 0130 00',
+          bic: 'COBADEFFXXX',
+          address: `Musterstraße ${index + 1}`,
+          'birth-date': '1990-08-02',
+        },
+      });
+    }
+  }
 
   const ensureMembershipRequest = async (
     userId: string,
