@@ -86,6 +86,12 @@
       "verifying": "Wird bestätigt..."
     }
   },
+  "CheckIn": {
+    "manualCheckin": "Manuelles Einchecken",
+    "myQrCodeTab": "Mein QR-Code",
+    "qrScannerTab": "QR-Scanner",
+    "scanACode": "Code scannen"
+  },
   "Common": {
     "avatarAlt": "Avatar von {name}",
     "back": "Zurück",
@@ -1063,7 +1069,6 @@
       "checkingIn": "Wird eingecheckt...",
       "checkingOut": "Wird ausgecheckt...",
       "checkingOutAt": "Wird ausgecheckt: {time}",
-      "enterQrTitle": "Oder gib die QR-ID manuell ein, um die Anwesenheit zu bestätigen",
       "generalCheckIn": "Allgemeines Check-in",
       "invalidCheckin": {
         "blocked": {
@@ -1076,8 +1081,6 @@
         }
       },
       "noShiftSelected": "Kein Einsatz ausgewählt",
-      "scanDescription": "Scanne die QR-ID mit der Kamera. Damit checkst du Freiwillige ein- oder aus.",
-      "searchVolunteerTitle": "Oder wähle die Person zur Anmeldung aus der Liste aus",
       "selectOrgDescription": "Wähle die Organisation aus, in die die Person eingecheckt werden soll.",
       "selectOrgTitle": "Einchecken",
       "successNext": "Weiter",

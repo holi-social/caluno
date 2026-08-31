@@ -29,9 +29,10 @@ export class OrganizationRepository extends BaseRepository {
   }
 
   async findVolunteersByUnit(organizationUnitId: string) {
-    const data = await this.sdk.GetOrganizationVolunteersByUnit({
-      id: organizationUnitId,
-    });
+    const data = await this.sdk.GetOrganizationVolunteersByUnit(
+      { id: organizationUnitId },
+      { 'x-organization-unit-id': organizationUnitId },
+    );
     return data.members ?? [];
   }
 
@@ -56,6 +57,11 @@ export class OrganizationRepository extends BaseRepository {
   async findMyAdminstrableOrganizationUnits() {
     const data = await this.sdk.GetMyAdminstableOrganizationUnits();
     return data.myAdminstableOrganizationUnits;
+  }
+
+  async findMyCheckInAdministrableOrganizationUnits() {
+    const data = await this.sdk.GetMyCheckInAdministrableOrganizationUnits();
+    return data.myCheckInAdministrableOrganizationUnits;
   }
 
   async findAll(options: FindOrganizationsOptions = {}) {
