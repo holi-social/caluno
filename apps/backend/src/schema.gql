@@ -33,6 +33,7 @@ type Contract {
   downloadUrl: String
   id: ID!
   isNonCompliant: Boolean!
+  missingOrgProfileFields: [String!]!
   missingProfileFields: [String!]!
   periodEnd: DateTime!
   periodStart: DateTime!
@@ -144,6 +145,7 @@ input CreateInvoiceInput {
 
 input CreateOrganizationInput {
   address: String
+  city: String
   contactEmail: String
   description: String
   logoFileId: String
@@ -152,6 +154,7 @@ input CreateOrganizationInput {
   parentId: String
   phone: String
   websiteUrl: String
+  zipCode: String
 }
 
 input CreateOrganizationUnitInput {
@@ -457,6 +460,7 @@ type Invoice {
   invoiceStatus: InvoiceStatus!
   invoiceTimeEntries: [InvoiceTimeEntry!]!
   isNonCompliant: Boolean!
+  missingOrgProfileFields: [String!]!
   missingProfileFields: [String!]!
   paidAt: DateTime
   paidByUser: User
@@ -660,6 +664,7 @@ type Mutation {
   updateMyImage(input: UpdateMyImageInput!): User!
   updateMyLocale(locale: String!): User!
   updateMyUserProfile(input: UpdateUserProfileInput!): UserProfile!
+  updateOrganization(id: ID!, input: UpdateOrganizationInput!): Organization!
   updateOrganizationUnit(id: String!, input: UpdateOrganizationUnitInput!): OrganizationUnit!
   updateRequirement(id: String!, input: UpdateRequirementInput!): Requirement!
   updateRequirementForm(id: String!, input: UpdateRequirementFormInput!): RequirementForm!
@@ -692,6 +697,7 @@ type MyDocumentsGroup {
 type Organization {
   accountingEnabled: Boolean!
   address: String
+  city: String
   contactEmail: String
   createdAt: DateTime!
   description: String
@@ -704,6 +710,7 @@ type Organization {
   units: [OrganizationUnit!]!
   updatedAt: DateTime
   websiteUrl: String
+  zipCode: String
 }
 
 type OrganizationPaginatedResponse {
@@ -1340,6 +1347,18 @@ input UpdateFormBlockInput {
 
 input UpdateMyImageInput {
   imageFileId: String
+}
+
+input UpdateOrganizationInput {
+  address: String
+  city: String
+  contactEmail: String
+  description: String
+  logoFileId: String
+  logoUrl: String
+  phone: String
+  websiteUrl: String
+  zipCode: String
 }
 
 input UpdateOrganizationUnitInput {

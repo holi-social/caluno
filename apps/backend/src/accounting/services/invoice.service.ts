@@ -188,6 +188,23 @@ export class InvoiceService {
       await this.documentTemplateService.findOrderedTemplateSignees(
         template.id,
       );
+
+    // The org must have the profile fields its documents render (e.g. city /
+    // address) before one is created — otherwise the PDF comes out with gaps
+    // the org can't fix inline. The account manager is told to complete the
+    // org profile first.
+    const missingOrg = await this.documentProfileRequirementService.missingOrgProfileSources(
+      organizationId,
+      template.body,
+    );
+    if (missingOrg.length > 0) {
+      throw new BadRequestGraphQLError(
+        'Your organization is missing details required for this document: ' +
+          missingOrg.join(', ') +
+          '. Please complete your organization profile before creating documents.',
+      );
+    }
+
     const activeContract = await this.contractService.findActiveContract(
       input.volunteerId,
       input.reimbursementTypeId,

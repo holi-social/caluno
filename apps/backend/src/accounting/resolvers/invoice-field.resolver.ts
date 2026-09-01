@@ -134,6 +134,26 @@ export class InvoiceFieldResolver {
     );
   }
 
+  @ResolveField(() => [String])
+  async missingOrgProfileFields(
+    @Parent() invoice: MaybeWithRelations,
+    @Loader(InvoiceLoader) loader: InvoiceLoader,
+  ): Promise<string[]> {
+    let templateBody: unknown = invoice.documentTemplate?.body;
+    let organizationId: string | undefined =
+      invoice.documentTemplate?.organizationId;
+    if (!templateBody) {
+      const full = await loader.invoiceWithRelationsById.load(invoice.id);
+      templateBody = full.documentTemplate?.body;
+      organizationId = full.documentTemplate?.organizationId;
+    }
+    if (!organizationId) return [];
+    return this.documentProfileRequirementService.missingOrgProfileSources(
+      organizationId,
+      templateBody,
+    );
+  }
+
   @ResolveField(() => User)
   async volunteer(
     @Parent() invoice: InvoiceEntity,

@@ -2,10 +2,11 @@ import { describe, expect, it } from 'bun:test';
 import { DocumentProfileRequirementService } from './document-profile-requirement.service';
 
 describe('DocumentProfileRequirementService', () => {
+  const db = {} as never;
   const userProfileService = {
     findByUserId: () => Promise.resolve(undefined),
   } as never;
-  const service = new DocumentProfileRequirementService(userProfileService);
+  const service = new DocumentProfileRequirementService(db, userProfileService);
 
   it('collects profile-required sources from enabled lines only', () => {
     const body = {
@@ -74,7 +75,7 @@ describe('DocumentProfileRequirementService', () => {
   });
 
   it('reports a source as missing when the profile value is empty', async () => {
-    const serviceWithProfile = new DocumentProfileRequirementService({
+    const serviceWithProfile = new DocumentProfileRequirementService(db, {
       findByUserId: () =>
         Promise.resolve({
           data: { iban: 'DE00 0000 0000 0000 0000 00', bic: '' },
@@ -97,6 +98,37 @@ describe('DocumentProfileRequirementService', () => {
     };
     expect(await serviceWithProfile.missingProfileSources('v-1', body)).toEqual(
       ['volunteer_bic'],
+    );
+  });
+
+  it('reports org city as missing when the org entity has no city, but not name/address', async () => {
+    const dbWithOrg = {
+      query: {
+        organizations: {
+          findFirst: () =>
+            Promise.resolve({ id: 'org-1', name: 'Playground', address: 'Straße 1', city: '' }),
+        },
+      },
+    } as never;
+    const serviceWithOrg = new DocumentProfileRequirementService(
+      dbWithOrg,
+      userProfileService,
+    );
+    const body = {
+      header: {
+        orgIdentityLine: {
+          enabled: true,
+          fields: [
+            { value: { kind: 'bound', source: 'org_name' } },
+            { value: { kind: 'bound', source: 'org_address' } },
+            { value: { kind: 'bound', source: 'org_city' } },
+          ],
+        },
+      },
+    };
+    // name is always present, address is present, city is empty → only org_city.
+    expect(await serviceWithOrg.missingOrgProfileSources('org-1', body)).toEqual(
+      ['org_city'],
     );
   });
 });

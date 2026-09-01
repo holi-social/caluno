@@ -370,13 +370,33 @@ export class DocumentRenderingService {
     const totalHours =
       'totalHours' in document ? document.totalHours : undefined;
 
+    // Invoice-only computed values: the period range, the yearly budget
+    // already used (minus this invoice) and the statutory cap, and the mock
+    // document number. These are generation-time, not volunteer-profile data.
+    const yearlyUsage =
+      'invoiceStatus' in document
+        ? await this.reimbursementRateService
+            .getYearlyUsage(
+              document.volunteerId,
+              document.reimbursementTypeId,
+              new Date(document.periodStart).getFullYear(),
+            )
+            .catch(() => undefined)
+        : undefined;
+    const alreadyReceivedCents = yearlyUsage
+      ? Math.max(0, yearlyUsage.usedCents - (amountCents ?? 0))
+      : undefined;
+    const yearlyLimitCents =
+      yearlyUsage?.limitCents ??
+      document.reimbursementType?.yearlyLimitCents;
+
     const str = (value: unknown): string =>
       typeof value === 'string' ? value : '';
 
     return {
       org_name: org?.name ?? '',
       org_address: org?.address ?? '',
-      org_city: '',
+      org_city: org?.city ?? '',
       volunteer_name: volunteer?.name ?? '',
       volunteer_first_name: firstName,
       volunteer_last_name: lastName,
@@ -398,8 +418,49 @@ export class DocumentRenderingService {
         amountCents !== undefined ? this.formatEuro(amountCents) : '',
       period_start: this.formatDate(new Date(document.periodStart)),
       period_end: this.formatDate(new Date(document.periodEnd)),
+      contract_period: `${this.formatDate(new Date(document.periodStart))} – ${this.formatDate(new Date(document.periodEnd))}`,
+      already_received_amount:
+        alreadyReceivedCents !== undefined
+          ? this.formatEuro(alreadyReceivedCents)
+          : '',
+      yearly_limit_amount:
+        yearlyLimitCents !== undefined ? this.formatEuro(yearlyLimitCents) : '',
+      document_number:
+        'invoiceStatus' in document
+          ? this.formatInvoiceNumber(
+              template.invoiceNumberFormat,
+              new Date(document.periodStart),
+            )
+          : '',
       generated_date: this.formatDate(new Date()),
     };
+  }
+
+  /**
+   * Mock document-number generation — no real sequence counter exists yet, so
+   * this only has to look plausible for the chosen format (mirrors the
+   * frontend's formatDocumentNumber).
+   */
+  private formatInvoiceNumber(
+    invoiceFormat: string | null | undefined,
+    periodStart: Date,
+  ): string {
+    const yyyy = periodStart.getUTCFullYear();
+    const mm = String(periodStart.getUTCMonth() + 1).padStart(2, '0');
+    const dd = String(periodStart.getUTCDate()).padStart(2, '0');
+    const seq = '001';
+    switch (invoiceFormat) {
+      case 'date-number':
+        return `${yyyy}${mm}${dd}-${seq}`;
+      case 'date-kostenstelle-number':
+        return `${yyyy}${mm}${dd}-${seq}`;
+      case 'compact-date-number':
+        return `${String(yyyy).slice(2)}${mm}${dd}${seq}`;
+      case 'kostenstelle-month-year-number':
+        return `${mm}.${yyyy}-${seq}`;
+      default:
+        return `${yyyy}${mm}${dd}-${seq}`;
+    }
   }
 
   /** Invoice table rows: task, begin, end, hours, rate — mirroring the frontend's eligible-hours preview. */

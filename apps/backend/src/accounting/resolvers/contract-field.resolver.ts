@@ -117,6 +117,26 @@ export class ContractFieldResolver {
     );
   }
 
+  @ResolveField(() => [String])
+  async missingOrgProfileFields(
+    @Parent() contract: MaybeWithRelations,
+    @Loader(ContractLoader) loader: ContractLoader,
+  ): Promise<string[]> {
+    let templateBody: unknown = contract.documentTemplate?.body;
+    let organizationId: string | undefined =
+      contract.documentTemplate?.organizationId;
+    if (!templateBody) {
+      const full = await loader.contractWithRelationsById.load(contract.id);
+      templateBody = full.documentTemplate?.body;
+      organizationId = full.documentTemplate?.organizationId;
+    }
+    if (!organizationId) return [];
+    return this.documentProfileRequirementService.missingOrgProfileSources(
+      organizationId,
+      templateBody,
+    );
+  }
+
   @ResolveField(() => User)
   async volunteer(
     @Parent() contract: ContractEntity,
