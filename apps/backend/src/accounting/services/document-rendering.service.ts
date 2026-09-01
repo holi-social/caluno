@@ -24,6 +24,12 @@ type RenderableDocument = ContractWithRelations | InvoiceWithRelations;
 
 const EUR = '€';
 
+/** Human label for the reimbursement type key rendered for the `pauschalen_type` source. */
+const PAUSCHALE_TYPE_LABELS: Record<string, string> = {
+  EHRENAMT: 'Ehrenamtspauschale',
+  UEBUNGSLEITER: 'Übungsleiterpauschale',
+};
+
 /**
  * Renders a fully-signed contract or invoice to a PDF and stores it as a
  * file, attaching the fileId to the document row. The PDF carries the
@@ -418,6 +424,9 @@ export class DocumentRenderingService {
       volunteer_tax_id: str(
         profileData[PROFILE_SOURCE_TO_PROFILE_KEY.volunteer_tax_id],
       ),
+      pauschalen_type: document.reimbursementType
+        ? (PAUSCHALE_TYPE_LABELS[document.reimbursementType.key] ?? '')
+        : '',
       hourly_rate: rateCents !== undefined ? this.formatRate(rateCents) : '',
       total_hours: totalHours !== undefined ? `${totalHours}h` : '',
       total_amount:
