@@ -51,6 +51,8 @@ query GetOrganizationUnit($id: String!) {
     contactEmail
     phone
     address
+    city
+    zipCode
     organizationId
     requiredForms {
       form {
@@ -314,6 +316,9 @@ mutation UpdateOrganizationUnit(
     name
     slug
     deletedAt
+    address
+    city
+    zipCode
     parent {
       id
     }

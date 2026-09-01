@@ -613,6 +613,10 @@
     "form": {
       "addressLabel": "Address",
       "addressPlaceholder": "e.g. 123 Main St, City",
+      "cityLabel": "City",
+      "cityPlaceholder": "e.g. Berlin",
+      "zipCodeLabel": "Postal code",
+      "zipCodePlaceholder": "e.g. 10115",
       "descriptionLabel": "Description",
       "descriptionPlaceholder": "Describe this organizational unit...",
       "emailLabel": "Email",
