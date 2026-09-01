@@ -1,10 +1,7 @@
 import { Field, InputType } from '@nestjs/graphql';
 
 @InputType()
-export class CreateOrganizationInput {
-  @Field(() => String)
-  name!: string;
-
+export class UpdateOrganizationInput {
   @Field(() => String, { nullable: true })
   logoUrl?: string | null;
 
@@ -31,7 +28,4 @@ export class CreateOrganizationInput {
 
   @Field(() => String, { nullable: true })
   zipCode?: string | null;
-
-  @Field(() => String, { nullable: true })
-  parentId?: string | null;
 }
