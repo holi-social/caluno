@@ -29,6 +29,7 @@ import { TemplateBuilderPeriodPicker } from './builder-period-picker';
 import {
   type DataSourceKey,
   FIELD_ORIGIN,
+  type FieldOrigin,
   getFirstOccurrenceLineByFieldId,
   type InvoiceNumberFormat,
   type TableFirstColumnSource,
@@ -212,6 +213,23 @@ function ProfileGapBadge({ t }: { t: ReturnType<typeof useTranslations> }) {
   );
 }
 
+function sourceLabelKey(origin: FieldOrigin | undefined): string {
+  switch (origin) {
+    case 'organization_profile':
+      return 'fieldSource.organizationProfile';
+    case 'rate_settings':
+      return 'fieldSource.rateSettings';
+    case 'yearly_limit':
+      return 'fieldSource.yearlyLimit';
+    case 'generation_time':
+      return 'fieldSource.generationTime';
+    case 'volunteer_profile':
+      return 'fieldSource.volunteerProfile';
+    default:
+      return 'fieldSource.volunteerProfile';
+  }
+}
+
 function FieldRow({
   field,
   line,
@@ -237,13 +255,9 @@ function FieldRow({
     const body = hasValue ? (
       <div className="space-y-0.5">
         <p className="text-base text-foreground">{known}</p>
-        {(origin === 'rate_settings' || origin === 'organization_profile') && (
+        {origin && (
           <p className="text-xs text-muted-foreground">
-            {t(
-              origin === 'rate_settings'
-                ? 'fieldSource.rateSettings'
-                : 'fieldSource.organizationProfile',
-            )}
+            {t(sourceLabelKey(origin))}
           </p>
         )}
       </div>
@@ -269,11 +283,7 @@ function FieldRow({
           {placeholderExample}
         </p>
         <p className="text-xs text-muted-foreground">
-          {t(
-            origin === 'generation_time'
-              ? 'fieldSource.generationTime'
-              : 'fieldSource.volunteerProfile',
-          )}
+          {t(sourceLabelKey(origin))}
         </p>
       </div>
     );
