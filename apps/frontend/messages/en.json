@@ -1148,6 +1148,10 @@
       "noRecurrence": "No recurrence",
       "openShiftDescription": "The shift is visible for your volunteers on the platform. Any of your volunteers can sign up for this shift",
       "openShiftLabel": "Open shift",
+      "recurrenceEndDatePlaceholder": "Pick a date",
+      "recurrenceEnds": "End of series",
+      "recurrenceEndsNever": "Never",
+      "recurrenceEndsOn": "On",
       "recurring": "Recurring shift",
       "timeRangeConstraint": "Shifts must start and end within ({window})."
     },
@@ -1328,6 +1332,8 @@
       "minMaxVolunteers": "Minimum volunteers cannot exceed maximum volunteers",
       "nameRequired": "Name is required",
       "organizationUnitRequired": "Organization unit is required",
+      "recurrenceEndBeforeStart": "End date cannot be before the start date",
+      "recurrenceEndRequired": "End date is required",
       "shiftIdRequired": "Shift ID is required",
       "startTimeRequired": "Start time is required",
       "windowViolation": "Must fall within the event window"
