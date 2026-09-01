@@ -159,9 +159,13 @@ describe('reimbursement-rate resolver unit scoping', () => {
     organizationUnitId: string,
   ): AuthenticatedGraphQLContext =>
     ({
-      user: { id: `test-user-${crypto.randomUUID()}` },
       organizationUnitId,
     }) as AuthenticatedGraphQLContext;
+
+  const sessionFor = (): UserSession =>
+    ({
+      user: { id: `test-user-${crypto.randomUUID()}` },
+    }) as UserSession;
 
   describe('setReimbursementRate', () => {
     it('rejects a caller from a sibling branch targeting another branch', async () => {
@@ -176,6 +180,7 @@ describe('reimbursement-rate resolver unit scoping', () => {
           2_000,
           branchB.id,
           contextFor(branchA.id),
+          sessionFor(),
         ),
       ).rejects.toBeInstanceOf(NotFoundGraphQLError);
     });
@@ -192,6 +197,7 @@ describe('reimbursement-rate resolver unit scoping', () => {
           2_000,
           root.id,
           contextFor(branchA.id),
+          sessionFor(),
         ),
       ).rejects.toBeInstanceOf(NotFoundGraphQLError);
     });
@@ -207,6 +213,7 @@ describe('reimbursement-rate resolver unit scoping', () => {
         2_000,
         branchA.id,
         contextFor(branchA.id),
+        sessionFor(),
       );
       expect(rate.hourlyRateCents).toBe(2_000);
     });
@@ -222,6 +229,7 @@ describe('reimbursement-rate resolver unit scoping', () => {
         2_000,
         branchASub.id,
         contextFor(branchA.id),
+        sessionFor(),
       );
       expect(rate.hourlyRateCents).toBe(2_000);
     });

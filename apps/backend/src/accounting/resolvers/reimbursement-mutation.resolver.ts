@@ -38,6 +38,7 @@ export class ReimbursementMutationResolver {
     @Args('organizationUnitId', { type: () => ID, nullable: true })
     organizationUnitId: string | null | undefined,
     @Context() context: AuthenticatedGraphQLContext,
+    @Session() session: UserSession,
   ): Promise<ReimbursementRate> {
     const organizationId =
       await this.organizationUnitService.findOrganizationIdByUnitId(
@@ -63,7 +64,7 @@ export class ReimbursementMutationResolver {
       organizationId,
       reimbursementTypeId,
       hourlyRateCents,
-      context.user.id,
+      session.user.id,
       organizationUnitId ?? undefined,
     );
     return this.reimbursementRateMapper.toModelOrThrow(rate);
