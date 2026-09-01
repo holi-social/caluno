@@ -86,12 +86,13 @@ export class EventMutationResolver {
     @Args('id', { type: () => ID }) id: string,
     @Args('input') input: UpdateEventInput,
     @Context() context: AuthenticatedGraphQLContext,
+    @Session() session: UserSession,
   ): Promise<Event> {
     const event = await this.eventService.update(
       id,
       context.organizationUnitId,
       input,
-      context.user.id,
+      session.user.id,
     );
     return this.eventMapper.toModelOrThrow(event);
   }
@@ -101,11 +102,12 @@ export class EventMutationResolver {
   async deleteEvent(
     @Args('id', { type: () => ID }) id: string,
     @Context() context: AuthenticatedGraphQLContext,
+    @Session() session: UserSession,
   ): Promise<Event> {
     const event = await this.eventService.delete(
       id,
       context.organizationUnitId,
-      context.user.id,
+      session.user.id,
     );
     return this.eventMapper.toModelOrThrow(event);
   }

@@ -1,4 +1,5 @@
 import { Args, Context, Mutation, Resolver } from '@nestjs/graphql';
+import { Session, type UserSession } from '@thallesp/nestjs-better-auth';
 import { PERMISSIONS } from '../../auth/constants';
 import { Permissions } from '../../auth/decorators/permissions.decorator';
 import type { AuthenticatedGraphQLContext } from '../../graphql/graphql.context';
@@ -20,11 +21,12 @@ export class RequirementProfileMutationResolver {
   async createRequirementProfile(
     @Args('input') input: CreateRequirementProfileInput,
     @Context() context: AuthenticatedGraphQLContext,
+    @Session() session: UserSession,
   ): Promise<RequirementProfile> {
     const item = await this.requirementProfileService.create(
       input,
       context.organizationUnitId,
-      context.user.id,
+      session.user.id,
     );
     return this.requirementProfileMapper.toModelOrThrow(item);
   }
@@ -35,12 +37,13 @@ export class RequirementProfileMutationResolver {
     @Args('id') id: string,
     @Args('input') input: UpdateRequirementProfileInput,
     @Context() context: AuthenticatedGraphQLContext,
+    @Session() session: UserSession,
   ): Promise<RequirementProfile> {
     const item = await this.requirementProfileService.update(
       id,
       context.organizationUnitId,
       input,
-      context.user.id,
+      session.user.id,
     );
     return this.requirementProfileMapper.toModelOrThrow(item);
   }
@@ -50,11 +53,12 @@ export class RequirementProfileMutationResolver {
   async deleteRequirementProfile(
     @Args('id') id: string,
     @Context() context: AuthenticatedGraphQLContext,
+    @Session() session: UserSession,
   ): Promise<RequirementProfile> {
     const item = await this.requirementProfileService.delete(
       id,
       context.organizationUnitId,
-      context.user.id,
+      session.user.id,
     );
     return this.requirementProfileMapper.toModelOrThrow(item);
   }
