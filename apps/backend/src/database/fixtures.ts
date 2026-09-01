@@ -1092,21 +1092,21 @@ const ensureCodeOfConductForm = async (
 };
 
 /**
- * Seeds default contract + invoice document templates for the Playground org
- * (both Pauschale reimbursement types) with the standard volunteer →
+ * Seeds default contract + invoice document templates for an org (both
+ * Pauschale reimbursement types) with the standard volunteer →
  * permission-holder signee chain. Runs on every `db:fixtures` (bootstrap and
- * staging), so a freshly provisioned org never hits "No contract template
- * configured for reimbursement type …" — the coordinator can create documents
- * out of the box and customize the templates in the builder afterwards.
+ * staging) for every accounting-enabled organization, so a freshly provisioned
+ * org never hits "No contract template configured for reimbursement type …" —
+ * the coordinator can create documents out of the box and customize the
+ * templates in the builder afterwards.
  *
  * The body is a minimal but renderable contract/invoice template. Existing
- * templates are left untouched so an org's hand-built templates win.
+ * org-default templates are left untouched so an org's hand-built templates
+ * win.
  */
 const ensureAccountingDocumentTemplates = async (
   db: Database,
   organizationId: string,
-  organizationUnitId: string,
-  createdById: string,
 ): Promise<void> => {
   const accountingManagePermission = await db.query.permissions.findFirst({
     where: { key: PERMISSIONS.ACCOUNTING_MANAGE },
@@ -1592,13 +1592,6 @@ async function seedFixtures() {
     org.rootUnitId,
     admin.id,
     SHOWCASE_OPEN_SHIFT_ID,
-  );
-
-  await ensureAccountingDocumentTemplates(
-    db,
-    org.organizationId,
-    org.rootUnitId,
-    admin.id,
   );
 
   const showcaseFullInviteIds = [
@@ -2091,6 +2084,15 @@ async function seedFixtures() {
     .set({ accountingEnabled: true })
     .returning({ id: schema.organizations.id });
   console.log(`Accounting enabled on ${enabledOrgs.length} organization(s).`);
+
+  // Give every accounting-enabled org default contract + invoice templates so
+  // documents can be created out of the box on a fresh provision.
+  for (const enabledOrg of enabledOrgs) {
+    await ensureAccountingDocumentTemplates(db, enabledOrg.id);
+  }
+  console.log(
+    `Seeded default accounting document templates on ${enabledOrgs.length} organization(s).`,
+  );
 
   await pool.end();
 }
