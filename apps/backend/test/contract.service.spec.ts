@@ -92,6 +92,7 @@ describe('ContractService', () => {
       } as unknown as DocumentNotificationService,
       {
         missingProfileSources: () => Promise.resolve([]),
+        missingOrgProfileSources: () => Promise.resolve([]),
       } as unknown as DocumentProfileRequirementService,
       {
         renderAndAttachPdf: () => Promise.resolve(null),
