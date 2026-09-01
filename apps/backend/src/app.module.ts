@@ -82,7 +82,6 @@ const autoSchemaFile =
 
           return {
             req,
-            user,
             locale,
             organizationUnitId: req.headers['x-organization-unit-id'],
           };

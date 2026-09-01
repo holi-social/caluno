@@ -60,11 +60,12 @@ export class RequirementFormMutationResolver {
   async deleteRequirementForm(
     @Args('id') id: string,
     @Context() context: AuthenticatedGraphQLContext,
+    @Session() session: UserSession,
   ): Promise<RequirementForm> {
     const item = await this.requirementFormService.delete(
       id,
       context.organizationUnitId,
-      context.user.id,
+      session.user.id,
     );
     return this.requirementFormMapper.toModelOrThrow(item);
   }
