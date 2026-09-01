@@ -403,6 +403,7 @@ const ensurePlaygroundOrganization = async (
         address: 'Hauptstraße 1',
         city: 'Berlin',
         zipCode: '10115',
+        legalRep: 'Max Mustermann',
       })
       .returning();
 
@@ -2103,6 +2104,7 @@ async function seedFixtures() {
     if (!rootUnit.address) patch.address = 'Hauptstraße 1';
     if (!rootUnit.city) patch.city = 'Berlin';
     if (!rootUnit.zipCode) patch.zipCode = '10115';
+    if (!rootUnit.legalRep) patch.legalRep = 'Max Mustermann';
     if (Object.keys(patch).length > 0) {
       await db
         .update(schema.organizationUnits)

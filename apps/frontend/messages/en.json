@@ -617,6 +617,8 @@
       "cityPlaceholder": "e.g. Berlin",
       "zipCodeLabel": "Postal code",
       "zipCodePlaceholder": "e.g. 10115",
+      "legalRepLabel": "Legal representative",
+      "legalRepPlaceholder": "e.g. Jane Doe",
       "descriptionLabel": "Description",
       "descriptionPlaceholder": "Describe this organizational unit...",
       "emailLabel": "Email",

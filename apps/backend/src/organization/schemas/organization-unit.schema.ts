@@ -43,6 +43,7 @@ export const organizationUnits = snakeCase.table(
     address: text('address'),
     city: text('city'),
     zipCode: text('zip_code'),
+    legalRep: text('legal_rep'),
     requiredMembershipRequirementProfileId: uuid(
       'required_membership_requirement_profile_id',
     ).references(() => requirementProfiles.id, { onDelete: 'set null' }),

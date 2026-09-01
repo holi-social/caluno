@@ -53,6 +53,7 @@ query GetOrganizationUnit($id: String!) {
     address
     city
     zipCode
+    legalRep
     organizationId
     requiredForms {
       form {
@@ -175,6 +176,8 @@ query GetMyOrganizationUnits {
     description
     logoUrl
     address
+    city
+    legalRep
     parent {
       id
     }
@@ -196,6 +199,8 @@ query GetMyAdminstableOrganizationUnits {
     description
     logoUrl
     address
+    city
+    legalRep
     parent {
       id
     }
@@ -217,6 +222,8 @@ query GetMyCheckInAdministrableOrganizationUnits {
     description
     logoUrl
     address
+    city
+    legalRep
     parent {
       id
     }
@@ -319,6 +326,7 @@ mutation UpdateOrganizationUnit(
     address
     city
     zipCode
+    legalRep
     parent {
       id
     }

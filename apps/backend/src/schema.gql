@@ -162,6 +162,7 @@ input CreateOrganizationUnitInput {
   city: String
   contactEmail: String
   description: String
+  legalRep: String
   logoFileId: String
   name: String!
   organizationId: String!
@@ -733,6 +734,7 @@ type OrganizationUnit {
   deletedAt: DateTime
   description: String
   id: ID!
+  legalRep: String
   logoUrl: String
   memberCount: Int!
   myMembershipState: JoinStatus!
@@ -1370,6 +1372,7 @@ input UpdateOrganizationUnitInput {
   city: String
   contactEmail: String
   description: String
+  legalRep: String
   logoFileId: String
   name: String
   organizationId: String!
