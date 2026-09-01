@@ -152,6 +152,42 @@ export function OrgUnitFormContent({
       </Field>
 
       <Field>
+        <FieldLabel htmlFor="city">{t('cityLabel')}</FieldLabel>
+        <Input
+          id="city"
+          placeholder={t('cityPlaceholder')}
+          disabled={isPending}
+          aria-invalid={!!errors.city}
+          {...register('city')}
+        />
+        {errors.city && <FieldError>{errors.city.message}</FieldError>}
+      </Field>
+
+      <Field>
+        <FieldLabel htmlFor="zipCode">{t('zipCodeLabel')}</FieldLabel>
+        <Input
+          id="zipCode"
+          placeholder={t('zipCodePlaceholder')}
+          disabled={isPending}
+          aria-invalid={!!errors.zipCode}
+          {...register('zipCode')}
+        />
+        {errors.zipCode && <FieldError>{errors.zipCode.message}</FieldError>}
+      </Field>
+
+      <Field>
+        <FieldLabel htmlFor="legalRep">{t('legalRepLabel')}</FieldLabel>
+        <Input
+          id="legalRep"
+          placeholder={t('legalRepPlaceholder')}
+          disabled={isPending}
+          aria-invalid={!!errors.legalRep}
+          {...register('legalRep')}
+        />
+        {errors.legalRep && <FieldError>{errors.legalRep.message}</FieldError>}
+      </Field>
+
+      <Field>
         <FieldLabel htmlFor="description">{t('descriptionLabel')}</FieldLabel>
         <Textarea
           id="description"

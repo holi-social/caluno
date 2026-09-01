@@ -613,6 +613,12 @@
     "form": {
       "addressLabel": "Address",
       "addressPlaceholder": "e.g. 123 Main St, City",
+      "cityLabel": "City",
+      "cityPlaceholder": "e.g. Berlin",
+      "zipCodeLabel": "Postal code",
+      "zipCodePlaceholder": "e.g. 10115",
+      "legalRepLabel": "Legal representative",
+      "legalRepPlaceholder": "e.g. Jane Doe",
       "descriptionLabel": "Description",
       "descriptionPlaceholder": "Describe this organizational unit...",
       "emailLabel": "Email",
@@ -700,7 +706,8 @@
         "iban": "For expense and allowance payments",
         "lastName": "As on your ID",
         "preferredName": "If you'd like to be called something else",
-        "bic": "Bank identifier code (BIC) for your account"
+        "bic": "Bank identifier code (BIC) for your account",
+        "taxId": "Your tax identification number (for expense reports)"
       }
     },
     "language": "Language",
@@ -908,6 +915,7 @@
       "gender": "Gender",
       "iban": "IBAN",
       "bic": "BIC",
+      "taxId": "Tax ID",
       "infoText": "Info text",
       "labelLabel": "Label",
       "labelPlaceholder": "e.g. Favorite color",
@@ -1088,7 +1096,25 @@
     }
   },
   "Settings": {
-    "title": "Settings"
+    "title": "Settings",
+    "organizationProfile": {
+      "title": "Organization profile",
+      "subtitle": "Update your organization's address and contact details.",
+      "addressLabel": "Organization address",
+      "addressPlaceholder": "123 Main St",
+      "cityLabel": "City",
+      "cityPlaceholder": "Berlin",
+      "zipCodeLabel": "Postal code",
+      "zipCodePlaceholder": "10115",
+      "contactEmailLabel": "Contact email",
+      "contactEmailPlaceholder": "contact@organization.org",
+      "phoneLabel": "Phone",
+      "phonePlaceholder": "+1 (555) 123-4567",
+      "websiteLabel": "Website",
+      "websitePlaceholder": "https://organization.org",
+      "saved": "Organization updated",
+      "saveFailed": "Failed to update organization"
+    }
   },
   "Shift": {
     "action": {
@@ -1713,6 +1739,7 @@
         "contractSigning": "Sign contracts",
         "timesheetGenerate": "Create timesheets",
         "timesheetSigning": "Sign timesheets",
+        "needsTimesheet": "Timesheet needed",
         "readyToGo": "Ready to go"
       },
       "toolbar": {
@@ -1876,6 +1903,10 @@
         "sendErrorToast": "Couldn't send the contract to {name}. Please try again.",
         "loadErrorTitle": "Couldn't load profile data",
         "loadError": "{name}'s profile data couldn't be loaded. Please close this and try again.",
+        "sendErrorTitle": "Couldn't send the contract",
+        "sendError": "The contract couldn't be sent to {name}. Please try again.",
+        "noTemplateCta": "Create a contract template",
+        "completeOrgProfileCta": "Complete your organization profile",
         "hoursUnitMonth": "month",
         "hoursUnitWeek": "week",
         "hoursUnitHint": "per {unit}",
@@ -1896,6 +1927,10 @@
         "sendErrorToast": "Couldn't send the invoice to {name}. Please try again.",
         "loadErrorTitle": "Couldn't load invoice data",
         "loadError": "{name}'s invoice data couldn't be loaded. Please close this and try again.",
+        "sendErrorTitle": "Couldn't send the invoice",
+        "sendError": "The invoice couldn't be sent to {name}. Please try again.",
+        "noTemplateCta": "Create an invoice template",
+        "completeOrgProfileCta": "Complete your organization profile",
         "nameFieldLabel": "Name",
         "periodFieldLabel": "Billing period",
         "periodPicker": {
@@ -1956,6 +1991,11 @@
         "saveButton": "Save template",
         "saveSuccessToast": "Template saved",
         "saveErrorToast": "The template could not be saved. Please try again.",
+        "orgProfile": {
+          "blockedMessage": "Your organization info is missing details this template needs. Complete the organization info before saving.",
+          "blockedCta": "Complete organization info",
+          "blockedAskSomeone": "Ask someone who can manage the organization to complete the organization info."
+        },
         "previewScrollRegionLabel": "Document preview, scrollable",
         "preview": {
           "disclaimerBadge": "Preview",
