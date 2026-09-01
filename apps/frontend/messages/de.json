@@ -1088,7 +1088,25 @@
     }
   },
   "Settings": {
-    "title": "Einstellungen"
+    "title": "Einstellungen",
+    "organizationProfile": {
+      "title": "Organisationsprofil",
+      "subtitle": "Aktualisiere die Adresse und Kontaktdaten deiner Organisation.",
+      "addressLabel": "Adresse der Organisation",
+      "addressPlaceholder": "Musterstraße 1",
+      "cityLabel": "Stadt",
+      "cityPlaceholder": "Berlin",
+      "zipCodeLabel": "Postleitzahl",
+      "zipCodePlaceholder": "10115",
+      "contactEmailLabel": "Kontakt-E-Mail",
+      "contactEmailPlaceholder": "kontakt@organisation.org",
+      "phoneLabel": "Telefon",
+      "phonePlaceholder": "+49 30 12345678",
+      "websiteLabel": "Website",
+      "websitePlaceholder": "https://organisation.org",
+      "saved": "Organisation aktualisiert",
+      "saveFailed": "Organisation konnte nicht aktualisiert werden"
+    }
   },
   "Shift": {
     "action": {

@@ -1088,7 +1088,25 @@
     }
   },
   "Settings": {
-    "title": "Settings"
+    "title": "Settings",
+    "organizationProfile": {
+      "title": "Organization profile",
+      "subtitle": "Update your organization's address and contact details.",
+      "addressLabel": "Organization address",
+      "addressPlaceholder": "123 Main St",
+      "cityLabel": "City",
+      "cityPlaceholder": "Berlin",
+      "zipCodeLabel": "Postal code",
+      "zipCodePlaceholder": "10115",
+      "contactEmailLabel": "Contact email",
+      "contactEmailPlaceholder": "contact@organization.org",
+      "phoneLabel": "Phone",
+      "phonePlaceholder": "+1 (555) 123-4567",
+      "websiteLabel": "Website",
+      "websitePlaceholder": "https://organization.org",
+      "saved": "Organization updated",
+      "saveFailed": "Failed to update organization"
+    }
   },
   "Shift": {
     "action": {
