@@ -30,6 +30,8 @@ export * from './react/hooks/use-available-shift-instances-infinite';
 export * from './react/hooks/use-block';
 export * from './react/hooks/use-bundle-download';
 export * from './react/hooks/use-check-in';
+export * from './react/hooks/use-check-in-shift-instances';
+export * from './react/hooks/use-check-in-shifts';
 export * from './react/hooks/use-check-out';
 export * from './react/hooks/use-contracts';
 export * from './react/hooks/use-create-requirement-profile-submission';
