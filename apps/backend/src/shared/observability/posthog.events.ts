@@ -119,6 +119,10 @@ export const POSTHOG_EVENT_REGISTRY = {
     'organization_create',
     'An organization is created.',
   ),
+  organization_update: defineEvent(
+    'organization_update',
+    'An organization profile field is updated.',
+  ),
   organization_join: defineEvent(
     'organization_join',
     'A user becomes a member of an organization for the first time.',
