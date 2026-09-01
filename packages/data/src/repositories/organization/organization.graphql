@@ -9,6 +9,8 @@ query GetOrganization($id: String!) {
     contactEmail
     phone
     address
+    city
+    zipCode
     createdAt
     updatedAt
   }
@@ -257,6 +259,16 @@ mutation CreateOrganization($input: CreateOrganizationInput!) {
     root {
       id
     }
+  }
+}
+
+mutation UpdateOrganization($id: ID!, $input: UpdateOrganizationInput!) {
+  updateOrganization(id: $id, input: $input) {
+    id
+    name
+    address
+    city
+    zipCode
   }
 }
 
