@@ -54,6 +54,7 @@ describe('GraphQL API Integration', () => {
             }
           }
         `,
+          headers: { 'x-organization-unit-id': organizationUnitId },
           variables: {
             input: {
               organizationId,
@@ -64,6 +65,7 @@ describe('GraphQL API Integration', () => {
             },
           },
         },
+
         'createRequirement',
       );
 
