@@ -2344,7 +2344,7 @@ export class ShiftService {
     });
   }
 
-  async findShiftsForWeek(
+  async findInstancesForOrgUnitInRange(
     organizationUnitId: string,
     startsAfter: Date | null,
     endsBefore: Date | null,
