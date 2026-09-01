@@ -1990,6 +1990,11 @@
         "saveButton": "Vorlage speichern",
         "saveSuccessToast": "Vorlage gespeichert",
         "saveErrorToast": "Die Vorlage konnte nicht gespeichert werden. Bitte erneut versuchen.",
+        "orgProfile": {
+          "blockedMessage": "In deinen Organisationsdaten fehlen Angaben, die diese Vorlage benötigt. Vervollständige die Organisationsdaten, bevor du speicherst.",
+          "blockedCta": "Organisationsdaten vervollständigen",
+          "blockedAskSomeone": "Bitte jemanden, der die Organisation verwalten kann, die Organisationsdaten zu vervollständigen."
+        },
         "previewScrollRegionLabel": "Dokumentvorschau, scrollbar",
         "preview": {
           "disclaimerBadge": "Vorschau",
