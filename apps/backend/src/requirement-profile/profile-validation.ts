@@ -32,6 +32,11 @@ export const validateSystemKeyValue = (
   label: string,
   minAge: number | null,
 ): void => {
+  // Empty means "no value yet" — not an invalid value. Profile fields can be
+  // left blank and are only enforced at the point they're actually needed (the
+  // document sign gate), so don't reject an empty optional field here.
+  if (!value) return;
+
   switch (systemKey) {
     case 'name':
     case 'lastname':
