@@ -1879,6 +1879,7 @@
         "sendErrorTitle": "Vertrag konnte nicht gesendet werden",
         "sendError": "Der Vertrag konnte nicht an {name} gesendet werden. Bitte erneut versuchen.",
         "noTemplateCta": "Vertragsvorlage erstellen",
+        "completeOrgProfileCta": "Organisationsprofil vervollständigen",
         "hoursUnitMonth": "Monat",
         "hoursUnitWeek": "Woche",
         "hoursUnitHint": "pro {unit}",
@@ -1902,6 +1903,7 @@
         "sendErrorTitle": "Stundennachweis konnte nicht gesendet werden",
         "sendError": "Der Stundennachweis konnte nicht an {name} gesendet werden. Bitte erneut versuchen.",
         "noTemplateCta": "Stundennachweis-Vorlage erstellen",
+        "completeOrgProfileCta": "Organisationsprofil vervollständigen",
         "nameFieldLabel": "Name",
         "periodFieldLabel": "Stundennachweiszeitraum",
         "periodPicker": {

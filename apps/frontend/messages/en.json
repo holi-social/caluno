@@ -1879,6 +1879,7 @@
         "sendErrorTitle": "Couldn't send the contract",
         "sendError": "The contract couldn't be sent to {name}. Please try again.",
         "noTemplateCta": "Create a contract template",
+        "completeOrgProfileCta": "Complete your organization profile",
         "hoursUnitMonth": "month",
         "hoursUnitWeek": "week",
         "hoursUnitHint": "per {unit}",
@@ -1902,6 +1903,7 @@
         "sendErrorTitle": "Couldn't send the invoice",
         "sendError": "The invoice couldn't be sent to {name}. Please try again.",
         "noTemplateCta": "Create an invoice template",
+        "completeOrgProfileCta": "Complete your organization profile",
         "nameFieldLabel": "Name",
         "periodFieldLabel": "Billing period",
         "periodPicker": {
