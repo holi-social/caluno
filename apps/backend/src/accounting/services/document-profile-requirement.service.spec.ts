@@ -101,12 +101,12 @@ describe('DocumentProfileRequirementService', () => {
     );
   });
 
-  it('reports org city as missing when the org entity has no city, but not name/address', async () => {
+  it('reports org city as missing when the org unit has no city, but not name/address', async () => {
     const dbWithOrg = {
       query: {
-        organizations: {
+        organizationUnits: {
           findFirst: () =>
-            Promise.resolve({ id: 'org-1', name: 'Playground', address: 'Straße 1', city: '' }),
+            Promise.resolve({ id: 'unit-1', name: 'Playground', address: 'Straße 1', city: '' }),
         },
       },
     } as never;
@@ -127,7 +127,7 @@ describe('DocumentProfileRequirementService', () => {
       },
     };
     // name is always present, address is present, city is empty → only org_city.
-    expect(await serviceWithOrg.missingOrgProfileSources('org-1', body)).toEqual(
+    expect(await serviceWithOrg.missingOrgProfileSources('unit-1', body)).toEqual(
       ['org_city'],
     );
   });
