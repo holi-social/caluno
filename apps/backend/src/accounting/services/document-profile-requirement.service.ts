@@ -107,6 +107,28 @@ export class DocumentProfileRequirementService {
 
   /**
    * The org-profile source keys (e.g. org_city/org_address) a document's
+   * template needs that the given org unit has not yet supplied. Pure and
+   * synchronous so callers that already have the unit (e.g. a batched
+   * DataLoader) can skip the extra per-row query in `missingOrgProfileSources`.
+   */
+  missingOrgProfileSourcesForUnit(
+    unit: Record<string, unknown> | undefined,
+    templateBody: unknown,
+  ): string[] {
+    const required = this.requiredOrgSources(templateBody);
+    if (required.length === 0) return [];
+    if (!unit) return [];
+
+    return required.filter((source) => {
+      const column = ORG_SOURCE_TO_ORG_COLUMN[source];
+      if (column === 'name') return false; // always present
+      const value = unit[column];
+      return typeof value !== 'string' || value.trim() === '';
+    });
+  }
+
+  /**
+   * The org-profile source keys (e.g. org_city/org_address) a document's
    * template needs that the org's root/creating unit has not yet supplied.
    * Empty when the unit's profile is complete enough to create the document.
    * Reads the unit by id — the same entity the overview Edit edits, so what an
@@ -117,20 +139,15 @@ export class DocumentProfileRequirementService {
     organizationUnitId: string | null | undefined,
     templateBody: unknown,
   ): Promise<string[]> {
-    const required = this.requiredOrgSources(templateBody);
-    if (required.length === 0) return [];
+    if (this.requiredOrgSources(templateBody).length === 0) return [];
     const unit = await this.db.query.organizationUnits.findFirst({
       where: organizationUnitId
         ? { id: organizationUnitId }
         : { organizationId, parentId: { isNull: true } },
     });
-    if (!unit) return [];
-
-    return required.filter((source) => {
-      const column = ORG_SOURCE_TO_ORG_COLUMN[source];
-      if (column === 'name') return false; // always present
-      const value = (unit as unknown as Record<string, unknown>)[column];
-      return typeof value !== 'string' || value.trim() === '';
-    });
+    return this.missingOrgProfileSourcesForUnit(
+      unit as unknown as Record<string, unknown> | undefined,
+      templateBody,
+    );
   }
 }

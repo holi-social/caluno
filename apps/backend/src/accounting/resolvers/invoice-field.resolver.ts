@@ -23,6 +23,7 @@ import type { InvoiceStatusChangeEntity } from '../schemas/invoice-status-change
 import type { InvoiceTimeEntryEntity } from '../schemas/invoice-time-entry.schema';
 import type { ReimbursementTypeEntity } from '../schemas/reimbursement-type.schema';
 import { DocumentProfileRequirementService } from '../services/document-profile-requirement.service';
+import { AccountingOrganizationLoader } from './accounting-organization.loader';
 import { AccountingUserLoader } from './accounting-user.loader';
 import { InvoiceLoader } from './invoice.loader';
 
@@ -137,22 +138,28 @@ export class InvoiceFieldResolver {
   @ResolveField(() => [String])
   async missingOrgProfileFields(
     @Parent() invoice: MaybeWithRelations,
-    @Loader(InvoiceLoader) loader: InvoiceLoader,
+    @Loader(InvoiceLoader) invoiceLoader: InvoiceLoader,
+    @Loader(AccountingOrganizationLoader)
+    orgLoader: AccountingOrganizationLoader,
   ): Promise<string[]> {
     let templateBody: unknown = invoice.documentTemplate?.body;
     let organizationId = invoice.documentTemplate?.organizationId;
     let organizationUnitId: string | undefined =
       invoice.organizationUnitId ?? undefined;
     if (!templateBody || !organizationId) {
-      const full = await loader.invoiceWithRelationsById.load(invoice.id);
+      const full = await invoiceLoader.invoiceWithRelationsById.load(
+        invoice.id,
+      );
       templateBody = full.documentTemplate?.body;
       organizationId = full.documentTemplate?.organizationId;
       organizationUnitId = full.organizationUnitId ?? undefined;
     }
     if (!organizationId) return [];
-    return this.documentProfileRequirementService.missingOrgProfileSources(
-      organizationId,
-      organizationUnitId,
+    const unit = organizationUnitId
+      ? await orgLoader.organizationUnitById.load(organizationUnitId)
+      : await orgLoader.rootUnitByOrganizationId.load(organizationId);
+    return this.documentProfileRequirementService.missingOrgProfileSourcesForUnit(
+      (unit ?? undefined) as Record<string, unknown> | undefined,
       templateBody,
     );
   }
