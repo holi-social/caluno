@@ -9,10 +9,12 @@ import { useMemo, useState } from 'react';
 import { UserCard } from '@/components/user-card';
 import { useRouter } from '@/i18n/navigation';
 import {
+  applyOrgUnit,
   type CheckInSelection,
   pickInitialInstance,
   toCheckInInstance,
 } from '../../check-in-selection';
+import { OrgUnitSheet } from './org-unit-sheet';
 import { ShiftInstanceStepper } from './shift-instance-stepper';
 
 type ManualCheckInPageProps = {
@@ -41,6 +43,9 @@ export function ManualCheckInPage({
     shiftInstanceId: null,
   }));
   const [didPreselect, setDidPreselect] = useState(false);
+  const [openSheet, setOpenSheet] = useState<
+    'orgUnit' | 'date' | 'shift' | null
+  >(null);
 
   // The visible month drives the fetch; it also feeds the calendar dots and
   // the day list, so one range query serves every consumer on the page.
@@ -88,12 +93,22 @@ export function ManualCheckInPage({
           selection={selection}
           orgUnits={orgUnits}
           instances={instances}
-          onOpenOrgUnit={() => {}}
+          onOpenOrgUnit={() => setOpenSheet('orgUnit')}
           onOpenDate={() => {}}
           onOpenShift={() => {}}
         />
 
         <UserCard user={volunteer} size="lg" />
+
+        <OrgUnitSheet
+          open={openSheet === 'orgUnit'}
+          onOpenChange={(open) => setOpenSheet(open ? 'orgUnit' : null)}
+          orgUnits={orgUnits}
+          selectedOrgUnitId={selection.orgUnitId}
+          onSelect={(orgUnitId) =>
+            setSelection((current) => applyOrgUnit(current, orgUnitId))
+          }
+        />
       </CardContent>
     </Card>
   );
