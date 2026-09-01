@@ -273,6 +273,26 @@ query GetPendingInvoiceSignee($invoiceId: ID!) {
   }
 }
 
+query GetVolunteersNeedingTimesheets(
+  $periodStart: DateTime
+  $periodEnd: DateTime
+) {
+  volunteersNeedingTimesheets(
+    periodStart: $periodStart
+    periodEnd: $periodEnd
+  ) {
+    volunteer {
+      id
+      name
+    }
+    reimbursementType {
+      id
+      key
+    }
+    eligibleHours
+  }
+}
+
 query GetEligibleTimeEntriesForInvoice(
   $volunteerId: ID!
   $reimbursementTypeId: ID!

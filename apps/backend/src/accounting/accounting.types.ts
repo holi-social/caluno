@@ -24,6 +24,13 @@ export type EffectiveRate = {
   isOverride: boolean;
 };
 
+/** A volunteer with at least one eligible (unclaimed, completed, in-period) time entry. */
+export type EligibleTimesheetVolunteer = {
+  volunteerId: string;
+  reimbursementTypeId: string;
+  eligibleHours: number;
+};
+
 export type YearlyUsage = {
   usedCents: number;
   limitCents: number;

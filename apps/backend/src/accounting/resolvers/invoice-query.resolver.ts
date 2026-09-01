@@ -11,12 +11,19 @@ import type { AuthenticatedGraphQLContext } from '../../graphql/graphql.context'
 import { OrganizationUnitService } from '../../organization/organization-unit.service';
 import { TimeEntryMapper } from '../../time-tracking/mappers/time-entry.mapper';
 import { TimeEntry } from '../../time-tracking/models/time-entry.model';
+import { UserMapper } from '../../user/mappers/user.mapper';
+import { UserService } from '../../user/user.service';
 import type { InvoiceFilter } from '../accounting.types';
 import { InvoiceFilterInput } from '../inputs/invoice-filter.input';
-import { InvoiceMapper } from '../mappers';
+import { InvoiceMapper, ReimbursementTypeMapper } from '../mappers';
 import { Invoice } from '../models/invoice.model';
 import { PendingSignee } from '../models/pending-signee.model';
-import { AccountingOrgAccessService, InvoiceService } from '../services';
+import { VolunteerNeedsTimesheet } from '../models/volunteer-needs-timesheet.model';
+import {
+  AccountingOrgAccessService,
+  InvoiceService,
+  ReimbursementRateService,
+} from '../services';
 
 function toInvoiceFilter(
   filter: InvoiceFilterInput | null | undefined,
@@ -39,6 +46,10 @@ export class InvoiceQueryResolver {
     private readonly authService: AuthService,
     private readonly organizationUnitService: OrganizationUnitService,
     private readonly accountingOrgAccessService: AccountingOrgAccessService,
+    private readonly userMapper: UserMapper,
+    private readonly userService: UserService,
+    private readonly reimbursementTypeMapper: ReimbursementTypeMapper,
+    private readonly reimbursementRateService: ReimbursementRateService,
   ) {}
 
   @Query(() => Invoice)
@@ -116,6 +127,55 @@ export class InvoiceQueryResolver {
       periodEnd ?? undefined,
     );
     return this.timeEntryMapper.toArray(entries);
+  }
+
+  @Permissions(PERMISSIONS.ACCOUNTING_MANAGE)
+  @Query(() => [VolunteerNeedsTimesheet])
+  async volunteersNeedingTimesheets(
+    @Args('periodStart', { type: () => Date, nullable: true })
+    periodStart: Date | null | undefined,
+    @Args('periodEnd', { type: () => Date, nullable: true })
+    periodEnd: Date | null | undefined,
+    @Context() context: AuthenticatedGraphQLContext,
+  ): Promise<VolunteerNeedsTimesheet[]> {
+    const rows = await this.invoiceService.findVolunteersNeedingTimesheets(
+      context.organizationUnitId,
+      periodStart ?? undefined,
+      periodEnd ?? undefined,
+    );
+    if (rows.length === 0) return [];
+
+    const [users, reimbursementTypes] = await Promise.all([
+      this.userService.findByIds(rows.map((row) => row.volunteerId)),
+      this.reimbursementRateService.findReimbursementTypes(),
+    ]);
+    const userById = new Map(users.map((user) => [user.id, user]));
+    const reimbursementTypeById = new Map(
+      reimbursementTypes.map((type) => [type.id, type]),
+    );
+
+    return rows.map((row) => {
+      const user = userById.get(row.volunteerId);
+      const reimbursementType = reimbursementTypeById.get(
+        row.reimbursementTypeId,
+      );
+      if (!user) {
+        throw new NotFoundGraphQLError(
+          `Volunteer with ID ${row.volunteerId} not found`,
+        );
+      }
+      if (!reimbursementType) {
+        throw new NotFoundGraphQLError(
+          `Reimbursement type with ID ${row.reimbursementTypeId} not found`,
+        );
+      }
+      return {
+        volunteer: this.userMapper.toModelOrThrow(user),
+        reimbursementType:
+          this.reimbursementTypeMapper.toModelOrThrow(reimbursementType),
+        eligibleHours: row.eligibleHours,
+      };
+    });
   }
 
   private async assertCanViewDocument(

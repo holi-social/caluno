@@ -15,6 +15,7 @@ import {
 import { PostHogService } from '../../shared/observability/posthog.service';
 import type { TimeEntryEntity } from '../../time-tracking/schemas/time-entry.schema';
 import type {
+  EligibleTimesheetVolunteer,
   InvoiceFilter,
   InvoiceWithRelations,
   PendingSignee,
@@ -139,6 +140,61 @@ export class InvoiceService {
     return rows.map((row) => row.timeEntry);
   }
 
+  /**
+   * Volunteers in the unit that still need a timesheet: they have at least
+   * one eligible (unclaimed, completed, in-period) time entry, grouped by
+   * volunteer and reimbursement type with the summed eligible hours.
+   */
+  async findVolunteersNeedingTimesheets(
+    organizationUnitId: string,
+    periodStart?: Date,
+    periodEnd?: Date,
+  ): Promise<EligibleTimesheetVolunteer[]> {
+    const conditions = [
+      eq(schema.timeEntries.organizationUnitId, organizationUnitId),
+      isNotNull(schema.timeEntries.endedAt),
+      isNotNull(schema.timeEntries.reimbursementTypeId),
+      isNull(schema.invoiceTimeEntries.id),
+    ];
+    if (periodStart) {
+      conditions.push(gte(schema.timeEntries.startedAt, periodStart));
+    }
+    if (periodEnd) {
+      conditions.push(lt(schema.timeEntries.startedAt, periodEnd));
+    }
+
+    const rows = await this.db
+      .select({ timeEntry: schema.timeEntries })
+      .from(schema.timeEntries)
+      .leftJoin(
+        schema.invoiceTimeEntries,
+        eq(schema.invoiceTimeEntries.timeEntryId, schema.timeEntries.id),
+      )
+      .where(and(...conditions));
+
+    const hoursByVolunteerType = new Map<string, number>();
+    for (const row of rows) {
+      const entry = row.timeEntry;
+      if (!entry.endedAt || !entry.reimbursementTypeId) continue;
+      const key = `${entry.volunteerId}:${entry.reimbursementTypeId}`;
+      const hours =
+        (entry.endedAt.getTime() - entry.startedAt.getTime()) / 3_600_000;
+      hoursByVolunteerType.set(
+        key,
+        (hoursByVolunteerType.get(key) ?? 0) + hours,
+      );
+    }
+
+    return Array.from(hoursByVolunteerType, ([key, eligibleHours]) => {
+      const [volunteerId, reimbursementTypeId] = key.split(':');
+      return {
+        volunteerId,
+        reimbursementTypeId,
+        eligibleHours: Math.round(eligibleHours * 100) / 100,
+      };
+    });
+  }
+
   async createInvoice(
     organizationId: string,
     input: CreateInvoiceInput,
@@ -194,10 +250,11 @@ export class InvoiceService {
     // address) before one is created — otherwise the PDF comes out with gaps
     // the org can't fix inline. The account manager is told to complete the
     // unit's profile first.
-    const missingOrg = await this.documentProfileRequirementService.missingOrgProfileSources(
-      input.organizationUnitId ?? '',
-      template.body,
-    );
+    const missingOrg =
+      await this.documentProfileRequirementService.missingOrgProfileSources(
+        input.organizationUnitId ?? '',
+        template.body,
+      );
     if (missingOrg.length > 0) {
       throw new BadRequestGraphQLError(
         'Your organization is missing details required for this document: ' +

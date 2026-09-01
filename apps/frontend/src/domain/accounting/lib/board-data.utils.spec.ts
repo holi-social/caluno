@@ -288,21 +288,21 @@ describe('monthsInRange', () => {
 });
 
 describe('buildBoardVolunteers', () => {
+  const noDocsVolunteer = {
+    volunteer: { id: 'v-1', name: 'Anna Müller', image: null },
+    usageByType: [
+      {
+        usedCents: 0,
+        limitCents: 84_000,
+        remainingCents: 84_000,
+        reimbursementType: ehrenamtType,
+      },
+    ],
+  };
+
   it('returns no documents for a volunteer with no contract or invoice', () => {
     const volunteers = buildBoardVolunteers({
-      rosterUsage: [
-        {
-          volunteer: { id: 'v-1', name: 'Anna Müller', image: null },
-          usageByType: [
-            {
-              usedCents: 0,
-              limitCents: 84_000,
-              remainingCents: 84_000,
-              reimbursementType: ehrenamtType,
-            },
-          ],
-        },
-      ],
+      rosterUsage: [noDocsVolunteer],
       contracts: [],
       invoices: [],
       year: 2026,
@@ -310,6 +310,19 @@ describe('buildBoardVolunteers', () => {
     });
     expect(volunteers).toHaveLength(1);
     expect(volunteers[0]?.documents).toEqual([]);
+    expect(volunteers[0]?.needsTimesheet).toBe(false);
+  });
+
+  it('flags a volunteer with eligible time entries as needing a timesheet', () => {
+    const volunteers = buildBoardVolunteers({
+      rosterUsage: [noDocsVolunteer],
+      contracts: [],
+      invoices: [],
+      year: 2026,
+      locale: 'de',
+      needsTimesheetVolunteers: new Set(['v-1']),
+    });
+    expect(volunteers[0]?.needsTimesheet).toBe(true);
   });
 
   it('maps the active contract and skips timesheet placeholders when there is no invoice', () => {

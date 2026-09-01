@@ -182,6 +182,8 @@ export interface BuildBoardVolunteersInput {
   year: number;
   locale: string;
   dateRange?: { from?: Date; to?: Date };
+  /** Volunteer ids that still have eligible (unclaimed, completed, in-period) time entries — i.e. they still need a timesheet. */
+  needsTimesheetVolunteers?: ReadonlySet<string>;
 }
 
 export function buildBoardVolunteers({
@@ -191,6 +193,7 @@ export function buildBoardVolunteers({
   year,
   locale,
   dateRange,
+  needsTimesheetVolunteers,
 }: BuildBoardVolunteersInput): BoardVolunteer[] {
   return rosterUsage.map((entry) => {
     const documents: BoardDocument[] = [];
@@ -252,6 +255,8 @@ export function buildBoardVolunteers({
       name: entry.volunteer.name,
       initials: getInitials(entry.volunteer.name),
       pauschale: primaryType,
+      needsTimesheet:
+        needsTimesheetVolunteers?.has(entry.volunteer.id) ?? false,
       usedAmount: centsToEuros(
         entry.usageByType.reduce((sum, u) => sum + u.usedCents, 0),
       ),
