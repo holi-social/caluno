@@ -503,7 +503,10 @@ export class DocumentRenderingService {
     const lines: (TemplateLineShape | undefined)[] = [
       body.header?.orgIdentityLine,
       ...(body.header?.metaLines ?? []),
-      ...(body.blocks ?? []).flatMap((block) => [block.line, ...(block.lines ?? [])]),
+      ...(body.blocks ?? []).flatMap((block) => [
+        block.line,
+        ...(block.lines ?? []),
+      ]),
       body.footer?.closingLine,
     ];
     for (const line of lines) {
