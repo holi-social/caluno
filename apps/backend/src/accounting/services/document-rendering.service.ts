@@ -449,6 +449,10 @@ export class DocumentRenderingService {
           ? this.formatInvoiceNumber(
               template.invoiceNumberFormat,
               new Date(document.periodStart),
+              this.findManualFieldValue(
+                (template.body ?? {}) as TemplateBodyShape,
+                'kostenstelle',
+              ),
             )
           : '',
       generated_date: this.formatDate(new Date()),
@@ -463,6 +467,7 @@ export class DocumentRenderingService {
   private formatInvoiceNumber(
     invoiceFormat: string | null | undefined,
     periodStart: Date,
+    kostenstelle: string | undefined,
   ): string {
     const yyyy = periodStart.getUTCFullYear();
     const mm = String(periodStart.getUTCMonth() + 1).padStart(2, '0');
@@ -472,14 +477,40 @@ export class DocumentRenderingService {
       case 'date-number':
         return `${yyyy}${mm}${dd}-${seq}`;
       case 'date-kostenstelle-number':
-        return `${yyyy}${mm}${dd}-${seq}`;
+        return `${yyyy}${mm}${dd}-${kostenstelle ?? '—'}-${seq}`;
       case 'compact-date-number':
         return `${String(yyyy).slice(2)}${mm}${dd}${seq}`;
       case 'kostenstelle-month-year-number':
-        return `${mm}.${yyyy}-${seq}`;
+        return `${kostenstelle ?? '—'}-${mm}.${yyyy}-${seq}`;
       default:
         return `${yyyy}${mm}${dd}-${seq}`;
     }
+  }
+
+  private findManualFieldValue(
+    body: TemplateBodyShape,
+    fieldId: string,
+  ): string | undefined {
+    const findIn = (fields?: TemplateFieldShape[]): string | undefined => {
+      const field = fields?.find(
+        (f) => f.id === fieldId && f.value.kind === 'manual-template',
+      );
+      return field?.value.kind === 'manual-template'
+        ? field.value.value
+        : undefined;
+    };
+
+    const lines: (TemplateLineShape | undefined)[] = [
+      body.header?.orgIdentityLine,
+      ...(body.header?.metaLines ?? []),
+      ...(body.blocks ?? []).flatMap((block) => [block.line, ...(block.lines ?? [])]),
+      body.footer?.closingLine,
+    ];
+    for (const line of lines) {
+      const value = findIn(line?.fields);
+      if (value !== undefined) return value;
+    }
+    return undefined;
   }
 
   /** Invoice table rows: task, begin, end, hours, rate — mirroring the frontend's eligible-hours preview. */
