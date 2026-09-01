@@ -240,7 +240,8 @@ export function ContractCreationModal({
   const sendErrorIsOrgProfile = /organization is missing/i.test(
     sendError ?? '',
   );
-  const completeOrgProfileCta = () => router.push(`/admin/${orgUId}/settings`);
+  const completeOrgProfileCta = () =>
+    router.push(`/admin/${orgUId}/settings/org-units`);
 
   const pauschaleLabel = tPauschale(
     `type${getPauschaleKey(pauschale).toUpperCase()}` as Parameters<
