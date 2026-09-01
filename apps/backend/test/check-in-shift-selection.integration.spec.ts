@@ -170,4 +170,94 @@ describe('check-in query permissions', () => {
       ),
     ).toEqual([PERMISSIONS.CHECK_IN_MANAGE]);
   });
+
+  it('gates checkInShifts on check-in:manage', () => {
+    expect(
+      Reflect.getMetadata(
+        PERMISSIONS_KEY,
+        ShiftQueryResolver.prototype.checkInShifts,
+      ),
+    ).toEqual([PERMISSIONS.CHECK_IN_MANAGE]);
+  });
+});
+
+describe('checkInShifts query', () => {
+  const CHECK_IN_SHIFTS = `
+    query CheckInShifts($search: String) {
+      checkInShifts(search: $search) {
+        id
+        title
+      }
+    }
+  `;
+
+  let app: INestApplication;
+  let db: Database;
+  let testUserId: string;
+  let unitId: string;
+
+  beforeAll(async () => {
+    const context = await getGraphqlTestContext();
+    app = context.app;
+    db = context.db;
+    testUserId = context.testUserId;
+
+    const org = await createOrganizationWithType(
+      db,
+      `Search ${crypto.randomUUID()}`,
+    );
+    const unit = await createUnit(db, {
+      organizationId: org.organization.id,
+      typeId: org.type.id,
+      name: 'Search unit',
+    });
+    unitId = unit.id;
+
+    const permission = await db.query.permissions.findFirst({
+      where: { key: PERMISSIONS.CHECK_IN_MANAGE },
+    });
+    if (!permission) throw new Error('CHECK_IN_MANAGE permission not seeded');
+
+    const role = await createRole(db, {
+      organizationId: org.organization.id,
+    });
+    await grantPermissionToRole(db, {
+      roleId: role.id,
+      permissionId: permission.id,
+    });
+    const membership = await addMembership(db, testUserId, unit.id);
+    await assignRoleToMembership(db, {
+      membershipId: membership.id,
+      roleId: role.id,
+    });
+  });
+
+  afterEach(() => {
+    setAuthMockUserId(testUserId);
+  });
+
+  it('matches shift titles case-insensitively', async () => {
+    const shift = await createShift(db, {
+      organizationUnitId: unitId,
+      title: 'Soup Kitchen 2nd shift',
+    });
+    await createShift(db, {
+      organizationUnitId: unitId,
+      title: 'Gardening crew',
+    });
+
+    const data = await graphqlRequestRequiringData<{
+      checkInShifts: Array<{ id: string; title: string }>;
+    }>(
+      app,
+      {
+        query: CHECK_IN_SHIFTS,
+        variables: { search: 'soup kitchen' },
+        headers: { 'x-organization-unit-id': unitId },
+      },
+      'checkInShifts',
+    );
+
+    expect(data.checkInShifts.map((s) => s.id)).toEqual([shift.id]);
+  });
 });

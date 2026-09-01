@@ -194,6 +194,20 @@ export class ShiftQueryResolver {
     return this.shiftInstanceMapper.toArray(instances);
   }
 
+  @Permissions(PERMISSIONS.CHECK_IN_MANAGE)
+  @Query(() => [Shift])
+  async checkInShifts(
+    @Args('search', { type: () => String, nullable: true })
+    search: string | null | undefined,
+    @Context() context: AuthenticatedGraphQLContext,
+  ): Promise<Shift[]> {
+    const shifts = await this.shiftService.findShiftsByTitle(
+      context.organizationUnitId,
+      search ?? null,
+    );
+    return this.shiftMapper.toArray(shifts);
+  }
+
   @Query(() => ShiftInstancePaginatedResponse)
   async myShiftInstances(
     @Args('includePast', { type: () => Boolean, defaultValue: false })
