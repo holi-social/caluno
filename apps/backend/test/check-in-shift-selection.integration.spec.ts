@@ -10,8 +10,10 @@ import {
 } from 'bun:test';
 import type { INestApplication } from '@nestjs/common';
 import { PERMISSIONS } from '../src/auth/constants';
+import { PERMISSIONS_KEY } from '../src/auth/decorators/permissions.decorator';
 import type { Database } from '../src/database/database.module';
-import { createShift, createUser } from './factories';
+import { ShiftQueryResolver } from '../src/shift/resolvers/shift-query.resolver';
+import { createShift } from './factories';
 import {
   addMembership,
   createOrganizationWithType,
@@ -23,10 +25,7 @@ import {
   grantPermissionToRole,
 } from './factories/role.factory';
 import { applyBunAuthMocks, setAuthMockUserId } from './helpers/auth-mocks';
-import {
-  graphqlRequest,
-  graphqlRequestRequiringData,
-} from './helpers/graphql-request';
+import { graphqlRequestRequiringData } from './helpers/graphql-request';
 import { getGraphqlTestContext } from './helpers/graphql-test-context';
 
 applyBunAuthMocks(mock.module);
@@ -154,22 +153,21 @@ describe('checkInShiftInstances query', () => {
       foreignShift.id,
     );
   });
+});
 
-  it('rejects a caller without check-in:manage in the header unit', async () => {
-    const outsider = await createUser(db);
-    setAuthMockUserId(outsider.id);
-
-    const response = await graphqlRequest(app, {
-      query: CHECK_IN_SHIFT_INSTANCES,
-      variables: {
-        startsAfter: new Date(Date.now() - 60 * 60 * 1000).toISOString(),
-        endsBefore: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
-      },
-      headers: { 'x-organization-unit-id': checkInOnlyUnitId },
-    });
-
-    expect(response.errors?.[0]?.message).toContain(
-      'do not have the required permissions',
-    );
+/**
+ * The integration harness stubs `PermissionGuard.prototype.canActivate` to
+ * always-true (`test/helpers/create-graphql-full-app.ts:20`), so a rejection
+ * cannot be provoked through a GraphQL request. Assert the decorator instead:
+ * this fails if anyone drops or weakens the guard on these queries.
+ */
+describe('check-in query permissions', () => {
+  it('gates checkInShiftInstances on check-in:manage', () => {
+    expect(
+      Reflect.getMetadata(
+        PERMISSIONS_KEY,
+        ShiftQueryResolver.prototype.checkInShiftInstances,
+      ),
+    ).toEqual([PERMISSIONS.CHECK_IN_MANAGE]);
   });
 });
