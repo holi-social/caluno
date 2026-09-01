@@ -130,36 +130,6 @@ export function mapInvoiceToBoardDoc(
   };
 }
 
-export function buildContractGenerateDoc(
-  volunteerId: string,
-  type: PauschalenType,
-  year: number,
-): BoardDocument {
-  return {
-    id: `${volunteerId}-contract-generate-${type}-${year}`,
-    status: 'contract-generate',
-    lastActionDate: new Date(year, 0, 1),
-    periodLabel: String(year),
-    pauschale: type,
-  };
-}
-
-export function buildTimesheetGenerateDoc(
-  volunteerId: string,
-  type: PauschalenType,
-  year: number,
-  month: number,
-  locale: string,
-): BoardDocument {
-  return {
-    id: `${volunteerId}-timesheet-generate-${type}-${year}-${month}`,
-    status: 'timesheet-generate',
-    lastActionDate: new Date(year, month, 1),
-    periodLabel: formatMonthYear(new Date(year, month, 1), locale),
-    pauschale: type,
-  };
-}
-
 export function contractPeriodOverlapsYear(
   contract: RawContract,
   year: number,
@@ -212,6 +182,8 @@ export interface BuildBoardVolunteersInput {
   year: number;
   locale: string;
   dateRange?: { from?: Date; to?: Date };
+  /** Volunteer ids that still have eligible (unclaimed, completed, in-period) time entries — i.e. they still need a timesheet. */
+  needsTimesheetVolunteers?: ReadonlySet<string>;
 }
 
 export function buildBoardVolunteers({
@@ -221,6 +193,7 @@ export function buildBoardVolunteers({
   year,
   locale,
   dateRange,
+  needsTimesheetVolunteers,
 }: BuildBoardVolunteersInput): BoardVolunteer[] {
   return rosterUsage.map((entry) => {
     const documents: BoardDocument[] = [];
@@ -246,14 +219,8 @@ export function buildBoardVolunteers({
           contractPeriodOverlapsYear(c, year),
       );
 
-      if (contractsForType.length === 0) {
-        documents.push(
-          buildContractGenerateDoc(entry.volunteer.id, type, year),
-        );
-      } else {
-        for (const contract of contractsForType) {
-          documents.push(mapContractToBoardDoc(contract, type));
-        }
+      for (const contract of contractsForType) {
+        documents.push(mapContractToBoardDoc(contract, type));
       }
 
       const activeContract = contractsForType.find(
@@ -269,20 +236,8 @@ export function buildBoardVolunteers({
               i.reimbursementType.id === usage.reimbursementType.id &&
               invoiceInMonth(i, y, month),
           );
-          if (invoicesForMonth.length === 0) {
-            documents.push(
-              buildTimesheetGenerateDoc(
-                entry.volunteer.id,
-                type,
-                y,
-                month,
-                locale,
-              ),
-            );
-          } else {
-            for (const invoice of invoicesForMonth) {
-              documents.push(mapInvoiceToBoardDoc(invoice, type, locale));
-            }
+          for (const invoice of invoicesForMonth) {
+            documents.push(mapInvoiceToBoardDoc(invoice, type, locale));
           }
         }
       }
@@ -300,6 +255,8 @@ export function buildBoardVolunteers({
       name: entry.volunteer.name,
       initials: getInitials(entry.volunteer.name),
       pauschale: primaryType,
+      needsTimesheet:
+        needsTimesheetVolunteers?.has(entry.volunteer.id) ?? false,
       usedAmount: centsToEuros(
         entry.usageByType.reduce((sum, u) => sum + u.usedCents, 0),
       ),

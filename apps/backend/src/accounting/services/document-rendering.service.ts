@@ -24,6 +24,12 @@ type RenderableDocument = ContractWithRelations | InvoiceWithRelations;
 
 const EUR = '€';
 
+/** Human label for the reimbursement type key rendered for the `pauschalen_type` source. */
+const PAUSCHALE_TYPE_LABELS: Record<string, string> = {
+  EHRENAMT: 'Ehrenamtspauschale',
+  UEBUNGSLEITER: 'Übungsleiterpauschale',
+};
+
 /**
  * Renders a fully-signed contract or invoice to a PDF and stores it as a
  * file, attaching the fileId to the document row. The PDF carries the
@@ -347,10 +353,10 @@ export class DocumentRenderingService {
     if (!template) {
       throw new Error('Document is missing its template');
     }
-    const [org, volunteer] = await Promise.all([
-      this.db.query.organizations.findFirst({
-        where: { id: template.organizationId },
-      }),
+    const [rootUnit, volunteer] = await Promise.all([
+      'organizationUnit' in document && document.organizationUnit
+        ? Promise.resolve(document.organizationUnit)
+        : this.resolveTemplateOrgUnit(template),
       this.db.query.users.findFirst({
         where: { id: document.volunteerId },
       }),
@@ -370,13 +376,40 @@ export class DocumentRenderingService {
     const totalHours =
       'totalHours' in document ? document.totalHours : undefined;
 
+    // Invoice-only computed values: the period range, the yearly budget
+    // already used (minus this invoice) and the statutory cap, and the mock
+    // document number. These are generation-time, not volunteer-profile data.
+    const yearlyUsage =
+      'invoiceStatus' in document
+        ? await this.reimbursementRateService
+            .getYearlyUsage(
+              document.volunteerId,
+              document.reimbursementTypeId,
+              new Date(document.periodStart).getFullYear(),
+            )
+            .catch((error: unknown) => {
+              this.logger.warn(
+                `Failed to resolve yearly usage for document ${document.id}: ${
+                  error instanceof Error ? error.message : String(error)
+                }`,
+              );
+              return undefined;
+            })
+        : undefined;
+    const alreadyReceivedCents = yearlyUsage
+      ? Math.max(0, yearlyUsage.usedCents - (amountCents ?? 0))
+      : undefined;
+    const yearlyLimitCents =
+      yearlyUsage?.limitCents ?? document.reimbursementType?.yearlyLimitCents;
+
     const str = (value: unknown): string =>
       typeof value === 'string' ? value : '';
 
     return {
-      org_name: org?.name ?? '',
-      org_address: org?.address ?? '',
-      org_city: '',
+      org_name: rootUnit?.name ?? '',
+      org_address: rootUnit?.address ?? '',
+      org_city: rootUnit?.city ?? '',
+      org_legal_rep: rootUnit?.legalRep ?? '',
       volunteer_name: volunteer?.name ?? '',
       volunteer_first_name: firstName,
       volunteer_last_name: lastName,
@@ -392,14 +425,95 @@ export class DocumentRenderingService {
       volunteer_bic: str(
         profileData[PROFILE_SOURCE_TO_PROFILE_KEY.volunteer_bic],
       ),
+      volunteer_tax_id: str(
+        profileData[PROFILE_SOURCE_TO_PROFILE_KEY.volunteer_tax_id],
+      ),
+      pauschalen_type: document.reimbursementType
+        ? (PAUSCHALE_TYPE_LABELS[document.reimbursementType.key] ?? '')
+        : '',
       hourly_rate: rateCents !== undefined ? this.formatRate(rateCents) : '',
       total_hours: totalHours !== undefined ? `${totalHours}h` : '',
       total_amount:
         amountCents !== undefined ? this.formatEuro(amountCents) : '',
       period_start: this.formatDate(new Date(document.periodStart)),
       period_end: this.formatDate(new Date(document.periodEnd)),
+      contract_period: `${this.formatDate(new Date(document.periodStart))} – ${this.formatDate(new Date(document.periodEnd))}`,
+      already_received_amount:
+        alreadyReceivedCents !== undefined
+          ? this.formatEuro(alreadyReceivedCents)
+          : '',
+      yearly_limit_amount:
+        yearlyLimitCents !== undefined ? this.formatEuro(yearlyLimitCents) : '',
+      document_number:
+        'invoiceStatus' in document
+          ? this.formatInvoiceNumber(
+              template.invoiceNumberFormat,
+              new Date(document.periodStart),
+              this.findManualFieldValue(
+                (template.body ?? {}) as TemplateBodyShape,
+                'kostenstelle',
+              ),
+            )
+          : '',
       generated_date: this.formatDate(new Date()),
     };
+  }
+
+  /**
+   * Mock document-number generation — no real sequence counter exists yet, so
+   * this only has to look plausible for the chosen format (mirrors the
+   * frontend's formatDocumentNumber).
+   */
+  private formatInvoiceNumber(
+    invoiceFormat: string | null | undefined,
+    periodStart: Date,
+    kostenstelle: string | undefined,
+  ): string {
+    const yyyy = periodStart.getUTCFullYear();
+    const mm = String(periodStart.getUTCMonth() + 1).padStart(2, '0');
+    const dd = String(periodStart.getUTCDate()).padStart(2, '0');
+    const seq = '001';
+    switch (invoiceFormat) {
+      case 'date-number':
+        return `${yyyy}${mm}${dd}-${seq}`;
+      case 'date-kostenstelle-number':
+        return `${yyyy}${mm}${dd}-${kostenstelle ?? '—'}-${seq}`;
+      case 'compact-date-number':
+        return `${String(yyyy).slice(2)}${mm}${dd}${seq}`;
+      case 'kostenstelle-month-year-number':
+        return `${kostenstelle ?? '—'}-${mm}.${yyyy}-${seq}`;
+      default:
+        return `${yyyy}${mm}${dd}-${seq}`;
+    }
+  }
+
+  private findManualFieldValue(
+    body: TemplateBodyShape,
+    fieldId: string,
+  ): string | undefined {
+    const findIn = (fields?: TemplateFieldShape[]): string | undefined => {
+      const field = fields?.find(
+        (f) => f.id === fieldId && f.value.kind === 'manual-template',
+      );
+      return field?.value.kind === 'manual-template'
+        ? field.value.value
+        : undefined;
+    };
+
+    const lines: (TemplateLineShape | undefined)[] = [
+      body.header?.orgIdentityLine,
+      ...(body.header?.metaLines ?? []),
+      ...(body.blocks ?? []).flatMap((block) => [
+        block.line,
+        ...(block.lines ?? []),
+      ]),
+      body.footer?.closingLine,
+    ];
+    for (const line of lines) {
+      const value = findIn(line?.fields);
+      if (value !== undefined) return value;
+    }
+    return undefined;
   }
 
   /** Invoice table rows: task, begin, end, hours, rate — mirroring the frontend's eligible-hours preview. */
@@ -474,6 +588,17 @@ export class DocumentRenderingService {
     } catch {
       return undefined;
     }
+  }
+
+  private async resolveTemplateOrgUnit(
+    template: RenderableDocument['documentTemplate'],
+  ) {
+    const organizationUnitId =
+      template?.organizationUnitId ??
+      (await this.resolveOrgRootUnitId(template?.organizationId ?? null));
+    return this.db.query.organizationUnits.findFirst({
+      where: { id: organizationUnitId },
+    });
   }
 
   private async resolveOrgRootUnitId(

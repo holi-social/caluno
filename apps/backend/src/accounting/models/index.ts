@@ -13,5 +13,6 @@ export { ReimbursementRate } from './reimbursement-rate.model';
 export { ReimbursementType } from './reimbursement-type.model';
 export { ReimbursementTypeUsage } from './reimbursement-type-usage.model';
 export { TemplateSignee } from './template-signee.model';
+export { VolunteerNeedsTimesheet } from './volunteer-needs-timesheet.model';
 export { VolunteerYearlyUsage } from './volunteer-yearly-usage.model';
 export { YearlyUsage } from './yearly-usage.model';

@@ -1,6 +1,6 @@
 'use client';
 
-import { parseTemplateBody } from '@repo/data';
+import { DataError, parseTemplateBody } from '@repo/data';
 import {
   useActiveDocumentTemplate,
   useAdminUserProfile,
@@ -9,11 +9,13 @@ import {
   useEffectiveRates,
   useEligibleTimeEntriesForInvoice,
   useReimbursementTypes,
+  useYearlyUsage,
 } from '@repo/data/react';
 import { format } from 'date-fns';
 import { useTranslations } from 'next-intl';
 import { useEffect, useMemo, useState } from 'react';
 import { toast } from 'sonner';
+import { useRouter } from '@/i18n/navigation';
 import { formatEuro } from '@/lib/formatting/formats';
 import { mapEligibleTimeEntry } from '../lib/creation-modal.utils';
 import { centsToEuros } from '../lib/money';
@@ -125,6 +127,7 @@ export function InvoiceCreationModal({
   );
 
   const org = useCurrentOrg();
+  const router = useRouter();
 
   const typesQuery = useReimbursementTypes();
   const ratesQuery = useEffectiveRates(orgUId);
@@ -159,13 +162,14 @@ export function InvoiceCreationModal({
   const contractTemplate = contractTemplateQuery.data
     ? parseTemplateBody(contractTemplateQuery.data.body)
     : null;
-
   const [nameField, setNameField] = useState<NameFieldState | null>(null);
   const [addressField, setAddressField] = useState<IbanFieldState | null>(null);
   const [ibanField, setIbanField] = useState<IbanFieldState | null>(null);
   const [checkedIds, setCheckedIds] = useState<Set<string>>(new Set());
   const [period, setPeriod] = useState<DateRange>(thisMonthRange);
   const [isSending, setIsSending] = useState(false);
+  const [sendError, setSendError] = useState<string | null>(null);
+  const [sendErrorCode, setSendErrorCode] = useState<string | null>(null);
 
   const eligibleQuery = useEligibleTimeEntriesForInvoice({
     volunteerId: volunteerId ?? undefined,
@@ -173,6 +177,10 @@ export function InvoiceCreationModal({
     periodStart: period.from?.toISOString(),
     periodEnd: (period.to ?? period.from)?.toISOString(),
   });
+  const yearlyUsageQuery = useYearlyUsage(
+    reimbursementType?.id,
+    period.from?.getFullYear(),
+  );
   const lines = useMemo(
     () => (eligibleQuery.data ?? []).map(mapEligibleTimeEntry),
     [eligibleQuery.data],
@@ -228,11 +236,22 @@ export function InvoiceCreationModal({
     contractTemplateQuery.error ??
     eligibleQuery.error;
 
+  // The most common blocker: the org has the reimbursement type but no
+  // invoice template yet (org-default or unit-override). Offer a direct CTA
+  // to the template builder instead of a dead end.
+  const noInvoiceTemplate =
+    invoiceTemplateQuery.error instanceof DataError &&
+    invoiceTemplateQuery.error.options?.code === 'NOT_FOUND';
+  const createTemplateCta = () =>
+    router.push(`/admin/${orgUId}/accounting/settings/templates`);
+
   const status: DocumentCreationLoadStatus = hasError
     ? 'error'
-    : dataReady
-      ? 'loaded'
-      : 'loading';
+    : sendError
+      ? 'error'
+      : dataReady
+        ? 'loaded'
+        : 'loading';
 
   // Seed the editable fields once from the loaded profile, then leave them
   // alone — later re-renders shouldn't clobber a coordinator's edits.
@@ -286,6 +305,8 @@ export function InvoiceCreationModal({
   const handleSend = async () => {
     if (!reimbursementType) return;
     setIsSending(true);
+    setSendError(null);
+    setSendErrorCode(null);
     try {
       await createInvoice.mutateAsync({
         organizationUnitId: orgUId,
@@ -298,12 +319,30 @@ export function InvoiceCreationModal({
       onOpenChange(false);
       toast.success(t('sentToast', { name: volunteerName }));
       onSent();
-    } catch {
-      toast.error(t('sendErrorToast', { name: volunteerName }));
+    } catch (error) {
+      // Surface the real server error (e.g. "No invoice template configured
+      // for reimbursement type …") instead of a generic "try again", and keep
+      // the modal open so the coordinator can act on the reason.
+      if (error instanceof Error) {
+        setSendError(error.message || null);
+        setSendErrorCode(
+          error instanceof DataError ? (error.options?.code ?? null) : null,
+        );
+      } else {
+        setSendError(null);
+        setSendErrorCode(null);
+      }
     } finally {
       setIsSending(false);
     }
   };
+
+  const sendErrorIsNoTemplate = sendErrorCode === 'NOT_FOUND';
+  const sendErrorIsOrgProfile = /organization is missing/i.test(
+    sendError ?? '',
+  );
+  const completeOrgProfileCta = () =>
+    router.push(`/admin/${orgUId}/settings/org-units`);
 
   const pauschaleLabel = tPauschale(
     `type${getPauschaleKey(pauschale).toUpperCase()}` as Parameters<
@@ -329,9 +368,8 @@ export function InvoiceCreationModal({
       pauschale,
       orgName: org.name,
       orgAddress: org.address,
-      // orgCity/orgLegalRep: no such field exists on the org profile yet
-      // (see OrganizationData) — a real gap, left unresolved rather than
-      // invented.
+      orgCity: org.city,
+      orgLegalRep: org.legalRep,
       hourlyRateCents: effectiveRate?.hourlyRateCents,
       yearlyLimitCents:
         effectiveRate?.reimbursementType.yearlyLimitCents ??
@@ -352,6 +390,16 @@ export function InvoiceCreationModal({
         : undefined,
     period_start: format(period.from ?? new Date(), 'dd.MM.yyyy'),
     period_end: format(period.to ?? new Date(), 'dd.MM.yyyy'),
+    contract_period: `${format(period.from ?? new Date(), 'dd.MM.yyyy')} – ${format(
+      period.to ?? new Date(),
+      'dd.MM.yyyy',
+    )}`,
+    already_received_amount:
+      yearlyUsageQuery.data?.usedCents !== undefined
+        ? `${centsToEuros(yearlyUsageQuery.data.usedCents).toLocaleString(
+            'de-DE',
+          )} €`
+        : undefined,
   };
 
   const tableBlock = template?.blocks.find((b) => b.kind === 'table');
@@ -398,9 +446,30 @@ export function InvoiceCreationModal({
       embedded={embedded}
       title={t('title')}
       status={status}
-      errorTitle={t('loadErrorTitle')}
-      errorDescription={t('loadError', { name: volunteerName })}
-      errorMessage={loadError instanceof Error ? loadError.message : undefined}
+      errorTitle={sendError ? t('sendErrorTitle') : t('loadErrorTitle')}
+      errorDescription={
+        sendError
+          ? t('sendError', { name: volunteerName })
+          : t('loadError', { name: volunteerName })
+      }
+      errorMessage={
+        sendError ??
+        (loadError instanceof Error ? loadError.message : undefined)
+      }
+      errorCtaLabel={
+        noInvoiceTemplate || sendErrorIsNoTemplate
+          ? t('noTemplateCta')
+          : sendErrorIsOrgProfile
+            ? t('completeOrgProfileCta')
+            : undefined
+      }
+      errorCtaAction={
+        noInvoiceTemplate || sendErrorIsNoTemplate
+          ? createTemplateCta
+          : sendErrorIsOrgProfile
+            ? completeOrgProfileCta
+            : undefined
+      }
       fieldsSkeletonKeys={['name', 'iban', 'period', 'cap', 'hours']}
       cancelLabel={t('cancel')}
       sendLabel={t('sendForSigning')}

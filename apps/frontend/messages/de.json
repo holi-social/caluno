@@ -613,6 +613,12 @@
     "form": {
       "addressLabel": "Adresse",
       "addressPlaceholder": "z. B. Musterstraße 1, Berlin",
+      "cityLabel": "Stadt",
+      "cityPlaceholder": "z. B. Berlin",
+      "zipCodeLabel": "Postleitzahl",
+      "zipCodePlaceholder": "z. B. 10115",
+      "legalRepLabel": "Vertretungsberechtigte Person",
+      "legalRepPlaceholder": "z. B. Erika Musterfrau",
       "descriptionLabel": "Beschreibung",
       "descriptionPlaceholder": "Beschreibe diese Organisationseinheit...",
       "emailLabel": "E-Mail",
@@ -700,7 +706,8 @@
         "iban": "Für Aufwandsentschädigungen",
         "lastName": "Wie auf deinem Ausweis",
         "preferredName": "Falls du anders angesprochen werden möchtest",
-        "bic": "Bankleitzahl (BIC) deines Kontos"
+        "bic": "Bankleitzahl (BIC) deines Kontos",
+        "taxId": "Deine Steuernummer (für Spendenbescheinigungen)"
       }
     },
     "language": "Sprache",
@@ -908,6 +915,7 @@
       "gender": "Geschlecht",
       "iban": "IBAN",
       "bic": "BIC",
+      "taxId": "Steuernummer",
       "infoText": "Infotext",
       "labelLabel": "Bezeichnung",
       "labelPlaceholder": "z. B. Lieblingsfarbe",
@@ -1088,7 +1096,25 @@
     }
   },
   "Settings": {
-    "title": "Einstellungen"
+    "title": "Einstellungen",
+    "organizationProfile": {
+      "title": "Organisationsprofil",
+      "subtitle": "Aktualisiere die Adresse und Kontaktdaten deiner Organisation.",
+      "addressLabel": "Adresse der Organisation",
+      "addressPlaceholder": "Musterstraße 1",
+      "cityLabel": "Stadt",
+      "cityPlaceholder": "Berlin",
+      "zipCodeLabel": "Postleitzahl",
+      "zipCodePlaceholder": "10115",
+      "contactEmailLabel": "Kontakt-E-Mail",
+      "contactEmailPlaceholder": "kontakt@organisation.org",
+      "phoneLabel": "Telefon",
+      "phonePlaceholder": "+49 30 12345678",
+      "websiteLabel": "Website",
+      "websitePlaceholder": "https://organisation.org",
+      "saved": "Organisation aktualisiert",
+      "saveFailed": "Organisation konnte nicht aktualisiert werden"
+    }
   },
   "Shift": {
     "action": {
@@ -1713,6 +1739,7 @@
         "contractSigning": "Vereinbarungen gegenzeichnen",
         "timesheetGenerate": "Stundennachweise erstellen",
         "timesheetSigning": "Stundennachweise gegenzeichnen",
+        "needsTimesheet": "Stundennachweis fällig",
         "readyToGo": "Bereit zur Abgabe"
       },
       "toolbar": {
@@ -1876,6 +1903,10 @@
         "sendErrorToast": "Die Vereinbarung konnte nicht an {name} gesendet werden. Bitte erneut versuchen.",
         "loadErrorTitle": "Profildaten konnten nicht geladen werden",
         "loadError": "Die Profildaten von {name} konnten nicht geladen werden. Bitte schließen und erneut versuchen.",
+        "sendErrorTitle": "Vertrag konnte nicht gesendet werden",
+        "sendError": "Der Vertrag konnte nicht an {name} gesendet werden. Bitte erneut versuchen.",
+        "noTemplateCta": "Vertragsvorlage erstellen",
+        "completeOrgProfileCta": "Organisationsprofil vervollständigen",
         "hoursUnitMonth": "Monat",
         "hoursUnitWeek": "Woche",
         "hoursUnitHint": "pro {unit}",
@@ -1896,6 +1927,10 @@
         "sendErrorToast": "Der Stundennachweis konnte nicht an {name} gesendet werden. Bitte erneut versuchen.",
         "loadErrorTitle": "Stundennachweisdaten konnten nicht geladen werden",
         "loadError": "Die Stundennachweisdaten von {name} konnten nicht geladen werden. Bitte schließen und erneut versuchen.",
+        "sendErrorTitle": "Stundennachweis konnte nicht gesendet werden",
+        "sendError": "Der Stundennachweis konnte nicht an {name} gesendet werden. Bitte erneut versuchen.",
+        "noTemplateCta": "Stundennachweis-Vorlage erstellen",
+        "completeOrgProfileCta": "Organisationsprofil vervollständigen",
         "nameFieldLabel": "Name",
         "periodFieldLabel": "Stundennachweiszeitraum",
         "periodPicker": {
@@ -1956,6 +1991,11 @@
         "saveButton": "Vorlage speichern",
         "saveSuccessToast": "Vorlage gespeichert",
         "saveErrorToast": "Die Vorlage konnte nicht gespeichert werden. Bitte erneut versuchen.",
+        "orgProfile": {
+          "blockedMessage": "In deinen Organisationsdaten fehlen Angaben, die diese Vorlage benötigt. Vervollständige die Organisationsdaten, bevor du speicherst.",
+          "blockedCta": "Organisationsdaten vervollständigen",
+          "blockedAskSomeone": "Bitte jemanden, der die Organisation verwalten kann, die Organisationsdaten zu vervollständigen."
+        },
         "previewScrollRegionLabel": "Dokumentvorschau, scrollbar",
         "preview": {
           "disclaimerBadge": "Vorschau",

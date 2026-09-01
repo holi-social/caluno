@@ -53,4 +53,17 @@ export const PROFILE_SOURCE_TO_PROFILE_KEY: Record<string, string> = {
   volunteer_bic: 'bic',
   volunteer_address: 'address',
   volunteer_dob: 'birth-date',
+  volunteer_tax_id: 'tax-id',
+};
+
+/**
+ * Maps a template field's bound `source` to the org unit column it reads from.
+ * Used to check whether the unit (the entity the overview Edit edits) has the
+ * profile data its documents need before one is created/sent.
+ */
+export const ORG_SOURCE_TO_ORG_COLUMN: Record<string, string> = {
+  org_name: 'name',
+  org_address: 'address',
+  org_city: 'city',
+  org_legal_rep: 'legalRep',
 };

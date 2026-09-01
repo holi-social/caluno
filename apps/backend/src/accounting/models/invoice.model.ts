@@ -81,6 +81,14 @@ export class Invoice {
   @Field(() => [String])
   missingProfileFields!: string[];
 
+  /**
+   * The org-profile sources (e.g. org_city/org_address) this document's
+   * template needs that the organization has not yet supplied. Empty once the
+   * org profile is complete enough to create the document.
+   */
+  @Field(() => [String])
+  missingOrgProfileFields!: string[];
+
   @Field(() => Date)
   createdAt!: Date;
 

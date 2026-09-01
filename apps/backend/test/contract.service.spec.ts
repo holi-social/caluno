@@ -74,9 +74,15 @@ describe('ContractService', () => {
       {} as FileService,
       { capture: () => {} } as unknown as PostHogService,
     );
-    const documentTemplateService = new DocumentTemplateService(db, {
-      capture: () => {},
-    } as unknown as PostHogService);
+    const documentTemplateService = new DocumentTemplateService(
+      db,
+      {
+        capture: () => {},
+      } as unknown as PostHogService,
+      {
+        missingOrgProfileSources: () => Promise.resolve([]),
+      } as unknown as DocumentProfileRequirementService,
+    );
     const documentSigningService = new DocumentSigningService(
       db,
       authService,
@@ -92,6 +98,7 @@ describe('ContractService', () => {
       } as unknown as DocumentNotificationService,
       {
         missingProfileSources: () => Promise.resolve([]),
+        missingOrgProfileSources: () => Promise.resolve([]),
       } as unknown as DocumentProfileRequirementService,
       {
         renderAndAttachPdf: () => Promise.resolve(null),

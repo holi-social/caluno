@@ -233,3 +233,61 @@ export function countIncompleteManualFields(doc: TemplateDocument): number {
   }
   return count;
 }
+
+/** Org-profile data sources the document gate actually enforces (name always present). */
+const ORG_PROFILE_REQUIRED_SOURCES: DataSourceKey[] = [
+  'org_address',
+  'org_city',
+  'org_legal_rep',
+];
+
+/**
+ * The org-profile sources bound on enabled lines/blocks that the org unit is
+ * currently missing. Mirrors the backend's `missingOrgProfileSources` gate so
+ * the template builder can block Save up front and point the coordinator at the
+ * unit's edit sheet instead of failing the request.
+ */
+export function missingOrgProfileSourcesForOrg(
+  doc: TemplateDocument,
+  org: {
+    address?: string | null;
+    city?: string | null;
+    legalRep?: string | null;
+  },
+): DataSourceKey[] {
+  const bound = new Set<DataSourceKey>();
+
+  const collectLine = (line: TemplateLine | undefined) => {
+    if (!line || line.enabled === false) return;
+    for (const field of line.fields) {
+      if (
+        field.value.kind === 'bound' &&
+        ORG_PROFILE_REQUIRED_SOURCES.includes(field.value.source)
+      ) {
+        bound.add(field.value.source);
+      }
+    }
+  };
+
+  collectLine(doc.header.orgIdentityLine);
+  for (const metaLine of doc.header.metaLines) collectLine(metaLine);
+  for (const block of doc.blocks) {
+    if (block.kind === 'table') continue;
+    if (block.kind === 'note') {
+      collectLine(block.line);
+    } else if (block.kind === 'text' && block.enabled !== false) {
+      for (const line of block.lines) collectLine(line);
+    }
+  }
+  collectLine(doc.footer.closingLine);
+
+  return [...bound].filter((source) => {
+    const value =
+      source === 'org_address'
+        ? org.address
+        : source === 'org_city'
+          ? org.city
+          : org.legalRep;
+    return typeof value !== 'string' || value.trim() === '';
+  });
+}

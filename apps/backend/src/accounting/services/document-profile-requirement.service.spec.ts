@@ -2,10 +2,11 @@ import { describe, expect, it } from 'bun:test';
 import { DocumentProfileRequirementService } from './document-profile-requirement.service';
 
 describe('DocumentProfileRequirementService', () => {
+  const db = {} as never;
   const userProfileService = {
     findByUserId: () => Promise.resolve(undefined),
   } as never;
-  const service = new DocumentProfileRequirementService(userProfileService);
+  const service = new DocumentProfileRequirementService(db, userProfileService);
 
   it('collects profile-required sources from enabled lines only', () => {
     const body = {
@@ -74,7 +75,7 @@ describe('DocumentProfileRequirementService', () => {
   });
 
   it('reports a source as missing when the profile value is empty', async () => {
-    const serviceWithProfile = new DocumentProfileRequirementService({
+    const serviceWithProfile = new DocumentProfileRequirementService(db, {
       findByUserId: () =>
         Promise.resolve({
           data: { iban: 'DE00 0000 0000 0000 0000 00', bic: '' },
@@ -97,6 +98,135 @@ describe('DocumentProfileRequirementService', () => {
     };
     expect(await serviceWithProfile.missingProfileSources('v-1', body)).toEqual(
       ['volunteer_bic'],
+    );
+  });
+
+  it('reports org city as missing when the org unit has no city, but not name/address', async () => {
+    const dbWithOrg = {
+      query: {
+        organizationUnits: {
+          findFirst: () =>
+            Promise.resolve({
+              id: 'unit-1',
+              name: 'Playground',
+              address: 'Straße 1',
+              city: '',
+            }),
+        },
+      },
+    } as never;
+    const serviceWithOrg = new DocumentProfileRequirementService(
+      dbWithOrg,
+      userProfileService,
+    );
+    const body = {
+      header: {
+        orgIdentityLine: {
+          enabled: true,
+          fields: [
+            { value: { kind: 'bound', source: 'org_name' } },
+            { value: { kind: 'bound', source: 'org_address' } },
+            { value: { kind: 'bound', source: 'org_city' } },
+          ],
+        },
+      },
+    };
+    // name is always present, address is present, city is empty → only org_city.
+    expect(
+      await serviceWithOrg.missingOrgProfileSources('org-1', 'unit-1', body),
+    ).toEqual(['org_city']);
+  });
+
+  it('reports org legal rep as missing when the org unit has none', async () => {
+    const dbWithOrg = {
+      query: {
+        organizationUnits: {
+          findFirst: () =>
+            Promise.resolve({
+              id: 'unit-1',
+              name: 'Playground',
+              address: 'Straße 1',
+              city: 'Berlin',
+              legalRep: '',
+            }),
+        },
+      },
+    } as never;
+    const serviceWithOrg = new DocumentProfileRequirementService(
+      dbWithOrg,
+      userProfileService,
+    );
+    const body = {
+      header: {
+        orgIdentityLine: {
+          enabled: true,
+          fields: [{ value: { kind: 'bound', source: 'org_legal_rep' } }],
+        },
+      },
+    };
+    expect(
+      await serviceWithOrg.missingOrgProfileSources('org-1', 'unit-1', body),
+    ).toEqual(['org_legal_rep']);
+  });
+
+  it('falls back to the org root unit when no organization unit id is given', async () => {
+    const findFirst = (args: {
+      where: { organizationId?: string; parentId?: { isNull: boolean } };
+    }) => {
+      expect(args.where).toEqual({
+        organizationId: 'org-1',
+        parentId: { isNull: true },
+      });
+      return Promise.resolve({
+        id: 'root-unit',
+        name: 'Root',
+        address: '',
+        city: '',
+      });
+    };
+    const dbWithOrg = {
+      query: { organizationUnits: { findFirst } },
+    } as never;
+    const serviceWithOrg = new DocumentProfileRequirementService(
+      dbWithOrg,
+      userProfileService,
+    );
+    const body = {
+      header: {
+        orgIdentityLine: {
+          enabled: true,
+          fields: [{ value: { kind: 'bound', source: 'org_address' } }],
+        },
+      },
+    };
+    expect(
+      await serviceWithOrg.missingOrgProfileSources('org-1', undefined, body),
+    ).toEqual(['org_address']);
+  });
+
+  it('treats volunteer tax id as a profile-required source', async () => {
+    const serviceWithProfile = new DocumentProfileRequirementService(db, {
+      findByUserId: () =>
+        Promise.resolve({
+          data: { taxId: '', 'tax-id': '' },
+        }),
+    } as never);
+    const body = {
+      blocks: [
+        {
+          lines: [
+            {
+              enabled: true,
+              fields: [
+                { value: { kind: 'bound', source: 'volunteer_tax_id' } },
+              ],
+            },
+          ],
+        },
+      ],
+    };
+    expect(await serviceWithProfile.missingProfileSources('v-1', body)).toEqual(
+      ['volunteer_tax_id'],
     );
   });
 });

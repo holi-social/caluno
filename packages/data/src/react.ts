@@ -64,6 +64,7 @@ export * from './react/hooks/use-update-shift-instance-invite-status';
 export * from './react/hooks/use-update-user-locale';
 export * from './react/hooks/use-user';
 export * from './react/hooks/use-volunteer-submissions';
+export * from './react/hooks/use-volunteers-needing-timesheets';
 export * from './react/hooks/use-weekly-shifts';
 export * from './react/hooks/use-yearly-usage';
 // Organization context (provider, hooks, and cookie utilities)
@@ -86,6 +87,7 @@ export type {
   RawManualBaseline,
   RawPendingSignee,
   RawReimbursementType,
+  RawVolunteerNeedsTimesheet,
   RawVolunteerYearlyUsage,
   RawYearlyUsage,
   RecordedBundleDownload,

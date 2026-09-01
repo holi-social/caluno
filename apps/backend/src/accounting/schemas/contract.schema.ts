@@ -10,6 +10,7 @@ import {
 import { users } from '../../auth/schemas/auth.schema';
 import { idColumn, timestampColumns } from '../../database/database-columns';
 import { enumValues } from '../../database/typeutil';
+import { organizationUnits } from '../../organization/schemas/organization-unit.schema';
 import { files } from '../../storage/schemas/file.schema';
 import { ContractStatus } from '../enums';
 import { documentTemplates } from './document-template.schema';
@@ -38,6 +39,10 @@ export const contracts = snakeCase.table('contracts', {
   reimbursementTypeId: uuid('reimbursement_type_id')
     .references(() => reimbursementTypes.id, { onDelete: 'restrict' })
     .notNull(),
+  organizationUnitId: uuid('organization_unit_id').references(
+    () => organizationUnits.id,
+    { onDelete: 'restrict' },
+  ),
   fileId: uuid('file_id').references(() => files.id, { onDelete: 'set null' }),
   contractStatus: contractStatusEnum('contract_status')
     .$type<ContractStatus>()

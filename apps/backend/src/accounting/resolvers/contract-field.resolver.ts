@@ -20,6 +20,7 @@ import type { ContractStatusChangeEntity } from '../schemas/contract-status-chan
 import type { DocumentTemplateEntity } from '../schemas/document-template.schema';
 import type { ReimbursementTypeEntity } from '../schemas/reimbursement-type.schema';
 import { DocumentProfileRequirementService } from '../services/document-profile-requirement.service';
+import { AccountingOrganizationLoader } from './accounting-organization.loader';
 import { AccountingUserLoader } from './accounting-user.loader';
 import { ContractLoader } from './contract.loader';
 
@@ -113,6 +114,35 @@ export class ContractFieldResolver {
     }
     return this.documentProfileRequirementService.missingProfileSources(
       contract.volunteerId,
+      templateBody,
+    );
+  }
+
+  @ResolveField(() => [String])
+  async missingOrgProfileFields(
+    @Parent() contract: MaybeWithRelations,
+    @Loader(ContractLoader) contractLoader: ContractLoader,
+    @Loader(AccountingOrganizationLoader)
+    orgLoader: AccountingOrganizationLoader,
+  ): Promise<string[]> {
+    let templateBody: unknown = contract.documentTemplate?.body;
+    let organizationId = contract.documentTemplate?.organizationId;
+    let organizationUnitId: string | undefined =
+      contract.organizationUnitId ?? undefined;
+    if (!templateBody || !organizationId) {
+      const full = await contractLoader.contractWithRelationsById.load(
+        contract.id,
+      );
+      templateBody = full.documentTemplate?.body;
+      organizationId = full.documentTemplate?.organizationId;
+      organizationUnitId = full.organizationUnitId ?? undefined;
+    }
+    if (!organizationId) return [];
+    const unit = organizationUnitId
+      ? await orgLoader.organizationUnitById.load(organizationUnitId)
+      : await orgLoader.rootUnitByOrganizationId.load(organizationId);
+    return this.documentProfileRequirementService.missingOrgProfileSourcesForUnit(
+      (unit ?? undefined) as Record<string, unknown> | undefined,
       templateBody,
     );
   }

@@ -81,6 +81,7 @@ fragment ContractSummaryFields on Contract {
   renewDate
   downloadUrl
   missingProfileFields
+  missingOrgProfileFields
   createdAt
   updatedAt
   volunteer {
@@ -184,6 +185,7 @@ fragment InvoiceSummaryFields on Invoice {
   }
   downloadUrl
   missingProfileFields
+  missingOrgProfileFields
   createdAt
   updatedAt
   volunteer {
@@ -268,6 +270,26 @@ query GetPendingInvoiceSignee($invoiceId: ID!) {
     userId
     permissionKey
     eligibleUserIds
+  }
+}
+
+query GetVolunteersNeedingTimesheets(
+  $periodStart: DateTime
+  $periodEnd: DateTime
+) {
+  volunteersNeedingTimesheets(
+    periodStart: $periodStart
+    periodEnd: $periodEnd
+  ) {
+    volunteer {
+      id
+      name
+    }
+    reimbursementType {
+      id
+      key
+    }
+    eligibleHours
   }
 }
 

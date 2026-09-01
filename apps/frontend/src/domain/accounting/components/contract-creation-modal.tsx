@@ -1,6 +1,6 @@
 'use client';
 
-import { parseTemplateBody } from '@repo/data';
+import { DataError, parseTemplateBody } from '@repo/data';
 import {
   useActiveDocumentTemplate,
   useAdminUserProfile,
@@ -14,6 +14,7 @@ import { Input } from '@repo/ui';
 import { useTranslations } from 'next-intl';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
+import { useRouter } from '@/i18n/navigation';
 import { contractPeriodForLifespan } from '../lib/creation-modal.utils';
 import {
   apiDocumentKindFor,
@@ -74,6 +75,7 @@ export function ContractCreationModal({
 
   const orgUId = useOrgUId();
   const org = useCurrentOrg();
+  const router = useRouter();
 
   const typesQuery = useReimbursementTypes();
   const ratesQuery = useEffectiveRates(orgUId);
@@ -107,6 +109,8 @@ export function ContractCreationModal({
   const [lifespan, setLifespan] = useState('');
   const [hoursAmount, setHoursAmount] = useState('');
   const [isSending, setIsSending] = useState(false);
+  const [sendError, setSendError] = useState<string | null>(null);
+  const [sendErrorCode, setSendErrorCode] = useState<string | null>(null);
 
   // Reset local edits whenever a different volunteer/pauschale is targeted —
   // the fields get re-seeded from the freshly loaded profile/template below.
@@ -141,11 +145,22 @@ export function ContractCreationModal({
     profileQuery.error ??
     templateQuery.error;
 
+  // The most common blocker: the org has the reimbursement type but no
+  // contract template yet (org-default or unit-override). Offer a direct CTA
+  // to the template builder instead of a dead end.
+  const noContractTemplate =
+    templateQuery.error instanceof DataError &&
+    templateQuery.error.options?.code === 'NOT_FOUND';
+  const createTemplateCta = () =>
+    router.push(`/admin/${orgUId}/accounting/settings/templates`);
+
   const status: DocumentCreationLoadStatus = hasError
     ? 'error'
-    : dataReady
-      ? 'loaded'
-      : 'loading';
+    : sendError
+      ? 'error'
+      : dataReady
+        ? 'loaded'
+        : 'loading';
 
   // Seed the editable fields once from the loaded profile/template, then
   // leave them alone — further re-renders (e.g. rate data arriving late)
@@ -189,6 +204,8 @@ export function ContractCreationModal({
   const handleSend = async () => {
     if (!reimbursementType) return;
     setIsSending(true);
+    setSendError(null);
+    setSendErrorCode(null);
     const { periodStart, periodEnd } = contractPeriodForLifespan(lifespan);
     try {
       await createContract.mutateAsync({
@@ -201,12 +218,30 @@ export function ContractCreationModal({
       onOpenChange(false);
       toast.success(t('sentToast', { name: volunteerName }));
       onSent();
-    } catch {
-      toast.error(t('sendErrorToast', { name: volunteerName }));
+    } catch (error) {
+      // Surface the real server error (e.g. "No contract template configured
+      // for reimbursement type …") instead of a generic "try again", and keep
+      // the modal open so the coordinator can act on the reason.
+      if (error instanceof Error) {
+        setSendError(error.message || null);
+        setSendErrorCode(
+          error instanceof DataError ? (error.options?.code ?? null) : null,
+        );
+      } else {
+        setSendError(null);
+        setSendErrorCode(null);
+      }
     } finally {
       setIsSending(false);
     }
   };
+
+  const sendErrorIsNoTemplate = sendErrorCode === 'NOT_FOUND';
+  const sendErrorIsOrgProfile = /organization is missing/i.test(
+    sendError ?? '',
+  );
+  const completeOrgProfileCta = () =>
+    router.push(`/admin/${orgUId}/settings/org-units`);
 
   const pauschaleLabel = tPauschale(
     `type${getPauschaleKey(pauschale).toUpperCase()}` as Parameters<
@@ -227,9 +262,8 @@ export function ContractCreationModal({
       pauschale,
       orgName: org.name,
       orgAddress: org.address,
-      // orgCity/orgLegalRep: no such field exists on the org profile yet
-      // (see OrganizationData) — a real gap, left unresolved rather than
-      // invented.
+      orgCity: org.city,
+      orgLegalRep: org.legalRep,
       hourlyRateCents: effectiveRate?.hourlyRateCents,
       yearlyLimitCents:
         effectiveRate?.reimbursementType.yearlyLimitCents ??
@@ -251,9 +285,30 @@ export function ContractCreationModal({
       embedded={embedded}
       title={t('title')}
       status={status}
-      errorTitle={t('loadErrorTitle')}
-      errorDescription={t('loadError', { name: volunteerName })}
-      errorMessage={loadError instanceof Error ? loadError.message : undefined}
+      errorTitle={sendError ? t('sendErrorTitle') : t('loadErrorTitle')}
+      errorDescription={
+        sendError
+          ? t('sendError', { name: volunteerName })
+          : t('loadError', { name: volunteerName })
+      }
+      errorMessage={
+        sendError ??
+        (loadError instanceof Error ? loadError.message : undefined)
+      }
+      errorCtaLabel={
+        noContractTemplate || sendErrorIsNoTemplate
+          ? t('noTemplateCta')
+          : sendErrorIsOrgProfile
+            ? t('completeOrgProfileCta')
+            : undefined
+      }
+      errorCtaAction={
+        noContractTemplate || sendErrorIsNoTemplate
+          ? createTemplateCta
+          : sendErrorIsOrgProfile
+            ? completeOrgProfileCta
+            : undefined
+      }
       fieldsSkeletonKeys={['address', 'iban', 'dob', 'lifespan', 'hours']}
       cancelLabel={t('cancel')}
       sendLabel={t('sendForSigning')}

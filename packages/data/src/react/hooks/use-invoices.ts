@@ -87,6 +87,9 @@ export function invalidateInvoiceQueries(queryClient: QueryClient) {
   });
   queryClient.invalidateQueries({ queryKey: ['accounting', 'roster-usage'] });
   queryClient.invalidateQueries({ queryKey: ['accounting', 'yearly-usage'] });
+  queryClient.invalidateQueries({
+    queryKey: ['accounting', 'volunteers-needing-timesheets'],
+  });
 }
 
 export function useCreateInvoice() {
