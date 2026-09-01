@@ -139,7 +139,8 @@ export class ContractService {
     // unit's profile first.
     const missingOrg =
       await this.documentProfileRequirementService.missingOrgProfileSources(
-        input.organizationUnitId ?? '',
+        organizationId,
+        input.organizationUnitId,
         template.body,
       );
     if (missingOrg.length > 0) {

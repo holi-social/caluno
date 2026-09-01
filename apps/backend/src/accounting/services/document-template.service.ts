@@ -76,7 +76,11 @@ export class DocumentTemplateService {
       // The unit must already carry the org-profile fields the template's
       // bound org sources render — otherwise the PDF comes out with "—" gaps
       // the org can't fix inline after the fact.
-      await this.assertOrgProfileComplete(input.organizationUnitId, input.body);
+      await this.assertOrgProfileComplete(
+        organizationId,
+        input.organizationUnitId,
+        input.body,
+      );
     }
 
     const existing = await this.db.query.documentTemplates.findFirst({
@@ -155,6 +159,7 @@ export class DocumentTemplateService {
     // unit the template is scoped to before overwriting its body.
     if (input.body !== undefined && existingTemplate.organizationUnitId) {
       await this.assertOrgProfileComplete(
+        organizationId,
         existingTemplate.organizationUnitId,
         input.body,
       );
@@ -290,12 +295,14 @@ export class DocumentTemplateService {
   }
 
   private async assertOrgProfileComplete(
+    organizationId: string,
     organizationUnitId: string | null,
     body: unknown,
   ): Promise<void> {
     if (!organizationUnitId) return;
     const missing =
       await this.documentProfileRequirementService.missingOrgProfileSources(
+        organizationId,
         organizationUnitId,
         body,
       );

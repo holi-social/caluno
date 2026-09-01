@@ -140,15 +140,18 @@ export class InvoiceFieldResolver {
     @Loader(InvoiceLoader) loader: InvoiceLoader,
   ): Promise<string[]> {
     let templateBody: unknown = invoice.documentTemplate?.body;
+    let organizationId = invoice.documentTemplate?.organizationId;
     let organizationUnitId: string | undefined =
       invoice.organizationUnitId ?? undefined;
-    if (!templateBody) {
+    if (!templateBody || !organizationId) {
       const full = await loader.invoiceWithRelationsById.load(invoice.id);
       templateBody = full.documentTemplate?.body;
+      organizationId = full.documentTemplate?.organizationId;
       organizationUnitId = full.organizationUnitId ?? undefined;
     }
-    if (!organizationUnitId) return [];
+    if (!organizationId) return [];
     return this.documentProfileRequirementService.missingOrgProfileSources(
+      organizationId,
       organizationUnitId,
       templateBody,
     );

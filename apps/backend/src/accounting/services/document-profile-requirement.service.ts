@@ -113,13 +113,16 @@ export class DocumentProfileRequirementService {
    * account manager sees and what the document renders stay in sync.
    */
   async missingOrgProfileSources(
-    organizationUnitId: string,
+    organizationId: string,
+    organizationUnitId: string | null | undefined,
     templateBody: unknown,
   ): Promise<string[]> {
     const required = this.requiredOrgSources(templateBody);
     if (required.length === 0) return [];
     const unit = await this.db.query.organizationUnits.findFirst({
-      where: { id: organizationUnitId },
+      where: organizationUnitId
+        ? { id: organizationUnitId }
+        : { organizationId, parentId: { isNull: true } },
     });
     if (!unit) return [];
 
