@@ -3,14 +3,10 @@ import { Building2, Calendar, LogIn, ScanQrCode } from 'lucide-react';
 import { notFound } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
 import { UserCard } from '@/components/user-card';
-import { resolveCheckInTargetOrg } from '@/domain/shift/resolve-check-in-target-org';
 import { Link, redirect } from '@/i18n/navigation';
 import { getDataClient } from '@/lib/data-client';
 import { getFormatting } from '@/lib/formatting/formatting-server';
-import {
-  getLastVisitedOrgServer,
-  getMyCheckInOrgUnits,
-} from '@/lib/org-context-server';
+import { getMyCheckInOrgUnits } from '@/lib/org-context-server';
 
 interface DecidePageProps {
   params: Promise<{ locale: string; checkInId: string }>;
@@ -35,20 +31,15 @@ export default async function VolunteeringDecidePage({
     notFound();
   }
 
-  // TEMP-CHECKIN-MIGRATION: target org unit for the legacy admin check-in
-  // page, until a volunteering-side check-in page exists.
-  const targetOrgUId = resolveCheckInTargetOrg({
-    eligibleOrgUnitIds: context.eligibleOrganizationUnits.map((u) => u.id),
-    orgUIdParam,
-    lastVisitedOrgId: await getLastVisitedOrgServer(),
-  });
+  // The check-in page resolves its own org unit from the caller's
+  // check-in:manage units; `orgUId` is forwarded only as a preference.
+  const checkInHref = orgUIdParam
+    ? `/check-in/${checkInId}/check-in?orgUId=${encodeURIComponent(orgUIdParam)}`
+    : `/check-in/${checkInId}/check-in`;
 
-  // TEMP-CHECKIN-MIGRATION: nothing to check out -> straight to legacy check-in.
-  if (context.openTimeEntries.length === 0 && targetOrgUId) {
-    redirect({
-      href: `/admin/${targetOrgUId}/check-in/${checkInId}/check-in`,
-      locale,
-    });
+  // Nothing to check out -> straight to check-in.
+  if (context.openTimeEntries.length === 0) {
+    redirect({ href: checkInHref, locale });
   }
 
   const t = await getTranslations('CheckIn');
@@ -98,23 +89,11 @@ export default async function VolunteeringDecidePage({
         </div>
       )}
 
-      {targetOrgUId ? (
-        <Button asChild size="lg" className="w-full">
-          {/* TEMP-CHECKIN-MIGRATION: links to the legacy admin check-in page. */}
-          <Link href={`/admin/${targetOrgUId}/check-in/${checkInId}/check-in`}>
-            <LogIn /> {t('checkInButton')}
-          </Link>
-        </Button>
-      ) : (
-        <Card>
-          <CardContent>
-            <p className="font-medium">{t('noEligibleOrgTitle')}</p>
-            <p className="text-sm text-muted-foreground">
-              {t('noEligibleOrgDescription')}
-            </p>
-          </CardContent>
-        </Card>
-      )}
+      <Button asChild size="lg" className="w-full">
+        <Link href={checkInHref}>
+          <LogIn /> {t('checkInButton')}
+        </Link>
+      </Button>
     </div>
   );
 }
