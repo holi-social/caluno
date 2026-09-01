@@ -21,6 +21,12 @@ export type CheckInSelection = {
   date: Date | null;
   shiftId: string | null;
   shiftInstanceId: string | null;
+  /**
+   * The full selected instance, carried alongside `shiftInstanceId` so the UI
+   * can render it even when the currently fetched (month-scoped) instances no
+   * longer contain it.
+   */
+  selectedInstance: CheckInInstance | null;
 };
 
 type RawInstance = {
@@ -83,11 +89,19 @@ function closestToNow(
 export function pickInitialInstance(
   instances: CheckInInstance[],
   now: Date,
-): { shiftId: string; shiftInstanceId: string } | null {
+): {
+  shiftId: string;
+  shiftInstanceId: string;
+  selectedInstance: CheckInInstance;
+} | null {
   const today = closestToNow(instancesOnDate(instances, now), now);
   if (!today) return null;
 
-  return { shiftId: today.masterId, shiftInstanceId: today.id };
+  return {
+    shiftId: today.masterId,
+    shiftInstanceId: today.id,
+    selectedInstance: today,
+  };
 }
 
 export function applyOrgUnit(
@@ -99,6 +113,7 @@ export function applyOrgUnit(
     orgUnitId,
     shiftId: null,
     shiftInstanceId: null,
+    selectedInstance: null,
   };
 }
 
@@ -109,7 +124,12 @@ export function applyDate(
   now: Date,
 ): CheckInSelection {
   if (!selection.shiftId) {
-    return { ...selection, date, shiftInstanceId: null };
+    return {
+      ...selection,
+      date,
+      shiftInstanceId: null,
+      selectedInstance: null,
+    };
   }
 
   const match = closestToNow(
@@ -120,10 +140,21 @@ export function applyDate(
   );
 
   if (!match) {
-    return { ...selection, date, shiftId: null, shiftInstanceId: null };
+    return {
+      ...selection,
+      date,
+      shiftId: null,
+      shiftInstanceId: null,
+      selectedInstance: null,
+    };
   }
 
-  return { ...selection, date, shiftInstanceId: match.id };
+  return {
+    ...selection,
+    date,
+    shiftInstanceId: match.id,
+    selectedInstance: match,
+  };
 }
 
 export function applyShift(
@@ -142,10 +173,21 @@ export function applyShift(
     : null;
 
   if (!match) {
-    return { ...selection, shiftId, date: null, shiftInstanceId: null };
+    return {
+      ...selection,
+      shiftId,
+      date: null,
+      shiftInstanceId: null,
+      selectedInstance: null,
+    };
   }
 
-  return { ...selection, shiftId, shiftInstanceId: match.id };
+  return {
+    ...selection,
+    shiftId,
+    shiftInstanceId: match.id,
+    selectedInstance: match,
+  };
 }
 
 export function applyShiftInstance(
@@ -157,5 +199,6 @@ export function applyShiftInstance(
     date: new Date(instance.actualStartsAt),
     shiftId: instance.masterId,
     shiftInstanceId: instance.id,
+    selectedInstance: instance,
   };
 }

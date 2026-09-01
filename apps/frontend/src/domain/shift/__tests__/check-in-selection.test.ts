@@ -52,6 +52,7 @@ const base: CheckInSelection = {
   date: sep(1, 0),
   shiftId: 'soup',
   shiftInstanceId: 'i-soup-today',
+  selectedInstance: soupToday,
 };
 
 describe('pickInitialInstance', () => {
@@ -59,6 +60,7 @@ describe('pickInitialInstance', () => {
     expect(pickInitialInstance(ALL, NOW)).toEqual({
       shiftId: 'garden',
       shiftInstanceId: 'i-garden-today',
+      selectedInstance: gardenToday,
     });
   });
 
@@ -67,6 +69,7 @@ describe('pickInitialInstance', () => {
     expect(pickInitialInstance([soupToday, gardenToday], early)).toEqual({
       shiftId: 'garden',
       shiftInstanceId: 'i-garden-today',
+      selectedInstance: gardenToday,
     });
   });
 
@@ -80,6 +83,7 @@ describe('applyDate', () => {
     const next = applyDate(base, sep(2, 0), ALL, NOW);
     expect(next.shiftId).toBe('soup');
     expect(next.shiftInstanceId).toBe('i-soup-tomorrow');
+    expect(next.selectedInstance).toEqual(soupTomorrow);
   });
 
   it('clears the shift when it has no instance on the new date', () => {
@@ -87,14 +91,21 @@ describe('applyDate', () => {
     expect(next.date).toEqual(sep(3, 0));
     expect(next.shiftId).toBeNull();
     expect(next.shiftInstanceId).toBeNull();
+    expect(next.selectedInstance).toBeNull();
   });
 
   it('keeps the shift cleared when none is selected', () => {
-    const noShift = { ...base, shiftId: null, shiftInstanceId: null };
+    const noShift = {
+      ...base,
+      shiftId: null,
+      shiftInstanceId: null,
+      selectedInstance: null,
+    };
     const next = applyDate(noShift, sep(2, 0), ALL, NOW);
     expect(next.date).toEqual(sep(2, 0));
     expect(next.shiftId).toBeNull();
     expect(next.shiftInstanceId).toBeNull();
+    expect(next.selectedInstance).toBeNull();
   });
 });
 
@@ -103,15 +114,22 @@ describe('applyShift', () => {
     const next = applyShift(base, 'garden', ALL, NOW);
     expect(next.shiftId).toBe('garden');
     expect(next.shiftInstanceId).toBe('i-garden-today');
+    expect(next.selectedInstance).toEqual(gardenToday);
     expect(next.date).toEqual(base.date);
   });
 
   it('clears the date when the shift has no instance on it', () => {
-    const noShiftSelected = { ...base, shiftId: null, shiftInstanceId: null };
+    const noShiftSelected = {
+      ...base,
+      shiftId: null,
+      shiftInstanceId: null,
+      selectedInstance: null,
+    };
     const next = applyShift(noShiftSelected, 'nope', ALL, NOW);
     expect(next.shiftId).toBe('nope');
     expect(next.date).toBeNull();
     expect(next.shiftInstanceId).toBeNull();
+    expect(next.selectedInstance).toBeNull();
   });
 
   it('picks the instance closest to now when a shift runs twice that day', () => {
@@ -123,6 +141,7 @@ describe('applyShift', () => {
     );
     const next = applyShift(base, 'soup', [soupEarly, soupToday], NOW);
     expect(next.shiftInstanceId).toBe('i-soup-early');
+    expect(next.selectedInstance).toEqual(soupEarly);
   });
 });
 
@@ -133,6 +152,7 @@ describe('applyOrgUnit', () => {
     expect(next.date).toEqual(base.date);
     expect(next.shiftId).toBeNull();
     expect(next.shiftInstanceId).toBeNull();
+    expect(next.selectedInstance).toBeNull();
   });
 });
 
@@ -168,10 +188,12 @@ describe('applyShiftInstance', () => {
       date: null,
       shiftId: 'soup',
       shiftInstanceId: null,
+      selectedInstance: null,
     };
     const next = applyShiftInstance(cleared, soupTomorrow);
     expect(next.shiftId).toBe('soup');
     expect(next.shiftInstanceId).toBe('i-soup-tomorrow');
+    expect(next.selectedInstance).toEqual(soupTomorrow);
     expect(next.date?.toDateString()).toBe(sep(2, 0).toDateString());
   });
 
@@ -179,6 +201,7 @@ describe('applyShiftInstance', () => {
     const next = applyShiftInstance(base, gardenToday);
     expect(next.shiftId).toBe('garden');
     expect(next.shiftInstanceId).toBe('i-garden-today');
+    expect(next.selectedInstance).toEqual(gardenToday);
     expect(next.date?.toDateString()).toBe(sep(1, 0).toDateString());
   });
 });
