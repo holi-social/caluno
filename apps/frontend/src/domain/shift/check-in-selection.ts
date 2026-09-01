@@ -49,9 +49,7 @@ export function instancesOnDate(
   instances: CheckInInstance[],
   date: Date,
 ): CheckInInstance[] {
-  return instances.filter((i) =>
-    isSameDay(new Date(i.actualStartsAt), date),
-  );
+  return instances.filter((i) => isSameDay(new Date(i.actualStartsAt), date));
 }
 
 /**
