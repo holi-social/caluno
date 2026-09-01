@@ -15,8 +15,8 @@ import {
   OrganizationUnitEntity,
   OrganizationUnitTypeEntity,
 } from '../database/schema';
-import type { PaginationInput } from '../graphql/pagination.input';
 import { NotFoundGraphQLError } from '../graphql/errors';
+import type { PaginationInput } from '../graphql/pagination.input';
 import { MembershipService } from '../membership/membership.service';
 import { NotificationService } from '../notification';
 import {
