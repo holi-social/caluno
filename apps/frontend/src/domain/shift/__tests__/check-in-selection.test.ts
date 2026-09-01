@@ -3,9 +3,11 @@ import {
   applyDate,
   applyOrgUnit,
   applyShift,
+  applyShiftInstance,
   type CheckInInstance,
   type CheckInSelection,
   pickInitialInstance,
+  toCheckInInstance,
 } from '../check-in-selection';
 
 // Fixtures are built in LOCAL time on purpose: `instancesOnDate` compares
@@ -86,6 +88,14 @@ describe('applyDate', () => {
     expect(next.shiftId).toBeNull();
     expect(next.shiftInstanceId).toBeNull();
   });
+
+  it('keeps the shift cleared when none is selected', () => {
+    const noShift = { ...base, shiftId: null, shiftInstanceId: null };
+    const next = applyDate(noShift, sep(2, 0), ALL, NOW);
+    expect(next.date).toEqual(sep(2, 0));
+    expect(next.shiftId).toBeNull();
+    expect(next.shiftInstanceId).toBeNull();
+  });
 });
 
 describe('applyShift', () => {
@@ -97,8 +107,8 @@ describe('applyShift', () => {
   });
 
   it('clears the date when the shift has no instance on it', () => {
-    const onlyTomorrow = { ...base, shiftId: null, shiftInstanceId: null };
-    const next = applyShift(onlyTomorrow, 'nope', ALL, NOW);
+    const noShiftSelected = { ...base, shiftId: null, shiftInstanceId: null };
+    const next = applyShift(noShiftSelected, 'nope', ALL, NOW);
     expect(next.shiftId).toBe('nope');
     expect(next.date).toBeNull();
     expect(next.shiftInstanceId).toBeNull();
@@ -123,5 +133,52 @@ describe('applyOrgUnit', () => {
     expect(next.date).toEqual(base.date);
     expect(next.shiftId).toBeNull();
     expect(next.shiftInstanceId).toBeNull();
+  });
+});
+
+describe('toCheckInInstance', () => {
+  const raw = {
+    id: 'i-1',
+    actualStartsAt: soupToday.actualStartsAt,
+    actualEndsAt: soupToday.actualEndsAt,
+    master: { id: 'soup', title: 'Soup kitchen' },
+  };
+
+  it('prefers the instance override title', () => {
+    expect(
+      toCheckInInstance({ ...raw, overrideTitle: 'Renamed for tonight' }).title,
+    ).toBe('Renamed for tonight');
+  });
+
+  it('falls back to the shift title when there is no override', () => {
+    expect(toCheckInInstance({ ...raw, overrideTitle: null })).toEqual({
+      id: 'i-1',
+      masterId: 'soup',
+      title: 'Soup kitchen',
+      actualStartsAt: soupToday.actualStartsAt,
+      actualEndsAt: soupToday.actualEndsAt,
+    });
+  });
+});
+
+describe('applyShiftInstance', () => {
+  it('sets shift, instance and date together from one instance', () => {
+    const cleared: CheckInSelection = {
+      orgUnitId: 'ou-1',
+      date: null,
+      shiftId: 'soup',
+      shiftInstanceId: null,
+    };
+    const next = applyShiftInstance(cleared, soupTomorrow);
+    expect(next.shiftId).toBe('soup');
+    expect(next.shiftInstanceId).toBe('i-soup-tomorrow');
+    expect(next.date?.toDateString()).toBe(sep(2, 0).toDateString());
+  });
+
+  it('repoints every field when switching to a different shift', () => {
+    const next = applyShiftInstance(base, gardenToday);
+    expect(next.shiftId).toBe('garden');
+    expect(next.shiftInstanceId).toBe('i-garden-today');
+    expect(next.date?.toDateString()).toBe(sep(1, 0).toDateString());
   });
 });
