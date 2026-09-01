@@ -308,9 +308,7 @@ function countActionableForTile(
   tile: Exclude<TileFilter, null>,
 ): number {
   if (tile === 'needs-timesheet') {
-    return volunteers.filter(
-      (vol) => vol.needsTimesheet && vol.documents.length > 0,
-    ).length;
+    return volunteers.filter((vol) => vol.needsTimesheet).length;
   }
   return volunteers.reduce(
     (sum, vol) =>
@@ -339,9 +337,7 @@ const TILE_DOC_TYPE: Record<Exclude<TileFilter, null>, DocTypeFilter> = {
 function countForTile(volunteers: BoardVolunteer[], tile: TileFilter): number {
   if (!tile) return 0;
   if (tile === 'needs-timesheet') {
-    return volunteers.filter(
-      (vol) => vol.needsTimesheet && vol.documents.length > 0,
-    ).length;
+    return volunteers.filter((vol) => vol.needsTimesheet).length;
   }
   return volunteers.reduce(
     (sum, vol) =>
@@ -368,7 +364,7 @@ function applyFilters(
 ): BoardVolunteer[] {
   return volunteers.filter((vol) => {
     if (tile === 'needs-timesheet') {
-      if (!vol.needsTimesheet || vol.documents.length === 0) return false;
+      if (!vol.needsTimesheet) return false;
       if (pauschale !== 'all' && vol.pauschale !== pauschale) return false;
       if (search && !vol.name.toLowerCase().includes(search.toLowerCase()))
         return false;
@@ -582,8 +578,7 @@ export function ReimbursementsBoard({
         if (pauschale === 'all') return true;
         // A needs-timesheet volunteer may have no document for the type they
         // need a timesheet for, so match their primary pauschale instead.
-        if (v.needsTimesheet)
-          return v.documents.length > 0 && v.pauschale === pauschale;
+        if (v.needsTimesheet) return v.pauschale === pauschale;
         return v.documents.some(
           (d) => (d.pauschale ?? v.pauschale) === pauschale,
         );
