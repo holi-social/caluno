@@ -9,6 +9,7 @@ import {
   useEffectiveRates,
   useEligibleTimeEntriesForInvoice,
   useReimbursementTypes,
+  useYearlyUsage,
 } from '@repo/data/react';
 import { format } from 'date-fns';
 import { useTranslations } from 'next-intl';
@@ -161,7 +162,6 @@ export function InvoiceCreationModal({
   const contractTemplate = contractTemplateQuery.data
     ? parseTemplateBody(contractTemplateQuery.data.body)
     : null;
-
   const [nameField, setNameField] = useState<NameFieldState | null>(null);
   const [addressField, setAddressField] = useState<IbanFieldState | null>(null);
   const [ibanField, setIbanField] = useState<IbanFieldState | null>(null);
@@ -177,6 +177,10 @@ export function InvoiceCreationModal({
     periodStart: period.from?.toISOString(),
     periodEnd: (period.to ?? period.from)?.toISOString(),
   });
+  const yearlyUsageQuery = useYearlyUsage(
+    reimbursementType?.id,
+    period.from?.getFullYear(),
+  );
   const lines = useMemo(
     () => (eligibleQuery.data ?? []).map(mapEligibleTimeEntry),
     [eligibleQuery.data],
@@ -334,6 +338,10 @@ export function InvoiceCreationModal({
   };
 
   const sendErrorIsNoTemplate = sendErrorCode === 'NOT_FOUND';
+  const sendErrorIsOrgProfile = /organization is missing/i.test(
+    sendError ?? '',
+  );
+  const completeOrgProfileCta = () => router.push(`/admin/${orgUId}/settings`);
 
   const pauschaleLabel = tPauschale(
     `type${getPauschaleKey(pauschale).toUpperCase()}` as Parameters<
@@ -382,6 +390,16 @@ export function InvoiceCreationModal({
         : undefined,
     period_start: format(period.from ?? new Date(), 'dd.MM.yyyy'),
     period_end: format(period.to ?? new Date(), 'dd.MM.yyyy'),
+    contract_period: `${format(period.from ?? new Date(), 'dd.MM.yyyy')} – ${format(
+      period.to ?? new Date(),
+      'dd.MM.yyyy',
+    )}`,
+    already_received_amount:
+      yearlyUsageQuery.data?.usedCents !== undefined
+        ? `${centsToEuros(yearlyUsageQuery.data.usedCents).toLocaleString(
+            'de-DE',
+          )} €`
+        : undefined,
   };
 
   const tableBlock = template?.blocks.find((b) => b.kind === 'table');
@@ -441,12 +459,16 @@ export function InvoiceCreationModal({
       errorCtaLabel={
         noInvoiceTemplate || sendErrorIsNoTemplate
           ? t('noTemplateCta')
-          : undefined
+          : sendErrorIsOrgProfile
+            ? t('completeOrgProfileCta')
+            : undefined
       }
       errorCtaAction={
         noInvoiceTemplate || sendErrorIsNoTemplate
           ? createTemplateCta
-          : undefined
+          : sendErrorIsOrgProfile
+            ? completeOrgProfileCta
+            : undefined
       }
       fieldsSkeletonKeys={['name', 'iban', 'period', 'cap', 'hours']}
       cancelLabel={t('cancel')}

@@ -237,6 +237,10 @@ export function ContractCreationModal({
   };
 
   const sendErrorIsNoTemplate = sendErrorCode === 'NOT_FOUND';
+  const sendErrorIsOrgProfile = /organization is missing/i.test(
+    sendError ?? '',
+  );
+  const completeOrgProfileCta = () => router.push(`/admin/${orgUId}/settings`);
 
   const pauschaleLabel = tPauschale(
     `type${getPauschaleKey(pauschale).toUpperCase()}` as Parameters<
@@ -294,12 +298,16 @@ export function ContractCreationModal({
       errorCtaLabel={
         noContractTemplate || sendErrorIsNoTemplate
           ? t('noTemplateCta')
-          : undefined
+          : sendErrorIsOrgProfile
+            ? t('completeOrgProfileCta')
+            : undefined
       }
       errorCtaAction={
         noContractTemplate || sendErrorIsNoTemplate
           ? createTemplateCta
-          : undefined
+          : sendErrorIsOrgProfile
+            ? completeOrgProfileCta
+            : undefined
       }
       fieldsSkeletonKeys={['address', 'iban', 'dob', 'lifespan', 'hours']}
       cancelLabel={t('cancel')}

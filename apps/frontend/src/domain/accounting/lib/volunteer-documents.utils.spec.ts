@@ -166,6 +166,7 @@ describe('contractToVolunteerDocument', () => {
         renewDate: null,
         downloadUrl: null,
         missingProfileFields: [],
+        missingOrgProfileFields: [],
         createdAt: '2026-07-01T00:00:00.000Z',
         updatedAt: null,
         volunteer: { id: 'v-1', name: 'Alexandra Bauer', image: null },

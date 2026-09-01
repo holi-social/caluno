@@ -81,6 +81,7 @@ fragment ContractSummaryFields on Contract {
   renewDate
   downloadUrl
   missingProfileFields
+  missingOrgProfileFields
   createdAt
   updatedAt
   volunteer {
@@ -184,6 +185,7 @@ fragment InvoiceSummaryFields on Invoice {
   }
   downloadUrl
   missingProfileFields
+  missingOrgProfileFields
   createdAt
   updatedAt
   volunteer {
