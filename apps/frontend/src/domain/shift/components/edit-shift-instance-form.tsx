@@ -36,6 +36,10 @@ import {
   type EditShiftInstanceFormValues,
   editShiftInstanceFormSchema,
 } from '../schemas';
+import {
+  type RecurrenceEndMode,
+  RecurrenceEndSelect,
+} from './recurrence-end-select';
 import { RecurrenceSelect } from './recurrence-select';
 import { ShiftInstanceSummaryCard } from './shift-instance-summary-card';
 
@@ -105,6 +109,8 @@ export const EditShiftInstanceForm = ({
     startTimeRequired: t('validation.startTimeRequired'),
     endTimeRequired: t('validation.endTimeRequired'),
     minMaxVolunteers: t('validation.minMaxVolunteers'),
+    recurrenceEndRequired: t('validation.recurrenceEndRequired'),
+    recurrenceEndBeforeStart: t('validation.recurrenceEndBeforeStart'),
   });
 
   const {
@@ -123,6 +129,7 @@ export const EditShiftInstanceForm = ({
       imageFileId: undefined,
       applyToAllFuture: false,
       ...initialValues,
+      recurrenceEndMode: initialValues.recurrenceEndsAt ? 'on' : 'never',
     },
   });
 
@@ -130,6 +137,9 @@ export const EditShiftInstanceForm = ({
   const startsAt = watch('startsAt');
   const endsAt = watch('endsAt');
   const applyToAllFuture = watch('applyToAllFuture');
+  const recurrenceDays = watch('recurrenceDays');
+  const recurrenceEndMode = watch('recurrenceEndMode') ?? 'never';
+  const recurrenceEndsAt = watch('recurrenceEndsAt');
   const instanceDate = initialValues.startsAt;
 
   const onSubmit = async (formData: EditShiftInstanceFormValues) => {
@@ -247,14 +257,41 @@ export const EditShiftInstanceForm = ({
 
       {applyToAllFuture && (
         <RecurrenceSelect
-          value={watch('recurrenceDays')}
-          onChange={(days) =>
+          value={recurrenceDays}
+          onChange={(days) => {
             setValue(
               'recurrenceDays',
               days as EditShiftInstanceFormValues['recurrenceDays'],
-            )
-          }
+            );
+            if (days.length === 0) {
+              setValue('recurrenceEndMode', 'never', { shouldValidate: true });
+              setValue('recurrenceEndsAt', undefined, {
+                shouldValidate: true,
+              });
+            }
+          }}
           disabled={pending}
+        />
+      )}
+
+      {applyToAllFuture && (recurrenceDays?.length ?? 0) > 0 && (
+        <RecurrenceEndSelect
+          mode={recurrenceEndMode}
+          date={recurrenceEndsAt}
+          minDate={startsAt}
+          error={errors.recurrenceEndsAt?.message}
+          disabled={pending}
+          onModeChange={(mode: RecurrenceEndMode) => {
+            setValue('recurrenceEndMode', mode, { shouldValidate: true });
+            if (mode === 'never') {
+              setValue('recurrenceEndsAt', undefined, {
+                shouldValidate: true,
+              });
+            }
+          }}
+          onDateChange={(date) => {
+            setValue('recurrenceEndsAt', date, { shouldValidate: true });
+          }}
         />
       )}
 
