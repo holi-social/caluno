@@ -159,6 +159,7 @@ input CreateOrganizationInput {
 
 input CreateOrganizationUnitInput {
   address: String
+  city: String
   contactEmail: String
   description: String
   logoFileId: String
@@ -168,6 +169,7 @@ input CreateOrganizationUnitInput {
   phone: String
   typeId: String!
   websiteUrl: String
+  zipCode: String
 }
 
 input CreateRequirementFormInput {
@@ -725,6 +727,7 @@ type OrganizationTree {
 type OrganizationUnit {
   address: String
   children: [OrganizationUnit!]!
+  city: String
   contactEmail: String
   coverUrl: String
   deletedAt: DateTime
@@ -744,6 +747,7 @@ type OrganizationUnit {
   slug: String!
   type: OrganizationUnitType!
   websiteUrl: String
+  zipCode: String
 }
 
 type OrganizationUnitPaginatedResponse {
@@ -1363,6 +1367,7 @@ input UpdateOrganizationInput {
 
 input UpdateOrganizationUnitInput {
   address: String
+  city: String
   contactEmail: String
   description: String
   logoFileId: String
@@ -1373,6 +1378,7 @@ input UpdateOrganizationUnitInput {
   requiredMembershipRequirementProfileId: String
   typeId: String
   websiteUrl: String
+  zipCode: String
 }
 
 input UpdateRequirementFormInput {

@@ -60,6 +60,7 @@ export class InvoiceService {
         signatures: true,
         statusChanges: true,
         invoiceTimeEntries: true,
+        organizationUnit: true,
       },
     });
     if (!invoice) {
@@ -189,12 +190,12 @@ export class InvoiceService {
         template.id,
       );
 
-    // The org must have the profile fields its documents render (e.g. city /
+    // The unit must have the profile fields its documents render (e.g. city /
     // address) before one is created — otherwise the PDF comes out with gaps
     // the org can't fix inline. The account manager is told to complete the
-    // org profile first.
+    // unit's profile first.
     const missingOrg = await this.documentProfileRequirementService.missingOrgProfileSources(
-      organizationId,
+      input.organizationUnitId ?? '',
       template.body,
     );
     if (missingOrg.length > 0) {
@@ -217,6 +218,7 @@ export class InvoiceService {
           documentTemplateId: template.id,
           volunteerId: input.volunteerId,
           reimbursementTypeId: input.reimbursementTypeId,
+          organizationUnitId: input.organizationUnitId,
           invoiceStatus: this.nextInvoiceStatus(orderedSignees[0].signeeType),
           periodStart: input.periodStart,
           periodEnd: input.periodEnd,

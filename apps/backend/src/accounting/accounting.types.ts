@@ -45,6 +45,7 @@ export type ContractWithRelations = InferResultType<
     reimbursementType: true;
     signatures: true;
     statusChanges: true;
+    organizationUnit: true;
   }
 >;
 
@@ -56,5 +57,6 @@ export type InvoiceWithRelations = InferResultType<
     signatures: true;
     statusChanges: true;
     invoiceTimeEntries: true;
+    organizationUnit: true;
   }
 >;

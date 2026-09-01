@@ -123,16 +123,16 @@ export class ContractFieldResolver {
     @Loader(ContractLoader) loader: ContractLoader,
   ): Promise<string[]> {
     let templateBody: unknown = contract.documentTemplate?.body;
-    let organizationId: string | undefined =
-      contract.documentTemplate?.organizationId;
+    let organizationUnitId: string | undefined =
+      contract.organizationUnitId ?? undefined;
     if (!templateBody) {
       const full = await loader.contractWithRelationsById.load(contract.id);
       templateBody = full.documentTemplate?.body;
-      organizationId = full.documentTemplate?.organizationId;
+      organizationUnitId = full.organizationUnitId ?? undefined;
     }
-    if (!organizationId) return [];
+    if (!organizationUnitId) return [];
     return this.documentProfileRequirementService.missingOrgProfileSources(
-      organizationId,
+      organizationUnitId,
       templateBody,
     );
   }

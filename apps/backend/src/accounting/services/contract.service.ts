@@ -54,6 +54,7 @@ export class ContractService {
         reimbursementType: true,
         signatures: true,
         statusChanges: true,
+        organizationUnit: true,
       },
     });
     if (!contract) {
@@ -132,12 +133,12 @@ export class ContractService {
         template.id,
       );
 
-    // The org must have the profile fields its documents render (e.g. city /
+    // The unit must have the profile fields its documents render (e.g. city /
     // address) before one is created — otherwise the PDF comes out with gaps
     // the org can't fix inline. The account manager is told to complete the
-    // org profile first.
+    // unit's profile first.
     const missingOrg = await this.documentProfileRequirementService.missingOrgProfileSources(
-      organizationId,
+      input.organizationUnitId ?? '',
       template.body,
     );
     if (missingOrg.length > 0) {
@@ -155,6 +156,7 @@ export class ContractService {
           documentTemplateId: template.id,
           volunteerId: input.volunteerId,
           reimbursementTypeId: input.reimbursementTypeId,
+          organizationUnitId: input.organizationUnitId,
           contractStatus: this.nextContractStatus(orderedSignees[0].signeeType),
           periodStart: input.periodStart,
           periodEnd: input.periodEnd,

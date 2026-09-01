@@ -347,10 +347,12 @@ export class DocumentRenderingService {
     if (!template) {
       throw new Error('Document is missing its template');
     }
-    const [org, volunteer] = await Promise.all([
-      this.db.query.organizations.findFirst({
-        where: { id: template.organizationId },
-      }),
+    const [rootUnit, volunteer] = await Promise.all([
+      'organizationUnit' in document && document.organizationUnit
+        ? Promise.resolve(document.organizationUnit)
+        : this.db.query.organizationUnits.findFirst({
+            where: { id: template.organizationUnitId ?? undefined },
+          }),
       this.db.query.users.findFirst({
         where: { id: document.volunteerId },
       }),
@@ -394,9 +396,9 @@ export class DocumentRenderingService {
       typeof value === 'string' ? value : '';
 
     return {
-      org_name: org?.name ?? '',
-      org_address: org?.address ?? '',
-      org_city: org?.city ?? '',
+      org_name: rootUnit?.name ?? '',
+      org_address: rootUnit?.address ?? '',
+      org_city: rootUnit?.city ?? '',
       volunteer_name: volunteer?.name ?? '',
       volunteer_first_name: firstName,
       volunteer_last_name: lastName,
