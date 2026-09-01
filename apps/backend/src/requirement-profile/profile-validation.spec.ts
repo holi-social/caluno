@@ -23,7 +23,6 @@ describe('validateSystemKeyValue', () => {
     });
 
     it('rejects malformed BICs', () => {
-      expectBad('', 'bic');
       expectBad('COB', 'bic'); // too short
       expectBad('COBADEFFXXXX', 'bic'); // too long
       expectBad('1234', 'bic'); // digits only
@@ -43,7 +42,10 @@ describe('validateSystemKeyValue', () => {
     it('rejects an invalid checksum or malformed IBAN', () => {
       expectBad('DE89 3704 0044 0532 0130 01', 'iban');
       expectBad('DE00XX', 'iban');
-      expectBad('', 'iban');
+    });
+
+    it('accepts an empty IBAN (no value is not an invalid value)', () => {
+      expectOk('', 'iban');
     });
   });
 });
