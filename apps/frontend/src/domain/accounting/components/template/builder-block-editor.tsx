@@ -52,7 +52,12 @@ import {
  * blocks. The legal text stays organized by clause; the editor groups the same fields by
  * what a coordinator is actually filling in (org info, volunteer info, engagement terms).
  */
-const ORG_SOURCES: DataSourceKey[] = ['org_name', 'org_address', 'org_city'];
+const ORG_SOURCES: DataSourceKey[] = [
+  'org_name',
+  'org_address',
+  'org_city',
+  'org_legal_rep',
+];
 const VOLUNTEER_SOURCES: DataSourceKey[] = [
   'volunteer_first_name',
   'volunteer_last_name',

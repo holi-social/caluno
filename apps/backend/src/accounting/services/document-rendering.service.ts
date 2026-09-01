@@ -399,6 +399,7 @@ export class DocumentRenderingService {
       org_name: rootUnit?.name ?? '',
       org_address: rootUnit?.address ?? '',
       org_city: rootUnit?.city ?? '',
+      org_legal_rep: rootUnit?.legalRep ?? '',
       volunteer_name: volunteer?.name ?? '',
       volunteer_first_name: firstName,
       volunteer_last_name: lastName,

@@ -176,6 +176,18 @@ export function OrgUnitFormContent({
       </Field>
 
       <Field>
+        <FieldLabel htmlFor="legalRep">{t('legalRepLabel')}</FieldLabel>
+        <Input
+          id="legalRep"
+          placeholder={t('legalRepPlaceholder')}
+          disabled={isPending}
+          aria-invalid={!!errors.legalRep}
+          {...register('legalRep')}
+        />
+        {errors.legalRep && <FieldError>{errors.legalRep.message}</FieldError>}
+      </Field>
+
+      <Field>
         <FieldLabel htmlFor="description">{t('descriptionLabel')}</FieldLabel>
         <Textarea
           id="description"

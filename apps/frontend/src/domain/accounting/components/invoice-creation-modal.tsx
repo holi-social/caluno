@@ -367,9 +367,8 @@ export function InvoiceCreationModal({
       pauschale,
       orgName: org.name,
       orgAddress: org.address,
-      // orgCity/orgLegalRep: no such field exists on the org profile yet
-      // (see OrganizationData) — a real gap, left unresolved rather than
-      // invented.
+      orgCity: org.city,
+      orgLegalRep: org.legalRep,
       hourlyRateCents: effectiveRate?.hourlyRateCents,
       yearlyLimitCents:
         effectiveRate?.reimbursementType.yearlyLimitCents ??

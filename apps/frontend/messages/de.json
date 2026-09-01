@@ -617,6 +617,8 @@
       "cityPlaceholder": "z. B. Berlin",
       "zipCodeLabel": "Postleitzahl",
       "zipCodePlaceholder": "z. B. 10115",
+      "legalRepLabel": "Vertretungsberechtigte Person",
+      "legalRepPlaceholder": "z. B. Erika Musterfrau",
       "descriptionLabel": "Beschreibung",
       "descriptionPlaceholder": "Beschreibe diese Organisationseinheit...",
       "emailLabel": "E-Mail",

@@ -19,6 +19,7 @@ export function createOrgUnitSchema(t: OrgUnitSchemaMessages) {
     address: z.string().optional(),
     city: z.string().optional(),
     zipCode: z.string().optional(),
+    legalRep: z.string().optional(),
   });
 }
 

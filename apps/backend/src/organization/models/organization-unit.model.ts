@@ -46,6 +46,9 @@ export class OrganizationUnit {
   zipCode?: string | null;
 
   @Field(() => String, { nullable: true })
+  legalRep?: string | null;
+
+  @Field(() => String, { nullable: true })
   description?: string | null;
 
   @Field(() => OrganizationModel)

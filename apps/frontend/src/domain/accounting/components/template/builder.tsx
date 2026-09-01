@@ -181,6 +181,8 @@ export function TemplateBuilder({
     pauschale,
     orgName: org.name,
     orgAddress: org.address,
+    orgCity: org.city,
+    orgLegalRep: org.legalRep,
     hourlyRateCents: effectiveRate?.hourlyRateCents,
     yearlyLimitCents:
       effectiveRate?.reimbursementType.yearlyLimitCents ??

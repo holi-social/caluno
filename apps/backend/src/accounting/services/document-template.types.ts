@@ -64,4 +64,5 @@ export const ORG_SOURCE_TO_ORG_COLUMN: Record<string, string> = {
   org_name: 'name',
   org_address: 'address',
   org_city: 'city',
+  org_legal_rep: 'legal_rep',
 };

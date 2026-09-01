@@ -131,4 +131,36 @@ describe('DocumentProfileRequirementService', () => {
       ['org_city'],
     );
   });
+
+  it('reports org legal rep as missing when the org unit has none', async () => {
+    const dbWithOrg = {
+      query: {
+        organizationUnits: {
+          findFirst: () =>
+            Promise.resolve({
+              id: 'unit-1',
+              name: 'Playground',
+              address: 'Straße 1',
+              city: 'Berlin',
+              legalRep: '',
+            }),
+        },
+      },
+    } as never;
+    const serviceWithOrg = new DocumentProfileRequirementService(
+      dbWithOrg,
+      userProfileService,
+    );
+    const body = {
+      header: {
+        orgIdentityLine: {
+          enabled: true,
+          fields: [{ value: { kind: 'bound', source: 'org_legal_rep' } }],
+        },
+      },
+    };
+    expect(
+      await serviceWithOrg.missingOrgProfileSources('unit-1', body),
+    ).toEqual(['org_legal_rep']);
+  });
 });
