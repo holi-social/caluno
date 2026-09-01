@@ -46,6 +46,7 @@ export function ManualCheckInPage({
     date: new Date(),
     shiftId: null,
     shiftInstanceId: null,
+    selectedInstance: null,
   }));
   const [didPreselect, setDidPreselect] = useState(false);
   const [openSheet, setOpenSheet] = useState<
@@ -97,9 +98,11 @@ export function ManualCheckInPage({
         <ShiftInstanceStepper
           selection={selection}
           orgUnits={orgUnits}
-          instances={instances}
           onOpenOrgUnit={() => setOpenSheet('orgUnit')}
-          onOpenDate={() => setOpenSheet('date')}
+          onOpenDate={() => {
+            setVisibleMonth(selection.date ?? new Date());
+            setOpenSheet('date');
+          }}
           onOpenShift={() => setOpenSheet('shift')}
         />
 

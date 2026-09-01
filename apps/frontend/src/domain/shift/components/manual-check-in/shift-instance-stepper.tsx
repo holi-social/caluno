@@ -4,16 +4,12 @@ import { Separator } from '@repo/ui';
 import { Building2, CalendarDays } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useFormatting } from '@/lib/formatting/use-formatting';
-import type {
-  CheckInInstance,
-  CheckInSelection,
-} from '../../check-in-selection';
+import type { CheckInSelection } from '../../check-in-selection';
 import { StepperRow } from './stepper-row';
 
 type ShiftInstanceStepperProps = {
   selection: CheckInSelection;
   orgUnits: Array<{ id: string; name: string }>;
-  instances: CheckInInstance[];
   onOpenOrgUnit: () => void;
   onOpenDate: () => void;
   onOpenShift: () => void;
@@ -22,7 +18,6 @@ type ShiftInstanceStepperProps = {
 export function ShiftInstanceStepper({
   selection,
   orgUnits,
-  instances,
   onOpenOrgUnit,
   onOpenDate,
   onOpenShift,
@@ -31,9 +26,7 @@ export function ShiftInstanceStepper({
   const { formatDate, formatTimeRange } = useFormatting();
 
   const selectedOrgUnit = orgUnits.find((u) => u.id === selection.orgUnitId);
-  const selectedInstance = instances.find(
-    (i) => i.id === selection.shiftInstanceId,
-  );
+  const selectedInstance = selection.selectedInstance;
 
   const isToday =
     !!selection.date &&
