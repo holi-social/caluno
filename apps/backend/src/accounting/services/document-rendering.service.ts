@@ -387,7 +387,14 @@ export class DocumentRenderingService {
               document.reimbursementTypeId,
               new Date(document.periodStart).getFullYear(),
             )
-            .catch(() => undefined)
+            .catch((error: unknown) => {
+              this.logger.warn(
+                `Failed to resolve yearly usage for document ${document.id}: ${
+                  error instanceof Error ? error.message : String(error)
+                }`,
+              );
+              return undefined;
+            })
         : undefined;
     const alreadyReceivedCents = yearlyUsage
       ? Math.max(0, yearlyUsage.usedCents - (amountCents ?? 0))
