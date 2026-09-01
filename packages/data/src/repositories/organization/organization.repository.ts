@@ -1,6 +1,7 @@
 import type {
   CreateOrganizationInput,
   GetMyOrganizationUnitsQuery,
+  UpdateOrganizationInput,
 } from '../../generated/graphql';
 import { BaseRepository } from '../base/base.repository';
 
@@ -73,6 +74,11 @@ export class OrganizationRepository extends BaseRepository {
   async create(input: CreateOrganizationInput) {
     const data = await this.sdk.CreateOrganization({ input });
     return data.createOrganization;
+  }
+
+  async update(id: string, input: UpdateOrganizationInput) {
+    const data = await this.sdk.UpdateOrganization({ id, input });
+    return data.updateOrganization;
   }
 
   async setRequiredForms(organizationUnitId: string, formIds: string[]) {
