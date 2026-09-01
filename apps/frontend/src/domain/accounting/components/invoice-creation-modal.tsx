@@ -168,6 +168,8 @@ export function InvoiceCreationModal({
   const [checkedIds, setCheckedIds] = useState<Set<string>>(new Set());
   const [period, setPeriod] = useState<DateRange>(thisMonthRange);
   const [isSending, setIsSending] = useState(false);
+  const [sendError, setSendError] = useState<string | null>(null);
+  const [sendErrorCode, setSendErrorCode] = useState<string | null>(null);
 
   const eligibleQuery = useEligibleTimeEntriesForInvoice({
     volunteerId: volunteerId ?? undefined,
@@ -241,9 +243,11 @@ export function InvoiceCreationModal({
 
   const status: DocumentCreationLoadStatus = hasError
     ? 'error'
-    : dataReady
-      ? 'loaded'
-      : 'loading';
+    : sendError
+      ? 'error'
+      : dataReady
+        ? 'loaded'
+        : 'loading';
 
   // Seed the editable fields once from the loaded profile, then leave them
   // alone — later re-renders shouldn't clobber a coordinator's edits.
@@ -297,6 +301,8 @@ export function InvoiceCreationModal({
   const handleSend = async () => {
     if (!reimbursementType) return;
     setIsSending(true);
+    setSendError(null);
+    setSendErrorCode(null);
     try {
       await createInvoice.mutateAsync({
         organizationUnitId: orgUId,
@@ -309,12 +315,25 @@ export function InvoiceCreationModal({
       onOpenChange(false);
       toast.success(t('sentToast', { name: volunteerName }));
       onSent();
-    } catch {
-      toast.error(t('sendErrorToast', { name: volunteerName }));
+    } catch (error) {
+      // Surface the real server error (e.g. "No invoice template configured
+      // for reimbursement type …") instead of a generic "try again", and keep
+      // the modal open so the coordinator can act on the reason.
+      if (error instanceof Error) {
+        setSendError(error.message || null);
+        setSendErrorCode(
+          error instanceof DataError ? (error.options?.code ?? null) : null,
+        );
+      } else {
+        setSendError(null);
+        setSendErrorCode(null);
+      }
     } finally {
       setIsSending(false);
     }
   };
+
+  const sendErrorIsNoTemplate = sendErrorCode === 'NOT_FOUND';
 
   const pauschaleLabel = tPauschale(
     `type${getPauschaleKey(pauschale).toUpperCase()}` as Parameters<
@@ -409,11 +428,26 @@ export function InvoiceCreationModal({
       embedded={embedded}
       title={t('title')}
       status={status}
-      errorTitle={t('loadErrorTitle')}
-      errorDescription={t('loadError', { name: volunteerName })}
-      errorMessage={loadError instanceof Error ? loadError.message : undefined}
-      errorCtaLabel={noInvoiceTemplate ? t('noTemplateCta') : undefined}
-      errorCtaAction={noInvoiceTemplate ? createTemplateCta : undefined}
+      errorTitle={sendError ? t('sendErrorTitle') : t('loadErrorTitle')}
+      errorDescription={
+        sendError
+          ? t('sendError', { name: volunteerName })
+          : t('loadError', { name: volunteerName })
+      }
+      errorMessage={
+        sendError ??
+        (loadError instanceof Error ? loadError.message : undefined)
+      }
+      errorCtaLabel={
+        noInvoiceTemplate || sendErrorIsNoTemplate
+          ? t('noTemplateCta')
+          : undefined
+      }
+      errorCtaAction={
+        noInvoiceTemplate || sendErrorIsNoTemplate
+          ? createTemplateCta
+          : undefined
+      }
       fieldsSkeletonKeys={['name', 'iban', 'period', 'cap', 'hours']}
       cancelLabel={t('cancel')}
       sendLabel={t('sendForSigning')}

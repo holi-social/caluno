@@ -109,6 +109,8 @@ export function ContractCreationModal({
   const [lifespan, setLifespan] = useState('');
   const [hoursAmount, setHoursAmount] = useState('');
   const [isSending, setIsSending] = useState(false);
+  const [sendError, setSendError] = useState<string | null>(null);
+  const [sendErrorCode, setSendErrorCode] = useState<string | null>(null);
 
   // Reset local edits whenever a different volunteer/pauschale is targeted —
   // the fields get re-seeded from the freshly loaded profile/template below.
@@ -154,9 +156,11 @@ export function ContractCreationModal({
 
   const status: DocumentCreationLoadStatus = hasError
     ? 'error'
-    : dataReady
-      ? 'loaded'
-      : 'loading';
+    : sendError
+      ? 'error'
+      : dataReady
+        ? 'loaded'
+        : 'loading';
 
   // Seed the editable fields once from the loaded profile/template, then
   // leave them alone — further re-renders (e.g. rate data arriving late)
@@ -200,6 +204,8 @@ export function ContractCreationModal({
   const handleSend = async () => {
     if (!reimbursementType) return;
     setIsSending(true);
+    setSendError(null);
+    setSendErrorCode(null);
     const { periodStart, periodEnd } = contractPeriodForLifespan(lifespan);
     try {
       await createContract.mutateAsync({
@@ -212,12 +218,25 @@ export function ContractCreationModal({
       onOpenChange(false);
       toast.success(t('sentToast', { name: volunteerName }));
       onSent();
-    } catch {
-      toast.error(t('sendErrorToast', { name: volunteerName }));
+    } catch (error) {
+      // Surface the real server error (e.g. "No contract template configured
+      // for reimbursement type …") instead of a generic "try again", and keep
+      // the modal open so the coordinator can act on the reason.
+      if (error instanceof Error) {
+        setSendError(error.message || null);
+        setSendErrorCode(
+          error instanceof DataError ? (error.options?.code ?? null) : null,
+        );
+      } else {
+        setSendError(null);
+        setSendErrorCode(null);
+      }
     } finally {
       setIsSending(false);
     }
   };
+
+  const sendErrorIsNoTemplate = sendErrorCode === 'NOT_FOUND';
 
   const pauschaleLabel = tPauschale(
     `type${getPauschaleKey(pauschale).toUpperCase()}` as Parameters<
@@ -262,11 +281,26 @@ export function ContractCreationModal({
       embedded={embedded}
       title={t('title')}
       status={status}
-      errorTitle={t('loadErrorTitle')}
-      errorDescription={t('loadError', { name: volunteerName })}
-      errorMessage={loadError instanceof Error ? loadError.message : undefined}
-      errorCtaLabel={noContractTemplate ? t('noTemplateCta') : undefined}
-      errorCtaAction={noContractTemplate ? createTemplateCta : undefined}
+      errorTitle={sendError ? t('sendErrorTitle') : t('loadErrorTitle')}
+      errorDescription={
+        sendError
+          ? t('sendError', { name: volunteerName })
+          : t('loadError', { name: volunteerName })
+      }
+      errorMessage={
+        sendError ??
+        (loadError instanceof Error ? loadError.message : undefined)
+      }
+      errorCtaLabel={
+        noContractTemplate || sendErrorIsNoTemplate
+          ? t('noTemplateCta')
+          : undefined
+      }
+      errorCtaAction={
+        noContractTemplate || sendErrorIsNoTemplate
+          ? createTemplateCta
+          : undefined
+      }
       fieldsSkeletonKeys={['address', 'iban', 'dob', 'lifespan', 'hours']}
       cancelLabel={t('cancel')}
       sendLabel={t('sendForSigning')}
