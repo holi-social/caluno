@@ -356,9 +356,7 @@ export class DocumentRenderingService {
     const [rootUnit, volunteer] = await Promise.all([
       'organizationUnit' in document && document.organizationUnit
         ? Promise.resolve(document.organizationUnit)
-        : this.db.query.organizationUnits.findFirst({
-            where: { id: template.organizationUnitId ?? undefined },
-          }),
+        : this.resolveTemplateOrgUnit(template),
       this.db.query.users.findFirst({
         where: { id: document.volunteerId },
       }),
@@ -549,6 +547,17 @@ export class DocumentRenderingService {
     } catch {
       return undefined;
     }
+  }
+
+  private async resolveTemplateOrgUnit(
+    template: RenderableDocument['documentTemplate'],
+  ) {
+    const organizationUnitId =
+      template?.organizationUnitId ??
+      (await this.resolveOrgRootUnitId(template?.organizationId ?? null));
+    return this.db.query.organizationUnits.findFirst({
+      where: { id: organizationUnitId },
+    });
   }
 
   private async resolveOrgRootUnitId(
