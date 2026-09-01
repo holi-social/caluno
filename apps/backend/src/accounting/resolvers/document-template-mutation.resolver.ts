@@ -65,6 +65,7 @@ export class DocumentTemplateMutationResolver {
   async deleteDocumentTemplate(
     @Args('id', { type: () => ID }) id: string,
     @Context() context: AuthenticatedGraphQLContext,
+    @Session() session: UserSession,
   ): Promise<boolean> {
     const organizationId =
       await this.accountingOrgAccessService.resolveEnabledOrganizationId(
@@ -73,7 +74,7 @@ export class DocumentTemplateMutationResolver {
     await this.documentTemplateService.deleteDocumentTemplate(
       organizationId,
       id,
-      context.user.id,
+      session.user.id,
     );
     return true;
   }
