@@ -706,7 +706,8 @@
         "iban": "Für Aufwandsentschädigungen",
         "lastName": "Wie auf deinem Ausweis",
         "preferredName": "Falls du anders angesprochen werden möchtest",
-        "bic": "Bankleitzahl (BIC) deines Kontos"
+        "bic": "Bankleitzahl (BIC) deines Kontos",
+        "taxId": "Deine Steuernummer (für Spendenbescheinigungen)"
       }
     },
     "language": "Sprache",
@@ -914,6 +915,7 @@
       "gender": "Geschlecht",
       "iban": "IBAN",
       "bic": "BIC",
+      "taxId": "Steuernummer",
       "infoText": "Infotext",
       "labelLabel": "Bezeichnung",
       "labelPlaceholder": "z. B. Lieblingsfarbe",

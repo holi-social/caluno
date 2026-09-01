@@ -11,4 +11,5 @@ export const SYSTEM_PROFILE_KEYS = new Set<string>([
   'birth-date',
   'iban',
   'bic',
+  'tax-id',
 ]);

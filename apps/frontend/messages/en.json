@@ -706,7 +706,8 @@
         "iban": "For expense and allowance payments",
         "lastName": "As on your ID",
         "preferredName": "If you'd like to be called something else",
-        "bic": "Bank identifier code (BIC) for your account"
+        "bic": "Bank identifier code (BIC) for your account",
+        "taxId": "Your tax identification number (for expense reports)"
       }
     },
     "language": "Language",
@@ -914,6 +915,7 @@
       "gender": "Gender",
       "iban": "IBAN",
       "bic": "BIC",
+      "taxId": "Tax ID",
       "infoText": "Info text",
       "labelLabel": "Label",
       "labelPlaceholder": "e.g. Favorite color",
