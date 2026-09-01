@@ -11,6 +11,8 @@ import { useRouter } from '@/i18n/navigation';
 import {
   applyDate,
   applyOrgUnit,
+  applyShift,
+  applyShiftInstance,
   type CheckInSelection,
   pickInitialInstance,
   toCheckInInstance,
@@ -18,6 +20,7 @@ import {
 import { DateSheet } from './date-sheet';
 import { OrgUnitSheet } from './org-unit-sheet';
 import { ShiftInstanceStepper } from './shift-instance-stepper';
+import { ShiftSheet } from './shift-sheet';
 
 type ManualCheckInPageProps = {
   volunteer: {
@@ -97,7 +100,7 @@ export function ManualCheckInPage({
           instances={instances}
           onOpenOrgUnit={() => setOpenSheet('orgUnit')}
           onOpenDate={() => setOpenSheet('date')}
-          onOpenShift={() => {}}
+          onOpenShift={() => setOpenSheet('shift')}
         />
 
         <UserCard user={volunteer} size="lg" />
@@ -123,6 +126,23 @@ export function ManualCheckInPage({
           onSelect={(date) =>
             setSelection((current) =>
               applyDate(current, date, instances, new Date()),
+            )
+          }
+        />
+
+        <ShiftSheet
+          open={openSheet === 'shift'}
+          onOpenChange={(open) => setOpenSheet(open ? 'shift' : null)}
+          orgUnitId={selection.orgUnitId}
+          instances={instances}
+          selectedDate={selection.date}
+          selectedShiftInstanceId={selection.shiftInstanceId}
+          onSelectInstance={(instance) =>
+            setSelection((current) => applyShiftInstance(current, instance))
+          }
+          onSelectShift={(shiftId) =>
+            setSelection((current) =>
+              applyShift(current, shiftId, instances, new Date()),
             )
           }
         />
