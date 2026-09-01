@@ -2,11 +2,7 @@ import { hashPassword } from 'better-auth/crypto';
 import { eq, inArray } from 'drizzle-orm';
 import { drizzle, type NodePgDatabase } from 'drizzle-orm/node-postgres';
 import { Pool } from 'pg';
-import {
-  DocumentKind,
-  ReimbursementTypeKey,
-  SigneeType,
-} from '../accounting/enums';
+import { DocumentKind, SigneeType } from '../accounting/enums';
 import {
   DEFAULT_MEMBER_ROLE_NAME,
   DEFAULT_OWNER_ROLE_NAME,
@@ -1127,7 +1123,10 @@ const ensureAccountingDocumentTemplates = async (
         id: 'header-org-identity',
         text: '{orgName} {orgAddress}',
         fields: [
-          { id: 'header-org-name', value: { kind: 'bound', source: 'org_name' } },
+          {
+            id: 'header-org-name',
+            value: { kind: 'bound', source: 'org_name' },
+          },
           {
             id: 'header-org-address',
             value: { kind: 'bound', source: 'org_address' },
@@ -1185,7 +1184,10 @@ const ensureAccountingDocumentTemplates = async (
         id: 'header-org-identity',
         text: '{orgName} {orgAddress}',
         fields: [
-          { id: 'header-org-name', value: { kind: 'bound', source: 'org_name' } },
+          {
+            id: 'header-org-name',
+            value: { kind: 'bound', source: 'org_name' },
+          },
           {
             id: 'header-org-address',
             value: { kind: 'bound', source: 'org_address' },
@@ -1239,8 +1241,7 @@ const ensureAccountingDocumentTemplates = async (
           organizationUnitId: null,
           reimbursementTypeId: type.id,
           kind,
-          body:
-            kind === DocumentKind.CONTRACT ? contractBody : invoiceBody,
+          body: kind === DocumentKind.CONTRACT ? contractBody : invoiceBody,
           isDeleted: false,
         })
         .returning();

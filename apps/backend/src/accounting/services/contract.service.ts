@@ -137,10 +137,11 @@ export class ContractService {
     // address) before one is created — otherwise the PDF comes out with gaps
     // the org can't fix inline. The account manager is told to complete the
     // unit's profile first.
-    const missingOrg = await this.documentProfileRequirementService.missingOrgProfileSources(
-      input.organizationUnitId ?? '',
-      template.body,
-    );
+    const missingOrg =
+      await this.documentProfileRequirementService.missingOrgProfileSources(
+        input.organizationUnitId ?? '',
+        template.body,
+      );
     if (missingOrg.length > 0) {
       throw new BadRequestGraphQLError(
         'Your organization is missing details required for this document: ' +

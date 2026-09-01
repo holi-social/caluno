@@ -10,8 +10,8 @@ import {
 import { users } from '../../auth/schemas/auth.schema';
 import { idColumn, timestampColumns } from '../../database/database-columns';
 import { enumValues } from '../../database/typeutil';
-import { files } from '../../storage/schemas/file.schema';
 import { organizationUnits } from '../../organization/schemas/organization-unit.schema';
+import { files } from '../../storage/schemas/file.schema';
 import { ContractStatus } from '../enums';
 import { documentTemplates } from './document-template.schema';
 import { reimbursementTypes } from './reimbursement-type.schema';

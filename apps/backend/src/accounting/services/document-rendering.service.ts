@@ -395,8 +395,7 @@ export class DocumentRenderingService {
       ? Math.max(0, yearlyUsage.usedCents - (amountCents ?? 0))
       : undefined;
     const yearlyLimitCents =
-      yearlyUsage?.limitCents ??
-      document.reimbursementType?.yearlyLimitCents;
+      yearlyUsage?.limitCents ?? document.reimbursementType?.yearlyLimitCents;
 
     const str = (value: unknown): string =>
       typeof value === 'string' ? value : '';

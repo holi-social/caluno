@@ -106,7 +106,12 @@ describe('DocumentProfileRequirementService', () => {
       query: {
         organizationUnits: {
           findFirst: () =>
-            Promise.resolve({ id: 'unit-1', name: 'Playground', address: 'Straße 1', city: '' }),
+            Promise.resolve({
+              id: 'unit-1',
+              name: 'Playground',
+              address: 'Straße 1',
+              city: '',
+            }),
         },
       },
     } as never;
@@ -127,9 +132,9 @@ describe('DocumentProfileRequirementService', () => {
       },
     };
     // name is always present, address is present, city is empty → only org_city.
-    expect(await serviceWithOrg.missingOrgProfileSources('unit-1', body)).toEqual(
-      ['org_city'],
-    );
+    expect(
+      await serviceWithOrg.missingOrgProfileSources('unit-1', body),
+    ).toEqual(['org_city']);
   });
 
   it('reports org legal rep as missing when the org unit has none', async () => {
