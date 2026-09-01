@@ -41,4 +41,10 @@ export const SYSTEM_PROFILE_FIELDS: readonly SystemProfileField[] = [
   { key: 'city', labelKey: 'city', type: FieldType.Text, required: false },
   { key: 'iban', labelKey: 'iban', type: FieldType.Iban, required: true },
   { key: 'bic', labelKey: 'bic', type: FieldType.Text, required: true },
+  {
+    key: 'tax-id',
+    labelKey: 'taxId',
+    type: FieldType.Text,
+    required: false,
+  },
 ];

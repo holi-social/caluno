@@ -415,6 +415,9 @@ export class DocumentRenderingService {
       volunteer_bic: str(
         profileData[PROFILE_SOURCE_TO_PROFILE_KEY.volunteer_bic],
       ),
+      volunteer_tax_id: str(
+        profileData[PROFILE_SOURCE_TO_PROFILE_KEY.volunteer_tax_id],
+      ),
       hourly_rate: rateCents !== undefined ? this.formatRate(rateCents) : '',
       total_hours: totalHours !== undefined ? `${totalHours}h` : '',
       total_amount:

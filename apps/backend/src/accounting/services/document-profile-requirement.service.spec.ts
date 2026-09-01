@@ -163,4 +163,30 @@ describe('DocumentProfileRequirementService', () => {
       await serviceWithOrg.missingOrgProfileSources('unit-1', body),
     ).toEqual(['org_legal_rep']);
   });
+
+  it('treats volunteer tax id as a profile-required source', async () => {
+    const serviceWithProfile = new DocumentProfileRequirementService(db, {
+      findByUserId: () =>
+        Promise.resolve({
+          data: { taxId: '', 'tax-id': '' },
+        }),
+    } as never);
+    const body = {
+      blocks: [
+        {
+          lines: [
+            {
+              enabled: true,
+              fields: [
+                { value: { kind: 'bound', source: 'volunteer_tax_id' } },
+              ],
+            },
+          ],
+        },
+      ],
+    };
+    expect(await serviceWithProfile.missingProfileSources('v-1', body)).toEqual(
+      ['volunteer_tax_id'],
+    );
+  });
 });
